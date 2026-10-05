@@ -227,7 +227,7 @@ export type RfxEventStatus = 'Draft' | 'Open' | 'Closed' | 'Cancelled';
 
 /**
  * RFx D2 — an RFP's states: the RFx ones plus the two its award reaches
- * (`rfpEvent.flow.ts`). An RFI is never awarded (RFX-D1), so the shared union
+ * (`rfpEvent.flow.js`). An RFI is never awarded (RFX-D1), so the shared union
  * stays as it is.
  */
 export type RfpEventStatus = RfxEventStatus | 'Partly awarded' | 'Awarded';

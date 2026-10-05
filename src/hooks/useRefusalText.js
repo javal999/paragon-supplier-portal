@@ -9,7 +9,7 @@ import { describeRefusal, describeDataError } from '@services/transitions/refusa
  *
  * Returns `null` for a reason this vocabulary does not own, so every call site
  * reads `refusalText(r) ?? <what it rendered before>` and an unrecognised
- * refusal is untouched. See `refusalMessage.ts` for why `null` rather than a
+ * refusal is untouched. See `refusalMessage.js` for why `null` rather than a
  * default.
  * @returns {(reason: string | undefined) => string | null}
  */

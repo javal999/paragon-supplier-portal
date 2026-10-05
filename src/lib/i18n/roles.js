@@ -2,7 +2,7 @@
 // ROLE NAMES + THE CROSS-ROLE HANDOFF LINE. Namespace: roles.*
 //
 // ⚠️ **ONE KEY PER ROLE, NEVER ONE PER STATE.** This is the whole reason the
-// handoff is derived rather than authored (`services/transitions/handoff.ts`):
+// handoff is derived rather than authored (`services/transitions/handoff.js`):
 // `requiredRole` is per-verb and per-state, so the machine already knows whose
 // act is next. What it cannot know is what to CALL that role in Indonesian.
 // Authoring a line per state — "Awaiting finance" pinned beside `Approved` —

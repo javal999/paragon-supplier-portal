@@ -9,7 +9,7 @@
 // ⚠️ **THIS FILE IS THE ARITHMETIC, NOT THE CALENDAR IN FORCE.** Q-18 was
 // decided on 2026-09-21: the hub keeps its own calendar, loaded from the SAP
 // factory calendar and maintained by the Hub administrator (BL-50). That
-// calendar lives in `services/transitions/workingCalendarStore.ts`
+// calendar lives in `services/transitions/workingCalendarStore.js`
 // (`hubWorkingCalendar()`), and EVERY deadline in the hub reads it there — the
 // `DEFAULT_WORKING_CALENDAR` below is only the base it is built from, and
 // `hubCalendarReaders.guard.test.js` refuses a deadline module that names it.

@@ -25,9 +25,13 @@ not touch stay byte-identical. Its header lists every translation it makes.
    (`vitest.config.ts` `setupFiles`, `app/index.html` → `../src/main.jsx`) and comments that
    name a file. It reports a bare name it cannot place (`'types.ts'` names seven files).
 3. **Format:** `npx prettier --write <files>`.
-4. **Repair by hand** what was flagged, what `tsc` reports, and every guard that reads
+4. **Check casts Prettier may have moved:** `grep -rnE '\*/ \(\(' <files>`. A hit is either a lazy
+   initializer (`/** @type {() => T} */ (() => …)`, fine) or a JSDoc cast that opened a
+   parenthesised expression, which Prettier moves OUTSIDE the parentheses so it re-types the whole
+   expression. Rewrite that one as a local variable (found once in B3, `callOffRules.test.js`).
+5. **Repair by hand** what was flagged, what `tsc` reports, and every guard that reads
    TypeScript declarations as text (see "Guards that parse TypeScript" below).
-5. **Done when all pass:**
+6. **Done when all pass:**
    - `node scripts/codemods/check-comments-kept.mjs <files>` → 0 lost (it uses the TypeScript
      parser to find comments; a regex read the `/*` in `'/src/**/*.ts'` as a comment)
    - `npx tsc --noEmit -p tsconfig.json` and `-p tsconfig.vitest.json` → 0 errors
@@ -71,15 +75,17 @@ Two kinds of failure in the dry run are not tooling problems:
    `POStatus` and `ChannelType`, become `/** @type {const} */` objects with a typedef of their values); this replaces the
    earlier "keep it as `types.d.ts`" ruling, since a `.d.ts` file cannot hold runtime values.
 
-### Known text-only matchers still to teach (found in B1, passing today)
+### Text matchers taught the JSDoc form so far (B1–B3)
 
-- `src/lib/projectionGate/dayCounts.js` `takesInjectedNow` matches the TEXT `nowIso: string`.
-  A `computed-at-read` producer converted to `@param {string} nowIso` will fail it — teach it
-  the JSDoc form in the batch that converts the producer (B4, `services/data`).
-- The same file's "named endpoint EXISTS" check matches `\bfield\??:`; in converted data files
-  it is satisfied by fixture assignments, not declarations (this looseness predates JS).
-- Helpers for reading either form now exist: `src/test/declaredFields.js` (fields declared by
-  an interface or by JSDoc `@property`), and `declaredType` in `src/lib/enforcement.test.js`.
+- `projectionGate/dayCounts.js`: `takesInjectedNow` now reads a `nowIso`/`now` parameter typed by
+  TS syntax or `@param` (B3); `writesField` also accepts the last shorthand member of an object,
+  because Prettier here writes no trailing comma (`trailingComma: none`) — `daysToImpact,` became
+  `daysToImpact` before `}`. A write matcher keyed on a trailing comma misses that shape.
+- Helpers that read either form: `src/test/declaredFields.js`; `declaredType`, `declaredAlias`,
+  `importsOf` in `src/lib/enforcement.test.js`; `deriveInterfaceMembers` (+ its spec) in
+  `src/services/contracts/__tests__/deriveC1Surface.ts` for interface-or-typedef members.
+- Still text-only, passing today: `dayCounts.js` "named endpoint EXISTS" (`\bfield\??:`), which
+  in converted data files is satisfied by fixture assignments rather than declarations.
 
 ## Phase 3 pilot history
 

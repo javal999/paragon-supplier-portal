@@ -12,7 +12,7 @@
 // delivery timestamp nothing in this prototype produces. The OUTBOUND failures
 // are real: they are the settle failures the dispatcher already records, read
 // back out of the audit trail and classified by the SAME vocabulary the settle
-// boundary uses (`settleFaults.ts`), so CR-20's retry rule has exactly one home.
+// boundary uses (`settleFaults.js`), so CR-20's retry rule has exactly one home.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { TransitionEvent } from '../transitions/events';

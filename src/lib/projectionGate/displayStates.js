@@ -295,7 +295,7 @@ export const DISPLAY_STATE_ENTITIES = [...new Set(DISPLAY_STATES.map((r) => r.en
 /**
  * The states no flow knows, for one entity — THE ORIGINAL, TRUE CLAIM.
  *
- * This is what `remainingFlows.test.ts` and `compliance.flow.test.ts` consume:
+ * This is what `remainingFlows.test.js` and `compliance.flow.test.js` consume:
  * their assertion is unchanged and still correct. What changed is that the
  * grouping no longer tells them the states are computed, because seven of them
  * are not. An entity with no display states answers `[]` — `purchaseRequisition`

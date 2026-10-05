@@ -28,7 +28,7 @@
 // ── ⚠️ THE SCOPE IS `procurement`, WHICH IS THE ONLY LANE THAT HOLDS THE VERB
 //
 // Derived, not assumed: `application:submit` sits in `procurement` and the
-// deciding atoms sit in `compliance` (`businessRoles.ts`). Seeding under a wide
+// deciding atoms sit in `compliance` (`businessRoles.js`). Seeding under a wide
 // seat would have worked and would have quietly modelled one person raising an
 // application and deciding it — the segregation defect already filed at §76d.
 // A seed is a worked example of the system's own rules.

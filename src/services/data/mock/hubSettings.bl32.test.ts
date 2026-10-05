@@ -139,7 +139,7 @@ const SHIPPED = shipped(SRC).map((f) => ({ path: rel(f), code: code(readFileSync
 
 /** The config modules: every `*Config.ts` under src/services, and the call-off tolerance module. */
 const CONFIG_MODULES = SHIPPED.filter(
-  (f) => f.path.startsWith('src/services/') && (/Config\.[jt]s$/.test(f.path) || f.path.endsWith('/callOffTolerance.ts')),
+  (f) => f.path.startsWith('src/services/') && (/Config\.[jt]s$/.test(f.path) || f.path.endsWith('/callOffTolerance.js')),
 );
 
 /** Exported `const` names of a module — what a reader could import as a constant. */
@@ -165,15 +165,15 @@ const RETIRED = [
 describe('BL32-POP · the population of rule values is derived from the config modules', () => {
   it('BL32-POP-01 · the config modules are found — known-true present, known-false absent', () => {
     const paths = CONFIG_MODULES.map((f) => f.path);
-    expect(paths).toContain('src/services/transitions/callOffTolerance.ts');
+    expect(paths).toContain('src/services/transitions/callOffTolerance.js');
     expect(paths).toContain('src/services/sourcing/complianceGateConfig.ts');
     expect(paths).toEqual([
       'src/services/sourcing/complianceGateConfig.ts',
       'src/services/sourcing/rfxConfig.ts',
-      'src/services/transitions/callOffTolerance.ts',
+      'src/services/transitions/callOffTolerance.js',
       'src/services/transitions/forecastConfig.ts',
-      'src/services/transitions/fulfilmentConfig.ts',
-      'src/services/transitions/inventoryConfig.ts',
+      'src/services/transitions/fulfilmentConfig.js',
+      'src/services/transitions/inventoryConfig.js',
     ]);
     // Known-false: the menu's config is UI, not a rule value, and lives outside services.
     expect(paths).not.toContain('src/components/layout-v2/navConfig.js');
@@ -186,7 +186,7 @@ describe('BL32-POP · the population of rule values is derived from the config m
     }
     // Control: the matcher finds a constant that DOES still exist.
     expect(SHIPPED.filter((f) => /\bDEMAND_WINDOW\b/.test(f.code)).map((f) => f.path)).toContain(
-      'src/services/transitions/inventoryConfig.ts',
+      'src/services/transitions/inventoryConfig.js',
     );
   });
 
@@ -194,10 +194,10 @@ describe('BL32-POP · the population of rule values is derived from the config m
     const byModule = Object.fromEntries(CONFIG_MODULES.map((f) => [f.path, exportedConsts(f.code)]));
     // Rule values: none left. What remains is structure, master data, lists
     // and the RFx library — the reason is written beside each in its module.
-    expect(byModule['src/services/transitions/callOffTolerance.ts']).toEqual([]);
+    expect(byModule['src/services/transitions/callOffTolerance.js']).toEqual([]);
     expect(byModule['src/services/sourcing/complianceGateConfig.ts']).toEqual([]);
-    expect(byModule['src/services/transitions/fulfilmentConfig.ts']).toEqual(['RECEIPT_QTY_TOLERANCE_BY_MATERIAL']);
-    expect(byModule['src/services/transitions/inventoryConfig.ts']).toEqual(
+    expect(byModule['src/services/transitions/fulfilmentConfig.js']).toEqual(['RECEIPT_QTY_TOLERANCE_BY_MATERIAL']);
+    expect(byModule['src/services/transitions/inventoryConfig.js']).toEqual(
       expect.arrayContaining(['CAPACITY_HORIZON_WEEKS', 'DEMAND_WINDOW']),
     );
     expect(byModule['src/services/transitions/forecastConfig.ts']).toEqual(
@@ -251,11 +251,11 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
   it('BL32-READ-01 · the store is read only by the accessors (config modules), the policy, the target and the admin page', () => {
     const readers = callersOf('hubSetting');
     expect(readers).toEqual([
-      'src/services/transitions/callOffTolerance.ts',
+      'src/services/transitions/callOffTolerance.js',
       'src/services/transitions/forecastConfig.ts',
-      'src/services/transitions/fulfilmentConfig.ts',
-      'src/services/transitions/hubSettingsStore.ts',
-      'src/services/transitions/inventoryConfig.ts',
+      'src/services/transitions/fulfilmentConfig.js',
+      'src/services/transitions/hubSettingsStore.js',
+      'src/services/transitions/inventoryConfig.js',
     ].concat(['src/services/sourcing/complianceGateConfig.ts']).sort());
     // Known-false: no page reads the store behind the accessors' back.
     expect(readers).not.toContain('src/pages-v2/invoices/InvoiceCollaboration.tsx');
@@ -265,29 +265,29 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
     const table: Record<string, string[]> = {
       callOffTolerance: [
         'src/pages-v2/BuyerCallOffs.tsx',
-        'src/services/transitions/callOffRules.ts',
-        'src/services/transitions/callOffTolerance.ts',
+        'src/services/transitions/callOffRules.js',
+        'src/services/transitions/callOffTolerance.js',
       ],
       callOffConfirmWorkingDays: [
         'src/pages-v2/BuyerCallOffs.tsx',
-        'src/services/transitions/callOffRules.ts',
-        'src/services/transitions/callOffTolerance.ts',
+        'src/services/transitions/callOffRules.js',
+        'src/services/transitions/callOffTolerance.js',
       ],
       invoicePriceTolerance: [
         'src/pages-v2/BuyerInvoices.tsx',
         'src/pages-v2/SupplierInvoices.tsx',
         'src/pages-v2/invoices/InvoiceCollaboration.tsx',
-        'src/services/transitions/fulfilmentConfig.ts',
-        'src/services/transitions/invoiceRollup.ts',
+        'src/services/transitions/fulfilmentConfig.js',
+        'src/services/transitions/invoiceRollup.js',
       ],
       receiptQtyToleranceFor: [
         'src/pages-v2/receipts/ReceiptToleranceNote.tsx',
-        'src/services/transitions/fulfilmentConfig.ts',
-        'src/services/transitions/fulfilmentRules.ts',
+        'src/services/transitions/fulfilmentConfig.js',
+        'src/services/transitions/fulfilmentRules.js',
       ],
       // MR-6 BR-06 (D2) — the ASN line rule reads the minimum through the master.
-      shelfLifeDefaultMonths: ['src/services/transitions/fulfilmentConfig.ts'],
-      shelfLifeRuleFor: ['src/services/transitions/fulfilmentConfig.ts', 'src/services/transitions/fulfilmentRules.ts'],
+      shelfLifeDefaultMonths: ['src/services/transitions/fulfilmentConfig.js'],
+      shelfLifeRuleFor: ['src/services/transitions/fulfilmentConfig.js', 'src/services/transitions/fulfilmentRules.js'],
       commitmentTolerance: ['src/services/transitions/forecastConfig.ts', 'src/services/transitions/forecastRules.ts'],
       commitmentDeadlineWorkingDays: [
         'src/pages-v2/BuyerCommitments.tsx',
@@ -306,37 +306,37 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
         'src/services/sourcing/complianceGateConfig.ts',
       ],
       gateNoHistoryPasses: ['src/services/sourcing/complianceGate.ts', 'src/services/sourcing/complianceGateConfig.ts'],
-      leadTimeRisk: ['src/services/transitions/inventoryConfig.ts', 'src/services/transitions/inventoryRules.ts'],
-      supplyBands: ['src/services/transitions/inventoryConfig.ts', 'src/services/transitions/inventoryRules.ts'],
+      leadTimeRisk: ['src/services/transitions/inventoryConfig.js', 'src/services/transitions/inventoryRules.js'],
+      supplyBands: ['src/services/transitions/inventoryConfig.js', 'src/services/transitions/inventoryRules.js'],
       coverageThresholds: [
         'src/pages-v2/BuyerCommitments.tsx',
         'src/services/sdc/consolidation.ts',
-        'src/services/transitions/inventoryConfig.ts',
-        'src/services/transitions/inventoryRules.ts',
+        'src/services/transitions/inventoryConfig.js',
+        'src/services/transitions/inventoryRules.js',
       ],
-      updateSlaFor: ['src/services/transitions/inventoryConfig.ts', 'src/services/transitions/inventoryRules.ts'],
+      updateSlaFor: ['src/services/transitions/inventoryConfig.js', 'src/services/transitions/inventoryRules.js'],
       // Material B1 — MR-1 BR-03 and BR-05, read when the positions are built.
       // Material B2 and B3 — the weekly-update panel and the compliance read model read the cutoff.
       updateCycleSettings: [
         'src/pages-v2/inventory/WeeklyUpdatePanel.tsx',
         'src/services/data/mock/updateComplianceReadModel.ts',
-        'src/services/transitions/inventoryConfig.ts',
-        'src/services/transitions/inventoryRules.ts',
+        'src/services/transitions/inventoryConfig.js',
+        'src/services/transitions/inventoryRules.js',
       ],
       // Material B2 — the admin row names the API hours.
       staleApiHours: [
         'src/pages-v2/admin/AdminRuleValues.tsx',
-        'src/services/transitions/inventoryConfig.ts',
-        'src/services/transitions/inventoryRules.ts',
+        'src/services/transitions/inventoryConfig.js',
+        'src/services/transitions/inventoryRules.js',
       ],
       // Material B2 — MR-1 BR-01, the API panel's "Next sync".
-      stockSyncIntervalHours: ['src/pages-v2/inventory/WeeklyUpdatePanel.tsx', 'src/services/transitions/inventoryConfig.ts'],
-      staleOverrideDaysFor: ['src/services/transitions/inventoryConfig.ts', 'src/services/transitions/inventoryRules.ts'],
+      stockSyncIntervalHours: ['src/pages-v2/inventory/WeeklyUpdatePanel.tsx', 'src/services/transitions/inventoryConfig.js'],
+      staleOverrideDaysFor: ['src/services/transitions/inventoryConfig.js', 'src/services/transitions/inventoryRules.js'],
       // Material B3 — MR-2 BR-05, read by the score at call time; the card states it.
       complianceScoreWeight: [
         'src/pages-v2/performance/UpdateComplianceCard.tsx',
         'src/services/data/performanceRules.ts',
-        'src/services/transitions/inventoryConfig.ts',
+        'src/services/transitions/inventoryConfig.js',
       ],
       // Material B4 — MR-2 BR-04 and BR-06: the award pill, the reason line and
       // the verbs' flag read the thresholds at call time.
@@ -344,7 +344,7 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
         'src/pages-v2/rfx/AwardPanel.tsx',
         'src/pages-v2/rfx/ComplianceAwardPill.tsx',
         'src/services/data/mock/updateComplianceReadModel.ts',
-        'src/services/transitions/inventoryConfig.ts',
+        'src/services/transitions/inventoryConfig.js',
       ],
       // ENG-D5 / REQ-E14-04 — read by the service that runs the engine, which
       // takes them as arguments (X-01); the engine never reads the store.

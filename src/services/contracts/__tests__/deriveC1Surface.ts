@@ -133,7 +133,85 @@ export function deriveServiceSurface(program: ts.Program, typesPath: string): De
   };
 }
 
-/** Every member of an interface, split by kind — used for `CommandTarget`. */
+/**
+ * The `@typedef` named `name`, wherever its JSDoc comment hangs in the file.
+ *
+ * Reads both forms (frontend-standard Phase 4): after the TS → JS conversion an
+ * `interface X { … }` is written `/** @typedef {object} X  @property … *\/`.
+ * JSDoc hangs off the node it documents (a trailing typedef hangs off the
+ * end-of-file token) and is not reached by `forEachChild`, so every node's
+ * `jsDoc` is visited explicitly — all of a node's comments, not just the last.
+ */
+const typedefIn = (sf: ts.SourceFile, name: string): ts.JSDocTypedefTag | undefined => {
+  let found: ts.JSDocTypedefTag | undefined;
+  const visit = (n: ts.Node): void => {
+    for (const doc of (n as { jsDoc?: ts.JSDoc[] }).jsDoc ?? []) {
+      for (const tag of doc.tags ?? []) {
+        if (ts.isJSDocTypedefTag(tag) && tag.name && ts.isIdentifier(tag.name) && tag.name.text === name) {
+          found ??= tag;
+        }
+      }
+    }
+    ts.forEachChild(n, visit);
+  };
+  visit(sf);
+  return found;
+};
+
+/** A JSDoc `@property {T}` is method-shaped exactly when `T` is a function type. */
+const isFunctionTypeNode = (t: ts.TypeNode | undefined): boolean => {
+  let u = t;
+  while (u && (ts.isParenthesizedTypeNode(u) || u.kind === ts.SyntaxKind.JSDocOptionalType)) {
+    u = (u as ts.ParenthesizedTypeNode | ts.JSDocOptionalType).type;
+  }
+  return !!u && (ts.isFunctionTypeNode(u) || ts.isJSDocFunctionType(u));
+};
+
+/**
+ * The members a typedef declares, split as `deriveInterfaceMembers` splits an
+ * interface's. Two typedef shapes reach here:
+ *   - `@typedef {object} X` + `@property` tags → a `JSDocTypeLiteral`. A tag
+ *     whose type is a function type (`{(id: string) => string}`) is the JSDoc
+ *     spelling of a METHOD signature; any other type is a PROPERTY.
+ *   - `@typedef {{ … }} X` or `@typedef {Base & { … }} X` → TS type-literal
+ *     members, classified exactly as an interface's are. Like the interface
+ *     read (`nodeMethods`), only the members WRITTEN here count: a named base
+ *     in an intersection is the `extends` clause, and is not followed.
+ */
+const typedefMembers = (
+  tag: ts.JSDocTypedefTag,
+  sf: ts.SourceFile,
+): { methods: string[]; properties: string[] } => {
+  const methods: string[] = [];
+  const properties: string[] = [];
+  const te = tag.typeExpression;
+  if (te && ts.isJSDocTypeLiteral(te)) {
+    for (const p of te.jsDocPropertyTags ?? []) {
+      (isFunctionTypeNode(p.typeExpression?.type) ? methods : properties).push(p.name.getText(sf));
+    }
+  } else if (te) {
+    const literals: ts.TypeLiteralNode[] = [];
+    const collect = (t: ts.TypeNode): void => {
+      if (ts.isTypeLiteralNode(t)) literals.push(t);
+      else if (ts.isIntersectionTypeNode(t)) t.types.forEach(collect);
+      else if (ts.isParenthesizedTypeNode(t)) collect(t.type);
+    };
+    collect(te.type);
+    for (const lit of literals) {
+      methods.push(...lit.members.filter(ts.isMethodSignature).map((m) => m.name.getText(sf)));
+      properties.push(...lit.members.filter(ts.isPropertySignature).map((m) => m.name.getText(sf)));
+    }
+  }
+  return { methods, properties };
+};
+
+/**
+ * Every member of an interface, split by kind — used for `CommandTarget`.
+ *
+ * Reads both forms (frontend-standard Phase 4): a TS `interface`, or a JSDoc
+ * `@typedef` in a converted `.js` file. Still THROWS when neither declares the
+ * name — `EMPTY-INPUT-REPORTS-CLEAN-01`.
+ */
 export function deriveInterfaceMembers(
   program: ts.Program,
   filePath: string,
@@ -142,16 +220,20 @@ export function deriveInterfaceMembers(
   const sf = program.getSourceFile(filePath);
   if (!sf) throw new Error(`C1 derivation: cannot read ${filePath}`);
   const decl = interfaceIn(sf, ifaceName);
-  if (!decl) throw new Error(`C1 derivation: \`${ifaceName}\` is not declared in ${filePath}`);
+  const typedef = decl ? undefined : typedefIn(sf, ifaceName);
+  if (!decl && !typedef) {
+    throw new Error(`C1 derivation: \`${ifaceName}\` is not declared in ${filePath}`);
+  }
 
   // ⚠️ **THE SPLIT IS THE POINT, AND IT IS WHY THIS RETURNS TWO LISTS.** The
   // first matcher written for this read `\w+\??\(` — method-call shape — and
   // reported `CommandTarget` as SIX members. It has seven: `requireCreationOwner`
   // is a `boolean` PROPERTY, not a method, and a matcher keyed on the call shape
   // cannot see it. Rule 2 in miniature, and the document had the same six.
+  if (typedef) return typedefMembers(typedef, sf);
   return {
-    methods: decl.members.filter(ts.isMethodSignature).map((m) => m.name.getText(sf)),
-    properties: decl.members.filter(ts.isPropertySignature).map((m) => m.name.getText(sf)),
+    methods: decl!.members.filter(ts.isMethodSignature).map((m) => m.name.getText(sf)),
+    properties: decl!.members.filter(ts.isPropertySignature).map((m) => m.name.getText(sf)),
   };
 }
 
@@ -221,12 +303,16 @@ export interface DocFlowRow {
   readonly claimsWired: boolean;
 }
 
-/** Rows of the Axis-2 table: `| \`x.flow.ts\` | \`entity\` | N | \`t_a\`, … | wiring |`. */
+/**
+ * Rows of the Axis-2 table: `| \`x.flow.js\` | \`entity\` | N | \`t_a\`, … | wiring |`.
+ * Reads both forms (frontend-standard Phase 4): converted flows are `.flow.js`,
+ * the forecast flows are still `.flow.ts`.
+ */
 export function parseFlowTable(sectionText: string): DocFlowRow[] {
   const rows: DocFlowRow[] = [];
   for (const line of sectionText.split(/\r?\n/)) {
     const m = line.match(
-      /^\|\s*`([\w.]+\.flow\.ts)`\s*\|\s*`(\w+)`\s*\|\s*(\d+)\s*\|([^|]*)\|([^|]*)\|/,
+      /^\|\s*`([\w.]+\.flow\.[jt]s)`\s*\|\s*`(\w+)`\s*\|\s*(\d+)\s*\|([^|]*)\|([^|]*)\|/,
     );
     if (m) {
       rows.push({

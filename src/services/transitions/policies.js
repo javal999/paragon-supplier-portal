@@ -1,0 +1,927 @@
+// ────────────────────────────────────────────────────────────────────────────
+// Policy-hook BINDINGS (v2.2 Step 3.4) — resolve a registered hook NAME to its
+// function. `policyHooks.js` owns the name allowlist (schema-time); this module
+// binds each name to its runtime implementation, which the dispatcher resolves.
+// Kept separate so flow metadata stays serialisable (names, never closures).
+// ────────────────────────────────────────────────────────────────────────────
+
+/** @import { PurchaseOrder, Invoice, PoLineResponse } from '../data/types' */
+/** @import { GoodsReceipt } from '@data/mockGoodsReceipts' */
+/** @import { PolicyHookFn } from './dispatcher' */
+import { maxStockRefusal, parseMaxStockEntityId } from './maxStock';
+import { POLICY_HOOKS } from './policyHooks';
+/** @import { GrHeaderDisposition } from './grRollup' */
+import { deriveHeaderDisposition } from './grRollup';
+import { isMatched } from './invoiceRollup';
+import { BASE_CURRENCY, BID_CURRENCIES, isBidCurrency } from '@lib/currencyPolicy';
+import { isUsableRate } from '@lib/fxPin';
+import { rfqCreateRefusal } from '../sourcing/rfqModel';
+/** @import { EnforcementSetting } from '@lib/enforcement' */
+import {
+  ENFORCEMENT_MODES,
+  GOVERNED_CHECK_IDS,
+  MAXIMUM_RIGOUR,
+  UNATTRIBUTED_REASONS,
+  asActorAttribution,
+  isAttributed,
+  isEnforcementMode,
+  isGovernedCheckId,
+  isReviewDay,
+  rigour,
+  settingInForce
+} from '@lib/enforcement';
+
+import {
+  CUSTOM_ROLE_TEXT,
+  I18N_NAMESPACE_PREFIX,
+  addableAtomRefusal,
+  copyableParentRefusal,
+  grantableIdRefusal
+} from './customRoles';
+/** @import { SystemRoleId } from './businessRoles' */
+import { SYSTEM_ROLES } from './businessRoles';
+import { catalogRoles } from './roles';
+import { calendarRulingRefusal } from './workingCalendarStore';
+import { threePlRefusal, threePlStore } from './threePlStore';
+import { settingRefusal } from './hubSettings';
+import {
+  activeReasonCodes,
+  isActiveReasonCode,
+  parseReasonCodeEntityId,
+  reasonCodeStore
+} from './reasonCodes';
+import { hubSettingsStore } from './hubSettingsStore';
+import {
+  APPLICATION_REQUEST_TYPES,
+  VENDOR_BEARING_REQUEST_TYPE,
+  isApplicationRequestType,
+  isApplicationDeclaration
+} from './flows/supplierApplication.flow';
+
+const BINDINGS = /** @type {Map<string, PolicyHookFn>} */ (new Map());
+
+/**
+ * @param {string} name
+ * @param {PolicyHookFn} fn
+ * @returns {void}
+ */
+export function bindPolicyHook(name, fn) {
+  BINDINGS.set(name, fn);
+}
+
+/**
+ * @param {string} name
+ * @returns {PolicyHookFn | undefined}
+ */
+export function resolvePolicyHook(name) {
+  return BINDINGS.get(name);
+}
+
+// — PO confirm: each confirmed line qty must be > 0 and ≤ the ordered qty, and
+//   the confirmation must cover every line (count matches). ————————————————————
+
+/**
+ * The ONE expression of the per-line confirm bound — shared between the policy
+ * hook below (the LAW) and the SupplierOrders surface (a courtesy mirror that
+ * disables Confirm and explains the bound in the operator's language). One
+ * expression, two consumers, so the mirror structurally cannot drift from the
+ * policy (CP-0 · 2f-c, operator constraint). The policy remains authoritative:
+ * a dispatch that bypasses the UI is still refused here, in this voice.
+ *
+ * `Number.isFinite` (2f-c, SE-Team spec edit): the previous
+ * `typeof q !== 'number'` admitted NaN — `typeof NaN === 'number'`, and NaN
+ * fails BOTH comparisons (`NaN <= 0` and `NaN > ordered` are false), so a
+ * hand-crafted dispatch could stamp `confirmedQty: NaN` into the store and
+ * poison `expectedValue` (Σ confirmedQty × unitPrice), the 3-way-match input.
+ * The 4a-FIND-01 `num()` class, closed here because this policy is the lock
+ * the 2f-c parse gate is built in front of.
+ * @param {number} q
+ * @param {number} ordered
+ * @returns {boolean}
+ */
+export const confirmedQtyWithinBounds = (q, ordered) => Number.isFinite(q) && q > 0 && q <= ordered;
+
+/** @type {PolicyHookFn} */
+const poConfirmQtyWithinOrdered = ({ entityId, payload, target }) => {
+  const po = /** @type {PurchaseOrder | null} */ (target.readEntity(entityId));
+  if (!po) return { ok: false, reason: 'entity missing' };
+  const qtys = payload.confirmedQuantities;
+  if (!Array.isArray(qtys) || qtys.length !== po.lineItems.length) {
+    return { ok: false, reason: 'confirmedQuantities must cover every line' };
+  }
+  for (let i = 0; i < qtys.length; i++) {
+    const q = qtys[i];
+    const ordered = po.lineItems[i].quantity;
+    if (typeof q !== 'number' || !confirmedQtyWithinBounds(q, ordered)) {
+      return {
+        ok: false,
+        reason: `line ${i + 1}: confirmed qty out of bounds (0 < q ≤ ${ordered})`
+      };
+    }
+  }
+  return { ok: true };
+};
+
+bindPolicyHook(POLICY_HOOKS.PO_CONFIRM_QTY_WITHIN_ORDERED, poConfirmQtyWithinOrdered);
+
+// — PO response: adjust / reject / counter-offer review / shipping notice
+//   (REQ-E07-02, REQ-E07-05). Each rule is ONE exported expression, read by the
+//   policy (the law) and by the supplier surface (a courtesy mirror), on the
+//   `confirmedQtyWithinBounds` precedent. ——————————————————————————————————————
+
+// The adjust reasons (§3.6 starter list) and the rejection causes (REQ-E07-02
+// BR-06) are the Hub administrator's lists since BL-32 (`reasonCodes.js`): read
+// IN FORCE at every check, so a code added is accepted at once and a retired
+// code is refused on a new answer while old answers keep it.
+
+/**
+ * @param {unknown} v
+ * @returns {v is string}
+ */
+const isNonBlank = (v) => typeof v === 'string' && v.trim().length > 0;
+
+/**
+ * A real calendar date written `YYYY-MM-DD` (2026-02-30 is refused).
+ * @param {unknown} v
+ * @returns {v is string}
+ */
+export const isIsoDate = (v) => {
+  if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  const d = new Date(`${v}T00:00:00.000Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+};
+
+/** Why a counter-offer line would be refused, or null when it is acceptable. */
+/** @typedef {'unknownLine' | 'reason' | 'note' | 'quantity' | 'date'} CounterOfferRefusal */
+
+/**
+ * @param {Partial<PoLineResponse> | null | undefined} line
+ * @param {Pick<PurchaseOrder, 'lineItems'>} po
+ * @returns {CounterOfferRefusal | null}
+ */
+export function counterOfferRefusal(line, po) {
+  const item = po.lineItems.find((li) => li.id === line?.lineId);
+  if (!line || !item) return 'unknownLine';
+  if (!isActiveReasonCode('poAdjust', line.reasonCode)) return 'reason';
+  if (line.reasonCode === 'other' && !isNonBlank(line.note)) return 'note';
+  // CR-10 is the same bound the confirm verb enforces: 0 < q ≤ ordered.
+  if (
+    typeof line.counterQty !== 'number' ||
+    !confirmedQtyWithinBounds(line.counterQty, item.quantity)
+  ) {
+    return 'quantity';
+  }
+  if (!isIsoDate(line.counterDate)) return 'date';
+  return null;
+}
+
+/** @type {PolicyHookFn} */
+const poAdjustCounterOfferValid = ({ entityId, payload, target }) => {
+  const po = /** @type {PurchaseOrder | null} */ (target.readEntity(entityId));
+  if (!po) return { ok: false, reason: 'entity missing' };
+  const lines = payload.lineResponses;
+  if (!Array.isArray(lines) || lines.length === 0) {
+    return { ok: false, reason: 'an adjustment needs at least one counter-offer line' };
+  }
+  const seen = /** @type {Set<string>} */ (new Set());
+  for (let i = 0; i < lines.length; i++) {
+    const line = /** @type {Partial<PoLineResponse> | null} */ (lines[i]);
+    const refusal = counterOfferRefusal(line, po);
+    if (refusal) return { ok: false, reason: `counter-offer ${i + 1}: ${refusal}` };
+    if (seen.has(String(line?.lineId)))
+      return { ok: false, reason: `counter-offer ${i + 1}: line given twice` };
+    seen.add(String(line?.lineId));
+  }
+  return { ok: true };
+};
+
+bindPolicyHook(POLICY_HOOKS.PO_ADJUST_COUNTER_OFFER_VALID, poAdjustCounterOfferValid);
+
+/** @type {PolicyHookFn} */
+const poRejectCauseGiven = ({ payload }) => {
+  const causes = payload.rejectionCauses;
+  if (!Array.isArray(causes) || causes.length === 0) {
+    return {
+      ok: false,
+      reason: `a rejection needs at least one cause: ${activeReasonCodes('poReject').join(', ')}`
+    };
+  }
+  const unknown = causes.find((c) => !isActiveReasonCode('poReject', c));
+  if (unknown !== undefined) {
+    const retired =
+      typeof unknown === 'string' && reasonCodeStore.get('poReject', unknown) !== undefined;
+    return {
+      ok: false,
+      reason: retired
+        ? `rejection cause '${unknown}' is retired`
+        : `unknown rejection cause '${String(unknown)}'`
+    };
+  }
+  return { ok: true };
+};
+
+bindPolicyHook(POLICY_HOOKS.PO_REJECT_CAUSE_GIVEN, poRejectCauseGiven);
+
+/** @type {PolicyHookFn} */
+const poCounterReviewCommentAuthored = ({ payload }) =>
+  isNonBlank(payload.reviewComment)
+    ? { ok: true }
+    : { ok: false, reason: 'rejecting a counter-offer needs a comment for the supplier' };
+
+bindPolicyHook(POLICY_HOOKS.PO_COUNTER_REVIEW_COMMENT_AUTHORED, poCounterReviewCommentAuthored);
+
+/** @type {PolicyHookFn} */
+const poShippingNoticeDateValid = ({ payload }) =>
+  isIsoDate(payload.expectedCompletionDate)
+    ? { ok: true }
+    : { ok: false, reason: 'expected completion date must be a date (YYYY-MM-DD)' };
+
+bindPolicyHook(POLICY_HOOKS.PO_SHIPPING_NOTICE_DATE_VALID, poShippingNoticeDateValid);
+
+// — GR header disposition = ROLLUP of the per-line sub-flow (census G2). Each
+//   disposition verb is legal ONLY when the lines roll up to its terminal, so
+//   the header is provably derived, never asserted. Reads the GR's own lines
+//   (same-entity), so it binds here rather than in the cross-entity mock layer. —
+/**
+ * @param {GrHeaderDisposition} want
+ * @returns {PolicyHookFn}
+ */
+const grRollup =
+  (want) =>
+  ({ entityId, target }) => {
+    const gr = /** @type {GoodsReceipt | null} */ (target.readEntity(entityId));
+    if (!gr) return { ok: false, reason: 'entity missing' };
+    const got = deriveHeaderDisposition(gr.inspectionResults);
+    return got === want
+      ? { ok: true }
+      : { ok: false, reason: `line rollup is '${got}', not '${want}'` };
+  };
+
+bindPolicyHook(POLICY_HOOKS.GR_ROLLUP_APPROVED, grRollup('Approved'));
+bindPolicyHook(POLICY_HOOKS.GR_ROLLUP_PARTIAL, grRollup('Partially Approved'));
+bindPolicyHook(POLICY_HOOKS.GR_ROLLUP_REJECTED, grRollup('Rejected'));
+
+// — Invoice match = ROLLUP of the match sub-flow (census G2). The header advance
+//   `Submitted → Matched` is legal ONLY when the invoice's match axis has rolled
+//   up to a clean Matched — so the header is derived, never asserted. Reads the
+//   invoice's own matchStatus (same-entity), so it binds here. ————————————————
+/** @type {PolicyHookFn} */
+const invoiceRollupMatched = ({ entityId, target }) => {
+  const inv = /** @type {Invoice | null} */ (target.readEntity(entityId));
+  if (!inv) return { ok: false, reason: 'entity missing' };
+  return isMatched(inv)
+    ? { ok: true }
+    : { ok: false, reason: `match axis is '${inv.matchStatus}', not 'Matched'` };
+};
+
+bindPolicyHook(POLICY_HOOKS.INVOICE_ROLLUP_MATCHED, invoiceRollupMatched);
+
+// — Quotation submit: the bid currency must be one the platform PERMITS
+//   (CP-0 · 2e-c-2). ————————————————————————————————————————————————————————
+//
+// `requiredFields` proves the field is non-empty; it says nothing about what is
+// IN it. Without this, 'CNY' / 'Rp' / 'usd' / 'gold' all clear the floor and get
+// stored as the denomination of a real bid.
+//
+// Reads `payload` only — no entity exists yet on a creation verb, and the answer
+// depends on nothing but the token and the policy list.
+//
+// It shares `isBidCurrency` with the supplier's quote form, on the
+// `confirmedQtyWithinBounds` precedent (2f-c): ONE expression of the rule, two
+// consumers — the policy is the LAW and refuses any dispatch that skips the UI,
+// while the form is a courtesy mirror that never offers an off-list option in
+// the first place. Sharing the expression is what stops the mirror from drifting
+// away from the law.
+//
+// REFUSES BY NAME. The rejected token is quoted back verbatim and the permitted
+// set is spelled out, because "invalid currency" tells a supplier neither what
+// they sent nor what they may send. Deliberately NOT a coercion to the base
+// currency: silently making a foreign bid domestic is the exact defect 2e-c-2
+// exists to close, and doing it in the policy layer would be the same lie with
+// better manners.
+/** @type {PolicyHookFn} */
+const quotationSubmitCurrencyPermitted = ({ payload }) => {
+  const currency = payload.currency;
+  if (typeof currency !== 'string') {
+    return { ok: false, reason: `currency must be a string, got ${typeof currency}` };
+  }
+  return isBidCurrency(currency)
+    ? { ok: true }
+    : {
+        ok: false,
+        reason: `currency '${currency}' is not permitted (${BID_CURRENCIES.join(', ')})`
+      };
+};
+
+bindPolicyHook(POLICY_HOOKS.QUOTATION_SUBMIT_CURRENCY_PERMITTED, quotationSubmitCurrencyPermitted);
+
+// — RFQ FX pin: the recorded basis must be WELL-FORMED (CP-0 · 2e-c-3) ————————
+//
+// An ABSENT pin is safe — the engine refuses `FX_UNPINNED` and says so. A
+// MALFORMED pin is not: it is a basis a comparison would happily be ranked on,
+// producing a plausible number and the wrong winner. So the gate sits here, at
+// the moment the fact is recorded, rather than being re-litigated by every
+// reader.
+//
+// Reads `payload` only — the RFQ's own state does not bear on whether a rate is
+// well-formed, and a pin is legal from every state the verb is legal from.
+//
+// It shares `isUsableRate` and `isBidCurrency` with the scoring engine, on the
+// `confirmedQtyWithinBounds` precedent: one expression of the rule, policy as
+// law, engine as the reader that must never see a value this refused.
+/** @type {PolicyHookFn} */
+const rfqFxPinWellFormed = ({ payload }) => {
+  const quote = payload.quote;
+  if (typeof quote !== 'string' || !isBidCurrency(quote)) {
+    return {
+      ok: false,
+      reason: `quote currency '${String(quote)}' is not permitted (${BID_CURRENCIES.join(', ')})`
+    };
+  }
+  // Pinning the base to itself is not a harmless no-op: it would put a rate on
+  // the ledger for a currency whose rate is 1 BY DEFINITION, and any value other
+  // than 1 would silently re-denominate every domestic bid on the RFQ.
+  if (quote === BASE_CURRENCY) {
+    return { ok: false, reason: `${BASE_CURRENCY} is the comparison base — it has no rate to pin` };
+  }
+  if (!isUsableRate(payload.rate)) {
+    // Names the value: '0', 'NaN' and a missing rate are different mistakes.
+    return {
+      ok: false,
+      reason: `rate must be a finite number greater than 0, got ${String(payload.rate)}`
+    };
+  }
+  const asOf = payload.asOf;
+  if (typeof asOf !== 'string' || !Number.isFinite(new Date(asOf).getTime())) {
+    return { ok: false, reason: `asOf must be a readable date, got ${String(asOf)}` };
+  }
+  if (payload.source !== 'MANUAL' && payload.source !== 'SAP_EXHGRATE') {
+    // Provenance is part of the fact. A pin whose source cannot be named is a
+    // number nobody is accountable for.
+    return {
+      ok: false,
+      reason: `source must be MANUAL or SAP_EXHGRATE, got ${String(payload.source)}`
+    };
+  }
+  return { ok: true };
+};
+
+bindPolicyHook(POLICY_HOOKS.RFQ_FX_PIN_WELL_FORMED, rfqFxPinWellFormed);
+
+// — RFQ create: the rebuilt shape is SOUND when it is sent (RFx spec 2026-09-21)
+//
+// Items (at least one; a known type; a description; at least one variant; every
+// required buyer field filled), quantity breaks (1 to 8, positive, strictly
+// increasing), typed questions, a well-formed sample request, and a currency in
+// `BID_CURRENCIES`. Each arm refuses BY NAME (`NO_ITEMS`, `TIER_COUNT`,
+// `TIERS_NOT_INCREASING`, `ITEM_SPEC_MISSING`, `CURRENCY_NOT_PERMITTED`, …).
+//
+// The rule itself lives in `rfqModel.ts` so the wizard's step gate and the
+// template store call the SAME judgement; this is only its binding. Every arm is
+// conditional on its key being present: a legacy single-item dispatch carries
+// none of them and is not refused for that (the versioning rule).
+bindPolicyHook(POLICY_HOOKS.RFQ_CREATE_VALID, ({ payload }) => {
+  const reason = rfqCreateRefusal(payload);
+  return reason ? { ok: false, reason } : { ok: true };
+});
+
+// — Enforcement set: the recorded relaxation must be GOVERNED (CP-3 · E2) ——————
+//
+// THE DIRECTION RULE, as the operator dispatched it: TIGHTENING IS ALWAYS
+// LEGAL; LOOSENING REQUIRES `reviewBy` AND A NAMED ACTOR. Read the asymmetry
+// the right way round — this is not "loosening needs paperwork", it is
+//
+//   THE SAFEST ACT IS ALWAYS AVAILABLE TO ANYBODY.
+//
+// Setting a check to full rigour needs no review date, no resolved identity and
+// no argument. Everything below it does. Failing in the strict direction costs a
+// blocked dock; failing in the other costs an anonymous unlock, and only one of
+// those is recoverable after the goods have moved.
+//
+// FOUR REFUSALS, each by name:
+//   1. an unrecognised MODE. Note the direction: `effectiveEnforcement` RANKS an
+//      unknown mode at the ceiling (the class rule), but this verb REFUSES it.
+//      Reading and writing want opposite behaviours — a stored typo must not
+//      relax anything, and an authoring typo must be told, not silently
+//      maximised into a block nobody asked for.
+//   2. a malformed ACTOR — including a `RESOLVED` one missing either field.
+//      Coercing it to UNATTRIBUTED would give every typo a legitimate-looking
+//      absence to hide in.
+//   3. a relaxation with NO READABLE `reviewBy`. The type already forbids it;
+//      this is the runtime half, because the payload crosses a seam and a type
+//      guarantee is only as strong as the authoring on the other side.
+//   4. a LOOSENING by an unattributed actor.
+//
+// The baseline for "loosening" is the LAST RECORDED MODE, not the effective
+// (possibly ratcheted) one — two reasons, and both matter. A lapse is a
+// CONSEQUENCE, not a decision, so comparing against it would let the calendar
+// silently re-classify an unchanged decision as a relaxation; and legality would
+// then depend on WHEN the command was dispatched, which is a clock deciding a
+// transition by another route. An unset check baselines at MAXIMUM_RIGOUR, so
+// THE FIRST EVER SETTING BELOW FULL RIGOUR IS A LOOSENING and must be named.
+/** @type {PolicyHookFn} */
+const enforcementSetGoverned = ({ entityId, payload, target }) => {
+  const mode = payload.mode;
+  if (typeof mode !== 'string' || !isEnforcementMode(mode)) {
+    return {
+      ok: false,
+      reason: `mode '${String(mode)}' is not an enforcement mode (${ENFORCEMENT_MODES.join(', ')})`
+    };
+  }
+  if (!isGovernedCheckId(entityId)) {
+    // Defence in depth: `readState` already answers null for an unknown check,
+    // so the dispatcher raised NOT_FOUND before this ran. Stated anyway, because
+    // "the target happens to check it" is a convention and this is a rule.
+    return {
+      ok: false,
+      reason: `'${entityId}' is not a governed check (${GOVERNED_CHECK_IDS.join(', ')})`
+    };
+  }
+  const actor = asActorAttribution(payload.setBy);
+  if (!actor) {
+    return {
+      ok: false,
+      reason:
+        "setBy must be { kind: 'RESOLVED', person: { personId, displayName } } or " +
+        `{ kind: 'UNATTRIBUTED', reason } (${UNATTRIBUTED_REASONS.join(', ')})`
+    };
+  }
+  if (mode !== MAXIMUM_RIGOUR && !isReviewDay(payload.reviewBy)) {
+    return {
+      ok: false,
+      reason: `a relaxation to ${mode} requires reviewBy as a readable YYYY-MM-DD, got ${String(payload.reviewBy)}`
+    };
+  }
+  const ledger = /** @type {readonly EnforcementSetting[] | null} */ (target.readEntity(entityId));
+  const current = settingInForce(ledger ?? undefined, entityId);
+  const baseline = current && isEnforcementMode(current.mode) ? current.mode : MAXIMUM_RIGOUR;
+  if (rigour(mode) < rigour(baseline) && !isAttributed(actor)) {
+    return {
+      ok: false,
+      reason: `loosening ${entityId} from ${baseline} to ${mode} requires a NAMED actor (setBy.kind is UNATTRIBUTED: ${actor.reason})`
+    };
+  }
+  return { ok: true };
+};
+
+bindPolicyHook(POLICY_HOOKS.ENFORCEMENT_SET_GOVERNED, enforcementSetGoverned);
+
+// ── THE PRIVILEGE GRANT (duplicate-and-narrow) ──────────────────────────────
+//
+// ⚠️ **EVERY REFUSAL HERE NAMES THE THING IT REFUSED.** The tenancy arm names
+// the ATOM and both SIDES, because "invalid role" would send somebody to read
+// the form when the answer is that the boundary held.
+//
+// ⚠️ **AND THE TENANCY CHECK IS DELIBERATELY NOT THE FORM'S.** The surface
+// offers only same-side atoms, so a well-behaved caller never reaches this
+// branch — which is exactly why it must exist. A boundary that has held by
+// construction since the beginning must not become a boundary that holds
+// because a dropdown was populated correctly.
+//
+// ⚠️ **`grantedBy` IS VALIDATED, NEVER REQUIRED TO BE *NAMED*, AND THE
+// DIFFERENCE IS THE D2 RULING.** `enforcementSetGoverned` refuses a LOOSENING by
+// an unattributed actor — and a custom role is additive, so every grant is a
+// loosening, 100% of the time. Applying that rule verbatim would refuse every
+// grant this platform can currently make, because `CurrentIdentity.actor` is
+// always `UNATTRIBUTED: NO_PERSON_IN_SESSION`. What pays for the difference is
+// that a grant DOES NOT SURVIVE THE SESSION (`customRoles.js`): an anonymous
+// privilege grant that cannot outlive the browser tab is a demonstrable act,
+// not a durable ungoverned one. **The day an IdP answers, this is where the
+// `isAttributed` guard lands and where durability becomes arguable.**
+/** @type {PolicyHookFn} */
+const roleGrantGoverned = ({ entityId, payload }) => {
+  const parentRefusal = copyableParentRefusal(entityId);
+  if (parentRefusal) return { ok: false, reason: parentRefusal };
+  const parent = /** @type {SystemRoleId} */ (entityId);
+
+  const roleId = payload.roleId;
+  if (typeof roleId !== 'string') {
+    return { ok: false, reason: `roleId must be a string, got ${typeof roleId}` };
+  }
+  const idRefusal = grantableIdRefusal(roleId);
+  if (idRefusal) return { ok: false, reason: idRefusal };
+
+  // ⚠️ `displayName` AND `description` ARE RENDERED BY PASSING THEM TO `t()`
+  // AS THEIR OWN KEY (`roleModel.ts`), so user text comes back verbatim in both
+  // locales. The only string that would resolve to something else is one
+  // prefixed with this app's loaded namespace — refused by name. Punctuation is
+  // NOT refused: it was probed and does not truncate.
+  for (const field of /** @type {const} */ (['displayName', 'description'])) {
+    const value = payload[field];
+    if (typeof value !== 'string' || !CUSTOM_ROLE_TEXT.test(value.trim())) {
+      return { ok: false, reason: `${field} must be 2-80 characters of text` };
+    }
+    if (I18N_NAMESPACE_PREFIX.test(value.trim())) {
+      return {
+        ok: false,
+        reason: `${field} may not begin with a translation namespace - it would render truncated`
+      };
+    }
+  }
+
+  const adds = payload.adds;
+  if (!Array.isArray(adds) || adds.some((a) => typeof a !== 'string')) {
+    return { ok: false, reason: 'adds must be an array of permission strings' };
+  }
+  const catalog = catalogRoles();
+  const held = /** @type {Set<string>} */ (new Set(SYSTEM_ROLES[parent]));
+  for (const atom of /** @type {readonly string[]} */ (adds)) {
+    if (held.has(atom)) {
+      return {
+        ok: false,
+        reason: `'${atom}' is already held by '${parent}' - an addition must add something`
+      };
+    }
+    const refusal = addableAtomRefusal(parent, atom, catalog);
+    if (refusal) return { ok: false, reason: refusal };
+  }
+
+  if (!asActorAttribution(payload.grantedBy)) {
+    return {
+      ok: false,
+      reason:
+        "grantedBy must be { kind: 'RESOLVED', person: { personId, displayName } } or " +
+        `{ kind: 'UNATTRIBUTED', reason } (${UNATTRIBUTED_REASONS.join(', ')})`
+    };
+  }
+  return { ok: true };
+};
+
+bindPolicyHook(POLICY_HOOKS.ROLE_GRANT_GOVERNED, roleGrantGoverned);
+
+// ── BL-51 · ONE 3PL ON THE ADMINISTRATOR'S LIST ──────────────────────────────
+//
+// ⚠️ **THE SAME PREDICATE THE LINK IS BUILT THROUGH** (`threePlRefusal` →
+// `trackingPatternRefusal`), so "an address the verb would accept" and "an
+// address an ASN links to" are one rule in one place. `entityId` IS the 3PL id —
+// there is no id payload field. A name is unique across the list, because a
+// supplier picks a 3PL by its name and two identical names would make the pick
+// a guess.
+/** @type {PolicyHookFn} */
+const threePlGoverned = ({ entityId, payload }) => {
+  const refusal = threePlRefusal(
+    entityId,
+    payload.name,
+    payload.trackingUrlPattern,
+    payload.active
+  );
+  if (refusal) return { ok: false, reason: refusal };
+  const name = String(payload.name).trim().toLowerCase();
+  const clash = threePlStore
+    .all()
+    .find((r) => r.id !== entityId && r.name.trim().toLowerCase() === name);
+  if (clash)
+    return { ok: false, reason: `another 3PL on the list is already called ${clash.name}` };
+  if (!asActorAttribution(payload.setBy)) {
+    return {
+      ok: false,
+      reason:
+        "setBy must be { kind: 'RESOLVED', person: { personId, displayName } } or " +
+        `{ kind: 'UNATTRIBUTED', reason } (${UNATTRIBUTED_REASONS.join(', ')})`
+    };
+  }
+  return { ok: true };
+};
+
+// ── BL-50 · A RULING ON ONE DAY OF THE HUB'S WORKING CALENDAR ────────────────
+//
+// ⚠️ **THE SAME PREDICATE THE STORE CALLS ON READ** (`calendarRulingRefusal`),
+// so "a ruling the verb would have accepted" is one rule in one place, not two
+// vocabularies that agree until the day they do not. Every refusal names what
+// it refused. `entityId` IS the date — there is no date payload field.
+/** @type {PolicyHookFn} */
+const calendarDayGoverned = ({ entityId, payload }) => {
+  const refusal = calendarRulingRefusal(entityId, payload.kind, payload.reason);
+  if (refusal) return { ok: false, reason: refusal };
+  if (!asActorAttribution(payload.setBy)) {
+    return {
+      ok: false,
+      reason:
+        "setBy must be { kind: 'RESOLVED', person: { personId, displayName } } or " +
+        `{ kind: 'UNATTRIBUTED', reason } (${UNATTRIBUTED_REASONS.join(', ')})`
+    };
+  }
+  return { ok: true };
+};
+
+bindPolicyHook(POLICY_HOOKS.THREE_PL_GOVERNED, threePlGoverned);
+bindPolicyHook(POLICY_HOOKS.CALENDAR_DAY_GOVERNED, calendarDayGoverned);
+
+// ── BL-32 · ONE RULE VALUE THE HUB ADMINISTRATOR CHANGES ─────────────────────
+//
+// ⚠️ **THE SAME PREDICATE THE STORE CALLS ON READ** (`settingRefusal`), checked
+// against the values IN FORCE, so an order rule (a band's ends, min below max)
+// is judged on the state the change would produce. `entityId` IS the key —
+// there is no key payload field. `value` must be PRESENT (null is a value: it
+// removes a stale-period override), which the dispatcher's required-field rule
+// cannot say without refusing that null.
+/** @type {PolicyHookFn} */
+const settingGoverned = ({ entityId, payload }) => {
+  if (!Object.prototype.hasOwnProperty.call(payload, 'value')) {
+    return { ok: false, reason: `value is required for ${entityId}` };
+  }
+  const refusal = settingRefusal(entityId, payload.value, hubSettingsStore.state());
+  if (refusal) return { ok: false, reason: refusal };
+  if (!asActorAttribution(payload.setBy)) {
+    return {
+      ok: false,
+      reason:
+        "setBy must be { kind: 'RESOLVED', person: { personId, displayName } } or " +
+        `{ kind: 'UNATTRIBUTED', reason } (${UNATTRIBUTED_REASONS.join(', ')})`
+    };
+  }
+  return { ok: true };
+};
+
+bindPolicyHook(POLICY_HOOKS.SETTING_GOVERNED, settingGoverned);
+
+// ── BL-32 · ONE CODE ON ONE REASON LIST ──────────────────────────────────────
+// The same predicate the store calls on read (`reasonCodeStore.refusal`), so a
+// hand-edited list is held to the verb's rule. `entityId` IS `<list>:<code>`.
+/** @type {PolicyHookFn} */
+const reasonCodeGoverned = ({ entityId, payload }) => {
+  const id = parseReasonCodeEntityId(entityId);
+  if (!id) return { ok: false, reason: `'${entityId}' is not <list>:<code>` };
+  const refusal = reasonCodeStore.refusal(
+    id.list,
+    id.code,
+    payload.labelEn,
+    payload.labelId,
+    payload.active
+  );
+  if (refusal) return { ok: false, reason: refusal };
+  if (!asActorAttribution(payload.setBy)) {
+    return {
+      ok: false,
+      reason:
+        "setBy must be { kind: 'RESOLVED', person: { personId, displayName } } or " +
+        `{ kind: 'UNATTRIBUTED', reason } (${UNATTRIBUTED_REASONS.join(', ')})`
+    };
+  }
+  return { ok: true };
+};
+
+bindPolicyHook(POLICY_HOOKS.REASON_CODE_GOVERNED, reasonCodeGoverned);
+
+// ── REQ-E06-04 BR-06 · ONE SUPPLIER × MATERIAL'S MAXIMUM STOCK ───────────────
+// The same predicate the page's form calls (`maxStockRefusal`). `quantity` must
+// be PRESENT — a whole number above zero, or null to clear — so an omitted key
+// can never be read as "cleared".
+bindPolicyHook(POLICY_HOOKS.MAX_STOCK_GOVERNED, ({ entityId, payload }) => {
+  if (!parseMaxStockEntityId(entityId))
+    return { ok: false, reason: `'${entityId}' is not <supplierId>|<materialCode>` };
+  if (!('quantity' in payload))
+    return { ok: false, reason: 'quantity is required: a whole number, or null to clear it' };
+  const refusal = maxStockRefusal(payload.quantity);
+  if (refusal) return { ok: false, reason: refusal };
+  if (!asActorAttribution(payload.setBy)) {
+    return {
+      ok: false,
+      reason:
+        "setBy must be { kind: 'RESOLVED', person: { personId, displayName } } or " +
+        `{ kind: 'UNATTRIBUTED', reason } (${UNATTRIBUTED_REASONS.join(', ')})`
+    };
+  }
+  return { ok: true };
+});
+
+// ── §67 · PR REJECT — THE REASON IS SUBSTANCE, NOT PRESENCE ──────────────────
+//
+// `requiredFields: ['rejectionReason']` proves the key is there. This proves
+// somebody wrote something in it. Both are needed and the split is the point:
+// the dispatcher's rule 5 is `isEmpty`, and `isEmpty('   ')` is FALSE — so a
+// "required" reason without this hook admits the space bar, and A REQUIRED
+// FIELD THAT ADMITS THE SPACE BAR IS A SUGGESTION WITH A VALIDATION MESSAGE.
+//
+// ⚠️ THE LIMIT, STATED: it proves a non-blank string. It cannot prove the text
+// is TRUE, relevant, or responsive to the requisition — no value-level guard
+// can, exactly as `RR_SUBMIT_QTY_FLOOR` cannot tell 2400 from 2.4. The surface
+// disables its own submit until the box is non-empty; this is what stands
+// behind a hand-crafted dispatch that never sees the surface.
+bindPolicyHook(POLICY_HOOKS.PR_REJECT_REASON_AUTHORED, ({ payload }) => {
+  const value = payload.rejectionReason;
+  if (typeof value !== 'string') {
+    return { ok: false, reason: `rejectionReason must be text, got ${typeof value}` };
+  }
+  if (value.trim() === '') {
+    return {
+      ok: false,
+      reason:
+        'rejectionReason is blank — a rejected requisition must say something ' +
+        'the requester can read and revise against'
+    };
+  }
+  return { ok: true };
+});
+
+// ── §68 · PR REVISE — WHAT CHANGED IS SUBSTANCE, NOT PRESENCE ───────────────
+//
+// The twin of `PR_REJECT_REASON_AUTHORED`, and the field it guards had been
+// REQUIRED since PF-1a while being discarded before the document was written.
+// A required field whose value evaporates is a validation message, not a
+// record; a required field that admits the space bar is a suggestion with a
+// validation message. Both halves are now closed on this verb.
+bindPolicyHook(POLICY_HOOKS.PR_REVISION_NOTE_AUTHORED, ({ payload }) => {
+  const value = payload.revisionNote;
+  if (typeof value !== 'string') {
+    return { ok: false, reason: `revisionNote must be text, got ${typeof value}` };
+  }
+  if (value.trim() === '') {
+    return {
+      ok: false,
+      reason:
+        'revisionNote is blank — a requisition returning to the approval queue must say what ' +
+        'changed, or the approver sees the document they already declined'
+    };
+  }
+  return { ok: true };
+});
+
+// ── §82 · SUPPLIERDOC REJECT — THE REASON THE SUPPLIER WILL READ ────────────
+//
+// The third instance of the same lesson, and the one with a reader on the other
+// end: §80's `RefusalBlock` renders this text word for word to the supplier the
+// refusal is about. A blank reason there is not a validation gap, it is a
+// refusal notice with nothing written in it — the dead end §80 existed to end,
+// restored by the space bar.
+bindPolicyHook(POLICY_HOOKS.SUPPLIERDOC_REFUSAL_AUTHORED, ({ payload }) => {
+  const value = payload.rejectionReason;
+  if (typeof value !== 'string') {
+    return { ok: false, reason: `rejectionReason must be text, got ${typeof value}` };
+  }
+  if (value.trim() === '') {
+    return {
+      ok: false,
+      reason:
+        'rejectionReason is blank — the supplier reads this text verbatim on their own ' +
+        'documents page, so a refusal with nothing written in it tells them only that ' +
+        'they failed'
+    };
+  }
+  return { ok: true };
+});
+
+// ── §68 · PR APPROVE — THE DECIDER IS NAMED, AND NOT BY THE CALLER ──────────
+//
+// ⚠️ **THIS IS C10 §6.2's SECOND HALF, AND IT IS THE FIRST IMPLEMENTATION OF
+// IT IN THE TREE.** §6.2 states the rule in two parts and records that the
+// second is the one that gets forgotten:
+//
+//   1. the resolved actor comes from the SESSION, never from a payload;
+//   2. a payload-supplied `RESOLVED` actor is REFUSED BY NAME ON WRITE — *"not
+//      ignored, not overwritten, not silently replaced by the session's.
+//      Refused, loudly."*
+//
+// The overwrite is the tempting build and it is the one §6.2 rules out: a
+// silent correction of an attribution is a caller that believes it attributed
+// an act and a record that says somebody else did.
+//
+// ⚠️ **AND THE REFUSAL IS BY KEY, NOT BY VALUE-SHAPE.** Refusing only a
+// well-formed `RESOLVED` actor would let a malformed one through to be dropped
+// silently, which is the same silent correction wearing a type error. Anything
+// under `approvedBy` is refused, because the caller has no business writing
+// that key at all — the payload is not where attribution lives.
+//
+// ⚠️ **AN `UNATTRIBUTED` SESSION ACTOR IS ACCEPTED, AND MUST BE.** It is a
+// claim about a FAILURE TO RESOLVE, which is exactly what this platform has
+// today (`NO_PERSON_IN_SESSION`) and exactly what makes the gap countable.
+// Refusing it would make approval unreachable and would replace an honest
+// absence with no record at all.
+bindPolicyHook(POLICY_HOOKS.PR_APPROVAL_ATTRIBUTED, ({ payload, scope }) => {
+  if ('approvedBy' in payload) {
+    return {
+      ok: false,
+      reason:
+        'approvedBy is REFUSED in the payload — an approval is attributed from the session, ' +
+        'never from the caller (C10 §6.2). A caller that could set it could backdate its own ' +
+        'audit entry'
+    };
+  }
+  const actor = asActorAttribution(scope.actor);
+  if (!actor) {
+    return {
+      ok: false,
+      reason:
+        'the commanding scope carries no actor — an approval that cannot say who decided it ' +
+        'is not a record, and UNATTRIBUTED is available to any caller that has no person'
+    };
+  }
+  return { ok: true };
+});
+
+// ── B1 · SUPPLIER APPLICATION — THE BIRTH GUARDS ────────────────────────────
+//
+// All three are PURE: they read the payload and, for the vendor rule, the
+// TARGET's own resolver. No roster, no fixture and no store crosses into this
+// layer — which is what lets the resolution live in the data layer that owns
+// the roster while the OBLIGATION lives here, next to every other obligation.
+
+// The request type is one of three, and an unknown token is refused BY NAME.
+// `requiredFields` proves presence; nothing else proves membership, so without
+// this a hand-crafted dispatch stores a request type no reader recognises and
+// every downstream branch takes its else-arm silently.
+bindPolicyHook(POLICY_HOOKS.APPLICATION_REQUEST_TYPE_KNOWN, ({ payload }) => {
+  const value = payload.requestType;
+  if (!isApplicationRequestType(value)) {
+    return {
+      ok: false,
+      reason:
+        `requestType ${JSON.stringify(value)} is not one of ` +
+        `${APPLICATION_REQUEST_TYPES.join(' | ')} — an unrecognised request type would be ` +
+        'stored as one and read by nothing'
+    };
+  }
+  return { ok: true };
+});
+
+// ── THE VENDOR RESOLUTION, MADE BINDING ─────────────────────────────────────
+//
+// ⚠️ **THE RESOLVER IS THE TARGET'S `creationOwner`, READ THROUGH `ctx.target`
+// — THERE IS EXACTLY ONE OF IT, AND THIS HOOK DOES NOT CONTAIN A SECOND.** A
+// hook that re-implemented the roster lookup would be the copy that drifts, and
+// it would put the platform roster inside the transitions layer, which knows
+// about no data at all.
+//
+// ⚠️ **WHY THIS IS NOT `requireCreationOwner: true`, MEASURED.** That flag is
+// per-TARGET: the dispatcher refuses ANY buyer creation whose owner resolves
+// null. Two of the three request types have no existing vendor by definition,
+// so their owner is legitimately null and the flag would refuse them — the
+// majority path, including every genuinely new supplier. The flag cannot say
+// "required when", and this is the layer that can.
+//
+// ⚠️ **THE LIMIT, STATED.** It proves the named vendor EXISTS on the roster. It
+// cannot prove the applicant is that vendor, or that the person filling the
+// form meant that one — no value-level guard can, exactly as the quantity floor
+// cannot tell 2400 from 2.4.
+bindPolicyHook(POLICY_HOOKS.APPLICATION_INTERNAL_VENDOR_RESOLVED, ({ payload, target }) => {
+  if (payload.requestType !== VENDOR_BEARING_REQUEST_TYPE) return { ok: true };
+  if (!target.creationOwner) {
+    return {
+      ok: false,
+      reason:
+        'the target implements no creationOwner, so the named vendor cannot be resolved ' +
+        'against anything — an application claiming an existing vendor must be checked, ' +
+        'never taken on the payload’s word'
+    };
+  }
+  if (target.creationOwner(payload) === null) {
+    return {
+      ok: false,
+      reason:
+        `s4Vendor ${JSON.stringify(payload.s4Vendor ?? null)} resolves to no vendor the ` +
+        'governed roster names — a request to extend a supplier that does not exist would ' +
+        'sit in the queue forever with nobody able to say who it is about'
+    };
+  }
+  return { ok: true };
+});
+
+// The refusal a person will eventually have to deliver. Fourth instance of the
+// substance-not-presence guard, and the one whose reader is furthest from the
+// act: the applicant has no seat here, so whoever tells them has nothing but
+// this text to tell them with.
+bindPolicyHook(POLICY_HOOKS.APPLICATION_REFUSAL_AUTHORED, ({ payload }) => {
+  const value = payload.rejectionReason;
+  if (typeof value !== 'string') {
+    return { ok: false, reason: `rejectionReason must be text, got ${typeof value}` };
+  }
+  if (value.trim() === '') {
+    return {
+      ok: false,
+      reason:
+        'rejectionReason is blank — a refused application is the one record anybody will have ' +
+        'when the applicant asks why, and an empty one answers nothing'
+    };
+  }
+  return { ok: true };
+});
+
+// Declarations are OPTIONAL — an application carrying none is legal and common.
+// A declarations key that is PRESENT and malformed is not: reading the good
+// entries and dropping the rest would subtract from data somebody supplied,
+// silently, and leave nothing anywhere saying which claim went missing.
+bindPolicyHook(POLICY_HOOKS.APPLICATION_DECLARATIONS_WELL_FORMED, ({ payload }) => {
+  if (!('declarations' in payload) || payload.declarations === undefined) {
+    return { ok: true };
+  }
+  const value = payload.declarations;
+  if (!Array.isArray(value)) {
+    return {
+      ok: false,
+      reason: `declarations must be a list, got ${typeof value}`
+    };
+  }
+  const bad = value
+    .map((d, i) => (isApplicationDeclaration(d) ? null : i))
+    .filter(/** @returns {i is number} */ (i) => i !== null);
+  if (bad.length > 0) {
+    return {
+      ok: false,
+      reason:
+        `declarations ${bad.join(', ')} name no known document or carry a blank reference — ` +
+        'a declaration is a claim somebody will later be asked to stand behind, and one with ' +
+        'nothing in it cannot be looked up or refused'
+    };
+  }
+  return { ok: true };
+});

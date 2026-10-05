@@ -149,7 +149,7 @@ describe('t_mrpcontroller_set (MR-5 BR-02)', () => {
   it('a malformed code is not addressable (NOT_FOUND, the threePl shape); a SAP code passes', async () => {
     // The target's `readState` answers null for a code that fails the shape, so
     // the dispatcher refuses before the hook; the page pre-check names it
-    // MRP_CONTROLLER_CODE_INVALID (mrpControllerStore.test.ts).
+    // MRP_CONTROLLER_CODE_INVALID (mrpControllerStore.test.js).
     await expect(setController('p12', { name: 'Desk', userLabels: ['A'] })).rejects.toMatchObject({ code: 'NOT_FOUND' });
     expect(mrpControllerStore.changes()).toEqual([]);
     expect((await setController('P14', { name: 'Desk', userLabels: ['A'] })).status).toBe('done');

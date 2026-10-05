@@ -68,7 +68,7 @@ const fmtPct = (n: number): string => `${n.toFixed(2)}%`;
 
 /**
  * CR-12 (BL-44) — which rule applied to one price, and what it decided. The
- * tolerances are read from `fulfilmentConfig.ts`, never written here, so the
+ * tolerances are read from `fulfilmentConfig.js`, never written here, so the
  * screen cannot disagree with the rule.
  */
 export const PriceCheckCell: React.FC<{

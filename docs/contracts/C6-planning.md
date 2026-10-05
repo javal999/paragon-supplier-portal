@@ -125,7 +125,7 @@ For each PLANNED row, in order:
    await svc.commands.dispatch(scope, { transitionId, entity, entityId, payload })
    ```
    The dispatcher applies the FULL validation chain unchanged
-   (`src/services/transitions/dispatcher.ts:4-14`): transition-exists + CommandTarget →
+   (`src/services/transitions/dispatcher.js:4-14`): transition-exists + CommandTarget →
    `QueryScope` (scope enforced on every command exactly as reads) → `requiredRole` →
    legality (`from` includes currentState) → `requiredFields` → `policyHooks` → apply +
    emit one `TransitionEvent` (DR-10 audit). **The grid gets no validation shortcut** — it is
@@ -141,12 +141,12 @@ For each PLANNED row, in order:
 ### 3.1 Both failure channels are BINDING
 
 The dispatcher reports failure through **two distinct channels**
-(`dispatcher.ts:16-18`) and the pipeline MUST handle both:
+(`dispatcher.js:16-18`) and the pipeline MUST handle both:
 
 | Channel | Source | How it surfaces |
 |---|---|---|
-| **Thrown `DataError`** | Hard authorization failure — `SCOPE_DENIED` / `NOT_FOUND` (`dispatcher.ts:197, :208, :211`) | The `await dispatch(...)` **rejects** — the pipeline must `catch`. |
-| **`result.status === 'failed'`** | Domain rejection — `ILLEGAL_TRANSITION`, `MISSING_FIELDS`, `ROLE_NOT_PERMITTED`, `POLICY_REJECTED` (`dispatcher.ts:217, :222, :228, :243`) | Resolves normally with `status:'failed'` + `reason` — the pipeline must **test the status**. |
+| **Thrown `DataError`** | Hard authorization failure — `SCOPE_DENIED` / `NOT_FOUND` (`dispatcher.js:197, :208, :211`) | The `await dispatch(...)` **rejects** — the pipeline must `catch`. |
+| **`result.status === 'failed'`** | Domain rejection — `ILLEGAL_TRANSITION`, `MISSING_FIELDS`, `ROLE_NOT_PERMITTED`, `POLICY_REJECTED` (`dispatcher.js:217, :222, :228, :243`) | Resolves normally with `status:'failed'` + `reason` — the pipeline must **test the status**. |
 
 **Contract:** a row stays **PLANNED with reason attached regardless of which channel the
 failure arrives through.** The pipeline catches throws AND tests `result.status`; it never
@@ -168,7 +168,7 @@ inherits it, it does not introduce it.
 A plan push is semantically ONE act of intent that fans out into N row-dispatches. The
 durable audit-of-why should group those N events under **one `causationId`**, with the plan
 rationale carried in the dispatch payloads — the same grouping the RFQ-award cascade already
-produces (`events.ts:23-31`; `dispatcher.ts:170-179, :276-297`: a cascaded transition carries
+produces (`events.js:23-31`; `dispatcher.js:170-179, :276-297`: a cascaded transition carries
 the source's `correlationId` as its `causationId`, grouping the fan-out **without** collapsing
 each transition's own 1:1 `correlationId` / settle-ability).
 
@@ -177,18 +177,18 @@ each transition's own 1:1 `correlationId` / settle-ability).
 This clause states **intent**, not an existing capability. Harvested truth:
 
 - `causationId` is set **only inside the dispatcher's private cascade path** — the internal
-  `dispatch(scope, input, causationId)` third argument (`dispatcher.ts:170`). It is **not**
+  `dispatch(scope, input, causationId)` third argument (`dispatcher.js:170`). It is **not**
   on the public seam: `ICommandService.dispatch(scope, input)`
   (`src/services/data/types.ts:1080`) accepts **no** caller-supplied correlation.
 - Therefore N independent `svc.commands.dispatch(...)` calls from a plan push each mint their
-  own unrelated `correlationId` (`dispatcher.ts:151`) and **cannot be grouped** under one
+  own unrelated `correlationId` (`dispatcher.js:151`) and **cannot be grouped** under one
   causation today.
 
 **Deferral (the seam extension is a G1/G2 dependency), the honest options:**
 1. **Caller-supplied correlation** — extend `ICommandService` so a caller passes a group id
    the dispatcher stamps as `causationId` on each event. Additive to the seam.
 2. **Model-push-as-cascade-source** — a single `t_plan_push` source transition whose cascade
-   resolver (`dispatcher.ts:115`, `CascadeContext`) fans out the row-commands, reusing the
+   resolver (`dispatcher.js:115`, `CascadeContext`) fans out the row-commands, reusing the
    existing causation grouping with zero seam change.
 
 The **G2 `Plan` canonical entity** (Stage G plan §4) is the durable-audit end state: pushes
@@ -303,7 +303,7 @@ GOVERNED DECISION:
 - the DR-10 **`TransitionEvent`** records **actor + timestamp** (already on the event) **+
   suggestedQty→acceptedQty + reason + wasAdjusted**, carried in an optional **`decision`** field
   the dispatcher forwards **VERBATIM** — opaque, never interpreted or validated, exactly as
-  `causationId` is (`events.ts:23-31`). This is **reuse of the DR-10 audit, NOT a new event
+  `causationId` is (`events.js:23-31`). This is **reuse of the DR-10 audit, NOT a new event
   type**, and it is orthogonal to G0.1-FIND-01 (that clause is about causation *grouping*; this
   is one event's provenance).
 
@@ -318,8 +318,8 @@ mints a Draft that stays simulated, **never a live procurement instruction**.
 reason-gate is headless-provable (`plan-grid/IntakeAdjustDrawer.tsx`); the push is
 `usePurchaseRequisitionCreate` (`services/query/commandHooks.ts`) through the G1.1
 `purchaseRequisition` target; and the opaque carrier is `CommandDecision`
-(`services/data/types.ts`) forwarded by `dispatcher.ts:143-166` onto the `TransitionEvent`
-(`transitions/events.ts`).
+(`services/data/types.ts`) forwarded by `dispatcher.js:143-166` onto the `TransitionEvent`
+(`transitions/events.js`).
 
 ---
 
@@ -328,8 +328,8 @@ reason-gate is headless-provable (`plan-grid/IntakeAdjustDrawer.tsx`); the push 
 Generated FORK-3 (machine-harvest from code-truth + thin connecting prose) at `main` #66.
 Every seam cited traces to a `file:line` in the shipped tree:
 `src/services/data/types.ts` (`ICommandService` :1078-1090, `IDataService` :1205),
-`src/services/transitions/dispatcher.ts` (validation chain :4-14, failure channels + causation
-:151-297), `src/services/transitions/events.ts` (`TransitionEvent` / causation :14-46),
+`src/services/transitions/dispatcher.js` (validation chain :4-14, failure channels + causation
+:151-297), `src/services/transitions/events.js` (`TransitionEvent` / causation :14-46),
 `src/services/query/commandHooks.ts` (dispatch+invalidate pattern :29-156),
 `src/services/query/useServiceQuery.ts` (`scopeKey` read pattern :19-38),
 `src/services/liveness/registry.ts` (`liveness`/`isLive`/`Tier` :45-184),

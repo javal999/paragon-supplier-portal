@@ -22,7 +22,7 @@
 //
 // HOLDS NO DOMAIN RULE, deliberately (the `grLineQuantities` discipline). The
 // bound `0 < q ≤ ordered` is the POLICY's law, expressed once in
-// `confirmedQtyWithinBounds` (`services/transitions/policies.ts`) and shared
+// `confirmedQtyWithinBounds` (`services/transitions/policies.js`) and shared
 // with the surface's courtesy mirror — it does not belong in a parser, and
 // duplicating it here would be a second recipe. This module answers only "what
 // number did the operator type", never "is that number allowed".

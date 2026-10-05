@@ -13,7 +13,7 @@
 // It is not: re-posting would mint a SECOND correlationId and orphan the first,
 // whose `pending` entry never clears. The interim's ONE exit is the `settlesTo`
 // settlement edge, so the re-attempt is the SETTLE, on the SAME correlationId —
-// which `dispatcher.ts` deliberately keeps re-settleable (*"Leaving the command
+// which `dispatcher.js` deliberately keeps re-settleable (*"Leaving the command
 // `submitted` is what makes the named remedy TRUE"*). No transition changes.
 //
 // ⚠️ **RULE 4 — BOTH DIRECTIONS, AND THE KNOWN-GOOD RUNS FIRST.** A surface that

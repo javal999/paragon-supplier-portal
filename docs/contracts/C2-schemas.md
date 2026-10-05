@@ -153,7 +153,7 @@ entity that carries a clock-derived display state. It is the home for:
 
 - **F0.4-FIND-01** — obligation / contract / supplier-document clock projections.
 - **The ONE canonical compliance machine** (census #11–15 — the 5 fragmented compliance
-  vocabularies collapsed) — **LANDED at I3.1** as the 14th flow (`compliance.flow.ts`, inert) +
+  vocabularies collapsed) — **LANDED at I3.1** as the 14th flow (`compliance.flow.js`, inert) +
   the `ComplianceRegistryEntry` type + `getComplianceRegistry` read + `complianceProjection.ts`.
   The projection computes `status`/`daysRemaining` (clock, law 0.5), `schemeValid` (issuer axis),
   and `remindEligible` at read time — the generalization of `invoiceProjection`. **Fixture-first +

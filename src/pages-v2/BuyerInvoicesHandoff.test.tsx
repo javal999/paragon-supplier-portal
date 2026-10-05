@@ -15,7 +15,7 @@ import { NO_PERSON } from '@context/noPerson';
 //   > NEVER AS AN ABSENT AFFORDANCE.
 //
 // **This is the thing most likely to be right in the derivation and wrong on
-// the screen** (operator), and `handoff.test.ts` cannot catch that: it proves
+// the screen** (operator), and `handoff.test.js` cannot catch that: it proves
 // the machine knows finance owns `invoice:pay`, not that a procurement user
 // ever SEES so. The failure mode is a green derivation over a footer that
 // silently lost its button — which is exactly the defect

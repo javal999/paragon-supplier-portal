@@ -145,7 +145,7 @@ export const sdcConsolidationEn = {
   'sdc.underReview.chip': 'Under review',
 
   // ⚠️ THE TITLE SAYS TERMINAL BECAUSE THE FLOW SAYS TERMINAL — no transition in
-  // `requirementResponse.flow.ts` declares `Accepted` as a `from` state, so this
+  // `requirementResponse.flow.js` declares `Accepted` as a `from` state, so this
   // is the last move the line ever makes. Derived, not asserted in prose.
   'sdc.accept.cta': 'Accept',
   'sdc.accept.ctaTitle': 'Accept this confirmation and close the line — {{material}} · {{period}}',

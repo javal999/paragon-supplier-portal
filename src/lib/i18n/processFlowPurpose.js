@@ -8,8 +8,8 @@
 // opposite by design: each value explains ONE registered thing.
 //
 // ── ⚠️ EVERY KEY IS NAMED BY AN ANNOTATION, AND EVERY ANNOTATION IS HERE ────
-//   `services/transitions/annotations.ts` holds the keys; this file holds the
-//   words. `annotations.test.ts` pins the two together in BOTH directions, so
+//   `services/transitions/annotations.js` holds the keys; this file holds the
+//   words. `annotations.test.js` pins the two together in BOTH directions, so
 //   an orphan key here is red and a keyless annotation there is red. Nothing in
 //   this file is looked up by concatenation — see the annotation header.
 //

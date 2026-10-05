@@ -269,7 +269,7 @@ const INVOICES_RAW: Invoice[] = [
   // ⚠️ **WHY THIS ROW EXISTS, SAID PLAINLY: WITHOUT IT NO CLICK PATH IN THIS
   // PORTAL REACHES `Matched`, AND `Matched` IS THE ONLY FROM-STATE OF
   // `t_invoice_approve`.** The cascade that produces it is
-  // `t_gr_post → t_invoice_match` (`cascades.ts`), and it fires the header verb
+  // `t_gr_post → t_invoice_match` (`cascades.js`), and it fires the header verb
   // only when `deriveMatchVerdict` returns a genuine `Matched` — which needs a
   // receipt this portal can still POST (`from: ['Approved','Partially
   // Approved']`), on a PO that an awaiting invoice names, whose invoiced amount
@@ -281,7 +281,7 @@ const INVOICES_RAW: Invoice[] = [
   // `inv-mus-0214` ↔ `PO-2025-00102` at 875,000,000 — is unreachable because
   // that PO's only receipt, `GR-2026-014`, has already POSTED, and `t_gr_post`
   // is illegal from `Posted to SAP`. Moving it back would empty the only
-  // positive case `receiptsForInvoice` has (`invoiceMatchPairing.test.ts`), so
+  // positive case `receiptsForInvoice` has (`invoiceMatchPairing.test.js`), so
   // the receipt side is where this must NOT be fixed.
   //
   // `PO-2025-00104` is the honest opposite: 200 KG × 2,700,000 = 540,000,000

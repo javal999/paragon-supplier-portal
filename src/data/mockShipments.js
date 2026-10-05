@@ -20,7 +20,7 @@ import { shiftFields } from '@services/data/fixturePresent';
  */
 // ⚠️ `'Delayed'` LEFT THIS UNION — it is COMPUTED
 // (`services/data/shipmentDisplayState.ts`). It was the ninth member of a
-// union whose flow declares eight states, and `shipment.flow.ts` has said so
+// union whose flow declares eight states, and `shipment.flow.js` has said so
 // since F0.4: a read-time PROJECTION, deliberately absent from `states`. The
 // union now equals `getFlow('shipment').states` exactly, which
 // `shipmentDisplayState.test.ts` asserts bilaterally.

@@ -52,7 +52,7 @@ export function useVerbAvailability(atom) {
  * about what the seat IS would put a line on screen that contradicts the button
  * beside it. One source (`identity.businessRoles`), one answer.
  *
- * ⚠️ **PASS THE CANONICAL STATE, NEVER A DISPLAY LABEL.** `legality.ts` states
+ * ⚠️ **PASS THE CANONICAL STATE, NEVER A DISPLAY LABEL.** `legality.js` states
  * the rule at length: a projection collapses states on purpose (`toBuyerLabel`
  * turns `Approved` into `Overdue` past its due date), so a label asked a machine
  * question returns a confident wrong answer. Callers hold the canonical state —

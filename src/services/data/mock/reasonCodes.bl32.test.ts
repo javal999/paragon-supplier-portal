@@ -124,12 +124,12 @@ describe('BL32-RSN-POP · the coded reason lists, derived', () => {
       expect(callersOf(new RegExp(`\\b${name}\\b`)), name).toEqual([]);
     }
     // Control: the matcher finds a list constant that does exist.
-    expect(callersOf(/\bSTARTER_REASON_CODES\b/)).toContain('src/services/transitions/reasonCodes.ts');
+    expect(callersOf(/\bSTARTER_REASON_CODES\b/)).toContain('src/services/transitions/reasonCodes.js');
   });
 
   it('BL32-RSN-POP-03 · call-off and receipt-dispute reasons are free text — no coded list to maintain', () => {
-    const callOffFlow = readFileSync(join(process.cwd(), 'src/services/transitions/flows/callOff.flow.ts'), 'utf8');
-    const disputeFlow = readFileSync(join(process.cwd(), 'src/services/transitions/flows/receiptDiscrepancy.flow.ts'), 'utf8');
+    const callOffFlow = readFileSync(join(process.cwd(), 'src/services/transitions/flows/callOff.flow.js'), 'utf8');
+    const disputeFlow = readFileSync(join(process.cwd(), 'src/services/transitions/flows/receiptDiscrepancy.flow.js'), 'utf8');
     expect(callOffFlow).toMatch(/requiredFields: \['reason'\]/);
     expect(disputeFlow).toMatch(/requiredFields: \['receiptId', 'comment'\]/);
     // Known-false: no call-off or dispute list exists to derive.
@@ -144,11 +144,11 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
     expect(callersOf(/\bisActiveReasonCode\s*\(/)).toEqual([
       'src/services/data/mock/MockCommandService.ts',
       'src/services/data/mock/targets/forecastOverride.ts',
-      'src/services/transitions/capacityRules.ts',
+      'src/services/transitions/capacityRules.js',
       'src/services/transitions/forecastRules.ts',
-      'src/services/transitions/inventoryAlertRules.ts',
-      'src/services/transitions/policies.ts',
-      'src/services/transitions/reasonCodes.ts',
+      'src/services/transitions/inventoryAlertRules.js',
+      'src/services/transitions/policies.js',
+      'src/services/transitions/reasonCodes.js',
     ]);
   });
 

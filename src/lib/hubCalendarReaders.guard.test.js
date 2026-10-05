@@ -36,7 +36,7 @@ import { isSourceFile, isTestFile, scriptKindOf } from '@test/sourceFiles';
 
 const SRC = path.resolve(__dirname, '..');
 const ARITHMETIC_MODULE = 'lib/workingCalendar.js';
-const CALENDAR_STORE = 'services/transitions/workingCalendarStore.ts';
+const CALENDAR_STORE = 'services/transitions/workingCalendarStore.js';
 
 /**
  * The calendar functions, and the argument count that includes the calendar.
@@ -254,11 +254,11 @@ const D = derive();
 const CALENDAR_DAY_ALLOWLIST = {
   'services/delivery/fulfillment.ts#statusForUnmatched':
     'CR-07 — "Missed: nothing received 3 days after the need date": a physical delivery window in calendar days, not a response deadline.',
-  'services/transitions/callOffRules.ts#deliveryResults':
+  'services/transitions/callOffRules.js#deliveryResults':
     'CR-07 again — the call-off side of the same missed-delivery window (calendar days).',
-  'services/transitions/callOffRules.ts#checkTolerance':
+  'services/transitions/callOffRules.js#checkTolerance':
     'CR-05 — how many calendar days a confirmed delivery date sits before or after the need date: a comparison of two dates, not a deadline anybody answers.',
-  'services/transitions/callOffRules.ts#isDueWithoutHeadsUp':
+  'services/transitions/callOffRules.js#isDueWithoutHeadsUp':
     'CR-09 — the reminder 7 calendar days before a need date when no heads-up exists: counted back from a delivery date.',
   'services/data/invoiceProjection.ts#daysOutstanding':
     'CR-14 — days outstanding = today minus the due date: a payment term counted in calendar days.',
@@ -268,7 +268,7 @@ const CALENDAR_DAY_ALLOWLIST = {
     'CR-14 — the same 30-day payment term, restamped when a corrected invoice is resubmitted.',
   'services/data/complianceProjection.ts#daysRemaining':
     'Days until a certificate expires — a validity period, not a response deadline.',
-  'services/transitions/rfxRules.ts#daysToDeadline':
+  'services/transitions/rfxRules.js#daysToDeadline':
     'An RFI/RFQ/RFP deadline is a DATE THE BUYER SETS on the event (CE-07); nothing computes it, so no calendar ruling can move it. This is a calendar-day countdown to that chosen date for the "closing soon" band.',
   'services/sdc/consolidation.ts#chaseList':
     "The superseded SDC design's interim chase threshold (RESPONSE_DUE_DAYS) on /buyer/chase, a route hidden from the MVP menu (NV-06) and replaced by REQ-E06-03. No Supplier Hub rule defines it, so changing it would invent one. Reported as a follow-up rather than left silently.",
@@ -284,7 +284,7 @@ describe('BL-50 · the deadline population reads the hub calendar', () => {
     // Known-true members: the three response deadlines of §3.4.
     expect(readers).toContain('services/transitions/forecastRules.ts');
     expect(readers).toContain('services/data/poResponseProjection.ts');
-    expect(readers).toContain('services/transitions/callOffRules.ts');
+    expect(readers).toContain('services/transitions/callOffRules.js');
     // Known-false: the invoice projection counts calendar days (CR-14).
     expect(readers).not.toContain('services/data/invoiceProjection.ts');
     // And the calendar-day side has both a known member and a known non-member.
@@ -330,13 +330,13 @@ describe('BL-50 · the deadline population reads the hub calendar', () => {
     const readers = [...new Set(D.workingDayCalls.map((c) => c.key.split('#')[0]))].sort();
     expect(readers).toEqual([
       'services/data/poResponseProjection.ts',
-      'services/transitions/callOffRules.ts',
+      'services/transitions/callOffRules.js',
       'services/transitions/forecastRules.ts',
       // Material B1 — the weekly stock update cutoff moves off a non-working day (MR-1 BR-03).
       // Material B3 — an API week is judged on the cycle's working days (MR-2 BR-02).
-      'services/transitions/updateCompliance.ts',
-      'services/transitions/updateCycle.ts',
-      'services/transitions/workingCalendarStore.ts'
+      'services/transitions/updateCompliance.js',
+      'services/transitions/updateCycle.js',
+      'services/transitions/workingCalendarStore.js'
     ]);
   });
 

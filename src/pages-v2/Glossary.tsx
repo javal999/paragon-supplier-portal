@@ -53,7 +53,7 @@ import {
 //     over them would summarise fixtures.
 //   · NO BENCHMARKS. An authored industry figure with no source is the
 //     fabricated-claims class this tree spent five batches retracting.
-//   · NO FLOW-STATE OR TRANSITION PROSE. `services/transitions/annotations.ts`
+//   · NO FLOW-STATE OR TRANSITION PROSE. `services/transitions/annotations.js`
 //     + `lib/i18n/processFlowPurpose.js` ALREADY ARE that glossary, bilaterally
 //     pinned to the registry. This page LINKS to Process Flows and does not
 //     restate one word of it — a second copy is the half that goes wrong
@@ -106,7 +106,7 @@ const Appearances: React.FC<{ appearances: readonly FlowAppearance[] }> = ({ app
         ))}
       </ul>
       {/* The DEFERRAL, made navigable. What each state and verb is FOR is
-          authored once, in `annotations.ts`, and rendered on Process Flows. A
+          authored once, in `annotations.js`, and rendered on Process Flows. A
           sentence about it here would be the second copy. */}
       <Link
         to="/buyer/process-flows"

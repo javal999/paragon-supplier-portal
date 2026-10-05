@@ -3,7 +3,7 @@
 //
 // One record per name a supplier submitted (or PTI loaded). A changed name is a
 // NEW record (MAT-R3); an earlier record only ever changes STATE, through the
-// verbs of `materialName.flow.ts`, applied by its target. Nothing else writes
+// verbs of `materialName.flow.js`, applied by its target. Nothing else writes
 // here. Read through `materialNameReadModel.ts`, never by a page.
 //
 // The sample rows are illustrative (SC-04): the names say "(sample)".

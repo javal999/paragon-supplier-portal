@@ -3,7 +3,7 @@
 // display state in the tree.
 //
 // `'Delayed'` was a member of `ShipmentStatus` and of nothing else: the flow
-// declares eight states and `Delayed` was never among them. `shipment.flow.ts`
+// declares eight states and `Delayed` was never among them. `shipment.flow.js`
 // has said so since F0.4 in its own header — *"`Delayed` (ETA < clock) is a
 // read-time PROJECTION (law 0.5, census G1), NOT a transition-state — it is
 // deliberately absent from `states`"* — so the union carried a ninth member the

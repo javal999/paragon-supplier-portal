@@ -6,7 +6,7 @@ import { createContext, useCallback, useContext, useState } from 'react';
 
 /**
  * The business roles this seat holds. Typed as bare strings here on purpose:
- * `SystemRoleId` lives in `services/transitions/businessRoles.ts`, and the role
+ * `SystemRoleId` lives in `services/transitions/businessRoles.js`, and the role
  * VOCABULARY is a service concern while the SEAT is a context one. Validated at
  * the boundary (`identitySources.js`), resolved to atoms by `atomsFor`.
  */

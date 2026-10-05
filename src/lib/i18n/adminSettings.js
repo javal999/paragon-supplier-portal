@@ -2,7 +2,7 @@
 // ADMINISTRATION · TOLERANCES AND RULE VALUES, ALERT THRESHOLDS AND STALE
 // PERIODS (BL-32, REQ-E08-05 BR-03, §3.6). Namespace: adminSet.*
 //
-// One label and one hint per value in the registry (`hubSettings.ts`), keyed by
+// One label and one hint per value in the registry (`hubSettings.js`), keyed by
 // the setting key; one title per rule group. Plurals: English `_one` / `_other`,
 // Indonesian `_other` only (Indonesian does not inflect for number).
 // ─────────────────────────────────────────────────────────────────────────────

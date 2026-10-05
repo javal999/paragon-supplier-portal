@@ -9,7 +9,7 @@
 //
 // Suppliers come from the ONE supplier resolver (`supplierEntry`), documents
 // from the mutable document store, the lists from their store. The pure halves
-// live in `transitions/qualificationRules.ts`.
+// live in `transitions/qualificationRules.js`.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { mockSuppliers } from '@data/mockSuppliers';

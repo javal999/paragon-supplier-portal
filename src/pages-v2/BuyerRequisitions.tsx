@@ -282,7 +282,7 @@ const BuyerRequisitions: React.FC = () => {
   // The seat's authority over this page's five verbs, DERIVED per verb — never
   // authored as a status→owner map. `pr:approve` / `pr:reject` live in
   // `procurement` and `pr:create` / `pr:submit` / `pr:revise` in
-  // `requisitioner` (businessRoles.ts), two disjoint bundles, so each side
+  // `requisitioner` (businessRoles.js), two disjoint bundles, so each side
   // reads "Awaiting <the other>" rather than seeing nothing at all — and the
   // segregation is visible from BOTH sides of the machine instead of being a
   // property of the bundles that nothing exercised.
@@ -1134,7 +1134,7 @@ const BuyerRequisitions: React.FC = () => {
 
             {/* ⚠️ APPROVED IS A DEAD END TODAY AND THE SURFACE SAYS SO.
                 `t_pr_source` and `t_pr_convert` are `trigger: 'cascade'` and
-                NO SOURCE NAMES EITHER in `cascades.ts` — both are
+                NO SOURCE NAMES EITHER in `cascades.js` — both are
                 `unauthored-cascade` rows in the loose-end census. The two
                 buttons that used to sit here implied a next step the platform
                 cannot produce, which is the false-affordance class exactly. An

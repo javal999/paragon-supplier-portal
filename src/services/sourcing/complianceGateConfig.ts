@@ -7,7 +7,7 @@
 // rulings: 80%, and "No history" passes.
 //
 // ⚠️ **THEY ARE THE HUB ADMINISTRATOR'S (BL-32).** The defaults live in
-// `transitions/hubSettings.ts`; when BL-55 is decided, the value is changed on
+// `transitions/hubSettings.js`; when BL-55 is decided, the value is changed on
 // Administration → Tolerances and rule values, through `t_setting_set`, with no
 // code change. The gate, the award verb and every surface read these two
 // accessors at the moment they judge a supplier.

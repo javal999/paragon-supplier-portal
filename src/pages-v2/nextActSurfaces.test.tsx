@@ -2,7 +2,7 @@
 // WHO ACTS NEXT, ON THE FLOW-BACKED SURFACES. S2a (buyer) + S2b (supplier).
 //
 // ⚠️ **ONE NAMED TEST PER SURFACE, AND THAT IS THE WHOLE DESIGN OF THIS FILE.**
-// `nextAct.test.ts` already proves the FUNCTION: every arm, both seats, the
+// `nextAct.test.js` already proves the FUNCTION: every arm, both seats, the
 // ruling-1 and ruling-2 blocks, the copy map. Re-proving any of that here would
 // be a spec that stays green while a surface loses its line — which is exactly
 // the probe this batch has to survive. So every assertion below reaches through

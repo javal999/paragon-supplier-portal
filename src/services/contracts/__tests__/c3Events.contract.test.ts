@@ -26,7 +26,7 @@
 //
 // ── §86 — THE HALVES ARE INDEPENDENT ────────────────────────────────────────
 //   The document half is markdown text; the tree half is the TypeScript AST via
-//   `buildRepoProgram`. Mutating `events.ts` cannot shrink the document's claim
+//   `buildRepoProgram`. Mutating `events.js` cannot shrink the document's claim
 //   set, so the pin can always tell "I caught it" from "I have nothing to read".
 // ─────────────────────────────────────────────────────────────────────────────
 import { readFileSync, readdirSync } from 'node:fs';
@@ -40,7 +40,7 @@ import { getKnownFlows } from '../../transitions';
 
 const ROOT = process.cwd();
 const CONTRACT = readFileSync(join(ROOT, 'docs', 'contracts', 'C3-events.md'), 'utf8');
-const EVENTS_PATH = join(ROOT, 'src', 'services', 'transitions', 'events.ts');
+const EVENTS_PATH = join(ROOT, 'src', 'services', 'transitions', 'events.js');
 const TYPES_PATH = join(ROOT, 'src', 'services', 'data', 'types.ts');
 
 const program = buildRepoProgram(ROOT);
@@ -104,7 +104,12 @@ describe('AuditSink — the seam the whole contract rests on', () => {
 
   it('`InMemoryAuditSink` really implements it, and really has the methods C3 names', () => {
     const src = readFileSync(EVENTS_PATH, 'utf8');
-    expect(src).toMatch(/class InMemoryAuditSink implements AuditSink/);
+    // Reads both forms (frontend-standard Phase 4): the TS `implements` clause,
+    // or the JSDoc `@implements {AuditSink}` closing the comment directly above
+    // the class — the tag on any OTHER declaration does not count.
+    expect(src).toMatch(
+      /class InMemoryAuditSink implements AuditSink\b|@implements\s*\{AuditSink\}\s*\*\/\s*(?:export\s+)?class InMemoryAuditSink\b/,
+    );
     for (const m of ['all', 'byEvent', 'clear']) {
       expect(src, `InMemoryAuditSink.${m} is named by C3`).toMatch(
         new RegExp(`^\\s+${m}\\(`, 'm'),
@@ -190,7 +195,7 @@ describe('the artefacts and transitions C3 names all exist', () => {
 //
 // ⚠️ **THE DISCRIMINATION THE MATCHER MUST GET RIGHT.** `new Date()` reads the
 // clock. `new Date(asOf)` PARSES A SUPPLIED STRING and is not a clock read at
-// all — `policies.ts` does exactly that, validating an FX pin's `asOf`. A
+// all — `policies.js` does exactly that, validating an FX pin's `asOf`. A
 // matcher that cannot tell them apart accuses the spine of the very thing this
 // assertion exists to deny, which is heuristic rule 2 widening into a false
 // accusation. Both directions are controlled below, and the known-GOOD control
@@ -202,7 +207,7 @@ const MOCK_COMMAND = join(ROOT, 'src', 'services', 'data', 'mock', 'MockCommandS
 
 /**
  * Comments blanked LENGTH-PRESERVINGLY, so a clock read QUOTED in a comment
- * cannot count. `contractDraftOwner.ts` quotes `Date.now()` while describing a
+ * cannot count. `contractDraftOwner.js` quotes `Date.now()` while describing a
  * retired defect, and an unstripped matcher would convict the spine on it.
  *
  * The fifth private stripper in this tree — the absence of a shared helper is
@@ -240,7 +245,7 @@ describe('⚠️ the instant is INJECTED, and the shared spine holds no clock', 
 
   it('CONTROL — the spine was really read', () => {
     expect(files.length).toBeGreaterThan(10);
-    expect(files.some((f) => f.endsWith('dispatcher.ts'))).toBe(true);
+    expect(files.some((f) => f.endsWith('dispatcher.js'))).toBe(true);
   });
 
   it('⚠️ KNOWN-GOOD FIRST — the matcher FINDS clock reads where they really are', () => {
@@ -269,7 +274,11 @@ describe('⚠️ the instant is INJECTED, and the shared spine holds no clock', 
   });
 
   it('the dispatcher DECLARES the instant as a dependency', () => {
-    expect(readFileSync(join(SPINE_DIR, 'dispatcher.ts'), 'utf8')).toMatch(/now:\s*\(\)\s*=>\s*string/);
+    // Reads both forms (frontend-standard Phase 4): `now: () => string` (TS) or
+    // `@property {() => string} now` (JSDoc). Same name, same type, either way.
+    expect(readFileSync(join(SPINE_DIR, 'dispatcher.js'), 'utf8')).toMatch(
+      /now:\s*\(\)\s*=>\s*string|@property\s*\{\s*\(\)\s*=>\s*string\s*\}\s*now\b/,
+    );
   });
 
   it('⚠️ the DEV supplier is the one C3 documents, at the one wiring site', () => {

@@ -51,7 +51,7 @@ export interface RoleView {
   /**
    * D1's exception, derived: atoms the parent held at grant time and holds no
    * longer, RETAINED rather than silently dropped. Always empty while grants are
-   * session-scoped and bundles are compile-time — see `customRoles.ts`.
+   * session-scoped and bundles are compile-time — see `customRoles.js`.
    */
   readonly retained: readonly string[];
   readonly atoms: readonly string[];

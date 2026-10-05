@@ -212,7 +212,7 @@ mechanisms whose success signals said nothing about the damage they did.
 
 > ⚠️ **AUTHORISATION NOW EXISTS (Batch A, §64).** `resolveRoles` no longer widens
 > a persona to its whole atom set: it resolves the SEAT's business roles
-> (`services/transitions/businessRoles.ts` — **derive the roles from the
+> (`services/transitions/businessRoles.js` — **derive the roles from the
 > `SystemRoleId` union and `LANE_BUNDLES`; no figure is written here** — plus an
 > `automation` grant that is deliberately NOT assignable to a person).
 > **There is no persona fallback**; a command scope without `businessRoles` is
@@ -222,7 +222,7 @@ mechanisms whose success signals said nothing about the damage they did.
 > silence. `PERSONA_ROLES` survives as a DERIVED tenancy view and is no longer an
 > authorisation source. **Do not restate the atom or role counts here** — derive
 > them from `SYSTEM_ROLES` × `catalogRoles()`; the bilateral gate in
-> `businessRoles.test.ts` is what keeps them honest.
+> `businessRoles.test.js` is what keeps them honest.
 >
 > ⚠️ **AND `readScopeOwner: () => null` DENIES EVERY SUPPLIER — IT DOES NOT MEAN
 > "NOTHING TO COMPARE" (§86).** The dispatcher's supplier arm compares
@@ -232,12 +232,12 @@ mechanisms whose success signals said nothing about the damage they did.
 > at SCOPE on one that does not. **The refusal KIND was an existence oracle**,
 > across a tenancy boundary, on the write path. **Do not restate which targets are
 > owner-less** — it was filed as two and derived as five, and
-> `ownerlessScope.test.ts` re-derives the set every run from each target's own
+> `ownerlessScope.test.js` re-derives the set every run from each target's own
 > `readState` / `readScopeOwner`. A target that wants a supplier to reach a verb
 > must NAME that supplier; returning `null` because the owner is merely UNKNOWN
 > now silently denies a legitimate act instead of admitting one.
 >
-> **The cross-role handoff renders the wait, not a gap** (`handoff.ts` +
+> **The cross-role handoff renders the wait, not a gap** (`handoff.js` +
 > `HandoffNotice` + `useVerbAvailability`) — wired across the BUYER surfaces at §72–§76, and it is **ONE NOTICE PER VERB, IN THAT VERB'S OWN SLOT** (§76 retired §74's per-group collapse: the RFQ side panel is a WORKSPACE, not a control, and the two verbs one group notice spoke for are not co-reachable on any RFQ in the tree).
 > ⚠️ **DO NOT RESTATE HOW MANY SURFACES CARRY IT** — the sentence that stood here was a prose count and it was wrong TWICE, once per batch, which is `FLOOR-IN-PROSE-01` in the paragraph about handoffs. Derive it as **(surface × verb)** from the `testId="handoff-…"` sites against BOTH dispatch families. **THE SUPPLIER SIDE IS COVERED TOO, AND THE SENTENCE THAT SAID OTHERWISE IS DELETED RATHER THAN CORRECTED.** It read *"every supplier-side surface (a supplier seat is exactly `['supplier']` — no proper subset to narrow to, so every notice is dead branch)"*. That reason died at #263, which seeded `commercial` · `fulfilment` · `back_office`; **six supplier surfaces already carried notices while it still stood**, so it was describing the tree it was filed against, not the tree. Derived today: **no supplier atom is held by all three lanes** — the intersection is EMPTY — so "every lane holds it" is never the reason on this side. What is deliberately NOT covered: every control that holds **no atom** (toasts and reads are ungoverned, not withheld — §75e), and **`GRInspectionWizard`'s interior** (`WIZARD-ADMITS-A-SEAT-IT-WILL-REFUSE-01`, OPEN — closed at both known entrances, unprobed within).
 >
@@ -264,13 +264,13 @@ mechanisms whose success signals said nothing about the damage they did.
 > **CUSTOM ROLES EXIST, FOR THE SESSION (§66).** A custom role is
 > `{ parent, adds }` — a PARENT REFERENCE resolved at read, never a snapshot of
 > atoms, because a snapshot silently keeps yesterday's truth the moment the
-> parent gains one. It is granted by `t_role_grant` (`flows/role.flow.ts`),
+> parent gains one. It is granted by `t_role_grant` (`flows/role.flow.js`),
 > which follows `t_enforcement_set` verb for verb: single state `Defined`,
 > `statePreserving`, append-only ledger, CommandTarget, policy hook, and
 > `entityId` IS the parent `SystemRoleId`. **`role:grant` is a `compliance`
 > atom** — whoever can edit roles can grant themselves any verb, so procurement
 > cannot hold it. **A CUSTOM ROLE MAY NOT SPAN TENANCIES**, refused at the verb
-> by name, per atom. The store (`services/transitions/customRoles.ts`) is
+> by name, per atom. The store (`services/transitions/customRoles.js`) is
 > **PERSISTED in `localStorage` under `paragon.customRoles`** (operator ruling,
 > superseding session scope: an honest statement does not repair an experience
 > that looks like a defect). **Only CUSTOM roles are written** — the seeded ones
@@ -281,7 +281,7 @@ mechanisms whose success signals said nothing about the damage they did.
 > rendered rather than absorbed. A grant is still recorded against
 > `UNATTRIBUTED: NO_PERSON_IN_SESSION`, and the surface says so before the act. **Every SEAT resolves through `atomsForSeat`, never
 > `atomsFor`** — the call sites are derived from source and allowlisted
-> bilaterally in `businessRoles.test.ts`. **ASSIGNING a custom role to a seat is
+> bilaterally in `businessRoles.test.js`. **ASSIGNING a custom role to a seat is
 > NOT built** (§66k): `rolesFromStorage` would silently re-widen such a seat to
 > its whole persona on reload, and that line is the assignment batch's first fix.
 >
@@ -295,7 +295,7 @@ mechanisms whose success signals said nothing about the damage they did.
 > unrelated authority it could never shed. The remedy is the mirror — one
 > zero-atom `buyer` anchor — and it required **no change to
 > `copyableParentRefusal`, to the additive-only merge rule, or to any lane's
-> membership** (asserted in `buyerAnchor.test.ts`, because an unasserted "it
+> membership** (asserted in `buyerAnchor.test.js`, because an unasserted "it
 > needed none of those" is prose). **Do not restate the lane sizes or the role
 > count here** — derive them from `SYSTEM_ROLES`; the figures above are named as
 > the measurement that motivated the batch, not as a standing tally. It is
@@ -338,7 +338,7 @@ mechanisms whose success signals said nothing about the damage they did.
 > IT HAS ALREADY STOPPED ONE BATCH.** `PolicyHookFn` takes ONE ctx
 > (`{ entityId, currentState, toState, payload, target, scope }`), `CommandTarget.
 > readEntity` is *"Full entity for policy hooks to inspect"*, and FOUR shipped hooks
-> read a document through it (`policies.ts:64/87/104/263`) — none by importing a
+> read a document through it (`policies.js:64/87/104/263`) — none by importing a
 > store. What a threshold lacks is the RIGHT-HAND SIDE of the comparison, not the
 > left. A role-gated VALUE policy (value from `readEntity` × lane from
 > `scope.businessRoles`) is buildable today and is **not** the ladder: it
@@ -365,7 +365,7 @@ and the Stage G planning canon + World-Class Build Plan are now on main.
   sequence — the array's "this is precedence" claim was a comment that nothing
   checked. **Do not restate which verb-pairs it covers**: it was dispatched as
   catching the `statePreserving` cases and MEASURED to be blind to exactly
-  those, and `staleState.test.ts` re-derives both populations every run.
+  those, and `staleState.test.js` re-derives both populations every run.
   ⚠️ **It is NOT the revision precondition** — content staleness (a payload
   revised under you while the state held) is invisible to a state comparison,
   no addressable entity carries a revision, and the three revision-shaped fields
@@ -824,7 +824,7 @@ prose, in the section that forbids restating cardinalities in prose. §27 /
    are dispatched?"* run as `grep "transitionId: '<id>'"` returns **0 for
    `t_gr_approve`, which fires on every goods receipt the wizard commits, and 0
    for `t_gr_hold`, which nothing has ever fired.** The literal is real — it
-   lives in a `switch` return (`grRollup.ts`), not at the call site, because the
+   lives in a `switch` return (`grRollup.js`), not at the call site, because the
    GR header disposition is DERIVED rather than chosen and the call site reads
    `transitionId: headerVerb`. **A dispatch census must RESOLVE every
    non-literal id to its concrete returns before it reports anything**; derive
@@ -967,7 +967,7 @@ PROBE: A GATE MUST NOT DERIVE ITS POPULATION THROUGH THE CODE IT IS PROBING.**
 Rules 1–3 ask whether a matcher sees the tree correctly. Rule 4 asks whether a
 guard was probed both ways. This asks a question neither reaches, because the
 matcher was correct AND the guard was probed both ways AND the probe still proved
-nothing. `ownerlessScope.test.ts` first derived "which targets are owner-less?"
+nothing. `ownerlessScope.test.js` first derived "which targets are owner-less?"
 by asking the dispatcher — the very predicate under test. Mutate that predicate
 and the POPULATION collapses to empty: the suite goes red on its own population
 control while **the assertion it exists to make never executes**, and the
@@ -1307,7 +1307,8 @@ over everything else combined, and it grew that way in six weeks.
 The owner ruled the portal moves to JavaScript + JSDoc to match the company React
 boilerplate. Converted so far: `src/components/ui-v2` (pilot) and the app shell
 (`src/` root files, `hooks`, `context`, `router`, `test`, `data`, `components/*`;
-Phase 4 B1) and `src/lib` (B2). Before converting a
+Phase 4 B1), `src/lib` (B2) and `src/services/transitions` (B3; forecast flows excluded).
+Before converting a
 folder, follow `docs/frontend-standard/JS-CONVERSION-PLAYBOOK.md`: the draft tool
 deletes comments and loosens types, and `scripts/codemods/check-comments-kept.mjs`
 must report 0 lost. Any spec or gate that scans files uses `src/test/sourceFiles.js`

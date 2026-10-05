@@ -3,7 +3,7 @@
 //
 // Every number the forecast publication, commitment and gap rules compare
 // against is read through this module. CR-21, CR-22 and CR-26 are the Hub
-// administrator's (BL-32: defaults in `hubSettings.ts`, changed on the admin
+// administrator's (BL-32: defaults in `hubSettings.js`, changed on the admin
 // page); the period grid, zone lengths and lead times stay here — they are the
 // shape of the forecast and sample master data, not thresholds:
 //   · REQ-E06-01 BR-02 / BR-03 — cadence, horizon and the weekly-to-monthly
@@ -101,7 +101,7 @@ export function zoneLengthsFor(supplierId: string, materialGroup: string, materi
 export const FS_RECONCILE_CYCLE_ANCHOR = '2026-08-31';
 
 // ── The administrator's values (BL-32) ───────────────────────────────────────
-// CR-21, CR-22 and CR-26 have their defaults in `hubSettings.ts` and are changed
+// CR-21, CR-22 and CR-26 have their defaults in `hubSettings.js` and are changed
 // on Administration → Tolerances and rule values; these accessors read the
 // value in force each time a rule runs, never a copy taken at load.
 
@@ -267,4 +267,4 @@ export function feedFreshnessLimitsDays(): {
 export const REMINDER_FRACTION = 0.5;
 
 // Section 3.6 starter reason codes for a commitment below forecast are the Hub
-// administrator's list since BL-32: `reasonCodes.ts`, list `commitmentShortfall`.
+// administrator's list since BL-32: `reasonCodes.js`, list `commitmentShortfall`.

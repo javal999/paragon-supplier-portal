@@ -940,7 +940,7 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
       // `'halal.certificate'` would have kept this census green and rotted the
       // day the vocabulary changed — which is the trade this list exists to
       // refuse. Authorised by the owner-less existence-oracle batch.
-      '/src/services/transitions/ownerlessScope.test.ts',
+      '/src/services/transitions/ownerlessScope.test.js',
       // ⚠️ 1c · THE STATE PRECONDITION. It consumes `GOVERNED_CHECK_IDS` as a
       // VALUE for one reason worth stating: `t_enforcement_set` is a
       // `statePreserving` verb, which makes it the clearest demonstration of the
@@ -948,7 +948,7 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
       // declare the state they read, both land. Pinning that needs a check id
       // `readState` will recognise, and a literal would have kept this census
       // green while rotting. Authorised by the 1c batch.
-      '/src/services/transitions/staleState.test.ts'
+      '/src/services/transitions/staleState.test.js'
     ]);
     expect(referencing.filter((p) => !suites.includes(p))).toEqual([
       '/src/components/v2-features/GRInspectionWizard.jsx', // ⚠️ E4 — THE FIRST GATE
@@ -995,7 +995,7 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
       '/src/services/data/mock/stores/enforcementSettingStore.ts', // the ledger
       '/src/services/data/types.ts', //                   the seam's row type (TYPE-ONLY)
       '/src/services/query/hooks.ts', //                  E4 — the scoped read hook
-      '/src/services/transitions/policies.ts' //         the recording policy
+      '/src/services/transitions/policies.js' //         the recording policy
     ]);
     // ⚠️ `main.jsx` IS A CONSUMER OF THE SEED AND IS NOT ON THIS LIST, because it
     // names `seedEnforcementLedger` and no enforcement vocabulary at all. Stated

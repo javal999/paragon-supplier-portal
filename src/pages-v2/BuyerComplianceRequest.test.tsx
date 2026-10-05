@@ -2,7 +2,7 @@
 // WAVE E — THE BUYER ASKS, AND THE SUPPLIER FINDS THE ASK.
 //
 // ⚠️ **THIS FILE IS THE COVERAGE INSTRUMENT, BECAUSE THE CENSUS CANNOT BE ONE.**
-// `surfaceable.test.ts` derives its population as
+// `surfaceable.test.js` derives its population as
 //
 //     surfaced && !firable && **t.from.length > 0**
 //
@@ -306,7 +306,7 @@ describe('WAVE E · the roster refusal, in the reader’s language', () => {
   // correctly and rendered as *"creation of supplierDocument denied: unresolved
   // owner"* — a dispatcher sentence, in English, to an Indonesian operator. It
   // is the `ROLE_NOT_PERMITTED:po:confirm` defect that created
-  // `refusalMessage.ts` arriving through the one door that module does not
+  // `refusalMessage.js` arriving through the one door that module does not
   // cover: a THROWN `DataError`, whose message is prose rather than
   // `KIND:detail`, so `refusalKindOf` correctly matches nothing.
   for (const [lang, fragment] of [

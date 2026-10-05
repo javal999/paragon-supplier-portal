@@ -7,7 +7,7 @@
 // full envelope: nothing has been released or delivered, and the ledger says so.
 //
 // The two named tolerance presets live here, co-located with the derivation that
-// reads them — the same idiom as MATCH_TOLERANCE in invoiceRollup.ts and
+// reads them — the same idiom as MATCH_TOLERANCE in invoiceRollup.js and
 // RESPONSE_DUE_DAYS in consolidation.ts.
 // ─────────────────────────────────────────────────────────────────────────────
 

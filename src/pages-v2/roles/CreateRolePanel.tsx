@@ -71,7 +71,7 @@ const CreateRolePanel: React.FC<{ onGranted: () => void }> = ({ onGranted }) => 
   const { toast } = useToast();
   const grant = useRoleGrant();
 
-  // THE GATE. `role:grant` sits in `compliance` alone — see `businessRoles.ts`.
+  // THE GATE. `role:grant` sits in `compliance` alone — see `businessRoles.js`.
   const availability = useMemo(
     () => availabilityOfAtom('role:grant', identity.businessRoles),
     [identity.businessRoles],

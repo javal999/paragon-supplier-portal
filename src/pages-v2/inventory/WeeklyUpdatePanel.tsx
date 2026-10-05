@@ -32,7 +32,7 @@ import { useDurationText } from '../forecasts/forecastDisplay';
 //     not running in the prototype and its liveness pill (MAT-R14).
 //
 // Everything is derived at read from the positions the supplier already reads
-// and the calendar and settings in force (`updateCycle.ts`); nothing is stored.
+// and the calendar and settings in force (`updateCycle.js`); nothing is stored.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface WeeklyUpdateView {

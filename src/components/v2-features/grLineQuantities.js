@@ -38,7 +38,7 @@
 //
 // BLANK REFUSES (operator ruling, 2f-a). Both quantities are REQUIRED. A line
 // with no received quantity is not a fact, it is an unfinished inspection — and
-// the lifecycle already models that (`goodsReceiptLine.flow.ts` `Pending →
+// the lifecycle already models that (`goodsReceiptLine.flow.js` `Pending →
 // Inspected`). Representing it a second time as an absent quantity would encode
 // one state in two places and would touch transition-schema surface the SE Team
 // reads as spec. So blank never reaches the store, and a TYPED zero keeps its

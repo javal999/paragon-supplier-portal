@@ -42,7 +42,7 @@ import AdminSectionNav from './AdminSectionNav';
 // ADMINISTRATION · THE HUB'S RULE VALUES — BL-32 (REQ-E08-05 BR-03, §3.6, ADM).
 //
 // Two pages, one component, because they are one verb (`t_setting_set`) over
-// one registry (`hubSettings.ts`), split for reading:
+// one registry (`hubSettings.js`), split for reading:
 //   · Tolerances and rule values — CR-05, the call-off confirmation deadline,
 //     CR-12, CR-25, CR-21, CR-26, CR-22, CR-23, MR-2 (update compliance),
 //     MR-6 (default shelf life);

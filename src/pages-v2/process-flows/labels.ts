@@ -3,7 +3,7 @@
 //
 // ⚠️ **THE `Record<Union, string>` IS THE POINT, NOT THE STRING MAP.** Both
 // vocabularies below are CLOSED and deliberately have no catch-all member
-// (`looseEndCensus.ts` argues why: one `OTHER` turns a closed vocabulary into
+// (`looseEndCensus.js` argues why: one `OTHER` turns a closed vocabulary into
 // free text wearing an enum's clothes). A lookup written as a function with a
 // default would silently render the raw token for a sixth reason nobody
 // translated. Written as an exhaustive Record, adding a member to either union

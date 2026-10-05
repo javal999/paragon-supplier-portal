@@ -3,7 +3,7 @@
 //
 // ⚠️ **`shipment` IS TARGET-LESS — NO VERB CAN GROW A FOURTH ROW.** It has no
 // `CommandTarget` (`WIRED_COMMAND_TARGETS` does not list it) and every
-// transition in `shipment.flow.ts` is `surfaced: false, because: 'external-fact',
+// transition in `shipment.flow.js` is `surfaced: false, because: 'external-fact',
 // owner: 'tms'`. So a fixture can only be grown BY HAND, and the honest position
 // is to say what the three rows do and do not prove rather than to imply a
 // population. They prove the rule DISCRIMINATES on all three of its axes:

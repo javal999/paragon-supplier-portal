@@ -111,7 +111,7 @@ export const DAY_COUNTS = [
     field: 'daysToImpact',
     group: 'computed-at-read',
     against: 'week',
-    producer: 'src/services/transitions/inventoryAlertRules.ts'
+    producer: 'src/services/transitions/inventoryAlertRules.js'
   },
 
   // ── ⚠️ TWO ROWS LEFT THIS TABLE BY BEING RETIRED, NOT BY BEING EXCUSED ────
@@ -343,13 +343,76 @@ function jsDocDayCountFields(file, text) {
   return [...found];
 }
 
-/** Does `file` inject its clock rather than read one? The property that
+/**
+ * Does `file` inject its clock rather than read one? The property that
+ * separates a real `computed-at-read` producer from law 0.5's defect.
+ *
+ * Read through the TypeScript parser, so the same fact counts in either
+ * language: a PARAMETER named `nowIso` or `now`, typed `string` or `Date` by
+ * TypeScript syntax (`nowIso: string`) or by its JSDoc `@param {string} nowIso`;
+ * or a PROPERTY of that name and type on an injected object (`{ nowIso: string }`
+ * in TypeScript or inside a JSDoc type, or `@property {string} nowIso`). The
+ * earlier matcher was the text regex `\b(nowIso|now)\s*:\s*(string|Date)`, which
+ * a converted producer no longer contains. A local `const nowIso = …` is not a
+ * parameter and does not count: that is a producer reading its own clock.
  * @param {string} file
  * @param {(f: string) => string} [read]
  * @returns {boolean}
- *  separates a real `computed-at-read` producer from law 0.5's defect. */
+ */
 export function takesInjectedNow(file, read = (f) => readFileSync(f, 'utf8')) {
-  return /\b(nowIso|now)\s*:\s*(string|Date)/.test(read(file));
+  const sf = ts.createSourceFile(
+    file,
+    read(file),
+    ts.ScriptTarget.Latest,
+    true,
+    scriptKindOf(file)
+  );
+  /**
+   * @param {ts.Node | undefined} name
+   * @returns {boolean}
+   */
+  const isNowName = (name) => !!name && ts.isIdentifier(name) && /^(nowIso|now)$/.test(name.text);
+  /**
+   * @param {ts.TypeNode | undefined} t
+   * @returns {boolean}
+   */
+  const isNowType = (t) =>
+    !!t &&
+    (t.kind === ts.SyntaxKind.StringKeyword ||
+      (ts.isTypeReferenceNode(t) && ts.isIdentifier(t.typeName) && t.typeName.text === 'Date'));
+  let found = false;
+  /**
+   * @param {ts.Node} n
+   * @returns {void}
+   */
+  const visit = (n) => {
+    if (found) return;
+    if (ts.isParameter(n) && isNowName(n.name)) {
+      // `getJSDocParameterTags` finds the `@param` wherever the JSDoc hangs:
+      // on the function, or on the `const` an arrow function is assigned to.
+      if (
+        isNowType(n.type) ||
+        ts.getJSDocParameterTags(n).some((tag) => isNowType(tag.typeExpression?.type))
+      ) {
+        found = true;
+        return;
+      }
+    }
+    if (ts.isPropertySignature(n) && isNowName(n.name) && isNowType(n.type)) {
+      found = true;
+      return;
+    }
+    if (ts.isJSDocPropertyTag(n) && isNowName(n.name) && isNowType(n.typeExpression?.type)) {
+      found = true;
+      return;
+    }
+    // JSDoc is not a child `forEachChild` visits; walk it so a property declared
+    // inside a JSDoc type (`@param {{ nowIso: string }} opts`) is seen.
+    for (const doc of /** @type {{ jsDoc?: readonly ts.JSDoc[] }} */ (n).jsDoc ?? []) visit(doc);
+    ts.forEachChild(n, visit);
+  };
+  visit(sf);
+  return found;
 }
 
 /**
@@ -367,6 +430,13 @@ export function takesInjectedNow(file, read = (f) => readFileSync(f, 'utf8')) {
  * A DECLARATION (`field: number;`) is excluded by the `number` lookahead: a type
  * is not a write, and counting it as one would acquit every stored field on the
  * strength of its own interface.
+ *
+ * ⚠️ **A THIRD SHAPE ARRIVED WITH THE JAVASCRIPT CONVERSION: THE LAST MEMBER.**
+ * Prettier here prints `trailingComma: "none"`, so a converted file writes a
+ * shorthand LAST member as a bare `field` with no comma — on its own line before
+ * the closing `}` (`inventoryAlertRules.js` writes `daysToImpact` this way), or
+ * as `, field }` on one line. Both are matched; `{field}` alone is not, because
+ * JSX `{field}` and a template's `${field}` are reads.
  * @param {string} file
  * @param {string} field
  * @param {(f: string) => string} [read]
@@ -376,10 +446,16 @@ export function writesField(file, field, read = (f) => readFileSync(f, 'utf8')) 
   const head = `(?:^\\s*|[{,]\\s*)`;
   const assign = new RegExp(`${head}${field}\\s*:\\s*(?!number\\b)\\S`);
   const shorthand = new RegExp(`${head}${field}\\s*,`);
-  return read(file)
+  const lastOnLine = new RegExp(`,\\s*${field}\\s*}`);
+  const bareLine = new RegExp(`^\\s*${field}\\s*$`);
+  const lines = read(file)
     .split(/\r?\n/)
-    .some((raw) => {
-      const code = raw.replace(/\/\/.*$/, '');
-      return assign.test(code) || shorthand.test(code);
-    });
+    .map((raw) => raw.replace(/\/\/.*$/, ''));
+  return lines.some(
+    (code, i) =>
+      assign.test(code) ||
+      shorthand.test(code) ||
+      lastOnLine.test(code) ||
+      (bareLine.test(code) && /^\s*}/.test(lines[i + 1] ?? ''))
+  );
 }

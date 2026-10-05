@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // PF-1 · THE SURFACE GATE.
 //
-// The derivation is held by `catalogView.test.ts` and the geometry by
+// The derivation is held by `catalogView.test.js` and the geometry by
 // `flowLayout.test.ts`. What is left for this suite is the part only a rendered
 // page can be wrong about:
 //
@@ -332,7 +332,7 @@ describe('ProcessFlows — honesty markers', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // PF-2 · THE AUTHORED HALF, ON THE SURFACE
 //
-// `annotations.test.ts` holds the pins (registry ↔ annotation ↔ i18n, all four
+// `annotations.test.js` holds the pins (registry ↔ annotation ↔ i18n, all four
 // directions) and the no-restatement rule. What is left for a rendered page is
 // the part only a render can be wrong about: that the sentence actually REACHES
 // the reader, in both languages, and that a MISSING one degrades to silence

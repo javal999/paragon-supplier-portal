@@ -162,7 +162,7 @@ describe('SupplierOrders — PO-confirm end-to-end proof (Step 3.10)', () => {
 // THE INVERTED LOCKS: 2f-b was one lock by necessity (no dispatcher). Here the
 // SECOND lock (`poConfirmQtyWithinOrdered`) exists and holds — these specs
 // guard the FIRST, and the policy's own first direct unit tests live in
-// `services/transitions/policies.test.ts`.
+// `services/transitions/policies.test.js`.
 describe('SupplierOrders — the confirm cells are text, so the parser is load-bearing', () => {
   /** Open PO-2025-00108 (sup-007, Sent, one line: 150,000 PCS) in editing mode. */
   const openEditing = async () => {

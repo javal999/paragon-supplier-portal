@@ -20,7 +20,7 @@
 // choices no longer live in a page module: BL-51 retired `CARRIER_OPTIONS` for
 // the administrator's 3PL list (`SAMPLE_THREE_PLS`, `transitions/threePlStore`),
 // whose names and `.example` addresses are held fictional in
-// `transitions/threePl.bl51.test.ts`.
+// `transitions/threePl.bl51.test.js`.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, it, expect } from 'vitest';

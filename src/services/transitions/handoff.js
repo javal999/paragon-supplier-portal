@@ -1,0 +1,158 @@
+// ────────────────────────────────────────────────────────────────────────────
+// THE CROSS-ROLE HANDOFF — DERIVED, NEVER AUTHORED.
+//
+// ⚠️ **THE BINDING CONSTRAINT THIS FILE EXISTS TO HOLD (operator ruling):**
+//
+//   > EVERY CROSS-ROLE HANDOFF RENDERS THE WAIT, NOT A GAP. A verb a user's
+//   > role does not hold shows as PENDING WITH AN OWNER — "Awaiting Finance" —
+//   > NEVER AS AN ABSENT AFFORDANCE.
+//
+// That is the difference between a clean process boundary and finance being an
+// invisible bottleneck, and it is a build constraint rather than a nicety.
+//
+// ── WHY DERIVED AND NOT AUTHORED, AND WHY R1a DOES NOT GENERALISE ───────────
+// R1a put "Awaiting Paragon" on the supplier's responses list by AUTHORING one
+// i18n key per outcome, and that was correct for its context: two personas, a
+// closed union, and a ruling that every RR exit belongs to the buyer.
+//
+// **It does not generalise, and the operator's argument is the one that decides
+// it:** `requiredRole` is per-verb AND per-state, so the derivation yields an
+// owner without a second vocabulary — and that is what stays true when a verb
+// moves. An authored `Record<Status, Owner>` beside the pill is the
+// `BuyerInvoices` footer-verb defect in a new costume (`invoiceActionModel.ts`
+// header): a display concern answering a question only the machine can answer.
+// Move `invoice:pay` from `finance` to `treasury` tomorrow and every authored
+// map silently keeps saying "Awaiting Finance"; this file changes with it,
+// because it reads `rolesHolding(t.requiredRole)`.
+//
+// ⚠️ **THE ONE AUTHORED THING IS THE LABEL PER ROLE, AND IT IS BOUND
+// EXHAUSTIVELY.** `SystemRoleId` is a closed union and `ROLE_LABEL_KEY` is a
+// total `Record` over it, so seeding a seventh role is a `tsc` error here
+// rather than a role that renders blank. THE LIVE TRAP THIS REPLACES: the R1a
+// consumer keyed on a two-arm ternary — `personas.includes('supplier') ? … :
+// 'awaiting buyer'` — which is TOTAL ONLY BECAUSE `PersonaType` HAS TWO
+// MEMBERS. A third actor would have fallen through to "Awaiting Paragon" over
+// a finance-owned verb: the exact mislabel the constraint above forbids,
+// produced by the mechanism meant to prevent it.
+// ────────────────────────────────────────────────────────────────────────────
+
+/** @import { TransitionDef, TransitionRole } from './schema' */
+/** @import { SystemRoleId, BusinessRoleId } from './businessRoles' */
+import { rolesHolding } from './businessRoles';
+import { atomsForSeat } from './customRoles';
+
+/**
+ * WHETHER THIS SEAT MAY FIRE A VERB, AND IF NOT, WHOSE IT IS.
+ *
+ * Three arms, kept apart for the same reason `NextActor` keeps `ended` and
+ * `stranded` apart: a caller must never be able to render "someone else is
+ * handling it" over an act NOBODY can perform.
+ *
+ * · `held`     — the seat holds the atom. Render the affordance.
+ * · `withheld` — a DIFFERENT assignable role holds it. Render the wait, naming
+ *                the owner. **This is the arm the constraint is about.**
+ * · `unowned`  — no assignable role holds it. A machine act, or a gap. NEVER
+ *                copy: "Awaiting <nobody>" is worse than silence, and an
+ *                `unowned` verb on a human surface is a FINDING.
+ */
+/**
+ * @typedef {| { readonly kind: 'held' }
+ *   | { readonly kind: 'withheld'; readonly owners: readonly SystemRoleId[] }
+ *   | { readonly kind: 'unowned' }} VerbAvailability
+ */
+
+/**
+ * Does `seatRoles` grant `atom`, and if not, who does?
+ * @param {TransitionRole} atom
+ * @param {readonly BusinessRoleId[]} seatRoles
+ * @returns {VerbAvailability}
+ */
+export function availabilityOfAtom(atom, seatRoles) {
+  // `atomsForSeat`, not `atomsFor`: a seat may hold a granted custom role, and
+  // resolving it through the system-only function would report every one of its
+  // atoms as WITHHELD — the handoff naming an owner for an act the seat can
+  // actually take, which is worse than a missing button.
+  if (atomsForSeat(seatRoles).includes(atom)) return { kind: 'held' };
+  const owners = rolesHolding(atom);
+  return owners.length > 0 ? { kind: 'withheld', owners } : { kind: 'unowned' };
+}
+
+/**
+ * The same question asked of a transition.
+ * @param {TransitionDef} transition
+ * @param {readonly BusinessRoleId[]} seatRoles
+ * @returns {VerbAvailability}
+ */
+export function availabilityOf(transition, seatRoles) {
+  return availabilityOfAtom(transition.requiredRole, seatRoles);
+}
+
+/**
+ * The i18n key naming each role, for the "Awaiting …" line. A TOTAL record over
+ * the closed union — see the header: this totality is the compile-time bind
+ * that the two-arm ternary it replaces did not have.
+ * @type {Readonly<Record<SystemRoleId, string>>}
+ */
+export const ROLE_LABEL_KEY = Object.freeze({
+  procurement: 'roles.owner.procurement',
+  receiving: 'roles.owner.receiving',
+  finance: 'roles.owner.finance',
+  compliance: 'roles.owner.compliance',
+  planning: 'roles.owner.planning',
+  requisitioner: 'roles.owner.requisitioner',
+  buyer: 'roles.owner.buyer',
+  supplier: 'roles.owner.supplier',
+  commercial: 'roles.owner.commercial',
+  fulfilment: 'roles.owner.fulfilment',
+  back_office: 'roles.owner.back_office',
+  buyer_all: 'roles.owner.buyer_all',
+  admin: 'roles.owner.admin'
+});
+
+/**
+ * The label keys for a withheld verb's owners, in a stable order.
+ *
+ * ⚠️ **STABLE BY THE UNION'S DECLARATION ORDER, NOT BY `rolesHolding`'s.**
+ * `rolesHolding` derives from `Object.keys(SYSTEM_ROLES)`, which is stable
+ * today and is not a contract; sorting here on a declared order means the line
+ * cannot re-order itself under a refactor of the bundle literal.
+ * @type {readonly SystemRoleId[]}
+ */
+// Exported so `buyerAll.test.js` can assert it stays TOTAL over `SystemRoleId`
+// in both directions. A role missing here does not fail — it silently vanishes
+// from an owner line, which is the quiet half of the same defect.
+export const ROLE_ORDER = [
+  'procurement',
+  'receiving',
+  'finance',
+  'compliance',
+  'planning',
+  'requisitioner',
+  // ⚠️ **THE ANCHORS SIT WITH THE SUPERSETS AND FOR THE SAME REASON, ONE STEP
+  // FURTHER.** Neither holds an atom, so `rolesHolding` can never return either
+  // — a superset names nothing because it holds everything; an anchor names
+  // nothing because it holds nothing. Both are unreachable owner lines, and
+  // both are listed so the record stays total over the union. **`buyer` joins
+  // `supplier` here rather than being special-cased**: the two sides now have
+  // the same shape, and a reader who learns the rule on one side has learned it.
+  'buyer',
+  'supplier',
+  'commercial',
+  'fulfilment',
+  'back_office',
+  // Last, and in practice never reached: `rolesHolding` filters the SUPERSET
+  // roles out before an owner list is built, because a role that holds
+  // everything names nothing. Present here so the record stays total over the
+  // union — and `ROLE_LABEL_KEY` is an exhaustive `Record<SystemRoleId, …>`, so
+  // a role added tomorrow is a `tsc` failure rather than a silent omission.
+  'buyer_all',
+  'admin'
+];
+
+/**
+ * @param {readonly SystemRoleId[]} owners
+ * @returns {readonly string[]}
+ */
+export function ownerLabelKeys(owners) {
+  return ROLE_ORDER.filter((r) => owners.includes(r)).map((r) => ROLE_LABEL_KEY[r]);
+}

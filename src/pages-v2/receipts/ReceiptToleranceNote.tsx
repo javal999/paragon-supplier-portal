@@ -10,7 +10,7 @@ import {
 // both the supplier's and PTI's receipt screens: exact, over (flagged: any
 // over-delivery is a decision), short within tolerance (closes), short beyond
 // it (flagged; the receipt stays open). The tolerance is read from
-// `fulfilmentConfig.ts` for the line's material, never written here.
+// `fulfilmentConfig.js` for the line's material, never written here.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const TONE: Record<ReceiptLineComparison['qtyOutcome'], string> = {

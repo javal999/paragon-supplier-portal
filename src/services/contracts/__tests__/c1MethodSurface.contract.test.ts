@@ -95,7 +95,7 @@ const ROOT = process.cwd();
 const CONTRACT = readFileSync(join(ROOT, 'docs', 'contracts', 'C1-methods.md'), 'utf8');
 
 const TYPES_PATH = join(ROOT, 'src', 'services', 'data', 'types.ts');
-const DISPATCHER_PATH = join(ROOT, 'src', 'services', 'transitions', 'dispatcher.ts');
+const DISPATCHER_PATH = join(ROOT, 'src', 'services', 'transitions', 'dispatcher.js');
 
 // One program for the file. `buildRepoProgram` is the helper the stored-field
 // gate already ships; reusing it means both gates see the same tsconfig and a
@@ -309,8 +309,9 @@ describe('C1 Axis 2 — the transition catalog', () => {
       );
     }
     // And the other direction: a flow file that reaches the tree without
-    // reaching the document.
-    expect(onDisk.filter((f) => f.endsWith('.flow.ts')).sort()).toEqual(
+    // reaching the document. Reads both forms (frontend-standard Phase 4):
+    // converted flows are `.flow.js`, the forecast flows are still `.flow.ts`.
+    expect(onDisk.filter((f) => /\.flow\.[jt]s$/.test(f)).sort()).toEqual(
       rows.map((r) => r.file).sort(),
     );
   });

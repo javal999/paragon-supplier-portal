@@ -62,7 +62,7 @@ import { shiftFields } from '@services/data/fixturePresent';
  * @property {ReceiptDiscrepancyResponse} [discrepancyResponse] REQ-E07-06 — the supplier's answer to a receipt discrepancy, and PTI's
  *   resolution of a dispute. Held in its own store and joined on read; never a
  *   fixture value. Whether a receipt HAS a discrepancy is derived at read time
- *   (`fulfilmentRules.ts`), not stored.
+ *   (`fulfilmentRules.js`), not stored.
  */
 
 /** @typedef {'Acknowledged' | 'Disputed' | 'Resolved'} ReceiptDiscrepancyStatus */
@@ -632,7 +632,7 @@ const mockGoodsReceiptsRaw = [
   // like GR-2026-003 on the same order, and NOT `Posted to SAP`: a posted
   // receipt is a landed one, and `receiptsForInvoice` would then pair the
   // disputed INV-2025-BRL-0043 on this PO with them
-  // (`invoiceMatchPairing.test.ts` names the one pairing the corpus holds).
+  // (`invoiceMatchPairing.test.js` names the one pairing the corpus holds).
   // No ASN: the call-offs had none, and the receipt pages say "Received
   // without ASN".
   // Every date is 12 days or more from every other sup-007 receipt and call-off

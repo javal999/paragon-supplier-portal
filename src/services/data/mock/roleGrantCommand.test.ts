@@ -140,7 +140,7 @@ describe('⚠️ THE ROLE GATE — procurement cannot lower the bar it is measur
     // by construction, so this seat used to fall THROUGH scope to the role gate
     // and come back `ROLE_NOT_PERMITTED` — while the same probe at an id that is
     // not a `SystemRoleId` came back `SCOPE_DENIED`. The refusal KIND answered
-    // "is this a real role?". It no longer does; see `ownerlessScope.test.ts`.
+    // "is this a real role?". It no longer does; see `ownerlessScope.test.js`.
     await expect(svc.dispatch(supplier, grant())).rejects.toThrow(/denied for scope/);
   });
 

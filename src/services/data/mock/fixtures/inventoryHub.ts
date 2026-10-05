@@ -122,7 +122,7 @@ export const PLANNING_DAILY_DEMAND: Readonly<Record<string, number>> = {
  * "lead time missing" alert.
  *
  * BL-46 demo cases (days of cover are the planning estimate's, so they do not
- * move with the clock — pinned in inventoryRules.test.ts by name):
+ * move with the clock — pinned in inventoryRules.test.js by name):
  *   · High        sup-002 RM-STEAR-7300  10 days vs lead time 21 (below 1×)
  *   · Medium      sup-007 PK-PETB-8801   17 days vs lead time 14 (1× to 1.5×)
  *   · Low         sup-008 PK-CART-9901   ~45 days vs lead time 14

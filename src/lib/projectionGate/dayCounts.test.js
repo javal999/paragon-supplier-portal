@@ -83,6 +83,51 @@ describe('POPULATION + MATCHER CONTROLS — before any row is believed', () => {
     );
     expect(declaredDayCountFields(() => crlf, ['x.ts'])).toHaveLength(2);
   });
+
+  // `takesInjectedNow` reads both languages. Each known-good input has a
+  // known-bad twin in the SAME language, so neither half is believed alone.
+  it('the injected-now matcher ACCEPTS an injected now in TypeScript and in JSDoc', () => {
+    /** @type {Array<[string, string]>} */
+    const good = [
+      ['p.ts', 'export function f(p: P, nowIso: string): number { return 0; }'],
+      ['p.ts', 'export const f = (now: Date) => now.getTime();'],
+      ['p.ts', 'export function f(opts: { nowIso: string }) { return opts; }'],
+      [
+        'p.js',
+        '/**\n * @param {P} p\n * @param {string} nowIso\n */\nexport function f(p, nowIso) {}'
+      ],
+      ['p.js', '/** @param {Date} now */\nexport const f = (now) => now.getTime();'],
+      ['p.js', '/** @param {{ nowIso: string }} opts */\nexport function f(opts) {}']
+    ];
+    for (const [file, text] of good)
+      expect(
+        takesInjectedNow(file, () => text),
+        text
+      ).toBe(true);
+  });
+
+  it('the injected-now matcher REFUSES a producer that reads its own clock', () => {
+    /** @type {Array<[string, string]>} */
+    const bad = [
+      [
+        'p.ts',
+        'export function f(p: P): number { const nowIso: string = new Date().toISOString(); return 0; }'
+      ],
+      ['p.ts', 'export function f(p: P, nowIso: number): number { return 0; }'],
+      ['p.ts', '// nowIso: string\nexport function f(p: P) { return Date.now(); }'],
+      [
+        'p.js',
+        '/**\n * @param {P} p\n */\nexport function f(p) {\n  const nowIso = new Date().toISOString();\n}'
+      ],
+      ['p.js', '/** @param {number} nowIso */\nexport function f(nowIso) {}'],
+      ['p.js', '/** @param {string} nowIso */\nexport function f(p) {}']
+    ];
+    for (const [file, text] of bad)
+      expect(
+        takesInjectedNow(file, () => text),
+        text
+      ).toBe(false);
+  });
 });
 
 describe('BILATERAL — declared == derived, as SETS', () => {
@@ -221,6 +266,22 @@ describe('⚠️ mintedAtWrite — the clock value COMPUTED AND THEN STORED', ()
     expect(writesField('x.ts', 'daysUntilExpiry', () => '  daysUntilExpiry: number;')).toBe(false);
     // …nor is a commented-out one.
     expect(writesField('x.ts', 'daysUntilExpiry', () => '  // daysUntilExpiry: 590,')).toBe(false);
+  });
+
+  it('the LAST-member shorthand is a write; a parameter, JSX and a template are not', () => {
+    // Converted files print no trailing comma, so the last shorthand member is
+    // a bare `field` before `}` — `inventoryAlertRules.js` writes `daysToImpact`
+    // that way. Each known-good shape has a known-bad neighbour.
+    const f = 'daysToImpact';
+    expect(
+      writesField('x.js', f, () => '        riskBasis: b,\n        daysToImpact\n      });')
+    ).toBe(true);
+    expect(writesField('x.js', f, () => 'out.push({ key, daysToImpact });')).toBe(true);
+    expect(writesField('x.js', f, () => 'function g(\n  daysToImpact\n) {}')).toBe(false);
+    expect(writesField('x.js', f, () => '<b>{daysToImpact}</b>')).toBe(false);
+    // Split so the source text holds a template literal, not this spec.
+    expect(writesField('x.js', f, () => 'const s = `$' + '{daysToImpact}`;')).toBe(false);
+    expect(writesField('x.js', f, () => '  // , daysToImpact }')).toBe(false);
   });
 });
 

@@ -446,7 +446,7 @@ describe('⚠️ AUTHORISATION — raising and deciding are different seats', ()
   //
   // ⚠️ **THE TWO SPECS BELOW ARE DELIBERATELY NOT MERGED INTO ONE.** They probe
   // the two inputs a leak would distinguish, and a single spec asserting one of
-  // them would pass just as happily with the leak restored. `ownerlessScope.test.ts`
+  // them would pass just as happily with the leak restored. `ownerlessScope.test.js`
   // asserts the equality across the whole DERIVED population; these two are the
   // local, readable form of it on the collection where the population grew.
   it('a supplier seat is refused on an application that EXISTS — at scope', async () => {

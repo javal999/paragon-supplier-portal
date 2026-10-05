@@ -7,7 +7,7 @@
 // counts, the grain, and whether a date change resets the clock.
 //
 // ⚠️ **THIS FILE DESCRIBES THE CODE; IT DOES NOT DEFINE THE MEASURE.** The
-// measure is `performanceRules.ts` over `callOffRules.ts` (CR-06 to CR-08) and
+// measure is `performanceRules.ts` over `callOffRules.js` (CR-06 to CR-08) and
 // `poCfot`. Every number below is READ from the constants those modules use,
 // and `kpiDefinitions.bl53.test.ts` fires the real functions at each stated
 // boundary — so if the arithmetic changes and this text does not, a named test

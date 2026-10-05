@@ -232,7 +232,7 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
   // surfaces, one account of it.
   //
   // ⚠️ **WHAT WAS WRONG WAS THE SURFACE, NOT THE MACHINE.** A settle that fails
-  // leaves the command `submitted` and `pending` undeleted — `dispatcher.ts`
+  // leaves the command `submitted` and `pending` undeleted — `dispatcher.js`
   // does that DELIBERATELY, so the SAME correlationId is genuinely re-settleable
   // ("Leaving the command `submitted` is what makes the named remedy TRUE").
   // Nothing on this page held the correlationId, so the only trace of a failure

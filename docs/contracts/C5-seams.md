@@ -4,8 +4,8 @@ The swap-points where the mock becomes the real system. Each is tiered **LIVE** 
 **SPEC** (README legend). The design rule throughout: the seam is an **interface**, so landing the
 real implementation is **additive** — pages and the contract do not change.
 
-Source of truth: `DataServiceContext.tsx`, `types.ts`, `MockCommandService.ts`, `roles.ts`,
-`events.ts`, `docs/findings.md`.
+Source of truth: `DataServiceContext.tsx`, `types.ts`, `MockCommandService.ts`, `roles.js`,
+`events.js`, `docs/findings.md`.
 
 ---
 
@@ -19,7 +19,7 @@ Source of truth: `DataServiceContext.tsx`, `types.ts`, `MockCommandService.ts`, 
 | SAP boundary (Option B) | **LIVE** (2 verbs) | `settleFinalize` → real SAP settlement webhook |
 | `AuditSink` / `TransitionEvent` (DR-10) | **LIVE** in-memory / durable **RESERVED** | `AuditSink` interface (C3) |
 | `httpDataService` | **RESERVED** | `DataServiceContext` service prop |
-| OIDC / real IdP | **RESERVED** | persona→role map (`roles.ts`) |
+| OIDC / real IdP | **RESERVED** | persona→role map (`roles.js`) |
 | INT-TMS-01 (Portal↔TMS ASN boundary) | **RESERVED** | `advanceShipNotice` system-trigger transitions |
 | Backend / datastore | **RESERVED** (greenfield) | in-memory stores |
 | Snowflake clean-data layer | **SPEC** (C4) | durable `AuditSink` tee |
@@ -87,7 +87,7 @@ getCapabilities(scope: QueryScope): Promise<CapabilitySet>   // { roles, transit
 ```
 
 - **LIVE:** `getCapabilities` is reserved on `IDataService` and **mock-backed** — `capabilitiesFor`
-  computes it as the **persona-role map × the flow catalog** (`roles.ts`): the roles a persona
+  computes it as the **persona-role map × the flow catalog** (`roles.js`): the roles a persona
   holds and the transition ids it may initiate. `PERSONA_ROLES` is the **DATA** placeholder for
   the real IdP claim set (Phase-4′ OIDC swaps the table, never the transition metadata).
 - **RESERVED (the partial):** the **`guidance?` prop slot** on the inline-state / deferred-action
@@ -108,7 +108,7 @@ verbs are behavior-wired (they are not — C1 wiring census).
 
 ## OIDC / real IdP · **RESERVED**
 
-The persona→transition-role table (`PERSONA_ROLES`, `roles.ts`) is the placeholder. Phase-4′ OIDC
+The persona→transition-role table (`PERSONA_ROLES`, `roles.js`) is the placeholder. Phase-4′ OIDC
 swaps it for a real IdP claim set; the transition metadata (`requiredRole` strings) and the
 dispatcher are untouched. System/cascade transitions (Paragon-side automation) map to `buyer`.
 
@@ -117,12 +117,12 @@ dispatcher are untouched. System/cascade transitions (Paragon-side automation) m
 ## INT-TMS-01 — Portal↔TMS ASN boundary · **RESERVED**
 
 Once an ASN is `Submitted`, its logistics lifecycle (`In Transit` / `Delivered` — the
-`system`-trigger transitions on `advanceShipNotice.flow.ts`, **authored but unwired**) belongs to
+`system`-trigger transitions on `advanceShipNotice.flow.js`, **authored but unwired**) belongs to
 the **TMS Control Tower** (the Odyssey platform sibling), not the Supplier Portal. There is **no
 integration seam** handing the submitted ASN to the TMS and **no inbound channel** for TMS-driven
 logistics events. Phase-4′ wire: the `asn:carry` transitions become TMS-driven, mirroring how
 `t_gr_post` is SAP-driven. Until then, In-Transit / Delivered stay authored-unwired. The
-`shipment.flow.ts` machine (8 transitions, inert F0.4) is the TMS-owned lifecycle this boundary
+`shipment.flow.js` machine (8 transitions, inert F0.4) is the TMS-owned lifecycle this boundary
 eventually feeds. (`docs/findings.md` INT-TMS-01.)
 
 ---

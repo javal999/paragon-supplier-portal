@@ -56,7 +56,7 @@ import {
 // (`PF1-NO-PURPOSE-ANNOTATION-01`), because purpose is the one thing the schema
 // does not carry: `trigger: 'user'` says a person does it, never why a person
 // would. So PF-2 authors one sentence per machine and per verb —
-// `services/transitions/annotations.ts` for the keys, `lib/i18n/
+// `services/transitions/annotations.js` for the keys, `lib/i18n/
 // processFlowPurpose.js` for the words, bilaterally pinned to `getKnownFlows()`
 // in both directions.
 //
@@ -108,7 +108,7 @@ const LooseEndRow: React.FC<{ end: AnnotatedLooseEnd }> = ({ end }) => {
         <Data className="text-[11px]">{end.subject}</Data>
         <span className="text-[11px] text-text-secondary">{t(looseEndKindKey(end.kind))}</span>
         {/* The reason TOKEN, verbatim — it is the census's own closed-vocabulary
-            word, and it is what a reader traces back to `looseEndCensus.ts`.
+            word, and it is what a reader traces back to `looseEndCensus.js`.
             The gloss for each token is in the reading key on the rail. */}
         <StatusPill variant="warning" className="text-[10px]">
           <Data className="text-[10px] text-warning-hover">

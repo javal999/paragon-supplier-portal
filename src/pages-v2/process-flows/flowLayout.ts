@@ -90,7 +90,7 @@ export interface DiagramLayout {
  * THE VERB SEGMENT of a transition id — `t_po_confirm` → `confirm`.
  *
  * Derived by dropping the two fixed leading segments the id format guarantees
- * (`t_<entity>_<verb>`, format-validated in `validate.ts`), so it is a slice of
+ * (`t_<entity>_<verb>`, format-validated in `validate.js`), so it is a slice of
  * the schema's own string and not a second name for the verb. A compound verb
  * keeps its underscore (`t_gr_partial_approve` → `partial_approve`).
  */
@@ -120,7 +120,7 @@ export function verbOf(transitionId: string): string {
  * something different, which is a worse defect than the one it fixes and it
  * arrives silently.
  *
- * `t_<entity>_<verb>` is format-validated in `validate.ts`, so this is a slice
+ * `t_<entity>_<verb>` is format-validated in `validate.js`, so this is a slice
  * of the schema's own string — not a second name and not a lookup.
  */
 export function entityVerbOf(transitionId: string): string {

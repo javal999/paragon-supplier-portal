@@ -4,7 +4,7 @@ One event shape across the whole command layer (DR-10). The dispatcher emits a `
 on **every** command outcome; the durable audit sink persists the **same** shape, so there is no
 retrofit — the sink interface *is* the contract.
 
-Source of truth: `src/services/transitions/events.ts`, `src/services/transitions/dispatcher.ts`.
+Source of truth: `src/services/transitions/events.js`, `src/services/transitions/dispatcher.js`.
 
 ---
 
@@ -27,7 +27,7 @@ interface TransitionEvent {
 
 ⚠️ **THREE OF THOSE FIELDS WERE ADDED AFTER THIS PAGE WAS FIRST WRITTEN AND WENT
 UNDOCUMENTED UNTIL THE PIN CAUGHT THEM.** `reason`, `decision` and `attribution`
-were live in `events.ts` while this block still showed seven fields. They are
+were live in `events.js` while this block still showed seven fields. They are
 described at their declarations and only summarised here, so the two cannot
 drift into two different stories:
 
@@ -58,7 +58,7 @@ prose is how a contract clause gets contradicted by shipped code with every gate
 claims: **no file under `src/services/transitions/` reads a clock at all**, the dispatcher declares
 `now` as a dependency, and the one production wiring site supplies exactly the value named above.
 The matcher separates `new Date()` (a clock read) from `new Date(asOf)` (a parse of a supplied
-string, which `policies.ts` really does), and it is controlled in both directions before its silence
+string, which `policies.js` really does), and it is controlled in both directions before its silence
 over the spine is believed.
 
 ⚠️ **IT IS THE WALL CLOCK AND NOT THE DECLARED PRESENT, DELIBERATELY — WHICH IS THE
@@ -89,7 +89,7 @@ interface AuditSink {
 - **LIVE:** `InMemoryAuditSink` — keeps events in memory for inspection and tests
   (`all()` / `byEvent(id)` / `clear()`). The process-wide instance is `commandAuditSink`
   (`MockCommandService.ts`), injected into the dispatcher as `deps.sink`.
-- **RESERVED:** the durable persistent sink. The comment in `events.ts` names it "CMVE implements
+- **RESERVED:** the durable persistent sink. The comment in `events.js` names it "CMVE implements
   this in Phase 5′" — because it implements the **same** `AuditSink` interface, landing it is
   additive: the dispatcher, the event shape, and every emit site are unchanged.
 
@@ -159,7 +159,7 @@ before durability closes the window. **Read a field added after this page as int
 drift** — but the moment the sink is durable, this list is final.
 
 ⚠️ **AND THIS PAGE IS NOW PINNED** (`c3Events.contract.test.ts`): the interfaces above are asserted
-field-for-field against `events.ts`, so a field added to the tree and not to this page fails the
+field-for-field against `events.js`, so a field added to the tree and not to this page fails the
 build. That is how the three above were found.
 
 ---

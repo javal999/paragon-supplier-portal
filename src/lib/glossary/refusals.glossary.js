@@ -4,7 +4,7 @@
 // Every union here is a REFUSAL: a machine saying no. `HALAL-REFUSAL-DEAD-
 // ENDS-01` is about exactly these — Monday's smoke found a refusal that tells
 // you only that you are STUCK. A refusal could not acquire a definition until
-// something could name the set; `services/transitions/refusals.ts` named the
+// something could name the set; `services/transitions/refusals.js` named the
 // command set, and these registries define all of them.
 //
 // ⚠️ `HalalNotSatisfiedReason` HAS NEVER HAD USER-FACING PROSE IN THIS TREE —
@@ -95,7 +95,7 @@ export const DATA_ERROR_GLOSSARY = /** @satisfies {GlossaryOf<DataErrorCode>} */
   // BELIEVES; a mechanism that hides existence behind copy asserting existence
   // is not hiding it. Both locales carried it. Rewritten so the sentence is true
   // of BOTH inputs — which is the same property the dispatcher now enforces
-  // (`ownerlessScope.test.ts`), stated in the words the reader actually gets.
+  // (`ownerlessScope.test.js`), stated in the words the reader actually gets.
   SCOPE_DENIED: {
     en: 'This is outside what your account may see — or there is no such record. The answer is deliberately the same either way, so that asking cannot reveal which. A supplier sees only its own records.',
     id: 'Ini di luar jangkauan akun Anda — atau memang tidak ada datanya. Jawabannya sengaja sama untuk keduanya, sehingga bertanya tidak dapat mengungkapkan yang mana. Pemasok hanya melihat datanya sendiri.'

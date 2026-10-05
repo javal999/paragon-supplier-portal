@@ -154,7 +154,7 @@ export const STORED_FIELD_ALLOWLIST = Object.freeze([
   // `MaterialMasterEntry.materialGroup` and `.materialType` LEFT THIS LIST BY
   // ACQUIRING A PRODUCT READER (REQ-E08-01 / REQ-E08-04): the inventory model
   // splits raw material from packaging on the type (BR-07) and states capacity
-  // per material group, both in `transitions/inventoryRules.ts`.
+  // per material group, both in `transitions/inventoryRules.js`.
   // ⚠️ §68 — `ActorAttribution.person` WAS HERE AND ITS EXEMPTION OUTLIVED ITS
   // SUBJECT, WHICH IS THE GATE DOING THE ONE THING A ONE-DIRECTIONAL LIST
   // CANNOT. The row read: unreachable by construction, nothing can produce a

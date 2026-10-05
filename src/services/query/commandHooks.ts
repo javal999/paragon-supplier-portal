@@ -135,7 +135,7 @@ async function settleOrRefuse(
 // genuinely re-attempts"*, which is right about the machine and was read at §91
 // as a claim about `t_gr_post` — whose `from` excludes the interim state, making
 // the whole remedy look like a machine change. It is not. The action that
-// re-attempts is the SETTLE, on the SAME correlationId: `dispatcher.ts` leaves a
+// re-attempts is the SETTLE, on the SAME correlationId: `dispatcher.js` leaves a
 // failed settle `submitted` with its `pending` context undeleted precisely so a
 // second `settle()` completes. A re-POST would mint a SECOND correlationId and
 // orphan the first, so widening `from` would have broken the thing it was meant

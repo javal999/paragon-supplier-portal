@@ -266,7 +266,7 @@ describe('t_enforcement_set — ⚠️ LOOSENING REQUIRES reviewBy AND A NAMED A
     // Asserted structurally: the policy reads `settingInForce`, which takes no
     // instant, and `effectiveEnforcement` (which does) is not in the hook.
     const policies = Object.entries(
-      import.meta.glob('/src/services/transitions/policies.ts', {
+      import.meta.glob('/src/services/transitions/policies.js', {
         query: '?raw',
         import: 'default',
         eager: true,

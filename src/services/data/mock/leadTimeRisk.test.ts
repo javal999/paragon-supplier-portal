@@ -213,10 +213,10 @@ describe('BL-46 sites — one function computes the risk class, and nothing else
   it('the CR-02 band is called only inside inventoryRules (the fallback), never by a page', () => {
     const band = callers(/\b(supplyBand|positionBand)\s*\(/);
     // Known-true: the rules module calls it (the fallback in riskFor).
-    expect(band).toContain('src/services/transitions/inventoryRules.ts');
+    expect(band).toContain('src/services/transitions/inventoryRules.js');
     // Known-false: the PTI inventory page used to filter by band; it must not now.
     expect(band).not.toContain('src/pages-v2/BuyerInventory.tsx');
-    expect(band).toEqual(['src/services/transitions/inventoryRules.ts']);
+    expect(band).toEqual(['src/services/transitions/inventoryRules.js']);
   });
 
   it('every surface that shows a material risk reads positionRisk', () => {
@@ -225,7 +225,7 @@ describe('BL-46 sites — one function computes the risk class, and nothing else
       'src/pages-v2/BuyerInventory.tsx',
       'src/pages-v2/inventory/inventoryDisplay.tsx',
       'src/pages-v2/widgets/BuyerInventoryWidget.tsx',
-      'src/services/transitions/inventoryAlertRules.ts',
+      'src/services/transitions/inventoryAlertRules.js',
     ]);
     // Known-false: the alert list shows the class the alert carries; it does not recompute it.
     expect(risk).not.toContain('src/pages-v2/BuyerAlerts.tsx');
@@ -239,8 +239,8 @@ describe('BL-46 sites — one function computes the risk class, and nothing else
     // their only reader — and the old names must be gone from shipped code.
     expect(callers(/\b(SUPPLY_BANDS|LEAD_TIME_RISK)\b/)).toEqual([]);
     expect(callers(/\b(supplyBands|leadTimeRisk)\s*\(/)).toEqual([
-      'src/services/transitions/inventoryConfig.ts',
-      'src/services/transitions/inventoryRules.ts',
+      'src/services/transitions/inventoryConfig.js',
+      'src/services/transitions/inventoryRules.js',
     ]);
   });
 });

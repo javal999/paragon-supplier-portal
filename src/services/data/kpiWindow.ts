@@ -2,7 +2,7 @@
 // THE EARLY-DELIVERY WINDOW FOR OTIF AND CFOT — ONE VALUE (BL-66 (4), BL-82).
 //
 // How many days BEFORE its date a receipt may arrive and still count as on time.
-// OTIF (CR-06 matching in `transitions/callOffRules.ts`), the Hub CFOT
+// OTIF (CR-06 matching in `transitions/callOffRules.js`), the Hub CFOT
 // (`data/performanceRules.ts`) and the engine CFOT (`engine/cfot.ts`) all read
 // THIS constant, so the two measures can never apply two different early rules.
 //

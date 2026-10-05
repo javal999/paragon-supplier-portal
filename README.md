@@ -136,7 +136,7 @@ when — and it never owns the S/4 document itself. Every act the portal refuses
 originate is declared as data on the verb rather than left to prose: the
 `surfaceable` field on each transition carries the reason and, for an external
 fact, the system that owns it (`ExternalFactOwner` in
-`src/services/transitions/schema.ts`), and every one of them is rendered with its
+`src/services/transitions/schema.js`), and every one of them is rendered with its
 owner at `/buyer/process-flows`. The SE team implements against the contracts
 package in `src/services/contracts/` and proves conformance with the two
 factories in `src/services/contracts/conformance/`.

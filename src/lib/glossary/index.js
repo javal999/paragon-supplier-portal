@@ -22,9 +22,9 @@
 //
 // ── ⚠️ FLOW STATES AND TRANSITIONS ARE DELIBERATELY NOT HERE ────────────────
 //   The dispatch listed them, and they already have this exact thing:
-//   `services/transitions/annotations.ts` holds an authored purpose per flow and
+//   `services/transitions/annotations.js` holds an authored purpose per flow and
 //   per transition, keyed by derived identity, with the prose in
-//   `lib/i18n/processFlowPurpose.js` (EN + ID) and `annotations.test.ts` pinning
+//   `lib/i18n/processFlowPurpose.js` (EN + ID) and `annotations.test.js` pinning
 //   the two bilaterally. **Re-authoring them here would create the second copy
 //   that file's own header forbids** — and a second copy is the half that goes
 //   wrong silently. The glossary DEFERS to it. **GL-1 kept that fence:** a term
@@ -111,7 +111,7 @@ const REGISTRIES = /** @satisfies {readonly GlossaryRegistry[]} */ (
   /** @type {const} */ ([
     {
       sourceType: 'CommandRefusal',
-      sourceFile: 'src/services/transitions/refusals.ts',
+      sourceFile: 'src/services/transitions/refusals.js',
       entries: COMMAND_REFUSAL_GLOSSARY
     },
     {
@@ -121,7 +121,7 @@ const REGISTRIES = /** @satisfies {readonly GlossaryRegistry[]} */ (
     },
     {
       sourceType: 'SettleFault',
-      sourceFile: 'src/services/transitions/settleFaults.ts',
+      sourceFile: 'src/services/transitions/settleFaults.js',
       entries: SETTLE_FAULT_GLOSSARY
     },
     { sourceType: 'FxRefusalReason', sourceFile: 'src/lib/fxPin.js', entries: FX_REFUSAL_GLOSSARY },

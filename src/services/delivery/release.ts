@@ -56,7 +56,7 @@ export type ReleaseReason =
   /** An explicitly-named line is already 'released'. Note the deliberate split:
    *  the HORIZON arm skips already-released lines silently (re-releasing a horizon
    *  is a natural operator repeat — cf. the best-effort cascade no-op in
-   *  ../transitions/dispatcher.ts), while an EXPLICITLY named line is refused
+   *  ../transitions/dispatcher.js), while an EXPLICITLY named line is refused
    *  (the operator named THAT line and deserves to be told — cf. the dispatcher's
    *  ILLEGAL_TRANSITION on an explicit verb). Also the freeze law (Decision B). */
   | 'ALREADY_RELEASED'

@@ -1,0 +1,267 @@
+// ────────────────────────────────────────────────────────────────────────────
+// Transition Schema (v2.2 Step 3.1) — TMS-shape, adapted.
+//
+// A declarative, data-only description of an entity state machine. The
+// dispatcher (Step 3.4) reads these definitions to validate and execute
+// commands; NO dispatch logic lives here — this module is TYPES ONLY plus one
+// type-level law guard. Validation (runtime) lives in `validate.js`; the loader
+// registry (`getKnownFlows`) lives in `registry.js`.
+//
+// Law 0.5 (DR-8, computed-never-stored): clock-derived states
+// (Expiring / Expired / Overdue / Upcoming …) are COMPUTED AT READ TIME from
+// dates. They are never stored, never commanded, and never appear in a
+// transition table. Enforced below at the TYPE LEVEL — a `clock` trigger is a
+// compile error.
+// ────────────────────────────────────────────────────────────────────────────
+
+/**
+ * How a transition fires.
+ * - `user`     — a persona explicitly commands it (PO confirm, invoice submit).
+ * - `system`   — an upstream/integration event drives it (SAP posts, GR settles).
+ * - `cascade`  — another transition's completion fans out into this one
+ *                (RFQ Award → losing quotations Rejected).
+ * - `creation` — the entity comes into existence in this state (empty `from`).
+ *
+ * `clock` is DELIBERATELY ABSENT. Clock-derived states are read-time projections
+ * (law 0.5), never transitions. See the compile-time guard below.
+ *
+ * ⚠️ **THIS FIELD IS PROVENANCE. IT DOES NOT SAY WHETHER A SCREEN OFFERS THE
+ * ACT — read `surfaceable` for that, and never infer one from the other.**
+ * For most of the tree the two agree, and *mostly* is exactly the problem: a
+ * field right three times in four earns trust it cannot hold. The proof is the
+ * `sapBoundary` population, which is TWO transitions and disagrees with itself
+ * — `t_gr_post` is `system` and `t_invoice_release_payment` is `user`, and both
+ * are the same panel-terminal button a buyer clicks. `system` also settles a
+ * question about THE SEAM, not about the act: `t_asn_deliver` is `system`
+ * because a carrier feed would drive it, so `system` currently means "not by a
+ * Paragon human AT THIS SEAM" — which is why a supplier-portal act can read as
+ * system-driven while a supplier does it. That is a real distinction and it is
+ * not the one this field's name implies. §50.
+ */
+/** @typedef {'user' | 'system' | 'cascade' | 'creation'} TransitionTrigger */
+
+// — Law 0.5 compile-time guard ───────────────────────────────────────────────
+// If `clock` ever leaks into TransitionTrigger, `Extract<…, 'clock'>` resolves
+// to `'clock'` (not `never`) and this alias violates its `extends never`
+// constraint → `tsc --noEmit` (the build gate) fails. This is the type-level
+// enforcement the plan requires (Step 3.1 / law 0.5). Lives in a non-test `src`
+// file deliberately: tsconfig.json (the build's tsc) excludes `*.test.ts`.
+/**
+ * @template {never} T
+ * @typedef {T} AssertNever
+ */
+/**
+ * @typedef {AssertNever<
+ *     Extract<TransitionTrigger, 'clock'>
+ *   >} ClockTriggerIsForbidden
+ */
+
+/**
+ * A namespaced transition-role, `<namespace>:<role>` (e.g. `po:confirm`).
+ * The persona→transition-role mapping is DATA (Step 3.7); Phase 4′ OIDC swaps
+ * that mapping, never these metadata strings. Format-validated in `validate.js`.
+ */
+/** @typedef {string} TransitionRole */
+
+/**
+ * A stable, human-legible transition id, `t_<entity>_<verb>` (e.g. `t_po_confirm`).
+ * Stable across schema versions and globally unique. Format-validated at runtime.
+ */
+/** @typedef {string} TransitionId */
+
+/**
+ * A REGISTERED policy-hook name (never a closure). Resolved to a function by the
+ * dispatcher (Step 3.4); kept as a name so definitions stay serialisable and
+ * inspectable. Validated against the registry in `policyHooks.js`.
+ */
+/** @typedef {string} PolicyHookName */
+
+/**
+ * WHY AN ACT HAS NO SCREEN. Three reasons, and they have different futures —
+ * which is the whole reason a bare `false` was refused (operator ruling, §50).
+ *
+ * - `external-fact`     — something outside Paragon reports it (a carrier feed,
+ *                         S/4HANA, a bank remittance). No screen is possible
+ *                         because no person here initiates it.
+ * - `computed`          — the platform derives it from what it already holds (a
+ *                         match verdict, a cascade, a deadline elapsing). There
+ *                         is nothing to click.
+ * - `ruled-unsurfaced`  — a person COULD initiate it and a STANDING RULING
+ *                         refuses the screen. The `why` cites the ruling, and
+ *                         **lifting that ruling is what changes this value** —
+ *                         which is what separates it from `surfaced: true` on
+ *                         an act that simply has not been built yet.
+ */
+/** @typedef {'external-fact' | 'computed' | 'ruled-unsurfaced'} NotSurfacedReason */
+
+/**
+ * WHICH SYSTEM OUTSIDE PARAGON OWNS AN `external-fact` ACT. A CLOSED union, and
+ * REQUIRED on that arm — an external fact whose owner is unnamed is the same
+ * omission `why` already refuses, one field along.
+ *
+ * ⚠️ **THE DISCRIMINATOR, SO THE NEXT AUTHOR DECIDES IT THE SAME WAY: THE OWNER
+ * IS THE EXTERNAL SYSTEM THE `why` NAMES AS REPORTING THE FACT.** It is read off
+ * the reason already written, never chosen freshly — which is what keeps this
+ * from becoming a second vocabulary for a fact the `why` already states. On the
+ * 15 external facts this arrived with, 14 name exactly one system: S/4HANA (4)
+ * or the TMS (10, every one of them citing `INT-TMS-01`).
+ *
+ * ⚠️ **AND THE FIFTEENTH IS AN AMBIGUITY THE DATA DOES NOT RESOLVE — RECORDED
+ * HERE RATHER THAN SMOOTHED OVER.** `t_invoice_remit` says *"Remittance is
+ * confirmed by the bank/SAP settlement feed"*: ONE feed, named by both ends, so
+ * the two candidate discriminators disagree on it and on nothing else. Read as
+ * *where the fact ORIGINATES* it is `bank` (the money moves at the bank; SAP
+ * relays); read as *which seam Paragon would read it FROM* it is `s4hana`. It is
+ * declared `bank` on the operator's ruling. **Changing it is one line and no
+ * other verb moves** — that is the whole reason the ambiguity is written down
+ * here instead of being argued again from the `why`.
+ *
+ * ⚠️ **THE RELAY IS NOT THE OWNER, AND THE SHIPMENT LEGS ARE WHY THAT MATTERS.**
+ * Four of the ten TMS facts name a party as well as a system — a forwarder, a
+ * carrier, a warehouse — and every one of them says that party reports *through
+ * the TMS*. Promoting the party would mint `warehouse` / `forwarder` / `carrier`
+ * as owners of a seam this platform does not have, which is the wildcard shape:
+ * a union that grows a member per sentence stops constraining anything.
+ *
+ * Adding a member is deliberately expensive — the union, the runtime set in
+ * `validate.js`, and two locale strings, all asserted bilaterally by
+ * `externalFactOwner.test.js`.
+ */
+/** @typedef {'s4hana' | 'tms' | 'bank'} ExternalFactOwner */
+
+/**
+ * DOES THE PLATFORM INTEND A SCREEN FOR THIS ACT AT ALL — a DESIGN-TIME
+ * question, and the axis nothing in this schema modelled before §50.
+ *
+ * ⚠️ **NOT "MAY THIS ACTOR DO IT NOW".** Role, scope, precondition and required
+ * fields are answered by the DISPATCHER AT REQUEST TIME and are already
+ * modelled. This says only whether the act is one a human is ever meant to
+ * initiate through a Paragon surface.
+ *
+ * ⚠️ **`surfaced: true` DOES NOT MEAN A SCREEN EXISTS TODAY.** It means one is
+ * intended. An intended act with no screen yet is the gap census
+ * (`USER-VERBS-WITHOUT-SURFACES-01`, §49g) and it must stay visible as a gap —
+ * so the gate asserts ONE direction only: everything DISPATCHED is surfaceable.
+ * The converse would demand a screen for every intended act on the day it is
+ * declared, and would turn a truthful backlog into a red build.
+ *
+ * ⚠️ **DELIBERATELY KEYED ON THE VERB, NEVER ON (verb, state).** Keying it per
+ * state would let `t_po_confirm` — surfaceable, and offered from 2 of its 3
+ * declared from-states — DECLARE ITS OWN LIVE DEFECT CORRECT, and the census
+ * that found it could never find it again. A field that lets a defect declare
+ * itself correct is worse than no field. The verb-level form is exact only
+ * while every `requiredRole` maps to ONE persona; that is true of all 46 user
+ * verbs today, NOTHING IN THIS SCHEMA ENFORCES IT, and the gate therefore
+ * ASSERTS it rather than assuming it.
+ */
+/**
+ * ⚠️ **THE `false` HALF IS SPLIT BY `because`, AND THE SPLIT IS THE ENFORCEMENT.**
+ * A single arm carrying `owner?:` would make the field optional on the one
+ * reason that requires it and legal on the two that must never carry it — the
+ * type would permit exactly the two states the gate exists to refuse. Split, the
+ * discriminant does the work: an `external-fact` without an `owner` does not
+ * compile, and a `computed` WITH one does not either (excess-property check).
+ * `validate.js` re-asserts both at import for untyped callers, the way it
+ * already re-asserts `why`.
+ */
+/**
+ *  WHICH SYSTEM REPORTS IT. Required — see `ExternalFactOwner`.
+ *  The reason, stated. An empty one is an omission wearing a row's clothes.
+ *  The reason, stated. An empty one is an omission wearing a row's clothes.
+ *
+ * @typedef {| { readonly surfaced: true }
+ *   | {
+ *       readonly surfaced: false;
+ *       readonly because: 'external-fact';
+ *       readonly owner: ExternalFactOwner;
+ *       readonly why: string;
+ *     }
+ *   | {
+ *       readonly surfaced: false;
+ *       readonly because: Exclude<NotSurfacedReason, 'external-fact'>;
+ *       readonly why: string;
+ *     }} Surfaceability
+ */
+
+/** One transition (edge) in a flow. */
+/**
+ * @typedef {object} TransitionDef
+ * @property {TransitionId} id -  Stable id, `t_<entity>_<verb>`. Globally unique across all flows.
+ * @property {readonly string[]} from -  Source states. EMPTY for `creation`; NON-EMPTY otherwise.
+ * @property {string} to -  Target state (∈ the flow's declared states).
+ * @property {TransitionTrigger} trigger -  WHAT FIRES IT — provenance only. Not the surface: read `surfaceable`.
+ * @property {Surfaceability} surfaceable WHETHER A PARAGON SURFACE IS EVER MEANT TO OFFER THIS ACT. Required on
+ *   every transition — a member that cannot exist without a value (E1/GL-0) —
+ *   and **authored per verb, never seeded from `trigger`**: the two disagree,
+ *   and seeding would have manufactured the disagreements and called them
+ *   derived. §50 lists every disagreement explicitly.
+ * @property {TransitionRole} requiredRole -  Namespaced transition-role permitted to fire it.
+ * @property {readonly string[]} requiredFields -  Command-payload field names that must be present (validated at dispatch).
+ * @property {readonly PolicyHookName[]} policyHooks -  Policy hooks by REGISTERED NAME (never closures). Validated vs the registry.
+ * @property {boolean} [sapBoundary] True when this transition crosses the SAP integration boundary (e.g. GR
+ *   "Posted to SAP"). Such commands settle asynchronously: the dispatcher
+ *   returns `submitted` (not `done`) and the real system reference lands on
+ *   settlement (Step 3.5). Optional; absent ⇒ synchronous (`done`).
+ * @property {string} [settlesTo] WHERE SETTLEMENT LANDS THE ENTITY — **required exactly when `sapBoundary`
+ *   is set, and forbidden otherwise** (PF-0 · D-2, operator ruling). Validated
+ *   ∈ the flow's states.
+ *
+ *   ⚠️ **WHY THIS IS DECLARED DATA AND NOT A COMMENT.** An Option-B verb parks
+ *   the entity in an INTERIM state (`Posting to SAP`, `Releasing Payment`) and
+ *   `settle()`'s finalize advances it to the settled one — inside the adapter,
+ *   **outside the declared machine**. So the declaration was TRUE AND
+ *   INCOMPLETE: a graph derived from it renders `Posted to SAP` unreachable and
+ *   `Posting to SAP` exit-less, and **both readings are correct about the
+ *   declaration** while being wrong about the system. The fix is to make the
+ *   declaration honest, not to exempt the reader.
+ *
+ *   It does not change dispatch. The dispatcher still returns `submitted`, the
+ *   adapter still owns the finalize; this field states, in data a build can
+ *   check, where that finalize is contracted to land.
+ * @property {boolean} [statePreserving] True when this transition RECORDS A FACT without moving the entity (2e-c-3).
+ *   The dispatcher applies it with the entity's CURRENT state, so `to` is never
+ *   written; validation requires `to ∈ from` so the declaration stays truthful
+ *   about where the entity ends up.
+ *
+ *   Why the flag rather than `to: <the same state>`: such a verb is legal from
+ *   SEVERAL resting states (an FX pin may be recorded on an Open or a Closed
+ *   RFQ) and `to` is a single value, so any concrete choice would move the
+ *   entity for the other from-states. Declaring `from: ['Open','Closed'], to:
+ *   'Open'` would quietly reopen a Closed RFQ every time a buyer pinned a rate.
+ *
+ *   The alternative — routing metadata around the dispatcher — was rejected: it
+ *   is the only path to the DR-10 audit trail, and a governed fact recorded
+ *   outside the trail is exactly what the trail exists to prevent.
+ *
+ *   Optional; absent ⇒ an ordinary state-moving transition.
+ * @property {number} version -  Schema version of this transition definition. Positive integer.
+ */
+
+/** A complete state machine for one entity. */
+/**
+ * @typedef {object} FlowDefinition
+ * @property {string} entity -  Machine key, e.g. `purchaseOrder`. Unique across the registry.
+ * @property {readonly string[]} states -  Every declared state (the machine's alphabet). Transition-states only —
+ *    clock-derived display states (Expiring/Expired/…) are NOT listed here.
+ * @property {string} initial -  The state a freshly-created entity lands in (∈ `states`).
+ * @property {readonly string[]} terminals THE STATES THIS MACHINE DECLARES AS ENDINGS (⊆ `states`) — **REQUIRED, and
+ *   an empty array is a legal, meaningful answer** (PF-0 · D-2, operator).
+ *
+ *   ⚠️ **TERMINAL-NESS IS THE ONE INTENT A GRAPH CANNOT INFER.** "Nothing
+ *   leaves this state" is the same SHAPE for an ending and for a hole: `Awarded`
+ *   and `Quality Hold` are indistinguishable in the edge set, and only an author
+ *   knows which is which. So it is declared, and validated BOTH WAYS —
+ *   declared-terminal ⇒ no exit (`validate.js`), and no-exit ⇒ declared-terminal
+ *   or censused (`flowGraph.test.js`). A flow cannot buy silence by declaring a
+ *   live state terminal, and cannot leave a hole unnamed.
+ *
+ *   **REQUIRED rather than optional, deliberately:** an optional field is
+ *   omitted on exactly the flows whose endings nobody thought about, which are
+ *   the flows this exists for. `[]` says *this machine declares no ending* —
+ *   which is true of the ASN flow today, and worth being able to read.
+ * @property {readonly TransitionDef[]} transitions -  Every transition (edge).
+ * @property {number} version -  Schema version of the flow. Positive integer.
+ */
+
+// Types only: `export {}` keeps this a module so its typedefs can be imported.
+export {};

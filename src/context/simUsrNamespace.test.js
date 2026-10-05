@@ -45,7 +45,7 @@ function sourceFiles(dir, acc = []) {
  *
  * ⚠️ **THE FIRST VERSION OF THIS MATCHER MADE A FALSE ACCUSATION, AND IT WAS
  * RULE 2 EXACTLY** (`docs/findings.md` §19 / CLAUDE.md): a bare
- * `/kind:\s*'RESOLVED'/` condemned `services/transitions/policies.ts`, whose
+ * `/kind:\s*'RESOLVED'/` condemned `services/transitions/policies.js`, whose
  * only occurrence is inside a REFUSAL MESSAGE documenting the shape a caller
  * must send — `"setBy must be { kind: 'RESOLVED', person: … }"`. A string
  * describing a constructor is not a constructor, and widening a matcher

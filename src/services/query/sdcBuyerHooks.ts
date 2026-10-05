@@ -254,7 +254,7 @@ export const useReviewRequirementResponse = () =>
  * `UnderReview → Accepted`).
  *
  * ⚠️ **`Accepted` IS TERMINAL — derived, not assumed: no transition in
- * `requirementResponse.flow.ts` declares it as a `from` state.** The surface
+ * `requirementResponse.flow.js` declares it as a `from` state.** The surface
  * says so before the act rather than discovering it afterwards.
  */
 export const useAcceptRequirementResponse = () =>

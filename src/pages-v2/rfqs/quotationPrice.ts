@@ -38,7 +38,7 @@ import { normalizeQty, type QtyRefusalReason } from '@lib/localeNumber';
  *
  * A zero here is perfectly readable — it is simply not a bid. `normalizeQty`
  * is right to return it (a typed 0 is a legal QUANTITY: "cannot supply at all",
- * `requirementResponse.flow.ts:35`), and this layer is right to reject it: a
+ * `requirementResponse.flow.js:35`), and this layer is right to reject it: a
  * quotation is an offer to sell at a price, and Rp 0 is not an offer. The two
  * rulings do not conflict because they are about different facts — which is
  * exactly why the zero rule lives HERE and not inside the shared parser.

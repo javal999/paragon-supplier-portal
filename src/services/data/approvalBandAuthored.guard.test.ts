@@ -207,7 +207,7 @@ describe('§69 · "not assigned" has ONE representation', () => {
     // `t_pr_create` writes `approvalLevel: ''`. The old copy said "this PR routes
     // to Section Head" — refuted by the create path AND by pr-003 ('VP
     // Procurement') in the same sentence. Procurement is derivable-true:
-    // `pr:approve` lives in exactly one bundle (`businessRoles.ts`).
+    // `pr:approve` lives in exactly one bundle (`businessRoles.js`).
     expect(requisitionsEn['requisitions.new.info']).not.toMatch(/Section Head/);
     expect(requisitionsId['requisitions.new.info']).not.toMatch(/Kepala Seksi/);
     expect(requisitionsEn['requisitions.new.info']).toMatch(/Procurement/);

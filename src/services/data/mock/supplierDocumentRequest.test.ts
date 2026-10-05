@@ -8,7 +8,7 @@
 //
 //   · **RULING 1 — the creation gate.** `creationOwner` ECHOED the payload and
 //     `requireCreationOwner` was unset, so a BUYER creation walked
-//     `dispatcher.ts`'s buyer branch with nothing between a payload string and a
+//     `dispatcher.js`'s buyer branch with nothing between a payload string and a
 //     minted row. It is now resolved against the platform roster. **The half
 //     that needs proving is the INERTNESS for `t_supplierdoc_declare`** — the
 //     only shipped behaviour this touches — and it is proved in BOTH
@@ -181,7 +181,7 @@ describe('RULING 1 · the creation gate — a payload echo is not a resolution',
   it('⚠️ an empty supplierId is now refused by the OWNER GATE, not by requiredFields', async () => {
     // **MEASURED, NOT PREDICTED — AND IT WENT THE OTHER WAY.** This test was
     // written expecting `MISSING_FIELDS`, on the reasoning that '' is an absent
-    // field. It is not: `dispatcher.ts` runs the creation-scope check at step 2
+    // field. It is not: `dispatcher.js` runs the creation-scope check at step 2
     // and `requiredFields` at step 5, so once `requireCreationOwner` is set the
     // owner gate answers first and '' resolves to no tenant.
     //

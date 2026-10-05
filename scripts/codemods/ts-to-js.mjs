@@ -46,7 +46,7 @@
 import ts from 'typescript';
 import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -235,6 +235,36 @@ function reexportTemplate(nameNode) {
   };
 }
 
+/**
+ * The checker's name for a type when it is ONE named type (`TransitionDef`,
+ * `Map<string, Row>`) and that name resolves, at `node`, to the SAME symbol —
+ * so the app's `TransitionEvent` is never written where the DOM's would be read.
+ */
+function sameSymbolName(type, node) {
+  const sym = type.aliasSymbol ?? type.getSymbol();
+  if (!sym) return null;
+  const text = checker.typeToString(type, node, ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope);
+  const m = /^([A-Za-z_$][\w$]*)(<.*>)?$/.exec(text);
+  if (!m || m[1] !== sym.getName() || text.length > 160) return null;
+  let found = checker.resolveName(m[1], node, ts.SymbolFlags.Type, false);
+  if (found && found.flags & ts.SymbolFlags.Alias) found = checker.getAliasedSymbol(found);
+  if (found === sym) return text;
+  if (found) return null; // the name means something ELSE here (the DOM's TransitionEvent)
+  // Not in scope at all: reference it where it is declared, `import('…').Name`,
+  // a JSDoc form that needs no import line. Only for app files, never a library.
+  const declFile = sym.declarations?.[0]?.getSourceFile().fileName;
+  if (!declFile || declFile.includes('/node_modules/') || (m[2] && /\b[A-Z]/.test(m[2]))) return null;
+  let rel = toPosixRel(node.getSourceFile().fileName, declFile);
+  return `import('${rel}').${text}`;
+}
+
+/** `./x` / `../y` module path from one source file to another, without extension. */
+function toPosixRel(fromFile, toFile) {
+  let rel = relative(dirname(fromFile), toFile).split('\\').join('/').replace(/\.(d\.ts|tsx?|jsx?)$/, '');
+  if (!rel.startsWith('.')) rel = `./${rel}`;
+  return rel;
+}
+
 /** A type the checker names, only if every name in it resolves at `node`. */
 function nameableType(type, node) {
   const text = checker.typeToString(type, node, ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope);
@@ -320,7 +350,12 @@ function convert(sf) {
       }
     } else {
       const start = t.target.getStart(sf);
-      ins(start, jsdocBlock(tags, indentAt(sf, start)));
+      const indent = indentAt(sf, start);
+      // If code precedes the target on its line (`{ a: …, b: (c) => … }`), a
+      // block placed there is read by Prettier as a TRAILING comment of `a`.
+      const lineStart = src.lastIndexOf('\n', start - 1) + 1;
+      const codeBefore = src.slice(lineStart, start).trim().length > 0;
+      ins(start, `${codeBefore ? `\n${indent}` : ''}${jsdocBlock(tags, indent)}`);
     }
   };
 
@@ -690,7 +725,10 @@ function convert(sf) {
       // construction. A checker-printed name is the fallback, and only after
       // `nameableType` found every name in scope — even then a name can resolve
       // to a different type here (the app's `TransitionEvent` vs the DOM's).
-      cast = shaped ? `NonNullable<${shaped}>` : named;
+      // A single named type that verifiably means the same type here beats the
+      // shape (which cannot see through generic methods such as `flatMap`).
+      const exact = sameSymbolName(checker.getNonNullableType(checker.getTypeAtLocation(e)), node);
+      cast = exact ?? (shaped ? `NonNullable<${shaped}>` : named);
       if (cast) {
         ins(e.getStart(sf), `/** @type {${cast}} */ (`);
         rep(e.end, node.end, ')');

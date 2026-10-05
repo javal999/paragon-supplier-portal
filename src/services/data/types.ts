@@ -308,7 +308,7 @@ export interface POLineItem {
   /**
    * CR-12 — the contract this line's unit price comes from, when it does. A
    * contract-priced line is invoiced at 0% tolerance; a line without one at 2%
-   * within the rupiah cap (`fulfilmentConfig.ts`). Absent = no contract price.
+   * within the rupiah cap (`fulfilmentConfig.js`). Absent = no contract price.
    */
   contractNumber?: string;
 }
@@ -352,7 +352,7 @@ export type PoResponseOption = 'approve' | 'adjust' | 'reject';
 
 /**
  * An adjust reason code (REQUIREMENTS §3.6). Since BL-32 the list is the Hub
- * administrator's (`reasonCodes.ts`, list `poAdjust`): the starter codes are
+ * administrator's (`reasonCodes.js`, list `poAdjust`): the starter codes are
  * capacity, material, logistics, quality and other, and a code can be added or
  * retired, so the type is the code's shape, not a closed union.
  */
@@ -413,7 +413,7 @@ export interface PoShippingNotice {
 // material). The hub is the record for call-offs; SAP only knows the umbrella
 // PO, receipts and invoices (REQUIREMENTS §3.1). Everything clock-derived —
 // Escalated, At Risk, Dispatched, on time / late / missed — is computed at read
-// time (`callOffRules.ts`) and never stored here.
+// time (`callOffRules.js`) and never stored here.
 
 /** JIT or forecast-based, set at release (BR-09). Since BL-47 the CR-05 tolerance is the same for both. */
 export type CallOffType = 'jit' | 'forecast';
@@ -543,7 +543,7 @@ export interface CallOff {
 // InventoryDeclaration store), PTI's SAP stock and reorder point, the in-transit
 // ASNs and call-off dispatch notices, and the forecast. Nothing here is stored,
 // and nothing clock-derived (staleness, days of supply, bands) is a field: the
-// pages compute those with the shared rules in `transitions/inventoryRules.ts`.
+// pages compute those with the shared rules in `transitions/inventoryRules.js`.
 
 /** Where an incoming quantity comes from (REQ-E08-01 BR-06). */
 export type IncomingSource = 'production' | 'asn' | 'dispatch';
@@ -1347,7 +1347,7 @@ export interface POSummary {
  * ⚠️ **`Rejected` IS HERE FOR A THIRD REASON, WHICH MUST NOT BE CONFLATED WITH
  * EITHER.** `Expiring Soon` is absent from the flow because it is derived;
  * `Expired` is gone because nothing made it. **`Rejected` is a real machine
- * state:** §82 put it in `supplierDocument.flow.ts` and
+ * state:** §82 put it in `supplierDocument.flow.js` and
  * `t_supplierdoc_reject` targets it.
  *
  *   ⚠️ **THE SENTENCE THAT STOOD HERE SAID THE OPPOSITE, AND IS QUOTED RATHER
@@ -2737,7 +2737,7 @@ export interface CommandInput {
    * identical and this compares states. It is equally blind to a concurrent
    * `statePreserving` verb, which by construction leaves the state where it
    * was. Both need an entity REVISION, which no store carries; see
-   * `staleState.test.ts`, which derives all three populations every run.
+   * `staleState.test.js`, which derives all three populations every run.
    *
    * The optionality is load-bearing in the other direction too: a REQUIRED
    * precondition would refuse every caller that has not been migrated, and
@@ -2780,7 +2780,7 @@ export interface CommandInput {
    * `ALREADY_RELEASED`. Those are REFUSALS on purpose — a person who clicked
    * twice must be told the second click did nothing. This field answers the
    * opposite case, where the caller is a transport that never intended a
-   * second act, and `idempotencyKey.test.ts` asserts no user surface passes it.
+   * second act, and `idempotencyKey.test.js` asserts no user surface passes it.
    */
   idempotencyKey?: string;
   /**

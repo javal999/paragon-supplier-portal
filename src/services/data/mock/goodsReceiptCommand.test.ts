@@ -1,7 +1,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 // GR command integration (v2.2 Step 4 batch ii) — the goods-receipt verbs
 // dispatched through the REAL MockCommandService + the real stores (not synthetic
-// targets like command.test.ts). This is the honest proof of the operator chain:
+// targets like command.test.js). This is the honest proof of the operator chain:
 //   create (records lines) → rollup-gated disposition → cross-entity cascade
 //   (ASN discrepancy) → Post to SAP (submitted, interim, NO doc) → settle
 //   (Posted to SAP + REAL MAT-DOC, Option B).

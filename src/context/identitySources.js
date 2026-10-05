@@ -87,7 +87,7 @@ const rolesFromStorage = (persona, value) => {
  * `sup-007`.
  *
  * ⚠️ **THIS FIELD IS NOT DISPLAY. It is the tenancy gate AND the cache key** —
- * `scope.supplierId` is what `dispatcher.ts` refuses on (`SCOPE_DENIED`) and
+ * `scope.supplierId` is what `dispatcher.js` refuses on (`SCOPE_DENIED`) and
  * what `scopeKey` shards every query cache by. That is why the name is
  * re-derived from the supplier master instead of read from the stored row:
  * localStorage is caller-supplied, and a row claiming

@@ -19,7 +19,7 @@ registered `:983`), a mutable store (`stores/purchaseRequisitionStore.ts`), a re
 (`IntakeReview.tsx`, `PlanGrid.tsx`) have all landed since. The SOMO wire remains SPEC (§5).
 
 **Grounding (real sources):**
-- the shipped PR machine — `src/services/transitions/flows/purchaseRequisition.flow.ts` (cited `file:line`);
+- the shipped PR machine — `src/services/transitions/flows/purchaseRequisition.flow.js` (cited `file:line`);
 - C6 planning doctrine — `docs/contracts/C6-planning.md` (the two-axis honesty model C7 reuses);
 - the IBP seat's seam answers — `docs/IBP_SupplyPlan_to_Procurement_Seam_2026-07-14.md` ("Seam");
 - the IBP seat's contract reply — `docs/IBP_SupplyPlan_Procurement_Seam_Reply_2026-07-14.md` ("Reply"),
@@ -114,7 +114,7 @@ green (LIVENESS-DATASOURCE-01).
 
 ## 1. The PR machine as-built (harvest)
 
-The buyer-internal intake machine — suppliers never see PRs (`purchaseRequisition.flow.ts:2-5`;
+The buyer-internal intake machine — suppliers never see PRs (`purchaseRequisition.flow.js:2-5`;
 read is buyer-only, `MockProcurementService.ts:353`). **F0.4, census #9 — authored at F0.4 and
 since WIRED** (G1.1): `purchaseRequisition` is a registered `CommandTarget`
 (`MockCommandService.ts:547-593`, `:983`) backed by a mutable store
@@ -132,10 +132,10 @@ plus `Rejected` (`PRStatus`, `types.ts:559-565`).
 | `t_pr_submit` (`:40-48`) | Draft → Pending Approval | user | `pr:submit` | — | |
 | `t_pr_approve` (`:50-58`) | Pending Approval → Approved | user | `pr:approve` | — | |
 | `t_pr_reject` (`:60-68`) | Pending Approval → Rejected | user | `pr:reject` | — | |
-| `t_pr_source` (`:72-80`) | Approved → Sourcing Event | cascade | `pr:source` | — | **metadata-only** (declared, no link in `cascades.ts`) |
+| `t_pr_source` (`:72-80`) | Approved → Sourcing Event | cascade | `pr:source` | — | **metadata-only** (declared, no link in `cascades.js`) |
 | `t_pr_convert` (`:83-91`) | Approved/Sourcing Event → PO Created | cascade | `pr:convert` | — | **metadata-only** |
 
-All roles map to `buyer` (`roles.ts:37`; flow header `:9`). `t_pr_source`/`t_pr_convert`
+All roles map to `buyer` (`roles.js:37`; flow header `:9`). `t_pr_source`/`t_pr_convert`
 **declare** that a raised RFQ / issued PO advances the PR, but **no cascade link is authored**
 (`:70-71, :82`) — declaration, not emission.
 
@@ -300,9 +300,9 @@ invoice creation:
 
 - A `creation`-trigger transition (`t_pr_create`, §1) dispatched through
   `ICommandService.dispatch(scope, input)` (`types.ts:1080`) with the full validation chain
-  (`dispatcher.ts:4-14`): QueryScope, `requiredRole` (`pr:create`), `requiredFields`
+  (`dispatcher.js:4-14`): QueryScope, `requiredRole` (`pr:create`), `requiredFields`
   (`material`+`quantity`), policy hooks → `create(payload, toState)` mints the entity + returns
-  its id (`dispatcher.ts:61-62, 251-254`; `creationOwner` derives scope from the payload,
+  its id (`dispatcher.js:61-62, 251-254`; `creationOwner` derives scope from the payload,
   `:60, :193-199`).
 
 ### C7-FIND-01 — **CLOSED** (was: PR create is author-INERT)
@@ -547,11 +547,11 @@ checkpoint; a contract statement that cannot be traced to a current `file:line` 
 finding, not as prose.
 
 Originally generated FORK-3 (machine-harvest from code-truth + thin connecting prose) at `main` #67.
-In-repo seams cited `file:line`: `purchaseRequisition.flow.ts` (machine :1-92),
+In-repo seams cited `file:line`: `purchaseRequisition.flow.js` (machine :1-92),
 `types.ts` (`PurchaseRequisition` :569-587, `PRStatus` :559-565, `getRequisitions` :1150),
 `MockProcurementService.ts` (read :349-354), `MockCommandService.ts` (TARGETS / wiring census
-:343-360, creation-mechanism examples :96-98/:252-254), `dispatcher.ts` (creation +
-validation :4-14/:60-62/:251-254), `roles.ts` (`pr:*` :37),
+:343-360, creation-mechanism examples :96-98/:252-254), `dispatcher.js` (creation +
+validation :4-14/:60-62/:251-254), `roles.js` (`pr:*` :37),
 `registry.ts` (`liveness`/`isLive`/`Tier` :45-184), `C5-seams.md` (INT-TMS-01 precedent :117-126),
 `C6-planning.md` (honesty matrix, PLANNED axis). External producer grain cited by doc § + field:
 `docs/IBP_SupplyPlan_to_Procurement_Seam_2026-07-14.md` (§0 liveness caveat, §1 grain, §3 RM/PM +

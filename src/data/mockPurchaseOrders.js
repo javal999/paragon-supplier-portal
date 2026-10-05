@@ -767,7 +767,7 @@ const mockPurchaseOrdersRaw = [
       // ⚠️ THE ONE PARTIALLY-CONFIRMED LINE IN THE FIXTURE, AND IT IS
       // LOAD-BEARING. PTI asked for 60,000; the supplier confirmed 50,000, which
       // is the ordinary case the set was missing — `committedQty`
-      // (`transitions/fulfilmentRules.ts`) reads the confirmation, so the ASN
+      // (`transitions/fulfilmentRules.js`) reads the confirmation, so the ASN
       // lane offers 50,000. It is ALSO invariant 1 in the header above: this is
       // what makes `po-024` the unique parent the Draft ASN's selection rule
       // resolves to.

@@ -7,7 +7,7 @@
 // its invitees, dates or files: invitees and dates belong to one event, and a
 // session-held file (BL-27) would be a dead reference after a reload.
 //
-// ── THE STORE FOLLOWS `customRoles.ts`, AND THE REASONS TRAVEL WITH IT ──────
+// ── THE STORE FOLLOWS `customRoles.js`, AND THE REASONS TRAVEL WITH IT ──────
 //
 // 1. **PERSISTED in `localStorage`** under `paragon.rfiTemplates` and
 //    `paragon.rfpTemplates` — one key per event type, so a corrupt RFP store

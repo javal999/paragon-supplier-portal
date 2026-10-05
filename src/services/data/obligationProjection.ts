@@ -35,7 +35,7 @@
 //   present under both labels**. The only thing that distinguishes an
 //   `Upcoming` row from an `In Progress` row is the literal itself.
 //
-//   `In Progress` is the flow's `initial` MACHINE state (`obligation.flow.ts`:
+//   `In Progress` is the flow's `initial` MACHINE state (`obligation.flow.js`:
 //   `states: ['In Progress', 'Completed']`), not a display state. Preserving it
 //   on a surface needs a stored field recording that work BEGAN, and no such
 //   field exists — inventing one is a data change dressed as a predicate. So
@@ -61,7 +61,7 @@
 //     > disposal available to them).
 //
 //   **ITS LAST CLAUSE IS STILL TRUE AND IS THE ONLY PART THAT IS.** Both verbs
-//   really are `surfaced: true`, and `obligation.flow.ts` really carries no
+//   really are `surfaced: true`, and `obligation.flow.js` really carries no
 //   `owner` and no `external-fact`. **Do not restate how many flow files do**
 //   — derive it (`grep -rln external-fact flows/`); the first draft of this
 //   sentence said *"one of the thirteen"* against a directory holding twenty,

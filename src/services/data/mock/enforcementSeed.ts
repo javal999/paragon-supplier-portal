@@ -98,7 +98,7 @@ const SEED_ACTOR = Object.freeze({
 /** Enforcement settings are a buyer governance record; the verb is buyer-only. */
 // The seeder dispatches `t_enforcement_set`, whose atom lives in `procurement`
 // this batch (the ruled move to `compliance` waits on its caller — see
-// `businessRoles.ts`). Naming the role here rather than the persona is what the
+// `businessRoles.js`). Naming the role here rather than the persona is what the
 // retirement requires of every command caller.
 const BUYER_SCOPE: QueryScope = {
   personaType: 'buyer',

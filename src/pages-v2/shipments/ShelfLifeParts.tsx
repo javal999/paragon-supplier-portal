@@ -4,7 +4,7 @@
 // exception record on an ASN, and the blocked-stock marker carried to receipt.
 //
 // Nothing here decides. Every figure comes from the rules in
-// `services/transitions/fulfilmentRules.ts`, the same functions the verbs call.
+// `services/transitions/fulfilmentRules.js`, the same functions the verbs call.
 // ────────────────────────────────────────────────────────────────────────────
 
 import React from 'react';

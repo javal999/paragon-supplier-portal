@@ -2054,7 +2054,7 @@ const purchaseRequisitionTarget: CommandTarget = {
   // written below has exactly ONE inbound edge (`Rejected` ← t_pr_reject,
   // `Draft` ← t_pr_revise, `Approved` ← t_pr_approve, `Sourcing Event` ←
   // t_pr_source), and `t_pr_create` also lands at `Draft` but arrives through
-  // `create`, never through here. Derive it from `purchaseRequisition.flow.ts`
+  // `create`, never through here. Derive it from `purchaseRequisition.flow.js`
   // before adding a fifth: a state that gains a second inbound edge makes one of
   // these writes fire on the wrong verb, silently.
   //
@@ -5018,7 +5018,7 @@ const supplierDocumentTarget: CommandTarget = {
   // and the dispatcher's supplier branch already refuses any owner that is not
   // `scope.supplierId`, so an owner function that merely ECHOED the payload was
   // sufficient: the equality check did the resolving. A BUYER creation walks the
-  // other branch (`dispatcher.ts:318`), where the ONLY thing standing between a
+  // other branch (`dispatcher.js:318`), where the ONLY thing standing between a
   // payload string and a minted row is this flag. Without it, `supplierId:
   // 'sup-999'` mints a document owned by a tenant that does not exist —
   // permanently in `Awaiting Upload`, permanently invisible to every seat,
@@ -5182,7 +5182,7 @@ const supplierApplicationTarget: CommandTarget = {
   // written below has exactly ONE inbound edge (`Under Review` ←
   // t_application_start_review, `Approved` ← t_application_approve, `Rejected`
   // ← t_application_reject); `Submitted` is reached only through `create`.
-  // Derive it from `supplierApplication.flow.ts` before adding a fourth: a
+  // Derive it from `supplierApplication.flow.js` before adding a fourth: a
   // state that gains a second inbound edge makes one of these writes fire on
   // the wrong verb, silently.
   applyTransition: (id, toState, payload, scope) => {
@@ -5387,7 +5387,7 @@ export const WIRED_COMMAND_TARGETS: readonly string[] = Object.freeze(
  *
  * ⚠️ **EXPORTED SO A GATE CAN DERIVE A POPULATION FROM THE TARGET'S OWN
  * CONTRACT RATHER THAN FROM THE DISPATCHER PREDICATE THAT CONSUMES IT, AND THE
- * REASON IS A MEASURED FAILURE.** `ownerlessScope.test.ts` first derived
+ * REASON IS A MEASURED FAILURE.** `ownerlessScope.test.js` first derived
  * "which targets are owner-less?" behaviourally — by asking which supplier ids
  * clear the dispatcher's scope gate. That reads correctly against the shipped
  * tree and is USELESS AS A GATE: mutate the predicate under test and the
@@ -5406,7 +5406,7 @@ export const commandTargetFor = (entity: string): CommandTarget | undefined =>
   TARGETS[entity];
 
 // Cross-entity cascade (census G4): a GR mismatch disposition (reject / partial
-// approve) raises a discrepancy on the linked ASN. The registry (cascades.ts)
+// approve) raises a discrepancy on the linked ASN. The registry (cascades.js)
 // declares WHICH verb; the mock resolves WHICH ASN id (the GR's own asnNumber).
 // Best-effort — a GR whose ASN is absent or not in a cascadable state no-ops.
 const resolveCascades = (ctx: CascadeContext): CascadeCommand[] => {
@@ -5444,8 +5444,8 @@ const resolveCascades = (ctx: CascadeContext): CascadeCommand[] => {
       // PO×state relation between a receipt and an invoice, and while it lived
       // here it could only be asked in this one direction — which is why an
       // invoice arriving AFTER its receipt is matched by nothing. Same predicate,
-      // same rows, now named in `invoiceRollup.ts` so the mirror is askable and
-      // testable. `invoiceMatchPairing.test.ts` pins that this direction is
+      // same rows, now named in `invoiceRollup.js` so the mirror is askable and
+      // testable. `invoiceMatchPairing.test.js` pins that this direction is
       // byte-for-byte the behaviour it replaced.
       // REQ-E07-07 — an invoice drawn from receipts is matched at its own
       // submission against the receipts it names (below), so a later receipt
@@ -5638,7 +5638,7 @@ const dispatcher = createDispatcher({
   // atoms unconditionally — award, post-to-SAP, release-payment and
   // enforcement-mode-setting held by one undifferentiated seat. That
   // persona-wide grant WAS the wildcard: there is no literal `buyer:all` in the
-  // role path (it is the DR-10 audit ACTOR string, `events.ts:actorKey`, and a
+  // role path (it is the DR-10 audit ACTOR string, `events.js:actorKey`, and a
   // `requiredRole` on 0 of 91 transitions) and the gate is a plain
   // `Array.includes` with no short-circuit. The wildcard was the SHAPE of the
   // grant, not a token in it.
@@ -5655,7 +5655,7 @@ const dispatcher = createDispatcher({
   // does not recognise. A seat holding a custom role would therefore resolve to
   // an EMPTY atom set and be refused `ROLE_NOT_PERMITTED` on every act, with
   // nothing anywhere to say the role existed. `atomsForSeat` composes the
-  // session's granted roles on top; `businessRoles.test.ts` pins that no other
+  // session's granted roles on top; `businessRoles.test.js` pins that no other
   // seat-resolution site still reads the narrower function.
   resolveRoles: (scope) => atomsForSeat(scope.businessRoles ?? []),
   target: (entity) => TARGETS[entity],

@@ -364,7 +364,7 @@ group('boundary provenance · README points at the data, and the retired claims 
     fail('boundary provenance', 'README.md is missing');
   } else {
     const text = readFileSync(readme, 'utf8');
-    const pointers = ['src/services/transitions/schema.ts', '/buyer/process-flows'];
+    const pointers = ['src/services/transitions/schema.js', '/buyer/process-flows'];
     const missing = pointers.filter((p) => !text.includes(p));
     if (missing.length > 0) {
       fail(

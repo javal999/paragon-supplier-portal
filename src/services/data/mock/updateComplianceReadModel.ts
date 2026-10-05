@@ -3,7 +3,7 @@
 //
 // ONE place gathers the stock records, the sync attempts, the assignments, the
 // mode history and the calendar and hands them to the pure rule
-// (`transitions/updateCompliance.ts`). Computed at read; nothing is stored.
+// (`transitions/updateCompliance.js`). Computed at read; nothing is stored.
 // ────────────────────────────────────────────────────────────────────────────
 
 import type { QueryScope } from '../types';

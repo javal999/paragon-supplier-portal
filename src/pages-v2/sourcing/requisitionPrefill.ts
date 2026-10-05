@@ -119,7 +119,7 @@ export function prefillFromRequisition(pr: PurchaseRequisition): RequisitionPref
  *
  * ⚠️ **IT ASKS "WHICH STATES REACH `Sourcing Event`?" RATHER THAN NAMING
  * `t_pr_source`, AND THE DIFFERENCE IS NOT COSMETIC.** Naming the transition id
- * from anything a surface can reach makes `surfaceable.test.ts` conclude that an
+ * from anything a surface can reach makes `surfaceable.test.js` conclude that an
  * operator can FIRE it — its walk treats an id mentioned in (or reachable from)
  * a surface as a dispatch site, and `t_pr_source` is `surfaced: false`. That
  * conclusion would be wrong here: the buyer fires `t_rfq_create`, and the

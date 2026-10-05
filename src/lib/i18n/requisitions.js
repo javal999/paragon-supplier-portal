@@ -220,7 +220,7 @@ export const requisitionsEn = {
   //   and named it on the form whose verb writes `approvalLevel: ''` — so the
   //   promise was refuted by the fixture (pr-003 carries 'VP Procurement') AND
   //   by the create path in the same sentence. Procurement IS derivable-true:
-  //   `pr:approve` lives in exactly one bundle (`businessRoles.ts`).
+  //   `pr:approve` lives in exactly one bundle (`businessRoles.js`).
   'requisitions.new.info':
     'After submission this PR goes to Procurement for a decision. If a PIR or Outline Agreement exists, a PO is created directly. Otherwise, a Sourcing Event is initiated.'
 };

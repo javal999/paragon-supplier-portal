@@ -36,7 +36,7 @@ import { addDays, mondayOf } from './dates';
 import type { DemandForecastRun } from './demandForecast';
 import type { IsoDate } from './types';
 
-/** The reason list the administrator maintains (reasonCodes.ts `forecastOverride`). */
+/** The reason list the administrator maintains (reasonCodes.js `forecastOverride`). */
 export const OVERRIDE_REASON_LIST = 'forecastOverride';
 /** BR-03 — the review window. */
 export const OVERRIDE_REVIEW_WEEKS = 13;

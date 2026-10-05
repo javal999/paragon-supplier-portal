@@ -244,7 +244,7 @@ describe('BL-66 (4) · ONE early window for OTIF and CFOT (PROPOSED until BL-56)
 
   it('and every calculation imports it rather than carrying its own number', () => {
     const src = (p: string) => readFileSync(resolve(__dirname, p), 'utf8');
-    expect(src('../transitions/callOffRules.ts')).toMatch(/import \{ EARLY_DELIVERY_WINDOW_DAYS \} from '\.\.\/data\/kpiWindow'/);
+    expect(src('../transitions/callOffRules.js')).toMatch(/import \{ EARLY_DELIVERY_WINDOW_DAYS \} from '\.\.\/data\/kpiWindow'/);
     expect(src('./performanceRules.ts')).toMatch(/import \{ receivedOnTimeFor \} from '\.\/kpiWindow'/);
     expect(src('../engine/cfot.ts')).toMatch(/import \{ EARLY_DELIVERY_WINDOW_DAYS \} from '\.\.\/data\/kpiWindow'/);
   });
