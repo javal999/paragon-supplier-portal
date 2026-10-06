@@ -515,7 +515,7 @@ const BuyerScorecard = () => {
       </section>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-6">
-        <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6">
+        <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6 relative overflow-hidden">
           <h2 className="text-section text-text-primary mb-4 pb-3 border-b border-border-subtle">
             {t('buyerScorecard.radar.title')}
           </h2>
@@ -549,6 +549,7 @@ const BuyerScorecard = () => {
             </RadarChart>
           </ResponsiveContainer>
           {/* C2 (WCAG 1.1.1): the chart's figures, for a screen reader. */}
+          {/* The card is `relative overflow-hidden` so this absolutely placed table, which grows to its content despite `sr-only`, cannot widen the page at phone size. */}
           <table className="sr-only" data-testid="scorecard-radar-table">
             <caption>{t('buyerScorecard.radar.title')}</caption>
             <thead>
@@ -570,7 +571,7 @@ const BuyerScorecard = () => {
           </table>
         </section>
 
-        <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6">
+        <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6 relative overflow-hidden">
           <h2 className="text-section text-text-primary mb-1 pb-3 border-b border-border-subtle">
             {t('buyerScorecard.trends.title')}
           </h2>
