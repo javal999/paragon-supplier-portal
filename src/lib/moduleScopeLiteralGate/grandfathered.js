@@ -70,7 +70,7 @@ export const S2_GRANDFATHERED = [
   'src/pages-v2/SupplierMyStorefront.jsx::CURRENCY_OPTIONS',
   'src/pages-v2/SupplierMyStorefront.jsx::UOM_OPTIONS',
   'src/pages-v2/SupplierPerformance.jsx::GRADE_HISTORY',
-  'src/pages-v2/SupplierRFQs.jsx::EVAL_SEGMENTS',
+  'src/pages-v2/SupplierRFQs/index.jsx::EVAL_SEGMENTS',
   'src/pages-v2/SupplierRegistration.jsx::BANKS',
   'src/pages-v2/SupplierRegistration.jsx::CHANNELS',
   'src/pages-v2/SupplierRegistration.jsx::CONTACT_ROLES',

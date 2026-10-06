@@ -44,42 +44,42 @@ import {
   useRfqClarifications,
   useRfqEngagement
 } from '@services/query/hooks';
-/** @import { DocumentDraft } from './rfx/ResponseDocumentsSection' */
-import ResponseDocumentsSection from './rfx/ResponseDocumentsSection';
-import TieredQuoteForm, { SampleOfferFields } from './rfqs/TieredQuoteForm';
+/** @import { DocumentDraft } from '../rfx/ResponseDocumentsSection' */
+import ResponseDocumentsSection from '../rfx/ResponseDocumentsSection';
+import TieredQuoteForm, { SampleOfferFields } from '../rfqs/TieredQuoteForm';
 import {
   RfqClarifications,
   RfqConfidentialityGate,
   RfqIntentControls
-} from './rfqs/RfqEngagementControls';
-/** @import { TieredDraft } from './rfqs/tieredQuoteModel' */
+} from '../rfqs/RfqEngagementControls';
+/** @import { TieredDraft } from '../rfqs/tieredQuoteModel' */
 import {
   draftFromQuote,
   emptyTieredDraft,
   readTieredDraft,
   refusalItem
-} from './rfqs/tieredQuoteModel';
-import { rfqResponseRefusal } from './rfqs/rfqResponseText';
+} from '../rfqs/tieredQuoteModel';
+import { rfqResponseRefusal } from '../rfqs/rfqResponseText';
 import { tiersForItem } from '@services/sourcing/rfqModel';
 import { documentsOf, responseDocumentsRefusal } from '@services/transitions/rfxDocumentRules';
 /** @import { RfqClarificationView, RfqEngagementView } from '@services/sourcing/rfqResponse' */
 import { useQuotationSubmit } from '@services/query/commandHooks';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
-import { buildQuotationSubmitPayload, isCurrencyRefusal } from './rfqs/quotationSubmitModel';
-/** @import { PriceRefusalReason } from './rfqs/quotationPrice' */
-import { readBidPrice } from './rfqs/quotationPrice';
+import { buildQuotationSubmitPayload, isCurrencyRefusal } from '../rfqs/quotationSubmitModel';
+/** @import { PriceRefusalReason } from '../rfqs/quotationPrice' */
+import { readBidPrice } from '../rfqs/quotationPrice';
 /** @import { BidCurrency } from '@lib/currencyPolicy' */
 import { BASE_CURRENCY, BID_CURRENCIES, isBidCurrency } from '@lib/currencyPolicy';
-/** @import { LeadTimeRefusalReason, LeadTimeUnit } from './rfqs/quotationLeadTime' */
-import { readLeadTimeDays } from './rfqs/quotationLeadTime';
-/** @import { MoqRefusalReason } from './rfqs/quotationMoq' */
-import { readMoq } from './rfqs/quotationMoq';
+/** @import { LeadTimeRefusalReason, LeadTimeUnit } from '../rfqs/quotationLeadTime' */
+import { readLeadTimeDays } from '../rfqs/quotationLeadTime';
+/** @import { MoqRefusalReason } from '../rfqs/quotationMoq' */
+import { readMoq } from '../rfqs/quotationMoq';
 import { daysUntil } from '@services/data/dayProjection';
 /** @import { RFQ, Quotation, Supplier } from '@services/data/types' */
 import { CHART_SERIES } from '@lib/chartPalette';
 import { CRITERIA_WEIGHTS } from '@lib/quoteScore';
-import { rfxNow } from './rfx/rfxDisplay';
+import { rfxNow } from '../rfx/rfxDisplay';
 import { formatDate, formatMoney, formatNumber } from '@lib/format';
 import { useRefusalText } from '@hooks/useRefusalText';
 
