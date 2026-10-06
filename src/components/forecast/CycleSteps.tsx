@@ -12,6 +12,7 @@ import {
   useReschedule
 } from '@services/query/hooks';
 import { FORECAST_PAGES } from './forecastPages';
+import { FOCUS_RING } from './focusRing';
 import {
   CYCLE_STEPS,
   currentVersions,
@@ -110,7 +111,10 @@ const CycleSteps: React.FC<CycleStepsProps> = ({ current }) => {
       data-testid="cycle-steps"
       data-current={current}
     >
-      <ol className="grid grid-cols-1 gap-2 sm:grid-cols-5">
+      {/* C2 (WCAG 1.4.10): 5 columns only from xl. At 768 px the menu leaves
+          about 460 px, and 5 columns of 84 px pushed the step names out of
+          their boxes; 2 then 3 columns let them wrap inside. */}
+      <ol className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {CYCLE_STEPS.map((id, i) => {
           const page = FORECAST_PAGES[id];
           const f = figures[id];
@@ -123,7 +127,7 @@ const CycleSteps: React.FC<CycleStepsProps> = ({ current }) => {
                 data-testid={`cycle-step-${id}`}
                 data-current={isCurrent ? 'true' : 'false'}
                 data-blocked={f.blocked ? 'true' : 'false'}
-                className={`block h-full rounded border px-3 py-2 text-sm hover:border-action ${
+                className={`block h-full min-w-0 break-words rounded border px-3 py-2 text-sm hover:border-action ${FOCUS_RING} ${
                   isCurrent ? 'border-action bg-action-soft' : 'border-border-subtle bg-bg-surface'
                 }`}
               >
