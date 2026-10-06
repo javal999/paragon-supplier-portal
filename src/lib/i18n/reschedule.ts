@@ -150,7 +150,7 @@ export const rescheduleEn: Record<string, string> = {
   'rs.action.callOffCancel':
     'No hub act cancels a released call-off: agree it with the supplier, who rejects or re-confirms it.',
   'rs.action.inSap': 'Change this order in SAP, then mark it here.',
-  'rs.action.sampleData': 'Sample data',
+  'rs.action.sampleData': 'Off on sample data',
   'rs.action.mark': 'Mark as taken to SAP',
   'rs.action.taken': 'Taken to SAP',
   'rs.reason.later': 'Warehouse capacity: not needed until {{week}}',
@@ -375,7 +375,7 @@ export const rescheduleId: Record<string, string> = {
   'rs.action.callOffCancel':
     'Tidak ada tindakan hub yang membatalkan call-off yang sudah dirilis: sepakati dengan pemasok, yang menolak atau mengonfirmasi ulang.',
   'rs.action.inSap': 'Ubah pesanan ini di SAP, lalu tandai di sini.',
-  'rs.action.sampleData': 'Data contoh',
+  'rs.action.sampleData': 'Nonaktif pada data contoh',
   'rs.action.mark': 'Tandai sudah dibawa ke SAP',
   'rs.action.taken': 'Sudah dibawa ke SAP',
   'rs.reason.later': 'Kapasitas gudang: belum dibutuhkan sampai {{week}}',

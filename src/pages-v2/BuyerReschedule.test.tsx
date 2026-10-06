@@ -122,10 +122,10 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
     expect(within(row).queryByTestId(`rs-send-${co.id}`)).toBeNull();
     // The act is shown switched off, with a one-word reason; the full reason sits once above the table.
     expect(within(row).getByTestId(`rs-send-off-${co.id}`)).toBeDisabled();
-    expect(within(row).getByTestId(`rs-withheld-${co.id}`)).toHaveTextContent('Sample data');
+    expect(within(row).getByTestId(`rs-withheld-${co.id}`)).toHaveTextContent('Off on sample data');
     expect(screen.getByTestId('rs-actions-withheld')).toHaveTextContent('Master Data Management team’s SAP feed is live');
     await i18n.changeLanguage('id');
-    await waitFor(() => expect(screen.getByTestId(`rs-withheld-${co.id}`)).toHaveTextContent('Data contoh'));
+    await waitFor(() => expect(screen.getByTestId(`rs-withheld-${co.id}`)).toHaveTextContent('Nonaktif pada data contoh'));
     expect(screen.getByTestId('rs-actions-withheld')).toHaveTextContent('data SAP dari tim Master Data Management tersedia');
   });
 
@@ -138,7 +138,7 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
     expect(within(row).queryByTestId(`rs-mark-${po.id}`)).toBeNull();
     expect(within(row).getByTestId(`rs-mark-off-${po.id}`)).toBeDisabled();
     expect(within(row).getByTestId(`rs-mark-off-${po.id}`)).toHaveTextContent('Mark as taken to SAP');
-    expect(within(row).getByTestId(`rs-withheld-${po.id}`)).toHaveTextContent('Sample data');
+    expect(within(row).getByTestId(`rs-withheld-${po.id}`)).toHaveTextContent('Off on sample data');
   });
 
   it('says what ticking a proposal does: it shows the effect and sends nothing, EN and ID', async () => {
