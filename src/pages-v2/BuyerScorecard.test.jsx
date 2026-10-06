@@ -220,6 +220,18 @@ describe('BuyerScorecard — purpose header, banner and measure basis (B6)', () 
     expect(screen.queryByText('Sample data')).toBeNull();
   });
 
+  it('keeps the screen-reader chart tables clipped inside their card, so they cannot widen the page at phone size', async () => {
+    renderWithProviders(<BuyerScorecard />, { route: '/buyer/scorecard' });
+    for (const id of ['scorecard-radar-table', 'scorecard-trend-table']) {
+      const table = await screen.findByTestId(id);
+      expect(table).toHaveClass('sr-only');
+      // A table grows to its content despite `sr-only`; the card positions and clips it.
+      const card = table.closest('section');
+      expect(card).toHaveClass('relative');
+      expect(card).toHaveClass('overflow-hidden');
+    }
+  });
+
   it('states the basis of "Delivered on the confirmed date" for the selected period', async () => {
     renderWithProviders(<BuyerScorecard />);
     expect(await screen.findByTestId('scorecard-cfot-basis')).toHaveTextContent(
