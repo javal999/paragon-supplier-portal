@@ -1031,6 +1031,25 @@ export interface SapChangeMark {
 }
 
 /**
+ * FUX-D3 — a Material Planner's decision for a warehouse week that does not
+ * fit (the order plan's shortfall week): rent space, push out orders, reduce
+ * orders, or accept the overflow (with a note). A ledger: the latest record of
+ * a stream × week is in force, earlier ones stay. A record of intent only — it
+ * changes no order and is never sent to SAP or a supplier.
+ */
+export interface WarehouseDecision {
+  readonly id: string;
+  readonly stream: import('../sdc/types').ForecastStream;
+  readonly weekStart: string;
+  readonly choice: import('../transitions/warehouseDecisionRules').WarehouseDecisionChoice;
+  readonly note: string | null;
+  /** The stream's published plan version when the decision was recorded; null when none was published. */
+  readonly planVersion: number | null;
+  readonly recordedAt: string;
+  readonly recordedBy: ActorAttribution;
+}
+
+/**
  * REQ-E14-13 — reschedule or cancel open orders, as served: computed at read
  * on the engine's (SIMULATED) dataset plus the Hub's open call-offs, with the
  * cost rates and threshold in force. PTI only; a supplier gets null.
@@ -1046,6 +1065,10 @@ export interface RescheduleView extends RescheduleRun {
   readonly unconfirmedPoLines: number;
   /** "Taken to SAP" marks, latest first. */
   readonly sapMarks: readonly SapChangeMark[];
+  /** FUX-D3 — every warehouse-week decision, in recording order (the ledger). */
+  readonly warehouseDecisions: readonly WarehouseDecision[];
+  /** FUX-D3 — each stream's current published plan version, the one a decision is made against. */
+  readonly planVersions: Readonly<Record<import('../sdc/types').ForecastStream, number | null>>;
 }
 
 /** REQ-E14-06 — one supplier × material, with its display names. */

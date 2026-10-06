@@ -122,6 +122,7 @@ import { sourcingTypeStore } from './sourcingTypeStore';
 import { planningGroupStore } from '../data/mock/stores/planningGroupStore';
 import { materialOverlayStore } from '../data/mock/stores/materialOverlayStore';
 import { mrpControllerStore } from './mrpControllerStore';
+import { warehouseDecisionStore } from '../data/mock/stores/warehouseDecisionStore';
 import { materialNameStore } from '../data/mock/stores/materialNameStore';
 import { simulationOverrideStore } from '../data/mock/stores/simulationOverrideStore';
 import { hubSettingsStore, settingValue } from './hubSettingsStore';
@@ -254,6 +255,8 @@ async function realIds(): Promise<Record<string, string | null>> {
     reasonCode: 'poAdjust:capacity',
     // REQ-E06-04 — `entityId` IS `<supplier>|<material>`; any assigned pair exists.
     maxStock: 'sup-007|PK-PETB-8801',
+    // FUX-D3 — `entityId` IS `<stream>|<weekStart>`; every well-formed id exists.
+    warehouseDecision: 'packaging|2026-10-12',
     supplierDocument: supplierDocumentStore.all()[0]?.id ?? null,
     supplierApplication: raised.entityId ?? null,
     receiptDiscrepancy: receiptDiscrepancyStore.all()[0]?.receiptId ?? null,
@@ -362,6 +365,7 @@ async function walk(entity: string, t: TransitionDef): Promise<Walk | null> {
   if (entity === 'hubSetting') return at('callOff.overPct', 'Maintained');
   if (entity === 'reasonCode') return at('poAdjust:capacity', 'Maintained');
   if (entity === 'maxStock') return at('sup-007|PK-PETB-8801', 'Maintained');
+  if (entity === 'warehouseDecision') return at('packaging|2026-10-12', 'Maintained');
   if (entity === 'supplierApplication') {
     const raised = await svc.dispatch(buyerSeat('procurement'), {
       transitionId: 't_application_submit', entity,
@@ -411,6 +415,7 @@ const resetAll = () => {
   planningGroupStore.reset();
   materialOverlayStore.reset();
   mrpControllerStore.reset();
+  warehouseDecisionStore.reset();
   materialNameStore.reset();
   simulationOverrideStore.reset();
   hubSettingsStore.reset();
@@ -618,6 +623,8 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
         'supplierApplication',
         // BL-51 — the 3PL list is PTI's; no supplier is its owner.
         'threePl',
+        // FUX-D3 — a warehouse-week decision is the Material Planning team's; no supplier is its owner.
+        'warehouseDecision',
         // BL-50 — the hub's calendar is PTI's; no supplier is its owner.
         'workingCalendar',
       ],
@@ -704,6 +711,13 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
     });
     expect(mrpRes.status, mrpRes.reason).toBe('done');
     expect(mrpControllerStore.get('P13')?.name).toBe('Fragrance planning desk (sample)');
+    // FUX-D3 — the Material Planning lane can still record a warehouse-week decision.
+    const wdRes = await svc.dispatch(buyerSeat('planning'), {
+      transitionId: 't_warehousedecision_record', entity: 'warehouseDecision', entityId: 'packaging|2026-10-12',
+      payload: { choice: 'rent' },
+    });
+    expect(wdRes.status, wdRes.reason).toBe('done');
+    expect(warehouseDecisionStore.all().map((r) => r.choice)).toEqual(['rent']);
 
     const qualRes = await svc.dispatch(buyerSeat('compliance'), {
       transitionId: 't_qualification_rule_set', entity: 'qualificationRule', entityId: 'approved',
