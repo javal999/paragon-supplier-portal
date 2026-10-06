@@ -166,9 +166,12 @@ describe('labels (F-19, F-25)', () => {
     }
   });
 
-  it('the old section key stays for the pages that still read it', () => {
-    expect(hubEn['hub.nav.section.forecast']).toBe('Forecast');
-    expect(hubId['hub.nav.section.forecast']).toBe('Prakiraan');
+  it('the old Forecast section key is gone: no page reads it after phases 1 and 2 (FUX3 C1)', () => {
+    expect(hubEn['hub.nav.section.forecast']).toBeUndefined();
+    expect(hubId['hub.nav.section.forecast']).toBeUndefined();
+    // Control: the section keys the menu reads are still there.
+    expect(hubEn['hub.nav.section.weeklyPlan']).toBeTruthy();
+    expect(hubId['hub.nav.section.weeklyPlan']).toBeTruthy();
   });
 
   it('the Safety stock page title matches its menu label', () => {

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import Button from '@components/ui-v2/Button';
@@ -24,7 +24,38 @@ import { qtyOf } from '@pages-v2/materialPlan/planDisplay';
 // `materialCode` in all 3, so the panel and the pages show the same numbers.
 // Neither full page keeps a material filter in its address, so the links open
 // the pages unfiltered.
+//
+// Narrow screens (FUX phase 3, C1). The panel opens in a full-width row of the
+// order table, whose own wrapper scrolls sideways (`ui-v2/Table`). A row that
+// wide put the 3rd block off screen at 1024 px. So the panel measures the
+// visible width of that scroll area, takes that width less the cell's padding,
+// sticks to its left edge, and stacks the 3 blocks once 3 columns no longer
+// fit (`STACK_BELOW_PX`).
 // ─────────────────────────────────────────────────────────────────────────────
+
+/** Below this visible width of the table's scroll area, the 3 blocks stack. */
+const STACK_BELOW_PX = 880;
+/** The panel cell's horizontal padding (`px-4` on each side, in the page). */
+const CELL_PADDING_PX = 32;
+
+/** The visible width of the scroll area holding the table the panel sits in; null outside a table. */
+function useScrollAreaWidth(ref: React.RefObject<HTMLElement | null>): number | null {
+  const [width, setWidth] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const area = ref.current?.closest('table')?.parentElement ?? null;
+    if (!area) return undefined;
+    const read = () => setWidth(area.clientWidth);
+    read();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', read);
+      return () => window.removeEventListener('resize', read);
+    }
+    const observer = new ResizeObserver(read);
+    observer.observe(area);
+    return () => observer.disconnect();
+  }, [ref]);
+  return width;
+}
 
 interface WhyQuantityPanelProps {
   readonly id: string;
@@ -75,9 +106,15 @@ const WhyQuantityPanel: React.FC<WhyQuantityPanelProps> = ({ id, rec, material, 
   const requirement = useMaterialRequirement();
   const safety = useSafetyStock();
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const areaWidth = useScrollAreaWidth(rootRef);
   useEffect(() => {
     headingRef.current?.focus();
   }, []);
+  // Outside a table (never on the page) the panel keeps the plain responsive grid.
+  const fitted = areaWidth !== null && areaWidth > CELL_PADDING_PX;
+  const stacked = fitted && areaWidth < STACK_BELOW_PX;
+  const gridCols = !fitted ? 'grid-cols-1 lg:grid-cols-3' : stacked ? 'grid-cols-1' : 'grid-cols-3';
 
   const uom = material.uom;
   const q = (x: number) => `${qtyOf(x, uom)} ${uom}`;
@@ -92,10 +129,13 @@ const WhyQuantityPanel: React.FC<WhyQuantityPanelProps> = ({ id, rec, material, 
   return (
     <div
       id={id}
+      ref={rootRef}
       role="region"
       aria-labelledby={`${id}-title`}
-      className="border border-border-subtle rounded-md p-4 bg-bg-hover"
+      className={`border border-border-subtle rounded-md p-4 bg-bg-hover${fitted ? ' sticky left-4' : ''}`}
+      style={fitted ? { width: areaWidth - CELL_PADDING_PX } : undefined}
       data-testid="op-wq-panel"
+      data-layout={!fitted ? undefined : stacked ? 'stacked' : 'columns'}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
           e.stopPropagation();
@@ -116,7 +156,7 @@ const WhyQuantityPanel: React.FC<WhyQuantityPanelProps> = ({ id, rec, material, 
           {t('op.wq.close')}
         </Button>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+      <div className={`grid ${gridCols} gap-3`} data-testid="op-wq-blocks">
         <Block
           title={t('op.wq.req.title')}
           testId="op-wq-requirement"

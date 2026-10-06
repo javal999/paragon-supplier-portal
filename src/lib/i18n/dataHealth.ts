@@ -9,7 +9,6 @@ export const dataHealthEn: Record<string, string> = {
   'dh.title': 'Data health',
   'dh.subtitle':
     'Every input the forecast engine reads: when it last arrived, whether it is within its freshness limit, and whether its records pass the quality checks agreed in the feed specification.',
-  'dh.meta.checked': 'Checked',
   'dh.synthetic':
     'Checked on synthetic data built to reproduce PTI’s current measures. It is generated at the hub’s present on every read, so every feed shows as arriving at that moment; a real feed will carry its own arrival time.',
   'dh.owner':
@@ -162,7 +161,6 @@ export const dataHealthId: Record<string, string> = {
   'dh.title': 'Kesehatan data',
   'dh.subtitle':
     'Setiap masukan yang dibaca mesin prakiraan: kapan terakhir tiba, apakah masih dalam batas kesegarannya, dan apakah catatannya lolos pemeriksaan mutu yang disepakati dalam spesifikasi umpan.',
-  'dh.meta.checked': 'Diperiksa',
   'dh.synthetic':
     'Diperiksa pada data sintetis yang dibuat untuk meniru ukuran PTI saat ini. Data dibuat pada waktu kini hub di setiap pembacaan, jadi setiap umpan tampak tiba pada saat itu; umpan nyata akan membawa waktu tibanya sendiri.',
   'dh.owner':
