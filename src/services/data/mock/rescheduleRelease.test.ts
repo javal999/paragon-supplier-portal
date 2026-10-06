@@ -201,7 +201,7 @@ describe('X-03 — the report itself is PTI’s only', () => {
 
 describe('the refusal copy, in EN and ID', () => {
   it('names simulated data and the MDM SAP feed in both languages', () => {
-    for (const k of ['rs.refusal.simulated', 'rs.action.withheldCallOff', 'rs.action.withheldSap', 'rs.withheld']) {
+    for (const k of ['rs.refusal.simulated', 'rs.relief.withheld', 'rs.withheld']) {
       expect(rescheduleEn[k]).toMatch(/Master Data Management team’s SAP feed is live/);
       expect(rescheduleId[k]).toMatch(/Master Data Management/);
       expect(rescheduleId[k]).not.toBe(rescheduleEn[k]);

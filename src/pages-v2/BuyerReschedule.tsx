@@ -441,10 +441,17 @@ const BuyerReschedule: React.FC = () => {
       if (p.type === 'cancel') return <span className="text-xs text-text-tertiary">{t('rs.action.callOffCancel')}</span>;
       if (sent.has(p.id)) return <StatusPill variant="info">{t('rs.action.awaitingConfirmation')}</StatusPill>;
       if (planAvailability.kind !== 'held') return <HandoffNotice availability={planAvailability} testId="handoff-reschedule-change" />;
+      // Simulated data: the act is shown, switched off, with a one-word reason;
+      // the full reason is stated once above the table (rs-actions-withheld).
       if (withheld)
         return (
-          <div className="text-xs text-warning-hover max-w-[16rem]" data-testid={`rs-withheld-${p.id}`}>
-            {t('rs.action.withheldCallOff')}
+          <div>
+            <Button variant="outline" disabled data-testid={`rs-send-off-${p.id}`}>
+              {t('rs.action.send')}
+            </Button>
+            <div className="text-xs text-warning-hover mt-1" data-testid={`rs-withheld-${p.id}`}>
+              {t('rs.action.sampleData')}
+            </div>
           </div>
         );
       return (
@@ -468,8 +475,13 @@ const BuyerReschedule: React.FC = () => {
       <div>
         <div className="text-xs text-text-secondary mb-1">{t('rs.action.inSap')}</div>
         {withheld ? (
-          <div className="text-xs text-warning-hover max-w-[16rem]" data-testid={`rs-withheld-${p.id}`}>
-            {t('rs.action.withheldSap')}
+          <div>
+            <Button variant="outline" disabled data-testid={`rs-mark-off-${p.id}`}>
+              {t('rs.action.mark')}
+            </Button>
+            <div className="text-xs text-warning-hover mt-1" data-testid={`rs-withheld-${p.id}`}>
+              {t('rs.action.sampleData')}
+            </div>
           </div>
         ) : (
           <Button variant="outline" onClick={() => void markSap(p)} disabled={sapCommand.isPending} data-testid={`rs-mark-${p.id}`}>
@@ -700,6 +712,14 @@ const BuyerReschedule: React.FC = () => {
               </p>
             ) : (
               <>
+                {!!withheld && (
+                  <p className="text-xs text-warning-hover mb-2" data-testid="rs-actions-withheld">
+                    {t('rs.relief.withheld')}
+                  </p>
+                )}
+                <p className="text-xs text-text-secondary mb-2" data-testid="rs-select-hint">
+                  {t('rs.relief.selectHint')}
+                </p>
                 <div className="flex flex-wrap gap-2 mb-3">
                   <Button variant="outline" onClick={selectFree} data-testid="rs-select-free">
                     {t('rs.relief.selectFree', { count: freeCount })}

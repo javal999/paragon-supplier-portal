@@ -88,6 +88,9 @@ export const rescheduleEn: Record<string, string> = {
   'rs.relief.selectFree_one': 'Select the {{count}} proposal without supplier agreement',
   'rs.relief.selectFree_other': 'Select the {{count}} proposals without supplier agreement',
   'rs.relief.clear': 'Clear selection',
+  'rs.relief.selectHint': 'Tick proposals to see their effect on warehouse fill and supplier stability. Ticking sends nothing.',
+  'rs.relief.withheld':
+    'The buttons stay off while this page runs on sample data. They turn on when the Master Data Management team’s SAP feed is live.',
 
   'rs.shortage.title': 'Bring in to prevent a shortage',
   'rs.shortage.intro':
@@ -143,15 +146,12 @@ export const rescheduleEn: Record<string, string> = {
   'rs.flag.planChange': 'Would count as a PTI change inside the lead time',
 
   'rs.action.send': 'Send change to supplier',
-  'rs.action.withheldCallOff':
-    'Cannot be sent to the supplier until the Master Data Management team’s SAP feed is live: this proposal is calculated on simulated data.',
   'rs.action.awaitingConfirmation': 'Sent — awaiting the supplier’s confirmation',
   'rs.action.callOffCancel':
     'No hub act cancels a released call-off: agree it with the supplier, who rejects or re-confirms it.',
-  'rs.action.inSap': 'Changed in SAP by the Material Planner',
+  'rs.action.inSap': 'Change this order in SAP, then mark it here.',
+  'rs.action.sampleData': 'Off on sample data',
   'rs.action.mark': 'Mark as taken to SAP',
-  'rs.action.withheldSap':
-    'Cannot be taken to SAP until the Master Data Management team’s SAP feed is live: this proposal is calculated on simulated data.',
   'rs.action.taken': 'Taken to SAP',
   'rs.reason.later': 'Warehouse capacity: not needed until {{week}}',
   'rs.reason.reduce': 'Warehouse capacity: only {{quantity}} needed within the plan horizon',
@@ -314,6 +314,9 @@ export const rescheduleId: Record<string, string> = {
   'rs.relief.empty': 'Tidak ada pesanan terbuka di gudang ini yang dapat membebaskan ruang di minggu di atas kapasitas.',
   'rs.relief.selectFree_other': 'Pilih {{count}} usulan tanpa persetujuan pemasok',
   'rs.relief.clear': 'Hapus pilihan',
+  'rs.relief.selectHint': 'Centang usulan untuk melihat dampaknya pada isi gudang dan stabilitas pemasok. Mencentang tidak mengirim apa pun.',
+  'rs.relief.withheld':
+    'Tombol tetap nonaktif selama halaman ini memakai data contoh. Tombol aktif setelah data SAP dari tim Master Data Management tersedia.',
 
   'rs.shortage.title': 'Majukan untuk mencegah kekurangan',
   'rs.shortage.intro':
@@ -368,15 +371,12 @@ export const rescheduleId: Record<string, string> = {
   'rs.flag.planChange': 'Akan dihitung sebagai perubahan PTI di dalam waktu tunggu',
 
   'rs.action.send': 'Kirim perubahan ke pemasok',
-  'rs.action.withheldCallOff':
-    'Tidak dapat dikirim ke pemasok sampai data SAP dari tim Master Data Management tersedia: usulan ini dihitung dengan data simulasi.',
   'rs.action.awaitingConfirmation': 'Terkirim — menunggu konfirmasi pemasok',
   'rs.action.callOffCancel':
     'Tidak ada tindakan hub yang membatalkan call-off yang sudah dirilis: sepakati dengan pemasok, yang menolak atau mengonfirmasi ulang.',
-  'rs.action.inSap': 'Diubah di SAP oleh Perencana Material',
+  'rs.action.inSap': 'Ubah pesanan ini di SAP, lalu tandai di sini.',
+  'rs.action.sampleData': 'Nonaktif pada data contoh',
   'rs.action.mark': 'Tandai sudah dibawa ke SAP',
-  'rs.action.withheldSap':
-    'Tidak dapat dibawa ke SAP sampai data SAP dari tim Master Data Management tersedia: usulan ini dihitung dengan data simulasi.',
   'rs.action.taken': 'Sudah dibawa ke SAP',
   'rs.reason.later': 'Kapasitas gudang: belum dibutuhkan sampai {{week}}',
   'rs.reason.reduce': 'Kapasitas gudang: hanya {{quantity}} yang dibutuhkan dalam horizon rencana',
