@@ -34,6 +34,14 @@ C1 and C2 touch different concerns and can run in parallel. T1 can run any time;
 
 The 13 forecast pages and their place in the cycle are listed in `src/components/forecast/forecastPages.ts`. Shared forecast UI lives in `src/components/forecast/`. The menu is `src/components/layout-v2/navConfig.ts`.
 
+## Phase 3 status (2026-10-06)
+
+Merged: C1 #150, C2 #153. T1 (usability test) has not run yet; C3 waits for its findings.
+- C1: 35 unused keys removed from EN and ID (the brief listed 3; the derived list, checked both ways, found 32 more). The Why this quantity panel fits the table's visible width and stacks its 3 blocks below 880 px; at 1024 px its third block used to end past the edge.
+- C2: 33 accessibility findings (0 Blocker, 6 Major, 27 Minor), 26 fixed, recorded in `docs/supplier-hub/research/FORECAST-UX-ACCESSIBILITY-2026-10.md`. Every disabled act now states its reason to a screen reader; Forecast quality's tabs keep focus on arrow keys; no forecast page scrolls sideways at 768 px. The lint ceiling went down to 756.
+- Not fixed, outside the forecast pages: the shared app shell's menu is a fixed 240 px, leaving 86 px for a page at 390 px, so phones are not usable until the shell collapses its menu (Major). Also shared: filter chips without arrow keys, 40 px button height, low-contrast field borders, 13 px checkboxes.
+- PR #147 (FE standard Phase 7) converts the forecast module to JavaScript and must take these changes in.
+
 ## Report format for every task
 
 At most 25 lines:
