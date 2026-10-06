@@ -21,8 +21,18 @@ const WEEK_TONE = {
   notCounted: 'bg-border-subtle'
 };
 
-/** @type {React.FC<{ compliance: UpdateCompliance | null; testId: string }>} */
-const UpdateComplianceCard = ({ compliance, testId }) => {
+/**
+ * `livenessPill`:  Show the card's own liveness pill. False only where a page-level simulated-data banner already covers it (B6).
+ *
+ * @typedef {{
+ *     readonly compliance: UpdateCompliance | null;
+ *     readonly testId: string;
+ *     readonly livenessPill?: boolean;
+ *   }} UpdateComplianceCardProps
+ */
+
+/** @type {React.FC<UpdateComplianceCardProps>} */
+const UpdateComplianceCard = ({ compliance, testId, livenessPill = true }) => {
   const { t } = useTranslation();
   const pct = compliance?.pct ?? null;
   const weeks = compliance?.weeks ?? [];
@@ -44,7 +54,7 @@ const UpdateComplianceCard = ({ compliance, testId }) => {
             : t('perf.compliance.value', { pct })}
         </h2>
         {/* MAT-R14 — built from the stock records and sync attempts, which are sample data. */}
-        <LivenessPill capability="inventory" />
+        {livenessPill ? <LivenessPill capability="inventory" /> : null}
       </div>
       <p className="text-meta text-text-tertiary mb-4">{t('perf.compliance.definition')}</p>
       <ol

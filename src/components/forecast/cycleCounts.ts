@@ -89,10 +89,12 @@ export function openExceptions(lines: readonly ForecastCommitmentLine[], nowIso:
 export const CYCLE_STEPS = ['thisWeek', 'whatToOrder', 'makeRoom', 'publish', 'responses'] as const;
 export type CycleStepId = (typeof CYCLE_STEPS)[number];
 
+
 /**
  * The engine step each Weekly plan page's Data health chip names (the pages'
  * own `DataHealthChip step=…`). Supplier responses carries no chip; This week
- * counts every check (its input check card).
+ * counts every check (its input check card). Read by the publish checklist
+ * (`BuyerStabilise`, B2); restored after #140 removed it while that reader stood.
  */
 export const STEP_HEALTH: Readonly<Partial<Record<CycleStepId, EngineStep>>> = Object.freeze({
   whatToOrder: 'E14-05',

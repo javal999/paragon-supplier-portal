@@ -997,6 +997,28 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  */
 
 /**
+ * FUX-D3 — a Material Planner's decision for a warehouse week that does not
+ * fit (the order plan's shortfall week): rent space, push out orders, reduce
+ * orders, or accept the overflow (with a note). A ledger: the latest record of
+ * a stream × week is in force, earlier ones stay. A record of intent only — it
+ * changes no order and is never sent to SAP or a supplier.
+ */
+/**
+ * `planVersion`:  The stream's published plan version when the decision was recorded; null when none was published.
+ *
+ * @typedef {{
+ *     readonly id: string;
+ *     readonly stream: import('../sdc/types').ForecastStream;
+ *     readonly weekStart: string;
+ *     readonly choice: import('../transitions/warehouseDecisionRules').WarehouseDecisionChoice;
+ *     readonly note: string | null;
+ *     readonly planVersion: number | null;
+ *     readonly recordedAt: string;
+ *     readonly recordedBy: ActorAttribution;
+ *   }} WarehouseDecision
+ */
+
+/**
  * REQ-E14-13 — reschedule or cancel open orders, as served: computed at read
  * on the engine's (SIMULATED) dataset plus the Hub's open call-offs, with the
  * cost rates and threshold in force. PTI only; a supplier gets null.
@@ -1006,6 +1028,8 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * `planChange`:  BR-09 — E14-02's portfolio plan-change share over its window, before any proposal is sent.
  * `unconfirmedPoLines`:  Open PO lines not yet confirmed: not in the projection (E14-03's default), counted here.
  * `sapMarks`:  "Taken to SAP" marks, latest first.
+ * `warehouseDecisions`:  FUX-D3 — every warehouse-week decision, in recording order (the ledger).
+ * `planVersions`:  FUX-D3 — each stream's current published plan version, the one a decision is made against.
  *
  * @typedef {Omit<RescheduleRun, 'warehouses'> & {
  *     readonly planMadeAt: string | null;
@@ -1014,6 +1038,8 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *     readonly planChangeWindowWeeks: number;
  *     readonly unconfirmedPoLines: number;
  *     readonly sapMarks: readonly SapChangeMark[];
+ *     readonly warehouseDecisions: readonly WarehouseDecision[];
+ *     readonly planVersions: Readonly<Record<import('../sdc/types').ForecastStream, number | null>>;
  *   }} RescheduleView
  */
 
