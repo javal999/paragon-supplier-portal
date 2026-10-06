@@ -27,15 +27,25 @@ import { useRefusalText } from '@hooks/useRefusalText';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { formatDate, formatIDR, formatNumber } from '@lib/format';
 import { CHART_AXIS, CHART_GRID, CHART_SEMANTIC, CHART_SERIES } from '@lib/chartPalette';
-import { useReschedule } from '@services/query/hooks';
-import { useCallOffCommand, useSapChangeMarkCommand } from '@services/query/commandHooks';
-import type { RescheduleProposalView, RescheduleView, SapChangeMark, WarehouseRescheduleView } from '@services/data/types';
+import { useOrderPlan, useReschedule } from '@services/query/hooks';
+import { useCallOffCommand, useSapChangeMarkCommand, useWarehouseDecisionCommand } from '@services/query/commandHooks';
+import type { RescheduleProposalView, RescheduleView, SapChangeMark, WarehouseDecision, WarehousePlanView, WarehouseRescheduleView } from '@services/data/types';
+import type { ShortfallWeek } from '@services/engine/orderSizing';
 import { planChangeAfter, selectionEffect } from '@services/engine/reschedule';
 import type { WarehouseKind } from '@services/engine/types';
 import { isoWeek } from '@services/engine/dates';
 import { isLive } from '@services/liveness';
 import { POLICY_HOOKS } from '@services/transitions/policyHooks';
 import { refusedByPolicy } from '@services/transitions/refusalMessage';
+import {
+  DECISION_NOTE_REQUIRED,
+  WAREHOUSE_DECISION_CHOICES,
+  decisionInForce,
+  earlierDecisions,
+  madeOnOlderPlan,
+  warehouseDecisionRefusal,
+  type WarehouseDecisionChoice,
+} from '@services/transitions/warehouseDecisionRules';
 import { qtyOf } from './materialPlan/planDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -56,6 +66,11 @@ import { qtyOf } from './materialPlan/planDisplay';
 // live both verbs refuse, and the page says so in place of the act.
 // BR-09: the plan-change guard shows how PTI's share of schedules changed inside
 // the lead time (E14-02) would move if the selected proposals were sent.
+//
+// FUX-D3 (F-10, F-22): the weeks that do not fit even with the most rented
+// space (from the order plan) sit here above the proposals, each with the
+// planner's saved decision (`t_warehousedecision_record`) — a record of intent
+// that changes no order and is never sent to SAP or a supplier.
 //
 // Every figure is computed by the forecast engine at read time on its
 // SYNTHETIC dataset (the `engineDataset` pill, X-03).
@@ -104,11 +119,231 @@ const FillChart: React.FC<{ w: WarehouseRescheduleView; selected: readonly numbe
 /** The latest "taken to SAP" mark for a line. */
 const markFor = (marks: readonly SapChangeMark[], lineId: string) => marks.find((m) => m.lineId === lineId) ?? null;
 
+// ── FUX-D3 (F-10, F-22) · THE WAREHOUSE-WEEK DECISION ───────────────────────
+// The weeks that do not fit even with the most rented space come from the order
+// plan (`shortfallWeeks`, BL-117); the decision for each is recorded through
+// `t_warehousedecision_record` and read back from the ledger on this page's own
+// read. The page pre-checks with the same rule the verb's policy hook calls
+// (`warehouseDecisionRefusal`, MAT-R2). A seat without the atom sees who acts.
+
+const inputClass =
+  'w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action placeholder:text-text-tertiary';
+const pal = (x: number) => formatNumber(Math.round(x * 10) / 10);
+
+/** What arrives by the week and whether moving it keeps safety stock — the "push out" option's detail. */
+const LaterDeliveries: React.FC<{ sw: ShortfallWeek; plan: WarehousePlanView }> = ({ sw, plan }) => {
+  const { t } = useTranslation();
+  const nameOf = new Map(plan.materials.map((m) => [m.materialCode, m] as const));
+  return (
+    <div className="overflow-x-auto mt-3" data-testid={`rs-decide-later-${sw.weekStart}`}>
+      <Table>
+        <TableHeader>
+          <TableHeaderCell>{t('rs.decide.col.material')}</TableHeaderCell>
+          <TableHeaderCell>{t('rs.decide.col.delivery')}</TableHeaderCell>
+          <TableHeaderCell>{t('rs.decide.col.week')}</TableHeaderCell>
+          <TableHeaderCell>{t('rs.decide.col.quantity')}</TableHeaderCell>
+          <TableHeaderCell>{t('rs.decide.col.safety')}</TableHeaderCell>
+        </TableHeader>
+        <tbody>
+          {sw.later.deliveries.map((d) => {
+            const m = nameOf.get(d.materialCode);
+            return (
+              <TableRow key={`${d.materialCode}-${d.source}-${d.weekStart}`} data-testid={`rs-decide-delivery-${d.materialCode}-${d.source}-${d.weekStart}`}>
+                <TableCell>
+                  <div className="text-sm text-text-primary">{m?.materialLabel ?? d.materialCode}</div>
+                  <Data className="text-xs text-text-tertiary">{d.materialCode}</Data>
+                </TableCell>
+                <TableCell>{t(`rs.decide.source.${d.source}`)}</TableCell>
+                <TableCell>
+                  <Data>{weekLabel(d.weekStart)}</Data>
+                </TableCell>
+                <TableCell>
+                  <Data>{`${qtyOf(d.quantity, m?.uom ?? 'PCS')} ${m?.uom ?? ''}`.trim()}</Data>
+                  <div className="text-xs text-text-tertiary">
+                    <Data>{t('rs.decide.palletsUnit', { value: pal(d.pallets) })}</Data>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {d.keepsSafetyStock ? (
+                    <StatusPill variant="success">{t('rs.decide.keeps')}</StatusPill>
+                  ) : (
+                    <StatusPill variant="warning">{t('rs.decide.breaks')}</StatusPill>
+                  )}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </tbody>
+      </Table>
+    </div>
+  );
+};
+
+/** The decision in force for a week, with the review marker when the plan has moved on. */
+const DecisionInForce: React.FC<{ weekStart: string; ledger: readonly WarehouseDecision[]; stream: WarehouseKind; currentVersion: number | null }> = ({
+  weekStart,
+  ledger,
+  stream,
+  currentVersion,
+}) => {
+  const { t } = useTranslation();
+  const now = decisionInForce(ledger, stream, weekStart);
+  const earlier = earlierDecisions(ledger, stream, weekStart).length;
+  if (!now)
+    return (
+      <p className="text-xs text-text-tertiary mb-2" data-testid={`rs-decide-none-${weekStart}`}>
+        {t('rs.decide.none')}
+      </p>
+    );
+  const vars = { choice: t(`rs.decide.inline.${now.choice}`), date: formatDate(now.recordedAt), version: now.planVersion ?? '' };
+  return (
+    <div className="mb-2" data-testid={`rs-decide-inforce-${weekStart}`}>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-text-primary">{t(now.planVersion === null ? 'rs.decide.inForce.noVersion' : 'rs.decide.inForce', vars)}</span>
+        {madeOnOlderPlan(now, currentVersion) && (
+          <span data-testid={`rs-decide-older-${weekStart}`}>
+            <StatusPill variant="warning">{t('rs.decide.olderPlan')}</StatusPill>
+          </span>
+        )}
+      </div>
+      {now.note !== null && <p className="text-xs text-text-secondary mt-1">{now.note}</p>}
+      {earlier > 0 && <p className="text-xs text-text-tertiary mt-1">{t('rs.decide.earlier', { count: earlier })}</p>}
+    </div>
+  );
+};
+
+/** One week's choice control: the four ways, the note, and the save. Rendered only for a seat holding the atom. */
+const DecisionControl: React.FC<{ sw: ShortfallWeek; plan: WarehousePlanView; rate: number }> = ({ sw, plan, rate }) => {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const refusalText = useRefusalText();
+  const command = useWarehouseDecisionCommand();
+  const [picked, setPicked] = useState<WarehouseDecisionChoice | null>(null);
+  const [note, setNote] = useState('');
+  const refusal = picked === null ? null : warehouseDecisionRefusal(picked, note);
+  const detail = (c: WarehouseDecisionChoice): string => {
+    if (c === 'rent') return t('rs.decide.detail.rent', { pallets: pal(sw.rent.pallets), cost: formatIDR(Math.round(sw.rent.costIdr)), rate: formatIDR(rate) });
+    if (c === 'pushOut')
+      return sw.later.deliveries.length === 0
+        ? t('rs.decide.later.none')
+        : t(sw.later.enough ? 'rs.decide.later.enough' : 'rs.decide.later.notEnough', { count: sw.later.deliveries.length, movable: pal(sw.later.movablePallets) });
+    return t(`rs.decide.detail.${c}`);
+  };
+  const save = async () => {
+    if (picked === null || refusal !== null) return;
+    try {
+      const res = await command.mutateAsync({ stream: plan.kind, weekStart: sw.weekStart, choice: picked, note: note.trim() || null });
+      if (res.status === 'failed') {
+        toast({ variant: 'warning', title: t('rs.decide.toast.refused'), description: refusalText(res.reason) ?? res.reason ?? '' });
+        return;
+      }
+      setPicked(null);
+      setNote('');
+      toast({ variant: 'success', title: t('rs.decide.toast.saved'), description: t('rs.decide.toast.savedDesc', { week: weekLabel(sw.weekStart) }) });
+    } catch {
+      toast({ variant: 'error', title: t('rs.decide.toast.refused') });
+    }
+  };
+  const noteId = `rs-decide-note-${plan.kind}-${sw.weekStart}`;
+  return (
+    <div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="group" aria-label={t('rs.decide.choose')}>
+        {WAREHOUSE_DECISION_CHOICES.map((c) => (
+          <button
+            key={c}
+            type="button"
+            aria-pressed={picked === c}
+            onClick={() => setPicked(c)}
+            className={`text-left border rounded-md p-3 ${picked === c ? 'border-action bg-action-soft' : 'border-border-subtle hover:border-action'}`}
+            data-testid={`rs-decide-choose-${c}-${sw.weekStart}`}
+          >
+            <div className="text-sm font-medium text-text-primary">{t(`rs.decide.choice.${c}`)}</div>
+            <div className="text-xs text-text-secondary mt-1">{detail(c)}</div>
+          </button>
+        ))}
+      </div>
+      {picked === 'pushOut' && sw.later.deliveries.length > 0 && <LaterDeliveries sw={sw} plan={plan} />}
+      <div className="mt-3 flex flex-col sm:flex-row sm:items-end gap-3">
+        <div className="flex-1">
+          <label htmlFor={noteId} className="block text-label text-text-tertiary uppercase mb-1">
+            {t('rs.decide.note')}
+          </label>
+          <input
+            id={noteId}
+            type="text"
+            maxLength={500}
+            className={inputClass}
+            aria-required={picked === 'accept'}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            data-testid={`rs-decide-note-${sw.weekStart}`}
+          />
+          <p className="text-xs text-text-tertiary mt-1">{t(picked === 'accept' ? 'rs.decide.note.required' : 'rs.decide.note.optional')}</p>
+        </div>
+        <Button variant="outline" onClick={() => void save()} disabled={picked === null || refusal !== null || command.isPending} data-testid={`rs-decide-save-${sw.weekStart}`}>
+          {t('rs.decide.save')}
+        </Button>
+      </div>
+      {refusal !== null && (
+        <p className="text-xs text-warning-hover mt-2" role="status" data-testid={`rs-decide-refusal-${sw.weekStart}`}>
+          {t(refusal.startsWith(DECISION_NOTE_REQUIRED) ? 'rs.decide.refusal.note' : 'rs.decide.refusal.choice')}
+        </p>
+      )}
+    </div>
+  );
+};
+
+/** The card: every week of the warehouse shown that does not fit, its saved decision, and the control. */
+const DecisionCard: React.FC<{
+  plan: WarehousePlanView;
+  rate: number;
+  ledger: readonly WarehouseDecision[];
+  currentVersion: number | null;
+}> = ({ plan, rate, ledger, currentVersion }) => {
+  const { t } = useTranslation();
+  const availability = useVerbAvailability('warehousedecision:record');
+  return (
+    <section className="bg-bg-surface border border-danger rounded-lg p-4 mb-6" data-testid="rs-decide">
+      <h2 className="text-section text-text-primary mb-1">{t('rs.decide.title')}</h2>
+      <p className="text-xs text-text-tertiary mb-1">{t('rs.decide.intro', { max: formatNumber(Math.round(plan.maxRentedPallets ?? 0)) })}</p>
+      <p className="text-xs text-text-tertiary mb-1" data-testid="rs-decide-basis">
+        {t('rs.decide.basis')}
+      </p>
+      <p className="text-xs text-text-secondary mb-3" data-testid="rs-decide-intent">
+        {t('rs.decide.intent')}
+      </p>
+      {availability.kind !== 'held' && <HandoffNotice availability={availability} testId="handoff-reschedule-decision" />}
+      {plan.shortfallWeeks.map((sw) => (
+        <div key={sw.weekStart} className="border border-border-subtle rounded-md p-4 mt-3" data-testid={`rs-decide-week-${sw.weekStart}`}>
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-2">
+            <h3 className="text-sm font-semibold text-text-primary">
+              <Data>{weekLabel(sw.weekStart)}</Data> · <Data>{formatDate(sw.weekStart)}</Data>
+            </h3>
+            <span className="text-sm text-danger" data-testid={`rs-decide-pallets-${sw.weekStart}`}>
+              {t('rs.decide.pallets', { value: pal(sw.shortfallPallets) })}
+            </span>
+            <span className="text-xs text-text-tertiary">{t('rs.decide.against', { pallets: pal(sw.pallets), limit: pal(sw.limitPallets) })}</span>
+          </div>
+          {sw.unavoidable && (
+            <p className="text-xs text-text-secondary mb-2" data-testid={`rs-decide-unavoidable-${sw.weekStart}`}>
+              {t('rs.decide.unavoidable')}
+            </p>
+          )}
+          <DecisionInForce weekStart={sw.weekStart} ledger={ledger} stream={plan.kind} currentVersion={currentVersion} />
+          {availability.kind === 'held' && <DecisionControl key={`${plan.kind}-${sw.weekStart}`} sw={sw} plan={plan} rate={rate} />}
+        </div>
+      ))}
+    </section>
+  );
+};
+
 const BuyerReschedule: React.FC = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const refusalText = useRefusalText();
   const query = useReschedule();
+  // FUX-D3 — the weeks that do not fit come from the order plan (BL-117).
+  const orderPlan = useOrderPlan();
   const callOffCommand = useCallOffCommand();
   const sapCommand = useSapChangeMarkCommand();
   const planAvailability = useVerbAvailability('calloff:plan');
@@ -122,6 +357,8 @@ const BuyerReschedule: React.FC = () => {
   const withheld = !isLive('engineDataset');
 
   const w = run?.warehouses.find((x) => x.kind === kind) ?? run?.warehouses[0] ?? null;
+  const planW = orderPlan.data?.warehouses.find((x) => x.kind === (w?.kind ?? kind)) ?? null;
+  const rentRate = orderPlan.data?.costs.rentIdrPerPalletWeek ?? null;
   const relief = useMemo(() => (w?.proposals ?? []).filter((p) => p.rank !== null), [w]);
   const shortage = useMemo(() => (w?.proposals ?? []).filter((p) => p.type === 'rescheduleIn'), [w]);
   const noSaving = useMemo(() => (w?.proposals ?? []).filter((p) => p.rank === null && p.type !== 'rescheduleIn'), [w]);
@@ -417,6 +654,10 @@ const BuyerReschedule: React.FC = () => {
               }
             />
           </div>
+
+          {planW && rentRate !== null && planW.shortfallWeeks.length > 0 && (
+            <DecisionCard key={planW.kind} plan={planW} rate={rentRate} ledger={run!.warehouseDecisions} currentVersion={run!.planVersions[planW.kind]} />
+          )}
 
           <section className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="rs-guard">
             <h2 className="text-section text-text-primary mb-1">{t('rs.guard.title')}</h2>
