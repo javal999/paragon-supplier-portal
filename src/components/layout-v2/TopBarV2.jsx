@@ -22,7 +22,7 @@ const TopBarV2 = ({ navOpen = false, navControlsId, navButtonRef, onToggleNav })
     typeof window !== 'undefined' ? window.location.hostname : undefined
   );
   return (
-    <header className="h-14 w-full bg-bg-surface border-b border-border-subtle flex items-center px-4 gap-4">
+    <header className="h-14 w-full bg-bg-surface border-b border-border-subtle flex items-center px-4 gap-2 sm:gap-4">
       {/* Left cluster */}
       <div className="flex items-center gap-3 min-w-0">
         {/* Below `lg` only: at `lg` and up the side menu is inline, so a ☰
@@ -38,7 +38,7 @@ const TopBarV2 = ({ navOpen = false, navControlsId, navButtonRef, onToggleNav })
         >
           <Menu size={18} />
         </button>
-        <span className="text-sm font-semibold text-text-primary whitespace-nowrap">
+        <span className="hidden sm:inline text-sm font-semibold text-text-primary whitespace-nowrap">
           {t('app.title')}
         </span>
         {badge && (
@@ -55,7 +55,7 @@ const TopBarV2 = ({ navOpen = false, navControlsId, navButtonRef, onToggleNav })
       </div>
 
       {/* Center search */}
-      <div className="flex-1 flex justify-center">
+      <div className="flex-1 min-w-0 flex justify-center">
         <div className="relative w-full max-w-md">
           <Search
             size={14}
@@ -71,7 +71,7 @@ const TopBarV2 = ({ navOpen = false, navControlsId, navButtonRef, onToggleNav })
       </div>
 
       {/* Right cluster */}
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-3">
         <LanguageMenu />
         <button
           type="button"
