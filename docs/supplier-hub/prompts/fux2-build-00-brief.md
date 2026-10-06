@@ -56,12 +56,14 @@ Waves run in order. Tasks inside a wave run in parallel. B4 waits for B3 because
 
 ## Phase 2 status (2026-10-05)
 
-Merged: B6 #134, B1 #135, B5 #137, B3 #138, B2 #139, step-bar fix #140, B4 #142. Findings from building it:
+Merged: B6 #134, B1 #135, B5 #137, B3 #138, B2 #139, step-bar fix #140, B4 #142, warehouse relief fix #145; CI job timeout raised from 25 to 35 minutes in #146. Findings from building it:
 - B1: the This week "What to order" card first counted only orders releasing this week, which read 0 while the page showed 65 recommended orders. It now shows the page's own count and the first release week.
 - B3: net requirement is worked out week by week (`netMaterial`, `src/services/engine/requirement.ts`: gross + safety stock − (stock at start of week + that week's receipts), never below zero), so the 26-week total is not gross − stock − deliveries. The panel shows the order's own week, whose figures add up, plus 1 line explaining the total.
 - B6: the scorecard title now matches the menu ("Supplier performance"). The supplier's own "Your reliability" panel shares the renamed measure.
 - B5 and B2: old routes redirect with a plain `Navigate`, because `LegacyRedirect` drops the `?tab=` query.
 - #140: the step bar and the This week cards state the failing input check once. It removed `STEP_HEALTH` while `BuyerStabilise.tsx` (B2) still read it, which broke main at `4adf175`; B4 restored the export. Check for readers on current main, not on the branch base, before deleting an export.
+- #145: on Make warehouse room, each relief proposal now shows its real act (Mark as taken to SAP, Send change to supplier), disabled on sample data with "Off on sample data" under it, and the reason once above the table. The PO-line hint reads "Change this order in SAP, then mark it here.", and a line by the selection buttons says ticking shows the effect and sends nothing. The per-row label may not read exactly "Sample data": phase 1's F-14 guard rejects the retired badge text.
+- #146: the gates finished green at 24m57s on #142 and the 25-minute job limit then cancelled the run, reporting a failure for a passing run.
 - B4: verb `t_warehousedecision_record` (atom `warehousedecision:record`, planning bundle; refusals `WAREHOUSE_DECISION_CHOICE_UNKNOWN`, `WAREHOUSE_DECISION_NOTE_REQUIRED`). Its ledger is mirrored to `sessionStorage` so a decision survives a reload, and `getReschedule` returns the decisions and plan versions.
 
 ## Report format for every task

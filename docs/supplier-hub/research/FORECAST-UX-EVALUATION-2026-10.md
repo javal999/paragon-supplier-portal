@@ -207,7 +207,7 @@ Phase 1 build brief: `docs/supplier-hub/prompts/fux-build-00-brief.md` (tasks A1
 
 ## 10. STATUS AFTER PHASES 1 AND 2 (2026-10-05)
 
-Every finding has been acted on. Phase 1 is #125, #126, #127, #131 (brief `fux-build-00-brief.md`); phase 2 is #134, #135, #137, #138, #139, #140, #142 (brief `fux2-build-00-brief.md`).
+Every finding has been acted on. Phase 1 is #125, #126, #127, #131 (brief `fux-build-00-brief.md`); phase 2 is #134, #135, #137, #138, #139, #140, #142, #145 (brief `fux2-build-00-brief.md`).
 
 | Finding | Where it was fixed | Status |
 |---|---|---|
@@ -218,7 +218,7 @@ Every finding has been acted on. Phase 1 is #125, #126, #127, #131 (brief `fux-b
 | F-06 | A3 (plan source on What to order), B5 (plan source on Forecast quality) | Done |
 | F-07 | A3 (decision first), B3 ("Why this quantity" panel) | Done |
 | F-08, F-09, F-14, F-16, F-18, F-20, F-21, F-26 | A4 | Done |
-| F-10 | B4 (warehouse-week decision saved on Make warehouse room) | Done |
+| F-10 | B4 (warehouse-week decision saved on Make warehouse room), #145 (relief proposals show their acts) | Done |
 | F-11 | A1 (scorecard is the evaluation home), B6 (header, basis line, reliability measure renamed) | Done |
 | F-12 | A4 (override note), B5 (Forecast bias as a tab) | Done |
 | F-13 | A2 and B2 (last published on the publish page) | Partly: Source column and next-due date wait for the engine and C8 §8 (FUX-D4) |
