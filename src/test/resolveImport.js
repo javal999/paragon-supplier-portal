@@ -43,5 +43,14 @@ export const resolveImport = (fromFile, specifier) => {
   const base = specifierBase(fromFile, specifier);
   if (base === null) return null;
   for (const ext of EXTENSIONS) if (existsSync(base + ext)) return base + ext;
+  // A page split into a folder (frontend-standard Phase 5, PAGE-SPLIT-GUIDE):
+  // `@pages-v2/SupplierRFQs` now names `SupplierRFQs/index.jsx`, exactly as the
+  // bundler resolves it. Without this the specifier resolved to `null` and a
+  // guard following the router's imports (`pageWidth.guard`) silently dropped
+  // the page from its population.
+  for (const ext of EXTENSIONS) {
+    const index = join(base, `index${ext}`);
+    if (existsSync(index)) return index;
+  }
   return null;
 };
