@@ -99,7 +99,10 @@ describe('BuyerStabilise — the planner page (REQ-E14-06)', () => {
         `Last published (${stream === 'packaging' ? 'Packaging' : 'Raw material'}): Version ${current.version}, ${formatDate(current.publishedAt)}`
       );
     }
-    expect(screen.getByTestId('stb-versions-link')).toHaveAttribute('href', '/buyer/forecasts');
+    expect(screen.getByTestId('stb-versions-link')).toHaveAttribute(
+      'href',
+      '/buyer/stabilise?tab=versions'
+    );
     expect(screen.getByTestId('stb-versions-link')).toHaveTextContent('Published versions');
   });
 

@@ -5,6 +5,10 @@ import BuyerReschedule from './BuyerReschedule';
 import { mockDataService } from '@services/data/mock/mockDataService';
 import { callOffStore } from '@services/data/mock/stores/callOffStore';
 import { sapChangeMarkStore } from '@services/data/mock/stores/sapChangeMarkStore';
+import { warehouseDecisionStore } from '@services/data/mock/stores/warehouseDecisionStore';
+import { forecastVersionStore } from '@services/data/mock/stores/forecastHubStores';
+import { currentPlanVersion, currentVersion } from '@services/data/mock/forecastReadModel';
+import { formatDate } from '@lib/format';
 import { isLive } from '@services/liveness';
 import { PERSONA_SYSTEM_ROLES, SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { planChangeAfter, selectionEffect } from '@services/engine/reschedule';
@@ -28,6 +32,8 @@ const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 beforeEach(() => {
   callOffStore.reset();
   sapChangeMarkStore.reset();
+  warehouseDecisionStore.reset();
+  forecastVersionStore.reset();
 });
 afterEach(() => {
   void i18n.changeLanguage('en');
@@ -274,6 +280,177 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
     ).toBeInTheDocument();
     expect(screen.getByTestId('rs-setting-rent')).toHaveTextContent(
       'Sementara — menunggu konfirmasi Keuangan'
+    );
+  });
+});
+
+describe('BuyerReschedule — the warehouse-week decision (FUX-D3, F-10)', () => {
+  const orderPlan = async () =>
+    /** @type {import('../services/data/types').OrderPlanView} */ (
+      await mockDataService.procurement.getOrderPlan(buyerScope)
+    );
+  const firstWeek = async () =>
+    /** @type {import('../services/data/types').WarehousePlanView} */ (
+      (await orderPlan()).warehouses.find((w) => w.kind === 'packaging')
+    ).shortfallWeeks[0];
+
+  it('the weeks that do not fit sit above the proposals, each with its shortfall and the four ways; the page says the decision changes no order', async () => {
+    const pk = /** @type {import('../services/data/types').WarehousePlanView} */ (
+      (await orderPlan()).warehouses.find((w) => w.kind === 'packaging')
+    );
+    expect(pk.shortfallWeeks.length).toBeGreaterThan(0);
+    renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
+    const card = await screen.findByTestId('rs-decide');
+    expect(
+      card.compareDocumentPosition(screen.getByTestId('rs-relief')) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(screen.getByTestId('rs-decide-intent')).toHaveTextContent(
+      'It changes no order and is never sent to SAP or a supplier'
+    );
+    // F-22 — the card says its weeks come from the What to order projection.
+    expect(screen.getByTestId('rs-decide-basis')).toHaveTextContent('What to order projection');
+    for (const sw of pk.shortfallWeeks) {
+      const week = within(card).getByTestId(`rs-decide-week-${sw.weekStart}`);
+      expect(within(week).getByTestId(`rs-decide-none-${sw.weekStart}`)).toHaveTextContent(
+        'No decision yet.'
+      );
+      for (const c of ['rent', 'pushOut', 'reduce', 'accept']) {
+        expect(within(week).getByTestId(`rs-decide-choose-${c}-${sw.weekStart}`)).toHaveAttribute(
+          'aria-pressed',
+          'false'
+        );
+      }
+    }
+  });
+
+  it('recording a choice appends a record and shows it in force; a second choice replaces it on screen while the first stays in the ledger', async () => {
+    const sw = await firstWeek();
+    const version = /** @type {NonNullable<ReturnType<typeof currentPlanVersion>>} */ (
+      currentPlanVersion('packaging')
+    );
+    renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
+    const week = await screen.findByTestId(`rs-decide-week-${sw.weekStart}`);
+    fireEvent.click(within(week).getByTestId(`rs-decide-choose-rent-${sw.weekStart}`));
+    fireEvent.click(within(week).getByTestId(`rs-decide-save-${sw.weekStart}`));
+    await waitFor(() => expect(warehouseDecisionStore.all()).toHaveLength(1));
+    const [first] = warehouseDecisionStore.all();
+    expect(first).toMatchObject({
+      stream: 'packaging',
+      weekStart: sw.weekStart,
+      choice: 'rent',
+      planVersion: version
+    });
+    expect(await within(week).findByTestId(`rs-decide-inforce-${sw.weekStart}`)).toHaveTextContent(
+      `Decided: rent space, ${formatDate(first.recordedAt)}, against version ${version}`
+    );
+    expect(within(week).queryByTestId(`rs-decide-older-${sw.weekStart}`)).toBeNull();
+
+    fireEvent.click(within(week).getByTestId(`rs-decide-choose-pushOut-${sw.weekStart}`));
+    fireEvent.click(within(week).getByTestId(`rs-decide-save-${sw.weekStart}`));
+    await waitFor(() => expect(warehouseDecisionStore.all()).toHaveLength(2));
+    await waitFor(() =>
+      expect(within(week).getByTestId(`rs-decide-inforce-${sw.weekStart}`)).toHaveTextContent(
+        'Decided: push out orders'
+      )
+    );
+    expect(within(week).getByTestId(`rs-decide-inforce-${sw.weekStart}`)).toHaveTextContent(
+      '1 earlier decision kept on record'
+    );
+    expect(warehouseDecisionStore.all().map((r) => r.choice)).toEqual(['rent', 'pushOut']);
+  });
+
+  it('"accept" needs a note: the page pre-checks with the verb’s rule and saves once the note is given', async () => {
+    const sw = await firstWeek();
+    renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
+    const week = await screen.findByTestId(`rs-decide-week-${sw.weekStart}`);
+    fireEvent.click(within(week).getByTestId(`rs-decide-choose-accept-${sw.weekStart}`));
+    expect(within(week).getByTestId(`rs-decide-refusal-${sw.weekStart}`)).toHaveTextContent(
+      'Add a note to accept the overflow.'
+    );
+    expect(within(week).getByTestId(`rs-decide-save-${sw.weekStart}`)).toBeDisabled();
+    fireEvent.change(within(week).getByTestId(`rs-decide-note-${sw.weekStart}`), {
+      target: { value: 'Agreed with the warehouse lead' }
+    });
+    expect(within(week).queryByTestId(`rs-decide-refusal-${sw.weekStart}`)).toBeNull();
+    fireEvent.click(within(week).getByTestId(`rs-decide-save-${sw.weekStart}`));
+    await waitFor(() => expect(warehouseDecisionStore.all()).toHaveLength(1));
+    expect(warehouseDecisionStore.all()[0]).toMatchObject({
+      choice: 'accept',
+      note: 'Agreed with the warehouse lead'
+    });
+    expect(await within(week).findByTestId(`rs-decide-inforce-${sw.weekStart}`)).toHaveTextContent(
+      'Agreed with the warehouse lead'
+    );
+  });
+
+  it('a decision made against an older plan version shows the review marker', async () => {
+    const sw = await firstWeek();
+    const before = /** @type {NonNullable<ReturnType<typeof currentPlanVersion>>} */ (
+      currentPlanVersion('packaging')
+    );
+    const cmd = (await import('@services/data/mock/MockCommandService')).MockCommandService;
+    const res = await new cmd().dispatch(
+      { personaType: 'buyer', supplierId: null, businessRoles: ['planning'] },
+      {
+        transitionId: 't_warehousedecision_record',
+        entity: 'warehouseDecision',
+        entityId: `packaging|${sw.weekStart}`,
+        payload: { choice: 'reduce' }
+      }
+    );
+    expect(res.status, res.reason).toBe('done');
+    forecastVersionStore.add({
+      .../** @type {import('../services/sdc/types').ForecastPublication} */ (
+        currentVersion('packaging')
+      ),
+      publicationId: 'fv-probe-newer',
+      version: before + 1,
+      publishedAt: '2026-10-06T00:00:00.000Z'
+    });
+    renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
+    const week = await screen.findByTestId(`rs-decide-week-${sw.weekStart}`);
+    expect(within(week).getByTestId(`rs-decide-inforce-${sw.weekStart}`)).toHaveTextContent(
+      `against version ${before}`
+    );
+    expect(within(week).getByTestId(`rs-decide-older-${sw.weekStart}`)).toHaveTextContent(
+      'Made on an older plan: review'
+    );
+  });
+
+  it('a seat without the atom sees the handoff notice and the saved decision, not the control', async () => {
+    const sw = await firstWeek();
+    renderWithProviders(<BuyerReschedule />, {
+      identity: { ...BUYER, businessRoles: ['procurement'] },
+      route: '/buyer/reschedule'
+    });
+    const card = await screen.findByTestId('rs-decide');
+    expect(within(card).getByTestId('handoff-reschedule-decision')).toBeInTheDocument();
+    expect(within(card).getByTestId(`rs-decide-none-${sw.weekStart}`)).toBeInTheDocument();
+    expect(within(card).queryByTestId(`rs-decide-choose-rent-${sw.weekStart}`)).toBeNull();
+    expect(within(card).queryByTestId(`rs-decide-save-${sw.weekStart}`)).toBeNull();
+  });
+
+  it('the planner seat sees no handoff notice for the decision', async () => {
+    renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
+    await screen.findByTestId('rs-decide');
+    expect(screen.queryByTestId('handoff-reschedule-decision')).toBeNull();
+  });
+
+  it('renders in Indonesian', async () => {
+    const sw = await firstWeek();
+    await i18n.changeLanguage('id');
+    renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Minggu yang tidak muat, meski dengan ruang sewa terbanyak'
+      })
+    ).toBeInTheDocument();
+    expect(screen.getByTestId(`rs-decide-choose-accept-${sw.weekStart}`)).toHaveTextContent(
+      'Terima kelebihan'
+    );
+    expect(screen.getByTestId('rs-decide-intent')).toHaveTextContent(
+      'tidak pernah dikirim ke SAP atau pemasok'
     );
   });
 });

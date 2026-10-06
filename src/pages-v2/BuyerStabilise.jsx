@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import SubTabs from '@components/ui-v2/SubTabs';
 import KpiCard from '@components/ui-v2/KpiCard';
 import StatusPill from '@components/ui-v2/StatusPill';
 import Table from '@components/ui-v2/Table';
@@ -19,9 +20,15 @@ import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { formatDate, formatNumber } from '@lib/format';
-import { useForecastVersions, useStabilisedPlan } from '@services/query/hooks';
+import {
+  useDataHealth,
+  useForecastVersions,
+  useOrderPlan,
+  useReschedule,
+  useStabilisedPlan
+} from '@services/query/hooks';
 import { useForecastCommand } from '@services/query/commandHooks';
-/** @import { ForecastVersionView, StabiliseRunView, StabilisedSeriesView } from '@services/data/types' */
+/** @import { StabiliseRunView, StabilisedPlanView, StabilisedSeriesView } from '@services/data/types' */
 /** @import { PeriodResult, StabiliseRule } from '@services/engine/stabilise' */
 import { STABILISE_RULES } from '@services/engine/stabilise';
 import { isoWeek } from '@services/engine/dates';
@@ -36,7 +43,15 @@ import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
 import AboutThisPage from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
 import TermTip from '@components/forecast/TermTip';
-import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
+import { FORECAST_PAGES, forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
+import {
+  STEP_HEALTH,
+  currentVersions,
+  failingChecks,
+  recommendedOrders,
+  weeksOverCapacity
+} from '@components/forecast/cycleCounts';
+import PublishedVersions from './BuyerForecasts';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STABILISE AND PUBLISH — REQ-E14-06, the Material Planner's view before a plan
@@ -65,6 +80,16 @@ import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages
 // published version per stream, read from the published versions. The version
 // record carries no source (SAP plan or engine) and no next-due date, so the
 // line shows neither rather than infer them.
+//
+// FUX phase 2 B2 (F-01, F-13): one page for publishing. Two tabs, kept in the
+// address: "Version to publish" (the content above) and "Published versions"
+// (`?tab=versions`, the list that was its own page at `/buyer/forecasts`, which
+// now redirects here — FUX2-R1). Above the publish act a checklist shows
+// whether the week is ready: inputs (Data health), recommended orders, weeks
+// over warehouse capacity and held Trade-off weeks without a reason. Each item
+// is derived at render from data the hooks already return, by the counting
+// rules the linked pages apply (`cycleCounts.ts`); nothing is stored (FUX2-R3).
+// It adds no gate to the verb (FUX-R1): the act and its refusal are unchanged.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @typedef {'engine' | 'sapHistory'} Source */
@@ -418,6 +443,174 @@ const RunSection = ({ run, source }) => {
   );
 };
 
+/**
+ * The values in use (ENG-D8, ENG-D9).
+ * @type {React.FC<{ params: StabilisedPlanView['params'] }>}
+ */
+const SettingsSection = ({ params }) => {
+  const { t } = useTranslation();
+  return (
+    <section
+      className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-5"
+      data-testid="stb-settings"
+    >
+      <h2 className="text-section text-text-primary mb-2">{t('stb.settings.title')}</h2>
+      <dl className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+        <div>
+          <dt className="text-text-secondary">{t('stb.settings.weight')}</dt>
+          <dd>
+            <Data data-testid="stb-setting-weight">{`${formatNumber(Math.round(params.tradeOffWeight * 100))}%`}</Data>
+            <div className="text-xs text-text-tertiary">{t('stb.settings.weightNote')}</div>
+          </dd>
+        </div>
+        <div>
+          <dt className="text-text-secondary">{t('stb.settings.forecastWeight')}</dt>
+          <dd>
+            <Data>{`${formatNumber(Math.round(params.forecastWeight * 100))}%`}</Data>
+            <div className="text-xs text-text-tertiary">{t('stb.settings.forecastWeightNote')}</div>
+          </dd>
+        </div>
+        <div>
+          <dt className="text-text-secondary">{t('stb.settings.band')}</dt>
+          <dd>
+            <Data data-testid="stb-setting-band">
+              {t('stb.settings.bandValue', {
+                perVersion: Math.round(params.band.perVersion * 100),
+                cumulative: Math.round(params.band.cumulative * 100)
+              })}
+            </Data>
+            <div className="text-xs text-text-tertiary">{t('stb.settings.bandNote')}</div>
+          </dd>
+        </div>
+      </dl>
+    </section>
+  );
+};
+
+/** @typedef {'publish' | 'versions'} Tab */
+const TAB_PARAM = 'tab';
+/**
+ * @param {string | null} raw
+ * @returns {Tab}
+ */
+const tabOf = (raw) => (raw === 'versions' ? 'versions' : 'publish');
+
+/** @typedef {'pass' | 'attention' | 'count' | 'unknown'} ItemState */
+/** @type {Record<ItemState, 'success' | 'warning' | 'neutral'>} */
+const ITEM_VARIANT = {
+  pass: 'success',
+  attention: 'warning',
+  count: 'neutral',
+  unknown: 'neutral'
+};
+
+/**
+ * @typedef {{
+ *     readonly id: 'inputs' | 'orders' | 'warehouse' | 'held';
+ *     readonly state: ItemState;
+ *     readonly text: string;
+ *     readonly to: string;
+ *     readonly linkText: string;
+ *   }} ChecklistItem
+ */
+
+/**
+ * F-01 · evaluation §5 "Publish gate checklist". Four items, each with its state
+ * and a link to the page that resolves it. Orders carry a number, not a status:
+ * no "reviewed" flag exists, and none is invented (FUX2-R3).
+ * @type {React.FC<{ run: StabiliseRunView | null }>}
+ */
+const PublishChecklist = ({ run }) => {
+  const { t } = useTranslation();
+  const health = useDataHealth();
+  const orderPlan = useOrderPlan();
+  const reschedule = useReschedule();
+  const unknown = t('stb.check.unknown');
+
+  // The page's own Data health chip count (the checks that reach this step).
+  const failing = health.data ? failingChecks(health.data, STEP_HEALTH.publish) : null;
+  const overCapacity = reschedule.data ? weeksOverCapacity(reschedule.data) : null;
+  const orders = orderPlan.data ? recommendedOrders(orderPlan.data) : null;
+  // Held Trade-off weeks are the weeks beyond the band with no reason
+  // (`stabilise.ts`: an override is the same week WITH one), the weeks the
+  // detail table marks "needs a reason".
+  const heldNoReason = run ? run.totals.counts.bandHeld + run.totals.counts.cumulativeHeld : null;
+
+  /** @type {ChecklistItem[]} */
+  const items = [
+    {
+      id: 'inputs',
+      state: failing === null ? 'unknown' : failing > 0 ? 'attention' : 'pass',
+      text:
+        failing === null
+          ? unknown
+          : failing > 0
+            ? t('fux.steps.checks', { count: failing })
+            : t('fux.steps.pass'),
+      to: FORECAST_PAGES.dataHealth.path,
+      linkText: t(FORECAST_PAGES.dataHealth.titleKey)
+    },
+    {
+      id: 'orders',
+      state: orders === null ? 'unknown' : 'count',
+      text: orders === null ? unknown : t('fux.count.toOrder', { count: orders }),
+      to: FORECAST_PAGES.whatToOrder.path,
+      linkText: t(FORECAST_PAGES.whatToOrder.titleKey)
+    },
+    {
+      id: 'warehouse',
+      state: overCapacity === null ? 'unknown' : overCapacity > 0 ? 'attention' : 'pass',
+      text: overCapacity === null ? unknown : t('fux.count.overCapacity', { count: overCapacity }),
+      to: FORECAST_PAGES.makeRoom.path,
+      linkText: t(FORECAST_PAGES.makeRoom.titleKey)
+    },
+    {
+      id: 'held',
+      state: heldNoReason === null ? 'unknown' : heldNoReason > 0 ? 'attention' : 'pass',
+      text: heldNoReason === null ? unknown : t('stb.check.held.state', { count: heldNoReason }),
+      to: FORECAST_PAGES.publish.path,
+      linkText: t('stb.check.held.link')
+    }
+  ];
+
+  return (
+    <div className="mb-4" data-testid="stb-checklist">
+      <h3 className="text-sm font-semibold text-text-primary mb-1">{t('stb.check.title')}</h3>
+      <p className="text-xs text-text-tertiary mb-2">{t('stb.check.intro')}</p>
+      <ul className="divide-y divide-border-subtle border border-border-subtle rounded">
+        {items.map((item) => (
+          <li
+            key={item.id}
+            className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-sm"
+            data-testid={`stb-check-${item.id}`}
+            data-state={item.state}
+          >
+            <span className="text-text-primary min-w-[12rem]">{t(`stb.check.${item.id}`)}</span>
+            <StatusPill variant={ITEM_VARIANT[item.state]}>
+              <span data-testid={`stb-check-${item.id}-state`}>{item.text}</span>
+            </StatusPill>
+            <Link
+              to={item.to}
+              className="text-action-hover hover:underline ml-auto"
+              data-testid={`stb-check-${item.id}-link`}
+              onClick={
+                item.id === 'held'
+                  ? () =>
+                      document
+                        .querySelector('[data-testid="stb-series"]')
+                        ?.scrollIntoView?.({ behavior: 'smooth' })
+                  : undefined
+              }
+            >
+              {item.linkText}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
 /** @type {React.FC} */
 const BuyerStabilise = () => {
   const { t } = useTranslation();
@@ -428,16 +621,36 @@ const BuyerStabilise = () => {
   const publishAvailability = useVerbAvailability('forecast:publish');
   const versionsQuery = useForecastVersions();
   const [source, setSource] = useState(/** @type {Source} */ ('engine'));
+  const [params, setParams] = useSearchParams();
+  const tab = tabOf(params.get(TAB_PARAM));
   const crumb = forecastCrumb(t, 'publish');
   // X-03 — the registry's own answer, read at render; the verb reads it again.
   const withheld = !isLive('engineDataset');
 
-  if (query.isPending) return <LoadingState breadcrumb={crumb} />;
-  if (query.isError)
+  // The tab shown decides which read the page waits for.
+  const shownQuery = tab === 'versions' ? versionsQuery : query;
+  if (shownQuery.isPending) return <LoadingState breadcrumb={crumb} />;
+  if (shownQuery.isError)
     return (
-      <ErrorState breadcrumb={crumb} error={query.error} onRetry={() => void query.refetch()} />
+      <ErrorState
+        breadcrumb={crumb}
+        error={shownQuery.error}
+        onRetry={() => void shownQuery.refetch()}
+      />
     );
   const plan = query.data ?? null;
+  const versions = versionsQuery.data?.items ?? [];
+  /** @param {Tab} next */
+  const selectTab = (next) =>
+    setParams(
+      (prev) => {
+        const out = new URLSearchParams(prev);
+        if (next === 'versions') out.set(TAB_PARAM, 'versions');
+        else out.delete(TAB_PARAM);
+        return out;
+      },
+      { replace: true }
+    );
 
   /** @param {'packaging' | 'rawMaterial'} stream */
   const publish = async (stream) => {
@@ -459,11 +672,7 @@ const BuyerStabilise = () => {
 
   const run = plan ? plan[source] : null;
   // FUX-D1 · F-13 — the current published version of each stream.
-  const lastPublished = /** @type {const} */ (['packaging', 'rawMaterial'])
-    .map((stream) =>
-      (versionsQuery.data?.items ?? []).find((v) => v.stream === stream && v.isCurrent)
-    )
-    .filter(/** @returns {v is ForecastVersionView} */ (v) => v !== undefined);
+  const lastPublished = currentVersions(versions);
   const pv = plan?.versions;
 
   return (
@@ -471,159 +680,156 @@ const BuyerStabilise = () => {
       <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'publish')} />
       <PurposeHeader page="publish" />
       <CycleSteps current="publish" />
-      <SimulatedDataBanner capability="engineDataset" />
-      <DataAsOf
-        date={plan?.planMadeAt ?? null}
-        detail={
-          plan?.planMadeAt
-            ? pv && pv.packaging.length > 0
-              ? t('stb.meta.versions', {
-                  packaging: pv.packaging.length,
-                  raw: pv.rawMaterial.length,
-                  from: formatDate(pv.packaging[0])
-                })
-              : null
-            : t('stb.meta.noPlan')
-        }
+      {/* One banner, for the figures the tab shows: the engine's plan, or the
+          published versions (FUX-R3). */}
+      <SimulatedDataBanner
+        capability={tab === 'versions' ? 'forecastPublications' : 'engineDataset'}
       />
-      {/* F-02 — the published quantities are the material net requirement, so the
-          chip counts the checks that reach Material requirement (and Safety stock,
-          which feeds it). */}
-      <DataHealthChip step="E14-03" className="mb-3" />
-
       <div className="mb-4">
-        <FilterChipsBar
+        <SubTabs
           options={[
-            { id: 'engine', label: t('stb.source.engine') },
-            { id: 'sapHistory', label: t('stb.source.sapHistory') }
+            { id: 'publish', label: t('stb.tab.publish') },
+            { id: 'versions', label: t('stb.tab.versions'), count: versions.length }
           ]}
-          value={source}
-          onChange={setSource}
+          value={tab}
+          onChange={selectTab}
         />
       </div>
 
-      {run && <RunSection key={source} run={run} source={source} />}
+      {tab === 'versions' ? (
+        <PublishedVersions versions={versions} />
+      ) : (
+        <>
+          <DataAsOf
+            date={plan?.planMadeAt ?? null}
+            detail={
+              plan?.planMadeAt
+                ? pv && pv.packaging.length > 0
+                  ? t('stb.meta.versions', {
+                      packaging: pv.packaging.length,
+                      raw: pv.rawMaterial.length,
+                      from: formatDate(pv.packaging[0])
+                    })
+                  : null
+                : t('stb.meta.noPlan')
+            }
+          />
+          {/* F-02 — the published quantities are the material net requirement, so the
+              chip counts the checks that reach Material requirement (and Safety stock,
+              which feeds it). */}
+          <DataHealthChip step="E14-03" className="mb-3" />
 
-      {plan && (
-        <section
-          className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-5"
-          data-testid="stb-settings"
-        >
-          <h2 className="text-section text-text-primary mb-2">{t('stb.settings.title')}</h2>
-          <dl className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-            <div>
-              <dt className="text-text-secondary">{t('stb.settings.weight')}</dt>
-              <dd>
-                <Data data-testid="stb-setting-weight">{`${formatNumber(Math.round(plan.params.tradeOffWeight * 100))}%`}</Data>
-                <div className="text-xs text-text-tertiary">{t('stb.settings.weightNote')}</div>
-              </dd>
-            </div>
-            <div>
-              <dt className="text-text-secondary">{t('stb.settings.forecastWeight')}</dt>
-              <dd>
-                <Data>{`${formatNumber(Math.round(plan.params.forecastWeight * 100))}%`}</Data>
-                <div className="text-xs text-text-tertiary">
-                  {t('stb.settings.forecastWeightNote')}
-                </div>
-              </dd>
-            </div>
-            <div>
-              <dt className="text-text-secondary">{t('stb.settings.band')}</dt>
-              <dd>
-                <Data data-testid="stb-setting-band">
-                  {t('stb.settings.bandValue', {
-                    perVersion: Math.round(plan.params.band.perVersion * 100),
-                    cumulative: Math.round(plan.params.band.cumulative * 100)
-                  })}
-                </Data>
-                <div className="text-xs text-text-tertiary">{t('stb.settings.bandNote')}</div>
-              </dd>
-            </div>
-          </dl>
-        </section>
+          <div className="mb-4">
+            <FilterChipsBar
+              options={[
+                { id: 'engine', label: t('stb.source.engine') },
+                { id: 'sapHistory', label: t('stb.source.sapHistory') }
+              ]}
+              value={source}
+              onChange={setSource}
+            />
+          </div>
+
+          {run && <RunSection key={source} run={run} source={source} />}
+
+          {plan && <SettingsSection params={plan.params} />}
+
+          <section
+            className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6"
+            data-testid="stb-publish"
+          >
+            <h2 className="text-section text-text-primary mb-1">{t('stb.publish.title')}</h2>
+            <p className="text-xs text-text-tertiary mb-3">{t('stb.publish.intro')}</p>
+            <ul
+              className="text-sm text-text-secondary mb-2 space-y-1"
+              data-testid="stb-last-published"
+            >
+              {lastPublished.map((v) => (
+                <li key={v.publicationId} data-testid={`stb-last-published-${v.stream}`}>
+                  {t('stb.publish.last', { stream: t(`fc.stream.${v.stream}`) })}{' '}
+                  <Data>{t('fc.version', { version: v.version })}</Data>,{' '}
+                  <Data>{formatDate(v.publishedAt)}</Data>
+                </li>
+              ))}
+              {versionsQuery.isSuccess && lastPublished.length === 0 && (
+                <li>{t('stb.publish.lastNone')}</li>
+              )}
+            </ul>
+            <p className="text-sm mb-3">
+              <Link
+                to={`${FORECAST_PAGES.publish.path}?${TAB_PARAM}=versions`}
+                className="text-action-hover hover:underline"
+                data-testid="stb-versions-link"
+              >
+                {t('stb.publish.versionsLink')}
+              </Link>
+            </p>
+            <PublishChecklist run={plan?.engine ?? null} />
+            {publishAvailability.kind !== 'held' ? (
+              <HandoffNotice
+                availability={publishAvailability}
+                testId="handoff-stabilise-publish"
+              />
+            ) : withheld ? (
+              <p className="text-sm text-warning-hover" data-testid="stb-publish-withheld">
+                {t('stb.publish.withheld')}
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => void publish('packaging')}
+                  disabled={forecastCommand.isPending}
+                  data-testid="stb-publish-packaging"
+                >
+                  {t('stb.publish.packaging')}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => void publish('rawMaterial')}
+                  disabled={forecastCommand.isPending}
+                  data-testid="stb-publish-rawMaterial"
+                >
+                  {t('stb.publish.rawMaterial')}
+                </Button>
+              </div>
+            )}
+          </section>
+
+          <section
+            className="bg-bg-surface border border-border-subtle rounded-lg p-4 text-sm text-text-secondary space-y-2"
+            data-testid="stb-definitions"
+          >
+            <h2 className="text-section text-text-primary">{t('stb.def.title')}</h2>
+            <p>{t('stb.def.quantity')}</p>
+            <p>{t('stb.def.zones')}</p>
+            <p>{t('stb.def.masc')}</p>
+            <p>{t('stb.def.share')}</p>
+          </section>
+        </>
       )}
 
-      <section
-        className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6"
-        data-testid="stb-publish"
-      >
-        <h2 className="text-section text-text-primary mb-1">{t('stb.publish.title')}</h2>
-        <p className="text-xs text-text-tertiary mb-3">{t('stb.publish.intro')}</p>
-        <ul className="text-sm text-text-secondary mb-2 space-y-1" data-testid="stb-last-published">
-          {lastPublished.map((v) => (
-            <li key={v.publicationId} data-testid={`stb-last-published-${v.stream}`}>
-              {t('stb.publish.last', { stream: t(`fc.stream.${v.stream}`) })}{' '}
-              <Data>{t('fc.version', { version: v.version })}</Data>,{' '}
-              <Data>{formatDate(v.publishedAt)}</Data>
-            </li>
-          ))}
-          {versionsQuery.isSuccess && lastPublished.length === 0 && (
-            <li>{t('stb.publish.lastNone')}</li>
-          )}
-        </ul>
-        <p className="text-sm mb-3">
-          <Link
-            to="/buyer/forecasts"
-            className="text-action-hover hover:underline"
-            data-testid="stb-versions-link"
-          >
-            {t('stb.publish.versionsLink')}
-          </Link>
-        </p>
-        {publishAvailability.kind !== 'held' ? (
-          <HandoffNotice availability={publishAvailability} testId="handoff-stabilise-publish" />
-        ) : withheld ? (
-          <p className="text-sm text-warning-hover" data-testid="stb-publish-withheld">
-            {t('stb.publish.withheld')}
-          </p>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              onClick={() => void publish('packaging')}
-              disabled={forecastCommand.isPending}
-              data-testid="stb-publish-packaging"
-            >
-              {t('stb.publish.packaging')}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => void publish('rawMaterial')}
-              disabled={forecastCommand.isPending}
-              data-testid="stb-publish-rawMaterial"
-            >
-              {t('stb.publish.rawMaterial')}
-            </Button>
-          </div>
-        )}
-      </section>
-
-      <section
-        className="bg-bg-surface border border-border-subtle rounded-lg p-4 text-sm text-text-secondary space-y-2"
-        data-testid="stb-definitions"
-      >
-        <h2 className="text-section text-text-primary">{t('stb.def.title')}</h2>
-        <p>{t('stb.def.quantity')}</p>
-        <p>{t('stb.def.zones')}</p>
-        <p>{t('stb.def.masc')}</p>
-        <p>{t('stb.def.share')}</p>
-      </section>
-
       <AboutThisPage>
-        <p>{t('stb.subtitle')}</p>
-        <p data-testid="stb-synthetic-note">{t('stb.synthetic')}</p>
-        {withheld && <p data-testid="stb-withheld-note">{t('stb.withheld')}</p>}
-        <p data-testid="stb-range-note">
-          {t('stb.range')}{' '}
-          <Link
-            to="/buyer/demand-forecast"
-            className="text-action-hover hover:underline"
-            data-testid="stb-range-link"
-          >
-            {t('stb.range.link')}
-          </Link>
-        </p>
-        <p>{t('stb.replay')}</p>
+        {tab === 'versions' ? (
+          <p>{t('fc.pti.versions.subtitle')}</p>
+        ) : (
+          <>
+            <p>{t('stb.subtitle')}</p>
+            <p data-testid="stb-synthetic-note">{t('stb.synthetic')}</p>
+            {withheld && <p data-testid="stb-withheld-note">{t('stb.withheld')}</p>}
+            <p data-testid="stb-range-note">
+              {t('stb.range')}{' '}
+              <Link
+                to="/buyer/demand-forecast"
+                className="text-action-hover hover:underline"
+                data-testid="stb-range-link"
+              >
+                {t('stb.range.link')}
+              </Link>
+            </p>
+            <p>{t('stb.replay')}</p>
+          </>
+        )}
       </AboutThisPage>
     </AppShellV2>
   );

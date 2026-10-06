@@ -212,16 +212,13 @@ describe('This week — the page (F-03)', () => {
     expect(shown).toBe(listed);
   });
 
-  it('a step card shows the failing checks its page’s Data health chip shows', async () => {
+  it('states the failing input check once, in the input check card, and no step card repeats it', async () => {
     await renderThisWeek();
-    /** @param {string | null | undefined} text */
-    const num = (text) =>
-      text ? Number(/** @type {RegExpExecArray} */ (/(\d+)/.exec(text))[1]) : null;
-    const card = num(screen.queryByTestId('tw-checks-whatToOrder')?.textContent);
-    cleanup();
-    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
-    const chip = await screen.findByTestId('data-health-chip', {}, SLOW);
-    expect(card).toBe(num(within(chip).queryByTestId('data-health-chip-failing')?.textContent));
+    // The fixture really carries a failing check, so the count does show on the page.
+    expect(screen.getByTestId('tw-input-check')).toHaveTextContent(/1 check failing/);
+    for (const id of ['whatToOrder', 'makeRoom', 'publish', 'responses']) {
+      expect(screen.getByTestId(`tw-card-${id}`)).not.toHaveTextContent(/input checks? failing/);
+    }
   });
 
   it('reads in Indonesian', async () => {
@@ -264,6 +261,19 @@ describe('the cycle step bar (F-03, F-05)', () => {
       }
     }
   );
+
+  it('states the failing input check once, on This week, not under every step', async () => {
+    await renderThisWeek();
+    const bar = screen.getByTestId('cycle-steps');
+    // The fixture really carries a failing check, so this proves the count shows somewhere.
+    expect(screen.getByTestId('tw-input-check')).toHaveTextContent(/1 check failing/);
+    expect(
+      await within(bar).findByTestId('cycle-step-thisWeek-checks', {}, SLOW)
+    ).toHaveTextContent(/input check failing/);
+    for (const id of CYCLE_STEPS.filter((s) => s !== 'thisWeek')) {
+      expect(within(bar).queryByTestId(`cycle-step-${id}-checks`)).toBeNull();
+    }
+  });
 
   it('shows the same figures as the This week cards', async () => {
     await renderThisWeek();
