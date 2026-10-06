@@ -182,7 +182,68 @@ export const rescheduleEn = {
   'rs.def.unconfirmed_one':
     '{{count}} open PO line is not yet confirmed by its supplier. Like the material requirement, this report leaves it out of the projection until it is confirmed.',
   'rs.def.unconfirmed_other':
-    '{{count}} open PO lines are not yet confirmed by their suppliers. Like the material requirement, this report leaves them out of the projection until they are confirmed.'
+    '{{count}} open PO lines are not yet confirmed by their suppliers. Like the material requirement, this report leaves them out of the projection until they are confirmed.',
+  // FUX-D3 (F-10, F-22) — the warehouse-week decision, moved here from What to order and saved.
+  'rs.decide.title': 'Weeks that do not fit, even with the most rented space',
+  'rs.decide.intro':
+    'In these weeks the stock is above owned capacity plus the {{max}} rented pallets the plan may use. Decide for each week how it will be handled.',
+  'rs.decide.basis':
+    'These weeks come from the What to order projection, which includes the recommended orders. The fill table on this page also counts released call-offs not yet received, so a week’s figures can differ between the two pages.',
+  'rs.decide.intent':
+    'A decision is saved as your record of intent. It changes no order and is never sent to SAP or a supplier: act on it with the 3PL, with the proposals below, or on What to order.',
+  'rs.decide.pallets': '{{value}} pallets short',
+  'rs.decide.against': '{{pallets}} pallets against a limit of {{limit}}',
+  'rs.decide.unavoidable':
+    'No change to the recommended orders can fix this week: even ordering each week’s need exactly, the stock already on hand or already confirmed fills the space.',
+  'rs.decide.choose': 'Decide how to handle this week',
+  'rs.decide.choice.rent': 'Rent space',
+  'rs.decide.choice.pushOut': 'Push out orders',
+  'rs.decide.choice.reduce': 'Reduce orders',
+  'rs.decide.choice.accept': 'Accept the overflow',
+  'rs.decide.inline.rent': 'rent space',
+  'rs.decide.inline.pushOut': 'push out orders',
+  'rs.decide.inline.reduce': 'reduce orders',
+  'rs.decide.inline.accept': 'accept the overflow',
+  'rs.decide.detail.rent':
+    '{{pallets}} pallets beyond the limit for the week at {{rate}} a pallet: {{cost}}.',
+  'rs.decide.detail.reduce':
+    'Order less for this week: lower a recommended order on What to order, or reduce an open order with the proposals below.',
+  'rs.decide.detail.accept': 'Leave the week as it is. A note saying why is required.',
+  'rs.decide.later.none': 'Nothing arrives by this week that could come later.',
+  'rs.decide.later.enough_one':
+    '{{count}} delivery arrives by this week; moving it after the week frees {{movable}} pallets while keeping safety stock — enough.',
+  'rs.decide.later.enough_other':
+    '{{count}} deliveries arrive by this week; those that can move after the week while keeping safety stock free {{movable}} pallets — enough.',
+  'rs.decide.later.notEnough_one':
+    '{{count}} delivery arrives by this week; moving it while keeping safety stock frees {{movable}} pallets — not enough on its own.',
+  'rs.decide.later.notEnough_other':
+    '{{count}} deliveries arrive by this week; those that can move while keeping safety stock free {{movable}} pallets — not enough on their own.',
+  'rs.decide.col.material': 'Material',
+  'rs.decide.col.delivery': 'Delivery',
+  'rs.decide.col.week': 'Week',
+  'rs.decide.col.quantity': 'Quantity',
+  'rs.decide.col.safety': 'Moved after the week',
+  'rs.decide.source.planned': 'Recommended order',
+  'rs.decide.source.confirmed': 'Confirmed order line',
+  'rs.decide.keeps': 'Safety stock holds',
+  'rs.decide.breaks': 'Stock falls below safety stock',
+  'rs.decide.palletsUnit': '{{value}} pallets',
+  'rs.decide.note': 'Note',
+  'rs.decide.note.required': 'Required to accept the overflow.',
+  'rs.decide.note.optional': 'Optional.',
+  'rs.decide.save': 'Save decision',
+  'rs.decide.refusal.note': 'Add a note to accept the overflow.',
+  'rs.decide.refusal.choice': 'Choose one of the four ways.',
+  'rs.decide.none': 'No decision yet.',
+  'rs.decide.inForce': 'Decided: {{choice}}, {{date}}, against version {{version}}',
+  'rs.decide.inForce.noVersion':
+    'Decided: {{choice}}, {{date}}, before any plan version was published',
+  'rs.decide.olderPlan': 'Made on an older plan: review',
+  'rs.decide.earlier_one': '{{count}} earlier decision kept on record',
+  'rs.decide.earlier_other': '{{count}} earlier decisions kept on record',
+  'rs.decide.toast.saved': 'Decision saved',
+  'rs.decide.toast.savedDesc': 'Recorded for {{week}}. No order was changed.',
+  'rs.decide.toast.refused': 'Decision not saved'
 };
 
 /** @type {Record<string, string>} */
@@ -355,5 +416,61 @@ export const rescheduleId = {
   'rs.def.onHand':
     'Stok di tangan: yang sudah ada di gudang dan belum dipakai rencana. Bila stok itu sendiri di atas kapasitas, tidak ada perubahan pesanan terbuka yang dapat membawa minggu itu ke bawah.',
   'rs.def.unconfirmed_other':
-    '{{count}} baris PO terbuka belum dikonfirmasi pemasoknya. Seperti kebutuhan material, laporan ini tidak memasukkannya ke proyeksi sampai dikonfirmasi.'
+    '{{count}} baris PO terbuka belum dikonfirmasi pemasoknya. Seperti kebutuhan material, laporan ini tidak memasukkannya ke proyeksi sampai dikonfirmasi.',
+  // FUX-D3 (F-10, F-22) — keputusan minggu gudang, dipindah dari Apa yang dipesan dan disimpan.
+  'rs.decide.title': 'Minggu yang tidak muat, meski dengan ruang sewa terbanyak',
+  'rs.decide.intro':
+    'Pada minggu-minggu ini stok melebihi kapasitas sendiri ditambah {{max}} palet sewa yang boleh dipakai rencana. Putuskan untuk setiap minggu cara menanganinya.',
+  'rs.decide.basis':
+    'Minggu-minggu ini berasal dari proyeksi Apa yang dipesan, yang sudah memasukkan pesanan yang direkomendasikan. Tabel isi di halaman ini juga menghitung call-off yang sudah dirilis tetapi belum diterima, sehingga angka satu minggu bisa berbeda di kedua halaman.',
+  'rs.decide.intent':
+    'Keputusan disimpan sebagai catatan niat Anda. Keputusan tidak mengubah pesanan apa pun dan tidak pernah dikirim ke SAP atau pemasok: tindak lanjuti dengan 3PL, dengan usulan di bawah, atau di Apa yang dipesan.',
+  'rs.decide.pallets': 'kurang {{value}} palet',
+  'rs.decide.against': '{{pallets}} palet terhadap batas {{limit}}',
+  'rs.decide.unavoidable':
+    'Tidak ada perubahan pada pesanan yang direkomendasikan yang dapat mengatasi minggu ini: meski memesan tepat kebutuhan setiap minggu, stok yang sudah ada atau sudah dikonfirmasi memenuhi ruangnya.',
+  'rs.decide.choose': 'Putuskan cara menangani minggu ini',
+  'rs.decide.choice.rent': 'Sewa ruang',
+  'rs.decide.choice.pushOut': 'Mundurkan pesanan',
+  'rs.decide.choice.reduce': 'Kurangi pesanan',
+  'rs.decide.choice.accept': 'Terima kelebihan',
+  'rs.decide.inline.rent': 'sewa ruang',
+  'rs.decide.inline.pushOut': 'mundurkan pesanan',
+  'rs.decide.inline.reduce': 'kurangi pesanan',
+  'rs.decide.inline.accept': 'terima kelebihan',
+  'rs.decide.detail.rent':
+    '{{pallets}} palet melebihi batas untuk minggu ini dengan {{rate}} per palet: {{cost}}.',
+  'rs.decide.detail.reduce':
+    'Pesan lebih sedikit untuk minggu ini: turunkan pesanan yang direkomendasikan di Apa yang dipesan, atau kurangi pesanan terbuka dengan usulan di bawah.',
+  'rs.decide.detail.accept': 'Biarkan minggu ini apa adanya. Catatan alasannya wajib diisi.',
+  'rs.decide.later.none': 'Tidak ada pengiriman hingga minggu ini yang dapat datang lebih lambat.',
+  'rs.decide.later.enough_other':
+    '{{count}} pengiriman tiba hingga minggu ini; yang dapat dipindah setelah minggu itu dengan stok pengaman tetap terjaga membebaskan {{movable}} palet — cukup.',
+  'rs.decide.later.notEnough_other':
+    '{{count}} pengiriman tiba hingga minggu ini; yang dapat dipindah dengan stok pengaman tetap terjaga membebaskan {{movable}} palet — belum cukup sendiri.',
+  'rs.decide.col.material': 'Material',
+  'rs.decide.col.delivery': 'Pengiriman',
+  'rs.decide.col.week': 'Minggu',
+  'rs.decide.col.quantity': 'Kuantitas',
+  'rs.decide.col.safety': 'Dipindah setelah minggu itu',
+  'rs.decide.source.planned': 'Pesanan yang direkomendasikan',
+  'rs.decide.source.confirmed': 'Baris pesanan terkonfirmasi',
+  'rs.decide.keeps': 'Stok pengaman terjaga',
+  'rs.decide.breaks': 'Stok turun di bawah stok pengaman',
+  'rs.decide.palletsUnit': '{{value}} palet',
+  'rs.decide.note': 'Catatan',
+  'rs.decide.note.required': 'Wajib untuk menerima kelebihan.',
+  'rs.decide.note.optional': 'Opsional.',
+  'rs.decide.save': 'Simpan keputusan',
+  'rs.decide.refusal.note': 'Tambahkan catatan untuk menerima kelebihan.',
+  'rs.decide.refusal.choice': 'Pilih salah satu dari empat cara.',
+  'rs.decide.none': 'Belum ada keputusan.',
+  'rs.decide.inForce': 'Diputuskan: {{choice}}, {{date}}, berdasarkan versi {{version}}',
+  'rs.decide.inForce.noVersion':
+    'Diputuskan: {{choice}}, {{date}}, sebelum ada versi rencana yang diterbitkan',
+  'rs.decide.olderPlan': 'Dibuat pada rencana lama: tinjau',
+  'rs.decide.earlier_other': '{{count}} keputusan sebelumnya tetap tercatat',
+  'rs.decide.toast.saved': 'Keputusan disimpan',
+  'rs.decide.toast.savedDesc': 'Dicatat untuk {{week}}. Tidak ada pesanan yang diubah.',
+  'rs.decide.toast.refused': 'Keputusan tidak disimpan'
 };

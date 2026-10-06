@@ -15,6 +15,7 @@ import {
   allCommitmentLines,
   allCoverageRows,
   allVersionViews,
+  currentPlanVersion,
   forecastSupplierName
 } from './forecastReadModel';
 import { allFixedStockRows } from './fixedStockReadModel';
@@ -105,6 +106,7 @@ import { planChangeGuard, poOrderLines, reschedule, termsKey } from '../../engin
 import { callOffViews } from '../../transitions/callOffRules';
 import { callOffOrderLines } from './rescheduleReadModel';
 import { sapChangeMarkStore } from './stores/sapChangeMarkStore';
+import { warehouseDecisionStore } from './stores/warehouseDecisionStore';
 import { addDays, dayOf } from '../../engine/dates';
 /** @import { EngineDataset } from '../../engine/types' */
 import { labelOf, materialEntry } from '../../sdc/materialMaster';
@@ -732,7 +734,13 @@ export class MockProcurementService {
       planChange: guard.baseline,
       planChangeWindowWeeks: WINDOW_WEEKS,
       unconfirmedPoLines,
-      sapMarks: [...sapChangeMarkStore.all()].reverse()
+      sapMarks: [...sapChangeMarkStore.all()].reverse(),
+      // FUX-D3 — the warehouse-week decisions and the version each is judged against.
+      warehouseDecisions: warehouseDecisionStore.all(),
+      planVersions: {
+        packaging: currentPlanVersion('packaging'),
+        rawMaterial: currentPlanVersion('rawMaterial')
+      }
     };
   }
 

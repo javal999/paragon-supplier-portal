@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import {
   RadarChart,
   Radar,
@@ -39,9 +40,12 @@ import PageHeader from '@components/ui-v2/PageHeader';
 import Data from '@components/ui-v2/Data';
 import TargetBar from '@components/ui-v2/TargetBar';
 import PageMetaLine from '@components/ui-v2/PageMetaLine';
-import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import KpiCard from '@components/ui-v2/KpiCard';
+import PurposeHeader from '@components/forecast/PurposeHeader';
+import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
+import DataAsOf from '@components/forecast/DataAsOf';
+import { forecastTitle, linkTarget } from '@components/forecast/forecastPages';
 import { usePerformance } from './performance/performanceDisplay';
 import KpiDefinitions from './performance/KpiDefinitions';
 import UpdateComplianceCard from './performance/UpdateComplianceCard';
@@ -60,6 +64,7 @@ import { useToast } from '@hooks/useToast';
 import { useCategoryLabel } from '@hooks/useCategoryLabel';
 import { useChannelLabel } from '@hooks/useChannelLabel';
 import { useSupplierScorecards } from '@services/query/hooks';
+import { isLive } from '@services/liveness';
 import type {
   ScorecardKpi,
   ScorecardRadarAxis,
@@ -209,7 +214,9 @@ const BuyerScorecard: React.FC = () => {
 
   const SCORECARD_CRUMB = [
     t('buyerScorecard.crumb.intelligence'),
-    t('buyerScorecard.crumb.scorecard'),
+    // FUX2-R4 (B6) — named by its menu label, so the title and both menus
+    // (Review for MP, Performance for BUY) cannot drift.
+    t('hub.nav.pti.performance'),
   ];
 
   const scorecardsQuery = useSupplierScorecards();
@@ -266,7 +273,7 @@ const BuyerScorecard: React.FC = () => {
     <AppShellV2>
       <PageHeader
         breadcrumb={SCORECARD_CRUMB}
-        title={t('buyerScorecard.header.title')}
+        title={t('hub.nav.pti.performance')}
         subtitle={t('buyerScorecard.header.subtitle')}
         actions={
           <select
@@ -283,8 +290,16 @@ const BuyerScorecard: React.FC = () => {
           </select>
         }
       />
+      {/* Forecast UX phase 2, B6 (F-11, FUX-D2) — the one supplier-evaluation
+          page states its decision and its place in the cycle for both roles that
+          open it (Material Planner under Review, Procurement under Performance),
+          carries the one simulated-data banner in place of the old "Sample data"
+          label on the KPI section, and dates its figures. */}
+      <PurposeHeader page="performance" />
+      <SimulatedDataBanner capability="scorecards" />
+      <DataAsOf date={perf.nowIso} />
 
-      <PageMetaLine className="-mt-6 mb-6">
+      <PageMetaLine className="mb-6">
         {t(
           suppliers.length === 1
             ? 'buyerScorecard.meta.suppliers.one'
@@ -293,10 +308,6 @@ const BuyerScorecard: React.FC = () => {
         )}{' '}
         · {t('buyerScorecard.meta.lastActivity')} {latestCommDate} ·{' '}
         {t('perf.periodLabel')}: {t(`perf.period.${period}`)}
-        {/* REQ-E10-01 — the marker MOVED rather than staying put. The OTIF, CFOT,
-            score and grade on this page ARE computed from hub data now, so the
-            page-level "Sample data" claim would be false about them; the marker
-            sits on the KPI section below, which is still authored. */}
       </PageMetaLine>
 
       <div className="mb-6">
@@ -332,10 +343,17 @@ const BuyerScorecard: React.FC = () => {
           eyebrow={t('perf.cfot')}
           value={measure.cfot.pct === null ? t('rfx.noHistory') : `${measure.cfot.pct}%`}
           subtitle={
-            <span className="text-text-tertiary" data-testid="scorecard-cfot">
-              {measure.cfot.pct === null
-                ? t('perf.noMeasured')
-                : t('perf.measuredOrders', { count: measure.cfot.measured })}
+            <span className="text-text-tertiary">
+              <span data-testid="scorecard-cfot">
+                {measure.cfot.pct === null
+                  ? t('perf.noMeasured')
+                  : t('perf.measuredOrders', { count: measure.cfot.measured })}
+              </span>
+              {/* B6 (FUX-D5) — the basis, so this is not read as Supplier
+                  reliability's "Confirmed-date lines delivered". */}
+              <span className="block" data-testid="scorecard-cfot-basis">
+                {t(`perf.cfot.basis.${period}`)}
+              </span>
             </span>
           }
         />
@@ -360,8 +378,23 @@ const BuyerScorecard: React.FC = () => {
         />
       </div>
 
+      {/* B6 (F-11) — the engine's plan-change measures live on Supplier reliability. */}
+      <p className="-mt-3 mb-6 text-sm text-text-secondary" data-testid="scorecard-reliability-link">
+        {t('perf.reliabilityLink')} →{' '}
+        <Link to={linkTarget('reliability').path} className="text-action-hover hover:underline">
+          {forecastTitle(t, 'reliability')}
+        </Link>
+      </p>
+
       {/* Material B3 (MR-2, US-MAT-03) — the supplier's weekly update compliance. */}
-      <UpdateComplianceCard compliance={measure.updateCompliance} testId="scorecard-update-compliance" />
+      {/* B6 — while the page banner shows (scorecards not live), it carries the
+          compliance card's "sample" fact too; the card's pill returns with no
+          edit here once the scorecard feed is live. */}
+      <UpdateComplianceCard
+        compliance={measure.updateCompliance}
+        testId="scorecard-update-compliance"
+        livenessPill={isLive('scorecards')}
+      />
 
       {/* BL-53 — the definitions behind OTIF and CFOT, and "Baseline period". */}
       <KpiDefinitions />
@@ -459,10 +492,10 @@ const BuyerScorecard: React.FC = () => {
 
       <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6 mb-6">
         <h2 className="flex flex-wrap items-center gap-3 text-section text-text-primary mb-4 pb-3 border-b border-border-subtle">
-          {t('buyerScorecard.kpi.title')}
           {/* D-CENSUS-8 — these rows are still authored: no hub data measures
-              OTDR, acknowledgement speed, defect rate or sustainability. */}
-          <ProvenanceMarker capability="scorecards" />
+              OTDR, acknowledgement speed, defect rate or sustainability. B6: the
+              page-level SimulatedDataBanner now carries that fact. */}
+          {t('buyerScorecard.kpi.title')}
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
           {supp.kpis.map((k) => (

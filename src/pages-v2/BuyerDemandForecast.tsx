@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
 import KpiCard from '../components/ui-v2/KpiCard';
+import Tabs from '../components/ui-v2/Tabs';
 import StatusPill from '../components/ui-v2/StatusPill';
 import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
 import Table from '../components/ui-v2/Table';
@@ -25,6 +26,7 @@ import SimulatedDataBanner from '../components/forecast/SimulatedDataBanner';
 import AboutThisPage from '../components/forecast/AboutThisPage';
 import DataAsOf from '../components/forecast/DataAsOf';
 import { forecastCrumb, forecastTitle } from '../components/forecast/forecastPages';
+import ForecastBiasTab, { type QualityFrame } from './BuyerForecastBias';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DEMAND FORECAST — REQ-E14-07, the Material Planner's view (Experience: "the
@@ -209,7 +211,57 @@ const EventsSection: React.FC<{ events: DemandForecastRun['events'] }> = ({ even
   );
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// FORECAST QUALITY — Forecast UX phase 2, task B5 (F-06, F-12). One page, two
+// tabs, so "how did the forecast do" has one home: "Forecast vs plan" (the
+// demand forecast below) and "Bias and overrides" (`BuyerForecastBias.tsx`).
+// The tab is kept in the address (`?tab=bias`), so a reload or a shared link
+// lands on the same tab, and `/buyer/forecast-bias` redirects here (FUX2-R1).
+// Both tabs share one frame: the page title, purpose header, banner, the tabs
+// and the line naming the plan source (F-06). Each tab reads only its own data.
+// ─────────────────────────────────────────────────────────────────────────────
+
+type QualityTab = 'forecast' | 'bias';
+
+const ForecastQualityFrame: React.FC<{ tab: QualityTab; onTab: (tab: QualityTab) => void; children: React.ReactNode }> = ({ tab, onTab, children }) => {
+  const { t } = useTranslation();
+  return (
+    <AppShellV2>
+      <PageHeader breadcrumb={forecastCrumb(t, 'forecastQuality')} title={forecastTitle(t, 'forecastQuality')} />
+      <PurposeHeader page="forecastQuality" />
+      <SimulatedDataBanner capability="engineDataset" />
+      <div data-testid="fq-tabs" data-tab={tab}>
+        <Tabs
+          tabs={[
+            { id: 'forecast', label: t('df.tab.forecast') },
+            { id: 'bias', label: t('df.tab.bias') },
+          ]}
+          active={tab}
+          onChange={(id) => onTab(id === 'bias' ? 'bias' : 'forecast')}
+          className="mb-3"
+        />
+      </div>
+      {/* F-06 — which plan drives orders, and what this page measures against it. */}
+      <p className="text-sm text-text-secondary mb-4" data-testid="fq-plan-source">
+        {t('df.planSource')}
+      </p>
+      {children}
+    </AppShellV2>
+  );
+};
+
 const BuyerDemandForecast: React.FC = () => {
+  const [params, setParams] = useSearchParams();
+  const tab: QualityTab = params.get('tab') === 'bias' ? 'bias' : 'forecast';
+  const frame: QualityFrame = (content) => (
+    <ForecastQualityFrame tab={tab} onTab={(next) => setParams(next === 'bias' ? { tab: 'bias' } : {})}>
+      {content}
+    </ForecastQualityFrame>
+  );
+  return tab === 'bias' ? <ForecastBiasTab frame={frame} /> : <DemandForecastTab frame={frame} />;
+};
+
+const DemandForecastTab: React.FC<{ frame: QualityFrame }> = ({ frame }) => {
   const { t } = useTranslation();
   const query = useDemandForecast();
   const crumb = forecastCrumb(t, 'forecastQuality');
@@ -230,11 +282,8 @@ const BuyerDemandForecast: React.FC = () => {
   const levels = [run.total, ...run.brands];
   const recon = run.reconciliation;
 
-  return (
-    <AppShellV2>
-      <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'forecastQuality')} />
-      <PurposeHeader page="forecastQuality" />
-      <SimulatedDataBanner capability="engineDataset" />
+  return frame(
+    <>
       <DataAsOf
         date={run.asOf}
         detail={
@@ -247,7 +296,7 @@ const BuyerDemandForecast: React.FC = () => {
       {/* REQ-E14-11 / REQ-E14-10 — the two engine pages Forecast quality reaches. */}
       <p className="text-xs text-text-secondary mb-4" data-testid="df-overrides">
         {run.overrideCells > 0 && <>{t('fb.df.overrides', { count: run.overrideCells })} </>}
-        <Link to="/buyer/forecast-bias" className="text-action hover:underline" data-testid="df-bias-link">
+        <Link to="/buyer/demand-forecast?tab=bias" className="text-action hover:underline" data-testid="df-bias-link">
           {t('fb.df.link')}
         </Link>
         <span data-testid="df-backtest-link">
@@ -451,7 +500,7 @@ const BuyerDemandForecast: React.FC = () => {
         <p data-testid="df-main-not-built">{t('df.mainNotBuilt')}</p>
         <p data-testid="df-source-note">{t('df.source')}</p>
       </AboutThisPage>
-    </AppShellV2>
+    </>,
   );
 };
 
