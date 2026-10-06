@@ -152,9 +152,16 @@ export const SAMPLE_RELATIONSHIP = {
 // supplier × material, so on those pairs an input on the sample row would
 // also land on the real row. Each case therefore uses a pair of the same
 // supplier and unit with no real row: sup-002 × RM-EMUL-9430 (KG, same
-// planning group as RM-EMUL-9410) and sup-007 × PK-PETB-8803 (PCS, 100 ml,
-// same planning group as PK-PETB-8802). The read model reserves both pairs
-// for their sample row.
+// planning group as RM-EMUL-9410) and sup-007 × PK-CART-9910 (PCS, planning
+// group MG-23). The read model reserves both pairs for their sample row.
+//
+// ⚠️ A SAMPLE MAY ONLY NAME A CODE THE DOCUMENT LANE ALREADY CARRIES. The
+// material-master census (`sdc/__tests__/materialMasterAdoption`) counts every
+// `materialCode` in a source module as a route; a code sourced by one lane only
+// (the RFQ lane's PK-PETB-8803 / -8825, the ASN lane's PK-PETB-8804) would move
+// to "a fourth route" the moment this file names it. No such MG-20 code is
+// free for sup-007, so case 3 uses MG-23's PK-CART-9910, which
+// `src/data/mockPurchaseOrders.js` already states.
 //
 // Case 2 — the supplier cannot cover what is already called off. A
 // manufacturer. On 2026-09-01: available 1,700 · already called off, not
@@ -271,9 +278,9 @@ const C2_OPEN = sampleCallOff({
   needDate: '2026-09-10'
 });
 
-/** Case 3 — sup-007, PCS (walkthrough pair: sup-007 × PK-PETB-8802). */
+/** Case 3 — sup-007, PCS (walkthrough pair: sup-007 × PK-PETB-8802; see the census note above). */
 export const SIMULATION_SAMPLE_CASE3_SUPPLIER = 'sup-007';
-export const SIMULATION_SAMPLE_CASE3_MATERIAL = 'PK-PETB-8803';
+export const SIMULATION_SAMPLE_CASE3_MATERIAL = 'PK-CART-9910';
 const C3S = SIMULATION_SAMPLE_CASE3_SUPPLIER;
 const C3M = SIMULATION_SAMPLE_CASE3_MATERIAL;
 const C3_SHIPPED = sampleCallOff({

@@ -226,7 +226,7 @@ describe('getStockSimulation', () => {
     });
     expect(a.basis).toBe('plannerInput');
     // Isolation: the input reaches the sample row only — no real row for the pair,
-    // and the real sup-007 row of the same planning group reads exactly as before.
+    // and a real sup-007 row reads exactly as before.
     expect(
       rows.filter(
         (r) =>

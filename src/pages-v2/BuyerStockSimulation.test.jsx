@@ -34,7 +34,7 @@ const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer, actor: RINA 
 const SAMPLE = 'sup-004-FR-WARD-4410';
 const PET = 'sup-007-PK-PETB-8801';
 const CASE2 = 'sup-002-RM-EMUL-9430';
-const CASE3 = 'sup-007-PK-PETB-8803';
+const CASE3 = 'sup-007-PK-CART-9910';
 
 beforeEach(() => {
   simulationOverrideStore.reset();
