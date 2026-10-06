@@ -25,6 +25,7 @@ import AboutThisPage from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
 import TermTip from '@components/forecast/TermTip';
 import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
+import { TOUCH_TARGET } from '@components/forecast/focusRing';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER RELIABILITY — REQ-E14-02 (BL-99), the Material Planner's view.
@@ -163,7 +164,7 @@ const BuyerReliability: React.FC = () => {
             <TableHeaderCell ariaSort={dir}>
               <button
                 type="button"
-                className="inline-flex items-center gap-1 uppercase hover:text-action"
+                className={`inline-flex items-center gap-1 uppercase hover:text-action-hover ${TOUCH_TARGET}`}
                 onClick={() => setDir((d) => (d === 'ascending' ? 'descending' : 'ascending'))}
                 aria-label={t(dir === 'ascending' ? 'rel.sort.descending' : 'rel.sort.ascending')}
                 data-testid="rel-sort-confirmation"

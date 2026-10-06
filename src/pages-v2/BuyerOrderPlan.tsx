@@ -24,6 +24,7 @@ import AboutThisPage from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
 import WhyQuantityPanel from '@components/forecast/WhyQuantityPanel';
 import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
+import { TOUCH_TARGET } from '@components/forecast/focusRing';
 import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
@@ -364,11 +365,11 @@ const BuyerOrderPlan: React.FC = () => {
             <p className="text-xs text-text-tertiary mb-3">{t('op.recs.intro')}</p>
             <p className="text-xs text-text-secondary mb-3" data-testid="op-why">
               {t('op.why')}{' '}
-              <Link to="/buyer/material-requirement" className="text-action underline" data-testid="op-why-requirement">
+              <Link to="/buyer/material-requirement" className="text-action-hover underline" data-testid="op-why-requirement">
                 {t('op.why.requirement')}
               </Link>{' '}
               ·{' '}
-              <Link to="/buyer/safety-stock" className="text-action underline" data-testid="op-why-safety">
+              <Link to="/buyer/safety-stock" className="text-action-hover underline" data-testid="op-why-safety">
                 {t('op.why.safety')}
               </Link>
             </p>
@@ -450,7 +451,7 @@ const BuyerOrderPlan: React.FC = () => {
                             <button
                               type="button"
                               id={`${whyId(r)}-toggle`}
-                              className="mt-1 text-xs text-action underline"
+                              className={`mt-1 text-xs text-action-hover underline ${TOUCH_TARGET}`}
                               aria-expanded={whyIsOpen}
                               aria-controls={whyId(r)}
                               aria-label={t('op.wq.openAria', { material: m.materialLabel, week: weekLabel(r.weekStart) })}
@@ -481,8 +482,10 @@ const BuyerOrderPlan: React.FC = () => {
                           </TableCell>
                           <TableCell className="align-top">
                             {!line ? (
-                              <span title={t('op.action.noPo.hint')}>
+                              // C2 (WCAG 1.3.1): the reason is read out too, not only shown on hover.
+                              <span title={t('op.action.noPo.hint')} data-testid={`op-nopo-${r.materialCode}-${r.weekStart}`}>
                                 <StatusPill variant="neutral">{t('op.action.noPo')}</StatusPill>
+                                <span className="sr-only">{t('op.action.noPo.hint')}</span>
                               </span>
                             ) : drafted.has(key) ? (
                               <StatusPill variant="success">{t('op.action.drafted')}</StatusPill>
@@ -533,7 +536,7 @@ const BuyerOrderPlan: React.FC = () => {
           {w.shortfallWeeks.length > 0 && (
             <p className="text-sm text-text-primary bg-bg-surface border border-danger rounded-lg px-4 py-3 mb-6" data-testid="op-shortfall-count">
               {t('op.short.count', { count: w.shortfallWeeks.length })}{' '}
-              <Link to="/buyer/reschedule" className="text-action underline">
+              <Link to="/buyer/reschedule" className="text-action-hover underline">
                 {t('op.short.decide')}
               </Link>
             </p>

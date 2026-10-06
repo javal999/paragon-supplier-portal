@@ -29,6 +29,7 @@ import AboutThisPage from '../components/forecast/AboutThisPage';
 import DataAsOf from '../components/forecast/DataAsOf';
 import TermTip from '../components/forecast/TermTip';
 import { forecastCrumb } from '../components/forecast/forecastPages';
+import { FIELD_FOCUS_RING } from '../components/forecast/focusRing';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FORECAST BIAS — the "Bias and overrides" tab of Forecast quality (FUX phase 2
@@ -47,8 +48,9 @@ import { forecastCrumb } from '../components/forecast/forecastPages';
 // dataset (the `engineDataset` pill, X-03).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const inputClass =
-  'w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action placeholder:text-text-tertiary';
+// C2 (WCAG 2.4.7): the shared field class shows focus only as a 1 px border
+// tint; the forecast fields add a ring.
+const inputClass = `w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action placeholder:text-text-tertiary ${FIELD_FOCUS_RING}`;
 const labelClass = 'block text-label text-text-tertiary uppercase mb-1';
 
 const signalText = (s: number | null) => (s === null ? '—' : `${s > 0 ? '+' : ''}${formatNumber(Math.round(s * 100) / 100)}`);
@@ -182,7 +184,7 @@ const OverrideForm: React.FC<{ view: ForecastBiasView }> = ({ view }) => {
           <label htmlFor="fb-reason" className={labelClass}>
             {t('fb.form.reason')}
           </label>
-          <select id="fb-reason" className={inputClass} value={reason} onChange={(e) => setReason(e.target.value)} aria-required={up} data-testid="fb-form-reason">
+          <select id="fb-reason" className={inputClass} value={reason} onChange={(e) => setReason(e.target.value)} aria-required={up} aria-describedby="fb-form-reason-hint" data-testid="fb-form-reason">
             <option value="">{t('fb.form.reason.none')}</option>
             {reasons.map((code) => (
               <option key={code} value={code}>
@@ -190,7 +192,7 @@ const OverrideForm: React.FC<{ view: ForecastBiasView }> = ({ view }) => {
               </option>
             ))}
           </select>
-          <p className={`text-xs mt-1 ${up && !reason ? 'text-warning-hover' : 'text-text-tertiary'}`} data-testid="fb-form-reason-hint">
+          <p id="fb-form-reason-hint" className={`text-xs mt-1 ${up && !reason ? 'text-warning-hover' : 'text-text-tertiary'}`} data-testid="fb-form-reason-hint">
             {t('fb.form.reason.hint')}
           </p>
         </div>
@@ -211,9 +213,21 @@ const OverrideForm: React.FC<{ view: ForecastBiasView }> = ({ view }) => {
         />
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <Button variant="outline" onClick={() => void submit()} disabled={!valid || command.isPending} data-testid="fb-form-submit">
+        {/* C2 (WCAG 4.1.2): a switched-off submit says why. */}
+        <Button
+          variant="outline"
+          onClick={() => void submit()}
+          disabled={!valid || command.isPending}
+          aria-describedby={valid ? undefined : 'fb-form-submit-why'}
+          data-testid="fb-form-submit"
+        >
           {t('fb.form.submit')}
         </Button>
+        {valid ? null : (
+          <span id="fb-form-submit-why" className="sr-only">
+            {t('fb.form.submit.needValue')}
+          </span>
+        )}
         <span className="text-xs text-text-tertiary" data-testid="fb-form-attribution">
           {t('fb.form.attribution')}
         </span>

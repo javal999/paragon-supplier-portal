@@ -341,6 +341,8 @@ const RunSection: React.FC<{ run: StabiliseRunView; source: Source }> = ({ run, 
                           <Button
                             variant="secondary"
                             onClick={() => setOpen(open === key ? null : key)}
+                            // C2 (WCAG 4.1.2): the toggle says whether its weeks are shown.
+                            aria-expanded={open === key}
                             data-testid={`stb-open-${key}`}
                           >
                             {open === key ? t('stb.series.hide') : t('stb.series.show')}
@@ -585,6 +587,8 @@ const BuyerStabilise: React.FC = () => {
         />
       </div>
 
+      {/* C2 (WCAG 1.3.1): the tab's content is its tab panel. */}
+      <div role="tabpanel" aria-label={t(tab === 'versions' ? 'stb.tab.versions' : 'stb.tab.publish')} data-testid="stb-tabpanel">
       {tab === 'versions' ? (
         <PublishedVersions versions={versions} />
       ) : (
@@ -667,6 +671,7 @@ const BuyerStabilise: React.FC = () => {
           </section>
         </>
       )}
+      </div>
 
       <AboutThisPage>
         {tab === 'versions' ? (
