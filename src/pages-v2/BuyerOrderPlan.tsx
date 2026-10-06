@@ -22,6 +22,7 @@ import CycleSteps from '@components/forecast/CycleSteps';
 import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
 import AboutThisPage from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
+import WhyQuantityPanel from '@components/forecast/WhyQuantityPanel';
 import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
@@ -32,7 +33,7 @@ import { useOrderPlan, usePurchaseOrders } from '@services/query/hooks';
 import { useCallOffCommand } from '@services/query/commandHooks';
 import { CALL_OFF_PO_STATES } from '@services/transitions/callOffRules';
 import type { MaterialOrderPlanView, WarehousePlanView } from '@services/data/types';
-import type { Recommendation, ShortfallWeek } from '@services/engine/orderSizing';
+import type { Recommendation } from '@services/engine/orderSizing';
 import type { WarehouseKind } from '@services/engine/types';
 import { isoWeek } from '@services/engine/dates';
 import { sdcClock } from '@services/sdc/clock';
@@ -65,11 +66,13 @@ import { draftNeedDate, umbrellaLineFor } from './orderPlan/orderPlanRelease';
 // so beside the button rather than letting the planner find out on release.
 //
 // Edge case (BL-117): a week where no plan fits even with the most rented space
-// the administrator allows is listed with its shortfall and the planner's two
-// ways out, each costed — rent beyond the cap, or a later delivery (what
-// arrives by that week and whether moving it keeps the safety stock). The
-// choice is the planner's and is NOT stored: the page says where to act on it
-// (the 3PL booking; the Reschedule page or the release week of an order).
+// the administrator allows is counted here, with a link to Make warehouse room,
+// where the planner's decision for it is recorded (FUX-D3, F-10).
+//
+// FUX2 B3 (F-07, F-17): each recommended order opens a "Why this quantity"
+// panel (`components/forecast/WhyQuantityPanel.tsx`) with its material's
+// Material requirement and Safety stock figures and its sizing, so the planner
+// sees why without leaving the page. The 2 full pages stay linked above.
 //
 // Every figure is computed by the forecast engine at read time on its
 // SYNTHETIC dataset (the `engineDataset` pill, X-03).
@@ -188,133 +191,6 @@ const FillTable: React.FC<{ w: WarehousePlanView }> = ({ w }) => {
   );
 };
 
-type ShortfallChoice = 'rent' | 'later';
-
-/** REQ-E14-05 edge case (BL-117) — weeks that do not fit even with the most rented space, and the planner's choice. */
-const ShortfallPanel: React.FC<{ w: WarehousePlanView; rate: number }> = ({ w, rate }) => {
-  const { t } = useTranslation();
-  const [choice, setChoice] = useState<Readonly<Record<string, ShortfallChoice>>>({});
-  const nameOf = new Map(w.materials.map((m) => [m.materialCode, m] as const));
-  const pal = (x: number) => formatNumber(Math.round(x * 10) / 10);
-  const one = (sw: ShortfallWeek) => {
-    const picked = choice[sw.weekStart] ?? null;
-    const option = (id: ShortfallChoice, label: string, detail: string) => (
-      <button
-        type="button"
-        aria-pressed={picked === id}
-        onClick={() => setChoice((prev) => ({ ...prev, [sw.weekStart]: id }))}
-        className={`text-left border rounded-md p-3 flex-1 min-w-[14rem] ${
-          picked === id ? 'border-action bg-action-soft' : 'border-border-subtle hover:border-action'
-        }`}
-        data-testid={`op-short-choose-${id}-${sw.weekStart}`}
-      >
-        <div className="text-sm font-medium text-text-primary">{label}</div>
-        <div className="text-xs text-text-secondary mt-1">{detail}</div>
-      </button>
-    );
-    return (
-      <div key={sw.weekStart} className="border border-border-subtle rounded-md p-4 mb-3" data-testid={`op-short-${sw.weekStart}`}>
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-2">
-          <h3 className="text-sm font-semibold text-text-primary">
-            <Data>{weekLabel(sw.weekStart)}</Data> · <Data>{formatDate(sw.weekStart)}</Data>
-          </h3>
-          <span className="text-sm text-danger" data-testid={`op-short-pallets-${sw.weekStart}`}>
-            {t('op.short.pallets', { value: pal(sw.shortfallPallets) })}
-          </span>
-          <span className="text-xs text-text-tertiary">
-            {t('op.short.against', { pallets: pal(sw.pallets), limit: pal(sw.limitPallets) })}
-          </span>
-        </div>
-        {sw.unavoidable && (
-          <p className="text-xs text-text-secondary mb-2" data-testid={`op-short-unavoidable-${sw.weekStart}`}>
-            {t('op.short.unavoidable')}
-          </p>
-        )}
-        <div className="flex flex-wrap gap-3" role="group" aria-label={t('op.short.choose')}>
-          {option('rent', t('op.short.rent'), t('op.short.rent.detail', { pallets: pal(sw.rent.pallets), cost: formatIDR(Math.round(sw.rent.costIdr)), rate: formatIDR(rate) }))}
-          {option(
-            'later',
-            t('op.short.later'),
-            sw.later.deliveries.length === 0
-              ? t('op.short.later.none')
-              : t(sw.later.enough ? 'op.short.later.enough' : 'op.short.later.notEnough', {
-                  count: sw.later.deliveries.length,
-                  movable: pal(sw.later.movablePallets),
-                }),
-          )}
-        </div>
-        {picked === 'rent' && (
-          <p className="text-xs text-text-secondary mt-3" data-testid={`op-short-next-rent-${sw.weekStart}`}>
-            {t('op.short.next.rent', { pallets: pal(sw.rent.pallets) })}
-          </p>
-        )}
-        {picked === 'later' && (
-          <div className="mt-3" data-testid={`op-short-next-later-${sw.weekStart}`}>
-            {sw.later.deliveries.length > 0 && (
-              <div className="overflow-x-auto mb-2">
-                <Table>
-                  <TableHeader>
-                    <TableHeaderCell>{t('op.col.material')}</TableHeaderCell>
-                    <TableHeaderCell>{t('op.short.col.source')}</TableHeaderCell>
-                    <TableHeaderCell>{t('op.col.week')}</TableHeaderCell>
-                    <TableHeaderCell>{t('op.col.quantity')}</TableHeaderCell>
-                    <TableHeaderCell>{t('op.short.col.safety')}</TableHeaderCell>
-                  </TableHeader>
-                  <tbody>
-                    {sw.later.deliveries.map((d) => {
-                      const m = nameOf.get(d.materialCode);
-                      return (
-                        <TableRow key={`${d.materialCode}-${d.source}-${d.weekStart}`} data-testid={`op-short-delivery-${d.materialCode}-${d.source}-${d.weekStart}`}>
-                          <TableCell>
-                            <div className="text-sm text-text-primary">{m?.materialLabel ?? d.materialCode}</div>
-                            <Data className="text-xs text-text-tertiary">{d.materialCode}</Data>
-                          </TableCell>
-                          <TableCell>{t(`op.short.source.${d.source}`)}</TableCell>
-                          <TableCell>
-                            <Data>{weekLabel(d.weekStart)}</Data>
-                          </TableCell>
-                          <TableCell>
-                            <Data>{`${qtyOf(d.quantity, m?.uom ?? 'PCS')} ${m?.uom ?? ''}`.trim()}</Data>
-                            <div className="text-xs text-text-tertiary">
-                              <Data>{t('op.pallets', { value: pal(d.pallets) })}</Data>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {d.keepsSafetyStock ? (
-                              <StatusPill variant="success">{t('op.short.keeps')}</StatusPill>
-                            ) : (
-                              <StatusPill variant="warning">{t('op.short.breaks')}</StatusPill>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </tbody>
-                </Table>
-              </div>
-            )}
-            <p className="text-xs text-text-secondary">
-              {t('op.short.next.later')}{' '}
-              <Link to="/buyer/reschedule" className="text-action underline">
-                {t('op.short.next.laterLink')}
-              </Link>
-            </p>
-          </div>
-        )}
-      </div>
-    );
-  };
-  return (
-    <section className="bg-bg-surface border border-danger rounded-lg p-4 mb-6" data-testid="op-shortfall">
-      <h2 className="text-section text-text-primary mb-1">{t('op.short.title')}</h2>
-      <p className="text-xs text-text-tertiary mb-3">
-        {t('op.short.intro', { max: formatNumber(Math.round(w.maxRentedPallets ?? 0)) })} {t('op.short.notStored')}
-      </p>
-      {w.shortfallWeeks.map(one)}
-    </section>
-  );
-};
-
 interface RecRow {
   readonly rec: Recommendation;
   readonly material: MaterialOrderPlanView;
@@ -330,6 +206,8 @@ const BuyerOrderPlan: React.FC = () => {
   const planAvailability = useVerbAvailability('calloff:plan');
   const [kind, setKind] = useState<WarehouseKind>('packaging');
   const [drafted, setDrafted] = useState<ReadonlySet<string>>(new Set());
+  // FUX2 B3 — the one recommendation whose "Why this quantity" panel is open.
+  const [whyOpen, setWhyOpen] = useState<string | null>(null);
   const crumb = forecastCrumb(t, 'whatToOrder');
   const run = query.data ?? null;
   const today = sdcClock.now().slice(0, 10);
@@ -365,6 +243,12 @@ const BuyerOrderPlan: React.FC = () => {
   }));
   const peak = w ? Math.max(...w.weeks.map((wk) => wk.fill ?? 0)) : 0;
   const keyOf = (r: Recommendation) => `${r.materialCode}|${r.weekStart}`;
+  const whyId = (r: Recommendation) => `op-wq-${r.materialCode}-${r.weekStart}`;
+  const closeWhy = (r: Recommendation) => {
+    setWhyOpen(null);
+    // Focus goes back to the control that opened the panel.
+    requestAnimationFrame(() => document.getElementById(`${whyId(r)}-toggle`)?.focus());
+  };
 
   const createDraft = async (r: Recommendation, line: NonNullable<ReturnType<typeof umbrellaLineFor>>) => {
     try {
@@ -511,8 +395,10 @@ const BuyerOrderPlan: React.FC = () => {
                       const key = keyOf(r);
                       const line = umbrellaLineFor(pos, r.supplierId, r.materialCode);
                       const changed = r.previousQuantity !== null && r.previousQuantity !== r.quantity;
+                      const whyIsOpen = whyOpen === key;
                       return (
-                        <TableRow key={key} data-testid={`op-rec-${r.materialCode}-${r.weekStart}`}>
+                        <React.Fragment key={key}>
+                        <TableRow data-testid={`op-rec-${r.materialCode}-${r.weekStart}`}>
                           <TableCell className="align-top">
                             <div className="text-sm text-text-primary">{m.materialLabel}</div>
                             <Data className="text-xs text-text-tertiary">{m.materialCode}</Data>
@@ -561,6 +447,18 @@ const BuyerOrderPlan: React.FC = () => {
                                 </>
                               )}
                             </div>
+                            <button
+                              type="button"
+                              id={`${whyId(r)}-toggle`}
+                              className="mt-1 text-xs text-action underline"
+                              aria-expanded={whyIsOpen}
+                              aria-controls={whyId(r)}
+                              aria-label={t('op.wq.openAria', { material: m.materialLabel, week: weekLabel(r.weekStart) })}
+                              onClick={() => (whyIsOpen ? closeWhy(r) : setWhyOpen(key))}
+                              data-testid={`op-wq-open-${r.materialCode}-${r.weekStart}`}
+                            >
+                              {t('op.wq.open')}
+                            </button>
                           </TableCell>
                           <TableCell className="align-top">
                             {r.previousQuantity === null ? (
@@ -615,6 +513,14 @@ const BuyerOrderPlan: React.FC = () => {
                             )}
                           </TableCell>
                         </TableRow>
+                        {whyIsOpen ? (
+                          <tr>
+                            <td colSpan={9} className="px-4 pb-4">
+                              <WhyQuantityPanel id={whyId(r)} rec={r} material={m} onClose={() => closeWhy(r)} />
+                            </td>
+                          </tr>
+                        ) : null}
+                        </React.Fragment>
                       );
                     })}
                   </tbody>
@@ -623,7 +529,15 @@ const BuyerOrderPlan: React.FC = () => {
             )}
           </section>
 
-          {w.shortfallWeeks.length > 0 && costs && <ShortfallPanel key={w.kind} w={w} rate={costs.rentIdrPerPalletWeek} />}
+          {/* FUX-D3 (F-10): the decision for these weeks is made and saved on Make warehouse room. */}
+          {w.shortfallWeeks.length > 0 && (
+            <p className="text-sm text-text-primary bg-bg-surface border border-danger rounded-lg px-4 py-3 mb-6" data-testid="op-shortfall-count">
+              {t('op.short.count', { count: w.shortfallWeeks.length })}{' '}
+              <Link to="/buyer/reschedule" className="text-action underline">
+                {t('op.short.decide')}
+              </Link>
+            </p>
+          )}
 
           <details className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6" data-testid="op-fill">
             <summary className="cursor-pointer">

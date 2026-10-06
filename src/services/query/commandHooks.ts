@@ -41,6 +41,8 @@ import type { SourcingType, SourcingTypeKey } from '../sourcing/sourcingType';
 import type { ProposalType } from '../engine/reschedule';
 import type { SimulationOverrideField } from '../data/types';
 import { reasonCodeEntityId, type ReasonListId } from '../transitions/reasonCodes';
+import { warehouseDecisionEntityId, type WarehouseDecisionChoice } from '../transitions/warehouseDecisionRules';
+import type { ForecastStream } from '../sdc/types';
 
 /**
  * The COMMAND scope — tenancy plus the seat's business roles.
@@ -2523,6 +2525,43 @@ export function useForecastOverrideCommand() {
       qc.invalidateQueries({
         predicate: (q) => q.queryKey[0] === 'procurement' && (q.queryKey[1] === 'forecastBias' || q.queryKey[1] === 'demandForecast'),
       });
+    },
+  });
+}
+
+// ─── Warehouse-week decisions (FUX-D3) ──────────────────────────────────────
+//
+// The Material Planner records how a week that does not fit the warehouse is
+// handled. The entity is `<stream>|<weekStart>`; the target reads the plan
+// version, the time and the actor itself. A record of intent: a success
+// changes the Make warehouse room page and nothing else.
+
+export interface WarehouseDecisionVars {
+  readonly stream: ForecastStream;
+  readonly weekStart: string;
+  readonly choice: WarehouseDecisionChoice;
+  readonly note: string | null;
+}
+
+export function useWarehouseDecisionCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return useMutation<CommandResult, Error, WarehouseDecisionVars>({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_warehousedecision_record',
+        entity: 'warehouseDecision',
+        entityId: warehouseDecisionEntityId(vars.stream, vars.weekStart),
+        payload: {
+          choice: vars.choice,
+          ...(vars.note ? { note: vars.note } : {}),
+        },
+      }),
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      qc.invalidateQueries({ predicate: (q) => q.queryKey[0] === 'procurement' && q.queryKey[1] === 'reschedule' });
     },
   });
 }

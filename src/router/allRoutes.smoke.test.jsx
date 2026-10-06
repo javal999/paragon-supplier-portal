@@ -87,7 +87,6 @@ import SupplierOrders from '@pages-v2/SupplierOrders';
 import SupplierRFQsV2 from '@pages-v2/SupplierRFQs';
 import SupplierForecasts from '@pages-v2/SupplierForecasts';
 import SupplierForecastCommitments from '@pages-v2/SupplierForecastCommitments';
-import BuyerForecasts from '@pages-v2/BuyerForecasts';
 import BuyerCommitments from '@pages-v2/BuyerCommitments';
 import BuyerReliability from '@pages-v2/BuyerReliability';
 import {
@@ -102,7 +101,6 @@ import BuyerReschedule from '@pages-v2/BuyerReschedule';
 import BuyerStabilise from '@pages-v2/BuyerStabilise';
 import BuyerDataHealth from '@pages-v2/BuyerDataHealth';
 import BuyerDemandForecast from '@pages-v2/BuyerDemandForecast';
-import BuyerForecastBias from '@pages-v2/BuyerForecastBias';
 import BuyerModelBacktest from '@pages-v2/BuyerModelBacktest';
 import SupplierShipments from '@pages-v2/SupplierShipments';
 import SupplierGoodsReceipts from '@pages-v2/SupplierGoodsReceipts';
@@ -239,13 +237,6 @@ const ROUTES = [
     identity: BUYER
   },
   {
-    name: 'buyer/forecasts',
-    pattern: '/buyer/forecasts',
-    at: '/buyer/forecasts',
-    element: <BuyerForecasts />,
-    identity: BUYER
-  },
-  {
     name: 'buyer/collaboration',
     pattern: '/buyer/collaboration',
     at: '/buyer/collaboration',
@@ -320,13 +311,6 @@ const ROUTES = [
     pattern: '/buyer/demand-forecast',
     at: '/buyer/demand-forecast',
     element: <BuyerDemandForecast />,
-    identity: BUYER
-  },
-  {
-    name: 'buyer/forecast-bias',
-    pattern: '/buyer/forecast-bias',
-    at: '/buyer/forecast-bias',
-    element: <BuyerForecastBias />,
     identity: BUYER
   },
   {

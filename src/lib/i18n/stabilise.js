@@ -111,6 +111,20 @@ export const stabiliseEn = {
   'stb.publish.last': 'Last published ({{stream}}):',
   'stb.publish.lastNone': 'No version has been published yet.',
   'stb.publish.versionsLink': 'Published versions',
+  // FUX phase 2 B2 (F-01, F-13) — the two tabs and the checklist before the act.
+  'stb.tab.publish': 'Version to publish',
+  'stb.tab.versions': 'Published versions',
+  'stb.check.title': 'Before you publish',
+  'stb.check.intro':
+    'Read from the pages that resolve each item. The checklist does not change what can be published.',
+  'stb.check.inputs': 'Inputs pass',
+  'stb.check.orders': 'Orders reviewed',
+  'stb.check.warehouse': 'Warehouse weeks resolved',
+  'stb.check.held': 'Held weeks have reasons',
+  'stb.check.held.state_one': '{{count}} held week without a reason',
+  'stb.check.held.state_other': '{{count}} held weeks without a reason',
+  'stb.check.held.link': 'See the weeks per supplier and material',
+  'stb.check.unknown': 'Not read yet',
   'stb.toast.refused': 'Not published',
   'stb.refusal.simulated':
     'The plan is calculated on simulated data, which is never shown to a supplier.',
@@ -233,6 +247,19 @@ export const stabiliseId = {
   'stb.publish.last': 'Terakhir diterbitkan ({{stream}}):',
   'stb.publish.lastNone': 'Belum ada versi yang diterbitkan.',
   'stb.publish.versionsLink': 'Versi terbit',
+  // FUX phase 2 B2 (F-01, F-13) — dua tab dan daftar periksa sebelum penerbitan.
+  'stb.tab.publish': 'Versi untuk diterbitkan',
+  'stb.tab.versions': 'Versi terbit',
+  'stb.check.title': 'Sebelum Anda menerbitkan',
+  'stb.check.intro':
+    'Dibaca dari halaman yang menyelesaikan setiap butir. Daftar periksa ini tidak mengubah apa yang dapat diterbitkan.',
+  'stb.check.inputs': 'Masukan lolos',
+  'stb.check.orders': 'Pesanan ditinjau',
+  'stb.check.warehouse': 'Minggu gudang diselesaikan',
+  'stb.check.held': 'Minggu tertahan punya alasan',
+  'stb.check.held.state_other': '{{count}} minggu tertahan tanpa alasan',
+  'stb.check.held.link': 'Lihat minggu per pemasok dan material',
+  'stb.check.unknown': 'Belum terbaca',
   'stb.toast.refused': 'Tidak diterbitkan',
   'stb.refusal.simulated':
     'Rencana dihitung pada data simulasi, yang tidak pernah ditampilkan ke pemasok.',
