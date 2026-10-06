@@ -471,7 +471,7 @@ describe('BuyerOrderPlan — "Why this quantity" panel (FUX2 B3)', () => {
           run.materials.find((x) => x.materialCode === rec.materialCode)
         ).weeks.find((w) => w.weekStart === rec.weekStart)
       );
-      // The engine's rule (requirement.ts netMaterial): net = max(0, gross + SS − (stock at start + receipts)).
+      // The engine's rule (requirement.js netMaterial): net = max(0, gross + SS − (stock at start + receipts)).
       expect(wk.net).toBeCloseTo(
         Math.max(0, wk.gross + wk.safetyStock - (wk.projectedStart + wk.receipts)),
         6

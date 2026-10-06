@@ -35,7 +35,7 @@ const SLOW = { timeout: 20000 };
 // The page computes the engine's plan; several mounts per spec need more than the default 5 s on a busy machine.
 vi.setConfig({ testTimeout: 60000 });
 
-const ROUTER_SRC = readFileSync(join(__dirname, '..', 'router', 'AppRouter.tsx'), 'utf8');
+const ROUTER_SRC = readFileSync(join(__dirname, '..', 'router', 'AppRouter.jsx'), 'utf8');
 const CHUNKS = ROUTER_SRC.split('<Route')
   .slice(1)
   .map((c) => c.split('<Route')[0]);
