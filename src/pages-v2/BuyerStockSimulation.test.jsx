@@ -33,6 +33,8 @@ const RINA = { kind: 'RESOLVED', person: { personId: 'usr-021', displayName: 'Ri
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer, actor: RINA };
 const SAMPLE = 'sup-004-FR-WARD-4410';
 const PET = 'sup-007-PK-PETB-8801';
+const CASE2 = 'sup-002-RM-EMUL-9430';
+const CASE3 = 'sup-007-PK-PETB-8803';
 
 beforeEach(() => {
   simulationOverrideStore.reset();
@@ -85,6 +87,41 @@ describe('Stock simulation page (MR-7 section e)', () => {
     const weeks = await screen.findByTestId(`sim-detail-${SAMPLE}-weeks`);
     expect(within(weeks).getAllByRole('row')).toHaveLength(14);
     expect(within(weeks).getByText('Production finishes')).toBeInTheDocument();
+  });
+
+  it('walkthrough case 2 is its own labelled sample row: 1,700 · 2,500 · −800 · 1,500', async () => {
+    renderWithProviders(<BuyerStockSimulation />, {
+      identity: PLANNER,
+      route: '/buyer/stock-simulation?date=2026-09-01'
+    });
+    const row = await screen.findByTestId(`sim-row-${CASE2}`);
+    expect(within(row).getByTestId(`sim-sample-${CASE2}`)).toHaveTextContent(
+      stockSimulationEn['sim.sampleCase2']
+    );
+    expect(screen.getByTestId(`sim-available-${CASE2}`)).toHaveTextContent(/^1,700 KG$/);
+    expect(screen.getByTestId(`sim-calledoff-${CASE2}`)).toHaveTextContent(/^2,500 KG$/);
+    expect(screen.getByTestId(`sim-free-${CASE2}`)).toHaveTextContent(/^-800 KG$/);
+    expect(screen.getByTestId(`sim-pti-${CASE2}`)).toHaveTextContent(/^1,500 KG$/);
+  });
+
+  it('walkthrough case 3 is its own labelled sample row: 7,000 · 10,000 · −3,000 · 15,000, production date missing', async () => {
+    renderWithProviders(<BuyerStockSimulation />, {
+      identity: PLANNER,
+      route: '/buyer/stock-simulation?date=2026-09-01'
+    });
+    const row = await screen.findByTestId(`sim-row-${CASE3}`);
+    expect(within(row).getByTestId(`sim-sample-${CASE3}`)).toHaveTextContent(
+      stockSimulationEn['sim.sampleCase3']
+    );
+    expect(screen.getByTestId(`sim-available-${CASE3}`)).toHaveTextContent(/^7,000 PCS$/);
+    expect(screen.getByTestId(`sim-calledoff-${CASE3}`)).toHaveTextContent(/^10,000 PCS$/);
+    expect(screen.getByTestId(`sim-free-${CASE3}`)).toHaveTextContent(/^-3,000 PCS$/);
+    expect(screen.getByTestId(`sim-pti-${CASE3}`)).toHaveTextContent(/^15,000 PCS$/);
+    expect(
+      within(screen.getByTestId(`sim-flags-${CASE3}`)).getByText(
+        stockSimulationEn['sim.flag.productionDateMissing']
+      )
+    ).toBeInTheDocument();
   });
 
   it('AC-03 — a planner input is dispatched from the inline form and shows "Planner input · <who> · <when>"', async () => {

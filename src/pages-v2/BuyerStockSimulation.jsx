@@ -364,7 +364,15 @@ const SimulationRow = ({
         {matchReason}
         {r.sample ? (
           <div className="mt-1" data-testid={`sim-sample-${key}`}>
-            <StatusPill variant="info">{t('sim.sample')}</StatusPill>
+            <StatusPill variant="info">
+              {t(
+                r.sampleCase === 2
+                  ? 'sim.sampleCase2'
+                  : r.sampleCase === 3
+                    ? 'sim.sampleCase3'
+                    : 'sim.sample'
+              )}
+            </StatusPill>
           </div>
         ) : null}
       </TableCell>
