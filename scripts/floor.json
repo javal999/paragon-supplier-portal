@@ -1,7 +1,7 @@
 {
   "//": "THE ASSERTED FLOOR \u2014 a floor, not an equality (operator ruling, CP-3a). `npm run gates` FAILS when a count falls below one of these, and PASSES with a loud note when it rises above. Exact matching was rejected: it would redden every legitimate test-adding PR until somebody edited a number, which trains people to edit the number, and a floor that gets edited routinely is not a floor. THE TRADE, RECORDED: a suite that SHRINKS but still exceeds the recorded floor is invisible here \u2014 the skipped/todo refusal covers the common shape of that (a spec disabled rather than deleted), a spec file genuinely deleted while others grow past it does not. Bump these when the note tells you to, so the floor keeps defending the current suite and not an older, smaller one. `vitest.files` is the collected test-FILE count: a whole file dropped from collection does not change nothing, it changes this.",
   "vitest": {
-    "tests": 8291,
+    "tests": 8294,
     "files": 533
   },
   "gate": {
@@ -9,6 +9,6 @@
   },
   "lint": {
     "//": "A CEILING, not a floor (added 2026-10-02, frontend-standard plan Phase 1). `npm run gates` FAILS when lint warnings rise above maxWarnings and passes with a note when they fall below it. Rules that still have violations run as warnings (see RULES_WITH_OPEN_VIOLATIONS in eslint.config.js); this ceiling stops new violations while they are fixed. Lower it when the note tells you to; never raise it to make a PR pass.",
-    "maxWarnings": 751
+    "maxWarnings": 747
   }
 }
