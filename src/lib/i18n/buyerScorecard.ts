@@ -56,6 +56,8 @@ export const buyerScorecardEn: Record<string, string> = {
   // — Radar section —
   'buyerScorecard.radar.title': 'Score breakdown — radar',
   'buyerScorecard.radar.benchmark': 'Benchmark',
+  'buyerScorecard.chart.area': 'Area',
+  'buyerScorecard.chart.month': 'Month',
   // — Performance trends section —
   'buyerScorecard.trends.title': 'Performance trends — 12 months',
   'buyerScorecard.trends.caption':
@@ -105,6 +107,8 @@ export const buyerScorecardId: Record<string, string> = {
   // — Radar section —
   'buyerScorecard.radar.title': 'Rincian skor — radar',
   'buyerScorecard.radar.benchmark': 'Tolok Ukur',
+  'buyerScorecard.chart.area': 'Area',
+  'buyerScorecard.chart.month': 'Bulan',
   // — Performance trends section —
   'buyerScorecard.trends.title': 'Tren kinerja — 12 bulan',
   'buyerScorecard.trends.caption':

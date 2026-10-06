@@ -16,6 +16,9 @@ import { failingChecks } from './cycleCounts';
 //
 // Read-only and presentation-only (FUX-R1). The report is computed on the
 // engine's synthetic dataset; the page's own liveness pill says so (FUX-R3).
+//
+// C2 (WCAG 1.4.3): the link is `action.hover`, as `action` text measures
+// 4.41:1 on the page background, under the 4.5:1 floor.
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface DataHealthChipProps {
@@ -44,7 +47,7 @@ const DataHealthChip: React.FC<DataHealthChipProps> = ({ step, className = '' })
         </StatusPill>
       )}
       {failing !== 0 && (
-        <Link to="/buyer/data-health" className="text-action underline" data-testid="data-health-chip-link">
+        <Link to="/buyer/data-health" className="text-action-hover underline" data-testid="data-health-chip-link">
           {t('dh.chip.link')}
         </Link>
       )}

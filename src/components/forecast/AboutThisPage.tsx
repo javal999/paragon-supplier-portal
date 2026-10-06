@@ -21,7 +21,8 @@ const AboutThisPage: React.FC<AboutThisPageProps> = ({ children }) => {
       className="mt-6 rounded-lg border border-border-subtle bg-bg-surface p-4 text-sm text-text-secondary"
       data-testid="about-this-page"
     >
-      <summary className="cursor-pointer">
+      {/* C2: on a touch screen the summary row is at least 44 px tall. */}
+      <summary className="cursor-pointer [@media(pointer:coarse)]:py-2.5">
         <h2 className="inline text-section text-text-primary">{t('fux.about.title')}</h2>
       </summary>
       <div className="mt-3 max-w-prose space-y-2">{children}</div>
