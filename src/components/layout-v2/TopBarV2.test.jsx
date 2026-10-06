@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { renderWithProviders } from '@test/test-utils';
 import i18n, { LANG_STORAGE_KEY } from '@lib/i18n';
@@ -39,5 +39,26 @@ describe('TopBarV2 — language menu integration (SEAT2-LANG-DROPDOWN-01)', () =
       expect(screen.getByText('Portal Pemasok Paragon')).toBeInTheDocument();
     });
     expect(localStorage.getItem(LANG_STORAGE_KEY)).toBe('id');
+  });
+});
+
+describe('TopBarV2 — ☰ opens the side-menu drawer', () => {
+  it('reports its state, names the drawer it controls and calls onToggleNav', () => {
+    const onToggleNav = vi.fn();
+    renderWithProviders(
+      <TopBarV2 navOpen={false} navControlsId="app-nav-drawer" onToggleNav={onToggleNav} />
+    );
+    const button = screen.getByRole('button', { name: 'Toggle navigation' });
+    expect(button).toHaveAttribute('aria-expanded', 'false');
+    expect(button).toHaveAttribute('aria-controls', 'app-nav-drawer');
+    fireEvent.click(button);
+    expect(onToggleNav).toHaveBeenCalledTimes(1);
+  });
+
+  it('is hidden from lg, where the side menu is inline', () => {
+    renderWithProviders(<TopBarV2 navOpen />);
+    const button = screen.getByRole('button', { name: 'Toggle navigation' });
+    expect(button).toHaveAttribute('aria-expanded', 'true');
+    expect(button).toHaveClass('lg:hidden');
   });
 });

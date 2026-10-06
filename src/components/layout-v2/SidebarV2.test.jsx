@@ -231,3 +231,24 @@ describe('SidebarV2 — scroll position survives navigation', () => {
     }
   });
 });
+
+describe('SidebarV2 — inline at lg, drawer below it', () => {
+  it('closed: hidden below lg, the inline 240 px column from lg, no dialog role', () => {
+    renderWithProviders(<SidebarV2 id="nav" />, { route: '/buyer/home' });
+    const aside = /** @type {HTMLElement} */ (document.getElementById('nav'));
+    expect(aside).toHaveClass('hidden', 'lg:flex', 'w-60', 'shrink-0');
+    expect(aside).not.toHaveAttribute('role');
+    expect(screen.queryByRole('button', { name: 'Close navigation' })).toBeNull();
+  });
+
+  it('open: a fixed drawer that picking a nav item closes', () => {
+    const onClose = vi.fn();
+    renderWithProviders(<SidebarV2 id="nav" open onClose={onClose} />, { route: '/buyer/home' });
+    const aside = /** @type {HTMLElement} */ (document.getElementById('nav'));
+    expect(aside).toHaveClass('fixed', 'inset-y-0', 'left-0', 'lg:static');
+    fireEvent.click(
+      within(screen.getByRole('navigation')).getByRole('button', { name: 'Suppliers' })
+    );
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});

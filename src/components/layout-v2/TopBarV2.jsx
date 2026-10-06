@@ -5,8 +5,16 @@ import { resolveEnvBadge } from '@lib/envBadge';
 import LanguageMenu from './LanguageMenu';
 import IdentityPanel from './IdentityPanel';
 
-/** @type {React.FC} */
-const TopBarV2 = () => {
+/**
+ * @typedef {object} TopBarV2Props
+ * @property {boolean} [navOpen] Whether the phone/tablet side-menu drawer is open.
+ * @property {string} [navControlsId] The drawer's id, for `aria-controls`.
+ * @property {React.Ref<HTMLButtonElement>} [navButtonRef] The ☰ button, so focus can return to it.
+ * @property {() => void} [onToggleNav] Opens or closes the drawer.
+ */
+
+/** @type {React.FC<TopBarV2Props>} */
+const TopBarV2 = ({ navOpen = false, navControlsId, navButtonRef, onToggleNav }) => {
   const { t } = useTranslation();
   const badge = resolveEnvBadge(
     import.meta.env.DEV,
@@ -14,17 +22,23 @@ const TopBarV2 = () => {
     typeof window !== 'undefined' ? window.location.hostname : undefined
   );
   return (
-    <header className="h-14 w-full bg-bg-surface border-b border-border-subtle flex items-center px-4 gap-4">
+    <header className="h-14 w-full bg-bg-surface border-b border-border-subtle flex items-center px-4 gap-2 sm:gap-4">
       {/* Left cluster */}
       <div className="flex items-center gap-3 min-w-0">
+        {/* Below `lg` only: at `lg` and up the side menu is inline, so a ☰
+            there would be a dead control. */}
         <button
+          ref={navButtonRef}
           type="button"
           aria-label={t('topbar.toggleNav')}
-          className="p-2 rounded-md text-text-secondary hover:bg-bg-hover"
+          aria-expanded={navOpen}
+          aria-controls={navControlsId}
+          onClick={onToggleNav}
+          className="p-2 rounded-md text-text-secondary hover:bg-bg-hover lg:hidden"
         >
           <Menu size={18} />
         </button>
-        <span className="text-sm font-semibold text-text-primary whitespace-nowrap">
+        <span className="hidden sm:inline text-sm font-semibold text-text-primary whitespace-nowrap">
           {t('app.title')}
         </span>
         {badge && (
@@ -41,7 +55,7 @@ const TopBarV2 = () => {
       </div>
 
       {/* Center search */}
-      <div className="flex-1 flex justify-center">
+      <div className="flex-1 min-w-0 flex justify-center">
         <div className="relative w-full max-w-md">
           <Search
             size={14}
@@ -57,7 +71,7 @@ const TopBarV2 = () => {
       </div>
 
       {/* Right cluster */}
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-3">
         <LanguageMenu />
         <button
           type="button"

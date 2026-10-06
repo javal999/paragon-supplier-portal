@@ -502,6 +502,7 @@ export const resources = {
       // — Shared chrome: top bar —
       'topbar.search': 'Search... (Ctrl K)',
       'topbar.toggleNav': 'Toggle navigation',
+      'topbar.closeNav': 'Close navigation',
       'topbar.notifications': 'Notifications',
       'topbar.userAvatar': 'User avatar',
       'topbar.language': 'Language',
@@ -992,6 +993,7 @@ export const resources = {
       // — Shared chrome: top bar —
       'topbar.search': 'Cari... (Ctrl K)',
       'topbar.toggleNav': 'Alihkan navigasi',
+      'topbar.closeNav': 'Tutup navigasi',
       'topbar.notifications': 'Notifikasi',
       'topbar.userAvatar': 'Avatar pengguna',
       'topbar.language': 'Bahasa',
