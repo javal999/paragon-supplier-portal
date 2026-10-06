@@ -712,7 +712,7 @@ const BuyerReschedule: React.FC = () => {
               </p>
             ) : (
               <>
-                {withheld && (
+                {!!withheld && (
                   <p className="text-xs text-warning-hover mb-2" data-testid="rs-actions-withheld">
                     {t('rs.relief.withheld')}
                   </p>
