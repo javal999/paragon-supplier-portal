@@ -167,14 +167,20 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
     renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
     const row = await screen.findByTestId(`rs-relief-${co.id}`);
     expect(within(row).queryByTestId(`rs-send-${co.id}`)).toBeNull();
-    expect(within(row).getByTestId(`rs-withheld-${co.id}`)).toHaveTextContent(
-      'Cannot be sent to the supplier until the Master Data Management team’s SAP feed is live'
+    // The act is shown switched off, with a one-word reason; the full reason sits once above the table.
+    expect(within(row).getByTestId(`rs-send-off-${co.id}`)).toBeDisabled();
+    expect(within(row).getByTestId(`rs-withheld-${co.id}`)).toHaveTextContent('Off on sample data');
+    expect(screen.getByTestId('rs-actions-withheld')).toHaveTextContent(
+      'Master Data Management team’s SAP feed is live'
     );
     await i18n.changeLanguage('id');
     await waitFor(() =>
       expect(screen.getByTestId(`rs-withheld-${co.id}`)).toHaveTextContent(
-        'Tidak dapat dikirim ke pemasok sampai data SAP dari tim Master Data Management tersedia'
+        'Nonaktif pada data contoh'
       )
+    );
+    expect(screen.getByTestId('rs-actions-withheld')).toHaveTextContent(
+      'data SAP dari tim Master Data Management tersedia'
     );
   });
 
@@ -187,10 +193,25 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
     );
     renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
     const row = await screen.findByTestId(`rs-relief-${po.id}`);
-    expect(within(row).getByText('Changed in SAP by the Material Planner')).toBeInTheDocument();
+    expect(
+      within(row).getByText('Change this order in SAP, then mark it here.')
+    ).toBeInTheDocument();
     expect(within(row).queryByTestId(`rs-mark-${po.id}`)).toBeNull();
-    expect(within(row).getByTestId(`rs-withheld-${po.id}`)).toHaveTextContent(
-      'Cannot be taken to SAP'
+    expect(within(row).getByTestId(`rs-mark-off-${po.id}`)).toBeDisabled();
+    expect(within(row).getByTestId(`rs-mark-off-${po.id}`)).toHaveTextContent(
+      'Mark as taken to SAP'
+    );
+    expect(within(row).getByTestId(`rs-withheld-${po.id}`)).toHaveTextContent('Off on sample data');
+  });
+
+  it('says what ticking a proposal does: it shows the effect and sends nothing, EN and ID', async () => {
+    renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
+    expect(await screen.findByTestId('rs-select-hint')).toHaveTextContent('Ticking sends nothing.');
+    await i18n.changeLanguage('id');
+    await waitFor(() =>
+      expect(screen.getByTestId('rs-select-hint')).toHaveTextContent(
+        'Mencentang tidak mengirim apa pun.'
+      )
     );
   });
 
@@ -201,6 +222,7 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
     });
     await screen.findByTestId('rs-relief');
     expect(screen.queryAllByTestId(/^rs-withheld-(po|co):/)).toEqual([]);
+    expect(screen.queryAllByTestId(/^rs-(mark|send)-off-/)).toEqual([]);
     expect(screen.getAllByTestId('handoff-reschedule-sap').length).toBeGreaterThan(0);
   });
 
