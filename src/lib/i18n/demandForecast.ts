@@ -9,7 +9,6 @@ export const demandForecastEn: Record<string, string> = {
   'df.tab.forecast': 'Forecast vs plan',
   'df.tab.bias': 'Bias and overrides',
   'df.planSource': 'Plan source: material planning uses SAP’s finished-goods plan. This page measures the engine’s forecast against it.',
-  'df.title': 'Demand forecast',
   'df.subtitle':
     'Weekly sell-in per finished good for the next 26 weeks, the method that made each forecast, and SKU, brand and total forecasts reconciled so they add up.',
   'df.meta.run': 'Forecast from the week of',
@@ -183,7 +182,6 @@ export const demandForecastId: Record<string, string> = {
   'df.tab.forecast': 'Prakiraan vs rencana',
   'df.tab.bias': 'Bias dan penyesuaian',
   'df.planSource': 'Sumber rencana: perencanaan material memakai rencana barang jadi SAP. Halaman ini mengukur prakiraan mesin terhadap rencana itu.',
-  'df.title': 'Prakiraan permintaan',
   'df.subtitle':
     'Sell-in mingguan per barang jadi untuk 26 minggu ke depan, metode yang menghasilkan tiap prakiraan, serta prakiraan SKU, merek, dan total yang direkonsiliasi agar jumlahnya cocok.',
   'df.meta.run': 'Prakiraan dari minggu',

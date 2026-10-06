@@ -5,7 +5,6 @@
 // dates, codes, rupiah) is rendered through <Data> and never keyed.
 
 export const orderPlanEn: Record<string, string> = {
-  'op.title': 'Order plan',
   'op.subtitle':
     'When and how much to order, sized for all materials sharing a warehouse together: demand met every week, MOQ and order multiple kept, and warehouse space weighed against the cost of another order.',
   'op.meta.plan': 'Plan source: SAP finished-goods plan,',
@@ -169,7 +168,6 @@ export const orderPlanEn: Record<string, string> = {
 };
 
 export const orderPlanId: Record<string, string> = {
-  'op.title': 'Rencana pesanan',
   'op.subtitle':
     'Kapan dan berapa banyak memesan, ditentukan bersama untuk semua material dalam satu gudang: kebutuhan setiap minggu terpenuhi, MOQ dan kelipatan pesanan dijaga, dan ruang gudang ditimbang terhadap biaya satu pesanan lagi.',
   'op.meta.plan': 'Sumber rencana: rencana barang jadi SAP,',

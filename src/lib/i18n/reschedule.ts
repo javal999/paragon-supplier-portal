@@ -6,10 +6,8 @@
 // through <Data> and never keyed.
 
 export const rescheduleEn: Record<string, string> = {
-  'rs.title': 'Reschedule open orders',
   'rs.subtitle':
     'Open PO lines and call-offs that arrive before they are needed, and what moving them later, reducing or cancelling them would free in the warehouse, and cost with the supplier.',
-  'rs.meta.plan': 'Finished-goods plan made',
   'rs.meta.horizon': 'Horizon',
   'rs.meta.weeks': '{{count}} weeks',
   'rs.meta.noPlan': 'No finished-goods plan',
@@ -238,10 +236,8 @@ export const rescheduleEn: Record<string, string> = {
 };
 
 export const rescheduleId: Record<string, string> = {
-  'rs.title': 'Jadwal ulang pesanan terbuka',
   'rs.subtitle':
     'Baris PO dan call-off terbuka yang tiba sebelum dibutuhkan, dan apa yang akan dibebaskan di gudang serta biayanya dengan pemasok bila dipindah lebih lambat, dikurangi, atau dibatalkan.',
-  'rs.meta.plan': 'Rencana barang jadi dibuat',
   'rs.meta.horizon': 'Horizon',
   'rs.meta.weeks': '{{count}} minggu',
   'rs.meta.noPlan': 'Tidak ada rencana barang jadi',

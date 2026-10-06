@@ -5,7 +5,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const forecastBiasEn: Record<string, string> = {
-  'fb.title': 'Forecast bias',
   'fb.subtitle':
     'Whether the demand forecast runs one way — too high fills the warehouse, too low causes shortage — per SKU and material, the Material Planning team’s overrides, and whether each kind of override makes the forecast better.',
   'fb.meta.origins': 'Tracking signal over {{count}} past weeks, from the week of',
@@ -143,7 +142,6 @@ export const forecastBiasEn: Record<string, string> = {
 };
 
 export const forecastBiasId: Record<string, string> = {
-  'fb.title': 'Bias prakiraan',
   'fb.subtitle':
     'Apakah prakiraan permintaan condong ke satu arah — terlalu tinggi memenuhi gudang, terlalu rendah menyebabkan kekurangan — per SKU dan material, penyesuaian oleh tim Perencanaan Material, dan apakah tiap jenis penyesuaian membuat prakiraan lebih baik.',
   'fb.meta.origins': 'Sinyal pelacakan atas {{count}} minggu lalu, dari minggu',

@@ -9,7 +9,6 @@ export const safetyStockEn: Record<string, string> = {
   'sst.title': 'Safety stock targets',
   'sst.subtitle':
     'Safety stock sized from the plan’s own forecast errors against a fill-rate target, a safety lead time from each supplier’s late deliveries, and the reorder point — compared with SAP’s safety stock.',
-  'sst.meta.plan': 'Plan in use made',
   'sst.meta.method': 'Fill-rate target on the errors as they happened',
   'sst.synthetic':
     'Calculated on synthetic data built to reproduce PTI’s current measures. It proves the calculations, not the business answer.',
@@ -101,7 +100,6 @@ export const safetyStockId: Record<string, string> = {
   'sst.title': 'Target stok pengaman',
   'sst.subtitle':
     'Stok pengaman yang diukur dari kesalahan prakiraan rencana sendiri terhadap target tingkat pemenuhan, waktu tunggu pengaman dari keterlambatan setiap pemasok, dan titik pesan ulang — dibandingkan dengan stok pengaman SAP.',
-  'sst.meta.plan': 'Rencana yang dipakai dibuat',
   'sst.meta.method': 'Target tingkat pemenuhan atas kesalahan yang benar-benar terjadi',
   'sst.synthetic':
     'Dihitung dengan data sintetis yang dibuat untuk meniru ukuran PTI saat ini. Ini membuktikan perhitungannya, bukan jawaban bisnisnya.',
