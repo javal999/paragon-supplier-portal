@@ -10,7 +10,7 @@
 
 ## Summary
 
-33 findings: 0 Blocker, 6 Major, 27 Minor. 26 fixed, 7 not fixed. Of the 6 Major findings, 5 were fixed. The one left (finding 8) is the shared app shell's fixed menu, which C2's file scope excludes.
+33 findings: 0 Blocker, 6 Major, 27 Minor. 26 fixed in C2 (#153) and 1 more after it, so 27 fixed and 6 not fixed. All 6 Major findings are fixed: finding 8, the shared app shell's fixed menu, was outside C2's files and was fixed in #155 on 2026-10-06.
 
 ## Findings
 
@@ -23,7 +23,7 @@
 | 5 | Pages whose Data health chip shows failing checks (shared `DataHealthChip`) | The "See Data health" link used `text-action`, which measures 4.41:1 on the page background. | 1.4.3 | Minor | Fixed: `text-action-hover` | |
 | 6 | This week and the 4 Weekly plan pages (shared `CycleSteps`) | At 768 px, 5 columns of about 84 px each pushed step names out of their boxes. | 1.4.10 | Minor | Fixed: 1, 2, 3 columns, then 5 from `xl` | |
 | 7 | Publish to suppliers, Forecast quality | The content under the tab list was not a tab panel. | 1.3.1 | Minor | Fixed: `role="tabpanel"` named by the active tab | |
-| 8 | All 13 pages (shared `AppShellV2`) | The menu is a fixed 240 px and the main area has 32 px padding. At 390 px a page gets 86 px of width; at 768 px it gets 458 px. | 1.4.10 | Major | Not fixed | The shell wraps every portal page and is outside C2's files. It needs a collapsible menu. With a collapsed menu simulated, all 13 pages fit 390 px. |
+| 8 | All 13 pages (shared `AppShellV2`) | The menu is a fixed 240 px and the main area has 32 px padding. At 390 px a page gets 86 px of width; at 768 px it gets 458 px. | 1.4.10 | Major | Fixed in #155 | Below 1024 px the menu is a drawer opened by the top bar's ☰ button (it closes on a pick, Escape or backdrop; focus returns to ☰), and the page padding is 16 px on phones. At 390 px the page gets the full width. #156 then fixed Supplier performance, whose screen-reader chart tables widened the page to 513 px: their cards now clip them. |
 | 9 | Forecast quality | An arrow key or click on a tab dropped focus to the page body. Each tab mounts its own frame and tab list. | 2.1.1, 2.4.3 | Major | Fixed: new frame focuses its active tab | |
 | 10 | What to order | The "Why this quantity" buttons and 3 links used `text-action`: 4.21:1 on a hovered row, 4.41:1 on the page background. | 1.4.3 | Minor | Fixed: `text-action-hover` | |
 | 11 | What to order | The reason a row has "No agreement" instead of a draft act was only in a hover `title`. | 1.3.1 | Minor | Fixed: reason also in screen-reader text | |
