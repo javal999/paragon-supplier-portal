@@ -16,7 +16,7 @@ import { dataHealthEn, dataHealthId } from './dataHealth';
 // ─────────────────────────────────────────────────────────────────────────────
 // FUX phase 3, C1 — strings that phases 1 and 2 left without a reader.
 //
-// Derived from every key in forecastUx.ts, hub.ts and the strings files of the
+// Derived from every key in forecastUx.js, hub.js and the strings files of the
 // 13 forecast pages that no non-test source file reads, counting keys read
 // through template literals (`fux.thisWeek.card.${id}`) and through prefix
 // tables (`BUILT_IN_LABEL_PREFIX`: `fc.reason.`, `fb.reason.`) as read.

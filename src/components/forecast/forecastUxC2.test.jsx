@@ -38,7 +38,7 @@ import { BuyerFixedStockReconcile } from '@pages-v2/FixedStockReconcile';
 //   · at 390 px nothing outside a table's own scroll area is wider than the
 //     screen, and a closed term tip takes no room.
 // The Why this quantity panel's focus handling (focus in, Escape out, focus
-// back to its control) is tested in BuyerOrderPlan.test.tsx.
+// back to its control) is tested in BuyerOrderPlan.test.jsx.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
