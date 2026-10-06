@@ -105,6 +105,7 @@ describe('⚠️ §70 · THE MATCHER, BEFORE ANY CLAIM ABOUT THE TREE', () => {
     expect(sourceOf('SupplierRegistrationV2')).toMatch(/SupplierRegistration\.jsx$/);
     // A page split into a folder resolves to its index, as the bundler does.
     expect(sourceOf('SupplierRFQsV2')).toMatch(/SupplierRFQs\/index\.jsx$/);
+    expect(sourceOf('BuyerSourcing')).toMatch(/BuyerSourcing\/index\.jsx$/);
   });
 });
 

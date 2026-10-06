@@ -830,6 +830,8 @@ describe('DP2-BUTTON-01 — Export never occupies the primary (action-blue) slot
     expect(scanned).toContain('BuyerAnalytics.jsx');
     // A page split into a folder is still a page (PAGE-SPLIT-GUIDE).
     expect(scanned).toContain('SupplierRFQs/index.jsx');
+    expect(scanned).toContain('BuyerSourcing/index.jsx');
+    expect(scanned).toContain('BuyerSourcing/components/RfqSidePanel.jsx');
     expect(scanned).not.toContain('rfqs/TieredQuoteForm.jsx');
     expect(scanned).not.toContain('BuyerCompliance.jsx');
     expect(scanned).not.toContain('BuyerNotAChartPage.tsx');
