@@ -1,4 +1,5 @@
 /** @import React from 'react' */
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import TopBarV2 from './TopBarV2';
 import SidebarV2 from './SidebarV2';
@@ -8,9 +9,46 @@ import SidebarV2 from './SidebarV2';
  * @property {React.ReactNode} children
  */
 
+/** The drawer's id: the top bar's ☰ button points at it with `aria-controls`. */
+export const NAV_DRAWER_ID = 'app-nav-drawer';
+
+/** Tailwind `lg`: at and above it the side menu is inline, below it a drawer. */
+const DESKTOP_QUERY = '(min-width: 1024px)';
+
 /** @type {React.FC<AppShellV2Props>} */
 const AppShellV2 = ({ children }) => {
   const { t, i18n } = useTranslation();
+  // Below `lg` the side menu is an off-canvas drawer the ☰ button opens; at
+  // `lg` and up it is inline and this flag has no effect on layout.
+  const [navOpen, setNavOpen] = useState(false);
+  const closeNav = useCallback(() => setNavOpen(false), []);
+  const navButtonRef = useRef(/** @type {HTMLButtonElement | null} */ (null));
+
+  // On close, focus goes back to the ☰ button. `useDialogFocus` in the drawer
+  // returns focus to whatever was focused at open, which is <body> when the
+  // click did not focus the button (Safari), so the shell states it here.
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (wasOpen.current && !navOpen) {
+      const now = document.activeElement;
+      const drawer = document.getElementById(NAV_DRAWER_ID);
+      if (!now || now === document.body || drawer?.contains(now)) navButtonRef.current?.focus();
+    }
+    wasOpen.current = navOpen;
+  }, [navOpen]);
+
+  // Widening the window past `lg` while the drawer is open would leave an
+  // invisible focus trap behind the inline menu, so close it.
+  useEffect(() => {
+    if (!navOpen || typeof window.matchMedia !== 'function') return;
+    const mq = window.matchMedia(DESKTOP_QUERY);
+    /** @param {MediaQueryListEvent} e */
+    const onChange = (e) => {
+      if (e.matches) setNavOpen(false);
+    };
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, [navOpen]);
   // Pages build `children` in their own render, so a language change (which
   // re-renders subscribers like TopBar/Sidebar) would NOT re-run a page body —
   // React bails on the referentially-equal children element. Keying <main> on
@@ -35,14 +73,19 @@ const AppShellV2 = ({ children }) => {
       >
         {t('ui.skipToContent')}
       </a>
-      <TopBarV2 />
+      <TopBarV2
+        navOpen={navOpen}
+        navControlsId={NAV_DRAWER_ID}
+        navButtonRef={navButtonRef}
+        onToggleNav={() => setNavOpen((open) => !open)}
+      />
       <div className="flex flex-1 overflow-hidden">
-        <SidebarV2 />
+        <SidebarV2 id={NAV_DRAWER_ID} open={navOpen} onClose={closeNav} />
         <main
           key={i18n.language}
           id="main-content"
           tabIndex={-1}
-          className="flex-1 overflow-auto bg-bg-page p-8 focus:outline-none"
+          className="flex-1 overflow-auto bg-bg-page p-4 sm:p-6 lg:p-8 focus:outline-none"
         >
           {children}
         </main>
