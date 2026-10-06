@@ -120,8 +120,6 @@ export const forecastCollaborationEn = {
   'fc.sup.ackOnly': 'Forecast period: acknowledge that you have seen it. No commitment is needed.',
   'fc.sup.acknowledge': 'Acknowledge',
   'fc.sup.acknowledgeFor': 'Acknowledge {{period}}',
-  'fc.sup.submit': 'Submit',
-  'fc.sup.revise': 'Submit revision',
   'fc.sup.saveDraft': 'Save draft',
   'fc.sup.draftSaved': 'Draft saved (not visible to PTI)',
   'fc.sup.qtyFor': 'Commitment quantity for {{period}}',
@@ -129,7 +127,6 @@ export const forecastCollaborationEn = {
   'fc.sup.upsideFor': 'Upside quantity for {{period}}',
   'fc.sup.reasonFor': 'Reason below forecast for {{period}}',
   'fc.sup.noteFor': 'Note for {{period}}',
-  'fc.sup.submitFor': 'Submit commitment for {{period}}',
   'fc.sup.draftFor': 'Save draft for {{period}}',
   'fc.sup.refusal.qtyRequired': 'Enter a quantity (for example 1500).',
   'fc.sup.refusal.upsideInvalid': 'The upside quantity is not a number.',
@@ -192,7 +189,6 @@ export const forecastCollaborationEn = {
   'fc.upload.reason.noteRequired': 'The reason "other" needs a note.',
 
   // PTI — Forecasts
-  'fc.pti.versions.title': 'Published versions',
   'fc.pti.versions.subtitle':
     'Published forecast versions for packaging and raw material, and which suppliers have opened them',
   'fc.pti.versions.banner': 'Suppliers that have not opened version {{version}}: {{count}}',
@@ -209,7 +205,6 @@ export const forecastCollaborationEn = {
   'fc.pti.versions.empty': 'No version published for this stream.',
 
   // PTI — Commitments & gaps
-  'fc.pti.gaps.title': 'Commitments & gaps',
   'fc.pti.gaps.subtitle':
     'Supplier commitments against the forecast, exceptions to act on, and coverage',
   'fc.pti.gaps.banner':
@@ -385,8 +380,6 @@ export const forecastCollaborationId = {
   'fc.sup.ackOnly': 'Periode prakiraan: tandai bahwa Anda sudah melihatnya. Tidak perlu komitmen.',
   'fc.sup.acknowledge': 'Tandai diterima',
   'fc.sup.acknowledgeFor': 'Tandai diterima {{period}}',
-  'fc.sup.submit': 'Kirim',
-  'fc.sup.revise': 'Kirim revisi',
   'fc.sup.saveDraft': 'Simpan draf',
   'fc.sup.draftSaved': 'Draf tersimpan (tidak terlihat oleh PTI)',
   'fc.sup.qtyFor': 'Kuantitas komitmen untuk {{period}}',
@@ -394,7 +387,6 @@ export const forecastCollaborationId = {
   'fc.sup.upsideFor': 'Kuantitas tambahan untuk {{period}}',
   'fc.sup.reasonFor': 'Alasan di bawah prakiraan untuk {{period}}',
   'fc.sup.noteFor': 'Catatan untuk {{period}}',
-  'fc.sup.submitFor': 'Kirim komitmen untuk {{period}}',
   'fc.sup.draftFor': 'Simpan draf untuk {{period}}',
   'fc.sup.refusal.qtyRequired': 'Isi kuantitas (misalnya 1500).',
   'fc.sup.refusal.upsideInvalid': 'Kuantitas tambahan bukan angka.',
@@ -459,7 +451,6 @@ export const forecastCollaborationId = {
     'Di bawah prakiraan: perlu alasan (capacity, material, logistics, quality atau other).',
   'fc.upload.reason.noteRequired': 'Alasan "other" memerlukan catatan.',
 
-  'fc.pti.versions.title': 'Versi terbit',
   'fc.pti.versions.subtitle':
     'Versi prakiraan yang diterbitkan per jenis dan pemasok yang sudah membukanya',
   'fc.pti.versions.banner': 'Pemasok yang belum membuka versi {{version}}: {{count}}',
@@ -475,7 +466,6 @@ export const forecastCollaborationId = {
   'fc.pti.versions.changed': 'Periode berubah: {{count}}',
   'fc.pti.versions.empty': 'Belum ada versi yang diterbitkan untuk jenis ini.',
 
-  'fc.pti.gaps.title': 'Komitmen & selisih',
   'fc.pti.gaps.subtitle':
     'Komitmen pemasok terhadap prakiraan, pengecualian yang perlu ditindaklanjuti, dan cakupan',
   'fc.pti.gaps.banner':

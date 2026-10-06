@@ -22,6 +22,7 @@ import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
 import AboutThisPage from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
 import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
+import { FIELD_FOCUS_RING, TOUCH_TARGET } from '@components/forecast/focusRing';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { useToast } from '@hooks/useToast';
@@ -36,6 +37,10 @@ import { maxStockRefusal } from '@services/transitions/maxStock';
 import { daysBetween } from '@services/engine/dates';
 import { forecastNow } from './forecasts/forecastDisplay';
 import { inputClass, labelClass } from './inventory/inventoryDisplay';
+
+// C2 (WCAG 2.4.7): the shared field class shows focus only as a 1 px border
+// tint; the forecast fields add a ring.
+const fieldClass = `${inputClass} ${FIELD_FOCUS_RING}`;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FIXED STOCK (FS) RECONCILE — REQ-E06-04 (ENG-D21, BL-134; owner 2026-09-29).
@@ -311,7 +316,7 @@ const FixedStockReconcile = ({ persona }) => {
                     (canSetMax ? (
                       <button
                         type="button"
-                        className="text-xs text-action-hover hover:underline"
+                        className={`text-xs text-action-hover hover:underline ${TOUCH_TARGET}`}
                         onClick={() => openEditor(r)}
                         data-testid={`fsr-max-edit-${r.key}`}
                         aria-label={t('fsr.max.editFor', {
@@ -391,6 +396,8 @@ const FixedStockReconcile = ({ persona }) => {
               <Button
                 variant="outline"
                 disabled={setMax.isPending || draftQty === null || draftInvalid}
+                // C2 (WCAG 4.1.2): a switched-off Save says why.
+                aria-describedby={draftQty === null || draftInvalid ? 'fsr-max-why' : undefined}
                 onClick={() => void save(draftQty)}
                 data-testid="fsr-max-save"
               >
@@ -409,19 +416,29 @@ const FixedStockReconcile = ({ persona }) => {
             <label className="block">
               <span className={labelClass}>{t('fsr.max.input', { uom: editing.uom })}</span>
               <input
-                className={inputClass}
+                className={fieldClass}
                 inputMode="numeric"
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 data-testid="fsr-max-input"
                 aria-invalid={draftInvalid}
+                aria-describedby={draftInvalid ? 'fsr-max-why' : undefined}
               />
             </label>
-            {draftInvalid && (
-              <p className="text-sm text-danger" role="alert" data-testid="fsr-max-invalid">
+            {draftInvalid ? (
+              <p
+                id="fsr-max-why"
+                className="text-sm text-danger"
+                role="alert"
+                data-testid="fsr-max-invalid"
+              >
                 {t('fsr.max.invalid')}
               </p>
-            )}
+            ) : draftQty === null ? (
+              <span id="fsr-max-why" className="sr-only">
+                {t('fsr.max.invalid')}
+              </span>
+            ) : null}
           </div>
         )}
       </SidePanel>

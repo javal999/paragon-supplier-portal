@@ -1,5 +1,5 @@
 /** @import React from 'react' */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
@@ -283,9 +283,23 @@ const EventsSection = ({ events }) => {
 
 /** @typedef {'forecast' | 'bias'} QualityTab */
 
-/** @type {React.FC<{ tab: QualityTab; onTab: (tab: QualityTab) => void; children: React.ReactNode }>} */
-const ForecastQualityFrame = ({ tab, onTab, children }) => {
+// C2 (WCAG 2.1.1, 2.4.3): each tab is its own component, so a tab change
+// mounts a new frame and its tab list. The arrow keys focused the old tab
+// button, which React then removed, and focus fell to the page body. The page
+// now notes a tab change and the new frame focuses its active tab once mounted.
+/**
+ * `takeTabFocus`:  True once after a tab change: the new frame then focuses its active tab.
+ * @type {React.FC<{ tab: QualityTab; onTab: (tab: QualityTab) => void; takeTabFocus: () => boolean; children: React.ReactNode; }>}
+ */
+const ForecastQualityFrame = ({ tab, onTab, takeTabFocus, children }) => {
   const { t } = useTranslation();
+  const tabsRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  useEffect(() => {
+    if (takeTabFocus())
+      /** @type {HTMLElement | null} */ (
+        tabsRef.current?.querySelector('[role="tab"][aria-selected="true"]')
+      )?.focus();
+  }, [takeTabFocus]);
   return (
     <AppShellV2>
       <PageHeader
@@ -294,7 +308,7 @@ const ForecastQualityFrame = ({ tab, onTab, children }) => {
       />
       <PurposeHeader page="forecastQuality" />
       <SimulatedDataBanner capability="engineDataset" />
-      <div data-testid="fq-tabs" data-tab={tab}>
+      <div data-testid="fq-tabs" data-tab={tab} ref={tabsRef}>
         <Tabs
           tabs={[
             { id: 'forecast', label: t('df.tab.forecast') },
@@ -309,7 +323,13 @@ const ForecastQualityFrame = ({ tab, onTab, children }) => {
       <p className="text-sm text-text-secondary mb-4" data-testid="fq-plan-source">
         {t('df.planSource')}
       </p>
-      {children}
+      <div
+        role="tabpanel"
+        aria-label={t(tab === 'bias' ? 'df.tab.bias' : 'df.tab.forecast')}
+        data-testid="fq-tabpanel"
+      >
+        {children}
+      </div>
     </AppShellV2>
   );
 };
@@ -319,12 +339,21 @@ const BuyerDemandForecast = () => {
   const [params, setParams] = useSearchParams();
   /** @type {QualityTab} */
   const tab = params.get('tab') === 'bias' ? 'bias' : 'forecast';
+  const focusTab = useRef(false);
+  /** @param {QualityTab} next */
+  const onTab = (next) => {
+    if (next === tab) return;
+    focusTab.current = true;
+    setParams(next === 'bias' ? { tab: 'bias' } : {});
+  };
+  const takeTabFocus = () => {
+    const take = focusTab.current;
+    focusTab.current = false;
+    return take;
+  };
   /** @type {QualityFrame} */
   const frame = (content) => (
-    <ForecastQualityFrame
-      tab={tab}
-      onTab={(next) => setParams(next === 'bias' ? { tab: 'bias' } : {})}
-    >
+    <ForecastQualityFrame tab={tab} onTab={onTab} takeTabFocus={takeTabFocus}>
       {content}
     </ForecastQualityFrame>
   );
@@ -375,14 +404,14 @@ const DemandForecastTab = ({ frame }) => {
         {run.overrideCells > 0 && <>{t('fb.df.overrides', { count: run.overrideCells })} </>}
         <Link
           to="/buyer/demand-forecast?tab=bias"
-          className="text-action hover:underline"
+          className="text-action-hover hover:underline"
           data-testid="df-bias-link"
         >
           {t('fb.df.link')}
         </Link>
         <span data-testid="df-backtest-link">
           {' · '}
-          <Link to="/buyer/model-backtest" className="text-action hover:underline">
+          <Link to="/buyer/model-backtest" className="text-action-hover hover:underline">
             {t('mb.link.fromDemandForecast')}
           </Link>
         </span>
@@ -541,7 +570,8 @@ const DemandForecastTab = ({ frame }) => {
                     key={s.skuCode}
                     data-testid={`df-sku-${s.skuCode}`}
                     onClick={() => setSelected(s.skuCode)}
-                    aria-selected={current?.skuCode === s.skuCode}
+                    // C2 (WCAG 4.1.2): aria-selected is not exposed on a plain table row; aria-current is.
+                    aria-current={current?.skuCode === s.skuCode}
                     className={current?.skuCode === s.skuCode ? 'bg-action-soft' : ''}
                   >
                     <TableCell className="align-top">

@@ -329,7 +329,8 @@ const BuyerDataHealth = () => {
                   key={f.feed}
                   data-testid={`dh-row-${f.feed}`}
                   onClick={() => setSelected(f.feed)}
-                  aria-selected={current?.feed === f.feed}
+                  // C2 (WCAG 4.1.2): aria-selected is not exposed on a plain table row; aria-current is.
+                  aria-current={current?.feed === f.feed}
                   className={current?.feed === f.feed ? 'bg-action-soft' : ''}
                 >
                   <TableCell className="align-top">

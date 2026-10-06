@@ -34,6 +34,7 @@ import AboutThisPage from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
 import WhyQuantityPanel from '@components/forecast/WhyQuantityPanel';
 import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
+import { TOUCH_TARGET } from '@components/forecast/focusRing';
 import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
@@ -483,7 +484,7 @@ const BuyerOrderPlan = () => {
               {t('op.why')}{' '}
               <Link
                 to="/buyer/material-requirement"
-                className="text-action underline"
+                className="text-action-hover underline"
                 data-testid="op-why-requirement"
               >
                 {t('op.why.requirement')}
@@ -491,7 +492,7 @@ const BuyerOrderPlan = () => {
               ·{' '}
               <Link
                 to="/buyer/safety-stock"
-                className="text-action underline"
+                className="text-action-hover underline"
                 data-testid="op-why-safety"
               >
                 {t('op.why.safety')}
@@ -591,7 +592,7 @@ const BuyerOrderPlan = () => {
                               <button
                                 type="button"
                                 id={`${whyId(r)}-toggle`}
-                                className="mt-1 text-xs text-action underline"
+                                className={`mt-1 text-xs text-action-hover underline ${TOUCH_TARGET}`}
                                 aria-expanded={whyIsOpen}
                                 aria-controls={whyId(r)}
                                 aria-label={t('op.wq.openAria', {
@@ -634,8 +635,13 @@ const BuyerOrderPlan = () => {
                             </TableCell>
                             <TableCell className="align-top">
                               {!line ? (
-                                <span title={t('op.action.noPo.hint')}>
+                                // C2 (WCAG 1.3.1): the reason is read out too, not only shown on hover.
+                                <span
+                                  title={t('op.action.noPo.hint')}
+                                  data-testid={`op-nopo-${r.materialCode}-${r.weekStart}`}
+                                >
                                   <StatusPill variant="neutral">{t('op.action.noPo')}</StatusPill>
+                                  <span className="sr-only">{t('op.action.noPo.hint')}</span>
                                 </span>
                               ) : drafted.has(key) ? (
                                 <StatusPill variant="success">{t('op.action.drafted')}</StatusPill>
@@ -697,7 +703,7 @@ const BuyerOrderPlan = () => {
               data-testid="op-shortfall-count"
             >
               {t('op.short.count', { count: w.shortfallWeeks.length })}{' '}
-              <Link to="/buyer/reschedule" className="text-action underline">
+              <Link to="/buyer/reschedule" className="text-action-hover underline">
                 {t('op.short.decide')}
               </Link>
             </p>

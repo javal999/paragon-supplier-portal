@@ -7,10 +7,8 @@
 
 /** @type {Record<string, string>} */
 export const stabiliseEn = {
-  'stb.title': 'Stabilise and publish',
   'stb.subtitle':
     'The plan suppliers would see, before and after it is stabilised: Firm weeks kept as published, Trade-off weeks damped and held to the tolerance band, and what that does to how much the plan moves.',
-  'stb.meta.plan': 'Finished-goods plan made',
   'stb.meta.noPlan': 'No finished-goods plan',
   'stb.meta.versions':
     'Versions replayed: packaging {{packaging}} (weekly), raw material {{raw}} (monthly), from {{from}}',
@@ -144,10 +142,8 @@ export const stabiliseEn = {
 
 /** @type {Record<string, string>} */
 export const stabiliseId = {
-  'stb.title': 'Stabilkan dan terbitkan',
   'stb.subtitle':
     'Rencana yang akan dilihat pemasok, sebelum dan sesudah distabilkan: minggu Firm tetap seperti yang diterbitkan, minggu Trade-off diredam dan ditahan dalam batas toleransi, dan dampaknya pada seberapa besar rencana bergerak.',
-  'stb.meta.plan': 'Rencana barang jadi dibuat',
   'stb.meta.noPlan': 'Tidak ada rencana barang jadi',
   'stb.meta.versions':
     'Versi yang diputar ulang: kemasan {{packaging}} (mingguan), bahan baku {{raw}} (bulanan), sejak {{from}}',

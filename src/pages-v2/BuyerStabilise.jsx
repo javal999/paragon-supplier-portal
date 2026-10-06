@@ -418,6 +418,8 @@ const RunSection = ({ run, source }) => {
                           <Button
                             variant="secondary"
                             onClick={() => setOpen(open === key ? null : key)}
+                            // C2 (WCAG 4.1.2): the toggle says whether its weeks are shown.
+                            aria-expanded={open === key}
                             data-testid={`stb-open-${key}`}
                           >
                             {open === key ? t('stb.series.hide') : t('stb.series.show')}
@@ -696,118 +698,125 @@ const BuyerStabilise = () => {
         />
       </div>
 
-      {tab === 'versions' ? (
-        <PublishedVersions versions={versions} />
-      ) : (
-        <>
-          <DataAsOf
-            date={plan?.planMadeAt ?? null}
-            detail={
-              plan?.planMadeAt
-                ? pv && pv.packaging.length > 0
-                  ? t('stb.meta.versions', {
-                      packaging: pv.packaging.length,
-                      raw: pv.rawMaterial.length,
-                      from: formatDate(pv.packaging[0])
-                    })
-                  : null
-                : t('stb.meta.noPlan')
-            }
-          />
-          {/* F-02 — the published quantities are the material net requirement, so the
+      {/* C2 (WCAG 1.3.1): the tab's content is its tab panel. */}
+      <div
+        role="tabpanel"
+        aria-label={t(tab === 'versions' ? 'stb.tab.versions' : 'stb.tab.publish')}
+        data-testid="stb-tabpanel"
+      >
+        {tab === 'versions' ? (
+          <PublishedVersions versions={versions} />
+        ) : (
+          <>
+            <DataAsOf
+              date={plan?.planMadeAt ?? null}
+              detail={
+                plan?.planMadeAt
+                  ? pv && pv.packaging.length > 0
+                    ? t('stb.meta.versions', {
+                        packaging: pv.packaging.length,
+                        raw: pv.rawMaterial.length,
+                        from: formatDate(pv.packaging[0])
+                      })
+                    : null
+                  : t('stb.meta.noPlan')
+              }
+            />
+            {/* F-02 — the published quantities are the material net requirement, so the
               chip counts the checks that reach Material requirement (and Safety stock,
               which feeds it). */}
-          <DataHealthChip step="E14-03" className="mb-3" />
+            <DataHealthChip step="E14-03" className="mb-3" />
 
-          <div className="mb-4">
-            <FilterChipsBar
-              options={[
-                { id: 'engine', label: t('stb.source.engine') },
-                { id: 'sapHistory', label: t('stb.source.sapHistory') }
-              ]}
-              value={source}
-              onChange={setSource}
-            />
-          </div>
-
-          {run && <RunSection key={source} run={run} source={source} />}
-
-          {plan && <SettingsSection params={plan.params} />}
-
-          <section
-            className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6"
-            data-testid="stb-publish"
-          >
-            <h2 className="text-section text-text-primary mb-1">{t('stb.publish.title')}</h2>
-            <p className="text-xs text-text-tertiary mb-3">{t('stb.publish.intro')}</p>
-            <ul
-              className="text-sm text-text-secondary mb-2 space-y-1"
-              data-testid="stb-last-published"
-            >
-              {lastPublished.map((v) => (
-                <li key={v.publicationId} data-testid={`stb-last-published-${v.stream}`}>
-                  {t('stb.publish.last', { stream: t(`fc.stream.${v.stream}`) })}{' '}
-                  <Data>{t('fc.version', { version: v.version })}</Data>,{' '}
-                  <Data>{formatDate(v.publishedAt)}</Data>
-                </li>
-              ))}
-              {versionsQuery.isSuccess && lastPublished.length === 0 && (
-                <li>{t('stb.publish.lastNone')}</li>
-              )}
-            </ul>
-            <p className="text-sm mb-3">
-              <Link
-                to={`${FORECAST_PAGES.publish.path}?${TAB_PARAM}=versions`}
-                className="text-action-hover hover:underline"
-                data-testid="stb-versions-link"
-              >
-                {t('stb.publish.versionsLink')}
-              </Link>
-            </p>
-            <PublishChecklist run={plan?.engine ?? null} />
-            {publishAvailability.kind !== 'held' ? (
-              <HandoffNotice
-                availability={publishAvailability}
-                testId="handoff-stabilise-publish"
+            <div className="mb-4">
+              <FilterChipsBar
+                options={[
+                  { id: 'engine', label: t('stb.source.engine') },
+                  { id: 'sapHistory', label: t('stb.source.sapHistory') }
+                ]}
+                value={source}
+                onChange={setSource}
               />
-            ) : withheld ? (
-              <p className="text-sm text-warning-hover" data-testid="stb-publish-withheld">
-                {t('stb.publish.withheld')}
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => void publish('packaging')}
-                  disabled={forecastCommand.isPending}
-                  data-testid="stb-publish-packaging"
-                >
-                  {t('stb.publish.packaging')}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => void publish('rawMaterial')}
-                  disabled={forecastCommand.isPending}
-                  data-testid="stb-publish-rawMaterial"
-                >
-                  {t('stb.publish.rawMaterial')}
-                </Button>
-              </div>
-            )}
-          </section>
+            </div>
 
-          <section
-            className="bg-bg-surface border border-border-subtle rounded-lg p-4 text-sm text-text-secondary space-y-2"
-            data-testid="stb-definitions"
-          >
-            <h2 className="text-section text-text-primary">{t('stb.def.title')}</h2>
-            <p>{t('stb.def.quantity')}</p>
-            <p>{t('stb.def.zones')}</p>
-            <p>{t('stb.def.masc')}</p>
-            <p>{t('stb.def.share')}</p>
-          </section>
-        </>
-      )}
+            {run && <RunSection key={source} run={run} source={source} />}
+
+            {plan && <SettingsSection params={plan.params} />}
+
+            <section
+              className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6"
+              data-testid="stb-publish"
+            >
+              <h2 className="text-section text-text-primary mb-1">{t('stb.publish.title')}</h2>
+              <p className="text-xs text-text-tertiary mb-3">{t('stb.publish.intro')}</p>
+              <ul
+                className="text-sm text-text-secondary mb-2 space-y-1"
+                data-testid="stb-last-published"
+              >
+                {lastPublished.map((v) => (
+                  <li key={v.publicationId} data-testid={`stb-last-published-${v.stream}`}>
+                    {t('stb.publish.last', { stream: t(`fc.stream.${v.stream}`) })}{' '}
+                    <Data>{t('fc.version', { version: v.version })}</Data>,{' '}
+                    <Data>{formatDate(v.publishedAt)}</Data>
+                  </li>
+                ))}
+                {versionsQuery.isSuccess && lastPublished.length === 0 && (
+                  <li>{t('stb.publish.lastNone')}</li>
+                )}
+              </ul>
+              <p className="text-sm mb-3">
+                <Link
+                  to={`${FORECAST_PAGES.publish.path}?${TAB_PARAM}=versions`}
+                  className="text-action-hover hover:underline"
+                  data-testid="stb-versions-link"
+                >
+                  {t('stb.publish.versionsLink')}
+                </Link>
+              </p>
+              <PublishChecklist run={plan?.engine ?? null} />
+              {publishAvailability.kind !== 'held' ? (
+                <HandoffNotice
+                  availability={publishAvailability}
+                  testId="handoff-stabilise-publish"
+                />
+              ) : withheld ? (
+                <p className="text-sm text-warning-hover" data-testid="stb-publish-withheld">
+                  {t('stb.publish.withheld')}
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => void publish('packaging')}
+                    disabled={forecastCommand.isPending}
+                    data-testid="stb-publish-packaging"
+                  >
+                    {t('stb.publish.packaging')}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => void publish('rawMaterial')}
+                    disabled={forecastCommand.isPending}
+                    data-testid="stb-publish-rawMaterial"
+                  >
+                    {t('stb.publish.rawMaterial')}
+                  </Button>
+                </div>
+              )}
+            </section>
+
+            <section
+              className="bg-bg-surface border border-border-subtle rounded-lg p-4 text-sm text-text-secondary space-y-2"
+              data-testid="stb-definitions"
+            >
+              <h2 className="text-section text-text-primary">{t('stb.def.title')}</h2>
+              <p>{t('stb.def.quantity')}</p>
+              <p>{t('stb.def.zones')}</p>
+              <p>{t('stb.def.masc')}</p>
+              <p>{t('stb.def.share')}</p>
+            </section>
+          </>
+        )}
+      </div>
 
       <AboutThisPage>
         {tab === 'versions' ? (

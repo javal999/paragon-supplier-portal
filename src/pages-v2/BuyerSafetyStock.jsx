@@ -317,7 +317,8 @@ const BuyerSafetyStock = () => {
                 key={m.materialCode}
                 data-testid={`sst-row-${m.materialCode}`}
                 onClick={() => setSelected(m.materialCode)}
-                aria-selected={current?.materialCode === m.materialCode}
+                // C2 (WCAG 4.1.2): aria-selected is not exposed on a plain table row; aria-current is.
+                aria-current={current?.materialCode === m.materialCode}
                 className={current?.materialCode === m.materialCode ? 'bg-action-soft' : ''}
               >
                 <TableCell className="align-top">

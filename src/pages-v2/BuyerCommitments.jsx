@@ -35,6 +35,7 @@ import AboutThisPage from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
 import TermTip from '@components/forecast/TermTip';
 import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
+import { FIELD_FOCUS_RING } from '@components/forecast/focusRing';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { formatDateTime } from '@lib/format';
 import { CHART_SERIES } from '@lib/chartPalette';
@@ -65,6 +66,10 @@ import {
   useForecastRunner,
   usePeriodLabel
 } from './forecasts/forecastDisplay';
+
+// C2 (WCAG 2.4.7): the shared field class shows focus only as a 1 px border
+// tint; the forecast fields add a ring.
+const fieldClass = `${inputClass} ${FIELD_FOCUS_RING}`;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI COMMITMENTS & GAPS — REQ-E06-03 (with REQ-E06-02 from the planner's side).
@@ -294,7 +299,7 @@ const BuyerCommitments = () => {
           <label className="text-sm text-text-secondary flex items-center gap-2">
             {t('fc.col.supplier')}
             <select
-              className={`${inputClass} w-auto`}
+              className={`${fieldClass} w-auto`}
               value={supplier}
               onChange={(e) => setSupplier(e.target.value)}
               data-testid="fc-supplier-filter"
@@ -310,7 +315,7 @@ const BuyerCommitments = () => {
           <label className="text-sm text-text-secondary flex items-center gap-2">
             {t('fc.col.material')}
             <select
-              className={`${inputClass} w-auto`}
+              className={`${fieldClass} w-auto`}
               value={material}
               onChange={(e) => setMaterial(e.target.value)}
               data-testid="fc-material-filter"
@@ -789,6 +794,15 @@ const BuyerCommitments = () => {
                 (action.kind !== 'accept' && note.trim() === '') ||
                 (action.kind === 'reassign' && toSupplier === '')
               }
+              // C2 (WCAG 4.1.2): a switched-off confirm names the field it waits for.
+              aria-describedby={
+                [
+                  action.kind === 'reassign' && toSupplier === '' ? 'fc-reassign-why' : null,
+                  action.kind !== 'accept' && note.trim() === '' ? 'fc-action-note-hint' : null
+                ]
+                  .filter(Boolean)
+                  .join(' ') || undefined
+              }
               onClick={() => void submitAction()}
             >
               {t(`fc.pti.gaps.panel.confirm.${action.kind}`)}
@@ -834,9 +848,10 @@ const BuyerCommitments = () => {
                 </label>
                 <select
                   id="fc-reassign-to"
-                  className={inputClass}
+                  className={fieldClass}
                   value={toSupplier}
                   onChange={(e) => setToSupplier(e.target.value)}
+                  aria-describedby="fc-reassign-hint"
                 >
                   <option value="">{t('fc.pti.gaps.panel.chooseSupplier')}</option>
                   {action.line.otherQualifiedSuppliers.map((q) => (
@@ -845,9 +860,14 @@ const BuyerCommitments = () => {
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-text-tertiary mt-1">
+                <p id="fc-reassign-hint" className="text-xs text-text-tertiary mt-1">
                   {t('fc.pti.gaps.panel.reassignHint')}
                 </p>
+                {toSupplier === '' ? (
+                  <span id="fc-reassign-why" className="sr-only">
+                    {t('fc.pti.gaps.panel.chooseSupplier')}
+                  </span>
+                ) : null}
               </div>
             )}
             {action.kind !== 'accept' && (
@@ -858,11 +878,14 @@ const BuyerCommitments = () => {
                 <textarea
                   id="fc-action-note"
                   rows={4}
-                  className={inputClass}
+                  className={fieldClass}
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
+                  aria-describedby="fc-action-note-hint"
                 />
-                <p className="text-xs text-text-tertiary mt-1">{t('fc.pti.gaps.panel.noteHint')}</p>
+                <p id="fc-action-note-hint" className="text-xs text-text-tertiary mt-1">
+                  {t('fc.pti.gaps.panel.noteHint')}
+                </p>
               </div>
             )}
           </div>

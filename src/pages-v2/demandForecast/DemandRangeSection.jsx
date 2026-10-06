@@ -11,6 +11,7 @@ import Data from '@components/ui-v2/Data';
 import { formatDate, formatNumber } from '@lib/format';
 /** @import { DemandRangeRun, RangeExperience, SeriesRange } from '@services/engine/demandRange' */
 import TermTip from '@components/forecast/TermTip';
+import { FIELD_FOCUS_RING } from '@components/forecast/focusRing';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DEMAND RANGE — REQ-E14-09 on the Demand forecast page (BL-111). Experience:
@@ -193,7 +194,7 @@ const DemandRangeSection = ({ range }) => {
         </label>
         <select
           id="df-range-week"
-          className="w-full px-3 py-2 text-sm font-mono text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action"
+          className={`w-full px-3 py-2 text-sm font-mono text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action ${FIELD_FOCUS_RING}`}
           value={week}
           onChange={(e) => setWeek(Number(e.target.value))}
           data-testid="df-range-week"

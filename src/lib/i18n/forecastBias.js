@@ -6,7 +6,6 @@
 
 /** @type {Record<string, string>} */
 export const forecastBiasEn = {
-  'fb.title': 'Forecast bias',
   'fb.subtitle':
     'Whether the demand forecast runs one way — too high fills the warehouse, too low causes shortage — per SKU and material, the Material Planning team’s overrides, and whether each kind of override makes the forecast better.',
   'fb.meta.origins': 'Tracking signal over {{count}} past weeks, from the week of',
@@ -68,6 +67,7 @@ export const forecastBiasEn = {
     'Required when the new forecast is above the engine’s. "Other" needs a note.',
   'fb.form.note': 'Note',
   'fb.form.submit': 'Record override',
+  'fb.form.submit.needValue': 'Enter the new forecast as a whole number of zero or more to save.',
   'fb.form.attribution':
     'Recorded without a name: sign-in is not built yet, so the override shows as not attributed.',
   'fb.toast.refused': 'Override not recorded',
@@ -149,7 +149,6 @@ export const forecastBiasEn = {
 
 /** @type {Record<string, string>} */
 export const forecastBiasId = {
-  'fb.title': 'Bias prakiraan',
   'fb.subtitle':
     'Apakah prakiraan permintaan condong ke satu arah — terlalu tinggi memenuhi gudang, terlalu rendah menyebabkan kekurangan — per SKU dan material, penyesuaian oleh tim Perencanaan Material, dan apakah tiap jenis penyesuaian membuat prakiraan lebih baik.',
   'fb.meta.origins': 'Sinyal pelacakan atas {{count}} minggu lalu, dari minggu',
@@ -211,6 +210,8 @@ export const forecastBiasId = {
     'Wajib bila prakiraan baru di atas prakiraan mesin. "Lainnya" memerlukan catatan.',
   'fb.form.note': 'Catatan',
   'fb.form.submit': 'Catat penyesuaian',
+  'fb.form.submit.needValue':
+    'Isi prakiraan baru sebagai bilangan bulat nol atau lebih untuk menyimpan.',
   'fb.form.attribution':
     'Dicatat tanpa nama: fitur masuk belum dibangun, sehingga penyesuaian tampil tanpa atribusi.',
   'fb.toast.refused': 'Penyesuaian tidak dicatat',

@@ -47,6 +47,7 @@ import PurposeHeader from '@components/forecast/PurposeHeader';
 import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
 import DataAsOf from '@components/forecast/DataAsOf';
 import { forecastTitle, linkTarget } from '@components/forecast/forecastPages';
+import { FIELD_FOCUS_RING } from '@components/forecast/focusRing';
 import { usePerformance } from './performance/performanceDisplay';
 import KpiDefinitions from './performance/KpiDefinitions';
 import UpdateComplianceCard from './performance/UpdateComplianceCard';
@@ -293,7 +294,7 @@ const BuyerScorecard = () => {
           <select
             value={selectedId}
             onChange={(e) => setSelectedId(e.target.value)}
-            className="h-10 min-w-[260px] px-3 text-sm text-text-primary bg-bg-surface border border-border-input rounded-md focus:outline-none focus:border-action cursor-pointer"
+            className={`h-10 min-w-[260px] px-3 text-sm text-text-primary bg-bg-surface border border-border-input rounded-md focus:outline-none focus:border-action cursor-pointer ${FIELD_FOCUS_RING}`}
             aria-label={t('buyerScorecard.header.selectSupplier')}
           >
             {suppliers.map((s) => (
@@ -547,6 +548,26 @@ const BuyerScorecard = () => {
               <Tooltip content={<ChartTooltip />} />
             </RadarChart>
           </ResponsiveContainer>
+          {/* C2 (WCAG 1.1.1): the chart's figures, for a screen reader. */}
+          <table className="sr-only" data-testid="scorecard-radar-table">
+            <caption>{t('buyerScorecard.radar.title')}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{t('buyerScorecard.chart.area')}</th>
+                <th scope="col">{supp.name}</th>
+                <th scope="col">{t('buyerScorecard.radar.benchmark')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {radarData.map((r) => (
+                <tr key={r.axis}>
+                  <th scope="row">{r.axis}</th>
+                  <td>{r.value}</td>
+                  <td>{r.target}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </section>
 
         <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6">
@@ -604,6 +625,28 @@ const BuyerScorecard = () => {
               <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
             </LineChart>
           </ResponsiveContainer>
+          {/* C2 (WCAG 1.1.1): the chart's figures, for a screen reader. */}
+          <table className="sr-only" data-testid="scorecard-trend-table">
+            <caption>{t('buyerScorecard.trends.title')}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{t('buyerScorecard.chart.month')}</th>
+                <th scope="col">{t('buyerScorecard.series.otif')}</th>
+                <th scope="col">{t('buyerScorecard.series.ackSpeed')}</th>
+                <th scope="col">{t('buyerScorecard.series.defectRate')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {trendData.map((d) => (
+                <tr key={d.month}>
+                  <th scope="row">{d.month}</th>
+                  <td>{d.otif}</td>
+                  <td>{d.ackSpeed}</td>
+                  <td>{d.defect}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </section>
       </div>
 

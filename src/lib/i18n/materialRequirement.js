@@ -9,7 +9,6 @@ export const materialRequirementEn = {
   'mrq.title': 'Material requirement',
   'mrq.subtitle':
     'What each material is needed, when, and how much must be ordered: the finished-goods plan through the bill of materials, net of stock, confirmed deliveries and safety stock.',
-  'mrq.meta.plan': 'Finished-goods plan made',
   'mrq.meta.horizon': 'Horizon',
   'mrq.meta.weeks': '{{count}} weeks',
   'mrq.meta.noPlan': 'No finished-goods plan',
@@ -100,7 +99,6 @@ export const materialRequirementId = {
   'mrq.title': 'Kebutuhan material',
   'mrq.subtitle':
     'Berapa kebutuhan setiap material, kapan, dan berapa yang harus dipesan: rencana barang jadi melalui daftar bahan, dikurangi stok, pengiriman terkonfirmasi, dan stok pengaman.',
-  'mrq.meta.plan': 'Rencana barang jadi dibuat',
   'mrq.meta.horizon': 'Cakupan',
   'mrq.meta.weeks': '{{count}} minggu',
   'mrq.meta.noPlan': 'Tidak ada rencana barang jadi',

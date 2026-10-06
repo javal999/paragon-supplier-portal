@@ -21,6 +21,7 @@ import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
 import AboutThisPage from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
 import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
+import { TOUCH_TARGET } from '@components/forecast/focusRing';
 import { useMaterialRequirement } from '@services/query/hooks';
 /** @import { MaterialPlanView, MaterialRequirementView } from '@services/data/types' */
 /** @import { MaterialWeek } from '@services/engine/requirement' */
@@ -195,7 +196,7 @@ const WeekGrid = ({ plan, names }) => {
                     {w.gross > 0 ? (
                       <button
                         type="button"
-                        className="underline decoration-dotted hover:text-action"
+                        className={`underline decoration-dotted hover:text-action-hover ${TOUCH_TARGET}`}
                         onClick={() => setPegWeek(w.weekStart)}
                         aria-label={t('mrq.wk.openPegs', { qty: qtyOf(w.gross, plan.uom) })}
                         data-testid={`mrq-gross-${w.weekStart}`}
@@ -402,7 +403,8 @@ const BuyerMaterialRequirement = () => {
                 key={m.materialCode}
                 data-testid={`mrq-row-${m.materialCode}`}
                 onClick={() => setSelected(m.materialCode)}
-                aria-selected={current?.materialCode === m.materialCode}
+                // C2 (WCAG 4.1.2): aria-selected is not exposed on a plain table row; aria-current is.
+                aria-current={current?.materialCode === m.materialCode}
                 className={current?.materialCode === m.materialCode ? 'bg-action-soft' : ''}
               >
                 <TableCell className="align-top">
@@ -438,6 +440,8 @@ const BuyerMaterialRequirement = () => {
                   {m.reviewRequired && (
                     <div title={t('mrq.review.hint')}>
                       <StatusPill variant="warning">{t('mrq.review')}</StatusPill>
+                      {/* C2 (WCAG 1.3.1): the reason is read out too, not only shown on hover. */}
+                      <span className="sr-only">{t('mrq.review.hint')}</span>
                     </div>
                   )}
                 </TableCell>

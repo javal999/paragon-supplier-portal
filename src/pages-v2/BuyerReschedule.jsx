@@ -33,6 +33,7 @@ import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
 import AboutThisPage from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
 import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
+import { FIELD_FOCUS_RING } from '@components/forecast/focusRing';
 import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
@@ -175,8 +176,10 @@ const markFor = (marks, lineId) => marks.find((m) => m.lineId === lineId) ?? nul
 // read. The page pre-checks with the same rule the verb's policy hook calls
 // (`warehouseDecisionRefusal`, MAT-R2). A seat without the atom sees who acts.
 
-const inputClass =
-  'w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action placeholder:text-text-tertiary';
+// C2 (WCAG 2.4.7): the field draws a focus ring, not only a 1 px border tint.
+const inputClass = `w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action placeholder:text-text-tertiary ${FIELD_FOCUS_RING}`;
+/** The id of the one line, above the proposals, that says why their acts are off. */
+const WITHHELD_ID = 'rs-actions-withheld-why';
 /** @param {number} x */
 const pal = (x) => formatNumber(Math.round(x * 10) / 10);
 
@@ -339,6 +342,12 @@ const DecisionControl = ({ sw, plan, rate }) => {
     }
   };
   const noteId = `rs-decide-note-${plan.kind}-${sw.weekStart}`;
+  // C2 (WCAG 4.1.2, 3.3.2): a switched-off Save says why — no option chosen
+  // yet, or the refusal below — and the note field names its own rule.
+  const noteHintId = `${noteId}-hint`;
+  const saveWhyId = `rs-decide-save-why-${plan.kind}-${sw.weekStart}`;
+  const refusalId = `rs-decide-refusal-${plan.kind}-${sw.weekStart}`;
+  const saveWhy = picked === null ? saveWhyId : refusal !== null ? refusalId : undefined;
   return (
     <div>
       <div
@@ -376,11 +385,12 @@ const DecisionControl = ({ sw, plan, rate }) => {
             maxLength={500}
             className={inputClass}
             aria-required={picked === 'accept'}
+            aria-describedby={noteHintId}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             data-testid={`rs-decide-note-${sw.weekStart}`}
           />
-          <p className="text-xs text-text-tertiary mt-1">
+          <p id={noteHintId} className="text-xs text-text-tertiary mt-1">
             {t(picked === 'accept' ? 'rs.decide.note.required' : 'rs.decide.note.optional')}
           </p>
         </div>
@@ -388,13 +398,20 @@ const DecisionControl = ({ sw, plan, rate }) => {
           variant="outline"
           onClick={() => void save()}
           disabled={picked === null || refusal !== null || command.isPending}
+          aria-describedby={saveWhy}
           data-testid={`rs-decide-save-${sw.weekStart}`}
         >
           {t('rs.decide.save')}
         </Button>
+        {picked === null ? (
+          <span id={saveWhyId} className="sr-only">
+            {t('rs.decide.save.needChoice')}
+          </span>
+        ) : null}
       </div>
       {refusal !== null && (
         <p
+          id={refusalId}
           className="text-xs text-warning-hover mt-2"
           role="status"
           data-testid={`rs-decide-refusal-${sw.weekStart}`}
@@ -598,6 +615,11 @@ const BuyerReschedule = () => {
     }
   };
 
+  /** @param {RescheduleProposalView} p */
+  const reasonId = (p) => `rs-withheld-why-${p.id}`;
+  /** @param {RescheduleProposalView} p */
+  const withheldWhy = (p) => `${reasonId(p)} ${WITHHELD_ID}`;
+
   /**
    * The act for one proposal — or why there is none.
    * @param {RescheduleProposalView} p
@@ -612,13 +634,24 @@ const BuyerReschedule = () => {
         return <HandoffNotice availability={planAvailability} testId="handoff-reschedule-change" />;
       // Simulated data: the act is shown, switched off, with a one-word reason;
       // the full reason is stated once above the table (rs-actions-withheld).
+      // C2 (WCAG 4.1.2): the switched-off act names its reason to a screen
+      // reader too — the one-word reason under it and the full one above.
       if (withheld)
         return (
           <div>
-            <Button variant="outline" disabled data-testid={`rs-send-off-${p.id}`}>
+            <Button
+              variant="outline"
+              disabled
+              aria-describedby={withheldWhy(p)}
+              data-testid={`rs-send-off-${p.id}`}
+            >
               {t('rs.action.send')}
             </Button>
-            <div className="text-xs text-warning-hover mt-1" data-testid={`rs-withheld-${p.id}`}>
+            <div
+              id={reasonId(p)}
+              className="text-xs text-warning-hover mt-1"
+              data-testid={`rs-withheld-${p.id}`}
+            >
               {t('rs.action.sampleData')}
             </div>
           </div>
@@ -651,10 +684,19 @@ const BuyerReschedule = () => {
         <div className="text-xs text-text-secondary mb-1">{t('rs.action.inSap')}</div>
         {withheld ? (
           <div>
-            <Button variant="outline" disabled data-testid={`rs-mark-off-${p.id}`}>
+            <Button
+              variant="outline"
+              disabled
+              aria-describedby={withheldWhy(p)}
+              data-testid={`rs-mark-off-${p.id}`}
+            >
               {t('rs.action.mark')}
             </Button>
-            <div className="text-xs text-warning-hover mt-1" data-testid={`rs-withheld-${p.id}`}>
+            <div
+              id={reasonId(p)}
+              className="text-xs text-warning-hover mt-1"
+              data-testid={`rs-withheld-${p.id}`}
+            >
               {t('rs.action.sampleData')}
             </div>
           </div>
@@ -954,7 +996,11 @@ const BuyerReschedule = () => {
             ) : (
               <>
                 {!!withheld && (
-                  <p className="text-xs text-warning-hover mb-2" data-testid="rs-actions-withheld">
+                  <p
+                    id={WITHHELD_ID}
+                    className="text-xs text-warning-hover mb-2"
+                    data-testid="rs-actions-withheld"
+                  >
                     {t('rs.relief.withheld')}
                   </p>
                 )}

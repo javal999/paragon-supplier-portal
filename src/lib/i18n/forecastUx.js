@@ -29,10 +29,6 @@ export const forecastUxEn = {
     'How much of each material is needed, after stock, confirmed deliveries and safety stock.',
   'fux.purpose.safetyStock':
     'Whether each material’s safety stock and reorder point are right, compared with SAP’s.',
-  'fux.purpose.publishedVersions':
-    'Which plan version each supplier holds, and whether they have opened it.',
-  'fux.purpose.forecastBias':
-    'Whether a forecast runs steadily high or low, and whether to override it.',
   'fux.purpose.dataHealth':
     'Whether the input feeds are fresh and clean enough to plan on this week.',
   'fux.purpose.modelBacktest':
@@ -124,10 +120,6 @@ export const forecastUxId = {
     'Berapa banyak setiap material yang dibutuhkan, setelah stok, pengiriman terkonfirmasi, dan stok pengaman.',
   'fux.purpose.safetyStock':
     'Apakah stok pengaman dan titik pemesanan ulang setiap material sudah tepat, dibandingkan milik SAP.',
-  'fux.purpose.publishedVersions':
-    'Versi rencana mana yang dipegang setiap pemasok, dan apakah mereka sudah membukanya.',
-  'fux.purpose.forecastBias':
-    'Apakah sebuah prakiraan terus-menerus terlalu tinggi atau terlalu rendah, dan apakah perlu disesuaikan.',
   'fux.purpose.dataHealth':
     'Apakah umpan data masukan cukup baru dan bersih untuk dipakai merencanakan minggu ini.',
   'fux.purpose.modelBacktest':

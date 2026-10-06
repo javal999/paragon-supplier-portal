@@ -7,10 +7,8 @@
 
 /** @type {Record<string, string>} */
 export const rescheduleEn = {
-  'rs.title': 'Reschedule open orders',
   'rs.subtitle':
     'Open PO lines and call-offs that arrive before they are needed, and what moving them later, reducing or cancelling them would free in the warehouse, and cost with the supplier.',
-  'rs.meta.plan': 'Finished-goods plan made',
   'rs.meta.horizon': 'Horizon',
   'rs.meta.weeks': '{{count}} weeks',
   'rs.meta.noPlan': 'No finished-goods plan',
@@ -233,6 +231,7 @@ export const rescheduleEn = {
   'rs.decide.note.required': 'Required to accept the overflow.',
   'rs.decide.note.optional': 'Optional.',
   'rs.decide.save': 'Save decision',
+  'rs.decide.save.needChoice': 'Choose one of the options above before saving.',
   'rs.decide.refusal.note': 'Add a note to accept the overflow.',
   'rs.decide.refusal.choice': 'Choose one of the four ways.',
   'rs.decide.none': 'No decision yet.',
@@ -249,10 +248,8 @@ export const rescheduleEn = {
 
 /** @type {Record<string, string>} */
 export const rescheduleId = {
-  'rs.title': 'Jadwal ulang pesanan terbuka',
   'rs.subtitle':
     'Baris PO dan call-off terbuka yang tiba sebelum dibutuhkan, dan apa yang akan dibebaskan di gudang serta biayanya dengan pemasok bila dipindah lebih lambat, dikurangi, atau dibatalkan.',
-  'rs.meta.plan': 'Rencana barang jadi dibuat',
   'rs.meta.horizon': 'Horizon',
   'rs.meta.weeks': '{{count}} minggu',
   'rs.meta.noPlan': 'Tidak ada rencana barang jadi',
@@ -464,6 +461,7 @@ export const rescheduleId = {
   'rs.decide.note.required': 'Wajib untuk menerima kelebihan.',
   'rs.decide.note.optional': 'Opsional.',
   'rs.decide.save': 'Simpan keputusan',
+  'rs.decide.save.needChoice': 'Pilih salah satu opsi di atas sebelum menyimpan.',
   'rs.decide.refusal.note': 'Tambahkan catatan untuk menerima kelebihan.',
   'rs.decide.refusal.choice': 'Pilih salah satu dari empat cara.',
   'rs.decide.none': 'Belum ada keputusan.',

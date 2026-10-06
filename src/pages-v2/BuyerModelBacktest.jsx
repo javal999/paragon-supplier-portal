@@ -456,7 +456,8 @@ const BuyerModelBacktest = () => {
                 key={s.skuCode}
                 data-testid={`mb-sku-${s.skuCode}`}
                 onClick={() => setSelected(s.skuCode)}
-                aria-selected={current?.skuCode === s.skuCode}
+                // C2 (WCAG 4.1.2): aria-selected is not exposed on a plain table row; aria-current is.
+                aria-current={current?.skuCode === s.skuCode}
                 className={current?.skuCode === s.skuCode ? 'bg-action-soft' : ''}
               >
                 <TableCell className="align-top">
