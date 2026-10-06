@@ -1,7 +1,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 // THE ONLY ASSERTION IN THIS TREE THAT READS THE REAL CLOCK ON PURPOSE.
 //
-// ⚠️ **EXCLUDED FROM THE DEFAULT RUN** (`vitest.config.ts` → `test.exclude`),
+// ⚠️ **EXCLUDED FROM THE DEFAULT RUN** (`vitest.config.js` → `test.exclude`),
 // so `npx vitest run` — gate 3, and every PR — never collects it. It is run by
 // `npm run drift`, and by CI on the SCHEDULE trigger only.
 //

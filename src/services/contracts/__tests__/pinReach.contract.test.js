@@ -142,7 +142,7 @@ function importsOf(path) {
   /** @type {string[]} */
   const found = [];
   // Relative ('./x') AND aliased ('@services/x') specifiers: since the import
-  // aliases landed (aliases.ts), most cross-folder imports are aliased, and a
+  // aliases landed (aliases.js), most cross-folder imports are aliased, and a
   // relative-only matcher would quietly follow fewer hops.
   for (const m of src.matchAll(/from\s+'((?:\.|@[\w-]+\/)[^']+)'/g)) {
     const resolved = specifierBase(path, m[1]);

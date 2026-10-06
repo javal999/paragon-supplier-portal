@@ -141,7 +141,7 @@
     "allowJs": true,
     "checkJs": true,
     // ── `paths` — IMPORT ALIASES (frontend-standard plan, Phase 2) ───────────
-    // Mirrors `ALIAS_FOLDERS` in aliases.ts, which Vite and Vitest read. JSON
+    // Mirrors `ALIAS_FOLDERS` in aliases.js, which Vite and Vitest read. JSON
     // cannot import that module, so the list is repeated here and
     // `src/test/aliases.guard.test.js` fails if the two disagree. Change both.
     "paths": {

@@ -7,11 +7,11 @@
 //   For every source file under src/, finds each RELATIVE module specifier
 //   ('./x', '../../y') and resolves it. If the target sits in a DIFFERENT
 //   top-level folder of src/ than the importing file, the specifier is
-//   rewritten to that folder's alias (see aliases.ts):
+//   rewritten to that folder's alias (see aliases.js):
 //     src/pages-v2/rfx/Foo.tsx:  '../../services/data/types'
 //                             →  '@services/data/types'
 //   Imports inside the same top-level folder are left relative, per the rule
-//   in aliases.ts. Only the string changes; nothing else in the file moves.
+//   in aliases.js. Only the string changes; nothing else in the file moves.
 //
 // WHICH SPECIFIERS
 //   `import … from '…'`, `export … from '…'`, side-effect `import '…'`,
@@ -39,14 +39,14 @@ const SRC = join(ROOT, 'src');
 const DRY_RUN = process.argv.includes('--dry-run');
 const INCLUDE_FORECAST = process.argv.includes('--include-forecast');
 
-// Read the alias list from aliases.ts as TEXT (this script runs in plain Node,
+// Read the alias list from aliases.js as TEXT (this script runs in plain Node,
 // which cannot import a .ts module without a loader). The guard spec
-// src/test/aliases.guard.test.js keeps aliases.ts itself honest.
-const aliasSource = readFileSync(join(ROOT, 'aliases.ts'), 'utf8');
+// src/test/aliases.guard.test.js keeps aliases.js itself honest.
+const aliasSource = readFileSync(join(ROOT, 'aliases.js'), 'utf8');
 const FOLDER_TO_ALIAS = new Map(
   [...aliasSource.matchAll(/'(@[\w-]+)':\s*'([\w-]+)'/g)].map(([, alias, folder]) => [folder, alias]),
 );
-if (FOLDER_TO_ALIAS.size === 0) throw new Error('No aliases parsed from aliases.ts — refusing to run');
+if (FOLDER_TO_ALIAS.size === 0) throw new Error('No aliases parsed from aliases.js — refusing to run');
 
 const FORECAST = /[fF]orecast/;
 const SOURCE_FILE = /\.(ts|tsx|js|jsx|mjs)$/;
@@ -83,7 +83,7 @@ for (const file of walk(SRC)) {
 
   const after = before.replace(SPECIFIER, (whole, lead, quote, spec) => {
     const target = resolve(dirname(file), spec);
-    if (!target.startsWith(SRC + sep)) return whole; // outside src/ (e.g. aliases.ts)
+    if (!target.startsWith(SRC + sep)) return whole; // outside src/ (e.g. aliases.js)
     const toFolder = topFolder(target);
     const alias = FOLDER_TO_ALIAS.get(toFolder);
     if (!toFolder || toFolder === fromFolder || !alias) return whole;

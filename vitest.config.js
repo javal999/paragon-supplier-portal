@@ -2,19 +2,19 @@ import { defineConfig, configDefaults } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { ALIASES } from './aliases';
 
-// Separate from vite.config.ts on purpose: the app's vite root is 'app/'
+// Separate from vite.config.js on purpose: the app's vite root is 'app/'
 // (index.html there loads ../src/main.tsx), but source and tests live at the
 // repo root under src/. This config leaves `root` at its default (repo root)
 // so `src/**` resolves for the test run.
 export default defineConfig({
   plugins: [react()],
-  // Same aliases as the app build (aliases.ts); vitest.drift.config.ts inherits them.
+  // Same aliases as the app build (aliases.js); vitest.drift.config.js inherits them.
   resolve: { alias: ALIASES },
   // __DEPLOY_ENV__ is injected by vite `define` in the real build; define it here
   // too so components that read it don't hit a ReferenceError under test. Empty
   // string → the badge's hostname fallback path (ENV-BADGE-01).
   define: {
-    __DEPLOY_ENV__: JSON.stringify(''),
+    __DEPLOY_ENV__: JSON.stringify('')
   },
   test: {
     environment: 'jsdom',
@@ -39,6 +39,6 @@ export default defineConfig({
     // that shrinks without the floor noticing. `clockDrift.live.test.js` pins
     // the excluded set bilaterally, derived from disk, so a second one is red.
     exclude: [...configDefaults.exclude, 'src/**/*.live.test.{js,jsx,ts,tsx}'],
-    css: false,
-  },
+    css: false
+  }
 });

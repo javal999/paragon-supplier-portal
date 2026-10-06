@@ -1,10 +1,11 @@
-import { defineConfig, configDefaults, type UserConfig } from 'vitest/config';
+import { defineConfig, configDefaults } from 'vitest/config';
+/** @import { UserConfig } from 'vitest/config' */
 import base from './vitest.config';
 
 // ────────────────────────────────────────────────────────────────────────────
 // THE DRIFT RUN — the only configuration that collects a real-clock spec.
 //
-// `vitest.config.ts` EXCLUDES `*.live.test.ts`, and an exclusion beats a CLI
+// `vitest.config.js` EXCLUDES `*.live.test.ts`, and an exclusion beats a CLI
 // file filter: `vitest run <path>` against the base config answers
 //   `No test files found, exiting with code 1`
 // which would have made `npm run drift` look like a failing gate that examined
@@ -25,13 +26,13 @@ import base from './vitest.config';
 // and a bare `[]` would let the run reach `node_modules`.
 // ────────────────────────────────────────────────────────────────────────────
 
-const b = base as UserConfig;
+const b = /** @type {UserConfig} */ (base);
 
 export default defineConfig({
   ...b,
   test: {
     ...b.test,
     include: ['src/**/*.live.test.{js,jsx,ts,tsx}'],
-    exclude: [...configDefaults.exclude],
-  },
+    exclude: [...configDefaults.exclude]
+  }
 });

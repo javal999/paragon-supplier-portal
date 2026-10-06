@@ -15,16 +15,16 @@ export default defineConfig(() => ({
   // signal the env badge keys off (ENV-BADGE-01). Empty off-Vercel, where the
   // badge falls back to the hostname allowlist.
   define: {
-    __DEPLOY_ENV__: JSON.stringify(process.env.VERCEL_ENV ?? ''),
+    __DEPLOY_ENV__: JSON.stringify(process.env.VERCEL_ENV ?? '')
   },
   plugins: [react()],
-  // `@components/...`, `@services/...` etc. — the list and the rule live in aliases.ts.
+  // `@components/...`, `@services/...` etc. — the list and the rule live in aliases.js.
   resolve: { alias: ALIASES },
   build: {
     outDir: '../dist',
-    emptyOutDir: true,
+    emptyOutDir: true
   },
   server: {
-    port: 5173,
-  },
+    port: 5173
+  }
 }));

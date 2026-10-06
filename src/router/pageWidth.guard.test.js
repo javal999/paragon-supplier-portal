@@ -63,7 +63,7 @@ function routes() {
 function sourceOf(component) {
   const m = routerSrc.match(new RegExp(`import\\s+${component}\\s+from\\s+'([^']+)'`));
   if (!m) return null;
-  // The router imports pages through the `@pages-v2/...` alias (aliases.ts), so
+  // The router imports pages through the `@pages-v2/...` alias (aliases.js), so
   // the specifier is resolved alias-aware rather than joined as a relative path.
   return resolveImport(ROUTER, m[1]);
 }

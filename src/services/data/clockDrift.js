@@ -44,7 +44,7 @@
 //   So the split is: this module is PURE and is asserted at PINNED instants by
 //   `clockDrift.test.js`, inside the normal suite, where it can never decay.
 //   The REAL-CLOCK evaluation lives in `clockDrift.live.test.js`, which
-//   `vitest.config.ts` excludes from the default run and `npm run drift`
+//   `vitest.config.js` excludes from the default run and `npm run drift`
 //   executes on purpose — and which CI runs on the SCHEDULE trigger only, the
 //   half of `gates.yml` that exists precisely to catch a break with no commit
 //   involved.

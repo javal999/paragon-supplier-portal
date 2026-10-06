@@ -8,7 +8,7 @@
 //   Converting `x.ts` → `x.js` breaks every place that names the FILE rather
 //   than importing the module: specs that `readFileSync('src/data/mockX.ts')`,
 //   guards that expect `'components/ui-v2/Button.tsx'` in a census, configs
-//   (`vitest.config.ts` setupFiles, `app/index.html`'s `../src/main.tsx`), and
+//   (`vitest.config.js` setupFiles, `app/index.html`'s `../src/main.tsx`), and
 //   comments that say "see SelectField.tsx". Imports are unaffected: they name
 //   modules without an extension. Measured on the dry run of all 1,182 files:
 //   every one of the converted tree's test failures that was not a type error

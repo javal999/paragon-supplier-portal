@@ -61,14 +61,14 @@ if (inputs.length === 0) {
   process.exit(1);
 }
 
-// Folder → alias, read from aliases.ts as TEXT (same parse as
+// Folder → alias, read from aliases.js as TEXT (same parse as
 // alias-imports.mjs). An `import('…')` type that crosses a top-level folder of
 // src/ is written with the alias, so a conversion never adds an import the
 // alias-imports codemod would then have to rewrite.
 const FOLDER_TO_ALIAS = new Map(
-  [...readFileSync(join(ROOT, 'aliases.ts'), 'utf8').matchAll(/'(@[\w-]+)':\s*'([\w-]+)'/g)].map(([, alias, folder]) => [folder, alias]),
+  [...readFileSync(join(ROOT, 'aliases.js'), 'utf8').matchAll(/'(@[\w-]+)':\s*'([\w-]+)'/g)].map(([, alias, folder]) => [folder, alias]),
 );
-if (FOLDER_TO_ALIAS.size === 0) throw new Error('No aliases parsed from aliases.ts — refusing to run');
+if (FOLDER_TO_ALIAS.size === 0) throw new Error('No aliases parsed from aliases.js — refusing to run');
 
 // ── A program over the whole spec surface, for the type checker ─────────────
 // Only two translations need types (a non-null or generic call the syntax
@@ -278,7 +278,7 @@ function sameSymbolName(type, node) {
 /**
  * Module path from one source file to another, without extension: the alias
  * (`@lib/quoteScore`) when the target is in another top-level folder of src/,
- * else `./x` / `../y` — the rule in aliases.ts.
+ * else `./x` / `../y` — the rule in aliases.js.
  */
 function moduleSpecifierTo(fromFile, toFile) {
   const top = (f) => {

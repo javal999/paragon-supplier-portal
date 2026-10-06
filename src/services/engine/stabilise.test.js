@@ -418,7 +418,7 @@ describe('X-01 — pure: no clock, no store, no setting', () => {
     const src = readFileSync(join(__dirname, 'stabilise.js'), 'utf8');
     expect(src).not.toMatch(/Date\.now|new Date\(/);
     expect(src).not.toMatch(/from '\.\.\/(data|transitions|sdc)\//);
-    // …nor through an import alias (aliases.ts), which reaches the same folders.
+    // …nor through an import alias (aliases.js), which reaches the same folders.
     expect(src).not.toMatch(/from '@services\/(data|transitions|sdc)\//);
     // Control: the matcher finds an import that IS there.
     expect(src).toMatch(/from '\.\/reliability'/);

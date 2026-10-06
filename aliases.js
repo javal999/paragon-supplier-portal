@@ -16,7 +16,7 @@
 //   per folder it actually has.
 //
 // WHO READS THIS FILE
-//   · `vite.config.ts`, `vitest.config.ts`, `vitest.drift.config.ts` import
+//   · `vite.config.js`, `vitest.config.js`, `vitest.drift.config.js` import
 //     ALIASES directly.
 //   · `tsconfig.json` cannot import a module, so its `compilerOptions.paths`
 //     repeats the list. `src/test/aliases.guard.test.js` fails if the two ever
@@ -30,7 +30,7 @@
 import { fileURLToPath } from 'node:url';
 
 /** Alias name → folder under `src/`. */
-export const ALIAS_FOLDERS = {
+export const ALIAS_FOLDERS = /** @type {const} */ ({
   '@assets': 'assets',
   '@components': 'components',
   '@context': 'context',
@@ -43,16 +43,17 @@ export const ALIAS_FOLDERS = {
   '@services': 'services',
   '@styles': 'styles',
   '@test': 'test',
-  '@app-types': 'types',
-} as const;
+  '@app-types': 'types'
+});
 
 /**
  * The same map with absolute folder paths, in the shape Vite's `resolve.alias`
  * takes. Absolute because Vite's root is `app/`, not the repo root.
+ * @type {Record<string, string>}
  */
-export const ALIASES: Record<string, string> = Object.fromEntries(
+export const ALIASES = Object.fromEntries(
   Object.entries(ALIAS_FOLDERS).map(([alias, folder]) => [
     alias,
-    fileURLToPath(new URL(`./src/${folder}`, import.meta.url)),
-  ]),
+    fileURLToPath(new URL(`./src/${folder}`, import.meta.url))
+  ])
 );

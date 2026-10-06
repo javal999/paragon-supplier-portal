@@ -1,7 +1,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 // The import aliases are declared twice, and this spec keeps the two equal.
 //
-// `aliases.ts` (repo root) is the list Vite and Vitest read. `tsconfig.json`
+// `aliases.js` (repo root) is the list Vite and Vitest read. `tsconfig.json`
 // `compilerOptions.paths` repeats it because JSON cannot import a module. If
 // they drift, the editor and `tsc` resolve an import one way and the build or
 // the test run another. Both directions are checked: an alias missing from
@@ -24,7 +24,7 @@ const readTsconfigPaths = () => {
   return JSON.parse(json).compilerOptions.paths;
 };
 
-describe('import aliases — aliases.ts and tsconfig.json paths agree', () => {
+describe('import aliases — aliases.js and tsconfig.json paths agree', () => {
   const paths = readTsconfigPaths();
   const fromTsconfig = Object.fromEntries(
     Object.entries(paths).map(([key, [target]]) => [

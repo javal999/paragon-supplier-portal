@@ -210,7 +210,7 @@ export default defineConfig([
     extends: ['js/recommended'],
     languageOptions: {
       // `__DEPLOY_ENV__` is a build-time constant injected by Vite's `define`
-      // (vite.config.ts / vitest.config.ts), declared for TypeScript in vite-env.d.ts.
+      // (vite.config.js / vitest.config.js), declared for TypeScript in vite-env.d.ts.
       globals: { ...globals.browser, __DEPLOY_ENV__: 'readonly' },
       parserOptions: { ecmaVersion: 'latest', sourceType: 'module', ecmaFeatures: { jsx: true } }
     },

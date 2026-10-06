@@ -2,7 +2,7 @@
 // resolveImport — turn an import specifier into a file path, for specs that
 // read source code as text (guards that follow a file's imports by hand).
 //
-// Since the import aliases landed (aliases.ts, frontend-standard plan Phase 2)
+// Since the import aliases landed (aliases.js, frontend-standard plan Phase 2)
 // a specifier may be relative ('./x', '../../y') OR aliased ('@services/x'). A
 // guard that only joined relative paths would silently stop finding aliased
 // files and pass over an empty set. Use this helper instead of `join(dirname)`.

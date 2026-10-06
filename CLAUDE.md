@@ -1429,7 +1429,7 @@ CP-3a). A failing scheduled run opens/updates a `gates-failure` issue.
 Vite root is app/ — never edit app/index.html directly.
 Deploy is Vercel-only: Vercel builds from source via vercel.json (npm run build → dist/).
 Nothing is copied to repo root; there are no committed build artifacts.
-Source entry: app/index.html  |  vite.config.ts root: app  |  outDir: ../dist
+Source entry: app/index.html  |  vite.config.js root: app  |  outDir: ../dist
 
 ### Access gate (SEC-GATE-01)
 A Vercel Routing Middleware (`middleware.js`) runs BEFORE the SPA rewrite and
