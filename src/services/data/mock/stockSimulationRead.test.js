@@ -15,10 +15,15 @@ import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { materialEntry, sdcClock } from '../../sdc';
 import { NO_PERSON } from '@context/noPerson';
 import {
+  SIMULATION_SAMPLE_CASE2_MATERIAL,
+  SIMULATION_SAMPLE_CASE2_SUPPLIER,
+  SIMULATION_SAMPLE_CASE3_MATERIAL,
+  SIMULATION_SAMPLE_CASE3_SUPPLIER,
   SIMULATION_SAMPLE_CHECK_DATE,
   SIMULATION_SAMPLE_MATERIAL,
   SIMULATION_SAMPLE_SUPPLIER
 } from './fixtures/stockSimulationSample';
+/** @import { StockSimulation } from '../../transitions/simulateSupplierStock' */
 
 const reads = new MockProcurementService();
 const commands = new MockCommandService();
@@ -90,7 +95,8 @@ describe('getStockSimulation', () => {
         .planningGroupId
     );
     expect(glycerin.simulation?.available).toBe(4000);
-    expect(rows.filter((r) => r.sample)).toHaveLength(1);
+    // The worked example and the walkthrough cases 2 and 3.
+    expect(rows.filter((r) => r.sample).map((r) => r.sampleCase)).toEqual([1, 2, 3]);
   });
 
   it("a supplier scope reads nothing: the simulation is PTI's estimate", async () => {
@@ -144,6 +150,93 @@ describe('getStockSimulation', () => {
     expect(before.refusal?.refusal).toBe('CHECK_DATE_BEFORE_LAST_UPDATE');
     const on = sampleOf((await reads.getStockSimulation(planner, '2026-08-27')).items);
     expect(on.refusal).toBeNull();
+  });
+
+  it('walkthrough case 2 — the supplier cannot cover what is already called off: 1,700 · 2,500 · −800 · 1,500', async () => {
+    const rows = (await reads.getStockSimulation(planner, SIMULATION_SAMPLE_CHECK_DATE)).items;
+    const row = /** @type {StockSimulationRow} */ (
+      rows.find(
+        (r) =>
+          r.supplierId === SIMULATION_SAMPLE_CASE2_SUPPLIER &&
+          r.materialCode === SIMULATION_SAMPLE_CASE2_MATERIAL
+      )
+    );
+    expect(row).toMatchObject({ sample: true, sampleCase: 2, distributor: false, uom: 'KG' });
+    const s = /** @type {StockSimulation} */ (row.simulation);
+    expect([s.available, s.calledOffNotShipped, s.freeToCallOff, s.ptiInbound]).toEqual([
+      1700, 2500, -800, 1500
+    ]);
+    expect(s.basis).toBe('supplier');
+    // The pair has one row only: the sample.
+    expect(
+      rows.filter(
+        (r) =>
+          r.supplierId === SIMULATION_SAMPLE_CASE2_SUPPLIER &&
+          r.materialCode === SIMULATION_SAMPLE_CASE2_MATERIAL
+      )
+    ).toHaveLength(1);
+  });
+
+  it('walkthrough case 3 — missing data, then filled by the planner: 7,000 · 10,000 · −3,000 · 15,000, then 37,000 · 27,000', async () => {
+    /** @param {readonly StockSimulationRow[]} rows */
+    const case3 = (rows) =>
+      /** @type {StockSimulationRow} */ (
+        rows.find(
+          (r) =>
+            r.supplierId === SIMULATION_SAMPLE_CASE3_SUPPLIER &&
+            r.materialCode === SIMULATION_SAMPLE_CASE3_MATERIAL
+        )
+      );
+    const before = case3(
+      (await reads.getStockSimulation(planner, SIMULATION_SAMPLE_CHECK_DATE)).items
+    );
+    expect(before).toMatchObject({ sample: true, sampleCase: 3, uom: 'PCS' });
+    const b = /** @type {StockSimulation} */ (before.simulation);
+    expect([b.available, b.calledOffNotShipped, b.freeToCallOff, b.ptiInbound]).toEqual([
+      7000, 10000, -3000, 15000
+    ]);
+    expect(b.flags.map((f) => f.code)).toContain('productionDateMissing');
+    expect(b.basis).toBe('supplier');
+
+    const realPet = (
+      await reads.getStockSimulation(planner, SIMULATION_SAMPLE_CHECK_DATE)
+    ).items.find((r) => r.supplierId === 'sup-007' && r.materialCode === 'PK-PETB-8801');
+    const res = await commands.dispatch(planner, {
+      transitionId: 't_simulation_override_set',
+      entity: 'simulationOverride',
+      payload: {
+        supplierId: SIMULATION_SAMPLE_CASE3_SUPPLIER,
+        materialCode: SIMULATION_SAMPLE_CASE3_MATERIAL,
+        field: 'inProduction',
+        value: 40000,
+        date: '2026-08-31'
+      }
+    });
+    expect(res.status, res.reason).toBe('done');
+    const rows = (await reads.getStockSimulation(planner, SIMULATION_SAMPLE_CHECK_DATE)).items;
+    const a = /** @type {StockSimulation} */ (case3(rows).simulation);
+    expect([a.available, a.calledOffNotShipped, a.freeToCallOff, a.ptiInbound]).toEqual([
+      37000, 10000, 27000, 15000
+    ]);
+    expect(a.cappedByCapacity).toBe(true);
+    expect(a.flags.map((f) => f.code)).toContain('cappedByCapacity');
+    expect(a.components.find((c) => c.kind === 'inProduction')).toMatchObject({
+      qty: 30000,
+      uncappedQty: 40000
+    });
+    expect(a.basis).toBe('plannerInput');
+    // Isolation: the input reaches the sample row only — no real row for the pair,
+    // and a real sup-007 row reads exactly as before.
+    expect(
+      rows.filter(
+        (r) =>
+          r.supplierId === SIMULATION_SAMPLE_CASE3_SUPPLIER &&
+          r.materialCode === SIMULATION_SAMPLE_CASE3_MATERIAL
+      )
+    ).toHaveLength(1);
+    expect(
+      rows.find((r) => r.supplierId === 'sup-007' && r.materialCode === 'PK-PETB-8801')
+    ).toEqual(realPet);
   });
 
   it('load time at fixture volume (plan section 1.1 input 2) — measured, not asserted', async () => {

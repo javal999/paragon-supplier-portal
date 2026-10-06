@@ -35,6 +35,8 @@ export const stockSimulationEn = {
   'sim.col.actions': 'Actions',
 
   'sim.sample': 'Sample: requirements worked example, not supplier data',
+  'sim.sampleCase2': 'Sample: walkthrough case 2, not supplier data',
+  'sim.sampleCase3': 'Sample: walkthrough case 3, not supplier data',
   'sim.missing': 'Missing',
   'sim.cannot': 'Cannot simulate: no stock update',
   'sim.noUpdate': 'No stock update',
@@ -134,6 +136,8 @@ export const stockSimulationId = {
   'sim.col.actions': 'Tindakan',
 
   'sim.sample': 'Contoh: contoh perhitungan dari kebutuhan, bukan data pemasok',
+  'sim.sampleCase2': 'Contoh: kasus panduan 2, bukan data pemasok',
+  'sim.sampleCase3': 'Contoh: kasus panduan 3, bukan data pemasok',
   'sim.missing': 'Belum ada',
   'sim.cannot': 'Tidak dapat disimulasikan: belum ada pembaruan stok',
   'sim.noUpdate': 'Belum ada pembaruan stok',

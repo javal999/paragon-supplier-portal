@@ -7,12 +7,15 @@
 // `simulateSupplierStock`, once per supplier × material. Nothing is stored.
 //
 // The rows are the inventory page's pairs (`assignments`), plus any pair a
-// planner has entered a figure for, plus ONE labelled sample row: the MR-7 9g
-// worked example on its own sample inputs (`fixtures/stockSimulationSample`),
-// computed on a world of its own so it can touch no other row.
+// planner has entered a figure for, plus THREE labelled sample rows: the MR-7
+// 9g worked example and the owner's walkthrough cases 2 and 3, each on its own
+// sample inputs (`fixtures/stockSimulationSample`), computed on a world of its
+// own so it can touch no other row. Each sample pair is reserved for its
+// sample row: it is never a real row, a planner input on it reaches only that
+// row, and it is kept out of the real rows' capacity cap.
 // ────────────────────────────────────────────────────────────────────────────
 
-/** @import { QueryScope, StockSimulationFilter, StockSimulationRow } from '../types' */
+/** @import { QueryScope, SimulationOverride, StockSimulationFilter, StockSimulationRow } from '../types' */
 import { SUPPLIER_MATERIAL_RELATIONSHIPS, materialEntry, sdcClock } from '../../sdc';
 import { callOffViews } from '../../transitions/callOffRules';
 import { dayOf } from '../../transitions/inventoryRules';
@@ -30,16 +33,8 @@ import { goodsReceiptStore } from './stores/goodsReceiptStore';
 import { incomingShipmentStore } from './stores/incomingShipmentStore';
 import { capacityStore } from './stores/inventoryHubStores';
 import { simulationOverrideStore } from './stores/simulationOverrideStore';
-import {
-  SAMPLE_ASN,
-  SAMPLE_CALL_OFF,
-  SAMPLE_DECLARATION,
-  SAMPLE_RELATIONSHIP,
-  SAMPLE_TO_DISTRIBUTOR,
-  SIMULATION_SAMPLE_MATERIAL,
-  SIMULATION_SAMPLE_SUPPLIER,
-  sampleCapacity
-} from './fixtures/stockSimulationSample';
+/** @import { SimulationSample } from './fixtures/stockSimulationSample' */
+import { SIMULATION_SAMPLES } from './fixtures/stockSimulationSample';
 
 /**
  * @param {string} code
@@ -66,21 +61,22 @@ export function simulationWorld(nowIso = sdcClock.now()) {
 }
 
 /**
- * The sample row's world: the 9g inputs only.
+ * A sample row's world: its own sample inputs only (the 9g inputs by default).
  * @param {string} [nowIso]
+ * @param {SimulationSample} [sample]
  * @returns {SimulationWorld}
  */
-export function sampleWorld(nowIso = sdcClock.now()) {
-  const group = planningGroupOf(SIMULATION_SAMPLE_MATERIAL);
+export function sampleWorld(nowIso = sdcClock.now(), sample = SIMULATION_SAMPLES[0]) {
+  const group = planningGroupOf(sample.materialCode);
   return {
     nowIso,
-    declarations: [SAMPLE_DECLARATION],
-    asns: [SAMPLE_ASN],
-    shipments: [SAMPLE_TO_DISTRIBUTOR],
-    callOffViews: [{ callOff: SAMPLE_CALL_OFF, delivery: 'notDue' }],
-    capacitySubmissions: group ? [sampleCapacity(group)] : [],
+    declarations: sample.declarations,
+    asns: sample.asns,
+    shipments: sample.shipments,
+    callOffViews: sample.callOffs.map((callOff) => ({ callOff, delivery: 'notDue' })),
+    capacitySubmissions: group ? sample.capacity(group) : [],
     planningGroupOf,
-    relationships: [SAMPLE_RELATIONSHIP]
+    relationships: sample.relationships
   };
 }
 
@@ -89,7 +85,7 @@ export function sampleWorld(nowIso = sdcClock.now()) {
  * @param {string} m
  */
 const key = (s, m) => `${s}|${m}`;
-const SAMPLE_KEY = key(SIMULATION_SAMPLE_SUPPLIER, SIMULATION_SAMPLE_MATERIAL);
+const SAMPLE_KEYS = new Set(SIMULATION_SAMPLES.map((x) => key(x.supplierId, x.materialCode)));
 
 /**
  * The rows at a check date, PTI's view. A supplier scope reads none (PTI's estimate).
@@ -102,7 +98,9 @@ const SAMPLE_KEY = key(SIMULATION_SAMPLE_SUPPLIER, SIMULATION_SAMPLE_MATERIAL);
 export function stockSimulationRows(scope, checkDate, filter, nowIso = sdcClock.now()) {
   if (scope.personaType !== 'buyer') return [];
   const day = checkDate ?? dayOf(nowIso);
-  const overrides = simulationOverrideStore.all();
+  const allOverrides = simulationOverrideStore.all();
+  // A sample pair's inputs reach its sample row only; a real row never reads them.
+  const overrides = allOverrides.filter((o) => !SAMPLE_KEYS.has(key(o.supplierId, o.materialCode)));
 
   const pairs = /** @type {Map<string, { supplierId: string; materialCode: string }>} */ (
     new Map()
@@ -114,22 +112,22 @@ export function stockSimulationRows(scope, checkDate, filter, nowIso = sdcClock.
     if (!pairs.has(k) && materialEntry(o.materialCode))
       pairs.set(k, { supplierId: o.supplierId, materialCode: o.materialCode });
   }
-  pairs.delete(SAMPLE_KEY);
+  for (const k of SAMPLE_KEYS) pairs.delete(k);
 
   const real = simulationWorld(nowIso);
-  const sample = sampleWorld(nowIso);
   /**
    * @param {string} supplierId
    * @param {string} materialCode
    * @param {SimulationWorld} world
-   * @param {boolean} isSample
+   * @param {SimulationSample['sampleCase'] | null} sampleCase
+   * @param {readonly SimulationOverride[]} inputs
    * @returns {StockSimulationRow | null}
    */
-  const rowFor = (supplierId, materialCode, world, isSample) => {
+  const rowFor = (supplierId, materialCode, world, sampleCase, inputs) => {
     const entry = materialEntry(materialCode);
     if (!entry) return null;
     const result = simulateSupplierStock(
-      { supplierId, materialCode, checkDate: day, overrides },
+      { supplierId, materialCode, checkDate: day, overrides: inputs },
       world
     );
     /** @type {StockSimulationRow} */
@@ -146,7 +144,8 @@ export function stockSimulationRows(scope, checkDate, filter, nowIso = sdcClock.
           r.materialCode === materialCode &&
           r.supplierType === 'distributor'
       ),
-      sample: isSample,
+      sample: sampleCase !== null,
+      sampleCase,
       simulation: isSimulationRefusal(result) ? null : result,
       refusal: isSimulationRefusal(result) ? result : null
     };
@@ -154,14 +153,22 @@ export function stockSimulationRows(scope, checkDate, filter, nowIso = sdcClock.
   };
 
   const rows = [...pairs.values()]
-    .map((p) => rowFor(p.supplierId, p.materialCode, real, false))
+    .map((p) => rowFor(p.supplierId, p.materialCode, real, null, overrides))
     .filter(/** @returns {r is StockSimulationRow} */ (r) => r !== null)
     .sort(
       (a, b) =>
         a.supplierName.localeCompare(b.supplierName) || a.materialCode.localeCompare(b.materialCode)
     );
-  const sampleRow = rowFor(SIMULATION_SAMPLE_SUPPLIER, SIMULATION_SAMPLE_MATERIAL, sample, true);
-  return [...(sampleRow ? [sampleRow] : []), ...rows].filter(
+  const sampleRows = SIMULATION_SAMPLES.map((x) =>
+    rowFor(
+      x.supplierId,
+      x.materialCode,
+      sampleWorld(nowIso, x),
+      x.sampleCase,
+      allOverrides.filter((o) => o.supplierId === x.supplierId && o.materialCode === x.materialCode)
+    )
+  ).filter(/** @returns {r is StockSimulationRow} */ (r) => r !== null);
+  return [...sampleRows, ...rows].filter(
     (r) =>
       (!filter?.supplierId || r.supplierId === filter.supplierId) &&
       (!filter?.planningGroupId || r.planningGroupId === filter.planningGroupId)

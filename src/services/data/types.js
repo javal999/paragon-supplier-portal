@@ -955,7 +955,8 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * `planningGroupId`:  The material's planning group (MR-8), null when unknown.
  * `distributor`:  MR-7 BR-09 — a distributor has a to-distributor term; a manufacturer has none.
  * `mrpController`:  Material C4 — the material's MRP controller, projected at read (never stored).
- * `sample`: A labelled sample row (the MR-7 section 9g worked example), computed on its own sample inputs so a reviewer can see the example on screen.
+ * `sample`: A labelled sample row (the MR-7 section 9g worked example, or the owner's walkthrough case 2 or 3), computed on its own sample inputs so a reviewer can see the example on screen.
+ * `sampleCase`: Which sample: 1 is the worked example, 2 and 3 the walkthrough cases; null on a real row.
  * `simulation`:  The check date's simulation; null when refused.
  * `refusal`:  Edge case 6 — why there is no simulation (the check date is before the latest update).
  *
@@ -969,6 +970,7 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *   readonly distributor: boolean;
  *   readonly mrpController?: MrpControllerRef;
  *   readonly sample: boolean;
+ *   readonly sampleCase: 1 | 2 | 3 | null;
  *   readonly simulation: StockSimulation | null;
  *   readonly refusal: SimulationRefusal | null;
  * }} StockSimulationRow
