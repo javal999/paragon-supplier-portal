@@ -343,7 +343,8 @@ const BuyerMaterialRequirement = () => {
             {t('mrq.receipts.includedNote')}
           </span>
         )}
-        <label className="inline-flex items-center gap-2 text-sm text-text-secondary cursor-pointer">
+        {/* A11y finding 15: the label carries the 44 px coarse-pointer tap area. */}
+        <label className="touch-target inline-flex items-center gap-2 text-sm text-text-secondary cursor-pointer">
           <input
             type="checkbox"
             className="accent-action"

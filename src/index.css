@@ -186,3 +186,26 @@ body {
    keeps the series colour (a non-text mark); the words are set in secondary
    text (#354A5F, 9.15:1). One rule, every chart. */
 .recharts-legend-item-text { color: #354A5F !important; }
+
+/* ─── Touch targets · 44 px on coarse pointers (a11y findings 15, 31) ────────── */
+/* Phones and tablets get a 44×44 px tap area without changing what is drawn:
+   an invisible ::before, centred on the control, at least 44 px each way. Mouse
+   and trackpad (fine pointers) match nothing here, so desktop is unchanged.
+   `position: relative` gives the pseudo-element its box; a caller's own
+   `absolute`/`fixed`/`sticky` utility loads later (tailwind.css) and wins, and
+   any of those is a containing block too. Native checkboxes cannot carry a
+   pseudo-element in every browser, so a checkbox takes this on its <label>. */
+@media (pointer: coarse) {
+  .touch-target {
+    position: relative;
+  }
+  .touch-target::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+}

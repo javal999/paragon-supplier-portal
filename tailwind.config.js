@@ -70,7 +70,8 @@ export default {
         'info': { DEFAULT: '#1E5BAE', soft: '#E5F0FF' },
         // Borders
         'border-subtle': '#E5E9EE',
-        'border-input': '#D1D8E0',
+        // WCAG 1.4.11: a field's edge is a non-text mark (3:1 floor). #D1D8E0 measured 1.4:1; #8291A0 is 3.23:1 on white, 3.12:1 on bg-page.
+        'border-input': '#8291A0',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
