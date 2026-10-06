@@ -52,7 +52,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 
 ## 2. Use cases
 
-**Final list: 6 use cases.** Supplier onboarding is out of scope: it is built in a separate codebase. I merged 2 of the remaining candidates into others:
+**Final list: 7 use cases** (UC7 Alerts added 2026-10-06). Supplier onboarding is out of scope: it is built in a separate codebase. I merged 2 of the remaining candidates into others:
 - **Comm Hub into UC6.** Its only working action is recording stock from a supplier reply.
 - **Performance into the Menu Directory only.** Both performance pages are read-only, and their action buttons do nothing (section 4).
 
@@ -307,6 +307,59 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | Closing an alert with reason "Other" | A note is required | PTI-Plan | Alerts | `lib/i18n/inventoryCapacity.js:381-396` |
 | Supplier seat without the Fulfilment lane | "Awaiting Supplier Fulfilment" in place of **Save stock** | Sup-Ful | Stock | `pages-v2/CommHubInbound.jsx:634-640` |
 
+### UC7 Inventory and capacity alerts
+
+**Purpose:** the portal checks stock, capacity, forecast commitments and call-offs against 9 rules and raises an alert for each risk; Planning acts on it and closes it with a reason. Alerts are computed live each time they are read (`services/data/mock/MockProcurementService.js:499-511`, `services/data/mock/inventoryReadModel.js:269-284`, `services/transitions/inventoryAlertRules.js:240-364`). Demo: 30 open, 17 High, 6 Medium, 7 Low (read from the Alerts screen, 2026-10-06).
+
+**The 9 rules** (`services/transitions/inventoryAlertRules.js:54-77`; labels `lib/i18n/inventoryCapacity.js:367-377`)
+
+| Rule | Fires when | Urgency | Supplier sees it | Evidence |
+|---|---|---|---|---|
+| PTI stock below PTI reorder point | PTI stock on hand < PTI reorder point | Cover vs lead time | No | `services/transitions/inventoryRules.js:414,551` |
+| Supplier stock below supplier reorder point | Supplier stock < reorder point the supplier declared | Cover vs lead time | Yes | `services/transitions/inventoryRules.js:420-421,549` |
+| PTI stock runs out before next delivery | PTI stock ÷ daily demand < days to next incoming; no incoming date = no alert | Cover vs lead time | No | `services/transitions/inventoryRules.js:433-439` |
+| Allocated capacity below the LTP | Any of the next 13 weeks: capacity < LTP demand | Worst class in the planning group, else Low | Yes | `services/transitions/capacityRules.js:139-145`; `services/transitions/inventoryAlertRules.js:316-330` |
+| Supplier stock figures out of date | Never submitted, or past the refresh deadline | Always Low | Yes | `services/transitions/inventoryRules.js:394-406`; `services/transitions/inventoryAlertRules.js:301` |
+| Stock and incoming do not cover 30 days | Supplier stock + incoming < 100% of 30-day demand | Cover vs lead time | Yes | `services/transitions/inventoryRules.js:363-377` |
+| Commitment below forecast beyond tolerance | Short beyond Firm 0% / Trade-off 10%, or revision requested | High if a Firm period, else Medium | Yes | `services/transitions/forecastRules.js:516-521,871-890`; `services/transitions/inventoryAlertRules.js:335-342` |
+| No supplier lead time on record | Lead time missing for the material | Day bands | No | `services/transitions/inventoryAlertRules.js:310-311` |
+| Call-off larger than supplier can deliver | Confirmed call-offs due within lead time > stock + production due | Cover vs lead time | No | `services/transitions/inventoryAlertRules.js:213-229,347-361` |
+
+**Urgency:** High when cover < 1× lead time, Medium < 1.5×, else Low; with no lead time, < 14 days High and < 30 days Medium (`services/transitions/inventoryRules.js:189-197,243-259`). Settings live under Help & administration → Alert thresholds and stale periods, editable by the Compliance role (`pages-v2/admin/AdminRuleValues.jsx:184,861,867`; `services/transitions/businessRoles.js:314`), and apply at the next calculation (`services/transitions/inventoryConfig.js:13-17,38-67`).
+
+**Positive end-to-end**
+
+| Step | Actor | Menu | Action | Status after | Evidence |
+|---|---|---|---|---|---|
+| 1 | Sup-Ful / Sup-Com | Stock · Capacity · Forecast & commitments | Updates data (or fails to) | – | `services/transitions/inventoryAlertRules.js:240-364` |
+| 2 | PTI (MP menu) | Home → **My tasks** / Inventory & capacity → **Alerts** | Reviews open alerts, highest risk first; filters by severity, planning group, PIC | Open | `pages-v2/BuyerHome.jsx:156-164`; `pages-v2/BuyerAlerts.jsx:255,282-296,322` |
+| 3 | Sup (any lane) | Home → **To do** → "Alerts about your materials" | Sees own open alerts from 5 rules | Open | `pages-v2/SupplierHome.jsx:334-354`; `services/data/mock/MockProcurementService.js:503-506` |
+| 4 | PTI-Plan | Alerts | Acts (call-off, PO, chase), then **Close alert** → reason | Closed | `pages-v2/BuyerAlerts.jsx:224-240,445-461`; `services/transitions/reasonCodes.js:78-86`; `services/transitions/businessRoles.js:368` |
+
+**Negative end-to-end: closing without the right role or note**
+
+| Step | Actor | Menu | Action | Status after | Evidence |
+|---|---|---|---|---|---|
+| 1 | PTI without Planning | Alerts | Sees "Awaiting Planning" instead of Close alert | Open | `pages-v2/BuyerAlerts.jsx:445-461` |
+| 2 | PTI-Plan | Alerts | Closes with "Other" and no note: refused | Open | `services/transitions/inventoryAlertRules.js:453-462` |
+| 3 | PTI-Plan | Alerts | Adds a note, closes | Closed | same |
+
+**Negative end-to-end: risk comes back**
+
+| Step | Actor | Menu | Action | Status after | Evidence |
+|---|---|---|---|---|---|
+| 1 | PTI-Plan | Alerts | Closes the alert | Closed | `services/data/mock/MockCommandService.js:6383` |
+| 2 | – | – | Condition clears, then returns | New alert Open | `services/transitions/inventoryAlertRules.js:386-421` |
+
+**Edge cases**
+
+| Condition | What the system does | Who acts next | Menu | Evidence |
+|---|---|---|---|---|
+| No lead time on record | Day bands decide urgency | PTI fixes master data | Alerts | `services/transitions/inventoryRules.js:189-197` |
+| No incoming delivery date | Stock-out rule does not fire | – | Alerts | `services/transitions/inventoryRules.js:433-439` |
+| Condition clears before anyone acts | Alert disappears; no closure recorded | – | Alerts | `services/data/mock/inventoryReadModel.js:269-284` |
+| Demo reset | Closures lost; all alerts Open again | – | Alerts | `services/data/mock/stores/inventoryHubStores.js:136-154` |
+
 ---
 
 ## 3. Menu Directory
@@ -334,7 +387,7 @@ Every item in `components/layout-v2/navConfig.js`. "Role" is the **Menu for** vi
 | Inventory | Inventory & capacity | Material Planner | Supplier and PTI stock, reorder points, incoming supply | UC6 |
 | Stock simulation | Inventory & capacity | Material Planner | Estimated supplier stock on a check date | Not walked through |
 | Capacity | Inventory & capacity | Material Planner | Supplier capacity against the LTP per week, read-only | UC6 |
-| Alerts | Inventory & capacity | Material Planner | Stock and commitment alerts, closed with a reason | UC6 |
+| Alerts | Inventory & capacity | Material Planner | Stock and commitment alerts, closed with a reason | UC7 |
 | Supplier access | Inventory & capacity | Material Planner | Grants suppliers a view of PTI stock | Not walked through |
 | Trade names | Materials | Material Planner | Approves the names suppliers use for PTI materials | Not walked through |
 | Call-offs | Call-offs | Material Planner | Releases call-offs and reviews supplier confirmations | UC3 |
@@ -362,8 +415,8 @@ Every item in `components/layout-v2/navConfig.js`. "Role" is the **Menu for** vi
 | Planning groups | Groups that supplier capacity is kept by | Not walked through |
 | MRP controllers (PIC) | Who each SAP MRP controller code is | Not walked through |
 | Tolerances and rule values | Values that used to live in configuration files | Not walked through |
-| Alert thresholds and stale periods | When an alert fires and when stock counts as stale | Not walked through |
-| Reason codes | Reasons offered for adjustments, rejections, alert closure | Not walked through |
+| Alert thresholds and stale periods | When an alert fires and when stock counts as stale | UC7 |
+| Reason codes | Reasons offered for adjustments, rejections, alert closure | UC7 |
 | Planning engine · Material requirement | What each material needs, when, and how much | Not walked through |
 | Planning engine · Safety stock targets | Safety stock and reorder points from forecast error | Not walked through |
 | Planning engine · Data health | Freshness and quality of each forecast input | Not walked through |
@@ -450,6 +503,11 @@ A reader might expect these to work. The code shows they do not, or that they ar
 19. **There is no sign-in guard.** Every page renders without signing in. (`router/AppRouter.jsx:124-306`)
 20. **The supplier switch always loads sup-007.** (`components/layout-v2/SidebarV2.jsx:120-127`)
 
+**Alerts**
+
+21. **The bell icon in the top bar always shows "3"** and does nothing when clicked. (`components/layout-v2/TopBarV2.jsx:62-70`)
+22. **No email or WhatsApp alerts; closures are lost when the demo resets.** (`pages-v2/BuyerAlerts.jsx:59-60`; `services/data/mock/stores/inventoryHubStores.js:136-154`)
+
 ---
 
 ## 5. Screenshot plan
@@ -487,6 +545,9 @@ Shared setup for every step:
 | UC6 | 3 | PTI | `/buyer/comm-hub` | Pasted sample reply |
 | UC6 | 4-5 | PTI | `/buyer/inventory`, `/buyer/alerts` | sup-002 RM-STEAR-7300 stock-out |
 | UC6 | 6 | PTI, Menu for Buyer | `/buyer/fs-reconcile` | – |
+| UC7 | 2 | PTI, Menu for Material Planner | `/buyer/alerts` | 30 open alerts |
+| UC7 | 4 | PTI | `/buyer/alerts` → Close alert | Any open alert |
+| UC7 | 3 | Supplier | `/supplier/home`, scrolled to "Alerts about your materials" | sup-007, 7 alerts |
 | All | Notices | PTI or Supplier with one role removed | Any page above | e.g. untick Supplier Fulfilment on `/supplier/inventory` |
 
 **Roles or lanes not reachable in Demo Mode: none.** Every PTI role and supplier lane is reachable by ticking or unticking under avatar → Roles. The one limit is the supplier itself: the toggle always loads sup-007, so screens for any other supplier are not reachable without editing `localStorage`.
