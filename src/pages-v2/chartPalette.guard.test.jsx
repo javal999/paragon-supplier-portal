@@ -4,7 +4,8 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
 import { buildRepoProgram } from '@lib/storedFieldGate/derive';
-import { isJsxFile, isTestFile, scriptKindOf } from '@test/sourceFiles';
+import { isTestFile, scriptKindOf } from '@test/sourceFiles';
+import { pageFiles as pagesOf } from '@test/pageFiles';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DP2-PALETTE-01 — chart colour comes from the centralized palette
@@ -794,8 +795,13 @@ describe('⚠️ DP2-PALETTE-01 · A HEX REACHED THROUGH A MEMBER EXPRESSION (M5
 // CARVE-OUT: BuyerCompliance.jsx is the registered fixture carve-out
 // (COMPLIANCE-CARVEOUT-01, docs/findings.md) landing at R2.2.
 // ─────────────────────────────────────────────────────────────────────────────
-/** @returns {string[]} */
-const pageFiles = () => readdirSync(here).filter((f) => isJsxFile(f) && !isTestFile(f));
+/**
+ * Every page, single-file AND split into a folder (`SupplierRFQs/index.jsx`,
+ * its `components/` and `hooks/`). The top-level `readdirSync` this replaced
+ * stopped at a page folder, so a split page left the population (Phase 5).
+ * @returns {string[]}
+ */
+const pageFiles = () => pagesOf(here);
 
 /**
  * @param {string} file
@@ -822,6 +828,9 @@ describe('DP2-BUTTON-01 — Export never occupies the primary (action-blue) slot
     const scanned = exportScanned();
     expect(scanned.length).toBeGreaterThan(20);
     expect(scanned).toContain('BuyerAnalytics.jsx');
+    // A page split into a folder is still a page (PAGE-SPLIT-GUIDE).
+    expect(scanned).toContain('SupplierRFQs/index.jsx');
+    expect(scanned).not.toContain('rfqs/TieredQuoteForm.jsx');
     expect(scanned).not.toContain('BuyerCompliance.jsx');
     expect(scanned).not.toContain('BuyerNotAChartPage.tsx');
   });
