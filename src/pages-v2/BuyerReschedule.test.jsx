@@ -145,7 +145,12 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
     const after = planChangeAfter(r.planChange, pk.proposals, new Set([inside.id]));
     expect(after.changedInsideLeadTime).toBe(r.planChange.changedInsideLeadTime + 1);
     renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
-    fireEvent.click(await screen.findByTestId(`rs-select-${inside.id}`));
+    const rowBox = await screen.findByTestId(`rs-select-${inside.id}`);
+    // A11y finding 15: the 13 px checkbox is unchanged; its label carries the
+    // 44 px coarse-pointer tap area (src/index.css), and clicking still toggles.
+    expect(rowBox.closest('label')).toHaveClass('touch-target');
+    fireEvent.click(rowBox);
+    expect(rowBox).toBeChecked();
     await waitFor(() =>
       expect(screen.getByTestId('rs-guard-after')).toHaveTextContent(
         `${Math.round(/** @type {NonNullable<typeof after.share>} */ (after.share) * 1000) / 10}`

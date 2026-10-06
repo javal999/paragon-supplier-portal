@@ -1420,10 +1420,15 @@ pointer at the file that holds them.
 
 `npm run gates` adds no notion of green beyond the gates listed above; it is
 those gates plus the assertion that they ran. **CI runs this exact command** and nothing
-else (`.github/workflows/gates.yml`) — on every PR to `main`, on every push to
-`main`, and **daily at 00:17 UTC on `main` with no commit involved**, which is
-the half that catches a clock-decay break like 2026-08-01 (see `docs/findings.md`,
-CP-3a). A failing scheduled run opens/updates a `gates-failure` issue.
+else (`.github/workflows/gates.yml`) — on every PR to `main` (including a
+retarget, the `edited` type), on manual dispatch, and **daily at 00:17 UTC on
+`main` with no commit involved**, which is the half that catches a clock-decay
+break like 2026-08-01 (see `docs/findings.md`, CP-3a). A failing scheduled run
+opens/updates a `gates-failure` issue. **It no longer runs on a push to `main`**
+(removed 2026-09-29, `d053d2e`, to save Actions minutes): a merge commit's tree is
+the tree its PR run already gated, so a push to `main` is covered by that PR's run,
+and by the next daily run. Run `npm run gates` locally on `main` when you need a
+record for the merge commit itself.
 
 ## Deploy
 Vite root is app/ — never edit app/index.html directly.

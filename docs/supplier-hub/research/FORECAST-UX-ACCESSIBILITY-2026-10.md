@@ -10,7 +10,7 @@
 
 ## Summary
 
-33 findings: 0 Blocker, 6 Major, 27 Minor. 26 fixed, 7 not fixed. Of the 6 Major findings, 5 were fixed. The one left (finding 8) is the shared app shell's fixed menu, which C2's file scope excludes.
+33 findings: 0 Blocker, 6 Major, 27 Minor. 26 fixed in C2 (#153), 1 more after it (#155), and 4 shared-primitive findings (15, 30, 31, 32) in #164, so 31 fixed and 2 not fixed (19, 33). All 6 Major findings are fixed: finding 8, the shared app shell's fixed menu, was outside C2's files and was fixed in #155 on 2026-10-06.
 
 ## Findings
 
@@ -23,14 +23,14 @@
 | 5 | Pages whose Data health chip shows failing checks (shared `DataHealthChip`) | The "See Data health" link used `text-action`, which measures 4.41:1 on the page background. | 1.4.3 | Minor | Fixed: `text-action-hover` | |
 | 6 | This week and the 4 Weekly plan pages (shared `CycleSteps`) | At 768 px, 5 columns of about 84 px each pushed step names out of their boxes. | 1.4.10 | Minor | Fixed: 1, 2, 3 columns, then 5 from `xl` | |
 | 7 | Publish to suppliers, Forecast quality | The content under the tab list was not a tab panel. | 1.3.1 | Minor | Fixed: `role="tabpanel"` named by the active tab | |
-| 8 | All 13 pages (shared `AppShellV2`) | The menu is a fixed 240 px and the main area has 32 px padding. At 390 px a page gets 86 px of width; at 768 px it gets 458 px. | 1.4.10 | Major | Not fixed | The shell wraps every portal page and is outside C2's files. It needs a collapsible menu. With a collapsed menu simulated, all 13 pages fit 390 px. |
+| 8 | All 13 pages (shared `AppShellV2`) | The menu is a fixed 240 px and the main area has 32 px padding. At 390 px a page gets 86 px of width; at 768 px it gets 458 px. | 1.4.10 | Major | Fixed in #155 | Below 1024 px the menu is a drawer opened by the top bar's ☰ button (it closes on a pick, Escape or backdrop; focus returns to ☰), and the page padding is 16 px on phones. At 390 px the page gets the full width. #156 then fixed Supplier performance, whose screen-reader chart tables widened the page to 513 px: their cards now clip them. |
 | 9 | Forecast quality | An arrow key or click on a tab dropped focus to the page body. Each tab mounts its own frame and tab list. | 2.1.1, 2.4.3 | Major | Fixed: new frame focuses its active tab | |
 | 10 | What to order | The "Why this quantity" buttons and 3 links used `text-action`: 4.21:1 on a hovered row, 4.41:1 on the page background. | 1.4.3 | Minor | Fixed: `text-action-hover` | |
 | 11 | What to order | The reason a row has "No agreement" instead of a draft act was only in a hover `title`. | 1.3.1 | Minor | Fixed: reason also in screen-reader text | |
 | 12 | Make warehouse room | The disabled "Mark as taken to SAP" and "Send change to supplier" were not linked to the reason beside them or the reason above the table. | 4.1.2 | Major | Fixed: `aria-describedby` to both | |
 | 13 | Make warehouse room | "Save decision" was disabled with no stated reason before an option was chosen. The refusal text was not linked to it. | 4.1.2, 3.3.2 | Minor | Fixed: reason linked in both states | |
 | 14 | Make warehouse room | On the decision note field, focus showed only as a 1 px border tint. Its required/optional hint was not linked. | 2.4.7, 3.3.2 | Minor | Fixed: focus ring, hint linked | |
-| 15 | Make warehouse room, Material requirement | Row checkboxes are 13×13 px. | 2.5.5 (AAA), brief's 44 px on touch | Minor | Not fixed | WCAG 2.1 AA sets no target size. Enlarging native checkboxes changes table density, a design decision. |
+| 15 | Make warehouse room, Material requirement | Row checkboxes are 13×13 px. | 2.5.5 (AAA), brief's 44 px on touch | Minor | Fixed in #164 | On coarse pointers the checkbox's `<label>` carries the shared `.touch-target` class (`src/index.css`): an invisible `::before` at least 44×44 px. The drawn checkbox and table density are unchanged; mouse pointers match no rule. |
 | 16 | Publish to suppliers | The "Show weeks" toggle did not say whether its weeks were shown. | 4.1.2 | Minor | Fixed: `aria-expanded` | |
 | 17 | Supplier responses | On the 2 filter selects, the move-to select and the note field, focus showed only as a border tint. | 2.4.7 | Minor | Fixed: focus ring | |
 | 18 | Supplier responses | The disabled confirm in the action panel did not name the missing note or supplier. | 4.1.2 | Minor | Fixed: reason linked | |
@@ -45,9 +45,9 @@
 | 27 | Material requirement | The reason for the "Review" flag was only in a hover `title`. | 1.3.1 | Minor | Fixed: reason also in screen-reader text | |
 | 28 | What to order, End-of-cycle stock check, Material requirement, Supplier reliability | The set-max-stock, gross-quantity and Why this quantity text buttons were 16 to 20 px tall. The sort button had no touch minimum. | Brief's 44 px on touch | Minor | Fixed: 44 px hit area on touch screens | |
 | 29 | All 13 pages ("About this page") | The section toggle had no minimum height on touch screens. | Brief's 44 px on touch | Minor | Fixed: taller on touch screens only | |
-| 30 | What to order, Make warehouse room, Publish to suppliers, Forecast quality (shared `FilterChipsBar`) | The chips are a radio group, but arrow keys do not move between them. | 2.1.1 (ARIA radio pattern) | Minor | Not fixed | Shared ui-v2 primitive outside C2's files. Every chip is a Tab stop and works by keyboard. |
-| 31 | All 13 pages (shared `Button`) | Buttons are 40 px tall, under 44 px on touch. | Brief's 44 px on touch | Minor | Not fixed | Shared ui-v2 primitive used by every portal page. |
-| 32 | All pages with fields | The field border (`border-input` #D1D8E0) measures 1.4:1 on white. | 1.4.11 | Minor | Not fixed | Portal-wide design token. A change needs a design-system decision. |
+| 30 | What to order, Make warehouse room, Publish to suppliers, Forecast quality (shared `FilterChipsBar`) | The chips are a radio group, but arrow keys do not move between them. | 2.1.1 (ARIA radio pattern) | Minor | Fixed in #164 | The group is one Tab stop (roving `tabIndex`); Left/Up and Right/Down move focus and selection with wrap; Home/End go to first/last. Multi-select chips keep one Tab stop each. |
+| 31 | All 13 pages (shared `Button`) | Buttons are 40 px tall, under 44 px on touch. | Brief's 44 px on touch | Minor | Fixed in #164 | `Button` carries `.touch-target`: on coarse pointers the tap area is at least 44×44 px; the drawn button stays 40 px and desktop is unchanged. |
+| 32 | All pages with fields | The field border (`border-input` #D1D8E0) measures 1.4:1 on white. | 1.4.11 | Minor | Fixed in #164 | Owner approved `border-input` #8291A0: 3.23:1 on white, 3.12:1 on `bg-page` #FAFBFC. |
 | 33 | All 13 pages (`AboutThisPage`, other collapsed sections) | An `h2` inside `<summary>` can lose its heading role, because a summary's children are presentational to some screen readers. | 1.3.1 | Minor | Not fixed | Restructuring changes every page's heading outline. Heading order is otherwise correct. |
 
 ## Re-check after the fixes
