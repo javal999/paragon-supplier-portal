@@ -666,6 +666,15 @@ describe('unbacked-toast honesty guard (R1)', () => {
     expect(SITES.length).toBeGreaterThan(10);
   });
 
+  // A page split into a folder keeps its sites (PAGE-SPLIT-GUIDE): the Export
+  // EDI toast stood in `SupplierShipments.jsx` and now stands in its index.
+  // Before `pageFiles`, the top-level scan dropped it with nothing going red.
+  it('a page split into a folder is still in the population', () => {
+    const shipments = SITES.filter((s) => s.file.startsWith('SupplierShipments/'));
+    expect(shipments.map((s) => s.file)).toContain('SupplierShipments/index.jsx');
+    expect(shipments.flatMap((s) => s.keys)).toContain('supplierShipments.toast.export.title');
+  });
+
   /**
    * ⚠️ **AN EXCLUSION THAT EXCLUDES NOTHING READS EXACTLY LIKE A WORKING ONE.**
    * If the refusal property stopped matching — a renamed identifier, a changed
