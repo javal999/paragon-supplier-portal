@@ -34,11 +34,11 @@ import { fsReconcileCycleWeeks } from '@services/transitions/forecastConfig';
 import { maxStockRefusal } from '@services/transitions/maxStock';
 import { daysBetween } from '@services/engine/dates';
 import { forecastNow } from './forecasts/forecastDisplay';
-import { inputClass as baseInputClass, labelClass } from './inventory/inventoryDisplay';
+import { inputClass, labelClass } from './inventory/inventoryDisplay';
 
 // C2 (WCAG 2.4.7): the shared field class shows focus only as a 1 px border
 // tint; the forecast fields add a ring.
-const inputClass = `${baseInputClass} ${FIELD_FOCUS_RING}`;
+const fieldClass = `${inputClass} ${FIELD_FOCUS_RING}`;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FIXED STOCK (FS) RECONCILE — REQ-E06-04 (ENG-D21, BL-134; owner 2026-09-29).
@@ -347,7 +347,7 @@ const FixedStockReconcile: React.FC<{ persona: 'buyer' | 'supplier' }> = ({ pers
             <label className="block">
               <span className={labelClass}>{t('fsr.max.input', { uom: editing.uom })}</span>
               <input
-                className={inputClass}
+                className={fieldClass}
                 inputMode="numeric"
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}

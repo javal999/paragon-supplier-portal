@@ -43,7 +43,7 @@ import {
   deadlineState,
   rankExceptions,
 } from '@services/transitions/forecastRules';
-import { inputClass as baseInputClass, labelClass } from './inventory/inventoryDisplay';
+import { inputClass, labelClass } from './inventory/inventoryDisplay';
 import { commitmentDeadlineWorkingDays, gapColourThresholds } from '@services/transitions/forecastConfig';
 import { coverageThresholds } from '@services/transitions/inventoryConfig';
 import {
@@ -60,7 +60,7 @@ import {
 
 // C2 (WCAG 2.4.7): the shared field class shows focus only as a 1 px border
 // tint; the forecast fields add a ring.
-const inputClass = `${baseInputClass} ${FIELD_FOCUS_RING}`;
+const fieldClass = `${inputClass} ${FIELD_FOCUS_RING}`;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI COMMITMENTS & GAPS — REQ-E06-03 (with REQ-E06-02 from the planner's side).
@@ -216,7 +216,7 @@ const BuyerCommitments: React.FC = () => {
         <div className="flex flex-wrap gap-3">
           <label className="text-sm text-text-secondary flex items-center gap-2">
             {t('fc.col.supplier')}
-            <select className={`${inputClass} w-auto`} value={supplier} onChange={(e) => setSupplier(e.target.value)} data-testid="fc-supplier-filter">
+            <select className={`${fieldClass} w-auto`} value={supplier} onChange={(e) => setSupplier(e.target.value)} data-testid="fc-supplier-filter">
               <option value="">{t('fc.allSuppliers')}</option>
               {suppliers.map(([id, name]) => (
                 <option key={id} value={id}>
@@ -227,7 +227,7 @@ const BuyerCommitments: React.FC = () => {
           </label>
           <label className="text-sm text-text-secondary flex items-center gap-2">
             {t('fc.col.material')}
-            <select className={`${inputClass} w-auto`} value={material} onChange={(e) => setMaterial(e.target.value)} data-testid="fc-material-filter">
+            <select className={`${fieldClass} w-auto`} value={material} onChange={(e) => setMaterial(e.target.value)} data-testid="fc-material-filter">
               <option value="">{t('fc.allMaterials')}</option>
               {materials.map((m) => (
                 <option key={m} value={m}>
@@ -628,7 +628,7 @@ const BuyerCommitments: React.FC = () => {
                 <label htmlFor="fc-reassign-to" className={labelClass}>
                   {t('fc.pti.gaps.panel.toSupplier')}
                 </label>
-                <select id="fc-reassign-to" className={inputClass} value={toSupplier} onChange={(e) => setToSupplier(e.target.value)} aria-describedby="fc-reassign-hint">
+                <select id="fc-reassign-to" className={fieldClass} value={toSupplier} onChange={(e) => setToSupplier(e.target.value)} aria-describedby="fc-reassign-hint">
                   <option value="">{t('fc.pti.gaps.panel.chooseSupplier')}</option>
                   {action.line.otherQualifiedSuppliers.map((q) => (
                     <option key={q.supplierId} value={q.supplierId}>
@@ -649,7 +649,7 @@ const BuyerCommitments: React.FC = () => {
                 <label htmlFor="fc-action-note" className={labelClass}>
                   {t('fc.pti.gaps.panel.note')}
                 </label>
-                <textarea id="fc-action-note" rows={4} className={inputClass} value={note} onChange={(e) => setNote(e.target.value)} aria-describedby="fc-action-note-hint" />
+                <textarea id="fc-action-note" rows={4} className={fieldClass} value={note} onChange={(e) => setNote(e.target.value)} aria-describedby="fc-action-note-hint" />
                 <p id="fc-action-note-hint" className="text-xs text-text-tertiary mt-1">{t('fc.pti.gaps.panel.noteHint')}</p>
               </div>
             )}
