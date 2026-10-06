@@ -753,13 +753,16 @@ const BuyerReschedule = () => {
             <TableRow key={p.id} data-testid={`${testPrefix}-${p.id}`}>
               {selectable && (
                 <TableCell className="align-top">
-                  <input
-                    type="checkbox"
-                    aria-label={t('rs.col.selectOne', { order: p.line.reference })}
-                    checked={selected.has(p.id)}
-                    onChange={() => toggle(p.id)}
-                    data-testid={`rs-select-${p.id}`}
-                  />
+                  {/* A11y finding 15: the label carries the 44 px coarse-pointer tap area. */}
+                  <label className="touch-target inline-flex">
+                    <input
+                      type="checkbox"
+                      aria-label={t('rs.col.selectOne', { order: p.line.reference })}
+                      checked={selected.has(p.id)}
+                      onChange={() => toggle(p.id)}
+                      data-testid={`rs-select-${p.id}`}
+                    />
+                  </label>
                 </TableCell>
               )}
               <TableCell className="align-top">

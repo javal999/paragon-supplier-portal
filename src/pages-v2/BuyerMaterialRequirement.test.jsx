@@ -187,6 +187,8 @@ describe('BuyerMaterialRequirement — the planner page', () => {
     });
     const box = await screen.findByTestId('mrq-needs-order');
     expect(box).not.toBeChecked();
+    // A11y finding 15: the label carries the 44 px coarse-pointer tap area.
+    expect(box.closest('label')).toHaveClass('touch-target');
     expect(screen.getByTestId(`mrq-row-${none.materialCode}`)).toBeInTheDocument();
     fireEvent.click(box);
     expect(screen.queryByTestId(`mrq-row-${none.materialCode}`)).toBeNull();

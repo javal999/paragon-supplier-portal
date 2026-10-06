@@ -50,6 +50,11 @@ const VARIANT_CLASS = {
 const FOCUS_RING =
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action';
 
+// A11y finding 31: the button draws 40 px tall; on coarse pointers (phones,
+// tablets) `.touch-target` (src/index.css) widens the TAP area to 44×44 px with
+// an invisible ::before. Fine pointers match no rule, so desktop is unchanged.
+const TOUCH_TARGET = 'touch-target';
+
 /**
  * @param {ButtonProps} props
  * @returns {React.ReactNode}
@@ -58,7 +63,7 @@ const Button = ({ variant = 'outline', icon: Icon, children, className = '', ...
   return (
     <button
       type="button"
-      className={`inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${FOCUS_RING} ${VARIANT_CLASS[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${FOCUS_RING} ${TOUCH_TARGET} ${VARIANT_CLASS[variant]} ${className}`}
       {...rest}
     >
       {Icon ? <Icon size={16} aria-hidden="true" /> : null}
