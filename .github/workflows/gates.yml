@@ -70,7 +70,10 @@ jobs:
   gates:
     name: build · floor · test:gate
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    # 35, raised from 25 on 2026-10-06: the suite grew to the point where a
+    # green run (gates finished at 24m57s on PR #142) was cancelled by the
+    # limit during cleanup and reported as a failure.
+    timeout-minutes: 35
     steps:
       # @v5 and not @v4: the v4 actions target node 20, which the runners have
       # deprecated and now force onto 24 with a warning. A brand-new workflow
