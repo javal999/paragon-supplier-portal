@@ -132,7 +132,7 @@ const WhyQuantityPanel: React.FC<WhyQuantityPanelProps> = ({ id, rec, material, 
             missing
           ) : (
             <>
-              {/* The order's own week, as netted by the engine (requirement.ts
+              {/* The order's own week, as netted by the engine (requirement.js
                   netMaterial): net = max(0, gross + safety stock − (stock at
                   start + confirmed receipts in the week)), and the stock at
                   start carries the orders planned for earlier weeks. So these
