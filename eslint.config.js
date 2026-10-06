@@ -36,10 +36,12 @@
 //   · `.js/.jsx` files under `src/` must carry JSDoc (`jsdoc/require-jsdoc`).
 //     JSDoc is where their types live; `tsc` with `checkJs` reads it.
 //
-// FORECAST IS DEFERRED (plan Phase 7)
-//   The forecast module's requirements are still being written. Its files are
-//   linted so problems stay visible, but every rule is downgraded to 'warn' for
-//   them, so lint never blocks forecast work. See FORECAST_FILES below.
+// FORECAST IS NO LONGER A SPECIAL CASE (plan Phase 7, 2026-10-06)
+//   Until Phase 7 the forecast module's files had every rule downgraded to
+//   'warn' (a FORECAST_FILES glob and a block at the end of this file), so lint
+//   never blocked forecast work while its requirements were being written.
+//   Phase 7 converted forecast to JavaScript and removed both: the same rules
+//   now apply to every file in src/.
 // ════════════════════════════════════════════════════════════════════════════
 
 import js from '@eslint/js';
@@ -51,18 +53,6 @@ import pluginReactHooks from 'eslint-plugin-react-hooks';
 import pluginJsdoc from 'eslint-plugin-jsdoc';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import { defineConfig } from 'eslint/config';
-
-// ── Which files belong to the deferred forecast module ──────────────────────
-// Matches any path under src/ whose file or folder name contains "forecast"
-// (e.g. `BuyerForecasts.tsx`, `services/engine/forecastBias.ts`,
-// `pages-v2/demandForecast/…`). This is the ONE definition of the forecast
-// scope for tooling; if another tool needs it, import it from here rather than
-// copying the globs. When Phase 7 starts, delete this constant and the
-// "forecast" block at the bottom of the file.
-export const FORECAST_FILES = [
-  'src/**/*{forecast,Forecast}*',
-  'src/**/*{forecast,Forecast}*/**'
-];
 
 // ── Rules shared by JS and TS application code ──────────────────────────────
 // Names and intent follow the boilerplate. Severity follows the measured run
@@ -150,21 +140,6 @@ const JS_ONLY_RULES = {
   'no-unused-vars': ['error', { argsIgnorePattern: '^_', ignoreRestSiblings: true }]
 };
 
-/**
- * Copy a rules object with every 'error' turned into 'warn'.
- * Used for the deferred forecast files so lint reports but never blocks.
- * @param {Record<string, unknown>} rules
- * @returns {Record<string, unknown>}
- */
-const asWarnings = (rules) =>
-  Object.fromEntries(
-    Object.entries(rules).map(([name, setting]) => {
-      if (setting === 'error') return [name, 'warn'];
-      if (Array.isArray(setting) && setting[0] === 'error') return [name, ['warn', ...setting.slice(1)]];
-      return [name, setting];
-    })
-  );
-
 // ── Rules that still have violations in the codebase (plan Phase 2 fixes them)
 // Each runs as 'warn' instead of its target severity until its count is zero.
 // Grouped by how urgent the fix is, so the cleanup can work top-down.
@@ -175,8 +150,8 @@ const RULES_WITH_OPEN_VIOLATIONS = [
   // or a harmless `sleep` helper, now annotated at the site.
   'react/jsx-no-leaked-render', // `{n && <X/>}` renders "0" when n is 0
   // react/no-array-index-key: promoted in Phase 2 (2026-10-02). Every index key
-  // outside forecast now uses a stable id, or keeps the index with a disable
-  // comment explaining why the list is static. Forecast keeps it as a warning.
+  // now uses a stable id, or keeps the index with a disable comment explaining
+  // why the list is static (forecast included since Phase 7).
   // React Compiler readiness (eslint-plugin-react-hooks v7 recommended set).
   'react-hooks/exhaustive-deps',
   'react-hooks/set-state-in-effect',
@@ -342,25 +317,6 @@ export default defineConfig([
     })
   },
 
-  // ── 8. Forecast: report, never block (plan Phase 7) ─────────────────────────
-  // Must come after blocks 2–4 so it overrides their severities. Two halves,
-  // because TS files do not load the jsdoc plugin or the JS-only rules.
-  {
-    files: FORECAST_FILES.map((glob) => (glob.endsWith('*') ? `${glob}.{ts,tsx}` : glob)),
-    ignores: ['**/*.{js,jsx,css}'],
-    rules: asWarnings({ ...pluginReactHooks.configs.flat.recommended.rules, ...SHARED_RULES })
-  },
-  {
-    files: FORECAST_FILES.map((glob) => (glob.endsWith('*') ? `${glob}.{js,jsx}` : glob)),
-    ignores: ['**/*.{ts,tsx,css}'],
-    rules: asWarnings({
-      ...pluginReactHooks.configs.flat.recommended.rules,
-      ...SHARED_RULES,
-      ...JS_ONLY_RULES,
-      'jsdoc/require-jsdoc': 'error'
-    })
-  },
-
-  // ── 9. Prettier owns formatting; turn off rules that fight it (must be last)
+  // ── 8. Prettier owns formatting; turn off rules that fight it (must be last)
   eslintConfigPrettier
 ]);

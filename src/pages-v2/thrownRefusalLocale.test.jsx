@@ -203,7 +203,7 @@ describe('PR2 · the population — six converted, two deliberately NOT', () => 
   });
 
   it('the SupplierForecasts site keeps its SUPERTYPE test — it was not forced into the others’ shape', () => {
-    const src = read('SupplierForecasts.tsx');
+    const src = read('SupplierForecasts.jsx');
     expect(src).toContain('useDataErrorText');
     // A plain `Error` that is not a `DataError` must still render its message,
     // and a thrown non-`Error` must still reach `String(e)`.

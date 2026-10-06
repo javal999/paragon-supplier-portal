@@ -346,7 +346,7 @@ describe('THE CENSUS — acts a screen is meant to offer that no screen offers',
     // `principal-to-distributor` leg ONLY, because a to-paragon leg's card
     // renders its linked ASN's state and the stored `lifecycle` these verbs move
     // is never displayed there. A dispatch census is blind to that distinction
-    // by construction; `SupplierForecastsAdvance.test.tsx` is what holds it.
+    // by construction; `SupplierForecastsAdvance.test.jsx` is what holds it.
     for (const id of [
       't_incomingshipment_ship',
       't_incomingshipment_arrive',

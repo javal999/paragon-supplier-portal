@@ -1310,14 +1310,15 @@ boilerplate. Converted so far: `src/components/ui-v2` (pilot) and the app shell
 Phase 4 B1), `src/lib` (B2), `src/services/transitions` (B3; forecast flows excluded), `src/services/data` (B4,
 including `types.js`) the rest of `src/services` (B5; forecast engine, flows and mock
 files excluded) the `src/pages-v2` subfolders (B6) and the `src/pages-v2` root pages plus
-`pages/auth/Login` and `types/supplier.types` (B7) — forecast-named files excluded. Phase 4 is
-complete: only forecast files (Phase 7) and `vite-env.d.ts` remain TypeScript. Interfaces with `readonly` members are type-literal typedefs, so readonly is kept.
+`pages/auth/Login` and `types/supplier.types` (B7), and the forecast module (Phase 7,
+2026-10-06). The conversion is complete: every file in `src/` is JavaScript except
+`vite-env.d.ts`, a type-declaration file with no JS form. Interfaces with `readonly` members are type-literal typedefs, so readonly is kept.
 Before converting a
 folder, follow `docs/frontend-standard/JS-CONVERSION-PLAYBOOK.md`: the draft tool
 deletes comments and loosens types, and `scripts/codemods/check-comments-kept.mjs`
 must report 0 lost. Any spec or gate that scans files uses `src/test/sourceFiles.js`
 (or a pattern naming all of `.ts/.tsx/.js/.jsx`); `languageNeutralScanners.guard`
-fails on a TypeScript-only filter. Forecast stays TypeScript until the last phase.
+fails on a TypeScript-only filter.
 
 ## Gates — LINT ADDED 2026-10-02 (the "no lint script" rule is lifted)
 Until 2026-10-02 this section said the project has no lint script. The owner
@@ -1327,8 +1328,8 @@ lifted that rule to align the portal with the company React boilerplate
 now part of the repo; each file's header explains its rules and why. Rules that
 still have violations run as warnings (listed in `RULES_WITH_OPEN_VIOLATIONS`
 in `eslint.config.js`) and their total may not rise above the ceiling in
-`scripts/floor.json`. The forecast module is deferred to plan Phase 7: lint
-reports on it but never blocks it.
+`scripts/floor.json`. Since Phase 7 (2026-10-06) the forecast module is linted
+like every other file; it no longer has its rules downgraded to warnings.
 The gates are exactly five (three until `TSC-SKIPS-TESTS-01` closed, four until
 lint was added):
 - `npm run build`  → `tsc && vite build` (typecheck + bundle)

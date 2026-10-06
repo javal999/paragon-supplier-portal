@@ -41,7 +41,7 @@ import {
 // An input check card (the Data health verdict, counted by the same function
 // as the result pages' chip) and one card per step in cycle order, each with
 // its menu label, one number and a link. Every number is read from the hook
-// its page already uses, by the rule that page applies (`cycleCounts.ts`).
+// its page already uses, by the rule that page applies (`cycleCounts.js`).
 //
 // FUX2-R3 — nothing is stored. A step is never marked done; Publish reads
 // withheld only while the registry says the engine data is simulated.

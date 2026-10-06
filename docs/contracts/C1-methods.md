@@ -153,10 +153,10 @@ transition id can be assembled at a call site rather than written as a literal (
 | `stockSync.flow.js` | `stockSync` | 2 | `t_stocksync_run`, `t_stocksync_pull` | **wired** |
 | `capacitySubmission.flow.js` | `capacitySubmission` | 1 | `t_capacity_submit` | **wired** |
 | `inventoryAlert.flow.js` | `inventoryAlert` | 1 | `t_inventoryalert_close` | **wired** |
-| `forecastVersion.flow.ts` | `forecastVersion` | 2 | `t_forecastversion_publish`, `t_forecastversion_reassign` | **wired** |
-| `forecastView.flow.ts` | `forecastView` | 1 | `t_forecastview_record` | **wired** |
+| `forecastVersion.flow.js` | `forecastVersion` | 2 | `t_forecastversion_publish`, `t_forecastversion_reassign` | **wired** |
+| `forecastView.flow.js` | `forecastView` | 1 | `t_forecastview_record` | **wired** |
 | `sapChangeMark.flow.js` | `sapChangeMark` | 1 | `t_sapchange_mark` | **wired** |
-| `forecastOverride.flow.ts` | `forecastOverride` | 1 | `t_forecastoverride_record` | **wired** |
+| `forecastOverride.flow.js` | `forecastOverride` | 1 | `t_forecastoverride_record` | **wired** |
 | `warehouseDecision.flow.js` | `warehouseDecision` | 1 | `t_warehousedecision_record` | **wired** |
 | `simulationOverride.flow.js` | `simulationOverride` | 1 | `t_simulation_override_set` | **wired** |
 | `rfiEvent.flow.js` | `rfiEvent` | 6 | `t_rfi_create`, `t_rfi_revise_draft`, `t_rfi_publish`, `t_rfi_extend`, `t_rfi_close`, `t_rfi_cancel` | **wired** |

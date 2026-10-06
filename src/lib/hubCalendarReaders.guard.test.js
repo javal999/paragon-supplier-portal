@@ -205,10 +205,15 @@ function derive(files = sources()) {
             args: node.arguments.length
           });
         }
+        // The parameter's type in EITHER form: the TS annotation (`cal:
+        // WorkingCalendar = …`) or, once converted, its JSDoc `@param
+        // {WorkingCalendar} [cal]` (ts.getJSDocType). Phase 7 converted the
+        // last TS defaults, which emptied the TS-only population.
+        const paramType = ts.isParameter(node) ? (node.type ?? ts.getJSDocType(node)) : undefined;
         if (
           ts.isParameter(node) &&
-          node.type &&
-          node.type.getText() === 'WorkingCalendar' &&
+          paramType &&
+          paramType.getText() === 'WorkingCalendar' &&
           node.initializer
         ) {
           out.calendarDefaults.push({
@@ -285,7 +290,7 @@ describe('BL-50 · the deadline population reads the hub calendar', () => {
   it('POPULATION — the derivation found what it must find, and not what it must not (rule 1)', () => {
     const readers = new Set(D.workingDayCalls.map((c) => c.key.split('#')[0]));
     // Known-true members: the three response deadlines of §3.4.
-    expect(readers).toContain('services/transitions/forecastRules.ts');
+    expect(readers).toContain('services/transitions/forecastRules.js');
     expect(readers).toContain('services/data/poResponseProjection.js');
     expect(readers).toContain('services/transitions/callOffRules.js');
     // Known-false: the invoice projection counts calendar days (CR-14).
@@ -297,7 +302,7 @@ describe('BL-50 · the deadline population reads the hub calendar', () => {
     );
     // BL-48 — the commitment deadline no longer counts calendar days.
     expect(D.calendarDaySites).not.toContain(
-      'services/transitions/forecastRules.ts#commitmentDueAt'
+      'services/transitions/forecastRules.js#commitmentDueAt'
     );
   });
 
@@ -334,7 +339,7 @@ describe('BL-50 · the deadline population reads the hub calendar', () => {
     expect(readers).toEqual([
       'services/data/poResponseProjection.js',
       'services/transitions/callOffRules.js',
-      'services/transitions/forecastRules.ts',
+      'services/transitions/forecastRules.js',
       // Material B1 — the weekly stock update cutoff moves off a non-working day (MR-1 BR-03).
       // Material B3 — an API week is judged on the cycle's working days (MR-2 BR-02).
       'services/transitions/updateCompliance.js',

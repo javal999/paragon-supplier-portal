@@ -166,7 +166,7 @@ export function requireUom(materialCode, master = MATERIAL_MASTER) {
  * A material's label, or the raw code echoed back. Deliberately NOT an outcome
  * type: a display miss on a LABEL is honest by echoing (the reader sees the
  * token the data carried), which is a different rule from the unit. See the
- * header's "a unit is not a label". `SupplierForecasts.tsx` already did this
+ * header's "a unit is not a label". `SupplierForecasts.jsx` already did this
  * correctly for labels — the defect was always its unit sibling.
  * @param {string} materialCode
  * @param {MaterialMaster} [master]

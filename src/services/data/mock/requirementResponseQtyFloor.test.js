@@ -4,7 +4,7 @@
 // WHY THIS EXISTS, STATED AS THE RANKING RATHER THAN AS A BUG. The one
 // production caller of `t_requirementresponse_submit` parses through
 // `normalizeQty` and refuses EMPTY_QTY / NOT_NUMERIC / AMBIGUOUS_QTY
-// (`SupplierForecasts.tsx`), so **no human could reach the gap this closes**.
+// (`SupplierForecasts.jsx`), so **no human could reach the gap this closes**.
 // That is still true of the floor, and it is why the hoist below was ranked as
 // a contract repair rather than an outage: it closes what an F1 author reading
 // the DTO could do, not what a supplier at a keyboard could do.

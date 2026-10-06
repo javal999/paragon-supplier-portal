@@ -236,9 +236,9 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
   it('BL32-RSN-READ-01 · the verbs and parsers that check a code, pinned', () => {
     expect(callersOf(/\bisActiveReasonCode\s*\(/)).toEqual([
       'src/services/data/mock/MockCommandService.js',
-      'src/services/data/mock/targets/forecastOverride.ts',
+      'src/services/data/mock/targets/forecastOverride.js',
       'src/services/transitions/capacityRules.js',
-      'src/services/transitions/forecastRules.ts',
+      'src/services/transitions/forecastRules.js',
       'src/services/transitions/inventoryAlertRules.js',
       'src/services/transitions/policies.js',
       'src/services/transitions/reasonCodes.js'
@@ -248,10 +248,10 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
   it('BL32-RSN-READ-02 · the pickers offer the active list; the records read through one label helper', () => {
     expect(callersOf(/\buseActiveReasonCodes\s*\(/)).toEqual([
       'src/pages-v2/BuyerAlerts.jsx',
-      'src/pages-v2/BuyerForecastBias.tsx',
+      'src/pages-v2/BuyerForecastBias.jsx',
       'src/pages-v2/SupplierCapacity.jsx',
-      'src/pages-v2/SupplierForecastCommitments.tsx',
-      'src/pages-v2/SupplierForecasts.tsx',
+      'src/pages-v2/SupplierForecastCommitments.jsx',
+      'src/pages-v2/SupplierForecasts.jsx',
       'src/pages-v2/SupplierOrders.jsx',
       'src/pages-v2/admin/reasonCodeDisplay.js'
     ]);
@@ -259,10 +259,10 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
       'src/pages-v2/BuyerAlerts.jsx',
       'src/pages-v2/BuyerCapacity.jsx',
       'src/pages-v2/BuyerCommitments.jsx',
-      'src/pages-v2/BuyerForecastBias.tsx',
+      'src/pages-v2/BuyerForecastBias.jsx',
       'src/pages-v2/SupplierCapacity.jsx',
-      'src/pages-v2/SupplierForecastCommitments.tsx',
-      'src/pages-v2/SupplierForecasts.tsx',
+      'src/pages-v2/SupplierForecastCommitments.jsx',
+      'src/pages-v2/SupplierForecasts.jsx',
       'src/pages-v2/SupplierOrders.jsx',
       'src/pages-v2/admin/reasonCodeDisplay.js',
       'src/pages-v2/orders/PoCollaboration.jsx'

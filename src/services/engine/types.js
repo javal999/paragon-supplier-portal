@@ -18,7 +18,7 @@
 //   thing, the relation is stated at the type rather than the Hub name forced
 //   onto an engine input:
 //     · `MaterialSource` EXTENDS the Hub's `ForecastSource`
-//       (`transitions/forecastRules.ts`: supplierId · materialCode · share) —
+//       (`transitions/forecastRules.js`: supplierId · materialCode · share) —
 //       same triple, plus the purchasing-info-record fields the engine needs.
 //     · `PoLine` is the SAP schedule-line grain. The Hub's `PurchaseOrder`
 //       (`data/types.js`) is a header with `orderDate` / `requestedDeliveryDate`

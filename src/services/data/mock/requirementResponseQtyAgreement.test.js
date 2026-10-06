@@ -57,7 +57,7 @@ const line = /** @type {import('../../sdc/types').ForecastLine} */ (
 
 /**
  * THE PRODUCTION CHAIN, run end to end rather than imitated. This is exactly
- * what `SupplierForecasts.tsx` does: ONE hint-free `normalizeQty` on the typed
+ * what `SupplierForecasts.jsx` does: ONE hint-free `normalizeQty` on the typed
  * string, then `buildRequirementResponsePayload` with the parsed value and the
  * token, then dispatch. Writing the payload by hand here would have tested a
  * copy of the caller instead of the caller.
@@ -114,7 +114,7 @@ beforeEach(() => {
 // what the screen can successfully send must be byte-for-byte the same set.
 describe('THE KNOWN-GOOD HALF — everything the surface accepts today still passes', () => {
   // Agreement on this path is STRUCTURAL, not lucky: the surface parses once at
-  // `SupplierForecasts.tsx:853` and ships that same result at :893, and the
+  // `SupplierForecasts.jsx:853` and ships that same result at :893, and the
   // transition re-runs the identical call on the identical string. There is no
   // second parse that could drift, which is why this is asserted as a property
   // over a token set rather than as one happy-path example.

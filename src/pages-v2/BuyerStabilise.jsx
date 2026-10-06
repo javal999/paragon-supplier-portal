@@ -88,7 +88,7 @@ import PublishedVersions from './BuyerForecasts';
 // whether the week is ready: inputs (Data health), recommended orders, weeks
 // over warehouse capacity and held Trade-off weeks without a reason. Each item
 // is derived at render from data the hooks already return, by the counting
-// rules the linked pages apply (`cycleCounts.ts`); nothing is stored (FUX2-R3).
+// rules the linked pages apply (`cycleCounts.js`); nothing is stored (FUX2-R3).
 // It adds no gate to the verb (FUX-R1): the act and its refusal are unchanged.
 // ─────────────────────────────────────────────────────────────────────────────
 

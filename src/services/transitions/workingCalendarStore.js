@@ -131,7 +131,7 @@ export const SAP_BASE_CALENDAR = Object.freeze({
  * leave announced after the SAP load. SAP has it as a working day, so this is
  * an OVERRIDE, and it is what moves the raw-material Trade-off deadline of the
  * version published on Monday 31 August from Friday 4 to Monday 7 September
- * (`forecastDeadline.bl48.test.ts`, BL48-DEMO-04). Seeded as a ruling rather
+ * (`forecastDeadline.bl48.test.js`, BL48-DEMO-04). Seeded as a ruling rather
  * than written into the SAP list, deliberately: the page must show it came from
  * the administrator, with a reason. Attributed honestly — the platform cannot
  * name a person.

@@ -156,7 +156,7 @@ function declarationComplete(f) {
 /**
  * ⚠️ **THE REFUSAL BLOCK — REASON, TIMESTAMP, AND THE LINE THAT SAYS NOBODY CAN
  * BE NAMED.** It renders the SAME grammar the dispute lane set one tenancy over
- * (`DisputeLedger`, `SupplierForecasts.tsx`): a coloured left rule, an uppercase
+ * (`DisputeLedger`, `SupplierForecasts.jsx`): a coloured left rule, an uppercase
  * label, a `Data` timestamp, then the buyer's authored text — read by the party
  * the text is about.
  *

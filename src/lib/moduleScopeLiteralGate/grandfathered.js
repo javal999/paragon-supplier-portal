@@ -63,7 +63,7 @@ export const S2_GRANDFATHERED = [
   'src/pages-v2/Marketplace.jsx::OPEN_RFQS',
   'src/pages-v2/SupplierDocuments.jsx::CATEGORY_FILTERS',
   'src/pages-v2/SupplierDocuments.jsx::CERT_TYPES',
-  'src/pages-v2/SupplierForecasts.tsx::ADVANCE_VERBS',
+  'src/pages-v2/SupplierForecasts.jsx::ADVANCE_VERBS',
   'src/pages-v2/SupplierMyStorefront.jsx::CATEGORY_OPTIONS',
   'src/pages-v2/SupplierMyStorefront.jsx::CERT_OPTIONS',
   'src/pages-v2/SupplierMyStorefront.jsx::COMPLETENESS_ITEMS',

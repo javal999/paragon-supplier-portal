@@ -8,7 +8,7 @@
 // Phase 2 task B3 adds safety stock, tipped in What to order's
 // "Why this quantity" panel.
 // The pages show each definition at the point of use through `TermTip`
-// (`components/forecast/TermTip.tsx`), which reads it from here, so a
+// (`components/forecast/TermTip.jsx`), which reads it from here, so a
 // correction is still one edit in one place.
 //
 // Unlike the refusal and governance vocabularies, this union is not a type the

@@ -70,7 +70,7 @@ import { lineKey } from './types';
 /**
  * Every feed, in the feed spec's order (§2.1–§2.4). `readBy` is what each
  * engine module reads today (E14-02 `reliability.js`, E14-03 `requirement.js`,
- * E14-04 `safetyStock.js`, E14-05 `orderSizing.js`, E14-07 `demandForecast.ts`,
+ * E14-04 `safetyStock.js`, E14-05 `orderSizing.js`, E14-07 `demandForecast.js`,
  * E14-09 `demandRange.js` (the BOM and SAP's past plans; its sales come through
  * E14-07), E14-13 `reschedule.js`).
  * @type {readonly FeedDef[]}

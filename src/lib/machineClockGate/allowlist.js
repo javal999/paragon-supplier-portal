@@ -74,7 +74,7 @@ export const MACHINE_CLOCK_ALLOWLIST = [
     reason: 'Submission-session id suffix; its openedAt reads the hub clock.'
   },
   {
-    key: 'src/pages-v2/SupplierForecasts.tsx::ForecastWorkspace.recordAttempt::Date.now()',
+    key: 'src/pages-v2/SupplierForecasts.jsx::ForecastWorkspace.recordAttempt::Date.now()',
     count: 1,
     why: 'unique-id',
     reason: 'Submission-session id suffix; its openedAt reads the hub clock.'

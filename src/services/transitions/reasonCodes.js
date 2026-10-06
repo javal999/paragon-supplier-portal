@@ -11,7 +11,7 @@
 //                           rejection is about (REQ-E07-02 BR-06);
 //   · capacityShortfall   — `CAPACITY_REASONS` (inventoryConfig.js): allocation
 //                           below demand (REQ-E08-04, §3.6);
-//   · commitmentShortfall — `COMMITMENT_REASONS` (forecastConfig.ts): a
+//   · commitmentShortfall — `COMMITMENT_REASONS` (forecastConfig.js): a
 //                           commitment below forecast (REQ-E06-02, §3.6).
 // A fifth list was added new, not replaced (SC Hub Material, MAT A3):
 //   · alertClose          — why a planner closes an alert (MR-9 BR-04, BR-05).

@@ -249,7 +249,7 @@ describe('GL-1 chip coverage — the instrument, before the conclusion', () => {
     // non-render, or the guard would be demanding an impossible chip.
     const toastBound = USES.filter((u) => !u.isRender);
     expect(toastBound.length).toBeGreaterThan(0);
-    expect(toastBound.some((u) => u.file.endsWith('SupplierForecasts.tsx'))).toBe(true);
+    expect(toastBound.some((u) => u.file.endsWith('SupplierForecasts.jsx'))).toBe(true);
   });
 });
 

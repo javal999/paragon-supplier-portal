@@ -24,8 +24,9 @@
 //     ERROR, so rules already at zero violations stay at zero.
 //   · Node tooling (gate/, scripts/, root configs): ESLint only.
 //
-// Forecast files need no special case here: they stay TypeScript until plan
-// Phase 7, and `eslint.config.js` downgrades every rule to a warning for them.
+// Forecast files need no special case here: Phase 7 (2026-10-06) converted them
+// to JavaScript, and `eslint.config.js` applies the same rules to them as to
+// every other file. The TypeScript line above now only meets `vite-env.d.ts`.
 //
 // To skip the hook in an emergency: `HUSKY=0 git commit ...`. Prefer fixing the
 // error — CI runs the same lint as gate 5 of `npm run gates` and will fail too.

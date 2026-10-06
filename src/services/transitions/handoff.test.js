@@ -61,7 +61,7 @@ describe('⚠️ THE BINDING CONSTRAINT — a withheld verb names its owner', ()
 });
 
 describe('⚠️ THE LABEL BIND — what replaced the two-arm ternary', () => {
-  // THE LIVE TRAP: `SupplierForecasts.tsx` keyed the R1a actor line on
+  // THE LIVE TRAP: `SupplierForecasts.jsx` keyed the R1a actor line on
   // `personas.includes('supplier') ? supplier : buyer`, TOTAL ONLY BECAUSE
   // `PersonaType` has two members. A third actor falls through to "Awaiting
   // Paragon" over a finance-owned verb — the exact mislabel the constraint

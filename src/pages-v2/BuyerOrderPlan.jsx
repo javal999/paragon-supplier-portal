@@ -80,7 +80,7 @@ import { draftNeedDate, umbrellaLineFor } from './orderPlan/orderPlanRelease';
 // where the planner's decision for it is recorded (FUX-D3, F-10).
 //
 // FUX2 B3 (F-07, F-17): each recommended order opens a "Why this quantity"
-// panel (`components/forecast/WhyQuantityPanel.tsx`) with its material's
+// panel (`components/forecast/WhyQuantityPanel.jsx`) with its material's
 // Material requirement and Safety stock figures and its sizing, so the planner
 // sees why without leaving the page. The 2 full pages stay linked above.
 //

@@ -297,7 +297,7 @@ describe('menu and page map after the merge', () => {
     expect(everyPath).toContain('/buyer/stabilise');
   });
 
-  it('no forecastPages.ts link points to a removed or redirected route', () => {
+  it('no forecastPages.js link points to a removed or redirected route', () => {
     const ids = /** @type {ForecastPageId[]} */ (Object.keys(FORECAST_PAGES));
     expect(ids).not.toContain('publishedVersions');
     const targets = ids.flatMap((id) => {

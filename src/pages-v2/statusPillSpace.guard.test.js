@@ -93,7 +93,7 @@ describe('BL-83 — no status pill drops the space between its label and its val
     // Population control: the scan read the files the fix touched.
     const read = withPills.map((f) => relative(SRC, f).replace(/\\/g, '/'));
     expect(read).toContain('pages-v2/rfx/rfxDisplay.jsx');
-    expect(read).toContain('pages-v2/BuyerForecasts.tsx');
+    expect(read).toContain('pages-v2/BuyerForecasts.jsx');
     const offenders = withPills.flatMap((f) =>
       pillsDroppingASpace(readFileSync(f, 'utf8')).map(
         (line) => `${relative(SRC, f).replace(/\\/g, '/')}:${line}`

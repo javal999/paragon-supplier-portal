@@ -226,7 +226,7 @@ describe('BL32-POP · the population of rule values is derived from the config m
       'src/services/sourcing/complianceGateConfig.js',
       'src/services/sourcing/rfxConfig.js',
       'src/services/transitions/callOffTolerance.js',
-      'src/services/transitions/forecastConfig.ts',
+      'src/services/transitions/forecastConfig.js',
       'src/services/transitions/fulfilmentConfig.js',
       'src/services/transitions/inventoryConfig.js'
     ]);
@@ -261,7 +261,7 @@ describe('BL32-POP · the population of rule values is derived from the config m
     expect(byModule['src/services/transitions/inventoryConfig.js']).toEqual(
       expect.arrayContaining(['CAPACITY_HORIZON_WEEKS', 'DEMAND_WINDOW'])
     );
-    expect(byModule['src/services/transitions/forecastConfig.ts']).toEqual(
+    expect(byModule['src/services/transitions/forecastConfig.js']).toEqual(
       expect.arrayContaining([
         'DEFAULT_LEAD_TIME_DAYS',
         'FORECAST_HORIZON',
@@ -342,7 +342,7 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
     expect(readers).toEqual(
       [
         'src/services/transitions/callOffTolerance.js',
-        'src/services/transitions/forecastConfig.ts',
+        'src/services/transitions/forecastConfig.js',
         'src/services/transitions/fulfilmentConfig.js',
         'src/services/transitions/hubSettingsStore.js',
         'src/services/transitions/inventoryConfig.js'
@@ -386,19 +386,19 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
         'src/services/transitions/fulfilmentRules.js'
       ],
       commitmentTolerance: [
-        'src/services/transitions/forecastConfig.ts',
-        'src/services/transitions/forecastRules.ts'
+        'src/services/transitions/forecastConfig.js',
+        'src/services/transitions/forecastRules.js'
       ],
       commitmentDeadlineWorkingDays: [
         'src/pages-v2/BuyerCommitments.jsx',
-        'src/pages-v2/SupplierForecastCommitments.tsx',
-        'src/services/transitions/forecastConfig.ts',
-        'src/services/transitions/forecastRules.ts'
+        'src/pages-v2/SupplierForecastCommitments.jsx',
+        'src/services/transitions/forecastConfig.js',
+        'src/services/transitions/forecastRules.js'
       ],
       gapColourThresholds: [
         'src/pages-v2/BuyerCommitments.jsx',
-        'src/services/transitions/forecastConfig.ts',
-        'src/services/transitions/forecastRules.ts'
+        'src/services/transitions/forecastConfig.js',
+        'src/services/transitions/forecastRules.js'
       ],
       gateMinOtifPct: [
         'src/pages-v2/rfx/rfxDisplay.jsx',
@@ -468,47 +468,47 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       // takes them as arguments (X-01); the engine never reads the store.
       engineServiceTargets: [
         'src/services/data/mock/MockProcurementService.js',
-        'src/services/transitions/forecastConfig.ts'
+        'src/services/transitions/forecastConfig.js'
       ],
       safetyLeadTimePercentile: [
         'src/services/data/mock/MockProcurementService.js',
-        'src/services/transitions/forecastConfig.ts'
+        'src/services/transitions/forecastConfig.js'
       ],
       // ENG-D6 / REQ-E14-05 — the same shape: the service passes them to the engine.
       orderSizingCosts: [
         'src/services/data/mock/MockProcurementService.js',
-        'src/services/transitions/forecastConfig.ts'
+        'src/services/transitions/forecastConfig.js'
       ],
       // ENG-D15 / REQ-E14-13 — the same shape: the service passes it to the engine.
       rescheduleOutThresholdWeeks: [
         'src/services/data/mock/MockProcurementService.js',
-        'src/services/transitions/forecastConfig.ts'
+        'src/services/transitions/forecastConfig.js'
       ],
       // REQ-E06-04 BR-01 — the read model passes it to the pure reconcile; the page states it.
       fsReconcileCycleWeeks: [
         'src/pages-v2/FixedStockReconcile.jsx',
         'src/services/data/mock/fixedStockReadModel.js',
-        'src/services/transitions/forecastConfig.ts'
+        'src/services/transitions/forecastConfig.js'
       ],
       // ENG-D9 / REQ-E14-06 — the same shape: the service passes it to the engine.
       stabiliseDampingWeight: [
         'src/services/data/mock/MockProcurementService.js',
-        'src/services/transitions/forecastConfig.ts'
+        'src/services/transitions/forecastConfig.js'
       ],
       // REQ-E14-01 — the same shape: the service passes the limits to the data-health check.
       feedFreshnessLimitsDays: [
         'src/services/data/mock/MockProcurementService.js',
-        'src/services/transitions/forecastConfig.ts'
+        'src/services/transitions/forecastConfig.js'
       ],
       // ENG-D13 / REQ-E14-10 — the same shape: the service passes the limit to the backtest.
       backtestMascLimit: [
         'src/services/data/mock/MockProcurementService.js',
-        'src/services/transitions/forecastConfig.ts'
+        'src/services/transitions/forecastConfig.js'
       ],
       // REQ-E14-09 — the same shape: the service passes the levels to the demand range.
       demandRangeExtraQuantilePct: [
         'src/services/data/mock/MockProcurementService.js',
-        'src/services/transitions/forecastConfig.ts'
+        'src/services/transitions/forecastConfig.js'
       ]
     };
     for (const [fn, files] of Object.entries(table)) expect(callersOf(fn), fn).toEqual(files);

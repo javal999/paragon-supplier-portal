@@ -2,8 +2,8 @@
 
 **Status:** pilot 2026-10-02 (`src/components/ui-v2`, 62 files); converter + dry run on all
 1,182 remaining files 2026-10-05.
-**Applies to:** Phase 4 (the rest of `src/`) and Phase 7 (forecast, deferred while its
-requirements are written). Earlier phases: tooling (#117), lint fixes (#118), import aliases
+**Applies to:** Phase 4 (the rest of `src/`) and Phase 7 (forecast, converted 2026-10-06 —
+the conversion is complete; see "Phase 7" below). Earlier phases: tooling (#117), lint fixes (#118), import aliases
 (#119), React 19 / Router 7 / Vite 7 (#120).
 
 The portal moves to JavaScript to match the company React boilerplate. Types are kept as JSDoc,
@@ -49,6 +49,31 @@ flagged in an UNFIXED conversion; checked per file by `: null` count, the rule's
 text of every flagged `&&`), and `lint-staged.config.js` now runs
 `eslint --fix --rule "react/jsx-no-leaked-render: off"`. **Before converting a folder, commit with
 the current hook config, and after converting, check the rule's site count did not drop.**
+
+## Phase 7 — forecast (2026-10-06)
+
+54 files (forecast pages, `components/forecast`, `services/engine`, the forecast flows, mocks and
+i18n), converted on top of B7 with the same procedure, after `alias-imports.mjs
+--include-forecast` (limited to the forecast files; the 114 Phase 4 files it also wanted are a
+separate cleanup). `FORECAST_FILES` and its warnings-only lint block are deleted from
+`eslint.config.js`. Three converter gaps, each repaired by hand and each worth knowing:
+
+- **A typed `let x: T | null = null` assigned only inside a callback.** The converter writes
+  `/** @type {T | null} */ let x = null`, and a later non-null cast `NonNullable<typeof x>`
+  resolves to `never`, because the read is narrowed to the `null` initializer. Put the type on
+  the INITIALIZER instead: `let x = /** @type {T | null} */ (null)` (`forecastMethods.js`).
+- **`reduce<U>(…)` with an explicit type argument.** JS has no call-site type arguments; casting
+  the initial value does not choose the overload. Type the accumulator inline:
+  `reduce((/** @type {number} */ a, v) => …, 0)` (`BuyerDemandForecast`, `DemandRangeSection`).
+- **A module-private `type X` becomes an EXPORTED `@typedef X`.** Two modules with the same
+  private name then collide through a barrel's `export *` (`NumberRead` in `forecastRules` and
+  `inventoryRules`, via `transitions/index.js`). Rename one for its module
+  (`CommitmentNumberRead`).
+
+One guard woke up: `hubCalendarReaders.guard` read only the TS parameter annotation, so since
+B3/B4 it had been blind to the JS defaults in `callOffRules` and `poResponseProjection`, kept
+non-empty only by `forecastRules`' TS default. Converting that emptied its population, its own
+non-empty control fired, and it now reads `@param` too (probed both ways).
 
 ## Dry run of the converter on everything (2026-10-05)
 
