@@ -176,6 +176,12 @@ export const POLICY_HOOKS = {
    * (REASON_REQUIRED), and "other" carries a note.
    */
   FORECAST_OVERRIDE_VALID: 'forecastoverride_valid',
+  /**
+   * Warehouse-week decision (FUX-D3): the choice is one of rent, pushOut,
+   * reduce or accept (WAREHOUSE_DECISION_CHOICE_UNKNOWN), and "accept" carries
+   * a note (WAREHOUSE_DECISION_NOTE_REQUIRED).
+   */
+  WAREHOUSE_DECISION_VALID: 'warehousedecision_valid',
   /** Dispatch heads-up (REQ-E09-04): the confirmation is accepted, the dates are
    *  dates with arrival on or after shipping, and the quantity is positive. */
   CALLOFF_DISPATCH_VALID: 'calloff_dispatch_valid',

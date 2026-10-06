@@ -526,6 +526,10 @@ export const processFlowPurposeEn: Record<string, string> = {
     'A Material Planning team member’s change to one week of one product’s demand forecast, with the old and new value, the reason, who and when. The latest change of a week is the one in force; the forecast bias page measures whether changes of each kind made the forecast better or worse.',
   'processFlows.purpose.t_forecastoverride_record':
     'The Material Planning team overrides the demand forecast for one product and week. Raising it above the engine’s forecast needs a reason code. It does not change material planning, which still runs on SAP’s plan.',
+  'processFlows.purpose.entity.warehouseDecision':
+    'The Material Planner’s decision for a week that does not fit the warehouse even with the most rented space: rent space, push out orders, reduce orders, or accept the overflow. It records the plan version it was made against. The latest decision of a week is the one in force; earlier ones stay on record.',
+  'processFlows.purpose.t_warehousedecision_record':
+    'The Material Planner records how a week that does not fit the warehouse will be handled. Accepting the overflow needs a note. The decision is a record of intent: it changes no order and is never sent to SAP or a supplier.',
 
   // ── RFx management (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ─────────────────
   'processFlows.purpose.entity.rfiEvent':
@@ -1087,6 +1091,10 @@ export const processFlowPurposeId: Record<string, string> = {
     'Perubahan oleh anggota tim Perencanaan Material pada satu minggu prakiraan permintaan satu produk, beserta nilai lama dan baru, alasan, siapa, dan kapan. Perubahan terakhir pada suatu minggu adalah yang berlaku; halaman bias prakiraan mengukur apakah perubahan tiap jenis membuat prakiraan lebih baik atau lebih buruk.',
   'processFlows.purpose.t_forecastoverride_record':
     'Tim Perencanaan Material menyesuaikan prakiraan permintaan satu produk untuk satu minggu. Menaikkannya di atas prakiraan mesin memerlukan kode alasan. Ini tidak mengubah perencanaan material, yang tetap memakai rencana SAP.',
+  'processFlows.purpose.entity.warehouseDecision':
+    'Keputusan Perencana Material untuk minggu yang tidak muat di gudang meski dengan ruang sewa terbanyak: sewa ruang, mundurkan pesanan, kurangi pesanan, atau terima kelebihan. Keputusan mencatat versi rencana yang menjadi dasarnya. Keputusan terakhir pada suatu minggu adalah yang berlaku; keputusan sebelumnya tetap tercatat.',
+  'processFlows.purpose.t_warehousedecision_record':
+    'Perencana Material mencatat cara menangani minggu yang tidak muat di gudang. Menerima kelebihan memerlukan catatan. Keputusan ini catatan niat: tidak mengubah pesanan apa pun dan tidak pernah dikirim ke SAP atau pemasok.',
 
   // ── RFx (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ────────────────────────────
   'processFlows.purpose.entity.rfiEvent':

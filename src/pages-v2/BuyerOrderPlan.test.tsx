@@ -71,7 +71,7 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
     expect(screen.getByTestId('op-kpi-orders')).toHaveTextContent(String(pk.after.orders));
   });
 
-  it('BL-117: the cap on rented space is shown with the rates; a week that does not fit shows its shortfall and the planner’s two choices', async () => {
+  it('BL-117 / FUX-D3: the cap on rented space is shown with the rates; weeks that do not fit are a count line linking to Make warehouse room, with no choice control', async () => {
     const p = await plan();
     const pk = p.warehouses.find((w) => w.kind === 'packaging')!;
     // The cap in force is the administrator's default (25%), a placeholder the Warehouse confirms.
@@ -79,32 +79,28 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
     expect(pk.maxRentedPallets).toBe(450);
     expect(pk.shortfallWeeks.length).toBeGreaterThan(0);
     const sw = pk.shortfallWeeks[0];
+    const n = pk.shortfallWeeks.length;
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
-    await screen.findByTestId('op-shortfall');
+    const line = await screen.findByTestId('op-shortfall-count');
     expect(screen.getByTestId('op-cost-maxRent')).toHaveTextContent('25% of owned capacity');
     expect(screen.getByTestId('op-cost-placeholder-maxRent')).toHaveTextContent('Placeholder — the Warehouse to confirm');
     expect(screen.getByTestId('op-max-rented')).toHaveTextContent('450 pallets');
-    const card = screen.getByTestId(`op-short-${sw.weekStart}`);
-    expect(within(card).getByTestId(`op-short-pallets-${sw.weekStart}`)).toHaveTextContent(
-      `${formatNumber(Math.round(sw.shortfallPallets * 10) / 10)} pallets short`,
-    );
-    expect(within(card).getByTestId(`op-short-unavoidable-${sw.weekStart}`)).toBeInTheDocument();
     expect(screen.getByTestId(`op-beyond-${sw.weekStart}`)).toHaveTextContent('beyond the limit');
-    // Neither choice is made for the planner; choosing shows what to do next.
-    const rent = within(card).getByTestId(`op-short-choose-rent-${sw.weekStart}`);
-    const later = within(card).getByTestId(`op-short-choose-later-${sw.weekStart}`);
-    expect([rent.getAttribute('aria-pressed'), later.getAttribute('aria-pressed')]).toEqual(['false', 'false']);
-    fireEvent.click(rent);
-    expect(rent).toHaveAttribute('aria-pressed', 'true');
-    expect(within(card).getByTestId(`op-short-next-rent-${sw.weekStart}`)).toHaveTextContent('Book');
-    fireEvent.click(later);
-    expect(later).toHaveAttribute('aria-pressed', 'true');
-    expect(within(card).queryByTestId(`op-short-next-rent-${sw.weekStart}`)).toBeNull();
-    const next = within(card).getByTestId(`op-short-next-later-${sw.weekStart}`);
-    for (const d of sw.later.deliveries) {
-      expect(within(next).getByTestId(`op-short-delivery-${d.materialCode}-${d.source}-${d.weekStart}`)).toBeInTheDocument();
-    }
-    expect(within(next).getByRole('link', { name: 'Open Make warehouse room' })).toHaveAttribute('href', expect.stringContaining('/buyer/reschedule'));
+    // One line: the count and where to decide.
+    expect(line).toHaveTextContent(`${n} ${n === 1 ? 'week does' : 'weeks do'} not fit. Decide on Make warehouse room.`);
+    expect(within(line).getByRole('link', { name: 'Decide on Make warehouse room.' })).toHaveAttribute('href', expect.stringContaining('/buyer/reschedule'));
+    // The card, its choice control and the "not saved" sentence are gone.
+    expect(screen.queryByTestId('op-shortfall')).toBeNull();
+    expect(screen.queryByTestId(`op-short-${sw.weekStart}`)).toBeNull();
+    expect(screen.queryAllByRole('group', { name: /cover the shortfall|handle this week/ })).toEqual([]);
+    expect(screen.queryByText(/is not saved/)).toBeNull();
+  });
+
+  it('FUX-D3: the count line renders in Indonesian', async () => {
+    const pk = (await plan()).warehouses.find((w) => w.kind === 'packaging')!;
+    await i18n.changeLanguage('id');
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    expect(await screen.findByTestId('op-shortfall-count')).toHaveTextContent(`${pk.shortfallWeeks.length} minggu tidak muat. Putuskan di Kosongkan ruang gudang.`);
   });
 
   it('BR-04: every recommendation shows the constraint that bound it and its saving', async () => {
