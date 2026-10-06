@@ -45,11 +45,12 @@
 
 import ts from 'typescript';
 import { execFileSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const SRC = join(ROOT, 'src');
 const DRY_RUN = process.argv.includes('--dry-run');
 const inputs = process.argv
   .slice(2)
@@ -59,6 +60,15 @@ if (inputs.length === 0) {
   console.error('usage: node scripts/codemods/ts-to-js.mjs [--dry-run] <file.ts|file.tsx>…');
   process.exit(1);
 }
+
+// Folder → alias, read from aliases.ts as TEXT (same parse as
+// alias-imports.mjs). An `import('…')` type that crosses a top-level folder of
+// src/ is written with the alias, so a conversion never adds an import the
+// alias-imports codemod would then have to rewrite.
+const FOLDER_TO_ALIAS = new Map(
+  [...readFileSync(join(ROOT, 'aliases.ts'), 'utf8').matchAll(/'(@[\w-]+)':\s*'([\w-]+)'/g)].map(([, alias, folder]) => [folder, alias]),
+);
+if (FOLDER_TO_ALIAS.size === 0) throw new Error('No aliases parsed from aliases.ts — refusing to run');
 
 // ── A program over the whole spec surface, for the type checker ─────────────
 // Only two translations need types (a non-null or generic call the syntax
@@ -261,12 +271,25 @@ function sameSymbolName(type, node) {
   // a JSDoc form that needs no import line. Only for app files, never a library.
   const declFile = sym.declarations?.[0]?.getSourceFile().fileName;
   if (!declFile || declFile.includes('/node_modules/') || (m[2] && /\b[A-Z]/.test(m[2]))) return null;
-  let rel = toPosixRel(node.getSourceFile().fileName, declFile);
+  let rel = moduleSpecifierTo(node.getSourceFile().fileName, declFile);
   return `import('${rel}').${text}`;
 }
 
-/** `./x` / `../y` module path from one source file to another, without extension. */
-function toPosixRel(fromFile, toFile) {
+/**
+ * Module path from one source file to another, without extension: the alias
+ * (`@lib/quoteScore`) when the target is in another top-level folder of src/,
+ * else `./x` / `../y` — the rule in aliases.ts.
+ */
+function moduleSpecifierTo(fromFile, toFile) {
+  const top = (f) => {
+    const parts = relative(SRC, f).split('\\').join('/').split('/');
+    return parts.length > 1 && parts[0] !== '..' ? parts[0] : '';
+  };
+  const toFolder = top(toFile);
+  const alias = FOLDER_TO_ALIAS.get(toFolder);
+  if (toFolder && alias && toFolder !== top(fromFile)) {
+    return `${alias}/${relative(join(SRC, toFolder), toFile).split('\\').join('/').replace(/\.(d\.ts|tsx?|jsx?)$/, '')}`;
+  }
   let rel = relative(dirname(fromFile), toFile).split('\\').join('/').replace(/\.(d\.ts|tsx?|jsx?)$/, '');
   if (!rel.startsWith('.')) rel = `./${rel}`;
   return rel;
