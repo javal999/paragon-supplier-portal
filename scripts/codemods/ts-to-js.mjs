@@ -45,11 +45,12 @@
 
 import ts from 'typescript';
 import { execFileSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const SRC = join(ROOT, 'src');
 const DRY_RUN = process.argv.includes('--dry-run');
 const inputs = process.argv
   .slice(2)
@@ -59,6 +60,15 @@ if (inputs.length === 0) {
   console.error('usage: node scripts/codemods/ts-to-js.mjs [--dry-run] <file.ts|file.tsx>…');
   process.exit(1);
 }
+
+// Folder → alias, read from aliases.js as TEXT (same parse as
+// alias-imports.mjs). An `import('…')` type that crosses a top-level folder of
+// src/ is written with the alias, so a conversion never adds an import the
+// alias-imports codemod would then have to rewrite.
+const FOLDER_TO_ALIAS = new Map(
+  [...readFileSync(join(ROOT, 'aliases.js'), 'utf8').matchAll(/'(@[\w-]+)':\s*'([\w-]+)'/g)].map(([, alias, folder]) => [folder, alias]),
+);
+if (FOLDER_TO_ALIAS.size === 0) throw new Error('No aliases parsed from aliases.js — refusing to run');
 
 // ── A program over the whole spec surface, for the type checker ─────────────
 // Only two translations need types (a non-null or generic call the syntax
@@ -209,6 +219,82 @@ function typeExprOf(e, sf) {
   return null;
 }
 
+/**
+ * `@template` lines and the `<T, …>` argument list for a re-exported type, read
+ * from its original declaration: `export type { Of } from './types'` where `Of<T>`
+ * is generic must become `@template T @typedef {import('./types').Of<T>} Of`.
+ */
+function reexportTemplate(nameNode) {
+  let sym = checker.getSymbolAtLocation(nameNode);
+  if (sym && sym.flags & ts.SymbolFlags.Alias) sym = checker.getAliasedSymbol(sym);
+  const decl = sym?.declarations?.find((d) => d.typeParameters?.length || ts.isJSDocTypedefTag(d));
+  const tps = decl?.typeParameters ?? (decl && ts.isJSDocTypedefTag(decl) ? ts.getEffectiveTypeParameterDeclarations(decl) : []);
+  if (!tps || tps.length === 0) return { tags: [], args: '' };
+  const dsf = decl.getSourceFile();
+  return {
+    tags: tps.map((tp) => {
+      // In a JSDoc typedef the constraint sits on the `@template {C} T` tag.
+      const c = tp.constraint
+        ? tp.constraint.getText(dsf)
+        : tp.parent && ts.isJSDocTemplateTag(tp.parent) && tp.parent.constraint
+          ? tp.parent.constraint.getText(dsf).replace(/^\{|\}$/g, '')
+          : null;
+      return `@template ${c ? `{${c}} ` : ''}${tp.default ? `[${tp.name.text}=${tp.default.getText(dsf)}]` : tp.name.text}`;
+    }),
+    args: `<${tps.map((tp) => tp.name.text).join(', ')}>`,
+  };
+}
+
+/**
+ * The checker's name for a type when it is ONE named type (`TransitionDef`,
+ * `Map<string, Row>`) and that name resolves, at `node`, to the SAME symbol —
+ * so the app's `TransitionEvent` is never written where the DOM's would be read.
+ */
+function sameSymbolName(type, node) {
+  const sym = type.aliasSymbol ?? type.getSymbol();
+  if (!sym) return null;
+  const text = checker.typeToString(type, node, ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope);
+  const m = /^([A-Za-z_$][\w$]*)(<.*>)?$/.exec(text);
+  if (!m || m[1] !== sym.getName() || text.length > 160) return null;
+  // Every name inside the type arguments must resolve here too
+  // (`Map<string, GrossCell>` with no GrossCell in scope is not usable).
+  if (m[2]) {
+    for (const n of new Set(m[2].replace(/"[^"]*"|'[^']*'/g, '').match(/\b[A-Z][A-Za-z0-9_]*\b/g) ?? [])) {
+      if (!checker.resolveName(n, node, ts.SymbolFlags.Type | ts.SymbolFlags.Namespace, false)) return null;
+    }
+  }
+  let found = checker.resolveName(m[1], node, ts.SymbolFlags.Type, false);
+  if (found && found.flags & ts.SymbolFlags.Alias) found = checker.getAliasedSymbol(found);
+  if (found === sym) return text;
+  if (found) return null; // the name means something ELSE here (the DOM's TransitionEvent)
+  // Not in scope at all: reference it where it is declared, `import('…').Name`,
+  // a JSDoc form that needs no import line. Only for app files, never a library.
+  const declFile = sym.declarations?.[0]?.getSourceFile().fileName;
+  if (!declFile || declFile.includes('/node_modules/') || (m[2] && /\b[A-Z]/.test(m[2]))) return null;
+  let rel = moduleSpecifierTo(node.getSourceFile().fileName, declFile);
+  return `import('${rel}').${text}`;
+}
+
+/**
+ * Module path from one source file to another, without extension: the alias
+ * (`@lib/quoteScore`) when the target is in another top-level folder of src/,
+ * else `./x` / `../y` — the rule in aliases.js.
+ */
+function moduleSpecifierTo(fromFile, toFile) {
+  const top = (f) => {
+    const parts = relative(SRC, f).split('\\').join('/').split('/');
+    return parts.length > 1 && parts[0] !== '..' ? parts[0] : '';
+  };
+  const toFolder = top(toFile);
+  const alias = FOLDER_TO_ALIAS.get(toFolder);
+  if (toFolder && alias && toFolder !== top(fromFile)) {
+    return `${alias}/${relative(join(SRC, toFolder), toFile).split('\\').join('/').replace(/\.(d\.ts|tsx?|jsx?)$/, '')}`;
+  }
+  let rel = relative(dirname(fromFile), toFile).split('\\').join('/').replace(/\.(d\.ts|tsx?|jsx?)$/, '');
+  if (!rel.startsWith('.')) rel = `./${rel}`;
+  return rel;
+}
+
 /** A type the checker names, only if every name in it resolves at `node`. */
 function nameableType(type, node) {
   const text = checker.typeToString(type, node, ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope);
@@ -235,6 +321,29 @@ function convert(sf) {
     flags.push(`${line + 1}: ${what}`);
   };
   const del = (start, end) => edits.push({ start, end, text: '' });
+
+  /**
+   * A JSDoc cast that would be the FIRST token inside an existing parenthesised
+   * expression — `(x!.a ?? 0)` → `(/** @type *\/ (x).a ?? 0)` — is moved OUT of
+   * the parentheses by Prettier, which then casts the whole expression. No
+   * written form survives repeated Prettier runs, so the spot is flagged for a
+   * person to rewrite as a local variable (frontend-standard Phase 4 playbook).
+   */
+  const flagIfOpensParens = (target, castNode) => {
+    const start = target.getStart(sf);
+    // Climb the nodes that START where the target starts; the first enclosing
+    // parenthesised expression among them is the one Prettier would rewrite.
+    for (let p = target.parent; p && p.getStart(sf) >= start - 1; p = p.parent) {
+      // Safe when the parentheses hold ONLY the cast (`(foo as Bar).baz`):
+      // risky when the cast is merely the start of a longer expression.
+      if (ts.isParenthesizedExpression(p) && p.expression.getStart(sf) === start && p.expression !== castNode) {
+        flag(target, 'JSDoc cast would open a parenthesised expression — Prettier moves it outside; rewrite as a local variable');
+        return;
+      }
+      if (p.getStart(sf) !== start) return;
+    }
+  };
+
   const ins = (pos, text) => edits.push({ start: pos, end: pos, text });
   const rep = (start, end, text) => edits.push({ start, end, text });
   const src = sf.text;
@@ -294,7 +403,12 @@ function convert(sf) {
       }
     } else {
       const start = t.target.getStart(sf);
-      ins(start, jsdocBlock(tags, indentAt(sf, start)));
+      const indent = indentAt(sf, start);
+      // If code precedes the target on its line (`{ a: …, b: (c) => … }`), a
+      // block placed there is read by Prettier as a TRAILING comment of `a`.
+      const lineStart = src.lastIndexOf('\n', start - 1) + 1;
+      const codeBefore = src.slice(lineStart, start).trim().length > 0;
+      ins(start, `${codeBefore ? `\n${indent}` : ''}${jsdocBlock(tags, indent)}`);
     }
   };
 
@@ -355,7 +469,10 @@ function convert(sf) {
         const [orig, , local = orig] = spec.split(' ');
         if (reexported.has(local)) {
           typeNames.splice(typeNames.indexOf(spec), 1);
-          tags.push(`/** @typedef {import('${modPath}').${orig}} ${local} */`);
+          const el = ic.namedBindings.elements.find((x) => x.name.text === local);
+          const g = reexportTemplate(el.name);
+          const typedef = `@typedef {import('${modPath}').${orig}${g.args}} ${local}`;
+          tags.push(g.tags.length ? `/**\n${[...g.tags, typedef].map((l) => ` * ${l}`).join('\n')}\n */` : `/** ${typedef} */`);
         }
       }
       if (defaultAsType) tags.push(`/** @import ${defaultAsType} from ${mod} */`);
@@ -381,7 +498,11 @@ function convert(sf) {
       if (typeEls.length === 0) continue;
       const keep = all.filter((e) => !typeEls.includes(e)).map((e) => e.getText(sf));
       const lines = st.moduleSpecifier
-        ? typeEls.map((e) => `/** @typedef {import(${st.moduleSpecifier.getText(sf)}).${(e.propertyName ?? e.name).text}} ${e.name.text} */`)
+        ? typeEls.map((e) => {
+            const g = reexportTemplate(e.propertyName ?? e.name);
+            const typedef = `@typedef {import(${st.moduleSpecifier.getText(sf)}).${(e.propertyName ?? e.name).text}${g.args}} ${e.name.text}`;
+            return g.tags.length ? `/**\n${[...g.tags, typedef].map((l) => ` * ${l}`).join('\n')}\n */` : `/** ${typedef} */`;
+          })
         : []; // a local type is already exported by its @typedef
       if (keep.length) lines.push(`export { ${keep.join(', ')} }${st.moduleSpecifier ? ` from ${st.moduleSpecifier.getText(sf)}` : ''};`);
       rep(st.getStart(sf), st.end, lines.join('\n'));
@@ -413,8 +534,24 @@ function convert(sf) {
       return true;
     }
     if (ts.isInterfaceDeclaration(node)) {
-      const heritage = (node.heritageClauses ?? []).flatMap((h) => h.types.map((t) => typeText(t, sf).text));
-      const simple = node.members.every((m) => ts.isPropertySignature(m) || ts.isMethodSignature(m));
+      // `interface X extends Base { a: T }` OVERRIDES Base's `a`; an intersection
+      // would AND the two types instead. So a base whose members X redeclares
+      // is written `Omit<Base, 'a'>` — the same type TypeScript gave X.
+      const own = new Set(node.members.map((m) => m.name?.getText(sf)).filter(Boolean).map((n) => n.replace(/^['"]|['"]$/g, '')));
+      const heritage = (node.heritageClauses ?? []).flatMap((h) =>
+        h.types.map((t) => {
+          const text = typeText(t, sf).text;
+          const baseProps = checker.getTypeAtLocation(t).getProperties().map((p) => p.getName());
+          const overridden = baseProps.filter((n) => own.has(n));
+          return overridden.length ? `Omit<${text}, ${overridden.map((n) => `'${n}'`).join(' | ')}>` : text;
+        })
+      );
+      // `@typedef {object}` + `@property` cannot say `readonly` (owner ruling
+      // 2026-10-05: keep readonly everywhere), so an interface with any readonly
+      // member is written as a type-literal typedef instead; each member's comment
+      // becomes a labelled line of prose above it.
+      const anyReadonly = node.members.some((m) => m.modifiers?.some((x) => x.kind === ts.SyntaxKind.ReadonlyKeyword));
+      const simple = !anyReadonly && node.members.every((m) => ts.isPropertySignature(m) || ts.isMethodSignature(m));
       const props = [];
       const prose = [];
       const literal = [];
@@ -531,7 +668,10 @@ function convert(sf) {
         // Comments inside an inline type (e.g. a field's doc in `{ /** … */ a: T }`)
         // cannot live inside the JSDoc type, so they become prose above the tag.
         tags.unshift(...typeProse(tt));
-        if (p.dotDotDotToken) t = /\[\]$/.test(t) ? `...${t.slice(0, -2).replace(/^\((.*)\)$/, '$1')}` : /^(?:readonly )?Array<(.+)>$/.test(t) ? `...${RegExp.$1}` : `...${t}`;
+        // A rest parameter: `...X[]` → JSDoc `...X` (each argument is X). A
+        // tuple or other non-array type (`Parameters<typeof f>`) is written as is —
+        // `...T` would mean "each argument is the whole tuple".
+        if (p.dotDotDotToken) t = /\[\]$/.test(t) ? `...${t.slice(0, -2).replace(/^\((.*)\)$/, '$1')}` : /^(?:readonly )?Array<(.+)>$/.test(t) ? `...${RegExp.$1}` : t;
         const opt = p.questionToken || p.initializer;
         tags.push(`@param {${t}} ${opt ? `[${name}]` : name}`);
       } else if (p.questionToken) {
@@ -541,10 +681,19 @@ function convert(sf) {
       if (p.questionToken) del(p.questionToken.getStart(sf), p.questionToken.end);
       if (p.type) dropAnnotation((p.questionToken ?? p.name).end, p.type);
     });
-    if (fn.type) {
+    // `(a): a is NonNullable<typeof a> => …` — JSDoc cannot name the parameter
+    // in an inline predicate, and TypeScript (5.5+) INFERS this exact predicate
+    // from `a !== undefined` / `a != null`, so the annotation is dropped.
+    const inferablePredicate =
+      fn.type && ts.isTypePredicateNode(fn.type) && fn.type.type &&
+      /^NonNullable<typeof \w+>$/.test(typeText(fn.type.type, sf).text);
+    if (fn.type && !inferablePredicate) {
       anyType = true;
       tags.push(`@returns {${typeText(fn.type, sf).text}}`);
       // `): R =>` / `): R {` — remove from the `)` to the end of the type.
+      const close = src.lastIndexOf(')', fn.type.getStart(sf));
+      del(close + 1, fn.type.end);
+    } else if (inferablePredicate) {
       const close = src.lastIndexOf(')', fn.type.getStart(sf));
       del(close + 1, fn.type.end);
     }
@@ -633,6 +782,7 @@ function convert(sf) {
         rep(node.getStart(sf), node.expression.getStart(sf), `/** ${tag} */ (`);
         ins(node.expression.end, ')');
       } else {
+        flagIfOpensParens(node.expression, node);
         ins(node.expression.getStart(sf), `/** ${tag} */ (`);
         rep(node.expression.end, node.end, ')');
       }
@@ -648,8 +798,12 @@ function convert(sf) {
       // construction. A checker-printed name is the fallback, and only after
       // `nameableType` found every name in scope — even then a name can resolve
       // to a different type here (the app's `TransitionEvent` vs the DOM's).
-      cast = shaped ? `NonNullable<${shaped}>` : named;
+      // A single named type that verifiably means the same type here beats the
+      // shape (which cannot see through generic methods such as `flatMap`).
+      const exact = sameSymbolName(checker.getNonNullableType(checker.getTypeAtLocation(e)), node);
+      cast = exact ?? (shaped ? `NonNullable<${shaped}>` : named);
       if (cast) {
+        flagIfOpensParens(e, node);
         ins(e.getStart(sf), `/** @type {${cast}} */ (`);
         rep(e.end, node.end, ')');
       } else {
@@ -681,7 +835,16 @@ function convert(sf) {
         ins(node.end, ')');
       };
       if (ts.isNewExpression(node)) castResult(`${callee}<${args.join(', ')}>`);
-      else if (callee === 'useState') castArg(args[0]);
+      else if (callee === 'useState') {
+        // A lazy initializer (`useState<T>(() => …)`, or a function passed by
+        // name: `useState<T>(blankTerm)`) is a function returning T.
+        const lazy =
+          arg0 &&
+          (ts.isArrowFunction(arg0) ||
+            ts.isFunctionExpression(arg0) ||
+            checker.getTypeAtLocation(arg0).getCallSignatures().length > 0);
+        castArg(lazy ? `() => ${args[0]}` : args[0]);
+      }
       else if (callee === 'useRef' || callee === 'createContext') {
         const lit = arg0?.kind === ts.SyntaxKind.NullKeyword ? ' | null' : '';
         castArg(`${args[0]}${lit}`);
@@ -692,7 +855,10 @@ function convert(sf) {
         ins(init.end, ')');
       } else if (callee === 'querySelector' || callee === 'closest') castResult(`${args[0]} | null`);
       else if (callee === 'querySelectorAll') castResult(`NodeListOf<${args[0]}>`);
-      else if (['toEqual', 'toBe', 'each', 'freeze', 'fn', 'mocked'].includes(callee)) {
+      // `Object.freeze<T>(v)` is overloaded (`T extends Function` first), so an
+      // instantiation cast picks the wrong overload: cast the argument instead.
+      else if (callee === 'freeze') castArg(args[0]);
+      else if (['toEqual', 'toBe', 'fn', 'mocked'].includes(callee)) {
         /* type arguments that only narrow a test helper: dropping them is safe */
       } else if (isEntityChain(node.expression)) {
         // Any other generic call: cast the CALLEE to its instantiation,

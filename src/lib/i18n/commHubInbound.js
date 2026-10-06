@@ -1,0 +1,131 @@
+// Comm Hub C2 — the inbound confirm-before-commit surface (operator-fed).
+// EN/ID parity is guarded by fragments.test.js.
+
+/** @type {Record<string, string>} */
+export const commHubInboundEn = {
+  'commHub.crumb.intelligence': 'Intelligence',
+  'commHub.crumb.inbound': 'Channel Inbox',
+  'commHub.header.title': 'Channel Inbox — reply triage',
+  'commHub.header.subtitle':
+    'Turn a supplier reply into a stock entry — you check and save it before anything is recorded.',
+  'commHub.meta.line': 'Operator-fed · simulated timeline, as of {{date}}',
+  'commHub.honesty.title': 'Operator-fed inbox — no live channel.',
+  'commHub.honesty.body':
+    'Paste the reply that reached you on WhatsApp, email, or WeChat. Nothing is sent or received live here. A parsed reply only fills in the Stock page’s entry form; nothing is recorded until you save that form.',
+  'commHub.source.title': 'Supplier reply',
+  'commHub.source.channelLabel': 'Channel',
+  'commHub.channel.whatsapp': 'WhatsApp',
+  'commHub.channel.email': 'Email',
+  'commHub.channel.wechat': 'WeChat',
+  'commHub.source.messageLabel': 'Message text',
+  'commHub.source.placeholder': 'e.g. STOK MAT-10234 2.400 KG',
+  'commHub.source.hint': 'Paste the supplier’s reply verbatim.',
+  'commHub.source.parse': 'Parse reply',
+  'commHub.infer.title': 'Parsed interpretation',
+  'commHub.infer.rawTitle': 'Message received',
+  'commHub.infer.confidence': 'Confidence {{pct}}%',
+  'commHub.infer.matched': 'Recognized',
+  'commHub.infer.unparsed': 'Did not parse',
+  'commHub.infer.unparsedNone': '— nothing left over',
+  'commHub.infer.uomDiag': 'Unit read: {{uom}} (reference only — never recorded)',
+  'commHub.infer.specHint': 'Interpreted as',
+  'commHub.infer.specHint.inventory': 'Inventory declaration (stock on hand)',
+  'commHub.infer.qtyRefused': 'A quantity was seen but not accepted: {{reason}}',
+  'commHub.qtyReason.EMPTY_QTY': 'no quantity',
+  'commHub.qtyReason.NOT_NUMERIC': 'not a number',
+  'commHub.qtyReason.AMBIGUOUS_QTY': 'ambiguous number — confirm it manually',
+  'commHub.infer.noParse.title': 'Could not interpret this as a stock update.',
+  'commHub.infer.noParse.body':
+    'Nothing will be recorded. Check the message, or enter the update on the supplier’s own surface.',
+  'commHub.row.title': 'Read from the message',
+  // BL-73 — a row only pre-fills the Stock page's entry form (REQ-E08-02 BR-09).
+  'commHub.row.matched': 'Matches your material {{material}}',
+  'commHub.row.unmatched': 'No material of yours matches — choose it in the form',
+  'commHub.row.enter': 'Enter this stock',
+  'commHub.entry.hint':
+    'Opens the Stock page’s entry form with these figures filled in. Check them, add anything else the supplier told you, and save — nothing is recorded before that.',
+  'commHub.row.supplierWrote': 'Supplier wrote',
+  'commHub.row.uomLabel': 'Unit',
+  'commHub.reset': 'New message',
+  'commHub.result.title': 'Result',
+  'commHub.result.landed': 'Recorded: {{material}} — {{qty}}',
+  'commHub.result.failed': 'Not recorded: {{reason}}',
+  'commHub.toast.blocked.title': 'Nothing recorded',
+  'commHub.toast.blocked.body': 'No confirmable update in this message.',
+  'commHub.gate.title': 'Supplier context',
+  'commHub.gate.body':
+    'This inbound triage records updates for the supplier whose conversation you are in.',
+  // — C5: "what Paragon needs from you" (own obligations) + the honest note. The
+  //   row labels/glosses reuse the shared delivery.supplier.obligations.* keys. —
+  'commHub.needs.title': 'What Paragon needs from you',
+  'commHub.needs.subtitle': 'Your own upcoming and overdue deliveries.',
+  'commHub.needs.loading': 'Loading your deliveries…',
+  'commHub.needs.viewAll': 'View all in Delivery Agreements',
+  'commHub.note.title': 'Recorded here, never sent from here.',
+  'commHub.note.body':
+    'Stock you save from a reply here is recorded to the governed ledger. Paragon has no live channel, so nothing is auto-sent or auto-received.'
+};
+
+/** @type {Record<string, string>} */
+export const commHubInboundId = {
+  'commHub.crumb.intelligence': 'Intelijen',
+  'commHub.crumb.inbound': 'Kotak Masuk Kanal',
+  'commHub.header.title': 'Kotak Masuk Kanal — triase balasan',
+  'commHub.header.subtitle':
+    'Ubah balasan pemasok menjadi isian stok — Anda memeriksa dan menyimpannya sebelum apa pun dicatat.',
+  'commHub.meta.line': 'Diisi operator · lini masa simulasi, per {{date}}',
+  'commHub.honesty.title': 'Kotak masuk diisi operator — tanpa kanal langsung.',
+  'commHub.honesty.body':
+    'Tempel balasan yang Anda terima di WhatsApp, email, atau WeChat. Tidak ada yang dikirim atau diterima secara langsung di sini. Balasan yang terurai hanya mengisi formulir isi stok di halaman Stok; tidak ada yang dicatat sampai Anda menyimpan formulir itu.',
+  'commHub.source.title': 'Balasan pemasok',
+  'commHub.source.channelLabel': 'Kanal',
+  'commHub.channel.whatsapp': 'WhatsApp',
+  'commHub.channel.email': 'Email',
+  'commHub.channel.wechat': 'WeChat',
+  'commHub.source.messageLabel': 'Teks pesan',
+  'commHub.source.placeholder': 'mis. STOK MAT-10234 2.400 KG',
+  'commHub.source.hint': 'Tempel balasan pemasok apa adanya.',
+  'commHub.source.parse': 'Urai balasan',
+  'commHub.infer.title': 'Interpretasi terurai',
+  'commHub.infer.rawTitle': 'Pesan diterima',
+  'commHub.infer.confidence': 'Keyakinan {{pct}}%',
+  'commHub.infer.matched': 'Dikenali',
+  'commHub.infer.unparsed': 'Tidak terurai',
+  'commHub.infer.unparsedNone': '— tidak ada sisa',
+  'commHub.infer.uomDiag': 'Satuan terbaca: {{uom}} (rujukan saja — tidak pernah dicatat)',
+  'commHub.infer.specHint': 'Ditafsirkan sebagai',
+  'commHub.infer.specHint.inventory': 'Deklarasi inventaris (stok tersedia)',
+  'commHub.infer.qtyRefused': 'Kuantitas terlihat tetapi tidak diterima: {{reason}}',
+  'commHub.qtyReason.EMPTY_QTY': 'tanpa kuantitas',
+  'commHub.qtyReason.NOT_NUMERIC': 'bukan angka',
+  'commHub.qtyReason.AMBIGUOUS_QTY': 'angka ambigu — konfirmasi manual',
+  'commHub.infer.noParse.title': 'Tidak dapat menafsirkan ini sebagai pembaruan stok.',
+  'commHub.infer.noParse.body':
+    'Tidak ada yang akan dicatat. Periksa pesannya, atau masukkan pembaruan di permukaan pemasok sendiri.',
+  'commHub.row.title': 'Terbaca dari pesan',
+  'commHub.row.matched': 'Cocok dengan material Anda {{material}}',
+  'commHub.row.unmatched': 'Tidak ada material Anda yang cocok — pilih di formulir',
+  'commHub.row.enter': 'Isi stok ini',
+  'commHub.entry.hint':
+    'Membuka formulir isi stok di halaman Stok dengan angka ini sudah terisi. Periksa, tambahkan hal lain yang disampaikan pemasok, lalu simpan — tidak ada yang dicatat sebelum itu.',
+  'commHub.row.supplierWrote': 'Pemasok menulis',
+  'commHub.row.uomLabel': 'Satuan',
+  'commHub.reset': 'Pesan baru',
+  'commHub.result.title': 'Hasil',
+  'commHub.result.landed': 'Tercatat: {{material}} — {{qty}}',
+  'commHub.result.failed': 'Tidak tercatat: {{reason}}',
+  'commHub.toast.blocked.title': 'Tidak ada yang dicatat',
+  'commHub.toast.blocked.body': 'Tidak ada pembaruan yang dapat dikonfirmasi dalam pesan ini.',
+  'commHub.gate.title': 'Konteks pemasok',
+  'commHub.gate.body':
+    'Triase masuk ini mencatat pembaruan untuk pemasok yang percakapannya sedang Anda buka.',
+  // — C5: "yang Paragon butuhkan dari Anda" (kewajiban sendiri) + catatan jujur.
+  //   Label/gloss baris menggunakan kembali kunci delivery.supplier.obligations.*. —
+  'commHub.needs.title': 'Yang Paragon butuhkan dari Anda',
+  'commHub.needs.subtitle': 'Pengiriman Anda yang akan datang dan terlambat.',
+  'commHub.needs.loading': 'Memuat pengiriman Anda…',
+  'commHub.needs.viewAll': 'Lihat semua di Perjanjian Pengiriman',
+  'commHub.note.title': 'Dicatat di sini, tidak pernah dikirim dari sini.',
+  'commHub.note.body':
+    'Stok yang Anda simpan dari balasan di sini dicatat ke buku besar terkelola. Paragon tidak memiliki kanal langsung, jadi tidak ada yang dikirim atau diterima secara otomatis.'
+};

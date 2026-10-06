@@ -26,7 +26,7 @@ must never be read as one.
 | Vocabulary | Values | What it measures | Authority |
 |---|---|---|---|
 | **Contract tier** (this package) | LIVE / RESERVED / SPEC | Does the *seam* exist in code today? | README legend |
-| **Source tier** (the planning grid, per cell) | LIVE / SIMULATED / SPEC | Is the *data under a cell* real? | `liveness()` — `src/services/liveness/registry.ts:137` |
+| **Source tier** (the planning grid, per cell) | LIVE / SIMULATED / SPEC | Is the *data under a cell* real? | `liveness()` — `src/services/liveness/registry.js:137` |
 
 The honesty matrix (§5) is built on the **source tier** (runtime `liveness()`), because a
 grid cell renders a per-cell data marker. Contract-tier RESERVED (a named-but-unbuilt seam)
@@ -40,16 +40,16 @@ not substitute one for the other.
 A **PlanDraft** is the proposed-values document a user composes over live seam data before
 committing. It is held in a dedicated client-side plan store and is, by contract:
 
-- **NEVER written through `IDataService`** (`src/services/data/types.ts:1205` — the read/write
+- **NEVER written through `IDataService`** (`src/services/data/types.js:1205` — the read/write
   service seam). A plan is not persisted state; it is a pre-commit working set.
 - **NEVER placed in the TanStack Query cache.** The query cache holds seam reads only
-  (`useServiceQuery`, `src/services/query/useServiceQuery.ts:22-38`); the plan overlay is a
+  (`useServiceQuery`, `src/services/query/useServiceQuery.js:22-38`); the plan overlay is a
   separate concern the grid renders *on top of* those reads.
 - **NEVER persisted to localStorage.** The codebase deliberately deleted its localStorage
   overlays; that pattern stays dead. A PlanDraft is session-scoped and disappears on reload.
 
 **Where it lives — the harvested neighbor pattern.** The plan store follows the house
-client-state pattern of `CurrentIdentityContext` (`src/context/CurrentIdentityContext.tsx`):
+client-state pattern of `CurrentIdentityContext` (`src/context/CurrentIdentityContext.jsx`):
 `createContext` + a `Provider` holding state in `useState`/`useReducer` (:35-56) + a `useX()`
 hook that throws outside its provider (:58-65). It lives beside `CurrentIdentityContext` and
 `AdaptiveContext` — **but differs in one deliberate way**: `CurrentIdentity` carries an
@@ -75,7 +75,7 @@ convention: **a PlanDraft entry cannot exist without anchoring to a seam row**, 
 never be minted as a standalone fabricated peer and spread into a seam-backed list.
 
 This structurally outlaws the named anti-pattern — the now-**RETIRED** `extraRfqs`
-client-fabrication that once lived in `src/pages-v2/BuyerSourcing.tsx`:
+client-fabrication that once lived in `src/pages-v2/BuyerSourcing.jsx`:
 
 ```ts
 // HISTORICAL — retired in PR #77; kept here only to name the shape the invariant bans.
@@ -102,7 +102,7 @@ The grid renders **`seamRow + plannedOverlay`**. A planned value is ALWAYS both:
   from the seam-backed arrays the read hooks return. It is **never merged into** those arrays.
 
 **The structural test (assertable at G1):** the seam list the grid reads
-(`useServiceQuery` output, `useServiceQuery.ts:33-37`) is never mutated to carry planned
+(`useServiceQuery` output, `useServiceQuery.js:33-37`) is never mutated to carry planned
 values; a planned value is only ever reachable by looking up `plannedOverlay[seamRef]`. If a
 planned value can be found *inside* a seam array, the invariant is broken. This is the
 inverse of the retired `extraRfqs` `[...extraRfqs, ...baseRfqs]` merge (BuyerSourcing, PR #77).
@@ -120,19 +120,19 @@ successful dispatch + invalidation re-read.
 For each PLANNED row, in order:
 
 1. **Dispatch** through the write seam
-   (`ICommandService.dispatch`, `src/services/data/types.ts:1078-1080`):
+   (`ICommandService.dispatch`, `src/services/data/types.js:1078-1080`):
    ```ts
    await svc.commands.dispatch(scope, { transitionId, entity, entityId, payload })
    ```
    The dispatcher applies the FULL validation chain unchanged
-   (`src/services/transitions/dispatcher.ts:4-14`): transition-exists + CommandTarget →
+   (`src/services/transitions/dispatcher.js:4-14`): transition-exists + CommandTarget →
    `QueryScope` (scope enforced on every command exactly as reads) → `requiredRole` →
    legality (`from` includes currentState) → `requiredFields` → `policyHooks` → apply +
    emit one `TransitionEvent` (DR-10 audit). **The grid gets no validation shortcut** — it is
    the same seam `usePurchaseOrderConfirm` / `useRfqAward` already use
-   (`src/services/query/commandHooks.ts:50-67, :139-156`).
+   (`src/services/query/commandHooks.js:50-67, :139-156`).
 2. **On non-failed outcome** → invalidate the current scope's reads
-   (`useInvalidateProcurement`, `commandHooks.ts:29-38`: predicate-invalidation keyed by
+   (`useInvalidateProcurement`, `commandHooks.js:29-38`: predicate-invalidation keyed by
    `scopeKey`) → the seam re-reads → **the overlay clears for that row because the seam now
    agrees.** The planned value is gone precisely because it is no longer *planned* — it is
    committed seam truth.
@@ -141,24 +141,24 @@ For each PLANNED row, in order:
 ### 3.1 Both failure channels are BINDING
 
 The dispatcher reports failure through **two distinct channels**
-(`dispatcher.ts:16-18`) and the pipeline MUST handle both:
+(`dispatcher.js:16-18`) and the pipeline MUST handle both:
 
 | Channel | Source | How it surfaces |
 |---|---|---|
-| **Thrown `DataError`** | Hard authorization failure — `SCOPE_DENIED` / `NOT_FOUND` (`dispatcher.ts:197, :208, :211`) | The `await dispatch(...)` **rejects** — the pipeline must `catch`. |
-| **`result.status === 'failed'`** | Domain rejection — `ILLEGAL_TRANSITION`, `MISSING_FIELDS`, `ROLE_NOT_PERMITTED`, `POLICY_REJECTED` (`dispatcher.ts:217, :222, :228, :243`) | Resolves normally with `status:'failed'` + `reason` — the pipeline must **test the status**. |
+| **Thrown `DataError`** | Hard authorization failure — `SCOPE_DENIED` / `NOT_FOUND` (`dispatcher.js:197, :208, :211`) | The `await dispatch(...)` **rejects** — the pipeline must `catch`. |
+| **`result.status === 'failed'`** | Domain rejection — `ILLEGAL_TRANSITION`, `MISSING_FIELDS`, `ROLE_NOT_PERMITTED`, `POLICY_REJECTED` (`dispatcher.js:217, :222, :228, :243`) | Resolves normally with `status:'failed'` + `reason` — the pipeline must **test the status**. |
 
 **Contract:** a row stays **PLANNED with reason attached regardless of which channel the
 failure arrives through.** The pipeline catches throws AND tests `result.status`; it never
 treats a resolved promise as success without checking status (mirrors the house guard
-`if (result.status !== 'failed') invalidate(scope)`, `commandHooks.ts:64`). Carried as an
+`if (result.status !== 'failed') invalidate(scope)`, `commandHooks.js:64`). Carried as an
 assertable invariant in §6.
 
 ### 3.2 No optimistic writes
 
 **No `onMutate`, no optimistic cache writes.** The overlay clears only *after* the seam
 re-read confirms the commit — never before. This is already the house rule: no mutation hook
-in `commandHooks.ts` uses `onMutate`; every one invalidates in `onSuccess` only. The grid
+in `commandHooks.js` uses `onMutate`; every one invalidates in `onSuccess` only. The grid
 inherits it, it does not introduce it.
 
 ---
@@ -168,7 +168,7 @@ inherits it, it does not introduce it.
 A plan push is semantically ONE act of intent that fans out into N row-dispatches. The
 durable audit-of-why should group those N events under **one `causationId`**, with the plan
 rationale carried in the dispatch payloads — the same grouping the RFQ-award cascade already
-produces (`events.ts:23-31`; `dispatcher.ts:170-179, :276-297`: a cascaded transition carries
+produces (`events.js:23-31`; `dispatcher.js:170-179, :276-297`: a cascaded transition carries
 the source's `correlationId` as its `causationId`, grouping the fan-out **without** collapsing
 each transition's own 1:1 `correlationId` / settle-ability).
 
@@ -177,18 +177,18 @@ each transition's own 1:1 `correlationId` / settle-ability).
 This clause states **intent**, not an existing capability. Harvested truth:
 
 - `causationId` is set **only inside the dispatcher's private cascade path** — the internal
-  `dispatch(scope, input, causationId)` third argument (`dispatcher.ts:170`). It is **not**
+  `dispatch(scope, input, causationId)` third argument (`dispatcher.js:170`). It is **not**
   on the public seam: `ICommandService.dispatch(scope, input)`
-  (`src/services/data/types.ts:1080`) accepts **no** caller-supplied correlation.
+  (`src/services/data/types.js:1080`) accepts **no** caller-supplied correlation.
 - Therefore N independent `svc.commands.dispatch(...)` calls from a plan push each mint their
-  own unrelated `correlationId` (`dispatcher.ts:151`) and **cannot be grouped** under one
+  own unrelated `correlationId` (`dispatcher.js:151`) and **cannot be grouped** under one
   causation today.
 
 **Deferral (the seam extension is a G1/G2 dependency), the honest options:**
 1. **Caller-supplied correlation** — extend `ICommandService` so a caller passes a group id
    the dispatcher stamps as `causationId` on each event. Additive to the seam.
 2. **Model-push-as-cascade-source** — a single `t_plan_push` source transition whose cascade
-   resolver (`dispatcher.ts:115`, `CascadeContext`) fans out the row-commands, reusing the
+   resolver (`dispatcher.js:115`, `CascadeContext`) fans out the row-commands, reusing the
    existing causation grouping with zero seam change.
 
 The **G2 `Plan` canonical entity** (Stage G plan §4) is the durable-audit end state: pushes
@@ -203,21 +203,21 @@ its own not-yet-buildable clause — that is the guard working.
 ## 5. Honesty matrix — source tier × plan state
 
 Two **independent** axes (LIVENESS-DATASOURCE-01). The **source tier** is the runtime
-`liveness()` value for the cell's capability (`registry.ts:137`, `Tier = LIVE|SIMULATED|SPEC`
-at `registry.ts:45`); the **plan state** is committed vs PLANNED. The required cell marker is
+`liveness()` value for the cell's capability (`registry.js:137`, `Tier = LIVE|SIMULATED|SPEC`
+at `registry.js:45`); the **plan state** is committed vs PLANNED. The required cell marker is
 the **conjunction** — neither axis is allowed to mask the other.
 
 | Source tier ↓ / Plan state → | **committed** (seam value) | **PLANNED** (overlay value) |
 |---|---|---|
-| **LIVE** (real wired source; `isLive` two-gate green, `registry.ts:178`) | Live committed value — no marker beyond the normal LIVE affordance. | **PLANNED marker** over a live base — "proposed, not yet committed." |
+| **LIVE** (real wired source; `isLive` two-gate green, `registry.js:178`) | Live committed value — no marker beyond the normal LIVE affordance. | **PLANNED marker** over a live base — "proposed, not yet committed." |
 | **SIMULATED** (real-shaped, unwired/fixture, or harvest-pending) | **SIMULATED marker** (`<LivenessPill>` reads the registry). | **BOTH markers** — SIMULATED (data isn't real) **and** PLANNED (value isn't committed). Neither is dropped. |
-| **SPEC** (zero backend; `registry.ts:43`) | **SPEC marker** — even further from truth than SIMULATED; no seeded capability is SPEC yet, but the cell must render SPEC, not SIMULATED. | **SPEC + PLANNED** — a proposed value over a data domain with no backend at all. The strongest honesty warning. |
+| **SPEC** (zero backend; `registry.js:43`) | **SPEC marker** — even further from truth than SIMULATED; no seeded capability is SPEC yet, but the cell must render SPEC, not SIMULATED. | **SPEC + PLANNED** — a proposed value over a data domain with no backend at all. The strongest honesty warning. |
 
 **Binding cells:**
 
 - **Real command over SIMULATED data still renders SIMULATED.** A grid that dispatches real,
   fully-validated commands (§3) over a SIMULATED-tier capability does **not** flip to LIVE.
-  Liveness is gate-1 (wiring) AND gate-2 (real data landed) — `isLive` (`registry.ts:178`);
+  Liveness is gate-1 (wiring) AND gate-2 (real data landed) — `isLive` (`registry.js:178`);
   executing a command is neither gate. The two-gate discipline holds inside the grid.
 - **SPEC × PLANNED is NOT collapsed into SIMULATED × PLANNED.** SPEC = zero backend is a
   distinct, stronger warning than SIMULATED = real-shaped-but-unwired. The grid renders three
@@ -246,7 +246,7 @@ Each is written so a G1 vitest can bind to it directly.
 4. **no-fabricated-derived-value.** No client-computed score/total/projection is rendered as a
    committed seam value; every such value carries a client-computed marker (§5).
 5. **two-gate-holds.** A cell's source-tier marker is the registry's `liveness()`/`isLive`
-   value (`registry.ts:137, :178`) — never a value derived from the fact that a command
+   value (`registry.js:137, :178`) — never a value derived from the fact that a command
    dispatched. Real command over SIMULATED data still renders SIMULATED.
 6. **reason-gated-override (C6-LOCK §8.3).** An override (accepted ≠ suggested) with an empty
    reason CANNOT dispatch — `overrideBlocked` true ⇒ no push. A test drives an empty-reason
@@ -303,7 +303,7 @@ GOVERNED DECISION:
 - the DR-10 **`TransitionEvent`** records **actor + timestamp** (already on the event) **+
   suggestedQty→acceptedQty + reason + wasAdjusted**, carried in an optional **`decision`** field
   the dispatcher forwards **VERBATIM** — opaque, never interpreted or validated, exactly as
-  `causationId` is (`events.ts:23-31`). This is **reuse of the DR-10 audit, NOT a new event
+  `causationId` is (`events.js:23-31`). This is **reuse of the DR-10 audit, NOT a new event
   type**, and it is orthogonal to G0.1-FIND-01 (that clause is about causation *grouping*; this
   is one event's provenance).
 
@@ -313,13 +313,13 @@ PLANNED render (LIVENESS-DATASOURCE-01) — the human adjusted a **sample** requ
 mints a Draft that stays simulated, **never a live procurement instruction**.
 
 **As-built (G1.2b):** the gate + payload + decision are pure functions
-(`src/pages-v2/plan-grid/planGridModel.ts` — `overrideBlocked` / `buildQtyDecision` /
+(`src/pages-v2/plan-grid/planGridModel.js` — `overrideBlocked` / `buildQtyDecision` /
 `buildPrCreatePayload` / `applyPushResult`); the governed surface is **plain DOM** so the
-reason-gate is headless-provable (`plan-grid/IntakeAdjustDrawer.tsx`); the push is
-`usePurchaseRequisitionCreate` (`services/query/commandHooks.ts`) through the G1.1
+reason-gate is headless-provable (`plan-grid/IntakeAdjustDrawer.jsx`); the push is
+`usePurchaseRequisitionCreate` (`services/query/commandHooks.js`) through the G1.1
 `purchaseRequisition` target; and the opaque carrier is `CommandDecision`
-(`services/data/types.ts`) forwarded by `dispatcher.ts:143-166` onto the `TransitionEvent`
-(`transitions/events.ts`).
+(`services/data/types.js`) forwarded by `dispatcher.js:143-166` onto the `TransitionEvent`
+(`transitions/events.js`).
 
 ---
 
@@ -327,15 +327,15 @@ reason-gate is headless-provable (`plan-grid/IntakeAdjustDrawer.tsx`); the push 
 
 Generated FORK-3 (machine-harvest from code-truth + thin connecting prose) at `main` #66.
 Every seam cited traces to a `file:line` in the shipped tree:
-`src/services/data/types.ts` (`ICommandService` :1078-1090, `IDataService` :1205),
-`src/services/transitions/dispatcher.ts` (validation chain :4-14, failure channels + causation
-:151-297), `src/services/transitions/events.ts` (`TransitionEvent` / causation :14-46),
-`src/services/query/commandHooks.ts` (dispatch+invalidate pattern :29-156),
-`src/services/query/useServiceQuery.ts` (`scopeKey` read pattern :19-38),
-`src/services/liveness/registry.ts` (`liveness`/`isLive`/`Tier` :45-184),
-`src/context/CurrentIdentityContext.tsx` (client-state provider pattern :35-65),
-`src/pages-v2/BuyerSourcing.tsx` (the `extraRfqs` anti-pattern — RETIRED in PR #77; RFQ
+`src/services/data/types.js` (`ICommandService` :1078-1090, `IDataService` :1205),
+`src/services/transitions/dispatcher.js` (validation chain :4-14, failure channels + causation
+:151-297), `src/services/transitions/events.js` (`TransitionEvent` / causation :14-46),
+`src/services/query/commandHooks.js` (dispatch+invalidate pattern :29-156),
+`src/services/query/useServiceQuery.js` (`scopeKey` read pattern :19-38),
+`src/services/liveness/registry.js` (`liveness`/`isLive`/`Tier` :45-184),
+`src/context/CurrentIdentityContext.jsx` (client-state provider pattern :35-65),
+`src/pages-v2/BuyerSourcing.jsx` (the `extraRfqs` anti-pattern — RETIRED in PR #77; RFQ
 creation now rides `t_rfq_create` on the dispatcher). §1-7 were
 authored pre-grid (FORK-3 harvest); §8 (C6-LOCK) is recorded at **G1.2b** alongside its first
-implementation — the grid product code now exists (`src/pages-v2/PlanGrid.tsx` +
+implementation — the grid product code now exists (`src/pages-v2/PlanGrid.jsx` +
 `plan-grid/*`, G1.2a/b), and §8's as-built block cites it directly.

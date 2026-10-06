@@ -4,8 +4,8 @@ The swap-points where the mock becomes the real system. Each is tiered **LIVE** 
 **SPEC** (README legend). The design rule throughout: the seam is an **interface**, so landing the
 real implementation is **additive** — pages and the contract do not change.
 
-Source of truth: `DataServiceContext.tsx`, `types.ts`, `MockCommandService.ts`, `roles.ts`,
-`events.ts`, `docs/findings.md`.
+Source of truth: `DataServiceContext.jsx`, `types.js`, `MockCommandService.js`, `roles.js`,
+`events.js`, `docs/findings.md`.
 
 ---
 
@@ -13,13 +13,13 @@ Source of truth: `DataServiceContext.tsx`, `types.ts`, `MockCommandService.ts`, 
 
 | Seam | Tier | Swap-point |
 |---|---|---|
-| `IDataService` / `useDataService` | **LIVE** (mock) | `DataServiceContext.tsx` — replace the `service` prop |
+| `IDataService` / `useDataService` | **LIVE** (mock) | `DataServiceContext.jsx` — replace the `service` prop |
 | `ICommandService` (dispatch / status / settle) | **LIVE** (in-memory) | `MockCommandService` → real adapter |
 | `getCapabilities` / DNA-SEED-01 | **LIVE-PARTIAL** | capability surface LIVE; `guidance?` slot RESERVED |
 | SAP boundary (Option B) | **LIVE** (2 verbs) | `settleFinalize` → real SAP settlement webhook |
 | `AuditSink` / `TransitionEvent` (DR-10) | **LIVE** in-memory / durable **RESERVED** | `AuditSink` interface (C3) |
 | `httpDataService` | **RESERVED** | `DataServiceContext` service prop |
-| OIDC / real IdP | **RESERVED** | persona→role map (`roles.ts`) |
+| OIDC / real IdP | **RESERVED** | persona→role map (`roles.js`) |
 | INT-TMS-01 (Portal↔TMS ASN boundary) | **RESERVED** | `advanceShipNotice` system-trigger transitions |
 | Backend / datastore | **RESERVED** (greenfield) | in-memory stores |
 | Snowflake clean-data layer | **SPEC** (C4) | durable `AuditSink` tee |
@@ -35,16 +35,16 @@ export const useDataService = (): IDataService => { … }   // throws outside a 
 
 One Provider, one hook. Pages read exclusively through `useDataService()` (TanStack Query v5 over
 scoped query hooks — per-supplier cache isolation via `scopeKey`). The implementation is the
-`service` prop on `DataServiceProvider` (mounted in `main.tsx` above the router). Swapping the mock
+`service` prop on `DataServiceProvider` (mounted in `main.jsx` above the router). Swapping the mock
 for the real adapter is a **one-line prop change**; pages do not change
-(`DataServiceContext.tsx:1–10`, 22–38).
+(`DataServiceContext.jsx:1–10`, 22–38).
 
 **Carve-out — CLOSED (I3.2).** `BuyerCompliance` (+ `BuyerComplianceWidget`) formerly imported the
 `COMPLIANCE_ITEMS` fixture directly (`COMPLIANCE-CARVEOUT-01`). I3.1 landed the target read
 (`risk.getComplianceRegistry` → `ComplianceRegistryEntry`, fixture-first/SIMULATED); **I3.2
 re-pointed both surfaces to `useComplianceRegistry()`** — status/daysRemaining computed-at-read,
 scheme-aware BPJPH KPI, SIMULATED rendered via `<LivenessPill capability="compliance">`. Every
-portal page is now on `useDataService()`. (The `halalXpersona.invariant.test.ts` retains its own
+portal page is now on `useDataService()`. (The `halalXpersona.invariant.test.js` retains its own
 independent `COMPLIANCE_ITEMS` read as a deliberate name-vs-id guard — not a page carve-out.)
 
 ---
@@ -54,7 +54,7 @@ independent `COMPLIANCE_ITEMS` read as a deliberate name-vs-id guard — not a p
 The designed real adapter. **No file exists** (glob-confirmed). It implements the **same**
 `IDataService` (all 103 methods, C1) against the real backend core (NestJS/SAP per the Stage-F1
 plan: `httpDataService`, OIDC, durable audit). Named as the intended swap in
-`DataServiceContext.tsx:5`. Because the interface is frozen, landing it is additive.
+`DataServiceContext.jsx:5`. Because the interface is frozen, landing it is additive.
 
 ---
 
@@ -62,7 +62,7 @@ plan: `httpDataService`, OIDC, durable audit). Named as the intended swap in
 
 The single write seam (C1): `dispatch` / `getCommandStatus` / `settle`. The mock wires the
 framework-agnostic dispatcher to the mock stores, the persona→role map, the bound policy hooks,
-and the in-memory `AuditSink` (`MockCommandService.ts`).
+and the in-memory `AuditSink` (`MockCommandService.js`).
 
 **Option B — SAP settlement.** A `sapBoundary: true` transition does not claim completion
 synchronously. Exactly **two** carry it today:
@@ -76,7 +76,7 @@ synchronously. Exactly **two** carry it today:
 
 The `settleFinalize` seam **is** the SAP settlement callback. In the mock it is called directly;
 the Phase-F2 real system implements it as the integration webhook (S/4HANA Event Mesh + OData),
-under the **same** `correlationId`. Swap-point: `MockCommandService.ts` `settleFinalize`.
+under the **same** `correlationId`. Swap-point: `MockCommandService.js` `settleFinalize`.
 
 ---
 
@@ -87,7 +87,7 @@ getCapabilities(scope: QueryScope): Promise<CapabilitySet>   // { roles, transit
 ```
 
 - **LIVE:** `getCapabilities` is reserved on `IDataService` and **mock-backed** — `capabilitiesFor`
-  computes it as the **persona-role map × the flow catalog** (`roles.ts`): the roles a persona
+  computes it as the **persona-role map × the flow catalog** (`roles.js`): the roles a persona
   holds and the transition ids it may initiate. `PERSONA_ROLES` is the **DATA** placeholder for
   the real IdP claim set (Phase-4′ OIDC swaps the table, never the transition metadata).
 - **RESERVED (the partial):** the **`guidance?` prop slot** on the inline-state / deferred-action
@@ -108,7 +108,7 @@ verbs are behavior-wired (they are not — C1 wiring census).
 
 ## OIDC / real IdP · **RESERVED**
 
-The persona→transition-role table (`PERSONA_ROLES`, `roles.ts`) is the placeholder. Phase-4′ OIDC
+The persona→transition-role table (`PERSONA_ROLES`, `roles.js`) is the placeholder. Phase-4′ OIDC
 swaps it for a real IdP claim set; the transition metadata (`requiredRole` strings) and the
 dispatcher are untouched. System/cascade transitions (Paragon-side automation) map to `buyer`.
 
@@ -117,12 +117,12 @@ dispatcher are untouched. System/cascade transitions (Paragon-side automation) m
 ## INT-TMS-01 — Portal↔TMS ASN boundary · **RESERVED**
 
 Once an ASN is `Submitted`, its logistics lifecycle (`In Transit` / `Delivered` — the
-`system`-trigger transitions on `advanceShipNotice.flow.ts`, **authored but unwired**) belongs to
+`system`-trigger transitions on `advanceShipNotice.flow.js`, **authored but unwired**) belongs to
 the **TMS Control Tower** (the Odyssey platform sibling), not the Supplier Portal. There is **no
 integration seam** handing the submitted ASN to the TMS and **no inbound channel** for TMS-driven
 logistics events. Phase-4′ wire: the `asn:carry` transitions become TMS-driven, mirroring how
 `t_gr_post` is SAP-driven. Until then, In-Transit / Delivered stay authored-unwired. The
-`shipment.flow.ts` machine (8 transitions, inert F0.4) is the TMS-owned lifecycle this boundary
+`shipment.flow.js` machine (8 transitions, inert F0.4) is the TMS-owned lifecycle this boundary
 eventually feeds. (`docs/findings.md` INT-TMS-01.)
 
 ---
@@ -139,7 +139,7 @@ the census living only in docs. **SPEC** — appears here only as a pointer; the
 ## Backend / datastore · **RESERVED (greenfield)**
 
 Zero server code, zero datastore clients. Data is in-memory fixtures behind `mockDataService`
-(`src/main.tsx`); the mutable command stores (`purchaseOrderStore`, `asnStore`,
+(`src/main.jsx`); the mutable command stores (`purchaseOrderStore`, `asnStore`,
 `goodsReceiptStore`, `invoiceStore`, `rfqStore`, `quotationStore`) hold command results in memory.
 Tenant scoping is enforced client-side. The real backend core is the Phase-F1 build (behind
 `httpDataService`); fixtures are multi-tenant (sup-002 / sup-005 / sup-007) and a service-level
@@ -149,7 +149,7 @@ scoping contract guards buyer-superset / per-supplier-isolation / `SCOPE_DENIED`
 
 ## Pin reach
 
-**Pinned by** `src/services/contracts/__tests__/c12BackendSpec.contract.test.ts` and `src/services/contracts/__tests__/c1MethodSurface.contract.test.ts`.
+**Pinned by** `src/services/contracts/__tests__/c12BackendSpec.contract.test.js` and `src/services/contracts/__tests__/c1MethodSurface.contract.test.js`.
 
 **GUARDED — these assertions, and nothing else on this page:**
 
@@ -191,7 +191,7 @@ a backlog: a clause describing a system outside this repository has nothing here
 against, and a clause stating WHY a boundary exists has no truth-value to decay. See C12
 for the statement of that property.
 
-⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.ts`).
+⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.js`).
 The GUARDED list is asserted EQUAL to the pin’s own `describe` titles, **both directions**:
 widen the pin without listing the new assertion and it reddens; drop a line here without
 narrowing the pin and it reddens too. A reach statement that can drift is the overclaim one

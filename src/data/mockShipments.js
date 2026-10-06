@@ -1,0 +1,656 @@
+import { shiftFields } from '@services/data/fixturePresent';
+
+/**
+ * @typedef {object} ShipmentLineItem
+ * @property {string} materialCode
+ * @property {string} description
+ * @property {number} qty
+ * @property {string} uom
+ */
+
+/**
+ * @typedef {| 'Pending ASN'
+ *   | 'ASN Received'
+ *   | 'In Transit'
+ *   | 'Arrived at Port'
+ *   | 'Customs Clearance'
+ *   | 'At Dock'
+ *   | 'Unloading'
+ *   | 'Delivered'} ShipmentStatus
+ */
+// ⚠️ `'Delayed'` LEFT THIS UNION — it is COMPUTED
+// (`services/data/shipmentDisplayState.js`). It was the ninth member of a
+// union whose flow declares eight states, and `shipment.flow.js` has said so
+// since F0.4: a read-time PROJECTION, deliberately absent from `states`. The
+// union now equals `getFlow('shipment').states` exactly, which
+// `shipmentDisplayState.test.js` asserts bilaterally.
+
+/** @typedef {'Sea' | 'Air' | 'Road'} ShipmentMode */
+
+// ⚠️ **`daysInTransit` AND `delayDays` ARE RETIRED (law 0.5), AND THEIR VALUES
+// ARE NOT LOST — THEY MOVED INTO THE SPEC AS PER-ROW PINS.** Both were stored
+// differences against the read instant, which is the rule `daysUntilExpiry` and
+// `daysLeft` were retired on at #318. They were LEFT BEHIND then because
+// computing them would have published fixture age as lateness; #319/#320's
+// anchoring ended that, and the computed values reproduce all 16 authored
+// literals exactly at `DECLARED_PRESENT`. The producers are `daysLate` and
+// `daysInTransit` in `services/data/shipmentDisplayState.js`, beside the
+// classifier so a state and its number cannot disagree.
+//
+// ⚠️ **DO NOT RE-ADD EITHER AS A FIELD.** `retiredDayFields.test.js` asserts
+// their absence at the type AND in these bytes, and `dayCounts.js`'s bilateral
+// gate goes red if a `…: number;` declaration comes back unclassified.
+/**
+ * @typedef {object} Shipment
+ * @property {string} id
+ * @property {string} asnNumber
+ * @property {string} poId
+ * @property {string} poNumber
+ * @property {string} supplierId
+ * @property {string} supplierName
+ * @property {ShipmentStatus} status
+ * @property {string} carrier
+ * @property {string} trackingNumber
+ * @property {ShipmentMode} mode
+ * @property {string} origin
+ * @property {string} destination
+ * @property {string} shipDate
+ * @property {string} estimatedArrival
+ * @property {string} [actualArrival]
+ * @property {number} packageCount
+ * @property {number} totalWeight
+ * @property {string} [containerNumber]
+ * @property {string} [dockAssignment]
+ * @property {string} [dockTime]
+ * @property {'Pending' | 'Cleared' | 'Held'} [customsStatus]
+ * @property {ShipmentLineItem[]} lineItems
+ */
+
+const NDC = 'NDC J6, Jakarta';
+
+/** @type {Shipment[]} */
+const mockShipmentsRaw = [
+  // --- 3 Pending ASN ---
+  {
+    id: 'shp-001',
+    asnNumber: 'ASN-2026-001',
+    poId: 'po-011',
+    poNumber: 'PO-2025-00111',
+    supplierId: 'sup-001',
+    supplierName: 'PT Sample Oleochemicals',
+    status: 'Pending ASN',
+    carrier: 'Awaiting',
+    trackingNumber: '—',
+    mode: 'Sea',
+    origin: 'Batam, Indonesia',
+    destination: NDC,
+    shipDate: '2026-05-22',
+    estimatedArrival: '2026-05-28',
+    packageCount: 0,
+    totalWeight: 0,
+    lineItems: [
+      {
+        materialCode: 'RM-COCO-8200',
+        description: 'Coconut Fatty Acid Distillate (CFAD)',
+        qty: 20000,
+        uom: 'KG'
+      }
+    ]
+  },
+  {
+    id: 'shp-002',
+    asnNumber: 'ASN-2026-002',
+    poId: 'po-014',
+    poNumber: 'PO-2025-00114',
+    supplierId: 'sup-007',
+    supplierName: 'PT Sample Packaging Indonesia',
+    status: 'Pending ASN',
+    carrier: 'Awaiting',
+    trackingNumber: '—',
+    mode: 'Road',
+    origin: 'Tangerang, Indonesia',
+    destination: NDC,
+    shipDate: '2026-05-23',
+    estimatedArrival: '2026-05-24',
+    packageCount: 0,
+    totalWeight: 0,
+    lineItems: [
+      {
+        materialCode: 'PK-PETB-8801',
+        description: 'PET Bottle 200ml Frosted — Wardah Series',
+        qty: 80000,
+        uom: 'PCS'
+      }
+    ]
+  },
+  {
+    id: 'shp-003',
+    asnNumber: 'ASN-2026-003',
+    poId: 'po-010',
+    poNumber: 'PO-2025-00110',
+    supplierId: 'sup-009',
+    supplierName: 'Sample Vitamins Co.',
+    status: 'Pending ASN',
+    carrier: 'Awaiting',
+    trackingNumber: '—',
+    mode: 'Air',
+    origin: 'Hangzhou, China',
+    destination: NDC,
+    shipDate: '2026-05-25',
+    estimatedArrival: '2026-05-26',
+    packageCount: 0,
+    totalWeight: 0,
+    lineItems: [
+      {
+        materialCode: 'AI-VITC-6730',
+        description: 'L-Ascorbic Acid Powder 99% — Cosmetic Grade',
+        qty: 800,
+        uom: 'KG'
+      }
+    ]
+  },
+
+  // --- 5 In Transit ---
+  {
+    id: 'shp-004',
+    asnNumber: 'ASN-2026-004',
+    poId: 'po-002',
+    poNumber: 'PO-2025-00102',
+    supplierId: 'sup-002',
+    supplierName: 'PT Sample Specialty Fats',
+    status: 'In Transit',
+    carrier: 'Sample Interisland Line (illustrative)',
+    trackingNumber: 'SMPL-ISL-552189',
+    mode: 'Sea',
+    origin: 'Medan, Indonesia',
+    destination: NDC,
+    shipDate: '2026-05-15',
+    estimatedArrival: '2026-05-22',
+    packageCount: 24,
+    totalWeight: 18000,
+    containerNumber: 'SMPL-ISL-4456712',
+    customsStatus: 'Pending',
+    lineItems: [
+      {
+        materialCode: 'RM-EMUL-9410',
+        description: 'Glyceryl Stearate SE (Halal Emulsifier)',
+        qty: 8000,
+        uom: 'KG'
+      },
+      {
+        materialCode: 'RM-STEAR-7300',
+        description: 'Stearic Acid — Double Pressed (Halal)',
+        qty: 10000,
+        uom: 'KG'
+      }
+    ]
+  },
+  {
+    id: 'shp-005',
+    asnNumber: 'ASN-2026-005',
+    poId: 'po-005',
+    poNumber: 'PO-2025-00105',
+    supplierId: 'sup-005',
+    supplierName: 'Sample Personal Care Emulsifiers GmbH',
+    status: 'In Transit',
+    carrier: 'Sample Ocean Carrier (illustrative)',
+    trackingNumber: 'SMPL-OCN-90218',
+    mode: 'Sea',
+    origin: 'Hamburg, Germany',
+    destination: NDC,
+    shipDate: '2026-04-22',
+    estimatedArrival: '2026-05-24',
+    packageCount: 18,
+    totalWeight: 9500,
+    containerNumber: 'SMPL-OCN-3219874',
+    customsStatus: 'Pending',
+    lineItems: [
+      {
+        materialCode: 'RM-EMUL-3320',
+        description: 'Cetearyl Alcohol — Vegetable Origin',
+        qty: 9000,
+        uom: 'KG'
+      }
+    ]
+  },
+  {
+    id: 'shp-006',
+    asnNumber: 'ASN-2026-006',
+    poId: 'po-003',
+    poNumber: 'PO-2025-00103',
+    supplierId: 'sup-003',
+    supplierName: 'Sample Fragrance House Indonesia',
+    status: 'In Transit',
+    carrier: 'Sample Courier (illustrative)',
+    trackingNumber: 'SMPL-CUR-77129',
+    mode: 'Road',
+    origin: 'Cikarang, Indonesia',
+    destination: NDC,
+    shipDate: '2026-05-19',
+    estimatedArrival: '2026-05-20',
+    packageCount: 12,
+    totalWeight: 2400,
+    lineItems: [
+      {
+        materialCode: 'FR-WARD-4410',
+        description: 'Wardah Signature Floral Compound',
+        qty: 1200,
+        uom: 'KG'
+      }
+    ]
+  },
+  {
+    id: 'shp-007',
+    asnNumber: 'ASN-2026-007',
+    poId: 'po-006',
+    poNumber: 'PO-2025-00106',
+    supplierId: 'sup-006',
+    supplierName: 'Sample Specialty Chemicals France',
+    status: 'In Transit',
+    carrier: 'Sample Air Cargo (illustrative)',
+    trackingNumber: 'SMPL-AIR-4421-A',
+    mode: 'Air',
+    origin: 'Lyon, France',
+    destination: NDC,
+    shipDate: '2026-05-17',
+    estimatedArrival: '2026-05-21',
+    packageCount: 6,
+    totalWeight: 850,
+    customsStatus: 'Pending',
+    lineItems: [
+      {
+        materialCode: 'AI-PEPTIDE-8801',
+        description: 'Peptide Complex Anti-Aging',
+        qty: 250,
+        uom: 'KG'
+      }
+    ]
+  },
+  {
+    id: 'shp-008',
+    asnNumber: 'ASN-2026-008',
+    poId: 'po-004',
+    poNumber: 'PO-2025-00104',
+    supplierId: 'sup-004',
+    supplierName: 'Sample Aromatics Sdn. Bhd.',
+    status: 'In Transit',
+    carrier: 'Sample Coastal Line (illustrative)',
+    trackingNumber: 'SMPL-CST-22871',
+    mode: 'Sea',
+    origin: 'Port Klang, Malaysia',
+    destination: NDC,
+    shipDate: '2026-05-13',
+    estimatedArrival: '2026-05-21',
+    packageCount: 9,
+    totalWeight: 1800,
+    containerNumber: 'SMPL-CST-7790012',
+    customsStatus: 'Pending',
+    lineItems: [
+      {
+        materialCode: 'FR-EMIN-4420',
+        description: 'Emina Fresh Citrus Accord',
+        qty: 900,
+        uom: 'KG'
+      }
+    ]
+  },
+
+  // --- 3 Arrived at Port / Customs ---
+  {
+    id: 'shp-009',
+    asnNumber: 'ASN-2026-009',
+    poId: 'po-009',
+    poNumber: 'PO-2025-00109',
+    supplierId: 'sup-008',
+    supplierName: 'PT Sample Carton Packaging',
+    status: 'Arrived at Port',
+    carrier: 'Sample Sea Line (illustrative)',
+    trackingNumber: 'SMPL-SEA-30019',
+    mode: 'Sea',
+    origin: 'Surabaya, Indonesia',
+    destination: NDC,
+    shipDate: '2026-05-12',
+    estimatedArrival: '2026-05-19',
+    actualArrival: '2026-05-19',
+    packageCount: 36,
+    totalWeight: 14200,
+    containerNumber: 'SMPL-SEA-1187204',
+    customsStatus: 'Pending',
+    lineItems: [
+      {
+        materialCode: 'PK-CART-9901',
+        description: 'Mono-Carton Box 70x40x180mm — Wardah Moisturizing Lotion',
+        qty: 200000,
+        uom: 'PCS'
+      }
+    ]
+  },
+  {
+    id: 'shp-010',
+    asnNumber: 'ASN-2026-010',
+    poId: 'po-013',
+    poNumber: 'PO-2025-00113',
+    supplierId: 'sup-005',
+    supplierName: 'Sample Personal Care Emulsifiers GmbH',
+    status: 'Customs Clearance',
+    carrier: 'Sample Container Line (illustrative)',
+    trackingNumber: 'SMPL-CTN-665821',
+    mode: 'Sea',
+    origin: 'Hamburg, Germany',
+    destination: NDC,
+    shipDate: '2026-04-15',
+    estimatedArrival: '2026-05-18',
+    actualArrival: '2026-05-18',
+    packageCount: 22,
+    totalWeight: 11500,
+    containerNumber: 'SMPL-CTN-8821007',
+    customsStatus: 'Held',
+    lineItems: [
+      {
+        materialCode: 'RM-EMUL-3320',
+        description: 'Cetearyl Alcohol — Vegetable Origin',
+        qty: 11000,
+        uom: 'KG'
+      }
+    ]
+  },
+  {
+    id: 'shp-011',
+    asnNumber: 'ASN-2026-011',
+    poId: 'po-015',
+    poNumber: 'PO-2025-00115',
+    supplierId: 'sup-010',
+    supplierName: 'PT Sample Halal Emulsifiers',
+    status: 'Customs Clearance',
+    carrier: 'Sample Sea Line (illustrative)',
+    trackingNumber: 'SMPL-SEA-30058',
+    mode: 'Road',
+    origin: 'Bogor, Indonesia',
+    destination: NDC,
+    shipDate: '2026-05-19',
+    estimatedArrival: '2026-05-20',
+    actualArrival: '2026-05-20',
+    packageCount: 14,
+    totalWeight: 3500,
+    customsStatus: 'Cleared',
+    lineItems: [
+      {
+        materialCode: 'RM-EMUL-9430',
+        description: 'Polysorbate 80 — Halal, Food & Cosmetic Grade',
+        qty: 3000,
+        uom: 'KG'
+      }
+    ]
+  },
+
+  // --- 4 At Dock / Unloading ---
+  {
+    id: 'shp-012',
+    asnNumber: 'ASN-2026-012',
+    poId: 'po-007',
+    poNumber: 'PO-2025-00107',
+    supplierId: 'sup-007',
+    supplierName: 'PT Sample Packaging Indonesia',
+    status: 'At Dock',
+    carrier: 'Sample Courier (illustrative)',
+    trackingNumber: 'SMPL-CUR-77131',
+    mode: 'Road',
+    origin: 'Tangerang, Indonesia',
+    destination: NDC,
+    shipDate: '2026-05-19',
+    estimatedArrival: '2026-05-20',
+    actualArrival: '2026-05-20',
+    packageCount: 32,
+    totalWeight: 5400,
+    dockAssignment: 'Dock B-3',
+    dockTime: '14:00',
+    customsStatus: 'Cleared',
+    lineItems: [
+      {
+        materialCode: 'PK-PETB-8801',
+        description: 'PET Bottle 200ml Frosted — Wardah Series',
+        qty: 120000,
+        uom: 'PCS'
+      }
+    ]
+  },
+  {
+    id: 'shp-013',
+    asnNumber: 'ASN-2026-013',
+    poId: 'po-008',
+    poNumber: 'PO-2025-00108',
+    supplierId: 'sup-007',
+    supplierName: 'PT Sample Packaging Indonesia',
+    status: 'At Dock',
+    carrier: 'Sample Courier (illustrative)',
+    trackingNumber: 'SMPL-CUR-77129',
+    mode: 'Road',
+    origin: 'Tangerang, Indonesia',
+    destination: NDC,
+    shipDate: '2026-05-19',
+    estimatedArrival: '2026-05-20',
+    actualArrival: '2026-05-20',
+    packageCount: 28,
+    totalWeight: 4800,
+    dockAssignment: 'Dock A-2',
+    dockTime: '11:00',
+    customsStatus: 'Cleared',
+    lineItems: [
+      {
+        materialCode: 'PK-PETB-8802',
+        description: 'PET Bottle 100ml Clear — Emina Series',
+        qty: 95000,
+        uom: 'PCS'
+      },
+      // ⚠️ **ADDED AT H4 — TO MAKE THE BPJPH MANDATE DEMONSTRABLE AT A DOCK,
+      // WHICH IT WAS NOT.** `AI-NIAC-6612` is backed by a MUI-legacy
+      // certificate whose own dates run to 2027 and whose SCHEME retires on
+      // 2026-10-17 (GR 42/2024) — the one row in the registry that flips
+      // `SATISFIED → SCHEME_INVALID` on the mandate date rather than on an
+      // expiry. It already shipped on `ASN-2025-00201`, and that ASN is
+      // `Discrepancy` (a 720-of-800 short-ship, which is WHY it is), so it is
+      // outside `RECEIVABLE_ASN_STATUSES` and no goods receipt could ever reach
+      // it. The arc's headline was pinned in a spec and unreachable in the
+      // product.
+      //
+      // ⚠️ ADDED HERE RATHER THAN BY RE-STATUSING `ASN-2025-00201`, and the
+      // choice is not cosmetic: that ASN is the tree's ONLY `Discrepancy`
+      // exemplar (`buyerDerivations.js` KPI, `SupplierShipments.jsx`, the
+      // `t_asn_*` repair verb's `from: ['Discrepancy']`, and
+      // `looseEndRepairCommands.test.js`'s HELD fixture), and its status is
+      // entailed by its own quantities. Re-statusing it would have deleted an
+      // exemplar and contradicted the row to demonstrate a notice.
+      //
+      // The `uom` is the master's `canonicalUom`; the description is the
+      // master's `label`, verbatim. This lot is AT DOCK, which is the most
+      // literal reading of "what the clerk sees".
+      //
+      // ⚠️ AND ON `shp-013` RATHER THAN `shp-012`, WHICH IS NOT ARBITRARY:
+      // `GRInspectionWizard.test.jsx`'s `RECEIVABLE` is the FIRST eligible
+      // shipment carrying a line, so `shp-012` is the default subject of two
+      // dozen specs that index lines by position. Widening it would have
+      // rewritten them all to demonstrate something none of them is about.
+      {
+        materialCode: 'AI-NIAC-6612',
+        description: 'Active Emulsion — Niacinamide 5%',
+        qty: 800,
+        uom: 'KG'
+      }
+    ]
+  },
+  {
+    id: 'shp-014',
+    asnNumber: 'ASN-2026-014',
+    poId: 'po-001',
+    poNumber: 'PO-2025-00101',
+    supplierId: 'sup-001',
+    supplierName: 'PT Sample Oleochemicals',
+    status: 'Unloading',
+    carrier: 'Sample Interisland Line (illustrative)',
+    trackingNumber: 'SMPL-ISL-552145',
+    mode: 'Sea',
+    origin: 'Batam, Indonesia',
+    destination: NDC,
+    shipDate: '2026-05-10',
+    estimatedArrival: '2026-05-19',
+    actualArrival: '2026-05-19',
+    packageCount: 40,
+    totalWeight: 25000,
+    containerNumber: 'SMPL-ISL-4456701',
+    dockAssignment: 'Dock C-1',
+    dockTime: '09:00',
+    customsStatus: 'Cleared',
+    lineItems: [
+      {
+        materialCode: 'RM-COCO-8200',
+        description: 'Coconut Fatty Acid Distillate (CFAD)',
+        qty: 25000,
+        uom: 'KG'
+      }
+    ]
+  },
+  {
+    id: 'shp-015',
+    asnNumber: 'ASN-2026-015',
+    poId: 'po-012',
+    poNumber: 'PO-2025-00112',
+    supplierId: 'sup-003',
+    supplierName: 'Sample Fragrance House Indonesia',
+    status: 'Unloading',
+    carrier: 'Sample Courier (illustrative)',
+    trackingNumber: 'SMPL-CUR-77140',
+    mode: 'Road',
+    origin: 'Cikarang, Indonesia',
+    destination: NDC,
+    shipDate: '2026-05-19',
+    estimatedArrival: '2026-05-20',
+    actualArrival: '2026-05-20',
+    packageCount: 8,
+    totalWeight: 1600,
+    dockAssignment: 'Dock B-1',
+    dockTime: '10:00',
+    customsStatus: 'Cleared',
+    lineItems: [
+      {
+        materialCode: 'FR-WARD-4410',
+        description: 'Wardah Signature Floral Compound',
+        qty: 800,
+        uom: 'KG'
+      }
+    ]
+  },
+
+  // --- 2 Delivered ---
+  {
+    id: 'shp-016',
+    asnNumber: 'ASN-2026-016',
+    poId: 'po-016',
+    poNumber: 'PO-2025-00116',
+    supplierId: 'sup-002',
+    supplierName: 'PT Sample Specialty Fats',
+    status: 'Delivered',
+    carrier: 'Sample Interisland Line (illustrative)',
+    trackingNumber: 'SMPL-ISL-552102',
+    mode: 'Sea',
+    origin: 'Medan, Indonesia',
+    destination: NDC,
+    shipDate: '2026-05-05',
+    estimatedArrival: '2026-05-15',
+    actualArrival: '2026-05-15',
+    packageCount: 18,
+    totalWeight: 8400,
+    containerNumber: 'SMPL-ISL-4456688',
+    dockAssignment: 'Dock A-1',
+    dockTime: '08:00',
+    customsStatus: 'Cleared',
+    lineItems: [
+      {
+        materialCode: 'RM-STEAR-7300',
+        description: 'Stearic Acid — Double Pressed (Halal)',
+        qty: 8000,
+        uom: 'KG'
+      }
+    ]
+  },
+  {
+    id: 'shp-017',
+    asnNumber: 'ASN-2026-017',
+    poId: 'po-017',
+    poNumber: 'PO-2025-00117',
+    supplierId: 'sup-008',
+    supplierName: 'PT Sample Carton Packaging',
+    status: 'Delivered',
+    carrier: 'Sample Sea Line (illustrative)',
+    trackingNumber: 'SMPL-SEA-30001',
+    mode: 'Sea',
+    origin: 'Surabaya, Indonesia',
+    destination: NDC,
+    shipDate: '2026-05-02',
+    estimatedArrival: '2026-05-12',
+    actualArrival: '2026-05-13',
+    packageCount: 44,
+    totalWeight: 16800,
+    containerNumber: 'SMPL-SEA-1187118',
+    dockAssignment: 'Dock B-2',
+    dockTime: '13:00',
+    customsStatus: 'Cleared',
+    lineItems: [
+      {
+        materialCode: 'PK-CART-9901',
+        description: 'Mono-Carton Box 70x40x180mm — Wardah Moisturizing Lotion',
+        qty: 240000,
+        uom: 'PCS'
+      }
+    ]
+  },
+
+  // --- 1 Delayed ---
+  {
+    id: 'shp-018',
+    asnNumber: 'ASN-2026-018',
+    poId: 'po-018',
+    poNumber: 'PO-2025-00118',
+    supplierId: 'sup-006',
+    supplierName: 'Sample Specialty Chemicals France',
+    // ⚠️ WAS `'Delayed'` — a display literal in the state cursor. Its own
+    // `customsStatus: 'Held'` is what the row actually is; the delay is
+    // computed from the ETA at read (`shipmentDisplayState`). This is the
+    // same repair `doc-001` took at #325.
+    status: 'Customs Clearance',
+    carrier: 'Sample Air Freight (illustrative)',
+    trackingNumber: 'SMPL-AFR-9981-D',
+    mode: 'Air',
+    origin: 'Lyon, France',
+    destination: NDC,
+    shipDate: '2026-05-08',
+    estimatedArrival: '2026-05-14',
+    packageCount: 4,
+    totalWeight: 480,
+    customsStatus: 'Held',
+    lineItems: [
+      {
+        materialCode: 'AI-PEPTIDE-8801',
+        description: 'Peptide Complex Anti-Aging',
+        qty: 180,
+        uom: 'KG'
+      }
+    ]
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// THE DECLARED PRESENT — FIXTURE-PRESENT-01 (d).
+//
+// The literals above are the AUTHORED set, left exactly as written so the
+// authoring intent stays readable. They are shifted to the declared present at
+// module load by this family's own anchor (shipment); the shift is
+// `DECLARED_PRESENT - anchor` and it moves every row by the same whole number of
+// days, so the set's internal spacing — which is the part that was never wrong —
+// is preserved exactly.
+// ─────────────────────────────────────────────────────────────────────────────
+/** @type {Shipment[]} */
+export const mockShipments = shiftFields(mockShipmentsRaw, 'shipment', [
+  'shipDate',
+  'estimatedArrival',
+  'actualArrival'
+]);

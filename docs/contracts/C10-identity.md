@@ -106,18 +106,18 @@ out of the shipped tree.
 
 | What exists | Where | What it actually holds |
 |---|---|---|
-| `PersonaType` | `src/context/CurrentIdentityContext.tsx:8` | **`'buyer' \| 'supplier'`. Two values.** A SEAT, not a human |
-| `CurrentIdentity` | `src/context/CurrentIdentityContext.tsx:10-14` | `{ personaType, supplierId, supplierName }`. **A persona, a tenant and a company. No human** |
-| The DR-10 audit actor | `actorKey(scope)`, C3 | **`'buyer:all'`** — pinned in `enforcementSetCommand.test.ts:354` beside `not.toContain('usr-014')` |
-| `PERSONA_ROLES` | `src/services/transitions/roles.ts:18-89` | **The persona IS the authorisation object.** A seat holds 60+ transition-roles because it is a seat |
-| `ActingPerson` | `src/lib/enforcement.ts:339-345` | **The one shape in the tree that names a person** — and nothing can fill it |
-| `ActorAttribution` | `src/lib/enforcement.ts:382-384` | `RESOLVED` \| `UNATTRIBUTED` + reason. The honest discriminated absence |
-| `UNATTRIBUTED_REASONS` | `src/lib/enforcement.ts:359-368` | Two members. **No `SYSTEM` member, deliberately** (§6.4) |
+| `PersonaType` | `src/context/CurrentIdentityContext.jsx:8` | **`'buyer' \| 'supplier'`. Two values.** A SEAT, not a human |
+| `CurrentIdentity` | `src/context/CurrentIdentityContext.jsx:10-14` | `{ personaType, supplierId, supplierName }`. **A persona, a tenant and a company. No human** |
+| The DR-10 audit actor | `actorKey(scope)`, C3 | **`'buyer:all'`** — pinned in `enforcementSetCommand.test.js:354` beside `not.toContain('usr-014')` |
+| `PERSONA_ROLES` | `src/services/transitions/roles.js:18-89` | **The persona IS the authorisation object.** A seat holds 60+ transition-roles because it is a seat |
+| `ActingPerson` | `src/lib/enforcement.js:339-345` | **The one shape in the tree that names a person** — and nothing can fill it |
+| `ActorAttribution` | `src/lib/enforcement.js:382-384` | `RESOLVED` \| `UNATTRIBUTED` + reason. The honest discriminated absence |
+| `UNATTRIBUTED_REASONS` | `src/lib/enforcement.js:359-368` | Two members. **No `SYSTEM` member, deliberately** (§6.4) |
 
 ### 2.1 `PersonaType` is a SEAT, and the platform has been reading it as a person
 
 `capabilitiesFor(scope)` derives every capability from `PERSONA_ROLES[scope.personaType]` ×
-the flow catalog (`roles.ts:114-123`). **The unit of authority is therefore "buyer", singular,
+the flow catalog (`roles.js:114-123`). **The unit of authority is therefore "buyer", singular,
 tenant-wide.** Every buyer employee at Paragon holds identical authority, including
 `invoice:approve`, `invoice:pay` and `enforcement:set`, because there is exactly one buyer.
 
@@ -136,11 +136,11 @@ where the record says **"this person accepted this risk"**.
 
 **Measured, and it is the reason this contract is issued now rather than at F1:**
 
-- The enforcement setting ledger **ships empty by ruling** — `lib/enforcement.ts:83-87`.
+- The enforcement setting ledger **ships empty by ruling** — `lib/enforcement.js:83-87`.
 - The E4 seed records its acts with `SEED_ACTOR = { kind: 'UNATTRIBUTED', reason:
-  'NO_PERSON_IN_SESSION' }` — `enforcementSeed.ts:93-96`.
+  'NO_PERSON_IN_SESSION' }` — `enforcementSeed.js:93-96`.
 - `overrideCompletes` returns `false` for every override this tree can construct —
-  `lib/enforcement.ts:778-780`.
+  `lib/enforcement.js:778-780`.
 - The only `personId` values in the repository (`usr-014` and siblings) live **in specs**, never
   in a fixture or a shipped record.
 
@@ -160,10 +160,10 @@ the subset this contract can anchor in code-truth — **VERIFIED**, by us, in th
 
 | Blocked capability | Anchor | Why identity blocks it |
 |---|---|---|
-| **PR approval** | `t_pr_approve` — `flows/purchaseRequisition.flow.ts:50` | Authored and dispatchable. **No `.tsx` in the tree names it.** An approval with one tenant-wide approver is a rubber stamp with a state machine attached |
-| **Invoice approval** | `t_invoice_approve` — `flows/invoice.flow.ts:84` | Same shape: **dispatchable, UI-unreachable** — grep-confirmed, zero component sites |
+| **PR approval** | `t_pr_approve` — `flows/purchaseRequisition.flow.js:50` | Authored and dispatchable. **No `.tsx` in the tree names it.** An approval with one tenant-wide approver is a rubber stamp with a state machine attached |
+| **Invoice approval** | `t_invoice_approve` — `flows/invoice.flow.js:84` | Same shape: **dispatchable, UI-unreachable** — grep-confirmed, zero component sites |
 | **Master-data maker-checker** | — | Two roles are required and the platform has one seat. **`personaCan` cannot express "not the same person"** |
-| **Override attribution** | `overrideCompletes` — `lib/enforcement.ts:778` | The override lane is **fully built and unusable by design** until identity exists |
+| **Override attribution** | `overrideCompletes` — `lib/enforcement.js:778` | The override lane is **fully built and unusable by design** until identity exists |
 | **A meaningful audit actor** | `actorKey(scope)` | §2.2 |
 | **Registration review** | — | Who reviews, and on which side of the tenancy line, is **D-ID-5 — OPEN** (§7.2) |
 
@@ -188,7 +188,7 @@ one of those three is demoted.
 | **`ApprovalAct`** | **NEW** | Append-only ledger | Not a state (§4.1) |
 
 **Every one of the four ledgers follows the shipped `fxPin` / `EnforcementSetting` precedent
-exactly** (`lib/enforcement.ts:613-692`): a flat append-only array, **in-force derived by
+exactly** (`lib/enforcement.js:613-692`): a flat append-only array, **in-force derived by
 `settingInForce`-shaped selection**, superseded acts preserved and readable, the instant
 **store-assigned** and never payload-supplied, and the derivation **pure, taking its instant as
 an argument** (law 0.5). None of this is new machinery. It is the third application of a shape
@@ -234,7 +234,7 @@ inversion §1 exists to prevent. Somebody grants access. It is an act, and it is
 
 The platform already has a complete, exhaustive, machine-checked permission vocabulary: the
 `requiredRole` on every transition in the catalog — **72 edges across 14 flows**, deduped by
-`catalogRoles()` (`roles.ts:102-108`), which **derives its population from the registry rather
+`catalogRoles()` (`roles.js:102-108`), which **derives its population from the registry rather
 than restating it**.
 
 **A second `Permission` table would restate the flow catalog as prose data.** That is the
@@ -290,7 +290,7 @@ requires is a checkable defect** rather than a plausible-looking string.
 
 **All four are append-only and none is ever edited.** Revocation is an appended act, not a
 deletion; a policy change is an appended act, not an update. The reason is the one
-`settingHistory` already carries (`lib/enforcement.ts:646-661`): **overwrite the record and the
+`settingHistory` already carries (`lib/enforcement.js:646-661`): **overwrite the record and the
 thing the derivation ran against is gone, so the derivation becomes unauditable — you can see
 that it bit and never why.**
 
@@ -329,7 +329,7 @@ The shape:
 2. **`ApprovalAct`** records each individual approver's act, with its **policy basis** (§5.3).
 3. **The existing terminal verb fires when the derived remaining requirement is zero**, gated by
    a **policy hook** — the mechanism `policyHooks[]` already provides on every transition
-   (`schema.ts`, and `POLICY_HOOKS.ENFORCEMENT_SET_GOVERNED` is the shipped precedent).
+   (`schema.js`, and `POLICY_HOOKS.ENFORCEMENT_SET_GOVERNED` is the shipped precedent).
 
 The object's **state** therefore stays what it always was — pending, approved, rejected — and
 "how many approvals remain" is **derived at read from two ledgers**, exactly as the enforcement
@@ -344,7 +344,7 @@ Approved`. It fails three separate ways, and **the third one does not compile in
 |---|---|
 | **The alphabet explodes** | States multiply by approver count **× band count × org shape**. Every flow acquires a private approval sub-alphabet, and the 72-edge catalog stops being readable as a catalog |
 | **A threshold change becomes a schema migration** | "Above 500 million IDR now needs a fourth approver" is an **operational decision made on a Tuesday**. As states it is a new state, new edges, a code change, a deploy — and **in-flight objects sitting in states the new machine does not have** |
-| ⚠️ **Escalation-on-elapsed-time becomes a CLOCK-FIRED TRANSITION** | *"Unapproved for 5 days → escalate"* is a transition whose trigger is the clock. **`trigger: 'clock'` is type-level impossible in this tree** — `ClockTriggerIsForbidden` (`src/services/transitions/schema.ts:37`) fails `tsc`, and `validateFlow` refuses it again at runtime for untyped callers (`validate.ts:57-61`). **It is a compile error, not a design preference** |
+| ⚠️ **Escalation-on-elapsed-time becomes a CLOCK-FIRED TRANSITION** | *"Unapproved for 5 days → escalate"* is a transition whose trigger is the clock. **`trigger: 'clock'` is type-level impossible in this tree** — `ClockTriggerIsForbidden` (`src/services/transitions/schema.js:37`) fails `tsc`, and `validateFlow` refuses it again at runtime for untyped callers (`validate.js:57-61`). **It is a compile error, not a design preference** |
 
 **The third cost is the decisive one, and it is not a coincidence.** Law 0.5 forbids clock-fired
 transitions because **clock-derived state cannot be stored without going stale** — and main
@@ -415,7 +415,7 @@ containing `Budi` is an **invisible** one: it renders identically to a resolved 
 survives into permanent records, and the day real identity lands there is **no way to tell the
 typed rows from the resolved rows** — they have the same shape.
 
-**This generalises the shipped E2 ruling from overrides to everything.** `lib/enforcement.ts`
+**This generalises the shipped E2 ruling from overrides to everything.** `lib/enforcement.js`
 already refuses it for one lane (*"CAPTURING A TYPED NAME IS FORGEABLE AND WORSE THAN NOTHING
 BECAUSE IT LOOKS LIKE ATTRIBUTION"*, header). **The rule was never override-specific**, and
 leaving it scoped to one lane is how the next surface adopts a text box in good faith.
@@ -536,7 +536,7 @@ migration. It is a new ledger and a claim that the old one meant something it do
 ### 6.2 ⚠️ THE ATTRIBUTION SEAM FLIPS TO SESSION-INJECTION, and a payload-supplied RESOLVED actor is **REFUSED BY NAME ON WRITE**
 
 **Today `setBy` is a caller-supplied payload field** — `requiredFields: ['mode', 'setBy']`
-(`flows/enforcement.flow.ts:66`). That is **ATTRIBUTION BY ASSERTION**: the caller states who
+(`flows/enforcement.flow.js:66`). That is **ATTRIBUTION BY ASSERTION**: the caller states who
 acted, and the platform records the statement.
 
 It is harmless today for one reason only — **nothing can construct a `RESOLVED` actor** (§2.3).
@@ -560,7 +560,7 @@ The moment identity exists, the same seam accepts one **from the payload**, and:
 
 ⚠️ **An `UNATTRIBUTED` payload value stays legal**, and must: it is a claim about a **failure to
 resolve**, which a caller is entitled to make and which the tightening rule already depends on
-(`lib/enforcement.ts:109-111` — the safest act is always available to anybody).
+(`lib/enforcement.js:109-111` — the safest act is always available to anybody).
 
 ### 6.3 A fixture-person namespace (`sim-usr-*`), pinned by test
 
@@ -570,7 +570,7 @@ The portal is fixture-first by design and will therefore acquire demo people. **
 a real person are the same shape**, and a governed record — an override, an approval, an
 enforcement setting — that names a demo person is **manufactured provenance**: the exact thing
 E2 refused when it declined to seed an invented `personId`, and E4 refused again when it seeded
-`UNATTRIBUTED` instead (`enforcementSeed.ts:33-38, 93-96`).
+`UNATTRIBUTED` instead (`enforcementSeed.js:33-38, 93-96`).
 
 **The mechanism, not the convention:** a reserved prefix (`sim-usr-*`), and **a pin that fails the
 floor** when a value carrying it reaches a `RESOLVED` attribution on a governed record. The
@@ -588,7 +588,7 @@ nobody could tell the difference at read time.
 **The seam is the sink** (`AuditSink`, DR-10 / C3). While it is in-memory, the event shape is
 free. **Once it is durable, every event ever written is an event whose shape is fixed** — and the
 DR-10 taxonomy explicitly has **no retrofit**: *"the sink interface is the contract"*
-(`transitions/events.ts:6-7`).
+(`transitions/events.js:6-7`).
 
 **Optional, and that is a ruling rather than a hedge:**
 
@@ -599,7 +599,7 @@ A system, cascade or creation-triggered transition **has no person to name** —
 `UNATTRIBUTED` would be a lie of a specific and expensive kind: **`UNATTRIBUTED` is a CLAIM —
 "a human acted and could not be resolved, and here is why"** — and every member of
 `UNATTRIBUTED_REASONS` names a **failure somebody can go and fix**
-(`lib/enforcement.ts:355-368`). Flooding that vocabulary with cascade events makes the count
+(`lib/enforcement.js:355-368`). Flooding that vocabulary with cascade events makes the count
 meaningless and the pressure it creates disappear.
 
 > ⚠️ **`UNATTRIBUTED_REASONS` HAS NO `SYSTEM` MEMBER AND MUST NOT ACQUIRE ONE.**
@@ -611,7 +611,7 @@ meaningless and the pressure it creates disappear.
 > anybody would ever fix it.
 >
 > Its absence from the frozen array **is the mechanism**, in the same way the missing fourth
-> enforcement mode below `OBSERVE` is (`lib/enforcement.ts:41-51`). Adding one turns a suite red,
+> enforcement mode below `OBSERVE` is (`lib/enforcement.js:41-51`). Adding one turns a suite red,
 > which is the point of writing it down.
 
 **The event actor field (`actor: 'buyer:all'`) is NOT what this replaces.** The persona actor is
@@ -665,10 +665,10 @@ favour and reads as caution.** Every row below is a negative about our own tree,
 | # | What this contract states | What we actually ship |
 |---|---|---|
 | **8.1** | A model of six objects, three survivors, four ledgers | **ZERO CODE. ZERO TYPES. ZERO FIXTURE PERSONS.** No `Person`, no `SubjectBinding`, no `BusinessRole`, no ledger, no minting rule. This issue is a model and its preconditions, and it must never read as a seam that exists |
-| **8.2** | ⚠️ **D-ID-7: a stamp carries `personId` ONLY** (§5.5) | **`ActingPerson` REQUIRES `displayName`, and its own doc-comment states the OPPOSITE ruling** — *"Captured, never resolved at read"* (`src/lib/enforcement.ts:339-345`). **The shipped shape contradicts this contract.** It is **free to correct today and only today**: zero `RESOLVED` attributions exist (§2.3), so no stored record loses a name. The correction rides a code batch; **this contract is the authority in the interim** |
-| **8.3** | Attribution comes from the SESSION and a payload-supplied `RESOLVED` actor is refused (§6.2) | **`setBy` is a payload field** — `requiredFields: ['mode', 'setBy']` (`flows/enforcement.flow.ts:66`). **Attribution by assertion.** Harmless only because nothing can construct a `RESOLVED` actor; harmful the day something can |
+| **8.2** | ⚠️ **D-ID-7: a stamp carries `personId` ONLY** (§5.5) | **`ActingPerson` REQUIRES `displayName`, and its own doc-comment states the OPPOSITE ruling** — *"Captured, never resolved at read"* (`src/lib/enforcement.js:339-345`). **The shipped shape contradicts this contract.** It is **free to correct today and only today**: zero `RESOLVED` attributions exist (§2.3), so no stored record loses a name. The correction rides a code batch; **this contract is the authority in the interim** |
+| **8.3** | Attribution comes from the SESSION and a payload-supplied `RESOLVED` actor is refused (§6.2) | **`setBy` is a payload field** — `requiredFields: ['mode', 'setBy']` (`flows/enforcement.flow.js:66`). **Attribution by assertion.** Harmless only because nothing can construct a `RESOLVED` actor; harmful the day something can |
 | **8.4** | `TransitionEvent` carries optional attribution (§6.4) | **It does not.** The event carries `actor: string` and nothing else about who acted (C3). The sink is still in-memory, which is the only reason this is still fixable |
-| **8.5** | `PersonaType` is tenancy only (§3.1) | **It is the authorisation object.** `PERSONA_ROLES` grants 60+ transition-roles to a seat and `capabilitiesFor` derives every capability from it (`roles.ts:18-123`). Unchanged by this contract, which is docs-only |
+| **8.5** | `PersonaType` is tenancy only (§3.1) | **It is the authorisation object.** `PERSONA_ROLES` grants 60+ transition-roles to a seat and `capabilitiesFor` derives every capability from it (`roles.js:18-123`). Unchanged by this contract, which is docs-only |
 | **8.6** | A `sim-usr-*` namespace, pinned by test (§6.3) | **No namespace, no pin.** The only `personId` literals are in specs (`usr-014`), which is why the precondition is still free — **and there is nothing stopping the next fixture from being `usr-020`** |
 | **8.7** | Ten capabilities wait on identity (§2.4) | **The count is the external census's, carried as a DISCLOSURE and NOT re-derived by us** (C9 §3.4). Six are anchored in code-truth in §2.4; the remaining four are **not verified in this tree** and this contract does not assert them |
 | **8.8** | `TransitionRole` is the sole permission atom (§3.3) | **True today and structurally unguarded.** `catalogRoles()` derives from the registry, but **nothing forbids a second permission table from being added tomorrow** — the rule is a contract clause, not yet a mechanism. Recorded so it is not read as enforced |

@@ -4,7 +4,7 @@ Three distinct axes. **103** (service surface) · **202** (transition catalog) �
 targets). They measure different things; this file keeps them separate.
 
 > ⚠️ **THIS DOCUMENT IS PINNED TO THE TREE, AND THE PIN IS WHY THE NUMBERS ABOVE ARE ALLOWED TO
-> BE NUMBERS.** `src/services/contracts/__tests__/c1MethodSurface.contract.test.ts` derives every
+> BE NUMBERS.** `src/services/contracts/__tests__/c1MethodSurface.contract.test.js` derives every
 > figure and every name below from the AST and the flow registry, and fails when the tree drifts
 > **or when this document goes stale**. A count written in prose is normally forbidden here
 > (`FLOOR-IN-PROSE-01`); a contract sent to a counterparty must nevertheless carry concrete
@@ -23,11 +23,11 @@ targets). They measure different things; this file keeps them separate.
 > `getSupplierApplications`, and `CommandInput` gained `expectedState` (1c) and `decision`. It
 > **lost** `IEngagementService` — a seven-method sub-service this page described and the tree has
 > never contained since — and `IDiscoveryService.getGlobalSuppliers`, which was removed
-> deliberately (`types.ts` records the removal). The transition catalog went 72 → **97** across
+> deliberately (`types.js` records the removal). The transition catalog went 72 → **97** across
 > 14 → **20** flows, and the wired-target axis 6 → **14**. Every figure on this page is now
 > re-derived on every test run, which is the point of the batch that corrected it.
 
-Source of truth: `src/services/data/types.ts` (service + command types),
+Source of truth: `src/services/data/types.js` (service + command types),
 `src/services/transitions/` (schema, dispatcher, flows).
 
 ---
@@ -96,7 +96,7 @@ signalled by **throwing** `DataError` (DR-4 — see C2), matching TanStack Query
 model. Command methods report outcome as a status, not a throw, except hard authorization
 failures (`NOT_FOUND` / `SCOPE_DENIED`) which throw `DataError` on the same channel as reads.
 
-**Status:** **LIVE** (mock-backed: `mockDataService.ts` wires the mock read services +
+**Status:** **LIVE** (mock-backed: `mockDataService.js` wires the mock read services +
 `MockCommandService` + `capabilitiesFor`). The real adapter is **RESERVED** — **no module in
 `src/` implements `httpDataService`** (C5). Several files under `src/` name it, every one of them as a reserved
 future seam or a comment; the pin asserts the ABSENCE OF AN IMPLEMENTATION, never the absence of
@@ -113,62 +113,62 @@ transition id can be assembled at a call site rather than written as a literal (
 
 | Flow file | Entity | Transitions | Transition ids | Wiring |
 |---|---|---|---|---|
-| `purchaseOrder.flow.ts` | `purchaseOrder` | 12 | `t_po_issue`, `t_po_view`, `t_po_acknowledge`, `t_po_confirm`, `t_po_adjust`, `t_po_reject`, `t_po_accept_counter`, `t_po_reject_counter`, `t_po_shipping_notice`, `t_po_partial_deliver`, `t_po_deliver`, `t_po_close` | **wired** |
-| `advanceShipNotice.flow.ts` | `advanceShipNotice` | 11 | `t_asn_create`, `t_asn_submit`, `t_asn_cancel`, `t_asn_request_exception`, `t_asn_approve_exception`, `t_asn_reject_exception`, `t_asn_change_eta`, `t_asn_in_transit`, `t_asn_deliver`, `t_asn_discrepancy`, `t_asn_resolve_discrepancy` | **wired** |
-| `goodsReceipt.flow.ts` | `goodsReceipt` | 8 | `t_gr_create`, `t_gr_start_inspection`, `t_gr_hold`, `t_gr_request_retest`, `t_gr_approve`, `t_gr_partial_approve`, `t_gr_reject`, `t_gr_post` | **wired** |
-| `goodsReceiptLine.flow.ts` | `goodsReceiptLine` | 6 | `t_grline_inspect`, `t_grline_accept`, `t_grline_reject`, `t_grline_quarantine`, `t_grline_release`, `t_grline_return` | sub-flow (rollup) |
-| `invoice.flow.ts` | `invoice` | 9 | `t_invoice_create`, `t_invoice_submit`, `t_invoice_match`, `t_invoice_approve`, `t_invoice_release_payment`, `t_invoice_remit`, `t_invoice_dispute`, `t_invoice_resubmit`, `t_invoice_resolve` | **wired** |
-| `invoiceMatch.flow.ts` | `invoiceMatch` | 4 | `t_invmatch_await_gr`, `t_invmatch_matched`, `t_invmatch_qty_variance`, `t_invmatch_price_variance` | sub-flow (rollup) |
-| `rfq.flow.ts` | `rfq` | 13 | `t_rfq_create`, `t_rfq_revise_draft`, `t_rfq_publish`, `t_rfq_close`, `t_rfq_award`, `t_rfq_award_partial`, `t_rfq_award_cancel`, `t_rfq_award_cancel_partial`, `t_rfq_award_sap_raised`, `t_rfq_extend`, `t_rfq_fx_pin`, `t_rfq_cancel`, `t_rfq_reopen` | **wired** |
-| `quotation.flow.ts` | `quotation` | 6 | `t_quotation_submit`, `t_quotation_revise`, `t_quotation_review`, `t_quotation_award`, `t_quotation_reject`, `t_quotation_reinstate` | **wired** |
-| `rfqIntent.flow.ts` | `rfqIntent` | 3 | `t_rfqintent_respond`, `t_rfqintent_decline`, `t_rfqintent_withdraw` | **wired** |
-| `rfqConfidentiality.flow.ts` | `rfqConfidentiality` | 1 | `t_rfqconfidentiality_accept` | **wired** |
-| `rfqClarification.flow.ts` | `rfqClarification` | 2 | `t_rfqclarification_ask`, `t_rfqclarification_answer` | **wired** |
-| `shipment.flow.ts` | `shipment` | 8 | `t_shipment_create`, `t_shipment_asn_received`, `t_shipment_depart`, `t_shipment_arrive_port`, `t_shipment_customs`, `t_shipment_dock`, `t_shipment_unload`, `t_shipment_deliver` | inert |
-| `contract.flow.ts` | `contract` | 4 | `t_contract_draft`, `t_contract_activate`, `t_contract_renew`, `t_contract_terminate` | inert |
-| `obligation.flow.ts` | `obligation` | 2 | `t_obligation_track`, `t_obligation_complete` | inert |
-| `purchaseRequisition.flow.ts` | `purchaseRequisition` | 7 | `t_pr_create`, `t_pr_submit`, `t_pr_approve`, `t_pr_reject`, `t_pr_revise`, `t_pr_source`, `t_pr_convert` | **wired** |
-| `supplierDocument.flow.ts` | `supplierDocument` | 5 | `t_supplierdoc_request`, `t_supplierdoc_declare`, `t_supplierdoc_submit`, `t_supplierdoc_verify`, `t_supplierdoc_reject` | **wired** |
-| `compliance.flow.ts` | `compliance` | 3 | `t_compliance_submit`, `t_compliance_verify`, `t_compliance_reject` | inert |
-| `requirementResponse.flow.ts` | `requirementResponse` | 7 | `t_requirementresponse_submit`, `t_requirementresponse_acknowledge`, `t_requirementresponse_promote`, `t_requirementresponse_review`, `t_requirementresponse_accept`, `t_requirementresponse_dispute`, `t_requirementresponse_resolve` | **wired** |
-| `inventoryDeclaration.flow.ts` | `inventoryDeclaration` | 2 | `t_inventorydeclaration_declare`, `t_inventorydeclaration_record` | **wired** |
-| `incomingShipment.flow.ts` | `incomingShipment` | 4 | `t_incomingshipment_report`, `t_incomingshipment_ship`, `t_incomingshipment_arrive`, `t_incomingshipment_cancel` | **wired** |
-| `enforcement.flow.ts` | `enforcement` | 1 | `t_enforcement_set` | **wired** |
-| `role.flow.ts` | `role` | 1 | `t_role_grant` | **wired** |
-| `workingCalendar.flow.ts` | `workingCalendar` | 1 | `t_calendar_day_set` | **wired** |
-| `threePl.flow.ts` | `threePl` | 1 | `t_threepl_set` | **wired** |
-| `supplierOverlay.flow.ts` | `supplierOverlay` | 1 | `t_supplier_set_update_mode` | **wired** |
-| `qualificationRule.flow.ts` | `qualificationRule` | 1 | `t_qualification_rule_set` | **wired** |
-| `sourcingType.flow.ts` | `sourcingType` | 1 | `t_sourcingtype_set` | **wired** |
-| `mrpController.flow.ts` | `mrpController` | 2 | `t_mrpcontroller_set`, `t_mrpcontroller_unmap` | **wired** |
-| `materialName.flow.ts` | `materialName` | 5 | `t_materialname_submit`, `t_materialname_approve`, `t_materialname_reject`, `t_materialname_load`, `t_materialname_replace` | **wired** |
-| `planningGroup.flow.ts` | `planningGroup` | 4 | `t_planninggroup_create`, `t_planninggroup_rename`, `t_planninggroup_move_materials`, `t_planninggroup_retire` | **wired** |
-| `hubSetting.flow.ts` | `hubSetting` | 1 | `t_setting_set` | **wired** |
-| `reasonCode.flow.ts` | `reasonCode` | 1 | `t_reasoncode_set` | **wired** |
-| `maxStock.flow.ts` | `maxStock` | 1 | `t_maxstock_set` | **wired** |
-| `supplierApplication.flow.ts` | `supplierApplication` | 4 | `t_application_submit`, `t_application_start_review`, `t_application_approve`, `t_application_reject` | **wired** |
-| `receiptDiscrepancy.flow.ts` | `receiptDiscrepancy` | 3 | `t_receiptdiscrepancy_acknowledge`, `t_receiptdiscrepancy_dispute`, `t_receiptdiscrepancy_resolve` | **wired** |
-| `callOff.flow.ts` | `callOff` | 14 | `t_calloff_release`, `t_calloff_draft`, `t_calloff_edit_draft`, `t_calloff_release_draft`, `t_calloff_dismiss`, `t_calloff_change`, `t_calloff_confirm`, `t_calloff_confirm_new_date`, `t_calloff_confirm_changes`, `t_calloff_confirm_partial`, `t_calloff_reject`, `t_calloff_approve`, `t_calloff_reject_confirmation`, `t_calloff_dispatch` | **wired** |
-| `stockAccess.flow.ts` | `stockAccess` | 3 | `t_stockaccess_grant`, `t_stockaccess_change`, `t_stockaccess_remove` | **wired** |
-| `stockSync.flow.ts` | `stockSync` | 2 | `t_stocksync_run`, `t_stocksync_pull` | **wired** |
-| `capacitySubmission.flow.ts` | `capacitySubmission` | 1 | `t_capacity_submit` | **wired** |
-| `inventoryAlert.flow.ts` | `inventoryAlert` | 1 | `t_inventoryalert_close` | **wired** |
-| `forecastVersion.flow.ts` | `forecastVersion` | 2 | `t_forecastversion_publish`, `t_forecastversion_reassign` | **wired** |
-| `forecastView.flow.ts` | `forecastView` | 1 | `t_forecastview_record` | **wired** |
-| `sapChangeMark.flow.ts` | `sapChangeMark` | 1 | `t_sapchange_mark` | **wired** |
-| `forecastOverride.flow.ts` | `forecastOverride` | 1 | `t_forecastoverride_record` | **wired** |
-| `warehouseDecision.flow.ts` | `warehouseDecision` | 1 | `t_warehousedecision_record` | **wired** |
-| `simulationOverride.flow.ts` | `simulationOverride` | 1 | `t_simulation_override_set` | **wired** |
-| `rfiEvent.flow.ts` | `rfiEvent` | 6 | `t_rfi_create`, `t_rfi_revise_draft`, `t_rfi_publish`, `t_rfi_extend`, `t_rfi_close`, `t_rfi_cancel` | **wired** |
-| `rfiResponse.flow.ts` | `rfiResponse` | 3 | `t_rfiresponse_save`, `t_rfiresponse_submit`, `t_rfiresponse_revise` | **wired** |
-| `rfpEvent.flow.ts` | `rfpEvent` | 11 | `t_rfp_create`, `t_rfp_revise_draft`, `t_rfp_publish`, `t_rfp_extend`, `t_rfp_close`, `t_rfp_award`, `t_rfp_award_partial`, `t_rfp_award_cancel`, `t_rfp_award_cancel_partial`, `t_rfp_award_sap_raised`, `t_rfp_cancel` | **wired** |
-| `rfpResponse.flow.ts` | `rfpResponse` | 3 | `t_rfpresponse_save`, `t_rfpresponse_submit`, `t_rfpresponse_revise` | **wired** |
-| `negotiationRound.flow.ts` | `negotiationRound` | 2 | `t_negotiationround_open`, `t_negotiationround_close` | **wired** |
-| `rfpOfferRound.flow.ts` | `rfpOfferRound` | 2 | `t_rfp_round_open`, `t_rfp_round_close` | **wired** |
-| `rfpFirmOffer.flow.ts` | `rfpFirmOffer` | 2 | `t_rfpfirmoffer_submit`, `t_rfpfirmoffer_revise` | **wired** |
+| `purchaseOrder.flow.js` | `purchaseOrder` | 12 | `t_po_issue`, `t_po_view`, `t_po_acknowledge`, `t_po_confirm`, `t_po_adjust`, `t_po_reject`, `t_po_accept_counter`, `t_po_reject_counter`, `t_po_shipping_notice`, `t_po_partial_deliver`, `t_po_deliver`, `t_po_close` | **wired** |
+| `advanceShipNotice.flow.js` | `advanceShipNotice` | 11 | `t_asn_create`, `t_asn_submit`, `t_asn_cancel`, `t_asn_request_exception`, `t_asn_approve_exception`, `t_asn_reject_exception`, `t_asn_change_eta`, `t_asn_in_transit`, `t_asn_deliver`, `t_asn_discrepancy`, `t_asn_resolve_discrepancy` | **wired** |
+| `goodsReceipt.flow.js` | `goodsReceipt` | 8 | `t_gr_create`, `t_gr_start_inspection`, `t_gr_hold`, `t_gr_request_retest`, `t_gr_approve`, `t_gr_partial_approve`, `t_gr_reject`, `t_gr_post` | **wired** |
+| `goodsReceiptLine.flow.js` | `goodsReceiptLine` | 6 | `t_grline_inspect`, `t_grline_accept`, `t_grline_reject`, `t_grline_quarantine`, `t_grline_release`, `t_grline_return` | sub-flow (rollup) |
+| `invoice.flow.js` | `invoice` | 9 | `t_invoice_create`, `t_invoice_submit`, `t_invoice_match`, `t_invoice_approve`, `t_invoice_release_payment`, `t_invoice_remit`, `t_invoice_dispute`, `t_invoice_resubmit`, `t_invoice_resolve` | **wired** |
+| `invoiceMatch.flow.js` | `invoiceMatch` | 4 | `t_invmatch_await_gr`, `t_invmatch_matched`, `t_invmatch_qty_variance`, `t_invmatch_price_variance` | sub-flow (rollup) |
+| `rfq.flow.js` | `rfq` | 13 | `t_rfq_create`, `t_rfq_revise_draft`, `t_rfq_publish`, `t_rfq_close`, `t_rfq_award`, `t_rfq_award_partial`, `t_rfq_award_cancel`, `t_rfq_award_cancel_partial`, `t_rfq_award_sap_raised`, `t_rfq_extend`, `t_rfq_fx_pin`, `t_rfq_cancel`, `t_rfq_reopen` | **wired** |
+| `quotation.flow.js` | `quotation` | 6 | `t_quotation_submit`, `t_quotation_revise`, `t_quotation_review`, `t_quotation_award`, `t_quotation_reject`, `t_quotation_reinstate` | **wired** |
+| `rfqIntent.flow.js` | `rfqIntent` | 3 | `t_rfqintent_respond`, `t_rfqintent_decline`, `t_rfqintent_withdraw` | **wired** |
+| `rfqConfidentiality.flow.js` | `rfqConfidentiality` | 1 | `t_rfqconfidentiality_accept` | **wired** |
+| `rfqClarification.flow.js` | `rfqClarification` | 2 | `t_rfqclarification_ask`, `t_rfqclarification_answer` | **wired** |
+| `shipment.flow.js` | `shipment` | 8 | `t_shipment_create`, `t_shipment_asn_received`, `t_shipment_depart`, `t_shipment_arrive_port`, `t_shipment_customs`, `t_shipment_dock`, `t_shipment_unload`, `t_shipment_deliver` | inert |
+| `contract.flow.js` | `contract` | 4 | `t_contract_draft`, `t_contract_activate`, `t_contract_renew`, `t_contract_terminate` | inert |
+| `obligation.flow.js` | `obligation` | 2 | `t_obligation_track`, `t_obligation_complete` | inert |
+| `purchaseRequisition.flow.js` | `purchaseRequisition` | 7 | `t_pr_create`, `t_pr_submit`, `t_pr_approve`, `t_pr_reject`, `t_pr_revise`, `t_pr_source`, `t_pr_convert` | **wired** |
+| `supplierDocument.flow.js` | `supplierDocument` | 5 | `t_supplierdoc_request`, `t_supplierdoc_declare`, `t_supplierdoc_submit`, `t_supplierdoc_verify`, `t_supplierdoc_reject` | **wired** |
+| `compliance.flow.js` | `compliance` | 3 | `t_compliance_submit`, `t_compliance_verify`, `t_compliance_reject` | inert |
+| `requirementResponse.flow.js` | `requirementResponse` | 7 | `t_requirementresponse_submit`, `t_requirementresponse_acknowledge`, `t_requirementresponse_promote`, `t_requirementresponse_review`, `t_requirementresponse_accept`, `t_requirementresponse_dispute`, `t_requirementresponse_resolve` | **wired** |
+| `inventoryDeclaration.flow.js` | `inventoryDeclaration` | 2 | `t_inventorydeclaration_declare`, `t_inventorydeclaration_record` | **wired** |
+| `incomingShipment.flow.js` | `incomingShipment` | 4 | `t_incomingshipment_report`, `t_incomingshipment_ship`, `t_incomingshipment_arrive`, `t_incomingshipment_cancel` | **wired** |
+| `enforcement.flow.js` | `enforcement` | 1 | `t_enforcement_set` | **wired** |
+| `role.flow.js` | `role` | 1 | `t_role_grant` | **wired** |
+| `workingCalendar.flow.js` | `workingCalendar` | 1 | `t_calendar_day_set` | **wired** |
+| `threePl.flow.js` | `threePl` | 1 | `t_threepl_set` | **wired** |
+| `supplierOverlay.flow.js` | `supplierOverlay` | 1 | `t_supplier_set_update_mode` | **wired** |
+| `qualificationRule.flow.js` | `qualificationRule` | 1 | `t_qualification_rule_set` | **wired** |
+| `sourcingType.flow.js` | `sourcingType` | 1 | `t_sourcingtype_set` | **wired** |
+| `mrpController.flow.js` | `mrpController` | 2 | `t_mrpcontroller_set`, `t_mrpcontroller_unmap` | **wired** |
+| `materialName.flow.js` | `materialName` | 5 | `t_materialname_submit`, `t_materialname_approve`, `t_materialname_reject`, `t_materialname_load`, `t_materialname_replace` | **wired** |
+| `planningGroup.flow.js` | `planningGroup` | 4 | `t_planninggroup_create`, `t_planninggroup_rename`, `t_planninggroup_move_materials`, `t_planninggroup_retire` | **wired** |
+| `hubSetting.flow.js` | `hubSetting` | 1 | `t_setting_set` | **wired** |
+| `reasonCode.flow.js` | `reasonCode` | 1 | `t_reasoncode_set` | **wired** |
+| `maxStock.flow.js` | `maxStock` | 1 | `t_maxstock_set` | **wired** |
+| `supplierApplication.flow.js` | `supplierApplication` | 4 | `t_application_submit`, `t_application_start_review`, `t_application_approve`, `t_application_reject` | **wired** |
+| `receiptDiscrepancy.flow.js` | `receiptDiscrepancy` | 3 | `t_receiptdiscrepancy_acknowledge`, `t_receiptdiscrepancy_dispute`, `t_receiptdiscrepancy_resolve` | **wired** |
+| `callOff.flow.js` | `callOff` | 14 | `t_calloff_release`, `t_calloff_draft`, `t_calloff_edit_draft`, `t_calloff_release_draft`, `t_calloff_dismiss`, `t_calloff_change`, `t_calloff_confirm`, `t_calloff_confirm_new_date`, `t_calloff_confirm_changes`, `t_calloff_confirm_partial`, `t_calloff_reject`, `t_calloff_approve`, `t_calloff_reject_confirmation`, `t_calloff_dispatch` | **wired** |
+| `stockAccess.flow.js` | `stockAccess` | 3 | `t_stockaccess_grant`, `t_stockaccess_change`, `t_stockaccess_remove` | **wired** |
+| `stockSync.flow.js` | `stockSync` | 2 | `t_stocksync_run`, `t_stocksync_pull` | **wired** |
+| `capacitySubmission.flow.js` | `capacitySubmission` | 1 | `t_capacity_submit` | **wired** |
+| `inventoryAlert.flow.js` | `inventoryAlert` | 1 | `t_inventoryalert_close` | **wired** |
+| `forecastVersion.flow.js` | `forecastVersion` | 2 | `t_forecastversion_publish`, `t_forecastversion_reassign` | **wired** |
+| `forecastView.flow.js` | `forecastView` | 1 | `t_forecastview_record` | **wired** |
+| `sapChangeMark.flow.js` | `sapChangeMark` | 1 | `t_sapchange_mark` | **wired** |
+| `forecastOverride.flow.js` | `forecastOverride` | 1 | `t_forecastoverride_record` | **wired** |
+| `warehouseDecision.flow.js` | `warehouseDecision` | 1 | `t_warehousedecision_record` | **wired** |
+| `simulationOverride.flow.js` | `simulationOverride` | 1 | `t_simulation_override_set` | **wired** |
+| `rfiEvent.flow.js` | `rfiEvent` | 6 | `t_rfi_create`, `t_rfi_revise_draft`, `t_rfi_publish`, `t_rfi_extend`, `t_rfi_close`, `t_rfi_cancel` | **wired** |
+| `rfiResponse.flow.js` | `rfiResponse` | 3 | `t_rfiresponse_save`, `t_rfiresponse_submit`, `t_rfiresponse_revise` | **wired** |
+| `rfpEvent.flow.js` | `rfpEvent` | 11 | `t_rfp_create`, `t_rfp_revise_draft`, `t_rfp_publish`, `t_rfp_extend`, `t_rfp_close`, `t_rfp_award`, `t_rfp_award_partial`, `t_rfp_award_cancel`, `t_rfp_award_cancel_partial`, `t_rfp_award_sap_raised`, `t_rfp_cancel` | **wired** |
+| `rfpResponse.flow.js` | `rfpResponse` | 3 | `t_rfpresponse_save`, `t_rfpresponse_submit`, `t_rfpresponse_revise` | **wired** |
+| `negotiationRound.flow.js` | `negotiationRound` | 2 | `t_negotiationround_open`, `t_negotiationround_close` | **wired** |
+| `rfpOfferRound.flow.js` | `rfpOfferRound` | 2 | `t_rfp_round_open`, `t_rfp_round_close` | **wired** |
+| `rfpFirmOffer.flow.js` | `rfpFirmOffer` | 2 | `t_rfpfirmoffer_submit`, `t_rfpfirmoffer_revise` | **wired** |
 | **TOTAL** | | **202** | | |
 
-**Flow shape** (`schema.ts`, `FlowDefinition` / `TransitionDef`): each transition declares
+**Flow shape** (`schema.js`, `FlowDefinition` / `TransitionDef`): each transition declares
 `from[]` / `to` / `trigger` / `requiredRole` / `requiredFields[]` / `policyHooks[]` /
 `sapBoundary?` / `version`. `trigger ∈ { user, system, cascade, creation }` — **`clock` is
 type-level impossible** (law 0.5: clock-derived states are read-time projections, never
@@ -185,11 +185,11 @@ system reference is minted only on `settle` (see C5, SAP boundary).
 ## Axis 3 — the 47 wired CommandTargets
 
 A `CommandTarget` is the per-entity adapter the dispatcher reads/writes through. **47 exist**, the
-runtime export `WIRED_COMMAND_TARGETS` (`MockCommandService.ts` `TARGETS`):
+runtime export `WIRED_COMMAND_TARGETS` (`MockCommandService.js` `TARGETS`):
 
 - **wired:** `purchaseOrder`, `advanceShipNotice`, `goodsReceipt`, `invoice`, `rfq`, `quotation`, `rfqIntent`, `rfqConfidentiality`, `rfqClarification`, `purchaseRequisition`, `supplierDocument`, `requirementResponse`, `inventoryDeclaration`, `incomingShipment`, `enforcement`, `role`, `workingCalendar`, `threePl`, `supplierOverlay`, `qualificationRule`, `sourcingType`, `planningGroup`, `supplierApplication`, `receiptDiscrepancy`, `callOff`, `stockSync`, `stockAccess`, `capacitySubmission`, `inventoryAlert`, `forecastVersion`, `forecastView`, `sapChangeMark`, `rfiEvent`, `rfiResponse`, `rfpEvent`, `rfpResponse`, `negotiationRound`, `rfpOfferRound`, `rfpFirmOffer`, `hubSetting`, `reasonCode`, `maxStock`, `mrpController`, `materialName`, `simulationOverride`, `forecastOverride`, `warehouseDecision`
 
-The interface is **7 members** (`dispatcher.ts`, `CommandTarget`):
+The interface is **7 members** (`dispatcher.js`, `CommandTarget`):
 
 ```ts
 interface CommandTarget {
@@ -216,8 +216,8 @@ unconditionally; a target that wants a supplier to reach a verb must NAME that s
 
 - **47 behavior-wired** — have a `CommandTarget`, dispatch runs against in-memory stores. Named
   above.
-- **2 rolled-up sub-flows** — authored, participate via terminal rollup (`grRollup.ts` /
-  `invoiceRollup.ts`), **no standalone target**: `goodsReceiptLine`, `invoiceMatch`.
+- **2 rolled-up sub-flows** — authored, participate via terminal rollup (`grRollup.js` /
+  `invoiceRollup.js`), **no standalone target**: `goodsReceiptLine`, `invoiceMatch`.
 - **4 inert** — registry data only: **no CommandTarget**: `shipment`, `contract`, `obligation`,
   `compliance`. Contract-complete, NOT behavior-complete (FORK-2 hybrid — each machine's
   `CommandTarget` + verb wiring rides its Stage-2 surface). ⚠️ **`compliance` is READ-complete and
@@ -234,7 +234,7 @@ derives it rather than reading the bullet above.
 
 ## The dispatcher pipeline (single validator/executor)
 
-One dispatcher for every command (`dispatcher.ts`). It validates in order, then applies + emits:
+One dispatcher for every command (`dispatcher.js`). It validates in order, then applies + emits:
 
 1. **Transition exists** in the registry, and the entity has a `CommandTarget`.
 2. **`QueryScope` on every command exactly as reads** — a supplier can only command its own
@@ -269,7 +269,7 @@ reason and a `failed` event — every outcome is auditable. The module is framew
 roles, targets, hooks, sink, id/clock are **injected**, so the mock and the Phase-F1 real adapter
 share it unchanged.
 
-**Command types** (`types.ts`): `CommandInput` (`transitionId` / `entity` / `entityId?` /
+**Command types** (`types.js`): `CommandInput` (`transitionId` / `entity` / `entityId?` /
 `payload?` / `expectedState?` / `idempotencyKey?` / `decision?`), `CommandResult` (`correlationId` / `transitionId` /
 `status` / `reason?` / `entityId?`), `CommandStatus` (`correlationId` / `transitionId` / `status`
 / `ts`), `CommandOutcome = 'done' | 'submitted' | 'failed'`.
@@ -277,7 +277,7 @@ share it unchanged.
 ⚠️ **`expectedState` is a STATE precondition, not a REVISION precondition.** It is blind to
 content staleness — a payload revised under you while the state held — and blind by construction
 to `statePreserving` verbs, which leave the state where it was. Both blind sets are derived and
-pinned in `staleState.test.ts`; neither is restated here.
+pinned in `staleState.test.js`; neither is restated here.
 
 **Cascades** are post-apply, best-effort fan-outs (a denied/illegal cascade never breaks the
 source command), running under an `automation` grant. See C3 for how a cascade groups under the
@@ -287,7 +287,7 @@ source command via `causationId`.
 
 ## What the pin cannot see
 
-`c1MethodSurface.contract.test.ts` compares **names, counts and membership**, derived from the AST
+`c1MethodSurface.contract.test.js` compares **names, counts and membership**, derived from the AST
 and the flow registry against this document's tables. Stated plainly, in the same form 1c's
 header states its blindness, so that no reader mistakes a green floor for a correct contract:
 
@@ -311,7 +311,7 @@ not yet checked the behaviour.**
 
 ## Pin reach
 
-**Pinned by** `src/services/contracts/__tests__/c1MethodSurface.contract.test.ts`.
+**Pinned by** `src/services/contracts/__tests__/c1MethodSurface.contract.test.js`.
 
 **GUARDED — these assertions, and nothing else on this page:**
 
@@ -344,7 +344,7 @@ a backlog: a clause describing a system outside this repository has nothing here
 against, and a clause stating WHY a boundary exists has no truth-value to decay. See C12
 for the statement of that property.
 
-⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.ts`).
+⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.js`).
 The GUARDED list is asserted EQUAL to the pin’s own `describe` titles, **both directions**:
 widen the pin without listing the new assertion and it reddens; drop a line here without
 narrowing the pin and it reddens too. A reach statement that can drift is the overclaim one

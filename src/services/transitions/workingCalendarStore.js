@@ -1,0 +1,435 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// THE HUB WORKING CALENDAR — BL-50, REQUIREMENTS §3.4 (Q-18 decided 2026-09-21).
+//
+//   > The hub keeps its own working calendar, maintained by the Hub
+//   > administrator (ADM). It is loaded from the SAP factory calendar for
+//   > Indonesia, and the administrator can add, remove or override days in the
+//   > hub. Every deadline in this file reads that calendar. [Owner]
+//
+// Two layers, and the page shows which one a day came from:
+//
+//   1. THE SAP LOAD. `SAP_FACTORY_CALENDAR` — the factory calendar's non-working
+//      dates for the year it covers. ⚠️ **SIMULATED: there is no SAP
+//      connection.** The load is a fixture standing where the inbound message
+//      will, and the page marks it "Sample data" (SC-04). Nothing here pretends
+//      to fetch.
+//   2. THE ADMINISTRATOR'S RULINGS. An append-only ledger of
+//      `{ date, kind, reason, setBy, setAt }`, written ONLY by the governed verb
+//      `t_calendar_day_set` (the `CommandTarget` in `MockCommandService`). The
+//      latest ruling for a date decides it outright, whatever SAP said.
+//
+// ⚠️ **ONE CALENDAR IN FORCE, AND EVERY DEADLINE READS IT HERE.**
+// `hubWorkingCalendar()` is the calendar the PO response deadline, the call-off
+// confirmation deadline and the forecast commitment deadlines (CR-26) all count
+// working days on. `hubCalendarReaders.guard.test.js` derives the modules that
+// do working-day arithmetic from source and refuses any that reaches past this
+// function to the frozen base — a ruling that moved one deadline and not
+// another would be two calendars, which is what Q-18 ruled out.
+//
+// ⚠️ **A RULING IS A FACT; A DEADLINE IS NEVER STORED (law 0.5).** Nothing here
+// records that a commitment is late or a PO escalated. Those stay derived at
+// read from `hubWorkingCalendar()` and the instant the caller passes, so a
+// ruling moves every open deadline the moment it lands — no recompute, no
+// migration, nothing to fall out of step.
+//
+// Persistence follows `customRoles.js` (operator ruling on that store): the
+// rulings survive a reload via `localStorage`, local to this browser and shared
+// with nobody. The read fails honestly — absent, unparseable and refused rows
+// are distinguished from "no rulings".
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** @import { CalendarDayKind, WorkingCalendar } from '@lib/workingCalendar' */
+import {
+  DEFAULT_WORKING_CALENDAR,
+  INDONESIA_HOLIDAYS_2026,
+  isCalendarDate,
+  isCalendarDayKind,
+  isWorkingDay,
+  withDayRulings
+} from '@lib/workingCalendar';
+/** @import { ActorAttribution } from '@lib/enforcement' */
+import { asActorAttribution } from '@lib/enforcement';
+
+// ── 1 · THE SAP LOAD (simulated) ─────────────────────────────────────────────
+
+/**
+ * ⚠️ SAMPLE DATA (BL-48 demo). A plant shutdown the factory calendar carries on
+ * top of the public holidays — factory calendars hold plant days as well as
+ * national ones. It is what makes the packaging Trade-off deadline span a
+ * weekend AND a holiday at the present. Invented for the demo, like every other
+ * row of this simulated load; the page marks the load "Sample data".
+ * @type {readonly string[]}
+ */
+export const SAMPLE_PLANT_SHUTDOWN_DAYS = Object.freeze(['2026-09-02']);
+
+/**
+ * The SAP factory calendar as the hub loaded it. ⚠️ **SIMULATED** — a fixture,
+ * not an inbound message; `liveness` says so and the page renders it.
+ *
+ * Weekends are carried by weekday (SAP factory calendars mark Saturday and
+ * Sunday as non-working by rule); `nonWorkingDates` is the list of dated
+ * holidays and collective leave on top of that.
+ */
+export const SAP_FACTORY_CALENDAR = Object.freeze({
+  /** The SAP factory calendar id for Indonesia. */
+  calendarId: 'ID',
+  liveness: /** @type {const} */ ('SIMULATED'),
+  /** The first and last date the load covers, inclusive. */
+  coversFrom: '2026-01-01',
+  coversTo: '2026-12-31',
+  /** When the load arrived. A fixed instant — there is no feed to stamp it. */
+  loadedAt: '2026-08-31T01:00:00.000Z',
+  nonWorkingDates: Object.freeze([...INDONESIA_HOLIDAYS_2026, ...SAMPLE_PLANT_SHUTDOWN_DAYS].sort())
+});
+
+/**
+ * Is `date` inside the year the SAP load covers? The verb's `readState`.
+ * @param {string} date
+ * @returns {boolean}
+ */
+export function calendarCovers(date) {
+  return (
+    isCalendarDate(date) &&
+    date >= SAP_FACTORY_CALENDAR.coversFrom &&
+    date <= SAP_FACTORY_CALENDAR.coversTo
+  );
+}
+
+/**
+ * The calendar exactly as SAP loaded it, before any ruling.
+ * @type {WorkingCalendar}
+ */
+export const SAP_BASE_CALENDAR = Object.freeze({
+  ...DEFAULT_WORKING_CALENDAR,
+  holidays: new Set(SAP_FACTORY_CALENDAR.nonWorkingDates)
+});
+
+// ── 2 · THE ADMINISTRATOR'S RULINGS ──────────────────────────────────────────
+
+/**
+ * One ruling on one date.
+ *
+ * ⚠️ **`setAt` IS STORE-ASSIGNED, NEVER A PAYLOAD FIELD** — the `pinnedAt` /
+ * `grantedAt` discipline. A caller that could set it could backdate its own
+ * audit entry.
+ */
+/**
+ * @typedef {{
+ *   readonly date: string;
+ *   readonly kind: CalendarDayKind;
+ *   readonly reason: string;
+ *   readonly setBy: ActorAttribution;
+ *   readonly setAt: string;
+ * }} CalendarDayRuling
+ */
+
+/**
+ * THE DEMO RULING (BL-48 demo data) — present before anybody acts; fixture
+ * data, not a stored write, so `reset()` keeps it.
+ *
+ * The administrator made Friday 4 September 2026 a non-working day: collective
+ * leave announced after the SAP load. SAP has it as a working day, so this is
+ * an OVERRIDE, and it is what moves the raw-material Trade-off deadline of the
+ * version published on Monday 31 August from Friday 4 to Monday 7 September
+ * (`forecastDeadline.bl48.test.js`, BL48-DEMO-04). Seeded as a ruling rather
+ * than written into the SAP list, deliberately: the page must show it came from
+ * the administrator, with a reason. Attributed honestly — the platform cannot
+ * name a person.
+ * @type {readonly CalendarDayRuling[]}
+ */
+export const SEEDED_CALENDAR_RULINGS = Object.freeze([
+  Object.freeze({
+    date: '2026-09-04',
+    kind: /** @type {const} */ ('non-working'),
+    reason: 'Collective leave announced after the SAP load',
+    setBy: Object.freeze({
+      kind: /** @type {const} */ ('UNATTRIBUTED'),
+      reason: /** @type {const} */ ('NO_PERSON_IN_SESSION')
+    }),
+    setAt: '2026-08-31T02:00:00.000Z'
+  })
+]);
+
+/** The one key. Beside `paragon.customRoles`, same envelope discipline. */
+export const WORKING_CALENDAR_KEY = 'paragon.workingCalendar';
+const STORE_VERSION = 1;
+
+/**
+ * `rulings`:  The rulings in force, oldest first (seed + stored).
+ * `rejected`:  Stored rows refused on read, each with the reason.
+ * `unreadable`:  The store exists but could not be parsed — DISTINCT from "no rulings".
+ *
+ * @typedef {{
+ *   readonly rulings: readonly CalendarDayRuling[];
+ *   readonly rejected: readonly { readonly row: string; readonly reason: string }[];
+ *   readonly unreadable: boolean;
+ * }} CalendarReadState
+ */
+
+/** Why a ruling is not one the verb would have accepted, or null. The SAME
+ *  predicates `calendar_day_governed` calls, so a hand-edited store cannot
+ * @param {unknown} date
+ * @param {unknown} kind
+ * @param {unknown} reason
+ * @returns {string | null}
+ *  carry a ruling the verb would refuse. */
+export function calendarRulingRefusal(date, kind, reason) {
+  if (!isCalendarDate(date)) return `'${String(date)}' is not a date (YYYY-MM-DD)`;
+  if (!calendarCovers(date)) {
+    return `${date} is outside the calendar loaded from SAP (${SAP_FACTORY_CALENDAR.coversFrom} to ${SAP_FACTORY_CALENDAR.coversTo})`;
+  }
+  if (!isCalendarDayKind(kind)) return `kind '${String(kind)}' is not working or non-working`;
+  if (typeof reason !== 'string' || reason.trim().length < 3) {
+    return 'a ruling on the working calendar needs a reason (at least 3 characters)';
+  }
+  return null;
+}
+
+/** @type {CalendarDayRuling[]} */
+let stored = [];
+/** @type {CalendarReadState} */
+let readStateCache = { rulings: SEEDED_CALENDAR_RULINGS, rejected: [], unreadable: false };
+let hydrated = false;
+let version = 0;
+const listeners = /** @type {Set<() => void>} */ (new Set());
+// §3's memo of the calendar in force; declared here because `changed()` clears it.
+/** @type {WorkingCalendar | null} */
+let calendarMemo = null;
+
+/** @returns {{ rows: CalendarDayRuling[]; rejected: CalendarReadState['rejected']; unreadable: boolean }} */
+function readFromStorage() {
+  /** @type {string | null} */
+  let raw = null;
+  try {
+    if (typeof window === 'undefined' || !window.localStorage)
+      return { rows: [], rejected: [], unreadable: false };
+    raw = window.localStorage.getItem(WORKING_CALENDAR_KEY);
+  } catch {
+    return { rows: [], rejected: [], unreadable: false };
+  }
+  if (raw === null) return { rows: [], rejected: [], unreadable: false };
+  /** @type {unknown} */
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return { rows: [], rejected: [], unreadable: true };
+  }
+  const env = /** @type {{ v?: unknown; rulings?: unknown } | null} */ (parsed);
+  if (!env || typeof env !== 'object' || env.v !== STORE_VERSION || !Array.isArray(env.rulings)) {
+    return { rows: [], rejected: [], unreadable: true };
+  }
+  /** @type {CalendarDayRuling[]} */
+  const rows = [];
+  /** @type {{ row: string; reason: string }[]} */
+  const rejected = [];
+  for (const [i, row] of /** @type {readonly unknown[]} */ (env.rulings).entries()) {
+    const r = /** @type {Record<string, unknown> | null} */ (row);
+    if (!r || typeof r !== 'object' || typeof r.setAt !== 'string') {
+      rejected.push({ row: `row ${i}`, reason: 'not a calendar ruling' });
+      continue;
+    }
+    const refusal = calendarRulingRefusal(r.date, r.kind, r.reason);
+    if (refusal) {
+      rejected.push({ row: String(r.date ?? `row ${i}`), reason: refusal });
+      continue;
+    }
+    const setBy = asActorAttribution(r.setBy);
+    if (!setBy) {
+      rejected.push({ row: String(r.date), reason: 'setBy is not a recorded attribution' });
+      continue;
+    }
+    rows.push({
+      date: /** @type {string} */ (r.date),
+      kind: /** @type {CalendarDayKind} */ (r.kind),
+      reason: /** @type {string} */ (r.reason).trim(),
+      setBy,
+      setAt: r.setAt
+    });
+  }
+  return { rows, rejected, unreadable: false };
+}
+
+/** @returns {void} */
+function hydrate() {
+  if (hydrated) return;
+  hydrated = true;
+  const read = readFromStorage();
+  stored = read.rows;
+  readStateCache = {
+    rulings: [...SEEDED_CALENDAR_RULINGS, ...stored],
+    rejected: read.rejected,
+    unreadable: read.unreadable
+  };
+}
+
+/** @returns {void} */
+function persist() {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return;
+    window.localStorage.setItem(
+      WORKING_CALENDAR_KEY,
+      JSON.stringify({ v: STORE_VERSION, rulings: stored })
+    );
+  } catch {
+    // Quota / private browsing: the ruling stands for the session and is in
+    // the audit trail; only its durability is lost.
+  }
+}
+
+/** @returns {void} */
+function changed() {
+  version += 1;
+  calendarMemo = null;
+  listeners.forEach((l) => l());
+}
+
+export const workingCalendarStore = {
+  /**
+   * Every ruling in force, oldest first (the seeded demo ruling first).
+   * @returns {readonly CalendarDayRuling[]}
+   */
+  rulings() {
+    hydrate();
+    return readStateCache.rulings;
+  },
+  /**
+   * What the last read found, including refused rows and an unreadable store.
+   * @returns {CalendarReadState}
+   */
+  readState() {
+    hydrate();
+    return readStateCache;
+  },
+  /**
+   * APPEND ONLY — called by the `t_calendar_day_set` target and nothing else.
+   * @param {CalendarDayRuling} ruling
+   * @returns {void}
+   */
+  append(ruling) {
+    hydrate();
+    stored = [...stored, ruling];
+    readStateCache = { ...readStateCache, rulings: [...SEEDED_CALENDAR_RULINGS, ...stored] };
+    persist();
+    changed();
+  },
+  /** Forget the stored rulings, in memory AND on disk — test isolation. The
+   * @returns {void}
+   *  seeded demo ruling stays: it is fixture data, not a stored write. */
+  reset() {
+    stored = [];
+    readStateCache = { rulings: SEEDED_CALENDAR_RULINGS, rejected: [], unreadable: false };
+    hydrated = false;
+    try {
+      if (typeof window !== 'undefined' && window.localStorage)
+        window.localStorage.removeItem(WORKING_CALENDAR_KEY);
+    } catch {
+      // in-memory state is already clear
+    }
+    changed();
+  },
+  /**
+   * Drop the in-memory copy WITHOUT touching storage — what a reload does.
+   * @returns {void}
+   */
+  rehydrate() {
+    stored = [];
+    hydrated = false;
+    hydrate();
+    changed();
+  },
+  /**
+   * A number that changes whenever the calendar in force does.
+   * @returns {number}
+   */
+  version() {
+    return version;
+  },
+  /**
+   * @param {() => void} listener
+   * @returns {() => void}
+   */
+  subscribe(listener) {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+  }
+};
+
+// ── 3 · THE CALENDAR IN FORCE ────────────────────────────────────────────────
+
+/**
+ * THE calendar every deadline in the hub counts working days on: the SAP load
+ * with the administrator's rulings applied, latest ruling per date winning.
+ * @returns {WorkingCalendar}
+ */
+export function hubWorkingCalendar() {
+  if (calendarMemo) return calendarMemo;
+  calendarMemo = withDayRulings(SAP_BASE_CALENDAR, workingCalendarStore.rulings());
+  return calendarMemo;
+}
+
+/** Where a date's answer comes from, for the page. */
+/** @typedef {'sap' | 'administrator'} CalendarDaySource */
+
+/**
+ * `weekday`:  ISO weekday, 1 = Monday … 7 = Sunday.
+ * `sapWorking`:  What SAP said, so an override is visible as one.
+ * `ruling`:  The ruling that decides it, when the administrator ruled.
+ *
+ * @typedef {{
+ *   readonly date: string;
+ *   readonly weekday: number;
+ *   readonly working: boolean;
+ *   readonly source: CalendarDaySource;
+ *   readonly sapWorking: boolean;
+ *   readonly ruling: CalendarDayRuling | null;
+ * }} CalendarDayView
+ */
+
+/**
+ * @param {string} date
+ * @returns {number}
+ */
+const weekdayOf = (date) => {
+  const d = new Date(`${date}T00:00:00.000Z`).getUTCDay();
+  return d === 0 ? 7 : d;
+};
+
+/**
+ * The latest ruling per date.
+ * @returns {Map<string, CalendarDayRuling>}
+ */
+function latestRulings() {
+  const out = /** @type {Map<string, CalendarDayRuling>} */ (new Map());
+  for (const r of workingCalendarStore.rulings()) out.set(r.date, r);
+  return out;
+}
+
+/**
+ * One date as the page shows it.
+ * @param {string} date
+ * @returns {CalendarDayView}
+ */
+export function calendarDay(date) {
+  const ruling = latestRulings().get(date) ?? null;
+  return {
+    date,
+    weekday: weekdayOf(date),
+    working: isWorkingDay(date, hubWorkingCalendar()),
+    source: ruling ? 'administrator' : 'sap',
+    sapWorking: isWorkingDay(date, SAP_BASE_CALENDAR),
+    ruling
+  };
+}
+
+/**
+ * The dated non-working days in force plus every date the administrator ruled
+ * on, in date order — the list the page shows. Weekends are by weekday and are
+ * not listed one by one, unless a ruling touches one.
+ * @returns {readonly CalendarDayView[]}
+ */
+export function listedCalendarDays() {
+  const dates = /** @type {Set<string>} */ (new Set(SAP_FACTORY_CALENDAR.nonWorkingDates));
+  for (const date of latestRulings().keys()) dates.add(date);
+  return [...dates].sort().map(calendarDay);
+}

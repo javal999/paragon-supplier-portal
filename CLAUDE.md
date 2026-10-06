@@ -212,7 +212,7 @@ mechanisms whose success signals said nothing about the damage they did.
 
 > ⚠️ **AUTHORISATION NOW EXISTS (Batch A, §64).** `resolveRoles` no longer widens
 > a persona to its whole atom set: it resolves the SEAT's business roles
-> (`services/transitions/businessRoles.ts` — **derive the roles from the
+> (`services/transitions/businessRoles.js` — **derive the roles from the
 > `SystemRoleId` union and `LANE_BUNDLES`; no figure is written here** — plus an
 > `automation` grant that is deliberately NOT assignable to a person).
 > **There is no persona fallback**; a command scope without `businessRoles` is
@@ -222,7 +222,7 @@ mechanisms whose success signals said nothing about the damage they did.
 > silence. `PERSONA_ROLES` survives as a DERIVED tenancy view and is no longer an
 > authorisation source. **Do not restate the atom or role counts here** — derive
 > them from `SYSTEM_ROLES` × `catalogRoles()`; the bilateral gate in
-> `businessRoles.test.ts` is what keeps them honest.
+> `businessRoles.test.js` is what keeps them honest.
 >
 > ⚠️ **AND `readScopeOwner: () => null` DENIES EVERY SUPPLIER — IT DOES NOT MEAN
 > "NOTHING TO COMPARE" (§86).** The dispatcher's supplier arm compares
@@ -232,12 +232,12 @@ mechanisms whose success signals said nothing about the damage they did.
 > at SCOPE on one that does not. **The refusal KIND was an existence oracle**,
 > across a tenancy boundary, on the write path. **Do not restate which targets are
 > owner-less** — it was filed as two and derived as five, and
-> `ownerlessScope.test.ts` re-derives the set every run from each target's own
+> `ownerlessScope.test.js` re-derives the set every run from each target's own
 > `readState` / `readScopeOwner`. A target that wants a supplier to reach a verb
 > must NAME that supplier; returning `null` because the owner is merely UNKNOWN
 > now silently denies a legitimate act instead of admitting one.
 >
-> **The cross-role handoff renders the wait, not a gap** (`handoff.ts` +
+> **The cross-role handoff renders the wait, not a gap** (`handoff.js` +
 > `HandoffNotice` + `useVerbAvailability`) — wired across the BUYER surfaces at §72–§76, and it is **ONE NOTICE PER VERB, IN THAT VERB'S OWN SLOT** (§76 retired §74's per-group collapse: the RFQ side panel is a WORKSPACE, not a control, and the two verbs one group notice spoke for are not co-reachable on any RFQ in the tree).
 > ⚠️ **DO NOT RESTATE HOW MANY SURFACES CARRY IT** — the sentence that stood here was a prose count and it was wrong TWICE, once per batch, which is `FLOOR-IN-PROSE-01` in the paragraph about handoffs. Derive it as **(surface × verb)** from the `testId="handoff-…"` sites against BOTH dispatch families. **THE SUPPLIER SIDE IS COVERED TOO, AND THE SENTENCE THAT SAID OTHERWISE IS DELETED RATHER THAN CORRECTED.** It read *"every supplier-side surface (a supplier seat is exactly `['supplier']` — no proper subset to narrow to, so every notice is dead branch)"*. That reason died at #263, which seeded `commercial` · `fulfilment` · `back_office`; **six supplier surfaces already carried notices while it still stood**, so it was describing the tree it was filed against, not the tree. Derived today: **no supplier atom is held by all three lanes** — the intersection is EMPTY — so "every lane holds it" is never the reason on this side. What is deliberately NOT covered: every control that holds **no atom** (toasts and reads are ungoverned, not withheld — §75e), and **`GRInspectionWizard`'s interior** (`WIZARD-ADMITS-A-SEAT-IT-WILL-REFUSE-01`, OPEN — closed at both known entrances, unprobed within).
 >
@@ -248,7 +248,7 @@ mechanisms whose success signals said nothing about the damage they did.
 >
 > The resolved actor is a SEAM, not a person: `CurrentIdentity.actor` is always
 > `UNATTRIBUTED: NO_PERSON_IN_SESSION`. **C10 §6.2's payload-refusal half is NOT
-> built** and is guarded by a tripwire in `simUsrNamespace.test.ts` — the moment
+> built** and is guarded by a tripwire in `simUsrNamespace.test.js` — the moment
 > shipped code constructs a `RESOLVED` actor, the refusal must land first.
 >
 > **AUTHORISATION IS NOW VISIBLE (§65).** The identity panel (`IdentityPanel`,
@@ -264,13 +264,13 @@ mechanisms whose success signals said nothing about the damage they did.
 > **CUSTOM ROLES EXIST, FOR THE SESSION (§66).** A custom role is
 > `{ parent, adds }` — a PARENT REFERENCE resolved at read, never a snapshot of
 > atoms, because a snapshot silently keeps yesterday's truth the moment the
-> parent gains one. It is granted by `t_role_grant` (`flows/role.flow.ts`),
+> parent gains one. It is granted by `t_role_grant` (`flows/role.flow.js`),
 > which follows `t_enforcement_set` verb for verb: single state `Defined`,
 > `statePreserving`, append-only ledger, CommandTarget, policy hook, and
 > `entityId` IS the parent `SystemRoleId`. **`role:grant` is a `compliance`
 > atom** — whoever can edit roles can grant themselves any verb, so procurement
 > cannot hold it. **A CUSTOM ROLE MAY NOT SPAN TENANCIES**, refused at the verb
-> by name, per atom. The store (`services/transitions/customRoles.ts`) is
+> by name, per atom. The store (`services/transitions/customRoles.js`) is
 > **PERSISTED in `localStorage` under `paragon.customRoles`** (operator ruling,
 > superseding session scope: an honest statement does not repair an experience
 > that looks like a defect). **Only CUSTOM roles are written** — the seeded ones
@@ -281,7 +281,7 @@ mechanisms whose success signals said nothing about the damage they did.
 > rendered rather than absorbed. A grant is still recorded against
 > `UNATTRIBUTED: NO_PERSON_IN_SESSION`, and the surface says so before the act. **Every SEAT resolves through `atomsForSeat`, never
 > `atomsFor`** — the call sites are derived from source and allowlisted
-> bilaterally in `businessRoles.test.ts`. **ASSIGNING a custom role to a seat is
+> bilaterally in `businessRoles.test.js`. **ASSIGNING a custom role to a seat is
 > NOT built** (§66k): `rolesFromStorage` would silently re-widen such a seat to
 > its whole persona on reload, and that line is the assignment batch's first fix.
 >
@@ -295,7 +295,7 @@ mechanisms whose success signals said nothing about the damage they did.
 > unrelated authority it could never shed. The remedy is the mirror — one
 > zero-atom `buyer` anchor — and it required **no change to
 > `copyableParentRefusal`, to the additive-only merge rule, or to any lane's
-> membership** (asserted in `buyerAnchor.test.ts`, because an unasserted "it
+> membership** (asserted in `buyerAnchor.test.js`, because an unasserted "it
 > needed none of those" is prose). **Do not restate the lane sizes or the role
 > count here** — derive them from `SYSTEM_ROLES`; the figures above are named as
 > the measurement that motivated the batch, not as a standing tally. It is
@@ -327,7 +327,7 @@ mechanisms whose success signals said nothing about the damage they did.
 > tracks `estimatedValue` closely enough to read as computed and **nothing computes
 > it**: zero relational or arithmetic reads of `estimatedValue` exist in the tree and
 > no threshold number exists in `src/` or `docs/`. The surface now SAYS it is
-> authored; `approvalBandAuthored.guard.test.ts` re-derives it every run (write-site
+> authored; `approvalBandAuthored.guard.test.js` re-derives it every run (write-site
 > assertion primary, read-site secondary and labelled weaker).
 > **Both readings of what a band decides fail independently:** WHO MAY APPROVE needs
 > seniority roles that do not exist and C10 §3.4 forbids minting (*"a new role per
@@ -338,7 +338,7 @@ mechanisms whose success signals said nothing about the damage they did.
 > IT HAS ALREADY STOPPED ONE BATCH.** `PolicyHookFn` takes ONE ctx
 > (`{ entityId, currentState, toState, payload, target, scope }`), `CommandTarget.
 > readEntity` is *"Full entity for policy hooks to inspect"*, and FOUR shipped hooks
-> read a document through it (`policies.ts:64/87/104/263`) — none by importing a
+> read a document through it (`policies.js:64/87/104/263`) — none by importing a
 > store. What a threshold lacks is the RIGHT-HAND SIDE of the comparison, not the
 > left. A role-gated VALUE policy (value from `readEntity` × lane from
 > `scope.businessRoles`) is buildable today and is **not** the ladder: it
@@ -365,7 +365,7 @@ and the Stage G planning canon + World-Class Build Plan are now on main.
   sequence — the array's "this is precedence" claim was a comment that nothing
   checked. **Do not restate which verb-pairs it covers**: it was dispatched as
   catching the `statePreserving` cases and MEASURED to be blind to exactly
-  those, and `staleState.test.ts` re-derives both populations every run.
+  those, and `staleState.test.js` re-derives both populations every run.
   ⚠️ **It is NOT the revision precondition** — content staleness (a payload
   revised under you while the state held) is invisible to a state comparison,
   no addressable entity carries a revision, and the three revision-shaped fields
@@ -389,7 +389,7 @@ and the Stage G planning canon + World-Class Build Plan are now on main.
   (Shipment/Contract/Obligation/SupplierDocument): no CommandTarget, no cascade
   link, roles mapped for catalog-coverage only (DNA-SEED-01 contract surface, no
   UI consumer). **PR is NO LONGER among them** — corrected 2026-08-03: it was
-  wired at G1.1 and dispatches (`MockCommandService.ts:547-593`, registered
+  wired at G1.1 and dispatches (`MockCommandService.js:547-593`, registered
   `:983`).
 
   ⚠️ **THE TARGET-LESS FLOWS ARE A SET DIFFERENCE, NOT A LIST — RUN
@@ -410,7 +410,7 @@ and the Stage G planning canon + World-Class Build Plan are now on main.
 
   ⚠️ **THE WIRED-COMMANDTARGET COUNT IS DELIBERATELY NOT WRITTEN HERE.** Derive
   it from `WIRED_COMMAND_TARGETS` — the runtime export of `TARGETS` in
-  `MockCommandService.ts`, which is the one place it can be true. The sentence
+  `MockCommandService.js`, which is the one place it can be true. The sentence
   that stood in this spot carried a figure, and it was restated and re-corrected
   repeatedly (*"6"*, then *"10"*, then *"11"*), each right on the day it was
   typed and stale within weeks; the line references shipped beside it had
@@ -422,9 +422,9 @@ and the Stage G planning canon + World-Class Build Plan are now on main.
   hybrid). Clock-projected states stay out of every transition table (law 0.5);
   the fixtures that still store them as literals are F0.4-FIND-01 (read/DTO-v2).
 - **Backend is greenfield.** Zero server code / datastore clients; data is
-  in-memory fixtures behind `mockDataService` (`src/main.tsx`); tenant scoping is
+  in-memory fixtures behind `mockDataService` (`src/main.jsx`); tenant scoping is
   enforced client-side. `httpDataService` is the designed Phase-F1 swap
-  (`DataServiceContext.tsx`) — pages do not change when it lands.
+  (`DataServiceContext.jsx`) — pages do not change when it lands.
 - **I3 compliance phase COMPLETE** (PRs #61–#64): I3.1 canonical compliance
   machine + DTO-v2 read (fixture-first, SIMULATED); I3.2 re-pointed BuyerCompliance
   + widget onto the seam and **closed COMPLIANCE-CARVEOUT-01**; I3.3 simulation
@@ -500,7 +500,7 @@ and the Stage G planning canon + World-Class Build Plan are now on main.
   42/2024, BPJPH — carried at `docs/Paragon_Platform_Strategic_Spine_v1.md:102`,
   `docs/Halal_Compliance_Control_Design_v1.md:9`, and as the `BPJPH_MANDATE_DATE`
   constant behind `complianceProjection.schemeValid`
-  (`src/services/data/complianceProjection.ts`). ⚠️ **THE DAYS REMAINING ARE NOT
+  (`src/services/data/complianceProjection.js`). ⚠️ **THE DAYS REMAINING ARE NOT
   WRITTEN HERE.** A countdown in prose is wrong every day after it is typed —
   `FLOOR-IN-PROSE-01` with a clock attached, and the one variant that decays
   with nobody touching the file. The line read *"58 days from 2026-08-20"* and
@@ -515,7 +515,7 @@ Three arcs, in order. Nothing else is queued.
 - **ARC 1 · TRACK R — the halal lane made operable.** Three deliverables, and
   every one of them is a SURFACE or a WRITE PATH, never a register entry:
   1. **An operator-editable certificate registry.** Today `COMPLIANCE_REGISTRY`
-     (`src/services/data/mock/fixtures/complianceRegistry.ts`) is **16 frozen
+     (`src/services/data/mock/fixtures/complianceRegistry.js`) is **16 frozen
      rows** — `readonly … = [ … ]`, every supplier `"Sample … (illustrative)"`,
      every cert number a `SAMPLE-…` token, every material `RM-SAMPLE-…`. Derived:
      `compliance` is one of the **seven flows with no `CommandTarget`**
@@ -523,12 +523,12 @@ Three arcs, in order. Nothing else is queued.
      `_verify` / `_reject` **cannot fire**. There is no write path of any kind:
      nobody — operator, buyer or supplier — can add, edit or expire a
      certificate. **That is arc 1's first deliverable.**
-  2. **The expiry projection on real dates.** `complianceProjection.ts` already
+  2. **The expiry projection on real dates.** `complianceProjection.js` already
      computes display status and scheme validity from `expiryDate` + issuer
      (clock-states never stored, law 0.5). It has never once run against a date a
      person entered.
   3. **The receipt gate reading it.** `verifyHalalAtReceipt`
-     (`src/services/data/halalVerification.ts`) is authored, tested, and
+     (`src/services/data/halalVerification.js`) is authored, tested, and
      **HEADLESS BY RULING** — its own header forbids acquiring a consumer there,
      because `COMPLIANCE_REGISTRY`'s codes are `RM-SAMPLE-…` and
      `MATERIAL_MASTER`'s are not, so **the intersection is empty by construction**
@@ -539,14 +539,14 @@ Three arcs, in order. Nothing else is queued.
 - **ARC 2 · THE REQUISITION LANE.** ⚠️ **The dispatched premise inverted twice,
   and the lane is in WORSE shape than "unreachable", not better.** Derived:
   `purchaseRequisition` **IS** a wired `CommandTarget`
-  (`MockCommandService.ts:1292`), so `t_pr_submit` / `t_pr_approve` /
+  (`MockCommandService.js:1292`), so `t_pr_submit` / `t_pr_approve` /
   `t_pr_reject` are dispatch**able**; and procurement's entry point **DOES** have
   a page — `/buyer/purchase-requisition` → `BuyerRequisitions`
-  (`AppRouter.tsx:111`), alongside `IntakeReview` and
+  (`AppRouter.jsx:111`), alongside `IntakeReview` and
   `plan-grid/IntakeAdjustDrawer`. What is true is sharper: **only `t_pr_create`
   has a hook and a caller.** The panel ships a `Draft` → **"Submit for approval"**
   button that fires a **`variant: 'success'` toast and closes the drawer** — no
-  dispatch, no state change (`BuyerRequisitions.tsx:520-532`); the `Approved` →
+  dispatch, no state change (`BuyerRequisitions.jsx:520-532`); the `Approved` →
   "Create PO directly" / "Create sourcing event" button does the same
   (`:501-519`); and `Pending Approval` carries **no approve or reject affordance
   at all**. An unreachable verb is silent. **This one tells the buyer it
@@ -555,7 +555,7 @@ Three arcs, in order. Nothing else is queued.
 
 - **ARC 3 · SUPPLIER ONBOARDING.** ⚠️ **AMENDED 2026-09-01 — THE MECHANISM
   SURVIVES MEASUREMENT, THE CONCLUSION DOES NOT.** Re-derived today, and the
-  hard half still holds exactly: `src/pages-v2/SupplierRegistration.tsx` behind
+  hard half still holds exactly: `src/pages-v2/SupplierRegistration.jsx` behind
   `/register` contains **zero** service calls — `grep -c 'useDataService'` and
   `grep -c 'dispatch'` both return 0 — the whole form lives in `useState`, and
   submitting still sets a `const [submitted, setSubmitted] = useState(false)`
@@ -574,7 +574,7 @@ Three arcs, in order. Nothing else is queued.
   it.** What no surface does is let the SUPPLIER raise their own, and `/register`
   no longer pretends otherwise: it stopped minting a fabricated
   `APP-2026-{random}` under the label "Application number", and
-  `registrationHonesty.guard.test.ts` holds that closed bilaterally. **The gap
+  `registrationHonesty.guard.test.js` holds that closed bilaterally. **The gap
   is now one-sided, not total** — which is a materially different arc from the
   one this bullet used to describe, and the difference decides whether arc 3
   builds a machine or only a door onto one that exists.
@@ -596,7 +596,7 @@ never as a standalone batch:
     unions / 580 members** across `src/` and registered 18 of them / 66 terms;
     **125 remain** as GL-0b's worklist. The figure is GL-0's derivation, named
     here rather than restated as if freshly measured (§27).
-  - **The 29 stored-field allowlist rows** (`src/lib/storedFieldGate/allowlist.ts`
+  - **The 29 stored-field allowlist rows** (`src/lib/storedFieldGate/allowlist.js`
     — 29 `key:` entries, derived at read time). Each is a stored field carrying a
     stated reason instead of a reader; the list can only ever shrink truthfully.
   - **R1d.** ⚠️ Parked as named, with a caveat that belongs in the parking
@@ -609,9 +609,9 @@ never as a standalone batch:
   (author all remaining flows; wire opportunistically per Stage-2 surface).
 
 ## Routing
-Routing is HashRouter (`src/router/AppRouter.tsx`) — not BrowserRouter. The `/`
+Routing is HashRouter (`src/router/AppRouter.jsx`) — not BrowserRouter. The `/`
 home redirect points to `/buyer/dashboard`; unknown routes render a real 404
-(`src/pages-v2/NotFound.tsx`).
+(`src/pages-v2/NotFound.jsx`).
 
 Most routes are persona-prefixed (`/buyer/…`, `/supplier/…`). Two are
 deliberately NOT: `/marketplace` and `/glossary` (GL-1). The glossary is reached
@@ -657,7 +657,7 @@ nav groups under one neutral key, `nav.glossary`.
 
   **THE RULE IS ENFORCED BY A TYPE, NOT BY THIS PARAGRAPH.** `Button`'s
   `Variant` union has no `'primary'` member, so every route back is a `tsc`
-  failure; `src/pages-v2/solidButtonRetired.guard.test.ts` covers what a type
+  failure; `src/pages-v2/solidButtonRetired.guard.test.js` covers what a type
   cannot. **Do not restate the site count here** — the literal scan that opened
   the sweep was incomplete four ways (a `BulkActionsBar` prop, an
   `invoiceActionModel` flag that also drove a confirm step, two typed
@@ -678,7 +678,7 @@ nav groups under one neutral key, `nav.glossary`.
   The old burnt `#B45309` is retired from the token; `CHART_SEMANTIC.warning`
   (chart strokes / flow-band fills with white text) is a separate concern.
 - TARGET/KPI bars are ONE system (DP2-TARGET-01), centralized in
-  `chartPalette.ts`: `targetStatus(pct, target, nearBand=10)` →
+  `chartPalette.js`: `targetStatus(pct, target, nearBand=10)` →
   meeting | near | missing, and `TARGET_STATUS` gives the fill/text colour
   (meeting = success, near = the DP2-WARN-01 amber split, missing = danger).
   Every target bar renders via the shared `<TargetBar>` primitive — fill +
@@ -688,7 +688,7 @@ nav groups under one neutral key, `nav.glossary`.
   KPI colour consts are gone. Pass-warn-fail cells (Analytics) and the supplier
   dashboard perf bars derive from the same helper (target 90). Grade A–D ramps
   are a separate axis, not yet unified here.
-- Charts consume ONE ordered series ramp from `src/lib/chartPalette.ts`
+- Charts consume ONE ordered series ramp from `src/lib/chartPalette.js`
   (`CHART_SERIES`: teal → navy → teal-tint → navy-tint → neutral grey). No
   rainbow donuts, no per-page ad-hoc hex. Migrate chart colors opportunistically
   per touched page (SupplierPerformance is the first natural migrant).
@@ -767,7 +767,7 @@ prose, in the section that forbids restating cardinalities in prose. §27 /
 
    ⚠️ **GL-1 · SECOND INSTANCE, SAME BATCH.** The first refusal-site matcher
    keyed **only on the union** (`Record<QtyRefusalReason, …>`) and produced
-   **three false accusations** against `services/sdc/ingest.ts` — a
+   **three false accusations** against `services/sdc/ingest.js` — a
    union-to-union translation table (`Record<QtyRefusalReason, ParseReason>`) in
    a service, with no message and no surface to attach anything to. The fix was
    to test **both halves of the generic**: the VALUE must be `string`, which is
@@ -824,7 +824,7 @@ prose, in the section that forbids restating cardinalities in prose. §27 /
    are dispatched?"* run as `grep "transitionId: '<id>'"` returns **0 for
    `t_gr_approve`, which fires on every goods receipt the wizard commits, and 0
    for `t_gr_hold`, which nothing has ever fired.** The literal is real — it
-   lives in a `switch` return (`grRollup.ts`), not at the call site, because the
+   lives in a `switch` return (`grRollup.js`), not at the call site, because the
    GR header disposition is DERIVED rather than chosen and the call site reads
    `transitionId: headerVerb`. **A dispatch census must RESOLVE every
    non-literal id to its concrete returns before it reports anything**; derive
@@ -967,7 +967,7 @@ PROBE: A GATE MUST NOT DERIVE ITS POPULATION THROUGH THE CODE IT IS PROBING.**
 Rules 1–3 ask whether a matcher sees the tree correctly. Rule 4 asks whether a
 guard was probed both ways. This asks a question neither reaches, because the
 matcher was correct AND the guard was probed both ways AND the probe still proved
-nothing. `ownerlessScope.test.ts` first derived "which targets are owner-less?"
+nothing. `ownerlessScope.test.js` first derived "which targets are owner-less?"
 by asking the dispatcher — the very predicate under test. Mutate that predicate
 and the POPULATION collapses to empty: the suite goes red on its own population
 control while **the assertion it exists to make never executes**, and the
@@ -1134,7 +1134,7 @@ weak"*, which is the reading that gets believed and the one that staffs a lane.
 
 ⚠️ **AND THE RULE THAT ORDERS EVERY PROBE IN THIS SECTION, PROMOTED OUT OF ONE
 MODULE'S COMMENT BECAUSE IT GOVERNS ALL OF THEM — `PROBE-MUST-FIRE-AT-A-REAL-
-DEFECT-01`.** It was written at #326 inside `src/services/data/clockDrift.ts`,
+DEFECT-01`.** It was written at #326 inside `src/services/data/clockDrift.js`,
 where it reads as local to that instrument. It is not:
 
 > **WHAT IS MISSING IS NOT A FAMILY — IT IS A PROBE THAT FIRES THE INSTRUMENT AT
@@ -1147,7 +1147,7 @@ does not — but it can never tell you the matcher is aimed at the right thing,
 because the seat that aimed it also built the target. **Only a defect the tree
 really carried was aimed by something other than the seat.**
 
-**The specimen is `dayProjection.test.ts` @ `3e0c1d2`, quoted into a comment
+**The specimen is `dayProjection.test.js` @ `3e0c1d2`, quoted into a comment
 there rather than deleted, and it is the model to copy rather than to redesign:**
 run the SHIPPED matcher over the LIVE population at an input that reconstructs a
 geometry the tree really occupied, and require it to return **NAMED members**.
@@ -1156,9 +1156,9 @@ correct and is instructive: with one side of its comparison deleted it could no
 longer fail, and *a guard that can no longer fail is worse than none.*
 
 **Where this is already honoured, so it is copied and not reinvented:**
-`chartPalette.guard.test.tsx:578` (the walk must REACH `ScoreBadge`'s `TONE`, the
+`chartPalette.guard.test.jsx:578` (the walk must REACH `ScoreBadge`'s `TONE`, the
 object its class was named for, with an anti-vacuity control saying so), and
-`thirdPartyIdentifiers.test.ts`, whose ISO 6346 probe fires at a dead regex this
+`thirdPartyIdentifiers.test.js`, whose ISO 6346 probe fires at a dead regex this
 file really shipped — `[A-Z]{4}U` where the standard has three letters, which
 matched nothing while the guard read green.
 
@@ -1195,7 +1195,7 @@ not move — the read did. A diff hunting for changed values comes back empty on
 corpus that was entirely replaced.
 
 **Then #325 changed `doc-001`'s stored `status` and the mode produced a live
-falsehood.** `SupplierCertsExpiringWidget.test.tsx` had *traded away* a
+falsehood.** `SupplierCertsExpiringWidget.test.jsx` had *traded away* a
 behavioural probe, stating in its header that the projection and the stored
 status *"now agree on every row, so no rendered assertion can separate them any
 more."* #325 made them disagree again. The file was last touched at #324, its
@@ -1204,7 +1204,7 @@ stayed green while the header stayed wrong. **A weaker assertion was being held
 on a premise measurement had already falsified.**
 
 **THE SPECIMEN IS ALREADY IN THE TREE AND IS §71's SHAPE APPLIED TO DATA** —
-`supplierDocumentRefusal.test.ts`:
+`supplierDocumentRefusal.test.js`:
 
 ```ts
 const refused = DOCUMENTS.filter((d) => d.status === 'Rejected');
@@ -1254,7 +1254,7 @@ reachability cannot answer (a mapped const always renders) the reason is stated
 AT THE SITE via the tree's existing `i18n-defer:` convention, which cannot go
 stale because it is the same bytes as the code it acquits — **and which is
 UNVERIFIED, buying a stated reason and a visible diff, never enforcement.**
-`grandfathered.ts` carries the consts that predate the gate as a bilateral set
+`grandfathered.js` carries the consts that predate the gate as a bilateral set
 that can only shrink; it is the S2 worklist, not an exemption.
 
 ### And the rule beside all of them: A REGISTER ENTRY IS NOT A DELIVERABLE
@@ -1305,12 +1305,20 @@ over everything else combined, and it grew that way in six weeks.
 
 ## Language — TypeScript → JavaScript, folder by folder (from 2026-10-02)
 The owner ruled the portal moves to JavaScript + JSDoc to match the company React
-boilerplate. Converted so far: `src/components/ui-v2` (pilot). Before converting a
+boilerplate. Converted so far: `src/components/ui-v2` (pilot) and the app shell
+(`src/` root files, `hooks`, `context`, `router`, `test`, `data`, `components/*`;
+Phase 4 B1), `src/lib` (B2), `src/services/transitions` (B3; forecast flows excluded), `src/services/data` (B4,
+including `types.js`) the rest of `src/services` (B5; forecast engine, flows and mock
+files excluded) the `src/pages-v2` subfolders (B6) and the `src/pages-v2` root pages plus
+`pages/auth/Login` and `types/supplier.types` (B7), and the forecast module (Phase 7,
+2026-10-06). The conversion is complete: every file in `src/` is JavaScript except
+`vite-env.d.ts`, a type-declaration file with no JS form. Interfaces with `readonly` members are type-literal typedefs, so readonly is kept.
+Before converting a
 folder, follow `docs/frontend-standard/JS-CONVERSION-PLAYBOOK.md`: the draft tool
 deletes comments and loosens types, and `scripts/codemods/check-comments-kept.mjs`
-must report 0 lost. Any spec or gate that scans files uses `src/test/sourceFiles.ts`
+must report 0 lost. Any spec or gate that scans files uses `src/test/sourceFiles.js`
 (or a pattern naming all of `.ts/.tsx/.js/.jsx`); `languageNeutralScanners.guard`
-fails on a TypeScript-only filter. Forecast stays TypeScript until the last phase.
+fails on a TypeScript-only filter.
 
 ## Gates — LINT ADDED 2026-10-02 (the "no lint script" rule is lifted)
 Until 2026-10-02 this section said the project has no lint script. The owner
@@ -1320,8 +1328,8 @@ lifted that rule to align the portal with the company React boilerplate
 now part of the repo; each file's header explains its rules and why. Rules that
 still have violations run as warnings (listed in `RULES_WITH_OPEN_VIOLATIONS`
 in `eslint.config.js`) and their total may not rise above the ceiling in
-`scripts/floor.json`. The forecast module is deferred to plan Phase 7: lint
-reports on it but never blocks it.
+`scripts/floor.json`. Since Phase 7 (2026-10-06) the forecast module is linted
+like every other file; it no longer has its rules downgraded to warnings.
 The gates are exactly five (three until `TSC-SKIPS-TESTS-01` closed, four until
 lint was added):
 - `npm run build`  → `tsc && vite build` (typecheck + bundle)
@@ -1421,7 +1429,7 @@ CP-3a). A failing scheduled run opens/updates a `gates-failure` issue.
 Vite root is app/ — never edit app/index.html directly.
 Deploy is Vercel-only: Vercel builds from source via vercel.json (npm run build → dist/).
 Nothing is copied to repo root; there are no committed build artifacts.
-Source entry: app/index.html  |  vite.config.ts root: app  |  outDir: ../dist
+Source entry: app/index.html  |  vite.config.js root: app  |  outDir: ../dist
 
 ### Access gate (SEC-GATE-01)
 A Vercel Routing Middleware (`middleware.js`) runs BEFORE the SPA rewrite and

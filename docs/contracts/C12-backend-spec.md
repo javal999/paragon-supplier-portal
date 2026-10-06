@@ -1,7 +1,7 @@
 # C12 — The backend spec: a map of what is absent
 
 **Status:** CONTRACT · **first issue, 2026-09-10**, pinned bilaterally by
-`src/services/contracts/__tests__/c12BackendSpec.contract.test.ts` against
+`src/services/contracts/__tests__/c12BackendSpec.contract.test.js` against
 code-truth at `main`.
 
 **Number derived, not chosen.** `docs/contracts/` holds `C1`…`C11`, contiguous,
@@ -49,7 +49,7 @@ joins has had prose counts go stale at six separate sites
 ⚠️ **Scoping and dispatch are the two rows with an empty third column, and that
 is the whole reason this document is short.** They are the hardest seams to
 specify in prose and they did not need specifying: the factories carry them
-across. Add a sibling of `*.mock.test.ts` that passes your service and change
+across. Add a sibling of `*.mock.test.js` that passes your service and change
 nothing else.
 
 ---
@@ -77,7 +77,7 @@ document number; the TMS owns the shipment record. We CARRY identity, we do not
 ASSIGN it. A portal-minted number is a fact about a system we do not own.
 
 ⚠️ **AND THIS REPOSITORY VIOLATES ITS OWN RULE IN ONE PLACE, WHICH YOU WILL READ
-AS PERMISSION IF NOBODY TELLS YOU.** `BuyerContracts.tsx` mints
+AS PERMISSION IF NOBODY TELLS YOU.** `BuyerContracts.jsx` mints
 `CTR-${year}-${n}` client-side (`CTR-FABRICATION-01`, filed, unscheduled). It is
 a defect, not a pattern. C11 V15 records it on the invariant it contradicts.
 
@@ -275,7 +275,7 @@ a link written before hash routing landed — returns the shell instead of a hos
 404. **What makes it load-bearing tomorrow: the day routing moves off the hash,
 every declared route becomes a real path and the fallback becomes the difference
 between a working portal and a wall of 404s.** The route paths are declared in
-one place (`src/router/AppRouter.tsx`) and are derived by the pin rather than
+one place (`src/router/AppRouter.jsx`) and are derived by the pin rather than
 counted here.
 
 ### 6.3 · The access gate is an EDGE component, and a static bucket cannot run it
@@ -445,11 +445,11 @@ it as evidence of anything.
   repeating.
 
   ⚠️ **AND UNTIL §6 LANDED THAT SENTENCE WAS TRUE OF FIELDS AND ONLY
-  ACCIDENTALLY TRUE OF FILES.** A backticked `BuyerContracts.tsx` satisfied the
+  ACCIDENTALLY TRUE OF FILES.** A backticked `BuyerContracts.jsx` satisfied the
   FIELD pattern, so the check asked whether `src/` contains the string `tsx` —
   which it always does. **Three citations were passing on their own file
   extension.** A file is now its own kind, resolved on disk, with both controls:
-  a path the tree does not hold is rejected, and a glob (`*.mock.test.ts`) is
+  a path the tree does not hold is rejected, and a glob (`*.mock.test.js`) is
   not read as a file claim at all.
 
 - **§6.2's and §6.3's load-bearing half is pinned, and the rest of §6 is not.**
@@ -474,7 +474,7 @@ sentence appears above.
 
 ## Pin reach
 
-**Pinned by** `src/services/contracts/__tests__/c12BackendSpec.contract.test.ts`.
+**Pinned by** `src/services/contracts/__tests__/c12BackendSpec.contract.test.js`.
 
 **GUARDED — these assertions, and nothing else on this page:**
 
@@ -507,7 +507,7 @@ a backlog: a clause describing a system outside this repository has nothing here
 against, and a clause stating WHY a boundary exists has no truth-value to decay. See C12
 for the statement of that property.
 
-⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.ts`).
+⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.js`).
 The GUARDED list is asserted EQUAL to the pin’s own `describe` titles, **both directions**:
 widen the pin without listing the new assertion and it reddens; drop a line here without
 narrowing the pin and it reddens too. A reach statement that can drift is the overclaim one

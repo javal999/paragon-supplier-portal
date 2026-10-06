@@ -8,7 +8,7 @@
 //   Converting `x.ts` → `x.js` breaks every place that names the FILE rather
 //   than importing the module: specs that `readFileSync('src/data/mockX.ts')`,
 //   guards that expect `'components/ui-v2/Button.tsx'` in a census, configs
-//   (`vitest.config.ts` setupFiles, `app/index.html`'s `../src/main.tsx`), and
+//   (`vitest.config.js` setupFiles, `app/index.html`'s `../src/main.tsx`), and
 //   comments that say "see SelectField.tsx". Imports are unaffected: they name
 //   modules without an extension. Measured on the dry run of all 1,182 files:
 //   every one of the converted tree's test failures that was not a type error
@@ -65,6 +65,10 @@ for (const abs of walk(join(ROOT, 'src'), (p) => /\.(js|jsx)$/.test(p))) {
   const old = rel.replace(/\.jsx$/, '.tsx').replace(/\.js$/, '.ts');
   if (inBase.has(old) && !existsSync(join(ROOT, old))) renamed.set(old, rel);
 }
+// Files that still exist under their .ts/.tsx name (not converted yet). A bare
+// name or path suffix that ALSO matches one of these is not ours to rewrite:
+// 'types.ts' may mean src/services/data/types.ts, which is still TypeScript.
+const remaining = walk(join(ROOT, 'src'), (p) => /\.tsx?$/.test(p) && !p.endsWith('.d.ts')).map((p) => toPosix(relative(ROOT, p)));
 const byBase = new Map(); // bare file name → [old paths]
 for (const old of renamed.keys()) {
   const b = posix.basename(old);
@@ -87,15 +91,28 @@ function rewrite(token, fileRel) {
   // c. a path suffix ('ui-v2/Button.tsx', 'components/ui-v2/Button.tsx')
   if (token.includes('/')) {
     const hits = [...renamed.keys()].filter((o) => o.endsWith(`/${clean}`));
-    return hits.length === 1 ? withExt(hits[0]) : null;
+    const stillTs = remaining.some((r) => r.endsWith(`/${clean}`));
+    if (hits.length === 1 && stillTs) ambiguous.add(`${fileRel}: '${token}' also names a file that is still TypeScript — left as is`);
+    return hits.length === 1 && !stillTs ? withExt(hits[0]) : null;
   }
-  // d. a bare file name: the only renamed file with that name, or else the one
-  //    in the SAME folder as the file that names it ("see types.ts" beside it).
+  // d. a bare file name. Only names a renamed file has are considered.
+  //    - No still-TypeScript file shares it: the only renamed file with that
+  //      name, or else the one in the SAME folder as the reference.
+  //    - A still-TypeScript file shares it ('types.ts'): only a renamed file in
+  //      the same folder as the reference can be meant, and only if no
+  //      still-TypeScript file sits in that folder too; otherwise it is left.
   const hits = byBase.get(token) ?? [];
-  if (hits.length === 1) return withExt(hits[0]);
-  const sameDir = hits.filter((o) => posix.dirname(o) === posix.dirname(fileRel.replace(/\.(jsx?)$/, '')));
-  if (sameDir.length === 1) return withExt(sameDir[0]);
-  if (hits.length > 1) ambiguous.add(`${fileRel}: '${token}' names ${hits.length} renamed files — left as is`);
+  if (hits.length === 0) return null;
+  const refDir = posix.dirname(fileRel.replace(/\.(jsx?)$/, ''));
+  const sameDir = hits.filter((o) => posix.dirname(o) === refDir);
+  const stillTs = remaining.filter((r) => posix.basename(r) === token);
+  if (stillTs.length === 0) {
+    if (hits.length === 1) return withExt(hits[0]);
+    if (sameDir.length === 1) return withExt(sameDir[0]);
+  } else if (sameDir.length === 1 && !stillTs.some((r) => posix.dirname(r) === refDir)) {
+    return withExt(sameDir[0]);
+  }
+  ambiguous.add(`${fileRel}: '${token}' names ${hits.length} renamed file(s)${stillTs.length ? ' and a file that is still TypeScript' : ''} — left as is`);
   return null;
 }
 const ambiguous = new Set();

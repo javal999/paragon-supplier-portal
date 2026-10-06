@@ -60,7 +60,7 @@ describe('ErrorState · CONTROLS — the instrument can see', () => {
   it('CONTROL — the two locales differ on every key this surface renders', async () => {
     // Without this, an ID assertion below could pass because ID fell back to EN
     // (the `fallbackLng` path), which is the invisible-untranslated-string shape
-    // `fragments.test.ts` exists to prevent — asserted here for THIS fragment at
+    // `fragments.test.js` exists to prevent — asserted here for THIS fragment at
     // the point of use, not only in the key-set guard.
     for (const key of [
       'errorState.title',
@@ -241,7 +241,7 @@ describe('ErrorState · the 31 consumers actually reach it — a real page, both
   // ⚠️ **THE WALK.** Everything above mounts the component directly, which is a
   // fair test of the component and NO test of the wiring. These two drive a real
   // page into its error branch through the chaos service — the same route
-  // `BuyerOrders.test.tsx` uses — so the assertion is about what a person sees
+  // `BuyerOrders.test.jsx` uses — so the assertion is about what a person sees
   // after a read fails, not about a component in isolation.
   it('[id] a BUYER page that fails to read explains it in Indonesian', async () => {
     await i18n.changeLanguage('id');

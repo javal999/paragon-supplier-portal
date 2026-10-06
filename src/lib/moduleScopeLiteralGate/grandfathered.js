@@ -1,0 +1,92 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// S2 · THE GRANDFATHER LIST — the module-scope-literal gate's worklist.
+//
+// Every module-scope const consumed by `.map()` that carried reader-visible
+// literals BEFORE this gate existed, and has not yet been adjudicated.
+//
+// ── ⚠️ THIS IS A DECOMPOSITION, NOT A DEFERRAL OF CONVENIENCE ───────────────
+//   The batch that built the gate fixed shape S1 completely and stopped here on
+//   purpose. S2 is not one fix, it is 57 separate rulings on whether a given
+//   const is COPY (translate it) or DATA (state why it is not copy) — and a
+//   large minority of them are entangled with the central label maps
+//   (`statusLabel`, `priorityLabel`, `categoryLabel`), where the remedy is not
+//   "add a key" but "route the page through the map". Half-doing that would
+//   leave screens where some strings translate and others do not, which teaches
+//   the reader that they are different kinds of text. That is the harm, and it
+//   is worse than the wait.
+//
+// ── HOW A ROW LEAVES ────────────────────────────────────────────────────────
+//   Adjudicate the const at its own site — `// i18n-defer: <why it is not
+//   copy>` — or translate it. Then DELETE the row. The list is asserted
+//   BILATERALLY: a row naming no live const fails as loudly as a live const
+//   naming no row, so it cannot quietly rot into a list of things that used to
+//   be true. **It can only shrink.**
+//
+// ⚠️ **NO COUNT IS WRITTEN IN THIS COMMENT.** `S2_GRANDFATHERED.length` is the
+// count, derived where it cannot drift (§27, `FLOOR-IN-PROSE-01`). The ceiling
+// asserted in the spec is the one number, and it is a CEILING precisely so that
+// shrinking this list never requires editing a number.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * `file::CONST` — see the header. Sorted; append is not expected, ever.
+ * @type {readonly string[]}
+ */
+export const S2_GRANDFATHERED = [
+  'src/components/delivery/PolicyEditor.jsx::ENFORCEMENTS',
+  'src/components/layout-v2/LanguageMenu.jsx::LANGUAGES',
+  'src/pages-v2/BuyerAnalytics.jsx::PERIOD_IDS',
+  'src/pages-v2/BuyerAnalytics.jsx::SUMMARY_CARDS',
+  'src/pages-v2/BuyerChannelTriage.jsx::CHANNELS',
+  'src/pages-v2/BuyerCompliance.jsx::CATEGORY_OPTIONS',
+  'src/pages-v2/BuyerCompliance.jsx::REQUEST_CATEGORIES',
+  'src/pages-v2/BuyerCompliance.jsx::STATUS_OPTIONS',
+  'src/pages-v2/BuyerContracts.jsx::BRAND_OPTIONS',
+  'src/pages-v2/BuyerContracts.jsx::CATEGORY_OPTIONS',
+  'src/pages-v2/BuyerContracts.jsx::INCOTERMS_OPTIONS',
+  'src/pages-v2/BuyerContracts.jsx::PAYMENT_TERMS_OPTIONS',
+  'src/pages-v2/BuyerContracts.jsx::TYPE_OPTIONS',
+  'src/pages-v2/BuyerDiscovery.jsx::STAGE_LABEL_KEYS',
+  'src/pages-v2/BuyerInvoices.jsx::AGING_DATA',
+  'src/pages-v2/BuyerInvoices.jsx::STATUS_OPTIONS',
+  'src/pages-v2/BuyerRequisitions.jsx::COST_CENTERS',
+  'src/pages-v2/BuyerRequisitions.jsx::PRIORITY_OPTIONS',
+  'src/pages-v2/BuyerRequisitions.jsx::UOM_OPTIONS',
+  'src/pages-v2/BuyerRisk.jsx::SCENARIO_LIBRARY_IDS',
+  'src/pages-v2/BuyerRisk.jsx::TAB_DEFS',
+  'src/pages-v2/BuyerSourcing.jsx::INCOTERMS_OPTIONS',
+  'src/pages-v2/BuyerSourcing.jsx::MATERIAL_CATALOG',
+  'src/pages-v2/BuyerSourcing.jsx::PAYMENT_TERMS_OPTIONS',
+  'src/pages-v2/BuyerSupplierProfile.jsx::MSG_LOG',
+  'src/pages-v2/CommHubInbound.jsx::CHANNELS',
+  'src/pages-v2/Marketplace.jsx::CATEGORIES',
+  'src/pages-v2/Marketplace.jsx::OPEN_RFQS',
+  'src/pages-v2/SupplierDocuments.jsx::CATEGORY_FILTERS',
+  'src/pages-v2/SupplierDocuments.jsx::CERT_TYPES',
+  'src/pages-v2/SupplierForecasts.jsx::ADVANCE_VERBS',
+  'src/pages-v2/SupplierMyStorefront.jsx::CATEGORY_OPTIONS',
+  'src/pages-v2/SupplierMyStorefront.jsx::CERT_OPTIONS',
+  'src/pages-v2/SupplierMyStorefront.jsx::COMPLETENESS_ITEMS',
+  'src/pages-v2/SupplierMyStorefront.jsx::CURRENCY_OPTIONS',
+  'src/pages-v2/SupplierMyStorefront.jsx::UOM_OPTIONS',
+  'src/pages-v2/SupplierPerformance.jsx::GRADE_HISTORY',
+  'src/pages-v2/SupplierRFQs.jsx::EVAL_SEGMENTS',
+  'src/pages-v2/SupplierRegistration.jsx::BANKS',
+  'src/pages-v2/SupplierRegistration.jsx::CHANNELS',
+  'src/pages-v2/SupplierRegistration.jsx::CONTACT_ROLES',
+  'src/pages-v2/SupplierRegistration.jsx::COUNTRIES',
+  'src/pages-v2/SupplierRegistration.jsx::DOCUMENTS',
+  'src/pages-v2/SupplierRegistration.jsx::INDONESIAN_PROVINCES',
+  'src/pages-v2/SupplierRegistration.jsx::REQUEST_TYPES',
+  'src/pages-v2/SupplierRegistration.jsx::SUPPLY_CATEGORIES',
+  'src/pages-v2/SupplierStorefront.jsx::TABS',
+  'src/pages-v2/SupplierStorefront.jsx::TRACK_RECORD',
+  'src/pages-v2/SupplierWhatsApp.jsx::CAP_KEYS',
+  'src/pages-v2/SupplierWhatsApp.jsx::LANGUAGES',
+  'src/pages-v2/process-flows/FlowDiagram.jsx::MARKERS'
+];
+
+/** @returns {ReadonlySet<string>} */
+export function grandfatheredKeys() {
+  return new Set(S2_GRANDFATHERED);
+}

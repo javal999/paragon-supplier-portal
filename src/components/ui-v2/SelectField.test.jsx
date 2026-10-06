@@ -161,7 +161,7 @@ describe('SelectField — edge cases', () => {
   });
   it('duplicate labels are disambiguated via the description line', () => {
     // Not a real corporate name on purpose — a `label:` value in this shape
-    // reads to src/data/thirdPartyIdentifiers.test.ts as a material identity,
+    // reads to src/data/thirdPartyIdentifiers.test.js as a material identity,
     // which flags any corporate legal form found there. This is a generic UI
     // fixture, not a material/supplier registry entry, so it stays generic.
     /** @type {SelectOption[]} */

@@ -1,0 +1,490 @@
+// ────────────────────────────────────────────────────────────────────────────
+// i18n fragment — the rebuilt RFQ authoring (RFx spec 2026-09-21): the item-type
+// library, the items / breaks / questions-and-options wizard steps, templates
+// and copying, and the shared session-only attachment control (`attachments.*`,
+// used by the RFI, RFP and quote screens too).
+// ────────────────────────────────────────────────────────────────────────────
+
+/** @type {Record<string, string>} */
+export const rfqAuthoringEn = {
+  // — Item types —
+  'rfqAuthoring.itemType.sticker': 'Sticker / label',
+  'rfqAuthoring.itemType.unitBox': 'Unit box / carton',
+  'rfqAuthoring.itemType.bottleClosure': 'Bottle and closure',
+  'rfqAuthoring.itemType.moldComponent': 'Mold component',
+  'rfqAuthoring.itemType.other': 'Other',
+
+  // — Spec fields —
+  'rfqAuthoring.field.sticker.material': 'Material',
+  'rfqAuthoring.field.sticker.size': 'Size (W × H)',
+  'rfqAuthoring.field.sticker.printingColours': 'Printing colours',
+  'rfqAuthoring.field.sticker.finishing': 'Finishing',
+  'rfqAuthoring.field.sticker.form': 'Form',
+  'rfqAuthoring.field.sticker.inkStandard': 'Ink standard',
+  'rfqAuthoring.field.sticker.brand': 'Label stock brand',
+  'rfqAuthoring.field.sticker.machine': 'Printing machine',
+  'rfqAuthoring.field.sticker.dieCutType': 'Die-cut type',
+  'rfqAuthoring.field.unitBox.boxType': 'Box type',
+  'rfqAuthoring.field.unitBox.materialGsm': 'Material and gsm',
+  'rfqAuthoring.field.unitBox.formedSize': 'Formed size (L × W × H)',
+  'rfqAuthoring.field.unitBox.flatSize': 'Flat size',
+  'rfqAuthoring.field.unitBox.printing': 'Printing',
+  'rfqAuthoring.field.unitBox.finishing': 'Finishing',
+  'rfqAuthoring.field.unitBox.decoration': 'Decoration',
+  'rfqAuthoring.field.unitBox.dieCutType': 'Die-cut type',
+  'rfqAuthoring.field.unitBox.inkNote': 'Ink note',
+  'rfqAuthoring.field.bottleClosure.component': 'Component',
+  'rfqAuthoring.field.bottleClosure.material': 'Material',
+  'rfqAuthoring.field.bottleClosure.colour': 'Colour',
+  'rfqAuthoring.field.bottleClosure.netVolume': 'Net volume',
+  'rfqAuthoring.field.bottleClosure.decoration': 'Decoration',
+  'rfqAuthoring.field.bottleClosure.supplierProductCode': 'Supplier product code',
+  'rfqAuthoring.field.moldComponent.componentName': 'Component name',
+  'rfqAuthoring.field.moldComponent.material': 'Material',
+  'rfqAuthoring.field.moldComponent.decorationProcesses': 'Decoration processes',
+  'rfqAuthoring.field.moldComponent.cavities': 'Cavities',
+  'rfqAuthoring.field.moldComponent.cycleTime': 'Cycle time',
+  'rfqAuthoring.field.moldComponent.weeklyCapacity': 'Weekly capacity',
+  'rfqAuthoring.field.moldComponent.developmentLeadTime': 'Development lead time',
+  'rfqAuthoring.field.other.specification': 'Specification',
+
+  // — Units and options —
+  'rfqAuthoring.unit.mm': 'mm',
+  'rfqAuthoring.unit.ml': 'ml',
+  'rfqAuthoring.unit.seconds': 's',
+  'rfqAuthoring.unit.pcs': 'pcs',
+  'rfqAuthoring.unit.weeks': 'weeks',
+  'rfqAuthoring.opt.roll': 'Roll',
+  'rfqAuthoring.opt.sheet': 'Sheet',
+  'rfqAuthoring.opt.flexible': 'Flexible',
+  'rfqAuthoring.opt.flatbed': 'Flatbed',
+  'rfqAuthoring.opt.choose': 'Choose…',
+
+  // — One-time costs —
+  'rfqAuthoring.cost.mold': 'Mold',
+  'rfqAuthoring.cost.dieCutPlate': 'Die-cut plate',
+  'rfqAuthoring.cost.printingPlate': 'Printing plate or cylinder',
+  'rfqAuthoring.cost.development': 'Development',
+
+  // — Basis and who fills —
+  'rfqAuthoring.basis.perVariant': 'per variant',
+  'rfqAuthoring.basis.total': 'total',
+  'rfqAuthoring.filledBy.buyer': 'You fill',
+  'rfqAuthoring.filledBy.supplier': 'Supplier fills',
+
+  // — Basics —
+  'rfqAuthoring.field.projectName': 'Project name',
+  'rfqAuthoring.placeholder.projectName': 'e.g. Oslo',
+  'rfqAuthoring.projectTag': 'Project {{name}}',
+
+  // — Wizard steps —
+  'rfqAuthoring.step.items.title': 'Items',
+  'rfqAuthoring.step.items.short': 'Items',
+  'rfqAuthoring.step.items.desc':
+    'What is being quoted: each item with its spec sheet, files and one-time costs.',
+  'rfqAuthoring.step.tiers.title': 'Quantity breaks',
+  'rfqAuthoring.step.tiers.short': 'Breaks',
+  'rfqAuthoring.step.tiers.desc':
+    'The quantities suppliers price at. One to eight breaks, per variant or total.',
+  'rfqAuthoring.step.questions.title': 'Questions and options',
+  'rfqAuthoring.step.questions.short': 'Options',
+  'rfqAuthoring.step.questions.desc':
+    'Optional questions, alternative offers, samples and confidentiality.',
+
+  // — Items step —
+  'rfqAuthoring.items.add': 'Add item',
+  'rfqAuthoring.items.remove': 'Remove item {{n}}',
+  'rfqAuthoring.items.heading': 'Item {{n}}',
+  'rfqAuthoring.items.type': 'Item type',
+  'rfqAuthoring.items.description': 'Description',
+  'rfqAuthoring.items.description.ph': 'e.g. Front sticker',
+  'rfqAuthoring.items.variants': 'Variants or SKUs',
+  'rfqAuthoring.items.uom': 'Unit',
+  'rfqAuthoring.items.spec': 'Spec sheet',
+  'rfqAuthoring.items.optional': 'optional',
+  'rfqAuthoring.items.supplierAnswers': 'The supplier answers this in the quote.',
+  'rfqAuthoring.items.removeField': 'Remove {{field}}',
+  'rfqAuthoring.items.addField': 'Add a field',
+  'rfqAuthoring.items.addField.label': 'Field name',
+  'rfqAuthoring.items.addField.filledBy': 'Filled by',
+  'rfqAuthoring.items.addField.required': 'Required',
+  'rfqAuthoring.items.addField.confirm': 'Add field',
+  'rfqAuthoring.items.note': 'Note',
+  'rfqAuthoring.items.note.ph': 'e.g. Spec is the same as the existing Amplify variant sticker',
+  'rfqAuthoring.items.attachments': 'Reference files',
+  'rfqAuthoring.items.costs': 'One-time costs to quote',
+  'rfqAuthoring.items.costs.help': 'The supplier can add others.',
+  'rfqAuthoring.items.ownTiers': 'This item has its own quantity breaks',
+
+  // — Tiers —
+  'rfqAuthoring.tiers.input': 'Quantity',
+  'rfqAuthoring.tiers.placeholder': 'e.g. 5000 or 5K',
+  'rfqAuthoring.tiers.add': 'Add break',
+  'rfqAuthoring.tiers.basis': 'Counted',
+  'rfqAuthoring.tiers.remove': 'Remove break {{qty}}',
+  'rfqAuthoring.tiers.toggle': 'Switch {{qty}} to {{basis}}',
+  'rfqAuthoring.tiers.empty': 'No quantity breaks yet.',
+  'rfqAuthoring.tiers.help':
+    'Per variant means each variant is made in this quantity; total means the whole item.',
+  'rfqAuthoring.tiers.refusal.EMPTY_QTY': 'Type a quantity first.',
+  'rfqAuthoring.tiers.refusal.NOT_NUMERIC': 'That is not a quantity.',
+  'rfqAuthoring.tiers.refusal.AMBIGUOUS_QTY':
+    'That number can be read two ways. Type it without separators.',
+  'rfqAuthoring.tiers.refusal.NOT_POSITIVE': 'A break is a whole number above zero.',
+  'rfqAuthoring.tiers.refusal.DUPLICATE': 'That break is already in the list.',
+  'rfqAuthoring.tiers.refusal.TOO_MANY': 'An RFQ has at most eight breaks.',
+
+  // — Questions and options —
+  'rfqAuthoring.q.heading': 'Questions',
+  'rfqAuthoring.q.help':
+    'The same typed questions an RFI asks, e.g. "Can goods ship in the 2nd week of October?"',
+  'rfqAuthoring.q.prompt': 'Question',
+  'rfqAuthoring.q.prompt.ph': 'e.g. Sample ready date',
+  'rfqAuthoring.q.type': 'Answer type',
+  'rfqAuthoring.q.type.yesNo': 'Yes / no',
+  'rfqAuthoring.q.type.text': 'Text',
+  'rfqAuthoring.q.type.date': 'Date',
+  'rfqAuthoring.q.type.numberWithUnit': 'Number',
+  'rfqAuthoring.q.required': 'Required',
+  'rfqAuthoring.q.add': 'Add question',
+  'rfqAuthoring.q.remove': 'Remove question: {{prompt}}',
+  'rfqAuthoring.q.none': 'No questions. This step is optional.',
+  'rfqAuthoring.o.heading': 'Options',
+  'rfqAuthoring.o.alternatives': 'Allow alternative offers',
+  'rfqAuthoring.o.alternatives.help':
+    'Alternatives are shown apart from the main quote and are not ranked.',
+  'rfqAuthoring.o.samples': 'Samples requested',
+  'rfqAuthoring.o.samples.qty': 'Sample quantity',
+  'rfqAuthoring.o.samples.neededBy': 'Needed by',
+  'rfqAuthoring.o.confidential': 'Confidential',
+  'rfqAuthoring.o.confidential.help':
+    'Suppliers see the files and spec only after accepting the confidentiality terms.',
+  'rfqAuthoring.o.attachments': 'RFQ files',
+
+  // — Review —
+  'rfqAuthoring.review.section.items': 'Items',
+  'rfqAuthoring.review.section.options': 'Breaks, questions and options',
+  'rfqAuthoring.review.row.origin': 'Created from',
+  'rfqAuthoring.review.origin.rfi': 'RFI {{label}}',
+  'rfqAuthoring.review.origin.rfp': 'RFP {{label}}',
+  'rfqAuthoring.review.origin.template': 'Template {{label}}',
+  'rfqAuthoring.review.origin.copy': 'Copy of {{label}}',
+  'rfqAuthoring.review.row.project': 'Project',
+  'rfqAuthoring.review.row.item': 'Item {{n}}',
+  'rfqAuthoring.review.item': '{{type}} · {{description}} · variants: {{variants}}',
+  'rfqAuthoring.review.row.tiers': 'Quantity breaks',
+  'rfqAuthoring.review.row.questions': 'Questions',
+  'rfqAuthoring.review.row.alternatives': 'Alternative offers',
+  'rfqAuthoring.review.row.samples': 'Samples',
+  'rfqAuthoring.review.samples': '{{qty}} by {{date}}',
+  'rfqAuthoring.review.row.confidential': 'Confidential',
+  'rfqAuthoring.review.row.files': 'Files',
+  'rfqAuthoring.review.yes': 'Yes',
+  'rfqAuthoring.review.no': 'No',
+  'rfqAuthoring.review.none': 'None',
+
+  // — Templates and copying —
+  'rfqAuthoring.template.sys.stickerRoll': 'Sticker, roll, tiered',
+  'rfqAuthoring.template.sys.unitBox': 'Unit box, papercard',
+  'rfqAuthoring.template.saveAs': 'Save as template',
+  'rfqAuthoring.template.picker.title': 'Start an RFQ',
+  'rfqAuthoring.template.picker.fromTemplate': 'Start from template',
+  'rfqAuthoring.template.picker.copy': 'Copy a past RFQ',
+  'rfqAuthoring.template.picker.system': 'System template',
+  'rfqAuthoring.template.picker.saved': 'Saved in this browser',
+  'rfqAuthoring.template.picker.use': 'Use',
+  'rfqAuthoring.template.picker.copyThis': 'Copy',
+  'rfqAuthoring.template.picker.summary': 'Items: {{items}} · breaks: {{tiers}}',
+  'rfqAuthoring.template.picker.copyHelp':
+    'A copy carries the items, options and invited suppliers. Its dates are cleared.',
+  'rfqAuthoring.template.picker.search': 'Search past RFQs',
+  'rfqAuthoring.template.picker.noMatch': 'No RFQ matches.',
+  'rfqAuthoring.template.picker.close': 'Close',
+  'rfqAuthoring.template.picker.storage':
+    'Saved templates live in this browser only. They are not shared with your team.',
+  'rfqAuthoring.template.picker.unreadable':
+    'The saved templates in this browser could not be read, so none are shown.',
+  'rfqAuthoring.template.picker.rejected': 'A saved template was refused: {{id}} ({{reason}})',
+  'rfqAuthoring.template.save.title': 'Save as template',
+  'rfqAuthoring.template.save.name': 'Template name',
+  'rfqAuthoring.template.save.keeps':
+    'Keeps the items, spec sheets, breaks, one-time costs, questions and options. Invited suppliers, dates and files are not kept.',
+  'rfqAuthoring.template.save.confirm': 'Save template',
+  'rfqAuthoring.template.save.cancel': 'Cancel',
+  'rfqAuthoring.template.save.done': 'Template "{{name}}" saved',
+  'rfqAuthoring.template.save.doneDesc': 'Saved in this browser. Use it from Templates.',
+  'rfqAuthoring.template.save.sessionOnly':
+    'This browser would not keep it, so it lasts for this session only.',
+  'rfqAuthoring.template.save.failed': 'Template not saved',
+  'rfqAuthoring.template.save.nothing': 'This RFQ has no quantity to keep as a break.',
+
+  // — Pre-fill —
+  'rfqAuthoring.prefill.rfiMissing.title': 'RFI not found',
+  'rfqAuthoring.prefill.rfiMissing.desc':
+    'The RFI {{id}} is not available, so the RFQ starts blank.',
+  'rfqAuthoring.prefill.rfpMissing.title': 'RFP options not found',
+  'rfqAuthoring.prefill.rfpMissing.desc':
+    'The RFP {{id}} or the options chosen on it are not available, so no RFQ was started.',
+
+  // — Step refusals (why Next is disabled) —
+  'rfqAuthoring.refusal.NO_ITEMS': 'Add at least one item.',
+  'rfqAuthoring.refusal.ITEM_TYPE_UNKNOWN': 'Choose an item type for every item.',
+  'rfqAuthoring.refusal.ITEM_INCOMPLETE': 'Every item needs a description.',
+  'rfqAuthoring.refusal.VARIANTS_INVALID':
+    'Every item comes in at least one variant (a whole number).',
+  'rfqAuthoring.refusal.ITEM_SPEC_MISSING': 'Fill every required field marked with *.',
+  'rfqAuthoring.refusal.ONE_TIME_COST_UNKNOWN':
+    'An item asks for a one-time cost this portal does not know.',
+  'rfqAuthoring.refusal.TIER_COUNT': 'Add one to eight quantity breaks.',
+  'rfqAuthoring.refusal.TIER_NOT_POSITIVE': 'Every break is a whole number above zero.',
+  'rfqAuthoring.refusal.TIER_BASIS_UNKNOWN': 'Every break is per variant or total.',
+  'rfqAuthoring.refusal.TIERS_NOT_INCREASING': 'Breaks must increase.',
+  'rfqAuthoring.refusal.SAMPLES_INVALID':
+    'A sample request needs a quantity and the date it is needed.',
+  'rfqAuthoring.refusal.CURRENCY_NOT_PERMITTED': 'Choose a currency this portal accepts bids in.',
+  'rfqAuthoring.refusal.UNKNOWN_QUESTION_TYPE':
+    'A question has an answer type this portal does not know.',
+  'rfqAuthoring.refusal.QUESTION_INCOMPLETE': 'Every question needs its wording.',
+
+  // — Session-only attachments (shared) —
+  'attachments.add': 'Attach',
+  'attachments.none': 'No files attached.',
+  'attachments.notHeld': 'not available in this session',
+  'attachments.remove': 'Remove {{name}}',
+  'attachments.sessionOnly': 'Stored for this session; permanent storage comes with the backend.'
+};
+
+/** @type {Record<string, string>} */
+export const rfqAuthoringId = {
+  'rfqAuthoring.itemType.sticker': 'Stiker / label',
+  'rfqAuthoring.itemType.unitBox': 'Unit box / karton',
+  'rfqAuthoring.itemType.bottleClosure': 'Botol dan tutup',
+  'rfqAuthoring.itemType.moldComponent': 'Komponen molding',
+  'rfqAuthoring.itemType.other': 'Lainnya',
+
+  'rfqAuthoring.field.sticker.material': 'Bahan',
+  'rfqAuthoring.field.sticker.size': 'Ukuran (L × T)',
+  'rfqAuthoring.field.sticker.printingColours': 'Warna cetak',
+  'rfqAuthoring.field.sticker.finishing': 'Finishing',
+  'rfqAuthoring.field.sticker.form': 'Bentuk',
+  'rfqAuthoring.field.sticker.inkStandard': 'Standar tinta',
+  'rfqAuthoring.field.sticker.brand': 'Merek bahan label',
+  'rfqAuthoring.field.sticker.machine': 'Mesin cetak',
+  'rfqAuthoring.field.sticker.dieCutType': 'Jenis pisau pond',
+  'rfqAuthoring.field.unitBox.boxType': 'Jenis kotak',
+  'rfqAuthoring.field.unitBox.materialGsm': 'Bahan dan gsm',
+  'rfqAuthoring.field.unitBox.formedSize': 'Ukuran jadi (P × L × T)',
+  'rfqAuthoring.field.unitBox.flatSize': 'Ukuran bentangan',
+  'rfqAuthoring.field.unitBox.printing': 'Cetak',
+  'rfqAuthoring.field.unitBox.finishing': 'Finishing',
+  'rfqAuthoring.field.unitBox.decoration': 'Dekorasi',
+  'rfqAuthoring.field.unitBox.dieCutType': 'Jenis pisau pond',
+  'rfqAuthoring.field.unitBox.inkNote': 'Catatan tinta',
+  'rfqAuthoring.field.bottleClosure.component': 'Komponen',
+  'rfqAuthoring.field.bottleClosure.material': 'Bahan',
+  'rfqAuthoring.field.bottleClosure.colour': 'Warna',
+  'rfqAuthoring.field.bottleClosure.netVolume': 'Volume bersih',
+  'rfqAuthoring.field.bottleClosure.decoration': 'Dekorasi',
+  'rfqAuthoring.field.bottleClosure.supplierProductCode': 'Kode produk pemasok',
+  'rfqAuthoring.field.moldComponent.componentName': 'Nama komponen',
+  'rfqAuthoring.field.moldComponent.material': 'Bahan',
+  'rfqAuthoring.field.moldComponent.decorationProcesses': 'Proses dekorasi',
+  'rfqAuthoring.field.moldComponent.cavities': 'Jumlah cavity',
+  'rfqAuthoring.field.moldComponent.cycleTime': 'Waktu siklus',
+  'rfqAuthoring.field.moldComponent.weeklyCapacity': 'Kapasitas mingguan',
+  'rfqAuthoring.field.moldComponent.developmentLeadTime': 'Waktu pengembangan',
+  'rfqAuthoring.field.other.specification': 'Spesifikasi',
+
+  'rfqAuthoring.unit.mm': 'mm',
+  'rfqAuthoring.unit.ml': 'ml',
+  'rfqAuthoring.unit.seconds': 'dtk',
+  'rfqAuthoring.unit.pcs': 'pcs',
+  'rfqAuthoring.unit.weeks': 'minggu',
+  'rfqAuthoring.opt.roll': 'Roll',
+  'rfqAuthoring.opt.sheet': 'Lembaran',
+  'rfqAuthoring.opt.flexible': 'Fleksibel',
+  'rfqAuthoring.opt.flatbed': 'Flatbed',
+  'rfqAuthoring.opt.choose': 'Pilih…',
+
+  'rfqAuthoring.cost.mold': 'Molding',
+  'rfqAuthoring.cost.dieCutPlate': 'Pisau pond',
+  'rfqAuthoring.cost.printingPlate': 'Plat atau silinder cetak',
+  'rfqAuthoring.cost.development': 'Pengembangan',
+
+  'rfqAuthoring.basis.perVariant': 'per varian',
+  'rfqAuthoring.basis.total': 'total',
+  'rfqAuthoring.filledBy.buyer': 'Anda isi',
+  'rfqAuthoring.filledBy.supplier': 'Diisi pemasok',
+
+  'rfqAuthoring.field.projectName': 'Nama proyek',
+  'rfqAuthoring.placeholder.projectName': 'mis. Oslo',
+  'rfqAuthoring.projectTag': 'Proyek {{name}}',
+
+  'rfqAuthoring.step.items.title': 'Item',
+  'rfqAuthoring.step.items.short': 'Item',
+  'rfqAuthoring.step.items.desc':
+    'Apa yang dimintakan penawaran: setiap item dengan lembar spesifikasi, berkas dan biaya satu kali.',
+  'rfqAuthoring.step.tiers.title': 'Jenjang kuantitas',
+  'rfqAuthoring.step.tiers.short': 'Jenjang',
+  'rfqAuthoring.step.tiers.desc':
+    'Kuantitas yang diberi harga oleh pemasok. Satu sampai delapan jenjang, per varian atau total.',
+  'rfqAuthoring.step.questions.title': 'Pertanyaan dan opsi',
+  'rfqAuthoring.step.questions.short': 'Opsi',
+  'rfqAuthoring.step.questions.desc':
+    'Pertanyaan opsional, penawaran alternatif, sampel dan kerahasiaan.',
+
+  'rfqAuthoring.items.add': 'Tambah item',
+  'rfqAuthoring.items.remove': 'Hapus item {{n}}',
+  'rfqAuthoring.items.heading': 'Item {{n}}',
+  'rfqAuthoring.items.type': 'Jenis item',
+  'rfqAuthoring.items.description': 'Deskripsi',
+  'rfqAuthoring.items.description.ph': 'mis. Stiker depan',
+  'rfqAuthoring.items.variants': 'Varian atau SKU',
+  'rfqAuthoring.items.uom': 'Satuan',
+  'rfqAuthoring.items.spec': 'Lembar spesifikasi',
+  'rfqAuthoring.items.optional': 'opsional',
+  'rfqAuthoring.items.supplierAnswers': 'Pemasok mengisinya di penawaran.',
+  'rfqAuthoring.items.removeField': 'Hapus {{field}}',
+  'rfqAuthoring.items.addField': 'Tambah kolom',
+  'rfqAuthoring.items.addField.label': 'Nama kolom',
+  'rfqAuthoring.items.addField.filledBy': 'Diisi oleh',
+  'rfqAuthoring.items.addField.required': 'Wajib',
+  'rfqAuthoring.items.addField.confirm': 'Tambah kolom',
+  'rfqAuthoring.items.note': 'Catatan',
+  'rfqAuthoring.items.note.ph': 'mis. Spesifikasi sama dengan stiker varian Amplify yang ada',
+  'rfqAuthoring.items.attachments': 'Berkas referensi',
+  'rfqAuthoring.items.costs': 'Biaya satu kali yang diminta',
+  'rfqAuthoring.items.costs.help': 'Pemasok dapat menambahkan yang lain.',
+  'rfqAuthoring.items.ownTiers': 'Item ini memiliki jenjang kuantitas sendiri',
+
+  'rfqAuthoring.tiers.input': 'Kuantitas',
+  'rfqAuthoring.tiers.placeholder': 'mis. 5000 atau 5K',
+  'rfqAuthoring.tiers.add': 'Tambah jenjang',
+  'rfqAuthoring.tiers.basis': 'Dihitung',
+  'rfqAuthoring.tiers.remove': 'Hapus jenjang {{qty}}',
+  'rfqAuthoring.tiers.toggle': 'Ubah {{qty}} menjadi {{basis}}',
+  'rfqAuthoring.tiers.empty': 'Belum ada jenjang kuantitas.',
+  'rfqAuthoring.tiers.help':
+    'Per varian berarti setiap varian dibuat sebanyak ini; total berarti seluruh item.',
+  'rfqAuthoring.tiers.refusal.EMPTY_QTY': 'Ketik kuantitas terlebih dahulu.',
+  'rfqAuthoring.tiers.refusal.NOT_NUMERIC': 'Itu bukan kuantitas.',
+  'rfqAuthoring.tiers.refusal.AMBIGUOUS_QTY':
+    'Angka itu bisa dibaca dua cara. Ketik tanpa pemisah.',
+  'rfqAuthoring.tiers.refusal.NOT_POSITIVE': 'Jenjang adalah bilangan bulat di atas nol.',
+  'rfqAuthoring.tiers.refusal.DUPLICATE': 'Jenjang itu sudah ada di daftar.',
+  'rfqAuthoring.tiers.refusal.TOO_MANY': 'Satu RFQ memiliki paling banyak delapan jenjang.',
+
+  'rfqAuthoring.q.heading': 'Pertanyaan',
+  'rfqAuthoring.q.help':
+    'Pertanyaan bertipe yang sama dengan RFI, mis. "Bisakah barang dikirim pada minggu ke-2 Oktober?"',
+  'rfqAuthoring.q.prompt': 'Pertanyaan',
+  'rfqAuthoring.q.prompt.ph': 'mis. Tanggal sampel siap',
+  'rfqAuthoring.q.type': 'Jenis jawaban',
+  'rfqAuthoring.q.type.yesNo': 'Ya / tidak',
+  'rfqAuthoring.q.type.text': 'Teks',
+  'rfqAuthoring.q.type.date': 'Tanggal',
+  'rfqAuthoring.q.type.numberWithUnit': 'Angka',
+  'rfqAuthoring.q.required': 'Wajib',
+  'rfqAuthoring.q.add': 'Tambah pertanyaan',
+  'rfqAuthoring.q.remove': 'Hapus pertanyaan: {{prompt}}',
+  'rfqAuthoring.q.none': 'Tidak ada pertanyaan. Langkah ini opsional.',
+  'rfqAuthoring.o.heading': 'Opsi',
+  'rfqAuthoring.o.alternatives': 'Izinkan penawaran alternatif',
+  'rfqAuthoring.o.alternatives.help':
+    'Alternatif ditampilkan terpisah dari penawaran utama dan tidak diperingkat.',
+  'rfqAuthoring.o.samples': 'Sampel diminta',
+  'rfqAuthoring.o.samples.qty': 'Jumlah sampel',
+  'rfqAuthoring.o.samples.neededBy': 'Dibutuhkan paling lambat',
+  'rfqAuthoring.o.confidential': 'Rahasia',
+  'rfqAuthoring.o.confidential.help':
+    'Pemasok melihat berkas dan spesifikasi hanya setelah menyetujui ketentuan kerahasiaan.',
+  'rfqAuthoring.o.attachments': 'Berkas RFQ',
+
+  'rfqAuthoring.review.section.items': 'Item',
+  'rfqAuthoring.review.section.options': 'Jenjang, pertanyaan dan opsi',
+  'rfqAuthoring.review.row.origin': 'Dibuat dari',
+  'rfqAuthoring.review.origin.rfi': 'RFI {{label}}',
+  'rfqAuthoring.review.origin.rfp': 'RFP {{label}}',
+  'rfqAuthoring.review.origin.template': 'Templat {{label}}',
+  'rfqAuthoring.review.origin.copy': 'Salinan {{label}}',
+  'rfqAuthoring.review.row.project': 'Proyek',
+  'rfqAuthoring.review.row.item': 'Item {{n}}',
+  'rfqAuthoring.review.item': '{{type}} · {{description}} · varian: {{variants}}',
+  'rfqAuthoring.review.row.tiers': 'Jenjang kuantitas',
+  'rfqAuthoring.review.row.questions': 'Pertanyaan',
+  'rfqAuthoring.review.row.alternatives': 'Penawaran alternatif',
+  'rfqAuthoring.review.row.samples': 'Sampel',
+  'rfqAuthoring.review.samples': '{{qty}} paling lambat {{date}}',
+  'rfqAuthoring.review.row.confidential': 'Rahasia',
+  'rfqAuthoring.review.row.files': 'Berkas',
+  'rfqAuthoring.review.yes': 'Ya',
+  'rfqAuthoring.review.no': 'Tidak',
+  'rfqAuthoring.review.none': 'Tidak ada',
+
+  'rfqAuthoring.template.sys.stickerRoll': 'Stiker, roll, berjenjang',
+  'rfqAuthoring.template.sys.unitBox': 'Unit box, kertas karton',
+  'rfqAuthoring.template.saveAs': 'Simpan sebagai templat',
+  'rfqAuthoring.template.picker.title': 'Mulai RFQ',
+  'rfqAuthoring.template.picker.fromTemplate': 'Mulai dari templat',
+  'rfqAuthoring.template.picker.copy': 'Salin RFQ sebelumnya',
+  'rfqAuthoring.template.picker.system': 'Templat sistem',
+  'rfqAuthoring.template.picker.saved': 'Tersimpan di peramban ini',
+  'rfqAuthoring.template.picker.use': 'Gunakan',
+  'rfqAuthoring.template.picker.copyThis': 'Salin',
+  'rfqAuthoring.template.picker.summary': 'Item: {{items}} · jenjang: {{tiers}}',
+  'rfqAuthoring.template.picker.copyHelp':
+    'Salinan membawa item, opsi dan pemasok yang diundang. Tanggalnya dikosongkan.',
+  'rfqAuthoring.template.picker.search': 'Cari RFQ sebelumnya',
+  'rfqAuthoring.template.picker.noMatch': 'Tidak ada RFQ yang cocok.',
+  'rfqAuthoring.template.picker.close': 'Tutup',
+  'rfqAuthoring.template.picker.storage':
+    'Templat tersimpan hanya ada di peramban ini. Tidak dibagikan ke tim Anda.',
+  'rfqAuthoring.template.picker.unreadable':
+    'Templat tersimpan di peramban ini tidak dapat dibaca, sehingga tidak ada yang ditampilkan.',
+  'rfqAuthoring.template.picker.rejected': 'Sebuah templat tersimpan ditolak: {{id}} ({{reason}})',
+  'rfqAuthoring.template.save.title': 'Simpan sebagai templat',
+  'rfqAuthoring.template.save.name': 'Nama templat',
+  'rfqAuthoring.template.save.keeps':
+    'Menyimpan item, lembar spesifikasi, jenjang, biaya satu kali, pertanyaan dan opsi. Pemasok yang diundang, tanggal dan berkas tidak disimpan.',
+  'rfqAuthoring.template.save.confirm': 'Simpan templat',
+  'rfqAuthoring.template.save.cancel': 'Batal',
+  'rfqAuthoring.template.save.done': 'Templat "{{name}}" disimpan',
+  'rfqAuthoring.template.save.doneDesc': 'Tersimpan di peramban ini. Gunakan dari Templat.',
+  'rfqAuthoring.template.save.sessionOnly':
+    'Peramban ini tidak dapat menyimpannya, jadi hanya berlaku untuk sesi ini.',
+  'rfqAuthoring.template.save.failed': 'Templat tidak disimpan',
+  'rfqAuthoring.template.save.nothing':
+    'RFQ ini tidak memiliki kuantitas untuk disimpan sebagai jenjang.',
+
+  'rfqAuthoring.prefill.rfiMissing.title': 'RFI tidak ditemukan',
+  'rfqAuthoring.prefill.rfiMissing.desc': 'RFI {{id}} tidak tersedia, jadi RFQ dimulai kosong.',
+  'rfqAuthoring.prefill.rfpMissing.title': 'Pilihan RFP tidak ditemukan',
+  'rfqAuthoring.prefill.rfpMissing.desc':
+    'RFP {{id}} atau pilihan yang dipilih di dalamnya tidak tersedia, jadi tidak ada RFQ yang dimulai.',
+
+  'rfqAuthoring.refusal.NO_ITEMS': 'Tambahkan minimal satu item.',
+  'rfqAuthoring.refusal.ITEM_TYPE_UNKNOWN': 'Pilih jenis item untuk setiap item.',
+  'rfqAuthoring.refusal.ITEM_INCOMPLETE': 'Setiap item membutuhkan deskripsi.',
+  'rfqAuthoring.refusal.VARIANTS_INVALID':
+    'Setiap item memiliki minimal satu varian (bilangan bulat).',
+  'rfqAuthoring.refusal.ITEM_SPEC_MISSING': 'Isi setiap kolom wajib yang bertanda *.',
+  'rfqAuthoring.refusal.ONE_TIME_COST_UNKNOWN':
+    'Sebuah item meminta biaya satu kali yang tidak dikenal portal ini.',
+  'rfqAuthoring.refusal.TIER_COUNT': 'Tambahkan satu sampai delapan jenjang kuantitas.',
+  'rfqAuthoring.refusal.TIER_NOT_POSITIVE': 'Setiap jenjang adalah bilangan bulat di atas nol.',
+  'rfqAuthoring.refusal.TIER_BASIS_UNKNOWN': 'Setiap jenjang dihitung per varian atau total.',
+  'rfqAuthoring.refusal.TIERS_NOT_INCREASING': 'Jenjang harus meningkat.',
+  'rfqAuthoring.refusal.SAMPLES_INVALID':
+    'Permintaan sampel membutuhkan jumlah dan tanggal dibutuhkan.',
+  'rfqAuthoring.refusal.CURRENCY_NOT_PERMITTED':
+    'Pilih mata uang yang diterima portal ini untuk penawaran.',
+  'rfqAuthoring.refusal.UNKNOWN_QUESTION_TYPE':
+    'Sebuah pertanyaan memiliki jenis jawaban yang tidak dikenal portal ini.',
+  'rfqAuthoring.refusal.QUESTION_INCOMPLETE': 'Setiap pertanyaan membutuhkan kalimatnya.',
+
+  'attachments.add': 'Lampirkan',
+  'attachments.none': 'Tidak ada berkas terlampir.',
+  'attachments.notHeld': 'tidak tersedia di sesi ini',
+  'attachments.remove': 'Hapus {{name}}',
+  'attachments.sessionOnly': 'Disimpan untuk sesi ini; penyimpanan permanen hadir bersama backend.'
+};

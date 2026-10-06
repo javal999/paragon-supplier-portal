@@ -1,0 +1,377 @@
+// ────────────────────────────────────────────────────────────────────────────
+// i18n fragment — the supplier's response to an RFQ (RFx spec 2026-09-21):
+// intent, the confidentiality gate, the tiered quote grid, clarification Q&A,
+// revisions, and the buyer's read-only view of all of it on the side panel.
+// Namespace: rfqResponse.*
+// ────────────────────────────────────────────────────────────────────────────
+
+/** @type {Record<string, string>} */
+export const rfqResponseEn = {
+  // — The card —
+  'rfqResponse.card.delivery': 'Delivery terms:',
+  'rfqResponse.card.awardBy': 'Award by:',
+  'rfqResponse.card.breaks': 'Breaks',
+  'rfqResponse.card.confidential': 'Confidential',
+  'rfqResponse.card.samplesRequested': 'Samples requested: {{qty}} by {{date}}',
+  'rfqResponse.card.alternativesAllowed': 'Alternative offers are welcome',
+  'rfqResponse.card.sampleRequirements':
+    'Full RFQ specifics arrive with the Paragon sourcing packet (illustrative sample).',
+  'rfqResponse.card.respondFirst': 'Say you will respond to open the quote grid.',
+  'rfqResponse.card.acceptFirst': 'Accept the confidentiality terms to open the quote grid.',
+  'rfqResponse.basis.perVariant': 'per variant',
+  'rfqResponse.basis.total': 'total',
+
+  // — Intent —
+  'rfqResponse.intent.respond': 'I will respond',
+  'rfqResponse.intent.responding': 'You will respond',
+  'rfqResponse.intent.declined': 'Declined',
+  'rfqResponse.intent.withdraw': 'Decline after all',
+  'rfqResponse.decline.reason': 'Reason',
+  'rfqResponse.decline.choose': 'Choose a reason…',
+  'rfqResponse.decline.text': 'In your own words',
+  'rfqResponse.decline.buyerSees': 'The buyer reads both the reason and your words.',
+  'rfqResponse.decline.confirm': 'Decline this RFQ',
+  'rfqResponse.decline.reasonLabel.noCapacity': 'No capacity',
+  'rfqResponse.decline.reasonLabel.notOurProduct': 'Not a product we make',
+  'rfqResponse.decline.reasonLabel.leadTimeTooShort': 'Lead time too short',
+  'rfqResponse.decline.reasonLabel.quantityTooSmall': 'Quantity too small',
+  'rfqResponse.decline.reasonLabel.specUnclear': 'Specification unclear',
+  'rfqResponse.decline.reasonLabel.other': 'Other',
+
+  // — Confidentiality —
+  'rfqResponse.confidential.notice':
+    'This RFQ is confidential. Its specification, notes and files are hidden until you accept the terms.',
+  'rfqResponse.confidential.terms':
+    'By accepting, you agree to keep this RFQ and everything attached to it confidential, and to use it only to prepare your quote. Your acceptance is recorded with the time.',
+  'rfqResponse.confidential.accept': 'Accept confidentiality terms',
+  'rfqResponse.confidential.accepted': 'Terms accepted',
+
+  // — Clarifications —
+  'rfqResponse.clar.ask': 'Your question',
+  'rfqResponse.clar.placeholder': 'Ask the buyer what something in this RFQ means',
+  'rfqResponse.clar.howAnswered':
+    'The buyer answers either to you alone or to every invited supplier. A shared answer never says who asked.',
+  'rfqResponse.clar.send': 'Send question',
+  'rfqResponse.clar.waiting': 'Waiting for an answer',
+  'rfqResponse.clar.published': 'Answer shared with all invitees',
+  'rfqResponse.clar.private': 'Private answer',
+  'rfqResponse.clar.askedByYou': 'You asked',
+  'rfqResponse.clar.askedByInvitee': 'Asked by an invited supplier',
+
+  // — The grid —
+  'rfqResponse.grid.step1.eyebrow': 'Step 1',
+  'rfqResponse.grid.step1.title': 'Price every item at every break',
+  'rfqResponse.grid.step1.desc':
+    'One unit price per quantity break, your part of the spec, and the one-time costs.',
+  'rfqResponse.grid.step2.eyebrow': 'Step 2',
+  'rfqResponse.grid.step2.title': 'Terms, answers and samples',
+  'rfqResponse.grid.step2.desc':
+    'How long the quote holds, the buyer’s questions, and your sample offer.',
+  'rfqResponse.grid.itemNo': 'Item {{n}}',
+  'rfqResponse.grid.itemLabel': 'Item {{n}} ({{description}})',
+  'rfqResponse.grid.variants_one': '{{count}} variant · {{uom}}',
+  'rfqResponse.grid.variants_other': '{{count}} variants · {{uom}}',
+  'rfqResponse.grid.yourSpec': 'Your part of the spec',
+  'rfqResponse.grid.unitPrices': 'Unit price per quantity break',
+  'rfqResponse.grid.priceAt': 'Unit price, {{prefix}}, at {{qty}}',
+  'rfqResponse.grid.moq': 'Minimum order qty',
+  'rfqResponse.grid.moqFor': 'Minimum order quantity, {{item}}',
+  'rfqResponse.grid.leadTime': 'Lead time (days)',
+  'rfqResponse.grid.leadTimeFor': 'Lead time in days, {{item}}',
+  'rfqResponse.grid.oneTimeCosts': 'One-time costs (0 if none)',
+  'rfqResponse.grid.costFor': '{{cost}}, {{item}}',
+  'rfqResponse.grid.extraCostName': 'Other cost {{n}}, name',
+  'rfqResponse.grid.extraCostNamePlaceholder': 'e.g. Colour proofing',
+  'rfqResponse.grid.extraCostAmount': 'Other cost {{n}}, amount',
+  'rfqResponse.grid.extraCostRemove': 'Remove other cost {{n}}',
+  'rfqResponse.grid.addCost': 'Add another cost',
+  'rfqResponse.grid.altToggle': 'Offer an alternative for this item',
+  'rfqResponse.grid.altHint':
+    'An alternative is shown to the buyer apart from your main quote and is not ranked.',
+  'rfqResponse.grid.altDescription': 'What the alternative is',
+  'rfqResponse.grid.altDescriptionFor': 'Alternative description, {{item}}',
+  'rfqResponse.grid.altLabel': 'alternative for {{item}}',
+  'rfqResponse.grid.questions': 'The buyer’s questions',
+  'rfqResponse.paymentTerms': 'Payment terms offered',
+  'rfqResponse.sample.requested_one': 'The buyer asks for {{qty}} sample by {{date}}.',
+  'rfqResponse.sample.requested_other': 'The buyer asks for {{qty}} samples by {{date}}.',
+  'rfqResponse.sample.readyDate': 'Sample ready date',
+  'rfqResponse.attachments': 'Attachments (e.g. your quotation PDF)',
+  'rfqResponse.question.comment': 'Comment (optional)',
+  'rfqResponse.question.attachment': 'File',
+
+  // — Revisions —
+  'rfqResponse.quotes.revise': 'Revise quote',
+  'rfqResponse.quotes.revising':
+    'You are revising {{quote}}. The new version replaces it; both are kept.',
+  'rfqResponse.quotes.superseded': 'Superseded',
+
+  // — Toasts —
+  'rfqResponse.toast.refused': 'Not sent',
+  'rfqResponse.toast.responding': 'The buyer now sees that you will respond.',
+  'rfqResponse.toast.declined': 'Declined. The buyer sees your reason.',
+  'rfqResponse.toast.accepted': 'Terms accepted. The full RFQ is open to you.',
+  'rfqResponse.toast.asked': 'Question sent to the buyer.',
+  'rfqResponse.toast.answered': 'Answer sent.',
+
+  // — The buyer's side panel —
+  'rfqResponse.buyer.title': 'Supplier responses',
+  'rfqResponse.buyer.responding': 'Will respond',
+  'rfqResponse.buyer.noAnswer': 'No answer yet',
+  'rfqResponse.buyer.termsNotAccepted': 'Terms not accepted',
+  'rfqResponse.buyer.clarifications': 'Clarification questions',
+  'rfqResponse.buyer.noQuestions': 'No questions yet.',
+  'rfqResponse.buyer.askedBy': 'Asked by {{name}}',
+  'rfqResponse.buyer.answer': 'Your answer',
+  'rfqResponse.buyer.visibility': 'Who reads the answer',
+  'rfqResponse.buyer.publish': 'Share with all invitees (asker not named)',
+  'rfqResponse.buyer.private': 'Only the supplier that asked',
+  'rfqResponse.buyer.send': 'Send answer',
+
+  // — Refusals, by code —
+  'rfqResponse.refusal.onItem': '(item {{n}})',
+  'rfqResponse.refusal.RFQ_NOT_FOUND': 'This RFQ could not be found.',
+  'rfqResponse.refusal.NOT_INVITED': 'You are not invited to this RFQ.',
+  'rfqResponse.refusal.EVENT_NOT_OPEN': 'This RFQ is no longer open.',
+  'rfqResponse.refusal.PAST_DEADLINE': 'The response deadline has passed.',
+  'rfqResponse.refusal.NOT_RESPONDING': 'Only a stated “I will respond” can be withdrawn.',
+  'rfqResponse.refusal.INTENT_ALREADY_STATED': 'You have already answered this RFQ.',
+  'rfqResponse.refusal.DECLINE_REASON_UNKNOWN': 'Choose a reason from the list.',
+  'rfqResponse.refusal.DECLINE_TEXT_MISSING': 'Say why in your own words as well.',
+  'rfqResponse.refusal.QUOTE_ALREADY_SUBMITTED':
+    'You have a live quote on this RFQ, so it cannot be declined.',
+  'rfqResponse.refusal.NOT_CONFIDENTIAL': 'This RFQ has no confidentiality terms.',
+  'rfqResponse.refusal.ALREADY_ACCEPTED': 'You accepted these terms already.',
+  'rfqResponse.refusal.QUESTION_EMPTY': 'Write your question first.',
+  'rfqResponse.refusal.QUESTION_TOO_LONG': 'Keep the question under 1,000 characters.',
+  'rfqResponse.refusal.CLARIFICATION_NOT_FOUND': 'This question could not be found.',
+  'rfqResponse.refusal.ALREADY_ANSWERED': 'This question has its answer already.',
+  'rfqResponse.refusal.ANSWER_EMPTY': 'Write the answer first.',
+  'rfqResponse.refusal.VISIBILITY_UNKNOWN': 'Choose who reads the answer.',
+  'rfqResponse.refusal.CONFIDENTIALITY_NOT_ACCEPTED':
+    'Accept the confidentiality terms before quoting.',
+  'rfqResponse.refusal.INTENT_DECLINED': 'You declined this RFQ, so it cannot be quoted.',
+  'rfqResponse.refusal.NOT_TIERED': 'This RFQ is priced as one figure, not per item.',
+  'rfqResponse.refusal.TIERED_QUOTE_REQUIRED':
+    'This RFQ is priced per item and per quantity break.',
+  'rfqResponse.refusal.ITEM_UNKNOWN': 'A quote names an item that is not on this RFQ.',
+  'rfqResponse.refusal.ITEM_QUOTE_MISSING': 'Quote every item.',
+  'rfqResponse.refusal.ITEM_QUOTE_DUPLICATE': 'An item is quoted twice.',
+  'rfqResponse.refusal.SPEC_VALUES_MALFORMED': 'Your spec values could not be read.',
+  'rfqResponse.refusal.SPEC_VALUE_MISSING': 'Fill in every required spec field.',
+  'rfqResponse.refusal.SPEC_VALUE_INVALID': 'A spec field needs a number or one of its options.',
+  'rfqResponse.refusal.SPEC_VALUE_UNKNOWN': 'A spec value names a field that is not yours to fill.',
+  'rfqResponse.refusal.TIER_PRICE_MISSING': 'Give a unit price at every quantity break.',
+  'rfqResponse.refusal.TIER_PRICE_UNREADABLE':
+    'A unit price could not be read. Type digits only, e.g. 385 or 385,50.',
+  'rfqResponse.refusal.TIER_PRICE_INVALID': 'Every unit price is a number above zero.',
+  'rfqResponse.refusal.TIER_UNKNOWN': 'A price names a quantity break that is not on this RFQ.',
+  'rfqResponse.refusal.ONE_TIME_COST_MISSING':
+    'Give an amount for every one-time cost the buyer asked for (0 if none).',
+  'rfqResponse.refusal.ONE_TIME_COST_INVALID':
+    'Every one-time cost has a name and an amount of zero or more.',
+  'rfqResponse.refusal.COST_UNREADABLE': 'A one-time cost amount could not be read.',
+  'rfqResponse.refusal.MOQ_UNREADABLE': 'A minimum order quantity could not be read.',
+  'rfqResponse.refusal.MOQ_INVALID': 'A minimum order quantity is above zero.',
+  'rfqResponse.refusal.LEAD_TIME_UNREADABLE': 'Give every item a lead time in whole days.',
+  'rfqResponse.refusal.LEAD_TIME_ZERO': 'A lead time is at least one day.',
+  'rfqResponse.refusal.LEAD_TIME_INVALID': 'A lead time is a whole number of days.',
+  'rfqResponse.refusal.ALTERNATIVES_NOT_ALLOWED': 'This RFQ does not invite alternative offers.',
+  'rfqResponse.refusal.ALTERNATIVE_INCOMPLETE': 'Say what the alternative is.',
+  'rfqResponse.refusal.ANSWERS_MALFORMED': 'Your answers could not be read.',
+  'rfqResponse.refusal.ANSWER_MISSING': 'Answer every required question.',
+  'rfqResponse.refusal.ANSWER_UNKNOWN': 'An answer names a question that is not on this RFQ.',
+  'rfqResponse.refusal.ANSWER_INVALID':
+    'An answer does not fit its question (a yes or no, a date, a number, or one of its options).',
+  'rfqResponse.refusal.SAMPLE_OFFER_MISSING':
+    'The buyer asks for samples: say whether you can provide them.',
+  'rfqResponse.refusal.SAMPLE_OFFER_INVALID': 'A sample offer states its ready date.',
+  'rfqResponse.refusal.ATTACHMENT_MALFORMED': 'An attachment could not be read.',
+  'rfqResponse.refusal.VALID_UNTIL_MISSING': 'Say how long the quote holds (valid until).'
+};
+
+/** @type {Record<string, string>} */
+export const rfqResponseId = {
+  // — Kartu —
+  'rfqResponse.card.delivery': 'Syarat pengiriman:',
+  'rfqResponse.card.awardBy': 'Pemenang ditetapkan:',
+  'rfqResponse.card.breaks': 'Jenjang',
+  'rfqResponse.card.confidential': 'Rahasia',
+  'rfqResponse.card.samplesRequested': 'Sampel diminta: {{qty}} sebelum {{date}}',
+  'rfqResponse.card.alternativesAllowed': 'Penawaran alternatif dipersilakan',
+  'rfqResponse.card.sampleRequirements':
+    'Rincian lengkap RFQ menyusul dalam paket pengadaan Paragon (contoh ilustratif).',
+  'rfqResponse.card.respondFirst': 'Nyatakan Anda akan menanggapi untuk membuka tabel penawaran.',
+  'rfqResponse.card.acceptFirst': 'Terima syarat kerahasiaan untuk membuka tabel penawaran.',
+  'rfqResponse.basis.perVariant': 'per varian',
+  'rfqResponse.basis.total': 'total',
+
+  // — Niat —
+  'rfqResponse.intent.respond': 'Saya akan menanggapi',
+  'rfqResponse.intent.responding': 'Anda akan menanggapi',
+  'rfqResponse.intent.declined': 'Ditolak',
+  'rfqResponse.intent.withdraw': 'Tolak saja',
+  'rfqResponse.decline.reason': 'Alasan',
+  'rfqResponse.decline.choose': 'Pilih alasan…',
+  'rfqResponse.decline.text': 'Dengan kata-kata Anda sendiri',
+  'rfqResponse.decline.buyerSees': 'Pembeli membaca alasan dan penjelasan Anda.',
+  'rfqResponse.decline.confirm': 'Tolak RFQ ini',
+  'rfqResponse.decline.reasonLabel.noCapacity': 'Kapasitas tidak tersedia',
+  'rfqResponse.decline.reasonLabel.notOurProduct': 'Bukan produk yang kami buat',
+  'rfqResponse.decline.reasonLabel.leadTimeTooShort': 'Waktu tunggu terlalu singkat',
+  'rfqResponse.decline.reasonLabel.quantityTooSmall': 'Kuantitas terlalu kecil',
+  'rfqResponse.decline.reasonLabel.specUnclear': 'Spesifikasi kurang jelas',
+  'rfqResponse.decline.reasonLabel.other': 'Lainnya',
+
+  // — Kerahasiaan —
+  'rfqResponse.confidential.notice':
+    'RFQ ini rahasia. Spesifikasi, catatan, dan berkasnya disembunyikan sampai Anda menerima syaratnya.',
+  'rfqResponse.confidential.terms':
+    'Dengan menerima, Anda setuju menjaga kerahasiaan RFQ ini beserta semua lampirannya dan hanya memakainya untuk menyiapkan penawaran. Penerimaan Anda dicatat beserta waktunya.',
+  'rfqResponse.confidential.accept': 'Terima syarat kerahasiaan',
+  'rfqResponse.confidential.accepted': 'Syarat diterima',
+
+  // — Klarifikasi —
+  'rfqResponse.clar.ask': 'Pertanyaan Anda',
+  'rfqResponse.clar.placeholder': 'Tanyakan kepada pembeli maksud sesuatu dalam RFQ ini',
+  'rfqResponse.clar.howAnswered':
+    'Pembeli menjawab hanya kepada Anda atau kepada semua pemasok yang diundang. Jawaban bersama tidak pernah menyebut siapa yang bertanya.',
+  'rfqResponse.clar.send': 'Kirim pertanyaan',
+  'rfqResponse.clar.waiting': 'Menunggu jawaban',
+  'rfqResponse.clar.published': 'Jawaban dibagikan ke semua undangan',
+  'rfqResponse.clar.private': 'Jawaban pribadi',
+  'rfqResponse.clar.askedByYou': 'Anda bertanya',
+  'rfqResponse.clar.askedByInvitee': 'Ditanyakan oleh pemasok yang diundang',
+
+  // — Tabel —
+  'rfqResponse.grid.step1.eyebrow': 'Langkah 1',
+  'rfqResponse.grid.step1.title': 'Beri harga setiap item di setiap jenjang',
+  'rfqResponse.grid.step1.desc':
+    'Satu harga satuan per jenjang kuantitas, bagian spesifikasi Anda, dan biaya satu kali.',
+  'rfqResponse.grid.step2.eyebrow': 'Langkah 2',
+  'rfqResponse.grid.step2.title': 'Syarat, jawaban, dan sampel',
+  'rfqResponse.grid.step2.desc':
+    'Berapa lama penawaran berlaku, pertanyaan pembeli, dan penawaran sampel Anda.',
+  'rfqResponse.grid.itemNo': 'Item {{n}}',
+  'rfqResponse.grid.itemLabel': 'Item {{n}} ({{description}})',
+  'rfqResponse.grid.variants_other': '{{count}} varian · {{uom}}',
+  'rfqResponse.grid.yourSpec': 'Bagian spesifikasi Anda',
+  'rfqResponse.grid.unitPrices': 'Harga satuan per jenjang kuantitas',
+  'rfqResponse.grid.priceAt': 'Harga satuan, {{prefix}}, pada {{qty}}',
+  'rfqResponse.grid.moq': 'Jumlah pesanan minimum',
+  'rfqResponse.grid.moqFor': 'Jumlah pesanan minimum, {{item}}',
+  'rfqResponse.grid.leadTime': 'Waktu tunggu (hari)',
+  'rfqResponse.grid.leadTimeFor': 'Waktu tunggu dalam hari, {{item}}',
+  'rfqResponse.grid.oneTimeCosts': 'Biaya satu kali (0 bila tidak ada)',
+  'rfqResponse.grid.costFor': '{{cost}}, {{item}}',
+  'rfqResponse.grid.extraCostName': 'Biaya lain {{n}}, nama',
+  'rfqResponse.grid.extraCostNamePlaceholder': 'mis. Proof warna',
+  'rfqResponse.grid.extraCostAmount': 'Biaya lain {{n}}, jumlah',
+  'rfqResponse.grid.extraCostRemove': 'Hapus biaya lain {{n}}',
+  'rfqResponse.grid.addCost': 'Tambah biaya lain',
+  'rfqResponse.grid.altToggle': 'Tawarkan alternatif untuk item ini',
+  'rfqResponse.grid.altHint':
+    'Alternatif ditampilkan kepada pembeli terpisah dari penawaran utama dan tidak diperingkat.',
+  'rfqResponse.grid.altDescription': 'Apa alternatifnya',
+  'rfqResponse.grid.altDescriptionFor': 'Deskripsi alternatif, {{item}}',
+  'rfqResponse.grid.altLabel': 'alternatif untuk {{item}}',
+  'rfqResponse.grid.questions': 'Pertanyaan pembeli',
+  'rfqResponse.paymentTerms': 'Syarat pembayaran yang ditawarkan',
+  'rfqResponse.sample.requested_other': 'Pembeli meminta {{qty}} sampel sebelum {{date}}.',
+  'rfqResponse.sample.readyDate': 'Tanggal sampel siap',
+  'rfqResponse.attachments': 'Lampiran (mis. PDF penawaran Anda)',
+  'rfqResponse.question.comment': 'Komentar (opsional)',
+  'rfqResponse.question.attachment': 'Berkas',
+
+  // — Revisi —
+  'rfqResponse.quotes.revise': 'Revisi penawaran',
+  'rfqResponse.quotes.revising':
+    'Anda merevisi {{quote}}. Versi baru menggantikannya; keduanya disimpan.',
+  'rfqResponse.quotes.superseded': 'Digantikan',
+
+  // — Toast —
+  'rfqResponse.toast.refused': 'Tidak terkirim',
+  'rfqResponse.toast.responding': 'Pembeli kini melihat bahwa Anda akan menanggapi.',
+  'rfqResponse.toast.declined': 'Ditolak. Pembeli melihat alasan Anda.',
+  'rfqResponse.toast.accepted': 'Syarat diterima. RFQ lengkap terbuka untuk Anda.',
+  'rfqResponse.toast.asked': 'Pertanyaan terkirim ke pembeli.',
+  'rfqResponse.toast.answered': 'Jawaban terkirim.',
+
+  // — Panel samping pembeli —
+  'rfqResponse.buyer.title': 'Tanggapan pemasok',
+  'rfqResponse.buyer.responding': 'Akan menanggapi',
+  'rfqResponse.buyer.noAnswer': 'Belum menjawab',
+  'rfqResponse.buyer.termsNotAccepted': 'Syarat belum diterima',
+  'rfqResponse.buyer.clarifications': 'Pertanyaan klarifikasi',
+  'rfqResponse.buyer.noQuestions': 'Belum ada pertanyaan.',
+  'rfqResponse.buyer.askedBy': 'Ditanyakan oleh {{name}}',
+  'rfqResponse.buyer.answer': 'Jawaban Anda',
+  'rfqResponse.buyer.visibility': 'Siapa yang membaca jawaban',
+  'rfqResponse.buyer.publish': 'Bagikan ke semua undangan (penanya tidak disebut)',
+  'rfqResponse.buyer.private': 'Hanya pemasok yang bertanya',
+  'rfqResponse.buyer.send': 'Kirim jawaban',
+
+  // — Penolakan, per kode —
+  'rfqResponse.refusal.onItem': '(item {{n}})',
+  'rfqResponse.refusal.RFQ_NOT_FOUND': 'RFQ ini tidak ditemukan.',
+  'rfqResponse.refusal.NOT_INVITED': 'Anda tidak diundang ke RFQ ini.',
+  'rfqResponse.refusal.EVENT_NOT_OPEN': 'RFQ ini sudah tidak terbuka.',
+  'rfqResponse.refusal.PAST_DEADLINE': 'Tenggat tanggapan sudah lewat.',
+  'rfqResponse.refusal.NOT_RESPONDING':
+    'Hanya pernyataan “Saya akan menanggapi” yang dapat ditarik.',
+  'rfqResponse.refusal.INTENT_ALREADY_STATED': 'Anda sudah menjawab RFQ ini.',
+  'rfqResponse.refusal.DECLINE_REASON_UNKNOWN': 'Pilih alasan dari daftar.',
+  'rfqResponse.refusal.DECLINE_TEXT_MISSING': 'Jelaskan juga dengan kata-kata Anda sendiri.',
+  'rfqResponse.refusal.QUOTE_ALREADY_SUBMITTED':
+    'Anda memiliki penawaran aktif pada RFQ ini, jadi RFQ ini tidak dapat ditolak.',
+  'rfqResponse.refusal.NOT_CONFIDENTIAL': 'RFQ ini tidak memiliki syarat kerahasiaan.',
+  'rfqResponse.refusal.ALREADY_ACCEPTED': 'Anda sudah menerima syarat ini.',
+  'rfqResponse.refusal.QUESTION_EMPTY': 'Tulis pertanyaan Anda terlebih dahulu.',
+  'rfqResponse.refusal.QUESTION_TOO_LONG': 'Pertanyaan maksimal 1.000 karakter.',
+  'rfqResponse.refusal.CLARIFICATION_NOT_FOUND': 'Pertanyaan ini tidak ditemukan.',
+  'rfqResponse.refusal.ALREADY_ANSWERED': 'Pertanyaan ini sudah dijawab.',
+  'rfqResponse.refusal.ANSWER_EMPTY': 'Tulis jawabannya terlebih dahulu.',
+  'rfqResponse.refusal.VISIBILITY_UNKNOWN': 'Pilih siapa yang membaca jawaban.',
+  'rfqResponse.refusal.CONFIDENTIALITY_NOT_ACCEPTED': 'Terima syarat kerahasiaan sebelum menawar.',
+  'rfqResponse.refusal.INTENT_DECLINED': 'Anda menolak RFQ ini, jadi tidak dapat menawar.',
+  'rfqResponse.refusal.NOT_TIERED': 'RFQ ini diberi harga sebagai satu angka, bukan per item.',
+  'rfqResponse.refusal.TIERED_QUOTE_REQUIRED':
+    'RFQ ini diberi harga per item dan per jenjang kuantitas.',
+  'rfqResponse.refusal.ITEM_UNKNOWN': 'Penawaran menyebut item yang tidak ada di RFQ ini.',
+  'rfqResponse.refusal.ITEM_QUOTE_MISSING': 'Beri harga setiap item.',
+  'rfqResponse.refusal.ITEM_QUOTE_DUPLICATE': 'Satu item diberi harga dua kali.',
+  'rfqResponse.refusal.SPEC_VALUES_MALFORMED': 'Nilai spesifikasi Anda tidak dapat dibaca.',
+  'rfqResponse.refusal.SPEC_VALUE_MISSING': 'Isi setiap kolom spesifikasi yang wajib.',
+  'rfqResponse.refusal.SPEC_VALUE_INVALID':
+    'Kolom spesifikasi memerlukan angka atau salah satu pilihannya.',
+  'rfqResponse.refusal.SPEC_VALUE_UNKNOWN':
+    'Nilai spesifikasi menyebut kolom yang bukan bagian Anda.',
+  'rfqResponse.refusal.TIER_PRICE_MISSING': 'Beri harga satuan di setiap jenjang kuantitas.',
+  'rfqResponse.refusal.TIER_PRICE_UNREADABLE':
+    'Harga satuan tidak dapat dibaca. Ketik angka saja, mis. 385 atau 385,50.',
+  'rfqResponse.refusal.TIER_PRICE_INVALID': 'Setiap harga satuan adalah angka di atas nol.',
+  'rfqResponse.refusal.TIER_UNKNOWN': 'Harga menyebut jenjang kuantitas yang tidak ada di RFQ ini.',
+  'rfqResponse.refusal.ONE_TIME_COST_MISSING':
+    'Isi jumlah untuk setiap biaya satu kali yang diminta pembeli (0 bila tidak ada).',
+  'rfqResponse.refusal.ONE_TIME_COST_INVALID':
+    'Setiap biaya satu kali punya nama dan jumlah nol atau lebih.',
+  'rfqResponse.refusal.COST_UNREADABLE': 'Jumlah biaya satu kali tidak dapat dibaca.',
+  'rfqResponse.refusal.MOQ_UNREADABLE': 'Jumlah pesanan minimum tidak dapat dibaca.',
+  'rfqResponse.refusal.MOQ_INVALID': 'Jumlah pesanan minimum di atas nol.',
+  'rfqResponse.refusal.LEAD_TIME_UNREADABLE': 'Beri setiap item waktu tunggu dalam hari utuh.',
+  'rfqResponse.refusal.LEAD_TIME_ZERO': 'Waktu tunggu paling sedikit satu hari.',
+  'rfqResponse.refusal.LEAD_TIME_INVALID': 'Waktu tunggu adalah jumlah hari utuh.',
+  'rfqResponse.refusal.ALTERNATIVES_NOT_ALLOWED': 'RFQ ini tidak mengundang penawaran alternatif.',
+  'rfqResponse.refusal.ALTERNATIVE_INCOMPLETE': 'Jelaskan apa alternatifnya.',
+  'rfqResponse.refusal.ANSWERS_MALFORMED': 'Jawaban Anda tidak dapat dibaca.',
+  'rfqResponse.refusal.ANSWER_MISSING': 'Jawab setiap pertanyaan yang wajib.',
+  'rfqResponse.refusal.ANSWER_UNKNOWN': 'Jawaban menyebut pertanyaan yang tidak ada di RFQ ini.',
+  'rfqResponse.refusal.ANSWER_INVALID':
+    'Jawaban tidak sesuai pertanyaannya (ya atau tidak, tanggal, angka, atau salah satu pilihannya).',
+  'rfqResponse.refusal.SAMPLE_OFFER_MISSING':
+    'Pembeli meminta sampel: nyatakan apakah Anda dapat menyediakannya.',
+  'rfqResponse.refusal.SAMPLE_OFFER_INVALID': 'Penawaran sampel menyebut tanggal siapnya.',
+  'rfqResponse.refusal.ATTACHMENT_MALFORMED': 'Lampiran tidak dapat dibaca.',
+  'rfqResponse.refusal.VALID_UNTIL_MISSING':
+    'Nyatakan berapa lama penawaran berlaku (berlaku sampai).'
+};

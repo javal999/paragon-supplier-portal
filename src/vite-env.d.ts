@@ -12,7 +12,7 @@ interface ImportMeta {
 }
 
 // Injected by vite `define` from process.env.VERCEL_ENV at build time
-// ('production' | 'preview' | 'development' | ''). See src/lib/envBadge.ts.
+// ('production' | 'preview' | 'development' | ''). See src/lib/envBadge.js.
 declare const __DEPLOY_ENV__: string;
 
 declare module '*.svg' {
