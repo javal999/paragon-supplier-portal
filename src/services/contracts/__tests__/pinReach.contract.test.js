@@ -157,7 +157,10 @@ function importsOf(path) {
       `${base}.js`,
       `${base}.jsx`,
       `${base}/index.ts`,
-      `${base}/index.js`
+      `${base}/index.tsx`,
+      `${base}/index.js`,
+      // A page split into a folder (PAGE-SPLIT-GUIDE): `@pages-v2/SupplierRFQs`.
+      `${base}/index.jsx`
     ]) {
       if (MODULES.has(cand)) found.push(cand);
     }

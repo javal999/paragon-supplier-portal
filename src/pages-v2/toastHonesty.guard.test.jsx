@@ -208,11 +208,12 @@
 //     so is the difference between a stated reason and an enforced one.
 // ═══════════════════════════════════════════════════════════════════════════
 import { describe, it, expect } from 'vitest';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import ts from 'typescript';
 import { resources } from '@lib/i18n';
-import { isJsxFile, scriptKindOf } from '@test/sourceFiles';
+import { scriptKindOf } from '@test/sourceFiles';
+import { pageFiles } from '@test/pageFiles';
 
 const PAGES_DIR = __dirname;
 
@@ -614,7 +615,10 @@ const EXCLUSIONS = [];
 function deriveUnbackedSites() {
   /** @type {Site[]} */
   const out = [];
-  const files = readdirSync(PAGES_DIR).filter((f) => isJsxFile(f) && !f.includes('.test.'));
+  // Every page, single-file AND split into a folder: a top-level `readdirSync`
+  // stopped at `SupplierRFQs/`, so a split page's handlers left the population
+  // (frontend-standard Phase 5, PAGE-SPLIT-GUIDE).
+  const files = pageFiles(PAGES_DIR);
   for (const file of files) {
     const raw = readFileSync(join(PAGES_DIR, file), 'utf8');
     const src = codeOnly(raw);

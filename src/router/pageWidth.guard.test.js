@@ -103,6 +103,8 @@ describe('⚠️ §70 · THE MATCHER, BEFORE ANY CLAIM ABOUT THE TREE', () => {
     expect(sourceOf('RolesCatalogue')).toMatch(/RolesCatalogue\.jsx$/);
     // The ALIASED import is the one a name-based lookup gets wrong.
     expect(sourceOf('SupplierRegistrationV2')).toMatch(/SupplierRegistration\.jsx$/);
+    // A page split into a folder resolves to its index, as the bundler does.
+    expect(sourceOf('SupplierRFQsV2')).toMatch(/SupplierRFQs\/index\.jsx$/);
   });
 });
 
