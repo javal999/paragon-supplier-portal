@@ -196,11 +196,39 @@ Count: Blocker 2 · Major 14 · Minor 8 · Polish 3 (27 findings).
 
 1. Until the engine is live, should the SAP-plan publish on Forecasts stay available, and who may use emergency re-publication? **Decided 2026-10-05 (FUX-D1): remove the SAP-plan publish; Stabilise and publish is the only publish point.**
 2. Which page is the single supplier-evaluation home: Supplier reliability (Forecast) or Supplier scorecard (Performance)? **Decided 2026-10-05 (FUX-D2): Supplier scorecard; Supplier reliability moves to the planning-engine pages.**
-3. Should Demand forecast and Forecast bias sit in planners' navigation before the engine forecast drives material plans (ENG-B66)?
+3. Should Demand forecast and Forecast bias sit in planners' navigation before the engine forecast drives material plans (ENG-B66)? **Resolved in build: both sit under Review as the 2 tabs of Forecast quality, with a line saying material planning uses SAP's plan (phase 2 B5).**
 4. Who owns Data health and Model backtest day to day: the MDM team, the owner, or a planning lead?
-5. Should Procurement (BUY) see End-of-cycle stock check, given it maintains max stock?
+5. Should Procurement (BUY) see End-of-cycle stock check, given it maintains max stock? **Decided 2026-10-05 (FUX-D6): yes, from its Performance menu; Set max stock stays role-gated (phase 2 B1).**
 6. Which English loanwords stay in the Indonesian UI (Firm, Trade-off, call-off, sell-in, backtest)?
 7. For raw material (monthly), does the same weekly stepper apply, or does it need a monthly variant?
 8. Is the safety-stock tier list a planner decision (which keeps a planner page) or administrator configuration (admin only)?
 
-Phase 1 build brief: `docs/supplier-hub/prompts/fux-build-00-brief.md` (tasks A1 to A4).
+Phase 1 build brief: `docs/supplier-hub/prompts/fux-build-00-brief.md` (tasks A1 to A4). Phase 2: `fux2-build-00-brief.md` (tasks B1 to B6).
+
+## 10. STATUS AFTER PHASES 1 AND 2 (2026-10-05)
+
+Every finding has been acted on. Phase 1 is #125, #126, #127, #131 (brief `fux-build-00-brief.md`); phase 2 is #134, #135, #137, #138, #139, #140, #142, #145 (brief `fux2-build-00-brief.md`).
+
+| Finding | Where it was fixed | Status |
+|---|---|---|
+| F-01 | A2 (SAP publish removed), B2 (versions tab and checklist) | Done |
+| F-02 | A3 (Data health chip), A4 (chip on Publish), B1 (input check on This week) | Done |
+| F-03, F-04 | A1 (Weekly plan and Review menus), B1 (This week page and step bar) | Done |
+| F-05 | A4 (purpose headers), B1 (step bar) | Done |
+| F-06 | A3 (plan source on What to order), B5 (plan source on Forecast quality) | Done |
+| F-07 | A3 (decision first), B3 ("Why this quantity" panel) | Done |
+| F-08, F-09, F-14, F-16, F-18, F-20, F-21, F-26 | A4 | Done |
+| F-10 | B4 (warehouse-week decision saved on Make warehouse room), #145 (relief proposals show their acts) | Done |
+| F-11 | A1 (scorecard is the evaluation home), B6 (header, basis line, reliability measure renamed) | Done |
+| F-12 | A4 (override note), B5 (Forecast bias as a tab) | Done |
+| F-13 | A2 and B2 (last published on the publish page) | Partly: Source column and next-due date wait for the engine and C8 §8 (FUX-D4) |
+| F-15 | B1 (Procurement menu path, FUX-D6) | Done |
+| F-17 | A3 (sort by need, filter) | Done |
+| F-19, F-25 | A1, A4 | Done |
+| F-22 | A3 (labels name the real difference: released call-offs), B4 | Done |
+| F-23, F-24, F-27 | A2 | Done |
+
+Still open:
+- F-13's Source column and next-due date (FUX-D4).
+- Whether This week becomes the planners' landing page: decided after the phase 3 usability test.
+- Open questions 4, 6, 7 and 8 above.
