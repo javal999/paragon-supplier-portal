@@ -157,12 +157,12 @@ describe('SupplierCertsExpiringWidget — the clock is the source, not `status`'
     const now = DECLARED_PRESENT + 'T00:00:00.000Z';
     const doc = DOCUMENTS.find((d) => d.id === 'doc-001');
     expect(doc, 'doc-001 is gone — this probe is vacuous').toBeDefined();
-    expect(/** @type {import('../../services/data/types').SupplierDocument} */ (doc).status).toBe(
+    expect(/** @type {import('@services/data/types').SupplierDocument} */ (doc).status).toBe(
       'Valid'
     );
     expect(
       documentDisplayState(
-        /** @type {import('../../services/data/types').SupplierDocument} */ (doc),
+        /** @type {import('@services/data/types').SupplierDocument} */ (doc),
         now
       )
     ).toBe('expiring');

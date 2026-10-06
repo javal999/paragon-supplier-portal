@@ -80,7 +80,7 @@ describe('C.2 · the cascade C.1 was built for actually fires', () => {
   beforeEach(() => commandAuditSink.clear());
 
   it('⚠️ THE WHOLE POINT — an RFQ raised from an approved PR moves it to Sourcing Event', async () => {
-    const before = /** @type {import('../../services/data/types').PurchaseRequisition} */ (
+    const before = /** @type {import('@services/data/types').PurchaseRequisition} */ (
       purchaseRequisitionStore.get('pr-002')
     );
     expect(before.status).toBe('Approved');
@@ -89,7 +89,7 @@ describe('C.2 · the cascade C.1 was built for actually fires', () => {
     const res = await raise(draftFor('pr-002'));
     expect(res.status).toBe('done');
 
-    const after = /** @type {import('../../services/data/types').PurchaseRequisition} */ (
+    const after = /** @type {import('@services/data/types').PurchaseRequisition} */ (
       purchaseRequisitionStore.get('pr-002')
     );
     expect(after.status).toBe('Sourcing Event');
@@ -120,7 +120,7 @@ describe('C.2 · the cascade C.1 was built for actually fires', () => {
     // what success looks like — the PR is no longer Approved afterwards). A
     // second raise here would refuse as ILLEGAL_TRANSITION and this test would
     // be asserting test-ordering rather than the property it names.
-    const pr = /** @type {import('../../services/data/types').PurchaseRequisition} */ (
+    const pr = /** @type {import('@services/data/types').PurchaseRequisition} */ (
       purchaseRequisitionStore.all().find((r) => r.prNumber === 'PR-2026-00342')
     );
     const prefill = prefillFromRequisition(pr);

@@ -41,7 +41,7 @@ beforeEach(() => {
   sdcClock.reset();
 });
 
-const oslo = () => /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
+const oslo = () => /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
 /** @param {number} lineNo */
 const item = (lineNo) =>
   /** @type {import('../../sourcing/rfqModel').RfqItem} */ (
@@ -60,9 +60,7 @@ const gateOf = (supplierId) =>
  */
 const addQuote = (id, supplierId) =>
   quotationStore.add({
-    .../** @type {import('../../../data/mockQuotations').Quotation} */ (
-      quotationStore.get('qt-021a')
-    ),
+    .../** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get('qt-021a')),
     id,
     supplierId,
     status: 'Submitted'
@@ -146,9 +144,8 @@ describe('BL-94 — a split award giving sup-007 a share of an Oslo item is acce
     ).toEqual([[1, 50, 12_000]]);
     expect(rec.notAwardedSupplierIds).not.toContain('sup-007');
     expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (
-        quotationStore.get('qt-021s7')
-      ).status
+      /** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get('qt-021s7'))
+        .status
     ).toBe('Awarded');
   });
 

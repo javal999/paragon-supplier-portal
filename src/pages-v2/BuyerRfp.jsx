@@ -821,12 +821,12 @@ const RfpComparison = ({ event }) => {
                     {t('rfx.rfp.scored')}{' '}
                     <Data>
                       {
-                        /** @type {import('../lib/quoteScore').QuoteScore} */ (scoreById.get(r.id))
+                        /** @type {import('@lib/quoteScore').QuoteScore} */ (scoreById.get(r.id))
                           .composite
                       }
                     </Data>
                     {
-                      /** @type {import('../lib/quoteScore').QuoteScore} */ (scoreById.get(r.id))
+                      /** @type {import('@lib/quoteScore').QuoteScore} */ (scoreById.get(r.id))
                         .topRanked && (
                         <StatusPill variant="success" className="ml-1">
                           {t('rfx.cmp.best')}

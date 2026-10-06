@@ -66,7 +66,7 @@ const responsesFor = (supplierId, material, period) =>
 
 describe('menu and copy (section 3.7)', () => {
   it('PTI Weekly plan: This week, What to order, Make warehouse room, Publish, then Supplier responses (FUX phase 1 and phase 2 B1, F-03)', () => {
-    const weekly = /** @type {import('../components/layout-v2/navConfig').NavSection} */ (
+    const weekly = /** @type {import('@components/layout-v2/navConfig').NavSection} */ (
       PTI_NAV.find((s) => s.id === 'weeklyPlan')
     );
     expect(weekly.items.map((i) => [i.labelKey, i.path])).toEqual([
@@ -199,7 +199,7 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
   });
 
   it('PTI’s revision request is visible to the supplier, with its note', async () => {
-    const line = /** @type {import('../services/sdc/types').RequirementResponse} */ (
+    const line = /** @type {import('@services/sdc/types').RequirementResponse} */ (
       requirementResponseStore
         .all()
         .find(
@@ -366,7 +366,7 @@ describe('PTI — Commitments & gaps (REQ-E06-03)', () => {
     const id = responsesFor('sup-007', 'PK-PETB-8801', W[1])[0].id;
     await waitFor(() =>
       expect(
-        /** @type {import('../services/sdc/types').RequirementResponse} */ (
+        /** @type {import('@services/sdc/types').RequirementResponse} */ (
           requirementResponseStore.get(id)
         ).status
       ).toBe('Accepted')
@@ -388,14 +388,14 @@ describe('PTI — Commitments & gaps (REQ-E06-03)', () => {
     const id = responsesFor('sup-007', 'PK-PETB-8802', W[3])[0].id;
     await waitFor(() =>
       expect(
-        /** @type {import('../services/sdc/types').RequirementResponse} */ (
+        /** @type {import('@services/sdc/types').RequirementResponse} */ (
           requirementResponseStore.get(id)
         ).status
       ).toBe('Disputed')
     );
     expect(
       /** @type {NonNullable<(NonNullable<ReturnType<typeof requirementResponseStore.get>>)['disputeResponse']>} */ (
-        /** @type {import('../services/sdc/types').RequirementResponse} */ (
+        /** @type {import('@services/sdc/types').RequirementResponse} */ (
           requirementResponseStore.get(id)
         ).disputeResponse
       ).map((e) => e.text)
@@ -418,7 +418,7 @@ describe('PTI — Commitments & gaps (REQ-E06-03)', () => {
       expect(forecastVersionStore.get('FC-PK-V3')?.changeNote).toBe('Moulding line down that week')
     );
     expect(
-      /** @type {import('../services/sdc/types').ForecastPublication} */ (
+      /** @type {import('@services/sdc/types').ForecastPublication} */ (
         forecastVersionStore.get('FC-PK-V3')
       ).lines
         .filter((l) => l.materialCode === 'PK-PETB-8802' && l.periodBucket === W[3])

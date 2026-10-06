@@ -68,7 +68,7 @@ describe('Material C5 · AdminPlanningGroups', () => {
     fireEvent.click(screen.getByTestId('adminpg-move-submit'));
     await waitFor(() =>
       expect(
-        /** @type {import('../../services/sdc/types').MaterialMasterEntry} */ (
+        /** @type {import('@services/sdc/types').MaterialMasterEntry} */ (
           materialEntry('RM-EMUL-3310')
         ).planningGroupId
       ).toBe('pg-0001')

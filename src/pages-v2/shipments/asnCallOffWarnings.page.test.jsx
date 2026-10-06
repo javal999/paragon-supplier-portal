@@ -38,7 +38,7 @@ beforeEach(() => {
 
 // co-0006 — sup-007, PO-2025-00107, PK-PETB-8801, 10,000 PCS, Confirmed.
 const needDate = () =>
-  /** @type {import('../../services/data/types').CallOff} */ (callOffStore.get('co-0006')).needDate;
+  /** @type {import('@services/data/types').CallOff} */ (callOffStore.get('co-0006')).needDate;
 
 describe('supplier — the call-off warnings before submit (MR-6 BR-10, BR-12)', () => {
   it('AC-05 — the wizard confirm step shows "11,000 vs 10,000 called off (+10%)", and the ASN still submits', async () => {

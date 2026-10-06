@@ -116,7 +116,7 @@ describe('REQ-E03-03 AC-05 — the response deadline is enforced at the verb', (
   });
 
   it('KNOWN-GOOD — the same quote on an event still open goes through', async () => {
-    const open = /** @type {import('../../../data/mockRfqs').RFQ} */ (
+    const open = /** @type {import('@data/mockRfqs').RFQ} */ (
       rfqStore.all().find((r) => r.status === 'Open' && r.invitedSupplierIds.includes('sup-007'))
     );
     const res = await svc.dispatch(sup007, {
@@ -126,7 +126,7 @@ describe('REQ-E03-03 AC-05 — the response deadline is enforced at the verb', (
     });
     expect(res.status, res.reason).toBe('done');
     expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (
+      /** @type {import('@data/mockQuotations').Quotation} */ (
         quotationStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
       ).rfqId
     ).toBe(open.id);
@@ -142,7 +142,7 @@ describe('REQ-E03-03 AC-05 — the response deadline is enforced at the verb', (
     expect(extended.status, extended.reason).toBe('done');
     // The event's own deadline did NOT move — only sup-007's did.
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).responseDeadline
+      /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).responseDeadline
     ).toBe(dayFromNow(-2));
 
     const mine = await svc.dispatch(sup007, {
@@ -213,7 +213,7 @@ describe('REQ-E03-05 BR-03 — a negotiation round is a shortlist, not an invita
     // AC-03 — the superseded version is still readable, not overwritten.
     expect(quotationStore.get('qt-014a')).toBeDefined();
     expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (
+      /** @type {import('@data/mockQuotations').Quotation} */ (
         quotationStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
       ).supersedesQuotationId
     ).toBe('qt-014a');
@@ -306,9 +306,9 @@ describe('REQ-E03-05 BR-06 — each item’s shares must total 100%', () => {
     });
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/AWARD_SPLIT_INCOMPLETE/);
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Closed');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Closed'
+    );
     expect(awardStore.all().some((a) => a.eventId === 'rfq-014')).toBe(false);
   });
 
@@ -332,9 +332,9 @@ describe('REQ-E03-05 BR-06 — each item’s shares must total 100%', () => {
       }
     });
     expect(res.status, res.reason).toBe('done');
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Awarded');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Awarded'
+    );
     const recorded = /** @type {import('../../sourcing/types').AwardRecord} */ (
       awardStore.all().find((a) => a.eventId === 'rfq-014')
     );
@@ -354,7 +354,7 @@ describe('REQ-E03-05 BR-07 — an award that leaves the best-scored quote out st
   const bestOf014 = async () => {
     const { bestScoredQuotationId } = await import('./rfxReadModel');
     return bestScoredQuotationId(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')),
+      /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')),
       rfxNow()
     );
   };
@@ -367,8 +367,8 @@ describe('REQ-E03-05 BR-07 — an award that leaves the best-scored quote out st
    */
   const qualifiedLoserOf014 = async (best) => {
     const { currentQuotesFor, rfqSupplierGate } = await import('./rfxReadModel');
-    const rfq = /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014'));
-    return /** @type {import('../../../data/mockQuotations').Quotation} */ (
+    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014'));
+    return /** @type {import('@data/mockQuotations').Quotation} */ (
       currentQuotesFor('rfq-014').find(
         (q) => q.id !== best && rfqSupplierGate(rfq, q.supplierId, rfxNow()).passes
       )
@@ -379,7 +379,7 @@ describe('REQ-E03-05 BR-07 — an award that leaves the best-scored quote out st
     const best = await bestOf014();
     expect(best).not.toBeNull();
     expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (
+      /** @type {import('@data/mockQuotations').Quotation} */ (
         quotationStore.get(/** @type {NonNullable<typeof best>} */ (best))
       ).rfqId
     ).toBe('rfq-014');
@@ -402,9 +402,9 @@ describe('REQ-E03-05 BR-07 — an award that leaves the best-scored quote out st
     });
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/AWARD_REASON_REQUIRED/);
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Closed');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Closed'
+    );
   });
 
   it('KNOWN-GOOD — the SAME award with a reason is recorded, and the reason is kept', async () => {
@@ -435,7 +435,7 @@ describe('REQ-E03-05 BR-07 — an award that leaves the best-scored quote out st
     const best = /** @type {NonNullable<Awaited<ReturnType<typeof bestOf014>>>} */ (
       await bestOf014()
     );
-    const winner = /** @type {import('../../../data/mockQuotations').Quotation} */ (
+    const winner = /** @type {import('@data/mockQuotations').Quotation} */ (
       quotationStore.get(best)
     );
     const res = await svc.dispatch(buyer, {
@@ -804,18 +804,18 @@ describe('REQ-E03-05 BR-01a — an award line naming a supplier that fails the c
     const res = await award014(awardLines([['sup-008', 'qt-014b', 100]]));
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/COMPLIANCE_GATE_FAILED: sup-008 .*\(otif\)/);
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Closed');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Closed'
+    );
     expect(awardStore.all().some((a) => a.eventId === 'rfq-014')).toBe(false);
   });
 
   it('KNOWN-GOOD — the SAME award to sup-013, which passes, is recorded', async () => {
     const res = await award014(awardLines([['sup-013', 'qt-014c', 100]]));
     expect(res.status, res.reason).toBe('done');
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Awarded');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Awarded'
+    );
   });
 
   it('a split with ONE failing line is refused whole — the passing share does not carry it', async () => {
@@ -845,8 +845,7 @@ describe('REQ-E03-05 BR-01a — an award line naming a supplier that fails the c
       quotationId,
       itemCode: '',
       sharePct: 100,
-      quantity: /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-003'))
-        .totalQty
+      quantity: /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-003')).totalQty
     });
     const bad = await svc.dispatch(buyer, {
       transitionId: 't_rfq_award',

@@ -154,7 +154,7 @@ describe('PTI Call-offs page (REQ-E09-01, REQ-E09-03)', () => {
     fireEvent.click(within(review).getByRole('button', { name: 'Approve' }));
     await waitFor(() =>
       expect(
-        /** @type {import('../services/data/types').CallOff} */ (callOffStore.get('co-0004'))
+        /** @type {import('@services/data/types').CallOff} */ (callOffStore.get('co-0004'))
           .confirmation?.approval
       ).toBe('approved')
     );
@@ -174,11 +174,11 @@ describe('PTI Call-offs page (REQ-E09-01, REQ-E09-03)', () => {
     fireEvent.click(within(review).getByRole('button', { name: 'Reject' }));
     await waitFor(() =>
       expect(
-        /** @type {import('../services/data/types').CallOff} */ (callOffStore.get('co-0010')).status
+        /** @type {import('@services/data/types').CallOff} */ (callOffStore.get('co-0010')).status
       ).toBe('Awaiting Confirmation')
     );
     expect(
-      /** @type {import('../services/data/types').CallOff} */ (callOffStore.get('co-0010'))
+      /** @type {import('@services/data/types').CallOff} */ (callOffStore.get('co-0010'))
         .confirmation
     ).toBeUndefined();
   });
@@ -290,7 +290,7 @@ describe('Supplier Call-offs page (REQ-E09-03, REQ-E09-04)', () => {
     fireEvent.click(panel().getByRole('button', { name: 'Send confirmation' }));
     await waitFor(() =>
       expect(
-        /** @type {import('../services/data/types').CallOff} */ (callOffStore.get('co-0003')).status
+        /** @type {import('@services/data/types').CallOff} */ (callOffStore.get('co-0003')).status
       ).toBe('Confirmed')
     );
   });
@@ -318,7 +318,7 @@ describe('Supplier Call-offs page (REQ-E09-03, REQ-E09-04)', () => {
     fireEvent.click(panel().getByRole('button', { name: 'Send dispatch notice' }));
     await waitFor(() =>
       expect(
-        /** @type {import('../services/data/types').CallOff} */ (callOffStore.get('co-0006'))
+        /** @type {import('@services/data/types').CallOff} */ (callOffStore.get('co-0006'))
           .dispatches
       ).toEqual([
         expect.objectContaining({
@@ -449,7 +449,7 @@ describe('CR-04 on the screens — release by remaining quantity, value only wit
     fireEvent.click(panel().getByRole('button', { name: 'Release to supplier' }));
     await waitFor(() =>
       expect(
-        /** @type {import('../services/data/types').CallOff} */ (callOffStore.get('co-0019')).status
+        /** @type {import('@services/data/types').CallOff} */ (callOffStore.get('co-0019')).status
       ).toBe('Awaiting Confirmation')
     );
   });
@@ -502,7 +502,7 @@ describe('CR-04 on the screens — release by remaining quantity, value only wit
     );
     await waitFor(() =>
       expect(
-        /** @type {import('../services/data/types').CallOff} */ (callOffStore.get('co-0014'))
+        /** @type {import('@services/data/types').CallOff} */ (callOffStore.get('co-0014'))
           .confirmation?.approval
       ).toBe('approved')
     );

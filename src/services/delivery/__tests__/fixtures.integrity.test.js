@@ -9,7 +9,7 @@ import { mockContracts } from '@data/mockContracts';
 // all-draft, unique releaseRefs, an in-window calendar, and a SIMULATED marker.
 
 const AGREEMENT = SCHEDULING_AGREEMENT_CTR003;
-const CTR003 = /** @type {import('../../../data/mockContracts').Contract} */ (
+const CTR003 = /** @type {import('@data/mockContracts').Contract} */ (
   mockContracts.find((c) => c.id === 'ctr-003')
 );
 

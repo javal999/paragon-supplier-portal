@@ -261,7 +261,7 @@ describe('t_rfqintent_* — "I will respond" or a reasoned decline', () => {
 describe('the confidentiality gate — probed both ways, at the READ', () => {
   /** @param {QueryScope} scope */
   const redwoodFor = async (scope) =>
-    /** @type {import('../../../data/mockRfqs').RFQ} */ (
+    /** @type {import('@data/mockRfqs').RFQ} */ (
       (await reads.getRFQs(scope)).items.find((r) => r.id === 'rfq-023')
     );
 
@@ -290,7 +290,7 @@ describe('the confidentiality gate — probed both ways, at the READ', () => {
     expect(
       (await redwoodFor(buyer)).items?.[0]?.specFields.find((f) => f.key === 'material')?.value
     ).toBe('ABS');
-    const oslo = /** @type {import('../../../data/mockRfqs').RFQ} */ (
+    const oslo = /** @type {import('@data/mockRfqs').RFQ} */ (
       (await reads.getRFQs(sup007)).items.find((r) => r.id === 'rfq-021')
     );
     expect(oslo.items?.[0]?.specFields.find((f) => f.key === 'material')?.value).toBe(
@@ -337,7 +337,7 @@ describe('quotation_tiered_well_formed — the grid, refused by name and accepte
     });
     const res = await submit(sup007, payload);
     expect(res.status).toBe('done');
-    const stored = /** @type {import('../../../data/mockQuotations').Quotation} */ (
+    const stored = /** @type {import('@data/mockQuotations').Quotation} */ (
       quotationStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
     );
     expect(stored.itemQuotes).toEqual(payload.itemQuotes);
@@ -348,7 +348,7 @@ describe('quotation_tiered_well_formed — the grid, refused by name and accepte
     // The header is DERIVED from the grid, never the payload's placeholder 1.
     const header = /** @type {NonNullable<ReturnType<typeof deriveQuoteHeader>>} */ (
       deriveQuoteHeader(
-        /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021')),
+        /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021')),
         /** @type {QuotationItemQuote[]} */ (payload.itemQuotes)
       )
     );
@@ -559,11 +559,11 @@ describe('quotation_tiered_well_formed — the grid, refused by name and accepte
         ?.supersedesQuotationId
     ).toBe(first.entityId);
     expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (
+      /** @type {import('@data/mockQuotations').Quotation} */ (
         quotationStore.get(/** @type {NonNullable<typeof second.entityId>} */ (second.entityId))
       ).unitPrice
     ).toBeLessThan(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (
+      /** @type {import('@data/mockQuotations').Quotation} */ (
         quotationStore.get(/** @type {NonNullable<typeof first.entityId>} */ (first.entityId))
       ).unitPrice
     );
@@ -681,7 +681,7 @@ describe("the grid's quote is what B4's comparison and award read", () => {
       })
     );
     expect(res.status).toBe('done');
-    const oslo = /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
+    const oslo = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
     const current = currentQuotesFor('rfq-021');
     const rows = comparisonRows(oslo, current, (id) => id).filter((r) => r.supplier === 'sup-007');
     // 2 items × 6 breaks, each carrying the item's one-time costs.
@@ -691,7 +691,7 @@ describe("the grid's quote is what B4's comparison and award read", () => {
       oneTimeCosts: 3_000_000,
       leadTimeDays: 20
     });
-    const mine = /** @type {import('../../../data/mockQuotations').Quotation} */ (
+    const mine = /** @type {import('@data/mockQuotations').Quotation} */ (
       current.find((q) => q.supplierId === 'sup-007')
     );
     expect(mine.paymentTermsOffered).toBe('Net 45');

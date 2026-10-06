@@ -123,7 +123,7 @@ describe('§81 · BuyerCompliance — the sync state reaches a reader', () => {
     await i18n.changeLanguage('en');
     renderWithProviders(<BuyerCompliance />, { route: ROUTE, identity: SUPPLIER });
 
-    const certNumber = /** @type {import('../services/data/types').ComplianceRegistryEntry} */ (
+    const certNumber = /** @type {import('@services/data/types').ComplianceRegistryEntry} */ (
       COMPLIANCE_REGISTRY.find((e) => e.id === 'creg-0001')
     ).certNumber;
     const cell = await screen.findByText(certNumber);

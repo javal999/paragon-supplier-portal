@@ -96,7 +96,7 @@ describe('t_rfq_create — the rebuilt RFQ lands whole', () => {
   it('a multi-item tiered RFQ is stored with every authoring field', async () => {
     const res = await svc.dispatch(buyer, create());
     expect(res.status).toBe('done');
-    const rfq = /** @type {import('../../../data/mockRfqs').RFQ} */ (
+    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (
       rfqStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
     );
     expect(rfq.projectName).toBe('Oslo');
@@ -126,14 +126,14 @@ describe('t_rfq_create — the rebuilt RFQ lands whole', () => {
   it('THE CURRENCY BUG — the chosen currency is KEPT, not overwritten with IDR', async () => {
     const res = await svc.dispatch(buyer, create({ currency: 'EUR' }));
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (
+      /** @type {import('@data/mockRfqs').RFQ} */ (
         rfqStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
       ).currency
     ).toBe('EUR');
     // KNOWN-GOOD twin — absence (a legacy dispatch) is the base currency.
     const legacy = await svc.dispatch(buyer, create({ currency: undefined }));
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (
+      /** @type {import('@data/mockRfqs').RFQ} */ (
         rfqStore.get(/** @type {NonNullable<typeof legacy.entityId>} */ (legacy.entityId))
       ).currency
     ).toBe('IDR');
@@ -148,13 +148,13 @@ describe('t_rfq_create — the rebuilt RFQ lands whole', () => {
         copiedFromRfqId: 'rfq-021'
       })
     );
-    const rfq = /** @type {import('../../../data/mockRfqs').RFQ} */ (
+    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (
       rfqStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
     );
     expect(rfq.sourceRfiId).toBe('rfi-001');
     expect(rfq.templateId).toBe('sys-sticker-roll-tiered');
     expect(rfq.copiedFromRfqId).toBe('rfq-021');
-    const plain = /** @type {import('../../../data/mockRfqs').RFQ} */ (
+    const plain = /** @type {import('@data/mockRfqs').RFQ} */ (
       rfqStore.get(
         /** @type {NonNullable<(Awaited<ReturnType<typeof svc.dispatch>>)['entityId']>} */ (
           (await svc.dispatch(buyer, create())).entityId
@@ -178,7 +178,7 @@ describe('t_rfq_create — the rebuilt RFQ lands whole', () => {
     );
     expect(res.status).toBe('done');
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (
+      /** @type {import('@data/mockRfqs').RFQ} */ (
         rfqStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
       ).items
     ).toBeUndefined();
@@ -301,32 +301,32 @@ describe('rfq_create_valid — each refusal by name, probed both ways', () => {
 describe('the sample RFQs are sound by the verb’s own rule', () => {
   it('Oslo, Iron and Redwood 2.0 carry the shapes the samples have', () => {
     const [oslo, iron, redwood] = ['rfq-021', 'rfq-022', 'rfq-023'].map(
-      (id) => /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(id))
+      (id) => /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(id))
     );
-    expect(/** @type {import('../../../data/mockRfqs').RFQ} */ (oslo).projectName).toBe('Oslo');
-    expect(/** @type {import('../../../data/mockRfqs').RFQ} */ (oslo).items).toHaveLength(2);
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (oslo).projectName).toBe('Oslo');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (oslo).items).toHaveLength(2);
     expect(
       /** @type {NonNullable<(NonNullable<typeof oslo>)['items']>} */ (
-        /** @type {import('../../../data/mockRfqs').RFQ} */ (oslo).items
+        /** @type {import('@data/mockRfqs').RFQ} */ (oslo).items
       ).every((i) => i.variantCount === 8)
     ).toBe(true);
     expect(
       /** @type {NonNullable<(NonNullable<typeof oslo>)['tiers']>} */ (
-        /** @type {import('../../../data/mockRfqs').RFQ} */ (oslo).tiers
+        /** @type {import('@data/mockRfqs').RFQ} */ (oslo).tiers
       ).map((t) => t.qty)
     ).toEqual([3_000, 5_000, 7_000, 10_000, 25_000, 50_000]);
-    expect(/** @type {import('../../../data/mockRfqs').RFQ} */ (iron).items).toHaveLength(1);
-    expect(/** @type {import('../../../data/mockRfqs').RFQ} */ (iron).tiers).toHaveLength(5);
-    expect(/** @type {import('../../../data/mockRfqs').RFQ} */ (redwood).confidential).toBe(true);
-    expect(/** @type {import('../../../data/mockRfqs').RFQ} */ (redwood).items).toHaveLength(5);
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (iron).items).toHaveLength(1);
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (iron).tiers).toHaveLength(5);
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (redwood).confidential).toBe(true);
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (redwood).items).toHaveLength(5);
     expect(
       /** @type {NonNullable<(NonNullable<typeof redwood>)['tiers']>} */ (
-        /** @type {import('../../../data/mockRfqs').RFQ} */ (redwood).tiers
+        /** @type {import('@data/mockRfqs').RFQ} */ (redwood).tiers
       ).map((t) => t.qty)
     ).toEqual([100_000, 200_000, 300_000]);
     expect(
       /** @type {NonNullable<(NonNullable<typeof redwood>)['items']>} */ (
-        /** @type {import('../../../data/mockRfqs').RFQ} */ (redwood).items
+        /** @type {import('@data/mockRfqs').RFQ} */ (redwood).items
       ).every((i) => i.oneTimeCosts?.includes('mold'))
     ).toBe(true);
   });
@@ -350,7 +350,7 @@ describe('the sample RFQs are sound by the verb’s own rule', () => {
   it('Oslo has two tiered quotes from different suppliers, whose header is DERIVED', () => {
     const quotes = quotationStore.forRfq('rfq-021');
     expect(new Set(quotes.map((q) => q.supplierId))).toEqual(new Set(['sup-013', 'sup-015']));
-    const oslo = /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
+    const oslo = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
     for (const q of quotes) {
       expect(q.itemQuotes).toHaveLength(2);
       expect(
@@ -371,7 +371,7 @@ describe('the sample RFQs are sound by the verb’s own rule', () => {
       /** @type {import('../../sourcing/rfqModel').TierPrice} */ (
         /** @type {import('../../sourcing/rfqModel').QuotationItemQuote} */ (
           /** @type {NonNullable<(NonNullable<ReturnType<typeof quotes.find>>)['itemQuotes']>} */ (
-            /** @type {import('../../../data/mockQuotations').Quotation} */ (
+            /** @type {import('@data/mockQuotations').Quotation} */ (
               quotes.find((q) => q.supplierId === sid)
             ).itemQuotes
           )[0]

@@ -42,12 +42,12 @@ describe('§69 · the population this file rests on', () => {
   it('⚠️ FIRST — the two rows differ in the way the batch is about', () => {
     // Every claim below is meaningless if both rows carry the same thing.
     expect(
-      /** @type {import('../services/data/types').PurchaseRequisition} */ (
+      /** @type {import('@services/data/types').PurchaseRequisition} */ (
         purchaseRequisitionStore.get('pr-004')
       ).approvalLevel
     ).toBe('Section Head');
     expect(
-      /** @type {import('../services/data/types').PurchaseRequisition} */ (
+      /** @type {import('@services/data/types').PurchaseRequisition} */ (
         purchaseRequisitionStore.get('pr-005')
       ).approvalLevel
     ).toBe('');
@@ -55,11 +55,11 @@ describe('§69 · the population this file rests on', () => {
     // band implies: the UNBANDED row is worth twice the banded one. A rule that
     // assigned bands by value could not have produced this pair.
     expect(
-      /** @type {import('../services/data/types').PurchaseRequisition} */ (
+      /** @type {import('@services/data/types').PurchaseRequisition} */ (
         purchaseRequisitionStore.get('pr-005')
       ).estimatedValue
     ).toBeGreaterThan(
-      /** @type {import('../services/data/types').PurchaseRequisition} */ (
+      /** @type {import('@services/data/types').PurchaseRequisition} */ (
         purchaseRequisitionStore.get('pr-004')
       ).estimatedValue
     );

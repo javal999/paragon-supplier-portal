@@ -93,7 +93,7 @@ const toasts = () => screen.getByTestId('toast-spy').textContent ?? '';
 const approvedGr = () => {
   const g = goodsReceiptStore.all().find((x) => x.status === 'Approved');
   expect(g, 'no Approved GR in the store — every spec below would be vacuous').toBeDefined();
-  return /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (g);
+  return /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (g);
 };
 
 const openGr = async () => {
@@ -128,7 +128,7 @@ describe('§91e — the GR interim state offers the remedy its copy names', () =
     await waitFor(
       () =>
         expect(
-          /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (
+          /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
             goodsReceiptStore.get(gr.id)
           ).status
         ).toBe('Posted to SAP'),
@@ -137,7 +137,7 @@ describe('§91e — the GR interim state offers the remedy its copy names', () =
       }
     );
     expect(
-      /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(gr.id))
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(gr.id))
         .sapMaterialDoc
     ).toMatch(/^MAT-DOC-/);
     expect(toasts()).toMatch(/posted to SAP/i);
@@ -164,11 +164,11 @@ describe('§91e — the GR interim state offers the remedy its copy names', () =
     expect(toasts()).toMatch(/settling twice is safe/i);
     // The GR is parked exactly where the dispatcher intends, with nothing minted.
     expect(
-      /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(gr.id))
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(gr.id))
         .status
     ).toBe('Posting to SAP');
     expect(
-      /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(gr.id))
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(gr.id))
         .sapMaterialDoc
     ).toBeUndefined();
     // ⚠️ AND THE COPY'S PROMISE NOW HAS A HANDLER.
@@ -191,7 +191,7 @@ describe('§91e — the GR interim state offers the remedy its copy names', () =
       { timeout: 4000 }
     );
     expect(
-      /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(gr.id))
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(gr.id))
         .status
     ).toBe('Posting to SAP');
 
@@ -202,7 +202,7 @@ describe('§91e — the GR interim state offers the remedy its copy names', () =
     await waitFor(
       () =>
         expect(
-          /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (
+          /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
             goodsReceiptStore.get(gr.id)
           ).status
         ).toBe('Posted to SAP'),
@@ -211,7 +211,7 @@ describe('§91e — the GR interim state offers the remedy its copy names', () =
       }
     );
     expect(
-      /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(gr.id))
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(gr.id))
         .sapMaterialDoc
     ).toMatch(/^MAT-DOC-/);
     expect(toasts()).toMatch(/Settlement completed on retry/i);
@@ -236,7 +236,7 @@ describe('§91e — the GR interim state offers the remedy its copy names', () =
     });
     expect(toasts()).toMatch(/asking again gives the same refusal/i);
     expect(
-      /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(gr.id))
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(gr.id))
         .status
     ).toBe('Posting to SAP');
     expect(await screen.findByText(/Settlement was refused/)).toBeInTheDocument();
@@ -270,7 +270,7 @@ describe('§91e — the GR interim state offers the remedy its copy names', () =
     await waitFor(
       () =>
         expect(
-          /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (
+          /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
             goodsReceiptStore.get(gr.id)
           ).status
         ).toBe('Posting to SAP'),
@@ -394,7 +394,7 @@ describe('§91e — a settle the WIZARD saw fail is still remediable on the page
 
     await waitFor(() => expect(walkedGr()?.status).toBe('Posted to SAP'), { timeout: 4000 });
     expect(
-      /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (walkedGr()).sapMaterialDoc
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (walkedGr()).sapMaterialDoc
     ).toMatch(/^MAT-DOC-/);
     expect(screen.queryByRole('button', { name: 'Retry settlement' })).not.toBeInTheDocument();
   });
@@ -413,7 +413,7 @@ describe('§91e — a settle the WIZARD saw fail is still remediable on the page
     // The wizard closed; the GR is parked at the boundary with nothing minted.
     await waitFor(() => expect(walkedGr()?.status).toBe('Posting to SAP'), { timeout: 4000 });
     expect(
-      /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (walkedGr()).sapMaterialDoc
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (walkedGr()).sapMaterialDoc
     ).toBeUndefined();
     expect(toasts()).toMatch(/Settlement did not complete/i);
 
@@ -421,7 +421,7 @@ describe('§91e — a settle the WIZARD saw fail is still remediable on the page
     fireEvent.click(
       (
         await screen.findAllByText(
-          /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (walkedGr()).grNumber
+          /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (walkedGr()).grNumber
         )
       )[0]
     );
@@ -434,7 +434,7 @@ describe('§91e — a settle the WIZARD saw fail is still remediable on the page
 
     await waitFor(() => expect(walkedGr()?.status).toBe('Posted to SAP'), { timeout: 4000 });
     expect(
-      /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (walkedGr()).sapMaterialDoc
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (walkedGr()).sapMaterialDoc
     ).toMatch(/^MAT-DOC-/);
   });
 
@@ -453,7 +453,7 @@ describe('§91e — a settle the WIZARD saw fail is still remediable on the page
     fireEvent.click(
       (
         await screen.findAllByText(
-          /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (walkedGr()).grNumber
+          /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (walkedGr()).grNumber
         )
       )[0]
     );

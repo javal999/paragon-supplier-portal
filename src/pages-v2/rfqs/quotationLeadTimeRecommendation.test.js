@@ -79,7 +79,7 @@ const scorableSet = () =>
 
 /** Who the buyer is told to award — the fact this whole batch protects. */
 const recommended = () =>
-  /** @type {import('../../lib/quoteScore').QuoteScore} */ (
+  /** @type {import('@lib/quoteScore').QuoteScore} */ (
     scoredSet(scorableSet()).find((s) => s.topRanked)
   ).quoteId;
 
@@ -118,7 +118,7 @@ describe('FIND-05 — the award recommendation is decided by lead time, honestly
   it('the fixture really is neutral — one axis, and one only, can separate these quotes', () => {
     // If this ever stops being true the rest of the file proves nothing, so it
     // is asserted rather than assumed.
-    const incumbent = /** @type {import('../../data/mockQuotations').Quotation} */ (
+    const incumbent = /** @type {import('@data/mockQuotations').Quotation} */ (
       quotationStore.get(INCUMBENT)
     );
     expect(incumbent.unitPrice).toBe(15_000);
@@ -131,14 +131,12 @@ describe('FIND-05 — the award recommendation is decided by lead time, honestly
   // ── POSITIVE TWIN FIRST (Correction-2) ────────────────────────────────────
   it('POSITIVE TWIN — a SLOWER honest promise leaves the recommendation where it belongs', async () => {
     const res = await submitTypedLeadTime('14');
-    expect(/** @type {import('../../services/data/types').CommandResult} */ (res).status).toBe(
-      'done'
-    );
+    expect(/** @type {import('@services/data/types').CommandResult} */ (res).status).toBe('done');
     expect(
-      /** @type {import('../../data/mockQuotations').Quotation} */ (
+      /** @type {import('@data/mockQuotations').Quotation} */ (
         quotationStore.get(
           /** @type {NonNullable<(NonNullable<typeof res>)['entityId']>} */ (
-            /** @type {import('../../services/data/types').CommandResult} */ (res).entityId
+            /** @type {import('@services/data/types').CommandResult} */ (res).entityId
           )
         )
       ).leadTimeDays
@@ -155,14 +153,13 @@ describe('FIND-05 — the award recommendation is decided by lead time, honestly
     // LAST. `topRanked` now reads the un-rounded composite.
     const res = await submitTypedLeadTime('5');
     const scored = scoredSet(scorableSet());
-    const mine = /** @type {import('../../lib/quoteScore').QuoteScore} */ (
+    const mine = /** @type {import('@lib/quoteScore').QuoteScore} */ (
       scored.find(
         (s) =>
-          s.quoteId ===
-          /** @type {import('../../services/data/types').CommandResult} */ (res).entityId
+          s.quoteId === /** @type {import('@services/data/types').CommandResult} */ (res).entityId
       )
     );
-    const incumbent = /** @type {import('../../lib/quoteScore').QuoteScore} */ (
+    const incumbent = /** @type {import('@lib/quoteScore').QuoteScore} */ (
       scored.find((s) => s.quoteId === INCUMBENT)
     );
     expect(mine.composite).toBe(incumbent.composite); // identical on the display
@@ -176,7 +173,7 @@ describe('FIND-05 — the award recommendation is decided by lead time, honestly
     // supplier deserves to take it from a 4-day one.
     const res = await submitTypedLeadTime('3');
     expect(recommended()).toBe(
-      /** @type {import('../../services/data/types').CommandResult} */ (res).entityId
+      /** @type {import('@services/data/types').CommandResult} */ (res).entityId
     );
   });
 
@@ -184,23 +181,22 @@ describe('FIND-05 — the award recommendation is decided by lead time, honestly
     const res = await submitTypedLeadTime('0');
     const scored = scoredSet(scorableSet());
     expect(
-      /** @type {import('../../lib/quoteScore').QuoteScore} */ (
+      /** @type {import('@lib/quoteScore').QuoteScore} */ (
         scored.find(
           (s) =>
-            s.quoteId ===
-            /** @type {import('../../services/data/types').CommandResult} */ (res).entityId
+            s.quoteId === /** @type {import('@services/data/types').CommandResult} */ (res).entityId
         )
       ).leadTimeScore
     ).toBe(100);
     // Under the retired ratio-to-best axis a `best` of 0 scored EVERY rival 0.
     // The incumbent keeps the 92 its own 4-day promise earns.
     expect(
-      /** @type {import('../../lib/quoteScore').QuoteScore} */ (
+      /** @type {import('@lib/quoteScore').QuoteScore} */ (
         scored.find((s) => s.quoteId === INCUMBENT)
       ).leadTimeScore
     ).toBe(92);
     expect(recommended()).toBe(
-      /** @type {import('../../services/data/types').CommandResult} */ (res).entityId
+      /** @type {import('@services/data/types').CommandResult} */ (res).entityId
     );
   });
 
@@ -243,12 +239,10 @@ describe('FIND-05 — the award recommendation is decided by lead time, honestly
   it('POSITIVE TWIN — the same bid WITH a lead time is compared normally', async () => {
     // The refusal is about completeness, not about disliking the supplier.
     const res = await submitTypedLeadTime('3');
-    expect(/** @type {import('../../services/data/types').CommandResult} */ (res).status).toBe(
-      'done'
-    );
+    expect(/** @type {import('@services/data/types').CommandResult} */ (res).status).toBe('done');
     expect(quotationStore.forRfq(RFQ_ID)).toHaveLength(2);
     expect(recommended()).toBe(
-      /** @type {import('../../services/data/types').CommandResult} */ (res).entityId
+      /** @type {import('@services/data/types').CommandResult} */ (res).entityId
     );
   });
 
@@ -298,7 +292,7 @@ describe('FIND-05 — the award recommendation is decided by lead time, honestly
 
     const scored = scoredSet(scorableSet());
     expect(
-      /** @type {import('../../lib/quoteScore').QuoteScore} */ (
+      /** @type {import('@lib/quoteScore').QuoteScore} */ (
         scored.find((s) => s.quoteId === res.entityId)
       ).leadTimeScore
     ).toBe(100);

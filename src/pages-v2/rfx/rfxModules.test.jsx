@@ -19,10 +19,10 @@ import SupplierRfi from '../SupplierRfi';
 import SupplierRfp from '../SupplierRfp';
 import SupplierRFQs from '../SupplierRFQs';
 
-const buyerSourcing = /** @type {import('../../components/layout-v2/navConfig').NavSection} */ (
+const buyerSourcing = /** @type {import('@components/layout-v2/navConfig').NavSection} */ (
   PTI_NAV.find((s) => s.id === 'sourcing')
 );
-const supplierSourcing = /** @type {import('../../components/layout-v2/navConfig').NavSection} */ (
+const supplierSourcing = /** @type {import('@components/layout-v2/navConfig').NavSection} */ (
   SUPPLIER_NAV.find((s) => s.id === 'sourcing')
 );
 

@@ -57,7 +57,7 @@ describe('t_rfq_fx_pin — recording the basis', () => {
 
     const pins =
       /** @type {NonNullable<(NonNullable<ReturnType<typeof rfqStore.get>>)['fxPins']>} */ (
-        /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).fxPins
+        /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).fxPins
       );
     expect(pins).toHaveLength(1);
     expect(pins[0].quote).toBe('USD');
@@ -75,7 +75,7 @@ describe('t_rfq_fx_pin — recording the basis', () => {
     await svc.dispatch(buyer, pin({ pinnedAt: '1999-01-01T00:00:00.000Z' }));
     const [p] =
       /** @type {NonNullable<(NonNullable<ReturnType<typeof rfqStore.get>>)['fxPins']>} */ (
-        /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).fxPins
+        /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).fxPins
       );
     expect(p.pinnedAt).not.toBe('1999-01-01T00:00:00.000Z');
     // Stamped on the hub clock, the one every RFx read is judged at.
@@ -83,13 +83,9 @@ describe('t_rfq_fx_pin — recording the basis', () => {
   });
 
   it('STATE-PRESERVING — pinning does NOT move the RFQ', async () => {
-    expect(/** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).status).toBe(
-      'Open'
-    );
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).status).toBe('Open');
     await svc.dispatch(buyer, pin());
-    expect(/** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).status).toBe(
-      'Open'
-    );
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).status).toBe('Open');
   });
 
   it('THE REASON THE FLAG EXISTS — pinning a CLOSED RFQ does not reopen it', async () => {
@@ -100,12 +96,8 @@ describe('t_rfq_fx_pin — recording the basis', () => {
     rfqStore.update(RFQ, (r) => ({ ...r, status: 'Closed' }));
     const res = await svc.dispatch(buyer, pin());
     expect(res.status).toBe('done');
-    expect(/** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).status).toBe(
-      'Closed'
-    );
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).fxPins
-    ).toHaveLength(1);
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).status).toBe('Closed');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).fxPins).toHaveLength(1);
   });
 
   it('is a BUYER verb — a supplier cannot set the basis their own bid is judged on', async () => {
@@ -120,7 +112,7 @@ describe('t_rfq_fx_pin — recording the basis', () => {
     // remains true and is asserted by the distinct-authority spec below.
     await expect(svc.dispatch(supplier, pin())).rejects.toThrow(/denied for scope/);
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).fxPins ?? []
+      /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).fxPins ?? []
     ).toHaveLength(0);
   });
 
@@ -140,7 +132,7 @@ describe('t_rfq_fx_pin — the D-1 freeze is APPEND-ONLY', () => {
 
     const pins =
       /** @type {NonNullable<(NonNullable<ReturnType<typeof rfqStore.get>>)['fxPins']>} */ (
-        /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).fxPins
+        /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).fxPins
       );
     // TWO entries, not one replaced. The basis an earlier comparison was ranked
     // on is still readable — which is the whole of D-1's "prior basis
@@ -154,7 +146,7 @@ describe('t_rfq_fx_pin — the D-1 freeze is APPEND-ONLY', () => {
     await svc.dispatch(buyer, pin({ quote: 'EUR', rate: 18_600 }));
     const pins =
       /** @type {NonNullable<(NonNullable<ReturnType<typeof rfqStore.get>>)['fxPins']>} */ (
-        /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).fxPins
+        /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).fxPins
       );
     expect(pins.map((p) => p.quote)).toEqual(['USD', 'EUR']);
   });
@@ -177,12 +169,8 @@ describe('t_rfq_fx_pin — the D-1 freeze is APPEND-ONLY', () => {
         awardReason: 'Chosen for capacity in the delivery window.'
       }
     });
-    expect(/** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).status).toBe(
-      'Awarded'
-    );
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).fxPins
-    ).toHaveLength(1);
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).status).toBe('Awarded');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).fxPins).toHaveLength(1);
   });
 });
 
@@ -248,7 +236,7 @@ describe('t_rfq_fx_pin — a malformed basis is REFUSED, by name', () => {
   it('a refused pin writes NOTHING — the ledger is untouched', async () => {
     await svc.dispatch(buyer, pin({ rate: 0 }));
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).fxPins ?? []
+      /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).fxPins ?? []
     ).toHaveLength(0);
   });
 
@@ -256,7 +244,7 @@ describe('t_rfq_fx_pin — a malformed basis is REFUSED, by name', () => {
     await svc.dispatch(buyer, pin({ source: 'SAP_EXHGRATE', rateType: 'M' }));
     expect(
       /** @type {NonNullable<(NonNullable<ReturnType<typeof rfqStore.get>>)['fxPins']>} */ (
-        /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).fxPins
+        /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).fxPins
       )[0].rateType
     ).toBe('M');
     rfqStore.reset();
@@ -266,7 +254,7 @@ describe('t_rfq_fx_pin — a malformed basis is REFUSED, by name', () => {
     expect(
       'rateType' in
         /** @type {NonNullable<(NonNullable<ReturnType<typeof rfqStore.get>>)['fxPins']>} */ (
-          /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).fxPins
+          /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).fxPins
         )[0]
     ).toBe(false);
   });

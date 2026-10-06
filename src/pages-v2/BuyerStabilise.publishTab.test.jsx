@@ -238,7 +238,7 @@ describe('the publish checklist (F-01, evaluation §5)', () => {
   });
 
   it('with every check passing, the inputs item says so', async () => {
-    const r = /** @type {import('../services/data/types').DataHealthView} */ (
+    const r = /** @type {import('@services/data/types').DataHealthView} */ (
       await mockDataService.procurement.getDataHealth(buyerScope)
     );
     const passing = {

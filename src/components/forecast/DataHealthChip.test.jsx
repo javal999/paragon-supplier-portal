@@ -20,7 +20,7 @@ const buyerScope = {
   businessRoles: PERSONA_SYSTEM_ROLES.buyer
 };
 const report = async () =>
-  /** @type {import('../../services/data/types').DataHealthView} */ (
+  /** @type {import('@services/data/types').DataHealthView} */ (
     await mockDataService.procurement.getDataHealth(buyerScope)
   );
 /**

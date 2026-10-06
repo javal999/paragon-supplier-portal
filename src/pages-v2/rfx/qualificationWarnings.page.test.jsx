@@ -55,7 +55,7 @@ const renderEvent = (rfqId) =>
 
 describe('BL-147 — RFQ event page and award record', () => {
   it('a published RFQ names the invitee let through below the level', async () => {
-    const id = /** @type {import('../../data/mockRfqs').RFQ} */ (
+    const id = /** @type {import('@data/mockRfqs').RFQ} */ (
       rfqStore.all().find((r) => r.status === 'Draft')
     ).id;
     rfqStore.update(id, (r) => ({ ...r, invitedSupplierIds: ['sup-005', 'sup-007'] }));
@@ -92,7 +92,7 @@ describe('BL-147 — RFQ event page and award record', () => {
       }
     });
     expect(res.status, res.reason).toBe('done');
-    const rec = /** @type {import('../../services/sourcing/types').AwardRecord} */ (
+    const rec = /** @type {import('@services/sourcing/types').AwardRecord} */ (
       awardStore.all().find((a) => a.eventId === 'rfq-003')
     );
     renderEvent('rfq-003');

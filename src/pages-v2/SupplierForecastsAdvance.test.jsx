@@ -80,7 +80,7 @@ const openShipments = async () => {
 
 describe('WAVE D premises — derived from the tree, not inherited', () => {
   it('⚠️ all three verbs exist with NO required fields and NO policy hooks — a cancel reason would be invented', () => {
-    const flow = /** @type {import('../services/transitions/schema').FlowDefinition} */ (
+    const flow = /** @type {import('@services/transitions/schema').FlowDefinition} */ (
       getKnownFlows().find((f) => f.entity === 'incomingShipment')
     );
     for (const id of [
@@ -88,7 +88,7 @@ describe('WAVE D premises — derived from the tree, not inherited', () => {
       't_incomingshipment_arrive',
       't_incomingshipment_cancel'
     ]) {
-      const t = /** @type {import('../services/transitions/schema').TransitionDef} */ (
+      const t = /** @type {import('@services/transitions/schema').TransitionDef} */ (
         flow.transitions.find((x) => x.id === id)
       );
       expect(t, `${id} must exist`).toBeDefined();
@@ -98,7 +98,7 @@ describe('WAVE D premises — derived from the tree, not inherited', () => {
     // The known-good control on the same instrument: the CREATION verb on the
     // same flow DOES declare both, so "empty" above is a reading of the tree
     // rather than of a matcher that returns empty for everything.
-    const report = /** @type {import('../services/transitions/schema').TransitionDef} */ (
+    const report = /** @type {import('@services/transitions/schema').TransitionDef} */ (
       flow.transitions.find((x) => x.id === 't_incomingshipment_report')
     );
     expect(report.requiredFields.length).toBeGreaterThan(0);
@@ -164,7 +164,7 @@ describe('WAVE D premises — derived from the tree, not inherited', () => {
     /** @type {(string | null)[]} */
     const asnAxis = [];
     const observe = () => {
-      const row = /** @type {import('../services/sdc/types').IncomingShipment} */ (
+      const row = /** @type {import('@services/sdc/types').IncomingShipment} */ (
         incomingShipmentStore.get(id)
       );
       declared.push(row.lifecycle);
@@ -216,7 +216,7 @@ describe('WAVE D premises — derived from the tree, not inherited', () => {
       entityId: /** @type {NonNullable<typeof second.entityId>} */ (second.entityId)
     });
     expect(cancelled.status).not.toBe('failed');
-    const row = /** @type {import('../services/sdc/types').IncomingShipment} */ (
+    const row = /** @type {import('@services/sdc/types').IncomingShipment} */ (
       incomingShipmentStore.get(
         /** @type {NonNullable<typeof second.entityId>} */ (second.entityId)
       )
@@ -288,7 +288,7 @@ describe('WAVE D premises — derived from the tree, not inherited', () => {
     // buyer's coverage projection. Asserted through the store the projection
     // reads, so a change to either side breaks this.
     const svc = new MockCommandService();
-    const before = /** @type {import('../services/sdc/types').IncomingShipment} */ (
+    const before = /** @type {import('@services/sdc/types').IncomingShipment} */ (
       incomingShipmentStore.get('ish-0002')
     );
     expect(['Booked', 'Shipped']).toContain(before.lifecycle);
@@ -298,7 +298,7 @@ describe('WAVE D premises — derived from the tree, not inherited', () => {
       entityId: 'ish-0002'
     });
     expect(
-      /** @type {import('../services/sdc/types').IncomingShipment} */ (
+      /** @type {import('@services/sdc/types').IncomingShipment} */ (
         incomingShipmentStore.get('ish-0002')
       ).lifecycle
     ).toBe('Cancelled');
@@ -308,7 +308,7 @@ describe('WAVE D premises — derived from the tree, not inherited', () => {
     // The `||0` class cannot occur here: the DTO carries no act-stamped
     // temporal field, and the transition writes only `lifecycle`.
     const before = /** @type {Record<string, unknown>} */ ({
-      .../** @type {import('../services/sdc/types').IncomingShipment} */ (
+      .../** @type {import('@services/sdc/types').IncomingShipment} */ (
         incomingShipmentStore.get('ish-0002')
       )
     });
@@ -319,7 +319,7 @@ describe('WAVE D premises — derived from the tree, not inherited', () => {
     });
     const after = /** @type {Record<string, unknown>} */ (
       /** @type {unknown} */ (
-        /** @type {import('../services/sdc/types').IncomingShipment} */ (
+        /** @type {import('@services/sdc/types').IncomingShipment} */ (
           incomingShipmentStore.get('ish-0002')
         )
       )
@@ -341,7 +341,7 @@ describe('the held seat — the walk reaches the state where each control render
     });
     const tab = await openShipments();
     expect(
-      /** @type {import('../services/sdc/types').IncomingShipment} */ (
+      /** @type {import('@services/sdc/types').IncomingShipment} */ (
         incomingShipmentStore.get('ish-0002')
       ).lifecycle
     ).toBe('Booked');
@@ -354,7 +354,7 @@ describe('the held seat — the walk reaches the state where each control render
     fireEvent.click(ship);
     await waitFor(() =>
       expect(
-        /** @type {import('../services/sdc/types').IncomingShipment} */ (
+        /** @type {import('@services/sdc/types').IncomingShipment} */ (
           incomingShipmentStore.get('ish-0002')
         ).lifecycle
       ).toBe('Shipped')
@@ -370,7 +370,7 @@ describe('the held seat — the walk reaches the state where each control render
     fireEvent.click(arrive);
     await waitFor(() =>
       expect(
-        /** @type {import('../services/sdc/types').IncomingShipment} */ (
+        /** @type {import('@services/sdc/types').IncomingShipment} */ (
           incomingShipmentStore.get('ish-0002')
         ).lifecycle
       ).toBe('Arrived')
@@ -395,7 +395,7 @@ describe('the held seat — the walk reaches the state where each control render
     fireEvent.click(await within(tab).findByRole('button', { name: /Cancel shipment/i }));
     await waitFor(() =>
       expect(
-        /** @type {import('../services/sdc/types').IncomingShipment} */ (
+        /** @type {import('@services/sdc/types').IncomingShipment} */ (
           incomingShipmentStore.get('ish-0002')
         ).lifecycle
       ).toBe('Cancelled')
@@ -440,7 +440,7 @@ describe('the narrowed seat — each verb renders its OWN pending-with-an-owner 
       entityId: 'ish-0002'
     });
     expect(
-      /** @type {import('../services/sdc/types').IncomingShipment} */ (
+      /** @type {import('@services/sdc/types').IncomingShipment} */ (
         incomingShipmentStore.get('ish-0002')
       ).lifecycle
     ).toBe('Shipped');
@@ -552,14 +552,14 @@ describe('a to-paragon leg — ship and arrive defer to the ASN, cancel does not
     });
     const tab = await openShipments();
     expect(
-      /** @type {import('../services/sdc/types').IncomingShipment} */ (
+      /** @type {import('@services/sdc/types').IncomingShipment} */ (
         incomingShipmentStore.get('ish-0001')
       ).lifecycle
     ).toBe('Shipped');
     fireEvent.click(within(tab).getByRole('button', { name: /Cancel shipment/i }));
     await waitFor(() =>
       expect(
-        /** @type {import('../services/sdc/types').IncomingShipment} */ (
+        /** @type {import('@services/sdc/types').IncomingShipment} */ (
           incomingShipmentStore.get('ish-0001')
         ).lifecycle
       ).toBe('Cancelled')
@@ -574,7 +574,7 @@ describe('a to-paragon leg — ship and arrive defer to the ASN, cancel does not
   it('⚠️ THE BILATERAL GATE — every advance verb is classified, and exactly one is not ASN-tracked', () => {
     // A new advance verb must not land unclassified. Derived from the FLOW, not
     // from a list in this file.
-    const flow = /** @type {import('../services/transitions/schema').FlowDefinition} */ (
+    const flow = /** @type {import('@services/transitions/schema').FlowDefinition} */ (
       getKnownFlows().find((f) => f.entity === 'incomingShipment')
     );
     const advanceVerbs = flow.transitions
@@ -633,7 +633,7 @@ describe('the card renders the DECLARED axis even when the ASN disagrees', () =>
     });
     expect(res.status).not.toBe('failed');
     expect(
-      /** @type {import('../services/sdc/types').IncomingShipment} */ (
+      /** @type {import('@services/sdc/types').IncomingShipment} */ (
         incomingShipmentStore.get('ish-0001')
       ).lifecycle
     ).toBe('Cancelled');

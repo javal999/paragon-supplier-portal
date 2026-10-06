@@ -429,7 +429,7 @@ describe('NR-1 RFX-R2 — the authoring verbs refuse a malformed request, naming
     });
     expect(good.status, good.reason).toBe('done');
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (
+      /** @type {import('@data/mockRfqs').RFQ} */ (
         rfqStore.get(/** @type {NonNullable<typeof good.entityId>} */ (good.entityId))
       ).documentRequests
     ).toEqual([{ ...HALAL, itemLineNo: 1 }]);
@@ -453,7 +453,7 @@ describe('NR-1 BR-03 — the quotation submit verb', () => {
   });
 
   it('refuses a quote missing the required document, and accepts it with the document', async () => {
-    const open = /** @type {import('../../../data/mockRfqs').RFQ} */ (
+    const open = /** @type {import('@data/mockRfqs').RFQ} */ (
       rfqStore
         .all()
         .find(
@@ -480,7 +480,7 @@ describe('NR-1 BR-03 — the quotation submit verb', () => {
     });
     expect(good.status, good.reason).toBe('done');
     expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (
+      /** @type {import('@data/mockQuotations').Quotation} */ (
         quotationStore.get(/** @type {NonNullable<typeof good.entityId>} */ (good.entityId))
       ).documents?.[0].requestId
     ).toBe(HALAL.id);
@@ -523,7 +523,7 @@ describe('NR-1 BR-03 / BR-09 — the quotation revise verb (negotiation round)',
     });
     expect(res.status, res.reason).toBe('done');
     expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (
+      /** @type {import('@data/mockQuotations').Quotation} */ (
         quotationStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
       ).documents?.[0].requestId
     ).toBe(HALAL.id);

@@ -265,7 +265,7 @@ describe('2B-5b-ii — the rulings, asserted so they cannot be tidied away', () 
     const source = /** @type {import('../../data/types').ASN} */ (
       MOCK_ASNS.find((a) => a.lineItems.some((l) => l.materialCode === 'PK-ALCP-2450'))
     );
-    const rfq2441 = /** @type {import('../../../data/mockRfqs').RFQ} */ (
+    const rfq2441 = /** @type {import('@data/mockRfqs').RFQ} */ (
       mockRfqs.find((r) => r.materialIds?.includes('PK-ALCP-2441'))
     );
     expect(rfq2441.status).toBe('Open');

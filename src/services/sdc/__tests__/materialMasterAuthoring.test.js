@@ -304,10 +304,7 @@ describe('2B-3 — the unit is the RFQ HEADER, and the header is WEAKER evidence
     // was built to demonstrate. A copy agrees with its original by construction.
     // THREE SOURCES OF THE SAME TIER, ONE OF WHICH IS A REPLICATION.
     const [r12, r13] = ['RFQ-2026-012', 'RFQ-2026-013'].map(
-      (n) =>
-        /** @type {import('../../../data/mockRfqs').RFQ} */ (
-          mockRfqs.find((r) => r.rfqNumber === n)
-        )
+      (n) => /** @type {import('@data/mockRfqs').RFQ} */ (mockRfqs.find((r) => r.rfqNumber === n))
     );
     expect(r13.materialIds).toEqual(r12.materialIds);
     expect(r13.totalQty).toBe(r12.totalQty);

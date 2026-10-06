@@ -270,7 +270,7 @@ describe('PF-1 — routing', () => {
   });
 
   it('sibling edges in one column get distinct gutters', () => {
-    const po = /** @type {import('../../services/transitions/catalogView').FlowView} */ (
+    const po = /** @type {import('@services/transitions/catalogView').FlowView} */ (
       views().find((v) => v.entity === 'purchaseOrder')
     );
     const siblings = layoutFlow(po).edges.filter((e) => e.route === 'sibling');
@@ -280,7 +280,7 @@ describe('PF-1 — routing', () => {
 
   it('two creation verbs into ONE state fan apart instead of stacking', () => {
     // requirementResponse is exactly this shape: submit AND draft both birth.
-    const rr = /** @type {import('../../services/transitions/catalogView').FlowView} */ (
+    const rr = /** @type {import('@services/transitions/catalogView').FlowView} */ (
       views().find((v) => v.entity === 'requirementResponse')
     );
     const births = layoutFlow(rr).edges.filter((e) => e.route === 'birth');
@@ -289,7 +289,7 @@ describe('PF-1 — routing', () => {
   });
 
   it('a degenerate single-state machine still lays out (enforcement)', () => {
-    const enforcement = /** @type {import('../../services/transitions/catalogView').FlowView} */ (
+    const enforcement = /** @type {import('@services/transitions/catalogView').FlowView} */ (
       views().find((v) => v.entity === 'enforcement')
     );
     const layout = layoutFlow(enforcement);

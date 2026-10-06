@@ -68,19 +68,19 @@ describe('POPULATION CONTROLS — nothing below means anything without these', (
     const flow = getFlow('contract');
     expect(flow, 'contract flow must be registered').toBeDefined();
     expect(
-      /** @type {import('../../services/transitions/schema').FlowDefinition} */ (
-        flow
-      ).transitions.map((t) => t.id)
+      /** @type {import('@services/transitions/schema').FlowDefinition} */ (flow).transitions.map(
+        (t) => t.id
+      )
     ).toContain(CONTRACT_DRAFT_TRANSITION);
   });
 });
 
 describe('⚠️ THE OWNER IS READ FROM THE FLOW, NEVER AUTHORED', () => {
   it('resolves the owner the declaration names', () => {
-    const flow = /** @type {import('../../services/transitions/schema').FlowDefinition} */ (
+    const flow = /** @type {import('@services/transitions/schema').FlowDefinition} */ (
       getFlow('contract')
     );
-    const draft = /** @type {import('../../services/transitions/schema').TransitionDef} */ (
+    const draft = /** @type {import('@services/transitions/schema').TransitionDef} */ (
       flow.transitions.find((t) => t.id === CONTRACT_DRAFT_TRANSITION)
     );
     expect(draft.surfaceable.surfaced).toBe(false);
@@ -98,7 +98,7 @@ describe('⚠️ THE OWNER IS READ FROM THE FLOW, NEVER AUTHORED', () => {
     // ruling); what must exist in both locales is the FRAMING that carries it.
     expect(
       EXTERNAL_FACT_OWNER_KEY[
-        /** @type {import('../../services/transitions/schema').ExternalFactOwner} */ (owner)
+        /** @type {import('@services/transitions/schema').ExternalFactOwner} */ (owner)
       ]
     ).toBe('processFlows.owner.s4hana');
   });

@@ -82,7 +82,7 @@ describe('SupplierDocuments — the refused document', () => {
     expect(block).toHaveTextContent(
       formatDate(
         /** @type {NonNullable<(NonNullable<typeof doc012>)['rejectedAt']>} */ (
-          /** @type {import('../services/data/types').SupplierDocument} */ (doc012).rejectedAt
+          /** @type {import('@services/data/types').SupplierDocument} */ (doc012).rejectedAt
         )
       )
     );

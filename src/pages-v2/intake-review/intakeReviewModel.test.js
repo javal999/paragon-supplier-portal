@@ -25,11 +25,11 @@ import {
 } from './intakeReviewModel';
 
 // pil-somo-001 (Glycerin): accepted === suggested (a clean as-suggested line).
-const AS_SUGGESTED = /** @type {import('../../services/data/types').PrIntakeLine} */ (
+const AS_SUGGESTED = /** @type {import('@services/data/types').PrIntakeLine} */ (
   PR_INTAKE_LINES.find((l) => !l.wasAdjusted)
 );
 // pil-somo-002 (Niacinamide): producer-recorded adjustment (accepted ≠ suggested).
-const PRODUCER_ADJUSTED = /** @type {import('../../services/data/types').PrIntakeLine} */ (
+const PRODUCER_ADJUSTED = /** @type {import('@services/data/types').PrIntakeLine} */ (
   PR_INTAKE_LINES.find((l) => l.wasAdjusted)
 );
 

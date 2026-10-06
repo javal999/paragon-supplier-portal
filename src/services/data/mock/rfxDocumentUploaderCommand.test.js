@@ -411,7 +411,7 @@ describe('CE-11i — RFI response save and revise', () => {
 
 describe('CE-11i — quotation submit and negotiation-round revise', () => {
   it('submit stamps the session actor; a competitor cannot read it, the buyer can', async () => {
-    const open = /** @type {import('../../../data/mockRfqs').RFQ} */ (
+    const open = /** @type {import('@data/mockRfqs').RFQ} */ (
       rfqStore
         .all()
         .find(
@@ -439,7 +439,7 @@ describe('CE-11i — quotation submit and negotiation-round revise', () => {
     expect(res.status, res.reason).toBe('done');
     const doc = /** @type {import('../../sourcing/types').ResponseDocument} */ (
       /** @type {NonNullable<(NonNullable<ReturnType<typeof quotationStore.get>>)['documents']>} */ (
-        /** @type {import('../../../data/mockQuotations').Quotation} */ (
+        /** @type {import('@data/mockQuotations').Quotation} */ (
           quotationStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
         ).documents
       )[0]
@@ -454,7 +454,7 @@ describe('CE-11i — quotation submit and negotiation-round revise', () => {
     expect(
       /** @type {import('../../sourcing/types').ResponseDocument} */ (
         /** @type {NonNullable<(NonNullable<typeof buyerSees>)['documents']>} */ (
-          /** @type {import('../../../data/mockQuotations').Quotation} */ (buyerSees).documents
+          /** @type {import('@data/mockQuotations').Quotation} */ (buyerSees).documents
         )[0]
       ).uploadedBy
     ).toEqual(FIRST);
@@ -469,7 +469,7 @@ describe('CE-11i — quotation submit and negotiation-round revise', () => {
     expect(
       /** @type {import('../../sourcing/types').ResponseDocument} */ (
         /** @type {NonNullable<(NonNullable<ReturnType<typeof mine.find>>)['documents']>} */ (
-          /** @type {import('../../../data/mockQuotations').Quotation} */ (
+          /** @type {import('@data/mockQuotations').Quotation} */ (
             mine.find((q) => q.id === res.entityId)
           ).documents
         )[0]
@@ -504,7 +504,7 @@ describe('CE-11i — quotation submit and negotiation-round revise', () => {
     expect(res.status, res.reason).toBe('done');
     const docs =
       /** @type {NonNullable<(NonNullable<ReturnType<typeof quotationStore.get>>)['documents']>} */ (
-        /** @type {import('../../../data/mockQuotations').Quotation} */ (
+        /** @type {import('@data/mockQuotations').Quotation} */ (
           quotationStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
         ).documents
       );
@@ -517,7 +517,7 @@ describe('CE-11i — quotation submit and negotiation-round revise', () => {
 
   it('KNOWN-BAD — another supplier\'s earlier file is not "carried": a same-id file on a competitor\'s quote is stamped new', async () => {
     // qt-014b is sup-015's quote on the same RFQ; its file must not lend sup-007 a stamp.
-    const competitorQuote = /** @type {import('../../../data/mockQuotations').Quotation} */ (
+    const competitorQuote = /** @type {import('@data/mockQuotations').Quotation} */ (
       quotationStore.all().find((q) => q.rfqId === 'rfq-014' && q.supplierId !== 'sup-007')
     );
     quotationStore.update(competitorQuote.id, (q) => ({
@@ -544,7 +544,7 @@ describe('CE-11i — quotation submit and negotiation-round revise', () => {
     expect(res.status, res.reason).toBe('done');
     const doc = /** @type {import('../../sourcing/types').ResponseDocument} */ (
       /** @type {NonNullable<(NonNullable<ReturnType<typeof quotationStore.get>>)['documents']>} */ (
-        /** @type {import('../../../data/mockQuotations').Quotation} */ (
+        /** @type {import('@data/mockQuotations').Quotation} */ (
           quotationStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
         ).documents
       )[0]

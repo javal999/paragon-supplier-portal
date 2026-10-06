@@ -40,7 +40,7 @@ afterEach(() => {
 });
 
 const report = async () =>
-  /** @type {import('../services/data/types').RescheduleView} */ (
+  /** @type {import('@services/data/types').RescheduleView} */ (
     await mockDataService.procurement.getReschedule(buyerScope)
   );
 /** @param {number} x */
@@ -75,7 +75,7 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
 
   it('AC-01: every relief proposal shows its type, now and proposed, freed pallet-weeks, saving, change cost and zone — the service’s own figures, in rank order', async () => {
     const r = await report();
-    const pk = /** @type {import('../services/data/types').WarehouseRescheduleView} */ (
+    const pk = /** @type {import('@services/data/types').WarehouseRescheduleView} */ (
       r.warehouses.find((w) => w.kind === 'packaging')
     );
     const relief = pk.proposals.filter((p) => p.rank !== null);
@@ -104,7 +104,7 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
 
   it('AC-03 / BR-09: selecting the proposals without supplier agreement moves the fill and the guard to the engine’s own recomputation', async () => {
     const r = await report();
-    const pk = /** @type {import('../services/data/types').WarehouseRescheduleView} */ (
+    const pk = /** @type {import('@services/data/types').WarehouseRescheduleView} */ (
       r.warehouses.find((w) => w.kind === 'packaging')
     );
     const free = pk.proposals.filter((p) => p.rank !== null && !p.needsSupplierAgreement);
@@ -136,10 +136,10 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
 
   it('BR-09: ticking a proposal inside the lead time moves PTI’s plan-change share by the engine’s own count', async () => {
     const r = await report();
-    const pk = /** @type {import('../services/data/types').WarehouseRescheduleView} */ (
+    const pk = /** @type {import('@services/data/types').WarehouseRescheduleView} */ (
       r.warehouses.find((w) => w.kind === 'packaging')
     );
-    const inside = /** @type {import('../services/data/types').RescheduleProposalView} */ (
+    const inside = /** @type {import('@services/data/types').RescheduleProposalView} */ (
       pk.proposals.find((p) => p.rank !== null && p.addsToPlanChange)
     );
     const after = planChangeAfter(r.planChange, pk.proposals, new Set([inside.id]));
@@ -158,7 +158,7 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
 
   it('X-03: a call-off proposal offers no send while the data is simulated — the reason stands in its place, EN and ID', async () => {
     const r = await report();
-    const co = /** @type {import('../services/data/types').RescheduleProposalView} */ (
+    const co = /** @type {import('@services/data/types').RescheduleProposalView} */ (
       r.warehouses
         .flatMap((w) => w.proposals)
         .find((p) => p.rank !== null && p.line.kind === 'callOff' && p.type !== 'cancel')
@@ -180,7 +180,7 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
 
   it('X-03: a PO-line proposal says it is changed in SAP, and cannot be marked taken to SAP while simulated', async () => {
     const r = await report();
-    const po = /** @type {import('../services/data/types').RescheduleProposalView} */ (
+    const po = /** @type {import('@services/data/types').RescheduleProposalView} */ (
       r.warehouses
         .flatMap((w) => w.proposals)
         .find((p) => p.rank !== null && p.line.kind === 'poLine')
@@ -206,7 +206,7 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
 
   it('the raw-material warehouse: its overload is stock on hand — the page says no open order can relieve those weeks', async () => {
     const r = await report();
-    const rm = /** @type {import('../services/data/types').WarehouseRescheduleView} */ (
+    const rm = /** @type {import('@services/data/types').WarehouseRescheduleView} */ (
       r.warehouses.find((w) => w.kind === 'rawMaterial')
     );
     const weeks = rm.weeks.filter((w) => w.onHandOverPallets > 0);
@@ -227,10 +227,10 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
 
   it('call-offs that cannot be changed are shown for information, with why', async () => {
     const r = await report();
-    const info = /** @type {import('../services/data/types').WarehouseRescheduleView} */ (
+    const info = /** @type {import('@services/data/types').WarehouseRescheduleView} */ (
       r.warehouses.find((w) => w.kind === 'packaging')
     ).info;
-    const dispatched = /** @type {import('../services/data/types').RescheduleInfoView} */ (
+    const dispatched = /** @type {import('@services/data/types').RescheduleInfoView} */ (
       info.find((i) => i.reason === 'dispatched')
     );
     renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
@@ -286,16 +286,16 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
 
 describe('BuyerReschedule — the warehouse-week decision (FUX-D3, F-10)', () => {
   const orderPlan = async () =>
-    /** @type {import('../services/data/types').OrderPlanView} */ (
+    /** @type {import('@services/data/types').OrderPlanView} */ (
       await mockDataService.procurement.getOrderPlan(buyerScope)
     );
   const firstWeek = async () =>
-    /** @type {import('../services/data/types').WarehousePlanView} */ (
+    /** @type {import('@services/data/types').WarehousePlanView} */ (
       (await orderPlan()).warehouses.find((w) => w.kind === 'packaging')
     ).shortfallWeeks[0];
 
   it('the weeks that do not fit sit above the proposals, each with its shortfall and the four ways; the page says the decision changes no order', async () => {
-    const pk = /** @type {import('../services/data/types').WarehousePlanView} */ (
+    const pk = /** @type {import('@services/data/types').WarehousePlanView} */ (
       (await orderPlan()).warehouses.find((w) => w.kind === 'packaging')
     );
     expect(pk.shortfallWeeks.length).toBeGreaterThan(0);
@@ -401,7 +401,7 @@ describe('BuyerReschedule — the warehouse-week decision (FUX-D3, F-10)', () =>
     );
     expect(res.status, res.reason).toBe('done');
     forecastVersionStore.add({
-      .../** @type {import('../services/sdc/types').ForecastPublication} */ (
+      .../** @type {import('@services/sdc/types').ForecastPublication} */ (
         currentVersion('packaging')
       ),
       publicationId: 'fv-probe-newer',

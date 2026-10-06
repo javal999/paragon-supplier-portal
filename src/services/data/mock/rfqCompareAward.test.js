@@ -61,10 +61,9 @@ beforeEach(() => {
   everyVendorQualified();
 });
 
-const oslo = () => /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
+const oslo = () => /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
 /** @param {string} id */
-const q = (id) =>
-  /** @type {import('../../../data/mockQuotations').Quotation} */ (quotationStore.get(id));
+const q = (id) => /** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get(id));
 /** @param {number} lineNo */
 const item = (lineNo) =>
   /** @type {import('../../sourcing/rfqModel').RfqItem} */ (
@@ -91,7 +90,7 @@ describe('the fixtures the rules are probed against', () => {
     ).toEqual(['sup-013', 'sup-015']);
     // known-bad: a legacy RFQ has no items
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).items
+      /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).items
     ).toBeUndefined();
   });
 });
@@ -106,7 +105,7 @@ describe('the evaluation break', () => {
     expect(defaultEvaluationTierQty(oslo())).toBe(3_000);
     expect(
       defaultEvaluationTierQty(
-        /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-022'))
+        /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-022'))
       )
     ).toBe(10_000);
     // the default moves with totalQty: 400,000 pieces is 25K × 8 × 2
@@ -202,7 +201,7 @@ describe('changing the evaluation break changes the ranking', () => {
     /** @param {string} id */
     const priceOf = (id) =>
       scored.kind === 'scored'
-        ? /** @type {import('../../../lib/quoteScore').QuoteScore} */ (
+        ? /** @type {import('@lib/quoteScore').QuoteScore} */ (
             scored.scores.find((s) => s.quoteId === id)
           ).priceScore
         : -1;
@@ -214,7 +213,7 @@ describe('changing the evaluation break changes the ranking', () => {
 
 describe('legacy single-price RFQs compare exactly as today', () => {
   it('rfq-014 scores its header unit prices, and the evaluation break is ignored', () => {
-    const rfq = /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014'));
+    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014'));
     const direct = rfqScoring(rfq, rfxNow());
     expect(rfqScoring(rfq, rfxNow(), 50_000)).toEqual(direct);
     expect(bestScoredByItem(rfq, rfxNow(), 3_000).size).toBe(0);
@@ -493,7 +492,7 @@ describe('an unknown item, a whole-event line, or a missing break is refused by 
 
 describe('the seeded Amplify split (rfq-024) tells the truth about itself', () => {
   it('its stored best scores are what CR-15 gives per item at its break, and its quantities are derived', () => {
-    const rfq = /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-024'));
+    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-024'));
     const seeded = /** @type {import('../../sourcing/types').AwardRecord} */ (
       RFQ_SAMPLE_AWARD_SEED[0]
     );

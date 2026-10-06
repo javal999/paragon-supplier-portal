@@ -11,7 +11,7 @@ import { INVOICES } from '@services/data/mock/fixtures/invoices';
 import { hubSettingsStore } from '@services/transitions/hubSettingsStore';
 
 const NO_PERSON = /** @type {const} */ ({ kind: 'UNATTRIBUTED', reason: 'NO_PERSON_IN_SESSION' });
-const inv = /** @type {import('../../services/data/types').Invoice} */ (
+const inv = /** @type {import('@services/data/types').Invoice} */ (
   INVOICES.find((i) => i.invoiceNumber === 'INV-2026-BRL-0064')
 );
 

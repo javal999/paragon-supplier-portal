@@ -116,7 +116,7 @@ describe('MR-2 step 4 — the four pill states on seeded events (sample history)
 
 // ── The shared fixture: Oslo (rfq-021), a split that follows the best score ──
 
-const oslo = () => /** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
+const oslo = () => /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
 /**
  * @param {string} supplierId
  * @param {string} quotationId
@@ -132,7 +132,7 @@ const lineFor = (supplierId, quotationId, lineNo, sharePct) => ({
   sharePct,
   quantity: awardQuantity(
     oslo(),
-    /** @type {import('../../services/sourcing/rfqModel').RfqItem} */ (
+    /** @type {import('@services/sourcing/rfqModel').RfqItem} */ (
       /** @type {NonNullable<(ReturnType<typeof oslo>)['items']>} */ (oslo().items).find(
         (i) => i.lineNo === lineNo
       )

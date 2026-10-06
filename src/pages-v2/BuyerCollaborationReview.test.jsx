@@ -74,7 +74,7 @@ const openBoard = async (identity = PLANNING) => {
 const statusSet = () => new Set(requirementResponseStore.all().map((r) => r.status));
 /** @param {string} id */
 const statusOf = (id) =>
-  /** @type {import('../services/sdc/types').RequirementResponse} */ (
+  /** @type {import('@services/sdc/types').RequirementResponse} */ (
     requirementResponseStore.get(id)
   ).status;
 
@@ -82,7 +82,7 @@ const statusOf = (id) =>
 
 describe('wave C — the gate is the MACHINE, probed in both directions', () => {
   it('⚠ CONTROL (known-good + known-bad, ONE derivation) — each verb is offered from its own state and nowhere else', () => {
-    const states = /** @type {import('../services/transitions/schema').FlowDefinition} */ (
+    const states = /** @type {import('@services/transitions/schema').FlowDefinition} */ (
       getFlow('requirementResponse')
     ).states;
     // Population control first: an empty state list would report every verb as
@@ -100,12 +100,12 @@ describe('wave C — the gate is the MACHINE, probed in both directions', () => 
   });
 
   it('⚠ THE THREE ATOMS ARE DISTINCT, and the surface must not collapse them', () => {
-    const f = /** @type {import('../services/transitions/schema').FlowDefinition} */ (
+    const f = /** @type {import('@services/transitions/schema').FlowDefinition} */ (
       getFlow('requirementResponse')
     );
     /** @param {string} id */
     const atomOf = (id) =>
-      /** @type {import('../services/transitions/schema').TransitionDef} */ (
+      /** @type {import('@services/transitions/schema').TransitionDef} */ (
         f.transitions.find((t) => t.id === id)
       ).requiredRole;
     const atoms = [
@@ -121,7 +121,7 @@ describe('wave C — the gate is the MACHINE, probed in both directions', () => 
   });
 
   it('⚠ `Accepted` IS TERMINAL — derived from the flow, not asserted in prose', () => {
-    const f = /** @type {import('../services/transitions/schema').FlowDefinition} */ (
+    const f = /** @type {import('@services/transitions/schema').FlowDefinition} */ (
       getFlow('requirementResponse')
     );
     expect(f.states).toContain('Accepted');
@@ -326,7 +326,7 @@ describe('wave C — the walk: UnderReview → dispute, with the words it requir
 
     await waitFor(() => expect(statusOf(RR)).toBe('Disputed'));
     const ledger =
-      /** @type {import('../services/sdc/types').RequirementResponse} */ (
+      /** @type {import('@services/sdc/types').RequirementResponse} */ (
         requirementResponseStore.get(RR)
       ).disputeResponse ?? [];
     expect(ledger).toHaveLength(1);
@@ -342,7 +342,7 @@ describe('wave C — the walk: UnderReview → dispute, with the words it requir
 
     expect(statusOf(RR)).toBe('UnderReview');
     expect(
-      /** @type {import('../services/sdc/types').RequirementResponse} */ (
+      /** @type {import('@services/sdc/types').RequirementResponse} */ (
         requirementResponseStore.get(RR)
       ).disputeResponse ?? []
     ).toHaveLength(0);

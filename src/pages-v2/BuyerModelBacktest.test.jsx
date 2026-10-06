@@ -28,7 +28,7 @@ const supplierScope = {
   businessRoles: PERSONA_SYSTEM_ROLES.supplier
 };
 const view = async () =>
-  /** @type {import('../services/data/types').ModelBacktestView} */ (
+  /** @type {import('@services/data/types').ModelBacktestView} */ (
     await mockDataService.procurement.getModelBacktest(buyerScope)
   );
 /** @param {number} x */

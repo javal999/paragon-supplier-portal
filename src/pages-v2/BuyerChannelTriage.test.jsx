@@ -255,7 +255,7 @@ describe('BuyerChannelTriage — the entry form + the RECORD verb', () => {
   it('on save it dispatches the RECORD verb (not declare) and the object lands as "Entered by PTI"', async () => {
     renderWithProviders(<BuyerChannelTriage />);
     await recordOne('STOK PK-PETB-8810 2.400 KG');
-    const minted = /** @type {import('../services/sdc/types').InventoryDeclaration} */ (
+    const minted = /** @type {import('@services/sdc/types').InventoryDeclaration} */ (
       inventoryDeclarationStore.latestFor(SUBJECT, MAT)
     );
     expect(minted.totalQty).toBe(2400);

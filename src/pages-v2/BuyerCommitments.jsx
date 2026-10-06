@@ -209,10 +209,10 @@ const BuyerCommitments = () => {
         ? await run(
             {
               verb: 'accept',
-              responseId: /** @type {import('../services/sdc/types').RequirementResponse} */ (
+              responseId: /** @type {import('@services/sdc/types').RequirementResponse} */ (
                 line.response
               ).id,
-              status: /** @type {import('../services/sdc/types').RequirementResponse} */ (
+              status: /** @type {import('@services/sdc/types').RequirementResponse} */ (
                 line.response
               ).status
             },
@@ -222,10 +222,10 @@ const BuyerCommitments = () => {
           ? await run(
               {
                 verb: 'requestRevision',
-                responseId: /** @type {import('../services/sdc/types').RequirementResponse} */ (
+                responseId: /** @type {import('@services/sdc/types').RequirementResponse} */ (
                   line.response
                 ).id,
-                status: /** @type {import('../services/sdc/types').RequirementResponse} */ (
+                status: /** @type {import('@services/sdc/types').RequirementResponse} */ (
                   line.response
                 ).status,
                 note

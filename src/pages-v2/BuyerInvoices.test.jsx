@@ -74,12 +74,12 @@ describe('BuyerInvoices — release payment is Option B (no fabrication)', () =>
     // Interim: submitted to SAP, no payment reference asserted yet.
     await waitFor(() => {
       expect(
-        /** @type {import('../services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
+        /** @type {import('@services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
           .status
       ).toBe('Releasing Payment');
     });
     expect(
-      /** @type {import('../services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
+      /** @type {import('@services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
         .paymentRef
     ).toBeNull();
 
@@ -87,14 +87,14 @@ describe('BuyerInvoices — release payment is Option B (no fabrication)', () =>
     await waitFor(
       () => {
         expect(
-          /** @type {import('../services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
+          /** @type {import('@services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
             .status
         ).toBe('Payment Released');
       },
       { timeout: 2500 }
     );
     expect(
-      /** @type {import('../services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
+      /** @type {import('@services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
         .paymentRef
     ).toMatch(/^PAY-/);
   });
@@ -201,15 +201,14 @@ describe('BuyerInvoices — the release affordance survives the clock', () => {
     // it, and it is DERIVED from the shipped projection at the declared present
     // rather than written here, so a re-anchor moves the expectation with the
     // surface instead of reddening this line.
-    const subject = /** @type {import('../services/data/types').Invoice} */ (
+    const subject = /** @type {import('@services/data/types').Invoice} */ (
       INVOICES.find((i) => i.id === OVERDUE_APPROVED_ID)
     );
     const days = daysOutstanding(subject, `${DECLARED_PRESENT}T00:00:00.000Z`);
     expect(days, 'the subject must really be past due at the declared present').toBeGreaterThan(0);
     expect(
-      /** @type {import('../services/data/types').Invoice} */ (
-        invoiceStore.get(OVERDUE_APPROVED_ID)
-      ).status
+      /** @type {import('@services/data/types').Invoice} */ (invoiceStore.get(OVERDUE_APPROVED_ID))
+        .status
     ).toBe('Approved');
     expect(await screen.findByText(`${days}d overdue`)).toBeInTheDocument();
 
@@ -252,7 +251,7 @@ describe('BuyerInvoices — the settle failure branch', () => {
     await waitFor(
       () =>
         expect(
-          /** @type {import('../services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
+          /** @type {import('@services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
             .status
         ).toBe('Payment Released'),
       {
@@ -293,11 +292,11 @@ describe('BuyerInvoices — the settle failure branch', () => {
     );
     // The invoice is parked in the interim, exactly as the dispatcher intends.
     expect(
-      /** @type {import('../services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
+      /** @type {import('@services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
         .status
     ).toBe('Releasing Payment');
     expect(
-      /** @type {import('../services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
+      /** @type {import('@services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
         .paymentRef
     ).toBeNull();
     // TRANSPORT is retryable, so the remedy is offered — and it is the only
@@ -341,7 +340,7 @@ describe('BuyerInvoices — the settle failure branch', () => {
     await waitFor(
       () =>
         expect(
-          /** @type {import('../services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
+          /** @type {import('@services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
             .status
         ).toBe('Releasing Payment'),
       { timeout: 2500 }

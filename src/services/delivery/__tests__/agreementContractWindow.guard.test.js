@@ -186,7 +186,7 @@ describe('⚠️ EVERY RELEASE DATE SITS INSIDE ITS CONTRACT VALIDITY WINDOW', (
     expect(sa2.length).toBeGreaterThan(0);
     expect(sa2.every((r) => r.contractId === 'ctr-013')).toBe(true);
 
-    const ctr013 = /** @type {import('../../../data/mockContracts').Contract} */ (
+    const ctr013 = /** @type {import('@data/mockContracts').Contract} */ (
       mockContracts.find((c) => c.id === 'ctr-013')
     );
     expect(day(ctr013.startDate)).toBe('2026-03-01'); // UNSHIFTED, by ruling

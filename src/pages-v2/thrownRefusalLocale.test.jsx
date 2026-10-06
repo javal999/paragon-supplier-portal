@@ -107,7 +107,7 @@ describe('PR2 · CONTROLS — the walk reaches its subject', () => {
     // the button was withheld: the toast would be absent and the test would
     // pass its `not.toBeInTheDocument` neighbours for the wrong reason.
     expect(
-      /** @type {import('../services/data/types').PurchaseRequisition} */ (
+      /** @type {import('@services/data/types').PurchaseRequisition} */ (
         purchaseRequisitionStore.get('pr-004')
       ).status
     ).toBe('Pending Approval');

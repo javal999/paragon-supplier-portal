@@ -45,7 +45,7 @@ const AGREEMENT_ID = 'sa-0001';
  * contract out from under this calendar. It now READS the contract, so the two
  * cannot diverge at all and the guard asserts a property rather than a copy.
  */
-const START_DATE = /** @type {import('../../data/mockContracts').Contract} */ (
+const START_DATE = /** @type {import('@data/mockContracts').Contract} */ (
   mockContracts.find((c) => c.id === CONTRACT_ID)
 ).startDate;
 

@@ -184,10 +184,10 @@ describe('BuyerGoodsReceipt — GR from a live store ASN (UI path)', () => {
       const gr = goodsReceiptStore.all().find((g) => g.asnNumber === 'ASN-UITEST-1');
       expect(gr).toBeTruthy();
       expect(
-        /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (gr).supplierName
+        /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (gr).supplierName
       ).not.toBe('—');
       expect(
-        /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (gr).supplierName.length
+        /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (gr).supplierName.length
       ).toBeGreaterThan(0);
     });
   }, 13120);

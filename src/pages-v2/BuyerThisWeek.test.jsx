@@ -107,7 +107,7 @@ describe('This week — the page (F-03)', () => {
   });
 
   it('the input check is the Data health verdict, counted over every failing check in the report', async () => {
-    const report = /** @type {import('../services/data/types').DataHealthView} */ (
+    const report = /** @type {import('@services/data/types').DataHealthView} */ (
       await mockDataService.procurement.getDataHealth(buyerScope)
     );
     const failing = report.feeds.flatMap((f) => f.checks).filter((c) => !c.passed).length;
@@ -139,7 +139,7 @@ describe('This week — the page (F-03)', () => {
     expect(kpi).toBeGreaterThan(0);
     expect(shown).toBe(kpi);
 
-    const run = /** @type {import('../services/data/types').OrderPlanView} */ (
+    const run = /** @type {import('@services/data/types').OrderPlanView} */ (
       await mockDataService.procurement.getOrderPlan(buyerScope)
     );
     const earliest = run.warehouses

@@ -170,7 +170,7 @@ describe('Stock simulation page (MR-7 section e)', () => {
     const poNumber = /New call-off on (\S+)/.exec(
       within(dialog).getByRole('heading').textContent ?? ''
     )?.[1];
-    const po = /** @type {import('../services/data/types').PurchaseOrder} */ (
+    const po = /** @type {import('@services/data/types').PurchaseOrder} */ (
       purchaseOrderStore.all().find((p) => p.poNumber === poNumber)
     );
     expect(po.supplierId).toBe('sup-007');

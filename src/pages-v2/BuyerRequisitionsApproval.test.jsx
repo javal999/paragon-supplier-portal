@@ -47,7 +47,7 @@ describe('§67 · the population this file rests on', () => {
     // Every "the button is absent" claim below is meaningless if the panel
     // never opened. This is the membership assertion that makes them readable.
     expect(
-      /** @type {import('../services/data/types').PurchaseRequisition} */ (
+      /** @type {import('@services/data/types').PurchaseRequisition} */ (
         purchaseRequisitionStore.get('pr-004')
       ).status
     ).toBe('Pending Approval');
@@ -66,7 +66,7 @@ describe('§67 · approve — reachable at last', () => {
 
     await waitFor(() =>
       expect(
-        /** @type {import('../services/data/types').PurchaseRequisition} */ (
+        /** @type {import('@services/data/types').PurchaseRequisition} */ (
           purchaseRequisitionStore.get('pr-004')
         ).status
       ).toBe('Approved')
@@ -132,7 +132,7 @@ describe('⚠️ §67 · REJECT CARRIES ITS REASON, AND THE COMMIT IS DISABLED U
     fireEvent.click(confirm);
 
     await waitFor(() => {
-      const pr = /** @type {import('../services/data/types').PurchaseRequisition} */ (
+      const pr = /** @type {import('@services/data/types').PurchaseRequisition} */ (
         purchaseRequisitionStore.get('pr-004')
       );
       expect(pr.status).toBe('Rejected');

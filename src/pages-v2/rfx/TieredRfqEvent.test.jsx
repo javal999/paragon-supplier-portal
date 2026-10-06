@@ -291,7 +291,7 @@ describe('the award, item by item', () => {
     expect(within(recorded).getByTestId('award-line-1-sup-015')).toHaveTextContent('3,000');
     expect(within(recorded).getByTestId('award-line-2-sup-013')).toHaveTextContent('100%');
     expect(
-      /** @type {import('../../services/sourcing/types').AwardRecord} */ (
+      /** @type {import('@services/sourcing/types').AwardRecord} */ (
         awardStore.all().find((a) => a.eventId === 'rfq-021')
       ).lines.every((l) => l.awardTierQty === 3_000)
     ).toBe(true);
@@ -314,9 +314,7 @@ describe('the award, item by item', () => {
 
   it('a supplier failing the gate gets no share field, and the reason instead', async () => {
     quotationStore.add({
-      .../** @type {import('../../data/mockQuotations').Quotation} */ (
-        quotationStore.get('qt-021a')
-      ),
+      .../** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get('qt-021a')),
       id: 'qt-021x',
       supplierId: 'sup-008'
     });
@@ -371,12 +369,12 @@ describe('RFx C3 — the award panel on a legacy RFQ (rfq-014)', () => {
       ...r,
       lineItems: [
         {
-          .../** @type {import('../../data/mockRfqs').RfqLineItem} */ (
+          .../** @type {import('@data/mockRfqs').RfqLineItem} */ (
             /** @type {NonNullable<typeof r.lineItems>} */ (r.lineItems)[0]
           ),
           quantity: 100_000
         },
-        /** @type {import('../../data/mockRfqs').RfqLineItem} */ (
+        /** @type {import('@data/mockRfqs').RfqLineItem} */ (
           /** @type {NonNullable<typeof r.lineItems>} */ (r.lineItems)[1]
         ),
         ...(three
@@ -468,13 +466,13 @@ describe('RFx C3 — the award panel on a legacy RFQ (rfq-014)', () => {
     );
     expect(within(recorded).getByTestId(`award-line-${BOTTLE}-sup-015`)).toHaveTextContent('70%');
     expect(within(recorded).getByTestId(`award-line-${CAP}-sup-013`)).toHaveTextContent('40%');
-    expect(/** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
       'Awarded'
     );
     const [rec] = awardsOf014();
-    const saved = /** @type {import('../../services/sourcing/types').AwardRecord} */ (
-      rec
-    ).lines.map((l) => [l.itemCode, l.supplierId, l.sharePct, l.quantity, l.splitBasis].join(' '));
+    const saved = /** @type {import('@services/sourcing/types').AwardRecord} */ (rec).lines.map(
+      (l) => [l.itemCode, l.supplierId, l.sharePct, l.quantity, l.splitBasis].join(' ')
+    );
     expect(saved.sort()).toEqual([
       `${CAP} sup-013 40 120000 pct`,
       `${CAP} sup-015 60 180000 pct`,
@@ -516,24 +514,24 @@ describe('RFx C3 — the award panel on a legacy RFQ (rfq-014)', () => {
     reasonIfAsked();
     fireEvent.click(screen.getByTestId('award-confirm'));
     await waitFor(() =>
-      expect(
-        /** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-      ).toBe('Partly awarded')
+      expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+        'Partly awarded'
+      )
     );
 
     // The panel starts afresh over the open item; the awarded ones name their award.
     const labelRow = await screen.findByTestId(`award-input-${LABEL}-sup-015`);
     expect(labelRow).toBeInTheDocument();
     expect(screen.getByTestId(`award-item-awarded-${BOTTLE}`)).toHaveTextContent(
-      /** @type {import('../../services/sourcing/types').AwardRecord} */ (awardsOf014()[0]).id
+      /** @type {import('@services/sourcing/types').AwardRecord} */ (awardsOf014()[0]).id
     );
     type(LABEL, 'sup-015', '100');
     reasonIfAsked();
     fireEvent.click(screen.getByTestId('award-confirm'));
     await waitFor(() =>
-      expect(
-        /** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-      ).toBe('Awarded')
+      expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+        'Awarded'
+      )
     );
     expect(awardsOf014()).toHaveLength(2);
   });
@@ -548,18 +546,17 @@ describe('RFx C3 — the award panel on a legacy RFQ (rfq-014)', () => {
     renderEvent('rfq-014');
     fireEvent.click(await screen.findByTestId('award-will-not-rest'));
     await waitFor(() =>
-      expect(
-        /** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-      ).toBe('Awarded')
+      expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+        'Awarded'
+      )
     );
-    const final = /** @type {import('../../services/sourcing/types').AwardRecord} */ (
+    const final = /** @type {import('@services/sourcing/types').AwardRecord} */ (
       awardsOf014().find((a) => a.lines.length === 0)
     );
     expect(await screen.findByTestId(`award-no-lines-${final.id}`)).toBeInTheDocument();
     // the final award's cascade still ran: a quote no award named is Rejected
     expect(
-      /** @type {import('../../data/mockQuotations').Quotation} */ (quotationStore.get('qt-014a'))
-        .status
+      /** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get('qt-014a')).status
     ).toBe('Rejected');
   });
 
@@ -567,8 +564,7 @@ describe('RFx C3 — the award panel on a legacy RFQ (rfq-014)', () => {
     withLines(false);
     const res = await recordAward('t_rfq_award', [whole(BOTTLE, 100_000), whole(CAP, 300_000)]);
     expect(res.status, res.reason).toBe('done');
-    const id = /** @type {import('../../services/sourcing/types').AwardRecord} */ (awardsOf014()[0])
-      .id;
+    const id = /** @type {import('@services/sourcing/types').AwardRecord} */ (awardsOf014()[0]).id;
     renderEvent('rfq-014');
     expect(await screen.findByTestId(`award-status-${id}`)).toHaveTextContent('Active');
     expect(screen.queryByTestId('award-form')).not.toBeInTheDocument(); // Awarded: nothing to award
@@ -582,7 +578,7 @@ describe('RFx C3 — the award panel on a legacy RFQ (rfq-014)', () => {
       expect(screen.getByTestId(`award-status-${id}`)).toHaveTextContent('Cancelled')
     );
     expect(screen.getByTestId(`award-cancelled-${id}`)).toHaveTextContent('Wrong split entered.');
-    expect(/** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
       'Closed'
     );
     expect(await screen.findByTestId('award-form')).toBeInTheDocument();
@@ -592,8 +588,7 @@ describe('RFx C3 — the award panel on a legacy RFQ (rfq-014)', () => {
   it('AC-06 — once marked "Raised in SAP", cancel is no longer offered', async () => {
     withLines(false);
     await recordAward('t_rfq_award', [whole(BOTTLE, 100_000), whole(CAP, 300_000)]);
-    const id = /** @type {import('../../services/sourcing/types').AwardRecord} */ (awardsOf014()[0])
-      .id;
+    const id = /** @type {import('@services/sourcing/types').AwardRecord} */ (awardsOf014()[0]).id;
     renderEvent('rfq-014');
     // KNOWN-GOOD twin first: an active award offers cancel
     expect(await screen.findByTestId(`award-cancel-${id}`)).toBeInTheDocument();
@@ -613,8 +608,7 @@ describe('RFx C3 — the award panel on a legacy RFQ (rfq-014)', () => {
   it('a seat without the cancel and SAP atoms reads whose act each is', async () => {
     withLines(false);
     await recordAward('t_rfq_award', [whole(BOTTLE, 100_000), whole(CAP, 300_000)]);
-    const id = /** @type {import('../../services/sourcing/types').AwardRecord} */ (awardsOf014()[0])
-      .id;
+    const id = /** @type {import('@services/sourcing/types').AwardRecord} */ (awardsOf014()[0]).id;
     renderWithProviders(
       <Routes>
         <Route path="/buyer/rfq/:rfqId" element={<BuyerSourcingEvent />} />
@@ -650,7 +644,7 @@ describe('the comparison export', () => {
 
   it('a tiered RFQ exports items × suppliers × breaks; a legacy RFQ one row per quote', () => {
     const oslo = buildComparisonCsv(
-      [/** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'))],
+      [/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'))],
       quotationStore.all(),
       name,
       t
@@ -668,7 +662,7 @@ describe('the comparison export', () => {
       'RFQ-2026-021,2 Oslo back sticker (ingredients),sup-013,50000,perVariant,226,IDR,3100000,20'
     );
     const legacy = buildComparisonCsv(
-      [/** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014'))],
+      [/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014'))],
       quotationStore.all(),
       name,
       t
@@ -728,7 +722,7 @@ describe('the RFQ panel defers a tiered award to the event page', () => {
   it('the panel ranks Oslo at the default break, and agrees with the event page', async () => {
     const { bestScoredQuotationId, rfxNow } = await import('@services/data/mock/rfxReadModel');
     const { defaultEvaluationTierQty } = await import('@services/sourcing/rfqComparison');
-    const oslo = /** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
+    const oslo = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
     const best = bestScoredQuotationId(
       oslo,
       rfxNow(),
@@ -758,7 +752,7 @@ describe('the RFQ panel defers a tiered award to the event page', () => {
     const { bestScoredQuotationId, rfxNow } = await import('@services/data/mock/rfxReadModel');
     expect(
       bestScoredQuotationId(
-        /** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021')),
+        /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021')),
         rfxNow(),
         25_000
       )

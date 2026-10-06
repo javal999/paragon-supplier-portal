@@ -27,7 +27,7 @@ const supplierScope = {
   businessRoles: PERSONA_SYSTEM_ROLES.supplier
 };
 const report = async () =>
-  /** @type {import('../services/data/types').DataHealthView} */ (
+  /** @type {import('@services/data/types').DataHealthView} */ (
     await mockDataService.procurement.getDataHealth(buyerScope)
   );
 
@@ -77,10 +77,10 @@ describe('BuyerDataHealth — the planner page', () => {
 
   it('opens on the feed with a failing check and drills into its failing records (stock accuracy)', async () => {
     const r = await report();
-    const cc = /** @type {import('../services/engine/dataHealth').FeedHealth} */ (
+    const cc = /** @type {import('@services/engine/dataHealth').FeedHealth} */ (
       r.feeds.find((f) => f.feed === 'cycleCounts')
     );
-    const flagged = /** @type {import('../services/engine/dataHealth').CheckResult} */ (
+    const flagged = /** @type {import('@services/engine/dataHealth').CheckResult} */ (
       cc.checks.find((c) => c.check === 'stockAccuracy')
     );
     expect(flagged.failures.length).toBeGreaterThan(0);
@@ -103,7 +103,7 @@ describe('BuyerDataHealth — the planner page', () => {
 
   it('selecting the stock feed shows its checks all passing and the per-warehouse snapshot', async () => {
     const r = await report();
-    const stock = /** @type {import('../services/engine/dataHealth').FeedHealth} */ (
+    const stock = /** @type {import('@services/engine/dataHealth').FeedHealth} */ (
       r.feeds.find((f) => f.feed === 'stock')
     );
     renderWithProviders(<BuyerDataHealth />, { identity: BUYER, route: '/buyer/data-health' });

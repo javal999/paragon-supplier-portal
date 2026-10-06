@@ -29,10 +29,9 @@ beforeEach(() => {
 /** @param {string} rfqId */
 const gatesOf = (rfqId) =>
   Object.fromEntries(
-    rfqGateViews(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(rfqId)),
-      rfxNow()
-    ).map((g) => [g.supplierId, g.failed])
+    rfqGateViews(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(rfqId)), rfxNow()).map(
+      (g) => [g.supplierId, g.failed]
+    )
   );
 
 describe('CR-23 — the seeded demo', () => {
@@ -53,7 +52,7 @@ describe('CR-23 — the seeded demo', () => {
 describe('CR-15 / BR-01a — a failing supplier is not ranked', () => {
   it('rfq-003 scores only the qualified quotes, and the best is never the failing one', () => {
     const outcome = rfqScoring(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-003')),
+      /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-003')),
       rfxNow()
     );
     expect(outcome.kind).toBe('scored');
@@ -63,7 +62,7 @@ describe('CR-15 / BR-01a — a failing supplier is not ranked', () => {
     expect(currentQuotesFor('rfq-003').map((q) => q.supplierId)).toContain('sup-010');
     expect(
       bestScoredQuotationId(
-        /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-003')),
+        /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-003')),
         rfxNow()
       )
     ).not.toBe('qt-003c');
@@ -76,20 +75,20 @@ describe('CR-15 / BR-01a — a failing supplier is not ranked', () => {
     // (sup-011, sup-004 and sup-009 each fail on certificates).
     expect(currentQuotesFor('rfq-020').length).toBeGreaterThan(0); // they DID quote
     const outcome = rfqScoring(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-020')),
+      /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-020')),
       rfxNow()
     );
     expect(outcome.kind === 'scored' ? outcome.scores : null).toEqual([]);
     expect(
       bestScoredQuotationId(
-        /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-020')),
+        /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-020')),
         rfxNow()
       )
     ).toBeNull();
   });
 
   it('KNOWN-GOOD twin — rfq-005 now ranks sup-007 alone; sup-008 stays unranked', () => {
-    const rfq = /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-005'));
+    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-005'));
     const outcome = rfqScoring(rfq, rfxNow());
     const byQuote = new Map(currentQuotesFor('rfq-005').map((q) => [q.id, q.supplierId]));
     const ranked =

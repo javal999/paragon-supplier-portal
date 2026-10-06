@@ -106,7 +106,7 @@ describe('GR command integration — create + rollup-gated disposition + cascade
     asnStore.add(submittedAsn('ASN-TEST-1'));
     const res = await create('ASN-TEST-1', [line(60, 40)]);
     expect(res.status).toBe('done');
-    const gr = /** @type {import('../../../data/mockGoodsReceipts').GoodsReceipt} */ (
+    const gr = /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
       goodsReceiptStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
     );
     expect(gr.status).toBe('Pending Inspection');
@@ -126,9 +126,8 @@ describe('GR command integration — create + rollup-gated disposition + cascade
     expect(bad.reason).toMatch(/POLICY_REJECTED:gr_rollup_all_accepted/);
     // The GR is untouched by the rejected command.
     expect(
-      /** @type {import('../../../data/mockGoodsReceipts').GoodsReceipt} */ (
-        goodsReceiptStore.get(grId)
-      ).status
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(grId))
+        .status
     ).toBe('Under Inspection');
   });
 
@@ -141,9 +140,8 @@ describe('GR command integration — create + rollup-gated disposition + cascade
     const res = await fire('t_gr_partial_approve', grId);
     expect(res.status).toBe('done');
     expect(
-      /** @type {import('../../../data/mockGoodsReceipts').GoodsReceipt} */ (
-        goodsReceiptStore.get(grId)
-      ).status
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(grId))
+        .status
     ).toBe('Partially Approved');
     // Cross-entity cascade fired onto the linked ASN.
     expect(/** @type {ASN} */ (asnStore.get('ASN-TEST-1')).status).toBe('Discrepancy');
@@ -176,14 +174,13 @@ describe('GR Post to SAP — Option B submitted-interim → settle-finalize', ()
     await fire('t_gr_start_inspection', grId);
     await fire('t_gr_approve', grId); // all accepted → Approved
     expect(
-      /** @type {import('../../../data/mockGoodsReceipts').GoodsReceipt} */ (
-        goodsReceiptStore.get(grId)
-      ).status
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(grId))
+        .status
     ).toBe('Approved');
 
     const post = await fire('t_gr_post', grId);
     expect(post.status).toBe('submitted');
-    const interim = /** @type {import('../../../data/mockGoodsReceipts').GoodsReceipt} */ (
+    const interim = /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
       goodsReceiptStore.get(grId)
     );
     expect(interim.status).toBe('Posting to SAP');
@@ -191,7 +188,7 @@ describe('GR Post to SAP — Option B submitted-interim → settle-finalize', ()
 
     const settled = await svc.settle(buyer, post.correlationId);
     expect(settled?.status).toBe('done');
-    const final = /** @type {import('../../../data/mockGoodsReceipts').GoodsReceipt} */ (
+    const final = /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
       goodsReceiptStore.get(grId)
     );
     expect(final.status).toBe('Posted to SAP');

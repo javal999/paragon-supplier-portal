@@ -174,7 +174,7 @@ describe('SupplierReliabilityPanel — the supplier sees only its own figures (A
 
   it('shows the supplier’s own confirmation rate and PTI’s plan-change figure, with the SIMULATED pill', async () => {
     const all = (await mockDataService.procurement.getSupplierReliability(buyerScope)).items;
-    const mine = /** @type {import('../services/data/types').SupplierReliabilityView} */ (
+    const mine = /** @type {import('@services/data/types').SupplierReliabilityView} */ (
       all.find((r) => r.supplierId === 'sup-007')
     );
     renderWithProviders(<SupplierReliabilityPanel />, {
@@ -205,10 +205,10 @@ describe('SupplierReliabilityPanel — the supplier sees only its own figures (A
 
   it('another supplier’s figures never render — sup-002 sees its own confirmation, not sup-007’s', async () => {
     const all = (await mockDataService.procurement.getSupplierReliability(buyerScope)).items;
-    const own = /** @type {import('../services/data/types').SupplierReliabilityView} */ (
+    const own = /** @type {import('@services/data/types').SupplierReliabilityView} */ (
       all.find((r) => r.supplierId === 'sup-002')
     );
-    const other = /** @type {import('../services/data/types').SupplierReliabilityView} */ (
+    const other = /** @type {import('@services/data/types').SupplierReliabilityView} */ (
       all.find((r) => r.supplierId === 'sup-007')
     );
     expect(pct(own.confirmation.rate)).not.toBe(pct(other.confirmation.rate)); // the probe can tell them apart

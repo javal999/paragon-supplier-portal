@@ -51,7 +51,7 @@ const FULL_BUYER = {
 function releasableDocNumber() {
   const approved = invoiceStore.all().find((i) => i.status === 'Approved');
   expect(approved, 'no Approved invoice in the fixtures').toBeDefined();
-  return /** @type {import('../services/data/types').Invoice} */ (approved).invoiceNumber;
+  return /** @type {import('@services/data/types').Invoice} */ (approved).invoiceNumber;
 }
 
 beforeEach(() => {
@@ -112,7 +112,7 @@ describe('⚠️ THE DISPUTED INVOICE — the footer verb that is NOT the solid 
   function disputedDocNumber() {
     const d = invoiceStore.all().find((i) => i.status === 'Disputed');
     expect(d, 'no Disputed invoice in the fixtures').toBeDefined();
-    return /** @type {import('../services/data/types').Invoice} */ (d).invoiceNumber;
+    return /** @type {import('@services/data/types').Invoice} */ (d).invoiceNumber;
   }
 
   it('the resolve button is replaced by the wait for a procurement seat', async () => {

@@ -179,7 +179,7 @@ describe('the RFQ wizard authors a multi-item tiered RFQ', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save RFQ draft' }));
 
     await waitFor(() => expect(newest()).toBeDefined());
-    const rfq = /** @type {import('../../data/mockRfqs').RFQ} */ (newest());
+    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (newest());
     expect(rfq.currency).toBe('USD');
     expect(rfq.projectName).toBe('Oslo');
     expect(
@@ -192,7 +192,7 @@ describe('the RFQ wizard authors a multi-item tiered RFQ', () => {
       ['sticker', 'Front sticker', 8],
       ['other', 'Back sticker', 1]
     ]);
-    const sheet = /** @type {import('../../services/sourcing/rfqModel').RfqItem} */ (
+    const sheet = /** @type {import('@services/sourcing/rfqModel').RfqItem} */ (
       /** @type {NonNullable<typeof rfq.items>} */ (rfq.items)[0]
     ).specFields;
     expect(sheet.find((f) => f.key === 'material')?.value).toBe('PP white 60 mic');
@@ -202,12 +202,12 @@ describe('the RFQ wizard authors a multi-item tiered RFQ', () => {
       filledBy: 'buyer'
     });
     expect(
-      /** @type {import('../../services/sourcing/rfqModel').RfqItem} */ (
+      /** @type {import('@services/sourcing/rfqModel').RfqItem} */ (
         /** @type {NonNullable<typeof rfq.items>} */ (rfq.items)[0]
       ).oneTimeCosts
     ).toEqual(['dieCutPlate', 'printingPlate']);
     expect(
-      /** @type {import('../../services/sourcing/rfqModel').RfqItem} */ (
+      /** @type {import('@services/sourcing/rfqModel').RfqItem} */ (
         /** @type {NonNullable<typeof rfq.items>} */ (rfq.items)[1]
       ).tiers
     ).toEqual([{ qty: 100_000, basis: 'perVariant' }]);
@@ -282,8 +282,8 @@ describe('RFI → RFQ pre-fill (/buyer/rfq?rfi=<id>)', () => {
     expect(await screen.findByText('RFI RFI-2026-001')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Save RFQ draft' }));
     await waitFor(() => expect(newest()).toBeDefined());
-    expect(/** @type {import('../../data/mockRfqs').RFQ} */ (newest()).sourceRfiId).toBe('rfi-001');
-    expect(/** @type {import('../../data/mockRfqs').RFQ} */ (newest()).invitedSupplierIds).toEqual([
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (newest()).sourceRfiId).toBe('rfi-001');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (newest()).invitedSupplierIds).toEqual([
       'sup-007',
       'sup-008'
     ]);
@@ -367,7 +367,7 @@ describe('RFP → RFQ pre-fill (/buyer/rfq?rfp=<id>&options=<ids>, spec D3)', ()
     expect(await screen.findByText('RFP RFP-2026-002')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Save RFQ draft' }));
     await waitFor(() => expect(newest()).toBeDefined());
-    const rfq = /** @type {import('../../data/mockRfqs').RFQ} */ (newest());
+    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (newest());
     expect(rfq.sourceRfpId).toBe('rfp-002');
     expect(rfq.currency).toBe('IDR');
     expect(rfq.uom).toBe('PCS');
@@ -455,7 +455,7 @@ describe('RFP → RFQ pre-fill (/buyer/rfq?rfp=<id>&options=<ids>, spec D3)', ()
       next(); // + the Documents step (B3), optional, so it passes empty
       fireEvent.click(await screen.findByRole('button', { name: 'Save RFQ draft' }));
       await waitFor(() => expect(newest()).toBeDefined());
-      const rfq = /** @type {import('../../data/mockRfqs').RFQ} */ (newest());
+      const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (newest());
       expect(rfq.sourceRfpId).toBe('rfp-002');
       expect(rfq.sourceRfpOptionRefs).toEqual(['opt-pump-cap']);
     });
@@ -538,7 +538,7 @@ describe('templates and copying (D2)', () => {
     fireEvent.click(within(dialog).getByTestId('rfq-save-template-confirm'));
     expect(await screen.findByText('Template "Iron" saved')).toBeInTheDocument();
     expect(rfqTemplateStore.readState().saved.map((t) => t.name)).toEqual(['Iron']);
-    const saved = /** @type {import('../../services/sourcing/rfqTemplates').RfqTemplate} */ (
+    const saved = /** @type {import('@services/sourcing/rfqTemplates').RfqTemplate} */ (
       rfqTemplateStore.readState().saved[0]
     );
     // Not kept: invitees and dates are not part of a template's shape at all.
@@ -620,7 +620,7 @@ describe('NR-1 BR-02 — the buyer asks for documents on the RFQ (B3)', () => {
       .map(([, input]) => input)
       .find((i) => i.transitionId === 't_rfq_create');
     expect(create?.payload).toMatchObject({ documentRequests: [REQUEST] });
-    expect(/** @type {import('../../data/mockRfqs').RFQ} */ (newest()).documentRequests).toEqual([
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (newest()).documentRequests).toEqual([
       REQUEST
     ]);
   }, 20000); // a long wizard walk, like THE LOCK above
@@ -703,13 +703,13 @@ describe('NR-1 BR-02 — removing an RFQ item remaps the document requests (B3)'
     // test if the payload is missing).
     const payload = /** @type {{ documentRequests: object[] }} */ (create?.payload);
     expect(payload.documentRequests[1]).not.toHaveProperty('itemLineNo');
-    expect(/** @type {import('../../data/mockRfqs').RFQ} */ (newest()).documentRequests).toEqual(
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (newest()).documentRequests).toEqual(
       REQUESTS
     );
     expect(
-      /** @type {import('../../services/sourcing/rfqModel').RfqItem} */ (
+      /** @type {import('@services/sourcing/rfqModel').RfqItem} */ (
         /** @type {NonNullable<(NonNullable<ReturnType<typeof newest>>)['items']>} */ (
-          /** @type {import('../../data/mockRfqs').RFQ} */ (newest()).items
+          /** @type {import('@data/mockRfqs').RFQ} */ (newest()).items
         )[1]
       ).description
     ).toBe('Shrink sleeve');

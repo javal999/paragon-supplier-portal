@@ -9,8 +9,8 @@ import {
 } from '@services/data/mock/fixtures/rfqSamples';
 import { readRevision, revisionPricesFrom } from './TieredRevisionFields';
 
-const oslo = /** @type {import('../../data/mockRfqs').RFQ} */ (RFQ_SAMPLE_SEED[0]);
-const last = /** @type {import('../../data/mockQuotations').Quotation} */ (
+const oslo = /** @type {import('@data/mockRfqs').RFQ} */ (RFQ_SAMPLE_SEED[0]);
+const last = /** @type {import('@data/mockQuotations').Quotation} */ (
   RFQ_SAMPLE_QUOTATION_SEED.find((q) => q.id === 'qt-021a')
 );
 
@@ -21,14 +21,14 @@ describe('readRevision — the per-break revision', () => {
       readRevision(oslo, last, typed)
     );
     expect(
-      /** @type {import('../../services/sourcing/rfqModel').QuotationItemQuote} */ (r.itemQuotes[0])
+      /** @type {import('@services/sourcing/rfqModel').QuotationItemQuote} */ (r.itemQuotes[0])
         .tierPrices[0]
     ).toEqual({ tierQty: 3000, unitPrice: 400 });
     expect(
-      /** @type {import('../../services/sourcing/rfqModel').QuotationItemQuote} */ (r.itemQuotes[0])
+      /** @type {import('@services/sourcing/rfqModel').QuotationItemQuote} */ (r.itemQuotes[0])
         .oneTimeCosts
     ).toEqual(
-      /** @type {import('../../services/sourcing/rfqModel').QuotationItemQuote} */ (
+      /** @type {import('@services/sourcing/rfqModel').QuotationItemQuote} */ (
         /** @type {NonNullable<typeof last.itemQuotes>} */ (last.itemQuotes)[0]
       ).oneTimeCosts
     );

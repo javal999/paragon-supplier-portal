@@ -83,7 +83,7 @@ beforeEach(() => {
 
 // ── The RFQ: Oslo (rfq-021), a split that FOLLOWS the best score ─────────────
 
-const oslo = () => /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
+const oslo = () => /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
 /** @param {number} lineNo */
 const item = (lineNo) =>
   /** @type {import('../../sourcing/rfqModel').RfqItem} */ (

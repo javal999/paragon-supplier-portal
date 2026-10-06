@@ -66,7 +66,7 @@ describe('SupplierInvoices — Submit dispatches the real verb', () => {
 
     await waitFor(() => {
       expect(
-        /** @type {import('../services/data/types').Invoice} */ (invoiceStore.get('inv-brl-0055'))
+        /** @type {import('@services/data/types').Invoice} */ (invoiceStore.get('inv-brl-0055'))
           .status
       ).toBe('Submitted');
     });

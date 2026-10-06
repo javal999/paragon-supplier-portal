@@ -24,7 +24,7 @@ import { sdcClock } from '@services/sdc/clock';
  * master row is restored afterwards.
  */
 const passGateForSup005 = () => {
-  const s = /** @type {import('../data/mockSuppliers').SupplierExtended} */ (
+  const s = /** @type {import('@data/mockSuppliers').SupplierExtended} */ (
     mockSuppliers.find((x) => x.id === 'sup-005')
   );
   const saved = { halalCertified: s.halalCertified, certExpiryDate: s.certExpiryDate };
@@ -761,7 +761,7 @@ describe('BuyerSourcing — recording a rate is confirm-before-commit (2e-c-4)',
   const eurPins = () => {
     // A local, not an inline cast: Prettier moves a JSDoc cast that opens a
     // parenthesised expression outside it (frontend-standard playbook, step 4).
-    const rfq = /** @type {import('../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-009'));
+    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-009'));
     return (rfq.fxPins ?? []).filter((p) => p.quote === 'EUR');
   };
 
@@ -961,12 +961,12 @@ describe('BuyerSourcing — a supersede reads as a NEW RECORDED ACT (2e-c-4)', (
 
     await waitFor(() =>
       expect(
-        /** @type {import('../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-009')).fxPins
+        /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-009')).fxPins
       ).toHaveLength(2)
     );
     expect(
       /** @type {NonNullable<(NonNullable<ReturnType<typeof rfqStore.get>>)['fxPins']>} */ (
-        /** @type {import('../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-009')).fxPins
+        /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-009')).fxPins
       ).map((p) => p.rate)
     ).toEqual([16_000, 18_000]);
   });

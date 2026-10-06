@@ -20,7 +20,7 @@ describe('BL-33 — "Received without ASN" has a sample receipt to show it', () 
   it('the data: gr-018 names no ASN, gr-015 names ASN-2026-025', () => {
     /** @param {string} id */
     const gr = (id) =>
-      /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
         mockGoodsReceipts.find((g) => g.id === id)
       );
     expect(gr('gr-018').asnNumber).toBe('');

@@ -38,7 +38,7 @@ beforeEach(() => {
 
 describe('RFQ target — the transition id is the discriminator (AR-01)', () => {
   it('awards on t_rfq_award even when the payload carries a stray deadline', async () => {
-    const before = /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ));
+    const before = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ));
     expect(before.status).toBe('Open');
 
     const res = await svc.dispatch(buyer, {
@@ -54,7 +54,7 @@ describe('RFQ target — the transition id is the discriminator (AR-01)', () => 
     });
     expect(res.status).toBe('done');
 
-    const after = /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ));
+    const after = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ));
     expect(after.status).toBe('Awarded');
     expect(after.awardedQuotationId).toBe('qt-003a');
     expect(after.responseDeadline).toBe(before.responseDeadline);

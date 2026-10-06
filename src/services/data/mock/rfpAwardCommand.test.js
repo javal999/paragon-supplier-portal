@@ -591,7 +591,7 @@ describe('NR-2 BR-08 / AC-06 — one option, one route', () => {
     const ok = await rfqFromRfp(seed.sourceRfpOptionRefs);
     expect(ok.status, ok.reason).toBe('done');
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (
+      /** @type {import('@data/mockRfqs').RFQ} */ (
         rfqStore.get(/** @type {NonNullable<typeof ok.entityId>} */ (ok.entityId))
       ).sourceRfpOptionRefs
     ).toEqual([PUMP_CAP]);
@@ -935,7 +935,7 @@ describe('BL-131 — a supplier that fails the compliance gate between the round
 
     // The round opens and closes while sup-015 passes (the round policy checks CR-23 too).
     const offers = await twoOptionOffers();
-    /** @type {import('../../../data/mockSuppliers').SupplierExtended} */ (row).status =
+    /** @type {import('@data/mockSuppliers').SupplierExtended} */ (row).status =
       SupplierStatus.SUSPENDED;
     expect(rfpSupplierGate('sup-015', rfxNow())).toEqual({ passes: false, failed: ['status'] });
 

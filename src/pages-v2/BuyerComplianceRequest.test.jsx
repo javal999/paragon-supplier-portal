@@ -157,7 +157,7 @@ describe('WAVE E · the act is reachable, and withheld as a notice', () => {
     await askSupplier('sup-007', 'Halal Compliance');
 
     await waitFor(() => expect(supplierDocumentStore.all().length).toBe(before + 1));
-    const minted = /** @type {import('../services/data/types').SupplierDocument} */ (
+    const minted = /** @type {import('@services/data/types').SupplierDocument} */ (
       supplierDocumentStore.all().find((d) => d.notes === NOTE)
     );
     expect(minted.supplierId).toBe('sup-007');
@@ -428,7 +428,7 @@ describe('WAVE E · the loop crosses two surfaces, in both locales', () => {
     await waitFor(() =>
       expect(supplierDocumentStore.all().some((d) => d.notes === NOTE)).toBe(true)
     );
-    const minted = /** @type {import('../services/data/types').SupplierDocument} */ (
+    const minted = /** @type {import('@services/data/types').SupplierDocument} */ (
       supplierDocumentStore.all().find((d) => d.notes === NOTE)
     );
     expect(minted.declaration).toBeUndefined();

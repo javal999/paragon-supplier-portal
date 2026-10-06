@@ -66,15 +66,14 @@ const day = (offset) =>
  */
 const gatesOf = (rfqId, nowIso = rfxNow()) =>
   Object.fromEntries(
-    rfqGateViews(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(rfqId)),
-      nowIso
-    ).map((g) => [g.supplierId, [...g.failed]])
+    rfqGateViews(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(rfqId)), nowIso).map(
+      (g) => [g.supplierId, [...g.failed]]
+    )
   );
 
 /** @param {string} id */
 const supplier = (id) =>
-  /** @type {import('../../../data/mockSuppliers').SupplierExtended} */ (
+  /** @type {import('@data/mockSuppliers').SupplierExtended} */ (
     mockSuppliers.find((s) => s.id === id)
   );
 
@@ -89,9 +88,9 @@ describe('BL-64 — the demo exists where a buyer will look for it', () => {
     expect(
       rows.every(
         (r) =>
-          /** @type {import('../../../data/mockRfqs').RFQ} */ (r).title.startsWith(
+          /** @type {import('@data/mockRfqs').RFQ} */ (r).title.startsWith(
             'Compliance gate demo'
-          ) && /** @type {import('../../../data/mockRfqs').RFQ} */ (r).title.endsWith('(sample)')
+          ) && /** @type {import('@data/mockRfqs').RFQ} */ (r).title.endsWith('(sample)')
       )
     ).toBe(true);
     // KNOWN-BAD twin — an id the demo does not hold. PREMISE CHANGED (RFx spec
@@ -180,7 +179,7 @@ const SCENARIOS = [
 describe('BL-64 — every gate scenario, by named supplier on a named RFQ', () => {
   it.each(SCENARIOS)('%s — %s / %s', (_scenario, rfqId, supplierId, failed) => {
     const view = rfqGateViews(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(rfqId)),
+      /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(rfqId)),
       rfxNow()
     ).find((g) => g.supplierId === supplierId);
     expect(view, `${supplierId} is not an invitee or bidder of ${rfqId}`).toBeDefined();
@@ -237,7 +236,7 @@ describe('BL-64 — the halal expiry boundary moves with the clock', () => {
 describe('BL-64 — the compliance registry overrides the supplier master, both ways', () => {
   /** @param {string} rfqId */
   const materials = (rfqId) =>
-    rfqMaterialCodes(/** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(rfqId)));
+    rfqMaterialCodes(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(rfqId)));
 
   it('sup-002: master says certified and in date; registry creg-0017 for RM-LAURIC-7200 expired — fails halal', () => {
     const s = supplier('sup-002');
@@ -296,17 +295,13 @@ describe('BL-64 — a material that asks for no certificate', () => {
   it('rfq-019 sources packaging whose master rows require neither halal, BPOM nor GMP', () => {
     expect(
       gateRequirementFor(
-        rfqMaterialCodes(
-          /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-019'))
-        )
+        rfqMaterialCodes(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-019')))
       )
     ).toEqual({ halal: false, bpom: false, gmp: false });
     // KNOWN-GOOD twin — the raw-material RFQ asks for halal and GMP.
     expect(
       gateRequirementFor(
-        rfqMaterialCodes(
-          /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-016'))
-        )
+        rfqMaterialCodes(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-016')))
       )
     ).toEqual({ halal: true, bpom: false, gmp: true });
   });
@@ -327,13 +322,13 @@ describe('BL-64 — a material that asks for no certificate', () => {
 describe('BL-64 — what can and cannot be awarded', () => {
   it('rfq-020: nothing is scored and there is no best score to follow — the award is impossible', () => {
     const outcome = rfqScoring(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-020')),
+      /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-020')),
       rfxNow()
     );
     expect(outcome.kind === 'scored' ? outcome.scores : null).toEqual([]);
     expect(
       bestScoredQuotationId(
-        /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-020')),
+        /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-020')),
         rfxNow()
       )
     ).toBeNull();
@@ -347,7 +342,7 @@ describe('BL-64 — what can and cannot be awarded', () => {
 
   it('rfq-016: only the two passing suppliers are scored', () => {
     const outcome = rfqScoring(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-016')),
+      /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-016')),
       rfxNow()
     );
     const scored = outcome.kind === 'scored' ? outcome.scores.map((s) => s.quoteId).sort() : [];
@@ -380,9 +375,9 @@ describe('BL-64 — what can and cannot be awarded', () => {
       ['sup-017', 'qt-016b', 40]
     ]);
     expect(res.status, res.reason).toBe('done');
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-016')).status
-    ).toBe('Awarded');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-016')).status).toBe(
+      'Awarded'
+    );
     const award = /** @type {import('../../sourcing/types').AwardRecord} */ (
       awardStore.all().find((a) => a.eventId === 'rfq-016')
     );
@@ -399,13 +394,13 @@ describe('BL-64 — what can and cannot be awarded', () => {
     ]);
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/COMPLIANCE_GATE_FAILED: sup-018 .*\(halal\)/);
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-016')).status
-    ).toBe('Closed');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-016')).status).toBe(
+      'Closed'
+    );
   });
 
   it('rfq-018 is Open and still collecting: sup-017 is invited and has not quoted', () => {
-    const rfq = /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-018'));
+    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-018'));
     expect(rfq.responseDeadline > DECLARED_PRESENT).toBe(true);
     expect(rfq.invitedSupplierIds).toContain('sup-017');
     expect(currentQuotesFor('rfq-018').map((q) => q.supplierId)).toEqual(['sup-001', 'sup-002']);

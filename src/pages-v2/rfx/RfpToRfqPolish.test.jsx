@@ -48,7 +48,7 @@ beforeEach(() => {
 const BUYER_SEAT = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 /** @type {CurrentIdentity} */
 const RECEIVING = { ...BUYER, businessRoles: ['receiving'] };
-const tundra = /** @type {import('../../services/sourcing/types').RfpEvent} */ (
+const tundra = /** @type {import('@services/sourcing/types').RfpEvent} */ (
   RFP_EVENT_SEED.find((e) => e.id === 'rfp-002')
 );
 
@@ -85,7 +85,7 @@ describe('seedFromRfp — the neutral RFP seed as the wizard draft', () => {
   });
 
   it('a per-variant RFP keeps its basis (ICY points are per variant)', () => {
-    const icy = /** @type {import('../../services/sourcing/types').RfpEvent} */ (
+    const icy = /** @type {import('@services/sourcing/types').RfpEvent} */ (
       RFP_EVENT_SEED.find((e) => e.id === 'rfp-003')
     );
     const s = seedFromRfp(prefillRfqItemsFromRfp(icy, [], ['opt-pack-1']), icy.eventNumber);
@@ -388,7 +388,7 @@ describe('a genuine tie has no single best to follow — the comparison and the 
     ).toBe('b');
   });
   it('Oslo item 1 at the default break ties, so the award rule names no best for it', async () => {
-    const oslo = /** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
+    const oslo = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
     const byItem = bestScoredByItem(
       oslo,
       rfxNow(),
@@ -449,7 +449,7 @@ describe('the supplier RFQ card', () => {
   it('counts the deadline on the hub clock, as the buyer pages do', async () => {
     renderWithProviders(<SupplierRFQs />, { identity: SUPPLIER });
     const oslo = await screen.findByTestId('rfq-card-rfq-021');
-    const deadline = /** @type {import('../../data/mockRfqs').RFQ} */ (
+    const deadline = /** @type {import('@data/mockRfqs').RFQ} */ (
       rfqStore.all().find((r) => r.id === 'rfq-021')
     ).responseDeadline;
     const days = /** @type {NonNullable<ReturnType<typeof daysUntil>>} */ (

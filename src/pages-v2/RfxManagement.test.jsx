@@ -421,7 +421,7 @@ describe('NR-1 BR-08 — the supplier revises a submitted RFP before the deadlin
     fireEvent.click(screen.getByTestId(`supplier-rfp-${rfpId}-revise-send`));
 
     expect(await screen.findByText(/Version 2/)).toBeInTheDocument();
-    const stored = /** @type {import('../services/sourcing/types').RfpResponse} */ (
+    const stored = /** @type {import('@services/sourcing/types').RfpResponse} */ (
       rfpResponseStore.get(responseId)
     );
     expect(stored.status).toBe('Submitted');
@@ -732,7 +732,7 @@ describe('REQ-E03-05 BR-05 — a supplier sees only its own thread and its own o
     expect(res.status, res.reason).toBe('done');
     return {
       svc,
-      awardId: /** @type {import('../services/sourcing/types').AwardRecord} */ (
+      awardId: /** @type {import('@services/sourcing/types').AwardRecord} */ (
         awardStore.all().find((a) => a.eventId === 'rfq-014')
       ).id
     };
@@ -760,7 +760,7 @@ describe('REQ-E03-05 BR-05 — a supplier sees only its own thread and its own o
     expect(cancel.status, cancel.reason).toBe('done');
     renderWithProviders(<SupplierNegotiations />, { identity: SUP_015 });
     const bottle = await screen.findByTestId('supplier-outcome-rfq-014-PK-PETB-8802');
-    const withdrawnAt = /** @type {import('../services/sourcing/types').AwardCancellation} */ (
+    const withdrawnAt = /** @type {import('@services/sourcing/types').AwardCancellation} */ (
       awardCancellationStore.all()[0]
     ).cancelledAt;
     expect(bottle).toHaveTextContent(`Award withdrawn ${formatDate(withdrawnAt)}`);
@@ -962,8 +962,7 @@ async function partlyAwardedTundra(svc) {
   });
   expect(partial.status, partial.reason).toBe('done');
   expect(
-    /** @type {import('../services/sourcing/types').RfpEvent} */ (rfpEventStore.get('rfp-002'))
-      .status
+    /** @type {import('@services/sourcing/types').RfpEvent} */ (rfpEventStore.get('rfp-002')).status
   ).toBe('Partly awarded');
 }
 
@@ -993,14 +992,14 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     await waitFor(() => expect(rfpOfferRoundStore.all()).toHaveLength(1));
     const [round] = rfpOfferRoundStore.all();
     expect(
-      /** @type {import('../services/sourcing/types').RfpOfferRound} */ (round).invitedSupplierIds
+      /** @type {import('@services/sourcing/types').RfpOfferRound} */ (round).invitedSupplierIds
     ).toEqual(['sup-007', 'sup-015']);
     expect(
-      /** @type {import('../services/sourcing/types').RfpOfferRound} */ (round).optionRefs
+      /** @type {import('@services/sourcing/types').RfpOfferRound} */ (round).optionRefs
     ).toEqual([FULL_SET]);
     expect(
       await screen.findByTestId(
-        `rfp-round-${/** @type {import('../services/sourcing/types').RfpOfferRound} */ (round).id}`
+        `rfp-round-${/** @type {import('@services/sourcing/types').RfpOfferRound} */ (round).id}`
       )
     ).toHaveTextContent('Round 1');
   });
@@ -1065,7 +1064,7 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     fireEvent.click(screen.getByTestId('award-confirm'));
     await waitFor(() =>
       expect(
-        /** @type {import('../services/sourcing/types').RfpEvent} */ (rfpEventStore.get('rfp-002'))
+        /** @type {import('@services/sourcing/types').RfpEvent} */ (rfpEventStore.get('rfp-002'))
           .status
       ).toBe('Awarded')
     );
@@ -1145,12 +1144,12 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     await waitFor(() => expect(within(form).getByTestId('rfp-round-open-rfp-002')).toBeEnabled());
     fireEvent.click(within(form).getByTestId('rfp-round-open-rfp-002'));
     await waitFor(() => expect(rfpOfferRoundStore.all()).toHaveLength(2));
-    const second = /** @type {import('../services/sourcing/types').RfpOfferRound} */ (
+    const second = /** @type {import('@services/sourcing/types').RfpOfferRound} */ (
       rfpOfferRoundStore.all().find((r) => r.roundNumber === 2)
     );
     expect(second.optionRefs).toEqual([PUMP_CAP]);
     expect(
-      /** @type {import('../services/sourcing/types').RfpEvent} */ (rfpEventStore.get('rfp-002'))
+      /** @type {import('@services/sourcing/types').RfpEvent} */ (rfpEventStore.get('rfp-002'))
         .status
     ).toBe('Partly awarded');
   });
@@ -1172,11 +1171,11 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     fireEvent.click(within(settle).getByTestId('award-will-not-rest'));
     await waitFor(() =>
       expect(
-        /** @type {import('../services/sourcing/types').RfpEvent} */ (rfpEventStore.get('rfp-002'))
+        /** @type {import('@services/sourcing/types').RfpEvent} */ (rfpEventStore.get('rfp-002'))
           .status
       ).toBe('Awarded')
     );
-    const closeOut = /** @type {import('../services/sourcing/types').AwardRecord} */ (
+    const closeOut = /** @type {import('@services/sourcing/types').AwardRecord} */ (
       awardStore.all().find((a) => a.eventType === 'rfp' && a.lines.length === 0)
     );
     expect(closeOut.reason).toBe('Pump and cap stays with the current supplier.');
@@ -1217,15 +1216,14 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     await screen.findByTestId(`supplier-round-offer-${roundId}`);
     const [offer] = rfpFirmOfferStore.all().filter((o) => o.roundId === roundId);
     expect(
-      /** @type {import('../services/sourcing/types').RfpFirmOffer} */ (offer).documents?.map(
+      /** @type {import('@services/sourcing/types').RfpFirmOffer} */ (offer).documents?.map(
         (d) => d.name
       )
     ).toEqual(['revised-drawing.pdf']);
     expect(
-      /** @type {import('../services/sourcing/types').RfpFirmOfferVersion} */ (
-        /** @type {import('../services/sourcing/types').RfpFirmOffer} */ (offer).versions[
-          /** @type {import('../services/sourcing/types').RfpFirmOffer} */ (offer).versions.length -
-            1
+      /** @type {import('@services/sourcing/types').RfpFirmOfferVersion} */ (
+        /** @type {import('@services/sourcing/types').RfpFirmOffer} */ (offer).versions[
+          /** @type {import('@services/sourcing/types').RfpFirmOffer} */ (offer).versions.length - 1
         ]
       ).documents?.map((d) => d.name)
     ).toEqual(['revised-drawing.pdf']);
@@ -1237,17 +1235,17 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     fireEvent.click(screen.getByTestId(`supplier-round-send-${roundId}`));
     await waitFor(() =>
       expect(
-        /** @type {import('../services/sourcing/types').RfpFirmOffer} */ (
+        /** @type {import('@services/sourcing/types').RfpFirmOffer} */ (
           rfpFirmOfferStore.get(
-            /** @type {import('../services/sourcing/types').RfpFirmOffer} */ (offer).id
+            /** @type {import('@services/sourcing/types').RfpFirmOffer} */ (offer).id
           )
         ).versions
       ).toHaveLength(2)
     );
     expect(
-      /** @type {import('../services/sourcing/types').RfpFirmOffer} */ (
+      /** @type {import('@services/sourcing/types').RfpFirmOffer} */ (
         rfpFirmOfferStore.get(
-          /** @type {import('../services/sourcing/types').RfpFirmOffer} */ (offer).id
+          /** @type {import('@services/sourcing/types').RfpFirmOffer} */ (offer).id
         )
       ).documents?.map((d) => d.name)
     ).toEqual(['revised-drawing.pdf']);

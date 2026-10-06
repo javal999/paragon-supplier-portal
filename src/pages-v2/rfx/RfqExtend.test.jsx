@@ -116,7 +116,7 @@ describe('REQ-E03-03 BR-05 — the buyer moves the response window', () => {
   });
 
   it('extended for SELECTED invitees only — the event’s own deadline does not move', async () => {
-    const original = /** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ))
+    const original = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ))
       .responseDeadline;
 
     renderEvent();
@@ -138,7 +138,7 @@ describe('REQ-E03-03 BR-05 — the buyer moves the response window', () => {
     );
 
     // The event's deadline is untouched, so the grant is readable as a grant.
-    const after = /** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ));
+    const after = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ));
     expect(after.responseDeadline).toBe(original);
     expect(
       effectiveDeadline(after.responseDeadline, after.inviteeDeadlines ?? [], LATE_BIDDER)
@@ -155,8 +155,7 @@ describe('REQ-E03-03 BR-05 — the buyer moves the response window', () => {
   it('a deadline EARLIER than the current one is refused — an extension moves later', async () => {
     renderEvent();
     await screen.findByTestId('event-invitee-sup-013');
-    const before = /** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ))
-      .responseDeadline;
+    const before = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).responseDeadline;
     fireEvent.change(screen.getByLabelText('Extend the deadline'), {
       target: { value: dayFromNow(-9) }
     });

@@ -5335,7 +5335,7 @@ const enforcementTarget = {
   readEntity: (id) => enforcementSettingStore.forCheck(id),
   applyTransition: (id, _toState, payload) => {
     const mode = /** @type {EnforcementMode} */ (payload.mode);
-    const setBy = /** @type {import('../../../lib/enforcement').ActorAttribution} */ (
+    const setBy = /** @type {import('@lib/enforcement').ActorAttribution} */ (
       asActorAttribution(payload.setBy)
     );
     const setAt = sdcClock.now();
@@ -5395,7 +5395,7 @@ const workingCalendarTarget = {
       date: id,
       kind: /** @type {'working' | 'non-working'} */ (payload.kind),
       reason: /** @type {string} */ (payload.reason).trim(),
-      setBy: /** @type {import('../../../lib/enforcement').ActorAttribution} */ (
+      setBy: /** @type {import('@lib/enforcement').ActorAttribution} */ (
         asActorAttribution(payload.setBy)
       ),
       setAt: sdcClock.now()
@@ -5418,7 +5418,7 @@ const roleTarget = {
       adds: [.../** @type {readonly string[]} */ (payload.adds)],
       // THE DRIFT BASELINE, never the resolution source (D1).
       parentAtomsAtGrant: [...SYSTEM_ROLES[parent]],
-      grantedBy: /** @type {import('../../../lib/enforcement').ActorAttribution} */ (
+      grantedBy: /** @type {import('@lib/enforcement').ActorAttribution} */ (
         asActorAttribution(payload.grantedBy)
       ),
       grantedAt: sdcClock.now()
@@ -5487,7 +5487,7 @@ const reasonCodeTarget = {
       labelEn: String(payload.labelEn),
       labelId: String(payload.labelId),
       active: /** @type {boolean} */ (payload.active),
-      setBy: /** @type {import('../../../lib/enforcement').ActorAttribution} */ (
+      setBy: /** @type {import('@lib/enforcement').ActorAttribution} */ (
         asActorAttribution(payload.setBy)
       ),
       setAt: sdcClock.now()
@@ -5535,7 +5535,7 @@ const hubSettingTarget = {
     hubSettingsStore.append({
       key: id,
       value: /** @type {number | boolean | null} */ (payload.value),
-      setBy: /** @type {import('../../../lib/enforcement').ActorAttribution} */ (
+      setBy: /** @type {import('@lib/enforcement').ActorAttribution} */ (
         asActorAttribution(payload.setBy)
       ),
       setAt: sdcClock.now()

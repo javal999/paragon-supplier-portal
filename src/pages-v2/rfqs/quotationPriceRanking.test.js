@@ -134,12 +134,12 @@ describe('BLAST RADIUS — a refused bid price never enters the award ranking', 
     const scored = rank();
     expect(scored).toHaveLength(2);
     // sup-008 @ 1,220 is the cheapest of the two → anchors priceScore 100.
-    const cheapest = /** @type {import('../../lib/quoteScore').QuoteScore} */ (
+    const cheapest = /** @type {import('@lib/quoteScore').QuoteScore} */ (
       scored.find((s) => s.quoteId === 'qt-002b')
     );
     expect(cheapest.priceScore).toBe(100);
     expect(
-      /** @type {import('../../lib/quoteScore').QuoteScore} */ (
+      /** @type {import('@lib/quoteScore').QuoteScore} */ (
         scored.find((s) => s.quoteId === 'qt-002a')
       ).priceScore
     ).toBeGreaterThan(0);
@@ -180,13 +180,11 @@ describe('BLAST RADIUS — a refused bid price never enters the award ranking', 
     const res = await submitTypedPrice('1500');
 
     expect(res).not.toBeNull();
-    expect(/** @type {import('../../services/data/types').CommandResult} */ (res).status).toBe(
-      'done'
-    );
-    const minted = /** @type {import('../../data/mockQuotations').Quotation} */ (
+    expect(/** @type {import('@services/data/types').CommandResult} */ (res).status).toBe('done');
+    const minted = /** @type {import('@data/mockQuotations').Quotation} */ (
       quotationStore.get(
         /** @type {NonNullable<(NonNullable<typeof res>)['entityId']>} */ (
-          /** @type {import('../../services/data/types').CommandResult} */ (res).entityId
+          /** @type {import('@services/data/types').CommandResult} */ (res).entityId
         )
       )
     );
@@ -195,18 +193,17 @@ describe('BLAST RADIUS — a refused bid price never enters the award ranking', 
 
     const scored = rank();
     expect(scored).toHaveLength(3); // it IS in the ranking — nothing was disabled
-    const mine = /** @type {import('../../lib/quoteScore').QuoteScore} */ (
+    const mine = /** @type {import('@lib/quoteScore').QuoteScore} */ (
       scored.find(
         (s) =>
-          s.quoteId ===
-          /** @type {import('../../services/data/types').CommandResult} */ (res).entityId
+          s.quoteId === /** @type {import('@services/data/types').CommandResult} */ (res).entityId
       )
     );
     // 1,500 is dearer than the 1,220 incumbent, so it scores BELOW 100 and does
     // not take the award. Ranking still works; it just works on a true price.
     expect(mine.priceScore).toBeLessThan(100);
     expect(
-      /** @type {import('../../lib/quoteScore').QuoteScore} */ (
+      /** @type {import('@lib/quoteScore').QuoteScore} */ (
         scored.find((s) => s.quoteId === 'qt-002b')
       ).priceScore
     ).toBe(100);
@@ -216,11 +213,10 @@ describe('BLAST RADIUS — a refused bid price never enters the award ranking', 
   it('POSITIVE TWIN — a genuinely cheapest clean price DOES win on price', async () => {
     const res = await submitTypedPrice('1100');
     const scored = rank();
-    const mine = /** @type {import('../../lib/quoteScore').QuoteScore} */ (
+    const mine = /** @type {import('@lib/quoteScore').QuoteScore} */ (
       scored.find(
         (s) =>
-          s.quoteId ===
-          /** @type {import('../../services/data/types').CommandResult} */ (res).entityId
+          s.quoteId === /** @type {import('@services/data/types').CommandResult} */ (res).entityId
       )
     );
     expect(mine.priceScore).toBe(100); // undercuts 1,220 → anchors, correctly
@@ -247,16 +243,16 @@ describe('BLAST RADIUS — a refused bid price never enters the award ranking', 
 
     const scored = rank();
     expect(
-      /** @type {import('../../lib/quoteScore').QuoteScore} */ (
+      /** @type {import('@lib/quoteScore').QuoteScore} */ (
         scored.find((s) => s.quoteId === 'qt-002a')
       ).priceScore
     ).toBe(0);
     expect(
-      /** @type {import('../../lib/quoteScore').QuoteScore} */ (
+      /** @type {import('@lib/quoteScore').QuoteScore} */ (
         scored.find((s) => s.quoteId === 'qt-002b')
       ).priceScore
     ).toBe(0);
-    const hijacker = /** @type {import('../../lib/quoteScore').QuoteScore} */ (
+    const hijacker = /** @type {import('@lib/quoteScore').QuoteScore} */ (
       scored.find((s) => s.priceScore === 100)
     );
     expect(hijacker.topRanked).toBe(true); // the wrong supplier wins

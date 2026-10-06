@@ -28,7 +28,7 @@ import {
  * @returns {readonly string[]}
  */
 const declaredUserVerbs = () =>
-  /** @type {import('../../services/transitions/schema').FlowDefinition} */ (
+  /** @type {import('@services/transitions/schema').FlowDefinition} */ (
     getFlow('invoice')
   ).transitions
     .filter((t) => t.trigger === 'user')
@@ -109,7 +109,7 @@ describe('invoiceActionsFor — derived from the canonical state', () => {
   // rendering is retired portal-wide and the confirm gate is not, so deleting
   // it with the styling would have deleted behaviour.
   it('⚠️ AT MOST ONE reserved commit across every state the machine has', () => {
-    for (const s of /** @type {import('../../services/transitions/schema').FlowDefinition} */ (
+    for (const s of /** @type {import('@services/transitions/schema').FlowDefinition} */ (
       getFlow('invoice')
     ).states) {
       const commits = invoiceActionsFor(/** @type {InvoiceStatus} */ (s)).filter(
@@ -139,8 +139,8 @@ describe('invoiceActionsFor — derived from the canonical state', () => {
 
   it('dispute is offered on every pre-payment state the MACHINE allows it on', () => {
     // Derived from the flow, so this cannot drift from the declaration.
-    const declared = /** @type {import('../../services/transitions/schema').TransitionDef} */ (
-      /** @type {import('../../services/transitions/schema').FlowDefinition} */ (
+    const declared = /** @type {import('@services/transitions/schema').TransitionDef} */ (
+      /** @type {import('@services/transitions/schema').FlowDefinition} */ (
         getFlow('invoice')
       ).transitions.find((t) => t.id === 't_invoice_dispute')
     );
@@ -164,8 +164,8 @@ describe('invoiceActionsFor — derived from the canonical state', () => {
     // only one. The rendered surface did not move: this verb was never in
     // INVOICE_VERB_SURFACE.
     expect(
-      /** @type {import('../../services/transitions/schema').TransitionDef} */ (
-        /** @type {import('../../services/transitions/schema').FlowDefinition} */ (
+      /** @type {import('@services/transitions/schema').TransitionDef} */ (
+        /** @type {import('@services/transitions/schema').FlowDefinition} */ (
           getFlow('invoice')
         ).transitions.find((t) => t.id === 't_invoice_approve')
       ).from

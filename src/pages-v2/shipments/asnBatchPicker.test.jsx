@@ -30,9 +30,7 @@ const declareWithOneShipped = () => {
     ],
     provenance: { source: 'SUPPLIER', liveness: 'SIMULATED', planState: 'committed' }
   });
-  const base = /** @type {import('../../services/data/types').ASN} */ (
-    asnStore.get('ASN-2025-00211')
-  );
+  const base = /** @type {import('@services/data/types').ASN} */ (asnStore.get('ASN-2025-00211'));
   asnStore.add({
     ...base,
     asnNumber: 'ASN-TEST-0001',

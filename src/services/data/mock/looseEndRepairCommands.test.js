@@ -70,7 +70,7 @@ describe('PF-1a · RFQ — creation births at Draft and publish comes alive', ()
     const res = await rfqCreate();
     expect(res.status).toBe('done');
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (
+      /** @type {import('@data/mockRfqs').RFQ} */ (
         rfqStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
       ).status
     ).toBe('Draft');
@@ -85,7 +85,7 @@ describe('PF-1a · RFQ — creation births at Draft and publish comes alive', ()
     });
     expect(published.status).toBe('done');
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (
+      /** @type {import('@data/mockRfqs').RFQ} */ (
         rfqStore.get(/** @type {NonNullable<typeof created.entityId>} */ (created.entityId))
       ).status
     ).toBe('Open');
@@ -122,7 +122,7 @@ describe('PF-1a · RFQ — creation births at Draft and publish comes alive', ()
       })
     ).rejects.toThrow(/denied for scope/);
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (
+      /** @type {import('@data/mockRfqs').RFQ} */ (
         rfqStore.get(/** @type {NonNullable<typeof created.entityId>} */ (created.entityId))
       ).status
     ).toBe('Draft');
@@ -138,9 +138,7 @@ describe('PF-1a · RFQ — creation births at Draft and publish comes alive', ()
       entityId: id
     });
     expect(again.status).toBe('failed');
-    expect(/** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(id)).status).toBe(
-      'Open'
-    );
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(id)).status).toBe('Open');
   });
 
   it('the Draft branch of t_rfq_cancel is reachable now — it never was before', async () => {
@@ -152,7 +150,7 @@ describe('PF-1a · RFQ — creation births at Draft and publish comes alive', ()
     });
     expect(res.status).toBe('done');
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (
+      /** @type {import('@data/mockRfqs').RFQ} */ (
         rfqStore.get(/** @type {NonNullable<typeof created.entityId>} */ (created.entityId))
       ).status
     ).toBe('Cancelled');
@@ -428,9 +426,8 @@ describe('PF-1a · goods receipt — a quality hold can be released', () => {
 
   it('the fixture is genuinely held — reachable and, until now, inescapable', () => {
     expect(
-      /** @type {import('../../../data/mockGoodsReceipts').GoodsReceipt} */ (
-        goodsReceiptStore.get(HELD)
-      ).status
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(HELD))
+        .status
     ).toBe('Quality Hold');
   });
 
@@ -442,9 +439,8 @@ describe('PF-1a · goods receipt — a quality hold can be released', () => {
     });
     expect(res.status).toBe('done');
     expect(
-      /** @type {import('../../../data/mockGoodsReceipts').GoodsReceipt} */ (
-        goodsReceiptStore.get(HELD)
-      ).status
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(HELD))
+        .status
     ).toBe('Under Inspection');
   });
 
@@ -461,9 +457,8 @@ describe('PF-1a · goods receipt — a quality hold can be released', () => {
       })
     ).rejects.toThrow(/denied for scope/);
     expect(
-      /** @type {import('../../../data/mockGoodsReceipts').GoodsReceipt} */ (
-        goodsReceiptStore.get(HELD)
-      ).status
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(HELD))
+        .status
     ).toBe('Quality Hold');
   });
 

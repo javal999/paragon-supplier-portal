@@ -89,9 +89,7 @@ const publishRfq = (rfqId) =>
   svc.dispatch(procurement, { transitionId: 't_rfq_publish', entity: 'rfq', entityId: rfqId });
 
 const draftRfqId = () =>
-  /** @type {import('../../../data/mockRfqs').RFQ} */ (
-    rfqStore.all().find((r) => r.status === 'Draft')
-  ).id;
+  /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.all().find((r) => r.status === 'Draft')).id;
 
 beforeEach(() => {
   resetRfxStores();
@@ -144,9 +142,7 @@ describe('AC-03 — a direct RFQ does not offer an Approved-only vendor, and the
     expect(res.reason).toContain('sup-005');
     expect(res.reason).toContain('Halal certificate');
     expect(res.reason).not.toContain('sup-002');
-    expect(/** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(id)).status).toBe(
-      'Draft'
-    );
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(id)).status).toBe('Draft');
   });
 
   it('REAL LIST — KNOWN-GOOD twin: the same RFQ with Preferred invitees publishes, and stores its type', async () => {
@@ -155,7 +151,7 @@ describe('AC-03 — a direct RFQ does not offer an Approved-only vendor, and the
     rfqStore.update(id, (r) => ({ ...r, invitedSupplierIds: ['sup-002', 'sup-007'] }));
     const res = await publishRfq(id);
     expect(res.status, res.reason).toBe('done');
-    const rfq = /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(id));
+    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(id));
     expect(rfq.status).toBe('Open');
     expect(rfq.sourcingType).toBe('direct');
     expect(rfq.qualificationWarnings).toBeUndefined();
@@ -168,7 +164,7 @@ describe('AC-03 — a direct RFQ does not offer an Approved-only vendor, and the
     expect(items.find((c) => c.supplierId === 'sup-005')?.eligibility?.state).toBe('warn');
     const res = await publishRfq(id);
     expect(res.status, res.reason).toBe('done');
-    const rfq = /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(id));
+    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(id));
     expect(rfq.sourcingType).toBe('direct');
     expect(rfq.qualificationWarnings?.map((w) => w.supplierId)).toEqual(['sup-005']);
     expect(rfq.qualificationWarnings?.[0]?.requiredLevel).toBe('preferred');
@@ -283,13 +279,13 @@ describe('AC-04 — an indirect RFP offers Approved and Preferred vendors', () =
 describe('BR-06 — the sourcing type is fixed after publish; older events read Direct', () => {
   it('a later map change moves a Draft, never a published event', async () => {
     const id = draftRfqId();
-    const category = /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(id))
+    const category = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(id))
       .materialCategory;
     const res = await publishRfq(id);
     expect(res.status, res.reason).toBe('done');
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(id)).sourcingType
-    ).toBe('direct');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(id)).sourcingType).toBe(
+      'direct'
+    );
 
     const set = await svc.dispatch(procurement, {
       transitionId: 't_sourcingtype_set',
@@ -298,12 +294,12 @@ describe('BR-06 — the sourcing type is fixed after publish; older events read 
       payload: { sourcingType: 'indirect' }
     });
     expect(set.status, set.reason).toBe('done');
-    expect(
-      eventSourcingType(/** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(id)))
-    ).toBe('direct');
+    expect(eventSourcingType(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(id)))).toBe(
+      'direct'
+    );
     // BILATERAL CONTROL — the map change did land: a Draft of that category reads it.
     const draft = {
-      .../** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(id)),
+      .../** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(id)),
       status: /** @type {const} */ ('Draft'),
       sourcingType: undefined
     };
@@ -311,7 +307,7 @@ describe('BR-06 — the sourcing type is fixed after publish; older events read 
   });
 
   it('edge case 4 — a sample event published before G2 reads Direct, and keeps its invitees', () => {
-    const open = /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-001'));
+    const open = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-001'));
     expect(open.status).toBe('Open');
     expect(open.sourcingType).toBeUndefined();
     expect(eventSourcingType(open)).toBe('direct');
@@ -413,9 +409,7 @@ describe('AC-05 / BR-07 — a vendor that dropped a level cannot be awarded; it 
     await realLists();
     expect(qualificationFor('sup-005').level).toBe('approved');
     expect(
-      eventSourcingType(
-        /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-001'))
-      )
+      eventSourcingType(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-001')))
     ).toBe('direct');
     const res = await svc.dispatch(supplier('sup-005'), {
       transitionId: 't_quotation_submit',
@@ -432,7 +426,7 @@ describe('AC-05 / BR-07 — a vendor that dropped a level cannot be awarded; it 
     });
     expect(res.status, res.reason).toBe('done');
     expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (
+      /** @type {import('@data/mockQuotations').Quotation} */ (
         quotationStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
       ).supplierId
     ).toBe('sup-005');
@@ -511,7 +505,7 @@ describe('BL-147 (MAT-R4) — the stored warnings reach the buyer; a supplier re
     expect((await publishRfq(id)).status).toBe('done');
     /** @param {QueryScope} scope */
     const rfqOf = async (scope) =>
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (
+      /** @type {import('@data/mockRfqs').RFQ} */ (
         (await reads.getRFQs(scope)).items.find((r) => r.id === id)
       );
     expect((await rfqOf(buyer)).qualificationWarnings?.map((w) => w.supplierId)).toEqual([

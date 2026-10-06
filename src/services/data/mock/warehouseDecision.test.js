@@ -27,7 +27,7 @@ import {
   DECISION_NOTE_REQUIRED,
   decisionInForce
 } from '../../transitions/warehouseDecisionRules';
-import { NO_PERSON } from '../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 
 const cmd = new MockCommandService();
 const svc = new MockProcurementService();

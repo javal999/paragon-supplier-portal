@@ -63,7 +63,7 @@ describe('RFX-R4 — the population the narrowing is probed against', () => {
 
 describe('RFX-R4 — the RFQ reads that carry OTIF-derived figures', () => {
   it("the compliance gate (judged on OTIF): the buyer reads B's row, supplier A reads nothing", async () => {
-    const rfq = /** @type {import('../../../data/mockRfqs').RFQ} */ (
+    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (
       rfqStore
         .all()
         .find((r) => r.invitedSupplierIds.includes(A) && r.invitedSupplierIds.includes(B))

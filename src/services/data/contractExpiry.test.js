@@ -131,7 +131,7 @@ describe('the population this gate speaks for', () => {
   });
 
   it('the RAW literals are NOT the exported ones — the shift is real', () => {
-    const c007 = /** @type {import('../../data/mockContracts').Contract} */ (
+    const c007 = /** @type {import('@data/mockContracts').Contract} */ (
       mockContracts.find((c) => c.id === 'ctr-007')
     );
     expect(c007.endDate).not.toBe('2026-06-15');
@@ -363,7 +363,7 @@ describe('⚠️ the shifted fixture agrees with the raw parse at `P`', () => {
     // excludes it from `shiftFields` — named here rather than silently skipped.
     const shift = Math.round(
       (dayMs(
-        /** @type {import('../../data/mockContracts').Contract} */ (
+        /** @type {import('@data/mockContracts').Contract} */ (
           mockContracts.find((c) => c.id === 'ctr-001')
         ).endDate
       ) -

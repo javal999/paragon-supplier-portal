@@ -39,8 +39,7 @@ beforeEach(() => {
 
 /** @param {string} quotationId */
 const status = (quotationId) =>
-  /** @type {import('../../../data/mockQuotations').Quotation} */ (quotationStore.get(quotationId))
-    .status;
+  /** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get(quotationId)).status;
 /** @param {string} rfqId */
 const awardsOf = (rfqId) =>
   awardStore.all().filter((a) => a.eventType === 'rfq' && a.eventId === rfqId);
@@ -128,7 +127,7 @@ const addThirdLine = () =>
     lineItems: [
       .../** @type {NonNullable<typeof r.lineItems>} */ (r.lineItems),
       {
-        .../** @type {import('../../../data/mockRfqs').RfqLineItem} */ (
+        .../** @type {import('@data/mockRfqs').RfqLineItem} */ (
           /** @type {NonNullable<typeof r.lineItems>} */ (r.lineItems)[1]
         ),
         lineNo: 3,
@@ -140,9 +139,9 @@ const addThirdLine = () =>
 
 describe('population control', () => {
   it('rfq-014 is a Closed legacy RFQ with every quote Under Review; rfq-024 is Awarded by aw-0002 to sup-013 and sup-015', () => {
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Closed');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Closed'
+    );
     expect(quotationStore.forRfq('rfq-014').map((q) => [q.id, q.status])).toEqual([
       ['qt-014a', 'Under Review'],
       ['qt-014b', 'Under Review'],
@@ -150,9 +149,9 @@ describe('population control', () => {
       ['qt-014d', 'Under Review'],
       ['qt-014d-r1', 'Under Review']
     ]);
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-024')).status
-    ).toBe('Awarded');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-024')).status).toBe(
+      'Awarded'
+    );
     expect(awardsOf('rfq-024').map((a) => a.id)).toEqual(['aw-0002']);
     expect(
       [
@@ -171,9 +170,9 @@ describe('population control', () => {
 describe('AC-05 — cancelling the only award', () => {
   it('returns the RFQ to Closed, keeps the award record, and returns the named and the rejected quotes to Under Review', async () => {
     const rec = await awardRfq014ToSup013();
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Awarded');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Awarded'
+    );
     expect(status('qt-014c')).toBe('Awarded');
     expect(['qt-014a', 'qt-014b', 'qt-014d', 'qt-014d-r1'].map(status)).toEqual([
       'Rejected',
@@ -184,9 +183,9 @@ describe('AC-05 — cancelling the only award', () => {
 
     const res = await cancel('t_rfq_award_cancel', 'rfq-014', rec.id);
     expect(res.status, res.reason).toBe('done');
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Closed');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Closed'
+    );
     // The award record is kept, byte for byte; the cancellation is a new record.
     expect(awardStore.get(rec.id)).toEqual(rec);
     expect(awardCancellationStore.all().map((c) => [c.awardId, c.reason, c.by])).toEqual([
@@ -201,21 +200,19 @@ describe('AC-05 — cancelling the only award', () => {
     ]);
     // Nothing is awarded any more, so the RFQ names no awarded supplier.
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014'))
-        .awardedSupplierId
+      /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).awardedSupplierId
     ).toBeUndefined();
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014'))
-        .awardedQuotationId
+      /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).awardedQuotationId
     ).toBeUndefined();
   });
 
   it('a seeded split award (aw-0002) cancelled: both awarded quotes go back to Under Review', async () => {
     const res = await cancel('t_rfq_award_cancel', 'rfq-024', 'aw-0002');
     expect(res.status, res.reason).toBe('done');
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-024')).status
-    ).toBe('Closed');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-024')).status).toBe(
+      'Closed'
+    );
     expect([status('qt-024a'), status('qt-024b')]).toEqual(['Under Review', 'Under Review']);
   });
 });
@@ -237,21 +234,20 @@ describe('cancelling 1 of 2 partial awards leaves the RFQ Partly awarded', () =>
       line('sup-015', 'qt-014d-r1', 'PK-CAPF-8820', 300_000)
     ]);
     expect(second.status, second.reason).toBe('done');
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Partly awarded');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Partly awarded'
+    );
 
     const res = await cancel('t_rfq_award_cancel_partial', 'rfq-014', first.id);
     expect(res.status, res.reason).toBe('done');
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Partly awarded');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Partly awarded'
+    );
     expect(status('qt-014c')).toBe('Under Review');
     expect(status('qt-014d-r1')).toBe('Awarded');
     // The RFQ's award pointer now names the award still in force.
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014'))
-        .awardedQuotationId
+      /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).awardedQuotationId
     ).toBe('qt-014d-r1');
     // …and the cancelled award's item is open again, so it can be awarded anew.
     const again = await award('t_rfq_award_partial', 'rfq-014', [
@@ -294,9 +290,9 @@ describe('cancelling 1 of 2 partial awards leaves the RFQ Partly awarded', () =>
     );
     const res = await cancel('t_rfq_award_cancel_partial', 'rfq-014', final.id);
     expect(res.status, res.reason).toBe('done');
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Partly awarded');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Partly awarded'
+    );
     expect(status('qt-014c')).toBe('Awarded'); // the partial award stands
     expect(['qt-014a', 'qt-014b', 'qt-014d', 'qt-014d-r1'].map(status)).toEqual([
       'Under Review',
@@ -323,9 +319,9 @@ describe('cancelling 1 of 2 partial awards leaves the RFQ Partly awarded', () =>
       /rfq_award_cancel_governed:AWARD_CANCEL_TARGET_WRONG: 1 other award\(s\) of this event stay in force/
     );
     expect(awardCancellationStore.all()).toEqual([]);
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Partly awarded');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Partly awarded'
+    );
   });
 
   it('KNOWN-BAD — the partial cancel of the only award is refused AWARD_CANCEL_TARGET_WRONG', async () => {
@@ -334,9 +330,9 @@ describe('cancelling 1 of 2 partial awards leaves the RFQ Partly awarded', () =>
     expect(res.reason).toMatch(
       /AWARD_CANCEL_TARGET_WRONG: no other award of this event stays in force/
     );
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Awarded');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Awarded'
+    );
   });
 });
 
@@ -345,9 +341,9 @@ describe('AC-06 / edge case 4 — "Raised in SAP"', () => {
     const rec = await awardRfq014ToSup013();
     const res = await markSap('rfq-014', rec.id, ' 4500012345 ');
     expect(res.status, res.reason).toBe('done');
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Awarded');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Awarded'
+    );
     expect(awardSapMarkStore.all().map((m) => [m.awardId, m.sapDocumentNo, m.by])).toEqual([
       [rec.id, '4500012345', NO_PERSON]
     ]);
@@ -360,9 +356,9 @@ describe('AC-06 / edge case 4 — "Raised in SAP"', () => {
     const res = await cancel('t_rfq_award_cancel', 'rfq-014', rec.id);
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/AWARD_RAISED_IN_SAP: the award was raised in SAP as 4500012345/);
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Awarded');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Awarded'
+    );
     expect(awardCancellationStore.all()).toEqual([]);
     expect(status('qt-014c')).toBe('Awarded');
   });
@@ -410,9 +406,9 @@ describe('AWARD_REASON_REQUIRED — a cancel carries a reason', () => {
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/AWARD_REASON_REQUIRED: cancelling an award needs a reason/);
     expect(awardCancellationStore.all()).toEqual([]);
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Awarded');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Awarded'
+    );
   });
 
   it('KNOWN-GOOD twin — the reason is stored trimmed', async () => {
@@ -544,12 +540,11 @@ describe('a new award after a cancel succeeds', () => {
       line('sup-015', 'qt-014d-r1', 'PK-CAPF-8820', 300_000)
     ]);
     expect(res.status, res.reason).toBe('done');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Awarded'
+    );
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Awarded');
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014'))
-        .awardedSupplierId
+      /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).awardedSupplierId
     ).toBe('sup-015');
     expect(awardsOf('rfq-014').map((a) => a.id)).toEqual([expect.any(String), rec.id]);
     expect(status('qt-014d-r1')).toBe('Awarded');

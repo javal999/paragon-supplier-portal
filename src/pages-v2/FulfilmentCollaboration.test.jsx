@@ -53,7 +53,7 @@ const panel = () =>
 
 describe('menu and copy', () => {
   it('supplier Orders lists Goods receipts right after Shipments & ASN', () => {
-    const orders = /** @type {import('../components/layout-v2/navConfig').NavSection} */ (
+    const orders = /** @type {import('@components/layout-v2/navConfig').NavSection} */ (
       SUPPLIER_NAV.find((s) => s.id === 'orders')
     );
     const paths = orders.items.map((i) => i.path);

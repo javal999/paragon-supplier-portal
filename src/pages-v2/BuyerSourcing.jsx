@@ -3234,7 +3234,7 @@ const SourcingWorkspace = ({
                             {names.join(', ')}
                             <div className="text-xs text-text-tertiary">
                               {
-                                /** @type {import('../services/sourcing/views').AwardView} */ (
+                                /** @type {import('@services/sourcing/views').AwardView} */ (
                                   rec
                                 ).lines.some((l) => l.itemLineNo !== undefined) && isTieredRfq(r)
                                   ? t('rfqCompare.history.split')
@@ -3877,7 +3877,7 @@ const SourcingWorkspace = ({
                             ) : (
                               <ScoreBadge
                                 score={
-                                  /** @type {import('../lib/quoteScore').QuoteScore} */ (
+                                  /** @type {import('@lib/quoteScore').QuoteScore} */ (
                                     scoreById.get(q.id)
                                   ).composite
                                 }

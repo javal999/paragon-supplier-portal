@@ -711,7 +711,7 @@ const BuyerSourcingEvent = () => {
                       <Data className="font-semibold">
                         {scoreById.has(q.id)
                           ? compositeText(
-                              /** @type {import('../lib/quoteScore').QuoteScore} */ (
+                              /** @type {import('@lib/quoteScore').QuoteScore} */ (
                                 scoreById.get(q.id)
                               ),
                               standing

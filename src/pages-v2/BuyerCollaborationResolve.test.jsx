@@ -107,7 +107,7 @@ describe('R1b — the gate is the MACHINE, and it is probed both ways', () => {
     const row = /** @type {HTMLElement} */ (cta.closest('li'));
     expect(row).toHaveTextContent('rr-0002');
     expect(
-      /** @type {import('../services/sdc/types').RequirementResponse} */ (
+      /** @type {import('@services/sdc/types').RequirementResponse} */ (
         requirementResponseStore.get(RR)
       ).status
     ).toBe('Disputed');
@@ -123,7 +123,7 @@ describe('R1b — every state this lane can reach HAS a label, in both locales',
     // five BY COINCIDENCE. Both misses — `UnderReview` and `Accepted` — are
     // reachable only through buyer verbs, and no buyer verb had a surface until
     // this batch, which is exactly why nobody had hit it.
-    const flow = /** @type {import('../services/transitions/schema').FlowDefinition} */ (
+    const flow = /** @type {import('@services/transitions/schema').FlowDefinition} */ (
       getFlow('requirementResponse')
     );
     expect(flow.states).toContain('UnderReview'); // population guard, not a count
@@ -133,7 +133,7 @@ describe('R1b — every state this lane can reach HAS a label, in both locales',
   });
 
   it('⚠ and they differ between EN and ID — a key with no ID value is not a label', async () => {
-    const flow = /** @type {import('../services/transitions/schema').FlowDefinition} */ (
+    const flow = /** @type {import('@services/transitions/schema').FlowDefinition} */ (
       getFlow('requirementResponse')
     );
     const en = flow.states.map((s) =>
@@ -189,12 +189,12 @@ describe('R1b — the capture: a required field with no dismissible way past it'
     fireEvent.click(screen.getByText('Cancel'));
 
     expect(
-      /** @type {import('../services/sdc/types').RequirementResponse} */ (
+      /** @type {import('@services/sdc/types').RequirementResponse} */ (
         requirementResponseStore.get(RR)
       ).status
     ).toBe('Disputed');
     expect(
-      /** @type {import('../services/sdc/types').RequirementResponse} */ (
+      /** @type {import('@services/sdc/types').RequirementResponse} */ (
         requirementResponseStore.get(RR)
       ).disputeResponse
     ).toHaveLength(1);
@@ -214,13 +214,13 @@ describe('R1b — the write: what a buyer can now do', () => {
 
     await waitFor(() => {
       expect(
-        /** @type {import('../services/sdc/types').RequirementResponse} */ (
+        /** @type {import('@services/sdc/types').RequirementResponse} */ (
           requirementResponseStore.get(RR)
         ).status
       ).toBe('UnderReview');
     });
     const ledger =
-      /** @type {import('../services/sdc/types').RequirementResponse} */ (
+      /** @type {import('@services/sdc/types').RequirementResponse} */ (
         requirementResponseStore.get(RR)
       ).disputeResponse ?? [];
     expect(ledger.map((e) => e.kind)).toEqual(['raised', 'resolved']);
@@ -235,14 +235,14 @@ describe('R1b — the write: what a buyer can now do', () => {
     fireEvent.click(screen.getByTestId('sdc-resolve-commit'));
     await waitFor(() => {
       expect(
-        /** @type {import('../services/sdc/types').RequirementResponse} */ (
+        /** @type {import('@services/sdc/types').RequirementResponse} */ (
           requirementResponseStore.get(RR)
         ).disputeResponse
       ).toHaveLength(2);
     });
     expect(
       /** @type {NonNullable<(NonNullable<ReturnType<typeof requirementResponseStore.get>>)['disputeResponse']>} */ (
-        /** @type {import('../services/sdc/types').RequirementResponse} */ (
+        /** @type {import('@services/sdc/types').RequirementResponse} */ (
           requirementResponseStore.get(RR)
         ).disputeResponse
       )[1].text
@@ -270,7 +270,7 @@ describe('R1b — the other half: what a SUPPLIER can now read', () => {
     fireEvent.click(screen.getByTestId('sdc-resolve-commit'));
     await waitFor(() => {
       expect(
-        /** @type {import('../services/sdc/types').RequirementResponse} */ (
+        /** @type {import('@services/sdc/types').RequirementResponse} */ (
           requirementResponseStore.get(RR)
         ).disputeResponse
       ).toHaveLength(2);

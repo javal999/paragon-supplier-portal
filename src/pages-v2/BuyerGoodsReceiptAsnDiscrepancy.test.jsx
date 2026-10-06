@@ -55,10 +55,10 @@ const openPage = async (identity = BUYER) => {
 
 describe('the premise — derived, not inherited from the dispatch', () => {
   it('the verb exits to Delivered, is payload-free, and gates on asn:flag', () => {
-    const flow = /** @type {import('../services/transitions/schema').FlowDefinition} */ (
+    const flow = /** @type {import('@services/transitions/schema').FlowDefinition} */ (
       getKnownFlows().find((f) => f.entity === 'advanceShipNotice')
     );
-    const verb = /** @type {import('../services/transitions/schema').TransitionDef} */ (
+    const verb = /** @type {import('@services/transitions/schema').TransitionDef} */ (
       flow.transitions.find((tr) => tr.id === 't_asn_resolve_discrepancy')
     );
     expect(verb.from).toEqual(['Discrepancy']);
@@ -99,7 +99,7 @@ describe('the premise — derived, not inherited from the dispatch', () => {
 
   it('the fixture really is in the problem state', () => {
     asnStore.reset();
-    expect(/** @type {import('../services/data/types').ASN} */ (asnStore.get(FLAGGED)).status).toBe(
+    expect(/** @type {import('@services/data/types').ASN} */ (asnStore.get(FLAGGED)).status).toBe(
       'Discrepancy'
     );
   });
@@ -117,16 +117,16 @@ describe('the held seat resolves it, and the ASN actually moves', () => {
 
   it('⚠️ THE WALK — clicking Reconcile drives Discrepancy → Delivered in the store', async () => {
     await openPage();
-    expect(/** @type {import('../services/data/types').ASN} */ (asnStore.get(FLAGGED)).status).toBe(
+    expect(/** @type {import('@services/data/types').ASN} */ (asnStore.get(FLAGGED)).status).toBe(
       'Discrepancy'
     );
 
     fireEvent.click(within(section()).getByRole('button', { name: 'Reconcile' }));
 
     await waitFor(() =>
-      expect(
-        /** @type {import('../services/data/types').ASN} */ (asnStore.get(FLAGGED)).status
-      ).toBe('Delivered')
+      expect(/** @type {import('@services/data/types').ASN} */ (asnStore.get(FLAGGED)).status).toBe(
+        'Delivered'
+      )
     );
   });
 
@@ -168,7 +168,7 @@ describe('a seat without the receiving lane waits, and is told whose act it is',
 
   it('the ASN does not move for a seat that cannot act', async () => {
     await openPage(NO_RECEIVING);
-    expect(/** @type {import('../services/data/types').ASN} */ (asnStore.get(FLAGGED)).status).toBe(
+    expect(/** @type {import('@services/data/types').ASN} */ (asnStore.get(FLAGGED)).status).toBe(
       'Discrepancy'
     );
   });
@@ -208,7 +208,7 @@ describe('the loop — the cascade raises it and the resolution clears it', () =
    * @param {(shipped: number) => { qtyAccepted: number; qtyRejected: number }} split
    */
   const receiveAndDispose = async (svc, asnNumber, headerVerb, split) => {
-    const asn = /** @type {import('../services/data/types').ASN} */ (asnStore.get(asnNumber));
+    const asn = /** @type {import('@services/data/types').ASN} */ (asnStore.get(asnNumber));
     const inspectionResults = asn.lineItems.map((li) => ({
       materialCode: li.materialCode,
       description: li.description,
@@ -233,11 +233,11 @@ describe('the loop — the cascade raises it and the resolution clears it', () =
     // The GR really did bind to the ASN under test — otherwise the cascade
     // below would fire at some other document and this test would prove nothing.
     expect(
-      /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(grId))
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(grId))
         .asnNumber
     ).toBe(asnNumber);
     expect(
-      /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(grId))
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (goodsReceiptStore.get(grId))
         .inspectionResults.length
     ).toBeGreaterThan(0);
 
@@ -270,7 +270,7 @@ describe('the loop — the cascade raises it and the resolution clears it', () =
       const svc = new MockCommandService();
 
       // BEFORE — the state set, stated rather than counted.
-      const before = /** @type {import('../services/data/types').ASN} */ (asnStore.get(asnNumber))
+      const before = /** @type {import('@services/data/types').ASN} */ (asnStore.get(asnNumber))
         .status;
       expect(before).not.toBe('Discrepancy');
 
@@ -290,7 +290,7 @@ describe('the loop — the cascade raises it and the resolution clears it', () =
       // cannot demonstrate, because a wizard-created GR is the only GR in this
       // system whose `asnNumber` names a row the ASN store actually holds.
       expect(
-        /** @type {import('../services/data/types').ASN} */ (asnStore.get(asnNumber)).status
+        /** @type {import('@services/data/types').ASN} */ (asnStore.get(asnNumber)).status
       ).toBe('Discrepancy');
 
       // THE EXIT.
@@ -301,7 +301,7 @@ describe('the loop — the cascade raises it and the resolution clears it', () =
       });
       expect(resolved.status).toBe('done');
       expect(
-        /** @type {import('../services/data/types').ASN} */ (asnStore.get(asnNumber)).status
+        /** @type {import('@services/data/types').ASN} */ (asnStore.get(asnNumber)).status
       ).toBe('Delivered');
     }
   );

@@ -462,7 +462,7 @@ const SupplierRfp = () => {
                           <Data>
                             {formatDate(
                               /** @type {NonNullable<(NonNullable<typeof mine>)['termsAcceptedAt']>} */ (
-                                /** @type {import('../services/sourcing/views').RfpResponseView} */ (
+                                /** @type {import('@services/sourcing/views').RfpResponseView} */ (
                                   mine
                                 ).termsAcceptedAt
                               )

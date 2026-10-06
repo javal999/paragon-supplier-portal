@@ -19,8 +19,8 @@ const t = i18n.t.bind(i18n);
  * @param {string} lineId
  */
 const lineOf = (poNumber, lineId) =>
-  /** @type {import('../../services/data/types').POLineItem} */ (
-    /** @type {import('../../services/data/types').PurchaseOrder} */ (
+  /** @type {import('@services/data/types').POLineItem} */ (
+    /** @type {import('@services/data/types').PurchaseOrder} */ (
       mockPurchaseOrders.find((p) => p.poNumber === poNumber)
     ).lineItems.find((l) => l.id === lineId)
   );

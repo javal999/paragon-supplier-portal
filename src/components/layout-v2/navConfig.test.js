@@ -7,8 +7,8 @@
 
 import { describe, expect, it } from 'vitest';
 import { PTI_NAV, UTILITY_NAV, navFor, sectionForPath } from './navConfig';
-import { hubEn, hubId } from '../../lib/i18n/hub';
-import { safetyStockEn, safetyStockId } from '../../lib/i18n/safetyStock';
+import { hubEn, hubId } from '@lib/i18n/hub';
+import { safetyStockEn, safetyStockId } from '@lib/i18n/safetyStock';
 
 const FORECAST_ROUTES = [
   '/buyer/order-plan',

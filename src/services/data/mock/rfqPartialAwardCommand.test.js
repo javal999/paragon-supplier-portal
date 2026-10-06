@@ -36,7 +36,7 @@ beforeEach(() => {
   everyVendorQualified();
 });
 
-const oslo = () => /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
+const oslo = () => /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
 /** @param {number} lineNo */
 const osloItem = (lineNo) =>
   /** @type {import('../../sourcing/rfqModel').RfqItem} */ (
@@ -117,7 +117,7 @@ describe('population control', () => {
         .map((q) => q.id)
         .sort()
     ).toEqual(['qt-021a', 'qt-021b']);
-    const legacy = /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014'));
+    const legacy = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014'));
     expect(legacy.status).toBe('Closed');
     expect(legacy.items).toBeUndefined();
     expect(
@@ -181,9 +181,7 @@ describe('AC-03 — a partial award to Partly awarded, then the final award to A
   /** A third current quote on Oslo, from sup-007 (passes the gate), which wins nothing. */
   const addSup007Quote = () =>
     quotationStore.add({
-      .../** @type {import('../../../data/mockQuotations').Quotation} */ (
-        quotationStore.get('qt-021a')
-      ),
+      .../** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get('qt-021a')),
       id: 'qt-021s7',
       supplierId: 'sup-007',
       status: 'Submitted'
@@ -203,20 +201,15 @@ describe('AC-03 — a partial award to Partly awarded, then the final award to A
     expect(partial.status, partial.reason).toBe('done');
     expect(oslo().status).toBe('Partly awarded');
     expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (
-        quotationStore.get('qt-021a')
-      ).status
+      /** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get('qt-021a')).status
     ).toBe('Awarded');
     // Rejected only at the final award: both losers-so-far are still alive.
     expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (
-        quotationStore.get('qt-021b')
-      ).status
+      /** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get('qt-021b')).status
     ).not.toBe('Rejected');
     expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (
-        quotationStore.get('qt-021s7')
-      ).status
+      /** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get('qt-021s7'))
+        .status
     ).toBe('Submitted');
     expect(
       /** @type {import('../../sourcing/types').AwardRecord} */ (awardsOf('rfq-021')[0])
@@ -235,19 +228,14 @@ describe('AC-03 — a partial award to Partly awarded, then the final award to A
     expect(final.status, final.reason).toBe('done');
     expect(oslo().status).toBe('Awarded');
     expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (
-        quotationStore.get('qt-021a')
-      ).status
+      /** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get('qt-021a')).status
     ).toBe('Awarded'); // named by the earlier award, not rejected
     expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (
-        quotationStore.get('qt-021b')
-      ).status
+      /** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get('qt-021b')).status
     ).toBe('Awarded');
     expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (
-        quotationStore.get('qt-021s7')
-      ).status
+      /** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get('qt-021s7'))
+        .status
     ).toBe('Rejected');
     const records = awardsOf('rfq-021');
     expect(records).toHaveLength(2);
@@ -329,9 +317,9 @@ describe('AC-04 — a legacy RFQ is awarded per line, on the same rule', () => {
       awardReason: 'Dual sourced.'
     });
     expect(res.status, res.reason).toBe('done');
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Awarded');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Awarded'
+    );
     expect(
       /** @type {import('../../sourcing/types').AwardRecord} */ (awardsOf('rfq-014')[0]).lines.map(
         (l) => [l.itemCode, l.supplierId, l.sharePct, l.quantity, l.awardTierQty]
@@ -385,9 +373,9 @@ describe('BR-06 — t_rfq_award refuses AWARD_ITEMS_OPEN while an item is open',
     });
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/AWARD_ITEMS_OPEN: item 2 \(Flip-Top Cap 24mm\) is not awarded/);
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Closed');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Closed'
+    );
     expect(awardsOf('rfq-014')).toEqual([]);
   });
 
@@ -397,9 +385,9 @@ describe('BR-06 — t_rfq_award refuses AWARD_ITEMS_OPEN while an item is open',
       notAwardedItems: ['PK-CAPF-8820']
     });
     expect(res.status, res.reason).toBe('done');
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Awarded');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Awarded'
+    );
   });
 
   it('KNOWN-BAD — a "Will not award" key naming no item of the RFQ is refused by name', async () => {
@@ -415,9 +403,9 @@ describe('BR-06 — t_rfq_award refuses AWARD_ITEMS_OPEN while an item is open',
       awardReason: 'Single source.'
     });
     expect(res.status, res.reason).toBe('done');
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Partly awarded');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Partly awarded'
+    );
   });
 });
 
@@ -456,26 +444,23 @@ describe('C3 — a final award with no lines settles the rest of a Partly awarde
       awardReason: 'Single source.'
     });
     expect(partial.status, partial.reason).toBe('done');
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Partly awarded');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Partly awarded'
+    );
   });
 
   it('KNOWN-GOOD — every open item marked Will not award: Awarded, and the cascade rejects the unnamed quotes', async () => {
     const res = await settleRest('t_rfq_award', { notAwardedItems: ['PK-CAPF-8820'] });
     expect(res.status, res.reason).toBe('done');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Awarded'
+    );
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Awarded');
-    expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (
-        quotationStore.get('qt-014c')
-      ).status
+      /** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get('qt-014c')).status
     ).toBe('Awarded'); // the earlier award's winner stays
     for (const id of ['qt-014a', 'qt-014b', 'qt-014d-r1'])
       expect(
-        /** @type {import('../../../data/mockQuotations').Quotation} */ (quotationStore.get(id))
-          .status
+        /** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get(id)).status
       ).toBe('Rejected');
     const final = /** @type {import('../../sourcing/types').AwardRecord} */ (
       awardsOf('rfq-014').find((a) => a.lines.length === 0)
@@ -487,13 +472,11 @@ describe('C3 — a final award with no lines settles the rest of a Partly awarde
     const res = await settleRest('t_rfq_award', {});
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/rfq_award_governed:AWARD_EMPTY/);
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Partly awarded'
+    );
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Partly awarded');
-    expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (
-        quotationStore.get('qt-014a')
-      ).status
+      /** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get('qt-014a')).status
     ).toBe('Under Review');
   });
 
@@ -517,8 +500,8 @@ describe('C3 — an empty final award on an RFQ that is not Partly awarded stays
       }
     });
     expect(res.reason).toMatch(/rfq_award_governed:AWARD_EMPTY/);
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status
-    ).toBe('Closed');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
+      'Closed'
+    );
   });
 });

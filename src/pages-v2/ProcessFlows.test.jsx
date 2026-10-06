@@ -127,7 +127,7 @@ describe('ProcessFlows — a recorded exemption is visible where it applies', ()
       renderWithProviders(<ProcessFlows />, { route: '/buyer/process-flows' });
       await title();
       pick(entity);
-      const flow = /** @type {import('../services/transitions/catalogView').FlowView} */ (
+      const flow = /** @type {import('@services/transitions/catalogView').FlowView} */ (
         catalog.flows.find((f) => f.entity === entity)
       );
       for (const end of flow.looseEnds) {
@@ -146,12 +146,12 @@ describe('ProcessFlows — a recorded exemption is visible where it applies', ()
       route: '/buyer/process-flows'
     });
     await title();
-    const flow = /** @type {import('../services/transitions/catalogView').FlowView} */ (
+    const flow = /** @type {import('@services/transitions/catalogView').FlowView} */ (
       catalog.flows.find((f) => f.looseEnds.some((e) => e.note))
     );
     pick(flow.entity);
     const note = /** @type {string} */ (
-      /** @type {import('../services/transitions/catalogView').AnnotatedLooseEnd} */ (
+      /** @type {import('@services/transitions/catalogView').AnnotatedLooseEnd} */ (
         flow.looseEnds.find((e) => e.note)
       ).note
     );
@@ -161,7 +161,7 @@ describe('ProcessFlows — a recorded exemption is visible where it applies', ()
   it('a flow with NO loose ends shows no loose-end section — silence for the right reason', async () => {
     renderWithProviders(<ProcessFlows />, { route: '/buyer/process-flows' });
     await title();
-    const clean = /** @type {import('../services/transitions/catalogView').FlowView} */ (
+    const clean = /** @type {import('@services/transitions/catalogView').FlowView} */ (
       catalog.flows.find((f) => f.looseEnds.length === 0)
     );
     pick(clean.entity);

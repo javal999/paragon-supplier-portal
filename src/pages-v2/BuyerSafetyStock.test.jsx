@@ -49,7 +49,7 @@ describe('BuyerSafetyStock — the planner page', () => {
   });
 
   it('AC-01: per material, safety stock, SAP value, safety lead time, ROP, target and the default marker — the service’s own figures', async () => {
-    const run = /** @type {import('../services/data/types').SafetyStockView} */ (
+    const run = /** @type {import('@services/data/types').SafetyStockView} */ (
       await mockDataService.procurement.getSafetyStock(buyerScope)
     );
     renderWithProviders(<BuyerSafetyStock />, { identity: BUYER, route: '/buyer/safety-stock' });
@@ -78,10 +78,10 @@ describe('BuyerSafetyStock — the planner page', () => {
   });
 
   it('AC-03: selecting a material shows the stored errors its figure was read from', async () => {
-    const run = /** @type {import('../services/data/types').SafetyStockView} */ (
+    const run = /** @type {import('@services/data/types').SafetyStockView} */ (
       await mockDataService.procurement.getSafetyStock(buyerScope)
     );
-    const m = /** @type {import('../services/data/types').MaterialSafetyStockView} */ (
+    const m = /** @type {import('@services/data/types').MaterialSafetyStockView} */ (
       run.materials.find((x) => x.safetyStock > 0 && x.source === 'engine')
     );
     renderWithProviders(<BuyerSafetyStock />, { identity: BUYER, route: '/buyer/safety-stock' });
@@ -94,7 +94,7 @@ describe('BuyerSafetyStock — the planner page', () => {
   });
 
   it('BR-06 (BL-116): each material shows its change since the last run and the cause, read back from the service', async () => {
-    const run = /** @type {import('../services/data/types').SafetyStockView} */ (
+    const run = /** @type {import('@services/data/types').SafetyStockView} */ (
       await mockDataService.procurement.getSafetyStock(buyerScope)
     );
     const moved = run.materials.filter((m) => m.change.safetyStockDelta !== 0);
@@ -156,7 +156,7 @@ describe('ENG-D5 targets on the administration page — the tiers stay in order'
   });
 
   it('flags a material whose safety stock relies on the order lot alone, in EN and ID — and only those', async () => {
-    const run = /** @type {import('../services/data/types').SafetyStockView} */ (
+    const run = /** @type {import('@services/data/types').SafetyStockView} */ (
       await mockDataService.procurement.getSafetyStock(buyerScope)
     );
     const flagged = run.materials.filter((m) => m.reliesOnOrderLot);

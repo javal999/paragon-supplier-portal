@@ -21,7 +21,7 @@ import {
 const asnFor = (asnNumber) => MOCK_ASNS.find((a) => a.asnNumber === asnNumber) ?? null;
 /** @param {string} id */
 const lines = (id) => {
-  const gr = /** @type {import('../../../../data/mockGoodsReceipts').GoodsReceipt} */ (
+  const gr = /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
     mockGoodsReceipts.find((g) => g.id === id)
   );
   return compareReceipt(gr, asnFor(gr.asnNumber));
@@ -49,7 +49,7 @@ describe('BL-45 demo — every CR-25 case is present, by name', () => {
   it('over by one unit: gr-003 is the only over-delivery, and it is flagged but not kept open', () => {
     expect(withOutcome('over')).toEqual(['gr-003']);
     expect(lines('gr-003')[0]).toMatchObject({ difference: 1, qtyOutcome: 'over', flagged: true });
-    const gr = /** @type {import('../../../../data/mockGoodsReceipts').GoodsReceipt} */ (
+    const gr = /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
       mockGoodsReceipts.find((g) => g.id === 'gr-003')
     );
     expect(hasReceiptDiscrepancy(gr, asnFor(gr.asnNumber))).toBe(true);
@@ -64,7 +64,7 @@ describe('BL-45 demo — every CR-25 case is present, by name', () => {
       differencePct: 2,
       flagged: false
     });
-    const gr = /** @type {import('../../../../data/mockGoodsReceipts').GoodsReceipt} */ (
+    const gr = /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
       mockGoodsReceipts.find((g) => g.id === 'gr-017')
     );
     expect(receiptKeptOpen(gr, asnFor(gr.asnNumber))).toBe(false);

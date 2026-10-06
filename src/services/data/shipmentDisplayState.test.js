@@ -52,7 +52,7 @@ describe('shipment delay — the population and its controls', () => {
   });
 
   it('shp-018 CONVICTS — no arrival and an ETA in the past', () => {
-    const s = /** @type {import('../../data/mockShipments').Shipment} */ (byId('shp-018'));
+    const s = /** @type {import('@data/mockShipments').Shipment} */ (byId('shp-018'));
     expect(s.actualArrival).toBeUndefined();
     expect(daysUntil(s.estimatedArrival, NOW)).toBeLessThan(0);
     expect(shipmentDisplayState(s, NOW)).toBe('Delayed');
@@ -67,7 +67,7 @@ describe('shipment delay — the population and its controls', () => {
     // THE RULING, MADE CHECKABLE. The naive rule convicts this row; the shipped
     // one must not. `Delayed` is a TRANSIT state — a shipment that has arrived
     // is delivered, late, and lateness after the fact belongs to a scorecard.
-    const s = /** @type {import('../../data/mockShipments').Shipment} */ (byId('shp-017'));
+    const s = /** @type {import('@data/mockShipments').Shipment} */ (byId('shp-017'));
     expect(s.actualArrival).toBeDefined();
     // The naive rule really would convict it — asserted, so the acquittal is
     // about the rule and not about a row that was never at risk.
@@ -83,7 +83,7 @@ describe('shipment delay — the population and its controls', () => {
     // joins `computeStatus` and `isOverdue` on `< 0`. shp-006 is the row that
     // makes the difference visible, so it is pinned by name: the day someone
     // "unifies" the conventions, this goes red rather than quiet.
-    const s = /** @type {import('../../data/mockShipments').Shipment} */ (byId('shp-006'));
+    const s = /** @type {import('@data/mockShipments').Shipment} */ (byId('shp-006'));
     expect(s.actualArrival).toBeUndefined();
     expect(daysUntil(s.estimatedArrival, NOW)).toBe(0);
     expect(shipmentDisplayState(s, NOW)).toBe('In Transit');
@@ -187,7 +187,7 @@ describe('the retired day counts, recomputed at the declared present', () => {
   it('⚠️ `daysInTransit` reproduces EVERY authored literal, by name', () => {
     for (const [id, authored] of Object.entries(AUTHORED_TRANSIT)) {
       expect(
-        daysInTransit(/** @type {import('../../data/mockShipments').Shipment} */ (byId(id)), NOW),
+        daysInTransit(/** @type {import('@data/mockShipments').Shipment} */ (byId(id)), NOW),
         id
       ).toBe(authored);
     }
@@ -210,7 +210,7 @@ describe('the retired day counts, recomputed at the declared present', () => {
   });
 
   it('⚠️ an IN-FLIGHT row DOES move with the clock — the other meaning', () => {
-    const s = /** @type {import('../../data/mockShipments').Shipment} */ (byId('shp-018'));
+    const s = /** @type {import('@data/mockShipments').Shipment} */ (byId('shp-018'));
     expect(s.actualArrival).toBeUndefined();
     const at = /** @type {NonNullable<ReturnType<typeof daysInTransit>>} */ (daysInTransit(s, NOW));
     const later = /** @type {NonNullable<ReturnType<typeof daysInTransit>>} */ (
@@ -224,7 +224,7 @@ describe('the retired day counts, recomputed at the declared present', () => {
   it('⚠️ `daysLate` reproduces the one authored literal, and is null otherwise', () => {
     for (const [id, authored] of Object.entries(AUTHORED_DELAY)) {
       expect(
-        daysLate(/** @type {import('../../data/mockShipments').Shipment} */ (byId(id)), NOW),
+        daysLate(/** @type {import('@data/mockShipments').Shipment} */ (byId(id)), NOW),
         id
       ).toBe(authored);
     }
@@ -252,7 +252,7 @@ describe('the retired day counts, recomputed at the declared present', () => {
     // The complement, so the guard cannot be satisfied by returning `null`
     // always — which is the one-sided-probe failure rule 4 exists for.
     for (const id of ['shp-001', 'shp-002', 'shp-003']) {
-      const s = /** @type {import('../../data/mockShipments').Shipment} */ (byId(id));
+      const s = /** @type {import('@data/mockShipments').Shipment} */ (byId(id));
       const after = `${s.shipDate}T00:00:00.000Z`;
       expect(daysInTransit(s, after), id).toBe(0);
       const later = new Date(Date.parse(after) + 3 * 86_400_000).toISOString();
@@ -261,7 +261,7 @@ describe('the retired day counts, recomputed at the declared present', () => {
   });
 
   it('⚠️ BOTH FIELDS MOVE TOGETHER when the instant moves — one clock, asserted', () => {
-    const s = /** @type {import('../../data/mockShipments').Shipment} */ (byId('shp-018'));
+    const s = /** @type {import('@data/mockShipments').Shipment} */ (byId('shp-018'));
     const a = {
       late: /** @type {NonNullable<ReturnType<typeof daysLate>>} */ (daysLate(s, NOW)),
       transit: /** @type {NonNullable<ReturnType<typeof daysInTransit>>} */ (daysInTransit(s, NOW))

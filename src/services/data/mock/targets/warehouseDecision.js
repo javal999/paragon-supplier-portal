@@ -24,7 +24,7 @@ import {
   warehouseDecisionRefusal
 } from '../../../transitions/warehouseDecisionRules';
 import { sdcClock } from '../../../sdc';
-import { NO_PERSON } from '../../../../context/noPerson';
+import { NO_PERSON } from '@context/noPerson';
 import { warehouseDecisionStore } from '../stores/warehouseDecisionStore';
 import { currentPlanVersion } from '../forecastReadModel';
 

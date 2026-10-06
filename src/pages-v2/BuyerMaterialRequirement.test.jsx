@@ -53,7 +53,7 @@ describe('BuyerMaterialRequirement — the planner page', () => {
   });
 
   it('one row per material, and the KPIs are the service’s own counts', async () => {
-    const run = /** @type {import('../services/data/types').MaterialRequirementView} */ (
+    const run = /** @type {import('@services/data/types').MaterialRequirementView} */ (
       await mockDataService.procurement.getMaterialRequirement(buyerScope)
     );
     renderWithProviders(<BuyerMaterialRequirement />, {
@@ -77,15 +77,15 @@ describe('BuyerMaterialRequirement — the planner page', () => {
   });
 
   it('the week grid shows the selected material; its gross requirement opens onto the finished goods behind it (AC-03)', async () => {
-    const run = /** @type {import('../services/data/types').MaterialRequirementView} */ (
+    const run = /** @type {import('@services/data/types').MaterialRequirementView} */ (
       await mockDataService.procurement.getMaterialRequirement(buyerScope)
     );
-    const m = /** @type {import('../services/data/types').MaterialPlanView} */ (
+    const m = /** @type {import('@services/data/types').MaterialPlanView} */ (
       run.materials.find((x) => x.totals.net > 0)
     );
     const w =
       m.weeks.find((x) => x.gross > 0 && x.pegs.length > 1) ??
-      /** @type {import('../services/engine/requirement').MaterialWeek} */ (
+      /** @type {import('@services/engine/requirement').MaterialWeek} */ (
         m.weeks.find((x) => x.gross > 0)
       );
     renderWithProviders(<BuyerMaterialRequirement />, {
@@ -114,13 +114,13 @@ describe('BuyerMaterialRequirement — the planner page', () => {
   });
 
   it('counting unconfirmed lines is the planner’s choice, and they are then marked (AC-02)', async () => {
-    const inc = /** @type {import('../services/data/types').MaterialRequirementView} */ (
+    const inc = /** @type {import('@services/data/types').MaterialRequirementView} */ (
       await mockDataService.procurement.getMaterialRequirement(buyerScope, true)
     );
-    const m = /** @type {import('../services/data/types').MaterialPlanView} */ (
+    const m = /** @type {import('@services/data/types').MaterialPlanView} */ (
       inc.materials.find((x) => x.weeks.some((w) => w.unconfirmedReceipts > 0))
     );
-    const w = /** @type {import('../services/engine/requirement').MaterialWeek} */ (
+    const w = /** @type {import('@services/engine/requirement').MaterialWeek} */ (
       m.weeks.find((x) => x.unconfirmedReceipts > 0)
     );
     renderWithProviders(<BuyerMaterialRequirement />, {
@@ -141,13 +141,13 @@ describe('BuyerMaterialRequirement — the planner page', () => {
   });
 
   it('F-17: rows are sorted by need — a material with a net requirement lists above one with none', async () => {
-    const run = /** @type {import('../services/data/types').MaterialRequirementView} */ (
+    const run = /** @type {import('@services/data/types').MaterialRequirementView} */ (
       await mockDataService.procurement.getMaterialRequirement(buyerScope)
     );
-    const need = /** @type {import('../services/data/types').MaterialPlanView} */ (
+    const need = /** @type {import('@services/data/types').MaterialPlanView} */ (
       run.materials.find((m) => m.totals.net > 0 && m.totals.lateToRelease === 0)
     );
-    const none = /** @type {import('../services/data/types').MaterialPlanView} */ (
+    const none = /** @type {import('@services/data/types').MaterialPlanView} */ (
       run.materials.find((m) => m.totals.net === 0)
     );
     renderWithProviders(<BuyerMaterialRequirement />, {
@@ -172,13 +172,13 @@ describe('BuyerMaterialRequirement — the planner page', () => {
   });
 
   it('F-17: "Needs order" is off by default, hides the rows with no net requirement, and is kept in the page address', async () => {
-    const run = /** @type {import('../services/data/types').MaterialRequirementView} */ (
+    const run = /** @type {import('@services/data/types').MaterialRequirementView} */ (
       await mockDataService.procurement.getMaterialRequirement(buyerScope)
     );
-    const need = /** @type {import('../services/data/types').MaterialPlanView} */ (
+    const need = /** @type {import('@services/data/types').MaterialPlanView} */ (
       run.materials.find((m) => m.totals.net > 0)
     );
-    const none = /** @type {import('../services/data/types').MaterialPlanView} */ (
+    const none = /** @type {import('@services/data/types').MaterialPlanView} */ (
       run.materials.find((m) => m.totals.net === 0)
     );
     renderWithProviders(<BuyerMaterialRequirement />, {
@@ -197,13 +197,13 @@ describe('BuyerMaterialRequirement — the planner page', () => {
   });
 
   it('F-17: opened at ?needs=order, the filter is on and the zero rows are hidden', async () => {
-    const run = /** @type {import('../services/data/types').MaterialRequirementView} */ (
+    const run = /** @type {import('@services/data/types').MaterialRequirementView} */ (
       await mockDataService.procurement.getMaterialRequirement(buyerScope)
     );
-    const none = /** @type {import('../services/data/types').MaterialPlanView} */ (
+    const none = /** @type {import('@services/data/types').MaterialPlanView} */ (
       run.materials.find((m) => m.totals.net === 0)
     );
-    const need = /** @type {import('../services/data/types').MaterialPlanView} */ (
+    const need = /** @type {import('@services/data/types').MaterialPlanView} */ (
       run.materials.find((m) => m.totals.net > 0)
     );
     renderWithProviders(<BuyerMaterialRequirement />, {

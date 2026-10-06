@@ -101,7 +101,7 @@ describe('R1a — every RR state the supplier can see names its actor', () => {
     // Not a count — membership. A sixth state would be silently untested by a
     // spec that hardcoded five names, so the list under test is the flow's.
     expect(
-      /** @type {import('../services/transitions/schema').FlowDefinition} */ (
+      /** @type {import('@services/transitions/schema').FlowDefinition} */ (
         getFlow('requirementResponse')
       ).states
     ).toEqual(['Draft', 'Submitted', 'UnderReview', 'Accepted', 'Disputed']);

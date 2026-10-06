@@ -52,7 +52,7 @@ describe('§68 · the population this file rests on', () => {
     // never opened, and every "the Draft has an exit" claim is meaningless if
     // the row was never a Draft.
     expect(
-      /** @type {import('../services/data/types').PurchaseRequisition} */ (
+      /** @type {import('@services/data/types').PurchaseRequisition} */ (
         purchaseRequisitionStore.get('pr-005')
       ).status
     ).toBe('Draft');
@@ -71,7 +71,7 @@ describe('§68 · submit — the dead end is closed', () => {
 
     await waitFor(() =>
       expect(
-        /** @type {import('../services/data/types').PurchaseRequisition} */ (
+        /** @type {import('@services/data/types').PurchaseRequisition} */ (
           purchaseRequisitionStore.get('pr-005')
         ).status
       ).toBe('Pending Approval')
@@ -140,7 +140,7 @@ describe('⚠️ §68 · REVISE CARRIES ITS NOTE, AND THE COMMIT IS DISABLED UNT
     fireEvent.click(confirm);
 
     await waitFor(() => {
-      const pr = /** @type {import('../services/data/types').PurchaseRequisition} */ (
+      const pr = /** @type {import('@services/data/types').PurchaseRequisition} */ (
         purchaseRequisitionStore.get('pr-004')
       );
       expect(pr.status).toBe('Draft');
@@ -186,7 +186,7 @@ describe('⚠️ §68 · THE APPROVAL NAMES ITS DECIDER, AND THE ROUTING TARGET 
 
     await waitFor(() =>
       expect(
-        /** @type {import('../services/data/types').PurchaseRequisition} */ (
+        /** @type {import('@services/data/types').PurchaseRequisition} */ (
           purchaseRequisitionStore.get('pr-004')
         ).approvedBy
       ).toEqual({

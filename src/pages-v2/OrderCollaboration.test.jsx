@@ -67,15 +67,14 @@ describe('supplier — Adjust (REQ-E07-02 AC-02)', () => {
 
     await waitFor(() =>
       expect(
-        /** @type {import('../services/data/types').PurchaseOrder} */ (
+        /** @type {import('@services/data/types').PurchaseOrder} */ (
           purchaseOrderStore.get('po-008')
         ).status
       ).toBe(POStatus.ADJUSTED)
     );
     expect(
-      /** @type {import('../services/data/types').PurchaseOrder} */ (
-        purchaseOrderStore.get('po-008')
-      ).response?.lines
+      /** @type {import('@services/data/types').PurchaseOrder} */ (purchaseOrderStore.get('po-008'))
+        .response?.lines
     ).toEqual([
       { lineId: 'li-008a', reasonCode: 'capacity', counterQty: 120000, counterDate: '2025-05-10' }
     ]);
@@ -96,15 +95,14 @@ describe('supplier — Reject (AC-03)', () => {
     fireEvent.click(send);
     await waitFor(() =>
       expect(
-        /** @type {import('../services/data/types').PurchaseOrder} */ (
+        /** @type {import('@services/data/types').PurchaseOrder} */ (
           purchaseOrderStore.get('po-008')
         ).status
       ).toBe(POStatus.REJECTED)
     );
     expect(
-      /** @type {import('../services/data/types').PurchaseOrder} */ (
-        purchaseOrderStore.get('po-008')
-      ).response
+      /** @type {import('@services/data/types').PurchaseOrder} */ (purchaseOrderStore.get('po-008'))
+        .response
     ).toMatchObject({
       option: 'reject',
       rejectionCauses: ['quantity'],
@@ -130,15 +128,14 @@ describe('supplier — shipping notice (REQ-E07-05)', () => {
     fireEvent.click(panel().getByRole('button', { name: 'Save date' }));
     await waitFor(() =>
       expect(
-        /** @type {import('../services/data/types').PurchaseOrder} */ (
+        /** @type {import('@services/data/types').PurchaseOrder} */ (
           purchaseOrderStore.get('po-007')
         ).shippingNotice?.expectedCompletionDate
       ).toBe('2025-04-20')
     );
     expect(
-      /** @type {import('../services/data/types').PurchaseOrder} */ (
-        purchaseOrderStore.get('po-007')
-      ).status
+      /** @type {import('@services/data/types').PurchaseOrder} */ (purchaseOrderStore.get('po-007'))
+        .status
     ).toBe(POStatus.CONFIRMED);
   });
 });
@@ -170,15 +167,14 @@ describe('planner — counter-offer review on BuyerOrders', () => {
     fireEvent.click(panel().getByRole('button', { name: 'Accept counter-offer' }));
     await waitFor(() =>
       expect(
-        /** @type {import('../services/data/types').PurchaseOrder} */ (
+        /** @type {import('@services/data/types').PurchaseOrder} */ (
           purchaseOrderStore.get('po-008')
         ).status
       ).toBe(POStatus.CONFIRMED)
     );
     expect(
-      /** @type {import('../services/data/types').PurchaseOrder} */ (
-        purchaseOrderStore.get('po-008')
-      ).lineItems[0].confirmedQty
+      /** @type {import('@services/data/types').PurchaseOrder} */ (purchaseOrderStore.get('po-008'))
+        .lineItems[0].confirmedQty
     ).toBe(100000);
   });
 
@@ -195,7 +191,7 @@ describe('planner — counter-offer review on BuyerOrders', () => {
     fireEvent.click(send);
     await waitFor(() =>
       expect(
-        /** @type {import('../services/data/types').PurchaseOrder} */ (
+        /** @type {import('@services/data/types').PurchaseOrder} */ (
           purchaseOrderStore.get('po-008')
         ).status
       ).toBe(POStatus.SENT)

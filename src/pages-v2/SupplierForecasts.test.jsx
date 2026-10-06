@@ -164,18 +164,17 @@ describe('SupplierForecasts — the visibility response (SDC-2b-EXT)', () => {
       .find((r) => r.supplierId === 'sup-007' && r.acknowledgment && r.id.startsWith('rr-9'));
     expect(minted).toBeDefined();
     expect(
-      /** @type {import('../services/sdc/types').RequirementResponse} */ (minted).acknowledgment
+      /** @type {import('@services/sdc/types').RequirementResponse} */ (minted).acknowledgment
     ).toEqual({ note: 'Current stock covers this horizon.' });
     expect(
-      /** @type {import('../services/sdc/types').RequirementResponse} */ (minted)
-        .forecastConfirmation
+      /** @type {import('@services/sdc/types').RequirementResponse} */ (minted).forecastConfirmation
     ).toBeUndefined(); // no number to misread
     expect(
-      /** @type {import('../services/sdc/types').RequirementResponse} */ (minted).planVersion
+      /** @type {import('@services/sdc/types').RequirementResponse} */ (minted).planVersion
     ).toBe('PV-2026-08.2');
     // The seed rr-0005 answered the same thread → this re-ack versions up to 2.
     expect(
-      /** @type {import('../services/sdc/types').RequirementResponse} */ (minted).submissionVersion
+      /** @type {import('@services/sdc/types').RequirementResponse} */ (minted).submissionVersion
     ).toBe(2);
     // My responses renders "Acknowledged" — and no qty for this record.
     expect(within(panel).getAllByText('Acknowledged').length).toBeGreaterThan(0);
@@ -206,33 +205,33 @@ describe('SupplierForecasts — the governed submit (t_requirementresponse_submi
     expect(minted).toBeDefined();
     // ⚠️ PF-1b — DRAFT. Every fact below is captured at creation exactly as
     // before; what changed is that the buyer cannot see it yet.
-    expect(/** @type {import('../services/sdc/types').RequirementResponse} */ (minted).status).toBe(
+    expect(/** @type {import('@services/sdc/types').RequirementResponse} */ (minted).status).toBe(
       'Draft'
     );
     expect(
-      /** @type {import('../services/sdc/types').RequirementResponse} */ (minted).submittedAt
+      /** @type {import('@services/sdc/types').RequirementResponse} */ (minted).submittedAt
     ).toBeUndefined();
     expect(
-      /** @type {import('../services/sdc/types').RequirementResponse} */ (minted).submissionVersion
+      /** @type {import('@services/sdc/types').RequirementResponse} */ (minted).submissionVersion
     ).toBe(1);
     expect(
-      /** @type {import('../services/sdc/types').ForecastConfirmation} */ (
-        /** @type {import('../services/sdc/types').RequirementResponse} */ (minted)
+      /** @type {import('@services/sdc/types').ForecastConfirmation} */ (
+        /** @type {import('@services/sdc/types').RequirementResponse} */ (minted)
           .forecastConfirmation
       ).confirmedQty
     ).toBe(40000);
     expect(
-      /** @type {import('../services/sdc/types').ForecastConfirmation} */ (
-        /** @type {import('../services/sdc/types').RequirementResponse} */ (minted)
+      /** @type {import('@services/sdc/types').ForecastConfirmation} */ (
+        /** @type {import('@services/sdc/types').RequirementResponse} */ (minted)
           .forecastConfirmation
       ).uom
     ).toBe('PCS'); // master, not caller
     expect(
-      /** @type {import('../services/sdc/types').RequirementResponse} */ (minted).planVersion
+      /** @type {import('@services/sdc/types').RequirementResponse} */ (minted).planVersion
     ).toBe('PV-2026-08.2'); // bound to the rendered snapshot
     expect(
       within(panel).getByText(
-        /** @type {import('../services/sdc/types').RequirementResponse} */ (minted).id
+        /** @type {import('@services/sdc/types').RequirementResponse} */ (minted).id
       )
     ).toBeInTheDocument();
   });
@@ -254,12 +253,12 @@ describe('SupplierForecasts — the governed submit (t_requirementresponse_submi
         true
       )
     );
-    const minted = /** @type {import('../services/sdc/types').RequirementResponse} */ (
+    const minted = /** @type {import('@services/sdc/types').RequirementResponse} */ (
       requirementResponseStore.all().find((r) => r.materialCode === 'PK-CAPF-8820')
     );
     expect(minted.rootCause?.level1).toBe('capacity');
     expect(
-      /** @type {import('../services/sdc/types').ForecastConfirmation} */ (
+      /** @type {import('@services/sdc/types').ForecastConfirmation} */ (
         minted.forecastConfirmation
       ).confirmedQty
     ).toBe(50000);
@@ -281,19 +280,19 @@ describe('SupplierForecasts — the governed submit (t_requirementresponse_submi
           .some(
             (r) =>
               r.supplierId === 'sup-007' &&
-              /** @type {import('../services/sdc/types').ForecastConfirmation} */ (
+              /** @type {import('@services/sdc/types').ForecastConfirmation} */ (
                 r.forecastConfirmation
               ).confirmedQty === 0
           )
       ).toBe(true)
     );
-    const minted = /** @type {import('../services/sdc/types').RequirementResponse} */ (
+    const minted = /** @type {import('@services/sdc/types').RequirementResponse} */ (
       requirementResponseStore
         .all()
         .find(
           (r) =>
             r.supplierId === 'sup-007' &&
-            /** @type {import('../services/sdc/types').ForecastConfirmation} */ (
+            /** @type {import('@services/sdc/types').ForecastConfirmation} */ (
               r.forecastConfirmation
             ).confirmedQty === 0
         )
@@ -397,13 +396,13 @@ describe('SupplierForecasts — the false-deficit chain (CP-0 · 2c)', () => {
         true
       )
     );
-    const minted = /** @type {import('../services/sdc/types').RequirementResponse} */ (
+    const minted = /** @type {import('@services/sdc/types').RequirementResponse} */ (
       requirementResponseStore
         .all()
         .find((r) => r.materialCode === 'PK-PETB-8810' && r.supplierId === 'sup-007')
     );
     expect(
-      /** @type {import('../services/sdc/types').ForecastConfirmation} */ (
+      /** @type {import('@services/sdc/types').ForecastConfirmation} */ (
         minted.forecastConfirmation
       ).confirmedQty
     ).toBe(40000);
@@ -414,7 +413,7 @@ describe('SupplierForecasts — the false-deficit chain (CP-0 · 2c)', () => {
     // line `awaiting`, which is the whole point of the draft lane.
     const beforeRows = consolidationRows(FORECAST_PUBLICATIONS, requirementResponseStore.all());
     expect(
-      /** @type {import('../services/sdc/consolidation').ConsolidationRow} */ (
+      /** @type {import('@services/sdc/consolidation').ConsolidationRow} */ (
         beforeRows.find(
           (r) => r.line.supplierId === 'sup-007' && r.line.materialCode === 'PK-PETB-8810'
         )
@@ -426,7 +425,7 @@ describe('SupplierForecasts — the false-deficit chain (CP-0 · 2c)', () => {
     // stored quantity. A full confirmation must derive `confirmed-full`, so
     // BuyerCollaboration has no deficit to render.
     const rows = consolidationRows(FORECAST_PUBLICATIONS, requirementResponseStore.all());
-    const row = /** @type {import('../services/sdc/consolidation').ConsolidationRow} */ (
+    const row = /** @type {import('@services/sdc/consolidation').ConsolidationRow} */ (
       rows.find((r) => r.line.supplierId === 'sup-007' && r.line.materialCode === 'PK-PETB-8810')
     );
     expect(row.state.kind).toBe('confirmed-full');
@@ -455,14 +454,14 @@ describe('SupplierForecasts — the false-deficit chain (CP-0 · 2c)', () => {
     );
 
     // And the REAL deficit still reaches the planner — once it is SUBMITTED.
-    const draft = /** @type {import('../services/sdc/types').RequirementResponse} */ (
+    const draft = /** @type {import('@services/sdc/types').RequirementResponse} */ (
       requirementResponseStore
         .all()
         .find((r) => r.materialCode === 'PK-CAPF-8820' && r.supplierId === 'sup-007')
     );
     await submitDraftFor(draft.id);
     const rows = consolidationRows(FORECAST_PUBLICATIONS, requirementResponseStore.all());
-    const row = /** @type {import('../services/sdc/consolidation').ConsolidationRow} */ (
+    const row = /** @type {import('@services/sdc/consolidation').ConsolidationRow} */ (
       rows.find((r) => r.line.supplierId === 'sup-007' && r.line.materialCode === 'PK-CAPF-8820')
     );
     expect(row.state.kind).toBe('short');
@@ -585,7 +584,7 @@ describe('SupplierForecasts — the shipment quantity is parsed, never coerced (
 
     fireEvent.click(reportBtn());
     await waitFor(() => expect(ownShipments().some((s) => s.qty === 6000)).toBe(true));
-    const minted = /** @type {import('../services/sdc/types').IncomingShipment} */ (
+    const minted = /** @type {import('@services/sdc/types').IncomingShipment} */ (
       ownShipments().find((s) => s.qty === 6000)
     );
     expect(minted.supplierId).toBe('sup-007');

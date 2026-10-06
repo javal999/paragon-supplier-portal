@@ -70,10 +70,10 @@ describe('BuyerRequisitions — the fabricated-number toast stub is retired (G1.
     const created = purchaseRequisitionStore.all().find((p) => p.material === 'Test Material B3');
     expect(created).toBeDefined();
     expect(
-      /** @type {import('../services/data/types').PurchaseRequisition} */ (created).prNumber
+      /** @type {import('@services/data/types').PurchaseRequisition} */ (created).prNumber
     ).toMatch(/^PR-2026-9\d+$/); // store range, never PR-2026-00xx
     expect(
-      /** @type {import('../services/data/types').PurchaseRequisition} */ (created).quantity
+      /** @type {import('@services/data/types').PurchaseRequisition} */ (created).quantity
     ).toBe(750);
   });
 });
@@ -134,7 +134,7 @@ describe('BuyerRequisitions — an AMBIGUOUS quantity never becomes a PR (CP-0 �
       const created = purchaseRequisitionStore.all().find((p) => p.material === PROBE_MATERIAL);
       expect(created).toBeDefined();
       expect(
-        /** @type {import('../services/data/types').PurchaseRequisition} */ (created).quantity
+        /** @type {import('@services/data/types').PurchaseRequisition} */ (created).quantity
       ).toBe(4_500);
     });
   });

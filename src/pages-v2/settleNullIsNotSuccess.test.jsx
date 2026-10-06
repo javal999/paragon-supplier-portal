@@ -155,14 +155,14 @@ describe('§90 KNOWN-GOOD FIRST — a real settle still completes and still says
     await waitFor(
       () =>
         expect(
-          /** @type {import('../services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
+          /** @type {import('@services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
             .status
         ).toBe('Payment Released'),
       { timeout: 3000 }
     );
     // The POSITIVE artifact — a settlement that did not happen cannot mint one.
     expect(
-      /** @type {import('../services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
+      /** @type {import('@services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
         .paymentRef
     ).toMatch(/^PAY-/);
     await waitFor(() =>
@@ -173,7 +173,7 @@ describe('§90 KNOWN-GOOD FIRST — a real settle still completes and still says
 
   it('goods receipt: post → settle assigns a REAL material document and toasts posted', async () => {
     goodsReceiptStore.reset();
-    const target = /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (
+    const target = /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
       goodsReceiptStore.all().find((g) => g.status === 'Approved')
     );
     renderWithProviders(
@@ -189,14 +189,14 @@ describe('§90 KNOWN-GOOD FIRST — a real settle still completes and still says
     await waitFor(
       () =>
         expect(
-          /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (
+          /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
             goodsReceiptStore.get(target.id)
           ).status
         ).toBe('Posted to SAP'),
       { timeout: 3000 }
     );
     expect(
-      /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
         goodsReceiptStore.get(target.id)
       ).sapMaterialDoc
     ).toMatch(/^MAT-DOC-/);
@@ -237,11 +237,11 @@ describe('§90 THE DEFECT — a null settle renders a refusal, never a success',
     expect(screen.getByTestId('toast-spy').textContent).toMatch(/still awaiting settlement/i);
     // And the store agrees with the copy: unchanged, no fabricated reference.
     expect(
-      /** @type {import('../services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
+      /** @type {import('@services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
         .status
     ).toBe('Releasing Payment');
     expect(
-      /** @type {import('../services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
+      /** @type {import('@services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
         .paymentRef
     ).toBeNull();
   }, 20000);
@@ -268,7 +268,7 @@ describe('§90 THE DEFECT — a null settle renders a refusal, never a success',
 
   it('goods receipt: no material document is claimed, and the refusal names the rule', async () => {
     goodsReceiptStore.reset();
-    const target = /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (
+    const target = /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
       goodsReceiptStore.all().find((g) => g.status === 'Approved')
     );
     renderWithProviders(
@@ -292,12 +292,12 @@ describe('§90 THE DEFECT — a null settle renders a refusal, never a success',
       /assigned the material document/i
     );
     expect(
-      /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
         goodsReceiptStore.get(target.id)
       ).status
     ).toBe('Posting to SAP');
     expect(
-      /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
         goodsReceiptStore.get(target.id)
       ).sapMaterialDoc
     ).toBeUndefined();
@@ -346,7 +346,7 @@ describe('§90 THE WIZARD — the same conversion reaches the third site', () =>
     // Mint a genuine `submitted` command through the seam, under the same buyer
     // scope the driver will settle with — anything less proves only that the
     // driver renders.
-    const target = /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (
+    const target = /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
       goodsReceiptStore.all().find((g) => g.status === 'Approved')
     );
     const posted = await mockDataService.commands.dispatch(BUYER_SCOPE, {
@@ -365,7 +365,7 @@ describe('§90 THE WIZARD — the same conversion reaches the third site', () =>
     );
     // The positive artifact: the settle really ran.
     expect(
-      /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
         goodsReceiptStore.get(target.id)
       ).sapMaterialDoc
     ).toMatch(/^MAT-DOC-/);

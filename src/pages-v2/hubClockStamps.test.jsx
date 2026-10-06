@@ -94,7 +94,7 @@ describe('GR wizard — a receipt recorded in the demo is dated at the declared 
     const next = () => screen.getByRole('button', { name: /Next/i });
     fireEvent.click(
       await screen.findByText(
-        /** @type {import('../data/mockShipments').Shipment} */ (ANSWERABLE).asnNumber
+        /** @type {import('@data/mockShipments').Shipment} */ (ANSWERABLE).asnNumber
       )
     );
     fireEvent.click(next()); // → receipt info
@@ -116,7 +116,7 @@ describe('GR wizard — a receipt recorded in the demo is dated at the declared 
     await waitFor(() => expect(goodsReceiptStore.all().some((g) => !before.has(g.id))).toBe(true), {
       timeout: 4000
     });
-    const created = /** @type {import('../data/mockGoodsReceipts').GoodsReceipt} */ (
+    const created = /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
       goodsReceiptStore.all().find((g) => !before.has(g.id))
     );
     expect(created.receivedDate).toBe(DECLARED_PRESENT);

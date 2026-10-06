@@ -70,17 +70,13 @@ describe('RFQ award — cascade fan-out (1 winner + N losers)', () => {
     const res = await award(buyer);
     expect(res.status).toBe('done');
 
-    expect(/** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).status).toBe(
-      'Awarded'
-    );
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).status).toBe('Awarded');
     expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (quotationStore.get(WINNER))
-        .status
+      /** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get(WINNER)).status
     ).toBe('Awarded');
     for (const loser of LOSERS) {
       expect(
-        /** @type {import('../../../data/mockQuotations').Quotation} */ (quotationStore.get(loser))
-          .status
+        /** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get(loser)).status
       ).toBe('Rejected');
     }
   });
@@ -128,12 +124,9 @@ describe('RFQ award — cascade fan-out (1 winner + N losers)', () => {
     // what this spec is really for.
     await expect(award(supplier)).rejects.toThrow(/denied for scope/);
     // The RFQ and its quotations are untouched.
-    expect(/** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).status).toBe(
-      'Open'
-    );
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ)).status).toBe('Open');
     expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (quotationStore.get(WINNER))
-        .status
+      /** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get(WINNER)).status
     ).toBe('Under Review');
     expect(commandAuditSink.byEvent('t_quotation_award')).toHaveLength(0);
   });
@@ -143,7 +136,7 @@ describe('RFQ award — cascade fan-out (1 winner + N losers)', () => {
     const res = await award(buyer);
     expect(res.status).toBe('done');
 
-    const rfq = /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ));
+    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ));
     // Award metadata is set — and nothing else.
     expect(rfq.awardedQuotationId).toBe(WINNER);
     expect(rfq.awardedSupplierId).toBe(WINNER_SUPPLIER);

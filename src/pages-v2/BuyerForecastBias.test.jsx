@@ -37,7 +37,7 @@ const supplierScope = {
 };
 const BIAS_TAB = '/buyer/demand-forecast?tab=bias';
 const view = async () =>
-  /** @type {import('../services/data/types').ForecastBiasView} */ (
+  /** @type {import('@services/data/types').ForecastBiasView} */ (
     await mockDataService.procurement.getForecastBias(buyerScope)
   );
 
@@ -81,7 +81,7 @@ describe('Forecast quality · Bias and overrides tab', () => {
     expect(screen.getByTestId('fb-kpi-mat-engine')).toHaveTextContent(
       `${v.alarms.materials.engine.total} / ${v.materials.length}`
     );
-    const sapAlarm = /** @type {import('../services/engine/forecastBias').SkuBias} */ (
+    const sapAlarm = /** @type {import('@services/engine/forecastBias').SkuBias} */ (
       v.skus.find((s) => s.sap.alarm)
     );
     expect(screen.getByTestId(`fb-sap-${sapAlarm.skuCode}`)).toHaveTextContent(
@@ -108,7 +108,7 @@ describe('Forecast quality · Bias and overrides tab', () => {
 
   it('X-06: a planner records an override through the form; it lands in the ledger with old → new, and on the Demand forecast', async () => {
     const v = await view();
-    const sku = /** @type {import('../services/data/types').DemandForecastSkuView} */ (
+    const sku = /** @type {import('@services/data/types').DemandForecastSkuView} */ (
       v.current.skus.find((s) => s.method === 'comb')
     );
     const engine = sku.engineForecast[0];
@@ -147,7 +147,7 @@ describe('Forecast quality · Bias and overrides tab', () => {
 
   it('BR-03 on the form: an upward override with no reason is refused and nothing is recorded', async () => {
     const v = await view();
-    const sku = /** @type {import('../services/data/types').DemandForecastSkuView} */ (
+    const sku = /** @type {import('@services/data/types').DemandForecastSkuView} */ (
       v.current.skus.find((s) => s.method === 'comb')
     );
     renderWithProviders(<BuyerDemandForecast />, { identity: BUYER, route: BIAS_TAB });

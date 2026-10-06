@@ -446,7 +446,7 @@ describe('receipt discrepancy — acknowledge, dispute, resolve (AC-03)', () => 
     });
     expect(res.status).toBe('done');
     expect(
-      /** @type {import('../../../data/mockGoodsReceipts').ReceiptDiscrepancyResponse} */ (
+      /** @type {import('@data/mockGoodsReceipts').ReceiptDiscrepancyResponse} */ (
         receiptDiscrepancyStore.get('gr-006')
       ).status
     ).toBe('Acknowledged');

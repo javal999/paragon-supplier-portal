@@ -117,7 +117,7 @@ describe('X-03 on the Call-offs page — while the engine dataset is simulated',
     fireEvent.click(panel().getByRole('button', { name: 'Dismiss draft' }));
     await waitFor(() =>
       expect(
-        /** @type {import('../../services/data/types').CallOff} */ (callOffStore.get(id)).status
+        /** @type {import('@services/data/types').CallOff} */ (callOffStore.get(id)).status
       ).toBe('Dismissed')
     );
   });
@@ -131,7 +131,7 @@ describe('X-03 on the Call-offs page — while the engine dataset is simulated',
     fireEvent.click(panel().getByRole('button', { name: 'Release to supplier' }));
     await waitFor(() =>
       expect(
-        /** @type {import('../../services/data/types').CallOff} */ (callOffStore.get(id)).status
+        /** @type {import('@services/data/types').CallOff} */ (callOffStore.get(id)).status
       ).toBe('Awaiting Confirmation')
     );
   });
@@ -164,7 +164,7 @@ describe('X-03 on the Call-offs page — once the engine dataset is live', () =>
     fireEvent.click(panel().getByRole('button', { name: 'Release to supplier' }));
     await waitFor(() =>
       expect(
-        /** @type {import('../../services/data/types').CallOff} */ (callOffStore.get(id)).status
+        /** @type {import('@services/data/types').CallOff} */ (callOffStore.get(id)).status
       ).toBe('Awaiting Confirmation')
     );
   });

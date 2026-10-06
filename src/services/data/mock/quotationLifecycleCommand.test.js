@@ -72,7 +72,7 @@ describe('t_quotation_submit — supplier-owned creation (ASN-faithful scope)', 
     const res = await svc.dispatch(invited, submit());
     expect(res.status).toBe('done');
     expect(res.entityId).toMatch(/^QUO-2026-9\d+$/);
-    const q = /** @type {import('../../../data/mockQuotations').Quotation} */ (
+    const q = /** @type {import('@data/mockQuotations').Quotation} */ (
       quotationStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
     );
     expect(q.status).toBe('Submitted');
@@ -154,7 +154,7 @@ describe('t_quotation_submit — supplier-owned creation (ASN-faithful scope)', 
     const res = await svc.dispatch(invited, submit({ leadTimeDays: 12 }));
     expect(res.status).toBe('done');
     expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (
+      /** @type {import('@data/mockQuotations').Quotation} */ (
         quotationStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
       ).leadTimeDays
     ).toBe(12);
@@ -170,7 +170,7 @@ describe('t_quotation_submit — supplier-owned creation (ASN-faithful scope)', 
     const res = await svc.dispatch(invited, submit({ moq: 100_000 }));
     expect(res.status).toBe('done');
     expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (
+      /** @type {import('@data/mockQuotations').Quotation} */ (
         quotationStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
       ).moq
     ).toBe(100_000);
@@ -182,7 +182,7 @@ describe('t_quotation_submit — supplier-owned creation (ASN-faithful scope)', 
     // minimum" into "the supplier's minimum is zero" — a commercial term
     // attributed to someone who never offered it.
     const res = await svc.dispatch(invited, submit());
-    const q = /** @type {import('../../../data/mockQuotations').Quotation} */ (
+    const q = /** @type {import('@data/mockQuotations').Quotation} */ (
       quotationStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
     );
     expect(q.moq).toBeUndefined();
@@ -210,7 +210,7 @@ describe('t_quotation_submit — supplier-owned creation (ASN-faithful scope)', 
 describe('t_quotation_submit — honest-by-construction scores (score-at-READ)', () => {
   it('persists NO fabricated derived scores — derived fields are sentinel', async () => {
     const res = await svc.dispatch(invited, submit());
-    const q = /** @type {import('../../../data/mockQuotations').Quotation} */ (
+    const q = /** @type {import('@data/mockQuotations').Quotation} */ (
       quotationStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
     );
     // Derived axes are engine-owned at READ; storing them would re-fabricate.
@@ -222,7 +222,7 @@ describe('t_quotation_submit — honest-by-construction scores (score-at-READ)',
 
   it('seeds compliance + reliability from a SIMULATED baseline — never a lying zero', async () => {
     const res = await svc.dispatch(invited, submit());
-    const q = /** @type {import('../../../data/mockQuotations').Quotation} */ (
+    const q = /** @type {import('@data/mockQuotations').Quotation} */ (
       quotationStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
     );
     expect(q.complianceScore).toBeGreaterThan(0);
@@ -244,7 +244,7 @@ describe('t_quotation_submit — honest-by-construction scores (score-at-READ)',
     // A single-currency set is ranked without any pin (the homogeneous-set
     // exemption) — if this ever refuses, the fixture stopped being homogeneous.
     if (outcome.kind !== 'scored') throw new Error(`expected scored, got ${outcome.reason}`);
-    const mine = /** @type {import('../../../lib/quoteScore').QuoteScore} */ (
+    const mine = /** @type {import('@lib/quoteScore').QuoteScore} */ (
       outcome.scores.find((s) => s.quoteId === res.entityId)
     );
     // Cheapest → priceScore anchors 100 (LIVE ratio-to-best), computed at read
@@ -259,8 +259,7 @@ describe('t_quotation_review — buyer moves a submitted quote into evaluation',
     const created = await svc.dispatch(invited, submit());
     const id = /** @type {NonNullable<typeof created.entityId>} */ (created.entityId);
     expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (quotationStore.get(id))
-        .status
+      /** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get(id)).status
     ).toBe('Submitted');
     const res = await svc.dispatch(buyer, {
       transitionId: 't_quotation_review',
@@ -269,8 +268,7 @@ describe('t_quotation_review — buyer moves a submitted quote into evaluation',
     });
     expect(res.status).toBe('done');
     expect(
-      /** @type {import('../../../data/mockQuotations').Quotation} */ (quotationStore.get(id))
-        .status
+      /** @type {import('@data/mockQuotations').Quotation} */ (quotationStore.get(id)).status
     ).toBe('Under Review');
   });
 
@@ -313,7 +311,7 @@ describe('t_quotation_submit — the bid currency is a fact, not a decoration', 
   it('THE LOCK — an EUR submit mints an EUR quotation', async () => {
     const res = await svc.dispatch(invited, submit({ currency: 'EUR', unitPrice: 3 }));
     expect(res.status).not.toBe('failed');
-    const minted = /** @type {import('../../../data/mockQuotations').Quotation} */ (
+    const minted = /** @type {import('@data/mockQuotations').Quotation} */ (
       quotationStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
     );
     // The whole batch in one assertion: 3 EUR in, 3 EUR stored.
@@ -325,7 +323,7 @@ describe('t_quotation_submit — the bid currency is a fact, not a decoration', 
     for (const currency of BID_CURRENCIES) {
       const res = await svc.dispatch(invited, submit({ currency }));
       expect(
-        /** @type {import('../../../data/mockQuotations').Quotation} */ (
+        /** @type {import('@data/mockQuotations').Quotation} */ (
           quotationStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
         ).currency
       ).toBe(currency);

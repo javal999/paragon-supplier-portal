@@ -137,7 +137,7 @@ describe('the quote grid — refused out loud, accepted whole', () => {
     await waitFor(() =>
       expect(quotationStore.forRfq('rfq-021').some((q) => q.supplierId === 'sup-007')).toBe(true)
     );
-    const mine = /** @type {import('../../data/mockQuotations').Quotation} */ (
+    const mine = /** @type {import('@data/mockQuotations').Quotation} */ (
       quotationStore.forRfq('rfq-021').find((q) => q.supplierId === 'sup-007')
     );
     expect(mine.itemQuotes?.[0]?.tierPrices).toHaveLength(6);
@@ -253,7 +253,7 @@ describe("the buyer's side panel — read-only intent, and the answer", () => {
       question: 'Is the roll core 76 mm?',
       visibility: 'private'
     });
-    const oslo = /** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
+    const oslo = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
     renderWithProviders(<RfqEngagementSection rfq={oslo} nameOf={(id) => `Name of ${id}`} />, {
       identity: BUYER
     });

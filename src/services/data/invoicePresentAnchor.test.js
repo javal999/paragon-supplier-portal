@@ -222,7 +222,7 @@ describe('⚠️ A MATCHED-REACHABLE PATH EXISTS — by property, never by fixtu
     // The status is taken from a REAL receipt in a postable state rather than
     // from the flow's `from` (which is `readonly string[]`), so the control is
     // typed as a `GRStatus` and cannot drift away from the machine either.
-    const postable = /** @type {import('../../data/mockGoodsReceipts').GoodsReceipt} */ (
+    const postable = /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
       mockGoodsReceipts.find((gr) => from.includes(gr.status))
     );
     const orphan = { poNumber: 'PO-9999-00000', status: postable.status };

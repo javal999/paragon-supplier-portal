@@ -43,7 +43,7 @@ describe("BL-74 — a receipt's stored result is the result its lines roll up to
   it('gr-015 reads Approved (its one line accepted all it received); gr-016 stays Partially Approved', () => {
     /** @param {string} id */
     const status = (id) =>
-      /** @type {import('../../../../data/mockGoodsReceipts').GoodsReceipt} */ (
+      /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
         mockGoodsReceipts.find((gr) => gr.id === id)
       ).status;
     expect(status('gr-015')).toBe('Approved');

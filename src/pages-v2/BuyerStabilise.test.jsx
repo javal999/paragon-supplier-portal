@@ -35,7 +35,7 @@ afterEach(() => {
 });
 
 const plan = async () =>
-  /** @type {import('../services/data/types').StabilisedPlanView} */ (
+  /** @type {import('@services/data/types').StabilisedPlanView} */ (
     await mockDataService.procurement.getStabilisedPlan(buyerScope)
   );
 /** @param {number | null} x */
@@ -91,7 +91,7 @@ describe('BuyerStabilise — the planner page (REQ-E14-06)', () => {
     expect(withheld).toHaveTextContent('Nothing can be published until real data arrives');
     expect(withheld).toHaveTextContent('This is the only place a plan is published to suppliers.');
     for (const stream of /** @type {const} */ (['packaging', 'rawMaterial'])) {
-      const current = /** @type {import('../services/data/types').ForecastVersionView} */ (
+      const current = /** @type {import('@services/data/types').ForecastVersionView} */ (
         versions.find((v) => v.stream === stream && v.isCurrent)
       );
       const line = await screen.findByTestId(`stb-last-published-${stream}`);
@@ -157,11 +157,11 @@ describe('BuyerStabilise — the planner page (REQ-E14-06)', () => {
 
   it('AC-03: a week held at the band shows the engine value, the damped value, the range, what is published and why', async () => {
     const p = await plan();
-    const s = /** @type {import('../services/data/types').StabilisedSeriesView} */ (
+    const s = /** @type {import('@services/data/types').StabilisedSeriesView} */ (
       p.engine.series.find((x) => x.latest.some((w) => w.rule === 'bandHeld'))
     );
     expect(s).toBeDefined();
-    const w = /** @type {import('../services/engine/stabilise').PeriodResult} */ (
+    const w = /** @type {import('@services/engine/stabilise').PeriodResult} */ (
       s.latest.find((x) => x.rule === 'bandHeld')
     );
     const key = `${s.supplierId}-${s.materialCode}`;

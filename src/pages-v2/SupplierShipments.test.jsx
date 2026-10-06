@@ -119,7 +119,7 @@ describe('SupplierShipments — ASN verbs (Step 4 batch i)', () => {
         trackingNumber: 'SMPL123',
         eta: '2026-05-10',
         shipDate: '2026-05-08',
-        lines: /** @type {import('../services/data/types').ASN} */ (created).lineItems.map((l) => ({
+        lines: /** @type {import('@services/data/types').ASN} */ (created).lineItems.map((l) => ({
           materialCode: l.materialCode,
           shippedQty: l.shippedQty,
           batchNumber: 'BATCH-77'

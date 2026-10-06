@@ -30,7 +30,7 @@ const supplierScope = {
   businessRoles: PERSONA_SYSTEM_ROLES.supplier
 };
 const view = async () =>
-  /** @type {import('../services/data/types').DemandForecastView} */ (
+  /** @type {import('@services/data/types').DemandForecastView} */ (
     await mockDataService.procurement.getDemandForecast(buyerScope)
   );
 
@@ -121,7 +121,7 @@ describe('BuyerDemandForecast — the planner page', () => {
         expect(screen.getByTestId(`df-sku-${s.skuCode}`)).toBeInTheDocument();
       else expect(screen.queryByTestId(`df-sku-${s.skuCode}`)).toBeNull();
     }
-    const pick = /** @type {import('../services/data/types').DemandForecastSkuView} */ (
+    const pick = /** @type {import('@services/data/types').DemandForecastSkuView} */ (
       inBrand.find((s) => s.method === 'comb')
     );
     fireEvent.click(screen.getByTestId(`df-sku-${pick.skuCode}`));
@@ -150,7 +150,7 @@ describe('BuyerDemandForecast — the planner page', () => {
       route: '/buyer/demand-forecast'
     });
     const section = await screen.findByTestId('df-events');
-    const ramadan = /** @type {import('../services/engine/eventCalendar').EventFactor} */ (
+    const ramadan = /** @type {import('@services/engine/eventCalendar').EventFactor} */ (
       v.events.total.find((f) => f.event === 'ramadan')
     );
     expect(within(section).getByTestId('df-event-ramadan-total')).toHaveTextContent(
@@ -292,7 +292,7 @@ describe('BuyerDemandForecast — the demand range (REQ-E14-09)', () => {
 
   it('a new SKU on SAP’s plan says its range comes from SAP’s plan’s errors', async () => {
     const v = await view();
-    const fresh = /** @type {import('../services/engine/demandRange').SkuRange} */ (
+    const fresh = /** @type {import('@services/engine/demandRange').SkuRange} */ (
       v.range.skus.find((s) => s.method === 'newSkuSap' && s.source[0] === 'own')
     );
     renderWithProviders(<BuyerDemandForecast />, {
@@ -307,10 +307,10 @@ describe('BuyerDemandForecast — the demand range (REQ-E14-09)', () => {
 
   it('the SKU detail carries P50 and P90 beside each week', async () => {
     const v = await view();
-    const pick = /** @type {import('../services/data/types').DemandForecastSkuView} */ (
+    const pick = /** @type {import('@services/data/types').DemandForecastSkuView} */ (
       v.skus.find((s) => s.method === 'comb')
     );
-    const range = /** @type {import('../services/engine/demandRange').SkuRange} */ (
+    const range = /** @type {import('@services/engine/demandRange').SkuRange} */ (
       v.range.skus.find((s) => s.key === pick.skuCode)
     );
     renderWithProviders(<BuyerDemandForecast />, {

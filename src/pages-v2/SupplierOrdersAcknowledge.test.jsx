@@ -75,10 +75,10 @@ const footer = panel;
 
 describe('the premise — derived, not inherited from the dispatch', () => {
   it('the verb is payload-free and gates on po:acknowledge', () => {
-    const flow = /** @type {import('../services/transitions/schema').FlowDefinition} */ (
+    const flow = /** @type {import('@services/transitions/schema').FlowDefinition} */ (
       getFlow('purchaseOrder')
     );
-    const v = /** @type {import('../services/transitions/schema').TransitionDef} */ (
+    const v = /** @type {import('@services/transitions/schema').TransitionDef} */ (
       flow.transitions.find((tr) => tr.id === 't_po_acknowledge')
     );
     expect(v.from).toEqual([POStatus.SENT, POStatus.VIEWED]);
@@ -105,8 +105,8 @@ describe('the premise — derived, not inherited from the dispatch', () => {
     // A surface that presented acknowledge as a required first step would be
     // inventing a sequence the machine does not have: `t_po_confirm` is legal
     // from `Sent` directly.
-    const confirm = /** @type {import('../services/transitions/schema').TransitionDef} */ (
-      /** @type {import('../services/transitions/schema').FlowDefinition} */ (
+    const confirm = /** @type {import('@services/transitions/schema').TransitionDef} */ (
+      /** @type {import('@services/transitions/schema').FlowDefinition} */ (
         getFlow('purchaseOrder')
       ).transitions.find((tr) => tr.id === 't_po_confirm')
     );
@@ -122,7 +122,7 @@ describe('the premise — derived, not inherited from the dispatch', () => {
     // `t_po_view` is its sole producer and has no caller anywhere in the tree.
     // The control still renders there (acknowledge IS legal from Viewed), but
     // nothing a person does can put a PO into that state.
-    const producers = /** @type {import('../services/transitions/schema').FlowDefinition} */ (
+    const producers = /** @type {import('@services/transitions/schema').FlowDefinition} */ (
       getFlow('purchaseOrder')
     ).transitions
       .filter((tr) => tr.to === POStatus.VIEWED)
@@ -135,7 +135,7 @@ describe('the premise — derived, not inherited from the dispatch', () => {
 
   it('the seeded seat really has this Sent order, and the id/number keys differ', () => {
     purchaseOrderStore.reset();
-    const po = /** @type {import('../services/data/types').PurchaseOrder} */ (
+    const po = /** @type {import('@services/data/types').PurchaseOrder} */ (
       purchaseOrderStore.get(SENT_PO_ID)
     );
     expect(po.poNumber).toBe(SENT_PO);
@@ -161,7 +161,7 @@ describe('the held seat acknowledges, and the order actually moves', () => {
   it('⚠️ THE WALK — clicking it drives Sent → Acknowledged in the store', async () => {
     await openPanelOn(SENT_PO);
     expect(
-      /** @type {import('../services/data/types').PurchaseOrder} */ (
+      /** @type {import('@services/data/types').PurchaseOrder} */ (
         purchaseOrderStore.get(SENT_PO_ID)
       ).status
     ).toBe(POStatus.SENT);
@@ -170,7 +170,7 @@ describe('the held seat acknowledges, and the order actually moves', () => {
 
     await waitFor(() =>
       expect(
-        /** @type {import('../services/data/types').PurchaseOrder} */ (
+        /** @type {import('@services/data/types').PurchaseOrder} */ (
           purchaseOrderStore.get(SENT_PO_ID)
         ).status
       ).toBe(POStatus.ACKNOWLEDGED)
@@ -182,7 +182,7 @@ describe('the held seat acknowledges, and the order actually moves', () => {
     // from `payload.confirmedQuantities`. A payload-free verb must not touch
     // them; this is the assertion that would catch it if the branch changed.
     await openPanelOn(SENT_PO);
-    const before = /** @type {import('../services/data/types').PurchaseOrder} */ (
+    const before = /** @type {import('@services/data/types').PurchaseOrder} */ (
       purchaseOrderStore.get(SENT_PO_ID)
     ).lineItems.map((li) => ({
       q: li.quantity,
@@ -191,13 +191,13 @@ describe('the held seat acknowledges, and the order actually moves', () => {
     fireEvent.click(footer().getByRole('button', { name: 'Acknowledge receipt' }));
     await waitFor(() =>
       expect(
-        /** @type {import('../services/data/types').PurchaseOrder} */ (
+        /** @type {import('@services/data/types').PurchaseOrder} */ (
           purchaseOrderStore.get(SENT_PO_ID)
         ).status
       ).toBe(POStatus.ACKNOWLEDGED)
     );
     expect(
-      /** @type {import('../services/data/types').PurchaseOrder} */ (
+      /** @type {import('@services/data/types').PurchaseOrder} */ (
         purchaseOrderStore.get(SENT_PO_ID)
       ).lineItems.map((li) => ({
         q: li.quantity,
@@ -263,7 +263,7 @@ describe('a seat without the fulfilment lane waits, and is told whose act it is'
   it('the order does not move for a seat that cannot act', async () => {
     await openPanelOn(SENT_PO, NO_FULFILMENT);
     expect(
-      /** @type {import('../services/data/types').PurchaseOrder} */ (
+      /** @type {import('@services/data/types').PurchaseOrder} */ (
         purchaseOrderStore.get(SENT_PO_ID)
       ).status
     ).toBe(POStatus.SENT);
@@ -286,9 +286,8 @@ describe('the dispatcher agrees with what the surface offers', () => {
     const svc = new MockCommandService();
     // `po-007` (PO-2025-00107, sup-007) is Confirmed — legal for neither verb.
     expect(
-      /** @type {import('../services/data/types').PurchaseOrder} */ (
-        purchaseOrderStore.get('po-007')
-      ).status
+      /** @type {import('@services/data/types').PurchaseOrder} */ (purchaseOrderStore.get('po-007'))
+        .status
     ).toBe(POStatus.CONFIRMED);
     const res = await svc.dispatch(supplierScope, {
       transitionId: 't_po_acknowledge',
@@ -311,7 +310,7 @@ describe('the dispatcher agrees with what the surface offers', () => {
     );
     expect(res.status).toBe('failed');
     expect(
-      /** @type {import('../services/data/types').PurchaseOrder} */ (
+      /** @type {import('@services/data/types').PurchaseOrder} */ (
         purchaseOrderStore.get(SENT_PO_ID)
       ).status
     ).toBe(POStatus.SENT);

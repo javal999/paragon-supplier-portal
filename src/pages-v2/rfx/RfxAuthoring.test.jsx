@@ -103,8 +103,8 @@ describe('the option editor (BL-36) — a choice question is written, refused, t
     await screen.findByTestId('rfi-new-review');
     fireEvent.click(screen.getByRole('button', { name: 'Send to suppliers' }));
     await screen.findByTestId('rfi-detail-rfi-0004');
-    const stored = /** @type {import('../../services/sourcing/types').RfiQuestion} */ (
-      /** @type {import('../../services/sourcing/types').RfiEvent} */ (
+    const stored = /** @type {import('@services/sourcing/types').RfiQuestion} */ (
+      /** @type {import('@services/sourcing/types').RfiEvent} */ (
         rfiEventStore.get('rfi-0004')
       ).questions.find((q) => q.id === 'event-1')
     );
@@ -238,12 +238,11 @@ describe('RFI → RFP (D3)', () => {
       'Created from RFI-2026-002'
     );
     expect(
-      /** @type {import('../../services/sourcing/types').RfpEvent} */ (
-        rfpEventStore.get('rfp-0005')
-      ).sourceRfiId
+      /** @type {import('@services/sourcing/types').RfpEvent} */ (rfpEventStore.get('rfp-0005'))
+        .sourceRfiId
     ).toBe('rfi-002');
     expect(
-      /** @type {import('../../services/sourcing/types').RfpEvent} */ (
+      /** @type {import('@services/sourcing/types').RfpEvent} */ (
         rfpEventStore.get('rfp-0005')
       ).invitees.map((i) => i.supplierId)
     ).toEqual(['sup-008']);
@@ -332,7 +331,7 @@ describe('the gates as the supplier meets them (ICY)', () => {
       await screen.findByTestId('supplier-rfp-rfp-003-pricing-row-sup-opt-1')
     ).toHaveTextContent('Your own option');
 
-    const row = /** @type {import('../../services/sourcing/types').RfpResponse} */ (
+    const row = /** @type {import('@services/sourcing/types').RfpResponse} */ (
       rfpResponseStore.all().find((r) => r.rfpId === 'rfp-003' && r.supplierId === 'sup-007')
     );
     expect(row.confidentialityAcceptedAt).toBeDefined();

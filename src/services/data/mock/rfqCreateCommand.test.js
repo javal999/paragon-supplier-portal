@@ -58,7 +58,7 @@ describe('RFQ create — buyer-only creation dispatches (retires extraRfqs)', ()
     const res = await svc.dispatch(buyer, create());
     expect(res.status).toBe('done');
     expect(res.entityId).toMatch(/^RFQ-2026-9\d+$/); // store-assigned, distinct range
-    const rfq = /** @type {import('../../../data/mockRfqs').RFQ} */ (
+    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (
       rfqStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
     );
     // ⚠️ PF-1a · D-1 — DRAFT, not Open. FORK-2B had create+publish as ONE
@@ -123,7 +123,7 @@ describe('RFQ create — buyer-only creation dispatches (retires extraRfqs)', ()
     const res = await svc.dispatch(buyer, create({ totalQty: 2400 }));
     expect(res.status).toBe('done');
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (
+      /** @type {import('@data/mockRfqs').RFQ} */ (
         rfqStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
       ).totalQty
     ).toBe(2400);
@@ -144,7 +144,7 @@ describe('RFQ create — buyer-only creation dispatches (retires extraRfqs)', ()
     const res = await svc.dispatch(buyer, create({ totalQty: 0 }));
     expect(res.status).toBe('done');
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (
+      /** @type {import('@data/mockRfqs').RFQ} */ (
         rfqStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
       ).totalQty
     ).toBe(0);
@@ -153,7 +153,7 @@ describe('RFQ create — buyer-only creation dispatches (retires extraRfqs)', ()
   it('an ABSENT estimatedValue is stored as an ABSENCE — never a fabricated Rp 0', async () => {
     const res = await svc.dispatch(buyer, create({ estimatedValue: undefined }));
     expect(res.status).toBe('done');
-    const rfq = /** @type {import('../../../data/mockRfqs').RFQ} */ (
+    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (
       rfqStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
     );
     // The retired `num('estimatedValue')` returned 0 here, minting a stated
@@ -165,7 +165,7 @@ describe('RFQ create — buyer-only creation dispatches (retires extraRfqs)', ()
   it('a STATED estimatedValue survives verbatim — omission is for absence only', async () => {
     const res = await svc.dispatch(buyer, create({ estimatedValue: 850_000_000 }));
     expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (
+      /** @type {import('@data/mockRfqs').RFQ} */ (
         rfqStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
       ).estimatedValue
     ).toBe(850_000_000);
@@ -173,7 +173,7 @@ describe('RFQ create — buyer-only creation dispatches (retires extraRfqs)', ()
 
   it('HONEST-BY-CONSTRUCTION: the created RFQ mints no downstream artifact (no PO/contract ref)', async () => {
     const res = await svc.dispatch(buyer, create());
-    const rfq = /** @type {import('../../../data/mockRfqs').RFQ} */ (
+    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (
       rfqStore.get(/** @type {NonNullable<typeof res.entityId>} */ (res.entityId))
     );
     expect('poNumber' in rfq).toBe(false);

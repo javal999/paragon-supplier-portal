@@ -55,34 +55,34 @@ describe('RFQ cancel — Draft/Open/Closed → Cancelled', () => {
   it('cancels an Open RFQ', async () => {
     const res = await cancel(buyer, 'rfq-001');
     expect(res.status).toBe('done');
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-001')).status
-    ).toBe('Cancelled');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-001')).status).toBe(
+      'Cancelled'
+    );
   });
 
   it('cancels a Draft RFQ', async () => {
     const res = await cancel(buyer, 'rfq-008');
     expect(res.status).toBe('done');
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-008')).status
-    ).toBe('Cancelled');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-008')).status).toBe(
+      'Cancelled'
+    );
   });
 
   it('cancels a Closed RFQ', async () => {
     const res = await cancel(buyer, 'rfq-004');
     expect(res.status).toBe('done');
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-004')).status
-    ).toBe('Cancelled');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-004')).status).toBe(
+      'Cancelled'
+    );
   });
 
   it('cannot cancel an already-Awarded RFQ (illegal from-state, no mutation)', async () => {
     const res = await cancel(buyer, 'rfq-006');
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/ILLEGAL_TRANSITION:Awarded->Cancelled/);
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-006')).status
-    ).toBe('Awarded');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-006')).status).toBe(
+      'Awarded'
+    );
   });
 
   it('a supplier cannot cancel — refused at SCOPE, nothing mutates', async () => {
@@ -90,9 +90,9 @@ describe('RFQ cancel — Draft/Open/Closed → Cancelled', () => {
     // scope gate on one that exists — and the difference between that and the
     // `SCOPE_DENIED` a fabricated id got was an existence oracle.
     await expect(cancel(supplier, 'rfq-001')).rejects.toThrow(/denied for scope/);
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-001')).status
-    ).toBe('Open');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-001')).status).toBe(
+      'Open'
+    );
   });
 });
 
@@ -100,26 +100,26 @@ describe('RFQ reopen — Closed → Open (Closed only)', () => {
   it('reopens a Closed RFQ', async () => {
     const res = await reopen(buyer, 'rfq-005');
     expect(res.status).toBe('done');
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-005')).status
-    ).toBe('Open');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-005')).status).toBe(
+      'Open'
+    );
   });
 
   it('cannot reopen an Open RFQ (illegal from-state, no mutation)', async () => {
     const res = await reopen(buyer, 'rfq-002');
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/ILLEGAL_TRANSITION:Open->Open/);
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-002')).status
-    ).toBe('Open');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-002')).status).toBe(
+      'Open'
+    );
   });
 
   it('a supplier cannot reopen — refused at SCOPE, nothing mutates', async () => {
     // Same change, same reason as cancel above.
     await expect(reopen(supplier, 'rfq-005')).rejects.toThrow(/denied for scope/);
-    expect(
-      /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-005')).status
-    ).toBe('Closed');
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-005')).status).toBe(
+      'Closed'
+    );
   });
 });
 
@@ -140,7 +140,7 @@ describe('RFQ lifecycle — HONEST-BY-CONSTRUCTION: no cascade, no artifact', ()
     expect(commandAuditSink.byEvent('t_quotation_reject')).toHaveLength(0);
     // No PO fabricated, and the RFQ carries no award metadata.
     expect(purchaseOrderStore.all().length).toBe(poCountBefore);
-    const rfq = /** @type {import('../../../data/mockRfqs').RFQ} */ (rfqStore.get('rfq-003'));
+    const rfq = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-003'));
     expect(rfq.awardedSupplierId).toBeUndefined();
     expect(rfq.awardedQuotationId).toBeUndefined();
   });

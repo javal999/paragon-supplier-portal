@@ -266,7 +266,7 @@ describe('the walk — pick it up, then decide it', () => {
 
     await waitFor(() =>
       expect(
-        /** @type {import('../services/data/types').SupplierApplication} */ (
+        /** @type {import('@services/data/types').SupplierApplication} */ (
           supplierApplicationStore.all().find((a) => a.applicationNumber === number)
         ).status
       ).toBe('Under Review')
@@ -288,12 +288,12 @@ describe('the walk — pick it up, then decide it', () => {
 
     await waitFor(() =>
       expect(
-        /** @type {import('../services/data/types').SupplierApplication} */ (
+        /** @type {import('@services/data/types').SupplierApplication} */ (
           supplierApplicationStore.all().find((a) => a.applicationNumber === number)
         ).status
       ).toBe('Approved')
     );
-    const row = /** @type {import('../services/data/types').SupplierApplication} */ (
+    const row = /** @type {import('@services/data/types').SupplierApplication} */ (
       supplierApplicationStore.all().find((a) => a.applicationNumber === number)
     );
     expect(row.decidedBy).toEqual(NO_PERSON);
@@ -330,13 +330,13 @@ describe('the walk — pick it up, then decide it', () => {
 
     await waitFor(() =>
       expect(
-        /** @type {import('../services/data/types').SupplierApplication} */ (
+        /** @type {import('@services/data/types').SupplierApplication} */ (
           supplierApplicationStore.all().find((a) => a.applicationNumber === number)
         ).status
       ).toBe('Rejected')
     );
     expect(
-      /** @type {import('../services/data/types').SupplierApplication} */ (
+      /** @type {import('@services/data/types').SupplierApplication} */ (
         supplierApplicationStore.all().find((a) => a.applicationNumber === number)
       ).rejectionReason
     ).toBe('No NIB on file and the tax id does not match the legal name.');
@@ -344,7 +344,7 @@ describe('the walk — pick it up, then decide it', () => {
 
   it('a decided application offers no further act — Approved is terminal in v1', async () => {
     const number = await pickUpFirst();
-    const id = /** @type {import('../services/data/types').SupplierApplication} */ (
+    const id = /** @type {import('@services/data/types').SupplierApplication} */ (
       supplierApplicationStore.all().find((a) => a.applicationNumber === number)
     ).id;
     await commands.dispatch(complianceScope, {
@@ -652,7 +652,7 @@ describe('B3 · the door', () => {
         .all()
         .find((a) => a.companyName === 'PT Sample Creator Two (illustrative)');
       expect(row).toBeDefined();
-      return /** @type {import('../services/data/types').SupplierApplication} */ (row)
+      return /** @type {import('@services/data/types').SupplierApplication} */ (row)
         .applicationNumber;
     });
 

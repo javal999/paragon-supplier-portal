@@ -46,7 +46,7 @@ afterEach(() => {
 });
 
 const plan = async () =>
-  /** @type {import('../services/data/types').OrderPlanView} */ (
+  /** @type {import('@services/data/types').OrderPlanView} */ (
     await mockDataService.procurement.getOrderPlan(buyerScope)
   );
 const openPos = async () =>
@@ -80,7 +80,7 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
 
   it('AC-02: the packaging fill for every week, against capacity, with rented pallets and their cost — the service’s own figures', async () => {
     const p = await plan();
-    const pk = /** @type {import('../services/data/types').WarehousePlanView} */ (
+    const pk = /** @type {import('@services/data/types').WarehousePlanView} */ (
       p.warehouses.find((w) => w.kind === 'packaging')
     );
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
@@ -92,7 +92,7 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
         `${Math.round(/** @type {NonNullable<typeof wk.fill>} */ (wk.fill) * 100)}%`
       );
     }
-    const over = /** @type {import('../services/engine/orderSizing').WarehouseWeek} */ (
+    const over = /** @type {import('@services/engine/orderSizing').WarehouseWeek} */ (
       pk.weeks.find((wk) => wk.rentedPallets > 0)
     );
     expect(screen.getByTestId(`op-rent-${over.weekStart}`).textContent).toMatch(/^Rp /);
@@ -104,7 +104,7 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
 
   it('BL-117 / FUX-D3: the cap on rented space is shown with the rates; weeks that do not fit are a count line linking to Make warehouse room, with no choice control', async () => {
     const p = await plan();
-    const pk = /** @type {import('../services/data/types').WarehousePlanView} */ (
+    const pk = /** @type {import('@services/data/types').WarehousePlanView} */ (
       p.warehouses.find((w) => w.kind === 'packaging')
     );
     // The cap in force is the administrator's default (25%), a placeholder the Warehouse confirms.
@@ -138,7 +138,7 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
   });
 
   it('FUX-D3: the count line renders in Indonesian', async () => {
-    const pk = /** @type {import('../services/data/types').WarehousePlanView} */ (
+    const pk = /** @type {import('@services/data/types').WarehousePlanView} */ (
       (await plan()).warehouses.find((w) => w.kind === 'packaging')
     );
     await i18n.changeLanguage('id');
@@ -150,7 +150,7 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
 
   it('BR-04: every recommendation shows the constraint that bound it and its saving', async () => {
     const p = await plan();
-    const recs = /** @type {import('../services/data/types').WarehousePlanView} */ (
+    const recs = /** @type {import('@services/data/types').WarehousePlanView} */ (
       p.warehouses.find((w) => w.kind === 'packaging')
     ).materials.flatMap((m) => m.recommendations);
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
@@ -161,7 +161,7 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
         screen.getByTestId(`op-binding-${r.materialCode}-${r.weekStart}`).textContent
       ).not.toBe('');
     }
-    const withSaving = /** @type {import('../services/engine/orderSizing').Recommendation} */ (
+    const withSaving = /** @type {import('@services/engine/orderSizing').Recommendation} */ (
       recs.find((r) => r.savedIdr !== null && r.savedIdr > 0)
     );
     expect(
@@ -171,7 +171,7 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
 
   it('the raw-material warehouse is planned separately (ENG-D7): its own capacity, and no order needed on this data', async () => {
     const p = await plan();
-    const rm = /** @type {import('../services/data/types').WarehousePlanView} */ (
+    const rm = /** @type {import('@services/data/types').WarehousePlanView} */ (
       p.warehouses.find((w) => w.kind === 'rawMaterial')
     );
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
@@ -197,7 +197,7 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
     fireEvent.click(await screen.findByTestId(`op-draft-${r.materialCode}-${r.weekStart}`));
     await waitFor(() => expect(callOffStore.all().length).toBe(before + 1));
-    const made = /** @type {import('../services/data/types').CallOff} */ (
+    const made = /** @type {import('@services/data/types').CallOff} */ (
       callOffStore.all().find((c) => c.poLineId === line.line.id && c.quantity === r.quantity)
     );
     expect(made.status).toBe('Draft');
@@ -212,7 +212,7 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
     expect(isLive('engineDataset')).toBe(false);
     const p = await plan();
     const pos = await openPos();
-    const r = /** @type {import('../services/engine/orderSizing').Recommendation} */ (
+    const r = /** @type {import('@services/engine/orderSizing').Recommendation} */ (
       p.warehouses
         .flatMap((w) => w.materials.flatMap((m) => m.recommendations))
         .find((x) => umbrellaLineFor(pos, x.supplierId, x.materialCode) !== null)
@@ -249,7 +249,7 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
   it('a recommendation with no open agreement for its supplier and material says “No PO” and offers no act', async () => {
     const p = await plan();
     const pos = await openPos();
-    const blocked = /** @type {import('../services/engine/orderSizing').Recommendation} */ (
+    const blocked = /** @type {import('@services/engine/orderSizing').Recommendation} */ (
       p.warehouses
         .flatMap((w) => w.materials.flatMap((m) => m.recommendations))
         .find((r) => umbrellaLineFor(pos, r.supplierId, r.materialCode) === null)
@@ -313,7 +313,7 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
   });
 
   it('F-06 / F-02: the plan source and its date, the links to the full pages behind each quantity, and the Data health chip', async () => {
-    const run = /** @type {import('../services/data/types').OrderPlanView} */ (
+    const run = /** @type {import('@services/data/types').OrderPlanView} */ (
       await mockDataService.procurement.getOrderPlan(buyerScope)
     );
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
@@ -351,7 +351,7 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const firstRec = async () => {
-  const pk = /** @type {import('../services/data/types').WarehousePlanView} */ (
+  const pk = /** @type {import('@services/data/types').WarehousePlanView} */ (
     (await plan()).warehouses.find((w) => w.kind === 'packaging')
   );
   const rows = pk.materials
@@ -463,11 +463,11 @@ describe('BuyerOrderPlan — "Why this quantity" panel (FUX2 B3)', () => {
     'the requirement block shows the order’s week as the engine nets it, so the figures reconcile, and says the rule',
     async () => {
       const { rec, m } = await firstRec();
-      const run = /** @type {import('../services/data/types').MaterialRequirementView} */ (
+      const run = /** @type {import('@services/data/types').MaterialRequirementView} */ (
         await mockDataService.procurement.getMaterialRequirement(buyerScope, false)
       );
-      const wk = /** @type {import('../services/engine/requirement').MaterialWeek} */ (
-        /** @type {import('../services/data/types').MaterialPlanView} */ (
+      const wk = /** @type {import('@services/engine/requirement').MaterialWeek} */ (
+        /** @type {import('@services/data/types').MaterialPlanView} */ (
           run.materials.find((x) => x.materialCode === rec.materialCode)
         ).weeks.find((w) => w.weekStart === rec.weekStart)
       );

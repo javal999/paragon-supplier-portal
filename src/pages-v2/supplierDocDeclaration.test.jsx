@@ -227,7 +227,7 @@ describe('§82 · THE CROSSING — what the supplier states reaches the reviewer
 
     // The store is the only thing that crossed — assert it, then assert the
     // supplier's own page renders the result.
-    const row = /** @type {import('../services/data/types').SupplierDocument} */ (
+    const row = /** @type {import('@services/data/types').SupplierDocument} */ (
       supplierDocumentStore.all().find((d) => d.declaration?.certNumber === CERT_NUMBER)
     );
     expect(row.status).toBe('Valid');
@@ -266,7 +266,7 @@ describe('§82 · THE CROSSING — what the supplier states reaches the reviewer
     // ⚠️ THE STATE IS `Rejected`, WHICH IS THE ONE §80's SURFACE RENDERS. Before
     // §82 this verb pointed at `Awaiting Upload`, so the reason and the date
     // would have been written to a row that never showed them.
-    const row = /** @type {import('../services/data/types').SupplierDocument} */ (
+    const row = /** @type {import('@services/data/types').SupplierDocument} */ (
       supplierDocumentStore.all().find((d) => d.declaration?.certNumber === CERT_NUMBER)
     );
     expect(row.status).toBe('Rejected');
@@ -334,7 +334,7 @@ describe('§82 · the refusal is history, not a standing accusation', () => {
     const doc = await waitFor(() => {
       const d = supplierDocumentStore.all().find((x) => x.declaration?.certNumber === CERT_NUMBER);
       expect(d?.status).toBe('Rejected');
-      return /** @type {import('../services/data/types').SupplierDocument} */ (d);
+      return /** @type {import('@services/data/types').SupplierDocument} */ (d);
     });
     buyer.unmount();
 
@@ -364,12 +364,12 @@ describe('§82 · the refusal is history, not a standing accusation', () => {
     // ⚠️ THE STORE STILL HOLDS THE REFUSAL — it was a recorded act and a
     // correction does not un-happen it. Only the RENDER is gated.
     expect(
-      /** @type {import('../services/data/types').SupplierDocument} */ (
+      /** @type {import('@services/data/types').SupplierDocument} */ (
         supplierDocumentStore.get(doc.id)
       ).rejectionReason
     ).toBeTruthy();
     expect(
-      /** @type {import('../services/data/types').SupplierDocument} */ (
+      /** @type {import('@services/data/types').SupplierDocument} */ (
         supplierDocumentStore.get(doc.id)
       ).rejectedAt
     ).toBeTruthy();

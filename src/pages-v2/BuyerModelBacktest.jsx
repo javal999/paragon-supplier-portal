@@ -189,7 +189,7 @@ const BuyerModelBacktest = () => {
   const current = run.skus.find((s) => s.skuCode === selected) ?? run.skus[0] ?? null;
   /** @param {string} sc */
   const portfolio = (sc) =>
-    /** @type {import('../services/engine/modelBacktest').PortfolioResult} */ (
+    /** @type {import('@services/engine/modelBacktest').PortfolioResult} */ (
       run.portfolio.find((p) => p.scenario === sc)
     );
   const newSkus = run.excluded.filter((e) => e.reason === 'newSku').length;

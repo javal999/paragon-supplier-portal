@@ -696,7 +696,7 @@ const RfpCreateWizard = ({
               {missingValues
                 .map((id) =>
                   t(
-                    /** @type {import('../../services/sourcing/types').RfpTermDefinition} */ (
+                    /** @type {import('@services/sourcing/types').RfpTermDefinition} */ (
                       rfpTerm(id)
                     ).labelKey
                   )

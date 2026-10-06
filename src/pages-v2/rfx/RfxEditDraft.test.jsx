@@ -116,7 +116,7 @@ const RFQ_ID = 'rfq-025';
 
 /** Make the seeded Iron draft RICH: every optional authored field present. */
 const enrichRfq = async () => {
-  const seed = /** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ_ID));
+  const seed = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ_ID));
   const res = await svc.dispatch(scope, {
     transitionId: 't_rfq_revise_draft',
     entity: 'rfq',
@@ -138,7 +138,7 @@ const enrichRfq = async () => {
       projectName: 'Iron',
       items: [
         {
-          .../** @type {import('../../services/sourcing/rfqModel').RfqItem} */ (
+          .../** @type {import('@services/sourcing/rfqModel').RfqItem} */ (
             /** @type {NonNullable<typeof seed.items>} */ (seed.items)[0]
           ),
           attachments: [ATT],
@@ -186,13 +186,11 @@ describe('BL-93 · RFQ — Edit draft on the side panel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
     await waitFor(() =>
       expect(
-        /** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ_ID)).revisions
+        /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ_ID)).revisions
       ).toHaveLength(2)
     );
     expect(withoutTrail(rfqStore.get(RFQ_ID))).toEqual(before);
-    expect(/** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ_ID)).status).toBe(
-      'Draft'
-    );
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ_ID)).status).toBe('Draft');
     // CE-08 — the panel names the edit.
     expect(await screen.findByTestId('rfq-last-edited')).toHaveTextContent('Last edited');
   });
@@ -208,10 +206,10 @@ describe('BL-93 · RFQ — Edit draft on the side panel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
     await waitFor(() =>
       expect(
-        /** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ_ID)).revisions
+        /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ_ID)).revisions
       ).toHaveLength(1)
     );
-    const saved = /** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ_ID));
+    const saved = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ_ID));
     expect(saved.status).toBe('Draft');
     expect(/** @type {NonNullable<typeof saved.tiers>} */ (saved.tiers).map((t) => t.qty)).toEqual([
       5_000, 10_000, 12_000, 15_000, 20_000
@@ -224,13 +222,11 @@ describe('BL-93 · RFQ — Edit draft on the side panel', () => {
     walk(7); // + the Documents step (B3)
     fireEvent.click(screen.getByTestId('rfq-edit-send'));
     await waitFor(() =>
-      expect(/** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ_ID)).status).toBe(
-        'Open'
-      )
+      expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ_ID)).status).toBe('Open')
     );
     expect(
       /** @type {NonNullable<(NonNullable<ReturnType<typeof rfqStore.get>>)['tiers']>} */ (
-        /** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ_ID)).tiers
+        /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ_ID)).tiers
       ).map((t) => t.qty)
     ).toContain(12_000);
   });
@@ -244,12 +240,10 @@ describe('BL-93 · RFQ — Edit draft on the side panel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
     await waitFor(() =>
       expect(
-        /** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ_ID)).revisions
+        /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ_ID)).revisions
       ).toHaveLength(1)
     );
-    expect(/** @type {import('../../data/mockRfqs').RFQ} */ (rfqStore.get(RFQ_ID)).status).toBe(
-      'Draft'
-    );
+    expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get(RFQ_ID)).status).toBe('Draft');
   });
 
   it('a seat without create reads whose act editing is, in the button’s own slot', async () => {
@@ -311,7 +305,7 @@ describe('B6 · the RFQ wizard says where its content came from', () => {
 
 const RFI_ID = 'rfi-003';
 const enrichRfi = async () => {
-  const seed = /** @type {import('../../services/sourcing/types').RfiEvent} */ (
+  const seed = /** @type {import('@services/sourcing/types').RfiEvent} */ (
     rfiEventStore.get(RFI_ID)
   );
   const res = await svc.dispatch(scope, {
@@ -328,9 +322,8 @@ const enrichRfi = async () => {
       responseDeadline: seed.responseDeadline,
       invitedSupplierIds: ['sup-007', 'sup-013'],
       questions: [
-        .../** @type {import('../../services/sourcing/types').RfiTemplate} */ (
-          rfiTemplate('packaging')
-        ).questions,
+        .../** @type {import('@services/sourcing/types').RfiTemplate} */ (rfiTemplate('packaging'))
+          .questions,
         {
           id: 'custom-q1',
           sectionId: 'custom-tooling',
@@ -366,7 +359,7 @@ describe('BL-93 · RFI — Edit draft on the event detail', () => {
     fireEvent.click(screen.getByTestId('rfi-new-save-draft'));
     await waitFor(() =>
       expect(
-        /** @type {import('../../services/sourcing/types').RfiEvent} */ (rfiEventStore.get(RFI_ID))
+        /** @type {import('@services/sourcing/types').RfiEvent} */ (rfiEventStore.get(RFI_ID))
           .revisions
       ).toHaveLength(2)
     );
@@ -381,13 +374,12 @@ describe('BL-93 · RFI — Edit draft on the event detail', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save and send' }));
     await waitFor(() =>
       expect(
-        /** @type {import('../../services/sourcing/types').RfiEvent} */ (rfiEventStore.get(RFI_ID))
+        /** @type {import('@services/sourcing/types').RfiEvent} */ (rfiEventStore.get(RFI_ID))
           .status
       ).toBe('Open')
     );
     expect(
-      /** @type {import('../../services/sourcing/types').RfiEvent} */ (rfiEventStore.get(RFI_ID))
-        .title
+      /** @type {import('@services/sourcing/types').RfiEvent} */ (rfiEventStore.get(RFI_ID)).title
     ).toBe('Redwood 2.0 mold makers');
     // Sent: the Edit affordance is gone, because the verb would refuse it.
     await waitFor(() => expect(screen.queryByTestId(`rfi-edit-${RFI_ID}`)).not.toBeInTheDocument());
@@ -404,13 +396,12 @@ describe('BL-93 · RFI — Edit draft on the event detail', () => {
     fireEvent.click(screen.getByTestId('rfi-new-save-draft'));
     await waitFor(() =>
       expect(
-        /** @type {import('../../services/sourcing/types').RfiEvent} */ (rfiEventStore.get(RFI_ID))
+        /** @type {import('@services/sourcing/types').RfiEvent} */ (rfiEventStore.get(RFI_ID))
           .revisions
       ).toHaveLength(1)
     );
     expect(
-      /** @type {import('../../services/sourcing/types').RfiEvent} */ (rfiEventStore.get(RFI_ID))
-        .status
+      /** @type {import('@services/sourcing/types').RfiEvent} */ (rfiEventStore.get(RFI_ID)).status
     ).toBe('Draft');
   });
 
@@ -433,7 +424,7 @@ describe('BL-93 · RFI — Edit draft on the event detail', () => {
 
 const RFP_ID = 'rfp-004';
 const enrichRfp = async () => {
-  const seed = /** @type {import('../../services/sourcing/types').RfpEvent} */ (
+  const seed = /** @type {import('@services/sourcing/types').RfpEvent} */ (
     rfpEventStore.get(RFP_ID)
   );
   const res = await svc.dispatch(scope, {
@@ -501,7 +492,7 @@ describe('BL-93 · RFP — Edit draft on the event detail', () => {
     fireEvent.click(screen.getByTestId('rfp-new-save-draft'));
     await waitFor(() =>
       expect(
-        /** @type {import('../../services/sourcing/types').RfpEvent} */ (rfpEventStore.get(RFP_ID))
+        /** @type {import('@services/sourcing/types').RfpEvent} */ (rfpEventStore.get(RFP_ID))
           .revisions
       ).toHaveLength(2)
     );
@@ -535,7 +526,7 @@ describe('BL-93 · Discard draft (t_rfi_cancel / t_rfp_cancel from Draft)', () =
     fireEvent.click(await screen.findByTestId(`rfi-discard-${RFI_ID}`));
     await waitFor(() =>
       expect(
-        /** @type {import('../../services/sourcing/types').RfiEvent} */ (rfiEventStore.get(RFI_ID))
+        /** @type {import('@services/sourcing/types').RfiEvent} */ (rfiEventStore.get(RFI_ID))
           .status
       ).toBe('Cancelled')
     );
@@ -554,7 +545,7 @@ describe('BL-93 · Discard draft (t_rfi_cancel / t_rfp_cancel from Draft)', () =
     fireEvent.click(await screen.findByTestId(`rfp-discard-${RFP_ID}`));
     await waitFor(() =>
       expect(
-        /** @type {import('../../services/sourcing/types').RfpEvent} */ (rfpEventStore.get(RFP_ID))
+        /** @type {import('@services/sourcing/types').RfpEvent} */ (rfpEventStore.get(RFP_ID))
           .status
       ).toBe('Cancelled')
     );

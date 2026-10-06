@@ -130,7 +130,7 @@ describe('CommHubInbound — the Stock page’s entry form is the only act', () 
     ).toBe('2400');
     save();
     await waitFor(() => expect(countFor(MAT)).toBe(base + 1));
-    const minted = /** @type {import('../services/sdc/types').InventoryDeclaration} */ (
+    const minted = /** @type {import('@services/sdc/types').InventoryDeclaration} */ (
       inventoryDeclarationStore.latestFor('sup-007', MAT)
     );
     expect(minted.supplierId).toBe('sup-007'); // from identity
@@ -153,7 +153,7 @@ describe('CommHubInbound — the Stock page’s entry form is the only act', () 
     save();
     await waitFor(() => expect(countFor(MAT)).toBe(base + 1));
     expect(
-      /** @type {import('../services/sdc/types').InventoryDeclaration} */ (
+      /** @type {import('@services/sdc/types').InventoryDeclaration} */ (
         inventoryDeclarationStore.latestFor('sup-007', MAT)
       ).totalQty
     ).toBe(5000);
@@ -167,7 +167,7 @@ describe('CommHubInbound — the Stock page’s entry form is the only act', () 
     save();
     await waitFor(() => expect(countFor(MAT)).toBe(base + 1));
     expect(
-      /** @type {import('../services/sdc/types').InventoryDeclaration} */ (
+      /** @type {import('@services/sdc/types').InventoryDeclaration} */ (
         inventoryDeclarationStore.latestFor('sup-007', MAT)
       ).supplierId
     ).toBe('sup-007');

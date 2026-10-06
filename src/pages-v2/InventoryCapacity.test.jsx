@@ -59,7 +59,7 @@ const panel = () =>
 
 describe('menu and copy (section 3.7)', () => {
   it('PTI Inventory & capacity: Inventory, Stock simulation (Material E2), Capacity, Alerts, Supplier access; supplier Planning adds Capacity', () => {
-    const inventory = /** @type {import('../components/layout-v2/navConfig').NavSection} */ (
+    const inventory = /** @type {import('@components/layout-v2/navConfig').NavSection} */ (
       PTI_NAV.find((s) => s.id === 'inventory')
     );
     expect(inventory.items.map((i) => i.path)).toEqual([
@@ -69,7 +69,7 @@ describe('menu and copy (section 3.7)', () => {
       '/buyer/alerts',
       '/buyer/supplier-access'
     ]);
-    const planning = /** @type {import('../components/layout-v2/navConfig').NavSection} */ (
+    const planning = /** @type {import('@components/layout-v2/navConfig').NavSection} */ (
       SUPPLIER_NAV.find((s) => s.id === 'planning')
     );
     expect(planning.items.map((i) => i.path)).toEqual([
@@ -230,7 +230,7 @@ describe('Supplier Stock (REQ-E08-01 SUP, REQ-E08-02, REQ-E08-03)', () => {
       channel: 'template'
     });
     expect(
-      /** @type {import('../services/sdc/types').InventoryDeclaration} */ (
+      /** @type {import('@services/sdc/types').InventoryDeclaration} */ (
         inventoryDeclarationStore.latestFor('sup-007', 'PK-PETB-8802')
       ).totalQty
     ).toBe(22000);
@@ -331,7 +331,7 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
     fireEvent.click(panel().getByTestId('stock-entry-submit'));
     await waitFor(() =>
       expect(
-        /** @type {import('../services/sdc/types').InventoryDeclaration} */ (
+        /** @type {import('@services/sdc/types').InventoryDeclaration} */ (
           inventoryDeclarationStore.latestFor('sup-007', 'PK-PETB-8801')
         ).batches
       ).toEqual([{ batchNumber: 'MD-1', qty: 500, uom: 'PCS', manufacturingDate: made }])
@@ -456,7 +456,7 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
       'The manufacturing date is in the future'
     );
     expect(
-      /** @type {import('../services/sdc/types').InventoryDeclaration} */ (
+      /** @type {import('@services/sdc/types').InventoryDeclaration} */ (
         inventoryDeclarationStore.latestFor('sup-007', 'PK-CAPF-8820')
       ).batches
     ).toEqual([
@@ -554,7 +554,7 @@ describe('Supplier-triggered sync and PTI refresh (BL-59, REQ-E08-02 BR-03, BR-1
 
   it('a removed grant removes the refresh on the next load', async () => {
     stockAccessStore.reset();
-    const grant = /** @type {import('../services/data/types').StockAccessGrant} */ (
+    const grant = /** @type {import('@services/data/types').StockAccessGrant} */ (
       stockAccessStore.get('sup-007')
     );
     stockAccessStore.put({ ...grant, active: false, materials: [] });
@@ -592,13 +592,13 @@ describe('Supplier access (REQ-E08-03)', () => {
     fireEvent.click(panel().getByTestId('access-remove'));
     await waitFor(() =>
       expect(
-        /** @type {import('../services/data/types').StockAccessGrant} */ (
+        /** @type {import('@services/data/types').StockAccessGrant} */ (
           stockAccessStore.get('sup-007')
         ).active
       ).toBe(false)
     );
     expect(
-      /** @type {import('../services/data/types').StockAccessGrant} */ (
+      /** @type {import('@services/data/types').StockAccessGrant} */ (
         stockAccessStore.get('sup-007')
       ).log.map((e) => e.action)
     ).toEqual(['grant', 'remove']);
@@ -762,7 +762,7 @@ describe('Planner capacity filters (BL-63, REQ-E08-04 BR-07, AC-04)', () => {
     );
     expect(
       ['sup-002-pg-MG-02', 'sup-005-pg-MG-02', 'sup-010-pg-MG-02'].map((id) =>
-        planStatus(/** @type {import('../services/data/types').CapacityPlan} */ (byId.get(id)))
+        planStatus(/** @type {import('@services/data/types').CapacityPlan} */ (byId.get(id)))
       )
     ).toEqual(['confirmed', 'gap', 'notStarted']);
     expect(screen.getByTestId('capacity-plan-sup-010-pg-MG-02')).toHaveTextContent(
@@ -770,7 +770,7 @@ describe('Planner capacity filters (BL-63, REQ-E08-04 BR-07, AC-04)', () => {
     );
     // sup-005's short weeks are covered by its additional capacity: amber, so
     // sup-007 MG-20 stays the one red group the planner's banner counts.
-    const levels = /** @type {import('../services/data/types').CapacityPlan} */ (
+    const levels = /** @type {import('@services/data/types').CapacityPlan} */ (
       byId.get('sup-005-pg-MG-02')
     ).weeks.map((w) => ltpCapacityLevel(w.demand, w.entry));
     expect(levels.filter((l) => l !== 'within')).toEqual(['needsAdditional', 'needsAdditional']);
@@ -785,12 +785,12 @@ describe('Planner capacity filters (BL-63, REQ-E08-04 BR-07, AC-04)', () => {
     );
     expect(
       planStatus(
-        /** @type {import('../services/data/types').CapacityPlan} */ (byId.get('sup-007-pg-MG-20'))
+        /** @type {import('@services/data/types').CapacityPlan} */ (byId.get('sup-007-pg-MG-20'))
       )
     ).toBe('gap');
     expect(
       planStatus(
-        /** @type {import('../services/data/types').CapacityPlan} */ (byId.get('sup-012-pg-MG-20'))
+        /** @type {import('@services/data/types').CapacityPlan} */ (byId.get('sup-012-pg-MG-20'))
       )
     ).toBe('confirmed');
   });

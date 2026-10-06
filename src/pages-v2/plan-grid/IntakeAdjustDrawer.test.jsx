@@ -219,7 +219,7 @@ describe('CP-0 · 2b — an AMBIGUOUS accepted quantity never becomes a PR', () 
       .find((p) => p.material === ADJUSTED.material && /^PR-2026-9/.test(p.prNumber));
     // 4500 — never 4.5, the value `Number("4.500")` used to hand the store.
     expect(
-      /** @type {import('../../services/data/types').PurchaseRequisition} */ (created).quantity
+      /** @type {import('@services/data/types').PurchaseRequisition} */ (created).quantity
     ).toBe(4_500);
   });
 

@@ -346,11 +346,11 @@ const LineCard = ({ line, latest, onConfirm, onAcknowledge }) => {
               })
             : t('sdcSup.line.lastResponse', {
                 qty: formatNumber(
-                  /** @type {import('../services/sdc/types').ForecastConfirmation} */ (
+                  /** @type {import('@services/sdc/types').ForecastConfirmation} */ (
                     latest.forecastConfirmation
                   ).confirmedQty
                 ),
-                uom: /** @type {import('../services/sdc/types').ForecastConfirmation} */ (
+                uom: /** @type {import('@services/sdc/types').ForecastConfirmation} */ (
                   latest.forecastConfirmation
                 ).uom,
                 version: latest.submissionVersion,
@@ -538,7 +538,7 @@ const ResponsesTab = ({ responses, onSubmitDraft, submittingId }) => {
                   : t('sdcSup.responses.col.confirmed'),
                 value: r.acknowledgment
                   ? t('sdcSup.responses.ack')
-                  : `${formatNumber(/** @type {import('../services/sdc/types').ForecastConfirmation} */ (r.forecastConfirmation).confirmedQty)} ${/** @type {import('../services/sdc/types').ForecastConfirmation} */ (r.forecastConfirmation).uom}`
+                  : `${formatNumber(/** @type {import('@services/sdc/types').ForecastConfirmation} */ (r.forecastConfirmation).confirmedQty)} ${/** @type {import('@services/sdc/types').ForecastConfirmation} */ (r.forecastConfirmation).uom}`
               },
               {
                 label: t('sdcSup.responses.col.committedDate'),
