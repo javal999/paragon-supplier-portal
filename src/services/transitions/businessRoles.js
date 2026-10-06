@@ -376,6 +376,9 @@ const LANE_BUNDLES = Object.freeze({
     // demand forecast before it drives material plans, so the team that
     // reviews it is the one that overrides it, with a reason.
     'forecastoverride:record',
+    // FUX-D3 — the Material Planner records the decision for a warehouse week
+    // that does not fit (rent, push out, reduce, accept with a note).
+    'warehousedecision:record',
     // Material C5 (MR-8 BR-03) — Material Planning maintains the planning
     // groups capacity is kept by: create, rename, move materials, retire.
     'planninggroup:manage',

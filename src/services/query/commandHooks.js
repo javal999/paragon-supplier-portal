@@ -25,6 +25,9 @@ import { scopeKey } from './useServiceQuery';
 /** @import { SimulationOverrideField } from '../data/types' */
 /** @import { ReasonListId } from '../transitions/reasonCodes' */
 import { reasonCodeEntityId } from '../transitions/reasonCodes';
+/** @import { WarehouseDecisionChoice } from '../transitions/warehouseDecisionRules' */
+import { warehouseDecisionEntityId } from '../transitions/warehouseDecisionRules';
+/** @import { ForecastStream } from '../sdc/types' */
 
 /**
  * The COMMAND scope — tenancy plus the seat's business roles.
@@ -2665,6 +2668,50 @@ export function useForecastOverrideCommand() {
         predicate: (q) =>
           q.queryKey[0] === 'procurement' &&
           (q.queryKey[1] === 'forecastBias' || q.queryKey[1] === 'demandForecast')
+      });
+    }
+  });
+}
+
+// ─── Warehouse-week decisions (FUX-D3) ──────────────────────────────────────
+//
+// The Material Planner records how a week that does not fit the warehouse is
+// handled. The entity is `<stream>|<weekStart>`; the target reads the plan
+// version, the time and the actor itself. A record of intent: a success
+// changes the Make warehouse room page and nothing else.
+
+/**
+ * @typedef {{
+ *     readonly stream: ForecastStream;
+ *     readonly weekStart: string;
+ *     readonly choice: WarehouseDecisionChoice;
+ *     readonly note: string | null;
+ *   }} WarehouseDecisionVars
+ */
+
+/** Record how a warehouse week that does not fit is handled (fires `t_warehousedecision_record`). */
+export function useWarehouseDecisionCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, WarehouseDecisionVars>} */ (
+    useMutation
+  )({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_warehousedecision_record',
+        entity: 'warehouseDecision',
+        entityId: warehouseDecisionEntityId(vars.stream, vars.weekStart),
+        payload: {
+          choice: vars.choice,
+          ...(vars.note ? { note: vars.note } : {})
+        }
+      }),
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      qc.invalidateQueries({
+        predicate: (q) => q.queryKey[0] === 'procurement' && q.queryKey[1] === 'reschedule'
       });
     }
   });

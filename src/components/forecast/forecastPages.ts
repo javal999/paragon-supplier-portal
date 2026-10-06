@@ -1,7 +1,7 @@
 import type { TFunction } from 'i18next';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// THE 14 BUYER FORECAST PAGES — where each sits in the cycle (F-05, F-19).
+// THE BUYER FORECAST PAGES — where each sits in the cycle (F-05, F-19).
 //
 // Forecast UX phase 1, task A4. One row per page: its route, the menu section
 // that holds it (task A1's `weeklyPlan`, `review` or `planningEngine`), the key
@@ -13,6 +13,10 @@ import type { TFunction } from 'i18next';
 // quality → End-of-cycle stock check, and back to What to order for the next
 // cycle. An engine page links to the page whose input it is, or that reaches
 // it (`fux-build-00-brief.md`, "Reached from").
+//
+// FUX phase 2 B2 (F-01): Published versions is no longer a page. It is the
+// `?tab=versions` tab of Publish to suppliers, so it has no row here; its old
+// route redirects to the tab (FUX2-R1).
 //
 // A weekly or review page is named by its menu label (`hub.nav.pti.*`), so the
 // title and the menu cannot drift. An engine page keeps its own title.
@@ -28,13 +32,11 @@ export type ForecastPageId =
   | 'stockCheck'
   | 'materialRequirement'
   | 'safetyStock'
-  | 'publishedVersions'
-  | 'forecastBias'
   | 'dataHealth'
   | 'modelBacktest'
   | 'reliability';
 
-/** A page a purpose header may link to: one of the 14, or the Supplier scorecard. */
+/** A page a purpose header may link to: one of the forecast pages, or the Supplier scorecard. */
 export type ForecastLinkTarget = ForecastPageId | 'performance';
 
 type SectionKey = 'hub.nav.section.weeklyPlan' | 'hub.nav.section.review' | 'hub.nav.section.planningEngine';
@@ -66,14 +68,23 @@ export const FORECAST_PAGES: Readonly<Record<ForecastPageId, ForecastPage>> = Ob
   stockCheck: { path: '/buyer/fs-reconcile', titleKey: 'hub.nav.pti.stockCheck', sectionKey: REVIEW, uses: 'forecastQuality', next: 'whatToOrder' },
   materialRequirement: { path: '/buyer/material-requirement', titleKey: 'mrq.title', sectionKey: ENGINE, uses: 'safetyStock', next: 'whatToOrder' },
   safetyStock: { path: '/buyer/safety-stock', titleKey: 'sst.title', sectionKey: ENGINE, uses: 'reliability', next: 'whatToOrder' },
-  publishedVersions: { path: '/buyer/forecasts', titleKey: 'fc.pti.versions.title', sectionKey: ENGINE, uses: 'publish', next: 'responses' },
-  forecastBias: { path: '/buyer/forecast-bias', titleKey: 'fb.title', sectionKey: ENGINE, uses: 'forecastQuality', next: 'modelBacktest' },
   dataHealth: { path: '/buyer/data-health', titleKey: 'dh.title', sectionKey: ENGINE, uses: 'stockCheck', next: 'whatToOrder' },
-  modelBacktest: { path: '/buyer/model-backtest', titleKey: 'mb.title', sectionKey: ENGINE, uses: 'forecastBias', next: 'forecastQuality' },
+  // FUX phase 2 B5 — Forecast bias is now Forecast quality's bias tab, so the backtest's Uses link goes there.
+  modelBacktest: { path: '/buyer/model-backtest', titleKey: 'mb.title', sectionKey: ENGINE, uses: 'forecastQuality', next: 'forecastQuality' },
   reliability: { path: '/buyer/reliability', titleKey: 'rel.pti.title', sectionKey: ENGINE, uses: 'performance', next: 'makeRoom' },
 });
 
 const PERFORMANCE: PageTarget = { path: '/buyer/scorecard', titleKey: 'hub.nav.pti.performance' };
+
+/**
+ * The Supplier scorecard is not one of the forecast pages, but it is the
+ * "performance" step that Uses/Next links point to, so its own place in the
+ * cycle is stated here beside the others (phase 2, B6).
+ */
+export const PERFORMANCE_PLACE: { readonly uses: ForecastLinkTarget; readonly next: ForecastLinkTarget } = Object.freeze({
+  uses: 'responses',
+  next: 'forecastQuality',
+});
 
 /** Where a purpose-header link goes, and the key of the name it shows. */
 export function linkTarget(target: ForecastLinkTarget): PageTarget {

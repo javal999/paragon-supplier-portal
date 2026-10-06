@@ -80,7 +80,6 @@ import SupplierRegistrationV2 from '@pages-v2/SupplierRegistration';
 import SupplierDeliveryAgreements from '@pages-v2/SupplierDeliveryAgreements';
 import SupplierCallOffs from '@pages-v2/SupplierCallOffs';
 import SupplierCapacity from '@pages-v2/SupplierCapacity';
-import BuyerForecasts from '@pages-v2/BuyerForecasts';
 import BuyerCommitments from '@pages-v2/BuyerCommitments';
 import BuyerReliability from '@pages-v2/BuyerReliability';
 import {
@@ -95,7 +94,6 @@ import BuyerReschedule from '@pages-v2/BuyerReschedule';
 import BuyerStabilise from '@pages-v2/BuyerStabilise';
 import BuyerDataHealth from '@pages-v2/BuyerDataHealth';
 import BuyerDemandForecast from '@pages-v2/BuyerDemandForecast';
-import BuyerForecastBias from '@pages-v2/BuyerForecastBias';
 import BuyerModelBacktest from '@pages-v2/BuyerModelBacktest';
 import SupplierForecastCommitments from '@pages-v2/SupplierForecastCommitments';
 import SupplierPerformance from '@pages-v2/SupplierPerformance';
@@ -163,7 +161,11 @@ const AppRouter = () => {
             />
             {/* REQ-E06-01 / REQ-E06-03 — Forecast: versions, then commitments & gaps.
               The earlier response review stays reachable under the same menu item. */}
-            <Route path="/buyer/forecasts" element={<BuyerForecasts />} />
+            {/* FUX phase 2 B2 (FUX2-R1) — Published versions is a tab of Publish to suppliers. */}
+            <Route
+              path="/buyer/forecasts"
+              element={<Navigate to="/buyer/stabilise?tab=versions" replace />}
+            />
             <Route path="/buyer/collaboration" element={<BuyerCommitments />} />
             {/* REQ-E06-04 — fixed stock reconcile per supplier × material × cycle (ENG-D21). */}
             <Route path="/buyer/fs-reconcile" element={<BuyerFixedStockReconcile />} />
@@ -184,8 +186,11 @@ const AppRouter = () => {
             <Route path="/buyer/data-health" element={<BuyerDataHealth />} />
             {/* REQ-E14-07 — the finished-goods demand forecast (SIMULATED; PTI only). */}
             <Route path="/buyer/demand-forecast" element={<BuyerDemandForecast />} />
-            {/* REQ-E14-11 — forecast bias and planner overrides (SIMULATED; PTI only). */}
-            <Route path="/buyer/forecast-bias" element={<BuyerForecastBias />} />
+            {/* REQ-E14-11 — forecast bias and planner overrides: now Forecast quality's bias tab (FUX phase 2 B5, FUX2-R1). */}
+            <Route
+              path="/buyer/forecast-bias"
+              element={<Navigate to="/buyer/demand-forecast?tab=bias" replace />}
+            />
             {/* REQ-E14-10 — choosing each SKU's model by simulated service (SIMULATED; PTI only). */}
             <Route path="/buyer/model-backtest" element={<BuyerModelBacktest />} />
             <Route

@@ -52,8 +52,9 @@ describe('Batch 6 — tail-sweep bilingual render (no header EN leak)', () => {
   it('BuyerScorecard: ID header, English gone', async () => {
     await setLang('id');
     renderWithProviders(<BuyerScorecard />, { route: '/buyer/scorecard' });
-    expect(await screen.findByText('Kartu Skor Pemasok')).toBeInTheDocument();
-    expect(screen.queryByText('Supplier Scorecard')).not.toBeInTheDocument();
+    // FUX2-R4 (B6) — the page is named by its menu label: Supplier performance / Kinerja pemasok.
+    expect(await screen.findByRole('heading', { name: 'Kinerja pemasok' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Supplier performance' })).not.toBeInTheDocument();
   });
 
   it('BuyerInventory: ID header, English gone', async () => {

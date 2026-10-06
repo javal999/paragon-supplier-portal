@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { FORECAST_PAGES, linkTarget, type ForecastPageId } from './forecastPages';
+import { FORECAST_PAGES, PERFORMANCE_PLACE, linkTarget, type ForecastPageId } from './forecastPages';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PURPOSE HEADER — F-05 (Forecast UX phase 1, task A4).
@@ -16,12 +16,12 @@ import { FORECAST_PAGES, linkTarget, type ForecastPageId } from './forecastPages
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface PurposeHeaderProps {
-  readonly page: ForecastPageId;
+  readonly page: ForecastPageId | 'performance';
 }
 
 const PurposeHeader: React.FC<PurposeHeaderProps> = ({ page }) => {
   const { t } = useTranslation();
-  const p = FORECAST_PAGES[page];
+  const p = page === 'performance' ? PERFORMANCE_PLACE : FORECAST_PAGES[page];
   const uses = linkTarget(p.uses);
   const next = linkTarget(p.next);
   const term = 'text-text-tertiary whitespace-nowrap';

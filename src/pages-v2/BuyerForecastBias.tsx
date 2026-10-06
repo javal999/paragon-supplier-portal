@@ -1,8 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import AppShellV2 from '../components/layout-v2/AppShellV2';
-import PageHeader from '../components/ui-v2/PageHeader';
 import KpiCard from '../components/ui-v2/KpiCard';
 import StatusPill from '../components/ui-v2/StatusPill';
 import FilterChipsBar from '../components/ui-v2/FilterChipsBar';
@@ -27,15 +25,15 @@ import { directionOf, type FvaGroup, type FvaMonth } from '../services/engine/fo
 import { labelOf } from '../services/sdc/materialMaster';
 import { NOTE_REQUIRED_CODE } from '../services/transitions/reasonCodes';
 import { useActiveReasonCodes, useReasonLabel } from './admin/reasonCodeDisplay';
-import PurposeHeader from '../components/forecast/PurposeHeader';
-import SimulatedDataBanner from '../components/forecast/SimulatedDataBanner';
 import AboutThisPage from '../components/forecast/AboutThisPage';
 import DataAsOf from '../components/forecast/DataAsOf';
 import TermTip from '../components/forecast/TermTip';
-import { forecastCrumb, forecastTitle } from '../components/forecast/forecastPages';
+import { forecastCrumb } from '../components/forecast/forecastPages';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FORECAST BIAS — REQ-E14-11, the Material Planning team's view (Experience:
+// FORECAST BIAS — the "Bias and overrides" tab of Forecast quality (FUX phase 2
+// B5; `/buyer/forecast-bias` redirects to `/buyer/demand-forecast?tab=bias`).
+// REQ-E14-11, the Material Planning team's view (Experience:
 // "a bias alarm per SKU and material, and a monthly report of override value by
 // direction and size").
 //
@@ -311,11 +309,19 @@ const FvaTable: React.FC<{ month: FvaMonth }> = ({ month }) => {
   );
 };
 
-const BuyerForecastBias: React.FC = () => {
+/**
+ * Forecast UX phase 2, task B5 — the shared Forecast quality frame (title,
+ * purpose header, banner, tabs, plan-source line) that a tab renders around
+ * its content. Built in `BuyerDemandForecast.tsx`, which owns the page.
+ */
+export type QualityFrame = (content: React.ReactNode) => React.ReactElement;
+
+/** The "Bias and overrides" tab of Forecast quality (was the Forecast bias page). */
+const ForecastBiasTab: React.FC<{ frame: QualityFrame }> = ({ frame }) => {
   const { t } = useTranslation();
   const query = useForecastBias();
   const reasonLabel = useReasonLabel();
-  const crumb = forecastCrumb(t, 'forecastBias');
+  const crumb = forecastCrumb(t, 'forecastQuality');
   const view = query.data ?? null;
   const [skuFilter, setSkuFilter] = useState<SkuFilter>('all');
   const [materialFilter, setMaterialFilter] = useState<MaterialFilter>('alarms');
@@ -334,11 +340,8 @@ const BuyerForecastBias: React.FC = () => {
   const shownMonth = value.months.find((m) => m.month === month) ?? value.months[0] ?? null;
   const flagged = value.review.types.filter((x) => x.flagged);
 
-  return (
-    <AppShellV2>
-      <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'forecastBias')} />
-      <PurposeHeader page="forecastBias" />
-      <SimulatedDataBanner capability="engineDataset" />
+  return frame(
+    <>
       <DataAsOf
         date={view.asOf}
         detail={
@@ -589,8 +592,8 @@ const BuyerForecastBias: React.FC = () => {
         <p data-testid="fb-synthetic-note">{t('fb.synthetic')}</p>
         <p data-testid="fb-source-note">{t('fb.source')}</p>
       </AboutThisPage>
-    </AppShellV2>
+    </>,
   );
 };
 
-export default BuyerForecastBias;
+export default ForecastBiasTab;
