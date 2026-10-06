@@ -9,11 +9,9 @@ import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { PLANNING_TERM_GLOSSARY, GLOSSARY_REGISTRIES, type PlanningTerm } from '@lib/glossary';
 import { FORECAST_PAGES, linkTarget, type ForecastPageId } from './forecastPages';
 import TermTip from './TermTip';
-import BuyerForecasts from '@pages-v2/BuyerForecasts';
 import BuyerCommitments from '@pages-v2/BuyerCommitments';
 import BuyerDataHealth from '@pages-v2/BuyerDataHealth';
 import BuyerDemandForecast from '@pages-v2/BuyerDemandForecast';
-import BuyerForecastBias from '@pages-v2/BuyerForecastBias';
 import BuyerModelBacktest from '@pages-v2/BuyerModelBacktest';
 import BuyerReliability from '@pages-v2/BuyerReliability';
 import BuyerMaterialRequirement from '@pages-v2/BuyerMaterialRequirement';
@@ -28,7 +26,8 @@ import Glossary from '@pages-v2/Glossary';
 // ─────────────────────────────────────────────────────────────────────────────
 // FORECAST UX PHASE 1 · TASK A4 — purpose headers, one banner, plain copy.
 //
-// Every one of the 14 buyer forecast pages (13, plus phase 2's This week), rendered as a Material Planner:
+// Every buyer forecast page (phase 1's, plus phase 2's This week, less Forecast bias and Published versions,
+// which B5 and B2 made tabs of Forecast quality and Publish to suppliers), rendered as a Material Planner:
 //   · a purpose header whose Uses and Next links go to routes the router has;
 //   · the one simulated-data banner, and neither of the two old labels;
 //   · its menu label as the title and its new section in the crumb (F-19);
@@ -49,8 +48,6 @@ const PAGES: Record<ForecastPageId, React.FC> = {
   stockCheck: BuyerFixedStockReconcile,
   materialRequirement: BuyerMaterialRequirement,
   safetyStock: BuyerSafetyStock,
-  publishedVersions: BuyerForecasts,
-  forecastBias: BuyerForecastBias,
   dataHealth: BuyerDataHealth,
   modelBacktest: BuyerModelBacktest,
   reliability: BuyerReliability,
@@ -101,8 +98,12 @@ describe('the requirement-code matcher (probed before it is trusted)', () => {
 });
 
 describe('the purpose-header map', () => {
-  it('covers 14 pages (13, plus This week from phase 2 B1), and every Uses and Next target is a route the router has', () => {
-    expect(IDS).toHaveLength(14);
+  it('covers every forecast page (This week added by B1, Forecast bias and Published versions folded into tabs by B5 and B2), and every Uses and Next target is a route the router has', () => {
+    expect(IDS).toContain('thisWeek');
+    expect(IDS).toContain('forecastQuality');
+    expect(IDS).not.toContain('forecastBias');
+    expect(IDS).not.toContain('publishedVersions');
+    expect(Object.keys(FORECAST_PAGES).sort()).toEqual([...IDS].sort());
     expect(ROUTES.has('/buyer/order-plan')).toBe(true);
     expect(ROUTES.has('/buyer/no-such-page')).toBe(false);
     for (const id of IDS) {
@@ -180,10 +181,22 @@ describe.each(IDS)('%s', (page) => {
 
 describe('page-specific copy (F-12, F-16, F-21)', () => {
   it('F-12: the override form says overrides do not change orders', async () => {
-    await renderPage('forecastBias');
-    expect(screen.getByTestId('fb-override-no-effect')).toHaveTextContent(
+    renderWithProviders(<BuyerDemandForecast />, { identity: PLANNER, route: '/buyer/demand-forecast?tab=bias' });
+    expect(await screen.findByTestId('fb-override-no-effect', {}, { timeout: 15000 })).toHaveTextContent(
       'Overrides do not change orders until the engine forecast is switched on.',
     );
+  });
+
+  it('B5: the bias tab of Forecast quality keeps the purpose header, the one banner, its own Data as of, and no requirement code', async () => {
+    renderWithProviders(<BuyerDemandForecast />, { identity: PLANNER, route: '/buyer/demand-forecast?tab=bias' });
+    await screen.findByTestId('fb-kpis', {}, { timeout: 15000 });
+    expect(screen.getByTestId('purpose-header')).toHaveAttribute('data-page', 'forecastQuality');
+    expect(screen.getByTestId('simulated-data-banner')).toHaveTextContent('Sample data. Nothing here reaches suppliers or SAP.');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(i18n.t('hub.nav.pti.forecastQuality'));
+    expect(screen.getByTestId('data-as-of')).toHaveTextContent('Data as of');
+    expect(screen.getByTestId('about-this-page')).not.toHaveAttribute('open');
+    const text = document.body.textContent ?? '';
+    expect(text.match(new RegExp(REQUIREMENT_CODE, 'g')) ?? []).toEqual([]);
   });
 
   it('F-16: Forecast quality no longer says the backtest is not built', async () => {
@@ -207,8 +220,9 @@ describe('page-specific copy (F-12, F-16, F-21)', () => {
 describe('planning terms (F-09)', () => {
   const TERMS = Object.keys(PLANNING_TERM_GLOSSARY) as PlanningTerm[];
 
-  it('registers the six terms as a glossary vocabulary', () => {
-    expect(TERMS).toEqual(['Firm', 'Trade-off', 'MASC', 'Tracking signal', 'Reorder point', 'P50/P90']);
+  it('registers the seven terms as a glossary vocabulary', () => {
+    // FUX2 B3 adds Safety stock, tipped in the "Why this quantity" panel.
+    expect(TERMS).toEqual(['Firm', 'Trade-off', 'MASC', 'Tracking signal', 'Reorder point', 'P50/P90', 'Safety stock']);
     expect(GLOSSARY_REGISTRIES.map((r) => r.sourceType)).toContain('PlanningTerm');
   });
 

@@ -11,7 +11,7 @@ import {
 import { stockAccessStore } from './stores/inventoryHubStores';
 import { allPlanningGroups } from './planningGroupReadModel';
 import { stockSimulationRows } from './stockSimulationReadModel';
-import { allCommitmentLines, allCoverageRows, allVersionViews, forecastSupplierName } from './forecastReadModel';
+import { allCommitmentLines, allCoverageRows, allVersionViews, currentPlanVersion, forecastSupplierName } from './forecastReadModel';
 import { allFixedStockRows } from './fixedStockReadModel';
 import { maskForSupplier } from '../../transitions/inventoryRules';
 import { PTI_ONLY_RULES } from '../../transitions/inventoryAlertRules';
@@ -171,6 +171,7 @@ import { planChangeGuard, poOrderLines, reschedule, termsKey, type LineTerms, ty
 import { callOffViews } from '../../transitions/callOffRules';
 import { callOffOrderLines } from './rescheduleReadModel';
 import { sapChangeMarkStore } from './stores/sapChangeMarkStore';
+import { warehouseDecisionStore } from './stores/warehouseDecisionStore';
 import { addDays, dayOf } from '../../engine/dates';
 import type { EngineDataset } from '../../engine/types';
 import { labelOf, materialEntry } from '../../sdc/materialMaster';
@@ -670,6 +671,9 @@ export class MockProcurementService implements IProcurementService {
       planChangeWindowWeeks: WINDOW_WEEKS,
       unconfirmedPoLines,
       sapMarks: [...sapChangeMarkStore.all()].reverse(),
+      // FUX-D3 — the warehouse-week decisions and the version each is judged against.
+      warehouseDecisions: warehouseDecisionStore.all(),
+      planVersions: { packaging: currentPlanVersion('packaging'), rawMaterial: currentPlanVersion('rawMaterial') },
     };
   }
 

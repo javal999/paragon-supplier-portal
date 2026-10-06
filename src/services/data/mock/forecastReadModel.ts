@@ -39,6 +39,13 @@ export function currentVersion(stream: ForecastStream): ForecastPublication | nu
   return versions[versions.length - 1] ?? null;
 }
 
+/** FUX-D3 — the current version number of a stream (as `allVersionViews` numbers it), or null when none is published. */
+export function currentPlanVersion(stream: ForecastStream): number | null {
+  const versions = streamVersions(forecastVersionStore.all(), stream);
+  const last = versions[versions.length - 1];
+  return last ? (last.version ?? versions.length) : null;
+}
+
 /** Suppliers qualified to supply a material (REQ-E06-03 BR-05 reassignment targets). */
 export const qualifiedSuppliers = (materialCode: string): readonly string[] => QUALIFIED_SUPPLIERS[materialCode] ?? [];
 

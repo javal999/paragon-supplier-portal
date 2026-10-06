@@ -326,6 +326,18 @@ export const LOOSE_END_CENSUS: readonly CensusEntry[] = Object.freeze([
       'is a change with no quantity, never a delete. The verb is statePreserving, so the state is ' +
       'correctly declared terminal.',
   },
+  // ── warehouseDecision (FUX-D3) ─────────────────────────────────────────────
+  {
+    entity: 'warehouseDecision',
+    kind: 'initial-integrity',
+    subject: 'Maintained',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE MAXIMUM STOCK: the entity IS one warehouse ' +
+      'stream × week, addressed by <stream>|<weekStart>, and recording the first decision of a week adds ' +
+      'it — so there is no separate creation verb to be an entry. A later decision is a new record; ' +
+      'nothing is edited or deleted. The verb is statePreserving, so the state is correctly declared terminal.',
+  },
   // ── hubSetting (BL-32) ─────────────────────────────────────────────────────
   {
     entity: 'hubSetting',

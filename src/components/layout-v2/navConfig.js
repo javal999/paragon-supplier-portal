@@ -14,7 +14,6 @@ import {
   CalendarClock,
   CalendarSync,
   CalendarDays,
-  CalendarRange,
   ChartLine,
   DatabaseZap,
   Factory,
@@ -34,7 +33,6 @@ import {
   Receipt,
   ShieldCheck,
   ShieldHalf,
-  Crosshair,
   ShoppingCart,
   SlidersHorizontal,
   Tags,
@@ -315,12 +313,8 @@ export const UTILITY_NAV = {
       path: '/buyer/material-requirement'
     },
     { labelKey: 'hub.nav.pti.engine.safetyStock', icon: ShieldHalf, path: '/buyer/safety-stock' },
-    {
-      labelKey: 'hub.nav.pti.engine.publishedVersions',
-      icon: CalendarRange,
-      path: '/buyer/forecasts'
-    },
-    { labelKey: 'hub.nav.pti.engine.forecastBias', icon: Crosshair, path: '/buyer/forecast-bias' },
+    // FUX phase 2 B5 — Forecast bias left the user menu: it is Forecast quality's bias tab.
+    // FUX phase 2 B2 — Published versions left the user menu: it is Publish to suppliers' versions tab.
     { labelKey: 'hub.nav.pti.engine.dataHealth', icon: DatabaseZap, path: '/buyer/data-health' },
     {
       labelKey: 'hub.nav.pti.engine.modelBacktest',

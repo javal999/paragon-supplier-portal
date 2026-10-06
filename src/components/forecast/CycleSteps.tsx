@@ -14,7 +14,6 @@ import {
 import { FORECAST_PAGES } from './forecastPages';
 import {
   CYCLE_STEPS,
-  STEP_HEALTH,
   currentVersions,
   failingChecks,
   recommendedOrders,
@@ -60,12 +59,11 @@ const CycleSteps: React.FC<CycleStepsProps> = ({ current }) => {
   const report = health.data ?? null;
   const withheld = publishWithheld();
 
-  const checksFor = (id: CycleStepId): number => {
-    if (!report) return 0;
-    if (id === 'thisWeek') return failingChecks(report);
-    const step = STEP_HEALTH[id];
-    return step ? failingChecks(report, step) : 0;
-  };
+  // The input check is one fact about the week's data, so the bar states it
+  // once, on This week, where the input check lives. Each result page still
+  // carries its own Data health chip under its title.
+  const checksFor = (id: CycleStepId): number =>
+    report && id === 'thisWeek' ? failingChecks(report) : 0;
 
   const textFor = (id: CycleStepId): string | null => {
     switch (id) {
