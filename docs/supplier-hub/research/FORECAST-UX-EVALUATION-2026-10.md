@@ -228,7 +228,11 @@ Every finding has been acted on. Phase 1 is #125, #126, #127, #131 (brief `fux-b
 | F-22 | A3 (labels name the real difference: released call-offs), B4 | Done |
 | F-23, F-24, F-27 | A2 | Done |
 
+Phase 3 (brief `fux3-build-00-brief.md`): clean-up C1 #150 and accessibility C2 #153 are merged; the usability test plan is `FORECAST-UX-USABILITY-TEST-PLAN.md`.
+
 Still open:
+- The phase 3 usability test with planners, and the fixes it finds (C3).
+- Phone width: the shared app shell's fixed menu (see `FORECAST-UX-ACCESSIBILITY-2026-10.md`).
 - F-13's Source column and next-due date (FUX-D4).
 - Whether This week becomes the planners' landing page: decided after the phase 3 usability test.
 - Open questions 4, 6, 7 and 8 above.
