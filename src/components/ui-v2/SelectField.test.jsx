@@ -427,6 +427,50 @@ describe('SelectField — the panel always opens below the trigger, height-cappe
     expect(parseInt(listbox.style.maxHeight, 10)).toBe(120);
   });
 });
+describe("SelectField — the listbox's own scroll does not reposition the panel (N5)", () => {
+  it('ignores a scroll event whose target is inside the listbox itself', () => {
+    renderField(
+      <SelectField options={bigOptions(20)} value={null} onChange={() => {}} placeholder="Pick one" />
+    );
+    const field = screen.getByRole('combobox');
+    field.getBoundingClientRect = () =>
+      /** @type {DOMRect} */ (
+        /** @type {unknown} */ ({
+          top: 100,
+          bottom: 140,
+          left: 0,
+          right: 200,
+          width: 200,
+          height: 40,
+          x: 0,
+          y: 100
+        })
+      );
+    fireEvent.click(field);
+    const listbox = screen.getByRole('listbox');
+    const panel = /** @type {HTMLElement} */ (listbox.parentElement);
+    expect(panel.style.top).toBe('144px');
+
+    // Move the trigger, then scroll the listbox itself (not window/an ancestor). If the
+    // listbox's own scroll still re-ran `update`, the panel would jump to follow the trigger.
+    field.getBoundingClientRect = () =>
+      /** @type {DOMRect} */ (
+        /** @type {unknown} */ ({
+          top: 300,
+          bottom: 340,
+          left: 0,
+          right: 200,
+          width: 200,
+          height: 40,
+          x: 0,
+          y: 300
+        })
+      );
+    fireEvent.scroll(listbox);
+    expect(panel.style.top).toBe('144px');
+  });
+});
+
 describe('SelectField — large datasets are windowed', () => {
   it('renders far fewer option rows than exist once past the virtualize threshold', () => {
     renderField(

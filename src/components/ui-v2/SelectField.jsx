@@ -266,11 +266,19 @@ const SelectField = ({
         labelText: trigger.labels?.[0]?.textContent?.trim() || null
       });
     };
+    // The listbox scrolls itself (windowing/keyboard nav) inside `panelRef`; that scroll
+    // doesn't move the trigger and must not re-run `update` on every wheel tick (review N5)
+    // — only an ANCESTOR's scroll does.
+    /** @param {Event} e */
+    const onScroll = (e) => {
+      if (panelRef.current?.contains(/** @type {Node} */ (e.target))) return;
+      update();
+    };
     update();
-    window.addEventListener('scroll', update, true);
+    window.addEventListener('scroll', onScroll, true);
     window.addEventListener('resize', update);
     return () => {
-      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('scroll', onScroll, true);
       window.removeEventListener('resize', update);
     };
   }, [open]);
