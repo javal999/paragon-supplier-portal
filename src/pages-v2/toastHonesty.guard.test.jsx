@@ -673,6 +673,13 @@ describe('unbacked-toast honesty guard (R1)', () => {
     const shipments = SITES.filter((s) => s.file.startsWith('SupplierShipments/'));
     expect(shipments.map((s) => s.file)).toContain('SupplierShipments/index.jsx');
     expect(shipments.flatMap((s) => s.keys)).toContain('supplierShipments.toast.export.title');
+    // `BuyerContracts` contributes no site and no exclusion (measured before
+    // and after its split), so its membership is asserted on the scanned FILES:
+    // its index, which holds its one toast, and a hook the split moved
+    // handlers into.
+    const scanned = pageFiles(PAGES_DIR);
+    expect(scanned).toContain('BuyerContracts/index.jsx');
+    expect(scanned).toContain('BuyerContracts/hooks/useContractDraft.js');
   });
 
   /**

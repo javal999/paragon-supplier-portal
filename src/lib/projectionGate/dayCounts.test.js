@@ -266,7 +266,9 @@ describe('⚠️ mintedAtWrite — the clock value COMPUTED AND THEN STORED', ()
     // reports on the scan rather than on the tree.
     expect(stored.length).toBeGreaterThan(0);
     expect(nonFixture.length).toBeGreaterThan(50);
-    expect(nonFixture).toContain('src/pages-v2/BuyerContracts.jsx');
+    expect(nonFixture).toContain('src/pages-v2/BuyerContracts/index.jsx');
+    // A page split into a folder keeps its hooks in the scan (Phase 5).
+    expect(nonFixture).toContain('src/pages-v2/BuyerContracts/hooks/useContractDraft.js');
 
     /** @type {string[]} */
     const found = [];

@@ -77,7 +77,7 @@ document number; the TMS owns the shipment record. We CARRY identity, we do not
 ASSIGN it. A portal-minted number is a fact about a system we do not own.
 
 ⚠️ **AND THIS REPOSITORY VIOLATES ITS OWN RULE IN ONE PLACE, WHICH YOU WILL READ
-AS PERMISSION IF NOBODY TELLS YOU.** `BuyerContracts.jsx` mints
+AS PERMISSION IF NOBODY TELLS YOU.** `src/pages-v2/BuyerContracts/index.jsx` mints
 `CTR-${year}-${n}` client-side (`CTR-FABRICATION-01`, filed, unscheduled). It is
 a defect, not a pattern. C11 V15 records it on the invariant it contradicts.
 
