@@ -79,7 +79,7 @@ export const SEMANTIC_STATE = /** @type {const} */ ({
  */
 export const MAP_BASE = /** @type {const} */ ({
   land: '#F4F6F8', // landmass fill — the neutral surface a map sits on
-  landStroke: '#D1D8E0', // landmass hairline (mirrors the border-input token)
+  landStroke: '#D1D8E0', // decorative map hairline, kept light on purpose; no longer mirrors border-input (#8291A0)
   highlight: '#FEF3D6', // emphasised landmass fill — attention, NOT a state
   highlightStroke: '#B45309' // emphasised landmass hairline
 });

@@ -31,6 +31,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, expect, it } from 'vitest';
+import { GR_WIZARD_DIR, globFolderSource } from '@test/featureFolder';
 
 import { HALAL_CERT_TYPES, isHalalCertType, verifyHalalAtReceipt } from './halalVerification';
 import { BPJPH_MANDATE_DATE, computeStatus } from './complianceProjection';
@@ -584,7 +585,9 @@ describe('H4 — ⚠️ WIRED TO A NOTICE, AND TO NOTHING THAT CAN REFUSE', () =
       .map(([path]) => path)
       .sort();
     expect(referencing).toEqual([
-      '/src/components/v2-features/GRInspectionWizard.jsx',
+      // frontend-standard Phase 5: the wizard is a folder; its one read of the
+      // registry is in `hooks/useInspectionDraft.js` (`certVerdicts`).
+      '/src/components/v2-features/GRInspectionWizard/hooks/useInspectionDraft.js',
       '/src/services/data/halalVerification.js'
     ]);
 
@@ -615,8 +618,10 @@ describe('H4 — ⚠️ WIRED TO A NOTICE, AND TO NOTHING THAT CAN REFUSE', () =
     // Fixed by naming the path the claim REQUIRES instead of matching a
     // substring, and the fix is what makes the assertions below mean anything.
     const src = sources();
-    const wizard = src['/src/components/v2-features/GRInspectionWizard.jsx'];
-    expect(wizard, 'the component, not its spec').toBeDefined();
+    // A FOLDER since frontend-standard Phase 5: read whole, specs excluded by
+    // `globFolderSource`, which throws unless the folder's `index.jsx` is there.
+    const wizard = globFolderSource(src, GR_WIZARD_DIR);
+    expect(wizard, 'the component, not its spec').toContain('const GRInspectionWizard =');
     // The control that would have caught the original defect: the two files are
     // BOTH in the glob, so "the one I meant" was never a safe assumption.
     expect(src['/src/components/v2-features/GRInspectionWizard.test.jsx']).toBeDefined();

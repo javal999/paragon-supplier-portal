@@ -56,6 +56,7 @@ import { halalOf } from '@services/sdc/halal';
 import { MATERIAL_MASTER } from '@services/sdc/fixtures';
 import ts from 'typescript';
 import { isTestFile, scriptKindOf } from '@test/sourceFiles';
+import { GR_WIZARD_DIR, globFolderEntries } from '@test/featureFolder';
 
 // ─── Fixtures local to the suite. E1 SEEDS NONE IN THE TREE ──────────────────
 
@@ -951,7 +952,11 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
       '/src/services/transitions/staleState.test.js'
     ]);
     expect(referencing.filter((p) => !suites.includes(p))).toEqual([
-      '/src/components/v2-features/GRInspectionWizard.jsx', // ⚠️ E4 — THE FIRST GATE
+      // ⚠️ E4 — THE FIRST GATE. A FOLDER since frontend-standard Phase 5: the
+      // ledger read and the derivation sit in the draft hook, and the props
+      // typedef that names `EnforcementSetting` in the index. Two rows, one gate.
+      '/src/components/v2-features/GRInspectionWizard/hooks/useInspectionDraft.js',
+      '/src/components/v2-features/GRInspectionWizard/index.jsx',
       '/src/lib/enforcement.js', //                       the vocabulary + derivation
       // ⚠️ GL-0 — the glossary. STILL TYPE-ONLY, but **NO LONGER HEADLESS**: it
       // imports the six enforcement unions to pin `Record<Member,
@@ -1061,12 +1066,12 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
     // The E2 fence said the wizard was untouched. E4 touches it, and the shape
     // of the touch is the thing worth pinning: it reads the LEDGER through a
     // prop and derives the mode with `effectiveEnforcement` and its own instant.
-    const wizard = Object.entries(sources()).find(([p]) => p.endsWith('/GRInspectionWizard.jsx'));
-    expect(wizard).toBeDefined();
-    const code = codeOf(
-      /** @type {NonNullable<typeof wizard>} */ (wizard)[1],
-      /** @type {NonNullable<typeof wizard>} */ (wizard)[0]
-    );
+    // A FOLDER since frontend-standard Phase 5: every file of the wizard, each
+    // through `codeOf` with its own path. `globFolderEntries` throws unless the
+    // folder's `index.jsx` is in the glob.
+    const wizard = globFolderEntries(sources(), GR_WIZARD_DIR);
+    expect(wizard.map(([p]) => p)).toContain(`${GR_WIZARD_DIR}hooks/useInspectionDraft.js`);
+    const code = wizard.map(([p, text]) => codeOf(text, p)).join('\n');
     expect(code).toContain('effectiveEnforcement(');
     expect(code).toContain('enforcementSettings');
 

@@ -47,6 +47,7 @@ export const forecastCollaborationEn = {
   'fc.duration.underHour': 'under 1 h',
   'fc.col.dueRule':
     'Firm: {{firm}}. Trade-off and Forecast: {{other}}. Counted from publication on the hub working calendar.',
+  'fc.pti.gaps.dueRuleNote': '{{due}}: {{rule}}',
 
   'fc.gap.colour.green': 'Green',
   'fc.gap.colour.amber': 'Amber',
@@ -308,6 +309,7 @@ export const forecastCollaborationId = {
   'fc.duration.underHour': 'kurang dari 1 jam',
   'fc.col.dueRule':
     'Pasti: {{firm}}. Kompromi dan Prakiraan: {{other}}. Dihitung sejak penerbitan pada kalender kerja hub.',
+  'fc.pti.gaps.dueRuleNote': '{{due}}: {{rule}}',
 
   'fc.gap.colour.green': 'Hijau',
   'fc.gap.colour.amber': 'Kuning',
