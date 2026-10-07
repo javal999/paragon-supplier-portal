@@ -21,6 +21,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, expect, it } from 'vitest';
+import { GR_WIZARD_DIR, globFolderSource } from '@test/featureFolder';
 
 import { PROVISIONAL_BPOM_BY_GROUP, bpomOf, provisionalBpomForGroup } from '../bpom';
 import { MATERIAL_GROUPS } from '../materialGroups';
@@ -369,8 +370,12 @@ describe('2B-4b — the gate: WIRED, and the prefix rule is GONE', () => {
 
   it('the GR wizard runs the MASTER LOOKUP, and the prefix parse is not in the file', () => {
     const src = sources();
-    const wizard = src['/src/components/v2-features/GRInspectionWizard.jsx'];
-    expect(wizard).toBeDefined();
+    // A FOLDER since frontend-standard Phase 5 (`index.jsx` + `hooks/` +
+    // `components/` + `utils.js`): the master read sits in `utils.js` and the
+    // step gate in `hooks/useInspectionDraft.js`, so "the wizard" is read whole.
+    // `globFolderSource` throws unless `index.jsx` is in the glob.
+    const wizard = globFolderSource(src, GR_WIZARD_DIR);
+    expect(wizard).toContain('const GRInspectionWizard =');
 
     // WAS: `toContain("materialCode.startsWith('AI-')")` and `not.toContain('bpomOf')`.
     expect(wizard).not.toContain("materialCode.startsWith('AI-')");
@@ -434,7 +439,9 @@ describe('2B-4b — the gate: WIRED, and the prefix rule is GONE', () => {
     // Derived rather than listed: exactly one NON-TEST caller, and it is the
     // GR wizard. A second production caller means the lookup has spread to a
     // surface nobody reviewed, which is worth failing over.
-    expect(callers).toEqual(['/src/components/v2-features/GRInspectionWizard.jsx']);
+    // frontend-standard Phase 5: the wizard is a folder, and its one call site
+    // (`seedBpom`, shared by both draft builders) is in `utils.js`.
+    expect(callers).toEqual(['/src/components/v2-features/GRInspectionWizard/utils.js']);
 
     // ⚠️ AND EXACTLY ONE TYPE-ONLY REFERENCE, NAMED (`CENSUS-COUNTS-TYPE-IMPORTS-01`).
     // `src/lib/enforcement.js` imports `BpomRefusalReason` to derive — at
@@ -449,7 +456,17 @@ describe('2B-4b — the gate: WIRED, and the prefix rule is GONE', () => {
     // no master, and reaches no surface (the glossary is headless at GL-0). The
     // coupling is the POINT: it is what makes a refusal reason unable to exist
     // without a definition, and a definition unable to outlive its reason.
-    expect(typeOnly).toEqual(['/src/lib/enforcement.js', '/src/lib/glossary/refusals.glossary.js']);
+    // ⚠️ frontend-standard Phase 5 adds the THIRD, and it is the wizard's own:
+    // the split moved `GR_BPOM_REFUSAL_KEY` (`Record<BpomRefusalReason, string>`)
+    // into the step that renders it, `components/QualityStep.jsx`, because the
+    // chip-coverage gate links a message map to its uses within one file. It
+    // was this coupling inside the one wizard file before the split; it calls
+    // nothing — the call is `utils.js`, above.
+    expect(typeOnly).toEqual([
+      '/src/components/v2-features/GRInspectionWizard/components/QualityStep.jsx',
+      '/src/lib/enforcement.js',
+      '/src/lib/glossary/refusals.glossary.js'
+    ]);
 
     // ⚠️ THE LIMIT OF THIS CHECK, STATED AND UNCHANGED FROM 2B-4a: Vite's
     // `import.meta.glob` EXCLUDES THE MODULE IT IS WRITTEN IN, so this scan
