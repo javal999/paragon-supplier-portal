@@ -28,6 +28,8 @@ import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import { isLive } from '@services/liveness';
 import { refusedByPolicy } from '@services/transitions/refusalMessage';
 import { POLICY_HOOKS } from '@services/transitions/policyHooks';
@@ -208,6 +210,30 @@ const BuyerCallOffs = () => {
   const [search, setSearch] = useState('');
   const matchOf = useMaterialMatcher();
   const drilledPo = drilledPoId(drill);
+  /** @typedef {'all' | 'awaitingApproval' | 'escalated' | 'atRisk' | 'drift'} StatusFilter */
+  const [statusFilter, setStatusFilter] = useState(/** @type {StatusFilter} */ ('all'));
+  // Deep-link read: `?status=` narrows the My Tasks call-off tasks to the
+  // umbrella rows that match.
+  useUrlEnumParam(
+    'status',
+    /** @type {StatusFilter[]} */ (['all', 'awaitingApproval', 'escalated', 'atRisk', 'drift']),
+    setStatusFilter
+  );
+  const driftKeys = useMemo(
+    () => new Set(deliveryDrift(views).map((d) => `${d.supplierId}|${d.materialCode}`)),
+    [views]
+  );
+  const rowFilterActive =
+    statusFilter === 'awaitingApproval' ||
+    statusFilter === 'escalated' ||
+    statusFilter === 'atRisk';
+  /** @param {CallOffView} v */
+  const matchesStatusFilter = (v) =>
+    statusFilter === 'awaitingApproval'
+      ? v.confirmation === 'Awaiting Approval'
+      : statusFilter === 'escalated'
+        ? v.confirmation === 'Escalated'
+        : v.delivery === 'atRisk';
   /**
    * ⚠️ **WHEN A PO FILTER IS IN PLAY THE PAGE LISTS WHAT THE SUMMARY COUNTED,
    * WHICH IS NARROWER THAN ITS OWN NORMAL POPULATION.** Unfiltered, a planner
@@ -227,18 +253,23 @@ const BuyerCallOffs = () => {
     const all = views.map((v) => v.callOff);
     return pos
       .flatMap((po) =>
-        po.lineItems.map((line) => ({
-          po,
-          line,
-          remaining: umbrellaRemaining(line, all),
-          rows: (drilledViews ?? views)
-            .filter((v) => v.callOff.poLineId === line.id)
-            .sort((a, b) => a.callOff.needDate.localeCompare(b.callOff.needDate))
-        }))
+        po.lineItems.map((line) => {
+          const baseRows = (drilledViews ?? views).filter((v) => v.callOff.poLineId === line.id);
+          const rows = (rowFilterActive ? baseRows.filter(matchesStatusFilter) : baseRows).sort(
+            (a, b) => a.callOff.needDate.localeCompare(b.callOff.needDate)
+          );
+          return { po, line, remaining: umbrellaRemaining(line, all), rows };
+        })
       )
       .filter((s) => drilledPo === null || s.po.id === drilledPo)
+      .filter((s) => !rowFilterActive || s.rows.length > 0)
+      .filter(
+        (s) =>
+          statusFilter !== 'drift' || driftKeys.has(`${s.po.supplierId}|${s.line.materialCode}`)
+      )
       .sort((a, b) => b.rows.length - a.rows.length || a.po.poNumber.localeCompare(b.po.poNumber));
-  }, [posQuery.data, views, drilledViews, drilledPo]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [posQuery.data, views, drilledViews, drilledPo, statusFilter, driftKeys]);
 
   // Material E2 (MR-7 step 6) — "Create call-off" from the stock simulation
   // lands here with `?newFor=<supplier>&material=<code>` and opens the new
@@ -533,6 +564,32 @@ const BuyerCallOffs = () => {
           myCode={pic.myCode}
         />
       </div>
+
+      <FilterChipsBar
+        options={[
+          { id: 'all', label: t('co.pti.filter.all') },
+          {
+            id: 'awaitingApproval',
+            label: t('co.pti.filter.awaitingApproval'),
+            count: awaitingApproval
+          },
+          { id: 'escalated', label: t('co.pti.filter.escalated'), count: escalated },
+          { id: 'atRisk', label: t('co.pti.filter.atRisk'), count: atRisk },
+          { id: 'drift', label: t('co.pti.filter.drift'), count: drift.length }
+        ]}
+        value={statusFilter}
+        onChange={setStatusFilter}
+        className="mb-4"
+      />
+
+      {statusFilter !== 'all' && sections.length === 0 && (
+        <p
+          className="text-sm text-text-tertiary py-8 text-center"
+          data-testid="calloff-filter-empty"
+        >
+          {t('co.pti.filter.empty')}
+        </p>
+      )}
 
       <div className="space-y-6">
         {shownSections.length === 0 && (
