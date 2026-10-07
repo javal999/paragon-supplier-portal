@@ -337,7 +337,10 @@ const BuyerOrders = () => {
   // unknown or out-of-scope PO refuses rather than silently opening nothing.
   const drill = usePoDrillFilter();
   useEffect(() => {
-    if (linkedTab && ['escalated', 'review', 'rejected'].includes(linkedTab)) {
+    // `pending` added for the dashboard bar / Home's "unacknowledged POs"
+    // flag (PR #74 D-review): its count is a strict subset of this tab's
+    // [SENT, VIEWED], so the tab never hides a counted row.
+    if (linkedTab && ['escalated', 'review', 'rejected', 'pending'].includes(linkedTab)) {
       setGroup(/** @type {GroupTab} */ (linkedTab));
     }
   }, [linkedTab]);
