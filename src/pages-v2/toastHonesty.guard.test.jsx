@@ -675,6 +675,18 @@ describe('unbacked-toast honesty guard (R1)', () => {
     expect(shipments.flatMap((s) => s.keys)).toContain('supplierShipments.toast.export.title');
   });
 
+  // BuyerStabilise was split the same way. Its two refusal toasts sit in the
+  // publish handler beside its `mutateAsync`, so they are backed and never in
+  // SITES — which is why membership is asserted on the SCANNED files instead:
+  // the index that holds those toasts must still be read by the scan.
+  it('the split publish page is still scanned, toasts and all', () => {
+    const files = pageFiles(PAGES_DIR);
+    expect(files).toContain('BuyerStabilise/index.jsx');
+    expect(files).not.toContain('BuyerStabilise.jsx');
+    const src = readFileSync(join(PAGES_DIR, 'BuyerStabilise/index.jsx'), 'utf8');
+    expect(src.match(/\btoast\s*\(\s*\{/g) ?? []).toHaveLength(2);
+  });
+
   /**
    * ⚠️ **AN EXCLUSION THAT EXCLUDES NOTHING READS EXACTLY LIKE A WORKING ONE.**
    * If the refusal property stopped matching — a renamed identifier, a changed
