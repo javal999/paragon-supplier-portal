@@ -1,4 +1,3 @@
-/** @import React from 'react' */
 import { describe, it, expect, afterEach } from 'vitest';
 import { screen, render, fireEvent, within } from '@testing-library/react';
 import { renderWithProviders, BUYER } from '@test/test-utils';
