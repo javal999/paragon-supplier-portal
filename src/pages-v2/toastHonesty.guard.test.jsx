@@ -673,6 +673,12 @@ describe('unbacked-toast honesty guard (R1)', () => {
     const shipments = SITES.filter((s) => s.file.startsWith('SupplierShipments/'));
     expect(shipments.map((s) => s.file)).toContain('SupplierShipments/index.jsx');
     expect(shipments.flatMap((s) => s.keys)).toContain('supplierShipments.toast.export.title');
+    // A split page's HOOKS are scanned too: `BuyerOrderPlan`'s draft toasts
+    // moved from the page file into `hooks/useDraftCallOff.js`.
+    const files = pageFiles(PAGES_DIR);
+    expect(files).toContain('BuyerOrderPlan/index.jsx');
+    expect(files).toContain('BuyerOrderPlan/hooks/useDraftCallOff.js');
+    expect(files).not.toContain('BuyerOrderPlan.jsx');
   });
 
   /**
