@@ -1,5 +1,5 @@
 /** @import React from 'react' */
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { AlertTriangle, PencilLine } from 'lucide-react';
@@ -121,21 +121,31 @@ const SupplierInventory = () => {
     }),
     [rows]
   );
+  // A NEW `?highlight=<code>` always wins the tab for its own material type,
+  // even over an earlier manual pick — mirroring `useRowHighlight`'s own
+  // target-change reset: compared and adjusted DURING render
+  // (react-hooks/set-state-in-effect), never in an effect. Without this, a
+  // second deep link landing on an already-mounted page (typeChosen already
+  // true from the first) would leave the tab on the stale pick.
+  const [seenHighlightId, setSeenHighlightId] = useState(highlight.id);
+  if (seenHighlightId !== highlight.id) {
+    setSeenHighlightId(highlight.id);
+    if (highlight.id !== null) setTypeChosen(false);
+  }
+  // `?highlight=<code>`'s own row's type wins over the counts-based default
+  // until the user manually picks a tab (`typeChosen`) — a pure render-time
+  // derivation, not an effect, so a supplier with both types still lands on
+  // the highlighted row's tab the first time it renders with data.
+  const highlightRow =
+    highlight.id !== null ? rows.find((r) => r.materialCode === highlight.id) : undefined;
   /** @type {MaterialType} */
-  const activeType = typeChosen ? type : counts.VERP > 0 ? 'VERP' : 'ROH';
+  const activeType = typeChosen
+    ? type
+    : (highlightRow?.materialType ?? (counts.VERP > 0 ? 'VERP' : 'ROH'));
   // REQ-E08-01 BR-07 (BL-61) — one list on the supplier view: a supplier
   // normally supplies one material type, so the raw material / packaging split
   // appears only for a supplier that supplies both. The PTI view keeps it.
   const splitByType = counts.ROH > 0 && counts.VERP > 0;
-  useEffect(() => {
-    if (!splitByType || highlight.id === null) return;
-    const row = rows.find((r) => r.materialCode === highlight.id);
-    if (row && row.materialType !== activeType) {
-      setType(row.materialType);
-      setTypeChosen(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [highlight.id, rows, splitByType]);
   const ofType = splitByType ? rows.filter((r) => r.materialType === activeType) : rows;
   const ofStaleFilter =
     staleFilter === 'stale'
@@ -224,7 +234,7 @@ const SupplierInventory = () => {
       {/* REQ-E07-08 AC-03 — this page reads SAP data; say how old it is. */}
       <SapDataAgeBanner page="inventory" className="mb-4" />
 
-      {highlight.missing && (
+      {highlight.missing ? (
         <div
           role="status"
           data-testid="inv-highlight-missing"
@@ -232,7 +242,7 @@ const SupplierInventory = () => {
         >
           {t('inv.highlight.missing')}
         </div>
-      )}
+      ) : null}
 
       {/* Material B2 — the weekly update (manual) or the sync schedule (API). */}
       <WeeklyUpdatePanel supplierId={supplierId} positions={rows} nowIso={nowIso} />

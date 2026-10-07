@@ -1,5 +1,5 @@
 /** @import React from 'react' */
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { AlertTriangle, MessageSquarePlus, RefreshCw } from 'lucide-react';
@@ -87,13 +87,17 @@ const BuyerInventory = () => {
   const sync = useVerbAvailability('stocksync:run');
   const { run, pending } = useInventoryRunner();
   const [params] = useSearchParams();
-  const [type, setType] = useState(/** @type {MaterialType} */ ('ROH'));
+  // `manualType` is `null` until the URL or a click sets it; while it is
+  // null, `type` below derives from `?material=`'s own row instead of a
+  // fixed default — a pure render-time fallback, not an effect, so a stale
+  // lookup (before `rows` has loaded) is never possible.
+  const [manualType, setManualType] = useState(/** @type {MaterialType | null} */ (null));
   const [band, setBand] = useState(/** @type {BandFilter} */ ('all'));
   // Deep-link read: `?type=` / `?band=` narrow the alert's destination;
   // `?material=` (one-shot, like the existing one-shot params elsewhere)
   // pre-fills the search so the row is found regardless of which page it
   // sits on.
-  useUrlEnumParam('type', /** @type {MaterialType[]} */ (['ROH', 'VERP']), setType);
+  useUrlEnumParam('type', /** @type {MaterialType[]} */ (['ROH', 'VERP']), setManualType);
   useUrlEnumParam(
     'band',
     /** @type {BandFilter[]} */ (['all', 'high', 'medium', 'low', 'stale']),
@@ -112,6 +116,11 @@ const BuyerInventory = () => {
     rows.some((r) => `${r.supplierId}-${r.materialCode}` === id)
   );
   const materialParam = params.get('material');
+  const materialRow = materialParam
+    ? rows.find((r) => r.materialCode === materialParam)
+    : undefined;
+  const type = manualType ?? materialRow?.materialType ?? /** @type {MaterialType} */ ('ROH');
+  const setType = setManualType;
   const ofType = rows.filter((r) => r.materialType === type);
   /** @param {BandFilter} b */
   const bandCount = (b) =>
@@ -170,13 +179,6 @@ const BuyerInventory = () => {
     return out;
   }, [rows, nowIso]);
 
-  useEffect(() => {
-    if (!materialParam) return;
-    const row = rows.find((r) => r.materialCode === materialParam);
-    if (row && row.materialType !== type) setType(row.materialType);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [materialParam, rows]);
-
   if (inventory.isPending) return <LoadingState breadcrumb={crumb} />;
   if (inventory.isError)
     return (
@@ -225,7 +227,7 @@ const BuyerInventory = () => {
       {/* REQ-E07-08 AC-03 — this page reads SAP data; say how old it is. */}
       <SapDataAgeBanner page="inventory" className="mb-4" />
 
-      {highlight.missing && (
+      {highlight.missing ? (
         <div
           role="status"
           data-testid="inv-highlight-missing"
@@ -233,7 +235,7 @@ const BuyerInventory = () => {
         >
           {t('inv.highlight.missing')}
         </div>
-      )}
+      ) : null}
 
       {(high > 0 || noLeadTime > 0 || stale > 0) && (
         <div
