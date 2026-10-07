@@ -1,0 +1,177 @@
+// ────────────────────────────────────────────────────────────────────────────
+// Central status-label map (Batch 0, SEAT2-I18N-CHROME-01).
+//
+// Every StatusPill across the portal renders its label through this map, so the
+// ~75 canonical status terms localize from ONE place (translate-once). The EN
+// value is the canonical string itself — so EN output is byte-identical to the
+// pre-i18n hardcoded pills — and the ID value comes from the Odyssey procurement
+// term-base (TMS/SOMO glossary, see docs/i18n_glossary_en_id.md).
+//
+// Tone still lives in statusTone.js; this file is label only. The two stay in
+// sync via CANONICAL_STATUSES (imported below) + the statusLabel guard test.
+// ────────────────────────────────────────────────────────────────────────────
+
+import { CANONICAL_STATUSES } from './statusTone';
+
+// canonical EN status → Bahasa Indonesia. Keyed by the exact canonical string.
+/** @type {Record<string, string>} */
+const STATUS_ID = {
+  // positive
+  Delivered: 'Terkirim',
+  Closed: 'Ditutup',
+  Completed: 'Selesai',
+  Approved: 'Disetujui',
+  'Payment Released': 'Pembayaran Dirilis',
+  'Remittance Received': 'Bukti Pembayaran Diterima',
+  'Posted to SAP': 'Terkirim ke SAP',
+  Active: 'Aktif',
+  Renewed: 'Diperbarui',
+  Awarded: 'Dimenangkan',
+  Valid: 'Berlaku',
+  Matched: 'Cocok',
+  Pass: 'Lulus',
+  Resolved: 'Diselesaikan',
+  Normal: 'Normal',
+  'On Track': 'Sesuai Rencana',
+  'PO Created': 'PO Dibuat',
+  'On Time': 'Tepat Waktu',
+  'In Network': 'Dalam Jaringan',
+  'EDI 846': 'EDI 846',
+  'Halal Certified': 'Bersertifikat Halal',
+  // caution
+  Expiring: 'Akan Kedaluwarsa',
+  'Expiring Soon': 'Segera Kedaluwarsa',
+  'Partially Delivered': 'Terkirim Sebagian',
+  'Partially Approved': 'Disetujui Sebagian',
+  'Pending Inspection': 'Menunggu Inspeksi',
+  'Under Inspection': 'Sedang Diinspeksi',
+  'Pending Approval': 'Menunggu Persetujuan',
+  'In Progress': 'Sedang Berlangsung',
+  'Customs Clearance': 'Proses Bea Cukai',
+  'At Dock': 'Di Dok',
+  Unloading: 'Bongkar Muat',
+  'At Risk': 'Berisiko',
+  Onboarding: 'Onboarding',
+  Upcoming: 'Mendatang',
+  Delayed: 'Terlambat',
+  'Needs Attention': 'Perlu Perhatian',
+  Adjusted: 'Disesuaikan',
+  'Awaiting exception': 'Menunggu Pengecualian',
+  // REQ-E07-07 — the supplier's invoice status list.
+  Verified: 'Terverifikasi',
+  'Scheduled for payment': 'Dijadwalkan untuk dibayar',
+  Paid: 'Dibayar',
+  Returned: 'Dikembalikan',
+  // critical
+  Overdue: 'Jatuh Tempo',
+  Disputed: 'Disengketakan',
+  Rejected: 'Ditolak',
+  Reject: 'Tolak',
+  Expired: 'Kedaluwarsa',
+  'Quality Hold': 'Tahan Mutu',
+  Cancelled: 'Dibatalkan',
+  Blocked: 'Diblokir',
+  Fail: 'Gagal',
+  Missing: 'Hilang',
+  Discrepancy: 'Selisih',
+  'Qty Mismatch': 'Selisih Kuantitas',
+  'Price Variance': 'Varians Harga',
+  Suspended: 'Ditangguhkan',
+  'Not Awarded': 'Tidak Dimenangkan',
+  Escalated: 'Dieskalasi',
+  // info
+  Confirmed: 'Dikonfirmasi',
+  Acknowledged: 'Diakui',
+  Submitted: 'Diajukan',
+  'In Transit': 'Dalam Perjalanan',
+  'ASN Received': 'ASN Diterima',
+  'Arrived at Port': 'Tiba di Pelabuhan',
+  Open: 'Terbuka',
+  'API Push': 'Kiriman API',
+  Inbound: 'Masuk',
+  'BPOM Registered': 'Terdaftar BPOM',
+  // neutral
+  Draft: 'Draf',
+  Sent: 'Dikirim',
+  Viewed: 'Dilihat',
+  'Pending ASN': 'Menunggu ASN',
+  'Pending Match': 'Menunggu Pencocokan',
+  'Pending GR': 'Menunggu GR',
+  Pending: 'Menunggu',
+  'Awaiting Upload': 'Menunggu Unggahan',
+  'Sourcing Event': 'Acara Sourcing',
+  'N/A': 'T/A',
+  Excess: 'Berlebih',
+  Terminated: 'Dihentikan',
+  'Under Review': 'Sedang Ditinjau',
+  Accepted: 'Diterima',
+  Manual: 'Manual',
+  Outbound: 'Keluar'
+};
+
+/**
+ * Slug a canonical status into its i18n key: "Payment Released" → "status.payment_released".
+ * @param {string} status
+ * @returns {string}
+ */
+function slug(status) {
+  return (
+    'status.' +
+    status
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+  );
+}
+
+/**
+ * The i18n key for a status label, or null if the label is not part of the
+ * shared canonical vocabulary (StatusPill then renders it verbatim). Trims and
+ * matches the exact canonical casing.
+ */
+/**
+ * R1b — MACHINE STATE → CANONICAL DISPLAY STATUS.
+ *
+ * The transition flows and this map are two vocabularies, and they agreed by
+ * COINCIDENCE, not by construction: `requirementResponse` declares five states
+ * and three of them happen to be spelled exactly like their display status.
+ * `UnderReview` is not — this map is keyed `'Under Review'`, with the space —
+ * so it resolved to null and a supplier whose dispute had been resolved read the
+ * raw literal, in BOTH locales.
+ *
+ * ⚠️ AND THE OBVIOUS FIX WAS WRONG, WHICH IS WHY IT IS AN ALIAS AND NOT AN
+ * ENTRY. Registering `UnderReview` as its own canonical status makes its EN
+ * label the string "UnderReview", because this map's EN value IS the canonical
+ * key (that is the translate-once design). Browser QA caught it: the chip came
+ * back, reading the machine's spelling. An alias resolves to the label that
+ * already exists and already localizes.
+ *
+ * `Accepted` was a genuine gap and IS registered — it reads correctly in EN.
+ * @type {Record<string, string>}
+ */
+const MACHINE_STATE_ALIAS = {
+  UnderReview: 'Under Review'
+};
+
+/**
+ * @param {string} label
+ * @returns {string | null}
+ */
+export function statusLabelKey(label) {
+  const raw = label.trim();
+  const key = MACHINE_STATE_ALIAS[raw] ?? raw;
+  return key in STATUS_ID ? slug(key) : null;
+}
+
+/**
+ * i18n resource fragments — spread into the en/id translation namespaces.
+ * @type {Record<string, string>}
+ */
+export const statusResourcesEn = Object.fromEntries(CANONICAL_STATUSES.map((s) => [slug(s), s]));
+/** @type {Record<string, string>} */
+export const statusResourcesId = Object.fromEntries(
+  CANONICAL_STATUSES.map((s) => [slug(s), STATUS_ID[s] ?? s])
+);
+
+// Re-exported for the guard test (coverage + slug-collision checks).
+export const __statusInternals = { STATUS_ID, slug };

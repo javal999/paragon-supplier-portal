@@ -1,0 +1,575 @@
+// RFx AUTHORING i18n fragment (RFI and RFP authoring batch, 2026-09-21).
+// Namespace: rfxa.* for the new surfaces, plus the new rfx.q / rfx.unit /
+// rfx.qtype keys the seeded events and the new question kinds need.
+//
+// Kept apart from `rfx.js` on purpose: that fragment is being edited by another
+// open branch, and a separate file keeps both additive. Business language only
+// (SC-04), in EN and ID.
+
+/** @type {Record<string, string>} */
+export const rfxAuthoringEn = {
+  // — New question kinds ———————————————————————————————————————————————
+  'rfx.qtype.longText': 'Long text',
+  'rfx.qtype.money': 'An amount of money',
+  'rfx.qtype.percentage': 'A percentage',
+  'rfx.qtype.priceRange': 'An indicative price range',
+
+  // — Units the seeded events and standard terms use ——————————————————————
+  'rfx.unit.colours': 'colours',
+  'rfx.unit.perPiece': 'per piece',
+  'rfx.unit.shades': 'shades',
+  'rfx.unit.perUnitPrice': 'per unit, in the request currency',
+
+  // — Seeded questions: the Oslo sticker RFI and the ICY RFP ———————————————
+  'rfx.q.oslo-machine': 'Which printing machine would you run the stickers on?',
+  'rfx.q.oslo-dieCut': 'Which die-cut type do you use?',
+  'rfx.q.oslo-finishing': 'Which finishing can you apply?',
+  'rfx.q.oslo-colours': 'How many printing colours can you run in one pass?',
+  'rfx.q.oslo-process': 'Describe your process from artwork to delivery.',
+  'rfx.q.oslo-defect': 'What is your typical defect rate?',
+  'rfx.q.oslo-plate': 'What does one printing plate cost?',
+  'rfx.q.oslo-price': 'What is your indicative price range per sticker?',
+  'rfx.q.oslo-sample': 'When could a sample be ready?',
+  'rfx.q.oslo-halal': 'Are your inks and adhesives halal-certified?',
+  'rfx.q.oslo-portfolio': 'Attach examples of similar labels you print.',
+  'rfx.q.icy-timeline': 'Give a development timeline from brief to first production.',
+  'rfx.q.icy-halal': 'Is your formula base halal-certified?',
+  'rfx.q.icy-shades': 'How many shades can you develop in the first round?',
+
+  // — Indicative (spec D4) —————————————————————————————————————————————
+  'rfxa.indicative': 'Indicative',
+  'rfxa.firm': 'Firm',
+
+  // — Sections and the question editor ————————————————————————————————
+  'rfxa.section.new': 'Add a section of your own',
+  'rfxa.section.new.ph': 'e.g. Printing and finishing',
+  'rfxa.section.add': 'Add section',
+  'rfxa.section.remove': 'Remove section',
+  'rfxa.section.empty': 'No question in this section yet.',
+  'rfxa.q.section': 'Section',
+  'rfxa.q.help': 'Help text (optional)',
+  'rfxa.q.help.ph': 'What a good answer looks like.',
+  'rfxa.q.options': 'Options',
+  'rfxa.q.option': 'Option {{n}}',
+  'rfxa.q.option.add': 'Add an option',
+  'rfxa.q.option.remove': 'Remove option',
+  'rfxa.q.unit': 'Unit',
+  'rfxa.q.unit.ph': 'e.g. pcs per week',
+  'rfxa.q.min': 'Minimum (optional)',
+  'rfxa.q.max': 'Maximum (optional)',
+  'rfxa.q.priceRange.note':
+    'The supplier gives a minimum and a maximum. It is an indication, not a quote.',
+
+  // — Answers ——————————————————————————————————————————————————————————
+  'rfxa.answer.bounds': 'Between {{min}} and {{max}}.',
+  'rfxa.answer.rangeMin': 'From',
+  'rfxa.answer.rangeMax': 'To',
+  'rfxa.answer.files': 'Your files',
+  'rfxa.answer.fixInvalid':
+    'Some answers do not fit their question. Correct the fields marked in red before sending.',
+  'rfxa.answer.invalid.notYesNo': 'Choose yes or no.',
+  'rfxa.answer.invalid.notAnOption': 'Choose from the options given.',
+  'rfxa.answer.invalid.notANumber': 'Enter a number.',
+  'rfxa.answer.invalid.belowZero': 'The number cannot be below zero.',
+  'rfxa.answer.invalid.aboveHundred': 'A percentage cannot be above 100.',
+  'rfxa.answer.invalid.belowMin': 'The number is below the minimum.',
+  'rfxa.answer.invalid.aboveMax': 'The number is above the maximum.',
+  'rfxa.answer.invalid.notADate': 'Enter a date.',
+  'rfxa.answer.invalid.rangeIncomplete': 'Enter both ends of the range.',
+  'rfxa.answer.invalid.rangeInverted': 'The first number must not be above the second.',
+  'rfxa.answer.invalid.attachmentMalformed': 'The attached file could not be read.',
+  'rfxa.answer.invalid.notText': 'Enter text.',
+  'rfxa.answer.invalid.unknownType': 'This question cannot be answered here.',
+
+  // — Attachments ——————————————————————————————————————————————————————
+  'rfxa.att.buyer': 'Documents for the suppliers',
+  'rfxa.att.title': 'Documents from PTI',
+  'rfxa.att.count_one': '{{count}} document',
+  'rfxa.att.count_other': '{{count}} documents',
+
+  // — Confidentiality gate ————————————————————————————————————————————
+  'rfxa.conf.toggle': 'Suppliers must accept confidentiality terms before they see this request',
+  'rfxa.conf.toggle.hint':
+    'The scope, documents and questions stay hidden until the supplier accepts. The acceptance is recorded with its time.',
+  'rfxa.conf.terms': 'Confidentiality terms (optional)',
+  'rfxa.conf.standardTerms':
+    'The contents of this request are confidential to PTI. Use them only to prepare your answer, and share them with nobody outside your company.',
+  'rfxa.conf.pill': 'Confidential',
+  'rfxa.conf.on': 'Yes, suppliers accept first',
+  'rfxa.conf.off': 'No',
+  'rfxa.conf.title': 'Confidentiality terms',
+  'rfxa.conf.body':
+    'PTI shares this request only with suppliers that accept its confidentiality terms. Accept them to see the scope, documents and questions.',
+  'rfxa.conf.accept': 'I accept the confidentiality terms',
+  'rfxa.conf.acceptedOn': 'Confidentiality terms accepted on',
+  'rfxa.conf.col': 'Confidentiality accepted',
+  'rfxa.conf.notYet': 'Not yet',
+  'rfxa.conf.buyerNote':
+    'Confidential: each invited supplier sees the content only after accepting the terms. The table shows who has accepted, and when.',
+
+  // — T&C document (RFP) ——————————————————————————————————————————————
+  'rfxa.tc.title': 'Terms and conditions',
+  'rfxa.tc.hint': 'Optional. When present, the supplier ticks acceptance before answering.',
+  'rfxa.tc.file': 'Terms and conditions document',
+  'rfxa.tc.on': 'Yes, accepted before answering',
+  'rfxa.tc.off': 'None',
+  'rfxa.tc.tick': 'I have read and accept these terms and conditions',
+  'rfxa.tc.accept': 'Accept and continue',
+  'rfxa.tc.acceptedOn': 'Terms and conditions accepted on',
+  'rfxa.tc.col': 'T&C accepted',
+
+  // — Custom terms (RFP) ——————————————————————————————————————————————
+  'rfxa.term.custom': 'A term of your own',
+  'rfxa.term.custom.hint':
+    'For a term the standard list does not carry. Say how it is answered and what PTI asks for.',
+  'rfxa.term.label': 'Term',
+  'rfxa.term.label.ph': 'e.g. Pump dosage per stroke',
+  'rfxa.term.group': 'Group',
+  'rfxa.term.kind': 'Answered as',
+  'rfxa.term.add': 'Add the term',
+  'rfxa.term.customPill': 'PTI term',
+  'rfxa.term.valueInvalid': 'This value does not fit the term.',
+  'rfxa.termKind.text': 'Text',
+  'rfxa.termKind.numberWithUnit': 'A number with a unit',
+  'rfxa.termKind.choice': 'A choice',
+  'rfxa.termKind.yesNo': 'Yes or no',
+
+  // — Indicative pricing (RFP) ————————————————————————————————————————
+  'rfxa.step.pricing': 'Indicative pricing',
+  'rfxa.step.pricing.short': 'Pricing',
+  'rfxa.step.pricing.desc':
+    'Optional. For an open specification: list the options and the quantities to price.',
+  'rfxa.step.rfpQuestions': 'Questions',
+  'rfxa.step.rfpQuestions.desc': 'Optional. Ask the suppliers anything the terms do not cover.',
+  'rfxa.pricing.toggle': 'Ask for indicative prices',
+  'rfxa.pricing.hint':
+    'Indicative prices are for comparing options. Firm prices by quantity are asked for in a quotation request.',
+  'rfxa.pricing.options': 'Options to price',
+  'rfxa.pricing.noOptions': 'No option yet.',
+  'rfxa.pricing.option.title': 'Option',
+  'rfxa.pricing.option.title.ph': 'e.g. Secondary pack option 1: unit box, 3 colours + hot stamp',
+  'rfxa.pricing.option.desc': 'Description (optional)',
+  'rfxa.pricing.option.add': 'Add the option',
+  'rfxa.pricing.points': 'Quantity points',
+  'rfxa.pricing.qty': 'Quantity',
+  'rfxa.pricing.qty.add': 'Add quantity',
+  'rfxa.pricing.qty.remove': 'Remove quantity',
+  'rfxa.pricing.basis': 'Each quantity is',
+  'rfxa.pricing.basis.total': 'Quantities are totals.',
+  'rfxa.pricing.basis.perVariant': 'Quantities are per variant.',
+  'rfxa.pricing.samples': 'Ask whether the supplier can provide samples',
+  'rfxa.pricing.summary': '{{options}} at {{points}}',
+  'rfxa.pricing.optionCount_one': '{{count}} option',
+  'rfxa.pricing.optionCount_other': '{{count}} options',
+  'rfxa.pricing.pointCount_one': '{{count}} quantity',
+  'rfxa.pricing.pointCount_other': '{{count}} quantities',
+  'rfxa.pricing.title': 'Indicative prices',
+  'rfxa.pricing.supplierHint':
+    'A unit price per option at each quantity, in {{currency}}. Leave a cell empty for an option you do not offer.',
+  'rfxa.pricing.col.option': 'Option',
+  'rfxa.pricing.unitPrice': 'Indicative unit price',
+  'rfxa.pricing.yourOption': 'Your own option',
+  'rfxa.pricing.removeOwn': 'Remove',
+  'rfxa.pricing.own.title': 'Propose an option of your own',
+  'rfxa.pricing.own.title.ph': 'e.g. Pump and cap only',
+  'rfxa.pricing.own.add': 'Add my option',
+  'rfxa.pricing.canSample': 'We can provide a sample',
+  'rfxa.pricing.sampleDate': 'Sample ready date',
+  'rfxa.pricing.sampleOffer': 'Sample offer',
+  'rfxa.pricing.timeline': 'Timeline',
+  'rfxa.pricing.validUntil': 'Prices valid until',
+  'rfxa.pricing.compare': 'Indicative prices by option',
+  'rfxa.pricing.compareHint': 'Unit prices in {{currency}}, per quantity.',
+  'rfxa.pricing.notPriced': 'Not priced',
+  'rfxa.pricing.proposedBy': 'Proposed by {{supplier}}',
+
+  // — Blockers on the proposal form ———————————————————————————————————————
+  'rfxa.blocker.terms': 'Answer every term PTI asked for.',
+  'rfxa.blocker.termValues': 'Some term values do not fit their term.',
+  'rfxa.blocker.comments': 'Every deviation needs a comment.',
+  'rfxa.blocker.questions': 'Answer every required question.',
+  'rfxa.blocker.answers': 'Some answers do not fit their question.',
+
+  // — Templates and "start from" (D2) ——————————————————————————————————
+  'rfxa.start.label': 'Start from',
+  'rfxa.start.blank': 'A blank request',
+  'rfxa.start.group.system': 'Procurement templates',
+  'rfxa.start.group.saved': 'Your templates',
+  'rfxa.start.group.past': 'Copy a past request',
+  'rfxa.start.apply': 'Use it',
+  'rfxa.start.delete': 'Delete this template',
+  'rfxa.start.note':
+    'Everything stays editable. A copy keeps the invited suppliers; its dates are left blank.',
+  'rfxa.tpl.name': 'Save as a template',
+  'rfxa.tpl.name.ph': 'Template name',
+  'rfxa.tpl.save': 'Save template',
+  'rfxa.tpl.note':
+    'Saves the content (questions, terms, options), never the suppliers, dates or files. Templates are kept in this browser only and are not shared.',
+  'rfxa.tpl.saved': 'Template "{{name}}" saved in this browser',
+  'rfxa.tpl.unreadable':
+    'Your saved templates could not be read, so none are offered. Saving is paused so nothing is overwritten.',
+  'rfxa.tpl.rejected': 'Some saved templates were refused:',
+
+  // — RFI → RFP (D3) ——————————————————————————————————————————————————
+  'rfxa.rfi.createRfp': 'Create a proposal request from this',
+  'rfxa.fromRfi.notes': 'Scope notes from the information request:',
+
+  // — Toasts ——————————————————————————————————————————————————————————
+  'rfxa.toast.accepted': 'Accepted. PTI has a record of when.',
+
+  // — Refusals shown in the editors (the verb's own codes) ——————————————————
+  'rfxa.refusal.CHOICE_NEEDS_OPTIONS': 'A choice question needs at least two options.',
+  'rfxa.refusal.OPTION_BLANK': 'Every option needs a label.',
+  'rfxa.refusal.OPTION_DUPLICATE': 'Two options have the same label.',
+  'rfxa.refusal.BAD_BOUNDS': 'The minimum and maximum do not fit together.',
+  'rfxa.refusal.BOUNDS_NOT_APPLICABLE': 'Only a number question can have a minimum or maximum.',
+  'rfxa.refusal.CURRENCY_REQUIRED': 'Choose a currency.',
+  'rfxa.refusal.UNKNOWN_SECTION': 'The section no longer exists.',
+  'rfxa.refusal.DUPLICATE_QUESTION': 'This question is already on the request.',
+  'rfxa.refusal.CUSTOM_TERM_LABEL_REQUIRED': 'Name the term.',
+  'rfxa.refusal.CHOICE_TERM_NEEDS_OPTIONS': 'A choice term needs at least two different options.',
+  'rfxa.refusal.TERM_VALUE_REQUIRED': 'Say what PTI asks for.',
+  'rfxa.refusal.TERM_VALUE_INVALID': 'What PTI asks for does not fit how the term is answered.',
+  'rfxa.refusal.DUPLICATE_TERM': 'This term is already on the request.',
+  'rfxa.refusal.NO_TERMS': 'A proposal request asks for at least one term.',
+  'rfxa.refusal.NO_QUESTIONS': 'An information request asks at least one question.',
+  'rfxa.refusal.PRICING_NO_OPTIONS': 'Add at least one option to price.',
+  'rfxa.refusal.PRICING_QTY_COUNT': 'Add between 1 and 8 quantities.',
+  'rfxa.refusal.PRICING_QTY_INVALID': 'Each quantity is a whole number above zero.',
+  'rfxa.refusal.PRICING_QTY_ORDER': 'Quantities must rise.',
+  'rfxa.refusal.PRICING_EMPTY': 'Give at least one indicative price.',
+  'rfxa.refusal.PRICE_INVALID': 'Every price must be above zero.',
+  'rfxa.refusal.SAMPLE_OFFER_REQUIRED': 'Say whether you can provide a sample.',
+  'rfxa.refusal.SAMPLE_DATE_INVALID': 'The sample ready date must be a date.',
+  'rfxa.refusal.VALIDITY_INVALID': 'The validity date must be a date.',
+  'rfxa.refusal.PROPOSED_OPTION_TITLE': 'Your own option needs a title.',
+  'rfxa.refusal.TEMPLATE_NAME_REQUIRED': 'Give the template a name.',
+  'rfxa.refusal.TEMPLATE_NAME_LENGTH': 'A template name is 2 to 80 characters.',
+  'rfxa.refusal.UNKNOWN_FAMILY': 'Choose a category family first.',
+  'rfxa.refusal.STORE_UNREADABLE': 'Your saved templates could not be read, so nothing was saved.',
+  'rfxa.refusal.STORAGE_UNAVAILABLE': 'This browser did not keep the template.',
+
+  // — Documents from suppliers (NR-1 BR-02, B3) ————————————————————————
+  'rfxa.step.documents': 'Documents from suppliers',
+  'rfxa.step.documents.short': 'Documents',
+  'rfxa.step.documents.desc':
+    'Optional. List the documents every supplier sends with its response, and mark the ones it must send.',
+  'rfxa.doc.empty': 'No documents requested. Suppliers can still attach their own files.',
+  'rfxa.doc.add': 'Add a document request',
+  'rfxa.doc.row': 'Request {{n}}',
+  'rfxa.doc.name': 'Document name',
+  'rfxa.doc.name.ph': 'e.g. Halal certificate',
+  'rfxa.doc.type': 'Type',
+  'rfxa.doc.type.certificate': 'Certificate',
+  'rfxa.doc.type.specification': 'Specification',
+  'rfxa.doc.type.drawing': 'Drawing',
+  'rfxa.doc.type.samplePhoto': 'Sample photo',
+  'rfxa.doc.type.quotation': 'Quotation',
+  'rfxa.doc.type.companyProfile': 'Company profile',
+  'rfxa.doc.type.other': 'Other',
+  'rfxa.doc.required': 'Required',
+  'rfxa.doc.optional': 'Optional',
+  'rfxa.doc.level': 'For',
+  'rfxa.doc.level.response': 'Whole response',
+  'rfxa.doc.level.item': 'Item {{n}}',
+  'rfxa.doc.remove': 'Remove document request',
+  'rfxa.doc.certificateNote':
+    'A Certificate request also asks the supplier for the certificate number, issuer and expiry date.',
+  'rfxa.doc.refusal.noName': 'Request {{n}} needs a name.',
+  'rfxa.doc.refusal.duplicate':
+    'Request {{n}}, "{{name}}", is already on the list. Give each document its own name.',
+  'rfxa.doc.refusal.item':
+    'Request {{n}}, "{{name}}", is for an item this RFQ no longer has. Choose what it is for again.',
+  'rfxa.doc.refusal.invalid': 'Request {{n}} cannot be sent as it is.',
+  'rfxa.doc.review': 'Documents from suppliers',
+  'rfxa.doc.review.none': 'None requested',
+  'rfxa.doc.unlinked':
+    '"{{name}}" was linked to a removed item; it now applies to the whole response.',
+  'rfxa.doc.unlinked.dismiss': 'Dismiss'
+};
+
+/** @type {Record<string, string>} */
+export const rfxAuthoringId = {
+  // — Jenis pertanyaan baru ————————————————————————————————————————————
+  'rfx.qtype.longText': 'Teks panjang',
+  'rfx.qtype.money': 'Jumlah uang',
+  'rfx.qtype.percentage': 'Persentase',
+  'rfx.qtype.priceRange': 'Kisaran harga indikatif',
+
+  // — Satuan ——————————————————————————————————————————————————————————
+  'rfx.unit.colours': 'warna',
+  'rfx.unit.perPiece': 'per buah',
+  'rfx.unit.shades': 'varian warna',
+  'rfx.unit.perUnitPrice': 'per unit, dalam mata uang permintaan',
+
+  // — Pertanyaan contoh: RFI stiker Oslo dan RFP ICY ———————————————————————
+  'rfx.q.oslo-machine': 'Mesin cetak apa yang akan Anda gunakan untuk stiker ini?',
+  'rfx.q.oslo-dieCut': 'Jenis pisau pond apa yang Anda gunakan?',
+  'rfx.q.oslo-finishing': 'Finishing apa yang dapat Anda terapkan?',
+  'rfx.q.oslo-colours': 'Berapa warna cetak yang dapat Anda jalankan dalam satu kali proses?',
+  'rfx.q.oslo-process': 'Jelaskan proses Anda dari desain hingga pengiriman.',
+  'rfx.q.oslo-defect': 'Berapa tingkat cacat produk Anda pada umumnya?',
+  'rfx.q.oslo-plate': 'Berapa biaya satu pelat cetak?',
+  'rfx.q.oslo-price': 'Berapa kisaran harga indikatif per stiker?',
+  'rfx.q.oslo-sample': 'Kapan sampel dapat siap?',
+  'rfx.q.oslo-halal': 'Apakah tinta dan perekat Anda bersertifikat halal?',
+  'rfx.q.oslo-portfolio': 'Lampirkan contoh label serupa yang Anda cetak.',
+  'rfx.q.icy-timeline': 'Berikan jadwal pengembangan dari brief hingga produksi pertama.',
+  'rfx.q.icy-halal': 'Apakah basis formula Anda bersertifikat halal?',
+  'rfx.q.icy-shades': 'Berapa varian warna yang dapat Anda kembangkan pada putaran pertama?',
+
+  // — Indikatif (D4) ——————————————————————————————————————————————————
+  'rfxa.indicative': 'Indikatif',
+  'rfxa.firm': 'Pasti',
+
+  // — Bagian dan penyunting pertanyaan ————————————————————————————————————
+  'rfxa.section.new': 'Tambah bagian Anda sendiri',
+  'rfxa.section.new.ph': 'mis. Cetak dan finishing',
+  'rfxa.section.add': 'Tambah bagian',
+  'rfxa.section.remove': 'Hapus bagian',
+  'rfxa.section.empty': 'Belum ada pertanyaan di bagian ini.',
+  'rfxa.q.section': 'Bagian',
+  'rfxa.q.help': 'Teks bantuan (opsional)',
+  'rfxa.q.help.ph': 'Seperti apa jawaban yang baik.',
+  'rfxa.q.options': 'Pilihan',
+  'rfxa.q.option': 'Pilihan {{n}}',
+  'rfxa.q.option.add': 'Tambah pilihan',
+  'rfxa.q.option.remove': 'Hapus pilihan',
+  'rfxa.q.unit': 'Satuan',
+  'rfxa.q.unit.ph': 'mis. pcs per minggu',
+  'rfxa.q.min': 'Minimum (opsional)',
+  'rfxa.q.max': 'Maksimum (opsional)',
+  'rfxa.q.priceRange.note':
+    'Pemasok memberikan nilai minimum dan maksimum. Ini indikasi, bukan penawaran harga.',
+
+  // — Jawaban —————————————————————————————————————————————————————————
+  'rfxa.answer.bounds': 'Antara {{min}} dan {{max}}.',
+  'rfxa.answer.rangeMin': 'Dari',
+  'rfxa.answer.rangeMax': 'Sampai',
+  'rfxa.answer.files': 'Berkas Anda',
+  'rfxa.answer.fixInvalid':
+    'Beberapa jawaban tidak sesuai dengan pertanyaannya. Perbaiki kolom bertanda merah sebelum mengirim.',
+  'rfxa.answer.invalid.notYesNo': 'Pilih ya atau tidak.',
+  'rfxa.answer.invalid.notAnOption': 'Pilih dari pilihan yang tersedia.',
+  'rfxa.answer.invalid.notANumber': 'Masukkan angka.',
+  'rfxa.answer.invalid.belowZero': 'Angka tidak boleh di bawah nol.',
+  'rfxa.answer.invalid.aboveHundred': 'Persentase tidak boleh di atas 100.',
+  'rfxa.answer.invalid.belowMin': 'Angka di bawah minimum.',
+  'rfxa.answer.invalid.aboveMax': 'Angka di atas maksimum.',
+  'rfxa.answer.invalid.notADate': 'Masukkan tanggal.',
+  'rfxa.answer.invalid.rangeIncomplete': 'Isi kedua ujung kisaran.',
+  'rfxa.answer.invalid.rangeInverted': 'Angka pertama tidak boleh lebih besar dari angka kedua.',
+  'rfxa.answer.invalid.attachmentMalformed': 'Berkas yang dilampirkan tidak dapat dibaca.',
+  'rfxa.answer.invalid.notText': 'Masukkan teks.',
+  'rfxa.answer.invalid.unknownType': 'Pertanyaan ini tidak dapat dijawab di sini.',
+
+  // — Lampiran ————————————————————————————————————————————————————————
+  'rfxa.att.buyer': 'Dokumen untuk pemasok',
+  'rfxa.att.title': 'Dokumen dari PTI',
+  'rfxa.att.count_other': '{{count}} dokumen',
+
+  // — Kerahasiaan —————————————————————————————————————————————————————
+  'rfxa.conf.toggle':
+    'Pemasok wajib menyetujui ketentuan kerahasiaan sebelum melihat permintaan ini',
+  'rfxa.conf.toggle.hint':
+    'Lingkup, dokumen, dan pertanyaan tetap tersembunyi sampai pemasok menyetujui. Persetujuan dicatat beserta waktunya.',
+  'rfxa.conf.terms': 'Ketentuan kerahasiaan (opsional)',
+  'rfxa.conf.standardTerms':
+    'Isi permintaan ini bersifat rahasia bagi PTI. Gunakan hanya untuk menyiapkan jawaban Anda, dan jangan bagikan kepada siapa pun di luar perusahaan Anda.',
+  'rfxa.conf.pill': 'Rahasia',
+  'rfxa.conf.on': 'Ya, pemasok menyetujui terlebih dahulu',
+  'rfxa.conf.off': 'Tidak',
+  'rfxa.conf.title': 'Ketentuan kerahasiaan',
+  'rfxa.conf.body':
+    'PTI hanya membagikan permintaan ini kepada pemasok yang menyetujui ketentuan kerahasiaannya. Setujui untuk melihat lingkup, dokumen, dan pertanyaan.',
+  'rfxa.conf.accept': 'Saya menyetujui ketentuan kerahasiaan',
+  'rfxa.conf.acceptedOn': 'Ketentuan kerahasiaan disetujui pada',
+  'rfxa.conf.col': 'Kerahasiaan disetujui',
+  'rfxa.conf.notYet': 'Belum',
+  'rfxa.conf.buyerNote':
+    'Rahasia: setiap pemasok yang diundang baru melihat isinya setelah menyetujui ketentuan. Tabel menunjukkan siapa yang sudah menyetujui, dan kapan.',
+
+  // — Syarat dan ketentuan (RFP) ——————————————————————————————————————————
+  'rfxa.tc.title': 'Syarat dan ketentuan',
+  'rfxa.tc.hint': 'Opsional. Jika ada, pemasok mencentang persetujuan sebelum menjawab.',
+  'rfxa.tc.file': 'Dokumen syarat dan ketentuan',
+  'rfxa.tc.on': 'Ya, disetujui sebelum menjawab',
+  'rfxa.tc.off': 'Tidak ada',
+  'rfxa.tc.tick': 'Saya telah membaca dan menyetujui syarat dan ketentuan ini',
+  'rfxa.tc.accept': 'Setujui dan lanjutkan',
+  'rfxa.tc.acceptedOn': 'Syarat dan ketentuan disetujui pada',
+  'rfxa.tc.col': 'S&K disetujui',
+
+  // — Ketentuan khusus (RFP) ——————————————————————————————————————————————
+  'rfxa.term.custom': 'Ketentuan Anda sendiri',
+  'rfxa.term.custom.hint':
+    'Untuk ketentuan yang tidak ada di daftar standar. Tentukan cara menjawabnya dan apa yang diminta PTI.',
+  'rfxa.term.label': 'Ketentuan',
+  'rfxa.term.label.ph': 'mis. Dosis pompa per tekanan',
+  'rfxa.term.group': 'Kelompok',
+  'rfxa.term.kind': 'Dijawab sebagai',
+  'rfxa.term.add': 'Tambah ketentuan',
+  'rfxa.term.customPill': 'Ketentuan PTI',
+  'rfxa.term.valueInvalid': 'Nilai ini tidak sesuai dengan ketentuannya.',
+  'rfxa.termKind.text': 'Teks',
+  'rfxa.termKind.numberWithUnit': 'Angka dengan satuan',
+  'rfxa.termKind.choice': 'Pilihan',
+  'rfxa.termKind.yesNo': 'Ya atau tidak',
+
+  // — Harga indikatif (RFP) ———————————————————————————————————————————————
+  'rfxa.step.pricing': 'Harga indikatif',
+  'rfxa.step.pricing.short': 'Harga',
+  'rfxa.step.pricing.desc':
+    'Opsional. Untuk spesifikasi terbuka: cantumkan pilihan dan jumlah yang ingin diberi harga.',
+  'rfxa.step.rfpQuestions': 'Pertanyaan',
+  'rfxa.step.rfpQuestions.desc':
+    'Opsional. Tanyakan kepada pemasok hal-hal yang tidak dicakup ketentuan.',
+  'rfxa.pricing.toggle': 'Minta harga indikatif',
+  'rfxa.pricing.hint':
+    'Harga indikatif untuk membandingkan pilihan. Harga pasti per jumlah diminta melalui permintaan penawaran harga.',
+  'rfxa.pricing.options': 'Pilihan yang diberi harga',
+  'rfxa.pricing.noOptions': 'Belum ada pilihan.',
+  'rfxa.pricing.option.title': 'Pilihan',
+  'rfxa.pricing.option.title.ph':
+    'mis. Kemasan sekunder pilihan 1: kotak unit, 3 warna + hot stamp',
+  'rfxa.pricing.option.desc': 'Keterangan (opsional)',
+  'rfxa.pricing.option.add': 'Tambah pilihan',
+  'rfxa.pricing.points': 'Titik jumlah',
+  'rfxa.pricing.qty': 'Jumlah',
+  'rfxa.pricing.qty.add': 'Tambah jumlah',
+  'rfxa.pricing.qty.remove': 'Hapus jumlah',
+  'rfxa.pricing.basis': 'Setiap jumlah adalah',
+  'rfxa.pricing.basis.total': 'Jumlah adalah total.',
+  'rfxa.pricing.basis.perVariant': 'Jumlah adalah per varian.',
+  'rfxa.pricing.samples': 'Tanyakan apakah pemasok dapat menyediakan sampel',
+  'rfxa.pricing.summary': '{{options}} pada {{points}}',
+  'rfxa.pricing.optionCount_other': '{{count}} pilihan',
+  'rfxa.pricing.pointCount_other': '{{count}} jumlah',
+  'rfxa.pricing.title': 'Harga indikatif',
+  'rfxa.pricing.supplierHint':
+    'Harga satuan per pilihan pada setiap jumlah, dalam {{currency}}. Kosongkan sel untuk pilihan yang tidak Anda tawarkan.',
+  'rfxa.pricing.col.option': 'Pilihan',
+  'rfxa.pricing.unitPrice': 'Harga satuan indikatif',
+  'rfxa.pricing.yourOption': 'Pilihan Anda sendiri',
+  'rfxa.pricing.removeOwn': 'Hapus',
+  'rfxa.pricing.own.title': 'Usulkan pilihan Anda sendiri',
+  'rfxa.pricing.own.title.ph': 'mis. Hanya pompa dan tutup',
+  'rfxa.pricing.own.add': 'Tambah pilihan saya',
+  'rfxa.pricing.canSample': 'Kami dapat menyediakan sampel',
+  'rfxa.pricing.sampleDate': 'Tanggal sampel siap',
+  'rfxa.pricing.sampleOffer': 'Penawaran sampel',
+  'rfxa.pricing.timeline': 'Jadwal',
+  'rfxa.pricing.validUntil': 'Harga berlaku sampai',
+  'rfxa.pricing.compare': 'Harga indikatif per pilihan',
+  'rfxa.pricing.compareHint': 'Harga satuan dalam {{currency}}, per jumlah.',
+  'rfxa.pricing.notPriced': 'Tidak diberi harga',
+  'rfxa.pricing.proposedBy': 'Diusulkan oleh {{supplier}}',
+
+  // — Penghambat pada formulir proposal ————————————————————————————————————
+  'rfxa.blocker.terms': 'Jawab setiap ketentuan yang diminta PTI.',
+  'rfxa.blocker.termValues': 'Beberapa nilai ketentuan tidak sesuai dengan ketentuannya.',
+  'rfxa.blocker.comments': 'Setiap penyimpangan memerlukan komentar.',
+  'rfxa.blocker.questions': 'Jawab setiap pertanyaan wajib.',
+  'rfxa.blocker.answers': 'Beberapa jawaban tidak sesuai dengan pertanyaannya.',
+
+  // — Templat dan "mulai dari" (D2) ————————————————————————————————————————
+  'rfxa.start.label': 'Mulai dari',
+  'rfxa.start.blank': 'Permintaan kosong',
+  'rfxa.start.group.system': 'Templat Procurement',
+  'rfxa.start.group.saved': 'Templat Anda',
+  'rfxa.start.group.past': 'Salin permintaan sebelumnya',
+  'rfxa.start.apply': 'Gunakan',
+  'rfxa.start.delete': 'Hapus templat ini',
+  'rfxa.start.note':
+    'Semuanya tetap dapat diubah. Salinan menyimpan pemasok yang diundang; tanggalnya dikosongkan.',
+  'rfxa.tpl.name': 'Simpan sebagai templat',
+  'rfxa.tpl.name.ph': 'Nama templat',
+  'rfxa.tpl.save': 'Simpan templat',
+  'rfxa.tpl.note':
+    'Menyimpan isinya (pertanyaan, ketentuan, pilihan), tidak pernah pemasok, tanggal, atau berkas. Templat hanya disimpan di peramban ini dan tidak dibagikan.',
+  'rfxa.tpl.saved': 'Templat "{{name}}" disimpan di peramban ini',
+  'rfxa.tpl.unreadable':
+    'Templat tersimpan Anda tidak dapat dibaca, sehingga tidak ada yang ditawarkan. Penyimpanan dihentikan agar tidak ada yang tertimpa.',
+  'rfxa.tpl.rejected': 'Beberapa templat tersimpan ditolak:',
+
+  // — RFI → RFP (D3) ——————————————————————————————————————————————————
+  'rfxa.rfi.createRfp': 'Buat permintaan proposal dari sini',
+  'rfxa.fromRfi.notes': 'Catatan lingkup dari permintaan informasi:',
+
+  // — Notifikasi ——————————————————————————————————————————————————————
+  'rfxa.toast.accepted': 'Disetujui. PTI mencatat waktunya.',
+
+  // — Penolakan di penyunting ————————————————————————————————————————————
+  'rfxa.refusal.CHOICE_NEEDS_OPTIONS': 'Pertanyaan pilihan memerlukan sedikitnya dua pilihan.',
+  'rfxa.refusal.OPTION_BLANK': 'Setiap pilihan memerlukan label.',
+  'rfxa.refusal.OPTION_DUPLICATE': 'Dua pilihan memiliki label yang sama.',
+  'rfxa.refusal.BAD_BOUNDS': 'Nilai minimum dan maksimum tidak cocok.',
+  'rfxa.refusal.BOUNDS_NOT_APPLICABLE':
+    'Hanya pertanyaan angka yang dapat memiliki minimum atau maksimum.',
+  'rfxa.refusal.CURRENCY_REQUIRED': 'Pilih mata uang.',
+  'rfxa.refusal.UNKNOWN_SECTION': 'Bagian tersebut sudah tidak ada.',
+  'rfxa.refusal.DUPLICATE_QUESTION': 'Pertanyaan ini sudah ada di permintaan.',
+  'rfxa.refusal.CUSTOM_TERM_LABEL_REQUIRED': 'Beri nama ketentuannya.',
+  'rfxa.refusal.CHOICE_TERM_NEEDS_OPTIONS':
+    'Ketentuan pilihan memerlukan sedikitnya dua pilihan yang berbeda.',
+  'rfxa.refusal.TERM_VALUE_REQUIRED': 'Sebutkan apa yang diminta PTI.',
+  'rfxa.refusal.TERM_VALUE_INVALID': 'Yang diminta PTI tidak sesuai dengan cara ketentuan dijawab.',
+  'rfxa.refusal.DUPLICATE_TERM': 'Ketentuan ini sudah ada di permintaan.',
+  'rfxa.refusal.NO_TERMS': 'Permintaan proposal meminta sedikitnya satu ketentuan.',
+  'rfxa.refusal.NO_QUESTIONS': 'Permintaan informasi mengajukan sedikitnya satu pertanyaan.',
+  'rfxa.refusal.PRICING_NO_OPTIONS': 'Tambahkan sedikitnya satu pilihan untuk diberi harga.',
+  'rfxa.refusal.PRICING_QTY_COUNT': 'Tambahkan antara 1 dan 8 jumlah.',
+  'rfxa.refusal.PRICING_QTY_INVALID': 'Setiap jumlah adalah bilangan bulat di atas nol.',
+  'rfxa.refusal.PRICING_QTY_ORDER': 'Jumlah harus meningkat.',
+  'rfxa.refusal.PRICING_EMPTY': 'Berikan sedikitnya satu harga indikatif.',
+  'rfxa.refusal.PRICE_INVALID': 'Setiap harga harus di atas nol.',
+  'rfxa.refusal.SAMPLE_OFFER_REQUIRED': 'Sebutkan apakah Anda dapat menyediakan sampel.',
+  'rfxa.refusal.SAMPLE_DATE_INVALID': 'Tanggal sampel siap harus berupa tanggal.',
+  'rfxa.refusal.VALIDITY_INVALID': 'Tanggal berlaku harus berupa tanggal.',
+  'rfxa.refusal.PROPOSED_OPTION_TITLE': 'Pilihan Anda sendiri memerlukan judul.',
+  'rfxa.refusal.TEMPLATE_NAME_REQUIRED': 'Beri nama templatnya.',
+  'rfxa.refusal.TEMPLATE_NAME_LENGTH': 'Nama templat terdiri dari 2 sampai 80 karakter.',
+  'rfxa.refusal.UNKNOWN_FAMILY': 'Pilih kelompok kategori terlebih dahulu.',
+  'rfxa.refusal.STORE_UNREADABLE':
+    'Templat tersimpan Anda tidak dapat dibaca, sehingga tidak ada yang disimpan.',
+  'rfxa.refusal.STORAGE_UNAVAILABLE': 'Peramban ini tidak menyimpan templat.',
+
+  // — Dokumen dari pemasok (NR-1 BR-02, B3) ——————————————————————————————
+  'rfxa.step.documents': 'Dokumen dari pemasok',
+  'rfxa.step.documents.short': 'Dokumen',
+  'rfxa.step.documents.desc':
+    'Opsional. Cantumkan dokumen yang dikirim setiap pemasok bersama tanggapannya, dan tandai yang wajib dikirim.',
+  'rfxa.doc.empty':
+    'Belum ada dokumen yang diminta. Pemasok tetap dapat melampirkan berkasnya sendiri.',
+  'rfxa.doc.add': 'Tambah permintaan dokumen',
+  'rfxa.doc.row': 'Permintaan {{n}}',
+  'rfxa.doc.name': 'Nama dokumen',
+  'rfxa.doc.name.ph': 'mis. Sertifikat halal',
+  'rfxa.doc.type': 'Jenis',
+  'rfxa.doc.type.certificate': 'Sertifikat',
+  'rfxa.doc.type.specification': 'Spesifikasi',
+  'rfxa.doc.type.drawing': 'Gambar teknik',
+  'rfxa.doc.type.samplePhoto': 'Foto sampel',
+  'rfxa.doc.type.quotation': 'Penawaran harga',
+  'rfxa.doc.type.companyProfile': 'Profil perusahaan',
+  'rfxa.doc.type.other': 'Lainnya',
+  'rfxa.doc.required': 'Wajib',
+  'rfxa.doc.optional': 'Opsional',
+  'rfxa.doc.level': 'Untuk',
+  'rfxa.doc.level.response': 'Seluruh tanggapan',
+  'rfxa.doc.level.item': 'Item {{n}}',
+  'rfxa.doc.remove': 'Hapus permintaan dokumen',
+  'rfxa.doc.certificateNote':
+    'Permintaan Sertifikat juga meminta nomor sertifikat, penerbit, dan tanggal kedaluwarsa dari pemasok.',
+  'rfxa.doc.refusal.noName': 'Permintaan {{n}} memerlukan nama.',
+  'rfxa.doc.refusal.duplicate':
+    'Permintaan {{n}}, "{{name}}", sudah ada di daftar. Beri setiap dokumen namanya sendiri.',
+  'rfxa.doc.refusal.item':
+    'Permintaan {{n}}, "{{name}}", untuk item yang tidak lagi ada di RFQ ini. Pilih lagi untuk apa dokumen ini.',
+  'rfxa.doc.refusal.invalid': 'Permintaan {{n}} tidak dapat dikirim seperti ini.',
+  'rfxa.doc.review': 'Dokumen dari pemasok',
+  'rfxa.doc.review.none': 'Tidak ada yang diminta',
+  'rfxa.doc.unlinked':
+    '"{{name}}" terkait dengan item yang dihapus; kini berlaku untuk seluruh tanggapan.',
+  'rfxa.doc.unlinked.dismiss': 'Tutup'
+};

@@ -1,0 +1,337 @@
+// Order plan i18n fragment (REQ-E14-05). Namespace: op.*
+//
+// Business language only: the screen says what each figure is, what bound
+// each order and which costs are placeholders. Mono data (quantities, weeks,
+// dates, codes, rupiah) is rendered through <Data> and never keyed.
+
+/** @type {Record<string, string>} */
+export const orderPlanEn = {
+  'op.subtitle':
+    'When and how much to order, sized for all materials sharing a warehouse together: demand met every week, MOQ and order multiple kept, and warehouse space weighed against the cost of another order.',
+  'op.meta.plan': 'Plan source: SAP finished-goods plan,',
+  'op.meta.horizon': 'Horizon',
+  'op.meta.weeks': '{{count}} weeks',
+  'op.meta.noPlan': 'No finished-goods plan',
+  'op.meta.previous': 'Changes inside the lead time are weighed against last week’s plan, as of',
+  'op.synthetic':
+    'Calculated on synthetic data built to reproduce PTI’s current measures. It proves the calculations, not the business answer.',
+  'op.method':
+    'Each material’s plan is found exactly, then the materials of a warehouse are re-planned one at a time against the space the others use, until no change lowers the total cost.',
+
+  'op.costs.title': 'Cost rates in use',
+  'op.costs.placeholder': 'Placeholder — Finance to confirm',
+  'op.costs.placeholderPenalty': 'Placeholder — the Material Planner to confirm',
+  'op.costs.holding': 'Holding cost',
+  'op.costs.holdingValue': '{{value}}% of value a year',
+  'op.costs.order': 'Cost per order',
+  'op.costs.rent': 'Rented space, per pallet a week',
+  'op.costs.penalty': 'Change penalty inside the lead time, per pallet',
+  'op.costs.where':
+    'Set on Administration → Tolerances and rule values. Every rupiah figure on this page uses them.',
+
+  'op.warehouse.packaging': 'Packaging warehouse',
+  'op.warehouse.rawMaterial': 'Raw material warehouse',
+  'op.warehouse.capacity': 'Owned capacity',
+  'op.warehouse.pallets': '{{value}} pallets',
+  'op.fallback':
+    'This warehouse could not be sized jointly ({{reason}}). Each material is sized on its own by the fallback, and marked.',
+
+  'op.kpi.orders': 'Recommended orders',
+  'op.kpi.orders.sub': 'Interim round-up would place {{count}}',
+  'op.kpi.peak': 'Highest projected fill',
+  'op.kpi.peak.sub': 'Against owned capacity; the standard is 80%',
+  'op.kpi.rented': 'Rented pallet-weeks',
+  'op.kpi.rented.sub': 'Interim round-up: {{value}}',
+  'op.kpi.rentCost': 'Rented space cost',
+  'op.kpi.rentCost.sub': 'At the placeholder rate',
+
+  'op.fill.title': 'Projected warehouse fill by week',
+  'op.fill.basis':
+    'Includes the recommended orders on this page. Released call-offs not yet received are not counted yet; Make warehouse room adds them, so its “Now” fill can read higher for the same week.',
+  'op.fill.intro':
+    'Stock at the end of each week, in pallets, as a share of owned capacity. Above 100% the overflow goes to rented space and is costed. The lowest line is the least any plan could hold: each week’s need exactly, with no MOQ or multiple.',
+  'op.fill.series.plan': 'Order plan',
+  'op.fill.series.interim': 'Interim round-up',
+  'op.fill.series.lowest': 'Lowest possible',
+  'op.fill.line.capacity': 'Capacity 100%',
+  'op.fill.line.standard': 'Standard 80%',
+  'op.fill.col.week': 'Week',
+  'op.fill.col.plan': 'Order plan',
+  'op.fill.col.interim': 'Interim round-up',
+  'op.fill.col.lowest': 'Lowest possible',
+  'op.fill.col.status': 'Against 80%',
+  'op.fill.col.rented': 'Rented pallets',
+  'op.fill.col.rentCost': 'Rented space cost',
+  'op.fill.status.over': 'Over capacity',
+  'op.fill.status.above': 'Above 80%',
+  'op.fill.status.within': 'Within 80%',
+
+  'op.recs.title': 'Recommended orders',
+  'op.why': 'Full pages behind each quantity:',
+  'op.why.requirement': 'Material requirement',
+  'op.why.safety': 'Safety stock targets',
+  'op.wq.open': 'Why this quantity',
+  'op.wq.openAria': 'Why this quantity: {{material}}, {{week}}',
+  'op.wq.title': 'Why this quantity',
+  'op.wq.close': 'Close',
+  'op.wq.loading': 'Loading…',
+  'op.wq.missing': 'This material is not in this run.',
+  'op.wq.req.title': 'Material requirement',
+  'op.wq.req.gross': 'Gross requirement in {{week}}',
+  'op.wq.req.safety': '+ Safety stock',
+  'op.wq.req.stock': '− Stock at start of week',
+  'op.wq.req.confirmed': '− Confirmed deliveries in the week',
+  'op.wq.req.net': '= Net requirement in {{week}}',
+  'op.wq.req.rule':
+    'Worked out week by week, and never below zero. Stock at start of week already includes the orders planned for earlier weeks, so the all-weeks total below is a sum of weekly figures, not gross − stock − deliveries.',
+  'op.wq.req.stockDate': 'Stock as of',
+  'op.wq.req.total_one': 'Net requirement, all {{count}} week (sum of the weekly figures):',
+  'op.wq.req.total_other': 'Net requirement, all {{count}} weeks (sum of the weekly figures):',
+  'op.wq.req.link': 'Open Material requirement',
+  'op.wq.ss.title': 'Safety stock targets',
+  'op.wq.ss.safetyStock': 'Safety stock',
+  'op.wq.ss.slt': 'Safety lead time',
+  'op.wq.ss.days_one': '{{count}} day',
+  'op.wq.ss.days_other': '{{count}} days',
+  'op.wq.ss.rop': 'Reorder point',
+  'op.wq.ss.link': 'Open Safety stock targets',
+  'op.wq.size.title': 'Order sizing',
+  'op.wq.size.net': 'Net requirement in {{week}}',
+  'op.wq.size.moq': 'Minimum order quantity',
+  'op.wq.size.multiple': 'Order multiple',
+  'op.wq.size.space': 'Warehouse space used',
+  'op.wq.size.quantity': 'Recommended quantity',
+  'op.wq.size.binding': 'What set the size: {{constraint}}.',
+  'op.recs.intro':
+    'Each order with the constraint that bound it and the cost it saved. A recommendation becomes a call-off only when a planner acts: it is created here as a draft on the supplier’s open agreement, and released on the Call-offs page, where what remains on the agreement is checked.',
+  'op.recs.empty': 'No order is needed in this warehouse over the horizon.',
+  'op.col.material': 'Material',
+  'op.col.supplier': 'Supplier',
+  'op.col.week': 'Receive in',
+  'op.col.release': 'Release in',
+  'op.col.quantity': 'Quantity',
+  'op.col.reason': 'Why this size',
+  'op.col.previous': 'Last week’s plan',
+  'op.col.method': 'Sized by',
+  'op.col.action': 'Action',
+  'op.pallets': '{{value}} pallets',
+  'op.late': 'Late to release',
+  'op.cover_one': 'Covers {{count}} week',
+  'op.cover_other': 'Covers {{count}} weeks',
+  'op.moqFlag': 'MOQ above 26 weeks of demand — a sourcing issue for the buyer',
+
+  'op.binding.moq': 'Minimum order quantity',
+  'op.binding.orderMultiple': 'Order multiple',
+  'op.binding.warehouse': 'Warehouse space',
+  'op.binding.changePenalty': 'Kept as planned (inside the lead time)',
+  'op.binding.costBalance': 'Ordering against holding cost',
+  'op.binding.demand': 'This week’s need',
+  'op.saved': '{{value}} less than {{quantity}}',
+  'op.saved.none': 'No other size possible',
+  'op.previous.none': 'None planned',
+  'op.previous.changed': 'Changed',
+
+  'op.method.joint': 'Joint sizing',
+  'op.method.wagnerWhitin': 'Fallback: this material alone (Wagner–Whitin)',
+  'op.method.interim': 'Fallback: interim round-up (no value on record)',
+
+  'op.action.draft': 'Create draft call-off',
+  'op.action.drafted': 'Draft created',
+  'op.action.noPo': 'No PO',
+  'op.action.noPo.hint':
+    'No open agreement with this supplier for this material, so there is nothing to call off against.',
+  'op.action.onPo': 'On {{po}}',
+  'op.action.releaseWithheld':
+    'Drafts from this plan cannot be released to the supplier until the Master Data Management team’s SAP feed is live: the plan is calculated on simulated data.',
+  'op.toast.drafted': 'Draft call-off created',
+  'op.toast.draftedDesc': 'Release it from the Call-offs page.',
+  'op.toast.draftedDescWithheld':
+    'It stays a draft on the Call-offs page until the Master Data Management team’s SAP feed is live.',
+  'op.toast.refused': 'The draft was not created',
+
+  'op.def.title': 'How the plan is sized',
+  'op.def.cost':
+    'Total cost: the cost of each order, plus holding (stock × value × the holding rate ÷ 52 each week), plus rented space (pallets above owned capacity × the rented-space rate each week), plus the change penalty for changing an order already inside the supplier’s lead time.',
+  'op.def.constraints':
+    'Every week’s need is met and the safety stock is held; every order is at least the MOQ and a whole number of order multiples.',
+  'op.def.fill':
+    'Fill: stock at the end of the week in pallets (quantity ÷ units per pallet) ÷ owned capacity.',
+  'op.def.fallback':
+    'Where the joint sizing cannot run, a material is sized on its own (Wagner–Whitin, then rounded up to MOQ and multiple) and marked.',
+  'op.def.cap':
+    'Most rented space: the plan never rents more than the administrator’s share of owned capacity to save money. A week that cannot fit even so is listed above the fill, for the planner to choose between renting beyond the limit and a later delivery.',
+
+  'op.costs.maxRent': 'Most rented space',
+  'op.costs.maxRentValue': '{{value}}% of owned capacity',
+  'op.costs.placeholderWarehouse': 'Placeholder — the Warehouse to confirm',
+  'op.warehouse.maxRented': 'most rented',
+  'op.fill.beyondCap': '{{value}} beyond the limit',
+  // FUX-D3 — the decision moved to Make warehouse room; this page keeps the count.
+  'op.short.count_one': '{{count}} week does not fit.',
+  'op.short.count_other': '{{count}} weeks do not fit.',
+  'op.short.decide': 'Decide on Make warehouse room.'
+};
+
+/** @type {Record<string, string>} */
+export const orderPlanId = {
+  'op.subtitle':
+    'Kapan dan berapa banyak memesan, ditentukan bersama untuk semua material dalam satu gudang: kebutuhan setiap minggu terpenuhi, MOQ dan kelipatan pesanan dijaga, dan ruang gudang ditimbang terhadap biaya satu pesanan lagi.',
+  'op.meta.plan': 'Sumber rencana: rencana barang jadi SAP,',
+  'op.meta.horizon': 'Cakupan',
+  'op.meta.weeks': '{{count}} minggu',
+  'op.meta.noPlan': 'Tidak ada rencana barang jadi',
+  'op.meta.previous': 'Perubahan dalam waktu tunggu ditimbang terhadap rencana minggu lalu, per',
+  'op.synthetic':
+    'Dihitung dengan data sintetis yang dibuat untuk meniru ukuran PTI saat ini. Ini membuktikan perhitungannya, bukan jawaban bisnisnya.',
+  'op.method':
+    'Rencana setiap material dicari secara tepat, lalu material dalam satu gudang direncanakan ulang satu per satu terhadap ruang yang dipakai material lain, sampai tidak ada perubahan yang menurunkan total biaya.',
+
+  'op.costs.title': 'Tarif biaya yang dipakai',
+  'op.costs.placeholder': 'Sementara — menunggu konfirmasi Keuangan',
+  'op.costs.placeholderPenalty': 'Sementara — menunggu konfirmasi Perencana Material',
+  'op.costs.holding': 'Biaya penyimpanan',
+  'op.costs.holdingValue': '{{value}}% dari nilai per tahun',
+  'op.costs.order': 'Biaya per pesanan',
+  'op.costs.rent': 'Ruang sewa, per palet per minggu',
+  'op.costs.penalty': 'Penalti perubahan dalam waktu tunggu, per palet',
+  'op.costs.where':
+    'Diatur di Administrasi → Toleransi dan nilai aturan. Setiap angka rupiah di halaman ini memakainya.',
+
+  'op.warehouse.packaging': 'Gudang kemasan',
+  'op.warehouse.rawMaterial': 'Gudang bahan baku',
+  'op.warehouse.capacity': 'Kapasitas sendiri',
+  'op.warehouse.pallets': '{{value}} palet',
+  'op.fallback':
+    'Gudang ini tidak dapat dihitung bersama ({{reason}}). Setiap material dihitung sendiri dengan cara cadangan, dan ditandai.',
+
+  'op.kpi.orders': 'Pesanan yang disarankan',
+  'op.kpi.orders.sub': 'Pembulatan sementara akan membuat {{count}}',
+  'op.kpi.peak': 'Isi tertinggi yang diproyeksikan',
+  'op.kpi.peak.sub': 'Terhadap kapasitas sendiri; standarnya 80%',
+  'op.kpi.rented': 'Palet-minggu sewa',
+  'op.kpi.rented.sub': 'Pembulatan sementara: {{value}}',
+  'op.kpi.rentCost': 'Biaya ruang sewa',
+  'op.kpi.rentCost.sub': 'Dengan tarif sementara',
+
+  'op.fill.title': 'Proyeksi isi gudang per minggu',
+  'op.fill.basis':
+    'Termasuk pesanan yang disarankan di halaman ini. Call-off yang sudah dirilis tetapi belum diterima belum dihitung; Kosongkan ruang gudang menambahkannya, jadi isi “Sekarang” di sana bisa lebih tinggi untuk minggu yang sama.',
+  'op.fill.intro':
+    'Stok di akhir setiap minggu, dalam palet, sebagai porsi kapasitas sendiri. Di atas 100% kelebihannya masuk ruang sewa dan dihitung biayanya. Garis terendah adalah stok paling sedikit yang mungkin: kebutuhan setiap minggu tepat, tanpa MOQ atau kelipatan.',
+  'op.fill.series.plan': 'Rencana pesanan',
+  'op.fill.series.interim': 'Pembulatan sementara',
+  'op.fill.series.lowest': 'Terendah yang mungkin',
+  'op.fill.line.capacity': 'Kapasitas 100%',
+  'op.fill.line.standard': 'Standar 80%',
+  'op.fill.col.week': 'Minggu',
+  'op.fill.col.plan': 'Rencana pesanan',
+  'op.fill.col.interim': 'Pembulatan sementara',
+  'op.fill.col.lowest': 'Terendah yang mungkin',
+  'op.fill.col.status': 'Terhadap 80%',
+  'op.fill.col.rented': 'Palet sewa',
+  'op.fill.col.rentCost': 'Biaya ruang sewa',
+  'op.fill.status.over': 'Melebihi kapasitas',
+  'op.fill.status.above': 'Di atas 80%',
+  'op.fill.status.within': 'Dalam 80%',
+
+  'op.recs.title': 'Pesanan yang disarankan',
+  'op.why': 'Halaman lengkap di balik setiap kuantitas:',
+  'op.why.requirement': 'Kebutuhan material',
+  'op.why.safety': 'Target stok pengaman',
+  'op.wq.open': 'Mengapa kuantitas ini',
+  'op.wq.openAria': 'Mengapa kuantitas ini: {{material}}, {{week}}',
+  'op.wq.title': 'Mengapa kuantitas ini',
+  'op.wq.close': 'Tutup',
+  'op.wq.loading': 'Memuat…',
+  'op.wq.missing': 'Material ini tidak ada dalam perhitungan ini.',
+  'op.wq.req.title': 'Kebutuhan material',
+  'op.wq.req.gross': 'Kebutuhan kotor di {{week}}',
+  'op.wq.req.safety': '+ Stok pengaman',
+  'op.wq.req.stock': '− Stok awal minggu',
+  'op.wq.req.confirmed': '− Pengiriman terkonfirmasi pada minggu itu',
+  'op.wq.req.net': '= Kebutuhan bersih di {{week}}',
+  'op.wq.req.rule':
+    'Dihitung minggu per minggu, dan tidak pernah di bawah nol. Stok awal minggu sudah mencakup pesanan yang direncanakan untuk minggu-minggu sebelumnya, sehingga total seluruh minggu di bawah adalah jumlah angka mingguan, bukan kebutuhan kotor − stok − pengiriman.',
+  'op.wq.req.stockDate': 'Stok per',
+  'op.wq.req.total_other': 'Kebutuhan bersih, seluruh {{count}} minggu (jumlah angka mingguan):',
+  'op.wq.req.link': 'Buka Kebutuhan material',
+  'op.wq.ss.title': 'Target stok pengaman',
+  'op.wq.ss.safetyStock': 'Stok pengaman',
+  'op.wq.ss.slt': 'Waktu tunggu pengaman',
+  'op.wq.ss.days_other': '{{count}} hari',
+  'op.wq.ss.rop': 'Titik pesan ulang',
+  'op.wq.ss.link': 'Buka Target stok pengaman',
+  'op.wq.size.title': 'Penentuan ukuran pesanan',
+  'op.wq.size.net': 'Kebutuhan bersih di {{week}}',
+  'op.wq.size.moq': 'Jumlah pesanan minimum',
+  'op.wq.size.multiple': 'Kelipatan pesanan',
+  'op.wq.size.space': 'Ruang gudang terpakai',
+  'op.wq.size.quantity': 'Kuantitas yang disarankan',
+  'op.wq.size.binding': 'Yang menentukan ukuran: {{constraint}}.',
+  'op.recs.intro':
+    'Setiap pesanan dengan batasan yang menentukannya dan biaya yang dihematnya. Saran menjadi call-off hanya bila perencana bertindak: dibuat di sini sebagai draf pada perjanjian terbuka pemasok, lalu dirilis di halaman Call-off, tempat sisa perjanjian diperiksa.',
+  'op.recs.empty': 'Tidak ada pesanan yang dibutuhkan di gudang ini sepanjang cakupan.',
+  'op.col.material': 'Material',
+  'op.col.supplier': 'Pemasok',
+  'op.col.week': 'Diterima pada',
+  'op.col.release': 'Dirilis pada',
+  'op.col.quantity': 'Jumlah',
+  'op.col.reason': 'Alasan ukuran ini',
+  'op.col.previous': 'Rencana minggu lalu',
+  'op.col.method': 'Dihitung dengan',
+  'op.col.action': 'Tindakan',
+  'op.pallets': '{{value}} palet',
+  'op.late': 'Terlambat dirilis',
+  'op.cover_other': 'Mencakup {{count}} minggu',
+  'op.moqFlag': 'MOQ di atas kebutuhan 26 minggu — masalah sumber pasokan bagi pembeli',
+
+  'op.binding.moq': 'Jumlah pesanan minimum',
+  'op.binding.orderMultiple': 'Kelipatan pesanan',
+  'op.binding.warehouse': 'Ruang gudang',
+  'op.binding.changePenalty': 'Dipertahankan sesuai rencana (dalam waktu tunggu)',
+  'op.binding.costBalance': 'Biaya pesanan terhadap biaya simpan',
+  'op.binding.demand': 'Kebutuhan minggu ini',
+  'op.saved': '{{value}} lebih murah daripada {{quantity}}',
+  'op.saved.none': 'Tidak ada ukuran lain yang mungkin',
+  'op.previous.none': 'Tidak direncanakan',
+  'op.previous.changed': 'Berubah',
+
+  'op.method.joint': 'Perhitungan bersama',
+  'op.method.wagnerWhitin': 'Cadangan: material ini sendiri (Wagner–Whitin)',
+  'op.method.interim': 'Cadangan: pembulatan sementara (nilai tidak tercatat)',
+
+  'op.action.draft': 'Buat draf call-off',
+  'op.action.drafted': 'Draf dibuat',
+  'op.action.noPo': 'Tidak ada PO',
+  'op.action.noPo.hint':
+    'Tidak ada perjanjian terbuka dengan pemasok ini untuk material ini, sehingga tidak ada yang dapat di-call-off.',
+  'op.action.onPo': 'Pada {{po}}',
+  'op.action.releaseWithheld':
+    'Draf dari rencana ini tidak dapat dirilis ke pemasok sampai data SAP dari tim Master Data Management tersedia: rencana ini dihitung dengan data simulasi.',
+  'op.toast.drafted': 'Draf call-off dibuat',
+  'op.toast.draftedDesc': 'Rilis dari halaman Call-off.',
+  'op.toast.draftedDescWithheld':
+    'Draf tetap di halaman Call-off sampai data SAP dari tim Master Data Management tersedia.',
+  'op.toast.refused': 'Draf tidak dibuat',
+
+  'op.def.title': 'Cara rencana dihitung',
+  'op.def.cost':
+    'Total biaya: biaya setiap pesanan, ditambah biaya simpan (stok × nilai × tarif simpan ÷ 52 setiap minggu), ditambah ruang sewa (palet di atas kapasitas sendiri × tarif ruang sewa setiap minggu), ditambah penalti perubahan bila mengubah pesanan yang sudah masuk waktu tunggu pemasok.',
+  'op.def.constraints':
+    'Kebutuhan setiap minggu terpenuhi dan stok pengaman terjaga; setiap pesanan minimal MOQ dan kelipatan pesanan yang utuh.',
+  'op.def.fill':
+    'Isi: stok di akhir minggu dalam palet (jumlah ÷ unit per palet) ÷ kapasitas sendiri.',
+  'op.def.fallback':
+    'Bila perhitungan bersama tidak dapat dijalankan, material dihitung sendiri (Wagner–Whitin, lalu dibulatkan ke atas ke MOQ dan kelipatan) dan ditandai.',
+  'op.def.cap':
+    'Ruang sewa terbanyak: rencana tidak pernah menyewa lebih dari bagian kapasitas sendiri yang ditetapkan administrator demi menghemat biaya. Minggu yang tetap tidak muat dicantumkan di atas isi gudang, agar perencana memilih antara menyewa melebihi batas atau pengiriman yang lebih lambat.',
+
+  'op.costs.maxRent': 'Ruang sewa terbanyak',
+  'op.costs.maxRentValue': '{{value}}% dari kapasitas sendiri',
+  'op.costs.placeholderWarehouse': 'Sementara — menunggu konfirmasi Gudang',
+  'op.warehouse.maxRented': 'sewa terbanyak',
+  'op.fill.beyondCap': '{{value}} melebihi batas',
+  // FUX-D3 — keputusan dipindah ke Kosongkan ruang gudang; halaman ini menyimpan jumlahnya.
+  'op.short.count_other': '{{count}} minggu tidak muat.',
+  'op.short.decide': 'Putuskan di Kosongkan ruang gudang.'
+};

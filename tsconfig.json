@@ -27,7 +27,7 @@
     // The SPEC surface adds 11 more (`tsconfig.vitest.json` inherits this flag —
     // it is set ONCE, here, and a second copy there would be a figure that can
     // drift). 39 in total, and a fixpoint: removing them cascaded once, onto
-    // `fixturePresent.guard.test.ts` · `docStateAt`, whose only reader was one of
+    // `fixturePresent.guard.test.js` · `docStateAt`, whose only reader was one of
     // the 39.
     //
     // ⚠️ **NOT ONE OF THE 39 WAS A LIVE DEFECT, AND THAT WAS CHECKED RATHER THAN
@@ -85,7 +85,7 @@
     //
     // It catches A PARAMETER WHOSE SIGNATURE ASSERTS A USE THE BODY DOES NOT
     // MAKE. On adoption it found exactly one site tree-wide, and the site was a
-    // real defect: `data/communicationProfiles.ts`'s GERMAN `asn_reminder` took
+    // real defect: `data/communicationProfiles.js`'s GERMAN `asn_reminder` took
     // `supplier` and never interpolated it, addressing an unnamed recipient
     // while holding the name. Nine sibling locales used it, and so did the
     // German `po_issued` template TWENTY LINES ABOVE IT — so the fix was the
@@ -121,15 +121,53 @@
     //     returns 0 "by construction: the portal links no documents to a contract
     //     today", kept as a function so a real relation has one seat to land in;
     //     `FOOTER_VARIANT(_r: RFQ)` returns `'outline'` because §68 retired the
-    //     solid register, and it is PINNED — `BuyerSourcing.footer.test.ts` holds
+    //     solid register, and it is PINNED — `BuyerSourcing.footer.test.js` holds
     //     nine assertions against it, so the seam cannot quietly rot.
     // The discriminator, for the next one: a hatch is honest when the signature is
     // owed to a caller or the emptiness is stated and pinned. Silence is not.
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    // ── `allowJs` + `checkJs` — JAVASCRIPT IS TYPE-CHECKED TOO (2026-10-02) ───
+    // The portal is moving from TypeScript to JavaScript to match the company
+    // React boilerplate (frontend-standard plan, Phases 3–4). Types move into
+    // JSDoc comments (`/** @param {Supplier} s */`), and these two flags make
+    // `tsc` read and check them with the same `strict` settings as above. So a
+    // converted `.js` file stays under the same type gate as the `.ts` file it
+    // replaced: gate 1 (`npm run build`) and gate 2 (specs) both cover it.
+    // Shared contract types may stay in `.d.ts` files (owner ruling: keep
+    // `types.d.ts`); a `.js` file imports them with `@typedef {import(...)}`.
+    "allowJs": true,
+    "checkJs": true,
+    // ── `paths` — IMPORT ALIASES (frontend-standard plan, Phase 2) ───────────
+    // Mirrors `ALIAS_FOLDERS` in aliases.js, which Vite and Vitest read. JSON
+    // cannot import that module, so the list is repeated here and
+    // `src/test/aliases.guard.test.js` fails if the two disagree. Change both.
+    "paths": {
+      "@assets/*": ["./src/assets/*"],
+      "@components/*": ["./src/components/*"],
+      "@context/*": ["./src/context/*"],
+      "@data/*": ["./src/data/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@pages/*": ["./src/pages/*"],
+      "@pages-v2/*": ["./src/pages-v2/*"],
+      "@router/*": ["./src/router/*"],
+      "@services/*": ["./src/services/*"],
+      "@styles/*": ["./src/styles/*"],
+      "@test/*": ["./src/test/*"],
+      "@app-types/*": ["./src/types/*"]
+    }
   },
   "include": ["src"],
-  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/test"]
+  // Specs are typechecked by gate 2 (`tsconfig.vitest.json`), not here; JS
+  // specs are listed so the base config keeps excluding them after conversion.
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.test.js",
+    "src/**/*.test.jsx",
+    "src/test"
+  ]
 }

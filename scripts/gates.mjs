@@ -1,8 +1,8 @@
 // ────────────────────────────────────────────────────────────────────────────
-// THE THREE GATES, RUN AND ASSERTED — CP-3a.
+// THE GATES, RUN AND ASSERTED — CP-3a.
 //
-// This is not a fourth gate. It runs EXACTLY the three gates CLAUDE.md names
-// (`npm run build`, `npx vitest run`, `npm run test:gate`), in that order, and
+// It runs EXACTLY the gates CLAUDE.md names, in this order — build, spec
+// typecheck, vitest, test:gate, and (since 2026-10-02) lint + format — and
 // then asserts that each one actually DID something. CI runs this file and so
 // can the operator: `npm run gates`. There is deliberately no command that CI
 // can run and the operator cannot — CI is not a second source of truth about
@@ -39,7 +39,7 @@ const failures = [];
 // What was actually observed, so the closing line reports the run and not the
 // floor. A summary that prints the recorded number back at you is a summary
 // that would read identically if nothing had run.
-const observed = { tests: null, files: null, gate: null };
+const observed = { tests: null, files: null, gate: null, lintWarnings: null };
 
 const group = (title) => console.log(CI ? `::group::${title}` : `\n──────── ${title} ────────`);
 const endGroup = () => console.log(CI ? '::endgroup::' : '');
@@ -98,8 +98,8 @@ function assertCount(gate, label, actual, expected, floorPath) {
 
 mkdirSync(OUT, { recursive: true });
 
-// ── Gate 1/4 · npm run build (tsc && vite build) ────────────────────────────
-group('gate 1/4 · npm run build  (tsc && vite build)');
+// ── Gate 1/5 · npm run build (tsc && vite build) ────────────────────────────
+group('gate 1/5 · npm run build  (tsc && vite build)');
 {
   const dist = join(ROOT, 'dist');
   // Removed first so the artifact assertions below cannot be satisfied by a
@@ -124,7 +124,7 @@ group('gate 1/4 · npm run build  (tsc && vite build)');
 }
 endGroup();
 
-// ── Gate 2/4 · tsc -p tsconfig.vitest.json (the SPEC surface) ───────────────
+// ── Gate 2/5 · tsc -p tsconfig.vitest.json (the SPEC surface) ───────────────
 // `TSC-SKIPS-TESTS-01`. Gate 1 runs `tsc` against `tsconfig.json`, which
 // EXCLUDES `src/**/*.test.ts(x)` — so for the life of the suite no gate ever
 // typechecked a spec, and vitest transpiles without checking. A spec could carry
@@ -138,7 +138,7 @@ endGroup();
 // AND THE CONFIG IS RUN HERE, NOT MERELY PRESENT. Adding the override without
 // adding this gate would repeat the same failure one layer up: presence mistaken
 // for enforcement is exactly why the booked remedy was theatre.
-group('gate 2/4 · tsc -p tsconfig.vitest.json  (typecheck the specs)');
+group('gate 2/5 · tsc -p tsconfig.vitest.json  (typecheck the specs)');
 {
   const cfg = join(ROOT, 'tsconfig.vitest.json');
   if (!existsSync(cfg)) {
@@ -165,11 +165,11 @@ group('gate 2/4 · tsc -p tsconfig.vitest.json  (typecheck the specs)');
 }
 endGroup();
 
-// ── Gate 3/4 · npx vitest run ───────────────────────────────────────────────
+// ── Gate 3/5 · npx vitest run ───────────────────────────────────────────────
 // Identical execution to the documented gate; two reporters are added so the
 // run leaves a machine-readable record to assert against. Invoked through the
 // installed bin rather than `npx` so no network or shell resolution is involved.
-group('gate 3/4 · npx vitest run  (the floor)');
+group('gate 3/5 · npx vitest run  (the floor)');
 {
   const reportRel = `${OUT_REL}/vitest.json`;
   const report = join(ROOT, reportRel);
@@ -206,10 +206,10 @@ group('gate 3/4 · npx vitest run  (the floor)');
 }
 endGroup();
 
-// ── Gate 4/4 · npm run test:gate (SEC-GATE-01) ──────────────────────────────
+// ── Gate 4/5 · npm run test:gate (SEC-GATE-01) ──────────────────────────────
 // The command is DERIVED from package.json rather than restated here: a second
 // copy of the invocation is a second thing that can drift (CENSUS-MUST-DERIVE-01).
-group('gate 4/4 · npm run test:gate  (SEC-GATE-01 session/HMAC)');
+group('gate 4/5 · npm run test:gate  (SEC-GATE-01 session/HMAC)');
 {
   const script = String(PKG.scripts?.['test:gate'] ?? '');
   const argv = script.split(/\s+/).filter(Boolean);
@@ -249,6 +249,73 @@ group('gate 4/4 · npm run test:gate  (SEC-GATE-01 session/HMAC)');
       }
     }
   }
+}
+endGroup();
+
+// ── Gate 5/5 · npm run lint + npm run format:check ──────────────────────────
+// Added 2026-10-02 when the owner lifted the "no lint script" rule to align the
+// portal with the company React boilerplate (frontend-standard plan, Phase 1).
+// The rules and their reasoning live in `eslint.config.js`; read its header.
+//
+// WHAT IS ASSERTED, AND WHY EACH ONE
+//   · ESLint exits 0 → no rule set to 'error' is violated anywhere.
+//   · A JSON report was written and covers files under src/ → lint really ran
+//     on the app (a config that ignored everything would also exit 0).
+//   · Warnings ≤ `lint.maxWarnings` in scripts/floor.json → a CEILING, the
+//     mirror image of the test floor. Rules with open violations run as
+//     warnings while Phase 2 fixes them; the ceiling stops NEW ones being
+//     added in the meantime. Below the ceiling passes with a note asking you
+//     to lower it, so the ceiling follows the cleanup down.
+//   · Prettier check passes on converted JavaScript in src/ (`format:check`).
+//
+// ESLint is invoked through the installed bin, like vitest above, so no
+// network or shell resolution is involved.
+group('gate 5/5 · npm run lint + format:check  (ESLint, Prettier)');
+{
+  const reportRel = `${OUT_REL}/eslint.json`;
+  const report = join(ROOT, reportRel);
+  rmSync(report, { force: true });
+
+  const status = run('lint', process.execPath, [
+    'node_modules/eslint/bin/eslint.js',
+    '.',
+    '--format=json',
+    `--output-file=${reportRel}`,
+  ]);
+  if (status !== 0) fail('lint', `ESLint exited ${status} — an 'error' rule is violated (run \`npm run lint\` to see where)`);
+
+  if (!existsSync(report)) {
+    fail('lint', 'no ESLint report was written — there is no evidence lint ran');
+  } else {
+    const results = JSON.parse(readFileSync(report, 'utf8'));
+    const appFiles = results.filter((r) => r.filePath.startsWith(join(ROOT, 'src'))).length;
+    const errors = results.reduce((n, r) => n + r.errorCount, 0);
+    const warnings = results.reduce((n, r) => n + r.warningCount, 0);
+    observed.lintWarnings = warnings;
+
+    if (appFiles === 0) fail('lint', 'ESLint linted no file under src/ — the config is ignoring the app');
+    else ok(`${results.length} files linted (${appFiles} under src/)`);
+    if (errors > 0) fail('lint', `${errors} lint error(s)`);
+
+    const max = FLOOR.lint?.maxWarnings;
+    if (typeof max !== 'number') {
+      fail('lint', '`lint.maxWarnings` is missing from scripts/floor.json — the warning ceiling is undefended');
+    } else if (warnings > max) {
+      fail(
+        'lint',
+        `warnings — REGRESSION: ${warnings} > ${max}. New code added a violation of a rule that is ` +
+          'still being cleaned up. Fix it rather than raising the ceiling.',
+      );
+    } else if (warnings < max) {
+      note(`lint warnings = ${warnings}, below the ceiling of ${max}. Lower \`lint.maxWarnings\` in scripts/floor.json.`);
+    } else {
+      ok(`lint warnings = ${warnings} (at the ceiling)`);
+    }
+  }
+
+  const fmt = run('format', 'npm', ['run', 'format:check'], { shell: true });
+  if (fmt !== 0) fail('format', '`npm run format:check` failed — run `npm run format` on the listed files');
+  else ok('converted JavaScript is Prettier-formatted');
 }
 endGroup();
 
@@ -297,7 +364,7 @@ group('boundary provenance · README points at the data, and the retired claims 
     fail('boundary provenance', 'README.md is missing');
   } else {
     const text = readFileSync(readme, 'utf8');
-    const pointers = ['src/services/transitions/schema.ts', '/buyer/process-flows'];
+    const pointers = ['src/services/transitions/schema.js', '/buyer/process-flows'];
     const missing = pointers.filter((p) => !text.includes(p));
     if (missing.length > 0) {
       fail(
@@ -340,7 +407,9 @@ if (failures.length > 0) {
 }
 console.log(
   `GATES GREEN — build emitted a bundle · ${observed.tests} tests across ` +
-    `${observed.files} files · ${observed.gate} gate tests. Observed, and at or above ` +
-    `the recorded floor (${FLOOR.vitest.tests}/${FLOOR.vitest.files}/${FLOOR.gate.tests}).`,
+    `${observed.files} files · ${observed.gate} gate tests · ${observed.lintWarnings} lint ` +
+    `warnings. Observed, and at or above the recorded floor ` +
+    `(${FLOOR.vitest.tests}/${FLOOR.vitest.files}/${FLOOR.gate.tests}); lint at or below its ` +
+    `ceiling (${FLOOR.lint.maxWarnings}).`,
 );
 process.exit(0);

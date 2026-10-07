@@ -1,0 +1,103 @@
+// ────────────────────────────────────────────────────────────────────────────
+// Cross-entity cascade registry (v2.2 Step 4 batch ii — census G4).
+//
+// When a transition completes, another entity's machine may need to fan out
+// (RFQ Award → losing quotations Rejected; GR mismatch → ASN Discrepancy). The
+// `cascade` trigger already marks the TARGET transition; this registry is the
+// DATA that links a SOURCE transition to the cascade(s) it fires. Kept out of
+// `TransitionDef` so the schema stays pure (G4: "no schema change") — the
+// dispatcher owns the fan-out (post-apply), the mock adapter resolves WHICH
+// target ids to hit (cross-entity lookups live in the adapter, like policy hooks
+// and creation owners).
+// ────────────────────────────────────────────────────────────────────────────
+
+/** A source→target cascade link (which transition to fire on which entity). */
+/**
+ * @typedef {{
+ *   readonly targetEntity: string;
+ *   readonly targetTransitionId: string;
+ * }} CascadeLink
+ */
+
+/**
+ * Source transition id → the cascades it fires. A GR mismatch disposition
+ * (reject / partial approve) raises a discrepancy on the linked ASN.
+ * @type {Record<string, readonly CascadeLink[]>}
+ */
+export const CASCADES = {
+  t_gr_reject: [{ targetEntity: 'advanceShipNotice', targetTransitionId: 't_asn_discrepancy' }],
+  t_gr_partial_approve: [
+    { targetEntity: 'advanceShipNotice', targetTransitionId: 't_asn_discrepancy' }
+  ],
+  // GR-post fans out the 3-way match onto the invoice(s) sharing its PO (F0.2,
+  // INV-GR-OVERLAY-01 — the honest replacement for the deleted `paragon_gr_posted`
+  // localStorage overlay). The adapter computes the verdict from real PO×GR×invoice
+  // data, writes the invoice's matchStatus, and fires this header verb ONLY when
+  // the verdict is a genuine 'Matched' (a variance verdict honestly no-ops).
+  t_gr_post: [{ targetEntity: 'invoice', targetTransitionId: 't_invoice_match' }],
+  // REQ-E07-07 — the match also runs when an invoice drawn from receipts enters
+  // the state a verdict is written for: first submission, the supplier's
+  // corrected resubmission, and Finance sending a returned invoice back. All
+  // three entrances, so no door into that state skips the check. The adapter
+  // computes CR-13 / CR-12 from the receipts the invoice names and fires the
+  // header verb only on a clean Matched.
+  t_invoice_submit: [{ targetEntity: 'invoice', targetTransitionId: 't_invoice_match' }],
+  t_invoice_resubmit: [{ targetEntity: 'invoice', targetTransitionId: 't_invoice_match' }],
+  t_invoice_resolve: [{ targetEntity: 'invoice', targetTransitionId: 't_invoice_match' }],
+  // RFQ award fans out onto its quotations (batch iv): the winner is awarded,
+  // every other is rejected. Both target the `quotation` machine; the adapter
+  // resolver splits the sibling set (winner ← payload, losers ← the store) across
+  // these two links.
+  // A raised RFQ advances the approved PR it was raised FROM (C.1). The link is
+  // authored here; the resolver decides whether it fires at all, and the COMMON
+  // answer is that it does not — an RFQ raised without a `sourceRequisitionId`
+  // in its payload cascades onto nothing. That is not a failure path, it is the
+  // ordinary one: most RFQs are not raised from a requisition.
+  //
+  // ⚠️ **THE SOURCE IS A `creation` VERB, WHICH IS NEW FOR THIS REGISTRY.** The
+  // other three sources mutate an entity in place; this one mints it. The
+  // dispatcher handles both identically — `resolvedId` reads `result.entityId`,
+  // which creation sets to the store-assigned number — so `ctx.entityId` here is
+  // the NEW RFQ's number, and that is exactly what the PR wants written onto it.
+  t_rfq_create: [{ targetEntity: 'purchaseRequisition', targetTransitionId: 't_pr_source' }],
+  t_rfq_award: [
+    { targetEntity: 'quotation', targetTransitionId: 't_quotation_award' },
+    { targetEntity: 'quotation', targetTransitionId: 't_quotation_reject' }
+  ],
+  // RFx C1 — a PARTIAL award marks its named quotes Awarded and rejects NONE:
+  // a supplier with no share yet may still win an item left open. The final
+  // award (`t_rfq_award`) rejects every quote no award of the event named.
+  t_rfq_award_partial: [{ targetEntity: 'quotation', targetTransitionId: 't_quotation_award' }],
+  // RFx C2 (AR-06) — cancelling an award reverses its cascade: the quotes the
+  // cancelled award named go back to Under Review, unless another award in
+  // force still names them; and when the cancel takes the event out of
+  // Awarded, so do the quotes the final award rejected. The resolver picks
+  // the ids from the award record and the store.
+  t_rfq_award_cancel: [{ targetEntity: 'quotation', targetTransitionId: 't_quotation_reinstate' }],
+  t_rfq_award_cancel_partial: [
+    { targetEntity: 'quotation', targetTransitionId: 't_quotation_reinstate' }
+  ],
+  // Material C2 (MR-3 BR-01, BR-02) — at most one approved trade name per
+  // supplier × material: approving or loading a name replaces the earlier
+  // approved one; a new submission replaces a name still awaiting approval
+  // (the approved one stays in use). The resolver in `targets/materialName.js`
+  // picks the ids from the store.
+  t_materialname_submit: [
+    { targetEntity: 'materialName', targetTransitionId: 't_materialname_replace' }
+  ],
+  t_materialname_approve: [
+    { targetEntity: 'materialName', targetTransitionId: 't_materialname_replace' }
+  ],
+  t_materialname_load: [
+    { targetEntity: 'materialName', targetTransitionId: 't_materialname_replace' }
+  ]
+};
+
+/**
+ * The cascade links declared for a source transition (empty if none).
+ * @param {string} transitionId
+ * @returns {readonly CascadeLink[]}
+ */
+export function cascadesFor(transitionId) {
+  return CASCADES[transitionId] ?? [];
+}

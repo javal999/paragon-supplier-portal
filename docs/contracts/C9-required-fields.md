@@ -1,8 +1,8 @@
 # C9 — the COMPLETE required-field list, DERIVED
 
-> ⚠️ **GENERATED FROM `src/services/sdc/materialMasterRef.types.ts`. DO NOT EDIT BY HAND.**
-> It is rendered by `src/services/sdc/__tests__/deriveC9FieldList.ts` and pinned by
-> `materialMasterRef.contract.test.ts`: if a field reaches the shape without reaching this
+> ⚠️ **GENERATED FROM `src/services/sdc/materialMasterRef.types.js`. DO NOT EDIT BY HAND.**
+> It is rendered by `src/services/sdc/__tests__/deriveC9FieldList.js` and pinned by
+> `materialMasterRef.contract.test.js`: if a field reaches the shape without reaching this
 > list, the floor fails. Regenerate with `npx vitest run -u`.
 
 > ⚠️ **THIS IS NOT A SUMMARY OF C9 AND MUST NOT BE RATIFIED IN PLACE OF IT.**

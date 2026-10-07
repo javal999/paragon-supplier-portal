@@ -70,7 +70,10 @@ jobs:
   gates:
     name: build · floor · test:gate
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    # 35, raised from 25 on 2026-10-06: the suite grew to the point where a
+    # green run (gates finished at 24m57s on PR #142) was cancelled by the
+    # limit during cleanup and reported as a failure.
+    timeout-minutes: 35
     steps:
       # @v5 and not @v4: the v4 actions target node 20, which the runners have
       # deprecated and now force onto 24 with a warning. A brand-new workflow
@@ -88,8 +91,8 @@ jobs:
       # from package.json instead of quietly resolving something else.
       - run: npm ci
 
-      # The same command the operator runs locally. It executes the three gates
-      # CLAUDE.md names and asserts the collected counts against
+      # The same command the operator runs locally. It executes the gates
+      # CLAUDE.md names (build, spec typecheck, vitest, test:gate, lint) and asserts the collected counts against
       # scripts/floor.json, so a suite that silently collects less cannot pass.
       - run: npm run gates
 

@@ -4,7 +4,7 @@ One event shape across the whole command layer (DR-10). The dispatcher emits a `
 on **every** command outcome; the durable audit sink persists the **same** shape, so there is no
 retrofit — the sink interface *is* the contract.
 
-Source of truth: `src/services/transitions/events.ts`, `src/services/transitions/dispatcher.ts`.
+Source of truth: `src/services/transitions/events.js`, `src/services/transitions/dispatcher.js`.
 
 ---
 
@@ -27,7 +27,7 @@ interface TransitionEvent {
 
 ⚠️ **THREE OF THOSE FIELDS WERE ADDED AFTER THIS PAGE WAS FIRST WRITTEN AND WENT
 UNDOCUMENTED UNTIL THE PIN CAUGHT THEM.** `reason`, `decision` and `attribution`
-were live in `events.ts` while this block still showed seven fields. They are
+were live in `events.js` while this block still showed seven fields. They are
 described at their declarations and only summarised here, so the two cannot
 drift into two different stories:
 
@@ -52,18 +52,18 @@ mirrors the query-layer `scopeKey` format.
 read-projection clock injection (C2). In the mock it is `() => new Date().toISOString()`; the real
 adapter supplies its own clock.
 
-⚠️ **AND THAT CLAUSE IS NOW PINNED** (`c3Events.contract.test.ts`). It was prose, and
+⚠️ **AND THAT CLAUSE IS NOW PINNED** (`c3Events.contract.test.js`). It was prose, and
 prose is how a contract clause gets contradicted by shipped code with every gate green. This one is
 **decidable** — a clock read is a call shape, not a meaning — so the guard asserts what the sentence
 claims: **no file under `src/services/transitions/` reads a clock at all**, the dispatcher declares
 `now` as a dependency, and the one production wiring site supplies exactly the value named above.
 The matcher separates `new Date()` (a clock read) from `new Date(asOf)` (a parse of a supplied
-string, which `policies.ts` really does), and it is controlled in both directions before its silence
+string, which `policies.js` really does), and it is controlled in both directions before its silence
 over the spine is believed.
 
 ⚠️ **IT IS THE WALL CLOCK AND NOT THE DECLARED PRESENT, DELIBERATELY — WHICH IS THE
 OPPOSITE OF THE RULE THE FIXTURES FOLLOW, AND THE REASON IS WORTH CARRYING.**
-`services/data/fixturePresent.ts` shifts every dated fixture family onto a frozen
+`services/data/fixturePresent.js` shifts every dated fixture family onto a frozen
 `DECLARED_PRESENT`, so a question asked of seeded data reads as though today were that family's own
 anchor. **An event is not seeded data.** `ts` records when an act HAPPENED, and in a session the act
 happens now; stamping a live act with a frozen past date would make every event in every session
@@ -88,8 +88,8 @@ interface AuditSink {
 
 - **LIVE:** `InMemoryAuditSink` — keeps events in memory for inspection and tests
   (`all()` / `byEvent(id)` / `clear()`). The process-wide instance is `commandAuditSink`
-  (`MockCommandService.ts`), injected into the dispatcher as `deps.sink`.
-- **RESERVED:** the durable persistent sink. The comment in `events.ts` names it "CMVE implements
+  (`MockCommandService.js`), injected into the dispatcher as `deps.sink`.
+- **RESERVED:** the durable persistent sink. The comment in `events.js` names it "CMVE implements
   this in Phase 5′" — because it implements the **same** `AuditSink` interface, landing it is
   additive: the dispatcher, the event shape, and every emit site are unchanged.
 
@@ -121,7 +121,7 @@ fan-out; the per-child `correlationId` keeps each child's status independent (DR
 
 `t_rfq_award` (source) fans out to the RFQ's quotation siblings: the winner fires
 `t_quotation_award` (→ Awarded), every other sibling fires `t_quotation_reject` (→ Rejected)
-(`MockCommandService.ts` `resolveCascades`, `rfq` branch). Each quotation transition:
+(`MockCommandService.js` `resolveCascades`, `rfq` branch). Each quotation transition:
 
 - gets its **own** `correlationId` (independently settleable),
 - carries `causationId` = the award command's `correlationId` (groups the fan-out).
@@ -158,15 +158,15 @@ true and they are not the same claim:
 before durability closes the window. **Read a field added after this page as intentional, not as
 drift** — but the moment the sink is durable, this list is final.
 
-⚠️ **AND THIS PAGE IS NOW PINNED** (`c3Events.contract.test.ts`): the interfaces above are asserted
-field-for-field against `events.ts`, so a field added to the tree and not to this page fails the
+⚠️ **AND THIS PAGE IS NOW PINNED** (`c3Events.contract.test.js`): the interfaces above are asserted
+field-for-field against `events.js`, so a field added to the tree and not to this page fails the
 build. That is how the three above were found.
 
 ---
 
 ## Pin reach
 
-**Pinned by** `src/services/contracts/__tests__/c3Events.contract.test.ts`.
+**Pinned by** `src/services/contracts/__tests__/c3Events.contract.test.js`.
 
 **GUARDED — these assertions, and nothing else on this page:**
 
@@ -189,7 +189,7 @@ a backlog: a clause describing a system outside this repository has nothing here
 against, and a clause stating WHY a boundary exists has no truth-value to decay. See C12
 for the statement of that property.
 
-⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.ts`).
+⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.js`).
 The GUARDED list is asserted EQUAL to the pin’s own `describe` titles, **both directions**:
 widen the pin without listing the new assertion and it reddens; drop a line here without
 narrowing the pin and it reddens too. A reach statement that can drift is the overclaim one

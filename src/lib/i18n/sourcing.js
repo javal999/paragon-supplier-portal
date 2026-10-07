@@ -1,0 +1,695 @@
+// BuyerSourcing i18n fragment (Batch 1). Namespace: sourcing.*
+// Flat dot-keys, mirrors src/lib/i18n.js. Wired into i18n.js by the operator.
+// Count-dependent phrases use explicit `.one` / `.other` sibling keys selected
+// in-component by a `count === 1` ternary (no reliance on the i18next plural
+// resolver, matching the flat-key convention already shipped in i18n.js).
+// Award verbs use the "menang" family (Award → Menangkan, Awarded →
+// Dimenangkan) to stay consistent with the status glossary (statusLabel.js).
+// Canonical StatusPill children (Open/Awarded/Draft/…) are localized centrally
+// by StatusPill via statusLabel.js and are NOT re-declared here.
+/** @type {Record<string, string>} */
+export const sourcingEn = {
+  // — Breadcrumb —
+  'sourcing.crumb.acquire': 'ACQUIRE',
+  'sourcing.crumb.sourcing': 'SOURCING & RFQ',
+  // — Page header —
+  'sourcing.header.title': 'Quotation requests',
+  'sourcing.header.subtitle': 'Active sourcing events, quote evaluation, and award history.',
+  // — Header actions —
+  'sourcing.action.export': 'Export',
+  'sourcing.action.templates': 'Templates',
+  'sourcing.action.newRfq': 'New RFQ',
+  // — Meta line —
+  'sourcing.meta.summary.one': '{{count}} active RFQ · last updated {{date}}',
+  'sourcing.meta.summary.other': '{{count}} active RFQs · last updated {{date}}',
+  // — KPI cards —
+  'sourcing.kpi.active.eyebrow': 'Active RFQs',
+  'sourcing.kpi.active.subtitle': 'Open for response',
+  'sourcing.kpi.awaiting.eyebrow': 'Awaiting Response',
+  'sourcing.kpi.awaiting.subtitle': 'Deadline within 7 days',
+  'sourcing.kpi.ready.eyebrow': 'Ready to Award',
+  'sourcing.kpi.ready.subtitle': 'All suppliers responded',
+  'sourcing.kpi.awarded.eyebrow': 'Awarded (Quarter)',
+  'sourcing.kpi.awarded.subtitle': 'Last 90 days',
+  // — Group tabs —
+  'sourcing.tab.all': 'All',
+  'sourcing.tab.open': 'Open',
+  'sourcing.tab.pending': 'Pending Award',
+  'sourcing.tab.awarded': 'Awarded',
+  'sourcing.tab.closed': 'Closed',
+  // — Filter / search —
+  'sourcing.filter.byCategory': 'Filter by category',
+  'sourcing.search.placeholder': 'Search by RFQ number, title, or material…',
+  // — Category labels (value stays the RFQCategory enum for logic) —
+  'sourcing.category.fragrance': 'Fragrance',
+  'sourcing.category.activeIngredients': 'Active Ingredients',
+  'sourcing.category.packaging': 'Packaging',
+  'sourcing.category.emulsifiers': 'Emulsifiers',
+  'sourcing.category.botanical': 'Botanical',
+  'sourcing.category.other': 'Other',
+  // — Active table —
+  'sourcing.table.col.rfq': 'RFQ #',
+  'sourcing.table.col.category': 'Category',
+  'sourcing.table.col.responses': 'Responses',
+  'sourcing.table.col.qty': 'Qty',
+  'sourcing.table.col.estValue': 'Est. Value',
+  'sourcing.table.col.responseDeadline': 'Response deadline',
+  'sourcing.table.col.status': 'Status',
+  'sourcing.table.col.actions': 'Actions',
+  'sourcing.table.empty': 'No RFQs match the current filters.',
+  // — Deadline compact labels —
+  'sourcing.deadline.overdue': '{{count}}d overdue',
+  'sourcing.deadline.dueToday': 'Due today',
+  'sourcing.deadline.remaining': '{{count}}d remaining',
+  // — Awards history —
+  'sourcing.awards.title': 'Awards History',
+  'sourcing.awards.count.one': '{{count}} awarded RFQ',
+  'sourcing.awards.count.other': '{{count}} awarded RFQs',
+  'sourcing.awards.col.rfq': 'RFQ #',
+  'sourcing.awards.col.title': 'Title',
+  'sourcing.awards.col.supplier': 'Awarded supplier',
+  'sourcing.awards.col.date': 'Award date',
+  'sourcing.awards.col.value': 'Award value',
+  'sourcing.awards.col.actions': 'Actions',
+  'sourcing.awards.empty': 'No awarded RFQs yet.',
+  // — Side panel —
+  'sourcing.panel.title': 'RFQ {{number}} — {{title}}',
+  'sourcing.panel.exportComparison': 'Export comparison',
+  'sourcing.panel.awardSummary': 'Award summary',
+  'sourcing.panel.awardedTo': 'Awarded to',
+  'sourcing.panel.awardedValue': 'Awarded value',
+  'sourcing.panel.awardDate': 'Award date',
+  'sourcing.panel.poIssued': 'PO issued',
+  'sourcing.panel.summary': 'Summary',
+  'sourcing.panel.field.category': 'Category',
+  'sourcing.panel.field.status': 'Status',
+  'sourcing.panel.field.created': 'Created',
+  'sourcing.panel.field.responseDeadline': 'Response deadline',
+  'sourcing.panel.field.awardDeadline': 'Award deadline',
+  'sourcing.panel.field.totalQty': 'Total qty',
+  'sourcing.panel.field.estValue': 'Est. value',
+  'sourcing.panel.field.currency': 'Currency',
+  'sourcing.panel.field.incoterms': 'Incoterms',
+  'sourcing.panel.field.paymentTerms': 'Payment terms',
+  'sourcing.panel.lifecycle': 'Lifecycle',
+  // — Quote comparison —
+  'sourcing.cmp.title.one': 'Quote comparison ({{count}} quote)',
+  'sourcing.cmp.title.other': 'Quote comparison ({{count}} quotes)',
+  'sourcing.cmp.empty': 'No quotes received yet.',
+  'sourcing.cmp.criterion': 'Criterion',
+  'sourcing.cmp.topRanked': 'Top-ranked',
+  // — 2e-c-3 FX refusals. Both name the currencies and both name the REMEDY:
+  //   a refusal a buyer cannot act on is only half a refusal.
+  'sourcing.cmp.fx.refused.FX_UNPINNED':
+    'Not ranked — quotes are priced in {{currencies}} and no exchange rate has been recorded for this RFQ. Record a rate to compare them; the bids below are shown as quoted.',
+  // 2e-c-4 — a STALE refusal names the vintage it is judging. "Too old" without
+  // saying how old leaves a buyer unable to tell this morning's rate from
+  // January's.
+  'sourcing.cmp.fx.refused.FX_STALE':
+    'Not ranked — the recorded exchange rate for {{currencies}} (as of {{asOf}}) is older than this comparison allows. Record a current rate; the previous one is kept on the RFQ.',
+  // — 2e-c-4 · the recorded FX basis, on screen. A buyer must be able to answer
+  //   "what rate ranked this, and how old is it?" without an audit query.
+  'sourcing.cmp.fx.basis.title': 'Exchange rate basis',
+  'sourcing.cmp.fx.basis.asOf': 'as of {{date}}',
+  'sourcing.cmp.fx.basis.none': 'No rate recorded',
+  'sourcing.cmp.fx.basis.source.MANUAL': 'Entered manually',
+  'sourcing.cmp.fx.basis.source.SAP_EXHGRATE': 'SAP exchange rate',
+  // Superseded pins are KEPT (D-1) — saying so makes the preservation visible
+  // rather than a claim in a code comment.
+  'sourcing.cmp.fx.basis.superseded.one': '{{count}} earlier rate kept',
+  'sourcing.cmp.fx.basis.superseded.other': '{{count}} earlier rates kept',
+  'sourcing.cmp.fx.basis.record': 'Record {{currency}} rate',
+  // "Supersede", never "Edit": the prior rate is not replaced, it is outranked
+  // by a newer recorded act, and both stay on the RFQ.
+  'sourcing.cmp.fx.basis.supersede': 'Supersede {{currency}} rate',
+  // — the pin dialog (confirm-before-commit) —
+  'sourcing.fx.dialog.title.record': 'Record the {{currency}} exchange rate',
+  'sourcing.fx.dialog.title.supersede': 'Supersede the {{currency}} exchange rate',
+  'sourcing.fx.dialog.body.record':
+    'This rate is what Paragon will compare {{currency}} bids against. It is recorded on the RFQ and kept with the award decision.',
+  'sourcing.fx.dialog.body.supersede':
+    'This records a NEW {{currency}} rate. The existing one is not changed or deleted — it stays on the RFQ, so the basis every earlier comparison used remains on record.',
+  'sourcing.fx.dialog.prior': 'Currently in force:',
+  'sourcing.fx.dialog.rate': 'Rate — {{base}} per 1 {{currency}}',
+  'sourcing.fx.dialog.rateHint': 'Digits only — no thousands separators (e.g. 17250)',
+  'sourcing.fx.dialog.asOf': 'Rate date',
+  'sourcing.fx.dialog.asOfHint':
+    'The date this rate was true. Comparisons refuse to rank on a rate older than {{days}} days.',
+  'sourcing.fx.dialog.source': 'Source',
+  'sourcing.fx.dialog.rateType': 'SAP rate type (optional)',
+  'sourcing.fx.dialog.cancel': 'Cancel',
+  'sourcing.fx.dialog.confirm.record': 'Record rate',
+  'sourcing.fx.dialog.confirm.supersede': 'Record new rate',
+  'sourcing.fx.dialog.submitting': 'Recording…',
+  // — rate / vintage refusals: each names its own rule —
+  'sourcing.fx.refused.EMPTY_QTY': 'Enter the exchange rate — a blank field is not a rate.',
+  'sourcing.fx.refused.NOT_NUMERIC': 'That is not a rate — type digits only, e.g. 17250.',
+  'sourcing.fx.refused.AMBIGUOUS_QTY':
+    'This can be read two ways — "17.250" means seventeen thousand two hundred fifty in Indonesian and seventeen-point-two-five in English. Type it without separators: 17250.',
+  'sourcing.fx.refused.ZERO_RATE':
+    'Zero is not an exchange rate. It would value every foreign bid at nothing.',
+  'sourcing.fx.refused.EMPTY_VINTAGE': 'Give the date this rate was true.',
+  'sourcing.fx.refused.UNREADABLE_VINTAGE': 'That date cannot be read.',
+  'sourcing.fx.refused.FUTURE_VINTAGE':
+    'A rate cannot be true in the future. Enter the date it applied.',
+  // — toasts —
+  'sourcing.toast.fxPinned.title': '{{currency}} rate recorded',
+  'sourcing.toast.fxPinned.desc': 'The comparison now ranks against it.',
+  'sourcing.toast.fxSuperseded.title': 'New {{currency}} rate recorded',
+  'sourcing.toast.fxSuperseded.desc':
+    'The previous rate is kept on the RFQ; comparisons now use the new one.',
+  'sourcing.toast.fxPinFailed.title': 'Rate not recorded',
+  'sourcing.toast.fxPinFailed.default': 'Please try again.',
+  'sourcing.cmp.simulated': 'Simulated',
+  'sourcing.cmp.simulatedTitle':
+    'Rehearsal — awaiting a live source (compliance & reliability data)',
+  'sourcing.cmp.row.unitPrice': 'Unit Price',
+  'sourcing.cmp.row.totalPrice': 'Total Price',
+  'sourcing.cmp.row.leadTime': 'Lead Time',
+  // CP-0 2e-b-1a — the quote-stage lead time is a required ESTIMATE, not a
+  // commitment. It is still scored and ranked on; the tag only stops the buyer
+  // reading it as firmer than it is. The firm date is confirmed at PO.
+  'sourcing.cmp.estimated': 'Estimated',
+  'sourcing.cmp.estimatedTitle':
+    'Indicative at quote stage — the supplier confirms a firm delivery date at PO. Still scored and ranked on.',
+  // CP-0 2e-b-2 — the supplier's stated minimum order quantity, surfaced to the
+  // buyer for the first time (it was collected on the quote form and dropped).
+  // Display only this batch: whether a minimum ABOVE the RFQ quantity should
+  // warn, flag or block the award is MOQ-FIND-01, not built here.
+  'sourcing.cmp.row.moq': 'Min. Order Qty',
+  'sourcing.cmp.moqNone': 'No minimum stated',
+  'sourcing.cmp.row.paymentTerms': 'Payment Terms',
+  'sourcing.cmp.row.compliance': 'Compliance gate',
+  'sourcing.cmp.row.priceScore': 'Price Score',
+  'sourcing.cmp.row.leadTimeScore': 'Lead Time Score',
+  'sourcing.cmp.row.reliability': 'Reliability',
+  'sourcing.cmp.row.composite': 'Composite',
+  'sourcing.cmp.row.result': 'Result',
+  'sourcing.cmp.row.status': 'Status',
+  'sourcing.cmp.leadTimeDays_one': '{{count}} day',
+  'sourcing.cmp.leadTimeDays_other': '{{count}} days',
+  'sourcing.cmp.moveToReview': 'Move to review',
+  // — CI-2 should-cost-vs-quote spread (read-only, MODELED × SIMULATED) —
+  'sourcing.cmp.row.spread': 'vs Should-Cost',
+  'sourcing.cmp.spread.range': '{{low}} to {{high}}',
+  'sourcing.cmp.spread.vsModel': 'vs modeled ~{{value}}/kg',
+  'sourcing.cmp.model': 'Model',
+  'sourcing.cmp.modelTitle':
+    'Modeled should-cost — a computed reference, not an observed price; permanent regardless of feed liveness',
+  'sourcing.cmp.fx': 'FX-converted',
+  'sourcing.cmp.fxTitle':
+    'Should-cost pushed through spot FX to the quote currency — more modeled than a same-currency (FX-free) comparison',
+  'sourcing.cmp.spread.silent.currency-unsupported':
+    'No should-cost reference — quoted in a currency the model does not price',
+  'sourcing.cmp.spread.silent.tail':
+    'No should-cost reference — tail material (supplier-quoted only)',
+  'sourcing.cmp.spread.silent.unit-mismatch':
+    'No should-cost reference — priced per unit, not by weight',
+  'sourcing.cmp.spread.silent.unmapped':
+    'No should-cost reference — material not yet mapped to a basket',
+  // — Award action panel —
+  'sourcing.award.title': 'Award action',
+  'sourcing.award.rejectAll': 'Reject all & resource',
+  // — Lifecycle actions (cancel / reopen) —
+  'sourcing.lifecycle.actions': 'Lifecycle actions',
+  'sourcing.publish.submit': 'Publish RFQ',
+  'sourcing.publish.submitting': 'Publishing…',
+  'sourcing.cancel.submit': 'Cancel RFQ',
+  'sourcing.cancel.submitting': 'Cancelling…',
+  'sourcing.reopen.submit': 'Reopen RFQ',
+  'sourcing.reopen.submitting': 'Reopening…',
+  // — Side-panel footer primary label (state-driven) —
+  'sourcing.footer.awardRfq': 'Award RFQ',
+  'sourcing.footer.sendReminder': 'Send reminder',
+  'sourcing.footer.viewAward': 'View award details',
+  'sourcing.footer.viewReport': 'View final report',
+  'sourcing.footer.continueDraft': 'Continue draft',
+  // — Lifecycle timeline —
+  'sourcing.timeline.drafted': 'RFQ Drafted',
+  'sourcing.timeline.sentTo.one': 'Sent to {{count}} supplier',
+  'sourcing.timeline.sentTo.other': 'Sent to {{count}} suppliers',
+  'sourcing.timeline.responses': 'Responses Received ({{responded}}/{{total}})',
+  'sourcing.timeline.latest': 'Latest: {{date}}',
+  'sourcing.timeline.evaluation': 'Evaluation',
+  'sourcing.timeline.awarded': 'Awarded',
+  'sourcing.timeline.closed': 'Closed',
+  // — Wizard: chrome —
+  // PF-1a — IT DOES NOT SEND. Creation births a Draft (D-1); publishing is a
+  // second, deliberate act, and the label said otherwise.
+  'sourcing.wizard.complete': 'Save RFQ draft',
+  'sourcing.wizard.step.scope.title': 'Define Scope',
+  'sourcing.wizard.step.scope.short': 'Scope',
+  'sourcing.wizard.step.scope.desc': 'What are you sourcing and how much?',
+  'sourcing.wizard.step.suppliers.title': 'Invite Suppliers',
+  'sourcing.wizard.step.suppliers.short': 'Suppliers',
+  'sourcing.wizard.step.suppliers.desc': 'Pick suppliers to request quotes from.',
+  'sourcing.wizard.step.terms.title': 'Terms & Deadlines',
+  'sourcing.wizard.step.terms.short': 'Terms',
+  'sourcing.wizard.step.terms.desc': 'When are responses due and on what commercial terms?',
+  'sourcing.wizard.step.review.title': 'Review & Submit',
+  'sourcing.wizard.step.review.short': 'Review',
+  // PF-1a — the draft is not sent here; publishing is what sends it.
+  'sourcing.wizard.step.review.desc': 'Check the details before saving the draft.',
+  // — Wizard: scope —
+  // C.2 — the requisition entrance. "Raised from", never "created by": the
+  // requisition is where the requirement came from, the buyer in the wizard is
+  // who is creating this RFQ.
+  'sourcing.wizard.field.sourceRequisition': 'Raise from requisition',
+  'sourcing.wizard.sourceRequisition.placeholder': 'Not from a requisition',
+  'sourcing.wizard.sourceRequisition.help':
+    'Optional. Choosing an approved requisition fills in what it can and moves it to Sourcing Event when this RFQ is raised.',
+  'sourcing.wizard.sourceRequisition.none':
+    'No approved requisition is waiting. A sourcing event can be raised from an approved requisition; you can also raise this RFQ on its own.',
+  'sourcing.wizard.field.title': 'RFQ title',
+  'sourcing.wizard.placeholder.title': 'e.g. Q3 2026 Fragrance Sourcing — Floral Compounds',
+  'sourcing.wizard.field.category': 'Material category',
+  'sourcing.wizard.select.category': 'Select a category…',
+  'sourcing.wizard.field.budget': 'Estimated budget (IDR)',
+  'sourcing.wizard.placeholder.budget': 'Optional',
+  'sourcing.wizard.field.materials': 'Specific material(s)',
+  'sourcing.wizard.materials.selectFirst': 'Select a category first to see available materials.',
+  'sourcing.wizard.field.totalQty': 'Total quantity',
+  // 2e-b-4a — was "0". A placeholder must never model a value the field treats
+  // specially: this one modelled the exact number a blank must NOT become.
+  'sourcing.wizard.placeholder.qty': 'e.g. 2400',
+  'sourcing.wizard.field.uom': 'UoM',
+  // — Wizard: the numeric refusals (CP-0 · W1 · 2e-b-4a) —
+  'sourcing.wizard.qty.refused.empty':
+    'Enter the total quantity you are sourcing — suppliers quote a unit price against it, so an RFQ without it cannot be answered.',
+  'sourcing.wizard.qty.refused.notNumeric': 'That is not a quantity — type digits only, e.g. 2400.',
+  'sourcing.wizard.qty.refused.ambiguous':
+    'This can be read two ways — "2.400" means two thousand four hundred in Indonesian and two-point-four in English. Type it without separators: 2400.',
+  'sourcing.wizard.budget.refused.notNumeric':
+    'That is not an amount — type digits only, e.g. 850000000, or leave it blank if the budget is not set.',
+  'sourcing.wizard.budget.refused.ambiguous':
+    'This can be read two ways — "1.500" means one thousand five hundred in Indonesian and one-point-five in English. Type it without separators: 1500.',
+  // — Wizard: suppliers —
+  'sourcing.wizard.ai.title': 'AI recommendation',
+  'sourcing.wizard.ai.basis': '· Based on category, tier, and OTIF',
+  'sourcing.wizard.supplierMeta': '{{country}} · OTIF {{otif}}% · Grade {{grade}}',
+  'sourcing.wizard.search.supplier': 'Search suppliers by name or country…',
+  'sourcing.wizard.col.supplier': 'Supplier',
+  'sourcing.wizard.col.country': 'Country',
+  'sourcing.wizard.col.otif': 'OTIF',
+  'sourcing.wizard.supplier.noMatch': 'No suppliers match the current search.',
+  'sourcing.wizard.supplier.selectCategory': 'Select a category in step 1.',
+  'sourcing.wizard.selectedCount.one': '{{count}} supplier selected',
+  'sourcing.wizard.selectedCount.other': '{{count}} suppliers selected',
+  // — Wizard: terms —
+  'sourcing.wizard.field.responseDeadline': 'Response deadline',
+  'sourcing.wizard.field.awardDeadline': 'Award deadline',
+  'sourcing.wizard.awardAfterResponse': 'Award deadline must be after response deadline.',
+  'sourcing.wizard.field.incoterms': 'Incoterms',
+  'sourcing.wizard.field.paymentTerms': 'Payment terms',
+  'sourcing.wizard.field.currency': 'Currency',
+  // — Wizard: review —
+  'sourcing.wizard.review.section.scope': 'Scope',
+  'sourcing.wizard.review.section.suppliers': 'Suppliers',
+  'sourcing.wizard.review.section.terms': 'Terms & Deadlines',
+  'sourcing.wizard.review.edit': 'Edit',
+  'sourcing.wizard.review.row.sourceRequisition': 'Raised from',
+  'sourcing.wizard.review.row.notCarried': 'Not carried over',
+  'sourcing.wizard.review.notCarried.category': 'category',
+  'sourcing.wizard.review.notCarried.uom': 'unit',
+  'sourcing.wizard.review.row.title': 'Title',
+  'sourcing.wizard.review.row.category': 'Category',
+  'sourcing.wizard.review.row.materials': 'Materials',
+  'sourcing.wizard.review.row.quantity': 'Quantity',
+  'sourcing.wizard.review.row.budget': 'Budget',
+  'sourcing.wizard.review.budgetUnspecified': 'Not specified',
+  'sourcing.wizard.review.row.invited': 'Invited',
+  'sourcing.wizard.review.row.names': 'Names',
+  'sourcing.wizard.review.row.responseDeadline': 'Response deadline',
+  'sourcing.wizard.review.row.awardDeadline': 'Award deadline',
+  'sourcing.wizard.review.row.incoterms': 'Incoterms',
+  'sourcing.wizard.review.row.paymentTerms': 'Payment terms',
+  'sourcing.wizard.review.row.currency': 'Currency',
+  'sourcing.wizard.review.invited.one': '{{count}} supplier',
+  'sourcing.wizard.review.invited.other': '{{count}} suppliers',
+  // — Toasts —
+  'sourcing.toast.reviewed.title': 'Quote moved to review',
+  'sourcing.toast.reviewed.desc': 'The quotation is now under evaluation.',
+  'sourcing.toast.reviewFailed.title': 'Review failed',
+  'sourcing.toast.reviewFailed.default': 'The quote could not be moved to review.',
+  'sourcing.toast.cancelled.title': '{{rfqNumber}} cancelled',
+  'sourcing.toast.cancelled.desc': 'The sourcing event was cancelled.',
+  'sourcing.toast.cancelFailed.title': 'Cancel failed',
+  'sourcing.toast.cancelFailed.default': 'The RFQ could not be cancelled.',
+  'sourcing.toast.cancelFailed.dispatch': 'The cancel could not be dispatched.',
+  'sourcing.toast.reopened.title': '{{rfqNumber}} reopened',
+  'sourcing.toast.reopened.desc': 'The sourcing event is open for responses again.',
+  'sourcing.toast.reopenFailed.title': 'Reopen failed',
+  'sourcing.toast.reopenFailed.default': 'The RFQ could not be reopened.',
+  'sourcing.toast.reopenFailed.dispatch': 'The reopen could not be dispatched.',
+  'sourcing.toast.created.title': '{{rfqNumber}} saved as a draft',
+  'sourcing.toast.created.desc.one':
+    'Not sent yet — publish to open it to {{count}} invited supplier',
+  'sourcing.toast.created.desc.other':
+    'Not sent yet — publish to open it to {{count}} invited suppliers',
+  'sourcing.toast.published.title': '{{rfqNumber}} published',
+  'sourcing.toast.published.desc.one': 'Now open to {{count}} invited supplier.',
+  'sourcing.toast.published.desc.other': 'Now open to {{count}} invited suppliers.',
+  'sourcing.toast.publishFailed.title': 'Publish failed',
+  'sourcing.toast.publishFailed.default': 'The RFQ could not be published.',
+  'sourcing.toast.publishFailed.dispatch': 'The publish could not be dispatched.',
+  'sourcing.toast.createFailed.title': 'Create failed',
+  'sourcing.toast.createFailed.default': 'The RFQ could not be created.',
+  'sourcing.toast.createFailed.dispatch': 'The RFQ could not be dispatched.',
+  'sourcing.toast.numberRefused.title': 'RFQ not created — check the numbers',
+  // — Empty state (wrapper) —
+  'sourcing.state.empty.title': 'No sourcing events yet',
+  'sourcing.state.empty.subtitle': 'No RFQs are on file.',
+  'sourcing.state.empty.message':
+    'Sourcing events and quote evaluations appear here once RFQs are raised.'
+};
+
+/** @type {Record<string, string>} */
+export const sourcingId = {
+  // — Breadcrumb —
+  'sourcing.crumb.acquire': 'PENGADAAN',
+  'sourcing.crumb.sourcing': 'SUMBER & RFQ',
+  // — Page header —
+  'sourcing.header.title': 'Permintaan penawaran harga',
+  'sourcing.header.subtitle': 'Acara sumber aktif, evaluasi penawaran, dan riwayat pemenangan.',
+  // — Header actions —
+  'sourcing.action.export': 'Ekspor',
+  'sourcing.action.templates': 'Templat',
+  'sourcing.action.newRfq': 'RFQ Baru',
+  // — Meta line —
+  'sourcing.meta.summary.one': '{{count}} RFQ aktif · terakhir diperbarui {{date}}',
+  'sourcing.meta.summary.other': '{{count}} RFQ aktif · terakhir diperbarui {{date}}',
+  // — KPI cards —
+  'sourcing.kpi.active.eyebrow': 'RFQ Aktif',
+  'sourcing.kpi.active.subtitle': 'Terbuka untuk respons',
+  'sourcing.kpi.awaiting.eyebrow': 'Menunggu Respons',
+  'sourcing.kpi.awaiting.subtitle': 'Tenggat dalam 7 hari',
+  'sourcing.kpi.ready.eyebrow': 'Siap Dimenangkan',
+  'sourcing.kpi.ready.subtitle': 'Semua pemasok merespons',
+  'sourcing.kpi.awarded.eyebrow': 'Dimenangkan (Kuartal)',
+  'sourcing.kpi.awarded.subtitle': '90 hari terakhir',
+  // — Group tabs —
+  'sourcing.tab.all': 'Semua',
+  'sourcing.tab.open': 'Terbuka',
+  'sourcing.tab.pending': 'Menunggu Pemenangan',
+  'sourcing.tab.awarded': 'Dimenangkan',
+  'sourcing.tab.closed': 'Ditutup',
+  // — Filter / search —
+  'sourcing.filter.byCategory': 'Saring menurut kategori',
+  'sourcing.search.placeholder': 'Cari berdasarkan nomor RFQ, judul, atau material…',
+  // — Category labels —
+  'sourcing.category.fragrance': 'Pewangi',
+  'sourcing.category.activeIngredients': 'Bahan Aktif',
+  'sourcing.category.packaging': 'Kemasan',
+  'sourcing.category.emulsifiers': 'Pengemulsi',
+  'sourcing.category.botanical': 'Botani',
+  'sourcing.category.other': 'Lainnya',
+  // — Active table —
+  'sourcing.table.col.rfq': 'No. RFQ',
+  'sourcing.table.col.category': 'Kategori',
+  'sourcing.table.col.responses': 'Respons',
+  'sourcing.table.col.qty': 'Jml',
+  'sourcing.table.col.estValue': 'Nilai Est.',
+  'sourcing.table.col.responseDeadline': 'Tenggat respons',
+  'sourcing.table.col.status': 'Status',
+  'sourcing.table.col.actions': 'Tindakan',
+  'sourcing.table.empty': 'Tidak ada RFQ yang cocok dengan filter saat ini.',
+  // — Deadline compact labels —
+  'sourcing.deadline.overdue': '{{count}}h terlambat',
+  'sourcing.deadline.dueToday': 'Jatuh tempo hari ini',
+  'sourcing.deadline.remaining': '{{count}}h tersisa',
+  // — Awards history —
+  'sourcing.awards.title': 'Riwayat Pemenangan',
+  'sourcing.awards.count.one': '{{count}} RFQ dimenangkan',
+  'sourcing.awards.count.other': '{{count}} RFQ dimenangkan',
+  'sourcing.awards.col.rfq': 'No. RFQ',
+  'sourcing.awards.col.title': 'Judul',
+  'sourcing.awards.col.supplier': 'Pemasok pemenang',
+  'sourcing.awards.col.date': 'Tanggal pemenangan',
+  'sourcing.awards.col.value': 'Nilai pemenangan',
+  'sourcing.awards.col.actions': 'Tindakan',
+  'sourcing.awards.empty': 'Belum ada RFQ yang dimenangkan.',
+  // — Side panel —
+  'sourcing.panel.title': 'RFQ {{number}} — {{title}}',
+  'sourcing.panel.exportComparison': 'Ekspor perbandingan',
+  'sourcing.panel.awardSummary': 'Ringkasan pemenangan',
+  'sourcing.panel.awardedTo': 'Dimenangkan oleh',
+  'sourcing.panel.awardedValue': 'Nilai yang dimenangkan',
+  'sourcing.panel.awardDate': 'Tanggal pemenangan',
+  'sourcing.panel.poIssued': 'PO diterbitkan',
+  'sourcing.panel.summary': 'Ringkasan',
+  'sourcing.panel.field.category': 'Kategori',
+  'sourcing.panel.field.status': 'Status',
+  'sourcing.panel.field.created': 'Dibuat',
+  'sourcing.panel.field.responseDeadline': 'Tenggat respons',
+  'sourcing.panel.field.awardDeadline': 'Tenggat pemenangan',
+  'sourcing.panel.field.totalQty': 'Total jml',
+  'sourcing.panel.field.estValue': 'Nilai est.',
+  'sourcing.panel.field.currency': 'Mata uang',
+  'sourcing.panel.field.incoterms': 'Incoterms',
+  'sourcing.panel.field.paymentTerms': 'Syarat pembayaran',
+  'sourcing.panel.lifecycle': 'Siklus hidup',
+  // — Quote comparison —
+  'sourcing.cmp.title.one': 'Perbandingan penawaran ({{count}} penawaran)',
+  'sourcing.cmp.title.other': 'Perbandingan penawaran ({{count}} penawaran)',
+  'sourcing.cmp.empty': 'Belum ada penawaran diterima.',
+  'sourcing.cmp.criterion': 'Kriteria',
+  'sourcing.cmp.topRanked': 'Peringkat teratas',
+  'sourcing.cmp.fx.refused.FX_UNPINNED':
+    'Tidak diperingkat — penawaran dihargai dalam {{currencies}} dan belum ada kurs yang dicatat untuk RFQ ini. Catat kurs untuk membandingkannya; penawaran di bawah ditampilkan sesuai yang diajukan.',
+  'sourcing.cmp.fx.refused.FX_STALE':
+    'Tidak diperingkat — kurs tercatat untuk {{currencies}} (per {{asOf}}) lebih lama daripada yang diizinkan perbandingan ini. Catat kurs terkini; kurs sebelumnya tetap tersimpan pada RFQ.',
+  // — 2e-c-4 · dasar kurs yang tercatat —
+  'sourcing.cmp.fx.basis.title': 'Dasar kurs',
+  'sourcing.cmp.fx.basis.asOf': 'per {{date}}',
+  'sourcing.cmp.fx.basis.none': 'Belum ada kurs tercatat',
+  'sourcing.cmp.fx.basis.source.MANUAL': 'Dimasukkan manual',
+  'sourcing.cmp.fx.basis.source.SAP_EXHGRATE': 'Kurs SAP',
+  'sourcing.cmp.fx.basis.superseded.one': '{{count}} kurs sebelumnya disimpan',
+  'sourcing.cmp.fx.basis.superseded.other': '{{count}} kurs sebelumnya disimpan',
+  'sourcing.cmp.fx.basis.record': 'Catat kurs {{currency}}',
+  'sourcing.cmp.fx.basis.supersede': 'Ganti kurs {{currency}}',
+  // — dialog pencatatan kurs —
+  'sourcing.fx.dialog.title.record': 'Catat kurs {{currency}}',
+  'sourcing.fx.dialog.title.supersede': 'Ganti kurs {{currency}}',
+  'sourcing.fx.dialog.body.record':
+    'Kurs ini yang dipakai Paragon untuk membandingkan penawaran {{currency}}. Kurs dicatat pada RFQ dan disimpan bersama keputusan pemenangan.',
+  'sourcing.fx.dialog.body.supersede':
+    'Ini mencatat kurs {{currency}} BARU. Kurs yang ada tidak diubah atau dihapus — kurs lama tetap tersimpan pada RFQ, sehingga dasar yang dipakai setiap perbandingan sebelumnya tetap tercatat.',
+  'sourcing.fx.dialog.prior': 'Yang berlaku saat ini:',
+  'sourcing.fx.dialog.rate': 'Kurs — {{base}} per 1 {{currency}}',
+  'sourcing.fx.dialog.rateHint': 'Angka saja — tanpa pemisah ribuan (mis. 17250)',
+  'sourcing.fx.dialog.asOf': 'Tanggal kurs',
+  'sourcing.fx.dialog.asOfHint':
+    'Tanggal kurs ini berlaku. Perbandingan menolak memberi peringkat pada kurs yang lebih lama dari {{days}} hari.',
+  'sourcing.fx.dialog.source': 'Sumber',
+  'sourcing.fx.dialog.rateType': 'Jenis kurs SAP (opsional)',
+  'sourcing.fx.dialog.cancel': 'Batal',
+  'sourcing.fx.dialog.confirm.record': 'Catat kurs',
+  'sourcing.fx.dialog.confirm.supersede': 'Catat kurs baru',
+  'sourcing.fx.dialog.submitting': 'Mencatat…',
+  // — penolakan kurs / tanggal —
+  'sourcing.fx.refused.EMPTY_QTY': 'Masukkan kurs — kolom kosong bukan kurs.',
+  'sourcing.fx.refused.NOT_NUMERIC': 'Itu bukan kurs — ketik angka saja, mis. 17250.',
+  'sourcing.fx.refused.AMBIGUOUS_QTY':
+    'Ini bisa dibaca dua cara — "17.250" berarti tujuh belas ribu dua ratus lima puluh dalam bahasa Indonesia dan tujuh belas koma dua lima dalam bahasa Inggris. Ketik tanpa pemisah: 17250.',
+  'sourcing.fx.refused.ZERO_RATE':
+    'Nol bukan kurs. Kurs nol membuat setiap penawaran mata uang asing bernilai nihil.',
+  'sourcing.fx.refused.EMPTY_VINTAGE': 'Isi tanggal kurs ini berlaku.',
+  'sourcing.fx.refused.UNREADABLE_VINTAGE': 'Tanggal itu tidak terbaca.',
+  'sourcing.fx.refused.FUTURE_VINTAGE':
+    'Kurs tidak bisa berlaku di masa depan. Masukkan tanggal kurs itu berlaku.',
+  // — toast —
+  'sourcing.toast.fxPinned.title': 'Kurs {{currency}} tercatat',
+  'sourcing.toast.fxPinned.desc': 'Perbandingan kini diperingkat berdasarkan kurs itu.',
+  'sourcing.toast.fxSuperseded.title': 'Kurs {{currency}} baru tercatat',
+  'sourcing.toast.fxSuperseded.desc':
+    'Kurs sebelumnya tetap tersimpan pada RFQ; perbandingan kini memakai kurs baru.',
+  'sourcing.toast.fxPinFailed.title': 'Kurs tidak tercatat',
+  'sourcing.toast.fxPinFailed.default': 'Silakan coba lagi.',
+  'sourcing.cmp.simulated': 'Simulasi',
+  'sourcing.cmp.simulatedTitle': 'Latihan — menunggu sumber langsung (data kepatuhan & keandalan)',
+  'sourcing.cmp.row.unitPrice': 'Harga Satuan',
+  'sourcing.cmp.row.totalPrice': 'Harga Total',
+  'sourcing.cmp.row.leadTime': 'Waktu Tunggu',
+  'sourcing.cmp.estimated': 'Perkiraan',
+  'sourcing.cmp.estimatedTitle':
+    'Bersifat indikatif pada tahap penawaran — pemasok mengonfirmasi tanggal pengiriman pasti saat PO. Tetap dinilai dan diperingkat.',
+  'sourcing.cmp.row.moq': 'Kuantitas Pesanan Min.',
+  'sourcing.cmp.moqNone': 'Tidak ada minimum',
+  'sourcing.cmp.row.paymentTerms': 'Syarat Pembayaran',
+  'sourcing.cmp.row.compliance': 'Gerbang kepatuhan',
+  'sourcing.cmp.row.priceScore': 'Skor Harga',
+  'sourcing.cmp.row.leadTimeScore': 'Skor Waktu Tunggu',
+  'sourcing.cmp.row.reliability': 'Keandalan',
+  'sourcing.cmp.row.composite': 'Komposit',
+  'sourcing.cmp.row.result': 'Hasil',
+  'sourcing.cmp.row.status': 'Status',
+  'sourcing.cmp.leadTimeDays_other': '{{count}} hari',
+  'sourcing.cmp.moveToReview': 'Pindahkan ke tinjauan',
+  // — Selisih should-cost vs penawaran CI-2 (hanya-baca, MODELED × SIMULASI) —
+  'sourcing.cmp.row.spread': 'vs Should-Cost',
+  'sourcing.cmp.spread.range': '{{low}} hingga {{high}}',
+  'sourcing.cmp.spread.vsModel': 'vs model ~{{value}}/kg',
+  'sourcing.cmp.model': 'Model',
+  'sourcing.cmp.modelTitle':
+    'Should-cost termodelkan — rujukan terhitung, bukan harga teramati; permanen terlepas dari keaktifan umpan',
+  'sourcing.cmp.fx': 'Konversi FX',
+  'sourcing.cmp.fxTitle':
+    'Should-cost dikonversi lewat FX spot ke mata uang penawaran — lebih termodelkan daripada perbandingan satu mata uang (tanpa FX)',
+  'sourcing.cmp.spread.silent.currency-unsupported':
+    'Tanpa rujukan should-cost — ditawarkan dalam mata uang yang tidak dihargai model',
+  'sourcing.cmp.spread.silent.tail':
+    'Tanpa rujukan should-cost — material ekor (hanya dari penawaran pemasok)',
+  'sourcing.cmp.spread.silent.unit-mismatch':
+    'Tanpa rujukan should-cost — dihargai per unit, bukan per berat',
+  'sourcing.cmp.spread.silent.unmapped':
+    'Tanpa rujukan should-cost — material belum dipetakan ke basket',
+  // — Award action panel —
+  'sourcing.award.title': 'Tindakan pemenangan',
+  'sourcing.award.rejectAll': 'Tolak semua & sumber ulang',
+  // — Lifecycle actions (batal / buka kembali) —
+  'sourcing.lifecycle.actions': 'Tindakan siklus hidup',
+  'sourcing.publish.submit': 'Terbitkan RFQ',
+  'sourcing.publish.submitting': 'Menerbitkan…',
+  'sourcing.cancel.submit': 'Batalkan RFQ',
+  'sourcing.cancel.submitting': 'Membatalkan…',
+  'sourcing.reopen.submit': 'Buka kembali RFQ',
+  'sourcing.reopen.submitting': 'Membuka kembali…',
+  // — Side-panel footer primary label —
+  'sourcing.footer.awardRfq': 'Menangkan RFQ',
+  'sourcing.footer.sendReminder': 'Kirim pengingat',
+  'sourcing.footer.viewAward': 'Lihat detail pemenangan',
+  'sourcing.footer.viewReport': 'Lihat laporan akhir',
+  'sourcing.footer.continueDraft': 'Lanjutkan draf',
+  // — Lifecycle timeline —
+  'sourcing.timeline.drafted': 'RFQ Dibuat',
+  'sourcing.timeline.sentTo.one': 'Dikirim ke {{count}} pemasok',
+  'sourcing.timeline.sentTo.other': 'Dikirim ke {{count}} pemasok',
+  'sourcing.timeline.responses': 'Respons Diterima ({{responded}}/{{total}})',
+  'sourcing.timeline.latest': 'Terbaru: {{date}}',
+  'sourcing.timeline.evaluation': 'Evaluasi',
+  'sourcing.timeline.awarded': 'Dimenangkan',
+  'sourcing.timeline.closed': 'Ditutup',
+  // — Wizard: chrome —
+  'sourcing.wizard.complete': 'Simpan draf RFQ',
+  'sourcing.wizard.step.scope.title': 'Tentukan Cakupan',
+  'sourcing.wizard.step.scope.short': 'Cakupan',
+  'sourcing.wizard.step.scope.desc': 'Apa yang Anda sumberkan dan berapa banyak?',
+  'sourcing.wizard.step.suppliers.title': 'Undang Pemasok',
+  'sourcing.wizard.step.suppliers.short': 'Pemasok',
+  'sourcing.wizard.step.suppliers.desc': 'Pilih pemasok untuk diminta penawaran.',
+  'sourcing.wizard.step.terms.title': 'Syarat & Tenggat',
+  'sourcing.wizard.step.terms.short': 'Syarat',
+  'sourcing.wizard.step.terms.desc': 'Kapan respons jatuh tempo dan dengan syarat komersial apa?',
+  'sourcing.wizard.step.review.title': 'Tinjau & Kirim',
+  'sourcing.wizard.step.review.short': 'Tinjau',
+  'sourcing.wizard.step.review.desc': 'Periksa detail sebelum menyimpan draf.',
+  // — Wizard: scope —
+  'sourcing.wizard.field.sourceRequisition': 'Ajukan dari permintaan',
+  'sourcing.wizard.sourceRequisition.placeholder': 'Bukan dari permintaan',
+  'sourcing.wizard.sourceRequisition.help':
+    'Opsional. Memilih permintaan yang disetujui akan mengisi data yang bisa dibawa dan memindahkannya ke Acara Sourcing saat RFQ ini diajukan.',
+  'sourcing.wizard.sourceRequisition.none':
+    'Tidak ada permintaan disetujui yang menunggu. Acara sourcing dapat diajukan dari permintaan yang disetujui; Anda juga bisa mengajukan RFQ ini secara mandiri.',
+  'sourcing.wizard.field.title': 'Judul RFQ',
+  'sourcing.wizard.placeholder.title': 'mis. Sumber Pewangi Q3 2026 — Senyawa Floral',
+  'sourcing.wizard.field.category': 'Kategori material',
+  'sourcing.wizard.select.category': 'Pilih kategori…',
+  'sourcing.wizard.field.budget': 'Anggaran perkiraan (IDR)',
+  'sourcing.wizard.placeholder.budget': 'Opsional',
+  'sourcing.wizard.field.materials': 'Material spesifik',
+  'sourcing.wizard.materials.selectFirst':
+    'Pilih kategori terlebih dahulu untuk melihat material yang tersedia.',
+  'sourcing.wizard.field.totalQty': 'Total kuantitas',
+  'sourcing.wizard.placeholder.qty': 'mis. 2400',
+  // — Wizard: penolakan numerik (CP-0 · W1 · 2e-b-4a) —
+  'sourcing.wizard.qty.refused.empty':
+    'Masukkan total kuantitas yang Anda cari — pemasok menawarkan harga satuan terhadap angka ini, jadi RFQ tanpa kuantitas tidak dapat dijawab.',
+  'sourcing.wizard.qty.refused.notNumeric':
+    'Itu bukan kuantitas — ketik angka saja, misalnya 2400.',
+  'sourcing.wizard.qty.refused.ambiguous':
+    'Ini bisa dibaca dua cara — "2.400" berarti dua ribu empat ratus dalam bahasa Indonesia dan dua koma empat dalam bahasa Inggris. Ketik tanpa pemisah: 2400.',
+  'sourcing.wizard.budget.refused.notNumeric':
+    'Itu bukan nominal — ketik angka saja, misalnya 850000000, atau kosongkan jika anggaran belum ditetapkan.',
+  'sourcing.wizard.budget.refused.ambiguous':
+    'Ini bisa dibaca dua cara — "1.500" berarti seribu lima ratus dalam bahasa Indonesia dan satu koma lima dalam bahasa Inggris. Ketik tanpa pemisah: 1500.',
+  'sourcing.wizard.field.uom': 'Satuan',
+  // — Wizard: suppliers —
+  'sourcing.wizard.ai.title': 'Rekomendasi AI',
+  'sourcing.wizard.ai.basis': '· Berdasarkan kategori, tingkat, dan OTIF',
+  'sourcing.wizard.supplierMeta': '{{country}} · OTIF {{otif}}% · Grade {{grade}}',
+  'sourcing.wizard.search.supplier': 'Cari pemasok berdasarkan nama atau negara…',
+  'sourcing.wizard.col.supplier': 'Pemasok',
+  'sourcing.wizard.col.country': 'Negara',
+  'sourcing.wizard.col.otif': 'OTIF',
+  'sourcing.wizard.supplier.noMatch': 'Tidak ada pemasok yang cocok dengan pencarian saat ini.',
+  'sourcing.wizard.supplier.selectCategory': 'Pilih kategori di langkah 1.',
+  'sourcing.wizard.selectedCount.one': '{{count}} pemasok dipilih',
+  'sourcing.wizard.selectedCount.other': '{{count}} pemasok dipilih',
+  // — Wizard: terms —
+  'sourcing.wizard.field.responseDeadline': 'Tenggat respons',
+  'sourcing.wizard.field.awardDeadline': 'Tenggat pemenangan',
+  'sourcing.wizard.awardAfterResponse': 'Tenggat pemenangan harus setelah tenggat respons.',
+  'sourcing.wizard.field.incoterms': 'Incoterms',
+  'sourcing.wizard.field.paymentTerms': 'Syarat pembayaran',
+  'sourcing.wizard.field.currency': 'Mata uang',
+  // — Wizard: review —
+  'sourcing.wizard.review.section.scope': 'Cakupan',
+  'sourcing.wizard.review.section.suppliers': 'Pemasok',
+  'sourcing.wizard.review.section.terms': 'Syarat & Tenggat',
+  'sourcing.wizard.review.edit': 'Sunting',
+  'sourcing.wizard.review.row.sourceRequisition': 'Diajukan dari',
+  'sourcing.wizard.review.row.notCarried': 'Tidak dibawa',
+  'sourcing.wizard.review.notCarried.category': 'kategori',
+  'sourcing.wizard.review.notCarried.uom': 'satuan',
+  'sourcing.wizard.review.row.title': 'Judul',
+  'sourcing.wizard.review.row.category': 'Kategori',
+  'sourcing.wizard.review.row.materials': 'Material',
+  'sourcing.wizard.review.row.quantity': 'Kuantitas',
+  'sourcing.wizard.review.row.budget': 'Anggaran',
+  'sourcing.wizard.review.budgetUnspecified': 'Tidak ditentukan',
+  'sourcing.wizard.review.row.invited': 'Diundang',
+  'sourcing.wizard.review.row.names': 'Nama',
+  'sourcing.wizard.review.row.responseDeadline': 'Tenggat respons',
+  'sourcing.wizard.review.row.awardDeadline': 'Tenggat pemenangan',
+  'sourcing.wizard.review.row.incoterms': 'Incoterms',
+  'sourcing.wizard.review.row.paymentTerms': 'Syarat pembayaran',
+  'sourcing.wizard.review.row.currency': 'Mata uang',
+  'sourcing.wizard.review.invited.one': '{{count}} pemasok',
+  'sourcing.wizard.review.invited.other': '{{count}} pemasok',
+  // — Toasts —
+  'sourcing.toast.reviewed.title': 'Penawaran dipindahkan ke tinjauan',
+  'sourcing.toast.reviewed.desc': 'Penawaran kini sedang dievaluasi.',
+  'sourcing.toast.reviewFailed.title': 'Tinjauan gagal',
+  'sourcing.toast.reviewFailed.default': 'Penawaran tidak dapat dipindahkan ke tinjauan.',
+  'sourcing.toast.cancelled.title': '{{rfqNumber}} dibatalkan',
+  'sourcing.toast.cancelled.desc': 'Acara sumber telah dibatalkan.',
+  'sourcing.toast.cancelFailed.title': 'Pembatalan gagal',
+  'sourcing.toast.cancelFailed.default': 'RFQ tidak dapat dibatalkan.',
+  'sourcing.toast.cancelFailed.dispatch': 'Pembatalan tidak dapat dikirim.',
+  'sourcing.toast.reopened.title': '{{rfqNumber}} dibuka kembali',
+  'sourcing.toast.reopened.desc': 'Acara sumber kembali terbuka untuk penawaran.',
+  'sourcing.toast.reopenFailed.title': 'Pembukaan kembali gagal',
+  'sourcing.toast.reopenFailed.default': 'RFQ tidak dapat dibuka kembali.',
+  'sourcing.toast.reopenFailed.dispatch': 'Pembukaan kembali tidak dapat dikirim.',
+  'sourcing.toast.created.title': '{{rfqNumber}} disimpan sebagai draf',
+  'sourcing.toast.created.desc.one':
+    'Belum dikirim — terbitkan untuk membukanya ke {{count}} pemasok yang diundang',
+  'sourcing.toast.created.desc.other':
+    'Belum dikirim — terbitkan untuk membukanya ke {{count}} pemasok yang diundang',
+  'sourcing.toast.published.title': '{{rfqNumber}} diterbitkan',
+  'sourcing.toast.published.desc.one': 'Kini terbuka untuk {{count}} pemasok yang diundang.',
+  'sourcing.toast.published.desc.other': 'Kini terbuka untuk {{count}} pemasok yang diundang.',
+  'sourcing.toast.publishFailed.title': 'Penerbitan gagal',
+  'sourcing.toast.publishFailed.default': 'RFQ tidak dapat diterbitkan.',
+  'sourcing.toast.publishFailed.dispatch': 'Penerbitan tidak dapat dikirim.',
+  'sourcing.toast.createFailed.title': 'Pembuatan gagal',
+  'sourcing.toast.createFailed.default': 'RFQ tidak dapat dibuat.',
+  'sourcing.toast.createFailed.dispatch': 'RFQ tidak dapat dikirim.',
+  'sourcing.toast.numberRefused.title': 'RFQ tidak dibuat — periksa angkanya',
+  // — Empty state (wrapper) —
+  'sourcing.state.empty.title': 'Belum ada acara sumber',
+  'sourcing.state.empty.subtitle': 'Belum ada RFQ yang tercatat.',
+  'sourcing.state.empty.message':
+    'Acara sumber dan evaluasi penawaran muncul di sini setelah RFQ diajukan.'
+};

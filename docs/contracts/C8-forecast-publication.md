@@ -29,9 +29,9 @@ platform is not a ruling.**
 | The chosen **wire option** | **§4.5** | **option 3, then option 2** — transport and shape only; **option 1 explicitly declined, with reason** |
 
 **Grounding (real sources):**
-- the shipped SDC model — `src/services/sdc/types.ts` (cited `file:line`);
-- the shipped fixtures + integrity suite — `src/services/sdc/fixtures.ts`,
-  `src/services/sdc/__tests__/sdc.integrity.test.ts`;
+- the shipped SDC model — `src/services/sdc/types.js` (cited `file:line`);
+- the shipped fixtures + integrity suite — `src/services/sdc/fixtures.js`,
+  `src/services/sdc/__tests__/sdc.integrity.test.js`;
 - the converged design — `docs/Supplier_Data_Collaboration_Design_v2.md`;
 - the schema freeze — `docs/SDC-0_Build_Freeze_Addendum.md`;
 - C6 planning doctrine + C7 vocabulary — `docs/contracts/C6-planning.md`, `./C7-pr-intake.md`.
@@ -80,15 +80,15 @@ Seam tiers at a glance:
 
 | Surface | Tier | Evidence |
 |---|---|---|
-| The SDC object model + fixtures + invariants | **LIVE (mock)** | `sdc/types.ts`, `sdc/fixtures.ts`, `sdc.integrity.test.ts` |
-| `RequirementResponse` submit / acknowledge | **LIVE (mock)** — a wired `CommandTarget` | `MockCommandService.ts:984` |
-| `forecastPublications` capability render | **SIMULATED** — gate-1 LIVE, **gate-2 shut** | `registry.ts:116` + harvest gate `:159-162` |
+| The SDC object model + fixtures + invariants | **LIVE (mock)** | `sdc/types.js`, `sdc/fixtures.js`, `sdc.integrity.test.js` |
+| `RequirementResponse` submit / acknowledge | **LIVE (mock)** — a wired `CommandTarget` | `MockCommandService.js:984` |
+| `forecastPublications` capability render | **SIMULATED** — gate-1 LIVE, **gate-2 shut** | `registry.js:116` + harvest gate `:159-162` |
 | **SOMO's inbound emission (the C8 producer)** | **SPEC — zero code, and NOT MODELLED** | §1.2 |
 | Supplier-response feedback → Snowflake commons | **SPEC** | C4 is SPEC, zero code |
 
 **The publication a supplier sees today is a frozen fixture, not a SOMO feed.** The UI says so in
 both languages: *"Sample — awaiting SOMO C8 feed"* / *"Sampel — menunggu feed data C8 SOMO"*
-(`i18n/widget.ts:28,111`). Green is structurally unreachable until a live producer lands
+(`i18n/widget.js:28,111`). Green is structurally unreachable until a live producer lands
 (LIVENESS-DATASOURCE-01).
 
 ---
@@ -115,14 +115,14 @@ the data ownership actually falls.
 emits no such field and holds no entity that could populate it.** Struck from the contract.
 
 **KEPT — `Allocation.materialPeriodTotal`**, described as *the SOMO-committed total the line was
-split from* (`sdc/types.ts:115`). It stays precisely because it **keeps SOMO's number auditable
+split from* (`sdc/types.js:115`). It stays precisely because it **keeps SOMO's number auditable
 through our fan-out**: every fanned line carries the total it came from, so the split can always
 be checked back against what SOMO actually committed. Enforced, not merely asserted — integrity
 invariant #4 requires Σ fanned `forecastQty` ≤ `materialPeriodTotal`, with the total shared
-across every line in a material×period group (`sdc.integrity.test.ts:105-121`).
+across every line in a material×period group (`sdc.integrity.test.js:105-121`).
 
 > **This is not a contradiction, and the distinction must survive into SOMO's build.**
-> `ForecastLine.supplierId` **exists and is required** in our code (`sdc/types.ts:129`) — because
+> `ForecastLine.supplierId` **exists and is required** in our code (`sdc/types.js:129`) — because
 > our `ForecastLine` is a **post-fan-out** object. SOMO's **pre-fan-out emission** carries no
 > supplier. Same word, two lifecycle positions. Conform to §1.2, not to `ForecastLine`.
 
@@ -130,7 +130,7 @@ across every line in a material×period group (`sdc.integrity.test.ts:105-121`).
 
 Stated honestly: **there is no type in the tree representing what SOMO emits.** Grep-confirmed —
 no `PlanTotal`, no inbound-plan type; the only residue of SOMO's number is
-`Allocation.materialPeriodTotal` (`sdc/types.ts:115`), which exists on our post-fan-out line.
+`Allocation.materialPeriodTotal` (`sdc/types.js:115`), which exists on our post-fan-out line.
 
 The emission we ask SOMO to conform to:
 
@@ -152,13 +152,13 @@ MaterialPeriodTotal             (SPEC — one material × periodBucket. NO suppl
   suggestedSource?              ← read-only recommend-first lane annotation
 ```
 
-`segment` / `suggestedSource` reuse C7's names and semantics exactly (`sdc/types.ts:137-138`;
+`segment` / `suggestedSource` reuse C7's names and semantics exactly (`sdc/types.js:137-138`;
 note C7's lane-field name drift, C7 D-7 — `suggestedSource` carries **lane** semantics on both
 seams, consistently).
 
 ### 1.3 Our post-fan-out line (**LIVE on fixtures**) — `ForecastLine`
 
-`src/services/sdc/types.ts:127-141`. This is ours; SOMO does not emit it.
+`src/services/sdc/types.js:127-141`. This is ours; SOMO does not emit it.
 
 | Field | Type | Opt | `file:line` |
 |---|---|---|---|
@@ -180,7 +180,7 @@ seams, consistently).
 | `materialPeriodTotal` | `number` | req | the SOMO-committed total this line was split from |
 | `basis` | `'planner-split' \| 'quota' \| 'award-history'` | req | **how** the split derived |
 | `approvedBy` | `string` | opt in type | **required in practice for firm lines** — invariant #3 |
-| `approvedAt` | `string` | opt in type | idem (`sdc.integrity.test.ts:95-99`) |
+| `approvedAt` | `string` | opt in type | idem (`sdc.integrity.test.js:95-99`) |
 
 `allocation` is the direct structural consequence of §1: because the fan-out is ours, a `firm`
 badge on an allocated number claims more than SOMO's lock supports **unless** it carries how the
@@ -202,13 +202,13 @@ is ours to make and ours to own.
 ### 2.1 Our shipped `locked → firm` mapping is **VOID**, effective now
 
 The portal shipped a `lock → firm` mapping as a policy default (`sdc/FLAGS.md`, FLAG-1;
-`sdc/types.ts:23`). **It is recorded here as VOID, not as a position we hold.** It was a
+`sdc/types.js:23`). **It is recorded here as VOID, not as a position we hold.** It was a
 unilateral derivation of a commercial-liability statement from a planning state, made without
 ratification from SOMO, Paragon procurement, or Paragon finance. It is withdrawn rather than
 defended, and it is not the starting point for the decision below.
 
 `sdc/FLAGS.md` is neutralised accordingly in this PR (docs only). **The code comment it describes
-(`sdc/types.ts:23`) and any mapping logic are NOT touched here** — that is a separate, booked
+(`sdc/types.js:23`) and any mapping logic are NOT touched here** — that is a separate, booked
 code batch. Until that batch lands, the mapping remains present in code while void in contract;
 this document is the authority, and the divergence is registered §7.
 
@@ -250,7 +250,7 @@ against it.**
 Portal-side verification (CP-1, exhaustive): zero occurrences in the working tree, in `docs/`, in
 `src/`, and **in git history** — `git log --all -S "RM-SLS-2050"` returns no commit that ever
 added or removed it. The only near-hits are unrelated: `MAT-20500`
-(`channel/outboundFixtures.ts:29`) and a commodity price `2050.2` (`commodityHistory.ts:102`).
+(`channel/outboundFixtures.js:29`) and a commodity price `2050.2` (`commodityHistory.js:102`).
 No shared first-wire acceptance test exists on our side in any form.
 
 **DO NOT SEED IT.** Creating the material to make the test runnable would manufacture the
@@ -262,7 +262,7 @@ whole correction exists to stop.
 
 **Compute the intersection of the two material masters, on BOTH codes and names.**
 
-- Inputs: the portal's `MATERIAL_MASTER` (`sdc/fixtures.ts:58-100`, 5 entries today) — **the
+- Inputs: the portal's `MATERIAL_MASTER` (`sdc/fixtures.js:58-100`, 5 entries today) — **the
   declared authoritative master, §4.0, and the ONLY portal input** — and SOMO's BOM material set.
   **`src/data/mock*.ts` is NOT an input.** A code that appears only there is not portal material
   identity, and including it would reproduce `MASTER-STRADDLE-01` (§4.2) inside the very test
@@ -280,7 +280,7 @@ whole correction exists to stop.
 **EMPTY BY CODE.** Zero portal codes appear anywhere in SOMO's repository or its history. The
 emptiness is **structural, not incidental**, and the structure is the useful part:
 
-| Axis | Portal (`sdc/fixtures.ts`) | SOMO |
+| Axis | Portal (`sdc/fixtures.js`) | SOMO |
 |---|---|---|
 | Code form | `XX-XXXX-NNNN`, **numeric serials** | **mnemonic** — `RM-AQUA`, `PM-CAP-FLIP` |
 | Packaging prefix | **`PK-`** | **`PM-`** |
@@ -339,7 +339,7 @@ enters the join.
 
 ### 4.0 THE PORTAL'S AUTHORITATIVE MATERIAL MASTER — declared (**OPERATOR RULING, binding**)
 
-> **`src/services/sdc/fixtures.ts` (`MATERIAL_MASTER`, `:58-100`) IS the portal's authoritative
+> **`src/services/sdc/fixtures.js` (`MATERIAL_MASTER`, `:58-100`) IS the portal's authoritative
 > material master. C8 is contracted against it and against nothing else.**
 >
 > **`src/data/mock*.ts` is a parallel NON-MASTER dataset.** It is **booked for retirement, not
@@ -354,13 +354,13 @@ identity on this seam named a master only by inference; that is exactly the gap 
 **Rationale.** A second parallel master owned by one party is **deleted, not mapped** — *a
 crosswalk between two spaces WE control carries no information.* This is the same argument SOMO
 used to close its own internal identity leg, applied to ours. Reconciling `mock*.ts` against
-`sdc/fixtures.ts` would produce a mapping that encodes nothing except the fact that we once had
+`sdc/fixtures.js` would produce a mapping that encodes nothing except the fact that we once had
 two datasets; retiring one produces a master.
 
 **Consequences that bind this contract:**
 
-- The intersection method of §3.1 runs against **`sdc/fixtures.ts` only** — 5 entries today.
-- `ForecastLine.materialCode` (`sdc/types.ts:128`) keys to that master and to no other.
+- The intersection method of §3.1 runs against **`sdc/fixtures.js` only** — 5 entries today.
+- `ForecastLine.materialCode` (`sdc/types.js:128`) keys to that master and to no other.
 - Integrity invariant #2 — every qty-bearing field inherits its material's `canonicalUom` from
   that master — is the master's enforcement, and it is already on the floor.
 - A code appearing **only** in `mock*.ts` is **not** portal material identity. It is not evidence
@@ -377,13 +377,13 @@ State the symmetry plainly, because it is the scheduling fact both platforms nee
 
 > **`material_master_ref` is the live external clock in BOTH directions.** SOMO's codes are
 > illustrative pending their crosswalk; ours are a 5-entry SIMULATED master
-> (`sdc/fixtures.ts:58-100`) with C7 not even on codes yet (display strings, C7 §6.1). **Neither
+> (`sdc/fixtures.js:58-100`) with C7 not even on codes yet (display strings, C7 §6.1). **Neither
 > side is waiting on the other. Both are waiting on the same freeze.**
 
 Consequences to hold onto:
 
 - **`materialCode` is not yet a join key between the platforms**, and no C8 work should assume it
-  is. `ForecastLine.materialCode` (`sdc/types.ts:128`) is a real key *within* our tree only.
+  is. `ForecastLine.materialCode` (`sdc/types.js:128`) is a real key *within* our tree only.
 - **This is the one place a crosswalk IS warranted** — between spaces owned by different parties.
   Contrast C7 §6.1, where the C7↔C8 material-space split is entirely ours and the right fix is to
   **delete one space, not bridge it**. The distinction is the whole rule: *a crosswalk between
@@ -422,7 +422,7 @@ it is a record correction and a declaration (§4.0), not a code change.
 
 **Both masters are self-declared SIMULATED.** Ours carries an honesty marker at the top of the
 file — *"⚠️ HONESTY MARKER — THIS IS SIMULATED DATA, NOT PARAGON DATA … It is NOT Paragon's real
-material master"* (`sdc/fixtures.ts:4-11`). SOMO's declares itself seed-illustrative and **never
+material master"* (`sdc/fixtures.js:4-11`). SOMO's declares itself seed-illustrative and **never
 SKU-validated**.
 
 Therefore **any match between them is an ADOPTION, NOT A DISCOVERY.** Every crosswalk row would
@@ -450,7 +450,7 @@ nobody negotiated.
 
 The rule is stated once and applied three times in this correction cycle, in all three
 directions: SOMO used it to close its own internal identity leg; we apply it to `mock*.ts` versus
-`sdc/fixtures.ts` (§4.0) and to C7-versus-C8 (C7 §6.1); and both platforms now apply it to the
+`sdc/fixtures.js` (§4.0) and to C7-versus-C8 (C7 §6.1); and both platforms now apply it to the
 portal-versus-SOMO masters here. A rule that survives being turned on its author is canon rather
 than convenience.
 
@@ -509,7 +509,7 @@ able to see that it was considered rather than overlooked.
 
 ## 4.6 Shared risk — reciprocal hazard disclosure
 
-We disclosed that **`inferBpom` (`GRInspectionWizard.tsx:129-163`) parses a material code prefix
+We disclosed that **`inferBpom` (`GRInspectionWizard.jsx:129-163`) parses a material code prefix
 to derive BPOM applicability** — a regulatory determination computed from a string prefix
 (C7 §6.1, `MOCK-RETIREMENT-01`).
 
@@ -552,16 +552,16 @@ compliance-and-explosion change until proven otherwise.
 
 | # | Gap | Status |
 |---|---|---|
-| **GG-3′** | **period bucket vs single date.** C8 is bucket-native — a supplier confirms "I can meet Aug-25", not a date. **Built that way:** `periodBucket: string` (`sdc/types.ts:130`), documented as *"the planning grain … NOT a resolved date"* (`:122-126`). | **CLOSED our side.** ⚠️ C7 resolves the SAME gap the OPPOSITE way (bucket written into `requiredDate`, C7 GG-3). **Ask stands:** confirm SOMO can emit one plan at both grains. |
+| **GG-3′** | **period bucket vs single date.** C8 is bucket-native — a supplier confirms "I can meet Aug-25", not a date. **Built that way:** `periodBucket: string` (`sdc/types.js:130`), documented as *"the planning grain … NOT a resolved date"* (`:122-126`). | **CLOSED our side.** ⚠️ C7 resolves the SAME gap the OPPOSITE way (bucket written into `requiredDate`, C7 GG-3). **Ask stands:** confirm SOMO can emit one plan at both grains. |
 | **GG-7** | **revision cadence + net-change.** Governed cadence (monthly RM / weekly PM) rather than per-revision, with flagged emergency republication; and a net-change delta so unchanged lines are not re-confirmed. | **OPEN.** No cadence or delta machinery in code. Full re-confirmation of an unchanged 200-line forecast every cycle is how supplier adoption dies. |
-| **GG-8** | **horizon boundary.** How many buckets forward, and is the commitment boundary a fixed offset or plan-driven per material? | **OPEN.** Code comments a 6-bucket window as "trimmable" (`sdc/types.ts:152`); nothing enforces it. Now partly superseded by §2 — the boundary question is the projection question. |
+| **GG-8** | **horizon boundary.** How many buckets forward, and is the commitment boundary a fixed offset or plan-driven per material? | **OPEN.** Code comments a 6-bucket window as "trimmable" (`sdc/types.js:152`); nothing enforces it. Now partly superseded by §2 — the boundary question is the projection question. |
 
 ---
 
 ## 6. Feedback direction (portal → SOMO)
 
 Symmetric to C7's F3 feedback seam. The supplier's confirmation — `confirmedQty`, `committedDate`,
-capacity constraint, root-cause (`sdc/types.ts:169-174, 191-195`) — writes back to the
+capacity constraint, root-cause (`sdc/types.js:169-174, 191-195`) — writes back to the
 **Snowflake commons** for SOMO's replan.
 
 - We are the SoR for the supplier response.
@@ -571,7 +571,7 @@ capacity constraint, root-cause (`sdc/types.ts:169-174, 191-195`) — writes bac
 
 Two response kinds, discriminated structurally (integrity invariant #11, XOR): a
 `forecastConfirmation` is a **commitment** against a firm/semi-firm line; an `acknowledgment`
-(`sdc/types.ts:186-188`) is a **visibility response** carrying **no quantity at all**, so SOMO can
+(`sdc/types.js:186-188`) is a **visibility response** carrying **no quantity at all**, so SOMO can
 never mistake an acknowledgment for a commitment — there is no number to misread.
 
 ---
@@ -584,19 +584,19 @@ never mistake an acknowledgment for a commitment — there is no number to misre
 | **C8-CLASS-VOID** | The shipped `locked → firm` mapping is **VOID**, recorded as withdrawn rather than as a position. | **RATIFIED** (§2.1) |
 | **C8-CLASS-PROJECTION** | SOMO emits `lockState` + `approvalState`; the portal projects `commitmentClass`. SOMO's proposed projection (firm=locked · semi-firm=approved-unlocked · visibility-only=draft/submitted) is recorded as a proposal. | **NAMED OPEN DECISION — explicitly UNRATIFIED.** Pending named owners in Paragon procurement + finance (§2.2) |
 | **C8-RM-SLS-2050** | Does not exist on either side; never run. **Do not seed.** Replaced by a two-master intersection on codes AND names, empty reported as a result. | **RATIFIED** (§3) |
-| **C8-MASTER-DECL** | **`src/services/sdc/fixtures.ts` IS the portal's authoritative material master; C8 is contracted against it and nothing else. `src/data/mock*.ts` is a parallel NON-MASTER, booked for retirement rather than reconciliation** — a second parallel master owned by one party is deleted, not mapped. Load-bearing: SOMO cannot ratify a freeze against an undeclared master. | **RATIFIED — operator ruling** (§4.0) |
+| **C8-MASTER-DECL** | **`src/services/sdc/fixtures.js` IS the portal's authoritative material master; C8 is contracted against it and nothing else. `src/data/mock*.ts` is a parallel NON-MASTER, booked for retirement rather than reconciliation** — a second parallel master owned by one party is deleted, not mapped. Load-bearing: SOMO cannot ratify a freeze against an undeclared master. | **RATIFIED — operator ruling** (§4.0) |
 | **C8-MATERIAL-REF** | SOMO's codes are illustrative, not canonical S/4; their crosswalk is named, registered, NOT BUILT. `material_master_ref` is the live external clock **both directions**. | **RATIFIED** (§4.1) |
 | **MASTER-STRADDLE-01** | The CP-1 code-truth record quoted a material code list drawn from BOTH datasets without noticing — only `RM-EMUL-3310` was authoritative; `RM-COCO-8200` / `RM-STEAR-7300` came from `mock*.ts`. An unnoticed straddle becomes the next phantom. SOMO caught it; we did not. | **RECORD CORRECTED at source** (§4.2). No build follows. |
 | **MOCK-RETIREMENT-01** | Retire `src/data/mock*.ts` as a material-identity space. **NOT this PR and NOT the next.** ⚠️ **CORRECTED 2026-08-06 — THE STATED REASON IS GONE, THE BOOKING IS NOT.** The reason given was that `inferBpom` parses the code prefix to derive BPOM applicability, so **retiring or renaming a code space can SILENTLY change compliance behaviour**. `inferBpom` is deleted; applicability is a master field and an unresolvable code is **refused**, not waved through — so the change is **no longer silent**, which is the property that made the hazard one. **The blast-radius census requirement stands on its own**: the census is what proved the retirement safe, and it measured the space at **44 tree-wide codes, 2 unresolvable**. `C9-STALE-BY-FIX-01` (C9 §7.13). | **BOOKED** — investigation-first, own dispatch, **blast-radius census before any deletion** |
 | **C8-INTERSECT** | The acceptance-test intersection: **EMPTY BY CODE** (structural — numeric-serial vs mnemonic, `PK-` vs `PM-`, `AI-` class exists only here), **NON-EMPTY BY SUBSTANCE** (3 pairs, confidence stated), with **refusals recorded** as the quality signal (stearates ≠ stearic acid; finished surfactants ≠ distillate feedstock — SOMO's master is a cosmetic formulation BOM, these are upstream oleochemical feedstocks). `ROH`/`VERP` is the ONLY pre-existing vocabulary agreement — the one thing neither side negotiated. `EA` vs `PCS` booked, dormant. | **RECORDED AS A RESULT** (§3.2) — not resolved |
-| **C8-ADOPTION** | **Both masters are self-declared SIMULATED** (`sdc/fixtures.ts:4-11`; SOMO's seed-illustrative, never SKU-validated), so any match is an **ADOPTION, NOT A DISCOVERY** — every crosswalk row would be a fact invented at agreement time. **The three pairs are REAL AS SUBSTANCES and NOT REAL AS IDENTITIES.** General rule, now **shared canon**: *a crosswalk earns its place only between spaces owned by different parties.* `material_master_ref` is that; our two demo masters are not. | **RATIFIED** (§4.3) — **no crosswalk built** |
+| **C8-ADOPTION** | **Both masters are self-declared SIMULATED** (`sdc/fixtures.js:4-11`; SOMO's seed-illustrative, never SKU-validated), so any match is an **ADOPTION, NOT A DISCOVERY** — every crosswalk row would be a fact invented at agreement time. **The three pairs are REAL AS SUBSTANCES and NOT REAL AS IDENTITIES.** General rule, now **shared canon**: *a crosswalk earns its place only between spaces owned by different parties.* `material_master_ref` is that; our two demo masters are not. | **RATIFIED** (§4.3) — **no crosswalk built** |
 | **C8-WIRE-OPTION** | **OPTION 3, THEN OPTION 2.** First wire proves **transport and shape only** — no material semantics, no identity claim. The identity join becomes real when `material_master_ref` freezes. | **RATIFIED — operator ruling** (§4.5) |
 | **C8-OPTION-1-DECLINED** | The adopted translation on `RM-EMUL-3320 ↔ RM-CETALC`, **offered by SOMO on acceptable terms**, is **explicitly NOT TAKEN**: we do not need a material in the payload sooner, and **a fiction with an expiry condition is a fiction someone must remember to retire.** Recorded because a declined option that leaves no trace gets re-proposed. | **DECLINED — recorded with reason** (§4.5) |
 | **C8-IDENTITY-GRAIN** | **Spec-level vs substance-level identity** — is a USP-99.5% requirement the same material as unspecified glycerin? Is a 24mm cap the same as an unsized cap? Blocks nothing under option 3; **LOAD-BEARING at option 2**, because `material_master_ref`'s schema depends on the answer. | **NAMED OPEN DECISION — explicitly NOT defaulted.** Escalated to Paragon procurement alongside `commitmentClass` (§4.4) |
 | **C8-RECIPROCAL-HAZARD** | We disclosed `inferBpom`'s prefix-parsed BPOM applicability; SOMO disclosed that **their codes carry class semantics in the prefix** (`RM-`/`PM-`), **their explosion engine reads it**, and nobody had asked what else parses a prefix — booked **because we volunteered ours**. *A hazard named on one platform is worth more to the other than any agreement in the document.* ✅ **BOTH SIDES NOW CLEAR (2026-08-06):** their sweep measured **no material-code prefix parsed in production** (C9 §3.1, A-3), and **ours is deleted** — `inferBpom` is retired and no prefix parse survives on any path a receipt can travel (C9 §7.3, A-15). **The exchange outlived the hazards it was about, which is the point of recording it as practice rather than as a defect.** | **RECORDED — standing practice** (§4.6) |
 | **C8-FIND-01** | **This contract did not exist** while the code hardened past the 2026-07-16 proposal — `allocation` (required), the `Uom` union, per-line `provenance` and a `commitmentClass` mapping all landed unseen by SOMO. | **CLOSED by this document** |
 | **C8-FIND-02** | The SOMO inbound emission shape is **not modelled in code** — no type exists; only `Allocation.materialPeriodTotal` residue. §1.2 is SPEC prose, not a harvested shape. | **OPEN** — lands with the F2 producer |
-| **C8-FIND-03** | **Code/contract divergence, knowingly held:** the void mapping (§2.1) remains in code (`sdc/types.ts:23`, `sdc/FLAGS.md` pre-correction) until the booked code batch. Contract is authority. | **OPEN** — booked code batch |
+| **C8-FIND-03** | **Code/contract divergence, knowingly held:** the void mapping (§2.1) remains in code (`sdc/types.js:23`, `sdc/FLAGS.md` pre-correction) until the booked code batch. Contract is authority. | **OPEN** — booked code batch |
 | GG-3′ | bucket-native on C8 | **CLOSED our side**; cross-seam ask stands (§5) |
 | GG-7, GG-8 | cadence + net-change · horizon boundary | **OPEN** — co-design (§5) |
 | C4-FEEDBACK | Supplier response → Snowflake commons | **SPEC** — gated on F1/F2 (§6) |
@@ -674,7 +674,7 @@ the top — the itemised corrections are only its symptoms.
 
 ## Pin reach
 
-**Pinned by** `src/services/contracts/__tests__/ledgerTruth.test.ts`.
+**Pinned by** `src/services/contracts/__tests__/ledgerTruth.test.js`.
 
 **GUARDED — these assertions, and nothing else on this page:**
 
@@ -706,7 +706,7 @@ a backlog: a clause describing a system outside this repository has nothing here
 against, and a clause stating WHY a boundary exists has no truth-value to decay. See C12
 for the statement of that property.
 
-⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.ts`).
+⚠️ **THIS BLOCK IS SELF-PINNED** (`src/services/contracts/__tests__/pinReach.contract.test.js`).
 The GUARDED list is asserted EQUAL to the pin’s own `describe` titles, **both directions**:
 widen the pin without listing the new assertion and it reddens; drop a line here without
 narrowing the pin and it reddens too. A reach statement that can drift is the overclaim one

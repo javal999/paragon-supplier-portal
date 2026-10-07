@@ -1,0 +1,158 @@
+// Comm Hub C4a — the buyer/planner Communication Hub (chase-derived outbound queue
+// + channel-sourced provenance trail). EN/ID parity is guarded by fragments.test.js.
+
+/** @type {Record<string, string>} */
+export const buyerCommHubEn = {
+  'buyerCommHub.crumb.intelligence': 'Intelligence',
+  'buyerCommHub.crumb.hub': 'Communication Hub',
+  'buyerCommHub.header.title': 'Communication Hub',
+  'buyerCommHub.header.subtitle':
+    'The cyclical requests you owe suppliers and the replies you have recorded — derived from the chase, honest about what is sent.',
+  'buyerCommHub.meta.line': 'Chase-derived · simulated timeline, as of {{date}}',
+  'buyerCommHub.honesty.title': 'No live channel — nothing is sent from here.',
+  'buyerCommHub.honesty.body':
+    'Outbound requests are composed from the delivery chase; each reads “composed — not sent” until a real transport exists. Replies are recorded on the Channel Inbox, one supplier at a time.',
+  // — Outbound queue —
+  'buyerCommHub.outbound.title': 'Outbound requests',
+  'buyerCommHub.outbound.subtitle': 'One per supplier with something to ask — worst first.',
+  'buyerCommHub.outbound.empty': 'No outstanding requests — the chase is clear.',
+  'buyerCommHub.outbound.composedNotSent': 'Composed — not sent',
+  'buyerCommHub.outbound.subjectDue': 'due {{date}}',
+  'buyerCommHub.outbound.lastAsked': 'Last asked {{date}}',
+  'buyerCommHub.outbound.neverAsked': 'Not yet asked',
+  'buyerCommHub.outbound.channel': 'via {{channel}}',
+  'buyerCommHub.status.composed': 'To compose',
+  'buyerCommHub.status.awaiting': 'Awaiting reply',
+  'buyerCommHub.status.stale': 'No reply yet',
+  'buyerCommHub.severity.hard': 'Urgent',
+  'buyerCommHub.severity.soft': 'Advisory',
+  'buyerCommHub.severity.none': 'Clear',
+  'buyerCommHub.reason.overdue': 'Overdue response',
+  'buyerCommHub.reason.partial-response': 'Partial response',
+  'buyerCommHub.channel.whatsapp': 'WhatsApp',
+  'buyerCommHub.channel.email': 'Email',
+  'buyerCommHub.channel.wechat': 'WeChat',
+  // — Channel-sourced provenance —
+  'buyerCommHub.provenance.title': 'Channel-sourced submissions',
+  'buyerCommHub.provenance.subtitle':
+    'Replies recorded into the governed ledger from a channel message — an audit trail, never a portal self-submission.',
+  'buyerCommHub.provenance.empty':
+    'No channel-sourced submissions recorded yet. Confirmed replies appear here with their message origin.',
+  'buyerCommHub.provenance.recorded': 'Recorded',
+  'buyerCommHub.provenance.message': 'Message',
+  'buyerCommHub.provenance.session': 'Session',
+  'buyerCommHub.provenance.correlation': 'Correlation',
+  'buyerCommHub.provenance.noCorrelation': 'No correlation yet',
+  // — Triage panel (C4d — in-place recording confirm) —
+  'buyerCommHub.triage.title': 'Triage a channel reply',
+  'buyerCommHub.triage.subtitle':
+    'Record a reply a supplier sent you over a channel. You check and save it in the stock entry form before anything is recorded, and it is recorded by Paragon — the supplier’s words, not their self-submission.',
+  'buyerCommHub.triage.supplierLabel': 'Whose conversation is this?',
+  'buyerCommHub.triage.supplierSelect': 'Select the supplier…',
+  'buyerCommHub.triage.supplierHint':
+    'Pick the supplier before pasting — this binds the message. It cannot be changed at confirm.',
+  'buyerCommHub.triage.pickSupplierFirst':
+    'Pick a supplier to begin — the reply is recorded against them.',
+  'buyerCommHub.triage.recordingFor': 'Recording for',
+  'buyerCommHub.triage.channelLabel': 'Channel',
+  'buyerCommHub.triage.messageLabel': 'Message text',
+  // CP-2 · B2a — the unit here is PCS, not KG. `PK-PETB-8810` is a PCS material
+  // in the master, and sup-007 (the seeded triage persona) collaborates on
+  // exactly this code — so the old `KG` example tripped the page's own
+  // unit-mismatch warning on the worked example a new operator reads first.
+  'buyerCommHub.triage.placeholder': 'e.g. STOK PK-PETB-8810 2.400 PCS',
+  'buyerCommHub.triage.messageHint': 'Paste the supplier’s reply verbatim.',
+  'buyerCommHub.triage.parse': 'Parse reply',
+  'buyerCommHub.triage.reset': 'New message',
+  'buyerCommHub.triage.inferTitle': 'Parsed interpretation',
+  'buyerCommHub.triage.rawTitle': 'Message received',
+  'buyerCommHub.triage.rowTitle': 'Read from the message',
+  // BL-73 — a row only pre-fills the Inventory page's entry form, bound to the
+  // supplier (REQ-E08-02 BR-08 / BR-09).
+  'buyerCommHub.triage.row.matched': 'Matches {{material}} for {{supplier}}',
+  'buyerCommHub.triage.row.unmatched':
+    'No material of {{supplier}} matches — choose it in the form',
+  'buyerCommHub.triage.row.record': 'Record this stock',
+  'buyerCommHub.triage.entryHint':
+    'Opens the stock entry form of the Inventory page, filled in and bound to this supplier. The record shows it was entered by PTI on the supplier’s behalf, and the supplier sees it on its Stock page.',
+  'buyerCommHub.triage.resultTitle': 'Result',
+  'buyerCommHub.triage.result.landed':
+    'Recorded by Paragon from {{channel}}: {{material}} — {{qty}}',
+  'buyerCommHub.triage.honestyNote':
+    'Operator-fed — no live channel; nothing is sent or received here. Recorded by Paragon under the buyer’s identity, honestly distinct from a supplier’s own submission.'
+};
+
+/** @type {Record<string, string>} */
+export const buyerCommHubId = {
+  'buyerCommHub.crumb.intelligence': 'Intelijen',
+  'buyerCommHub.crumb.hub': 'Pusat Komunikasi',
+  'buyerCommHub.header.title': 'Pusat Komunikasi',
+  'buyerCommHub.header.subtitle':
+    'Permintaan berkala yang Anda ajukan ke pemasok dan balasan yang telah Anda catat — diturunkan dari pengejaran, jujur tentang apa yang terkirim.',
+  'buyerCommHub.meta.line': 'Diturunkan dari pengejaran · lini masa simulasi, per {{date}}',
+  'buyerCommHub.honesty.title': 'Tanpa kanal langsung — tidak ada yang dikirim dari sini.',
+  'buyerCommHub.honesty.body':
+    'Permintaan keluar disusun dari pengejaran pengiriman; masing-masing bertuliskan “disusun — belum terkirim” sampai transport nyata tersedia. Balasan dicatat di Kotak Masuk Kanal, satu pemasok sekali waktu.',
+  // — Outbound queue —
+  'buyerCommHub.outbound.title': 'Permintaan keluar',
+  'buyerCommHub.outbound.subtitle': 'Satu per pemasok yang perlu ditanya — terparah dahulu.',
+  'buyerCommHub.outbound.empty': 'Tidak ada permintaan tertunda — pengejaran bersih.',
+  'buyerCommHub.outbound.composedNotSent': 'Disusun — belum terkirim',
+  'buyerCommHub.outbound.subjectDue': 'jatuh tempo {{date}}',
+  'buyerCommHub.outbound.lastAsked': 'Terakhir ditanya {{date}}',
+  'buyerCommHub.outbound.neverAsked': 'Belum ditanya',
+  'buyerCommHub.outbound.channel': 'via {{channel}}',
+  'buyerCommHub.status.composed': 'Perlu disusun',
+  'buyerCommHub.status.awaiting': 'Menunggu balasan',
+  'buyerCommHub.status.stale': 'Belum ada balasan',
+  'buyerCommHub.severity.hard': 'Mendesak',
+  'buyerCommHub.severity.soft': 'Anjuran',
+  'buyerCommHub.severity.none': 'Bersih',
+  'buyerCommHub.reason.overdue': 'Balasan terlambat',
+  'buyerCommHub.reason.partial-response': 'Balasan sebagian',
+  'buyerCommHub.channel.whatsapp': 'WhatsApp',
+  'buyerCommHub.channel.email': 'Email',
+  'buyerCommHub.channel.wechat': 'WeChat',
+  // — Channel-sourced provenance —
+  'buyerCommHub.provenance.title': 'Kiriman bersumber kanal',
+  'buyerCommHub.provenance.subtitle':
+    'Balasan yang dicatat ke dalam buku besar terkelola dari pesan kanal — jejak audit, bukan kiriman mandiri lewat portal.',
+  'buyerCommHub.provenance.empty':
+    'Belum ada kiriman bersumber kanal yang tercatat. Balasan yang dikonfirmasi muncul di sini dengan asal pesannya.',
+  'buyerCommHub.provenance.recorded': 'Tercatat',
+  'buyerCommHub.provenance.message': 'Pesan',
+  'buyerCommHub.provenance.session': 'Sesi',
+  'buyerCommHub.provenance.correlation': 'Korelasi',
+  'buyerCommHub.provenance.noCorrelation': 'Belum ada korelasi',
+  // — Triage panel (C4d — konfirmasi pencatatan langsung) —
+  'buyerCommHub.triage.title': 'Triase balasan kanal',
+  'buyerCommHub.triage.subtitle':
+    'Catat balasan yang dikirim pemasok kepada Anda melalui kanal. Anda memeriksa dan menyimpannya di formulir isi stok sebelum apa pun dicatat, dan ini dicatat oleh Paragon — kata-kata pemasok, bukan kiriman mandiri mereka.',
+  'buyerCommHub.triage.supplierLabel': 'Ini percakapan siapa?',
+  'buyerCommHub.triage.supplierSelect': 'Pilih pemasok…',
+  'buyerCommHub.triage.supplierHint':
+    'Pilih pemasok sebelum menempel — ini mengikat pesan. Tidak dapat diubah saat konfirmasi.',
+  'buyerCommHub.triage.pickSupplierFirst':
+    'Pilih pemasok untuk mulai — balasan dicatat atas nama mereka.',
+  'buyerCommHub.triage.recordingFor': 'Mencatat untuk',
+  'buyerCommHub.triage.channelLabel': 'Kanal',
+  'buyerCommHub.triage.messageLabel': 'Teks pesan',
+  'buyerCommHub.triage.placeholder': 'mis. STOK PK-PETB-8810 2.400 PCS',
+  'buyerCommHub.triage.messageHint': 'Tempel balasan pemasok apa adanya.',
+  'buyerCommHub.triage.parse': 'Urai balasan',
+  'buyerCommHub.triage.reset': 'Pesan baru',
+  'buyerCommHub.triage.inferTitle': 'Interpretasi terurai',
+  'buyerCommHub.triage.rawTitle': 'Pesan diterima',
+  'buyerCommHub.triage.rowTitle': 'Terbaca dari pesan',
+  'buyerCommHub.triage.row.matched': 'Cocok dengan {{material}} untuk {{supplier}}',
+  'buyerCommHub.triage.row.unmatched':
+    'Tidak ada material {{supplier}} yang cocok — pilih di formulir',
+  'buyerCommHub.triage.row.record': 'Catat stok ini',
+  'buyerCommHub.triage.entryHint':
+    'Membuka formulir isi stok di halaman Stok, sudah terisi dan terikat ke pemasok ini. Catatan menunjukkan bahwa angka diisi oleh PTI atas nama pemasok, dan pemasok melihatnya di halaman Stok miliknya.',
+  'buyerCommHub.triage.resultTitle': 'Hasil',
+  'buyerCommHub.triage.result.landed':
+    'Dicatat oleh Paragon dari {{channel}}: {{material}} — {{qty}}',
+  'buyerCommHub.triage.honestyNote':
+    'Diisi operator — tanpa kanal langsung; tidak ada yang dikirim atau diterima di sini. Dicatat oleh Paragon di bawah identitas pembeli, jujur berbeda dari kiriman mandiri pemasok.'
+};
