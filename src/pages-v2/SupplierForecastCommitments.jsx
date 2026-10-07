@@ -914,6 +914,20 @@ const SupplierForecastCommitments = () => {
         </div>
       ) : (
         <div className="space-y-6">
+          {/* A11y finding 19, supplier side — the Due column's rule, once and visible, above the material tables so it is not read in every cell. */}
+          <p className="text-xs text-text-tertiary" data-testid="fc-sup-due-rule">
+            {t('fc.pti.gaps.dueRuleNote', {
+              due: t('fc.col.due'),
+              rule: t('fc.col.dueRule', {
+                firm: t('adminSet.unit.workingDays', {
+                  count: commitmentDeadlineWorkingDays().firm
+                }),
+                other: t('adminSet.unit.workingDays', {
+                  count: commitmentDeadlineWorkingDays().other
+                })
+              })
+            })}
+          </p>
           {shownMaterials.map((code) => {
             const mine = streamLines.filter((l) => l.materialCode === code);
             const first = mine[0];
@@ -935,20 +949,7 @@ const SupplierForecastCommitments = () => {
                       <TableHeaderCell className="text-right">
                         {t('fc.col.forecast', { uom: first.uom })}
                       </TableHeaderCell>
-                      <TableHeaderCell>
-                        <span
-                          title={t('fc.col.dueRule', {
-                            firm: t('adminSet.unit.workingDays', {
-                              count: commitmentDeadlineWorkingDays().firm
-                            }),
-                            other: t('adminSet.unit.workingDays', {
-                              count: commitmentDeadlineWorkingDays().other
-                            })
-                          })}
-                        >
-                          {t('fc.col.due')}
-                        </span>
-                      </TableHeaderCell>
+                      <TableHeaderCell>{t('fc.col.due')}</TableHeaderCell>
                       <TableHeaderCell>
                         {t('fc.col.commitment', { uom: first.uom })}
                       </TableHeaderCell>
