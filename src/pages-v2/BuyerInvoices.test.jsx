@@ -365,7 +365,10 @@ describe('D9 — the `?tab=queue&status=Overdue` deep link BuyerInvoices reads',
     renderWithProviders(<BuyerInvoices />, { route: '/buyer/invoices?tab=queue&status=Overdue' });
     expect(await screen.findByText(OVERDUE_APPROVED_NUMBER)).toBeInTheDocument();
     expect(screen.queryByText('INV-2025-BRL-0043')).toBeNull();
-    expect(screen.getByRole('tab', { name: /Invoice Queue/ })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: /Invoice Queue/ })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
     expect(screen.getByRole('radio', { name: /^Overdue/ })).toHaveAttribute('aria-checked', 'true');
   });
 
