@@ -78,6 +78,8 @@ import {
   readQty
 } from './invoices/InvoiceCollaboration';
 import { useVerbAvailability, useNextAct } from '@hooks/useVerbAvailability';
+import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import NextActLine from '@components/ui-v2/NextActLine';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 /** @import { QtyRefusalReason } from '@lib/localeNumber' */
@@ -323,6 +325,15 @@ const SupplierInvoices = () => {
     if (onlyInvoice !== null) setSelected(onlyInvoice);
   }, [onlyInvoice]);
   const [panelMode, setPanelMode] = useState(/** @type {PanelMode} */ ('detail'));
+  const [stageFilter, setStageFilter] = useState(/** @type {'all' | 'Returned'} */ ('all'));
+  // Deep-link read: `?stage=Returned` narrows "returned invoices to correct"
+  // to the invoices Finance returned.
+  useUrlEnumParam(
+    'stage',
+    /** @type {('all' | 'Returned')[]} */ (['all', 'Returned']),
+    setStageFilter
+  );
+  const shown = stageFilter === 'Returned' ? listed.filter((i) => i.stage === 'Returned') : listed;
 
   // WHO ACTS NEXT (S2b). ⚠️ **READS `selected.status`, THE PROJECTION LABEL,
   // AND THAT IS DELIBERATE.** `SupplierInvoice` HAS no `lifecycleState` — the
@@ -800,6 +811,25 @@ const SupplierInvoices = () => {
         </p>
       )}
 
+      <FilterChipsBar
+        options={[
+          { id: 'all', label: t('inv.filter.all') },
+          { id: 'Returned', label: t('supplierInvoices.filter.returned'), count: counts.returned }
+        ]}
+        value={stageFilter}
+        onChange={setStageFilter}
+        className="mb-4"
+      />
+
+      {stageFilter !== 'all' && shown.length === 0 && (
+        <p
+          className="text-sm text-text-tertiary py-8 text-center"
+          data-testid="supplier-invoices-filter-empty"
+        >
+          {t('supplierInvoices.filter.empty')}
+        </p>
+      )}
+
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto mb-6">
         <Table>
           <TableHeader>
@@ -817,7 +847,7 @@ const SupplierInvoices = () => {
             </TableHeaderCell>
           </TableHeader>
           <tbody>
-            {listed.map((inv) => {
+            {shown.map((inv) => {
               const Channel = CHANNEL_ICON[inv.channel];
               const isPaid = inv.stage === 'Paid';
               return (
