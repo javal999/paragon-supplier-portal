@@ -675,6 +675,23 @@ describe('unbacked-toast honesty guard (R1)', () => {
     expect(shipments.flatMap((s) => s.keys)).toContain('supplierShipments.toast.export.title');
   });
 
+  // SupplierForecastCommitments' Submit all toasts moved from the page file to
+  // `hooks/useCommitmentActions.js`. They are backed (each follows a `run(`),
+  // so they are not SITES before or after the split; what must hold is that
+  // the hook is still READ, or a future unbacked toast there would go unjudged.
+  it('a split page’s hooks are still scanned — SupplierForecastCommitments', () => {
+    const files = pageFiles(PAGES_DIR);
+    expect(files).toContain('SupplierForecastCommitments/index.jsx');
+    expect(files).toContain('SupplierForecastCommitments/hooks/useCommitmentActions.js');
+    expect(
+      readFileSync(
+        join(PAGES_DIR, 'SupplierForecastCommitments/hooks/useCommitmentActions.js'),
+        'utf8'
+      )
+    ).toMatch(/\btoast\s*\(\s*\{/);
+    expect(files).not.toContain('forecasts/forecastDisplay.jsx');
+  });
+
   /**
    * ⚠️ **AN EXCLUSION THAT EXCLUDES NOTHING READS EXACTLY LIKE A WORKING ONE.**
    * If the refusal property stopped matching — a renamed identifier, a changed

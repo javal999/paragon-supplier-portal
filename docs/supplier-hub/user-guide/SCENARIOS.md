@@ -209,9 +209,9 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
 | 1 | PTI (MP menu) | Weekly plan → **This week** | Reads the cycle cards and opens the next step | – | `pages-v2/BuyerThisWeek.jsx:75-80,145-207` |
-| 2 | Sup-Com | Planning → **Forecast & commitments** | Opens the page (the view is recorded); enters qty per row → **Save draft** | Draft ("not visible to PTI") | `pages-v2/SupplierForecastCommitments.jsx:190-196,1155-1172` |
-| 3 | Sup-Com | same, "Submit by period" | **Submit all** | Submitted | `pages-v2/SupplierForecastCommitments.jsx:447-480,781-788` |
-| 4 | Sup-BO | same | **Acknowledge** on Forecast-zone rows | Acknowledged | `pages-v2/SupplierForecastCommitments.jsx:996-1004` |
+| 2 | Sup-Com | Planning → **Forecast & commitments** | Opens the page (the view is recorded); enters qty per row → **Save draft** | Draft ("not visible to PTI") | `pages-v2/SupplierForecastCommitments/hooks/useRecordView.js:20-26`; `pages-v2/SupplierForecastCommitments/components/CommitmentRow.jsx:84-91,159-166` |
+| 3 | Sup-Com | same, "Submit by period" | **Submit all** | Submitted | `pages-v2/SupplierForecastCommitments/hooks/useCommitmentActions.js:54-87`; `pages-v2/SupplierForecastCommitments/components/PeriodSubmitRow.jsx:114-122` |
+| 4 | Sup-BO | same | **Acknowledge** on Forecast-zone rows | Acknowledged | `pages-v2/SupplierForecastCommitments/components/ForecastZoneRow.jsx:57-66` |
 | 5 | PTI-Plan | Weekly plan → **Supplier responses** | **Accept** → **Accept** | Accepted by PTI | `pages-v2/BuyerCommitments.jsx:209-221,443-449` |
 
 **Negative end-to-end: commitment below forecast, PTI asks for revision**
@@ -220,21 +220,21 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 |---|---|---|---|---|---|
 | 1 | Sup-Com | Forecast & commitments | Commits below forecast. A reason is required ("Below forecast: choose a reason."). | Submitted, Outside tolerance | `services/transitions/forecastRules.js:493-505,516-522` |
 | 2 | PTI-Plan | Supplier responses | **Request revision** → note → **Send request** | Revision requested | `pages-v2/BuyerCommitments.jsx:223-235,450-456` |
-| 3 | Sup-Com | Forecast & commitments | Sees "PTI asked for a revision", revises, **Submit all** | Submitted | `pages-v2/SupplierForecastCommitments.jsx:1140-1160` |
+| 3 | Sup-Com | Forecast & commitments | Sees "PTI asked for a revision", revises, **Submit all** | Submitted | `pages-v2/SupplierForecastCommitments/components/CommitmentLogRow.jsx:16-30`; `pages-v2/SupplierForecastCommitments/components/PeriodSubmitRow.jsx:114-122` |
 
 **Negative end-to-end: capacity not confirmed**
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | Sup-Com | Forecast & commitments | **Submit all**; blocked with "Confirm capacity for {group} first." | Draft | `pages-v2/SupplierForecastCommitments.jsx:429-440,730-738` |
+| 1 | Sup-Com | Forecast & commitments | **Submit all**; blocked with "Confirm capacity for {group} first." | Draft | `pages-v2/SupplierForecastCommitments/utils.js:150-153`; `pages-v2/SupplierForecastCommitments/components/PeriodSubmitRow.jsx:123-135` |
 | 2 | Sup-Ful | Planning → **Capacity** | **Submit capacity** | Capacity Submitted | `pages-v2/SupplierCapacity.jsx:176-185,369-376` |
 
 **Edge cases**
 
 | Condition | What the system does | Who acts next | Menu | Evidence |
 |---|---|---|---|---|
-| New forecast version | A commitment carries forward if the period qty is unchanged; otherwise it goes back to awaiting. The supplier sees "was {qty}" and a Changes tab. | Sup-Com | Forecast & commitments | `services/transitions/forecastRules.js:15-16`; `pages-v2/SupplierForecastCommitments.jsx:820-870` |
-| Emergency republish | "Emergency re-publication" badge | Sup-Com | Forecast & commitments | `pages-v2/SupplierForecastCommitments.jsx:530-533` |
+| New forecast version | A commitment carries forward if the period qty is unchanged; otherwise it goes back to awaiting. The supplier sees "was {qty}" and a Changes tab. | Sup-Com | Forecast & commitments | `services/transitions/forecastRules.js:15-16`; `pages-v2/SupplierForecastCommitments/components/CommitmentRow.jsx:70-74`; `pages-v2/SupplierForecastCommitments/components/ChangesTable.jsx`; `pages-v2/SupplierForecastCommitments/components/ViewToolbar.jsx` |
+| Emergency republish | "Emergency re-publication" badge | Sup-Com | Forecast & commitments | `pages-v2/SupplierForecastCommitments/components/VersionSection.jsx:58-62` |
 | Firm vs Trade-off line | Firm: any shortfall is an exception. Trade-off: up to 10% short is auto-accepted. | PTI-Plan | Supplier responses | `services/transitions/forecastRules.js:516-522` |
 | Commitment deadline | Firm lines due 1 working day after publish, others 3. Overdue lines become exceptions. | Sup-Com | Forecast & commitments | `services/transitions/forecastRules.js:524-537,838-840` |
 | PTI moves demand | **Move demand** publishes a new version | Sup-Com re-commits | Supplier responses | `pages-v2/BuyerCommitments.jsx:236-249,463-471` |

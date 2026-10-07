@@ -107,6 +107,9 @@ describe('⚠️ §70 · THE MATCHER, BEFORE ANY CLAIM ABOUT THE TREE', () => {
     expect(sourceOf('SupplierRFQsV2')).toMatch(/SupplierRFQs\/index\.jsx$/);
     expect(sourceOf('BuyerSourcing')).toMatch(/BuyerSourcing\/index\.jsx$/);
     expect(sourceOf('SupplierShipments')).toMatch(/SupplierShipments\/index\.jsx$/);
+    expect(sourceOf('SupplierForecastCommitments')).toMatch(
+      /SupplierForecastCommitments\/index\.jsx$/
+    );
   });
 });
 
