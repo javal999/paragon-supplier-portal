@@ -30,7 +30,7 @@ import DataHealthChip from '@components/forecast/DataHealthChip';
 import PurposeHeader from '@components/forecast/PurposeHeader';
 import CycleSteps from '@components/forecast/CycleSteps';
 import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
-import AboutThisPage from '@components/forecast/AboutThisPage';
+import AboutThisPage, { CollapsedSection } from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
 import WhyQuantityPanel from '@components/forecast/WhyQuantityPanel';
 import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
@@ -709,31 +709,27 @@ const BuyerOrderPlan = () => {
             </p>
           )}
 
-          <details
+          <CollapsedSection
+            title={t('op.fill.title')}
+            testId="op-fill"
             className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6"
-            data-testid="op-fill"
           >
-            <summary className="cursor-pointer">
-              <h2 className="inline text-section text-text-primary">{t('op.fill.title')}</h2>
-            </summary>
             <p className="text-xs text-text-secondary mt-3 mb-1" data-testid="op-fill-basis">
               {t('op.fill.basis')}
             </p>
             <p className="text-xs text-text-tertiary mb-3">{t('op.fill.intro')}</p>
             <FillChart w={w} />
             <FillTable w={w} />
-          </details>
+          </CollapsedSection>
         </>
       )}
 
       {costs && (
-        <details
+        <CollapsedSection
+          title={t('op.costs.title')}
+          testId="op-costs"
           className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-5"
-          data-testid="op-costs"
         >
-          <summary className="cursor-pointer">
-            <h2 className="inline text-section text-text-primary">{t('op.costs.title')}</h2>
-          </summary>
           <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 text-sm">
             {
               /** @type {const} */ ([
@@ -779,23 +775,22 @@ const BuyerOrderPlan = () => {
             }
           </dl>
           <p className="text-xs text-text-tertiary mt-2">{t('op.costs.where')}</p>
-        </details>
+        </CollapsedSection>
       )}
 
-      <details
-        className="bg-bg-surface border border-border-subtle rounded-lg p-4 text-sm text-text-secondary space-y-2"
-        data-testid="op-definitions"
+      <CollapsedSection
+        title={t('op.def.title')}
+        testId="op-definitions"
+        className="bg-bg-surface border border-border-subtle rounded-lg p-4 text-sm text-text-secondary"
+        detailsClassName="space-y-2"
       >
-        <summary className="cursor-pointer">
-          <h2 className="inline text-section text-text-primary">{t('op.def.title')}</h2>
-        </summary>
         <p>{t('op.method')}</p>
         <p>{t('op.def.cost')}</p>
         <p>{t('op.def.constraints')}</p>
         <p>{t('op.def.fill')}</p>
         <p>{t('op.def.fallback')}</p>
         <p>{t('op.def.cap')}</p>
-      </details>
+      </CollapsedSection>
 
       <AboutThisPage>
         <p>{t('op.subtitle')}</p>
