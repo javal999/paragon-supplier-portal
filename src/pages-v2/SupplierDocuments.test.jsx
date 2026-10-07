@@ -8,6 +8,8 @@ import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
 import { NO_PERSON } from '@context/noPerson';
 import { DOCUMENTS } from '@services/data/mock/fixtures/supplierDocuments';
 import { formatDate } from '@lib/format';
+import { documentDisplayState } from '@services/data/documentDisplayState';
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 
 const alwaysFails = withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 });
 const alwaysPending = withChaos(mockDataService, { minMs: 1e7, maxMs: 1e7, failureRate: 0 });
@@ -138,5 +140,66 @@ describe('SupplierDocuments — the refused document', () => {
     expect(screen.queryByTestId('doc-refusal-doc-012')).toBeNull();
     expect(screen.queryByTestId('doc-refused-banner')).toBeNull();
     expect(screen.queryByText(/PK-PETB-8810/)).toBeNull();
+  });
+});
+
+// D9 (deep-links PR #74 review): SupplierDocuments reads `?expiry=` from the
+// URL (the "certificates expired or expiring" task's deep link), but had no
+// page-level spec rendering the route with the param. The rows are derived
+// via the SAME function + clock the page itself calls (FIXTURE-PRESENT-01:
+// expiry status moves with the declared-present anchor), never re-pinned, so
+// a later anchor bump cannot make this pass vacuously or go stale.
+//
+// No fixture row is currently `expired` at the declared present (checked:
+// zero across all of `DOCUMENTS`), so this exercises the sibling value the
+// same task and the same `expiry` enum carry — `expiring` — rather than
+// asserting a population that doesn't exist today.
+describe('D9 — the `?expiry=expiring` deep link SupplierDocuments reads', () => {
+  const sup007Docs = () => DOCUMENTS.filter((d) => d.supplierId === 'sup-007');
+  const expiringDoc = () =>
+    sup007Docs().find((d) => documentDisplayState(d, DECLARED_PRESENT) === 'expiring');
+  const validDoc = () =>
+    sup007Docs().find((d) => documentDisplayState(d, DECLARED_PRESENT) === 'valid');
+  // The page renders TWO radiogroups (category, then expiry) — the expiry
+  // one is the second, and is the only one with an `Expiring soon` option.
+  const expiryGroup = () => within(screen.getAllByRole('radiogroup')[1]);
+
+  it('`?expiry=expiring` selects that chip and keeps only expiring certificates', async () => {
+    const expiringRaw = expiringDoc();
+    const validRaw = validDoc();
+    expect(
+      expiringRaw,
+      'sup-007 must have an expiring cert for this assertion to mean anything'
+    ).toBeTruthy();
+    expect(validRaw, 'sup-007 must have a valid cert as the non-expiring contrast').toBeTruthy();
+    const expiring = /** @type {NonNullable<typeof expiringRaw>} */ (expiringRaw);
+    const valid = /** @type {NonNullable<typeof validRaw>} */ (validRaw);
+    renderWithProviders(<SupplierDocuments />, {
+      identity: SUPPLIER,
+      route: '/supplier/documents?expiry=expiring'
+    });
+    expect(await screen.findByText(expiring.name)).toBeInTheDocument();
+    expect(screen.queryByText(valid.name)).toBeNull();
+    expect(expiryGroup().getByRole('radio', { name: /^Expiring/ })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
+  });
+
+  it('no `expiry` param renders exactly as before this feature — `All` selected, every row shown', async () => {
+    const expiringRaw = expiringDoc();
+    const validRaw = validDoc();
+    const expiring = /** @type {NonNullable<typeof expiringRaw>} */ (expiringRaw);
+    const valid = /** @type {NonNullable<typeof validRaw>} */ (validRaw);
+    renderWithProviders(<SupplierDocuments />, {
+      identity: SUPPLIER,
+      route: '/supplier/documents'
+    });
+    expect(await screen.findByText(expiring.name)).toBeInTheDocument();
+    expect(screen.getByText(valid.name)).toBeInTheDocument();
+    expect(expiryGroup().getByRole('radio', { name: /^All/ })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
   });
 });
