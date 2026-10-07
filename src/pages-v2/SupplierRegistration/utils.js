@@ -1,4 +1,4 @@
-/** @import React from 'react' */
+/** @import { UseFormReturn } from 'react-hook-form' */
 /** @import { TFunction } from 'i18next' */
 
 // Pure helpers for the registration wizard: the form's shape, its empty
@@ -120,10 +120,8 @@ export const emptyForm = () => ({
 export const isEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 
 /**
- * @typedef {object} StepProps
- * @property {FormState} form
- * @property {React.Dispatch<React.SetStateAction<FormState>>} setForm
- * @property {Record<string, string>} errors
+ * The react-hook-form handle every step reads through `useFormContext()`.
+ * @typedef {UseFormReturn<FormState>} RegistrationForm
  */
 
 /**
@@ -147,7 +145,7 @@ export const validateStep1 = (form, t) => {
 
 /**
  * Contacts: every row needs a name, a valid email and a WhatsApp number.
- * Keys are `c{index}{field}`.
+ * Keys are the field paths, `contacts.{index}.{field}`.
  * @param {FormState} form
  * @param {TFunction} t
  * @returns {Record<string, string>}
@@ -156,10 +154,12 @@ export const validateStep2 = (form, t) => {
   /** @type {Record<string, string>} */
   const e = {};
   form.contacts.forEach((c, i) => {
-    if (!c.name.trim()) e[`c${i}name`] = t('registration.validation.name.required');
-    if (!c.email.trim()) e[`c${i}email`] = t('registration.validation.email.required');
-    else if (!isEmail(c.email)) e[`c${i}email`] = t('registration.validation.email.invalid');
-    if (!c.whatsapp.trim()) e[`c${i}whatsapp`] = t('registration.validation.whatsapp.required');
+    if (!c.name.trim()) e[`contacts.${i}.name`] = t('registration.validation.name.required');
+    if (!c.email.trim()) e[`contacts.${i}.email`] = t('registration.validation.email.required');
+    else if (!isEmail(c.email))
+      e[`contacts.${i}.email`] = t('registration.validation.email.invalid');
+    if (!c.whatsapp.trim())
+      e[`contacts.${i}.whatsapp`] = t('registration.validation.whatsapp.required');
   });
   return e;
 };

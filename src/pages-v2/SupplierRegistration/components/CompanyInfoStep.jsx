@@ -1,7 +1,8 @@
 /** @import React from 'react' */
+import { useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import FormSection from '@components/ui-v2/FormSection';
-/** @import { StepProps } from '../utils' */
+/** @import { RegistrationForm } from '../utils' */
 import { inputClass } from '../const';
 import Field from './Field';
 
@@ -84,11 +85,19 @@ const COUNTRIES = [
 /**
  * Step "Company info" (External SR step 1, KOL step 1): legal name, NPWP, NIB,
  * country, province (Indonesia only), city, address, website. Changing the
- * country clears the province.
- * @type {React.FC<StepProps>}
+ * country clears the province. Reads and writes the form through
+ * `useFormContext()`.
+ * @type {React.FC}
  */
-const CompanyInfoStep = ({ form, setForm, errors }) => {
+const CompanyInfoStep = () => {
   const { t } = useTranslation();
+  const {
+    register,
+    setValue,
+    control,
+    formState: { errors }
+  } = /** @type {RegistrationForm} */ (useFormContext());
+  const country = useWatch({ control, name: 'country' });
   return (
     <FormSection
       eyebrow={t('registration.step.company.eyebrow')}
@@ -100,37 +109,29 @@ const CompanyInfoStep = ({ form, setForm, errors }) => {
           <Field
             label={t('registration.step.company.field.legalName.label')}
             required
-            error={errors.legalName}
+            error={errors.legalName?.message}
           >
             <input
               className={inputClass}
-              value={form.legalName}
-              onChange={(e) => setForm((f) => ({ ...f, legalName: e.target.value }))}
+              {...register('legalName')}
               placeholder={t('registration.step.company.field.legalName.placeholder')}
             />
           </Field>
         </div>
-        <Field label={t('registration.step.company.field.npwp.label')} required error={errors.npwp}>
-          <input
-            className={inputClass}
-            value={form.npwp}
-            onChange={(e) => setForm((f) => ({ ...f, npwp: e.target.value }))}
-            placeholder="00.000.000.0-000.000"
-          />
+        <Field
+          label={t('registration.step.company.field.npwp.label')}
+          required
+          error={errors.npwp?.message}
+        >
+          <input className={inputClass} {...register('npwp')} placeholder="00.000.000.0-000.000" />
         </Field>
         <Field label={t('registration.step.company.field.nib.label')}>
-          <input
-            className={inputClass}
-            value={form.nib}
-            onChange={(e) => setForm((f) => ({ ...f, nib: e.target.value }))}
-            placeholder="1234567890123"
-          />
+          <input className={inputClass} {...register('nib')} placeholder="1234567890123" />
         </Field>
         <Field label={t('registration.step.company.field.country.label')} required>
           <select
             className={inputClass}
-            value={form.country}
-            onChange={(e) => setForm((f) => ({ ...f, country: e.target.value, province: '' }))}
+            {...register('country', { onChange: () => setValue('province', '') })}
           >
             {COUNTRIES.map((c) => (
               <option key={c.value} value={c.value}>
@@ -139,17 +140,13 @@ const CompanyInfoStep = ({ form, setForm, errors }) => {
             ))}
           </select>
         </Field>
-        {form.country === 'Indonesia' && (
+        {country === 'Indonesia' && (
           <Field
             label={t('registration.step.company.field.province.label')}
             required
-            error={errors.province}
+            error={errors.province?.message}
           >
-            <select
-              className={inputClass}
-              value={form.province}
-              onChange={(e) => setForm((f) => ({ ...f, province: e.target.value }))}
-            >
+            <select className={inputClass} {...register('province')}>
               <option value="">{t('registration.step.company.field.province.placeholder')}</option>
               {INDONESIAN_PROVINCES.map((p) => (
                 <option key={p}>{p}</option>
@@ -157,11 +154,14 @@ const CompanyInfoStep = ({ form, setForm, errors }) => {
             </select>
           </Field>
         )}
-        <Field label={t('registration.step.company.field.city.label')} required error={errors.city}>
+        <Field
+          label={t('registration.step.company.field.city.label')}
+          required
+          error={errors.city?.message}
+        >
           <input
             className={inputClass}
-            value={form.city}
-            onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+            {...register('city')}
             placeholder={t('registration.step.company.field.city.placeholder')}
           />
         </Field>
@@ -169,12 +169,11 @@ const CompanyInfoStep = ({ form, setForm, errors }) => {
           <Field
             label={t('registration.step.company.field.address.label')}
             required
-            error={errors.address}
+            error={errors.address?.message}
           >
             <textarea
               className={`${inputClass} min-h-[80px] resize-y`}
-              value={form.address}
-              onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+              {...register('address')}
               placeholder={t('registration.step.company.field.address.placeholder')}
             />
           </Field>
@@ -183,8 +182,7 @@ const CompanyInfoStep = ({ form, setForm, errors }) => {
           <Field label={t('registration.step.company.field.website.label')}>
             <input
               className={inputClass}
-              value={form.website}
-              onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))}
+              {...register('website')}
               placeholder="https://www.example.com"
             />
           </Field>

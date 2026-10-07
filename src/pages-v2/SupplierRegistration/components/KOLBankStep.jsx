@@ -1,18 +1,24 @@
 /** @import React from 'react' */
+import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import FormSection from '@components/ui-v2/FormSection';
-/** @import { StepProps } from '../utils' */
+/** @import { RegistrationForm } from '../utils' */
 import { inputClass } from '../const';
 import Field from './Field';
 import { BANKS } from './DocumentsAndBankStep';
 
 /**
  * Step "Bank" for a KOL (step 2): bank name, account number, account holder,
- * and the notice about personal accounts.
- * @type {React.FC<StepProps>}
+ * and the notice about personal accounts. Reads and writes the form through
+ * `useFormContext()`.
+ * @type {React.FC}
  */
-const KOLBankStep = ({ form, setForm, errors }) => {
+const KOLBankStep = () => {
   const { t } = useTranslation();
+  const {
+    register,
+    formState: { errors }
+  } = /** @type {RegistrationForm} */ (useFormContext());
   return (
     <FormSection
       eyebrow={t('registration.step.bank.eyebrow')}
@@ -23,13 +29,9 @@ const KOLBankStep = ({ form, setForm, errors }) => {
         <Field
           label={t('registration.step.bank.field.bankName.label')}
           required
-          error={errors.bankName}
+          error={errors.bankName?.message}
         >
-          <select
-            className={inputClass}
-            value={form.bankName}
-            onChange={(e) => setForm((f) => ({ ...f, bankName: e.target.value }))}
-          >
+          <select className={inputClass} {...register('bankName')}>
             <option value="">{t('registration.step.bank.field.bankName.placeholder')}</option>
             {BANKS.map((b) => (
               <option key={b} value={b}>
@@ -41,12 +43,11 @@ const KOLBankStep = ({ form, setForm, errors }) => {
         <Field
           label={t('registration.step.bank.field.accountNumber.label')}
           required
-          error={errors.accountNumber}
+          error={errors.accountNumber?.message}
         >
           <input
             className={inputClass}
-            value={form.accountNumber}
-            onChange={(e) => setForm((f) => ({ ...f, accountNumber: e.target.value }))}
+            {...register('accountNumber')}
             placeholder={t('registration.step.kolBank.field.accountNumber.placeholder')}
           />
         </Field>
@@ -54,12 +55,11 @@ const KOLBankStep = ({ form, setForm, errors }) => {
           <Field
             label={t('registration.step.bank.field.accountHolder.label')}
             required
-            error={errors.accountHolder}
+            error={errors.accountHolder?.message}
           >
             <input
               className={inputClass}
-              value={form.accountHolder}
-              onChange={(e) => setForm((f) => ({ ...f, accountHolder: e.target.value }))}
+              {...register('accountHolder')}
               placeholder={t('registration.step.kolBank.field.accountHolder.placeholder')}
             />
           </Field>

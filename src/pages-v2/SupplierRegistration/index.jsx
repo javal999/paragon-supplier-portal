@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { useMemo } from 'react';
 import { ChevronLeft } from 'lucide-react';
+import { FormProvider } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 /** @import { WizardStep } from '@components/ui-v2/Wizard' */
 import Wizard from '@components/ui-v2/Wizard';
@@ -21,8 +22,10 @@ import { useRegistrationWizard } from './hooks/useRegistrationWizard';
  * `/register` — the supplier registration walkthrough, outside the app shell.
  * Renders its own header and footer, the provenance marker, then one of: the
  * request-type selector, the wizard for the chosen type, or the end screen.
- * State and handlers live in `useRegistrationWizard`; this component builds
- * the wizard's step list for the chosen type.
+ * State and handlers live in `useRegistrationWizard`; the form is a
+ * react-hook-form `useForm` that this component hands to every step through
+ * `FormProvider` (the steps read it with `useFormContext`). This component
+ * builds the wizard's step list for the chosen type.
  * @type {React.FC}
  */
 const SupplierRegistrationV2 = () => {
@@ -31,10 +34,7 @@ const SupplierRegistrationV2 = () => {
     pendingRequestType,
     requestType,
     currentStep,
-    form,
-    setForm,
-    errors,
-    catError,
+    methods,
     submitted,
     handleSelectRequestType,
     handleContinueFromTypeSelector,
@@ -54,35 +54,31 @@ const SupplierRegistrationV2 = () => {
           id: 'company',
           title: t('registration.step.company.title'),
           shortTitle: t('registration.step.company.short'),
-          content: <CompanyInfoStep form={form} setForm={setForm} errors={errors} />
+          content: <CompanyInfoStep />
         },
         {
           id: 'contacts',
           title: t('registration.step.contacts.title'),
           shortTitle: t('registration.step.contacts.short'),
-          content: <ContactsStep form={form} setForm={setForm} errors={errors} />
+          content: <ContactsStep />
         },
         {
           id: 'categories',
           title: t('registration.title.categoriesChannel'),
           shortTitle: t('registration.step.categories.short'),
-          content: (
-            <CategoriesStep form={form} setForm={setForm} errors={errors} catError={catError} />
-          )
+          content: <CategoriesStep />
         },
         {
           id: 'docs',
           title: t('registration.title.documentsBank'),
           shortTitle: t('registration.step.documents.short'),
-          content: <DocumentsAndBankStep form={form} setForm={setForm} errors={errors} />
+          content: <DocumentsAndBankStep />
         },
         {
           id: 'review',
           title: t('registration.step.review.title'),
           shortTitle: t('registration.step.review.short'),
-          content: (
-            <ReviewStep form={form} setForm={setForm} errors={errors} requestType={requestType} />
-          )
+          content: <ReviewStep requestType={requestType} />
         }
       ];
     }
@@ -92,28 +88,19 @@ const SupplierRegistrationV2 = () => {
           id: 'expansion',
           title: t('registration.step.expansion.title'),
           shortTitle: t('registration.step.expansion.short'),
-          content: (
-            <InternalSRCategoryStep
-              form={form}
-              setForm={setForm}
-              errors={errors}
-              catError={catError}
-            />
-          )
+          content: <InternalSRCategoryStep />
         },
         {
           id: 'contacts',
           title: t('registration.title.additionalContacts'),
           shortTitle: t('registration.step.contacts.short'),
-          content: <ContactsStep form={form} setForm={setForm} errors={errors} />
+          content: <ContactsStep />
         },
         {
           id: 'review',
           title: t('registration.step.review.title'),
           shortTitle: t('registration.step.review.short'),
-          content: (
-            <ReviewStep form={form} setForm={setForm} errors={errors} requestType={requestType} />
-          )
+          content: <ReviewStep requestType={requestType} />
         }
       ];
     }
@@ -123,16 +110,16 @@ const SupplierRegistrationV2 = () => {
         id: 'company',
         title: t('registration.step.company.title'),
         shortTitle: t('registration.step.company.short'),
-        content: <CompanyInfoStep form={form} setForm={setForm} errors={errors} />
+        content: <CompanyInfoStep />
       },
       {
         id: 'bank',
         title: t('registration.step.kolBank.title'),
         shortTitle: t('registration.step.kolBank.short'),
-        content: <KOLBankStep form={form} setForm={setForm} errors={errors} />
+        content: <KOLBankStep />
       }
     ];
-  }, [requestType, form, setForm, errors, catError, t]);
+  }, [requestType, t]);
 
   const activeMeta = REQUEST_TYPES.find((r) => r.id === requestType);
 
@@ -173,16 +160,18 @@ const SupplierRegistrationV2 = () => {
                   {activeMeta ? t(activeMeta.subKey) : ''}
                 </div>
               </div>
-              <Wizard
-                key={requestType}
-                steps={wizardSteps}
-                currentStep={currentStep}
-                onStepChange={handleStepChange}
-                onCancel={changeRequestType}
-                onComplete={handleComplete}
-                isStepValid={isStepValid}
-                completeLabel={t('registration.submit')}
-              />
+              <FormProvider {...methods}>
+                <Wizard
+                  key={requestType}
+                  steps={wizardSteps}
+                  currentStep={currentStep}
+                  onStepChange={handleStepChange}
+                  onCancel={changeRequestType}
+                  onComplete={handleComplete}
+                  isStepValid={isStepValid}
+                  completeLabel={t('registration.submit')}
+                />
+              </FormProvider>
             </div>
           )}
         </div>

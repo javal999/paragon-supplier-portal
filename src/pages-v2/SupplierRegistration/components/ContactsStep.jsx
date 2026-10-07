@@ -1,8 +1,9 @@
 /** @import React from 'react' */
 import { Plus, X } from 'lucide-react';
+import { useFieldArray, useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import FormSection from '@components/ui-v2/FormSection';
-/** @import { Contact, StepProps } from '../utils' */
+/** @import { RegistrationForm } from '../utils' */
 import { emptyContact } from '../utils';
 import { inputClass } from '../const';
 import Field from './Field';
@@ -33,31 +34,28 @@ export const roleKey = (value) => CONTACT_ROLES.find((r) => r.value === value)?.
 
 /**
  * Step "Contacts" (External SR step 2, Internal SR step 2): one to three
- * contact rows, each with name, role, email, WhatsApp and phone. Rows are keyed
- * by their client-only `id`.
- * @type {React.FC<StepProps>}
+ * contact rows, each with name, role, email, WhatsApp and phone. The rows are a
+ * react-hook-form `useFieldArray` over `contacts`, keyed by the array's own row
+ * ids so a removed row never hands its DOM nodes to the next one.
+ * @type {React.FC}
  */
-const ContactsStep = ({ form, setForm, errors }) => {
+const ContactsStep = () => {
   const { t } = useTranslation();
-  /**
-   * @param {number} i
-   * @param {keyof Contact} field
-   * @param {string} val
-   */
-  const updateContact = (i, field, val) =>
-    setForm((f) => ({
-      ...f,
-      contacts: f.contacts.map((c, idx) => (idx === i ? { ...c, [field]: val } : c))
-    }));
-  const addContact = () =>
-    setForm((f) =>
-      f.contacts.length < 3 ? { ...f, contacts: [...f.contacts, emptyContact()] } : f
-    );
+  const {
+    control,
+    register,
+    formState: { errors }
+  } = /** @type {RegistrationForm} */ (useFormContext());
+  const { fields, append, remove } = useFieldArray({ control, name: 'contacts' });
+  // `shouldFocus: false`: adding a row leaves focus on the Add button, as it
+  // did before the form moved to react-hook-form.
+  const addContact = () => {
+    if (fields.length < 3) append(emptyContact(), { shouldFocus: false });
+  };
   /** @param {number} i */
-  const removeContact = (i) =>
-    setForm((f) =>
-      f.contacts.length > 1 ? { ...f, contacts: f.contacts.filter((_, idx) => idx !== i) } : f
-    );
+  const removeContact = (i) => {
+    if (fields.length > 1) remove(i);
+  };
 
   return (
     <FormSection
@@ -66,13 +64,13 @@ const ContactsStep = ({ form, setForm, errors }) => {
       description={t('registration.step.contacts.description')}
     >
       <div className="flex flex-col gap-4">
-        {form.contacts.map((c, i) => (
+        {fields.map((c, i) => (
           <div key={c.id} className="bg-bg-hover border border-border-subtle rounded-md p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-bold text-text-primary">
                 {t('registration.contacts.label', { index: i + 1 })}
               </span>
-              {form.contacts.length > 1 && (
+              {fields.length > 1 && (
                 <button
                   type="button"
                   onClick={() => removeContact(i)}
@@ -87,21 +85,16 @@ const ContactsStep = ({ form, setForm, errors }) => {
               <Field
                 label={t('registration.step.contacts.field.name.label')}
                 required
-                error={errors[`c${i}name`]}
+                error={errors.contacts?.[i]?.name?.message}
               >
                 <input
                   className={inputClass}
-                  value={c.name}
-                  onChange={(e) => updateContact(i, 'name', e.target.value)}
+                  {...register(`contacts.${i}.name`)}
                   placeholder={t('registration.step.contacts.field.name.placeholder')}
                 />
               </Field>
               <Field label={t('registration.step.contacts.field.role.label')}>
-                <select
-                  className={inputClass}
-                  value={c.role}
-                  onChange={(e) => updateContact(i, 'role', e.target.value)}
-                >
+                <select className={inputClass} {...register(`contacts.${i}.role`)}>
                   {CONTACT_ROLES.map((r) => (
                     <option key={r.value} value={r.value}>
                       {t(r.key)}
@@ -112,24 +105,22 @@ const ContactsStep = ({ form, setForm, errors }) => {
               <Field
                 label={t('registration.step.contacts.field.email.label')}
                 required
-                error={errors[`c${i}email`]}
+                error={errors.contacts?.[i]?.email?.message}
               >
                 <input
                   className={inputClass}
-                  value={c.email}
-                  onChange={(e) => updateContact(i, 'email', e.target.value)}
+                  {...register(`contacts.${i}.email`)}
                   placeholder="jane@example.com"
                 />
               </Field>
               <Field
                 label={t('registration.step.contacts.field.whatsapp.label')}
                 required
-                error={errors[`c${i}whatsapp`]}
+                error={errors.contacts?.[i]?.whatsapp?.message}
               >
                 <input
                   className={inputClass}
-                  value={c.whatsapp}
-                  onChange={(e) => updateContact(i, 'whatsapp', e.target.value)}
+                  {...register(`contacts.${i}.whatsapp`)}
                   placeholder="+62 812 3456 7890"
                 />
               </Field>
@@ -137,8 +128,7 @@ const ContactsStep = ({ form, setForm, errors }) => {
                 <Field label={t('registration.step.contacts.field.phone.label')}>
                   <input
                     className={inputClass}
-                    value={c.phone}
-                    onChange={(e) => updateContact(i, 'phone', e.target.value)}
+                    {...register(`contacts.${i}.phone`)}
                     placeholder="+62 21 1234 5678"
                   />
                 </Field>
@@ -147,7 +137,7 @@ const ContactsStep = ({ form, setForm, errors }) => {
           </div>
         ))}
       </div>
-      {form.contacts.length < 3 && (
+      {fields.length < 3 && (
         <button
           type="button"
           onClick={addContact}

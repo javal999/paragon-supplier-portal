@@ -1,8 +1,9 @@
 /** @import React from 'react' */
 import { Upload, CheckCircle2 } from 'lucide-react';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import FormSection from '@components/ui-v2/FormSection';
-/** @import { DocState, StepProps } from '../utils' */
+/** @import { RegistrationForm } from '../utils' */
 import { inputClass } from '../const';
 import Field from './Field';
 
@@ -27,20 +28,19 @@ export const BANKS = ['BCA', 'Mandiri', 'BNI', 'BRI', 'CIMB Niaga', 'Other'];
 /**
  * Step "Documents & bank" (External SR step 4): one upload row per document
  * (with an expiry date once a dated document is uploaded), then the bank
- * account fields.
- * @type {React.FC<StepProps>}
+ * account fields. Reads and writes the form through `useFormContext()`; a file
+ * pick records only whether a file was chosen and its name.
+ * @type {React.FC}
  */
-const DocumentsAndBankStep = ({ form, setForm, errors }) => {
+const DocumentsAndBankStep = () => {
   const { t } = useTranslation();
-  /**
-   * @param {string} key
-   * @param {Partial<DocState>} patch
-   */
-  const setDoc = (key, patch) =>
-    setForm((f) => ({
-      ...f,
-      docs: { ...f.docs, [key]: { ...f.docs[key], ...patch } }
-    }));
+  const {
+    register,
+    setValue,
+    control,
+    formState: { errors }
+  } = /** @type {RegistrationForm} */ (useFormContext());
+  const docs = useWatch({ control, name: 'docs' });
 
   return (
     <div className="flex flex-col gap-5">
@@ -51,7 +51,7 @@ const DocumentsAndBankStep = ({ form, setForm, errors }) => {
       >
         <div className="flex flex-col gap-3">
           {DOCUMENTS.map((doc) => {
-            const d = form.docs[doc.key];
+            const d = docs[doc.key];
             return (
               <div
                 key={doc.key}
@@ -73,8 +73,7 @@ const DocumentsAndBankStep = ({ form, setForm, errors }) => {
                         type="date"
                         className={`${inputClass} text-xs`}
                         style={{ width: 140 }}
-                        value={d.expiry}
-                        onChange={(e) => setDoc(doc.key, { expiry: e.target.value })}
+                        {...register(`docs.${doc.key}.expiry`)}
                       />
                     </label>
                   </div>
@@ -101,12 +100,10 @@ const DocumentsAndBankStep = ({ form, setForm, errors }) => {
                     type="file"
                     className="hidden"
                     accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={(e) =>
-                      setDoc(doc.key, {
-                        uploaded: !!e.target.files?.[0],
-                        fileName: e.target.files?.[0]?.name ?? ''
-                      })
-                    }
+                    onChange={(e) => {
+                      setValue(`docs.${doc.key}.uploaded`, !!e.target.files?.[0]);
+                      setValue(`docs.${doc.key}.fileName`, e.target.files?.[0]?.name ?? '');
+                    }}
                   />
                 </label>
               </div>
@@ -124,13 +121,9 @@ const DocumentsAndBankStep = ({ form, setForm, errors }) => {
           <Field
             label={t('registration.step.bank.field.bankName.label')}
             required
-            error={errors.bankName}
+            error={errors.bankName?.message}
           >
-            <select
-              className={inputClass}
-              value={form.bankName}
-              onChange={(e) => setForm((f) => ({ ...f, bankName: e.target.value }))}
-            >
+            <select className={inputClass} {...register('bankName')}>
               <option value="">{t('registration.step.bank.field.bankName.placeholder')}</option>
               {BANKS.map((b) => (
                 <option key={b} value={b}>
@@ -142,25 +135,19 @@ const DocumentsAndBankStep = ({ form, setForm, errors }) => {
           <Field
             label={t('registration.step.bank.field.accountNumber.label')}
             required
-            error={errors.accountNumber}
+            error={errors.accountNumber?.message}
           >
-            <input
-              className={inputClass}
-              value={form.accountNumber}
-              onChange={(e) => setForm((f) => ({ ...f, accountNumber: e.target.value }))}
-              placeholder="1234567890"
-            />
+            <input className={inputClass} {...register('accountNumber')} placeholder="1234567890" />
           </Field>
           <div className="md:col-span-2">
             <Field
               label={t('registration.step.bank.field.accountHolder.label')}
               required
-              error={errors.accountHolder}
+              error={errors.accountHolder?.message}
             >
               <input
                 className={inputClass}
-                value={form.accountHolder}
-                onChange={(e) => setForm((f) => ({ ...f, accountHolder: e.target.value }))}
+                {...register('accountHolder')}
                 placeholder={t('registration.step.bank.field.accountHolder.placeholder')}
               />
             </Field>

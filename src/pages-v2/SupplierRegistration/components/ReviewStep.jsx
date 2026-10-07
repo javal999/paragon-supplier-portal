@@ -1,7 +1,8 @@
 /** @import React from 'react' */
+import { useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation, Trans } from 'react-i18next';
 import FormSection from '@components/ui-v2/FormSection';
-/** @import { StepProps } from '../utils' */
+/** @import { FormState, RegistrationForm } from '../utils' */
 /** @import { RequestType } from './RequestTypeSelector' */
 import { errorClass } from '../const';
 import { catKey, channelLabelKey } from './CategoriesStep';
@@ -9,18 +10,24 @@ import { roleKey } from './ContactsStep';
 import { DOCUMENTS } from './DocumentsAndBankStep';
 
 /**
- * @typedef {StepProps & {
- *     requestType: RequestType;
- *   }} ReviewStepProps
+ * @typedef {object} ReviewStepProps
+ * @property {RequestType} requestType
  */
 
 /**
  * The last step of the External and Internal SR wizards: a read-back of every
  * earlier step for the chosen `requestType`, then the two agreement boxes.
+ * Reads every value through `useFormContext()`.
  * @type {React.FC<ReviewStepProps>}
  */
-const ReviewStep = ({ form, setForm, errors, requestType }) => {
+const ReviewStep = ({ requestType }) => {
   const { t } = useTranslation();
+  const {
+    register,
+    control,
+    formState: { errors }
+  } = /** @type {RegistrationForm} */ (useFormContext());
+  const form = /** @type {FormState} */ (useWatch({ control }));
   /** @type {React.FC<{ label: string; value: string }>} */
   const Row = ({ label, value }) => (
     <div className="flex flex-col sm:flex-row gap-1 sm:gap-3 py-1.5 border-b border-border-subtle last:border-b-0">
@@ -146,12 +153,7 @@ const ReviewStep = ({ form, setForm, errors, requestType }) => {
         title={t('registration.review.agreements.title')}
       >
         <label className="flex items-start gap-3 cursor-pointer mb-2">
-          <input
-            type="checkbox"
-            checked={form.agreed1}
-            onChange={(e) => setForm((f) => ({ ...f, agreed1: e.target.checked }))}
-            className="mt-1 accent-teal"
-          />
+          <input type="checkbox" {...register('agreed1')} className="mt-1 accent-teal" />
           <span className="text-sm text-text-secondary">
             <Trans
               i18nKey="registration.review.agreement1.text"
@@ -162,17 +164,12 @@ const ReviewStep = ({ form, setForm, errors, requestType }) => {
             />
           </span>
         </label>
-        {errors.agreed1 && <div className={errorClass}>{errors.agreed1}</div>}
+        {errors.agreed1 && <div className={errorClass}>{errors.agreed1.message}</div>}
         <label className="flex items-start gap-3 cursor-pointer mt-2">
-          <input
-            type="checkbox"
-            checked={form.agreed2}
-            onChange={(e) => setForm((f) => ({ ...f, agreed2: e.target.checked }))}
-            className="mt-1 accent-teal"
-          />
+          <input type="checkbox" {...register('agreed2')} className="mt-1 accent-teal" />
           <span className="text-sm text-text-secondary">{t('registration.review.agreement2')}</span>
         </label>
-        {errors.agreed2 && <div className={errorClass}>{errors.agreed2}</div>}
+        {errors.agreed2 && <div className={errorClass}>{errors.agreed2.message}</div>}
       </FormSection>
     </div>
   );

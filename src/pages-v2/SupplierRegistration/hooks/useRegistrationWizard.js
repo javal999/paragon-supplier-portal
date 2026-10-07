@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+/** @import { FieldPath } from 'react-hook-form' */
 /** @import { FormState } from '../utils' */
 /** @import { RequestType } from '../components/RequestTypeSelector' */
 import {
@@ -12,9 +14,18 @@ import {
 
 /**
  * The registration wizard's state and handlers: the two-stage request-type
- * choice, the current step, the form values, the errors shown under fields,
- * and whether the walkthrough has been submitted. Nothing here calls a
- * service: `/register` is a walkthrough and submitting only flips `submitted`.
+ * choice, the current step, the form (a react-hook-form `useForm`, handed to the
+ * steps through `FormProvider`), and whether the walkthrough has been submitted.
+ * Nothing here calls a service: `/register` is a walkthrough and submitting only
+ * flips `submitted`.
+ *
+ * ⚠️ **VALIDATION IS THE WIZARD'S, NOT REACT-HOOK-FORM'S.** No field is
+ * registered with rules and `handleSubmit` is never called, so react-hook-form
+ * never validates on its own (its default `onSubmit` mode only re-validates after
+ * a submit, which never happens). The per-step validators in `utils.js` decide
+ * whether Next is enabled, from the live values (`useWatch`), and on a forward
+ * step write their messages with `setError`. Those errors stay until the next
+ * step change, exactly as the `useState` errors did.
  */
 export function useRegistrationWizard() {
   const { t } = useTranslation();
@@ -25,9 +36,12 @@ export function useRegistrationWizard() {
   );
   const [requestType, setRequestType] = useState(/** @type {RequestType | null} */ (null));
   const [currentStep, setCurrentStep] = useState(0);
-  const [form, setForm] = useState(/** @type {() => FormState} */ (emptyForm));
-  const [errors, setErrors] = useState(/** @type {Record<string, string>} */ ({}));
-  const [catError, setCatError] = useState('');
+  // Built once: `emptyForm()` mints a contact id, so it is not called per render.
+  const [initialForm] = useState(emptyForm);
+  const methods = useForm({ defaultValues: initialForm });
+  const { control, reset, setError, clearErrors } = methods;
+  // Every value, re-read on every change: `isStepValid` gates Next on them.
+  const form = /** @type {FormState} */ (useWatch({ control }));
   const [submitted, setSubmitted] = useState(false);
   // ⚠️ **THE MINT IS DELETED.** It read
   // `String(10000 + Math.floor(Math.random() * 90000))` and was rendered as
@@ -37,11 +51,20 @@ export function useRegistrationWizard() {
   // faced OUTWARD. Real application numbers are minted by
   // `supplierApplicationStore` and named on the row they belong to.
 
+  /**
+   * Replace every shown error with `messages` (field path → message).
+   * @param {Record<string, string>} messages
+   */
+  const showErrors = (messages) => {
+    clearErrors();
+    for (const [path, message] of Object.entries(messages)) {
+      setError(/** @type {FieldPath<FormState>} */ (path), { type: 'manual', message });
+    }
+  };
+
   const resetWizardState = () => {
     setCurrentStep(0);
-    setForm(emptyForm());
-    setErrors({});
-    setCatError('');
+    reset(emptyForm());
   };
 
   /** @param {RequestType} type */
@@ -107,12 +130,11 @@ export function useRegistrationWizard() {
       } else if (requestType === 'KOL') {
         if (currentStep === 0) stepErrors = validateStep1(form, t);
       }
-      setErrors(stepErrors);
-      setCatError(ce);
+      // The category message sits on `selCats`, the field it is about.
+      showErrors(ce ? { ...stepErrors, selCats: ce } : stepErrors);
       if (Object.keys(stepErrors).length > 0 || ce) return;
     } else {
-      setErrors({});
-      setCatError('');
+      clearErrors();
     }
     setCurrentStep(next);
   };
@@ -120,7 +142,7 @@ export function useRegistrationWizard() {
   const handleComplete = () => {
     if (!requestType) return;
     const finalErrors = validateAgreements(form, t);
-    setErrors(finalErrors);
+    showErrors(finalErrors);
     if (Object.keys(finalErrors).length > 0) return;
     setSubmitted(true);
   };
@@ -133,13 +155,10 @@ export function useRegistrationWizard() {
   };
 
   return {
+    methods,
     pendingRequestType,
     requestType,
     currentStep,
-    form,
-    setForm,
-    errors,
-    catError,
     submitted,
     handleSelectRequestType,
     handleContinueFromTypeSelector,

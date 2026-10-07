@@ -1,18 +1,23 @@
 /** @import React from 'react' */
+import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import FormSection from '@components/ui-v2/FormSection';
-/** @import { StepProps } from '../utils' */
+/** @import { RegistrationForm } from '../utils' */
 import { errorClass, inputClass, labelClass } from '../const';
 import Field from './Field';
 import { SUPPLY_CATEGORIES } from './CategoriesStep';
+import { useSelectedCategories } from '../hooks/useSelectedCategories';
 
 /**
  * Step "Category expansion" for an Internal SR (step 1): the additional supply
- * categories (at least one; `catError` says so) and a free-text reason.
- * @type {React.FC<StepProps & { catError: string }>}
+ * categories (at least one; the error on `selCats` says so) and a free-text
+ * reason. Reads and writes the form through `useFormContext()`.
+ * @type {React.FC}
  */
-const InternalSRCategoryStep = ({ form, setForm, catError }) => {
+const InternalSRCategoryStep = () => {
   const { t } = useTranslation();
+  const { register } = /** @type {RegistrationForm} */ (useFormContext());
+  const { selCats, toggleCat, error: catError } = useSelectedCategories();
   return (
     <FormSection
       eyebrow={t('registration.step.expansion.eyebrow')}
@@ -29,22 +34,15 @@ const InternalSRCategoryStep = ({ form, setForm, catError }) => {
             <label
               key={cat.value}
               className={`flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer border-2 text-sm transition-colors ${
-                form.selCats.includes(cat.value)
+                selCats.includes(cat.value)
                   ? 'border-action bg-action-soft text-text-primary font-semibold'
                   : 'border-border-subtle bg-bg-surface text-text-secondary hover:bg-bg-hover'
               }`}
             >
               <input
                 type="checkbox"
-                checked={form.selCats.includes(cat.value)}
-                onChange={() =>
-                  setForm((f) => ({
-                    ...f,
-                    selCats: f.selCats.includes(cat.value)
-                      ? f.selCats.filter((c) => c !== cat.value)
-                      : [...f.selCats, cat.value]
-                  }))
-                }
+                checked={selCats.includes(cat.value)}
+                onChange={() => toggleCat(cat.value)}
                 className="accent-teal"
               />
               {t(cat.key)}
@@ -56,8 +54,7 @@ const InternalSRCategoryStep = ({ form, setForm, catError }) => {
       <Field label={t('registration.step.expansion.field.reason.label')}>
         <textarea
           className={`${inputClass} min-h-[80px] resize-y`}
-          value={form.expansionReason}
-          onChange={(e) => setForm((f) => ({ ...f, expansionReason: e.target.value }))}
+          {...register('expansionReason')}
           placeholder={t('registration.step.expansion.field.reason.placeholder')}
         />
       </Field>

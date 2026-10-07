@@ -1,10 +1,12 @@
 /** @import React from 'react' */
 /** @import { LucideIcon } from 'lucide-react' */
 import { MessageCircle, Globe, Send, Radio } from 'lucide-react';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import FormSection from '@components/ui-v2/FormSection';
-/** @import { StepProps } from '../utils' */
+/** @import { RegistrationForm } from '../utils' */
 import { errorClass } from '../const';
+import { useSelectedCategories } from '../hooks/useSelectedCategories';
 
 /**
  * @typedef {object} CategoryOption
@@ -79,18 +81,16 @@ export const channelLabelKey = (value) => CHANNELS.find((c) => c.value === value
 
 /**
  * Step "Categories & channel" (External SR step 3): the supply-category
- * checkboxes (at least one is required; `catError` says so) and the preferred
- * communication channel radio group.
- * @type {React.FC<StepProps & { catError: string }>}
+ * checkboxes (at least one is required; the error on `selCats` says so) and
+ * the preferred communication channel radio group. Reads and writes the form
+ * through `useFormContext()`.
+ * @type {React.FC}
  */
-const CategoriesStep = ({ form, setForm, catError }) => {
+const CategoriesStep = () => {
   const { t } = useTranslation();
-  /** @param {string} cat */
-  const toggleCat = (cat) =>
-    setForm((f) => ({
-      ...f,
-      selCats: f.selCats.includes(cat) ? f.selCats.filter((c) => c !== cat) : [...f.selCats, cat]
-    }));
+  const { setValue, control } = /** @type {RegistrationForm} */ (useFormContext());
+  const { selCats, toggleCat, error: catError } = useSelectedCategories();
+  const channel = useWatch({ control, name: 'channel' });
 
   return (
     <div className="flex flex-col gap-5">
@@ -101,7 +101,7 @@ const CategoriesStep = ({ form, setForm, catError }) => {
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {SUPPLY_CATEGORIES.map((cat) => {
-            const checked = form.selCats.includes(cat.value);
+            const checked = selCats.includes(cat.value);
             return (
               <label
                 key={cat.value}
@@ -132,7 +132,7 @@ const CategoriesStep = ({ form, setForm, catError }) => {
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {CHANNELS.map((ch) => {
-            const active = form.channel === ch.value;
+            const active = channel === ch.value;
             const Icon = ch.Icon;
             return (
               <label
@@ -147,7 +147,7 @@ const CategoriesStep = ({ form, setForm, catError }) => {
                   type="radio"
                   name="channel"
                   checked={active}
-                  onChange={() => setForm((f) => ({ ...f, channel: ch.value }))}
+                  onChange={() => setValue('channel', ch.value)}
                   className="accent-action"
                 />
                 <Icon size={18} className={active ? 'text-action' : 'text-text-tertiary'} />
