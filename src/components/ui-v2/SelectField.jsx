@@ -105,7 +105,8 @@ const SelectField = ({
   searchPlaceholder,
   name,
   id,
-  testId
+  testId,
+  selectedLabel
 }) => {
   const { t } = useTranslation();
   const generatedId = useId();
@@ -133,7 +134,9 @@ const SelectField = ({
    */
   const [panelPos, setPanelPos] = useState(/** @type {PanelPos | null} */ (null));
   const selected = value === null ? undefined : options.find((o) => o.value === value);
-  const hasInvalidValue = value !== null && !selected;
+  // A `selectedLabel` names a value the current `options` page doesn't hold (review N3) —
+  // that is not the same as the value being invalid.
+  const hasInvalidValue = value !== null && !selected && !selectedLabel;
   const filteredOptions = useMemo(() => {
     if (onSearch) return options;
     const q = query.trim().toLowerCase();
@@ -506,9 +509,7 @@ const SelectField = ({
   // and typing filters live (review Q1); a ≤10 native <select> is never writable.
   const closedText = hasInvalidValue
     ? t('ui.select.unavailableValue', { value })
-    : selected
-      ? selected.label
-      : '';
+    : (selected?.label ?? selectedLabel ?? '');
   const inputValue = open ? query : closedText;
   const inputPlaceholder = open
     ? (searchPlaceholder ?? t('ui.select.searchPlaceholder'))
@@ -659,6 +660,9 @@ export default SelectField;
  * @property {string} [name]
  * @property {string} [id]
  * @property {string} [testId] Forwarded as `data-testid` to whichever control actually renders.
+ * @property {string} [selectedLabel] Label for `value` when it is valid but not in the current `options` page —
+ *   the normal case with `onSearch` before any search has surfaced it. Without it a valid selection reads as
+ *   "Unavailable" (PR #52 review N3).
  */
 /**
  * Local filtering: `options` is the whole set, and its size picks the mode.

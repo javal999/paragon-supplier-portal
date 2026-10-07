@@ -720,6 +720,36 @@ describe('SelectField — onSearch fires only for a query the user typed while o
     expect(onSearch).toHaveBeenCalledTimes(2);
   });
 });
+describe('SelectField — selectedLabel names a value off the current onSearch page (N3)', () => {
+  it('shows the real label, not "Unavailable", when value is valid but not in the current options page', () => {
+    renderField(
+      <SelectField
+        options={bigOptions(20)}
+        value="ghost-but-valid"
+        selectedLabel="Sample Supplier Co"
+        onChange={() => {}}
+        placeholder="Pick one"
+        onSearch={() => {}}
+      />
+    );
+    expect(screen.getByRole('combobox')).toHaveValue('Sample Supplier Co');
+    expect(screen.queryByText(/Unavailable/)).not.toBeInTheDocument();
+  });
+
+  it('still reads as Unavailable when no selectedLabel is given for an off-page value', () => {
+    renderField(
+      <SelectField
+        options={bigOptions(20)}
+        value="ghost"
+        onChange={() => {}}
+        placeholder="Pick one"
+        onSearch={() => {}}
+      />
+    );
+    expect(screen.getByRole('combobox')).toHaveValue('Unavailable: ghost');
+  });
+});
+
 describe('SelectField — review round 2 (G1–G5)', () => {
   it('G1: re-picking the current value does not call onChange (a native <select> never does)', () => {
     const onChange = vi.fn();
