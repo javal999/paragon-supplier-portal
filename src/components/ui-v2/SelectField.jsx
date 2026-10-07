@@ -112,7 +112,6 @@ const SelectField = ({
   const controlId = id ?? generatedId;
   const listboxId = `${controlId}-listbox`;
   const resolvedPlaceholder = placeholder ?? t('ui.select.placeholder');
-  const accessibleName = ariaLabel ?? resolvedPlaceholder;
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -428,8 +427,13 @@ const SelectField = ({
     return (
       <button
         type="button"
+        id={controlId}
         disabled
-        aria-label={accessibleName}
+        // No placeholder fallback here (review N2): falling back to the placeholder as
+        // `aria-label` overrides the button's own "No options available" text, so a screen
+        // reader never hears it. Without an explicit `ariaLabel` the button's own text is
+        // its accessible name; a page's `<label htmlFor={controlId}>` still names it.
+        aria-label={ariaLabel}
         data-testid={testId}
         className={`${controlBaseClass} text-left text-text-tertiary ${className}`}
       >

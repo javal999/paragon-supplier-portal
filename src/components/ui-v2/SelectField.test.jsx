@@ -159,6 +159,13 @@ describe('SelectField — edge cases', () => {
     );
     expect(screen.getByRole('combobox')).toHaveAttribute('title', long);
   });
+  it('N2: without an explicit ariaLabel, the empty-state button exposes its own text as its name, not the placeholder', () => {
+    renderField(<SelectField options={[]} value={null} onChange={() => {}} placeholder="Pick a supplier" />);
+    // If the placeholder still fell back into aria-label, this query would find nothing —
+    // the aria-label would hide the button's own text.
+    expect(screen.getByRole('button', { name: 'No options available' })).toBeInTheDocument();
+  });
+
   it('duplicate labels are disambiguated via the description line', () => {
     // Not a real corporate name on purpose — a `label:` value in this shape
     // reads to src/data/thirdPartyIdentifiers.test.js as a material identity,
