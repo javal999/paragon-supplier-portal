@@ -30,7 +30,7 @@ import DataHealthChip from '@components/forecast/DataHealthChip';
 import PurposeHeader from '@components/forecast/PurposeHeader';
 import CycleSteps from '@components/forecast/CycleSteps';
 import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
-import AboutThisPage from '@components/forecast/AboutThisPage';
+import AboutThisPage, { CollapsedSection } from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
 import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 import { FIELD_FOCUS_RING } from '@components/forecast/focusRing';
@@ -1062,13 +1062,11 @@ const BuyerReschedule = () => {
             </details>
           )}
 
-          <details
+          <CollapsedSection
+            title={t('rs.fill.title')}
+            testId="rs-fill"
             className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6"
-            data-testid="rs-fill"
           >
-            <summary className="cursor-pointer">
-              <h2 className="inline text-section text-text-primary">{t('rs.fill.title')}</h2>
-            </summary>
             <p className="text-xs text-text-secondary mt-3 mb-1" data-testid="rs-fill-basis">
               {t('rs.fill.basis')}
             </p>
@@ -1128,16 +1126,14 @@ const BuyerReschedule = () => {
                 </tbody>
               </Table>
             </div>
-          </details>
+          </CollapsedSection>
 
           {w.info.length > 0 && (
-            <details
+            <CollapsedSection
+              title={t('rs.info.title')}
+              testId="rs-info"
               className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6"
-              data-testid="rs-info"
             >
-              <summary className="cursor-pointer">
-                <h2 className="inline text-section text-text-primary">{t('rs.info.title')}</h2>
-              </summary>
               <p className="text-xs text-text-tertiary my-3">{t('rs.info.intro')}</p>
               <ul className="text-sm space-y-1">
                 {w.info.map((i) => (
@@ -1148,19 +1144,17 @@ const BuyerReschedule = () => {
                   </li>
                 ))}
               </ul>
-            </details>
+            </CollapsedSection>
           )}
         </>
       )}
 
       {run && (
-        <details
+        <CollapsedSection
+          title={t('rs.settings.title')}
+          testId="rs-settings"
           className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-5"
-          data-testid="rs-settings"
         >
-          <summary className="cursor-pointer">
-            <h2 className="inline text-section text-text-primary">{t('rs.settings.title')}</h2>
-          </summary>
           <dl className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
             <div data-testid="rs-setting-threshold">
               <dt className="text-text-secondary">{t('rs.settings.threshold')}</dt>
@@ -1189,16 +1183,15 @@ const BuyerReschedule = () => {
             </div>
           </dl>
           <p className="text-xs text-text-tertiary mt-2">{t('rs.settings.where')}</p>
-        </details>
+        </CollapsedSection>
       )}
 
-      <details
-        className="bg-bg-surface border border-border-subtle rounded-lg p-4 text-sm text-text-secondary space-y-2"
-        data-testid="rs-definitions"
+      <CollapsedSection
+        title={t('rs.def.title')}
+        testId="rs-definitions"
+        className="bg-bg-surface border border-border-subtle rounded-lg p-4 text-sm text-text-secondary"
+        detailsClassName="space-y-2"
       >
-        <summary className="cursor-pointer">
-          <h2 className="inline text-section text-text-primary">{t('rs.def.title')}</h2>
-        </summary>
         <p>{t('rs.method')}</p>
         <p>{t('rs.def.need')}</p>
         <p>{t('rs.def.types')}</p>
@@ -1210,7 +1203,7 @@ const BuyerReschedule = () => {
             {t('rs.def.unconfirmed', { count: run.unconfirmedPoLines })}
           </p>
         )}
-      </details>
+      </CollapsedSection>
 
       <AboutThisPage>
         <p>{t('rs.subtitle')}</p>

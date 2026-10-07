@@ -10,7 +10,7 @@
 
 ## Summary
 
-33 findings: 0 Blocker, 6 Major, 27 Minor. 26 fixed in C2 (#153), 1 more after it (#155), and 4 shared-primitive findings (15, 30, 31, 32) in #164, so 31 fixed and 2 not fixed (19, 33). All 6 Major findings are fixed: finding 8, the shared app shell's fixed menu, was outside C2's files and was fixed in #155 on 2026-10-06.
+33 findings: 0 Blocker, 6 Major, 27 Minor. 26 fixed in C2 (#153), 1 more after it (#155), 4 shared-primitive findings (15, 30, 31, 32) in #164, and the last 2 (19, 33) in #169, so 33 of 33 fixed. All 6 Major findings are fixed: finding 8, the shared app shell's fixed menu, was outside C2's files and was fixed in #155 on 2026-10-06.
 
 ## Findings
 
@@ -34,7 +34,7 @@
 | 16 | Publish to suppliers | The "Show weeks" toggle did not say whether its weeks were shown. | 4.1.2 | Minor | Fixed: `aria-expanded` | |
 | 17 | Supplier responses | On the 2 filter selects, the move-to select and the note field, focus showed only as a border tint. | 2.4.7 | Minor | Fixed: focus ring | |
 | 18 | Supplier responses | The disabled confirm in the action panel did not name the missing note or supplier. | 4.1.2 | Minor | Fixed: reason linked | |
-| 19 | Supplier responses | The rule for the Due column is only in a hover `title` on its header. | 1.3.1 | Minor | Not fixed | A sentence in a header cell is read on every cell. A visible note needs a copy decision. |
+| 19 | Supplier responses | The rule for the Due column is only in a hover `title` on its header. | 1.3.1 | Minor | Fixed in #169 | The rule is one visible line under the exceptions heading, outside the table, in EN and ID (the existing tooltip text, 17 words, unshortened). The header's `title` is removed, so the rule is read once. |
 | 20 | Supplier performance | On the supplier select, focus showed only as a border tint. | 2.4.7 | Minor | Fixed: focus ring | |
 | 21 | Supplier performance | The radar and 12-month trend charts had no text alternative. The trend figures appear nowhere else. | 1.1.1 | Major | Fixed: a screen-reader table under each chart | |
 | 22 | Forecast quality | The bias link and the Model backtest link used `text-action` (4.41:1). | 1.4.3 | Minor | Fixed: `text-action-hover` | |
@@ -48,7 +48,7 @@
 | 30 | What to order, Make warehouse room, Publish to suppliers, Forecast quality (shared `FilterChipsBar`) | The chips are a radio group, but arrow keys do not move between them. | 2.1.1 (ARIA radio pattern) | Minor | Fixed in #164 | The group is one Tab stop (roving `tabIndex`); Left/Up and Right/Down move focus and selection with wrap; Home/End go to first/last. Multi-select chips keep one Tab stop each. |
 | 31 | All 13 pages (shared `Button`) | Buttons are 40 px tall, under 44 px on touch. | Brief's 44 px on touch | Minor | Fixed in #164 | `Button` carries `.touch-target`: on coarse pointers the tap area is at least 44×44 px; the drawn button stays 40 px and desktop is unchanged. |
 | 32 | All pages with fields | The field border (`border-input` #D1D8E0) measures 1.4:1 on white. | 1.4.11 | Minor | Fixed in #164 | Owner approved `border-input` #8291A0: 3.23:1 on white, 3.12:1 on `bg-page` #FAFBFC. |
-| 33 | All 13 pages (`AboutThisPage`, other collapsed sections) | An `h2` inside `<summary>` can lose its heading role, because a summary's children are presentational to some screen readers. | 1.3.1 | Minor | Not fixed | Restructuring changes every page's heading outline. Heading order is otherwise correct. |
+| 33 | All 13 pages (`AboutThisPage`, other collapsed sections) | An `h2` inside `<summary>` can lose its heading role, because a summary's children are presentational to some screen readers. | 1.3.1 | Minor | Fixed in #169 | The `h2` now sits above the `<details>`, inside a `<section aria-labelledby>` it names; the summary holds only a Show/Hide details toggle. Sections changed: `AboutThisPage` (all 13 pages), What to order (weekly fill, cost rates, How it works) and Make warehouse room (weekly fill, information-only lines, settings, How it works). Heading levels and order are unchanged; the touch height stays. |
 
 ## Re-check after the fixes
 
