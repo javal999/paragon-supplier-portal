@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
 import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
+import { deepLink, sharedValue } from '@lib/deepLink';
 import {
   useASNs,
   useBuyerInvoices,
@@ -83,6 +84,11 @@ const BuyerHome = () => {
       const grItems = grs.data?.items ?? [];
       const asnItems = asns.data?.items ?? [];
       const chaseRows = chase.data ?? [];
+      const forecastLineItems = forecastLines.data?.items ?? [];
+      const overdueForecastLines = forecastLineItems.filter(
+        (l) => deadlineState(l, forecastNow()) === 'overdue'
+      );
+      const exceptionForecastLines = forecastLineItems.filter((l) => l.state === 'exception');
       /** @type {RoleTask[]} */
       const all = [
         {
@@ -93,7 +99,7 @@ const BuyerHome = () => {
           label: t('hub.home.task.escalatedPo'),
           count: poItems.filter((po) => isEscalated(po, nowIso)).length,
           severity: 'critical',
-          to: '/buyer/orders?tab=escalated'
+          to: deepLink('/buyer/orders', { tab: 'escalated' })
         },
         {
           // REQ-E07-02 BR-08 — a rejection is PTI's to act on.
@@ -102,7 +108,7 @@ const BuyerHome = () => {
           label: t('hub.home.task.rejectedPo'),
           count: poItems.filter((po) => po.status === POStatus.REJECTED).length,
           severity: 'critical',
-          to: '/buyer/orders?tab=rejected'
+          to: deepLink('/buyer/orders', { tab: 'rejected' })
         },
         {
           id: 'counter-offers',
@@ -110,7 +116,7 @@ const BuyerHome = () => {
           label: t('hub.home.task.counterOffers'),
           count: poItems.filter((po) => po.status === POStatus.ADJUSTED).length,
           severity: 'warning',
-          to: '/buyer/orders?tab=review'
+          to: deepLink('/buyer/orders', { tab: 'review' })
         },
         {
           // REQ-E07-05 — the supplier moved the expected completion date later.
@@ -127,7 +133,7 @@ const BuyerHome = () => {
           label: t('hub.home.task.callOffsApproval'),
           count: callOffs.views.filter((v) => v.confirmation === 'Awaiting Approval').length,
           severity: 'warning',
-          to: '/buyer/call-offs'
+          to: deepLink('/buyer/call-offs', { status: 'awaitingApproval' })
         },
         {
           id: 'calloffs-escalated',
@@ -135,7 +141,7 @@ const BuyerHome = () => {
           label: t('hub.home.task.callOffsEscalated'),
           count: callOffs.views.filter((v) => v.confirmation === 'Escalated').length,
           severity: 'critical',
-          to: '/buyer/call-offs'
+          to: deepLink('/buyer/call-offs', { status: 'escalated' })
         },
         {
           id: 'calloffs-at-risk',
@@ -143,7 +149,7 @@ const BuyerHome = () => {
           label: t('hub.home.task.callOffsAtRisk'),
           count: callOffs.views.filter((v) => v.delivery === 'atRisk').length,
           severity: 'warning',
-          to: '/buyer/call-offs'
+          to: deepLink('/buyer/call-offs', { status: 'atRisk' })
         },
         {
           id: 'calloffs-drift',
@@ -151,7 +157,7 @@ const BuyerHome = () => {
           label: t('hub.home.task.callOffsDrift'),
           count: deliveryDrift(callOffs.views).length,
           severity: 'critical',
-          to: '/buyer/call-offs'
+          to: deepLink('/buyer/call-offs', { status: 'drift' })
         },
         {
           id: 'inventory-high-alerts',
@@ -161,7 +167,7 @@ const BuyerHome = () => {
             (a) => a.status === 'open' && a.riskClass === 'high'
           ).length,
           severity: 'critical',
-          to: '/buyer/alerts'
+          to: deepLink('/buyer/alerts', { tab: 'open', risk: 'high' })
         },
         {
           // REQ-E08-04 edge case — a submitted update that creates a gap notifies the planner.
@@ -170,27 +176,32 @@ const BuyerHome = () => {
           label: t('hub.home.task.capacityGaps'),
           count: (capacity.data?.items ?? []).filter((p) => planStatus(p) === 'gap').length,
           severity: 'warning',
-          to: '/buyer/capacity'
+          to: deepLink('/buyer/capacity', { gapsOnly: '1' })
         },
         {
           // REQ-E06-03 BR-06 — after the deadline, a missing commitment escalates to the planner.
           id: 'missing-commitments',
           roles: ['MP'],
           label: t('hub.home.task.missingCommitments'),
-          count: (forecastLines.data?.items ?? []).filter(
-            (l) => deadlineState(l, forecastNow()) === 'overdue'
-          ).length,
+          count: overdueForecastLines.length,
           severity: 'critical',
-          to: '/buyer/collaboration'
+          // D7 (PR #74 review): only narrow to a stream when every counted
+          // line shares one — the count is over ALL overdue lines, and the
+          // first line's stream alone can hide the rest.
+          to: deepLink('/buyer/collaboration', {
+            stream: sharedValue(overdueForecastLines, (l) => l.stream)
+          })
         },
         {
           // REQ-E06-02 BR-05 — a commitment outside tolerance is an exception for the planner.
           id: 'commitment-exceptions',
           roles: ['MP'],
           label: t('hub.home.task.commitmentExceptions'),
-          count: (forecastLines.data?.items ?? []).filter((l) => l.state === 'exception').length,
+          count: exceptionForecastLines.length,
           severity: 'warning',
-          to: '/buyer/collaboration'
+          to: deepLink('/buyer/collaboration', {
+            stream: sharedValue(exceptionForecastLines, (l) => l.stream)
+          })
         },
         {
           id: 'chase',
@@ -224,6 +235,9 @@ const BuyerHome = () => {
           label: t('hub.home.task.inboundAsn'),
           count: d.pendingAsns(asnItems).length,
           severity: d.asnTier(asnItems),
+          // D4 (PR #74 review): pendingAsns (Submitted/In Transit) is not the
+          // shipments page's Pending-tab predicate (Pending ASN/ASN Received)
+          // — link unfiltered rather than hiding every counted row.
           to: '/buyer/shipments'
         },
         {
@@ -241,6 +255,8 @@ const BuyerHome = () => {
             (r) => !r.closed && r.awaiting > 0 && isClosingSoon(r.deadline, rfxNow())
           ).length,
           severity: 'warning',
+          // D3 (PR #74 review): the round closing soon need not be Open, so
+          // the Open tab can hide the one round this task counts — unfiltered.
           to: '/buyer/rfq'
         },
         {
@@ -249,6 +265,9 @@ const BuyerHome = () => {
           label: t('hub.home.task.rfqAward'),
           count: d.pendingAwardRfqs(rfqItems, quoteItems).length,
           severity: d.rfqAwardTier(rfqItems, quoteItems, now),
+          // D2 (PR #74 review): pendingAwardRfqs is not the Pending tab's own
+          // predicate (it also counts Closed/partially-answered Open rounds)
+          // — link unfiltered.
           to: '/buyer/rfq'
         },
         {
@@ -267,7 +286,7 @@ const BuyerHome = () => {
           label: t('hub.home.task.overdueInvoices'),
           count: d.overdueInvoices(invItems).length,
           severity: d.invoiceTier(invItems),
-          to: '/buyer/invoices'
+          to: deepLink('/buyer/invoices', { tab: 'queue', status: 'Overdue' })
         }
       ];
       return role === 'ALL' ? all : all.filter((task) => task.roles.includes(role));
