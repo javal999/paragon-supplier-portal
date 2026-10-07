@@ -675,6 +675,16 @@ describe('unbacked-toast honesty guard (R1)', () => {
     expect(shipments.flatMap((s) => s.keys)).toContain('supplierShipments.toast.export.title');
   });
 
+  // BuyerCommitments has no `toast({` site of its own (its toasts are the
+  // success texts `run` shows), so its split is asserted on the FILE population:
+  // the hook that now holds the submit handler is read like the page was.
+  it('a split page with no toast site still has its handler files in the population', () => {
+    const files = pageFiles(PAGES_DIR);
+    expect(files).toContain('BuyerCommitments/index.jsx');
+    expect(files).toContain('BuyerCommitments/hooks/useCommitmentAction.js');
+    expect(files).not.toContain('BuyerCommitments.jsx');
+  });
+
   /**
    * ⚠️ **AN EXCLUSION THAT EXCLUDES NOTHING READS EXACTLY LIKE A WORKING ONE.**
    * If the refusal property stopped matching — a renamed identifier, a changed

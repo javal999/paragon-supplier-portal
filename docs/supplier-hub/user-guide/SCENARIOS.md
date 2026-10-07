@@ -212,14 +212,14 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | 2 | Sup-Com | Planning → **Forecast & commitments** | Opens the page (the view is recorded); enters qty per row → **Save draft** | Draft ("not visible to PTI") | `pages-v2/SupplierForecastCommitments.jsx:190-196,1155-1172` |
 | 3 | Sup-Com | same, "Submit by period" | **Submit all** | Submitted | `pages-v2/SupplierForecastCommitments.jsx:447-480,781-788` |
 | 4 | Sup-BO | same | **Acknowledge** on Forecast-zone rows | Acknowledged | `pages-v2/SupplierForecastCommitments.jsx:996-1004` |
-| 5 | PTI-Plan | Weekly plan → **Supplier responses** | **Accept** → **Accept** | Accepted by PTI | `pages-v2/BuyerCommitments.jsx:209-221,443-449` |
+| 5 | PTI-Plan | Weekly plan → **Supplier responses** | **Accept** → **Accept** | Accepted by PTI | `pages-v2/BuyerCommitments/hooks/useCommitmentAction.js:36-44`; `pages-v2/BuyerCommitments/components/ExceptionRow.jsx:106-112` |
 
 **Negative end-to-end: commitment below forecast, PTI asks for revision**
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
 | 1 | Sup-Com | Forecast & commitments | Commits below forecast. A reason is required ("Below forecast: choose a reason."). | Submitted, Outside tolerance | `services/transitions/forecastRules.js:493-505,516-522` |
-| 2 | PTI-Plan | Supplier responses | **Request revision** → note → **Send request** | Revision requested | `pages-v2/BuyerCommitments.jsx:223-235,450-456` |
+| 2 | PTI-Plan | Supplier responses | **Request revision** → note → **Send request** | Revision requested | `pages-v2/BuyerCommitments/hooks/useCommitmentAction.js:45-54`; `pages-v2/BuyerCommitments/components/ExceptionRow.jsx:113-119` |
 | 3 | Sup-Com | Forecast & commitments | Sees "PTI asked for a revision", revises, **Submit all** | Submitted | `pages-v2/SupplierForecastCommitments.jsx:1140-1160` |
 
 **Negative end-to-end: capacity not confirmed**
@@ -237,7 +237,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | Emergency republish | "Emergency re-publication" badge | Sup-Com | Forecast & commitments | `pages-v2/SupplierForecastCommitments.jsx:530-533` |
 | Firm vs Trade-off line | Firm: any shortfall is an exception. Trade-off: up to 10% short is auto-accepted. | PTI-Plan | Supplier responses | `services/transitions/forecastRules.js:516-522` |
 | Commitment deadline | Firm lines due 1 working day after publish, others 3. Overdue lines become exceptions. | Sup-Com | Forecast & commitments | `services/transitions/forecastRules.js:524-537,838-840` |
-| PTI moves demand | **Move demand** publishes a new version | Sup-Com re-commits | Supplier responses | `pages-v2/BuyerCommitments.jsx:236-249,463-471` |
+| PTI moves demand | **Move demand** publishes a new version | Sup-Com re-commits | Supplier responses | `pages-v2/BuyerCommitments/hooks/useCommitmentAction.js:55-66`; `pages-v2/BuyerCommitments/components/ExceptionRow.jsx:125-131` |
 | Supplier wants to dispute | No supplier dispute action exists; the supplier commits below forecast with a reason | – | – | `services/transitions/businessRoles.js:441-443,520-528` |
 
 ### UC5 Compliance documents

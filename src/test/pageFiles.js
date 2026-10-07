@@ -25,7 +25,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { existsSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { isJsxFile, isSourceFile, isTestFile } from './sourceFiles';
 
 /**
@@ -48,6 +48,22 @@ const filesUnder = (root, dir) =>
  */
 export const isPageFolder = (folder) =>
   existsSync(join(folder, 'index.jsx')) || existsSync(join(folder, 'index.tsx'));
+
+/**
+ * Every shipped source file of ONE page folder (`<folder>/index.jsx`, its
+ * `components/`, `hooks/`, `utils.js`, `const.js`), as absolute paths, sorted.
+ * A guard that resolves a route to `<PageName>/index.jsx` and reads only that
+ * file stops seeing the code the split moved into `components/`; this is the
+ * folder it must read instead. Empty for a folder that is not a page.
+ * @param {string} folder  Absolute path of the page folder.
+ * @returns {string[]}
+ */
+export const pageFolderFiles = (folder) =>
+  isPageFolder(folder)
+    ? filesUnder(dirname(folder), basename(folder))
+        .map((rel) => join(dirname(folder), rel))
+        .sort()
+    : [];
 
 /**
  * The shipped page files under `pagesDir`, single-file and folder pages alike.

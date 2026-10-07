@@ -258,7 +258,7 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
     expect(callersOf(/\buseReasonLabel\s*\(/)).toEqual([
       'src/pages-v2/BuyerAlerts.jsx',
       'src/pages-v2/BuyerCapacity.jsx',
-      'src/pages-v2/BuyerCommitments.jsx',
+      'src/pages-v2/BuyerCommitments/index.jsx',
       'src/pages-v2/BuyerForecastBias.jsx',
       'src/pages-v2/SupplierCapacity.jsx',
       'src/pages-v2/SupplierForecastCommitments.jsx',
