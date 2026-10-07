@@ -24,7 +24,7 @@
 //   'BuyerAnalytics.jsx', 'SupplierRFQs/index.jsx', 'SupplierRFQs/hooks/x.js'.
 // ────────────────────────────────────────────────────────────────────────────
 
-import { existsSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { isJsxFile, isSourceFile, isTestFile } from './sourceFiles';
 
@@ -60,3 +60,34 @@ export const pageFiles = (pagesDir) =>
     if (statSync(full).isDirectory()) return isPageFolder(full) ? filesUnder(pagesDir, name) : [];
     return isJsxFile(name) && !isTestFile(name) ? [name] : [];
   });
+
+/**
+ * The shipped files of ONE page folder, relative to `pagesDir`
+ * (`'BuyerContracts/index.jsx'`, `'BuyerContracts/hooks/x.js'`, …).
+ *
+ * For a spec that used to read a single page file as text: after a split the
+ * page's code is the whole folder, and reading only `index.jsx` would shrink
+ * the population an absence assertion runs over (CLAUDE.md, "Deriving a
+ * population", rule 1). Throws when the folder has no index, so a renamed or
+ * missing page cannot hand an absence assertion an empty population.
+ * @param {string} pagesDir
+ * @param {string} page  the folder name, e.g. `'BuyerContracts'`
+ * @returns {string[]}
+ */
+export const pageFolderFiles = (pagesDir, page) => {
+  if (!isPageFolder(join(pagesDir, page)))
+    throw new Error(`pageFolderFiles: ${page}/ is not a page folder under ${pagesDir}`);
+  return filesUnder(pagesDir, page);
+};
+
+/**
+ * Every shipped file of ONE page folder as one text — the folder-shaped
+ * equivalent of `readFileSync('<Page>.jsx')`. See `pageFolderFiles`.
+ * @param {string} pagesDir
+ * @param {string} page
+ * @returns {string}
+ */
+export const pageFolderSource = (pagesDir, page) =>
+  pageFolderFiles(pagesDir, page)
+    .map((f) => readFileSync(join(pagesDir, f), 'utf8'))
+    .join('\n');
