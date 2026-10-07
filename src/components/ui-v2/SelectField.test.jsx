@@ -160,7 +160,9 @@ describe('SelectField — edge cases', () => {
     expect(screen.getByRole('combobox')).toHaveAttribute('title', long);
   });
   it('N2: without an explicit ariaLabel, the empty-state button exposes its own text as its name, not the placeholder', () => {
-    renderField(<SelectField options={[]} value={null} onChange={() => {}} placeholder="Pick a supplier" />);
+    renderField(
+      <SelectField options={[]} value={null} onChange={() => {}} placeholder="Pick a supplier" />
+    );
     // If the placeholder still fell back into aria-label, this query would find nothing —
     // the aria-label would hide the button's own text.
     expect(screen.getByRole('button', { name: 'No options available' })).toBeInTheDocument();
@@ -430,7 +432,12 @@ describe('SelectField — the panel always opens below the trigger, height-cappe
 describe("SelectField — the listbox's own scroll does not reposition the panel (N5)", () => {
   it('ignores a scroll event whose target is inside the listbox itself', () => {
     renderField(
-      <SelectField options={bigOptions(20)} value={null} onChange={() => {}} placeholder="Pick one" />
+      <SelectField
+        options={bigOptions(20)}
+        value={null}
+        onChange={() => {}}
+        placeholder="Pick one"
+      />
     );
     const field = screen.getByRole('combobox');
     field.getBoundingClientRect = () =>
