@@ -324,7 +324,7 @@ const BuyerInventory: React.FC = () => {
                 key={rowId}
                 ref={isHighlighted ? highlight.scrollRef : undefined}
                 data-testid={`pti-stock-row-${p.supplierId}-${p.materialCode}`}
-                aria-selected={isHighlighted || undefined}
+                aria-current={isHighlighted ? 'true' : undefined}
                 className={isHighlighted ? HIGHLIGHTED_ROW_CLASS : undefined}
               >
                 <TableCell>

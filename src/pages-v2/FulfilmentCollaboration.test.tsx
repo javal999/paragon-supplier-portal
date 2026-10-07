@@ -118,6 +118,25 @@ describe('supplier Goods receipts page (REQ-E07-06)', () => {
   });
 });
 
+// D9 (deep-links PR #74 review): SupplierGoodsReceipts reads `?status=awaiting`
+// from the URL (the "receipt discrepancies" task's deep link), but had no
+// page-level spec rendering the route with the param.
+describe('D9 — the `?status=awaiting` deep link SupplierGoodsReceipts reads', () => {
+  it("`?status=awaiting` selects that chip and keeps only receipts still awaiting this supplier's answer", async () => {
+    renderWithProviders(<SupplierGoodsReceipts />, { identity: SUP_008, route: '/supplier/goods-receipts?status=awaiting' });
+    expect(await screen.findByTestId('supplier-gr-row-gr-006')).toBeInTheDocument();
+    expect(screen.queryByTestId('supplier-gr-row-gr-008')).toBeNull();
+    expect(screen.getByRole('radio', { name: /Awaiting your answer/ })).toHaveAttribute('aria-checked', 'true');
+  });
+
+  it('no `status` param renders exactly as before this feature — `All` selected, every row shown', async () => {
+    renderWithProviders(<SupplierGoodsReceipts />, { identity: SUP_008, route: '/supplier/goods-receipts' });
+    expect(await screen.findByTestId('supplier-gr-row-gr-006')).toBeInTheDocument();
+    expect(screen.getByTestId('supplier-gr-row-gr-008')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /^All/ })).toHaveAttribute('aria-checked', 'true');
+  });
+});
+
 describe('Home tasks', () => {
   it('supplier: receipt discrepancies to acknowledge or dispute, gone once answered', async () => {
     const { unmount } = renderWithProviders(<SupplierHome />, { identity: SUP_008 });
@@ -179,5 +198,25 @@ describe('supplier invoice status list (REQ-E07-07)', () => {
     expect(panel().getByText(/Amount above PO price/)).toBeInTheDocument();
     fireEvent.click(panel().getByRole('button', { name: 'Resubmit invoice' }));
     await waitFor(() => expect(invoiceStore.get('inv-brl-0055')?.status).toBe('Submitted'));
+  });
+});
+
+// D9 (deep-links PR #74 review): SupplierInvoices reads `?stage=Returned`
+// from the URL (the "Returned invoices to correct" task's deep link), but
+// had no page-level spec rendering the route with the param.
+describe('D9 — the `?stage=Returned` deep link SupplierInvoices reads', () => {
+  it('`?stage=Returned` selects that chip and keeps only the returned invoice', async () => {
+    invoiceStore.update('inv-brl-0055', (i) => ({ ...i, status: 'Disputed', returnReason: 'Amount above PO price' }));
+    renderWithProviders(<SupplierInvoices />, { identity: SUPPLIER, route: '/supplier/invoices?stage=Returned' });
+    expect(await screen.findByText('INV-2026-BRL-0055')).toBeInTheDocument();
+    expect(screen.queryByText('INV-2025-BRL-0042')).toBeNull();
+    expect(screen.getByRole('radio', { name: /Returned/ })).toHaveAttribute('aria-checked', 'true');
+  });
+
+  it('no `stage` param renders exactly as before this feature — `All` selected, every row shown', async () => {
+    renderWithProviders(<SupplierInvoices />, { identity: SUPPLIER, route: '/supplier/invoices' });
+    expect(await screen.findByText('INV-2026-BRL-0055')).toBeInTheDocument();
+    expect(screen.getByText('INV-2025-BRL-0042')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /^All/ })).toHaveAttribute('aria-checked', 'true');
   });
 });

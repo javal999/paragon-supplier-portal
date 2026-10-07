@@ -38,7 +38,7 @@ import { forecastNow } from './forecasts/forecastDisplay';
 import Data from '../components/ui-v2/Data';
 import { RiskPill, inventoryNow } from './inventory/inventoryDisplay';
 import { sdcClock } from '../services/sdc/clock';
-import { deepLink } from '../lib/deepLink';
+import { deepLink, sharedValue } from '../lib/deepLink';
 import WeeklyUpdatePanel, { weeklyUpdateView } from './inventory/WeeklyUpdatePanel';
 
 // Supplier Home — "To do" (REQUIREMENTS §3.8 SC-01): what Paragon is waiting for
@@ -157,7 +157,8 @@ const SupplierHome: React.FC = () => {
         label: t('hub.home.task.sup.capacityDue'),
         count: capacityDuePlans.length,
         severity: 'warning',
-        to: deepLink('/supplier/capacity', { group: capacityDuePlans[0]?.planningGroupId }),
+        // D7: only narrow to a group when every due plan shares one.
+        to: deepLink('/supplier/capacity', { group: sharedValue(capacityDuePlans, (p) => p.planningGroupId) }),
       },
       {
         // REQ-E06-01 — a published version this supplier has not opened yet.
@@ -165,7 +166,7 @@ const SupplierHome: React.FC = () => {
         label: t('hub.home.task.sup.newForecast'),
         count: newForecastVersions.length,
         severity: 'warning',
-        to: deepLink('/supplier/forecasts', { stream: newForecastVersions[0]?.stream }),
+        to: deepLink('/supplier/forecasts', { stream: sharedValue(newForecastVersions, (v) => v.stream) }),
       },
       {
         // REQ-E06-03 BR-06 — the reminder at the deadline.
@@ -173,7 +174,7 @@ const SupplierHome: React.FC = () => {
         label: t('hub.home.task.sup.commitmentsOverdue'),
         count: overdueLines.length,
         severity: 'critical',
-        to: deepLink('/supplier/forecasts', { stream: overdueLines[0]?.stream }),
+        to: deepLink('/supplier/forecasts', { stream: sharedValue(overdueLines, (l) => l.stream) }),
       },
       {
         // REQ-E06-03 BR-06 — the reminder at half the deadline.
@@ -181,7 +182,7 @@ const SupplierHome: React.FC = () => {
         label: t('hub.home.task.sup.commitmentsDueSoon'),
         count: dueSoonLines.length,
         severity: 'warning',
-        to: deepLink('/supplier/forecasts', { stream: dueSoonLines[0]?.stream }),
+        to: deepLink('/supplier/forecasts', { stream: sharedValue(dueSoonLines, (l) => l.stream) }),
       },
       {
         // REQ-E06-03 BR-05 — the planner asked for a revision, with a note.
@@ -189,7 +190,7 @@ const SupplierHome: React.FC = () => {
         label: t('hub.home.task.sup.revisionRequested'),
         count: revisionLines.length,
         severity: 'warning',
-        to: deepLink('/supplier/forecasts', { stream: revisionLines[0]?.stream }),
+        to: deepLink('/supplier/forecasts', { stream: sharedValue(revisionLines, (l) => l.stream) }),
       },
       {
         // REQ-E07-05 — a confirmed order still owes its expected completion date.
@@ -267,7 +268,18 @@ const SupplierHome: React.FC = () => {
         label: t('hub.home.task.sup.certs'),
         count: expired.length + expiring.length,
         severity: expired.length > 0 ? 'critical' : 'warning',
-        to: deepLink('/supplier/documents', { expiry: expired.length > 0 ? 'expired' : expiring.length > 0 ? 'expiring' : undefined }),
+        // D6: the page's `expiry` filter is single-valued (all/expired/expiring).
+        // Narrow to whichever kind the count is entirely made of; when both
+        // kinds are present, no single value covers the whole count, so link
+        // unfiltered rather than hiding half of it.
+        to: deepLink('/supplier/documents', {
+          expiry:
+            expired.length > 0 && expiring.length === 0
+              ? 'expired'
+              : expiring.length > 0 && expired.length === 0
+                ? 'expiring'
+                : undefined,
+        }),
       },
       {
         id: 'invoices',

@@ -1,7 +1,7 @@
 import React from 'react';
-import { screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent, act } from '@testing-library/react';
 import { renderWithProviders } from '../test/test-utils';
-import { HIGHLIGHTED_ROW_CLASS, useRowHighlight } from './useRowHighlight';
+import { AUTO_CLEAR_MS, HIGHLIGHTED_ROW_CLASS, useRowHighlight } from './useRowHighlight';
 
 // ────────────────────────────────────────────────────────────────────────────
 // The shared "scroll to and select one row" half of the deep-link pattern.
@@ -30,7 +30,7 @@ const Probe: React.FC = () => {
               key={id}
               data-testid={`row-${id}`}
               ref={isHighlighted ? highlight.scrollRef : undefined}
-              aria-selected={isHighlighted || undefined}
+              aria-current={isHighlighted ? 'true' : undefined}
               className={isHighlighted ? HIGHLIGHTED_ROW_CLASS : undefined}
             >
               {id}
@@ -51,13 +51,13 @@ describe('useRowHighlight', () => {
   it('no `highlight` param: nothing is selected, nothing is reported missing', () => {
     renderWithProviders(<Probe />, { route: '/buyer/inventory' });
     expect(screen.getByTestId('missing').textContent).toBe('false');
-    for (const id of ROWS) expect(screen.getByTestId(`row-${id}`)).not.toHaveAttribute('aria-selected');
+    for (const id of ROWS) expect(screen.getByTestId(`row-${id}`)).not.toHaveAttribute('aria-current');
   });
 
-  it('a row that exists is selected in the existing aria-selected / highlight style', () => {
+  it('a row that exists is selected in the existing aria-current / highlight style', () => {
     renderWithProviders(<Probe />, { route: '/buyer/inventory?highlight=row-2' });
     const row = screen.getByTestId('row-row-2');
-    expect(row).toHaveAttribute('aria-selected', 'true');
+    expect(row).toHaveAttribute('aria-current', 'true');
     expect(row).toHaveClass(HIGHLIGHTED_ROW_CLASS);
     expect(screen.getByTestId('missing').textContent).toBe('false');
   });
@@ -65,13 +65,27 @@ describe('useRowHighlight', () => {
   it('a row that no longer exists is reported missing, without error, and nothing is selected', () => {
     renderWithProviders(<Probe />, { route: '/buyer/inventory?highlight=row-404' });
     expect(screen.getByTestId('missing').textContent).toBe('true');
-    for (const id of ROWS) expect(screen.getByTestId(`row-${id}`)).not.toHaveAttribute('aria-selected');
+    for (const id of ROWS) expect(screen.getByTestId(`row-${id}`)).not.toHaveAttribute('aria-current');
   });
 
   it('clear() removes the highlight (a later row pick / filter change)', () => {
     renderWithProviders(<Probe />, { route: '/buyer/inventory?highlight=row-1' });
-    expect(screen.getByTestId('row-row-1')).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByTestId('row-row-1')).toHaveAttribute('aria-current', 'true');
     fireEvent.click(screen.getByTestId('clear'));
-    expect(screen.getByTestId('row-row-1')).not.toHaveAttribute('aria-selected');
+    expect(screen.getByTestId('row-row-1')).not.toHaveAttribute('aria-current');
+  });
+
+  it('D8: the highlight clears itself after AUTO_CLEAR_MS, without the caller calling clear()', () => {
+    vi.useFakeTimers();
+    try {
+      renderWithProviders(<Probe />, { route: '/buyer/inventory?highlight=row-1' });
+      expect(screen.getByTestId('row-row-1')).toHaveAttribute('aria-current', 'true');
+      act(() => {
+        vi.advanceTimersByTime(AUTO_CLEAR_MS);
+      });
+      expect(screen.getByTestId('row-row-1')).not.toHaveAttribute('aria-current');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

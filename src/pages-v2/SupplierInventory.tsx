@@ -306,7 +306,7 @@ const SupplierInventory: React.FC = () => {
                 key={p.materialCode}
                 ref={isHighlighted ? highlight.scrollRef : undefined}
                 data-testid={`sup-stock-row-${p.materialCode}`}
-                aria-selected={isHighlighted || undefined}
+                aria-current={isHighlighted ? 'true' : undefined}
                 className={isHighlighted ? HIGHLIGHTED_ROW_CLASS : undefined}
               >
                 <TableCell>

@@ -18,7 +18,6 @@ import {
   usePoDrillFilter,
 } from './orders/PoDrillFilter';
 import { receiptsForPo } from './orders/orderSummaryModel';
-import { useUrlEnumParam } from '../hooks/useUrlEnumParam';
 import SapDataAgeBanner from '../components/ui-v2/SapDataAgeBanner';
 import PageMetaLine from '../components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '../components/ui-v2/ProvenanceMarker';
@@ -221,12 +220,10 @@ const GoodsReceiptWorkspace: React.FC<GoodsReceiptWorkspaceProps> = ({
     () => new Map(suppliers.map((s) => [s.id, s])),
     [suppliers],
   );
+  // D10: no deep link targets this page with `?tab=` (the receipts tasks land
+  // here unfiltered — see the deep-links PR's OBSERVATIONS), so there is no
+  // URL read to wire until one does.
   const [tab, setTab] = useState<GroupTab>('all');
-  useUrlEnumParam<GroupTab>(
-    'tab',
-    ['all', 'pending', 'under-inspection', 'approved', 'hold', 'rejected', 'posted'],
-    setTab,
-  );
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);

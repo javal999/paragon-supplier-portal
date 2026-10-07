@@ -12,17 +12,25 @@ import { HIGHLIGHT_PARAM } from '../lib/deepLink';
 // caller can say so instead of silently showing nothing), and hands back a
 // ref callback that scrolls the row into view the first time it mounts.
 //
-// The caller applies `HIGHLIGHTED_ROW_CLASS` / `HIGHLIGHTED_ROW_ARIA` to the
-// row whose id matches `highlight.id` — the app's own `bg-action-soft` tint
-// (already the "selected" background on `SubTabs`, `Tabs` and `KpiCard`), so
-// no new color or style is introduced. The highlight clears itself the
-// moment `highlight.id` no longer matches (tab/filter change, another row
-// picked) because callers derive the applied class from `highlight.id`
-// directly rather than caching it — and clears explicitly when the user
-// selects a different row, via `highlight.clear()`.
+// The caller applies `HIGHLIGHTED_ROW_CLASS` to the row whose id matches
+// `highlight.id` — the app's own `bg-action-soft` tint (already the
+// "selected" background on `SubTabs`, `Tabs` and `KpiCard`), so no new color
+// or style is introduced. A plain `<table>`'s rows carry the implicit ARIA
+// `row` role, not `gridcell`/`option`/`tab`, so `aria-selected` is not valid
+// on them — callers use `aria-current="true"` instead. The highlight clears
+// itself the moment `highlight.id` no longer matches (tab/filter change,
+// another row picked, `?highlight=` removed) because callers derive the
+// applied class from `highlight.id` directly rather than caching it; it also
+// clears on its own `AUTO_CLEAR_MS` after being shown, so the tint does not
+// sit on the row forever once the user has moved on, and explicitly via
+// `highlight.clear()` when a caller wants to clear it sooner (e.g. the user
+// picks a different row).
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const HIGHLIGHTED_ROW_CLASS = 'bg-action-soft';
+
+/** How long a row stays highlighted before it clears itself. */
+export const AUTO_CLEAR_MS = 6000;
 
 export interface RowHighlight {
   /** The row id to highlight, or `null` once cleared / not applicable. */
@@ -57,6 +65,12 @@ export function useRowHighlight(exists: (id: string) => boolean): RowHighlight {
   const id = cleared ? null : targetId;
   const missing = id !== null && !exists(id);
   const activeId = missing ? null : id;
+
+  useEffect(() => {
+    if (activeId === null) return;
+    const timer = setTimeout(() => setCleared(true), AUTO_CLEAR_MS);
+    return () => clearTimeout(timer);
+  }, [activeId]);
 
   const scrollRef = (el: HTMLElement | null) => {
     if (el && activeId && scrolledRef.current !== activeId) {

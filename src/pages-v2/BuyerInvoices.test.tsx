@@ -313,3 +313,30 @@ describe('BuyerInvoices — the settle failure branch', () => {
     expect(screen.queryByRole('button', { name: 'Send remittance' })).not.toBeInTheDocument();
   });
 });
+
+// D9 (deep-links PR #74 review): BuyerInvoices reads `?tab=queue&status=Overdue`
+// from the URL (the "overdue supplier invoices" task's deep link, and the
+// dashboard bar's matching flag), but had no page-level spec rendering the
+// route with the params. inv-brl-0043 is `Disputed`, which `isOverdue` never
+// computes (OVERDUE_ELIGIBLE excludes it), so it is a stable non-overdue
+// contrast row regardless of the wall clock's drift past its due date.
+describe('D9 — the `?tab=queue&status=Overdue` deep link BuyerInvoices reads', () => {
+  usePinnedDemoClock();
+
+  it('`?tab=queue&status=Overdue` selects the Queue tab and the Overdue chip, keeping only overdue invoices', async () => {
+    invoiceStore.reset();
+    renderWithProviders(<BuyerInvoices />, { route: '/buyer/invoices?tab=queue&status=Overdue' });
+    expect(await screen.findByText(OVERDUE_APPROVED_NUMBER)).toBeInTheDocument();
+    expect(screen.queryByText('INV-2025-BRL-0043')).toBeNull();
+    expect(screen.getByRole('tab', { name: /Invoice Queue/ })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('radio', { name: /^Overdue/ })).toHaveAttribute('aria-checked', 'true');
+  });
+
+  it('no params render exactly as before this feature — `All` chip selected, every row shown', async () => {
+    invoiceStore.reset();
+    renderWithProviders(<BuyerInvoices />, { route: '/buyer/invoices' });
+    expect(await screen.findByText(OVERDUE_APPROVED_NUMBER)).toBeInTheDocument();
+    expect(screen.getByText('INV-2025-BRL-0043')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /^All/ })).toHaveAttribute('aria-checked', 'true');
+  });
+});

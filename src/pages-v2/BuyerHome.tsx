@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import AppShellV2 from '../components/layout-v2/AppShellV2';
 import PageHeader from '../components/ui-v2/PageHeader';
 import SampleDataBadge from '../components/ui-v2/SampleDataBadge';
-import { deepLink } from '../lib/deepLink';
+import { deepLink, sharedValue } from '../lib/deepLink';
 import {
   useASNs,
   useBuyerInvoices,
@@ -174,7 +174,8 @@ const BuyerHome: React.FC = () => {
         label: t('hub.home.task.missingCommitments'),
         count: overdueForecastLines.length,
         severity: 'critical',
-        to: deepLink('/buyer/collaboration', { stream: overdueForecastLines[0]?.stream }),
+        // D7: only narrow to a stream when every counted line shares one.
+        to: deepLink('/buyer/collaboration', { stream: sharedValue(overdueForecastLines, (l) => l.stream) }),
       },
       {
         // REQ-E06-02 BR-05 — a commitment outside tolerance is an exception for the planner.
@@ -183,7 +184,7 @@ const BuyerHome: React.FC = () => {
         label: t('hub.home.task.commitmentExceptions'),
         count: exceptionForecastLines.length,
         severity: 'warning',
-        to: deepLink('/buyer/collaboration', { stream: exceptionForecastLines[0]?.stream }),
+        to: deepLink('/buyer/collaboration', { stream: sharedValue(exceptionForecastLines, (l) => l.stream) }),
       },
       {
         id: 'chase',
@@ -217,7 +218,9 @@ const BuyerHome: React.FC = () => {
         label: t('hub.home.task.inboundAsn'),
         count: d.pendingAsns(asnItems).length,
         severity: d.asnTier(asnItems),
-        to: deepLink('/buyer/shipments', { tab: 'pending' }),
+        // D4: pendingAsns (Submitted/In Transit) is not the shipments page's
+        // Pending tab predicate (Pending ASN/ASN Received) — link unfiltered.
+        to: '/buyer/shipments',
       },
       {
         // REQ-E03-05 BR-03 — a round whose deadline is close and whose invitees
@@ -234,7 +237,9 @@ const BuyerHome: React.FC = () => {
           (r) => !r.closed && r.awaiting > 0 && isClosingSoon(r.deadline, rfxNow()),
         ).length,
         severity: 'warning',
-        to: deepLink('/buyer/rfq', { tab: 'open' }),
+        // D3: the round closing soon need not be Open, so the Open tab can
+        // hide the one item this task counts — link unfiltered.
+        to: '/buyer/rfq',
       },
       {
         id: 'rfq-award',
@@ -242,7 +247,9 @@ const BuyerHome: React.FC = () => {
         label: t('hub.home.task.rfqAward'),
         count: d.pendingAwardRfqs(rfqItems, quoteItems).length,
         severity: d.rfqAwardTier(rfqItems, quoteItems, now),
-        to: deepLink('/buyer/rfq', { tab: 'pending' }),
+        // D2: pendingAwardRfqs is not the Pending tab's predicate (it also
+        // counts Closed/partially-answered Open rounds) — link unfiltered.
+        to: '/buyer/rfq',
       },
       {
         // REQ-E07-08 AC-02 — only a RETRYABLE failure is a task: a business

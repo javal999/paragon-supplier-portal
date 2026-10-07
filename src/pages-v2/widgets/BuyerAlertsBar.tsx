@@ -72,7 +72,8 @@ const BuyerAlertsBar: React.FC = () => {
         label: t('widget.alertsBar.flag.rfqAward'),
         count: d.pendingAwardRfqs(rfqItems, quoteItems).length,
         severity: d.rfqAwardTier(rfqItems, quoteItems, now),
-        to: deepLink('/buyer/rfq', { tab: 'pending' }),
+        // D2: pendingAwardRfqs is not the Pending tab's predicate — link unfiltered.
+        to: '/buyer/rfq',
       },
       {
         label: t('widget.alertsBar.flag.receiptsReview'),
@@ -84,7 +85,8 @@ const BuyerAlertsBar: React.FC = () => {
         label: t('widget.alertsBar.flag.inboundAsn'),
         count: d.pendingAsns(asnItems).length,
         severity: d.asnTier(asnItems),
-        to: deepLink('/buyer/shipments', { tab: 'pending' }),
+        // D4: pendingAsns is not the shipments page's Pending tab predicate — link unfiltered.
+        to: '/buyer/shipments',
       },
     ].filter((f) => f.count > 0);
   }, [invoices.data, pos.data, rfqs.data, quotes.data, grs.data, asns.data, t]);

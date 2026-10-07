@@ -29,3 +29,20 @@ export function deepLink(
   const qs = q.toString();
   return qs ? `${path}?${qs}` : path;
 }
+
+/**
+ * The value every item in `items` shares under `select`, or `undefined` if
+ * `items` is empty or they disagree. Use this before narrowing a deep link to
+ * one item's value (a stream, a planning group) — a task's count is over the
+ * whole list, so filtering on the first item's value alone hides the rest
+ * whenever they don't all match it.
+ */
+export function sharedValue<T>(
+  items: readonly T[],
+  select: (item: T) => string | undefined,
+): string | undefined {
+  if (items.length === 0) return undefined;
+  const first = select(items[0]);
+  if (first === undefined) return undefined;
+  return items.every((item) => select(item) === first) ? first : undefined;
+}
