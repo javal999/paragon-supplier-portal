@@ -675,6 +675,22 @@ describe('unbacked-toast honesty guard (R1)', () => {
     expect(shipments.flatMap((s) => s.keys)).toContain('supplierShipments.toast.export.title');
   });
 
+  // BuyerReschedule's proposal acts toast from `hooks/useProposalActions.js`
+  // and its decision save from `components/DecisionControl.jsx`. Every one is
+  // backed (a `mutateAsync` in the branch), so none is a SITE; the scan must
+  // still read both files, or a future unbacked toast there would go unseen.
+  it('a split page’s hook and component files are scanned', () => {
+    const files = pageFiles(PAGES_DIR);
+    for (const f of [
+      'BuyerReschedule/hooks/useProposalActions.js',
+      'BuyerReschedule/components/DecisionControl.jsx'
+    ]) {
+      expect(files).toContain(f);
+      expect(readFileSync(join(PAGES_DIR, f), 'utf8')).toMatch(/\btoast\s*\(\s*\{/);
+    }
+    expect(files).toContain('BuyerReschedule/index.jsx');
+  });
+
   /**
    * ⚠️ **AN EXCLUSION THAT EXCLUDES NOTHING READS EXACTLY LIKE A WORKING ONE.**
    * If the refusal property stopped matching — a renamed identifier, a changed
