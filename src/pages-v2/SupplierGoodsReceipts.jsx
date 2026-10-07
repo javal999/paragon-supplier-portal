@@ -30,6 +30,8 @@ import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import { formatDate, formatDateTime } from '@lib/format';
 import { statusTone } from '@lib/statusTone';
 import { DECLARED_PRESENT } from '@services/data/fixturePresent';
@@ -89,6 +91,15 @@ const SupplierGoodsReceipts = () => {
   const respondAvailability = useVerbAvailability('receiptdiscrepancy:respond');
   const [selectedId, setSelectedId] = useState(/** @type {string | null} */ (null));
   const [comment, setComment] = useState('');
+  const [statusFilter, setStatusFilter] = useState(/** @type {'all' | 'awaiting'} */ ('all'));
+  // Deep-link read: `?status=awaiting` narrows the "receipt discrepancies to
+  // acknowledge or dispute" task to the receipts still awaiting this
+  // supplier's answer.
+  useUrlEnumParam(
+    'status',
+    /** @type {('all' | 'awaiting')[]} */ (['all', 'awaiting']),
+    setStatusFilter
+  );
   const crumb = [t('hub.nav.section.supplierOrders'), t('fc.gr.title')];
   // REQ-E07-03 — the drill-through filter, with the summary's own predicate.
   const drill = usePoDrillFilter();
@@ -215,6 +226,16 @@ const SupplierGoodsReceipts = () => {
         </div>
       )}
 
+      <FilterChipsBar
+        options={[
+          { id: 'all', label: t('inv.filter.all') },
+          { id: 'awaiting', label: t('fc.gr.filter.awaiting'), count: awaiting }
+        ]}
+        value={statusFilter}
+        onChange={setStatusFilter}
+        className="mb-4"
+      />
+
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>
           <TableHeader>
@@ -230,86 +251,93 @@ const SupplierGoodsReceipts = () => {
             <TableHeaderCell className="text-right">{t('fc.gr.col.action')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {rows.map(({ gr, lines, flagged, keptOpen, awaiting: needsAnswer, qc, withoutAsn }) => (
-              <TableRow key={gr.id} data-testid={`supplier-gr-row-${gr.id}`}>
-                <TableCell>
-                  <Data className="text-xs font-bold text-text-primary whitespace-nowrap">
-                    {gr.grNumber}
-                  </Data>
-                </TableCell>
-                <TableCell>
-                  <Data className="text-xs text-text-secondary whitespace-nowrap">
-                    {gr.asnNumber}
-                  </Data>
-                  {withoutAsn && (
-                    <span
-                      className="block text-xs text-warning-hover"
-                      data-testid={`gr-without-asn-${gr.id}`}
-                    >
-                      {t('oc.drill.receipt.withoutAsn')}
-                    </span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Data className="text-xs text-text-secondary whitespace-nowrap">
-                    {gr.poNumber}
-                  </Data>
-                </TableCell>
-                <TableCell className="whitespace-nowrap">
-                  <Data className="text-xs text-text-secondary">{formatDate(gr.receivedDate)}</Data>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Data>{qty(sum(lines, 'shipped'))}</Data>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Data>{qty(sum(lines, 'received'))}</Data>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Data className={sum(lines, 'rejected') > 0 ? 'text-danger font-semibold' : ''}>
-                    {qty(sum(lines, 'rejected'))}
-                  </Data>
-                </TableCell>
-                <TableCell>
-                  {qc ? (
-                    <StatusPill variant={statusTone(qc)}>{qc}</StatusPill>
-                  ) : (
-                    <span className="text-xs text-text-tertiary">{t('fc.gr.qc.pending')}</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {gr.discrepancyResponse ? (
-                    <StatusPill variant={statusTone(gr.discrepancyResponse.status)}>
-                      {gr.discrepancyResponse.status}
-                    </StatusPill>
-                  ) : flagged ? (
-                    <StatusPill variant="warning">{t('fc.gr.disc.flagged')}</StatusPill>
-                  ) : (
-                    <span className="text-xs text-text-tertiary">{t('fc.gr.disc.none')}</span>
-                  )}
-                  {keptOpen && (
-                    <span
-                      className="block text-xs text-warning-hover"
-                      data-testid={`gr-kept-open-${gr.id}`}
-                    >
-                      {t('fc.gr.tol.keptOpen')}
-                    </span>
-                  )}
-                </TableCell>
-                <TableCell className="text-right whitespace-nowrap">
-                  {needsAnswer && respondAvailability.kind !== 'held' ? (
-                    <HandoffNotice availability={respondAvailability} testId="handoff-gr-respond" />
-                  ) : (
-                    <Button
-                      variant={needsAnswer ? 'outline' : 'secondary'}
-                      onClick={() => open(gr.id)}
-                      aria-label={`${t(needsAnswer ? 'fc.gr.action.respond' : 'fc.gr.action.view')} ${gr.grNumber}`}
-                    >
-                      {t(needsAnswer ? 'fc.gr.action.respond' : 'fc.gr.action.view')}
-                    </Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
+            {(statusFilter === 'awaiting' ? rows.filter((r) => r.awaiting) : rows).map(
+              ({ gr, lines, flagged, keptOpen, awaiting: needsAnswer, qc, withoutAsn }) => (
+                <TableRow key={gr.id} data-testid={`supplier-gr-row-${gr.id}`}>
+                  <TableCell>
+                    <Data className="text-xs font-bold text-text-primary whitespace-nowrap">
+                      {gr.grNumber}
+                    </Data>
+                  </TableCell>
+                  <TableCell>
+                    <Data className="text-xs text-text-secondary whitespace-nowrap">
+                      {gr.asnNumber}
+                    </Data>
+                    {withoutAsn && (
+                      <span
+                        className="block text-xs text-warning-hover"
+                        data-testid={`gr-without-asn-${gr.id}`}
+                      >
+                        {t('oc.drill.receipt.withoutAsn')}
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Data className="text-xs text-text-secondary whitespace-nowrap">
+                      {gr.poNumber}
+                    </Data>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    <Data className="text-xs text-text-secondary">
+                      {formatDate(gr.receivedDate)}
+                    </Data>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Data>{qty(sum(lines, 'shipped'))}</Data>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Data>{qty(sum(lines, 'received'))}</Data>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Data className={sum(lines, 'rejected') > 0 ? 'text-danger font-semibold' : ''}>
+                      {qty(sum(lines, 'rejected'))}
+                    </Data>
+                  </TableCell>
+                  <TableCell>
+                    {qc ? (
+                      <StatusPill variant={statusTone(qc)}>{qc}</StatusPill>
+                    ) : (
+                      <span className="text-xs text-text-tertiary">{t('fc.gr.qc.pending')}</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {gr.discrepancyResponse ? (
+                      <StatusPill variant={statusTone(gr.discrepancyResponse.status)}>
+                        {gr.discrepancyResponse.status}
+                      </StatusPill>
+                    ) : flagged ? (
+                      <StatusPill variant="warning">{t('fc.gr.disc.flagged')}</StatusPill>
+                    ) : (
+                      <span className="text-xs text-text-tertiary">{t('fc.gr.disc.none')}</span>
+                    )}
+                    {keptOpen && (
+                      <span
+                        className="block text-xs text-warning-hover"
+                        data-testid={`gr-kept-open-${gr.id}`}
+                      >
+                        {t('fc.gr.tol.keptOpen')}
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right whitespace-nowrap">
+                    {needsAnswer && respondAvailability.kind !== 'held' ? (
+                      <HandoffNotice
+                        availability={respondAvailability}
+                        testId="handoff-gr-respond"
+                      />
+                    ) : (
+                      <Button
+                        variant={needsAnswer ? 'outline' : 'secondary'}
+                        onClick={() => open(gr.id)}
+                        aria-label={`${t(needsAnswer ? 'fc.gr.action.respond' : 'fc.gr.action.view')} ${gr.grNumber}`}
+                      >
+                        {t(needsAnswer ? 'fc.gr.action.respond' : 'fc.gr.action.view')}
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              )
+            )}
           </tbody>
         </Table>
       </div>
