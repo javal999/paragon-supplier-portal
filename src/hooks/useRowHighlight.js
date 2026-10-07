@@ -32,16 +32,19 @@ export const HIGHLIGHTED_ROW_CLASS = 'bg-action-soft';
 /** How long a row stays highlighted before it clears itself. */
 export const AUTO_CLEAR_MS = 6000;
 
-export interface RowHighlight {
-  /** The row id to highlight, or `null` once cleared / not applicable. */
-  readonly id: string | null;
-  /** `true` when the address named a row this page's data no longer has. */
-  readonly missing: boolean;
-  /** Attach to the target row's element; scrolls it into view once. */
-  readonly scrollRef: (el: HTMLElement | null) => void;
-  /** Call when the user picks a different row / changes tab or filter. */
-  readonly clear: () => void;
-}
+/**
+ * `id`:  The row id to highlight, or `null` once cleared / not applicable.
+ * `missing`:  `true` when the address named a row this page's data no longer has.
+ * `scrollRef`:  Attach to the target row's element; scrolls it into view once.
+ * `clear`:  Call when the user picks a different row / changes tab or filter.
+ *
+ * @typedef {{
+ *     readonly id: string | null;
+ *     readonly missing: boolean;
+ *     readonly scrollRef: (el: HTMLElement | null) => void;
+ *     readonly clear: () => void;
+ *   }} RowHighlight
+ */
 
 /**
  * `exists` is asked against the FULL population the page can show (before
@@ -50,17 +53,29 @@ export interface RowHighlight {
  * that would otherwise hide it, the same way `BuyerOrders`' `?po=` already
  * opens its detail panel from the unfiltered order list. Only a row absent
  * from the full population is reported `missing`.
+ * @param {(id: string) => boolean} exists
+ * @returns {RowHighlight}
  */
-export function useRowHighlight(exists: (id: string) => boolean): RowHighlight {
+export function useRowHighlight(exists) {
   const [searchParams] = useSearchParams();
   const targetId = searchParams.get(HIGHLIGHT_PARAM);
   const [cleared, setCleared] = useState(false);
-  const scrolledRef = useRef<string | null>(null);
+  const scrolledRef = useRef(/** @type {string | null} */ (null));
 
-  useEffect(() => {
-    setCleared(false);
-    scrolledRef.current = null;
-  }, [targetId]);
+  // Reset `cleared` for a new target DURING render, not in an effect —
+  // adjusting state this way lets React discard the stale render instead of
+  // committing it and then re-rendering a moment later
+  // (react-hooks/set-state-in-effect). Refs may not be read or written during
+  // render, so the "last seen" value this compares against is state, exactly
+  // as React's own docs do it. `scrolledRef` needs no reset here: a real
+  // target change already gives `activeId` a new value below, which the
+  // `scrollRef` callback (reset's natural home, since it runs post-commit —
+  // never during render) compares against on its own.
+  const [seenTarget, setSeenTarget] = useState(targetId);
+  if (seenTarget !== targetId) {
+    setSeenTarget(targetId);
+    if (cleared) setCleared(false);
+  }
 
   const id = cleared ? null : targetId;
   const missing = id !== null && !exists(id);
@@ -72,7 +87,8 @@ export function useRowHighlight(exists: (id: string) => boolean): RowHighlight {
     return () => clearTimeout(timer);
   }, [activeId]);
 
-  const scrollRef = (el: HTMLElement | null) => {
+  /** @param {HTMLElement | null} el */
+  const scrollRef = (el) => {
     if (el && activeId && scrolledRef.current !== activeId) {
       scrolledRef.current = activeId;
       el.scrollIntoView({ block: 'center' });

@@ -1,4 +1,4 @@
-import React from 'react';
+/** @import React from 'react' */
 import { screen, fireEvent, act } from '@testing-library/react';
 import { renderWithProviders } from '../test/test-utils';
 import { AUTO_CLEAR_MS, HIGHLIGHTED_ROW_CLASS, useRowHighlight } from './useRowHighlight';
@@ -14,7 +14,8 @@ const ROWS = ['row-1', 'row-2', 'row-3'];
 
 const scrollIntoView = () => {};
 
-const Probe: React.FC = () => {
+/** @type {React.FC} */
+const Probe = () => {
   const highlight = useRowHighlight((id) => ROWS.includes(id));
   return (
     <div>
@@ -51,7 +52,8 @@ describe('useRowHighlight', () => {
   it('no `highlight` param: nothing is selected, nothing is reported missing', () => {
     renderWithProviders(<Probe />, { route: '/buyer/inventory' });
     expect(screen.getByTestId('missing').textContent).toBe('false');
-    for (const id of ROWS) expect(screen.getByTestId(`row-${id}`)).not.toHaveAttribute('aria-current');
+    for (const id of ROWS)
+      expect(screen.getByTestId(`row-${id}`)).not.toHaveAttribute('aria-current');
   });
 
   it('a row that exists is selected in the existing aria-current / highlight style', () => {
@@ -65,7 +67,8 @@ describe('useRowHighlight', () => {
   it('a row that no longer exists is reported missing, without error, and nothing is selected', () => {
     renderWithProviders(<Probe />, { route: '/buyer/inventory?highlight=row-404' });
     expect(screen.getByTestId('missing').textContent).toBe('true');
-    for (const id of ROWS) expect(screen.getByTestId(`row-${id}`)).not.toHaveAttribute('aria-current');
+    for (const id of ROWS)
+      expect(screen.getByTestId(`row-${id}`)).not.toHaveAttribute('aria-current');
   });
 
   it('clear() removes the highlight (a later row pick / filter change)', () => {

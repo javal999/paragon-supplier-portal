@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// THE SHARED READ HALF OF THE DEEP-LINK PATTERN (pairs with `src/lib/deepLink.ts`).
+// THE SHARED READ HALF OF THE DEEP-LINK PATTERN (pairs with `src/lib/deepLink.js`).
 //
 // `BuyerOrders.tsx` shipped this exact shape first, one-off, for its own `tab`
 // param: read the query string once, and if it names a value the page
@@ -24,17 +24,18 @@ import { useSearchParams } from 'react-router-dom';
  * Reads `paramKey` off the current address; if it is one of `validValues`,
  * calls `setValue` with it. Returns the raw param (or `null`) so a caller can
  * also use it for something read-only (e.g. a filter banner).
+ * @template {string} T
+ * @param {string} paramKey
+ * @param {readonly T[]} validValues
+ * @param {(value: T) => void} setValue
+ * @returns {string | null}
  */
-export function useUrlEnumParam<T extends string>(
-  paramKey: string,
-  validValues: readonly T[],
-  setValue: (value: T) => void,
-): string | null {
+export function useUrlEnumParam(paramKey, validValues, setValue) {
   const [searchParams] = useSearchParams();
   const raw = searchParams.get(paramKey);
   useEffect(() => {
-    if (raw !== null && (validValues as readonly string[]).includes(raw)) {
-      setValue(raw as T);
+    if (raw !== null && /** @type {readonly string[]} */ (validValues).includes(raw)) {
+      setValue(/** @type {T} */ (raw));
     }
     // Only the param's own value should re-trigger this; `validValues` is a
     // literal array recreated every render and `setValue` is a state setter.

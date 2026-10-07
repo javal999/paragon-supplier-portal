@@ -17,11 +17,11 @@ export const HIGHLIGHT_PARAM = 'highlight';
  * is `undefined` or the empty string — so an item that has no filter for a
  * given destination does not send one, and a normal nav-menu visit to the
  * same path (no params at all) renders identically to before this feature.
+ * @param {string} path
+ * @param {Readonly<Record<string, string | undefined>>} [params]
+ * @returns {string}
  */
-export function deepLink(
-  path: string,
-  params: Readonly<Record<string, string | undefined>> = {},
-): string {
+export function deepLink(path, params = {}) {
   const q = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== '') q.set(key, value);
@@ -36,11 +36,12 @@ export function deepLink(
  * one item's value (a stream, a planning group) — a task's count is over the
  * whole list, so filtering on the first item's value alone hides the rest
  * whenever they don't all match it.
+ * @template T
+ * @param {readonly T[]} items
+ * @param {(item: T) => string | undefined} select
+ * @returns {string | undefined}
  */
-export function sharedValue<T>(
-  items: readonly T[],
-  select: (item: T) => string | undefined,
-): string | undefined {
+export function sharedValue(items, select) {
   if (items.length === 0) return undefined;
   const first = select(items[0]);
   if (first === undefined) return undefined;

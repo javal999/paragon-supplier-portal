@@ -9,19 +9,19 @@ describe('deepLink — the one place a task/alert destination URL is built', () 
 
   it('appends every defined, non-empty param', () => {
     expect(deepLink('/buyer/alerts', { tab: 'open', risk: 'high' })).toBe(
-      '/buyer/alerts?tab=open&risk=high',
+      '/buyer/alerts?tab=open&risk=high'
     );
   });
 
   it('drops undefined and empty-string params, keeping the rest', () => {
-    expect(deepLink('/buyer/capacity', { supplier: undefined, status: 'gap', materialGroup: '' })).toBe(
-      '/buyer/capacity?status=gap',
-    );
+    expect(
+      deepLink('/buyer/capacity', { supplier: undefined, status: 'gap', materialGroup: '' })
+    ).toBe('/buyer/capacity?status=gap');
   });
 
   it('encodes values that need it', () => {
     expect(deepLink('/buyer/collaboration', { material: 'RM 100/A' })).toBe(
-      '/buyer/collaboration?material=RM+100%2FA',
+      '/buyer/collaboration?material=RM+100%2FA'
     );
   });
 

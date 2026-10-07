@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+/** @import React from 'react' */
+import { useState } from 'react';
 import { screen } from '@testing-library/react';
 import { renderWithProviders } from '../test/test-utils';
 import { useUrlEnumParam } from './useUrlEnumParam';
@@ -10,11 +11,13 @@ import { useUrlEnumParam } from './useUrlEnumParam';
 // destination page reads its tab/filter through this ONE hook.
 // ────────────────────────────────────────────────────────────────────────────
 
-type Tab = 'all' | 'open' | 'closed';
-const TABS: readonly Tab[] = ['all', 'open', 'closed'];
+/** @typedef {'all' | 'open' | 'closed'} Tab */
+/** @type {readonly Tab[]} */
+const TABS = ['all', 'open', 'closed'];
 
-const Probe: React.FC = () => {
-  const [tab, setTab] = useState<Tab>('all');
+/** @type {React.FC} */
+const Probe = () => {
+  const [tab, setTab] = useState(/** @type {Tab} */ ('all'));
   useUrlEnumParam('tab', TABS, setTab);
   return <span data-testid="tab">{tab}</span>;
 };
