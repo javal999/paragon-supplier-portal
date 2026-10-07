@@ -444,7 +444,7 @@ describe('Alert, Home tasks and the Order summary', () => {
     expect(within(alert).getByText('High')).toBeInTheDocument();
     expect(within(alert).getByRole('link', { name: 'Open commitments & gaps' })).toHaveAttribute(
       'href',
-      '/buyer/collaboration?material=RM-STEAR-7300'
+      '/buyer/collaboration?material=RM-STEAR-7300&supplier=sup-002'
     );
   });
 

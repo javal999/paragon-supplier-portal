@@ -162,7 +162,10 @@ const SupplierForecastCommitments = () => {
   // supplier's PO gets `notFound`: its PO read never returned it (BR-06).
   const drill = usePoDrillFilter();
   const drillMaterials = drill.kind === 'filtered' ? drill.materials : null;
-  const [stream, setStream] = useState(/** @type {ForecastStream | null} */ (null));
+  // Deep-link read: `?stream=` (one-shot, like `?material=` below) pre-selects
+  // the stream. An unknown value is ignored by `activeStream`'s own
+  // `streams.includes(stream)` check, so no separate whitelist is needed here.
+  const [stream, setStream] = useState(/** @type {ForecastStream | null} */ (params.get('stream')));
   const [mode, setMode] = useState(/** @type {ViewMode} */ ('forecast'));
   const [material, setMaterial] = useState(/** @type {string} */ (params.get('material') ?? ''));
   const [drafts, setDrafts] = useState(/** @type {Record<string, RowDraft>} */ ({}));
