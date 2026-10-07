@@ -43,6 +43,8 @@ export const forecastUxEn = {
 
   // About this page (F-08)
   'fux.about.title': 'About this page',
+  'fux.collapse.show': 'Show details',
+  'fux.collapse.hide': 'Hide details',
 
   // One date line (F-26)
   'fux.asOf': 'Data as of',
@@ -131,6 +133,8 @@ export const forecastUxId = {
   'fux.banner': 'Data contoh. Tidak ada yang sampai ke pemasok atau SAP.',
 
   'fux.about.title': 'Tentang halaman ini',
+  'fux.collapse.show': 'Tampilkan rincian',
+  'fux.collapse.hide': 'Sembunyikan rincian',
 
   'fux.asOf': 'Data per',
 
