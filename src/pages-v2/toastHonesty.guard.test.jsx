@@ -675,6 +675,15 @@ describe('unbacked-toast honesty guard (R1)', () => {
     expect(shipments.flatMap((s) => s.keys)).toContain('supplierShipments.toast.export.title');
   });
 
+  // `/register` holds no toast site, so its folder is pinned in the FILE
+  // population the sites are derived from rather than in the sites.
+  it('the SupplierRegistration folder is in the scanned files', () => {
+    const files = pageFiles(PAGES_DIR);
+    expect(files).toContain('SupplierRegistration/index.jsx');
+    expect(files).toContain('SupplierRegistration/components/ContactsStep.jsx');
+    expect(files).not.toContain('SupplierRegistration.jsx');
+  });
+
   /**
    * ⚠️ **AN EXCLUSION THAT EXCLUDES NOTHING READS EXACTLY LIKE A WORKING ONE.**
    * If the refusal property stopped matching — a renamed identifier, a changed
