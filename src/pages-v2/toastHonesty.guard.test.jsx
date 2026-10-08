@@ -715,8 +715,11 @@ describe('unbacked-toast honesty guard (R1)', () => {
       expect(readFileSync(join(PAGES_DIR, f), 'utf8')).toMatch(/\btoast\s*\(\s*\{/);
     }
     expect(files).toContain('BuyerReschedule/index.jsx');
-    // A split page's HOOKS are scanned too: `BuyerOrderPlan`'s draft toasts
-    // moved from the page file into `hooks/useDraftCallOff.js`.
+  });
+
+  // A split page's HOOKS are scanned too: `BuyerOrderPlan`'s draft toasts
+  // moved from the page file into `hooks/useDraftCallOff.js`.
+  it('a split page’s hook files are scanned (BuyerOrderPlan)', () => {
     const files = pageFiles(PAGES_DIR);
     expect(files).toContain('BuyerOrderPlan/index.jsx');
     expect(files).toContain('BuyerOrderPlan/hooks/useDraftCallOff.js');
