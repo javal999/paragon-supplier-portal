@@ -185,7 +185,7 @@ const TopBarSearch = () => {
         }}
         onKeyDown={onKeyDown}
         autoComplete="off"
-        className="w-full h-9 pl-9 pr-3 rounded-md bg-bg-hover text-sm text-text-primary placeholder:text-text-tertiary border border-transparent focus:outline-none focus:border-border-input focus:bg-bg-surface"
+        className="w-full h-9 pl-9 pr-3 rounded-md bg-bg-hover text-base sm:text-sm text-text-primary placeholder:text-text-tertiary border border-transparent focus:outline-none focus:border-border-input focus:bg-bg-surface"
       />
       {/* Below `sm` the input is a few characters wide, so the list spans the
           viewport under the header instead; from `sm` it hangs from the input's

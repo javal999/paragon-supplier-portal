@@ -121,6 +121,15 @@ describe('TopBarSearch — the dropdown', () => {
     expect(screen.getByRole('listbox')).toHaveClass('max-h-80', 'overflow-y-auto');
   });
 
+  it('uses 16px text below `sm`, so iOS Safari does not zoom the page when the input is focused', () => {
+    // iOS Safari zooms into any focused input whose text is under 16px and
+    // keeps the zoom after navigating, which cut off the right edge of the
+    // page opened from a result. 14px is kept from `sm` up.
+    const input = renderSearch();
+    expect(input).toHaveClass('text-base', 'sm:text-sm');
+    expect(input).not.toHaveClass('text-sm');
+  });
+
   it('searches the supplier menu for a supplier seat', () => {
     const input = renderSearch(SUPPLIER);
     type(input, 'invitations');
