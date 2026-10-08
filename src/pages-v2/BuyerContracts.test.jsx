@@ -74,7 +74,10 @@ describe('BuyerContracts — the create wizard numerics are text, so the parser 
       screen.getByPlaceholderText('e.g. Halal Emulsifier Master Supply Agreement 2027'),
       { target: { value: 'Emulsifier Master Supply 2027' } }
     );
-    const selects = screen.getAllByRole('combobox');
+    // The top bar search is a combobox too; leave it out of the positional pick.
+    const selects = screen
+      .getAllByRole('combobox')
+      .filter((el) => el.getAttribute('aria-label') !== 'Search the portal');
     fireEvent.change(selects[0], { target: { value: 'Supply' } });
     fireEvent.change(selects[1], { target: { value: 'Packaging' } });
     fireEvent.click(screen.getAllByRole('radio')[0]);

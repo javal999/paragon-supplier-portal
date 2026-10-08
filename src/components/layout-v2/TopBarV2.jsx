@@ -1,9 +1,10 @@
 /** @import React from 'react' */
-import { Menu, Search, Bell } from 'lucide-react';
+import { Menu, Bell } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { resolveEnvBadge } from '@lib/envBadge';
 import LanguageMenu from './LanguageMenu';
 import IdentityPanel from './IdentityPanel';
+import TopBarSearch from './TopBarSearch';
 
 /**
  * @typedef {object} TopBarV2Props
@@ -56,18 +57,7 @@ const TopBarV2 = ({ navOpen = false, navControlsId, navButtonRef, onToggleNav })
 
       {/* Center search */}
       <div className="flex-1 min-w-0 flex justify-center">
-        <div className="relative w-full max-w-md">
-          <Search
-            size={14}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none"
-          />
-          <input
-            type="search"
-            aria-label={t('topbar.searchLabel')}
-            placeholder={t('topbar.search')}
-            className="w-full h-9 pl-9 pr-3 rounded-md bg-bg-hover text-sm text-text-primary placeholder:text-text-tertiary border border-transparent focus:outline-none focus:border-border-input focus:bg-bg-surface"
-          />
-        </div>
+        <TopBarSearch />
       </div>
 
       {/* Right cluster */}
