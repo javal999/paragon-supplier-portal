@@ -25,6 +25,7 @@ import { takesInjectedNow } from './dayCounts';
 import { WIRED_COMMAND_TARGETS } from '@services/data/mock/MockCommandService';
 import '@services/transitions/index';
 import { getFlow } from '@services/transitions/registry';
+import { pageFolderFiles } from '@test/pageFiles';
 
 const FILES = sourceFiles();
 
@@ -49,11 +50,14 @@ describe('POPULATION + MATCHER CONTROLS — before any row is believed', () => {
     // `BuyerContracts.jsx` compares `c.status === 'Expired'` several times and
     // writes it never. The broken matcher returned those as producers, which
     // would have classified a fixture-only state as computed.
-    const cmp = writeSites('Expired', ['src/pages-v2/BuyerContracts.jsx']);
+    // The page is the `BuyerContracts/` FOLDER since the Phase 5 split, so
+    // every file in it is scanned.
+    const page = pageFolderFiles('src/pages-v2', 'BuyerContracts').map((f) => `src/pages-v2/${f}`);
+    const cmp = writeSites('Expired', page);
     expect(cmp, 'a comparison was counted as a write').toHaveLength(0);
     // …and the file really does contain the comparison, so the zero above is a
     // matcher result and not an empty file.
-    expect(readFileSync('src/pages-v2/BuyerContracts.jsx', 'utf8')).toContain("=== 'Expired'");
+    expect(page.map((f) => readFileSync(f, 'utf8')).join('\n')).toContain("=== 'Expired'");
   });
 
   it('⚠️ THE SCAN IS ENTITY-SCOPED — a shared literal is not one population', () => {

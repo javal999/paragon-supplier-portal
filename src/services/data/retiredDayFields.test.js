@@ -25,6 +25,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { declaresField } from '@test/declaredFields';
+import { pageFolderSource } from '@test/pageFiles';
 import { mockContracts } from '@data/mockContracts';
 import { mockShipments } from '@data/mockShipments';
 import { COMPLIANCE_DATA } from './mock/fixtures/buyerRisk';
@@ -63,7 +64,8 @@ describe('⚠️ Contract.daysUntilExpiry is RETIRED', () => {
   });
 
   it('the wizard no longer MINTS it — the one non-fixture writer is gone', () => {
-    const src = readFileSync('src/pages-v2/BuyerContracts.jsx', 'utf8');
+    // The whole `BuyerContracts/` page folder since the Phase 5 split.
+    const src = pageFolderSource('src/pages-v2', 'BuyerContracts');
     // Neither the computation nor the shorthand write survives.
     expect(/const daysUntilExpiry = Math\.round/.test(src)).toBe(false);
     expect(/^\s*daysUntilExpiry,\s*$/m.test(src)).toBe(false);
