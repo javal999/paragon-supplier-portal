@@ -71,6 +71,13 @@ const TopBarSearch = () => {
   const showPopup = open && hasQuery && debouncedQuery.trim() !== '';
   const showList = showPopup && ordered.length > 0;
 
+  // Closing the list drops its highlight, so a dismissed result can't be opened
+  // by Enter or come back highlighted when the list reopens.
+  const close = () => {
+    setOpen(false);
+    setActiveIndex(-1);
+  };
+
   // Close on a click outside the input and its list (LanguageMenu's convention).
   useEffect(() => {
     if (!open) return undefined;
@@ -78,6 +85,7 @@ const TopBarSearch = () => {
     const onDocPointer = (e) => {
       if (rootRef.current && !rootRef.current.contains(/** @type {Node} */ (e.target))) {
         setOpen(false);
+        setActiveIndex(-1);
       }
     };
     document.addEventListener('mousedown', onDocPointer);
@@ -121,12 +129,14 @@ const TopBarSearch = () => {
         return;
       }
       case 'Enter': {
+        // An IME is still composing: this Enter commits the text, it is not a pick.
+        if (e.nativeEvent.isComposing || e.keyCode === 229) return;
         e.preventDefault();
         // The highlight belongs to the list on screen; if the text has moved on
         // since the last filter, match the text as typed instead of waiting.
         const current = debouncedQuery === query;
         const target =
-          current && highlighted >= 0
+          current && showList && highlighted >= 0
             ? ordered[highlighted]
             : (current ? ordered : groupByCategory(matchEntries(entries, query, t)).ordered)[0];
         if (target) openResult(target.path);
@@ -137,11 +147,11 @@ const TopBarSearch = () => {
         // own Escape-to-clear.
         if (showPopup) {
           e.preventDefault();
-          setOpen(false);
+          close();
         }
         return;
       case 'Tab':
-        setOpen(false);
+        close();
         return;
       default:
         return;
@@ -177,8 +187,11 @@ const TopBarSearch = () => {
         autoComplete="off"
         className="w-full h-9 pl-9 pr-3 rounded-md bg-bg-hover text-sm text-text-primary placeholder:text-text-tertiary border border-transparent focus:outline-none focus:border-border-input focus:bg-bg-surface"
       />
+      {/* Below `sm` the input is a few characters wide, so the list spans the
+          viewport under the header instead; from `sm` it hangs from the input's
+          right edge, at least 20rem wide but never wider than the viewport. */}
       {showPopup ? (
-        <div className="absolute left-0 right-0 top-full mt-1 z-50 rounded-md border border-border-subtle bg-bg-surface shadow-lg overflow-hidden">
+        <div className="fixed inset-x-4 top-14 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:w-full sm:min-w-[min(20rem,calc(100vw-2rem))] mt-1 z-50 rounded-md border border-border-subtle bg-bg-surface shadow-lg overflow-hidden">
           {showList ? (
             <div
               id={listboxId}
@@ -223,12 +236,21 @@ const TopBarSearch = () => {
               ))}
             </div>
           ) : (
-            <div role="status" className="px-3 py-3 text-sm text-text-secondary">
+            <div className="px-3 py-3 text-sm text-text-secondary">
               {t('topbar.searchNoResults', { query: debouncedQuery.trim() })}
             </div>
           )}
         </div>
       ) : null}
+      {/* Always mounted, so a screen reader hears each change rather than a
+          region that arrives already filled. Updates once per debounce. */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {showList
+          ? t('topbar.searchCount', { count: ordered.length })
+          : showPopup
+            ? t('topbar.searchNoResults', { query: debouncedQuery.trim() })
+            : ''}
+      </div>
     </div>
   );
 };

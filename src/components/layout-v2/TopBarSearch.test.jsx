@@ -104,6 +104,23 @@ describe('TopBarSearch — the dropdown', () => {
     expect(screen.getByRole('listbox')).toHaveClass('max-h-80', 'overflow-y-auto');
   });
 
+  it('below `sm` spans the viewport under the header; from `sm` hangs from the input, at least 20rem wide', () => {
+    const input = renderSearch();
+    type(input, 'supplier');
+    const popup = /** @type {HTMLElement} */ (screen.getByRole('listbox').parentElement);
+    expect(popup).toHaveClass('fixed', 'inset-x-4', 'top-14', 'mt-1');
+    expect(popup).toHaveClass(
+      'sm:absolute',
+      'sm:left-auto',
+      'sm:right-0',
+      'sm:top-full',
+      'sm:w-full',
+      'sm:min-w-[min(20rem,calc(100vw-2rem))]'
+    );
+    expect(popup).not.toHaveClass('left-0');
+    expect(screen.getByRole('listbox')).toHaveClass('max-h-80', 'overflow-y-auto');
+  });
+
   it('searches the supplier menu for a supplier seat', () => {
     const input = renderSearch(SUPPLIER);
     type(input, 'invitations');
@@ -179,6 +196,73 @@ describe('TopBarSearch — keyboard', () => {
     fireEvent.keyDown(input, { key: 'ArrowDown' });
     expect(screen.getByRole('listbox')).toBeInTheDocument();
   });
+
+  it('Tab closes the list and keeps the text', () => {
+    const input = renderSearch();
+    type(input, 'supplier');
+    fireEvent.keyDown(input, { key: 'Tab' });
+    expect(screen.queryByRole('listbox')).toBeNull();
+    expect(input).toHaveAttribute('aria-expanded', 'false');
+    expect(input.value).toBe('supplier');
+  });
+
+  it('closing the list drops its highlight: Enter opens the first match, not the dismissed one', () => {
+    const input = renderSearch();
+    type(input, 'supplier');
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'Escape' });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(screen.getByTestId('location')).toHaveTextContent('/buyer/comm-hub');
+  });
+
+  it('a reopened list starts with nothing highlighted', () => {
+    const input = renderSearch();
+    type(input, 'supplier');
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'outside' }));
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+    expect(input).not.toHaveAttribute('aria-activedescendant');
+  });
+
+  it('Enter that commits an IME composition does not open a page', () => {
+    const input = renderSearch();
+    type(input, 'supplier');
+    fireEvent.keyDown(input, { key: 'Enter', isComposing: true });
+    fireEvent.keyDown(input, { key: 'Enter', keyCode: 229 });
+    expect(screen.getByTestId('location')).toHaveTextContent('/buyer/home');
+    expect(input.value).toBe('supplier');
+  });
+});
+
+describe('TopBarSearch — announcements', () => {
+  it('keeps one polite status region mounted, empty until a filter has run', () => {
+    const input = renderSearch();
+    const status = screen.getByRole('status');
+    expect(status).toHaveAttribute('aria-live', 'polite');
+    expect(status).toHaveClass('sr-only');
+    expect(status).toHaveTextContent(/^$/);
+
+    fireEvent.change(input, { target: { value: 'invoice' } });
+    expect(screen.getByRole('status')).toBe(status);
+    expect(status).toHaveTextContent(/^$/);
+  });
+
+  it('announces the result count after each debounce, singular and plural', () => {
+    const input = renderSearch();
+    type(input, 'invoice');
+    const status = screen.getByRole('status');
+    expect(status).toHaveTextContent(/^1 page$/);
+    type(input, 'supplier');
+    expect(screen.getByRole('status')).toBe(status);
+    expect(status).toHaveTextContent(`${screen.getAllByRole('option').length} pages`);
+    type(input, 'zzqx');
+    expect(status).toHaveTextContent('No pages match “zzqx”');
+    fireEvent.keyDown(input, { key: 'Escape' });
+    expect(status).toHaveTextContent(/^$/);
+  });
 });
 
 describe('TopBarSearch — mouse', () => {
@@ -189,6 +273,13 @@ describe('TopBarSearch — mouse', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('/buyer/suppliers');
     expect(input.value).toBe('');
     expect(screen.queryByRole('listbox')).toBeNull();
+  });
+
+  it('pressing on a result does not move focus out of the input', () => {
+    const input = renderSearch();
+    type(input, 'supplier');
+    const notCancelled = fireEvent.mouseDown(screen.getByRole('option', { name: 'Suppliers' }));
+    expect(notCancelled).toBe(false);
   });
 
   it('a click outside closes the list and keeps the text', () => {
@@ -206,6 +297,7 @@ describe('TopBarSearch — mouse', () => {
     type(input, 'supplier');
     type(input, '');
     expect(screen.queryByRole('listbox')).toBeNull();
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.queryByText(/No pages match/)).toBeNull();
+    expect(screen.getByRole('status')).toHaveTextContent(/^$/);
   });
 });
