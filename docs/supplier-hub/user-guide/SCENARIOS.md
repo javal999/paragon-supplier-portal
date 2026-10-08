@@ -1,7 +1,7 @@
 # Paragon Supplier Portal: use-case scenario catalog
 
 **Status:** Phase 1, approved by PTI on 2026-10-06 with supplier onboarding removed. The deck is built from this file after approval.
-**Basis:** the code on `main` at `7078ea3`. All paths are under `src/`. Every behavior cites a `file:line`. If a behavior has no citation, it is under section 4 (Unverified and known limits).
+**Basis:** the code on `main` at `7078ea3`. All paths are under `src/`. Every behavior cites a `file:line`. Citations into pages later split into folders (frontend-standard Phase 5) were re-pointed on 2026-10-08 to the file in the folder that now holds the code; every other line number is as of `7078ea3`. If a behavior has no citation, it is under section 4 (Unverified and known limits).
 **Data:** all data is in-memory demo data. Nothing reaches SAP. The demo date is 2026-08-31 (`services/data/fixturePresent.js:184,206`).
 
 ---
@@ -71,14 +71,14 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | 1 | PTI-Req | Purchase requisitions (URL `/buyer/purchase-requisition`) | **New PR**, then **Submit for approval** | Draft → Pending Approval | `pages-v2/BuyerRequisitions.jsx:697,908-920` |
 | 2 | PTI-Proc | same | **Approve** | Approved | `pages-v2/BuyerRequisitions.jsx:996-1038` |
 | 3 | PTI-Proc | same | **Raise sourcing event**. Opens the RFQ wizard pre-filled; saving the RFQ moves the PR. | PR: Sourcing Event | `pages-v2/BuyerRequisitions.jsx:636-637,1194-1201`; `services/transitions/cascades.js:62` |
-| 4 | PTI-Proc | Sourcing → **RFQ** | **New RFQ** → Define Scope / Invite Suppliers / Terms & Deadlines / Review & Submit → **Save RFQ draft**, then **Publish RFQ** | Draft → Open | `pages-v2/BuyerSourcing.jsx:2953,4227,3524-3534` |
-| 5 | Sup-Com | Sourcing → **RFQ invitations** | **I will respond** → **Submit quote** → **Submit quotation** | Quotation Submitted | `pages-v2/rfqs/RfqEngagementControls.jsx:192`; `pages-v2/SupplierRFQs.jsx:516,1358` |
-| 6 | PTI-Proc | RFQ | **Move to review** | Under Review | `pages-v2/BuyerSourcing.jsx:3940-3944` |
+| 4 | PTI-Proc | Sourcing → **RFQ** | **New RFQ** → Define Scope / Invite Suppliers / Terms & Deadlines / Review & Submit → **Save RFQ draft**, then **Publish RFQ** | Draft → Open | `pages-v2/BuyerSourcing/components/SourcingHeader.jsx:82`; `pages-v2/BuyerSourcing/components/RfqWizardModal.jsx:216`; `pages-v2/BuyerSourcing/components/RfqLifecycleActions.jsx:83-87` |
+| 5 | Sup-Com | Sourcing → **RFQ invitations** | **I will respond** → **Submit quote** → **Submit quotation** | Quotation Submitted | `pages-v2/rfqs/RfqEngagementControls.jsx:192`; `pages-v2/SupplierRFQs/components/RFQCard.jsx:201`; `pages-v2/SupplierRFQs/components/QuotePanel.jsx:76-78` |
+| 6 | PTI-Proc | RFQ | **Move to review** | Under Review | `pages-v2/BuyerSourcing/components/ComparisonTable.jsx:134-138` |
 | 7 | PTI-Proc | RFQ → event page | **Open the round**, for a shortlist of suppliers who quoted | Round Open | `pages-v2/BuyerSourcingEvent.jsx:1019-1038` |
 | 8 | Sup-Com | RFQ invitations → revised quotes | **Send the revised quote** | Quotation revised | `pages-v2/SupplierNegotiations.jsx:231-283` |
 | 9 | PTI-Proc | RFQ event page | **Close the round**, then award per item (Award, or Split by % / by quantity) → **Award the event** | Awarded (or Partly awarded) | `pages-v2/BuyerSourcingEvent.jsx:910-917,1044-1118`; `pages-v2/rfx/AwardPanel.jsx:669` |
 | 10 | PTI-Proc | same | **Mark raised in SAP** → **Save SAP number** | Award locked | `services/transitions/flows/rfq.flow.js:210-257` |
-| 11 | Sup-Com | RFQ invitations → Awards & history | Sees "Your share: x%" | – | `pages-v2/SupplierRFQs.jsx:208-211`; `pages-v2/SupplierNegotiations.jsx:347-353` |
+| 11 | Sup-Com | RFQ invitations → Awards & history | Sees "Your share: x%" | – | `pages-v2/SupplierRFQs/utils.js:132-135`; `pages-v2/SupplierNegotiations.jsx:347-353` |
 
 **RFI and RFP use the same pattern:**
 - **RFI:** **New information request** → **Send to suppliers** (Open) → supplier **Send answers** → **Close the event** (`pages-v2/BuyerRfi.jsx:156,369,395`; `pages-v2/SupplierRfi.jsx:409`).
@@ -96,7 +96,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
 | 1 | PTI-Proc | RFQ event page (rfq-020) | Opens the award panel | "This RFQ cannot be awarded: no supplier that quoted passes the compliance gate…" | `lib/i18n/rfx.js:278`; `pages-v2/BuyerSourcingEvent.jsx:1092-1098` |
-| 2 | PTI-Proc | RFQ | **Cancel RFQ** | Cancelled | `pages-v2/BuyerSourcing.jsx:3560-3569` |
+| 2 | PTI-Proc | RFQ | **Cancel RFQ** | Cancelled | `pages-v2/BuyerSourcing/components/RfqLifecycleActions.jsx:110-117` |
 
 **Negative end-to-end: PR rejected**
 
@@ -109,7 +109,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 
 | Condition | What the system does | Who acts next | Menu | Evidence |
 |---|---|---|---|---|
-| Quote after the deadline | Refused: "Quotation could not be submitted" (PAST_DEADLINE). The RFQ itself stays Open, because nothing closes it automatically. | PTI-Proc extends the deadline | RFQ invitations | `services/data/mock/MockCommandService.js:4659`; `pages-v2/SupplierRFQs.jsx:1077-1088`; `services/transitions/flows/rfq.flow.js:136-158` |
+| Quote after the deadline | Refused: "Quotation could not be submitted" (PAST_DEADLINE). The RFQ itself stays Open, because nothing closes it automatically. | PTI-Proc extends the deadline | RFQ invitations | `services/data/mock/MockCommandService.js:4659`; `pages-v2/SupplierRFQs/hooks/useQuoteSubmission.js:188-199`; `services/transitions/flows/rfq.flow.js:136-158` |
 | Extend deadline | For every supplier or for selected suppliers. The new date must be later than the current one. | Sup-Com | RFQ event page | `pages-v2/BuyerSourcingEvent.jsx:484-514` |
 | Split award does not total 100% | Refused (AWARD_SPLIT_INCOMPLETE) | PTI-Proc corrects the split | RFQ event page | `services/sourcing/awardShape.js:286-289` |
 | Award departs from the best-scored quote | A reason is required | PTI-Proc | RFQ event page | `services/data/mock/MockCommandService.js:4950-4975` |
@@ -127,8 +127,8 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 |---|---|---|---|---|---|
 | 1 | Sup-Ful | Orders → **Purchase orders** | **Acknowledge receipt** | Acknowledged | `pages-v2/SupplierOrders.jsx:865-872` |
 | 2 | Sup-Ful | same | **Confirm order**, with confirmed qty and date | Confirmed | `pages-v2/SupplierOrders.jsx:897,934-942` |
-| 3 | Sup-Ful | Orders → **Shipments & ASN** | **Create ASN** → **Submit ASN** | ASN Submitted | `pages-v2/SupplierShipments.jsx:1259-1294,1983-2002` |
-| 4 | PTI-Rcv | Order collaboration → **Goods receipts** | **New GR** → 4-step wizard → **Create GR** | Approved → Posted to SAP | `components/v2-features/GRInspectionWizard.jsx:1588-1739`; `services/transitions/grRollup.js:55-79` |
+| 3 | Sup-Ful | Orders → **Shipments & ASN** | **Create ASN** → **Submit ASN** | ASN Submitted | `pages-v2/SupplierShipments/hooks/useAsnRowCommands.js:66-101`; `pages-v2/SupplierShipments/index.jsx:310-324` |
+| 4 | PTI-Rcv | Order collaboration → **Goods receipts** | **New GR** → 4-step wizard → **Create GR** | Approved → Posted to SAP | `components/v2-features/GRInspectionWizard/hooks/useCompleteReceipt.js:75-226`; `services/transitions/grRollup.js:55-79` |
 | 5 | Sup-BO | Invoices → **Invoices** | **New invoice** → **Submit invoice** | Submitted → Matched | `pages-v2/SupplierInvoices.jsx:429-528`; `services/transitions/cascades.js:44-46` |
 | 6 | PTI-Fin | Invoices → **Invoices** | **Release payment** → **Confirm release — {amount}** (Approved invoices only, see section 4) | Payment Released | `pages-v2/BuyerInvoices.jsx:1136-1157,507-560` |
 
@@ -464,7 +464,7 @@ A reader might expect these to work. The code shows they do not, or that they ar
 **Requisitions and contracts**
 
 4. **PR to PO directly is not available.** The PO is raised in S/4. (`lib/i18n/requisitions.js:122-123`)
-5. **"New Contract" creates nothing.** It ends with "No contract was created". Contract actions belong to S/4. (`pages-v2/BuyerContracts.jsx:606-623`; `lib/i18n/contracts.js:178`; `services/transitions/flows/contract.flow.js:46-120`)
+5. **"New Contract" creates nothing.** It ends with "No contract was created". Contract actions belong to S/4. (`pages-v2/BuyerContracts/index.jsx:171-208`; `lib/i18n/contracts.js:178`; `services/transitions/flows/contract.flow.js:46-120`)
 6. **Delivery agreement releases are simulated:** "Released in the portal (simulated) — not posted to SAP". (`services/data/mock/MockDeliveryService.js:16-20,83-125`)
 
 **PO to payment**
