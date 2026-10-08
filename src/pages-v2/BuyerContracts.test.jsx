@@ -60,9 +60,9 @@ describe('BuyerContracts — four honest states', () => {
 // — because that is locale-independent and jsdom-visible. The behavioural specs
 // stack on top and are honest about what they can prove.
 //
-// This page has NO second lock available: it reads via `useContracts()` and
-// fabricates the created contract into local state (CTR-FABRICATION-01), so
-// there is no dispatcher and no `requiredFields` behind the gate. These specs
+// This page has NO second lock available: it reads via `useContracts()` and its
+// terminal act refuses rather than creating anything (CTR-FABRICATION-01, closed
+// in f5338c2), so there is no dispatcher and no `requiredFields` behind the gate. These specs
 // are guarding the only lock there is.
 describe('BuyerContracts — the create wizard numerics are text, so the parser is load-bearing', () => {
   /** Drive the wizard to step 2 (Terms), where both numbers live. */
