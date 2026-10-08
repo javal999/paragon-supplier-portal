@@ -480,7 +480,7 @@ A reader might expect these to work. The code shows they do not, or that they ar
 
 **Forecast and planning**
 
-10. **"Publish to suppliers" is always refused on sample data:** "Nothing can be published until real data arrives…". Published versions exist only as demo data, or through "Move demand". (`pages-v2/BuyerStabilise.jsx:781-784`; `services/data/mock/MockCommandService.js:3380-3396`)
+10. **"Publish to suppliers" is always refused on sample data:** "Nothing can be published until real data arrives…". Published versions exist only as demo data, or through "Move demand". (`pages-v2/BuyerStabilise/components/PublishSection.jsx:73-76`; `services/data/mock/MockCommandService.js:3380-3396`)
 11. **Order-plan drafts cannot be released** until the SAP feed is live. (`lib/i18n/orderPlan.js:144-149`)
 12. **Reschedule actions are off on sample data:** "Send change to supplier" and "Mark as taken to SAP". (`pages-v2/BuyerReschedule/index.jsx:84`; `pages-v2/BuyerReschedule/components/ProposalAction.jsx:60-135`)
 

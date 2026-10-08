@@ -852,6 +852,9 @@ describe('DP2-BUTTON-01 — Export never occupies the primary (action-blue) slot
     expect(scanned).toContain('BuyerOrderPlan/index.jsx');
     expect(scanned).toContain('BuyerOrderPlan/components/RecActionCell.jsx');
     expect(scanned).not.toContain('BuyerOrderPlan.jsx');
+    expect(scanned).toContain('BuyerStabilise/index.jsx');
+    expect(scanned).toContain('BuyerStabilise/components/PublishSection.jsx');
+    expect(scanned).toContain('BuyerStabilise/hooks/usePublishChecklist.js');
     expect(scanned).not.toContain('shipments/CarrierPicker.jsx');
     expect(scanned).not.toContain('rfqs/TieredQuoteForm.jsx');
     expect(scanned).not.toContain('BuyerCompliance.jsx');
