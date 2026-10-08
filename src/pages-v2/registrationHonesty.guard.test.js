@@ -26,8 +26,19 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { registrationEn, registrationId } from '@lib/i18n/registration';
+import { pageFiles } from '@test/pageFiles';
 
-const RAW = readFileSync(resolve(__dirname, 'SupplierRegistration.jsx'), 'utf-8');
+/**
+ * Every shipped file of the `/register` page. The page was one file until the
+ * Phase 5 split (PAGE-SPLIT-GUIDE) made it a folder — `index.jsx` plus
+ * `components/`, `hooks/`, `utils.js`, `const.js` — so the guard reads ALL of
+ * them, concatenated: the fabrication could return in any one. Derived through
+ * `pageFiles`, never listed by hand, so a new file in the folder joins the
+ * population with nobody editing this spec.
+ */
+const PAGE_FILES = pageFiles(__dirname).filter((f) => f.startsWith('SupplierRegistration/'));
+
+const RAW = PAGE_FILES.map((f) => readFileSync(resolve(__dirname, f), 'utf-8')).join('\n');
 
 /**
  * ⚠️ **COMMENTS ARE STRIPPED, AND THE FIRST RUN OF THIS GUARD IS WHY.**
@@ -114,6 +125,13 @@ describe('POPULATION CONTROL — nothing below means anything without this', () 
   it('the source really was read, and the locale maps really are populated', () => {
     // Membership, never a count: a wrong path returns '' and every absence
     // assertion in this file would then pass over nothing.
+    // The page folder's shell and the end screen are both in the population,
+    // and a sibling page is not (the filter is a prefix, so probe its edge).
+    expect(PAGE_FILES).toContain('SupplierRegistration/index.jsx');
+    expect(PAGE_FILES).toContain('SupplierRegistration/components/SuccessScreen.jsx');
+    expect(PAGE_FILES).toContain('SupplierRegistration/hooks/useRegistrationWizard.js');
+    expect(PAGE_FILES).not.toContain('SupplierRegistration.test.jsx');
+    expect(PAGE_FILES.some((f) => f.startsWith('SupplierRFQs/'))).toBe(false);
     expect(SOURCE).toContain('const SupplierRegistration');
     expect(SOURCE).toContain('registration.success.headline');
     for (const [name, map] of LOCALES) {
