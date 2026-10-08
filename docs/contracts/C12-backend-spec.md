@@ -76,10 +76,12 @@ elsewhere. **Derived as the intersection, and the pin re-derives it.**
 document number; the TMS owns the shipment record. We CARRY identity, we do not
 ASSIGN it. A portal-minted number is a fact about a system we do not own.
 
-⚠️ **AND THIS REPOSITORY VIOLATES ITS OWN RULE IN ONE PLACE, WHICH YOU WILL READ
-AS PERMISSION IF NOBODY TELLS YOU.** `src/pages-v2/BuyerContracts/index.jsx` mints
-`CTR-${year}-${n}` client-side (`CTR-FABRICATION-01`, filed, unscheduled). It is
-a defect, not a pattern. C11 V15 records it on the invariant it contradicts.
+⚠️ **THIS REPOSITORY VIOLATED ITS OWN RULE IN ONE PLACE, AND THE REPAIR IS THE
+PATTERN — NOT THE VIOLATION.** *(Amended 2026-10-07.)* The BuyerContracts
+create wizard minted `CTR-${year}-${n}` client-side until `CTR-FABRICATION-01`
+closed (`f5338c2`, findings §103). Its terminal act now refuses: no row is
+created, and the page says the outline agreement is raised in S/4HANA and arrives
+here as a fact. Copy that, not a POST. C11 V15 records the rule; no gate enforces it.
 
 ### 2.2 · Never assert an external fact from portal input
 
@@ -131,7 +133,7 @@ drift from the document that classifies them.
 | **V12** | the actor is never fabricated | assert `personId` is portal-minted and never equal to an IdP subject — buildable the day D-ID-2 lands |
 | **V13** | `DataError`'s shape is fixed | **a serialisation question we have never had to answer.** Ours is an in-process `Error`; yours crosses a wire |
 | **V14** | external facts name their owner | **nothing.** It is a TYPE — you inherit it by compiling |
-| **V15** | never mint a document identity | a source gate over identifier construction. Ours does not exist; §2.1 records the violation |
+| **V15** | never mint a document identity | a source gate over identifier construction. Ours does not exist; §2.1 records the retired violation |
 | **V16** | authentication bought, authorisation ours | assert an IdP supplies a binding and never a second authorisation path |
 | **V17** | a refusal is a result, not an exception | **checkable only on your side.** We have no transport. Over HTTP it is one line: a business refusal is a 200 carrying a refusal body, never a 4xx/5xx |
 | **V19** | a pinned contract states its pin’s reach | **nothing, if you keep our shape.** The block is generated from the pin’s own assertions and asserted equal to them, so it cannot drift; what it costs you is the discipline of writing one when you add a pin of your own |
@@ -445,7 +447,7 @@ it as evidence of anything.
   repeating.
 
   ⚠️ **AND UNTIL §6 LANDED THAT SENTENCE WAS TRUE OF FIELDS AND ONLY
-  ACCIDENTALLY TRUE OF FILES.** A backticked `BuyerContracts.jsx` satisfied the
+  ACCIDENTALLY TRUE OF FILES.** A backticked BuyerContracts.jsx satisfied the
   FIELD pattern, so the check asked whether `src/` contains the string `tsx` —
   which it always does. **Three citations were passing on their own file
   extension.** A file is now its own kind, resolved on disk, with both controls:
