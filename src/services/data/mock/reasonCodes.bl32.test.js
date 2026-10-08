@@ -250,8 +250,8 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
       'src/pages-v2/BuyerAlerts.jsx',
       'src/pages-v2/BuyerForecastBias.jsx',
       'src/pages-v2/SupplierCapacity.jsx',
-      'src/pages-v2/SupplierForecastCommitments.jsx',
-      'src/pages-v2/SupplierForecasts.jsx',
+      'src/pages-v2/SupplierForecastCommitments/index.jsx',
+      'src/pages-v2/SupplierForecasts/components/ConfirmPanel.jsx',
       'src/pages-v2/SupplierOrders.jsx',
       'src/pages-v2/admin/reasonCodeDisplay.js'
     ]);
@@ -261,8 +261,9 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
       'src/pages-v2/BuyerCommitments/index.jsx',
       'src/pages-v2/BuyerForecastBias.jsx',
       'src/pages-v2/SupplierCapacity.jsx',
-      'src/pages-v2/SupplierForecastCommitments.jsx',
-      'src/pages-v2/SupplierForecasts.jsx',
+      'src/pages-v2/SupplierForecastCommitments/index.jsx',
+      'src/pages-v2/SupplierForecasts/components/ConfirmPanel.jsx',
+      'src/pages-v2/SupplierForecasts/components/ResponsesTab.jsx',
       'src/pages-v2/SupplierOrders.jsx',
       'src/pages-v2/admin/reasonCodeDisplay.js',
       'src/pages-v2/orders/PoCollaboration.jsx'

@@ -253,7 +253,16 @@ describe('GL-1 chip coverage — the instrument, before the conclusion', () => {
     // non-render, or the guard would be demanding an impossible chip.
     const toastBound = USES.filter((u) => !u.isRender);
     expect(toastBound.length).toBeGreaterThan(0);
-    expect(toastBound.some((u) => u.file.endsWith('SupplierForecasts.jsx'))).toBe(true);
+    // `SupplierForecasts` is a page folder now (PAGE-SPLIT-GUIDE): each qty
+    // refusal map sits in the panel that toasts and renders it.
+    expect(
+      toastBound.some((u) => u.file.endsWith('SupplierForecasts/components/ConfirmPanel.jsx'))
+    ).toBe(true);
+    expect(
+      toastBound.some((u) =>
+        u.file.endsWith('SupplierForecasts/components/ShipmentReportPanel.jsx')
+      )
+    ).toBe(true);
   });
 });
 

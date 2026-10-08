@@ -391,7 +391,7 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       ],
       commitmentDeadlineWorkingDays: [
         'src/pages-v2/BuyerCommitments/index.jsx',
-        'src/pages-v2/SupplierForecastCommitments.jsx',
+        'src/pages-v2/SupplierForecastCommitments/components/DueRuleNote.jsx',
         'src/services/transitions/forecastConfig.js',
         'src/services/transitions/forecastRules.js'
       ],
