@@ -134,6 +134,7 @@ describe('⚠️ §70 · THE MATCHER, BEFORE ANY CLAIM ABOUT THE TREE', () => {
       'data-testid="fc-coverage-details"'
     );
     expect(sourceOf('BuyerContracts')).toMatch(/BuyerContracts\/index\.jsx$/);
+    expect(sourceOf('BuyerReschedule')).toMatch(/BuyerReschedule\/index\.jsx$/);
   });
 });
 
