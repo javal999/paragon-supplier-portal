@@ -27,6 +27,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, expect, it } from 'vitest';
+import { GR_WIZARD_DIR, globFolderSource } from '@test/featureFolder';
 
 import { MATERIAL_GROUPS, groupLabel } from '../materialGroups';
 import { MATERIAL_MASTER } from '../fixtures';
@@ -415,12 +416,16 @@ describe('2B-4 GATE — the mechanism landed at 2B-4a; the BEHAVIOUR still has n
     // wizard started reading the master, which is what an adoption is FOR.
     // Pinned in full by `bpomApplicability.test.js`; asserted here too because
     // this is the file a reader of the 2B-2 adoption reaches for.
-    const wizard = /** @type {string} */ (
-      import.meta.glob('/src/components/v2-features/GRInspectionWizard.jsx', {
-        query: '?raw',
-        import: 'default',
-        eager: true
-      })['/src/components/v2-features/GRInspectionWizard.jsx']
+    const wizard = globFolderSource(
+      /** @type {Record<string, string>} */ (
+        // A FOLDER since frontend-standard Phase 5 — read whole.
+        import.meta.glob('/src/components/v2-features/GRInspectionWizard/**/*.{js,jsx}', {
+          query: '?raw',
+          import: 'default',
+          eager: true
+        })
+      ),
+      GR_WIZARD_DIR
     );
     expect(wizard).not.toContain("materialCode.startsWith('AI-')");
     expect(wizard).toContain('bpomOf(');

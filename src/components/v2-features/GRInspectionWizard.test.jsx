@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { screen, fireEvent, cleanup } from '@testing-library/react';
 import { renderWithProviders } from '@test/test-utils';
+import { GR_WIZARD_DIR, globFolderSource } from '@test/featureFolder';
 import { mockShipments } from '@data/mockShipments';
 import { asnStore } from '@services/data/mock/stores/asnStore';
 import { bpomOf } from '@services/sdc/bpom';
@@ -1028,13 +1029,19 @@ describe('CP-3 · E4 — ⚠️ THE PER-CHECK DELTA, AND IT IS ZERO', () => {
     // ENFORCEMENT MODE RELAXES THE CONSEQUENCE OF AN ANSWER; NOTHING MAY RELAX
     // THE ABSENCE OF A QUESTION. The two refusal branches must carry no mode
     // term, and a prose promise would not survive the next edit.
-    const wizard = /** @type {Record<string, string>} */ (
-      import.meta.glob('/src/components/v2-features/GRInspectionWizard.jsx', {
-        query: '?raw',
-        import: 'default',
-        eager: true
-      })
-    )['/src/components/v2-features/GRInspectionWizard.jsx'];
+    // frontend-standard Phase 5: the wizard is a FOLDER now (`index.jsx` +
+    // `hooks/` + `components/`), so "the wizard's own source" is every file in
+    // it — the six-mention count below is over the whole wizard, as it was.
+    const wizard = globFolderSource(
+      /** @type {Record<string, string>} */ (
+        import.meta.glob('/src/components/v2-features/GRInspectionWizard/**/*.{js,jsx}', {
+          query: '?raw',
+          import: 'default',
+          eager: true
+        })
+      ),
+      GR_WIZARD_DIR
+    );
     const code = wizard
       .split(/\r?\n/)
       .filter((l) => {

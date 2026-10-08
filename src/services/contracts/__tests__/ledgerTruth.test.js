@@ -61,6 +61,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { buildProgramFromSources } from '@lib/storedFieldGate/derive';
+import { readSource } from '@test/featureFolder';
 import { deriveInterfaceMembers, deriveUnionLiterals } from './deriveC1Surface';
 
 const ROOT = process.cwd();
@@ -228,7 +229,9 @@ describe('C9 §7.3 — DISCHARGED IN CODE, STALE IN THE DOCUMENT', () => {
   // left as a note: the code is clean AND the contract is stale, until the C9
   // amendment. See `docs/findings.md` → `C9-STALE-BY-FIX-01`.
   it('the prefix parse is gone from the wizard', () => {
-    const wizard = read('src', 'components', 'v2-features', 'GRInspectionWizard.jsx');
+    // A FOLDER since frontend-standard Phase 5 — read whole, so the parse cannot
+    // hide in a file this pin does not open.
+    const wizard = readSource(join(ROOT, 'src', 'components', 'v2-features', 'GRInspectionWizard'));
     expect(wizard).not.toMatch(/const inferBpom = /);
     expect(wizard).not.toMatch(/materialCode\.startsWith\(/);
     // The replacement, named — so this cannot go green by the wizard losing the

@@ -219,7 +219,9 @@ describe('⚠️ EVERY ARTEFACT C12 NAMES EXISTS', () => {
 
   it('KNOWN-GOOD CONTROL — both citation forms resolve', () => {
     expect(citedFileExists('vercel.json'), 'a root path').toBe(true);
-    expect(citedFileExists('BuyerContracts.jsx'), 'a bare basename').toBe(true);
+    // `BuyerContracts.jsx` stood here until the Phase 5 split made it a folder;
+    // `findings.md` is a bare basename C12 cites, and it is not at the root.
+    expect(citedFileExists('findings.md'), 'a bare basename').toBe(true);
   });
 
   it('a GLOB is not read as a file claim — `*.mock.test.js` names no single file', () => {

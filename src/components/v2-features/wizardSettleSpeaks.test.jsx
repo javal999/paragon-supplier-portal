@@ -25,12 +25,12 @@
 // Every refusal assertion below is satisfied by a wizard that refuses
 // EVERYTHING. Only a real `MAT-DOC-…` in the store separates the two.
 // ─────────────────────────────────────────────────────────────────────────────
-import fs from 'node:fs';
 import path from 'node:path';
 /** @import React from 'react' */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { renderWithProviders } from '@test/test-utils';
+import { readSource } from '@test/featureFolder';
 import { useToast } from '@hooks/useToast';
 import { mockDataService } from '@services/data/mock/mockDataService';
 import { asnStore } from '@services/data/mock/stores/asnStore';
@@ -237,15 +237,19 @@ describe('§91 THE FILED DEFECT IS ABSENT — a null settle SPEAKS at the wizard
 
 // ─── THE POPULATION ──────────────────────────────────────────────────────────
 
-/** @param {string} rel */
-const src = (rel) => fs.readFileSync(path.resolve(__dirname, rel), 'utf8');
+/**
+ * A file's source — or, for a component split into a folder (frontend-standard
+ * Phase 5), every non-test file under it, so "the wizard" stays the whole wizard.
+ * @param {string} rel
+ */
+const src = (rel) => readSource(path.resolve(__dirname, rel));
 
 describe('§91 POPULATION — only a site that AWAITS a settle can swallow one', () => {
   // ⚠️ §86: derived from the CALL SITES' own source, never by asking the hook —
   // a mutation in `commandHooks.js` must not be able to collapse this population
   // and the assertions above together.
   const SITES = {
-    wizard: src('./GRInspectionWizard.jsx'),
+    wizard: src('./GRInspectionWizard'),
     grPage: src('../../pages-v2/BuyerGoodsReceipt.jsx'),
     invoices: src('../../pages-v2/BuyerInvoices.jsx')
   };

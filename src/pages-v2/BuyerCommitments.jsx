@@ -348,7 +348,11 @@ const BuyerCommitments = () => {
         <h2 className="text-section text-text-primary mb-2">
           {t('fc.pti.gaps.exceptions', { count: exceptions.length })}
         </h2>
-        <p className="text-sm text-text-secondary mb-3">{t('fc.pti.gaps.exceptionsHint')}</p>
+        <p className="text-sm text-text-secondary mb-1">{t('fc.pti.gaps.exceptionsHint')}</p>
+        {/* A11y finding 19 — the Due column's rule, once and visible, outside the table so it is not read in every cell. */}
+        <p className="text-xs text-text-tertiary mb-3" data-testid="fc-due-rule">
+          {t('fc.pti.gaps.dueRuleNote', { due: t('fc.col.due'), rule: dueRule })}
+        </p>
         <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
           <Table>
             <TableHeader>
@@ -367,9 +371,7 @@ const BuyerCommitments = () => {
               </TableHeaderCell>
               <TableHeaderCell>{t('fc.col.gap')}</TableHeaderCell>
               <TableHeaderCell>{t('fc.col.status')}</TableHeaderCell>
-              <TableHeaderCell>
-                <span title={dueRule}>{t('fc.col.due')}</span>
-              </TableHeaderCell>
+              <TableHeaderCell>{t('fc.col.due')}</TableHeaderCell>
               <TableHeaderCell>{t('fc.col.daysOfSupply')}</TableHeaderCell>
               <TableHeaderCell>{t('fc.col.actions')}</TableHeaderCell>
             </TableHeader>

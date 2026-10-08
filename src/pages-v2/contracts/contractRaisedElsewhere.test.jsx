@@ -20,8 +20,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { pageFolderSource } from '@test/pageFiles';
 import { screen } from '@testing-library/react';
 
 import {
@@ -34,7 +34,10 @@ import { contractsEn, contractsId } from '@lib/i18n/contracts';
 import { RaisedElsewhereNote, RaisedElsewherePanel } from './RaisedElsewhere';
 import { renderWithProviders } from '@test/test-utils';
 
-const PAGE = readFileSync(resolve(__dirname, '..', 'BuyerContracts.jsx'), 'utf-8');
+// The page is a FOLDER since the Phase 5 split (`BuyerContracts/index.jsx`,
+// `components/`, `hooks/`, `utils.js`, `const.js`), so the page source is the
+// whole folder: reading `index.jsx` alone would let a mint return in a hook.
+const PAGE = pageFolderSource(resolve(__dirname, '..'), 'BuyerContracts');
 
 /**
  * ⚠️ THE PAGE WITH ITS COMMENTS STRIPPED — and the need for it is the
