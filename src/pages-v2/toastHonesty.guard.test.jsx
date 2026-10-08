@@ -213,7 +213,7 @@ import { join } from 'node:path';
 import ts from 'typescript';
 import { resources } from '@lib/i18n';
 import { scriptKindOf } from '@test/sourceFiles';
-import { folderSourceFiles, pageFiles, pageFolderFiles, pagesDirFolders } from '@test/pageFiles';
+import { folderSourceFiles, pageFiles, pagesDirFolders } from '@test/pageFiles';
 
 const PAGES_DIR = __dirname;
 
@@ -693,7 +693,7 @@ describe('unbacked-toast honesty guard (R1)', () => {
 
   it.each(PAGE_FOLDERS)('%s/ — every shipped file of the page folder is scanned', (page) => {
     const scanned = new Set(pageFiles(PAGES_DIR));
-    const files = pageFolderFiles(PAGES_DIR, page);
+    const files = folderSourceFiles(PAGES_DIR, page);
     expect(files).toContain(`${page}/index.jsx`);
     expect(files.filter((f) => !scanned.has(f))).toEqual([]);
   });

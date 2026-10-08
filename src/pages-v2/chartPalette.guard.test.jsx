@@ -5,12 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
 import { buildRepoProgram } from '@lib/storedFieldGate/derive';
 import { isTestFile, scriptKindOf } from '@test/sourceFiles';
-import {
-  folderSourceFiles,
-  pageFiles as pagesOf,
-  pageFolderFiles,
-  pagesDirFolders
-} from '@test/pageFiles';
+import { folderSourceFiles, pageFiles as pagesOf, pagesDirFolders } from '@test/pageFiles';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DP2-PALETTE-01 — chart colour comes from the centralized palette
@@ -857,7 +852,7 @@ describe('DP2-BUTTON-01 — Export never occupies the primary (action-blue) slot
 
   it.each(PAGE_FOLDERS)('%s/ — every shipped file of the page folder is scanned', (page) => {
     const scanned = new Set(exportScanned());
-    const files = pageFolderFiles(here, page);
+    const files = folderSourceFiles(here, page);
     expect(files).toContain(`${page}/index.jsx`);
     expect(files.filter((f) => !scanned.has(f))).toEqual([]);
   });

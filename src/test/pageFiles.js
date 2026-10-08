@@ -25,7 +25,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join, sep } from 'node:path';
 import { isJsxFile, isSourceFile, isTestFile } from './sourceFiles';
 
 /**
@@ -133,10 +133,23 @@ export const pageFolders = (pagesDir) => pagesDirFolders(pagesDir).pages;
 
 /**
  * Every non-test source file under ONE direct subfolder of `pagesDir`, page
- * folder or not, relative to `pagesDir`. For the known-bad control: a feature
- * folder's files must stay OUT of a page population.
+ * folder or not, relative to `pagesDir` and sorted. The guards use it as the
+ * EXPECTED side: for a page folder, every file must be in their population;
+ * for a feature folder, none may be.
+ *
+ * ⚠️ Deliberately a second walk (`readdirSync` recursive), not `filesUnder`:
+ * `pageFiles` and `pageFolderFiles` both walk through `filesUnder`, so if the
+ * expected side used it too, a `filesUnder` that skipped a subfolder would
+ * shrink both sides alike and every guard would stay green (CLAUDE.md §86).
  * @param {string} pagesDir
  * @param {string} folder
  * @returns {string[]}
  */
-export const folderSourceFiles = (pagesDir, folder) => filesUnder(pagesDir, folder);
+export const folderSourceFiles = (pagesDir, folder) =>
+  readdirSync(join(pagesDir, folder), { recursive: true, encoding: 'utf8' })
+    .map((rel) => `${folder}/${rel.split(sep).join('/')}`)
+    .filter((rel) => {
+      const name = basename(rel);
+      return isSourceFile(name) && !isTestFile(name) && statSync(join(pagesDir, rel)).isFile();
+    })
+    .sort();

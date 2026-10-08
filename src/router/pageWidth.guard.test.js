@@ -32,7 +32,13 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { resolveImport, specifierBase } from '@test/resolveImport';
-import { isPageFolder, pageFolderFiles, pageFolderSource, pageFolders } from '@test/pageFiles';
+import {
+  folderSourceFiles,
+  isPageFolder,
+  pageFolderFiles,
+  pageFolderSource,
+  pageFolders
+} from '@test/pageFiles';
 
 const ROUTER = join(process.cwd(), 'src', 'router', 'AppRouter.jsx');
 const routerSrc = readFileSync(ROUTER, 'utf-8');
@@ -176,9 +182,12 @@ describe('§70 · every page folder the router imports is read as its whole fold
       const file = resolveImport(ROUTER, specifier);
       expect(file).toBe(join(PAGES_DIR, page, 'index.jsx'));
       const src = pageSource(/** @type {string} */ (file));
-      const unread = pageFolderFiles(PAGES_DIR, page).filter(
-        (f) => !src.includes(readFileSync(join(PAGES_DIR, f), 'utf-8'))
-      );
+      // The expected side is an independent walk (`folderSourceFiles`), so a
+      // `pageFolderFiles` that skipped a subfolder fails here too.
+      const files = folderSourceFiles(PAGES_DIR, page);
+      expect(files).toContain(`${page}/index.jsx`);
+      expect([...pageFolderFiles(PAGES_DIR, page)].sort()).toEqual(files);
+      const unread = files.filter((f) => !src.includes(readFileSync(join(PAGES_DIR, f), 'utf-8')));
       expect(unread).toEqual([]);
     }
   );
