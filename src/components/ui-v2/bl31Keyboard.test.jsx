@@ -285,7 +285,8 @@ describe('BL-31 · accessible names in the shared primitives', () => {
     fireEvent.click(skip);
     expect(document.activeElement).toBe(container.querySelector('main#main-content'));
     expect(screen.getByRole('navigation', { name: 'Main navigation' })).toBeInTheDocument();
-    expect(screen.getByRole('searchbox', { name: 'Search the portal' })).toBeInTheDocument();
+    // The top bar search is an autocomplete, so its role is combobox, not searchbox.
+    expect(screen.getByRole('combobox', { name: 'Search the portal' })).toBeInTheDocument();
     const group = screen.getByRole('group', { name: 'Portal view' });
     const pressed = within(group)
       .getAllByRole('button')
