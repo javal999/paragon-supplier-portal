@@ -349,7 +349,7 @@ describe('⚠️ THE BLOCK EQUALS THE PIN — both directions, per contract', ()
 // ⚠️ **A GLOB IS NOT A PATH** (`*.mock.test.js` names a shape), and a BASENAME
 // citation resolves anywhere in the tree — contracts use both forms.
 // -----------------------------------------------------------------------------
-const CITED_FILE = /`([A-Za-z0-9_./-]+\.(?:tsx?|mjs|json|js|html|yml))`/g;
+const CITED_FILE = /`([A-Za-z0-9_./-]+\.(?:tsx?|jsx?|mjs|json|html|yml))`/g;
 
 /** @returns {Set<string>} */
 function repoBasenames() {
@@ -402,11 +402,21 @@ describe('⚠️ EVERY SOURCE FILE A CONTRACT CITES EXISTS', () => {
     // assertion below proves nothing.
     expect(fileExists('scoping.contract.test.ts')).toBe(false);
     expect(fileExists('plan-grid/IntakePushPanel.tsx')).toBe(false);
+    expect(fileExists('src/no/such/Page.jsx'), 'a fabricated .jsx path').toBe(false);
+  });
+
+  it('⚠️ CONTROL — the matcher SEES every source extension, `.jsx` included', () => {
+    // CITED_FILE once omitted `.jsx`, so a stale page path (the
+    // `src/pages-v2/BuyerSourcing.jsx` a split retired) was never checked at all.
+    for (const ext of ['ts', 'tsx', 'js', 'jsx', 'mjs']) {
+      expect(citedFilesIn(`\`src/no/such/Page.${ext}\``), ext).toEqual([`src/no/such/Page.${ext}`]);
+    }
   });
 
   it('KNOWN-GOOD — both citation forms resolve', () => {
     expect(fileExists('scoping.mock.test.js'), 'a bare basename').toBe(true);
     expect(fileExists('src/services/transitions/dispatcher.js'), 'a full path').toBe(true);
+    expect(fileExists('src/router/AppRouter.jsx'), 'a full .jsx path').toBe(true);
   });
 
   it('THE CLAIM — no contract names a file the tree does not hold', () => {

@@ -29,6 +29,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, expect, it } from 'vitest';
+import { GR_WIZARD_DIR, globFolderSource } from '@test/featureFolder';
 
 import { mockRfqs } from '@data/mockRfqs';
 import { MATERIAL_GROUPS, groupLabel } from '../materialGroups';
@@ -468,12 +469,16 @@ describe('2B-4 GATE — the mechanism landed at 2B-4a; the BEHAVIOUR still has n
     // never heard of `bpomApplicable` and still runs the prefix rule. Mechanism
     // early, precondition discharged, behaviour late — three separate facts,
     // and 2B-4b changes only the third.
-    const wizard = /** @type {string} */ (
-      import.meta.glob('/src/components/v2-features/GRInspectionWizard.jsx', {
-        query: '?raw',
-        import: 'default',
-        eager: true
-      })['/src/components/v2-features/GRInspectionWizard.jsx']
+    const wizard = globFolderSource(
+      /** @type {Record<string, string>} */ (
+        // A FOLDER since frontend-standard Phase 5 — read whole.
+        import.meta.glob('/src/components/v2-features/GRInspectionWizard/**/*.{js,jsx}', {
+          query: '?raw',
+          import: 'default',
+          eager: true
+        })
+      ),
+      GR_WIZARD_DIR
     );
     // ⚠️ INVERTED AT 2B-4b — the third fact moved, and only the third. The
     // sentence above is left standing because it was true when written and it

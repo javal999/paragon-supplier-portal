@@ -215,11 +215,20 @@ describe('⚠️ EVERY ARTEFACT C12 NAMES EXISTS', () => {
   it('⚠️ KNOWN-BAD CONTROL — a file path the tree does not hold is REJECTED', () => {
     expect(citedFileExists('src/services/data/documentUpload.ts')).toBe(false);
     expect(citedFileExists('no-such-config.json')).toBe(false);
+    expect(citedFileExists('src/no/such/Page.jsx'), 'a fabricated .jsx path').toBe(false);
+  });
+
+  it('⚠️ a `.jsx` citation is classified as a FILE, not an identifier', () => {
+    // FILE_EXT once omitted `.jsx`, so `src/router/AppRouter.jsx` fell through to
+    // the identifier branch, which only asks whether `src/` contains `jsx`.
+    expect(cited).toContainEqual({ token: 'src/router/AppRouter.jsx', kind: 'file' });
   });
 
   it('KNOWN-GOOD CONTROL — both citation forms resolve', () => {
     expect(citedFileExists('vercel.json'), 'a root path').toBe(true);
-    expect(citedFileExists('BuyerContracts.jsx'), 'a bare basename').toBe(true);
+    // `BuyerContracts.jsx` stood here until the Phase 5 split made it a folder;
+    // `findings.md` is a bare basename C12 cites, and it is not at the root.
+    expect(citedFileExists('findings.md'), 'a bare basename').toBe(true);
   });
 
   it('a GLOB is not read as a file claim — `*.mock.test.js` names no single file', () => {

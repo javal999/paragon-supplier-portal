@@ -37,12 +37,12 @@
 // dispatcher behind it (2e-b-4a put `totalQty` into `t_rfq_create` precisely so
 // a hand-crafted dispatch could not bypass the wizard). BuyerContracts has no
 // second lock available: it imports only `useContracts()` — a read — and the
-// "created" contract is client-fabricated into local `extraContracts` state
-// (CTR-FABRICATION-01, filed and UNSCHEDULED, deliberately untouched here).
-// There is no command, no `requiredFields`, no store to refuse. So the gate
-// below is the ONLY thing standing between a blank and a fabricated zero, and it
-// has to hold alone. A future seat: when CTR-FABRICATION-01 is fixed, mirror
-// `value` into the create verb's `requiredFields` and this becomes two locks.
+// terminal act refuses rather than creating anything (CTR-FABRICATION-01, closed
+// in f5338c2, findings §103: `t_contract_draft` is S/4HANA's). There is no
+// command, no `requiredFields`, no store to refuse. So the gate below is the
+// ONLY thing standing between a blank and a coerced reading shown back to the
+// buyer as what they entered, and it has to hold alone. It stays one lock for as
+// long as S/4HANA owns contract creation.
 //
 // BLANK REFUSES on both fields (operator ruling, 2f-b) — the third field-pair to
 // take the ruling after `readGrLineQuantities` (2f-a) and `totalQty` (2e-b-4a).

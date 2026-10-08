@@ -673,6 +673,22 @@ describe('unbacked-toast honesty guard (R1)', () => {
     const shipments = SITES.filter((s) => s.file.startsWith('SupplierShipments/'));
     expect(shipments.map((s) => s.file)).toContain('SupplierShipments/index.jsx');
     expect(shipments.flatMap((s) => s.keys)).toContain('supplierShipments.toast.export.title');
+    // `BuyerContracts` contributes no site and no exclusion (measured before
+    // and after its split), so its membership is asserted on the scanned FILES:
+    // its index, which holds its one toast, and a hook the split moved
+    // handlers into.
+    const scanned = pageFiles(PAGES_DIR);
+    expect(scanned).toContain('BuyerContracts/index.jsx');
+    expect(scanned).toContain('BuyerContracts/hooks/useContractDraft.js');
+  });
+
+  // `/register` holds no toast site, so its folder is pinned in the FILE
+  // population the sites are derived from rather than in the sites.
+  it('the SupplierRegistration folder is in the scanned files', () => {
+    const files = pageFiles(PAGES_DIR);
+    expect(files).toContain('SupplierRegistration/index.jsx');
+    expect(files).toContain('SupplierRegistration/components/ContactsStep.jsx');
+    expect(files).not.toContain('SupplierRegistration.jsx');
   });
 
   // BuyerCommitments has no `toast({` site of its own (its toasts are the

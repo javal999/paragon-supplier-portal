@@ -32,7 +32,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { resolveImport } from '@test/resolveImport';
-import { pageFolderFiles } from '@test/pageFiles';
+import { isPageFolder, pageFolderSource } from '@test/pageFiles';
 
 const ROUTER = join(process.cwd(), 'src', 'router', 'AppRouter.jsx');
 const routerSrc = readFileSync(ROUTER, 'utf-8');
@@ -78,9 +78,10 @@ function sourceOf(component) {
  * @returns {string}
  */
 function pageSource(file) {
-  const folder = pageFolderFiles(dirname(file));
-  const files = /^index\.[jt]sx?$/.test(basename(file)) && folder.length > 0 ? folder : [file];
-  return files.map((f) => readFileSync(f, 'utf-8')).join('\n');
+  const dir = dirname(file);
+  return /^index\.[jt]sx?$/.test(basename(file)) && isPageFolder(dir)
+    ? pageFolderSource(dirname(dir), basename(dir))
+    : readFileSync(file, 'utf-8');
 }
 
 /** The matcher: a container `<div>` that sets a large max-width. */
@@ -117,7 +118,7 @@ describe('⚠️ §70 · THE MATCHER, BEFORE ANY CLAIM ABOUT THE TREE', () => {
     // vacuously true over an empty set of readable sources.
     expect(sourceOf('RolesCatalogue')).toMatch(/RolesCatalogue\.jsx$/);
     // The ALIASED import is the one a name-based lookup gets wrong.
-    expect(sourceOf('SupplierRegistrationV2')).toMatch(/SupplierRegistration\.jsx$/);
+    expect(sourceOf('SupplierRegistrationV2')).toMatch(/SupplierRegistration\/index\.jsx$/);
     // A page split into a folder resolves to its index, as the bundler does.
     expect(sourceOf('SupplierRFQsV2')).toMatch(/SupplierRFQs\/index\.jsx$/);
     expect(sourceOf('BuyerSourcing')).toMatch(/BuyerSourcing\/index\.jsx$/);
@@ -132,6 +133,7 @@ describe('⚠️ §70 · THE MATCHER, BEFORE ANY CLAIM ABOUT THE TREE', () => {
     expect(pageSource(/** @type {string} */ (sourceOf('RolesCatalogue')))).not.toContain(
       'data-testid="fc-coverage-details"'
     );
+    expect(sourceOf('BuyerContracts')).toMatch(/BuyerContracts\/index\.jsx$/);
   });
 });
 

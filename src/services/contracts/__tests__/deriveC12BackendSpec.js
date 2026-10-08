@@ -179,7 +179,7 @@ export function c12InheritedRows() {
 /** @typedef {'transition' | 'identifier' | 'file'} CitedKind */
 
 /** Extensions a backticked token may carry and still be a FILE claim. */
-const FILE_EXT = /\.(json|jsonc|js|mjs|cjs|ts|tsx|html|css|ico|txt|yml|yaml|md|lock)$/;
+const FILE_EXT = /\.(json|jsonc|js|jsx|mjs|cjs|ts|tsx|html|css|ico|txt|yml|yaml|md|lock)$/;
 
 /**
  * ⚠️ **A FILE IS A THIRD KIND, AND ADDING IT CLOSED A VACUITY RATHER THAN
