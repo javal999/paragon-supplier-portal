@@ -854,7 +854,8 @@ describe('DP2-BUTTON-01 — Export never occupies the primary (action-blue) slot
     const scanned = new Set(exportScanned());
     const files = folderSourceFiles(here, page);
     expect(files).toContain(`${page}/index.jsx`);
-    expect(files.filter((f) => !scanned.has(f))).toEqual([]);
+    const missing = files.filter((f) => !scanned.has(f));
+    expect(missing, `not scanned: ${missing.join(', ')}`).toEqual([]);
   });
 
   it('⚠️ KNOWN-BAD: no feature-folder file is scanned as a page, and no split page left its old file', () => {
@@ -865,10 +866,12 @@ describe('DP2-BUTTON-01 — Export never occupies the primary (action-blue) slot
     expect(featureFiles).toContain('shipments/CarrierPicker.jsx');
     expect(featureFiles).toContain('rfqs/TieredQuoteForm.jsx');
     expect(featureFiles).toContain('forecasts/forecastDisplay.jsx');
-    expect(scanned.filter((f) => featureFiles.includes(f))).toEqual([]);
+    const leaked = scanned.filter((f) => featureFiles.includes(f));
+    expect(leaked, `feature files scanned as pages: ${leaked.join(', ')}`).toEqual([]);
     // A split page leaves no `<Page>.jsx` beside its folder.
     const folders = new Set(PAGE_FOLDERS);
-    expect(scanned.filter((f) => folders.has(f.replace(/\.[jt]sx$/, '')))).toEqual([]);
+    const stale = scanned.filter((f) => folders.has(f.replace(/\.[jt]sx$/, '')));
+    expect(stale, `old page files beside their folder: ${stale.join(', ')}`).toEqual([]);
   });
 
   for (const file of exportScanned()) {

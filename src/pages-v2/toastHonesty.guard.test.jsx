@@ -695,7 +695,8 @@ describe('unbacked-toast honesty guard (R1)', () => {
     const scanned = new Set(pageFiles(PAGES_DIR));
     const files = folderSourceFiles(PAGES_DIR, page);
     expect(files).toContain(`${page}/index.jsx`);
-    expect(files.filter((f) => !scanned.has(f))).toEqual([]);
+    const missing = files.filter((f) => !scanned.has(f));
+    expect(missing, `not scanned: ${missing.join(', ')}`).toEqual([]);
   });
 
   it('KNOWN-BAD: no feature-folder file is scanned, and no split page left its old file', () => {
@@ -703,9 +704,11 @@ describe('unbacked-toast honesty guard (R1)', () => {
     const featureFiles = FEATURE_FOLDERS.flatMap((d) => folderSourceFiles(PAGES_DIR, d));
     expect(featureFiles).toContain('forecasts/forecastDisplay.jsx');
     expect(featureFiles).toContain('contracts/RaisedElsewhere.jsx');
-    expect(scanned.filter((f) => featureFiles.includes(f))).toEqual([]);
+    const leaked = scanned.filter((f) => featureFiles.includes(f));
+    expect(leaked, `feature files scanned as pages: ${leaked.join(', ')}`).toEqual([]);
     const folders = new Set(PAGE_FOLDERS);
-    expect(scanned.filter((f) => folders.has(f.replace(/\.[jt]sx$/, '')))).toEqual([]);
+    const stale = scanned.filter((f) => folders.has(f.replace(/\.[jt]sx$/, '')));
+    expect(stale, `old page files beside their folder: ${stale.join(', ')}`).toEqual([]);
   });
 
   // CONTENT checks, not membership: the files a split moved toasts into still

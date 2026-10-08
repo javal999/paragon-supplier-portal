@@ -186,9 +186,12 @@ describe('§70 · every page folder the router imports is read as its whole fold
       // `pageFolderFiles` that skipped a subfolder fails here too.
       const files = folderSourceFiles(PAGES_DIR, page);
       expect(files).toContain(`${page}/index.jsx`);
-      expect([...pageFolderFiles(PAGES_DIR, page)].sort()).toEqual(files);
+      const walked = new Set(pageFolderFiles(PAGES_DIR, page));
+      const skipped = files.filter((f) => !walked.has(f));
+      expect(skipped, `pageFolderFiles skipped: ${skipped.join(', ')}`).toEqual([]);
+      expect(walked.size).toBe(files.length);
       const unread = files.filter((f) => !src.includes(readFileSync(join(PAGES_DIR, f), 'utf-8')));
-      expect(unread).toEqual([]);
+      expect(unread, `not read by pageSource: ${unread.join(', ')}`).toEqual([]);
     }
   );
 });
