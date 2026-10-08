@@ -213,7 +213,7 @@ import { join } from 'node:path';
 import ts from 'typescript';
 import { resources } from '@lib/i18n';
 import { scriptKindOf } from '@test/sourceFiles';
-import { pageFiles } from '@test/pageFiles';
+import { folderSourceFiles, pageFiles, pageFolderFiles, pagesDirFolders } from '@test/pageFiles';
 
 const PAGES_DIR = __dirname;
 
@@ -673,86 +673,64 @@ describe('unbacked-toast honesty guard (R1)', () => {
     const shipments = SITES.filter((s) => s.file.startsWith('SupplierShipments/'));
     expect(shipments.map((s) => s.file)).toContain('SupplierShipments/index.jsx');
     expect(shipments.flatMap((s) => s.keys)).toContain('supplierShipments.toast.export.title');
-    // `BuyerContracts` contributes no site and no exclusion (measured before
-    // and after its split), so its membership is asserted on the scanned FILES:
-    // its index, which holds its one toast, and a hook the split moved
-    // handlers into.
+  });
+
+  // ── Page folders are DERIVED from the tree (PAGE-SPLIT-GUIDE). A split adds
+  // no line here. Membership is asserted on the scanned FILES, not on SITES:
+  // most split pages hold no unbacked site (their toasts are backed, or they
+  // have none), and a file the scan never reads can never become one.
+  // `pagesDirFolders` reads the tree itself, not through `pageFiles`, so a
+  // `pageFiles` that stopped descending into page folders goes red by name.
+  const { pages: PAGE_FOLDERS, features: FEATURE_FOLDERS } = pagesDirFolders(PAGES_DIR);
+
+  it('the page folders are derived — by membership, never by count', () => {
+    expect(PAGE_FOLDERS.length).toBeGreaterThan(0);
+    expect(PAGE_FOLDERS).toContain('BuyerSourcing');
+    expect(PAGE_FOLDERS).toContain('SupplierShipments');
+    expect(PAGE_FOLDERS).not.toContain('contracts');
+    expect(FEATURE_FOLDERS).toContain('contracts');
+  });
+
+  it.each(PAGE_FOLDERS)('%s/ — every shipped file of the page folder is scanned', (page) => {
+    const scanned = new Set(pageFiles(PAGES_DIR));
+    const files = pageFolderFiles(PAGES_DIR, page);
+    expect(files).toContain(`${page}/index.jsx`);
+    expect(files.filter((f) => !scanned.has(f))).toEqual([]);
+  });
+
+  it('KNOWN-BAD: no feature-folder file is scanned, and no split page left its old file', () => {
     const scanned = pageFiles(PAGES_DIR);
-    expect(scanned).toContain('BuyerContracts/index.jsx');
-    expect(scanned).toContain('BuyerContracts/hooks/useContractDraft.js');
+    const featureFiles = FEATURE_FOLDERS.flatMap((d) => folderSourceFiles(PAGES_DIR, d));
+    expect(featureFiles).toContain('forecasts/forecastDisplay.jsx');
+    expect(featureFiles).toContain('contracts/RaisedElsewhere.jsx');
+    expect(scanned.filter((f) => featureFiles.includes(f))).toEqual([]);
+    const folders = new Set(PAGE_FOLDERS);
+    expect(scanned.filter((f) => folders.has(f.replace(/\.[jt]sx$/, '')))).toEqual([]);
   });
 
-  // `/register` holds no toast site, so its folder is pinned in the FILE
-  // population the sites are derived from rather than in the sites.
-  it('the SupplierRegistration folder is in the scanned files', () => {
-    const files = pageFiles(PAGES_DIR);
-    expect(files).toContain('SupplierRegistration/index.jsx');
-    expect(files).toContain('SupplierRegistration/components/ContactsStep.jsx');
-    expect(files).not.toContain('SupplierRegistration.jsx');
-  });
-
-  // BuyerCommitments has no `toast({` site of its own (its toasts are the
-  // success texts `run` shows), so its split is asserted on the FILE population:
-  // the hook that now holds the submit handler is read like the page was.
-  it('a split page with no toast site still has its handler files in the population', () => {
-    const files = pageFiles(PAGES_DIR);
-    expect(files).toContain('BuyerCommitments/index.jsx');
-    expect(files).toContain('BuyerCommitments/hooks/useCommitmentAction.js');
-    expect(files).not.toContain('BuyerCommitments.jsx');
-  });
-
-  // BuyerReschedule's proposal acts toast from `hooks/useProposalActions.js`
-  // and its decision save from `components/DecisionControl.jsx`. Every one is
-  // backed (a `mutateAsync` in the branch), so none is a SITE; the scan must
-  // still read both files, or a future unbacked toast there would go unseen.
-  it('a split page’s hook and component files are scanned', () => {
-    const files = pageFiles(PAGES_DIR);
+  // CONTENT checks, not membership: the files a split moved toasts into still
+  // hold them. Every one is backed (a `mutateAsync` or `run(` in the branch),
+  // so none is a SITE; if the toast moved again, these say where to look.
+  //  · BuyerReschedule: proposal acts in `hooks/useProposalActions.js`, the
+  //    decision save in `components/DecisionControl.jsx`.
+  //  · BuyerOrderPlan: draft toasts in `hooks/useDraftCallOff.js`.
+  //  · SupplierForecastCommitments: Submit all in `hooks/useCommitmentActions.js`.
+  it('the files a split moved toasts into still hold them', () => {
     for (const f of [
       'BuyerReschedule/hooks/useProposalActions.js',
-      'BuyerReschedule/components/DecisionControl.jsx'
+      'BuyerReschedule/components/DecisionControl.jsx',
+      'BuyerOrderPlan/hooks/useDraftCallOff.js',
+      'SupplierForecastCommitments/hooks/useCommitmentActions.js'
     ]) {
-      expect(files).toContain(f);
-      expect(readFileSync(join(PAGES_DIR, f), 'utf8')).toMatch(/\btoast\s*\(\s*\{/);
+      expect(readFileSync(join(PAGES_DIR, f), 'utf8'), f).toMatch(/\btoast\s*\(\s*\{/);
     }
-    expect(files).toContain('BuyerReschedule/index.jsx');
   });
 
-  // A split page's HOOKS are scanned too: `BuyerOrderPlan`'s draft toasts
-  // moved from the page file into `hooks/useDraftCallOff.js`.
-  it('a split page’s hook files are scanned (BuyerOrderPlan)', () => {
-    const files = pageFiles(PAGES_DIR);
-    expect(files).toContain('BuyerOrderPlan/index.jsx');
-    expect(files).toContain('BuyerOrderPlan/hooks/useDraftCallOff.js');
-    expect(files).not.toContain('BuyerOrderPlan.jsx');
-  });
-
-  // BuyerStabilise was split the same way. Its two refusal toasts sit in the
-  // publish handler beside its `mutateAsync`, so they are backed and never in
-  // SITES — which is why membership is asserted on the SCANNED files instead:
-  // the index that holds those toasts must still be read by the scan.
-  it('the split publish page is still scanned, toasts and all', () => {
-    const files = pageFiles(PAGES_DIR);
-    expect(files).toContain('BuyerStabilise/index.jsx');
-    expect(files).not.toContain('BuyerStabilise.jsx');
+  // BuyerStabilise's two refusal toasts sit in the publish handler beside its
+  // `mutateAsync`, so they are backed and never in SITES.
+  it('the split publish page still holds its two toasts', () => {
     const src = readFileSync(join(PAGES_DIR, 'BuyerStabilise/index.jsx'), 'utf8');
     expect(src.match(/\btoast\s*\(\s*\{/g) ?? []).toHaveLength(2);
-  });
-
-  // SupplierForecastCommitments' Submit all toasts moved from the page file to
-  // `hooks/useCommitmentActions.js`. They are backed (each follows a `run(`),
-  // so they are not SITES before or after the split; what must hold is that
-  // the hook is still READ, or a future unbacked toast there would go unjudged.
-  it('a split page’s hooks are still scanned — SupplierForecastCommitments', () => {
-    const files = pageFiles(PAGES_DIR);
-    expect(files).toContain('SupplierForecastCommitments/index.jsx');
-    expect(files).toContain('SupplierForecastCommitments/hooks/useCommitmentActions.js');
-    expect(
-      readFileSync(
-        join(PAGES_DIR, 'SupplierForecastCommitments/hooks/useCommitmentActions.js'),
-        'utf8'
-      )
-    ).toMatch(/\btoast\s*\(\s*\{/);
-    expect(files).not.toContain('forecasts/forecastDisplay.jsx');
   });
 
   /**

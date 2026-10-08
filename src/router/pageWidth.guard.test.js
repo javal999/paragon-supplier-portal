@@ -31,8 +31,8 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
-import { resolveImport } from '@test/resolveImport';
-import { isPageFolder, pageFolderSource } from '@test/pageFiles';
+import { resolveImport, specifierBase } from '@test/resolveImport';
+import { isPageFolder, pageFolderFiles, pageFolderSource, pageFolders } from '@test/pageFiles';
 
 const ROUTER = join(process.cwd(), 'src', 'router', 'AppRouter.jsx');
 const routerSrc = readFileSync(ROUTER, 'utf-8');
@@ -119,12 +119,7 @@ describe('⚠️ §70 · THE MATCHER, BEFORE ANY CLAIM ABOUT THE TREE', () => {
     expect(sourceOf('RolesCatalogue')).toMatch(/RolesCatalogue\.jsx$/);
     // The ALIASED import is the one a name-based lookup gets wrong.
     expect(sourceOf('SupplierRegistrationV2')).toMatch(/SupplierRegistration\/index\.jsx$/);
-    // A page split into a folder resolves to its index, as the bundler does.
-    expect(sourceOf('SupplierRFQsV2')).toMatch(/SupplierRFQs\/index\.jsx$/);
-    expect(sourceOf('BuyerSourcing')).toMatch(/BuyerSourcing\/index\.jsx$/);
-    expect(sourceOf('SupplierShipments')).toMatch(/SupplierShipments\/index\.jsx$/);
-    expect(sourceOf('BuyerCommitments')).toMatch(/BuyerCommitments\/index\.jsx$/);
-    // …and a split page is read as its whole folder: the grid and charts
+    // A split page is read as its whole folder: the grid and charts
     // `<details>` container moved to `components/CoverageDetails.jsx`.
     const commitments = pageSource(/** @type {string} */ (sourceOf('BuyerCommitments')));
     expect(commitments).toContain('<AppShellV2');
@@ -133,14 +128,60 @@ describe('⚠️ §70 · THE MATCHER, BEFORE ANY CLAIM ABOUT THE TREE', () => {
     expect(pageSource(/** @type {string} */ (sourceOf('RolesCatalogue')))).not.toContain(
       'data-testid="fc-coverage-details"'
     );
-    expect(sourceOf('BuyerContracts')).toMatch(/BuyerContracts\/index\.jsx$/);
-    expect(sourceOf('BuyerReschedule')).toMatch(/BuyerReschedule\/index\.jsx$/);
-    expect(sourceOf('BuyerOrderPlan')).toMatch(/BuyerOrderPlan\/index\.jsx$/);
-    expect(sourceOf('BuyerStabilise')).toMatch(/BuyerStabilise\/index\.jsx$/);
-    expect(sourceOf('SupplierForecastCommitments')).toMatch(
-      /SupplierForecastCommitments\/index\.jsx$/
-    );
   });
+});
+
+// ── Page folders the router imports, DERIVED (PAGE-SPLIT-GUIDE). A split adds
+// no line here. Every router import whose specifier names a page folder under
+// `src/pages-v2` (a folder holding an `index.jsx`) must resolve to that folder's
+// index — a stale `<Page>.jsx` left beside the folder would win resolution —
+// and `pageSource` must read every file in the folder, not only the index.
+// Static and `lazy(() => import(…))` imports both count. The folder test is
+// `isPageFolder` on the specifier's base path, not `resolveImport`'s answer, so
+// a resolver that stopped finding folder indexes goes red by the page's name.
+const PAGES_DIR = join(process.cwd(), 'src', 'pages-v2');
+
+/** @returns {{ page: string, specifier: string }[]} */
+function routedPageFolders() {
+  const specifiers = [
+    ...routerSrc.matchAll(/import\s+\w+\s+from\s+'([^']+)'/g),
+    ...routerSrc.matchAll(/lazy\(\s*\(\)\s*=>\s*import\(\s*'([^']+)'\s*\)\s*\)/g)
+  ].map((m) => m[1]);
+  return specifiers.flatMap((specifier) => {
+    const base = specifierBase(ROUTER, specifier);
+    if (base === null || dirname(base) !== PAGES_DIR || !isPageFolder(base)) return [];
+    return [{ page: basename(base), specifier }];
+  });
+}
+const ROUTED_PAGE_FOLDERS = routedPageFolders();
+
+describe('§70 · every page folder the router imports is read as its whole folder', () => {
+  it('⚠️ THE DERIVATION FINDS KNOWN MEMBERS — by membership, never by count', () => {
+    const pages = ROUTED_PAGE_FOLDERS.map((r) => r.page);
+    expect(pages.length).toBeGreaterThan(0);
+    expect(pages).toContain('BuyerSourcing');
+    expect(pages).toContain('SupplierShipments');
+    // A lazy import is found too.
+    expect(pages).toContain('SupplierForecasts');
+    // Known-false: a routed single-file page is not a page folder.
+    expect(pages).not.toContain('RolesCatalogue');
+    // Every member is a page folder in the tree. (Not the converse: a page the
+    // router does not import, e.g. `BuyerForecasts.jsx`, may be split one day.)
+    for (const p of pages) expect(pageFolders(PAGES_DIR)).toContain(p);
+  });
+
+  it.each(ROUTED_PAGE_FOLDERS.map((r) => /** @type {const} */ ([r.page, r.specifier])))(
+    '%s/ — resolves to its index.jsx and is read as the whole folder',
+    (page, specifier) => {
+      const file = resolveImport(ROUTER, specifier);
+      expect(file).toBe(join(PAGES_DIR, page, 'index.jsx'));
+      const src = pageSource(/** @type {string} */ (file));
+      const unread = pageFolderFiles(PAGES_DIR, page).filter(
+        (f) => !src.includes(readFileSync(join(PAGES_DIR, f), 'utf-8'))
+      );
+      expect(unread).toEqual([]);
+    }
+  );
 });
 
 describe('§70 · no page inside AppShellV2 sets its own width', () => {

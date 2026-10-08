@@ -91,3 +91,52 @@ export const pageFolderSource = (pagesDir, page) =>
   pageFolderFiles(pagesDir, page)
     .map((f) => readFileSync(join(pagesDir, f), 'utf8'))
     .join('\n');
+
+// ── DERIVED PAGE-FOLDER MEMBERSHIP ─────────────────────────────────────────
+// Until 2026-10-08 each guard that scans pages carried one hand-written line
+// per split page (`expect(scanned).toContain('<Page>/index.jsx')`). Every split
+// appended to the same lines, so parallel splits conflicted on them, and a split
+// that forgot its line was not checked at all. The guards now DERIVE the page
+// folders from the tree with the functions below and assert that every file of
+// every page folder is in their population, so a split adds no line to any
+// guard (PAGE-SPLIT-GUIDE, "Guards and tests that name a file").
+//
+// These read the tree themselves (`readdirSync` + `isPageFolder`), NOT through
+// `pageFiles`, so a `pageFiles` that stopped descending into page folders is
+// caught by name instead of agreeing with itself (CLAUDE.md §86: a gate must
+// not derive its population through the code it is probing).
+
+/**
+ * The direct subfolders of `pagesDir`, split into page folders (they hold an
+ * `index.jsx` / `index.tsx`) and feature folders (`contracts/`, `rfqs/`, …).
+ * Direct children only: that is where a page lives (PAGE-SPLIT-GUIDE, "Target
+ * shape"); a component split inside a feature folder is not a page.
+ * @param {string} pagesDir
+ * @returns {{ pages: string[], features: string[] }}  folder names, sorted
+ */
+export const pagesDirFolders = (pagesDir) => {
+  const dirs = readdirSync(pagesDir)
+    .filter((name) => statSync(join(pagesDir, name)).isDirectory())
+    .sort();
+  return {
+    pages: dirs.filter((d) => isPageFolder(join(pagesDir, d))),
+    features: dirs.filter((d) => !isPageFolder(join(pagesDir, d)))
+  };
+};
+
+/**
+ * Every page folder under `pagesDir` (`'BuyerSourcing'`, `'SupplierShipments'`, …).
+ * @param {string} pagesDir
+ * @returns {string[]}
+ */
+export const pageFolders = (pagesDir) => pagesDirFolders(pagesDir).pages;
+
+/**
+ * Every non-test source file under ONE direct subfolder of `pagesDir`, page
+ * folder or not, relative to `pagesDir`. For the known-bad control: a feature
+ * folder's files must stay OUT of a page population.
+ * @param {string} pagesDir
+ * @param {string} folder
+ * @returns {string[]}
+ */
+export const folderSourceFiles = (pagesDir, folder) => filesUnder(pagesDir, folder);

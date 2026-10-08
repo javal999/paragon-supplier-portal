@@ -5,7 +5,12 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
 import { buildRepoProgram } from '@lib/storedFieldGate/derive';
 import { isTestFile, scriptKindOf } from '@test/sourceFiles';
-import { pageFiles as pagesOf } from '@test/pageFiles';
+import {
+  folderSourceFiles,
+  pageFiles as pagesOf,
+  pageFolderFiles,
+  pagesDirFolders
+} from '@test/pageFiles';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DP2-PALETTE-01 — chart colour comes from the centralized palette
@@ -828,40 +833,47 @@ describe('DP2-BUTTON-01 — Export never occupies the primary (action-blue) slot
     const scanned = exportScanned();
     expect(scanned.length).toBeGreaterThan(20);
     expect(scanned).toContain('BuyerAnalytics.jsx');
-    // A page split into a folder is still a page (PAGE-SPLIT-GUIDE).
-    expect(scanned).toContain('SupplierRFQs/index.jsx');
-    expect(scanned).toContain('BuyerSourcing/index.jsx');
-    expect(scanned).toContain('BuyerSourcing/components/RfqSidePanel.jsx');
-    expect(scanned).toContain('SupplierShipments/index.jsx');
-    expect(scanned).toContain('SupplierShipments/components/ShipmentsList.jsx');
-    expect(scanned).toContain('BuyerCommitments/index.jsx');
-    expect(scanned).toContain('BuyerCommitments/components/ExceptionRow.jsx');
-    expect(scanned).toContain('SupplierRegistration/index.jsx');
-    expect(scanned).toContain('SupplierRegistration/components/ReviewStep.jsx');
-    expect(scanned).toContain('SupplierRegistration/hooks/useRegistrationWizard.js');
-    expect(scanned).toContain('BuyerContracts/index.jsx');
-    expect(scanned).toContain('BuyerContracts/components/ContractsTable.jsx');
-    expect(scanned).not.toContain('contracts/RaisedElsewhere.jsx');
-    expect(scanned).toContain('BuyerReschedule/index.jsx');
-    expect(scanned).toContain('BuyerReschedule/components/FillChart.jsx');
-    expect(scanned).toContain('BuyerReschedule/hooks/useProposalActions.js');
-    expect(scanned).toContain('SupplierForecasts/index.jsx');
-    expect(scanned).toContain('SupplierForecasts/components/ShipmentCard.jsx');
-    expect(scanned).toContain('SupplierForecasts/utils.js');
-    expect(scanned).not.toContain('forecasts/forecastDisplay.jsx');
-    expect(scanned).toContain('BuyerOrderPlan/index.jsx');
-    expect(scanned).toContain('BuyerOrderPlan/components/RecActionCell.jsx');
-    expect(scanned).not.toContain('BuyerOrderPlan.jsx');
-    expect(scanned).toContain('BuyerStabilise/index.jsx');
-    expect(scanned).toContain('BuyerStabilise/components/PublishSection.jsx');
-    expect(scanned).toContain('BuyerStabilise/hooks/usePublishChecklist.js');
-    expect(scanned).toContain('SupplierForecastCommitments/index.jsx');
-    expect(scanned).toContain('SupplierForecastCommitments/components/VersionSection.jsx');
-    expect(scanned).not.toContain('forecasts/forecastDisplay.jsx');
-    expect(scanned).not.toContain('shipments/CarrierPicker.jsx');
-    expect(scanned).not.toContain('rfqs/TieredQuoteForm.jsx');
+    // The carve-out, and a page that does not exist, stay out.
     expect(scanned).not.toContain('BuyerCompliance.jsx');
     expect(scanned).not.toContain('BuyerNotAChartPage.tsx');
+  });
+
+  // ── Page folders are DERIVED from the tree (PAGE-SPLIT-GUIDE). A split adds
+  // no line here: `pagesDirFolders` finds every folder holding an `index.jsx`,
+  // and every file in each one must be in the scanned population. It reads the
+  // tree itself, not through `pageFiles`, so a `pageFiles` that stopped
+  // descending into page folders goes red by the page's name.
+  const { pages: PAGE_FOLDERS, features: FEATURE_FOLDERS } = pagesDirFolders(here);
+
+  it('⚠️ THE PAGE FOLDERS ARE DERIVED — by membership, never by count', () => {
+    expect(PAGE_FOLDERS.length).toBeGreaterThan(0);
+    expect(PAGE_FOLDERS).toContain('BuyerSourcing');
+    expect(PAGE_FOLDERS).toContain('SupplierShipments');
+    // Known-false: a feature folder (no index) is not a page.
+    expect(PAGE_FOLDERS).not.toContain('contracts');
+    expect(FEATURE_FOLDERS).toContain('contracts');
+    expect(FEATURE_FOLDERS).toContain('shipments');
+  });
+
+  it.each(PAGE_FOLDERS)('%s/ — every shipped file of the page folder is scanned', (page) => {
+    const scanned = new Set(exportScanned());
+    const files = pageFolderFiles(here, page);
+    expect(files).toContain(`${page}/index.jsx`);
+    expect(files.filter((f) => !scanned.has(f))).toEqual([]);
+  });
+
+  it('⚠️ KNOWN-BAD: no feature-folder file is scanned as a page, and no split page left its old file', () => {
+    const scanned = exportScanned();
+    const featureFiles = FEATURE_FOLDERS.flatMap((d) => folderSourceFiles(here, d));
+    // Not vacuous: these are real files the scan must leave out.
+    expect(featureFiles).toContain('contracts/RaisedElsewhere.jsx');
+    expect(featureFiles).toContain('shipments/CarrierPicker.jsx');
+    expect(featureFiles).toContain('rfqs/TieredQuoteForm.jsx');
+    expect(featureFiles).toContain('forecasts/forecastDisplay.jsx');
+    expect(scanned.filter((f) => featureFiles.includes(f))).toEqual([]);
+    // A split page leaves no `<Page>.jsx` beside its folder.
+    const folders = new Set(PAGE_FOLDERS);
+    expect(scanned.filter((f) => folders.has(f.replace(/\.[jt]sx$/, '')))).toEqual([]);
   });
 
   for (const file of exportScanned()) {
