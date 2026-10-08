@@ -447,7 +447,7 @@ it as evidence of anything.
   repeating.
 
   ⚠️ **AND UNTIL §6 LANDED THAT SENTENCE WAS TRUE OF FIELDS AND ONLY
-  ACCIDENTALLY TRUE OF FILES.** A backticked `BuyerContracts.jsx` satisfied the
+  ACCIDENTALLY TRUE OF FILES.** A backticked BuyerContracts.jsx satisfied the
   FIELD pattern, so the check asked whether `src/` contains the string `tsx` —
   which it always does. **Three citations were passing on their own file
   extension.** A file is now its own kind, resolved on disk, with both controls:

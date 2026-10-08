@@ -424,9 +424,8 @@ const ContractsWorkspace = ({ baseContracts, obligations, suppliers }) => {
         })}
         {/* D-CENSUS-8 — `contracts` is null-backed: no contract lifecycle target is
             wired, and SAP owns contract identity. The create wizard on this page
-            still mints one client-side (CTR-FABRICATION-01 / CTR-NUMBER-FABRICATION-01,
-            filed for the D-CENSUS-3 demotion batch); the marker states the feed
-            fact now and does not pretend the wizard's output is a real contract. */}
+            no longer mints one: its terminal act refuses (CTR-FABRICATION-01, closed
+            in f5338c2, findings §103). The marker states the feed fact. */}
         <ProvenanceMarker capability="contracts" className="ml-3 align-middle" />
       </PageMetaLine>
 
