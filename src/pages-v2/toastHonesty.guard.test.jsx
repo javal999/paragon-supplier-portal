@@ -682,6 +682,25 @@ describe('unbacked-toast honesty guard (R1)', () => {
     expect(scanned).toContain('BuyerContracts/hooks/useContractDraft.js');
   });
 
+  // `/register` holds no toast site, so its folder is pinned in the FILE
+  // population the sites are derived from rather than in the sites.
+  it('the SupplierRegistration folder is in the scanned files', () => {
+    const files = pageFiles(PAGES_DIR);
+    expect(files).toContain('SupplierRegistration/index.jsx');
+    expect(files).toContain('SupplierRegistration/components/ContactsStep.jsx');
+    expect(files).not.toContain('SupplierRegistration.jsx');
+  });
+
+  // BuyerCommitments has no `toast({` site of its own (its toasts are the
+  // success texts `run` shows), so its split is asserted on the FILE population:
+  // the hook that now holds the submit handler is read like the page was.
+  it('a split page with no toast site still has its handler files in the population', () => {
+    const files = pageFiles(PAGES_DIR);
+    expect(files).toContain('BuyerCommitments/index.jsx');
+    expect(files).toContain('BuyerCommitments/hooks/useCommitmentAction.js');
+    expect(files).not.toContain('BuyerCommitments.jsx');
+  });
+
   /**
    * ⚠️ **AN EXCLUSION THAT EXCLUDES NOTHING READS EXACTLY LIKE A WORKING ONE.**
    * If the refusal property stopped matching — a renamed identifier, a changed
