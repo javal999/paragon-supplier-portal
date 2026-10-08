@@ -390,13 +390,13 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
         'src/services/transitions/forecastRules.js'
       ],
       commitmentDeadlineWorkingDays: [
-        'src/pages-v2/BuyerCommitments.jsx',
+        'src/pages-v2/BuyerCommitments/index.jsx',
         'src/pages-v2/SupplierForecastCommitments.jsx',
         'src/services/transitions/forecastConfig.js',
         'src/services/transitions/forecastRules.js'
       ],
       gapColourThresholds: [
-        'src/pages-v2/BuyerCommitments.jsx',
+        'src/pages-v2/BuyerCommitments/components/CommitmentGrid.jsx',
         'src/services/transitions/forecastConfig.js',
         'src/services/transitions/forecastRules.js'
       ],
@@ -418,7 +418,7 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
         'src/services/transitions/inventoryRules.js'
       ],
       coverageThresholds: [
-        'src/pages-v2/BuyerCommitments.jsx',
+        'src/pages-v2/BuyerCommitments/components/SupplierCoverage.jsx',
         'src/services/sdc/consolidation.js',
         'src/services/transitions/inventoryConfig.js',
         'src/services/transitions/inventoryRules.js'

@@ -30,8 +30,9 @@
 
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { resolveImport } from '@test/resolveImport';
+import { isPageFolder, pageFolderSource } from '@test/pageFiles';
 
 const ROUTER = join(process.cwd(), 'src', 'router', 'AppRouter.jsx');
 const routerSrc = readFileSync(ROUTER, 'utf-8');
@@ -66,6 +67,21 @@ function sourceOf(component) {
   // The router imports pages through the `@pages-v2/...` alias (aliases.js), so
   // the specifier is resolved alias-aware rather than joined as a relative path.
   return resolveImport(ROUTER, m[1]);
+}
+
+/**
+ * The page's source text. A page split into a folder resolves to its
+ * `index.jsx`, but its containers now live in `components/` too, so the whole
+ * folder is read (PAGE-SPLIT-GUIDE): reading only the index would let a
+ * section moved out of it set its own width with nothing going red.
+ * @param {string} file
+ * @returns {string}
+ */
+function pageSource(file) {
+  const dir = dirname(file);
+  return /^index\.[jt]sx?$/.test(basename(file)) && isPageFolder(dir)
+    ? pageFolderSource(dirname(dir), basename(dir))
+    : readFileSync(file, 'utf-8');
 }
 
 /** The matcher: a container `<div>` that sets a large max-width. */
@@ -107,6 +123,16 @@ describe('⚠️ §70 · THE MATCHER, BEFORE ANY CLAIM ABOUT THE TREE', () => {
     expect(sourceOf('SupplierRFQsV2')).toMatch(/SupplierRFQs\/index\.jsx$/);
     expect(sourceOf('BuyerSourcing')).toMatch(/BuyerSourcing\/index\.jsx$/);
     expect(sourceOf('SupplierShipments')).toMatch(/SupplierShipments\/index\.jsx$/);
+    expect(sourceOf('BuyerCommitments')).toMatch(/BuyerCommitments\/index\.jsx$/);
+    // …and a split page is read as its whole folder: the grid and charts
+    // `<details>` container moved to `components/CoverageDetails.jsx`.
+    const commitments = pageSource(/** @type {string} */ (sourceOf('BuyerCommitments')));
+    expect(commitments).toContain('<AppShellV2');
+    expect(commitments).toContain('data-testid="fc-coverage-details"');
+    // Known-false: a single-file page is read as itself, not as its directory.
+    expect(pageSource(/** @type {string} */ (sourceOf('RolesCatalogue')))).not.toContain(
+      'data-testid="fc-coverage-details"'
+    );
     expect(sourceOf('BuyerContracts')).toMatch(/BuyerContracts\/index\.jsx$/);
   });
 });
@@ -116,7 +142,7 @@ describe('§70 · no page inside AppShellV2 sets its own width', () => {
     const offenders = routes()
       .map((r) => ({ ...r, file: sourceOf(r.component) }))
       .filter((r) => r.file !== null)
-      .map((r) => ({ ...r, src: readFileSync(/** @type {string} */ (r.file), 'utf-8') }))
+      .map((r) => ({ ...r, src: pageSource(/** @type {string} */ (r.file)) }))
       // Not a shell page ⇒ out of scope on principle: a full-bleed flow owns its
       // own chrome, and a centred form is a legitimate width without a shell.
       .filter((r) => r.src.includes('<AppShellV2'))
