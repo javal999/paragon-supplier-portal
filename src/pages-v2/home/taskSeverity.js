@@ -16,6 +16,11 @@ import { addDays, daysBetween } from '@services/transitions/inventoryRules';
 // the cap are `dueSoonAmber`: genuinely late, capped out of the red slots.
 // Everything else is `dueSoonGrey`. The red count is never padded to the cap.
 //
+// A task may opt in to `noDeadlineAmber`: while NO deadline is recorded for it
+// and nothing makes it eligible, it shows `dueSoonAmber` instead of grey, unranked
+// — "Due soon" until somebody defines its deadline (Supplier Home, product owner
+// ruling). It can never take a red slot that way.
+//
 // Days are calendar days in Asia/Jakarta, the zone every date on screen uses.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -31,11 +36,13 @@ export const URGENT_CAP = 3;
 /**
  * `deadlines`:  The deadline of every line item the task counts (ISO date or instant).
  * `stock`:  Cover against lead time for the materials the task counts, when it has any.
+ * `noDeadlineAmber`:  Show amber (not grey) while no deadline is on record and nothing makes the task eligible.
  *
  * @typedef {{
  *   readonly id: string;
  *   readonly deadlines: readonly (string | null | undefined)[];
  *   readonly stock?: readonly StockCover[];
+ *   readonly noDeadlineAmber?: boolean;
  * }} SeverityInput
  */
 
@@ -145,10 +152,18 @@ export function taskSeverities(tasks, today) {
         a.id.localeCompare(b.id)
     );
   const rankOf = new Map(ranked.map((a, i) => [a.id, i + 1]));
-  return assessed.map((a) => {
+  return assessed.map((a, i) => {
     const rank = rankOf.get(a.id) ?? null;
+    const amberUntilDefined = tasks[i].noDeadlineAmber === true && a.deadline === null;
     /** @type {TaskSeverity} */
-    const severity = rank === null ? 'dueSoonGrey' : rank <= URGENT_CAP ? 'urgent' : 'dueSoonAmber';
+    const severity =
+      rank !== null
+        ? rank <= URGENT_CAP
+          ? 'urgent'
+          : 'dueSoonAmber'
+        : amberUntilDefined
+          ? 'dueSoonAmber'
+          : 'dueSoonGrey';
     return { ...a, severity, rank };
   });
 }

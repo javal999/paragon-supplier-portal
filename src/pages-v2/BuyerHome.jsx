@@ -23,10 +23,8 @@ import { useHubRole } from '@components/layout-v2/hubRole';
 import * as d from './widgets/buyerDerivations';
 /** @import { HomeTask } from './home/TaskList' */
 import TaskList from './home/TaskList';
-/** @import { FlagSeverity } from '@components/ui-v2/ExpandableWidget' */
-/** @import { SeverityInput, TaskSeverity } from './home/taskSeverity' */
-import { taskSeverities } from './home/taskSeverity';
-import { formatDate } from '@lib/format';
+/** @import { UnratedTask } from './home/severityDisplay' */
+import { withSeverity } from './home/severityDisplay';
 import { POStatus } from '@services/data/types';
 import {
   completionMovedLater,
@@ -49,16 +47,11 @@ import { isRetryable } from '@services/data/sapInterfaceRules';
 // PTI role the menu is showing, so a Finance user is not handed a planner's work.
 
 /**
- * A task before its severity is known: what it counts, and the dates that decide it.
- * @typedef {Omit<HomeTask, 'severity'> & SeverityInput & {
- *   readonly roles: readonly Exclude<HubRole, 'ALL'>[];
- * }} RoleTask
+ * A task before its severity is known, and the PTI roles it is shown to.
+ * @typedef {UnratedTask & { readonly roles: readonly Exclude<HubRole, 'ALL'>[] }} RoleTask
  */
 
 const DAY_MS = 86_400_000;
-
-/** @type {Record<TaskSeverity, FlagSeverity>} */
-const FLAG = { urgent: 'critical', dueSoonAmber: 'warning', dueSoonGrey: 'info' };
 
 /** @type {React.FC} */
 const BuyerHome = () => {
@@ -322,33 +315,11 @@ const BuyerHome = () => {
         }
       ];
       // Rank only what the list shows: this role's tasks with something in them.
-      const shown = (role === 'ALL' ? all : all.filter((task) => task.roles.includes(role))).filter(
-        (task) => task.count > 0
+      return withSeverity(
+        role === 'ALL' ? all : all.filter((task) => task.roles.includes(role)),
+        nowIso,
+        t
       );
-      const severities = taskSeverities(shown, nowIso);
-      return shown.map((task, i) => {
-        const s = severities[i];
-        const due =
-          s.deadline === null ? null : t('hub.home.due', { date: formatDate(s.deadline) });
-        const detail =
-          s.reason === 'deadline'
-            ? `${due} · ${t('hub.home.overdueBy', { count: s.overdueDays })}`
-            : s.reason === 'stockOut' && s.cover
-              ? `${t('inv.basis.cover', { count: Math.floor(s.cover.daysOfCover) })} · ${t('inv.basis.leadTime', { count: s.cover.leadTimeDays })}`
-              : (due ?? t('hub.home.noDeadline'));
-        return {
-          id: task.id,
-          label: task.label,
-          count: task.count,
-          to: task.to,
-          severity: FLAG[s.severity],
-          // A grey row is still "Due soon", not "To review".
-          chipLabel: s.severity === 'dueSoonGrey' ? t('hub.home.severity.warning') : undefined,
-          // Red and amber rows list in urgency order, most urgent first.
-          rank: s.rank ?? undefined,
-          detail
-        };
-      });
     }, [
       role,
       pos.data,

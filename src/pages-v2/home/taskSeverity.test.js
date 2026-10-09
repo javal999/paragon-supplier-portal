@@ -145,3 +145,52 @@ describe('taskSeverities', () => {
     expect(taskSeverities(input, TODAY)).toEqual(first);
   });
 });
+
+describe('taskSeverities — noDeadlineAmber (amber until a deadline is defined)', () => {
+  it('a task with no deadline on record shows amber, unranked, when it opts in', () => {
+    const [r] = taskSeverities([{ id: 'a', deadlines: [], noDeadlineAmber: true }], TODAY);
+    expect(r).toMatchObject({ severity: 'dueSoonAmber', rank: null, eligible: false });
+  });
+
+  it('without the opt-in the same task stays grey', () => {
+    const [r] = taskSeverities([{ id: 'a', deadlines: [] }], TODAY);
+    expect(r.severity).toBe('dueSoonGrey');
+  });
+
+  it('it never takes a red slot: three eligible tasks keep red, the no-deadline task is amber', () => {
+    const results = byId(
+      taskSeverities(
+        [
+          { id: 'none', deadlines: [], noDeadlineAmber: true },
+          { id: 'late1', deadlines: ['2026-08-30'] }
+        ],
+        TODAY
+      )
+    );
+    expect(results.late1.severity).toBe('urgent');
+    expect(results.none).toMatchObject({ severity: 'dueSoonAmber', rank: null });
+  });
+
+  it('a stock-out still makes it eligible and ranked, like any task', () => {
+    const [r] = taskSeverities(
+      [
+        {
+          id: 'a',
+          deadlines: [],
+          noDeadlineAmber: true,
+          stock: [{ daysOfCover: 3, leadTimeDays: 14 }]
+        }
+      ],
+      TODAY
+    );
+    expect(r).toMatchObject({ eligible: true, rank: 1, severity: 'urgent', reason: 'stockOut' });
+  });
+
+  it('once a deadline exists it is judged by that deadline, not held amber', () => {
+    const [r] = taskSeverities(
+      [{ id: 'a', deadlines: ['2026-09-20'], noDeadlineAmber: true }],
+      TODAY
+    );
+    expect(r.severity).toBe('dueSoonGrey');
+  });
+});

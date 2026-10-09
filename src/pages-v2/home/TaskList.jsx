@@ -56,12 +56,19 @@ const CHIP = {
 export function sortTasks(tasks) {
   return tasks
     .filter((task) => task.count > 0)
-    .sort(
-      (a, b) =>
-        RANK[a.severity] - RANK[b.severity] ||
-        (a.rank !== undefined && b.rank !== undefined ? a.rank - b.rank : 0) ||
-        b.count - a.count
-    );
+    .sort((a, b) => RANK[a.severity] - RANK[b.severity] || byRank(a, b) || b.count - a.count);
+}
+
+/**
+ * Ranked rows first, in rank order; unranked rows after them (an amber row with
+ * no deadline on record carries no rank). Zero when neither is ranked.
+ * @param {HomeTask} a
+ * @param {HomeTask} b
+ * @returns {number}
+ */
+function byRank(a, b) {
+  if (a.rank === undefined) return b.rank === undefined ? 0 : 1;
+  return b.rank === undefined ? -1 : a.rank - b.rank;
 }
 
 /** @type {React.FC<{ tasks: readonly HomeTask[] }>} */

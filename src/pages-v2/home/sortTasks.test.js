@@ -39,6 +39,15 @@ describe('sortTasks', () => {
     expect(sorted.map((t) => t.id)).toEqual(['red', 'amber', 'grey']);
   });
 
+  it('within amber, ranked rows come first; an unranked amber row (no deadline) follows', () => {
+    const sorted = sortTasks([
+      task('no-deadline', 'warning', 9),
+      task('rank5', 'warning', 1, 5),
+      task('rank4', 'warning', 2, 4)
+    ]);
+    expect(sorted.map((t) => t.id)).toEqual(['rank4', 'rank5', 'no-deadline']);
+  });
+
   it('without a rank (Supplier Home, grey rows) the count still decides', () => {
     const sorted = sortTasks([
       task('few', 'warning', 2),
