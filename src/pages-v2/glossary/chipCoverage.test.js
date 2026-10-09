@@ -236,9 +236,13 @@ describe('GL-1 chip coverage — the instrument, before the conclusion', () => {
   });
 
   it('finds a KNOWN-TRUE render site — the goods-receipt halal refusal', () => {
-    // The exact site HALAL-REFUSAL-DEAD-ENDS-01 was found at.
+    // The exact site HALAL-REFUSAL-DEAD-ENDS-01 was found at. Since the wizard
+    // became a folder (frontend-standard Phase 5) the halal refusal banner and
+    // its map live in the quality step.
     const halal = USES.filter(
-      (u) => u.file.endsWith('GRInspectionWizard.jsx') && u.vocabulary === 'HalalRefusalReason'
+      (u) =>
+        u.file.endsWith('GRInspectionWizard/components/QualityStep.jsx') &&
+        u.vocabulary === 'HalalRefusalReason'
     );
     expect(halal.length).toBeGreaterThan(0);
     expect(halal.every((u) => u.isRender)).toBe(true);
@@ -249,7 +253,16 @@ describe('GL-1 chip coverage — the instrument, before the conclusion', () => {
     // non-render, or the guard would be demanding an impossible chip.
     const toastBound = USES.filter((u) => !u.isRender);
     expect(toastBound.length).toBeGreaterThan(0);
-    expect(toastBound.some((u) => u.file.endsWith('SupplierForecasts.jsx'))).toBe(true);
+    // `SupplierForecasts` is a page folder now (PAGE-SPLIT-GUIDE): each qty
+    // refusal map sits in the panel that toasts and renders it.
+    expect(
+      toastBound.some((u) => u.file.endsWith('SupplierForecasts/components/ConfirmPanel.jsx'))
+    ).toBe(true);
+    expect(
+      toastBound.some((u) =>
+        u.file.endsWith('SupplierForecasts/components/ShipmentReportPanel.jsx')
+      )
+    ).toBe(true);
   });
 });
 

@@ -533,6 +533,10 @@ export const resources = {
       'ui.select.error': 'Couldn’t load options',
       'ui.select.retry': 'Retry',
       'topbar.searchLabel': 'Search the portal',
+      'topbar.searchResults': 'Matching pages',
+      'topbar.searchNoResults': 'No pages match “{{query}}”',
+      'topbar.searchCount_one': '{{count}} page',
+      'topbar.searchCount_other': '{{count}} pages',
       // — PO confirm (Step 3.10 proof surface) —
       'po.confirm.action': 'Confirm order',
       'po.confirm.submitting': 'Confirming…',
@@ -1017,6 +1021,9 @@ export const resources = {
       'ui.select.error': 'Gagal memuat opsi',
       'ui.select.retry': 'Coba lagi',
       'topbar.searchLabel': 'Cari di portal',
+      'topbar.searchResults': 'Halaman yang cocok',
+      'topbar.searchNoResults': 'Tidak ada halaman yang cocok dengan “{{query}}”',
+      'topbar.searchCount_other': '{{count}} halaman',
       // — PO confirm (ID stub — refined in the Phase 3′ ID-first sweep) —
       'po.confirm.action': 'Konfirmasi pesanan',
       'po.confirm.submitting': 'Mengonfirmasi…',

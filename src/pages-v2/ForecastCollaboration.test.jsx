@@ -229,6 +229,23 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
 // FUX phase 2 B2 — Published versions is the `?tab=versions` tab of Publish to suppliers.
 const VERSIONS_TAB = '/buyer/stabilise?tab=versions';
 
+describe('Supplier — the Due rule is visible, once (a11y finding 19, supplier side)', () => {
+  it('states the rule in one line above the material tables, and no Due header carries a hover title', async () => {
+    renderWithProviders(<SupplierForecastCommitments />, {
+      identity: SUPPLIER,
+      route: '/supplier/forecasts'
+    });
+    await screen.findByTestId('fc-sup-material-PK-PETB-8801');
+    const note = screen.getByTestId('fc-sup-due-rule');
+    expect(note).toHaveTextContent(/^Commitment due: Firm: /);
+    expect(note).toHaveTextContent(/working days/);
+    expect(screen.getAllByTestId('fc-sup-due-rule')).toHaveLength(1);
+    for (const header of screen.getAllByRole('columnheader', { name: 'Commitment due' })) {
+      expect(header.querySelector('[title]')).toBeNull();
+    }
+  });
+});
+
 describe('PTI — Published versions (REQ-E06-01 MP, FUX-D1, FUX phase 2 B2)', () => {
   it('lists versions with who viewed them, as a tab of Publish to suppliers', async () => {
     renderWithProviders(<BuyerStabilise />, { identity: PLANNER, route: VERSIONS_TAB });

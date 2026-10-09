@@ -34,6 +34,7 @@ import { screen, fireEvent } from '@testing-library/react';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { renderWithProviders, BUYER } from '@test/test-utils';
+import { pageFolderSource } from '@test/pageFiles';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 import { mockDataService } from '@services/data/mock/mockDataService';
 import { purchaseRequisitionStore } from '@services/data/mock/stores/purchaseRequisitionStore';
@@ -203,7 +204,9 @@ describe('PR2 · the population — six converted, two deliberately NOT', () => 
   });
 
   it('the SupplierForecasts site keeps its SUPERTYPE test — it was not forced into the others’ shape', () => {
-    const src = read('SupplierForecasts.jsx');
+    // A page folder now (PAGE-SPLIT-GUIDE): read ALL of it, so the site is found
+    // wherever in the folder it lives and the assertions run over the whole page.
+    const src = pageFolderSource(__dirname, 'SupplierForecasts');
     expect(src).toContain('useDataErrorText');
     // A plain `Error` that is not a `DataError` must still render its message,
     // and a thrown non-`Error` must still reach `String(e)`.

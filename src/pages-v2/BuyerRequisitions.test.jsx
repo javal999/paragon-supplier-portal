@@ -58,7 +58,10 @@ describe('BuyerRequisitions — the fabricated-number toast stub is retired (G1.
       document.querySelector('input[type="date"]')
     );
     fireEvent.change(dateInput, { target: { value: '2026-09-01' } });
-    const selects = screen.getAllByRole('combobox');
+    // The top bar search is a combobox too; leave it out of the positional pick.
+    const selects = screen
+      .getAllByRole('combobox')
+      .filter((el) => el.getAttribute('aria-label') !== 'Search the portal');
     fireEvent.change(selects[1], { target: { value: 'CC-RD-001 — R&D' } });
 
     fireEvent.click(screen.getByRole('button', { name: 'Create requisition' }));
@@ -102,7 +105,11 @@ const openNewPrForm = async (qty) => {
   fireEvent.change(screen.getByPlaceholderText('0'), { target: { value: qty } });
   const dateInput = /** @type {HTMLInputElement} */ (document.querySelector('input[type="date"]'));
   fireEvent.change(dateInput, { target: { value: '2026-09-01' } });
-  fireEvent.change(screen.getAllByRole('combobox')[1], { target: { value: 'CC-RD-001 — R&D' } });
+  // The top bar search is a combobox too; leave it out of the positional pick.
+  const selects = screen
+    .getAllByRole('combobox')
+    .filter((el) => el.getAttribute('aria-label') !== 'Search the portal');
+  fireEvent.change(selects[1], { target: { value: 'CC-RD-001 — R&D' } });
 };
 
 describe('BuyerRequisitions — an AMBIGUOUS quantity never becomes a PR (CP-0 · 2b)', () => {

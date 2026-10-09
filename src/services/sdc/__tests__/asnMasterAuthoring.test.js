@@ -28,6 +28,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, expect, it } from 'vitest';
+import { GR_WIZARD_DIR, globFolderSource } from '@test/featureFolder';
 
 import { MATERIAL_MASTER } from '../fixtures';
 import { MATERIAL_GROUPS } from '../materialGroups';
@@ -455,14 +456,17 @@ describe('2B-5b-ii — the batch changed no BEHAVIOUR, and the firing set moved 
     // Duplicating the assertion would also have been
     // `EVIDENCE-REPLICATION-NOT-CORROBORATION-01`: a second copy of one check is
     // one check, and this one would have cost the original its accuracy.
-    const wizard = /** @type {Record<string, string>} */ (
-      import.meta.glob('/src/components/v2-features/GRInspectionWizard.jsx', {
-        query: '?raw',
-        import: 'default',
-        eager: true
-      })
+    const src = globFolderSource(
+      /** @type {Record<string, string>} */ (
+        // A FOLDER since frontend-standard Phase 5 — read whole.
+        import.meta.glob('/src/components/v2-features/GRInspectionWizard/**/*.{js,jsx}', {
+          query: '?raw',
+          import: 'default',
+          eager: true
+        })
+      ),
+      GR_WIZARD_DIR
     );
-    const src = Object.values(wizard)[0];
     expect(src).toBeTruthy();
     expect(src).not.toContain("materialCode.startsWith('AI-')");
     // ⚠️ `inferBpom` SURVIVES IN THIS FILE ONLY AS PROSE, and that is checked

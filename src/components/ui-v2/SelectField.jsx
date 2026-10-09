@@ -3,6 +3,7 @@ import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useSta
 import { createPortal } from 'react-dom';
 import { AlertTriangle, ChevronDown, Loader2, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { highlightMatch } from './highlightMatch';
 /**
  * GLOBAL KILL SWITCH (review Q6). Build with `VITE_SELECTFIELD_MODE=native`
  * (e.g. a Vercel env var, then redeploy) and every SelectField renders the
@@ -63,26 +64,6 @@ const DEFAULT_VIRTUALIZE_THRESHOLD = 300;
 const OVERSCAN = 4;
 const controlBaseClass =
   'w-full bg-white border border-border-input rounded-md px-3 py-2 text-sm placeholder:text-text-tertiary focus:outline-none focus:border-action disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-bg-hover';
-/**
- * @param {string} label
- * @param {string} query
- * @returns {React.ReactNode}
- */
-function highlightMatch(label, query) {
-  const trimmed = query.trim();
-  if (!trimmed) return label;
-  const idx = label.toLowerCase().indexOf(trimmed.toLowerCase());
-  if (idx === -1) return label;
-  return (
-    <>
-      {label.slice(0, idx)}
-      <mark className="bg-teal-soft text-teal-hover font-semibold rounded-sm">
-        {label.slice(idx, idx + trimmed.length)}
-      </mark>
-      {label.slice(idx + trimmed.length)}
-    </>
-  );
-}
 /**
  * @param {SelectFieldProps} props
  * @returns {React.ReactNode}

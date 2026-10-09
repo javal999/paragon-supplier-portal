@@ -22,6 +22,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { declaresField } from '@test/declaredFields';
+import { pageFolderSource } from '@test/pageFiles';
 import { mockContracts } from '@data/mockContracts';
 /** @import { ContractObligation } from '@data/mockObligations' */
 import { mockObligations } from '@data/mockObligations';
@@ -251,7 +252,8 @@ describe('⚠️ THE PROPERTY THE STORED VERSION COULD NEVER HAVE HAD', () => {
  */
 describe('⚠️ the stored counters are RETIRED — one source or none', () => {
   const CONTRACTS_SRC = 'src/data/mockContracts.js';
-  const WIZARD_SRC = 'src/pages-v2/BuyerContracts.jsx';
+  // The wizard is the `BuyerContracts/` page FOLDER since the Phase 5 split.
+  const WIZARD_PAGE = 'BuyerContracts';
   // A DECLARATION is read through the parser in either form — a TS
   // `f: number;` member or a JSDoc `@property {number} f` tag
   // (frontend-standard Phase 4: the fixture is now JavaScript).
@@ -283,7 +285,7 @@ describe('⚠️ the stored counters are RETIRED — one source or none', () => 
   });
 
   it('the wizard no longer MINTS either — the one non-fixture writer is gone', () => {
-    const src = readFileSync(WIZARD_SRC, 'utf8');
+    const src = pageFolderSource('src/pages-v2', WIZARD_PAGE);
     // The retirement note NAMES both fields, so a bare substring search would
     // find them there and read the retirement as the defect. Matching the WRITE
     // shape — the field at the head of a line, followed by `:` — is what
