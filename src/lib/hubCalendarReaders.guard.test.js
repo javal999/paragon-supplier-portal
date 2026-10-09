@@ -283,7 +283,9 @@ const CALENDAR_DAY_ALLOWLIST = {
   'services/engine/requirement.js#openReceipts':
     'REQ-E14-03 — an open PO line whose confirmed delivery date passed more than the grace window (14 calendar days) is treated as closed in netting: a physical delivery window counted in calendar days, like CR-07, not a response deadline anybody answers.',
   'services/data/mock/rescheduleReadModel.js#callOffOrderLines':
-    'REQ-E14-13 — the same E14-03 grace window applied to an open call-off (ENG-B10): a delivery date passed more than 14 calendar days ago is treated as closed. A physical delivery window, not a response deadline.'
+    'REQ-E14-13 — the same E14-03 grace window applied to an open call-off (ENG-B10): a delivery date passed more than 14 calendar days ago is treated as closed. A physical delivery window, not a response deadline.',
+  'pages-v2/home/taskSeverity.js#assess':
+    'SC-01 Home severity — it computes no deadline. It reads deadlines the lanes already computed (on the hub calendar where they are working-day deadlines) and counts how many calendar days ago they passed, and how many calendar days a stock-out precedes today + the supplier lead time. Cover and lead time are calendar days (CR-01 / CR-24), so the ranking compares like with like.'
 };
 
 describe('BL-50 · the deadline population reads the hub calendar', () => {

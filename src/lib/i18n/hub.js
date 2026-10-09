@@ -123,6 +123,12 @@ export const hubEn = {
   'hub.home.severity.critical': 'Urgent',
   'hub.home.severity.warning': 'Due soon',
   'hub.home.severity.info': 'To review',
+  // Why a task row has its severity (taskSeverity.js), worded as the order
+  // and chase pages word it.
+  'hub.home.due': 'Due {{date}}',
+  'hub.home.overdueBy_one': 'Overdue {{count}} day',
+  'hub.home.overdueBy_other': 'Overdue {{count}} days',
+  'hub.home.noDeadline': 'No deadline on record',
 
   'hub.home.task.escalatedPo': 'Escalated purchase orders',
   'hub.home.task.rejectedPo': 'Rejected purchase orders',
@@ -281,6 +287,9 @@ export const hubId = {
   'hub.home.severity.critical': 'Mendesak',
   'hub.home.severity.warning': 'Segera',
   'hub.home.severity.info': 'Untuk ditinjau',
+  'hub.home.due': 'Jatuh tempo {{date}}',
+  'hub.home.overdueBy_other': 'Terlambat {{count}} hari',
+  'hub.home.noDeadline': 'Tidak ada tenggat tercatat',
 
   'hub.home.task.escalatedPo': 'Pesanan pembelian yang dieskalasi',
   'hub.home.task.rejectedPo': 'Pesanan pembelian yang ditolak',
