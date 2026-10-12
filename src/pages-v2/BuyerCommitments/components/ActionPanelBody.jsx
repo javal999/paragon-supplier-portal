@@ -143,7 +143,7 @@ const ActionPanelBody = ({
                     className="border-t border-border-subtle align-top"
                     data-testid={`fc-move-row-${q.supplierId}`}
                   >
-                    <th scope="row" className="py-2 pr-2 font-normal text-text-primary">
+                    <th scope="row" className="py-2 pr-2 text-left font-normal text-text-primary">
                       {q.supplierName}
                     </th>
                     <td className="py-2 pr-2">
