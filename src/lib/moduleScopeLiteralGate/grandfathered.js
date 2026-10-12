@@ -81,8 +81,8 @@ export const S2_GRANDFATHERED = [
   'src/pages-v2/SupplierRegistration/components/RequestTypeSelector.jsx::REQUEST_TYPES',
   'src/pages-v2/SupplierStorefront.jsx::TABS',
   'src/pages-v2/SupplierStorefront.jsx::TRACK_RECORD',
-  'src/pages-v2/SupplierWhatsApp.jsx::CAP_KEYS',
-  'src/pages-v2/SupplierWhatsApp.jsx::LANGUAGES',
+  'src/pages-v2/SupplierWhatsApp/components/WhatsAppPanel.jsx::CAP_KEYS',
+  'src/pages-v2/SupplierWhatsApp/components/WhatsAppPanel.jsx::LANGUAGES',
   'src/pages-v2/process-flows/FlowDiagram.jsx::MARKERS'
 ];
 
