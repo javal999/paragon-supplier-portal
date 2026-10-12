@@ -5,7 +5,12 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
 import { buildRepoProgram } from '@lib/storedFieldGate/derive';
 import { isTestFile, scriptKindOf } from '@test/sourceFiles';
-import { folderSourceFiles, pageFiles as pagesOf, pagesDirFolders } from '@test/pageFiles';
+import {
+  folderSourceFiles,
+  pageFiles as pagesOf,
+  pageFolderSource,
+  pagesDirFolders
+} from '@test/pageFiles';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DP2-PALETTE-01 — chart colour comes from the centralized palette
@@ -582,7 +587,7 @@ describe('DP2-PALETTE-01 — no raw hex in any paint position, tree-wide', () =>
     // Not an exemption — a measurement. They are hex, they are page-local, and
     // no paint position consumes them. If one ever does, this file says so with
     // nobody editing it.
-    const chrome = readSrc('pages-v2/SupplierWhatsApp.jsx');
+    const chrome = pageFolderSource(join(SRC, 'pages-v2'), 'SupplierWhatsApp');
     expect(chrome, 'the control is vacuous if the consts have gone').toMatch(
       /const WHATSAPP_BG = '#/
     );
