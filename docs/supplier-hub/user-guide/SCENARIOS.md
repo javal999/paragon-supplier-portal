@@ -82,7 +82,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 
 **RFI and RFP use the same pattern:**
 - **RFI:** **New information request** → **Send to suppliers** (Open) → supplier **Send answers** → **Close the event** (`pages-v2/BuyerRfi.jsx:156,369,395`; `pages-v2/SupplierRfi.jsx:409`).
-- **RFP:** adds **Ask for firm offers** and an award that always needs a reason (`pages-v2/BuyerRfp.jsx:389,416`; `pages-v2/rfx/RfpFirmOffers.jsx:90-96`; `services/transitions/flows/rfpEvent.flow.js:117-135`).
+- **RFP:** adds **Ask for firm offers** and an award that always needs a reason (`pages-v2/BuyerRfp/components/RfpEventActions.jsx:43,67`; `pages-v2/rfx/RfpFirmOffers.jsx:90-96`; `services/transitions/flows/rfpEvent.flow.js:117-135`).
 
 **Negative end-to-end: supplier declines**
 
