@@ -69,7 +69,6 @@ const MaterialSection = ({
             </TableHeaderCell>
             <TableHeaderCell>{t('fc.col.due')}</TableHeaderCell>
             <TableHeaderCell>{t('fc.col.commitment', { uom: first.uom })}</TableHeaderCell>
-            <TableHeaderCell>{t('fc.col.date')}</TableHeaderCell>
             <TableHeaderCell>{t('fc.col.upside', { uom: first.uom })}</TableHeaderCell>
             <TableHeaderCell>{t('fc.col.reason')}</TableHeaderCell>
             <TableHeaderCell>{t('fc.col.status')}</TableHeaderCell>

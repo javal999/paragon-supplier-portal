@@ -19,8 +19,7 @@ export const forecastUxEn = {
     'Which open orders to move later, reduce or cancel when a warehouse week is over capacity.',
   'fux.purpose.publish':
     'Whether the stabilised plan is ready for suppliers, and which held weeks need a reason.',
-  'fux.purpose.responses':
-    'Which supplier commitments to accept, send back for revision or move to another supplier.',
+  'fux.purpose.responses': 'Which supplier commitments to accept or move to another supplier.',
   'fux.purpose.forecastQuality':
     'Whether the engine’s demand forecast is good enough to trust, compared with SAP’s plan.',
   'fux.purpose.stockCheck':
@@ -112,8 +111,7 @@ export const forecastUxId = {
     'Pesanan terbuka mana yang dimundurkan, dikurangi, atau dibatalkan saat satu minggu gudang melebihi kapasitas.',
   'fux.purpose.publish':
     'Apakah rencana yang sudah distabilkan siap untuk pemasok, dan minggu tertahan mana yang perlu alasan.',
-  'fux.purpose.responses':
-    'Komitmen pemasok mana yang diterima, dikembalikan untuk revisi, atau dipindahkan ke pemasok lain.',
+  'fux.purpose.responses': 'Komitmen pemasok mana yang diterima atau dipindahkan ke pemasok lain.',
   'fux.purpose.forecastQuality':
     'Apakah prakiraan permintaan mesin cukup baik untuk dipercaya, dibandingkan rencana SAP.',
   'fux.purpose.stockCheck':

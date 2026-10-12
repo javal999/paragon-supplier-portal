@@ -1,7 +1,7 @@
 /** @import React from 'react' */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useReasonLabel } from '../admin/reasonCodeDisplay';
+import { useActiveReasonCodes, useReasonLabel } from '../admin/reasonCodeDisplay';
 import { useSearchParams } from 'react-router-dom';
 import { OrderNotFound, PoFilterBanner, usePoDrillFilter } from '../orders/PoDrillFilter';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
@@ -78,6 +78,9 @@ const BuyerCommitments = () => {
   const [stream, setStream] = useState(/** @type {ForecastStream | null} */ (null));
   const [supplier, setSupplier] = useState(drill.kind === 'filtered' ? drill.po.supplierId : '');
   const [material, setMaterial] = useState(params.get('material') ?? '');
+  // CAP-5 BR-01 — the chosen shortfall reasons; none chosen is no filter.
+  const [reasons, setReasons] = useState(/** @type {string[]} */ ([]));
+  const activeReasons = useActiveReasonCodes('commitmentShortfall');
   const { action, setAction, note, setNote, toSupplier, setToSupplier, openAction, submitAction } =
     useCommitmentAction(run, t);
 
@@ -102,6 +105,7 @@ const BuyerCommitments = () => {
     shown,
     daysOfSupplyOf,
     exceptions,
+    reasonOptions,
     missing,
     outside,
     periods,
@@ -115,7 +119,9 @@ const BuyerCommitments = () => {
     drillMaterials,
     positions: inventory.data?.items ?? [],
     coverageRows: coverageQuery.data?.items ?? [],
-    nowIso
+    nowIso,
+    reasons,
+    activeReasons
   });
 
   return (
@@ -142,6 +148,7 @@ const BuyerCommitments = () => {
           setStream(s);
           setSupplier('');
           setMaterial('');
+          setReasons([]);
         }}
         supplier={supplier}
         onSupplierChange={setSupplier}
@@ -149,6 +156,9 @@ const BuyerCommitments = () => {
         material={material}
         onMaterialChange={setMaterial}
         materials={materials}
+        reasons={reasons}
+        onReasonsChange={setReasons}
+        reasonOptions={reasonOptions}
       />
 
       {/* REQ-E07-03 BR-04 / BR-05 — the filter, why these rows, and the way back. */}

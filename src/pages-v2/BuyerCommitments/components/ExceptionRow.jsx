@@ -5,6 +5,7 @@ import TableCell from '@components/ui-v2/TableCell';
 import Button from '@components/ui-v2/Button';
 import Data from '@components/ui-v2/Data';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { REQUEST_REVISION_ENABLED } from '@services/transitions/forecastConfig';
 import {
   CommitmentDeadline,
   CommitmentStatePill,
@@ -23,7 +24,8 @@ import {
  * supply, and the planner's actions. Accept and Request revision show for an
  * exception with a response when the seat holds `requirementresponse:dispute`;
  * Move demand when it holds `forecast:publish`; otherwise each verb's slot
- * renders its handoff notice (§76).
+ * renders its handoff notice (§76). Request revision renders only while
+ * `REQUEST_REVISION_ENABLED` is true (CAP-7: hidden, not deleted).
  * @type {React.FC<{
  *   line: ForecastCommitmentLine;
  *   rank: number;
@@ -110,13 +112,15 @@ const ExceptionRow = ({
                 >
                   {t('fc.pti.gaps.accept')}
                 </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => onAction('revise', l)}
-                  aria-label={t('fc.pti.gaps.reviseFor', { what: label })}
-                >
-                  {t('fc.pti.gaps.revise')}
-                </Button>
+                {REQUEST_REVISION_ENABLED ? (
+                  <Button
+                    variant="secondary"
+                    onClick={() => onAction('revise', l)}
+                    aria-label={t('fc.pti.gaps.reviseFor', { what: label })}
+                  >
+                    {t('fc.pti.gaps.revise')}
+                  </Button>
+                ) : null}
               </>
             ) : (
               <HandoffNotice availability={review} testId="handoff-commitment-review" />

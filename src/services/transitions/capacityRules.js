@@ -10,7 +10,8 @@
 // the reason rule, the Order summary status, the alerts. The SDC-0 publication
 // and the planning estimate no longer feed capacity; a material with no LTP
 // line has no capacity demand. A week below the LTP needs a starter reason
-// code; `other` needs a note. All of it is derived at read time from the
+// code; `other`, `force-majeure` and `discontinued` need a note (CAP-4).
+// All of it is derived at read time from the
 // latest submission — nothing here is stored.
 //
 // Material C5 (MR-8 BR-04, AR-15) — the group is the material's PLANNING group
@@ -26,7 +27,7 @@
 /** @import { PlanningGroupEvent } from '../data/types' */
 import { needsReEntry } from './planningGroupRules';
 import { CAPACITY_HORIZON_WEEKS } from './inventoryConfig';
-import { isActiveReasonCode } from './reasonCodes';
+import { isActiveReasonCode, shortfallReasonNeedsNote } from './reasonCodes';
 import { addDays, dayOf, isIsoDay, mondayOf } from './inventoryRules';
 
 /**
@@ -221,7 +222,8 @@ export function capacityStatusForPo(po, plans, master) {
 /**
  * REQ-E08-04 AC-01 / AC-02 — the submission states every week of the horizon,
  * is well formed, and every week
- * below demand carries a starter reason (and `other` a note). The ONE check
+ * below demand carries a starter reason (and `other`, `force-majeure` or
+ * `discontinued` a note — CAP-4 BR-02). The ONE check
  * the policy hook and the page's courtesy mirror both call.
  * @param {readonly unknown[]} weeks
  * @param {(week: string) => number} demandFor
@@ -245,7 +247,10 @@ export function capacitySubmissionRefusal(weeks, demandFor, horizon) {
     if (/** @type {number} */ (w.allocated) < demandFor(w.week)) {
       if (!isActiveReasonCode('capacityShortfall', w.reason))
         return { refusal: 'reasonRequired', week: w.week };
-      if (w.reason === 'other' && (typeof w.note !== 'string' || w.note.trim() === '')) {
+      if (
+        shortfallReasonNeedsNote(w.reason) &&
+        (typeof w.note !== 'string' || w.note.trim() === '')
+      ) {
         return { refusal: 'noteRequired', week: w.week };
       }
     }
@@ -512,7 +517,7 @@ export function commitmentCapacityRefusal(check, rootCause) {
       return { refusal: 'aboveBeNeedsReason', week: check.redWeek };
     }
     if (
-      rootCause.level1 === 'other' &&
+      shortfallReasonNeedsNote(rootCause.level1) &&
       (typeof rootCause.note !== 'string' || rootCause.note.trim() === '')
     ) {
       return { refusal: 'aboveBeNoteRequired', week: check.redWeek };

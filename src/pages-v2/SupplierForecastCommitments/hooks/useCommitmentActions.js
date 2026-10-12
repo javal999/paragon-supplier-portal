@@ -33,7 +33,6 @@ export function useCommitmentActions({ run, readRow, setDrafts, setWeekReasons }
         verb: 'commit',
         line: lineRef(l),
         committedQty: qtyValue,
-        commitmentDate: d.date,
         ...(upsideValue !== null ? { upsideQty: upsideValue } : {}),
         ...(qtyValue < l.forecastQty && d.reason
           ? { reason: d.reason, ...(d.note.trim() ? { note: d.note.trim() } : {}) }
@@ -54,14 +53,13 @@ export function useCommitmentActions({ run, readRow, setDrafts, setWeekReasons }
   const submitAll = async (row) => {
     let done = 0;
     for (const l of row.pending) {
-      const { d, qtyValue, upsideValue } = readRow(l);
+      const { qtyValue, upsideValue } = readRow(l);
       if (qtyValue === null) continue;
       const rc = row.rootFor(l);
       const res = await run({
         verb: 'commit',
         line: lineRef(l),
         committedQty: qtyValue,
-        commitmentDate: d.date,
         ...(upsideValue !== null ? { upsideQty: upsideValue } : {}),
         ...(rc ? { reason: rc.level1, ...(rc.note.trim() ? { note: rc.note.trim() } : {}) } : {})
       });

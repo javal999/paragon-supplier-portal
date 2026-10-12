@@ -157,7 +157,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 |---|---|---|---|---|
 | Confirmed qty above the ordered qty | Blocked | Sup-Ful | Purchase orders | `services/transitions/policies.js:102` |
 | ASN qty above the open qty | Refused (OVER_OPEN_QUANTITY) unless an over-ship reason is given | Sup-Ful | Shipments & ASN | `services/transitions/fulfilmentRules.js:168-182`; `services/data/mock/MockCommandService.js:744-787` |
-| Shelf life too short | **Request shelf-life exception**; ASN goes to Awaiting exception | PTI approves or rejects | Shipments & ASN | `pages-v2/BuyerShipments.jsx:614` |
+| Shelf life too short | **Request shelf-life exception**; ASN goes to Awaiting exception | PTI approves or rejects | Shipments & ASN | `pages-v2/BuyerShipments/index.jsx:272` |
 | Invoice price outside tolerance (2%, cap Rp 500,000) | Match: Price Variance; invoice held | PTI-Fin | Invoices | `services/transitions/hubSettings.js:121-167` |
 | Duplicate invoice number, or over-invoicing | Refused (DUPLICATE_INVOICE_NUMBER / OVER_INVOICED) | Sup-BO | Invoices | `services/data/mock/MockCommandService.js:1198-1251` |
 | GR on Quality Hold | **Request lab retest** → Under Inspection | PTI-Rcv | Goods receipts | `pages-v2/BuyerGoodsReceipt/components/footerForStatus.jsx:101-106` |
@@ -248,15 +248,15 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | PTI-Cmp | Compliance (URL `/buyer/compliance`, not in menu) | **Ask for a document** → **Check it over** → **Open the request** | Awaiting Upload | `pages-v2/BuyerCompliance.jsx:237,277-293,946-971` |
+| 1 | PTI-Cmp | Compliance (URL `/buyer/compliance`, not in menu) | **Ask for a document** → **Check it over** → **Open the request** | Awaiting Upload | `pages-v2/BuyerCompliance/hooks/useDocumentRequest.js:30,70-86`; `pages-v2/BuyerCompliance/components/RequestPanelFooter.jsx:23-44` |
 | 2 | Sup-BO | Company → **Profile & documents** | **Declare** → **Record declaration** | Under Review | `pages-v2/SupplierDocuments.jsx:402-430,844-856` |
-| 3 | PTI-Cmp | Compliance → "Declared certificates awaiting review" | **Confirm** | Valid | `pages-v2/BuyerCompliance.jsx:184-193,576-584` |
+| 3 | PTI-Cmp | Compliance → "Declared certificates awaiting review" | **Confirm** | Valid | `pages-v2/BuyerCompliance/hooks/useDocumentReview.js:42-51`; `pages-v2/BuyerCompliance/components/ReviewQueueItem.jsx:65-73` |
 
 **Negative end-to-end: declaration refused**
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | PTI-Cmp | Compliance | **Refuse** → reason → **Record refusal** | Rejected | `pages-v2/BuyerCompliance.jsx:203-223,593-655` |
+| 1 | PTI-Cmp | Compliance | **Refuse** → reason → **Record refusal** | Rejected | `pages-v2/BuyerCompliance/hooks/useDocumentReview.js:61-81`; `pages-v2/BuyerCompliance/components/ReviewQueueItem.jsx:79-101`; `pages-v2/BuyerCompliance/components/RejectReasonForm.jsx:24-56` |
 | 2 | Sup-BO | Profile & documents | Sees "{count} document was refused:" → **Declare again** | Under Review | `lib/i18n/supplierDocuments.js:117,135`; `services/transitions/flows/supplierDocument.flow.js:115-117` |
 
 **Edge cases**
@@ -266,7 +266,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | Certificate expired (doc-001) | Red "Expired" pill; banner "…immediate renewal required" | Sup-BO | Profile & documents | `services/data/dayProjection.js:138,210-219`; `lib/i18n/supplierDocuments.js:33-37` |
 | Expiring within 180 days (doc-005, doc-008) | Amber "Expiring" pill; a Home task "Certificates expired or expiring" | Sup-BO | Profile & documents; To do | `services/data/documentDisplayState.js:153-179`; `lib/i18n/hub.js:157` |
 | No expiry date (BPJPH) | Treated as no expiry | – | Profile & documents | `pages-v2/SupplierDocuments.jsx:409-411` |
-| Confirming a document | Does not update the compliance registry table (a separate fixed list) | – | Compliance | `pages-v2/BuyerCompliance.jsx:151-155` |
+| Confirming a document | Does not update the compliance registry table (a separate fixed list) | – | Compliance | `pages-v2/BuyerCompliance/index.jsx:65-69` |
 
 ### UC6 Shared stock, capacity and supplier replies
 
@@ -472,7 +472,7 @@ A reader might expect these to work. The code shows they do not, or that they ar
 7. **A Matched invoice never becomes Approved in the UI.** The approve action is deliberately not offered, so only seeded Approved invoices can be released. (`pages-v2/invoices/invoiceActionModel.js:99-102`)
 8. **These buttons only show a toast:**
     - Goods receipts: "Submit inspection results", "Override hold". (`pages-v2/BuyerGoodsReceipt/components/footerForStatus.jsx:77-130`)
-    - Shipments: "Send reminder to supplier", "Track shipment". (`pages-v2/BuyerShipments.jsx:445-505`)
+    - Shipments: "Send reminder to supplier", "Track shipment". (`pages-v2/BuyerShipments/components/footerForStatus.jsx:29-89`)
     - Invoices: "Review match", "Escalate". (`pages-v2/BuyerInvoices.jsx:444-476`)
     - Supplier orders: "Create ASN" on the PO page. (`pages-v2/SupplierOrders.jsx:543-568`)
     - Buyer orders: "Export", "New PO", "View Full Details" have no handler. (`pages-v2/BuyerOrders.jsx:493-496,707-711`)
@@ -488,7 +488,7 @@ A reader might expect these to work. The code shows they do not, or that they ar
 
 13. **The compliance certificate registry cannot be edited.** Its approval actions cannot fire. (`services/data/mock/MockCommandService.js:5938-6035`; `services/transitions/flows/compliance.flow.js:45,57,76`)
 14. **No file is sent to Paragon.** "View" download is not available yet, and "Renew" opens a read-only walkthrough. (`lib/i18n/supplierDocuments.js:95,121-122`; `pages-v2/SupplierDocuments.jsx:740-760`)
-15. **"Export Report" and "Remind" are simulated.** (`lib/i18n/compliance.js:26-27`; `pages-v2/BuyerCompliance.jsx:889-903`)
+15. **"Export Report" and "Remind" are simulated.** (`lib/i18n/compliance.js:26-27`; `pages-v2/BuyerCompliance/components/RegistryRow.jsx:111-125`)
 
 **Communication and performance**
 

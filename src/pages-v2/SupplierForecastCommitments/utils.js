@@ -14,7 +14,8 @@ import { readCommitmentNumber, shortfallRefusal } from '@services/transitions/fo
 
 /**
  * A line's starting draft: its saved draft, else its submitted response, else
- * the forecast quantity on the period's first day (BR-09).
+ * the forecast quantity (BR-09). No date: CAP-6 (BL-175) confirms a quantity
+ * per period, and the record stores the period start.
  * @param {ForecastCommitmentLine} l
  * @returns {RowDraft}
  */
@@ -23,7 +24,6 @@ export const draftOf = (l) => {
   const c = src?.forecastConfirmation;
   return {
     qty: String(c?.confirmedQty ?? l.forecastQty),
-    date: c?.committedDate ?? l.periodStart,
     upside: c?.upsideQty !== undefined ? String(c.upsideQty) : '',
     reason: /** @type {CapacityReason | undefined} */ (src?.rootCause?.level1) ?? '',
     note: src?.rootCause?.note ?? ''
@@ -32,7 +32,7 @@ export const draftOf = (l) => {
 
 /**
  * Read a row's draft: the parsed quantity and upside, and the first refusal
- * its inputs earn (quantity, upside, date, then BR-04's starter reason).
+ * its inputs earn (quantity, upside, then BR-04's starter reason).
  * @param {ForecastCommitmentLine} l
  * @param {RowDraft} d  The row's draft (`rowDraft(l)`).
  * @returns {ReadRow}
@@ -46,13 +46,11 @@ export const readDraft = (l, d) => {
       ? 'qtyRequired'
       : !upside.ok
         ? 'upsideInvalid'
-        : !/^\d{4}-\d{2}-\d{2}$/.test(d.date)
-          ? 'dateRequired'
-          : shortfallRefusal(
-              l.forecastQty,
-              qtyValue,
-              d.reason ? { level1: d.reason, note: d.note } : undefined
-            );
+        : shortfallRefusal(
+            l.forecastQty,
+            qtyValue,
+            d.reason ? { level1: d.reason, note: d.note } : undefined
+          );
   return { d, qtyValue, upsideValue: upside.ok ? upside.value : null, refusal };
 };
 
@@ -137,12 +135,7 @@ export const buildPeriodRows = ({
     /** @param {ForecastCommitmentLine} l */
     const rowBlocked = (l) => {
       const r = readRow(l);
-      if (
-        r.qtyValue === null ||
-        r.refusal === 'upsideInvalid' ||
-        r.refusal === 'dateRequired' ||
-        r.refusal === 'qtyRequired'
-      )
+      if (r.qtyValue === null || r.refusal === 'upsideInvalid' || r.refusal === 'qtyRequired')
         return true;
       return shortfallRefusal(l.forecastQty, r.qtyValue, rootFor(l)) !== null;
     };

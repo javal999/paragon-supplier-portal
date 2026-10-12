@@ -1,7 +1,9 @@
 /** @import React from 'react' */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useReasonLabel } from './admin/reasonCodeDisplay';
+import { useActiveReasonCodes, useReasonLabel } from './admin/reasonCodeDisplay';
+import ReasonFilter from './inventory/ReasonFilter';
+import { reasonFilterOptions } from './inventory/reasonFilterRules';
 import { useSearchParams } from 'react-router-dom';
 import { AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
@@ -63,6 +65,10 @@ import {
 // "short by", the banner and the filters all read it. Beside it, BE (capacity
 // + additional capacity) and the flag: amber "needs the additional capacity",
 // red "cannot be supplied" — the red week is where the planner acts.
+//
+// CAP-5 BR-02 (BL-174) — the Reason filter over `capacityShortfall`, in the
+// address with the others, narrows WEEKS together with Gaps only; each reason
+// shows how many of the weeks the other filters leave carry it.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @typedef {'all' | CapacityConfirmationStatus} StatusFilter */
@@ -279,12 +285,13 @@ const BuyerCapacity = () => {
   const filters = readCapacityFilters(params);
   /**
    * @param {Parameters<typeof withCapacityFilter>[1]} key
-   * @param {string | boolean | null} value
+   * @param {string | boolean | null | readonly string[]} value
    */
   const setFilter = (key, value) =>
     setParams(withCapacityFilter(params, key, value), { replace: true });
   const nowIso = inventoryNow();
   const crumb = [t('hub.nav.section.inventory'), t('inv.capacity.pti.title')];
+  const activeReasons = useActiveReasonCodes('capacityShortfall');
 
   const allPlans = useMemo(() => plansQuery.data?.items ?? [], [plansQuery.data]);
   // ── REQ-E07-03 BR-05 / AC-04 ──────────────────────────────────────────────
@@ -356,6 +363,24 @@ const BuyerCapacity = () => {
     )
   ].sort();
   const filtered = plans.filter((p) => planMatches(p, filters));
+  /**
+   * The weeks a plan shows: the PO drill's weeks, then the filters.
+   * @param {CapacityPlan} p
+   * @param {Pick<typeof filters, 'gapsOnly' | 'reasons'>} f
+   */
+  const shownWeeks = (p, f) =>
+    p.weeks
+      .filter((w) => drillWeeks === null || drillWeeks.includes(w.week))
+      .filter((w) => weekMatches(w, f));
+  // CAP-5 BR-03 — each reason's count: the weeks every OTHER filter leaves.
+  const noReason = { ...filters, reasons: [] };
+  const reasonOptions = reasonFilterOptions(
+    activeReasons,
+    plans
+      .filter((p) => planMatches(p, noReason))
+      .filter((p) => filter === 'all' || planStatus(p) === filter)
+      .flatMap((p) => shownWeeks(p, noReason).map((w) => w.entry?.reason))
+  );
   const shown = filtered.filter((p) => filter === 'all' || planStatus(p) === filter);
   const filtersActive = anyCapacityFilter(filters) || filter !== 'all';
   const clearFilters = () => {
@@ -418,7 +443,7 @@ const BuyerCapacity = () => {
       )}
 
       <div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))_auto_auto] items-end gap-3 mb-3"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))_auto_auto_auto] items-end gap-3 mb-3"
         data-testid="capacity-filters"
       >
         <div>
@@ -475,6 +500,13 @@ const BuyerCapacity = () => {
             ))}
           </select>
         </div>
+        <ReasonFilter
+          list="capacityShortfall"
+          options={reasonOptions}
+          value={filters.reasons}
+          onChange={(next) => setFilter('reason', next)}
+          testId="capacity-filter-reason"
+        />
         <label className="inline-flex items-center gap-2 text-sm text-text-primary pb-2">
           <input
             type="checkbox"
@@ -587,9 +619,7 @@ const BuyerCapacity = () => {
                     label={`${p.supplierName} · ${groupLabel(p.planningGroupId)}`}
                     nowIso={nowIso}
                     ltpWeeks={ltpByPlan.get(keyOf(p)) ?? []}
-                    weeks={p.weeks
-                      .filter((w) => drillWeeks === null || drillWeeks.includes(w.week))
-                      .filter((w) => weekMatches(w, filters))}
+                    weeks={shownWeeks(p, filters)}
                   />
                 </div>
               )}

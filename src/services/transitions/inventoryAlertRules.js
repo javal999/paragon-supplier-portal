@@ -30,12 +30,20 @@
 // Closing (MR-9 BR-04): a reason from the administrator's `alertClose` list;
 // the note is optional except for "Other". A closure recorded before reasons
 // existed carries only its note and counts as "Other" (`closeReasonOf`).
+//
+// CAP-4 BR-03 (CAP-D2, BL-173) — a supplier that gives the shortfall reason
+// Discontinued, on its capacity for a week or on a commitment, is saying the
+// material will not come from it any more: `supplyDiscontinued` asks PTI to
+// find another source. One alert per supplier × MATERIAL (a capacity week's
+// reason speaks for every material of its planning group), derived from the
+// standing submission like every other rule; High by rule. The alert model has
+// no audience field: it reaches whoever reads the PTI alerts page.
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** @import { CapacityPlan, InventoryAlert, InventoryAlertRule, InventoryPosition, RiskBasis, RiskClass } from '../data/types' */
+/** @import { CapacityPlan, ForecastCommitmentLine, InventoryAlert, InventoryAlertRule, InventoryPosition, RiskBasis, RiskClass } from '../data/types' */
 /** @import { ActorAttribution } from '@lib/enforcement' */
 import { gapWeeks } from './capacityRules';
-import { NOTE_REQUIRED_CODE, isActiveReasonCode } from './reasonCodes';
+import { DISCONTINUED_CODE, NOTE_REQUIRED_CODE, isActiveReasonCode } from './reasonCodes';
 import {
   coverage,
   dayOf,
@@ -60,20 +68,24 @@ export const ALERT_RULES = [
   'coverage',
   'commitmentBelowForecast',
   'leadTimeMissing',
-  'callOffNotCovered'
+  'callOffNotCovered',
+  'supplyDiscontinued'
 ];
 
 /**
  * Rules never shown to a supplier: the ones that read PTI stock, the gap in
  * PTI's own master data (the supplier has nothing to act on there), and the
- * planner's stock-side check of confirmed call-offs (MR-6 BR-13).
+ * planner's stock-side check of confirmed call-offs (MR-6 BR-13), and the
+ * "find another source" alert a Discontinued reason raises (CAP-D2).
  * @type {readonly InventoryAlertRule[]}
  */
 export const PTI_ONLY_RULES = [
   'ptiBelowRop',
   'projectedStockOut',
   'leadTimeMissing',
-  'callOffNotCovered'
+  'callOffNotCovered',
+  // CAP-D2 — finding another source is PTI's act; the supplier gave the reason.
+  'supplyDiscontinued'
 ];
 
 /** @type {readonly RiskClass[]} */
@@ -173,6 +185,74 @@ function capacityDaysToImpact(plan, nowIso) {
  * }} CommitmentShortfallSubject
  */
 
+/**
+ * CAP-4 BR-03 — a supplier × material the supplier has said is Discontinued.
+ * `daysToImpact`: days from today to the first week or period it said so for.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly supplierName: string;
+ *   readonly materialCode: string;
+ *   readonly materialLabel: string;
+ *   readonly daysToImpact: number;
+ * }} DiscontinuedSubject
+ */
+
+/**
+ * CAP-4 BR-03 (CAP-D2) — every supplier × material whose standing answer gives
+ * Discontinued for a shortfall: a capacity week below the LTP (for each
+ * material of the planning group), or a submitted commitment below forecast.
+ * Drafts are never read; a week or period that is no longer short is not one.
+ * @param {readonly CapacityPlan[]} plans
+ * @param {readonly Pick<ForecastCommitmentLine, 'supplierId' | 'supplierName' | 'materialCode' | 'materialLabel' | 'periodStart' | 'forecastQty' | 'committedQty' | 'response'>[]} lines
+ * @param {(materialCode: string) => string} materialLabel
+ * @param {string} nowIso
+ * @returns {DiscontinuedSubject[]}
+ */
+export function discontinuedSubjects(plans, lines, materialLabel, nowIso) {
+  const today = dayOf(nowIso);
+  const out = /** @type {Map<string, DiscontinuedSubject>} */ (new Map());
+  /** @param {Omit<DiscontinuedSubject, 'daysToImpact'>} s @param {string} from */
+  const add = (s, from) => {
+    const days = Math.max(0, daysBetween(today, from));
+    const k = `${s.supplierId}|${s.materialCode}`;
+    const prev = out.get(k);
+    if (!prev || days < prev.daysToImpact) out.set(k, { ...s, daysToImpact: days });
+  };
+  for (const plan of plans) {
+    const week = plan.weeks.find(
+      (w) =>
+        w.entry !== null && w.entry.reason === DISCONTINUED_CODE && w.entry.allocated < w.demand
+    );
+    if (!week) continue;
+    for (const materialCode of plan.materials) {
+      add(
+        {
+          supplierId: plan.supplierId,
+          supplierName: plan.supplierName,
+          materialCode,
+          materialLabel: materialLabel(materialCode)
+        },
+        week.week
+      );
+    }
+  }
+  for (const l of lines) {
+    if (l.response?.rootCause?.level1 !== DISCONTINUED_CODE) continue;
+    if (l.committedQty === null || l.committedQty >= l.forecastQty) continue;
+    add(
+      {
+        supplierId: l.supplierId,
+        supplierName: l.supplierName,
+        materialCode: l.materialCode,
+        materialLabel: l.materialLabel
+      },
+      l.periodStart
+    );
+  }
+  return [...out.values()];
+}
+
 /** Confirmed call-off deliveries a supplier × material still has to ship (MR-6 BR-13). */
 /**
  * `deliveries`:  Outstanding deliveries, in date order.
@@ -235,6 +315,7 @@ export function callOffCoverGap(p, deliveries, nowIso) {
  * @param {string} nowIso
  * @param {readonly CommitmentShortfallSubject[]} [commitmentShortfalls]
  * @param {readonly CallOffCoverInput[]} [callOffSubjects]
+ * @param {readonly DiscontinuedSubject[]} [discontinued]
  * @returns {AlertCondition[]}
  */
 export function deriveAlertConditions(
@@ -242,7 +323,8 @@ export function deriveAlertConditions(
   plans,
   nowIso,
   commitmentShortfalls = [],
-  callOffSubjects = []
+  callOffSubjects = [],
+  discontinued = []
 ) {
   const out = /** @type {Map<string, AlertCondition>} */ (new Map());
   /** @typedef {{ riskClass: RiskClass; basis: RiskBasis }} Risk */
@@ -359,6 +441,10 @@ export function deriveAlertConditions(
         positionRisk(p),
         gap.daysToNeed
       );
+  }
+  // CAP-4 BR-03 (CAP-D2) — the supplier said Discontinued: find another source.
+  for (const d of discontinued) {
+    push('supplyDiscontinued', d, d.materialCode, d.materialLabel, byRule('high'), d.daysToImpact);
   }
   return [...out.values()];
 }
