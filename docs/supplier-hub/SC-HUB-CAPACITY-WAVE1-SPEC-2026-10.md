@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Accepted 2026-10-12.** The owner accepted the recommendations for W1-Q1 to W1-Q3 (section 8). Ready to build |
+| Status | **Accepted 2026-10-12.** The owner accepted the recommendations for W1-Q1 to W1-Q3 (section 8). **Built in PR #191, merged 2026-10-12** (`main` at `a5eaac3`) |
 | Date | 2026-10-12 |
 | Parent | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` CAP-1 (BL-170), decisions CAP-D1 to CAP-D8 accepted 2026-10-12 |
 | Code read | `main` at `748d595` |
