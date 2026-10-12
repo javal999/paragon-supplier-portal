@@ -123,7 +123,8 @@ describe('CAP-4 BR-02 — the note predicate', () => {
       level: 'cannotSupply',
       weeks: [],
       unconfirmedWeek: null,
-      redWeek: '2026-09-14'
+      redWeek: '2026-09-14',
+      upsideUnconfirmedWeek: null
     });
     expect(commitmentCapacityRefusal(check, { level1: code })).toEqual({
       refusal: 'aboveBeNoteRequired',

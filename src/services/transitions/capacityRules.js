@@ -313,6 +313,17 @@ export function ltpCapacityLevel(ltp, entry) {
 }
 
 /**
+ * CAP-3 BR-03 (CAP-D1) — an amber week's additional capacity is confirmed when
+ * the supplier said so on that week. Any other level has nothing to confirm,
+ * so a stored confirmation on a week that is no longer amber reads false.
+ * @param {LtpCapacityLevel} level
+ * @param {Pick<CapacityWeekEntry, 'allocated' | 'upside' | 'upsideConfirmed'> | null} entry
+ * @returns {boolean}
+ */
+export const isUpsideConfirmed = (level, entry) =>
+  level === 'needsAdditional' && entry?.upsideConfirmed === true;
+
+/**
  * The fields of a forecast line the LTP sum reads. Material C5 — a line joins a
  * capacity group by its MATERIAL (the planning group holds materials), not by
  * the forecast's own `materialGroup`, which stays the forecast's concept.
@@ -373,6 +384,7 @@ export function groupWeekLtp(lines, supplierId, materials, week) {
 /**
  * `capacity`:  The stated capacity, or null when the week has none.
  * `be`:  Capacity + additional capacity (derived), or null.
+ * `upsideConfirmed`:  CAP-3 BR-03 — an amber week whose additional capacity the supplier confirmed.
  *
  * @typedef {{
  *   readonly week: string;
@@ -380,6 +392,7 @@ export function groupWeekLtp(lines, supplierId, materials, week) {
  *   readonly capacity: number | null;
  *   readonly be: number | null;
  *   readonly level: LtpCapacityLevel;
+ *   readonly upsideConfirmed: boolean;
  * }} LtpCapacityWeek
  */
 
@@ -391,12 +404,14 @@ export function groupWeekLtp(lines, supplierId, materials, week) {
 export function ltpCapacityWeeks(plan) {
   return plan.weeks.map((w) => {
     const ltp = w.demand;
+    const level = ltpCapacityLevel(ltp, w.entry);
     return {
       week: w.week,
       ltp,
       capacity: w.entry ? w.entry.allocated : null,
       be: w.entry ? beOf(w.entry) : null,
-      level: ltpCapacityLevel(ltp, w.entry)
+      level,
+      upsideConfirmed: isUpsideConfirmed(level, w.entry)
     };
   });
 }
@@ -439,12 +454,14 @@ const LEVEL_RANK = { unconfirmed: 0, cannotSupply: 1, needsAdditional: 2, within
  * `weeks`:  The weeks checked, with their figures.
  * `unconfirmedWeek`:  The first week with no stated capacity, if any.
  * `redWeek`:  The first week above BE, if any.
+ * `upsideUnconfirmedWeek`:  CAP-3 BR-03 — the first amber week whose additional capacity is not confirmed, if any.
  *
  * @typedef {{
  *   readonly level: LtpCapacityLevel | null;
  *   readonly weeks: readonly LtpCapacityWeek[];
  *   readonly unconfirmedWeek: string | null;
  *   readonly redWeek: string | null;
+ *   readonly upsideUnconfirmedWeek: string | null;
  * }} PeriodCapacityCheck
  */
 
@@ -476,12 +493,14 @@ export function periodCapacityCheck(
   const weeks = touched.map((week) => {
     const entry = plan?.weeks.find((w) => w.week === week)?.entry ?? null;
     const ltp = groupWeekLtp(lines, supplierId, materials, week);
+    const level = ltpCapacityLevel(ltp, entry);
     return {
       week,
       ltp,
       capacity: entry ? entry.allocated : null,
       be: entry ? beOf(entry) : null,
-      level: ltpCapacityLevel(ltp, entry)
+      level,
+      upsideConfirmed: isUpsideConfirmed(level, entry)
     };
   });
   const level =
@@ -495,7 +514,9 @@ export function periodCapacityCheck(
     level,
     weeks,
     unconfirmedWeek: weeks.find((w) => w.level === 'unconfirmed')?.week ?? null,
-    redWeek: weeks.find((w) => w.level === 'cannotSupply')?.week ?? null
+    redWeek: weeks.find((w) => w.level === 'cannotSupply')?.week ?? null,
+    upsideUnconfirmedWeek:
+      weeks.find((w) => w.level === 'needsAdditional' && !w.upsideConfirmed)?.week ?? null
   };
 }
 

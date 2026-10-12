@@ -3224,6 +3224,8 @@ const capacityTarget = {
       week: String(w.week),
       allocated: Number(w.allocated),
       ...(isNonNegative(w.upside) ? { upside: w.upside } : {}),
+      // CAP-3 BR-03 — only a literal `true` is a confirmation.
+      ...(w.upsideConfirmed === true ? { upsideConfirmed: /** @type {const} */ (true) } : {}),
       ...(isActiveReasonCode('capacityShortfall', w.reason) ? { reason: w.reason } : {}),
       ...(nonBlank(w.note) ? { note: nonBlank(w.note) } : {})
     }));

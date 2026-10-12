@@ -59,12 +59,20 @@ import { ReEntryPill, usePlanningGroupLabel } from './inventory/planningGroupDis
 // Material C5 (MR-8 BR-04, BR-05) — the tabs are PLANNING groups, named from
 // the planning group store. A week a planning-group move touched reads "Needs
 // re-entry": the supplier confirms it again by submitting the group.
+//
+// CAP-3 BR-03 (BL-172, CAP-D1) — an amber week (LTP above allocated, within
+// BE) offers "Confirm additional capacity" in its Additional capacity cell
+// (weekly view only; Monthly is read only). The confirmation rides the same
+// `t_capacity_submit` as the figures, as `upsideConfirmed: true` on the week —
+// no new verb — and is sent only for a week that is amber when submitted.
+// Changing the additional capacity clears it: a new figure is a new promise.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * @typedef {object} WeekDraft
  * @property {string} allocated
  * @property {string} upside
+ * @property {boolean} upsideConfirmed CAP-3 BR-03 — the supplier confirms an amber week's additional capacity.
  * @property {CapacityReason | ''} reason
  * @property {string} note
  */
@@ -77,6 +85,7 @@ const draftFrom = (plan) =>
   plan.weeks.map((w) => ({
     allocated: w.entry ? String(w.entry.allocated) : '',
     upside: w.entry?.upside !== undefined ? String(w.entry.upside) : '',
+    upsideConfirmed: w.entry?.upsideConfirmed === true,
     reason: w.entry?.reason ?? '',
     note: w.entry?.note ?? ''
   }));
@@ -195,7 +204,13 @@ const SupplierCapacity = () => {
     );
 
   const rows = plan.weeks.map((w, i) => {
-    const d = draft[i] ?? { allocated: '', upside: '', reason: '', note: '' };
+    const d = draft[i] ?? {
+      allocated: '',
+      upside: '',
+      upsideConfirmed: false,
+      reason: '',
+      note: ''
+    };
     const allocated = readStockNumber(d.allocated);
     const upside = readStockNumber(d.upside);
     const ltp = w.demand;
@@ -209,10 +224,13 @@ const SupplierCapacity = () => {
     const below = allocated.ok && allocated.value !== null && allocated.value < w.demand;
     return { w, d, allocated, upside, ltp, stated, below, level: ltpCapacityLevel(ltp, stated) };
   });
-  const payloadWeeks = rows.map(({ w, d, allocated, upside }) => ({
+  const payloadWeeks = rows.map(({ w, d, allocated, upside, level }) => ({
     week: w.week,
     allocated: allocated.ok && allocated.value !== null ? allocated.value : Number.NaN,
     ...(upside.ok && upside.value !== null ? { upside: upside.value } : {}),
+    ...(level === 'needsAdditional' && d.upsideConfirmed
+      ? { upsideConfirmed: /** @type {const} */ (true) }
+      : {}),
     ...(d.reason ? { reason: d.reason } : {}),
     ...(d.note.trim() ? { note: d.note.trim() } : {})
   }));
@@ -364,14 +382,30 @@ const SupplierCapacity = () => {
               value: (_w, i) => rows[i].stated?.upside ?? null,
               format: qty,
               cell: (week, i) => (
-                <input
-                  aria-label={t('inv.capacity.upsideFor', { week: formatDate(week) })}
-                  inputMode="decimal"
-                  className={gridInputClass}
-                  disabled={!held}
-                  value={rows[i].d.upside}
-                  onChange={(e) => update(i, { upside: e.target.value })}
-                />
+                <div className="space-y-1">
+                  <input
+                    aria-label={t('inv.capacity.upsideFor', { week: formatDate(week) })}
+                    inputMode="decimal"
+                    className={gridInputClass}
+                    disabled={!held}
+                    value={rows[i].d.upside}
+                    onChange={(e) => update(i, { upside: e.target.value, upsideConfirmed: false })}
+                  />
+                  {rows[i].level === 'needsAdditional' && (
+                    <label className="flex items-start gap-1 text-xs text-text-secondary">
+                      <input
+                        type="checkbox"
+                        className="mt-0.5 accent-action"
+                        aria-label={t('inv.capacity.confirmUpsideFor', { week: formatDate(week) })}
+                        data-testid={`capacity-confirm-upside-${week}`}
+                        disabled={!held}
+                        checked={rows[i].d.upsideConfirmed}
+                        onChange={(e) => update(i, { upsideConfirmed: e.target.checked })}
+                      />
+                      <span aria-hidden="true">{t('inv.capacity.confirmUpside')}</span>
+                    </label>
+                  )}
+                </div>
               )
             },
             {
@@ -408,7 +442,11 @@ const SupplierCapacity = () => {
                 <LtpCheckPill level={level} testId={`capacity-ltp-month-${m.key}`} />
               ),
               cell: (week, i) => (
-                <LtpCheckPill level={rows[i].level} testId={`capacity-ltp-${week}`} />
+                <LtpCheckPill
+                  level={rows[i].level}
+                  confirmed={rows[i].d.upsideConfirmed}
+                  testId={`capacity-ltp-${week}`}
+                />
               )
             },
             {
