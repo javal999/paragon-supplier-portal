@@ -140,7 +140,7 @@ describe('⚠️ §69 · THE MATCHERS, BEFORE ANY CLAIM ABOUT THE TREE', () => {
     const files = shipped(SRC).map((f) => relative(SRC, f).replace(/\\/g, '/'));
     expect(files).toContain('services/data/mock/fixtures/buyerRequisitions.js');
     expect(files).toContain('services/data/mock/MockCommandService.js');
-    expect(files).toContain('pages-v2/BuyerRequisitions.jsx');
+    expect(files).toContain('pages-v2/BuyerRequisitions/components/KeyFacts.jsx');
     expect(files).toContain(TYPE_DECL_FILE);
     // …and the field is actually THERE to be found. Without this the zero-offender
     // assertions below could both pass over a tree that had renamed it away.

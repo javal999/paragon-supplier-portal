@@ -121,9 +121,9 @@ describe('§90 POPULATION — every settle call site, derived from source', () =
 
     // KNOWN-FALSE CONTROL, in the same run: a page with no settle must not match,
     // or the matcher is reporting on itself rather than on the tree (rule 1).
-    expect(
-      /use(GoodsReceiptSettle|InvoiceSettlePayment)\b/.test(src('./BuyerRequisitions.jsx'))
-    ).toBe(false);
+    expect(/use(GoodsReceiptSettle|InvoiceSettlePayment)\b/.test(src('./BuyerRequisitions'))).toBe(
+      false
+    );
   });
 
   // ⚠️ **NO EXACT COUNT HERE, DELIBERATELY.** The invariant is *"every settle
