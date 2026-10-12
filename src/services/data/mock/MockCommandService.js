@@ -281,6 +281,8 @@ import {
 } from './forecastReadModel';
 import { baseDemand, FORECAST_SOURCES } from './fixtures/forecastHub';
 import {
+  moveDemandRefusal,
+  moveShortfall,
   periodBounds,
   reassignVersion,
   republishVersion,
@@ -3313,6 +3315,19 @@ bindPolicyHook(POLICY_HOOKS.ALERT_CLOSE_REASON_GIVEN, ({ payload }) => {
 const FORECAST_STREAMS = /** @type {const} */ (['packaging', 'rawMaterial']);
 
 /**
+ * CAP-8 — the allocations of a Move demand payload, read as sent. The policy
+ * has proven each one a qualified supplier and a quantity above 0 before
+ * `create` reads them.
+ * @param {unknown} raw
+ * @returns {{ supplierId: string; qty: number }[]}
+ */
+const moveAllocationsOf = (raw) =>
+  (Array.isArray(raw) ? raw : []).map((a) => ({
+    supplierId: String(a?.supplierId),
+    qty: typeof a?.qty === 'number' ? a.qty : Number.NaN
+  }));
+
+/**
  * REQ-E06-01 / REQ-E06-03 BR-05 — a forecast version; `entityId` is its publicationId.
  * @type {CommandTarget}
  */
@@ -3327,10 +3342,11 @@ const forecastVersionTarget = {
   creationOwner: () => null,
   create: (payload) => {
     const now = sdcClock.now();
-    if (payload.toSupplierId !== undefined) {
+    if (payload.allocations !== undefined) {
       const current = /** @type {import('../../sdc/types').ForecastPublication} */ (
         forecastVersionStore.get(String(payload.publicationId))
       );
+      // CAP-8 — one version for the whole split; the policy has checked every allocation.
       const next = /** @type {import('../../sdc/types').ForecastPublication} */ (
         reassignVersion(
           current,
@@ -3338,7 +3354,7 @@ const forecastVersionTarget = {
             materialCode: String(payload.materialCode),
             periodBucket: String(payload.periodBucket),
             fromSupplierId: String(payload.fromSupplierId),
-            toSupplierId: String(payload.toSupplierId),
+            allocations: moveAllocationsOf(payload.allocations),
             note: String(payload.note).trim()
           },
           now
@@ -3410,8 +3426,11 @@ bindPolicyHook(POLICY_HOOKS.FORECAST_ENGINE_PUBLISH_ALLOWED, ({ payload }) => {
   };
 });
 
-// REQ-E06-03 BR-05 — reassign: a line of the CURRENT version, a different
-// supplier qualified for the material, and a note the supplier can read.
+// REQ-E06-03 BR-05 / CAP-8 — reassign: a line of the CURRENT version, one or
+// more allocations to other suppliers qualified for the material, totalling
+// more than 0 and no more than the line's shortfall (BR-03, the same
+// `moveDemandRefusal` the panel pre-checks with), and a note the supplier can
+// read (BR-06). A quantity above a target's headroom is not refused (BR-04).
 bindPolicyHook(POLICY_HOOKS.FORECAST_REASSIGN_VALID, ({ payload }) => {
   const pub = forecastVersionStore.get(String(payload.publicationId));
   if (!pub || !pub.stream) return { ok: false, reason: 'forecast version not found' };
@@ -3420,25 +3439,40 @@ bindPolicyHook(POLICY_HOOKS.FORECAST_REASSIGN_VALID, ({ payload }) => {
   }
   if (nonBlank(payload.note) === undefined)
     return { ok: false, reason: 'NOTE_REQUIRED: moving demand needs a note' };
+  if (!Array.isArray(payload.allocations))
+    return { ok: false, reason: 'BAD_ALLOCATION: allocations must be a list' };
   const from = String(payload.fromSupplierId);
-  const to = String(payload.toSupplierId);
   const code = String(payload.materialCode);
-  const line = pub.lines.find(
+  const bucket = String(payload.periodBucket);
+  const line = allCommitmentLines(null).find(
     (l) =>
+      l.publicationId === pub.publicationId &&
       l.supplierId === from &&
       l.materialCode === code &&
-      l.periodBucket === String(payload.periodBucket)
+      l.periodBucket === bucket
   );
   if (!line)
     return {
       ok: false,
       reason: 'no such period for this supplier and material in the current version'
     };
-  if (from === to) return { ok: false, reason: 'SAME_SUPPLIER: choose a different supplier' };
-  if (!qualifiedSuppliers(code).includes(to)) {
-    return { ok: false, reason: `NOT_QUALIFIED: ${to} does not supply ${code}` };
-  }
-  return { ok: true };
+  const shortfall = moveShortfall(line);
+  const refused = moveDemandRefusal(shortfall, moveAllocationsOf(payload.allocations), {
+    fromSupplierId: from,
+    qualified: qualifiedSuppliers(code)
+  });
+  if (refused === null) return { ok: true };
+  const who = refused.supplierId ?? '';
+  /** @type {Record<import('../../transitions/forecastRules').MoveDemandRefusal, string>} */
+  const reasons = {
+    aboveShortfall: `ABOVE_SHORTFALL: More than the shortfall of ${shortfall.toLocaleString('en-US')} ${line.uom}`,
+    nothingToMove: 'NOTHING_TO_MOVE: give at least one supplier a quantity',
+    badQty: `BAD_ALLOCATION: the quantity for ${who} must be a number above 0`,
+    sameSupplier: 'SAME_SUPPLIER: choose a different supplier',
+    notQualified: `NOT_QUALIFIED: ${who} does not supply ${code}`,
+    duplicateSupplier: `DUPLICATE_SUPPLIER: ${who} is given more than one quantity`
+  };
+  return { ok: false, reason: reasons[refused.refusal] };
 });
 
 /**

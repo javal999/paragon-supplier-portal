@@ -446,6 +446,56 @@ export function periodHorizonWeeks(periodStart, periodEnd, horizon) {
   return horizon.filter((week) => overlapDays(periodStart, periodEnd, week) > 0);
 }
 
+/**
+ * CAP-8 BR-01 / BR-04 — a target supplier's capacity headroom for one period
+ * of a material: BE − LTP for its planning group, in the material's base unit.
+ * A week-long period reads that week's BE − LTP. A longer period spreads by day
+ * (as `groupWeekLtp` does), so the headroom is the most it can take before any
+ * week it touches goes above BE. Null — unknown, shown "—" — when the supplier
+ * has no capacity plan for the group, a week has no stated capacity, or part of
+ * the period lies beyond the capacity horizon. Never refuses anything: a
+ * quantity above it warns (BR-04).
+ * @param {readonly CapacityPlan[]} plans
+ * @param {readonly LtpLine[]} lines
+ * @param {string} supplierId
+ * @param {string} materialCode
+ * @param {string} periodStart
+ * @param {string} periodEnd
+ * @param {readonly string[]} horizon
+ * @param {(materialCode: string) => MaterialMasterEntry | null} master
+ * @returns {number | null}
+ */
+export function moveHeadroom(
+  plans,
+  lines,
+  supplierId,
+  materialCode,
+  periodStart,
+  periodEnd,
+  horizon,
+  master
+) {
+  const cap = capacityGroupOfMaterial(plans, supplierId, materialCode, master);
+  if (!cap.plan) return null;
+  const plan = cap.plan;
+  // The moved material joins the group's LTP even before the target supplies it.
+  const materials = cap.materials.includes(materialCode)
+    ? cap.materials
+    : [...cap.materials, materialCode];
+  const days = daysInclusive(periodStart, periodEnd);
+  const weeks = periodHorizonWeeks(periodStart, periodEnd, horizon);
+  const covered = weeks.reduce((n, w) => n + overlapDays(periodStart, periodEnd, w), 0);
+  if (weeks.length === 0 || covered < days) return null;
+  let headroom = Number.POSITIVE_INFINITY;
+  for (const week of weeks) {
+    const entry = plan.weeks.find((w) => w.week === week)?.entry ?? null;
+    if (!entry) return null;
+    const room = beOf(entry) - groupWeekLtp(lines, supplierId, materials, week);
+    headroom = Math.min(headroom, (room * days) / overlapDays(periodStart, periodEnd, week));
+  }
+  return Math.floor(headroom);
+}
+
 /** @type {Record<LtpCapacityLevel, number>} */
 const LEVEL_RANK = { unconfirmed: 0, cannotSupply: 1, needsAdditional: 2, within: 3 };
 

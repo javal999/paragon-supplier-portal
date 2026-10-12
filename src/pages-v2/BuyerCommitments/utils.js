@@ -1,10 +1,68 @@
 // BuyerCommitments — pure helpers (no React). Moved out of the page file
 // unchanged (frontend-standard Phase 5 split).
 import { positionDays } from '@services/transitions/inventoryRules';
-import { deadlineState, rankExceptions } from '@services/transitions/forecastRules';
+import {
+  deadlineState,
+  moveDemandRefusal,
+  moveShortfall,
+  rankExceptions,
+  readCommitmentNumber
+} from '@services/transitions/forecastRules';
 import { reasonFilterOptions, reasonMatches } from '../inventory/reasonFilterRules';
 /** @import { ForecastCommitmentLine, ForecastCoverageRow, InventoryPosition } from '@services/data/types' */
 /** @import { ForecastStream } from '@services/sdc/types' */
+/** @import { DemandAllocation, MoveDemandRefusal } from '@services/transitions/forecastRules' */
+
+/**
+ * `shortfall`:  Forecast − commitment: the most the planner may move (BR-03).
+ * `allocations`:  The rows with a quantity, as the verb receives them.
+ * `remaining`:  What stays on the line as an open exception after the move.
+ * `refused`:  The verb's own refusal for these allocations (`moveDemandRefusal`), or an unreadable number (`ambiguous` when it reads differently in ID and EN); null when the move can be sent.
+ * @typedef {{
+ *   readonly shortfall: number;
+ *   readonly allocations: readonly DemandAllocation[];
+ *   readonly total: number;
+ *   readonly remaining: number;
+ *   readonly refused: { readonly refusal: MoveDemandRefusal | 'ambiguous'; readonly supplierId?: string } | null;
+ * }} MoveView
+ */
+
+/**
+ * CAP-8 — the Move demand panel's reading of what the planner typed, checked
+ * by the same rule the verb's policy calls, so the page refuses what the verb
+ * would refuse. An empty row, or 0, moves nothing to that supplier.
+ * @param {ForecastCommitmentLine} line
+ * @param {Readonly<Record<string, string>>} qtys  Raw input per target supplier id.
+ * @returns {MoveView}
+ */
+export function moveView(line, qtys) {
+  const shortfall = moveShortfall(line);
+  /** @type {DemandAllocation[]} */
+  const allocations = [];
+  /** @type {MoveView['refused']} */
+  let unreadable = null;
+  for (const q of line.otherQualifiedSuppliers) {
+    const read = readCommitmentNumber(qtys[q.supplierId]);
+    if (!read.ok) {
+      if (unreadable === null)
+        unreadable = {
+          refusal: read.reason === 'ambiguousNumber' ? 'ambiguous' : 'badQty',
+          supplierId: q.supplierId
+        };
+      continue;
+    }
+    if (read.value !== null && read.value !== 0)
+      allocations.push({ supplierId: q.supplierId, qty: read.value });
+  }
+  const total = allocations.reduce((sum, a) => sum + a.qty, 0);
+  const refused =
+    unreadable ??
+    moveDemandRefusal(shortfall, allocations, {
+      fromSupplierId: line.supplierId,
+      qualified: line.otherQualifiedSuppliers.map((q) => q.supplierId)
+    });
+  return { shortfall, allocations, total, remaining: Math.max(0, shortfall - total), refused };
+}
 
 /**
  * A threshold held as a fraction, shown as a percentage without rounding it away.
