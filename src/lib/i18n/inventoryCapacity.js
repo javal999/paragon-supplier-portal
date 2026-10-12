@@ -295,6 +295,8 @@ export const inventoryCapacityEn = {
   'inv.capacity.materials': 'Materials:',
   'inv.capacity.gapWeeks': 'Weeks below the LTP: {{count}}',
   'inv.capacity.notStated': 'Not stated',
+  // CAP-1 B-04 — a filter left no week column in this supplier group.
+  'inv.capacity.grid.noWeekMatches': 'No week matches the filters',
   'inv.capacity.col.week': 'Week of',
   'inv.capacity.col.allocated': 'Allocated ({{uom}})',
   'inv.capacity.col.upside': 'Additional capacity ({{uom}})',
@@ -740,6 +742,7 @@ export const inventoryCapacityId = {
   'inv.capacity.materials': 'Material:',
   'inv.capacity.gapWeeks': 'Minggu di bawah LTP: {{count}}',
   'inv.capacity.notStated': 'Belum dinyatakan',
+  'inv.capacity.grid.noWeekMatches': 'Tidak ada minggu yang cocok dengan filter',
   'inv.capacity.col.week': 'Minggu mulai',
   'inv.capacity.col.allocated': 'Dialokasikan ({{uom}})',
   'inv.capacity.col.upside': 'Kapasitas tambahan ({{uom}})',
