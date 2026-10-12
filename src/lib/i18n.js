@@ -33,6 +33,7 @@ import { shipmentsEn, shipmentsId } from './i18n/shipments';
 import { complianceEn, complianceId } from './i18n/compliance';
 import { supplierDashboardEn, supplierDashboardId } from './i18n/supplierDashboard';
 import { widgetEn, widgetId } from './i18n/widget';
+import { weekGridEn, weekGridId } from './i18n/weekGrid';
 import { supplierOrdersEn, supplierOrdersId } from './i18n/supplierOrders';
 import { supplierShipmentsEn, supplierShipmentsId } from './i18n/supplierShipments';
 import { supplierInvoicesEn, supplierInvoicesId } from './i18n/supplierInvoices';
@@ -178,6 +179,7 @@ export const resources = {
       ...complianceEn,
       ...supplierDashboardEn,
       ...widgetEn,
+      ...weekGridEn,
       ...supplierOrdersEn,
       ...supplierShipmentsEn,
       ...supplierInvoicesEn,
@@ -681,6 +683,7 @@ export const resources = {
       ...complianceId,
       ...supplierDashboardId,
       ...widgetId,
+      ...weekGridId,
       ...supplierOrdersId,
       ...supplierShipmentsId,
       ...supplierInvoicesId,
