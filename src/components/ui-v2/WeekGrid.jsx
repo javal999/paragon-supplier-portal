@@ -2,8 +2,14 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Data from './Data';
+import StatusPill from './StatusPill';
+import TimeRangeToggle from './TimeRangeToggle';
+import { useWeekGridView } from './weekGridView';
 import { isoWeek, mondayOf } from '@services/engine/dates';
-import { formatDate } from '@lib/format';
+import { formatDate, formatNumber } from '@lib/format';
+import { combineWeeks, groupWeeksByMonth } from '@lib/weekMonths';
+/** @import { MonthCombine, MonthStatus, WeekMonth } from '@lib/weekMonths' */
+/** @import { WeekGridView } from './weekGridView' */
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WEEK GRID — CAP-1 wave 1 (SC-HUB-CAPACITY-WAVE1-SPEC-2026-10, section 2).
@@ -30,6 +36,16 @@ import { formatDate } from '@lib/format';
 //   the scroll container is focusable and carries the table's name.
 //
 // No figure is computed here: every cell is what the page's `cell` returns.
+//
+// CAP-2 (BL-171, SC-HUB-CAPACITY-REQUIREMENTS-2026-10 §3) — a Weekly/Monthly
+// toggle over the same rows. Weekly is the default; the choice is remembered
+// per page (`viewKey`, BR-01). In Monthly a column is a month: the weeks whose
+// Thursday falls in it (BR-02), combined as each row declares (`combine`,
+// BR-03); its header names the month, its week count and its first and last
+// Monday, and says "Partial" when it holds fewer weeks than the month has
+// (BR-04, BR-06). Monthly is READ ONLY (BR-05, CAP-D6): no week `cell` is
+// called, so no input, select or per-week action can render; an `editable`
+// grid says "Switch to Weekly to edit." A month holding a gap week is tinted.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -53,6 +69,12 @@ import { formatDate } from '@lib/format';
  * @property {boolean} [emphasis] Semibold label (Demand forecast's Reconciled row, A-03).
  * @property {'end' | 'start'} [align] Cell alignment; numbers are `end` (the default).
  * @property {(week: string, index: number) => React.ReactNode} cell The cell's content.
+ * @property {MonthCombine} [combine] CAP-2 BR-03 — how the weeks combine into a month. Without it the month cell reads "—".
+ * @property {(week: string, index: number) => unknown} [value] The week's raw value that `combine` reads: a number, a status key, or for `distinct` a value or a list.
+ * @property {(status: string) => number} [severity] For `combine: 'status'` — higher is worse.
+ * @property {(n: number) => string} [format] How a combined number is written; `formatNumber` by default.
+ * @property {(value: any, month: WeekMonth) => React.ReactNode} [monthCell] Draws the combined value; for `status` it draws the worst status (the week count is added by the grid).
+ * @property {React.ReactNode} [monthNote] A line under the label in Monthly only.
  */
 
 /**
@@ -64,6 +86,8 @@ import { formatDate } from '@lib/format';
  * @property {string} [currentWeek] The Monday of the current week (G-04, G-07); any day of it is accepted.
  * @property {string} [testId] `data-testid` on the table.
  * @property {string} [className] Extra classes on the scroll container.
+ * @property {string} [viewKey] CAP-2 BR-01 — remembers the Weekly/Monthly choice under this page key.
+ * @property {boolean} [editable] The weekly view takes input; Monthly then says "Switch to Weekly to edit." (BR-05).
  */
 
 const LABEL_COL =
@@ -88,16 +112,45 @@ const DRILL_RING =
 const columnClass = (c) =>
   [WEEK_COL, c.gap ? 'bg-warning-soft' : '', c.drill ? DRILL_RING : ''].filter(Boolean).join(' ');
 
+const DASH = <span className="text-text-tertiary">—</span>;
+
+/**
+ * `Oct 2026` for a `YYYY-MM` month, in the reader's language.
+ * @param {string} key
+ * @param {string} lang
+ */
+const monthName = (key, lang) => {
+  const [y, m] = key.split('-').map(Number);
+  return new Intl.DateTimeFormat(lang.startsWith('id') ? 'id-ID' : 'en-GB', {
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC'
+  }).format(Date.UTC(y, m - 1, 1));
+};
+
 /**
  * @param {WeekGridProps} props
  * @returns {React.ReactNode}
  */
-const WeekGrid = ({ weeks, rows, label, corner, currentWeek, testId, className = '' }) => {
-  const { t } = useTranslation();
+const WeekGrid = ({
+  weeks,
+  rows,
+  label,
+  corner,
+  currentWeek,
+  testId,
+  className = '',
+  viewKey,
+  editable = false
+}) => {
+  const { t, i18n } = useTranslation();
   const scrollRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const [edges, setEdges] = useState({ left: false, right: false });
+  const [view, setView] = useWeekGridView(viewKey);
+  const monthly = view === 'monthly';
   const current = currentWeek ? mondayOf(currentWeek) : null;
   const shownRows = rows.filter((r) => !r.hidden);
+  const months = monthly ? groupWeeksByMonth(weeks.map((c) => c.week)) : [];
 
   const measure = useCallback(() => {
     const el = scrollRef.current;
@@ -111,14 +164,14 @@ const WeekGrid = ({ weeks, rows, label, corner, currentWeek, testId, className =
   useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const head = current ? el.querySelector(`th[data-week="${current}"]`) : null;
+    const head = current ? el.querySelector('thead th[data-current="true"]') : null;
     const labelCell = el.querySelector('th[data-label-col]');
     if (head instanceof HTMLElement && labelCell instanceof HTMLElement) {
       el.scrollLeft = Math.max(0, head.offsetLeft - labelCell.offsetWidth);
     }
     measure();
-    // Only on first layout and when the horizon itself changes.
-  }, [current, weeks.length, measure]);
+    // Only on first layout, when the horizon itself changes, and on a switch.
+  }, [current, weeks.length, view, measure]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -161,8 +214,85 @@ const WeekGrid = ({ weeks, rows, label, corner, currentWeek, testId, className =
     }
   };
 
+  /**
+   * CAP-2 — a month column's own state: gap tint and drill ring when any of its
+   * weeks has them; the first per-week marker it holds.
+   * @param {WeekMonth} m
+   * @returns {WeekGridColumn}
+   */
+  const monthColumn = (m) => {
+    const cols = m.indexes.map((i) => weeks[i]);
+    return {
+      week: m.key,
+      gap: cols.some((c) => c.gap),
+      drill: cols.some((c) => c.drill),
+      marker: cols.find((c) => c.marker)?.marker
+    };
+  };
+
+  /**
+   * CAP-2 BR-03 — one row's month cell. The week `cell` is never called here,
+   * so nothing the weekly view lets a user act on can render (BR-05).
+   * @param {WeekGridRow} r
+   * @param {WeekMonth} m
+   * @returns {React.ReactNode}
+   */
+  const monthCellOf = (r, m) => {
+    if (!r.combine) return DASH;
+    const values = m.indexes.map((i) => r.value?.(weeks[i].week, i));
+    const v = combineWeeks(r.combine, values, r.severity);
+    if (r.combine === 'status') {
+      const st = /** @type {MonthStatus} */ (v);
+      if (st.worst === null) return DASH;
+      return (
+        <div className="flex flex-col items-start gap-1" data-worst={st.worst}>
+          {r.monthCell ? r.monthCell(st.worst, m) : st.worst}
+          <span className="text-xs text-text-secondary whitespace-nowrap">
+            <span className="sr-only"> · </span>
+            {t('weekGrid.month.weeksOf', { count: st.count, of: st.of })}
+          </span>
+        </div>
+      );
+    }
+    if (r.monthCell) return r.monthCell(v, m);
+    if (r.combine === 'distinct') {
+      const list = /** @type {string[]} */ (v);
+      return list.length ? (
+        <span className="text-xs text-text-secondary break-words">{list.join(', ')}</span>
+      ) : (
+        DASH
+      );
+    }
+    return typeof v === 'number' ? <Data>{(r.format ?? formatNumber)(v)}</Data> : DASH;
+  };
+
+  /** @type {{ id: WeekGridView; label: string }[]} */
+  const viewOptions = [
+    { id: 'weekly', label: t('weekGrid.view.weekly') },
+    { id: 'monthly', label: t('weekGrid.view.monthly') }
+  ];
+
   return (
     <div className="relative w-full min-w-0">
+      {/* CAP-2 BR-01 — the toggle sits outside the table, so it never joins
+          the grid's row-wise tab order (G-11). */}
+      <div className="flex flex-wrap items-center justify-end gap-2 px-2 py-2">
+        {monthly && editable ? (
+          <p
+            className="mr-auto text-xs text-text-secondary"
+            data-testid={testId ? `${testId}-readonly` : undefined}
+          >
+            {t('weekGrid.monthlyReadOnly')}
+          </p>
+        ) : null}
+        <div
+          role="group"
+          aria-label={t('weekGrid.view.label')}
+          data-testid={testId ? `${testId}-view` : undefined}
+        >
+          <TimeRangeToggle options={viewOptions} value={view} onChange={setView} />
+        </div>
+      </div>
       <div
         ref={scrollRef}
         role="region"
@@ -190,38 +320,87 @@ const WeekGrid = ({ weeks, rows, label, corner, currentWeek, testId, className =
                   edges.left ? 'shadow-[4px_0_6px_-4px_rgba(13,27,42,0.18)]' : ''
                 }`}
               >
-                {corner}
+                {monthly ? t('weekGrid.month.corner') : corner}
               </th>
-              {weeks.map((c) => {
-                const isCurrent = c.week === current;
-                return (
-                  <th
-                    key={c.week}
-                    scope="col"
-                    data-week={c.week}
-                    data-current={isCurrent ? 'true' : undefined}
-                    data-gap={c.gap ? 'true' : undefined}
-                    data-testid={c.testId}
-                    {...c.headerAttrs}
-                    className={`${columnClass(c)} ${c.gap ? '' : 'bg-bg-hover'} border-b border-border-subtle px-3 py-2 text-right align-bottom font-normal ${
-                      isCurrent ? 'border-t-2 border-t-action' : 'border-t-2 border-t-transparent'
-                    }`}
-                  >
-                    <Data as="div" className="font-semibold">
-                      {`W${isoWeek(c.week)}`}
-                    </Data>
-                    <Data as="div" className="text-xs text-text-secondary whitespace-nowrap">
-                      {shortDate(c.week)}
-                    </Data>
-                    {isCurrent ? (
-                      <div className="text-xs text-action-hover whitespace-nowrap">
-                        {t('weekGrid.thisWeek')}
-                      </div>
-                    ) : null}
-                    {c.marker ? <div className="mt-1 [&>span]:ml-0">{c.marker}</div> : null}
-                  </th>
-                );
-              })}
+              {monthly
+                ? months.map((m) => {
+                    const c = monthColumn(m);
+                    const isCurrent = current !== null && m.weeks.includes(current);
+                    return (
+                      <th
+                        key={m.key}
+                        scope="col"
+                        data-month={m.key}
+                        data-current={isCurrent ? 'true' : undefined}
+                        data-gap={c.gap ? 'true' : undefined}
+                        data-partial={m.partial ? 'true' : undefined}
+                        data-testid={testId ? `${testId}-month-${m.key}` : undefined}
+                        className={`${columnClass(c)} ${c.gap ? '' : 'bg-bg-hover'} border-b border-border-subtle px-3 py-2 text-right align-bottom font-normal ${
+                          isCurrent
+                            ? 'border-t-2 border-t-action'
+                            : 'border-t-2 border-t-transparent'
+                        }`}
+                      >
+                        <div className="font-semibold whitespace-nowrap">
+                          {monthName(m.key, i18n.language ?? 'en')}
+                        </div>
+                        <div className="text-xs text-text-secondary whitespace-nowrap">
+                          {t('weekGrid.month.weeks', { count: m.weeks.length })}
+                        </div>
+                        <Data as="div" className="text-xs text-text-secondary">
+                          {m.weeks.length > 1
+                            ? `${shortDate(m.firstMonday)} – ${shortDate(m.lastMonday)}`
+                            : shortDate(m.firstMonday)}
+                        </Data>
+                        {isCurrent ? (
+                          <div className="text-xs text-action-hover whitespace-nowrap">
+                            {t('weekGrid.thisMonth')}
+                          </div>
+                        ) : null}
+                        {m.partial ? (
+                          <div
+                            className="mt-1"
+                            data-testid={testId ? `${testId}-partial-${m.key}` : undefined}
+                          >
+                            <StatusPill variant="neutral">{t('weekGrid.month.partial')}</StatusPill>
+                          </div>
+                        ) : null}
+                        {c.marker ? <div className="mt-1 [&>span]:ml-0">{c.marker}</div> : null}
+                      </th>
+                    );
+                  })
+                : weeks.map((c) => {
+                    const isCurrent = c.week === current;
+                    return (
+                      <th
+                        key={c.week}
+                        scope="col"
+                        data-week={c.week}
+                        data-current={isCurrent ? 'true' : undefined}
+                        data-gap={c.gap ? 'true' : undefined}
+                        data-testid={c.testId}
+                        {...c.headerAttrs}
+                        className={`${columnClass(c)} ${c.gap ? '' : 'bg-bg-hover'} border-b border-border-subtle px-3 py-2 text-right align-bottom font-normal ${
+                          isCurrent
+                            ? 'border-t-2 border-t-action'
+                            : 'border-t-2 border-t-transparent'
+                        }`}
+                      >
+                        <Data as="div" className="font-semibold">
+                          {`W${isoWeek(c.week)}`}
+                        </Data>
+                        <Data as="div" className="text-xs text-text-secondary whitespace-nowrap">
+                          {shortDate(c.week)}
+                        </Data>
+                        {isCurrent ? (
+                          <div className="text-xs text-action-hover whitespace-nowrap">
+                            {t('weekGrid.thisWeek')}
+                          </div>
+                        ) : null}
+                        {c.marker ? <div className="mt-1 [&>span]:ml-0">{c.marker}</div> : null}
+                      </th>
+                    );
+                  })}
             </tr>
           </thead>
           <tbody>
@@ -239,17 +418,37 @@ const WeekGrid = ({ weeks, rows, label, corner, currentWeek, testId, className =
                       <span className="text-text-tertiary font-normal"> · {r.unit}</span>
                     ) : null}
                   </span>
+                  {monthly && r.monthNote ? (
+                    <span
+                      className="block mt-1 text-xs font-normal text-text-tertiary break-words"
+                      data-testid={testId ? `${testId}-note-${r.id}` : undefined}
+                    >
+                      {r.monthNote}
+                    </span>
+                  ) : null}
                 </th>
-                {weeks.map((c, i) => (
-                  <td
-                    key={c.week}
-                    className={`${columnClass(c)} border-b border-border-subtle px-2 py-2 align-top ${
-                      (r.align ?? 'end') === 'end' ? 'text-right' : 'text-left'
-                    }`}
-                  >
-                    {r.cell(c.week, i)}
-                  </td>
-                ))}
+                {monthly
+                  ? months.map((m) => (
+                      <td
+                        key={m.key}
+                        data-testid={testId ? `${testId}-${r.id}-${m.key}` : undefined}
+                        className={`${columnClass(monthColumn(m))} border-b border-border-subtle px-2 py-2 align-top ${
+                          (r.align ?? 'end') === 'end' ? 'text-right' : 'text-left'
+                        }`}
+                      >
+                        {monthCellOf(r, m)}
+                      </td>
+                    ))
+                  : weeks.map((c, i) => (
+                      <td
+                        key={c.week}
+                        className={`${columnClass(c)} border-b border-border-subtle px-2 py-2 align-top ${
+                          (r.align ?? 'end') === 'end' ? 'text-right' : 'text-left'
+                        }`}
+                      >
+                        {r.cell(c.week, i)}
+                      </td>
+                    ))}
               </tr>
             ))}
           </tbody>

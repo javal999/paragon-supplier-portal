@@ -78,6 +78,11 @@ export const demandForecastEn = {
   'df.detail.col.theta': 'Theta (alternative)',
   'df.detail.col.sap': 'SAP’s plan',
   'df.detail.col.events': 'Events',
+  // CAP-2 — the Monthly view of the SKU's weeks. A P band summed over weeks is
+  // not the month's percentile, and the row says so.
+  'df.detail.month.bandNote': 'Monthly: the sum of the weekly values, not a monthly percentile',
+  'df.detail.month.overridden_one': '{{count}} week overridden',
+  'df.detail.month.overridden_other': '{{count}} weeks overridden',
   'df.detail.comb':
     'Comb: the average of simple exponential smoothing (α {{sesAlpha}}), Holt’s trend (α {{holtAlpha}}, β {{holtBeta}}) and a damped trend (α {{dampedAlpha}}, β {{dampedBeta}}, φ {{phi}}).',
   'df.detail.seasonal': 'Seasonality found and applied.',
@@ -264,6 +269,8 @@ export const demandForecastId = {
   'df.detail.col.theta': 'Theta (alternatif)',
   'df.detail.col.sap': 'Rencana SAP',
   'df.detail.col.events': 'Peristiwa',
+  'df.detail.month.bandNote': 'Bulanan: jumlah nilai mingguan, bukan persentil bulanan',
+  'df.detail.month.overridden_other': '{{count}} minggu disesuaikan',
   'df.detail.comb':
     'Comb: rata-rata simple exponential smoothing (α {{sesAlpha}}), tren Holt (α {{holtAlpha}}, β {{holtBeta}}), dan tren teredam (α {{dampedAlpha}}, β {{dampedBeta}}, φ {{phi}}).',
   'df.detail.seasonal': 'Musiman ditemukan dan diterapkan.',

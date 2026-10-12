@@ -189,6 +189,22 @@ const LTP_TONE = {
   cannotSupply: 'danger'
 };
 
+/**
+ * CAP-2 BR-03 — which LTP-against-capacity state is worse when weeks combine
+ * into a month: red above amber above "not stated" above green. The month's
+ * pill is its worst week's, so a red week is never hidden by an unstated one.
+ * (`capacityRules`' period check ranks "not stated" first, because a period
+ * cannot be confirmed without it; a monthly VIEW shows where to act.)
+ * @type {Record<LtpCapacityLevel, number>}
+ */
+const LTP_SEVERITY = { within: 0, unconfirmed: 1, needsAdditional: 2, cannotSupply: 3 };
+
+/**
+ * @param {string} level
+ * @returns {number}
+ */
+export const ltpSeverity = (level) => LTP_SEVERITY[/** @type {LtpCapacityLevel} */ (level)] ?? 0;
+
 /** @type {React.FC<{ level: LtpCapacityLevel; testId?: string }>} */
 export const LtpCheckPill = ({ level, testId }) => {
   const { t } = useTranslation();

@@ -10,6 +10,7 @@ import SubTabs from '@components/ui-v2/SubTabs';
 import Button from '@components/ui-v2/Button';
 import Data from '@components/ui-v2/Data';
 import WeekGrid from '@components/ui-v2/WeekGrid';
+import { useWeekGridView } from '@components/ui-v2/weekGridView';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import EmptyState from '@components/ui-v2/EmptyState';
@@ -33,6 +34,7 @@ import {
   LtpCheckPill,
   inputClass,
   inventoryNow,
+  ltpSeverity,
   qty,
   useInventoryRunner
 } from './inventory/inventoryDisplay';
@@ -92,6 +94,9 @@ const REFUSAL_TARGET = {
 // C-01 — a 96 px, right-aligned number input inside the 112 px week column.
 const gridInputClass = `${inputClass.replace('w-full', 'w-[96px]')} text-right`;
 
+// CAP-2 BR-01 — the page key the Weekly/Monthly choice is remembered under.
+const VIEW_KEY = 'supplierCapacity';
+
 // Stands in for the week while the sentence is translated, so the translated
 // string itself stays unchanged and the week can be drawn as a button.
 const WEEK_SLOT = '\u2063week\u2063';
@@ -141,6 +146,8 @@ const SupplierCapacity = () => {
   const { run, pending } = useInventoryRunner();
   const [group, setGroup] = useState(/** @type {string | null} */ (null));
   const [draft, setDraft] = useState(/** @type {WeekDraft[]} */ ([]));
+  // CAP-2 BR-05 — Monthly is read only, so the refusal's week is not a link there.
+  const [gridView] = useWeekGridView(VIEW_KEY);
   const nowIso = inventoryNow();
   const crumb = [t('hub.nav.section.planning'), t('inv.capacity.sup.title')];
 
@@ -307,6 +314,8 @@ const SupplierCapacity = () => {
           corner={t('inv.capacity.col.week')}
           currentWeek={nowIso.slice(0, 10)}
           testId="capacity-grid"
+          viewKey={VIEW_KEY}
+          editable={held}
           weeks={rows.map(({ w, below }) => ({
             week: w.week,
             gap: below,
@@ -321,6 +330,9 @@ const SupplierCapacity = () => {
             {
               id: 'ltp',
               label: t('inv.capacity.col.ltp', { uom: plan.uom }),
+              combine: 'sum',
+              value: (_w, i) => rows[i].ltp,
+              format: qty,
               cell: (week, i) => (
                 <Data data-testid={`capacity-ltp-qty-${week}`}>{qty(rows[i].ltp)}</Data>
               )
@@ -328,6 +340,10 @@ const SupplierCapacity = () => {
             {
               id: 'allocated',
               label: t('inv.capacity.col.allocated', { uom: plan.uom }),
+              // CAP-2 — the month sums what is typed, as the BE and pill do.
+              combine: 'sum',
+              value: (_w, i) => rows[i].stated?.allocated ?? null,
+              format: qty,
               cell: (week, i) => (
                 <input
                   id={`capacity-allocated-input-${week}`}
@@ -343,6 +359,9 @@ const SupplierCapacity = () => {
             {
               id: 'upside',
               label: t('inv.capacity.col.upside', { uom: plan.uom }),
+              combine: 'sum',
+              value: (_w, i) => rows[i].stated?.upside ?? null,
+              format: qty,
               cell: (week, i) => (
                 <input
                   aria-label={t('inv.capacity.upsideFor', { week: formatDate(week) })}
@@ -357,6 +376,12 @@ const SupplierCapacity = () => {
             {
               id: 'be',
               label: t('inv.capacity.col.be', { uom: plan.uom }),
+              combine: 'sum',
+              value: (_w, i) => {
+                const st = rows[i].stated;
+                return st ? st.allocated + (st.upside ?? 0) : null;
+              },
+              format: qty,
               cell: (week, i) => {
                 const stated = rows[i].stated;
                 return (
@@ -374,6 +399,13 @@ const SupplierCapacity = () => {
               id: 'ltpCheck',
               label: t('inv.capacity.col.ltpCheck'),
               align: 'start',
+              // CAP-2 BR-03 — the month shows its worst week, with the count.
+              combine: 'status',
+              value: (_w, i) => rows[i].level,
+              severity: ltpSeverity,
+              monthCell: (level, m) => (
+                <LtpCheckPill level={level} testId={`capacity-ltp-month-${m.key}`} />
+              ),
               cell: (week, i) => (
                 <LtpCheckPill level={rows[i].level} testId={`capacity-ltp-${week}`} />
               )
@@ -383,6 +415,15 @@ const SupplierCapacity = () => {
               id: 'reason',
               label: t('inv.capacity.col.reason'),
               align: 'start',
+              // CAP-2 BR-03 / BR-05 — every distinct reason of the month's weeks,
+              // as text: the select stays in the weekly view.
+              combine: 'distinct',
+              value: (_w, i) => {
+                const { d, below } = rows[i];
+                if (!below || !d.reason) return null;
+                const name = reasonLabel('capacityShortfall', d.reason);
+                return d.note.trim() ? `${name} — ${d.note.trim()}` : name;
+              },
               cell: (week, i) => {
                 const { d, below } = rows[i];
                 return below ? (
@@ -434,7 +475,9 @@ const SupplierCapacity = () => {
               refusalKey={`inv.capacity.refusal.${refusal.refusal}`}
               week={refusal.week}
               target={
-                refusal.week && plan.weeks.some((w) => w.week === refusal.week)
+                gridView === 'weekly' &&
+                refusal.week &&
+                plan.weeks.some((w) => w.week === refusal.week)
                   ? REFUSAL_TARGET[refusal.refusal]
                   : undefined
               }
