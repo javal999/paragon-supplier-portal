@@ -49,11 +49,11 @@ export const S2_GRANDFATHERED = [
   'src/pages-v2/BuyerDiscovery.jsx::STAGE_LABEL_KEYS',
   'src/pages-v2/BuyerInvoices.jsx::AGING_DATA',
   'src/pages-v2/BuyerInvoices.jsx::STATUS_OPTIONS',
-  'src/pages-v2/BuyerRequisitions.jsx::COST_CENTERS',
-  'src/pages-v2/BuyerRequisitions.jsx::PRIORITY_OPTIONS',
-  'src/pages-v2/BuyerRequisitions.jsx::UOM_OPTIONS',
-  'src/pages-v2/BuyerRisk.jsx::SCENARIO_LIBRARY_IDS',
-  'src/pages-v2/BuyerRisk.jsx::TAB_DEFS',
+  'src/pages-v2/BuyerRequisitions/components/NewPrItemStep.jsx::UOM_OPTIONS',
+  'src/pages-v2/BuyerRequisitions/components/NewPrScheduleStep.jsx::COST_CENTERS',
+  'src/pages-v2/BuyerRequisitions/components/NewPrScheduleStep.jsx::PRIORITY_OPTIONS',
+  'src/pages-v2/BuyerRisk/components/ScenarioTab.jsx::SCENARIO_LIBRARY_IDS',
+  'src/pages-v2/BuyerRisk/index.jsx::TAB_DEFS',
   'src/pages-v2/BuyerSourcing/components/WizardScopeStep.jsx::MATERIAL_CATALOG',
   'src/pages-v2/BuyerSourcing/components/WizardTermsStep.jsx::INCOTERMS_OPTIONS',
   'src/pages-v2/BuyerSourcing/components/WizardTermsStep.jsx::PAYMENT_TERMS_OPTIONS',
@@ -81,8 +81,8 @@ export const S2_GRANDFATHERED = [
   'src/pages-v2/SupplierRegistration/components/RequestTypeSelector.jsx::REQUEST_TYPES',
   'src/pages-v2/SupplierStorefront.jsx::TABS',
   'src/pages-v2/SupplierStorefront.jsx::TRACK_RECORD',
-  'src/pages-v2/SupplierWhatsApp.jsx::CAP_KEYS',
-  'src/pages-v2/SupplierWhatsApp.jsx::LANGUAGES',
+  'src/pages-v2/SupplierWhatsApp/components/WhatsAppPanel.jsx::CAP_KEYS',
+  'src/pages-v2/SupplierWhatsApp/components/WhatsAppPanel.jsx::LANGUAGES',
   'src/pages-v2/process-flows/FlowDiagram.jsx::MARKERS'
 ];
 

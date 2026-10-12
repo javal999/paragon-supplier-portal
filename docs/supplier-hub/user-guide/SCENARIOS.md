@@ -68,15 +68,15 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | PTI-Req | Purchase requisitions (URL `/buyer/purchase-requisition`) | **New PR**, then **Submit for approval** | Draft → Pending Approval | `pages-v2/BuyerRequisitions.jsx:697,908-920` |
-| 2 | PTI-Proc | same | **Approve** | Approved | `pages-v2/BuyerRequisitions.jsx:996-1038` |
-| 3 | PTI-Proc | same | **Raise sourcing event**. Opens the RFQ wizard pre-filled; saving the RFQ moves the PR. | PR: Sourcing Event | `pages-v2/BuyerRequisitions.jsx:636-637,1194-1201`; `services/transitions/cascades.js:62` |
+| 1 | PTI-Req | Purchase requisitions (URL `/buyer/purchase-requisition`) | **New PR**, then **Submit for approval** | Draft → Pending Approval | `pages-v2/BuyerRequisitions/index.jsx:203`; `pages-v2/BuyerRequisitions/components/RequisitionPanelFooter.jsx:89-104` |
+| 2 | PTI-Proc | same | **Approve** | Approved | `pages-v2/BuyerRequisitions/components/RequisitionPanelFooter.jsx:173-215` |
+| 3 | PTI-Proc | same | **Raise sourcing event**. Opens the RFQ wizard pre-filled; saving the RFQ moves the PR. | PR: Sourcing Event | `pages-v2/BuyerRequisitions/hooks/useRequisitionActions.js:281-282`; `pages-v2/BuyerRequisitions/components/StatusNotes.jsx:114-121`; `services/transitions/cascades.js:62` |
 | 4 | PTI-Proc | Sourcing → **RFQ** | **New RFQ** → Define Scope / Invite Suppliers / Terms & Deadlines / Review & Submit → **Save RFQ draft**, then **Publish RFQ** | Draft → Open | `pages-v2/BuyerSourcing/components/SourcingHeader.jsx:82`; `pages-v2/BuyerSourcing/components/RfqWizardModal.jsx:216`; `pages-v2/BuyerSourcing/components/RfqLifecycleActions.jsx:83-87` |
 | 5 | Sup-Com | Sourcing → **RFQ invitations** | **I will respond** → **Submit quote** → **Submit quotation** | Quotation Submitted | `pages-v2/rfqs/RfqEngagementControls.jsx:192`; `pages-v2/SupplierRFQs/components/RFQCard.jsx:201`; `pages-v2/SupplierRFQs/components/QuotePanel.jsx:76-78` |
 | 6 | PTI-Proc | RFQ | **Move to review** | Under Review | `pages-v2/BuyerSourcing/components/ComparisonTable.jsx:134-138` |
-| 7 | PTI-Proc | RFQ → event page | **Open the round**, for a shortlist of suppliers who quoted | Round Open | `pages-v2/BuyerSourcingEvent.jsx:1019-1038` |
+| 7 | PTI-Proc | RFQ → event page | **Open the round**, for a shortlist of suppliers who quoted | Round Open | `pages-v2/BuyerSourcingEvent/components/NewRoundForm.jsx:121-140` |
 | 8 | Sup-Com | RFQ invitations → revised quotes | **Send the revised quote** | Quotation revised | `pages-v2/SupplierNegotiations.jsx:231-283` |
-| 9 | PTI-Proc | RFQ event page | **Close the round**, then award per item (Award, or Split by % / by quantity) → **Award the event** | Awarded (or Partly awarded) | `pages-v2/BuyerSourcingEvent.jsx:910-917,1044-1118`; `pages-v2/rfx/AwardPanel.jsx:669` |
+| 9 | PTI-Proc | RFQ event page | **Close the round**, then award per item (Award, or Split by % / by quantity) → **Award the event** | Awarded (or Partly awarded) | `pages-v2/BuyerSourcingEvent/components/NegotiationSection.jsx:104-111`; `pages-v2/BuyerSourcingEvent/components/AwardSection.jsx:118-191`; `pages-v2/rfx/AwardPanel.jsx:669` |
 | 10 | PTI-Proc | same | **Mark raised in SAP** → **Save SAP number** | Award locked | `services/transitions/flows/rfq.flow.js:210-257` |
 | 11 | Sup-Com | RFQ invitations → Awards & history | Sees "Your share: x%" | – | `pages-v2/SupplierRFQs/utils.js:132-135`; `pages-v2/SupplierNegotiations.jsx:347-353` |
 
@@ -95,22 +95,22 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | PTI-Proc | RFQ event page (rfq-020) | Opens the award panel | "This RFQ cannot be awarded: no supplier that quoted passes the compliance gate…" | `lib/i18n/rfx.js:278`; `pages-v2/BuyerSourcingEvent.jsx:1092-1098` |
+| 1 | PTI-Proc | RFQ event page (rfq-020) | Opens the award panel | "This RFQ cannot be awarded: no supplier that quoted passes the compliance gate…" | `lib/i18n/rfx.js:278`; `pages-v2/BuyerSourcingEvent/components/AwardSection.jsx:165-171` |
 | 2 | PTI-Proc | RFQ | **Cancel RFQ** | Cancelled | `pages-v2/BuyerSourcing/components/RfqLifecycleActions.jsx:110-117` |
 
 **Negative end-to-end: PR rejected**
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | PTI-Proc | Purchase requisitions | **Reject** → reason → **Confirm rejection** | Rejected | `pages-v2/BuyerRequisitions.jsx:996-1038` |
-| 2 | PTI-Req | same | **Revise and return to draft** | Draft | `pages-v2/BuyerRequisitions.jsx:1066-1110` |
+| 1 | PTI-Proc | Purchase requisitions | **Reject** → reason → **Confirm rejection** | Rejected | `pages-v2/BuyerRequisitions/components/RequisitionPanelFooter.jsx:173-215` |
+| 2 | PTI-Req | same | **Revise and return to draft** | Draft | `pages-v2/BuyerRequisitions/components/DecisionCaptures.jsx:67-85` |
 
 **Edge cases**
 
 | Condition | What the system does | Who acts next | Menu | Evidence |
 |---|---|---|---|---|
 | Quote after the deadline | Refused: "Quotation could not be submitted" (PAST_DEADLINE). The RFQ itself stays Open, because nothing closes it automatically. | PTI-Proc extends the deadline | RFQ invitations | `services/data/mock/MockCommandService.js:4659`; `pages-v2/SupplierRFQs/hooks/useQuoteSubmission.js:188-199`; `services/transitions/flows/rfq.flow.js:136-158` |
-| Extend deadline | For every supplier or for selected suppliers. The new date must be later than the current one. | Sup-Com | RFQ event page | `pages-v2/BuyerSourcingEvent.jsx:484-514` |
+| Extend deadline | For every supplier or for selected suppliers. The new date must be later than the current one. | Sup-Com | RFQ event page | `pages-v2/BuyerSourcingEvent/components/ResponseWindowSection.jsx:146-176` |
 | Split award does not total 100% | Refused (AWARD_SPLIT_INCOMPLETE) | PTI-Proc corrects the split | RFQ event page | `services/sourcing/awardShape.js:286-289` |
 | Award departs from the best-scored quote | A reason is required | PTI-Proc | RFQ event page | `services/data/mock/MockCommandService.js:4950-4975` |
 | Attachment too large or wrong type | Limits: 25 MB per file, 30 files per response, listed file types only | Supplier | Any RFx response | `services/attachments/fileRules.js:11-63` |
@@ -146,7 +146,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 |---|---|---|---|---|---|
 | 1 | PTI-Rcv | Goods receipts | **Create GR** with rejected or short lines | GR Partially Approved; ASN flagged Discrepancy | `services/transitions/cascades.js:28-31` |
 | 2 | Sup-Ful | Orders → **Goods receipts** | **Respond** → **Acknowledge** or **Dispute** (comment required) | Answered | `pages-v2/SupplierGoodsReceipts.jsx:302-338` |
-| 3 | PTI-Rcv or PTI-Plan | Goods receipts → Shipment discrepancies | **Reconcile**, or **Resolve** a dispute | ASN Delivered | `pages-v2/BuyerGoodsReceipt.jsx:912-972`; `pages-v2/receipts/ReceiptDisputesSection.jsx:109-116` |
+| 3 | PTI-Rcv or PTI-Plan | Goods receipts → Shipment discrepancies | **Reconcile**, or **Resolve** a dispute | ASN Delivered | `pages-v2/BuyerGoodsReceipt/components/DiscrepancySection.jsx:34-91`; `pages-v2/receipts/ReceiptDisputesSection.jsx:109-116` |
 | 4 | Sup-BO | Invoices | **Submit invoice** | Match: Qty Mismatch; PTI sees "Pending Match" | `services/transitions/invoiceRollup.js:88-131`; `services/data/invoiceProjection.js:90-97` |
 | 5 | PTI-Fin | Invoices | **Dispute** → reason → **Raise dispute** | Disputed (supplier sees "Returned") | `pages-v2/BuyerInvoices.jsx:1094,1173-1178`; `services/transitions/fulfilmentRules.js:903-904` |
 | 6 | Sup-BO | Invoices | **Correct and resubmit** | Submitted; the match re-runs | `services/transitions/flows/invoice.flow.js:173-191` |
@@ -160,7 +160,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | Shelf life too short | **Request shelf-life exception**; ASN goes to Awaiting exception | PTI approves or rejects | Shipments & ASN | `pages-v2/BuyerShipments.jsx:614` |
 | Invoice price outside tolerance (2%, cap Rp 500,000) | Match: Price Variance; invoice held | PTI-Fin | Invoices | `services/transitions/hubSettings.js:121-167` |
 | Duplicate invoice number, or over-invoicing | Refused (DUPLICATE_INVOICE_NUMBER / OVER_INVOICED) | Sup-BO | Invoices | `services/data/mock/MockCommandService.js:1198-1251` |
-| GR on Quality Hold | **Request lab retest** → Under Inspection | PTI-Rcv | Goods receipts | `pages-v2/BuyerGoodsReceipt.jsx:560-569` |
+| GR on Quality Hold | **Request lab retest** → Under Inspection | PTI-Rcv | Goods receipts | `pages-v2/BuyerGoodsReceipt/components/footerForStatus.jsx:101-106` |
 
 ### UC3 Call-offs against agreements
 
@@ -457,7 +457,7 @@ A reader might expect these to work. The code shows they do not, or that they ar
 
 **Sourcing**
 
-1. **"Close the round" shows the wrong toast**, "Negotiation round opened". (`pages-v2/BuyerSourcingEvent.jsx:913`)
+1. **"Close the round" shows the wrong toast**, "Negotiation round opened". (`pages-v2/BuyerSourcingEvent/components/NegotiationSection.jsx:107`)
 2. **An RFQ never closes automatically at its deadline.** (`services/transitions/flows/rfq.flow.js:136-158`)
 3. **An Open RFI or RFP cannot be cancelled.** Only a Draft can be discarded. (`services/query/commandHooks.js:3364,3503`)
 
@@ -471,7 +471,7 @@ A reader might expect these to work. The code shows they do not, or that they ar
 
 7. **A Matched invoice never becomes Approved in the UI.** The approve action is deliberately not offered, so only seeded Approved invoices can be released. (`pages-v2/invoices/invoiceActionModel.js:99-102`)
 8. **These buttons only show a toast:**
-    - Goods receipts: "Submit inspection results", "Override hold". (`pages-v2/BuyerGoodsReceipt.jsx:536-593`)
+    - Goods receipts: "Submit inspection results", "Override hold". (`pages-v2/BuyerGoodsReceipt/components/footerForStatus.jsx:77-130`)
     - Shipments: "Send reminder to supplier", "Track shipment". (`pages-v2/BuyerShipments.jsx:445-505`)
     - Invoices: "Review match", "Escalate". (`pages-v2/BuyerInvoices.jsx:444-476`)
     - Supplier orders: "Create ASN" on the PO page. (`pages-v2/SupplierOrders.jsx:543-568`)
@@ -493,7 +493,7 @@ A reader might expect these to work. The code shows they do not, or that they ar
 **Communication and performance**
 
 16. **Nothing is sent from Supplier replies:** "No live channel — nothing is sent from here." (`pages-v2/BuyerCommHub.jsx:151-192`)
-17. **The supplier WhatsApp/Email page is scripted.** Its buttons show success banners and dispatch nothing. (`pages-v2/SupplierWhatsApp.jsx:648-694`)
+17. **The supplier WhatsApp/Email page is scripted.** Its buttons show success banners and dispatch nothing. (`pages-v2/SupplierWhatsApp/components/EmailBody.jsx:17-63`)
 18. **These buttons only show a toast, or a false success toast:**
     - "Send improvement plan" (scorecard). (`pages-v2/BuyerScorecard.jsx:684-695`)
     - Supplier "Export Report" and "Acknowledge & plan". (`pages-v2/SupplierPerformance.jsx:243-248,660-673`)
