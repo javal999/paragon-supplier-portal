@@ -503,7 +503,7 @@ describe('⚠️ DP2-PALETTE-01 · THE INSTRUMENT ITSELF', () => {
     expect(files.length).toBeGreaterThan(200);
     // known-present, three directories deep and across the pages/components split
     expect(files).toContain('lib/chartPalette.js');
-    expect(files).toContain('pages-v2/BuyerRisk.jsx');
+    expect(files).toContain('pages-v2/BuyerRisk/components/WorldMap.jsx');
     expect(files).toContain('components/ui-v2/ScoreBadge.jsx');
     expect(files).toContain('pages-v2/process-flows/FlowDiagram.jsx');
     // known-ABSENT: specs are excluded, and a fabrication is not present
@@ -532,7 +532,7 @@ describe('⚠️ DP2-PALETTE-01 · THE INSTRUMENT ITSELF', () => {
   it('⚠️ AND THE PAINTING SUBSET IS NON-EMPTY AND DERIVED', () => {
     const painting = paintingFiles();
     expect(painting.length).toBeGreaterThan(3);
-    expect(painting).toContain('pages-v2/BuyerRisk.jsx');
+    expect(painting).toContain('pages-v2/BuyerRisk/components/WorldMap.jsx');
     expect(painting).toContain('components/ui-v2/ScoreBadge.jsx');
     // a page with no paint of any kind must NOT be in it
     expect(painting).not.toContain('lib/chartPalette.js');

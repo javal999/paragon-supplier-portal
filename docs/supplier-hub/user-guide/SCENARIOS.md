@@ -74,9 +74,9 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | 4 | PTI-Proc | Sourcing → **RFQ** | **New RFQ** → Define Scope / Invite Suppliers / Terms & Deadlines / Review & Submit → **Save RFQ draft**, then **Publish RFQ** | Draft → Open | `pages-v2/BuyerSourcing/components/SourcingHeader.jsx:82`; `pages-v2/BuyerSourcing/components/RfqWizardModal.jsx:216`; `pages-v2/BuyerSourcing/components/RfqLifecycleActions.jsx:83-87` |
 | 5 | Sup-Com | Sourcing → **RFQ invitations** | **I will respond** → **Submit quote** → **Submit quotation** | Quotation Submitted | `pages-v2/rfqs/RfqEngagementControls.jsx:192`; `pages-v2/SupplierRFQs/components/RFQCard.jsx:201`; `pages-v2/SupplierRFQs/components/QuotePanel.jsx:76-78` |
 | 6 | PTI-Proc | RFQ | **Move to review** | Under Review | `pages-v2/BuyerSourcing/components/ComparisonTable.jsx:134-138` |
-| 7 | PTI-Proc | RFQ → event page | **Open the round**, for a shortlist of suppliers who quoted | Round Open | `pages-v2/BuyerSourcingEvent.jsx:1019-1038` |
+| 7 | PTI-Proc | RFQ → event page | **Open the round**, for a shortlist of suppliers who quoted | Round Open | `pages-v2/BuyerSourcingEvent/components/NewRoundForm.jsx:121-140` |
 | 8 | Sup-Com | RFQ invitations → revised quotes | **Send the revised quote** | Quotation revised | `pages-v2/SupplierNegotiations.jsx:231-283` |
-| 9 | PTI-Proc | RFQ event page | **Close the round**, then award per item (Award, or Split by % / by quantity) → **Award the event** | Awarded (or Partly awarded) | `pages-v2/BuyerSourcingEvent.jsx:910-917,1044-1118`; `pages-v2/rfx/AwardPanel.jsx:669` |
+| 9 | PTI-Proc | RFQ event page | **Close the round**, then award per item (Award, or Split by % / by quantity) → **Award the event** | Awarded (or Partly awarded) | `pages-v2/BuyerSourcingEvent/components/NegotiationSection.jsx:104-111`; `pages-v2/BuyerSourcingEvent/components/AwardSection.jsx:118-191`; `pages-v2/rfx/AwardPanel.jsx:669` |
 | 10 | PTI-Proc | same | **Mark raised in SAP** → **Save SAP number** | Award locked | `services/transitions/flows/rfq.flow.js:210-257` |
 | 11 | Sup-Com | RFQ invitations → Awards & history | Sees "Your share: x%" | – | `pages-v2/SupplierRFQs/utils.js:132-135`; `pages-v2/SupplierNegotiations.jsx:347-353` |
 
@@ -95,7 +95,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | PTI-Proc | RFQ event page (rfq-020) | Opens the award panel | "This RFQ cannot be awarded: no supplier that quoted passes the compliance gate…" | `lib/i18n/rfx.js:278`; `pages-v2/BuyerSourcingEvent.jsx:1092-1098` |
+| 1 | PTI-Proc | RFQ event page (rfq-020) | Opens the award panel | "This RFQ cannot be awarded: no supplier that quoted passes the compliance gate…" | `lib/i18n/rfx.js:278`; `pages-v2/BuyerSourcingEvent/components/AwardSection.jsx:165-171` |
 | 2 | PTI-Proc | RFQ | **Cancel RFQ** | Cancelled | `pages-v2/BuyerSourcing/components/RfqLifecycleActions.jsx:110-117` |
 
 **Negative end-to-end: PR rejected**
@@ -110,7 +110,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | Condition | What the system does | Who acts next | Menu | Evidence |
 |---|---|---|---|---|
 | Quote after the deadline | Refused: "Quotation could not be submitted" (PAST_DEADLINE). The RFQ itself stays Open, because nothing closes it automatically. | PTI-Proc extends the deadline | RFQ invitations | `services/data/mock/MockCommandService.js:4659`; `pages-v2/SupplierRFQs/hooks/useQuoteSubmission.js:188-199`; `services/transitions/flows/rfq.flow.js:136-158` |
-| Extend deadline | For every supplier or for selected suppliers. The new date must be later than the current one. | Sup-Com | RFQ event page | `pages-v2/BuyerSourcingEvent.jsx:484-514` |
+| Extend deadline | For every supplier or for selected suppliers. The new date must be later than the current one. | Sup-Com | RFQ event page | `pages-v2/BuyerSourcingEvent/components/ResponseWindowSection.jsx:146-176` |
 | Split award does not total 100% | Refused (AWARD_SPLIT_INCOMPLETE) | PTI-Proc corrects the split | RFQ event page | `services/sourcing/awardShape.js:286-289` |
 | Award departs from the best-scored quote | A reason is required | PTI-Proc | RFQ event page | `services/data/mock/MockCommandService.js:4950-4975` |
 | Attachment too large or wrong type | Limits: 25 MB per file, 30 files per response, listed file types only | Supplier | Any RFx response | `services/attachments/fileRules.js:11-63` |
@@ -457,7 +457,7 @@ A reader might expect these to work. The code shows they do not, or that they ar
 
 **Sourcing**
 
-1. **"Close the round" shows the wrong toast**, "Negotiation round opened". (`pages-v2/BuyerSourcingEvent.jsx:913`)
+1. **"Close the round" shows the wrong toast**, "Negotiation round opened". (`pages-v2/BuyerSourcingEvent/components/NegotiationSection.jsx:107`)
 2. **An RFQ never closes automatically at its deadline.** (`services/transitions/flows/rfq.flow.js:136-158`)
 3. **An Open RFI or RFP cannot be cancelled.** Only a Draft can be discarded. (`services/query/commandHooks.js:3364,3503`)
 
