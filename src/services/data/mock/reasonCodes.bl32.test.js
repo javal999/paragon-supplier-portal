@@ -147,16 +147,22 @@ describe('BL32-RSN-POP · the coded reason lists, derived', () => {
       'forecastOverride'
     ]);
     expect(STARTER_REASON_CODES.poReject).toEqual(['date', 'quantity', 'quality']);
-    for (const l of /** @type {const} */ ([
-      'poAdjust',
-      'capacityShortfall',
-      'commitmentShortfall'
-    ])) {
+    expect(STARTER_REASON_CODES.poAdjust).toEqual([
+      'capacity',
+      'material',
+      'logistics',
+      'quality',
+      'other'
+    ]);
+    // CAP-4 BR-01 — both shortfall lists gained Force Majeure and Discontinued, before Other.
+    for (const l of /** @type {const} */ (['capacityShortfall', 'commitmentShortfall'])) {
       expect(STARTER_REASON_CODES[l]).toEqual([
         'capacity',
         'material',
         'logistics',
         'quality',
+        'force-majeure',
+        'discontinued',
         'other'
       ]);
     }
@@ -248,6 +254,9 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
   it('BL32-RSN-READ-02 · the pickers offer the active list; the records read through one label helper', () => {
     expect(callersOf(/\buseActiveReasonCodes\s*\(/)).toEqual([
       'src/pages-v2/BuyerAlerts.jsx',
+      // CAP-5 — the Reason filters offer the active shortfall lists.
+      'src/pages-v2/BuyerCapacity.jsx',
+      'src/pages-v2/BuyerCommitments/index.jsx',
       'src/pages-v2/BuyerForecastBias.jsx',
       'src/pages-v2/SupplierCapacity.jsx',
       'src/pages-v2/SupplierForecastCommitments/index.jsx',
@@ -266,6 +275,7 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
       'src/pages-v2/SupplierForecasts/components/ResponsesTab.jsx',
       'src/pages-v2/SupplierOrders.jsx',
       'src/pages-v2/admin/reasonCodeDisplay.js',
+      'src/pages-v2/inventory/ReasonFilter.jsx',
       'src/pages-v2/orders/PoCollaboration.jsx'
     ]);
     // Known-false: no page builds a reason label from its i18n key itself any

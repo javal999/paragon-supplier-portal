@@ -182,6 +182,8 @@ describe('REQ-E06-02 BR-04 — below forecast needs a starter reason (the verb c
       'material',
       'logistics',
       'quality',
+      'force-majeure',
+      'discontinued',
       'other'
     ]);
     expect(shortfallRefusal(1000, 1000, undefined)).toBeNull();
@@ -728,7 +730,7 @@ describe('REQ-E06-02 BR-06 — spreadsheet: download, template and row-by-row up
     'Committed quantity',
     'Commitment date (YYYY-MM-DD)',
     'Upside quantity',
-    'Reason (capacity, material, logistics, quality, other)',
+    'Reason (capacity, material, logistics, quality, force-majeure, discontinued, other)',
     'Note'
   ];
   /** @param {...string} cells */

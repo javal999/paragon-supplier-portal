@@ -226,7 +226,7 @@ export const inventoryCapacityEn = {
   'inv.refusal.notConnected':
     'This supplier shares stock by template or on screen, not by system sync.',
   'inv.refusal.reasonRequired': 'A week below the LTP needs a reason.',
-  'inv.refusal.noteRequired': 'The reason "Other" needs a note.',
+  'inv.refusal.noteRequired': 'The reason you chose needs a note.',
   'inv.refusal.missingWeek': 'Every week of the 13-week horizon needs an allocation.',
   'inv.refusal.notSupplied': 'Access can only cover materials this supplier supplies.',
   'inv.refusal.batchTotal': 'Batch quantities must add up to the stock on hand.',
@@ -332,6 +332,8 @@ export const inventoryCapacityEn = {
   'inv.capacity.reason.material': 'Material',
   'inv.capacity.reason.logistics': 'Logistics',
   'inv.capacity.reason.quality': 'Quality',
+  'inv.capacity.reason.force-majeure': 'Force Majeure',
+  'inv.capacity.reason.discontinued': 'Discontinued',
   'inv.capacity.reason.other': 'Other',
   // MR-9 BR-05 — the starter reasons for closing an alert (list `alertClose`).
   'inv.alerts.closeReason.calloff-raised': 'Call-off raised or brought forward',
@@ -349,7 +351,8 @@ export const inventoryCapacityEn = {
   'inv.capacity.refusal.missingWeek': 'Enter an allocation for the week of {{week}}.',
   'inv.capacity.refusal.invalidQuantity': 'Enter a valid quantity for the week of {{week}}.',
   'inv.capacity.refusal.reasonRequired': 'The week of {{week}} is below the LTP. Choose a reason.',
-  'inv.capacity.refusal.noteRequired': 'Add a note for the reason "Other" in the week of {{week}}.',
+  'inv.capacity.refusal.noteRequired':
+    'Add a note for the reason in the week of {{week}}: Force Majeure, Discontinued and Other need one.',
   'inv.capacity.submit': 'Submit capacity',
   'inv.capacity.toast.submitted': 'Capacity submitted',
 
@@ -377,6 +380,8 @@ export const inventoryCapacityEn = {
     'No supplier lead time on record: risk uses the day bands until the master data is fixed',
   'inv.alerts.rule.callOffNotCovered':
     'A confirmed call-off due within the lead time is larger than the supplier stock plus production due before the need date',
+  'inv.alerts.rule.supplyDiscontinued':
+    'The supplier marked this material Discontinued: it needs another source',
   'inv.alerts.openInventory': 'Open inventory',
   'inv.alerts.openCapacity': 'Open capacity',
   'inv.alerts.openCommitments': 'Open commitments & gaps',
@@ -409,6 +414,8 @@ export const inventoryCapacityEn = {
   'inv.alerts.sup.rule.leadTimeMissing': 'PTI has no lead time on record for this material',
   'inv.alerts.sup.rule.callOffNotCovered':
     'A confirmed call-off is larger than your declared stock and production',
+  'inv.alerts.sup.rule.supplyDiscontinued':
+    'You marked this material Discontinued: PTI is finding another source',
 
   'inv.group.MG-01': 'Surfactants and cleansing actives',
   'inv.group.MG-02': 'Emollients, oils and esters',
@@ -672,7 +679,7 @@ export const inventoryCapacityId = {
   'inv.refusal.notConnected':
     'Pemasok ini membagikan stok lewat templat atau layar, bukan sinkronisasi sistem.',
   'inv.refusal.reasonRequired': 'Minggu di bawah LTP memerlukan alasan.',
-  'inv.refusal.noteRequired': 'Alasan "Lainnya" memerlukan catatan.',
+  'inv.refusal.noteRequired': 'Alasan yang dipilih memerlukan catatan.',
   'inv.refusal.missingWeek': 'Setiap minggu dalam cakupan 13 minggu memerlukan alokasi.',
   'inv.refusal.notSupplied': 'Akses hanya dapat mencakup material yang dipasok pemasok ini.',
   'inv.refusal.batchTotal': 'Jumlah kuantitas batch harus sama dengan stok tersedia.',
@@ -778,6 +785,8 @@ export const inventoryCapacityId = {
   'inv.capacity.reason.material': 'Material',
   'inv.capacity.reason.logistics': 'Logistik',
   'inv.capacity.reason.quality': 'Kualitas',
+  'inv.capacity.reason.force-majeure': 'Keadaan kahar',
+  'inv.capacity.reason.discontinued': 'Dihentikan',
   'inv.capacity.reason.other': 'Lainnya',
   'inv.alerts.closeReason.calloff-raised': 'Call-off dibuat atau dimajukan',
   'inv.alerts.closeReason.po-raised': 'PO dibuat',
@@ -794,7 +803,7 @@ export const inventoryCapacityId = {
   'inv.capacity.refusal.invalidQuantity': 'Isi kuantitas yang valid untuk minggu mulai {{week}}.',
   'inv.capacity.refusal.reasonRequired': 'Minggu mulai {{week}} di bawah LTP. Pilih alasan.',
   'inv.capacity.refusal.noteRequired':
-    'Tambahkan catatan untuk alasan "Lainnya" pada minggu mulai {{week}}.',
+    'Tambahkan catatan untuk alasan pada minggu mulai {{week}}: Keadaan kahar, Dihentikan, dan Lainnya memerlukannya.',
   'inv.capacity.submit': 'Kirim kapasitas',
   'inv.capacity.toast.submitted': 'Kapasitas terkirim',
 
@@ -824,6 +833,8 @@ export const inventoryCapacityId = {
     'Waktu tunggu pemasok belum tercatat: risiko memakai pita hari sampai data induk diperbaiki',
   'inv.alerts.rule.callOffNotCovered':
     'Call-off terkonfirmasi yang jatuh tempo dalam waktu tunggu melebihi stok pemasok ditambah produksi yang selesai sebelum tanggal kebutuhan',
+  'inv.alerts.rule.supplyDiscontinued':
+    'Pemasok menandai material ini Dihentikan: perlu sumber lain',
   'inv.alerts.openInventory': 'Buka stok',
   'inv.alerts.openCapacity': 'Buka kapasitas',
   'inv.alerts.openCommitments': 'Buka komitmen & selisih',
@@ -857,6 +868,8 @@ export const inventoryCapacityId = {
   'inv.alerts.sup.rule.leadTimeMissing': 'PTI belum mencatat waktu tunggu untuk material ini',
   'inv.alerts.sup.rule.callOffNotCovered':
     'Call-off terkonfirmasi melebihi stok dan produksi yang Anda laporkan',
+  'inv.alerts.sup.rule.supplyDiscontinued':
+    'Anda menandai material ini Dihentikan: PTI sedang mencari sumber lain',
 
   'inv.group.MG-01': 'Surfaktan dan bahan pembersih',
   'inv.group.MG-02': 'Emolien, minyak, dan ester',

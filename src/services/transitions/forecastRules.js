@@ -39,7 +39,7 @@ import {
   STREAM_MATERIAL_TYPE,
   zoneLengthsFor
 } from './forecastConfig';
-import { isActiveReasonCode } from './reasonCodes';
+import { isActiveReasonCode, shortfallReasonNeedsNote } from './reasonCodes';
 
 const DAY_MS = 86_400_000;
 
@@ -483,7 +483,8 @@ function pick(l) {
 
 /**
  * BR-04 / AC-02 — a commitment below forecast needs a starter reason code, and
- * `other` needs a note. The verb's policy calls this, so the rule holds for
+ * `other`, `force-majeure` and `discontinued` need a note (CAP-4 BR-02).
+ * The verb's policy calls this, so the rule holds for
  * every channel (screen, upload, or a hand-made dispatch).
  * @param {number} forecastQty
  * @param {number} committedQty
@@ -495,7 +496,7 @@ export function shortfallRefusal(forecastQty, committedQty, rootCause) {
   if (!rootCause || !isActiveReasonCode('commitmentShortfall', rootCause.level1))
     return 'reasonRequired';
   if (
-    rootCause.level1 === 'other' &&
+    shortfallReasonNeedsNote(rootCause.level1) &&
     (typeof rootCause.note !== 'string' || rootCause.note.trim() === '')
   )
     return 'noteRequired';
@@ -972,8 +973,10 @@ export const COMMITMENT_TEMPLATE_FIELDS = [
   { field: 'upsideQty', en: 'Upside quantity', id: 'Kuantitas tambahan' },
   {
     field: 'reason',
-    en: 'Reason (capacity, material, logistics, quality, other)',
-    id: 'Alasan (capacity, material, logistics, quality, other)'
+    // CAP-4 BR-01 — the starter codes, Force Majeure and Discontinued included.
+    // The header still matches without its parenthesis, so older files read.
+    en: 'Reason (capacity, material, logistics, quality, force-majeure, discontinued, other)',
+    id: 'Alasan (capacity, material, logistics, quality, force-majeure, discontinued, other)'
   },
   { field: 'note', en: 'Note', id: 'Catatan' }
 ];

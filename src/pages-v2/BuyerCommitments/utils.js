@@ -2,6 +2,7 @@
 // unchanged (frontend-standard Phase 5 split).
 import { positionDays } from '@services/transitions/inventoryRules';
 import { deadlineState, rankExceptions } from '@services/transitions/forecastRules';
+import { reasonFilterOptions, reasonMatches } from '../inventory/reasonFilterRules';
 /** @import { ForecastCommitmentLine, ForecastCoverageRow, InventoryPosition } from '@services/data/types' */
 /** @import { ForecastStream } from '@services/sdc/types' */
 
@@ -22,7 +23,16 @@ export const thresholdPct = (ratio) => String(Math.round(ratio * 100_000) / 1000
  * @property {readonly InventoryPosition[]} positions  The inventory positions (days of supply, CR-01).
  * @property {readonly ForecastCoverageRow[]} coverageRows  Supplier coverage rows (CR-03).
  * @property {string} nowIso  The forecast clock.
+ * @property {readonly string[]} [reasons]  CAP-5 — the chosen shortfall reasons ([] for all).
+ * @property {readonly string[]} [activeReasons]  CAP-5 — the active `commitmentShortfall` codes, in order.
  */
+
+/**
+ * The shortfall reason a line's standing commitment gives, if any.
+ * @param {ForecastCommitmentLine} l
+ * @returns {string | undefined}
+ */
+export const lineReason = (l) => l.response?.rootCause?.level1 || undefined;
 
 /**
  * Everything the page shows, derived from the loaded lines and the filters:
@@ -40,7 +50,9 @@ export function commitmentView({
   drillMaterials,
   positions,
   coverageRows,
-  nowIso
+  nowIso,
+  reasons = [],
+  activeReasons = []
 }) {
   /** @type {ForecastStream} */
   const activeStream =
@@ -70,7 +82,11 @@ export function commitmentView({
       .filter(/** @returns {d is number} */ (d) => d !== null);
     return days.length > 0 ? Math.min(...days) : null;
   };
-  const exceptions = rankExceptions(shown, nowIso, daysOfSupplyOf);
+  // CAP-5 BR-01 / BR-03 — the reason filter narrows the exception list only;
+  // its counts are over the exceptions the other filters leave.
+  const ranked = rankExceptions(shown, nowIso, daysOfSupplyOf);
+  const reasonOptions = reasonFilterOptions(activeReasons, ranked.map(lineReason));
+  const exceptions = ranked.filter((l) => reasonMatches(lineReason(l), reasons));
   const missing = streamLines.filter((l) => deadlineState(l, nowIso) === 'overdue').length;
   const outside = streamLines.filter((l) => l.state === 'exception').length;
   const periods = [...new Map(shown.map((l) => [l.periodBucket, l.periodStart])).entries()].sort(
@@ -91,6 +107,7 @@ export function commitmentView({
     shown,
     daysOfSupplyOf,
     exceptions,
+    reasonOptions,
     missing,
     outside,
     periods,

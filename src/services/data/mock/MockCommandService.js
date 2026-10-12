@@ -121,6 +121,8 @@ import { calendarCovers, workingCalendarStore } from '../../transitions/workingC
 import { isHubSettingKey, parseStaleOverrideKey } from '../../transitions/hubSettings';
 import { hubSettingsStore, settingValue } from '../../transitions/hubSettingsStore';
 import {
+  SHORTFALL_NOTE_REQUIRED_CODES,
+  activeReasonCodes,
   isActiveReasonCode,
   parseReasonCodeEntityId,
   reasonCodeStore
@@ -2641,8 +2643,8 @@ bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_QTY_AGREES, ({ payload }) => {
   return { ok: true };
 });
 
-// REQ-E06-02 BR-04 / AC-02 — below forecast needs a starter reason (and `other`
-// a note). The rule is `forecastRules.shortfallRefusal`, the same function the
+// REQ-E06-02 BR-04 / AC-02 — below forecast needs a starter reason (and `other`,
+// `force-majeure` or `discontinued` a note, CAP-4 BR-02). The rule is `forecastRules.shortfallRefusal`, the same function the
 // form and the upload check call, so the three can never disagree. The floor
 // ran first, so `confirmedQty` is a finite number here.
 bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_SHORTFALL_REASON, ({ payload }) => {
@@ -2656,11 +2658,14 @@ bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_SHORTFALL_REASON, ({ payload }) => {
   if (refusal === 'reasonRequired') {
     return {
       ok: false,
-      reason: `BELOW_FORECAST_NEEDS_REASON: ${payload.confirmedQty} is below the forecast of ${line.forecastQty}; choose capacity, material, logistics, quality or other`
+      reason: `BELOW_FORECAST_NEEDS_REASON: ${payload.confirmedQty} is below the forecast of ${line.forecastQty}; choose ${activeReasonCodes('commitmentShortfall').join(', ')}`
     };
   }
   if (refusal === 'noteRequired') {
-    return { ok: false, reason: 'OTHER_REASON_NEEDS_NOTE: the reason "other" needs a note' };
+    return {
+      ok: false,
+      reason: `OTHER_REASON_NEEDS_NOTE: the reason ${SHORTFALL_NOTE_REQUIRED_CODES.join(' / ')} needs a note`
+    };
   }
   return { ok: true };
 });
@@ -2728,7 +2733,10 @@ bindPolicyHook(POLICY_HOOKS.RR_PROMOTE_CAPACITY_CONFIRMED, ({ entityId, target }
     };
   }
   if (refusal.refusal === 'aboveBeNoteRequired') {
-    return { ok: false, reason: 'OTHER_REASON_NEEDS_NOTE: the reason "other" needs a note' };
+    return {
+      ok: false,
+      reason: `OTHER_REASON_NEEDS_NOTE: the reason ${SHORTFALL_NOTE_REQUIRED_CODES.join(' / ')} needs a note`
+    };
   }
   return {
     ok: false,
