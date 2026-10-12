@@ -131,7 +131,7 @@ export const adminReasonsId = {
   'adminRsn.action.rename': 'Ganti nama',
   'adminRsn.action.retire': 'Hentikan',
   'adminRsn.action.offer': 'Tawarkan lagi',
-  'adminRsn.retiredLabel': '{{label}} (dihentikan)',
+  'adminRsn.retiredLabel': '{{label}} (tidak aktif)',
 
   'adminRsn.form.title': 'Tambah atau ubah kode alasan',
   'adminRsn.form.intro':
