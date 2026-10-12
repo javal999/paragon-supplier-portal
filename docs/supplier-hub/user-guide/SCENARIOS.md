@@ -513,7 +513,7 @@ A reader might expect these to work. The code shows they do not, or that they ar
 ## 5. Screenshot plan
 
 Shared setup for every step:
-- Run `npm run dev` and open `/login`.
+- Run `npm run build && npm run preview` and open `#/login` at the address Vite prints (4173 by default). `npm run dev` serves a blank page (VITE-DEV-ENTRY-01, `docs/findings.md`).
 - Use **View as Buyer** or **View as Supplier**. The supplier is `sup-007`.
 - To show an "Awaiting …" notice, untick the role or lane under avatar → **Roles**.
 - Seeded records are cited from the readers' fixture reads (`fixtures/*`, `data/mock*`).
