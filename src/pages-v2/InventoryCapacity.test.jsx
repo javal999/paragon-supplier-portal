@@ -655,7 +655,7 @@ describe('Capacity (REQ-E08-04)', () => {
   it('BL-62 / owner 2026-09-29: "Additional capacity", explained on both sides with BE; the old labels are gone', async () => {
     const sup = renderWithProviders(<SupplierCapacity />, { identity: SUPPLIER });
     expect(
-      await screen.findByRole('columnheader', { name: /^Additional capacity \(/ })
+      await screen.findByRole('rowheader', { name: /^Additional capacity \(/ })
     ).toBeInTheDocument();
     expect(screen.getByTestId('capacity-upside-help')).toHaveTextContent(
       'above the capacity you allocate'
@@ -668,21 +668,23 @@ describe('Capacity (REQ-E08-04)', () => {
     );
     expect(screen.queryByText(/Upside/)).toBeNull();
     expect(screen.queryByText(/Extra capacity if requested/)).toBeNull();
-    // One demand figure: the LTP column, and no "PTI demand" column beside it.
+    // One demand figure: the LTP row (CAP-1: metrics are rows), and no "PTI demand" beside it.
     expect(
-      screen.getByRole('columnheader', { name: /^LTP, current forecast \(/ })
+      screen.getByRole('rowheader', { name: /^LTP, current forecast \(/ })
     ).toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /PTI demand/ })).toBeNull();
+    expect(screen.queryByRole('rowheader', { name: /PTI demand/ })).toBeNull();
     sup.unmount();
     renderWithProviders(<BuyerCapacity />, { identity: PLANNER });
     const plan = await screen.findByTestId('capacity-plan-sup-007-pg-MG-20');
     expect(
-      within(plan).getByRole('columnheader', { name: /^Additional capacity \(/ })
+      within(plan).getByRole('rowheader', { name: /^Additional capacity \(/ })
     ).toBeInTheDocument();
     expect(within(plan).getByTestId('capacity-upside-help-sup-007-pg-MG-20')).toHaveTextContent(
       'above its allocation'
     );
     expect(within(plan).queryByRole('columnheader', { name: /PTI demand/ })).toBeNull();
+    expect(within(plan).queryByRole('rowheader', { name: /PTI demand/ })).toBeNull();
     expect(screen.queryByText(/Upside/)).toBeNull();
     expect(screen.queryByText(/Extra capacity if requested/)).toBeNull();
     // ID wording as ruled.
@@ -743,8 +745,11 @@ describe('Planner capacity filters (BL-63, REQ-E08-04 BR-07, AC-04)', () => {
     // beside sup-007's MG-20.
     expect(planIds().sort()).toEqual(['sup-005-pg-MG-02', 'sup-007-pg-MG-20']);
     expect(new URLSearchParams(search).get('gapsOnly')).toBe('1');
-    const rows = within(screen.getByTestId('capacity-plan-sup-007-pg-MG-20')).getAllByRole('row');
-    expect(rows).toHaveLength(2); // the header row and the one gap week
+    // CAP-1 — weeks are columns: the label column's header and the one gap week.
+    const cols = within(screen.getByTestId('capacity-plan-sup-007-pg-MG-20')).getAllByRole(
+      'columnheader'
+    );
+    expect(cols).toHaveLength(2);
     expect(
       within(screen.getByTestId('capacity-plan-sup-007-pg-MG-20')).getAllByTestId(/capacity-gap-/)
     ).toHaveLength(1);
