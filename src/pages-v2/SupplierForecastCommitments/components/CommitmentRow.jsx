@@ -20,8 +20,9 @@ import CommitmentLogRow from './CommitmentLogRow';
 
 /**
  * A Firm or Trade-off line's row: the period, zone, forecast (with "was" when
- * it changed) and due date; the commitment quantity, date and upside inputs
- * (pre-filled, BR-09); the starter reason when the quantity is below forecast
+ * it changed) and due date; the commitment quantity and upside inputs
+ * (pre-filled, BR-09; no date since CAP-6, the record carries the period
+ * start); the starter reason when the quantity is below forecast
  * (BR-04); the state, draft marker and gap; and Save draft with the row's
  * refusal — or the handoff notice when the seat may not commit. Followed by
  * the line's revision log, when it has one.
@@ -88,16 +89,6 @@ const CommitmentRow = ({
             disabled={!canCommit}
             value={d.qty}
             onChange={(e) => setRow(l, { qty: e.target.value })}
-          />
-        </TableCell>
-        <TableCell>
-          <input
-            aria-label={t('fc.sup.dateFor', { period: label })}
-            type="date"
-            className={inputClass}
-            disabled={!canCommit}
-            value={d.date}
-            onChange={(e) => setRow(l, { date: e.target.value })}
           />
         </TableCell>
         <TableCell>

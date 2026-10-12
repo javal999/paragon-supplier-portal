@@ -2895,7 +2895,6 @@ export function useInventoryCommand() {
  *       verb: 'commit';
  *       line: ForecastLineRef;
  *       committedQty: number;
- *       commitmentDate: string;
  *       upsideQty?: number;
  *       reason?: string;
  *       note?: string;
@@ -2973,7 +2972,7 @@ export function useForecastCommand() {
                 // The token the number was read from: the canonical digits, which
                 // read the same in either convention.
                 confirmedQtyRaw: String(vars.committedQty),
-                committedDate: vars.commitmentDate,
+                // CAP-6 (BL-175) — no date: the store records the period start.
                 ...(vars.upsideQty !== undefined ? { upsideQty: vars.upsideQty } : {}),
                 ...(vars.reason
                   ? {

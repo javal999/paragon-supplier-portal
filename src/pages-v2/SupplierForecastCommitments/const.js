@@ -25,7 +25,6 @@
 /**
  * @typedef {object} RowDraft
  * @property {string} qty
- * @property {string} date
  * @property {string} upside
  * @property {CapacityReason | ''} reason
  * @property {string} note
@@ -56,7 +55,7 @@
  * @property {RowDraft} d
  * @property {number | null} qtyValue
  * @property {number | null} upsideValue
- * @property {'qtyRequired' | 'upsideInvalid' | 'dateRequired' | ShortfallRefusal | null} refusal
+ * @property {'qtyRequired' | 'upsideInvalid' | ShortfallRefusal | null} refusal
  */
 
 /**

@@ -299,3 +299,16 @@ export const REMINDER_FRACTION = 0.5;
 
 // Section 3.6 starter reason codes for a commitment below forecast are the Hub
 // administrator's list since BL-32: `reasonCodes.js`, list `commitmentShortfall`.
+
+/**
+ * CAP-7 (BL-176) — the planner's "Request revision" on a commitment exception.
+ * Hidden, not deleted: the owner ruled "hide first" on 2026-10-12
+ * (SC-HUB-CAPACITY-REQUIREMENTS-2026-10 §6, CAP-7 BR-01). While false the
+ * exception row offers Accept and Move demand only, and no handoff notice
+ * either, because the verb is withdrawn, not withheld from the seat. The
+ * dispute verb, the rules and the supplier's path for a line already in
+ * "Revision requested" are unchanged (BR-02). A code flag, not an
+ * administrator setting, so it cannot be switched on by accident (BR-03);
+ * setting it to true is the one-line revert.
+ */
+export const REQUEST_REVISION_ENABLED = false;

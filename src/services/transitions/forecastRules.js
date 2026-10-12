@@ -950,7 +950,6 @@ export function forecastCsv(lines, headers, zoneLabel) {
  *   | 'forecastQty'
  *   | 'unit'
  *   | 'committedQty'
- *   | 'commitmentDate'
  *   | 'upsideQty'
  *   | 'reason'
  *   | 'note'} CommitmentTemplateField
@@ -958,6 +957,9 @@ export function forecastCsv(lines, headers, zoneLabel) {
 
 /**
  * The fixed commitment template, in column order. Headers are matched in EN or ID.
+ * CAP-6 (BL-175) BR-03 — no commitment date column: a commitment is a quantity
+ * per period. An older file that still has "Commitment date" parses; the
+ * header matches no field, so the column is ignored.
  * @type {readonly { readonly field: CommitmentTemplateField; readonly en: string; readonly id: string }[]}
  */
 export const COMMITMENT_TEMPLATE_FIELDS = [
@@ -967,11 +969,6 @@ export const COMMITMENT_TEMPLATE_FIELDS = [
   { field: 'forecastQty', en: 'Forecast quantity', id: 'Kuantitas prakiraan' },
   { field: 'unit', en: 'Unit', id: 'Satuan' },
   { field: 'committedQty', en: 'Committed quantity', id: 'Kuantitas komitmen' },
-  {
-    field: 'commitmentDate',
-    en: 'Commitment date (YYYY-MM-DD)',
-    id: 'Tanggal komitmen (YYYY-MM-DD)'
-  },
   { field: 'upsideQty', en: 'Upside quantity', id: 'Kuantitas tambahan' },
   {
     field: 'reason',
@@ -1016,7 +1013,6 @@ export function commitmentTemplateCsv(lines, language) {
       String(l.forecastQty),
       l.uom,
       l.zone === 'forecast' ? '' : String(l.forecastQty),
-      l.zone === 'forecast' ? '' : l.periodStart,
       '',
       '',
       ''
@@ -1034,7 +1030,6 @@ export function commitmentTemplateCsv(lines, language) {
  *   | 'notANumber'
  *   | 'ambiguousNumber'
  *   | 'unitMismatch'
- *   | 'invalidDate'
  *   | 'reasonRequired'
  *   | 'noteRequired'} CommitmentRowRefusal
  */
@@ -1058,17 +1053,12 @@ export function commitmentTemplateCsv(lines, language) {
  *       readonly row: number;
  *       readonly line: ForecastCommitmentLine;
  *       readonly committedQty: number;
- *       readonly commitmentDate: string;
  *       readonly upsideQty?: number;
  *       readonly reason?: CapacityReason;
  *       readonly note?: string;
  *     }
  *   | { readonly kind: 'acknowledge'; readonly row: number; readonly line: ForecastCommitmentLine; readonly note?: string }} CommitmentDraft
  */
-
-/** @param {string} v */
-const isIsoDate = (v) =>
-  /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00.000Z`));
 
 /**
  * Named for this module: a JSDoc typedef is exported, unlike the TS `type` it
@@ -1154,9 +1144,6 @@ export function validateCommitmentRows(rows, lines) {
     if (committed.value === null) return refuse('missingField', 'committedQty');
     const upside = readCommitmentNumber(rec.upsideQty);
     if (!upside.ok) return refuse(upside.reason, 'upsideQty');
-    const date = rec.commitmentDate ?? '';
-    if (date === '') return refuse('missingField', 'commitmentDate');
-    if (!isIsoDate(date)) return refuse('invalidDate', 'commitmentDate');
     const reason = reasonOf(rec.reason ?? '');
     const refusal = shortfallRefusal(
       line.forecastQty,
@@ -1170,7 +1157,6 @@ export function validateCommitmentRows(rows, lines) {
       row,
       line,
       committedQty: committed.value,
-      commitmentDate: date,
       ...(upside.value !== null ? { upsideQty: upside.value } : {}),
       ...(reason && committed.value < line.forecastQty ? { reason } : {}),
       ...(note ? { note } : {})
