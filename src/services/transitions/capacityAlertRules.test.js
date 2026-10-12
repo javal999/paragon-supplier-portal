@@ -39,13 +39,16 @@ describe('REQ-E08-04 — the horizon and the below-demand rule', () => {
     expect(horizonWeeks('2026-09-02T00:00:00.000Z')[0]).toBe('2026-08-31');
   });
 
-  it('starter reason codes are Capacity, Material, Logistics, Quality, Other', () => {
+  it('starter reason codes are Capacity, Material, Logistics, Quality, Force Majeure, Discontinued, Other', () => {
     // BL-32: the administrator's list in force; with nothing changed, the starter list.
+    // CAP-4 BR-01 — Force Majeure and Discontinued sit before Other.
     expect(activeReasonCodes('capacityShortfall')).toEqual([
       'capacity',
       'material',
       'logistics',
       'quality',
+      'force-majeure',
+      'discontinued',
       'other'
     ]);
   });

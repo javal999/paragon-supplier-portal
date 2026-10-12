@@ -17,6 +17,7 @@ import {
 } from '../../forecasts/forecastDisplay';
 import { inputClass } from '../../inventory/inventoryDisplay';
 import CommitmentLogRow from './CommitmentLogRow';
+import { shortfallReasonNeedsNote } from '@services/transitions/reasonCodes';
 
 /**
  * A Firm or Trade-off line's row: the period, zone, forecast (with "was" when
@@ -131,7 +132,7 @@ const CommitmentRow = ({
                   </option>
                 ))}
               </select>
-              {d.reason === 'other' && (
+              {shortfallReasonNeedsNote(d.reason) && (
                 <input
                   aria-label={t('fc.sup.noteFor', { period: label })}
                   className={inputClass}

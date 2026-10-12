@@ -22,6 +22,7 @@ import { useCapacityPlans } from '@services/query/hooks';
 /** @import { CapacityPlan, CapacityReason } from '@services/data/types' */
 /** @import { CapacityRefusal } from '@services/transitions/capacityRules' */
 import { useActiveReasonCodes, useReasonLabel } from './admin/reasonCodeDisplay';
+import { shortfallReasonNeedsNote } from '@services/transitions/reasonCodes';
 import {
   capacitySubmissionRefusal,
   ltpCapacityLevel,
@@ -406,7 +407,7 @@ const SupplierCapacity = () => {
                         </option>
                       ))}
                     </select>
-                    {d.reason === 'other' && (
+                    {shortfallReasonNeedsNote(d.reason) && (
                       <input
                         id={`capacity-note-input-${week}`}
                         aria-label={t('inv.capacity.noteFor', { week: formatDate(week) })}

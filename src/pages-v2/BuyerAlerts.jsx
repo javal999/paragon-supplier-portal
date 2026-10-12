@@ -116,7 +116,8 @@ const CloseReasonCounts = ({ alerts }) => {
 const linkFor = (a) =>
   a.rule === 'capacityBelowDemand'
     ? '/buyer/capacity'
-    : a.rule === 'commitmentBelowForecast'
+    : // CAP-D2 — the commitments page is where demand moves to another qualified supplier.
+      a.rule === 'commitmentBelowForecast' || a.rule === 'supplyDiscontinued'
       ? `/buyer/collaboration?material=${encodeURIComponent(a.subject)}`
       : '/buyer/inventory';
 
@@ -436,7 +437,8 @@ const BuyerAlerts = () => {
                           {t(
                             a.rule === 'capacityBelowDemand'
                               ? 'inv.alerts.openCapacity'
-                              : a.rule === 'commitmentBelowForecast'
+                              : a.rule === 'commitmentBelowForecast' ||
+                                  a.rule === 'supplyDiscontinued'
                                 ? 'inv.alerts.openCommitments'
                                 : 'inv.alerts.openInventory'
                           )}

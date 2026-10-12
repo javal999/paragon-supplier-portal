@@ -1228,6 +1228,7 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *  REQ-E08-05 BR-01 — committed quantity below forecast beyond tolerance (REQ-E06-03).
  *  CR-24 / BR-02 — no supplier lead time on record; the risk class fell back to CR-02.
  *  MR-6 BR-13 — a confirmed call-off due within the lead time is larger than declared SOH + production.
+ *  CAP-4 BR-03 (CAP-D2) — the supplier gave Discontinued as a shortfall reason; PTI must find another source.
  *
  * @typedef {| 'ptiBelowRop'
  *   | 'supplierBelowRop'
@@ -1237,7 +1238,8 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *   | 'coverage'
  *   | 'commitmentBelowForecast'
  *   | 'leadTimeMissing'
- *   | 'callOffNotCovered'} InventoryAlertRule
+ *   | 'callOffNotCovered'
+ *   | 'supplyDiscontinued'} InventoryAlertRule
  */
 
 /** @typedef {'high' | 'medium' | 'low'} RiskClass */

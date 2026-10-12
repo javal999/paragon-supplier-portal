@@ -61,8 +61,16 @@ export const forecastCollaborationEn = {
   'fc.reason.material': 'Material',
   'fc.reason.logistics': 'Logistics',
   'fc.reason.quality': 'Quality',
+  'fc.reason.force-majeure': 'Force Majeure',
+  'fc.reason.discontinued': 'Discontinued',
   'fc.reason.other': 'Other',
   'fc.reason.notePlaceholder': 'Say what the reason is',
+  'fc.filter.reason.label': 'Reason',
+  'fc.filter.reason.all': 'All reasons',
+  'fc.filter.reason.chosen': '{{count}} chosen',
+  'fc.filter.reason.none': 'No reason',
+  'fc.filter.reason.option': '{{label}} ({{count}})',
+  'fc.filter.reason.clear': 'Clear reasons',
 
   'fc.col.supplier': 'Supplier',
   'fc.col.material': 'Material',
@@ -101,7 +109,7 @@ export const forecastCollaborationEn = {
   'fc.toast.refused': 'Not saved',
   'fc.refusal.generic': 'This could not be saved. Check the figures and try again.',
   'fc.refusal.reasonRequired': 'A commitment below forecast needs a reason.',
-  'fc.refusal.noteRequired': 'The reason "Other" needs a note.',
+  'fc.refusal.noteRequired': 'Force Majeure, Discontinued and Other need a note.',
   'fc.refusal.dateRequired': 'A commitment needs its date.',
   'fc.refusal.notQualified': 'That supplier does not supply this material.',
   'fc.refusal.noteRequiredPlanner': 'Add a note the supplier can read.',
@@ -133,7 +141,7 @@ export const forecastCollaborationEn = {
   'fc.sup.refusal.upsideInvalid': 'The upside quantity is not a number.',
   'fc.sup.refusal.dateRequired': 'Enter the commitment date.',
   'fc.sup.refusal.reasonRequired': 'Below forecast: choose a reason.',
-  'fc.sup.refusal.noteRequired': 'The reason "Other" needs a note.',
+  'fc.sup.refusal.noteRequired': 'Force Majeure, Discontinued and Other need a note.',
   'fc.sup.toast.submitted': 'Commitment submitted',
   'fc.sup.toast.drafted': 'Draft saved',
   'fc.sup.toast.acknowledged': 'Period acknowledged',
@@ -159,7 +167,7 @@ export const forecastCollaborationEn = {
   'fc.sup.week.submitAllFor': 'Submit all for {{period}}',
   'fc.sup.week.refusal.capacityNotConfirmed': 'Confirm capacity for {{group}} first.',
   'fc.sup.week.refusal.aboveBeNeedsReason': 'Above BE: choose a reason.',
-  'fc.sup.week.refusal.aboveBeNoteRequired': 'The reason "Other" needs a note.',
+  'fc.sup.week.refusal.aboveBeNoteRequired': 'Force Majeure, Discontinued and Other need a note.',
   'fc.sup.week.refusal.row': 'Fix the rows of this period first.',
   'fc.sup.week.toast.submitted': 'Commitments submitted: {{count}}',
   'fc.sup.week.toast.partial': 'Submitted {{done}} of {{total}}. {{reason}}',
@@ -187,7 +195,8 @@ export const forecastCollaborationEn = {
   'fc.upload.reason.invalidDate': 'The date is not in YYYY-MM-DD format.',
   'fc.upload.reason.reasonRequired':
     'Below forecast: a reason (capacity, material, logistics, quality or other) is needed.',
-  'fc.upload.reason.noteRequired': 'The reason "other" needs a note.',
+  'fc.upload.reason.noteRequired':
+    'The reasons "force-majeure", "discontinued" and "other" need a note.',
 
   // PTI — Forecasts
   'fc.pti.versions.subtitle':
@@ -323,8 +332,16 @@ export const forecastCollaborationId = {
   'fc.reason.material': 'Bahan',
   'fc.reason.logistics': 'Logistik',
   'fc.reason.quality': 'Kualitas',
+  'fc.reason.force-majeure': 'Keadaan kahar',
+  'fc.reason.discontinued': 'Dihentikan',
   'fc.reason.other': 'Lainnya',
   'fc.reason.notePlaceholder': 'Sebutkan alasannya',
+  'fc.filter.reason.label': 'Alasan',
+  'fc.filter.reason.all': 'Semua alasan',
+  'fc.filter.reason.chosen': '{{count}} dipilih',
+  'fc.filter.reason.none': 'Tanpa alasan',
+  'fc.filter.reason.option': '{{label}} ({{count}})',
+  'fc.filter.reason.clear': 'Hapus pilihan alasan',
 
   'fc.col.supplier': 'Pemasok',
   'fc.col.material': 'Material',
@@ -363,7 +380,7 @@ export const forecastCollaborationId = {
   'fc.toast.refused': 'Tidak tersimpan',
   'fc.refusal.generic': 'Tidak dapat disimpan. Periksa angkanya dan coba lagi.',
   'fc.refusal.reasonRequired': 'Komitmen di bawah prakiraan memerlukan alasan.',
-  'fc.refusal.noteRequired': 'Alasan "Lainnya" memerlukan catatan.',
+  'fc.refusal.noteRequired': 'Keadaan kahar, Dihentikan, dan Lainnya memerlukan catatan.',
   'fc.refusal.dateRequired': 'Komitmen memerlukan tanggal.',
   'fc.refusal.notQualified': 'Pemasok itu tidak memasok material ini.',
   'fc.refusal.noteRequiredPlanner': 'Tambahkan catatan yang dapat dibaca pemasok.',
@@ -394,7 +411,7 @@ export const forecastCollaborationId = {
   'fc.sup.refusal.upsideInvalid': 'Kuantitas tambahan bukan angka.',
   'fc.sup.refusal.dateRequired': 'Isi tanggal komitmen.',
   'fc.sup.refusal.reasonRequired': 'Di bawah prakiraan: pilih alasan.',
-  'fc.sup.refusal.noteRequired': 'Alasan "Lainnya" memerlukan catatan.',
+  'fc.sup.refusal.noteRequired': 'Keadaan kahar, Dihentikan, dan Lainnya memerlukan catatan.',
   'fc.sup.toast.submitted': 'Komitmen terkirim',
   'fc.sup.toast.drafted': 'Draf tersimpan',
   'fc.sup.toast.acknowledged': 'Periode ditandai diterima',
@@ -422,7 +439,8 @@ export const forecastCollaborationId = {
   'fc.sup.week.refusal.capacityNotConfirmed':
     'Konfirmasikan kapasitas untuk {{group}} terlebih dahulu.',
   'fc.sup.week.refusal.aboveBeNeedsReason': 'Di atas BE: pilih alasan.',
-  'fc.sup.week.refusal.aboveBeNoteRequired': 'Alasan "Lainnya" memerlukan catatan.',
+  'fc.sup.week.refusal.aboveBeNoteRequired':
+    'Keadaan kahar, Dihentikan, dan Lainnya memerlukan catatan.',
   'fc.sup.week.refusal.row': 'Perbaiki baris pada periode ini terlebih dahulu.',
   'fc.sup.week.toast.submitted': 'Komitmen terkirim: {{count}}',
   'fc.sup.week.toast.partial': 'Terkirim {{done}} dari {{total}}. {{reason}}',
@@ -451,7 +469,8 @@ export const forecastCollaborationId = {
   'fc.upload.reason.invalidDate': 'Tanggal tidak berformat YYYY-MM-DD.',
   'fc.upload.reason.reasonRequired':
     'Di bawah prakiraan: perlu alasan (capacity, material, logistics, quality atau other).',
-  'fc.upload.reason.noteRequired': 'Alasan "other" memerlukan catatan.',
+  'fc.upload.reason.noteRequired':
+    'Alasan "force-majeure", "discontinued", dan "other" memerlukan catatan.',
 
   'fc.pti.versions.subtitle':
     'Versi prakiraan yang diterbitkan per jenis dan pemasok yang sudah membukanya',

@@ -27,7 +27,8 @@ import { allCommitmentLines } from './forecastReadModel';
 import {
   alertsFromLedger,
   clearedSince,
-  deriveAlertConditions
+  deriveAlertConditions,
+  discontinuedSubjects
 } from '../../transitions/inventoryAlertRules';
 import { inventoryDeclarationStore } from './stores/inventoryDeclarationStore';
 import { asnStore } from './stores/asnStore';
@@ -248,16 +249,20 @@ export function allCapacityPlans(nowIso = sdcClock.now()) {
  * @returns {AlertCondition[]}
  */
 export function activeAlertConditions(nowIso = sdcClock.now()) {
+  const plans = allCapacityPlans(nowIso);
+  const lines = allCommitmentLines();
   return deriveAlertConditions(
     allPositions(nowIso),
-    allCapacityPlans(nowIso),
+    plans,
     nowIso,
     // REQ-E08-05 BR-01 — commitments below forecast beyond tolerance (REQ-E06-03).
-    commitmentAlertSubjects(allCommitmentLines()),
+    commitmentAlertSubjects(lines),
     // MR-6 BR-13 (AR-13) — confirmed call-offs the supplier's stock must cover.
     callOffCoverSubjects(
       callOffViews(callOffStore.all(), asnStore.all(), goodsReceiptStore.all(), nowIso)
-    )
+    ),
+    // CAP-4 BR-03 (CAP-D2) — a Discontinued reason: find another source.
+    discontinuedSubjects(plans, lines, (code) => materialEntry(code)?.label ?? code, nowIso)
   );
 }
 
