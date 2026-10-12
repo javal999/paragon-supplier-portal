@@ -7,12 +7,9 @@ import { OrderNotFound, PoFilterBanner, usePoDrillFilter } from './orders/PoDril
 import PageMetaLine from '@components/ui-v2/PageMetaLine';
 import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
 import SubTabs from '@components/ui-v2/SubTabs';
-import Table from '@components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
-import TableRow from '@components/ui-v2/TableRow';
-import TableCell from '@components/ui-v2/TableCell';
 import Button from '@components/ui-v2/Button';
 import Data from '@components/ui-v2/Data';
+import WeekGrid from '@components/ui-v2/WeekGrid';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import EmptyState from '@components/ui-v2/EmptyState';
@@ -23,6 +20,7 @@ import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import { formatDate, formatDateTime } from '@lib/format';
 import { useCapacityPlans } from '@services/query/hooks';
 /** @import { CapacityPlan, CapacityReason } from '@services/data/types' */
+/** @import { CapacityRefusal } from '@services/transitions/capacityRules' */
 import { useActiveReasonCodes, useReasonLabel } from './admin/reasonCodeDisplay';
 import {
   capacitySubmissionRefusal,
@@ -79,6 +77,56 @@ const draftFrom = (plan) =>
     reason: w.entry?.reason ?? '',
     note: w.entry?.note ?? ''
   }));
+
+/**
+ * CAP-1 C-03 — which field of the named week a refusal sends the supplier to.
+ * @type {Partial<Record<CapacityRefusal, 'allocated' | 'reason' | 'note'>>}
+ */
+const REFUSAL_TARGET = {
+  missingWeek: 'allocated',
+  invalidQuantity: 'allocated',
+  reasonRequired: 'reason',
+  noteRequired: 'note'
+};
+
+// C-01 — a 96 px, right-aligned number input inside the 112 px week column.
+const gridInputClass = `${inputClass.replace('w-full', 'w-[96px]')} text-right`;
+
+// Stands in for the week while the sentence is translated, so the translated
+// string itself stays unchanged and the week can be drawn as a button.
+const WEEK_SLOT = '\u2063week\u2063';
+
+/**
+ * CAP-1 C-03 — the refusal sentence, with its week as a button that scrolls to
+ * that week's column and focuses the field the refusal is about.
+ * @type {React.FC<{ refusalKey: string; week?: string; target?: 'allocated' | 'reason' | 'note' }>}
+ */
+const RefusalLine = ({ refusalKey, week, target }) => {
+  const { t } = useTranslation();
+  const label = week ? formatDate(week) : '';
+  const parts = t(refusalKey, { week: WEEK_SLOT }).split(WEEK_SLOT);
+  if (!week || !target || parts.length !== 2) return <>{t(refusalKey, { week: label })}</>;
+  const go = () => {
+    const el = document.getElementById(`capacity-${target}-input-${week}`);
+    if (!el) return;
+    el.scrollIntoView?.({ block: 'nearest', inline: 'center' });
+    el.focus();
+  };
+  return (
+    <>
+      {parts[0]}
+      <button
+        type="button"
+        onClick={go}
+        data-testid="capacity-refusal-week"
+        className="underline underline-offset-2 hover:text-action-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-action rounded-sm"
+      >
+        <Data className="text-warning-hover">{label}</Data>
+      </button>
+      {parts[1]}
+    </>
+  );
+};
 
 /** @type {React.FC} */
 const SupplierCapacity = () => {
@@ -150,7 +198,8 @@ const SupplierCapacity = () => {
             upside: upside.ok && upside.value !== null ? upside.value : undefined
           }
         : null;
-    return { w, d, allocated, upside, ltp, stated, level: ltpCapacityLevel(ltp, stated) };
+    const below = allocated.ok && allocated.value !== null && allocated.value < w.demand;
+    return { w, d, allocated, upside, ltp, stated, below, level: ltpCapacityLevel(ltp, stated) };
   });
   const payloadWeeks = rows.map(({ w, d, allocated, upside }) => ({
     week: w.week,
@@ -250,119 +299,146 @@ const SupplierCapacity = () => {
       <p className="text-xs text-text-tertiary mb-2" data-testid="capacity-ltp-help">
         {t('inv.capacity.ltpHelp')}
       </p>
-      <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto mb-4">
-        <Table>
-          <TableHeader>
-            <TableHeaderCell>{t('inv.capacity.col.week')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">
-              {t('inv.capacity.col.ltp', { uom: plan.uom })}
-            </TableHeaderCell>
-            <TableHeaderCell>{t('inv.capacity.col.allocated', { uom: plan.uom })}</TableHeaderCell>
-            <TableHeaderCell>{t('inv.capacity.col.upside', { uom: plan.uom })}</TableHeaderCell>
-            <TableHeaderCell className="text-right">
-              {t('inv.capacity.col.be', { uom: plan.uom })}
-            </TableHeaderCell>
-            <TableHeaderCell>{t('inv.capacity.col.ltpCheck')}</TableHeaderCell>
-            <TableHeaderCell>{t('inv.capacity.col.reason')}</TableHeaderCell>
-          </TableHeader>
-          <tbody>
-            {rows.map(({ w, d, allocated, ltp, stated, level }, i) => {
-              const below = allocated.ok && allocated.value !== null && allocated.value < w.demand;
-              return (
-                <TableRow
-                  key={w.week}
-                  data-testid={`capacity-week-${w.week}`}
-                  data-drill-week={drillWeeks?.includes(w.week) ? 'true' : undefined}
-                  className={`${below ? 'bg-warning-soft' : ''} ${
-                    drillWeeks?.includes(w.week) ? 'ring-1 ring-inset ring-action' : ''
-                  }`.trim()}
-                >
-                  <TableCell className="whitespace-nowrap">
-                    <Data>{formatDate(w.week)}</Data>
-                    {w.needsReEntry ? <ReEntryPill testId={`capacity-reentry-${w.week}`} /> : null}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Data>{qty(ltp)}</Data>
-                  </TableCell>
-                  <TableCell>
-                    <input
-                      aria-label={t('inv.capacity.allocatedFor', { week: formatDate(w.week) })}
-                      inputMode="decimal"
-                      className={inputClass}
-                      disabled={!held}
-                      value={d.allocated}
-                      onChange={(e) => update(i, { allocated: e.target.value })}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <input
-                      aria-label={t('inv.capacity.upsideFor', { week: formatDate(w.week) })}
-                      inputMode="decimal"
-                      className={inputClass}
-                      disabled={!held}
-                      value={d.upside}
-                      onChange={(e) => update(i, { upside: e.target.value })}
-                    />
-                  </TableCell>
-                  <TableCell className="text-right">
+      {/* CAP-1 wave 1 (Table C) — metrics per row, weeks per column. Inputs sit
+          row by row in the DOM, so Tab runs along a row (C-05). */}
+      <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm mb-4">
+        <WeekGrid
+          label={groupLabel(plan.planningGroupId)}
+          corner={t('inv.capacity.col.week')}
+          currentWeek={nowIso.slice(0, 10)}
+          testId="capacity-grid"
+          weeks={rows.map(({ w, below }) => ({
+            week: w.week,
+            gap: below,
+            drill: drillWeeks?.includes(w.week) ?? false,
+            testId: `capacity-week-${w.week}`,
+            headerAttrs: { 'data-drill-week': drillWeeks?.includes(w.week) ? 'true' : undefined },
+            marker: w.needsReEntry ? (
+              <ReEntryPill testId={`capacity-reentry-${w.week}`} />
+            ) : undefined
+          }))}
+          rows={[
+            {
+              id: 'ltp',
+              label: t('inv.capacity.col.ltp', { uom: plan.uom }),
+              cell: (week, i) => (
+                <Data data-testid={`capacity-ltp-qty-${week}`}>{qty(rows[i].ltp)}</Data>
+              )
+            },
+            {
+              id: 'allocated',
+              label: t('inv.capacity.col.allocated', { uom: plan.uom }),
+              cell: (week, i) => (
+                <input
+                  id={`capacity-allocated-input-${week}`}
+                  aria-label={t('inv.capacity.allocatedFor', { week: formatDate(week) })}
+                  inputMode="decimal"
+                  className={gridInputClass}
+                  disabled={!held}
+                  value={rows[i].d.allocated}
+                  onChange={(e) => update(i, { allocated: e.target.value })}
+                />
+              )
+            },
+            {
+              id: 'upside',
+              label: t('inv.capacity.col.upside', { uom: plan.uom }),
+              cell: (week, i) => (
+                <input
+                  aria-label={t('inv.capacity.upsideFor', { week: formatDate(week) })}
+                  inputMode="decimal"
+                  className={gridInputClass}
+                  disabled={!held}
+                  value={rows[i].d.upside}
+                  onChange={(e) => update(i, { upside: e.target.value })}
+                />
+              )
+            },
+            {
+              id: 'be',
+              label: t('inv.capacity.col.be', { uom: plan.uom }),
+              cell: (week, i) => {
+                const stated = rows[i].stated;
+                return (
+                  <span data-testid={`capacity-be-${week}`}>
                     {stated ? (
                       <Data>{qty(stated.allocated + (stated.upside ?? 0))}</Data>
                     ) : (
                       <span className="text-text-tertiary">—</span>
                     )}
-                  </TableCell>
-                  <TableCell>
-                    <LtpCheckPill level={level} testId={`capacity-ltp-${w.week}`} />
-                  </TableCell>
-                  <TableCell>
-                    {below ? (
-                      <div className="space-y-1 min-w-[180px]">
-                        <select
-                          aria-label={t('inv.capacity.reasonFor', { week: formatDate(w.week) })}
-                          className={inputClass}
-                          disabled={!held}
-                          value={d.reason}
-                          onChange={(e) =>
-                            update(i, {
-                              reason: /** @type {CapacityReason | ''} */ (e.target.value)
-                            })
-                          }
-                        >
-                          <option value="">{t('inv.capacity.reason.select')}</option>
-                          {capacityReasons.map((r) => (
-                            <option key={r} value={r}>
-                              {reasonLabel('capacityShortfall', r)}
-                            </option>
-                          ))}
-                        </select>
-                        {d.reason === 'other' && (
-                          <input
-                            aria-label={t('inv.capacity.noteFor', { week: formatDate(w.week) })}
-                            className={inputClass}
-                            placeholder={t('inv.capacity.notePlaceholder')}
-                            disabled={!held}
-                            value={d.note}
-                            onChange={(e) => update(i, { note: e.target.value })}
-                          />
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-xs text-text-tertiary">—</span>
+                  </span>
+                );
+              }
+            },
+            {
+              id: 'ltpCheck',
+              label: t('inv.capacity.col.ltpCheck'),
+              align: 'start',
+              cell: (week, i) => (
+                <LtpCheckPill level={rows[i].level} testId={`capacity-ltp-${week}`} />
+              )
+            },
+            {
+              // C-02 — the row is always present, so the grid never jumps.
+              id: 'reason',
+              label: t('inv.capacity.col.reason'),
+              align: 'start',
+              cell: (week, i) => {
+                const { d, below } = rows[i];
+                return below ? (
+                  <div className="space-y-1">
+                    <select
+                      id={`capacity-reason-input-${week}`}
+                      aria-label={t('inv.capacity.reasonFor', { week: formatDate(week) })}
+                      className={inputClass}
+                      disabled={!held}
+                      value={d.reason}
+                      onChange={(e) =>
+                        update(i, {
+                          reason: /** @type {CapacityReason | ''} */ (e.target.value)
+                        })
+                      }
+                    >
+                      <option value="">{t('inv.capacity.reason.select')}</option>
+                      {capacityReasons.map((r) => (
+                        <option key={r} value={r}>
+                          {reasonLabel('capacityShortfall', r)}
+                        </option>
+                      ))}
+                    </select>
+                    {d.reason === 'other' && (
+                      <input
+                        id={`capacity-note-input-${week}`}
+                        aria-label={t('inv.capacity.noteFor', { week: formatDate(week) })}
+                        className={inputClass}
+                        placeholder={t('inv.capacity.notePlaceholder')}
+                        disabled={!held}
+                        value={d.note}
+                        onChange={(e) => update(i, { note: e.target.value })}
+                      />
                     )}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </tbody>
-        </Table>
+                  </div>
+                ) : (
+                  <span className="text-xs text-text-tertiary">—</span>
+                );
+              }
+            }
+          ]}
+        />
       </div>
 
       <div className="flex flex-wrap items-center justify-end gap-3">
         {refusal && (
           <p role="status" className="text-sm text-warning-hover" data-testid="capacity-refusal">
-            {t(`inv.capacity.refusal.${refusal.refusal}`, {
-              week: refusal.week ? formatDate(refusal.week) : ''
-            })}
+            <RefusalLine
+              refusalKey={`inv.capacity.refusal.${refusal.refusal}`}
+              week={refusal.week}
+              target={
+                refusal.week && plan.weeks.some((w) => w.week === refusal.week)
+                  ? REFUSAL_TARGET[refusal.refusal]
+                  : undefined
+              }
+            />
           </p>
         )}
         {held ? (
