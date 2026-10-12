@@ -274,7 +274,7 @@ describe('§81 — the marker is READ, which is what makes it a marker', () => {
       .filter(([, text]) => READS_FIELD.test(codeOf(text)))
       .map(([path]) => path)
       .sort();
-    expect(readers).toContain('/src/pages-v2/BuyerCompliance.jsx');
+    expect(readers).toContain('/src/pages-v2/BuyerCompliance/components/RegistryRow.jsx');
   });
 });
 
