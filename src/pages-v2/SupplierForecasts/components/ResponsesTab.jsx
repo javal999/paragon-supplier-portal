@@ -98,7 +98,7 @@ const ResponsesTab = ({ responses, onSubmitDraft, submittingId }) => {
               and `nextActorCopy` returning null is asserted rather than
               described. */}
           <NextActorLine state={r.status} />
-          <dl className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <dl className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {[
               { label: t('sdcSup.responses.col.material'), value: materialLabel(r.materialCode) },
               { label: t('sdcSup.responses.col.period'), value: r.periodBucket },
@@ -112,12 +112,6 @@ const ResponsesTab = ({ responses, onSubmitDraft, submittingId }) => {
                 value: r.acknowledgment
                   ? t('sdcSup.responses.ack')
                   : `${formatNumber(/** @type {import('@services/sdc/types').ForecastConfirmation} */ (r.forecastConfirmation).confirmedQty)} ${/** @type {import('@services/sdc/types').ForecastConfirmation} */ (r.forecastConfirmation).uom}`
-              },
-              {
-                label: t('sdcSup.responses.col.committedDate'),
-                value: r.forecastConfirmation?.committedDate
-                  ? formatDate(r.forecastConfirmation.committedDate)
-                  : '—'
               },
               { label: t('sdcSup.responses.col.version'), value: `v${r.submissionVersion}` },
               {

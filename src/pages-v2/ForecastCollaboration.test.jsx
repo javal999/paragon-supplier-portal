@@ -125,6 +125,13 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
       within(row).getByLabelText(`Commitment quantity for ${week(W[6])}`)
     );
     expect(qty.value).toBe('38500');
+    // CAP-6 (BL-175) AC-01 — a quantity per period: no date input, no Date column.
+    expect(within(row).queryByLabelText(/Commitment date/)).toBeNull();
+    expect(within(row).queryByDisplayValue(W[6])).toBeNull();
+    expect(
+      within(section).getAllByRole('columnheader', { name: /Commitment/ }).length
+    ).toBeGreaterThan(0);
+    expect(within(section).queryByRole('columnheader', { name: /date/i })).toBeNull();
     fireEvent.change(qty, { target: { value: '30000' } });
     // BL-133 (ENG-D19) — the period is submitted with its one Submit all.
     const submit = screen.getByTestId(`fc-week-submit-${W[6]}`);
@@ -135,6 +142,7 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
     });
     expect(submit).not.toBeDisabled();
     fireEvent.click(submit);
+    // CAP-6 BR-02 — no date was sent; the record carries the period start.
     await waitFor(() =>
       expect(
         responsesFor('sup-007', 'PK-PETB-8802', W[6]).find((r) => r.status === 'Submitted')
@@ -174,7 +182,8 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
     await screen.findByTestId('fc-sup-version');
     const csv = [
       'Material code,Period,Zone,Forecast quantity,Unit,Committed quantity,Commitment date (YYYY-MM-DD),Upside quantity,Reason (capacity; material; logistics; quality; other),Note',
-      `PK-PETB-8802,${W[6]},tradeOff,38500,PCS,38500,${W[6]},,,`,
+      // CAP-6 AC-02 — an old file's date column, here malformed, is ignored.
+      `PK-PETB-8802,${W[6]},tradeOff,38500,PCS,38500,not-a-date,,,`,
       `PK-PETB-8802,${W[7]},tradeOff,38500,PCS,20000,${W[7]},,,`,
       `PK-PETB-8802,${W[5]},tradeOff,38500,PCS,1.500,${W[5]},,,`,
       `RM-STEAR-7300,2026-09,firm,12600,KG,12600,2026-09-01,,,`
@@ -222,6 +231,51 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
     expect(log).toHaveTextContent('Launch week, please find more');
     expect(screen.getByTestId(`fc-sup-row-PK-PETB-8802-${W[3]}`)).toHaveTextContent(
       'Revision requested'
+    );
+  });
+
+  it('CAP-7 AC-02 / BR-02 — a line already in Revision requested counts on Home and can still be resubmitted', async () => {
+    const line = /** @type {import('@services/sdc/types').RequirementResponse} */ (
+      requirementResponseStore
+        .all()
+        .find(
+          (r) =>
+            r.supplierId === 'sup-007' &&
+            r.materialCode === 'PK-PETB-8802' &&
+            r.periodBucket === W[3]
+        )
+    );
+    requirementResponseStore.update(line.id, (r) => ({
+      ...r,
+      status: 'Disputed',
+      disputeResponse: [
+        { kind: 'raised', text: 'Launch week, please find more', at: '2026-08-31T03:00:00.000Z' }
+      ]
+    }));
+    const home = renderWithProviders(<SupplierHome />, { identity: SUPPLIER });
+    expect(await screen.findByTestId('home-task-commitments-revision')).toBeInTheDocument();
+    home.unmount();
+    renderWithProviders(<SupplierForecastCommitments />, { identity: SUPPLIER });
+    const row = await screen.findByTestId(`fc-sup-row-PK-PETB-8802-${W[3]}`);
+    expect(row).toHaveTextContent('Revision requested');
+    const qty = /** @type {HTMLInputElement} */ (
+      within(row).getByLabelText(`Commitment quantity for ${week(W[3])}`)
+    );
+    fireEvent.change(qty, { target: { value: qty.value === '' ? '38500' : qty.value } });
+    const submit = screen.getByTestId(`fc-week-submit-${W[3]}`);
+    expect(submit).not.toBeDisabled();
+    fireEvent.click(submit);
+    await waitFor(() =>
+      expect(
+        responsesFor('sup-007', 'PK-PETB-8802', W[3])
+          .filter((r) => r.id !== line.id)
+          .map((r) => r.status)
+      ).toContain('Submitted')
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId(`fc-sup-row-PK-PETB-8802-${W[3]}`)).not.toHaveTextContent(
+        'Revision requested'
+      )
     );
   });
 });
@@ -393,30 +447,22 @@ describe('PTI — Commitments & gaps (REQ-E06-03)', () => {
     );
   });
 
-  it('request revision needs a note, which is kept for the supplier', async () => {
+  // CAP-7 (BL-176) — Request revision is hidden by REQUEST_REVISION_ENABLED
+  // (false, "hide first", 2026-10-12). Its walk with the flag on lives in
+  // BuyerCommitments.requestRevisionFlag.test.jsx, so the path stays tested.
+  it('CAP-7 AC-01 — no exception shows Request revision; Accept and Move demand stay, with no handoff for the withdrawn verb', async () => {
     renderWithProviders(<BuyerCommitments />, { identity: PLANNER });
     const what = `PT Sample Packaging Indonesia PK-PETB-8802 ${week(W[3])}`;
-    fireEvent.click(await screen.findByRole('button', { name: `Request revision for ${what}` }));
-    expect(panel().getByTestId('fc-action-submit')).toBeDisabled();
-    fireEvent.change(panel().getByLabelText('Note'), {
-      target: { value: 'Please cover the launch week' }
-    });
-    fireEvent.click(panel().getByTestId('fc-action-submit'));
-    const id = responsesFor('sup-007', 'PK-PETB-8802', W[3])[0].id;
-    await waitFor(() =>
-      expect(
-        /** @type {import('@services/sdc/types').RequirementResponse} */ (
-          requirementResponseStore.get(id)
-        ).status
-      ).toBe('Disputed')
+    const exceptions = await screen.findByTestId('fc-exceptions');
+    // Control: the exception with a response renders its other two actions.
+    expect(await screen.findByRole('button', { name: `Accept ${what}` })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: `Move demand for ${what}` })).toBeInTheDocument();
+    expect(within(exceptions).getAllByRole('button', { name: /^Accept / }).length).toBeGreaterThan(
+      0
     );
-    expect(
-      /** @type {NonNullable<(NonNullable<ReturnType<typeof requirementResponseStore.get>>)['disputeResponse']>} */ (
-        /** @type {import('@services/sdc/types').RequirementResponse} */ (
-          requirementResponseStore.get(id)
-        ).disputeResponse
-      ).map((e) => e.text)
-    ).toEqual(['Please cover the launch week']);
+    expect(screen.queryAllByRole('button', { name: /Request revision/ })).toEqual([]);
+    expect(exceptions).not.toHaveTextContent('Request revision');
+    expect(screen.queryByTestId('handoff-commitment-review')).toBeNull();
   });
 
   it('move demand: only qualified suppliers are offered; a note is required; a new version is published', async () => {

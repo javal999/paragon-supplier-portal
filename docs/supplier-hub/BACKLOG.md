@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.21, 2026-10-12 |
+| Version | 2.22, 2026-10-12 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -126,6 +126,10 @@ Nothing blocks these.
 | BL-142 | Removing a file from a revised record frees the file for the session, though an earlier version still lists it: `SessionAttachments` calls `files.release` on remove (`SessionAttachments.tsx:73, 82`), and firm offers (BL-129) and response documents keep every version's file list. The earlier version then shows the file as not available | A version's own record points at a file it can no longer open | S | With BL-27 if real storage keeps files per version |
 | BL-143 | `CLAUDE.md:1395` says CI runs "on every push to `main`". Once PR #94 (no post-merge gates run) merges, that is no longer true: `main` is re-tested daily at 00:17 UTC | A stale sentence in the file every session reads. The operator edits `CLAUDE.md`; task PRs do not (as BL-124) | S | PR #94 |
 | BL-169 | `ts-to-js.mjs` keeps the TypeScript file's own relative path when it splits a mixed import: `import { a, type B } from '../services/x'` becomes `/** @import { B } from '../services/x' */` plus the value import, so a cross-folder path appears twice and stays relative. Fix: write the alias for a cross-folder target in the `@import` tags (`ts-to-js.mjs:478-480`), as PR #149 already does for `import('…')` types | Every conversion has to be followed by `alias-imports.mjs` or it reintroduces relative cross-folder imports (10 such lines on the 54 forecast files). Only `src/vite-env.d.ts` is still TypeScript, so this matters only if more TypeScript arrives (a merged TS branch, a pasted file) | S | Found testing PR #149 (2026-10-06) |
+| BL-182 | Supplier Shipments still names an EDI integration the portal does not have: subtitle "Advance Ship Notices · Paragon WMS integration · EDI 856", an "Export EDI 856" action, and "Verify before transmitting EDI 856" in the ASN wizard, EN and ID (`src/lib/i18n/supplierShipments.js:30,63,123,162`) | `CHANNEL_CONFIG` marks EDI *designed, not connected*; the README retired the same claim, but the screen still makes it | S | Found writing the README, PR #194 |
+| BL-183 | Three page titles differ from their menu labels: `/buyer/admin/suppliers` "Suppliers" under *Supplier stock update mode*; `/supplier/rfq` "Quotation requests" under *RFQ invitations*; `/supplier/forecasts/responses` "Forecast Commitments" under *Forecast & commitments*. Decide the wording, then align title and label | A user who follows the menu lands on a heading with another name | S | Owner picks the wording; `src/components/layout-v2/navConfig.js`, `src/lib/i18n/adminSuppliers.js:11` |
+| BL-184 | `BUILD-GAP.md` cites source files by their TypeScript names (`demandRange.ts`, `forecastBias.ts`, `rfxReadModel.ts`, …), every path under `src/` ending `.ts` or `.tsx`, all `.js` or `.jsx` since the conversion finished (#152) | A reader following a citation finds no file | S | Derive the list with ``grep -on 'src/[^` ]*\.tsx\?' docs/supplier-hub/BUILD-GAP.md`` |
+| BL-185 | No screenshot script: the user-guide captures were taken by hand from `SCENARIOS.md` §5, so the README gallery cannot be refreshed with one command | Captures drift from the UI as pages change | M | Playwright over the §5 table (route, persona, demo record) into `docs/supplier-hub/user-guide/screens/` |
 
 ### 4a. Weekly SC Hub 2026-10-07: requirements accepted, ready to build
 

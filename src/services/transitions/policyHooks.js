@@ -305,8 +305,10 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    */
   RR_SUBMIT_SHORTFALL_REASON: 'rr_submit_shortfall_reason',
   /**
-   * REQ-E06-02 BR-08 — a commitment to a forecast version carries a commitment
-   * date, and an upside quantity when given is a number of zero or more.
+   * REQ-E06-02 BR-08 — an upside quantity when given is a number of zero or
+   * more, and a commitment date when given is a calendar day. CAP-6 (BL-175)
+   * BR-02 — a missing date is no longer refused; the record stores the period
+   * start.
    */
   RR_SUBMIT_COMMITMENT_DETAIL: 'rr_submit_commitment_detail',
   /**
