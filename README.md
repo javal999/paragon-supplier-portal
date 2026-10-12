@@ -30,17 +30,18 @@ calculations are real; anything a user changes is lost on reload.
 
 ## Try it in one command
 
-Clone, install and start the dev server on Node 24.
+Clone, install, build and serve the bundle on Node 24.
 
 ```bash
 nvm use               # reads .nvmrc, which pins 24
 npm ci
-npm run dev           # Vite on http://localhost:5173
+npm run build && npm run preview   # Vite prints the address, 4173 by default
 ```
 
-Open `http://localhost:5173/#/login` and choose **View as Buyer** or **View as
+Open `http://localhost:4173/#/login` and choose **View as Buyer** or **View as
 Supplier** under *Demo Mode*. Email and password are ignored; the buttons open
-a seeded seat (`src/pages/auth/Login.jsx`).
+a seeded seat (`src/pages/auth/Login.jsx`). Use `preview`, not `npm run dev`:
+the dev server serves a blank page (VITE-DEV-ENTRY-01, see Status).
 
 <div align="center">
 
@@ -90,9 +91,9 @@ follow the plan in
 Four honest notes: (1) the orange <i>SAMPLE DATA</i> and <i>SYNTHETIC DATA ·
 AWAITING THE MDM SAP FEED</i> markers are the system working; every figure is a
 fixture. (2) The bell always shows 3 and does nothing
-(<code>TopBarV2.jsx</code>). (3) The search box says <kbd>Ctrl</kbd> <kbd>K</kbd>
-but no handler is wired; <kbd>↑</kbd> <kbd>↓</kbd> <kbd>Enter</kbd> work once
-the box has focus. (4) "Not qualified (placeholder rules)" is warn-only until
+(<code>TopBarV2.jsx</code>). (3) <kbd>Ctrl</kbd> <kbd>K</kbd> (<kbd>⌘</kbd>
+<kbd>K</kbd> on a Mac) focuses the search box from anywhere except an open
+dialog; <kbd>↑</kbd> <kbd>↓</kbd> <kbd>Enter</kbd> pick a page. (4) "Not qualified (placeholder rules)" is warn-only until
 the real qualification lists arrive (BL-146). Below 1024 px the sidebar
 becomes a drawer behind ☰; <kbd>Esc</kbd> closes it.</sub>
 
@@ -494,8 +495,12 @@ npm ci                 # also installs the Husky pre-commit hook
 ### 2. Run the app
 
 ```bash
-npm run dev            # http://localhost:5173, Vite root is app/
+npm run build && npm run preview   # serves dist/, 4173 by default
 ```
+
+`npm run dev` starts but serves a blank page: the Vite root is `app/` and the
+entry `../src/main.jsx` sits above it, so the dev server 404s the module
+(VITE-DEV-ENTRY-01, `docs/findings.md`). Rebuild after each change.
 
 Choose **View as Buyer** or **View as Supplier** on `#/login`. Switch persona
 with the **PTI / Supplier** toggle at the top of the sidebar; add or remove
@@ -577,6 +582,7 @@ the RFQ that never auto-closes. Raise those as known, not as new defects.
 
 | ID | What is open | Blocked on |
 |---|---|---|
+| VITE-DEV-ENTRY-01 | `npm run dev` serves a blank page; local runs use build + preview | Entry restructure, deferred |
 | BL-24 | Real SAP integration | Backend (Stage F), interface choice BL-11 |
 | BL-28 | Real sign-in | Backend |
 | BL-30 | Durable storage; today every change is lost on reload | Backend |
