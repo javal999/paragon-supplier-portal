@@ -67,21 +67,21 @@ import {
 } from '@services/transitions/rfxRules';
 import { documentRequestsRefusal } from '@services/transitions/rfxDocumentRules';
 /** @import { DocumentRequest, RfiQuestion, RfpEvent, RfpPricingRequest, RfpTermRow, RfxCustomSection } from '@services/sourcing/types' */
-import DocumentRequestsEditor, { DocumentRequestsSummary } from './DocumentRequestsEditor';
-import RfxInviteeStep from './RfxInviteeStep';
-import { useSourcingTypeMap } from './eligibilityDisplay';
+import DocumentRequestsEditor, { DocumentRequestsSummary } from '../DocumentRequestsEditor';
+import RfxInviteeStep from '../RfxInviteeStep';
+import { useSourcingTypeMap } from '../eligibilityDisplay';
 import { mappedSourcingType } from '@services/sourcing/sourcingType';
-import RfxQuestionEditor from './RfxQuestionEditor';
-import RfxSaveTemplate from './RfxSaveTemplate';
-/** @import { StartOption } from './RfxStartFrom' */
-import RfxStartFrom from './RfxStartFrom';
-import { ConfidentialityFields } from './RfiCreateWizard';
-import { CustomTermEditor, TermValueInput } from './RfpTermControls';
-import { RfpPricingEditor } from './RfpPricing';
-import { IndicativePill, authored, termLabel } from './rfxAuthoringDisplay';
-import { rfxNow } from './rfxDisplay';
-import { draftEditRefusal } from './draftEdit';
-import { PrefillBanner } from './rfqSources';
+import RfxQuestionEditor from '../RfxQuestionEditor';
+import RfxSaveTemplate from '../RfxSaveTemplate';
+/** @import { StartOption } from '../RfxStartFrom' */
+import RfxStartFrom from '../RfxStartFrom';
+import { ConfidentialityFields } from '../RfiCreateWizard';
+import { CustomTermEditor, TermValueInput } from '../RfpTermControls';
+import { RfpPricingEditor } from '../RfpPricing';
+import { IndicativePill, authored, termLabel } from '../rfxAuthoringDisplay';
+import { rfxNow } from '../rfxDisplay';
+import { draftEditRefusal } from '../draftEdit';
+import { PrefillBanner } from '../rfqSources';
 
 /**
  * @typedef {object} Draft
