@@ -5,7 +5,12 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
 import { buildRepoProgram } from '@lib/storedFieldGate/derive';
 import { isTestFile, scriptKindOf } from '@test/sourceFiles';
-import { folderSourceFiles, pageFiles as pagesOf, pagesDirFolders } from '@test/pageFiles';
+import {
+  folderSourceFiles,
+  pageFiles as pagesOf,
+  pageFolderSource,
+  pagesDirFolders
+} from '@test/pageFiles';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DP2-PALETTE-01 — chart colour comes from the centralized palette
@@ -498,7 +503,7 @@ describe('⚠️ DP2-PALETTE-01 · THE INSTRUMENT ITSELF', () => {
     expect(files.length).toBeGreaterThan(200);
     // known-present, three directories deep and across the pages/components split
     expect(files).toContain('lib/chartPalette.js');
-    expect(files).toContain('pages-v2/BuyerRisk.jsx');
+    expect(files).toContain('pages-v2/BuyerRisk/components/WorldMap.jsx');
     expect(files).toContain('components/ui-v2/ScoreBadge.jsx');
     expect(files).toContain('pages-v2/process-flows/FlowDiagram.jsx');
     // known-ABSENT: specs are excluded, and a fabrication is not present
@@ -527,7 +532,7 @@ describe('⚠️ DP2-PALETTE-01 · THE INSTRUMENT ITSELF', () => {
   it('⚠️ AND THE PAINTING SUBSET IS NON-EMPTY AND DERIVED', () => {
     const painting = paintingFiles();
     expect(painting.length).toBeGreaterThan(3);
-    expect(painting).toContain('pages-v2/BuyerRisk.jsx');
+    expect(painting).toContain('pages-v2/BuyerRisk/components/WorldMap.jsx');
     expect(painting).toContain('components/ui-v2/ScoreBadge.jsx');
     // a page with no paint of any kind must NOT be in it
     expect(painting).not.toContain('lib/chartPalette.js');
@@ -582,7 +587,7 @@ describe('DP2-PALETTE-01 — no raw hex in any paint position, tree-wide', () =>
     // Not an exemption — a measurement. They are hex, they are page-local, and
     // no paint position consumes them. If one ever does, this file says so with
     // nobody editing it.
-    const chrome = readSrc('pages-v2/SupplierWhatsApp.jsx');
+    const chrome = pageFolderSource(join(SRC, 'pages-v2'), 'SupplierWhatsApp');
     expect(chrome, 'the control is vacuous if the consts have gone').toMatch(
       /const WHATSAPP_BG = '#/
     );
