@@ -100,7 +100,7 @@ describe('⚠️ §68 · THE MATCHER ITSELF, BEFORE ANY CLAIM ABOUT THE TREE', (
     // examined nothing looks exactly like a right answer. Membership, not a
     // count — the file list grows, and a count would rot.
     const files = shippedTsx(SRC).map((f) => relative(SRC, f).replace(/\\/g, '/'));
-    expect(files).toContain('pages-v2/BuyerRequisitions.jsx');
+    expect(files).toContain('pages-v2/BuyerRequisitions/index.jsx');
     expect(files).toContain('pages-v2/SupplierWhatsApp.jsx');
     expect(files).toContain('components/ui-v2/BulkActionsBar.jsx');
   });

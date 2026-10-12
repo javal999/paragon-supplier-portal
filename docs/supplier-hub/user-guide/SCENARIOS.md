@@ -68,9 +68,9 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | PTI-Req | Purchase requisitions (URL `/buyer/purchase-requisition`) | **New PR**, then **Submit for approval** | Draft → Pending Approval | `pages-v2/BuyerRequisitions.jsx:697,908-920` |
-| 2 | PTI-Proc | same | **Approve** | Approved | `pages-v2/BuyerRequisitions.jsx:996-1038` |
-| 3 | PTI-Proc | same | **Raise sourcing event**. Opens the RFQ wizard pre-filled; saving the RFQ moves the PR. | PR: Sourcing Event | `pages-v2/BuyerRequisitions.jsx:636-637,1194-1201`; `services/transitions/cascades.js:62` |
+| 1 | PTI-Req | Purchase requisitions (URL `/buyer/purchase-requisition`) | **New PR**, then **Submit for approval** | Draft → Pending Approval | `pages-v2/BuyerRequisitions/index.jsx:203`; `pages-v2/BuyerRequisitions/components/RequisitionPanelFooter.jsx:89-104` |
+| 2 | PTI-Proc | same | **Approve** | Approved | `pages-v2/BuyerRequisitions/components/RequisitionPanelFooter.jsx:173-215` |
+| 3 | PTI-Proc | same | **Raise sourcing event**. Opens the RFQ wizard pre-filled; saving the RFQ moves the PR. | PR: Sourcing Event | `pages-v2/BuyerRequisitions/hooks/useRequisitionActions.js:281-282`; `pages-v2/BuyerRequisitions/components/StatusNotes.jsx:114-121`; `services/transitions/cascades.js:62` |
 | 4 | PTI-Proc | Sourcing → **RFQ** | **New RFQ** → Define Scope / Invite Suppliers / Terms & Deadlines / Review & Submit → **Save RFQ draft**, then **Publish RFQ** | Draft → Open | `pages-v2/BuyerSourcing/components/SourcingHeader.jsx:82`; `pages-v2/BuyerSourcing/components/RfqWizardModal.jsx:216`; `pages-v2/BuyerSourcing/components/RfqLifecycleActions.jsx:83-87` |
 | 5 | Sup-Com | Sourcing → **RFQ invitations** | **I will respond** → **Submit quote** → **Submit quotation** | Quotation Submitted | `pages-v2/rfqs/RfqEngagementControls.jsx:192`; `pages-v2/SupplierRFQs/components/RFQCard.jsx:201`; `pages-v2/SupplierRFQs/components/QuotePanel.jsx:76-78` |
 | 6 | PTI-Proc | RFQ | **Move to review** | Under Review | `pages-v2/BuyerSourcing/components/ComparisonTable.jsx:134-138` |
@@ -102,8 +102,8 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | PTI-Proc | Purchase requisitions | **Reject** → reason → **Confirm rejection** | Rejected | `pages-v2/BuyerRequisitions.jsx:996-1038` |
-| 2 | PTI-Req | same | **Revise and return to draft** | Draft | `pages-v2/BuyerRequisitions.jsx:1066-1110` |
+| 1 | PTI-Proc | Purchase requisitions | **Reject** → reason → **Confirm rejection** | Rejected | `pages-v2/BuyerRequisitions/components/RequisitionPanelFooter.jsx:173-215` |
+| 2 | PTI-Req | same | **Revise and return to draft** | Draft | `pages-v2/BuyerRequisitions/components/DecisionCaptures.jsx:67-85` |
 
 **Edge cases**
 
