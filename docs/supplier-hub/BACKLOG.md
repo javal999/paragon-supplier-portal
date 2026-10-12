@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.19, 2026-09-29 |
+| Version | 2.20, 2026-10-12 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -126,6 +126,25 @@ Nothing blocks these.
 | BL-142 | Removing a file from a revised record frees the file for the session, though an earlier version still lists it: `SessionAttachments` calls `files.release` on remove (`SessionAttachments.tsx:73, 82`), and firm offers (BL-129) and response documents keep every version's file list. The earlier version then shows the file as not available | A version's own record points at a file it can no longer open | S | With BL-27 if real storage keeps files per version |
 | BL-143 | `CLAUDE.md:1395` says CI runs "on every push to `main`". Once PR #94 (no post-merge gates run) merges, that is no longer true: `main` is re-tested daily at 00:17 UTC | A stale sentence in the file every session reads. The operator edits `CLAUDE.md`; task PRs do not (as BL-124) | S | PR #94 |
 | BL-169 | `ts-to-js.mjs` keeps the TypeScript file's own relative path when it splits a mixed import: `import { a, type B } from '../services/x'` becomes `/** @import { B } from '../services/x' */` plus the value import, so a cross-folder path appears twice and stays relative. Fix: write the alias for a cross-folder target in the `@import` tags (`ts-to-js.mjs:478-480`), as PR #149 already does for `import('…')` types | Every conversion has to be followed by `alias-imports.mjs` or it reintroduces relative cross-folder imports (10 such lines on the 54 forecast files). Only `src/vite-env.d.ts` is still TypeScript, so this matters only if more TypeScript arrives (a merged TS branch, a pasted file) | S | Found testing PR #149 (2026-10-06) |
+
+### 4a. Weekly SC Hub 2026-10-07: requirements accepted, ready to build
+
+The owner reviewed the requirements and accepted CAP-D1 to CAP-D8 on 2026-10-12. Wave 2 and 3 tables of BL-170 are each confirmed by the owner before they are built (CAP-D5). Ary Hidayat's spike use case does not block BL-179 to BL-181; it replaces their starting values when it lands.
+
+| ID | Item | Why | Size | Blocked by | Detail |
+|---|---|---|---|---|---|
+| BL-170 | CAP-1 Week-as-column layout: one shared `WeekGrid` (metrics as rows, weeks as columns, sticky labels, horizontal scroll, actions stay weekly) for time-series tables. Wave 1: Demand forecast SKU detail, PTI Capacity, supplier Capacity | Weekly SC Hub 2026-10-07, U1/U2, AI 2: cut vertical scroll (a 13-week table becomes 4 to 8 rows) | L | — (waves 2 and 3: owner confirms each table) | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` |
+| BL-171 | CAP-2 Weekly/Monthly toggle on every `WeekGrid`; a week counts in the month holding 4+ of its days (ISO, its Thursday); monthly view read only | U3, AI 4 | M | BL-170 | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` |
+| BL-172 | CAP-3 Three capacity states (Within, Needs additional, Cannot be supplied) shown in one colour each on every surface; supplier confirms additional capacity per week | C1 | S | — | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` |
+| BL-173 | CAP-4 Force Majeure and Discontinued added to both shortfall reason lists (`capacityShortfall`, `commitmentShortfall`), note required; Discontinued alerts planner and Procurement | C3, AI 5 | S | — | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` |
+| BL-174 | CAP-5 Reason filter on the planner exception list (and on PTI Capacity gaps), with counts per reason | AI 3 | S | BL-173 | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` |
+| BL-175 | CAP-6 Remove the commitment date from the supplier's commitment and confirm screens; old upload files still parse | C4 | S | — | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` |
+| BL-176 | CAP-7 Hide Request revision behind a code flag; lines already in Revision requested keep working | C5 (owner: hide first) | S | — | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` |
+| BL-177 | CAP-8 Move demand to several qualified suppliers, a quantity each in the material's unit, total no more than the shortfall | C6 | M | — | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` |
+| BL-178 | CAP-9 Blanket PO run-out week and "new PO needed by" week, projected from LTP; list and alert | C2 | M | — | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` |
+| BL-179 | CAP-10 DA frozen in the current 4-week horizon; recalculation changes week 5 onward only | D1 | M | — | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` |
+| BL-180 | CAP-11 Lower consumption: excess taken off DA from week 5, fully absorbed by week 8, alert if it cannot be | D2 | M | BL-179 | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` |
+| BL-181 | CAP-12 PO below DA: recommend an additional PO (blanket call-off first) on What to order | D3 | M | BL-179 | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` |
 
 ---
 
