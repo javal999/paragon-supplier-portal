@@ -24,7 +24,19 @@ export const SEARCH_DEBOUNCE_MS = 150;
 //   highlighted. With no match, Enter does nothing.
 // · Escape, Tab and a click outside close the list and leave the text alone.
 // · Opening a page clears the input, as the input's own clear button does.
+// · Ctrl K (⌘ K on a Mac) anywhere on the page focuses the input and selects
+//   its text, as the placeholder promises — except while a modal dialog is
+//   open, because moving focus out of a dialog breaks its focus trap.
 // ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Whether a keydown is the search shortcut: Ctrl K or ⌘ K, no other modifier.
+ * @param {KeyboardEvent} e
+ * @returns {boolean}
+ */
+export function isSearchShortcut(e) {
+  return (e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'k';
+}
 
 /** @type {React.FC} */
 const TopBarSearch = () => {
@@ -42,6 +54,21 @@ const TopBarSearch = () => {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const rootRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const inputRef = useRef(/** @type {HTMLInputElement | null} */ (null));
+
+  // The shortcut is a document listener so it works wherever focus is.
+  useEffect(() => {
+    /** @param {KeyboardEvent} e */
+    const onDocKeyDown = (e) => {
+      if (!isSearchShortcut(e) || e.defaultPrevented || e.isComposing) return;
+      if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+      e.preventDefault();
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    };
+    document.addEventListener('keydown', onDocKeyDown);
+    return () => document.removeEventListener('keydown', onDocKeyDown);
+  }, []);
 
   const baseId = useId();
   const listboxId = `${baseId}-listbox`;
@@ -165,6 +192,7 @@ const TopBarSearch = () => {
         className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none"
       />
       <input
+        ref={inputRef}
         type="search"
         role="combobox"
         aria-label={t('topbar.searchLabel')}
