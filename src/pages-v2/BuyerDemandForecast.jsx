@@ -77,6 +77,9 @@ const diffPct = (a, b) => {
 /** @param {number | undefined} x */
 const two = (x) => (x === undefined ? '—' : formatNumber(Math.round(x * 100) / 100));
 
+/** @param {number} n */
+const roundNumber = (n) => formatNumber(Math.round(n));
+
 // CAP-1 A — the Events row names at most this many events per week; the rest
 // read "+n", with the full list on hover.
 const EVENTS_SHOWN = 3;
@@ -128,17 +131,41 @@ const SkuDetail = ({ sku, weeks, events, range, asOf }) => {
         corner={t('df.detail.col.week')}
         currentWeek={asOf}
         testId="df-weeks"
+        viewKey="demandForecast"
         weeks={weeks.map((w) => ({ week: w, testId: `df-week-${w}` }))}
         rows={[
           {
             id: 'base',
             label: t('df.detail.col.base'),
+            combine: 'sum',
+            value: (_w, i) => sku.base[i],
+            format: roundNumber,
             cell: (_w, i) => <Data>{formatNumber(Math.round(sku.base[i]))}</Data>
           },
           {
             id: 'forecast',
             label: t('df.detail.col.forecast'),
             emphasis: true,
+            combine: 'sum',
+            value: (_w, i) => sku.forecast[i],
+            // CAP-2 — in Monthly the override marker is a count of the month's
+            // overridden weeks, not per-week engine values.
+            monthCell: (/** @type {number | null} */ v, m) => {
+              const n = m.indexes.filter((i) => sku.overridden.includes(i)).length;
+              return (
+                <>
+                  <Data>{v === null ? '—' : formatNumber(v)}</Data>
+                  {n > 0 && (
+                    <div
+                      className="text-xs text-text-tertiary"
+                      data-testid={`df-month-overridden-${m.key}`}
+                    >
+                      {t('df.detail.month.overridden', { count: n })}
+                    </div>
+                  )}
+                </>
+              );
+            },
             cell: (w, i) => (
               <>
                 <Data data-testid={`df-week-forecast-${w}`}>{formatNumber(sku.forecast[i])}</Data>
@@ -160,6 +187,12 @@ const SkuDetail = ({ sku, weeks, events, range, asOf }) => {
           ...(range?.bands ?? []).map((b) => ({
             id: `p${b.level}`,
             label: t('df.range.col.p', { level: Math.round(b.level * 100) }),
+            // CAP-2 — summed like a flow, and the row says plainly that the
+            // sum of weekly quantiles is not the month's quantile.
+            combine: /** @type {const} */ ('sum'),
+            /** @param {string} _w @param {number} i */
+            value: (_w, i) => b.values[i],
+            monthNote: t('df.detail.month.bandNote'),
             /**
              * @param {string} w
              * @param {number} i
@@ -178,6 +211,9 @@ const SkuDetail = ({ sku, weeks, events, range, asOf }) => {
             id: 'theta',
             label: t('df.detail.col.theta'),
             hidden: !sku.theta,
+            combine: 'sum',
+            value: (_w, i) => sku.theta?.[i] ?? null,
+            format: roundNumber,
             cell: (_w, i) => (
               <Data className="text-text-tertiary">
                 {sku.theta ? formatNumber(Math.round(sku.theta[i])) : '—'}
@@ -187,12 +223,16 @@ const SkuDetail = ({ sku, weeks, events, range, asOf }) => {
           {
             id: 'sap',
             label: t('df.detail.col.sap'),
+            combine: 'sum',
+            value: (_w, i) => sku.sapPlan?.[i] ?? null,
             cell: (_w, i) => <Data>{sku.sapPlan ? formatNumber(sku.sapPlan[i]) : '—'}</Data>
           },
           {
             id: 'events',
             label: t('df.detail.col.events'),
             align: 'start',
+            combine: 'distinct',
+            value: (_w, i) => (events[i]?.events ?? []).map((e) => t(`df.events.event.${e}`)),
             cell: (w, i) => {
               const names = (events[i]?.events ?? []).map((e) => t(`df.events.event.${e}`));
               const more = names.length - EVENTS_SHOWN;

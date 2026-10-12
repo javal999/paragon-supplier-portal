@@ -1,5 +1,5 @@
 /** @import * as React from 'react' */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '@lib/i18n';
@@ -140,6 +140,103 @@ describe('WeekGrid — metrics as rows, weeks as columns', () => {
     try {
       renderGrid();
       expect(screen.getByTestId('head-2026-08-31')).toHaveTextContent('Minggu ini');
+    } finally {
+      await i18n.changeLanguage('en');
+    }
+  });
+});
+
+// CAP-2 (BL-171, SC-HUB-CAPACITY-REQUIREMENTS-2026-10 §3) — the Weekly/Monthly
+// toggle. Weeks 31 Aug (→ Sep), 28 Sep and 5 Oct (→ Oct): two partial months.
+describe('WeekGrid — Monthly view (CAP-2)', () => {
+  const MONTH_WEEKS = ['2026-08-31', '2026-09-28', '2026-10-05'];
+
+  /** @param {{ cell: (w: string) => React.ReactNode }} spy */
+  const renderMonthly = (spy) =>
+    render(
+      <I18nextProvider i18n={i18n}>
+        <WeekGrid
+          label="Capacity per week"
+          corner="Week of"
+          currentWeek="2026-10-07"
+          testId="grid"
+          editable
+          weeks={MONTH_WEEKS.map((week) => ({ week, gap: week === '2026-09-28' }))}
+          rows={[
+            {
+              id: 'ltp',
+              label: 'LTP',
+              combine: 'sum',
+              value: (_w, i) => [10, 20, 30][i],
+              cell: (w) => spy.cell(w)
+            },
+            {
+              id: 'alloc',
+              label: 'Allocated',
+              cell: (w) => <input aria-label={`Allocated ${w}`} defaultValue="" />
+            },
+            {
+              id: 'check',
+              label: 'Check',
+              combine: 'status',
+              value: (_w, i) => ['within', 'red', 'within'][i],
+              severity: (s) => (s === 'red' ? 1 : 0),
+              monthNote: 'worst week',
+              cell: () => 'never'
+            }
+          ]}
+        />
+      </I18nextProvider>
+    );
+
+  it('Weekly is the default; Monthly groups by the Thursday rule and never calls a week cell (BR-02, BR-05)', () => {
+    const spy = { cell: vi.fn((w) => `ltp ${w}`) };
+    renderMonthly(spy);
+    expect(screen.getByRole('button', { name: /Weekly/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getAllByRole('textbox')).toHaveLength(3);
+    spy.cell.mockClear();
+    fireEvent.click(screen.getByRole('button', { name: /Monthly/ }));
+    expect(spy.cell).not.toHaveBeenCalled();
+    const table = screen.getByTestId('grid');
+    expect(
+      [...table.querySelectorAll('thead th[data-month]')].map((h) => h.getAttribute('data-month'))
+    ).toEqual(['2026-09', '2026-10']);
+    expect(table.querySelectorAll('input, select')).toHaveLength(0);
+    // BR-03 — sum per month; a row with no `combine` reads "—".
+    expect(screen.getByTestId('grid-ltp-2026-09')).toHaveTextContent('10');
+    expect(screen.getByTestId('grid-ltp-2026-10')).toHaveTextContent('50');
+    expect(screen.getByTestId('grid-alloc-2026-10')).toHaveTextContent('—');
+    expect(screen.getByTestId('grid-check-2026-10')).toHaveTextContent('red · 1 of 2 wk');
+    expect(screen.getByTestId('grid-note-check')).toHaveTextContent('worst week');
+    expect(screen.getByTestId('grid-readonly')).toHaveTextContent('Switch to Weekly to edit.');
+  });
+
+  it('a month header names the month, its weeks and Mondays, marks partial and the current month; a gap week tints it (BR-04, BR-06)', () => {
+    renderMonthly({ cell: () => null });
+    fireEvent.click(screen.getByRole('button', { name: /Monthly/ }));
+    const oct = screen.getByTestId('grid-month-2026-10');
+    expect(oct).toHaveTextContent('Oct 2026');
+    expect(oct).toHaveTextContent('2 wk');
+    expect(oct).toHaveTextContent(/28 Sept? – 05 Oct/);
+    expect(oct).toHaveTextContent('This month');
+    expect(oct).toHaveAttribute('data-current', 'true');
+    expect(oct).toHaveAttribute('data-partial', 'true');
+    expect(screen.getByTestId('grid-partial-2026-10')).toHaveTextContent('Partial');
+    expect(oct).toHaveAttribute('data-gap', 'true');
+    expect(screen.getByTestId('grid-ltp-2026-10').className).toContain('bg-warning-soft');
+    const sep = screen.getByTestId('grid-month-2026-09');
+    expect(sep).not.toHaveAttribute('data-gap');
+    expect(sep).not.toHaveAttribute('data-current');
+  });
+
+  it('the toggle and the month header are translated (ID)', async () => {
+    await i18n.changeLanguage('id');
+    try {
+      renderMonthly({ cell: () => null });
+      fireEvent.click(screen.getByRole('button', { name: /Bulanan/ }));
+      expect(screen.getByRole('group', { name: 'Tampilan' })).toBeInTheDocument();
+      expect(screen.getByTestId('grid-month-2026-10')).toHaveTextContent('Bulan ini');
+      expect(screen.getByTestId('grid-readonly')).toHaveTextContent('Beralih ke Mingguan');
     } finally {
       await i18n.changeLanguage('en');
     }

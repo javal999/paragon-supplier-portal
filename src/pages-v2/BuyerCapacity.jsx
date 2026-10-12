@@ -33,6 +33,7 @@ import {
   inputClass,
   inventoryNow,
   labelClass,
+  ltpSeverity,
   qty
 } from './inventory/inventoryDisplay';
 import { ReEntryPill, usePlanningGroupLabel } from './inventory/planningGroupDisplay';
@@ -109,6 +110,8 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks }) => {
       corner={t('inv.capacity.col.week')}
       currentWeek={nowIso.slice(0, 10)}
       testId={`capacity-grid-${planKey}`}
+      // CAP-2 BR-01 — one choice for every accordion on the page.
+      viewKey="buyerCapacity"
       weeks={weeks.map((w) => ({
         week: w.week,
         gap: isGapWeek(w),
@@ -123,6 +126,9 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks }) => {
         {
           id: 'ltp',
           label: t('inv.capacity.col.ltp', { uom: plan.uom }),
+          combine: 'sum',
+          value: (week) => lwOf(week)?.ltp ?? 0,
+          format: qty,
           cell: (week) => (
             <Data data-testid={`capacity-ltp-qty-${planKey}-${week}`}>
               {qty(lwOf(week)?.ltp ?? 0)}
@@ -132,6 +138,14 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks }) => {
         {
           id: 'allocated',
           label: t('inv.capacity.col.allocated', { uom: plan.uom }),
+          combine: 'sum',
+          value: (week) => byWeek(week).entry?.allocated ?? null,
+          monthCell: (/** @type {number | null} */ v) =>
+            v === null ? (
+              <span className="text-text-tertiary">{t('inv.capacity.notStated')}</span>
+            ) : (
+              <Data>{qty(v)}</Data>
+            ),
           cell: (week) => {
             const w = byWeek(week);
             return w.entry ? (
@@ -151,6 +165,9 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks }) => {
         {
           id: 'upside',
           label: t('inv.capacity.col.upside', { uom: plan.uom }),
+          combine: 'sum',
+          value: (week) => byWeek(week).entry?.upside ?? null,
+          format: qty,
           cell: (week) => {
             const w = byWeek(week);
             return (
@@ -163,6 +180,9 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks }) => {
         {
           id: 'be',
           label: t('inv.capacity.col.be', { uom: plan.uom }),
+          combine: 'sum',
+          value: (week) => lwOf(week)?.be ?? null,
+          format: qty,
           cell: (week) => {
             const lw = lwOf(week);
             return (
@@ -176,6 +196,13 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks }) => {
           id: 'ltpCheck',
           label: t('inv.capacity.col.ltpCheck'),
           align: 'start',
+          // CAP-2 BR-03 — the month's worst week, with how many weeks hold it.
+          combine: 'status',
+          value: (week) => lwOf(week)?.level ?? null,
+          severity: ltpSeverity,
+          monthCell: (level, m) => (
+            <LtpCheckPill level={level} testId={`capacity-ltp-${planKey}-month-${m.key}`} />
+          ),
           cell: (week) => {
             const lw = lwOf(week);
             return lw ? (
@@ -186,6 +213,19 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks }) => {
         {
           id: 'gap',
           label: t('inv.capacity.col.gap', { uom: plan.uom }),
+          combine: 'sum',
+          value: (week) => {
+            const w = byWeek(week);
+            return isGapWeek(w) && w.entry ? w.demand - w.entry.allocated : null;
+          },
+          monthCell: (/** @type {number | null} */ v) =>
+            v === null ? (
+              dash
+            ) : (
+              <span className="text-warning-hover font-semibold">
+                <Data>{qty(v)}</Data>
+              </span>
+            ),
           cell: (week) => {
             const w = byWeek(week);
             const gap = isGapWeek(w);
@@ -203,6 +243,13 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks }) => {
           id: 'reason',
           label: t('inv.capacity.col.reason'),
           align: 'start',
+          combine: 'distinct',
+          value: (week) => {
+            const e = byWeek(week).entry;
+            if (!e?.reason) return null;
+            const name = reasonLabel('capacityShortfall', e.reason);
+            return e.note ? `${name} — ${e.note}` : name;
+          },
           cell: (week) => {
             const w = byWeek(week);
             return (
