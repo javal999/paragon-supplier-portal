@@ -158,7 +158,8 @@ describe('⚠️ Shipment.daysInTransit and Shipment.delayDays are RETIRED', () 
     // `is this late?` on one page, agreeing because a single row of eighteen
     // carried the stored field. This asserts the stored one is gone from the
     // surface, which no type can express.
-    const page = readFileSync('src/pages-v2/BuyerShipments.jsx', 'utf8');
+    // The whole `BuyerShipments/` page folder since the Phase 5 split.
+    const page = pageFolderSource('src/pages-v2', 'BuyerShipments');
     const code = page
       .split('\n')
       .map((l) => l.replace('\r', ''))
