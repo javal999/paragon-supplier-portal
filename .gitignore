@@ -22,3 +22,7 @@ qa*.png
 
 # TypeScript incremental build cache (written by tsc, never source)
 *.tsbuildinfo
+
+# macOS Finder/iCloud duplicate copies ("foo 2.js", ".prettierignore 2")
+* [0-9]
+* [0-9].*
