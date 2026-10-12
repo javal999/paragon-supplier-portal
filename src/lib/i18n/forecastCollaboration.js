@@ -112,6 +112,8 @@ export const forecastCollaborationEn = {
   'fc.refusal.notQualified': 'That supplier does not supply this material.',
   'fc.refusal.noteRequiredPlanner': 'Add a note the supplier can read.',
   'fc.refusal.notCurrent': 'A newer forecast version exists. Reload the page.',
+  'fc.refusal.aboveShortfall':
+    'More than the shortfall. The commitment may have changed; reload the page.',
 
   // Supplier — Forecast & commitments
   'fc.sup.title': 'Forecast & commitments',
@@ -249,16 +251,27 @@ export const forecastCollaborationEn = {
   'fc.pti.gaps.toast.reassigned': 'Demand moved. A new forecast version is published.',
   'fc.pti.gaps.panel.accept': 'Accept commitment',
   'fc.pti.gaps.panel.revise': 'Request revision',
-  'fc.pti.gaps.panel.reassign': 'Move demand to another supplier',
+  'fc.pti.gaps.panel.reassign': 'Move demand to other suppliers',
   'fc.pti.gaps.panel.confirm.accept': 'Accept',
   'fc.pti.gaps.panel.confirm.revise': 'Send request',
   'fc.pti.gaps.panel.confirm.reassign': 'Move demand',
   'fc.pti.gaps.panel.acceptHint':
     'The shortfall is accepted as it is. The supplier sees the commitment as accepted by PTI.',
-  'fc.pti.gaps.panel.toSupplier': 'Move to supplier',
-  'fc.pti.gaps.panel.chooseSupplier': 'Choose a supplier',
   'fc.pti.gaps.panel.reassignHint':
-    'Only suppliers that supply this material are listed. The period’s quantity moves in a new forecast version.',
+    'Only suppliers that supply this material are listed. Each quantity becomes new demand for that supplier in a new forecast version, and the supplier confirms it like any other demand.',
+  'fc.pti.gaps.move.shortfall': 'Shortfall',
+  'fc.pti.gaps.move.supplier': 'Supplier',
+  'fc.pti.gaps.move.qty': 'Quantity to move',
+  'fc.pti.gaps.move.headroom': 'Headroom this period',
+  'fc.pti.gaps.move.qtyFor': 'Quantity to move to {{supplier}}',
+  'fc.pti.gaps.move.aboveHeadroom':
+    'Above this supplier’s headroom of {{qty}} {{unit}}. You can still move it.',
+  'fc.pti.gaps.move.moving': 'Moving',
+  'fc.pti.gaps.move.remaining': 'Left as an exception',
+  'fc.pti.gaps.move.aboveShortfall': 'More than the shortfall of {{qty}} {{unit}}',
+  'fc.pti.gaps.move.nothingToMove': 'Enter a quantity for at least one supplier.',
+  'fc.pti.gaps.move.badQty': 'Enter each quantity as a number above 0.',
+  'fc.pti.gaps.move.logEntry': 'Moved {{qty}} {{unit}} to {{supplier}}: {{note}}',
   'fc.pti.gaps.panel.note': 'Note',
   'fc.pti.gaps.panel.noteHint': 'Required. The supplier can read it.',
 
@@ -378,6 +391,8 @@ export const forecastCollaborationId = {
   'fc.refusal.notQualified': 'Pemasok itu tidak memasok material ini.',
   'fc.refusal.noteRequiredPlanner': 'Tambahkan catatan yang dapat dibaca pemasok.',
   'fc.refusal.notCurrent': 'Sudah ada versi prakiraan yang lebih baru. Muat ulang halaman.',
+  'fc.refusal.aboveShortfall':
+    'Melebihi kekurangan. Komitmen mungkin telah berubah; muat ulang halaman.',
 
   'fc.sup.title': 'Prakiraan & komitmen',
   'fc.sup.subtitle':
@@ -524,10 +539,21 @@ export const forecastCollaborationId = {
   'fc.pti.gaps.panel.confirm.reassign': 'Pindahkan kebutuhan',
   'fc.pti.gaps.panel.acceptHint':
     'Kekurangan diterima apa adanya. Pemasok melihat komitmen sebagai diterima PTI.',
-  'fc.pti.gaps.panel.toSupplier': 'Pindahkan ke pemasok',
-  'fc.pti.gaps.panel.chooseSupplier': 'Pilih pemasok',
   'fc.pti.gaps.panel.reassignHint':
-    'Hanya pemasok yang memasok material ini yang ditampilkan. Kuantitas periode pindah dalam versi prakiraan baru.',
+    'Hanya pemasok yang memasok material ini yang ditampilkan. Setiap kuantitas menjadi kebutuhan baru bagi pemasok itu dalam versi prakiraan baru, dan pemasok mengonfirmasinya seperti kebutuhan lain.',
+  'fc.pti.gaps.move.shortfall': 'Kekurangan',
+  'fc.pti.gaps.move.supplier': 'Pemasok',
+  'fc.pti.gaps.move.qty': 'Kuantitas yang dipindahkan',
+  'fc.pti.gaps.move.headroom': 'Sisa kapasitas periode ini',
+  'fc.pti.gaps.move.qtyFor': 'Kuantitas yang dipindahkan ke {{supplier}}',
+  'fc.pti.gaps.move.aboveHeadroom':
+    'Melebihi sisa kapasitas pemasok ini sebesar {{qty}} {{unit}}. Anda tetap dapat memindahkannya.',
+  'fc.pti.gaps.move.moving': 'Dipindahkan',
+  'fc.pti.gaps.move.remaining': 'Tersisa sebagai pengecualian',
+  'fc.pti.gaps.move.aboveShortfall': 'Melebihi kekurangan sebesar {{qty}} {{unit}}',
+  'fc.pti.gaps.move.nothingToMove': 'Isi kuantitas untuk setidaknya satu pemasok.',
+  'fc.pti.gaps.move.badQty': 'Isi setiap kuantitas dengan angka di atas 0.',
+  'fc.pti.gaps.move.logEntry': 'Dipindahkan {{qty}} {{unit}} ke {{supplier}}: {{note}}',
   'fc.pti.gaps.panel.note': 'Catatan',
   'fc.pti.gaps.panel.noteHint': 'Wajib. Pemasok dapat membacanya.',
 
