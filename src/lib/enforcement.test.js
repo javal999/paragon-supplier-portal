@@ -985,7 +985,7 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
       // list as a list of consumers, which is why the distinction is written
       // down instead of left for the next reader to discover.
       '/src/lib/storedFieldGate/allowlist.js',
-      '/src/pages-v2/BuyerGoodsReceipt.jsx', //           E4 — the page that reads the ledger
+      '/src/pages-v2/BuyerGoodsReceipt/index.jsx', //     E4 — the page that reads the ledger
       // ⚠️ GL-1 — THE FIRST VALUE CONSUMER OUTSIDE THIS MODULE'S OWN LANE, and
       // it consumes exactly one name: `REFUSALS_OUTSIDE_ENFORCEMENT`. The
       // glossary's "related terms" needed a relationship the CODE already

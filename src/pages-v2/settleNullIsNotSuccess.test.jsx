@@ -103,7 +103,7 @@ describe('§90 POPULATION — every settle call site, derived from source', () =
   /** @type {readonly { file: string; rel: string }[]} */
   const SITES = [
     { file: 'BuyerInvoices.jsx', rel: './BuyerInvoices.jsx' },
-    { file: 'BuyerGoodsReceipt.jsx', rel: './BuyerGoodsReceipt.jsx' },
+    { file: 'BuyerGoodsReceipt/', rel: './BuyerGoodsReceipt' },
     // A FOLDER since frontend-standard Phase 5: the settle hook and its
     // `mutateAsync` live in `hooks/useCompleteReceipt.js`, read with the rest.
     { file: 'GRInspectionWizard/', rel: '../components/v2-features/GRInspectionWizard' }
@@ -114,16 +114,16 @@ describe('§90 POPULATION — every settle call site, derived from source', () =
       /use(GoodsReceiptSettle|InvoiceSettlePayment)\b/.test(src(s.rel))
     );
     expect(settling.map((s) => s.file).sort()).toEqual([
-      'BuyerGoodsReceipt.jsx',
+      'BuyerGoodsReceipt/',
       'BuyerInvoices.jsx',
       'GRInspectionWizard/'
     ]);
 
     // KNOWN-FALSE CONTROL, in the same run: a page with no settle must not match,
     // or the matcher is reporting on itself rather than on the tree (rule 1).
-    expect(
-      /use(GoodsReceiptSettle|InvoiceSettlePayment)\b/.test(src('./BuyerRequisitions.jsx'))
-    ).toBe(false);
+    expect(/use(GoodsReceiptSettle|InvoiceSettlePayment)\b/.test(src('./BuyerRequisitions'))).toBe(
+      false
+    );
   });
 
   // ⚠️ **NO EXACT COUNT HERE, DELIBERATELY.** The invariant is *"every settle
