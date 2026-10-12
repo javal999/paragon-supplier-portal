@@ -103,7 +103,7 @@ describe('§90 POPULATION — every settle call site, derived from source', () =
   /** @type {readonly { file: string; rel: string }[]} */
   const SITES = [
     { file: 'BuyerInvoices.jsx', rel: './BuyerInvoices.jsx' },
-    { file: 'BuyerGoodsReceipt.jsx', rel: './BuyerGoodsReceipt.jsx' },
+    { file: 'BuyerGoodsReceipt/', rel: './BuyerGoodsReceipt' },
     // A FOLDER since frontend-standard Phase 5: the settle hook and its
     // `mutateAsync` live in `hooks/useCompleteReceipt.js`, read with the rest.
     { file: 'GRInspectionWizard/', rel: '../components/v2-features/GRInspectionWizard' }
@@ -114,7 +114,7 @@ describe('§90 POPULATION — every settle call site, derived from source', () =
       /use(GoodsReceiptSettle|InvoiceSettlePayment)\b/.test(src(s.rel))
     );
     expect(settling.map((s) => s.file).sort()).toEqual([
-      'BuyerGoodsReceipt.jsx',
+      'BuyerGoodsReceipt/',
       'BuyerInvoices.jsx',
       'GRInspectionWizard/'
     ]);

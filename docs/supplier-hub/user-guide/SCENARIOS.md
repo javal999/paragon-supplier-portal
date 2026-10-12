@@ -146,7 +146,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 |---|---|---|---|---|---|
 | 1 | PTI-Rcv | Goods receipts | **Create GR** with rejected or short lines | GR Partially Approved; ASN flagged Discrepancy | `services/transitions/cascades.js:28-31` |
 | 2 | Sup-Ful | Orders → **Goods receipts** | **Respond** → **Acknowledge** or **Dispute** (comment required) | Answered | `pages-v2/SupplierGoodsReceipts.jsx:302-338` |
-| 3 | PTI-Rcv or PTI-Plan | Goods receipts → Shipment discrepancies | **Reconcile**, or **Resolve** a dispute | ASN Delivered | `pages-v2/BuyerGoodsReceipt.jsx:912-972`; `pages-v2/receipts/ReceiptDisputesSection.jsx:109-116` |
+| 3 | PTI-Rcv or PTI-Plan | Goods receipts → Shipment discrepancies | **Reconcile**, or **Resolve** a dispute | ASN Delivered | `pages-v2/BuyerGoodsReceipt/components/DiscrepancySection.jsx:34-91`; `pages-v2/receipts/ReceiptDisputesSection.jsx:109-116` |
 | 4 | Sup-BO | Invoices | **Submit invoice** | Match: Qty Mismatch; PTI sees "Pending Match" | `services/transitions/invoiceRollup.js:88-131`; `services/data/invoiceProjection.js:90-97` |
 | 5 | PTI-Fin | Invoices | **Dispute** → reason → **Raise dispute** | Disputed (supplier sees "Returned") | `pages-v2/BuyerInvoices.jsx:1094,1173-1178`; `services/transitions/fulfilmentRules.js:903-904` |
 | 6 | Sup-BO | Invoices | **Correct and resubmit** | Submitted; the match re-runs | `services/transitions/flows/invoice.flow.js:173-191` |
@@ -160,7 +160,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | Shelf life too short | **Request shelf-life exception**; ASN goes to Awaiting exception | PTI approves or rejects | Shipments & ASN | `pages-v2/BuyerShipments.jsx:614` |
 | Invoice price outside tolerance (2%, cap Rp 500,000) | Match: Price Variance; invoice held | PTI-Fin | Invoices | `services/transitions/hubSettings.js:121-167` |
 | Duplicate invoice number, or over-invoicing | Refused (DUPLICATE_INVOICE_NUMBER / OVER_INVOICED) | Sup-BO | Invoices | `services/data/mock/MockCommandService.js:1198-1251` |
-| GR on Quality Hold | **Request lab retest** → Under Inspection | PTI-Rcv | Goods receipts | `pages-v2/BuyerGoodsReceipt.jsx:560-569` |
+| GR on Quality Hold | **Request lab retest** → Under Inspection | PTI-Rcv | Goods receipts | `pages-v2/BuyerGoodsReceipt/components/footerForStatus.jsx:101-106` |
 
 ### UC3 Call-offs against agreements
 
@@ -471,7 +471,7 @@ A reader might expect these to work. The code shows they do not, or that they ar
 
 7. **A Matched invoice never becomes Approved in the UI.** The approve action is deliberately not offered, so only seeded Approved invoices can be released. (`pages-v2/invoices/invoiceActionModel.js:99-102`)
 8. **These buttons only show a toast:**
-    - Goods receipts: "Submit inspection results", "Override hold". (`pages-v2/BuyerGoodsReceipt.jsx:536-593`)
+    - Goods receipts: "Submit inspection results", "Override hold". (`pages-v2/BuyerGoodsReceipt/components/footerForStatus.jsx:77-130`)
     - Shipments: "Send reminder to supplier", "Track shipment". (`pages-v2/BuyerShipments.jsx:445-505`)
     - Invoices: "Review match", "Escalate". (`pages-v2/BuyerInvoices.jsx:444-476`)
     - Supplier orders: "Create ASN" on the PO page. (`pages-v2/SupplierOrders.jsx:543-568`)
