@@ -322,13 +322,30 @@ describe('REQ-E06-02 — commitment through the verb', () => {
     expect((await lineOf(buyer, 'sup-007', 'PK-PETB-8802', W[6])).state).toBe('exception');
   });
 
-  it('known-bad: a forecast-version commitment needs its date; upside must be zero or more', async () => {
+  it('CAP-6 AC-01 / BR-02 — a forecast-version commitment with a quantity only is stored with the period start as its date', async () => {
     const l = await lineOf(sup007, 'sup-007', 'PK-PETB-8802', W[6]);
     const noDate = await submit(sup007, {
       ...commitPayload(l, l.forecastQty),
       committedDate: undefined
     });
-    expect(noDate.reason).toMatch(/COMMITMENT_DATE_REQUIRED/);
+    expect(noDate.status).toBe('done');
+    const stored = /** @type {import('../../sdc/types').RequirementResponse} */ (
+      requirementResponseStore.get(/** @type {string} */ (noDate.entityId))
+    );
+    expect(stored.forecastConfirmation).toMatchObject({
+      confirmedQty: l.forecastQty,
+      committedDate: l.periodStart
+    });
+    expect(l.periodStart).toBe(W[6]);
+  });
+
+  it('known-bad: a date, when one is sent, must be a calendar day; upside must be zero or more', async () => {
+    const l = await lineOf(sup007, 'sup-007', 'PK-PETB-8802', W[6]);
+    const badDate = await submit(sup007, {
+      ...commitPayload(l, l.forecastQty),
+      committedDate: '14/09/2026'
+    });
+    expect(badDate.reason).toMatch(/committedDate must be a date/);
     const badUpside = await submit(sup007, commitPayload(l, l.forecastQty, { upsideQty: -5 }));
     expect(badUpside.reason).toMatch(/upsideQty/);
   });
