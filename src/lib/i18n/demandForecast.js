@@ -270,6 +270,8 @@ export const demandForecastId = {
   'df.detail.col.sap': 'Rencana SAP',
   'df.detail.col.events': 'Peristiwa',
   'df.detail.month.bandNote': 'Bulanan: jumlah nilai mingguan, bukan persentil bulanan',
+  // Indonesian has no plural; `_one` is kept so the EN and ID key sets match.
+  'df.detail.month.overridden_one': '{{count}} minggu disesuaikan',
   'df.detail.month.overridden_other': '{{count}} minggu disesuaikan',
   'df.detail.comb':
     'Comb: rata-rata simple exponential smoothing (α {{sesAlpha}}), tren Holt (α {{holtAlpha}}, β {{holtBeta}}), dan tren teredam (α {{dampedAlpha}}, β {{dampedBeta}}, φ {{phi}}).',
