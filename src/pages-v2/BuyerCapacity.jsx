@@ -21,12 +21,7 @@ import { formatDate, formatDateTime } from '@lib/format';
 import { useCapacityPlans } from '@services/query/hooks';
 /** @import { CapacityPlan } from '@services/data/types' */
 /** @import { CapacityConfirmationStatus } from '@services/transitions/capacityRules' */
-import {
-  gapWeeks,
-  isGapWeek,
-  ltpCapacityWeeks,
-  planStatus
-} from '@services/transitions/capacityRules';
+import { isGapWeek, ltpCapacityWeeks, planStatus } from '@services/transitions/capacityRules';
 import {
   CapacityStatusPill,
   LtpCheckPill,
@@ -63,8 +58,12 @@ import {
 // BL-133 (ENG-D18) — the ONE demand figure is the group's LTP (the current
 // forecast, summed over the group's materials; owner, 2026-09-29): the gap,
 // "short by", the banner and the filters all read it. Beside it, BE (capacity
-// + additional capacity) and the flag: amber "needs the additional capacity",
+// + additional capacity) and the flag: amber "needs additional capacity",
 // red "cannot be supplied" — the red week is where the planner acts.
+//
+// CAP-3 (BL-172) — the flag is the one capacity-state pill; an amber week says
+// whether the supplier confirmed its additional capacity (BR-03), and the
+// accordion header counts each non-green state (BR-02).
 //
 // CAP-5 BR-02 (BL-174) — the Reason filter over `capacityShortfall`, in the
 // address with the others, narrows WEEKS together with Gaps only; each reason
@@ -206,7 +205,11 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks }) => {
           cell: (week) => {
             const lw = lwOf(week);
             return lw ? (
-              <LtpCheckPill level={lw.level} testId={`capacity-ltp-${planKey}-${week}`} />
+              <LtpCheckPill
+                level={lw.level}
+                confirmed={lw.upsideConfirmed}
+                testId={`capacity-ltp-${planKey}-${week}`}
+              />
             ) : null;
           }
         },
@@ -339,11 +342,27 @@ const BuyerCapacity = () => {
   const withGap = plans.filter((p) => planStatus(p) === 'gap');
   const ltpByPlan = new Map(plans.map((p) => [keyOf(p), ltpCapacityWeeks(p)]));
   /**
+   * CAP-3 BR-02 — weeks per non-green state. An amber week the supplier has
+   * confirmed (BR-03) leaves "Needs additional" for "Confirmed additional".
    * @param {CapacityPlan} p
-   * @param {'cannotSupply' | 'needsAdditional'} level
+   * @param {'cannotSupply' | 'needsAdditional' | 'confirmedAdditional'} state
    */
-  const ltpCount = (p, level) =>
-    (ltpByPlan.get(keyOf(p)) ?? []).filter((w) => w.level === level).length;
+  const ltpCount = (p, state) =>
+    (ltpByPlan.get(keyOf(p)) ?? []).filter((w) =>
+      state === 'cannotSupply'
+        ? w.level === 'cannotSupply'
+        : w.level === 'needsAdditional' && w.upsideConfirmed === (state === 'confirmedAdditional')
+    ).length;
+  /** @type {readonly { state: 'needsAdditional' | 'confirmedAdditional' | 'cannotSupply'; testId: string; tone: string }[]} */
+  const HEADER_COUNTS = [
+    { state: 'needsAdditional', testId: 'capacity-amber-count', tone: 'text-warning-hover' },
+    {
+      state: 'confirmedAdditional',
+      testId: 'capacity-confirmed-count',
+      tone: 'text-warning-hover'
+    },
+    { state: 'cannotSupply', testId: 'capacity-red-count', tone: 'text-danger' }
+  ];
   const withRed = plans.filter((p) => ltpCount(p, 'cannotSupply') > 0);
   // The option lists come from the drill-narrowed plans, so a filter can never
   // offer a supplier the PO filter has already excluded.
@@ -545,7 +564,9 @@ const BuyerCapacity = () => {
       <div className="space-y-3">
         {shown.map((p) => {
           const open = isOpen(p);
-          const gaps = gapWeeks(p);
+          const counts = HEADER_COUNTS.map((c) => ({ ...c, count: ltpCount(p, c.state) })).filter(
+            (c) => c.count > 0
+          );
           return (
             <section
               key={keyOf(p)}
@@ -566,29 +587,16 @@ const BuyerCapacity = () => {
                 <span className="text-sm font-semibold text-text-primary">{p.supplierName}</span>
                 <span className="text-sm text-text-secondary">{groupLabel(p.planningGroupId)}</span>
                 <CapacityStatusPill status={planStatus(p)} />
-                {gaps.length > 0 && (
-                  <span className="text-xs text-warning-hover">
-                    {t('inv.capacity.gapWeeks', { count: gaps.length })}
-                  </span>
-                )}
-                {ltpCount(p, 'cannotSupply') > 0 && (
-                  <span
-                    className="text-xs text-danger"
-                    data-testid={`capacity-red-count-${keyOf(p)}`}
-                  >
-                    {t('inv.capacity.ltpWeeks.cannotSupply', {
-                      count: ltpCount(p, 'cannotSupply')
-                    })}
-                  </span>
-                )}
-                {ltpCount(p, 'needsAdditional') > 0 && (
-                  <span
-                    className="text-xs text-warning-hover"
-                    data-testid={`capacity-amber-count-${keyOf(p)}`}
-                  >
-                    {t('inv.capacity.ltpWeeks.needsAdditional', {
-                      count: ltpCount(p, 'needsAdditional')
-                    })}
+                {counts.length > 0 && (
+                  <span className="text-xs" data-testid={`capacity-state-counts-${keyOf(p)}`}>
+                    {counts.map((c, i) => (
+                      <span key={c.state}>
+                        {i > 0 && <span className="text-text-tertiary"> · </span>}
+                        <span className={c.tone} data-testid={`${c.testId}-${keyOf(p)}`}>
+                          {t(`inv.capacity.ltpWeeks.${c.state}`, { count: c.count })}
+                        </span>
+                      </span>
+                    ))}
                   </span>
                 )}
                 <span className="ml-auto text-xs text-text-tertiary">

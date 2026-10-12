@@ -2761,7 +2761,7 @@ export function useWarehouseDecisionCommand() {
  *       verb: 'submitCapacity';
  *       supplierId: string;
  *       planningGroupId: string;
- *       weeks: readonly { week: string; allocated: number; upside?: number; reason?: string; note?: string }[];
+ *       weeks: readonly { week: string; allocated: number; upside?: number; upsideConfirmed?: true; reason?: string; note?: string }[];
  *     }
  *   | { verb: 'closeAlert'; key: string; closeReason: string; actionNote?: string }} InventoryCommandVars
  */

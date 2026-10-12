@@ -663,11 +663,13 @@ export class DataError extends Error {
 /** One weekly bucket of a capacity submission (REQ-E08-04). */
 /**
  * `week`:  Monday of the week (`YYYY-MM-DD`).
+ * `upsideConfirmed`:  CAP-3 BR-03 (CAP-D1) — the supplier confirmed the additional capacity this week needs (LTP above allocated, within BE). Present only when true; read only while the week is amber.
  *
  * @typedef {{
  *   readonly week: string;
  *   readonly allocated: number;
  *   readonly upside?: number;
+ *   readonly upsideConfirmed?: true;
  *   readonly reason?: CapacityReason;
  *   readonly note?: string;
  * }} CapacityWeekEntry
