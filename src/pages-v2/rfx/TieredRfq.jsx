@@ -35,7 +35,7 @@ import { documentsOf } from '@services/transitions/rfxDocumentRules';
 // award"). Two sections the rebuilt RFQ needs and a single-price RFQ never
 // had: what is being quoted, and the comparison ITEM BY ITEM at an evaluation
 // break. The award, item by item, is the one award panel every RFQ shares
-// (`AwardPanel.jsx`, RFx C3).
+// (`AwardPanel/index.jsx`, RFx C3).
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -653,5 +653,5 @@ const ItemComparison = ({
   );
 };
 
-// The award, item by item, is `AwardPanel.jsx` (RFx C3): one panel for every
+// The award, item by item, is `AwardPanel/index.jsx` (RFx C3): one panel for every
 // RFQ, grown from the tiered per-item form that stood here.
