@@ -157,7 +157,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 |---|---|---|---|---|
 | Confirmed qty above the ordered qty | Blocked | Sup-Ful | Purchase orders | `services/transitions/policies.js:102` |
 | ASN qty above the open qty | Refused (OVER_OPEN_QUANTITY) unless an over-ship reason is given | Sup-Ful | Shipments & ASN | `services/transitions/fulfilmentRules.js:168-182`; `services/data/mock/MockCommandService.js:744-787` |
-| Shelf life too short | **Request shelf-life exception**; ASN goes to Awaiting exception | PTI approves or rejects | Shipments & ASN | `pages-v2/BuyerShipments.jsx:614` |
+| Shelf life too short | **Request shelf-life exception**; ASN goes to Awaiting exception | PTI approves or rejects | Shipments & ASN | `pages-v2/BuyerShipments/index.jsx:272` |
 | Invoice price outside tolerance (2%, cap Rp 500,000) | Match: Price Variance; invoice held | PTI-Fin | Invoices | `services/transitions/hubSettings.js:121-167` |
 | Duplicate invoice number, or over-invoicing | Refused (DUPLICATE_INVOICE_NUMBER / OVER_INVOICED) | Sup-BO | Invoices | `services/data/mock/MockCommandService.js:1198-1251` |
 | GR on Quality Hold | **Request lab retest** → Under Inspection | PTI-Rcv | Goods receipts | `pages-v2/BuyerGoodsReceipt/components/footerForStatus.jsx:101-106` |
@@ -472,7 +472,7 @@ A reader might expect these to work. The code shows they do not, or that they ar
 7. **A Matched invoice never becomes Approved in the UI.** The approve action is deliberately not offered, so only seeded Approved invoices can be released. (`pages-v2/invoices/invoiceActionModel.js:99-102`)
 8. **These buttons only show a toast:**
     - Goods receipts: "Submit inspection results", "Override hold". (`pages-v2/BuyerGoodsReceipt/components/footerForStatus.jsx:77-130`)
-    - Shipments: "Send reminder to supplier", "Track shipment". (`pages-v2/BuyerShipments.jsx:445-505`)
+    - Shipments: "Send reminder to supplier", "Track shipment". (`pages-v2/BuyerShipments/components/footerForStatus.jsx:29-89`)
     - Invoices: "Review match", "Escalate". (`pages-v2/BuyerInvoices.jsx:444-476`)
     - Supplier orders: "Create ASN" on the PO page. (`pages-v2/SupplierOrders.jsx:543-568`)
     - Buyer orders: "Export", "New PO", "View Full Details" have no handler. (`pages-v2/BuyerOrders.jsx:493-496,707-711`)
