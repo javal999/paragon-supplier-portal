@@ -719,6 +719,8 @@ describe('REQ-E06-02 BR-06 — spreadsheet: download, template and row-by-row up
       forecastQty: 1500
     })
   ];
+  // An OLDER file's header: it still carries the commitment date column that
+  // CAP-6 (BL-175) removed from the template (BR-03 — still parses, ignored).
   const H = [
     'Material code',
     'Period',
@@ -740,8 +742,35 @@ describe('REQ-E06-02 BR-06 — spreadsheet: download, template and row-by-row up
       const { accepted, refused } = validateCommitmentRows(parsed.rows, lines);
       expect(refused).toEqual([]);
       expect(accepted.map((a) => a.kind)).toEqual(['commit', 'commit', 'acknowledge', 'commit']);
-      expect(accepted[0]).toMatchObject({ committedQty: 34300, commitmentDate: '2026-09-07' });
+      expect(accepted[0]).toMatchObject({ committedQty: 34300 });
     }
+  });
+
+  it('CAP-6 BR-03 — the template has no commitment date column, in EN or ID', () => {
+    for (const lang of /** @type {const} */ (['en', 'id'])) {
+      const header = commitmentTemplateCsv(lines, lang).split('\n')[0];
+      expect(header).not.toMatch(/date|tanggal/i);
+      expect(header).toMatch(lang === 'en' ? /Committed quantity/ : /Kuantitas komitmen/);
+    }
+  });
+
+  it('CAP-6 AC-02 — an old file with a date column uploads: the date, valid, malformed or blank, is ignored', () => {
+    const { accepted, refused } = validateCommitmentRows(
+      [
+        row('PK-PETB-8801', '2026-09-07', 'firm', '', 'PCS', '34300', '2026-09-07'), // 2 valid date
+        row('PK-PETB-8801', '2026-09-14', '', '', 'PCS', '34300', '14/09/2026'), // 3 malformed date
+        row('PK-PETB-8802', '2026-09-14', '', '', 'PCS', '1500', '') // 4 blank date
+      ],
+      lines
+    );
+    expect(refused).toEqual([]);
+    expect(accepted.map((a) => [a.row, a.kind])).toEqual([
+      [2, 'commit'],
+      [3, 'commit'],
+      [4, 'commit']
+    ]);
+    // The checked row carries no date at all: the store records the period start.
+    expect(accepted.every((a) => !('commitmentDate' in a))).toBe(true);
   });
 
   it('each row is accepted or refused on its own, with its row number and reason', () => {
@@ -753,21 +782,22 @@ describe('REQ-E06-02 BR-06 — spreadsheet: download, template and row-by-row up
         row('PK-PETB-9999', '2026-09-14', '', '', 'PCS', '10', '2026-09-14'), // 5 not in forecast
         row('PK-PETB-8801', '2026-10-26', '', '', '', '', '', '', '', 'Seen'), // 6 acknowledgement
         row('PK-PETB-8801', '2026-09-07', '', '', 'PCS', '34300', '2026-09-07'), // 7 duplicate of row 2
-        row('PK-PETB-8802', '2026-09-14', '', '', 'PCS', '1400', '14/09/2026', '', 'capacity'), // 8 bad date
+        // 8 malformed date in an old file's date column: ignored since CAP-6 (BR-03)
+        row('PK-PETB-8801', '2026-09-14', '', '', 'PCS', '30000', '14/09/2026', '', 'capacity'),
         row('PK-PETB-8802', '2026-09-14', '', '', 'KG', '1400', '2026-09-14') // 9 unit
       ],
       lines
     );
     expect(accepted.map((a) => [a.row, a.kind])).toEqual([
       [2, 'commit'],
-      [6, 'acknowledge']
+      [6, 'acknowledge'],
+      [8, 'commit']
     ]);
     expect(refused.map((r) => [r.row, r.reason])).toEqual([
       [3, 'reasonRequired'],
       [4, 'ambiguousNumber'],
       [5, 'notInForecast'],
       [7, 'duplicateRow'],
-      [8, 'invalidDate'],
       [9, 'unitMismatch']
     ]);
   });

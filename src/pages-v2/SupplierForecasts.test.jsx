@@ -359,6 +359,33 @@ describe('SupplierForecasts — the governed submit (t_requirementresponse_submi
 const categoryIsRequired = () =>
   screen.getAllByText(/Category/).some((el) => /\*/.test(el.textContent ?? ''));
 
+describe('SupplierForecasts — CAP-6 (BL-175): a quantity, no committed date', () => {
+  it('the confirm panel asks for no committed date; My responses shows no Committed date column', async () => {
+    renderPage();
+    await openConfirmFor('PK-PETB-8810');
+    expect(screen.getByLabelText(/Capacity constraint/)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Committed date/)).toBeNull();
+    expect(document.querySelector('input[type="date"]#sdcsup-date')).toBeNull();
+    setQty('40000');
+    submitPanel();
+    await waitFor(() =>
+      expect(
+        requirementResponseStore
+          .all()
+          .find((r) => r.supplierId === 'sup-007' && r.materialCode === 'PK-PETB-8810')
+          ?.forecastConfirmation
+      ).toMatchObject({ confirmedQty: 40000 })
+    );
+    // My responses: the seeded responses still store a committed date (sdc
+    // fixtures), and the grid no longer shows it.
+    fireEvent.click(await screen.findByRole('tab', { name: /My responses/ }));
+    const responses = await screen.findByTestId('sdcsup-responses');
+    // Control: the response grid rendered its other labels, so the absence is real.
+    expect(within(responses).getAllByText('Version').length).toBeGreaterThan(0);
+    expect(within(responses).queryByText('Committed date')).toBeNull();
+  });
+});
+
 describe('SupplierForecasts — the false-deficit chain (CP-0 · 2c)', () => {
   it('an AMBIGUOUS quantity REFUSES — it is never read as a shortfall', async () => {
     renderPage();

@@ -216,7 +216,6 @@ function refusalKey(reason) {
     ['CAPACITY_NOT_CONFIRMED', 'fc.refusal.capacityNotConfirmed'],
     ['ABOVE_BE_NEEDS_REASON', 'fc.refusal.aboveBeNeedsReason'],
     ['OTHER_REASON_NEEDS_NOTE', 'fc.refusal.noteRequired'],
-    ['COMMITMENT_DATE_REQUIRED', 'fc.refusal.dateRequired'],
     ['NOT_QUALIFIED', 'fc.refusal.notQualified'],
     ['NOTE_REQUIRED', 'fc.refusal.noteRequiredPlanner'],
     ['NOT_CURRENT_VERSION', 'fc.refusal.notCurrent'],

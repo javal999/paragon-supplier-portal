@@ -17,7 +17,7 @@ const CommitmentLogRow = ({ l }) => {
       className="border-t border-border-subtle"
       data-testid={`fc-sup-log-${l.materialCode}-${l.periodBucket}`}
     >
-      <td colSpan={10} className="px-4 py-2 text-xs text-text-secondary">
+      <td colSpan={9} className="px-4 py-2 text-xs text-text-secondary">
         {l.log.map((e, i) => (
           <div key={i}>
             <span className="font-semibold">

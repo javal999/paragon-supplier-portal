@@ -281,6 +281,7 @@ import {
 } from './forecastReadModel';
 import { baseDemand, FORECAST_SOURCES } from './fixtures/forecastHub';
 import {
+  periodBounds,
   reassignVersion,
   republishVersion,
   shortfallRefusal
@@ -2496,7 +2497,16 @@ const requirementResponseTarget = {
             // that let this be a plain read.
             confirmedQty: /** @type {number} */ (payload.confirmedQty),
             uom,
-            ...(str('committedDate') ? { committedDate: str('committedDate') } : {}),
+            // CAP-6 (BL-175) BR-02 — the supplier confirms a quantity, no date.
+            // A forecast-version commitment without one stores the period
+            // start, so every reader of the record keeps a date until the
+            // data contract drops the field. SDC-0 publications keep theirs
+            // optional, as before.
+            ...(str('committedDate')
+              ? { committedDate: str('committedDate') }
+              : isForecastVersion(publicationId)
+                ? { committedDate: periodBounds(periodBucket).start }
+                : {}),
             ...(str('capacityConstraint') ? { capacityConstraint: str('capacityConstraint') } : {}),
             // REQ-E06-02 BR-08 — proven a number ≥ 0 by RR_SUBMIT_COMMITMENT_DETAIL.
             ...(typeof payload.upsideQty === 'number' ? { upsideQty: payload.upsideQty } : {})
@@ -2660,21 +2670,16 @@ bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_SHORTFALL_REASON, ({ payload }) => {
   return { ok: true };
 });
 
-// REQ-E06-02 BR-08 — a commitment to a forecast version carries its date, and
-// an upside quantity is a number of zero or more. The SDC-0 publications
-// predate the date rule and keep their shape.
+// REQ-E06-02 BR-08 — an upside quantity is a number of zero or more, and a
+// date, when one is sent, is a calendar day. CAP-6 (BL-175) BR-02 retired the
+// refusal of a MISSING date on a forecast version: the supplier confirms a
+// quantity per period, and `create` stores the period start instead.
 bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_COMMITMENT_DETAIL, ({ payload }) => {
   const up = payload.upsideQty;
   if (up !== undefined && (typeof up !== 'number' || !Number.isFinite(up) || up < 0)) {
     return { ok: false, reason: 'upsideQty must be a number of zero or more' };
   }
   const date = payload.committedDate;
-  if (isForecastVersion(String(payload.publicationId)) && !isIsoDay(date)) {
-    return {
-      ok: false,
-      reason: 'COMMITMENT_DATE_REQUIRED: a commitment needs its date (YYYY-MM-DD)'
-    };
-  }
   if (date !== undefined && date !== '' && !isIsoDay(date)) {
     return { ok: false, reason: 'committedDate must be a date (YYYY-MM-DD)' };
   }
