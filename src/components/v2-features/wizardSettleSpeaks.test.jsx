@@ -250,7 +250,7 @@ describe('§91 POPULATION — only a site that AWAITS a settle can swallow one',
   // and the assertions above together.
   const SITES = {
     wizard: src('./GRInspectionWizard'),
-    grPage: src('../../pages-v2/BuyerGoodsReceipt.jsx'),
+    grPage: src('../../pages-v2/BuyerGoodsReceipt'),
     invoices: src('../../pages-v2/BuyerInvoices.jsx')
   };
 
