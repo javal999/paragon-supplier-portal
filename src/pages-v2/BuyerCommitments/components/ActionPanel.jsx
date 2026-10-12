@@ -3,22 +3,24 @@ import { useTranslation } from 'react-i18next';
 import Button from '@components/ui-v2/Button';
 import SidePanel from '@components/ui-v2/SidePanel';
 import ActionPanelBody from './ActionPanelBody';
+import { moveView } from '../utils';
 /** @import { Action } from '../const' */
 
 /**
  * The side panel for the planner's action (BR-05): titled by the action, its
- * confirm switched off until the note (revise, reassign) and the target
- * supplier (reassign) are given — and naming the field it waits for (C2,
- * WCAG 4.1.2) — and the body from `ActionPanelBody`. Closed while `action` is
- * null.
+ * confirm switched off until the note (revise, reassign) is given and, for
+ * Move demand, until the quantities pass the shortfall rule (CAP-8 BR-03) —
+ * and naming what it waits for (C2, WCAG 4.1.2) — and the body from
+ * `ActionPanelBody`. Closed while `action` is null.
  * @type {React.FC<{
  *   action: Action | null;
  *   onClose: () => void;
  *   pending: boolean;
  *   note: string;
  *   onNoteChange: (note: string) => void;
- *   toSupplier: string;
- *   onToSupplierChange: (id: string) => void;
+ *   qtys: Readonly<Record<string, string>>;
+ *   onQtyChange: (supplierId: string, raw: string) => void;
+ *   headroomOf: (supplierId: string) => number | null;
  *   onSubmit: () => Promise<void>;
  *   periodLabel: (bucket: string) => string;
  * }>}
@@ -29,12 +31,14 @@ const ActionPanel = ({
   pending,
   note,
   onNoteChange,
-  toSupplier,
-  onToSupplierChange,
+  qtys,
+  onQtyChange,
+  headroomOf,
   onSubmit,
   periodLabel
 }) => {
   const { t } = useTranslation();
+  const move = action?.kind === 'reassign' ? moveView(action.line, qtys) : null;
   return (
     <SidePanel
       open={action !== null}
@@ -48,12 +52,12 @@ const ActionPanel = ({
             disabled={
               pending ||
               (action.kind !== 'accept' && note.trim() === '') ||
-              (action.kind === 'reassign' && toSupplier === '')
+              (move !== null && move.refused !== null)
             }
             // C2 (WCAG 4.1.2): a switched-off confirm names the field it waits for.
             aria-describedby={
               [
-                action.kind === 'reassign' && toSupplier === '' ? 'fc-reassign-why' : null,
+                move !== null && move.refused !== null ? 'fc-reassign-why' : null,
                 action.kind !== 'accept' && note.trim() === '' ? 'fc-action-note-hint' : null
               ]
                 .filter(Boolean)
@@ -71,8 +75,10 @@ const ActionPanel = ({
           action={action}
           note={note}
           onNoteChange={onNoteChange}
-          toSupplier={toSupplier}
-          onToSupplierChange={onToSupplierChange}
+          move={move}
+          qtys={qtys}
+          onQtyChange={onQtyChange}
+          headroomOf={headroomOf}
           periodLabel={periodLabel}
         />
       )}

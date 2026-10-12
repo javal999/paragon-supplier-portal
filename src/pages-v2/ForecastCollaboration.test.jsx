@@ -469,9 +469,13 @@ describe('PTI — Commitments & gaps (REQ-E06-03)', () => {
     renderWithProviders(<BuyerCommitments />, { identity: PLANNER });
     const what = `PT Sample Packaging Indonesia PK-PETB-8802 ${week(W[3])}`;
     fireEvent.click(await screen.findByRole('button', { name: `Move demand for ${what}` }));
-    const select = /** @type {HTMLSelectElement} */ (panel().getByLabelText('Move to supplier'));
-    expect([...select.options].map((o) => o.value)).toEqual(['', 'sup-012']);
-    fireEvent.change(select, { target: { value: 'sup-012' } });
+    // CAP-8 BR-01 — one row per other qualified supplier.
+    expect(
+      panel()
+        .getAllByTestId(/^fc-move-row-/)
+        .map((r) => r.getAttribute('data-testid'))
+    ).toEqual(['fc-move-row-sup-012']);
+    fireEvent.change(panel().getByTestId('fc-move-qty-sup-012'), { target: { value: '8500' } });
     expect(panel().getByTestId('fc-action-submit')).toBeDisabled();
     fireEvent.change(panel().getByLabelText('Note'), {
       target: { value: 'Moulding line down that week' }
@@ -485,8 +489,11 @@ describe('PTI — Commitments & gaps (REQ-E06-03)', () => {
         forecastVersionStore.get('FC-PK-V3')
       ).lines
         .filter((l) => l.materialCode === 'PK-PETB-8802' && l.periodBucket === W[3])
-        .map((l) => l.supplierId)
-    ).toEqual(['sup-012']);
+        .map((l) => [l.supplierId, l.forecastQty])
+    ).toEqual([
+      ['sup-007', 30000],
+      ['sup-012', 8500]
+    ]);
   });
 
   it('a seat without the planning lane sees handoffs instead of the actions', async () => {

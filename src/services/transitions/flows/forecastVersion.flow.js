@@ -56,7 +56,8 @@ export const forecastVersionFlow = {
         'materialCode',
         'periodBucket',
         'fromSupplierId',
-        'toSupplierId',
+        // CAP-8 — one or more `{ supplierId, qty }`, all in ONE new version.
+        'allocations',
         'note'
       ],
       policyHooks: [POLICY_HOOKS.FORECAST_REASSIGN_VALID],
