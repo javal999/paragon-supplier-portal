@@ -310,3 +310,71 @@ describe('TopBarSearch — mouse', () => {
     expect(screen.getByRole('status')).toHaveTextContent(/^$/);
   });
 });
+
+describe('TopBarSearch — Ctrl K shortcut', () => {
+  it('Ctrl K from elsewhere on the page focuses the input and selects its text', () => {
+    const input = renderSearch();
+    type(input, 'supplier');
+    const outside = screen.getByRole('button', { name: 'outside' });
+    outside.focus();
+    const event = new KeyboardEvent('keydown', {
+      key: 'k',
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true
+    });
+    act(() => {
+      outside.dispatchEvent(event);
+    });
+    expect(event.defaultPrevented).toBe(true);
+    expect(input).toHaveFocus();
+    expect([input.selectionStart, input.selectionEnd]).toEqual([0, 'supplier'.length]);
+  });
+
+  it('⌘ K does the same, and an upper-case K counts', () => {
+    const input = renderSearch();
+    fireEvent.keyDown(document.body, { key: 'K', metaKey: true });
+    expect(input).toHaveFocus();
+  });
+
+  it('K alone, or with Shift or Alt, does not move focus', () => {
+    const input = renderSearch();
+    const outside = screen.getByRole('button', { name: 'outside' });
+    outside.focus();
+    fireEvent.keyDown(outside, { key: 'k' });
+    fireEvent.keyDown(outside, { key: 'k', ctrlKey: true, shiftKey: true });
+    fireEvent.keyDown(outside, { key: 'k', ctrlKey: true, altKey: true });
+    expect(input).not.toHaveFocus();
+    expect(outside).toHaveFocus();
+  });
+
+  it('does nothing while a modal dialog is open, so focus stays in the dialog', () => {
+    renderWithProviders(
+      <>
+        <TopBarSearch />
+        <div role="dialog" aria-modal="true" aria-label="Confirm">
+          <button type="button">inside</button>
+        </div>
+      </>,
+      { route: '/buyer/home' }
+    );
+    const inside = screen.getByRole('button', { name: 'inside' });
+    inside.focus();
+    fireEvent.keyDown(inside, { key: 'k', ctrlKey: true });
+    expect(inside).toHaveFocus();
+  });
+
+  it('stops listening once unmounted', () => {
+    const { unmount } = renderWithProviders(<TopBarSearch />, { route: '/buyer/home' });
+    unmount();
+    const event = new KeyboardEvent('keydown', {
+      key: 'k',
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true
+    });
+    document.body.dispatchEvent(event);
+    // Nothing claimed the key, so the browser keeps its own Ctrl K.
+    expect(event.defaultPrevented).toBe(false);
+  });
+});
