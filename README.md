@@ -586,7 +586,7 @@ the RFQ that never auto-closes. Raise those as known, not as new defects.
 | BL-54, 55, 56 | Invoice Rp cap, OTIF minimum, early-delivery allowance | Owner decision |
 | BL-65 | Capacity fixed or week-to-week | Owner decision |
 | BL-146 | Real qualification lists | Owner |
-| BL-171..181 | Capacity CAP-2..12 | BL-171 waits on BL-170; BL-179..181 on a DA spike |
+| BL-171..181 | Capacity CAP-2..12, plus CAP-1 waves 2 and 3 (BL-170) | BL-179..181 use starting values until a DA spike lands |
 
 The full list, with sizes and owners, is in
 [BACKLOG.md](docs/supplier-hub/BACKLOG.md).
