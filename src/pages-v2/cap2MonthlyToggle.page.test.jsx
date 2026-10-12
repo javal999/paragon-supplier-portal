@@ -334,9 +334,7 @@ describe('CAP-2 Demand forecast (Table A) — Monthly', () => {
     expect(await screen.findByTestId(`df-week-overridden-${w1}`)).toBeInTheDocument();
     toMonthly('df-weeks');
     expect(screen.queryByTestId(`df-week-overridden-${w1}`)).toBeNull();
-    expect(screen.getByTestId('df-month-overridden-2026-10')).toHaveTextContent(
-      '2 weeks overridden'
-    );
+    expect(screen.getByTestId('df-month-overridden-2026-10')).toHaveTextContent('2 wk overridden');
     expect(screen.queryByTestId('df-month-overridden-2026-09')).toBeNull();
   });
 });
@@ -361,6 +359,6 @@ describe('CAP-2 strings exist in both languages', () => {
     expect(weekGridEn['weekGrid.monthlyReadOnly']).toBe('Switch to Weekly to edit.');
     expect(demandForecastEn['df.detail.month.bandNote']).toBeTruthy();
     expect(demandForecastId['df.detail.month.bandNote']).toBeTruthy();
-    expect(demandForecastId['df.detail.month.overridden_other']).toBeTruthy();
+    expect(demandForecastId['df.detail.month.overridden']).toBeTruthy();
   });
 });
