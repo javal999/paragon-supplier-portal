@@ -30,18 +30,17 @@ calculations are real; anything a user changes is lost on reload.
 
 ## Try it in one command
 
-Clone, install, build and serve the bundle on Node 24.
+Clone, install and start the dev server on Node 24.
 
 ```bash
 nvm use               # reads .nvmrc, which pins 24
 npm ci
-npm run build && npm run preview   # Vite prints the address, 4173 by default
+npm run dev           # Vite on http://localhost:5173
 ```
 
-Open `http://localhost:4173/#/login` and choose **View as Buyer** or **View as
+Open `http://localhost:5173/#/login` and choose **View as Buyer** or **View as
 Supplier** under *Demo Mode*. Email and password are ignored; the buttons open
-a seeded seat (`src/pages/auth/Login.jsx`). Use `preview`, not `npm run dev`:
-the dev server serves a blank page (VITE-DEV-ENTRY-01, see Status).
+a seeded seat (`src/pages/auth/Login.jsx`).
 
 <div align="center">
 
@@ -495,12 +494,15 @@ npm ci                 # also installs the Husky pre-commit hook
 ### 2. Run the app
 
 ```bash
-npm run build && npm run preview   # serves dist/, 4173 by default
+npm run dev                        # http://localhost:5173, hot reload
+npm run build && npm run preview   # the bundle Vercel ships, 4173 by default
 ```
 
-`npm run dev` starts but serves a blank page: the Vite root is `app/` and the
-entry `../src/main.jsx` sits above it, so the dev server 404s the module
-(VITE-DEV-ENTRY-01, `docs/findings.md`). Rebuild after each change.
+The Vite root is `app/` and the entry `../src/main.jsx` sits above it. A
+dev-only plugin in `vite.config.js` (`devEntryAboveRoot`) points the dev server
+at the entry, because otherwise it 404s the module and the page stays blank
+(VITE-DEV-ENTRY-01). `vite build` never runs the plugin, so `dist/` is
+unchanged by it; `src/test/viteDevEntry.guard.test.js` holds both properties.
 
 Choose **View as Buyer** or **View as Supplier** on `#/login`. Switch persona
 with the **PTI / Supplier** toggle at the top of the sidebar; add or remove
@@ -572,6 +574,7 @@ the RFQ that never auto-closes. Raise those as known, not as new defects.
 
 | What | Where |
 |---|---|
+| `npm run dev` serves the app again (VITE-DEV-ENTRY-01) | #195 |
 | Week-as-column grid for demand forecast and capacity (CAP-1 wave 1) | #191 |
 | Capacity requirements CAP-1..12, decisions CAP-D1..D8 accepted | #187 |
 | TypeScript → JavaScript conversion complete | #152 |
@@ -582,7 +585,6 @@ the RFQ that never auto-closes. Raise those as known, not as new defects.
 
 | ID | What is open | Blocked on |
 |---|---|---|
-| VITE-DEV-ENTRY-01 | `npm run dev` serves a blank page; local runs use build + preview | Entry restructure, deferred |
 | BL-24 | Real SAP integration | Backend (Stage F), interface choice BL-11 |
 | BL-28 | Real sign-in | Backend |
 | BL-30 | Durable storage; today every change is lost on reload | Backend |
