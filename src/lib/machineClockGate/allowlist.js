@@ -86,7 +86,7 @@ export const MACHINE_CLOCK_ALLOWLIST = [
     reason: 'Catalogue-row id for a material added in the session; never rendered.'
   },
   {
-    key: 'src/pages-v2/SupplierWhatsApp.jsx::WhatsAppPanel.addMessage.id::Date.now()',
+    key: 'src/pages-v2/SupplierWhatsApp/components/WhatsAppPanel.jsx::WhatsAppPanel.addMessage.id::Date.now()',
     count: 1,
     why: 'unique-id',
     reason: "Simulator message id (React key); the message's shown time reads the hub clock."

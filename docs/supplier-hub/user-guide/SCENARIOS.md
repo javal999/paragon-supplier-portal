@@ -493,7 +493,7 @@ A reader might expect these to work. The code shows they do not, or that they ar
 **Communication and performance**
 
 16. **Nothing is sent from Supplier replies:** "No live channel — nothing is sent from here." (`pages-v2/BuyerCommHub.jsx:151-192`)
-17. **The supplier WhatsApp/Email page is scripted.** Its buttons show success banners and dispatch nothing. (`pages-v2/SupplierWhatsApp.jsx:648-694`)
+17. **The supplier WhatsApp/Email page is scripted.** Its buttons show success banners and dispatch nothing. (`pages-v2/SupplierWhatsApp/components/EmailBody.jsx:17-63`)
 18. **These buttons only show a toast, or a false success toast:**
     - "Send improvement plan" (scorecard). (`pages-v2/BuyerScorecard.jsx:684-695`)
     - Supplier "Export Report" and "Acknowledge & plan". (`pages-v2/SupplierPerformance.jsx:243-248,660-673`)
