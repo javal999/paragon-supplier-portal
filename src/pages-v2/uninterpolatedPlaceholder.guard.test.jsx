@@ -220,7 +220,9 @@ describe('BL-72 — every literal-key t() call passes the variables its strings 
     // The row call that interpolates correctly is IN the population…
     expect(
       examined.some(
-        (e) => e.startsWith('pages-v2/BuyerSourcingEvent.jsx:') && e.endsWith(':rfx.cmp.round')
+        (e) =>
+          e.startsWith('pages-v2/BuyerSourcingEvent/components/ComparisonTable.jsx:') &&
+          e.endsWith(':rfx.cmp.round')
       )
     ).toBe(true);
     // …and so is the second instance's call site.
