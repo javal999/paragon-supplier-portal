@@ -208,7 +208,7 @@ unreachable by construction. **The mode is unconditional so that no seat has to
 decide it** — see the merge doctrine for the full argument and for the four
 mechanisms whose success signals said nothing about the damage they did.
 
-## Current state (as-built: main @ #65 — F0 + I3 complete; Stage G planning canon on main)
+## Current state (as-built: main @ #354)
 
 > ⚠️ **AUTHORISATION NOW EXISTS (Batch A, §64).** `resolveRoles` no longer widens
 > a persona to its whole atom set: it resolves the SEAT's business roles
@@ -346,6 +346,18 @@ mechanisms whose success signals said nothing about the damage they did.
 Re-baselined by the **Canon True-Up** (2026-07-14). The prior "main @ #53" pointer
 was stale by ~12 commits; F0 (contract-freeze) and the I3 compliance phase are DONE,
 and the Stage G planning canon + World-Class Build Plan are now on main.
+
+Re-baselined a second time (2026-09-16). The "main @ #65" pointer that True-Up installed
+had itself drifted **391 commits** — #65 landed 2026-07-14 as `65edbde`, HEAD is #354 at
+2026-09-15. Twice stale is a pattern, not an accident, so the heading above now carries the
+pointer ALONE. The "F0 + I3 complete; Stage G planning canon on main" clause it used to
+carry was an authored summary of as-built state: still true, but 391 commits short of the
+truth, and a reader takes a heading as the inventory. The phase list below IS the inventory.
+**A number a human must remember to edit is the failure shape `scripts/floor.json` rejects
+for the test floor** — it trains people to edit the number. Deriving this one from the
+latest merge subject instead of typing it is proposed in the pull request that made this
+change; it is not built here, because a gate that reads git history is a new dependency on
+the clone's shape and that is an operator ruling, not a docs fix.
 
 - **Phases 0 → 2′ (historical, all merged).** Phase 0 (PRs #11–#17); Phase 1′
   page/read migrations + gates + DP-1/2/3 theme (PRs #18–#31); v2.2 Step 1 Canon
