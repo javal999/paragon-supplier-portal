@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Draft for owner review** before build |
+| Status | **Accepted 2026-10-12.** The owner accepted the recommendations for W1-Q1 to W1-Q3 (section 8). Ready to build |
 | Date | 2026-10-12 |
 | Parent | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` CAP-1 (BL-170), decisions CAP-D1 to CAP-D8 accepted 2026-10-12 |
 | Code read | `main` at `748d595` |
@@ -198,10 +198,10 @@ One component in `src/components/ui-v2/WeekGrid.jsx` renders all three tables. E
 
 One PR for the four steps, as they share the component and its tests. CAP-2 (monthly toggle) follows as a separate PR on the same component.
 
-## 8. Questions for the owner
+## 8. Decisions (accepted 2026-10-12)
 
-| # | Question | Recommendation |
-|---|---|---|
-| W1-Q1 | Is a 112 px week column right, given 13 weeks becomes ~1,700 px of grid (about 9 weeks visible on a laptop)? | Yes. Smaller columns can't fit the reason select |
-| W1-Q2 | On PTI Capacity, should "Gaps only" hide the other weeks (as specified), or keep them and dim them? | Hide, as it does today with rows |
-| W1-Q3 | Should "Reconciled" be the first row on Demand forecast, since it is the figure that is used? | Keep today's order (Method's, then Reconciled) so the eye reads method → result; Reconciled is bold |
+| # | Question | Recommendation | Outcome |
+|---|---|---|---|
+| W1-Q1 | Is a 112 px week column right, given 13 weeks becomes ~1,700 px of grid (about 9 weeks visible on a laptop)? | Yes. Smaller columns can't fit the reason select | Accepted, 2026-10-12 |
+| W1-Q2 | On PTI Capacity, should "Gaps only" hide the other weeks (as specified), or keep them and dim them? | Hide, as it does today with rows | Accepted, 2026-10-12 |
+| W1-Q3 | Should "Reconciled" be the first row on Demand forecast, since it is the figure that is used? | Keep today's order (Method's, then Reconciled) so the eye reads method → result; Reconciled is bold | Accepted, 2026-10-12 |
