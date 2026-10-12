@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Accepted 2026-10-12.** The owner accepted every recommendation in section 10 (CAP-D1 to CAP-D8). Nothing here is built yet. Under CAP-D8 every [Proposed] value is the starting value; CAP-10 to CAP-12 values are replaced by Ary Hidayat's spike use case when it lands |
+| Status | **Accepted 2026-10-12.** The owner accepted every recommendation in section 10 (CAP-D1 to CAP-D8). CAP-1 wave 1 is built (PR #191, 2026-10-12); everything else is not built yet. Build status per CAP is in section 1.2 of `BUILD-GAP.md`. Under CAP-D8 every [Proposed] value is the starting value; CAP-10 to CAP-12 values are replaced by Ary Hidayat's spike use case when it lands |
 | Date | 2026-10-12 |
 | Source meeting | Weekly SC Hub, 2026-10-07. Items cited as [MOM n] (section 1) and [AI n] (action items) |
 | Owner review | 2026-10-12, cited as [Owner, 2026-10-12] |
