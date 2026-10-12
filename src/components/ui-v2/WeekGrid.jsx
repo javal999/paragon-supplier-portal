@@ -174,7 +174,9 @@ const WeekGrid = ({ weeks, rows, label, corner, currentWeek, testId, className =
         className={`w-full min-w-0 overflow-x-auto focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-action ${className}`}
       >
         <table
-          className="min-w-full border-separate border-spacing-0 text-sm text-text-primary"
+          // No `min-w-full`: a grid narrowed to one or two weeks (Gaps only)
+          // keeps 112 px columns instead of stretching one across the card.
+          className="border-separate border-spacing-0 text-sm text-text-primary"
           data-testid={testId}
           onKeyDown={onKeyDown}
         >
