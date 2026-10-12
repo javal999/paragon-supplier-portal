@@ -650,8 +650,6 @@ channel *Designed … (not connected)*; the portal channel is the only real one.
 **PT Paragon Technology and Innovation** · Odyssey Program, Ops Project #11 ·
 Indonesia
 
-[contact: owner to supply]
-
 Proprietary. All rights reserved.
 
 </div>
