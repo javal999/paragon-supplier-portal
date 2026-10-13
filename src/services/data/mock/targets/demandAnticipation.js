@@ -6,7 +6,8 @@
 //   · `readState` answers `Published` for a publication that exists.
 //   · `readScopeOwner` / `creationOwner` are null: a publication is PTI's
 //     Material Planning plan, so a supplier seat is denied at SCOPE (§86).
-//   · `create` APPENDS a publication. The weeks it freezes (`nextHorizon`),
+//   · `create` APPENDS a publication. The weeks it freezes (`currentHorizon`,
+//     CAP-D17: the fixed horizon holding the current hub week, once),
 //     their figures and inputs (`demandAnticipationToFreeze`), the time (hub
 //     clock) and the actor (the session's) are all assigned here; the
 //     payload's `horizonStart` is only checked, by the policy hook, against
@@ -34,8 +35,8 @@ export const demandAnticipationTarget = {
   create: (_payload, _toState, scope) => {
     const now = sdcClock.now();
     const toFreeze = demandAnticipationToFreeze(now);
-    // The policy hook has refused a publish with no horizon to freeze.
-    const horizon = /** @type {string[]} */ (toFreeze.horizon);
+    // The policy hook has refused a publish of a frozen horizon.
+    const horizon = toFreeze.horizon.weeks;
     const entries = toFreeze.entries;
     const made = demandAnticipationStore.add({
       publishedAt: now,
@@ -52,9 +53,9 @@ export const demandAnticipationTarget = {
 /** @type {Record<NonNullable<ReturnType<typeof publishRefusal>>, string>} */
 const REFUSAL_TEXT = {
   STALE_HORIZON:
-    'STALE_HORIZON: the weeks to freeze have changed since the confirm opened; reopen Publish',
+    'STALE_HORIZON: the hub week is in another horizon than the confirm named; reopen Publish',
   NOTHING_TO_FREEZE:
-    'NOTHING_TO_FREEZE: the next horizon is already frozen; publish again when the hub week moves on'
+    'NOTHING_TO_FREEZE: the current horizon is already frozen; the next one can be published when the hub week reaches it'
 };
 
 bindPolicyHook(POLICY_HOOKS.DEMAND_ANTICIPATION_PUBLISH_VALID, ({ payload }) => {

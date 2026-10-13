@@ -14,9 +14,10 @@ import {
   demandAnticipationWeeks,
   entriesToFreeze,
   frozenEntryOf,
-  nextHorizon,
-  publishRefusal,
-  publishedWeeks
+  currentHorizon,
+  horizonAnchor,
+  horizonContaining,
+  publishRefusal
 } from './demandAnticipationRules';
 /** @import { DemandAnticipationPublication } from './demandAnticipationRules' */
 /** @import { LtpLine } from './capacityRules' */
@@ -186,18 +187,41 @@ const pub = (id, horizonWeeks, entries) => ({
 });
 
 describe('CAP-10 · freezing (brief §4, CAP-D13, BR-01 to BR-04)', () => {
-  it('BR-01 — with nothing frozen a publication freezes the 4 weeks from the current hub week', () => {
-    expect(nextHorizon([], NOW)).toEqual(W.slice(0, 4));
+  const W36 = W.slice(0, 4);
+  const W40 = ['2026-09-28', '2026-10-05', '2026-10-12', '2026-10-19'];
+  const W44 = ['2026-10-26', '2026-11-02', '2026-11-09', '2026-11-16'];
+
+  it('CAP-D17 — with nothing published the anchor is the current hub week: the horizon is its 4 weeks', () => {
+    expect(horizonAnchor([], '2026-09-02T03:00:00.000Z')).toBe(W[0]);
+    expect(currentHorizon([], NOW)).toEqual({ weeks: W36, frozen: false, next: W40 });
   });
 
-  it('AC-02 shape — with weeks 1 to 4 frozen the next horizon is weeks 5 to 8, this week or a week later', () => {
-    const frozen = W.slice(0, 4);
-    const next = ['2026-09-28', '2026-10-05', '2026-10-12', '2026-10-19'];
-    expect(nextHorizon(frozen, NOW)).toEqual(next);
-    expect(nextHorizon(frozen, '2026-09-08T03:00:00.000Z')).toEqual(next);
-    // Both horizons frozen: nothing more until the hub week reaches week 5.
-    expect(nextHorizon([...frozen, ...next], NOW)).toBeNull();
-    expect(nextHorizon([...frozen, ...next], '2026-09-28T03:00:00.000Z')?.[0]).toBe('2026-10-26');
+  it('CAP-D17 — fixed horizons count from the first publication: W36–W39, W40–W43, W44–W47', () => {
+    const seed = [pub('dap-0001', W36, [])];
+    expect(horizonContaining(W[0], '2026-09-14')).toEqual(W36);
+    expect(horizonContaining(W[0], '2026-10-12')).toEqual(W40);
+    expect(horizonContaining(W[0], '2026-11-16')).toEqual(W44);
+    // A week before the anchor falls in the horizon before it.
+    expect(horizonContaining(W[0], '2026-08-24')[0]).toBe('2026-08-03');
+    // At W37 the current horizon is still W36–W39, and it is frozen: once only.
+    expect(currentHorizon(seed, '2026-09-08T03:00:00.000Z')).toEqual({
+      weeks: W36,
+      frozen: true,
+      next: W40
+    });
+    // At W40 the current horizon is W40–W43, not yet frozen; W44–W47 is never offered early.
+    expect(currentHorizon(seed, '2026-09-28T03:00:00.000Z')).toEqual({
+      weeks: W40,
+      frozen: false,
+      next: W44
+    });
+  });
+
+  it('CAP-D17 — a horizon nobody published stays unfrozen: at W44 only W44–W47 is current', () => {
+    const seed = [pub('dap-0001', W36, [])];
+    const atW44 = currentHorizon(seed, '2026-10-27T03:00:00.000Z');
+    expect(atW44.weeks).toEqual(W44);
+    expect(atW44.frozen).toBe(false);
   });
 
   it('BR-02 — the first publication that froze a week keeps it: a later one never wins at read', () => {
@@ -263,16 +287,24 @@ describe('CAP-10 · freezing (brief §4, CAP-D13, BR-01 to BR-04)', () => {
     expect(row.weeks).toHaveLength(DEMAND_ANTICIPATION_RULES.shownWeeks);
   });
 
-  it('the publish refusals: nothing to freeze, and a confirm naming another horizon', () => {
-    expect(publishRefusal(W[0], W.slice(0, 4), 3)).toBeNull();
-    expect(publishRefusal(W[1], W.slice(0, 4), 3)).toBe('STALE_HORIZON');
-    expect(publishRefusal(W[0], W.slice(0, 4), 0)).toBe('NOTHING_TO_FREEZE');
-    expect(publishRefusal(W[0], null, 0)).toBe('NOTHING_TO_FREEZE');
+  it('the publish refusals: a frozen current horizon, nothing to freeze, and a confirm naming another horizon', () => {
+    const open = { weeks: W.slice(0, 4), frozen: false };
+    expect(publishRefusal(W[0], open, 3)).toBeNull();
+    expect(publishRefusal(W[4], open, 3)).toBe('STALE_HORIZON');
+    expect(publishRefusal(W[0], open, 0)).toBe('NOTHING_TO_FREEZE');
+    expect(publishRefusal(W[0], { ...open, frozen: true }, 3)).toBe('NOTHING_TO_FREEZE');
   });
 
-  it('publishedWeeks is the union of every publication horizon', () => {
-    expect(
-      publishedWeeks([pub('a', W.slice(0, 4), []), pub('b', W.slice(2, 5), [])]).sort()
-    ).toEqual(W);
+  it('each week of the read names its fixed horizon and whether it is frozen', () => {
+    const today = demandAnticipationWeeks(
+      { ltpLines: FOUR_WEEKS_OF_400, ptiStock: [stock('M-1', 1800, 1500)] },
+      NOW
+    );
+    const [row] = demandAnticipationRows([pub('dap-0001', W.slice(0, 4), [])], today, NOW);
+    expect(row.weeks.slice(0, 9).map((w) => [w.horizonStart, w.horizonFrozen])).toEqual([
+      ...Array(4).fill([W[0], true]),
+      ...Array(4).fill([W[4], false]),
+      ['2026-10-26', false]
+    ]);
   });
 });

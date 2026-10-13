@@ -7,7 +7,7 @@
 
 import { addDays, isoWeek } from '@services/engine/dates';
 import { formatDate, formatNumber } from '@lib/format';
-import { nextHorizon } from '@services/transitions/demandAnticipationRules';
+import { currentHorizon, horizonContaining } from '@services/transitions/demandAnticipationRules';
 /** @import { DemandAnticipationRow, DemandAnticipationWeekView } from '@services/transitions/demandAnticipationRules' */
 
 /** `W42` for a week's Monday. @param {string} week */
@@ -44,23 +44,33 @@ export const frozenWeeks = (rows) =>
   [...new Set(rows.flatMap((r) => r.weeks.filter((w) => w.frozen).map((w) => w.week)))].sort();
 
 /**
- * BR-01 / AC-02 — the horizon a publication made now would freeze (the verb's
- * own `nextHorizon` over the frozen weeks the read shows; null when the next
- * horizon is frozen too), and how many supplier × material × weeks of it are
- * not frozen yet: what it would add.
+ * CAP-D17 — the fixed horizon holding the current hub week (named by the read
+ * on every week: `horizonStart`, `horizonFrozen`), the one after it, whether
+ * the current one is frozen, and how many supplier × material × weeks a
+ * publish would freeze in it. With no row to read, nothing is published, so
+ * the horizon is the 4 weeks from the current week.
  * @param {readonly DemandAnticipationRow[]} rows
  * @param {string} nowIso
- * @returns {{ horizon: string[] | null; toFreeze: number }}
+ * @returns {{ horizon: string[]; next: string[]; frozen: boolean; toFreeze: number }}
  */
 export function publishPreview(rows, nowIso) {
-  const horizon = nextHorizon(frozenWeeks(rows), nowIso);
-  if (horizon === null) return { horizon, toFreeze: 0 };
-  const toFreeze = rows.reduce(
-    (n, r) =>
-      n + r.weeks.filter((w) => horizon.includes(w.week) && !w.frozen && w.wouldBe !== null).length,
-    0
-  );
-  return { horizon, toFreeze };
+  const first = rows[0]?.weeks[0];
+  if (!first) {
+    const h = currentHorizon([], nowIso);
+    return { horizon: h.weeks, next: h.next, frozen: false, toFreeze: 0 };
+  }
+  const horizon = horizonContaining(first.horizonStart, first.horizonStart);
+  const next = horizonContaining(first.horizonStart, addDays(horizon[0], horizon.length * 7));
+  const frozen = first.horizonFrozen;
+  const toFreeze = frozen
+    ? 0
+    : rows.reduce(
+        (n, r) =>
+          n +
+          r.weeks.filter((w) => horizon.includes(w.week) && !w.frozen && w.wouldBe !== null).length,
+        0
+      );
+  return { horizon, next, frozen, toFreeze };
 }
 
 /**

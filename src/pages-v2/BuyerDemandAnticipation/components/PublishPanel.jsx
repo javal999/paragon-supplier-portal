@@ -7,6 +7,7 @@ import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { useToast } from '@hooks/useToast';
 import { useDemandAnticipationCommand } from '@services/query/commandHooks';
+import { formatDate } from '@lib/format';
 import { weekDates, weekRange } from '../display';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -15,23 +16,26 @@ import { weekDates, weekRange } from '../display';
 // `forecast:publish` sees the handoff notice instead of the button, and the
 // confirm is a mode of this panel, so it is gated with it — a confirm left
 // open while the seat narrows renders the notice, not the commit (§84).
-// When the next horizon is frozen too the button is off and says so.
+// CAP-D17: it freezes the fixed horizon holding the current hub week, once.
+// Once that horizon is frozen the button is off and names the next horizon
+// and the date it can be published from.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * @type {React.FC<{
- *   horizon: readonly string[] | null;
+ *   horizon: readonly string[];
+ *   next: readonly string[];
+ *   frozen: boolean;
  *   toFreeze: number;
- *   frozenRange: string;
  * }>}
  */
-const PublishPanel = ({ horizon, toFreeze, frozenRange }) => {
+const PublishPanel = ({ horizon, next, frozen, toFreeze }) => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const availability = useVerbAvailability('forecast:publish');
   const publish = useDemandAnticipationCommand();
   const [confirming, setConfirming] = useState(false);
-  const range = horizon ? weekRange(horizon) : '';
+  const range = weekRange(horizon);
 
   if (availability.kind !== 'held')
     return (
@@ -39,7 +43,6 @@ const PublishPanel = ({ horizon, toFreeze, frozenRange }) => {
     );
 
   const submit = async () => {
-    if (!horizon) return;
     const res = await publish.mutateAsync({ horizonStart: horizon[0] });
     setConfirming(false);
     if (res.status === 'failed')
@@ -52,17 +55,21 @@ const PublishPanel = ({ horizon, toFreeze, frozenRange }) => {
       <Button
         variant="outline"
         onClick={() => setConfirming(true)}
-        disabled={toFreeze === 0 || publish.isPending}
+        disabled={frozen || toFreeze === 0 || publish.isPending}
         data-testid="dant-publish-button"
       >
-        {horizon ? t('demandAnt.publish.button', { range }) : t('demandAnt.publish.confirmTitle')}
+        {t('demandAnt.publish.button', { range })}
       </Button>
-      {toFreeze === 0 ? (
-        <p className="mt-2 text-xs text-text-secondary" data-testid="dant-publish-all-frozen">
-          {t('demandAnt.publish.allFrozen', { range: frozenRange })}
+      {frozen ? (
+        <p className="mt-2 text-xs text-text-secondary" data-testid="dant-publish-horizon-frozen">
+          {t('demandAnt.publish.horizonFrozen', {
+            current: range,
+            next: weekRange(next),
+            date: formatDate(next[0])
+          })}
         </p>
       ) : null}
-      {confirming && horizon ? (
+      {confirming && !frozen ? (
         <ModalOverlay
           label={t('demandAnt.publish.confirmTitle')}
           onClose={() => setConfirming(false)}

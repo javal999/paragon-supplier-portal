@@ -21,14 +21,15 @@
 // count once, in week 1 (brief §3). Open orders are not netted here: CAP-12
 // compares supply with this figure, so netting them would count them twice.
 //
-// Freezing (CAP-D13, CAP-10 BR-01 to BR-04): a publication freezes 4 weeks
-// (`horizonWeeks`): the 4 from the current hub week when none is frozen
-// (BR-01), else the next 4 after the frozen run, so publishing again a week
-// later freezes weeks 5 to 8 and leaves 1 to 4 alone (AC-02; `nextHorizon`).
-// A week keeps the figure of the FIRST publication that froze it (BR-02);
-// the horizon rolls when the planner publishes (brief §4, the demo clock does
-// not move by itself). "Would be" is today's recomputation of a frozen week,
-// shown beside it, read only (BR-03).
+// Freezing (CAP-D13; FIXED 4-WEEK HORIZONS, CAP-D17, owner 2026-10-13): weeks
+// fall into consecutive horizons of `horizonWeeks` weeks, anchored on the
+// first published horizon (the seed: W36–W39, then W40–W43, W44–W47, …), or
+// on the current hub week while nothing is published (`horizonAnchor`).
+// Publishing freezes the horizon that CONTAINS the current hub week, once
+// (`currentHorizon`); it never freezes a future horizon, so the next one's
+// weeks stay adjustable (CAP-11 absorbs into them). A week keeps the figure
+// of the FIRST publication that froze it (BR-02). "Would be" is today's
+// recomputation of a frozen week, shown beside it, read only (BR-03).
 //
 // Everything here is a pure function of its inputs and the hub clock's now:
 // today's figure and "would be" are computed at read, never stored (law 0.5).
@@ -47,9 +48,9 @@ import { addDays, dayOf, mondayOf } from './inventoryRules';
 
 /**
  * [Placeholder, CAP-D16] — every value Ary's use case may change.
- *   · horizonWeeks:     CAP-10 BR-01 — a publication freezes this many weeks,
- *                       from the current hub week, or the first week after
- *                       the frozen run (`nextHorizon`).
+ *   · horizonWeeks:     CAP-10 BR-01 / CAP-D17 — the length of every fixed
+ *                       horizon; a publication freezes the one that holds the
+ *                       current hub week.
  *   · shareWindowWeeks: CAP-D11 — the weeks whose LTP decides each supplier's
  *                       share of the material's stock and reorder point.
  *   · shownWeeks:       how many weeks the page shows, from the current week.
@@ -72,24 +73,56 @@ export function hubWeeks(nowIso, count) {
 }
 
 /**
- * BR-01 / BR-02 / AC-02 — the weeks a publication made now would freeze: the
- * `horizonWeeks` weeks starting with the first week, from the current hub week
- * on, that no publication has frozen yet. With nothing frozen that is the 4
- * weeks from the current week (BR-01); with weeks 1 to 4 frozen it is weeks 5
- * to 8, the next horizon (AC-02), whether the planner publishes this week or a
- * week later. Never further ahead than the horizon right after the current
- * week's run: a start more than `horizonWeeks` weeks out is null — nothing to
- * publish until the hub week moves on.
- * @param {Iterable<string>} frozenWeeks The Mondays any publication froze.
+ * CAP-D17 — the Monday the fixed horizons are counted from: the first
+ * publication's horizon start (publications are kept oldest first), or the
+ * current hub week while nothing is published.
+ * @param {readonly { readonly horizonStart: string }[]} publications
  * @param {string} nowIso
- * @returns {string[] | null}
+ * @returns {string}
  */
-export function nextHorizon(frozenWeeks, nowIso) {
-  const frozen = new Set(frozenWeeks);
+export function horizonAnchor(publications, nowIso) {
+  return publications[0]?.horizonStart ?? mondayOf(dayOf(nowIso));
+}
+
+/**
+ * CAP-D17 — the fixed horizon that holds `week` (any Monday, before or after
+ * the anchor): its `horizonWeeks` Mondays.
+ * @param {string} anchor
+ * @param {string} week
+ * @returns {string[]}
+ */
+export function horizonContaining(anchor, week) {
   const n = DEMAND_ANTICIPATION_RULES.horizonWeeks;
-  const start = hubWeeks(nowIso, n + 1).find((w) => !frozen.has(w));
-  if (start === undefined) return null;
-  return Array.from({ length: n }, (_, i) => addDays(start, i * 7));
+  const weeksFromAnchor = Math.round(
+    (Date.parse(`${week}T00:00:00Z`) - Date.parse(`${anchor}T00:00:00Z`)) / (7 * 86_400_000)
+  );
+  const first = addDays(anchor, Math.floor(weeksFromAnchor / n) * n * 7);
+  return Array.from({ length: n }, (_, i) => addDays(first, i * 7));
+}
+
+/**
+ * CAP-D17 — the horizon that contains the current hub week, and whether a
+ * publication has already frozen it. Publishing freezes exactly this one,
+ * once; a future horizon is never frozen ahead of its time.
+ *
+ * ⚠️ A SKIPPED HORIZON STAYS UNFROZEN. The hub clock can jump past a whole
+ * horizon nobody published (the demo clock moves only through its test seam;
+ * a real one moves while a planner is away). Publishing then freezes the
+ * CURRENT horizon only: the skipped weeks are history by then, and freezing
+ * them after the fact would invent a commitment nobody made at the time.
+ * @param {readonly { readonly horizonStart: string }[]} publications
+ * @param {string} nowIso
+ * @returns {{ weeks: string[]; frozen: boolean; next: string[] }}
+ */
+export function currentHorizon(publications, nowIso) {
+  const anchor = horizonAnchor(publications, nowIso);
+  const weeks = horizonContaining(anchor, mondayOf(dayOf(nowIso)));
+  const n = DEMAND_ANTICIPATION_RULES.horizonWeeks;
+  return {
+    weeks,
+    frozen: publications.some((p) => p.horizonStart === weeks[0]),
+    next: horizonContaining(anchor, addDays(weeks[0], n * 7))
+  };
 }
 
 /**
@@ -306,6 +339,8 @@ export function entriesToFreeze(publications, today, horizon) {
  * `delta`:  wouldBe − published in a frozen week; null otherwise.
  * `inputs`:  Today's inputs (LTP, stock share, ROP share); null as `wouldBe`.
  * `frozenBy`:  The publication that froze the week, with the inputs it froze.
+ * `horizonStart`:  CAP-D17 — the first Monday of the fixed horizon the week belongs to.
+ * `horizonFrozen`:  Whether a publication froze that horizon.
  *
  * @typedef {{
  *   readonly week: string;
@@ -315,6 +350,8 @@ export function entriesToFreeze(publications, today, horizon) {
  *   readonly wouldBe: number | null;
  *   readonly delta: number | null;
  *   readonly inputs: DemandAnticipationInputs | null;
+ *   readonly horizonStart: string;
+ *   readonly horizonFrozen: boolean;
  *   readonly frozenBy: {
  *     readonly publicationId: string;
  *     readonly publishedAt: string;
@@ -353,6 +390,10 @@ export function entriesToFreeze(publications, today, horizon) {
  */
 export function demandAnticipationRows(publications, today, nowIso) {
   const shown = hubWeeks(nowIso, DEMAND_ANTICIPATION_RULES.shownWeeks);
+  const anchor = horizonAnchor(publications, nowIso);
+  const publishedStarts = new Set(publications.map((p) => p.horizonStart));
+  /** @param {string} week */
+  const horizonOfWeek = (week) => horizonContaining(anchor, week)[0];
   const pairs = new Map(today.map((s) => [`${s.supplierId}|${s.materialCode}`, s]));
   /** @type {Map<string, { supplierId: string; materialCode: string }>} */
   const keys = new Map(
@@ -390,6 +431,8 @@ export function demandAnticipationRows(publications, today, nowIso) {
             wouldBe,
             delta: hit && wouldBe !== null ? wouldBe - hit.entry.qty : null,
             inputs: now ? now.inputs : null,
+            horizonStart: horizonOfWeek(week),
+            horizonFrozen: publishedStarts.has(horizonOfWeek(week)),
             frozenBy: hit
               ? {
                   publicationId: hit.publication.id,
@@ -405,28 +448,18 @@ export function demandAnticipationRows(publications, today, nowIso) {
 }
 
 /**
- * Every Monday a publication froze (its horizon weeks).
- * @param {readonly DemandAnticipationPublication[]} publications
- * @returns {string[]}
- */
-export const publishedWeeks = (publications) => [
-  ...new Set(publications.flatMap((p) => p.horizonWeeks))
-];
-
-/**
  * The publish verb's refusal, or null when it may proceed.
- *   · NOTHING_TO_FREEZE — there is no horizon to publish now (the next one is
- *     already frozen), or it holds no figure not frozen yet.
- *   · STALE_HORIZON — the confirm named another horizon start than the one a
- *     publication would freeze now (the hub week or the publications moved
- *     while it was open).
+ *   · NOTHING_TO_FREEZE — the current horizon is already frozen (CAP-D17:
+ *     once), or holds no figure to freeze.
+ *   · STALE_HORIZON — the confirm named another horizon than the current one
+ *     (the hub week moved into the next horizon while it was open).
  * @param {unknown} horizonStart
- * @param {readonly string[] | null} horizon
+ * @param {{ readonly weeks: readonly string[]; readonly frozen: boolean }} horizon
  * @param {number} toFreeze
  * @returns {'STALE_HORIZON' | 'NOTHING_TO_FREEZE' | null}
  */
 export function publishRefusal(horizonStart, horizon, toFreeze) {
-  if (horizon === null || toFreeze === 0) return 'NOTHING_TO_FREEZE';
-  if (horizonStart !== horizon[0]) return 'STALE_HORIZON';
+  if (horizon.frozen || toFreeze === 0) return 'NOTHING_TO_FREEZE';
+  if (horizonStart !== horizon.weeks[0]) return 'STALE_HORIZON';
   return null;
 }

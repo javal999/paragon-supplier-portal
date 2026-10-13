@@ -25,8 +25,8 @@ import { frozenWeeks, latestPublication, publishPreview, sharePct, weekRange } f
 // One WeekGrid per supplier × material, filtered by supplier and material (in
 // the page address). Frozen weeks show a lock and the published figure; "Would
 // be" beside them is today's recomputation, read only (BR-03). Publish freezes
-// the 4 weeks from the current hub week; weeks frozen earlier keep their figure
-// (BR-01, BR-02, BR-04). The sample data opens with one seeded publication, and
+// the fixed 4-week horizon holding the current hub week, once; a future horizon
+// stays open, and weeks frozen earlier keep their figure (BR-01, BR-02, CAP-D17). The sample data opens with one seeded publication, and
 // the page says it is a sample publication rather than naming an act.
 //
 // Every input is sample data (the sample LTP and SAP stock fixtures), so the
@@ -52,7 +52,7 @@ const BuyerDemandAnticipation = () => {
   if (query.isError)
     return <ErrorState breadcrumb={crumb} error={query.error} onRetry={() => query.refetch()} />;
 
-  const { horizon, toFreeze } = publishPreview(rows, nowIso);
+  const { horizon, next, frozen: horizonFrozen, toFreeze } = publishPreview(rows, nowIso);
   const latest = latestPublication(rows);
   const frozen = frozenWeeks(rows);
   const supplierOptions = [
@@ -107,7 +107,7 @@ const BuyerDemandAnticipation = () => {
           </p>
         ) : null}
         <p className="text-xs text-text-tertiary mb-3">{t('demandAnt.howItWorks')}</p>
-        <PublishPanel horizon={horizon} toFreeze={toFreeze} frozenRange={weekRange(frozen)} />
+        <PublishPanel horizon={horizon} next={next} frozen={horizonFrozen} toFreeze={toFreeze} />
       </section>
 
       <div

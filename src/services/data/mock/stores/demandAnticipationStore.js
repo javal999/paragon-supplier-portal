@@ -9,8 +9,8 @@
 // THE SEED. The page must open frozen (brief §4), so the store opens with ONE
 // publication at the hub's present. Its figures are not authored: the read
 // model registers a seeder that computes them with `demandAnticipationWeeks`
-// over the sample LTP and PTI stock, at the hub clock's now, the first time
-// the store is read. It is marked `source: 'sampleSeed'` and attributed
+// over the sample LTP and PTI stock, at the hub's declared present, the first
+// time the store is read. It is marked `source: 'sampleSeed'` and attributed
 // `UNATTRIBUTED: NO_PERSON_IN_SESSION` — nobody published it, and the page
 // says "Sample publication" rather than naming an act. `reset()` drops every
 // publication and re-seeds on the next read (tests).

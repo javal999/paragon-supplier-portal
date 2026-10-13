@@ -8,10 +8,10 @@
 /** @type {Record<string, string>} */
 export const demandAnticipationEn = {
   'demandAnt.subtitle':
-    'What PTI expects to call off from each supplier, per material and week. Publishing freezes the 4 weeks from the current week; a frozen week keeps its figure.',
+    'What PTI expects to call off from each supplier, per material and week. Weeks run in fixed 4-week horizons: publishing freezes the horizon that holds the current week, once. A frozen week keeps its figure; the next horizon stays open until it starts.',
   'demandAnt.asOf': 'As of',
   'demandAnt.howItWorks':
-    'Week 1 is the LTP plus the supplier’s share of the gap up to PTI’s reorder point, or less its share of the stock above it (used up week by week). Later weeks are the LTP. Shares follow each supplier’s LTP over the 4 frozen weeks.',
+    'Week 1 is the LTP plus the supplier’s share of the gap up to PTI’s reorder point, or less its share of the stock above it (used up week by week). Later weeks are the LTP. Shares follow each supplier’s LTP over the 4 weeks from the current week.',
   // The publication in force.
   'demandAnt.pub.label': 'Frozen weeks',
   'demandAnt.pub.none': 'Nothing is frozen yet.',
@@ -20,8 +20,8 @@ export const demandAnticipationEn = {
   'demandAnt.pub.unattributed': 'not attributed to a person (no one is signed in by name)',
   // The publish act.
   'demandAnt.publish.button': 'Publish demand anticipation · {{range}}',
-  'demandAnt.publish.allFrozen':
-    '{{range}} are frozen. The next horizon can be published when the hub week moves on.',
+  'demandAnt.publish.horizonFrozen':
+    'The current horizon {{current}} is frozen. The next one, {{next}}, can be published from {{date}}.',
   'demandAnt.publish.confirmTitle': 'Publish demand anticipation',
   'demandAnt.publish.confirmBody':
     'This freezes the demand anticipation of {{range}} ({{dates}}) at today’s figures.',
@@ -62,10 +62,10 @@ export const demandAnticipationEn = {
 /** @type {Record<string, string>} */
 export const demandAnticipationId = {
   'demandAnt.subtitle':
-    'Jumlah yang PTI perkirakan akan dipanggil dari tiap pemasok, per material dan minggu. Publikasi membekukan 4 minggu mulai minggu ini; minggu yang dibekukan mempertahankan angkanya.',
+    'Jumlah yang PTI perkirakan akan dipanggil dari tiap pemasok, per material dan minggu. Minggu berjalan dalam horizon tetap 4 minggu: publikasi membekukan horizon yang memuat minggu ini, satu kali. Minggu yang dibekukan mempertahankan angkanya; horizon berikutnya tetap terbuka sampai dimulai.',
   'demandAnt.asOf': 'Per',
   'demandAnt.howItWorks':
-    'Minggu 1 adalah LTP ditambah bagian pemasok atas kekurangan hingga titik pemesanan ulang PTI, atau dikurangi bagiannya atas stok di atasnya (dipakai minggu demi minggu). Minggu berikutnya adalah LTP. Bagian mengikuti LTP tiap pemasok selama 4 minggu yang dibekukan.',
+    'Minggu 1 adalah LTP ditambah bagian pemasok atas kekurangan hingga titik pemesanan ulang PTI, atau dikurangi bagiannya atas stok di atasnya (dipakai minggu demi minggu). Minggu berikutnya adalah LTP. Bagian mengikuti LTP tiap pemasok selama 4 minggu mulai minggu ini.',
   'demandAnt.pub.label': 'Minggu dibekukan',
   'demandAnt.pub.none': 'Belum ada yang dibekukan.',
   'demandAnt.pub.sampleSeed': 'Publikasi contoh, dihitung dari data contoh pada {{date}}',
@@ -73,8 +73,8 @@ export const demandAnticipationId = {
   'demandAnt.pub.unattributed':
     'tidak tercatat atas nama seseorang (tidak ada yang masuk dengan nama)',
   'demandAnt.publish.button': 'Publikasikan antisipasi permintaan · {{range}}',
-  'demandAnt.publish.allFrozen':
-    '{{range}} sudah dibekukan. Horizon berikutnya dapat dipublikasikan saat minggu hub berganti.',
+  'demandAnt.publish.horizonFrozen':
+    'Horizon saat ini {{current}} sudah dibekukan. Horizon berikutnya, {{next}}, dapat dipublikasikan mulai {{date}}.',
   'demandAnt.publish.confirmTitle': 'Publikasikan antisipasi permintaan',
   'demandAnt.publish.confirmBody':
     'Ini membekukan antisipasi permintaan {{range}} ({{dates}}) pada angka hari ini.',

@@ -91,7 +91,18 @@ describe('AC-01 — a new LTP raising week 2 by 10,000', () => {
 });
 
 describe('Publish (BR-01, AC-02 shape) and AC-03', () => {
-  it('the confirm names W40–W43; publishing freezes them and the button then says the horizon is frozen', async () => {
+  it('CAP-D17 — at the present the current horizon W36–W39 is frozen: Publish is off and names the next', async () => {
+    renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    const button = await screen.findByTestId('dant-publish-button');
+    expect(button).toHaveTextContent('Publish demand anticipation · W36–W39');
+    expect(button).toBeDisabled();
+    expect(screen.getByTestId('dant-publish-horizon-frozen')).toHaveTextContent(
+      `The current horizon W36–W39 is frozen. The next one, W40–W43, can be published from ${formatDate('2026-09-28')}.`
+    );
+  });
+
+  it('at W40 the confirm names W40–W43; publishing freezes them and the button is then off again', async () => {
+    sdcClock.set('2026-09-28T03:00:00.000Z');
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
     const button = await screen.findByTestId('dant-publish-button');
     expect(button).toHaveTextContent('Publish demand anticipation · W40–W43');
@@ -103,10 +114,10 @@ describe('Publish (BR-01, AC-02 shape) and AC-03', () => {
     fireEvent.click(within(confirm).getByTestId('dant-publish-commit'));
     await waitFor(() => expect(demandAnticipationStore.all()).toHaveLength(2));
     await waitFor(() =>
-      expect(screen.getByTestId('dant-frozen-weeks')).toHaveTextContent('W36–W43')
+      expect(screen.getByTestId('dant-frozen-weeks')).toHaveTextContent('W40–W43')
     );
     expect(screen.getByTestId('dant-publish-button')).toBeDisabled();
-    expect(screen.getByTestId('dant-publish-all-frozen')).toBeInTheDocument();
+    expect(screen.getByTestId('dant-publish-horizon-frozen')).toHaveTextContent('W44–W47');
     // The newest publication is named, not the seed: both carry the same hub-clock
     // instant (the demo clock does not move), so the id breaks the tie.
     expect(screen.getByTestId('dant-latest-publication')).toHaveTextContent(/^Last published/);
@@ -144,7 +155,10 @@ describe('both locales (CAP-D10)', () => {
       ])
         expect(within(card).getByText(label)).toBeInTheDocument();
       expect(screen.getByTestId('dant-publish-button')).toHaveTextContent(
-        'Publikasikan antisipasi permintaan · W40–W43'
+        'Publikasikan antisipasi permintaan · W36–W39'
+      );
+      expect(screen.getByTestId('dant-publish-horizon-frozen')).toHaveTextContent(
+        /^Horizon saat ini W36–W39 sudah dibekukan\. Horizon berikutnya, W40–W43/
       );
       expectNoAbbreviation();
     } finally {

@@ -15,13 +15,13 @@
 /** @import { DemandAnticipationRow } from '../../transitions/demandAnticipationRules' */
 /** @import { DemandAnticipationEntry, DemandAnticipationSeries } from '../../transitions/demandAnticipationRules' */
 import { NO_PERSON } from '@context/noPerson';
-import { materialEntry, sdcClock } from '../../sdc';
+import { SDC_SIMULATED_NOW, materialEntry, sdcClock } from '../../sdc';
 import {
   demandAnticipationRows,
   demandAnticipationWeeks,
   entriesToFreeze,
-  nextHorizon,
-  publishedWeeks
+  currentHorizon,
+  hubWeeks
 } from '../../transitions/demandAnticipationRules';
 import { allCommitmentLines } from './forecastReadModel';
 import { PTI_STOCK } from './fixtures/inventoryHub';
@@ -41,25 +41,37 @@ export function todaysDemandAnticipation(nowIso = sdcClock.now()) {
 }
 
 /**
- * BR-01 / BR-02 / AC-02 — the horizon a publication made now would freeze
- * (null when the next one is already frozen) and the figures it would add.
+ * CAP-D17 — the fixed horizon holding the current hub week, and the figures a
+ * publication made now would freeze in it: none once it is frozen (once only).
+ * Published part-way through, a horizon freezes the weeks from the current
+ * week on; its weeks already past are history and are not frozen afterwards.
  * @param {string} [nowIso]
- * @returns {{ horizon: string[] | null; entries: DemandAnticipationEntry[] }}
+ * @returns {{ horizon: ReturnType<typeof currentHorizon>; entries: DemandAnticipationEntry[] }}
  */
 export function demandAnticipationToFreeze(nowIso = sdcClock.now()) {
   const publications = demandAnticipationStore.all();
-  const horizon = nextHorizon(publishedWeeks(publications), nowIso);
+  const horizon = currentHorizon(publications, nowIso);
+  const fromNow = hubWeeks(nowIso, 1)[0];
   return {
     horizon,
-    entries: horizon ? entriesToFreeze(publications, todaysDemandAnticipation(nowIso), horizon) : []
+    entries: horizon.frozen
+      ? []
+      : entriesToFreeze(
+          publications,
+          todaysDemandAnticipation(nowIso),
+          horizon.weeks.filter((w) => w >= fromNow)
+        )
   };
 }
 
 // The seed (store header): one publication at the hub's present, computed by
 // the same function the verb freezes with. Nobody published it.
 demandAnticipationStore.useSeeder(() => {
-  const now = sdcClock.now();
-  const horizon = /** @type {string[]} */ (nextHorizon([], now));
+  // The hub's declared present, not the clock at the first read: a test that
+  // moves the clock before anything reads the store still opens on W36–W39.
+  const now = SDC_SIMULATED_NOW;
+  // Nothing published yet: the anchor is the current hub week (CAP-D17).
+  const horizon = currentHorizon([], now).weeks;
   const entries = entriesToFreeze([], todaysDemandAnticipation(now), horizon);
   return entries.length === 0
     ? null

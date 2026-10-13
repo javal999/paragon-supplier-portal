@@ -2,8 +2,9 @@
 // CAP-10 (BL-179) — `t_demandanticipation_publish` dispatched through the REAL
 // MockCommandService against the real store, and read back through the REAL
 // service: the seeded publication, AC-01 (a new LTP leaves a frozen week and
-// shows "would be"), AC-02 (a week later the next horizon freezes and the first
-// stays as it was), the append-only store, who may publish, and the refusals.
+// shows "would be"), AC-02 under fixed 4-week horizons (CAP-D17: at W37 the
+// frozen current horizon is refused; at W40 W40–W43 freezes and W36–W39 stays
+// exactly as it was), the append-only store, who may publish, and the refusals.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -180,14 +181,31 @@ describe('AC-01 — a new LTP that raises week 2 by 10,000', () => {
   });
 });
 
-describe('AC-02 — publishing again a week later', () => {
-  it('freezes weeks 5 to 8 and leaves weeks 1 to 4 as they were; the store only grows', async () => {
+describe('AC-02 — fixed 4-week horizons (CAP-D17)', () => {
+  it('at W37 publish is refused: the current horizon W36–W39 is already frozen, and nothing changes', async () => {
+    const before = JSON.stringify(demandAnticipationStore.all());
+    sdcClock.set('2026-09-08T03:00:00.000Z'); // Tuesday of W37.
+    for (const start of [W[0], W[4]]) {
+      const res = await publish(planning, start);
+      expect(res.status).toBe('failed');
+      expect(refusedByPolicy(res.reason, POLICY_HOOKS.DEMAND_ANTICIPATION_PUBLISH_VALID)).toBe(
+        true
+      );
+      expect(res.reason).toMatch(/NOTHING_TO_FREEZE/);
+    }
+    expect(JSON.stringify(demandAnticipationStore.all())).toBe(before);
+    // The next horizon is never frozen ahead of its time: W40 stays adjustable.
+    const row = await rowOf('sup-002', 'RM-STEAR-7300');
+    expect(row.weeks.find((w) => w.week === W[4])).toMatchObject({
+      frozen: false,
+      horizonFrozen: false
+    });
+  });
+
+  it('at W40 publish freezes W40–W43 and leaves W36–W39 exactly as they were; the store only grows', async () => {
     const seed = demandAnticipationStore.all()[0];
     const seedSnapshot = JSON.stringify(seed);
-    const frozenBefore = (await rowOf('sup-002', 'RM-STEAR-7300')).weeks
-      .slice(1, 4)
-      .map((w) => w.published);
-    sdcClock.set('2026-09-08T03:00:00.000Z'); // Tuesday of week 2.
+    sdcClock.set('2026-09-28T03:00:00.000Z'); // Monday of W40.
     const res = await publish(planning, W[4]);
     expect(res.status, res.reason).toBe('done');
     const all = demandAnticipationStore.all();
@@ -200,26 +218,25 @@ describe('AC-02 — publishing again a week later', () => {
       source: 'publish',
       horizonStart: W[4],
       horizonWeeks: W.slice(4, 8),
-      publishedAt: '2026-09-08T03:00:00.000Z',
+      publishedAt: '2026-09-28T03:00:00.000Z',
       actor: NO_PERSON
     });
     expect([...new Set(all[1].entries.map((e) => e.week))]).toEqual(W.slice(4, 8));
-    // Week 2 is now the current week: weeks 2 to 4 still read the seed's figure.
     const row = await rowOf('sup-002', 'RM-STEAR-7300');
-    expect(row.weeks[0].week).toBe(W[1]);
-    expect(row.weeks.slice(0, 3).map((w) => w.published)).toEqual(frozenBefore);
-    expect(row.weeks.slice(0, 3).map((w) => w.frozenBy?.publicationId)).toEqual([
-      'dap-0001',
-      'dap-0001',
-      'dap-0001'
-    ]);
-    expect(row.weeks.slice(3, 7).map((w) => w.frozenBy?.publicationId)).toEqual(
+    expect(row.weeks[0].week).toBe(W[4]);
+    expect(row.weeks.slice(0, 4).map((w) => w.frozenBy?.publicationId)).toEqual(
       Array(4).fill(res.entityId)
     );
-    expect(row.weeks[7].frozen).toBe(false);
+    // W44 is the next horizon: open.
+    expect(row.weeks[4]).toMatchObject({ frozen: false, horizonStart: '2026-10-26' });
+    // Publishing again in W40–W43 is refused: once per horizon.
+    const again = await publish(planning, W[4]);
+    expect(again.reason).toMatch(/NOTHING_TO_FREEZE/);
+    expect(demandAnticipationStore.all()).toHaveLength(2);
   });
 
   it('records one DR-10 event for the act', async () => {
+    sdcClock.set('2026-09-28T03:00:00.000Z');
     const res = await publish(planning, W[4]);
     expect(res.status, res.reason).toBe('done');
     const done = commandAuditSink
@@ -230,18 +247,16 @@ describe('AC-02 — publishing again a week later', () => {
 });
 
 describe('the refusals, through the policy hook (each fires once and passes once)', () => {
-  it('NOTHING_TO_FREEZE: with this horizon and the next frozen there is nothing to publish', async () => {
-    expect((await publish(planning, W[4])).status).toBe('done');
-    const again = await publish(planning, W[4]);
-    expect(again.status).toBe('failed');
-    expect(refusedByPolicy(again.reason, POLICY_HOOKS.DEMAND_ANTICIPATION_PUBLISH_VALID)).toBe(
-      true
-    );
-    expect(again.reason).toMatch(/NOTHING_TO_FREEZE/);
-    expect(demandAnticipationStore.all()).toHaveLength(2);
+  it('NOTHING_TO_FREEZE at the present: the seed froze the current horizon', async () => {
+    const res = await publish(planning, W[0]);
+    expect(res.status).toBe('failed');
+    expect(refusedByPolicy(res.reason, POLICY_HOOKS.DEMAND_ANTICIPATION_PUBLISH_VALID)).toBe(true);
+    expect(res.reason).toMatch(/NOTHING_TO_FREEZE/);
+    expect(demandAnticipationStore.all()).toHaveLength(1);
   });
 
-  it('STALE_HORIZON: a confirm naming another week is refused; the right week goes through', async () => {
+  it('STALE_HORIZON: at W40 a confirm naming W36 is refused; the current horizon goes through', async () => {
+    sdcClock.set('2026-09-28T03:00:00.000Z');
     const stale = await publish(planning, W[0]);
     expect(stale.status).toBe('failed');
     expect(refusedByPolicy(stale.reason, POLICY_HOOKS.DEMAND_ANTICIPATION_PUBLISH_VALID)).toBe(
@@ -251,10 +266,24 @@ describe('the refusals, through the policy hook (each fires once and passes once
     expect(demandAnticipationStore.all()).toHaveLength(1);
     expect((await publish(planning, W[4])).status).toBe('done');
   });
+
+  it('a skipped horizon stays unfrozen: at W44 publish freezes W44–W47 only', async () => {
+    sdcClock.set('2026-10-26T03:00:00.000Z');
+    const res = await publish(planning, '2026-10-26');
+    expect(res.status, res.reason).toBe('done');
+    expect(demandAnticipationStore.all()[1].horizonWeeks[0]).toBe('2026-10-26');
+    expect(
+      demandAnticipationStore
+        .all()
+        .flatMap((p) => p.entries)
+        .some((e) => e.week === W[4])
+    ).toBe(false);
+  });
 });
 
 describe('who may publish and read (probed both ways)', () => {
   it('known-good: the planning seat publishes; known-bad: procurement is refused at the ROLE gate', async () => {
+    sdcClock.set('2026-09-28T03:00:00.000Z');
     const refused = await publish(procurement, W[4]);
     expect(refused.status).toBe('failed');
     expect(refused.reason).toMatch(/^ROLE_NOT_PERMITTED/);
@@ -264,6 +293,7 @@ describe('who may publish and read (probed both ways)', () => {
   });
 
   it('a supplier is refused at SCOPE and reads an empty page; PTI reads every row', async () => {
+    sdcClock.set('2026-09-28T03:00:00.000Z');
     await expect(publish(supplier, W[4])).rejects.toBeInstanceOf(DataError);
     expect(demandAnticipationStore.all()).toHaveLength(1);
     expect((await svc.getDemandAnticipation(supplier)).items).toEqual([]);
