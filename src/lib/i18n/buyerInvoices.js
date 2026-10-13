@@ -165,8 +165,11 @@ export const buyerInvoicesEn = {
   'buyerInvoices.remit.downloadPdf': 'Download PDF',
   'buyerInvoices.remit.note':
     'This remittance advice confirms payment has been processed. The supplier will receive notification via their preferred communication channel.',
-  'buyerInvoices.toast.downloadPdf.title': 'Downloading remittance PDF',
-  'buyerInvoices.toast.downloadPdf.desc': 'File will be available in a moment.',
+  // #229 — was 'Downloading remittance PDF' / 'File will be available in a
+  // moment.' Nothing downloads: the button has no file behind it.
+  'buyerInvoices.toast.remitPdfNotAvailable.title': 'Remittance PDF not available yet',
+  'buyerInvoices.toast.remitPdfNotAvailable.desc':
+    'No file was downloaded. The remittance PDF will open in a future release.',
   // — Escalate toast —
   'buyerInvoices.toast.escalate.title': '{{invoiceNumber}} — escalation not available yet',
   'buyerInvoices.toast.escalate.desc':
@@ -322,8 +325,9 @@ export const buyerInvoicesId = {
   'buyerInvoices.remit.downloadPdf': 'Unduh PDF',
   'buyerInvoices.remit.note':
     'Bukti pembayaran ini mengonfirmasi bahwa pembayaran telah diproses. Pemasok akan menerima notifikasi melalui kanal komunikasi pilihan mereka.',
-  'buyerInvoices.toast.downloadPdf.title': 'Mengunduh PDF bukti pembayaran',
-  'buyerInvoices.toast.downloadPdf.desc': 'File akan tersedia sebentar lagi.',
+  'buyerInvoices.toast.remitPdfNotAvailable.title': 'PDF bukti pembayaran belum tersedia',
+  'buyerInvoices.toast.remitPdfNotAvailable.desc':
+    'Tidak ada file yang diunduh. PDF bukti pembayaran hadir pada rilis mendatang.',
   // — Escalate toast —
   'buyerInvoices.toast.escalate.title': '{{invoiceNumber}} — eskalasi belum tersedia',
   'buyerInvoices.toast.escalate.desc':

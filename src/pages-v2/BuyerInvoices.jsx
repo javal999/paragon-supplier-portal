@@ -672,8 +672,9 @@ const BuyerInvoicesView = ({ invoices: allInvoices }) => {
 
   const downloadPdf = () => {
     toast({
-      title: t('buyerInvoices.toast.downloadPdf.title'),
-      description: t('buyerInvoices.toast.downloadPdf.desc')
+      variant: 'warning',
+      title: t('buyerInvoices.toast.remitPdfNotAvailable.title'),
+      description: t('buyerInvoices.toast.remitPdfNotAvailable.desc')
     });
   };
 
