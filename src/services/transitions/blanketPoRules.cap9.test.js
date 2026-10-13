@@ -14,12 +14,14 @@ import {
   blanketPoAlertSubjects,
   blanketPoRunOuts,
   isNewPoDue,
+  oldestFirst,
   poLeadTimeWeeks,
+  projectGroup,
   projectRunOut,
   projectionWeeks,
   runningOut
 } from './blanketPoRules';
-/** @import { BlanketPoInputs, BlanketPoRunOut, RunOutProjection } from './blanketPoRules' */
+/** @import { BlanketPoInputs, BlanketPoRunOut, GroupLine, RunOutProjection } from './blanketPoRules' */
 /** @import { PurchaseOrder } from '../data/types' */
 
 const NOW = '2026-08-31T12:00:00.000Z'; // a Monday
@@ -174,12 +176,14 @@ function row(poId, poNumber, lineId, projection) {
   return {
     poId,
     poNumber,
+    orderDate: '2026-01-01',
     supplierId: 'sup-x',
     supplierName: 'Sample',
     lineId,
     materialCode: 'PK-1',
     description: 'Bottle',
     uom: 'PCS',
+    nextInLine: null,
     projection
   };
 }
@@ -193,7 +197,7 @@ describe('CAP-9 BR-04 — "Blanket POs running out", soonest "new PO needed by" 
       row('po-5', 'PO-5', 'l5', qtyLine(4_000, 1000, 28)), // run-out 5, by 1
       row('po-4', 'PO-4', 'l4', qtyLine(4_000, 1000, 28)) // run-out 5, by 1 — PO-4 before PO-5
     ];
-    expect(runningOut(rows).map((r) => r.poNumber)).toEqual(['PO-2', 'PO-4', 'PO-5', 'PO-1']);
+    expect(runningOut(rows).map((g) => g.last.poNumber)).toEqual(['PO-2', 'PO-4', 'PO-5', 'PO-1']);
   });
 });
 
@@ -203,6 +207,7 @@ describe('CAP-9 — the read: blanket PO lines, LTP and lead time, on the hub cl
     /** @type {PurchaseOrder} */ ({
       id: 'po-x',
       poNumber: 'PO-X',
+      orderDate: '2026-03-01',
       supplierId: 'sup-x',
       supplierName: 'Sample',
       status: POStatus.CONFIRMED,
@@ -222,6 +227,7 @@ describe('CAP-9 — the read: blanket PO lines, LTP and lead time, on the hub cl
     /** @type {PurchaseOrder} */ ({
       id: 'po-y',
       poNumber: 'PO-Y',
+      orderDate: '2026-02-01',
       supplierId: 'sup-x',
       supplierName: 'Sample',
       status: POStatus.DELIVERED,
@@ -280,5 +286,154 @@ describe('CAP-9 — the read: blanket PO lines, LTP and lead time, on the hub cl
     // Nothing was called off, so the same remaining meets the LTP a week later.
     expect(p.runOut).toEqual({ index: 3, week: '2026-09-21' });
     expect(p.newPoBy).toEqual({ index: 1, week: '2026-09-07' });
+  });
+});
+
+// ── Owner ruling 2026-10-13 — one supplier × material: one after another, oldest first ──
+
+/**
+ * @param {number} remainingQty
+ * @returns {GroupLine}
+ */
+const qtyOf = (remainingQty) => ({
+  remaining: { basis: 'quantity', remainingQty, remainingValue: remainingQty * 1600 },
+  unitPrice: 1600
+});
+
+describe('CAP-9 groups — several blanket POs for one supplier × material draw down oldest first', () => {
+  it('sup-007 × PK-PETB-8801 shape: 15,000 → 37,000 → 70,000 at 34,300/wk, lead 14 days', () => {
+    const [p007, p024, p027] = projectGroup({
+      lines: [qtyOf(15_000), qtyOf(37_000), qtyOf(70_000)],
+      weeks: WEEKS,
+      ltpPerWeek: WEEKS.map(() => 34_300),
+      leadTimeDays: 14
+    }).map((p) => /** @type {RunOutProjection} */ (p));
+    // Week 1 uses up po-007 (15,000) and 19,300 of po-024.
+    expect(p007?.weeks[0]).toMatchObject({ draw: 15_000, balance: 0 });
+    expect(p024?.weeks[0]).toMatchObject({ draw: 19_300, balance: 17_700 });
+    expect(p027?.weeks[0]).toMatchObject({ draw: 0, balance: 70_000 });
+    // Week 2 uses up po-024 and 16,600 of po-027.
+    expect(p024?.weeks[1]).toMatchObject({ draw: 17_700, balance: 0 });
+    expect(p027?.weeks[1]).toMatchObject({ draw: 16_600, balance: 53_400 });
+    expect([p007?.runOut?.index, p024?.runOut?.index, p027?.runOut?.index]).toEqual([1, 2, 4]);
+    // Only the last line needs a new PO: week 4 − 2 weeks = week 2.
+    expect([p007?.newPoBy, p024?.newPoBy]).toEqual([null, null]);
+    expect(p027?.newPoBy).toEqual({ index: 2, week: '2026-09-07' });
+    expect([p007?.lastInLine, p024?.lastInLine, p027?.lastInLine]).toEqual([false, false, true]);
+  });
+
+  it('spill-over: what the older line cannot give in a week comes from the next line that week', () => {
+    const [a, b] = projectGroup({
+      lines: [qtyOf(10_000), qtyOf(5_000)],
+      weeks: WEEKS,
+      ltpPerWeek: WEEKS.map(() => 12_000),
+      leadTimeDays: 14
+    });
+    expect(a?.weeks[0]).toMatchObject({ ltp: 12_000, draw: 10_000, balance: 0 });
+    expect(b?.weeks[0]).toMatchObject({ ltp: 12_000, draw: 2_000, balance: 3_000 });
+    expect(b?.weeks[1]).toMatchObject({ draw: 12_000, balance: -9_000 });
+    expect([a?.runOut?.index, b?.runOut?.index]).toEqual([1, 2]);
+    expect(b?.newPoBy?.index).toBe(0);
+    // An older line used up EXACTLY in a week has not run out until demand spills past it.
+    const [c] = projectGroup({
+      lines: [qtyOf(12_000), qtyOf(5_000)],
+      weeks: WEEKS,
+      ltpPerWeek: WEEKS.map(() => 12_000),
+      leadTimeDays: 14
+    });
+    expect(c?.weeks[0]?.balance).toBe(0);
+    expect(c?.runOut?.index).toBe(2);
+  });
+
+  it('a value-only line in a group holds remaining value ÷ its unit price, and shows IDR', () => {
+    const [kg, value] = projectGroup({
+      lines: [
+        qtyOf(1_000),
+        {
+          remaining: { basis: 'value', remainingQty: null, remainingValue: 2_200_000_000 },
+          unitPrice: 2_200_000
+        }
+      ],
+      weeks: WEEKS,
+      ltpPerWeek: WEEKS.map(() => 600),
+      leadTimeDays: 7
+    });
+    // Week 2: the kg line gives its last 400 and is used up; the value line gives 200 kg.
+    expect(kg?.weeks[1]).toMatchObject({ draw: 400, balance: 0 });
+    expect(kg?.runOut?.index).toBe(2);
+    expect(value?.weeks[1]).toMatchObject({ draw: 440_000_000, balance: 1_760_000_000 });
+    // 1,000 kg + 1,000 kg against 600 kg/wk: the group runs out in week 4.
+    expect(value?.runOut?.index).toBe(4);
+    expect(value?.newPoBy?.index).toBe(3);
+  });
+});
+
+describe('CAP-9 groups — the read: oldest PO first by order date, one alert per group', () => {
+  /**
+   * @param {string} id
+   * @param {string} poNumber
+   * @param {string} orderDate
+   * @param {number} quantity
+   * @returns {PurchaseOrder}
+   */
+  const po = (id, poNumber, orderDate, quantity) =>
+    /** @type {PurchaseOrder} */ ({
+      id,
+      poNumber,
+      orderDate,
+      supplierId: 'sup-x',
+      supplierName: 'Sample',
+      status: POStatus.CONFIRMED,
+      lineItems: [
+        {
+          id: `li-${id}`,
+          materialCode: 'PK-1',
+          description: 'Bottle',
+          quantity,
+          uom: 'PCS',
+          unitPrice: 1600,
+          confirmedQty: quantity
+        }
+      ]
+    });
+  /** @type {BlanketPoInputs} */
+  const input = {
+    // PO-A is the NEWER order: the order date decides, not the PO number.
+    pos: [po('a', 'PO-A', '2026-05-01', 70_000), po('b', 'PO-B', '2026-04-01', 15_000)],
+    callOffs: [],
+    ltpLines: WEEKS.map((w) => ({
+      supplierId: 'sup-x',
+      materialCode: 'PK-1',
+      periodStart: w,
+      periodEnd: addDays(w, 6),
+      forecastQty: 34_300
+    })),
+    leadTimeDays: () => 14
+  };
+
+  it('orders a group by order date, then PO number; each older line names the next in line', () => {
+    const rows = blanketPoRunOuts(input, NOW);
+    expect(rows.map((r) => r.poNumber)).toEqual(['PO-B', 'PO-A']);
+    expect(rows[0]?.nextInLine).toEqual({ poId: 'a', poNumber: 'PO-A', lineId: 'li-a' });
+    expect(rows[1]?.nextInLine).toBeNull();
+    // PO-B (15,000) is used up in week 1; PO-A runs out in week 3: 85,000 against 34,300/wk.
+    expect(rows.map((r) => r.projection.runOut?.index)).toEqual([1, 3]);
+    expect(rows.map((r) => r.projection.newPoBy?.index ?? null)).toEqual([null, 1]);
+    // Same date: the PO number breaks the tie.
+    expect(
+      oldestFirst(
+        { orderDate: '2026-04-01', poNumber: 'PO-2', lineId: 'l' },
+        { orderDate: '2026-04-01', poNumber: 'PO-1', lineId: 'l' }
+      )
+    ).toBeGreaterThan(0);
+  });
+
+  it('one group, one alert — on the last line’s PO; the list reads per group', () => {
+    const rows = blanketPoRunOuts(input, NOW);
+    expect(blanketPoAlertSubjects(rows, NOW).map((s) => s.poId)).toEqual(['a']);
+    const groups = runningOut(rows);
+    expect(groups.map((g) => [g.last.poNumber, g.earlier.map((r) => r.poNumber)])).toEqual([
+      ['PO-A', ['PO-B']]
+    ]);
   });
 });

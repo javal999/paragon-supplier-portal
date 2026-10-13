@@ -296,12 +296,13 @@ const BuyerCallOffs = () => {
   const escalated = views.filter((v) => v.confirmation === 'Escalated').length;
   const atRisk = views.filter((v) => v.delivery === 'atRisk').length;
   const drift = deliveryDrift(views);
-  // CAP-9 BR-04 — the run-out per blanket PO line, and the lines running out
-  // (within a PO drill-through, that PO's only).
-  const runOuts = (runOutQuery.data?.items ?? []).filter(
-    (r) => drilledPo === null || r.poId === drilledPo
-  );
+  // CAP-9 BR-04 — the run-out per blanket PO line, and the supplier × material
+  // groups running out (within a PO drill-through, the group that PO is in).
+  const runOuts = runOutQuery.data?.items ?? [];
   const runOutByLine = new Map(runOuts.map((r) => [r.lineId, r]));
+  const runOutGroups = runningOut(runOuts).filter(
+    (g) => drilledPo === null || [g.last, ...g.earlier].some((r) => r.poId === drilledPo)
+  );
   // Filtered at render only: `panelLine` below still finds a line the filter hides.
   // Material C3 — the search matches the line's code, PTI description and its
   // supplier's approved trade name; the best match comes first.
@@ -527,7 +528,7 @@ const BuyerCallOffs = () => {
         </div>
       )}
 
-      <RunningOutList rows={runningOut(runOuts)} />
+      <RunningOutList groups={runOutGroups} />
 
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <div className="flex-1 min-w-[240px]">

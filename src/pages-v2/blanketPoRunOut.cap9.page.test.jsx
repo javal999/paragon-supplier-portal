@@ -2,8 +2,10 @@
 // CAP-9 (BL-178) on the screens — the PTI Call-offs page's blanket PO panels
 // (both weeks, BR-04), the "Blanket POs running out" list (BR-04), "Covers the
 // forecast horizon" (BR-06) and the planner's alert (BR-05), on fixture data.
-// Every expected week is read back from the read model the service answers
-// from and pinned by name, never re-derived in the test.
+// Owner ruling 2026-10-13: several blanket POs for one supplier × material are
+// drawn down one after another, oldest first; the group's last PO alone needs
+// a new PO. Every expected week is read back from the read model the service
+// answers from and pinned by name.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { screen, within } from '@testing-library/react';
@@ -44,41 +46,90 @@ const SUP_007 = {
 const reads = new MockProcurementService();
 
 /** @param {string} lineId */
-const projectionOf = (lineId) => {
+const rowOf = (lineId) => {
   const row = allBlanketPoRunOuts().find((r) => r.lineId === lineId);
   expect(row, `blanket PO line ${lineId}`).toBeDefined();
-  return /** @type {NonNullable<typeof row>} */ (row).projection;
+  return /** @type {NonNullable<typeof row>} */ (row);
 };
+/** @param {string} lineId */
+const projectionOf = (lineId) => rowOf(lineId).projection;
 
-describe('CAP-9 BR-04 — both weeks on the blanket PO panel', () => {
-  it('AC-01 on fixture data: PO-2026-00127 (70,000 pcs, LTP 34,300/wk, lead time 14 days) runs out in week 3, new PO needed by week 1', async () => {
-    const p = projectionOf('li-027a');
-    expect(p.start).toBe(70_000);
-    expect(p.runOut).toEqual({ index: 3, week: '2026-09-14' });
-    expect(p.newPoBy).toEqual({ index: 1, week: '2026-08-31' });
-    expect(p.leadTime).toEqual({ weeks: 2, onRecord: true });
-
-    renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
-    const panel = await screen.findByTestId('calloff-umbrella-po-027-li-027a');
-    const facts = within(panel).getByTestId('calloff-runout-li-027a');
-    expect(within(facts).getByTestId('calloff-runout-week-li-027a')).toHaveTextContent(
-      `W38 · ${formatDate('2026-09-14')}`
+describe('CAP-9 — sup-007 × PK-PETB-8801: three blanket POs, drawn down oldest first', () => {
+  it('the read: po-007 → po-024 → po-027 by order date; po-027 runs out in week 4, needed by week 2', () => {
+    const group = allBlanketPoRunOuts().filter(
+      (r) => r.supplierId === 'sup-007' && r.materialCode === 'PK-PETB-8801'
     );
-    expect(within(facts).getByTestId('calloff-newpo-week-li-027a')).toHaveTextContent(
+    expect(group.map((r) => r.poId)).toEqual(['po-007', 'po-024', 'po-027']);
+    // The order is the PO's order date (shifted fixture), oldest first.
+    expect(group.map((r) => r.orderDate)).toEqual([...group.map((r) => r.orderDate)].sort());
+    expect(group.map((r) => r.projection.start)).toEqual([15_000, 37_000, 70_000]);
+    // Week 1 (LTP 34,300) uses up po-007 and 19,300 of po-024; week 2 uses up
+    // po-024 and 16,600 of po-027.
+    expect(group.map((r) => r.projection.weeks[0]?.draw)).toEqual([15_000, 19_300, 0]);
+    expect(group.map((r) => r.projection.weeks[1]?.draw)).toEqual([0, 17_700, 16_600]);
+    expect(group.map((r) => r.projection.runOut?.index)).toEqual([1, 2, 4]);
+    expect(group.map((r) => r.projection.newPoBy)).toEqual([
+      null,
+      null,
+      { index: 2, week: '2026-09-07' }
+    ]);
+    expect(group.map((r) => r.nextInLine?.poNumber ?? null)).toEqual([
+      'PO-2026-00124',
+      'PO-2026-00127',
+      null
+    ]);
+  });
+
+  it('panels: the older POs show their run-out and the next in line; the last shows "new PO needed by"', async () => {
+    renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    const p007 = await screen.findByTestId('calloff-runout-li-007a');
+    expect(within(p007).getByTestId('calloff-runout-week-li-007a')).toHaveTextContent(
       `W36 · ${formatDate('2026-08-31')}`
     );
-    expect(facts).toHaveTextContent('Runs out');
-    expect(facts).toHaveTextContent('New PO needed by');
-    expect(facts).toHaveTextContent('(this week)');
-    expect(facts).toHaveTextContent('PO lead time 2 wk');
-    expect(within(facts).getByTestId('calloff-newpo-due-li-027a')).toHaveTextContent(
+    expect(within(p007).getByTestId('calloff-next-in-line-li-007a')).toHaveTextContent(
+      'Next in line: PO-2026-00124'
+    );
+    expect(within(p007).queryByText('New PO needed by')).toBeNull();
+    expect(within(p007).queryByTestId('calloff-newpo-due-li-007a')).toBeNull();
+    expect(screen.getByTestId('calloff-next-in-line-li-024a')).toHaveTextContent(
+      'Next in line: PO-2026-00127'
+    );
+
+    const p027 = screen.getByTestId('calloff-runout-li-027a');
+    expect(within(p027).getByTestId('calloff-runout-week-li-027a')).toHaveTextContent(
+      `W39 · ${formatDate('2026-09-21')}`
+    );
+    expect(within(p027).getByTestId('calloff-newpo-week-li-027a')).toHaveTextContent(
+      `W37 · ${formatDate('2026-09-07')}`
+    );
+    expect(p027).toHaveTextContent('(in 1 wk)');
+    expect(p027).toHaveTextContent('PO lead time 2 wk');
+    expect(within(p027).getByTestId('calloff-newpo-due-li-027a')).toHaveTextContent(
       'Raise the next PO'
     );
+    expect(screen.queryByTestId('calloff-next-in-line-li-027a')).toBeNull();
+  });
+});
+
+describe('CAP-9 BR-04 — a single-line group is unchanged', () => {
+  it('PO-2025-00102 (6,000 kg, lead time 21 days) runs out in week 6, new PO needed by week 3', async () => {
+    const p = projectionOf('li-002a');
+    expect(p.lastInLine).toBe(true);
+    expect(p.runOut).toEqual({ index: 6, week: '2026-10-05' });
+    expect(p.newPoBy).toEqual({ index: 3, week: '2026-09-14' });
+    renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    const facts = await screen.findByTestId('calloff-runout-li-002a');
+    expect(within(facts).getByTestId('calloff-runout-week-li-002a')).toHaveTextContent(
+      `W41 · ${formatDate('2026-10-05')}`
+    );
+    expect(within(facts).getByTestId('calloff-newpo-week-li-002a')).toHaveTextContent(
+      `W38 · ${formatDate('2026-09-14')}`
+    );
+    expect(facts).toHaveTextContent('(in 2 wk)');
+    expect(facts).toHaveTextContent('PO lead time 3 wk');
   });
 
   it('BR-06: a line that never goes below zero says "Covers the forecast horizon (26 wk)"', async () => {
-    // Known-good: PO-2025-00102 runs out today; with 100,000 kg more ordered it covers.
-    expect(projectionOf('li-002a').runOut?.index).toBe(6);
     purchaseOrderStore.update('po-002', (po) => ({
       ...po,
       lineItems: po.lineItems.map((li) => ({ ...li, quantity: li.quantity + 100_000 }))
@@ -92,7 +143,6 @@ describe('CAP-9 BR-04 — both weeks on the blanket PO panel', () => {
       /^Covers the forecast horizon \(26 wk\)$/
     );
     expect(within(panel).queryByTestId('calloff-runout-li-002a')).toBeNull();
-    // A line with no LTP at all covers the horizon too, and says why.
     const noLtp = await screen.findByTestId('calloff-runout-covers-li-191a');
     expect(noLtp).toHaveTextContent(
       'Covers the forecast horizon (26 wk) · No LTP for this material in the horizon: nothing draws it down.'
@@ -100,65 +150,81 @@ describe('CAP-9 BR-04 — both weeks on the blanket PO panel', () => {
   });
 });
 
-describe('CAP-9 BR-04 — "Blanket POs running out", sorted by "new PO needed by"', () => {
-  it('lists the lines that run out, soonest needed-by first, with the Sample data marker', async () => {
-    const expected = ['li-007a', 'li-024a', 'li-027a', 'li-002a', 'li-016a'];
-    expect(runningOut(allBlanketPoRunOuts()).map((r) => r.lineId)).toEqual(expected);
+describe('CAP-9 BR-04 — "Blanket POs running out", per group, sorted by "new PO needed by"', () => {
+  it('one block per group: the last PO first, the older POs in line under it', async () => {
+    const groups = runningOut(allBlanketPoRunOuts());
+    expect(groups.map((g) => [g.last.lineId, g.earlier.map((r) => r.lineId)])).toEqual([
+      ['li-027a', ['li-007a', 'li-024a']],
+      ['li-002a', []],
+      ['li-016a', []]
+    ]);
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
     const list = await screen.findByTestId('calloff-runout-list');
     expect(within(list).getByText('Blanket POs running out')).toBeInTheDocument();
     expect(within(list).getByTestId('sample-data-badge')).toBeInTheDocument();
-    const rows = within(list)
-      .getAllByTestId(/^calloff-runout-row-/)
+    const blocks = within(list)
+      .getAllByTestId(/^calloff-runout-group-/)
       .map((el) => el.getAttribute('data-testid'));
-    expect(rows).toEqual(expected.map((id) => `calloff-runout-row-${id}`));
-    // PO-2025-00107 was needed two weeks ago: said so, not hidden.
-    expect(within(list).getByTestId('calloff-runout-row-li-007a')).toHaveTextContent(
-      'passed 2 wk ago'
+    expect(blocks).toEqual([
+      'calloff-runout-group-li-027a',
+      'calloff-runout-group-li-002a',
+      'calloff-runout-group-li-016a'
+    ]);
+    const pet = within(list).getByTestId('calloff-runout-group-li-027a');
+    expect(
+      within(pet)
+        .getAllByTestId(/^calloff-runout-row-/)
+        .map((el) => el.getAttribute('data-testid'))
+    ).toEqual([
+      'calloff-runout-row-li-027a',
+      'calloff-runout-row-li-007a',
+      'calloff-runout-row-li-024a'
+    ]);
+    expect(within(pet).getByTestId('calloff-runout-row-li-007a')).toHaveTextContent(
+      'Next in line: PO-2026-00124'
     );
-    expect(within(list).getByTestId('calloff-runout-row-li-002a')).toHaveTextContent('in 2 wk');
-    // A line that covers the horizon is not on the list.
+    expect(within(pet).getByTestId('calloff-runout-due-li-027a')).toBeInTheDocument();
+    expect(within(pet).queryByTestId('calloff-runout-due-li-007a')).toBeNull();
     expect(within(list).queryByTestId('calloff-runout-row-li-191a')).toBeNull();
   });
 
-  it('a drill-through to one PO lists that PO only', async () => {
+  it('a drill-through to one PO lists the group that PO is in', async () => {
     renderWithProviders(<BuyerCallOffs />, {
       identity: PLANNER,
-      route: '/buyer/call-offs?po=po-027'
+      route: '/buyer/call-offs?po=po-024'
     });
     const list = await screen.findByTestId('calloff-runout-list');
     expect(
       within(list)
-        .getAllByTestId(/^calloff-runout-row-/)
+        .getAllByTestId(/^calloff-runout-group-/)
         .map((el) => el.getAttribute('data-testid'))
-    ).toEqual(['calloff-runout-row-li-027a']);
+    ).toEqual(['calloff-runout-group-li-027a']);
   });
 
   it('the projection moves when the hub clock moves', async () => {
     sdcClock.set('2026-09-07T12:00:00.000Z');
-    // Nothing more was called off, so the same 70,000 pcs meet the LTP a week later.
-    expect(projectionOf('li-027a').runOut).toEqual({ index: 3, week: '2026-09-21' });
+    // Nothing more was called off, so the same 122,000 pcs meet the LTP a week later.
+    expect(projectionOf('li-027a').runOut).toEqual({ index: 4, week: '2026-09-28' });
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
     expect(await screen.findByTestId('calloff-runout-week-li-027a')).toHaveTextContent(
-      `W39 · ${formatDate('2026-09-21')}`
+      `W40 · ${formatDate('2026-09-28')}`
     );
     expect(screen.getByTestId('calloff-newpo-week-li-027a')).toHaveTextContent(
-      `W37 · ${formatDate('2026-09-07')}`
+      `W38 · ${formatDate('2026-09-14')}`
     );
   });
 });
 
 describe('CAP-9 BR-05 — the planner is alerted when "new PO needed by" is within 4 weeks', () => {
-  it('one alert per blanket PO due, linked to that PO on the Call-offs page; none for a PO that covers', async () => {
+  it('one alert per group, on its last PO, linked to that PO on the Call-offs page', async () => {
     const keys = (await reads.getInventoryAlerts(PLANNER)).items
       .filter((a) => a.rule === 'blanketPoRunOut')
       .map((a) => a.key)
       .sort();
+    // ONE for the three sup-007 PET bottle POs, not three.
     expect(keys).toEqual([
       'blanketPoRunOut|po-002|sup-002',
-      'blanketPoRunOut|po-007|sup-007',
       'blanketPoRunOut|po-016|sup-002',
-      'blanketPoRunOut|po-024|sup-007',
       'blanketPoRunOut|po-027|sup-007'
     ]);
     renderWithProviders(<BuyerAlerts />, { identity: PLANNER, route: '/buyer/alerts' });
@@ -167,12 +233,13 @@ describe('CAP-9 BR-05 — the planner is alerted when "new PO needed by" is with
       'A blanket PO runs out soon: raise the next PO by its "new PO needed by" week'
     );
     expect(alert).toHaveTextContent('PO-2026-00127 · PK-PETB-8801');
-    expect(alert).toHaveTextContent('High');
+    // Needed by week 2: Medium (High is this week or passed).
+    expect(alert).toHaveTextContent('Medium');
     expect(
       within(alert).getByRole('link', { name: 'Open blanket PO' }).getAttribute('href')
     ).toMatch(/\/buyer\/call-offs\?po=po-027$/);
-    expect(screen.getByTestId('alert-blanketPoRunOut|po-002|sup-002')).toHaveTextContent('Medium');
-    expect(screen.queryByTestId('alert-blanketPoRunOut|po-191|sup-019')).toBeNull();
+    expect(screen.queryByTestId('alert-blanketPoRunOut|po-007|sup-007')).toBeNull();
+    expect(screen.queryByTestId('alert-blanketPoRunOut|po-024|sup-007')).toBeNull();
   });
 
   it('a needed-by week beyond 4 weeks raises none; the supplier never sees the rule', async () => {

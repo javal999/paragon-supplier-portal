@@ -41,7 +41,7 @@
 //
 // CAP-9 BR-05 (BL-178) — `blanketPoRunOut`: a blanket PO whose "new PO needed
 // by" week (`blanketPoRules`) falls within 4 weeks or has passed. One alert per
-// blanket PO (its most urgent line), subject = the PO id, PTI-only. High when
+// supplier × material group, on its last (newest) PO; subject = that PO id. PTI-only. High when
 // the week is this week or passed, Medium otherwise; impact at that week.
 // ─────────────────────────────────────────────────────────────────────────────
 

@@ -25,7 +25,7 @@ export const callOffsEn = {
   // CAP-9 (BL-178) — blanket PO run-out and "new PO needed by".
   'co.runOut.title': 'Blanket POs running out',
   'co.runOut.subtitle':
-    'What remains on each blanket PO, drawn down week by week from this week by the LTP, as if call-offs follow the plan. Soonest "new PO needed by" first.',
+    'What remains on each blanket PO, drawn down week by week from this week by the LTP, as if call-offs follow the plan. Several POs for one supplier and material are used one after another, oldest first. Soonest "new PO needed by" first.',
   'co.runOut.empty': 'No blanket PO runs out within the forecast horizon ({{weeks}} wk).',
   'co.runOut.col.po': 'Blanket PO',
   'co.runOut.col.material': 'Material',
@@ -43,6 +43,9 @@ export const callOffsEn = {
   'co.runOut.weeks': '{{weeks}} wk',
   'co.runOut.weeksFallback': '{{weeks}} wk (default)',
   'co.runOut.due': 'Raise the next PO',
+  'co.runOut.nextInLine': 'Next in line:',
+  'co.runOut.drawnFirst':
+    'Drawn before the next blanket PO for this supplier and material (oldest first).',
   'co.runOut.covers': 'Covers the forecast horizon ({{weeks}} wk)',
   'co.runOut.noLtp': 'No LTP for this material in the horizon: nothing draws it down.',
   'co.runOut.valueBasis': 'Value-only line: each week draws LTP × the unit price.',
@@ -294,7 +297,7 @@ export const callOffsId = {
   // CAP-9 (BL-178) — habisnya PO induk dan "PO baru diperlukan paling lambat".
   'co.runOut.title': 'PO induk yang akan habis',
   'co.runOut.subtitle':
-    'Sisa setiap PO induk, dikurangi LTP minggu demi minggu mulai minggu ini, dengan anggapan call-off mengikuti rencana. "PO baru diperlukan paling lambat" yang paling dekat lebih dulu.',
+    'Sisa setiap PO induk, dikurangi LTP minggu demi minggu mulai minggu ini, dengan anggapan call-off mengikuti rencana. Beberapa PO untuk satu pemasok dan material dipakai berurutan, yang terlama lebih dulu. "PO baru diperlukan paling lambat" yang paling dekat lebih dulu.',
   'co.runOut.empty': 'Tidak ada PO induk yang habis dalam horizon prakiraan ({{weeks}} mgg).',
   'co.runOut.col.po': 'PO induk',
   'co.runOut.col.material': 'Material',
@@ -312,6 +315,9 @@ export const callOffsId = {
   'co.runOut.weeks': '{{weeks}} mgg',
   'co.runOut.weeksFallback': '{{weeks}} mgg (bawaan)',
   'co.runOut.due': 'Buat PO berikutnya',
+  'co.runOut.nextInLine': 'Berikutnya:',
+  'co.runOut.drawnFirst':
+    'Dipakai sebelum PO induk berikutnya untuk pemasok dan material ini (yang terlama lebih dulu).',
   'co.runOut.covers': 'Mencukupi horizon prakiraan ({{weeks}} mgg)',
   'co.runOut.noLtp':
     'Tidak ada LTP untuk material ini dalam horizon: tidak ada yang mengurangi sisanya.',
