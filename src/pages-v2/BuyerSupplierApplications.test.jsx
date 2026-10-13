@@ -25,6 +25,7 @@ import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import BuyerSupplierApplications from './BuyerSupplierApplications';
 import Toaster from '@components/ui-v2/Toaster';
 import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import i18n from '@lib/i18n';
 import { supplierApplicationStore } from '@services/data/mock/stores/supplierApplicationStore';
 import { mockSuppliers } from '@data/mockSuppliers';
 import { seedSupplierApplications } from '@services/data/mock/applicationSeed';
@@ -681,5 +682,64 @@ describe('B3 · the door', () => {
     // The commit is gone with it, not merely hidden behind a disabled button.
     expect(screen.queryByTestId('application-raise-commit')).toBeNull();
     expect(screen.queryByTestId('application-raise-next')).toBeNull();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The request type reads in the reader's language at every site that shows it.
+// The form's select already rendered `applications.raise.type.<rt>`; the table
+// column, the review panel and the raise-confirm read-back showed the raw enum
+// token, so an Indonesian reader picked a translated option and was then shown
+// the English code for it. The stored value stays canonical (asserted last).
+describe('the request type is localized wherever it is shown (ID)', () => {
+  const KOL_ID = 'KOL — kreator atau perorangan';
+
+  it('table column and review panel show the localized type, never the raw token', async () => {
+    try {
+      await i18n.changeLanguage('id');
+      renderWithProviders(<BuyerSupplierApplications />, { identity: COMPLIANCE_SEAT });
+      const kol = supplierApplicationStore.all().find((a) => a.requestType === 'KOL');
+      expect(kol, 'CONTROL — the seed grows a KOL application').toBeDefined();
+      const number = /** @type {import('@services/data/types').SupplierApplication} */ (kol)
+        .applicationNumber;
+
+      const row = await screen.findByTestId(`application-row-${number}`);
+      expect(within(row).getByText(KOL_ID)).toBeInTheDocument();
+      expect(within(row).queryByText('KOL')).toBeNull();
+
+      fireEvent.click(row);
+      // The table cell + the panel's request-type field.
+      await waitFor(() => expect(screen.getAllByText(KOL_ID)).toHaveLength(2));
+      expect(screen.queryByText('KOL')).toBeNull();
+    } finally {
+      await i18n.changeLanguage('en');
+    }
+  });
+
+  it('the raise-confirm step reads the type back localized; the stored value stays canonical', async () => {
+    try {
+      await i18n.changeLanguage('id');
+      renderWithProviders(<BuyerSupplierApplications />, { identity: PROCUREMENT_SEAT });
+      await openDoor('KOL');
+      fireEvent.change(await screen.findByTestId('application-raise-company'), {
+        target: { value: 'PT Sample Locale Creator (illustrative)' }
+      });
+      fireEvent.click(screen.getByTestId('application-raise-next'));
+
+      const confirm = await screen.findByTestId('application-raise-confirm');
+      expect(within(confirm).getByText(KOL_ID)).toBeInTheDocument();
+      expect(within(confirm).queryByText('KOL')).toBeNull();
+
+      fireEvent.click(screen.getByTestId('application-raise-commit'));
+      await waitFor(() =>
+        expect(
+          supplierApplicationStore
+            .all()
+            .find((a) => a.companyName === 'PT Sample Locale Creator (illustrative)')?.requestType
+        ).toBe('KOL')
+      );
+    } finally {
+      await i18n.changeLanguage('en');
+    }
   });
 });
