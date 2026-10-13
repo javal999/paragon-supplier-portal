@@ -100,12 +100,15 @@ const ComplianceRisksTab = ({ compliance }) => {
           </TableHeader>
           <tbody>
             {compliance.map((row) => {
+              // "Expiring soon" is not a canonical status token (the map holds
+              // "Expiring Soon"), so StatusPill left it in EN; all three labels
+              // are keyed here so the pill reads in the reader's language.
               const statusLabel =
                 row.status === 'expired'
-                  ? 'Expired'
+                  ? t('risk.compliance.status.expired')
                   : row.status === 'expiring'
-                    ? 'Expiring soon'
-                    : 'Valid';
+                    ? t('risk.compliance.status.expiring')
+                    : t('risk.compliance.status.valid');
               return (
                 <TableRow key={row.supplier + row.type}>
                   <TableCell>
@@ -130,7 +133,7 @@ const ComplianceRisksTab = ({ compliance }) => {
                         if (d === null) return '—';
                         return d < 0
                           ? t('risk.compliance.overdue', { days: Math.abs(d) })
-                          : `${d}d`;
+                          : t('risk.unit.daysShort', { days: d });
                       })()}
                     </Data>
                   </TableCell>

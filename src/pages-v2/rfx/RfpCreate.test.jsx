@@ -202,18 +202,34 @@ describe('section 3.6a — the buyer raises a proposal request', () => {
     fireEvent.change(screen.getByLabelText('Title'), { target: { value: TITLE } });
     fireEvent.change(screen.getByTestId('rfp-new-family'), { target: { value: 'packaging' } });
     expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
-    expect(screen.getByTestId('rfp-new-deadline-refusal')).toBeInTheDocument();
+    // Nothing entered yet ⇒ the step stays shut, but no refusal shouts at a
+    // blank field the buyer has not reached.
+    expect(screen.queryByTestId('rfp-new-deadline-refusal')).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Response deadline'), {
       target: { value: dayFromNow(-2) }
     });
     expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+    // A past date entered ⇒ the refusal names why.
+    expect(screen.getByTestId('rfp-new-deadline-refusal')).toBeInTheDocument();
 
     // POSITIVE TWIN.
     fireEvent.change(screen.getByLabelText('Response deadline'), {
       target: { value: dayFromNow(12) }
     });
     await waitFor(() => expect(screen.getByRole('button', { name: 'Next' })).not.toBeDisabled());
+    expect(screen.queryByTestId('rfp-new-deadline-refusal')).not.toBeInTheDocument();
+  });
+
+  it('a request with no proposals yet says so — not that no request exists', async () => {
+    await openWizard();
+    await walkToReview();
+    fireEvent.click(screen.getByTestId('rfp-new-save-draft'));
+    const detail = await screen.findByTestId('rfp-detail-rfp-0005');
+    expect(within(detail).getByTestId('rfp-no-proposals')).toHaveTextContent(
+      'No proposals received yet.'
+    );
+    expect(within(detail).queryByText('No proposal request yet.')).not.toBeInTheDocument();
   });
 
   it('REQ-E03-04 · a picked term with no requested value blocks the walk, and is NAMED', async () => {

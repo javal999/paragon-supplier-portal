@@ -58,7 +58,7 @@ const ApplicationsTable = ({ rows, onSelect }) => {
               <Data>{a.applicationNumber}</Data>
             </TableCell>
             <TableCell>{a.companyName}</TableCell>
-            <TableCell>{a.requestType}</TableCell>
+            <TableCell>{t(`applications.raise.type.${a.requestType}`)}</TableCell>
             <TableCell>{declaredLabel(a)}</TableCell>
             <TableCell>
               <Data>{formatDate(a.submittedAt)}</Data>

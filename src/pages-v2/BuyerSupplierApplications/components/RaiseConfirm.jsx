@@ -41,7 +41,7 @@ const RaiseConfirm = ({ raise }) => {
           <dt className="text-label text-text-tertiary uppercase">
             {t('applications.raise.field.type')}
           </dt>
-          <dd className="text-text-primary">{raiseType}</dd>
+          <dd className="text-text-primary">{t(`applications.raise.type.${raiseType}`)}</dd>
         </div>
         <div>
           <dt className="text-label text-text-tertiary uppercase">

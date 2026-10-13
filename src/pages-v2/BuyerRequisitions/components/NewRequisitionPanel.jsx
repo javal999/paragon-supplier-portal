@@ -17,13 +17,15 @@ import { inputClass } from '../const';
  * @property {(form: NewPRForm) => void} setForm
  * @property {QtyOutcome} parsedQty The page's ONE parse of `form.qty`.
  * @property {boolean} canSubmit Material, a readable quantity, date and cost centre are present.
+ * @property {boolean} creating The `pr:create` dispatch is in flight; the submit is disabled.
  * @property {() => void} onSubmit Dispatches `pr:create` (`submitNewPR`).
  * @property {TFunction} t
  */
 
 /**
  * The New-PR side panel: three form steps (item, schedule, justification) and
- * a footer with Cancel and the submit button, disabled until `canSubmit`. Only
+ * a footer with Cancel and the submit button, disabled until `canSubmit` and
+ * while the create is in flight (so a second click cannot be made). Only
  * opened for a seat holding `pr:create` — the page withholds the opener
  * otherwise. Moved out of `BuyerRequisitions.jsx` by the Phase 5 page split (no
  * behaviour change).
@@ -36,6 +38,7 @@ const NewRequisitionPanel = ({
   setForm,
   parsedQty,
   canSubmit,
+  creating,
   onSubmit,
   t
 }) => (
@@ -48,7 +51,7 @@ const NewRequisitionPanel = ({
         <Button variant="secondary" onClick={onClose}>
           {t('requisitions.new.cancel')}
         </Button>
-        <Button variant="outline" disabled={!canSubmit} onClick={onSubmit}>
+        <Button variant="outline" disabled={!canSubmit || creating} onClick={onSubmit}>
           {t('requisitions.new.submit')}
         </Button>
       </>

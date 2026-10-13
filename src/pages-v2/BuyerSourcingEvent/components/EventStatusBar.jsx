@@ -26,7 +26,9 @@ const EventStatusBar = ({ rfq, rfqs, sourcingMap }) => {
       >
         {t('rfx.event.back')}
       </Link>
-      <StatusPill variant={rfq.status === 'Awarded' ? 'success' : 'info'}>{rfq.status}</StatusPill>
+      <StatusPill variant={rfq.status === 'Awarded' ? 'success' : 'info'}>
+        {t(`rfx.status.${rfq.status}`)}
+      </StatusPill>
       {/* Material G2 (MR-10 BR-06) — the type, fixed at publish. */}
       <SourcingTypePill
         type={sourcingTypeOf(
