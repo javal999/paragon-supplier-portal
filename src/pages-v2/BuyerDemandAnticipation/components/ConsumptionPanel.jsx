@@ -16,6 +16,7 @@ import {
   validateConsumptionRows
 } from '@services/transitions/consumptionRules';
 import { dayOf, mondayOf, parseCsv } from '@services/transitions/inventoryRules';
+import { horizonContaining } from '@services/transitions/demandAnticipationRules';
 /** @import { DemandAnticipationRow } from '@services/transitions/demandAnticipationRules' */
 /** @import { ConsumptionRowRefusal } from '@services/transitions/consumptionRules' */
 import { inputClass, labelClass, readFileText } from '../../inventory/inventoryDisplay';
@@ -55,13 +56,17 @@ const ConsumptionPanel = ({ rows, nowIso }) => {
     if (!materials.has(r.materialCode))
       materials.set(r.materialCode, { label: r.materialLabel, uom: r.uom });
   const codes = [...materials.keys()].sort();
-  // A frozen week up to the current one: what can have been consumed and compared.
-  const weeks = [
-    ...new Set(rows.flatMap((r) => r.weeks.filter((w) => w.frozen).map((w) => w.week)))
-  ]
-    .filter((w) => w <= current)
-    .sort()
-    .reverse();
+  // The frozen current horizon's weeks up to the current one: what can have
+  // been consumed and compared. The read starts at the current week, so the
+  // horizon's earlier weeks come from its start (CAP-D17), not from the rows.
+  // A week of an earlier horizon is recorded through the upload.
+  const first = rows[0]?.weeks[0];
+  const weeks =
+    first && first.horizonFrozen
+      ? horizonContaining(first.horizonStart, first.horizonStart)
+          .filter((w) => w <= current)
+          .reverse()
+      : [];
 
   const [material, setMaterial] = useState('');
   const [week, setWeek] = useState('');
@@ -212,81 +217,88 @@ const ConsumptionPanel = ({ rows, nowIso }) => {
 
       {!held ? (
         <HandoffNotice availability={availability} testId="handoff-consumption-record" />
-      ) : weeks.length === 0 || codes.length === 0 ? (
-        <p className="text-sm text-text-tertiary" data-testid="consumption-no-weeks">
-          {t('consumption.noWeeks')}
-        </p>
       ) : (
         <>
-          <div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[minmax(0,16rem)_minmax(0,10rem)_minmax(0,10rem)_auto] items-end gap-3"
-            data-testid="consumption-form"
-          >
-            <div>
-              <label htmlFor="consumption-material" className={labelClass}>
-                {t('consumption.field.material')}
-              </label>
-              <select
-                id="consumption-material"
-                className={inputClass}
-                value={chosenMaterial}
-                onChange={(e) => setMaterial(e.target.value)}
-              >
-                {codes.map((c) => (
-                  <option key={c} value={c}>
-                    {`${c} · ${materials.get(c)?.label ?? ''}`}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="consumption-week" className={labelClass}>
-                {t('consumption.field.week')}
-              </label>
-              <select
-                id="consumption-week"
-                className={inputClass}
-                value={chosenWeek}
-                onChange={(e) => setWeek(e.target.value)}
-              >
-                {weeks.map((w) => (
-                  <option key={w} value={w}>
-                    {`${weekLabel(w)} · ${w}`}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="consumption-qty" className={labelClass}>
-                {t('consumption.field.qty', { uom })}
-              </label>
-              <input
-                id="consumption-qty"
-                className={inputClass}
-                inputMode="decimal"
-                value={qty}
-                onChange={(e) => setQty(e.target.value)}
-                data-testid="consumption-qty"
-              />
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => void submit()}
-              disabled={record.isPending || busy || qty.trim() === ''}
-              data-testid="consumption-record"
-            >
-              {t('consumption.record.button')}
-            </Button>
-          </div>
-          {recorded ? (
-            <p className="mt-2 text-xs text-text-secondary" data-testid="consumption-recorded-now">
-              {t('consumption.record.inForce', {
-                qty: formatNumber(recorded.materialQty),
-                uom,
-                source: t(`consumption.source.${recorded.source}`)
-              })}
+          {weeks.length === 0 || codes.length === 0 ? (
+            <p className="text-sm text-text-tertiary" data-testid="consumption-no-weeks">
+              {t('consumption.noWeeks')}
             </p>
-          ) : null}
+          ) : (
+            <>
+              <div
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[minmax(0,16rem)_minmax(0,10rem)_minmax(0,10rem)_auto] items-end gap-3"
+                data-testid="consumption-form"
+              >
+                <div>
+                  <label htmlFor="consumption-material" className={labelClass}>
+                    {t('consumption.field.material')}
+                  </label>
+                  <select
+                    id="consumption-material"
+                    className={inputClass}
+                    value={chosenMaterial}
+                    onChange={(e) => setMaterial(e.target.value)}
+                  >
+                    {codes.map((c) => (
+                      <option key={c} value={c}>
+                        {`${c} · ${materials.get(c)?.label ?? ''}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="consumption-week" className={labelClass}>
+                    {t('consumption.field.week')}
+                  </label>
+                  <select
+                    id="consumption-week"
+                    className={inputClass}
+                    value={chosenWeek}
+                    onChange={(e) => setWeek(e.target.value)}
+                  >
+                    {weeks.map((w) => (
+                      <option key={w} value={w}>
+                        {`${weekLabel(w)} · ${w}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="consumption-qty" className={labelClass}>
+                    {t('consumption.field.qty', { uom })}
+                  </label>
+                  <input
+                    id="consumption-qty"
+                    className={inputClass}
+                    inputMode="decimal"
+                    value={qty}
+                    onChange={(e) => setQty(e.target.value)}
+                    data-testid="consumption-qty"
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => void submit()}
+                  disabled={record.isPending || busy || qty.trim() === ''}
+                  data-testid="consumption-record"
+                >
+                  {t('consumption.record.button')}
+                </Button>
+              </div>
+              {recorded ? (
+                <p
+                  className="mt-2 text-xs text-text-secondary"
+                  data-testid="consumption-recorded-now"
+                >
+                  {t('consumption.record.inForce', {
+                    qty: formatNumber(recorded.materialQty),
+                    uom,
+                    source: t(`consumption.source.${recorded.source}`)
+                  })}
+                </p>
+              ) : null}
+            </>
+          )}
 
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <input

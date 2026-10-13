@@ -103,6 +103,25 @@ describe('recording consumption in the frozen horizon (typed)', () => {
     expect(within(card).queryByTestId(`dant-consumption-${KEY}-${W36}`)).toBeNull();
     expect(within(card).queryByTestId(`dant-absorbed-${KEY}-${H2[0]}`)).toBeNull();
   });
+
+  it('at W39 the week choice is the frozen horizon’s weeks up to now, newest first', async () => {
+    sdcClock.set('2026-09-21T03:00:00.000Z');
+    renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    const panel = await screen.findByTestId('consumption-panel');
+    expect(
+      [...within(panel).getByLabelText('Week').querySelectorAll('option')].map((o) => o.value)
+    ).toEqual(['2026-09-21', '2026-09-14', '2026-09-07', W36]);
+  });
+
+  it('at W40, before W40–W43 is published, no week can be typed and the upload stays', async () => {
+    sdcClock.set('2026-09-28T03:00:00.000Z');
+    renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    expect(await screen.findByTestId('consumption-no-weeks')).toHaveTextContent(
+      'The current horizon is not frozen yet'
+    );
+    expect(screen.queryByTestId('consumption-record')).toBeNull();
+    expect(screen.getByTestId('consumption-upload-choose')).toBeInTheDocument();
+  });
 });
 
 describe('the upload', () => {

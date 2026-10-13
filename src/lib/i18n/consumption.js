@@ -10,7 +10,8 @@ export const consumptionEn = {
   'consumption.marker': 'Consumption recorded by the planner · awaiting SAP goods-issue feed',
   'consumption.howItWorks':
     'Record what a material actually used in a frozen week, up to the current one. Where it is below the frozen demand anticipation, the excess is taken off the next 4-week horizon: spread evenly, never below zero in a week, and what a week cannot take moves to the next. A material’s consumption is shared across its suppliers by their share of that week’s demand anticipation. A later record for the same material and week replaces the earlier one.',
-  'consumption.noWeeks': 'No frozen week up to the current one to record consumption for.',
+  'consumption.noWeeks':
+    'The current horizon is not frozen yet, so there is no week to type consumption for. A week of an earlier horizon can be uploaded.',
   'consumption.field.material': 'Material',
   'consumption.field.week': 'Week',
   'consumption.field.qty': 'Consumption ({{uom}})',
@@ -59,7 +60,7 @@ export const consumptionId = {
   'consumption.howItWorks':
     'Catat pemakaian aktual material pada minggu yang dibekukan, sampai minggu ini. Jika di bawah antisipasi permintaan yang dibekukan, kelebihannya dikurangkan dari horizon 4 minggu berikutnya: dibagi rata, tidak pernah di bawah nol dalam satu minggu, dan yang tidak dapat ditampung satu minggu pindah ke minggu berikutnya. Pemakaian material dibagi ke pemasoknya menurut bagian masing-masing atas antisipasi permintaan minggu itu. Catatan yang lebih baru untuk material dan minggu yang sama menggantikan yang lebih lama.',
   'consumption.noWeeks':
-    'Tidak ada minggu yang dibekukan sampai minggu ini untuk dicatat pemakaiannya.',
+    'Horizon saat ini belum dibekukan, jadi tidak ada minggu untuk diketik pemakaiannya. Minggu dari horizon sebelumnya dapat diunggah.',
   'consumption.field.material': 'Material',
   'consumption.field.week': 'Minggu',
   'consumption.field.qty': 'Pemakaian ({{uom}})',
