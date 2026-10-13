@@ -286,6 +286,9 @@ describe('BL-46 sites — one function computes the risk class, and nothing else
     const risk = callers(/\bpositionRisk\s*\(/);
     expect(risk).toEqual([
       'src/pages-v2/BuyerInventory.jsx',
+      // SC-01 — the supplier's To do reads cover against lead time from the same
+      // function to rate its supply tasks ("Cover 4 days · Lead time 14 days").
+      'src/pages-v2/SupplierHome.jsx',
       'src/pages-v2/inventory/inventoryDisplay.jsx',
       'src/pages-v2/widgets/BuyerInventoryWidget.jsx',
       'src/services/transitions/inventoryAlertRules.js'

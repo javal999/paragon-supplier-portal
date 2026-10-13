@@ -28,11 +28,15 @@ import { documentDisplayState } from '@services/data/documentDisplayState';
 import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 /** @import { HomeTask } from './home/TaskList' */
 import TaskList from './home/TaskList';
+/** @import { UnratedTask } from './home/severityDisplay' */
+import { withSeverity } from './home/severityDisplay';
+import { responseDeadline } from '@services/data/poResponseProjection';
+import { effectiveDeadline } from '@services/transitions/rfxRules';
 import { awaitsSupplierAnswer } from '@services/transitions/fulfilmentRules';
 import { isDueWithoutHeadsUp } from '@services/transitions/callOffRules';
 import { useCallOffViews } from './callOffs/callOffDisplay';
 import { planStatus } from '@services/transitions/capacityRules';
-import { stockFreshness } from '@services/transitions/inventoryRules';
+import { positionRisk, stockFreshness } from '@services/transitions/inventoryRules';
 import { deadlineState } from '@services/transitions/forecastRules';
 import { forecastNow } from './forecasts/forecastDisplay';
 import Data from '@components/ui-v2/Data';
@@ -42,6 +46,8 @@ import WeeklyUpdatePanel, { weeklyUpdateView } from './inventory/WeeklyUpdatePan
 
 // Supplier Home — "To do" (REQUIREMENTS §3.8 SC-01): what Paragon is waiting for
 // from this supplier. Filters match the supplier dashboard widgets they replace.
+// Severity is computed from each task's own deadlines and stock cover
+// (home/taskSeverity.js), the same rule as Buyer Home — never from its type.
 
 /** @type {React.FC} */
 const SupplierHome = () => {
@@ -73,23 +79,26 @@ const SupplierHome = () => {
 
   const tasks = /** @type {HomeTask[]} */ (
     useMemo(() => {
+      // One "today" for every lane, the clock the supplier pages read.
+      const nowIso = sdcClock.now();
       const poItems = pos.data?.items ?? [];
       const toConfirm = poItems.filter(
         (po) => po.status === POStatus.SENT || po.status === POStatus.ACKNOWLEDGED
       );
       const readyToShip = poItems.filter((po) => po.status === POStatus.CONFIRMED);
-      const now = Date.parse(sdcClock.now());
+      const noNotice = poItems.filter(
+        (po) =>
+          (po.status === POStatus.CONFIRMED || po.status === POStatus.PARTIALLY_DELIVERED) &&
+          !po.shippingNotice?.expectedCompletionDate
+      );
       const openRfqs = (rfqs.data?.items ?? []).filter(
         (r) => r.status === 'Open' && !!supplierId && !r.respondedSupplierIds.includes(supplierId)
       );
-      const lateRfqs = openRfqs.filter((r) => new Date(r.responseDeadline).getTime() < now);
       const docs = documents.data?.items ?? [];
-      const expired = docs.filter(
-        (doc) => documentDisplayState(doc, DECLARED_PRESENT) === 'expired'
-      );
-      const expiring = docs.filter(
-        (doc) => documentDisplayState(doc, DECLARED_PRESENT) === 'expiring'
-      );
+      const certsDue = docs.filter((doc) => {
+        const state = documentDisplayState(doc, DECLARED_PRESENT);
+        return state === 'expired' || state === 'expiring';
+      });
       const unpaid = (invoices.data?.items ?? []).filter(
         (i) => i.status !== 'Payment Released' && i.status !== 'Remittance Received'
       );
@@ -103,132 +112,191 @@ const SupplierHome = () => {
         )
       );
       const returned = (invoices.data?.items ?? []).filter((i) => i.stage === 'Returned');
-      return [
+      const toConfirmCallOffs = callOffs.views.filter(
+        (v) => v.callOff.status === 'Awaiting Confirmation'
+      );
+      const dueCallOffs = callOffs.views.filter((v) => isDueWithoutHeadsUp(v, callOffs.nowIso));
+      const positions = (stock.data?.items ?? []).filter((p) => p.supplierId === supplierId);
+      const stalePositions = positions.filter(
+        (p) => stockFreshness(p, inventoryNow()) !== 'current'
+      );
+      // Material B2 (MR-1 d step 2) — the in-hub reminder: from 09:00 WIB on the
+      // working day before the cutoff, a manual supplier's materials still
+      // missing this cycle. Derived, never stored.
+      const weekly =
+        supplierId && positions.length > 0 && !positions.some((p) => p.apiConnected)
+          ? weeklyUpdateView(supplierId, positions, inventoryNow())
+          : null;
+      const weeklyMissing = weekly?.reminder ? weekly.status.missing : [];
+      const capacityDue = (capacity.data?.items ?? []).filter(
+        (p) => planStatus(p) === 'notStarted' || planStatus(p) === 'outdated'
+      );
+      const unviewed = (forecastVersions.data?.items ?? []).filter(
+        (v) =>
+          v.isCurrent && v.suppliers.some((s) => s.supplierId === supplierId && s.viewedAt === null)
+      );
+      const lines = forecastLines.data?.items ?? [];
+      const unviewedLines = lines.filter((l) =>
+        unviewed.some((v) => v.publicationId === l.publicationId)
+      );
+      const overdueLines = lines.filter((l) => deadlineState(l, forecastNow()) === 'overdue');
+      const dueSoonLines = lines.filter((l) => deadlineState(l, forecastNow()) === 'dueSoon');
+      const revisionLines = lines.filter((l) => l.state === 'revisionRequested');
+      const openRfis = (rfiEvents.data?.items ?? []).filter(
+        (e) => !e.closed && e.responses.every((r) => r.status !== 'Submitted')
+      );
+      const openRfps = (rfpEvents.data?.items ?? []).filter(
+        (e) => !e.closed && e.responses.every((r) => r.status !== 'Submitted')
+      );
+      const openRounds = (rounds.data?.items ?? []).filter((r) => !r.closed && r.awaiting > 0);
+
+      /**
+       * CR-24 — this supplier's cover against its lead time, for the materials a
+       * task is about. Only figures with a lead time on record take part.
+       * @param {readonly string[]} codes
+       * @returns {{ daysOfCover: number; leadTimeDays: number }[]}
+       */
+      const coverOf = (codes) =>
+        positions
+          .filter((p) => codes.includes(p.materialCode))
+          .flatMap((p) => {
+            const { basis } = positionRisk(p);
+            return basis.kind === 'leadTime'
+              ? [{ daysOfCover: basis.daysOfCover, leadTimeDays: basis.leadTimeDays }]
+              : [];
+          });
+      /** @param {readonly { lineItems: readonly { materialCode: string }[] }[]} orders */
+      const poMaterials = (orders) =>
+        orders.flatMap((po) => po.lineItems.map((l) => l.materialCode));
+
+      // Each task names the deadline of every record it counts and, where it is
+      // about supply, this supplier's cover against lead time. severityDisplay.js
+      // decides URGENT / DUE SOON. `noDeadlineAmber` — no deadline is defined for
+      // these yet, so they stay "Due soon" (amber) until one is (owner ruling).
+      /** @type {UnratedTask[]} */
+      const rated = [
         {
+          // REQ-E07-02 — the 1-working-day response deadline.
           id: 'confirm-orders',
           label: t('hub.home.task.sup.confirmOrders'),
           count: toConfirm.length,
-          severity: 'critical',
+          deadlines: toConfirm.map((po) => responseDeadline(po).toISOString()),
+          stock: coverOf(poMaterials(toConfirm)),
           to: '/supplier/orders'
         },
         {
           // REQ-E09-03 — released call-offs waiting for this supplier's answer.
           id: 'confirm-calloffs',
           label: t('hub.home.task.sup.callOffsConfirm'),
-          count: callOffs.views.filter((v) => v.callOff.status === 'Awaiting Confirmation').length,
-          severity: callOffs.views.some((v) => v.confirmation === 'Escalated')
-            ? 'critical'
-            : 'warning',
+          count: toConfirmCallOffs.length,
+          deadlines: toConfirmCallOffs.map((v) => v.deadline?.toISOString() ?? v.callOff.needDate),
+          stock: coverOf(toConfirmCallOffs.map((v) => v.callOff.materialCode)),
           to: '/supplier/call-offs'
         },
         {
           // CR-09 — confirmed, due within 7 days, and no ASN or dispatch notice yet.
           id: 'calloffs-due',
           label: t('hub.home.task.sup.callOffsDue'),
-          count: callOffs.views.filter((v) => isDueWithoutHeadsUp(v, callOffs.nowIso)).length,
-          severity: 'warning',
+          count: dueCallOffs.length,
+          deadlines: dueCallOffs.map((v) => v.dueDate),
+          stock: coverOf(dueCallOffs.map((v) => v.callOff.materialCode)),
           to: '/supplier/call-offs'
         },
         {
-          // REQ-E08-01 AC-05 — figures past their data-update SLA, or never sent.
+          // REQ-E08-01 AC-05 — figures past their data-update SLA, or never sent
+          // (a figure never sent is due at this cycle's cutoff).
           id: 'stale-stock',
           label: t('hub.home.task.sup.staleStock'),
-          count: (stock.data?.items ?? []).filter(
-            (p) => stockFreshness(p, inventoryNow()) !== 'current'
-          ).length,
-          severity: 'warning',
+          count: stalePositions.length,
+          deadlines: stalePositions.map((p) => p.staleAt ?? weekly?.status.cycle.cutoff),
+          stock: coverOf(stalePositions.map((p) => p.materialCode)),
           to: '/supplier/inventory'
         },
         {
-          // Material B2 (MR-1 d step 2) — the in-hub reminder: from 09:00 WIB on
-          // the working day before the cutoff, a manual supplier's materials
-          // still missing this cycle. Derived, never stored.
           id: 'weekly-update',
           label: t('hub.home.task.sup.weeklyUpdate'),
-          count: (() => {
-            const items = stock.data?.items ?? [];
-            if (!supplierId || items.length === 0 || items.some((p) => p.apiConnected)) return 0;
-            const view = weeklyUpdateView(supplierId, items, inventoryNow());
-            return view.reminder === null ? 0 : view.status.missing.length;
-          })(),
-          severity: 'warning',
+          count: weeklyMissing.length,
+          deadlines: weekly ? [weekly.status.cycle.cutoff] : [],
+          stock: coverOf(weeklyMissing),
           to: '/supplier/inventory'
         },
         {
           // REQ-E08-04 — a material group with no current capacity confirmation.
+          // No due date is defined; the first week the plan does not cover stands in.
           id: 'capacity-due',
           label: t('hub.home.task.sup.capacityDue'),
-          count: (capacity.data?.items ?? []).filter(
-            (p) => planStatus(p) === 'notStarted' || planStatus(p) === 'outdated'
-          ).length,
-          severity: 'warning',
+          count: capacityDue.length,
+          deadlines: capacityDue.map(
+            (p) => p.weeks.find((w) => w.entry === null || w.needsReEntry === true)?.week
+          ),
+          stock: coverOf(capacityDue.flatMap((p) => p.materials)),
           to: '/supplier/capacity'
         },
         {
-          // REQ-E06-01 — a published version this supplier has not opened yet.
+          // REQ-E06-01 — a published version this supplier has not opened yet. No
+          // view-by date exists; the version's earliest commitment deadline stands in.
           id: 'new-forecast',
           label: t('hub.home.task.sup.newForecast'),
-          count: (forecastVersions.data?.items ?? []).filter(
-            (v) =>
-              v.isCurrent &&
-              v.suppliers.some((s) => s.supplierId === supplierId && s.viewedAt === null)
-          ).length,
-          severity: 'warning',
+          count: unviewed.length,
+          deadlines: unviewedLines.map((l) => l.dueAt),
+          stock: coverOf(unviewedLines.map((l) => l.materialCode)),
           to: '/supplier/forecasts'
         },
         {
           // REQ-E06-03 BR-06 — the reminder at the deadline.
           id: 'commitments-overdue',
           label: t('hub.home.task.sup.commitmentsOverdue'),
-          count: (forecastLines.data?.items ?? []).filter(
-            (l) => deadlineState(l, forecastNow()) === 'overdue'
-          ).length,
-          severity: 'critical',
+          count: overdueLines.length,
+          deadlines: overdueLines.map((l) => l.dueAt),
+          stock: coverOf(overdueLines.map((l) => l.materialCode)),
           to: '/supplier/forecasts'
         },
         {
           // REQ-E06-03 BR-06 — the reminder at half the deadline.
           id: 'commitments-due-soon',
           label: t('hub.home.task.sup.commitmentsDueSoon'),
-          count: (forecastLines.data?.items ?? []).filter(
-            (l) => deadlineState(l, forecastNow()) === 'dueSoon'
-          ).length,
-          severity: 'warning',
+          count: dueSoonLines.length,
+          deadlines: dueSoonLines.map((l) => l.dueAt),
+          stock: coverOf(dueSoonLines.map((l) => l.materialCode)),
           to: '/supplier/forecasts'
         },
         {
           // REQ-E06-03 BR-05 — the planner asked for a revision, with a note.
           id: 'commitments-revision',
           label: t('hub.home.task.sup.revisionRequested'),
-          count: (forecastLines.data?.items ?? []).filter((l) => l.state === 'revisionRequested')
-            .length,
-          severity: 'warning',
+          count: revisionLines.length,
+          deadlines: [],
+          stock: coverOf(revisionLines.map((l) => l.materialCode)),
+          noDeadlineAmber: true,
           to: '/supplier/forecasts'
         },
         {
           // REQ-E07-05 — a confirmed order still owes its expected completion date.
           id: 'shipping-notice',
           label: t('hub.home.task.sup.shippingNotice'),
-          count: poItems.filter(
-            (po) =>
-              (po.status === POStatus.CONFIRMED || po.status === POStatus.PARTIALLY_DELIVERED) &&
-              !po.shippingNotice?.expectedCompletionDate
-          ).length,
-          severity: 'warning',
+          count: noNotice.length,
+          deadlines: [],
+          stock: coverOf(poMaterials(noNotice)),
+          noDeadlineAmber: true,
           to: '/supplier/order-summary'
         },
         {
+          // Ship by the confirmed delivery date (several orders carry an empty
+          // one), else the requested date.
           id: 'create-asn',
           label: t('hub.home.task.sup.createAsn'),
           count: readyToShip.length,
-          severity: 'warning',
+          deadlines: readyToShip.map((po) => po.confirmedDeliveryDate || po.requestedDeliveryDate),
+          stock: coverOf(poMaterials(readyToShip)),
           to: '/supplier/shipments'
         },
         {
           id: 'receipt-discrepancies',
           label: t('hub.home.task.sup.receiptDiscrepancies'),
           count: toAnswer.length,
-          severity: 'warning',
+          deadlines: [],
+          stock: coverOf(toAnswer.flatMap((gr) => gr.inspectionResults.map((r) => r.materialCode))),
+          noDeadlineAmber: true,
           to: '/supplier/goods-receipts'
         },
         {
@@ -236,14 +304,18 @@ const SupplierHome = () => {
           id: 'returned-invoices',
           label: t('hub.home.task.sup.returnedInvoices'),
           count: returned.length,
-          severity: 'critical',
+          deadlines: [],
+          noDeadlineAmber: true,
           to: '/supplier/invoices'
         },
         {
+          // REQ-E03-03 BR-05 — this supplier's own deadline, extension included.
           id: 'rfq',
           label: t('hub.home.task.sup.rfq'),
           count: openRfqs.length,
-          severity: lateRfqs.length > 0 ? 'critical' : 'warning',
+          deadlines: openRfqs.map((r) =>
+            effectiveDeadline(r.responseDeadline, r.inviteeDeadlines ?? [], supplierId ?? '')
+          ),
           to: '/supplier/rfq'
         },
         {
@@ -251,20 +323,20 @@ const SupplierHome = () => {
           // SUBMITTED response (a draft is still "to answer").
           id: 'rfi-answer',
           label: t('hub.home.task.rfiToAnswer'),
-          count: (rfiEvents.data?.items ?? []).filter(
-            (e) => !e.closed && e.responses.every((r) => r.status !== 'Submitted')
-          ).length,
-          severity: 'warning',
+          count: openRfis.length,
+          deadlines: openRfis.map((e) =>
+            effectiveDeadline(e.responseDeadline, e.invitedSuppliers, supplierId ?? '')
+          ),
           to: '/supplier/rfi'
         },
         {
           // REQ-E03-04 — a proposal request still to answer.
           id: 'rfp-answer',
           label: t('hub.home.task.rfpToAnswer'),
-          count: (rfpEvents.data?.items ?? []).filter(
-            (e) => !e.closed && e.responses.every((r) => r.status !== 'Submitted')
-          ).length,
-          severity: 'warning',
+          count: openRfps.length,
+          deadlines: openRfps.map((e) =>
+            effectiveDeadline(e.responseDeadline, e.invitedSuppliers, supplierId ?? '')
+          ),
           to: '/supplier/rfp'
         },
         {
@@ -272,22 +344,30 @@ const SupplierHome = () => {
           // sent one. The read already narrows the round to its own thread.
           id: 'revised-quote',
           label: t('hub.home.task.revisedQuote'),
-          count: (rounds.data?.items ?? []).filter((r) => !r.closed && r.awaiting > 0).length,
-          severity: 'critical',
+          count: openRounds.length,
+          deadlines: openRounds.map((r) => r.deadline),
           to: '/supplier/rfq/rounds'
         },
         {
+          // An expired certificate's deadline has passed; an expiring one is due
+          // on its expiry date.
           id: 'certs',
           label: t('hub.home.task.sup.certs'),
-          count: expired.length + expiring.length,
-          severity: expired.length > 0 ? 'critical' : 'warning',
+          count: certsDue.length,
+          deadlines: certsDue.map((doc) => doc.expiryDate),
           to: '/supplier/documents'
-        },
+        }
+      ];
+      return [
+        ...withSeverity(rated, nowIso, t),
+        // Money PTI owes this supplier, not something the supplier does: it stays
+        // "To review", outside the urgency ranking, and last (`none` renders as
+        // `info` but sorts below every due task).
         {
           id: 'invoices',
           label: t('hub.home.task.sup.invoices'),
           count: unpaid.length,
-          severity: 'info',
+          severity: /** @type {const} */ ('none'),
           to: '/supplier/invoices'
         }
       ];
