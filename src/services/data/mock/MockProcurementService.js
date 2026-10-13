@@ -1,8 +1,10 @@
 import { callOffStore } from './stores/callOffStore';
 /** @import { CallOff } from '../types' */
+/** @import { BlanketPoRunOut } from '../../transitions/blanketPoRules' */
 import { purchaseOrderStore } from './stores/purchaseOrderStore';
 import {
   allAlerts,
+  allBlanketPoRunOuts,
   allCapacityPlans,
   allPositions,
   grantFor,
@@ -460,6 +462,17 @@ export class MockProcurementService {
   async getCapacityPlans(scope) {
     // REQ-E08-04 — capacity against demand per supplier × material group.
     return { items: applySupplierScope(scope, allCapacityPlans()) };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<BlanketPoRunOut>>}
+   */
+  async getBlanketPoRunOuts(scope) {
+    // CAP-9 — PTI's projection of its own blanket POs against the LTP; a
+    // supplier reads none (the call-off page and the alert are PTI's).
+    if (scope.personaType !== 'buyer') return { items: [] };
+    return { items: allBlanketPoRunOuts() };
   }
 
   /**
