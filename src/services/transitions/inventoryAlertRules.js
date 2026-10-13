@@ -38,10 +38,16 @@
 // reason speaks for every material of its planning group), derived from the
 // standing submission like every other rule; High by rule. The alert model has
 // no audience field: it reaches whoever reads the PTI alerts page.
+//
+// CAP-9 BR-05 (BL-178) — `blanketPoRunOut`: a blanket PO whose "new PO needed
+// by" week (`blanketPoRules`) falls within 4 weeks or has passed. One alert per
+// supplier × material group, on its last (newest) PO; subject = that PO id. PTI-only. High when
+// the week is this week or passed, Medium otherwise; impact at that week.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @import { CapacityPlan, ForecastCommitmentLine, InventoryAlert, InventoryAlertRule, InventoryPosition, RiskBasis, RiskClass } from '../data/types' */
 /** @import { ActorAttribution } from '@lib/enforcement' */
+/** @import { BlanketPoAlertSubject } from './blanketPoRules' */
 import { gapWeeks } from './capacityRules';
 import { DISCONTINUED_CODE, NOTE_REQUIRED_CODE, isActiveReasonCode } from './reasonCodes';
 import {
@@ -69,7 +75,8 @@ export const ALERT_RULES = [
   'commitmentBelowForecast',
   'leadTimeMissing',
   'callOffNotCovered',
-  'supplyDiscontinued'
+  'supplyDiscontinued',
+  'blanketPoRunOut'
 ];
 
 /**
@@ -85,7 +92,9 @@ export const PTI_ONLY_RULES = [
   'leadTimeMissing',
   'callOffNotCovered',
   // CAP-D2 — finding another source is PTI's act; the supplier gave the reason.
-  'supplyDiscontinued'
+  'supplyDiscontinued',
+  // CAP-9 BR-05 — raising the next PO is PTI's act; the projection is PTI's estimate.
+  'blanketPoRunOut'
 ];
 
 /** @type {readonly RiskClass[]} */
@@ -316,6 +325,7 @@ export function callOffCoverGap(p, deliveries, nowIso) {
  * @param {readonly CommitmentShortfallSubject[]} [commitmentShortfalls]
  * @param {readonly CallOffCoverInput[]} [callOffSubjects]
  * @param {readonly DiscontinuedSubject[]} [discontinued]
+ * @param {readonly BlanketPoAlertSubject[]} [blanketRunOuts]
  * @returns {AlertCondition[]}
  */
 export function deriveAlertConditions(
@@ -324,7 +334,8 @@ export function deriveAlertConditions(
   nowIso,
   commitmentShortfalls = [],
   callOffSubjects = [],
-  discontinued = []
+  discontinued = [],
+  blanketRunOuts = []
 ) {
   const out = /** @type {Map<string, AlertCondition>} */ (new Map());
   /** @typedef {{ riskClass: RiskClass; basis: RiskBasis }} Risk */
@@ -445,6 +456,10 @@ export function deriveAlertConditions(
   // CAP-4 BR-03 (CAP-D2) — the supplier said Discontinued: find another source.
   for (const d of discontinued) {
     push('supplyDiscontinued', d, d.materialCode, d.materialLabel, byRule('high'), d.daysToImpact);
+  }
+  // CAP-9 BR-05 — a blanket PO needs its next PO within 4 weeks: raise it.
+  for (const b of blanketRunOuts) {
+    push('blanketPoRunOut', b, b.poId, b.label, byRule(b.riskClass), b.daysToImpact);
   }
   return [...out.values()];
 }

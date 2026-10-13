@@ -106,8 +106,9 @@ describe('CAP-2 supplier Capacity (Table C) — Monthly', () => {
     const head = screen.getByTestId('capacity-grid-month-2026-10');
     expect(head).toHaveTextContent('Oct 2026');
     expect(head).toHaveTextContent('5 wk');
-    // The portal's short date: `28 Sep` or `28 Sept`, depending on the ICU data.
-    expect(head).toHaveTextContent(/28 Sept? – 26 Oct/);
+    // BL-186 — the grid's own short date: `28 Sep`, never the portal's `28 Sept`.
+    expect(head).toHaveTextContent('28 Sep – 26 Oct');
+    expect(head).not.toHaveTextContent('Sept');
     expect(head).not.toHaveAttribute('data-partial');
   });
 

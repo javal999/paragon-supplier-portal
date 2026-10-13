@@ -124,7 +124,8 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks }) => {
       rows={[
         {
           id: 'ltp',
-          label: t('inv.capacity.col.ltp', { uom: plan.uom }),
+          label: t('inv.capacity.row.ltp'),
+          unit: plan.uom,
           combine: 'sum',
           value: (week) => lwOf(week)?.ltp ?? 0,
           format: qty,
@@ -136,7 +137,8 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks }) => {
         },
         {
           id: 'allocated',
-          label: t('inv.capacity.col.allocated', { uom: plan.uom }),
+          label: t('inv.capacity.row.allocated'),
+          unit: plan.uom,
           combine: 'sum',
           value: (week) => byWeek(week).entry?.allocated ?? null,
           monthCell: (/** @type {number | null} */ v) =>
@@ -163,7 +165,8 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks }) => {
         },
         {
           id: 'upside',
-          label: t('inv.capacity.col.upside', { uom: plan.uom }),
+          label: t('inv.capacity.row.upside'),
+          unit: plan.uom,
           combine: 'sum',
           value: (week) => byWeek(week).entry?.upside ?? null,
           format: qty,
@@ -178,7 +181,8 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks }) => {
         },
         {
           id: 'be',
-          label: t('inv.capacity.col.be', { uom: plan.uom }),
+          label: t('inv.capacity.row.be'),
+          unit: plan.uom,
           combine: 'sum',
           value: (week) => lwOf(week)?.be ?? null,
           format: qty,
@@ -215,7 +219,8 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks }) => {
         },
         {
           id: 'gap',
-          label: t('inv.capacity.col.gap', { uom: plan.uom }),
+          label: t('inv.capacity.row.gap'),
+          unit: plan.uom,
           combine: 'sum',
           value: (week) => {
             const w = byWeek(week);
