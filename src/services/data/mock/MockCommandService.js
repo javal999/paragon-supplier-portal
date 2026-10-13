@@ -121,6 +121,8 @@ import { calendarCovers, workingCalendarStore } from '../../transitions/workingC
 import { isHubSettingKey, parseStaleOverrideKey } from '../../transitions/hubSettings';
 import { hubSettingsStore, settingValue } from '../../transitions/hubSettingsStore';
 import {
+  SHORTFALL_NOTE_REQUIRED_CODES,
+  activeReasonCodes,
   isActiveReasonCode,
   parseReasonCodeEntityId,
   reasonCodeStore
@@ -279,6 +281,9 @@ import {
 } from './forecastReadModel';
 import { baseDemand, FORECAST_SOURCES } from './fixtures/forecastHub';
 import {
+  moveDemandRefusal,
+  moveShortfall,
+  periodBounds,
   reassignVersion,
   republishVersion,
   shortfallRefusal
@@ -2494,7 +2499,16 @@ const requirementResponseTarget = {
             // that let this be a plain read.
             confirmedQty: /** @type {number} */ (payload.confirmedQty),
             uom,
-            ...(str('committedDate') ? { committedDate: str('committedDate') } : {}),
+            // CAP-6 (BL-175) BR-02 — the supplier confirms a quantity, no date.
+            // A forecast-version commitment without one stores the period
+            // start, so every reader of the record keeps a date until the
+            // data contract drops the field. SDC-0 publications keep theirs
+            // optional, as before.
+            ...(str('committedDate')
+              ? { committedDate: str('committedDate') }
+              : isForecastVersion(publicationId)
+                ? { committedDate: periodBounds(periodBucket).start }
+                : {}),
             ...(str('capacityConstraint') ? { capacityConstraint: str('capacityConstraint') } : {}),
             // REQ-E06-02 BR-08 — proven a number ≥ 0 by RR_SUBMIT_COMMITMENT_DETAIL.
             ...(typeof payload.upsideQty === 'number' ? { upsideQty: payload.upsideQty } : {})
@@ -2631,8 +2645,8 @@ bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_QTY_AGREES, ({ payload }) => {
   return { ok: true };
 });
 
-// REQ-E06-02 BR-04 / AC-02 — below forecast needs a starter reason (and `other`
-// a note). The rule is `forecastRules.shortfallRefusal`, the same function the
+// REQ-E06-02 BR-04 / AC-02 — below forecast needs a starter reason (and `other`,
+// `force-majeure` or `discontinued` a note, CAP-4 BR-02). The rule is `forecastRules.shortfallRefusal`, the same function the
 // form and the upload check call, so the three can never disagree. The floor
 // ran first, so `confirmedQty` is a finite number here.
 bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_SHORTFALL_REASON, ({ payload }) => {
@@ -2646,30 +2660,28 @@ bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_SHORTFALL_REASON, ({ payload }) => {
   if (refusal === 'reasonRequired') {
     return {
       ok: false,
-      reason: `BELOW_FORECAST_NEEDS_REASON: ${payload.confirmedQty} is below the forecast of ${line.forecastQty}; choose capacity, material, logistics, quality or other`
+      reason: `BELOW_FORECAST_NEEDS_REASON: ${payload.confirmedQty} is below the forecast of ${line.forecastQty}; choose ${activeReasonCodes('commitmentShortfall').join(', ')}`
     };
   }
   if (refusal === 'noteRequired') {
-    return { ok: false, reason: 'OTHER_REASON_NEEDS_NOTE: the reason "other" needs a note' };
+    return {
+      ok: false,
+      reason: `OTHER_REASON_NEEDS_NOTE: the reason ${SHORTFALL_NOTE_REQUIRED_CODES.join(' / ')} needs a note`
+    };
   }
   return { ok: true };
 });
 
-// REQ-E06-02 BR-08 — a commitment to a forecast version carries its date, and
-// an upside quantity is a number of zero or more. The SDC-0 publications
-// predate the date rule and keep their shape.
+// REQ-E06-02 BR-08 — an upside quantity is a number of zero or more, and a
+// date, when one is sent, is a calendar day. CAP-6 (BL-175) BR-02 retired the
+// refusal of a MISSING date on a forecast version: the supplier confirms a
+// quantity per period, and `create` stores the period start instead.
 bindPolicyHook(POLICY_HOOKS.RR_SUBMIT_COMMITMENT_DETAIL, ({ payload }) => {
   const up = payload.upsideQty;
   if (up !== undefined && (typeof up !== 'number' || !Number.isFinite(up) || up < 0)) {
     return { ok: false, reason: 'upsideQty must be a number of zero or more' };
   }
   const date = payload.committedDate;
-  if (isForecastVersion(String(payload.publicationId)) && !isIsoDay(date)) {
-    return {
-      ok: false,
-      reason: 'COMMITMENT_DATE_REQUIRED: a commitment needs its date (YYYY-MM-DD)'
-    };
-  }
   if (date !== undefined && date !== '' && !isIsoDay(date)) {
     return { ok: false, reason: 'committedDate must be a date (YYYY-MM-DD)' };
   }
@@ -2723,7 +2735,10 @@ bindPolicyHook(POLICY_HOOKS.RR_PROMOTE_CAPACITY_CONFIRMED, ({ entityId, target }
     };
   }
   if (refusal.refusal === 'aboveBeNoteRequired') {
-    return { ok: false, reason: 'OTHER_REASON_NEEDS_NOTE: the reason "other" needs a note' };
+    return {
+      ok: false,
+      reason: `OTHER_REASON_NEEDS_NOTE: the reason ${SHORTFALL_NOTE_REQUIRED_CODES.join(' / ')} needs a note`
+    };
   }
   return {
     ok: false,
@@ -3211,6 +3226,8 @@ const capacityTarget = {
       week: String(w.week),
       allocated: Number(w.allocated),
       ...(isNonNegative(w.upside) ? { upside: w.upside } : {}),
+      // CAP-3 BR-03 — only a literal `true` is a confirmation.
+      ...(w.upsideConfirmed === true ? { upsideConfirmed: /** @type {const} */ (true) } : {}),
       ...(isActiveReasonCode('capacityShortfall', w.reason) ? { reason: w.reason } : {}),
       ...(nonBlank(w.note) ? { note: nonBlank(w.note) } : {})
     }));
@@ -3298,6 +3315,19 @@ bindPolicyHook(POLICY_HOOKS.ALERT_CLOSE_REASON_GIVEN, ({ payload }) => {
 const FORECAST_STREAMS = /** @type {const} */ (['packaging', 'rawMaterial']);
 
 /**
+ * CAP-8 — the allocations of a Move demand payload, read as sent. The policy
+ * has proven each one a qualified supplier and a quantity above 0 before
+ * `create` reads them.
+ * @param {unknown} raw
+ * @returns {{ supplierId: string; qty: number }[]}
+ */
+const moveAllocationsOf = (raw) =>
+  (Array.isArray(raw) ? raw : []).map((a) => ({
+    supplierId: String(a?.supplierId),
+    qty: typeof a?.qty === 'number' ? a.qty : Number.NaN
+  }));
+
+/**
  * REQ-E06-01 / REQ-E06-03 BR-05 — a forecast version; `entityId` is its publicationId.
  * @type {CommandTarget}
  */
@@ -3312,10 +3342,11 @@ const forecastVersionTarget = {
   creationOwner: () => null,
   create: (payload) => {
     const now = sdcClock.now();
-    if (payload.toSupplierId !== undefined) {
+    if (payload.allocations !== undefined) {
       const current = /** @type {import('../../sdc/types').ForecastPublication} */ (
         forecastVersionStore.get(String(payload.publicationId))
       );
+      // CAP-8 — one version for the whole split; the policy has checked every allocation.
       const next = /** @type {import('../../sdc/types').ForecastPublication} */ (
         reassignVersion(
           current,
@@ -3323,7 +3354,7 @@ const forecastVersionTarget = {
             materialCode: String(payload.materialCode),
             periodBucket: String(payload.periodBucket),
             fromSupplierId: String(payload.fromSupplierId),
-            toSupplierId: String(payload.toSupplierId),
+            allocations: moveAllocationsOf(payload.allocations),
             note: String(payload.note).trim()
           },
           now
@@ -3395,8 +3426,11 @@ bindPolicyHook(POLICY_HOOKS.FORECAST_ENGINE_PUBLISH_ALLOWED, ({ payload }) => {
   };
 });
 
-// REQ-E06-03 BR-05 — reassign: a line of the CURRENT version, a different
-// supplier qualified for the material, and a note the supplier can read.
+// REQ-E06-03 BR-05 / CAP-8 — reassign: a line of the CURRENT version, one or
+// more allocations to other suppliers qualified for the material, totalling
+// more than 0 and no more than the line's shortfall (BR-03, the same
+// `moveDemandRefusal` the panel pre-checks with), and a note the supplier can
+// read (BR-06). A quantity above a target's headroom is not refused (BR-04).
 bindPolicyHook(POLICY_HOOKS.FORECAST_REASSIGN_VALID, ({ payload }) => {
   const pub = forecastVersionStore.get(String(payload.publicationId));
   if (!pub || !pub.stream) return { ok: false, reason: 'forecast version not found' };
@@ -3405,25 +3439,40 @@ bindPolicyHook(POLICY_HOOKS.FORECAST_REASSIGN_VALID, ({ payload }) => {
   }
   if (nonBlank(payload.note) === undefined)
     return { ok: false, reason: 'NOTE_REQUIRED: moving demand needs a note' };
+  if (!Array.isArray(payload.allocations))
+    return { ok: false, reason: 'BAD_ALLOCATION: allocations must be a list' };
   const from = String(payload.fromSupplierId);
-  const to = String(payload.toSupplierId);
   const code = String(payload.materialCode);
-  const line = pub.lines.find(
+  const bucket = String(payload.periodBucket);
+  const line = allCommitmentLines(null).find(
     (l) =>
+      l.publicationId === pub.publicationId &&
       l.supplierId === from &&
       l.materialCode === code &&
-      l.periodBucket === String(payload.periodBucket)
+      l.periodBucket === bucket
   );
   if (!line)
     return {
       ok: false,
       reason: 'no such period for this supplier and material in the current version'
     };
-  if (from === to) return { ok: false, reason: 'SAME_SUPPLIER: choose a different supplier' };
-  if (!qualifiedSuppliers(code).includes(to)) {
-    return { ok: false, reason: `NOT_QUALIFIED: ${to} does not supply ${code}` };
-  }
-  return { ok: true };
+  const shortfall = moveShortfall(line);
+  const refused = moveDemandRefusal(shortfall, moveAllocationsOf(payload.allocations), {
+    fromSupplierId: from,
+    qualified: qualifiedSuppliers(code)
+  });
+  if (refused === null) return { ok: true };
+  const who = refused.supplierId ?? '';
+  /** @type {Record<import('../../transitions/forecastRules').MoveDemandRefusal, string>} */
+  const reasons = {
+    aboveShortfall: `ABOVE_SHORTFALL: More than the shortfall of ${shortfall.toLocaleString('en-US')} ${line.uom}`,
+    nothingToMove: 'NOTHING_TO_MOVE: give at least one supplier a quantity',
+    badQty: `BAD_ALLOCATION: the quantity for ${who} must be a number above 0`,
+    sameSupplier: 'SAME_SUPPLIER: choose a different supplier',
+    notQualified: `NOT_QUALIFIED: ${who} does not supply ${code}`,
+    duplicateSupplier: `DUPLICATE_SUPPLIER: ${who} is given more than one quantity`
+  };
+  return { ok: false, reason: reasons[refused.refusal] };
 });
 
 /**

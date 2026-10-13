@@ -194,7 +194,7 @@ describe('a switched-off act says why (WCAG 4.1.2)', () => {
     );
   });
 
-  it('Supplier responses: the confirm waits for a note, and for a supplier when moving demand', async () => {
+  it('Supplier responses: the confirm waits for a note, and for a quantity when moving demand', async () => {
     renderWithProviders(<BuyerCommitments />, { identity: PLANNER });
     const what = `PT Sample Packaging Indonesia PK-PETB-8802 Week of ${formatDate(W[3])}`;
     fireEvent.click(await screen.findByRole('button', { name: `Move demand for ${what}` }, LOAD));
@@ -204,9 +204,12 @@ describe('a switched-off act says why (WCAG 4.1.2)', () => {
     const confirm = panel.getByTestId('fc-action-submit');
     expect(confirm).toBeDisabled();
     expect(confirm).toHaveAccessibleDescription(
-      'Choose a supplier Required. The supplier can read it.'
+      'Enter a quantity for at least one supplier. Required. The supplier can read it.'
     );
-    fireEvent.change(panel.getByLabelText('Move to supplier'), { target: { value: 'sup-012' } });
+    fireEvent.change(
+      panel.getByLabelText('Quantity to move to Sample PET Bottle Manufacturer GmbH'),
+      { target: { value: '8500' } }
+    );
     expect(confirm).toHaveAccessibleDescription('Required. The supplier can read it.');
   });
 

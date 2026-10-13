@@ -21,17 +21,21 @@ import {
 import { callOffCoverSubjects, callOffViews } from '../../transitions/callOffRules';
 import { buildInventoryPositions } from '../../transitions/inventoryRules';
 import { buildCapacityPlans } from '../../transitions/capacityRules';
+/** @import { BlanketPoRunOut } from '../../transitions/blanketPoRules' */
+import { blanketPoAlertSubjects, blanketPoRunOuts } from '../../transitions/blanketPoRules';
 import { commitmentAlertSubjects } from '../../transitions/forecastRules';
 import { allCommitmentLines } from './forecastReadModel';
 /** @import { AlertCondition } from '../../transitions/inventoryAlertRules' */
 import {
   alertsFromLedger,
   clearedSince,
-  deriveAlertConditions
+  deriveAlertConditions,
+  discontinuedSubjects
 } from '../../transitions/inventoryAlertRules';
 import { inventoryDeclarationStore } from './stores/inventoryDeclarationStore';
 import { asnStore } from './stores/asnStore';
 import { callOffStore } from './stores/callOffStore';
+import { purchaseOrderStore } from './stores/purchaseOrderStore';
 import { goodsReceiptStore } from './stores/goodsReceiptStore';
 import {
   capacityStore,
@@ -243,21 +247,46 @@ export function allCapacityPlans(nowIso = sdcClock.now()) {
 }
 
 /**
+ * CAP-9 (BL-178) — every open blanket PO line projected from the current hub
+ * week: remaining − the LTP, the run-out and "new PO needed by" weeks. The LTP
+ * is the capacity demand figure; the lead time the one on record (CR-24).
+ * @param {string} [nowIso]
+ * @returns {BlanketPoRunOut[]}
+ */
+export function allBlanketPoRunOuts(nowIso = sdcClock.now()) {
+  return blanketPoRunOuts(
+    {
+      pos: purchaseOrderStore.all(),
+      callOffs: callOffStore.all(),
+      ltpLines: allCommitmentLines(null),
+      leadTimeDays: leadTimeOf
+    },
+    nowIso
+  );
+}
+
+/**
  * The active alert conditions now.
  * @param {string} [nowIso]
  * @returns {AlertCondition[]}
  */
 export function activeAlertConditions(nowIso = sdcClock.now()) {
+  const plans = allCapacityPlans(nowIso);
+  const lines = allCommitmentLines();
   return deriveAlertConditions(
     allPositions(nowIso),
-    allCapacityPlans(nowIso),
+    plans,
     nowIso,
     // REQ-E08-05 BR-01 — commitments below forecast beyond tolerance (REQ-E06-03).
-    commitmentAlertSubjects(allCommitmentLines()),
+    commitmentAlertSubjects(lines),
     // MR-6 BR-13 (AR-13) — confirmed call-offs the supplier's stock must cover.
     callOffCoverSubjects(
       callOffViews(callOffStore.all(), asnStore.all(), goodsReceiptStore.all(), nowIso)
-    )
+    ),
+    // CAP-4 BR-03 (CAP-D2) — a Discontinued reason: find another source.
+    discontinuedSubjects(plans, lines, (code) => materialEntry(code)?.label ?? code, nowIso),
+    // CAP-9 BR-05 — a blanket PO needs its next PO within 4 weeks.
+    blanketPoAlertSubjects(allBlanketPoRunOuts(nowIso), nowIso)
   );
 }
 

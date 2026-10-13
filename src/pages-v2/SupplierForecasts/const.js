@@ -35,7 +35,6 @@ export const labelClass = 'block text-label text-text-tertiary uppercase mb-1';
 /**
  * @typedef {object} ConfirmForm
  * @property {string} confirmedQty
- * @property {string} committedDate
  * @property {string} capacityConstraint
  * @property {string} rootCauseLevel1
  * @property {string} rootCauseNote
@@ -44,7 +43,6 @@ export const labelClass = 'block text-label text-text-tertiary uppercase mb-1';
 /** @type {ConfirmForm} */
 export const emptyForm = {
   confirmedQty: '',
-  committedDate: '',
   capacityConstraint: '',
   rootCauseLevel1: '',
   rootCauseNote: ''

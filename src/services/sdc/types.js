@@ -241,6 +241,7 @@
  * `uom`:  Keys off MaterialMaster.canonicalUom (invariant #2).
  * `segment`:  SOMO read-only planning annotations (C7 GG-1/GG-2 vocabulary).
  * `provenance`:  source = SOMO; SIMULATED × PLANNED for seed publications.
+ * `movedOut`:  CAP-8 BR-05 — the planner's moves of this line's demand to other suppliers, oldest first, one per allocation. `forecastQty` is what is left; `forecastQty` + the moved quantities is the line's demand before any move, which is what a standing commitment answered.
  *
  * @typedef {{
  *   readonly materialCode: string;
@@ -253,7 +254,19 @@
  *   readonly segment?: string;
  *   readonly suggestedSource?: string;
  *   readonly provenance: Provenance;
+ *   readonly movedOut?: readonly MovedDemand[];
  * }} ForecastLine
+ */
+
+/**
+ * CAP-8 BR-05 — one allocation of a Move demand: how much of a line's demand
+ * went to which supplier, when (the new version's publication) and why.
+ * @typedef {{
+ *   readonly toSupplierId: string;
+ *   readonly qty: number;
+ *   readonly at: string;
+ *   readonly note: string;
+ * }} MovedDemand
  */
 
 /**

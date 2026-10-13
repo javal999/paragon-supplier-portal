@@ -13,6 +13,7 @@ import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
 import TableRow from '@components/ui-v2/TableRow';
 import TableCell from '@components/ui-v2/TableCell';
 import Data from '@components/ui-v2/Data';
+import WeekGrid from '@components/ui-v2/WeekGrid';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { formatDate, formatNumber } from '@lib/format';
@@ -76,8 +77,15 @@ const diffPct = (a, b) => {
 /** @param {number | undefined} x */
 const two = (x) => (x === undefined ? '—' : formatNumber(Math.round(x * 100) / 100));
 
-/** @type {React.FC<{ sku: DemandForecastSkuView; weeks: readonly string[]; events: DemandForecastRun['events']['horizon']; range: SeriesRange | null; }>} */
-const SkuDetail = ({ sku, weeks, events, range }) => {
+/** @param {number} n */
+const roundNumber = (n) => formatNumber(Math.round(n));
+
+// CAP-1 A — the Events row names at most this many events per week; the rest
+// read "+n", with the full list on hover.
+const EVENTS_SHOWN = 3;
+
+/** @type {React.FC<{ sku: DemandForecastSkuView; weeks: readonly string[]; events: DemandForecastRun['events']['horizon']; range: SeriesRange | null; asOf: string; }>} */
+const SkuDetail = ({ sku, weeks, events, range, asOf }) => {
   const { t } = useTranslation();
   const d = sku.detail;
   return (
@@ -116,77 +124,132 @@ const SkuDetail = ({ sku, weeks, events, range }) => {
         {sku.method === 'main' && <p>{t('df.detail.main')}</p>}
         {sku.endsOn && <p>{t('df.detail.endsOn', { date: formatDate(sku.endsOn) })}</p>}
       </div>
-      <div className="overflow-x-auto max-h-96 overflow-y-auto">
-        <Table>
-          <TableHeader>
-            <TableHeaderCell>{t('df.detail.col.week')}</TableHeaderCell>
-            <TableHeaderCell>{t('df.detail.col.base')}</TableHeaderCell>
-            <TableHeaderCell>{t('df.detail.col.forecast')}</TableHeaderCell>
-            {range?.bands.map((b) => (
-              <TableHeaderCell key={b.level}>
-                {t('df.range.col.p', { level: Math.round(b.level * 100) })}
-              </TableHeaderCell>
-            ))}
-            {sku.theta && <TableHeaderCell>{t('df.detail.col.theta')}</TableHeaderCell>}
-            <TableHeaderCell>{t('df.detail.col.sap')}</TableHeaderCell>
-            <TableHeaderCell>{t('df.detail.col.events')}</TableHeaderCell>
-          </TableHeader>
-          <tbody>
-            {weeks.map((w, i) => (
-              <TableRow key={w} data-testid={`df-week-${w}`}>
-                <TableCell>
-                  <Data>{formatDate(w)}</Data>
-                </TableCell>
-                <TableCell>
-                  <Data>{formatNumber(Math.round(sku.base[i]))}</Data>
-                </TableCell>
-                <TableCell>
-                  <Data data-testid={`df-week-forecast-${w}`}>{formatNumber(sku.forecast[i])}</Data>
-                  {/* REQ-E14-11 X-06 — a planner override in force; the engine's own value beside it. */}
-                  {sku.overridden.includes(i) && (
+      {/* CAP-1 wave 1 (Table A) — metrics per row, weeks per column; no inner
+          vertical scroll box (A-01). Method's above Reconciled (W1-Q3). */}
+      <WeekGrid
+        label={`${t('df.detail.title')} · ${sku.skuCode}`}
+        corner={t('df.detail.col.week')}
+        currentWeek={asOf}
+        testId="df-weeks"
+        viewKey="demandForecast"
+        weeks={weeks.map((w) => ({ week: w, testId: `df-week-${w}` }))}
+        rows={[
+          {
+            id: 'base',
+            label: t('df.detail.col.base'),
+            combine: 'sum',
+            value: (_w, i) => sku.base[i],
+            format: roundNumber,
+            cell: (_w, i) => <Data>{formatNumber(Math.round(sku.base[i]))}</Data>
+          },
+          {
+            id: 'forecast',
+            label: t('df.detail.col.forecast'),
+            emphasis: true,
+            combine: 'sum',
+            value: (_w, i) => sku.forecast[i],
+            // CAP-2 — in Monthly the override marker is a count of the month's
+            // overridden weeks, not per-week engine values.
+            monthCell: (/** @type {number | null} */ v, m) => {
+              const n = m.indexes.filter((i) => sku.overridden.includes(i)).length;
+              return (
+                <>
+                  <Data>{v === null ? '—' : formatNumber(v)}</Data>
+                  {n > 0 && (
                     <div
-                      className="text-xs text-text-tertiary whitespace-nowrap"
-                      data-testid={`df-week-overridden-${w}`}
+                      className="text-xs text-text-tertiary"
+                      data-testid={`df-month-overridden-${m.key}`}
                     >
-                      {t('fb.df.overridden')} · {t('fb.df.engineCol')}{' '}
-                      <Data className="text-text-tertiary">
-                        {formatNumber(sku.engineForecast[i])}
-                      </Data>
+                      {t('df.detail.month.overridden', { count: n })}
                     </div>
                   )}
-                </TableCell>
-                {range?.bands.map((b) => (
-                  <TableCell key={b.level}>
-                    <Data data-testid={`df-week-p${Math.round(b.level * 100)}-${w}`}>
-                      {b.values[i] === null
-                        ? '—'
-                        : formatNumber(
-                            /** @type {NonNullable<(typeof b.values)[number]>} */ (b.values[i])
-                          )}
-                    </Data>
-                  </TableCell>
-                ))}
-                {sku.theta && (
-                  <TableCell>
+                </>
+              );
+            },
+            cell: (w, i) => (
+              <>
+                <Data data-testid={`df-week-forecast-${w}`}>{formatNumber(sku.forecast[i])}</Data>
+                {/* REQ-E14-11 X-06 — a planner override in force; the engine's own value under it. */}
+                {sku.overridden.includes(i) && (
+                  <div
+                    className="text-xs text-text-tertiary"
+                    data-testid={`df-week-overridden-${w}`}
+                  >
+                    {t('fb.df.overridden')} · {t('fb.df.engineCol')}{' '}
                     <Data className="text-text-tertiary">
-                      {formatNumber(Math.round(sku.theta[i]))}
+                      {formatNumber(sku.engineForecast[i])}
                     </Data>
-                  </TableCell>
+                  </div>
                 )}
-                <TableCell>
-                  <Data>{sku.sapPlan ? formatNumber(sku.sapPlan[i]) : '—'}</Data>
-                </TableCell>
-                <TableCell
-                  className="text-xs text-text-secondary"
+              </>
+            )
+          },
+          ...(range?.bands ?? []).map((b) => ({
+            id: `p${b.level}`,
+            label: t('df.range.col.p', { level: Math.round(b.level * 100) }),
+            // CAP-2 — summed like a flow, and the row says plainly that the
+            // sum of weekly quantiles is not the month's quantile.
+            combine: /** @type {const} */ ('sum'),
+            /** @param {string} _w @param {number} i */
+            value: (_w, i) => b.values[i],
+            monthNote: t('df.detail.month.bandNote'),
+            /**
+             * @param {string} w
+             * @param {number} i
+             */
+            cell: (w, i) => (
+              <Data data-testid={`df-week-p${Math.round(b.level * 100)}-${w}`}>
+                {b.values[i] === null
+                  ? '—'
+                  : formatNumber(
+                      /** @type {NonNullable<(typeof b.values)[number]>} */ (b.values[i])
+                    )}
+              </Data>
+            )
+          })),
+          {
+            id: 'theta',
+            label: t('df.detail.col.theta'),
+            hidden: !sku.theta,
+            combine: 'sum',
+            value: (_w, i) => sku.theta?.[i] ?? null,
+            format: roundNumber,
+            cell: (_w, i) => (
+              <Data className="text-text-tertiary">
+                {sku.theta ? formatNumber(Math.round(sku.theta[i])) : '—'}
+              </Data>
+            )
+          },
+          {
+            id: 'sap',
+            label: t('df.detail.col.sap'),
+            combine: 'sum',
+            value: (_w, i) => sku.sapPlan?.[i] ?? null,
+            cell: (_w, i) => <Data>{sku.sapPlan ? formatNumber(sku.sapPlan[i]) : '—'}</Data>
+          },
+          {
+            id: 'events',
+            label: t('df.detail.col.events'),
+            align: 'start',
+            combine: 'distinct',
+            value: (_w, i) => (events[i]?.events ?? []).map((e) => t(`df.events.event.${e}`)),
+            cell: (w, i) => {
+              const names = (events[i]?.events ?? []).map((e) => t(`df.events.event.${e}`));
+              const more = names.length - EVENTS_SHOWN;
+              return (
+                <div
+                  className="text-xs text-text-secondary line-clamp-3"
                   data-testid={`df-week-events-${w}`}
+                  title={more > 0 ? names.join(', ') : undefined}
                 >
-                  {(events[i]?.events ?? []).map((e) => t(`df.events.event.${e}`)).join(', ')}
-                </TableCell>
-              </TableRow>
-            ))}
-          </tbody>
-        </Table>
-      </div>
+                  {names.slice(0, EVENTS_SHOWN).join(', ')}
+                  {more > 0 ? ` +${more}` : ''}
+                </div>
+              );
+            }
+          }
+        ]}
+      />
     </section>
   );
 };
@@ -622,6 +685,7 @@ const DemandForecastTab = ({ frame }) => {
           key={current.skuCode}
           sku={current}
           weeks={run.weeks}
+          asOf={run.asOf}
           events={run.events.horizon}
           range={run.range.skus.find((r) => r.key === current.skuCode) ?? null}
         />

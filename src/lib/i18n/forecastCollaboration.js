@@ -61,8 +61,16 @@ export const forecastCollaborationEn = {
   'fc.reason.material': 'Material',
   'fc.reason.logistics': 'Logistics',
   'fc.reason.quality': 'Quality',
+  'fc.reason.force-majeure': 'Force Majeure',
+  'fc.reason.discontinued': 'Discontinued',
   'fc.reason.other': 'Other',
   'fc.reason.notePlaceholder': 'Say what the reason is',
+  'fc.filter.reason.label': 'Reason',
+  'fc.filter.reason.all': 'All reasons',
+  'fc.filter.reason.chosen': '{{count}} chosen',
+  'fc.filter.reason.none': 'No reason',
+  'fc.filter.reason.option': '{{label}} ({{count}})',
+  'fc.filter.reason.clear': 'Clear reasons',
 
   'fc.col.supplier': 'Supplier',
   'fc.col.material': 'Material',
@@ -74,7 +82,6 @@ export const forecastCollaborationEn = {
   'fc.col.due': 'Commitment due',
   'fc.col.commitment': 'Commitment ({{uom}})',
   'fc.col.commitmentShort': 'Commitment',
-  'fc.col.date': 'Commitment date',
   'fc.col.upside': 'Upside ({{uom}})',
   'fc.col.reason': 'Reason below forecast',
   'fc.col.status': 'Status',
@@ -101,11 +108,12 @@ export const forecastCollaborationEn = {
   'fc.toast.refused': 'Not saved',
   'fc.refusal.generic': 'This could not be saved. Check the figures and try again.',
   'fc.refusal.reasonRequired': 'A commitment below forecast needs a reason.',
-  'fc.refusal.noteRequired': 'The reason "Other" needs a note.',
-  'fc.refusal.dateRequired': 'A commitment needs its date.',
+  'fc.refusal.noteRequired': 'Force Majeure, Discontinued and Other need a note.',
   'fc.refusal.notQualified': 'That supplier does not supply this material.',
   'fc.refusal.noteRequiredPlanner': 'Add a note the supplier can read.',
   'fc.refusal.notCurrent': 'A newer forecast version exists. Reload the page.',
+  'fc.refusal.aboveShortfall':
+    'More than the shortfall. The commitment may have changed; reload the page.',
 
   // Supplier — Forecast & commitments
   'fc.sup.title': 'Forecast & commitments',
@@ -124,16 +132,14 @@ export const forecastCollaborationEn = {
   'fc.sup.saveDraft': 'Save draft',
   'fc.sup.draftSaved': 'Draft saved (not visible to PTI)',
   'fc.sup.qtyFor': 'Commitment quantity for {{period}}',
-  'fc.sup.dateFor': 'Commitment date for {{period}}',
   'fc.sup.upsideFor': 'Upside quantity for {{period}}',
   'fc.sup.reasonFor': 'Reason below forecast for {{period}}',
   'fc.sup.noteFor': 'Note for {{period}}',
   'fc.sup.draftFor': 'Save draft for {{period}}',
   'fc.sup.refusal.qtyRequired': 'Enter a quantity (for example 1500).',
   'fc.sup.refusal.upsideInvalid': 'The upside quantity is not a number.',
-  'fc.sup.refusal.dateRequired': 'Enter the commitment date.',
   'fc.sup.refusal.reasonRequired': 'Below forecast: choose a reason.',
-  'fc.sup.refusal.noteRequired': 'The reason "Other" needs a note.',
+  'fc.sup.refusal.noteRequired': 'Force Majeure, Discontinued and Other need a note.',
   'fc.sup.toast.submitted': 'Commitment submitted',
   'fc.sup.toast.drafted': 'Draft saved',
   'fc.sup.toast.acknowledged': 'Period acknowledged',
@@ -159,7 +165,7 @@ export const forecastCollaborationEn = {
   'fc.sup.week.submitAllFor': 'Submit all for {{period}}',
   'fc.sup.week.refusal.capacityNotConfirmed': 'Confirm capacity for {{group}} first.',
   'fc.sup.week.refusal.aboveBeNeedsReason': 'Above BE: choose a reason.',
-  'fc.sup.week.refusal.aboveBeNoteRequired': 'The reason "Other" needs a note.',
+  'fc.sup.week.refusal.aboveBeNoteRequired': 'Force Majeure, Discontinued and Other need a note.',
   'fc.sup.week.refusal.row': 'Fix the rows of this period first.',
   'fc.sup.week.toast.submitted': 'Commitments submitted: {{count}}',
   'fc.sup.week.toast.partial': 'Submitted {{done}} of {{total}}. {{reason}}',
@@ -184,10 +190,10 @@ export const forecastCollaborationEn = {
   'fc.upload.reason.ambiguousNumber':
     'A quantity reads differently in Indonesian and English format (for example 1.500). Write it without separators.',
   'fc.upload.reason.unitMismatch': 'The unit does not match the material.',
-  'fc.upload.reason.invalidDate': 'The date is not in YYYY-MM-DD format.',
   'fc.upload.reason.reasonRequired':
     'Below forecast: a reason (capacity, material, logistics, quality or other) is needed.',
-  'fc.upload.reason.noteRequired': 'The reason "other" needs a note.',
+  'fc.upload.reason.noteRequired':
+    'The reasons "force-majeure", "discontinued" and "other" need a note.',
 
   // PTI — Forecasts
   'fc.pti.versions.subtitle':
@@ -245,16 +251,27 @@ export const forecastCollaborationEn = {
   'fc.pti.gaps.toast.reassigned': 'Demand moved. A new forecast version is published.',
   'fc.pti.gaps.panel.accept': 'Accept commitment',
   'fc.pti.gaps.panel.revise': 'Request revision',
-  'fc.pti.gaps.panel.reassign': 'Move demand to another supplier',
+  'fc.pti.gaps.panel.reassign': 'Move demand to other suppliers',
   'fc.pti.gaps.panel.confirm.accept': 'Accept',
   'fc.pti.gaps.panel.confirm.revise': 'Send request',
   'fc.pti.gaps.panel.confirm.reassign': 'Move demand',
   'fc.pti.gaps.panel.acceptHint':
     'The shortfall is accepted as it is. The supplier sees the commitment as accepted by PTI.',
-  'fc.pti.gaps.panel.toSupplier': 'Move to supplier',
-  'fc.pti.gaps.panel.chooseSupplier': 'Choose a supplier',
   'fc.pti.gaps.panel.reassignHint':
-    'Only suppliers that supply this material are listed. The period’s quantity moves in a new forecast version.',
+    'Only suppliers that supply this material are listed. Each quantity becomes new demand for that supplier in a new forecast version, and the supplier confirms it like any other demand.',
+  'fc.pti.gaps.move.shortfall': 'Shortfall',
+  'fc.pti.gaps.move.supplier': 'Supplier',
+  'fc.pti.gaps.move.qty': 'Quantity to move',
+  'fc.pti.gaps.move.headroom': 'Headroom this period',
+  'fc.pti.gaps.move.qtyFor': 'Quantity to move to {{supplier}}',
+  'fc.pti.gaps.move.aboveHeadroom':
+    'Above this supplier’s headroom of {{qty}} {{unit}}. You can still move it.',
+  'fc.pti.gaps.move.moving': 'Moving',
+  'fc.pti.gaps.move.remaining': 'Left as an exception',
+  'fc.pti.gaps.move.aboveShortfall': 'More than the shortfall of {{qty}} {{unit}}',
+  'fc.pti.gaps.move.nothingToMove': 'Enter a quantity for at least one supplier.',
+  'fc.pti.gaps.move.badQty': 'Enter each quantity as a number above 0.',
+  'fc.pti.gaps.move.logEntry': 'Moved {{qty}} {{unit}} to {{supplier}}: {{note}}',
   'fc.pti.gaps.panel.note': 'Note',
   'fc.pti.gaps.panel.noteHint': 'Required. The supplier can read it.',
 
@@ -323,8 +340,16 @@ export const forecastCollaborationId = {
   'fc.reason.material': 'Bahan',
   'fc.reason.logistics': 'Logistik',
   'fc.reason.quality': 'Kualitas',
+  'fc.reason.force-majeure': 'Keadaan kahar',
+  'fc.reason.discontinued': 'Dihentikan',
   'fc.reason.other': 'Lainnya',
   'fc.reason.notePlaceholder': 'Sebutkan alasannya',
+  'fc.filter.reason.label': 'Alasan',
+  'fc.filter.reason.all': 'Semua alasan',
+  'fc.filter.reason.chosen': '{{count}} dipilih',
+  'fc.filter.reason.none': 'Tanpa alasan',
+  'fc.filter.reason.option': '{{label}} ({{count}})',
+  'fc.filter.reason.clear': 'Hapus pilihan alasan',
 
   'fc.col.supplier': 'Pemasok',
   'fc.col.material': 'Material',
@@ -336,7 +361,6 @@ export const forecastCollaborationId = {
   'fc.col.due': 'Tenggat komitmen',
   'fc.col.commitment': 'Komitmen ({{uom}})',
   'fc.col.commitmentShort': 'Komitmen',
-  'fc.col.date': 'Tanggal komitmen',
   'fc.col.upside': 'Tambahan ({{uom}})',
   'fc.col.reason': 'Alasan di bawah prakiraan',
   'fc.col.status': 'Status',
@@ -363,11 +387,12 @@ export const forecastCollaborationId = {
   'fc.toast.refused': 'Tidak tersimpan',
   'fc.refusal.generic': 'Tidak dapat disimpan. Periksa angkanya dan coba lagi.',
   'fc.refusal.reasonRequired': 'Komitmen di bawah prakiraan memerlukan alasan.',
-  'fc.refusal.noteRequired': 'Alasan "Lainnya" memerlukan catatan.',
-  'fc.refusal.dateRequired': 'Komitmen memerlukan tanggal.',
+  'fc.refusal.noteRequired': 'Keadaan kahar, Dihentikan, dan Lainnya memerlukan catatan.',
   'fc.refusal.notQualified': 'Pemasok itu tidak memasok material ini.',
   'fc.refusal.noteRequiredPlanner': 'Tambahkan catatan yang dapat dibaca pemasok.',
   'fc.refusal.notCurrent': 'Sudah ada versi prakiraan yang lebih baru. Muat ulang halaman.',
+  'fc.refusal.aboveShortfall':
+    'Melebihi kekurangan. Komitmen mungkin telah berubah; muat ulang halaman.',
 
   'fc.sup.title': 'Prakiraan & komitmen',
   'fc.sup.subtitle':
@@ -385,16 +410,14 @@ export const forecastCollaborationId = {
   'fc.sup.saveDraft': 'Simpan draf',
   'fc.sup.draftSaved': 'Draf tersimpan (tidak terlihat oleh PTI)',
   'fc.sup.qtyFor': 'Kuantitas komitmen untuk {{period}}',
-  'fc.sup.dateFor': 'Tanggal komitmen untuk {{period}}',
   'fc.sup.upsideFor': 'Kuantitas tambahan untuk {{period}}',
   'fc.sup.reasonFor': 'Alasan di bawah prakiraan untuk {{period}}',
   'fc.sup.noteFor': 'Catatan untuk {{period}}',
   'fc.sup.draftFor': 'Simpan draf untuk {{period}}',
   'fc.sup.refusal.qtyRequired': 'Isi kuantitas (misalnya 1500).',
   'fc.sup.refusal.upsideInvalid': 'Kuantitas tambahan bukan angka.',
-  'fc.sup.refusal.dateRequired': 'Isi tanggal komitmen.',
   'fc.sup.refusal.reasonRequired': 'Di bawah prakiraan: pilih alasan.',
-  'fc.sup.refusal.noteRequired': 'Alasan "Lainnya" memerlukan catatan.',
+  'fc.sup.refusal.noteRequired': 'Keadaan kahar, Dihentikan, dan Lainnya memerlukan catatan.',
   'fc.sup.toast.submitted': 'Komitmen terkirim',
   'fc.sup.toast.drafted': 'Draf tersimpan',
   'fc.sup.toast.acknowledged': 'Periode ditandai diterima',
@@ -422,7 +445,8 @@ export const forecastCollaborationId = {
   'fc.sup.week.refusal.capacityNotConfirmed':
     'Konfirmasikan kapasitas untuk {{group}} terlebih dahulu.',
   'fc.sup.week.refusal.aboveBeNeedsReason': 'Di atas BE: pilih alasan.',
-  'fc.sup.week.refusal.aboveBeNoteRequired': 'Alasan "Lainnya" memerlukan catatan.',
+  'fc.sup.week.refusal.aboveBeNoteRequired':
+    'Keadaan kahar, Dihentikan, dan Lainnya memerlukan catatan.',
   'fc.sup.week.refusal.row': 'Perbaiki baris pada periode ini terlebih dahulu.',
   'fc.sup.week.toast.submitted': 'Komitmen terkirim: {{count}}',
   'fc.sup.week.toast.partial': 'Terkirim {{done}} dari {{total}}. {{reason}}',
@@ -448,10 +472,10 @@ export const forecastCollaborationId = {
   'fc.upload.reason.ambiguousNumber':
     'Kuantitas terbaca berbeda dalam format Indonesia dan Inggris (misalnya 1.500). Tulis tanpa pemisah.',
   'fc.upload.reason.unitMismatch': 'Satuan tidak sesuai dengan material.',
-  'fc.upload.reason.invalidDate': 'Tanggal tidak berformat YYYY-MM-DD.',
   'fc.upload.reason.reasonRequired':
     'Di bawah prakiraan: perlu alasan (capacity, material, logistics, quality atau other).',
-  'fc.upload.reason.noteRequired': 'Alasan "other" memerlukan catatan.',
+  'fc.upload.reason.noteRequired':
+    'Alasan "force-majeure", "discontinued", dan "other" memerlukan catatan.',
 
   'fc.pti.versions.subtitle':
     'Versi prakiraan yang diterbitkan per jenis dan pemasok yang sudah membukanya',
@@ -515,10 +539,21 @@ export const forecastCollaborationId = {
   'fc.pti.gaps.panel.confirm.reassign': 'Pindahkan kebutuhan',
   'fc.pti.gaps.panel.acceptHint':
     'Kekurangan diterima apa adanya. Pemasok melihat komitmen sebagai diterima PTI.',
-  'fc.pti.gaps.panel.toSupplier': 'Pindahkan ke pemasok',
-  'fc.pti.gaps.panel.chooseSupplier': 'Pilih pemasok',
   'fc.pti.gaps.panel.reassignHint':
-    'Hanya pemasok yang memasok material ini yang ditampilkan. Kuantitas periode pindah dalam versi prakiraan baru.',
+    'Hanya pemasok yang memasok material ini yang ditampilkan. Setiap kuantitas menjadi kebutuhan baru bagi pemasok itu dalam versi prakiraan baru, dan pemasok mengonfirmasinya seperti kebutuhan lain.',
+  'fc.pti.gaps.move.shortfall': 'Kekurangan',
+  'fc.pti.gaps.move.supplier': 'Pemasok',
+  'fc.pti.gaps.move.qty': 'Kuantitas yang dipindahkan',
+  'fc.pti.gaps.move.headroom': 'Sisa kapasitas periode ini',
+  'fc.pti.gaps.move.qtyFor': 'Kuantitas yang dipindahkan ke {{supplier}}',
+  'fc.pti.gaps.move.aboveHeadroom':
+    'Melebihi sisa kapasitas pemasok ini sebesar {{qty}} {{unit}}. Anda tetap dapat memindahkannya.',
+  'fc.pti.gaps.move.moving': 'Dipindahkan',
+  'fc.pti.gaps.move.remaining': 'Tersisa sebagai pengecualian',
+  'fc.pti.gaps.move.aboveShortfall': 'Melebihi kekurangan sebesar {{qty}} {{unit}}',
+  'fc.pti.gaps.move.nothingToMove': 'Isi kuantitas untuk setidaknya satu pemasok.',
+  'fc.pti.gaps.move.badQty': 'Isi setiap kuantitas dengan angka di atas 0.',
+  'fc.pti.gaps.move.logEntry': 'Dipindahkan {{qty}} {{unit}} ke {{supplier}}: {{note}}',
   'fc.pti.gaps.panel.note': 'Catatan',
   'fc.pti.gaps.panel.noteHint': 'Wajib. Pemasok dapat membacanya.',
 

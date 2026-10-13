@@ -58,7 +58,6 @@ export const sdcSupplierEn = {
   'sdcSup.responses.col.material': 'Material',
   'sdcSup.responses.col.period': 'Period',
   'sdcSup.responses.col.confirmed': 'Confirmed',
-  'sdcSup.responses.col.committedDate': 'Committed date',
   'sdcSup.responses.col.version': 'Version',
   'sdcSup.responses.col.submitted': 'Submitted',
   // R1b — the buyer's dispute text and its resolution, shown to the supplier who
@@ -90,10 +89,8 @@ export const sdcSupplierEn = {
   'sdcSup.panel.qty.refused.ambiguous':
     'This can be read two ways — "40.000" means forty thousand in Indonesian and forty in English. Type it without separators: 40000.',
   'sdcSup.panel.date.eyebrow': 'Step 2',
-  'sdcSup.panel.date.title': 'Delivery commitment',
-  'sdcSup.panel.date.desc':
-    'Optional: the date you commit to deliver by, and any capacity constraint worth flagging.',
-  'sdcSup.panel.committedDate': 'Committed date',
+  'sdcSup.panel.date.title': 'Capacity',
+  'sdcSup.panel.date.desc': 'Optional: any capacity constraint worth flagging.',
   'sdcSup.panel.capacityConstraint': 'Capacity constraint',
   'sdcSup.panel.capacityPlaceholder': 'e.g. line changeover limits August output',
   'sdcSup.panel.rootCause.eyebrow': 'Step 3',
@@ -293,7 +290,6 @@ export const sdcSupplierId = {
   'sdcSup.responses.col.material': 'Material',
   'sdcSup.responses.col.period': 'Periode',
   'sdcSup.responses.col.confirmed': 'Dikonfirmasi',
-  'sdcSup.responses.col.committedDate': 'Tanggal komitmen',
   'sdcSup.responses.col.version': 'Versi',
   'sdcSup.responses.col.submitted': 'Dikirim',
   'sdcSup.responses.dispute.raised': 'Paragon menyanggah tanggapan ini',
@@ -319,10 +315,8 @@ export const sdcSupplierId = {
   'sdcSup.panel.qty.refused.ambiguous':
     'Ini bisa dibaca dua cara — "40.000" berarti empat puluh ribu dalam bahasa Indonesia dan empat puluh dalam bahasa Inggris. Ketik tanpa pemisah: 40000.',
   'sdcSup.panel.date.eyebrow': 'Langkah 2',
-  'sdcSup.panel.date.title': 'Komitmen pengiriman',
-  'sdcSup.panel.date.desc':
-    'Opsional: tanggal komitmen pengiriman dan kendala kapasitas yang perlu ditandai.',
-  'sdcSup.panel.committedDate': 'Tanggal komitmen',
+  'sdcSup.panel.date.title': 'Kapasitas',
+  'sdcSup.panel.date.desc': 'Opsional: kendala kapasitas yang perlu ditandai.',
   'sdcSup.panel.capacityConstraint': 'Kendala kapasitas',
   'sdcSup.panel.capacityPlaceholder': 'mis. pergantian lini membatasi output Agustus',
   'sdcSup.panel.rootCause.eyebrow': 'Langkah 3',

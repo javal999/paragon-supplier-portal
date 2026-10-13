@@ -16,17 +16,26 @@
 // Values are read with the drill's own id-shape check (`parseIdParam`): a value
 // that is not id-shaped is IGNORED rather than guessed at, and reported as such.
 // Pure: the page reads and writes `URLSearchParams`, everything else is here.
+//
+// CAP-5 BR-02 (BL-174) — `reason` adds the supplier's shortfall reasons
+// (`capacityShortfall` codes, comma-separated, "No reason" as `_none`). It
+// narrows WEEKS together with gaps-only: a week shows when it passes both,
+// and a plan shows when one of its weeks does — the same rule gaps-only
+// already followed. It is not id-shaped, so it has its own reader
+// (`parseReasonParam`).
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @import { CapacityPlan } from '@services/data/types' */
 import { isGapWeek } from '@services/transitions/capacityRules';
 import { parseIdParam } from '../orders/orderSummaryDrill';
+import { parseReasonParam, reasonMatches } from './reasonFilterRules';
 
 export const CAPACITY_FILTER_PARAMS = /** @type {const} */ ({
   supplier: 'supplier',
   planningGroup: 'planningGroup',
   material: 'materialCode',
-  gapsOnly: 'gapsOnly'
+  gapsOnly: 'gapsOnly',
+  reason: 'reason'
 });
 
 /**
@@ -37,6 +46,7 @@ export const CAPACITY_FILTER_PARAMS = /** @type {const} */ ({
  *     readonly planningGroupId: string | null;
  *     readonly materialCode: string | null;
  *     readonly gapsOnly: boolean;
+ *     readonly reasons: readonly string[];
  *     readonly ignoredMalformed: boolean;
  *   }} CapacityFilters
  */
@@ -60,7 +70,10 @@ export function readCapacityFilters(params) {
   const planningGroupId = id(CAPACITY_FILTER_PARAMS.planningGroup);
   const materialCode = id(CAPACITY_FILTER_PARAMS.material);
   const gapsOnly = params.get(CAPACITY_FILTER_PARAMS.gapsOnly) === '1';
-  return { supplierId, planningGroupId, materialCode, gapsOnly, ignoredMalformed };
+  const reason = parseReasonParam(params.get(CAPACITY_FILTER_PARAMS.reason));
+  if (reason.kind === 'malformed') ignoredMalformed = true;
+  const reasons = reason.kind === 'ok' ? reason.value : [];
+  return { supplierId, planningGroupId, materialCode, gapsOnly, reasons, ignoredMalformed };
 }
 
 /**
@@ -68,19 +81,29 @@ export function readCapacityFilters(params) {
  * @returns {boolean}
  */
 export const anyCapacityFilter = (f) =>
-  f.supplierId !== null || f.planningGroupId !== null || f.materialCode !== null || f.gapsOnly;
+  f.supplierId !== null ||
+  f.planningGroupId !== null ||
+  f.materialCode !== null ||
+  f.gapsOnly ||
+  f.reasons.length > 0;
 
 /**
  * Write one filter into a COPY of the address, keeping every other parameter
  * (the PO drill's included). `null` / `false` removes the parameter.
  * @param {URLSearchParams} params
+ * A list (the reasons) is written comma-separated; an empty list removes it.
  * @param {keyof typeof CAPACITY_FILTER_PARAMS} key
- * @param {string | boolean | null} value
+ * @param {string | boolean | null | readonly string[]} value
  * @returns {URLSearchParams}
  */
 export function withCapacityFilter(params, key, value) {
   const next = new URLSearchParams(params);
   const name = CAPACITY_FILTER_PARAMS[key];
+  if (value !== null && typeof value === 'object') {
+    if (value.length === 0) next.delete(name);
+    else next.set(name, value.join(','));
+    return next;
+  }
   if (value === null || value === false || value === '') next.delete(name);
   else next.set(name, value === true ? '1' : value);
   return next;
@@ -98,6 +121,16 @@ export function withoutCapacityFilters(params) {
 }
 
 /**
+ * The weeks a plan shows: every week, or only its gap weeks under gaps-only,
+ * and only weeks whose reason was chosen under the reason filter (CAP-5).
+ * @param {CapacityPlan['weeks'][number]} w
+ * @param {Pick<CapacityFilters, 'gapsOnly' | 'reasons'>} f
+ * @returns {boolean}
+ */
+export const weekMatches = (w, f) =>
+  (!f.gapsOnly || isGapWeek(w)) && reasonMatches(w.entry?.reason, f.reasons);
+
+/**
  * Does a plan pass the supplier, group, material and gaps-only filters?
  * @param {CapacityPlan} p
  * @param {CapacityFilters} f
@@ -107,14 +140,6 @@ export function planMatches(p, f) {
   if (f.supplierId !== null && p.supplierId !== f.supplierId) return false;
   if (f.planningGroupId !== null && p.planningGroupId !== f.planningGroupId) return false;
   if (f.materialCode !== null && !p.materials.includes(f.materialCode)) return false;
-  if (f.gapsOnly && !p.weeks.some(isGapWeek)) return false;
+  if ((f.gapsOnly || f.reasons.length > 0) && !p.weeks.some((w) => weekMatches(w, f))) return false;
   return true;
 }
-
-/**
- * The weeks a plan shows: every week, or only its gap weeks under gaps-only.
- * @param {CapacityPlan['weeks'][number]} w
- * @param {CapacityFilters} f
- * @returns {boolean}
- */
-export const weekMatches = (w, f) => !f.gapsOnly || isGapWeek(w);

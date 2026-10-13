@@ -31,8 +31,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
+import { pageFolderSource } from '@test/pageFiles';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { renderWithProviders } from '@test/test-utils';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
@@ -197,7 +196,7 @@ describe('WAVE E · the act is reachable, and withheld as a notice', () => {
     // door — and a comment asserting that door was unreachable was the only
     // thing holding the claim up. So the entrances are COUNTED, in the source,
     // rather than inferred from a render.
-    const src = readFileSync(path.resolve(__dirname, 'BuyerCompliance.jsx'), 'utf-8');
+    const src = pageFolderSource(__dirname, 'BuyerCompliance');
 
     // CONTROL FIRST — the file really is the one under test, and the matcher
     // matches something. A count of 0 over the wrong file reads exactly like a

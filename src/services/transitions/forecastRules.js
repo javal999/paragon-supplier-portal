@@ -39,7 +39,7 @@ import {
   STREAM_MATERIAL_TYPE,
   zoneLengthsFor
 } from './forecastConfig';
-import { isActiveReasonCode } from './reasonCodes';
+import { isActiveReasonCode, shortfallReasonNeedsNote } from './reasonCodes';
 
 const DAY_MS = 86_400_000;
 
@@ -368,6 +368,8 @@ export function republishVersion(current, input) {
       {
         ...line,
         forecastQty,
+        // CAP-8 — the planner's moves stay recorded on the line they left.
+        ...(previous.movedOut ? { movedOut: previous.movedOut } : {}),
         allocation: {
           ...line.allocation,
           materialPeriodTotal: Math.max(line.allocation.materialPeriodTotal, forecastQty)
@@ -379,25 +381,78 @@ export function republishVersion(current, input) {
 }
 
 /**
- * REQ-E06-03 BR-05 — move one period's quantity from one supplier to another
- * that supplies the material, as a new version. The receiving supplier gets a
- * new line (or an increased one) in the same zone; every other line is copied.
+ * CAP-8 BR-05 — one target of a Move demand: a supplier and the quantity it
+ * receives, in the material's base unit (CAP-D3).
+ * @typedef {{ readonly supplierId: string; readonly qty: number }} DemandAllocation
+ */
+
+/**
+ * The line's demand before any planner's move: what is left plus what was moved out.
+ * @param {Pick<ForecastLine, 'forecastQty' | 'movedOut'>} line
+ * @returns {number}
+ */
+export const demandBeforeMoves = (line) =>
+  line.forecastQty + (line.movedOut ?? []).reduce((sum, m) => sum + m.qty, 0);
+
+/**
+ * REQ-E06-03 BR-05 / CAP-8 — move part of one period's quantity from one
+ * supplier to one or more others that supply the material, as ONE new version.
+ * Each allocation adds to the target's line for the same material and period
+ * (a new line in the same zone when it has none), and the source line keeps
+ * what is left and records one `movedOut` entry per allocation. A source line
+ * moved down to nothing leaves the version. Every other line is copied.
+ *
+ * Returns null when the move cannot be made: no such source line, no
+ * allocation, a target that is the source, a quantity that is not above 0, or
+ * more in total than the source line carries. The verb's policy refuses the
+ * shortfall rule (`moveDemandRefusal`) before this is reached.
  * @param {ForecastPublication} current
- * @param {{ readonly materialCode: string; readonly periodBucket: string; readonly fromSupplierId: string; readonly toSupplierId: string; readonly note: string; }} move
+ * @param {{ readonly materialCode: string; readonly periodBucket: string; readonly fromSupplierId: string; readonly allocations: readonly DemandAllocation[]; readonly note: string; }} move
  * @param {string} publishedAt
  * @returns {ForecastPublication | null}
  */
 export function reassignVersion(current, move, publishedAt) {
   const from = current.lines.find((l) => sameLine(l, { ...move, supplierId: move.fromSupplierId }));
-  if (!from || move.fromSupplierId === move.toSupplierId) return null;
-  const existing = current.lines.find((l) =>
-    sameLine(l, { ...move, supplierId: move.toSupplierId })
-  );
+  if (!from || move.allocations.length === 0) return null;
+  if (move.allocations.some((a) => a.supplierId === move.fromSupplierId || !(a.qty > 0)))
+    return null;
+  const total = move.allocations.reduce((sum, a) => sum + a.qty, 0);
+  if (total > from.forecastQty) return null;
+  /** @param {string} supplierId */
+  const qtyTo = (supplierId) =>
+    move.allocations.filter((a) => a.supplierId === supplierId).reduce((sum, a) => sum + a.qty, 0);
   /** @type {ForecastLine[]} */
-  const lines = current.lines
-    .filter((l) => l !== from)
-    .map((l) => (l === existing ? { ...l, forecastQty: l.forecastQty + from.forecastQty } : l));
-  if (!existing) lines.push({ ...from, supplierId: move.toSupplierId });
+  const lines = [];
+  for (const l of current.lines) {
+    if (l === from) {
+      if (from.forecastQty - total > 0)
+        lines.push({
+          ...from,
+          forecastQty: from.forecastQty - total,
+          movedOut: [
+            ...(from.movedOut ?? []),
+            ...move.allocations.map((a) => ({
+              toSupplierId: a.supplierId,
+              qty: a.qty,
+              at: publishedAt,
+              note: move.note
+            }))
+          ]
+        });
+      continue;
+    }
+    const received =
+      l.materialCode === move.materialCode && l.periodBucket === move.periodBucket
+        ? qtyTo(l.supplierId)
+        : 0;
+    lines.push(received > 0 ? { ...l, forecastQty: l.forecastQty + received } : l);
+  }
+  // A new target line copies the source line's zone and provenance, not its moves.
+  const { movedOut: _moves, ...template } = from;
+  for (const supplierId of new Set(move.allocations.map((a) => a.supplierId))) {
+    if (current.lines.some((l) => sameLine(l, { ...move, supplierId }))) continue;
+    lines.push({ ...template, supplierId, forecastQty: qtyTo(supplierId) });
+  }
   const version = (current.version ?? 0) + 1;
   const stream = current.stream ?? 'packaging';
   return {
@@ -410,6 +465,56 @@ export function reassignVersion(current, move, publishedAt) {
     changeNote: move.note,
     emergency: undefined
   };
+}
+
+/**
+ * CAP-8 BR-03 — the shortfall a Move demand may move: forecast − commitment. A
+ * line still awaiting its commitment (overdue) counts as committing nothing.
+ * @param {Pick<ForecastCommitmentLine, 'forecastQty' | 'committedQty' | 'state'>} line
+ * @returns {number}
+ */
+export function moveShortfall(line) {
+  const committed = line.state !== 'awaiting' ? (line.committedQty ?? 0) : 0;
+  return Math.max(0, line.forecastQty - committed);
+}
+
+/**
+ * `aboveShortfall`: the total is more than the shortfall (BR-03).
+ * `nothingToMove`: no allocation was given.
+ * `badQty`: an allocation that is not a number above 0.
+ * `sameSupplier`: an allocation to the line's own supplier.
+ * `notQualified`: an allocation to a supplier not qualified for the material.
+ * `duplicateSupplier`: two allocations to one supplier.
+ * @typedef {'aboveShortfall' | 'nothingToMove' | 'badQty' | 'sameSupplier' | 'notQualified' | 'duplicateSupplier'} MoveDemandRefusal
+ */
+
+/**
+ * CAP-8 BR-01..BR-03 — the ONE check the verb's policy and the Move demand
+ * panel both call. The total moved must be above 0 and no more than the
+ * shortfall; less leaves the rest as an open exception. A quantity above a
+ * target's capacity headroom is not refused here (BR-04: it warns, it does not
+ * block). `supplierId` names the allocation a per-row refusal is about.
+ * @param {number} shortfall
+ * @param {readonly { readonly supplierId: unknown; readonly qty: unknown }[]} allocations
+ * @param {{ readonly fromSupplierId: string; readonly qualified: readonly string[] }} ctx
+ * @returns {{ refusal: MoveDemandRefusal; supplierId?: string } | null}
+ */
+export function moveDemandRefusal(shortfall, allocations, ctx) {
+  if (allocations.length === 0) return { refusal: 'nothingToMove' };
+  const seen = /** @type {Set<string>} */ (new Set());
+  let total = 0;
+  for (const a of allocations) {
+    const supplierId = String(a.supplierId);
+    if (typeof a.qty !== 'number' || !Number.isFinite(a.qty) || a.qty <= 0)
+      return { refusal: 'badQty', supplierId };
+    if (supplierId === ctx.fromSupplierId) return { refusal: 'sameSupplier', supplierId };
+    if (!ctx.qualified.includes(supplierId)) return { refusal: 'notQualified', supplierId };
+    if (seen.has(supplierId)) return { refusal: 'duplicateSupplier', supplierId };
+    seen.add(supplierId);
+    total += a.qty;
+  }
+  if (total > shortfall) return { refusal: 'aboveShortfall' };
+  return null;
 }
 
 // ── Version comparison (REQ-E06-01 BR-06) ────────────────────────────────────
@@ -483,7 +588,8 @@ function pick(l) {
 
 /**
  * BR-04 / AC-02 — a commitment below forecast needs a starter reason code, and
- * `other` needs a note. The verb's policy calls this, so the rule holds for
+ * `other`, `force-majeure` and `discontinued` need a note (CAP-4 BR-02).
+ * The verb's policy calls this, so the rule holds for
  * every channel (screen, upload, or a hand-made dispatch).
  * @param {number} forecastQty
  * @param {number} committedQty
@@ -495,7 +601,7 @@ export function shortfallRefusal(forecastQty, committedQty, rootCause) {
   if (!rootCause || !isActiveReasonCode('commitmentShortfall', rootCause.level1))
     return 'reasonRequired';
   if (
-    rootCause.level1 === 'other' &&
+    shortfallReasonNeedsNote(rootCause.level1) &&
     (typeof rootCause.note !== 'string' || rootCause.note.trim() === '')
   )
     return 'noteRequired';
@@ -688,7 +794,10 @@ export function buildCommitmentLines(input) {
         const answered = versions.find((v) => v.publicationId === submitted.publicationId);
         const answeredLine = answered?.lines.find((l) => sameLine(l, line));
         if (submitted.publicationId === current.publicationId) response = submitted;
-        else if (answeredLine && answeredLine.forecastQty === line.forecastQty) {
+        // CAP-8 BR-03 — a planner's move takes demand off the line, not the
+        // commitment: the commitment answered the line's demand BEFORE moves,
+        // so it still stands and what the move left is an open exception.
+        else if (answeredLine && demandBeforeMoves(answeredLine) === demandBeforeMoves(line)) {
           response = submitted;
           carriedForward = true;
         }
@@ -739,6 +848,13 @@ export function buildCommitmentLines(input) {
         draft,
         committedQty: response?.forecastConfirmation?.confirmedQty ?? null,
         log,
+        moves: (line.movedOut ?? []).map((m) => ({
+          toSupplierId: m.toSupplierId,
+          toSupplierName: input.supplierName(m.toSupplierId),
+          qty: m.qty,
+          at: m.at,
+          note: m.note
+        })),
         otherQualifiedSuppliers: (input.qualifiedSuppliers?.(line.materialCode) ?? [])
           .filter((id) => id !== line.supplierId)
           .map((supplierId) => ({ supplierId, supplierName: input.supplierName(supplierId) }))
@@ -950,7 +1066,6 @@ export function forecastCsv(lines, headers, zoneLabel) {
  *   | 'forecastQty'
  *   | 'unit'
  *   | 'committedQty'
- *   | 'commitmentDate'
  *   | 'upsideQty'
  *   | 'reason'
  *   | 'note'} CommitmentTemplateField
@@ -958,6 +1073,9 @@ export function forecastCsv(lines, headers, zoneLabel) {
 
 /**
  * The fixed commitment template, in column order. Headers are matched in EN or ID.
+ * CAP-6 (BL-175) BR-03 — no commitment date column: a commitment is a quantity
+ * per period. An older file that still has "Commitment date" parses; the
+ * header matches no field, so the column is ignored.
  * @type {readonly { readonly field: CommitmentTemplateField; readonly en: string; readonly id: string }[]}
  */
 export const COMMITMENT_TEMPLATE_FIELDS = [
@@ -967,16 +1085,13 @@ export const COMMITMENT_TEMPLATE_FIELDS = [
   { field: 'forecastQty', en: 'Forecast quantity', id: 'Kuantitas prakiraan' },
   { field: 'unit', en: 'Unit', id: 'Satuan' },
   { field: 'committedQty', en: 'Committed quantity', id: 'Kuantitas komitmen' },
-  {
-    field: 'commitmentDate',
-    en: 'Commitment date (YYYY-MM-DD)',
-    id: 'Tanggal komitmen (YYYY-MM-DD)'
-  },
   { field: 'upsideQty', en: 'Upside quantity', id: 'Kuantitas tambahan' },
   {
     field: 'reason',
-    en: 'Reason (capacity, material, logistics, quality, other)',
-    id: 'Alasan (capacity, material, logistics, quality, other)'
+    // CAP-4 BR-01 — the starter codes, Force Majeure and Discontinued included.
+    // The header still matches without its parenthesis, so older files read.
+    en: 'Reason (capacity, material, logistics, quality, force-majeure, discontinued, other)',
+    id: 'Alasan (capacity, material, logistics, quality, force-majeure, discontinued, other)'
   },
   { field: 'note', en: 'Note', id: 'Catatan' }
 ];
@@ -1016,7 +1131,6 @@ export function commitmentTemplateCsv(lines, language) {
       String(l.forecastQty),
       l.uom,
       l.zone === 'forecast' ? '' : String(l.forecastQty),
-      l.zone === 'forecast' ? '' : l.periodStart,
       '',
       '',
       ''
@@ -1034,7 +1148,6 @@ export function commitmentTemplateCsv(lines, language) {
  *   | 'notANumber'
  *   | 'ambiguousNumber'
  *   | 'unitMismatch'
- *   | 'invalidDate'
  *   | 'reasonRequired'
  *   | 'noteRequired'} CommitmentRowRefusal
  */
@@ -1058,17 +1171,12 @@ export function commitmentTemplateCsv(lines, language) {
  *       readonly row: number;
  *       readonly line: ForecastCommitmentLine;
  *       readonly committedQty: number;
- *       readonly commitmentDate: string;
  *       readonly upsideQty?: number;
  *       readonly reason?: CapacityReason;
  *       readonly note?: string;
  *     }
  *   | { readonly kind: 'acknowledge'; readonly row: number; readonly line: ForecastCommitmentLine; readonly note?: string }} CommitmentDraft
  */
-
-/** @param {string} v */
-const isIsoDate = (v) =>
-  /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00.000Z`));
 
 /**
  * Named for this module: a JSDoc typedef is exported, unlike the TS `type` it
@@ -1154,9 +1262,6 @@ export function validateCommitmentRows(rows, lines) {
     if (committed.value === null) return refuse('missingField', 'committedQty');
     const upside = readCommitmentNumber(rec.upsideQty);
     if (!upside.ok) return refuse(upside.reason, 'upsideQty');
-    const date = rec.commitmentDate ?? '';
-    if (date === '') return refuse('missingField', 'commitmentDate');
-    if (!isIsoDate(date)) return refuse('invalidDate', 'commitmentDate');
     const reason = reasonOf(rec.reason ?? '');
     const refusal = shortfallRefusal(
       line.forecastQty,
@@ -1170,7 +1275,6 @@ export function validateCommitmentRows(rows, lines) {
       row,
       line,
       committedQty: committed.value,
-      commitmentDate: date,
       ...(upside.value !== null ? { upsideQty: upside.value } : {}),
       ...(reason && committed.value < line.forecastQty ? { reason } : {}),
       ...(note ? { note } : {})

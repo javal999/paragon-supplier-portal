@@ -399,6 +399,9 @@ const BuyerAlerts = () => {
                           <div className="text-xs text-text-secondary">
                             {a.rule === 'capacityBelowDemand' ? (
                               groupLabel(a.subject)
+                            ) : a.rule === 'blanketPoRunOut' ? (
+                              // CAP-9 — the label carries the PO number and material; the id stays out.
+                              <Data>{a.subjectLabel}</Data>
                             ) : (
                               <>
                                 <Data>{a.subject}</Data> · {a.subjectLabel}
@@ -439,9 +442,12 @@ const BuyerAlerts = () => {
                           {t(
                             a.rule === 'capacityBelowDemand'
                               ? 'inv.alerts.openCapacity'
-                              : a.rule === 'commitmentBelowForecast'
+                              : a.rule === 'commitmentBelowForecast' ||
+                                  a.rule === 'supplyDiscontinued'
                                 ? 'inv.alerts.openCommitments'
-                                : 'inv.alerts.openInventory'
+                                : a.rule === 'blanketPoRunOut'
+                                  ? 'inv.alerts.openBlanketPo'
+                                  : 'inv.alerts.openInventory'
                           )}
                         </Link>
                         {a.status === 'open' &&

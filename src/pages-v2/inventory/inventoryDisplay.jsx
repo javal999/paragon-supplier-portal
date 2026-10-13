@@ -189,12 +189,57 @@ const LTP_TONE = {
   cannotSupply: 'danger'
 };
 
-/** @type {React.FC<{ level: LtpCapacityLevel; testId?: string }>} */
-export const LtpCheckPill = ({ level, testId }) => {
+/**
+ * CAP-2 BR-03 — which LTP-against-capacity state is worse when weeks combine
+ * into a month: red above amber above "not stated" above green. The month's
+ * pill is its worst week's, so a red week is never hidden by an unstated one.
+ * (`capacityRules`' period check ranks "not stated" first, because a period
+ * cannot be confirmed without it; a monthly VIEW shows where to act.)
+ * @type {Record<LtpCapacityLevel, number>}
+ */
+const LTP_SEVERITY = { within: 0, unconfirmed: 1, needsAdditional: 2, cannotSupply: 3 };
+
+/**
+ * @param {string} level
+ * @returns {number}
+ */
+export const ltpSeverity = (level) => LTP_SEVERITY[/** @type {LtpCapacityLevel} */ (level)] ?? 0;
+
+/**
+ * CAP-3 BR-01 (BL-172) — THE capacity-state pill. Every surface that shows
+ * where a week's (or a period's) LTP stands against capacity draws this one
+ * component, so each state has one colour everywhere: green Within capacity,
+ * amber Needs additional capacity, red Cannot be supplied (neutral while no
+ * capacity is stated). `data-pill="capacity-state"` and `data-tone` let a
+ * spec assert both the component and the colour.
+ *
+ * BR-03 (CAP-D1) — `confirmed` is passed by a surface that knows whether the
+ * supplier confirmed an amber week's additional capacity; the amber pill then
+ * reads "Needs confirmation" or "Confirmed additional" beneath it. Omitted (a
+ * month, where weeks combine), nothing is added.
+ * @type {React.FC<{ level: LtpCapacityLevel; testId?: string; confirmed?: boolean }>}
+ */
+export const LtpCheckPill = ({ level, testId, confirmed }) => {
   const { t } = useTranslation();
+  const showConfirmation = level === 'needsAdditional' && confirmed !== undefined;
   return (
-    <span data-testid={testId} data-level={level}>
+    <span
+      data-testid={testId}
+      data-pill="capacity-state"
+      data-level={level}
+      data-tone={LTP_TONE[level]}
+      data-confirmed={showConfirmation ? String(confirmed) : undefined}
+      className="inline-flex flex-col items-start gap-0.5"
+    >
       <StatusPill variant={LTP_TONE[level]}>{t(`inv.ltp.level.${level}`)}</StatusPill>
+      {showConfirmation ? (
+        <span
+          className="text-xs text-warning-hover whitespace-nowrap"
+          data-testid={testId ? `${testId}-confirmation` : undefined}
+        >
+          {t(confirmed ? 'inv.ltp.upside.confirmed' : 'inv.ltp.upside.needsConfirmation')}
+        </span>
+      ) : null}
     </span>
   );
 };

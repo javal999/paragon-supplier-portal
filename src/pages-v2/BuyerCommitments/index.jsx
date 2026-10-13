@@ -1,7 +1,7 @@
 /** @import React from 'react' */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useReasonLabel } from '../admin/reasonCodeDisplay';
+import { useActiveReasonCodes, useReasonLabel } from '../admin/reasonCodeDisplay';
 import { useSearchParams } from 'react-router-dom';
 import { OrderNotFound, PoFilterBanner, usePoDrillFilter } from '../orders/PoDrillFilter';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
@@ -15,9 +15,16 @@ import AboutThisPage from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
 import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
-import { useForecastCommitments, useForecastCoverage, useInventory } from '@services/query/hooks';
+import {
+  useCapacityPlans,
+  useForecastCommitments,
+  useForecastCoverage,
+  useInventory
+} from '@services/query/hooks';
 /** @import { ForecastStream } from '@services/sdc/types' */
+import { materialEntry } from '@services/sdc/materialMaster';
 import { commitmentDeadlineWorkingDays } from '@services/transitions/forecastConfig';
+import { horizonWeeks, moveHeadroom } from '@services/transitions/capacityRules';
 import { forecastNow, useForecastRunner, usePeriodLabel } from '../forecasts/forecastDisplay';
 import { commitmentView } from './utils';
 import { useCommitmentAction } from './hooks/useCommitmentAction';
@@ -32,8 +39,9 @@ import ActionPanel from './components/ActionPanel';
 //
 // Per stream: a ranked exception list (overdue first, then Firm, then lowest
 // days of supply — BR-04) with the planner's three actions (accept, request
-// revision with a note the supplier reads, move the period's demand to another
-// qualified supplier with a note — BR-05); the material × period grid of
+// revision with a note the supplier reads, move part or all of the period's
+// shortfall to one or more qualified suppliers, a quantity each, with a note —
+// BR-05 and CAP-8); the material × period grid of
 // commitment against forecast coloured per CR-22 (BR-01, BR-02); cumulative
 // commitment against cumulative forecast per material (BR-03); and supplier
 // coverage per material with distributor lead times, labelled an estimate
@@ -61,6 +69,8 @@ const BuyerCommitments = () => {
   const linesQuery = useForecastCommitments();
   const coverageQuery = useForecastCoverage();
   const inventory = useInventory();
+  // CAP-8 BR-01 — the capacity read gives each Move demand target its headroom.
+  const plansQuery = useCapacityPlans();
   const review = useVerbAvailability('requirementresponse:dispute');
   const publish = useVerbAvailability('forecast:publish');
   const { run, pending } = useForecastRunner();
@@ -85,10 +95,32 @@ const BuyerCommitments = () => {
     drill.kind === 'filtered' ? drill.po.supplierId : (params.get('supplier') ?? '')
   );
   const [material, setMaterial] = useState(params.get('material') ?? '');
-  const { action, setAction, note, setNote, toSupplier, setToSupplier, openAction, submitAction } =
+  // CAP-5 BR-01 — the chosen shortfall reasons; none chosen is no filter.
+  const [reasons, setReasons] = useState(/** @type {string[]} */ ([]));
+  const activeReasons = useActiveReasonCodes('commitmentShortfall');
+  const { action, setAction, note, setNote, qtys, setQty, openAction, submitAction } =
     useCommitmentAction(run, t);
 
   const lines = useMemo(() => linesQuery.data?.items ?? [], [linesQuery.data]);
+  /**
+   * CAP-8 BR-01 — a target's headroom (BE − LTP) for the open action's
+   * material and period; null (shown "—") when not known.
+   * @param {string} supplierId
+   * @returns {number | null}
+   */
+  const headroomOf = (supplierId) =>
+    action
+      ? moveHeadroom(
+          plansQuery.data?.items ?? [],
+          lines,
+          supplierId,
+          action.line.materialCode,
+          action.line.periodStart,
+          action.line.periodEnd,
+          horizonWeeks(nowIso),
+          materialEntry
+        )
+      : null;
 
   if (linesQuery.isPending || drill.kind === 'pending') return <LoadingState breadcrumb={crumb} />;
   // AC-08 — an address naming a PO that does not exist, with a way back.
@@ -109,6 +141,7 @@ const BuyerCommitments = () => {
     shown,
     daysOfSupplyOf,
     exceptions,
+    reasonOptions,
     missing,
     outside,
     periods,
@@ -122,7 +155,9 @@ const BuyerCommitments = () => {
     drillMaterials,
     positions: inventory.data?.items ?? [],
     coverageRows: coverageQuery.data?.items ?? [],
-    nowIso
+    nowIso,
+    reasons,
+    activeReasons
   });
 
   return (
@@ -149,6 +184,7 @@ const BuyerCommitments = () => {
           setStream(s);
           setSupplier('');
           setMaterial('');
+          setReasons([]);
         }}
         supplier={supplier}
         onSupplierChange={setSupplier}
@@ -156,6 +192,9 @@ const BuyerCommitments = () => {
         material={material}
         onMaterialChange={setMaterial}
         materials={materials}
+        reasons={reasons}
+        onReasonsChange={setReasons}
+        reasonOptions={reasonOptions}
       />
 
       {/* REQ-E07-03 BR-04 / BR-05 — the filter, why these rows, and the way back. */}
@@ -197,8 +236,9 @@ const BuyerCommitments = () => {
         pending={pending}
         note={note}
         onNoteChange={setNote}
-        toSupplier={toSupplier}
-        onToSupplierChange={setToSupplier}
+        qtys={qtys}
+        onQtyChange={setQty}
+        headroomOf={headroomOf}
         onSubmit={submitAction}
         periodLabel={periodLabel}
       />

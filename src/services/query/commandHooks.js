@@ -2532,7 +2532,10 @@ export function useCallOffCommand() {
           q.queryKey[0] === 'procurement' &&
           (q.queryKey[1] === 'callOffs' ||
             q.queryKey[1] === 'asns' ||
-            q.queryKey[1] === 'reschedule')
+            q.queryKey[1] === 'reschedule' ||
+            // CAP-9 — a release changes what remains, so the run-out moves.
+            q.queryKey[1] === 'blanketPoRunOuts' ||
+            q.queryKey[1] === 'inventoryAlerts')
       });
     }
   });
@@ -2761,7 +2764,7 @@ export function useWarehouseDecisionCommand() {
  *       verb: 'submitCapacity';
  *       supplierId: string;
  *       planningGroupId: string;
- *       weeks: readonly { week: string; allocated: number; upside?: number; reason?: string; note?: string }[];
+ *       weeks: readonly { week: string; allocated: number; upside?: number; upsideConfirmed?: true; reason?: string; note?: string }[];
  *     }
  *   | { verb: 'closeAlert'; key: string; closeReason: string; actionNote?: string }} InventoryCommandVars
  */
@@ -2887,7 +2890,7 @@ export function useInventoryCommand() {
  *       materialCode: string;
  *       periodBucket: string;
  *       fromSupplierId: string;
- *       toSupplierId: string;
+ *       allocations: readonly { readonly supplierId: string; readonly qty: number }[];
  *       note: string;
  *     }
  *   | { verb: 'recordView'; publicationId: string; supplierId: string }
@@ -2895,7 +2898,6 @@ export function useInventoryCommand() {
  *       verb: 'commit';
  *       line: ForecastLineRef;
  *       committedQty: number;
- *       commitmentDate: string;
  *       upsideQty?: number;
  *       reason?: string;
  *       note?: string;
@@ -2910,7 +2912,12 @@ const FORECAST_READS = new Set([
   'forecastVersions',
   'forecastCommitments',
   'forecastCoverage',
-  'inventoryAlerts'
+  'inventoryAlerts',
+  // The LTP is the current forecast version, so a new version (publish, or a
+  // CAP-8 move) changes every capacity plan's demand and headroom.
+  'capacityPlans',
+  // CAP-9 — and every blanket PO's run-out, which draws the LTP down.
+  'blanketPoRunOuts'
 ]);
 
 /** Every forecast-collaboration act: publish, reassign, record a view, commit, acknowledge, accept, request a revision. */
@@ -2973,7 +2980,7 @@ export function useForecastCommand() {
                 // The token the number was read from: the canonical digits, which
                 // read the same in either convention.
                 confirmedQtyRaw: String(vars.committedQty),
-                committedDate: vars.commitmentDate,
+                // CAP-6 (BL-175) — no date: the store records the period start.
                 ...(vars.upsideQty !== undefined ? { upsideQty: vars.upsideQty } : {}),
                 ...(vars.reason
                   ? {

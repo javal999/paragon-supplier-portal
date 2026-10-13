@@ -1,7 +1,9 @@
 /** @import React from 'react' */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useReasonLabel } from './admin/reasonCodeDisplay';
+import { useActiveReasonCodes, useReasonLabel } from './admin/reasonCodeDisplay';
+import ReasonFilter from './inventory/ReasonFilter';
+import { reasonFilterOptions } from './inventory/reasonFilterRules';
 import { useSearchParams } from 'react-router-dom';
 import { AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
@@ -11,6 +13,7 @@ import PageMetaLine from '@components/ui-v2/PageMetaLine';
 import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import Data from '@components/ui-v2/Data';
+import WeekGrid from '@components/ui-v2/WeekGrid';
 import Button from '@components/ui-v2/Button';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
@@ -18,18 +21,14 @@ import { formatDate, formatDateTime } from '@lib/format';
 import { useCapacityPlans } from '@services/query/hooks';
 /** @import { CapacityPlan } from '@services/data/types' */
 /** @import { CapacityConfirmationStatus } from '@services/transitions/capacityRules' */
-import {
-  gapWeeks,
-  isGapWeek,
-  ltpCapacityWeeks,
-  planStatus
-} from '@services/transitions/capacityRules';
+import { isGapWeek, ltpCapacityWeeks, planStatus } from '@services/transitions/capacityRules';
 import {
   CapacityStatusPill,
   LtpCheckPill,
   inputClass,
   inventoryNow,
   labelClass,
+  ltpSeverity,
   qty
 } from './inventory/inventoryDisplay';
 import { ReEntryPill, usePlanningGroupLabel } from './inventory/planningGroupDisplay';
@@ -59,16 +58,233 @@ import {
 // BL-133 (ENG-D18) — the ONE demand figure is the group's LTP (the current
 // forecast, summed over the group's materials; owner, 2026-09-29): the gap,
 // "short by", the banner and the filters all read it. Beside it, BE (capacity
-// + additional capacity) and the flag: amber "needs the additional capacity",
+// + additional capacity) and the flag: amber "needs additional capacity",
 // red "cannot be supplied" — the red week is where the planner acts.
+//
+// CAP-3 (BL-172) — the flag is the one capacity-state pill; an amber week says
+// whether the supplier confirmed its additional capacity (BR-03), and the
+// accordion header counts each non-green state (BR-02).
+//
+// CAP-5 BR-02 (BL-174) — the Reason filter over `capacityShortfall`, in the
+// address with the others, narrows WEEKS together with Gaps only; each reason
+// shows how many of the weeks the other filters leave carry it.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @typedef {'all' | CapacityConfirmationStatus} StatusFilter */
 
+/**
+ * CAP-1 wave 1 (Table B) — one supplier × planning group's weeks as columns.
+ * B-04: the Gaps only filter and a PO drill-down hide week COLUMNS (`weeks` is
+ * already narrowed), and a filter that leaves no week says so.
+ * @type {React.FC<{
+ *   plan: CapacityPlan;
+ *   planKey: string;
+ *   label: string;
+ *   nowIso: string;
+ *   ltpWeeks: ReturnType<typeof ltpCapacityWeeks>;
+ *   weeks: CapacityPlan['weeks'];
+ * }>}
+ */
+const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks }) => {
+  const { t } = useTranslation();
+  const reasonLabel = useReasonLabel();
+  if (weeks.length === 0)
+    return (
+      <p
+        className="px-4 py-4 text-sm text-text-tertiary"
+        data-testid={`capacity-no-week-${planKey}`}
+      >
+        {t('inv.capacity.grid.noWeekMatches')}
+      </p>
+    );
+  /** @param {string} week */
+  const byWeek = (week) =>
+    /** @type {CapacityPlan['weeks'][number]} */ (weeks.find((w) => w.week === week));
+  /** @param {string} week */
+  const lwOf = (week) => ltpWeeks.find((x) => x.week === week);
+  const dash = <span className="text-text-tertiary">—</span>;
+  return (
+    <WeekGrid
+      label={label}
+      corner={t('inv.capacity.col.week')}
+      currentWeek={nowIso.slice(0, 10)}
+      testId={`capacity-grid-${planKey}`}
+      // CAP-2 BR-01 — one choice for every accordion on the page.
+      viewKey="buyerCapacity"
+      weeks={weeks.map((w) => ({
+        week: w.week,
+        gap: isGapWeek(w),
+        testId: isGapWeek(w)
+          ? `capacity-gap-${planKey}-${w.week}`
+          : `capacity-week-${planKey}-${w.week}`,
+        marker: w.needsReEntry ? (
+          <ReEntryPill testId={`capacity-reentry-${planKey}-${w.week}`} />
+        ) : undefined
+      }))}
+      rows={[
+        {
+          id: 'ltp',
+          label: t('inv.capacity.row.ltp'),
+          unit: plan.uom,
+          combine: 'sum',
+          value: (week) => lwOf(week)?.ltp ?? 0,
+          format: qty,
+          cell: (week) => (
+            <Data data-testid={`capacity-ltp-qty-${planKey}-${week}`}>
+              {qty(lwOf(week)?.ltp ?? 0)}
+            </Data>
+          )
+        },
+        {
+          id: 'allocated',
+          label: t('inv.capacity.row.allocated'),
+          unit: plan.uom,
+          combine: 'sum',
+          value: (week) => byWeek(week).entry?.allocated ?? null,
+          monthCell: (/** @type {number | null} */ v) =>
+            v === null ? (
+              <span className="text-text-tertiary">{t('inv.capacity.notStated')}</span>
+            ) : (
+              <Data>{qty(v)}</Data>
+            ),
+          cell: (week) => {
+            const w = byWeek(week);
+            return w.entry ? (
+              <Data data-testid={`capacity-allocated-${planKey}-${week}`}>
+                {qty(w.entry.allocated)}
+              </Data>
+            ) : (
+              <span
+                className="text-text-tertiary"
+                data-testid={`capacity-allocated-${planKey}-${week}`}
+              >
+                {t('inv.capacity.notStated')}
+              </span>
+            );
+          }
+        },
+        {
+          id: 'upside',
+          label: t('inv.capacity.row.upside'),
+          unit: plan.uom,
+          combine: 'sum',
+          value: (week) => byWeek(week).entry?.upside ?? null,
+          format: qty,
+          cell: (week) => {
+            const w = byWeek(week);
+            return (
+              <span data-testid={`capacity-upside-${planKey}-${week}`}>
+                {w.entry?.upside !== undefined ? <Data>{qty(w.entry.upside)}</Data> : dash}
+              </span>
+            );
+          }
+        },
+        {
+          id: 'be',
+          label: t('inv.capacity.row.be'),
+          unit: plan.uom,
+          combine: 'sum',
+          value: (week) => lwOf(week)?.be ?? null,
+          format: qty,
+          cell: (week) => {
+            const lw = lwOf(week);
+            return (
+              <span data-testid={`capacity-be-${planKey}-${week}`}>
+                {lw?.be != null ? <Data>{qty(lw.be)}</Data> : dash}
+              </span>
+            );
+          }
+        },
+        {
+          id: 'ltpCheck',
+          label: t('inv.capacity.col.ltpCheck'),
+          align: 'start',
+          // CAP-2 BR-03 — the month's worst week, with how many weeks hold it.
+          combine: 'status',
+          value: (week) => lwOf(week)?.level ?? null,
+          severity: ltpSeverity,
+          monthCell: (level, m) => (
+            <LtpCheckPill level={level} testId={`capacity-ltp-${planKey}-month-${m.key}`} />
+          ),
+          cell: (week) => {
+            const lw = lwOf(week);
+            return lw ? (
+              <LtpCheckPill
+                level={lw.level}
+                confirmed={lw.upsideConfirmed}
+                testId={`capacity-ltp-${planKey}-${week}`}
+              />
+            ) : null;
+          }
+        },
+        {
+          id: 'gap',
+          label: t('inv.capacity.row.gap'),
+          unit: plan.uom,
+          combine: 'sum',
+          value: (week) => {
+            const w = byWeek(week);
+            return isGapWeek(w) && w.entry ? w.demand - w.entry.allocated : null;
+          },
+          monthCell: (/** @type {number | null} */ v) =>
+            v === null ? (
+              dash
+            ) : (
+              <span className="text-warning-hover font-semibold">
+                <Data>{qty(v)}</Data>
+              </span>
+            ),
+          cell: (week) => {
+            const w = byWeek(week);
+            const gap = isGapWeek(w);
+            return (
+              <span
+                data-testid={`capacity-short-${planKey}-${week}`}
+                className={gap ? 'text-warning-hover font-semibold' : ''}
+              >
+                {gap && w.entry ? <Data>{qty(w.demand - w.entry.allocated)}</Data> : dash}
+              </span>
+            );
+          }
+        },
+        {
+          id: 'reason',
+          label: t('inv.capacity.col.reason'),
+          align: 'start',
+          combine: 'distinct',
+          value: (week) => {
+            const e = byWeek(week).entry;
+            if (!e?.reason) return null;
+            const name = reasonLabel('capacityShortfall', e.reason);
+            return e.note ? `${name} — ${e.note}` : name;
+          },
+          cell: (week) => {
+            const w = byWeek(week);
+            return (
+              <span
+                className="text-text-secondary break-words"
+                data-testid={`capacity-reason-${planKey}-${week}`}
+              >
+                {w.entry?.reason ? (
+                  <>
+                    {reasonLabel('capacityShortfall', w.entry.reason)}
+                    {w.entry.note ? ` — ${w.entry.note}` : ''}
+                  </>
+                ) : (
+                  '—'
+                )}
+              </span>
+            );
+          }
+        }
+      ]}
+    />
+  );
+};
+
 /** @type {React.FC} */
 const BuyerCapacity = () => {
   const { t } = useTranslation();
-  const reasonLabel = useReasonLabel();
   const groupLabel = usePlanningGroupLabel();
   const plansQuery = useCapacityPlans();
   const [filter, setStatusFilter] = useState(/** @type {StatusFilter} */ ('all'));
@@ -77,12 +293,13 @@ const BuyerCapacity = () => {
   const filters = readCapacityFilters(params);
   /**
    * @param {Parameters<typeof withCapacityFilter>[1]} key
-   * @param {string | boolean | null} value
+   * @param {string | boolean | null | readonly string[]} value
    */
   const setFilter = (key, value) =>
     setParams(withCapacityFilter(params, key, value), { replace: true });
   const nowIso = inventoryNow();
   const crumb = [t('hub.nav.section.inventory'), t('inv.capacity.pti.title')];
+  const activeReasons = useActiveReasonCodes('capacityShortfall');
 
   const allPlans = useMemo(() => plansQuery.data?.items ?? [], [plansQuery.data]);
   // ── REQ-E07-03 BR-05 / AC-04 ──────────────────────────────────────────────
@@ -130,11 +347,27 @@ const BuyerCapacity = () => {
   const withGap = plans.filter((p) => planStatus(p) === 'gap');
   const ltpByPlan = new Map(plans.map((p) => [keyOf(p), ltpCapacityWeeks(p)]));
   /**
+   * CAP-3 BR-02 — weeks per non-green state. An amber week the supplier has
+   * confirmed (BR-03) leaves "Needs additional" for "Confirmed additional".
    * @param {CapacityPlan} p
-   * @param {'cannotSupply' | 'needsAdditional'} level
+   * @param {'cannotSupply' | 'needsAdditional' | 'confirmedAdditional'} state
    */
-  const ltpCount = (p, level) =>
-    (ltpByPlan.get(keyOf(p)) ?? []).filter((w) => w.level === level).length;
+  const ltpCount = (p, state) =>
+    (ltpByPlan.get(keyOf(p)) ?? []).filter((w) =>
+      state === 'cannotSupply'
+        ? w.level === 'cannotSupply'
+        : w.level === 'needsAdditional' && w.upsideConfirmed === (state === 'confirmedAdditional')
+    ).length;
+  /** @type {readonly { state: 'needsAdditional' | 'confirmedAdditional' | 'cannotSupply'; testId: string; tone: string }[]} */
+  const HEADER_COUNTS = [
+    { state: 'needsAdditional', testId: 'capacity-amber-count', tone: 'text-warning-hover' },
+    {
+      state: 'confirmedAdditional',
+      testId: 'capacity-confirmed-count',
+      tone: 'text-warning-hover'
+    },
+    { state: 'cannotSupply', testId: 'capacity-red-count', tone: 'text-danger' }
+  ];
   const withRed = plans.filter((p) => ltpCount(p, 'cannotSupply') > 0);
   // The option lists come from the drill-narrowed plans, so a filter can never
   // offer a supplier the PO filter has already excluded.
@@ -154,6 +387,24 @@ const BuyerCapacity = () => {
     )
   ].sort();
   const filtered = plans.filter((p) => planMatches(p, filters));
+  /**
+   * The weeks a plan shows: the PO drill's weeks, then the filters.
+   * @param {CapacityPlan} p
+   * @param {Pick<typeof filters, 'gapsOnly' | 'reasons'>} f
+   */
+  const shownWeeks = (p, f) =>
+    p.weeks
+      .filter((w) => drillWeeks === null || drillWeeks.includes(w.week))
+      .filter((w) => weekMatches(w, f));
+  // CAP-5 BR-03 — each reason's count: the weeks every OTHER filter leaves.
+  const noReason = { ...filters, reasons: [] };
+  const reasonOptions = reasonFilterOptions(
+    activeReasons,
+    plans
+      .filter((p) => planMatches(p, noReason))
+      .filter((p) => filter === 'all' || planStatus(p) === filter)
+      .flatMap((p) => shownWeeks(p, noReason).map((w) => w.entry?.reason))
+  );
   const shown = filtered.filter((p) => filter === 'all' || planStatus(p) === filter);
   const filtersActive = anyCapacityFilter(filters) || filter !== 'all';
   const clearFilters = () => {
@@ -216,7 +467,7 @@ const BuyerCapacity = () => {
       )}
 
       <div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))_auto_auto] items-end gap-3 mb-3"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))_auto_auto_auto] items-end gap-3 mb-3"
         data-testid="capacity-filters"
       >
         <div>
@@ -273,6 +524,13 @@ const BuyerCapacity = () => {
             ))}
           </select>
         </div>
+        <ReasonFilter
+          list="capacityShortfall"
+          options={reasonOptions}
+          value={filters.reasons}
+          onChange={(next) => setFilter('reason', next)}
+          testId="capacity-filter-reason"
+        />
         <label className="inline-flex items-center gap-2 text-sm text-text-primary pb-2">
           <input
             type="checkbox"
@@ -311,7 +569,9 @@ const BuyerCapacity = () => {
       <div className="space-y-3">
         {shown.map((p) => {
           const open = isOpen(p);
-          const gaps = gapWeeks(p);
+          const counts = HEADER_COUNTS.map((c) => ({ ...c, count: ltpCount(p, c.state) })).filter(
+            (c) => c.count > 0
+          );
           return (
             <section
               key={keyOf(p)}
@@ -332,29 +592,16 @@ const BuyerCapacity = () => {
                 <span className="text-sm font-semibold text-text-primary">{p.supplierName}</span>
                 <span className="text-sm text-text-secondary">{groupLabel(p.planningGroupId)}</span>
                 <CapacityStatusPill status={planStatus(p)} />
-                {gaps.length > 0 && (
-                  <span className="text-xs text-warning-hover">
-                    {t('inv.capacity.gapWeeks', { count: gaps.length })}
-                  </span>
-                )}
-                {ltpCount(p, 'cannotSupply') > 0 && (
-                  <span
-                    className="text-xs text-danger"
-                    data-testid={`capacity-red-count-${keyOf(p)}`}
-                  >
-                    {t('inv.capacity.ltpWeeks.cannotSupply', {
-                      count: ltpCount(p, 'cannotSupply')
-                    })}
-                  </span>
-                )}
-                {ltpCount(p, 'needsAdditional') > 0 && (
-                  <span
-                    className="text-xs text-warning-hover"
-                    data-testid={`capacity-amber-count-${keyOf(p)}`}
-                  >
-                    {t('inv.capacity.ltpWeeks.needsAdditional', {
-                      count: ltpCount(p, 'needsAdditional')
-                    })}
+                {counts.length > 0 && (
+                  <span className="text-xs" data-testid={`capacity-state-counts-${keyOf(p)}`}>
+                    {counts.map((c, i) => (
+                      <span key={c.state}>
+                        {i > 0 && <span className="text-text-tertiary"> · </span>}
+                        <span className={c.tone} data-testid={`${c.testId}-${keyOf(p)}`}>
+                          {t(`inv.capacity.ltpWeeks.${c.state}`, { count: c.count })}
+                        </span>
+                      </span>
+                    ))}
                   </span>
                 )}
                 <span className="ml-auto text-xs text-text-tertiary">
@@ -369,116 +616,24 @@ const BuyerCapacity = () => {
                 </span>
               </button>
               {open && (
-                <div className="overflow-x-auto border-t border-border-subtle">
+                <div className="border-t border-border-subtle">
                   <p
                     className="px-4 pt-2 text-xs text-text-tertiary"
                     data-testid={`capacity-upside-help-${keyOf(p)}`}
                   >
                     {t('inv.capacity.upsideHelpPti')}
                   </p>
-                  <p className="px-4 pt-1 text-xs text-text-tertiary">
+                  <p className="px-4 pt-1 pb-2 text-xs text-text-tertiary">
                     {t('inv.capacity.ltpHelpPti')}
                   </p>
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-label text-text-tertiary uppercase bg-bg-hover">
-                        <th className="text-left px-4 py-2">{t('inv.capacity.col.week')}</th>
-                        <th className="text-right px-4 py-2">
-                          {t('inv.capacity.col.ltp', { uom: p.uom })}
-                        </th>
-                        <th className="text-right px-4 py-2">
-                          {t('inv.capacity.col.allocated', { uom: p.uom })}
-                        </th>
-                        <th className="text-right px-4 py-2">
-                          {t('inv.capacity.col.upside', { uom: p.uom })}
-                        </th>
-                        <th className="text-right px-4 py-2">
-                          {t('inv.capacity.col.be', { uom: p.uom })}
-                        </th>
-                        <th className="text-left px-4 py-2">{t('inv.capacity.col.ltpCheck')}</th>
-                        <th className="text-right px-4 py-2">
-                          {t('inv.capacity.col.gap', { uom: p.uom })}
-                        </th>
-                        <th className="text-left px-4 py-2">{t('inv.capacity.col.reason')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {p.weeks
-                        .filter((w) => drillWeeks === null || drillWeeks.includes(w.week))
-                        .filter((w) => weekMatches(w, filters))
-                        .map((w) => {
-                          const gap = isGapWeek(w);
-                          const lw = ltpByPlan.get(keyOf(p))?.find((x) => x.week === w.week);
-                          return (
-                            <tr
-                              key={w.week}
-                              className={`border-t border-border-subtle ${gap ? 'bg-warning-soft' : ''}`}
-                              data-testid={gap ? `capacity-gap-${keyOf(p)}-${w.week}` : undefined}
-                            >
-                              <td className="px-4 py-2">
-                                <Data>{formatDate(w.week)}</Data>
-                                {w.needsReEntry ? (
-                                  <ReEntryPill testId={`capacity-reentry-${keyOf(p)}-${w.week}`} />
-                                ) : null}
-                              </td>
-                              <td className="px-4 py-2 text-right">
-                                <Data>{qty(lw?.ltp ?? 0)}</Data>
-                              </td>
-                              <td className="px-4 py-2 text-right">
-                                {w.entry ? (
-                                  <Data>{qty(w.entry.allocated)}</Data>
-                                ) : (
-                                  <span className="text-text-tertiary">
-                                    {t('inv.capacity.notStated')}
-                                  </span>
-                                )}
-                              </td>
-                              <td className="px-4 py-2 text-right">
-                                {w.entry?.upside !== undefined ? (
-                                  <Data>{qty(w.entry.upside)}</Data>
-                                ) : (
-                                  <span className="text-text-tertiary">—</span>
-                                )}
-                              </td>
-                              <td className="px-4 py-2 text-right">
-                                {lw?.be != null ? (
-                                  <Data>{qty(lw.be)}</Data>
-                                ) : (
-                                  <span className="text-text-tertiary">—</span>
-                                )}
-                              </td>
-                              <td className="px-4 py-2">
-                                {lw && (
-                                  <LtpCheckPill
-                                    level={lw.level}
-                                    testId={`capacity-ltp-${keyOf(p)}-${w.week}`}
-                                  />
-                                )}
-                              </td>
-                              <td
-                                className={`px-4 py-2 text-right ${gap ? 'text-warning-hover font-semibold' : ''}`}
-                              >
-                                {gap && w.entry ? (
-                                  <Data>{qty(w.demand - w.entry.allocated)}</Data>
-                                ) : (
-                                  <span className="text-text-tertiary">—</span>
-                                )}
-                              </td>
-                              <td className="px-4 py-2 text-text-secondary">
-                                {w.entry?.reason ? (
-                                  <>
-                                    {reasonLabel('capacityShortfall', w.entry.reason)}
-                                    {w.entry.note ? ` — ${w.entry.note}` : ''}
-                                  </>
-                                ) : (
-                                  '—'
-                                )}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                    </tbody>
-                  </table>
+                  <PlanWeekGrid
+                    plan={p}
+                    planKey={keyOf(p)}
+                    label={`${p.supplierName} · ${groupLabel(p.planningGroupId)}`}
+                    nowIso={nowIso}
+                    ltpWeeks={ltpByPlan.get(keyOf(p)) ?? []}
+                    weeks={shownWeeks(p, filters)}
+                  />
                 </div>
               )}
             </section>

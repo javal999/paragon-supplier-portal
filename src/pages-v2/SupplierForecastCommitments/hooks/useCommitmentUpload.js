@@ -62,7 +62,6 @@ export function useCommitmentUpload(run, streamLines) {
               verb: 'commit',
               line: lineRef(draft.line),
               committedQty: draft.committedQty,
-              commitmentDate: draft.commitmentDate,
               ...(draft.upsideQty !== undefined ? { upsideQty: draft.upsideQty } : {}),
               ...(draft.reason
                 ? { reason: draft.reason, ...(draft.note ? { note: draft.note } : {}) }

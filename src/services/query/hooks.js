@@ -82,6 +82,12 @@ export const useCapacityPlans = () =>
     svc.procurement.getCapacityPlans(scope)
   );
 
+/** CAP-9 — open blanket PO lines projected against the LTP (PTI only). */
+export const useBlanketPoRunOuts = () =>
+  useServiceQuery(['procurement', 'blanketPoRunOuts'], (svc, scope) =>
+    svc.procurement.getBlanketPoRunOuts(scope)
+  );
+
 /** Material C5 (MR-8) — the planning groups, their materials and changes. */
 export const usePlanningGroups = () =>
   useServiceQuery(['procurement', 'planningGroups'], (svc, scope) =>

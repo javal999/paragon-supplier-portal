@@ -47,7 +47,7 @@ const ForecastZoneRow = ({ l, label, nowIso, canAck, pending, ackAvail, onAcknow
           testId={`fc-due-${l.materialCode}-${l.periodBucket}`}
         />
       </TableCell>
-      <TableCell colSpan={4}>
+      <TableCell colSpan={3}>
         <span className="text-xs text-text-tertiary">{t('fc.sup.ackOnly')}</span>
       </TableCell>
       <TableCell>

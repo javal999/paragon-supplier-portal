@@ -24,6 +24,7 @@
 // fulfils it import ONE declaration rather than each holding its own copy.
 /** @import { InviteeCandidate, InviteeFilter } from '../transitions/rfxRules' */
 /** @import { FsRow } from '../transitions/fixedStockReconcile' */
+/** @import { BlanketPoRunOut } from '../transitions/blanketPoRules' */
 /** @import { SimulationRefusal, StockSimulation } from '../transitions/simulateSupplierStock' */
 /** @import { RfqClarificationView, RfqEngagementView } from '../sourcing/rfqResponse' */
 /** @import { AwardView, NegotiationRoundView, RfiEventView, RfpEventView, RfpAwardView, RfpOfferRoundView, RfqSupplierGateView } from '../sourcing/views' */
@@ -663,11 +664,13 @@ export class DataError extends Error {
 /** One weekly bucket of a capacity submission (REQ-E08-04). */
 /**
  * `week`:  Monday of the week (`YYYY-MM-DD`).
+ * `upsideConfirmed`:  CAP-3 BR-03 (CAP-D1) — the supplier confirmed the additional capacity this week needs (LTP above allocated, within BE). Present only when true; read only while the week is amber.
  *
  * @typedef {{
  *   readonly week: string;
  *   readonly allocated: number;
  *   readonly upside?: number;
+ *   readonly upsideConfirmed?: true;
  *   readonly reason?: CapacityReason;
  *   readonly note?: string;
  * }} CapacityWeekEntry
@@ -762,6 +765,7 @@ export class DataError extends Error {
  * `carriedForward`:  True when that commitment answered an earlier version with the same quantity.
  * `draft`:  The supplier's own unsubmitted draft (never in PTI's read — BR-10).
  * `log`:  REQ-E06-03 BR-05 — every revision request and note on this period, oldest first.
+ * `moves`:  CAP-8 BR-05 — the planner's moves of this line's demand to other suppliers, one entry per allocation, oldest first.
  * `otherQualifiedSuppliers`:  REQ-E06-03 BR-05 — the other suppliers qualified for the material (where demand can move).
  *
  * @typedef {{
@@ -792,6 +796,7 @@ export class DataError extends Error {
  *   readonly draft: RequirementResponse | null;
  *   readonly committedQty: number | null;
  *   readonly log: readonly DisputeEntry[];
+ *   readonly moves: readonly { readonly toSupplierId: string; readonly toSupplierName: string; readonly qty: number; readonly at: string; readonly note: string }[];
  *   readonly otherQualifiedSuppliers: readonly { readonly supplierId: string; readonly supplierName: string }[];
  * }} ForecastCommitmentLine
  */
@@ -1228,6 +1233,8 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *  REQ-E08-05 BR-01 — committed quantity below forecast beyond tolerance (REQ-E06-03).
  *  CR-24 / BR-02 — no supplier lead time on record; the risk class fell back to CR-02.
  *  MR-6 BR-13 — a confirmed call-off due within the lead time is larger than declared SOH + production.
+ *  CAP-4 BR-03 (CAP-D2) — the supplier gave Discontinued as a shortfall reason; PTI must find another source.
+ *  CAP-9 BR-05 — a blanket PO's "new PO needed by" week is within 4 weeks (or passed); PTI raises the next PO.
  *
  * @typedef {| 'ptiBelowRop'
  *   | 'supplierBelowRop'
@@ -1237,7 +1244,9 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *   | 'coverage'
  *   | 'commitmentBelowForecast'
  *   | 'leadTimeMissing'
- *   | 'callOffNotCovered'} InventoryAlertRule
+ *   | 'callOffNotCovered'
+ *   | 'supplyDiscontinued'
+ *   | 'blanketPoRunOut'} InventoryAlertRule
  */
 
 /** @typedef {'high' | 'medium' | 'low'} RiskClass */
@@ -3028,6 +3037,9 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *   its own assigned materials only. PTI: every supplier × material with a name.
  * @property {(scope: QueryScope) => Promise<Page<StockAccessGrant>>} getStockAccess -  Supplier access to PTI stock. PTI: every supplier with its log. Supplier: its own.
  * @property {(scope: QueryScope) => Promise<Page<CapacityPlan>>} getCapacityPlans -  Capacity against demand per supplier × planning group, 13 weeks.
+ * @property {(scope: QueryScope) => Promise<Page<BlanketPoRunOut>>} getBlanketPoRunOuts CAP-9 — every open blanket PO line projected against the LTP: its
+ *   run-out and "new PO needed by" weeks, derived at read. PTI only: a supplier
+ *   scope reads an empty page.
  * @property {(scope: QueryScope) => Promise<Page<PlanningGroupView>>} getPlanningGroups Material C5 (MR-8) — the planning groups with their materials and changes.
  *   PTI: every group. Supplier: the groups holding its own materials, narrowed
  *   to those materials, with no change history.
