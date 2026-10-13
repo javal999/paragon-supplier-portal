@@ -597,7 +597,9 @@ export const RfpPricingComparison = ({ request, currency, responses, testId, fir
         </span>
       </div>
       {responses.length === 0 ? (
-        <p className="px-4 py-6 text-center text-sm text-text-tertiary">{t('rfx.rfp.empty')}</p>
+        <p className="px-4 py-6 text-center text-sm text-text-tertiary">
+          {t('rfx.rfp.noProposals')}
+        </p>
       ) : (
         <Table>
           <TableHeader>

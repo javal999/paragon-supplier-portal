@@ -1,6 +1,6 @@
 /** @import React from 'react' */
 /** @import { Scenario } from '@services/data/types' */
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronUp, Sparkles, Send } from 'lucide-react';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
@@ -35,34 +35,19 @@ const ScenarioTab = ({ scenarios }) => {
   }));
   const [activeScenario, setActiveScenario] = useState(/** @type {string} */ ('me'));
   const [expandedAlt, setExpandedAlt] = useState(/** @type {string | null} */ ('s1'));
-  const [warRoomSent, setWarRoomSent] = useState(false);
-  // The pending "Sent" → idle reset. Cleared on unmount so leaving the tab
-  // within 4 s does not set state on a component that is gone.
-  const warRoomTimer = useRef(/** @type {ReturnType<typeof setTimeout> | null} */ (null));
-  useEffect(
-    () => () => {
-      if (warRoomTimer.current !== null) clearTimeout(warRoomTimer.current);
-    },
-    []
-  );
-
   // Detail for the picked scenario; falls back to the first modeled one for
   // library entries that are not yet fully modeled.
   const featured = scenarios.find((s) => s.id === activeScenario) ?? scenarios[0];
   if (!featured) return null;
 
+  // UNBACKED: there is no War Room channel or command yet, so the button sends
+  // nothing. The toast says so, and the button never shows a "Sent" state.
   const sendToWarRoom = () => {
-    setWarRoomSent(true);
     toast({
-      variant: 'success',
-      title: t('risk.toast.warRoomForwarded.title'),
-      description: t('risk.toast.warRoomForwarded.desc', { title: featured.title })
+      variant: 'warning',
+      title: t('risk.toast.warRoomNotSent.title'),
+      description: t('risk.toast.warRoomNotSent.desc', { title: featured.title })
     });
-    if (warRoomTimer.current !== null) clearTimeout(warRoomTimer.current);
-    warRoomTimer.current = setTimeout(() => {
-      warRoomTimer.current = null;
-      setWarRoomSent(false);
-    }, 4000);
   };
 
   return (
@@ -91,7 +76,7 @@ const ScenarioTab = ({ scenarios }) => {
             </div>
           </div>
           <Button variant="outline" icon={Send} onClick={sendToWarRoom} className="shrink-0">
-            {warRoomSent ? t('risk.scenario.sent') : t('risk.scenario.sendWarRoom')}
+            {t('risk.scenario.sendWarRoom')}
           </Button>
         </div>
       </section>

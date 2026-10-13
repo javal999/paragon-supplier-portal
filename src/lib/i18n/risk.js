@@ -97,7 +97,6 @@ export const riskEn = {
   'risk.scenario.lib.tw': 'Taiwan Strait closure',
   'risk.scenario.lib.pa': 'Pandemic resurgence',
   'risk.scenario.sendWarRoom': 'Send to War Room',
-  'risk.scenario.sent': '✓ Sent',
   'risk.scenario.responseAlternatives': 'Response alternatives',
   'risk.scenario.activatePlan': 'Activate plan',
   'risk.scenario.viewFullAnalysis': 'View full analysis',
@@ -106,8 +105,9 @@ export const riskEn = {
   // — Shared compact day count (exposure days-of-stock, compliance days left) —
   'risk.unit.daysShort': '{{days}}d',
   // — Scenario toasts —
-  'risk.toast.warRoomForwarded.title': 'Scenario forwarded to War Room',
-  'risk.toast.warRoomForwarded.desc': '{{title}} dispatched to procurement leadership.',
+  'risk.toast.warRoomNotSent.title': 'War Room hand-off not available yet',
+  'risk.toast.warRoomNotSent.desc':
+    'Nothing was sent: {{title}} was not forwarded, and nobody in procurement leadership was notified.',
   'risk.toast.activationInitiated':
     'Plan activation not available yet — nothing was activated for {{name}}.',
   'risk.toast.openingAnalysis': 'Full analysis not available yet — {{id}} has no detail view.',
@@ -243,7 +243,6 @@ export const riskId = {
   'risk.scenario.lib.tw': 'Penutupan Selat Taiwan',
   'risk.scenario.lib.pa': 'Kebangkitan pandemi',
   'risk.scenario.sendWarRoom': 'Kirim ke War Room',
-  'risk.scenario.sent': '✓ Terkirim',
   'risk.scenario.responseAlternatives': 'Alternatif respons',
   'risk.scenario.activatePlan': 'Aktifkan rencana',
   'risk.scenario.viewFullAnalysis': 'Lihat analisis lengkap',
@@ -252,8 +251,9 @@ export const riskId = {
   // — Shared compact day count —
   'risk.unit.daysShort': '{{days}} hr',
   // — Scenario toasts —
-  'risk.toast.warRoomForwarded.title': 'Skenario diteruskan ke War Room',
-  'risk.toast.warRoomForwarded.desc': '{{title}} dikirim ke pimpinan pengadaan.',
+  'risk.toast.warRoomNotSent.title': 'Penerusan ke War Room belum tersedia',
+  'risk.toast.warRoomNotSent.desc':
+    'Tidak ada yang dikirim: {{title}} tidak diteruskan, dan pimpinan pengadaan tidak diberi tahu.',
   'risk.toast.activationInitiated':
     'Aktivasi rencana belum tersedia — tidak ada yang diaktifkan untuk {{name}}.',
   'risk.toast.openingAnalysis':
