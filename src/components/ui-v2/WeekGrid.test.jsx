@@ -1,6 +1,6 @@
 /** @import * as React from 'react' */
 import { describe, it, expect, vi } from 'vitest';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '@lib/i18n';
 import WeekGrid from './WeekGrid';
@@ -135,6 +135,45 @@ describe('WeekGrid — metrics as rows, weeks as columns', () => {
     expect(document.activeElement).toBe(inputs[2]);
   });
 
+  it('BL-186 (G-03) — the header date is day + 3-letter month: "07 Sep" in EN, Indonesian months in ID', async () => {
+    const en = renderGrid();
+    expect(screen.getByTestId('head-2026-09-07')).toHaveTextContent(/^W3707 Sep$/);
+    expect(screen.getByTestId('head-2026-09-07')).not.toHaveTextContent('Sept');
+    en.unmount();
+    await i18n.changeLanguage('id');
+    try {
+      const r = renderGrid({ currentWeek: undefined });
+      expect(r.getByTestId('head-2026-08-31')).toHaveTextContent(/^W3631 Agu$/);
+      expect(r.getByTestId('head-2026-09-07')).toHaveTextContent(/^W3707 Sep$/);
+    } finally {
+      await i18n.changeLanguage('en');
+    }
+  });
+
+  it('BL-186 (G-13) — a focused cell ends fully clear of the sticky label column, after the browser’s own focus scroll', async () => {
+    renderGrid();
+    const region = screen.getByRole('region', { name: 'Capacity per week' });
+    // jsdom has no layout: give the grid the geometry of a 375 px screen —
+    // a 140 px label column, 112 px weeks, a 335 px wide scroll container
+    // scrolled to its right end.
+    const labelCell = /** @type {HTMLElement} */ (region.querySelector('th[data-label-col]'));
+    Object.defineProperty(labelCell, 'offsetWidth', { configurable: true, value: 140 });
+    Object.defineProperty(region, 'clientWidth', { configurable: true, value: 335 });
+    Object.defineProperty(region, 'scrollLeft', { configurable: true, writable: true, value: 600 });
+    const input = screen.getByLabelText('Allocated 2026-09-07');
+    const cell = /** @type {HTMLElement} */ (input.closest('td'));
+    Object.defineProperty(cell, 'offsetLeft', { configurable: true, value: 252 });
+    Object.defineProperty(cell, 'offsetWidth', { configurable: true, value: 112 });
+    // The scroll padding the browser's own focus scroll keeps clear: the label
+    // column's width, 140 px under 768 px and 220 px from there.
+    expect(region.className).toContain('scroll-ps-[140px]');
+    expect(region.className).toContain('md:scroll-ps-[220px]');
+    input.focus();
+    // W37 starts 252 px into the table, right after W36 (140 + 112): it is
+    // clear of the 140 px label column when 112 px are scrolled away.
+    await waitFor(() => expect(region.scrollLeft).toBe(112));
+  });
+
   it('"This week" is translated (EN and ID)', async () => {
     await i18n.changeLanguage('id');
     try {
@@ -217,7 +256,9 @@ describe('WeekGrid — Monthly view (CAP-2)', () => {
     const oct = screen.getByTestId('grid-month-2026-10');
     expect(oct).toHaveTextContent('Oct 2026');
     expect(oct).toHaveTextContent('2 wk');
-    expect(oct).toHaveTextContent(/28 Sept? – 05 Oct/);
+    // BL-186 — the grid's own short date: `Sep`, never the portal's `Sept`.
+    expect(oct).toHaveTextContent('28 Sep – 05 Oct');
+    expect(oct).not.toHaveTextContent('Sept');
     expect(oct).toHaveTextContent('This month');
     expect(oct).toHaveAttribute('data-current', 'true');
     expect(oct).toHaveAttribute('data-partial', 'true');

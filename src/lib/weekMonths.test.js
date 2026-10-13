@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { combineWeeks, groupWeeksByMonth, isoWeeksInMonth, monthOfWeek } from './weekMonths';
+import {
+  combineWeeks,
+  groupWeeksByMonth,
+  isoWeeksInMonth,
+  monthOfWeek,
+  weekHeaderDate
+} from './weekMonths';
 
 // CAP-2 (BL-171), SC-HUB-CAPACITY-REQUIREMENTS-2026-10 §3 — weeks into months.
 
@@ -122,5 +128,29 @@ describe('combineWeeks — BR-03', () => {
       'Material',
       'Labour'
     ]);
+  });
+});
+
+describe('weekHeaderDate — BL-186, the week header’s short date (G-03)', () => {
+  const firsts = Array.from({ length: 12 }, (_, i) => `2026-${String(i + 1).padStart(2, '0')}-07`);
+
+  it('EN: day and a 3-letter month for every month — "07 Sep", never "Sept"', () => {
+    expect(firsts.map((d) => weekHeaderDate(d, 'en'))).toEqual(
+      ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(
+        (m) => `07 ${m}`
+      )
+    );
+    // Known-good control against the portal formatter's en-GB form.
+    expect(weekHeaderDate('2026-09-07')).toBe('07 Sep');
+    expect(weekHeaderDate('2026-08-31T00:00:00Z', 'en-GB')).toBe('31 Aug');
+  });
+
+  it('ID: Indonesian months (Mei, Agu, Okt, Des), the date read as written', () => {
+    expect(firsts.map((d) => weekHeaderDate(d, 'id'))).toEqual(
+      ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'].map(
+        (m) => `07 ${m}`
+      )
+    );
+    expect(weekHeaderDate('2026-12-28', 'id-ID')).toBe('28 Des');
   });
 });

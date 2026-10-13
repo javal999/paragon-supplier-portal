@@ -24,6 +24,7 @@
 // fulfils it import ONE declaration rather than each holding its own copy.
 /** @import { InviteeCandidate, InviteeFilter } from '../transitions/rfxRules' */
 /** @import { FsRow } from '../transitions/fixedStockReconcile' */
+/** @import { BlanketPoRunOut } from '../transitions/blanketPoRules' */
 /** @import { SimulationRefusal, StockSimulation } from '../transitions/simulateSupplierStock' */
 /** @import { RfqClarificationView, RfqEngagementView } from '../sourcing/rfqResponse' */
 /** @import { AwardView, NegotiationRoundView, RfiEventView, RfpEventView, RfpAwardView, RfpOfferRoundView, RfqSupplierGateView } from '../sourcing/views' */
@@ -1233,6 +1234,7 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *  CR-24 / BR-02 — no supplier lead time on record; the risk class fell back to CR-02.
  *  MR-6 BR-13 — a confirmed call-off due within the lead time is larger than declared SOH + production.
  *  CAP-4 BR-03 (CAP-D2) — the supplier gave Discontinued as a shortfall reason; PTI must find another source.
+ *  CAP-9 BR-05 — a blanket PO's "new PO needed by" week is within 4 weeks (or passed); PTI raises the next PO.
  *
  * @typedef {| 'ptiBelowRop'
  *   | 'supplierBelowRop'
@@ -1243,7 +1245,8 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *   | 'commitmentBelowForecast'
  *   | 'leadTimeMissing'
  *   | 'callOffNotCovered'
- *   | 'supplyDiscontinued'} InventoryAlertRule
+ *   | 'supplyDiscontinued'
+ *   | 'blanketPoRunOut'} InventoryAlertRule
  */
 
 /** @typedef {'high' | 'medium' | 'low'} RiskClass */
@@ -3034,6 +3037,9 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *   its own assigned materials only. PTI: every supplier × material with a name.
  * @property {(scope: QueryScope) => Promise<Page<StockAccessGrant>>} getStockAccess -  Supplier access to PTI stock. PTI: every supplier with its log. Supplier: its own.
  * @property {(scope: QueryScope) => Promise<Page<CapacityPlan>>} getCapacityPlans -  Capacity against demand per supplier × planning group, 13 weeks.
+ * @property {(scope: QueryScope) => Promise<Page<BlanketPoRunOut>>} getBlanketPoRunOuts CAP-9 — every open blanket PO line projected against the LTP: its
+ *   run-out and "new PO needed by" weeks, derived at read. PTI only: a supplier
+ *   scope reads an empty page.
  * @property {(scope: QueryScope) => Promise<Page<PlanningGroupView>>} getPlanningGroups Material C5 (MR-8) — the planning groups with their materials and changes.
  *   PTI: every group. Supplier: the groups holding its own materials, narrowed
  *   to those materials, with no change history.

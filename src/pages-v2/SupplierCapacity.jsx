@@ -104,6 +104,12 @@ const REFUSAL_TARGET = {
 // C-01 — a 96 px, right-aligned number input inside the 112 px week column.
 const gridInputClass = `${inputClass.replace('w-full', 'w-[96px]')} text-right`;
 
+// BL-186 — the reason select and its note in compact text. Its cell is at least 128 px, so a
+// week that shows the select grows to 144 px (the other weeks stay 112 px,
+// W1-Q1) and "Force Majeure" or "Keadaan kahar" reads in full.
+const compactFieldClass = inputClass.replace('px-3', 'pl-2 pr-1').replace('text-sm', 'text-xs');
+const REASON_CELL = 'space-y-1 min-w-[128px]';
+
 // CAP-2 BR-01 — the page key the Weekly/Monthly choice is remembered under.
 const VIEW_KEY = 'supplierCapacity';
 
@@ -348,7 +354,8 @@ const SupplierCapacity = () => {
           rows={[
             {
               id: 'ltp',
-              label: t('inv.capacity.col.ltp', { uom: plan.uom }),
+              label: t('inv.capacity.row.ltp'),
+              unit: plan.uom,
               combine: 'sum',
               value: (_w, i) => rows[i].ltp,
               format: qty,
@@ -358,7 +365,8 @@ const SupplierCapacity = () => {
             },
             {
               id: 'allocated',
-              label: t('inv.capacity.col.allocated', { uom: plan.uom }),
+              label: t('inv.capacity.row.allocated'),
+              unit: plan.uom,
               // CAP-2 — the month sums what is typed, as the BE and pill do.
               combine: 'sum',
               value: (_w, i) => rows[i].stated?.allocated ?? null,
@@ -377,7 +385,8 @@ const SupplierCapacity = () => {
             },
             {
               id: 'upside',
-              label: t('inv.capacity.col.upside', { uom: plan.uom }),
+              label: t('inv.capacity.row.upside'),
+              unit: plan.uom,
               combine: 'sum',
               value: (_w, i) => rows[i].stated?.upside ?? null,
               format: qty,
@@ -410,7 +419,8 @@ const SupplierCapacity = () => {
             },
             {
               id: 'be',
-              label: t('inv.capacity.col.be', { uom: plan.uom }),
+              label: t('inv.capacity.row.be'),
+              unit: plan.uom,
               combine: 'sum',
               value: (_w, i) => {
                 const st = rows[i].stated;
@@ -466,11 +476,16 @@ const SupplierCapacity = () => {
               cell: (week, i) => {
                 const { d, below } = rows[i];
                 return below ? (
-                  <div className="space-y-1">
+                  <div className={REASON_CELL}>
                     <select
                       id={`capacity-reason-input-${week}`}
                       aria-label={t('inv.capacity.reasonFor', { week: formatDate(week) })}
-                      className={inputClass}
+                      title={
+                        d.reason
+                          ? reasonLabel('capacityShortfall', d.reason)
+                          : t('inv.capacity.reason.select')
+                      }
+                      className={compactFieldClass}
                       disabled={!held}
                       value={d.reason}
                       onChange={(e) =>
@@ -490,7 +505,7 @@ const SupplierCapacity = () => {
                       <input
                         id={`capacity-note-input-${week}`}
                         aria-label={t('inv.capacity.noteFor', { week: formatDate(week) })}
-                        className={inputClass}
+                        className={compactFieldClass}
                         placeholder={t('inv.capacity.notePlaceholder')}
                         disabled={!held}
                         value={d.note}

@@ -147,3 +147,53 @@ export function combineWeeks(kind, values, severity = () => 0) {
       return null;
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BL-186 (G-03) — the week header's short date: `07 Sep`, the day and a
+// 3-letter month. The portal's `formatDate` uses en-GB, whose ICU data writes
+// September as "Sept"; that formatter is portal-wide and pinned by many specs,
+// so the grid has its own. The months are written out rather than read from
+// Intl, so the header does not change with the browser's ICU version.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const MONTHS_EN = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec'
+];
+const MONTHS_ID = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'Mei',
+  'Jun',
+  'Jul',
+  'Agu',
+  'Sep',
+  'Okt',
+  'Nov',
+  'Des'
+];
+
+/**
+ * `07 Sep` (EN) or `17 Agu` (ID) for a calendar date, `YYYY-MM-DD`. The date is
+ * read as written, with no time zone.
+ * @param {string} iso
+ * @param {string} [lang] The reader's language; `id…` gives Indonesian months.
+ * @returns {string}
+ */
+export function weekHeaderDate(iso, lang = 'en') {
+  const [, m, d] = iso.slice(0, 10).split('-');
+  const months = lang.startsWith('id') ? MONTHS_ID : MONTHS_EN;
+  return `${d} ${months[Number(m) - 1]}`;
+}

@@ -655,7 +655,7 @@ describe('Capacity (REQ-E08-04)', () => {
   it('BL-62 / owner 2026-09-29: "Additional capacity", explained on both sides with BE; the old labels are gone', async () => {
     const sup = renderWithProviders(<SupplierCapacity />, { identity: SUPPLIER });
     expect(
-      await screen.findByRole('rowheader', { name: /^Additional capacity \(/ })
+      await screen.findByRole('rowheader', { name: /^Additional capacity · / })
     ).toBeInTheDocument();
     expect(screen.getByTestId('capacity-upside-help')).toHaveTextContent(
       'above the capacity you allocate'
@@ -670,7 +670,7 @@ describe('Capacity (REQ-E08-04)', () => {
     expect(screen.queryByText(/Extra capacity if requested/)).toBeNull();
     // One demand figure: the LTP row (CAP-1: metrics are rows), and no "PTI demand" beside it.
     expect(
-      screen.getByRole('rowheader', { name: /^LTP, current forecast \(/ })
+      screen.getByRole('rowheader', { name: /^LTP, current forecast · / })
     ).toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /PTI demand/ })).toBeNull();
     expect(screen.queryByRole('rowheader', { name: /PTI demand/ })).toBeNull();
@@ -678,7 +678,7 @@ describe('Capacity (REQ-E08-04)', () => {
     renderWithProviders(<BuyerCapacity />, { identity: PLANNER });
     const plan = await screen.findByTestId('capacity-plan-sup-007-pg-MG-20');
     expect(
-      within(plan).getByRole('rowheader', { name: /^Additional capacity \(/ })
+      within(plan).getByRole('rowheader', { name: /^Additional capacity · / })
     ).toBeInTheDocument();
     expect(within(plan).getByTestId('capacity-upside-help-sup-007-pg-MG-20')).toHaveTextContent(
       'above its allocation'
@@ -688,7 +688,7 @@ describe('Capacity (REQ-E08-04)', () => {
     expect(screen.queryByText(/Upside/)).toBeNull();
     expect(screen.queryByText(/Extra capacity if requested/)).toBeNull();
     // ID wording as ruled.
-    expect(inventoryCapacityId['inv.capacity.col.upside']).toBe('Kapasitas tambahan ({{uom}})');
+    expect(inventoryCapacityId['inv.capacity.row.upside']).toBe('Kapasitas tambahan');
   });
 });
 

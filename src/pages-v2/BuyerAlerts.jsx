@@ -119,7 +119,10 @@ const linkFor = (a) =>
     : // CAP-D2 — the commitments page is where demand moves to another qualified supplier.
       a.rule === 'commitmentBelowForecast' || a.rule === 'supplyDiscontinued'
       ? `/buyer/collaboration?material=${encodeURIComponent(a.subject)}`
-      : '/buyer/inventory';
+      : // CAP-9 BR-05 — the subject is the blanket PO; the call-off page filters to it.
+        a.rule === 'blanketPoRunOut'
+        ? `/buyer/call-offs?po=${encodeURIComponent(a.subject)}`
+        : '/buyer/inventory';
 
 /** @type {React.FC} */
 const BuyerAlerts = () => {
@@ -400,6 +403,9 @@ const BuyerAlerts = () => {
                           <div className="text-xs text-text-secondary">
                             {a.rule === 'capacityBelowDemand' ? (
                               groupLabel(a.subject)
+                            ) : a.rule === 'blanketPoRunOut' ? (
+                              // CAP-9 — the label carries the PO number and material; the id stays out.
+                              <Data>{a.subjectLabel}</Data>
                             ) : (
                               <>
                                 <Data>{a.subject}</Data> · {a.subjectLabel}
@@ -440,7 +446,9 @@ const BuyerAlerts = () => {
                               : a.rule === 'commitmentBelowForecast' ||
                                   a.rule === 'supplyDiscontinued'
                                 ? 'inv.alerts.openCommitments'
-                                : 'inv.alerts.openInventory'
+                                : a.rule === 'blanketPoRunOut'
+                                  ? 'inv.alerts.openBlanketPo'
+                                  : 'inv.alerts.openInventory'
                           )}
                         </Link>
                         {a.status === 'open' &&
