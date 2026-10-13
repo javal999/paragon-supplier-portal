@@ -218,6 +218,7 @@ Wave 3 is last because those tables carry long text (Stabilise's Rule column) or
 **Built.** A blanket (umbrella) PO shows ordered, released and remaining quantity or value [Code: `lib/i18n/callOffs.js:16-23`]. Nothing projects when it runs out.
 
 - BR-01. For each blanket PO line, the hub projects week by week: remaining − (LTP for that supplier × material in the week). It assumes call-offs follow the plan [MOM 2 C2].
+- BR-01a. Several blanket PO lines for the same supplier × material draw down one after another, oldest PO first. Each week's LTP is taken from the oldest line that still has a balance, and any excess spills to the next line in the same week. Each line has its own run-out week; the group's run-out, its "new PO needed by" week and its single alert belong to the last line. Earlier lines show which PO is next in line [Owner, 2026-10-13, CAP-D9].
 - BR-02. A value-only line (no quantity) uses LTP × the line's unit price [Proposed].
 - BR-03. The **run-out week** is the first week the projection goes below zero. The **new PO needed by** week is the run-out week minus the PO lead time for that material [Proposed: lead time from the material master; 2 weeks if missing].
 - BR-04. The call-off page shows both weeks on the blanket PO panel, and a list "Blanket POs running out" sorted by "new PO needed by".
@@ -265,7 +266,7 @@ Wave 3 is last because those tables carry long text (Stabilise's Rule column) or
 
 ---
 
-## 10. Decisions (accepted 2026-10-12)
+## 10. Decisions (CAP-D1 to D8 accepted 2026-10-12, CAP-D9 2026-10-13)
 
 | ID | Question | Recommendation | Outcome |
 |---|---|---|---|
@@ -277,3 +278,4 @@ Wave 3 is last because those tables carry long text (Stabilise's Rule column) or
 | CAP-D6 | Monthly view editable? | No, read only (CAP-2 BR-05) | Accepted, 2026-10-12 |
 | CAP-D7 | Exports keep one row per week? | Yes (CAP-1 BR-10) | Accepted, 2026-10-12 |
 | CAP-D8 | Every other [Proposed] value in this file | Accept as starting values; CAP-10 to CAP-12 values are replaced by Ary's use case | Accepted, 2026-10-12 |
+| CAP-D9 | Several blanket POs for one supplier × material: each drawn by the full LTP, pooled, or one after another? | One after another, oldest first; one alert per group, on the last PO (CAP-9 BR-01a) | Accepted, 2026-10-13 |
