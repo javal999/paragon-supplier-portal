@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.23, 2026-10-13 |
+| Version | 2.24, 2026-10-13 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -133,14 +133,12 @@ Nothing blocks these.
 
 ### 4a. Weekly SC Hub 2026-10-07: requirements accepted, ready to build
 
-BL-170, BL-171 and BL-173 to BL-176 were built and merged on 2026-10-12 and 2026-10-13; they are in section 6.
+BL-170 to BL-177 were built and merged on 2026-10-12 and 2026-10-13; they are in section 6.
 
 The owner reviewed the requirements and accepted CAP-D1 to CAP-D8 on 2026-10-12. Wave 1 of BL-170 is built (PR #191, 2026-10-12); what is built is in section 1.2 of `BUILD-GAP.md`. Wave 2 and 3 tables of BL-170 are each confirmed by the owner before they are built (CAP-D5). Ary Hidayat's spike use case does not block BL-179 to BL-181; it replaces their starting values when it lands.
 
 | ID | Item | Why | Size | Blocked by | Detail |
 |---|---|---|---|---|---|
-| BL-172 | CAP-3 Three capacity states (Within, Needs additional, Cannot be supplied) shown in one colour each on every surface; supplier confirms additional capacity per week | C1 | S | — | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` |
-| BL-177 | CAP-8 Move demand to several qualified suppliers, a quantity each in the material's unit, total no more than the shortfall | C6 | M | — | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` |
 | BL-178 | CAP-9 Blanket PO run-out week and "new PO needed by" week, projected from LTP; list and alert | C2 | M | — | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` |
 | BL-179 | CAP-10 DA frozen in the current 4-week horizon; recalculation changes week 5 onward only | D1 | M | — | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` |
 | BL-180 | CAP-11 Lower consumption: excess taken off DA from week 5, fully absorbed by week 8, alert if it cannot be | D2 | M | BL-179 | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` |
@@ -175,6 +173,8 @@ The owner reviewed the requirements and accepted CAP-D1 to CAP-D8 on 2026-10-12.
 
 | ID | Item | Closed | By |
 |---|---|---|---|
+| BL-177 | CAP-8 Move demand to several qualified suppliers, a quantity each in the material's unit, total no more than the shortfall | 2026-10-13 | Built in PR #213 (merge `2379aaf`): Move demand splits a shortfall across qualified suppliers in one `t_forecastversion_reassign` with `allocations`; total refused above the shortfall by `moveDemandRefusal`; headroom (BE − LTP) warns, never blocks; one `movedOut` log entry per allocation. Behaviour change: the old verb moved the line's whole forecast to one supplier; it now moves only the entered quantities and the rest stays an exception |
+| BL-172 | CAP-3 Three capacity states (Within, Needs additional, Cannot be supplied) shown in one colour each on every surface; supplier confirms additional capacity per week | 2026-10-13 | Built in PR #213 (merge `2379aaf`): `LtpCheckPill` is the one capacity-state pill on PTI Capacity, supplier Capacity and Submit per period; PTI header counts "Needs additional / Confirmed additional / Cannot be supplied"; an amber week offers "Confirm additional capacity", saved with `t_capacity_submit` as `upsideConfirmed`, read through `isUpsideConfirmed` (`capacityRules.js`). The planner exception list shows no capacity level, so it has no pill |
 | BL-176 | CAP-7 Hide Request revision behind a code flag; lines already in Revision requested keep working | 2026-10-12 | Built in PR #200 (merge `b637319`): `REQUEST_REVISION_ENABLED = false` in `forecastConfig.js` hides the button; lines already in Revision requested still resubmit; a flag-on test keeps the path tested. If the flag is turned back on, restore the Supplier responses purpose line too |
 | BL-175 | CAP-6 Remove the commitment date from the supplier's commitment and confirm screens; old upload files still parse | 2026-10-12 | Built in PR #200 (merge `b637319`): Date input and column removed from the commitment page, "Committed date" from the older confirm panel and My responses; a forecast-version commitment sent without a date stores the period start; old upload files with a date column still parse |
 | BL-174 | CAP-5 Reason filter on the planner exception list (and on PTI Capacity gaps), with counts per reason | 2026-10-12 | Built in PR #201 (merge `c60d50c`): shared `ReasonFilter` with counts on the planner exception list and PTI Capacity (`reason=` in the address, with Gaps only). Owner ruling 2026-10-12: a supplier with no matching week drops out of the list, as with Gaps only |
