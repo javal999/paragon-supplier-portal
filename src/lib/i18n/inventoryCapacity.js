@@ -297,17 +297,18 @@ export const inventoryCapacityEn = {
   // CAP-1 B-04 — a filter left no week column in this supplier group.
   'inv.capacity.grid.noWeekMatches': 'No week matches the filters',
   'inv.capacity.col.week': 'Week of',
-  'inv.capacity.col.allocated': 'Allocated ({{uom}})',
-  'inv.capacity.col.upside': 'Additional capacity ({{uom}})',
+  // BL-186 (G-02) — a grid row's name; the unit follows it in grey.
+  'inv.capacity.row.allocated': 'Allocated',
+  'inv.capacity.row.upside': 'Additional capacity',
   'inv.capacity.upsideHelp':
     'Additional capacity is what you could give PTI on request, above the capacity you allocate. Optional. BE = capacity + additional capacity.',
   'inv.capacity.upsideHelpPti':
     'Additional capacity is what the supplier could give PTI on request, above its allocation. BE = capacity + additional capacity.',
-  'inv.capacity.col.gap': 'Short by ({{uom}})',
+  'inv.capacity.row.gap': 'Short by',
   'inv.capacity.col.reason': 'Reason',
   // BL-133 (ENG-D18) — the LTP against capacity and BE.
-  'inv.capacity.col.ltp': 'LTP, current forecast ({{uom}})',
-  'inv.capacity.col.be': 'BE = capacity + additional ({{uom}})',
+  'inv.capacity.row.ltp': 'LTP, current forecast',
+  'inv.capacity.row.be': 'BE = capacity + additional',
   'inv.capacity.col.ltpCheck': 'LTP against capacity',
   'inv.capacity.ltpHelp':
     'LTP is PTI’s current forecast for the materials of this group, added up per week. It is the demand this page checks. Above your capacity it needs the additional capacity; above BE (capacity + additional capacity) it cannot be supplied. Confirm capacity here before you submit the LTP on Forecast & commitments.',
@@ -756,17 +757,18 @@ export const inventoryCapacityId = {
   'inv.capacity.notStated': 'Belum dinyatakan',
   'inv.capacity.grid.noWeekMatches': 'Tidak ada minggu yang cocok dengan filter',
   'inv.capacity.col.week': 'Minggu mulai',
-  'inv.capacity.col.allocated': 'Dialokasikan ({{uom}})',
-  'inv.capacity.col.upside': 'Kapasitas tambahan ({{uom}})',
+  // BL-186 (G-02) — nama baris grid; satuannya menyusul dalam abu-abu.
+  'inv.capacity.row.allocated': 'Dialokasikan',
+  'inv.capacity.row.upside': 'Kapasitas tambahan',
   'inv.capacity.upsideHelp':
     'Kapasitas tambahan adalah kapasitas yang dapat Anda berikan kepada PTI jika diminta, di atas kapasitas yang Anda alokasikan. Opsional. BE = kapasitas + kapasitas tambahan.',
   'inv.capacity.upsideHelpPti':
     'Kapasitas tambahan adalah kapasitas yang dapat diberikan pemasok kepada PTI jika diminta, di atas alokasinya. BE = kapasitas + kapasitas tambahan.',
-  'inv.capacity.col.gap': 'Kurang ({{uom}})',
+  'inv.capacity.row.gap': 'Kurang',
   'inv.capacity.col.reason': 'Alasan',
   // BL-133 (ENG-D18) — LTP terhadap kapasitas dan BE.
-  'inv.capacity.col.ltp': 'LTP, prakiraan saat ini ({{uom}})',
-  'inv.capacity.col.be': 'BE = kapasitas + tambahan ({{uom}})',
+  'inv.capacity.row.ltp': 'LTP, prakiraan saat ini',
+  'inv.capacity.row.be': 'BE = kapasitas + tambahan',
   'inv.capacity.col.ltpCheck': 'LTP terhadap kapasitas',
   'inv.capacity.ltpHelp':
     'LTP adalah prakiraan PTI saat ini untuk material kelompok ini, dijumlahkan per minggu. Inilah kebutuhan yang diperiksa halaman ini. Di atas kapasitas Anda, LTP memerlukan kapasitas tambahan; di atas BE (kapasitas + kapasitas tambahan), LTP tidak dapat dipenuhi. Konfirmasikan kapasitas di sini sebelum Anda mengirim LTP di Prakiraan & komitmen.',

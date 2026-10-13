@@ -6,8 +6,8 @@ import StatusPill from './StatusPill';
 import TimeRangeToggle from './TimeRangeToggle';
 import { useWeekGridView } from './weekGridView';
 import { isoWeek, mondayOf } from '@services/engine/dates';
-import { formatDate, formatNumber } from '@lib/format';
-import { combineWeeks, groupWeeksByMonth } from '@lib/weekMonths';
+import { formatNumber } from '@lib/format';
+import { combineWeeks, groupWeeksByMonth, weekHeaderDate } from '@lib/weekMonths';
 /** @import { MonthCombine, MonthStatus, WeekMonth } from '@lib/weekMonths' */
 /** @import { WeekGridView } from './weekGridView' */
 
@@ -94,12 +94,6 @@ const LABEL_COL =
   'sticky left-0 z-10 w-[140px] min-w-[140px] max-w-[140px] md:w-[220px] md:min-w-[220px] md:max-w-[220px]';
 const WEEK_COL = 'min-w-[112px]';
 
-/**
- * `31 Aug` for a week's Monday: the portal's own date format without the year.
- * @param {string} iso
- */
-const shortDate = (iso) => formatDate(iso.slice(0, 10)).replace(/\s\d{4}$/, '');
-
 // G-08 — a drilled-to week: a 1 px action-blue ring down both sides of every
 // cell of the column, which reads as one ring around the column.
 const DRILL_RING =
@@ -144,6 +138,11 @@ const WeekGrid = ({
   editable = false
 }) => {
   const { t, i18n } = useTranslation();
+  /**
+   * `07 Sep` for a week's Monday (G-03), in the reader's language (BL-186).
+   * @param {string} iso
+   */
+  const shortDate = (iso) => weekHeaderDate(iso, i18n.language ?? 'en');
   const scrollRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const [edges, setEdges] = useState({ left: false, right: false });
   const [view, setView] = useWeekGridView(viewKey);
@@ -182,18 +181,35 @@ const WeekGrid = ({
   }, [measure]);
 
   /**
-   * G-13 — a focused cell is scrolled clear of the sticky label column.
-   * @param {React.FocusEvent<HTMLDivElement>} e
+   * G-13 — the whole of a cell, not only its field, clear of the label column.
+   * @param {HTMLElement} cell
    */
-  const onFocus = (e) => {
+  const reveal = (cell) => {
     const el = scrollRef.current;
-    const cell = e.target instanceof HTMLElement ? e.target.closest('td') : null;
     const labelCell = el?.querySelector('th[data-label-col]');
-    if (!el || !(cell instanceof HTMLElement) || !(labelCell instanceof HTMLElement)) return;
+    if (!el || !(labelCell instanceof HTMLElement)) return;
     const labelW = labelCell.offsetWidth;
     if (cell.offsetLeft - labelW < el.scrollLeft) el.scrollLeft = cell.offsetLeft - labelW;
     else if (cell.offsetLeft + cell.offsetWidth > el.scrollLeft + el.clientWidth)
       el.scrollLeft = cell.offsetLeft + cell.offsetWidth - el.clientWidth;
+  };
+
+  /**
+   * G-13 — a focused cell is scrolled clear of the sticky label column.
+   *
+   * BL-186: the browser scrolls a focused field into view AFTER the focus
+   * event, and that scroll knows nothing of the sticky label column, so a
+   * correction made in the event was undone and the week ended under the
+   * labels. The scroll container's `scroll-padding-inline-start` (the label
+   * column's width) makes the browser's own scroll stop clear of it, and this
+   * pass, a frame later, brings the whole cell into view.
+   * @param {React.FocusEvent<HTMLDivElement>} e
+   */
+  const onFocus = (e) => {
+    const cell = e.target instanceof HTMLElement ? e.target.closest('td') : null;
+    if (!(cell instanceof HTMLElement)) return;
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => reveal(cell));
+    else reveal(cell);
   };
 
   /**
@@ -301,7 +317,9 @@ const WeekGrid = ({
         onScroll={measure}
         onFocus={onFocus}
         data-testid={testId ? `${testId}-scroll` : undefined}
-        className={`w-full min-w-0 overflow-x-auto focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-action ${className}`}
+        // G-13 (BL-186) — the browser's own focus scroll stops clear of the
+        // sticky label column: the padding is that column's width.
+        className={`w-full min-w-0 overflow-x-auto scroll-ps-[140px] md:scroll-ps-[220px] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-action ${className}`}
       >
         <table
           // No `min-w-full`: a grid narrowed to one or two weeks (Gaps only)

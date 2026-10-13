@@ -6,6 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
 import { SEEDED_SEAT_ROLES, PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
@@ -269,22 +270,34 @@ describe('CAP-1 Table C — supplier Capacity', () => {
 
   it('tab order runs along a row: every Allocated week, then every Additional week, then the reason selects (G-11, C-05)', async () => {
     const plan = planOf('sup-007-pg-MG-20');
-    const grid = await openGroup();
-    // Tab follows DOM order when no element sets a positive tabIndex.
-    const focusables = [
-      ...grid.querySelectorAll('input:not([disabled]), select:not([disabled]), button, [tabindex]')
-    ];
-    expect(focusables.some((el) => Number(el.getAttribute('tabindex')) > 0)).toBe(false);
-    const labels = focusables.map((el) => el.getAttribute('aria-label'));
+    await openGroup();
     const weeks = plan.weeks.map((w) => formatDate(w.week));
     const reasonWeeks = plan.weeks
       .filter((w) => w.entry && w.entry.allocated < w.demand)
       .map((w) => formatDate(w.week));
-    expect(labels).toEqual([
+    const expected = [
       ...weeks.map((w) => `Allocated capacity for the week of ${w}`),
       ...weeks.map((w) => `Additional capacity for the week of ${w}`),
       ...reasonWeeks.map((w) => `Reason for the week of ${w}`)
-    ]);
+    ];
+    // Population control: 13 weeks per row, and at least one reason select.
+    expect(weeks).toHaveLength(13);
+    expect(reasonWeeks.length).toBeGreaterThan(0);
+    // BL-186 — real Tab presses (user-event), from the grid's scroll container:
+    // W36 → W37 → … → W48 along Allocated, then the Additional row, then the
+    // reason selects, left to right.
+    const user = userEvent.setup();
+    screen.getByTestId('capacity-grid-scroll').focus();
+    /** @type {(string | null)[]} */
+    const visited = [];
+    for (let i = 0; i < expected.length; i += 1) {
+      await user.tab();
+      visited.push(document.activeElement?.getAttribute('aria-label') ?? null);
+    }
+    expect(visited).toEqual(expected);
+    // Shift+Tab walks back the same way: from the first reason select to Additional W48.
+    await user.tab({ shift: true });
+    expect(document.activeElement?.getAttribute('aria-label')).toBe(expected[expected.length - 2]);
     // C-AC1 — Enter in Allocated W36 moves to Allocated W37.
     const first = screen.getByLabelText(`Allocated capacity for the week of ${weeks[0]}`);
     first.focus();
@@ -324,6 +337,131 @@ describe('CAP-1 Table C — supplier Capacity', () => {
     expect(document.activeElement).not.toBe(select);
     fireEvent.click(link);
     await waitFor(() => expect(document.activeElement).toBe(select));
+  });
+
+  it('BL-186 — the chosen reason is readable: a reason week’s cell is wider, the select is compact and its title is the full label', async () => {
+    const grid = await openGroup();
+    const w38 = '2026-09-14';
+    const w37 = '2026-09-07';
+    const select = /** @type {HTMLSelectElement} */ (
+      screen.getByLabelText(`Reason for the week of ${formatDate(w38)}`)
+    );
+    fireEvent.change(select, { target: { value: 'force-majeure' } });
+    expect(select).toHaveValue('force-majeure');
+    expect(select).toHaveAttribute('title', 'Force Majeure');
+    expect(select.className).toContain('text-xs');
+    // Its cell holds at least 128 px, so only this week grows to 144 px; a week
+    // with no select keeps the 112 px column (W1-Q1).
+    expect(/** @type {HTMLElement} */ (select.parentElement).className).toContain('min-w-[128px]');
+    expect(cellAt(grid, 'reason', w37).querySelector('select')).toBeNull();
+    expect(cellAt(grid, 'reason', w37).querySelector('.min-w-\\[128px\\]')).toBeNull();
+    fireEvent.change(select, { target: { value: '' } });
+    expect(select).toHaveAttribute('title', 'Select a reason…');
+    // ID: the full Indonesian label. The switch redraws the page, so the
+    // select is found again by its id.
+    await i18n.changeLanguage('id');
+    try {
+      const idSelect = await waitFor(() => {
+        const el = document.getElementById(`capacity-reason-input-${w38}`);
+        expect(el).not.toBeNull();
+        return /** @type {HTMLSelectElement} */ (el);
+      });
+      fireEvent.change(idSelect, { target: { value: 'force-majeure' } });
+      expect(idSelect).toHaveAttribute('title', 'Keadaan kahar');
+      expect(idSelect.selectedOptions[0].textContent).toBe('Keadaan kahar');
+    } finally {
+      await i18n.changeLanguage('en');
+    }
+  });
+
+  it('BL-186 (G-02, G-03) — a metric’s unit follows its name in grey; week headers read "07 Sep"', async () => {
+    const plan = planOf('sup-007-pg-MG-20');
+    const grid = await openGroup();
+    const ltp = /** @type {HTMLElement} */ (
+      grid.querySelector('tbody tr[data-row="ltp"] th[scope="row"]')
+    );
+    expect(ltp.textContent).toBe(`LTP, current forecast · ${plan.uom}`);
+    const unit = /** @type {HTMLElement} */ (ltp.querySelector('.text-text-tertiary'));
+    expect(unit.textContent).toBe(` · ${plan.uom}`);
+    // The label itself no longer carries the unit in its own colour.
+    expect(ltp.textContent).not.toContain(`(${plan.uom})`);
+    for (const id of ['allocated', 'upside', 'be'])
+      expect(
+        grid.querySelector(`tbody tr[data-row="${id}"] th[scope="row"] .text-text-tertiary`)
+      ).toHaveTextContent(`· ${plan.uom}`);
+    // A row with no unit has no grey part.
+    expect(
+      grid.querySelector('tbody tr[data-row="reason"] th[scope="row"] .text-text-tertiary')
+    ).toBeNull();
+    expect(screen.getByTestId('capacity-week-2026-09-07')).toHaveTextContent('07 Sep');
+    expect(screen.getByTestId('capacity-week-2026-09-07')).not.toHaveTextContent('Sept');
+  });
+});
+
+describe('CAP-1 C-AC4 — after a supplier submits, PTI Capacity shows the same figures', () => {
+  it('every week of sup-007 MG-20 reads on PTI Capacity as the supplier submitted it', async () => {
+    const before = planOf('sup-007-pg-MG-20');
+    const w36 = before.weeks[0];
+    const w40 = before.weeks[4];
+    // Population control: W40 has an LTP to fall under.
+    expect(w40.demand).toBeGreaterThan(1000);
+    const sup = renderWithProviders(<SupplierCapacity />, {
+      identity: SUPPLIER,
+      route: '/supplier/capacity'
+    });
+    fireEvent.click(await screen.findByRole('tab', { name: 'Rigid plastic packaging' }));
+    await screen.findByTestId('capacity-grid');
+    /** @param {string} name @param {string} week */
+    const field = (name, week) =>
+      /** @type {HTMLInputElement | HTMLSelectElement} */ (
+        screen.getByLabelText(`${name} for the week of ${formatDate(week)}`)
+      );
+    // New figures in two weeks: W36 above the LTP with additional capacity,
+    // W40 under it with a reason.
+    fireEvent.change(field('Allocated capacity', w36.week), {
+      target: { value: String(w36.demand + 1234) }
+    });
+    fireEvent.change(field('Additional capacity', w36.week), { target: { value: '4321' } });
+    fireEvent.change(field('Allocated capacity', w40.week), {
+      target: { value: String(w40.demand - 1000) }
+    });
+    fireEvent.change(field('Reason', w40.week), { target: { value: 'force-majeure' } });
+    // Force Majeure needs a note.
+    fireEvent.change(field('Note', w40.week), { target: { value: 'Flood at the plant' } });
+    // What the supplier sends, week by week, read off the form itself.
+    const sent = before.weeks.map((w) => ({
+      week: w.week,
+      allocated: Number(field('Allocated capacity', w.week).value),
+      upside: field('Additional capacity', w.week).value,
+      reason:
+        /** @type {HTMLSelectElement | null} */ (
+          document.getElementById(`capacity-reason-input-${w.week}`)
+        )?.value ?? ''
+    }));
+    expect(sent.find((s) => s.week === w40.week)?.reason).toBe('force-majeure');
+    const submit = screen.getByTestId('capacity-submit');
+    expect(submit).toBeEnabled();
+    fireEvent.click(submit);
+    await waitFor(() => expect(planOf('sup-007-pg-MG-20').latest?.id).not.toBe(before.latest?.id));
+    sup.unmount();
+
+    renderWithProviders(<BuyerCapacity />, { identity: PLANNER, route: '/buyer/capacity' });
+    const grid = await screen.findByTestId('capacity-grid-sup-007-pg-MG-20');
+    expect(weekColumns(grid)).toEqual(sent.map((s) => s.week));
+    for (const s of sent) {
+      const upside = s.upside === '' ? null : Number(s.upside);
+      expect(cellAt(grid, 'allocated', s.week)).toHaveTextContent(qty(s.allocated));
+      expect(cellAt(grid, 'upside', s.week)).toHaveTextContent(upside === null ? '—' : qty(upside));
+      expect(cellAt(grid, 'be', s.week)).toHaveTextContent(qty(s.allocated + (upside ?? 0)));
+      expect(cellAt(grid, 'reason', s.week).textContent).toContain(
+        s.reason ? reasonName(s.reason) : '—'
+      );
+    }
+    // The two changed weeks, in figures written out.
+    expect(cellAt(grid, 'allocated', w36.week)).toHaveTextContent(qty(w36.demand + 1234));
+    expect(cellAt(grid, 'upside', w36.week)).toHaveTextContent('4,321');
+    expect(cellAt(grid, 'allocated', w40.week)).toHaveTextContent(qty(w40.demand - 1000));
+    expect(cellAt(grid, 'reason', w40.week)).toHaveTextContent('Force Majeure');
   });
 });
 
