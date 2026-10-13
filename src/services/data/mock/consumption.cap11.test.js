@@ -179,6 +179,20 @@ describe('recording consumption in the frozen horizon', () => {
   });
 });
 
+describe('a week with no use (consumption 0)', () => {
+  it('is accepted, and the excess is the full frozen figure', async () => {
+    const before = await rowOf('sup-002', 'RM-STEAR-7300');
+    const frozenW36 = /** @type {number} */ (weekOf(before, H1[0]).published);
+    const res = await record(planning, { qty: 0 });
+    expect(res.status, res.reason).toBe('done');
+    expect(consumptionStore.all().map((r) => r.qty)).toEqual([0]);
+    const after = await rowOf('sup-002', 'RM-STEAR-7300');
+    expect(weekOf(after, H1[0]).consumption).toBe(0);
+    const absorbed = H2.reduce((n, w) => n + (weekOf(after, w).absorbed?.qty ?? 0), 0);
+    expect(absorbed).toBe(frozenW36);
+  });
+});
+
 describe('publishing the next horizon freezes it WITH the absorption, once', () => {
   it('at W40 the frozen figures carry the absorption and nothing is absorbed twice', async () => {
     await record(planning, { qty: 1_000 });
@@ -249,7 +263,7 @@ describe('BR-04 — the unabsorbed excess raises a PTI-only alert', () => {
 
 describe('the refusals, through the policy hook (each refused, nothing stored)', () => {
   it.each([
-    [{ qty: 0 }, 'NOT_A_QUANTITY'],
+    [{ qty: -1 }, 'NOT_A_QUANTITY'],
     [{ qty: -10 }, 'NOT_A_QUANTITY'],
     [{ qty: Number.NaN }, 'NOT_A_QUANTITY'],
     [{ week: H1[1] }, 'FUTURE_WEEK'],

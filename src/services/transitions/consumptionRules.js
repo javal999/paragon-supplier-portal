@@ -94,7 +94,8 @@ const isDay = (v) =>
  *   · UNKNOWN_MATERIAL — not in the material master.
  *   · NOT_A_WEEK — not a calendar date, or not a Monday (weeks are named by their Monday).
  *   · FUTURE_WEEK — after the current hub week: consumption is what was used.
- *   · NOT_A_QUANTITY — not a number, or not above zero.
+ *   · NOT_A_QUANTITY — not a finite number, or below zero. Zero is accepted:
+ *     a week with no use is real, and it gives the largest excess.
  *   · UNIT_MISMATCH — not the material's unit in the master.
  *   · BAD_SOURCE — not `manual` or `upload` (`sap` is the feed's, not a planner's).
  * @param {{ readonly materialCode?: unknown; readonly week?: unknown; readonly qty?: unknown; readonly unit?: unknown; readonly source?: unknown }} payload
@@ -106,7 +107,7 @@ export function consumptionRefusal(payload, ctx) {
   if (uom === null) return 'UNKNOWN_MATERIAL';
   if (!isDay(payload.week) || mondayOf(payload.week) !== payload.week) return 'NOT_A_WEEK';
   if (payload.week > mondayOf(dayOf(ctx.nowIso))) return 'FUTURE_WEEK';
-  if (typeof payload.qty !== 'number' || !Number.isFinite(payload.qty) || payload.qty <= 0)
+  if (typeof payload.qty !== 'number' || !Number.isFinite(payload.qty) || payload.qty < 0)
     return 'NOT_A_QUANTITY';
   if (payload.unit !== uom) return 'UNIT_MISMATCH';
   if (!(/** @type {readonly unknown[]} */ (PLANNER_CONSUMPTION_SOURCES).includes(payload.source)))
@@ -433,7 +434,6 @@ export function consumptionTemplateCsv(materials, weeks, language) {
  *   | 'futureWeek'
  *   | 'notANumber'
  *   | 'ambiguousNumber'
- *   | 'notPositive'
  *   | 'unitMismatch'
  *   | 'duplicateRow'} ConsumptionRowRefusal
  */
@@ -494,10 +494,9 @@ export function validateConsumptionRows(headers, rows, ctx) {
     if (verdict === 'UNKNOWN_MATERIAL') return refuse('unknownMaterial');
     if (verdict === 'NOT_A_WEEK') return refuse('notAWeek');
     if (verdict === 'FUTURE_WEEK') return refuse('futureWeek');
+    // `normalizeQty` reads no sign, so a refused quantity is unreadable, never negative.
     if (verdict === 'NOT_A_QUANTITY')
-      return refuse(
-        read.ok ? 'notPositive' : read.reason === 'AMBIGUOUS_QTY' ? 'ambiguousNumber' : 'notANumber'
-      );
+      return refuse(read.ok || read.reason !== 'AMBIGUOUS_QTY' ? 'notANumber' : 'ambiguousNumber');
     if (verdict !== null) return refuse('unitMismatch');
     drafts.push({ row, materialCode, week, qty, unit: cell(r, 'unit') });
   });

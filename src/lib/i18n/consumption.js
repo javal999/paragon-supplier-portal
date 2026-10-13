@@ -40,7 +40,6 @@ export const consumptionEn = {
   'consumption.upload.reason.notANumber': 'the consumption is not a number',
   'consumption.upload.reason.ambiguousNumber':
     'the number reads differently in English and Indonesian; write it without a thousands separator',
-  'consumption.upload.reason.notPositive': 'the consumption must be above zero',
   'consumption.upload.reason.unitMismatch': 'the unit is not the material’s unit',
   'consumption.upload.reason.duplicateRow': 'the file has another row for this material and week',
   // The grid rows (CAP-11 BR-05).
@@ -88,7 +87,6 @@ export const consumptionId = {
   'consumption.upload.reason.notANumber': 'pemakaian bukan angka',
   'consumption.upload.reason.ambiguousNumber':
     'angka terbaca berbeda dalam bahasa Inggris dan Indonesia; tulis tanpa pemisah ribuan',
-  'consumption.upload.reason.notPositive': 'pemakaian harus di atas nol',
   'consumption.upload.reason.unitMismatch': 'satuan bukan satuan material',
   'consumption.upload.reason.duplicateRow': 'berkas punya baris lain untuk material dan minggu ini',
   'consumption.row.recorded': 'Pemakaian tercatat',

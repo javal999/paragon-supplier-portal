@@ -201,7 +201,7 @@ export const POLICY_HOOKS = /** @type {const} */ ({
   DEMAND_ANTICIPATION_PUBLISH_VALID: 'demandanticipation_publish_valid',
   /**
    * Recorded consumption (CAP-11, CAP-D14): a known material, a week named by
-   * its Monday and not after the current hub week, a quantity above zero, the
+   * its Monday and not after the current hub week, a quantity of zero or more, the
    * material's unit, and a planner source (`manual` or `upload`).
    */
   CONSUMPTION_RECORD_VALID: 'consumption_record_valid',

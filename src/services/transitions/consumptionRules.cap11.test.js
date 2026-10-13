@@ -365,6 +365,8 @@ describe('the record verb’s rule', () => {
   const ok = { materialCode: 'RM-1', week: H1[0], qty: 10, unit: 'kg', source: 'manual' };
   it('accepts a known material, a Monday up to the current week, a positive quantity', () => {
     expect(consumptionRefusal(ok, ctx)).toBeNull();
+    // Zero is a real week with no use, not a refusal.
+    expect(consumptionRefusal({ ...ok, qty: 0 }, ctx)).toBeNull();
     expect(consumptionRefusal({ ...ok, week: '2026-08-24', source: 'upload' }, ctx)).toBeNull();
   });
   it.each([
@@ -372,8 +374,8 @@ describe('the record verb’s rule', () => {
     [{ week: '2026-09-01' }, 'NOT_A_WEEK'],
     [{ week: '2026-02-30' }, 'NOT_A_WEEK'],
     [{ week: H1[1] }, 'FUTURE_WEEK'],
-    [{ qty: 0 }, 'NOT_A_QUANTITY'],
     [{ qty: -5 }, 'NOT_A_QUANTITY'],
+    [{ qty: -1 }, 'NOT_A_QUANTITY'],
     [{ qty: NaN }, 'NOT_A_QUANTITY'],
     [{ qty: '10' }, 'NOT_A_QUANTITY'],
     [{ unit: 'pcs' }, 'UNIT_MISMATCH'],
@@ -411,6 +413,15 @@ describe('the upload template', () => {
     ]);
   });
 
+  it('accepts a row of 0: a week with no use', () => {
+    const f = parseCsv('Material code,Week (Monday),Consumption,Unit\nRM-1,2026-08-31,0,kg\n');
+    expect(validateConsumptionRows(f.headers, f.rows, ctx)).toEqual({
+      ok: true,
+      accepted: [{ row: 2, materialCode: 'RM-1', week: H1[0], qty: 0, unit: 'kg' }],
+      refused: []
+    });
+  });
+
   it('refuses an old or unrelated file whole, naming the missing columns', () => {
     const f = parseCsv('Material code,SOH,Unit\nRM-1,100,kg\n');
     expect(validateConsumptionRows(f.headers, f.rows, ctx)).toEqual({
@@ -426,7 +437,7 @@ describe('the upload template', () => {
         'RM-X,2026-08-31,10,kg',
         'RM-1,2026-09-07,10,kg',
         'RM-1,2026-08-31,abc,kg',
-        'RM-1,2026-08-31,0,kg',
+        'RM-1,2026-08-31,-3,kg',
         'RM-1,2026-08-31,10,pcs',
         'RM-1,not a date,10,kg',
         'RM-1,2026-08-24,5,kg',
@@ -439,7 +450,7 @@ describe('the upload template', () => {
       [2, 'unknownMaterial'],
       [3, 'futureWeek'],
       [4, 'notANumber'],
-      [5, 'notPositive'],
+      [5, 'notANumber'],
       [6, 'unitMismatch'],
       [7, 'notAWeek'],
       [8, 'duplicateRow'],

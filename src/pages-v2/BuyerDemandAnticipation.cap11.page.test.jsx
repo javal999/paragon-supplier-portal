@@ -104,6 +104,20 @@ describe('recording consumption in the frozen horizon (typed)', () => {
     expect(within(card).queryByTestId(`dant-absorbed-${KEY}-${H2[0]}`)).toBeNull();
   });
 
+  it('a typed 0 is recorded: the whole frozen 4,120 is the excess (1,030 a week)', async () => {
+    renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    const panel = await screen.findByTestId('consumption-panel');
+    fireEvent.change(within(panel).getByLabelText('Material'), {
+      target: { value: 'RM-STEAR-7300' }
+    });
+    fireEvent.change(within(panel).getByTestId('consumption-qty'), { target: { value: '0' } });
+    fireEvent.click(within(panel).getByTestId('consumption-record'));
+    await waitFor(() => expect(consumptionStore.all().map((r) => r.qty)).toEqual([0]));
+    expect(await screen.findByTestId(`dant-absorbed-${KEY}-${H2[0]}`)).toHaveTextContent(
+      '−1,030 absorbed from the W36–W39 excess'
+    );
+  });
+
   it('at W39 the week choice is the frozen horizon’s weeks up to now, newest first', async () => {
     sdcClock.set('2026-09-21T03:00:00.000Z');
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });

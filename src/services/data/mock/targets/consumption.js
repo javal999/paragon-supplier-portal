@@ -53,7 +53,7 @@ const REFUSAL_TEXT = {
   UNKNOWN_MATERIAL: 'UNKNOWN_MATERIAL: the material is not in the material master',
   NOT_A_WEEK: 'NOT_A_WEEK: name the week by its Monday (YYYY-MM-DD)',
   FUTURE_WEEK: 'FUTURE_WEEK: consumption can be recorded up to the current week only',
-  NOT_A_QUANTITY: 'NOT_A_QUANTITY: the consumption must be a number above zero',
+  NOT_A_QUANTITY: 'NOT_A_QUANTITY: the consumption must be a number, zero or more',
   UNIT_MISMATCH: 'UNIT_MISMATCH: the unit is not the material’s unit in the master',
   BAD_SOURCE: 'BAD_SOURCE: a planner records consumption typed or uploaded; SAP is the feed’s'
 };
