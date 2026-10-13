@@ -107,6 +107,9 @@ describe('Publish (BR-01, AC-02 shape) and AC-03', () => {
     );
     expect(screen.getByTestId('dant-publish-button')).toBeDisabled();
     expect(screen.getByTestId('dant-publish-all-frozen')).toBeInTheDocument();
+    // The newest publication is named, not the seed: both carry the same hub-clock
+    // instant (the demo clock does not move), so the id breaks the tie.
+    expect(screen.getByTestId('dant-latest-publication')).toHaveTextContent(/^Last published/);
   });
 
   it('AC-03 — a seat without forecast:publish sees the handoff notice instead of Publish', async () => {

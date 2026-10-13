@@ -64,7 +64,9 @@ export function publishPreview(rows, nowIso) {
 }
 
 /**
- * The newest publication any shown week is frozen by, or null.
+ * The newest publication any shown week is frozen by, or null. The demo hub
+ * clock does not move by itself, so two publications can share `publishedAt`;
+ * the store's ids rise with every append and break the tie.
  * @param {readonly DemandAnticipationRow[]} rows
  * @returns {NonNullable<DemandAnticipationWeekView['frozenBy']> | null}
  */
@@ -72,9 +74,16 @@ export function latestPublication(rows) {
   /** @type {NonNullable<DemandAnticipationWeekView['frozenBy']> | null} */
   let latest = null;
   for (const r of rows)
-    for (const w of r.weeks)
-      if (w.frozenBy && (latest === null || w.frozenBy.publishedAt > latest.publishedAt))
-        latest = w.frozenBy;
+    for (const w of r.weeks) {
+      const p = w.frozenBy;
+      if (
+        p &&
+        (latest === null ||
+          p.publishedAt > latest.publishedAt ||
+          (p.publishedAt === latest.publishedAt && p.publicationId > latest.publicationId))
+      )
+        latest = p;
+    }
   return latest;
 }
 
