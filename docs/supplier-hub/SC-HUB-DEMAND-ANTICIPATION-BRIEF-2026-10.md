@@ -2,13 +2,13 @@
 
 | Field | Value |
 |---|---|
-| Status | **Draft for owner review.** Nothing here is built. Decisions CAP-D10 to CAP-D16 (section 9) wait for the owner |
+| Status | **Accepted 2026-10-13.** The owner accepted every recommendation in section 9 (CAP-D10 to CAP-D16). Nothing here is built yet; build order in section 7 |
 | Date | 2026-10-13 |
 | Parent | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` section 8 (CAP-10 BR-01 to BR-04, CAP-11 BR-01 to BR-05, CAP-12 BR-01 to BR-03); backlog BL-179 to BL-181 |
 | Code read | `main` at `b1cc133` |
 | Values | Every number marked [Placeholder] is a starting value. Ary Hidayat's spike use case (MoM 07 Oct, AI 1) validates them later as a test fixture (section 8), on the owner's ruling of 2026-10-13 |
 
-**Tags.** [Code] = what `main` does today, cited `path:line` under `src/`. [MoM] = the 07 Oct meeting. [Placeholder] = a starting value to be checked against Ary's use case. [Proposed] = a design choice for the owner (section 9).
+**Tags.** [Code] = what `main` does today, cited `path:line` under `src/`. [MoM] = the 07 Oct meeting. [Placeholder] = a starting value to be checked against Ary's use case. [Proposed] = a design choice, all accepted on 2026-10-13 (section 9); the tag is kept so each choice can be traced.
 
 ---
 
@@ -147,14 +147,14 @@ B and C run in parallel once A is merged. Each step runs its own specs; the full
 
 ---
 
-## 9. Decisions for the owner
+## 9. Decisions (accepted 2026-10-13)
 
-| ID | Question | Recommendation |
-|---|---|---|
-| CAP-D10 | Name | "Demand anticipation" on screen, `demandAnticipation` in code, never "DA" (it means Delivery Agreement today) |
-| CAP-D11 | Grain and splitting | Supplier × material × week; monthly raw-material LTP spread by day; stock on hand and reorder point shared by LTP share over the frozen 4 weeks |
-| CAP-D12 | Formula | Stock and reorder point counted once, in week 1 (top up to the reorder point, or use the stock above it first); later weeks equal the LTP; open orders not netted. One function, checked by Ary's fixture |
-| CAP-D13 | Freezing | An append-only publication store; a planner "Publish demand anticipation" verb on the `forecast:publish` atom; a frozen week keeps its first value; "would be" beside it; the horizon rolls on publish; one publication seeded |
-| CAP-D14 | Consumption | Recorded by the planner, typed or uploaded, marked as awaiting the SAP goods-issue feed; split by demand anticipation share; never derived from stock changes |
-| CAP-D15 | Open supply and the extra PO | Released call-offs by need week; gap = demand anticipation − open supply; call-off on the oldest blanket line first, otherwise "New PO needed"; its own section on What to order |
-| CAP-D16 | Ary's numbers | A golden fixture and a test; placeholders in one config block |
+| ID | Question | Recommendation | Outcome |
+|---|---|---|---|
+| CAP-D10 | Name | "Demand anticipation" on screen, `demandAnticipation` in code, never "DA" (it means Delivery Agreement today) | Accepted, 2026-10-13 |
+| CAP-D11 | Grain and splitting | Supplier × material × week; monthly raw-material LTP spread by day; stock on hand and reorder point shared by LTP share over the frozen 4 weeks | Accepted, 2026-10-13 |
+| CAP-D12 | Formula | Stock and reorder point counted once, in week 1 (top up to the reorder point, or use the stock above it first); later weeks equal the LTP; open orders not netted. One function, checked by Ary's fixture | Accepted, 2026-10-13 |
+| CAP-D13 | Freezing | An append-only publication store; a planner "Publish demand anticipation" verb on the `forecast:publish` atom; a frozen week keeps its first value; "would be" beside it; the horizon rolls on publish; one publication seeded | Accepted, 2026-10-13 |
+| CAP-D14 | Consumption | Recorded by the planner, typed or uploaded, marked as awaiting the SAP goods-issue feed; split by demand anticipation share; never derived from stock changes | Accepted, 2026-10-13 |
+| CAP-D15 | Open supply and the extra PO | Released call-offs by need week; gap = demand anticipation − open supply; call-off on the oldest blanket line first, otherwise "New PO needed"; its own section on What to order | Accepted, 2026-10-13 |
+| CAP-D16 | Ary's numbers | A golden fixture and a test; placeholders in one config block | Accepted, 2026-10-13 |

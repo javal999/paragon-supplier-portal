@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.24, 2026-10-13 |
+| Version | 2.25, 2026-10-13 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -133,7 +133,7 @@ Nothing blocks these.
 
 ### 4a. Weekly SC Hub 2026-10-07: requirements accepted, ready to build
 
-BL-170 to BL-178 and BL-186 were built on 2026-10-12 and 2026-10-13; they are in section 6. Still open: BL-179 to BL-181 (DA horizon, values wait on Ary Hidayat's spike use case).
+BL-170 to BL-178 and BL-186 were built on 2026-10-12 and 2026-10-13; they are in section 6. Still open: BL-179 to BL-181 (demand anticipation, CAP-10 to CAP-12). Design accepted 2026-10-13 in `SC-HUB-DEMAND-ANTICIPATION-BRIEF-2026-10.md`; built with placeholder values, which Ary Hidayat's spike use case validates later as a test fixture.
 
 The owner reviewed the requirements and accepted CAP-D1 to CAP-D8 on 2026-10-12. Wave 1 of BL-170 is built (PR #191, 2026-10-12); what is built is in section 1.2 of `BUILD-GAP.md`. Wave 2 and 3 tables of BL-170 are each confirmed by the owner before they are built (CAP-D5). Ary Hidayat's spike use case does not block BL-179 to BL-181; it replaces their starting values when it lands.
 
