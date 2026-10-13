@@ -174,12 +174,20 @@ const IdentityPanel = () => {
         {initials}
       </button>
 
+      {/* Height is capped to the viewport below the top bar and the panel
+          scrolls its own content. Uncapped, a tall panel overflowed the
+          `h-screen` shell, grew the document and scrolled the whole window.
+          `overscroll-contain` stops a scroll that reaches the panel's end
+          from carrying on into the page behind it. The scrollbar gutter is
+          always reserved and the right padding gives back its 6px (the
+          global scrollbar width in index.css), so the content keeps the
+          same width whether or not the panel scrolls and no label wraps. */}
       {open && (
         <div
           role="dialog"
           aria-label={t('identity.panel.title')}
           data-testid="identity-panel"
-          className="absolute right-0 mt-2 w-80 bg-white border border-border-subtle rounded-lg shadow-lg z-50 p-4 text-left"
+          className="absolute right-0 mt-2 w-80 max-h-[calc(100vh-4rem)] overflow-y-auto overscroll-contain [scrollbar-gutter:stable] bg-white border border-border-subtle rounded-lg shadow-lg z-50 p-4 pr-[10px] text-left"
         >
           {/* — WHO — */}
           <div className="pb-3 border-b border-border-subtle">

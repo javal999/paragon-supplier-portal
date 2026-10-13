@@ -31,4 +31,26 @@ describe('Table — shared horizontal scroll container', () => {
     expect(table.className).toContain('w-full');
     expect(table.className).not.toMatch(/\bmin-w-max\b/);
   });
+  // Chrome/Firefox auto-focus an overflow container; Safari doesn't, so a read-only table
+  // (no focusable cells) leaves off-screen columns unreachable by keyboard there without an
+  // explicit tabIndex (review R2).
+  it('the scroll container is keyboard-focusable, named as a region (R2)', () => {
+    renderTable();
+    const wrapper = /** @type {HTMLElement} */ (screen.getByTestId('t').parentElement);
+    expect(wrapper).toHaveAttribute('tabIndex', '0');
+    expect(wrapper).toHaveAttribute('role', 'region');
+  });
+  it('names the scroll region via scrollLabel when given', () => {
+    render(
+      <Table data-testid="t2" scrollLabel="Purchase order lines">
+        <tbody>
+          <tr>
+            <td>cell</td>
+          </tr>
+        </tbody>
+      </Table>
+    );
+    const wrapper = /** @type {HTMLElement} */ (screen.getByTestId('t2').parentElement);
+    expect(wrapper).toHaveAttribute('aria-label', 'Purchase order lines');
+  });
 });
