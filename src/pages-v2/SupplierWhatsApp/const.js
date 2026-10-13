@@ -180,7 +180,10 @@ export const EMAIL_SCENARIOS = {
  * @property {string} label
  * @property {string} bot
  * @property {string[]} replies
- * @property {string} success
+ * @property {string} success  The scripted answer to `replies[0]`.
+ * @property {Record<string, string>} [successByReply]  The scripted answer to
+ *   any other reply, keyed by that reply. A reply with no entry here gets
+ *   `success`, so a scenario with one reply needs none.
  */
 
 /** @type {Record<ScenarioId, WeChatScenario>} */
@@ -189,7 +192,11 @@ export const WECHAT_SCENARIOS = {
     label: 'Confirm PO',
     bot: 'Selamat pagi / 早上好\nPurchase Order received:\n📦 PO-2025-00108\nPET Bottle 100ml — 50,000 PCS\nRp 185,000,000\nDelivery: 15 Apr 2026\n\n中文: 采购订单已发出，请确认。\nReply: CONFIRM / REJECT / CHANGE',
     replies: ['CONFIRM', 'REJECT', 'CHANGE'],
-    success: '✅ PO-2025-00108 Confirmed\nSAP updated automatically.\n已自动更新SAP系统。'
+    success: '✅ PO-2025-00108 Confirmed\nSAP updated automatically.\n已自动更新SAP系统。',
+    successByReply: {
+      REJECT: 'PO-2025-00108 rejection received\nBuyer notified.\n已通知采购员。',
+      CHANGE: 'PO-2025-00108 change request received\nBuyer notified.\n已通知采购员。'
+    }
   },
   asn: {
     label: 'Submit ASN',
