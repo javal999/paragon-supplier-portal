@@ -1,7 +1,7 @@
-import { vi } from 'vitest';
 import { screen, within, fireEvent } from '@testing-library/react';
 import i18n from '@lib/i18n';
 import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import { useToast } from '@hooks/useToast';
 import { mockDataService } from '@services/data/mock/mockDataService';
 import { withChaos } from '@services/data/mock/withChaos';
 import { isLive } from '@services/liveness';
@@ -188,29 +188,58 @@ describe('BuyerRisk — whole-surface honesty while SIMULATED', () => {
   });
 });
 
-describe('BuyerRisk — the war-room "Sent" reset timer is cleared on unmount', () => {
-  it('unmounting the scenario tab clears the pending 4 s reset, so no state is set after it is gone', async () => {
-    const setSpy = vi.spyOn(globalThis, 'setTimeout');
-    const clearSpy = vi.spyOn(globalThis, 'clearTimeout');
+describe('BuyerRisk — "Send to War Room" admits that nothing was sent', () => {
+  // The button only sets local state: no command, no channel. Until 2026-10-13
+  // it showed a SUCCESS toast ("dispatched to procurement leadership") and
+  // flipped to "✓ Sent" for 4 s. toastHonesty.guard missed it because the
+  // handler is a named function, not an inline onClick.
+  const ToastSpy = () => {
+    const { toasts } = useToast();
+    return (
+      <ul data-testid="toast-spy">
+        {toasts.map((x) => (
+          <li key={x.id} data-variant={x.variant}>{`${x.title} ${x.description ?? ''}`}</li>
+        ))}
+      </ul>
+    );
+  };
+
+  it('the toast is a warning that says nothing was sent, and the button never claims "Sent"', async () => {
+    renderWithProviders(
+      <>
+        <BuyerRisk />
+        <ToastSpy />
+      </>
+    );
+    await screen.findByText('Supply Risk & Scenario Intelligence');
+    fireEvent.click(screen.getByRole('tab', { name: 'Scenario Modeling' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Send to War Room' }));
+
+    const toasts = within(screen.getByTestId('toast-spy')).getAllByRole('listitem');
+    expect(toasts).toHaveLength(1);
+    expect(toasts[0]).toHaveAttribute('data-variant', 'warning');
+    expect(toasts[0]).toHaveTextContent(/nothing was sent/i);
+    expect(toasts[0]).not.toHaveTextContent(/dispatched to|Scenario forwarded/i);
+    // The button keeps its label: there is no "Sent" state to show.
+    expect(screen.getByRole('button', { name: 'Send to War Room' })).toBeInTheDocument();
+    expect(screen.queryByText(/✓ Sent/)).toBeNull();
+  });
+
+  it('in Indonesian the toast admits it too', async () => {
     try {
-      const { unmount } = renderWithProviders(<BuyerRisk />);
-      await screen.findByText('Supply Risk & Scenario Intelligence');
-      fireEvent.click(screen.getByRole('tab', { name: 'Scenario Modeling' }));
-
-      const before = setSpy.mock.calls.length;
-      fireEvent.click(screen.getByRole('button', { name: 'Send to War Room' }));
-      // CONTROL — the click really armed the reset timer.
-      const armed = setSpy.mock.calls
-        .map((call, i) => ({ delay: call[1], id: setSpy.mock.results[i].value }))
-        .slice(before)
-        .filter((c) => c.delay === 4000);
-      expect(armed).toHaveLength(1);
-
-      unmount();
-      expect(clearSpy.mock.calls.map((c) => c[0])).toContain(armed[0].id);
+      await i18n.changeLanguage('id');
+      renderWithProviders(
+        <>
+          <BuyerRisk />
+          <ToastSpy />
+        </>
+      );
+      fireEvent.click(await screen.findByRole('tab', { name: /Pemodelan Skenario/i }));
+      fireEvent.click(screen.getByRole('button', { name: 'Kirim ke War Room' }));
+      const toast = within(screen.getByTestId('toast-spy')).getByRole('listitem');
+      expect(toast).toHaveTextContent(/tidak ada yang dikirim/i);
     } finally {
-      setSpy.mockRestore();
-      clearSpy.mockRestore();
+      await i18n.changeLanguage('en');
     }
   });
 });
