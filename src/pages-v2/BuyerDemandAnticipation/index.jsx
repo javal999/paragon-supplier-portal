@@ -16,6 +16,7 @@ import { useDemandAnticipation } from '@services/query/hooks';
 import { inputClass, inventoryNow, labelClass } from '../inventory/inventoryDisplay';
 import AnticipationGrid from './components/AnticipationGrid';
 import PublishPanel from './components/PublishPanel';
+import ConsumptionPanel from './components/ConsumptionPanel';
 import { frozenWeeks, latestPublication, publishPreview, sharePct, weekRange } from './display';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -109,6 +110,9 @@ const BuyerDemandAnticipation = () => {
         <p className="text-xs text-text-tertiary mb-3">{t('demandAnt.howItWorks')}</p>
         <PublishPanel horizon={horizon} next={next} frozen={horizonFrozen} toFreeze={toFreeze} />
       </section>
+
+      {/* CAP-11 — the planner records consumption; the excess is absorbed into the next horizon. */}
+      <ConsumptionPanel rows={rows} nowIso={nowIso} />
 
       <div
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(2,minmax(0,16rem))_auto] items-end gap-3 mb-4"

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.25, 2026-10-13 |
+| Version | 2.26, 2026-10-13 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -133,15 +133,12 @@ Nothing blocks these.
 
 ### 4a. Weekly SC Hub 2026-10-07: requirements accepted, ready to build
 
-BL-170 to BL-178 and BL-186 were built on 2026-10-12 and 2026-10-13; they are in section 6. Still open: BL-179 to BL-181 (demand anticipation, CAP-10 to CAP-12). Design accepted 2026-10-13 in `SC-HUB-DEMAND-ANTICIPATION-BRIEF-2026-10.md`; built with placeholder values, which Ary Hidayat's spike use case validates later as a test fixture.
+BL-170 to BL-181 and BL-186 were built on 2026-10-12 and 2026-10-13; they are in section 6. Every item from the 2026-10-07 meeting is built. Ary Hidayat's spike use case, when it arrives, becomes the golden test fixture for BL-179 to BL-181 (CAP-D16).
 
 The owner reviewed the requirements and accepted CAP-D1 to CAP-D8 on 2026-10-12. Wave 1 of BL-170 is built (PR #191, 2026-10-12); what is built is in section 1.2 of `BUILD-GAP.md`. Wave 2 and 3 tables of BL-170 are each confirmed by the owner before they are built (CAP-D5). Ary Hidayat's spike use case does not block BL-179 to BL-181; it replaces their starting values when it lands.
 
 | ID | Item | Why | Size | Blocked by | Detail |
 |---|---|---|---|---|---|
-| BL-179 | CAP-10 DA frozen in the current 4-week horizon; recalculation changes week 5 onward only | D1 | M | — | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` |
-| BL-180 | CAP-11 Lower consumption: excess taken off DA from week 5, fully absorbed by week 8, alert if it cannot be | D2 | M | BL-179 | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` |
-| BL-181 | CAP-12 PO below DA: recommend an additional PO (blanket call-off first) on What to order | D3 | M | BL-179 | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` |
 
 ---
 
@@ -171,6 +168,9 @@ The owner reviewed the requirements and accepted CAP-D1 to CAP-D8 on 2026-10-12.
 
 | ID | Item | Closed | By |
 |---|---|---|---|
+| BL-181 | CAP-12 PO below DA: recommend an additional PO (blanket call-off first) on What to order | 2026-10-13 | Built on branch `feat/cap11-cap12-consumption-supply-gap`: open supply = released call-offs by need-date week; gap = demand anticipation in force − open supply; proposal walks the blanket lines oldest first (CAP-9 order) and shares their balance across weeks, else "New PO needed"; "Below demand anticipation" section on What to order, separate from the engine list; drafts carry no engine origin |
+| BL-180 | CAP-11 Lower consumption: excess taken off DA from week 5, fully absorbed by week 8, alert if it cannot be | 2026-10-13 | Built on branch `feat/cap11-cap12-consumption-supply-gap`: `consumptionStore` and `t_consumption_record` (planner-recorded, typed or CSV/XLSX upload, 0 accepted, marked as awaiting the SAP goods-issue feed); split by demand anticipation share; the excess of a frozen horizon is absorbed into the next horizon's open weeks, never a frozen one; `demandAnticipationUnabsorbed` PTI-only alert for what is left |
+| BL-179 | CAP-10 DA frozen in the current 4-week horizon; recalculation changes week 5 onward only | 2026-10-13 | Built in PR #221 (merge `c3507f8`): `demandAnticipationWeeks` (stock and reorder point counted once, in week 1), append-only `demandAnticipationStore` seeded with one sample publication, `t_demandanticipation_publish` on `forecast:publish`, fixed 4-week horizons (CAP-D17: publish freezes the horizon holding the current week, once), page `/buyer/demand-anticipation` with locked weeks and "would be" |
 | BL-186 | CAP-1/CAP-2 polish left by PRs #191 and #202: the reason select is cut off in the 112 px week column ("Force M…"); units read "(PCS)" in the label's colour, not grey (G-02); week dates read "07 Sept" from the portal formatter, not "07 Sep"; a scrolled-to week ends 13 px under the label column (G-13); no dedicated test that PTI Capacity shows the supplier's figures after submit (C-AC4); the tab-order test checks field order, not real Tab presses (user-event not installed) | 2026-10-13 | Fixed on branch `fix/bl186-weekgrid-polish`: a week holding a reason select widens to 144 px (others stay 112 px) and the select carries its full label as a title; units show in grey after the label; week headers use their own formatter ("07 Sep", ID "31 Agu"); `scroll-padding-inline-start` keeps a focused week clear of the label column; a C-AC4 test checks PTI Capacity against the supplier's submission; the tab-order test presses real Tab keys (`@testing-library/user-event` 14.6.1, dev only). Left as is: the refusal sentence still reads "Sept" from the portal-wide `formatDate` |
 | BL-178 | CAP-9 Blanket PO run-out week and "new PO needed by" week, projected from LTP; list and alert | 2026-10-13 | Built on branch `feat/cap9-blanket-po-runout`: `blanketPoRules.js` projects each blanket PO line week by week from the hub week (remaining − LTP; value-only lines at unit price), computed at read. Owner ruling CAP-D9: lines of one supplier × material draw down oldest first by `orderDate`; the last line carries the group run-out, "new PO needed by" (run-out − supplier × material lead time, 2 weeks if missing) and one PTI-only `blanketPoRunOut` alert within 4 weeks. Call-offs page lists "Blanket POs running out" per group. Lead time comes from `SUPPLIER_LEAD_TIME_DAYS`, as `MATERIAL_MASTER` has no lead-time field. C1 and C5 count the new read `getBlanketPoRunOuts` |
 | BL-177 | CAP-8 Move demand to several qualified suppliers, a quantity each in the material's unit, total no more than the shortfall | 2026-10-13 | Built in PR #213 (merge `2379aaf`): Move demand splits a shortfall across qualified suppliers in one `t_forecastversion_reassign` with `allocations`; total refused above the shortfall by `moveDemandRefusal`; headroom (BE − LTP) warns, never blocks; one `movedOut` log entry per allocation. Behaviour change: the old verb moved the line's whole forecast to one supplier; it now moves only the entered quantities and the rest stays an exception |

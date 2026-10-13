@@ -162,6 +162,7 @@ import { supplierOverlayTarget } from './targets/supplierOverlay';
 import { forecastOverrideTarget } from './targets/forecastOverride';
 import { warehouseDecisionTarget } from './targets/warehouseDecision';
 import { demandAnticipationTarget } from './targets/demandAnticipation';
+import { consumptionTarget } from './targets/consumption';
 // Material G1 — the qualification lists (its own module, MAT-R13).
 import { qualificationRuleTarget } from './targets/qualificationRule';
 // Material G2 — the sourcing type map (its own module, MAT-R13) and bidding
@@ -6062,6 +6063,8 @@ const TARGETS = {
   // CAP-10 — the demand anticipation publications. Ships in the same commit as
   // its flow, so the entity never joins the target-less set.
   demandAnticipation: demandAnticipationTarget,
+  // CAP-11 — the recorded consumption. Ships in the same commit as its flow.
+  consumption: consumptionTarget,
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx event types, the answers to
   // them, and the negotiation window. Each ships in the same commit as its flow,
   // so no entity joins the target-less set even for one merge.

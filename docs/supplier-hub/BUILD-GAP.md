@@ -97,14 +97,20 @@ The material build folded into `SUPPLIER-HUB-REQUIREMENTS.md` 0.29. The rule-by-
 
 ### 1.2 SC Hub Capacity (CAP-1 to CAP-12)
 
-The requirements are `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` (decisions CAP-D1 to CAP-D8 accepted 2026-10-12); the backlog items are BL-170 to BL-181. Wave 1 of CAP-1 is specified in `SC-HUB-CAPACITY-WAVE1-SPEC-2026-10.md`.
+The requirements are `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` (decisions CAP-D1 to CAP-D8 accepted 2026-10-12, CAP-D9 to CAP-D17 on 2026-10-13; demand anticipation design in `SC-HUB-DEMAND-ANTICIPATION-BRIEF-2026-10.md`); the backlog items are BL-170 to BL-181. Wave 1 of CAP-1 is specified in `SC-HUB-CAPACITY-WAVE1-SPEC-2026-10.md`.
 
 | CAP | Status | PRs | What is built, and what is not |
 |---|---|---|---|
-| CAP-1 Week-as-column layout (BL-170) | Partial | #191 | Wave 1 built: one shared `WeekGrid` (`src/components/ui-v2/WeekGrid.jsx`) draws metrics as rows and weeks as columns, oldest week on the left, with a sticky label column, sideways scroll inside its own container, the current week first on load, and Tab and Enter moving along a row. It computes no figure; each page supplies its cells. The three wave 1 tables use it: Demand forecast SKU detail (`/buyer/demand-forecast`), PTI Capacity (`/buyer/capacity`) and supplier Capacity (`/supplier/capacity`). Week columns stay at least 112 px wide, also when a filter leaves few weeks (W1-Q1). "Gaps only" on PTI Capacity hides the other weeks (W1-Q2). Demand forecast keeps the method's row first and Reconciled second, in bold (W1-Q3). **Not built:** waves 2 and 3, the other 7 time-series tables, each confirmed by the owner first (CAP-D5) |
-| CAP-2 Weekly/Monthly toggle (BL-171) | Not built | | Unblocked by CAP-1 wave 1 |
-| CAP-3 to CAP-9 (BL-172 to BL-178) | Not built | | No blocker; BL-174 waits on BL-173 |
-| CAP-10 to CAP-12, DA horizon (BL-179 to BL-181) | Not built | | Starting values until Ary Hidayat's spike use case lands (CAP-D8) |
+| CAP-1 Week-as-column layout (BL-170) | Partial | #191, #217 | Wave 1 built: one shared `WeekGrid` (`src/components/ui-v2/WeekGrid.jsx`) draws metrics as rows and weeks as columns, oldest week on the left, with a sticky label column, sideways scroll inside its own container, the current week first on load, and Tab and Enter moving along a row. It computes no figure; each page supplies its cells. The three wave 1 tables use it: Demand forecast SKU detail (`/buyer/demand-forecast`), PTI Capacity (`/buyer/capacity`) and supplier Capacity (`/supplier/capacity`). Week columns stay at least 112 px wide, also when a filter leaves few weeks (W1-Q1). "Gaps only" on PTI Capacity hides the other weeks (W1-Q2). Demand forecast keeps the method's row first and Reconciled second, in bold (W1-Q3). **Not built:** waves 2 and 3, the other 7 time-series tables, each confirmed by the owner first (CAP-D5) |
+| CAP-2 Weekly/Monthly toggle (BL-171) | Built | #202 | `WeekGrid` toggle; a week counts in the month of its Thursday; monthly read only; P50/P90 monthly figures are sums of weekly values and say so |
+| CAP-3 Capacity states (BL-172) | Built | #213 | One `LtpCheckPill` on PTI Capacity, supplier Capacity and Submit per period; supplier confirms additional capacity (`upsideConfirmed`). The exception list has no capacity level, so no pill |
+| CAP-4, CAP-5 Reasons and reason filter (BL-173, BL-174) | Built | #201 | Force Majeure and Discontinued with a required note; Discontinued alert on PTI Alerts only (no Procurement surface); `ReasonFilter` on the exception list and PTI Capacity |
+| CAP-6, CAP-7 Commitment date removed, Request revision hidden (BL-175, BL-176) | Built | #200 | No date on the commitment screens (period start stored); `REQUEST_REVISION_ENABLED = false` |
+| CAP-8 Move demand to several suppliers (BL-177) | Built | #213 | One verb with `allocations`, capped at the shortfall; headroom warns. Moves only the entered quantities |
+| CAP-9 Blanket PO run-out (BL-178) | Built | #217 | `blanketPoRules.js`; lines of one supplier × material drawn oldest first (CAP-D9); one alert per group |
+| CAP-10 Demand anticipation frozen per horizon (BL-179) | Built | #221 | `demandAnticipationRules.js`, append-only `demandAnticipationStore`, `t_demandanticipation_publish`; fixed 4-week horizons (CAP-D17); page `/buyer/demand-anticipation` |
+| CAP-11 Recorded consumption and absorbing the excess (BL-180) | Built | this PR | `consumptionStore`, `t_consumption_record` (0 accepted), typed or uploaded; excess absorbed into the next horizon's open weeks; `demandAnticipationUnabsorbed` alert. Waits on the SAP goods-issue feed for real data |
+| CAP-12 Supply below demand anticipation (BL-181) | Built | this PR | Open supply = released call-offs by need week; gap and an oldest-blanket-first call-off proposal or "New PO needed"; own section on What to order |
 
 ## 2. Build list
 

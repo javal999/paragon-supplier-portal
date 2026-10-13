@@ -23,6 +23,7 @@ import { buildInventoryPositions } from '../../transitions/inventoryRules';
 import { buildCapacityPlans } from '../../transitions/capacityRules';
 /** @import { BlanketPoRunOut } from '../../transitions/blanketPoRules' */
 import { blanketPoAlertSubjects, blanketPoRunOuts } from '../../transitions/blanketPoRules';
+import { demandAnticipationAbsorption } from './demandAnticipationReadModel';
 import { commitmentAlertSubjects } from '../../transitions/forecastRules';
 import { allCommitmentLines } from './forecastReadModel';
 /** @import { AlertCondition } from '../../transitions/inventoryAlertRules' */
@@ -30,7 +31,8 @@ import {
   alertsFromLedger,
   clearedSince,
   deriveAlertConditions,
-  discontinuedSubjects
+  discontinuedSubjects,
+  unabsorbedAlertSubjects
 } from '../../transitions/inventoryAlertRules';
 import { inventoryDeclarationStore } from './stores/inventoryDeclarationStore';
 import { asnStore } from './stores/asnStore';
@@ -286,7 +288,13 @@ export function activeAlertConditions(nowIso = sdcClock.now()) {
     // CAP-4 BR-03 (CAP-D2) — a Discontinued reason: find another source.
     discontinuedSubjects(plans, lines, (code) => materialEntry(code)?.label ?? code, nowIso),
     // CAP-9 BR-05 — a blanket PO needs its next PO within 4 weeks.
-    blanketPoAlertSubjects(allBlanketPoRunOuts(nowIso), nowIso)
+    blanketPoAlertSubjects(allBlanketPoRunOuts(nowIso), nowIso),
+    // CAP-11 BR-04 — an excess the next horizon of demand anticipation cannot absorb.
+    unabsorbedAlertSubjects(demandAnticipationAbsorption(nowIso).unabsorbed, nowIso, {
+      supplierName: supplierNameOf,
+      materialLabel: (code) => materialEntry(code)?.label ?? code,
+      uom: (code) => materialEntry(code)?.canonicalUom ?? ''
+    })
   );
 }
 
