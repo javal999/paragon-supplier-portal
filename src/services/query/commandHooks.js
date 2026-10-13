@@ -2535,6 +2535,8 @@ export function useCallOffCommand() {
             q.queryKey[1] === 'reschedule' ||
             // CAP-9 — a release changes what remains, so the run-out moves.
             q.queryKey[1] === 'blanketPoRunOuts' ||
+            // CAP-12 — and open supply, the gap and its proposal.
+            q.queryKey[1] === 'demandAnticipation' ||
             q.queryKey[1] === 'inventoryAlerts')
       });
     }

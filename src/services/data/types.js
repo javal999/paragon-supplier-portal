@@ -25,7 +25,7 @@
 /** @import { InviteeCandidate, InviteeFilter } from '../transitions/rfxRules' */
 /** @import { FsRow } from '../transitions/fixedStockReconcile' */
 /** @import { BlanketPoRunOut } from '../transitions/blanketPoRules' */
-/** @import { DemandAnticipationRow } from '../transitions/demandAnticipationRules' */
+/** @import { DemandAnticipationSupplyRow } from '../transitions/supplyBelowDemandRules' */
 /** @import { SimulationRefusal, StockSimulation } from '../transitions/simulateSupplierStock' */
 /** @import { RfqClarificationView, RfqEngagementView } from '../sourcing/rfqResponse' */
 /** @import { AwardView, NegotiationRoundView, RfiEventView, RfpEventView, RfpAwardView, RfpOfferRoundView, RfqSupplierGateView } from '../sourcing/views' */
@@ -3041,9 +3041,9 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * @property {(scope: QueryScope) => Promise<Page<BlanketPoRunOut>>} getBlanketPoRunOuts CAP-9 — every open blanket PO line projected against the LTP: its
  *   run-out and "new PO needed by" weeks, derived at read. PTI only: a supplier
  *   scope reads an empty page.
- * @property {(scope: QueryScope) => Promise<Page<DemandAnticipationRow>>} getDemandAnticipation CAP-10 — demand anticipation per supplier × material × week: the
+ * @property {(scope: QueryScope) => Promise<Page<DemandAnticipationSupplyRow>>} getDemandAnticipation CAP-10 — demand anticipation per supplier × material × week: the
  *   frozen figure of each frozen week, today's recomputation ("would be") and its
- *   inputs. PTI only: a supplier scope reads an empty page.
+ *   inputs, and (CAP-12) each week's open supply, gap and proposal. PTI only: a supplier scope reads an empty page.
  * @property {(scope: QueryScope) => Promise<Page<PlanningGroupView>>} getPlanningGroups Material C5 (MR-8) — the planning groups with their materials and changes.
  *   PTI: every group. Supplier: the groups holding its own materials, narrowed
  *   to those materials, with no change history.

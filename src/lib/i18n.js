@@ -85,6 +85,7 @@ import {
 } from './i18n/fulfilmentCollaboration';
 import { callOffsEn, callOffsId } from './i18n/callOffs';
 import { demandAnticipationEn, demandAnticipationId } from './i18n/demandAnticipation';
+import { supplyGapEn, supplyGapId } from './i18n/supplyGap';
 import { sapInterfaceEn, sapInterfaceId } from './i18n/sapInterface';
 import { adminCalendarEn, adminCalendarId } from './i18n/adminCalendar';
 import { performanceEn, performanceId } from './i18n/performance';
@@ -219,6 +220,7 @@ export const resources = {
       ...fulfilmentCollaborationEn,
       ...callOffsEn,
       ...demandAnticipationEn,
+      ...supplyGapEn,
       ...sapInterfaceEn,
       ...adminCalendarEn,
       ...performanceEn,
@@ -724,6 +726,7 @@ export const resources = {
       ...fulfilmentCollaborationId,
       ...callOffsId,
       ...demandAnticipationId,
+      ...supplyGapId,
       ...sapInterfaceId,
       ...adminCalendarId,
       ...performanceId,

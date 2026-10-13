@@ -8,6 +8,7 @@ import { formatDate, formatNumber } from '@lib/format';
 /** @import { DemandAnticipationRow, DemandAnticipationWeekView } from '@services/transitions/demandAnticipationRules' */
 /** @import { WeekGridRow } from '@components/ui-v2/WeekGrid' */
 import { signedDelta } from '../display';
+import { supplyRows } from './supplyRows';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CAP-10 — one supplier × material's weeks as columns (CAP-1 WeekGrid).
@@ -134,7 +135,8 @@ const AnticipationGrid = ({ row, rowKey, currentWeek }) => {
           </span>
         );
       }
-    }
+    },
+    ...supplyRows(row, rowKey, t)
   ];
 
   return (
