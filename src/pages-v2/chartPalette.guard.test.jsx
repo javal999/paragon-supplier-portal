@@ -601,7 +601,7 @@ describe('DP2-PALETTE-01 — no raw hex in any paint position, tree-wide', () =>
     for (const f of [
       'pages-v2/BuyerScorecard.jsx',
       'pages-v2/SupplierPerformance.jsx',
-      'pages-v2/SupplierDashboard.jsx'
+      'pages-v2/SupplierDashboard/components/GradeBadge.jsx'
     ]) {
       const src = readSrc(f);
       // The declaration in EITHER form: TS `GRADE_TONE: Record<Grade, …>` or, once
