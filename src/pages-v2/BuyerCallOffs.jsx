@@ -32,7 +32,9 @@ import { isLive } from '@services/liveness';
 import { refusedByPolicy } from '@services/transitions/refusalMessage';
 import { POLICY_HOOKS } from '@services/transitions/policyHooks';
 import { formatDate, formatDateTime, formatIDR } from '@lib/format';
-import { usePurchaseOrders } from '@services/query/hooks';
+import { useBlanketPoRunOuts, usePurchaseOrders } from '@services/query/hooks';
+import { runningOut } from '@services/transitions/blanketPoRules';
+import { RunOutFacts, RunningOutList } from './callOffs/blanketRunOutDisplay';
 /** @import { CallOffCommandVars } from '@services/query/commandHooks' */
 import { useCallOffCommand } from '@services/query/commandHooks';
 /** @import { ASN, CallOffType, CallOffWarning, POLineItem, PurchaseOrder } from '@services/data/types' */
@@ -166,6 +168,8 @@ const BuyerCallOffs = () => {
     status: [POStatus.CONFIRMED, POStatus.PARTIALLY_DELIVERED]
   });
   const { views, nowIso, isPending, error, refetch, asns } = useCallOffViews();
+  // CAP-9 — every blanket PO line's run-out, projected by the read model.
+  const runOutQuery = useBlanketPoRunOuts();
   // MR-6 BR-12 (edge case 6) — each call-off's ASNs with the CURRENT comparison,
   // recomputed on read: the planner's "Mismatch" marker.
   const linkedAsns = useMemo(() => {
@@ -271,18 +275,19 @@ const BuyerCallOffs = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefillSupplier, prefillMaterial, sections, posQuery.isPending, isPending]);
 
-  if (posQuery.isPending || isPending || drill.kind === 'pending')
+  if (posQuery.isPending || isPending || runOutQuery.isPending || drill.kind === 'pending')
     return <LoadingState breadcrumb={crumb} />;
   // AC-08 — an address naming a PO that does not exist, with a way back.
   if (drill.kind === 'notFound') return <OrderNotFound persona="buyer" breadcrumb={crumb} />;
-  if (posQuery.isError || error)
+  if (posQuery.isError || error || runOutQuery.isError)
     return (
       <ErrorState
         breadcrumb={crumb}
-        error={posQuery.error ?? error}
+        error={posQuery.error ?? error ?? runOutQuery.error}
         onRetry={() => {
           posQuery.refetch();
           refetch();
+          runOutQuery.refetch();
         }}
       />
     );
@@ -291,6 +296,12 @@ const BuyerCallOffs = () => {
   const escalated = views.filter((v) => v.confirmation === 'Escalated').length;
   const atRisk = views.filter((v) => v.delivery === 'atRisk').length;
   const drift = deliveryDrift(views);
+  // CAP-9 BR-04 — the run-out per blanket PO line, and the lines running out
+  // (within a PO drill-through, that PO's only).
+  const runOuts = (runOutQuery.data?.items ?? []).filter(
+    (r) => drilledPo === null || r.poId === drilledPo
+  );
+  const runOutByLine = new Map(runOuts.map((r) => [r.lineId, r]));
   // Filtered at render only: `panelLine` below still finds a line the filter hides.
   // Material C3 — the search matches the line's code, PTI description and its
   // supplier's approved trade name; the best match comes first.
@@ -516,6 +527,8 @@ const BuyerCallOffs = () => {
         </div>
       )}
 
+      <RunningOutList rows={runningOut(runOuts)} />
+
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <div className="flex-1 min-w-[240px]">
           <MaterialSearch
@@ -627,6 +640,7 @@ const BuyerCallOffs = () => {
                       : 'co.umbrella.noQuantity'
                   )}
                 </p>
+                <RunOutFacts row={runOutByLine.get(line.id)} />
               </div>
               <div className="flex gap-2 shrink-0">
                 {planHeld ? (

@@ -2532,7 +2532,10 @@ export function useCallOffCommand() {
           q.queryKey[0] === 'procurement' &&
           (q.queryKey[1] === 'callOffs' ||
             q.queryKey[1] === 'asns' ||
-            q.queryKey[1] === 'reschedule')
+            q.queryKey[1] === 'reschedule' ||
+            // CAP-9 — a release changes what remains, so the run-out moves.
+            q.queryKey[1] === 'blanketPoRunOuts' ||
+            q.queryKey[1] === 'inventoryAlerts')
       });
     }
   });
@@ -2912,7 +2915,9 @@ const FORECAST_READS = new Set([
   'inventoryAlerts',
   // The LTP is the current forecast version, so a new version (publish, or a
   // CAP-8 move) changes every capacity plan's demand and headroom.
-  'capacityPlans'
+  'capacityPlans',
+  // CAP-9 — and every blanket PO's run-out, which draws the LTP down.
+  'blanketPoRunOuts'
 ]);
 
 /** Every forecast-collaboration act: publish, reassign, record a view, commit, acknowledge, accept, request a revision. */
