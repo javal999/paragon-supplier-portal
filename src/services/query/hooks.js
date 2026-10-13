@@ -88,6 +88,12 @@ export const useBlanketPoRunOuts = () =>
     svc.procurement.getBlanketPoRunOuts(scope)
   );
 
+/** CAP-10 — demand anticipation per supplier × material × week, frozen per horizon (PTI only). */
+export const useDemandAnticipation = () =>
+  useServiceQuery(['procurement', 'demandAnticipation'], (svc, scope) =>
+    svc.procurement.getDemandAnticipation(scope)
+  );
+
 /** Material C5 (MR-8) — the planning groups, their materials and changes. */
 export const usePlanningGroups = () =>
   useServiceQuery(['procurement', 'planningGroups'], (svc, scope) =>

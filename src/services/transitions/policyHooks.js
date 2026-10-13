@@ -193,6 +193,12 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    * a note (WAREHOUSE_DECISION_NOTE_REQUIRED).
    */
   WAREHOUSE_DECISION_VALID: 'warehousedecision_valid',
+  /**
+   * Demand anticipation publish (CAP-10 BR-01 / BR-02): the confirm names the
+   * current hub week as the horizon start (STALE_HORIZON otherwise), and the
+   * horizon holds at least one week not frozen yet (NOTHING_TO_FREEZE).
+   */
+  DEMAND_ANTICIPATION_PUBLISH_VALID: 'demandanticipation_publish_valid',
   /** Dispatch heads-up (REQ-E09-04): the confirmation is accepted, the dates are
    *  dates with arrival on or after shipping, and the quantity is positive. */
   CALLOFF_DISPATCH_VALID: 'calloff_dispatch_valid',

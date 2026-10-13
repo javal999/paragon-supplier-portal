@@ -57,6 +57,7 @@ export const hubEn = {
   'hub.nav.pti.makeRoom': 'Make warehouse room',
   'hub.nav.pti.publishToSuppliers': 'Publish to suppliers',
   'hub.nav.pti.supplierResponses': 'Supplier responses',
+  'hub.nav.pti.demandAnticipation': 'Demand anticipation',
   'hub.nav.pti.forecastQuality': 'Forecast quality',
   'hub.nav.pti.stockCheck': 'End-of-cycle stock check',
   // Planning engine pages, in the user menu (F-04).
@@ -220,6 +221,7 @@ export const hubId = {
   'hub.nav.pti.makeRoom': 'Kosongkan ruang gudang',
   'hub.nav.pti.publishToSuppliers': 'Terbitkan ke pemasok',
   'hub.nav.pti.supplierResponses': 'Tanggapan pemasok',
+  'hub.nav.pti.demandAnticipation': 'Antisipasi permintaan',
   'hub.nav.pti.forecastQuality': 'Kualitas prakiraan',
   'hub.nav.pti.stockCheck': 'Cek stok akhir siklus',
   'hub.nav.pti.engine.materialRequirement': 'Mesin perencanaan · Kebutuhan material',
