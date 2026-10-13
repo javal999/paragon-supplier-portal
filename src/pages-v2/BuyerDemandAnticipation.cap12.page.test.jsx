@@ -47,7 +47,7 @@ const readRow = async () => {
 };
 
 describe('CAP-12 — Open supply and Gap rows', () => {
-  it('follow "Would be", carry the read’s figures, and a gap above 0 is in warning tone', async () => {
+  it('follow the CAP-11 rows (brief order), carry the read’s figures, and a gap above 0 is in warning tone', async () => {
     const row = await readRow();
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
     const grid = await screen.findByTestId(`dant-grid-${KEY}`);
@@ -56,7 +56,10 @@ describe('CAP-12 — Open supply and Gap rows', () => {
       .map((h) => h.textContent ?? '');
     const at = (/** @type {string} */ name) => labels.findIndex((l) => l.startsWith(name));
     expect(at('Would be')).toBeGreaterThan(-1);
-    expect(at('Open supply')).toBe(at('Would be') + 1);
+    // Brief section 4 row order: … Would be, Recorded consumption, Absorbed (CAP-11), Open supply, Gap.
+    expect(at('Recorded consumption')).toBe(at('Would be') + 1);
+    expect(at('Absorbed')).toBe(at('Recorded consumption') + 1);
+    expect(at('Open supply')).toBe(at('Absorbed') + 1);
     expect(at('Gap')).toBe(at('Open supply') + 1);
 
     const withSupply = row.weeks.find((w) => w.openSupply > 0 && w.gap !== null && w.gap > 0);
