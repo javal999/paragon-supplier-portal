@@ -1,7 +1,6 @@
 /** @import React from 'react' */
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
 import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
@@ -25,6 +24,7 @@ import * as d from './widgets/buyerDerivations';
 import TaskList from './home/TaskList';
 /** @import { UnratedTask } from './home/severityDisplay' */
 import { withSeverity } from './home/severityDisplay';
+import WeeklyPlanCard from './home/WeeklyPlanCard';
 import { POStatus } from '@services/data/types';
 import {
   completionMovedLater,
@@ -346,22 +346,15 @@ const BuyerHome = () => {
         title={t('hub.home.pti.title')}
         subtitle={t('hub.home.pti.subtitle')}
       />
+      {/* FUX phase 2 B1 (F-03) — the planner's way into the weekly cycle. My
+          tasks stays the landing page; This week is Weekly plan's first item.
+          For MP and the ALL demo view it is the first thing under the header,
+          a card rather than a text link, so the weekly routine is not the
+          lightest thing on the page. BUY and FIN are not shown it. */}
+      {(role === 'MP' || role === 'ALL') && <WeeklyPlanCard />}
       <div className="mb-4">
         <SampleDataBadge />
       </div>
-      {/* FUX phase 2 B1 (F-03) — the planner's way into the weekly cycle. My
-          tasks stays the landing page; This week is Weekly plan's first item. */}
-      {(role === 'MP' || role === 'ALL') && (
-        <p className="mb-4 text-sm">
-          <Link
-            to="/buyer/this-week"
-            className="text-action-hover hover:underline"
-            data-testid="home-this-week"
-          >
-            {t('hub.home.pti.thisWeek')}
-          </Link>
-        </p>
-      )}
       <TaskList tasks={tasks} />
     </AppShellV2>
   );

@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { screen, within, fireEvent, cleanup } from '@testing-library/react';
+import { Routes, Route } from 'react-router-dom';
 import { renderWithProviders, BUYER } from '@test/test-utils';
 import i18n from '@lib/i18n';
 import { formatDate } from '@lib/format';
@@ -296,16 +297,84 @@ describe('the cycle step bar (F-03, F-05)', () => {
   });
 });
 
-describe('My tasks links to This week for the planner (F-03)', () => {
-  it('shows the link for MP and not for FIN', async () => {
+describe('My tasks leads the planner into This week (F-03)', () => {
+  /** The element right after the page header: the first thing under it. */
+  const firstUnderHeader = () => {
+    // The page header and the task list are siblings in the page's content column.
+    const column = screen.getByTestId('home-tasks').parentElement;
+    let header = /** @type {HTMLElement} */ (screen.getByRole('heading', { level: 1 }));
+    while (header.parentElement !== column)
+      header = /** @type {HTMLElement} */ (header.parentElement);
+    return header.nextElementSibling;
+  };
+
+  const renderHome = async () => {
+    renderWithProviders(
+      <Routes>
+        <Route path="/buyer/home" element={<BuyerHome />} />
+        <Route path="/buyer/this-week" element={<p data-testid="landed-this-week" />} />
+      </Routes>,
+      { identity: PLANNER, route: '/buyer/home' }
+    );
+    await screen.findByTestId('home-tasks', {}, SLOW);
+  };
+
+  it.each(/** @type {const} */ (['MP', 'ALL']))(
+    'for %s the weekly plan card is the first element under the header, and the text link is gone',
+    async (role) => {
+      setHubRole(role);
+      await renderHome();
+      const card = await screen.findByTestId('home-weekly-plan');
+      expect(firstUnderHeader()).toBe(card);
+      expect(card.compareDocumentPosition(screen.getByTestId('home-tasks'))).toBe(
+        Node.DOCUMENT_POSITION_FOLLOWING
+      );
+      expect(card).toHaveClass('h-16');
+      expect(within(card).getByRole('heading', { level: 2 })).toHaveTextContent(
+        'Weekly plan, step 1 of 5: This week'
+      );
+      expect(screen.queryByTestId('home-this-week')).toBeNull();
+      expect(screen.queryByText('Start the weekly plan: This week')).toBeNull();
+    }
+  );
+
+  it('the card names the failing input checks This week counts', async () => {
+    const report = /** @type {import('@services/data/types').DataHealthView} */ (
+      await mockDataService.procurement.getDataHealth(buyerScope)
+    );
+    const failing = report.feeds.flatMap((f) => f.checks).filter((c) => !c.passed).length;
     setHubRole('MP');
-    renderWithProviders(<BuyerHome />, { identity: PLANNER, route: '/buyer/home' });
-    expect(await screen.findByTestId('home-this-week')).toHaveAttribute('href', '/buyer/this-week');
-    cleanup();
-    setHubRole('FIN');
-    renderWithProviders(<BuyerHome />, { identity: PLANNER, route: '/buyer/home' });
-    await screen.findByRole('heading', { level: 1 });
-    expect(screen.queryByTestId('home-this-week')).toBeNull();
+    await renderHome();
+    expect(
+      await screen.findByText(
+        failing === 0
+          ? 'Input check: all checks pass'
+          : `Input check: ${failing} ${failing === 1 ? 'check' : 'checks'} failing`,
+        {},
+        SLOW
+      )
+    ).toHaveAttribute('data-testid', 'home-weekly-plan-status');
+  });
+
+  it('"Open This week" is an outline button that opens This week', async () => {
+    setHubRole('MP');
+    await renderHome();
+    const open = await screen.findByRole('button', { name: 'Open This week' });
+    expect(open).toHaveClass('border-action');
+    fireEvent.click(open);
+    expect(await screen.findByTestId('landed-this-week')).toBeInTheDocument();
+    expect(FORECAST_PAGES.thisWeek.path).toBe('/buyer/this-week');
+  });
+
+  it('BUY and FIN keep the view they had: neither the card nor the link', async () => {
+    for (const role of /** @type {const} */ (['BUY', 'FIN'])) {
+      cleanup();
+      setHubRole(role);
+      await renderHome();
+      expect(screen.queryByTestId('home-this-week')).toBeNull();
+      expect(screen.queryByTestId('home-weekly-plan')).toBeNull();
+      expect(firstUnderHeader()).toHaveTextContent('Sample data');
+    }
   });
 });
 
