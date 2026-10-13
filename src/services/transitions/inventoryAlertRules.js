@@ -60,7 +60,7 @@ import { gapWeeks } from './capacityRules';
 import { DEMAND_ANTICIPATION_RULES } from './demandAnticipationRules';
 import { DISCONTINUED_CODE, NOTE_REQUIRED_CODE, isActiveReasonCode } from './reasonCodes';
 import {
-  addDays as addDaysIso,
+  addDays,
   coverage,
   dayOf,
   daysBetween,
@@ -529,7 +529,7 @@ export function unabsorbedAlertSubjects(rows, nowIso, names) {
     const prev = out.get(k);
     const fromWeeks = [...new Set([...(prev?.fromWeeks ?? []), ...r.fromWeeks])].sort();
     const intoWeeks = [...new Set([...(prev?.intoWeeks ?? []), ...r.intoWeeks])].sort();
-    const end = addDaysIso(intoWeeks[intoWeeks.length - 1], 6);
+    const end = addDays(intoWeeks[intoWeeks.length - 1], 6);
     out.set(k, {
       supplierId: r.supplierId,
       supplierName: names.supplierName(r.supplierId),
