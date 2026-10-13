@@ -239,7 +239,7 @@ Wave 3 is last because those tables carry long text (Stabilise's Rule column) or
 - BR-01. The horizon is 4 weeks [MOM 4 D2]. The current horizon is the 4 weeks starting with the current week [Proposed].
 - BR-02. When DA is published for a horizon, its 4 weeks are frozen. A recalculation (new LTP, stock, consumption) changes only week 5 onward [MOM 4 D1].
 - BR-03. The planner sees frozen weeks with a lock and the recalculated figure beside them as "would be" (read only).
-- BR-04. The horizon rolls weekly [Proposed]: each Monday, week 5 enters the frozen window.
+- BR-04. ~~The horizon rolls weekly [Proposed]: each Monday, week 5 enters the frozen window.~~ Superseded 2026-10-13 by CAP-D17: weeks group into fixed 4-week horizons, and publishing freezes the horizon that contains the current week, once.
 - AC-01. A new LTP that raises week 2 by 10,000 leaves week 2's DA unchanged and shows "would be +10,000".
 
 ### CAP-11 Lower consumption absorbed in the next horizon
@@ -268,7 +268,7 @@ Wave 3 is last because those tables carry long text (Stabilise's Rule column) or
 
 ---
 
-## 10. Decisions (CAP-D1 to D8 accepted 2026-10-12, CAP-D9 to D16 2026-10-13)
+## 10. Decisions (CAP-D1 to D8 accepted 2026-10-12, CAP-D9 to D17 2026-10-13)
 
 | ID | Question | Recommendation | Outcome |
 |---|---|---|---|
@@ -288,3 +288,4 @@ Wave 3 is last because those tables carry long text (Stabilise's Rule column) or
 | CAP-D14 | Consumption | Recorded by the planner (typed or uploaded), marked as awaiting the SAP goods-issue feed; split by demand anticipation share | Accepted, 2026-10-13 |
 | CAP-D15 | Open supply and the extra PO | Released call-offs by need week; call-off on the oldest blanket line first, otherwise "New PO needed"; own section on What to order | Accepted, 2026-10-13 |
 | CAP-D16 | Ary's numbers | Golden fixture and test; placeholders in one config block | Accepted, 2026-10-13 |
+| CAP-D17 | How the frozen window moves | Fixed 4-week horizons; Publish freezes the horizon containing the current week, once, never a future one | Accepted, 2026-10-13 |

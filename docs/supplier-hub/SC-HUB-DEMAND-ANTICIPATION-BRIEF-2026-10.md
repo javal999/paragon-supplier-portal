@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Accepted 2026-10-13.** The owner accepted every recommendation in section 9 (CAP-D10 to CAP-D16). Nothing here is built yet; build order in section 7 |
+| Status | **Accepted 2026-10-13.** The owner accepted every recommendation in section 9 (CAP-D10 to CAP-D17). Nothing here is built yet; build order in section 7 |
 | Date | 2026-10-13 |
 | Parent | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` section 8 (CAP-10 BR-01 to BR-04, CAP-11 BR-01 to BR-05, CAP-12 BR-01 to BR-03); backlog BL-179 to BL-181 |
 | Code read | `main` at `b1cc133` |
@@ -70,15 +70,16 @@ week w:
   - who published it (actor) and when (hub clock);
   - its horizon start (a Monday);
   - per supplier × material × week: the figure, and the inputs it came from (LTP, stock share, reorder-point share).
-- **A new planner verb, "Publish demand anticipation"** (`t_demandanticipation_publish`). It freezes the 4 weeks from the current hub week (BR-01). It reuses the planner's `forecast:publish` atom [Code: `transitions/businessRoles.js:371`] rather than minting a new one [Proposed]. A seat without the atom sees the existing handoff notice.
-- **Once frozen, a week keeps its value.** It keeps the figure from the first publication that froze it. A later publication freezes the next 4 weeks and leaves the frozen ones alone, which rolls the horizon (BR-02, BR-04).
+- **Fixed 4-week horizons [Owner, 2026-10-13, CAP-D17].** Weeks group into consecutive 4-week horizons anchored on the first publication (for example W36–W39, then W40–W43). This matches the MoM: the current horizon does not change, adjustments go into the next horizon, and the excess is absorbed by week 4 of the next horizon.
+- **A new planner verb, "Publish demand anticipation"** (`t_demandanticipation_publish`). It freezes the horizon that contains the current hub week, once. It never freezes a future horizon, so the next horizon stays open for CAP-11. Publishing again inside a frozen horizon is refused. It reuses the planner's `forecast:publish` atom [Code: `transitions/businessRoles.js:371`] rather than minting a new one [Proposed]. A seat without the atom sees the existing handoff notice.
+- **Once frozen, a week keeps its value.** It keeps the figure from the first publication that froze it. The horizon rolls when the next horizon begins and the planner publishes it (BR-02, BR-04).
 - **"Would be" (BR-03).** A frozen week shows a lock and its published figure. Beside it, read only, it shows today's recomputation, e.g. "would be 12,800 (+2,800)".
 - **Weekly roll.** The demo clock does not move by itself [Code: `services/sdc/clock.js:66`], so the roll happens when the planner publishes, not on a timer. One publication is seeded so the page opens frozen.
 - **Where it shows.** A new planner page, "Demand anticipation", in the Weekly plan menu. It shows one `WeekGrid` per supplier × material, with these rows: LTP, stock share, reorder-point share, demand anticipation (locked in weeks 1 to 4), would be, recorded consumption, absorbed, open supply, gap. Weekly and Monthly view come with the grid; monthly is read only.
 
 **Acceptance.**
 - AC-01: after publishing, a new LTP that raises week 2 by 10,000 leaves week 2's figure unchanged and shows "would be +10,000".
-- AC-02: publishing again a week later freezes weeks 5 to 8 and leaves weeks 1 to 4 as they were.
+- AC-02: at W37, publishing is refused because the current horizon W36–W39 is already frozen. At W40, publishing freezes W40–W43 and leaves W36–W39 as they were.
 - AC-03: a seat without the atom sees the handoff notice instead of Publish.
 
 ---
@@ -158,3 +159,4 @@ B and C run in parallel once A is merged. Each step runs its own specs; the full
 | CAP-D14 | Consumption | Recorded by the planner, typed or uploaded, marked as awaiting the SAP goods-issue feed; split by demand anticipation share; never derived from stock changes | Accepted, 2026-10-13 |
 | CAP-D15 | Open supply and the extra PO | Released call-offs by need week; gap = demand anticipation − open supply; call-off on the oldest blanket line first, otherwise "New PO needed"; its own section on What to order | Accepted, 2026-10-13 |
 | CAP-D16 | Ary's numbers | A golden fixture and a test; placeholders in one config block | Accepted, 2026-10-13 |
+| CAP-D17 | How the frozen window moves | Fixed 4-week horizons; Publish freezes the horizon containing the current week, once, never a future one | Accepted, 2026-10-13 |
