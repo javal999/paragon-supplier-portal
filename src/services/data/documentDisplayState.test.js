@@ -13,6 +13,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { basename, dirname } from 'node:path';
+import { isPageFolder, pageFolderSource } from '@test/pageFiles';
 /** @import { DocumentDisplayState } from './documentDisplayState' */
 import {
   documentDisplayState,
@@ -152,14 +154,14 @@ describe('the maps are total, and every label already existed', () => {
 });
 
 describe('⚠️ THE WIRING, BY SITE — a working classifier proves nothing about a badge', () => {
-  /** @param {string} f */
+  /** @param {string} f  a file, or a page folder (read as every file in it) */
   const read = (f) =>
-    readFileSync(f, 'utf8')
+    (isPageFolder(f) ? pageFolderSource(dirname(f), basename(f)) : readFileSync(f, 'utf8'))
       .replace(/\/\*[\s\S]*?\*\//g, ' ')
       .replace(/\/\/[^\n]*/g, ' ');
 
   const DOCS_PAGE = 'src/pages-v2/SupplierDocuments.jsx';
-  const DASHBOARD = 'src/pages-v2/SupplierDashboard.jsx';
+  const DASHBOARD = 'src/pages-v2/SupplierDashboard';
   const WIDGET = 'src/pages-v2/widgets/SupplierCertsExpiringWidget.jsx';
 
   it('CONTROL: the strip left real code behind on all three files', () => {
