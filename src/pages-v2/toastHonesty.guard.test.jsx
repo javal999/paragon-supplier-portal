@@ -213,9 +213,20 @@ import { join } from 'node:path';
 import ts from 'typescript';
 import { resources } from '@lib/i18n';
 import { scriptKindOf } from '@test/sourceFiles';
-import { folderSourceFiles, pageFiles, pagesDirFolders } from '@test/pageFiles';
+import { folderSourceFiles, pageFiles as pagesOf, pagesDirFolders } from '@test/pageFiles';
+import { routedPageFiles } from '@test/routerPages';
 
 const PAGES_DIR = __dirname;
+
+/**
+ * Every page file: top-level pages and page folders (`pagesOf`), PLUS every file
+ * a route renders (`routedPageFiles`). A routed page in a feature folder
+ * (`admin/AdminSuppliers.jsx`, `admin/AdminRuleValues/`) is a page; `pagesOf`
+ * alone left it out, so its toasts were never read (2026-10-13).
+ * @param {string} dir
+ * @returns {string[]}
+ */
+const pageFiles = (dir) => [...new Set([...pagesOf(dir), ...routedPageFiles(dir)])].sort();
 
 /**
  * A real act. If a BRANCH does ANY of these, its toast is OUT of this guard's
@@ -704,7 +715,12 @@ describe('unbacked-toast honesty guard (R1)', () => {
     const featureFiles = FEATURE_FOLDERS.flatMap((d) => folderSourceFiles(PAGES_DIR, d));
     expect(featureFiles).toContain('forecasts/forecastDisplay.jsx');
     expect(featureFiles).toContain('contracts/RaisedElsewhere.jsx');
-    const leaked = scanned.filter((f) => featureFiles.includes(f));
+    // A feature-folder file is scanned only when a route renders it.
+    const routed = new Set(routedPageFiles(PAGES_DIR));
+    expect(routed.has('contracts/RaisedElsewhere.jsx')).toBe(false);
+    expect(scanned).toContain('admin/AdminSuppliers.jsx');
+    expect(scanned).toContain('admin/AdminRuleValues/index.jsx');
+    const leaked = scanned.filter((f) => featureFiles.includes(f) && !routed.has(f));
     expect(leaked, `feature files scanned as pages: ${leaked.join(', ')}`).toEqual([]);
     const folders = new Set(PAGE_FOLDERS);
     const stale = scanned.filter((f) => folders.has(f.replace(/\.[jt]sx$/, '')));

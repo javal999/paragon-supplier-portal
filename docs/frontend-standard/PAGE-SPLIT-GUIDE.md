@@ -85,6 +85,16 @@ Each guard also checks that no feature-folder file (`contracts/`, `shipments/`, 
 page and that no `<Page>.jsx` is left beside its folder. The expected file list comes from
 `folderSourceFiles`, a second walk of the tree, so a bug in `pageFiles` cannot hide itself.
 
+**Routed pages in a feature folder count as pages** (since 2026-10-13). A page the router renders
+can live in a feature folder: `admin/AdminSuppliers.jsx`, `admin/AdminRuleValues/`,
+`materials/BuyerTradeNames.jsx`. `src/test/routerPages.js` derives every route from `AppRouter`, including
+multi-line routes, `<Suspense>`-wrapped `lazy()` pages and named imports. `routedPageFiles` returns
+the files those routes render; a page folder's `index.jsx` brings its whole folder at any depth.
+DP2-BUTTON-01 and the toast-honesty guard scan `pageFiles` plus `routedPageFiles`. The
+page-width guard reads its routes and their sources through the same module. The feature-folder
+check therefore excludes only files no route renders. A split of a routed page inside a feature
+folder adds no guard line either.
+
 **What a new split must do in these guards: nothing.** Run them; a failure names the page and
 the file. Add a line only for a **content** check: a test that asserts a toast, a test id or a
 handler still sits in a specific moved file (for example, `toastHonesty` checks that
