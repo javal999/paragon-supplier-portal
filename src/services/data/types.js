@@ -1236,6 +1236,7 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *  MR-6 BR-13 — a confirmed call-off due within the lead time is larger than declared SOH + production.
  *  CAP-4 BR-03 (CAP-D2) — the supplier gave Discontinued as a shortfall reason; PTI must find another source.
  *  CAP-9 BR-05 — a blanket PO's "new PO needed by" week is within 4 weeks (or passed); PTI raises the next PO.
+ *  CAP-11 BR-04 — consumption below the frozen demand anticipation left an excess the next horizon cannot absorb.
  *
  * @typedef {| 'ptiBelowRop'
  *   | 'supplierBelowRop'
@@ -1247,7 +1248,8 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *   | 'leadTimeMissing'
  *   | 'callOffNotCovered'
  *   | 'supplyDiscontinued'
- *   | 'blanketPoRunOut'} InventoryAlertRule
+ *   | 'blanketPoRunOut'
+ *   | 'demandAnticipationUnabsorbed'} InventoryAlertRule
  */
 
 /** @typedef {'high' | 'medium' | 'low'} RiskClass */
@@ -1279,6 +1281,7 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * `daysToImpact`: MR-9 BR-03 — days until the risk bites, the order within a class (derived with the alert, never stored): days of cover or to the projected stock-out, days to the first capacity gap week, minus the days stale, else 0.
  * `closeReason`:  MR-9 BR-04 — the `alertClose` code; absent on a closure recorded before reasons (counts as Other).
  * `mrpController`:  Material C4 — the MRP controller of the material an alert is about. Absent  on a capacity alert, whose subject is a material group.
+ * `unabsorbed`:  CAP-11 BR-04 — on `demandAnticipationUnabsorbed` only: the excess left after the next horizon (derived with the alert, never stored), its unit, the horizon weeks it arose in and the weeks that could not take it.
  *
  * @typedef {{
  *   readonly key: string;
@@ -1295,6 +1298,12 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *   readonly closeReason?: string;
  *   readonly actionNote?: string;
  *   readonly mrpController?: MrpControllerRef;
+ *   readonly unabsorbed?: {
+ *     readonly qty: number;
+ *     readonly uom: string;
+ *     readonly fromWeeks: readonly string[];
+ *     readonly intoWeeks: readonly string[];
+ *   };
  * }} InventoryAlert
  */
 

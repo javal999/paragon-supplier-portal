@@ -16,7 +16,7 @@ import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
-import { formatDate, formatDateTime } from '@lib/format';
+import { formatDate, formatDateTime, formatNumber } from '@lib/format';
 import { useInventoryAlerts } from '@services/query/hooks';
 /** @import { InventoryAlert, RiskClass } from '@services/data/types' */
 import {
@@ -43,6 +43,7 @@ import MaterialSearch, {
   useMaterialMatcher
 } from '@components/ui-v2/MaterialSearch';
 import { searchMaterials } from '@services/transitions/matchMaterial';
+import { weekLabel, weekRange } from './BuyerDemandAnticipation/display';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI ALERTS — REQ-E08-05.
@@ -122,7 +123,10 @@ const linkFor = (a) =>
       : // CAP-9 BR-05 — the subject is the blanket PO; the call-off page filters to it.
         a.rule === 'blanketPoRunOut'
         ? `/buyer/call-offs?po=${encodeURIComponent(a.subject)}`
-        : '/buyer/inventory';
+        : // CAP-11 BR-04 — the subject is the material; the page filters to the supplier × material.
+          a.rule === 'demandAnticipationUnabsorbed'
+          ? `/buyer/demand-anticipation?supplier=${encodeURIComponent(a.supplierId)}&material=${encodeURIComponent(a.subject)}`
+          : '/buyer/inventory';
 
 /** @type {React.FC} */
 const BuyerAlerts = () => {
@@ -412,6 +416,22 @@ const BuyerAlerts = () => {
                               </>
                             )}
                           </div>
+                          {a.unabsorbed ? (
+                            // CAP-11 BR-04 — the remaining amount and the horizons it concerns.
+                            <div
+                              className="text-xs text-text-secondary mt-1"
+                              data-testid={`alert-unabsorbed-${a.key}`}
+                            >
+                              {t('consumption.alert.detail', {
+                                qty: formatNumber(a.unabsorbed.qty),
+                                uom: a.unabsorbed.uom,
+                                from: weekRange(a.unabsorbed.fromWeeks),
+                                by: weekLabel(
+                                  a.unabsorbed.intoWeeks[a.unabsorbed.intoWeeks.length - 1]
+                                )
+                              })}
+                            </div>
+                          ) : null}
                           <MaterialMatchReason
                             match={matchByKey.get(a.key) ?? null}
                             testId={`alert-match-${a.key}`}
@@ -448,7 +468,9 @@ const BuyerAlerts = () => {
                                 ? 'inv.alerts.openCommitments'
                                 : a.rule === 'blanketPoRunOut'
                                   ? 'inv.alerts.openBlanketPo'
-                                  : 'inv.alerts.openInventory'
+                                  : a.rule === 'demandAnticipationUnabsorbed'
+                                    ? 'inv.alerts.openDemandAnticipation'
+                                    : 'inv.alerts.openInventory'
                           )}
                         </Link>
                         {a.status === 'open' &&

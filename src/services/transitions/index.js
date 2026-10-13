@@ -77,6 +77,7 @@ export { sapChangeMarkFlow } from './flows/sapChangeMark.flow';
 export { forecastOverrideFlow } from './flows/forecastOverride.flow';
 export { warehouseDecisionFlow } from './flows/warehouseDecision.flow';
 export { demandAnticipationFlow } from './flows/demandAnticipation.flow';
+export { consumptionFlow } from './flows/consumption.flow';
 export { rfiEventFlow } from './flows/rfiEvent.flow';
 export { rfiResponseFlow } from './flows/rfiResponse.flow';
 export { rfpEventFlow } from './flows/rfpEvent.flow';
@@ -137,6 +138,7 @@ import { sapChangeMarkFlow } from './flows/sapChangeMark.flow';
 import { forecastOverrideFlow } from './flows/forecastOverride.flow';
 import { warehouseDecisionFlow } from './flows/warehouseDecision.flow';
 import { demandAnticipationFlow } from './flows/demandAnticipation.flow';
+import { consumptionFlow } from './flows/consumption.flow';
 import { rfiEventFlow } from './flows/rfiEvent.flow';
 import { rfiResponseFlow } from './flows/rfiResponse.flow';
 import { rfpEventFlow } from './flows/rfpEvent.flow';
@@ -247,6 +249,7 @@ flowRegistry.register(sapChangeMarkFlow); // REQ-E14-13 BR-07 — a reschedule p
 flowRegistry.register(forecastOverrideFlow); // REQ-E14-11 X-06 — a planner's override of the demand forecast
 flowRegistry.register(warehouseDecisionFlow); // FUX-D3 — a planner's decision for a warehouse week that does not fit
 flowRegistry.register(demandAnticipationFlow); // CAP-10 — the planner freezes the demand anticipation of the current horizon
+flowRegistry.register(consumptionFlow); // CAP-11 — the planner records a material's weekly consumption
 // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx event types and the
 // negotiation window. RFQ keeps its own machine (`rfqFlow`); these are the two
 // event types it did not cover plus the round the award is negotiated in.
