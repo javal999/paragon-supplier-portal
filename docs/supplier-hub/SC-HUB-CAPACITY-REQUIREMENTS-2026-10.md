@@ -232,12 +232,14 @@ Wave 3 is last because those tables carry long text (Stabilise's Rule column) or
 
 **Definition used.** DA (Demand Anticipation) = LTP + ROP PTI − SOH, per supplier × material per week (ENG-D22, `FORECAST-ENGINE-REQUIREMENTS.md`). The hub has no DA figure today. The nearest built pieces are the published forecast's zones (REQ-E06-01 BR-04) and the What to order recommendations (REQ-E14-05). These requirements add DA as its own record. **Ary Hidayat's spike use case (AI 1) is the source of truth; every [Proposed] below is a placeholder until it lands.**
 
+**Design (accepted 2026-10-13).** `SC-HUB-DEMAND-ANTICIPATION-BRIEF-2026-10.md` sets how these rules are built: the name "Demand anticipation" (never "DA", which means Delivery Agreement in the code), the grain, the formula (stock and reorder point counted once, in week 1), the publication store and verb, planner-recorded consumption, open supply as released call-offs by need week, and Ary's use case as a golden test fixture. Decisions CAP-D10 to CAP-D16 below.
+
 ### CAP-10 DA frozen in the current horizon
 
 - BR-01. The horizon is 4 weeks [MOM 4 D2]. The current horizon is the 4 weeks starting with the current week [Proposed].
 - BR-02. When DA is published for a horizon, its 4 weeks are frozen. A recalculation (new LTP, stock, consumption) changes only week 5 onward [MOM 4 D1].
 - BR-03. The planner sees frozen weeks with a lock and the recalculated figure beside them as "would be" (read only).
-- BR-04. The horizon rolls weekly [Proposed]: each Monday, week 5 enters the frozen window.
+- BR-04. ~~The horizon rolls weekly [Proposed]: each Monday, week 5 enters the frozen window.~~ Superseded 2026-10-13 by CAP-D17: weeks group into fixed 4-week horizons, and publishing freezes the horizon that contains the current week, once.
 - AC-01. A new LTP that raises week 2 by 10,000 leaves week 2's DA unchanged and shows "would be +10,000".
 
 ### CAP-11 Lower consumption absorbed in the next horizon
@@ -266,7 +268,7 @@ Wave 3 is last because those tables carry long text (Stabilise's Rule column) or
 
 ---
 
-## 10. Decisions (CAP-D1 to D8 accepted 2026-10-12, CAP-D9 2026-10-13)
+## 10. Decisions (CAP-D1 to D8 accepted 2026-10-12, CAP-D9 to D17 2026-10-13)
 
 | ID | Question | Recommendation | Outcome |
 |---|---|---|---|
@@ -279,3 +281,11 @@ Wave 3 is last because those tables carry long text (Stabilise's Rule column) or
 | CAP-D7 | Exports keep one row per week? | Yes (CAP-1 BR-10) | Accepted, 2026-10-12 |
 | CAP-D8 | Every other [Proposed] value in this file | Accept as starting values; CAP-10 to CAP-12 values are replaced by Ary's use case | Accepted, 2026-10-12 |
 | CAP-D9 | Several blanket POs for one supplier × material: each drawn by the full LTP, pooled, or one after another? | One after another, oldest first; one alert per group, on the last PO (CAP-9 BR-01a) | Accepted, 2026-10-13 |
+| CAP-D10 | Name | "Demand anticipation" on screen, `demandAnticipation` in code, never "DA" | Accepted, 2026-10-13 |
+| CAP-D11 | Grain and splitting | Supplier × material × week; monthly raw-material LTP spread by day; stock and reorder point shared by LTP share over the frozen 4 weeks | Accepted, 2026-10-13 |
+| CAP-D12 | Formula | Stock and reorder point counted once, in week 1; later weeks equal the LTP; open orders not netted; one function checked by Ary's fixture | Accepted, 2026-10-13 |
+| CAP-D13 | Freezing | Append-only publication store; "Publish demand anticipation" verb on `forecast:publish`; a frozen week keeps its first value; "would be" beside it; horizon rolls on publish | Accepted, 2026-10-13 |
+| CAP-D14 | Consumption | Recorded by the planner (typed or uploaded), marked as awaiting the SAP goods-issue feed; split by demand anticipation share | Accepted, 2026-10-13 |
+| CAP-D15 | Open supply and the extra PO | Released call-offs by need week; call-off on the oldest blanket line first, otherwise "New PO needed"; own section on What to order | Accepted, 2026-10-13 |
+| CAP-D16 | Ary's numbers | Golden fixture and test; placeholders in one config block | Accepted, 2026-10-13 |
+| CAP-D17 | How the frozen window moves | Fixed 4-week horizons; Publish freezes the horizon containing the current week, once, never a future one | Accepted, 2026-10-13 |
