@@ -85,9 +85,11 @@ const EmailPanel = () => {
           </div>
           <div className="px-4 py-3 bg-bg-hover border-t border-border-subtle text-xs text-text-tertiary text-center">
             Paragon Corp · Jl. Swadarma Raya No. 1, Jakarta ·{' '}
-            <a href="#" className="text-text-tertiary underline">
+            {/* Demo chrome: inert. An `<a href="#">` here navigated the app
+                to `/` under HashRouter. */}
+            <button type="button" className="text-text-tertiary underline">
               Unsubscribe
-            </a>
+            </button>
           </div>
         </div>
 

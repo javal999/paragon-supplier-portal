@@ -184,11 +184,14 @@ const SupplierDashboard = () => {
   const otif = mySupplier.otif;
   const hasOtif = otif !== undefined;
   const otifVariant = hasOtif ? perfVariant(otif) : 'neutral';
+  // The label is read off the SAME band as the pill's colour (`perfVariant`),
+  // never its own thresholds, so the two cannot disagree. The labels are
+  // canonical status tokens: StatusPill localizes them (statusLabel.js).
   const otifStatusLabel = !hasOtif
     ? t('rfx.noHistory')
-    : otif >= 90
+    : otifVariant === 'success'
       ? 'On Track'
-      : otif >= 80
+      : otifVariant === 'warning'
         ? 'Needs Attention'
         : 'At Risk';
 

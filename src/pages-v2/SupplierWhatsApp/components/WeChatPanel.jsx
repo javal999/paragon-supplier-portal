@@ -11,8 +11,8 @@ import WeChatFlow from './WeChatFlow';
 /**
  * The WeChat tab: the banner, scenario chips, the WeChat phone frame (D-2
  * messenger chrome) and reset on the left; the WeChat process flow on the right.
- * Any reply chip flips `replied`, which shows the first reply and the scripted
- * success message. Nothing is dispatched.
+ * A reply chip records the chosen reply, which shows that reply and the
+ * scripted answer to it. Nothing is dispatched.
  */
 /** @type {React.FC} */
 const WeChatPanel = () => {
@@ -25,15 +25,17 @@ const WeChatPanel = () => {
     { id: 'invoice', label: t('supplierWhatsApp.wc.scenario.invoice') }
   ];
   const [scenario, setScenario] = useState(/** @type {ScenarioId} */ ('po'));
-  const [replied, setReplied] = useState(false);
+  // The reply chip the supplier chose; null until they choose one.
+  const [replied, setReplied] = useState(/** @type {string | null} */ (null));
 
   /** @param {ScenarioId} s */
   const switchScenario = (s) => {
     setScenario(s);
-    setReplied(false);
+    setReplied(null);
   };
 
   const current = WECHAT_SCENARIOS[scenario];
+  const answer = replied === null ? null : (current.successByReply?.[replied] ?? current.success);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[42%_1fr] gap-6">
@@ -83,13 +85,13 @@ const WeChatPanel = () => {
                 {current.bot}
               </div>
             </div>
-            {!replied && (
+            {replied === null && (
               <div className="pl-9 flex gap-1.5 flex-wrap">
                 {current.replies.map((r) => (
                   <button
                     key={r}
                     type="button"
-                    onClick={() => setReplied(true)}
+                    onClick={() => setReplied(r)}
                     className="px-3 py-1 rounded-full text-[11px] font-semibold text-white border-0"
                     style={{ background: WECHAT_GREEN }}
                   >
@@ -98,14 +100,14 @@ const WeChatPanel = () => {
                 ))}
               </div>
             )}
-            {replied && (
+            {replied !== null && (
               <>
                 <div className="flex justify-end">
                   <div
                     className="rounded-[10px_0_10px_10px] px-3 py-2 max-w-[70%] text-[11px] text-white"
                     style={{ background: WECHAT_GREEN }}
                   >
-                    {current.replies[0]}
+                    {replied}
                   </div>
                 </div>
                 <div className="flex gap-2 items-start">
@@ -116,7 +118,7 @@ const WeChatPanel = () => {
                     P
                   </div>
                   <div className="bg-white px-3 py-2 rounded-[0_10px_10px_10px] max-w-[75%] text-[11px] text-success leading-relaxed whitespace-pre-line font-semibold">
-                    {current.success}
+                    {answer}
                   </div>
                 </div>
               </>
