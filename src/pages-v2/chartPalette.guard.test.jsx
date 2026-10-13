@@ -11,6 +11,7 @@ import {
   pageFolderSource,
   pagesDirFolders
 } from '@test/pageFiles';
+import { routedPageFiles } from '@test/routerPages';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DP2-PALETTE-01 — chart colour comes from the centralized palette
@@ -797,16 +798,20 @@ describe('⚠️ DP2-PALETTE-01 · A HEX REACHED THROUGH A MEMBER EXPRESSION (M5
 // DP2-BUTTON-01 (Ops #11 SEAT 2): an Export is a secondary / alternative action
 // per DP-2 — it must never occupy the BulkActionsBar `primary` slot.
 //
-// CARVE-OUT: BuyerCompliance.jsx is the registered fixture carve-out
-// (COMPLIANCE-CARVEOUT-01, docs/findings.md) landing at R2.2.
+// No carve-out. `BuyerCompliance.jsx` was one (COMPLIANCE-CARVEOUT-01), closed
+// at I3.2 (docs/findings.md); after the Phase 5 split the entry named a file
+// that no longer existed, so it excluded nothing. Retired 2026-10-13.
 // ─────────────────────────────────────────────────────────────────────────────
 /**
  * Every page, single-file AND split into a folder (`SupplierRFQs/index.jsx`,
  * its `components/` and `hooks/`). The top-level `readdirSync` this replaced
  * stopped at a page folder, so a split page left the population (Phase 5).
+ * PLUS every file a route renders (`routedPageFiles`): a routed page that lives
+ * in a feature folder (`admin/AdminSuppliers.jsx`, `admin/AdminRuleValues/`,
+ * `materials/BuyerTradeNames.jsx`) is a page, and `pagesOf` alone left it out.
  * @returns {string[]}
  */
-const pageFiles = () => pagesOf(here);
+const pageFiles = () => [...new Set([...pagesOf(here), ...routedPageFiles(here)])].sort();
 
 /**
  * @param {string} file
@@ -814,12 +819,8 @@ const pageFiles = () => pagesOf(here);
  */
 const readPage = (file) => readFileSync(join(here, file), 'utf8');
 
-const EXPORT_CARVE_OUT = new Set(['BuyerCompliance.jsx']);
 /** @returns {string[]} */
-const exportScanned = () =>
-  pageFiles()
-    .filter((f) => !EXPORT_CARVE_OUT.has(f))
-    .sort();
+const exportScanned = () => pageFiles();
 
 /** A BulkActionsBar `primary` slot whose label is an Export action. */
 const EXPORT_IN_PRIMARY = /primary=\{\{\s*label:\s*['"][^'"]*Export/gi;
@@ -833,8 +834,13 @@ describe('DP2-BUTTON-01 — Export never occupies the primary (action-blue) slot
     const scanned = exportScanned();
     expect(scanned.length).toBeGreaterThan(20);
     expect(scanned).toContain('BuyerAnalytics.jsx');
-    // The carve-out, and a page that does not exist, stay out.
-    expect(scanned).not.toContain('BuyerCompliance.jsx');
+    // The former carve-out is scanned like any page (COMPLIANCE-CARVEOUT-01 closed).
+    expect(scanned).toContain('BuyerCompliance/index.jsx');
+    // Routed pages in feature folders are scanned (routedPageFiles).
+    expect(scanned).toContain('admin/AdminSuppliers.jsx');
+    expect(scanned).toContain('admin/AdminRuleValues/components/RuleRow.jsx');
+    expect(scanned).toContain('materials/BuyerTradeNames.jsx');
+    // A page that does not exist stays out.
     expect(scanned).not.toContain('BuyerNotAChartPage.tsx');
   });
 
@@ -871,7 +877,10 @@ describe('DP2-BUTTON-01 — Export never occupies the primary (action-blue) slot
     expect(featureFiles).toContain('shipments/CarrierPicker.jsx');
     expect(featureFiles).toContain('rfqs/TieredQuoteForm.jsx');
     expect(featureFiles).toContain('forecasts/forecastDisplay.jsx');
-    const leaked = scanned.filter((f) => featureFiles.includes(f));
+    // A feature-folder file is scanned only when a route renders it.
+    const routed = new Set(routedPageFiles(here));
+    expect(routed.has('contracts/RaisedElsewhere.jsx')).toBe(false);
+    const leaked = scanned.filter((f) => featureFiles.includes(f) && !routed.has(f));
     expect(leaked, `feature files scanned as pages: ${leaked.join(', ')}`).toEqual([]);
     // A split page leaves no `<Page>.jsx` beside its folder.
     const folders = new Set(PAGE_FOLDERS);
