@@ -457,56 +457,55 @@ A reader might expect these to work. The code shows they do not, or that they ar
 
 **Sourcing**
 
-1. **"Close the round" shows the wrong toast**, "Negotiation round opened". (`pages-v2/BuyerSourcingEvent/components/NegotiationSection.jsx:107`)
-2. **An RFQ never closes automatically at its deadline.** (`services/transitions/flows/rfq.flow.js:136-158`)
-3. **An Open RFI or RFP cannot be cancelled.** Only a Draft can be discarded. (`services/query/commandHooks.js:3364,3503`)
+1. **An RFQ never closes automatically at its deadline.** (`services/transitions/flows/rfq.flow.js:136-158`)
+2. **An Open RFI or RFP cannot be cancelled.** Only a Draft can be discarded. (`services/query/commandHooks.js:3364,3503`)
 
 **Requisitions and contracts**
 
-4. **PR to PO directly is not available.** The PO is raised in S/4. (`lib/i18n/requisitions.js:122-123`)
-5. **"New Contract" creates nothing.** It ends with "No contract was created". Contract actions belong to S/4. (`pages-v2/BuyerContracts/index.jsx:171-208`; `lib/i18n/contracts.js:178`; `services/transitions/flows/contract.flow.js:46-120`)
-6. **Delivery agreement releases are simulated:** "Released in the portal (simulated) — not posted to SAP". (`services/data/mock/MockDeliveryService.js:16-20,83-125`)
+3. **PR to PO directly is not available.** The PO is raised in S/4. (`lib/i18n/requisitions.js:122-123`)
+4. **"New Contract" creates nothing.** It ends with "No contract was created". Contract actions belong to S/4. (`pages-v2/BuyerContracts/index.jsx:171-208`; `lib/i18n/contracts.js:178`; `services/transitions/flows/contract.flow.js:46-120`)
+5. **Delivery agreement releases are simulated:** "Released in the portal (simulated) — not posted to SAP". (`services/data/mock/MockDeliveryService.js:16-20,83-125`)
 
 **PO to payment**
 
-7. **A Matched invoice never becomes Approved in the UI.** The approve action is deliberately not offered, so only seeded Approved invoices can be released. (`pages-v2/invoices/invoiceActionModel.js:99-102`)
-8. **These buttons only show a toast:**
+6. **A Matched invoice never becomes Approved in the UI.** The approve action is deliberately not offered, so only seeded Approved invoices can be released. (`pages-v2/invoices/invoiceActionModel.js:99-102`)
+7. **These buttons only show a toast:**
     - Goods receipts: "Submit inspection results", "Override hold". (`pages-v2/BuyerGoodsReceipt/components/footerForStatus.jsx:77-130`)
     - Shipments: "Send reminder to supplier", "Track shipment". (`pages-v2/BuyerShipments/components/footerForStatus.jsx:29-89`)
     - Invoices: "Review match", "Escalate". (`pages-v2/BuyerInvoices.jsx:444-476`)
     - Supplier orders: "Create ASN" on the PO page. (`pages-v2/SupplierOrders.jsx:543-568`)
     - Buyer orders: "Export", "New PO", "View Full Details" have no handler. (`pages-v2/BuyerOrders.jsx:493-496,707-711`)
-9. **ASN In Transit and Delivered, and PO delivered and closed, come from TMS/S4.** No screen produces them. (`services/transitions/flows/advanceShipNotice.flow.js:180-210`)
+8. **ASN In Transit and Delivered, and PO delivered and closed, come from TMS/S4.** No screen produces them. (`services/transitions/flows/advanceShipNotice.flow.js:180-210`)
 
 **Forecast and planning**
 
-10. **"Publish to suppliers" is always refused on sample data:** "Nothing can be published until real data arrives…". Published versions exist only as demo data, or through "Move demand". (`pages-v2/BuyerStabilise/components/PublishSection.jsx:73-76`; `services/data/mock/MockCommandService.js:3380-3396`)
-11. **Order-plan drafts cannot be released** until the SAP feed is live. (`lib/i18n/orderPlan.js:144-149`)
-12. **Reschedule actions are off on sample data:** "Send change to supplier" and "Mark as taken to SAP". (`pages-v2/BuyerReschedule/index.jsx:84`; `pages-v2/BuyerReschedule/components/ProposalAction.jsx:60-135`)
+9. **"Publish to suppliers" is always refused on sample data:** "Nothing can be published until real data arrives…". Published versions exist only as demo data, or through "Move demand". (`pages-v2/BuyerStabilise/components/PublishSection.jsx:73-76`; `services/data/mock/MockCommandService.js:3380-3396`)
+10. **Order-plan drafts cannot be released** until the SAP feed is live. (`lib/i18n/orderPlan.js:144-149`)
+11. **Reschedule actions are off on sample data:** "Send change to supplier" and "Mark as taken to SAP". (`pages-v2/BuyerReschedule/index.jsx:84`; `pages-v2/BuyerReschedule/components/ProposalAction.jsx:60-135`)
 
 **Compliance**
 
-13. **The compliance certificate registry cannot be edited.** Its approval actions cannot fire. (`services/data/mock/MockCommandService.js:5938-6035`; `services/transitions/flows/compliance.flow.js:45,57,76`)
-14. **No file is sent to Paragon.** "View" download is not available yet, and "Renew" opens a read-only walkthrough. (`lib/i18n/supplierDocuments.js:95,121-122`; `pages-v2/SupplierDocuments.jsx:740-760`)
-15. **"Export Report" and "Remind" are simulated.** (`lib/i18n/compliance.js:26-27`; `pages-v2/BuyerCompliance/components/RegistryRow.jsx:111-125`)
+12. **The compliance certificate registry cannot be edited.** Its approval actions cannot fire. (`services/data/mock/MockCommandService.js:5938-6035`; `services/transitions/flows/compliance.flow.js:45,57,76`)
+13. **No file is sent to Paragon.** "View" download is not available yet, and "Renew" opens a read-only walkthrough. (`lib/i18n/supplierDocuments.js:95,121-122`; `pages-v2/SupplierDocuments.jsx:740-760`)
+14. **"Export Report" and "Remind" are simulated.** (`lib/i18n/compliance.js:26-27`; `pages-v2/BuyerCompliance/components/RegistryRow.jsx:111-125`)
 
 **Communication and performance**
 
-16. **Nothing is sent from Supplier replies:** "No live channel — nothing is sent from here." (`pages-v2/BuyerCommHub.jsx:151-192`)
-17. **The supplier WhatsApp/Email page is scripted.** Its buttons show success banners and dispatch nothing. (`pages-v2/SupplierWhatsApp/components/EmailBody.jsx:17-63`)
-18. **These buttons only show a toast, or a false success toast:**
+15. **Nothing is sent from Supplier replies:** "No live channel — nothing is sent from here." (`pages-v2/BuyerCommHub.jsx:151-192`)
+16. **The supplier WhatsApp/Email page is scripted.** Its buttons show success banners and dispatch nothing. (`pages-v2/SupplierWhatsApp/components/EmailBody.jsx:17-63`)
+17. **These buttons only show a toast, or a false success toast:**
     - "Send improvement plan" (scorecard). (`pages-v2/BuyerScorecard.jsx:684-695`)
     - Supplier "Export Report" and "Acknowledge & plan". (`pages-v2/SupplierPerformance.jsx:243-248,660-673`)
 
 **Access**
 
-19. **There is no sign-in guard.** Every page renders without signing in. (`router/AppRouter.jsx:124-306`)
-20. **The supplier switch always loads sup-007.** (`components/layout-v2/SidebarV2.jsx:120-127`)
+18. **There is no sign-in guard.** Every page renders without signing in. (`router/AppRouter.jsx:124-306`)
+19. **The supplier switch always loads sup-007.** (`components/layout-v2/SidebarV2.jsx:120-127`)
 
 **Alerts**
 
-21. **The bell icon in the top bar always shows "3"** and does nothing when clicked. (`components/layout-v2/TopBarV2.jsx:62-70`)
-22. **No email or WhatsApp alerts; closures are lost when the demo resets.** (`pages-v2/BuyerAlerts.jsx:59-60`; `services/data/mock/stores/inventoryHubStores.js:136-154`)
+20. **The bell icon in the top bar always shows "3"** and does nothing when clicked. (`components/layout-v2/TopBarV2.jsx:62-70`)
+21. **No email or WhatsApp alerts; closures are lost when the demo resets.** (`pages-v2/BuyerAlerts.jsx:59-60`; `services/data/mock/stores/inventoryHubStores.js:136-154`)
 
 ---
 

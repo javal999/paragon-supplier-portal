@@ -104,7 +104,7 @@ const NegotiationSection = ({
                     <Button
                       variant="secondary"
                       onClick={() =>
-                        run({ verb: 'closeRound', roundId: round.id }, 'rfx.toast.roundOpened')
+                        run({ verb: 'closeRound', roundId: round.id }, 'rfx.toast.roundClosed')
                       }
                       data-testid={`round-close-${round.id}`}
                     >
