@@ -313,6 +313,17 @@ export function ltpCapacityLevel(ltp, entry) {
 }
 
 /**
+ * CAP-3 BR-03 (CAP-D1) — an amber week's additional capacity is confirmed when
+ * the supplier said so on that week. Any other level has nothing to confirm,
+ * so a stored confirmation on a week that is no longer amber reads false.
+ * @param {LtpCapacityLevel} level
+ * @param {Pick<CapacityWeekEntry, 'allocated' | 'upside' | 'upsideConfirmed'> | null} entry
+ * @returns {boolean}
+ */
+export const isUpsideConfirmed = (level, entry) =>
+  level === 'needsAdditional' && entry?.upsideConfirmed === true;
+
+/**
  * The fields of a forecast line the LTP sum reads. Material C5 — a line joins a
  * capacity group by its MATERIAL (the planning group holds materials), not by
  * the forecast's own `materialGroup`, which stays the forecast's concept.
@@ -373,6 +384,7 @@ export function groupWeekLtp(lines, supplierId, materials, week) {
 /**
  * `capacity`:  The stated capacity, or null when the week has none.
  * `be`:  Capacity + additional capacity (derived), or null.
+ * `upsideConfirmed`:  CAP-3 BR-03 — an amber week whose additional capacity the supplier confirmed.
  *
  * @typedef {{
  *   readonly week: string;
@@ -380,6 +392,7 @@ export function groupWeekLtp(lines, supplierId, materials, week) {
  *   readonly capacity: number | null;
  *   readonly be: number | null;
  *   readonly level: LtpCapacityLevel;
+ *   readonly upsideConfirmed: boolean;
  * }} LtpCapacityWeek
  */
 
@@ -391,12 +404,14 @@ export function groupWeekLtp(lines, supplierId, materials, week) {
 export function ltpCapacityWeeks(plan) {
   return plan.weeks.map((w) => {
     const ltp = w.demand;
+    const level = ltpCapacityLevel(ltp, w.entry);
     return {
       week: w.week,
       ltp,
       capacity: w.entry ? w.entry.allocated : null,
       be: w.entry ? beOf(w.entry) : null,
-      level: ltpCapacityLevel(ltp, w.entry)
+      level,
+      upsideConfirmed: isUpsideConfirmed(level, w.entry)
     };
   });
 }
@@ -431,6 +446,56 @@ export function periodHorizonWeeks(periodStart, periodEnd, horizon) {
   return horizon.filter((week) => overlapDays(periodStart, periodEnd, week) > 0);
 }
 
+/**
+ * CAP-8 BR-01 / BR-04 — a target supplier's capacity headroom for one period
+ * of a material: BE − LTP for its planning group, in the material's base unit.
+ * A week-long period reads that week's BE − LTP. A longer period spreads by day
+ * (as `groupWeekLtp` does), so the headroom is the most it can take before any
+ * week it touches goes above BE. Null — unknown, shown "—" — when the supplier
+ * has no capacity plan for the group, a week has no stated capacity, or part of
+ * the period lies beyond the capacity horizon. Never refuses anything: a
+ * quantity above it warns (BR-04).
+ * @param {readonly CapacityPlan[]} plans
+ * @param {readonly LtpLine[]} lines
+ * @param {string} supplierId
+ * @param {string} materialCode
+ * @param {string} periodStart
+ * @param {string} periodEnd
+ * @param {readonly string[]} horizon
+ * @param {(materialCode: string) => MaterialMasterEntry | null} master
+ * @returns {number | null}
+ */
+export function moveHeadroom(
+  plans,
+  lines,
+  supplierId,
+  materialCode,
+  periodStart,
+  periodEnd,
+  horizon,
+  master
+) {
+  const cap = capacityGroupOfMaterial(plans, supplierId, materialCode, master);
+  if (!cap.plan) return null;
+  const plan = cap.plan;
+  // The moved material joins the group's LTP even before the target supplies it.
+  const materials = cap.materials.includes(materialCode)
+    ? cap.materials
+    : [...cap.materials, materialCode];
+  const days = daysInclusive(periodStart, periodEnd);
+  const weeks = periodHorizonWeeks(periodStart, periodEnd, horizon);
+  const covered = weeks.reduce((n, w) => n + overlapDays(periodStart, periodEnd, w), 0);
+  if (weeks.length === 0 || covered < days) return null;
+  let headroom = Number.POSITIVE_INFINITY;
+  for (const week of weeks) {
+    const entry = plan.weeks.find((w) => w.week === week)?.entry ?? null;
+    if (!entry) return null;
+    const room = beOf(entry) - groupWeekLtp(lines, supplierId, materials, week);
+    headroom = Math.min(headroom, (room * days) / overlapDays(periodStart, periodEnd, week));
+  }
+  return Math.floor(headroom);
+}
+
 /** @type {Record<LtpCapacityLevel, number>} */
 const LEVEL_RANK = { unconfirmed: 0, cannotSupply: 1, needsAdditional: 2, within: 3 };
 
@@ -439,12 +504,14 @@ const LEVEL_RANK = { unconfirmed: 0, cannotSupply: 1, needsAdditional: 2, within
  * `weeks`:  The weeks checked, with their figures.
  * `unconfirmedWeek`:  The first week with no stated capacity, if any.
  * `redWeek`:  The first week above BE, if any.
+ * `upsideUnconfirmedWeek`:  CAP-3 BR-03 — the first amber week whose additional capacity is not confirmed, if any.
  *
  * @typedef {{
  *   readonly level: LtpCapacityLevel | null;
  *   readonly weeks: readonly LtpCapacityWeek[];
  *   readonly unconfirmedWeek: string | null;
  *   readonly redWeek: string | null;
+ *   readonly upsideUnconfirmedWeek: string | null;
  * }} PeriodCapacityCheck
  */
 
@@ -476,12 +543,14 @@ export function periodCapacityCheck(
   const weeks = touched.map((week) => {
     const entry = plan?.weeks.find((w) => w.week === week)?.entry ?? null;
     const ltp = groupWeekLtp(lines, supplierId, materials, week);
+    const level = ltpCapacityLevel(ltp, entry);
     return {
       week,
       ltp,
       capacity: entry ? entry.allocated : null,
       be: entry ? beOf(entry) : null,
-      level: ltpCapacityLevel(ltp, entry)
+      level,
+      upsideConfirmed: isUpsideConfirmed(level, entry)
     };
   });
   const level =
@@ -495,7 +564,9 @@ export function periodCapacityCheck(
     level,
     weeks,
     unconfirmedWeek: weeks.find((w) => w.level === 'unconfirmed')?.week ?? null,
-    redWeek: weeks.find((w) => w.level === 'cannotSupply')?.week ?? null
+    redWeek: weeks.find((w) => w.level === 'cannotSupply')?.week ?? null,
+    upsideUnconfirmedWeek:
+      weeks.find((w) => w.level === 'needsAdditional' && !w.upsideConfirmed)?.week ?? null
   };
 }
 

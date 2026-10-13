@@ -512,7 +512,7 @@ export const processFlowPurposeEn = {
   'processFlows.purpose.t_forecastversion_publish':
     'The planner publishes the next forecast version, on the cadence or as an emergency re-publication. Suppliers are asked to open it and commit.',
   'processFlows.purpose.t_forecastversion_reassign':
-    'The planner moves one period’s demand from a supplier to another supplier of the material and explains why. Suppliers receive it as a new version.',
+    'The planner moves part or all of one period’s shortfall from a supplier to one or more other suppliers of the material, a quantity each, and explains why. Suppliers receive it as a new version.',
   'processFlows.purpose.entity.forecastView':
     'The moment a supplier first opened a forecast version, so the planner sees who has seen the plan.',
   'processFlows.purpose.t_forecastview_record':
@@ -1077,7 +1077,7 @@ export const processFlowPurposeId = {
   'processFlows.purpose.t_forecastversion_publish':
     'Perencana menerbitkan versi prakiraan berikutnya, sesuai jadwal atau sebagai penerbitan ulang darurat. Pemasok diminta membukanya dan memberi komitmen.',
   'processFlows.purpose.t_forecastversion_reassign':
-    'Perencana memindahkan kebutuhan satu periode dari satu pemasok ke pemasok lain material itu dan menjelaskan alasannya. Pemasok menerimanya sebagai versi baru.',
+    'Perencana memindahkan sebagian atau seluruh kekurangan satu periode dari satu pemasok ke satu atau beberapa pemasok lain material itu, dengan kuantitas masing-masing, dan menjelaskan alasannya. Pemasok menerimanya sebagai versi baru.',
   'processFlows.purpose.entity.forecastView':
     'Saat pemasok pertama kali membuka versi prakiraan, agar perencana tahu siapa yang sudah melihat rencananya.',
   'processFlows.purpose.t_forecastview_record':

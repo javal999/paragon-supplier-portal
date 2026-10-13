@@ -354,7 +354,14 @@ describe('BL-133 — the pokayoke on the submit verb (ENG-D19)', () => {
     const mg20 = await plan(sup007, 'MG-20');
     const red = ltpCapacityWeeks(mg20).filter((w) => w.level === 'cannotSupply');
     expect(red).toEqual([
-      { week: W[2], ltp: 72800, capacity: 60000, be: 60000, level: 'cannotSupply' }
+      {
+        week: W[2],
+        ltp: 72800,
+        capacity: 60000,
+        be: 60000,
+        level: 'cannotSupply',
+        upsideConfirmed: false
+      }
     ]);
     const l = await lineOf(sup007, 'PK-PETB-8801', W[2]);
     expect((await promote(sup007, await draft(sup007, l, l.forecastQty))).reason).toMatch(

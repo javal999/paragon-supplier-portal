@@ -62,7 +62,13 @@ const PeriodSubmitRow = ({
               {check.level === null ? (
                 <span className="text-text-tertiary">{t('fc.sup.week.outsideHorizon')}</span>
               ) : (
-                <LtpCheckPill level={check.level} testId={`fc-week-check-${row.bucket}-${group}`} />
+                // CAP-3 BR-01 / BR-03 — the shared pill; an amber period is
+                // confirmed when every amber week in it is.
+                <LtpCheckPill
+                  level={check.level}
+                  confirmed={check.upsideUnconfirmedWeek === null}
+                  testId={`fc-week-check-${row.bucket}-${group}`}
+                />
               )}
               {check.level === 'unconfirmed' && (
                 <Link to="/supplier/capacity" className="text-action-hover hover:underline">

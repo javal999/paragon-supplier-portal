@@ -2761,7 +2761,7 @@ export function useWarehouseDecisionCommand() {
  *       verb: 'submitCapacity';
  *       supplierId: string;
  *       planningGroupId: string;
- *       weeks: readonly { week: string; allocated: number; upside?: number; reason?: string; note?: string }[];
+ *       weeks: readonly { week: string; allocated: number; upside?: number; upsideConfirmed?: true; reason?: string; note?: string }[];
  *     }
  *   | { verb: 'closeAlert'; key: string; closeReason: string; actionNote?: string }} InventoryCommandVars
  */
@@ -2887,7 +2887,7 @@ export function useInventoryCommand() {
  *       materialCode: string;
  *       periodBucket: string;
  *       fromSupplierId: string;
- *       toSupplierId: string;
+ *       allocations: readonly { readonly supplierId: string; readonly qty: number }[];
  *       note: string;
  *     }
  *   | { verb: 'recordView'; publicationId: string; supplierId: string }
@@ -2909,7 +2909,10 @@ const FORECAST_READS = new Set([
   'forecastVersions',
   'forecastCommitments',
   'forecastCoverage',
-  'inventoryAlerts'
+  'inventoryAlerts',
+  // The LTP is the current forecast version, so a new version (publish, or a
+  // CAP-8 move) changes every capacity plan's demand and headroom.
+  'capacityPlans'
 ]);
 
 /** Every forecast-collaboration act: publish, reassign, record a view, commit, acknowledge, accept, request a revision. */
