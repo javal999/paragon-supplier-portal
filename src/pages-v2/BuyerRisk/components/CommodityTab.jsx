@@ -43,7 +43,7 @@ const CommodityTab = ({ commodities }) => {
                     ) : (
                       <TrendingDown size={12} className="inline-block mr-1" />
                     )}
-                    {Math.abs(c.change)}% YTD
+                    {t('risk.commodity.ytd', { pct: Math.abs(c.change) })}
                   </div>
                 </div>
               </div>

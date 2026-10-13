@@ -1,4 +1,6 @@
+import { vi } from 'vitest';
 import { screen, within, fireEvent } from '@testing-library/react';
+import i18n from '@lib/i18n';
 import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 import { mockDataService } from '@services/data/mock/mockDataService';
 import { withChaos } from '@services/data/mock/withChaos';
@@ -183,5 +185,72 @@ describe('BuyerRisk — whole-surface honesty while SIMULATED', () => {
     await screen.findByText('Supply Risk & Scenario Intelligence');
     // Four KPI cards, four illustrative captions — no unlabeled headline figure.
     expect(screen.getAllByText('Illustrative — no live source')).toHaveLength(4);
+  });
+});
+
+describe('BuyerRisk — the war-room "Sent" reset timer is cleared on unmount', () => {
+  it('unmounting the scenario tab clears the pending 4 s reset, so no state is set after it is gone', async () => {
+    const setSpy = vi.spyOn(globalThis, 'setTimeout');
+    const clearSpy = vi.spyOn(globalThis, 'clearTimeout');
+    try {
+      const { unmount } = renderWithProviders(<BuyerRisk />);
+      await screen.findByText('Supply Risk & Scenario Intelligence');
+      fireEvent.click(screen.getByRole('tab', { name: 'Scenario Modeling' }));
+
+      const before = setSpy.mock.calls.length;
+      fireEvent.click(screen.getByRole('button', { name: 'Send to War Room' }));
+      // CONTROL — the click really armed the reset timer.
+      const armed = setSpy.mock.calls
+        .map((call, i) => ({ delay: call[1], id: setSpy.mock.results[i].value }))
+        .slice(before)
+        .filter((c) => c.delay === 4000);
+      expect(armed).toHaveLength(1);
+
+      unmount();
+      expect(clearSpy.mock.calls.map((c) => c[0])).toContain(armed[0].id);
+    } finally {
+      setSpy.mockRestore();
+      clearSpy.mockRestore();
+    }
+  });
+});
+
+describe('BuyerRisk — page chrome reads in Indonesian (ID)', () => {
+  /** @param {string} name */
+  const openTab = async (name) => {
+    fireEvent.click(await screen.findByRole('tab', { name }));
+  };
+
+  it('compliance status pills, day suffixes, the YTD change and the AI pill are localized', async () => {
+    try {
+      await i18n.changeLanguage('id');
+      renderWithProviders(<BuyerRisk />);
+
+      await openTab('Eksposur Pasokan');
+      // `dos: 18` on the Semiconductors exposure row.
+      expect(screen.getByText('18 hr')).toBeInTheDocument();
+      expect(screen.queryByText('18d')).toBeNull();
+
+      await openTab('Risiko Kepatuhan');
+      // Two fixture rows are `expiring`; one is `expired`.
+      expect(screen.getAllByText('Segera kedaluwarsa')).toHaveLength(2);
+      expect(screen.queryByText('Expiring soon')).toBeNull();
+      expect(screen.getAllByText('Kedaluwarsa').length).toBeGreaterThan(0);
+      const bareDays = Array.from(document.querySelectorAll('td *')).filter((el) =>
+        /^\d+d$/.test(el.textContent ?? '')
+      );
+      expect(bareDays).toHaveLength(0);
+
+      await openTab('Harga Komoditas');
+      // Copper (LME) `change: +4.2`.
+      expect(screen.getByText('4.2% sejak awal tahun')).toBeInTheDocument();
+      expect(screen.queryByText(/% YTD$/)).toBeNull();
+
+      await openTab('Pemodelan Skenario');
+      expect(screen.getByText('Berbasis AI')).toBeInTheDocument();
+      expect(screen.queryByText('AI-Powered')).toBeNull();
+    } finally {
+      await i18n.changeLanguage('en');
+    }
   });
 });

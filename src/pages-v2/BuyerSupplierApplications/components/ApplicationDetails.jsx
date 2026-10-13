@@ -39,7 +39,9 @@ const ApplicationDetails = ({ selected }) => {
       <FormSection title={t('applications.panel.section.applicant')}>
         <dl className="space-y-2 text-sm">
           <Field label={t('applications.panel.field.company')}>{selected.companyName}</Field>
-          <Field label={t('applications.panel.field.type')}>{selected.requestType}</Field>
+          <Field label={t('applications.panel.field.type')}>
+            {t(`applications.raise.type.${selected.requestType}`)}
+          </Field>
           <Field label={t('applications.panel.field.vendor')}>
             {selected.resolvedSupplierId ? (
               <Data>{selected.resolvedSupplierId}</Data>

@@ -4,11 +4,13 @@
 // selected in-component by a `count === 1` ternary; this page's static chrome has
 // no such live count phrase, so none are declared.
 // Canonical StatusPill children (risk/priority SEVERITY tokens like
-// critical/high/medium/low, and status tokens Expired/Expiring soon/Valid) are
-// localized centrally via statusLabel.js + priorityLabel.js and are NOT re-keyed
-// here. A handful of non-enum labels that sit *inside* a StatusPill child
-// ("Probability: …%", "AI-Powered", "{feasibility} feasibility") are left as-is
-// per the central-maps rule. Fixture-derived narrative (alert bodies, geo/scenario
+// critical/high/medium/low) are localized centrally via statusLabel.js +
+// priorityLabel.js and are NOT re-keyed here. The compliance-tab status labels
+// ARE keyed here (`risk.compliance.status.*`): "Expiring soon" is not a
+// canonical token (the central map holds "Expiring Soon"), so the central maps
+// left it in EN. Likewise "AI-Powered" and the `d` / `% YTD` suffixes are keyed
+// here, because no central map can reach them. "Probability: …%" and
+// "{feasibility} feasibility" remain as-is. Fixture-derived narrative (alert bodies, geo/scenario
 // card copy, the ARIA recommendation blurb, commodity names) is i18n-defer and
 // stays EN in the page.
 /** @type {Record<string, string>} */
@@ -100,6 +102,9 @@ export const riskEn = {
   'risk.scenario.activatePlan': 'Activate plan',
   'risk.scenario.viewFullAnalysis': 'View full analysis',
   'risk.scenario.ariaRecommendation': 'ARIA Recommendation',
+  'risk.scenario.aiPowered': 'AI-Powered',
+  // — Shared compact day count (exposure days-of-stock, compliance days left) —
+  'risk.unit.daysShort': '{{days}}d',
   // — Scenario toasts —
   'risk.toast.warRoomForwarded.title': 'Scenario forwarded to War Room',
   'risk.toast.warRoomForwarded.desc': '{{title}} dispatched to procurement leadership.',
@@ -124,6 +129,9 @@ export const riskEn = {
   'risk.compliance.col.daysLeft': 'Days left',
   'risk.compliance.col.status': 'Status',
   'risk.compliance.col.action': 'Action',
+  'risk.compliance.status.expired': 'Expired',
+  'risk.compliance.status.expiring': 'Expiring soon',
+  'risk.compliance.status.valid': 'Valid',
   'risk.compliance.overdue': '{{days}}d overdue',
   'risk.compliance.noAction': 'No action',
   'risk.compliance.urgentRenewal': 'Urgent renewal',
@@ -147,6 +155,7 @@ export const riskEn = {
   'risk.commodity.alertTriggered':
     'Alert triggered: current value {{current}} exceeds threshold {{threshold}}',
   'risk.commodity.withinThreshold': 'Within threshold ({{current}} / {{threshold}} {{unit}})',
+  'risk.commodity.ytd': '{{pct}}% YTD',
   // — Empty state (all-empty early return) —
   'risk.empty.title': 'No risk intelligence yet',
   'risk.empty.subtitle': 'Supply-risk monitoring is a buyer-side view.',
@@ -239,6 +248,9 @@ export const riskId = {
   'risk.scenario.activatePlan': 'Aktifkan rencana',
   'risk.scenario.viewFullAnalysis': 'Lihat analisis lengkap',
   'risk.scenario.ariaRecommendation': 'Rekomendasi ARIA',
+  'risk.scenario.aiPowered': 'Berbasis AI',
+  // — Shared compact day count —
+  'risk.unit.daysShort': '{{days}} hr',
   // — Scenario toasts —
   'risk.toast.warRoomForwarded.title': 'Skenario diteruskan ke War Room',
   'risk.toast.warRoomForwarded.desc': '{{title}} dikirim ke pimpinan pengadaan.',
@@ -260,6 +272,9 @@ export const riskId = {
   'risk.compliance.col.daysLeft': 'Hari tersisa',
   'risk.compliance.col.status': 'Status',
   'risk.compliance.col.action': 'Tindakan',
+  'risk.compliance.status.expired': 'Kedaluwarsa',
+  'risk.compliance.status.expiring': 'Segera kedaluwarsa',
+  'risk.compliance.status.valid': 'Berlaku',
   'risk.compliance.overdue': 'terlambat {{days}} hari',
   'risk.compliance.noAction': 'Tanpa tindakan',
   'risk.compliance.urgentRenewal': 'Pembaruan mendesak',
@@ -283,6 +298,7 @@ export const riskId = {
   'risk.commodity.alertTriggered':
     'Peringatan terpicu: nilai saat ini {{current}} melebihi ambang batas {{threshold}}',
   'risk.commodity.withinThreshold': 'Dalam ambang batas ({{current}} / {{threshold}} {{unit}})',
+  'risk.commodity.ytd': '{{pct}}% sejak awal tahun',
   // — Empty state (all-empty early return) —
   'risk.empty.title': 'Belum ada intelijen risiko',
   'risk.empty.subtitle': 'Pemantauan risiko pasokan adalah tampilan sisi pembeli.',

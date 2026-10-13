@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 import { mockDataService } from '@services/data/mock/mockDataService';
@@ -169,5 +170,28 @@ describe('BuyerRequisitions — an AMBIGUOUS quantity never becomes a PR (CP-0 �
     fireEvent.click(screen.getByRole('button', { name: 'Create requisition' }));
     await waitFor(() => expect(purchaseRequisitionStore.all()).toHaveLength(before));
     expect(purchaseRequisitionStore.all().some((p) => Number.isNaN(p.quantity))).toBe(false);
+  });
+});
+
+describe('BuyerRequisitions — the New-PR submit is disabled while pr:create is in flight', () => {
+  it('a pending create disables "Create requisition", so a second click cannot be made', async () => {
+    // A dispatch that never settles holds the mutation in its pending state.
+    const dispatch = vi
+      .spyOn(mockDataService.commands, 'dispatch')
+      .mockImplementation(() => new Promise(() => {}));
+    try {
+      await openNewPrForm('750');
+      const submit = screen.getByRole('button', { name: 'Create requisition' });
+      // CONTROL — the form is complete, so the button is enabled before the click.
+      expect(submit).toBeEnabled();
+
+      fireEvent.click(submit);
+      await waitFor(() => expect(dispatch).toHaveBeenCalledTimes(1));
+      await waitFor(() =>
+        expect(screen.getByRole('button', { name: 'Create requisition' })).toBeDisabled()
+      );
+    } finally {
+      dispatch.mockRestore();
+    }
   });
 });

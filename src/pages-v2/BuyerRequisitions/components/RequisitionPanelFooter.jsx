@@ -134,12 +134,10 @@ const RequisitionPanelFooter = ({
         >
           {t('requisitions.panel.reviseCancel')}
         </Button>
-        {/* DP2-BUTTON-01 — OUTLINE, and the contrast with the reject
-            commit below is the rule working. Solid is reserved for
-            the irreversible commit; a revision returns a declined
+        {/* DP2-BUTTON-01 — OUTLINE, the one primary register since §68
+            retired reserved solid. A revision returns a declined
             document to its own author's hands and is undone by
-            declining it again. Reject is named in the reserved list;
-            revise is not, and neither is submit. */}
+            declining it again. */}
         <Button
           variant="outline"
           onClick={reviseSelected}
@@ -196,11 +194,12 @@ const RequisitionPanelFooter = ({
         >
           {t('requisitions.panel.rejectCancel')}
         </Button>
-        {/* DP2-BUTTON-01 — SOLID, and Reject is named in the reserved
-            list. The opener above stays outline because it only
-            switches panel mode; THIS is the irreversible commit, and
-            it is the only solid on the surface (the approve button is
-            not rendered in `rejecting` mode). */}
+        {/* DP2-BUTTON-01 — OUTLINE. THIS is the irreversible commit
+            (the opener above only switches panel mode), and since §68
+            retired the reserved-solid register it uses the one primary
+            register, action-blue outline, like every other commit. It
+            is the only primary on the surface in `rejecting` mode (the
+            approve button is not rendered there). */}
         <Button
           variant="outline"
           onClick={rejectSelected}

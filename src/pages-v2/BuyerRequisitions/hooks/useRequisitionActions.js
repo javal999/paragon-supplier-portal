@@ -32,6 +32,7 @@ import { emptyForm } from '../const';
  * @typedef {object} RequisitionActions
  * @property {{ submit: boolean; revise: boolean; approve: boolean; reject: boolean }} pending
  *   Whether each detail-panel verb's dispatch is in flight.
+ * @property {boolean} creating Whether the New-PR `pr:create` dispatch is in flight.
  * @property {boolean} canReject The rejection reason is non-empty.
  * @property {boolean} canRevise The revision note is non-empty.
  * @property {() => Promise<void>} submitNewPR Dispatches `pr:create` from the New-PR form.
@@ -320,6 +321,7 @@ const useRequisitionActions = ({
       approve: approvePr.isPending,
       reject: rejectPr.isPending
     },
+    creating: createPr.isPending,
     canReject,
     canRevise,
     submitNewPR,

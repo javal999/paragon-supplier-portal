@@ -1,6 +1,6 @@
 /** @import React from 'react' */
 /** @import { Scenario } from '@services/data/types' */
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronUp, Sparkles, Send } from 'lucide-react';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
@@ -36,6 +36,15 @@ const ScenarioTab = ({ scenarios }) => {
   const [activeScenario, setActiveScenario] = useState(/** @type {string} */ ('me'));
   const [expandedAlt, setExpandedAlt] = useState(/** @type {string | null} */ ('s1'));
   const [warRoomSent, setWarRoomSent] = useState(false);
+  // The pending "Sent" → idle reset. Cleared on unmount so leaving the tab
+  // within 4 s does not set state on a component that is gone.
+  const warRoomTimer = useRef(/** @type {ReturnType<typeof setTimeout> | null} */ (null));
+  useEffect(
+    () => () => {
+      if (warRoomTimer.current !== null) clearTimeout(warRoomTimer.current);
+    },
+    []
+  );
 
   // Detail for the picked scenario; falls back to the first modeled one for
   // library entries that are not yet fully modeled.
@@ -49,7 +58,11 @@ const ScenarioTab = ({ scenarios }) => {
       title: t('risk.toast.warRoomForwarded.title'),
       description: t('risk.toast.warRoomForwarded.desc', { title: featured.title })
     });
-    setTimeout(() => setWarRoomSent(false), 4000);
+    if (warRoomTimer.current !== null) clearTimeout(warRoomTimer.current);
+    warRoomTimer.current = setTimeout(() => {
+      warRoomTimer.current = null;
+      setWarRoomSent(false);
+    }, 4000);
   };
 
   return (
@@ -166,8 +179,8 @@ const ScenarioTab = ({ scenarios }) => {
           <span className="text-sm font-bold text-teal-hover">
             {t('risk.scenario.ariaRecommendation')}
           </span>
-          {/* "AI-Powered" is a StatusPill child — left as-is per the central-maps rule */}
-          <StatusPill variant="info">AI-Powered</StatusPill>
+          {/* Not a canonical status token, so the central maps cannot reach it. */}
+          <StatusPill variant="info">{t('risk.scenario.aiPowered')}</StatusPill>
         </div>
         {/* i18n-defer: mock/sample narrative — illustrative ARIA recommendation with hardcoded demo figures */}
         <p className="text-sm text-text-secondary leading-relaxed">
