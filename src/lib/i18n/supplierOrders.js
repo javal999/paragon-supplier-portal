@@ -120,7 +120,9 @@ export const supplierOrdersEn = {
   // — Toasts (page-local; PO-confirm toasts reuse shared po.confirm.*) —
   'supplierOrders.toast.changeSubmitted.title': 'Change request for {{poNumber}} submitted',
   'supplierOrders.toast.changeSubmitted.desc': 'Paragon team will review.',
-  'supplierOrders.toast.asnCreation.title': 'ASN creation for {{poNumber}}',
+  // #229 — was 'ASN creation for {{poNumber}}', which read as an ASN started.
+  'supplierOrders.toast.asnNotCreated.title':
+    'ASN creation not available here — nothing was created for {{poNumber}}.',
   'supplierOrders.toast.asnContinue': 'Open My Shipments & ASN to create it there.',
   'supplierOrders.toast.creatingAsn.title':
     'ASN creation not available from this card — nothing was created for {{poNumber}}.',
@@ -233,7 +235,8 @@ export const supplierOrdersId = {
   // — Toasts (page-local; PO-confirm toasts reuse shared po.confirm.*) —
   'supplierOrders.toast.changeSubmitted.title': 'Permintaan perubahan untuk {{poNumber}} dikirim',
   'supplierOrders.toast.changeSubmitted.desc': 'Tim Paragon akan meninjau.',
-  'supplierOrders.toast.asnCreation.title': 'Pembuatan ASN untuk {{poNumber}}',
+  'supplierOrders.toast.asnNotCreated.title':
+    'Pembuatan ASN tidak tersedia di sini — tidak ada yang dibuat untuk {{poNumber}}.',
   'supplierOrders.toast.asnContinue': 'Buka Pengiriman & ASN Saya untuk membuatnya di sana.',
   'supplierOrders.toast.creatingAsn.title':
     'Pembuatan ASN tidak tersedia dari kartu ini — tidak ada yang dibuat untuk {{poNumber}}.',

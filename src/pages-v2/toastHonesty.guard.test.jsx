@@ -82,7 +82,10 @@
 //   2. a real act appears in the handler body AFTER that `if` statement ends;
 //      AND
 //   3. **the `if` condition and that act READ AT LEAST ONE IDENTIFIER IN
-//      COMMON.**
+//      COMMON** — OR (#229) the toast declares `variant: 'error'`, for a
+//      validation guard whose condition reaches the act only through a local.
+//      The argument for that arm, and the alternative it beat, is at
+//      `refusalOf`.
 //
 // **(3) IS THE WHOLE PROPERTY; (1) AND (2) ONLY ESTABLISH THE SHAPE.** Sharing
 // an identifier is what makes the clause a precondition of the act rather than a
@@ -156,6 +159,10 @@
 //   · the retired #352 claim admits nothing
 //   · the Overdue branch is convicted by the branch unit, acquitted by the body
 //     unit, and NOT excluded by the refusal class
+//   · a NAMED function is a handler when an `on*` prop in the same file names it
+//     (`onClick={name}` / `onClick: name`) — found when unbacked, not found when
+//     it acts, not found when nothing wires it; `ScenarioTab.sendToWarRoom` is
+//     the real-tree member
 //
 // ⚠️ **NOT GUARDED — AND THIS HALF IS WHY THE BLOCK EXISTS, BECAUSE A LIST OF
 // GUARDED THINGS READS AS COMPLETENESS.**
@@ -175,6 +182,10 @@
 //     probed in exactly that direction (P3) and the probe's finding is this
 //     bullet. Closing it needs the copy dimension that was measured
 //     disqualified above — so it is a STATED REACH LIMIT, not an oversight.
+//   · **A DECLARED ERROR EXCLUDES.** A guard clause in front of an act whose
+//     toast says `variant: 'error'` is excluded whatever its copy says, so an
+//     error toast that claims the act OCCURRED would pass. The variant is
+//     trusted as the toast's own statement; nothing here checks it.
 //   · **AN INCIDENTAL SHARED IDENTIFIER EXCLUDES.** Condition (3) counts any
 //     identifier, so a method name is enough: `answer.trim()` in the condition
 //     and `answer.trim()` in the act share BOTH `answer` and `trim`, and a
@@ -320,6 +331,51 @@ const AFFORDANCE = new RegExp(
   ].join('|'),
   'g'
 );
+
+/**
+ * A NAME WIRED AS A HANDLER: `on<X>={name}` in JSX, or `on<X>: name` in an object
+ * of actions. Same lifecycle exclusion as `AFFORDANCE` — `onSuccess: notify`
+ * wires a react-query callback, not an affordance.
+ *
+ * ⚠️ **THE HOLE THIS CLOSES WAS MEASURED ON THE TREE, NOT IMAGINED.**
+ * `AFFORDANCE` only sees a named handler whose name starts with `handle`.
+ * `BuyerRisk/components/ScenarioTab.jsx` declared `const sendToWarRoom = () => {
+ * toast(…) }` and wired it as `onClick={sendToWarRoom}`; its toast claimed the
+ * scenario was "dispatched to procurement leadership" while sending nothing,
+ * with this guard green the entire time. Found by hand, fixed at #228.
+ */
+const WIRED_NAME =
+  /\bon(?!Success|Error|Settled|Mutate)[A-Z][A-Za-z0-9]*\s*(?:=\s*\{\s*([A-Za-z_$][\w$]*)\s*\}|:\s*([A-Za-z_$][\w$]*)\s*(?=[,}\n]))/g;
+
+/** @param {string} s */
+const escapeRe = (s) => s.replace(/[$]/g, '\\$');
+
+/**
+ * THE NAMED-HANDLER MATCHER FOR ONE FILE, built from the names that file wires
+ * (`WIRED_NAME`). It matches the DEFINITION of each wired name — `const name =
+ * (…) =>`, `const name = useCallback((…) =>`, `function name(…)` — so the body
+ * is read exactly as an inline handler's is. **A function holding a toast that
+ * no `on*` prop names is NOT matched**: a helper called from `onSuccess` is
+ * backed by the dispatch that fires it, and matching every function would be
+ * derivation rule 2's widening.
+ *
+ * Returns null when the file wires no name, so no matcher runs over nothing.
+ * @param {string} src comment-blanked source
+ * @returns {RegExp | null}
+ */
+function namedHandlerDefs(src) {
+  const names = new Set();
+  for (const m of src.matchAll(WIRED_NAME)) names.add(m[1] ?? m[2]);
+  if (names.size === 0) return null;
+  const alt = [...names].map(escapeRe).join('|');
+  return new RegExp(
+    [
+      String.raw`\bconst\s+(?:${alt})\s*=\s*(?:useCallback\s*\(\s*)?(?:async\s*)?(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>`,
+      String.raw`\b(?:async\s+)?function\s+(?:${alt})\s*\([^)]*\)`
+    ].join('|'),
+    'g'
+  );
+}
 
 /**
  * The honest register, EN + ID. Phrases that ADMIT the act did not happen.
@@ -579,10 +635,94 @@ function terminates(sf, hStart, pos) {
 }
 
 /**
- * THE REFUSAL CLASS — see the header. Returns the identifiers the condition and
- * the act READ IN COMMON, or null when the branch is not a refusal.
+ * A `.mutate(` / `.mutateAsync(` on a name bound from a hook: `const changeEta =
+ * useAdvanceShipNoticeChangeEta()` then `changeEta.mutate(…)`.
  *
- * ⚠️ **IT RETURNS THE NAMES RATHER THAN A BOOLEAN ON PURPOSE: AN EXCLUSION THAT
+ * ⚠️ **`PERFORMS_REAL_ACT` KNEW ONLY `…Mutation.mutate(`, SO A COMMAND HOOK
+ * BOUND UNDER ANY OTHER NAME WAS INVISIBLE.** `SupplierShipments/components/
+ * AsnEtaChange.jsx`'s `run` dispatches `t_asn_change_eta` through `changeEta.
+ * mutate(…)`, and #229 measured it convicted as a handler that does nothing. The
+ * test is the BINDING, not the text: `.mutate(` on a local object (`const api =
+ * { mutate() {} }`) is not a hook and stays unrecognised.
+ *
+ * Returns null when the file binds no hook result.
+ * @param {string} src comment-blanked source
+ * @returns {RegExp | null}
+ */
+function hookMutateOf(src) {
+  const names = new Set();
+  for (const m of src.matchAll(/\bconst\s+([A-Za-z_$][\w$]*)\s*=\s*use[A-Z]\w*\s*\(/g)) {
+    names.add(m[1]);
+  }
+  if (names.size === 0) return null;
+  return new RegExp(String.raw`\b(?:${[...names].map(escapeRe).join('|')})\.mutate(?:Async)?\s*\(`);
+}
+
+/**
+ * The FIRST real act in `text`, by either instrument, or null.
+ * @param {string} text
+ * @param {RegExp | null} hookMutate from `hookMutateOf`
+ * @returns {RegExpMatchArray | null}
+ */
+function realActIn(text, hookMutate) {
+  const a = text.match(PERFORMS_REAL_ACT);
+  const b = hookMutate ? text.match(hookMutate) : null;
+  if (!a) return b;
+  if (!b) return a;
+  return (a.index ?? 0) <= (b.index ?? 0) ? a : b;
+}
+
+/**
+ * The `variant` the toast at `pos` declares, when it is a string literal.
+ * @param {ts.SourceFile} sf
+ * @param {number} pos
+ * @returns {string | null}
+ */
+function declaredVariant(sf, pos) {
+  /** @type {ts.Node | undefined} */
+  let n = nodeAt(sf, pos);
+  while (n && !ts.isCallExpression(n)) n = n.parent;
+  const arg = n && ts.isCallExpression(n) ? n.arguments[0] : undefined;
+  if (!arg || !ts.isObjectLiteralExpression(arg)) return null;
+  for (const p of arg.properties) {
+    if (
+      ts.isPropertyAssignment(p) &&
+      p.name.getText(sf) === 'variant' &&
+      ts.isStringLiteralLike(p.initializer)
+    ) {
+      return p.initializer.text;
+    }
+  }
+  return null;
+}
+
+/** The reason an exclusion names when the declared variant decided it. */
+const ERROR_VARIANT = "variant: 'error'";
+
+/**
+ * THE REFUSAL CLASS — see the header. Returns WHY the branch is a refusal — the
+ * identifiers the condition and the act READ IN COMMON, or `ERROR_VARIANT` —
+ * or null when the branch is not a refusal.
+ *
+ * ⚠️ **THE RULE, IN ONE SENTENCE: A TERMINATING `if` BRANCH IN FRONT OF A REAL
+ * ACT LATER IN THE SAME HANDLER IS A REFUSAL WHEN ITS CONDITION SHARES AN
+ * IDENTIFIER WITH THAT ACT, OR WHEN ITS TOAST DECLARES `variant: 'error'`.**
+ *
+ * The second arm was added at #229, which measured seven validation guards the
+ * first arm missed because the condition reaches the act only through a local
+ * (`if (!confirmQty.ok) …` → `const payload = build…({ confirmedQty:
+ * confirmQty.value })` → `mutateAsync({ payload })`), or not syntactically at
+ * all (`contractNumbers` and `draft` are both destructured from one hook call).
+ * Following locals was considered and rejected: the contracts link needs
+ * sibling bindings of one declaration tied together, and that same step ties
+ * `const [selected, setSelected] = useState()` — every state read to every
+ * setter — which would excuse #352's Overdue shape. An error toast REPORTS that
+ * the act did not run, which is the refusal claim; a success claim cannot hide
+ * there without contradicting its own variant. Conditions (1) and (2) still bind
+ * both arms, so an early-return toast with NO act after it is never excluded,
+ * whatever its variant.
+ *
+ * ⚠️ **IT RETURNS A REASON RATHER THAN A BOOLEAN ON PURPOSE: AN EXCLUSION THAT
  * CANNOT SAY WHY IT EXCLUDED IS INDISTINGUISHABLE FROM A SKIP**, and a skip is
  * the thing this guard's header refuses to carry.
  * @param {ts.SourceFile} sf
@@ -590,14 +730,15 @@ function terminates(sf, hStart, pos) {
  * @param {number} hStart
  * @param {number} bodyEnd
  * @param {number} pos
+ * @param {RegExp | null} [hookMutate] from `hookMutateOf`
  * @returns {string[] | null}
  */
-function refusalOf(sf, src, hStart, bodyEnd, pos) {
+function refusalOf(sf, src, hStart, bodyEnd, pos, hookMutate = null) {
   if (!terminates(sf, hStart, pos)) return null;
   const gate = enclosingIf(sf, hStart, pos);
   if (!gate) return null;
   const after = src.slice(gate.getEnd(), bodyEnd);
-  const act = after.match(PERFORMS_REAL_ACT);
+  const act = realActIn(after, hookMutate);
   if (!act) return null;
   /** @type {ts.Node | undefined} */
   let call = nodeAt(sf, gate.getEnd() + (act.index ?? 0));
@@ -605,7 +746,8 @@ function refusalOf(sf, src, hStart, bodyEnd, pos) {
   if (!call) return null;
   const used = identifiersOf(call);
   const shared = [...identifiersOf(gate.expression)].filter((i) => used.has(i));
-  return shared.length ? shared : null;
+  if (shared.length) return shared;
+  return declaredVariant(sf, pos) === 'error' ? [ERROR_VARIANT] : null;
 }
 
 /**
@@ -631,38 +773,58 @@ function deriveUnbackedSites() {
   // (frontend-standard Phase 5, PAGE-SPLIT-GUIDE).
   const files = pageFiles(PAGES_DIR);
   for (const file of files) {
-    const raw = readFileSync(join(PAGES_DIR, file), 'utf8');
-    const src = codeOnly(raw);
-    const sf = ts.createSourceFile(file, raw, ts.ScriptTarget.Latest, true, scriptKindOf(file));
-    for (const m of src.matchAll(/\btoast\s*\(\s*\{/g)) {
-      const idx = m.index ?? 0;
-      const pre = src.slice(0, idx);
-      const handlers = [...pre.matchAll(AFFORDANCE)];
-      const h = handlers[handlers.length - 1];
-      if (!h) continue;
-      const hStart = h.index ?? 0;
-      const bodyEnd = balancedEnd(src, hStart + h[0].length);
-      const body = src.slice(hStart, bodyEnd);
-      if (!body.includes('toast')) continue;
-      // THE UNIT: the branch, not the body. A real act in a SIBLING clause of
-      // the same handler no longer acquits the claim made here.
-      const branch = coExecutingRegion(sf, body, hStart, idx);
-      if (PERFORMS_REAL_ACT.test(branch)) continue; // backed — not this guard's business
-      const line0 = pre.split('\n').length;
-      if (out.some((s) => s.file === file && s.line === line0)) continue;
-      // THE ONE EXCLUSION: a guard clause in front of the handler's own act
-      // claims no act, so the admission test asks it the wrong question.
-      const shared = refusalOf(sf, src, hStart, bodyEnd, idx);
-      if (shared) {
-        EXCLUSIONS.push({ file, line: line0, shared });
-        continue;
-      }
-      const keys = [...branch.matchAll(/t\('([^']+)'/g)].map((k) => k[1]);
-      const literals = [...branch.matchAll(/(?:title|description):\s*[`'"]([^`'"]{4,})[`'"]/g)].map(
-        (k) => k[1]
-      );
-      out.push({ file, line: line0, keys, literals });
+    out.push(...sitesIn(file, readFileSync(join(PAGES_DIR, file), 'utf8'), EXCLUSIONS));
+  }
+  return out;
+}
+
+/**
+ * The unbacked toast sites of ONE file. Split out of `deriveUnbackedSites` so
+ * the matcher probes run the SHIPPED derivation over a synthetic source string,
+ * not a copy of it.
+ * @param {string} file
+ * @param {string} raw
+ * @param {Excluded[]} exclusions sink for the refusal class
+ * @returns {Site[]}
+ */
+function sitesIn(file, raw, exclusions) {
+  /** @type {Site[]} */
+  const out = [];
+  const src = codeOnly(raw);
+  const sf = ts.createSourceFile(file, raw, ts.ScriptTarget.Latest, true, scriptKindOf(file));
+  const named = namedHandlerDefs(src);
+  const hookMutate = hookMutateOf(src);
+  for (const m of src.matchAll(/\btoast\s*\(\s*\{/g)) {
+    const idx = m.index ?? 0;
+    const pre = src.slice(0, idx);
+    // The nearest handler start before the toast, inline OR named-and-wired.
+    const handlers = [...pre.matchAll(AFFORDANCE), ...(named ? pre.matchAll(named) : [])].sort(
+      (a, b) => (a.index ?? 0) - (b.index ?? 0)
+    );
+    const h = handlers[handlers.length - 1];
+    if (!h) continue;
+    const hStart = h.index ?? 0;
+    const bodyEnd = balancedEnd(src, hStart + h[0].length);
+    const body = src.slice(hStart, bodyEnd);
+    if (!body.includes('toast')) continue;
+    // THE UNIT: the branch, not the body. A real act in a SIBLING clause of
+    // the same handler no longer acquits the claim made here.
+    const branch = coExecutingRegion(sf, body, hStart, idx);
+    if (realActIn(branch, hookMutate)) continue; // backed — not this guard's business
+    const line0 = pre.split('\n').length;
+    if (out.some((s) => s.file === file && s.line === line0)) continue;
+    // THE ONE EXCLUSION: a guard clause in front of the handler's own act
+    // claims no act, so the admission test asks it the wrong question.
+    const shared = refusalOf(sf, src, hStart, bodyEnd, idx, hookMutate);
+    if (shared) {
+      exclusions.push({ file, line: line0, shared });
+      continue;
     }
+    const keys = [...branch.matchAll(/t\('([^']+)'/g)].map((k) => k[1]);
+    const literals = [...branch.matchAll(/(?:title|description):\s*[`'"]([^`'"]{4,})[`'"]/g)].map(
+      (k) => k[1]
+    );
+    out.push({ file, line: line0, keys, literals });
   }
   return out;
 }
@@ -816,6 +978,180 @@ describe('unbacked-toast honesty guard (R1)', () => {
  * both directions in one run, because a probe that only shows the new unit
  * firing cannot show that the old unit was the thing at fault.
  */
+/**
+ * NAMED HANDLERS — the matcher probed BOTH WAYS on synthetic sources, then fired
+ * at the defect the tree really carried (`ScenarioTab.sendToWarRoom`, #228).
+ * Every probe runs the SHIPPED `sitesIn`, never a copy of it.
+ */
+describe('a named function wired to an on* prop is an affordance', () => {
+  /** @param {string} body */
+  const page = (body) => `const Page = () => {\n${body}\n};\n`;
+  /** @param {string} src */
+  const keysOf = (src) => sitesIn('Probe.jsx', src, []).flatMap((s) => s.keys);
+  const UNBACKED = `toast({ variant: 'success', title: t('probe.sent.title') });`;
+
+  it.each([
+    ['const arrow, onClick={name}', `const send = () => { ${UNBACKED} };`, '{send}'],
+    ['async arrow', `const send = async () => { ${UNBACKED} };`, '{send}'],
+    ['function declaration', `function send() { ${UNBACKED} }`, '{send}'],
+    ['useCallback', `const send = useCallback(() => { ${UNBACKED} }, []);`, '{send}']
+  ])('FOUND — %s with an unbacked success toast', (_shape, def, wire) => {
+    const src = page(`${def}\nreturn <Button onClick=${wire}>Send</Button>;`);
+    // The gap was real: the inline matcher alone sees no handler here.
+    expect([...codeOnly(src).matchAll(AFFORDANCE)]).toEqual([]);
+    expect(keysOf(src)).toContain('probe.sent.title');
+  });
+
+  it('FOUND — a name wired as `onClick: name` in an object of actions', () => {
+    const src = page(
+      `const send = () => { ${UNBACKED} };\nconst actions = [{ label: 'Send', onClick: send }];`
+    );
+    expect(keysOf(src)).toContain('probe.sent.title');
+  });
+
+  it.each([
+    ['mutateAsync', `await sendMutation.mutateAsync({ id });`],
+    ['dispatch', `dispatch({ type: 'send' });`]
+  ])('NOT a site — the named handler performs a real act (%s)', (_act, act) => {
+    const src = page(
+      `const send = async () => { ${act} ${UNBACKED} };\nreturn <Button onClick={send}>Send</Button>;`
+    );
+    expect(keysOf(src)).toEqual([]);
+  });
+
+  it('NOT a site — a toast helper no on* prop names, e.g. one fired from onSuccess', () => {
+    const helper = `const notify = () => { ${UNBACKED} };\nconst save = useSaveMutation({ onSuccess: notify });`;
+    const unwired = page(`${helper}\nreturn <Button onClick={() => save.mutate()}>Save</Button>;`);
+    expect(keysOf(unwired)).toEqual([]);
+    // The same helper, wired to a click, IS a site — so the empty result above
+    // is the wiring test speaking, not a matcher that finds nothing.
+    const wired = page(`${helper}\nreturn <Button onClick={notify}>Save</Button>;`);
+    expect(keysOf(wired)).toContain('probe.sent.title');
+  });
+
+  // POSITIVE CONTROL ON THE REAL TREE: the defect #228 fixed is now in the
+  // population, and its repaired copy admits — so it passes the admission
+  // tests above rather than being skipped by them.
+  it('ScenarioTab.sendToWarRoom is in the population, and its copy admits', () => {
+    const site = SITES.find(
+      (s) =>
+        s.file === 'BuyerRisk/components/ScenarioTab.jsx' &&
+        s.keys.includes('risk.toast.warRoomNotSent.title')
+    );
+    expect(site, 'the named war-room handler must be a site').toBeDefined();
+    const keys = site?.keys ?? [];
+    expect(keys.map((k) => EN[k]).some(admits), 'EN must admit').toBe(true);
+    expect(keys.map((k) => ID[k]).some(admits), 'ID must admit').toBe(true);
+  });
+});
+
+/**
+ * #229's two widenings, probed BOTH WAYS on synthetic sources and then asserted
+ * by membership on the tree they were measured against.
+ */
+describe('the refusal class reads a declared error; a hook-bound mutate is an act', () => {
+  /** @param {string} body */
+  const page = (body) => `const Page = () => {\n${body}\n};\n`;
+  /** @param {string} src */
+  const run = (src) => {
+    /** @type {Excluded[]} */
+    const excluded = [];
+    const keys = sitesIn('Probe.jsx', src, excluded).flatMap((s) => s.keys);
+    return { keys, excluded: excluded.map((e) => e.shared) };
+  };
+  /** @param {string} variant */
+  const guard = (variant) =>
+    `if (!qty.ok) { toast({ variant: '${variant}', title: t('probe.refused') }); return; }`;
+  // The ConfirmPanel shape: the condition reaches the act only through `payload`.
+  const ACT = `const payload = build({ confirmedQty: qty.value });\nawait saveMutation.mutateAsync({ payload });`;
+
+  it('EXCLUDED — an error toast in a guard clause before the act, reached through a local', () => {
+    const r = run(
+      page(
+        `const submit = async () => { ${guard('error')}\n${ACT} };\nreturn <B onClick={submit} />;`
+      )
+    );
+    expect(r.keys).toEqual([]);
+    expect(r.excluded).toEqual([[ERROR_VARIANT]]);
+  });
+
+  it('STILL A SITE — the same early-return error toast with NO act after it in the handler', () => {
+    const r = run(
+      page(`const submit = () => { ${guard('error')}\nclose(); };\nreturn <B onClick={submit} />;`)
+    );
+    expect(r.keys).toContain('probe.refused');
+    expect(r.excluded).toEqual([]);
+  });
+
+  it('STILL A SITE — a success toast in the same guard position, before the act', () => {
+    const r = run(
+      page(
+        `const submit = async () => { ${guard('success')}\n${ACT} };\nreturn <B onClick={submit} />;`
+      )
+    );
+    expect(r.keys).toContain('probe.refused');
+    expect(r.excluded).toEqual([]);
+  });
+
+  const TOAST = `toast({ variant: 'warning', title: t('probe.result') });`;
+
+  it('BACKED — `.mutate(` on a name bound from a hook (the AsnEtaChange shape)', () => {
+    const r = run(
+      page(
+        `const changeEta = useAdvanceShipNoticeChangeEta();\nconst go = () => changeEta.mutate({ eta }, { onSuccess: () => { ${TOAST} } });\nreturn <B onClick={go} />;`
+      )
+    );
+    expect(r.keys).toEqual([]);
+  });
+
+  it('NOT BACKED — `.mutate(` on a local object that no hook bound', () => {
+    const r = run(
+      page(
+        `const api = { mutate() {} };\nconst go = () => { api.mutate({ eta }); ${TOAST} };\nreturn <B onClick={go} />;`
+      )
+    );
+    expect(r.keys).toContain('probe.result');
+  });
+
+  // MEMBERSHIP on the real tree, by name: the eight #229 measured.
+  const at = (/** @type {{ file: string; line: number }} */ s) => `${s.file}:${s.line}`;
+  const siteFiles = new Set(SITES.map((s) => s.file));
+  const excludedByVariant = EXCLUSIONS.filter((e) => e.shared.includes(ERROR_VARIANT)).map(at);
+
+  it.each([
+    'BuyerContracts/index.jsx',
+    'SupplierForecasts/components/ConfirmPanel.jsx',
+    'SupplierForecasts/components/ShipmentReportPanel.jsx'
+  ])('%s — its validation guards are refusals, not sites', (file) => {
+    expect(siteFiles.has(file), `${file} still contributes a site`).toBe(false);
+    expect(excludedByVariant.some((e) => e.startsWith(`${file}:`))).toBe(true);
+  });
+
+  it('the seven guard clauses are excluded by name, with the reason attached', () => {
+    /** @type {Record<string, number>} */
+    const perFile = {};
+    for (const e of excludedByVariant) {
+      const f = e.replace(/:\d+$/, '');
+      perFile[f] = (perFile[f] ?? 0) + 1;
+    }
+    // One per guard clause: the contract-number refusal, ConfirmPanel's
+    // quantity + root cause, ShipmentReportPanel's material / direction /
+    // quantity / ASN.
+    expect(perFile).toMatchObject({
+      'BuyerContracts/index.jsx': 1,
+      'SupplierForecasts/components/ConfirmPanel.jsx': 2,
+      'SupplierForecasts/components/ShipmentReportPanel.jsx': 4
+    });
+  });
+
+  it('AsnEtaChange.run is backed by its hook dispatch, so it is neither a site nor an exclusion', () => {
+    const file = 'SupplierShipments/components/AsnEtaChange.jsx';
+    expect(pageFiles(PAGES_DIR)).toContain(file);
+    expect(siteFiles.has(file)).toBe(false);
+    expect(EXCLUSIONS.map((e) => e.file)).not.toContain(file);
+  });
+});
+
 describe('the branch unit, fired at the defect it was built for (#352)', () => {
   const SRC = join(PAGES_DIR, 'BuyerInvoices.jsx');
   const RETIRED_EN = 'Routed to Finance Controller for urgent action.';
