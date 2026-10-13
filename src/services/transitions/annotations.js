@@ -347,6 +347,7 @@ export const TRANSITION_PURPOSE = Object.freeze({
   t_forecastoverride_record: { purposeKey: 'processFlows.purpose.t_forecastoverride_record' },
   t_warehousedecision_record: { purposeKey: 'processFlows.purpose.t_warehousedecision_record' },
   t_demandanticipation_publish: { purposeKey: 'processFlows.purpose.t_demandanticipation_publish' },
+  t_consumption_record: { purposeKey: 'processFlows.purpose.t_consumption_record' },
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — RFx management.
   t_rfi_create: { purposeKey: 'processFlows.purpose.t_rfi_create' },
   t_rfi_revise_draft: { purposeKey: 'processFlows.purpose.t_rfi_revise_draft' },
@@ -439,6 +440,7 @@ export const ENTITY_PURPOSE = Object.freeze({
   forecastOverride: { purposeKey: 'processFlows.purpose.entity.forecastOverride' },
   warehouseDecision: { purposeKey: 'processFlows.purpose.entity.warehouseDecision' },
   demandAnticipation: { purposeKey: 'processFlows.purpose.entity.demandAnticipation' },
+  consumption: { purposeKey: 'processFlows.purpose.entity.consumption' },
   rfiEvent: { purposeKey: 'processFlows.purpose.entity.rfiEvent' },
   rfiResponse: { purposeKey: 'processFlows.purpose.entity.rfiResponse' },
   rfpEvent: { purposeKey: 'processFlows.purpose.entity.rfpEvent' },
