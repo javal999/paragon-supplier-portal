@@ -121,7 +121,7 @@ const SURFACES = [
   },
   {
     label: 'SupplierMyStorefront add-material categories',
-    file: 'src/pages-v2/SupplierMyStorefront.jsx',
+    file: 'src/pages-v2/SupplierMyStorefront/components/AddMaterialForm.jsx',
     name: 'CATEGORY_OPTIONS'
   }
 ];
