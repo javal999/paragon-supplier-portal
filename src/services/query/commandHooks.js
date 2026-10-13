@@ -2720,6 +2720,34 @@ export function useWarehouseDecisionCommand() {
   });
 }
 
+/**
+ * CAP-10 — freeze the demand anticipation of the current horizon (fires
+ * `t_demandanticipation_publish`). `horizonStart` is the Monday the confirm
+ * named; the verb refuses it once the hub week has moved on.
+ */
+export function useDemandAnticipationCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, { readonly horizonStart: string }>} */ (
+    useMutation
+  )({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_demandanticipation_publish',
+        entity: 'demandAnticipation',
+        payload: { horizonStart: vars.horizonStart }
+      }),
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      qc.invalidateQueries({
+        predicate: (q) => q.queryKey[0] === 'procurement' && q.queryKey[1] === 'demandAnticipation'
+      });
+    }
+  });
+}
+
 // ─── Inventory & capacity (REQ-E08-02 to REQ-E08-05) ────────────────────────
 //
 // One dispatch per verb. Every one of these changes figures BOTH personas read
@@ -2917,7 +2945,9 @@ const FORECAST_READS = new Set([
   // CAP-8 move) changes every capacity plan's demand and headroom.
   'capacityPlans',
   // CAP-9 — and every blanket PO's run-out, which draws the LTP down.
-  'blanketPoRunOuts'
+  'blanketPoRunOuts',
+  // CAP-10 — and today's demand anticipation ("would be"), which starts from the LTP.
+  'demandAnticipation'
 ]);
 
 /** Every forecast-collaboration act: publish, reassign, record a view, commit, acknowledge, accept, request a revision. */

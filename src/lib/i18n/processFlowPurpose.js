@@ -530,6 +530,10 @@ export const processFlowPurposeEn = {
     'The Material Planner’s decision for a week that does not fit the warehouse even with the most rented space: rent space, push out orders, reduce orders, or accept the overflow. It records the plan version it was made against. The latest decision of a week is the one in force; earlier ones stay on record.',
   'processFlows.purpose.t_warehousedecision_record':
     'The Material Planner records how a week that does not fit the warehouse will be handled. Accepting the overflow needs a note. The decision is a record of intent: it changes no order and is never sent to SAP or a supplier.',
+  'processFlows.purpose.entity.demandAnticipation':
+    'A publication of the demand anticipation per supplier, material and week: the LTP, plus the supplier’s share of the gap to PTI’s reorder point, or less its share of the stock above it, counted once in the first week. It freezes the fixed 4-week horizon that holds the current week, once. A frozen week keeps the figure of the first publication that froze it; every publication stays on record.',
+  'processFlows.purpose.t_demandanticipation_publish':
+    'The Material Planner freezes the demand anticipation of the 4-week horizon that holds the current week. Each horizon is frozen once and never ahead of time, so the next horizon stays open until it starts. Nothing is sent to SAP or a supplier.',
 
   // ── RFx management (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ─────────────────
   'processFlows.purpose.entity.rfiEvent':
@@ -1095,6 +1099,10 @@ export const processFlowPurposeId = {
     'Keputusan Perencana Material untuk minggu yang tidak muat di gudang meski dengan ruang sewa terbanyak: sewa ruang, mundurkan pesanan, kurangi pesanan, atau terima kelebihan. Keputusan mencatat versi rencana yang menjadi dasarnya. Keputusan terakhir pada suatu minggu adalah yang berlaku; keputusan sebelumnya tetap tercatat.',
   'processFlows.purpose.t_warehousedecision_record':
     'Perencana Material mencatat cara menangani minggu yang tidak muat di gudang. Menerima kelebihan memerlukan catatan. Keputusan ini catatan niat: tidak mengubah pesanan apa pun dan tidak pernah dikirim ke SAP atau pemasok.',
+  'processFlows.purpose.entity.demandAnticipation':
+    'Publikasi antisipasi permintaan per pemasok, material, dan minggu: LTP, ditambah bagian pemasok atas kekurangan terhadap titik pemesanan ulang PTI, atau dikurangi bagiannya atas stok di atasnya, dihitung sekali pada minggu pertama. Publikasi membekukan horizon tetap 4 minggu yang memuat minggu ini, satu kali. Minggu yang dibekukan mempertahankan angka dari publikasi pertama yang membekukannya; setiap publikasi tetap tercatat.',
+  'processFlows.purpose.t_demandanticipation_publish':
+    'Perencana Material membekukan antisipasi permintaan untuk horizon 4 minggu yang memuat minggu ini. Tiap horizon dibekukan satu kali dan tidak pernah lebih awal, sehingga horizon berikutnya tetap terbuka sampai dimulai. Tidak ada yang dikirim ke SAP atau pemasok.',
 
   // ── RFx (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ────────────────────────────
   'processFlows.purpose.entity.rfiEvent':
