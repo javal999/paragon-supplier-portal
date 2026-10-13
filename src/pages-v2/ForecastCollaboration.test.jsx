@@ -65,7 +65,7 @@ const responsesFor = (supplierId, material, period) =>
     );
 
 describe('menu and copy (section 3.7)', () => {
-  it('PTI Weekly plan: This week, What to order, Make warehouse room, Publish, then Supplier responses (FUX phase 1 and phase 2 B1, F-03)', () => {
+  it('PTI Weekly plan: This week, What to order, Make warehouse room, Publish, Supplier responses, then Demand anticipation (FUX phase 1 and phase 2 B1, F-03; CAP-10)', () => {
     const weekly = /** @type {import('@components/layout-v2/navConfig').NavSection} */ (
       PTI_NAV.find((s) => s.id === 'weeklyPlan')
     );
@@ -74,7 +74,8 @@ describe('menu and copy (section 3.7)', () => {
       ['hub.nav.pti.whatToOrder', '/buyer/order-plan'],
       ['hub.nav.pti.makeRoom', '/buyer/reschedule'],
       ['hub.nav.pti.publishToSuppliers', '/buyer/stabilise'],
-      ['hub.nav.pti.supplierResponses', '/buyer/collaboration']
+      ['hub.nav.pti.supplierResponses', '/buyer/collaboration'],
+      ['hub.nav.pti.demandAnticipation', '/buyer/demand-anticipation']
     ]);
     expect(PTI_NAV.find((s) => s.id === 'forecast')).toBeUndefined();
   });
