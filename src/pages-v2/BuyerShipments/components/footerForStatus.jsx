@@ -32,7 +32,9 @@ export const footerForStatus = (s, { t, toast, navigate, displayOf }) => {
           variant="outline"
           onClick={() =>
             toast({
-              variant: 'success',
+              // Nothing is sent and the copy says so, so the tone is a
+              // warning — the same as the carrier toast below — not success.
+              variant: 'warning',
               title: t('shipments.toast.reminder.title'),
               description: t('shipments.toast.reminder.desc', {
                 supplier: s.supplierName,

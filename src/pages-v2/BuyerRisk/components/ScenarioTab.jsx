@@ -35,21 +35,19 @@ const ScenarioTab = ({ scenarios }) => {
   }));
   const [activeScenario, setActiveScenario] = useState(/** @type {string} */ ('me'));
   const [expandedAlt, setExpandedAlt] = useState(/** @type {string | null} */ ('s1'));
-  const [warRoomSent, setWarRoomSent] = useState(false);
-
   // Detail for the picked scenario; falls back to the first modeled one for
   // library entries that are not yet fully modeled.
   const featured = scenarios.find((s) => s.id === activeScenario) ?? scenarios[0];
   if (!featured) return null;
 
+  // UNBACKED: there is no War Room channel or command yet, so the button sends
+  // nothing. The toast says so, and the button never shows a "Sent" state.
   const sendToWarRoom = () => {
-    setWarRoomSent(true);
     toast({
-      variant: 'success',
-      title: t('risk.toast.warRoomForwarded.title'),
-      description: t('risk.toast.warRoomForwarded.desc', { title: featured.title })
+      variant: 'warning',
+      title: t('risk.toast.warRoomNotSent.title'),
+      description: t('risk.toast.warRoomNotSent.desc', { title: featured.title })
     });
-    setTimeout(() => setWarRoomSent(false), 4000);
   };
 
   return (
@@ -78,7 +76,7 @@ const ScenarioTab = ({ scenarios }) => {
             </div>
           </div>
           <Button variant="outline" icon={Send} onClick={sendToWarRoom} className="shrink-0">
-            {warRoomSent ? t('risk.scenario.sent') : t('risk.scenario.sendWarRoom')}
+            {t('risk.scenario.sendWarRoom')}
           </Button>
         </div>
       </section>
@@ -166,8 +164,8 @@ const ScenarioTab = ({ scenarios }) => {
           <span className="text-sm font-bold text-teal-hover">
             {t('risk.scenario.ariaRecommendation')}
           </span>
-          {/* "AI-Powered" is a StatusPill child — left as-is per the central-maps rule */}
-          <StatusPill variant="info">AI-Powered</StatusPill>
+          {/* Not a canonical status token, so the central maps cannot reach it. */}
+          <StatusPill variant="info">{t('risk.scenario.aiPowered')}</StatusPill>
         </div>
         {/* i18n-defer: mock/sample narrative — illustrative ARIA recommendation with hardcoded demo figures */}
         <p className="text-sm text-text-secondary leading-relaxed">

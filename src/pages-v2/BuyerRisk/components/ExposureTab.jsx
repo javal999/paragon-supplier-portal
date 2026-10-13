@@ -80,7 +80,9 @@ const ExposureTab = ({ exposure }) => {
                 <Data>${(row.spend / 1000).toFixed(1)}M</Data>
               </TableCell>
               <TableCell>
-                <StatusPill variant={dosVariant(row.dos)}>{row.dos}d</StatusPill>
+                <StatusPill variant={dosVariant(row.dos)}>
+                  {t('risk.unit.daysShort', { days: row.dos })}
+                </StatusPill>
               </TableCell>
               <TableCell>
                 <StatusPill variant={severityTone(row.risk)}>{row.risk}</StatusPill>

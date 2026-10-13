@@ -32,6 +32,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { resolveImport, specifierBase } from '@test/resolveImport';
+import { ROUTER, routes as routerRoutes, sourceOf as routerSourceOf } from '@test/routerPages';
 import {
   folderSourceFiles,
   isPageFolder,
@@ -40,7 +41,6 @@ import {
   pageFolders
 } from '@test/pageFiles';
 
-const ROUTER = join(process.cwd(), 'src', 'router', 'AppRouter.jsx');
 const routerSrc = readFileSync(ROUTER, 'utf-8');
 
 /** Comments stripped — a rule stated in the file it governs reads as a violation
@@ -55,25 +55,21 @@ const withoutProse = (s) =>
     .replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
 
 /** Route path → component name, DERIVED from the router source (§65a: the
+ * coverage guard that asserted its own table's length never read the router).
+ * Every `<Route>` with an `element`, multi-line and `<Suspense>`-wrapped ones
+ * included (`src/test/routerPages.js`). A pathless layout route has no path.
  * @returns {{ path: string; component: string }[]}
- *  coverage guard that asserted its own table's length never read the router). */
-function routes() {
-  return [...routerSrc.matchAll(/<Route\s+path="([^"]+)"\s+element=\{<(\w+)\s*\/?>\}/g)].map(
-    (m) => ({ path: m[1], component: m[2] })
-  );
-}
+ */
+const routes = () =>
+  routerRoutes(routerSrc).map((r) => ({ path: r.path ?? '(layout)', component: r.component }));
 
-/** Component name → source file, following the router's own imports (which may
+/** Component name → source file, following the router's own imports: default,
+ * ALIASED (`SupplierRegistrationV2` is `pages-v2/SupplierRegistration`), named
+ * (`{ AdminTolerances }`) and `lazy(() => import(…))`.
  * @param {string} component
  * @returns {string | null}
- *  be ALIASED: `SupplierRegistrationV2` is `pages-v2/SupplierRegistration`). */
-function sourceOf(component) {
-  const m = routerSrc.match(new RegExp(`import\\s+${component}\\s+from\\s+'([^']+)'`));
-  if (!m) return null;
-  // The router imports pages through the `@pages-v2/...` alias (aliases.js), so
-  // the specifier is resolved alias-aware rather than joined as a relative path.
-  return resolveImport(ROUTER, m[1]);
-}
+ */
+const sourceOf = (component) => routerSourceOf(routerSrc, component);
 
 /**
  * The page's source text. A page split into a folder resolves to its
@@ -125,6 +121,22 @@ describe('⚠️ §70 · THE MATCHER, BEFORE ANY CLAIM ABOUT THE TREE', () => {
     expect(sourceOf('RolesCatalogue')).toMatch(/RolesCatalogue\.jsx$/);
     // The ALIASED import is the one a name-based lookup gets wrong.
     expect(sourceOf('SupplierRegistrationV2')).toMatch(/SupplierRegistration\/index\.jsx$/);
+    // A NAMED import and a LAZY import resolve too. Until 2026-10-13 the lookup
+    // read only default imports and the route matcher only one-line routes, so
+    // these seven shell pages were never checked: the four named imports
+    // (AdminTolerances, AdminAlertThresholds, Buyer/SupplierFixedStockReconcile)
+    // and the three `lazy()` pages inside `<Suspense>` (PlanGrid,
+    // BuyerCollaboration, SupplierForecasts).
+    expect(sourceOf('AdminTolerances')).toMatch(/admin\/AdminRuleValues\/index\.jsx$/);
+    expect(sourceOf('SupplierFixedStockReconcile')).toMatch(/FixedStockReconcile\.jsx$/);
+    expect(sourceOf('PlanGrid')).toMatch(/PlanGrid\.jsx$/);
+    const byComponent = new Map(routes().map((r) => [r.component, r.path]));
+    expect(byComponent.get('AdminTolerances')).toBe('/buyer/admin/tolerances');
+    expect(byComponent.has('PlanGrid')).toBe(true);
+    expect(byComponent.has('BuyerCollaboration')).toBe(true);
+    // Known-false: a wrapper is never taken for the page it wraps.
+    expect(byComponent.has('Suspense')).toBe(false);
+    expect(byComponent.has('LoadingState')).toBe(false);
     // A split page is read as its whole folder: the grid and charts
     // `<details>` container moved to `components/CoverageDetails.jsx`.
     const commitments = pageSource(/** @type {string} */ (sourceOf('BuyerCommitments')));

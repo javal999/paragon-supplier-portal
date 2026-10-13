@@ -36,6 +36,8 @@ import { rfqStore } from '@services/data/mock/stores/rfqStore';
 import { quotationStore } from '@services/data/mock/stores/quotationStore';
 import { sdcClock } from '@services/sdc';
 import { rfxEn, rfxId } from '@lib/i18n/rfx';
+import i18n from '@lib/i18n';
+import { useToast } from '@hooks/useToast';
 import BuyerRfi from './BuyerRfi';
 import BuyerRfp from './BuyerRfp';
 import BuyerSourcingEvent from './BuyerSourcingEvent';
@@ -669,6 +671,75 @@ describe('CR-23 — the compliance gate is shown on the event (BL-43)', () => {
     expect(
       within(screen.getByTestId('award-input-event-sup-018')).queryByLabelText(/Share/i)
     ).not.toBeInTheDocument();
+  });
+});
+
+describe('the sourcing event page says what happened, in the reader’s language', () => {
+  it('closing a negotiation round says the round CLOSED, not that one opened', async () => {
+    /** The provider keeps toasts in state and renders none; read them here. */
+    const ToastSpy = () => {
+      const { toasts } = useToast();
+      return (
+        <ul data-testid="toast-spy">
+          {toasts.map((t) => (
+            <li key={t.id}>{t.title}</li>
+          ))}
+        </ul>
+      );
+    };
+    renderWithProviders(
+      <>
+        <Routes>
+          <Route path="/buyer/rfq/:rfqId" element={<BuyerSourcingEvent />} />
+        </Routes>
+        <ToastSpy />
+      </>,
+      { identity: BUYER_SEAT, route: '/buyer/rfq/rfq-014' }
+    );
+    fireEvent.click(await screen.findByTestId('round-close-nr-0001'));
+    await waitFor(() =>
+      expect(screen.getByTestId('toast-spy')).toHaveTextContent('Negotiation round closed')
+    );
+    expect(screen.getByTestId('toast-spy')).not.toHaveTextContent('Negotiation round opened');
+    expect(rfxId['rfx.toast.roundClosed']).toBe('Putaran negosiasi ditutup');
+  });
+
+  it('the quote-versions column holding the submission date is headed as such, not "Response deadline"', async () => {
+    openEvent();
+    const table = /** @type {HTMLElement} */ (
+      (await screen.findByTestId('quote-version-qt-014d')).closest('table')
+    );
+    expect(within(table).getByRole('columnheader', { name: 'Submitted on' })).toBeInTheDocument();
+    expect(
+      within(table).queryByRole('columnheader', { name: rfxEn['rfx.deadline'] })
+    ).not.toBeInTheDocument();
+  });
+
+  it('the status pill reads the RFx status vocabulary in Bahasa Indonesia, not raw English', async () => {
+    // StatusPill's generic map localises Open/Closed on its own, so they cannot
+    // tell the two readings apart. "Partly awarded" is not in that map and was
+    // rendered verbatim in English — it is the status that separates them.
+    rfqStore.update('rfq-014', (r) => ({ ...r, status: 'Partly awarded' }));
+    await i18n.changeLanguage('id');
+    try {
+      openEvent();
+      const bar = /** @type {HTMLElement} */ (
+        (await screen.findByTestId('event-back')).parentElement
+      );
+      expect(within(bar).getByText('Sebagian ditetapkan')).toBeInTheDocument();
+      expect(within(bar).queryByText('Partly awarded')).not.toBeInTheDocument();
+    } finally {
+      await i18n.changeLanguage('en');
+    }
+  });
+
+  it('KNOWN-GOOD twin — in English the same pill still reads the English status', async () => {
+    rfqStore.update('rfq-014', (r) => ({ ...r, status: 'Partly awarded' }));
+    openEvent();
+    const bar = /** @type {HTMLElement} */ (
+      (await screen.findByTestId('event-back')).parentElement
+    );
+    expect(within(bar).getByText('Partly awarded')).toBeInTheDocument();
   });
 });
 

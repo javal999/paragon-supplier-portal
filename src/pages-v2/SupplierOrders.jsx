@@ -551,7 +551,8 @@ const SupplierOrders = () => {
   const goToASN = () => {
     if (!selected) return;
     toast({
-      title: t('supplierOrders.toast.asnCreation.title', {
+      variant: 'warning',
+      title: t('supplierOrders.toast.asnNotCreated.title', {
         poNumber: selected.poNumber
       }),
       description: t('supplierOrders.toast.asnContinue')

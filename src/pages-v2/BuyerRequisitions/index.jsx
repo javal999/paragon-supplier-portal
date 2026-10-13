@@ -317,6 +317,7 @@ const BuyerRequisitions = () => {
         setForm={setForm}
         parsedQty={parsedQty}
         canSubmit={canSubmit}
+        creating={actions.creating}
         onSubmit={actions.submitNewPR}
         t={t}
       />

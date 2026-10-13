@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 /** @import React from 'react' */
 import { RotateCcw, CheckCircle2 } from 'lucide-react';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
@@ -40,7 +40,9 @@ const LANGUAGES = [
  * on the left; the process flow, the bot's capabilities and its languages on the
  * right. Owns the conversation state. A reply adds the supplier's message, shows
  * the typing dots, then after 1.5s adds the scripted bot reply and any follow-up
- * chips. Nothing is dispatched; no message leaves the browser.
+ * chips. The pending reply belongs to the conversation that started it, so a
+ * scenario switch, a reset or an unmount cancels it. Nothing is dispatched; no
+ * message leaves the browser.
  */
 /** @type {React.FC} */
 const WhatsAppPanel = () => {
@@ -62,9 +64,20 @@ const WhatsAppPanel = () => {
   );
   const [isTyping, setIsTyping] = useState(false);
   const [newMsgIds, setNewMsgIds] = useState(/** @type {Set<string>} */ (new Set()));
+  // The scheduled bot reply, if one is pending.
+  const replyTimer = useRef(/** @type {ReturnType<typeof setTimeout> | null} */ (null));
+
+  const cancelPendingReply = () => {
+    if (replyTimer.current !== null) clearTimeout(replyTimer.current);
+    replyTimer.current = null;
+  };
+
+  // No reply may land on an unmounted panel.
+  useEffect(() => cancelPendingReply, []);
 
   /** @param {ScenarioId} s */
   const switchScenario = (s) => {
+    cancelPendingReply();
     setScenario(s);
     setMessages(SCENARIOS[s].initial);
     setQuickReplies(SCENARIOS[s].quickReplies ?? []);
@@ -102,7 +115,8 @@ const WhatsAppPanel = () => {
     addMessage('supplier', text);
     setQuickReplies([]);
     setIsTyping(true);
-    setTimeout(() => {
+    replyTimer.current = setTimeout(() => {
+      replyTimer.current = null;
       setIsTyping(false);
       const reply = getBotReply(text);
       addMessage('bot', reply);

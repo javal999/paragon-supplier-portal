@@ -34,7 +34,7 @@ const QuoteVersionsSection = ({ allQuotes, currency, supplierName }) => {
           <TableHeaderCell>{t('rfx.cmp.roundColumn')}</TableHeaderCell>
           <TableHeaderCell>{t('rfx.cmp.row.unitPrice')}</TableHeaderCell>
           <TableHeaderCell>{t('rfx.cmp.row.leadTime')}</TableHeaderCell>
-          <TableHeaderCell>{t('rfx.deadline')}</TableHeaderCell>
+          <TableHeaderCell>{t('rfx.cmp.submittedOn')}</TableHeaderCell>
         </TableHeader>
         <tbody>
           {[...allQuotes]

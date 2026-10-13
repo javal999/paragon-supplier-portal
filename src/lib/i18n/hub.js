@@ -115,7 +115,12 @@ export const hubEn = {
   'hub.home.crumb': 'Home',
   'hub.home.pti.title': 'My tasks',
   'hub.home.pti.subtitle': 'What needs your action, most urgent first.',
-  'hub.home.pti.thisWeek': 'Start the weekly plan: This week',
+  // The planner's weekly plan card on My tasks (MP and ALL): the cycle's first step.
+  'hub.home.weeklyPlan.title': 'Weekly plan, step {{step}} of {{total}}: {{page}}',
+  'hub.home.weeklyPlan.failing_one': 'Input check: {{count}} check failing',
+  'hub.home.weeklyPlan.failing_other': 'Input check: {{count}} checks failing',
+  'hub.home.weeklyPlan.pass': 'Input check: all checks pass',
+  'hub.home.weeklyPlan.unknown': 'Input check: not checked yet',
   'hub.home.sup.title': 'To do',
   'hub.home.sup.subtitle': 'What Paragon is waiting for from you, most urgent first.',
   'hub.home.empty.title': 'Nothing needs your action',
@@ -124,6 +129,12 @@ export const hubEn = {
   'hub.home.severity.critical': 'Urgent',
   'hub.home.severity.warning': 'Due soon',
   'hub.home.severity.info': 'To review',
+  // Why a task row has its severity (taskSeverity.js), worded as the order
+  // and chase pages word it.
+  'hub.home.due': 'Due {{date}}',
+  'hub.home.overdueBy_one': 'Overdue {{count}} day',
+  'hub.home.overdueBy_other': 'Overdue {{count}} days',
+  'hub.home.noDeadline': 'No deadline on record',
 
   'hub.home.task.escalatedPo': 'Escalated purchase orders',
   'hub.home.task.rejectedPo': 'Rejected purchase orders',
@@ -274,7 +285,10 @@ export const hubId = {
   'hub.home.crumb': 'Beranda',
   'hub.home.pti.title': 'Tugas saya',
   'hub.home.pti.subtitle': 'Yang menunggu tindakan Anda, paling mendesak di atas.',
-  'hub.home.pti.thisWeek': 'Mulai rencana mingguan: Minggu ini',
+  'hub.home.weeklyPlan.title': 'Rencana mingguan, langkah {{step}} dari {{total}}: {{page}}',
+  'hub.home.weeklyPlan.failing_other': 'Cek masukan: {{count}} pemeriksaan gagal',
+  'hub.home.weeklyPlan.pass': 'Cek masukan: semua pemeriksaan lolos',
+  'hub.home.weeklyPlan.unknown': 'Cek masukan: belum diperiksa',
   'hub.home.sup.title': 'Yang perlu dikerjakan',
   'hub.home.sup.subtitle': 'Yang ditunggu Paragon dari Anda, paling mendesak di atas.',
   'hub.home.empty.title': 'Tidak ada yang perlu ditindaklanjuti',
@@ -283,6 +297,9 @@ export const hubId = {
   'hub.home.severity.critical': 'Mendesak',
   'hub.home.severity.warning': 'Segera',
   'hub.home.severity.info': 'Untuk ditinjau',
+  'hub.home.due': 'Jatuh tempo {{date}}',
+  'hub.home.overdueBy_other': 'Terlambat {{count}} hari',
+  'hub.home.noDeadline': 'Tidak ada tenggat tercatat',
 
   'hub.home.task.escalatedPo': 'Pesanan pembelian yang dieskalasi',
   'hub.home.task.rejectedPo': 'Pesanan pembelian yang ditolak',

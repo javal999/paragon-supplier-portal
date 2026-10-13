@@ -1160,15 +1160,21 @@ export function isDueWithoutHeadsUp(v, nowIso) {
  */
 
 /**
+ * A delivery that counts toward drift: missed, or received late.
+ * @param {DeliveryResult} r
+ * @returns {boolean}
+ */
+export const isDriftResult = (r) =>
+  r.timing === 'missed' || (r.basis === 'receipt' && r.timing === 'late');
+
+/**
  * @param {readonly CallOffView[]} views
  * @returns {readonly DeliveryDrift[]}
  */
 export function deliveryDrift(views) {
   const groups = /** @type {Map<string, DeliveryDrift>} */ (new Map());
   for (const v of views) {
-    const bad = v.results.filter(
-      (r) => r.timing === 'missed' || (r.basis === 'receipt' && r.timing === 'late')
-    ).length;
+    const bad = v.results.filter(isDriftResult).length;
     if (bad === 0) continue;
     const key = `${v.callOff.supplierId}|${v.callOff.materialCode}`;
     const prev = groups.get(key);

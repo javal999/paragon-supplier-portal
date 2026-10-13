@@ -1,4 +1,5 @@
-import { screen } from '@testing-library/react';
+import { screen, act, within } from '@testing-library/react';
+import i18n from '@lib/i18n';
 import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 import { mockDataService } from '@services/data/mock/mockDataService';
@@ -6,6 +7,20 @@ import { withChaos } from '@services/data/mock/withChaos';
 import SupplierDashboard from './SupplierDashboard';
 import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
 import { NO_PERSON } from '@context/noPerson';
+
+// The OTIF pill's band test (below) forces `perfVariant`; every other test
+// gets the real function (`forced.variant` stays null).
+const forced = vi.hoisted(() => ({
+  /** @type {null | 'success' | 'warning' | 'danger'} */ variant: null
+}));
+vi.mock('./SupplierDashboard/utils', async (importOriginal) => {
+  const actual = /** @type {typeof import('./SupplierDashboard/utils')} */ (await importOriginal());
+  return {
+    ...actual,
+    /** @param {number} v */
+    perfVariant: (v) => forced.variant ?? actual.perfVariant(v)
+  };
+});
 
 const alwaysFails = withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 });
 const alwaysPending = withChaos(mockDataService, { minMs: 1e7, maxMs: 1e7, failureRate: 0 });
@@ -89,5 +104,48 @@ describe('SupplierDashboard — four honest states', () => {
   it('empty: shows EmptyState for a supplier with no profile record', async () => {
     renderWithProviders(<SupplierDashboard />, { identity: SUPPLIER_NO_PROFILE });
     expect(await screen.findByText('No supplier profile yet')).toBeInTheDocument();
+  });
+});
+
+// The OTIF pill's label and its colour come from ONE band: `perfVariant`.
+// Before, the label carried its own 90/80 thresholds beside `perfVariant`'s
+// `targetStatus(v, 90)`, so the two could drift apart without any test
+// noticing. Forcing the variant proves the label follows it.
+describe('SupplierDashboard — OTIF pill label follows the perfVariant band', () => {
+  afterEach(async () => {
+    forced.variant = null;
+    await act(async () => {
+      await i18n.changeLanguage('en');
+    });
+  });
+
+  /** @param {string} label */
+  const pillIn = async (label) => {
+    const otifLine = await screen.findByText(/^OTIF: /);
+    const card = /** @type {HTMLElement} */ (otifLine.parentElement);
+    return within(card).getByText(label);
+  };
+
+  it.each(
+    /** @type {const} */ ([
+      ['success', 'On Track', 'text-success'],
+      ['warning', 'Needs Attention', 'text-warning-hover'],
+      ['danger', 'At Risk', 'text-danger']
+    ])
+  )('variant %s reads "%s" in the pill of that colour', async (variant, label, colour) => {
+    forced.variant = variant;
+    renderWithProviders(<SupplierDashboard />, { identity: SUPPLIER });
+    const pill = await pillIn(label);
+    expect(pill).toHaveClass(colour);
+  });
+
+  it('the pill label is Indonesian under the ID locale', async () => {
+    forced.variant = 'danger';
+    await act(async () => {
+      await i18n.changeLanguage('id');
+    });
+    renderWithProviders(<SupplierDashboard />, { identity: SUPPLIER });
+    const pill = await pillIn('Berisiko');
+    expect(pill).toHaveClass('text-danger');
   });
 });

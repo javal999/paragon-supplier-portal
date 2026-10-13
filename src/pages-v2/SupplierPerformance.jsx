@@ -242,9 +242,9 @@ const SupplierPerformance = () => {
 
   const exportReport = () =>
     toast({
-      variant: 'success',
-      title: t('supplierPerformance.toast.exportQueued.title'),
-      description: t('supplierPerformance.toast.exportQueued.desc')
+      variant: 'warning',
+      title: t('supplierPerformance.toast.exportNotAvailable.title'),
+      description: t('supplierPerformance.toast.exportNotAvailable.desc')
     });
 
   // Identity-gated (Pattern B): "My Performance" is supplier-only.

@@ -29,7 +29,7 @@ const RfpComparison = ({ event }) => {
   if (event.responses.length === 0) {
     return (
       <p className="py-10 text-center text-sm text-text-tertiary" data-testid="rfp-no-proposals">
-        {t('rfx.rfp.empty')}
+        {t('rfx.rfp.noProposals')}
       </p>
     );
   }

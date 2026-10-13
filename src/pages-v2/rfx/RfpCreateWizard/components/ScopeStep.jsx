@@ -22,7 +22,8 @@ import { PrefillBanner } from '../../rfqSources';
  * @property {(key: string) => void} onDeleteSaved
  * @property {boolean} unreadable  the template store could not be read
  * @property {React.ComponentProps<typeof RfxStartFrom>['rejected']} rejected  stored templates refused on read
- * @property {boolean} deadlineInFuture  CE-07 — false: the deadline refusal shows under the date
+ * @property {boolean} deadlineInFuture  CE-07 — false while a date is entered: the deadline refusal shows
+ *   under it. An empty date keeps the step shut (index.jsx) but shows no refusal yet.
  */
 
 /**
@@ -150,7 +151,7 @@ export const ScopeStep = ({
             onChange={(e) => setDraft((d) => ({ ...d, responseDeadline: e.target.value }))}
             className="bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
           />
-          {!deadlineInFuture && (
+          {draft.responseDeadline !== '' && !deadlineInFuture && (
             <p className="text-xs text-danger mt-1" data-testid="rfp-new-deadline-refusal">
               {t('rfx.create.field.deadline.future')}
             </p>
