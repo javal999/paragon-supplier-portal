@@ -107,8 +107,18 @@ describe('alertHref — the PTI-only rules keep the destinations main gave them'
     );
   });
 
-  it('neither rule falls through to the inventory page (the regression a sync would cause)', () => {
-    for (const rule of /** @type {const} */ (['blanketPoRunOut', 'supplyDiscontinued'])) {
+  it('CAP-11 BR-04 — unabsorbed demand anticipation opens that page on the supplier × material', () => {
+    expect(alertHref(alertOf('demandAnticipationUnabsorbed', 'RM-1'), 'buyer')).toBe(
+      '/buyer/demand-anticipation?supplier=sup-001&material=RM-1'
+    );
+  });
+
+  it('none of these rules falls through to the inventory page (the regression a sync would cause)', () => {
+    for (const rule of /** @type {const} */ ([
+      'blanketPoRunOut',
+      'supplyDiscontinued',
+      'demandAnticipationUnabsorbed'
+    ])) {
       expect(alertHref(alertOf(rule, 'x'), 'buyer').startsWith('/buyer/inventory')).toBe(false);
     }
   });

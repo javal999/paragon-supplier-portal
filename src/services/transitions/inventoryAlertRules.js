@@ -43,15 +43,25 @@
 // by" week (`blanketPoRules`) falls within 4 weeks or has passed. One alert per
 // supplier × material group, on its last (newest) PO; subject = that PO id. PTI-only. High when
 // the week is this week or passed, Medium otherwise; impact at that week.
+//
+// CAP-11 BR-04 (BL-180) — `demandAnticipationUnabsorbed`: consumption below the
+// frozen demand anticipation left an excess the next horizon's weeks could not
+// take (`consumptionRules`). One alert per supplier × material; subject = the
+// material; it carries the remaining amount. PTI-only. Medium by rule (an
+// excess is stock PTI will not need yet, not a shortage); impact at the end of
+// the horizon that could not absorb it.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @import { CapacityPlan, ForecastCommitmentLine, InventoryAlert, InventoryAlertRule, InventoryPosition, RiskBasis, RiskClass } from '../data/types' */
 /** @import { ActorAttribution } from '@lib/enforcement' */
 import { deepLink } from '@lib/deepLink';
 /** @import { BlanketPoAlertSubject } from './blanketPoRules' */
+/** @import { UnabsorbedExcess } from './consumptionRules' */
 import { gapWeeks } from './capacityRules';
+import { DEMAND_ANTICIPATION_RULES } from './demandAnticipationRules';
 import { DISCONTINUED_CODE, NOTE_REQUIRED_CODE, isActiveReasonCode } from './reasonCodes';
 import {
+  addDays,
   coverage,
   dayOf,
   daysBetween,
@@ -77,7 +87,8 @@ export const ALERT_RULES = [
   'leadTimeMissing',
   'callOffNotCovered',
   'supplyDiscontinued',
-  'blanketPoRunOut'
+  'blanketPoRunOut',
+  'demandAnticipationUnabsorbed'
 ];
 
 /**
@@ -95,7 +106,9 @@ export const PTI_ONLY_RULES = [
   // CAP-D2 — finding another source is PTI's act; the supplier gave the reason.
   'supplyDiscontinued',
   // CAP-9 BR-05 — raising the next PO is PTI's act; the projection is PTI's estimate.
-  'blanketPoRunOut'
+  'blanketPoRunOut',
+  // CAP-11 BR-04 — the demand anticipation and consumption are PTI's own figures.
+  'demandAnticipationUnabsorbed'
 ];
 
 /** @type {readonly RiskClass[]} */
@@ -327,6 +340,7 @@ export function callOffCoverGap(p, deliveries, nowIso) {
  * @param {readonly CallOffCoverInput[]} [callOffSubjects]
  * @param {readonly DiscontinuedSubject[]} [discontinued]
  * @param {readonly BlanketPoAlertSubject[]} [blanketRunOuts]
+ * @param {readonly UnabsorbedAlertSubject[]} [unabsorbed]
  * @returns {AlertCondition[]}
  */
 export function deriveAlertConditions(
@@ -336,7 +350,8 @@ export function deriveAlertConditions(
   commitmentShortfalls = [],
   callOffSubjects = [],
   discontinued = [],
-  blanketRunOuts = []
+  blanketRunOuts = [],
+  unabsorbed = []
 ) {
   const out = /** @type {Map<string, AlertCondition>} */ (new Map());
   /** @typedef {{ riskClass: RiskClass; basis: RiskBasis }} Risk */
@@ -346,8 +361,10 @@ export function deriveAlertConditions(
    * @param {string} subject
    * @param {string} label
    * @param {Risk} risk
+   * @param {number} [daysToImpact]
+   * @param {InventoryAlert['unabsorbed']} [unabsorbedExcess]
    */
-  const push = (rule, p, subject, label, risk, daysToImpact = 0) => {
+  const push = (rule, p, subject, label, risk, daysToImpact = 0, unabsorbedExcess) => {
     const key = alertKey(rule, subject, p.supplierId);
     if (!out.has(key)) {
       out.set(key, {
@@ -359,7 +376,8 @@ export function deriveAlertConditions(
         subjectLabel: label,
         riskClass: risk.riskClass,
         riskBasis: risk.basis,
-        daysToImpact
+        daysToImpact,
+        ...(unabsorbedExcess ? { unabsorbed: unabsorbedExcess } : {})
       });
     }
   };
@@ -462,7 +480,72 @@ export function deriveAlertConditions(
   for (const b of blanketRunOuts) {
     push('blanketPoRunOut', b, b.poId, b.label, byRule(b.riskClass), b.daysToImpact);
   }
+  // CAP-11 BR-04 — an excess the next horizon could not absorb, with what is left.
+  for (const u of unabsorbed) {
+    push(
+      'demandAnticipationUnabsorbed',
+      u,
+      u.materialCode,
+      u.materialLabel,
+      byRule('medium'),
+      u.daysToImpact,
+      { qty: u.remaining, uom: u.uom, fromWeeks: u.fromWeeks, intoWeeks: u.intoWeeks }
+    );
+  }
   return [...out.values()];
+}
+
+/**
+ * CAP-11 BR-04 — one supplier × material whose excess outlasts the next
+ * horizon. `remaining` sums every horizon of the pair with an excess left;
+ * `fromWeeks` / `intoWeeks` are those horizons' weeks and the weeks that
+ * could not take it.
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly supplierName: string;
+ *   readonly materialCode: string;
+ *   readonly materialLabel: string;
+ *   readonly uom: string;
+ *   readonly remaining: number;
+ *   readonly fromWeeks: readonly string[];
+ *   readonly intoWeeks: readonly string[];
+ *   readonly daysToImpact: number;
+ * }} UnabsorbedAlertSubject
+ */
+
+/**
+ * BR-04 — the alert subjects: one per supplier × material whose unabsorbed
+ * excess reaches `unabsorbedAlertMinQty`. Impact: days from today to the end
+ * of the last horizon that could not take it, 0 once passed.
+ * @param {readonly UnabsorbedExcess[]} rows
+ * @param {string} nowIso
+ * @param {{ readonly supplierName: (id: string) => string; readonly materialLabel: (code: string) => string; readonly uom: (code: string) => string }} names
+ * @returns {UnabsorbedAlertSubject[]}
+ */
+export function unabsorbedAlertSubjects(rows, nowIso, names) {
+  /** @type {Map<string, UnabsorbedAlertSubject>} */
+  const out = new Map();
+  for (const r of rows) {
+    const k = `${r.supplierId}|${r.materialCode}`;
+    const prev = out.get(k);
+    const fromWeeks = [...new Set([...(prev?.fromWeeks ?? []), ...r.fromWeeks])].sort();
+    const intoWeeks = [...new Set([...(prev?.intoWeeks ?? []), ...r.intoWeeks])].sort();
+    const end = addDays(intoWeeks[intoWeeks.length - 1], 6);
+    out.set(k, {
+      supplierId: r.supplierId,
+      supplierName: names.supplierName(r.supplierId),
+      materialCode: r.materialCode,
+      materialLabel: names.materialLabel(r.materialCode),
+      uom: names.uom(r.materialCode),
+      remaining: (prev?.remaining ?? 0) + r.remaining,
+      fromWeeks,
+      intoWeeks,
+      daysToImpact: Math.max(0, daysBetween(dayOf(nowIso), end))
+    });
+  }
+  return [...out.values()].filter(
+    (s) => s.remaining >= DEMAND_ANTICIPATION_RULES.unabsorbedAlertMinQty
+  );
 }
 
 /** One ledger entry: a planner's closure, or the moment its condition cleared. */
@@ -656,7 +739,7 @@ export function alertHref(a, persona) {
       ? deepLink('/buyer/collaboration', { material: a.subject, supplier: a.supplierId })
       : deepLink('/supplier/forecasts', { material: a.subject });
   }
-  // Both rules are in PTI_ONLY_RULES, so only the buyer side ever links them.
+  // These rules are in PTI_ONLY_RULES, so only the buyer side ever links them.
   if (persona === 'buyer') {
     // CAP-D2 — the commitments page is where demand moves to another qualified supplier.
     if (a.rule === 'supplyDiscontinued') {
@@ -665,6 +748,13 @@ export function alertHref(a, persona) {
     // CAP-9 BR-05 — the subject is the blanket PO; the call-off page filters to it.
     if (a.rule === 'blanketPoRunOut') {
       return deepLink('/buyer/call-offs', { po: a.subject });
+    }
+    // CAP-11 BR-04 — the subject is the material; the page filters to the supplier × material.
+    if (a.rule === 'demandAnticipationUnabsorbed') {
+      return deepLink('/buyer/demand-anticipation', {
+        supplier: a.supplierId,
+        material: a.subject
+      });
     }
   }
   // A stale-reading position's RISK CLASS can be Medium or High on its own

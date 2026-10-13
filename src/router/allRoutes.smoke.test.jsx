@@ -98,6 +98,7 @@ import BuyerSafetyStock from '@pages-v2/BuyerSafetyStock';
 import BuyerOrderPlan from '@pages-v2/BuyerOrderPlan';
 import BuyerThisWeek from '@pages-v2/BuyerThisWeek';
 import BuyerReschedule from '@pages-v2/BuyerReschedule';
+import BuyerDemandAnticipation from '@pages-v2/BuyerDemandAnticipation';
 import BuyerStabilise from '@pages-v2/BuyerStabilise';
 import BuyerDataHealth from '@pages-v2/BuyerDataHealth';
 import BuyerDemandForecast from '@pages-v2/BuyerDemandForecast';
@@ -290,6 +291,13 @@ const ROUTES = [
     pattern: '/buyer/reschedule',
     at: '/buyer/reschedule',
     element: <BuyerReschedule />,
+    identity: BUYER
+  },
+  {
+    name: 'buyer/demand-anticipation',
+    pattern: '/buyer/demand-anticipation',
+    at: '/buyer/demand-anticipation',
+    element: <BuyerDemandAnticipation />,
     identity: BUYER
   },
   {

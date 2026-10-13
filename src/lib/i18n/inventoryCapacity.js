@@ -394,10 +394,13 @@ export const inventoryCapacityEn = {
     'The supplier marked this material Discontinued: it needs another source',
   'inv.alerts.rule.blanketPoRunOut':
     'A blanket PO runs out soon: raise the next PO by its "new PO needed by" week',
+  'inv.alerts.rule.demandAnticipationUnabsorbed':
+    'Consumption below demand anticipation left an excess the next horizon cannot absorb',
   'inv.alerts.openInventory': 'Open inventory',
   'inv.alerts.openCapacity': 'Open capacity',
   'inv.alerts.openCommitments': 'Open commitments & gaps',
   'inv.alerts.openBlanketPo': 'Open blanket PO',
+  'inv.alerts.openDemandAnticipation': 'Open demand anticipation',
   'inv.alerts.close': 'Close alert',
   'inv.alerts.closeFor': 'Close alert: {{rule}} for {{subject}}',
   'inv.alerts.closeTitle': 'Close alert',
@@ -430,6 +433,8 @@ export const inventoryCapacityEn = {
   'inv.alerts.sup.rule.supplyDiscontinued':
     'You marked this material Discontinued: PTI is finding another source',
   'inv.alerts.sup.rule.blanketPoRunOut': 'A PTI blanket PO with you runs out soon',
+  'inv.alerts.sup.rule.demandAnticipationUnabsorbed':
+    'PTI’s demand anticipation for you carries an excess the next horizon cannot absorb',
 
   'inv.group.MG-01': 'Surfactants and cleansing actives',
   'inv.group.MG-02': 'Emollients, oils and esters',
@@ -859,10 +864,13 @@ export const inventoryCapacityId = {
     'Pemasok menandai material ini Dihentikan: perlu sumber lain',
   'inv.alerts.rule.blanketPoRunOut':
     'PO induk akan segera habis: buat PO berikutnya sebelum minggu "PO baru diperlukan paling lambat"',
+  'inv.alerts.rule.demandAnticipationUnabsorbed':
+    'Pemakaian di bawah antisipasi permintaan menyisakan kelebihan yang tidak dapat diserap horizon berikutnya',
   'inv.alerts.openInventory': 'Buka stok',
   'inv.alerts.openCapacity': 'Buka kapasitas',
   'inv.alerts.openCommitments': 'Buka komitmen & selisih',
   'inv.alerts.openBlanketPo': 'Buka PO induk',
+  'inv.alerts.openDemandAnticipation': 'Buka antisipasi permintaan',
   'inv.alerts.close': 'Tutup peringatan',
   'inv.alerts.closeFor': 'Tutup peringatan: {{rule}} untuk {{subject}}',
   'inv.alerts.closeTitle': 'Tutup peringatan',
@@ -896,6 +904,8 @@ export const inventoryCapacityId = {
   'inv.alerts.sup.rule.supplyDiscontinued':
     'Anda menandai material ini Dihentikan: PTI sedang mencari sumber lain',
   'inv.alerts.sup.rule.blanketPoRunOut': 'PO induk PTI dengan Anda akan segera habis',
+  'inv.alerts.sup.rule.demandAnticipationUnabsorbed':
+    'Antisipasi permintaan PTI untuk Anda memuat kelebihan yang tidak dapat diserap horizon berikutnya',
 
   'inv.group.MG-01': 'Surfaktan dan bahan pembersih',
   'inv.group.MG-02': 'Emolien, minyak, dan ester',
