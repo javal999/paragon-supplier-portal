@@ -8,12 +8,16 @@
 //     spread by day per week (`groupWeekLtp`), as capacity and CAP-9 read it;
 //   · PTI stock on hand and reorder point — SAP's (`PTI_STOCK`), read by
 //     material code exactly as `buildInventoryPositions` reads it;
-//   · the publications — `demandAnticipationStore`.
+//   · the publications — `demandAnticipationStore`;
+//   · CAP-11 — the recorded consumption (`consumptionStore`): the excess of a
+//     frozen horizon is absorbed into the next one's open weeks, so the figure
+//     in force (`qty`) and what a publication freezes both carry it.
 // Today's figures and "would be" are computed here at read, never stored.
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import { DemandAnticipationRow } from '../../transitions/demandAnticipationRules' */
 /** @import { DemandAnticipationEntry, DemandAnticipationSeries } from '../../transitions/demandAnticipationRules' */
+/** @import { AbsorptionPlan } from '../../transitions/consumptionRules' */
 import { NO_PERSON } from '@context/noPerson';
 import { SDC_SIMULATED_NOW, materialEntry, sdcClock } from '../../sdc';
 import {
@@ -23,6 +27,8 @@ import {
   currentHorizon,
   hubWeeks
 } from '../../transitions/demandAnticipationRules';
+import { absorptionPlan, rowsInForce, seriesInForce } from '../../transitions/consumptionRules';
+import { consumptionStore } from './stores/consumptionStore';
 import { allCommitmentLines } from './forecastReadModel';
 import { PTI_STOCK } from './fixtures/inventoryHub';
 import { supplierNameOf } from './inventoryReadModel';
@@ -36,6 +42,24 @@ import { demandAnticipationStore } from './stores/demandAnticipationStore';
 export function todaysDemandAnticipation(nowIso = sdcClock.now()) {
   return demandAnticipationWeeks(
     { ltpLines: allCommitmentLines(null), ptiStock: PTI_STOCK },
+    nowIso
+  );
+}
+
+/**
+ * CAP-11 — the consumption shares, the absorption per week and what stays
+ * unabsorbed, over the publications, today's figures and the recorded
+ * consumption.
+ * @param {string} [nowIso]
+ * @returns {AbsorptionPlan}
+ */
+export function demandAnticipationAbsorption(nowIso = sdcClock.now()) {
+  return absorptionPlan(
+    {
+      publications: demandAnticipationStore.all(),
+      today: todaysDemandAnticipation(nowIso),
+      records: consumptionStore.all()
+    },
     nowIso
   );
 }
@@ -58,7 +82,8 @@ export function demandAnticipationToFreeze(nowIso = sdcClock.now()) {
       ? []
       : entriesToFreeze(
           publications,
-          todaysDemandAnticipation(nowIso),
+          // CAP-11 — the figure in force: today's, less what each week absorbs.
+          seriesInForce(todaysDemandAnticipation(nowIso), demandAnticipationAbsorption(nowIso)),
           horizon.weeks.filter((w) => w >= fromNow)
         )
   };
@@ -95,10 +120,9 @@ export function allDemandAnticipation(nowIso = sdcClock.now()) {
   /** @param {string} supplierId */
   const nameOf = (supplierId) =>
     lines.find((l) => l.supplierId === supplierId)?.supplierName ?? supplierNameOf(supplierId);
-  return demandAnticipationRows(
-    demandAnticipationStore.all(),
-    todaysDemandAnticipation(nowIso),
-    nowIso
+  return rowsInForce(
+    demandAnticipationRows(demandAnticipationStore.all(), todaysDemandAnticipation(nowIso), nowIso),
+    demandAnticipationAbsorption(nowIso)
   ).map((r) => {
     const entry = materialEntry(r.materialCode);
     return {

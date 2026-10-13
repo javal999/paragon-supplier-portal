@@ -199,6 +199,12 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    * horizon holds at least one week not frozen yet (NOTHING_TO_FREEZE).
    */
   DEMAND_ANTICIPATION_PUBLISH_VALID: 'demandanticipation_publish_valid',
+  /**
+   * Recorded consumption (CAP-11, CAP-D14): a known material, a week named by
+   * its Monday and not after the current hub week, a quantity of zero or more, the
+   * material's unit, and a planner source (`manual` or `upload`).
+   */
+  CONSUMPTION_RECORD_VALID: 'consumption_record_valid',
   /** Dispatch heads-up (REQ-E09-04): the confirmation is accepted, the dates are
    *  dates with arrival on or after shipping, and the quantity is positive. */
   CALLOFF_DISPATCH_VALID: 'calloff_dispatch_valid',

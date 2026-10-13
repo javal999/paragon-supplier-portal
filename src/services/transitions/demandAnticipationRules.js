@@ -54,11 +54,21 @@ import { addDays, dayOf, mondayOf } from './inventoryRules';
  *   · shareWindowWeeks: CAP-D11 — the weeks whose LTP decides each supplier's
  *                       share of the material's stock and reorder point.
  *   · shownWeeks:       how many weeks the page shows, from the current week.
+ *   · consumptionSplit: CAP-11 / CAP-D14 — how a material's recorded weekly
+ *                       consumption is shared across its suppliers:
+ *                       'demandAnticipation' (each one's share of that week's
+ *                       frozen demand anticipation) or 'even'.
+ *   · unabsorbedAlertMinQty: CAP-11 BR-04 — the smallest excess left after the
+ *                       next horizon that raises the planner's alert.
+ * The excess is absorbed into the NEXT fixed horizon (weeks 5 to 8, BR-02 /
+ * BR-03, CAP-D17), so its length is `horizonWeeks`, not a key of its own.
  */
 export const DEMAND_ANTICIPATION_RULES = Object.freeze({
   horizonWeeks: 4,
   shareWindowWeeks: 4,
-  shownWeeks: 13
+  shownWeeks: 13,
+  consumptionSplit: /** @type {'demandAnticipation' | 'even'} */ ('demandAnticipation'),
+  unabsorbedAlertMinQty: 1
 });
 
 /**
@@ -136,10 +146,30 @@ export function currentHorizon(publications, nowIso) {
  */
 
 /**
+ * CAP-11 — what a week absorbs of an earlier horizon's excess (BR-05).
+ * `fromHorizonStart`:  The Monday of the horizon the excess arose in.
+ *
+ * @typedef {{
+ *   readonly qty: number;
+ *   readonly fromHorizonStart: string;
+ * }} DemandAnticipationAbsorbedStored
+ */
+
+/**
+ * The absorption as the read shows it: with the source horizon's weeks.
+ * @typedef {DemandAnticipationAbsorbedStored & {
+ *   readonly fromWeeks: readonly string[];
+ * }} DemandAnticipationAbsorbed
+ */
+
+/**
+ * `absorbed`:  CAP-11 — set only on a figure already lowered by an absorption.
+ *
  * @typedef {{
  *   readonly week: string;
  *   readonly qty: number;
  *   readonly inputs: DemandAnticipationInputs;
+ *   readonly absorbed?: DemandAnticipationAbsorbedStored;
  * }} DemandAnticipationWeek
  */
 
@@ -249,12 +279,16 @@ export function demandAnticipationWeeks(
 
 /**
  * One frozen figure of a publication.
+ * `absorbed`:  CAP-11 — the excess this week froze with (its `qty` is already
+ *   lowered by it), so the absorption is never taken twice.
+ *
  * @typedef {{
  *   readonly supplierId: string;
  *   readonly materialCode: string;
  *   readonly week: string;
  *   readonly qty: number;
  *   readonly inputs: DemandAnticipationInputs;
+ *   readonly absorbed?: DemandAnticipationAbsorbedStored;
  * }} DemandAnticipationEntry
  */
 
@@ -327,7 +361,9 @@ export function entriesToFreeze(publications, today, horizon) {
         materialCode: s.materialCode,
         week: w.week,
         qty: w.qty,
-        inputs: w.inputs
+        inputs: w.inputs,
+        // CAP-11 — a figure lowered by an absorption freezes with it.
+        ...(w.absorbed ? { absorbed: w.absorbed } : {})
       }))
   );
 }
@@ -341,6 +377,11 @@ export function entriesToFreeze(publications, today, horizon) {
  * `frozenBy`:  The publication that froze the week, with the inputs it froze.
  * `horizonStart`:  CAP-D17 — the first Monday of the fixed horizon the week belongs to.
  * `horizonFrozen`:  Whether a publication froze that horizon.
+ * `consumption`:  CAP-11 — the supplier's share of the material's recorded
+ *   consumption that week, or null when none is recorded.
+ * `consumptionRecord`:  The record in force behind it: the material's figure, the
+ *   supplier's share, the source and when it was recorded.
+ * `absorbed`:  CAP-11 BR-05 — the excess of an earlier horizon this week absorbs.
  *
  * @typedef {{
  *   readonly week: string;
@@ -358,6 +399,15 @@ export function entriesToFreeze(publications, today, horizon) {
  *     readonly source: DemandAnticipationPublication['source'];
  *     readonly inputs: DemandAnticipationInputs;
  *   } | null;
+ *   readonly consumption: number | null;
+ *   readonly consumptionRecord: {
+ *     readonly materialQty: number;
+ *     readonly share: number;
+ *     readonly source: 'manual' | 'upload' | 'sap';
+ *     readonly recordedAt: string;
+ *     readonly recordId: string;
+ *   } | null;
+ *   readonly absorbed: DemandAnticipationAbsorbed | null;
  * }} DemandAnticipationWeekView
  */
 
@@ -440,7 +490,11 @@ export function demandAnticipationRows(publications, today, nowIso) {
                   source: hit.publication.source,
                   inputs: hit.entry.inputs
                 }
-              : null
+              : null,
+            // CAP-11 — filled by `rowsInForce` (consumptionRules).
+            consumption: null,
+            consumptionRecord: null,
+            absorbed: null
           };
         })
       };
