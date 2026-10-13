@@ -325,7 +325,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | No supplier lead time on record | Lead time missing for the material | Day bands | No | `services/transitions/inventoryAlertRules.js:310-311` |
 | Call-off larger than supplier can deliver | Confirmed call-offs due within lead time > stock + production due | Cover vs lead time | No | `services/transitions/inventoryAlertRules.js:213-229,347-361` |
 
-**Urgency:** High when cover < 1× lead time, Medium < 1.5×, else Low; with no lead time, < 14 days High and < 30 days Medium (`services/transitions/inventoryRules.js:189-197,243-259`). Settings live under Help & administration → Alert thresholds and stale periods, editable by the Compliance role (`pages-v2/admin/AdminRuleValues.jsx:184,861,867`; `services/transitions/businessRoles.js:314`), and apply at the next calculation (`services/transitions/inventoryConfig.js:13-17,38-67`).
+**Urgency:** High when cover < 1× lead time, Medium < 1.5×, else Low; with no lead time, < 14 days High and < 30 days Medium (`services/transitions/inventoryRules.js:189-197,243-259`). Settings live under Help & administration → Alert thresholds and stale periods, editable by the Compliance role (`pages-v2/admin/AdminRuleValues/index.jsx:61,209,215`; `services/transitions/businessRoles.js:314`), and apply at the next calculation (`services/transitions/inventoryConfig.js:13-17,38-67`).
 
 **Positive end-to-end**
 

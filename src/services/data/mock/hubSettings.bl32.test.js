@@ -437,7 +437,7 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       ],
       // Material B2 — the admin row names the API hours.
       staleApiHours: [
-        'src/pages-v2/admin/AdminRuleValues.jsx',
+        'src/pages-v2/admin/AdminRuleValues/components/StalePeriodRow.jsx',
         'src/services/transitions/inventoryConfig.js',
         'src/services/transitions/inventoryRules.js'
       ],
