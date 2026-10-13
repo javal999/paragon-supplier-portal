@@ -21,6 +21,8 @@ export const supplyGapEn = {
     'Open supply is call-offs awaiting confirmation or confirmed, in the week of their need date. Drafts, rejected and dismissed call-offs are not supply, and a blanket balance not yet called off is not dated supply.',
   'supplyGap.count_one': '{{count}} supplier × material × week below demand anticipation',
   'supplyGap.count_other': '{{count}} supplier × material × weeks below demand anticipation',
+  'supplyGap.showAll': 'Show all {{count}}',
+  'supplyGap.showFewer': 'Show the first {{count}}',
   'supplyGap.empty': 'No week falls below the demand anticipation.',
   'supplyGap.col.supplier': 'Supplier',
   'supplyGap.col.material': 'Material',
@@ -60,6 +62,8 @@ export const supplyGapId = {
   'supplyGap.basis':
     'Pasokan terbuka adalah call-off yang menunggu konfirmasi atau sudah dikonfirmasi, pada minggu tanggal kebutuhannya. Draf, call-off yang ditolak dan yang dibatalkan bukan pasokan, dan saldo PO induk yang belum di-call-off bukan pasokan bertanggal.',
   'supplyGap.count_other': '{{count}} pemasok × material × minggu di bawah antisipasi permintaan',
+  'supplyGap.showAll': 'Tampilkan semua {{count}}',
+  'supplyGap.showFewer': 'Tampilkan {{count}} pertama',
   'supplyGap.empty': 'Tidak ada minggu di bawah antisipasi permintaan.',
   'supplyGap.col.supplier': 'Pemasok',
   'supplyGap.col.material': 'Material',

@@ -1,4 +1,5 @@
 /** @import React from 'react' */
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import Table from '@components/ui-v2/Table';
@@ -40,6 +41,9 @@ import { weekLabel } from '../utils';
 // already covers this section; the line adds where these figures come from.
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** The rows shown before "Show all": the earliest weeks first. */
+export const BELOW_DEMAND_FIRST_ROWS = 20;
+
 /** @param {SupplyGapRow} g */
 const rowKeyOf = (g) => `${g.supplierId}-${g.materialCode}-${g.week}`;
 
@@ -53,6 +57,8 @@ const BelowDemandSection = ({ today }) => {
   const planAvailability = useVerbAvailability('calloff:plan');
   const { drafted, pending, createDraft } = useDraftGapCallOff(today);
   const gaps = supplyGapRows(query.data?.items ?? []);
+  const [showAll, setShowAll] = useState(false);
+  const shown = showAll ? gaps : gaps.slice(0, BELOW_DEMAND_FIRST_ROWS);
 
   return (
     <section
@@ -64,7 +70,10 @@ const BelowDemandSection = ({ today }) => {
         {t('supplyGap.sample')}
       </p>
       <p className="text-xs text-text-tertiary mb-1">{t('supplyGap.intro')}</p>
-      <p className="text-xs text-text-tertiary mb-3">{t('supplyGap.basis')}</p>
+      <p className="text-xs text-text-tertiary mb-1">{t('supplyGap.basis')}</p>
+      <p className="text-xs text-text-tertiary mb-3" data-testid="op-below-demand-acts">
+        {t('supplyGap.action.releaseNote')} {t('supplyGap.proposal.newPoHint')}
+      </p>
       {query.isPending ? (
         <p className="text-sm text-text-tertiary py-4" data-testid="op-below-demand-loading">
           {t('loadingState.title')}
@@ -87,8 +96,9 @@ const BelowDemandSection = ({ today }) => {
           </p>
           <Table>
             <TableHeader>
-              <TableHeaderCell>{t('supplyGap.col.supplier')}</TableHeaderCell>
-              <TableHeaderCell>{t('supplyGap.col.material')}</TableHeaderCell>
+              <TableHeaderCell>
+                {t('supplyGap.col.supplier')} · {t('supplyGap.col.material')}
+              </TableHeaderCell>
               <TableHeaderCell>{t('supplyGap.col.week')}</TableHeaderCell>
               <TableHeaderCell className="text-right">
                 {t('supplyGap.col.demandAnticipation')}
@@ -100,13 +110,13 @@ const BelowDemandSection = ({ today }) => {
               <TableHeaderCell>{t('supplyGap.col.proposal')}</TableHeaderCell>
             </TableHeader>
             <tbody>
-              {gaps.map((g) => {
+              {shown.map((g) => {
                 const key = rowKeyOf(g);
                 const href = `/buyer/demand-anticipation?supplier=${encodeURIComponent(g.supplierId)}&material=${encodeURIComponent(g.materialCode)}`;
                 return (
                   <TableRow key={key} data-testid={`op-gap-${key}`}>
-                    <TableCell className="align-top">{g.supplierName}</TableCell>
-                    <TableCell className="align-top">
+                    <TableCell className="align-top min-w-[14rem]">
+                      <div className="text-sm text-text-primary">{g.supplierName}</div>
                       <Link
                         to={href}
                         className="text-action-hover underline"
@@ -118,13 +128,13 @@ const BelowDemandSection = ({ today }) => {
                       >
                         <Data className="text-action-hover">{g.materialCode}</Data>
                       </Link>
-                      <div className="text-xs text-text-tertiary">{g.materialLabel}</div>
+                      <span className="text-xs text-text-tertiary"> {g.materialLabel}</span>
                     </TableCell>
                     <TableCell className="align-top">
-                      <Data>{weekLabel(g.week)}</Data>
-                      <div className="text-xs text-text-tertiary">
-                        <Data className="text-text-tertiary">{formatDate(g.week)}</Data>
-                      </div>
+                      <Data className="whitespace-nowrap">{weekLabel(g.week)}</Data>{' '}
+                      <Data className="text-xs text-text-tertiary whitespace-nowrap">
+                        {formatDate(g.week)}
+                      </Data>
                     </TableCell>
                     <TableCell className="align-top text-right">
                       <Data>{formatNumber(g.demandAnticipation)}</Data>
@@ -140,7 +150,7 @@ const BelowDemandSection = ({ today }) => {
                         {formatNumber(g.gap)}
                       </Data>
                     </TableCell>
-                    <TableCell className="align-top">
+                    <TableCell className="align-top min-w-[20rem]">
                       <ul className="space-y-2">
                         {g.proposal.callOffs.map((c, i) => {
                           const dKey = gapDraftKey(g, c);
@@ -164,7 +174,7 @@ const BelowDemandSection = ({ today }) => {
                                   {t('supplyGap.action.drafted')}
                                 </StatusPill>
                               ) : planAvailability.kind === 'held' ? (
-                                <div className="mt-1">
+                                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                                   <Button
                                     variant="outline"
                                     onClick={() => void createDraft(g, c)}
@@ -173,12 +183,11 @@ const BelowDemandSection = ({ today }) => {
                                   >
                                     {t('supplyGap.action.draft')}
                                   </Button>
-                                  <div className="text-xs text-text-tertiary mt-1">
+                                  <span className="text-xs text-text-tertiary">
                                     {t('supplyGap.action.needDate', {
                                       date: formatDate(draftNeedDate(g.week, today))
-                                    })}{' '}
-                                    · {t('supplyGap.action.releaseNote')}
-                                  </div>
+                                    })}
+                                  </span>
                                 </div>
                               ) : (
                                 <HandoffNotice
@@ -197,9 +206,6 @@ const BelowDemandSection = ({ today }) => {
                                 uom: g.uom
                               })}
                             </StatusPill>
-                            <div className="text-xs text-text-tertiary mt-1 max-w-[18rem]">
-                              {t('supplyGap.proposal.newPoHint')}
-                            </div>
                           </li>
                         ) : null}
                       </ul>
@@ -209,6 +215,19 @@ const BelowDemandSection = ({ today }) => {
               })}
             </tbody>
           </Table>
+          {gaps.length > BELOW_DEMAND_FIRST_ROWS ? (
+            <div className="mt-3">
+              <Button
+                variant="secondary"
+                onClick={() => setShowAll((v) => !v)}
+                data-testid="op-below-demand-toggle"
+              >
+                {showAll
+                  ? t('supplyGap.showFewer', { count: BELOW_DEMAND_FIRST_ROWS })
+                  : t('supplyGap.showAll', { count: gaps.length })}
+              </Button>
+            </div>
+          ) : null}
         </>
       )}
     </section>

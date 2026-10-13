@@ -22,6 +22,7 @@ import { sdcClock } from '@services/sdc/clock';
 import i18n from '@lib/i18n';
 import { formatNumber } from '@lib/format';
 import BuyerOrderPlan from './BuyerOrderPlan';
+import { BELOW_DEMAND_FIRST_ROWS } from './BuyerOrderPlan/components/BelowDemandSection';
 
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 const ROUTE = '/buyer/order-plan';
@@ -29,6 +30,8 @@ const ROUTE = '/buyer/order-plan';
 const scope = { personaType: 'buyer', supplierId: null, businessRoles: SEEDED_SEAT_ROLES.buyer };
 // Week 6 from the hub's present (Monday 31 August 2026, W36): W41.
 const W6 = '2026-10-05';
+// The page runs the engine first; under a loaded machine the default 1 s wait is too short.
+const WAIT = { timeout: 5000 };
 
 beforeEach(() => {
   sdcClock.reset();
@@ -44,6 +47,10 @@ afterEach(() => {
 const gaps = async () =>
   supplyGapRows((await mockDataService.procurement.getDemandAnticipation(scope)).items);
 
+/** Opens every gap row (the section shows the earliest 20 first). */
+const showAll = async () =>
+  fireEvent.click(await screen.findByTestId('op-below-demand-toggle', {}, WAIT));
+
 /** @param {{ supplierId: string; materialCode: string; week: string }} g */
 const keyOf = (g) => `${g.supplierId}-${g.materialCode}-${g.week}`;
 
@@ -52,8 +59,8 @@ describe('CAP-12 — "Below demand anticipation" on What to order', () => {
     const all = await gaps();
     expect(all.length).toBeGreaterThan(0);
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: ROUTE });
-    const section = await screen.findByTestId('op-below-demand');
-    await within(section).findByTestId(`op-gap-${keyOf(/** @type {*} */ (all[0]))}`);
+    const section = await screen.findByTestId('op-below-demand', {}, WAIT);
+    await within(section).findByTestId(`op-gap-${keyOf(/** @type {*} */ (all[0]))}`, {}, WAIT);
     expect(
       within(section).getByRole('heading', { name: 'Below demand anticipation' })
     ).toBeVisible();
@@ -62,6 +69,13 @@ describe('CAP-12 — "Below demand anticipation" on What to order', () => {
       'From the hub’s sample data'
     );
     expect(screen.queryByTestId('sample-data-badge')).toBeNull();
+    // The earliest 20 first, then every one of them behind "Show all".
+    expect(all.length).toBeGreaterThan(BELOW_DEMAND_FIRST_ROWS);
+    expect(within(section).getAllByTestId(/^op-gap-sup-/)).toHaveLength(BELOW_DEMAND_FIRST_ROWS);
+    expect(within(section).getByTestId('op-below-demand-toggle')).toHaveTextContent(
+      `Show all ${all.length}`
+    );
+    await showAll();
     expect(within(section).getAllByTestId(/^op-gap-sup-/)).toHaveLength(all.length);
     const first = /** @type {NonNullable<(typeof all)[number]>} */ (all[0]);
     expect(within(section).getByTestId(`op-gap-qty-${keyOf(first)}`)).toHaveTextContent(
@@ -81,7 +95,7 @@ describe('CAP-12 — "Below demand anticipation" on What to order', () => {
     const w = /** @type {NonNullable<(typeof plan.warehouses)[number]>} */ (plan.warehouses[0]);
     const recs = w.materials.flatMap((m) => m.recommendations);
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: ROUTE });
-    const section = await screen.findByTestId('op-recs');
+    const section = await screen.findByTestId('op-recs', {}, WAIT);
     expect(
       within(section)
         .getAllByTestId(/^op-rec-/)
@@ -98,13 +112,14 @@ describe('CAP-12 — "Below demand anticipation" on What to order', () => {
     const c = /** @type {NonNullable<typeof proposed>} */ (proposed);
     const gap = /** @type {NonNullable<typeof g>} */ (g);
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: ROUTE });
-    const row = await screen.findByTestId(`op-gap-${keyOf(gap)}`);
+    await showAll();
+    const row = await screen.findByTestId(`op-gap-${keyOf(gap)}`, {}, WAIT);
     expect(within(row).getByTestId(`op-gap-calloff-${keyOf(gap)}-${c.poNumber}`)).toHaveTextContent(
       `Call off ${formatNumber(c.qty)} on ${c.poNumber} (oldest blanket line with balance)`
     );
     const before = callOffStore.all().length;
     fireEvent.click(within(row).getByTestId(`op-gap-draft-${keyOf(gap)}-${c.poNumber}`));
-    await waitFor(() => expect(callOffStore.all()).toHaveLength(before + 1));
+    await waitFor(() => expect(callOffStore.all()).toHaveLength(before + 1), WAIT);
     const draft = callOffStore.all()[before];
     expect(draft).toMatchObject({
       status: 'Draft',
@@ -117,7 +132,7 @@ describe('CAP-12 — "Below demand anticipation" on What to order', () => {
     });
     // Hub sample data, not the engine's: no engine origin (X-03 does not apply).
     expect(draft?.origin).toBeUndefined();
-    expect(await within(row).findByText('Draft created')).toBeInTheDocument();
+    expect(await within(row).findByText('Draft created', {}, WAIT)).toBeInTheDocument();
   });
 
   it('AC-03 — no blanket balance left reads "New PO needed" with the gap and the unit', async () => {
@@ -125,7 +140,8 @@ describe('CAP-12 — "Below demand anticipation" on What to order', () => {
     const gap = /** @type {NonNullable<typeof g>} */ (g);
     expect(gap.proposal.newPoQty).toBe(gap.gap);
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: ROUTE });
-    const row = await screen.findByTestId(`op-gap-${keyOf(gap)}`);
+    await showAll();
+    const row = await screen.findByTestId(`op-gap-${keyOf(gap)}`, {}, WAIT);
     expect(within(row).getByTestId(`op-gap-newpo-${keyOf(gap)}`)).toHaveTextContent(
       `New PO needed: ${formatNumber(gap.gap)} ${gap.uom}`
     );
@@ -137,7 +153,7 @@ describe('CAP-12 — "Below demand anticipation" on What to order', () => {
       (await gaps())[0]
     );
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: ROUTE });
-    const link = await screen.findByTestId(`op-gap-link-${keyOf(g)}`);
+    const link = await screen.findByTestId(`op-gap-link-${keyOf(g)}`, {}, WAIT);
     expect(link.getAttribute('href')).toContain(
       `/buyer/demand-anticipation?supplier=${g.supplierId}&material=${g.materialCode}`
     );
@@ -148,8 +164,8 @@ describe('CAP-12 — "Below demand anticipation" on What to order', () => {
       identity: { ...BUYER, businessRoles: ['finance'] },
       route: ROUTE
     });
-    const section = await screen.findByTestId('op-below-demand');
-    await within(section).findAllByTestId(/^op-gap-sup-/);
+    const section = await screen.findByTestId('op-below-demand', {}, WAIT);
+    await within(section).findAllByTestId(/^op-gap-sup-/, {}, WAIT);
     expect(within(section).queryByRole('button', { name: 'Create draft call-off' })).toBeNull();
     expect(within(section).getAllByTestId('handoff-orderplan-gap-draft').length).toBeGreaterThan(0);
   });
@@ -157,8 +173,8 @@ describe('CAP-12 — "Below demand anticipation" on What to order', () => {
   it('reads in Indonesian', async () => {
     await i18n.changeLanguage('id');
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: ROUTE });
-    const section = await screen.findByTestId('op-below-demand');
-    await within(section).findAllByTestId(/^op-gap-sup-/);
+    const section = await screen.findByTestId('op-below-demand', {}, WAIT);
+    await within(section).findAllByTestId(/^op-gap-sup-/, {}, WAIT);
     expect(within(section).getByText('Di bawah antisipasi permintaan')).toBeInTheDocument();
     expect(within(section).getAllByText(/^Perlu PO baru: /).length).toBeGreaterThan(0);
     expect(document.body.textContent ?? '').not.toMatch(/\bDA\b/);
