@@ -164,7 +164,10 @@ describe('CAP-10 · the formula (brief §3, CAP-D12)', () => {
     expect(DEMAND_ANTICIPATION_RULES).toEqual({
       horizonWeeks: 4,
       shareWindowWeeks: 4,
-      shownWeeks: 13
+      shownWeeks: 13,
+      // CAP-11 — the consumption split and the unabsorbed alert's threshold.
+      consumptionSplit: 'demandAnticipation',
+      unabsorbedAlertMinQty: 1
     });
     expect(Object.isFrozen(DEMAND_ANTICIPATION_RULES)).toBe(true);
   });

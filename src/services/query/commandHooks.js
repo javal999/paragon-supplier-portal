@@ -2535,6 +2535,8 @@ export function useCallOffCommand() {
             q.queryKey[1] === 'reschedule' ||
             // CAP-9 — a release changes what remains, so the run-out moves.
             q.queryKey[1] === 'blanketPoRunOuts' ||
+            // CAP-12 — and open supply, the gap and its proposal.
+            q.queryKey[1] === 'demandAnticipation' ||
             q.queryKey[1] === 'inventoryAlerts')
       });
     }
@@ -2743,6 +2745,37 @@ export function useDemandAnticipationCommand() {
       if (result.status === 'failed') return;
       qc.invalidateQueries({
         predicate: (q) => q.queryKey[0] === 'procurement' && q.queryKey[1] === 'demandAnticipation'
+      });
+    }
+  });
+}
+
+/**
+ * CAP-11 — record a material's consumption in a week (fires
+ * `t_consumption_record`). It moves the demand anticipation in force for the
+ * next horizon and may raise or clear the unabsorbed-excess alert, so both
+ * reads are refreshed.
+ */
+export function useConsumptionRecordCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, { readonly materialCode: string; readonly week: string; readonly qty: number; readonly unit: string; readonly source: 'manual' | 'upload' }>} */ (
+    useMutation
+  )({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_consumption_record',
+        entity: 'consumption',
+        payload: { ...vars }
+      }),
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      qc.invalidateQueries({
+        predicate: (q) =>
+          q.queryKey[0] === 'procurement' &&
+          (q.queryKey[1] === 'demandAnticipation' || q.queryKey[1] === 'inventoryAlerts')
       });
     }
   });
