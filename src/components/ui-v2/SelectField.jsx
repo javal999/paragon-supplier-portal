@@ -86,14 +86,14 @@ const SelectField = ({
   searchPlaceholder,
   name,
   id,
-  testId
+  testId,
+  selectedLabel
 }) => {
   const { t } = useTranslation();
   const generatedId = useId();
   const controlId = id ?? generatedId;
   const listboxId = `${controlId}-listbox`;
   const resolvedPlaceholder = placeholder ?? t('ui.select.placeholder');
-  const accessibleName = ariaLabel ?? resolvedPlaceholder;
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -115,7 +115,9 @@ const SelectField = ({
    */
   const [panelPos, setPanelPos] = useState(/** @type {PanelPos | null} */ (null));
   const selected = value === null ? undefined : options.find((o) => o.value === value);
-  const hasInvalidValue = value !== null && !selected;
+  // A `selectedLabel` names a value the current `options` page doesn't hold (review N3) —
+  // that is not the same as the value being invalid.
+  const hasInvalidValue = value !== null && !selected && !selectedLabel;
   const filteredOptions = useMemo(() => {
     if (onSearch) return options;
     const q = query.trim().toLowerCase();
@@ -245,11 +247,19 @@ const SelectField = ({
         labelText: trigger.labels?.[0]?.textContent?.trim() || null
       });
     };
+    // The listbox scrolls itself (windowing/keyboard nav) inside `panelRef`; that scroll
+    // doesn't move the trigger and must not re-run `update` on every wheel tick (review N5)
+    // — only an ANCESTOR's scroll does.
+    /** @param {Event} e */
+    const onScroll = (e) => {
+      if (panelRef.current?.contains(/** @type {Node} */ (e.target))) return;
+      update();
+    };
     update();
-    window.addEventListener('scroll', update, true);
+    window.addEventListener('scroll', onScroll, true);
     window.addEventListener('resize', update);
     return () => {
-      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('scroll', onScroll, true);
       window.removeEventListener('resize', update);
     };
   }, [open]);
@@ -409,8 +419,13 @@ const SelectField = ({
     return (
       <button
         type="button"
+        id={controlId}
         disabled
-        aria-label={accessibleName}
+        // No placeholder fallback here (review N2): falling back to the placeholder as
+        // `aria-label` overrides the button's own "No options available" text, so a screen
+        // reader never hears it. Without an explicit `ariaLabel` the button's own text is
+        // its accessible name; a page's `<label htmlFor={controlId}>` still names it.
+        aria-label={ariaLabel}
         data-testid={testId}
         className={`${controlBaseClass} text-left text-text-tertiary ${className}`}
       >
@@ -483,9 +498,7 @@ const SelectField = ({
   // and typing filters live (review Q1); a ≤10 native <select> is never writable.
   const closedText = hasInvalidValue
     ? t('ui.select.unavailableValue', { value })
-    : selected
-      ? selected.label
-      : '';
+    : (selected?.label ?? selectedLabel ?? '');
   const inputValue = open ? query : closedText;
   const inputPlaceholder = open
     ? (searchPlaceholder ?? t('ui.select.searchPlaceholder'))
@@ -636,6 +649,9 @@ export default SelectField;
  * @property {string} [name]
  * @property {string} [id]
  * @property {string} [testId] Forwarded as `data-testid` to whichever control actually renders.
+ * @property {string} [selectedLabel] Label for `value` when it is valid but not in the current `options` page —
+ *   the normal case with `onSearch` before any search has surfaced it. Without it a valid selection reads as
+ *   "Unavailable" (PR #52 review N3).
  */
 /**
  * Local filtering: `options` is the whole set, and its size picks the mode.
