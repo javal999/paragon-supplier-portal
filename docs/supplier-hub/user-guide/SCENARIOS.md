@@ -129,7 +129,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | 2 | Sup-Ful | same | **Confirm order**, with confirmed qty and date | Confirmed | `pages-v2/SupplierOrders.jsx:897,934-942` |
 | 3 | Sup-Ful | Orders → **Shipments & ASN** | **Create ASN** → **Submit ASN** | ASN Submitted | `pages-v2/SupplierShipments/hooks/useAsnRowCommands.js:66-101`; `pages-v2/SupplierShipments/index.jsx:310-324` |
 | 4 | PTI-Rcv | Order collaboration → **Goods receipts** | **New GR** → 4-step wizard → **Create GR** | Approved → Posted to SAP | `components/v2-features/GRInspectionWizard/hooks/useCompleteReceipt.js:75-226`; `services/transitions/grRollup.js:55-79` |
-| 5 | Sup-BO | Invoices → **Invoices** | **New invoice** → **Submit invoice** | Submitted → Matched | `pages-v2/SupplierInvoices.jsx:429-528`; `services/transitions/cascades.js:44-46` |
+| 5 | Sup-BO | Invoices → **Invoices** | **New invoice** → **Submit invoice** | Submitted → Matched | `pages-v2/SupplierInvoices/index.jsx:128-171`; `pages-v2/SupplierInvoices/components/NewInvoicePanel.jsx:65-121`; `services/transitions/cascades.js:44-46` |
 | 6 | PTI-Fin | Invoices → **Invoices** | **Release payment** → **Confirm release — {amount}** (Approved invoices only, see section 4) | Payment Released | `pages-v2/BuyerInvoices.jsx:1136-1157,507-560` |
 
 **Negative end-to-end: supplier adjusts the PO and PTI rejects the counter-offer**
