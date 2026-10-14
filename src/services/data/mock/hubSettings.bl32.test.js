@@ -368,7 +368,7 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
         'src/services/transitions/callOffTolerance.js'
       ],
       invoicePriceTolerance: [
-        'src/pages-v2/BuyerInvoices.jsx',
+        'src/pages-v2/BuyerInvoices/components/MatchSection.jsx',
         'src/pages-v2/SupplierInvoices.jsx',
         'src/pages-v2/invoices/InvoiceCollaboration.jsx',
         'src/services/transitions/fulfilmentConfig.js',
