@@ -29,6 +29,7 @@ import WarehouseFacts from './components/WarehouseFacts';
 import WarehouseKpis from './components/WarehouseKpis';
 import RecommendationsSection from './components/RecommendationsSection';
 import ShortfallNotice from './components/ShortfallNotice';
+import BelowDemandSection from './components/BelowDemandSection';
 import CostRatesSection from './components/CostRatesSection';
 import DefinitionsSection from './components/DefinitionsSection';
 
@@ -180,6 +181,9 @@ const BuyerOrderPlan = () => {
           </CollapsedSection>
         </>
       )}
+
+      {/* CAP-12 — the hub's own gaps, separate from the engine's list above (brief §6). */}
+      <BelowDemandSection today={today} />
 
       {costs && <CostRatesSection costs={costs} />}
 

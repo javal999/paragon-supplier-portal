@@ -33,6 +33,7 @@ import { shipmentsEn, shipmentsId } from './i18n/shipments';
 import { complianceEn, complianceId } from './i18n/compliance';
 import { supplierDashboardEn, supplierDashboardId } from './i18n/supplierDashboard';
 import { widgetEn, widgetId } from './i18n/widget';
+import { weekGridEn, weekGridId } from './i18n/weekGrid';
 import { supplierOrdersEn, supplierOrdersId } from './i18n/supplierOrders';
 import { supplierShipmentsEn, supplierShipmentsId } from './i18n/supplierShipments';
 import { supplierInvoicesEn, supplierInvoicesId } from './i18n/supplierInvoices';
@@ -83,7 +84,10 @@ import {
   fulfilmentCollaborationId
 } from './i18n/fulfilmentCollaboration';
 import { callOffsEn, callOffsId } from './i18n/callOffs';
+import { demandAnticipationEn, demandAnticipationId } from './i18n/demandAnticipation';
+import { supplyGapEn, supplyGapId } from './i18n/supplyGap';
 import { sapInterfaceEn, sapInterfaceId } from './i18n/sapInterface';
+import { consumptionEn, consumptionId } from './i18n/consumption';
 import { adminCalendarEn, adminCalendarId } from './i18n/adminCalendar';
 import { performanceEn, performanceId } from './i18n/performance';
 import { inventoryCapacityEn, inventoryCapacityId } from './i18n/inventoryCapacity';
@@ -178,6 +182,7 @@ export const resources = {
       ...complianceEn,
       ...supplierDashboardEn,
       ...widgetEn,
+      ...weekGridEn,
       ...supplierOrdersEn,
       ...supplierShipmentsEn,
       ...supplierInvoicesEn,
@@ -215,7 +220,10 @@ export const resources = {
       ...orderCollaborationEn,
       ...fulfilmentCollaborationEn,
       ...callOffsEn,
+      ...demandAnticipationEn,
+      ...supplyGapEn,
       ...sapInterfaceEn,
+      ...consumptionEn,
       ...adminCalendarEn,
       ...performanceEn,
       ...inventoryCapacityEn,
@@ -681,6 +689,7 @@ export const resources = {
       ...complianceId,
       ...supplierDashboardId,
       ...widgetId,
+      ...weekGridId,
       ...supplierOrdersId,
       ...supplierShipmentsId,
       ...supplierInvoicesId,
@@ -718,7 +727,10 @@ export const resources = {
       ...orderCollaborationId,
       ...fulfilmentCollaborationId,
       ...callOffsId,
+      ...demandAnticipationId,
+      ...supplyGapId,
       ...sapInterfaceId,
+      ...consumptionId,
       ...adminCalendarId,
       ...performanceId,
       ...inventoryCapacityId,

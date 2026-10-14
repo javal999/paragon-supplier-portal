@@ -437,7 +437,7 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       ],
       // Material B2 — the admin row names the API hours.
       staleApiHours: [
-        'src/pages-v2/admin/AdminRuleValues.jsx',
+        'src/pages-v2/admin/AdminRuleValues/components/StalePeriodRow.jsx',
         'src/services/transitions/inventoryConfig.js',
         'src/services/transitions/inventoryRules.js'
       ],
@@ -459,7 +459,7 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       // Material B4 — MR-2 BR-04 and BR-06: the award pill, the reason line and
       // the verbs' flag read the thresholds at call time.
       complianceThresholds: [
-        'src/pages-v2/rfx/AwardPanel.jsx',
+        'src/pages-v2/rfx/AwardPanel/components/ItemAwardForm.jsx',
         'src/pages-v2/rfx/ComplianceAwardPill.jsx',
         'src/services/data/mock/updateComplianceReadModel.js',
         'src/services/transitions/inventoryConfig.js'

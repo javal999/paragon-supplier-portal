@@ -229,7 +229,7 @@ export const inventoryCapacityEn = {
   'inv.refusal.notConnected':
     'This supplier shares stock by template or on screen, not by system sync.',
   'inv.refusal.reasonRequired': 'A week below the LTP needs a reason.',
-  'inv.refusal.noteRequired': 'The reason "Other" needs a note.',
+  'inv.refusal.noteRequired': 'The reason you chose needs a note.',
   'inv.refusal.missingWeek': 'Every week of the 13-week horizon needs an allocation.',
   'inv.refusal.notSupplied': 'Access can only cover materials this supplier supplies.',
   'inv.refusal.batchTotal': 'Batch quantities must add up to the stock on hand.',
@@ -296,20 +296,22 @@ export const inventoryCapacityEn = {
   'inv.capacity.lastSubmitted': 'Last submitted',
   'inv.capacity.neverSubmitted': 'Not submitted yet',
   'inv.capacity.materials': 'Materials:',
-  'inv.capacity.gapWeeks': 'Weeks below the LTP: {{count}}',
   'inv.capacity.notStated': 'Not stated',
+  // CAP-1 B-04 — a filter left no week column in this supplier group.
+  'inv.capacity.grid.noWeekMatches': 'No week matches the filters',
   'inv.capacity.col.week': 'Week of',
-  'inv.capacity.col.allocated': 'Allocated ({{uom}})',
-  'inv.capacity.col.upside': 'Additional capacity ({{uom}})',
+  // BL-186 (G-02) — a grid row's name; the unit follows it in grey.
+  'inv.capacity.row.allocated': 'Allocated',
+  'inv.capacity.row.upside': 'Additional capacity',
   'inv.capacity.upsideHelp':
     'Additional capacity is what you could give PTI on request, above the capacity you allocate. Optional. BE = capacity + additional capacity.',
   'inv.capacity.upsideHelpPti':
     'Additional capacity is what the supplier could give PTI on request, above its allocation. BE = capacity + additional capacity.',
-  'inv.capacity.col.gap': 'Short by ({{uom}})',
+  'inv.capacity.row.gap': 'Short by',
   'inv.capacity.col.reason': 'Reason',
   // BL-133 (ENG-D18) — the LTP against capacity and BE.
-  'inv.capacity.col.ltp': 'LTP, current forecast ({{uom}})',
-  'inv.capacity.col.be': 'BE = capacity + additional ({{uom}})',
+  'inv.capacity.row.ltp': 'LTP, current forecast',
+  'inv.capacity.row.be': 'BE = capacity + additional',
   'inv.capacity.col.ltpCheck': 'LTP against capacity',
   'inv.capacity.ltpHelp':
     'LTP is PTI’s current forecast for the materials of this group, added up per week. It is the demand this page checks. Above your capacity it needs the additional capacity; above BE (capacity + additional capacity) it cannot be supplied. Confirm capacity here before you submit the LTP on Forecast & commitments.',
@@ -317,12 +319,19 @@ export const inventoryCapacityEn = {
     'LTP is the current forecast for the group’s materials, added up per week, against the supplier’s capacity and BE (capacity + additional capacity).',
   'inv.capacity.pti.bannerRed':
     'Supplier material groups with a week where the LTP cannot be supplied: {{count}}',
+  // CAP-3 BR-02 — the accordion header counts each non-green state.
   'inv.capacity.ltpWeeks.cannotSupply': 'Cannot be supplied: {{count}} wk',
-  'inv.capacity.ltpWeeks.needsAdditional': 'Needs additional capacity: {{count}} wk',
+  'inv.capacity.ltpWeeks.needsAdditional': 'Needs additional: {{count}} wk',
+  'inv.capacity.ltpWeeks.confirmedAdditional': 'Confirmed additional: {{count}} wk',
   'inv.ltp.level.unconfirmed': 'Capacity not confirmed',
   'inv.ltp.level.within': 'Within capacity',
-  'inv.ltp.level.needsAdditional': 'Needs the additional capacity',
+  'inv.ltp.level.needsAdditional': 'Needs additional capacity',
   'inv.ltp.level.cannotSupply': 'Cannot be supplied',
+  // CAP-3 BR-03 (CAP-D1) — an amber week, before and after the supplier confirms.
+  'inv.ltp.upside.needsConfirmation': 'Needs confirmation',
+  'inv.ltp.upside.confirmed': 'Confirmed additional',
+  'inv.capacity.confirmUpside': 'Confirm additional capacity',
+  'inv.capacity.confirmUpsideFor': 'Confirm additional capacity for the week of {{week}}',
   'inv.capacity.allocatedFor': 'Allocated capacity for the week of {{week}}',
   'inv.capacity.upsideFor': 'Additional capacity for the week of {{week}}',
   'inv.capacity.reasonFor': 'Reason for the week of {{week}}',
@@ -333,6 +342,8 @@ export const inventoryCapacityEn = {
   'inv.capacity.reason.material': 'Material',
   'inv.capacity.reason.logistics': 'Logistics',
   'inv.capacity.reason.quality': 'Quality',
+  'inv.capacity.reason.force-majeure': 'Force Majeure',
+  'inv.capacity.reason.discontinued': 'Discontinued',
   'inv.capacity.reason.other': 'Other',
   // MR-9 BR-05 — the starter reasons for closing an alert (list `alertClose`).
   'inv.alerts.closeReason.calloff-raised': 'Call-off raised or brought forward',
@@ -350,7 +361,8 @@ export const inventoryCapacityEn = {
   'inv.capacity.refusal.missingWeek': 'Enter an allocation for the week of {{week}}.',
   'inv.capacity.refusal.invalidQuantity': 'Enter a valid quantity for the week of {{week}}.',
   'inv.capacity.refusal.reasonRequired': 'The week of {{week}} is below the LTP. Choose a reason.',
-  'inv.capacity.refusal.noteRequired': 'Add a note for the reason "Other" in the week of {{week}}.',
+  'inv.capacity.refusal.noteRequired':
+    'Add a note for the reason in the week of {{week}}: Force Majeure, Discontinued and Other need one.',
   'inv.capacity.submit': 'Submit capacity',
   'inv.capacity.toast.submitted': 'Capacity submitted',
 
@@ -378,9 +390,17 @@ export const inventoryCapacityEn = {
     'No supplier lead time on record: risk uses the day bands until the master data is fixed',
   'inv.alerts.rule.callOffNotCovered':
     'A confirmed call-off due within the lead time is larger than the supplier stock plus production due before the need date',
+  'inv.alerts.rule.supplyDiscontinued':
+    'The supplier marked this material Discontinued: it needs another source',
+  'inv.alerts.rule.blanketPoRunOut':
+    'A blanket PO runs out soon: raise the next PO by its "new PO needed by" week',
+  'inv.alerts.rule.demandAnticipationUnabsorbed':
+    'Consumption below demand anticipation left an excess the next horizon cannot absorb',
   'inv.alerts.openInventory': 'Open inventory',
   'inv.alerts.openCapacity': 'Open capacity',
   'inv.alerts.openCommitments': 'Open commitments & gaps',
+  'inv.alerts.openBlanketPo': 'Open blanket PO',
+  'inv.alerts.openDemandAnticipation': 'Open demand anticipation',
   'inv.alerts.close': 'Close alert',
   'inv.alerts.closeFor': 'Close alert: {{rule}} for {{subject}}',
   'inv.alerts.closeTitle': 'Close alert',
@@ -410,6 +430,11 @@ export const inventoryCapacityEn = {
   'inv.alerts.sup.rule.leadTimeMissing': 'PTI has no lead time on record for this material',
   'inv.alerts.sup.rule.callOffNotCovered':
     'A confirmed call-off is larger than your declared stock and production',
+  'inv.alerts.sup.rule.supplyDiscontinued':
+    'You marked this material Discontinued: PTI is finding another source',
+  'inv.alerts.sup.rule.blanketPoRunOut': 'A PTI blanket PO with you runs out soon',
+  'inv.alerts.sup.rule.demandAnticipationUnabsorbed':
+    'PTI’s demand anticipation for you carries an excess the next horizon cannot absorb',
 
   'inv.group.MG-01': 'Surfactants and cleansing actives',
   'inv.group.MG-02': 'Emollients, oils and esters',
@@ -676,7 +701,7 @@ export const inventoryCapacityId = {
   'inv.refusal.notConnected':
     'Pemasok ini membagikan stok lewat templat atau layar, bukan sinkronisasi sistem.',
   'inv.refusal.reasonRequired': 'Minggu di bawah LTP memerlukan alasan.',
-  'inv.refusal.noteRequired': 'Alasan "Lainnya" memerlukan catatan.',
+  'inv.refusal.noteRequired': 'Alasan yang dipilih memerlukan catatan.',
   'inv.refusal.missingWeek': 'Setiap minggu dalam cakupan 13 minggu memerlukan alokasi.',
   'inv.refusal.notSupplied': 'Akses hanya dapat mencakup material yang dipasok pemasok ini.',
   'inv.refusal.batchTotal': 'Jumlah kuantitas batch harus sama dengan stok tersedia.',
@@ -744,20 +769,21 @@ export const inventoryCapacityId = {
   'inv.capacity.lastSubmitted': 'Terakhir dikirim',
   'inv.capacity.neverSubmitted': 'Belum dikirim',
   'inv.capacity.materials': 'Material:',
-  'inv.capacity.gapWeeks': 'Minggu di bawah LTP: {{count}}',
   'inv.capacity.notStated': 'Belum dinyatakan',
+  'inv.capacity.grid.noWeekMatches': 'Tidak ada minggu yang cocok dengan filter',
   'inv.capacity.col.week': 'Minggu mulai',
-  'inv.capacity.col.allocated': 'Dialokasikan ({{uom}})',
-  'inv.capacity.col.upside': 'Kapasitas tambahan ({{uom}})',
+  // BL-186 (G-02) — nama baris grid; satuannya menyusul dalam abu-abu.
+  'inv.capacity.row.allocated': 'Dialokasikan',
+  'inv.capacity.row.upside': 'Kapasitas tambahan',
   'inv.capacity.upsideHelp':
     'Kapasitas tambahan adalah kapasitas yang dapat Anda berikan kepada PTI jika diminta, di atas kapasitas yang Anda alokasikan. Opsional. BE = kapasitas + kapasitas tambahan.',
   'inv.capacity.upsideHelpPti':
     'Kapasitas tambahan adalah kapasitas yang dapat diberikan pemasok kepada PTI jika diminta, di atas alokasinya. BE = kapasitas + kapasitas tambahan.',
-  'inv.capacity.col.gap': 'Kurang ({{uom}})',
+  'inv.capacity.row.gap': 'Kurang',
   'inv.capacity.col.reason': 'Alasan',
   // BL-133 (ENG-D18) — LTP terhadap kapasitas dan BE.
-  'inv.capacity.col.ltp': 'LTP, prakiraan saat ini ({{uom}})',
-  'inv.capacity.col.be': 'BE = kapasitas + tambahan ({{uom}})',
+  'inv.capacity.row.ltp': 'LTP, prakiraan saat ini',
+  'inv.capacity.row.be': 'BE = kapasitas + tambahan',
   'inv.capacity.col.ltpCheck': 'LTP terhadap kapasitas',
   'inv.capacity.ltpHelp':
     'LTP adalah prakiraan PTI saat ini untuk material kelompok ini, dijumlahkan per minggu. Inilah kebutuhan yang diperiksa halaman ini. Di atas kapasitas Anda, LTP memerlukan kapasitas tambahan; di atas BE (kapasitas + kapasitas tambahan), LTP tidak dapat dipenuhi. Konfirmasikan kapasitas di sini sebelum Anda mengirim LTP di Prakiraan & komitmen.',
@@ -765,12 +791,17 @@ export const inventoryCapacityId = {
     'LTP adalah prakiraan saat ini untuk material kelompok, dijumlahkan per minggu, dibandingkan kapasitas pemasok dan BE (kapasitas + kapasitas tambahan).',
   'inv.capacity.pti.bannerRed':
     'Kelompok material pemasok dengan minggu yang LTP-nya tidak dapat dipenuhi: {{count}}',
-  'inv.capacity.ltpWeeks.cannotSupply': 'Tidak dapat dipenuhi: {{count}} mgg',
-  'inv.capacity.ltpWeeks.needsAdditional': 'Perlu kapasitas tambahan: {{count}} mgg',
+  'inv.capacity.ltpWeeks.cannotSupply': 'Tidak dapat dipenuhi: {{count}} mg',
+  'inv.capacity.ltpWeeks.needsAdditional': 'Perlu tambahan: {{count}} mg',
+  'inv.capacity.ltpWeeks.confirmedAdditional': 'Tambahan dikonfirmasi: {{count}} mg',
   'inv.ltp.level.unconfirmed': 'Kapasitas belum dikonfirmasi',
   'inv.ltp.level.within': 'Dalam kapasitas',
   'inv.ltp.level.needsAdditional': 'Perlu kapasitas tambahan',
   'inv.ltp.level.cannotSupply': 'Tidak dapat dipenuhi',
+  'inv.ltp.upside.needsConfirmation': 'Perlu konfirmasi',
+  'inv.ltp.upside.confirmed': 'Tambahan dikonfirmasi',
+  'inv.capacity.confirmUpside': 'Konfirmasi kapasitas tambahan',
+  'inv.capacity.confirmUpsideFor': 'Konfirmasi kapasitas tambahan untuk minggu mulai {{week}}',
   'inv.capacity.allocatedFor': 'Kapasitas dialokasikan untuk minggu mulai {{week}}',
   'inv.capacity.upsideFor': 'Kapasitas tambahan untuk minggu mulai {{week}}',
   'inv.capacity.reasonFor': 'Alasan untuk minggu mulai {{week}}',
@@ -781,6 +812,8 @@ export const inventoryCapacityId = {
   'inv.capacity.reason.material': 'Material',
   'inv.capacity.reason.logistics': 'Logistik',
   'inv.capacity.reason.quality': 'Kualitas',
+  'inv.capacity.reason.force-majeure': 'Keadaan kahar',
+  'inv.capacity.reason.discontinued': 'Dihentikan',
   'inv.capacity.reason.other': 'Lainnya',
   'inv.alerts.closeReason.calloff-raised': 'Call-off dibuat atau dimajukan',
   'inv.alerts.closeReason.po-raised': 'PO dibuat',
@@ -797,7 +830,7 @@ export const inventoryCapacityId = {
   'inv.capacity.refusal.invalidQuantity': 'Isi kuantitas yang valid untuk minggu mulai {{week}}.',
   'inv.capacity.refusal.reasonRequired': 'Minggu mulai {{week}} di bawah LTP. Pilih alasan.',
   'inv.capacity.refusal.noteRequired':
-    'Tambahkan catatan untuk alasan "Lainnya" pada minggu mulai {{week}}.',
+    'Tambahkan catatan untuk alasan pada minggu mulai {{week}}: Keadaan kahar, Dihentikan, dan Lainnya memerlukannya.',
   'inv.capacity.submit': 'Kirim kapasitas',
   'inv.capacity.toast.submitted': 'Kapasitas terkirim',
 
@@ -827,9 +860,17 @@ export const inventoryCapacityId = {
     'Waktu tunggu pemasok belum tercatat: risiko memakai pita hari sampai data induk diperbaiki',
   'inv.alerts.rule.callOffNotCovered':
     'Call-off terkonfirmasi yang jatuh tempo dalam waktu tunggu melebihi stok pemasok ditambah produksi yang selesai sebelum tanggal kebutuhan',
+  'inv.alerts.rule.supplyDiscontinued':
+    'Pemasok menandai material ini Dihentikan: perlu sumber lain',
+  'inv.alerts.rule.blanketPoRunOut':
+    'PO induk akan segera habis: buat PO berikutnya sebelum minggu "PO baru diperlukan paling lambat"',
+  'inv.alerts.rule.demandAnticipationUnabsorbed':
+    'Pemakaian di bawah antisipasi permintaan menyisakan kelebihan yang tidak dapat diserap horizon berikutnya',
   'inv.alerts.openInventory': 'Buka stok',
   'inv.alerts.openCapacity': 'Buka kapasitas',
   'inv.alerts.openCommitments': 'Buka komitmen & selisih',
+  'inv.alerts.openBlanketPo': 'Buka PO induk',
+  'inv.alerts.openDemandAnticipation': 'Buka antisipasi permintaan',
   'inv.alerts.close': 'Tutup peringatan',
   'inv.alerts.closeFor': 'Tutup peringatan: {{rule}} untuk {{subject}}',
   'inv.alerts.closeTitle': 'Tutup peringatan',
@@ -860,6 +901,11 @@ export const inventoryCapacityId = {
   'inv.alerts.sup.rule.leadTimeMissing': 'PTI belum mencatat waktu tunggu untuk material ini',
   'inv.alerts.sup.rule.callOffNotCovered':
     'Call-off terkonfirmasi melebihi stok dan produksi yang Anda laporkan',
+  'inv.alerts.sup.rule.supplyDiscontinued':
+    'Anda menandai material ini Dihentikan: PTI sedang mencari sumber lain',
+  'inv.alerts.sup.rule.blanketPoRunOut': 'PO induk PTI dengan Anda akan segera habis',
+  'inv.alerts.sup.rule.demandAnticipationUnabsorbed':
+    'Antisipasi permintaan PTI untuk Anda memuat kelebihan yang tidak dapat diserap horizon berikutnya',
 
   'inv.group.MG-01': 'Surfaktan dan bahan pembersih',
   'inv.group.MG-02': 'Emolien, minyak, dan ester',

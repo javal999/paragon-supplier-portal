@@ -25,7 +25,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join, sep } from 'node:path';
 import { isJsxFile, isSourceFile, isTestFile } from './sourceFiles';
 
 /**
@@ -91,3 +91,65 @@ export const pageFolderSource = (pagesDir, page) =>
   pageFolderFiles(pagesDir, page)
     .map((f) => readFileSync(join(pagesDir, f), 'utf8'))
     .join('\n');
+
+// ── DERIVED PAGE-FOLDER MEMBERSHIP ─────────────────────────────────────────
+// Until 2026-10-08 each guard that scans pages carried one hand-written line
+// per split page (`expect(scanned).toContain('<Page>/index.jsx')`). Every split
+// appended to the same lines, so parallel splits conflicted on them, and a split
+// that forgot its line was not checked at all. The guards now DERIVE the page
+// folders from the tree with the functions below and assert that every file of
+// every page folder is in their population, so a split adds no line to any
+// guard (PAGE-SPLIT-GUIDE, "Guards and tests that name a file").
+//
+// These read the tree themselves (`readdirSync` + `isPageFolder`), NOT through
+// `pageFiles`, so a `pageFiles` that stopped descending into page folders is
+// caught by name instead of agreeing with itself (CLAUDE.md §86: a gate must
+// not derive its population through the code it is probing).
+
+/**
+ * The direct subfolders of `pagesDir`, split into page folders (they hold an
+ * `index.jsx` / `index.tsx`) and feature folders (`contracts/`, `rfqs/`, …).
+ * Direct children only: that is where a page lives (PAGE-SPLIT-GUIDE, "Target
+ * shape"); a component split inside a feature folder is not a page.
+ * @param {string} pagesDir
+ * @returns {{ pages: string[], features: string[] }}  folder names, sorted
+ */
+export const pagesDirFolders = (pagesDir) => {
+  const dirs = readdirSync(pagesDir)
+    .filter((name) => statSync(join(pagesDir, name)).isDirectory())
+    .sort();
+  return {
+    pages: dirs.filter((d) => isPageFolder(join(pagesDir, d))),
+    features: dirs.filter((d) => !isPageFolder(join(pagesDir, d)))
+  };
+};
+
+/**
+ * Every page folder under `pagesDir` (`'BuyerSourcing'`, `'SupplierShipments'`, …).
+ * @param {string} pagesDir
+ * @returns {string[]}
+ */
+export const pageFolders = (pagesDir) => pagesDirFolders(pagesDir).pages;
+
+/**
+ * Every non-test source file under ONE direct subfolder of `pagesDir`, page
+ * folder or not, relative to `pagesDir` and sorted. The guards use it as the
+ * EXPECTED side: for a page folder, every file must be in their population;
+ * for a feature folder, none may be.
+ *
+ * ⚠️ Deliberately a second walk (`readdirSync` recursive), not `filesUnder`:
+ * `pageFiles` and `pageFolderFiles` both walk through `filesUnder`, so if the
+ * expected side used it too, a `filesUnder` that skipped a subfolder would
+ * shrink both sides alike and every guard would stay green (CLAUDE.md §86).
+ * @param {string} pagesDir
+ * @param {string} folder
+ * @returns {string[]}
+ */
+export const folderSourceFiles = (pagesDir, folder) =>
+  readdirSync(join(pagesDir, folder), { recursive: true, encoding: 'utf8' })
+    .map((rel) => `${folder}/${rel.split(sep).join('/')}`)
+    .filter((rel) => {
+      const name = basename(rel);
+      return isSourceFile(name) && !isTestFile(name) && statSync(join(pagesDir, rel)).isFile();
+    })
+    .sort();

@@ -3,12 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import SubTabs from '@components/ui-v2/SubTabs';
 import { fieldClass } from '../const';
+import ReasonFilter from '../../inventory/ReasonFilter';
 /** @import { ForecastStream } from '@services/sdc/types' */
 
 /**
- * The stream tabs, the supplier and material filters, and the links to the
- * supplier follow-up list and the earlier responses. Switching stream clears
- * both filters (the page's `onStreamChange`).
+ * The stream tabs, the supplier, material and reason filters, and the links to
+ * the supplier follow-up list and the earlier responses. Switching stream
+ * clears every filter (the page's `onStreamChange`). CAP-5 — the Reason filter
+ * narrows the exception list by the supplier's shortfall reason.
  * @type {React.FC<{
  *   activeStream: ForecastStream;
  *   onStreamChange: (s: ForecastStream) => void;
@@ -18,6 +20,9 @@ import { fieldClass } from '../const';
  *   material: string;
  *   onMaterialChange: (code: string) => void;
  *   materials: readonly string[];
+ *   reasons: readonly string[];
+ *   onReasonsChange: (next: string[]) => void;
+ *   reasonOptions: readonly { id: string; count: number }[];
  * }>}
  */
 const CommitmentFilters = ({
@@ -28,7 +33,10 @@ const CommitmentFilters = ({
   suppliers,
   material,
   onMaterialChange,
-  materials
+  materials,
+  reasons,
+  onReasonsChange,
+  reasonOptions
 }) => {
   const { t } = useTranslation();
   return (
@@ -76,6 +84,13 @@ const CommitmentFilters = ({
             ))}
           </select>
         </label>
+        <ReasonFilter
+          list="commitmentShortfall"
+          options={reasonOptions}
+          value={reasons}
+          onChange={onReasonsChange}
+          testId="fc-reason-filter"
+        />
         <Link to="/buyer/chase" className="text-sm text-action-hover hover:underline self-center">
           {t('fc.pti.gaps.followUp')}
         </Link>

@@ -91,6 +91,7 @@ import BuyerSafetyStock from '@pages-v2/BuyerSafetyStock';
 import BuyerOrderPlan from '@pages-v2/BuyerOrderPlan';
 import BuyerThisWeek from '@pages-v2/BuyerThisWeek';
 import BuyerReschedule from '@pages-v2/BuyerReschedule';
+import BuyerDemandAnticipation from '@pages-v2/BuyerDemandAnticipation';
 import BuyerStabilise from '@pages-v2/BuyerStabilise';
 import BuyerDataHealth from '@pages-v2/BuyerDataHealth';
 import BuyerDemandForecast from '@pages-v2/BuyerDemandForecast';
@@ -180,6 +181,8 @@ const AppRouter = () => {
             <Route path="/buyer/order-plan" element={<BuyerOrderPlan />} />
             {/* REQ-E14-13 — reschedule or cancel open orders for warehouse relief (SIMULATED). */}
             <Route path="/buyer/reschedule" element={<BuyerReschedule />} />
+            {/* CAP-10 — demand anticipation, frozen per 4-week horizon (sample data). */}
+            <Route path="/buyer/demand-anticipation" element={<BuyerDemandAnticipation />} />
             {/* REQ-E14-06 — stabilise and publish the plan to suppliers (SIMULATED; never shown to a supplier). */}
             <Route path="/buyer/stabilise" element={<BuyerStabilise />} />
             {/* REQ-E14-01 — data health of the engine's inputs (SIMULATED). */}

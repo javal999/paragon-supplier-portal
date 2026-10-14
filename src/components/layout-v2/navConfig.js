@@ -23,6 +23,7 @@ import {
   FileText,
   Gauge,
   KeyRound,
+  LockKeyhole,
   Layers,
   Link2,
   ListChecks,
@@ -113,7 +114,13 @@ export const PTI_NAV = [
       { labelKey: 'hub.nav.pti.whatToOrder', icon: Container, path: '/buyer/order-plan' },
       { labelKey: 'hub.nav.pti.makeRoom', icon: CalendarSync, path: '/buyer/reschedule' },
       { labelKey: 'hub.nav.pti.publishToSuppliers', icon: Anchor, path: '/buyer/stabilise' },
-      { labelKey: 'hub.nav.pti.supplierResponses', icon: ChartLine, path: '/buyer/collaboration' }
+      { labelKey: 'hub.nav.pti.supplierResponses', icon: ChartLine, path: '/buyer/collaboration' },
+      // CAP-10 — the demand anticipation the planner freezes per 4-week horizon.
+      {
+        labelKey: 'hub.nav.pti.demandAnticipation',
+        icon: LockKeyhole,
+        path: '/buyer/demand-anticipation'
+      }
     ]
   },
   {

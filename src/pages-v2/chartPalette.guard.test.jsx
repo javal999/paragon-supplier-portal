@@ -5,7 +5,13 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
 import { buildRepoProgram } from '@lib/storedFieldGate/derive';
 import { isTestFile, scriptKindOf } from '@test/sourceFiles';
-import { pageFiles as pagesOf } from '@test/pageFiles';
+import {
+  folderSourceFiles,
+  pageFiles as pagesOf,
+  pageFolderSource,
+  pagesDirFolders
+} from '@test/pageFiles';
+import { routedPageFiles } from '@test/routerPages';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DP2-PALETTE-01 — chart colour comes from the centralized palette
@@ -498,7 +504,7 @@ describe('⚠️ DP2-PALETTE-01 · THE INSTRUMENT ITSELF', () => {
     expect(files.length).toBeGreaterThan(200);
     // known-present, three directories deep and across the pages/components split
     expect(files).toContain('lib/chartPalette.js');
-    expect(files).toContain('pages-v2/BuyerRisk.jsx');
+    expect(files).toContain('pages-v2/BuyerRisk/components/WorldMap.jsx');
     expect(files).toContain('components/ui-v2/ScoreBadge.jsx');
     expect(files).toContain('pages-v2/process-flows/FlowDiagram.jsx');
     // known-ABSENT: specs are excluded, and a fabrication is not present
@@ -527,7 +533,7 @@ describe('⚠️ DP2-PALETTE-01 · THE INSTRUMENT ITSELF', () => {
   it('⚠️ AND THE PAINTING SUBSET IS NON-EMPTY AND DERIVED', () => {
     const painting = paintingFiles();
     expect(painting.length).toBeGreaterThan(3);
-    expect(painting).toContain('pages-v2/BuyerRisk.jsx');
+    expect(painting).toContain('pages-v2/BuyerRisk/components/WorldMap.jsx');
     expect(painting).toContain('components/ui-v2/ScoreBadge.jsx');
     // a page with no paint of any kind must NOT be in it
     expect(painting).not.toContain('lib/chartPalette.js');
@@ -582,7 +588,7 @@ describe('DP2-PALETTE-01 — no raw hex in any paint position, tree-wide', () =>
     // Not an exemption — a measurement. They are hex, they are page-local, and
     // no paint position consumes them. If one ever does, this file says so with
     // nobody editing it.
-    const chrome = readSrc('pages-v2/SupplierWhatsApp.jsx');
+    const chrome = pageFolderSource(join(SRC, 'pages-v2'), 'SupplierWhatsApp');
     expect(chrome, 'the control is vacuous if the consts have gone').toMatch(
       /const WHATSAPP_BG = '#/
     );
@@ -596,7 +602,7 @@ describe('DP2-PALETTE-01 — no raw hex in any paint position, tree-wide', () =>
     for (const f of [
       'pages-v2/BuyerScorecard.jsx',
       'pages-v2/SupplierPerformance.jsx',
-      'pages-v2/SupplierDashboard.jsx'
+      'pages-v2/SupplierDashboard/components/GradeBadge.jsx'
     ]) {
       const src = readSrc(f);
       // The declaration in EITHER form: TS `GRADE_TONE: Record<Grade, …>` or, once
@@ -792,16 +798,20 @@ describe('⚠️ DP2-PALETTE-01 · A HEX REACHED THROUGH A MEMBER EXPRESSION (M5
 // DP2-BUTTON-01 (Ops #11 SEAT 2): an Export is a secondary / alternative action
 // per DP-2 — it must never occupy the BulkActionsBar `primary` slot.
 //
-// CARVE-OUT: BuyerCompliance.jsx is the registered fixture carve-out
-// (COMPLIANCE-CARVEOUT-01, docs/findings.md) landing at R2.2.
+// No carve-out. `BuyerCompliance.jsx` was one (COMPLIANCE-CARVEOUT-01), closed
+// at I3.2 (docs/findings.md); after the Phase 5 split the entry named a file
+// that no longer existed, so it excluded nothing. Retired 2026-10-13.
 // ─────────────────────────────────────────────────────────────────────────────
 /**
  * Every page, single-file AND split into a folder (`SupplierRFQs/index.jsx`,
  * its `components/` and `hooks/`). The top-level `readdirSync` this replaced
  * stopped at a page folder, so a split page left the population (Phase 5).
+ * PLUS every file a route renders (`routedPageFiles`): a routed page that lives
+ * in a feature folder (`admin/AdminSuppliers.jsx`, `admin/AdminRuleValues/`,
+ * `materials/BuyerTradeNames.jsx`) is a page, and `pagesOf` alone left it out.
  * @returns {string[]}
  */
-const pageFiles = () => pagesOf(here);
+const pageFiles = () => [...new Set([...pagesOf(here), ...routedPageFiles(here)])].sort();
 
 /**
  * @param {string} file
@@ -809,12 +819,8 @@ const pageFiles = () => pagesOf(here);
  */
 const readPage = (file) => readFileSync(join(here, file), 'utf8');
 
-const EXPORT_CARVE_OUT = new Set(['BuyerCompliance.jsx']);
 /** @returns {string[]} */
-const exportScanned = () =>
-  pageFiles()
-    .filter((f) => !EXPORT_CARVE_OUT.has(f))
-    .sort();
+const exportScanned = () => pageFiles();
 
 /** A BulkActionsBar `primary` slot whose label is an Export action. */
 const EXPORT_IN_PRIMARY = /primary=\{\{\s*label:\s*['"][^'"]*Export/gi;
@@ -828,40 +834,58 @@ describe('DP2-BUTTON-01 — Export never occupies the primary (action-blue) slot
     const scanned = exportScanned();
     expect(scanned.length).toBeGreaterThan(20);
     expect(scanned).toContain('BuyerAnalytics.jsx');
-    // A page split into a folder is still a page (PAGE-SPLIT-GUIDE).
-    expect(scanned).toContain('SupplierRFQs/index.jsx');
-    expect(scanned).toContain('BuyerSourcing/index.jsx');
-    expect(scanned).toContain('BuyerSourcing/components/RfqSidePanel.jsx');
-    expect(scanned).toContain('SupplierShipments/index.jsx');
-    expect(scanned).toContain('SupplierShipments/components/ShipmentsList.jsx');
-    expect(scanned).toContain('BuyerCommitments/index.jsx');
-    expect(scanned).toContain('BuyerCommitments/components/ExceptionRow.jsx');
-    expect(scanned).toContain('SupplierRegistration/index.jsx');
-    expect(scanned).toContain('SupplierRegistration/components/ReviewStep.jsx');
-    expect(scanned).toContain('SupplierRegistration/hooks/useRegistrationWizard.js');
-    expect(scanned).toContain('BuyerContracts/index.jsx');
-    expect(scanned).toContain('BuyerContracts/components/ContractsTable.jsx');
-    expect(scanned).not.toContain('contracts/RaisedElsewhere.jsx');
-    expect(scanned).toContain('BuyerReschedule/index.jsx');
-    expect(scanned).toContain('BuyerReschedule/components/FillChart.jsx');
-    expect(scanned).toContain('BuyerReschedule/hooks/useProposalActions.js');
-    expect(scanned).toContain('SupplierForecasts/index.jsx');
-    expect(scanned).toContain('SupplierForecasts/components/ShipmentCard.jsx');
-    expect(scanned).toContain('SupplierForecasts/utils.js');
-    expect(scanned).not.toContain('forecasts/forecastDisplay.jsx');
-    expect(scanned).toContain('BuyerOrderPlan/index.jsx');
-    expect(scanned).toContain('BuyerOrderPlan/components/RecActionCell.jsx');
-    expect(scanned).not.toContain('BuyerOrderPlan.jsx');
-    expect(scanned).toContain('BuyerStabilise/index.jsx');
-    expect(scanned).toContain('BuyerStabilise/components/PublishSection.jsx');
-    expect(scanned).toContain('BuyerStabilise/hooks/usePublishChecklist.js');
-    expect(scanned).toContain('SupplierForecastCommitments/index.jsx');
-    expect(scanned).toContain('SupplierForecastCommitments/components/VersionSection.jsx');
-    expect(scanned).not.toContain('forecasts/forecastDisplay.jsx');
-    expect(scanned).not.toContain('shipments/CarrierPicker.jsx');
-    expect(scanned).not.toContain('rfqs/TieredQuoteForm.jsx');
-    expect(scanned).not.toContain('BuyerCompliance.jsx');
+    // The former carve-out is scanned like any page (COMPLIANCE-CARVEOUT-01 closed).
+    expect(scanned).toContain('BuyerCompliance/index.jsx');
+    // Routed pages in feature folders are scanned (routedPageFiles).
+    expect(scanned).toContain('admin/AdminSuppliers.jsx');
+    expect(scanned).toContain('admin/AdminRuleValues/components/RuleRow.jsx');
+    expect(scanned).toContain('materials/BuyerTradeNames.jsx');
+    // A page that does not exist stays out.
     expect(scanned).not.toContain('BuyerNotAChartPage.tsx');
+  });
+
+  // ── Page folders are DERIVED from the tree (PAGE-SPLIT-GUIDE). A split adds
+  // no line here: `pagesDirFolders` finds every folder holding an `index.jsx`,
+  // and every file in each one must be in the scanned population. It reads the
+  // tree itself, not through `pageFiles`, so a `pageFiles` that stopped
+  // descending into page folders goes red by the page's name.
+  const { pages: PAGE_FOLDERS, features: FEATURE_FOLDERS } = pagesDirFolders(here);
+
+  it('⚠️ THE PAGE FOLDERS ARE DERIVED — by membership, never by count', () => {
+    expect(PAGE_FOLDERS.length).toBeGreaterThan(0);
+    expect(PAGE_FOLDERS).toContain('BuyerSourcing');
+    expect(PAGE_FOLDERS).toContain('SupplierShipments');
+    // Known-false: a feature folder (no index) is not a page.
+    expect(PAGE_FOLDERS).not.toContain('contracts');
+    expect(FEATURE_FOLDERS).toContain('contracts');
+    expect(FEATURE_FOLDERS).toContain('shipments');
+  });
+
+  it.each(PAGE_FOLDERS)('%s/ — every shipped file of the page folder is scanned', (page) => {
+    const scanned = new Set(exportScanned());
+    const files = folderSourceFiles(here, page);
+    expect(files).toContain(`${page}/index.jsx`);
+    const missing = files.filter((f) => !scanned.has(f));
+    expect(missing, `not scanned: ${missing.join(', ')}`).toEqual([]);
+  });
+
+  it('⚠️ KNOWN-BAD: no feature-folder file is scanned as a page, and no split page left its old file', () => {
+    const scanned = exportScanned();
+    const featureFiles = FEATURE_FOLDERS.flatMap((d) => folderSourceFiles(here, d));
+    // Not vacuous: these are real files the scan must leave out.
+    expect(featureFiles).toContain('contracts/RaisedElsewhere.jsx');
+    expect(featureFiles).toContain('shipments/CarrierPicker.jsx');
+    expect(featureFiles).toContain('rfqs/TieredQuoteForm.jsx');
+    expect(featureFiles).toContain('forecasts/forecastDisplay.jsx');
+    // A feature-folder file is scanned only when a route renders it.
+    const routed = new Set(routedPageFiles(here));
+    expect(routed.has('contracts/RaisedElsewhere.jsx')).toBe(false);
+    const leaked = scanned.filter((f) => featureFiles.includes(f) && !routed.has(f));
+    expect(leaked, `feature files scanned as pages: ${leaked.join(', ')}`).toEqual([]);
+    // A split page leaves no `<Page>.jsx` beside its folder.
+    const folders = new Set(PAGE_FOLDERS);
+    const stale = scanned.filter((f) => folders.has(f.replace(/\.[jt]sx$/, '')));
+    expect(stale, `old page files beside their folder: ${stale.join(', ')}`).toEqual([]);
   });
 
   for (const file of exportScanned()) {

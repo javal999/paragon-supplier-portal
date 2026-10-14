@@ -13,6 +13,8 @@
 //                           below demand (REQ-E08-04, §3.6);
 //   · commitmentShortfall — `COMMITMENT_REASONS` (forecastConfig.js): a
 //                           commitment below forecast (REQ-E06-02, §3.6).
+//   Both shortfall lists gained Force Majeure and Discontinued (CAP-4, BL-173);
+//   on them those two and Other need a note (`shortfallReasonNeedsNote`).
 // A fifth list was added new, not replaced (SC Hub Material, MAT A3):
 //   · alertClose          — why a planner closes an alert (MR-9 BR-04, BR-05).
 //                           "Other" needs a note. Read by the alert close
@@ -72,8 +74,26 @@ export const isReasonList = (v) =>
 export const STARTER_REASON_CODES = Object.freeze({
   poAdjust: Object.freeze(['capacity', 'material', 'logistics', 'quality', 'other']),
   poReject: Object.freeze(['date', 'quantity', 'quality']),
-  capacityShortfall: Object.freeze(['capacity', 'material', 'logistics', 'quality', 'other']),
-  commitmentShortfall: Object.freeze(['capacity', 'material', 'logistics', 'quality', 'other']),
+  // CAP-4 BR-01 (BL-173) — Force Majeure and Discontinued join both shortfall
+  // lists, before Other.
+  capacityShortfall: Object.freeze([
+    'capacity',
+    'material',
+    'logistics',
+    'quality',
+    'force-majeure',
+    'discontinued',
+    'other'
+  ]),
+  commitmentShortfall: Object.freeze([
+    'capacity',
+    'material',
+    'logistics',
+    'quality',
+    'force-majeure',
+    'discontinued',
+    'other'
+  ]),
   // MR-9 BR-05 — the starter list for closing an alert.
   alertClose: Object.freeze([
     'calloff-raised',
@@ -122,6 +142,35 @@ export const BUILT_IN_RECORD_LABEL_PREFIX = Object.freeze({
 
 /** The code that needs a note with it, on the lists that have one. */
 export const NOTE_REQUIRED_CODE = 'other';
+
+/**
+ * CAP-4 BR-02 (CAP-D8) — on the two SHORTFALL lists (`capacityShortfall`,
+ * `commitmentShortfall`) Force Majeure and Discontinued need a note, like Other.
+ * The other lists keep `NOTE_REQUIRED_CODE` alone. A code the administrator
+ * adds needs no note; renaming a built-in code keeps its rule (the code is
+ * unchanged), and a retired one is refused before the note is asked.
+ */
+export const SHORTFALL_NOTE_REQUIRED_CODES = Object.freeze([
+  'force-majeure',
+  'discontinued',
+  NOTE_REQUIRED_CODE
+]);
+
+/**
+ * Does this shortfall reason need a note? The ONE predicate the capacity rule,
+ * the commitment rules and the supplier forms all read.
+ * @param {unknown} code
+ * @returns {boolean}
+ */
+export const shortfallReasonNeedsNote = (code) =>
+  typeof code === 'string' &&
+  /** @type {readonly string[]} */ (SHORTFALL_NOTE_REQUIRED_CODES).includes(code);
+
+/**
+ * CAP-D2 — the shortfall reason that says the material will not come from this
+ * supplier any more: it raises a "find another source" alert.
+ */
+export const DISCONTINUED_CODE = 'discontinued';
 
 /** A code's shape — also what makes it addressable by the verb. */
 export const REASON_CODE = /^[a-z][a-z0-9-]{1,39}$/;

@@ -159,6 +159,15 @@ describe('SelectField — edge cases', () => {
     );
     expect(screen.getByRole('combobox')).toHaveAttribute('title', long);
   });
+  it('N2: without an explicit ariaLabel, the empty-state button exposes its own text as its name, not the placeholder', () => {
+    renderField(
+      <SelectField options={[]} value={null} onChange={() => {}} placeholder="Pick a supplier" />
+    );
+    // If the placeholder still fell back into aria-label, this query would find nothing —
+    // the aria-label would hide the button's own text.
+    expect(screen.getByRole('button', { name: 'No options available' })).toBeInTheDocument();
+  });
+
   it('duplicate labels are disambiguated via the description line', () => {
     // Not a real corporate name on purpose — a `label:` value in this shape
     // reads to src/data/thirdPartyIdentifiers.test.js as a material identity,
@@ -420,6 +429,55 @@ describe('SelectField — the panel always opens below the trigger, height-cappe
     expect(parseInt(listbox.style.maxHeight, 10)).toBe(120);
   });
 });
+describe("SelectField — the listbox's own scroll does not reposition the panel (N5)", () => {
+  it('ignores a scroll event whose target is inside the listbox itself', () => {
+    renderField(
+      <SelectField
+        options={bigOptions(20)}
+        value={null}
+        onChange={() => {}}
+        placeholder="Pick one"
+      />
+    );
+    const field = screen.getByRole('combobox');
+    field.getBoundingClientRect = () =>
+      /** @type {DOMRect} */ (
+        /** @type {unknown} */ ({
+          top: 100,
+          bottom: 140,
+          left: 0,
+          right: 200,
+          width: 200,
+          height: 40,
+          x: 0,
+          y: 100
+        })
+      );
+    fireEvent.click(field);
+    const listbox = screen.getByRole('listbox');
+    const panel = /** @type {HTMLElement} */ (listbox.parentElement);
+    expect(panel.style.top).toBe('144px');
+
+    // Move the trigger, then scroll the listbox itself (not window/an ancestor). If the
+    // listbox's own scroll still re-ran `update`, the panel would jump to follow the trigger.
+    field.getBoundingClientRect = () =>
+      /** @type {DOMRect} */ (
+        /** @type {unknown} */ ({
+          top: 300,
+          bottom: 340,
+          left: 0,
+          right: 200,
+          width: 200,
+          height: 40,
+          x: 0,
+          y: 300
+        })
+      );
+    fireEvent.scroll(listbox);
+    expect(panel.style.top).toBe('144px');
+  });
+});
+
 describe('SelectField — large datasets are windowed', () => {
   it('renders far fewer option rows than exist once past the virtualize threshold', () => {
     renderField(
@@ -713,6 +771,36 @@ describe('SelectField — onSearch fires only for a query the user typed while o
     expect(onSearch).toHaveBeenCalledTimes(2);
   });
 });
+describe('SelectField — selectedLabel names a value off the current onSearch page (N3)', () => {
+  it('shows the real label, not "Unavailable", when value is valid but not in the current options page', () => {
+    renderField(
+      <SelectField
+        options={bigOptions(20)}
+        value="ghost-but-valid"
+        selectedLabel="Sample Supplier Co"
+        onChange={() => {}}
+        placeholder="Pick one"
+        onSearch={() => {}}
+      />
+    );
+    expect(screen.getByRole('combobox')).toHaveValue('Sample Supplier Co');
+    expect(screen.queryByText(/Unavailable/)).not.toBeInTheDocument();
+  });
+
+  it('still reads as Unavailable when no selectedLabel is given for an off-page value', () => {
+    renderField(
+      <SelectField
+        options={bigOptions(20)}
+        value="ghost"
+        onChange={() => {}}
+        placeholder="Pick one"
+        onSearch={() => {}}
+      />
+    );
+    expect(screen.getByRole('combobox')).toHaveValue('Unavailable: ghost');
+  });
+});
+
 describe('SelectField — review round 2 (G1–G5)', () => {
   it('G1: re-picking the current value does not call onChange (a native <select> never does)', () => {
     const onChange = vi.fn();

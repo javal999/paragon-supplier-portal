@@ -9,6 +9,7 @@ import TableRow from '@components/ui-v2/TableRow';
 /** @import { VerbAvailability } from '@services/transitions/handoff' */
 /** @import { PeriodRow, ReasonLabel, WeekReason } from '../const' */
 import { LtpCheckPill, inputClass } from '../../inventory/inventoryDisplay';
+import { shortfallReasonNeedsNote } from '@services/transitions/reasonCodes';
 
 /**
  * One period of the BL-133 Submit all table: the period, how many lines Submit
@@ -61,7 +62,13 @@ const PeriodSubmitRow = ({
               {check.level === null ? (
                 <span className="text-text-tertiary">{t('fc.sup.week.outsideHorizon')}</span>
               ) : (
-                <LtpCheckPill level={check.level} testId={`fc-week-check-${row.bucket}-${group}`} />
+                // CAP-3 BR-01 / BR-03 — the shared pill; an amber period is
+                // confirmed when every amber week in it is.
+                <LtpCheckPill
+                  level={check.level}
+                  confirmed={check.upsideUnconfirmedWeek === null}
+                  testId={`fc-week-check-${row.bucket}-${group}`}
+                />
               )}
               {check.level === 'unconfirmed' && (
                 <Link to="/supplier/capacity" className="text-action-hover hover:underline">
@@ -93,7 +100,7 @@ const PeriodSubmitRow = ({
                 </option>
               ))}
             </select>
-            {row.wr.reason === 'other' && (
+            {shortfallReasonNeedsNote(row.wr.reason) && (
               <input
                 aria-label={t('fc.sup.week.noteFor', { period: label })}
                 className={inputClass}

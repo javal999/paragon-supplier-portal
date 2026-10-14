@@ -33,8 +33,11 @@ export const supplierPerformanceEn = {
     'Paragon scorecard · Rolling 12-week KPIs · Improvement tracking',
   'supplierPerformance.action.exportReport': 'Export Report',
   // — Toasts —
-  'supplierPerformance.toast.exportQueued.title': 'Performance report queued',
-  'supplierPerformance.toast.exportQueued.desc': 'Downloading performance report PDF...',
+  // #229 — was 'Performance report queued' / 'Downloading performance report
+  // PDF...'. Nothing is queued or downloaded: the button has no export behind it.
+  'supplierPerformance.toast.exportNotAvailable.title': 'Report export not available yet',
+  'supplierPerformance.toast.exportNotAvailable.desc':
+    'Nothing was exported or queued. The performance report PDF will open in a future release.',
   'supplierPerformance.toast.actionSubmitted.title':
     'Action plan not available yet — nothing was submitted for {{kpi}}.',
   'supplierPerformance.toast.actionSubmitted.desc':
@@ -104,8 +107,9 @@ export const supplierPerformanceId = {
     'Kartu skor Paragon · KPI bergulir 12 minggu · Pelacakan peningkatan',
   'supplierPerformance.action.exportReport': 'Ekspor Laporan',
   // — Toasts —
-  'supplierPerformance.toast.exportQueued.title': 'Laporan kinerja dalam antrean',
-  'supplierPerformance.toast.exportQueued.desc': 'Mengunduh PDF laporan kinerja...',
+  'supplierPerformance.toast.exportNotAvailable.title': 'Ekspor laporan belum tersedia',
+  'supplierPerformance.toast.exportNotAvailable.desc':
+    'Tidak ada yang diekspor atau dimasukkan ke antrean. PDF laporan kinerja hadir pada rilis mendatang.',
   'supplierPerformance.toast.actionSubmitted.title':
     'Rencana tindakan belum tersedia — tidak ada yang dikirim untuk {{kpi}}.',
   'supplierPerformance.toast.actionSubmitted.desc':

@@ -193,7 +193,7 @@ describe('PR2 · the population — six converted, two deliberately NOT', () => 
   const read = (rel) => readFileSync(path.resolve(__dirname, rel), 'utf-8');
 
   it('all five BuyerRequisitions sites route through the helper, and none renders `e.message` raw', () => {
-    const src = read('BuyerRequisitions.jsx');
+    const src = pageFolderSource(__dirname, 'BuyerRequisitions');
     // CONTROL — the matcher matches something, and a known-absent does not.
     expect(src).toContain('useDataErrorText');
     expect(src).not.toContain('useNonexistentErrorHook');

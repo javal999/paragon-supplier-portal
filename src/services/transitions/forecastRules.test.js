@@ -36,6 +36,8 @@ import {
   forecastCsv,
   gapColour,
   generatePeriods,
+  moveDemandRefusal,
+  moveShortfall,
   rankExceptions,
   reassignVersion,
   republishVersion,
@@ -182,6 +184,8 @@ describe('REQ-E06-02 BR-04 — below forecast needs a starter reason (the verb c
       'material',
       'logistics',
       'quality',
+      'force-majeure',
+      'discontinued',
       'other'
     ]);
     expect(shortfallRefusal(1000, 1000, undefined)).toBeNull();
@@ -408,7 +412,7 @@ describe('re-publication — unchanged periods keep their commitment, changed on
           materialCode: 'PK-PETB-8801',
           periodBucket: '2026-09-21',
           fromSupplierId: 'sup-007',
-          toSupplierId: 'sup-012',
+          allocations: [{ supplierId: 'sup-012', qty: 49000 }],
           note: 'Split'
         },
         '2026-08-29T02:00:00.000Z'
@@ -430,6 +434,66 @@ describe('re-publication — unchanged periods keep their commitment, changed on
     const week = next.lines.filter((l) => l.periodBucket === '2026-09-21');
     expect(week.map((l) => l.supplierId)).toEqual(['sup-012']);
     expect(next.lines.some((l) => l.forecastQty === 0)).toBe(false);
+  });
+
+  it('CAP-8 BR-03 — after part of the shortfall moves, the commitment still stands and the rest is an open exception; a re-publication keeps the moves', () => {
+    const committed = answer(v2, '2026-09-14', 30000);
+    // Control: before the move, 30 000 against 49 000 is an exception.
+    expect(at(lines([committed]), '2026-09-14')).toMatchObject({
+      state: 'exception',
+      committedQty: 30000,
+      moves: []
+    });
+    const moved = /** @type {import('../sdc/types').ForecastPublication} */ (
+      reassignVersion(
+        v2,
+        {
+          materialCode: 'PK-PETB-8801',
+          periodBucket: '2026-09-14',
+          fromSupplierId: 'sup-007',
+          allocations: [{ supplierId: 'sup-012', qty: 10000 }],
+          note: 'Second mould shop'
+        },
+        '2026-08-29T02:00:00.000Z'
+      )
+    );
+    /** @param {readonly import('../sdc/types').ForecastPublication[]} pubs */
+    const after = (pubs) =>
+      buildCommitmentLines({
+        publications: pubs,
+        responses: [committed],
+        master: materialEntry,
+        supplierName: (s) => s
+      });
+    const source = /** @type {ForecastCommitmentLine} */ (
+      after([moved, v2, v1]).find(
+        (l) => l.supplierId === 'sup-007' && l.periodBucket === '2026-09-14'
+      )
+    );
+    expect(source).toMatchObject({
+      forecastQty: 39000,
+      committedQty: 30000,
+      carriedForward: true,
+      state: 'exception',
+      moves: [
+        {
+          toSupplierId: 'sup-012',
+          qty: 10000,
+          at: '2026-08-29T02:00:00.000Z',
+          note: 'Second mould shop'
+        }
+      ]
+    });
+    const next = republishVersion(moved, {
+      publishedAt: '2026-09-04T02:00:00.000Z',
+      sources: [...src, { supplierId: 'sup-012', materialCode: 'PK-PETB-8801', share: 0 }],
+      master: materialEntry,
+      baseDemand: () => 49000
+    });
+    expect(
+      next.lines.find((l) => l.supplierId === 'sup-007' && l.periodBucket === '2026-09-14')
+        ?.movedOut
+    ).toHaveLength(1);
   });
 });
 
@@ -499,6 +563,7 @@ const mk = (p) => ({
   draft: null,
   committedQty: null,
   log: [],
+  moves: [],
   otherQualifiedSuppliers: [],
   ...p
 });
@@ -575,27 +640,40 @@ describe('REQ-E06-03 BR-03 — cumulative commitment against cumulative forecast
   });
 });
 
-describe('REQ-E06-03 BR-05 — moving demand to another supplier', () => {
+describe('REQ-E06-03 BR-05 / CAP-8 — moving demand to one or more suppliers', () => {
   const v = /** @type {import('../sdc/types').ForecastPublication} */ (
     FORECAST_VERSION_SEED.find((p) => p.publicationId === 'FC-PK-V2')
+  );
+  const rm = /** @type {import('../sdc/types').ForecastPublication} */ (
+    FORECAST_VERSION_SEED.find((p) => p.publicationId === 'FC-RM-V2')
   );
   const move = {
     materialCode: 'PK-PETB-8802',
     periodBucket: SEEDED_PACKAGING_WEEKS[3],
     fromSupplierId: 'sup-007',
-    toSupplierId: 'sup-012',
+    allocations: [{ supplierId: 'sup-012', qty: 38500 }],
     note: 'Moulding line down'
   };
-
-  it('known-good: the period’s quantity moves in a new version; the material × period total is unchanged', () => {
-    const before = /** @type {import('../sdc/types').ForecastLine} */ (
-      v.lines.find(
-        (l) =>
-          l.supplierId === 'sup-007' &&
-          l.materialCode === move.materialCode &&
-          l.periodBucket === move.periodBucket
-      )
+  /**
+   * @param {import('../sdc/types').ForecastPublication} pub
+   * @param {string} supplierId
+   * @param {string} materialCode
+   * @param {string} periodBucket
+   */
+  const lineOf = (pub, supplierId, materialCode, periodBucket) =>
+    pub.lines.find(
+      (l) =>
+        l.supplierId === supplierId &&
+        l.materialCode === materialCode &&
+        l.periodBucket === periodBucket
     );
+
+  it('known-good: the whole quantity moves in a new version; the material × period total is unchanged', () => {
+    const before = /** @type {import('../sdc/types').ForecastLine} */ (
+      lineOf(v, 'sup-007', move.materialCode, move.periodBucket)
+    );
+    // Control: the fixture line carries exactly what the move names.
+    expect(before.forecastQty).toBe(38500);
     const next = /** @type {import('../sdc/types').ForecastPublication} */ (
       reassignVersion(v, move, '2026-08-31T12:00:00.000Z')
     );
@@ -614,47 +692,177 @@ describe('REQ-E06-03 BR-05 — moving demand to another supplier', () => {
       ['sup-012', before.forecastQty]
     ]);
     expect(period(next)[0].commitmentClass).toBe(before.commitmentClass);
+    expect(period(next)[0].movedOut).toBeUndefined();
     expect(next.lines).toHaveLength(v.lines.length);
     // The earlier version is untouched (BR-06: every version is kept).
     expect(period(v).map((l) => l.supplierId)).toEqual(['sup-007']);
   });
 
+  it('CAP-8 AC-01 (rules) — a split to two suppliers in ONE version: each target gains its quantity, the source keeps the rest and records one entry per allocation', () => {
+    const M0 = '2026-09';
+    const src = /** @type {import('../sdc/types').ForecastLine} */ (
+      lineOf(rm, 'sup-005', 'RM-EMUL-9410', M0)
+    );
+    const sup002 = /** @type {import('../sdc/types').ForecastLine} */ (
+      lineOf(rm, 'sup-002', 'RM-EMUL-9410', M0)
+    );
+    // Control: the fixture premise — sup-005 carries 1 800 kg, sup-002 4 200, sup-010 none.
+    expect([src.forecastQty, sup002.forecastQty, src.uom]).toEqual([1800, 4200, 'KG']);
+    expect(lineOf(rm, 'sup-010', 'RM-EMUL-9410', M0)).toBeUndefined();
+    const next = /** @type {import('../sdc/types').ForecastPublication} */ (
+      reassignVersion(
+        rm,
+        {
+          materialCode: 'RM-EMUL-9410',
+          periodBucket: M0,
+          fromSupplierId: 'sup-005',
+          allocations: [
+            { supplierId: 'sup-002', qty: 800 },
+            { supplierId: 'sup-010', qty: 500 }
+          ],
+          note: 'Principal late'
+        },
+        '2026-08-31T12:00:00.000Z'
+      )
+    );
+    expect(next.publicationId).toBe('FC-RM-V3');
+    expect(lineOf(next, 'sup-002', 'RM-EMUL-9410', M0)?.forecastQty).toBe(5000);
+    expect(lineOf(next, 'sup-010', 'RM-EMUL-9410', M0)).toMatchObject({
+      forecastQty: 500,
+      uom: 'KG',
+      commitmentClass: src.commitmentClass
+    });
+    expect(lineOf(next, 'sup-005', 'RM-EMUL-9410', M0)).toMatchObject({
+      forecastQty: 500,
+      movedOut: [
+        {
+          toSupplierId: 'sup-002',
+          qty: 800,
+          at: '2026-08-31T12:00:00.000Z',
+          note: 'Principal late'
+        },
+        {
+          toSupplierId: 'sup-010',
+          qty: 500,
+          at: '2026-08-31T12:00:00.000Z',
+          note: 'Principal late'
+        }
+      ]
+    });
+    /** @param {typeof rm} pub */
+    const total = (pub) =>
+      pub.lines
+        .filter((l) => l.materialCode === 'RM-EMUL-9410' && l.periodBucket === M0)
+        .reduce((n, l) => n + l.forecastQty, 0);
+    expect(total(next)).toBe(total(rm));
+  });
+
   it('known-good: moving to a supplier that already has the period adds to its line', () => {
-    const shared = {
-      materialCode: 'PK-PETB-8801',
-      periodBucket: SEEDED_PACKAGING_WEEKS[0],
-      fromSupplierId: 'sup-012',
-      toSupplierId: 'sup-007',
-      note: 'x'
-    };
     /**
      * @param {typeof v} pub
      * @param {string} s
      */
-    const qty = (pub, s) =>
-      pub.lines.find(
-        (l) =>
-          l.supplierId === s &&
-          l.materialCode === shared.materialCode &&
-          l.periodBucket === shared.periodBucket
-      )?.forecastQty;
+    const qty = (pub, s) => lineOf(pub, s, 'PK-PETB-8801', SEEDED_PACKAGING_WEEKS[0])?.forecastQty;
+    const all = /** @type {number} */ (qty(v, 'sup-012'));
     const next = /** @type {import('../sdc/types').ForecastPublication} */ (
-      reassignVersion(v, shared, '2026-08-31T12:00:00.000Z')
+      reassignVersion(
+        v,
+        {
+          materialCode: 'PK-PETB-8801',
+          periodBucket: SEEDED_PACKAGING_WEEKS[0],
+          fromSupplierId: 'sup-012',
+          allocations: [{ supplierId: 'sup-007', qty: all }],
+          note: 'x'
+        },
+        '2026-08-31T12:00:00.000Z'
+      )
     );
-    expect(qty(next, 'sup-007')).toBe(
-      /** @type {NonNullable<ReturnType<typeof qty>>} */ (qty(v, 'sup-007')) +
-        /** @type {NonNullable<ReturnType<typeof qty>>} */ (qty(v, 'sup-012'))
-    );
+    expect(qty(next, 'sup-007')).toBe(/** @type {number} */ (qty(v, 'sup-007')) + all);
     expect(qty(next, 'sup-012')).toBeUndefined();
   });
 
-  it('known-bad: the same supplier, or a period the supplier does not have, moves nothing', () => {
+  it('known-bad: the same supplier, a period the supplier does not have, no allocation, 0, or more than the line moves nothing', () => {
+    const at = '2026-08-31T12:00:00.000Z';
+    // Control: the base move is accepted.
+    expect(reassignVersion(v, move, at)).not.toBeNull();
     expect(
-      reassignVersion(v, { ...move, toSupplierId: 'sup-007' }, '2026-08-31T12:00:00.000Z')
+      reassignVersion(v, { ...move, allocations: [{ supplierId: 'sup-007', qty: 100 }] }, at)
+    ).toBeNull();
+    expect(reassignVersion(v, { ...move, fromSupplierId: 'sup-012' }, at)).toBeNull();
+    expect(reassignVersion(v, { ...move, allocations: [] }, at)).toBeNull();
+    expect(
+      reassignVersion(v, { ...move, allocations: [{ supplierId: 'sup-012', qty: 0 }] }, at)
     ).toBeNull();
     expect(
-      reassignVersion(v, { ...move, fromSupplierId: 'sup-012' }, '2026-08-31T12:00:00.000Z')
+      reassignVersion(v, { ...move, allocations: [{ supplierId: 'sup-012', qty: 38501 }] }, at)
     ).toBeNull();
+  });
+});
+
+describe('CAP-8 BR-03 — the shortfall rule the verb and the panel share', () => {
+  const ctx = { fromSupplierId: 'sup-005', qualified: ['sup-002', 'sup-005', 'sup-010'] };
+
+  it('the shortfall is forecast − commitment; a line awaiting its commitment counts as committing nothing', () => {
+    expect(moveShortfall({ forecastQty: 38500, committedQty: 30000, state: 'exception' })).toBe(
+      8500
+    );
+    expect(moveShortfall({ forecastQty: 42400, committedQty: null, state: 'awaiting' })).toBe(
+      42400
+    );
+    // An acknowledgement-only response carries no commitment while awaiting.
+    expect(moveShortfall({ forecastQty: 1800, committedQty: 900, state: 'awaiting' })).toBe(1800);
+  });
+
+  it('known-good: a total up to and exactly at the shortfall, split or not, passes', () => {
+    expect(moveDemandRefusal(12800, [{ supplierId: 'sup-002', qty: 8000 }], ctx)).toBeNull();
+    expect(
+      moveDemandRefusal(
+        12800,
+        [
+          { supplierId: 'sup-002', qty: 8000 },
+          { supplierId: 'sup-010', qty: 4800 }
+        ],
+        ctx
+      )
+    ).toBeNull();
+  });
+
+  it('known-bad: above the shortfall by one unit, nothing, 0, a negative or text quantity, the same, an unqualified or a repeated supplier', () => {
+    expect(
+      moveDemandRefusal(
+        12800,
+        [
+          { supplierId: 'sup-002', qty: 8000 },
+          { supplierId: 'sup-010', qty: 4801 }
+        ],
+        ctx
+      )
+    ).toEqual({ refusal: 'aboveShortfall' });
+    expect(moveDemandRefusal(12800, [], ctx)).toEqual({ refusal: 'nothingToMove' });
+    for (const qty of [0, -5, '800', Number.NaN]) {
+      expect(moveDemandRefusal(12800, [{ supplierId: 'sup-002', qty }], ctx)).toEqual({
+        refusal: 'badQty',
+        supplierId: 'sup-002'
+      });
+    }
+    expect(moveDemandRefusal(12800, [{ supplierId: 'sup-005', qty: 1 }], ctx)).toEqual({
+      refusal: 'sameSupplier',
+      supplierId: 'sup-005'
+    });
+    expect(moveDemandRefusal(12800, [{ supplierId: 'sup-007', qty: 1 }], ctx)).toEqual({
+      refusal: 'notQualified',
+      supplierId: 'sup-007'
+    });
+    expect(
+      moveDemandRefusal(
+        12800,
+        [
+          { supplierId: 'sup-002', qty: 1 },
+          { supplierId: 'sup-002', qty: 1 }
+        ],
+        ctx
+      )
+    ).toEqual({ refusal: 'duplicateSupplier', supplierId: 'sup-002' });
   });
 });
 
@@ -717,6 +925,8 @@ describe('REQ-E06-02 BR-06 — spreadsheet: download, template and row-by-row up
       forecastQty: 1500
     })
   ];
+  // An OLDER file's header: it still carries the commitment date column that
+  // CAP-6 (BL-175) removed from the template (BR-03 — still parses, ignored).
   const H = [
     'Material code',
     'Period',
@@ -726,7 +936,7 @@ describe('REQ-E06-02 BR-06 — spreadsheet: download, template and row-by-row up
     'Committed quantity',
     'Commitment date (YYYY-MM-DD)',
     'Upside quantity',
-    'Reason (capacity, material, logistics, quality, other)',
+    'Reason (capacity, material, logistics, quality, force-majeure, discontinued, other)',
     'Note'
   ];
   /** @param {...string} cells */
@@ -738,8 +948,35 @@ describe('REQ-E06-02 BR-06 — spreadsheet: download, template and row-by-row up
       const { accepted, refused } = validateCommitmentRows(parsed.rows, lines);
       expect(refused).toEqual([]);
       expect(accepted.map((a) => a.kind)).toEqual(['commit', 'commit', 'acknowledge', 'commit']);
-      expect(accepted[0]).toMatchObject({ committedQty: 34300, commitmentDate: '2026-09-07' });
+      expect(accepted[0]).toMatchObject({ committedQty: 34300 });
     }
+  });
+
+  it('CAP-6 BR-03 — the template has no commitment date column, in EN or ID', () => {
+    for (const lang of /** @type {const} */ (['en', 'id'])) {
+      const header = commitmentTemplateCsv(lines, lang).split('\n')[0];
+      expect(header).not.toMatch(/date|tanggal/i);
+      expect(header).toMatch(lang === 'en' ? /Committed quantity/ : /Kuantitas komitmen/);
+    }
+  });
+
+  it('CAP-6 AC-02 — an old file with a date column uploads: the date, valid, malformed or blank, is ignored', () => {
+    const { accepted, refused } = validateCommitmentRows(
+      [
+        row('PK-PETB-8801', '2026-09-07', 'firm', '', 'PCS', '34300', '2026-09-07'), // 2 valid date
+        row('PK-PETB-8801', '2026-09-14', '', '', 'PCS', '34300', '14/09/2026'), // 3 malformed date
+        row('PK-PETB-8802', '2026-09-14', '', '', 'PCS', '1500', '') // 4 blank date
+      ],
+      lines
+    );
+    expect(refused).toEqual([]);
+    expect(accepted.map((a) => [a.row, a.kind])).toEqual([
+      [2, 'commit'],
+      [3, 'commit'],
+      [4, 'commit']
+    ]);
+    // The checked row carries no date at all: the store records the period start.
+    expect(accepted.every((a) => !('commitmentDate' in a))).toBe(true);
   });
 
   it('each row is accepted or refused on its own, with its row number and reason', () => {
@@ -751,21 +988,22 @@ describe('REQ-E06-02 BR-06 — spreadsheet: download, template and row-by-row up
         row('PK-PETB-9999', '2026-09-14', '', '', 'PCS', '10', '2026-09-14'), // 5 not in forecast
         row('PK-PETB-8801', '2026-10-26', '', '', '', '', '', '', '', 'Seen'), // 6 acknowledgement
         row('PK-PETB-8801', '2026-09-07', '', '', 'PCS', '34300', '2026-09-07'), // 7 duplicate of row 2
-        row('PK-PETB-8802', '2026-09-14', '', '', 'PCS', '1400', '14/09/2026', '', 'capacity'), // 8 bad date
+        // 8 malformed date in an old file's date column: ignored since CAP-6 (BR-03)
+        row('PK-PETB-8801', '2026-09-14', '', '', 'PCS', '30000', '14/09/2026', '', 'capacity'),
         row('PK-PETB-8802', '2026-09-14', '', '', 'KG', '1400', '2026-09-14') // 9 unit
       ],
       lines
     );
     expect(accepted.map((a) => [a.row, a.kind])).toEqual([
       [2, 'commit'],
-      [6, 'acknowledge']
+      [6, 'acknowledge'],
+      [8, 'commit']
     ]);
     expect(refused.map((r) => [r.row, r.reason])).toEqual([
       [3, 'reasonRequired'],
       [4, 'ambiguousNumber'],
       [5, 'notInForecast'],
       [7, 'duplicateRow'],
-      [8, 'invalidDate'],
       [9, 'unitMismatch']
     ]);
   });

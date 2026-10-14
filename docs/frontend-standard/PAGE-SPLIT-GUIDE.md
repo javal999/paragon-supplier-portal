@@ -68,6 +68,38 @@ new path; **never** delete a row to make a guard pass, and never weaken a matche
 population drops when files move is reporting on its matcher (CLAUDE.md, "Deriving a
 population"): fix the matcher, and probe it both ways.
 
+### The page-scanning guards derive page folders; a split adds no line to them
+
+Until 2026-10-08 every split appended membership lines (`expect(scanned).toContain('<Page>/index.jsx')`)
+to three guards, and parallel splits conflicted on those lines. The guards now derive the page
+folders from the tree: every direct subfolder of `src/pages-v2` that holds an `index.jsx`
+(`pagesDirFolders` / `pageFolders` in `src/test/pageFiles.js`). For each page folder they assert:
+
+| Guard | What it asserts per page folder |
+|---|---|
+| `src/pages-v2/chartPalette.guard.test.jsx` (DP2-BUTTON-01) | every non-test file in the folder is in the scanned population |
+| `src/pages-v2/toastHonesty.guard.test.jsx` | every non-test file in the folder is in `pageFiles(PAGES_DIR)` |
+| `src/router/pageWidth.guard.test.js` | the router's import of the folder resolves to its `index.jsx`, and `pageSource` reads every file in the folder |
+
+Each guard also checks that no feature-folder file (`contracts/`, `shipments/`, …) is read as a
+page and that no `<Page>.jsx` is left beside its folder. The expected file list comes from
+`folderSourceFiles`, a second walk of the tree, so a bug in `pageFiles` cannot hide itself.
+
+**Routed pages in a feature folder count as pages** (since 2026-10-13). A page the router renders
+can live in a feature folder: `admin/AdminSuppliers.jsx`, `admin/AdminRuleValues/`,
+`materials/BuyerTradeNames.jsx`. `src/test/routerPages.js` derives every route from `AppRouter`, including
+multi-line routes, `<Suspense>`-wrapped `lazy()` pages and named imports. `routedPageFiles` returns
+the files those routes render; a page folder's `index.jsx` brings its whole folder at any depth.
+DP2-BUTTON-01 and the toast-honesty guard scan `pageFiles` plus `routedPageFiles`. The
+page-width guard reads its routes and their sources through the same module. The feature-folder
+check therefore excludes only files no route renders. A split of a routed page inside a feature
+folder adds no guard line either.
+
+**What a new split must do in these guards: nothing.** Run them; a failure names the page and
+the file. Add a line only for a **content** check: a test that asserts a toast, a test id or a
+handler still sits in a specific moved file (for example, `toastHonesty` checks that
+`BuyerStabilise/index.jsx` still holds its two toasts). Membership is never written by hand.
+
 ## Forms
 
 `react-hook-form` (the boilerplate's form library, `^7.71`) comes in with the first page that is

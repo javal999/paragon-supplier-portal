@@ -150,7 +150,6 @@ const ConfirmPanel = ({
       // does not actually have is how "renders in one language, parses in another"
       // gets written; #240 is the register entry for that shape.
       confirmedQtyRaw: form.confirmedQty,
-      ...(form.committedDate ? { committedDate: form.committedDate } : {}),
       ...(form.capacityConstraint ? { capacityConstraint: form.capacityConstraint } : {}),
       ...(form.rootCauseLevel1
         ? {
@@ -292,18 +291,6 @@ const ConfirmPanel = ({
             title={t('sdcSup.panel.date.title')}
             description={t('sdcSup.panel.date.desc')}
           >
-            <div>
-              <label className={labelClass} htmlFor="sdcsup-date">
-                {t('sdcSup.panel.committedDate')}
-              </label>
-              <input
-                id="sdcsup-date"
-                type="date"
-                value={form.committedDate}
-                onChange={(e) => setForm({ ...form, committedDate: e.target.value })}
-                className={inputClass}
-              />
-            </div>
             <div>
               <label className={labelClass} htmlFor="sdcsup-constraint">
                 {t('sdcSup.panel.capacityConstraint')}

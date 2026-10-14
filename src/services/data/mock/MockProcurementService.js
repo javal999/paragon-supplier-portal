@@ -1,8 +1,10 @@
 import { callOffStore } from './stores/callOffStore';
 /** @import { CallOff } from '../types' */
+/** @import { BlanketPoRunOut } from '../../transitions/blanketPoRules' */
 import { purchaseOrderStore } from './stores/purchaseOrderStore';
 import {
   allAlerts,
+  allBlanketPoRunOuts,
   allCapacityPlans,
   allPositions,
   grantFor,
@@ -10,6 +12,8 @@ import {
 } from './inventoryReadModel';
 import { stockAccessStore } from './stores/inventoryHubStores';
 import { allPlanningGroups } from './planningGroupReadModel';
+import { allDemandAnticipationWithSupply } from './supplyBelowDemandReadModel';
+/** @import { DemandAnticipationSupplyRow } from '../../transitions/supplyBelowDemandRules' */
 import { stockSimulationRows } from './stockSimulationReadModel';
 import {
   allCommitmentLines,
@@ -460,6 +464,28 @@ export class MockProcurementService {
   async getCapacityPlans(scope) {
     // REQ-E08-04 — capacity against demand per supplier × material group.
     return { items: applySupplierScope(scope, allCapacityPlans()) };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<BlanketPoRunOut>>}
+   */
+  async getBlanketPoRunOuts(scope) {
+    // CAP-9 — PTI's projection of its own blanket POs against the LTP; a
+    // supplier reads none (the call-off page and the alert are PTI's).
+    if (scope.personaType !== 'buyer') return { items: [] };
+    return { items: allBlanketPoRunOuts() };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<DemandAnticipationSupplyRow>>}
+   */
+  async getDemandAnticipation(scope) {
+    // CAP-10 — PTI's own plan, frozen per horizon; a supplier reads none.
+    if (scope.personaType !== 'buyer') return { items: [] };
+    // CAP-12 — with open supply, the gap and its proposal per week.
+    return { items: allDemandAnticipationWithSupply() };
   }
 
   /**

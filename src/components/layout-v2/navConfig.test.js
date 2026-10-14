@@ -60,10 +60,11 @@ describe('Material Planner menu — Weekly plan and Review (F-03, F-04)', () => 
       ['review', 'hub.nav.pti.forecastQuality', '/buyer/demand-forecast'],
       ['review', 'hub.nav.pti.stockCheck', '/buyer/fs-reconcile']
     ]);
-    // FUX phase 2 B1 — This week joins Weekly plan as its first item.
+    // FUX phase 2 B1 — This week joins Weekly plan as its first item; CAP-10 —
+    // Demand anticipation joins it as its last.
     expect(
       /** @type {import('./navConfig').NavSection} */ (mp.find((s) => s.id === 'weeklyPlan')).items
-    ).toHaveLength(5);
+    ).toHaveLength(6);
     expect(
       /** @type {import('./navConfig').NavSection} */ (mp.find((s) => s.id === 'review')).items
     ).toHaveLength(3);
@@ -110,9 +111,13 @@ describe('FUX phase 2 B1 — This week and the Procurement path to the stock che
       ['hub.nav.pti.whatToOrder', '/buyer/order-plan'],
       ['hub.nav.pti.makeRoom', '/buyer/reschedule'],
       ['hub.nav.pti.publishToSuppliers', '/buyer/stabilise'],
-      ['hub.nav.pti.supplierResponses', '/buyer/collaboration']
+      ['hub.nav.pti.supplierResponses', '/buyer/collaboration'],
+      // CAP-10 — the demand anticipation, frozen per 4-week horizon.
+      ['hub.nav.pti.demandAnticipation', '/buyer/demand-anticipation']
     ]);
     expect(hubEn['hub.nav.pti.thisWeek']).toBe('This week');
+    expect(hubEn['hub.nav.pti.demandAnticipation']).toBe('Demand anticipation');
+    expect(hubId['hub.nav.pti.demandAnticipation']).toBe('Antisipasi permintaan');
     expect(hubId['hub.nav.pti.thisWeek']).toBe('Minggu ini');
   });
 

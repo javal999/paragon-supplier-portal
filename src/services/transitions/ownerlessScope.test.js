@@ -123,6 +123,7 @@ import { planningGroupStore } from '../data/mock/stores/planningGroupStore';
 import { materialOverlayStore } from '../data/mock/stores/materialOverlayStore';
 import { mrpControllerStore } from './mrpControllerStore';
 import { warehouseDecisionStore } from '../data/mock/stores/warehouseDecisionStore';
+import { demandAnticipationStore } from '../data/mock/stores/demandAnticipationStore';
 import { materialNameStore } from '../data/mock/stores/materialNameStore';
 import { simulationOverrideStore } from '../data/mock/stores/simulationOverrideStore';
 import { hubSettingsStore, settingValue } from './hubSettingsStore';
@@ -290,6 +291,12 @@ async function realIds() {
     // REQ-E06-01 — the version and view stores are seeded.
     forecastVersion: forecastVersionStore.all()[0]?.publicationId ?? null,
     forecastView: forecastViewStore.all()[0]?.id ?? null,
+    // CAP-10 — a demand anticipation publication is creation-only (unprobeable);
+    // the store opens with the sample publication, so its id is a real one.
+    demandAnticipation: demandAnticipationStore.all()[0]?.id ?? null,
+    // CAP-11 — a consumption record is creation-only (unprobeable) and its store
+    // starts empty (no consumption history is invented); a well-formed id.
+    consumption: 'con-0001',
     // REQ-E14-13 — a "taken to SAP" mark is creation-only (unprobeable) and its
     // store starts empty (nothing is marked while the engine data is simulated);
     // the id is a well-formed one so the coverage control can see the target.
@@ -569,6 +576,8 @@ describe('POPULATION — nothing below means anything without this', () => {
     // A confidentiality acceptance is the same creation-only shape.
     // A "taken to SAP" mark (REQ-E14-13) is the same creation-only record shape.
     // So is a stock simulation planner input (Material E1, AR-20) and a forecast override (REQ-E14-11).
+    // So is a demand anticipation publication (CAP-10): it is followed, never changed.
+    // And a consumption record (CAP-11): a later record supersedes it at read.
     expect(unprobeable).toEqual([
       'rfqConfidentiality',
       'inventoryDeclaration',
@@ -578,7 +587,9 @@ describe('POPULATION — nothing below means anything without this', () => {
       'forecastVersion',
       'forecastView',
       'sapChangeMark',
-      'forecastOverride'
+      'forecastOverride',
+      'demandAnticipation',
+      'consumption'
     ]);
   });
 

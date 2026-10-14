@@ -23,6 +23,7 @@ import {
 } from '@services/data/mock/fixtures/forecastHub';
 import { inventoryCapacityEn, inventoryCapacityId } from '@lib/i18n/inventoryCapacity';
 import { sdcClock } from '@services/sdc';
+import { formatDate } from '@lib/format';
 import SupplierForecastCommitments from './SupplierForecastCommitments';
 import SupplierCapacity from './SupplierCapacity';
 import BuyerCapacity from './BuyerCapacity';
@@ -161,17 +162,22 @@ describe('Capacity pages show the LTP against capacity and BE (ENG-D18)', () => 
     const red = await screen.findByTestId(`capacity-ltp-${W[2]}`);
     await waitFor(() => expect(red).toHaveAttribute('data-level', 'cannotSupply'));
     expect(screen.getByTestId(`capacity-ltp-${W[6]}`)).toHaveAttribute('data-level', 'within');
-    const week = screen.getByTestId(`capacity-week-${W[2]}`);
-    expect(week).toHaveTextContent('72,800');
+    // CAP-1 — the week is a column now: its header carries the row's old id,
+    // and the week's cells are found by their own ids and labels.
+    expect(screen.getByTestId(`capacity-week-${W[2]}`).tagName).toBe('TH');
+    expect(screen.getByTestId(`capacity-ltp-qty-${W[2]}`)).toHaveTextContent('72,800');
+    const additional = screen.getByLabelText(
+      `Additional capacity for the week of ${formatDate(W[2])}`
+    );
     // 60,000 + 12,800 = 72,800: exactly at BE is amber.
-    fireEvent.change(within(week).getByLabelText(/^Additional capacity for/), {
+    fireEvent.change(additional, {
       target: { value: '12800' }
     });
     expect(screen.getByTestId(`capacity-ltp-${W[2]}`)).toHaveAttribute(
       'data-level',
       'needsAdditional'
     );
-    fireEvent.change(within(week).getByLabelText(/^Additional capacity for/), {
+    fireEvent.change(additional, {
       target: { value: '12799' }
     });
     expect(screen.getByTestId(`capacity-ltp-${W[2]}`)).toHaveAttribute(

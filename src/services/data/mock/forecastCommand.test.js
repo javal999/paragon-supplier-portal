@@ -322,13 +322,30 @@ describe('REQ-E06-02 — commitment through the verb', () => {
     expect((await lineOf(buyer, 'sup-007', 'PK-PETB-8802', W[6])).state).toBe('exception');
   });
 
-  it('known-bad: a forecast-version commitment needs its date; upside must be zero or more', async () => {
+  it('CAP-6 AC-01 / BR-02 — a forecast-version commitment with a quantity only is stored with the period start as its date', async () => {
     const l = await lineOf(sup007, 'sup-007', 'PK-PETB-8802', W[6]);
     const noDate = await submit(sup007, {
       ...commitPayload(l, l.forecastQty),
       committedDate: undefined
     });
-    expect(noDate.reason).toMatch(/COMMITMENT_DATE_REQUIRED/);
+    expect(noDate.status).toBe('done');
+    const stored = /** @type {import('../../sdc/types').RequirementResponse} */ (
+      requirementResponseStore.get(/** @type {string} */ (noDate.entityId))
+    );
+    expect(stored.forecastConfirmation).toMatchObject({
+      confirmedQty: l.forecastQty,
+      committedDate: l.periodStart
+    });
+    expect(l.periodStart).toBe(W[6]);
+  });
+
+  it('known-bad: a date, when one is sent, must be a calendar day; upside must be zero or more', async () => {
+    const l = await lineOf(sup007, 'sup-007', 'PK-PETB-8802', W[6]);
+    const badDate = await submit(sup007, {
+      ...commitPayload(l, l.forecastQty),
+      committedDate: '14/09/2026'
+    });
+    expect(badDate.reason).toMatch(/committedDate must be a date/);
     const badUpside = await submit(sup007, commitPayload(l, l.forecastQty, { upsideQty: -5 }));
     expect(badUpside.reason).toMatch(/upsideQty/);
   });
@@ -427,8 +444,10 @@ describe('REQ-E06-03 — planner actions on exceptions', () => {
     expect(after.log).toHaveLength(1);
   });
 
-  it('reassign: moves the period quantity to a qualified supplier in a new version, with the note', async () => {
+  it('reassign: moves the shortfall to a qualified supplier in a new version, with the note; the commitment left behind now covers the line', async () => {
     const l = await lineOf(buyer, 'sup-002', 'RM-STEAR-7300', M[0]);
+    // Control: the fixture premise — 12 600 kg forecast, 10 000 committed, an exception.
+    expect([l.forecastQty, l.committedQty, l.state]).toEqual([12600, 10000, 'exception']);
     const res = await svc.dispatch(buyer, {
       transitionId: 't_forecastversion_reassign',
       entity: 'forecastVersion',
@@ -437,16 +456,17 @@ describe('REQ-E06-03 — planner actions on exceptions', () => {
         materialCode: l.materialCode,
         periodBucket: l.periodBucket,
         fromSupplierId: 'sup-002',
-        toSupplierId: 'sup-001',
+        allocations: [{ supplierId: 'sup-001', qty: 2600 }],
         note: 'Second source covers September'
       }
     });
     expect(res).toMatchObject({ status: 'done', entityId: 'FC-RM-V3' });
-    const moved = (await linesFor(buyer)).filter(
-      (x) => x.materialCode === 'RM-STEAR-7300' && x.periodBucket === M[0]
-    );
+    const moved = (await linesFor(buyer))
+      .filter((x) => x.materialCode === 'RM-STEAR-7300' && x.periodBucket === M[0])
+      .sort((a, b) => a.supplierId.localeCompare(b.supplierId));
     expect(moved.map((x) => [x.supplierId, x.forecastQty, x.version, x.state])).toEqual([
-      ['sup-001', l.forecastQty, 3, 'awaiting']
+      ['sup-001', 2600, 3, 'awaiting'],
+      ['sup-002', 10000, 3, 'accepted']
     ]);
     expect((await linesFor(supplier('sup-001'))).map((x) => x.periodBucket)).toEqual([M[0]]);
     expect(
@@ -456,16 +476,18 @@ describe('REQ-E06-03 — planner actions on exceptions', () => {
     ).toBe('Second source covers September');
   });
 
-  it('known-bad reassign: no note, an unqualified supplier, the same supplier, or an old version', async () => {
+  it('known-bad reassign: no note, an unqualified supplier, the same supplier, an old version, or the retired single-target payload', async () => {
     const l = await lineOf(buyer, 'sup-002', 'RM-STEAR-7300', M[0]);
     const base = {
       publicationId: l.publicationId,
       materialCode: l.materialCode,
       periodBucket: l.periodBucket,
       fromSupplierId: 'sup-002',
-      toSupplierId: 'sup-001',
+      allocations: [{ supplierId: 'sup-001', qty: 100 }],
       note: 'x'
     };
+    /** @param {string} supplierId */
+    const to = (supplierId) => ({ ...base, allocations: [{ supplierId, qty: 100 }] });
     /** @param {Record<string, unknown>} payload */
     const go = (payload) =>
       svc.dispatch(buyer, {
@@ -474,11 +496,16 @@ describe('REQ-E06-03 — planner actions on exceptions', () => {
         payload
       });
     expect((await go({ ...base, note: '   ' })).reason).toMatch(/NOTE_REQUIRED/);
-    expect((await go({ ...base, toSupplierId: 'sup-007' })).reason).toMatch(/NOT_QUALIFIED/);
-    expect((await go({ ...base, toSupplierId: 'sup-002' })).reason).toMatch(/SAME_SUPPLIER/);
+    expect((await go(to('sup-007'))).reason).toMatch(/NOT_QUALIFIED/);
+    expect((await go(to('sup-002'))).reason).toMatch(/SAME_SUPPLIER/);
     expect((await go({ ...base, publicationId: 'FC-RM-V1' })).reason).toMatch(
       /NOT_CURRENT_VERSION/
     );
+    // CAP-8 — every caller sends allocations; the single-target shape is refused by name.
+    const { allocations: _a, ...single } = base;
+    const legacy = await go({ ...single, toSupplierId: 'sup-001' });
+    expect(legacy).toMatchObject({ status: 'failed' });
+    expect(legacy.reason).toMatch(/allocations/);
     expect(forecastVersionStore.all()).toHaveLength(4);
   });
 });

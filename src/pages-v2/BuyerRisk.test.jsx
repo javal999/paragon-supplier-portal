@@ -1,5 +1,7 @@
 import { screen, within, fireEvent } from '@testing-library/react';
+import i18n from '@lib/i18n';
 import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import { useToast } from '@hooks/useToast';
 import { mockDataService } from '@services/data/mock/mockDataService';
 import { withChaos } from '@services/data/mock/withChaos';
 import { isLive } from '@services/liveness';
@@ -183,5 +185,101 @@ describe('BuyerRisk — whole-surface honesty while SIMULATED', () => {
     await screen.findByText('Supply Risk & Scenario Intelligence');
     // Four KPI cards, four illustrative captions — no unlabeled headline figure.
     expect(screen.getAllByText('Illustrative — no live source')).toHaveLength(4);
+  });
+});
+
+describe('BuyerRisk — "Send to War Room" admits that nothing was sent', () => {
+  // The button only sets local state: no command, no channel. Until 2026-10-13
+  // it showed a SUCCESS toast ("dispatched to procurement leadership") and
+  // flipped to "✓ Sent" for 4 s. toastHonesty.guard missed it because the
+  // handler is a named function, not an inline onClick.
+  const ToastSpy = () => {
+    const { toasts } = useToast();
+    return (
+      <ul data-testid="toast-spy">
+        {toasts.map((x) => (
+          <li key={x.id} data-variant={x.variant}>{`${x.title} ${x.description ?? ''}`}</li>
+        ))}
+      </ul>
+    );
+  };
+
+  it('the toast is a warning that says nothing was sent, and the button never claims "Sent"', async () => {
+    renderWithProviders(
+      <>
+        <BuyerRisk />
+        <ToastSpy />
+      </>
+    );
+    await screen.findByText('Supply Risk & Scenario Intelligence');
+    fireEvent.click(screen.getByRole('tab', { name: 'Scenario Modeling' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Send to War Room' }));
+
+    const toasts = within(screen.getByTestId('toast-spy')).getAllByRole('listitem');
+    expect(toasts).toHaveLength(1);
+    expect(toasts[0]).toHaveAttribute('data-variant', 'warning');
+    expect(toasts[0]).toHaveTextContent(/nothing was sent/i);
+    expect(toasts[0]).not.toHaveTextContent(/dispatched to|Scenario forwarded/i);
+    // The button keeps its label: there is no "Sent" state to show.
+    expect(screen.getByRole('button', { name: 'Send to War Room' })).toBeInTheDocument();
+    expect(screen.queryByText(/✓ Sent/)).toBeNull();
+  });
+
+  it('in Indonesian the toast admits it too', async () => {
+    try {
+      await i18n.changeLanguage('id');
+      renderWithProviders(
+        <>
+          <BuyerRisk />
+          <ToastSpy />
+        </>
+      );
+      fireEvent.click(await screen.findByRole('tab', { name: /Pemodelan Skenario/i }));
+      fireEvent.click(screen.getByRole('button', { name: 'Kirim ke War Room' }));
+      const toast = within(screen.getByTestId('toast-spy')).getByRole('listitem');
+      expect(toast).toHaveTextContent(/tidak ada yang dikirim/i);
+    } finally {
+      await i18n.changeLanguage('en');
+    }
+  });
+});
+
+describe('BuyerRisk — page chrome reads in Indonesian (ID)', () => {
+  /** @param {string} name */
+  const openTab = async (name) => {
+    fireEvent.click(await screen.findByRole('tab', { name }));
+  };
+
+  it('compliance status pills, day suffixes, the YTD change and the AI pill are localized', async () => {
+    try {
+      await i18n.changeLanguage('id');
+      renderWithProviders(<BuyerRisk />);
+
+      await openTab('Eksposur Pasokan');
+      // `dos: 18` on the Semiconductors exposure row.
+      expect(screen.getByText('18 hr')).toBeInTheDocument();
+      expect(screen.queryByText('18d')).toBeNull();
+
+      await openTab('Risiko Kepatuhan');
+      // Two fixture rows are `expiring`; one is `expired`.
+      expect(screen.getAllByText('Segera kedaluwarsa')).toHaveLength(2);
+      expect(screen.queryByText('Expiring soon')).toBeNull();
+      expect(screen.getAllByText('Kedaluwarsa').length).toBeGreaterThan(0);
+      const bareDays = Array.from(document.querySelectorAll('td *')).filter((el) =>
+        /^\d+d$/.test(el.textContent ?? '')
+      );
+      expect(bareDays).toHaveLength(0);
+
+      await openTab('Harga Komoditas');
+      // Copper (LME) `change: +4.2`.
+      expect(screen.getByText('4.2% sejak awal tahun')).toBeInTheDocument();
+      expect(screen.queryByText(/% YTD$/)).toBeNull();
+
+      await openTab('Pemodelan Skenario');
+      expect(screen.getByText('Berbasis AI')).toBeInTheDocument();
+      expect(screen.queryByText('AI-Powered')).toBeNull();
+    } finally {
+      await i18n.changeLanguage('en');
+    }
   });
 });

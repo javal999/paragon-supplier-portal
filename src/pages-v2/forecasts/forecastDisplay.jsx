@@ -216,10 +216,13 @@ function refusalKey(reason) {
     ['CAPACITY_NOT_CONFIRMED', 'fc.refusal.capacityNotConfirmed'],
     ['ABOVE_BE_NEEDS_REASON', 'fc.refusal.aboveBeNeedsReason'],
     ['OTHER_REASON_NEEDS_NOTE', 'fc.refusal.noteRequired'],
-    ['COMMITMENT_DATE_REQUIRED', 'fc.refusal.dateRequired'],
     ['NOT_QUALIFIED', 'fc.refusal.notQualified'],
     ['NOTE_REQUIRED', 'fc.refusal.noteRequiredPlanner'],
     ['NOT_CURRENT_VERSION', 'fc.refusal.notCurrent'],
+    // CAP-8 BR-03 — the page pre-checks the same rule; this is the verb's word if it lands.
+    ['ABOVE_SHORTFALL', 'fc.refusal.aboveShortfall'],
+    ['NOTHING_TO_MOVE', 'fc.pti.gaps.move.nothingToMove'],
+    ['BAD_ALLOCATION', 'fc.pti.gaps.move.badQty'],
     ['disputeReason', 'fc.refusal.noteRequiredPlanner']
   ];
   return table.find(([needle]) => reason.includes(needle))?.[1] ?? null;

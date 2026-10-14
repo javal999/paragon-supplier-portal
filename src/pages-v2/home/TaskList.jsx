@@ -12,12 +12,21 @@ import Data from '@components/ui-v2/Data';
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
+ * `detail`:  One line under the label saying why the task has its severity (a
+ *            passed deadline, cover against lead time, or the due date).
+ * `chipLabel`:  The chip's text when it is not the severity's own label.
+ * `rank`:  Urgency rank (1 = most urgent) where the page ranks its tasks; it
+ *          orders rows within a severity ahead of the count.
+ *
  * @typedef {{
  *     readonly id: string;
  *     readonly label: string;
  *     readonly count: number;
  *     readonly severity: FlagSeverity;
  *     readonly to: string;
+ *     readonly detail?: string;
+ *     readonly chipLabel?: string;
+ *     readonly rank?: number;
  *   }} HomeTask
  */
 
@@ -47,7 +56,19 @@ const CHIP = {
 export function sortTasks(tasks) {
   return tasks
     .filter((task) => task.count > 0)
-    .sort((a, b) => RANK[a.severity] - RANK[b.severity] || b.count - a.count);
+    .sort((a, b) => RANK[a.severity] - RANK[b.severity] || byRank(a, b) || b.count - a.count);
+}
+
+/**
+ * Ranked rows first, in rank order; unranked rows after them (an amber row with
+ * no deadline on record carries no rank). Zero when neither is ranked.
+ * @param {HomeTask} a
+ * @param {HomeTask} b
+ * @returns {number}
+ */
+function byRank(a, b) {
+  if (a.rank === undefined) return b.rank === undefined ? 0 : 1;
+  return b.rank === undefined ? -1 : a.rank - b.rank;
 }
 
 /** @type {React.FC<{ tasks: readonly HomeTask[] }>} */
@@ -88,9 +109,19 @@ const TaskList = ({ tasks }) => {
                 className={`absolute left-0 top-2 bottom-2 w-1 rounded-r ${STRIPE[severity]}`}
               />
               <Data className="text-section w-10 text-right">{task.count}</Data>
-              <span className="flex-1 min-w-0 text-sm text-text-primary">{task.label}</span>
+              <span className="flex-1 min-w-0 text-sm text-text-primary">
+                {task.label}
+                {task.detail ? (
+                  <span
+                    className="block text-xs text-text-secondary"
+                    data-testid={`home-task-detail-${task.id}`}
+                  >
+                    {task.detail}
+                  </span>
+                ) : null}
+              </span>
               <span className={`text-label uppercase px-2 py-0.5 rounded ${CHIP[severity]}`}>
-                {t(`hub.home.severity.${severity}`)}
+                {task.chipLabel ?? t(`hub.home.severity.${severity}`)}
               </span>
               <span className="inline-flex items-center gap-1 text-sm text-action">
                 {t('hub.home.open')}

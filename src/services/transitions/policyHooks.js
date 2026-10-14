@@ -193,6 +193,18 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    * a note (WAREHOUSE_DECISION_NOTE_REQUIRED).
    */
   WAREHOUSE_DECISION_VALID: 'warehousedecision_valid',
+  /**
+   * Demand anticipation publish (CAP-10 BR-01 / BR-02): the confirm names the
+   * current hub week as the horizon start (STALE_HORIZON otherwise), and the
+   * horizon holds at least one week not frozen yet (NOTHING_TO_FREEZE).
+   */
+  DEMAND_ANTICIPATION_PUBLISH_VALID: 'demandanticipation_publish_valid',
+  /**
+   * Recorded consumption (CAP-11, CAP-D14): a known material, a week named by
+   * its Monday and not after the current hub week, a quantity of zero or more, the
+   * material's unit, and a planner source (`manual` or `upload`).
+   */
+  CONSUMPTION_RECORD_VALID: 'consumption_record_valid',
   /** Dispatch heads-up (REQ-E09-04): the confirmation is accepted, the dates are
    *  dates with arrival on or after shipping, and the quantity is positive. */
   CALLOFF_DISPATCH_VALID: 'calloff_dispatch_valid',
@@ -305,8 +317,10 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    */
   RR_SUBMIT_SHORTFALL_REASON: 'rr_submit_shortfall_reason',
   /**
-   * REQ-E06-02 BR-08 — a commitment to a forecast version carries a commitment
-   * date, and an upside quantity when given is a number of zero or more.
+   * REQ-E06-02 BR-08 — an upside quantity when given is a number of zero or
+   * more, and a commitment date when given is a calendar day. CAP-6 (BL-175)
+   * BR-02 — a missing date is no longer refused; the record stores the period
+   * start.
    */
   RR_SUBMIT_COMMITMENT_DETAIL: 'rr_submit_commitment_detail',
   /**
