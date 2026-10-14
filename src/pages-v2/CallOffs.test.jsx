@@ -570,3 +570,49 @@ describe('Order summary (REQ-E07-03 with call-offs)', () => {
     expect(screen.getByTestId('order-summary-calloffs-po-001')).toHaveTextContent('—');
   });
 });
+
+// D9 (deep-links PR #74 review): BuyerCallOffs/SupplierCallOffs read a
+// `?status=` filter from the URL (the deep-link a My Tasks item sends), but
+// had no page-level spec rendering the route with the param. One spec per
+// page asserts the filtered rows; one asserts the old, unfiltered default.
+describe('D9 — the `?status=` deep link BuyerCallOffs/SupplierCallOffs read', () => {
+  it('BuyerCallOffs: `?status=awaitingApproval` selects that chip and keeps only call-offs awaiting approval', async () => {
+    renderWithProviders(<BuyerCallOffs />, {
+      identity: PLANNER,
+      route: '/buyer/call-offs?status=awaitingApproval'
+    });
+    expect(await screen.findByTestId('calloff-row-co-0004')).toBeInTheDocument();
+    expect(screen.queryByTestId('calloff-row-co-0001')).toBeNull();
+    expect(screen.getByRole('radio', { name: /Awaiting approval/ })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
+  });
+
+  it('BuyerCallOffs: no `status` param renders exactly as before this feature — `All` selected, every row shown', async () => {
+    renderWithProviders(<BuyerCallOffs />, { identity: PLANNER, route: '/buyer/call-offs' });
+    expect(await screen.findByTestId('calloff-row-co-0004')).toBeInTheDocument();
+    expect(screen.getByTestId('calloff-row-co-0001')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /^All/ })).toHaveAttribute('aria-checked', 'true');
+  });
+
+  it("SupplierCallOffs: `?status=toConfirm` selects that chip and keeps only the call-off awaiting this supplier's confirmation", async () => {
+    renderWithProviders(<SupplierCallOffs />, {
+      identity: SUPPLIER,
+      route: '/supplier/call-offs?status=toConfirm'
+    });
+    expect(await screen.findByTestId('supplier-calloff-row-co-0003')).toBeInTheDocument();
+    expect(screen.queryByTestId('supplier-calloff-row-co-0001')).toBeNull();
+    expect(screen.getByRole('radio', { name: /Awaiting your confirmation/ })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
+  });
+
+  it('SupplierCallOffs: no `status` param renders exactly as before this feature — `All` selected, every row shown', async () => {
+    renderWithProviders(<SupplierCallOffs />, { identity: SUPPLIER, route: '/supplier/call-offs' });
+    expect(await screen.findByTestId('supplier-calloff-row-co-0003')).toBeInTheDocument();
+    expect(screen.getByTestId('supplier-calloff-row-co-0001')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /^All/ })).toHaveAttribute('aria-checked', 'true');
+  });
+});

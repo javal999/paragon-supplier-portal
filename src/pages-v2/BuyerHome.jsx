@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
 import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
+import { deepLink, sharedValue } from '@lib/deepLink';
 import {
   useASNs,
   useBuyerInvoices,
@@ -133,7 +134,7 @@ const BuyerHome = () => {
           label: t('hub.home.task.escalatedPo'),
           count: escalatedPos.length,
           deadlines: escalatedPos.map((po) => responseDeadline(po).toISOString()),
-          to: '/buyer/orders?tab=escalated'
+          to: deepLink('/buyer/orders', { tab: 'escalated' })
         },
         {
           // REQ-E07-02 BR-08 — a rejection is PTI's to act on.
@@ -142,7 +143,7 @@ const BuyerHome = () => {
           label: t('hub.home.task.rejectedPo'),
           count: rejectedPos.length,
           deadlines: rejectedPos.map((po) => po.requestedDeliveryDate),
-          to: '/buyer/orders?tab=rejected'
+          to: deepLink('/buyer/orders', { tab: 'rejected' })
         },
         {
           id: 'counter-offers',
@@ -150,7 +151,7 @@ const BuyerHome = () => {
           label: t('hub.home.task.counterOffers'),
           count: adjustedPos.length,
           deadlines: adjustedPos.map((po) => po.requestedDeliveryDate),
-          to: '/buyer/orders?tab=review'
+          to: deepLink('/buyer/orders', { tab: 'review' })
         },
         {
           // REQ-E07-05 — the supplier moved the expected completion date later.
@@ -167,7 +168,7 @@ const BuyerHome = () => {
           label: t('hub.home.task.callOffsApproval'),
           count: awaitingCallOffs.length,
           deadlines: awaitingCallOffs.map((v) => v.dueDate),
-          to: '/buyer/call-offs'
+          to: deepLink('/buyer/call-offs', { status: 'awaitingApproval' })
         },
         {
           id: 'calloffs-escalated',
@@ -175,7 +176,7 @@ const BuyerHome = () => {
           label: t('hub.home.task.callOffsEscalated'),
           count: escalatedCallOffs.length,
           deadlines: escalatedCallOffs.map((v) => v.deadline?.toISOString() ?? v.callOff.needDate),
-          to: '/buyer/call-offs'
+          to: deepLink('/buyer/call-offs', { status: 'escalated' })
         },
         {
           id: 'calloffs-at-risk',
@@ -183,7 +184,7 @@ const BuyerHome = () => {
           label: t('hub.home.task.callOffsAtRisk'),
           count: atRiskCallOffs.length,
           deadlines: atRiskCallOffs.map((v) => v.dueDate),
-          to: '/buyer/call-offs'
+          to: deepLink('/buyer/call-offs', { status: 'atRisk' })
         },
         {
           id: 'calloffs-drift',
@@ -194,7 +195,7 @@ const BuyerHome = () => {
           deadlines: callOffs.views
             .filter((v) => driftKeys.has(`${v.callOff.supplierId}|${v.callOff.materialCode}`))
             .flatMap((v) => v.results.filter(isDriftResult).map((r) => r.approvedDate)),
-          to: '/buyer/call-offs'
+          to: deepLink('/buyer/call-offs', { status: 'drift' })
         },
         {
           id: 'inventory-high-alerts',
@@ -211,7 +212,7 @@ const BuyerHome = () => {
               ? [{ daysOfCover: a.riskBasis.daysOfCover, leadTimeDays: a.riskBasis.leadTimeDays }]
               : []
           ),
-          to: '/buyer/alerts'
+          to: deepLink('/buyer/alerts', { tab: 'open', risk: 'high' })
         },
         {
           // REQ-E08-04 edge case — a submitted update that creates a gap notifies the planner.
@@ -220,7 +221,7 @@ const BuyerHome = () => {
           label: t('hub.home.task.capacityGaps'),
           count: gapPlans.length,
           deadlines: gapPlans.map((p) => gapWeeks(p)[0]?.week),
-          to: '/buyer/capacity'
+          to: deepLink('/buyer/capacity', { gapsOnly: '1' })
         },
         {
           // REQ-E06-03 BR-06 — after the deadline, a missing commitment escalates to the planner.
@@ -229,7 +230,12 @@ const BuyerHome = () => {
           label: t('hub.home.task.missingCommitments'),
           count: missingLines.length,
           deadlines: missingLines.map((l) => l.dueAt),
-          to: '/buyer/collaboration'
+          // D7 (PR #74 review): only narrow to a stream when every counted
+          // line shares one — the count is over ALL overdue lines, and the
+          // first line's stream alone can hide the rest.
+          to: deepLink('/buyer/collaboration', {
+            stream: sharedValue(missingLines, (l) => l.stream)
+          })
         },
         {
           // REQ-E06-02 BR-05 — a commitment outside tolerance is an exception for the
@@ -240,7 +246,9 @@ const BuyerHome = () => {
           label: t('hub.home.task.commitmentExceptions'),
           count: exceptionLines.length,
           deadlines: exceptionLines.map((l) => l.periodStart),
-          to: '/buyer/collaboration'
+          to: deepLink('/buyer/collaboration', {
+            stream: sharedValue(exceptionLines, (l) => l.stream)
+          })
         },
         {
           id: 'chase',
@@ -275,6 +283,9 @@ const BuyerHome = () => {
           label: t('hub.home.task.inboundAsn'),
           count: asnsDue.length,
           deadlines: asnsDue.map((a) => a.eta),
+          // D4 (PR #74 review): pendingAsns (Submitted/In Transit) is not the
+          // shipments page's Pending-tab predicate (Pending ASN/ASN Received)
+          // — link unfiltered rather than hiding every counted row.
           to: '/buyer/shipments'
         },
         {
@@ -285,6 +296,8 @@ const BuyerHome = () => {
           label: t('hub.home.task.negotiationClosing'),
           count: closingRounds.length,
           deadlines: closingRounds.map((r) => r.deadline),
+          // D3 (PR #74 review): the round closing soon need not be Open, so
+          // the Open tab can hide the one round this task counts — unfiltered.
           to: '/buyer/rfq'
         },
         {
@@ -293,6 +306,9 @@ const BuyerHome = () => {
           label: t('hub.home.task.rfqAward'),
           count: awardRfqs.length,
           deadlines: awardRfqs.map((r) => r.awardDeadline),
+          // D2 (PR #74 review): pendingAwardRfqs is not the Pending tab's own
+          // predicate (it also counts Closed/partially-answered Open rounds)
+          // — link unfiltered.
           to: '/buyer/rfq'
         },
         {
@@ -311,7 +327,7 @@ const BuyerHome = () => {
           label: t('hub.home.task.overdueInvoices'),
           count: overdueInv.length,
           deadlines: overdueInv.map((i) => i.dueDate),
-          to: '/buyer/invoices'
+          to: deepLink('/buyer/invoices', { tab: 'queue', status: 'Overdue' })
         }
       ];
       // Rank only what the list shows: this role's tasks with something in them.

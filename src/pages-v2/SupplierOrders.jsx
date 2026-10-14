@@ -33,6 +33,7 @@ import {
 } from '@services/query/commandHooks';
 import { userVerbsFrom } from '@services/transitions';
 import { useVerbAvailability, useNextAct } from '@hooks/useVerbAvailability';
+import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { POStatus } from '@services/data/types';
 import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
@@ -177,6 +178,13 @@ const SupplierOrders = () => {
   const shippingAvailability = useVerbAvailability('po:shipping-notice');
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(/** @type {TabKey} */ ('all'));
+  // Deep-link read: `?tab=action` lands "purchase orders to respond to" on
+  // the Action tab.
+  useUrlEnumParam(
+    'tab',
+    /** @type {TabKey[]} */ (['all', 'action', 'progress', 'completed']),
+    setActiveTab
+  );
   const [selected, setSelected] = useState(/** @type {PurchaseOrder | null} */ (null));
   const [panelMode, setPanelMode] = useState(/** @type {PanelMode} */ ('detail'));
   // ⚠️ **THE MODE IS DERIVED, NOT READ, AND THAT IS WHAT MAKES THE GUARD COVER

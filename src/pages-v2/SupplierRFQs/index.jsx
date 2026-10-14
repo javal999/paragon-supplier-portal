@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import SubTabs from '@components/ui-v2/SubTabs';
 import { useCurrentIdentity } from '@context/CurrentIdentityContext';
@@ -60,6 +61,10 @@ const RfqWorkspace = ({
   // The eyebrow is the menu section alone (the `PageHeader` rule).
   const crumb = [t('hub.nav.section.sourcing')];
   const [activeTab, setActiveTab] = useState(/** @type {TabKey} */ ('open'));
+  // Deep-link read: `?tab=open` lands "sourcing invitations to answer" on
+  // the Open tab (already this page's default — kept explicit for the shared
+  // deep-link convention, and in case that default ever changes).
+  useUrlEnumParam('tab', /** @type {TabKey[]} */ (['open', 'quotes', 'history']), setActiveTab);
   const submission = useQuoteSubmission({
     supplierId,
     rfqById,

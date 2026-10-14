@@ -38,9 +38,10 @@ export const ROW_FOCUS_CLASS = ROW_FOCUS;
  * @param {TableRowProps} props
  * @returns {React.ReactNode}
  */
-const TableRow = ({ children, className = '', onClick, onKeyDown, tabIndex, ...rest }) => {
+const TableRow = ({ children, className = '', onClick, onKeyDown, tabIndex, ref, ...rest }) => {
   return (
     <tr
+      ref={ref}
       className={`border-b border-border-subtle hover:bg-bg-hover transition-colors ${onClick ? ROW_FOCUS : ''} ${className}`}
       onClick={onClick}
       {...rowActivation(onClick, onKeyDown)}
@@ -53,6 +54,7 @@ const TableRow = ({ children, className = '', onClick, onKeyDown, tabIndex, ...r
 };
 export default TableRow;
 /**
- * Every native `<tr>` attribute; `children` is required.
- * @typedef {React.HTMLAttributes<HTMLTableRowElement> & { children: React.ReactNode }} TableRowProps
+ * Every native `<tr>` attribute, plus `ref` (React 19 passes it as a regular
+ * prop); `children` is required.
+ * @typedef {React.HTMLAttributes<HTMLTableRowElement> & { children: React.ReactNode; ref?: React.Ref<HTMLTableRowElement> }} TableRowProps
  */

@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { AlertTriangle, MessageSquarePlus, RefreshCw } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
@@ -25,6 +26,8 @@ import ErrorState from '@components/ui-v2/ErrorState';
 import EmptyState from '@components/ui-v2/EmptyState';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
+import { HIGHLIGHTED_ROW_CLASS, useRowHighlight } from '@hooks/useRowHighlight';
 import { formatDate, formatDateTime } from '@lib/format';
 import { useInventory } from '@services/query/hooks';
 /** @import { InventoryPosition, RiskClass } from '@services/data/types' */
@@ -83,9 +86,24 @@ const BuyerInventory = () => {
   const record = useVerbAvailability('inventorydeclaration:record');
   const sync = useVerbAvailability('stocksync:run');
   const { run, pending } = useInventoryRunner();
-  const [type, setType] = useState(/** @type {MaterialType} */ ('ROH'));
+  const [params] = useSearchParams();
+  // `manualType` is `null` until the URL or a click sets it; while it is
+  // null, `type` below derives from `?material=`'s own row instead of a
+  // fixed default — a pure render-time fallback, not an effect, so a stale
+  // lookup (before `rows` has loaded) is never possible.
+  const [manualType, setManualType] = useState(/** @type {MaterialType | null} */ (null));
   const [band, setBand] = useState(/** @type {BandFilter} */ ('all'));
-  const [search, setSearch] = useState('');
+  // Deep-link read: `?type=` / `?band=` narrow the alert's destination;
+  // `?material=` (one-shot, like the existing one-shot params elsewhere)
+  // pre-fills the search so the row is found regardless of which page it
+  // sits on.
+  useUrlEnumParam('type', /** @type {MaterialType[]} */ (['ROH', 'VERP']), setManualType);
+  useUrlEnumParam(
+    'band',
+    /** @type {BandFilter[]} */ (['all', 'high', 'medium', 'low', 'stale']),
+    setBand
+  );
+  const [search, setSearch] = useState(() => params.get('material') ?? '');
   const [incoming, setIncoming] = useState(/** @type {InventoryPosition | null} */ (null));
   // Material C4 — the PIC filter, kept in the page address (MR-5 BR-03).
   const pic = usePicFilter();
@@ -94,6 +112,15 @@ const BuyerInventory = () => {
   const crumb = [t('hub.nav.section.inventory'), t('inv.pti.title')];
 
   const rows = useMemo(() => inventory.data?.items ?? [], [inventory.data]);
+  const highlight = useRowHighlight((id) =>
+    rows.some((r) => `${r.supplierId}-${r.materialCode}` === id)
+  );
+  const materialParam = params.get('material');
+  const materialRow = materialParam
+    ? rows.find((r) => r.materialCode === materialParam)
+    : undefined;
+  const type = manualType ?? materialRow?.materialType ?? /** @type {MaterialType} */ ('ROH');
+  const setType = setManualType;
   const ofType = rows.filter((r) => r.materialType === type);
   /** @param {BandFilter} b */
   const bandCount = (b) =>
@@ -199,6 +226,16 @@ const BuyerInventory = () => {
 
       {/* REQ-E07-08 AC-03 — this page reads SAP data; say how old it is. */}
       <SapDataAgeBanner page="inventory" className="mb-4" />
+
+      {highlight.missing ? (
+        <div
+          role="status"
+          data-testid="inv-highlight-missing"
+          className="bg-bg-hover border border-border-subtle rounded px-4 py-3 mb-4 text-sm text-text-secondary"
+        >
+          {t('inv.highlight.missing')}
+        </div>
+      ) : null}
 
       {(high > 0 || noLeadTime > 0 || stale > 0) && (
         <div
@@ -343,68 +380,75 @@ const BuyerInventory = () => {
             <TableHeaderCell>{t('inv.col.lastUpdate')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {shown.map(({ item: p, match }) => (
-              <TableRow
-                key={`${p.supplierId}-${p.materialCode}`}
-                data-testid={`pti-stock-row-${p.supplierId}-${p.materialCode}`}
-              >
-                <TableCell>
-                  <Data className="text-xs font-bold text-text-primary">{p.materialCode}</Data>
-                  <div className="text-sm text-text-primary">{p.materialLabel}</div>
-                  {/* Material C2 — the supplier's approved trade name (MR-3 d, planner step 3). */}
-                  <TradeNameBeside
-                    name={p.tradeName}
-                    viewer="pti"
-                    testId={`pti-stock-trade-name-${p.supplierId}-${p.materialCode}`}
-                  />
-                  <MaterialMatchReason
-                    match={match}
-                    testId={`pti-stock-match-${p.supplierId}-${p.materialCode}`}
-                  />
-                  {p.consignment && (
-                    <StatusPill variant="info" className="mt-1">
-                      {t('inv.consignment')}
-                    </StatusPill>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <div className="text-sm text-text-primary">{p.supplierName}</div>
-                </TableCell>
-                <TableCell
-                  className="whitespace-nowrap"
-                  data-testid={`pti-stock-cycle-${p.supplierId}-${p.materialCode}`}
+            {shown.map(({ item: p, match }) => {
+              const rowId = `${p.supplierId}-${p.materialCode}`;
+              const isHighlighted = highlight.id === rowId;
+              return (
+                <TableRow
+                  key={rowId}
+                  ref={isHighlighted ? highlight.scrollRef : undefined}
+                  data-testid={`pti-stock-row-${p.supplierId}-${p.materialCode}`}
+                  aria-current={isHighlighted ? 'true' : undefined}
+                  className={isHighlighted ? HIGHLIGHTED_ROW_CLASS : undefined}
                 >
-                  <CycleCell value={thisCycle.get(p.supplierId)} />
-                </TableCell>
-                <TableCell>
-                  <PicCell
-                    value={p.mrpController}
-                    testId={`pti-stock-pic-${p.supplierId}-${p.materialCode}`}
-                  />
-                </TableCell>
-                <TableCell className="text-right whitespace-nowrap">
-                  <Figure value={p.supplierSoh} uom={p.uom} absentKey="inv.figure.noSubmission" />
-                </TableCell>
-                <TableCell className="text-right whitespace-nowrap">
-                  <Figure value={p.ptiSoh} uom={p.uom} absentKey="inv.figure.none" />
-                </TableCell>
-                <TableCell className="text-right whitespace-nowrap">
-                  <Figure value={p.ptiRop} uom={p.uom} absentKey="inv.figure.none" />
-                </TableCell>
-                <TableCell className="text-right whitespace-nowrap">
-                  <Figure value={p.supplierRop} uom={p.uom} absentKey="inv.figure.notProvided" />
-                </TableCell>
-                <TableCell>
-                  <IncomingButton position={p} onOpen={() => setIncoming(p)} />
-                </TableCell>
-                <TableCell>
-                  <SupplyPill position={p} />
-                </TableCell>
-                <TableCell>
-                  <LastUpdateCell position={p} nowIso={nowIso} />
-                </TableCell>
-              </TableRow>
-            ))}
+                  <TableCell>
+                    <Data className="text-xs font-bold text-text-primary">{p.materialCode}</Data>
+                    <div className="text-sm text-text-primary">{p.materialLabel}</div>
+                    {/* Material C2 — the supplier's approved trade name (MR-3 d, planner step 3). */}
+                    <TradeNameBeside
+                      name={p.tradeName}
+                      viewer="pti"
+                      testId={`pti-stock-trade-name-${p.supplierId}-${p.materialCode}`}
+                    />
+                    <MaterialMatchReason
+                      match={match}
+                      testId={`pti-stock-match-${p.supplierId}-${p.materialCode}`}
+                    />
+                    {p.consignment && (
+                      <StatusPill variant="info" className="mt-1">
+                        {t('inv.consignment')}
+                      </StatusPill>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm text-text-primary">{p.supplierName}</div>
+                  </TableCell>
+                  <TableCell
+                    className="whitespace-nowrap"
+                    data-testid={`pti-stock-cycle-${p.supplierId}-${p.materialCode}`}
+                  >
+                    <CycleCell value={thisCycle.get(p.supplierId)} />
+                  </TableCell>
+                  <TableCell>
+                    <PicCell
+                      value={p.mrpController}
+                      testId={`pti-stock-pic-${p.supplierId}-${p.materialCode}`}
+                    />
+                  </TableCell>
+                  <TableCell className="text-right whitespace-nowrap">
+                    <Figure value={p.supplierSoh} uom={p.uom} absentKey="inv.figure.noSubmission" />
+                  </TableCell>
+                  <TableCell className="text-right whitespace-nowrap">
+                    <Figure value={p.ptiSoh} uom={p.uom} absentKey="inv.figure.none" />
+                  </TableCell>
+                  <TableCell className="text-right whitespace-nowrap">
+                    <Figure value={p.ptiRop} uom={p.uom} absentKey="inv.figure.none" />
+                  </TableCell>
+                  <TableCell className="text-right whitespace-nowrap">
+                    <Figure value={p.supplierRop} uom={p.uom} absentKey="inv.figure.notProvided" />
+                  </TableCell>
+                  <TableCell>
+                    <IncomingButton position={p} onOpen={() => setIncoming(p)} />
+                  </TableCell>
+                  <TableCell>
+                    <SupplyPill position={p} />
+                  </TableCell>
+                  <TableCell>
+                    <LastUpdateCell position={p} nowIso={nowIso} />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
             {shown.length === 0 && (
               <tr>
                 <td colSpan={11} className="py-10 text-center text-sm text-text-tertiary">

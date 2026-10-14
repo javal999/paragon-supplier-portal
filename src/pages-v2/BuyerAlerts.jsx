@@ -21,10 +21,12 @@ import { useInventoryAlerts } from '@services/query/hooks';
 /** @import { InventoryAlert, RiskClass } from '@services/data/types' */
 import {
   alertCloseRefusal,
+  alertHref,
   closeReasonCounts,
   closeReasonOf,
   groupAlertsBySupplier
 } from '@services/transitions/inventoryAlertRules';
+import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
 import { NOTE_REQUIRED_CODE } from '@services/transitions/reasonCodes';
 import { useActiveReasonCodes, useReasonLabel } from './admin/reasonCodeDisplay';
 import {
@@ -110,23 +112,10 @@ const CloseReasonCounts = ({ alerts }) => {
   );
 };
 
-/**
- * @param {InventoryAlert} a
- * @returns {string}
- */
-const linkFor = (a) =>
-  a.rule === 'capacityBelowDemand'
-    ? '/buyer/capacity'
-    : // CAP-D2 — the commitments page is where demand moves to another qualified supplier.
-      a.rule === 'commitmentBelowForecast' || a.rule === 'supplyDiscontinued'
-      ? `/buyer/collaboration?material=${encodeURIComponent(a.subject)}`
-      : // CAP-9 BR-05 — the subject is the blanket PO; the call-off page filters to it.
-        a.rule === 'blanketPoRunOut'
-        ? `/buyer/call-offs?po=${encodeURIComponent(a.subject)}`
-        : // CAP-11 BR-04 — the subject is the material; the page filters to the supplier × material.
-          a.rule === 'demandAnticipationUnabsorbed'
-          ? `/buyer/demand-anticipation?supplier=${encodeURIComponent(a.supplierId)}&material=${encodeURIComponent(a.subject)}`
-          : '/buyer/inventory';
+/** @type {readonly StatusTab[]} */
+const STATUS_TABS = ['open', 'closed'];
+/** @type {readonly RiskFilter[]} */
+const RISK_FILTERS = ['all', 'high', 'medium', 'low'];
 
 /** @type {React.FC} */
 const BuyerAlerts = () => {
@@ -145,6 +134,10 @@ const BuyerAlerts = () => {
   // A reason in the address is a Closed-tab filter, so that tab opens.
   const [tab, setTab] = useState(/** @type {StatusTab} */ (reasonFilter ? 'closed' : 'open'));
   const [risk, setRisk] = useState(/** @type {RiskFilter} */ ('all'));
+  // Deep-link read: `?tab=open&risk=high` lands the "High-risk inventory and
+  // capacity alerts" task on the Open tab with the High chip already selected.
+  useUrlEnumParam('tab', STATUS_TABS, setTab);
+  useUrlEnumParam('risk', RISK_FILTERS, setRisk);
   const [collapsed, setCollapsed] = useState(/** @type {Record<string, boolean>} */ ({}));
   const [closing, setClosing] = useState(/** @type {InventoryAlert | null} */ (null));
   const [reason, setReason] = useState('');
@@ -459,7 +452,10 @@ const BuyerAlerts = () => {
                             </div>
                           )}
                         </div>
-                        <Link to={linkFor(a)} className="text-sm text-action hover:underline">
+                        <Link
+                          to={alertHref(a, 'buyer')}
+                          className="text-sm text-action hover:underline"
+                        >
                           {t(
                             a.rule === 'capacityBelowDemand'
                               ? 'inv.alerts.openCapacity'

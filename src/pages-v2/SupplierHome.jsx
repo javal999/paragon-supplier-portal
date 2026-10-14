@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { usePlanningGroupLabel } from './inventory/planningGroupDisplay';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
@@ -37,11 +38,13 @@ import { isDueWithoutHeadsUp } from '@services/transitions/callOffRules';
 import { useCallOffViews } from './callOffs/callOffDisplay';
 import { planStatus } from '@services/transitions/capacityRules';
 import { positionRisk, stockFreshness } from '@services/transitions/inventoryRules';
+import { alertHref } from '@services/transitions/inventoryAlertRules';
 import { deadlineState } from '@services/transitions/forecastRules';
 import { forecastNow } from './forecasts/forecastDisplay';
 import Data from '@components/ui-v2/Data';
 import { RiskPill, inventoryNow } from './inventory/inventoryDisplay';
 import { sdcClock } from '@services/sdc/clock';
+import { deepLink, sharedValue } from '@lib/deepLink';
 import WeeklyUpdatePanel, { weeklyUpdateView } from './inventory/WeeklyUpdatePanel';
 
 // Supplier Home — "To do" (REQUIREMENTS §3.8 SC-01): what Paragon is waiting for
@@ -99,6 +102,13 @@ const SupplierHome = () => {
         const state = documentDisplayState(doc, DECLARED_PRESENT);
         return state === 'expired' || state === 'expiring';
       });
+      // The documents link narrows by kind; both kinds partition certsDue.
+      const expired = certsDue.filter(
+        (doc) => documentDisplayState(doc, DECLARED_PRESENT) === 'expired'
+      );
+      const expiring = certsDue.filter(
+        (doc) => documentDisplayState(doc, DECLARED_PRESENT) === 'expiring'
+      );
       const unpaid = (invoices.data?.items ?? []).filter(
         (i) => i.status !== 'Payment Released' && i.status !== 'Remittance Received'
       );
@@ -182,7 +192,7 @@ const SupplierHome = () => {
           count: toConfirm.length,
           deadlines: toConfirm.map((po) => responseDeadline(po).toISOString()),
           stock: coverOf(poMaterials(toConfirm)),
-          to: '/supplier/orders'
+          to: deepLink('/supplier/orders', { tab: 'action' })
         },
         {
           // REQ-E09-03 — released call-offs waiting for this supplier's answer.
@@ -191,7 +201,7 @@ const SupplierHome = () => {
           count: toConfirmCallOffs.length,
           deadlines: toConfirmCallOffs.map((v) => v.deadline?.toISOString() ?? v.callOff.needDate),
           stock: coverOf(toConfirmCallOffs.map((v) => v.callOff.materialCode)),
-          to: '/supplier/call-offs'
+          to: deepLink('/supplier/call-offs', { status: 'toConfirm' })
         },
         {
           // CR-09 — confirmed, due within 7 days, and no ASN or dispatch notice yet.
@@ -200,7 +210,7 @@ const SupplierHome = () => {
           count: dueCallOffs.length,
           deadlines: dueCallOffs.map((v) => v.dueDate),
           stock: coverOf(dueCallOffs.map((v) => v.callOff.materialCode)),
-          to: '/supplier/call-offs'
+          to: deepLink('/supplier/call-offs', { status: 'dueSoon' })
         },
         {
           // REQ-E08-01 AC-05 — figures past their data-update SLA, or never sent
@@ -210,7 +220,7 @@ const SupplierHome = () => {
           count: stalePositions.length,
           deadlines: stalePositions.map((p) => p.staleAt ?? weekly?.status.cycle.cutoff),
           stock: coverOf(stalePositions.map((p) => p.materialCode)),
-          to: '/supplier/inventory'
+          to: deepLink('/supplier/inventory', { stale: 'stale' })
         },
         {
           id: 'weekly-update',
@@ -230,7 +240,11 @@ const SupplierHome = () => {
             (p) => p.weeks.find((w) => w.entry === null || w.needsReEntry === true)?.week
           ),
           stock: coverOf(capacityDue.flatMap((p) => p.materials)),
-          to: '/supplier/capacity'
+          // D7 (PR #74 review): only narrow to a group when every due plan
+          // shares one.
+          to: deepLink('/supplier/capacity', {
+            group: sharedValue(capacityDue, (p) => p.planningGroupId)
+          })
         },
         {
           // REQ-E06-01 — a published version this supplier has not opened yet. No
@@ -240,7 +254,9 @@ const SupplierHome = () => {
           count: unviewed.length,
           deadlines: unviewedLines.map((l) => l.dueAt),
           stock: coverOf(unviewedLines.map((l) => l.materialCode)),
-          to: '/supplier/forecasts'
+          to: deepLink('/supplier/forecasts', {
+            stream: sharedValue(unviewed, (v) => v.stream)
+          })
         },
         {
           // REQ-E06-03 BR-06 — the reminder at the deadline.
@@ -249,7 +265,9 @@ const SupplierHome = () => {
           count: overdueLines.length,
           deadlines: overdueLines.map((l) => l.dueAt),
           stock: coverOf(overdueLines.map((l) => l.materialCode)),
-          to: '/supplier/forecasts'
+          to: deepLink('/supplier/forecasts', {
+            stream: sharedValue(overdueLines, (l) => l.stream)
+          })
         },
         {
           // REQ-E06-03 BR-06 — the reminder at half the deadline.
@@ -258,7 +276,9 @@ const SupplierHome = () => {
           count: dueSoonLines.length,
           deadlines: dueSoonLines.map((l) => l.dueAt),
           stock: coverOf(dueSoonLines.map((l) => l.materialCode)),
-          to: '/supplier/forecasts'
+          to: deepLink('/supplier/forecasts', {
+            stream: sharedValue(dueSoonLines, (l) => l.stream)
+          })
         },
         {
           // REQ-E06-03 BR-05 — the planner asked for a revision, with a note.
@@ -268,7 +288,9 @@ const SupplierHome = () => {
           deadlines: [],
           stock: coverOf(revisionLines.map((l) => l.materialCode)),
           noDeadlineAmber: true,
-          to: '/supplier/forecasts'
+          to: deepLink('/supplier/forecasts', {
+            stream: sharedValue(revisionLines, (l) => l.stream)
+          })
         },
         {
           // REQ-E07-05 — a confirmed order still owes its expected completion date.
@@ -288,7 +310,7 @@ const SupplierHome = () => {
           count: readyToShip.length,
           deadlines: readyToShip.map((po) => po.confirmedDeliveryDate || po.requestedDeliveryDate),
           stock: coverOf(poMaterials(readyToShip)),
-          to: '/supplier/shipments'
+          to: deepLink('/supplier/shipments', { tab: 'create' })
         },
         {
           id: 'receipt-discrepancies',
@@ -297,7 +319,7 @@ const SupplierHome = () => {
           deadlines: [],
           stock: coverOf(toAnswer.flatMap((gr) => gr.inspectionResults.map((r) => r.materialCode))),
           noDeadlineAmber: true,
-          to: '/supplier/goods-receipts'
+          to: deepLink('/supplier/goods-receipts', { status: 'awaiting' })
         },
         {
           // REQ-E07-07 — Finance returned the invoice with a reason.
@@ -306,7 +328,7 @@ const SupplierHome = () => {
           count: returned.length,
           deadlines: [],
           noDeadlineAmber: true,
-          to: '/supplier/invoices'
+          to: deepLink('/supplier/invoices', { stage: 'Returned' })
         },
         {
           // REQ-E03-03 BR-05 — this supplier's own deadline, extension included.
@@ -316,7 +338,7 @@ const SupplierHome = () => {
           deadlines: openRfqs.map((r) =>
             effectiveDeadline(r.responseDeadline, r.inviteeDeadlines ?? [], supplierId ?? '')
           ),
-          to: '/supplier/rfq'
+          to: deepLink('/supplier/rfq', { tab: 'open' })
         },
         {
           // REQ-E03-02 — an information request still to answer: invited, and no
@@ -355,7 +377,19 @@ const SupplierHome = () => {
           label: t('hub.home.task.sup.certs'),
           count: certsDue.length,
           deadlines: certsDue.map((doc) => doc.expiryDate),
-          to: '/supplier/documents'
+          // D6 (PR #74 review): the page's `expiry` filter is single-valued
+          // (all/expired/expiring). Narrow to whichever kind the count is
+          // entirely made of; when both kinds are present, no single value
+          // covers the whole count, so link unfiltered rather than hiding
+          // half of it.
+          to: deepLink('/supplier/documents', {
+            expiry:
+              expired.length > 0 && expiring.length === 0
+                ? 'expired'
+                : expiring.length > 0 && expired.length === 0
+                  ? 'expiring'
+                  : undefined
+          })
         }
       ];
       return [
@@ -428,6 +462,15 @@ const SupplierHome = () => {
                     <Data>{a.subject}</Data>
                   )}
                 </span>
+                <Link to={alertHref(a, 'supplier')} className="text-sm text-action hover:underline">
+                  {t(
+                    a.rule === 'capacityBelowDemand'
+                      ? 'inv.alerts.openCapacity'
+                      : a.rule === 'commitmentBelowForecast'
+                        ? 'inv.alerts.openCommitments'
+                        : 'inv.alerts.openInventory'
+                  )}
+                </Link>
               </li>
             ))}
           </ul>

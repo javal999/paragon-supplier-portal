@@ -15,6 +15,7 @@ import {
 } from '@services/query/hooks';
 import * as d from './buyerDerivations';
 import { sdcClock } from '@services/sdc/clock';
+import { deepLink } from '@lib/deepLink';
 
 // The buyer triage line — the aggregated exception count above the widget grid.
 // It reads the SAME derivations the widgets do, so the bar and the widget flags
@@ -64,18 +65,20 @@ const BuyerAlertsBar = () => {
           label: t('widget.alertsBar.flag.overdueInvoices'),
           count: d.overdueInvoices(invItems).length,
           severity: d.invoiceTier(invItems),
-          to: '/buyer/invoices'
+          to: deepLink('/buyer/invoices', { tab: 'queue', status: 'Overdue' })
         },
         {
           label: t('widget.alertsBar.flag.unackPo'),
           count: d.unacknowledgedOver48h(poItems, now).length,
           severity: d.poTier(poItems, now),
-          to: '/buyer/orders'
+          to: deepLink('/buyer/orders', { tab: 'pending' })
         },
         {
           label: t('widget.alertsBar.flag.rfqAward'),
           count: d.pendingAwardRfqs(rfqItems, quoteItems).length,
           severity: d.rfqAwardTier(rfqItems, quoteItems, now),
+          // D2 (PR #74 review): pendingAwardRfqs is not the Pending tab's own
+          // predicate — link unfiltered.
           to: '/buyer/rfq'
         },
         {
@@ -88,6 +91,8 @@ const BuyerAlertsBar = () => {
           label: t('widget.alertsBar.flag.inboundAsn'),
           count: d.pendingAsns(asnItems).length,
           severity: d.asnTier(asnItems),
+          // D4 (PR #74 review): pendingAsns is not the shipments page's
+          // Pending tab predicate — link unfiltered.
           to: '/buyer/shipments'
         }
       ].filter((f) => f.count > 0);
