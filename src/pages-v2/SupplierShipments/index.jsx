@@ -10,6 +10,7 @@ import SubTabs from '@components/ui-v2/SubTabs';
 /** @import { WizardStep } from '@components/ui-v2/Wizard' */
 import Wizard from '@components/ui-v2/Wizard';
 import { useVerbAvailabilities } from '@hooks/useVerbAvailability';
+import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@hooks/useToast';
@@ -81,6 +82,9 @@ const SupplierShipments = () => {
   );
   const wizardHeld = wizardVerbs.create.kind === 'held' && wizardVerbs.submit.kind === 'held';
   const [tab, setTab] = useState(/** @type {TabKey} */ ('shipments'));
+  // Deep-link read: `?tab=create` lands "confirmed orders ready to ship" on
+  // the create-ASN tab.
+  useUrlEnumParam('tab', /** @type {TabKey[]} */ (['shipments', 'create']), setTab);
   const [statusFilter, setStatusFilter] = useState(/** @type {StatusFilter} */ ('All'));
   const wizard = useAsnWizard({
     setTab,

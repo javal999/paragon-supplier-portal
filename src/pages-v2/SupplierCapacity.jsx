@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
 import { OrderNotFound, PoFilterBanner, usePoDrillFilter } from './orders/PoDrillFilter';
@@ -160,7 +161,10 @@ const SupplierCapacity = () => {
   const plansQuery = useCapacityPlans();
   const confirm = useVerbAvailability('capacity:confirm');
   const { run, pending } = useInventoryRunner();
-  const [group, setGroup] = useState(/** @type {string | null} */ (null));
+  const [params] = useSearchParams();
+  // Deep-link read: `?group=<planningGroupId>` (one-shot, like the material
+  // params elsewhere) pre-selects the group for "capacity confirmations due".
+  const [group, setGroup] = useState(/** @type {string | null} */ (params.get('group')));
   const [draft, setDraft] = useState(/** @type {WeekDraft[]} */ ([]));
   // CAP-2 BR-05 — Monthly is read only, so the refusal's week is not a link there.
   const [gridView] = useWeekGridView(VIEW_KEY);

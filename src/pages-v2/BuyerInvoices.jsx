@@ -44,6 +44,7 @@ import TableCell from '@components/ui-v2/TableCell';
 import Button from '@components/ui-v2/Button';
 import SidePanel from '@components/ui-v2/SidePanel';
 import { useToast } from '@hooks/useToast';
+import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import EmptyState from '@components/ui-v2/EmptyState';
@@ -263,6 +264,10 @@ const BuyerInvoicesView = ({ invoices: allInvoices }) => {
   const resolveMutation = useInvoiceResolve();
   const [tab, setTab] = useState(/** @type {TabKey} */ ('queue'));
   const [statusFilter, setStatusFilter] = useState(/** @type {StatusFilter} */ ('all'));
+  // Deep-link read: `?tab=queue&status=Overdue` lands the "overdue supplier
+  // invoices" task on the queue tab, filtered to overdue.
+  useUrlEnumParam('tab', /** @type {TabKey[]} */ (['queue', 'analytics', 'aging']), setTab);
+  useUrlEnumParam('status', STATUS_OPTIONS, setStatusFilter);
   const [selectedId, setSelectedId] = useState(/** @type {string | null} */ (null));
   // ── REQ-E07-03 · the drill-through filter ─────────────────────────────────
   // The receipts join is what makes "an invoice covering several POs appears

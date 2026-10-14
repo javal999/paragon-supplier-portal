@@ -85,8 +85,15 @@ const BuyerCommitments = () => {
   // when a PO spans several.
   const drill = usePoDrillFilter();
   const drillMaterials = drill.kind === 'filtered' ? drill.materials : null;
-  const [stream, setStream] = useState(/** @type {ForecastStream | null} */ (null));
-  const [supplier, setSupplier] = useState(drill.kind === 'filtered' ? drill.po.supplierId : '');
+  // Deep-link reads (one-shot, like `material` below): `?stream=` and
+  // `?supplier=` pre-select the stream/supplier for the missing-commitments
+  // and outside-tolerance My Tasks, and for an alert's "Open commitments &
+  // gaps" link. An unknown stream is ignored by the stream picker's own
+  // membership check, same as the supplier page's equivalent read.
+  const [stream, setStream] = useState(/** @type {ForecastStream | null} */ (params.get('stream')));
+  const [supplier, setSupplier] = useState(
+    drill.kind === 'filtered' ? drill.po.supplierId : (params.get('supplier') ?? '')
+  );
   const [material, setMaterial] = useState(params.get('material') ?? '');
   // CAP-5 BR-01 — the chosen shortfall reasons; none chosen is no filter.
   const [reasons, setReasons] = useState(/** @type {string[]} */ ([]));

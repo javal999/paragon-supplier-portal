@@ -58,6 +58,8 @@ export const supplierDocumentsEn = {
   'supplierDocuments.category.quality': 'Quality',
   'supplierDocuments.category.contract': 'Contract',
   'supplierDocuments.filter.count': '{{shown}} of {{total}} documents',
+  'supplierDocuments.filter.expired': 'Expired',
+  'supplierDocuments.filter.expiring': 'Expiring soon',
   // — Table columns —
   'supplierDocuments.table.document': 'Document',
   'supplierDocuments.table.category': 'Category',
@@ -186,6 +188,8 @@ export const supplierDocumentsId = {
   'supplierDocuments.category.quality': 'Kualitas',
   'supplierDocuments.category.contract': 'Kontrak',
   'supplierDocuments.filter.count': '{{shown}} dari {{total}} dokumen',
+  'supplierDocuments.filter.expired': 'Kedaluwarsa',
+  'supplierDocuments.filter.expiring': 'Akan kedaluwarsa',
   // — Table columns —
   'supplierDocuments.table.document': 'Dokumen',
   'supplierDocuments.table.category': 'Kategori',

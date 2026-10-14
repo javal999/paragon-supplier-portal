@@ -36,6 +36,8 @@ export const supplierInvoicesEn = {
   'supplierInvoices.banner.dispute.body': '— correct the invoice and resubmit it.',
   // — Table columns —
   'supplierInvoices.table.invoiceNo': 'Invoice #',
+  'supplierInvoices.filter.returned': 'Returned',
+  'supplierInvoices.filter.empty': 'No invoices match this filter right now.',
   'supplierInvoices.table.poRef': 'PO ref',
   'supplierInvoices.table.amount': 'Amount',
   'supplierInvoices.table.status': 'Status',
@@ -154,6 +156,8 @@ export const supplierInvoicesId = {
   'supplierInvoices.banner.dispute.body': '— perbaiki faktur lalu ajukan ulang.',
   // — Table columns —
   'supplierInvoices.table.invoiceNo': 'No. Faktur',
+  'supplierInvoices.filter.returned': 'Dikembalikan',
+  'supplierInvoices.filter.empty': 'Tidak ada faktur yang cocok dengan filter ini saat ini.',
   'supplierInvoices.table.poRef': 'Ref PO',
   'supplierInvoices.table.amount': 'Jumlah',
   'supplierInvoices.table.status': 'Status',

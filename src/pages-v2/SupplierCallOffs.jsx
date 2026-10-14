@@ -29,6 +29,8 @@ import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
+import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import { formatDate, formatDateTime } from '@lib/format';
 /** @import { CallOffCommandVars } from '@services/query/commandHooks' */
 import { useCallOffCommand } from '@services/query/commandHooks';
@@ -114,6 +116,16 @@ const SupplierCallOffs = () => {
   // are its own (narrowed in the read model, MAT-R4).
   const [search, setSearch] = useState('');
   const matchOf = useMaterialMatcher();
+  const [statusFilter, setStatusFilter] = useState(
+    /** @type {'all' | 'toConfirm' | 'dueSoon'} */ ('all')
+  );
+  // Deep-link read: `?status=toConfirm|dueSoon` narrows to the call-offs the
+  // linking task named.
+  useUrlEnumParam(
+    'status',
+    /** @type {('all' | 'toConfirm' | 'dueSoon')[]} */ (['all', 'toConfirm', 'dueSoon']),
+    setStatusFilter
+  );
 
   if (!identity.supplierId) return <NoSupplierIdentity />;
   if (isPending || drill.kind === 'pending') return <LoadingState breadcrumb={crumb} />;
@@ -131,9 +143,15 @@ const SupplierCallOffs = () => {
     );
 
   const scoped = drilledPo === null ? views : callOffsForPo(views, drilledPo);
-  const rows = [...scoped].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-  const toConfirm = rows.filter((v) => v.callOff.status === 'Awaiting Confirmation').length;
-  const dueSoon = rows.filter((v) => isDueWithoutHeadsUp(v, nowIso)).length;
+  const allRows = [...scoped].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  const toConfirm = allRows.filter((v) => v.callOff.status === 'Awaiting Confirmation').length;
+  const dueSoon = allRows.filter((v) => isDueWithoutHeadsUp(v, nowIso)).length;
+  const rows =
+    statusFilter === 'toConfirm'
+      ? allRows.filter((v) => v.callOff.status === 'Awaiting Confirmation')
+      : statusFilter === 'dueSoon'
+        ? allRows.filter((v) => isDueWithoutHeadsUp(v, nowIso))
+        : allRows;
   /** @type {CallOffView | null} */
   const selected = rows.find((v) => v.callOff.id === selectedId) ?? null;
   const listed = searchMaterials(
@@ -280,6 +298,26 @@ const SupplierCallOffs = () => {
           myCode={pic.myCode}
         />
       </div>
+
+      <FilterChipsBar
+        options={[
+          { id: 'all', label: t('co.pti.filter.all') },
+          { id: 'toConfirm', label: t('co.sup.filter.toConfirm'), count: toConfirm },
+          { id: 'dueSoon', label: t('co.sup.filter.dueSoon'), count: dueSoon }
+        ]}
+        value={statusFilter}
+        onChange={setStatusFilter}
+        className="mb-4"
+      />
+
+      {statusFilter !== 'all' && rows.length === 0 && (
+        <p
+          className="text-sm text-text-tertiary py-8 text-center"
+          data-testid="supplier-calloff-filter-empty"
+        >
+          {t('co.pti.filter.empty')}
+        </p>
+      )}
 
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>

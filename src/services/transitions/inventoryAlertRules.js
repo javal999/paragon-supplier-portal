@@ -54,6 +54,7 @@
 
 /** @import { CapacityPlan, ForecastCommitmentLine, InventoryAlert, InventoryAlertRule, InventoryPosition, RiskBasis, RiskClass } from '../data/types' */
 /** @import { ActorAttribution } from '@lib/enforcement' */
+import { deepLink } from '@lib/deepLink';
 /** @import { BlanketPoAlertSubject } from './blanketPoRules' */
 /** @import { UnabsorbedExcess } from './consumptionRules' */
 import { gapWeeks } from './capacityRules';
@@ -713,4 +714,59 @@ export function groupAlertsBySupplier(alerts) {
     groups.set(a.supplierId, g);
   }
   return [...groups.values()];
+}
+
+/**
+ * The destination a My Tasks item or an alert-list row that names this alert
+ * links to — the one place either side builds it, so a buyer's "Open
+ * inventory" link and a supplier's own list agree on the shape.
+ * @param {InventoryAlert} a
+ * @param {'buyer' | 'supplier'} persona
+ * @returns {string}
+ */
+export function alertHref(a, persona) {
+  if (a.rule === 'capacityBelowDemand') {
+    return persona === 'buyer'
+      ? deepLink('/buyer/capacity', {
+          supplier: a.supplierId,
+          planningGroup: a.subject,
+          gapsOnly: '1'
+        })
+      : deepLink('/supplier/capacity', { group: a.subject });
+  }
+  if (a.rule === 'commitmentBelowForecast') {
+    return persona === 'buyer'
+      ? deepLink('/buyer/collaboration', { material: a.subject, supplier: a.supplierId })
+      : deepLink('/supplier/forecasts', { material: a.subject });
+  }
+  // These rules are in PTI_ONLY_RULES, so only the buyer side ever links them.
+  if (persona === 'buyer') {
+    // CAP-D2 — the commitments page is where demand moves to another qualified supplier.
+    if (a.rule === 'supplyDiscontinued') {
+      return deepLink('/buyer/collaboration', { material: a.subject });
+    }
+    // CAP-9 BR-05 — the subject is the blanket PO; the call-off page filters to it.
+    if (a.rule === 'blanketPoRunOut') {
+      return deepLink('/buyer/call-offs', { po: a.subject });
+    }
+    // CAP-11 BR-04 — the subject is the material; the page filters to the supplier × material.
+    if (a.rule === 'demandAnticipationUnabsorbed') {
+      return deepLink('/buyer/demand-anticipation', {
+        supplier: a.supplierId,
+        material: a.subject
+      });
+    }
+  }
+  // A stale-reading position's RISK CLASS can be Medium or High on its own
+  // merits — the staleness is a separate, always-Low condition — so linking
+  // with `band=<riskClass>` would hide the row whenever the position's real
+  // band differs from Low. The destination's own `stale` band is the match.
+  const band = a.rule === 'staleData' ? 'stale' : a.riskClass;
+  return persona === 'buyer'
+    ? deepLink('/buyer/inventory', {
+        band,
+        material: a.subject,
+        highlight: `${a.supplierId}-${a.subject}`
+      })
+    : deepLink('/supplier/inventory', { highlight: a.subject });
 }

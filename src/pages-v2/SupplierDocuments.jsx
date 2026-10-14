@@ -56,6 +56,7 @@ import {
 } from '@services/query/commandHooks';
 import { certTypeLabelKey } from '@lib/complianceView';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { formatDate } from '@lib/format';
 import { useTranslation } from 'react-i18next';
@@ -267,6 +268,16 @@ const SupplierDocuments = () => {
   // (`BuyerCompliance` is the precedent.)
   const nowIso = TODAY;
   const [filterCat, setFilterCat] = useState(/** @type {CategoryFilter} */ ('All'));
+  const [expiryFilter, setExpiryFilter] = useState(
+    /** @type {'all' | 'expired' | 'expiring'} */ ('all')
+  );
+  // Deep-link read: `?expiry=expired|expiring` narrows the "certificates
+  // expired or expiring" task.
+  useUrlEnumParam(
+    'expiry',
+    /** @type {('all' | 'expired' | 'expiring')[]} */ (['all', 'expired', 'expiring']),
+    setExpiryFilter
+  );
   const [search, setSearch] = useState('');
   const [panelMode, setPanelMode] = useState(/** @type {PanelMode} */ ('closed'));
   const [activeDoc, setActiveDoc] = useState(/** @type {SupplierDocument | null} */ (null));
@@ -303,12 +314,14 @@ const SupplierDocuments = () => {
     () =>
       docs.filter((d) => {
         const matchCat = filterCat === 'All' || d.category === filterCat;
+        const matchExpiry =
+          expiryFilter === 'all' || documentDisplayState(d, nowIso) === expiryFilter;
         const q = search.toLowerCase();
         const matchSearch =
           q === '' || d.name.toLowerCase().includes(q) || d.issuedBy.toLowerCase().includes(q);
-        return matchCat && matchSearch;
+        return matchCat && matchExpiry && matchSearch;
       }),
-    [filterCat, search, docs]
+    [filterCat, expiryFilter, search, docs, nowIso]
   );
 
   const expiringSoon = useMemo(
@@ -603,6 +616,15 @@ const SupplierDocuments = () => {
         />
         <div className="flex flex-wrap items-center gap-3">
           <FilterChipsBar options={categoryOptions} value={filterCat} onChange={setFilterCat} />
+          <FilterChipsBar
+            options={[
+              { id: 'all', label: t('inv.filter.all') },
+              { id: 'expired', label: t('supplierDocuments.filter.expired') },
+              { id: 'expiring', label: t('supplierDocuments.filter.expiring') }
+            ]}
+            value={expiryFilter}
+            onChange={setExpiryFilter}
+          />
           <span className="text-meta text-text-tertiary">
             {t('supplierDocuments.filter.count', {
               shown: filtered.length,

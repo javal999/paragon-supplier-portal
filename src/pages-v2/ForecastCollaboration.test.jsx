@@ -515,8 +515,43 @@ describe('Alert, Home tasks and the Order summary', () => {
     expect(within(alert).getByText('High')).toBeInTheDocument();
     expect(within(alert).getByRole('link', { name: 'Open commitments & gaps' })).toHaveAttribute(
       'href',
-      '/buyer/collaboration?material=RM-STEAR-7300'
+      '/buyer/collaboration?material=RM-STEAR-7300&supplier=sup-002'
     );
+  });
+
+  it('#74 — that link opens Commitments & gaps narrowed to the alert’s supplier and material', async () => {
+    /** @returns {Promise<string[]>} the exception rows' ids, `<supplier>-<material>-<period>` */
+    const exceptionIds = async () =>
+      within(await screen.findByTestId('fc-exceptions'))
+        .queryAllByTestId(/^fc-exception-/)
+        .map((el) => String(el.getAttribute('data-testid')).replace('fc-exception-', ''));
+
+    // Control: unfiltered, the page lists other suppliers, so the narrowing below is real.
+    const { unmount } = renderWithProviders(<BuyerCommitments />, { identity: PLANNER });
+    expect((await exceptionIds()).some((id) => !id.startsWith('sup-002-'))).toBe(true);
+    unmount();
+
+    renderWithProviders(<BuyerCommitments />, {
+      identity: PLANNER,
+      route: '/buyer/collaboration?material=RM-STEAR-7300&supplier=sup-002'
+    });
+    const ids = await exceptionIds();
+    expect(ids.length).toBeGreaterThan(0);
+    expect(ids.filter((id) => !id.startsWith('sup-002-RM-STEAR-7300-'))).toEqual([]);
+  });
+
+  it('#74 — `?supplier=` alone narrows Commitments & gaps to that supplier', async () => {
+    // RM-STEAR-7300 is sup-002's alone, so the test above passes on `material`
+    // even if `supplier` were ignored; this one reads `supplier` and nothing else.
+    renderWithProviders(<BuyerCommitments />, {
+      identity: PLANNER,
+      route: '/buyer/collaboration?supplier=sup-007'
+    });
+    const ids = within(await screen.findByTestId('fc-exceptions'))
+      .queryAllByTestId(/^fc-exception-/)
+      .map((el) => String(el.getAttribute('data-testid')).replace('fc-exception-', ''));
+    expect(ids.length).toBeGreaterThan(0);
+    expect(ids.filter((id) => !id.startsWith('sup-007-'))).toEqual([]);
   });
 
   // ⚠️ PREMISE CHANGED BY BL-48 (CR-26): at 3 working days sup-007's Trade-off
