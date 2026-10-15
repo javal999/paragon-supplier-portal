@@ -696,8 +696,8 @@ describe('BuyerSourcing — the FX basis is visible, and recordable (2e-c-4)', (
     expect(screen.getByTestId('fx-vintage-EUR')).toHaveTextContent('as of 30 Jul 2026');
     expect(screen.getAllByText('Entered manually').length).toBe(2);
     // The rate itself, in the base currency, through the shared formatter.
-    expect(screen.getByText('Rp 18.000')).toBeInTheDocument();
-    expect(screen.getByText('Rp 17.250')).toBeInTheDocument();
+    expect(screen.getByText('Rp 18,000')).toBeInTheDocument();
+    expect(screen.getByText('Rp 17,250')).toBeInTheDocument();
   });
 
   it('a STALE refusal names the vintage it is judging', async () => {
@@ -717,7 +717,7 @@ describe('BuyerSourcing — the FX basis is visible, and recordable (2e-c-4)', (
     await openComparison();
 
     // The newer rate is in force...
-    expect(screen.getByText('Rp 18.000')).toBeInTheDocument();
+    expect(screen.getByText('Rp 18,000')).toBeInTheDocument();
     // ...and the older one is not gone, and the surface says so. This is what
     // makes "the prior basis is preserved" a property a buyer can observe
     // rather than a claim in a code comment.
@@ -852,7 +852,7 @@ describe('BuyerSourcing — recording a rate is confirm-before-commit (2e-c-4)',
     fireEvent.click(screen.getByRole('button', { name: 'Record rate' }));
 
     expect(await screen.findByTestId('fx-vintage-EUR')).toHaveTextContent('as of 29 Jul 2026');
-    expect(screen.getByText('Rp 18.000')).toBeInTheDocument();
+    expect(screen.getByText('Rp 18,000')).toBeInTheDocument();
   });
 
   it('THE AMBIGUOUS RATE IS REFUSED AT THE FIELD — "17.250" never reaches the ledger', async () => {
@@ -938,7 +938,7 @@ describe('BuyerSourcing — a supersede reads as a NEW RECORDED ACT (2e-c-4)', (
     // reacting to a real market move.
     await withExistingPin();
     const prior = screen.getByTestId('fx-supersede-prior');
-    expect(prior).toHaveTextContent('Rp 16.000');
+    expect(prior).toHaveTextContent('Rp 16,000');
     expect(prior).toHaveTextContent('20 Jul 2026');
   });
 
@@ -1010,7 +1010,7 @@ describe('BuyerSourcing — the award summary states the currency it was awarded
     // used to disagree — the cell said $22,800.00 while the summary directly
     // above it said Rp 22.800, for the same quote on the same screen.
     expect(await screen.findAllByText('$22,800.00')).toHaveLength(2);
-    expect(screen.queryByText('Rp 22.800')).not.toBeInTheDocument();
+    expect(screen.queryByText('Rp 22,800')).not.toBeInTheDocument();
   });
 });
 

@@ -462,7 +462,7 @@ describe('CR-04 on the screens — release by remaining quantity, value only wit
     );
     expect(within(line).queryByTestId('calloff-remaining-li-028a')).toBeNull();
     expect(within(line).getByTestId('calloff-remaining-value-li-028a')).toHaveTextContent(
-      '280.000.000'
+      '280,000,000'
     );
     fireEvent.click(
       within(screen.getByTestId('calloff-row-co-0021')).getByRole('button', { name: /Open draft/ })

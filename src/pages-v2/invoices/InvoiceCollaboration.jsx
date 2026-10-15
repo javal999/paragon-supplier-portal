@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import Data from '@components/ui-v2/Data';
 import StatusPill from '@components/ui-v2/StatusPill';
-import { formatDate } from '@lib/format';
+import { formatDate, formatIDR, formatNumber } from '@lib/format';
 /** @import { StatusTone } from '@lib/statusTone' */
 /** @import { Invoice, InvoiceLine, InvoiceMatchStatus } from '@services/data/types' */
 import { normalizeQty } from '@lib/localeNumber';
@@ -58,7 +58,7 @@ export const MatchResult = ({ status }) => {
         {t(`fc.inv.match.explain.${explain}`, {
           contractPct: invoicePriceTolerance().contractPricePct,
           pct: invoicePriceTolerance().standardPct,
-          cap: fmtIdr(invoicePriceTolerance().standardCapIdr)
+          cap: formatIDR(Math.round(invoicePriceTolerance().standardCapIdr))
         })}
       </p>
     </section>
@@ -66,19 +66,12 @@ export const MatchResult = ({ status }) => {
 };
 
 /**
- * @param {number} n
- * @returns {string}
- */
-export function fmtIdr(n) {
-  return `Rp ${Math.round(n).toLocaleString('id-ID')}`;
-}
-
-/**
  * A signed rupiah difference, so "more" and "less" are told apart on sight.
  * @param {number} n
  * @returns {string}
  */
-const fmtSignedIdr = (n) => (n > 0 ? `+${fmtIdr(n)}` : `-${fmtIdr(Math.abs(n))}`);
+const fmtSignedIdr = (n) =>
+  n > 0 ? `+${formatIDR(Math.round(n))}` : `-${formatIDR(Math.round(Math.abs(n)))}`;
 
 /**
  * @param {number} n
@@ -102,7 +95,7 @@ export const PriceCheckCell = ({ check, contractNumber, testId }) => {
         })
       : t('fc.inv.price.rule.standard', {
           pct: invoicePriceTolerance().standardPct,
-          cap: fmtIdr(invoicePriceTolerance().standardCapIdr)
+          cap: formatIDR(Math.round(invoicePriceTolerance().standardCapIdr))
         });
   return (
     <div data-testid={testId}>
@@ -115,7 +108,7 @@ export const PriceCheckCell = ({ check, contractNumber, testId }) => {
             check.rule === 'contract'
               ? invoicePriceTolerance().contractPricePct
               : invoicePriceTolerance().standardPct,
-          cap: fmtIdr(invoicePriceTolerance().standardCapIdr)
+          cap: formatIDR(Math.round(invoicePriceTolerance().standardCapIdr))
         })}
       </div>
     </div>
@@ -199,13 +192,13 @@ export const InvoiceLinesSection = ({
                         <div className="text-text-primary">{l.description}</div>
                       </td>
                       <td className="py-1.5 pr-2 text-right whitespace-nowrap">
-                        <Data>{`${l.quantity.toLocaleString('en-US')} ${l.uom ?? ''}`}</Data>
+                        <Data>{`${formatNumber(l.quantity)} ${l.uom ?? ''}`}</Data>
                       </td>
                       <td className="py-1.5 pr-2 text-right whitespace-nowrap">
-                        <Data>{fmtIdr(l.unitPrice)}</Data>
+                        <Data>{formatIDR(Math.round(l.unitPrice))}</Data>
                       </td>
                       <td className="py-1.5 text-right whitespace-nowrap">
-                        <Data>{fmtIdr(l.quantity * l.unitPrice)}</Data>
+                        <Data>{formatIDR(Math.round(l.quantity * l.unitPrice))}</Data>
                       </td>
                     </tr>
                     {/* CR-12 (BL-44) — the price check sits on its own row under
@@ -217,7 +210,7 @@ export const InvoiceLinesSection = ({
                           <div className="rounded bg-bg-hover px-2 py-1.5">
                             <div className="text-[11px] text-text-tertiary">
                               {t('fc.inv.price.col.check')} · {t('fc.inv.price.col.billed')}{' '}
-                              <Data>{fmtIdr(c.billed)}</Data>
+                              <Data>{formatIDR(Math.round(c.billed))}</Data>
                             </div>
                             <PriceCheckCell
                               check={c}

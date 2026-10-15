@@ -285,7 +285,7 @@ describe('custom terms and indicative pricing on the RFP surfaces', () => {
     );
     expect(
       within(cmp).getByTestId('rfp-pricing-rfp-002-cell-opt-full-set-sup-007')
-    ).toHaveTextContent(/10,000.*4\.850/);
+    ).toHaveTextContent(/10,000.*4,850/);
     expect(within(cmp).getByTestId('rfp-pricing-rfp-002-row-sup-opt-1')).toHaveTextContent(
       'Proposed by PT Sample Packaging Indonesia'
     );

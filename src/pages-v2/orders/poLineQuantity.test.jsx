@@ -43,7 +43,7 @@ describe('BL-80 — the one rule for a PO line quantity and value', () => {
 
   it('a value-limit line: no quantity, and worth its limit', () => {
     const line = lineOf('PO-2026-00128', 'li-028a');
-    expect(poLineQuantityText(t, line)).toBe('No quantity · value limit Rp 500.000.000');
+    expect(poLineQuantityText(t, line)).toBe('No quantity · value limit Rp 500,000,000');
     expect(poLineValue(line)).toBe(500_000_000);
   });
 
@@ -66,11 +66,11 @@ describe("BL-80 — PTI's order drawer on PO-2026-00128", () => {
     renderWithProviders(<BuyerOrders />);
     fireEvent.click(await screen.findByText('PO-2026-00128'));
     const row = /** @type {HTMLTableRowElement} */ (
-      (await screen.findByText('No quantity · value limit Rp 500.000.000')).closest('tr')
+      (await screen.findByText('No quantity · value limit Rp 500,000,000')).closest('tr')
     );
     expect(row).toHaveTextContent('Wardah Signature Floral Compound');
     expect(row).not.toHaveTextContent('0 KG');
     const cells = within(row).getAllByRole('cell');
-    expect(cells[cells.length - 1]).toHaveTextContent('Rp 500.000.000');
+    expect(cells[cells.length - 1]).toHaveTextContent('Rp 500,000,000');
   });
 });

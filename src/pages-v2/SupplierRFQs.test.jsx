@@ -143,7 +143,9 @@ describe('SupplierRFQs — the bid price is read once, and refused out loud', ()
     // preview now uses `formatNumber`, pinned to id-ID like every other quantity
     // on this page, so the separator is a dot and no longer depends on where the
     // test happens to run.
-    expect(screen.getByText(/180\.000\.000/)).toBeInTheDocument();
+    // The preview renders through formatMoney → formatIDR, which groups in the UI
+    // language (comma in English) since the currency/number formatting fix.
+    expect(screen.getByText(/180,000,000/)).toBeInTheDocument();
   });
 
   it('POSITIVE TWIN — a fully-formatted ID price is READ, not eaten', async () => {
@@ -154,7 +156,7 @@ describe('SupplierRFQs — the bid price is read once, and refused out loud', ()
     // GROUPING CORRECTED in 2e-b-3 (COS-01): was /1,800,060,000/. Same reason as
     // above — and note the fractional price survives the product exactly
     // (15000.5 × 120000), which is the point of the original spec.
-    expect(screen.getByText(/1\.800\.060\.000/)).toBeInTheDocument();
+    expect(screen.getByText(/1,800,060,000/)).toBeInTheDocument();
   });
 });
 

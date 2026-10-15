@@ -4,6 +4,7 @@ import { Building2, ClipboardCheck, UserPlus, CheckCircle2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next';
 import StatusPill from '@components/ui-v2/StatusPill';
 import Button from '@components/ui-v2/Button';
+import { formatIDR } from '@lib/format';
 
 /** @typedef {'External SR' | 'Internal SR' | 'KOL'} RequestType */
 
@@ -18,6 +19,16 @@ import Button from '@components/ui-v2/Button';
  * @property {string} badgeKey
  * @property {string} shortKey
  */
+
+// The KOL request type covers vendors below this value. The amount sits in the
+// sub-line copy as {{amount}} so it renders in the reader's language.
+const KOL_VALUE_LIMIT_IDR = 7_000_000;
+
+/**
+ * Translation values for a request type's sub-line.
+ * @returns {{ amount: string }}
+ */
+export const subLineValues = () => ({ amount: formatIDR(KOL_VALUE_LIMIT_IDR, { compact: true }) });
 
 /** @type {RequestTypeMeta[]} */
 export const REQUEST_TYPES = [
@@ -96,7 +107,9 @@ const RequestTypeSelector = ({ value, onChange, onContinue }) => {
                     {t('registration.selector.steps', { count: rt.steps })}
                   </span>
                 </div>
-                <div className="text-xs text-text-tertiary mb-2">{t(rt.subKey)}</div>
+                <div className="text-xs text-text-tertiary mb-2">
+                  {t(rt.subKey, subLineValues())}
+                </div>
                 <div className="text-xs text-text-secondary leading-relaxed">{t(rt.detailKey)}</div>
               </div>
               {selected && (

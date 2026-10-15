@@ -25,8 +25,8 @@ describe('formatNumber', () => {
     expect(formatNumber(-1500)).toBe('-1,500');
     expect(formatNumber(1_250_000_000)).toBe('1,250,000,000');
   });
-  it('leaves rupiah on the Indonesian grouping in both languages', () => {
-    expect(formatIDR(1_250_000)).toBe('Rp 1.250.000');
+  it('groups rupiah the same way as a plain number, so a quantity and an amount agree', () => {
+    expect(formatIDR(1_250_000)).toBe('Rp 1,250,000');
     expect(formatNumber(1_250_000)).toBe('1,250,000');
   });
   it('returns em dash for null/undefined/NaN', () => {
@@ -37,12 +37,12 @@ describe('formatNumber', () => {
 });
 
 describe('formatIDR (full)', () => {
-  it('prefixes Rp with id-ID grouping', () => {
-    expect(formatIDR(1_250_000_000)).toBe('Rp 1.250.000.000');
+  it('prefixes Rp and one space, grouped in the UI language', () => {
+    expect(formatIDR(1_250_000_000)).toBe('Rp 1,250,000,000');
     expect(formatIDR(0)).toBe('Rp 0');
   });
   it('handles negatives', () => {
-    expect(formatIDR(-1_000_000)).toBe('Rp -1.000.000');
+    expect(formatIDR(-1_000_000)).toBe('Rp -1,000,000');
   });
   it('returns em dash for null/undefined/NaN', () => {
     expect(formatIDR(null)).toBe('—');
@@ -51,14 +51,24 @@ describe('formatIDR (full)', () => {
   });
 });
 
-describe('formatIDR (compact — jt/B/T scale)', () => {
-  it('scales millions / billions / trillions', () => {
-    expect(formatIDR(14_000_000_000, { compact: true })).toBe('Rp 14.0B');
-    expect(formatIDR(1_500_000, { compact: true })).toBe('Rp 1.5jt');
-    expect(formatIDR(2_000_000_000_000, { compact: true })).toBe('Rp 2.0T');
-    expect(formatIDR(5_000, { compact: true })).toBe('Rp 5.0rb');
+describe('formatIDR (compact — English m / bn / tn)', () => {
+  it('scales millions / billions / trillions with a spaced English suffix', () => {
+    expect(formatIDR(14_000_000_000, { compact: true })).toBe('Rp 14 bn');
+    expect(formatIDR(1_500_000, { compact: true })).toBe('Rp 1.5 m');
+    expect(formatIDR(2_000_000_000_000, { compact: true })).toBe('Rp 2 tn');
   });
-  it('falls back to full formatting below thousands', () => {
+  it('reads a supplier KPI of Rp 1,125,000,000 as "Rp 1.1 bn" — never "M"', () => {
+    expect(formatIDR(1_125_000_000, { compact: true })).toBe('Rp 1.1 bn');
+  });
+  it('shows the decimal digit only when it is not zero', () => {
+    expect(formatIDR(320_000_000, { compact: true })).toBe('Rp 320 m');
+    expect(formatIDR(62_140_000, { compact: true })).toBe('Rp 62.1 m');
+  });
+  it('moves up a tier rather than rounding to "1,000 m"', () => {
+    expect(formatIDR(999_960_000, { compact: true })).toBe('Rp 1 bn');
+  });
+  it('renders a value below one million in full, with no suffix', () => {
+    expect(formatIDR(5_000, { compact: true })).toBe('Rp 5,000');
     expect(formatIDR(750, { compact: true })).toBe('Rp 750');
   });
   it('returns em dash for null', () => {
@@ -81,12 +91,13 @@ describe('formatDate', () => {
 });
 
 describe('locale-aware output (lang = id)', () => {
-  it('IDR compact billions use ID "M" (miliar); T/jt/rb unchanged', async () => {
+  it('IDR compact uses the Indonesian suffixes jt / M / T and a decimal comma', async () => {
     await i18n.changeLanguage('id');
-    expect(formatIDR(14_000_000_000, { compact: true })).toBe('Rp 14.0M');
-    expect(formatIDR(2_000_000_000_000, { compact: true })).toBe('Rp 2.0T');
-    expect(formatIDR(1_500_000, { compact: true })).toBe('Rp 1.5jt');
-    expect(formatIDR(5_000, { compact: true })).toBe('Rp 5.0rb');
+    expect(formatIDR(14_000_000_000, { compact: true })).toBe('Rp 14 M');
+    expect(formatIDR(1_125_000_000, { compact: true })).toBe('Rp 1,1 M');
+    expect(formatIDR(2_000_000_000_000, { compact: true })).toBe('Rp 2 T');
+    expect(formatIDR(1_500_000, { compact: true })).toBe('Rp 1,5 jt');
+    expect(formatIDR(5_000, { compact: true })).toBe('Rp 5.000');
   });
 
   it('date month abbreviations localize to id-ID (Agu/Okt/Des)', async () => {
@@ -102,9 +113,9 @@ describe('locale-aware output (lang = id)', () => {
     expect(formatNumber(1234567)).toBe('1.234.567');
   });
 
-  it('EN output is unchanged (billion "B", English months)', async () => {
+  it('EN output uses English suffixes and months after a switch back', async () => {
     await i18n.changeLanguage('en');
-    expect(formatIDR(14_000_000_000, { compact: true })).toBe('Rp 14.0B');
+    expect(formatIDR(14_000_000_000, { compact: true })).toBe('Rp 14 bn');
     expect(formatDate('2026-08-02')).toBe('02 Aug 2026');
     expect(formatDate('2026-12-15')).toBe('15 Dec 2026');
   });
@@ -148,7 +159,7 @@ describe('formatMoney — the operator currency ruling, made executable', () => 
     // space: two renderings of one currency differing by an invisible
     // character. Byte equality is the point of this assertion.
     expect(formatMoney(22_800, 'IDR')).toBe(formatIDR(22_800));
-    expect(formatMoney(22_800, 'IDR')).toBe('Rp 22.800');
+    expect(formatMoney(22_800, 'IDR')).toBe('Rp 22,800');
     expect(formatMoney(22_800, 'IDR')).not.toContain('\u00a0');
   });
 

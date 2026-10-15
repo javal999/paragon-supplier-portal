@@ -70,11 +70,11 @@ import {
 } from '@services/transitions/fulfilmentRules';
 import { statusLabelKey } from '@lib/statusLabel';
 import { statusTone } from '@lib/statusTone';
+import { formatIDR, formatNumber } from '@lib/format';
 import {
   InvoiceLinesSection,
   MatchPill,
   MatchResult,
-  fmtIdr,
   readQty
 } from './invoices/InvoiceCollaboration';
 import { useVerbAvailability, useNextAct } from '@hooks/useVerbAvailability';
@@ -105,21 +105,6 @@ const CHANNEL_ICON = {
   Web: Globe,
   API: Send
 };
-
-/**
- * @param {number} n
- * @returns {string}
- */
-const fmtIDR = (n) => {
-  if (n >= 1_000_000_000) return `Rp ${(n / 1_000_000_000).toFixed(1)}M`;
-  return `Rp ${Math.round(n / 1_000_000)}jT`;
-};
-
-/**
- * @param {number} n
- * @returns {string}
- */
-const fmtIDRFull = (n) => `Rp ${n.toLocaleString('id-ID')}`;
 
 /**
  * @param {string | null} s
@@ -233,7 +218,7 @@ const LineQtyTable = ({ lines, entries, onChange }) => {
                   {l.remaining !== null && (
                     <div className="mt-0.5 text-[11px] text-text-tertiary">
                       {t('fc.inv.new.upTo', {
-                        qty: `${l.remaining.toLocaleString('en-US')} ${l.uom ?? ''}`
+                        qty: `${formatNumber(l.remaining)} ${l.uom ?? ''}`
                       })}
                     </div>
                   )}
@@ -247,7 +232,7 @@ const LineQtyTable = ({ lines, entries, onChange }) => {
                   )}
                 </td>
                 <td className="py-1.5 text-right whitespace-nowrap">
-                  <Data>{fmtIdr(l.unitPrice)}</Data>
+                  <Data>{formatIDR(Math.round(l.unitPrice))}</Data>
                 </td>
               </tr>
             );
@@ -747,7 +732,7 @@ const SupplierInvoices = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-6">
         <KpiCard
           eyebrow={t('supplierInvoices.kpi.received.eyebrow')}
-          value={fmtIDR(sums.paid)}
+          value={formatIDR(sums.paid, { compact: true })}
           subtitle={
             <span className="text-success">
               {t(
@@ -762,7 +747,7 @@ const SupplierInvoices = () => {
         />
         <KpiCard
           eyebrow={t('supplierInvoices.kpi.pending.eyebrow')}
-          value={fmtIDR(sums.pending)}
+          value={formatIDR(sums.pending, { compact: true })}
           subtitle={
             <span className="text-warning-hover">
               {t(
@@ -777,7 +762,7 @@ const SupplierInvoices = () => {
         />
         <KpiCard
           eyebrow={t('supplierInvoices.kpi.disputed.eyebrow')}
-          value={fmtIDR(sums.returned)}
+          value={formatIDR(sums.returned, { compact: true })}
           subtitle={
             <span className="text-danger">
               {t(
@@ -866,10 +851,9 @@ const SupplierInvoices = () => {
                   </TableCell>
                   <TableCell className="text-right whitespace-nowrap">
                     <div className="font-semibold text-text-primary">
-                      <Data>{fmtIDR(inv.amount)}</Data>
-                    </div>
-                    <div className="text-xs text-text-tertiary">
-                      <Data>{fmtIDRFull(inv.amount)}</Data>
+                      <Data title={formatIDR(inv.amount)}>
+                        {formatIDR(inv.amount, { compact: true })}
+                      </Data>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -1014,7 +998,7 @@ const SupplierInvoices = () => {
                 <div>
                   <dt className="text-text-tertiary">{t('supplierInvoices.field.amount')}</dt>
                   <dd className="text-text-primary font-semibold">
-                    <Data>{fmtIDRFull(selected.amount)}</Data>
+                    <Data>{formatIDR(selected.amount)}</Data>
                   </dd>
                 </div>
                 <div>
@@ -1135,7 +1119,7 @@ const SupplierInvoices = () => {
                       {t('supplierInvoices.remittance.amountPaid')}
                     </dt>
                     <dd className="text-text-primary font-semibold">
-                      <Data>{fmtIDRFull(selected.amount)}</Data>
+                      <Data>{formatIDR(selected.amount)}</Data>
                     </dd>
                   </div>
                   <div>
@@ -1275,7 +1259,7 @@ const SupplierInvoices = () => {
                 onChange={(k, v) => setNewLineQty((m) => ({ ...m, [k]: v }))}
               />
               <div className="mt-2 text-xs text-text-secondary">
-                {t('fc.inv.new.expected')}: <Data>{fmtIdr(newExpected)}</Data>
+                {t('fc.inv.new.expected')}: <Data>{formatIDR(Math.round(newExpected))}</Data>
               </div>
             </div>
           )}
@@ -1352,7 +1336,7 @@ const SupplierInvoices = () => {
               {t('fc.inv.new.tolerance', {
                 contractPct: invoicePriceTolerance().contractPricePct,
                 pct: invoicePriceTolerance().standardPct,
-                cap: fmtIdr(invoicePriceTolerance().standardCapIdr)
+                cap: formatIDR(Math.round(invoicePriceTolerance().standardCapIdr))
               })}
             </div>
             {/* UNSEEDED field, so the 2e-a rule applies: an untouched blank does
@@ -1420,7 +1404,11 @@ const SupplierInvoices = () => {
                 />
                 <div className="mt-2 text-xs text-text-secondary">
                   {t('fc.inv.new.expected')}:{' '}
-                  <Data>{fmtIdr(expectedInvoiceValue(fixRead.valid ? fixRead.lines : []))}</Data>
+                  <Data>
+                    {formatIDR(
+                      Math.round(expectedInvoiceValue(fixRead.valid ? fixRead.lines : []))
+                    )}
+                  </Data>
                 </div>
               </div>
             )}

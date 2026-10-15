@@ -7,7 +7,10 @@ import { useTranslation } from 'react-i18next';
 import Wizard from '@components/ui-v2/Wizard';
 import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
 import { PageHeader, PageFooter } from './components/PageChrome';
-import RequestTypeSelector, { REQUEST_TYPES } from './components/RequestTypeSelector';
+import RequestTypeSelector, {
+  REQUEST_TYPES,
+  subLineValues
+} from './components/RequestTypeSelector';
 import CompanyInfoStep from './components/CompanyInfoStep';
 import ContactsStep from './components/ContactsStep';
 import CategoriesStep from './components/CategoriesStep';
@@ -157,7 +160,7 @@ const SupplierRegistrationV2 = () => {
                 </button>
                 <div className="bg-info-soft border-l-2 border-info rounded px-3 py-1.5 text-xs text-info">
                   <strong>{activeMeta ? t(activeMeta.shortKey) : ''}</strong> ·{' '}
-                  {activeMeta ? t(activeMeta.subKey) : ''}
+                  {activeMeta ? t(activeMeta.subKey, subLineValues()) : ''}
                 </div>
               </div>
               <FormProvider {...methods}>

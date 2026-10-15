@@ -1,6 +1,6 @@
 /** @import React from 'react' */
 import { useEffect, useMemo, useState } from 'react';
-import { InvoiceLinesSection, fmtIdr } from './invoices/InvoiceCollaboration';
+import { InvoiceLinesSection } from './invoices/InvoiceCollaboration';
 import { invoicePriceTolerance } from '@services/transitions';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 /** @import { LucideIcon } from 'lucide-react' */
@@ -132,6 +132,11 @@ const AGING_DATA = [
   { bucket: '>90d', amount: 0, count: 0, risk: /** @type {const} */ ('danger'), riskLabel: 'High' }
 ];
 
+// The two chart fixtures above and below hold amounts in millions of rupiah
+// (juta); multiply by this before formatting so the chart and table say the
+// amount in the reader's own units.
+const JUTA = 1_000_000;
+
 const MONTHLY_SPEND = [
   { month: 'Nov 24', paid: 1800, pending: 400 },
   { month: 'Dec 24', paid: 2100, pending: 350 },
@@ -182,14 +187,6 @@ const MATCH_DESC_KEY = {
   'Price Variance': 'buyerInvoices.match.priceVariance'
 };
 
-// Compact tiles use the shared jt/B/T scale; full amounts and dates delegate
-// to the locale utility directly (see call sites).
-/**
- * @param {number} n
- * @returns {string}
- */
-const fmtCompact = (n) => formatIDR(n, { compact: true });
-
 // DP2-PALETTE-01: chart/UI colour sourced from the central palette (SSoT),
 // not page-local hex. Values unchanged — pure de-dup.
 const TOKEN_SUCCESS = CHART_SEMANTIC.success;
@@ -207,26 +204,17 @@ const TOKEN_MUTED = CHART_SEMANTIC.neutral;
  * @property {boolean} [active]
  * @property {ChartTooltipPayload[]} [payload]
  * @property {string} [label]
- * @property {string} [suffix]
  */
 
 /** @type {React.FC<ChartTooltipProps>} */
-const ChartTooltip = ({
-  active,
-  payload,
-  label,
-  // i18n-defer: an IDR magnitude unit (`juta`, millions) that renders after
-  // `Rp` — already Indonesian, and identical in both locales.
-  suffix = 'jT'
-}) => {
+const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-bg-surface border border-border-subtle rounded-md shadow-sm px-3 py-2 text-xs">
       <div className="font-semibold text-text-primary mb-1">{label}</div>
       {payload.map((p) => (
         <div key={p.name} style={{ color: p.color }}>
-          {p.name}: Rp {p.value}
-          {suffix}
+          {p.name}: {formatIDR(p.value * JUTA, { compact: true })}
         </div>
       ))}
     </div>
@@ -738,25 +726,25 @@ const BuyerInvoicesView = ({ invoices: allInvoices }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
         <KpiCard
           eyebrow={t('buyerInvoices.kpi.pendingApproval.eyebrow')}
-          value={fmtCompact(sums.pendingApproval)}
+          value={formatIDR(sums.pendingApproval, { compact: true })}
           subtitle={invoiceCount(pendingApprovalCount)}
           icon={Clock}
         />
         <KpiCard
           eyebrow={t('buyerInvoices.kpi.released.eyebrow')}
-          value={fmtCompact(sums.released)}
+          value={formatIDR(sums.released, { compact: true })}
           subtitle={invoiceCount(counts.released)}
           icon={CheckCircle2}
         />
         <KpiCard
           eyebrow={t('buyerInvoices.kpi.disputed.eyebrow')}
-          value={fmtCompact(sums.disputed)}
+          value={formatIDR(sums.disputed, { compact: true })}
           subtitle={invoiceCount(counts.disputed)}
           icon={AlertTriangle}
         />
         <KpiCard
           eyebrow={t('buyerInvoices.kpi.overdue.eyebrow')}
-          value={fmtCompact(sums.overdue)}
+          value={formatIDR(sums.overdue, { compact: true })}
           subtitle={invoiceCount(counts.overdue)}
           icon={AlertOctagon}
         />
@@ -872,11 +860,12 @@ const BuyerInvoicesView = ({ invoices: allInvoices }) => {
                         <Data className="text-xs text-text-secondary">{inv.poNumber}</Data>
                       </TableCell>
                       <TableCell className="text-right whitespace-nowrap">
-                        <Data as="div" className="font-semibold text-text-primary">
-                          {fmtCompact(inv.amount)}
-                        </Data>
-                        <Data as="div" className="text-xs text-text-tertiary">
-                          {formatIDR(inv.amount)}
+                        <Data
+                          as="div"
+                          className="font-semibold text-text-primary"
+                          title={formatIDR(inv.amount)}
+                        >
+                          {formatIDR(inv.amount, { compact: true })}
                         </Data>
                       </TableCell>
                       <TableCell>
@@ -941,7 +930,11 @@ const BuyerInvoicesView = ({ invoices: allInvoices }) => {
               <BarChart data={MONTHLY_SPEND} margin={{ top: 10, right: 10, bottom: 0, left: -10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: TOKEN_MUTED }} />
-                <YAxis tick={{ fontSize: 11, fill: TOKEN_MUTED }} />
+                <YAxis
+                  width={88}
+                  tick={{ fontSize: 11, fill: TOKEN_MUTED }}
+                  tickFormatter={(v) => formatIDR(v * JUTA, { compact: true })}
+                />
                 <Tooltip content={<ChartTooltip />} />
                 <Bar
                   dataKey="paid"
@@ -1005,7 +998,11 @@ const BuyerInvoicesView = ({ invoices: allInvoices }) => {
                   tickFormatter={agingBucketLabel}
                   tick={{ fontSize: 11, fill: TOKEN_MUTED }}
                 />
-                <YAxis tick={{ fontSize: 11, fill: TOKEN_MUTED }} />
+                <YAxis
+                  width={88}
+                  tick={{ fontSize: 11, fill: TOKEN_MUTED }}
+                  tickFormatter={(v) => formatIDR(v * JUTA, { compact: true })}
+                />
                 <Tooltip content={<ChartTooltip />} />
                 <Bar
                   dataKey="amount"
@@ -1050,7 +1047,7 @@ const BuyerInvoicesView = ({ invoices: allInvoices }) => {
                             row.amount > 0 ? 'text-text-primary' : 'text-text-tertiary'
                           }`}
                         >
-                          {row.amount > 0 ? `Rp ${row.amount}jT` : '—'}
+                          {row.amount > 0 ? formatIDR(row.amount * JUTA, { compact: true }) : '—'}
                         </Data>
                       </TableCell>
                       <TableCell className="text-right text-text-secondary">
@@ -1160,7 +1157,7 @@ const BuyerInvoicesView = ({ invoices: allInvoices }) => {
                     onClick={handleReleasePayment}
                   >
                     {t('buyerInvoices.action.confirmRelease', {
-                      amount: fmtCompact(selected.amount)
+                      amount: formatIDR(selected.amount, { compact: true })
                     })}
                   </Button>
                 </>
@@ -1282,7 +1279,7 @@ const BuyerInvoicesView = ({ invoices: allInvoices }) => {
                   {t(MATCH_DESC_KEY[selected.matchStatus], {
                     contractPct: invoicePriceTolerance().contractPricePct,
                     pct: invoicePriceTolerance().standardPct,
-                    cap: fmtIdr(invoicePriceTolerance().standardCapIdr)
+                    cap: formatIDR(Math.round(invoicePriceTolerance().standardCapIdr))
                   })}
                 </div>
               </div>

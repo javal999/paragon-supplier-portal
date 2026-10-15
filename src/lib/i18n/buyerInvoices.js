@@ -75,7 +75,7 @@ export const buyerInvoicesEn = {
   'buyerInvoices.table.daysOverdue': '{{days}}d overdue',
   'buyerInvoices.table.empty': 'No invoices match the current filters.',
   // — Analytics tab —
-  'buyerInvoices.analytics.monthlyFlow': 'Monthly Invoice Flow (Rp jT)',
+  'buyerInvoices.analytics.monthlyFlow': 'Monthly Invoice Flow',
   'buyerInvoices.analytics.matchSummary': '3-Way Match Summary',
   'buyerInvoices.chart.released': 'Released',
   'buyerInvoices.chart.pending': 'Pending',
@@ -85,7 +85,7 @@ export const buyerInvoicesEn = {
   'buyerInvoices.matchTile.qtyMismatch': 'Qty Mismatch',
   'buyerInvoices.matchTile.priceVariance': 'Price Variance',
   // — Aging tab —
-  'buyerInvoices.aging.reportTitle': 'Invoice Aging Report (Rp jT)',
+  'buyerInvoices.aging.reportTitle': 'Invoice Aging Report',
   'buyerInvoices.aging.bucket': 'Aging bucket',
   'buyerInvoices.aging.count': 'Count',
   'buyerInvoices.aging.amount': 'Amount',
@@ -239,7 +239,7 @@ export const buyerInvoicesId = {
   'buyerInvoices.table.daysOverdue': 'lewat {{days}} hr',
   'buyerInvoices.table.empty': 'Tidak ada faktur yang cocok dengan filter saat ini.',
   // — Analytics tab —
-  'buyerInvoices.analytics.monthlyFlow': 'Arus Faktur Bulanan (Rp jT)',
+  'buyerInvoices.analytics.monthlyFlow': 'Arus Faktur Bulanan',
   'buyerInvoices.analytics.matchSummary': 'Ringkasan Pencocokan 3 Arah',
   'buyerInvoices.chart.released': 'Dirilis',
   'buyerInvoices.chart.pending': 'Menunggu',
@@ -249,7 +249,7 @@ export const buyerInvoicesId = {
   'buyerInvoices.matchTile.qtyMismatch': 'Selisih Kuantitas',
   'buyerInvoices.matchTile.priceVariance': 'Varians Harga',
   // — Aging tab —
-  'buyerInvoices.aging.reportTitle': 'Laporan Umur Faktur (Rp jT)',
+  'buyerInvoices.aging.reportTitle': 'Laporan Umur Faktur',
   'buyerInvoices.aging.bucket': 'Rentang umur',
   'buyerInvoices.aging.count': 'Jumlah',
   'buyerInvoices.aging.amount': 'Nilai',

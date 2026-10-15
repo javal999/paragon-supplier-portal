@@ -26,7 +26,7 @@ export const registrationEn = {
   'registration.type.internal.badge': 'Short form',
   'registration.type.internal.short': 'Internal SR',
   'registration.type.kol.label': 'KOL — Key Opinion Leader',
-  'registration.type.kol.sub': 'Below Rp 7jT — generic vendor at DC level',
+  'registration.type.kol.sub': 'Below {{amount}} — generic vendor at DC level',
   'registration.type.kol.detail':
     'Minimal 2-step form: basic company info and bank details only. No Ariba registration required. Created directly in S/4HANA as a generic DC-level vendor. Invoice processed via Web Tukar Faktur.',
   'registration.type.kol.badge': 'Minimal form',
@@ -285,7 +285,7 @@ export const registrationId = {
   'registration.type.internal.badge': 'Formulir singkat',
   'registration.type.internal.short': 'Internal SR',
   'registration.type.kol.label': 'KOL — Key Opinion Leader',
-  'registration.type.kol.sub': 'Di bawah Rp 7jT — vendor generik di tingkat DC',
+  'registration.type.kol.sub': 'Di bawah {{amount}} — vendor generik di tingkat DC',
   'registration.type.kol.detail':
     'Formulir minimal 2 langkah: hanya info dasar perusahaan dan detail bank. Tidak memerlukan pendaftaran Ariba. Dibuat langsung di S/4HANA sebagai vendor generik tingkat DC. Faktur diproses via Web Tukar Faktur.',
   'registration.type.kol.badge': 'Formulir minimal',

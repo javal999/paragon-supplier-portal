@@ -14,6 +14,7 @@ import SubTabs from '@components/ui-v2/SubTabs';
 import StatusPill from '@components/ui-v2/StatusPill';
 import NextActLine from '@components/ui-v2/NextActLine';
 import { statusTone } from '@lib/statusTone';
+import { formatIDR, formatNumber } from '@lib/format';
 import Table from '@components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
 import TableRow from '@components/ui-v2/TableRow';
@@ -94,16 +95,6 @@ const ACTION_STATUSES = [POStatus.SENT, POStatus.ACKNOWLEDGED];
 const PROGRESS_STATUSES = [POStatus.CONFIRMED, POStatus.PARTIALLY_DELIVERED];
 /** @type {POStatus[]} */
 const COMPLETED_STATUSES = [POStatus.DELIVERED, POStatus.CLOSED];
-
-/**
- * @param {number} v
- * @returns {string}
- */
-const fmtIDR = (v) => {
-  if (v >= 1_000_000_000) return `Rp ${(v / 1_000_000_000).toFixed(1)}M`;
-  if (v >= 1_000_000) return `Rp ${Math.round(v / 1_000_000)}jT`;
-  return `Rp ${v.toLocaleString()}`;
-};
 
 /**
  * @param {string} s
@@ -732,7 +723,7 @@ const SupplierOrders = () => {
         />
         <KpiCard
           eyebrow={t('supplierOrders.kpi.totalValue.eyebrow')}
-          value={fmtIDR(totalValuePending)}
+          value={formatIDR(totalValuePending, { compact: true })}
           subtitle={t('supplierOrders.kpi.totalValue.subtitle')}
           icon={Wallet}
         />
@@ -813,7 +804,9 @@ const SupplierOrders = () => {
                   {po.lineItems.length}
                 </TableCell>
                 <TableCell className="text-right font-semibold text-text-primary whitespace-nowrap">
-                  <Data>{fmtIDR(po.totalValue)}</Data>
+                  <Data title={formatIDR(po.totalValue)}>
+                    {formatIDR(po.totalValue, { compact: true })}
+                  </Data>
                 </TableCell>
                 <TableCell>
                   <StatusPill variant={statusTone(poDisplayStatus(po, nowIso))}>
@@ -1018,7 +1011,9 @@ const SupplierOrders = () => {
                 <div>
                   <dt className="text-text-tertiary">{t('supplierOrders.panel.totalValue')}</dt>
                   <dd className="text-text-primary font-semibold">
-                    <Data>{fmtIDR(selected.totalValue)}</Data>
+                    <Data title={formatIDR(selected.totalValue)}>
+                      {formatIDR(selected.totalValue, { compact: true })}
+                    </Data>
                   </dd>
                 </div>
                 <div>
@@ -1462,7 +1457,7 @@ const SupplierOrders = () => {
                     <dd className="text-sm font-bold text-text-primary">
                       <Data>
                         {totalConfirmedQty !== null
-                          ? `${totalConfirmedQty.toLocaleString()} ${t('supplierOrders.units')}`
+                          ? `${formatNumber(totalConfirmedQty)} ${t('supplierOrders.units')}`
                           : '—'}
                       </Data>
                     </dd>

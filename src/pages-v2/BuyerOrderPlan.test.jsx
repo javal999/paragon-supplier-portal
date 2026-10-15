@@ -74,7 +74,7 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
     expect(screen.getByTestId('op-cost-placeholder-penalty')).toHaveTextContent(
       'Placeholder — the Material Planner to confirm'
     );
-    expect(screen.getByTestId('op-cost-rent')).toHaveTextContent('Rp 35.000');
+    expect(screen.getByTestId('op-cost-rent')).toHaveTextContent('Rp 35,000');
     expect(screen.getAllByRole('navigation').length).toBeGreaterThan(0);
   });
 
@@ -166,7 +166,7 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
     );
     expect(
       screen.getByTestId(`op-saved-${withSaving.materialCode}-${withSaving.weekStart}`).textContent
-    ).toMatch(/^Rp [\d.]+ less than/);
+    ).toMatch(/^Rp [\d,]+ less than/);
   });
 
   it('the raw-material warehouse is planned separately (ENG-D7): its own capacity, and no order needed on this data', async () => {

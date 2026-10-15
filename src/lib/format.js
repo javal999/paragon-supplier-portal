@@ -1,6 +1,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 // Locale formatting — single source of truth for currency / date / number
-// display. rupiah in id-ID conventions (Rp prefix, dot thousands), plain numbers in the UI language's grouping (BL-83); dates render in the
+// display. Rupiah and plain numbers both follow the UI language's grouping and
+// compact suffixes ("Rp" prefix in both languages); dates render in the
 // Asia/Jakarta timezone so output is deterministic regardless of runner locale.
 //
 // Consolidation target: the ~127 inline formatting sites across pages-v2
@@ -30,8 +31,8 @@ function isID() {
  *
  * BL-83 — it used to group the Indonesian way in both languages, so the
  * English UI showed "1.234", which an English reader takes for one point two.
- * Rupiah amounts (`formatIDR`) keep the Indonesian grouping in both: that is
- * how rupiah is written, and the "Rp" says which convention applies.
+ * This is also the grouping `formatIDR` uses for a full rupiah amount, so a
+ * quantity and the amount beside it always share one separator.
  * @param {number | null} [value]
  * @returns {string}
  */
@@ -40,12 +41,28 @@ export function formatNumber(value) {
   return (isID() ? idID : enUS).format(value);
 }
 
+// Compact tiers, largest first. Each suffix is the UI language's own word for
+// the magnitude: English "m / bn / tn"; Indonesian "jt / M / T" (juta, miliar,
+// triliun). "M" means billion only in Indonesian, which is why the English UI
+// must never show it.
+const COMPACT_TIERS = [
+  { div: 1e12, en: 'tn', id: 'T' },
+  { div: 1e9, en: 'bn', id: 'M' },
+  { div: 1e6, en: 'm', id: 'jt' }
+];
+
+// One decimal, shown only when it is not zero ("1.1", "4"), with the
+// language's decimal separator ("1.1" EN, "1,1" ID).
+const enCompact = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
+const idCompact = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1 });
+
 /**
- * Rupiah. Full: "Rp 1.250.000.000". Compact ({ compact: true }) auto-scales:
- *   >=1e12 → "Rp 1.0T"  >=1e9 → "Rp 14.0B" (EN) / "Rp 14.0M" (ID, miliar)
- *   >=1e6 → "Rp 1.5jt"  >=1e3 → "Rp 5.0rb"
- * The billion suffix is the only locale-sensitive tier (EN "B" vs ID "M"); the
- * juta/ribu suffixes are Indonesian in both. null/undefined/NaN → "—".
+ * Rupiah, in the UI language's conventions. "Rp" and one space lead in both.
+ *   Full:    "Rp 1,250,000,000" (EN) / "Rp 1.250.000.000" (ID)
+ *   Compact ({ compact: true }), at or above one million:
+ *            "Rp 1.1 bn" (EN) / "Rp 1,1 M" (ID); "Rp 62.1 m" / "Rp 62,1 jt";
+ *            "Rp 2 tn" / "Rp 2 T"
+ * A compact amount below one million renders in full. null/undefined/NaN → "—".
  * @param {number | null} [value]
  * @param {{ compact?: boolean }} [opts]
  * @returns {string}
@@ -53,18 +70,19 @@ export function formatNumber(value) {
 export function formatIDR(value, opts) {
   if (value == null || Number.isNaN(value)) return EMPTY;
   if (opts?.compact) {
+    const id = isID();
     const abs = Math.abs(value);
-    /**
-     * @param {number} div
-     * @param {string} suffix
-     */
-    const scaled = (div, suffix) => `Rp ${(value / div).toFixed(1)}${suffix}`;
-    if (abs >= 1e12) return scaled(1e12, 'T');
-    if (abs >= 1e9) return scaled(1e9, isID() ? 'M' : 'B');
-    if (abs >= 1e6) return scaled(1e6, 'jt');
-    if (abs >= 1e3) return scaled(1e3, 'rb');
+    for (let i = 0; i < COMPACT_TIERS.length; i++) {
+      const tier = COMPACT_TIERS[i];
+      if (abs < tier.div) continue;
+      // 999.96 million rounds to "1,000 m"; say "1 bn" instead.
+      const rounded = Math.round((value / tier.div) * 10) / 10;
+      const up = i > 0 && Math.abs(rounded) >= 1000 ? COMPACT_TIERS[i - 1] : tier;
+      const n = up === tier ? rounded : Math.round((value / up.div) * 10) / 10;
+      return `Rp ${(id ? idCompact : enCompact).format(n)} ${id ? up.id : up.en}`;
+    }
   }
-  return `Rp ${idID.format(value)}`;
+  return `Rp ${formatNumber(value)}`;
 }
 
 // — Currency-aware money (CP-0 · 2e-c-2) ─────────────────────────────────────

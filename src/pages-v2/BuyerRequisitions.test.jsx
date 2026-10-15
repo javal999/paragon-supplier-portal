@@ -20,8 +20,8 @@ describe('BuyerRequisitions — four honest states', () => {
     expect(await screen.findByText('Purchase Requisitions')).toBeInTheDocument();
     // A relocated PR proves the read resolved and drove the table.
     expect(await screen.findByText('PR-2026-00341')).toBeInTheDocument();
-    // Numeric estimatedValue renders through the compact IDR formatter (lowercase jt).
-    expect(await screen.findByText('Rp 79.0jt')).toBeInTheDocument();
+    // Numeric estimatedValue renders through the compact IDR formatter (English "m").
+    expect(await screen.findByText('Rp 79 m')).toBeInTheDocument();
   });
 
   it('loading: shows LoadingState while the read is pending', () => {

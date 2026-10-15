@@ -66,11 +66,11 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
     renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
     expect(await screen.findByTestId('rs-setting-threshold')).toHaveTextContent('1 week');
     expect(screen.getByTestId('rs-setting-threshold')).toHaveTextContent('Decided by the owner');
-    expect(screen.getByTestId('rs-setting-rent')).toHaveTextContent('Rp 35.000');
+    expect(screen.getByTestId('rs-setting-rent')).toHaveTextContent('Rp 35,000');
     expect(screen.getByTestId('rs-setting-rent')).toHaveTextContent(
       'Placeholder — Finance to confirm'
     );
-    expect(screen.getByTestId('rs-setting-penalty')).toHaveTextContent('Rp 150.000');
+    expect(screen.getByTestId('rs-setting-penalty')).toHaveTextContent('Rp 150,000');
   });
 
   it('AC-01: every relief proposal shows its type, now and proposed, freed pallet-weeks, saving, change cost and zone — the service’s own figures, in rank order', async () => {
