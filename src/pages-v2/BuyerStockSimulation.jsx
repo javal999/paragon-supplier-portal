@@ -267,11 +267,8 @@ const BuyerStockSimulation = () => {
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableHeaderCell>
-              <span className="sr-only">{t('sim.detail.weeks')}</span>
-            </TableHeaderCell>
-            <TableHeaderCell>{t('sim.col.material')}</TableHeaderCell>
-            <TableHeaderCell>{t('sim.col.supplier')}</TableHeaderCell>
+            <TableHeaderCell pin="left">{t('sim.col.material')}</TableHeaderCell>
+            <TableHeaderCell pin="left">{t('sim.col.supplier')}</TableHeaderCell>
             <TableHeaderCell>
               <PicHeader />
             </TableHeaderCell>
@@ -290,6 +287,9 @@ const BuyerStockSimulation = () => {
             <TableHeaderCell>{t('sim.col.basis')}</TableHeaderCell>
             <TableHeaderCell>{t('sim.col.flags')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('sim.col.actions')}</TableHeaderCell>
+            <TableHeaderCell pin="right">
+              <span className="sr-only">{t('sim.detail.weeks')}</span>
+            </TableHeaderCell>
           </TableHeader>
           <tbody>
             {found.map(({ item: r, match }) => {
@@ -368,23 +368,10 @@ const SimulationRow = ({
     // BL-31 — the row opens on a click anywhere; from the keyboard, the toggle
     // button is the one tab stop (the row itself stays out of the tab order).
     <TableRow onClick={onToggle} tabIndex={-1} data-testid={`sim-row-${key}`}>
-      <TableCell>
-        <button
-          type="button"
-          aria-expanded={open}
-          aria-label={t(open ? 'sim.detail.close' : 'sim.detail.open', {
-            material: r.materialCode,
-            supplier: r.supplierName
-          })}
-          onClick={stop(onToggle)}
-          className="rounded p-1 text-text-tertiary hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-action"
-          data-testid={`sim-toggle-${key}`}
-        >
-          <Chevron size={16} aria-hidden="true" />
-        </button>
-      </TableCell>
-      <TableCell>
-        <Data className="text-xs font-bold text-text-primary">{r.materialCode}</Data>
+      <TableCell pin="left">
+        <Data className="text-xs font-bold text-text-primary whitespace-nowrap">
+          {r.materialCode}
+        </Data>
         <div className="text-sm text-text-primary">{r.materialLabel}</div>
         {matchReason}
         {r.sample ? (
@@ -401,8 +388,10 @@ const SimulationRow = ({
           </div>
         ) : null}
       </TableCell>
-      <TableCell>
-        <div className="text-sm text-text-primary">{r.supplierName}</div>
+      <TableCell pin="left">
+        <div className="text-sm text-text-primary line-clamp-2" title={r.supplierName}>
+          {r.supplierName}
+        </div>
       </TableCell>
       <TableCell>
         <PicCell value={r.mrpController} testId={`sim-pic-${key}`} />
@@ -480,6 +469,21 @@ const SimulationRow = ({
           onCallOff={stop(onCallOff)}
           onPoRequest={stop(onPoRequest)}
         />
+      </TableCell>
+      <TableCell pin="right">
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-label={t(open ? 'sim.detail.close' : 'sim.detail.open', {
+            material: r.materialCode,
+            supplier: r.supplierName
+          })}
+          onClick={stop(onToggle)}
+          className="rounded p-1 text-text-tertiary hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-action"
+          data-testid={`sim-toggle-${key}`}
+        >
+          <Chevron size={16} aria-hidden="true" />
+        </button>
       </TableCell>
     </TableRow>
   );

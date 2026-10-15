@@ -88,6 +88,7 @@ export const forecastCollaborationEn = {
   'fc.col.gap': 'Gap',
   'fc.col.daysOfSupply': 'Days of supply',
   'fc.col.actions': 'Actions',
+  'fc.col.details': 'Details',
   'fc.col.previous': 'Version {{version}}',
   'fc.col.current': 'Version {{version}}',
   'fc.col.change': 'Change',
@@ -227,6 +228,8 @@ export const forecastCollaborationEn = {
   'fc.pti.gaps.acceptFor': 'Accept {{what}}',
   'fc.pti.gaps.reviseFor': 'Request revision for {{what}}',
   'fc.pti.gaps.reassignFor': 'Move demand for {{what}}',
+  'fc.pti.gaps.detailsShow': 'Show zone for {{what}}',
+  'fc.pti.gaps.detailsHide': 'Hide zone for {{what}}',
   'fc.pti.gaps.grid': 'Commitment against forecast',
   'fc.pti.gaps.gridHint':
     'Each cell reads commitment / forecast. Green: {{green}}% or more. Amber: {{amber}}% to below {{green}}%. Red: below {{amber}}%.',
@@ -377,6 +380,7 @@ export const forecastCollaborationId = {
   'fc.col.gap': 'Selisih',
   'fc.col.daysOfSupply': 'Hari persediaan',
   'fc.col.actions': 'Tindakan',
+  'fc.col.details': 'Rincian',
   'fc.col.previous': 'Versi {{version}}',
   'fc.col.current': 'Versi {{version}}',
   'fc.col.change': 'Perubahan',
@@ -517,6 +521,8 @@ export const forecastCollaborationId = {
   'fc.pti.gaps.acceptFor': 'Terima {{what}}',
   'fc.pti.gaps.reviseFor': 'Minta revisi untuk {{what}}',
   'fc.pti.gaps.reassignFor': 'Pindahkan kebutuhan untuk {{what}}',
+  'fc.pti.gaps.detailsShow': 'Tampilkan zona untuk {{what}}',
+  'fc.pti.gaps.detailsHide': 'Sembunyikan zona untuk {{what}}',
   'fc.pti.gaps.grid': 'Komitmen terhadap prakiraan',
   'fc.pti.gaps.gridHint':
     'Setiap sel berisi komitmen / prakiraan. Hijau: {{green}}% atau lebih. Kuning: {{amber}}% hingga di bawah {{green}}%. Merah: di bawah {{amber}}%.',
