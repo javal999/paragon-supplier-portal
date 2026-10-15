@@ -70,7 +70,7 @@ import {
 } from '@services/transitions/fulfilmentRules';
 import { statusLabelKey } from '@lib/statusLabel';
 import { statusTone } from '@lib/statusTone';
-import { formatIDR, formatNumber } from '@lib/format';
+import { formatDate, formatIDR, formatNumber } from '@lib/format';
 import {
   InvoiceLinesSection,
   MatchPill,
@@ -106,19 +106,6 @@ const CHANNEL_ICON = {
   API: Send
 };
 
-/**
- * @param {string | null} s
- * @returns {string}
- */
-const fmtDate = (s) => {
-  if (!s) return '—';
-  return new Date(s).toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  });
-};
-
 /** @typedef {'detail' | 'remittance'} PanelMode */
 
 /**
@@ -143,9 +130,9 @@ const buildTimeline = (inv, t) => {
       title: k ? t(k) : stage,
       timestamp:
         i === 0 && inv.stage !== 'Draft'
-          ? fmtDate(inv.submittedDate)
+          ? formatDate(inv.submittedDate)
           : i === 3 && inv.paymentDate
-            ? fmtDate(inv.paymentDate)
+            ? formatDate(inv.paymentDate)
             : undefined,
       status:
         inv.stage === 'Draft'
@@ -661,7 +648,7 @@ const SupplierInvoices = () => {
   /** @param {SupplierInvoice} inv */
   const dueCell = (inv) => (
     <>
-      <Data>{fmtDate(inv.dueDate)}</Data>
+      <Data>{formatDate(inv.dueDate)}</Data>
       {inv.overdue && (
         <div className="text-[11px] text-danger font-semibold">
           {inv.daysOutstanding === 1
@@ -718,7 +705,7 @@ const SupplierInvoices = () => {
             : 'supplierInvoices.meta.summary.other',
           { count: INVOICES.length }
         )}{' '}
-        <Data>{fmtDate(lastSubmitted)}</Data>
+        <Data>{formatDate(lastSubmitted)}</Data>
         {/* D-CENSUS-8 — PARTLY REAL, both axes. Invoice create, submit and
             resubmit dispatch through the wired `invoice` target (DR-7); the POs
             and receipts backing them are fixtures, and nothing reaches e-Faktur
@@ -872,7 +859,7 @@ const SupplierInvoices = () => {
                   <TableCell className="text-xs whitespace-nowrap">
                     {inv.paymentDate ? (
                       <span className="text-success font-semibold">
-                        <Data>{fmtDate(inv.paymentDate)}</Data>
+                        <Data>{formatDate(inv.paymentDate)}</Data>
                       </span>
                     ) : (
                       <span className="text-text-tertiary">—</span>
@@ -1004,7 +991,7 @@ const SupplierInvoices = () => {
                 <div>
                   <dt className="text-text-tertiary">{t('supplierInvoices.field.submitted')}</dt>
                   <dd className="text-text-primary font-medium">
-                    <Data>{fmtDate(selected.submittedDate)}</Data>
+                    <Data>{formatDate(selected.submittedDate)}</Data>
                   </dd>
                 </div>
                 <div>
@@ -1127,7 +1114,7 @@ const SupplierInvoices = () => {
                       {t('supplierInvoices.remittance.paymentDate')}
                     </dt>
                     <dd className="text-text-primary font-medium">
-                      <Data>{fmtDate(selected.paymentDate)}</Data>
+                      <Data>{formatDate(selected.paymentDate)}</Data>
                     </dd>
                   </div>
                   <div>
@@ -1241,7 +1228,7 @@ const SupplierInvoices = () => {
                       />
                       {t('fc.inv.new.receiptOption', {
                         grNumber: gr.grNumber,
-                        date: fmtDate(gr.receivedDate)
+                        date: formatDate(gr.receivedDate)
                       })}
                     </label>
                   ))}

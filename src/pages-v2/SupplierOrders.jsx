@@ -14,7 +14,7 @@ import SubTabs from '@components/ui-v2/SubTabs';
 import StatusPill from '@components/ui-v2/StatusPill';
 import NextActLine from '@components/ui-v2/NextActLine';
 import { statusTone } from '@lib/statusTone';
-import { formatIDR, formatNumber } from '@lib/format';
+import { formatDate, formatIDR, formatNumber } from '@lib/format';
 import Table from '@components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
 import TableRow from '@components/ui-v2/TableRow';
@@ -95,19 +95,6 @@ const ACTION_STATUSES = [POStatus.SENT, POStatus.ACKNOWLEDGED];
 const PROGRESS_STATUSES = [POStatus.CONFIRMED, POStatus.PARTIALLY_DELIVERED];
 /** @type {POStatus[]} */
 const COMPLETED_STATUSES = [POStatus.DELIVERED, POStatus.CLOSED];
-
-/**
- * @param {string} s
- * @returns {string}
- */
-const fmtDate = (s) => {
-  if (!s) return '—';
-  return new Date(s).toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  });
-};
 
 /**
  * @param {TabKey} tab
@@ -685,7 +672,7 @@ const SupplierOrders = () => {
         {MY_POS.length === 1
           ? t('supplierOrders.meta.orders.one', { count: MY_POS.length })
           : t('supplierOrders.meta.orders.other', { count: MY_POS.length })}{' '}
-        · {t('supplierOrders.meta.lastUpdated')} <Data>{fmtDate(maxOrderDate)}</Data>
+        · {t('supplierOrders.meta.lastUpdated')} <Data>{formatDate(maxOrderDate)}</Data>
         {/* D-CENSUS-8 — PARTLY REAL, both axes. This is the clearest case the census
             named: Confirm/Reject here genuinely dispatch through the wired
             `purchaseOrder` target, run the legality + role + field gates and write
@@ -795,10 +782,10 @@ const SupplierOrders = () => {
                   <Data className="text-xs font-bold text-text-primary">{po.poNumber}</Data>
                 </TableCell>
                 <TableCell className="whitespace-nowrap text-text-secondary">
-                  <Data>{fmtDate(po.orderDate)}</Data>
+                  <Data>{formatDate(po.orderDate)}</Data>
                 </TableCell>
                 <TableCell className="whitespace-nowrap text-text-secondary">
-                  <Data>{fmtDate(po.requestedDeliveryDate)}</Data>
+                  <Data>{formatDate(po.requestedDeliveryDate)}</Data>
                 </TableCell>
                 <TableCell className="text-right text-text-secondary">
                   {po.lineItems.length}
@@ -993,7 +980,7 @@ const SupplierOrders = () => {
                 <div>
                   <dt className="text-text-tertiary">{t('supplierOrders.col.orderDate')}</dt>
                   <dd className="text-text-primary font-medium">
-                    <Data>{fmtDate(selected.orderDate)}</Data>
+                    <Data>{formatDate(selected.orderDate)}</Data>
                   </dd>
                 </div>
                 <div>
@@ -1001,7 +988,7 @@ const SupplierOrders = () => {
                     {t('supplierOrders.col.requestedDelivery')}
                   </dt>
                   <dd className="text-text-primary font-medium">
-                    <Data>{fmtDate(selected.requestedDeliveryDate)}</Data>
+                    <Data>{formatDate(selected.requestedDeliveryDate)}</Data>
                   </dd>
                 </div>
                 <div>
@@ -1447,7 +1434,7 @@ const SupplierOrders = () => {
                       {t('supplierOrders.panel.deliveryShort')}
                     </dt>
                     <dd className="text-sm font-bold text-text-primary">
-                      <Data>{fmtDate(deliveryDate)}</Data>
+                      <Data>{formatDate(deliveryDate)}</Data>
                     </dd>
                   </div>
                   <div className="bg-white rounded px-3 py-2 border border-border-subtle">
