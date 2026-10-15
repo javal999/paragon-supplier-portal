@@ -365,8 +365,8 @@ const BuyerInventory = () => {
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableHeaderCell>{t('inv.col.material')}</TableHeaderCell>
-            <TableHeaderCell>{t('inv.col.supplier')}</TableHeaderCell>
+            <TableHeaderCell pin="left">{t('inv.col.material')}</TableHeaderCell>
+            <TableHeaderCell pin="left">{t('inv.col.supplier')}</TableHeaderCell>
             <TableHeaderCell>{t('inv.col.thisCycle')}</TableHeaderCell>
             <TableHeaderCell>
               <PicHeader />
@@ -391,8 +391,10 @@ const BuyerInventory = () => {
                   aria-current={isHighlighted ? 'true' : undefined}
                   className={isHighlighted ? HIGHLIGHTED_ROW_CLASS : undefined}
                 >
-                  <TableCell>
-                    <Data className="text-xs font-bold text-text-primary">{p.materialCode}</Data>
+                  <TableCell pin="left">
+                    <Data className="text-xs font-bold text-text-primary whitespace-nowrap">
+                      {p.materialCode}
+                    </Data>
                     <div className="text-sm text-text-primary">{p.materialLabel}</div>
                     {/* Material C2 — the supplier's approved trade name (MR-3 d, planner step 3). */}
                     <TradeNameBeside
@@ -410,8 +412,10 @@ const BuyerInventory = () => {
                       </StatusPill>
                     )}
                   </TableCell>
-                  <TableCell>
-                    <div className="text-sm text-text-primary">{p.supplierName}</div>
+                  <TableCell pin="left">
+                    <div className="text-sm text-text-primary line-clamp-2" title={p.supplierName}>
+                      {p.supplierName}
+                    </div>
                   </TableCell>
                   <TableCell
                     className="whitespace-nowrap"

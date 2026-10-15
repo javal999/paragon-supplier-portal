@@ -42,7 +42,7 @@ const TableRow = ({ children, className = '', onClick, onKeyDown, tabIndex, ref,
   return (
     <tr
       ref={ref}
-      className={`border-b border-border-subtle hover:bg-bg-hover transition-colors ${onClick ? ROW_FOCUS : ''} ${className}`}
+      className={`group/row border-b border-border-subtle hover:bg-bg-hover transition-colors ${onClick ? ROW_FOCUS : ''} ${className}`}
       onClick={onClick}
       {...rowActivation(onClick, onKeyDown)}
       {...(tabIndex !== undefined ? { tabIndex } : {})}

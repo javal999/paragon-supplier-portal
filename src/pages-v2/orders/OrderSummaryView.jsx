@@ -404,11 +404,11 @@ const OrderSummaryView = ({ persona, foresightAnswers, invoices }) => {
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableHeaderCell>{t('oc.summary.col.po')}</TableHeaderCell>
+            <TableHeaderCell pin="left">{t('oc.summary.col.po')}</TableHeaderCell>
             {persona === 'buyer' && (
-              <TableHeaderCell>{t('oc.summary.col.supplier')}</TableHeaderCell>
+              <TableHeaderCell pin="left">{t('oc.summary.col.supplier')}</TableHeaderCell>
             )}
-            <TableHeaderCell>{t('oc.summary.col.response')}</TableHeaderCell>
+            <TableHeaderCell pin="left">{t('oc.summary.col.response')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('oc.summary.col.asns')}</TableHeaderCell>
             <TableHeaderCell>{t('oc.summary.col.callOffs')}</TableHeaderCell>
             {/* The 3 confirmations share 1 column: separately they pushed the
@@ -424,7 +424,7 @@ const OrderSummaryView = ({ persona, foresightAnswers, invoices }) => {
               return (
                 <TableRow key={po.id} data-testid={`order-summary-row-${po.id}`}>
                   {/* PO number — never empty (the drill-through table says so). */}
-                  <TableCell>
+                  <TableCell pin="left">
                     <DrillLink
                       to={/** @type {NonNullable<ReturnType<typeof href>>} */ (href('po', po))}
                       label={po.poNumber}
@@ -450,7 +450,7 @@ const OrderSummaryView = ({ persona, foresightAnswers, invoices }) => {
                   {/* Supplier — the profile, or the empty statement when there is
                       no supplier id to open one with. */}
                   {persona === 'buyer' && (
-                    <TableCell>
+                    <TableCell pin="left">
                       {href('supplier', po) ? (
                         <DrillLink
                           to={
@@ -465,7 +465,9 @@ const OrderSummaryView = ({ persona, foresightAnswers, invoices }) => {
                           onNavigate={rememberPosition}
                           testId={`order-summary-supplier-${po.id}`}
                         >
-                          <span className="text-sm whitespace-nowrap">{po.supplierName}</span>
+                          <span className="text-sm line-clamp-2" title={po.supplierName}>
+                            {po.supplierName}
+                          </span>
                         </DrillLink>
                       ) : (
                         <EmptyCell
@@ -481,7 +483,7 @@ const OrderSummaryView = ({ persona, foresightAnswers, invoices }) => {
                   )}
 
                   {/* Response — never empty; "Awaiting response" still opens the PO. */}
-                  <TableCell>
+                  <TableCell pin="left">
                     <DrillLink
                       to={
                         /** @type {NonNullable<ReturnType<typeof href>>} */ (

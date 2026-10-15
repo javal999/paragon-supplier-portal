@@ -1,4 +1,5 @@
 /** @import * as React from 'react' */
+import { pinnedHeaderClass } from './pinnedColumn';
 // DP-3 (TMS alignment): a light grey header band over the thin bottom border.
 // Row grammar (thin borders, generous height) already lives in TableRow/TableCell.
 /**
@@ -16,12 +17,13 @@ const TableHeader = ({ children, className = '' }) => {
  * @param {TableHeaderCellProps} props
  * @returns {React.ReactNode}
  */
-export const TableHeaderCell = ({ children, className = '', ariaSort }) => {
+export const TableHeaderCell = ({ children, className = '', ariaSort, pin }) => {
   return (
     <th
       scope="col"
       aria-sort={ariaSort}
-      className={`text-left text-label text-text-tertiary uppercase py-3 px-4 ${className}`}
+      data-pin={pin}
+      className={`text-left text-label text-text-tertiary uppercase py-3 px-4 ${pinnedHeaderClass(pin)} ${className}`}
     >
       {children}
     </th>
@@ -38,4 +40,5 @@ export default TableHeader;
  * @property {React.ReactNode} children
  * @property {string} [className]
  * @property {'ascending' | 'descending'} [ariaSort] Set on the column a table is sorted by, so assistive tech announces it.
+ * @property {'left' | 'right'} [pin] Sticks the column to the table's left or right edge; its body cells take the same `pin` (`pinnedColumn.js`).
  */
