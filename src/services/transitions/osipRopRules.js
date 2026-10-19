@@ -67,10 +67,18 @@ export const OSIP_ROP_READ = Object.freeze({
   /** [Default D1] the `'oneYearAfterLaunch'` variant (XLS): days after the earliest parent SKU's launch. */
   npdLaunchDays: 365,
   /** [Default D1] the `'52WeeksHistory'` variant (engine, ENG-B63): weeks of sales history. */
-  npdHistoryWeeks: 52,
-  /** [Default B5] DRC-10 "highest LTP over the next 3 months", in weeks (= [Default A11]'s 13 weeks). */
-  npdLtpWeeks: OSIP_RULES.consumptionMovingAvgWeeks
+  npdHistoryWeeks: 52
 });
+
+/**
+ * [Default B5] DRC-10 "highest LTP over the next 3 months", in weeks: the same
+ * 3 months as [Default A11] (`consumptionMovingAvgWeeks`, 13 weeks). BL-212 —
+ * read from the rules in use at call time, not fixed at load, so a rules
+ * variant (the sandbox's window switch) moves the NPD demand.
+ * @param {OsipRules} [rules]
+ * @returns {number}
+ */
+export const npdLtpWeeks = (rules = OSIP_RULES) => rules.consumptionMovingAvgWeeks;
 
 /** The three NPD variants, the default first. @type {readonly NpdRule[]} */
 export const NPD_RULES = Object.freeze(

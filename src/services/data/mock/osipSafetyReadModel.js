@@ -39,7 +39,7 @@ import {
 } from '../../transitions/demandAnticipationRules';
 import { OSIP_RULES, supplyAreaOf } from '../../transitions/osipRules';
 import { OSIP_SAFETY_READ, materialCvs } from '../../transitions/osipSafetyRules';
-import { OSIP_ROP_READ } from '../../transitions/osipRopRules';
+import { npdLtpWeeks } from '../../transitions/osipRopRules';
 import { engineDataset } from './fixtures/engineDataset';
 import { allCommitmentLines, forecastSupplierName } from './forecastReadModel';
 import { consumptionStore } from './stores/consumptionStore';
@@ -124,7 +124,7 @@ export function osipSafetyInputs(nowIso = sdcClock.now()) {
         // BL-196 — DRC-6 steps, for ROP Supplier / FS / to principal.
         leadTimeSteps: breakdown.steps,
         // BL-198 — DRC-10 "highest LTP over the next 3 months" (NPD).
-        ltpNext3m: hubWeeks(nowIso, OSIP_ROP_READ.npdLtpWeeks).map((w) =>
+        ltpNext3m: hubWeeks(nowIso, npdLtpWeeks()).map((w) =>
           groupWeekLtp(lines, s.supplierId, [code], w)
         )
       });
