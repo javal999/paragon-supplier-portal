@@ -8,6 +8,7 @@ import {
   BookOpen,
   Boxes,
   Building2,
+  Calculator,
   ClipboardCheck,
   Container,
   CalendarCheck,
@@ -121,7 +122,9 @@ export const PTI_NAV = [
         labelKey: 'hub.nav.pti.demandAnticipation',
         icon: LockKeyhole,
         path: '/buyer/demand-anticipation'
-      }
+      },
+      // DRC-17 (BL-202) BR-07 — the what-if sandbox: analysis only, last in the cycle.
+      { labelKey: 'hub.nav.pti.whatIfSandbox', icon: Calculator, path: '/buyer/what-if' }
     ]
   },
   {

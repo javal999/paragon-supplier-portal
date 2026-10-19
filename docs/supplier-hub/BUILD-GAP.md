@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 3.18, 2026-10-19 |
+| Version | 3.19, 2026-10-19 |
 | Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.12 with the prototype on `main` at `80a4281` (PR #27 merged, 2026-09-22). The RFx rows cover PRs #21, #24, #25, #26 and #27; the RFP → RFQ pre-fill was built in PR #30. The RFx improvements (supplier documents, RFP award, multi-supplier award) were added on 2026-09-28 from PRs #54 to #64, #66 and #67, read on `main` at `20341d1`. The SC Hub Material build (MR-1 to MR-10: PRs #84 to #93, #97, #101 to #110, all merged 2026-09-29) was added on 2026-09-29, read on `main` at `d7ac421`; section 1.1 maps each MR to its rules and PRs. CAP-1 wave 1 (PR #191, merged 2026-10-12) was added on 2026-10-12, read on `main` at `a5eaac3`; section 1.2 covers CAP-1 to CAP-12. |
 | Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4, E06-R); 2026-09-21 for the working calendar (Q-18, BL-14) and the commitment deadline (CR-26, BL-05), built as BL-50 and BL-48; 2026-09-21 for RFx (RFX-D1 to RFX-D5), built in PRs #21 and #24 to #27; 2026-09-25 for the RFx improvements (RFX-D6 to RFX-D14), built in PRs #54 to #64, #66 and #67. Also 2026-09-29 for the SC Hub Material build (MAT-D1 to MAT-D15, and the build rulings MAT-D16 to MAT-D21), built in PRs #84 to #93, #97 and #101 to #110 |
 | Gate evidence, RFx improvements | From 2026-09-25 08:13 UTC GitHub Actions could not run the gates: the `build · floor · test:gate` job was not started because of the account's billing limit, and the check reads as failed. That covers the final heads of PRs #54 to #56, #58 to #64, #67 and #69. The final heads of #57 and #66, which reached `main` inside #67, passed in Actions earlier on 2026-09-25. Each of these PRs reports a green local `npm run gates` run on Node 22 in its body, and the merges to `main` were gated on those runs; for the heads Actions did not run, that local run is the only gate record. The counts are held in `scripts/floor.json` and are not restated here |
@@ -114,7 +114,7 @@ The requirements are `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` (decisions CAP-D1
 
 ### 1.3 SC Hub DA, ROP and call-off (DRC-1 to DRC-19)
 
-The requirements are `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` (accepted 2026-10-19; decisions DRC-D1 to DRC-D16). Waves 1 to 3 are built (GitLab MR !4, !5 and !6, 2026-10-19). Backlog BL-187 to BL-209; build order in section 7 of that file. Values tagged [Default] are starting values until Material Planning confirms them.
+The requirements are `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` (accepted 2026-10-19; decisions DRC-D1 to DRC-D16). Waves 1 to 3 and the sandbox are built (GitLab MR !4 to !7, 2026-10-19). Backlog BL-187 to BL-209; build order in section 7 of that file. Values tagged [Default] are starting values until Material Planning confirms them.
 
 | DRC | Status | Built in | What exists today |
 |---|---|---|---|
@@ -134,6 +134,7 @@ The requirements are `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` (accepted 2
 | DRC-3 DA history (BL-189) | Built | MR !6 | `/buyer/demand-anticipation-history`, filters and CSV; ungated (DRC-D18) |
 | DRC-5 Delayed call-off (BL-191) | Built | MR !6 | "LTP dropped" change, supplier approve or reject on the call-off |
 | DRC-8 Feedstock confirmation (BL-194) | Built, feedstock only | MR !6 | Supplier "Current feedstock" panel; PTI line on Inventory; Incoming DA waits for BL-204 |
+| DRC-17 What-if sandbox (BL-202) | Built | MR !7 | `/buyer/what-if`: one supplier × material, live inputs and rule switches, results against the current plan, 52/24-week projection, named scenarios compared up to 3, PPT 7 preset; analysis only |
 | Every other DRC | Not built | — | — |
 
 ## 2. Build list

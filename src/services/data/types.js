@@ -3124,6 +3124,12 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * @property {(scope: QueryScope) => Promise<Page<import('../transitions/callOffTriggerRules').PrRecommendationView>>} getRopFisikPrRecommendations BL-199 (DRC-13 BR-02) — the open "Create a PR in SAP" recommendations:
  *   a material whose PTI SOH reached ROP Fisik with no umbrella PO balance left for what it needs. A
  *   recommendation only; the hub posts nothing to SAP. PTI only: a supplier scope reads an empty page.
+ * @property {(scope: QueryScope) => Promise<Page<import('./mock/whatIfSandboxReadModel').WhatIfPair>>} getWhatIfPairs DRC-17 (BL-202) — the supplier × material pairs the what-if sandbox
+ *   offers, with RM or PM and its horizon (52 / 24 weeks), the PPT 7 golden case first. PTI only:
+ *   a supplier scope reads an empty page.
+ * @property {(scope: QueryScope, supplierId: string, materialCode: string) => Promise<import('./mock/whatIfSandboxReadModel').WhatIfSandbox | null>} getWhatIfSandbox DRC-17 (BL-202) — one pair's sandbox: today's live inputs
+ *   (BR-02) and its saved scenarios (BR-05), each flagged when the rules changed since. Analysis
+ *   only. Null for a pair the sandbox does not offer, and for a supplier scope.
  * @property {(scope: QueryScope) => Promise<Page<import('../transitions/osipRopRules').NpdReview>>} getNpdReviews DRC-12a (BL-198) — the open "Review ROP after first order" tasks: a material
  *   whose NPD tag the hub saw drop, until the planner sets or confirms its OSIP level. PTI only:
  *   a supplier scope reads an empty page.

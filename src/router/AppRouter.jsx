@@ -93,6 +93,7 @@ import BuyerThisWeek from '@pages-v2/BuyerThisWeek';
 import BuyerReschedule from '@pages-v2/BuyerReschedule';
 import BuyerDemandAnticipation from '@pages-v2/BuyerDemandAnticipation';
 import BuyerDemandAnticipationHistory from '@pages-v2/BuyerDemandAnticipationHistory';
+import BuyerWhatIfSandbox from '@pages-v2/BuyerWhatIfSandbox';
 import BuyerStabilise from '@pages-v2/BuyerStabilise';
 import BuyerDataHealth from '@pages-v2/BuyerDataHealth';
 import BuyerDemandForecast from '@pages-v2/BuyerDemandForecast';
@@ -189,6 +190,8 @@ const AppRouter = () => {
               path="/buyer/demand-anticipation-history"
               element={<BuyerDemandAnticipationHistory />}
             />
+            {/* DRC-17 (BL-202) — the what-if sandbox: analysis only, never pushed to the plan. */}
+            <Route path="/buyer/what-if" element={<BuyerWhatIfSandbox />} />
             {/* REQ-E14-06 — stabilise and publish the plan to suppliers (SIMULATED; never shown to a supplier). */}
             <Route path="/buyer/stabilise" element={<BuyerStabilise />} />
             {/* REQ-E14-01 — data health of the engine's inputs (SIMULATED). */}
