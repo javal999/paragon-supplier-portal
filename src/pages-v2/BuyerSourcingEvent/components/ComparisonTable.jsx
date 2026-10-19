@@ -126,16 +126,21 @@ const ComparisonTable = ({
           <TableHeaderCell key={q.id}>
             <div data-testid={`cmp-head-${q.supplierId}`}>
               {supplierName(q.supplierId)}
+              {/* RFx UX X-03 — each pill says what it means on hover. */}
               {!tied && q.id === bestId && (
-                <StatusPill variant="success" className="ml-2">
-                  {t('rfx.cmp.best')}
-                </StatusPill>
+                <span className="inline-flex ml-2" title={t('rfx.cmp.best.tip')}>
+                  <StatusPill variant="success">{t('rfx.cmp.best')}</StatusPill>
+                </span>
               )}
               {!tied && q.id === bestId && COMPOSITE_LIVENESS === 'simulated' && (
                 <span data-testid="cmp-best-simulated">{simulated}</span>
               )}
               {tied && standing.tiedIds.includes(q.id) && (
-                <span className="ml-2" data-testid={`cmp-tied-${q.supplierId}`}>
+                <span
+                  className="ml-2"
+                  title={t('rfx.cmp.tied.tip')}
+                  data-testid={`cmp-tied-${q.supplierId}`}
+                >
                   <StatusPill variant="success">{t('rfx.cmp.tied')}</StatusPill>
                 </span>
               )}

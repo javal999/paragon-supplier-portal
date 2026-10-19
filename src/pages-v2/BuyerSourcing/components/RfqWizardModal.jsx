@@ -73,6 +73,7 @@ const RfqWizardModal = ({
           sourceablePrs={sourceablePrs}
           applySource={wizard.applySource}
           updateDraft={wizard.updateDraft}
+          changeCategory={wizard.changeCategory}
           toggleMaterial={wizard.toggleMaterial}
           qtyRead={wizard.qtyRead}
           budgetRead={wizard.budgetRead}
@@ -193,9 +194,13 @@ const RfqWizardModal = ({
           supplierNameById={supplierNameById}
           editingRfqId={wizard.editingRfqId}
           publishAvailability={publishAvailability}
-          revisePending={wizard.reviseMutation.isPending}
+          sendPending={
+            wizard.reviseMutation.isPending ||
+            wizard.createMutation.isPending ||
+            wizard.publishMutation.isPending
+          }
           isStepValid={wizard.isStepValid}
-          saveEdit={wizard.saveEdit}
+          saveAndSend={() => wizard.submitWizard(true)}
           setWizardStep={wizard.setWizardStep}
           setTemplateToSave={wizard.setTemplateToSave}
           t={t}
@@ -211,7 +216,7 @@ const RfqWizardModal = ({
         currentStep={wizard.wizardStep}
         onStepChange={wizard.setWizardStep}
         onCancel={wizard.closeWizard}
-        onComplete={wizard.submitWizard}
+        onComplete={() => wizard.submitWizard(false)}
         isStepValid={wizard.isStepValid}
         completeLabel={t(wizard.editingRfqId ? 'rfxEdit.saveChanges' : 'sourcing.wizard.complete')}
       />

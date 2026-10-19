@@ -52,15 +52,23 @@ export const AwardBidRow = ({
           testId={`award-compliance-${key}-${bid.supplierId}`}
         />
         {showBestMarker(item) && model.bestOf(item, brk.qty) === bid.key && (
-          <StatusPill variant="success" className="ml-2">
-            {t('rfqCompare.cmp.bestScored')}
-          </StatusPill>
+          // RFx UX X-03 — the pill says what it means on hover.
+          <span
+            className="inline-flex ml-2"
+            title={t('rfx.cmp.best.tip')}
+            data-testid={`award-best-${key}-${bid.supplierId}`}
+          >
+            <StatusPill variant="success">{t('rfqCompare.cmp.bestScored')}</StatusPill>
+          </span>
         )}
-        {/* Material G2 (edge case 1) — why this bidder is below the level. */}
+        {/* Material G2 (edge case 1) — that this bidder is below the level.
+            RFx UX B-14: the pill only, the reason as its tooltip; the reason
+            is written out once, in the invitee list. */}
         <div className="mt-1">
           <EligibilityMarker
             eligibility={eligibility}
             testId={`award-elig-${key}-${bid.supplierId}`}
+            compact
           />
         </div>
       </TableCell>

@@ -30,6 +30,7 @@ import NewRoundForm from './NewRoundForm';
  *   currency: RFQ['currency'];
  *   negotiate: VerbAvailability;
  *   supplierName: (id: string) => string;
+ *   earlyRound: { notQuoted: number } | null;
  *   form: NewRoundFormState;
  *   run: RunCommand;
  * }>}
@@ -41,6 +42,7 @@ const NegotiationSection = ({
   currency,
   negotiate,
   supplierName,
+  earlyRound,
   form,
   run
 }) => {
@@ -132,6 +134,7 @@ const NegotiationSection = ({
           rfq={rfq}
           current={current}
           supplierName={supplierName}
+          earlyRound={earlyRound}
           form={form}
           run={run}
         />

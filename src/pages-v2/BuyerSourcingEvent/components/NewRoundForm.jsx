@@ -5,6 +5,7 @@
 /** @import { NewRoundFormState } from '../hooks/useNewRoundForm' */
 import { useTranslation } from 'react-i18next';
 import Button from '@components/ui-v2/Button';
+import { formatDate } from '@lib/format';
 
 /**
  * REQ-E03-05 BR-03 / BR-04 — open a negotiation round: shortlist the suppliers
@@ -13,15 +14,20 @@ import Button from '@components/ui-v2/Button';
  * `rfq:negotiate`. Its fields are page state (`useNewRoundForm`), threaded in.
  * Moved out of `BuyerSourcingEvent.jsx` by the Phase 5 page split (no
  * behaviour change).
+ *
+ * RFx UX B-15 — while the response window is open and an invitee has still to
+ * quote (`earlyRound`, from `roundBeforeWindowCloses`), the form says so
+ * before the round is opened. A warning, not a refusal: the act stays enabled.
  * @type {React.FC<{
  *   rfq: RFQ;
  *   current: Quotation[];
  *   supplierName: (id: string) => string;
+ *   earlyRound: { notQuoted: number } | null;
  *   form: NewRoundFormState;
  *   run: RunCommand;
  * }>}
  */
-const NewRoundForm = ({ rfq, current, supplierName, form, run }) => {
+const NewRoundForm = ({ rfq, current, supplierName, earlyRound, form, run }) => {
   const { t } = useTranslation();
   const {
     shortlist,
@@ -38,6 +44,18 @@ const NewRoundForm = ({ rfq, current, supplierName, form, run }) => {
   return (
     <div className="p-4 border-t border-border-subtle space-y-3">
       <h3 className="text-sm font-semibold text-text-primary">{t('rfx.neg.new')}</h3>
+      {!!earlyRound && (
+        <p
+          className="rounded-md border border-warning bg-warning-soft px-3 py-2 text-xs text-warning-hover"
+          role="status"
+          data-testid="round-window-open-warn"
+        >
+          {t('rfx.neg.windowOpenWarn', {
+            date: formatDate(rfq.responseDeadline),
+            count: earlyRound.notQuoted
+          })}
+        </p>
+      )}
       <div className="flex flex-wrap gap-4">
         <fieldset className="min-w-[14rem]">
           <legend className="text-xs font-semibold text-text-secondary mb-1">
