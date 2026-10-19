@@ -15,6 +15,7 @@ import { rfxSectionsOf } from '@services/sourcing/rfxConfig';
 import { answerRefusal } from '@services/transitions/rfxRules';
 /** @import { RfiAnswer, RfiQuestion, RfxCustomSection } from '@services/sourcing/types' */
 import { IndicativePill, authored, optionLabel, sectionTitle } from './rfxAuthoringDisplay';
+import { StillMissing } from './ResponseFormState';
 
 /**
  * @typedef {object} RfxQuestionFormProps
@@ -24,7 +25,15 @@ import { IndicativePill, authored, optionLabel, sectionTitle } from './rfxAuthor
  * @property {boolean} disabled
  * @property {(questionId: string, patch: Partial<RfiAnswer>) => void} onChange
  * @property {boolean} [withDescription] -  Ask for the BR-02 description under each answer (the RFI does; the RFP does not).
+ * @property {readonly string[]} [missing] -  S-02 — the required questions still unanswered: each is marked "Still missing" where it sits.
  */
+
+/**
+ * The DOM id of a question's field, the target of the form's jump links (S-02).
+ * @param {string} questionId
+ * @returns {string}
+ */
+export const questionAnchor = (questionId) => `field-q-${questionId}`;
 
 /** @type {React.FC<RfxQuestionFormProps>} */
 export const RfxQuestionForm = ({
@@ -33,7 +42,8 @@ export const RfxQuestionForm = ({
   answers,
   disabled,
   onChange,
-  withDescription = false
+  withDescription = false,
+  missing = []
 }) => {
   const { t } = useTranslation();
   return (
@@ -53,6 +63,7 @@ export const RfxQuestionForm = ({
                 answer={answers.find((a) => a.questionId === q.id)}
                 disabled={disabled}
                 withDescription={withDescription}
+                missing={missing.includes(q.id)}
                 onChange={(patch) => onChange(q.id, patch)}
               />
             ))}
@@ -65,13 +76,15 @@ export const RfxQuestionForm = ({
 
 /**
  * One question, drawn according to its kind.
- * @type {React.FC<{ question: RfiQuestion; answer: RfiAnswer | undefined; disabled: boolean; withDescription?: boolean; onChange: (patch: Partial<RfiAnswer>) => void; }>}
+ * `missing`: S-02 — a required question still unanswered, marked where it sits.
+ * @type {React.FC<{ question: RfiQuestion; answer: RfiAnswer | undefined; disabled: boolean; withDescription?: boolean; missing?: boolean; onChange: (patch: Partial<RfiAnswer>) => void; }>}
  */
 export const QuestionField = ({
   question,
   answer,
   disabled,
   withDescription = false,
+  missing = false,
   onChange
 }) => {
   const { t } = useTranslation();
@@ -79,8 +92,9 @@ export const QuestionField = ({
   const value = answer?.value;
   const prompt = authored(t, question.promptKey);
   const invalid = answerRefusal(question, answer);
+  const marked = !!invalid || missing;
   const inputClass = `w-full bg-white border rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action disabled:bg-bg-hover ${
-    invalid ? 'border-danger' : 'border-border-input'
+    marked ? 'border-danger' : 'border-border-input'
   }`;
   const unit = question.unitKey ? authored(t, question.unitKey) : '';
 
@@ -97,7 +111,7 @@ export const QuestionField = ({
       : '';
 
   return (
-    <div data-testid={`rfi-field-${question.id}`}>
+    <div id={questionAnchor(question.id)} data-testid={`rfi-field-${question.id}`}>
       <label className="block text-sm text-text-primary mb-1" htmlFor={id}>
         {prompt}
         {question.required && <span className="text-danger ml-1">*</span>}
@@ -239,7 +253,7 @@ export const QuestionField = ({
           value={typeof value === 'string' ? value : ''}
           onChange={(e) => onChange({ value: e.target.value })}
           className={`w-full bg-white border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-action disabled:bg-bg-hover ${
-            invalid ? 'border-danger' : 'border-border-input'
+            marked ? 'border-danger' : 'border-border-input'
           }`}
         />
       )}
@@ -254,6 +268,7 @@ export const QuestionField = ({
       )}
 
       {bounds && <p className="text-xs text-text-tertiary mt-1">{bounds}</p>}
+      {!!missing && !invalid && <StillMissing testId={`rfi-field-missing-${question.id}`} />}
       {invalid && (
         <p className="text-xs text-danger mt-1" data-testid={`rfi-field-invalid-${question.id}`}>
           {t(`rfxa.answer.invalid.${invalid}`)}

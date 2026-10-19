@@ -7,9 +7,26 @@ import { useQuotationSubmit } from '@services/query/commandHooks';
 import { daysUntil } from '@services/data/dayProjection';
 import { documentsOf, responseDocumentsRefusal } from '@services/transitions/rfxDocumentRules';
 import { BASE_CURRENCY, BID_CURRENCIES } from '@lib/currencyPolicy';
-import { formatMoney } from '@lib/format';
-import { draftFromQuote, emptyTieredDraft, readTieredDraft } from '../../rfqs/tieredQuoteModel';
-/** @import { TieredDraft } from '../../rfqs/tieredQuoteModel' */
+import { formatMoney, formatNumber } from '@lib/format';
+import {
+  draftFromQuote,
+  emptyTieredDraft,
+  newExtraCost,
+  readTieredDraft,
+  tieredDraftProblems
+} from '../../rfqs/tieredQuoteModel';
+/** @import { GridProblem, TieredDraft } from '../../rfqs/tieredQuoteModel' */
+import { specLabel } from '../../rfqs/TieredQuoteForm';
+import { builtInDuplicates } from '../../rfx/builtInDuplicates';
+import {
+  clearDraft,
+  draftKey,
+  draftSavedNow,
+  readDraft,
+  useAutosave,
+  useLeaveGuard
+} from '../../rfx/responseDraft';
+/** @import { ResponseProblem } from '../../rfx/ResponseFormState' */
 import { rfqResponseRefusal } from '../../rfqs/rfqResponseText';
 import { buildQuotationSubmitPayload, isCurrencyRefusal } from '../../rfqs/quotationSubmitModel';
 import { readBidPrice } from '../../rfqs/quotationPrice';
@@ -43,6 +60,14 @@ import { toOpenRfq } from '../utils';
  * panel from a card (`handleSubmitQuote`) or from a quote version
  * (`handleRevise`) seeds the form; a submit the verb accepts closes the panel
  * and calls `onSubmitted`.
+ *
+ * RFx UX 2026-10. S-01: what the supplier types is kept in this browser per
+ * RFQ (and per version revised) and read back when the panel opens on it
+ * again; a submit the verb accepts drops it. S-02: `problems` lists every gap
+ * at once (the grid's from `tieredDraftProblems`, the single-price form's from
+ * the same reads its gates use), and Submit is off while any stands. S-06: a
+ * buyer question asking the sample ready date is answered once — its answer
+ * is copied into the sample offer.
  * @param {QuoteSubmissionArgs} args
  */
 export const useQuoteSubmission = ({ supplierId, rfqById, nowIso, onSubmitted }) => {
@@ -77,14 +102,100 @@ export const useQuoteSubmission = ({ supplierId, rfqById, nowIso, onSubmitted })
   const [supersedes, setSupersedes] = useState(/** @type {string | null} */ (null));
   const [gridRefusal, setGridRefusal] = useState(/** @type {string | null} */ (null));
   const panelTiered = (effectiveQuotePanelRFQ?.rfq.items ?? []).length > 0;
+  // S-01 — has the supplier typed in this panel, and when was it last kept.
+  const [edited, setEdited] = useState(false);
+  const [savedAt, setSavedAt] = useState(/** @type {string | undefined} */ (undefined));
+
+  /**
+   * The key one RFQ's draft (and the version it revises) is kept under.
+   * @param {string} rfqId
+   * @param {string | null} revises
+   */
+  const keyFor = (rfqId, revises) =>
+    draftKey('rfq', supplierId, revises ? `${rfqId}.${revises}` : rfqId);
+  const storeKey = effectiveQuotePanelRFQ ? keyFor(effectiveQuotePanelRFQ.id, supersedes) : null;
+  const saveFailed = useAutosave(storeKey, { form, tieredDraft, savedAt }, edited);
+  useLeaveGuard(storeKey !== null && edited && saveFailed, t('rfx.form.leave'));
+
+  /**
+   * Open the panel on what this browser kept for it, if anything.
+   * @param {string} key
+   * @returns {boolean}
+   */
+  const restore = (key) => {
+    const kept = readDraft(key);
+    if (!kept?.form) {
+      setEdited(false);
+      setSavedAt(undefined);
+      return false;
+    }
+    setForm({ ...emptyQuoteForm, ...kept.form });
+    /** @type {TieredDraft | null} */
+    const grid = kept.tieredDraft ?? null;
+    // Row ids are minted per session; a kept row gets a fresh one so it cannot
+    // collide with a row added after the reload.
+    setTieredDraft(
+      grid && {
+        ...grid,
+        items: grid.items.map((d) => ({
+          ...d,
+          extraCosts: d.extraCosts.map((c) => newExtraCost(c.name, c.amount))
+        }))
+      }
+    );
+    setEdited(true);
+    setSavedAt(kept.savedAt);
+    return true;
+  };
+
+  // S-06 — the buyer question that asks the sample ready date, if any.
+  const sampleDateQuestion = effectiveQuotePanelRFQ
+    ? builtInDuplicates(
+        effectiveQuotePanelRFQ.rfq.questions ?? [],
+        (q) => t(q.promptKey, { defaultValue: q.promptKey }),
+        {
+          sampleReadyDate: ['en', 'id'].map((lng) => t('rfqResponse.sample.readyDate', { lng })),
+          timeline: []
+        }
+      ).sampleReadyDate
+    : undefined;
+
+  /**
+   * S-06 — the sample offer carries the question's date while the supplier
+   * says Yes; with No it carries none (the rule refuses a date without one).
+   * @param {TieredDraft} next
+   * @returns {TieredDraft}
+   */
+  const withSampleDate = (next) => {
+    if (!sampleDateQuestion) return next;
+    const v = next.answers[sampleDateQuestion.id]?.value;
+    return {
+      ...next,
+      sampleReadyDate: next.canSample === true && typeof v === 'string' ? v : ''
+    };
+  };
+
+  /** @param {QuoteForm} next */
+  const editForm = (next) => {
+    setForm(next);
+    setEdited(true);
+    setSavedAt(draftSavedNow());
+  };
+  /** @param {TieredDraft} next */
+  const editTiered = (next) => {
+    setTieredDraft(withSampleDate(next));
+    setEdited(true);
+    setSavedAt(draftSavedNow());
+  };
 
   /** @param {OpenRFQ} rfq */
   const handleSubmitQuote = (rfq) => {
     setQuotePanelRFQ(rfq);
-    setForm({ ...emptyQuoteForm, paymentTermsOffered: rfq.rfq.paymentTerms });
-    setTieredDraft((rfq.rfq.items ?? []).length > 0 ? emptyTieredDraft(rfq.rfq) : null);
     setSupersedes(null);
     setGridRefusal(null);
+    if (restore(keyFor(rfq.id, null))) return;
+    setForm({ ...emptyQuoteForm, paymentTermsOffered: rfq.rfq.paymentTerms });
+    setTieredDraft((rfq.rfq.items ?? []).length > 0 ? emptyTieredDraft(rfq.rfq) : null);
   };
 
   // RFx spec — revising before the deadline: the panel opens on the supplier's
@@ -107,6 +218,9 @@ export const useQuoteSubmission = ({ supplierId, rfqById, nowIso, onSubmitted })
     const rfq = rfqById.get(q.quote.rfqId);
     if (!rfq) return;
     setQuotePanelRFQ(toOpenRfq(rfq, nowIso, t));
+    setSupersedes(q.quote.id);
+    setGridRefusal(null);
+    if (restore(keyFor(rfq.id, q.quote.id))) return;
     setForm({
       ...emptyQuoteForm,
       unitPrice: String(q.quote.unitPrice),
@@ -122,8 +236,6 @@ export const useQuoteSubmission = ({ supplierId, rfqById, nowIso, onSubmitted })
       documents: documentsOf(q.quote)
     });
     setTieredDraft((rfq.items ?? []).length > 0 ? draftFromQuote(rfq, q.quote) : null);
-    setSupersedes(q.quote.id);
-    setGridRefusal(null);
   };
 
   // ── CP-0 · W1 · 2e-a — the ONE read of the bid price ──────────────────────
@@ -146,6 +258,76 @@ export const useQuoteSubmission = ({ supplierId, rfqById, nowIso, onSubmitted })
   const moq = readMoq(form.moq);
 
   const submitBlocked = !leadTime.ok || sameDayAckOwed || !moq.ok;
+
+  // ── S-02 — every gap at once, named in the reader's language ─────────────
+  /** @type {readonly GridProblem[]} */
+  const gridProblems =
+    effectiveQuotePanelRFQ && panelTiered && tieredDraft
+      ? tieredDraftProblems(effectiveQuotePanelRFQ.rfq, tieredDraft, sampleDateQuestion?.id)
+      : [];
+  /**
+   * @param {GridProblem['field']} f
+   * @returns {string}
+   */
+  const gridLabel = (f) => {
+    /** @param {string} field */
+    const onItem = (field) => t('rfx.form.rfq.item', { n: 'n' in f ? f.n : '', field });
+    switch (f.kind) {
+      case 'price':
+        return t('rfx.form.rfq.price', { n: f.n, qty: formatNumber(f.qty) });
+      case 'altPrice':
+        return t('rfx.form.rfq.altPrice', { n: f.n, qty: formatNumber(f.qty) });
+      case 'altDescription':
+        return t('rfx.form.rfq.altDescription', { n: f.n });
+      case 'spec':
+        return onItem(specLabel(t, f.spec));
+      case 'moq':
+        return onItem(t('rfx.form.rfq.moq'));
+      case 'lead':
+        return onItem(t('rfx.form.rfq.lead'));
+      case 'cost':
+        return onItem(t(`rfqAuthoring.cost.${f.costId}`));
+      case 'extraCost':
+        return onItem(t('rfx.form.rfq.extraCost', { n: f.index + 1 }));
+      case 'question': {
+        const q = effectiveQuotePanelRFQ?.rfq.questions?.find((x) => x.id === f.questionId);
+        return q ? t(q.promptKey, { defaultValue: q.promptKey }) : f.questionId;
+      }
+      case 'validUntil':
+        return t('rfqs.field.validUntil');
+      case 'sample':
+        return t('rfqs.panel.canSample');
+      case 'sampleDate':
+        return t('rfqResponse.sample.readyDate');
+      default:
+        return t('rfx.form.anchor.documents');
+    }
+  };
+  /** @type {ResponseProblem[]} */
+  const problems = !effectiveQuotePanelRFQ
+    ? []
+    : panelTiered
+      ? gridProblems.map((p) => ({ anchor: p.anchor, label: gridLabel(p.field) }))
+      : [
+          ...(!bidPrice.ok
+            ? [{ anchor: 'quote-unit-price', label: t('rfqs.field.unitPrice') }]
+            : []),
+          ...(!leadTime.ok ? [{ anchor: 'quote-lead-time', label: t('rfqs.field.leadTime') }] : []),
+          ...(sameDayAckOwed
+            ? [{ anchor: 'quote-leadtime-sameday', label: t('rfx.form.rfq.sameDay') }]
+            : []),
+          ...(!form.validUntil.trim()
+            ? [{ anchor: 'quote-valid-until', label: t('rfqs.field.validUntil') }]
+            : []),
+          ...(!moq.ok ? [{ anchor: 'quote-moq', label: t('rfqs.field.moq') }] : []),
+          ...(responseDocumentsRefusal(
+            effectiveQuotePanelRFQ.rfq.documentRequests ?? [],
+            form.documents,
+            0
+          )
+            ? [{ anchor: 'quote-documents', label: t('rfx.form.anchor.documents') }]
+            : [])
+        ];
 
   // A price nobody can read has no total. The preview is only ASKABLE of a price
   // that exists — it never renders a product of a guessed value. The RFQ quantity
@@ -205,6 +387,10 @@ export const useQuoteSubmission = ({ supplierId, rfqById, nowIso, onSubmitted })
         title: t('rfqs.toast.submitted.title', { rfq: rfqNumber }),
         description: t('rfqs.toast.submitted.body', { date: deadline })
       });
+      // S-01 — sent: the kept draft has done its job.
+      if (storeKey) clearDraft(storeKey);
+      setEdited(false);
+      setSavedAt(undefined);
       setQuotePanelRFQ(null);
       setForm(emptyQuoteForm);
       setTieredDraft(null);
@@ -363,9 +549,9 @@ export const useQuoteSubmission = ({ supplierId, rfqById, nowIso, onSubmitted })
     effectiveQuotePanelRFQ,
     closeQuotePanel: () => setQuotePanelRFQ(null),
     form,
-    setForm,
+    setForm: editForm,
     tieredDraft,
-    setTieredDraft,
+    setTieredDraft: editTiered,
     supersedes,
     gridRefusal,
     setGridRefusal,
@@ -374,6 +560,12 @@ export const useQuoteSubmission = ({ supplierId, rfqById, nowIso, onSubmitted })
     leadTime,
     moq,
     submitBlocked,
+    problems,
+    gridProblems,
+    showMissing: edited,
+    savedAt: edited ? savedAt : undefined,
+    saveFailed,
+    sampleDateQuestion,
     totalPrice,
     isSubmitting: submitMutation.isPending,
     handleSubmitQuote,

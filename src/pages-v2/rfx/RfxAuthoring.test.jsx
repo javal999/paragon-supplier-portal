@@ -155,7 +155,9 @@ describe('the supplier form renders and validates every kind (the Oslo RFI)', ()
     expect(await screen.findByTestId('rfi-field-invalid-oslo-colours')).toHaveTextContent(
       'above the maximum'
     );
-    expect(screen.getByTestId('supplier-rfi-invalid-rfi-002')).toBeInTheDocument();
+    expect(screen.getByTestId('supplier-rfi-problems-rfi-002')).toHaveTextContent(
+      /How many printing colours/
+    );
     expect(screen.getByTestId('supplier-rfi-submit-rfi-002')).toBeDisabled();
     // POSITIVE TWIN.
     fireEvent.change(

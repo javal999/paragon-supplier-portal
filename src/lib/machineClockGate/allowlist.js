@@ -92,6 +92,13 @@ export const MACHINE_CLOCK_ALLOWLIST = [
     reason: "Simulator message id (React key); the message's shown time reads the hub clock."
   },
   {
+    key: 'src/pages-v2/rfx/responseDraft.js::draftSavedNow::new Date()',
+    count: 1,
+    why: 'time-of-day',
+    reason:
+      'The "Draft saved 19:04" stamp on a supplier response form (RFx UX S-01) shows when this browser kept the draft; the hub clock carries a date, not a moving time of day.'
+  },
+  {
     key: 'src/pages-v2/sourcing/RfqAuthoring/components/QuestionsOptionsStep.jsx::QuestionsOptionsStep.addQuestion.question.id::Date.now()',
     count: 1,
     why: 'unique-id',

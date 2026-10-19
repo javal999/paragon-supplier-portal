@@ -56,13 +56,16 @@ const QuoteNotesSection = ({ rfq, form, setForm }) => {
         canSample={form.canSample}
         readyDate={form.sampleReadyDate}
         onChange={(canSample, sampleReadyDate) => setForm({ ...form, canSample, sampleReadyDate })}
+        anchorPrefix="quote"
       />
-      <ResponseDocumentsSection
-        requests={rfq.rfq.documentRequests ?? []}
-        value={form.documents}
-        onChange={(documents) => setForm({ ...form, documents })}
-        testId="quote-documents"
-      />
+      <div id="quote-documents">
+        <ResponseDocumentsSection
+          requests={rfq.rfq.documentRequests ?? []}
+          value={form.documents}
+          onChange={(documents) => setForm({ ...form, documents })}
+          testId="quote-documents"
+        />
+      </div>
     </FormSection>
   );
 };

@@ -13,8 +13,10 @@ import { tiersForItem } from '@services/sourcing/rfqModel';
 import RfqQuestionField from './RfqQuestionField';
 import { FirmPill } from '../rfx/rfxAuthoringDisplay';
 import ResponseDocumentsSection from '../rfx/ResponseDocumentsSection';
-/** @import { ItemDraft, TieredDraft } from './tieredQuoteModel' */
+/** @import { GridProblem, ItemDraft, TieredDraft } from './tieredQuoteModel' */
+/** @import { RfiQuestion } from '@services/sourcing/types' */
 import { newExtraCost } from './tieredQuoteModel';
+import { StillMissing } from '../rfx/ResponseFormState';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE QUOTE GRID (RFx working spec, 2026-09-21, "Supplier response · Quote
@@ -28,11 +30,36 @@ import { newExtraCost } from './tieredQuoteModel';
 //
 // It only COLLECTS. What is complete is decided by `readTieredDraft`, which
 // runs the verb's own rule; the panel says the refusal before Submit is sent.
+//
+// S-02 (RFx UX 2026-10): every gap `tieredDraftProblems` finds is said under
+// its own field — "Not a valid value" at once, "Still missing" once the
+// supplier has started typing (an untouched blank does not nag on sight, the
+// price precedent) — and each field carries the DOM id the panel's jump links
+// scroll to. S-06: when a buyer question asks the sample ready date, the
+// sample offer does not ask it again (`sampleDateQuestion`).
 // ─────────────────────────────────────────────────────────────────────────────
 
 const inputClass =
   'w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action placeholder:text-text-tertiary';
 const labelClass = 'block text-label text-text-tertiary uppercase mb-1';
+
+/**
+ * What a field's gap says under it: "Not a valid value" always, "Still
+ * missing" once the supplier has started (S-02).
+ * @type {React.FC<{ problem: GridProblem | undefined; showMissing: boolean; testId: string }>}
+ */
+const FieldNote = ({ problem, showMissing, testId }) => {
+  const { t } = useTranslation();
+  if (!problem) return null;
+  if (problem.missing) return showMissing ? <StillMissing testId={testId} /> : null;
+  return (
+    <div className="text-xs text-danger mt-1" data-testid={testId}>
+      {t('rfx.form.notValid')}
+    </div>
+  );
+};
+
+/** @typedef {{ issue: (anchor: string) => GridProblem | undefined; showMissing: boolean }} FieldIssues */
 
 /**
  * A spec field's label: the library key, or the buyer's own words.
@@ -42,8 +69,8 @@ const labelClass = 'block text-label text-text-tertiary uppercase mb-1';
  */
 export const specLabel = (t, f) => (f.labelKey ? t(f.labelKey) : (f.label ?? f.key));
 
-/** @type {React.FC<{ field: RfqSpecField; value: string; onChange: (v: string) => void; testId: string; }>} */
-const SpecInput = ({ field, value, onChange, testId }) => {
+/** @type {React.FC<{ field: RfqSpecField; value: string; onChange: (v: string) => void; testId: string; issues: FieldIssues; }>} */
+const SpecInput = ({ field, value, onChange, testId, issues }) => {
   const { t } = useTranslation();
   const label = specLabel(t, field);
   return (
@@ -55,6 +82,7 @@ const SpecInput = ({ field, value, onChange, testId }) => {
       </span>
       {field.kind === 'choice' ? (
         <select
+          id={testId}
           aria-label={label}
           data-testid={testId}
           value={value}
@@ -72,6 +100,7 @@ const SpecInput = ({ field, value, onChange, testId }) => {
         <input
           type="text"
           inputMode={field.kind === 'number' ? 'decimal' : 'text'}
+          id={testId}
           aria-label={label}
           data-testid={testId}
           value={value}
@@ -79,15 +108,20 @@ const SpecInput = ({ field, value, onChange, testId }) => {
           className={inputClass}
         />
       )}
+      <FieldNote
+        problem={issues.issue(testId)}
+        showMissing={issues.showMissing}
+        testId={`${testId}-note`}
+      />
     </label>
   );
 };
 
 /**
  * The prices at every break in force, one input each, basis shown.
- * @type {React.FC<{ rfq: RFQ; item: RfqItem; prices: Readonly<Record<number, string>>; onChange: (qty: number, v: string) => void; testIdPrefix: string; labelPrefix: string; }>}
+ * @type {React.FC<{ rfq: RFQ; item: RfqItem; prices: Readonly<Record<number, string>>; onChange: (qty: number, v: string) => void; testIdPrefix: string; labelPrefix: string; issues: FieldIssues; }>}
  */
-const BreakPrices = ({ rfq, item, prices, onChange, testIdPrefix, labelPrefix }) => {
+const BreakPrices = ({ rfq, item, prices, onChange, testIdPrefix, labelPrefix, issues }) => {
   const { t } = useTranslation();
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -108,10 +142,16 @@ const BreakPrices = ({ rfq, item, prices, onChange, testIdPrefix, labelPrefix })
               prefix: labelPrefix,
               qty: formatNumber(tier.qty)
             })}
+            id={`${testIdPrefix}-${tier.qty}`}
             data-testid={`${testIdPrefix}-${tier.qty}`}
             value={prices[tier.qty] ?? ''}
             onChange={(e) => onChange(tier.qty, e.target.value)}
             className={inputClass}
+          />
+          <FieldNote
+            problem={issues.issue(`${testIdPrefix}-${tier.qty}`)}
+            showMissing={issues.showMissing}
+            testId={`${testIdPrefix}-${tier.qty}-note`}
           />
         </label>
       ))}
@@ -119,8 +159,8 @@ const BreakPrices = ({ rfq, item, prices, onChange, testIdPrefix, labelPrefix })
   );
 };
 
-/** @type {React.FC<{ rfq: RFQ; item: RfqItem; draft: ItemDraft; onChange: (next: ItemDraft) => void; flagged: boolean; }>} */
-const ItemBlock = ({ rfq, item, draft, onChange, flagged }) => {
+/** @type {React.FC<{ rfq: RFQ; item: RfqItem; draft: ItemDraft; onChange: (next: ItemDraft) => void; flagged: boolean; issues: FieldIssues; }>} */
+const ItemBlock = ({ rfq, item, draft, onChange, flagged, issues }) => {
   const { t } = useTranslation();
   const buyerFields = item.specFields.filter((f) => f.filledBy === 'buyer');
   const supplierFields = item.specFields.filter((f) => f.filledBy === 'supplier');
@@ -173,6 +213,7 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged }) => {
                 key={f.key}
                 field={f}
                 testId={`${tid}-spec-${f.key}`}
+                issues={issues}
                 value={draft.specValues[f.key] ?? ''}
                 onChange={(v) =>
                   onChange({ ...draft, specValues: { ...draft.specValues, [f.key]: v } })
@@ -194,6 +235,7 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged }) => {
           prices={draft.prices}
           labelPrefix={itemLabel}
           testIdPrefix={`${tid}-price`}
+          issues={issues}
           onChange={(qty, v) => onChange({ ...draft, prices: { ...draft.prices, [qty]: v } })}
         />
       </div>
@@ -205,10 +247,16 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged }) => {
             type="text"
             inputMode="numeric"
             aria-label={t('rfqResponse.grid.moqFor', { item: itemLabel })}
+            id={`${tid}-moq`}
             data-testid={`${tid}-moq`}
             value={draft.moq}
             onChange={(e) => onChange({ ...draft, moq: e.target.value })}
             className={inputClass}
+          />
+          <FieldNote
+            problem={issues.issue(`${tid}-moq`)}
+            showMissing={issues.showMissing}
+            testId={`${tid}-moq-note`}
           />
         </label>
         <label className="block">
@@ -220,10 +268,16 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged }) => {
             type="text"
             inputMode="numeric"
             aria-label={t('rfqResponse.grid.leadTimeFor', { item: itemLabel })}
+            id={`${tid}-lead`}
             data-testid={`${tid}-lead`}
             value={draft.leadTimeDays}
             onChange={(e) => onChange({ ...draft, leadTimeDays: e.target.value })}
             className={inputClass}
+          />
+          <FieldNote
+            problem={issues.issue(`${tid}-lead`)}
+            showMissing={issues.showMissing}
+            testId={`${tid}-lead-note`}
           />
         </label>
       </div>
@@ -234,7 +288,7 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged }) => {
         </div>
         <div className="space-y-2">
           {(item.oneTimeCosts ?? []).map((id) => (
-            <label key={id} className="flex items-center gap-3">
+            <label key={id} className="flex flex-wrap items-center gap-x-3">
               <span className="text-sm text-text-primary w-40 shrink-0">
                 {t(`rfqAuthoring.cost.${id}`)}
                 <span className="text-danger ml-1">*</span>
@@ -246,6 +300,7 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged }) => {
                   cost: t(`rfqAuthoring.cost.${id}`),
                   item: itemLabel
                 })}
+                id={`${tid}-cost-${id}`}
                 data-testid={`${tid}-cost-${id}`}
                 value={draft.requestedCosts[id] ?? ''}
                 onChange={(e) =>
@@ -254,14 +309,22 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged }) => {
                     requestedCosts: { ...draft.requestedCosts, [id]: e.target.value }
                   })
                 }
-                className={inputClass}
+                className={`${inputClass} flex-1`}
               />
+              <span className="basis-full">
+                <FieldNote
+                  problem={issues.issue(`${tid}-cost-${id}`)}
+                  showMissing={issues.showMissing}
+                  testId={`${tid}-cost-${id}-note`}
+                />
+              </span>
             </label>
           ))}
           {draft.extraCosts.map((c, i) => (
-            <div key={c.id} className="flex items-center gap-2">
+            <div key={c.id} className="flex flex-wrap items-center gap-2">
               <input
                 type="text"
+                id={`${tid}-extra-${c.id}`}
                 aria-label={t('rfqResponse.grid.extraCostName', { n: i + 1 })}
                 placeholder={t('rfqResponse.grid.extraCostNamePlaceholder')}
                 value={c.name}
@@ -300,6 +363,13 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged }) => {
               >
                 <X size={14} />
               </button>
+              <span className="basis-full">
+                <FieldNote
+                  problem={issues.issue(`${tid}-extra-${c.id}`)}
+                  showMissing={issues.showMissing}
+                  testId={`${tid}-extra-${i + 1}-note`}
+                />
+              </span>
             </div>
           ))}
           <Button
@@ -340,6 +410,7 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged }) => {
                 <input
                   type="text"
                   aria-label={t('rfqResponse.grid.altDescriptionFor', { item: itemLabel })}
+                  id={`${tid}-alt-description`}
                   data-testid={`${tid}-alt-description`}
                   value={draft.alternative.description}
                   onChange={(e) =>
@@ -350,6 +421,11 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged }) => {
                   }
                   className={inputClass}
                 />
+                <FieldNote
+                  problem={issues.issue(`${tid}-alt-description`)}
+                  showMissing={issues.showMissing}
+                  testId={`${tid}-alt-description-note`}
+                />
               </label>
               <BreakPrices
                 rfq={rfq}
@@ -357,6 +433,7 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged }) => {
                 prices={draft.alternative.prices}
                 labelPrefix={t('rfqResponse.grid.altLabel', { item: itemLabel })}
                 testIdPrefix={`${tid}-alt-price`}
+                issues={issues}
                 onChange={(qty, v) =>
                   onChange({
                     ...draft,
@@ -377,11 +454,27 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged }) => {
 
 /**
  * `flaggedItem`:  The item a refusal names, outlined so the supplier finds it.
- * @type {React.FC<{ rfq: RFQ; draft: TieredDraft; onChange: (next: TieredDraft) => void; flaggedItem: number | null; }>}
+ * `problems`:  S-02 — every gap `tieredDraftProblems` found, said under its field.
+ * `showMissing`:  S-02 — say "Still missing" under empty fields (once the supplier has started).
+ * `sampleDateQuestion`:  S-06 — the buyer question that already asks the sample ready date.
+ * @type {React.FC<{ rfq: RFQ; draft: TieredDraft; onChange: (next: TieredDraft) => void; flaggedItem: number | null; problems?: readonly GridProblem[]; showMissing?: boolean; sampleDateQuestion?: RfiQuestion; }>}
  */
-const TieredQuoteForm = ({ rfq, draft, onChange, flaggedItem }) => {
+const TieredQuoteForm = ({
+  rfq,
+  draft,
+  onChange,
+  flaggedItem,
+  problems = [],
+  showMissing = false,
+  sampleDateQuestion
+}) => {
   const { t } = useTranslation();
   const questions = rfq.questions ?? [];
+  /** @type {FieldIssues} */
+  const issues = {
+    issue: (anchor) => problems.find((p) => p.anchor === anchor),
+    showMissing
+  };
 
   return (
     <div className="space-y-5" data-testid="tiered-quote-form">
@@ -411,6 +504,7 @@ const TieredQuoteForm = ({ rfq, draft, onChange, flaggedItem }) => {
             rfq={rfq}
             item={item}
             flagged={flaggedItem === item.lineNo}
+            issues={issues}
             draft={/** @type {ItemDraft} */ (draft.items.find((d) => d.lineNo === item.lineNo))}
             onChange={(next) =>
               onChange({
@@ -435,10 +529,16 @@ const TieredQuoteForm = ({ rfq, draft, onChange, flaggedItem }) => {
             </span>
             <input
               type="date"
+              id="grid-valid-until"
               aria-label={t('rfqs.field.validUntil')}
               value={draft.validUntil}
               onChange={(e) => onChange({ ...draft, validUntil: e.target.value })}
               className={inputClass}
+            />
+            <FieldNote
+              problem={issues.issue('grid-valid-until')}
+              showMissing={showMissing}
+              testId="grid-valid-until-note"
             />
           </label>
           <label className="block">
@@ -458,12 +558,18 @@ const TieredQuoteForm = ({ rfq, draft, onChange, flaggedItem }) => {
               {t('rfqResponse.grid.questions')}
             </div>
             {questions.map((q) => (
-              <RfqQuestionField
-                key={q.id}
-                question={q}
-                answer={draft.answers[q.id]}
-                onChange={(a) => onChange({ ...draft, answers: { ...draft.answers, [q.id]: a } })}
-              />
+              <div key={q.id} id={`grid-q-${q.id}`}>
+                <RfqQuestionField
+                  question={q}
+                  answer={draft.answers[q.id]}
+                  onChange={(a) => onChange({ ...draft, answers: { ...draft.answers, [q.id]: a } })}
+                />
+                <FieldNote
+                  problem={issues.issue(`grid-q-${q.id}`)}
+                  showMissing={showMissing}
+                  testId={`grid-q-${q.id}-note`}
+                />
+              </div>
             ))}
           </div>
         )}
@@ -474,6 +580,15 @@ const TieredQuoteForm = ({ rfq, draft, onChange, flaggedItem }) => {
           onChange={(canSample, sampleReadyDate) =>
             onChange({ ...draft, canSample, sampleReadyDate })
           }
+          anchorPrefix="grid"
+          answeredIn={
+            sampleDateQuestion
+              ? t(sampleDateQuestion.promptKey, { defaultValue: sampleDateQuestion.promptKey })
+              : undefined
+          }
+          sampleProblem={issues.issue('grid-sample')}
+          dateProblem={issues.issue('grid-sample-date')}
+          showMissing={showMissing}
         />
         <label className="block">
           <span className={labelClass}>{t('rfqs.panel.notes')}</span>
@@ -485,16 +600,18 @@ const TieredQuoteForm = ({ rfq, draft, onChange, flaggedItem }) => {
             className={`${inputClass} resize-y`}
           />
         </label>
-        <ResponseDocumentsSection
-          requests={rfq.documentRequests ?? []}
-          value={draft.documents}
-          onChange={(documents) => onChange({ ...draft, documents })}
-          filesAlready={Object.values(draft.answers).reduce(
-            (n, a) => n + (a.attachments?.length ?? 0),
-            0
-          )}
-          testId="grid-documents"
-        />
+        <div id="grid-documents">
+          <ResponseDocumentsSection
+            requests={rfq.documentRequests ?? []}
+            value={draft.documents}
+            onChange={(documents) => onChange({ ...draft, documents })}
+            filesAlready={Object.values(draft.answers).reduce(
+              (n, a) => n + (a.attachments?.length ?? 0),
+              0
+            )}
+            testId="grid-documents"
+          />
+        </div>
       </FormSection>
     </div>
   );
@@ -503,12 +620,24 @@ const TieredQuoteForm = ({ rfq, draft, onChange, flaggedItem }) => {
 /**
  * The sample offer: can you sample, and by when. Shared by the grid and the
  * single-price form, because the offer is saved on both now.
- * @type {React.FC<{ requested?: { qty: number; neededBy: string }; canSample: boolean | null; readyDate: string; onChange: (canSample: boolean | null, readyDate: string) => void; }>}
+ * `anchorPrefix`:  S-02 — the DOM ids the jump links scroll to (`<prefix>-sample`, `<prefix>-sample-date`).
+ * `answeredIn`:  S-06 — the prompt of the buyer question that already asks the ready date; the date is not asked again here.
+ * @type {React.FC<{ requested?: { qty: number; neededBy: string }; canSample: boolean | null; readyDate: string; onChange: (canSample: boolean | null, readyDate: string) => void; anchorPrefix: string; answeredIn?: string; sampleProblem?: GridProblem; dateProblem?: GridProblem; showMissing?: boolean; }>}
  */
-export const SampleOfferFields = ({ requested, canSample, readyDate, onChange }) => {
+export const SampleOfferFields = ({
+  requested,
+  canSample,
+  readyDate,
+  onChange,
+  anchorPrefix,
+  answeredIn,
+  sampleProblem,
+  dateProblem,
+  showMissing = false
+}) => {
   const { t } = useTranslation();
   return (
-    <div data-testid="sample-offer">
+    <div data-testid="sample-offer" id={`${anchorPrefix}-sample`}>
       <span className={labelClass}>
         {t('rfqs.panel.canSample')}
         {requested && <span className="text-danger ml-1">*</span>}
@@ -541,19 +670,31 @@ export const SampleOfferFields = ({ requested, canSample, readyDate, onChange })
           ))
         }
       </div>
-      {canSample === true && (
-        <label className="block mt-2">
-          <span className={labelClass}>{t('rfqResponse.sample.readyDate')}</span>
-          <input
-            type="date"
-            aria-label={t('rfqResponse.sample.readyDate')}
-            value={readyDate}
-            onChange={(e) => onChange(true, e.target.value)}
-            className={inputClass}
-            style={{ width: 200 }}
-          />
-        </label>
-      )}
+      <FieldNote problem={sampleProblem} showMissing={showMissing} testId="sample-offer-note" />
+      {canSample === true &&
+        (answeredIn ? (
+          <p className="text-xs text-text-tertiary mt-2" data-testid="sample-offer-date-copied">
+            {t('rfx.form.copiedFrom', { question: answeredIn })}
+          </p>
+        ) : (
+          <label className="block mt-2">
+            <span className={labelClass}>{t('rfqResponse.sample.readyDate')}</span>
+            <input
+              type="date"
+              id={`${anchorPrefix}-sample-date`}
+              aria-label={t('rfqResponse.sample.readyDate')}
+              value={readyDate}
+              onChange={(e) => onChange(true, e.target.value)}
+              className={inputClass}
+              style={{ width: 200 }}
+            />
+            <FieldNote
+              problem={dateProblem}
+              showMissing={showMissing}
+              testId="sample-offer-date-note"
+            />
+          </label>
+        ))}
     </div>
   );
 };

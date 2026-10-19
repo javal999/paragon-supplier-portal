@@ -10,6 +10,11 @@ import QuotePriceSection from './QuotePriceSection';
 import QuoteTermsSection from './QuoteTermsSection';
 import QuoteOnFileSection from './QuoteOnFileSection';
 import QuoteNotesSection from './QuoteNotesSection';
+import {
+  DraftSaveState,
+  ResponseProblemsBanner,
+  SendBlockedReason
+} from '../../rfx/ResponseFormState';
 /** @import { QuoteSubmission } from '../hooks/useQuoteSubmission' */
 
 /**
@@ -20,6 +25,10 @@ import QuoteNotesSection from './QuoteNotesSection';
  * calls comes from `submission` (`useQuoteSubmission`); the panel is open only
  * while `effectiveQuotePanelRFQ` is set, which is `null` for a seat without
  * `quotation:submit`.
+ *
+ * RFx UX 2026-10: the save state sits at the top of the body (S-01), the
+ * banner lists every gap with a jump link to it, and Submit is off with the
+ * count beside it while any gap stands (S-02).
  * @type {React.FC<{ submission: QuoteSubmission }>}
  */
 const QuotePanel = ({ submission }) => {
@@ -39,6 +48,12 @@ const QuotePanel = ({ submission }) => {
     leadTime,
     moq,
     submitBlocked,
+    problems,
+    gridProblems,
+    showMissing,
+    savedAt,
+    saveFailed,
+    sampleDateQuestion,
     totalPrice,
     isSubmitting,
     submitQuote
@@ -66,13 +81,15 @@ const QuotePanel = ({ submission }) => {
             <Button variant="secondary" onClick={closeQuotePanel}>
               {t('rfqs.panel.cancel')}
             </Button>
+            <SendBlockedReason count={problems.length} testId="quote-send-reason" />
             <Button
               variant="outline"
               icon={Send}
               // 2e-b-1 — disabled while an unreadable lead time stands, and
               // while a same-day acknowledgement is owed. `submitQuote` re-checks
-              // both; this is the visible half of the same gate.
-              disabled={isSubmitting || (!panelTiered && submitBlocked)}
+              // both; this is the visible half of the same gate. S-02 — and
+              // while any other gap stands, named in the banner above.
+              disabled={isSubmitting || problems.length > 0 || (!panelTiered && submitBlocked)}
               onClick={submitQuote}
             >
               {isSubmitting ? t('rfqs.panel.submitting') : t('rfqs.panel.submit')}
@@ -83,6 +100,11 @@ const QuotePanel = ({ submission }) => {
     >
       {effectiveQuotePanelRFQ && (
         <div className="space-y-5">
+          <DraftSaveState savedAt={savedAt} failed={saveFailed} testId="quote-saved" />
+          {/* An untouched blank does not nag on sight (the price precedent):
+              the banner appears once the supplier has started; the count
+              beside Submit says it from the start. */}
+          {!!showMissing && <ResponseProblemsBanner problems={problems} testId="quote-problems" />}
           <section className="bg-bg-hover border border-border-subtle rounded-md px-4 py-3">
             <div className="text-sm font-semibold text-text-primary">
               {effectiveQuotePanelRFQ.material}
@@ -129,6 +151,9 @@ const QuotePanel = ({ submission }) => {
                   setGridRefusal(null);
                 }}
                 flaggedItem={gridRefusal ? refusalItem(gridRefusal) : null}
+                problems={gridProblems}
+                showMissing={showMissing}
+                sampleDateQuestion={sampleDateQuestion}
               />
             </>
           )}
@@ -140,7 +165,13 @@ const QuotePanel = ({ submission }) => {
                 bidPrice={bidPrice}
                 totalPrice={totalPrice}
               />
-              <QuoteTermsSection form={form} setForm={setForm} leadTime={leadTime} moq={moq} />
+              <QuoteTermsSection
+                form={form}
+                setForm={setForm}
+                leadTime={leadTime}
+                moq={moq}
+                showMissing={showMissing}
+              />
               <QuoteOnFileSection />
               <QuoteNotesSection rfq={effectiveQuotePanelRFQ} form={form} setForm={setForm} />
             </>
