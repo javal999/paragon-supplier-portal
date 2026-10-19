@@ -61,18 +61,45 @@ describe('Feedstock reconcile — planner', () => {
     expect(screen.getByTestId(`fsr-max-${K8801}`)).toHaveTextContent('No max stock agreed');
   });
 
-  it('BR-02: the remainders are shown only — no outcome or liability, and the leftover rule is DRC-15b', async () => {
+  it('BR-02: no outcome or summary; DRC-15b [Proposed BL-207] flags the liability by default', async () => {
     renderWithProviders(<BuyerFixedStockReconcile />, {
       identity: BUYER,
       route: '/buyer/fs-reconcile'
     });
     await screen.findByTestId(`fsr-row-${K8801}`);
-    expect(screen.getByTestId('fsr-remainder-note')).toHaveTextContent(
-      'What happens to a remainder is still to be decided (DRC-15b).'
-    );
-    expect(screen.queryByText(/Liability/)).toBeNull();
     expect(screen.queryByText(/under-called|Supplier short|Balanced/)).toBeNull();
     expect(screen.queryByTestId('fsr-summary')).toBeNull();
+    // No max stock on the pair: the liability is the full remainder (262,000).
+    expect(screen.getByTestId(`fsr-liability-${K8801}`)).toHaveTextContent(
+      `Liability, not priced: ${pcs(262_000)}`
+    );
+    expect(screen.getByTestId(`fsr-liability-nomax-${K8801}`)).toHaveTextContent(
+      'No max stock agreed'
+    );
+    expect(screen.getByTestId(`fsr-proposed-${K8801}`)).toHaveTextContent(
+      'Proposed: awaiting owner review (BL-207)'
+    );
+    expect(screen.queryByTestId(`fsr-carried-${K8801}`)).toBeNull();
+    const noteEl = screen.getByTestId('fsr-remainder-note');
+    expect(noteEl).toHaveAttribute('data-leftover-rule', 'flagLiability');
+    expect(noteEl).toHaveTextContent('Proposed leftover rule (DRC-15b), switch “flag liability”');
+    expect(noteEl).toHaveTextContent('Proposed: awaiting owner review (BL-207)');
+  });
+
+  it('DRC-15b [Proposed BL-207]: a max stock below the remainder caps the liability', async () => {
+    renderWithProviders(<BuyerFixedStockReconcile />, {
+      identity: BUYER,
+      route: '/buyer/fs-reconcile'
+    });
+    fireEvent.click(await screen.findByTestId(`fsr-max-edit-${K8801}`));
+    fireEvent.change(screen.getByTestId('fsr-max-input'), { target: { value: '50000' } });
+    fireEvent.click(screen.getByTestId('fsr-max-save'));
+    await waitFor(() =>
+      expect(screen.getByTestId(`fsr-liability-${K8801}`)).toHaveTextContent(
+        `Liability, not priced: ${pcs(50_000)}`
+      )
+    );
+    expect(screen.queryByTestId(`fsr-liability-nomax-${K8801}`)).toBeNull();
   });
 
   it('BR-03: a seat holding maxstock:set sets the max stock from the row, and the row reads it', async () => {
@@ -138,6 +165,12 @@ describe('Feedstock reconcile — supplier', () => {
     expect(screen.getByTestId('sample-data-badge')).toBeInTheDocument();
     expect(screen.queryByTestId('purpose-header')).toBeNull();
     expect(screen.getByTestId('fsr-remainder-note')).toBeInTheDocument();
+    // DRC-15b [Proposed BL-207] — the supplier sees the flag on its own rows too.
+    expect(screen.getByTestId(`fsr-liability-${K8801}`)).toHaveTextContent(
+      `Liability, not priced: ${pcs(262_000)}`
+    );
+    expect(screen.getByTestId(`fsr-proposed-${K8801}`)).toBeInTheDocument();
+    expect(screen.queryByTestId(`fsr-liability-${KUNASSIGNED}`)).toBeNull();
   });
 
   it('BR-05: reads in Indonesian', async () => {
@@ -152,6 +185,19 @@ describe('Feedstock reconcile — supplier', () => {
     expect(
       await screen.findByRole('columnheader', { name: 'Belum di-call-off' })
     ).toBeInTheDocument();
+    // DRC-15b [Proposed BL-207] in Indonesian.
+    expect(await screen.findByTestId(`fsr-liability-${K8801}`)).toHaveTextContent(
+      'Liabilitas, tanpa harga:'
+    );
+    expect(screen.getByTestId(`fsr-liability-nomax-${K8801}`)).toHaveTextContent(
+      'Belum ada stok maksimum yang disepakati'
+    );
+    expect(screen.getByTestId(`fsr-proposed-${K8801}`)).toHaveTextContent(
+      'Usulan: menunggu tinjauan pemilik (BL-207)'
+    );
+    expect(screen.getByTestId('fsr-remainder-note')).toHaveTextContent(
+      'Usulan aturan sisa (DRC-15b), pilihan “tandai liabilitas”'
+    );
   });
 });
 
