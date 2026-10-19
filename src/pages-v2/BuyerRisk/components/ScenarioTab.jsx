@@ -68,7 +68,7 @@ const ScenarioTab = ({ scenarios }) => {
               {Object.entries(featured.impact).map(([k, v]) => (
                 <div key={k}>
                   <div className="text-lg font-bold text-danger">{v}</div>
-                  <div className="text-[10px] text-text-tertiary uppercase tracking-wider mt-0.5">
+                  <div className="text-[length:var(--fs-caption-1)] text-text-tertiary uppercase tracking-wider mt-0.5">
                     {k.replace(/([A-Z])/g, ' $1')}
                   </div>
                 </div>

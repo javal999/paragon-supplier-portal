@@ -491,7 +491,7 @@ const ItemComparison = ({
                 <>
                   <span
                     aria-hidden="true"
-                    className="ml-1 inline-flex items-center rounded-sm border px-1.5 py-0.5 text-[10px] font-medium bg-success-soft text-success border-success/30"
+                    className="ml-1 inline-flex items-center rounded-sm border px-1.5 py-0.5 text-[length:var(--fs-caption-1)] font-medium bg-success-soft text-success border-success/30"
                   >
                     {t('rfqCompare.cmp.lowest')}
                   </span>

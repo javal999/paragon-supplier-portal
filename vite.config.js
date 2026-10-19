@@ -60,7 +60,13 @@ export default defineConfig(() => ({
   },
   plugins: [react(), devEntryAboveRoot()],
   // `@components/...`, `@services/...` etc. — the list and the rule live in aliases.js.
-  resolve: { alias: ALIASES },
+  resolve: {
+    // Paradise stage 5b: lucide-react -> paradise/adapters/lucide-react.jsx. Remove this entry to undo.
+    alias: [
+      { find: /^lucide-react$/, replacement: fileURLToPath(new URL('./paradise/adapters/lucide-react.jsx', import.meta.url)) },
+      ...Object.entries(ALIASES).map(([find, replacement]) => ({ find, replacement }))
+    ]
+  },
   build: {
     outDir: '../dist',
     emptyOutDir: true

@@ -6,7 +6,11 @@
 /** @type {React.FC<{ label?: string }>} */
 const FlowArrow = ({ label }) => (
   <div className="flex flex-col items-center my-1">
-    {label && <span className="text-[10px] text-text-tertiary font-semibold mb-1">{label}</span>}
+    {label && (
+      <span className="text-[length:var(--fs-caption-1)] text-text-tertiary font-semibold mb-1">
+        {label}
+      </span>
+    )}
     <div className="w-0.5 h-4 bg-border-input" />
     <div
       style={{

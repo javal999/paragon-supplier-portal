@@ -212,7 +212,7 @@ const LineQtyTable = ({ lines, entries, onChange }) => {
                   <Data>{l.grNumber}</Data>
                 </td>
                 <td className="py-1.5 pr-2">
-                  <Data as="div" className="text-[11px] text-text-tertiary">
+                  <Data as="div" className="text-[length:var(--fs-label-3)] text-text-tertiary">
                     {l.materialCode}
                   </Data>
                   <div className="text-text-primary">{l.description}</div>
@@ -231,17 +231,19 @@ const LineQtyTable = ({ lines, entries, onChange }) => {
                     onChange={(e) => onChange(key, e.target.value)}
                   />
                   {l.remaining !== null && (
-                    <div className="mt-0.5 text-[11px] text-text-tertiary">
+                    <div className="mt-0.5 text-[length:var(--fs-label-3)] text-text-tertiary">
                       {t('fc.inv.new.upTo', {
                         qty: `${l.remaining.toLocaleString('en-US')} ${l.uom ?? ''}`
                       })}
                     </div>
                   )}
                   {bad && (
-                    <div className="text-[11px] text-danger">{t('fc.inv.new.qtyInvalid')}</div>
+                    <div className="text-[length:var(--fs-label-3)] text-danger">
+                      {t('fc.inv.new.qtyInvalid')}
+                    </div>
                   )}
                   {over && (
-                    <div role="alert" className="text-[11px] text-danger">
+                    <div role="alert" className="text-[length:var(--fs-label-3)] text-danger">
                       {t('fc.inv.new.overInvoiced')}
                     </div>
                   )}
@@ -678,7 +680,7 @@ const SupplierInvoices = () => {
     <>
       <Data>{fmtDate(inv.dueDate)}</Data>
       {inv.overdue && (
-        <div className="text-[11px] text-danger font-semibold">
+        <div className="text-[length:var(--fs-label-3)] text-danger font-semibold">
           {inv.daysOutstanding === 1
             ? t('fc.inv.overdue.one')
             : t('fc.inv.overdue.other', { count: inv.daysOutstanding })}
@@ -856,7 +858,7 @@ const SupplierInvoices = () => {
                     <Data as="div" className="text-xs font-bold text-text-primary">
                       {inv.invoiceNumber}
                     </Data>
-                    <div className="inline-flex items-center gap-1 text-[10px] text-text-tertiary mt-0.5">
+                    <div className="inline-flex items-center gap-1 text-[length:var(--fs-caption-1)] text-text-tertiary mt-0.5">
                       <Channel size={10} />
                       {t('supplierInvoices.table.via', { channel: inv.channel })}
                     </div>
@@ -1297,7 +1299,7 @@ const SupplierInvoices = () => {
                 <div
                   role="alert"
                   data-testid="invoice-number-duplicate"
-                  className="mt-1 text-[11px] text-danger"
+                  className="mt-1 text-[length:var(--fs-label-3)] text-danger"
                 >
                   {t('fc.inv.new.duplicate')}
                 </div>
@@ -1361,7 +1363,7 @@ const SupplierInvoices = () => {
               <div
                 role="alert"
                 data-testid="invoice-amount-refusal"
-                className="mt-1 text-[11px] text-danger"
+                className="mt-1 text-[length:var(--fs-label-3)] text-danger"
               >
                 {t(INVOICE_AMOUNT_REFUSAL_KEY[amountRead.reason])}{' '}
                 <GlossaryTermChip
@@ -1373,7 +1375,7 @@ const SupplierInvoices = () => {
               <div
                 role="alert"
                 data-testid="invoice-amount-zero"
-                className="mt-1 text-[11px] text-danger"
+                className="mt-1 text-[length:var(--fs-label-3)] text-danger"
               >
                 {t('supplierInvoices.new.amount.mustExceedZero')}
               </div>
@@ -1438,7 +1440,7 @@ const SupplierInvoices = () => {
                   onChange={(e) => setFixNumber(e.target.value)}
                 />
                 {fixDuplicate && (
-                  <div role="alert" className="mt-1 text-[11px] text-danger">
+                  <div role="alert" className="mt-1 text-[length:var(--fs-label-3)] text-danger">
                     {t('fc.inv.new.duplicate')}
                   </div>
                 )}
@@ -1484,7 +1486,7 @@ const SupplierInvoices = () => {
                 onChange={(e) => setFixAmount(e.target.value)}
               />
               {fixAmount.trim() !== '' && !fixAmountRead.ok && (
-                <div role="alert" className="mt-1 text-[11px] text-danger">
+                <div role="alert" className="mt-1 text-[length:var(--fs-label-3)] text-danger">
                   {t(INVOICE_AMOUNT_REFUSAL_KEY[fixAmountRead.reason])}{' '}
                   <GlossaryTermChip
                     refTo={{ sourceType: 'QtyRefusalReason', term: fixAmountRead.reason }}

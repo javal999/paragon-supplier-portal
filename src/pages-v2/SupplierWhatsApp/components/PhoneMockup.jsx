@@ -94,7 +94,7 @@ const PhoneMockup = ({
                   key={r}
                   type="button"
                   onClick={() => onQuickReply(r)}
-                  className="px-2.5 py-1 rounded-full border text-[11px] font-semibold bg-white whitespace-nowrap"
+                  className="px-2.5 py-1 rounded-full border text-[length:var(--fs-label-3)] font-semibold bg-white whitespace-nowrap"
                   style={{
                     borderColor: WHATSAPP_GREEN_DOT,
                     color: WHATSAPP_GREEN_HEADER
@@ -112,7 +112,7 @@ const PhoneMockup = ({
                 <input
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  className="flex-1 px-3 py-1.5 rounded-full bg-white text-[11px] outline-none"
+                  className="flex-1 px-3 py-1.5 rounded-full bg-white text-[length:var(--fs-label-3)] outline-none"
                 />
                 <button
                   type="button"
@@ -125,7 +125,7 @@ const PhoneMockup = ({
                 </button>
               </>
             ) : (
-              <div className="flex-1 px-3 py-1.5 rounded-full bg-white text-[11px] text-text-tertiary">
+              <div className="flex-1 px-3 py-1.5 rounded-full bg-white text-[length:var(--fs-label-3)] text-text-tertiary">
                 Use quick reply buttons above ↑
               </div>
             )}

@@ -1,0 +1,22 @@
+/* Layout, layering and focus values shared by design and engineering. */
+:root {
+  --pds-breakpoint-sm: 30rem;
+  --pds-breakpoint-md: 48rem;
+  --pds-breakpoint-lg: 64rem;
+  --pds-breakpoint-xl: 80rem;
+  --pds-content-width-readable: 70ch;
+  --pds-content-width-page: 90rem;
+
+  --pds-z-index-base: 0;
+  --pds-z-index-sticky: 100;
+  --pds-z-index-dropdown: 300;
+  --pds-z-index-popover: 400;
+  --pds-z-index-modal: 500;
+  --pds-z-index-toast: 600;
+  --pds-z-index-tooltip: 700;
+
+  --pds-focus-ring-width: 3px;
+  --pds-focus-ring-offset: 2px;
+  --pds-target-size-minimum: 24px;
+  --pds-target-size-comfortable: 44px;
+}

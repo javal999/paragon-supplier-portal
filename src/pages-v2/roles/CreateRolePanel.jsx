@@ -51,7 +51,11 @@ const Field = ({ labelKey, hintKey, children }) => {
     <label className="block">
       <span className="text-label text-text-tertiary uppercase">{t(labelKey)}</span>
       {children}
-      {hintKey && <span className="block text-[11px] text-text-tertiary mt-0.5">{t(hintKey)}</span>}
+      {hintKey && (
+        <span className="block text-[length:var(--fs-label-3)] text-text-tertiary mt-0.5">
+          {t(hintKey)}
+        </span>
+      )}
     </label>
   );
 };
@@ -232,7 +236,7 @@ const CreateRolePanel = ({ onGranted }) => {
                     data-testid={`role-create-add-${a}`}
                     aria-pressed={on}
                     onClick={() => setAdds(on ? adds.filter((x) => x !== a) : [...adds, a])}
-                    className={`font-mono text-[11px] rounded px-1.5 py-0.5 border ${
+                    className={`font-mono text-[length:var(--fs-label-3)] rounded px-1.5 py-0.5 border ${
                       on
                         ? 'border-action text-action bg-action-soft'
                         : 'border-border-subtle text-data-navy'
@@ -250,7 +254,7 @@ const CreateRolePanel = ({ onGranted }) => {
             AFTER IT. The grant is recorded against an explicit absence, and the
             absence is the reason it does not survive a reload. */}
         <p
-          className="text-[11px] text-text-tertiary leading-relaxed"
+          className="text-[length:var(--fs-label-3)] text-text-tertiary leading-relaxed"
           data-testid="role-create-actor"
         >
           {t('roles.page.createGrantedBy')}

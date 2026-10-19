@@ -68,7 +68,7 @@ const AsnEtaChange = ({ asn }) => {
       <Button variant="outline" onClick={run} disabled={!legal || changeEta.isPending}>
         {t('fc.asn.shelfLife.changeEta.action')}
       </Button>
-      <p className="w-full text-[11px] text-text-tertiary">
+      <p className="w-full text-[length:var(--fs-label-3)] text-text-tertiary">
         {t('fc.asn.shelfLife.changeEta.hint', { eta: fmtDate(view.request.eta) })}
       </p>
     </div>

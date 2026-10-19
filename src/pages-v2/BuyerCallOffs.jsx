@@ -689,7 +689,7 @@ const BuyerCallOffs = () => {
                   </div>
                 </dl>
                 <p
-                  className="mt-1 text-[11px] text-text-tertiary"
+                  className="mt-1 text-[length:var(--fs-label-3)] text-text-tertiary"
                   data-testid={`calloff-basis-${line.id}`}
                 >
                   {t(

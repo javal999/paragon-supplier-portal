@@ -213,7 +213,7 @@ const IntakeReview = () => {
                     )}
                     {isDismissed && (
                       <div className="flex flex-col items-start gap-1.5">
-                        <span className="inline-flex items-center rounded-sm border border-border-subtle bg-bg-hover px-1.5 py-0.5 text-[11px] font-medium text-text-tertiary">
+                        <span className="inline-flex items-center rounded-sm border border-border-subtle bg-bg-hover px-1.5 py-0.5 text-[length:var(--fs-label-3)] font-medium text-text-tertiary">
                           {t('intakeReview.dismissed.label')}
                         </span>
                         <Button
@@ -255,7 +255,7 @@ const IntakeReview = () => {
                           </Button>
                         </div>
                         {pushState?.failureReason && (
-                          <span className="text-[11px] text-danger">
+                          <span className="text-[length:var(--fs-label-3)] text-danger">
                             {refusalText(pushState.failureReason) ??
                               t('intakeReview.failed.label', { reason: pushState.failureReason })}
                           </span>

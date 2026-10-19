@@ -80,7 +80,7 @@ const TieredRevisionFields = ({ rfq, roundId, prices, disabled, onChange }) => {
               const k = key(item.lineNo, tier.qty);
               return (
                 <label key={k} className="block">
-                  <span className="block text-[11px] text-text-tertiary">
+                  <span className="block text-[length:var(--fs-label-3)] text-text-tertiary">
                     <Data>{formatNumber(tier.qty)}</Data>{' '}
                     {t(
                       tier.basis === 'perVariant'

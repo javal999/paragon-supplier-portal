@@ -48,7 +48,7 @@ const IdentityCard = ({
       </div>
       <div className="flex items-center gap-6 shrink-0">
         <div className="text-center">
-          <div className="text-[10px] text-text-tertiary uppercase tracking-wider mb-2">
+          <div className="text-[length:var(--fs-caption-1)] text-text-tertiary uppercase tracking-wider mb-2">
             {t('supplierDashboard.identity.grade')}
           </div>
           {grade ? (

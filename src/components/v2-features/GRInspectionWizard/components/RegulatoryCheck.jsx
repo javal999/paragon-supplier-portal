@@ -63,7 +63,11 @@ const RegulatoryCheck = ({ name, label, value, onChange, el, unansweredText, tes
       }
     </div>
     {value === undefined && (
-      <div data-testid={testId} role="status" className="mt-1 text-[11px] text-warning-hover">
+      <div
+        data-testid={testId}
+        role="status"
+        className="mt-1 text-[length:var(--fs-label-3)] text-warning-hover"
+      >
         {unansweredText}
       </div>
     )}

@@ -5,6 +5,7 @@ import { resolveEnvBadge } from '@lib/envBadge';
 import LanguageMenu from './LanguageMenu';
 import IdentityPanel from './IdentityPanel';
 import TopBarSearch from './TopBarSearch';
+import paragonLogo from '../../../paradise/assets/paragon-logo-primary.svg';
 
 /**
  * @typedef {object} TopBarV2Props
@@ -39,6 +40,9 @@ const TopBarV2 = ({ navOpen = false, navControlsId, navButtonRef, onToggleNav })
         >
           <Menu size={18} />
         </button>
+        <img src={paragonLogo} alt="" aria-hidden="true" className="hidden sm:block h-5 w-auto" />
+        {/* Paradise stage 5a: divider between the logo and the product name. */}
+        <span aria-hidden="true" className="hidden sm:block h-5 w-px bg-border-subtle" />
         <span className="hidden sm:inline text-sm font-semibold text-text-primary whitespace-nowrap">
           {t('app.title')}
         </span>
@@ -69,7 +73,7 @@ const TopBarV2 = ({ navOpen = false, navControlsId, navButtonRef, onToggleNav })
           className="relative p-2 rounded-md text-text-secondary hover:bg-bg-hover"
         >
           <Bell size={18} />
-          <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-danger text-white text-[10px] font-bold flex items-center justify-center">
+          <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-danger text-white text-[length:var(--fs-caption-1)] font-bold flex items-center justify-center">
             3
           </span>
         </button>

@@ -140,7 +140,7 @@ const StalePeriodsPanel = ({ held, version, record }) => {
                 value={days}
                 onChange={(e) => setDays(e.target.value)}
               />
-              <span className="block text-[11px] text-text-tertiary mt-0.5">
+              <span className="block text-[length:var(--fs-label-3)] text-text-tertiary mt-0.5">
                 {t('adminSet.stale.form.emptyHint')}
               </span>
             </label>

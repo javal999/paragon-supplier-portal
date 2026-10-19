@@ -156,7 +156,7 @@ function periodClass(bucket) {
 
 // Quiet-outlined chip base (DP-3 status-chip grammar: soft tint, thin border).
 const CHIP =
-  'inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[11px] font-medium';
+  'inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[length:var(--fs-label-3)] font-medium';
 const CHIP_NEUTRAL = `${CHIP} border-border-subtle bg-bg-hover text-text-secondary`;
 const CHIP_SUCCESS = `${CHIP} border-success/30 bg-success-soft text-success`;
 const CHIP_WARNING = `${CHIP} border-warning/30 bg-warning-soft text-warning-hover`;
@@ -540,7 +540,10 @@ const BuyerCollaboration = () => {
   // deliberately NOT a warning (the line did not move; nothing was voided).
   const carriedToken = useMemo(
     () => (
-      <span className={`${CHIP_NEUTRAL} text-[10px]`} title={t('sdc.state.carriedTitle')}>
+      <span
+        className={`${CHIP_NEUTRAL} text-[length:var(--fs-caption-1)]`}
+        title={t('sdc.state.carriedTitle')}
+      >
         {t('sdc.state.carried')}
       </span>
     ),
@@ -768,7 +771,7 @@ const BuyerCollaboration = () => {
                   bridgeability is UNKNOWN. Marked, never assumed no-risk. */}
                 {st.expiryBlind && (
                   <span
-                    className="text-[10px] italic text-text-tertiary"
+                    className="text-[length:var(--fs-caption-1)] italic text-text-tertiary"
                     title={t('sdc.coverage.expiryBlindTitle')}
                   >
                     {t('sdc.coverage.expiryBlind')}

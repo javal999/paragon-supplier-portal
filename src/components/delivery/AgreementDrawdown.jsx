@@ -305,7 +305,7 @@ const ItemBlock = ({
             <StatusPill variant="neutral">{t('delivery.policy.reference')}</StatusPill>
           )}
           {showPolicyHistory && ledger.policyDeviation && (
-            <span className="text-[10px] italic text-warning-hover">
+            <span className="text-[length:var(--fs-caption-1)] italic text-warning-hover">
               {t('delivery.policy.deviation')}
             </span>
           )}
@@ -328,7 +328,7 @@ const ItemBlock = ({
           Buyer-only: the contract-default, edit date, and reason are buyer-internal
           governance history — the supplier mirror passes showPolicyHistory=false. */}
       {showPolicyHistory && ledger.policyDeviation && (
-        <div className="mb-4 text-[11px] text-text-tertiary">
+        <div className="mb-4 text-[length:var(--fs-label-3)] text-text-tertiary">
           {t('delivery.policy.deviation.detail', {
             def: formatPolicy(t, policy.contractDefault),
             date: policy.activeChangedAt ? formatDate(policy.activeChangedAt) : '—',
@@ -372,7 +372,7 @@ const ItemBlock = ({
 
       <div className="mb-5">
         <TargetBar pct={drawdownPct} />
-        <div className="text-[10px] text-text-tertiary mt-1">
+        <div className="text-[length:var(--fs-caption-1)] text-text-tertiary mt-1">
           {t('delivery.drawdown.label', { pct: Math.round(drawdownPct) })}
         </div>
       </div>

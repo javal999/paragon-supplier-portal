@@ -56,7 +56,9 @@ export const NextActLine = ({ act, testId = 'next-act' }) => {
     const owner = act.owners.map((o) => t(ROLE_LABEL_KEY[o])).join(' / ');
     return (
       <span className="text-xs text-text-tertiary" data-testid={testId} data-next-act="theirs">
-        <span className="uppercase tracking-wider text-[10px] mr-1">{t('nextAct.label')}</span>
+        <span className="uppercase tracking-wider text-[length:var(--fs-caption-1)] mr-1">
+          {t('nextAct.label')}
+        </span>
         {t('roles.handoff.awaiting', { owner })}
       </span>
     );
@@ -74,7 +76,9 @@ export const NextActLine = ({ act, testId = 'next-act' }) => {
 
   return (
     <span className="text-xs text-text-tertiary" data-testid={testId} data-next-act={act.kind}>
-      <span className="uppercase tracking-wider text-[10px] mr-1">{t('nextAct.label')}</span>
+      <span className="uppercase tracking-wider text-[length:var(--fs-caption-1)] mr-1">
+        {t('nextAct.label')}
+      </span>
       {text}
     </span>
   );

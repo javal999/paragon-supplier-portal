@@ -79,7 +79,7 @@ const SidePanel = ({ open, onClose, title, children, footerActions }) => {
       <div
         aria-hidden="true"
         onClick={onClose}
-        className="fixed inset-0 z-40 bg-[rgba(13,27,42,0.4)] animate-overlay-in"
+        className="fixed inset-0 z-40 bg-[var(--pds-color-scrim)] animate-overlay-in"
       />
       <aside
         ref={panelRef}

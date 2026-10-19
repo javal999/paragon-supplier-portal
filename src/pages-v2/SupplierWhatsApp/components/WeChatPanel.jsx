@@ -53,7 +53,7 @@ const WeChatPanel = () => {
         </div>
 
         <div className="rounded-[36px] p-3 shadow-2xl" style={{ background: '#1A1A1A' }}>
-          <div className="flex justify-between px-4 pt-1 pb-2 text-[10px] text-white">
+          <div className="flex justify-between px-4 pt-1 pb-2 text-[length:var(--fs-caption-1)] text-white">
             <span>09:00</span>
             <span>●●●</span>
           </div>
@@ -66,7 +66,9 @@ const WeChatPanel = () => {
             </div>
             <div>
               <div className="text-white font-bold text-sm">Paragon Corp</div>
-              <div className="text-white/80 text-[10px]">Official Account · 企业账号</div>
+              <div className="text-white/80 text-[length:var(--fs-caption-1)]">
+                Official Account · 企业账号
+              </div>
             </div>
           </div>
 
@@ -81,7 +83,7 @@ const WeChatPanel = () => {
               >
                 P
               </div>
-              <div className="bg-white px-3 py-2 rounded-[0_10px_10px_10px] max-w-[75%] text-[11px] text-text-primary leading-relaxed whitespace-pre-line">
+              <div className="bg-white px-3 py-2 rounded-[0_10px_10px_10px] max-w-[75%] text-[length:var(--fs-label-3)] text-text-primary leading-relaxed whitespace-pre-line">
                 {current.bot}
               </div>
             </div>
@@ -92,7 +94,7 @@ const WeChatPanel = () => {
                     key={r}
                     type="button"
                     onClick={() => setReplied(r)}
-                    className="px-3 py-1 rounded-full text-[11px] font-semibold text-white border-0"
+                    className="px-3 py-1 rounded-full text-[length:var(--fs-label-3)] font-semibold text-white border-0"
                     style={{ background: WECHAT_GREEN }}
                   >
                     {r}
@@ -104,7 +106,7 @@ const WeChatPanel = () => {
               <>
                 <div className="flex justify-end">
                   <div
-                    className="rounded-[10px_0_10px_10px] px-3 py-2 max-w-[70%] text-[11px] text-white"
+                    className="rounded-[10px_0_10px_10px] px-3 py-2 max-w-[70%] text-[length:var(--fs-label-3)] text-white"
                     style={{ background: WECHAT_GREEN }}
                   >
                     {replied}
@@ -117,7 +119,7 @@ const WeChatPanel = () => {
                   >
                     P
                   </div>
-                  <div className="bg-white px-3 py-2 rounded-[0_10px_10px_10px] max-w-[75%] text-[11px] text-success leading-relaxed whitespace-pre-line font-semibold">
+                  <div className="bg-white px-3 py-2 rounded-[0_10px_10px_10px] max-w-[75%] text-[length:var(--fs-label-3)] text-success leading-relaxed whitespace-pre-line font-semibold">
                     {answer}
                   </div>
                 </div>
@@ -126,7 +128,7 @@ const WeChatPanel = () => {
           </div>
 
           <div className="bg-bg-hover px-3 py-2 rounded-b-3xl flex gap-2 items-center">
-            <div className="flex-1 bg-white rounded-full px-3 py-1.5 text-[11px] text-text-tertiary">
+            <div className="flex-1 bg-white rounded-full px-3 py-1.5 text-[length:var(--fs-label-3)] text-text-tertiary">
               Type a message…
             </div>
             <div

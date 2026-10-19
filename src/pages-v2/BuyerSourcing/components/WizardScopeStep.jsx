@@ -272,7 +272,7 @@ const WizardScopeStep = ({
           <div
             role="alert"
             data-testid="rfq-budget-refusal"
-            className="mt-1 text-[11px] text-danger"
+            className="mt-1 text-[length:var(--fs-label-3)] text-danger"
           >
             {t(RFQ_BUDGET_REFUSAL_KEY[budgetRead.reason])}{' '}
             <GlossaryTermChip refTo={{ sourceType: 'QtyRefusalReason', term: budgetRead.reason }} />
@@ -340,7 +340,11 @@ const WizardScopeStep = ({
             gate (Next stays disabled) and says so on the field once the
             buyer has typed something (the 2e-a price precedent). */}
         {draft.totalQty.trim() !== '' && !qtyRead.ok && (
-          <div role="alert" data-testid="rfq-qty-refusal" className="mt-1 text-[11px] text-danger">
+          <div
+            role="alert"
+            data-testid="rfq-qty-refusal"
+            className="mt-1 text-[length:var(--fs-label-3)] text-danger"
+          >
             {t(RFQ_QTY_REFUSAL_KEY[qtyRead.reason])}{' '}
             <GlossaryTermChip refTo={{ sourceType: 'QtyRefusalReason', term: qtyRead.reason }} />
           </div>

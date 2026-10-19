@@ -1,70 +1,77 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+/* Paradise 0.2.0-alpha.6 tokens (stage 1) and Lato (stage 3). Inter and
+   JetBrains Mono are no longer fetched from Google Fonts. */
+@import '../paradise/paradise.css';
+
+/* The values below point at Paradise tokens (--pds-*, --font-*, --radius-*,
+   --shadow-*). They are defined in ../paradise/tokens/, which the CSS linter
+   does not follow through @import, so it would report each one as unknown. */
+/* eslint-disable css/no-invalid-properties */
 
 /* ─── Design Token System — Paragon Odyssey ─────────────────────────────────── */
 
 :root {
   /* ── BRAND CORE ── */
-  --paragon-navy:       #0D1B2A;
+  --paragon-navy:       var(--pds-color-text-primary);
   --paragon-navy-mid:   #1A2B3C;
   --paragon-navy-light: #1E3A5F;
-  --paragon-teal:       #0097A7;
+  --paragon-teal:       var(--pds-color-accent);
   --paragon-teal-light: #00B4C8;
-  --paragon-teal-dim:   rgba(0, 151, 167, 0.15);
-  --paragon-blue:       #354A5F;
-  --paragon-sap-blue:   #0A6ED1;
+  --paragon-teal-dim:   var(--pds-color-brand-subtle);
+  --paragon-blue:       var(--pds-color-text-secondary);
+  --paragon-sap-blue:   var(--pds-color-action-primary);
 
   /* ── STATUS ── */
-  --status-success:     #107E3E;
-  --status-success-bg:  #DCFCE7;
-  --status-warning:     #E9730C;
-  --status-warning-bg:  #FEF3C7;
-  --status-error:       #BB0000;
-  --status-error-bg:    #FEE2E2;
-  --status-info:        #0A6ED1;
-  --status-info-bg:     #EFF6FF;
+  --status-success:     var(--pds-color-feedback-success);
+  --status-success-bg:  var(--pds-color-feedback-success-background);
+  --status-warning:     var(--pds-color-feedback-warning);
+  --status-warning-bg:  var(--pds-color-feedback-warning-background);
+  --status-error:       var(--pds-color-feedback-danger);
+  --status-error-bg:    var(--pds-color-feedback-danger-background);
+  --status-info:        var(--pds-color-feedback-info);
+  --status-info-bg:     var(--pds-color-feedback-info-background);
   --status-purple:      #5B21B6;
   --status-purple-bg:   #EDE9FE;
 
   /* ── TEXT ── */
-  --text-primary:       #0D1B2A;
-  --text-secondary:     #64748B;
+  --app-text-primary:   var(--pds-color-text-primary);
+  --app-text-secondary: var(--pds-color-text-secondary);
   --text-muted:         #94A3B8;
-  --text-white:         #FFFFFF;
-  --text-teal:          #0097A7;
+  --text-white:         var(--pds-color-text-inverse);
+  --text-teal:          var(--pds-color-accent);
 
   /* ── SURFACES ── */
-  --surface-page:       #F0F4F8;
-  --surface-card:       #FFFFFF;
-  --surface-card-hover: #F8FAFC;
-  --surface-border:     #E2E8F0;
+  --surface-page:       var(--pds-color-background-canvas);
+  --surface-card:       var(--pds-color-background-surface);
+  --surface-card-hover: var(--pds-color-background-subtle);
+  --surface-border:     var(--pds-color-border-default);
   --surface-border-dark:#1E3A5F;
 
   /* ── TYPOGRAPHY ── */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  --font-sans: var(--font-body);
+  --app-font-mono: var(--font-mono);
 
   /* ── SPACING ── */
-  --radius-sm:   4px;
-  --radius-md:   8px;
-  --radius-lg:   12px;
-  --radius-pill: 9999px;
+  --radius-sm:   var(--radius-base);
+  --radius-md:   var(--radius-large);
+  --radius-lg:   var(--radius-xl);
+  --radius-pill: var(--radius-full);
 
   /* ── SHADOWS ── */
-  --shadow-card:   0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-panel:  0 4px 24px rgba(0, 0, 0, 0.12);
+  --shadow-card:   var(--shadow-light);
+  --shadow-panel:  var(--shadow-strong);
   --shadow-topbar: 0 1px 0px rgba(255, 255, 255, 0.04);
 }
 
 /* ─── Global Reset ───────────────────────────────────────────────────────────── */
 
 * {
-  font-family: var(--font-sans);
+  font-family: var(--font-sans), sans-serif;
   box-sizing: border-box;
 }
 
 body {
   background: var(--surface-page);
-  color: var(--text-primary);
+  color: var(--app-text-primary);
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
@@ -75,13 +82,13 @@ body {
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #1E3A5F; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #354A5F; }
+::-webkit-scrollbar-thumb { background: var(--pds-color-border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--pds-color-text-secondary); }
 
 /* ─── Typography utilities ───────────────────────────────────────────────────── */
 
 .mono {
-  font-family: var(--font-mono);
+  font-family: var(--app-font-mono), monospace;
   font-size: 0.9em;
   letter-spacing: 0.3px;
 }
@@ -99,7 +106,7 @@ body {
 .portal-card-header {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--app-text-primary);
   margin-bottom: 16px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--surface-border);
@@ -145,7 +152,7 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 2px;
-  color: var(--text-secondary);
+  color: var(--app-text-secondary);
   padding: 16px 16px 4px;
 }
 
@@ -165,27 +172,27 @@ body {
 .page-title {
   font-size: 20px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--app-text-primary);
   margin: 0 0 4px 0;
 }
 
 .page-subtitle {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--app-text-secondary);
   margin: 0 0 24px 0;
 }
 
 /* ─── Legacy aliases (keep backwards compat) ─────────────────────────────────── */
 
-.portal-page-title   { font-size: 20px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
-.portal-page-subtitle { font-size: 13px; color: var(--text-secondary); }
+.portal-page-title   { font-size: 20px; font-weight: 600; color: var(--app-text-primary); margin-bottom: 4px; }
+.portal-page-subtitle { font-size: 13px; color: var(--app-text-secondary); }
 
 /* ─── BL-31 · chart legend text (WCAG 1.4.3) ─────────────────────────────────── */
 /* Recharts paints each legend LABEL in its series colour, so a teal series reads
    at 3.51:1 and the teal-tint series at 2.07:1. The swatch beside the label
    keeps the series colour (a non-text mark); the words are set in secondary
    text (#354A5F, 9.15:1). One rule, every chart. */
-.recharts-legend-item-text { color: #354A5F !important; }
+.recharts-legend-item-text { color: var(--pds-color-text-secondary) !important; }
 
 /* ─── Touch targets · 44 px on coarse pointers (a11y findings 15, 31) ────────── */
 /* Phones and tablets get a 44×44 px tap area without changing what is drawn:

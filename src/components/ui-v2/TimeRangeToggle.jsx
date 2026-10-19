@@ -18,7 +18,7 @@ const TimeRangeToggle = ({ options, value, onChange }) => {
             // white fill; state it to assistive technology too.
             aria-pressed={active}
             onClick={() => onChange(opt.id)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-[6px] transition-all duration-150 cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-[var(--radius-medium)] transition-all duration-150 cursor-pointer ${
               active
                 ? 'bg-white text-text-primary shadow-sm'
                 : 'bg-transparent text-text-tertiary hover:text-text-secondary'

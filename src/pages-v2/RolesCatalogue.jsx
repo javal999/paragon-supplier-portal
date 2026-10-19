@@ -79,7 +79,7 @@ const RoleRow = ({ role }) => {
       </td>
       <td className="py-3 px-4 align-middle">
         <span
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] border border-border-subtle text-text-secondary bg-bg-hover whitespace-nowrap"
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[length:var(--fs-label-3)] border border-border-subtle text-text-secondary bg-bg-hover whitespace-nowrap"
           data-testid={`role-badge-${role.id}`}
         >
           <Lock size={10} className="text-teal" />

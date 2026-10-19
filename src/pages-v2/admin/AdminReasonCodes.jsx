@@ -255,7 +255,7 @@ const AdminReasonCodes = () => {
                   <Data>{draft.editing || draft.labelEn.trim() ? draftCode : '—'}</Data>
                 </div>
                 {!draft.editing && (
-                  <span className="block text-[11px] text-text-tertiary mt-0.5">
+                  <span className="block text-[length:var(--fs-label-3)] text-text-tertiary mt-0.5">
                     {t('adminRsn.form.codeHint')}
                   </span>
                 )}

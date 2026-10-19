@@ -1,0 +1,111 @@
+/* Paradise — primitive color tokens.
+   Canonical brand primary from the original Paradise source: #215AA8.
+   Components must consume semantic tokens from theme.css, not these ramps. */
+:root {
+  /* Paragon brand */
+  --paragon-100: #d3deee;
+  --paragon-200: #a6bddc;
+  --paragon-300: #7a9ccb;
+  --paragon-400: #4d7bb9;
+  --paragon-500: #215aa8;
+  --paragon-600: #1a4886;
+  --paragon-700: #143665;
+  --paragon-800: #0d2443;
+  --paragon-900: #071222;
+
+  /* Secondary — Magpie */
+  --magpie-100: #cce2ff;
+  --magpie-200: #99c5ff;
+  --magpie-300: #66a8ff;
+  --magpie-400: #338bff;
+  --magpie-500: #006eff;
+  --magpie-600: #0c4ac0;
+  --magpie-700: #0a3ea0;
+  --magpie-800: #062560;
+  --magpie-900: #001633;
+
+  /* Tertiary — Exagon */
+  --exagon-200: #b9aed1;
+  --exagon-300: #9c8ebf;
+  --exagon-400: #806dac;
+  --exagon-500: #725da3;
+  --exagon-600: #675493;
+  --exagon-700: #504172;
+  --exagon-800: #392f52;
+  --exagon-900: #221c31;
+
+  /* Neutral */
+  --neutral-white: #ffffff;
+  /* Figma Neutral ramp. The page canvas uses --semantic-background (#f8f9fd), the Figma Semantic/Background. */
+  --neutral-050: #f5f5f5;
+  --neutral-100: #ebebeb;
+  --neutral-150: #ebebeb;
+  --neutral-200: #d6d6d6;
+  --neutral-300: #c2c2c2;
+  --neutral-400: #adadad;
+  --neutral-500: #999999;
+  --neutral-600: #7a7a7a;
+  --neutral-700: #5c5c5c;
+  --neutral-800: #3d3d3d;
+  --neutral-900: #1f1f1f;
+  --neutral-black: #000000;
+
+  /* Success */
+  --success-100: #d9f2e3;
+  --success-200: #b3e5c8;
+  --success-300: #8cd9ac;
+  --success-400: #66cc91;
+  --success-500: #40bf75;
+  --success-600: #33995e;
+  --success-700: #267346;
+  --success-800: #1a4c2f;
+  --success-900: #06130c;
+
+  /* Warning */
+  --warning-100: #fffbe4;
+  --warning-200: #fff2ab;
+  --warning-300: #ffe86e;
+  --warning-400: #ffdd0c;
+  --warning-500: #ffcd00;
+  --warning-600: #d1a400;
+  --warning-700: #9d7b00;
+  --warning-800: #695200;
+  --warning-900: #342900;
+
+  /* Error */
+  --error-100: #ffedef;
+  --error-200: #f599a4;
+  --error-300: #f06677;
+  --error-400: #eb3349;
+  --error-500: #e6001c;
+  --error-600: #b80016;
+  --error-700: #8a0011;
+  --error-800: #5c000b;
+  --error-900: #170003;
+
+  /* Figma Semantic base used by the light theme: Text #2A3D4A, Background #F8F9FD. */
+  --semantic-text: rgb(42,61,74);
+  --semantic-background: rgb(248,249,253);
+
+  /* Information ramp, values from the Figma Color page (Token Color State). Independent of Magpie. */
+  --information-100: #ccddf5;
+  --information-200: #99bbeb;
+  --information-300: #669ae0;
+  --information-400: #3378d6;
+  --information-500: #0056cc;
+  --information-600: #0045a3;
+  --information-700: #00347a;
+  --information-800: #002252;
+  --information-900: #000914;
+
+  /* Commerce palette from the Figma storefront kit, darkened where text or a boundary needs WCAG AA.
+     Figma #029795 -> commerce-teal-700, #FF7566 / #FF5F4C -> commerce-coral-700, #FF994C -> commerce-orange-700. */
+  --commerce-teal-900: #015352;
+  --commerce-teal-700: #017b79;
+  --commerce-teal-100: #c9e8d7;
+  --commerce-coral-700: #c73e30;
+  --commerce-coral-200: #ffa399;
+  --commerce-amber-200: #ffd666;
+  --commerce-lime-100: #d9ebaf;
+  --commerce-orange-700: #c2610f;
+}

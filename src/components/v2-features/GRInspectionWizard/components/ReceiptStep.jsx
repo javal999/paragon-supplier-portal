@@ -178,7 +178,7 @@ const ReceiptStep = ({
                         <div
                           role="alert"
                           data-testid={`gr-received-refusal-${i}`}
-                          className="mt-1 text-[11px] text-danger"
+                          className="mt-1 text-[length:var(--fs-label-3)] text-danger"
                         >
                           {t(GR_QTY_REFUSAL_KEY[qty.reason])}{' '}
                           <GlossaryTermChip
@@ -208,7 +208,7 @@ const ReceiptStep = ({
                         <div
                           role="alert"
                           data-testid={`gr-accepted-refusal-${i}`}
-                          className="mt-1 text-[11px] text-danger"
+                          className="mt-1 text-[length:var(--fs-label-3)] text-danger"
                         >
                           {t(GR_QTY_REFUSAL_KEY[qty.reason])}{' '}
                           <GlossaryTermChip

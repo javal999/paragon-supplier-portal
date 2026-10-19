@@ -114,7 +114,7 @@ const SidebarV2 = ({ id, open = false, onClose }) => {
           aria-hidden="true"
           data-testid="nav-drawer-backdrop"
           onClick={onClose}
-          className="fixed inset-0 z-40 bg-[rgba(13,27,42,0.4)] lg:hidden"
+          className="fixed inset-0 z-40 bg-[var(--pds-color-scrim)] lg:hidden"
         />
       ) : null}
       <aside

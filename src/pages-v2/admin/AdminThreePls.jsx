@@ -258,7 +258,7 @@ const AdminThreePls = () => {
                       {t(r.active ? 'tpl.offered.yes' : 'tpl.offered.no')}
                     </StatusPill>
                     {!r.active && (
-                      <div className="text-[11px] text-text-tertiary mt-1">
+                      <div className="text-[length:var(--fs-label-3)] text-text-tertiary mt-1">
                         {t('tpl.offered.noHint')}
                       </div>
                     )}

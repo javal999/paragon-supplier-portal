@@ -41,7 +41,7 @@ const RfqBoardRow = ({ r, nowIso, onOpen, t }) => {
         <div className="text-xs text-text-tertiary mt-0.5">
           {r.projectName && (
             <span
-              className="inline-block mr-1.5 px-1.5 py-px rounded border border-border-subtle bg-bg-hover text-[11px] text-text-secondary"
+              className="inline-block mr-1.5 px-1.5 py-px rounded border border-border-subtle bg-bg-hover text-[length:var(--fs-label-3)] text-text-secondary"
               data-testid={`rfq-project-tag-${r.id}`}
             >
               {r.projectName}

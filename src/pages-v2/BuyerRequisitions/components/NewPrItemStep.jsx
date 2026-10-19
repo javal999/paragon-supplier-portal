@@ -88,13 +88,15 @@ const NewPrItemStep = ({ form, setForm, parsedQty, t }) => (
           <div
             role="alert"
             data-testid="new-pr-qty-refusal"
-            className="mt-1 text-[11px] text-danger"
+            className="mt-1 text-[length:var(--fs-label-3)] text-danger"
           >
             {t(QTY_REFUSAL_KEY[parsedQty.reason])}{' '}
             <GlossaryTermChip refTo={{ sourceType: 'QtyRefusalReason', term: parsedQty.reason }} />
           </div>
         )}
-        <div className="mt-1 text-[11px] text-text-tertiary">{t('requisitions.new.qty.hint')}</div>
+        <div className="mt-1 text-[length:var(--fs-label-3)] text-text-tertiary">
+          {t('requisitions.new.qty.hint')}
+        </div>
       </div>
       <div>
         <label className="block">

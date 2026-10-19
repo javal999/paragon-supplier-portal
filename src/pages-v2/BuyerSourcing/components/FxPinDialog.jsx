@@ -65,7 +65,11 @@ const fxVintageRefusalKey = (raw) => {
  *  `fx-rate-refusal` / `fx-asof-refusal` witnesses are untouched. */
 const FieldRefusal = ({ messageKey, testId, t }) =>
   messageKey === null ? null : (
-    <div role="alert" data-testid={testId} className="mt-1 text-[11px] text-danger">
+    <div
+      role="alert"
+      data-testid={testId}
+      className="mt-1 text-[length:var(--fs-label-3)] text-danger"
+    >
       {t(messageKey)}
     </div>
   );
@@ -109,7 +113,9 @@ const FxPinFields = ({ pinDraft, setPinDraft, t }) => (
         onChange={(e) => setPinDraft({ ...pinDraft, rate: e.target.value })}
         className={inputClass}
       />
-      <div className="mt-1 text-[11px] text-text-tertiary">{t('sourcing.fx.dialog.rateHint')}</div>
+      <div className="mt-1 text-[length:var(--fs-label-3)] text-text-tertiary">
+        {t('sourcing.fx.dialog.rateHint')}
+      </div>
       {/* An untouched blank does not nag; a TYPED rate that cannot be
           read says so, and says what to do about it. */}
       <FieldRefusal messageKey={fxRateRefusalKey(pinDraft.rate)} testId="fx-rate-refusal" t={t} />
@@ -126,7 +132,7 @@ const FxPinFields = ({ pinDraft, setPinDraft, t }) => (
         onChange={(e) => setPinDraft({ ...pinDraft, asOf: e.target.value })}
         className={inputClass}
       />
-      <div className="mt-1 text-[11px] text-text-tertiary">
+      <div className="mt-1 text-[length:var(--fs-label-3)] text-text-tertiary">
         {t('sourcing.fx.dialog.asOfHint', { days: FX_PIN_MAX_AGE_DAYS })}
       </div>
       <FieldRefusal

@@ -36,14 +36,16 @@ export const ShelfLifeLineNote = ({ view, expiry, refusal, materialCode }) => {
   const { t } = useTranslation();
   if (refusal === 'expiryRequired') {
     return (
-      <div className="mt-1 text-[11px] text-danger">{t('fc.asn.shelfLife.expiryRequired')}</div>
+      <div className="mt-1 text-[length:var(--fs-label-3)] text-danger">
+        {t('fc.asn.shelfLife.expiryRequired')}
+      </div>
     );
   }
   if (!view || view.monthsLeft === null) return null;
   return (
     <div
       data-testid={`asn-shelf-life-${materialCode}`}
-      className={`mt-1 text-[11px] ${view.ok ? 'text-text-tertiary' : 'text-danger'}`}
+      className={`mt-1 text-[length:var(--fs-label-3)] ${view.ok ? 'text-text-tertiary' : 'text-danger'}`}
     >
       {t('fc.asn.shelfLife.left', {
         expiry: formatDate(expiry),
@@ -93,7 +95,7 @@ export const BlockedStockMarker = ({ testId }) => {
   return (
     <span
       data-testid={testId}
-      className="inline-block px-1.5 py-0.5 rounded border border-warning bg-warning-soft text-[11px] text-warning-hover"
+      className="inline-block px-1.5 py-0.5 rounded border border-warning bg-warning-soft text-[length:var(--fs-label-3)] text-warning-hover"
     >
       {t('fc.asn.shelfLife.blocked')}
     </span>

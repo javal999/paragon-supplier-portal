@@ -328,7 +328,7 @@ const SupplierCallOffs = () => {
                 qualifies, and each header names both, as the Order summary does. */}
             <TableHeaderCell>
               {t('co.col.callOff')}{' '}
-              <span className="block text-[11px] font-normal normal-case text-text-tertiary">
+              <span className="block text-[length:var(--fs-label-3)] font-normal normal-case text-text-tertiary">
                 {t('co.col.po')}
               </span>
             </TableHeaderCell>
@@ -336,20 +336,20 @@ const SupplierCallOffs = () => {
                 call-off: as its own column it pushed the table 257px past 1280. */}
             <TableHeaderCell>
               {t('co.col.material')}{' '}
-              <span className="block text-[11px] font-normal normal-case text-text-tertiary">
+              <span className="block text-[length:var(--fs-label-3)] font-normal normal-case text-text-tertiary">
                 <PicHeader wrap />
               </span>
             </TableHeaderCell>
             <TableHeaderCell className="text-right">{t('co.col.quantity')}</TableHeaderCell>
             <TableHeaderCell>
               {t('co.col.needDate')}{' '}
-              <span className="block text-[11px] font-normal normal-case text-text-tertiary">
+              <span className="block text-[length:var(--fs-label-3)] font-normal normal-case text-text-tertiary">
                 {t('co.col.type')}
               </span>
             </TableHeaderCell>
             <TableHeaderCell>
               {t('co.col.confirmation')}{' '}
-              <span className="block text-[11px] font-normal normal-case text-text-tertiary">
+              <span className="block text-[length:var(--fs-label-3)] font-normal normal-case text-text-tertiary">
                 {t('co.col.confirmBy')}
               </span>
             </TableHeaderCell>
@@ -369,12 +369,18 @@ const SupplierCallOffs = () => {
                     >
                       {c.callOffNumber}
                     </Data>
-                    <Data as="div" className="text-[11px] text-text-secondary whitespace-nowrap">
+                    <Data
+                      as="div"
+                      className="text-[length:var(--fs-label-3)] text-text-secondary whitespace-nowrap"
+                    >
                       {c.poNumber}
                     </Data>
                   </TableCell>
                   <TableCell>
-                    <Data as="div" className="text-[11px] text-text-tertiary whitespace-nowrap">
+                    <Data
+                      as="div"
+                      className="text-[length:var(--fs-label-3)] text-text-tertiary whitespace-nowrap"
+                    >
                       {c.materialCode}
                     </Data>
                     <div className="text-xs text-text-primary">{c.description}</div>
@@ -390,13 +396,15 @@ const SupplierCallOffs = () => {
                     <Data as="div" className="text-xs">
                       {formatDate(c.needDate)}
                     </Data>
-                    <div className="text-[11px] text-text-secondary">{t(`co.type.${c.type}`)}</div>
+                    <div className="text-[length:var(--fs-label-3)] text-text-secondary">
+                      {t(`co.type.${c.type}`)}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <ConfirmationPill status={v.confirmation} />
                     {needsAnswer && v.deadline && (
                       <div
-                        className="mt-1 text-[11px] text-text-secondary"
+                        className="mt-1 text-[length:var(--fs-label-3)] text-text-secondary"
                         data-testid={`supplier-calloff-confirm-by-${c.id}`}
                       >
                         {t('co.col.confirmBy')}{' '}

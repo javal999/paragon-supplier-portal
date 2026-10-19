@@ -148,14 +148,14 @@ const EmailBody = ({ scenario, onAction, successMsg }) => {
             <React.Fragment key={s.label}>
               <div className="text-center flex-1">
                 <div
-                  className={`w-6 h-6 rounded-full text-[11px] font-bold flex items-center justify-center mx-auto mb-1 ${
+                  className={`w-6 h-6 rounded-full text-[length:var(--fs-label-3)] font-bold flex items-center justify-center mx-auto mb-1 ${
                     s.done ? 'bg-action text-white' : 'bg-bg-hover text-text-tertiary'
                   }`}
                 >
                   {s.done ? '✓' : i + 1}
                 </div>
                 <div
-                  className={`text-[10px] font-semibold ${
+                  className={`text-[length:var(--fs-caption-1)] font-semibold ${
                     s.done ? 'text-text-primary' : 'text-text-tertiary'
                   }`}
                 >

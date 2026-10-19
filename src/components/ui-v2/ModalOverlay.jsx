@@ -2,7 +2,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 // ModalOverlay — the centred modal scrim (BL-31, SC-07).
 //
-// Replaces the hand-written `<div className="fixed inset-0 … bg-[rgba(13,27,42,0.4)]">`
+// Replaces the hand-written `<div className="fixed inset-0 … bg-[var(--pds-color-scrim)]">`
 // wrapper that the RFQ, RFI, RFP, contract and GR-inspection wizards (and the
 // FX-pin and raised-elsewhere dialogs) each carried. Those wrappers painted a
 // modal and told assistive technology nothing: no `role="dialog"`, no name, no
@@ -42,7 +42,7 @@ const ModalOverlay = ({ onClose, label, children, scrim = 'default', testId }) =
       aria-modal="true"
       aria-label={label}
       data-testid={testId}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${scrim === 'dark' ? 'bg-[rgba(13,27,42,0.5)]' : 'bg-[rgba(13,27,42,0.4)]'}`}
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${scrim === 'dark' ? 'bg-[var(--pds-color-scrim)]' : 'bg-[var(--pds-color-scrim)]'}`}
     >
       {children}
     </div>

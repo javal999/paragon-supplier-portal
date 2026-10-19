@@ -14,6 +14,8 @@ import { withChaos, chaosConfigFromEnv } from '@services/data/mock/withChaos';
 import { queryClient } from '@services/query/queryClient';
 /** @import { IDataService } from '@services/data/types' */
 import './index.css';
+// Paradise scope: whole system (preview). Removing this line removes the scoped focus rule.
+document.documentElement.setAttribute('data-pds-theme', 'light');
 import '@styles/tailwind.css';
 
 // Chaos is dev-only and opt-in (VITE_CHAOS=on). import.meta.env.DEV is false

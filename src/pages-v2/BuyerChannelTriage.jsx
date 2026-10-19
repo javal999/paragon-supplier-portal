@@ -300,7 +300,7 @@ const BuyerChannelTriage = ({ onRecorded }) => {
             onRetry={() => suppliersQuery.refetch()}
             name="triage-supplier"
           />
-          <p className="mt-1 text-[11px] text-text-tertiary">
+          <p className="mt-1 text-[length:var(--fs-label-3)] text-text-tertiary">
             {t('buyerCommHub.triage.supplierHint')}
           </p>
         </div>
@@ -416,7 +416,6 @@ const BuyerChannelTriage = ({ onRecorded }) => {
                     </span>
                     <span className="inline-flex flex-wrap gap-1">
                       {parsed.diagnostics.matchedTokens.map((tok, i) => (
-                        // eslint-disable-next-line react/no-array-index-key -- immutable parser output (max 4 tokens), replaced wholesale per parse; tokens can repeat
                         <Data
                           key={i}
                           className="rounded bg-teal-soft px-1.5 py-0.5 text-teal-hover"

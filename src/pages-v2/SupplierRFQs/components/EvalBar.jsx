@@ -34,7 +34,7 @@ const EvalBar = ({ criteria }) => {
         {EVAL_SEGMENTS.map((seg) => (
           <span
             key={seg.key}
-            className="inline-flex items-center gap-1.5 text-[10px] text-text-tertiary"
+            className="inline-flex items-center gap-1.5 text-[length:var(--fs-caption-1)] text-text-tertiary"
           >
             <span className="inline-block w-2 h-2 rounded-full" style={{ background: seg.color }} />
             {t(seg.labelKey)} {criteria[seg.key]}%

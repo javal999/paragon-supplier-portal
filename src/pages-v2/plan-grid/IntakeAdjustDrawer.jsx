@@ -202,10 +202,13 @@ const IntakeAdjustDrawer = ({ line }) => {
           <span className="ml-2 text-xs text-text-tertiary">{line.uom}</span>
           {/* Names the raw-editable convention, so canonical digits in a field
               beside a grouped display chip reads as deliberate, not broken. */}
-          <div id={`accepted-hint-${line.id}`} className="mt-1 text-[11px] text-text-tertiary">
+          <div
+            id={`accepted-hint-${line.id}`}
+            className="mt-1 text-[length:var(--fs-label-3)] text-text-tertiary"
+          >
             {t('planGrid.push.qty.hint')}
           </div>
-          <div className="mt-1.5 text-[11px]">
+          <div className="mt-1.5 text-[length:var(--fs-label-3)]">
             {parsed.ok ? (
               <span
                 className={`inline-flex items-center rounded-sm border px-1.5 py-0.5 font-medium ${
@@ -249,7 +252,7 @@ const IntakeAdjustDrawer = ({ line }) => {
               onChange={(e) => setReason((r) => ({ ...r, [line.id]: e.target.value }))}
             />
             {blocked && (
-              <div className="mt-1 text-[11px] text-warning-hover">
+              <div className="mt-1 text-[length:var(--fs-label-3)] text-warning-hover">
                 {t('planGrid.push.reasonRequired')}
               </div>
             )}
@@ -259,7 +262,7 @@ const IntakeAdjustDrawer = ({ line }) => {
 
       {/* Push action + committed / failed feedback */}
       <div className="flex items-center justify-between gap-3 border-t border-border-subtle px-4 py-3">
-        <div className="text-[11px]">
+        <div className="text-[length:var(--fs-label-3)]">
           {committed && state.prNumber && (
             <Data className="text-text-secondary">
               {t('planGrid.push.committed', { pr: state.prNumber })}

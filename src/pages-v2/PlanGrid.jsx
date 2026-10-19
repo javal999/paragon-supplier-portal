@@ -265,7 +265,7 @@ const PlanGrid = () => {
           component: ({ rowData }) => (
             <div className="w-full px-2 text-sm">
               <span
-                className={`inline-flex items-center rounded-sm border px-1.5 py-0.5 text-[11px] font-medium ${
+                className={`inline-flex items-center rounded-sm border px-1.5 py-0.5 text-[length:var(--fs-label-3)] font-medium ${
                   rowData.wasAdjusted
                     ? 'border-warning/30 bg-warning-soft text-warning-hover'
                     : 'border-border-subtle bg-bg-hover text-text-tertiary'

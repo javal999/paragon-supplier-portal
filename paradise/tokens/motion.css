@@ -1,0 +1,21 @@
+/* Motion is functional and must respect reduced-motion preferences. */
+:root {
+  --pds-motion-duration-instant: 0ms;
+  --pds-motion-duration-fast: 120ms;
+  --pds-motion-duration-moderate: 180ms;
+  --pds-motion-duration-slow: 240ms;
+  --pds-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --pds-motion-easing-emphasized: cubic-bezier(0.2, 0, 0, 1.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --pds-motion-duration-fast: 1ms;
+    --pds-motion-duration-moderate: 1ms;
+    --pds-motion-duration-slow: 1ms;
+  }
+
+  :where(*, *::before, *::after) {
+    scroll-behavior: auto !important;
+  }
+}

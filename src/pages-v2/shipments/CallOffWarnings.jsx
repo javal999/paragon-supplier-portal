@@ -167,7 +167,7 @@ export const AsnPlannerMarkers = ({ asn, warnings }) => {
         <span
           key={l.materialCode}
           data-testid={`asn-not-declared-${asn.asnNumber}-${l.materialCode}`}
-          className="inline-block w-fit px-1.5 py-0.5 rounded border border-warning bg-warning-soft text-[11px] text-warning-hover"
+          className="inline-block w-fit px-1.5 py-0.5 rounded border border-warning bg-warning-soft text-[length:var(--fs-label-3)] text-warning-hover"
         >
           {t('fc.asn.batch.notDeclared')} · {l.materialCode} · {l.lotNumber}
         </span>

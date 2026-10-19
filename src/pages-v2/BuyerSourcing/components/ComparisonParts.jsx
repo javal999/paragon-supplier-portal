@@ -58,7 +58,7 @@ export const ComparisonRow = ({ label, tag, tagTitle, children }) => (
   <tr className="border-t border-border-subtle">
     <th
       scope="row"
-      className="text-left px-2 py-2 font-medium text-text-tertiary uppercase tracking-wider text-[10px] w-36 min-w-[9rem] align-middle"
+      className="text-left px-2 py-2 font-medium text-text-tertiary uppercase tracking-wider text-[length:var(--fs-caption-1)] w-36 min-w-[9rem] align-middle"
     >
       {label}
       {tag && (
@@ -86,7 +86,7 @@ export const SpreadCell = ({ result, t }) => {
   if (result.kind === 'silent') {
     // Honest silence — a specific reason, never a fabricated percentage.
     return (
-      <span className="text-[10px] text-text-tertiary whitespace-normal">
+      <span className="text-[length:var(--fs-caption-1)] text-text-tertiary whitespace-normal">
         {t(SPREAD_SILENT_KEY[result.reason])}
       </span>
     );
@@ -106,7 +106,7 @@ export const SpreadCell = ({ result, t }) => {
       </span>
       {/* The modeled anchor renders in the QUOTE's own currency — IDR is never
           shown as the basis for a USD deal (CI-2 currency-leg ruling). */}
-      <span className="text-[10px] text-text-tertiary whitespace-nowrap">
+      <span className="text-[length:var(--fs-caption-1)] text-text-tertiary whitespace-nowrap">
         {t('sourcing.cmp.spread.vsModel', {
           value: formatMoney(shouldCost.midPerKg, currency)
         })}

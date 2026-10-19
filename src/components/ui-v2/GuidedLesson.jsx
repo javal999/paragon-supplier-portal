@@ -69,7 +69,7 @@ const GuidedLesson = ({ steps, labels, disclaimer, source, onDone, className = '
                   onClick={() => setCurrent(i)}
                   aria-current={active ? 'step' : undefined}
                   aria-label={s.title}
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold transition-colors cursor-pointer ${
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[length:var(--fs-label-3)] font-semibold transition-colors cursor-pointer ${
                     done
                       ? 'bg-action text-white'
                       : active

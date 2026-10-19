@@ -3,11 +3,26 @@
 
 /** @type {Record<Grade, { stroke: string; soft: string }>} */
 const GRADE_TONE = {
-  A: { stroke: '#107E3E', soft: '#E8F5EC' },
-  B: { stroke: '#1E5BAE', soft: '#E5F0FF' },
-  C: { stroke: '#B45309', soft: '#FEF3D6' },
-  D: { stroke: '#BB0000', soft: '#FCE4E4' },
-  F: { stroke: '#BB0000', soft: '#FCE4E4' }
+  A: {
+    stroke: 'var(--pds-color-feedback-success)',
+    soft: 'var(--pds-color-feedback-success-background)'
+  },
+  B: {
+    stroke: 'var(--pds-color-feedback-info)',
+    soft: 'var(--pds-color-feedback-info-background)'
+  },
+  C: {
+    stroke: 'var(--pds-color-feedback-warning)',
+    soft: 'var(--pds-color-feedback-warning-background)'
+  },
+  D: {
+    stroke: 'var(--pds-color-feedback-danger)',
+    soft: 'var(--pds-color-feedback-danger-background)'
+  },
+  F: {
+    stroke: 'var(--pds-color-feedback-danger)',
+    soft: 'var(--pds-color-feedback-danger-background)'
+  }
 };
 
 /**

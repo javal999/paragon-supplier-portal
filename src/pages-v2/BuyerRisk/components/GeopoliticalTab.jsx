@@ -55,7 +55,7 @@ const GeopoliticalTab = ({ geoRisks }) => {
                 >
                   {r.score}
                 </Data>
-                <div className="text-[10px] text-text-tertiary mt-0.5">
+                <div className="text-[length:var(--fs-caption-1)] text-text-tertiary mt-0.5">
                   {t('risk.geo.riskScore')}
                 </div>
               </div>

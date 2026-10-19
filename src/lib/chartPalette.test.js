@@ -27,14 +27,17 @@ describe('DP2-TARGET-01 — targetStatus thresholds', () => {
   });
 });
 
+// Paradise stage 2 (paradise-migration-plan.md): the map now points at Paradise
+// feedback tokens. Paradise has one warning ink, so `near` uses it for both the
+// fill and the text; the DP2-WARN-01 bright/dark split has no Paradise token.
 describe('DP2-TARGET-01 — state → colour map', () => {
-  it('near is the DP2-WARN-01 amber split (bright fill, dark text)', () => {
-    expect(TARGET_STATUS.near.fill).toBe('#D97706');
-    expect(TARGET_STATUS.near.text).toBe('#8A5606');
+  it('near is the Paradise warning token (fill and text)', () => {
+    expect(TARGET_STATUS.near.fill).toBe('var(--pds-color-feedback-warning)');
+    expect(TARGET_STATUS.near.text).toBe('var(--pds-color-feedback-warning)');
   });
 
-  it('meeting is success green, missing is danger red', () => {
-    expect(TARGET_STATUS.meeting.fill).toBe('#107E3E');
-    expect(TARGET_STATUS.missing.fill).toBe('#BB0000');
+  it('meeting is the Paradise success token, missing is the Paradise danger token', () => {
+    expect(TARGET_STATUS.meeting.fill).toBe('var(--pds-color-feedback-success)');
+    expect(TARGET_STATUS.missing.fill).toBe('var(--pds-color-feedback-danger)');
   });
 });

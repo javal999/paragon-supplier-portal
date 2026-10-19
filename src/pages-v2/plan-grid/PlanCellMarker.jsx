@@ -29,7 +29,7 @@ const PlanCellMarker = ({ capability, planState, className = '' }) => {
     <span className={`inline-flex items-center gap-1.5 ${className}`}>
       {/* Source tier — green only if the registry greens it */}
       <span
-        className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider ${
+        className={`inline-flex items-center gap-1 text-[length:var(--fs-caption-1)] font-semibold uppercase tracking-wider ${
           live ? 'text-success' : 'text-warning-hover'
         }`}
       >
@@ -44,7 +44,7 @@ const PlanCellMarker = ({ capability, planState, className = '' }) => {
       </span>
       {/* Plan state — the C6 overlay axis (per row) */}
       <span
-        className={`inline-flex items-center rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+        className={`inline-flex items-center rounded-sm border px-1.5 py-0.5 text-[length:var(--fs-caption-1)] font-semibold uppercase tracking-wider ${
           committed
             ? 'border-border-subtle bg-bg-hover text-text-secondary'
             : 'border-info/30 bg-info-soft text-info'

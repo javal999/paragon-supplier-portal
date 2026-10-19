@@ -113,11 +113,15 @@ const QualificationCard = ({ item, onUpdate }) => {
             <React.Fragment key={labelKey}>
               <div className="flex flex-col items-center text-center flex-1 min-w-0">
                 <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${dotClass}`}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[length:var(--fs-label-3)] font-bold ${dotClass}`}
                 >
                   {isDone ? '✓' : stepNum}
                 </div>
-                <div className={`text-[10px] mt-1 leading-tight ${labelClass}`}>{label}</div>
+                <div
+                  className={`text-[length:var(--fs-caption-1)] mt-1 leading-tight ${labelClass}`}
+                >
+                  {label}
+                </div>
               </div>
               {i < STAGE_LABEL_KEYS.length - 1 && (
                 <div
@@ -167,7 +171,9 @@ const RecommendationCard = ({ supplier, onViewStorefront, onQualify, onInviteRfq
             {supplier.matchScore}
             <span className="text-xs font-medium">/100</span>
           </div>
-          <div className={`text-[10px] font-semibold ${scoreColorClass(supplier.matchScore)}`}>
+          <div
+            className={`text-[length:var(--fs-caption-1)] font-semibold ${scoreColorClass(supplier.matchScore)}`}
+          >
             {t('discovery.card.matchScore')}
           </div>
         </div>
@@ -568,7 +574,7 @@ const BuyerDiscovery = () => {
                   <div className="text-right shrink-0">
                     <TrendIcon dir={card.priceDir} />
                     <div
-                      className={`text-[11px] font-semibold mt-1 ${trendColorClass(card.priceDir)}`}
+                      className={`text-[length:var(--fs-label-3)] font-semibold mt-1 ${trendColorClass(card.priceDir)}`}
                     >
                       {card.priceTrend}
                     </div>
@@ -579,13 +585,13 @@ const BuyerDiscovery = () => {
                     <div className="text-lg font-bold text-text-primary">
                       {card.suppliersGlobal}
                     </div>
-                    <div className="text-[11px] text-text-tertiary">
+                    <div className="text-[length:var(--fs-label-3)] text-text-tertiary">
                       {t('discovery.intel.global')}
                     </div>
                   </div>
                   <div>
                     <div className="text-lg font-bold text-teal-hover">{card.suppliersParagon}</div>
-                    <div className="text-[11px] text-text-tertiary">
+                    <div className="text-[length:var(--fs-label-3)] text-text-tertiary">
                       {t('discovery.intel.inNetwork')}
                     </div>
                   </div>

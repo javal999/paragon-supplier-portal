@@ -27,7 +27,7 @@ const Bubble = ({ msg, animateIn }) => {
         </div>
         <div className="flex justify-end items-center gap-1 mt-1">
           <span className="text-[9px] text-text-tertiary">{msg.time}</span>
-          {!isBot && <span className="text-[10px] text-info">✓✓</span>}
+          {!isBot && <span className="text-[length:var(--fs-caption-1)] text-info">✓✓</span>}
         </div>
       </div>
     </div>

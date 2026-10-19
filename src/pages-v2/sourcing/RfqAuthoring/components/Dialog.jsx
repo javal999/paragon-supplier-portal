@@ -18,7 +18,7 @@ export const Dialog = ({ label, testId, onClose, wide, children }) => {
   useDialogFocus(ref, true, onClose);
   return (
     // z-[60]: above the wizard's overlay (z-50), which "Save as template" opens over.
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[rgba(13,27,42,0.4)]">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[var(--pds-color-scrim)]">
       <div
         ref={ref}
         role="dialog"
