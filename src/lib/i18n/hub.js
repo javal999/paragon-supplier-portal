@@ -28,6 +28,8 @@ export const hubEn = {
   // FUX phase 1 (F-03, F-04, F-19) — the Forecast group's replacements.
   'hub.nav.section.weeklyPlan': 'Weekly plan',
   'hub.nav.section.review': 'Review',
+  // DRC-3 (BL-189) — Procurement's and Finance's audit section.
+  'hub.nav.section.audit': 'Audit',
   'hub.nav.section.planningEngine': 'Planning engine',
 
   // PTI items
@@ -58,6 +60,7 @@ export const hubEn = {
   'hub.nav.pti.publishToSuppliers': 'Publish to suppliers',
   'hub.nav.pti.supplierResponses': 'Supplier responses',
   'hub.nav.pti.demandAnticipation': 'Demand anticipation',
+  'hub.nav.pti.demandAnticipationHistory': 'Demand anticipation history',
   'hub.nav.pti.forecastQuality': 'Forecast quality',
   'hub.nav.pti.stockCheck': 'Feedstock reconcile',
   // Planning engine pages, in the user menu (F-04).
@@ -206,6 +209,7 @@ export const hubId = {
   'hub.nav.section.company': 'Perusahaan',
   'hub.nav.section.weeklyPlan': 'Rencana mingguan',
   'hub.nav.section.review': 'Evaluasi',
+  'hub.nav.section.audit': 'Audit',
   'hub.nav.section.planningEngine': 'Mesin perencanaan',
 
   'hub.nav.pti.tasks': 'Tugas saya',
@@ -233,6 +237,7 @@ export const hubId = {
   'hub.nav.pti.publishToSuppliers': 'Terbitkan ke pemasok',
   'hub.nav.pti.supplierResponses': 'Tanggapan pemasok',
   'hub.nav.pti.demandAnticipation': 'Antisipasi permintaan',
+  'hub.nav.pti.demandAnticipationHistory': 'Riwayat antisipasi permintaan',
   'hub.nav.pti.forecastQuality': 'Kualitas prakiraan',
   'hub.nav.pti.stockCheck': 'Rekonsiliasi feedstock',
   'hub.nav.pti.engine.materialRequirement': 'Mesin perencanaan · Kebutuhan material',

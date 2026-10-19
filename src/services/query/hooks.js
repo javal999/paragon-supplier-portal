@@ -94,6 +94,21 @@ export const useDemandAnticipation = () =>
     svc.procurement.getDemandAnticipation(scope)
   );
 
+/**
+ * DRC-3 (BL-189) — every demand anticipation publication, for the audit view.
+ * The read varies by ROLE (planning, procurement and finance seats only), so the
+ * seat's roles are in this query's own key (`useServiceQuery`'s rule).
+ * Under `demandAnticipation`, so every act that refreshes that read refreshes this.
+ * @param {readonly string[]} roles
+ * @param {boolean} [enabled]  False when the page already knows the seat is refused.
+ */
+export const useDemandAnticipationHistory = (roles, enabled = true) =>
+  useServiceQuery(
+    ['procurement', 'demandAnticipation', 'history', [...roles].sort().join(',')],
+    (svc, scope) => svc.procurement.getDemandAnticipationHistory(scope),
+    { retry: false, enabled }
+  );
+
 /** Material C5 (MR-8) — the planning groups, their materials and changes. */
 export const usePlanningGroups = () =>
   useServiceQuery(['procurement', 'planningGroups'], (svc, scope) =>

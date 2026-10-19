@@ -16,6 +16,10 @@ import { allDemandAnticipationWithSupply } from './supplyBelowDemandReadModel';
 import { withLtpFgDemandRead } from './ltpFgDemandReadModel';
 import { osipSafetyInputs } from './osipSafetyReadModel';
 /** @import { DemandAnticipationSupplyRow } from '../../transitions/supplyBelowDemandRules' */
+/** @import { DaHistoryRow } from '../../transitions/demandAnticipationHistory' */
+import { daHistoryReadRefusal } from '../../transitions/demandAnticipationHistory';
+import { allDemandAnticipationHistory } from './demandAnticipationHistoryReadModel';
+import { DataError } from '../types';
 import { stockSimulationRows } from './stockSimulationReadModel';
 import {
   allCommitmentLines,
@@ -490,6 +494,25 @@ export class MockProcurementService {
     // DRC-18 (BL-203) — with FG demand, LTP − FG demand and the consumption
     // moving average per week, read only.
     return { items: withLtpFgDemandRead(allDemandAnticipationWithSupply()) };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<DaHistoryRow>>}
+   */
+  async getDemandAnticipationHistory(scope) {
+    // DRC-3 (BL-189), [Owner A10] — the audit view of every publication, for
+    // PTI's planning, procurement and finance seats. A supplier, or a PTI seat
+    // holding none of those roles, is refused (MockEnforcementService's shape).
+    const refusal = daHistoryReadRefusal(scope);
+    if (refusal === 'SUPPLIER')
+      throw new DataError('SCOPE_DENIED', 'demand anticipation history is PTI’s own plan');
+    if (refusal === 'ROLE')
+      throw new DataError(
+        'SCOPE_DENIED',
+        'demand anticipation history is read by planning, procurement and finance seats'
+      );
+    return { items: allDemandAnticipationHistory() };
   }
 
   /**

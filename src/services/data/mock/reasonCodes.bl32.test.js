@@ -4,8 +4,10 @@
 // force. Never deleted: a retired code still labels the records that carry it.
 //
 // Proved here, by named case:
-//   1. The coded lists are DERIVED (four), the constants they replaced are gone
-//      from shipped code, and call-off / dispute reasons are free text (control).
+//   1. The coded lists are DERIVED, the constants they replaced are gone from
+//      shipped code, and call-off REJECT / dispute reasons are free text
+//      (control). A call-off CHANGE has an optional coded reason since DRC-5
+//      (BL-191, list `callOffChange`).
 //   2. The readers are derived and pinned — every verb and parser reads the
 //      list in force; no page renders a reason label outside the one helper.
 //   3. For EACH list: a new code is accepted by the verb that reads it; retired,
@@ -144,8 +146,11 @@ describe('BL32-RSN-POP · the coded reason lists, derived', () => {
       'capacityShortfall',
       'commitmentShortfall',
       'alertClose',
-      'forecastOverride'
+      'forecastOverride',
+      // DRC-5 (BL-191) — the coded reason of a planner's call-off change.
+      'callOffChange'
     ]);
+    expect(STARTER_REASON_CODES.callOffChange).toEqual(['ltp-dropped']);
     expect(STARTER_REASON_CODES.poReject).toEqual(['date', 'quantity', 'quality']);
     expect(STARTER_REASON_CODES.poAdjust).toEqual([
       'capacity',
@@ -220,7 +225,10 @@ describe('BL32-RSN-POP · the coded reason lists, derived', () => {
     );
   });
 
-  it('BL32-RSN-POP-03 · call-off and receipt-dispute reasons are free text — no coded list to maintain', () => {
+  // DRC-5 (BL-191) narrowed this: a call-off CHANGE carries an optional coded
+  // reason (`callOffChange`), and its free-text `reason` is still required. The
+  // REJECT reason and the receipt-dispute comment stay free text.
+  it('BL32-RSN-POP-03 · call-off reject and receipt-dispute reasons are free text — no coded list to maintain', () => {
     const callOffFlow = readFileSync(
       join(process.cwd(), 'src/services/transitions/flows/callOff.flow.js'),
       'utf8'
@@ -254,6 +262,8 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
   it('BL32-RSN-READ-02 · the pickers offer the active list; the records read through one label helper', () => {
     expect(callersOf(/\buseActiveReasonCodes\s*\(/)).toEqual([
       'src/pages-v2/BuyerAlerts.jsx',
+      // DRC-5 (BL-191) — the reason type of a call-off change.
+      'src/pages-v2/BuyerCallOffs.jsx',
       // CAP-5 — the Reason filters offer the active shortfall lists.
       'src/pages-v2/BuyerCapacity.jsx',
       'src/pages-v2/BuyerCommitments/index.jsx',
@@ -266,6 +276,7 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
     ]);
     expect(callersOf(/\buseReasonLabel\s*\(/)).toEqual([
       'src/pages-v2/BuyerAlerts.jsx',
+      'src/pages-v2/BuyerCallOffs.jsx',
       'src/pages-v2/BuyerCapacity.jsx',
       'src/pages-v2/BuyerCommitments/index.jsx',
       'src/pages-v2/BuyerForecastBias.jsx',

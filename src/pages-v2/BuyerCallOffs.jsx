@@ -52,9 +52,13 @@ import {
   engineReleaseWithheld,
   generateCallOffSeries,
   isConfirmedAndAccepted,
+  LTP_DROPPED_CODE,
+  delayProposalRefusal,
   releaseCheck,
   umbrellaRemaining
 } from '@services/transitions/callOffRules';
+import { useActiveReasonCodes, useReasonLabel } from './admin/reasonCodeDisplay';
+import CallOffDelays from './callOffs/CallOffDelays';
 /** @import { ReleaseCadence } from '@services/delivery/types' */
 import {
   callOffConfirmWorkingDays,
@@ -1126,6 +1130,11 @@ const CallOffPanelBody = ({
   linkedAsns
 }) => {
   const { t } = useTranslation();
+  // BL-32 / DRC-5 (BL-191) — the coded reason of a change; "LTP dropped" makes
+  // a later need date a delay the supplier must approve.
+  const changeCodes = useActiveReasonCodes('callOffChange');
+  const reasonLabel = useReasonLabel();
+  const [reasonCode, setReasonCode] = useState('');
   const c = view.callOff;
   const isDraft = c.status === 'Draft';
   const awaitingApproval = view.confirmation === 'Awaiting Approval';
@@ -1145,6 +1154,9 @@ const CallOffPanelBody = ({
     ...(Number.isFinite(changedQty) && changedQty !== c.quantity ? { quantity: changedQty } : {}),
     ...(form.needDate && form.needDate !== c.needDate ? { needDate: form.needDate } : {})
   };
+  // DRC-5 — the verb's own rule, read as a courtesy before sending.
+  const delay = reasonCode === LTP_DROPPED_CODE;
+  const delayRefused = delay ? delayProposalRefusal(c, edits) : null;
 
   return (
     <div className="space-y-6">
@@ -1238,6 +1250,9 @@ const CallOffPanelBody = ({
           <p className="text-sm text-text-primary">{c.rejectionReason}</p>
         </section>
       )}
+
+      {/* DRC-5 (BL-191) — delays proposed for an LTP drop, and the supplier's answers. */}
+      <CallOffDelays callOff={c} testId="calloff-delays" />
 
       {view.headsUps.length > 0 && (
         <section>
@@ -1425,6 +1440,29 @@ const CallOffPanelBody = ({
             <>
               <p className="text-sm text-text-secondary">{t('co.change.intro')}</p>
               <DraftFields form={form} setForm={setForm} uom={c.uom} today={today} />
+              <div>
+                <label htmlFor="co-change-reason-code" className={labelClass}>
+                  {t('co.change.reasonCode')}
+                </label>
+                <select
+                  id="co-change-reason-code"
+                  className={inputClass}
+                  value={reasonCode}
+                  onChange={(e) => setReasonCode(e.target.value)}
+                >
+                  <option value="">{t('co.change.reasonCodeNone')}</option>
+                  {changeCodes.map((code) => (
+                    <option key={code} value={code}>
+                      {reasonLabel('callOffChange', code)}
+                    </option>
+                  ))}
+                </select>
+                {delay ? (
+                  <p className="mt-1 text-xs text-text-tertiary" data-testid="calloff-delay-hint">
+                    {t('co.change.delayHint')}
+                  </p>
+                ) : null}
+              </div>
               {/* The change verb runs the same remaining check as a release. */}
               <ExceedsNotice
                 check={changeRelease}
@@ -1438,10 +1476,20 @@ const CallOffPanelBody = ({
                     busy ||
                     reason === '' ||
                     Object.keys(edits).length === 0 ||
-                    (changeRelease?.exceeds ?? false)
+                    (changeRelease?.exceeds ?? false) ||
+                    delayRefused !== null
                   }
                   onClick={() =>
-                    void run({ verb: 'change', id: c.id, reason, ...edits }, t('co.toast.changed'))
+                    void run(
+                      {
+                        verb: 'change',
+                        id: c.id,
+                        reason,
+                        ...(reasonCode ? { reasonCode } : {}),
+                        ...edits
+                      },
+                      t('co.toast.changed')
+                    )
                   }
                 >
                   {t('co.change.submit')}

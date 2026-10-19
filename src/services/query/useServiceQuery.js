@@ -41,7 +41,8 @@ export function useServiceQuery(key, fetcher, options) {
     // `QueryScope.businessRoles`): two seats with different roles read the same
     // tenant's rows, so keying on roles would shard the cache on a dimension the
     // reads do not vary by. Any query that varies by ROLE must put the roles in
-    // its OWN key — no such query exists today.
+    // its OWN key — the demand anticipation history (DRC-3, BL-189) is the
+    // first: `useDemandAnticipationHistory` keys on the seat's roles.
     businessRoles: identity.businessRoles,
     actor: identity.actor
   };
