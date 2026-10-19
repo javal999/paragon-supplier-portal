@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.29, 2026-10-19 |
+| Version | 2.30, 2026-10-19 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -142,18 +142,12 @@ The owner reviewed the requirements and accepted CAP-D1 to CAP-D8 on 2026-10-12.
 
 ### 4b. Weekly SC Hub 2026-10-14: DA, ROP and call-off, accepted 2026-10-19
 
-The owner approved every requirement, default and decision in `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` on 2026-10-19 ("approve all"). Items are built on documented defaults (section 4 of that file) and corrected when Material Planning answers; the five "On hold" rows wait because their shape is unknown. Build order is section 7 of that file. Waves 1 and 2 (BL-187, 188, 190, 192, 193, 195, 197, 200, 201, 203) are built and in section 6.
+The owner approved every requirement, default and decision in `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` on 2026-10-19 ("approve all"). Items are built on documented defaults (section 4 of that file) and corrected when Material Planning answers; the five "On hold" rows wait because their shape is unknown. Build order is section 7 of that file. Waves 1 to 3 (BL-187 to BL-203 except the on-hold rows) are built and in section 6.
 
 | ID | Item | Why | Size | Blocked by | Detail |
 |---|---|---|---|---|---|
-| BL-189 | Demand anticipation history with carry-over origin; audit view for Procurement and Finance | Every version is kept for audit | M | BL-188 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-3 |
-| BL-191 | Supplier approval for a call-off delayed by an LTP drop, with the DA adjustment | MoM 1B | M | BL-188 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-5 |
-| BL-194 | Supplier confirms Incoming DA plus current feedstock, with a date | MoM 2B | M | BL-188 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-8 |
-| BL-196 | System-calculated ROP Order, ROP Fisik, supplier ROPs and Max, by level (level a planner-editable field, default 4) | Every ROP is calculated by the system [Owner, 2026-10-16] | L | BL-187, BL-193 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-10 |
-| BL-198 | NPD tag and ROP review after the first order | MoM 4C | S | BL-196 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-12a |
-| BL-199 | Call-off drafted at ROP Fisik for planner approval; SAP PR recommendation when the umbrella PO runs out; max stock caps call-offs; SOH plant stored | MoM 5A | L | BL-196 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-13 |
 | BL-202 | What-if sandbox: one material, editable inputs and rule switches, 52 weeks RM / 24 weeks PM, named scenarios compared up to 3, PTI planners only, analysis only | Also the tool to confirm defaults with Material Planning | L | BL-187, BL-196 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-17 |
-| BL-204 | On hold: supplier view of demand anticipation | Suppliers must not plan on unconfirmed figures (DRC-D10) | M | Material Planning: A1, A2, B1 to B4 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-1 |
+| BL-204 | On hold: supplier view of demand anticipation, and the supplier confirming Incoming DA (moved from BL-194, DRC-D17) | Suppliers must not plan on unconfirmed figures (DRC-D10) | M | Material Planning: A1, A2, B1 to B4 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-1 |
 | BL-205 | On hold: protection buffer | Uplift for non-festive materials unknown | ? | Material Planning: C3 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-9c |
 | BL-206 | On hold: NPD vs CMM rules and material-code prefixes | MoM 4C action item | ? | MDM and Material Planner: D2 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-12b |
 | BL-207 | On hold: feedstock reconcile leftover rule and final formula | "Discussed later" [Owner, 2026-10-16] | ? | Owner | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-15b |
@@ -188,6 +182,12 @@ The owner approved every requirement, default and decision in `SC-HUB-DA-ROP-CAL
 
 | ID | Item | Closed | By |
 |---|---|---|---|
+| BL-199 | Call-off drafted at ROP Fisik for planner approval; SAP PR recommendation when the umbrella PO runs out; max stock caps call-offs; SOH plant stored | 2026-10-19 | Built in GitLab MR !6: call-off drafted at ROP Fisik for planner approval, SAP PR recommendation; fires on PTI SOH updates only until the eWM feed exists |
+| BL-198 | NPD tag and ROP review after the first order | 2026-10-19 | Built in GitLab MR !6: NPD tag (default first order fulfilled, DRC-D19) and the review task |
+| BL-196 | System-calculated ROP Order, ROP Fisik, supplier ROPs and Max, by level (level a planner-editable field, default 4) | 2026-10-19 | Built in GitLab MR !6: ROP Order, ROP Fisik by level, Max, supplier-side ROPs, level field; supplier-below-ROP alert on the system ROP Supplier (DRC-D20) |
+| BL-194 | Supplier confirms Incoming DA plus current feedstock, with a date | 2026-10-19 | Built in GitLab MR !6 for the feedstock part (DRC-D17); confirming Incoming DA moves to BL-204 |
+| BL-191 | Supplier approval for a call-off delayed by an LTP drop, with the DA adjustment | 2026-10-19 | Built in GitLab MR !6: "LTP dropped" call-off change with supplier approval; DA moves only on approval |
+| BL-189 | Demand anticipation history with carry-over origin; audit view for Procurement and Finance | 2026-10-19 | Built in GitLab MR !6: history page, filters, CSV; ungated (DRC-D18) |
 | BL-197 | CV per variant, SKU and component; stable or fluctuative | 2026-10-19 | Built in GitLab MR !5: CV and category per material on Safety stock targets |
 | BL-195 | Strategic buffer (LTP minus baseline) and production limit | 2026-10-19 | Built in GitLab MR !5: production limit row and strategic buffer section on PTI Capacity; protection buffer still on hold (BL-205) |
 | BL-193 | Safety order (ROP Order) and ROP Fisik safety, with the deck and sheet variants behind switches | 2026-10-19 | Built in GitLab MR !5: OSIP safety order and ROP Fisik safety on Safety stock targets, engine fill rate as challenger |

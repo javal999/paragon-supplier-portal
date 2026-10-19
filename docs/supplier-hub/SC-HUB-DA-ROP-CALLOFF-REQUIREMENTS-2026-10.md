@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Accepted 2026-10-19.** The owner approved every requirement, default, backlog row and decision in this file ("approve all", 2026-10-19). Wave 1 (BL-187, BL-192, BL-200, BL-201, BL-203) is built in GitLab MR !4 and wave 2 (BL-188, BL-190, BL-193, BL-195, BL-197) in MR !5, 2026-10-19; build decisions in sections 6a and 6b. Values tagged [Default] are starting values until the Material Planning team confirms them (section 4) |
+| Status | **Accepted 2026-10-19.** The owner approved every requirement, default, backlog row and decision in this file ("approve all", 2026-10-19). Wave 1 (BL-187, BL-192, BL-200, BL-201, BL-203) is built in GitLab MR !4 and wave 2 (BL-188, BL-190, BL-193, BL-195, BL-197) in MR !5 and wave 3 (BL-189, BL-191, BL-194 feedstock part, BL-196, BL-198, BL-199) in MR !6, 2026-10-19; build decisions in sections 6a to 6c. Values tagged [Default] are starting values until the Material Planning team confirms them (section 4) |
 | Date | 2026-10-19 |
 | Source meeting | Weekly SC Hub, 2026-10-14: DA, ROP and call-off. Cited as [MoM n] |
 | Other sources | *OSIP Playbook.pptx* (SharePoint, FSE Laboratory), cited [PPT n] by slide; *Framework OSIP PM 2026* (Google Sheets), cited [XLS sheet]. Neither is stored in this repository |
@@ -303,6 +303,10 @@ Each row carries its question ID into the code comment and the "Provisional" lab
 | DRC-D14 | "Fixed stock reconcile" page | Rename and rework as feedstock reconcile |
 | DRC-D15 | Supplier ROP column on the stock template | Display only |
 | DRC-D16 | Audit of past figures after a rule changes | Each figure keeps its inputs and rules version; recalculate forward only |
+| DRC-D17 | Supplier confirmation before suppliers see DA (DRC-8, BL-194) | Accepted 2026-10-19: suppliers confirm their current feedstock with a confirmation date; confirming Incoming DA waits for BL-204 (DRC-D10) |
+| DRC-D18 | Access to the DA history (DRC-3, BL-189) | Accepted 2026-10-19: no role gate, as `CLAUDE.md` §65 holds for every page; planners find it under Review, Procurement and Finance under Audit; a supplier reads nothing |
+| DRC-D19 | NPD default on sample data (DRC-12a) | Accepted 2026-10-19: keep "until first order fulfilled" (D1); the page notes that sample PO history is partial, so most sample materials read as NPD |
+| DRC-D20 | Supplier-below-ROP alert after DRC-D15 (REQ-E08-05) | Accepted 2026-10-19: the alert compares supplier stock with the system ROP Supplier; it does not fire where that figure is not available |
 
 ---
 
@@ -345,6 +349,24 @@ Readings the builders made where the sources leave a gap. Each sits behind a rul
 | DRC-B26 | CV (DRC-11) | Historical weekly sell-in for the 26 weeks before now, stock-outs filled as the engine fills them; each SKU is its own variant (no variant grouping in the data) |
 | DRC-B27 | Production limit (DRC-9b) | The existing "Allocated" row on PTI Capacity is the production limit, relabelled and marked Provisional |
 | DRC-B28 | Strategic buffer (DRC-9a) | Festive window = the months from the first day of Ramadan to Lebaran (event calendar); CNY is not in the calendar and is not shown; an incomplete baseline shows "—" |
+
+## 6c. Build decisions, wave 3 (2026-10-19)
+
+| ID | Item | Decision |
+|---|---|---|
+| DRC-B29 | Level field (DRC-D11) | `t_osiplevel_set`, atom `osiplevel:set` in the planning lane; levels 1 to 6; levels 1 and 2 use the level-4 formula, flagged; confirming a level closes the NPD review task |
+| DRC-B30 | Level 5 and 6 inputs (DRC-10) | Level 5: MDQ = MOQ [Default]. Level 6: c = daily LTP, d = 1 day, rounded to a pallet |
+| DRC-B31 | Supplier-side ROPs (DRC-10, B10) | CEILING(ROP Fisik daily demand × the days of one lead-time leg, MPQ), no safety: ROP Supplier = queue + production, ROP FS = ordering material, ROP to principal = order to principal; a leg the route lacks reads "Not available" |
+| DRC-B32 | NPD "first order fulfilled" (DRC-12a) | Accepted goods-receipt quantity reaches the first non-rejected PO's quantity; a value-only line counts when the PO is Delivered or Closed. Transition products are not told apart (no flag in the data) |
+| DRC-B33 | NPD review task (DRC-12a) | Raised once when the tag drops from NPD; a material seen for the first time only sets a baseline |
+| DRC-B34 | Call-off trigger run (DRC-13 BR-04) | Runs on PTI SOH updates through the eWM refresh seam (`applyPtiStockRefresh`); the seeded stock is not an update. No screen records PTI SOH, so in the demo the trigger fires only through the seam |
+| DRC-B35 | Trigger quantity (DRC-13 BR-01b, A7) | Max − (SOH + released not yet received), stepped down to the largest whole MPQ that fits under PTI's Max (DRC-10); room below one MPQ drafts nothing |
+| DRC-B36 | Trigger line choice (DRC-13 BR-01a) | Oldest blanket line with balance across every supplier of the material; the remainder goes to the next line, then a PR recommendation |
+| DRC-B37 | One open draft (DRC-13 BR-01) | Any draft of the material, the planner's own included, blocks a new one; a released or dismissed hub draft re-arms only after SOH is seen above ROP Fisik |
+| DRC-B38 | Trigger draft path (DRC-13) | The hub creates the draft directly (`origin: 'ropFisik'`), with its figures and rules version stored; release is gated by the planner only. Whether X-03 (engine drafts withheld until the engine is live) should also apply is open |
+| DRC-B39 | Plant (DRC-D12) | PTI SOH records carry a plant (sample J6 for raw material, J2 for packaging); comparison is combined |
+| DRC-B40 | Delayed call-off (DRC-5) | Reason code "LTP dropped" (new reason list `callOffChange`); the supplier answers through the existing confirmation; reject keeps the call-off on its old date; DA moves only after approval |
+| DRC-B41 | Feedstock confirmation (DRC-8, DRC-D17) | `t_feedstock_confirm`, atom `feedstock:confirm` in the supplier fulfilment lane; shown on PTI Inventory; "Missed" only after a first confirmation; not in the MR-2 compliance score; no planner review marker |
 
 ## 7. Build order
 
