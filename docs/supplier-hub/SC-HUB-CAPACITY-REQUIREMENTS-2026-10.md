@@ -234,19 +234,21 @@ Wave 3 is last because those tables carry long text (Stabilise's Rule column) or
 
 **Design (accepted 2026-10-13).** `SC-HUB-DEMAND-ANTICIPATION-BRIEF-2026-10.md` sets how these rules are built: the name "Demand anticipation" (never "DA", which means Delivery Agreement in the code), the grain, the formula (stock and reorder point counted once, in week 1), the publication store and verb, planner-recorded consumption, open supply as released call-offs by need week, and Ary's use case as a golden test fixture. Decisions CAP-D10 to CAP-D16 below.
 
+**Superseded in part, 2026-10-19.** The 2026-10-14 meeting replaced the fixed 4-week horizon and the absorbing rule: CAP-10 BR-01, BR-02 and BR-04 and CAP-11 BR-02 and BR-03 are superseded by DRC-2 in `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` (rolling demand anticipation over the lead time, with carry-over). BL-179 and BL-180 are reopened under BL-188. CAP-12 stands; its gap reads against the rolling figure.
+
 ### CAP-10 DA frozen in the current horizon
 
-- BR-01. The horizon is 4 weeks [MOM 4 D2]. The current horizon is the 4 weeks starting with the current week [Proposed].
-- BR-02. When DA is published for a horizon, its 4 weeks are frozen. A recalculation (new LTP, stock, consumption) changes only week 5 onward [MOM 4 D1].
+- BR-01. ~~The horizon is 4 weeks [MOM 4 D2]. The current horizon is the 4 weeks starting with the current week [Proposed].~~ Superseded 2026-10-19 by DRC-2 BR-01: the horizon is the material's lead time.
+- BR-02. ~~When DA is published for a horizon, its 4 weeks are frozen. A recalculation (new LTP, stock, consumption) changes only week 5 onward [MOM 4 D1].~~ Superseded 2026-10-19 by DRC-2 BR-01 and BR-03: the horizon rolls weekly and a remainder carries over.
 - BR-03. The planner sees frozen weeks with a lock and the recalculated figure beside them as "would be" (read only).
-- BR-04. ~~The horizon rolls weekly [Proposed]: each Monday, week 5 enters the frozen window.~~ Superseded 2026-10-13 by CAP-D17: weeks group into fixed 4-week horizons, and publishing freezes the horizon that contains the current week, once.
+- BR-04. ~~The horizon rolls weekly [Proposed]: each Monday, week 5 enters the frozen window.~~ Superseded 2026-10-13 by CAP-D17: weeks group into fixed 4-week horizons, and publishing freezes the horizon that contains the current week, once. CAP-D17 is itself superseded 2026-10-19 by DRC-2 BR-01.
 - AC-01. A new LTP that raises week 2 by 10,000 leaves week 2's DA unchanged and shows "would be +10,000".
 
 ### CAP-11 Lower consumption absorbed in the next horizon
 
 - BR-01. At the end of each week, the hub compares actual consumption with DA for the frozen weeks so far. The **excess** is the sum of (DA − consumption) over weeks where consumption was lower.
-- BR-02. The excess is taken off DA from week 5 onward [MOM 4 D2].
-- BR-03. It must be fully absorbed by week 8 (week 4 of the next horizon) [MOM 4 D2]. The hub spreads it evenly over weeks 5 to 8, never below 0 in a week; what one week cannot take moves to the next [Proposed].
+- BR-02. ~~The excess is taken off DA from week 5 onward [MOM 4 D2].~~ Superseded 2026-10-19 by DRC-2 BR-03 and DRC-4 BR-02: supply above DA is absorbed in the last week of the horizon.
+- BR-03. ~~It must be fully absorbed by week 8 (week 4 of the next horizon) [MOM 4 D2]. The hub spreads it evenly over weeks 5 to 8, never below 0 in a week; what one week cannot take moves to the next [Proposed].~~ Superseded 2026-10-19 by DRC-2 BR-03.
 - BR-04. If it cannot be absorbed by week 8 (DA in weeks 5 to 8 is smaller than the excess), the hub raises an alert to the planner with the remaining amount.
 - BR-05. Each adjustment shows on the week as "−n, absorbed from W41 to W44 excess".
 - AC-01. Excess 12,000 over DA of 20,000/wk in weeks 5 to 8 gives 17,000/wk.
@@ -283,9 +285,9 @@ Wave 3 is last because those tables carry long text (Stabilise's Rule column) or
 | CAP-D9 | Several blanket POs for one supplier × material: each drawn by the full LTP, pooled, or one after another? | One after another, oldest first; one alert per group, on the last PO (CAP-9 BR-01a) | Accepted, 2026-10-13 |
 | CAP-D10 | Name | "Demand anticipation" on screen, `demandAnticipation` in code, never "DA" | Accepted, 2026-10-13 |
 | CAP-D11 | Grain and splitting | Supplier × material × week; monthly raw-material LTP spread by day; stock and reorder point shared by LTP share over the frozen 4 weeks | Accepted, 2026-10-13 |
-| CAP-D12 | Formula | Stock and reorder point counted once, in week 1; later weeks equal the LTP; open orders not netted; one function checked by Ary's fixture | Accepted, 2026-10-13 |
-| CAP-D13 | Freezing | Append-only publication store; "Publish demand anticipation" verb on `forecast:publish`; a frozen week keeps its first value; "would be" beside it; horizon rolls on publish | Accepted, 2026-10-13 |
+| CAP-D12 | Formula | Stock and reorder point counted once, in week 1; later weeks equal the LTP; open orders not netted; one function checked by Ary's fixture | Accepted, 2026-10-13; superseded 2026-10-19 by DRC-2 BR-02 (DA = LTP, safety order in week 1) |
+| CAP-D13 | Freezing | Append-only publication store; "Publish demand anticipation" verb on `forecast:publish`; a frozen week keeps its first value; "would be" beside it; horizon rolls on publish | Accepted, 2026-10-13; freezing superseded 2026-10-19 by DRC-2 (rolling horizon with carry-over). The append-only store is kept and stamped per DRC-D16 |
 | CAP-D14 | Consumption | Recorded by the planner (typed or uploaded), marked as awaiting the SAP goods-issue feed; split by demand anticipation share | Accepted, 2026-10-13 |
 | CAP-D15 | Open supply and the extra PO | Released call-offs by need week; call-off on the oldest blanket line first, otherwise "New PO needed"; own section on What to order | Accepted, 2026-10-13 |
-| CAP-D16 | Ary's numbers | Golden fixture and test; placeholders in one config block | Accepted, 2026-10-13 |
-| CAP-D17 | How the frozen window moves | Fixed 4-week horizons; Publish freezes the horizon containing the current week, once, never a future one | Accepted, 2026-10-13 |
+| CAP-D16 | Ary's numbers | Golden fixture and test; placeholders in one config block | Accepted, 2026-10-13; the fixture moves to BL-209 beside the PPT 7 to 9 fixtures (DRC design rule 4) |
+| CAP-D17 | How the frozen window moves | Fixed 4-week horizons; Publish freezes the horizon containing the current week, once, never a future one | Accepted, 2026-10-13; superseded 2026-10-19 by DRC-2 BR-01 (horizon = lead time, rolling weekly) |
