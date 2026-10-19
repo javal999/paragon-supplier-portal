@@ -146,12 +146,11 @@ The owner approved every requirement, default and decision in `SC-HUB-DA-ROP-CAL
 
 | ID | Item | Why | Size | Blocked by | Detail |
 |---|---|---|---|---|---|
-| BL-212 | `OSIP_ROP_READ.npdLtpWeeks` (`osipRopRules.js`) is read from `consumptionMovingAvgWeeks` when the module loads, so a sandbox change to that window does not reach the NPD demand branch; read it at call time, as BL-210 did for `fisikConsumptionWeeks` | Found by the BL-210 build | S | Nothing | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-12a |
 | BL-204 | On hold: supplier view of demand anticipation, and the supplier confirming Incoming DA (moved from BL-194, DRC-D17) | Suppliers must not plan on unconfirmed figures (DRC-D10) | M | Material Planning: A1, A2, B1 to B4 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-1 |
 | BL-205 | On hold: protection buffer | Uplift for non-festive materials unknown | ? | Material Planning: C3 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-9c |
 | BL-206 | On hold: NPD vs CMM rules and material-code prefixes | MoM 4C action item | ? | MDM and Material Planner: D2 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-12b |
 | BL-207 | On hold: feedstock reconcile leftover rule and final formula | "Discussed later" [Owner, 2026-10-16] | ? | Owner | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-15b |
-| BL-208 | On hold: automatic OSIP level classification | Number of levels unknown (6, 7 or 8) | L | Material Planning: C2, F5 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-19 |
+| BL-208 | Awaiting owner review (built as a proposal): automatic OSIP level classification | Number of levels unknown (6, 7 or 8) | L | Material Planning: C2, F5 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-19 |
 | BL-209 | Golden fixture from Ary Hidayat's spike use case (moves from CAP-D16) | Checks the rolling formula against Ary's numbers | S | Ary | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` CAP-D16 |
 
 ---
@@ -182,6 +181,7 @@ The owner approved every requirement, default and decision in `SC-HUB-DA-ROP-CAL
 
 | ID | Item | Closed | By |
 |---|---|---|---|
+| BL-212 | `OSIP_ROP_READ.npdLtpWeeks` (`osipRopRules.js`) is read from `consumptionMovingAvgWeeks` when the module loads, so a sandbox change to that window does not reach the NPD demand branch; read it at call time, as BL-210 did for `fisikConsumptionWeeks` | 2026-10-19 | Branch `feat/drc-bl208-212`: `npdLtpWeeks(rules)` read at call time |
 | BL-211 | One consumption split per supplier: the recorded-consumption grid on Demand anticipation splits by DA share (CAP-D14), the OSIP safety figures and the DRC-18 rows by LTP share (CAP-D11) | 2026-10-19 | GitLab MR !8: LTP share everywhere (DRC-D21) |
 | BL-210 | Align the live functions with the sandbox: `rollingDaFigure` takes no consumption, koli or MOQ, so under `sdSource: consumption12w` or `safetyRounding: koli/moq` DA's week-1 safety order differs from ROP Order's; `safetyOrder` takes no typed SD; `OSIP_SAFETY_READ.fisikConsumptionWeeks` is fixed when the module loads, so the consumption-window switch moves no figure | 2026-10-19 | GitLab MR !8: DA week-1 safety equals ROP Order safety under every switch; consumption window read at call time; SD override in `safetyOrder` |
 | BL-202 | What-if sandbox: one material, editable inputs and rule switches, 52 weeks RM / 24 weeks PM, named scenarios compared up to 3, PTI planners only, analysis only | 2026-10-19 | Built in GitLab MR !7: `/buyer/what-if`; decisions DRC-B42 to B48 |

@@ -121,7 +121,7 @@
 | DRC-15b | Feedstock reconcile leftover rule and final formula | Hold | Owner: "discussed later" |
 | DRC-17 | What-if sandbox | After module | Scope accepted 2026-10-16 |
 | DRC-18 | LTP vs FG demand; consumption moving average | Build now | A11 as [Default] |
-| DRC-19 | Automatic OSIP level classification | Hold | C2, F5; the level field exists from DRC-D11 |
+| DRC-19 | Automatic OSIP level classification | Built, proposal | Built as a proposal, awaiting owner review: the system suggests a level (CV stable 4, fluctuative 3; order-method tags when master data carries them; JIT not suggested without pallet-mix data); the planner confirms it through `t_osiplevel_set` |
 
 DRC-16 (daily FS reconcile) is merged into DRC-15a.
 
