@@ -13,6 +13,7 @@ import { Routes, Route } from 'react-router-dom';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER } from '@test/test-utils';
+import BuyerRfxRoutes from '@test/buyerRfxRoutes';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { NO_PERSON } from '@context/noPerson';
@@ -38,8 +39,6 @@ import { sdcClock } from '@services/sdc';
 import { rfxEn, rfxId } from '@lib/i18n/rfx';
 import i18n from '@lib/i18n';
 import { useToast } from '@hooks/useToast';
-import BuyerRfi from './BuyerRfi';
-import BuyerRfp from './BuyerRfp';
 import BuyerSourcingEvent from './BuyerSourcingEvent';
 import SupplierRfi from './SupplierRfi';
 import SupplierRfp from './SupplierRfp';
@@ -220,7 +219,7 @@ describe('REQ-E03-01 — the invitee search on the sourcing wizard', () => {
 
 describe('REQ-E03-02 — the information request', () => {
   it('PTI reads the event, its invitees with OTIF, and the two SUBMITTED responses', async () => {
-    renderWithProviders(<BuyerRfi />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfi' });
     expect(await screen.findByTestId('rfi-row-rfi-001')).toHaveTextContent('RFI-2026-001');
     fireEvent.click(screen.getByTestId('rfi-open-rfi-001'));
     const detail = await screen.findByTestId('rfi-detail-rfi-001');
@@ -275,7 +274,7 @@ describe('REQ-E03-02 — the information request', () => {
 
 describe('REQ-E03-04 — terms as rows, suppliers as columns, deviations highlighted', () => {
   it('renders every asked term, and marks the deviations with their comment', async () => {
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-001'));
     const detail = await screen.findByTestId('rfp-detail-rfp-001');
     expect(within(detail).getByTestId('rfp-term-paymentTerms')).toBeInTheDocument();
@@ -289,7 +288,7 @@ describe('REQ-E03-04 — terms as rows, suppliers as columns, deviations highlig
   });
 
   it('the proposals are scored with CR-15 because the request carries price and lead time', async () => {
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-001'));
     const detail = await screen.findByTestId('rfp-detail-rfp-001');
     expect(within(detail).getAllByText(/Weighted score/).length).toBeGreaterThan(0);
@@ -1043,7 +1042,7 @@ async function partlyAwardedTundra(svc) {
 describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', () => {
   it('buyer steps 2–4 / BR-02 — the buyer opens a firm-offer round; a supplier failing CR-23 cannot be selected', async () => {
     await closedTundra(new MockCommandService());
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
     fireEvent.click(await screen.findByTestId('rfp-ask-firm-rfp-002'));
     const form = await screen.findByTestId('rfp-round-form-rfp-002');
@@ -1110,7 +1109,7 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     const svc = new MockCommandService();
     await closedTundra(svc);
     await fullSetOffersClosed(svc);
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
     // BR-03 — the firm prices sit beside the indicative ones, labelled Firm.
     expect(
@@ -1144,7 +1143,10 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
           .status
       ).toBe('Awarded')
     );
-    await waitFor(() => expect(screen.getByTestId('rfp-row-rfp-002')).toHaveTextContent('Awarded'));
+    // B-09 — the RFP is read on its own page: its header status reads Awarded.
+    await waitFor(() =>
+      expect(screen.getByTestId('rfp-event-status')).toHaveTextContent('Awarded')
+    );
     expect(await screen.findByTestId(`award-line-${FULL_SET}-sup-007`)).toHaveTextContent('60%');
     // RFx UX B-07 — the awarded option stays listed, greyed "Awarded" and not
     // pickable; the open one can still go to an RFQ.
@@ -1202,7 +1204,7 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     await closedTundra(svc);
     await partlyAwardedTundra(svc);
 
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
     fireEvent.click(await screen.findByTestId('rfp-ask-firm-rfp-002'));
     const form = await screen.findByTestId('rfp-round-form-rfp-002');
@@ -1239,7 +1241,7 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     const svc = new MockCommandService();
     await closedTundra(svc);
     await partlyAwardedTundra(svc);
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
     const settle = await screen.findByTestId('award-settle-rest');
     expect(settle).toHaveTextContent('Marks every open option “Will not award”');
@@ -1262,14 +1264,17 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
       awardStore.all().find((a) => a.eventType === 'rfp' && a.lines.length === 0)
     );
     expect(closeOut.reason).toBe('Pump and cap stays with the current supplier.');
-    await waitFor(() => expect(screen.getByTestId('rfp-row-rfp-002')).toHaveTextContent('Awarded'));
+    // B-09 — the RFP is read on its own page: its header status reads Awarded.
+    await waitFor(() =>
+      expect(screen.getByTestId('rfp-event-status')).toHaveTextContent('Awarded')
+    );
   });
 
   it('BL-130 — "Will not award the rest" is not offered on a Closed RFP with nothing awarded yet', async () => {
     const svc = new MockCommandService();
     await closedTundra(svc);
     await fullSetOffersClosed(svc);
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
     // Population control: the award panel is on the page.
     expect(await screen.findByTestId(`award-item-${FULL_SET}`)).toBeInTheDocument();
@@ -1334,7 +1339,7 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     ).toEqual(['revised-drawing.pdf']);
     first.unmount();
 
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
     const seen = await screen.findByTestId(`rfp-round-docs-${roundId}-sup-007`);
     expect(seen).toHaveTextContent('Documents from');

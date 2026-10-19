@@ -15,6 +15,7 @@
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderWithProviders, BUYER } from '@test/test-utils';
+import BuyerRfxRoutes from '@test/buyerRfxRoutes';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { NO_PERSON } from '@context/noPerson';
@@ -24,7 +25,6 @@ import { quotationStore } from '@services/data/mock/stores/quotationStore';
 import { sdcClock } from '@services/sdc';
 import { rfpEventViews } from '@services/data/mock/rfxReadModel';
 import { mockDataService } from '@services/data/mock/mockDataService';
-import BuyerRfp from '../BuyerRfp';
 import SupplierRfp from '../SupplierRfp';
 import { rfxNow } from './rfxDisplay';
 
@@ -69,7 +69,7 @@ const TITLE = 'Q1 2027 bottle supply proposal';
 
 /** @param {CurrentIdentity} [identity] */
 const openWizard = async (identity = BUYER_SEAT) => {
-  renderWithProviders(<BuyerRfp />, { identity });
+  renderWithProviders(<BuyerRfxRoutes />, { identity, route: '/buyer/rfp' });
   fireEvent.click(await screen.findByTestId('rfp-new'));
 };
 
@@ -278,7 +278,7 @@ describe('section 3.6a — the buyer raises a proposal request', () => {
   });
 
   it('CE-06 · a seat holding neither atom reads WHOSE act each one is', async () => {
-    renderWithProviders(<BuyerRfp />, { identity: DRAFTER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: DRAFTER_SEAT, route: '/buyer/rfp' });
     await screen.findByTestId('rfp-row-rfp-001');
     expect(screen.queryByTestId('rfp-new')).not.toBeInTheDocument();
     expect(screen.getByTestId('handoff-rfp-create')).toHaveAttribute('data-handoff', 'withheld');
@@ -286,7 +286,7 @@ describe('section 3.6a — the buyer raises a proposal request', () => {
 
     // POSITIVE TWIN.
     cleanup();
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     expect(await screen.findByTestId('rfp-new')).toBeInTheDocument();
     expect(screen.queryByTestId('handoff-rfp-create')).not.toBeInTheDocument();
   });
@@ -294,7 +294,7 @@ describe('section 3.6a — the buyer raises a proposal request', () => {
 
 describe('REQ-E03-04 — closing the window stops the proposals', () => {
   it('a closed RFP is still readable, and the term boxes are shut', async () => {
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-001'));
     fireEvent.click(await screen.findByTestId('rfp-close-rfp-001'));
     // RFx UX 1C (B-05) — the close is dispatched from its confirmation sheet.

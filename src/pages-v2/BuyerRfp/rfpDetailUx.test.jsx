@@ -16,6 +16,7 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER } from '@test/test-utils';
+import BuyerRfxRoutes from '@test/buyerRfxRoutes';
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import {
   resetRfxStores,
@@ -26,7 +27,6 @@ import { rfqStore } from '@services/data/mock/stores/rfqStore';
 import { quotationStore } from '@services/data/mock/stores/quotationStore';
 import { sdcClock } from '@services/sdc';
 import { rfxNow } from '../rfx/rfxDisplay';
-import BuyerRfp from '.';
 
 /** @type {CurrentIdentity} */
 const BUYER_SEAT = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
@@ -40,7 +40,7 @@ beforeEach(() => {
 
 /** @param {string} id */
 const openDetail = async (id) => {
-  renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+  renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
   fireEvent.click(await screen.findByTestId(`rfp-open-${id}`));
   return screen.findByTestId(`rfp-detail-${id}`);
 };

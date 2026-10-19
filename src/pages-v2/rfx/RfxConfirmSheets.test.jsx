@@ -10,6 +10,7 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import i18n from '@lib/i18n';
 import { renderWithProviders, BUYER } from '@test/test-utils';
+import BuyerRfxRoutes from '@test/buyerRfxRoutes';
 import { everyVendorQualified } from '@test/everyVendorQualified';
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import {
@@ -23,8 +24,6 @@ import { quotationStore } from '@services/data/mock/stores/quotationStore';
 import { sdcClock } from '@services/sdc';
 import { rfxEn, rfxId } from '@lib/i18n/rfx';
 import BuyerSourcingEvent from '../BuyerSourcingEvent';
-import BuyerRfi from '../BuyerRfi';
-import BuyerRfp from '../BuyerRfp';
 import { awardEffects, closeEffects, notAwardedOnFinal } from './ConfirmSheet';
 
 const BUYER_SEAT = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
@@ -181,7 +180,7 @@ describe('B-05 — cancelling an award is a sheet too', () => {
 
 describe('B-05 — closing an RFI or RFP waits for the sheet', () => {
   it('RFI: "Close the event" opens the sheet; Back leaves it Open; the sheet closes it', async () => {
-    renderWithProviders(<BuyerRfi />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfi' });
     fireEvent.click(await screen.findByTestId('rfi-open-rfi-001'));
     fireEvent.click(await screen.findByTestId('rfi-close-rfi-001'));
     const sheet = await screen.findByTestId('rfi-close-sheet-rfi-001');
@@ -200,7 +199,7 @@ describe('B-05 — closing an RFI or RFP waits for the sheet', () => {
   });
 
   it('RFP: the close is dispatched only from the sheet', async () => {
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-001'));
     fireEvent.click(await screen.findByTestId('rfp-close-rfp-001'));
     expect(await screen.findByTestId('rfp-close-sheet-rfp-001')).toBeInTheDocument();

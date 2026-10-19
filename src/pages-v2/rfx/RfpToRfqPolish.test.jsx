@@ -17,6 +17,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { fireEvent, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
+import BuyerRfxRoutes from '@test/buyerRfxRoutes';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { resetRfxStores, rfpEventStore } from '@services/data/mock/stores/rfxStores';
@@ -32,7 +33,7 @@ import { obviousItemType, seedFromRfp } from '../sourcing/rfqDraft';
 import { defaultEvaluationTierQty, topRankedOf } from '@services/sourcing/rfqComparison';
 import { bestScoredByItem } from '@services/data/mock/rfxReadModel';
 import BuyerRfp from '../BuyerRfp';
-import BuyerRfi from '../BuyerRfi';
+import BuyerRfpEvent from '../BuyerRfp/BuyerRfpEvent';
 import BuyerRequisitions from '../BuyerRequisitions';
 import BuyerSourcingEvent from '../BuyerSourcingEvent';
 import SupplierRFQs from '../SupplierRFQs';
@@ -126,6 +127,7 @@ const renderBoard = (identity = BUYER_SEAT) =>
   renderWithProviders(
     <Routes>
       <Route path="/buyer/rfp" element={<BuyerRfp />} />
+      <Route path="/buyer/rfp/:rfpId" element={<BuyerRfpEvent />} />
       <Route path="/buyer/rfq" element={<LocationProbe />} />
     </Routes>,
     { identity, route: '/buyer/rfp' }
@@ -166,7 +168,9 @@ describe('"Create RFQ from this RFP" on the board', () => {
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-001'));
     await screen.findByTestId('rfp-detail-rfp-001');
     expect(screen.queryByTestId('rfp-to-rfq-rfp-001')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId('rfp-open-rfp-003'));
+    // B-09 — the detail is its own page: back to the list, then the next event.
+    fireEvent.click(screen.getByTestId('rfp-event-back'));
+    fireEvent.click(await screen.findByTestId('rfp-open-rfp-003'));
     await screen.findByTestId('rfp-detail-rfp-003');
     expect(screen.queryByTestId('rfp-to-rfq-rfp-003')).not.toBeInTheDocument();
   });
@@ -203,7 +207,7 @@ describe('"Created from …" names every recorded source by its document number,
     renderEvent('rfq-021');
     const el = await at('event-from-rfp');
     expect(el).toHaveTextContent('Created from RFP-2026-002');
-    expect(hrefOf(el)).toBe('/buyer/rfp?open=rfp-002');
+    expect(hrefOf(el)).toBe('/buyer/rfp/rfp-002');
   });
 
   it('sourceRfiId → RFI-2026-002 (the number, not the internal id rfi-002), linked', async () => {
@@ -212,7 +216,7 @@ describe('"Created from …" names every recorded source by its document number,
     const el = await at('event-from-rfi');
     expect(el).toHaveTextContent('Created from RFI-2026-002');
     expect(el).not.toHaveTextContent('rfi-002');
-    expect(hrefOf(el)).toBe('/buyer/rfi?open=rfi-002');
+    expect(hrefOf(el)).toBe('/buyer/rfi/rfi-002');
   });
 
   it('the requisition → PR-2026-00343, read from the PR that records this RFQ as its linked document', async () => {
@@ -261,13 +265,13 @@ describe('"Created from …" names every recorded source by its document number,
   });
 
   it('the links land: ?open= opens the RFP, the RFI and the requisition', async () => {
-    const { unmount } = renderWithProviders(<BuyerRfp />, {
+    const { unmount } = renderWithProviders(<BuyerRfxRoutes />, {
       identity: BUYER_SEAT,
       route: '/buyer/rfp?open=rfp-002'
     });
     expect(await screen.findByTestId('rfp-detail-rfp-002')).toBeInTheDocument();
     unmount();
-    const r2 = renderWithProviders(<BuyerRfi />, {
+    const r2 = renderWithProviders(<BuyerRfxRoutes />, {
       identity: BUYER_SEAT,
       route: '/buyer/rfi?open=rfi-002'
     });

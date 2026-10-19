@@ -9,6 +9,7 @@
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER } from '@test/test-utils';
+import BuyerRfxRoutes from '@test/buyerRfxRoutes';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { NO_PERSON } from '@context/noPerson';
@@ -22,8 +23,6 @@ import { rfqStore } from '@services/data/mock/stores/rfqStore';
 import { quotationStore } from '@services/data/mock/stores/quotationStore';
 import { sdcClock } from '@services/sdc';
 import { resetRfxTemplatesForTest } from '@services/sourcing/rfxTemplates';
-import BuyerRfi from '../BuyerRfi';
-import BuyerRfp from '../BuyerRfp';
 import SupplierRfi from '../SupplierRfi';
 import SupplierRfp from '../SupplierRfp';
 import { rfxNow } from './rfxDisplay';
@@ -57,7 +56,7 @@ const next = () => fireEvent.click(screen.getByRole('button', { name: 'Next' }))
 
 describe('the option editor (BL-36) — a choice question is written, refused, then sent', () => {
   it('one option is refused by name; a second unblocks it; the supplier picks from the buyer’s words', async () => {
-    renderWithProviders(<BuyerRfi />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfi' });
     fireEvent.click(await screen.findByTestId('rfi-new'));
     fireEvent.change(screen.getByLabelText('Title'), {
       target: { value: 'Sticker converters 2027' }
@@ -183,7 +182,7 @@ describe('the supplier form renders and validates every kind (the Oslo RFI)', ()
   });
 
   it('the buyer reads the answers in their kind — labels, range, percent', async () => {
-    renderWithProviders(<BuyerRfi />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfi' });
     fireEvent.click(await screen.findByTestId('rfi-open-rfi-002'));
     expect(await screen.findByTestId('rfi-answer-oslo-dieCut-sup-008')).toHaveTextContent(
       'Flexible (rotary) die'
@@ -199,16 +198,21 @@ describe('the supplier form renders and validates every kind (the Oslo RFI)', ()
 describe('RFI → RFP (D3)', () => {
   it('offered on an Open RFI, and absent on a Draft one', async () => {
     rfiEventStore.update('rfi-002', (e) => ({ ...e, status: 'Draft' }));
-    renderWithProviders(<BuyerRfi />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfi' });
     fireEvent.click(await screen.findByTestId('rfi-open-rfi-001'));
     expect(await screen.findByTestId('rfi-to-rfp-rfi-001')).toBeInTheDocument();
-    fireEvent.click(screen.getByTestId('rfi-open-rfi-002'));
+    // B-09 — the detail is its own page: back to the list, then the next event.
+    fireEvent.click(screen.getByTestId('rfi-event-back'));
+    fireEvent.click(await screen.findByTestId('rfi-open-rfi-002'));
     await screen.findByTestId('rfi-detail-rfi-002');
     expect(screen.queryByTestId('rfi-to-rfp-rfi-002')).not.toBeInTheDocument();
   });
 
   it('?rfi= opens the wizard pre-filled, and the sent RFP shows "Created from RFI-…"', async () => {
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT, route: '/buyer/rfp?rfi=rfi-002' });
+    renderWithProviders(<BuyerRfxRoutes />, {
+      identity: BUYER_SEAT,
+      route: '/buyer/rfp?rfi=rfi-002'
+    });
     expect(await screen.findByTestId('rfp-new-from-rfi')).toHaveTextContent(
       'Pre-filled from RFI-2026-002'
     );
@@ -255,7 +259,7 @@ describe('RFI → RFP (D3)', () => {
 
 describe('custom terms and indicative pricing on the RFP surfaces', () => {
   it('the wizard refuses a custom number term asked in words, and takes it as a number', async () => {
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-new'));
     fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Custom-term probe' } });
     fireEvent.change(screen.getByTestId('rfp-new-family'), { target: { value: 'packaging' } });
@@ -281,7 +285,7 @@ describe('custom terms and indicative pricing on the RFP surfaces', () => {
   });
 
   it('the buyer compares Tundra options × suppliers, Indicative, with the supplier’s own option', async () => {
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
     const cmp = await screen.findByTestId('rfp-pricing-rfp-002');
     expect(within(cmp).getByTestId('rfp-pricing-rfp-002-indicative')).toHaveTextContent(
@@ -342,7 +346,7 @@ describe('the gates as the supplier meets them (ICY)', () => {
     expect(row.termsAcceptedAt).toBeDefined();
 
     cleanup();
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-003'));
     expect(await screen.findByTestId('rfp-accepted-rfp-003-sup-007')).not.toHaveTextContent(
       'Not yet'
@@ -354,8 +358,11 @@ describe('the gates as the supplier meets them (ICY)', () => {
 
 describe('templates from the wizard (D2)', () => {
   it('save as template, then start a new RFI from it', async () => {
-    renderWithProviders(<BuyerRfi />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfi' });
     fireEvent.click(await screen.findByTestId('rfi-open-rfi-002'));
+    // B-10 — "Save as a template" is an item of the actions row's menu.
+    fireEvent.click(await screen.findByTestId('rfi-more-rfi-002'));
+    fireEvent.click(screen.getByTestId('rfi-more-rfi-002-template'));
     fireEvent.change(
       await screen.findByLabelText('Save as a template', {
         selector: '#rfi-rfi-002-template-name'
@@ -366,7 +373,9 @@ describe('templates from the wizard (D2)', () => {
     );
     fireEvent.click(screen.getByTestId('rfi-rfi-002-template-save'));
 
-    fireEvent.click(screen.getByTestId('rfi-new'));
+    // B-09 — "New RFI" is on the list: back from the event's page first.
+    fireEvent.click(screen.getByTestId('rfi-event-back'));
+    fireEvent.click(await screen.findByTestId('rfi-new'));
     const pick = await screen.findByTestId('rfi-new-start-pick');
     const option = /** @type {HTMLOptionElement} */ (
       within(pick).getByRole('option', { name: 'Sticker converter survey' })
