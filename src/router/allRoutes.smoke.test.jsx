@@ -35,6 +35,8 @@ import BuyerOrders from '@pages-v2/BuyerOrders';
 import BuyerSourcing from '@pages-v2/BuyerSourcing';
 import BuyerRfi from '@pages-v2/BuyerRfi';
 import BuyerRfp from '@pages-v2/BuyerRfp';
+import BuyerRfpEvent from '@pages-v2/BuyerRfp/BuyerRfpEvent';
+import BuyerRfiEvent from '@pages-v2/BuyerRfiEvent';
 import BuyerSourcingEvent from '@pages-v2/BuyerSourcingEvent';
 import SupplierRfi from '@pages-v2/SupplierRfi';
 import SupplierRfp from '@pages-v2/SupplierRfp';
@@ -223,6 +225,21 @@ const ROUTES = [
     pattern: '/buyer/rfp',
     at: '/buyer/rfp',
     element: <BuyerRfp />,
+    identity: BUYER
+  },
+  // RFx UX 2A (B-09) — the RFI and RFP details as their own pages.
+  {
+    name: 'buyer/rfi/:rfiId',
+    pattern: '/buyer/rfi/:rfiId',
+    at: '/buyer/rfi/rfi-001',
+    element: <BuyerRfiEvent />,
+    identity: BUYER
+  },
+  {
+    name: 'buyer/rfp/:rfpId',
+    pattern: '/buyer/rfp/:rfpId',
+    at: '/buyer/rfp/rfp-001',
+    element: <BuyerRfpEvent />,
     identity: BUYER
   },
   {

@@ -11,6 +11,7 @@ import { Routes, Route } from 'react-router-dom';
 import { screen, fireEvent, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER } from '@test/test-utils';
+import BuyerRfxRoutes from '@test/buyerRfxRoutes';
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { awardStore, resetRfxStores, rfpEventStore } from '@services/data/mock/stores/rfxStores';
 import { rfqStore } from '@services/data/mock/stores/rfqStore';
@@ -22,8 +23,6 @@ import { MockCommandService } from '@services/data/mock/MockCommandService';
 import { NO_PERSON } from '@context/noPerson';
 /** @import { QueryScope } from '@services/data/types' */
 import BuyerSourcingEvent from '../BuyerSourcingEvent';
-import BuyerRfi from '../BuyerRfi';
-import BuyerRfp from '../BuyerRfp';
 
 const BUYER_SEAT = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 /** @type {QueryScope} */
@@ -113,7 +112,7 @@ describe('BL-147 — RFI and RFP detail', () => {
       entityId: 'rfi-003'
     });
     expect(res.status, res.reason).toBe('done');
-    renderWithProviders(<BuyerRfi />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfi' });
     fireEvent.click(await screen.findByTestId('rfi-open-rfi-003'));
     const detail = await screen.findByTestId('rfi-detail-rfi-003');
     expect(within(detail).getByTestId('rfi-published-warnings-rfi-003')).toHaveTextContent(
@@ -137,7 +136,7 @@ describe('BL-147 — RFI and RFP detail', () => {
       entityId: 'rfp-004'
     });
     expect(res.status, res.reason).toBe('done');
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-004'));
     const detail = await screen.findByTestId('rfp-detail-rfp-004');
     expect(within(detail).getByTestId('rfp-published-warnings-rfp-004')).toHaveTextContent(

@@ -47,6 +47,7 @@ import Wizard from '@components/ui-v2/Wizard';
 import ModalOverlay from '@components/ui-v2/ModalOverlay';
 import { useToast } from '@hooks/useToast';
 import { BASE_CURRENCY } from '@lib/currencyPolicy';
+import { formatDate } from '@lib/format';
 /** @import { AttachmentMeta } from '@services/attachments/sessionAttachments' */
 import { useRfxCommand } from '@services/query/commandHooks';
 import {
@@ -64,6 +65,7 @@ import { documentRequestsRefusal } from '@services/transitions/rfxDocumentRules'
 /** @import { DocumentRequest, RfiEvent, RfiQuestion, RfxCustomSection } from '@services/sourcing/types' */
 import DocumentRequestsEditor, { DocumentRequestsSummary } from './DocumentRequestsEditor';
 import RfxInviteeStep from './RfxInviteeStep';
+import InviteeNames from './InviteeNames';
 import { useSourcingTypeMap } from './eligibilityDisplay';
 import { mappedSourcingType } from '@services/sourcing/sourcingType';
 import RfxQuestionEditor from './RfxQuestionEditor';
@@ -161,6 +163,9 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
   );
   // Bumped after a save or delete so the picker re-reads the store.
   const [storeVersion, setStoreVersion] = useState(0);
+  // RFx UX 2A (B-11) — the deadline refusal waits until the buyer has left the
+  // field once; it read as an error before anything was typed.
+  const [deadlineTouched, setDeadlineTouched] = useState(false);
 
   const family = rfxCategoryFamily(draft.family);
   // Material G2 (MR-10 BR-06) — the type comes from the category (and the
@@ -420,7 +425,7 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
                 </option>
               ))}
             </select>
-            {template && (
+            {!!template && (
               <p className="text-xs text-text-tertiary mt-1" data-testid="rfi-new-template">
                 {t('rfx.rfi.template')}: {t(template.nameKey)}
               </p>
@@ -448,9 +453,10 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
               type="date"
               value={draft.responseDeadline}
               onChange={(e) => setDraft((d) => ({ ...d, responseDeadline: e.target.value }))}
+              onBlur={() => setDeadlineTouched(true)}
               className="bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
             />
-            {!deadlineInFuture && (
+            {!!deadlineTouched && !deadlineInFuture && (
               <p className="text-xs text-danger mt-1" data-testid="rfi-new-deadline-refusal">
                 {t('rfx.create.field.deadline.future')}
               </p>
@@ -556,7 +562,7 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
                 {t('rfx.create.field.deadline')}
               </dt>
               <dd className="text-text-primary">
-                <Data>{draft.responseDeadline || '—'}</Data>
+                <Data>{draft.responseDeadline ? formatDate(draft.responseDeadline) : '—'}</Data>
               </dd>
             </div>
             <div>
@@ -590,7 +596,10 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
                 {t('rfx.create.review.invitees')}
               </dt>
               <dd className="text-text-primary">
-                {t('rfx.invite.selected', { count: draft.invitedSupplierIds.length })}
+                <InviteeNames
+                  supplierIds={draft.invitedSupplierIds}
+                  testId="rfi-new-review-invitees"
+                />
               </dd>
             </div>
             <div className="sm:col-span-2">
@@ -636,6 +645,8 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
         onComplete={() => create(true)}
         isStepValid={(n) => (n === steps.length - 1 ? canPublish && sendable : stepValid(n))}
         completeLabel={t(editing ? 'rfxEdit.saveAndSend' : 'rfx.create.send')}
+        // RFx UX 2A (B-11) — one height for every step, so Next stays put.
+        className="h-[90vh]"
       />
     </ModalOverlay>
   );
@@ -660,7 +671,7 @@ export const ConfidentialityFields = ({ confidential, terms, onChange, testIdPre
         {t('rfxa.conf.toggle')}
       </label>
       <p className="text-xs text-text-tertiary">{t('rfxa.conf.toggle.hint')}</p>
-      {confidential && (
+      {!!confidential && (
         <div>
           <label
             className="block text-xs font-semibold text-text-secondary mb-1"

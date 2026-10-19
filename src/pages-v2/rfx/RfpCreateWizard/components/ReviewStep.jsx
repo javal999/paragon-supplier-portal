@@ -2,10 +2,12 @@ import { useTranslation } from 'react-i18next';
 /** @import React from 'react' */
 import Button from '@components/ui-v2/Button';
 import Data from '@components/ui-v2/Data';
+import { formatDate } from '@lib/format';
 /** @import { rfxCategoryFamily } from '@services/sourcing/rfxConfig' */
 /** @import { RfpEvent, RfpTermRow } from '@services/sourcing/types' */
 import { DocumentRequestsSummary } from '../../DocumentRequestsEditor';
 import RfxSaveTemplate from '../../RfxSaveTemplate';
+import InviteeNames from '../../InviteeNames';
 import { IndicativePill, termLabel } from '../../rfxAuthoringDisplay';
 /** @import { Draft } from '../const' */
 
@@ -54,7 +56,7 @@ export const ReviewStep = ({
         <div>
           <dt className="text-xs uppercase text-text-tertiary">{t('rfx.create.field.deadline')}</dt>
           <dd className="text-text-primary">
-            <Data>{draft.responseDeadline || '—'}</Data>
+            <Data>{draft.responseDeadline ? formatDate(draft.responseDeadline) : '—'}</Data>
           </dd>
         </div>
         <div>
@@ -128,7 +130,7 @@ export const ReviewStep = ({
             {t('rfx.create.review.invitees')}
           </dt>
           <dd className="text-text-primary">
-            {t('rfx.invite.selected', { count: draft.invitedSupplierIds.length })}
+            <InviteeNames supplierIds={draft.invitedSupplierIds} testId="rfp-new-review-invitees" />
           </dd>
         </div>
         <div className="sm:col-span-2">

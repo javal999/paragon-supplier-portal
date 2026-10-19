@@ -95,7 +95,7 @@ export const RfqSourceLinks = ({ rfq, rfqs }) => {
         <span className={note} data-testid="event-from-rfi">
           {t('rfx.event.createdFrom')}{' '}
           {rfi ? (
-            <Link to={`/buyer/rfi?open=${encodeURIComponent(rfi.id)}`} className={link}>
+            <Link to={`/buyer/rfi/${encodeURIComponent(rfi.id)}`} className={link}>
               <Data>{rfi.eventNumber}</Data>
             </Link>
           ) : (
@@ -107,7 +107,7 @@ export const RfqSourceLinks = ({ rfq, rfqs }) => {
         <span className={note} data-testid="event-from-rfp">
           {t('rfx.event.createdFrom')}{' '}
           {rfp ? (
-            <Link to={`/buyer/rfp?open=${encodeURIComponent(rfp.id)}`} className={link}>
+            <Link to={`/buyer/rfp/${encodeURIComponent(rfp.id)}`} className={link}>
               <Data>{rfp.eventNumber}</Data>
             </Link>
           ) : (

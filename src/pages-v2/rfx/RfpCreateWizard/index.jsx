@@ -343,6 +343,8 @@ const RfpCreateWizard = ({
         onComplete={() => create(true)}
         isStepValid={(n) => (n === steps.length - 1 ? canPublish && sendable : stepValid(n))}
         completeLabel={t(editing ? 'rfxEdit.saveAndSend' : 'rfx.create.send')}
+        // RFx UX 2A (B-11) — one height for every step, so Next stays put.
+        className="h-[90vh]"
       />
     </ModalOverlay>
   );
