@@ -4,6 +4,8 @@
 // Moved out of `BuyerSourcingEvent.jsx` by the Phase 5 page split (no
 // behaviour change).
 // ────────────────────────────────────────────────────────────────────────────
+/** @import { TFunction } from 'i18next' */
+/** @import { RfxStageStep } from '../rfx/RfxStageBar' */
 
 /**
  * The quote with this id — the comparison rows read it by id, never by index.
@@ -135,3 +137,62 @@ export function roundBeforeWindowCloses({ status, responseDeadline, nowIso, invi
  */
 export const nextActKey = (next, quoted) =>
   next === 'quotes' && quoted > 0 ? 'rfx.stage.nextAct.reviewQuotes' : `rfx.stage.nextAct.${next}`;
+
+/**
+ * BL-220 — the RFQ event page's stage bar, as the shared `RfxStageBar` takes
+ * it: six steps (Sent · Quotes in · Round · Award · Raised in SAP · Done) with
+ * their details, where the event is (`rfqStageOf`), and the "Next" wording
+ * (`nextActKey`). Moved out of the RFQ page's own `EventStageBar` (lane 1C)
+ * unchanged.
+ * @param {TFunction} t
+ * @param {{
+ *   rfq: import('@data/mockRfqs').RFQ;
+ *   quoted: number;
+ *   rounds: readonly { closed: boolean }[];
+ *   inForce: readonly { status: string; lines: readonly unknown[] }[];
+ * }} input
+ * @returns {{ steps: RfxStageStep[]; current: number; next: StageNext; nextKey: string }}
+ */
+export function rfqStageBar(t, { rfq, quoted, rounds, inForce }) {
+  const invited = rfq.invitedSupplierIds.length;
+  const { current, next, roundSkipped } = rfqStageOf({
+    status: rfq.status,
+    invited,
+    quoted,
+    rounds,
+    inForce
+  });
+  const openRounds = rounds.filter((r) => !r.closed).length;
+  const withLines = inForce.filter((a) => a.lines.length > 0);
+  /** @type {Record<(typeof STAGE_STEPS)[number], string>} */
+  const detail = {
+    sent: t('rfx.stage.d.suppliers', { count: invited }),
+    quotesIn: t('rfx.stage.d.quoted', { quoted, invited }),
+    round:
+      openRounds > 0
+        ? t('rfx.stage.d.roundOpen', { count: openRounds })
+        : rounds.length > 0
+          ? t('rfx.stage.d.roundHeld', { count: rounds.length })
+          : t('rfx.stage.d.none'),
+    award: inForce.length > 0 ? t(`rfx.status.${rfq.status}`) : '',
+    sap:
+      withLines.length > 0
+        ? t('rfx.stage.d.ofTotal', {
+            done: withLines.filter((a) => a.status === 'Raised in SAP').length,
+            total: withLines.length
+          })
+        : '',
+    done: ''
+  };
+  return {
+    steps: STAGE_STEPS.map((key) => ({
+      key,
+      labelKey: `rfx.stage.${key}`,
+      detail: detail[key],
+      ...(key === 'round' && roundSkipped ? { skipped: true } : {})
+    })),
+    current,
+    next,
+    nextKey: nextActKey(next, quoted)
+  };
+}

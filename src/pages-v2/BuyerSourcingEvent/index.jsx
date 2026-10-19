@@ -45,9 +45,9 @@ import ComparisonSection from './components/ComparisonSection';
 import QuoteVersionsSection from './components/QuoteVersionsSection';
 import NegotiationSection from './components/NegotiationSection';
 import AwardSection from './components/AwardSection';
-import EventStageBar from './components/EventStageBar';
+import RfxStageBar from '../rfx/RfxStageBar';
 import EventSectionNav from './components/EventSectionNav';
-import { rfqStageLine, roundBeforeWindowCloses } from './utils';
+import { rfqStageBar, rfqStageLine, roundBeforeWindowCloses } from './utils';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ONE SOURCING EVENT — REQ-E03-03 and REQ-E03-05 (BUY).
@@ -85,7 +85,7 @@ import { rfqStageLine, roundBeforeWindowCloses } from './utils';
 // `hooks/useEventCommand`, the new-round fields `hooks/useNewRoundForm`.
 // Nothing rendered or dispatched changed in the move.
 //
-// RFx UX 1C (B-01): a stage bar (`EventStageBar`, derived by `rfqStageOf`) and
+// RFx UX 1C (B-01): a stage bar (`RfxStageBar` over `rfqStageBar`, BL-220) and
 // a sticky "Jump to" nav (`EventSectionNav`) with counts sit above and beside
 // the sections; each section is wrapped in the element the nav scrolls to.
 // `?section=award` still lands on `#event-award`.
@@ -290,7 +290,11 @@ const BuyerSourcingEvent = () => {
         stageLine={stageLine}
       />
       {/* RFx UX 1C (B-01) — where the event stands, and what the buyer does next. */}
-      <EventStageBar rfq={rfq} quoted={quoted} rounds={eventRounds} inForce={inForce} />
+      <RfxStageBar
+        {...rfqStageBar(t, { rfq, quoted, rounds: eventRounds, inForce })}
+        testId="event-stage"
+        nextTestId="event-next"
+      />
       {/* BL-147 — the invitees published below the level on placeholder rules, as recorded. */}
       {!!rfq.qualificationWarnings && rfq.qualificationWarnings.length > 0 && (
         <div className="mb-4">
