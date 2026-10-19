@@ -162,6 +162,9 @@ export const hubEn = {
   // DRC-12a (BL-198) — a material's NPD tag dropped: review its ROP on its real demand.
   'hub.home.task.npdRopReview':
     'Review ROP after first order: materials no longer NPD, review on CO and IR (real demand)',
+  // BL-199 (DRC-13 BR-02) — no umbrella PO balance left at ROP Fisik.
+  'hub.home.task.ropFisikPr':
+    'Create a PR in SAP: materials at ROP Fisik with no umbrella PO balance left',
   'hub.home.task.missingCommitments': 'Missing forecast commitments',
   'hub.home.task.commitmentExceptions': 'Forecast commitments outside tolerance to review',
 
@@ -328,6 +331,7 @@ export const hubId = {
   'hub.home.task.capacityGaps': 'Pemasok dengan kapasitas di bawah kebutuhan',
   'hub.home.task.npdRopReview':
     'Tinjau ROP setelah pesanan pertama: material bukan NPD lagi, tinjau berdasarkan CO dan IR (permintaan nyata)',
+  'hub.home.task.ropFisikPr': 'Buat PR di SAP: material pada ROP Fisik tanpa saldo PO induk',
   'hub.home.task.missingCommitments': 'Komitmen prakiraan yang belum masuk',
   'hub.home.task.commitmentExceptions': 'Komitmen prakiraan di luar toleransi untuk ditinjau',
 

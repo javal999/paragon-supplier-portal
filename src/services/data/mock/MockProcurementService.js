@@ -17,6 +17,8 @@ import { allDemandAnticipationWithSupply } from './supplyBelowDemandReadModel';
 import { withLtpFgDemandRead } from './ltpFgDemandReadModel';
 import { osipSafetyInputs } from './osipSafetyReadModel';
 import { npdReviews, osipRopInputs, systemRopSuppliers } from './osipRopReadModel';
+import { ropFisikPrRecommendations } from './callOffTriggerReadModel';
+/** @import { PrRecommendationView } from '../../transitions/callOffTriggerRules' */
 /** @import { DemandAnticipationSupplyRow } from '../../transitions/supplyBelowDemandRules' */
 import { stockSimulationRows } from './stockSimulationReadModel';
 import {
@@ -1011,6 +1013,18 @@ export class MockProcurementService {
 
   /**
    * @param {QueryScope} scope
+   * @returns {Promise<Page<PrRecommendationView>>}
+   */
+  async getRopFisikPrRecommendations(scope) {
+    // BL-199 (DRC-13 BR-02) — "Create a PR in SAP" when no umbrella PO balance
+    // is left at ROP Fisik. A recommendation only: the hub posts nothing to
+    // SAP. PTI only (X-03).
+    if (scope.personaType !== 'buyer') return { items: [] };
+    return { items: ropFisikPrRecommendations() };
+  }
+
+  /**
+   * @param {QueryScope} scope
    * @returns {Promise<Page<NpdReview>>}
    */
   async getNpdReviews(scope) {
@@ -1274,9 +1288,12 @@ export class MockProcurementService {
     // REQ-E09-03 — call-offs resolve from the mutable store. A supplier sees its
     // own released call-offs only: a draft or a dismissed draft is the planner's.
     const rows = applySupplierScope(scope, callOffStore.all());
+    // BL-199 — the ROP Fisik figures behind a hub-made draft are PTI's.
     const visible =
       scope.personaType === 'supplier'
-        ? rows.filter((c) => c.status !== 'Draft' && c.status !== 'Dismissed')
+        ? rows
+            .filter((c) => c.status !== 'Draft' && c.status !== 'Dismissed')
+            .map(({ trigger: _ptiOnly, ...c }) => c)
         : rows;
     // Material C4 — each call-off names its material's MRP controller (MR-5 BR-03).
     return { items: visible.map((c) => withMrpController(c, c.materialCode, scope)) };
