@@ -27,6 +27,7 @@ import { useMaterialRequirement } from '@services/query/hooks';
 /** @import { MaterialWeek } from '@services/engine/requirement' */
 import { isoWeek } from '@services/engine/dates';
 import { qtyOf } from './materialPlan/planDisplay';
+import LeadTimeSteps from './materialPlan/LeadTimeSteps';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MATERIAL REQUIREMENT — REQ-E14-03, the Material Planner's view.
@@ -424,6 +425,11 @@ const BuyerMaterialRequirement = () => {
                       {t('mrq.plusSafetyLead', { count: m.safetyLeadTimeDays })}
                     </div>
                   )}
+                  {/* DRC-6 (BL-192) — the lead time by step, read only. */}
+                  <LeadTimeSteps
+                    breakdown={m.leadTimeSteps}
+                    testId={`mrq-lt-steps-${m.materialCode}`}
+                  />
                 </TableCell>
                 <TableCell className="align-top">
                   <Data data-testid={`mrq-ss-${m.materialCode}`}>

@@ -88,6 +88,9 @@ import { demandAnticipationEn, demandAnticipationId } from './i18n/demandAnticip
 import { supplyGapEn, supplyGapId } from './i18n/supplyGap';
 import { sapInterfaceEn, sapInterfaceId } from './i18n/sapInterface';
 import { consumptionEn, consumptionId } from './i18n/consumption';
+// — DRC-18 LTP vs FG demand (BL-203); DRC-6 lead time by step (BL-192) —
+import { ltpFgDemandEn, ltpFgDemandId } from './i18n/ltpFgDemand';
+import { leadTimeStepsEn, leadTimeStepsId } from './i18n/leadTimeSteps';
 import { adminCalendarEn, adminCalendarId } from './i18n/adminCalendar';
 import { performanceEn, performanceId } from './i18n/performance';
 import { inventoryCapacityEn, inventoryCapacityId } from './i18n/inventoryCapacity';
@@ -224,6 +227,8 @@ export const resources = {
       ...supplyGapEn,
       ...sapInterfaceEn,
       ...consumptionEn,
+      ...ltpFgDemandEn,
+      ...leadTimeStepsEn,
       ...adminCalendarEn,
       ...performanceEn,
       ...inventoryCapacityEn,
@@ -731,6 +736,8 @@ export const resources = {
       ...supplyGapId,
       ...sapInterfaceId,
       ...consumptionId,
+      ...ltpFgDemandId,
+      ...leadTimeStepsId,
       ...adminCalendarId,
       ...performanceId,
       ...inventoryCapacityId,

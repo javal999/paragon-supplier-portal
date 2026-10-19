@@ -370,13 +370,19 @@ describe('every check fires on the bad record the feed spec names — by its key
     );
   });
 
-  it('MaterialSource: lead time > 0; MOQ ≥ 0; multiple ≥ 1; shares of one material add to 1 (every source of it listed)', () => {
+  it('MaterialSource: lead time > 0; lead time steps add up; MOQ ≥ 0; multiple ≥ 1; shares of one material add to 1 (every source of it listed)', () => {
     const s = first(base.sources);
     const key = `${s.materialCode} · ${s.supplierId}`;
     /** @param {object} patch */
     const set = (patch) =>
       mutate('sources', (r) => r.map((x) => (x === s ? { ...x, ...patch } : x)));
     fires('sources', 'leadTimePositive', set({ leadTimeDays: 0 }), [key]);
+    // DRC-6 (BL-192) — the steps add up to the total. Known-good: every sample
+    // source carries steps and passes; known-bad: a total one day off fires.
+    const steps = checkOf(run(), 'sources', 'leadTimeStepsSum');
+    expect(steps.checked).toBe(base.sources.length);
+    expect(steps.passed).toBe(true);
+    fires('sources', 'leadTimeStepsSum', set({ leadTimeDays: s.leadTimeDays + 1 }), [key]);
     fires('sources', 'moqNonNegative', set({ moq: -1 }), [key]);
     fires('sources', 'multipleAtLeastOne', set({ orderMultiple: 0 }), [key]);
     const siblings = base.sources
@@ -616,7 +622,7 @@ describe('every check fires on the bad record the feed spec names — by its key
   it('every check the report can produce is probed above', () => {
     // The union of checks over all feeds; each appears in this file as a fires() or explicit case.
     const all = new Set(run().feeds.flatMap((f) => f.checks.map((c) => c.check)));
-    expect(all.size).toBe(31);
+    expect(all.size).toBe(32);
   });
 });
 

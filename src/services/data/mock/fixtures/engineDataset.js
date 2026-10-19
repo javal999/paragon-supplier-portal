@@ -7,7 +7,8 @@
 //   · suppliers      — the Hub's sample supplier ids and categories
 //   · relationships  — the SDC relationships and the forecast sources (with
 //                      their shares), so an existing pair stays a pair
-//   · lead times     — `zoneLengthsFor(...).firmDays` (REQ-E06-01 BR-05)
+//   · lead times     — `zoneLengthsFor(...).firmDays` (REQ-E06-01 BR-05), split
+//                      into SAMPLE steps that add up to it (DRC-6, BL-192)
 //   · confirm-by     — the PO response deadline itself (`responseDeadline`,
 //                      REQ-E07-02 BR-01), on the hub working calendar
 //   · the present    — the hub clock (`sdcClock.now()`), never the machine clock
@@ -27,7 +28,51 @@ import { FORECAST_RELATIONSHIPS, FORECAST_SOURCES } from './forecastHub';
 /** @import { GeneratorInput } from '../../../engine/synthetic/generate' */
 import { generateEngineDataset } from '../../../engine/synthetic/generate';
 import { DEFAULT_PROFILE, SUPPLIER_PROFILES } from '../../../engine/synthetic/profiles';
-/** @import { EngineDataset, IsoInstant } from '../../../engine/types' */
+/** @import { EngineDataset, IsoInstant, LeadTimeRoute, LeadTimeStepId } from '../../../engine/types' */
+import { splitLeadTime } from '../../../engine/leadTimeSteps';
+
+/**
+ * DRC-6 (BL-192) — SAMPLE DATA. The route of a sample source: an Indonesian
+ * supplier is local; a foreign one is an import, and an imported raw material
+ * (SAP type ROH) is the imported-raw-material route [XLS Guidance].
+ * @param {string} supplierId
+ * @param {{ readonly materialType: string }} m
+ * @returns {LeadTimeRoute}
+ */
+export function sampleLeadTimeRoute(supplierId, m) {
+  const country = mockSuppliers.find((s) => s.id === supplierId)?.country ?? 'ID';
+  if (country === 'ID') return 'local';
+  return m.materialType === 'ROH' ? 'importedRawMaterial' : 'import';
+}
+
+/**
+ * DRC-6 (BL-192) — ⚠️ SAMPLE DATA, NOT A RULE. How a sample source's existing
+ * `leadTimeDays` is split into steps, so no total changes. The proportions
+ * follow the shape of the XLS Guidance (shipment and ordering dominate an
+ * import), not any supplier's real figures; the Master Data Management feed
+ * replaces them (ENG-D1).
+ * ⚠️ The sample totals are shorter than the XLS ranges for an import (a
+ * 30-day imported raw material cannot hold 4 weeks to the principal plus 6–8
+ * weeks of shipment): the split keeps the total, so the steps are smaller
+ * than the guidance until the real feed arrives.
+ * @type {Readonly<Record<LeadTimeRoute, Readonly<Partial<Record<LeadTimeStepId, number>>>>>}
+ */
+export const SAMPLE_LEAD_TIME_WEIGHTS = Object.freeze({
+  local: Object.freeze({ machineQueue: 0.25, production: 0.5, delivery: 0.25 }),
+  import: Object.freeze({
+    orderingMaterial: 0.25,
+    machineQueue: 0.15,
+    production: 0.3,
+    shipment: 0.3
+  }),
+  importedRawMaterial: Object.freeze({
+    orderToPrincipal: 0.25,
+    machineQueue: 0.1,
+    production: 0.15,
+    shipment: 0.4,
+    delivery: 0.1
+  })
+});
 
 /** The seed. Change it and every synthetic row changes; the calibration test must still pass. */
 export const ENGINE_DATASET_SEED = 20260924;
@@ -79,6 +124,11 @@ export function engineGeneratorInput(now, seed = ENGINE_DATASET_SEED) {
     ],
     leadTimeDays: (supplierId, m) =>
       zoneLengthsFor(supplierId, m.materialGroup, m.materialType).firmDays,
+    // DRC-6 (BL-192) — SAMPLE step split of the same total (see SAMPLE_LEAD_TIME_WEIGHTS).
+    leadTimeSteps: (supplierId, m, total) => {
+      const route = sampleLeadTimeRoute(supplierId, m);
+      return { route, steps: splitLeadTime(route, total, SAMPLE_LEAD_TIME_WEIGHTS[route]) };
+    },
     confirmDeadline: (createdAt) => responseDeadline({ orderDate: createdAt }, cal).toISOString(),
     profiles: SUPPLIER_PROFILES,
     defaultProfile: DEFAULT_PROFILE

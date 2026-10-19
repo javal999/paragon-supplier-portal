@@ -36,6 +36,7 @@
 
 /** @import { Uom } from '../sdc/types' */
 import { addDays, daysBetween, dayOf, DAY_MS, mondayOf } from './dates';
+import { leadTimeStepsProblem } from './leadTimeSteps';
 import { stockAccuracy } from './stock';
 /** @import { EngineDataset, IsoDate, IsoInstant } from './types' */
 import { lineKey } from './types';
@@ -266,6 +267,7 @@ export function affectedSteps(readBy) {
  *   | 'afterLineCreated'
  *   | 'receivedNonZero'
  *   | 'leadTimePositive'
+ *   | 'leadTimeStepsSum'
  *   | 'moqNonNegative'
  *   | 'multipleAtLeastOne'
  *   | 'sharesSumToOne'
@@ -576,6 +578,14 @@ function checksFor(feed, d, now, tolerance, ctx) {
         resolves(d.sources, k, ctx),
         eachRecord('leadTimePositive', d.sources, k, (s) =>
           s.leadTimeDays > 0 ? null : String(s.leadTimeDays)
+        ),
+        // DRC-6 (BL-192) — the lead time's steps add up to its total. A source
+        // whose feed carries no steps is not checked (it has nothing to add up).
+        eachRecord(
+          'leadTimeStepsSum',
+          d.sources.filter((s) => (s.leadTimeSteps?.length ?? 0) > 0),
+          k,
+          leadTimeStepsProblem
         ),
         eachRecord('moqNonNegative', d.sources, k, (s) => (s.moq >= 0 ? null : String(s.moq))),
         eachRecord('multipleAtLeastOne', d.sources, k, (s) =>
