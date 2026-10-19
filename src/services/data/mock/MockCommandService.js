@@ -227,6 +227,7 @@ import {
   rfpRoundedOptionRefs,
   rfpSettledOptionRefs,
   rfqOptionInRoundRefusal,
+  rfqFromOpenRfpRefusal,
   rfqSourcedOptionRefs
 } from '../../sourcing/rfpAward';
 import { isTieredRfq } from '../../sourcing/rfqComparison';
@@ -5396,6 +5397,8 @@ bindPolicyHook(POLICY_HOOKS.RFP_AWARD_SAP_GOVERNED, ({ payload, entityId }) => {
 // Owner ruling Q1 (2026-10-19, RFx UX B-07) — nor an option a firm-offer round
 // of that RFP names: once an option is in a round, the RFQ path is closed for
 // it (`rfqOptionInRoundRefusal`, the rule the RFP page's picker reads too).
+// BL-216 (RFX-D16) — and never from an RFP that is still Open
+// (`rfqFromOpenRfpRefusal`, the rule the RFP page holds its button by).
 bindPolicyHook(POLICY_HOOKS.RFQ_CREATE_RFP_OPTIONS_FREE, ({ payload }) => {
   const rfpId = typeof payload.sourceRfpId === 'string' ? payload.sourceRfpId.trim() : '';
   const refs = Array.isArray(payload.sourceRfpOptionRefs)
@@ -5403,8 +5406,11 @@ bindPolicyHook(POLICY_HOOKS.RFQ_CREATE_RFP_OPTIONS_FREE, ({ payload }) => {
         /** @returns {x is string} */ (x) => typeof x === 'string'
       )
     : [];
-  if (!rfpId || refs.length === 0) return { ok: true };
+  if (!rfpId) return { ok: true };
   const rfp = rfpEventStore.get(rfpId);
+  const open = rfp ? rfqFromOpenRfpRefusal(rfp.status, rfp.eventNumber) : null;
+  if (open) return { ok: false, reason: open };
+  if (refs.length === 0) return { ok: true };
   const refusal = rfpOptionSourcedRefusal(
     refs,
     rfpAwardedOptionRefs(rfpAwardsOf(rfpId)),
