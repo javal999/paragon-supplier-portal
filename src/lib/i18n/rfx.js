@@ -79,7 +79,6 @@ export const rfxEn = {
   'rfx.rfi.answer': 'Answer',
   'rfx.rfi.submit': 'Send answers',
   'rfx.rfi.required': 'Required',
-  'rfx.rfi.missing': 'Answer every required question before sending.',
   'rfx.rfi.description': 'Description',
   'rfx.rfi.identityFromMaster':
     'Company name, tax number, address and bank details come from your company profile and are not asked again.',
@@ -308,8 +307,6 @@ export const rfxEn = {
   'rfx.cmp.decimalNote':
     'Two scores round to the same whole number, so they are shown to one decimal. Best scored follows the unrounded score.',
   'rfx.cmp.single': 'Single quote',
-  'rfx.cmp.refused':
-    'The quotes are in different currencies and no exchange rate has been recorded, so they are not ranked.',
   'rfx.cmp.empty': 'No quote has been received yet.',
   'rfx.cmp.versions': 'Quote versions',
   'rfx.cmp.round': 'Round {{round}}',
@@ -766,7 +763,6 @@ export const rfxId = {
   'rfx.rfi.answer': 'Jawab',
   'rfx.rfi.submit': 'Kirim jawaban',
   'rfx.rfi.required': 'Wajib',
-  'rfx.rfi.missing': 'Jawab semua pertanyaan wajib sebelum mengirim.',
   'rfx.rfi.description': 'Keterangan',
   'rfx.rfi.identityFromMaster':
     'Nama perusahaan, NPWP, alamat, dan rekening bank diambil dari profil perusahaan Anda dan tidak ditanyakan lagi.',
@@ -987,8 +983,6 @@ export const rfxId = {
   'rfx.cmp.decimalNote':
     'Dua skor dibulatkan ke bilangan bulat yang sama, jadi ditampilkan dengan satu desimal. Nilai tertinggi mengikuti skor sebelum dibulatkan.',
   'rfx.cmp.single': 'Penawaran tunggal',
-  'rfx.cmp.refused':
-    'Penawaran memakai mata uang berbeda dan belum ada kurs yang dicatat, jadi belum diperingkat.',
   'rfx.cmp.empty': 'Belum ada penawaran yang masuk.',
   'rfx.cmp.versions': 'Versi penawaran',
   'rfx.cmp.round': 'Putaran {{round}}',

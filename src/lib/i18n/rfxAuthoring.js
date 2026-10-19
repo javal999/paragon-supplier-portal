@@ -67,8 +67,6 @@ export const rfxAuthoringEn = {
   'rfxa.answer.rangeMin': 'From',
   'rfxa.answer.rangeMax': 'To',
   'rfxa.answer.files': 'Your files',
-  'rfxa.answer.fixInvalid':
-    'Some answers do not fit their question. Correct the fields marked in red before sending.',
   'rfxa.answer.invalid.notYesNo': 'Choose yes or no.',
   'rfxa.answer.invalid.notAnOption': 'Choose from the options given.',
   'rfxa.answer.invalid.notANumber': 'Enter a number.',
@@ -192,11 +190,6 @@ export const rfxAuthoringEn = {
   'rfxa.pricing.proposedBy': 'Proposed by {{supplier}}',
 
   // — Blockers on the proposal form ———————————————————————————————————————
-  'rfxa.blocker.terms': 'Answer every term PTI asked for.',
-  'rfxa.blocker.termValues': 'Some term values do not fit their term.',
-  'rfxa.blocker.comments': 'Every deviation needs a comment.',
-  'rfxa.blocker.questions': 'Answer every required question.',
-  'rfxa.blocker.answers': 'Some answers do not fit their question.',
 
   // — Templates and "start from" (D2) ——————————————————————————————————
   'rfxa.start.label': 'Start from',
@@ -356,8 +349,6 @@ export const rfxAuthoringId = {
   'rfxa.answer.rangeMin': 'Dari',
   'rfxa.answer.rangeMax': 'Sampai',
   'rfxa.answer.files': 'Berkas Anda',
-  'rfxa.answer.fixInvalid':
-    'Beberapa jawaban tidak sesuai dengan pertanyaannya. Perbaiki kolom bertanda merah sebelum mengirim.',
   'rfxa.answer.invalid.notYesNo': 'Pilih ya atau tidak.',
   'rfxa.answer.invalid.notAnOption': 'Pilih dari pilihan yang tersedia.',
   'rfxa.answer.invalid.notANumber': 'Masukkan angka.',
@@ -479,11 +470,6 @@ export const rfxAuthoringId = {
   'rfxa.pricing.proposedBy': 'Diusulkan oleh {{supplier}}',
 
   // — Penghambat pada formulir proposal ————————————————————————————————————
-  'rfxa.blocker.terms': 'Jawab setiap ketentuan yang diminta PTI.',
-  'rfxa.blocker.termValues': 'Beberapa nilai ketentuan tidak sesuai dengan ketentuannya.',
-  'rfxa.blocker.comments': 'Setiap penyimpangan memerlukan komentar.',
-  'rfxa.blocker.questions': 'Jawab setiap pertanyaan wajib.',
-  'rfxa.blocker.answers': 'Beberapa jawaban tidak sesuai dengan pertanyaannya.',
 
   // — Templat dan "mulai dari" (D2) ————————————————————————————————————————
   'rfxa.start.label': 'Mulai dari',
