@@ -20,8 +20,10 @@ export const sourcingEn = {
   'sourcing.action.templates': 'Templates',
   'sourcing.action.newRfq': 'New RFQ',
   // — Meta line —
-  'sourcing.meta.summary.one': '{{count}} active RFQ · last updated {{date}}',
-  'sourcing.meta.summary.other': '{{count}} active RFQs · last updated {{date}}',
+  // RFx UX B-13 — the date the day counts read from is the "As of" line
+  // (`rfx.asOf`, as on the RFI and RFP pages); this is only the count.
+  'sourcing.meta.summary.one': '{{count}} active RFQ',
+  'sourcing.meta.summary.other': '{{count}} active RFQs',
   // — KPI cards —
   'sourcing.kpi.active.eyebrow': 'Active RFQs',
   'sourcing.kpi.active.subtitle': 'Open for response',
@@ -54,17 +56,16 @@ export const sourcingEn = {
   'sourcing.table.col.responses': 'Responses',
   'sourcing.table.col.qty': 'Qty',
   'sourcing.table.col.estValue': 'Est. Value',
+  // RFx UX B-13 — why Est. value reads "—": no budget was stated.
+  'sourcing.table.estValue.noBudget': 'No budget was stated for this RFQ.',
+  'sourcing.table.estValue.tieredNoBudget':
+    'No budget was stated. Quantity breaks carry quantities only; prices arrive with the quotes, so no value is computed.',
   'sourcing.table.col.responseDeadline': 'Response deadline',
   'sourcing.table.col.status': 'Status',
   'sourcing.table.col.actions': 'Actions',
   'sourcing.table.empty': 'No RFQs match the current filters.',
   'sourcing.table.emptyAction': 'Nothing needs your action today',
   'sourcing.table.col.next': 'Next',
-  'sourcing.next.publish': 'Publish',
-  'sourcing.next.reviewQuotes': 'Review quotes',
-  'sourcing.next.closeRound': 'Close round',
-  'sourcing.next.award': 'Award',
-  'sourcing.next.raiseInSap': 'Raise in SAP',
   // — Deadline compact labels —
   'sourcing.deadline.overdue': '{{count}}d overdue',
   'sourcing.deadline.dueToday': 'Due today',
@@ -229,8 +230,9 @@ export const sourcingEn = {
   'sourcing.award.rejectAll': 'Reject all & resource',
   // — Lifecycle actions (cancel / reopen) —
   'sourcing.lifecycle.actions': 'Lifecycle actions',
-  'sourcing.publish.submit': 'Publish RFQ',
-  'sourcing.publish.submitting': 'Publishing…',
+  // RFx UX B-16 — one verb per act: the RFQ is sent as the RFI and RFP are.
+  'sourcing.publish.submit': 'Send to suppliers',
+  'sourcing.publish.submitting': 'Sending…',
   'sourcing.cancel.submit': 'Cancel RFQ',
   'sourcing.cancel.submitting': 'Cancelling…',
   'sourcing.reopen.submit': 'Reopen RFQ',
@@ -254,6 +256,8 @@ export const sourcingEn = {
   // PF-1a — IT DOES NOT SEND. Creation births a Draft (D-1); publishing is a
   // second, deliberate act, and the label said otherwise.
   'sourcing.wizard.complete': 'Save RFQ draft',
+  // RFx UX B-12 — save the new draft and send it in one act.
+  'sourcing.wizard.saveAndSend': 'Save and send to suppliers',
   'sourcing.wizard.step.scope.title': 'Define Scope',
   'sourcing.wizard.step.scope.short': 'Scope',
   'sourcing.wizard.step.scope.desc': 'What are you sourcing and how much?',
@@ -361,15 +365,17 @@ export const sourcingEn = {
   'sourcing.toast.reopenFailed.dispatch': 'The reopen could not be dispatched.',
   'sourcing.toast.created.title': '{{rfqNumber}} saved as a draft',
   'sourcing.toast.created.desc.one':
-    'Not sent yet — publish to open it to {{count}} invited supplier',
+    'Not sent yet — send it to suppliers to open it to {{count}} invited supplier',
   'sourcing.toast.created.desc.other':
-    'Not sent yet — publish to open it to {{count}} invited suppliers',
-  'sourcing.toast.published.title': '{{rfqNumber}} published',
+    'Not sent yet — send it to suppliers to open it to {{count}} invited suppliers',
+  'sourcing.toast.published.title': '{{rfqNumber}} sent to suppliers',
   'sourcing.toast.published.desc.one': 'Now open to {{count}} invited supplier.',
   'sourcing.toast.published.desc.other': 'Now open to {{count}} invited suppliers.',
-  'sourcing.toast.publishFailed.title': 'Publish failed',
-  'sourcing.toast.publishFailed.default': 'The RFQ could not be published.',
-  'sourcing.toast.publishFailed.dispatch': 'The publish could not be dispatched.',
+  'sourcing.toast.publishFailed.title': 'Send failed',
+  'sourcing.toast.publishFailed.default': 'The RFQ could not be sent to suppliers.',
+  'sourcing.toast.publishFailed.dispatch': 'The send could not be dispatched.',
+  // RFx UX B-12 — "Save and send" on a new RFQ: the draft was saved, the send was refused.
+  'sourcing.toast.savedNotSent.title': '{{rfqNumber}} saved as a draft, not sent',
   'sourcing.toast.createFailed.title': 'Create failed',
   'sourcing.toast.createFailed.default': 'The RFQ could not be created.',
   'sourcing.toast.createFailed.dispatch': 'The RFQ could not be dispatched.',
@@ -394,8 +400,8 @@ export const sourcingId = {
   'sourcing.action.templates': 'Templat',
   'sourcing.action.newRfq': 'RFQ Baru',
   // — Meta line —
-  'sourcing.meta.summary.one': '{{count}} RFQ aktif · terakhir diperbarui {{date}}',
-  'sourcing.meta.summary.other': '{{count}} RFQ aktif · terakhir diperbarui {{date}}',
+  'sourcing.meta.summary.one': '{{count}} RFQ aktif',
+  'sourcing.meta.summary.other': '{{count}} RFQ aktif',
   // — KPI cards —
   'sourcing.kpi.active.eyebrow': 'RFQ Aktif',
   'sourcing.kpi.active.subtitle': 'Terbuka untuk respons',
@@ -428,17 +434,16 @@ export const sourcingId = {
   'sourcing.table.col.responses': 'Respons',
   'sourcing.table.col.qty': 'Jml',
   'sourcing.table.col.estValue': 'Nilai Est.',
+  // RFx UX B-13 — why Est. value reads "—": no budget was stated.
+  'sourcing.table.estValue.noBudget': 'Tidak ada anggaran yang dinyatakan untuk RFQ ini.',
+  'sourcing.table.estValue.tieredNoBudget':
+    'Tidak ada anggaran yang dinyatakan. Jumlah bertingkat hanya memuat kuantitas; harga datang bersama penawaran, jadi nilai tidak dihitung.',
   'sourcing.table.col.responseDeadline': 'Tenggat respons',
   'sourcing.table.col.status': 'Status',
   'sourcing.table.col.actions': 'Tindakan',
   'sourcing.table.empty': 'Tidak ada RFQ yang cocok dengan filter saat ini.',
   'sourcing.table.emptyAction': 'Tidak ada yang perlu Anda tindak lanjuti hari ini',
   'sourcing.table.col.next': 'Berikutnya',
-  'sourcing.next.publish': 'Terbitkan',
-  'sourcing.next.reviewQuotes': 'Tinjau penawaran',
-  'sourcing.next.closeRound': 'Tutup putaran',
-  'sourcing.next.award': 'Tetapkan pemenang',
-  'sourcing.next.raiseInSap': 'Buat di SAP',
   // — Deadline compact labels —
   'sourcing.deadline.overdue': '{{count}}h terlambat',
   'sourcing.deadline.dueToday': 'Jatuh tempo hari ini',
@@ -584,8 +589,8 @@ export const sourcingId = {
   'sourcing.award.rejectAll': 'Tolak semua & sumber ulang',
   // — Lifecycle actions (batal / buka kembali) —
   'sourcing.lifecycle.actions': 'Tindakan siklus hidup',
-  'sourcing.publish.submit': 'Terbitkan RFQ',
-  'sourcing.publish.submitting': 'Menerbitkan…',
+  'sourcing.publish.submit': 'Kirim ke pemasok',
+  'sourcing.publish.submitting': 'Mengirim…',
   'sourcing.cancel.submit': 'Batalkan RFQ',
   'sourcing.cancel.submitting': 'Membatalkan…',
   'sourcing.reopen.submit': 'Buka kembali RFQ',
@@ -607,6 +612,8 @@ export const sourcingId = {
   'sourcing.timeline.closed': 'Ditutup',
   // — Wizard: chrome —
   'sourcing.wizard.complete': 'Simpan draf RFQ',
+  // RFx UX B-12 — save the new draft and send it in one act.
+  'sourcing.wizard.saveAndSend': 'Simpan dan kirim ke pemasok',
   'sourcing.wizard.step.scope.title': 'Tentukan Cakupan',
   'sourcing.wizard.step.scope.short': 'Cakupan',
   'sourcing.wizard.step.scope.desc': 'Apa yang Anda sumberkan dan berapa banyak?',
@@ -710,15 +717,16 @@ export const sourcingId = {
   'sourcing.toast.reopenFailed.dispatch': 'Pembukaan kembali tidak dapat dikirim.',
   'sourcing.toast.created.title': '{{rfqNumber}} disimpan sebagai draf',
   'sourcing.toast.created.desc.one':
-    'Belum dikirim — terbitkan untuk membukanya ke {{count}} pemasok yang diundang',
+    'Belum dikirim — kirim ke pemasok untuk membukanya ke {{count}} pemasok yang diundang',
   'sourcing.toast.created.desc.other':
-    'Belum dikirim — terbitkan untuk membukanya ke {{count}} pemasok yang diundang',
-  'sourcing.toast.published.title': '{{rfqNumber}} diterbitkan',
+    'Belum dikirim — kirim ke pemasok untuk membukanya ke {{count}} pemasok yang diundang',
+  'sourcing.toast.published.title': '{{rfqNumber}} dikirim ke pemasok',
   'sourcing.toast.published.desc.one': 'Kini terbuka untuk {{count}} pemasok yang diundang.',
   'sourcing.toast.published.desc.other': 'Kini terbuka untuk {{count}} pemasok yang diundang.',
-  'sourcing.toast.publishFailed.title': 'Penerbitan gagal',
-  'sourcing.toast.publishFailed.default': 'RFQ tidak dapat diterbitkan.',
-  'sourcing.toast.publishFailed.dispatch': 'Penerbitan tidak dapat dikirim.',
+  'sourcing.toast.publishFailed.title': 'Pengiriman gagal',
+  'sourcing.toast.publishFailed.default': 'RFQ tidak dapat dikirim ke pemasok.',
+  'sourcing.toast.publishFailed.dispatch': 'Pengiriman tidak dapat diproses.',
+  'sourcing.toast.savedNotSent.title': '{{rfqNumber}} disimpan sebagai draf, belum dikirim',
   'sourcing.toast.createFailed.title': 'Pembuatan gagal',
   'sourcing.toast.createFailed.default': 'RFQ tidak dapat dibuat.',
   'sourcing.toast.createFailed.dispatch': 'RFQ tidak dapat dikirim.',

@@ -16,7 +16,7 @@
 /** @import React from 'react' */
 /** @import { TFunction } from 'i18next' */
 /** @import { RFQ } from '@data/mockRfqs' */
-/** @import { NextAct } from '@services/transitions/nextAct' */
+/** @import { StageNext } from '../../BuyerSourcingEvent/utils' */
 /** @import { VerbAvailability } from '@services/transitions/handoff' */
 /** @import { RfqTemplateContent } from '@services/sourcing/rfqTemplates' */
 /** @import { AwardView } from '@services/sourcing/views' */
@@ -38,7 +38,7 @@ import PanelAwardSection from './PanelAwardSection';
  * @property {RFQ | null} selectedRfq The open RFQ; null closes the panel.
  * @property {() => void} closePanel
  * @property {Map<string, string>} supplierNameById
- * @property {NextAct | null} nextAct Who acts next on the selected RFQ (S2a).
+ * @property {{ next: StageNext; quoted: number } | null} stage What comes next on the selected RFQ (B-15).
  * @property {VerbAvailability} rfqCreateAvailability `rfq:create` (edit draft).
  * @property {Readonly<Record<'publish' | 'reopen' | 'cancel' | 'award', VerbAvailability>>} rfqVerbs
  * @property {ReturnType<typeof useRfqPanelActions>} actions The panel's dispatches and their mutations.
@@ -76,7 +76,7 @@ const RfqSidePanel = ({
   selectedRfq,
   closePanel,
   supplierNameById,
-  nextAct,
+  stage,
   rfqCreateAvailability,
   rfqVerbs,
   actions,
@@ -123,7 +123,7 @@ const RfqSidePanel = ({
         <div className="space-y-6">
           <RfqPanelSummary
             selectedRfq={selectedRfq}
-            nextAct={nextAct}
+            stage={stage}
             quotes={panelQuotes.quotesForSelected}
             awardedQuote={panelQuotes.awardedQuote}
             awards={awardsInForce}

@@ -319,6 +319,13 @@ export const rfxEn = {
   'rfx.cmp.submittedOn': 'Submitted on',
   'rfx.cmp.originalQuote': 'First quote',
   'rfx.cmp.notAutomatic': 'The score supports your decision. Nothing is awarded automatically.',
+  // RFx UX X-03 — the award table's pills, explained above it and on each pill.
+  'rfx.award.legend':
+    "Updates N% = the supplier's weekly update compliance · No history = fewer than 4 weeks counted · Best scored = the highest weighted score at this quantity · Tied for best = exactly the same weighted score",
+  'rfx.award.legendLabel': 'What the pills mean',
+  'rfx.cmp.best.tip': 'The highest weighted score among the qualifying quotes, at this quantity.',
+  'rfx.cmp.tied.tip':
+    'This quote has exactly the same weighted score as the best one, so neither is ranked above the other.',
   'rfx.neg.title': 'Negotiation rounds',
   'rfx.neg.new': 'Open a negotiation round',
   'rfx.neg.shortlist': 'Invite these suppliers',
@@ -385,7 +392,9 @@ export const rfxEn = {
   'rfx.stage.d.ofTotal': '{{done}} of {{total}}',
   'rfx.stage.nextAct.send': 'Send to suppliers',
   'rfx.stage.nextAct.quotes': 'Wait for quotes',
-  'rfx.stage.nextAct.round': 'Close the open round',
+  'rfx.stage.nextAct.reviewQuotes': 'Review quotes',
+  // RFx UX B-16 — the act's one name, as on the round's own button.
+  'rfx.stage.nextAct.round': 'Close the round',
   'rfx.stage.nextAct.award': 'Award',
   'rfx.stage.nextAct.sap': 'Mark the award Raised in SAP',
   'rfx.stage.nextAct.none': 'Nothing left to do',
@@ -393,6 +402,18 @@ export const rfxEn = {
   'rfx.stage.daysLeft_one': '{{count}} day left',
   'rfx.stage.daysLeft_other': '{{count}} days left',
   'rfx.stage.passed': 'passed',
+  // RFx UX B-15 — the stage, said in words in the header.
+  'rfx.stageLine.draft': 'Draft · not sent',
+  'rfx.stageLine.collecting': 'Collecting quotes',
+  'rfx.stageLine.allIn': 'All quotes in',
+  'rfx.stageLine.windowClosed': 'Response window closed',
+  'rfx.stageLine.partly': 'Partly awarded',
+  'rfx.stageLine.sap': 'Awarded · waiting for SAP',
+  'rfx.stageLine.done': 'Done',
+  'rfx.stageLine.cancelled': 'Cancelled',
+  'rfx.stageLine.roundOpen': 'round {{round}} open',
+  'rfx.neg.windowOpenWarn':
+    'The response window is open until {{date}} and {{count}} invited suppliers have not quoted. A round opened now asks only the shortlisted suppliers to revise; the others can still send a first quote.',
   'rfx.nav.invitees': 'Invitees',
   'rfx.nav.clarifications': 'Clarifications',
   'rfx.nav.unanswered': '{{count}} unanswered',
@@ -562,7 +583,8 @@ export const rfxEn = {
   'rfx.firm.status.open': 'Open',
   'rfx.firm.status.closed': 'Closed',
   'rfx.firm.status.overdue': 'Past its deadline',
-  'rfx.firm.closeRound': 'Close round',
+  // RFx UX B-16 — the same words as the RFQ round's "Close the round".
+  'rfx.firm.closeRound': 'Close the round',
   'rfx.firm.offerIn': 'Firm offer received',
   'rfx.firm.noOffer': 'No firm offer yet',
   'rfx.firm.empty': 'No firm-offer round has been opened.',
@@ -915,6 +937,14 @@ export const rfxId = {
   'rfx.cmp.submittedOn': 'Dikirim pada',
   'rfx.cmp.originalQuote': 'Penawaran pertama',
   'rfx.cmp.notAutomatic': 'Nilai membantu keputusan Anda. Tidak ada yang dimenangkan otomatis.',
+  // RFx UX X-03 — the award table's pills, explained above it and on each pill.
+  'rfx.award.legend':
+    'Pembaruan N% = kepatuhan pembaruan mingguan pemasok · Tanpa riwayat = kurang dari 4 minggu tercatat · Nilai terbaik = nilai tertimbang tertinggi pada jumlah ini · Seri terbaik = nilai tertimbang sama persis',
+  'rfx.award.legendLabel': 'Arti label',
+  'rfx.cmp.best.tip':
+    'Nilai tertimbang tertinggi di antara penawaran yang lolos syarat, pada jumlah ini.',
+  'rfx.cmp.tied.tip':
+    'Penawaran ini memiliki nilai tertimbang yang sama persis dengan penawaran terbaik, jadi tidak ada yang diperingkat di atas yang lain.',
   'rfx.neg.title': 'Putaran negosiasi',
   'rfx.neg.new': 'Buka putaran negosiasi',
   'rfx.neg.shortlist': 'Undang pemasok berikut',
@@ -980,13 +1010,26 @@ export const rfxId = {
   'rfx.stage.d.ofTotal': '{{done}} dari {{total}}',
   'rfx.stage.nextAct.send': 'Kirim ke pemasok',
   'rfx.stage.nextAct.quotes': 'Tunggu penawaran',
-  'rfx.stage.nextAct.round': 'Tutup putaran yang terbuka',
+  'rfx.stage.nextAct.reviewQuotes': 'Tinjau penawaran',
+  'rfx.stage.nextAct.round': 'Tutup putaran',
   'rfx.stage.nextAct.award': 'Tetapkan pemenang',
   'rfx.stage.nextAct.sap': 'Tandai penetapan sudah dibuat di SAP',
   'rfx.stage.nextAct.none': 'Tidak ada lagi yang perlu dilakukan',
   'rfx.stage.nextAct.cancelled': 'Tidak ada: acara dibatalkan',
   'rfx.stage.daysLeft_other': '{{count}} hari lagi',
   'rfx.stage.passed': 'sudah lewat',
+  // RFx UX B-15 — the stage, said in words in the header.
+  'rfx.stageLine.draft': 'Draf · belum dikirim',
+  'rfx.stageLine.collecting': 'Mengumpulkan penawaran',
+  'rfx.stageLine.allIn': 'Semua penawaran masuk',
+  'rfx.stageLine.windowClosed': 'Jendela respons ditutup',
+  'rfx.stageLine.partly': 'Dimenangkan sebagian',
+  'rfx.stageLine.sap': 'Dimenangkan · menunggu SAP',
+  'rfx.stageLine.done': 'Selesai',
+  'rfx.stageLine.cancelled': 'Dibatalkan',
+  'rfx.stageLine.roundOpen': 'putaran {{round}} terbuka',
+  'rfx.neg.windowOpenWarn':
+    'Jendela respons masih terbuka sampai {{date}} dan {{count}} pemasok yang diundang belum mengirim penawaran. Putaran yang dibuka sekarang hanya meminta revisi dari pemasok yang dipilih; yang lain masih dapat mengirim penawaran pertama.',
   'rfx.nav.invitees': 'Pemasok diundang',
   'rfx.nav.clarifications': 'Klarifikasi',
   'rfx.nav.unanswered': '{{count}} belum dijawab',

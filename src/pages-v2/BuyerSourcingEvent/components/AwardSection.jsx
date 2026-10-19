@@ -197,6 +197,12 @@ const AwardSection = ({
               {t('rfx.gate.noAward')}
             </p>
           )}
+          {/* RFx UX X-03 — what the pills beside each supplier mean, once,
+              above the table they sit in; each pill also carries it on hover. */}
+          <p className="text-xs text-text-tertiary" data-testid="award-legend">
+            <span className="font-semibold text-text-secondary">{t('rfx.award.legendLabel')}:</span>{' '}
+            {t('rfx.award.legend')}
+          </p>
           <AwardPanel
             // Keyed on the awards in force, so a recorded or cancelled award
             // starts the panel afresh over the items still open.

@@ -441,12 +441,20 @@ const ItemComparison = ({
           <div className="text-sm text-text-primary">
             {supplierName(q.supplierId)}
             {!tied && score?.topRanked && (
-              <span className="ml-2" data-testid={`item-best-${item.lineNo}-${q.supplierId}`}>
+              <span
+                className="ml-2"
+                title={t('rfx.cmp.best.tip')}
+                data-testid={`item-best-${item.lineNo}-${q.supplierId}`}
+              >
                 <StatusPill variant="success">{t('rfqCompare.cmp.bestScored')}</StatusPill>
               </span>
             )}
             {tied && standing.tiedIds.includes(q.id) && (
-              <span className="ml-2" data-testid={`item-tied-${item.lineNo}-${q.supplierId}`}>
+              <span
+                className="ml-2"
+                title={t('rfx.cmp.tied.tip')}
+                data-testid={`item-tied-${item.lineNo}-${q.supplierId}`}
+              >
                 <StatusPill variant="success">{t('rfx.cmp.tied')}</StatusPill>
               </span>
             )}

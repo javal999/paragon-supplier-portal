@@ -3,7 +3,7 @@
 /** @import { AwardView } from '@services/sourcing/views' */
 import { useTranslation } from 'react-i18next';
 import StatusPill from '@components/ui-v2/StatusPill';
-import { STAGE_STEPS, rfqStageOf } from '../utils';
+import { STAGE_STEPS, nextActKey, rfqStageOf } from '../utils';
 
 /** @type {Record<(typeof STAGE_STEPS)[number], string>} */
 const STEP_KEY = {
@@ -67,7 +67,7 @@ const EventStageBar = ({ rfq, quoted, rounds, inForce }) => {
         </span>
         <span data-testid="event-next">
           <StatusPill variant={next === 'none' || next === 'cancelled' ? 'neutral' : 'info'}>
-            {t('rfx.stage.next')}: {t(`rfx.stage.nextAct.${next}`)}
+            {t('rfx.stage.next')}: {t(nextActKey(next, quoted))}
           </StatusPill>
         </span>
       </div>

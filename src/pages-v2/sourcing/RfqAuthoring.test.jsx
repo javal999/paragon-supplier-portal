@@ -130,6 +130,10 @@ describe('the RFQ wizard authors a multi-item tiered RFQ', () => {
     addTier('100K', 'rfq-item-2-tiers');
     next();
 
+    // RFx UX B-12 — the Breaks step opens on the Scope quantity, as a total break.
+    expect(await screen.findByTestId('rfq-tiers-chip')).toHaveTextContent('48,000total');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove break 48,000' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'per variant' }));
     // The RFQ's breaks: refused until there is one, strictly increasing by construction.
     expect(await screen.findByTestId('rfq-tiers-step-refusal')).toHaveTextContent(
       'Add one to eight quantity breaks.'

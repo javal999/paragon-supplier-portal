@@ -12,17 +12,17 @@
 /** @import { TFunction } from 'i18next' */
 /** @import { RFQ } from '@data/mockRfqs' */
 /** @import { Quotation } from '@data/mockQuotations' */
-/** @import { NextAct } from '@services/transitions/nextAct' */
+/** @import { StageNext } from '../../BuyerSourcingEvent/utils' */
 /** @import { AwardView } from '@services/sourcing/views' */
 import { Link } from 'react-router-dom';
 import StatusPill from '@components/ui-v2/StatusPill';
-import NextActLine from '@components/ui-v2/NextActLine';
 import Data from '@components/ui-v2/Data';
 import { formatDate, formatMoney } from '@lib/format';
 import { daysToDeadline } from '@services/transitions/rfxRules';
 import { rfxNow } from '../../rfx/rfxDisplay';
 import { DraftRevisionNote } from '../../rfx/draftEdit';
 import { STATUS_VARIANT } from '../const';
+import { nextActKey } from '../../BuyerSourcingEvent/utils';
 
 /** How many invited suppliers the pill list names before "+N more". */
 const PILL_LIMIT = 4;
@@ -30,7 +30,7 @@ const PILL_LIMIT = 4;
 /**
  * @typedef {object} RfqPanelSummaryProps
  * @property {RFQ} selectedRfq
- * @property {NextAct | null} nextAct Who acts next on the selected RFQ (S2a).
+ * @property {{ next: StageNext; quoted: number } | null} stage What comes next (B-15): the stage bar's `next`, worded by `nextActKey`.
  * @property {readonly Quotation[]} quotes The quotes on this RFQ.
  * @property {(Quotation & { currency: string }) | null} awardedQuote The awarded quote, Awarded RFQs only.
  * @property {readonly AwardView[]} awards The award records in force on this RFQ.
@@ -79,7 +79,7 @@ const AwardLine = ({ selectedRfq, awardedQuote, awards, supplierNameById, t }) =
  */
 const RfqPanelSummary = ({
   selectedRfq,
-  nextAct,
+  stage,
   quotes,
   awardedQuote,
   awards,
@@ -94,7 +94,16 @@ const RfqPanelSummary = ({
     <section className="space-y-4" data-testid="panel-summary">
       <div className="flex flex-wrap items-center gap-2">
         <StatusPill variant={STATUS_VARIANT[selectedRfq.status]}>{selectedRfq.status}</StatusPill>
-        <NextActLine act={nextAct} testId="next-act-buyer-rfq" />
+        {/* RFx UX B-15 — the event page's "Next", in the same words. */}
+        {!!stage && (
+          <span data-testid="next-act-buyer-rfq">
+            <StatusPill
+              variant={stage.next === 'none' || stage.next === 'cancelled' ? 'neutral' : 'info'}
+            >
+              {t('rfx.stage.next')}: {t(nextActKey(stage.next, stage.quoted))}
+            </StatusPill>
+          </span>
+        )}
       </div>
       <DraftRevisionNote revisions={selectedRfq.revisions} testId="rfq-last-edited" />
 

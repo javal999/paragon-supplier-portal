@@ -32,9 +32,9 @@ import { isIncotermOption } from './WizardTermsStep';
  * @property {Map<string, string>} supplierNameById
  * @property {string | null} editingRfqId The Draft being edited (BL-93), or null.
  * @property {VerbAvailability} publishAvailability The seat's `rfq:publish`.
- * @property {boolean} revisePending Whether a save is in flight.
+ * @property {boolean} sendPending Whether a save or a send is in flight.
  * @property {RfqWizard['isStepValid']} isStepValid
- * @property {(send: boolean) => void} saveEdit
+ * @property {() => void} saveAndSend Save the draft (new or edited) and send it to its suppliers.
  * @property {(step: number) => void} setWizardStep
  * @property {(t: { content: RfqTemplateContent; name: string }) => void} setTemplateToSave
  * @property {TFunction} t
@@ -53,9 +53,9 @@ const WizardReviewStep = ({
   supplierNameById,
   editingRfqId,
   publishAvailability,
-  revisePending,
+  sendPending,
   isStepValid,
-  saveEdit,
+  saveAndSend,
   setWizardStep,
   setTemplateToSave,
   t
@@ -197,25 +197,29 @@ const WizardReviewStep = ({
         sheets, breaks, costs, questions and options. Not invitees, not
         dates, not files. */}
     {/* BL-93 — an edited draft may also be SENT from here, in the same
-        act as the save. Sending is `rfq:publish`; a seat without it reads
-        whose act it is in the button's own slot, and can still save. */}
-    {editingRfqId && (
-      <div className="flex flex-wrap items-center justify-end gap-3">
-        {publishAvailability.kind === 'held' ? (
-          <Button
-            variant="outline"
-            icon={Send}
-            disabled={revisePending || ![0, 1, 2, 3, 4, 5, 6].every(isStepValid)}
-            onClick={() => saveEdit(true)}
-            data-testid="rfq-edit-send"
-          >
-            {t('rfxEdit.saveAndSend')}
-          </Button>
-        ) : (
-          <HandoffNotice availability={publishAvailability} testId="handoff-rfq-edit-send" />
-        )}
-      </div>
-    )}
+        act as the save. RFx UX B-12 — so may a NEW one, as the RFI and RFP
+        wizards allow: the draft is saved (`t_rfq_create`), then sent through
+        the same `t_rfq_publish` the panel dispatches. Sending is
+        `rfq:publish`; a seat without it reads whose act it is in the
+        button's own slot, and can still save the draft. */}
+    <div className="flex flex-wrap items-center justify-end gap-3">
+      {publishAvailability.kind === 'held' ? (
+        <Button
+          variant="outline"
+          icon={Send}
+          disabled={sendPending || ![0, 1, 2, 3, 4, 5, 6].every(isStepValid)}
+          onClick={saveAndSend}
+          data-testid={editingRfqId ? 'rfq-edit-send' : 'rfq-new-send'}
+        >
+          {t('sourcing.wizard.saveAndSend')}
+        </Button>
+      ) : (
+        <HandoffNotice
+          availability={publishAvailability}
+          testId={editingRfqId ? 'handoff-rfq-edit-send' : 'handoff-rfq-new-send'}
+        />
+      )}
+    </div>
     <div className="flex justify-end">
       <Button
         variant="secondary"

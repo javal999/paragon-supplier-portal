@@ -54,32 +54,40 @@ export const EventSourcingType = ({ event, testId }) => {
  * Why a vendor is below the level: nothing when it is qualified. `warn`
  * (placeholder lists) reads amber and the vendor stays selectable; `refused`
  * reads red and the row is not selectable.
- * @type {React.FC<{ eligibility: BiddingEligibility | undefined; testId?: string }>}
+ *
+ * RFx UX B-14 — the explanation is said ONCE per supplier, where the invitees
+ * are listed. `compact` renders the pill alone with the same explanation as
+ * its tooltip, for every other place the supplier appears (the award panel),
+ * so the two lines no longer repeat under each item.
+ * @type {React.FC<{ eligibility: BiddingEligibility | undefined; testId?: string; compact?: boolean }>}
  */
-export const EligibilityMarker = ({ eligibility, testId }) => {
+export const EligibilityMarker = ({ eligibility, testId, compact = false }) => {
   const { t } = useTranslation();
   if (!eligibility || eligibility.state === 'qualified') return null;
   const warn = eligibility.state === 'warn';
   const docs = missingText(eligibility);
+  const why = `${t('elig.needs', {
+    have: t(`qualification.level.${eligibility.level}`),
+    type: t(`sourcingType.${eligibility.sourcingType}`),
+    need: t(`qualification.level.${eligibility.requiredLevel}`)
+  })}${docs ? ` ${t('elig.missing', { docs })}` : ''}`;
   return (
     <span
       className="inline-flex flex-col items-start gap-0.5"
       data-testid={testId}
       data-state={eligibility.state}
+      {...(compact ? { title: why, 'data-compact': 'true' } : {})}
     >
       <StatusPill variant={warn ? 'warning' : 'danger'}>
         {t(warn ? 'elig.warn' : 'elig.refused')}
       </StatusPill>
-      <span
-        className={`text-xs font-normal normal-case ${warn ? 'text-warning-hover' : 'text-danger'}`}
-      >
-        {t('elig.needs', {
-          have: t(`qualification.level.${eligibility.level}`),
-          type: t(`sourcingType.${eligibility.sourcingType}`),
-          need: t(`qualification.level.${eligibility.requiredLevel}`)
-        })}
-        {docs ? ` ${t('elig.missing', { docs })}` : ''}
-      </span>
+      {!compact && (
+        <span
+          className={`text-xs font-normal normal-case ${warn ? 'text-warning-hover' : 'text-danger'}`}
+        >
+          {why}
+        </span>
+      )}
     </span>
   );
 };

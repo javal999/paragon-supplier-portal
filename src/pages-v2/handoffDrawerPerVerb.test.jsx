@@ -78,20 +78,20 @@ const renderEvent = (identity, rfqId) =>
   );
 
 describe('§76 · the drawer — publish (Draft only)', () => {
-  it('HELD: a procurement seat keeps Publish RFQ and reads no notice', async () => {
+  it('HELD: a procurement seat keeps Send to suppliers and reads no notice', async () => {
     renderWithProviders(<BuyerSourcing />, { identity: PROCUREMENT });
     await openRfq(DRAFT_RFQ);
-    expect(await screen.findByRole('button', { name: /Publish RFQ/i })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Send to suppliers/i })).toBeInTheDocument();
     expect(screen.queryByTestId('handoff-rfq-publish')).not.toBeInTheDocument();
   });
 
-  it('WITHHELD: a receiving seat reads the owner where Publish RFQ was', async () => {
+  it('WITHHELD: a receiving seat reads the owner where Send to suppliers was', async () => {
     renderWithProviders(<BuyerSourcing />, { identity: RECEIVING });
     await openRfq(DRAFT_RFQ);
     expect(await screen.findByTestId('handoff-rfq-publish')).toHaveTextContent(
       'Awaiting Procurement'
     );
-    expect(screen.queryByRole('button', { name: /Publish RFQ/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Send to suppliers/i })).not.toBeInTheDocument();
   });
 
   it('and the publish notice does NOT appear on an Open RFQ — the act is not there', async () => {

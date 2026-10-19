@@ -99,7 +99,7 @@ describe('B-01 — the event page (rfq-014: Closed, round 1 open)', () => {
     expect(within(stage).getByTestId('event-stage-sent')).toHaveAttribute('data-state', 'done');
     expect(within(stage).getByTestId('event-stage-round')).toHaveAttribute('data-state', 'current');
     expect(within(stage).getByTestId('event-stage-award')).toHaveAttribute('data-state', 'todo');
-    expect(screen.getByTestId('event-next')).toHaveTextContent('Next: Close the open round');
+    expect(screen.getByTestId('event-next')).toHaveTextContent('Next: Close the round');
     // Closed: no days-left counter on a window that is shut.
     expect(screen.queryByTestId('event-days-left')).not.toBeInTheDocument();
   });
