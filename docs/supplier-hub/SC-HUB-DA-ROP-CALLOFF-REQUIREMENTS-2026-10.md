@@ -100,7 +100,7 @@
 
 | ID | Requirement | Build | Waits on |
 |---|---|---|---|
-| DRC-1 | Suppliers see their own DA, read only | Hold | DRC-D10: the safety and DA rules (A1, A2, B1–B4) |
+| DRC-1 | Suppliers see their own DA, read only | Built, proposal | Built behind `SUPPLIER_DA_VIEW_ENABLED = false` (DRC-D10 holds): supplier page of its own published figures, and the Incoming demand anticipation confirmation on the feedstock panel; turning it on is one value |
 | DRC-2 | Rolling DA over the lead time, with carry-over | Build now | A1, A9 as [Default] |
 | DRC-3 | Full DA history with carry-over origin; audit view for Procurement and Finance | Build now | — |
 | DRC-4 | Plan vs execution check: Total DA = ROP Order = SOH + OSPO + OSPR + PR; surplus absorbed in the last week, shortfall becomes a PR recommendation | Build now | A2 as [Default] |
