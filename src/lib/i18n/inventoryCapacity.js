@@ -386,7 +386,8 @@ export const inventoryCapacityEn = {
   'inv.alerts.emptyClosed': 'No closed alerts.',
   'inv.alerts.count': 'Alerts: {{count}}',
   'inv.alerts.rule.ptiBelowRop': 'PTI stock is below the PTI reorder point',
-  'inv.alerts.rule.supplierBelowRop': 'Supplier stock is below the supplier reorder point',
+  'inv.alerts.rule.supplierBelowRop':
+    'Supplier stock is below the system-calculated supplier reorder point (ROP Supplier)',
   'inv.alerts.rule.projectedStockOut': 'PTI stock runs out before the next incoming delivery',
   'inv.alerts.rule.capacityBelowDemand': 'Allocated capacity is below the LTP',
   'inv.alerts.rule.staleData': 'Supplier stock figures are out of date',
@@ -424,7 +425,8 @@ export const inventoryCapacityEn = {
   'inv.alerts.closedAt': 'Closed',
   'inv.alerts.toast.closed': 'Alert closed',
   'inv.alerts.sup.title': 'Alerts about your materials',
-  'inv.alerts.sup.rule.supplierBelowRop': 'Your stock is below your reorder point',
+  'inv.alerts.sup.rule.supplierBelowRop':
+    'Your stock is below the reorder point PTI’s system calculated for you (ROP Supplier)',
   'inv.alerts.sup.rule.staleData': 'Your stock figures are out of date',
   'inv.alerts.sup.rule.capacityBelowDemand': 'Your allocated capacity is below PTI’s LTP',
   'inv.alerts.sup.rule.coverage':
@@ -860,7 +862,8 @@ export const inventoryCapacityId = {
   'inv.alerts.emptyClosed': 'Tidak ada peringatan yang ditutup.',
   'inv.alerts.count': 'Peringatan: {{count}}',
   'inv.alerts.rule.ptiBelowRop': 'Stok PTI di bawah titik pemesanan ulang PTI',
-  'inv.alerts.rule.supplierBelowRop': 'Stok pemasok di bawah titik pemesanan ulang pemasok',
+  'inv.alerts.rule.supplierBelowRop':
+    'Stok pemasok di bawah titik pemesanan ulang pemasok hasil hitung sistem (ROP Pemasok)',
   'inv.alerts.rule.projectedStockOut': 'Stok PTI habis sebelum kedatangan berikutnya',
   'inv.alerts.rule.capacityBelowDemand': 'Kapasitas yang dialokasikan di bawah LTP',
   'inv.alerts.rule.staleData': 'Angka stok pemasok kedaluwarsa',
@@ -901,7 +904,8 @@ export const inventoryCapacityId = {
   'inv.alerts.closedAt': 'Ditutup',
   'inv.alerts.toast.closed': 'Peringatan ditutup',
   'inv.alerts.sup.title': 'Peringatan tentang material Anda',
-  'inv.alerts.sup.rule.supplierBelowRop': 'Stok Anda di bawah titik pemesanan ulang Anda',
+  'inv.alerts.sup.rule.supplierBelowRop':
+    'Stok Anda di bawah titik pemesanan ulang yang dihitung sistem PTI untuk Anda (ROP Pemasok)',
   'inv.alerts.sup.rule.staleData': 'Angka stok Anda kedaluwarsa',
   'inv.alerts.sup.rule.capacityBelowDemand': 'Kapasitas yang Anda alokasikan di bawah LTP PTI',
   'inv.alerts.sup.rule.coverage':

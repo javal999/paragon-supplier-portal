@@ -215,6 +215,17 @@ describe('BL-198 — the NPD tag beside the level', () => {
     expect(screen.getByTestId(`sst-rop-ropFisik-${ID}`)).toHaveTextContent('1,275 KG');
   });
 
+  it('a note says most sample materials read as NPD because the sample PO history is partial (owner, 2026-10-19)', async () => {
+    await render();
+    expect(screen.getByTestId('sst-npd-sample-note')).toHaveTextContent(
+      'the sample PO and goods-receipt history is partial, so most sample materials read as NPD until real PO history arrives'
+    );
+    await i18n.changeLanguage('id');
+    expect(await screen.findByTestId('sst-npd-sample-note')).toHaveTextContent(
+      'sebagian besar material contoh terbaca NPD'
+    );
+  });
+
   it('first order fully received → no tag', async () => {
     fulfilFirstOrder();
     await render();

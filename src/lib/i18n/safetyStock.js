@@ -163,6 +163,8 @@ export const safetyStockEn = {
   'sst.rop.levelSource.planner': 'Set by the planner',
   'sst.rop.levelSource.classification': 'Set by classification',
   'sst.rop.npd': 'NPD',
+  'sst.rop.npdSampleNote':
+    'NPD: the sample PO and goods-receipt history is partial, so most sample materials read as NPD until real PO history arrives.',
   'sst.rop.npdBasis.FIRST_ORDER_OPEN': 'First order not yet fully received',
   'sst.rop.npdBasis.NO_ORDER': 'No order on record',
   'sst.rop.npdBasis.FIRST_ORDER_FULFILLED': 'First order fully received',
@@ -387,6 +389,8 @@ export const safetyStockId = {
   'sst.rop.levelSource.planner': 'Diatur perencana',
   'sst.rop.levelSource.classification': 'Diatur klasifikasi',
   'sst.rop.npd': 'NPD',
+  'sst.rop.npdSampleNote':
+    'NPD: riwayat PO dan penerimaan barang di data contoh belum lengkap, jadi sebagian besar material contoh terbaca NPD sampai riwayat PO nyata tersedia.',
   'sst.rop.npdBasis.FIRST_ORDER_OPEN': 'Pesanan pertama belum diterima penuh',
   'sst.rop.npdBasis.NO_ORDER': 'Belum ada pesanan tercatat',
   'sst.rop.npdBasis.FIRST_ORDER_FULFILLED': 'Pesanan pertama sudah diterima penuh',

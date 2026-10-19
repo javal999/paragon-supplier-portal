@@ -196,15 +196,35 @@ describe('MR-9 BR-03 — days to impact per rule', () => {
     ).toBe(NO_DAYS_TO_IMPACT);
   });
 
-  it('DRC-D15 — the supplier’s own reorder point is display only: below it raises no alert', () => {
+  it('supplierBelowRop reads the SYSTEM ROP Supplier (owner 2026-10-19); the typed ROP is display only; no system figure, no alert', () => {
     const c = deriveAlertConditions(
-      [position({ supplierSoh: 1000, supplierRop: 5000 }), position({ materialCode: 'PK-B' })],
+      [
+        // Typed ROP above the stock, system figure below it → no alert.
+        position({
+          materialCode: 'PK-A',
+          supplierSoh: 1000,
+          supplierRop: 5000,
+          systemRopSupplier: { value: 800, unavailable: null }
+        }),
+        // System figure above the stock → alert, with the stock rule's days of cover.
+        position({
+          materialCode: 'PK-B',
+          supplierSoh: 1000,
+          systemRopSupplier: { value: 2000, unavailable: null }
+        }),
+        // "Not available" (a lead-time leg the hub does not hold) → no alert.
+        position({
+          materialCode: 'PK-C',
+          supplierSoh: 1000,
+          supplierRop: 5000,
+          systemRopSupplier: { value: null, unavailable: 'NOT_ON_ROUTE' }
+        })
+      ],
       [],
       NOW
     );
-    // Population control: the same read still raises the other stock rules.
-    expect(c.map((x) => x.rule)).toContain('coverage');
-    expect(c.map((x) => x.rule)).not.toContain('supplierBelowRop');
+    expect(c.filter((x) => x.rule === 'supplierBelowRop').map((x) => x.subject)).toEqual(['PK-B']);
+    expect(c.find((x) => x.rule === 'supplierBelowRop')?.daysToImpact).toBe(10);
   });
 
   it('capacity: days to the first gap week', () => {

@@ -24,6 +24,7 @@ import { buildCapacityPlans } from '../../transitions/capacityRules';
 /** @import { BlanketPoRunOut } from '../../transitions/blanketPoRules' */
 import { blanketPoAlertSubjects, blanketPoRunOuts } from '../../transitions/blanketPoRules';
 import { demandAnticipationUnabsorbed } from './demandAnticipationReadModel';
+import { systemRopSuppliers } from './osipRopReadModel';
 import { commitmentAlertSubjects } from '../../transitions/forecastRules';
 import { allCommitmentLines } from './forecastReadModel';
 /** @import { AlertCondition } from '../../transitions/inventoryAlertRules' */
@@ -275,8 +276,13 @@ export function allBlanketPoRunOuts(nowIso = sdcClock.now()) {
 export function activeAlertConditions(nowIso = sdcClock.now()) {
   const plans = allCapacityPlans(nowIso);
   const lines = allCommitmentLines();
+  // REQ-E08-05 / DRC-D15 — `supplierBelowRop` reads the system ROP Supplier (BL-196).
+  const system = systemRopSuppliers(nowIso);
   return deriveAlertConditions(
-    allPositions(nowIso),
+    allPositions(nowIso).map((p) => ({
+      ...p,
+      systemRopSupplier: system.get(`${p.supplierId}|${p.materialCode}`) ?? null
+    })),
     plans,
     nowIso,
     // REQ-E08-05 BR-01 — commitments below forecast beyond tolerance (REQ-E06-03).

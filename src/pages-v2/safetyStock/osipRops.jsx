@@ -83,7 +83,11 @@ export const RopRuleSwitches = ({ value, onChange }) => {
       data-testid="sst-rop-switches"
     >
       <h2 className="text-section text-text-primary mb-1">{t('sst.rop.rules.title')}</h2>
-      <p className="text-xs text-text-tertiary mb-3">{t('sst.rop.rules.note')}</p>
+      <p className="text-xs text-text-tertiary mb-1">{t('sst.rop.rules.note')}</p>
+      {/* Owner, 2026-10-19 — the default NPD rule on partial sample history. */}
+      <p className="text-xs text-text-secondary mb-3" data-testid="sst-npd-sample-note">
+        {t('sst.rop.npdSampleNote')}
+      </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className={labelClass} htmlFor="sst-rop-maxRule">

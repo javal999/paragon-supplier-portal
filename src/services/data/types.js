@@ -532,7 +532,8 @@ export class DataError extends Error {
  * `materialType`:  ROH = raw material, VERP = packaging (BR-07).
  * `supplierSoh`:  Latest supplier stock submission; null when the supplier never submitted.
  * `supplierRop`:  The supplier's own reorder point; null reads "Not provided". DISPLAY ONLY
- *   (DRC-D15): suppliers may still send it, but no calculation or alert reads it.
+ *   (DRC-D15): suppliers may still send it, but no calculation or alert reads it; the
+ *   `supplierBelowRop` alert compares the supplier's stock with `systemRopSupplier`.
  * `systemRopSupplier`:  DRC-D15 (BL-196) — the system's ROP Supplier for this pair (`osipRopRules`),
  *   shown beside `supplierRop` on PTI's read; a figure or why not. Absent on a supplier's read;
  *   null when the pair has no engine source.
