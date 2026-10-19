@@ -38,17 +38,81 @@ import {
   materialShares
 } from '../../transitions/demandAnticipationRules';
 import { OSIP_RULES, supplyAreaOf } from '../../transitions/osipRules';
-import { OSIP_SAFETY_READ, materialCvs } from '../../transitions/osipSafetyRules';
+import { fisikConsumptionWeeks, materialCvs } from '../../transitions/osipSafetyRules';
 import { npdLtpWeeks } from '../../transitions/osipRopRules';
 import { engineDataset } from './fixtures/engineDataset';
 import { allCommitmentLines, forecastSupplierName } from './forecastReadModel';
 import { consumptionStore } from './stores/consumptionStore';
 
-/** The weeks of consumption read: the longer of the two windows. */
-const CONSUMPTION_WEEKS = Math.max(
-  OSIP_RULES.consumptionSdWeeks,
-  OSIP_SAFETY_READ.fisikConsumptionWeeks
-);
+/**
+ * The weeks of consumption read: the longer of the two windows in force. A
+ * variant with a shorter window reads the last weeks of this series; a longer
+ * one reads no weeks before it (BL-210).
+ */
+const CONSUMPTION_WEEKS = Math.max(OSIP_RULES.consumptionSdWeeks, fisikConsumptionWeeks());
+
+/**
+ * One material's sources (the primary one first) and each supplier's share of
+ * its recorded weekly consumption: the material's recorded weeks in the window
+ * ending this hub week, oldest first, times the supplier's LTP share over the
+ * share window (CAP-D11; BL-211 — the one split, an even one with no LTP).
+ * @param {string} code
+ * @param {{ readonly lines: ReturnType<typeof allCommitmentLines>; readonly inForce: ReturnType<typeof consumptionInForce>; readonly nowIso: string }} ctx
+ */
+function materialConsumption(code, { lines, inForce, nowIso }) {
+  const week = mondayOf(dayOf(nowIso));
+  /** @type {number[]} */
+  const recorded = [];
+  for (let i = CONSUMPTION_WEEKS - 1; i >= 0; i--) {
+    const r = inForce.get(`${code}|${addDays(week, -7 * i)}`);
+    if (r) recorded.push(r.qty);
+  }
+  const sources = engineDataset()
+    .sources.filter((s) => s.materialCode === code)
+    .sort((a, b) => b.share - a.share || a.supplierId.localeCompare(b.supplierId));
+  const ltpShares = materialShares(
+    lines,
+    code,
+    sources.map((s) => s.supplierId),
+    hubWeeks(nowIso, DEMAND_ANTICIPATION_RULES.shareWindowWeeks)
+  );
+  return {
+    sources,
+    /** @param {string} supplierId @returns {number[]} */
+    consumptionOf: (supplierId) => recorded.map((q) => q * (ltpShares.get(supplierId) ?? 0))
+  };
+}
+
+/**
+ * BL-210 — what ROP Order's safety order reads for a pair besides its LTP,
+ * lead time and MPQ: the supplier's share of the recorded consumption, MOQ and
+ * koli, exactly as `osipSafetyInputs` gathers them. Keyed `supplierId|materialCode`,
+ * one entry per engine source. The rolling demand anticipation passes them to
+ * `rollingDaFigure`, so its week-1 safety order is ROP Order's under every switch.
+ * @param {string} [nowIso]
+ * @returns {Map<string, { consumption: number[]; moq: number; koli: number | null }>}
+ */
+export function osipSafetySizes(nowIso = sdcClock.now()) {
+  const data = engineDataset();
+  const ctx = {
+    lines: allCommitmentLines(null),
+    inForce: consumptionInForce(consumptionStore.all()),
+    nowIso
+  };
+  const perPallet = new Map(data.volumes.map((v) => [v.materialCode, v.unitsPerPallet]));
+  /** @type {Map<string, { consumption: number[]; moq: number; koli: number | null }>} */
+  const out = new Map();
+  for (const code of new Set(data.sources.map((s) => s.materialCode))) {
+    const { sources, consumptionOf } = materialConsumption(code, ctx);
+    for (const s of sources)
+      out.set(`${s.supplierId}|${code}`, {
+        consumption: consumptionOf(s.supplierId),
+        moq: s.moq,
+        koli: perPallet.get(code) ?? null
+      });
+  }
+  return out;
+}
 
 /**
  * BL-193 / BL-197 — the OSIP inputs of every engine material, at the hub clock.
@@ -85,24 +149,7 @@ export function osipSafetyInputs(nowIso = sdcClock.now()) {
   const out = new Map();
   for (const m of data.materials) {
     const code = m.materialCode;
-    // The material's recorded weeks in the window ending this week, oldest first.
-    /** @type {number[]} */
-    const recorded = [];
-    for (let i = CONSUMPTION_WEEKS - 1; i >= 0; i--) {
-      const r = inForce.get(`${code}|${addDays(week, -7 * i)}`);
-      if (r) recorded.push(r.qty);
-    }
-    const sources = data.sources
-      .filter((s) => s.materialCode === code)
-      .sort((a, b) => b.share - a.share || a.supplierId.localeCompare(b.supplierId));
-    // CAP-D11: each supplier's share of the material = its share of the LTP over
-    // the share window (an even split when there is no LTP).
-    const ltpShares = materialShares(
-      lines,
-      code,
-      sources.map((s) => s.supplierId),
-      hubWeeks(nowIso, DEMAND_ANTICIPATION_RULES.shareWindowWeeks)
-    );
+    const { sources, consumptionOf } = materialConsumption(code, { lines, inForce, nowIso });
     const suppliers = sources.map((s) => {
       const breakdown = leadTimeBreakdown(s);
       const leadTimeWeeks = breakdown.totalWeeks;
@@ -119,7 +166,7 @@ export function osipSafetyInputs(nowIso = sdcClock.now()) {
         mpq: s.orderMultiple,
         moq: s.moq,
         koli: perPallet.get(code) ?? null,
-        consumption: recorded.map((q) => q * (ltpShares.get(s.supplierId) ?? 0)),
+        consumption: consumptionOf(s.supplierId),
         supplyArea: supplier ? supplyAreaOf(supplier) : null,
         // BL-196 — DRC-6 steps, for ROP Supplier / FS / to principal.
         leadTimeSteps: breakdown.steps,

@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest';
 import golden from './__fixtures__/osipGolden.json';
 import { OSIP_RULES } from './osipRules';
-import { OSIP_SAFETY_READ, materialCvs, osipSafety } from './osipSafetyRules';
+import { fisikConsumptionWeeks, materialCvs, osipSafety } from './osipSafetyRules';
 
 /**
  * @param {Partial<import('./osipRules').OsipRules>} over
@@ -126,9 +126,41 @@ describe('osipSafety — missing inputs are said, never zeroed', () => {
   });
 
   it('the Fisik window is the last 13 recorded weeks (3 months): an older peak is left out', () => {
-    expect(OSIP_SAFETY_READ.fisikConsumptionWeeks).toBe(13);
+    expect(fisikConsumptionWeeks()).toBe(13);
     const old = [99_999, ...Array.from({ length: 13 }, () => 700)];
     expect(osipSafety({ ...HAND, consumption: old }).fisik.consumptionPerDay).toBe(100);
+  });
+});
+
+describe('BL-210 — the live function reads what the sandbox changes', () => {
+  it('the consumption window comes from the rules passed in: 13 weeks → 500/day, 2 weeks → 100/day', () => {
+    // Worked by hand: 3,500, 700, 700 a week; LTP left out of the min, so the
+    // demand is the highest day of the window and ROP Fisik = CEILING(1 × it, 50).
+    const input = { ...HAND, consumption: [3500, 700, 700] };
+    const noLtp = { fisikDemandIncludesLtp: false };
+    const wide = osipSafety(input, rulesWith(noLtp)).fisik;
+    expect([wide.consumptionPerDay, wide.value]).toEqual([500, 500]);
+    const narrow = osipSafety(input, rulesWith({ ...noLtp, consumptionMovingAvgWeeks: 2 })).fisik;
+    expect([narrow.consumptionPerDay, narrow.value]).toEqual([100, 100]);
+    expect(fisikConsumptionWeeks(rulesWith({ consumptionMovingAvgWeeks: 2 }))).toBe(2);
+  });
+
+  it('a typed SD replaces the computed one: 1.65 × √3 × 200 = 571.58 → 600; without it, 300', () => {
+    const typed = osipSafety({ ...HAND, sd: 200 });
+    expect(typed.safetyOrder).toMatchObject({ sd: 200, value: 600, unavailable: null });
+    expect(osipSafety({ ...HAND, sd: null }).safetyOrder).toMatchObject({ sd: 100, value: 300 });
+    expect(osipSafety(HAND).safetyOrder).toMatchObject({ sd: 100, value: 300 });
+  });
+
+  it('a typed SD needs no series: with no consumption under consumption12w it still gives a figure', () => {
+    const rules = rulesWith({ sdSource: 'consumption12w' });
+    expect(osipSafety({ ...HAND, consumption: [] }, rules).safetyOrder.unavailable).toBe(
+      'NO_CONSUMPTION'
+    );
+    expect(osipSafety({ ...HAND, consumption: [], sd: 200 }, rules).safetyOrder).toMatchObject({
+      value: 600,
+      unavailable: null
+    });
   });
 });
 

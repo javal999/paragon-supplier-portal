@@ -18,13 +18,18 @@ import { MockProcurementService } from './MockProcurementService';
 import { demandAnticipationStore } from './stores/demandAnticipationStore';
 import { forecastVersionStore } from './stores/forecastHubStores';
 import { currentVersion } from './forecastReadModel';
-import { leadTimeWeeksOf } from './demandAnticipationReadModel';
+import { demandAnticipationToPublish, leadTimeWeeksOf } from './demandAnticipationReadModel';
+import { osipSafetyInputs } from './osipSafetyReadModel';
+import { consumptionStore } from './stores/consumptionStore';
+import { pairKey, rollingDaFigure } from '../../transitions/demandAnticipationRules';
+import { osipSafety } from '../../transitions/osipSafetyRules';
+import { addDays } from '../../transitions/inventoryRules';
 /** @import { QueryScope } from '../types' */
 import { DataError } from '../types';
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { POLICY_HOOKS } from '../../transitions/policyHooks';
 import { refusedByPolicy } from '../../transitions/refusalMessage';
-import { RULES_VERSION } from '../../transitions/osipRules';
+import { OSIP_RULES, RULES_VERSION } from '../../transitions/osipRules';
 import { demandAnticipationFlow } from '../../transitions/flows/demandAnticipation.flow';
 import { sdcClock } from '../../sdc';
 import { NO_PERSON } from '@context/noPerson';
@@ -336,5 +341,50 @@ describe('who may publish and read (probed both ways)', () => {
     expect((await svc.getDemandAnticipation(planning)).items.length).toBe(
       demandAnticipationStore.all()[0].entries.length
     );
+  });
+});
+
+describe('BL-210 — DA’s week-1 safety order is ROP Order’s under every switch', () => {
+  afterEach(() => consumptionStore.reset());
+
+  it('the pair’s inputs carry ROP Order’s consumption, MOQ and koli; both functions agree', () => {
+    // 13 recorded weeks of RM-EMUL-9410 ending at the hub week, varied so the
+    // consumption SD is not 0.
+    for (let i = 0; i < 13; i += 1)
+      consumptionStore.add({
+        materialCode: 'RM-EMUL-9410',
+        week: addDays(W[0], -7 * i),
+        qty: 400 + (i % 3) * 150,
+        unit: 'KG',
+        source: 'manual',
+        recordedAt: sdcClock.now(),
+        actor: NO_PERSON
+      });
+    const { figures } = demandAnticipationToPublish([]);
+    const osip = osipSafetyInputs();
+    const sourced = figures.filter((f) =>
+      osip.get(f.materialCode)?.suppliers.some((s) => s.supplierId === f.supplierId)
+    );
+    // Named member, reached through a value: sup-002 × RM-EMUL-9410 has 13 weeks.
+    const emul = sourced.find((f) => pairKey(f.supplierId, f.materialCode) === EMUL);
+    expect(emul?.inputs.consumption).toHaveLength(13);
+    expect(sourced.length).toBeGreaterThan(1);
+    for (const sdSource of /** @type {const} */ (['ltp', 'consumption12w']))
+      for (const safetyRounding of /** @type {const} */ (['mpq', 'koli', 'moq'])) {
+        const rules = { ...OSIP_RULES, sdSource, safetyRounding };
+        for (const f of sourced) {
+          const s = /** @type {import('../../transitions/osipSafetyRules').OsipSupplierInput} */ (
+            osip.get(f.materialCode)?.suppliers.find((x) => x.supplierId === f.supplierId)
+          );
+          expect(f.inputs.consumption).toEqual(s.consumption);
+          expect([f.inputs.moq, f.inputs.koli]).toEqual([s.moq, s.koli]);
+          const rop = osipSafety(s, rules).safetyOrder.value;
+          if (rop === null) continue;
+          expect(
+            rollingDaFigure(f.inputs, rules).safetyOrder,
+            `${f.supplierId}|${f.materialCode}`
+          ).toBe(rop);
+        }
+      }
   });
 });
