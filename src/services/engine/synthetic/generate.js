@@ -62,7 +62,7 @@
 /** @import { MaterialType, Uom } from '../../sdc/types' */
 import { grossRequirement } from '../bom';
 import { addDays, addHours, dayOf, daysBetween, instantOn, isWeekend, mondayOf } from '../dates';
-/** @import { BomLine, Brand, Confirmation, CycleCount, EngineDataset, EngineMaterial, FgPlanSnapshot, FinishedGood, IsoDate, IsoInstant, MaterialSource, MaterialValue, MaterialVolume, PlanVersion, PoLine, Receipt, SalesOrderWeek, SalesWeek, SapSafetyStock, ScheduleChange, StockSnapshot, Warehouse, WarehouseKind } from '../types' */
+/** @import { BomLine, Brand, Confirmation, CycleCount, EngineDataset, EngineMaterial, FgPlanSnapshot, FinishedGood, IsoDate, IsoInstant, LeadTimeRoute, LeadTimeStep, MaterialSource, MaterialValue, MaterialVolume, PlanVersion, PoLine, Receipt, SalesOrderWeek, SalesWeek, SapSafetyStock, ScheduleChange, StockSnapshot, Warehouse, WarehouseKind } from '../types' */
 /** @import { Rng } from './prng' */
 import { createRng } from './prng';
 /** @import { SupplierProfile } from './profiles' */
@@ -153,6 +153,8 @@ export const FLAGGED_COUNT_SHARE = 0.15;
  * `now`:  The hub's present (an instant). Everything is dated relative to it; nothing after it happens.
  * `leadTimeDays`:  The Hub's lead-time rule for a supplier × material (reused, not restated).
  * `confirmDeadline`:  The Hub's PO response-deadline rule (reused, not restated).
+ * `leadTimeSteps`:  DRC-6 (BL-192) — the route and steps of a source's lead time,
+ *   given its total; the steps must add up to `leadTimeDays`. Absent: no steps.
  *
  * @typedef {{
  *   readonly seed: number;
@@ -162,6 +164,7 @@ export const FLAGGED_COUNT_SHARE = 0.15;
  *   readonly relationships: readonly GeneratorRelationship[];
  *   readonly leadTimeDays: (supplierId: string, material: GeneratorMaterial) => number;
  *   readonly confirmDeadline: (createdAt: IsoInstant) => IsoInstant;
+ *   readonly leadTimeSteps?: (supplierId: string, material: GeneratorMaterial, leadTimeDays: number) => { readonly route: LeadTimeRoute; readonly steps: readonly LeadTimeStep[] };
  *   readonly profiles: Readonly<Record<string, SupplierProfile>>;
  *   readonly defaultProfile: SupplierProfile;
  *   readonly sizes?: Partial<GeneratorSizes>;
@@ -533,13 +536,17 @@ function buildSources(input, rng, baseline) {
     for (const c of chosen) {
       const orderMultiple = m.canonicalUom === 'PCS' ? 1000 : 25;
       const typical = weekly * c.share * (kindOf(m.materialType) === 'packaging' ? 1 : 2);
+      const leadTimeDays = input.leadTimeDays(c.supplierId, m);
+      const stepped = input.leadTimeSteps?.(c.supplierId, m, leadTimeDays);
       out.push({
         materialCode: m.materialCode,
         supplierId: c.supplierId,
-        leadTimeDays: input.leadTimeDays(c.supplierId, m),
+        leadTimeDays,
         moq: roundUpTo(typical * 0.5, orderMultiple),
         orderMultiple,
-        share: c.share
+        share: c.share,
+        // DRC-6 (BL-192) — the steps beside the total, when the input gives them.
+        ...(stepped ? { leadTimeRoute: stepped.route, leadTimeSteps: stepped.steps } : {})
       });
     }
   }

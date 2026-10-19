@@ -13,6 +13,7 @@ import {
 import { stockAccessStore } from './stores/inventoryHubStores';
 import { allPlanningGroups } from './planningGroupReadModel';
 import { allDemandAnticipationWithSupply } from './supplyBelowDemandReadModel';
+import { withLtpFgDemandRead } from './ltpFgDemandReadModel';
 /** @import { DemandAnticipationSupplyRow } from '../../transitions/supplyBelowDemandRules' */
 import { stockSimulationRows } from './stockSimulationReadModel';
 import {
@@ -485,7 +486,9 @@ export class MockProcurementService {
     // CAP-10 — PTI's own plan, frozen per horizon; a supplier reads none.
     if (scope.personaType !== 'buyer') return { items: [] };
     // CAP-12 — with open supply, the gap and its proposal per week.
-    return { items: allDemandAnticipationWithSupply() };
+    // DRC-18 (BL-203) — with FG demand, LTP − FG demand and the consumption
+    // moving average per week, read only.
+    return { items: withLtpFgDemandRead(allDemandAnticipationWithSupply()) };
   }
 
   /**

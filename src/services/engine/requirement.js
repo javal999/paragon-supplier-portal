@@ -58,6 +58,8 @@
 
 import { componentFactor } from './bom';
 import { addDays, mondayOf } from './dates';
+/** @import { LeadTimeBreakdown } from './leadTimeSteps' */
+import { leadTimeBreakdown } from './leadTimeSteps';
 /** @import { LineHistory } from './lines' */
 import { latestConfirmation, lineHistories, receivedBy, requirementAt } from './lines';
 import { DEFAULT_STOCK_ACCURACY_TOLERANCE, stockAccuracy } from './stock';
@@ -541,6 +543,8 @@ export const DEFAULT_HORIZON_WEEKS = 26;
  * @property {string | null} materialGroup
  * @property {string | null} supplierId -  The source the planned order goes to: the largest share (ties: supplier id).
  * @property {number} leadTimeDays
+ * @property {LeadTimeBreakdown | null} leadTimeSteps DRC-6 (BL-192) — the source's lead time by
+ *   step, for display only (the netting reads `leadTimeDays`). Null with no source.
  * @property {number} moq
  * @property {number} orderMultiple
  * @property {number} safetyStock
@@ -710,6 +714,7 @@ export function materialRequirement(data, options) {
           materialGroup: m.materialGroup ?? null,
           supplierId: src?.supplierId ?? null,
           leadTimeDays: src?.leadTimeDays ?? 0,
+          leadTimeSteps: src ? leadTimeBreakdown(src) : null,
           moq: src?.moq ?? 0,
           orderMultiple: src?.orderMultiple ?? 1,
           safetyStock: ss.quantity,
