@@ -30,7 +30,8 @@ import {
   useQuotations,
   useSuppliers,
   useRequisitions,
-  useAwards
+  useAwards,
+  useNegotiationRounds
 } from '@services/query/hooks';
 import { requisitionSourcingStates } from '../sourcing/requisitionPrefill';
 import { TemplatePicker, SaveTemplateDialog } from '../sourcing/RfqAuthoring';
@@ -91,7 +92,17 @@ const SourcingWorkspace = ({
   // getRFQs after the create dispatch invalidates — never a client-fabricated
   // peer spread in (the retired `extraRfqs` anti-pattern, C6 §1).
   const rfqs = baseRfqs;
-  const board = useRfqBoard(rfqs);
+  // BL-37 — the award records, so the history can name EVERY supplier of a split.
+  const awardsQuery = useAwards();
+  // RFx UX 1D (B-04) — the rounds and awards feed each row's next step. Like the
+  // award history, they are not part of the page's loading gate: until they
+  // arrive a row reads as having no round and no award.
+  const roundsQuery = useNegotiationRounds();
+  const board = useRfqBoard(rfqs, {
+    quotations,
+    rounds: roundsQuery.data?.items ?? [],
+    awards: awardsQuery.data?.items ?? []
+  });
   // 2e-c-4 — the panel holds the selected RFQ's ID, and the RFQ itself is
   // DERIVED from the live query result. It used to hold the RFQ OBJECT, which
   // was a snapshot taken when the row was clicked: a command that mutated the
@@ -155,8 +166,6 @@ const SourcingWorkspace = ({
   );
   const { toast } = useToast();
   const { t } = useTranslation();
-  // BL-37 — the award records, so the history can name EVERY supplier of a split.
-  const awardsQuery = useAwards();
   const awardByRfq = useMemo(
     () =>
       new Map((awardsQuery.data?.items ?? []).map((a) => /** @type {const} */ ([a.eventId, a]))),
@@ -223,11 +232,24 @@ const SourcingWorkspace = ({
         t={t}
       />
 
-      <SourcingKpis kpis={board.kpis} t={t} />
+      <SourcingKpis kpis={board.kpis} kpi={board.kpi} onKpi={board.toggleKpi} t={t} />
 
       <RfqBoardFilters board={board} t={t} />
 
-      <RfqBoardTable rows={board.activeFiltered} nowIso={board.nowIso} onOpen={openRfq} t={t} />
+      <RfqBoardTable
+        rows={board.activeFiltered}
+        nowIso={board.nowIso}
+        nextOf={board.nextOf}
+        // The queue's own empty line only when the queue itself is empty; a
+        // category or search that hides its rows reads the filter line.
+        emptyText={
+          board.kpi === null && board.group === 'action' && board.counts.action === 0
+            ? t('sourcing.table.emptyAction')
+            : t('sourcing.table.empty')
+        }
+        onOpen={openRfq}
+        t={t}
+      />
 
       {/* Awards history */}
       <AwardsHistory

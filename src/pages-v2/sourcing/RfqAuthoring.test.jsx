@@ -531,6 +531,8 @@ describe('templates and copying (D2)', () => {
 
   it('Save as template from the RFQ side panel, then start from it', async () => {
     renderWithProviders(<BuyerSourcing />);
+    // RFx UX 1D (B-04) — an Open RFQ with no quote in is read from "Open".
+    fireEvent.click(await screen.findByRole('tab', { name: /^Open/ }));
     fireEvent.click(await screen.findByText('RFQ-2026-022'));
     fireEvent.click(await screen.findByTestId('panel-save-template'));
     const dialog = await screen.findByTestId('rfq-save-template-dialog');

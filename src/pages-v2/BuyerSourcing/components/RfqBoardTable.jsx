@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 /** @import { TFunction } from 'i18next' */
 /** @import { RFQ } from '@data/mockRfqs' */
+/** @import { RfqNextStep } from '../utils' */
 import { ChevronRight } from 'lucide-react';
 import Table from '@components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
@@ -14,12 +15,25 @@ import { STATUS_VARIANT } from '../const';
 import { categoryLabel } from '../utils';
 
 /**
+ * The label of each next step on the board's "Next" column.
+ * @type {Record<RfqNextStep, string>}
+ */
+const NEXT_LABEL_KEY = {
+  send: 'sourcing.next.publish',
+  quotes: 'sourcing.next.reviewQuotes',
+  round: 'sourcing.next.closeRound',
+  award: 'sourcing.next.award',
+  sap: 'sourcing.next.raiseInSap'
+};
+
+/**
  * One board row: number, project tag and title, category, responses with a
  * bar, quantity, estimated value, the response deadline with its day-count
- * tone, and status. Clicking opens the side panel.
- * @type {React.FC<{ r: RFQ; nowIso: string; onOpen: (r: RFQ) => void; t: TFunction }>}
+ * tone, status, and the buyer's next act (B-04; "—" when nothing is the
+ * buyer's to do). Clicking opens the side panel.
+ * @type {React.FC<{ r: RFQ; next: RfqNextStep | null; nowIso: string; onOpen: (r: RFQ) => void; t: TFunction }>}
  */
-const RfqBoardRow = ({ r, nowIso, onOpen, t }) => {
+const RfqBoardRow = ({ r, next, nowIso, onOpen, t }) => {
   const responded = r.respondedSupplierIds.length;
   const invited = r.invitedSupplierIds.length;
   const pct = invited === 0 ? 0 : (responded / invited) * 100;
@@ -98,6 +112,12 @@ const RfqBoardRow = ({ r, nowIso, onOpen, t }) => {
       <TableCell>
         <StatusPill variant={STATUS_VARIANT[r.status]}>{r.status}</StatusPill>
       </TableCell>
+      <TableCell
+        className="text-sm font-medium text-text-primary whitespace-nowrap"
+        data-testid={`rfq-next-${r.id}`}
+      >
+        {next ? t(NEXT_LABEL_KEY[next]) : <span className="text-text-tertiary">—</span>}
+      </TableCell>
       <TableCell className="text-right">
         <ChevronRight size={16} className="text-text-tertiary inline-block" />
       </TableCell>
@@ -106,12 +126,19 @@ const RfqBoardRow = ({ r, nowIso, onOpen, t }) => {
 };
 
 /**
- * The board: every non-awarded RFQ the filters let through, or the empty row.
- * `nowIso` is the board's one clock read (`TODAY`). Moved out of
- * `BuyerSourcing.jsx` by the Phase 5 page split (no behaviour change).
- * @type {React.FC<{ rows: readonly RFQ[]; nowIso: string; onOpen: (r: RFQ) => void; t: TFunction }>}
+ * The board: every RFQ the tab (or KPI tile) and filters let through, in
+ * next-deadline order, or the empty row (`emptyText`). `nowIso` is the board's
+ * one clock read (`TODAY`); `nextOf` is each row's next step.
+ * @type {React.FC<{
+ *   rows: readonly RFQ[];
+ *   nowIso: string;
+ *   nextOf: (r: RFQ) => RfqNextStep | null;
+ *   emptyText: string;
+ *   onOpen: (r: RFQ) => void;
+ *   t: TFunction;
+ * }>}
  */
-const RfqBoardTable = ({ rows, nowIso, onOpen, t }) => (
+const RfqBoardTable = ({ rows, nowIso, nextOf, emptyText, onOpen, t }) => (
   <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-hidden mb-8">
     <Table>
       <TableHeader>
@@ -122,16 +149,21 @@ const RfqBoardTable = ({ rows, nowIso, onOpen, t }) => (
         <TableHeaderCell className="text-right">{t('sourcing.table.col.estValue')}</TableHeaderCell>
         <TableHeaderCell>{t('sourcing.table.col.responseDeadline')}</TableHeaderCell>
         <TableHeaderCell>{t('sourcing.table.col.status')}</TableHeaderCell>
+        <TableHeaderCell>{t('sourcing.table.col.next')}</TableHeaderCell>
         <TableHeaderCell className="text-right">{t('sourcing.table.col.actions')}</TableHeaderCell>
       </TableHeader>
       <tbody>
         {rows.map((r) => (
-          <RfqBoardRow key={r.id} r={r} nowIso={nowIso} onOpen={onOpen} t={t} />
+          <RfqBoardRow key={r.id} r={r} next={nextOf(r)} nowIso={nowIso} onOpen={onOpen} t={t} />
         ))}
         {rows.length === 0 && (
           <tr>
-            <td colSpan={8} className="text-center text-sm text-text-tertiary py-10">
-              {t('sourcing.table.empty')}
+            <td
+              colSpan={9}
+              className="text-center text-sm text-text-tertiary py-10"
+              data-testid="rfq-board-empty"
+            >
+              {emptyText}
             </td>
           </tr>
         )}

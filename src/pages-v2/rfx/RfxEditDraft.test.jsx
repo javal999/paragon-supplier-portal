@@ -253,7 +253,11 @@ describe('BL-93 · RFQ — Edit draft on the side panel', () => {
   });
 
   it('KNOWN-BAD twin — no Edit on an RFQ that is not a Draft', async () => {
-    await openRfqPanel(BUYER_SEAT, 'RFQ-2026-022');
+    // RFx UX 1D (B-04) — the board opens on "Needs my action"; an Open RFQ
+    // with no quote in is waiting on suppliers, so it is read from "Open".
+    renderWithProviders(<BuyerSourcing />, { identity: BUYER_SEAT });
+    fireEvent.click(await screen.findByRole('tab', { name: /^Open/ }));
+    fireEvent.click(await screen.findByText('RFQ-2026-022'));
     // The panel is open on the Open RFQ (its next-act line renders there).
     await screen.findByTestId('next-act-buyer-rfq');
     expect(screen.queryByTestId('rfq-edit-draft')).not.toBeInTheDocument();

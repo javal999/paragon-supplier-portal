@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 /** @import { TFunction } from 'i18next' */
 /** @import { useRfqBoard } from '../hooks/useRfqBoard' */
+/** @import { GroupTab } from '../const' */
 import SubTabs from '@components/ui-v2/SubTabs';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import SearchBar from '@components/ui-v2/SearchBar';
@@ -9,34 +10,26 @@ import { categoryLabel } from '../utils';
 
 /**
  * The board's filters: the status tabs with counts, the category chips and
- * the search box. `board` is the state from `useRfqBoard`. Moved out of
- * `BuyerSourcing.jsx` by the Phase 5 page split (no behaviour change).
+ * the search box. `board` is the state from `useRfqBoard`. RFx UX 1D (B-04):
+ * "Needs my action" first and the default, a Draft tab, no "All".
  * @type {React.FC<{ board: ReturnType<typeof useRfqBoard>; t: TFunction }>}
  */
 const RfqBoardFilters = ({ board, t }) => (
   <>
     <SubTabs
       options={[
-        { id: 'all', label: t('sourcing.tab.all'), count: board.counts.all },
+        { id: 'action', label: t('sourcing.tab.action'), count: board.counts.action },
         { id: 'open', label: t('sourcing.tab.open'), count: board.counts.open },
-        {
-          id: 'pending',
-          label: t('sourcing.tab.pending'),
-          count: board.counts.pending
-        },
-        {
-          id: 'awarded',
-          label: t('sourcing.tab.awarded'),
-          count: board.counts.awarded
-        },
-        {
-          id: 'closed',
-          label: t('sourcing.tab.closed'),
-          count: board.counts.closed
-        }
+        { id: 'pending', label: t('sourcing.tab.pending'), count: board.counts.pending },
+        { id: 'draft', label: t('sourcing.tab.draft'), count: board.counts.draft },
+        { id: 'awarded', label: t('sourcing.tab.awarded'), count: board.counts.awarded },
+        { id: 'closed', label: t('sourcing.tab.closed'), count: board.counts.closed }
       ]}
-      value={board.group}
-      onChange={board.setGroup}
+      // A KPI tile, pressed, filters instead of the tab, so no tab reads as selected.
+      value={board.kpi ? /** @type {GroupTab | ''} */ ('') : board.group}
+      onChange={(id) => {
+        if (id) board.setGroup(id);
+      }}
       className="mb-5"
     />
 
