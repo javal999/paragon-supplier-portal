@@ -19,6 +19,7 @@
 /** @import { RfqItem } from './rfqModel' */
 /** @import { Quotation, RFQ } from '@services/data/types' */
 /** @import { TFunction } from 'i18next' */
+/** @import { RfqEngagementView } from './rfqResponse' */
 import { supplierItemOutcomes } from './awardOutcome';
 import { itemCostAt } from './rfqComparison';
 
@@ -305,10 +306,20 @@ function noticeOf(outcome, eventType, eventId, eventNumber) {
  *   rfis: readonly RfiEventView[];
  *   rfps: readonly RfpEventView[];
  *   rounds: readonly NegotiationRoundView[];
+ *   rfqEngagement?: readonly Pick<RfqEngagementView, 'rfqId' | 'supplierId' | 'intent'>[];
  *   supplierId: string | null;
  * }} input
+ *   `rfqEngagement`: this supplier's stated intent per RFQ (lane 2D follow-up) — a declined RFQ
+ *   leaves the RFQs to quote, as the RFQ page's own count already does.
  */
-export function supplierSourcingQueue({ rfqs, rfis, rfps, rounds, supplierId }) {
+export function supplierSourcingQueue({
+  rfqs,
+  rfis,
+  rfps,
+  rounds,
+  rfqEngagement = [],
+  supplierId
+}) {
   /**
    * BL-132 — an RFI or RFP this supplier declined is no longer waiting on it,
    * as a declined RFQ leaves the RFQ page's count.
@@ -316,9 +327,18 @@ export function supplierSourcingQueue({ rfqs, rfis, rfps, rounds, supplierId }) 
    */
   const declined = (e) =>
     e.invitedSuppliers.find((i) => i.supplierId === supplierId)?.intent?.intent === 'decline';
+  const declinedRfqIds = new Set(
+    rfqEngagement
+      .filter((e) => e.supplierId === supplierId && e.intent?.intent === 'decline')
+      .map((e) => e.rfqId)
+  );
   return {
     openRfqs: rfqs.filter(
-      (r) => r.status === 'Open' && !!supplierId && !r.respondedSupplierIds.includes(supplierId)
+      (r) =>
+        r.status === 'Open' &&
+        !!supplierId &&
+        !r.respondedSupplierIds.includes(supplierId) &&
+        !declinedRfqIds.has(r.id)
     ),
     // A draft is still "to answer": only a SUBMITTED response (or a decline) takes it off.
     openRfis: rfis.filter(
