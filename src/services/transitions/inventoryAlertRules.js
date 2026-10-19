@@ -68,7 +68,6 @@ import {
   daysBetween,
   isProjectedStockOut,
   isPtiBelowRop,
-  isSupplierBelowRop,
   hasLeadTime,
   materialDailyDemand,
   positionDays,
@@ -393,8 +392,9 @@ export function deriveAlertConditions(
     // MR-9 BR-03 — the stock rules: days of cover, or days to the projected stock-out.
     if (isPtiBelowRop(p))
       push('ptiBelowRop', p, p.materialCode, p.materialLabel, risk, coverDays(p));
-    if (isSupplierBelowRop(p))
-      push('supplierBelowRop', p, p.materialCode, p.materialLabel, risk, coverDays(p));
+    // DRC-D15 (BL-196) — the supplier's own reorder point is DISPLAY ONLY: no
+    // calculation reads it, so `supplierBelowRop` no longer fires. The rule id
+    // stays in the vocabulary so a ledger row recorded before keeps its label.
     if (isProjectedStockOut(p, dailyDemand, nowIso)) {
       push(
         'projectedStockOut',

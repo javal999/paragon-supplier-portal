@@ -148,7 +148,86 @@ export const safetyStockEn = {
   'sst.osip.def.cv':
     'CV = standard deviation ÷ average of each finished good’s weekly demand over the last 26 weeks. A component takes its finished goods’ CVs weighted by their average demand. Stable below 0.5, fluctuative from 0.5. Finished goods carry no variant grouping yet, so each one is its own variant.',
   'sst.osip.def.challenger':
-    'The OSIP figures are the default rule. The engine’s fill-rate safety stock stays beside them as the challenger.'
+    'The OSIP figures are the default rule. The engine’s fill-rate safety stock stays beside them as the challenger.',
+  // BL-196 (DRC-10, DRC-D11) / BL-198 (DRC-12a)
+  'sst.rop.col.level': 'OSIP level',
+  'sst.rop.col.ropOrder': 'ROP Order',
+  'sst.rop.col.ropFisik': 'ROP Fisik',
+  'sst.rop.col.max': 'Max',
+  'sst.rop.col.ropSupplier': 'ROP Supplier',
+  'sst.rop.col.ropFs': 'ROP FS',
+  'sst.rop.col.ropToPrincipal': 'ROP to principal',
+  'sst.rop.challenger': 'Challenger: engine reorder point',
+  'sst.rop.level': 'Level {{level}}',
+  'sst.rop.levelSource.default': 'Default level (C2)',
+  'sst.rop.levelSource.planner': 'Set by the planner',
+  'sst.rop.levelSource.classification': 'Set by classification',
+  'sst.rop.npd': 'NPD',
+  'sst.rop.npdBasis.FIRST_ORDER_OPEN': 'First order not yet fully received',
+  'sst.rop.npdBasis.NO_ORDER': 'No order on record',
+  'sst.rop.npdBasis.FIRST_ORDER_FULFILLED': 'First order fully received',
+  'sst.rop.npdBasis.WITHIN_LAUNCH_YEAR': 'Within a year of launch',
+  'sst.rop.npdBasis.LAUNCH_YEAR_PASSED': 'More than a year since launch',
+  'sst.rop.npdBasis.SHORT_HISTORY': 'Under 52 weeks of sales history',
+  'sst.rop.npdBasis.NO_HISTORY': 'No sales history',
+  'sst.rop.npdBasis.FULL_HISTORY': '52 weeks of sales history or more',
+  'sst.rop.npdBasis.NO_BOM': 'No BOM line: no launch or history to read',
+  'sst.rop.unavailable.NO_SAFETY_ORDER': 'Not available: no safety order',
+  'sst.rop.unavailable.NO_FISIK_SAFETY': 'Not available: no ROP Fisik safety',
+  'sst.rop.unavailable.NO_SUPPLY_AREA': 'Not available: no supply area for f',
+  'sst.rop.unavailable.NO_LTP': 'Not available: no LTP',
+  'sst.rop.unavailable.NO_DEMAND': 'Not available: no ROP Fisik demand',
+  'sst.rop.unavailable.NO_LEAD_TIME_STEPS': 'Not available: no lead time by step',
+  'sst.rop.unavailable.NOT_ON_ROUTE': 'Not available: no {{steps}} lead time on this route',
+  'sst.rop.step.orderToPrincipal': 'order-to-principal',
+  'sst.rop.step.orderingMaterial': 'ordering-material',
+  'sst.rop.step.machineQueue': 'machine-queue',
+  'sst.rop.step.production': 'production',
+  'sst.rop.step.shipment': 'shipment',
+  'sst.rop.step.delivery': 'delivery',
+  'sst.rop.flag.LEVEL_FALLBACK': 'No formula for this level: level 4 used',
+  'sst.rop.flag.NO_MDQ': 'No MDQ: rounded to a unit',
+  'sst.rop.flag.NO_PALLET_SIZE': 'No pallet size: rounded to a unit',
+  'sst.rop.flag.NO_MAX_ROUNDING': 'No koli or MOQ: rounded to a unit',
+  'sst.rop.ropOrderTitle': 'Cycle stock {{cycle}} + safety order',
+  'sst.rop.ropFisikTitle': 'Level {{level}} · cycle {{cycle}} + safety',
+  'sst.rop.legTitle': '{{days}} days of the lead time',
+  'sst.rop.rules.title': 'ROP rule switches',
+  'sst.rop.rules.note':
+    'Read only: a switch recomputes the ROP figures on this page for comparison. Nothing is stored.',
+  'sst.rop.rules.maxRule': 'Max (B8)',
+  'sst.rop.rules.maxRule.deck': 'Deck: ROP rounded up to koli (local) or MOQ (import) (default)',
+  'sst.rop.rules.maxRule.sheetGuidance': 'Sheet guidance: ROP + cycle stock',
+  'sst.rop.rules.npdRule': 'NPD until (D1)',
+  'sst.rop.rules.npdRule.firstOrderFulfilled': 'First order fully received (default)',
+  'sst.rop.rules.npdRule.oneYearAfterLaunch': 'One year after launch (sheet)',
+  'sst.rop.rules.npdRule.52WeeksHistory': '52 weeks of sales history (engine)',
+  'sst.rop.detail.title': 'OSIP level and reorder points',
+  'sst.rop.detail.level': 'OSIP level {{level}}',
+  'sst.rop.detail.supplier': 'Supplier',
+  'sst.rop.detail.npdYes': 'NPD: ROP Fisik demand is the highest LTP of the next 3 months',
+  'sst.rop.detail.npdNo': 'Not NPD',
+  'sst.rop.detail.firstOrder': 'First order {{po}}: {{received}} of {{ordered}} {{uom}} received',
+  'sst.rop.detail.npdEffect':
+    'When the tag drops, the planner gets the Home task “Review ROP after first order” to review the ROP on CO and IR, the real demand. Setting or confirming the level closes it.',
+  'sst.rop.detail.supplierReading':
+    'Read until Material Planning confirms the sheet’s formulas: the ROP Fisik demand over one part of the supplier’s lead time, rounded up to the MPQ. ROP Supplier covers machine queue and production, ROP FS ordering material, ROP to principal the order to the principal.',
+  'sst.rop.levelForm.label': 'OSIP level',
+  'sst.rop.levelForm.save': 'Save level',
+  'sst.rop.levelForm.confirm': 'Confirm level',
+  'sst.rop.levelForm.saved': 'Level saved',
+  'sst.rop.levelForm.savedDesc': 'Level {{level}} is in force for {{material}}.',
+  'sst.rop.levelForm.refused': 'The level was not saved',
+  'sst.rop.def.level':
+    'OSIP level: set per material by the Material Planner; a material nobody set is at level 4 (warehouse replenishment). The level picks the ROP Fisik formula.',
+  'sst.rop.def.rops':
+    'ROP Order = cycle stock (the LTP over the lead time) + safety order: the input to ZPE007, which the hub does not run. ROP Fisik, levels 3 and 4 = the daily demand × f rounded up to the MPQ, + safety; level 5 rounds up to the MDQ (the MOQ until the master data carries an MDQ); level 6 (JIT) = 1 day of LTP rounded up to a pallet, no safety.',
+  'sst.rop.def.max':
+    'Max = ROP Fisik rounded up to a koli (units per pallet) for a local supplier, or to the MOQ for an import. It caps call-offs only.',
+  'sst.rop.def.supplier':
+    'ROP Supplier, ROP FS and ROP to principal are the supplier-side reorder points. The supplier’s own reorder point on the stock template is shown for reference only; no calculation reads it.',
+  'sst.rop.def.npd':
+    'NPD: a material is new until its first order is fully received (goods receipts). While it is, its ROP Fisik demand is the highest LTP of the next 3 months. Transition products are not told apart: the data carries no flag for them.'
 };
 
 /** @type {Record<string, string>} */
@@ -293,5 +372,87 @@ export const safetyStockId = {
   'sst.osip.def.cv':
     'CV = simpangan baku ÷ rata-rata permintaan mingguan setiap barang jadi selama 26 minggu terakhir. Komponen memakai CV barang jadinya, dibobot permintaan rata-ratanya. Stabil di bawah 0,5, fluktuatif mulai 0,5. Barang jadi belum punya pengelompokan varian, jadi setiap barang jadi adalah varian tersendiri.',
   'sst.osip.def.challenger':
-    'Angka OSIP adalah aturan bawaan. Stok pengaman tingkat pemenuhan dari mesin tetap di sampingnya sebagai pembanding.'
+    'Angka OSIP adalah aturan bawaan. Stok pengaman tingkat pemenuhan dari mesin tetap di sampingnya sebagai pembanding.',
+  // BL-196 (DRC-10, DRC-D11) / BL-198 (DRC-12a)
+  'sst.rop.col.level': 'Level OSIP',
+  'sst.rop.col.ropOrder': 'ROP Order',
+  'sst.rop.col.ropFisik': 'ROP Fisik',
+  'sst.rop.col.max': 'Maks',
+  'sst.rop.col.ropSupplier': 'ROP Pemasok',
+  'sst.rop.col.ropFs': 'ROP FS',
+  'sst.rop.col.ropToPrincipal': 'ROP ke prinsipal',
+  'sst.rop.challenger': 'Pembanding: titik pemesanan ulang mesin',
+  'sst.rop.level': 'Level {{level}}',
+  'sst.rop.levelSource.default': 'Level bawaan (C2)',
+  'sst.rop.levelSource.planner': 'Diatur perencana',
+  'sst.rop.levelSource.classification': 'Diatur klasifikasi',
+  'sst.rop.npd': 'NPD',
+  'sst.rop.npdBasis.FIRST_ORDER_OPEN': 'Pesanan pertama belum diterima penuh',
+  'sst.rop.npdBasis.NO_ORDER': 'Belum ada pesanan tercatat',
+  'sst.rop.npdBasis.FIRST_ORDER_FULFILLED': 'Pesanan pertama sudah diterima penuh',
+  'sst.rop.npdBasis.WITHIN_LAUNCH_YEAR': 'Dalam setahun sejak peluncuran',
+  'sst.rop.npdBasis.LAUNCH_YEAR_PASSED': 'Lebih dari setahun sejak peluncuran',
+  'sst.rop.npdBasis.SHORT_HISTORY': 'Riwayat penjualan kurang dari 52 minggu',
+  'sst.rop.npdBasis.NO_HISTORY': 'Tidak ada riwayat penjualan',
+  'sst.rop.npdBasis.FULL_HISTORY': 'Riwayat penjualan 52 minggu atau lebih',
+  'sst.rop.npdBasis.NO_BOM': 'Tidak ada baris BOM: tidak ada peluncuran atau riwayat untuk dibaca',
+  'sst.rop.unavailable.NO_SAFETY_ORDER': 'Tidak tersedia: tidak ada pesanan pengaman',
+  'sst.rop.unavailable.NO_FISIK_SAFETY': 'Tidak tersedia: tidak ada pengaman ROP Fisik',
+  'sst.rop.unavailable.NO_SUPPLY_AREA': 'Tidak tersedia: tidak ada area pasokan untuk f',
+  'sst.rop.unavailable.NO_LTP': 'Tidak tersedia: tidak ada LTP',
+  'sst.rop.unavailable.NO_DEMAND': 'Tidak tersedia: tidak ada permintaan ROP Fisik',
+  'sst.rop.unavailable.NO_LEAD_TIME_STEPS': 'Tidak tersedia: tidak ada waktu tunggu per tahap',
+  'sst.rop.unavailable.NOT_ON_ROUTE':
+    'Tidak tersedia: tidak ada waktu tunggu {{steps}} di rute ini',
+  'sst.rop.step.orderToPrincipal': 'pemesanan ke prinsipal',
+  'sst.rop.step.orderingMaterial': 'pemesanan bahan',
+  'sst.rop.step.machineQueue': 'antrean mesin',
+  'sst.rop.step.production': 'produksi',
+  'sst.rop.step.shipment': 'pengapalan',
+  'sst.rop.step.delivery': 'pengiriman',
+  'sst.rop.flag.LEVEL_FALLBACK': 'Tidak ada rumus untuk level ini: level 4 dipakai',
+  'sst.rop.flag.NO_MDQ': 'Tidak ada MDQ: dibulatkan ke satuan',
+  'sst.rop.flag.NO_PALLET_SIZE': 'Tidak ada ukuran palet: dibulatkan ke satuan',
+  'sst.rop.flag.NO_MAX_ROUNDING': 'Tidak ada koli atau MOQ: dibulatkan ke satuan',
+  'sst.rop.ropOrderTitle': 'Stok siklus {{cycle}} + pesanan pengaman',
+  'sst.rop.ropFisikTitle': 'Level {{level}} · siklus {{cycle}} + pengaman',
+  'sst.rop.legTitle': '{{days}} hari dari waktu tunggu',
+  'sst.rop.rules.title': 'Pengalih aturan ROP',
+  'sst.rop.rules.note':
+    'Hanya baca: pengalih menghitung ulang angka ROP di halaman ini untuk perbandingan. Tidak ada yang disimpan.',
+  'sst.rop.rules.maxRule': 'Maks (B8)',
+  'sst.rop.rules.maxRule.deck':
+    'Deck: ROP dibulatkan ke atas ke koli (lokal) atau MOQ (impor) (bawaan)',
+  'sst.rop.rules.maxRule.sheetGuidance': 'Panduan sheet: ROP + stok siklus',
+  'sst.rop.rules.npdRule': 'NPD sampai (D1)',
+  'sst.rop.rules.npdRule.firstOrderFulfilled': 'Pesanan pertama diterima penuh (bawaan)',
+  'sst.rop.rules.npdRule.oneYearAfterLaunch': 'Satu tahun setelah peluncuran (sheet)',
+  'sst.rop.rules.npdRule.52WeeksHistory': 'Riwayat penjualan 52 minggu (mesin)',
+  'sst.rop.detail.title': 'Level OSIP dan titik pemesanan ulang',
+  'sst.rop.detail.level': 'Level OSIP {{level}}',
+  'sst.rop.detail.supplier': 'Pemasok',
+  'sst.rop.detail.npdYes': 'NPD: permintaan ROP Fisik adalah LTP tertinggi 3 bulan ke depan',
+  'sst.rop.detail.npdNo': 'Bukan NPD',
+  'sst.rop.detail.firstOrder':
+    'Pesanan pertama {{po}}: {{received}} dari {{ordered}} {{uom}} diterima',
+  'sst.rop.detail.npdEffect':
+    'Saat tanda ini hilang, perencana mendapat tugas Beranda “Tinjau ROP setelah pesanan pertama” untuk meninjau ROP berdasarkan CO dan IR, permintaan nyata. Mengatur atau mengonfirmasi level menutupnya.',
+  'sst.rop.detail.supplierReading':
+    'Tafsiran sampai Material Planning mengonfirmasi rumus sheet: permintaan ROP Fisik selama satu bagian waktu tunggu pemasok, dibulatkan ke atas ke MPQ. ROP Pemasok mencakup antrean mesin dan produksi, ROP FS pemesanan bahan, ROP ke prinsipal pemesanan ke prinsipal.',
+  'sst.rop.levelForm.label': 'Level OSIP',
+  'sst.rop.levelForm.save': 'Simpan level',
+  'sst.rop.levelForm.confirm': 'Konfirmasi level',
+  'sst.rop.levelForm.saved': 'Level tersimpan',
+  'sst.rop.levelForm.savedDesc': 'Level {{level}} berlaku untuk {{material}}.',
+  'sst.rop.levelForm.refused': 'Level tidak tersimpan',
+  'sst.rop.def.level':
+    'Level OSIP: diatur per material oleh Perencana Material; material yang belum diatur berada di level 4 (pengisian ulang gudang). Level menentukan rumus ROP Fisik.',
+  'sst.rop.def.rops':
+    'ROP Order = stok siklus (LTP selama waktu tunggu) + pesanan pengaman: input ZPE007, yang tidak dijalankan hub. ROP Fisik, level 3 dan 4 = permintaan harian × f dibulatkan ke atas ke MPQ, + pengaman; level 5 dibulatkan ke atas ke MDQ (MOQ sampai data master memuat MDQ); level 6 (JIT) = LTP 1 hari dibulatkan ke atas ke palet, tanpa pengaman.',
+  'sst.rop.def.max':
+    'Maks = ROP Fisik dibulatkan ke atas ke koli (unit per palet) untuk pemasok lokal, atau ke MOQ untuk impor. Hanya membatasi call-off.',
+  'sst.rop.def.supplier':
+    'ROP Pemasok, ROP FS dan ROP ke prinsipal adalah titik pemesanan ulang di sisi pemasok. Titik pemesanan ulang pemasok sendiri di templat stok hanya ditampilkan sebagai acuan; tidak ada perhitungan yang membacanya.',
+  'sst.rop.def.npd':
+    'NPD: material dianggap baru sampai pesanan pertamanya diterima penuh (penerimaan barang). Selama itu, permintaan ROP Fisik-nya adalah LTP tertinggi 3 bulan ke depan. Produk transisi tidak dibedakan: data tidak memuat penandanya.'
 };

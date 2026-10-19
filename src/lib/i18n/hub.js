@@ -159,6 +159,9 @@ export const hubEn = {
     'Delivery drift: suppliers late or missing 2 or more call-offs of a material',
   'hub.home.task.inventoryHighAlerts': 'High-risk inventory and capacity alerts',
   'hub.home.task.capacityGaps': 'Suppliers with capacity below demand',
+  // DRC-12a (BL-198) — a material's NPD tag dropped: review its ROP on its real demand.
+  'hub.home.task.npdRopReview':
+    'Review ROP after first order: materials no longer NPD, review on CO and IR (real demand)',
   'hub.home.task.missingCommitments': 'Missing forecast commitments',
   'hub.home.task.commitmentExceptions': 'Forecast commitments outside tolerance to review',
 
@@ -323,6 +326,8 @@ export const hubId = {
     'Pergeseran pengiriman: pemasok terlambat atau tidak mengirim 2 call-off atau lebih untuk satu material',
   'hub.home.task.inventoryHighAlerts': 'Peringatan stok dan kapasitas berisiko tinggi',
   'hub.home.task.capacityGaps': 'Pemasok dengan kapasitas di bawah kebutuhan',
+  'hub.home.task.npdRopReview':
+    'Tinjau ROP setelah pesanan pertama: material bukan NPD lagi, tinjau berdasarkan CO dan IR (permintaan nyata)',
   'hub.home.task.missingCommitments': 'Komitmen prakiraan yang belum masuk',
   'hub.home.task.commitmentExceptions': 'Komitmen prakiraan di luar toleransi untuk ditinjau',
 

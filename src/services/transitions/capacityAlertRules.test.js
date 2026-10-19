@@ -246,7 +246,7 @@ describe('REQ-E08-05 BR-02 — risk class (CR-24 since 2026-09-21; was CR-02 ban
 });
 
 describe('REQ-E08-05 BR-01 — each rule raises an alert when its condition is met', () => {
-  it('PTI below ROP, supplier below ROP, projected stock-out, stale data, coverage, capacity gap', () => {
+  it('PTI below ROP, projected stock-out, stale data, coverage, capacity gap (supplier below ROP no longer: DRC-D15)', () => {
     const conditions = deriveAlertConditions(
       [
         position({ materialCode: 'P1', ptiSoh: 400, ptiRop: 500 }),
@@ -280,10 +280,11 @@ describe('REQ-E08-05 BR-01 — each rule raises an alert when its condition is m
       NOW
     );
     const keys = conditions.map((c) => c.key);
+    // DRC-D15 (BL-196) — the supplier's ROP is display only: P2 below it raises nothing.
+    expect(keys).not.toContain('supplierBelowRop|P2|sup-007');
     expect(keys).toEqual(
       expect.arrayContaining([
         'ptiBelowRop|P1|sup-007',
-        'supplierBelowRop|P2|sup-007',
         'projectedStockOut|P3|sup-007',
         'staleData|P4|sup-007',
         'coverage|P5|sup-007',

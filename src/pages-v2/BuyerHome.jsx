@@ -15,7 +15,8 @@ import {
   usePurchaseOrders,
   useQuotations,
   useRFQs,
-  useNegotiationRounds
+  useNegotiationRounds,
+  useNpdReviews
 } from '@services/query/hooks';
 import { useUnifiedChase } from '@services/query/chaseHooks';
 /** @import { HubRole } from '@components/layout-v2/hubRole' */
@@ -77,6 +78,9 @@ const BuyerHome = () => {
   const rounds = useNegotiationRounds();
   // REQ-E07-08 — records that did not get through and can be sent again (CR-20).
   const sap = useSapInterface();
+  // DRC-12a (BL-198) — materials whose NPD tag dropped, until the planner
+  // sets or confirms their OSIP level.
+  const npdReviews = useNpdReviews();
 
   const tasks = /** @type {HomeTask[]} */ (
     useMemo(() => {
@@ -108,6 +112,7 @@ const BuyerHome = () => {
         (a) => a.status === 'open' && a.riskClass === 'high'
       );
       const gapPlans = (capacity.data?.items ?? []).filter((p) => planStatus(p) === 'gap');
+      const reviews = npdReviews.data?.items ?? [];
       const lines = forecastLines.data?.items ?? [];
       const missingLines = lines.filter((l) => deadlineState(l, forecastNow()) === 'overdue');
       const exceptionLines = lines.filter((l) => l.state === 'exception');
@@ -222,6 +227,21 @@ const BuyerHome = () => {
           count: gapPlans.length,
           deadlines: gapPlans.map((p) => gapWeeks(p)[0]?.week),
           to: deepLink('/buyer/capacity', { gapsOnly: '1' })
+        },
+        {
+          // DRC-12a (BL-198) — raised once when a material's NPD tag drops: the
+          // planner reviews its ROP on CO and IR, the real demand. No deadline
+          // is recorded, so its severity is the computed "due soon" grey. The
+          // link opens the material on Safety stock targets when every counted
+          // material is the same one, else the page unfiltered.
+          id: 'npd-rop-review',
+          roles: ['MP'],
+          label: t('hub.home.task.npdRopReview'),
+          count: reviews.length,
+          deadlines: [],
+          to: deepLink('/buyer/safety-stock', {
+            material: sharedValue(reviews, (r) => r.materialCode)
+          })
         },
         {
           // REQ-E06-03 BR-06 — after the deadline, a missing commitment escalates to the planner.
@@ -351,6 +371,7 @@ const BuyerHome = () => {
       forecastLines.data,
       rounds.data,
       sap.failures,
+      npdReviews.data,
       t
     ])
   );

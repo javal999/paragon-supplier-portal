@@ -27,6 +27,12 @@ export const inventoryCapacityEn = {
   'inv.col.ptiSoh': 'PTI stock',
   'inv.col.ptiRop': 'PTI reorder point',
   'inv.col.supplierRop': 'Supplier reorder point',
+  // DRC-D15 (BL-196) — the supplier's figure is display only; the system's sits beside it.
+  'inv.col.supplierRop.displayOnly': 'Supplier’s figure, display only · system ROP Supplier below',
+  'inv.systemRopSupplier': 'System: {{value}}',
+  'inv.systemRopSupplier.none': 'System: no figure (an input is missing)',
+  'inv.systemRopSupplier.title':
+    'System ROP Supplier (OSIP). Provisional: rule awaiting Material Planning (B10, MPQ)',
   'inv.col.yourRop': 'Your reorder point',
   'inv.col.incoming': 'Incoming',
   'inv.col.daysOfSupply': 'Days of supply',
@@ -498,6 +504,12 @@ export const inventoryCapacityId = {
   'inv.col.ptiSoh': 'Stok PTI',
   'inv.col.ptiRop': 'Titik pemesanan ulang PTI',
   'inv.col.supplierRop': 'Titik pemesanan ulang pemasok',
+  'inv.col.supplierRop.displayOnly':
+    'Angka pemasok, hanya tampilan · ROP Pemasok sistem di bawahnya',
+  'inv.systemRopSupplier': 'Sistem: {{value}}',
+  'inv.systemRopSupplier.none': 'Sistem: tidak ada angka (input kurang)',
+  'inv.systemRopSupplier.title':
+    'ROP Pemasok sistem (OSIP). Sementara: aturan menunggu Material Planning (B10, MPQ)',
   'inv.col.yourRop': 'Titik pemesanan ulang Anda',
   'inv.col.incoming': 'Akan datang',
   'inv.col.daysOfSupply': 'Hari persediaan',

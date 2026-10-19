@@ -16,7 +16,10 @@
 //   · supply area — the supplier master's country and city (DRC-B8);
 //   · FG demand for CV — the engine dataset's weekly sell-in per SKU, stock-out
 //     weeks filled as the engine's forecast fills them (ENG-B62), mapped to
-//     components by the BOM lines valid this week.
+//     components by the BOM lines valid this week;
+//   · BL-196 / BL-198 — the source's lead time by step (DRC-6), which the
+//     supplier-side ROPs read, and the LTP over the next 3 months, which an NPD
+//     material's ROP Fisik demand reads (DRC-10 [Default B5]); same LTP read.
 // Computed at read, never stored (law 0.5); the page applies the rules, so a
 // switch variant needs no new read.
 // ────────────────────────────────────────────────────────────────────────────
@@ -36,6 +39,7 @@ import {
 } from '../../transitions/demandAnticipationRules';
 import { OSIP_RULES, supplyAreaOf } from '../../transitions/osipRules';
 import { OSIP_SAFETY_READ, materialCvs } from '../../transitions/osipSafetyRules';
+import { OSIP_ROP_READ } from '../../transitions/osipRopRules';
 import { engineDataset } from './fixtures/engineDataset';
 import { allCommitmentLines, forecastSupplierName } from './forecastReadModel';
 import { consumptionStore } from './stores/consumptionStore';
@@ -100,7 +104,8 @@ export function osipSafetyInputs(nowIso = sdcClock.now()) {
       hubWeeks(nowIso, DEMAND_ANTICIPATION_RULES.shareWindowWeeks)
     );
     const suppliers = sources.map((s) => {
-      const leadTimeWeeks = leadTimeBreakdown(s).totalWeeks;
+      const breakdown = leadTimeBreakdown(s);
+      const leadTimeWeeks = breakdown.totalWeeks;
       const supplier = mockSuppliers.find((x) => x.id === s.supplierId);
       return /** @type {OsipSupplierInput} */ ({
         supplierId: s.supplierId,
@@ -115,7 +120,13 @@ export function osipSafetyInputs(nowIso = sdcClock.now()) {
         moq: s.moq,
         koli: perPallet.get(code) ?? null,
         consumption: recorded.map((q) => q * (ltpShares.get(s.supplierId) ?? 0)),
-        supplyArea: supplier ? supplyAreaOf(supplier) : null
+        supplyArea: supplier ? supplyAreaOf(supplier) : null,
+        // BL-196 — DRC-6 steps, for ROP Supplier / FS / to principal.
+        leadTimeSteps: breakdown.steps,
+        // BL-198 — DRC-10 "highest LTP over the next 3 months" (NPD).
+        ltpNext3m: hubWeeks(nowIso, OSIP_ROP_READ.npdLtpWeeks).map((w) =>
+          groupWeekLtp(lines, s.supplierId, [code], w)
+        )
       });
     });
     out.set(code, {
