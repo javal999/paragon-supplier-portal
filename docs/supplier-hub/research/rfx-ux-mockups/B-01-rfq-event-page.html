@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>B-01 · RFQ event page: stage bar, section nav, award confirmation</title>
+<style>
+  :root{--bg:#f6f7f9;--surface:#fff;--border:#e4e7ec;--text:#111827;--text2:#4b5563;--text3:#6b7280;--action:#1d4ed8;--action-soft:#eff4ff;--teal:#0f766e;--teal-soft:#ecfdf5;--warn:#b45309;--warn-soft:#fffbeb;--danger:#b91c1c;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;color:var(--text);background:var(--bg)}
+  .shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+  .side{background:var(--surface);border-right:1px solid var(--border);padding:16px 12px}
+  .brand{font-weight:700;font-size:13px;margin-bottom:14px}
+  .persona{display:flex;border:1px solid var(--border);border-radius:999px;padding:2px;margin-bottom:18px;font-size:12px}
+  .persona span{flex:1;text-align:center;padding:4px;border-radius:999px}
+  .persona .on{background:#eef2f7;font-weight:600}
+  .sect{font-size:10px;letter-spacing:.08em;color:var(--text3);margin:14px 8px 6px}
+  .nav a{display:block;padding:7px 8px;border-radius:8px;color:var(--text);text-decoration:none}
+  .nav a.active{background:var(--action-soft);color:var(--action);font-weight:600}
+  main{padding:20px 28px 60px}
+  .eyebrow{font-size:10px;letter-spacing:.08em;color:var(--text3)}
+  .eyebrow a{color:var(--action);text-decoration:none}
+  h1{font-size:22px;margin:4px 0 2px}
+  .meta{color:var(--text2);margin:0 0 12px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600}
+  .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--border);color:var(--text2);background:#f9fafb}
+  .pill.info{background:var(--action-soft);color:var(--action);border-color:#c7d7fe}
+  .pill.ok{background:var(--teal-soft);color:var(--teal);border-color:#a7f3d0}
+  .pill.warn{background:var(--warn-soft);color:var(--warn);border-color:#fde68a}
+  .stage{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:0 0 16px}
+  .stage div{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text3)}
+  .stage div b{display:block;color:var(--text);font-size:12px}
+  .stage div.done{border-color:#a7f3d0;background:var(--teal-soft)}
+  .stage div.cur{border-color:var(--action);background:var(--action-soft)}
+  .stage div.cur b{color:var(--action)}
+  .layout{display:grid;grid-template-columns:200px 1fr;gap:20px;align-items:start}
+  .toc{position:sticky;top:16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px}
+  .toc a{display:flex;justify-content:space-between;padding:7px 8px;border-radius:6px;color:var(--text);text-decoration:none;font-size:13px}
+  .toc a.cur{background:var(--action-soft);color:var(--action);font-weight:600}
+  .toc small{color:var(--text3)}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 1px 2px rgba(16,24,40,.04);margin-bottom:14px}
+  .card .hd{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600}
+  .card .hd .sub{font-weight:400;color:var(--text3);font-size:12px}
+  .card .bd{padding:14px 16px}
+  details summary{cursor:pointer;color:var(--action);font-size:12px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{font-size:10px;letter-spacing:.06em;color:var(--text3);text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)}
+  td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+  td.num{font-family:ui-monospace,Menlo,monospace;text-align:right}
+  .best{background:var(--teal-soft)}
+  .warnline{font-size:12px;color:var(--warn)}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  input,select{font:inherit;padding:6px 8px;border:1px solid #d0d5dd;border-radius:8px;background:#fff;width:100%}
+  .btn{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid #d0d5dd;background:#fff;cursor:pointer}
+  .btn.primary{background:var(--action);border-color:var(--action);color:#fff;font-weight:600}
+  .sheet{border:2px solid var(--action);border-radius:10px;padding:14px 16px;background:var(--action-soft);margin-top:12px}
+  .sheet h4{margin:0 0 6px;font-size:14px}
+  .sheet ul{margin:6px 0 10px 18px;padding:0}
+  .legend{margin-top:24px;font-size:12px;color:var(--text3)}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand">Paragon Supplier Portal</div>
+    <div class="persona"><span class="on">PTI</span><span>Supplier</span></div>
+    <div class="sect">HOME</div><div class="nav"><a>My tasks</a></div>
+    <div class="sect">SOURCING</div>
+    <div class="nav"><a>RFI</a><a class="active">RFQ</a><a>RFP</a><a>Suppliers</a></div>
+  </aside>
+  <main>
+    <div class="eyebrow"><a href="#">SOURCING</a> · <a href="#">RFQ</a> · RFQ-2026-021</div>
+    <h1>Oslo variant stickers — launch run</h1>
+    <div class="meta">
+      <span class="mono">RFQ-2026-021</span>
+      <span class="pill info">Open · 3 of 4 quoted</span>
+      <span>Response deadline <b>09 Sept 2026</b> · 9 days left</span>
+      <span>Award by <b>16 Sept 2026</b></span>
+      <span class="pill">Sourcing type: Direct</span>
+      <span class="pill ok">Next: close round 1, then award</span>
+    </div>
+
+    <div class="stage">
+      <div class="done"><b>1 Sent</b>26 Aug · 4 suppliers</div>
+      <div class="done"><b>2 Quotes in</b>3 of 4 · 1 declined</div>
+      <div class="cur"><b>3 Round 1</b>closes 05 Sept · 1 of 2 revised</div>
+      <div><b>4 Award</b>per item, by % or qty</div>
+      <div><b>5 Raised in SAP</b>PO or contract number</div>
+      <div><b>6 Done</b></div>
+    </div>
+
+    <div class="layout">
+      <nav class="toc">
+        <a href="#invitees">Invitees <small>4</small></a>
+        <a href="#items">What is quoted <small>2 items</small></a>
+        <a href="#compare" class="cur">Comparison <small>3 quotes</small></a>
+        <a href="#rounds">Rounds <small>1 open</small></a>
+        <a href="#docs">Documents <small>0 files</small></a>
+        <a href="#award">Award <small>not yet</small></a>
+      </nav>
+
+      <div>
+        <div class="card" id="invitees">
+          <div class="hd">Invitees <span class="sub">Who was asked, what they said, and whether they can be awarded</span></div>
+          <div class="bd">
+            <table>
+              <tr><th>Supplier</th><th>Reply</th><th>Deadline</th><th>Can be awarded?</th></tr>
+              <tr><td>PT Sample Packaging Indonesia</td><td><span class="pill ok">Quoted · revised in round 1</span></td><td>09 Sept</td><td><span class="pill ok">Yes</span> OTIF 83%</td></tr>
+              <tr><td>PT Sample Preform Works</td><td><span class="pill ok">Quoted</span></td><td>09 Sept</td><td><span class="pill warn">With a reason</span> <details><summary>Not qualified (placeholder rules)</summary><span class="warnline">Registered; this Direct event needs Preferred. Missing NIB/NPWP, halal, GMP, BPOM.</span></details></td></tr>
+              <tr><td>PT Sample Flexible Packaging</td><td><span class="pill ok">Quoted</span></td><td>09 Sept</td><td><span class="pill warn">With a reason</span> <details><summary>Not qualified (placeholder rules)</summary><span class="warnline">Same list as above.</span></details></td></tr>
+              <tr><td>PT Sample Carton Packaging</td><td><span class="pill">Declined · lead time too short</span></td><td>—</td><td><span class="pill">No · OTIF 0%</span></td></tr>
+            </table>
+            <p style="font-size:12px;color:var(--text3);margin:10px 0 0">Qualification text is shown once per supplier here. Other sections show only the pill.</p>
+          </div>
+        </div>
+
+        <div class="card" id="compare">
+          <div class="hd">Comparison at 3,000 per variant <span class="sub">Price 40 · lead time 20 · reliability 40. Nothing is awarded automatically.</span></div>
+          <div class="bd">
+            <table>
+              <tr><th>Supplier</th><th>Item 1 total</th><th>Item 2 total</th><th>Lead time</th><th>Score</th></tr>
+              <tr class="best"><td>PT Sample Packaging Indonesia <span class="pill ok">Best scored</span></td><td class="num">IDR 13,200,000</td><td class="num">IDR 11,740,000</td><td>21 d</td><td class="num">85</td></tr>
+              <tr><td>PT Sample Preform Works</td><td class="num">IDR 13,680,000</td><td class="num">IDR 11,500,000</td><td>20 d</td><td class="num">72</td></tr>
+              <tr><td>PT Sample Flexible Packaging</td><td class="num">IDR 13,980,000</td><td class="num">IDR 12,020,000</td><td>18 d</td><td class="num">70</td></tr>
+            </table>
+            <details style="margin-top:8px"><summary>Show every break, one-time costs, MOQ and alternatives</summary></details>
+          </div>
+        </div>
+
+        <div class="card" id="award">
+          <div class="hd">Award <span class="sub">Per item, by share or by quantity. Closes the event.</span></div>
+          <div class="bd">
+            <div class="split">
+              <div>
+                <b>Item 1 · Oslo front sticker</b> <span class="pill ok">100% of 100%</span>
+                <table style="margin-top:6px">
+                  <tr><th>Supplier</th><th>Share</th><th>Qty</th></tr>
+                  <tr><td>PT Sample Packaging Indonesia</td><td><input value="60"></td><td class="num">14,400</td></tr>
+                  <tr><td>PT Sample Preform Works</td><td><input value="40"></td><td class="num">9,600</td></tr>
+                </table>
+              </div>
+              <div>
+                <b>Item 2 · Oslo back sticker</b> <span class="pill ok">100% of 100%</span>
+                <table style="margin-top:6px">
+                  <tr><th>Supplier</th><th>Share</th><th>Qty</th></tr>
+                  <tr><td>PT Sample Packaging Indonesia</td><td><input value="100"></td><td class="num">24,000</td></tr>
+                </table>
+              </div>
+            </div>
+
+            <div class="sheet">
+              <h4>Confirm the award</h4>
+              <ul>
+                <li>Item 1 → PT Sample Packaging Indonesia 60% (14,400 pcs) and PT Sample Preform Works 40% (9,600 pcs) at the 3,000 break</li>
+                <li>Item 2 → PT Sample Packaging Indonesia 100% (24,000 pcs)</li>
+                <li>Not awarded: PT Sample Flexible Packaging, PT Sample Carton Packaging. Both see "Not awarded" in the hub; no email leaves the hub yet.</li>
+                <li>Reason on record: "Dual source for the launch run; Preform Works holds flatbed capacity." (needed because Preform Works is not qualified)</li>
+                <li>After this: mark the award "Raised in SAP" with the PO or contract number. The award can be cancelled until then.</li>
+              </ul>
+              <button class="btn primary">Record the award</button>
+              <button class="btn">Back to edit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="legend">Mockup B-01 for the RFx UX evaluation (2026-10). Shows: a stage bar that names where the event is and what comes next, a sticky section nav with counts, the qualification text collapsed to one place, a summary comparison with the per-break table folded, and a confirmation sheet that restates the award before it is recorded. The same shell applies to the RFI and RFP detail once they become their own pages.</p>
+  </main>
+</div>
+</body>
+</html>

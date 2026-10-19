@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S-03 · Supplier RFQ workspace: one list, rounds and outcomes on the card</title>
+<style>
+  :root{--bg:#f6f7f9;--surface:#fff;--border:#e4e7ec;--text:#111827;--text2:#4b5563;--text3:#6b7280;--action:#1d4ed8;--action-soft:#eff4ff;--teal:#0f766e;--teal-soft:#ecfdf5;--warn:#b45309;--warn-soft:#fffbeb;--danger:#b91c1c;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;color:var(--text);background:var(--bg)}
+  .shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+  .side{background:var(--surface);border-right:1px solid var(--border);padding:16px 12px}
+  .brand{font-weight:700;font-size:13px;margin-bottom:14px}
+  .persona{display:flex;border:1px solid var(--border);border-radius:999px;padding:2px;margin-bottom:18px;font-size:12px}
+  .persona span{flex:1;text-align:center;padding:4px;border-radius:999px}
+  .persona .on{background:#eef2f7;font-weight:600}
+  .sect{font-size:10px;letter-spacing:.08em;color:var(--text3);margin:14px 8px 6px}
+  .nav a{display:block;padding:7px 8px;border-radius:8px;color:var(--text);text-decoration:none}
+  .nav a.active{background:var(--action-soft);color:var(--action);font-weight:600}
+  .nav a .badge{float:right;background:var(--warn-soft);color:var(--warn);border-radius:999px;font-size:11px;padding:0 7px}
+  main{padding:20px 28px 60px}
+  .eyebrow{font-size:10px;letter-spacing:.08em;color:var(--text3)}
+  h1{font-size:22px;margin:4px 0 2px}
+  .sub{color:var(--text2);margin:0 0 14px}
+  .tabs{display:flex;gap:18px;border-bottom:1px solid var(--border);margin-bottom:14px}
+  .tabs div{padding:8px 2px;font-size:13px;color:var(--text3);border-bottom:2px solid transparent}
+  .tabs div.cur{color:var(--action);border-color:var(--action);font-weight:600}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600}
+  .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--border);color:var(--text2);background:#f9fafb}
+  .pill.info{background:var(--action-soft);color:var(--action);border-color:#c7d7fe}
+  .pill.ok{background:var(--teal-soft);color:var(--teal);border-color:#a7f3d0}
+  .pill.warn{background:var(--warn-soft);color:var(--warn);border-color:#fde68a}
+  .pill.danger{background:#fef2f2;color:var(--danger);border-color:#fecaca}
+  .card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--teal);border-radius:10px;box-shadow:0 1px 2px rgba(16,24,40,.04);margin-bottom:12px}
+  .card.urgent{border-left-color:var(--warn)}
+  .card.done{border-left-color:#cbd5e1}
+  .hd{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+  .hd .right{margin-left:auto;font-size:12px;color:var(--text3)}
+  .bd{padding:12px 14px}
+  .title{font-weight:700;font-size:15px}
+  .facts{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text3);margin:6px 0 10px}
+  .facts b{color:var(--text)}
+  .strip{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:8px;margin-bottom:10px;font-size:13px}
+  .strip.round{background:var(--warn-soft);border:1px solid #fde68a}
+  .strip.award{background:var(--teal-soft);border:1px solid #a7f3d0}
+  .strip.wait{background:#f3f4f6;border:1px solid var(--border)}
+  .strip .btn{margin-left:auto}
+  .btn{font:inherit;padding:7px 12px;border-radius:8px;border:1px solid #d0d5dd;background:#fff;cursor:pointer}
+  .btn.primary{background:var(--action);border-color:var(--action);color:#fff;font-weight:600}
+  .steps{display:flex;gap:6px;font-size:11px;color:var(--text3);margin-bottom:10px}
+  .steps span{padding:3px 8px;border-radius:999px;background:#f3f4f6}
+  .steps span.done{background:var(--teal-soft);color:var(--teal)}
+  .steps span.cur{background:var(--action-soft);color:var(--action);font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{font-size:10px;letter-spacing:.06em;color:var(--text3);text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)}
+  td{padding:7px 8px;border-bottom:1px solid var(--border)}
+  td.num{font-family:ui-monospace,Menlo,monospace;text-align:right}
+  .legend{margin-top:24px;font-size:12px;color:var(--text3)}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand">Paragon Supplier Portal</div>
+    <div class="persona"><span>PTI</span><span class="on">Supplier</span></div>
+    <div class="sect">HOME</div><div class="nav"><a>To do <span class="badge">2 RFx</span></a></div>
+    <div class="sect">SOURCING</div>
+    <div class="nav"><a>RFI invitations</a><a class="active">RFQ invitations <span class="badge">1 round</span></a><a>RFP invitations</a></div>
+  </aside>
+  <main>
+    <div class="eyebrow">SOURCING</div>
+    <h1>RFQ invitations</h1>
+    <p class="sub">Every quotation request PTI sent you, newest action first. Rounds and award outcomes stay on the request they belong to.</p>
+
+    <div class="tabs">
+      <div class="cur">Needs my action · 2</div>
+      <div>Waiting on PTI · 3</div>
+      <div>Decided · 3</div>
+      <div>All · 8</div>
+    </div>
+
+    <div class="card urgent">
+      <div class="hd">
+        <span class="mono">RFQ-2026-021</span>
+        <span class="pill warn">Round 1 · revise by 05 Sept 2026 · 5 days left</span>
+        <span class="pill">Oslo</span>
+        <span class="right">Received 26 Aug 2026 · deadline 09 Sept 2026</span>
+      </div>
+      <div class="bd">
+        <div class="title">Oslo variant stickers — launch run</div>
+        <div class="steps"><span class="done">Said will respond</span><span class="done">Quoted 31 Aug</span><span class="cur">Round 1 open</span><span>Award</span></div>
+        <div class="strip round">
+          <b>PTI asked for a revised quote.</b> "Please sharpen the 25,000 and 50,000 breaks."
+          <button class="btn primary">Send a revised quote</button>
+        </div>
+        <div class="facts"><span>2 items · 8 variants · 6 breaks</span><span>Delivery <b>DDP Jakarta</b></span><span>Award by <b>16 Sept 2026</b></span><span>Your quote <b>QUO-2026-901 · 2 items priced</b></span></div>
+        <table>
+          <tr><th>Item</th><th>Your 3,000 price</th><th>Your MOQ</th><th>Lead time</th></tr>
+          <tr><td>Oslo front sticker</td><td class="num">IDR 400</td><td class="num">3,000</td><td>21 days</td></tr>
+          <tr><td>Oslo back sticker (ingredients)</td><td class="num">IDR 360</td><td class="num">3,000</td><td>21 days</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card urgent">
+      <div class="hd">
+        <span class="mono">RFQ-2026-010</span>
+        <span class="pill warn">3 days to deadline</span>
+        <span class="right">Received 09 Aug 2026 · deadline 03 Sept 2026</span>
+      </div>
+      <div class="bd">
+        <div class="title">PET Bottle 250ml Flip-Top — Emina refill line</div>
+        <div class="steps"><span class="cur">Say if you will respond</span><span>Quote</span><span>Rounds</span><span>Award</span></div>
+        <div class="strip wait">
+          <b>Step 1 of 2:</b> tell PTI whether you will quote. The quote grid opens after that.
+          <button class="btn primary">I will respond</button><button class="btn">Decline</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card done">
+      <div class="hd">
+        <span class="mono">RFQ-2026-024</span>
+        <span class="pill ok">Awarded to you · 40% of item 1</span>
+        <span class="right">Awarded 13 Jul 2026</span>
+      </div>
+      <div class="bd">
+        <div class="title">Amplify variant stickers — first run</div>
+        <div class="steps"><span class="done">Quoted</span><span class="done">Round 1</span><span class="done">Awarded 13 Jul</span><span class="cur">Waiting for the PO from SAP</span></div>
+        <div class="strip award">
+          <b>Your share: 40% (9,600 pcs) of Amplify front sticker at the 3,000 break.</b> Item 2 went to another supplier. PTI raises the purchase order in SAP; it appears under Purchase orders.
+        </div>
+      </div>
+    </div>
+
+    <p class="legend">Mockup S-03 for the RFx UX evaluation (2026-10). Shows: one list per RFQ instead of three tabs plus a hidden rounds page, a per-card step strip (intent → quote → rounds → award), the round request and the award outcome as strips on the card they belong to, "Needs my action" as the default tab, and a count on the menu item. Replaces the duplicated Awarded/Not awarded rows and the win-rate tile.</p>
+  </main>
+</div>
+</body>
+</html>
