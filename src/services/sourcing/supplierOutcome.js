@@ -309,13 +309,24 @@ function noticeOf(outcome, eventType, eventId, eventNumber) {
  * }} input
  */
 export function supplierSourcingQueue({ rfqs, rfis, rfps, rounds, supplierId }) {
+  /**
+   * BL-132 — an RFI or RFP this supplier declined is no longer waiting on it,
+   * as a declined RFQ leaves the RFQ page's count.
+   * @param {RfiEventView | RfpEventView} e
+   */
+  const declined = (e) =>
+    e.invitedSuppliers.find((i) => i.supplierId === supplierId)?.intent?.intent === 'decline';
   return {
     openRfqs: rfqs.filter(
       (r) => r.status === 'Open' && !!supplierId && !r.respondedSupplierIds.includes(supplierId)
     ),
-    // A draft is still "to answer": only a SUBMITTED response takes it off.
-    openRfis: rfis.filter((e) => !e.closed && e.responses.every((r) => r.status !== 'Submitted')),
-    openRfps: rfps.filter((e) => !e.closed && e.responses.every((r) => r.status !== 'Submitted')),
+    // A draft is still "to answer": only a SUBMITTED response (or a decline) takes it off.
+    openRfis: rfis.filter(
+      (e) => !e.closed && !declined(e) && e.responses.every((r) => r.status !== 'Submitted')
+    ),
+    openRfps: rfps.filter(
+      (e) => !e.closed && !declined(e) && e.responses.every((r) => r.status !== 'Submitted')
+    ),
     openRounds: rounds.filter((r) => !r.closed && r.awaiting > 0)
   };
 }

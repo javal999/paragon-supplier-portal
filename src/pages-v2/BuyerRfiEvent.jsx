@@ -549,7 +549,7 @@ const RfiDetail = ({
                   />
                 </TableCell>
                 <TableCell>
-                  <ResponseStatePill state={invitee.responseState} />
+                  <ResponseStatePill state={invitee.responseState} intent={invitee.intent} />
                 </TableCell>
                 {!!event.confidentiality && (
                   <TableCell data-testid={`rfi-accepted-${event.id}-${invitee.supplierId}`}>

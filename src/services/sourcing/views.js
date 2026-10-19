@@ -14,6 +14,7 @@
 
 /** @import { AwardCancellation, AwardSapMark, AwardStatus, NegotiationRound, ResponseVersion, RfiAnswer, RfiEvent, RfiResponse, RfpAwardLine, RfpEvent, RfpFirmOffer, RfpOfferRound, RfpResponse, RfpTermAnswer, RfqAwardRecord, ComplianceAtAward } from './types' */
 /** @import { GateCriterion } from './complianceGate' */
+/** @import { RfxIntentView } from './rfxIntent' */
 /** @import { BiddingEligibility, QualificationWarning } from './sourcingType' */
 
 /**
@@ -45,6 +46,7 @@
  * @property {string | null} confidentialityAcceptedAt -  When this invitee accepted the event's confidentiality terms; null = not (yet).
  * @property {string | null} termsAcceptedAt -  When this invitee accepted the RFP's T&C document; null = not (yet).
  * @property {BiddingEligibility} [eligibility] -  Material G2 (MR-10 BR-07) — the invitee against the event's sourcing type today.
+ * @property {RfxIntentView | null} intent -  BL-132 — "I will respond" or a reasoned decline, with its time; null = not said. A supplier reads only its own row, so only its own intent (RFX-R4).
  */
 
 /**

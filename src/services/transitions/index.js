@@ -88,6 +88,8 @@ export { rfpResponseFlow } from './flows/rfpResponse.flow';
 export { negotiationRoundFlow } from './flows/negotiationRound.flow';
 export { rfpOfferRoundFlow } from './flows/rfpOfferRound.flow';
 export { rfpFirmOfferFlow } from './flows/rfpFirmOffer.flow';
+export { rfiIntentFlow } from './flows/rfiIntent.flow';
+export { rfpIntentFlow } from './flows/rfpIntent.flow';
 export { rfqIntentFlow } from './flows/rfqIntent.flow';
 export { rfqConfidentialityFlow } from './flows/rfqConfidentiality.flow';
 export { rfqClarificationFlow } from './flows/rfqClarification.flow';
@@ -152,6 +154,8 @@ import { rfpResponseFlow } from './flows/rfpResponse.flow';
 import { negotiationRoundFlow } from './flows/negotiationRound.flow';
 import { rfpOfferRoundFlow } from './flows/rfpOfferRound.flow';
 import { rfpFirmOfferFlow } from './flows/rfpFirmOffer.flow';
+import { rfiIntentFlow } from './flows/rfiIntent.flow';
+import { rfpIntentFlow } from './flows/rfpIntent.flow';
 
 // Seed the shipped flows onto the singleton.
 flowRegistry.register(purchaseOrderFlow); // Step 3.1 — PO
@@ -271,3 +275,5 @@ flowRegistry.register(rfpResponseFlow); // REQ-E03-04 — the supplier's proposa
 flowRegistry.register(negotiationRoundFlow); // REQ-E03-05 — negotiation rounds
 flowRegistry.register(rfpOfferRoundFlow); // NR-2 BR-02 — firm-offer rounds on an RFP
 flowRegistry.register(rfpFirmOfferFlow); // NR-2 BR-01 / BR-03 — a supplier's firm offer in a round
+flowRegistry.register(rfiIntentFlow); // BL-132 — intent to respond, or a reasoned decline, on an RFI
+flowRegistry.register(rfpIntentFlow); // BL-132 — the same on an RFP

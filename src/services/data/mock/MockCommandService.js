@@ -265,6 +265,9 @@ import {
   rfqConfidentialityTarget,
   rfqIntentTarget
 } from './rfqEngagementCommand';
+// BL-132 — intent to respond, and a reasoned decline, on an RFI and an RFP.
+// Importing the module binds its two policies (side effect).
+import { rfiIntentTarget, rfpIntentTarget } from './rfxIntentCommand';
 /** @import { AttachmentMeta } from '../../attachments/sessionAttachments' */
 import { isAttachmentMeta } from '../../attachments/sessionAttachments';
 // NR-1 — document requests and response documents. Importing the module binds
@@ -6248,7 +6251,11 @@ const TARGETS = {
   negotiationRound: negotiationRoundTarget,
   // NR-2 (D-1) — the firm-offer round on an RFP and the supplier's firm offer.
   rfpOfferRound: rfpOfferRoundTarget,
-  rfpFirmOffer: rfpFirmOfferTarget
+  rfpFirmOffer: rfpFirmOfferTarget,
+  // BL-132 — the supplier's intent on an RFI or RFP. Ships in the same commit
+  // as its flow.
+  rfiIntent: rfiIntentTarget,
+  rfpIntent: rfpIntentTarget
 };
 
 // The behavior-wiring census (was the contract package's "6"; 7 with the G1.1

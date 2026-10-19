@@ -133,6 +133,8 @@ describe('S-02 / S-06 — the RFP sample question', () => {
   const openTundra = async () => {
     renderWithProviders(<SupplierRfp />, { identity: SUP_015 });
     fireEvent.click(await screen.findByTestId('supplier-rfp-open-rfp-002'));
+    // BL-132 — the form opens once the supplier says it will respond.
+    fireEvent.click(await screen.findByTestId('supplier-rfp-rfp-002-intent-respond'));
     return screen.findByTestId('supplier-rfp-rfp-002-pricing');
   };
 

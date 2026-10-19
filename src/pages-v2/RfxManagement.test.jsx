@@ -388,6 +388,8 @@ describe('NR-1 BR-08 — the supplier revises a submitted RFP before the deadlin
     const { rfpId, responseId } = await rfpWithDraft();
     renderWithProviders(<SupplierRfp />, { identity: SUP_007 });
     fireEvent.click(await screen.findByTestId(`supplier-rfp-open-${rfpId}`));
+    // BL-132 — the form opens once the supplier says it will respond.
+    fireEvent.click(await screen.findByTestId(`supplier-rfp-${rfpId}-intent-respond`));
 
     // The required slot blocks sending, by name, until a file is in it.
     expect(

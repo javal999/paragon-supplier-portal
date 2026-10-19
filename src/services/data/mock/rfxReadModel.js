@@ -61,12 +61,16 @@ import {
   awardStore,
   negotiationRoundStore,
   rfiEventStore,
+  rfiIntentStore,
   rfiResponseStore,
   rfpEventStore,
   rfpFirmOfferStore,
+  rfpIntentStore,
   rfpOfferRoundStore,
-  rfpResponseStore
+  rfpResponseStore,
+  rfxIntentOf
 } from './stores/rfxStores';
+import { rfxIntentView } from '../../sourcing/rfxIntent';
 
 /**
  * The RFx lane's "now".
@@ -235,14 +239,15 @@ export const rfpSupplierGate = (supplierId, nowIso) => supplierGate(supplierId, 
  */
 
 /**
- * @param {{ responseDeadline: string; invitees: readonly { supplierId: string; deadline?: string }[] }} event
+ * @param {{ id: string; responseDeadline: string; invitees: readonly { supplierId: string; deadline?: string }[] }} event
  * @param {(supplierId: string) => InviteeResponseFacts | undefined} responseFor
  * @param {string} nowIso
  * @param {SourcingType} sourcingType
  * @param {string | null} readerSupplierId
+ * @param {typeof rfiIntentStore} intents -  BL-132 — the event type's intent store.
  * @returns {readonly RfxInviteeView[]}
  */
-const inviteeViews = (event, responseFor, nowIso, sourcingType, readerSupplierId) =>
+const inviteeViews = (event, responseFor, nowIso, sourcingType, readerSupplierId, intents) =>
   // RFX-R4 — a supplier reads its OWN invitee row and no other: not a rival's
   // name, answer state, submission time, lateness, acceptances, OTIF or
   // qualification. It has no business reading the roster it competes against
@@ -258,6 +263,7 @@ const inviteeViews = (event, responseFor, nowIso, sourcingType, readerSupplierId
         invitee.supplierId
       );
       const response = responseFor(invitee.supplierId);
+      const intent = rfxIntentOf(intents, event.id, invitee.supplierId);
       // A Draft that holds only an acceptance (the confidentiality gate or the
       // T&C) is not a started answer: reading it as "Draft" would tell the buyer
       // the supplier had begun answering when it had only agreed to read.
@@ -280,7 +286,10 @@ const inviteeViews = (event, responseFor, nowIso, sourcingType, readerSupplierId
         termsAcceptedAt: response?.termsAcceptedAt ?? null,
         // Material G2 (MR-10 BR-07) — on the event's sourcing type, today. A
         // supplier reads only its own row, so only its own qualification (MAT-R4).
-        eligibility: eligibilityFor(invitee.supplierId, sourcingType, nowIso)
+        eligibility: eligibilityFor(invitee.supplierId, sourcingType, nowIso),
+        // BL-132 — the invitee's intent. Narrowed with the row: a supplier reads
+        // its own and no rival's.
+        intent: intent ? rfxIntentView(intent) : null
       };
     });
 
@@ -357,7 +366,8 @@ export function rfiEventViews(nowIso, supplierId) {
           (sid) => rfiFacts(mine.find((r) => r.supplierId === sid)),
           nowIso,
           eventSourcingType(event),
-          supplierId
+          supplierId,
+          rfiIntentStore
         ),
         // NR-1 BR-08 — the response is its latest version; every version rides
         // along. `visible` is already narrowed, so a supplier reads only its
@@ -420,7 +430,8 @@ export function rfpEventViews(nowIso, supplierId) {
           (sid) => rfpFacts(mine.find((r) => r.supplierId === sid)),
           nowIso,
           eventSourcingType(event),
-          supplierId
+          supplierId,
+          rfpIntentStore
         ),
 
         responses: visible.map((r) => ({

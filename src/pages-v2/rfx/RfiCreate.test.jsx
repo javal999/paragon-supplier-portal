@@ -289,6 +289,8 @@ describe('section 3.6a — the buyer raises an information request', () => {
     cleanup();
     renderWithProviders(<SupplierRfi />, { identity: SUP_007 });
     fireEvent.click(await screen.findByTestId('supplier-rfi-open-rfi-0004'));
+    // BL-132 — the form opens once the supplier says it will respond.
+    fireEvent.click(await screen.findByTestId('supplier-rfi-rfi-0004-intent-respond'));
     expect(await screen.findByTestId('rfi-field-event-1')).toHaveTextContent(
       'Which port do you ship from?'
     );

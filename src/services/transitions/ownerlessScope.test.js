@@ -101,8 +101,10 @@ import { forecastVersionStore, forecastViewStore } from '../data/mock/stores/for
 import {
   negotiationRoundStore,
   rfiEventStore,
+  rfiIntentStore,
   rfiResponseStore,
   rfpEventStore,
+  rfpIntentStore,
   rfpFirmOfferStore,
   rfpOfferRoundStore,
   rfpResponseStore
@@ -336,7 +338,11 @@ async function realIds() {
     // in `ownerful`; an acceptance is creation-only and is `unprobeable`.
     rfqIntent: rfqIntentStore.all()[0]?.id ?? null,
     rfqConfidentiality: rfqConfidentialityStore.all()[0]?.id ?? null,
-    rfqClarification: rfqClarificationStore.all()[0]?.id ?? null
+    rfqClarification: rfqClarificationStore.all()[0]?.id ?? null,
+    // BL-132 — the RFI and RFP intent stores are seeded; an intent names the
+    // supplier that stated it, so both land in `ownerful`.
+    rfiIntent: rfiIntentStore.all()[0]?.id ?? null,
+    rfpIntent: rfpIntentStore.all()[0]?.id ?? null
   };
 }
 
@@ -558,6 +564,8 @@ describe('POPULATION — nothing below means anything without this', () => {
     expect(ownerful).toContain('rfpResponse');
     expect(ownerful).toContain('rfqIntent');
     expect(ownerful).toContain('rfqClarification');
+    expect(ownerful).toContain('rfiIntent');
+    expect(ownerful).toContain('rfpIntent');
     // NR-2 — the firm-offer ROUND is PTI's; the firm OFFER is its supplier's.
     expect(ownerless).toContain('rfpOfferRound');
     expect(ownerful).toContain('rfpFirmOffer');

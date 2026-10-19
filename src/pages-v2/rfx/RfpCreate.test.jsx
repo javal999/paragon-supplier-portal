@@ -317,8 +317,10 @@ describe('REQ-E03-04 — closing the window stops the proposals', () => {
   it('POSITIVE TWIN — while it is Open the same supplier may still save a draft', async () => {
     renderWithProviders(<SupplierRfp />, { identity: SUP_013 });
     fireEvent.click(await screen.findByTestId('supplier-rfp-open-rfp-001'));
+    // BL-132 — the form opens once the supplier says it will respond.
+    fireEvent.click(await screen.findByTestId('supplier-rfp-rfp-001-intent-respond'));
     expect(screen.queryByTestId('supplier-rfp-closed-rfp-001')).not.toBeInTheDocument();
-    expect(screen.getByTestId('supplier-rfp-save-rfp-001')).not.toBeDisabled();
+    expect(await screen.findByTestId('supplier-rfp-save-rfp-001')).not.toBeDisabled();
   });
 });
 

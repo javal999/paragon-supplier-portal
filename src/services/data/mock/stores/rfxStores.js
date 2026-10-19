@@ -20,6 +20,8 @@
 //   · rfpFirmOfferStore                       — NR-2: one firm offer per
 //     supplier × round; a revision APPENDS a version. Both start EMPTY: no
 //     sample RFP is Closed, so no round could have been opened on one
+//   · rfiIntentStore / rfpIntentStore         — BL-132: one intent per
+//     supplier × event ("I will respond" or a reasoned decline)
 //
 // The RFQ and quotation rows the RFx demo needs live in `rfqStore` /
 // `quotationStore` beside the legacy set — one RFQ list, not two.
@@ -30,10 +32,13 @@ import {
   NEGOTIATION_ROUND_SEED,
   RFI_EVENT_SEED,
   RFI_RESPONSE_SEED,
+  RFI_INTENT_SEED,
   RFP_EVENT_SEED,
+  RFP_INTENT_SEED,
   RFP_RESPONSE_SEED
 } from '../fixtures/rfxHub';
 import { RFQ_SAMPLE_AWARD_SEED } from '../fixtures/rfqSamples';
+/** @import { RfxIntentRecord } from '../../../sourcing/rfxIntent' */
 /** @import { AwardCancellation, AwardRecord, AwardSapMark, NegotiationRound, RfiEvent, RfiResponse, RfpEvent, RfpFirmOffer, RfpOfferRound, RfpResponse } from '../../../sourcing/types' */
 
 /**
@@ -143,6 +148,26 @@ export const rfpFirmOfferStore = /** @type {typeof collection<RfpFirmOffer>} */ 
   'fo'
 );
 
+// BL-132 — the supplier's intent on an RFI or RFP (`rfxIntent.js`).
+export const rfiIntentStore = /** @type {typeof collection<RfxIntentRecord>} */ (collection)(
+  RFI_INTENT_SEED,
+  'rfii'
+);
+export const rfpIntentStore = /** @type {typeof collection<RfxIntentRecord>} */ (collection)(
+  RFP_INTENT_SEED,
+  'rfpi'
+);
+
+/**
+ * The intent one supplier stated on one RFI or RFP, if any.
+ * @param {typeof rfiIntentStore} store
+ * @param {string} eventId
+ * @param {string} supplierId
+ * @returns {RfxIntentRecord | undefined}
+ */
+export const rfxIntentOf = (store, eventId, supplierId) =>
+  store.all().find((r) => r.eventId === eventId && r.supplierId === supplierId);
+
 /**
  * The one response a supplier holds for an event, or undefined.
  * @template {{ supplierId: string }} T
@@ -169,4 +194,6 @@ export function resetRfxStores() {
   awardSapMarkStore.reset();
   rfpOfferRoundStore.reset();
   rfpFirmOfferStore.reset();
+  rfiIntentStore.reset();
+  rfpIntentStore.reset();
 }
