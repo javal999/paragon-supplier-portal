@@ -168,7 +168,7 @@ const AppRouter = () => {
               element={<Navigate to="/buyer/stabilise?tab=versions" replace />}
             />
             <Route path="/buyer/collaboration" element={<BuyerCommitments />} />
-            {/* REQ-E06-04 — fixed stock reconcile per supplier × material × cycle (ENG-D21). */}
+            {/* DRC-15a — feedstock reconcile per supplier × material, daily (path kept, BR-05). */}
             <Route path="/buyer/fs-reconcile" element={<BuyerFixedStockReconcile />} />
             {/* REQ-E14-02 — supplier reliability and PTI's plan-change measures (BL-99). */}
             <Route path="/buyer/reliability" element={<BuyerReliability />} />
@@ -289,7 +289,7 @@ const AppRouter = () => {
               The earlier responses and shipment reports stay reachable beneath it;
               its Stock tab only points to the Stock page (BL-60, one stock entry). */}
             <Route path="/supplier/forecasts" element={<SupplierForecastCommitments />} />
-            {/* REQ-E06-04 — the supplier's own fixed stock reconcile rows. */}
+            {/* DRC-15a — the supplier's own feedstock reconcile rows (path kept, BR-05). */}
             <Route path="/supplier/fs-reconcile" element={<SupplierFixedStockReconcile />} />
             <Route
               path="/supplier/forecasts/responses"

@@ -23,7 +23,7 @@
 // the entities (`services/sourcing/views`) so the contract and the adapter that
 // fulfils it import ONE declaration rather than each holding its own copy.
 /** @import { InviteeCandidate, InviteeFilter } from '../transitions/rfxRules' */
-/** @import { FsRow } from '../transitions/fixedStockReconcile' */
+/** @import { FsRow } from '../transitions/feedstockReconcile' */
 /** @import { BlanketPoRunOut } from '../transitions/blanketPoRules' */
 /** @import { DemandAnticipationSupplyRow } from '../transitions/supplyBelowDemandRules' */
 /** @import { SimulationRefusal, StockSimulation } from '../transitions/simulateSupplierStock' */
@@ -803,9 +803,10 @@ export class DataError extends Error {
  */
 
 /**
- * REQ-E06-04 — one supplier × material × cycle of the fixed stock (FS)
- * reconcile: committed against called off against held, with the agreed
- * maximum stock and the outcome. Computed at read, never stored.
+ * DRC-15a — one supplier × material of the feedstock (FS) reconcile: PO
+ * ordered against called off against ASN requested, the remainders, and the
+ * agreed maximum stock. Computed at read, never stored. The type keeps its
+ * name (FS now reads "feedstock", DRC-D14).
  */
 /** @typedef {FsRow} FixedStockReconcileRow */
 
@@ -3065,9 +3066,9 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *    Published forecast versions with who viewed them. A supplier sees versions carrying its lines.
  * @property {(scope: QueryScope) => Promise<Page<ForecastCommitmentLine>>} getForecastCommitments -  The current version's lines with their commitments. A supplier sees its own, with its drafts.
  * @property {(scope: QueryScope) => Promise<Page<ForecastCoverageRow>>} getForecastCoverage -  Supplier coverage per material against Firm demand (CR-03), PTI only.
- * @property {(scope: QueryScope) => Promise<Page<FixedStockReconcileRow>>} getFixedStockReconcile REQ-E06-04 — the fixed stock reconcile per supplier × material × cycle
- *   (ENG-D21). The planner reads every supplier; a supplier reads only its own
- *   rows (scoped in the service).
+ * @property {(scope: QueryScope) => Promise<Page<FixedStockReconcileRow>>} getFixedStockReconcile DRC-15a — the feedstock reconcile per supplier × material, daily
+ *   (DRC-D14 replaced the fixed stock reconcile; the method keeps its name). The
+ *   planner reads every supplier; a supplier reads only its own rows (scoped in the service).
  * @property {(scope: QueryScope, windowWeeks?: ReliabilityWindowWeeks) => Promise<Page<SupplierReliabilityView>>} getSupplierReliability REQ-E14-02 — supplier reliability and PTI's plan-change measures over a
  *   trailing window, computed by the forecast engine on its (SIMULATED)
  *   dataset. The planner sees every supplier; a supplier sees ONLY its own row,

@@ -11,7 +11,7 @@ import { NO_PERSON } from '@context/noPerson';
 // ─────────────────────────────────────────────────────────────────────────────
 // REQ-E06-04 BR-06 (owner, 2026-09-29) — the maximum stock per supplier ×
 // material is maintained by Procurement through `t_maxstock_set`, append-only,
-// and read by the fixed stock reconcile. Probed both ways: procurement sets it;
+// and read by the feedstock reconcile (DRC-15a BR-03). Probed both ways: procurement sets it;
 // a planner-only seat is refused at the ROLE gate and a supplier at SCOPE, by name.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -48,7 +48,7 @@ const setCmd = (entityId, quantity) => ({
   payload: { quantity, setBy: NO_PERSON }
 });
 const PAIR = 'sup-007|PK-PETB-8801';
-const ROW = 'packaging|2026-08-31|sup-007|PK-PETB-8801';
+const ROW = 'sup-007|PK-PETB-8801';
 const rowOf = async () =>
   /** @type {NonNullable<ReturnType<((Awaited<ReturnType<typeof reads.getFixedStockReconcile>>)['items'])['find']>>} */ (
     (await reads.getFixedStockReconcile(buyerSeat('planning'))).items.find((r) => r.key === ROW)
@@ -78,27 +78,21 @@ describe('the verb and who holds it', () => {
 });
 
 describe('procurement sets, changes and clears it — append-only', () => {
-  it('a procurement seat sets 90,000; the reconcile row reads it and caps nothing it does not need to', async () => {
+  it('a procurement seat sets 90,000; the feedstock reconcile row reads it', async () => {
     expect((await rowOf()).maxStock).toBeNull();
     const res = await svc.dispatch(buyerSeat('procurement'), setCmd(PAIR, 90_000));
     expect(res.status, res.reason).toBe('done');
     expect(maxStockFor('sup-007', 'PK-PETB-8801')).toBe(90_000);
-    expect(await rowOf()).toMatchObject({
-      maxStock: 90_000,
-      held: 85_000,
-      aboveMaxQty: 0,
-      liabilityQty: 54_500
-    });
+    expect(await rowOf()).toMatchObject({ maxStock: 90_000 });
   });
 
-  it('a lower max caps the liability and shows the stock above it as the supplier’s own', async () => {
+  it('DRC-15a BR-03 — the max stock caps nothing on the reconcile: the remainders stay as they are', async () => {
+    const before = await rowOf();
     await svc.dispatch(buyerSeat('procurement'), setCmd(PAIR, 50_000));
-    expect(await rowOf()).toMatchObject({
-      maxStock: 50_000,
-      liabilityQty: 50_000,
-      aboveMaxQty: 35_000,
-      outcome: 'underCalled'
-    });
+    const after = await rowOf();
+    expect(after.maxStock).toBe(50_000);
+    expect(after.notYetCalledOff).toBe(before.notYetCalledOff);
+    expect(after.calledOffNotShipped).toBe(before.calledOffNotShipped);
   });
 
   it('every change is kept with the value before it; clearing goes back to "no max stock agreed"', async () => {

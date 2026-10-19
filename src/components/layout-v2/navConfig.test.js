@@ -87,7 +87,7 @@ describe('Material Planner menu — Weekly plan and Review (F-03, F-04)', () => 
 });
 
 describe('Procurement menu keeps Performance → Supplier scorecard (FUX-D2)', () => {
-  it('shows Performance with the scorecard and (FUX-D6) the end-of-cycle stock check, and no Weekly plan or Review', () => {
+  it('shows Performance with the scorecard and (FUX-D6) the feedstock reconcile, and no Weekly plan or Review', () => {
     const buy = navFor('buyer', 'BUY');
     const performance = /** @type {import('./navConfig').NavSection} */ (
       buy.find((s) => s.id === 'performance')
@@ -121,7 +121,7 @@ describe('FUX phase 2 B1 — This week and the Procurement path to the stock che
     expect(hubId['hub.nav.pti.thisWeek']).toBe('Minggu ini');
   });
 
-  it('a BUY menu shows End-of-cycle stock check under Performance; This week stays a planner item', () => {
+  it('a BUY menu shows Feedstock reconcile under Performance; This week stays a planner item', () => {
     const buy = navFor('buyer', 'BUY');
     const where = buy
       .filter((s) => s.items.some((i) => i.path === '/buyer/fs-reconcile'))
