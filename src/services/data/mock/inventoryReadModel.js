@@ -24,6 +24,7 @@ import { buildCapacityPlans } from '../../transitions/capacityRules';
 /** @import { BlanketPoRunOut } from '../../transitions/blanketPoRules' */
 import { blanketPoAlertSubjects, blanketPoRunOuts } from '../../transitions/blanketPoRules';
 import { demandAnticipationUnabsorbed } from './demandAnticipationReadModel';
+import { systemRopSuppliers } from './osipRopReadModel';
 import { commitmentAlertSubjects } from '../../transitions/forecastRules';
 import { allCommitmentLines } from './forecastReadModel';
 /** @import { AlertCondition } from '../../transitions/inventoryAlertRules' */
@@ -49,11 +50,12 @@ import {
 import {
   API_CONNECTIONS,
   PLANNING_DAILY_DEMAND,
-  PTI_STOCK,
   SUPPLIER_LEAD_TIME_DAYS,
   SUPPLY_ASSIGNMENTS
 } from './fixtures/inventoryHub';
 import { stockUpdateModeOf } from './supplierMaster';
+// BL-199 (DRC-13 BR-04) — PTI SOH from the hub's stock records, all plants combined.
+import { ptiStockStore } from './stores/ptiStockStore';
 import { hubWorkingCalendar } from '../../transitions/workingCalendarStore';
 import { planningGroupMoves } from './planningGroupReadModel';
 
@@ -190,7 +192,7 @@ export function allPositions(nowIso = sdcClock.now()) {
       currentDeclaration: (s, m) => inventoryDeclarationStore.latestFor(s, m),
       master: materialEntry,
       supplierName: supplierNameOf,
-      ptiStock: PTI_STOCK,
+      ptiStock: ptiStockStore.combined(),
       forecastLines: forecastLines(),
       planningEstimate,
       leadTime: leadTimeOf,
@@ -275,8 +277,13 @@ export function allBlanketPoRunOuts(nowIso = sdcClock.now()) {
 export function activeAlertConditions(nowIso = sdcClock.now()) {
   const plans = allCapacityPlans(nowIso);
   const lines = allCommitmentLines();
+  // REQ-E08-05 / DRC-D15 — `supplierBelowRop` reads the system ROP Supplier (BL-196).
+  const system = systemRopSuppliers(nowIso);
   return deriveAlertConditions(
-    allPositions(nowIso),
+    allPositions(nowIso).map((p) => ({
+      ...p,
+      systemRopSupplier: system.get(`${p.supplierId}|${p.materialCode}`) ?? null
+    })),
     plans,
     nowIso,
     // REQ-E08-05 BR-01 — commitments below forecast beyond tolerance (REQ-E06-03).

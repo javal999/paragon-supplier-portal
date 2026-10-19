@@ -1,6 +1,7 @@
 import { callOffStore } from './stores/callOffStore';
 /** @import { CallOff } from '../types' */
 /** @import { BlanketPoRunOut } from '../../transitions/blanketPoRules' */
+/** @import { NpdReview } from '../../transitions/osipRopRules' */
 import { purchaseOrderStore } from './stores/purchaseOrderStore';
 import {
   allAlerts,
@@ -15,7 +16,12 @@ import { allPlanningGroups } from './planningGroupReadModel';
 import { allDemandAnticipationWithSupply } from './supplyBelowDemandReadModel';
 import { withLtpFgDemandRead } from './ltpFgDemandReadModel';
 import { osipSafetyInputs } from './osipSafetyReadModel';
+import { npdReviews, osipRopInputs, systemRopSuppliers } from './osipRopReadModel';
+import { ropFisikPrRecommendations } from './callOffTriggerReadModel';
+/** @import { PrRecommendationView } from '../../transitions/callOffTriggerRules' */
 /** @import { DemandAnticipationSupplyRow } from '../../transitions/supplyBelowDemandRules' */
+/** @import { DaHistoryRow } from '../../transitions/demandAnticipationHistory' */
+import { allDemandAnticipationHistory } from './demandAnticipationHistoryReadModel';
 import { stockSimulationRows } from './stockSimulationReadModel';
 import {
   allCommitmentLines,
@@ -120,6 +126,8 @@ import { labelOf, materialEntry } from '../../sdc/materialMaster';
 import { withMrpController } from './mrpControllerReadModel';
 // Material C2 — supplier trade names, narrowed per reader (MR-3 BR-03).
 import { materialNameRowsFor, withTradeName } from './materialNameReadModel';
+// BL-194 — the supplier's feedstock confirmation in force (DRC-8).
+import { withFeedstock } from './feedstockConfirmationReadModel';
 import { FEEDS, dataHealth } from '../../engine/dataHealth';
 import { currentDemandForecast, currentForecastBias, withOverrides } from './demandForecastRun';
 import { forecastOverrideStore } from './stores/forecastOverrideStore';
@@ -424,8 +432,22 @@ export class MockProcurementService {
     }
     if (filter?.supplierId) rows = rows.filter((r) => r.supplierId === filter.supplierId);
     if (filter?.materialCode) rows = rows.filter((r) => r.materialCode === filter.materialCode);
+    // DRC-D15 (BL-196) — PTI reads the system's ROP Supplier beside the
+    // supplier's own reorder point, which is display only. A supplier reads none.
+    if (scope.personaType === 'buyer' && rows.length > 0) {
+      const system = systemRopSuppliers();
+      rows = rows.map((r) => ({
+        ...r,
+        systemRopSupplier: system.get(`${r.supplierId}|${r.materialCode}`) ?? null
+      }));
+    }
     // Material C2 — the supplier's approved trade name beside PTI's description.
-    return { items: rows.map((r) => withTradeName(withMrpController(r, r.materialCode, scope))) };
+    // BL-194 (DRC-8) — the feedstock in force, as its own field beside SOH.
+    return {
+      items: rows.map((r) =>
+        withFeedstock(withTradeName(withMrpController(r, r.materialCode, scope)))
+      )
+    };
   }
 
   // Material C2 (MR-3 BR-03) — narrowed in the read model: a supplier reads its
@@ -490,6 +512,18 @@ export class MockProcurementService {
     // DRC-18 (BL-203) — with FG demand, LTP − FG demand and the consumption
     // moving average per week, read only.
     return { items: withLtpFgDemandRead(allDemandAnticipationWithSupply()) };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<DaHistoryRow>>}
+   */
+  async getDemandAnticipationHistory(scope) {
+    // DRC-3 (BL-189), [Owner A10] — the audit view of every publication. PTI's
+    // own plan: a supplier reads none (persona scoping, as getDemandAnticipation).
+    // No business-role gate (CLAUDE.md §65; owner decision 2026-10-19).
+    if (scope.personaType !== 'buyer') return { items: [] };
+    return { items: allDemandAnticipationHistory() };
   }
 
   /**
@@ -976,6 +1010,8 @@ export class MockProcurementService {
     // BL-193 (DRC-7) / BL-197 (DRC-11) — the OSIP inputs per material; the
     // page applies the rules (the default, or a switch variant).
     const osip = osipSafetyInputs();
+    // BL-196 (DRC-D11) / BL-198 (DRC-12a) — each material's level and NPD tags.
+    const rop = osipRopInputs(run.materials.map((m) => m.materialCode));
     return {
       ...run,
       previousAsOf,
@@ -988,9 +1024,35 @@ export class MockProcurementService {
         ),
         osip: /** @type {import('../../transitions/osipSafetyRules').MaterialOsipInputs} */ (
           osip.get(m.materialCode)
+        ),
+        rop: /** @type {import('../../transitions/osipRopRules').MaterialRopInputs} */ (
+          rop.get(m.materialCode)
         )
       }))
     };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<PrRecommendationView>>}
+   */
+  async getRopFisikPrRecommendations(scope) {
+    // BL-199 (DRC-13 BR-02) — "Create a PR in SAP" when no umbrella PO balance
+    // is left at ROP Fisik. A recommendation only: the hub posts nothing to
+    // SAP. PTI only (X-03).
+    if (scope.personaType !== 'buyer') return { items: [] };
+    return { items: ropFisikPrRecommendations() };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<NpdReview>>}
+   */
+  async getNpdReviews(scope) {
+    // DRC-12a (BL-198) — the planner's "Review ROP after first order" tasks,
+    // raised once when a material's NPD tag drops. PTI only (X-03).
+    if (scope.personaType !== 'buyer') return { items: [] };
+    return { items: npdReviews() };
   }
 
   // ─── Sourcing ─────────────────────────────────────────────────────────────
@@ -1247,9 +1309,12 @@ export class MockProcurementService {
     // REQ-E09-03 — call-offs resolve from the mutable store. A supplier sees its
     // own released call-offs only: a draft or a dismissed draft is the planner's.
     const rows = applySupplierScope(scope, callOffStore.all());
+    // BL-199 — the ROP Fisik figures behind a hub-made draft are PTI's.
     const visible =
       scope.personaType === 'supplier'
-        ? rows.filter((c) => c.status !== 'Draft' && c.status !== 'Dismissed')
+        ? rows
+            .filter((c) => c.status !== 'Draft' && c.status !== 'Dismissed')
+            .map(({ trigger: _ptiOnly, ...c }) => c)
         : rows;
     // Material C4 — each call-off names its material's MRP controller (MR-5 BR-03).
     return { items: visible.map((c) => withMrpController(c, c.materialCode, scope)) };

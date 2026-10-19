@@ -42,6 +42,7 @@ import StockEntryPanel from './inventory/StockEntryPanel';
 import StockUploadPanel from './inventory/StockUploadPanel';
 import SupplierSyncPanel from './inventory/SupplierSyncPanel';
 import WeeklyUpdatePanel from './inventory/WeeklyUpdatePanel';
+import FeedstockConfirmPanel from './inventory/FeedstockConfirmPanel';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
 import SupplierMaterialNames from './materials/SupplierMaterialNames';
 import { TradeNameBeside } from './materials/tradeNameDisplay';
@@ -246,6 +247,8 @@ const SupplierInventory = () => {
 
       {/* Material B2 — the weekly update (manual) or the sync schedule (API). */}
       <WeeklyUpdatePanel supplierId={supplierId} positions={rows} nowIso={nowIso} />
+      {/* BL-194 (DRC-8) — the weekly feedstock confirmation; never part of SOH. */}
+      <FeedstockConfirmPanel supplierId={supplierId} positions={rows} nowIso={nowIso} />
 
       {needUpdate > 0 && (
         <div

@@ -20,6 +20,7 @@ import { scopeKey } from './useServiceQuery';
 /** @import { FxPinSource } from '@lib/fxPin' */
 /** @import { CommandResult, CommandStatus, QueryScope, InspectionResult, CommandDecision, CertificateDeclaration, SupplierDocumentCategory, PoLineResponse, PoRejectionCause, InvoiceLine, CallOffDelivery, CallOffType, CallOffOrigin, StockUpdateMode, QualificationRequiredDoc, QualificationRuleLevel } from '../data/types' */
 /** @import { AsnLineInput } from '../transitions/fulfilmentRules' */
+/** @import { DelayAnswer } from '../transitions/callOffRules' */
 /** @import { SourcingType, SourcingTypeKey } from '../sourcing/sourcingType' */
 /** @import { ProposalType } from '../engine/reschedule' */
 /** @import { SimulationOverrideField } from '../data/types' */
@@ -1849,6 +1850,48 @@ export function useMaterialNameLoad() {
   });
 }
 
+// ── BL-194 · SUPPLIER FEEDSTOCK CONFIRMATION (DRC-8 BR-a; DRC-D17) ───────────
+//
+// The supplier confirms its current feedstock for one assigned material. The
+// unit, `recordedAt` and `recordedBy` are set by the target from the master,
+// the hub clock and the session; none is a payload field. The confirmation
+// shows on both stock pages, so the whole cache is invalidated.
+/**
+ * @typedef {object} FeedstockConfirmVars
+ * @property {string} supplierId
+ * @property {string} materialCode
+ * @property {number} feedstockQty
+ * @property {string} confirmedOn
+ * @property {string} [note]
+ */
+
+/** A supplier confirms its current feedstock (`t_feedstock_confirm`). */
+export function useFeedstockConfirm() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, FeedstockConfirmVars>} */ (
+    useMutation
+  )({
+    mutationFn: ({ supplierId, materialCode, feedstockQty, confirmedOn, note }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_feedstock_confirm',
+        entity: 'feedstockConfirmation',
+        payload: {
+          supplierId,
+          materialCode,
+          feedstockQty,
+          confirmedOn,
+          ...(note && note.trim() !== '' ? { note } : {})
+        }
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    }
+  });
+}
+
 // ── BL-50 · A RULING ON ONE DAY OF THE HUB'S WORKING CALENDAR ────────────────
 //
 // ⚠️ **`entityId` IS THE DATE, AND THERE IS NO `date` PAYLOAD FIELD** — the
@@ -2450,6 +2493,8 @@ export function useApplicationReject() {
 /**
  *  X-03 — set by the Order plan: the draft comes from an engine recommendation.
  *  REQ-E14-13 — set by the reschedule report: the change comes from an engine proposal (X-03).
+ *  BL-32 / DRC-5 (BL-191) — `reasonCode` on a change: the coded reason (`callOffChange`);
+ *  `ltp-dropped` proposes a delay the supplier answers with `delayAnswer` on `confirm`.
  *
  * @typedef {| { verb: 'release'; poId: string; poLineId: string; quantity: number; needDate: string; type: CallOffType }
  *   | {
@@ -2468,11 +2513,12 @@ export function useApplicationReject() {
  *       verb: 'change';
  *       id: string;
  *       reason: string;
+ *       reasonCode?: string;
  *       quantity?: number;
  *       needDate?: string;
  *       origin?: CallOffOrigin;
  *     }
- *   | { verb: 'confirm'; id: string; comment?: string }
+ *   | { verb: 'confirm'; id: string; comment?: string; delayAnswer?: DelayAnswer }
  *   | { verb: 'confirmNewDate'; id: string; confirmedDate: string; comment?: string }
  *   | { verb: 'confirmChanges'; id: string; confirmedQty: number; confirmedDate?: string; comment?: string }
  *   | { verb: 'confirmPartial'; id: string; deliveries: CallOffDelivery[]; comment?: string }
@@ -2717,6 +2763,38 @@ export function useWarehouseDecisionCommand() {
       if (result.status === 'failed') return;
       qc.invalidateQueries({
         predicate: (q) => q.queryKey[0] === 'procurement' && q.queryKey[1] === 'reschedule'
+      });
+    }
+  });
+}
+
+/**
+ * DRC-D11 (BL-196) — set or confirm one material's OSIP level (fires
+ * `t_osiplevel_set`). The Safety stock targets page re-reads, so the ROP
+ * Fisik formula follows the new level, and Home re-reads its review task.
+ * @typedef {{ readonly materialCode: string; readonly level: number }} OsipLevelVars
+ */
+
+/** Set or confirm a material's OSIP level (fires `t_osiplevel_set`). */
+export function useOsipLevelCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, OsipLevelVars>} */ (useMutation)({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_osiplevel_set',
+        entity: 'osipLevel',
+        entityId: vars.materialCode,
+        payload: { osipLevel: vars.level }
+      }),
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      qc.invalidateQueries({
+        predicate: (q) =>
+          q.queryKey[0] === 'procurement' &&
+          (q.queryKey[1] === 'safetyStock' || q.queryKey[1] === 'npdReviews')
       });
     }
   });

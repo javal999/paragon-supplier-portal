@@ -76,6 +76,12 @@ export const OSIP_SAFETY_QUESTIONS = Object.freeze({
  *   consumption, oldest first, ending at the current hub week; weeks with no
  *   record are left out (DRC-B11). Covers at least the longest window read.
  * `supplyArea`:  From the supplier's country and city (DRC-B8), or null.
+ * `leadTimeSteps`:  BL-196 — the source's lead time by step (DRC-6), empty when the feed carries
+ *   none; the supplier-side ROPs read them (`osipRopRules`).
+ * `ltpNext3m`:  BL-198 — weekly LTP of this supplier × material over the next 3 months
+ *   (`OSIP_ROP_READ.npdLtpWeeks` weeks from the current hub week).
+ * `npd`:  BL-198 (DRC-12a) — the material is NPD under the NPD rule in force: ROP Fisik demand
+ *   takes `fisikDemand`'s NPD branch, min(highest LTP over the next 3 months, capacity).
  *
  * @typedef {{
  *   readonly supplierId: string;
@@ -87,6 +93,9 @@ export const OSIP_SAFETY_QUESTIONS = Object.freeze({
  *   readonly koli: number | null;
  *   readonly consumption: readonly number[];
  *   readonly supplyArea: SupplyArea | null;
+ *   readonly leadTimeSteps?: readonly import('../engine/types').LeadTimeStep[];
+ *   readonly ltpNext3m?: readonly number[];
+ *   readonly npd?: boolean;
  * }} OsipSafetyInput
  */
 
@@ -148,6 +157,11 @@ export const OSIP_SAFETY_QUESTIONS = Object.freeze({
  * Unavailable with no consumption recorded in the window, or (sheet only) no
  * supply area for f.
  *
+ * BL-198 (DRC-12a) — an NPD material (`npd`) takes `fisikDemand`'s NPD branch:
+ * min(highest weekly LTP of the next 3 months ÷ 7, production capacity), the
+ * capacity left out as above. It needs no consumption under the deck rule, and
+ * is unavailable (`NO_LTP`) with no LTP over those weeks.
+ *
  * @param {OsipSafetyInput} input
  * @param {OsipRules} [rules]
  * @returns {OsipSafetyFigures}
@@ -198,7 +212,30 @@ export function osipSafety(input, rules = OSIP_RULES) {
       : rules.fisikSafety === 'sheet' && f === null
         ? 'NO_SUPPLY_AREA'
         : null;
-  const demandPerDay =
+  // BL-198 — the NPD branch of the demand (DRC-10 [Default B5]).
+  const next3m = input.ltpNext3m ?? [];
+  const npdDemand =
+    input.npd && next3m.some((q) => q > 0)
+      ? fisikDemand(
+          {
+            npd: true,
+            highestLtpNext3m: Math.max(...next3m) / perDay,
+            productionCapacity: Infinity
+          },
+          rules
+        )
+      : null;
+  /** @type {OsipUnavailable | null} */
+  const npdGap = !input.npd
+    ? null
+    : npdDemand === null
+      ? 'NO_LTP'
+      : rules.fisikSafety === 'sheet' && consumptionPerDay === null
+        ? 'NO_CONSUMPTION'
+        : rules.fisikSafety === 'sheet' && f === null
+          ? 'NO_SUPPLY_AREA'
+          : null;
+  const existingDemand =
     consumptionPerDay === null
       ? null
       : fisikDemand(
@@ -211,8 +248,10 @@ export function osipSafety(input, rules = OSIP_RULES) {
           },
           rules
         );
+  const demandPerDay = input.npd ? npdDemand : existingDemand;
+  const gap = input.npd ? npdGap : fisikGap;
   const fisikValue =
-    fisikGap !== null || demandPerDay === null
+    gap !== null || demandPerDay === null
       ? null
       : fisikSafety(
           {
@@ -238,7 +277,7 @@ export function osipSafety(input, rules = OSIP_RULES) {
       consumptionPerDay,
       ltpPerDay,
       f,
-      unavailable: fisikGap
+      unavailable: gap
     },
     flags
   };

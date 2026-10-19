@@ -94,6 +94,15 @@ export const useDemandAnticipation = () =>
     svc.procurement.getDemandAnticipation(scope)
   );
 
+/**
+ * DRC-3 (BL-189) — every demand anticipation publication, for the audit view.
+ * Under `demandAnticipation`, so every act that refreshes that read refreshes this.
+ */
+export const useDemandAnticipationHistory = () =>
+  useServiceQuery(['procurement', 'demandAnticipation', 'history'], (svc, scope) =>
+    svc.procurement.getDemandAnticipationHistory(scope)
+  );
+
 /** Material C5 (MR-8) — the planning groups, their materials and changes. */
 export const usePlanningGroups = () =>
   useServiceQuery(['procurement', 'planningGroups'], (svc, scope) =>
@@ -167,6 +176,18 @@ export const useMaterialRequirement = (includeUnconfirmed = false) =>
 export const useSafetyStock = () =>
   useServiceQuery(['procurement', 'safetyStock'], (svc, scope) =>
     svc.procurement.getSafetyStock(scope)
+  );
+
+/** DRC-12a (BL-198) — the open "Review ROP after first order" tasks (PTI only). */
+export const useNpdReviews = () =>
+  useServiceQuery(['procurement', 'npdReviews'], (svc, scope) =>
+    svc.procurement.getNpdReviews(scope)
+  );
+
+/** BL-199 (DRC-13 BR-02) — the open "Create a PR in SAP" recommendations at ROP Fisik (PTI only). */
+export const useRopFisikPrRecommendations = () =>
+  useServiceQuery(['procurement', 'ropFisikPrRecommendations'], (svc, scope) =>
+    svc.procurement.getRopFisikPrRecommendations(scope)
   );
 
 /** REQ-E14-05 — the order plan: sized orders, warehouse fill and rented space (PTI only). */

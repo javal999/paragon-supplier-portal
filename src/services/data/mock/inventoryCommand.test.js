@@ -676,8 +676,10 @@ describe('alerts (REQ-E08-05)', () => {
   });
 
   it('a closed alert reopens only after its condition clears and recurs', async () => {
-    const key = 'supplierBelowRop|PK-PETB-8802|sup-007';
-    expect((await close(key, 'Supplier producing')).status).toBe('done');
+    // DRC-D15 (BL-196) — this walk used `supplierBelowRop`, which no longer
+    // fires (the supplier's ROP is display only); `coverage` reads the same
+    // supplier stock, so the same walk runs on it.
+    const key = 'coverage|PK-PETB-8802|sup-007';
     /** @param {number} totalQty */
     const declare = (totalQty) =>
       svc.dispatch(sup007, {
@@ -691,9 +693,11 @@ describe('alerts (REQ-E08-05)', () => {
           inProductionQty: 0
         }
       });
-    await declare(40000); // above ROP → condition clears
+    await declare(1); // almost no supplier stock → not covered
+    expect((await close(key, 'Supplier producing')).status).toBe('done');
+    await declare(100_000_000); // covered → condition clears
     expect((await reads.getInventoryAlerts(buyer)).items.some((a) => a.key === key)).toBe(false);
-    await declare(10000); // below ROP again → recurs
+    await declare(1); // not covered again → recurs
     expect((await reads.getInventoryAlerts(buyer)).items.find((a) => a.key === key)).toMatchObject({
       status: 'open'
     });

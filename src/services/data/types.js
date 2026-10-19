@@ -26,6 +26,7 @@
 /** @import { FsRow } from '../transitions/feedstockReconcile' */
 /** @import { BlanketPoRunOut } from '../transitions/blanketPoRules' */
 /** @import { DemandAnticipationSupplyRow } from '../transitions/supplyBelowDemandRules' */
+/** @import { DaHistoryRow } from '../transitions/demandAnticipationHistory' */
 /** @import { SimulationRefusal, StockSimulation } from '../transitions/simulateSupplierStock' */
 /** @import { RfqClarificationView, RfqEngagementView } from '../sourcing/rfqResponse' */
 /** @import { AwardView, NegotiationRoundView, RfiEventView, RfpEventView, RfpAwardView, RfpOfferRoundView, RfqSupplierGateView } from '../sourcing/views' */
@@ -422,15 +423,44 @@ export class DataError extends Error {
 
 /** A planner or supplier note kept on the call-off (reasons are required). */
 /**
+ * `code`:  BL-32 / DRC-5 (BL-191) — the coded reason of a planner's change
+ *   (`callOffChange` list), when the planner chose one; the text stays required.
+ *
  * @typedef {{
  *   readonly action: 'edit' | 'dismiss' | 'change' | 'reject' | 'returned';
  *   readonly text: string;
  *   readonly at: string;
+ *   readonly code?: string;
  * }} CallOffNote
  */
 
+/**
+ * DRC-5 (BL-191) — a delay the planner proposed because the LTP dropped, and
+ * the supplier's answer. The audit trail of who proposed, who answered and
+ * when; kept on the call-off, never removed.
+ * `fromNeedDate` / `toNeedDate`:  The need date before and the later one proposed.
+ * `quantity`:  The call-off quantity the delay moves (unchanged by it).
+ * `reasonCode`:  The `callOffChange` code (`ltp-dropped`).
+ * `answer`:  null while the supplier has not answered; the need date moves only on `approved`.
+ * `comment`:  The supplier's note with its answer, if any.
+ *
+ * @typedef {{
+ *   readonly fromNeedDate: string;
+ *   readonly toNeedDate: string;
+ *   readonly quantity: number;
+ *   readonly reasonCode: string;
+ *   readonly reason: string;
+ *   readonly proposedAt: string;
+ *   readonly proposedBy: ActorAttribution;
+ *   readonly answer: 'approved' | 'rejected' | null;
+ *   readonly answeredAt?: string;
+ *   readonly answeredBy?: ActorAttribution;
+ *   readonly comment?: string;
+ * }} CallOffDelay
+ */
+
 /** The origin a call-off can carry (see `CallOff.origin`). */
-/** @typedef {'engine'} CallOffOrigin */
+/** @typedef {'engine' | 'ropFisik'} CallOffOrigin */
 
 /**
  * Material C4 (MR-5 BR-01 to BR-04) — a material's MRP controller (PIC) as the
@@ -456,8 +486,10 @@ export class DataError extends Error {
  * `releasedAt`:  When the supplier was last asked to confirm; the 1-working-day deadline counts from here.
  * `agreedDeliveries`: The deliveries last agreed by BOTH sides (BL-66 (2); REQ-E10-01 edge case "measure against the latest date agreed by both sides"). Kept when the planner changes a call-off the supplier had confirmed and that confirmation was accepted; OTIF measures against these until the supplier confirms the change and it is accepted. Absent when nothing was ever agreed.
  * `rejectionReason`:  The supplier's reason when it rejected the call-off.
- * `origin`: Where the call-off came from, when not typed by the planner. `'engine'`: a draft the Order plan created from a forecast-engine recommendation (REQ-E14-05 BR-05). While the engine dataset is not live, such a draft is refused on release (X-03, owner decision 2026-09-23). Absent for every call-off created on the Call-offs page.
+ * `origin`: Where the call-off came from, when not typed by the planner. `'engine'`: a draft the Order plan created from a forecast-engine recommendation (REQ-E14-05 BR-05). While the engine dataset is not live, such a draft is refused on release (X-03, owner decision 2026-09-23). `'ropFisik'`: BL-199 (DRC-13) — a draft the hub created when PTI SOH reached ROP Fisik, for the planner to approve. Absent for every call-off created on the Call-offs page.
+ * `trigger`: BL-199 (DRC-13) — on a `'ropFisik'` draft only: the figures behind it (SOH, ROP Fisik, Max, quantity), stamped with their inputs and rules version (DRC-D16). PTI only: a supplier's read never carries it.
  * `mrpController`:  Material C4 — the material's MRP controller, projected at read (never stored).
+ * `delays`:  DRC-5 (BL-191) — every delay proposed for an LTP drop, oldest first; the last may be awaiting the supplier's answer. Absent when none was proposed.
  *
  * @typedef {{
  *   readonly id: string;
@@ -481,8 +513,10 @@ export class DataError extends Error {
  *   readonly agreedDeliveries?: readonly CallOffDelivery[];
  *   readonly rejectionReason?: string;
  *   readonly origin?: CallOffOrigin;
+ *   readonly trigger?: import('../transitions/osipRules').Stamped<import('../transitions/callOffTriggerRules').TriggerFigures>;
  *   readonly dispatches: readonly CallOffDispatch[];
  *   readonly notes: readonly CallOffNote[];
+ *   readonly delays?: readonly CallOffDelay[];
  *   readonly mrpController?: MrpControllerRef;
  * }} CallOff
  */
@@ -531,7 +565,12 @@ export class DataError extends Error {
 /**
  * `materialType`:  ROH = raw material, VERP = packaging (BR-07).
  * `supplierSoh`:  Latest supplier stock submission; null when the supplier never submitted.
- * `supplierRop`:  The supplier's own reorder point; null reads "Not provided".
+ * `supplierRop`:  The supplier's own reorder point; null reads "Not provided". DISPLAY ONLY
+ *   (DRC-D15): suppliers may still send it, but no calculation or alert reads it; the
+ *   `supplierBelowRop` alert compares the supplier's stock with `systemRopSupplier`.
+ * `systemRopSupplier`:  DRC-D15 (BL-196) — the system's ROP Supplier for this pair (`osipRopRules`),
+ *   shown beside `supplierRop` on PTI's read; a figure or why not. Absent on a supplier's read;
+ *   null when the pair has no engine source.
  * `ptiSoh`:  PTI stock and reorder point from SAP. Null for a supplier without access.
  * `ptiStockShared`:  Whether PTI stock is shown on this row (always true for PTI users).
  * `consignment`:  Consignment material (MN-INV-10).
@@ -543,6 +582,7 @@ export class DataError extends Error {
  * `lastSync`:  The latest API sync attempt for this supplier, if any.
  * `mrpController`:  Material C4 — the material's MRP controller (MR-5 BR-03), narrowed per reader.
  * `tradeName`: Material C2 — this supplier's APPROVED trade name for the material (MR-3 BR-02), shown beside PTI's description. Projected at read, never stored; absent while no name is approved or the material is no longer assigned.
+ * `feedstock`: BL-194 (DRC-8) — the supplier's latest feedstock confirmation for the material, projected at read; absent while none is on record. A separate line, never part of `supplierSoh` (MoM 2B).
  *
  * @typedef {{
  *   readonly supplierId: string;
@@ -554,6 +594,7 @@ export class DataError extends Error {
  *   readonly uom: string;
  *   readonly supplierSoh: number | null;
  *   readonly supplierRop: number | null;
+ *   readonly systemRopSupplier?: import('../transitions/osipRopRules').RopFigure | null;
  *   readonly ptiSoh: number | null;
  *   readonly ptiRop: number | null;
  *   readonly ptiStockShared: boolean;
@@ -572,7 +613,32 @@ export class DataError extends Error {
  *   readonly batches: readonly { readonly batchNumber: string; readonly qty: number; readonly manufacturingDate?: string; readonly expiryDate?: string; }[];
  *   readonly mrpController?: MrpControllerRef;
  *   readonly tradeName?: string;
+ *   readonly feedstock?: FeedstockConfirmation;
  * }} InventoryPosition
+ */
+
+// ─── Supplier feedstock confirmation (BL-194 · DRC-8 BR-a; DRC-D17) ─────────
+
+/**
+ * One supplier confirmation of its current feedstock for an assigned material,
+ * append-only; the latest recorded per supplier × material is in force. It is
+ * NOT stock (MoM 2B): no stock figure, simulation or call-off check reads it.
+ *
+ * `feedstockQty`:  In the material's unit (`uom`, copied from the master); 0 allowed.
+ * `confirmedOn`:  `YYYY-MM-DD`, the day the supplier confirms the figure as of; never after the day it was recorded.
+ * `recordedAt` / `recordedBy`:  When and by whom the hub accepted it (hub clock, session), never from the payload.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly feedstockQty: number;
+ *   readonly uom: string;
+ *   readonly confirmedOn: string;
+ *   readonly note?: string;
+ *   readonly recordedAt: string;
+ *   readonly recordedBy: ActorAttribution;
+ * }} FeedstockConfirmation
  */
 
 // ─── Supplier trade names (Material C2 · MR-3 BR-01 to BR-06) ───────────────
@@ -855,12 +921,15 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * `change`:  BR-06 (BL-116) — the change since the last run of the material's stream, and why.
  * `osip`:  BL-193 (DRC-7) / BL-197 (DRC-11) — the inputs of the OSIP safety order, ROP Fisik
  *   safety and CV; the page applies the OSIP rules to them at read.
+ * `rop`:  BL-196 (DRC-D11) / BL-198 (DRC-12a) — the material's OSIP level in force and its NPD
+ *   tag under every variant; the page computes the ROPs and Max from `osip` at that level.
  *
  * @typedef {MaterialSafetyStock & {
  *     readonly materialLabel: string;
  *     readonly supplierName: string | null;
  *     readonly change: SafetyStockChange;
  *     readonly osip: MaterialOsipInputs;
+ *     readonly rop: import('../transitions/osipRopRules').MaterialRopInputs;
  *   }} MaterialSafetyStockView
  */
 
@@ -3052,12 +3121,22 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *   its own assigned materials only. PTI: every supplier × material with a name.
  * @property {(scope: QueryScope) => Promise<Page<StockAccessGrant>>} getStockAccess -  Supplier access to PTI stock. PTI: every supplier with its log. Supplier: its own.
  * @property {(scope: QueryScope) => Promise<Page<CapacityPlan>>} getCapacityPlans -  Capacity against demand per supplier × planning group, 13 weeks.
+ * @property {(scope: QueryScope) => Promise<Page<import('../transitions/callOffTriggerRules').PrRecommendationView>>} getRopFisikPrRecommendations BL-199 (DRC-13 BR-02) — the open "Create a PR in SAP" recommendations:
+ *   a material whose PTI SOH reached ROP Fisik with no umbrella PO balance left for what it needs. A
+ *   recommendation only; the hub posts nothing to SAP. PTI only: a supplier scope reads an empty page.
+ * @property {(scope: QueryScope) => Promise<Page<import('../transitions/osipRopRules').NpdReview>>} getNpdReviews DRC-12a (BL-198) — the open "Review ROP after first order" tasks: a material
+ *   whose NPD tag the hub saw drop, until the planner sets or confirms its OSIP level. PTI only:
+ *   a supplier scope reads an empty page.
  * @property {(scope: QueryScope) => Promise<Page<BlanketPoRunOut>>} getBlanketPoRunOuts CAP-9 — every open blanket PO line projected against the LTP: its
  *   run-out and "new PO needed by" weeks, derived at read. PTI only: a supplier
  *   scope reads an empty page.
  * @property {(scope: QueryScope) => Promise<Page<DemandAnticipationSupplyRow>>} getDemandAnticipation CAP-10 — demand anticipation per supplier × material × week: the
  *   frozen figure of each frozen week, today's recomputation ("would be") and its
  *   inputs, and (CAP-12) each week's open supply, gap and proposal. PTI only: a supplier scope reads an empty page.
+ * @property {(scope: QueryScope) => Promise<Page<DaHistoryRow>>} getDemandAnticipationHistory DRC-3 (BL-189) — every demand anticipation publication ever recorded,
+ *   one row per publication × supplier × material, with its stamped figure, its
+ *   carry-over origin and the delayed call-offs it reflects (DRC-5). PTI only:
+ *   a supplier scope reads an empty page.
  * @property {(scope: QueryScope) => Promise<Page<PlanningGroupView>>} getPlanningGroups Material C5 (MR-8) — the planning groups with their materials and changes.
  *   PTI: every group. Supplier: the groups holding its own materials, narrowed
  *   to those materials, with no change history.

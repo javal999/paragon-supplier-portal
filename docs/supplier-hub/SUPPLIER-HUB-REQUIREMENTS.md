@@ -1389,6 +1389,8 @@ Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
 
 #### REQ-E08-05  Inventory and capacity alerts
 
+> **Amended 2026-10-19 (DRC-D20).** "Supplier stock below supplier ROP" compares supplier stock with the system-calculated ROP Supplier (`SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-10), not the ROP the supplier types, which is display only (DRC-D15). Where the system figure is not available, the alert does not fire.
+
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
 | E08.02; PX1 | MVP | P0 [Deck p.7] | Material Planner | MP, SUP | Proposed |

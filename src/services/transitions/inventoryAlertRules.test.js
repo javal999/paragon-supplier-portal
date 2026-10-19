@@ -80,6 +80,8 @@ beforeEach(() => {
 });
 
 describe('MR-9 BR-02 / AC-01 — within a class, fewest days to impact first', () => {
+  // DRC-D15 (BL-196) — these ran on `supplierBelowRop`, which no longer fires;
+  // `ptiBelowRop` is a stock rule with the same days of cover and class.
   // Two High alerts: 10 days of cover at "PT A…" and 3 days at "PT Z…". By
   // supplier name A would come first; by days to impact the 3-day one does.
   const conditions = deriveAlertConditions(
@@ -89,20 +91,22 @@ describe('MR-9 BR-02 / AC-01 — within a class, fewest days to impact first', (
         supplierName: 'PT A Early Name',
         materialCode: 'M10',
         supplierSoh: 1000,
-        supplierRop: 2000
+        ptiSoh: 0,
+        ptiRop: 2000
       }),
       position({
         supplierId: 'sup-z',
         supplierName: 'PT Z Late Name',
         materialCode: 'M3',
         supplierSoh: 300,
-        supplierRop: 2000
+        ptiSoh: 0,
+        ptiRop: 2000
       })
     ],
     [],
     NOW
   );
-  const alerts = alertsFromLedger(conditions, []).filter((a) => a.rule === 'supplierBelowRop');
+  const alerts = alertsFromLedger(conditions, []).filter((a) => a.rule === 'ptiBelowRop');
 
   it('2 High alerts with 3 and 10 days of cover list the 3-day one first', () => {
     expect(alerts.map((a) => [a.riskClass, a.daysToImpact, a.supplierId])).toEqual([
@@ -129,14 +133,16 @@ describe('MR-9 BR-02 / AC-01 — within a class, fewest days to impact first', (
             supplierName: 'PT H',
             materialCode: 'H',
             supplierSoh: 2900,
-            supplierRop: 5000
+            ptiSoh: 0,
+            ptiRop: 5000
           }), // 29 d, High
           position({
             supplierId: 'sup-m',
             supplierName: 'PT M',
             materialCode: 'M',
             supplierSoh: 4000,
-            supplierRop: 5000,
+            ptiSoh: 0,
+            ptiRop: 5000,
             leadTimeDays: 30
           }) // 40 d, Medium
         ],
@@ -144,7 +150,7 @@ describe('MR-9 BR-02 / AC-01 — within a class, fewest days to impact first', (
         NOW
       ),
       []
-    ).filter((a) => a.rule === 'supplierBelowRop');
+    ).filter((a) => a.rule === 'ptiBelowRop');
     expect(mixed.map((a) => [a.riskClass, a.supplierId])).toEqual([
       ['high', 'sup-h'],
       ['medium', 'sup-m']
@@ -179,15 +185,46 @@ describe('MR-9 BR-03 — days to impact per rule', () => {
 
   it('a stock rule with no demand has no impact date and sorts last in its class', () => {
     const c = deriveAlertConditions(
-      [position({ supplierRop: 5000, avgDailyDemand: null })],
+      [position({ ptiSoh: 0, ptiRop: 5000, avgDailyDemand: null })],
       [],
       NOW
     );
     expect(
       /** @type {NonNullable<ReturnType<typeof c.find>>} */ (
-        c.find((x) => x.rule === 'supplierBelowRop')
+        c.find((x) => x.rule === 'ptiBelowRop')
       ).daysToImpact
     ).toBe(NO_DAYS_TO_IMPACT);
+  });
+
+  it('supplierBelowRop reads the SYSTEM ROP Supplier (owner 2026-10-19); the typed ROP is display only; no system figure, no alert', () => {
+    const c = deriveAlertConditions(
+      [
+        // Typed ROP above the stock, system figure below it → no alert.
+        position({
+          materialCode: 'PK-A',
+          supplierSoh: 1000,
+          supplierRop: 5000,
+          systemRopSupplier: { value: 800, unavailable: null }
+        }),
+        // System figure above the stock → alert, with the stock rule's days of cover.
+        position({
+          materialCode: 'PK-B',
+          supplierSoh: 1000,
+          systemRopSupplier: { value: 2000, unavailable: null }
+        }),
+        // "Not available" (a lead-time leg the hub does not hold) → no alert.
+        position({
+          materialCode: 'PK-C',
+          supplierSoh: 1000,
+          supplierRop: 5000,
+          systemRopSupplier: { value: null, unavailable: 'NOT_ON_ROUTE' }
+        })
+      ],
+      [],
+      NOW
+    );
+    expect(c.filter((x) => x.rule === 'supplierBelowRop').map((x) => x.subject)).toEqual(['PK-B']);
+    expect(c.find((x) => x.rule === 'supplierBelowRop')?.daysToImpact).toBe(10);
   });
 
   it('capacity: days to the first gap week', () => {

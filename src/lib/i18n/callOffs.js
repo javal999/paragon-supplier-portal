@@ -178,6 +178,31 @@ export const callOffsEn = {
   'co.draft.dismiss': 'Dismiss draft',
   'co.draft.release': 'Release to supplier',
   'co.origin.engine': 'From the order plan — simulated data',
+  // BL-199 (DRC-13) — a draft the hub made when PTI SOH reached ROP Fisik.
+  'co.trigger.marker': 'Drafted at ROP Fisik',
+  'co.trigger.title': 'Why the hub drafted this',
+  'co.trigger.intro':
+    'PTI stock on hand reached ROP Fisik, so the hub drafted this call-off on the oldest blanket PO line with balance. It is not sent to the supplier until you release it.',
+  'co.trigger.soh': 'PTI stock on hand (all plants)',
+  'co.trigger.ropFisik': 'ROP Fisik',
+  'co.trigger.max': 'Max',
+  'co.trigger.openSupply': 'Released, not yet received',
+  'co.trigger.quantity': 'Drafted quantity',
+  'co.trigger.quantityBasis':
+    'Max − (stock on hand + released call-offs not yet received), rounded up to the MPQ and capped so stock never goes above Max.',
+  'co.trigger.plants': 'By plant: {{plants}}',
+  'co.trigger.refresh':
+    'Checks follow the eWM refresh; eWM feed not connected, SOH from the hub’s stock records.',
+  'co.trigger.provisional': 'Provisional: rule awaiting Material Planning ({{questions}})',
+  'co.trigger.rulesVersion': 'Rules version {{version}}',
+  // BL-199 (DRC-13 BR-02) — What to order: no umbrella PO balance left.
+  'co.trigger.pr.title': 'Create a PR in SAP: no umbrella PO balance at ROP Fisik',
+  'co.trigger.pr.intro':
+    'PTI stock on hand reached ROP Fisik and no blanket PO line has balance left for what it needs. The hub recommends a PR; you create it in SAP. The hub posts nothing to SAP.',
+  'co.trigger.pr.col.material': 'Material',
+  'co.trigger.pr.col.recommendation': 'Recommendation',
+  'co.trigger.pr.create': 'Create a PR in SAP for {{qty}} {{uom}}',
+  'co.trigger.pr.since': 'Since {{date}}',
   'co.draft.releaseWithheld':
     'Not released to the supplier: this draft comes from an order-plan recommendation calculated on simulated data. It can be released once the Master Data Management team’s SAP feed is live. You can still edit or dismiss it.',
   'co.refusal.engineDataSimulated':
@@ -186,6 +211,27 @@ export const callOffsEn = {
   'co.change.intro':
     'Changing the quantity or need date sends the call-off back to the supplier to confirm again.',
   'co.change.submit': 'Change and ask again',
+  // DRC-5 (BL-191) — a delay for an LTP drop, and the coded change reason (BL-32).
+  'co.changeReason.ltp-dropped': 'LTP dropped',
+  'co.change.reasonCode': 'Reason type',
+  'co.change.reasonCodeNone': 'Not coded',
+  'co.change.delayHint':
+    'LTP dropped: choose a later need date and keep the quantity. The need date moves only when the supplier approves; until then the call-off stays on its current date and in the demand anticipation.',
+  'co.delay.title': 'Delay for an LTP drop',
+  'co.delay.pending': 'Proposed {{from}} → {{to}}, waiting for the supplier',
+  'co.delay.approved': '{{from}} → {{to}}: approved by the supplier',
+  'co.delay.rejected':
+    '{{from}} → {{to}}: rejected by the supplier; the call-off stayed on {{from}}',
+  'co.delay.proposedAt': 'Proposed {{date}}',
+  'co.delay.answeredAt': 'Answered {{date}}',
+  'co.delay.unattributed': 'not attributed to a person',
+  'co.delay.sup.intro':
+    'PTI proposes to move this call-off from {{from}} to {{to}} because the LTP dropped. The need date changes only if you approve.',
+  'co.delay.sup.reason': 'PTI’s reason',
+  'co.delay.sup.approve': 'Approve the delay',
+  'co.delay.sup.reject': 'Reject the delay, keep {{from}}',
+  'co.toast.delayApproved': '{{number}}: delay approved',
+  'co.toast.delayRejected': '{{number}}: delay rejected, the date stays',
   'co.review.title': 'Confirmation outside tolerance',
   'co.review.intro':
     'Approve to accept the date and quantity the supplier confirmed, or reject with a comment to ask the supplier again.',
@@ -458,6 +504,29 @@ export const callOffsId = {
   'co.draft.dismiss': 'Batalkan draf',
   'co.draft.release': 'Rilis ke pemasok',
   'co.origin.engine': 'Dari rencana pesanan — data simulasi',
+  'co.trigger.marker': 'Didraf pada ROP Fisik',
+  'co.trigger.title': 'Mengapa hub membuat draf ini',
+  'co.trigger.intro':
+    'Stok PTI mencapai ROP Fisik, sehingga hub membuat draf call-off ini pada baris PO induk tertua yang masih bersaldo. Draf tidak dikirim ke pemasok sampai Anda merilisnya.',
+  'co.trigger.soh': 'Stok PTI (semua pabrik)',
+  'co.trigger.ropFisik': 'ROP Fisik',
+  'co.trigger.max': 'Maks',
+  'co.trigger.openSupply': 'Dirilis, belum diterima',
+  'co.trigger.quantity': 'Kuantitas draf',
+  'co.trigger.quantityBasis':
+    'Maks − (stok + call-off yang dirilis dan belum diterima), dibulatkan ke atas ke MPQ dan dibatasi agar stok tidak pernah melebihi Maks.',
+  'co.trigger.plants': 'Per pabrik: {{plants}}',
+  'co.trigger.refresh':
+    'Pemeriksaan mengikuti pembaruan eWM; data eWM belum terhubung, stok diambil dari catatan stok hub.',
+  'co.trigger.provisional': 'Sementara: aturan menunggu Material Planning ({{questions}})',
+  'co.trigger.rulesVersion': 'Versi aturan {{version}}',
+  'co.trigger.pr.title': 'Buat PR di SAP: saldo PO induk habis pada ROP Fisik',
+  'co.trigger.pr.intro':
+    'Stok PTI mencapai ROP Fisik dan tidak ada baris PO induk yang masih bersaldo untuk kebutuhannya. Hub merekomendasikan PR; Anda membuatnya di SAP. Hub tidak mengirim apa pun ke SAP.',
+  'co.trigger.pr.col.material': 'Material',
+  'co.trigger.pr.col.recommendation': 'Rekomendasi',
+  'co.trigger.pr.create': 'Buat PR di SAP untuk {{qty}} {{uom}}',
+  'co.trigger.pr.since': 'Sejak {{date}}',
   'co.draft.releaseWithheld':
     'Tidak dirilis ke pemasok: draf ini berasal dari rekomendasi rencana pesanan yang dihitung dengan data simulasi. Draf dapat dirilis setelah data SAP dari tim Master Data Management tersedia. Anda tetap dapat mengubah atau membatalkannya.',
   'co.refusal.engineDataSimulated':
@@ -466,6 +535,26 @@ export const callOffsId = {
   'co.change.intro':
     'Mengubah kuantitas atau tanggal kebutuhan mengembalikan call-off ke pemasok untuk dikonfirmasi ulang.',
   'co.change.submit': 'Ubah dan minta konfirmasi ulang',
+  // DRC-5 (BL-191) — penundaan karena LTP turun, dan alasan perubahan berkode (BL-32).
+  'co.changeReason.ltp-dropped': 'LTP turun',
+  'co.change.reasonCode': 'Jenis alasan',
+  'co.change.reasonCodeNone': 'Tanpa kode',
+  'co.change.delayHint':
+    'LTP turun: pilih tanggal kebutuhan yang lebih lambat dan pertahankan kuantitasnya. Tanggal kebutuhan baru berubah bila pemasok menyetujui; sampai itu call-off tetap pada tanggalnya sekarang dan dalam antisipasi permintaan.',
+  'co.delay.title': 'Penundaan karena LTP turun',
+  'co.delay.pending': 'Diusulkan {{from}} → {{to}}, menunggu pemasok',
+  'co.delay.approved': '{{from}} → {{to}}: disetujui pemasok',
+  'co.delay.rejected': '{{from}} → {{to}}: ditolak pemasok; call-off tetap pada {{from}}',
+  'co.delay.proposedAt': 'Diusulkan {{date}}',
+  'co.delay.answeredAt': 'Dijawab {{date}}',
+  'co.delay.unattributed': 'tidak diatribusikan ke seseorang',
+  'co.delay.sup.intro':
+    'PTI mengusulkan memindahkan call-off ini dari {{from}} ke {{to}} karena LTP turun. Tanggal kebutuhan hanya berubah bila Anda menyetujui.',
+  'co.delay.sup.reason': 'Alasan PTI',
+  'co.delay.sup.approve': 'Setujui penundaan',
+  'co.delay.sup.reject': 'Tolak penundaan, tetap {{from}}',
+  'co.toast.delayApproved': '{{number}}: penundaan disetujui',
+  'co.toast.delayRejected': '{{number}}: penundaan ditolak, tanggal tetap',
   'co.review.title': 'Konfirmasi di luar toleransi',
   'co.review.intro':
     'Setujui untuk menerima tanggal dan kuantitas yang dikonfirmasi pemasok, atau tolak dengan komentar untuk meminta ulang.',

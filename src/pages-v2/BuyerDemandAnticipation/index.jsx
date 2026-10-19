@@ -1,7 +1,7 @@
 /** @import React from 'react' */
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
 import PageMetaLine from '@components/ui-v2/PageMetaLine';
@@ -119,7 +119,17 @@ const BuyerDemandAnticipation = () => {
               : `${t('demandAnt.pub.published', { date: formatDate(latest.publishedAt) })} · ${t('demandAnt.pub.unattributed')}`}
           </p>
         ) : null}
-        <p className="text-xs text-text-tertiary mb-3">{t('demandAnt.howItWorks')}</p>
+        <p className="text-xs text-text-tertiary mb-3">
+          {t('demandAnt.howItWorks')}{' '}
+          {/* DRC-3 (BL-189) — every publication, with its stamp and carry origin. */}
+          <Link
+            to="/buyer/demand-anticipation-history"
+            className="text-action-hover hover:underline"
+            data-testid="dant-history-link"
+          >
+            {t('daHist.openHistory')}
+          </Link>
+        </p>
         <PublishPanel rows={rows} planningWeek={planningWeek} changed={changed} />
       </section>
 

@@ -538,6 +538,14 @@ export const processFlowPurposeEn = {
     'How much of a material PTI used in one Monday-to-Sunday period, typed in or uploaded by the Material Planner until the SAP goods-issue feed exists. A later entry for the same material and period replaces the earlier one; both are kept.',
   'processFlows.purpose.t_consumption_record':
     'The Material Planner enters how much of a material was used in one Monday-to-Sunday period. It shows beside the demand anticipation and feeds the moving average of use. Nothing is sent to SAP or a supplier.',
+  'processFlows.purpose.entity.osipLevel':
+    'A material’s OSIP level, which picks the formula of its physical reorder point (ROP Fisik). A material nobody has set is at level 4. Every change keeps the level before it, who set it and when; the latest is in force.',
+  'processFlows.purpose.t_osiplevel_set':
+    'The Material Planner sets or confirms a material’s OSIP level, from 1 to 6. Confirming it closes the “Review ROP after first order” task. Nothing is sent to SAP or a supplier.',
+  'processFlows.purpose.entity.feedstockConfirmation':
+    'A supplier’s confirmation of its current feedstock for one material: the quantity in the material’s unit, the day the figure holds for, and an optional note. Feedstock is not stock until it is produced, so it never adds to the supplier’s stock on hand. A newer confirmation replaces the earlier one; every confirmation stays on record.',
+  'processFlows.purpose.t_feedstock_confirm':
+    'The supplier confirms its current feedstock for an assigned material, weekly with the stock update. PTI sees it as its own line beside the supplier stock. Nothing is sent to SAP.',
 
   // ── RFx management (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ─────────────────
   'processFlows.purpose.entity.rfiEvent':
@@ -1111,6 +1119,14 @@ export const processFlowPurposeId = {
     'Pemakaian material yang tercatat dalam satu minggu, diketik atau diunggah oleh Perencana Material sampai umpan pengeluaran barang SAP tersedia. Catatan yang lebih baru untuk material dan minggu yang sama menggantikan yang lebih lama; keduanya tetap tercatat.',
   'processFlows.purpose.t_consumption_record':
     'Perencana Material mencatat berapa banyak material yang dipakai dalam satu minggu. Pemakaian tampil di samping antisipasi permintaan dan masuk ke rata-rata pemakaian. Tidak ada yang dikirim ke SAP atau pemasok.',
+  'processFlows.purpose.entity.osipLevel':
+    'Level OSIP suatu material, yang menentukan rumus titik pemesanan ulang fisiknya (ROP Fisik). Material yang belum diatur berada di level 4. Setiap perubahan menyimpan level sebelumnya, siapa yang mengatur, dan kapan; yang terakhir berlaku.',
+  'processFlows.purpose.t_osiplevel_set':
+    'Perencana Material mengatur atau mengonfirmasi level OSIP suatu material, dari 1 sampai 6. Mengonfirmasinya menutup tugas “Tinjau ROP setelah pesanan pertama”. Tidak ada yang dikirim ke SAP atau pemasok.',
+  'processFlows.purpose.entity.feedstockConfirmation':
+    'Konfirmasi pemasok atas feedstock saat ini untuk satu material: jumlah dalam satuan material, tanggal konfirmasi, dan catatan opsional. Feedstock belum menjadi stok sampai diproduksi, sehingga tidak pernah menambah stok pemasok. Konfirmasi yang lebih baru menggantikan yang lama; setiap konfirmasi tetap tercatat.',
+  'processFlows.purpose.t_feedstock_confirm':
+    'Pemasok mengonfirmasi feedstock saat ini untuk material yang ditugaskan, setiap minggu bersama pembaruan stok. PTI melihatnya sebagai baris tersendiri di samping stok pemasok. Tidak ada yang dikirim ke SAP.',
 
   // ── RFx (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ────────────────────────────
   'processFlows.purpose.entity.rfiEvent':

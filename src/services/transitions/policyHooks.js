@@ -194,6 +194,11 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    */
   WAREHOUSE_DECISION_VALID: 'warehousedecision_valid',
   /**
+   * OSIP level per material (DRC-D11, BL-196): the level is a whole number
+   * from 1 to 6 (OSIP_LEVEL_INVALID).
+   */
+  OSIP_LEVEL_VALID: 'osiplevel_valid',
+  /**
    * Demand anticipation publish (DRC-2, BL-188): the confirm names the current
    * planning week (STALE_WEEK otherwise); a recorded supplier agreement names
    * a pair with a remainder to carry (BAD_AGREEMENT, [Owner A8]); some pair has
@@ -477,6 +482,15 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    * The rules are in `materialNameRules.js`, the ones the pages' pre-checks call.
    */
   MATERIAL_NAME_VALID: 'material_name_valid',
+  /**
+   * BL-194 / DRC-8 BR-a — a supplier's feedstock confirmation: the material is
+   * assigned to the supplier (NOT_ASSIGNED), the quantity is a number of 0 or
+   * more (QTY_INVALID), the confirmation date is given (DATE_REQUIRED), is a
+   * date (DATE_INVALID) and is not after today (DATE_IN_FUTURE), and the note
+   * is text of at most the rules' length (NOTE_INVALID, NOTE_TOO_LONG). The
+   * rule is `feedstockEntryRefusal`, the one the supplier form calls.
+   */
+  FEEDSTOCK_CONFIRMATION_VALID: 'feedstock_confirmation_valid',
   /**
    * Material E1 (MR-7 BR-06, BR-08) — a planner input to the stock simulation:
    * a known supplier (UNKNOWN_SUPPLIER) and material (UNKNOWN_MATERIAL), one of
