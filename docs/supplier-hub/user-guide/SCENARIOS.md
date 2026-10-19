@@ -294,7 +294,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | PTI or Supplier | End-of-cycle stock check / **Fixed stock reconcile** | Reads the outcome per material: "Supplier short", "PTI under-called", "Stock not reported", "Above max stock" | – | `lib/i18n/fixedStockReconcile.js:17-29` |
+| 1 | PTI or Supplier | **Feedstock reconcile** | Reads, per material, PO ordered against called off and ASN requested: "Not yet called off" and "Called off, not yet shipped" (DRC-15a; what happens to a remainder is still open, DRC-15b) | – | `lib/i18n/feedstockReconcile.js` |
 | 2 | Sup-Ful | To do | "Stock figures to update" → **Enter stock** | Declared | `lib/i18n/hub.js:163`; `pages-v2/SupplierInventory.jsx:183-192` |
 
 **Edge cases**
@@ -436,7 +436,7 @@ Purposes come from each page's subtitle in `lib/i18n/` (for example `rel.pti.sub
 | Shipments & ASN | Orders | Create and submit ASNs | UC2 |
 | Goods receipts | Orders | See receipts; acknowledge or dispute discrepancies | UC2 |
 | Forecast & commitments | Planning | Commit per period; acknowledge forecast rows | UC4 |
-| Fixed stock reconcile | Planning | End-of-cycle stock against max stock, read-only | UC6 |
+| Feedstock reconcile | Planning | PO ordered against call-offs and ASNs requested, daily, read-only; max stock shown | UC6 |
 | Stock | Planning | Enter stock; see PTI stock if shared | UC6 |
 | Capacity | Planning | Submit capacity per material group and week | UC4, UC6 |
 | RFI invitations | Sourcing | Answer RFIs | UC1 |

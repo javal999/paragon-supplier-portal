@@ -24,14 +24,15 @@
 // Read only. Nothing here changes how demand anticipation is calculated,
 // frozen or published (BL-188 reworks that in wave 2).
 //
-// ⚠️ [Default A11] lives in `LTP_FG_DEMAND_RULES` below, not yet in the one
-// rules block the requirements' design rule 2 names: that block is being
-// built in parallel (BL-187), and this key moves into it when it lands.
+// [Default A11] is owned by the one rules block (design rule 2,
+// `OSIP_RULES.consumptionMovingAvgWeeks` in `osipRules.js`, BL-187);
+// `LTP_FG_DEMAND_RULES` below only re-exports it, so the value lives once.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @import { ConsumptionRecord } from './consumptionRules' */
 /** @import { DemandAnticipationRow, DemandAnticipationWeekView } from './demandAnticipationRules' */
 import { consumptionInForce } from './consumptionRules';
+import { OSIP_RULES } from './osipRules';
 import { addDays, dayOf, mondayOf } from './inventoryRules';
 
 /**
@@ -40,7 +41,7 @@ import { addDays, dayOf, mondayOf } from './inventoryRules';
  *     consumption runs over 13 weeks (3 months) [XLS ROP Fisik Non stc].
  */
 export const LTP_FG_DEMAND_RULES = Object.freeze({
-  consumptionAverageWeeks: 13 // [Default A11]
+  consumptionAverageWeeks: OSIP_RULES.consumptionMovingAvgWeeks // [Default A11]
 });
 
 /**
