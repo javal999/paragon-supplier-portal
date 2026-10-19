@@ -19,7 +19,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
-import { resetRfxStores } from '@services/data/mock/stores/rfxStores';
+import { resetRfxStores, rfpEventStore } from '@services/data/mock/stores/rfxStores';
 import { rfqStore } from '@services/data/mock/stores/rfqStore';
 import { quotationStore } from '@services/data/mock/stores/quotationStore';
 import { sdcClock } from '@services/sdc';
@@ -131,8 +131,13 @@ const renderBoard = (identity = BUYER_SEAT) =>
     { identity, route: '/buyer/rfp' }
   );
 
+/** RFx UX B-07 — the RFQ choice opens once the RFP is closed ("Close the RFP first"). */
+const closeTundra = () =>
+  rfpEventStore.update('rfp-002', (e) => ({ ...e, status: /** @type {const} */ ('Closed') }));
+
 describe('"Create RFQ from this RFP" on the board', () => {
   it('Tundra: pick "pump and cap only" and the supplier’s stock bottle, and land on the RFQ link', async () => {
+    closeTundra();
     renderBoard();
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
     const panel = await screen.findByTestId('rfp-to-rfq-rfp-002');
@@ -167,6 +172,7 @@ describe('"Create RFQ from this RFP" on the board', () => {
   });
 
   it('a seat without rfq:create reads whose act it is instead of a button', async () => {
+    closeTundra();
     renderBoard(RECEIVING);
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
     const panel = await screen.findByTestId('rfp-to-rfq-rfp-002');

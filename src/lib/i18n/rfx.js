@@ -59,10 +59,10 @@ export const rfxEn = {
   'rfx.invite.onlyActive': 'Suspended, deactivated and blacklisted suppliers are not shown.',
 
   // — RFI (REQ-E03-02) ——————————————————————————————————————————————————
-  'rfx.rfi.title': 'Information requests',
+  'rfx.rfi.title': 'RFI · Information requests',
   'rfx.rfi.subtitle':
     'Ask suppliers what they can make, where, and how — before asking for a price.',
-  'rfx.rfi.supplier.title': 'Information requests',
+  'rfx.rfi.supplier.title': 'RFI · Information requests',
   'rfx.rfi.supplier.subtitle': 'Tell PTI about your capability, experience, sites and products.',
   'rfx.rfi.empty': 'No information request yet.',
   'rfx.rfi.supplier.empty': 'You have no information request to answer.',
@@ -157,10 +157,10 @@ export const rfxEn = {
   'rfx.template.rawMaterial': 'Raw material information request',
 
   // — RFP (REQ-E03-04) ——————————————————————————————————————————————————
-  'rfx.rfp.title': 'Proposal requests',
+  'rfx.rfp.title': 'RFP · Proposal requests',
   'rfx.rfp.subtitle':
     'Ask suppliers for the commercial terms they propose, and compare them term by term.',
-  'rfx.rfp.supplier.title': 'Proposal requests',
+  'rfx.rfp.supplier.title': 'RFP · Proposal requests',
   'rfx.rfp.supplier.subtitle': 'Answer each commercial term PTI asked for.',
   'rfx.rfp.empty': 'No proposal request yet.',
   'rfx.rfp.noProposals': 'No proposals received yet.',
@@ -173,6 +173,18 @@ export const rfxEn = {
   'rfx.rfp.col.term': 'Term',
   'rfx.rfp.col.requested': 'PTI asks for',
   'rfx.rfp.col.proposed': 'Proposed',
+  // RFx UX B-06 — the RFP detail shows what was sent before any proposal.
+  'rfx.rfp.sent.title': 'Terms sent',
+  'rfx.rfp.sent.note': 'Supplier columns appear as proposals arrive.',
+  'rfx.rfp.sent.options': 'Options sent',
+  // RFx UX B-07 — "Firm up the prices", owner ruling Q1 (2026-10-19).
+  'rfx.firmUp.title': 'Firm up the prices',
+  'rfx.firmUp.firm.title': 'Ask for firm offers in this RFP',
+  'rfx.firmUp.firm.rule': 'For full-service or ODM options settled here.',
+  'rfx.firmUp.rfq.rule': 'For components you will tender per item.',
+  'rfx.firmUp.closeFirst': 'Close the RFP first',
+  'rfx.firmUp.inRound': 'In firm-offer round {{n}}: its prices are firmed up there',
+  'rfx.firmUp.rfq.needsProposal': 'An RFQ can be created once a supplier has sent a proposal.',
   'rfx.rfp.deviations_one': '{{count}} deviation',
   'rfx.rfp.deviations_other': '{{count}} deviations',
   'rfx.rfp.noDeviation': 'No deviation',
@@ -534,7 +546,6 @@ export const rfxEn = {
     'A draft is PTI’s alone. The invited suppliers see it when it is sent.',
 
   // — RFx D3 · firm-offer rounds on an RFP (NR-2 buyer steps 2 to 4, supplier steps 2 and 3) ——
-  'rfx.firm.title': 'Firm-offer rounds',
   'rfx.firm.ask': 'Ask for firm offers',
   'rfx.firm.askHint':
     'Pick the options, the quantity points and the suppliers to ask. Only suppliers that submitted a proposal and pass the compliance gate can be asked.',
@@ -553,7 +564,6 @@ export const rfxEn = {
   'rfx.firm.offerIn': 'Firm offer received',
   'rfx.firm.noOffer': 'No firm offer yet',
   'rfx.firm.empty': 'No firm-offer round has been opened.',
-  'rfx.firm.needsClosed': 'Firm offers can be asked once the RFP is closed.',
   'rfx.firm.noPricing':
     'This RFP has no pricing step, so it cannot be awarded: an award needs firm prices, asked per option and quantity point.',
   'rfx.firm.validUntil': 'Valid until {{date}}',
@@ -654,9 +664,9 @@ export const rfxId = {
   'rfx.invite.onlyActive':
     'Pemasok yang ditangguhkan, dinonaktifkan, dan masuk daftar hitam tidak ditampilkan.',
 
-  'rfx.rfi.title': 'Permintaan informasi',
+  'rfx.rfi.title': 'RFI · Permintaan informasi',
   'rfx.rfi.subtitle': 'Tanyakan kemampuan pemasok sebelum meminta harga.',
-  'rfx.rfi.supplier.title': 'Permintaan informasi',
+  'rfx.rfi.supplier.title': 'RFI · Permintaan informasi',
   'rfx.rfi.supplier.subtitle':
     'Sampaikan kemampuan, pengalaman, lokasi, dan produk Anda kepada PTI.',
   'rfx.rfi.empty': 'Belum ada permintaan informasi.',
@@ -750,9 +760,9 @@ export const rfxId = {
   'rfx.template.packaging': 'Permintaan informasi kemasan',
   'rfx.template.rawMaterial': 'Permintaan informasi bahan baku',
 
-  'rfx.rfp.title': 'Permintaan proposal',
+  'rfx.rfp.title': 'RFP · Permintaan proposal',
   'rfx.rfp.subtitle': 'Minta syarat komersial dari pemasok, lalu bandingkan syarat demi syarat.',
-  'rfx.rfp.supplier.title': 'Permintaan proposal',
+  'rfx.rfp.supplier.title': 'RFP · Permintaan proposal',
   'rfx.rfp.supplier.subtitle': 'Jawab setiap syarat komersial yang diminta PTI.',
   'rfx.rfp.empty': 'Belum ada permintaan proposal.',
   'rfx.rfp.noProposals': 'Belum ada proposal yang diterima.',
@@ -763,6 +773,16 @@ export const rfxId = {
   'rfx.rfp.col.term': 'Syarat',
   'rfx.rfp.col.requested': 'Yang diminta PTI',
   'rfx.rfp.col.proposed': 'Yang diusulkan',
+  'rfx.rfp.sent.title': 'Syarat yang dikirim',
+  'rfx.rfp.sent.note': 'Kolom pemasok muncul saat proposal masuk.',
+  'rfx.rfp.sent.options': 'Opsi yang dikirim',
+  'rfx.firmUp.title': 'Pastikan harga',
+  'rfx.firmUp.firm.title': 'Minta penawaran pasti di RFP ini',
+  'rfx.firmUp.firm.rule': 'Untuk opsi layanan penuh atau ODM yang diselesaikan di sini.',
+  'rfx.firmUp.rfq.rule': 'Untuk komponen yang akan Anda tenderkan per item.',
+  'rfx.firmUp.closeFirst': 'Tutup RFP terlebih dahulu',
+  'rfx.firmUp.inRound': 'Ada di putaran penawaran pasti {{n}}: harganya dipastikan di sana',
+  'rfx.firmUp.rfq.needsProposal': 'RFQ dapat dibuat setelah pemasok mengirim proposal.',
   'rfx.rfp.deviations_other': '{{count}} penyimpangan',
   'rfx.rfp.noDeviation': 'Tanpa penyimpangan',
   'rfx.rfp.comment': 'Keterangan',
@@ -1116,7 +1136,6 @@ export const rfxId = {
     'Draf adalah milik PTI. Pemasok yang diundang melihatnya setelah dikirim.',
 
   // — RFx D3 · putaran penawaran pasti pada RFP ——
-  'rfx.firm.title': 'Putaran penawaran pasti',
   'rfx.firm.ask': 'Minta penawaran pasti',
   'rfx.firm.askHint':
     'Pilih opsi, titik kuantitas, dan pemasok yang diminta. Hanya pemasok yang mengirim proposal dan lolos gerbang kepatuhan yang dapat diminta.',
@@ -1135,7 +1154,6 @@ export const rfxId = {
   'rfx.firm.offerIn': 'Penawaran pasti diterima',
   'rfx.firm.noOffer': 'Belum ada penawaran pasti',
   'rfx.firm.empty': 'Belum ada putaran penawaran pasti yang dibuka.',
-  'rfx.firm.needsClosed': 'Penawaran pasti dapat diminta setelah RFP ditutup.',
   'rfx.firm.noPricing':
     'RFP ini tidak memiliki langkah harga, sehingga tidak dapat ditetapkan: penetapan memerlukan harga pasti, yang diminta per opsi dan titik kuantitas.',
   'rfx.firm.validUntil': 'Berlaku sampai {{date}}',

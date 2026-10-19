@@ -11,9 +11,14 @@ import { RFP_TERM_GROUP_ORDER, rfpTermGroupOf } from '@services/sourcing/rfxConf
 import { rfpScoringOf } from '../../rfx/rfpScoring';
 import { termLabel, termValueText } from '../../rfx/rfxAuthoringDisplay';
 import { DocumentsStatus } from '../../rfx/SupplierDocumentsPanel';
+import { qty } from '../../rfx/rfxDisplay';
 
 /**
  * REQ-E03-04 — terms as rows, suppliers as columns, deviations highlighted.
+ * RFx UX B-06 — from publish onward the grid shows what was sent: before the
+ * first proposal it is "Terms sent" with the "PTI asks for" column alone, then
+ * the options with their quantity points, and a note that the supplier columns
+ * appear as proposals arrive. A Draft still reads "No proposals received yet".
  * Moved out of `BuyerRfp.jsx` by the Phase 5 page split (no behaviour change).
  * @type {React.FC<{ event: RfpEventView }>}
  */
@@ -26,7 +31,8 @@ const RfpComparison = ({ event }) => {
       : []
   );
 
-  if (event.responses.length === 0) {
+  const none = event.responses.length === 0;
+  if (none && event.status === 'Draft') {
     return (
       <p className="py-10 text-center text-sm text-text-tertiary" data-testid="rfp-no-proposals">
         {t('rfx.rfp.noProposals')}
@@ -35,7 +41,18 @@ const RfpComparison = ({ event }) => {
   }
 
   return (
-    <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
+    <div
+      className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto"
+      data-testid={none ? `rfp-terms-sent-${event.id}` : undefined}
+    >
+      {none ? (
+        <div className="px-4 py-3 border-b border-border-subtle">
+          <h3 className="text-sm font-semibold text-text-primary">{t('rfx.rfp.sent.title')}</h3>
+          <p className="text-xs text-text-tertiary" data-testid={`rfp-terms-sent-note-${event.id}`}>
+            {t('rfx.rfp.sent.note')}
+          </p>
+        </div>
+      ) : null}
       <Table>
         <TableHeader>
           <TableHeaderCell>{t('rfx.rfp.col.term')}</TableHeaderCell>
@@ -118,39 +135,44 @@ const RfpComparison = ({ event }) => {
             ));
           })}
           {/* REQ-E03-04 edge case — the free-text terms a supplier added. */}
-          <TableRow data-testid="rfp-other-terms">
-            <TableCell className="align-top">
-              <div className="text-xs uppercase tracking-wide text-text-tertiary">
-                {t('rfx.group.other')}
-              </div>
-              <div className="text-sm text-text-primary">{t('rfx.rfp.otherTerms')}</div>
-            </TableCell>
-            <TableCell className="align-top text-sm text-text-tertiary">—</TableCell>
-            {event.responses.map((r) => (
-              <TableCell key={r.id} className="align-top text-sm text-text-secondary">
-                {r.otherTerms ?? '—'}
+          {!none && (
+            <TableRow data-testid="rfp-other-terms">
+              <TableCell className="align-top">
+                <div className="text-xs uppercase tracking-wide text-text-tertiary">
+                  {t('rfx.group.other')}
+                </div>
+                <div className="text-sm text-text-primary">{t('rfx.rfp.otherTerms')}</div>
               </TableCell>
-            ))}
-          </TableRow>
+              <TableCell className="align-top text-sm text-text-tertiary">—</TableCell>
+              {event.responses.map((r) => (
+                <TableCell key={r.id} className="align-top text-sm text-text-secondary">
+                  {r.otherTerms ?? '—'}
+                </TableCell>
+              ))}
+            </TableRow>
+          )}
           {/* RFx B5 — NR-1 buyer step 6: the required documents, per supplier. */}
-          <TableRow data-testid="rfp-documents-row">
-            <TableCell className="align-top text-sm text-text-primary">
-              {t('rfxFiles.docs.row')}
-            </TableCell>
-            <TableCell className="align-top text-sm text-text-tertiary">—</TableCell>
-            {event.responses.map((r) => (
-              <TableCell key={r.id} className="align-top">
-                <DocumentsStatus
-                  requests={event.documentRequests ?? []}
-                  documents={r.documents ?? []}
-                  testId={`rfp-documents-${r.supplierId}`}
-                />
+          {!none && (
+            <TableRow data-testid="rfp-documents-row">
+              <TableCell className="align-top text-sm text-text-primary">
+                {t('rfxFiles.docs.row')}
               </TableCell>
-            ))}
-          </TableRow>
+              <TableCell className="align-top text-sm text-text-tertiary">—</TableCell>
+              {event.responses.map((r) => (
+                <TableCell key={r.id} className="align-top">
+                  <DocumentsStatus
+                    requests={event.documentRequests ?? []}
+                    documents={r.documents ?? []}
+                    testId={`rfp-documents-${r.supplierId}`}
+                  />
+                </TableCell>
+              ))}
+            </TableRow>
+          )}
         </tbody>
       </Table>
-      {scoring === null && (
+      {none && !!event.pricing ? <SentOptions event={event} /> : null}
+      {!none && scoring === null && (
         <p
           className="px-4 py-3 text-xs text-text-tertiary border-t border-border-subtle"
           data-testid="rfp-not-scorable"
@@ -158,6 +180,47 @@ const RfpComparison = ({ event }) => {
           {t('rfx.rfp.notScorable')}
         </p>
       )}
+    </div>
+  );
+};
+
+/**
+ * RFx UX B-06 — the options and quantity points the RFP asked indicative
+ * prices for, as sent (no supplier column until a proposal arrives).
+ * @type {React.FC<{ event: RfpEventView }>}
+ */
+const SentOptions = ({ event }) => {
+  const { t } = useTranslation();
+  const pricing = event.pricing;
+  if (!pricing) return null;
+  return (
+    <div
+      className="px-4 py-3 border-t border-border-subtle space-y-2"
+      data-testid={`rfp-sent-options-${event.id}`}
+    >
+      <h4 className="text-xs font-semibold text-text-secondary">{t('rfx.rfp.sent.options')}</h4>
+      <ul className="space-y-1">
+        {pricing.options.map((o) => (
+          <li
+            key={o.id}
+            className="text-sm text-text-primary"
+            data-testid={`rfp-sent-option-${o.id}`}
+          >
+            {o.title}
+            {!!o.description && (
+              <span className="block text-xs text-text-tertiary">{o.description}</span>
+            )}
+          </li>
+        ))}
+      </ul>
+      <p className="text-xs text-text-secondary" data-testid={`rfp-sent-points-${event.id}`}>
+        {t('rfx.firm.points')}: <Data>{pricing.quantityPoints.map((q) => qty(q)).join(' / ')}</Data>{' '}
+        {t(
+          pricing.quantityBasis === 'perVariant'
+            ? 'rfxa.pricing.basis.perVariant'
+            : 'rfxa.pricing.basis.total'
+        )}
+      </p>
     </div>
   );
 };

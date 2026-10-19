@@ -6,7 +6,7 @@
 export const rfqsEn = {
   // breadcrumb
   // header + meta
-  'rfqs.header.title': 'Quotation requests',
+  'rfqs.header.title': 'RFQ · Quotation requests',
   'rfqs.rounds.link': 'Revised quotes (negotiation rounds)',
   'rfqs.header.subtitle': 'RFQs received from Paragon Corp procurement team — {{supplier}}.',
   'rfqs.meta.event.one': 'open event',
@@ -210,7 +210,7 @@ export const rfqsEn = {
 export const rfqsId = {
   // breadcrumb
   // header + meta
-  'rfqs.header.title': 'Permintaan penawaran harga',
+  'rfqs.header.title': 'RFQ · Permintaan penawaran harga',
   'rfqs.rounds.link': 'Penawaran revisi (putaran negosiasi)',
   'rfqs.header.subtitle': 'RFQ diterima dari tim pengadaan Paragon Corp — {{supplier}}.',
   'rfqs.meta.event.one': 'acara terbuka',

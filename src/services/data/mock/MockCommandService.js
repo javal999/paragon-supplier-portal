@@ -224,7 +224,9 @@ import {
   isRfpAward,
   rfpAwardedOptionRefs,
   rfpOptionSourcedRefusal,
+  rfpRoundedOptionRefs,
   rfpSettledOptionRefs,
+  rfqOptionInRoundRefusal,
   rfqSourcedOptionRefs
 } from '../../sourcing/rfpAward';
 import { isTieredRfq } from '../../sourcing/rfqComparison';
@@ -5388,6 +5390,9 @@ bindPolicyHook(POLICY_HOOKS.RFP_AWARD_SAP_GOVERNED, ({ payload, entityId }) => {
 // RFx D2 (NR-2 BR-08, AC-06) — an RFQ created from an RFP may not source an
 // option an award in force on that RFP already placed; the other options pass.
 // The rule is the one the RFP → RFQ pre-fill leaves such options out by.
+// Owner ruling Q1 (2026-10-19, RFx UX B-07) — nor an option a firm-offer round
+// of that RFP names: once an option is in a round, the RFQ path is closed for
+// it (`rfqOptionInRoundRefusal`, the rule the RFP page's picker reads too).
 bindPolicyHook(POLICY_HOOKS.RFQ_CREATE_RFP_OPTIONS_FREE, ({ payload }) => {
   const rfpId = typeof payload.sourceRfpId === 'string' ? payload.sourceRfpId.trim() : '';
   const refs = Array.isArray(payload.sourceRfpOptionRefs)
@@ -5403,7 +5408,14 @@ bindPolicyHook(POLICY_HOOKS.RFQ_CREATE_RFP_OPTIONS_FREE, ({ payload }) => {
     (awardId) => `awarded on ${rfp?.eventNumber ?? rfpId} (${awardId})`,
     rfp ? rfpRoundOptions(rfp) : []
   );
-  return refusal ? { ok: false, reason: awardRefusalText(refusal, 'rfp') } : { ok: true };
+  if (refusal) return { ok: false, reason: awardRefusalText(refusal, 'rfp') };
+  const inRound = rfqOptionInRoundRefusal(
+    refs,
+    rfpRoundedOptionRefs(rfpOfferRoundStore.all(), rfpId),
+    rfp?.eventNumber ?? rfpId,
+    rfp ? rfpRoundOptions(rfp) : []
+  );
+  return inRound ? { ok: false, reason: inRound } : { ok: true };
 });
 
 /** @type {CommandTarget} */
