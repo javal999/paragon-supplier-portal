@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Accepted 2026-10-19.** The owner approved every requirement, default, backlog row and decision in this file ("approve all", 2026-10-19). Wave 1 (BL-187, BL-192, BL-200, BL-201, BL-203) is built in GitLab MR !4 and wave 2 (BL-188, BL-190, BL-193, BL-195, BL-197) in MR !5 and wave 3 (BL-189, BL-191, BL-194 feedstock part, BL-196, BL-198, BL-199) in MR !6, 2026-10-19; build decisions in sections 6a to 6c. Values tagged [Default] are starting values until the Material Planning team confirms them (section 4) |
+| Status | **Accepted 2026-10-19.** The owner approved every requirement, default, backlog row and decision in this file ("approve all", 2026-10-19). Wave 1 (BL-187, BL-192, BL-200, BL-201, BL-203) is built in GitLab MR !4 and wave 2 (BL-188, BL-190, BL-193, BL-195, BL-197) in MR !5 and wave 3 (BL-189, BL-191, BL-194 feedstock part, BL-196, BL-198, BL-199) in MR !6, and the what-if sandbox (BL-202) in MR !7, 2026-10-19; build decisions in sections 6a to 6d. Values tagged [Default] are starting values until the Material Planning team confirms them (section 4) |
 | Date | 2026-10-19 |
 | Source meeting | Weekly SC Hub, 2026-10-14: DA, ROP and call-off. Cited as [MoM n] |
 | Other sources | *OSIP Playbook.pptx* (SharePoint, FSE Laboratory), cited [PPT n] by slide; *Framework OSIP PM 2026* (Google Sheets), cited [XLS sheet]. Neither is stored in this repository |
@@ -367,6 +367,18 @@ Readings the builders made where the sources leave a gap. Each sits behind a rul
 | DRC-B39 | Plant (DRC-D12) | PTI SOH records carry a plant (sample J6 for raw material, J2 for packaging); comparison is combined |
 | DRC-B40 | Delayed call-off (DRC-5) | Reason code "LTP dropped" (new reason list `callOffChange`); the supplier answers through the existing confirmation; reject keeps the call-off on its old date; DA moves only after approval |
 | DRC-B41 | Feedstock confirmation (DRC-8, DRC-D17) | `t_feedstock_confirm`, atom `feedstock:confirm` in the supplier fulfilment lane; shown on PTI Inventory; "Missed" only after a first confirmation; not in the MR-2 compliance score; no planner review marker |
+
+## 6d. Build decisions, what-if sandbox (2026-10-19)
+
+| ID | Item | Decision |
+|---|---|---|
+| DRC-B42 | Projection (DRC-17) | The sandbox runs its own day-by-day loop over the live functions: each week's LTP spread over 7 days; each day the trigger checks SOH against ROP Fisik; a call-off fills to Max from the OSPO balance, counts as approved and arrives f days later; what no balance covers is a PR recommendation; a shortage week is one where stock runs out on any day |
+| DRC-B43 | Scope of the trigger (DRC-17) | Per selected supplier × material, where the live trigger sums ROP Fisik and Max across a material's suppliers |
+| DRC-B44 | Festive uplift input (DRC-17) | A percentage added to the LTP of weeks in a Ramadan-to-Lebaran month (DRC-9a calendar); default 0 |
+| DRC-B45 | RM or PM horizon (DRC-17) | SAP material type VERP = packaging (24 weeks), anything else = raw material (52 weeks) |
+| DRC-B46 | Saving (DRC-17) | `t_whatifscenario_save`, atom `whatifscenario:save` in the planning lane, append-only, stamped with `RULES_VERSION`; no page role gate (§65, DRC-D18) |
+| DRC-B47 | PPT 7 preset (DRC-17) | Offered as its own pair so a confirmed result can be saved; runs on the hub's Mondays; ROP Fisik, Max and the trigger read "Not available" because the slide gives no consumption or supply area |
+| DRC-B48 | Inputs that feed no figure (DRC-17) | Listed on the page with the reason: feedstock (E1), CV threshold and window (CV not shown), carry-over target and limit, the consumption window, the production-limit source. SD cannot be typed, only its source switched. Gaps in live functions are BL-210 |
 
 ## 7. Build order
 
