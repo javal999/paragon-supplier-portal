@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.31, 2026-10-19 |
+| Version | 2.32, 2026-10-19 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -146,8 +146,7 @@ The owner approved every requirement, default and decision in `SC-HUB-DA-ROP-CAL
 
 | ID | Item | Why | Size | Blocked by | Detail |
 |---|---|---|---|---|---|
-| BL-210 | Align the live functions with the sandbox: `rollingDaFigure` takes no consumption, koli or MOQ, so under `sdSource: consumption12w` or `safetyRounding: koli/moq` DA's week-1 safety order differs from ROP Order's; `safetyOrder` takes no typed SD; `OSIP_SAFETY_READ.fisikConsumptionWeeks` is fixed when the module loads, so the consumption-window switch moves no figure | Found by the sandbox build (DRC-B48) | S | Nothing | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-17 |
-| BL-211 | One consumption split per supplier: the recorded-consumption grid on Demand anticipation splits by DA share (CAP-D14), the OSIP safety figures and the DRC-18 rows by LTP share (CAP-D11) | Same consumption divided two ways (DRC-B25) | S | Owner: which split | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-B25 |
+| BL-212 | `OSIP_ROP_READ.npdLtpWeeks` (`osipRopRules.js`) is read from `consumptionMovingAvgWeeks` when the module loads, so a sandbox change to that window does not reach the NPD demand branch; read it at call time, as BL-210 did for `fisikConsumptionWeeks` | Found by the BL-210 build | S | Nothing | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-12a |
 | BL-204 | On hold: supplier view of demand anticipation, and the supplier confirming Incoming DA (moved from BL-194, DRC-D17) | Suppliers must not plan on unconfirmed figures (DRC-D10) | M | Material Planning: A1, A2, B1 to B4 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-1 |
 | BL-205 | On hold: protection buffer | Uplift for non-festive materials unknown | ? | Material Planning: C3 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-9c |
 | BL-206 | On hold: NPD vs CMM rules and material-code prefixes | MoM 4C action item | ? | MDM and Material Planner: D2 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-12b |
@@ -183,6 +182,8 @@ The owner approved every requirement, default and decision in `SC-HUB-DA-ROP-CAL
 
 | ID | Item | Closed | By |
 |---|---|---|---|
+| BL-211 | One consumption split per supplier: the recorded-consumption grid on Demand anticipation splits by DA share (CAP-D14), the OSIP safety figures and the DRC-18 rows by LTP share (CAP-D11) | 2026-10-19 | GitLab MR !8: LTP share everywhere (DRC-D21) |
+| BL-210 | Align the live functions with the sandbox: `rollingDaFigure` takes no consumption, koli or MOQ, so under `sdSource: consumption12w` or `safetyRounding: koli/moq` DA's week-1 safety order differs from ROP Order's; `safetyOrder` takes no typed SD; `OSIP_SAFETY_READ.fisikConsumptionWeeks` is fixed when the module loads, so the consumption-window switch moves no figure | 2026-10-19 | GitLab MR !8: DA week-1 safety equals ROP Order safety under every switch; consumption window read at call time; SD override in `safetyOrder` |
 | BL-202 | What-if sandbox: one material, editable inputs and rule switches, 52 weeks RM / 24 weeks PM, named scenarios compared up to 3, PTI planners only, analysis only | 2026-10-19 | Built in GitLab MR !7: `/buyer/what-if`; decisions DRC-B42 to B48 |
 | BL-199 | Call-off drafted at ROP Fisik for planner approval; SAP PR recommendation when the umbrella PO runs out; max stock caps call-offs; SOH plant stored | 2026-10-19 | Built in GitLab MR !6: call-off drafted at ROP Fisik for planner approval, SAP PR recommendation; fires on PTI SOH updates only until the eWM feed exists |
 | BL-198 | NPD tag and ROP review after the first order | 2026-10-19 | Built in GitLab MR !6: NPD tag (default first order fulfilled, DRC-D19) and the review task |
