@@ -10,7 +10,9 @@
 //   · LTP — the hub's current forecast versions (`allCommitmentLines`),
 //     spread by day per week (`groupWeekLtp`), as demand anticipation reads it;
 //   · recorded consumption — `consumptionStore` (CAP-11), the material's
-//     figure times the supplier's share of the material (`MaterialSource.share`);
+//     figure times the supplier's LTP share of the material over the share
+//     window (CAP-D11, `materialShares`), the same split demand anticipation
+//     and DRC-18 use, so one week's consumption is divided one way only;
 //   · supply area — the supplier master's country and city (DRC-B8);
 //   · FG demand for CV — the engine dataset's weekly sell-in per SKU, stock-out
 //     weeks filled as the engine's forecast fills them (ENG-B62), mapped to
@@ -27,7 +29,11 @@ import { fillStockouts, historyOf } from '../../engine/demandForecast';
 import { leadTimeBreakdown } from '../../engine/leadTimeSteps';
 import { groupWeekLtp } from '../../transitions/capacityRules';
 import { consumptionInForce } from '../../transitions/consumptionRules';
-import { hubWeeks } from '../../transitions/demandAnticipationRules';
+import {
+  DEMAND_ANTICIPATION_RULES,
+  hubWeeks,
+  materialShares
+} from '../../transitions/demandAnticipationRules';
 import { OSIP_RULES, supplyAreaOf } from '../../transitions/osipRules';
 import { OSIP_SAFETY_READ, materialCvs } from '../../transitions/osipSafetyRules';
 import { engineDataset } from './fixtures/engineDataset';
@@ -85,6 +91,14 @@ export function osipSafetyInputs(nowIso = sdcClock.now()) {
     const sources = data.sources
       .filter((s) => s.materialCode === code)
       .sort((a, b) => b.share - a.share || a.supplierId.localeCompare(b.supplierId));
+    // CAP-D11: each supplier's share of the material = its share of the LTP over
+    // the share window (an even split when there is no LTP).
+    const ltpShares = materialShares(
+      lines,
+      code,
+      sources.map((s) => s.supplierId),
+      hubWeeks(nowIso, DEMAND_ANTICIPATION_RULES.shareWindowWeeks)
+    );
     const suppliers = sources.map((s) => {
       const leadTimeWeeks = leadTimeBreakdown(s).totalWeeks;
       const supplier = mockSuppliers.find((x) => x.id === s.supplierId);
@@ -100,7 +114,7 @@ export function osipSafetyInputs(nowIso = sdcClock.now()) {
         mpq: s.orderMultiple,
         moq: s.moq,
         koli: perPallet.get(code) ?? null,
-        consumption: recorded.map((q) => q * s.share),
+        consumption: recorded.map((q) => q * (ltpShares.get(s.supplierId) ?? 0)),
         supplyArea: supplier ? supplyAreaOf(supplier) : null
       });
     });
