@@ -12,7 +12,7 @@ import Table from '@components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
 import TableRow from '@components/ui-v2/TableRow';
 import TableCell from '@components/ui-v2/TableCell';
-import { compositeText } from '@lib/quoteScore';
+import { AXIS_LIVENESS, COMPOSITE_LIVENESS, compositeText } from '@lib/quoteScore';
 import { formatMoney, formatNumber } from '@lib/format';
 import { BASE_CURRENCY } from '@lib/currencyPolicy';
 import { spreadForQuote } from '@lib/shouldCostSpread';
@@ -95,6 +95,13 @@ const ComparisonTable = ({
   const estimated = (
     <RowTag tag={t('sourcing.cmp.estimated')} title={t('sourcing.cmp.estimatedTitle')} />
   );
+  // B-02 — the "Simulated" honesty marker the panel carried: an axis with no
+  // live source (reliability), and the composite that inherits its weakest
+  // link. Rendered from the same liveness constants, so it disappears by
+  // itself the day the axis goes live.
+  const simulated = (
+    <RowTag tag={t('sourcing.cmp.simulated')} title={t('sourcing.cmp.simulatedTitle')} />
+  );
 
   /**
    * The price rows say which break they are read at, on a tiered RFQ.
@@ -123,6 +130,9 @@ const ComparisonTable = ({
                 <StatusPill variant="success" className="ml-2">
                   {t('rfx.cmp.best')}
                 </StatusPill>
+              )}
+              {!tied && q.id === bestId && COMPOSITE_LIVENESS === 'simulated' && (
+                <span data-testid="cmp-best-simulated">{simulated}</span>
               )}
               {tied && standing.tiedIds.includes(q.id) && (
                 <span className="ml-2" data-testid={`cmp-tied-${q.supplierId}`}>
@@ -245,6 +255,7 @@ const ComparisonTable = ({
         <TableRow data-testid="cmp-row-reliability">
           <TableCell className="text-sm text-text-secondary">
             {t('rfx.cmp.row.reliabilityScore')}
+            {AXIS_LIVENESS.reliability === 'simulated' && simulated}
           </TableCell>
           {current.map((q) => (
             <TableCell key={q.id}>
@@ -261,6 +272,7 @@ const ComparisonTable = ({
         <TableRow data-testid="cmp-row-weighted">
           <TableCell className="text-sm font-semibold text-text-primary">
             {t('rfx.cmp.row.weighted')}
+            {COMPOSITE_LIVENESS === 'simulated' && simulated}
           </TableCell>
           {current.map((q) => (
             <TableCell

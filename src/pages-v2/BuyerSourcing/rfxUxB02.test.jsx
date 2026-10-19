@@ -17,6 +17,7 @@ import {
 import { rfxNow } from '@services/data/mock/rfxReadModel';
 import { sdcClock } from '@services/sdc';
 import { mockSuppliers } from '@data/mockSuppliers';
+import { AXIS_LIVENESS, COMPOSITE_LIVENESS } from '@lib/quoteScore';
 import BuyerSourcingEvent from '../BuyerSourcingEvent';
 import BuyerSourcing from './index';
 
@@ -172,5 +173,27 @@ describe('B-02 — a refused comparison still shows the bids', () => {
     expect(screen.queryByText('Best scored')).not.toBeInTheDocument();
     // The basis and the act to record a rate sit under the banner.
     expect(screen.getByRole('button', { name: /Record EUR rate/ })).toBeInTheDocument();
+  });
+});
+
+// B-02 — the "Simulated" honesty markers moved with the comparison. The
+// liveness constants are module-level and cannot be flipped in a test, so the
+// spec asserts the tag while the constant reads 'simulated' (the precondition
+// is asserted first, so a live axis makes this red rather than vacuous).
+describe('B-02 — the Simulated markers survive the move', () => {
+  it('reliability and the weighted score carry "Simulated" while their liveness is simulated', async () => {
+    expect(AXIS_LIVENESS.reliability).toBe('simulated');
+    expect(COMPOSITE_LIVENESS).toBe('simulated');
+    renderEvent(PROCUREMENT, '/buyer/rfq/rfq-011');
+    const reliability = await screen.findByTestId('cmp-row-reliability');
+    const weighted = screen.getByTestId('cmp-row-weighted');
+    for (const row of [reliability, weighted]) {
+      const tag = within(row).getByText('Simulated');
+      expect(tag).toHaveAttribute('title', expect.stringMatching(/.+/));
+    }
+    // KNOWN-GOOD twin — a live axis carries no Simulated tag.
+    expect(
+      within(screen.getByTestId('cmp-row-rfx.cmp.row.priceScore')).queryByText('Simulated')
+    ).not.toBeInTheDocument();
   });
 });
