@@ -263,14 +263,24 @@ export const RfpPricingEditor = ({ value, onChange }) => {
 /** @type {RfpPricingAnswer} */
 export const EMPTY_PRICING_ANSWER = { prices: [], proposedOptions: [] };
 
-/** @type {React.FC<{ request: RfpPricingRequest; currency: string; value: RfpPricingAnswer; onChange: (next: RfpPricingAnswer) => void; disabled: boolean; testIdPrefix: string; }>} */
+/**
+ * The supplier's indicative pricing. S-02: `sampleMissing` marks the sample
+ * question unanswered and `pricingError` says, under the grid, the pricing
+ * refusal the verb would give. S-06: the sample is a Yes/No control, and a
+ * built-in field a buyer question already asks (`answeredIn`, the question's
+ * prompt) is not asked again — the page copies the answer into it.
+ * @type {React.FC<{ request: RfpPricingRequest; currency: string; value: RfpPricingAnswer; onChange: (next: RfpPricingAnswer) => void; disabled: boolean; testIdPrefix: string; sampleMissing?: boolean; pricingError?: string | null; answeredIn?: { sampleReadyDate?: string; timeline?: string }; }>}
+ */
 export const RfpPricingForm = ({
   request,
   currency,
   value,
   onChange,
   disabled,
-  testIdPrefix: p
+  testIdPrefix: p,
+  sampleMissing = false,
+  pricingError = null,
+  answeredIn = {}
 }) => {
   const { t } = useTranslation();
   const [own, setOwn] = useState({ title: '', description: '' });
@@ -324,7 +334,7 @@ export const RfpPricingForm = ({
     });
 
   return (
-    <div className="space-y-4" data-testid={`${p}-pricing`}>
+    <div className="space-y-4" id={`${p}-pricing`} data-testid={`${p}-pricing`}>
       <div className="flex items-center gap-2">
         <h4 className="text-sm font-semibold text-text-primary">{t('rfxa.pricing.title')}</h4>
         <IndicativePill testId={`${p}-pricing-indicative`} />
@@ -394,6 +404,11 @@ export const RfpPricingForm = ({
           </tbody>
         </Table>
       </div>
+      {!!pricingError && (
+        <div className="text-xs text-danger" data-testid={`${p}-pricing-error`}>
+          {pricingError}
+        </div>
+      )}
 
       {!disabled && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
@@ -433,62 +448,99 @@ export const RfpPricingForm = ({
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {request.samplesRequested && (
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm text-text-primary">
-              <input
-                type="checkbox"
-                className="accent-teal"
-                disabled={disabled}
-                data-testid={`${p}-can-sample`}
-                checked={value.sample?.canSample ?? false}
-                onChange={(e) =>
-                  onChange({
-                    ...value,
-                    sample: {
-                      canSample: e.target.checked,
-                      ...(value.sample?.readyDate ? { readyDate: value.sample.readyDate } : {})
-                    }
-                  })
-                }
-              />
+          <div className="space-y-2" id={`${p}-sample`}>
+            <span className={labelClass}>
               {t('rfxa.pricing.canSample')}
-            </label>
-            <div>
-              <label className={labelClass} htmlFor={`${p}-sample-date`}>
-                {t('rfxa.pricing.sampleDate')}
-              </label>
-              <input
-                id={`${p}-sample-date`}
-                type="date"
-                disabled={disabled || !value.sample?.canSample}
-                value={value.sample?.readyDate ?? ''}
-                onChange={(e) =>
-                  onChange({
-                    ...value,
-                    sample: {
-                      canSample: true,
-                      ...(e.target.value ? { readyDate: e.target.value } : {})
+              <span className="text-danger ml-1">*</span>
+            </span>
+            <div className="flex gap-2" role="group" aria-label={t('rfxa.pricing.canSample')}>
+              {
+                /** @type {const} */ ([true, false]).map((v) => (
+                  <button
+                    key={String(v)}
+                    type="button"
+                    disabled={disabled}
+                    aria-pressed={value.sample?.canSample === v}
+                    data-testid={`${p}-can-sample-${v ? 'yes' : 'no'}`}
+                    onClick={() =>
+                      onChange({
+                        ...value,
+                        sample:
+                          v && value.sample?.readyDate
+                            ? { canSample: true, readyDate: value.sample.readyDate }
+                            : { canSample: v }
+                      })
                     }
-                  })
-                }
-                className={inputClass}
-              />
+                    className={`px-4 py-1.5 rounded-md text-sm font-semibold border transition-colors disabled:opacity-60 ${
+                      value.sample?.canSample === v
+                        ? 'bg-action-soft border-action text-action-hover'
+                        : `bg-bg-surface text-text-tertiary hover:text-text-secondary ${
+                            sampleMissing ? 'border-danger' : 'border-border-input'
+                          }`
+                    }`}
+                  >
+                    {v ? t('rfx.opt.yes') : t('rfx.opt.no')}
+                  </button>
+                ))
+              }
             </div>
+            {!!sampleMissing && (
+              <div className="text-xs text-danger" data-testid={`${p}-sample-missing`}>
+                {t('rfx.form.sample.choose')}
+              </div>
+            )}
+            {value.sample?.canSample === true &&
+              (answeredIn.sampleReadyDate ? (
+                <p className="text-xs text-text-tertiary" data-testid={`${p}-sample-date-copied`}>
+                  {t('rfx.form.copiedFrom', { question: answeredIn.sampleReadyDate })}
+                </p>
+              ) : (
+                <div>
+                  <label className={labelClass} htmlFor={`${p}-sample-date`}>
+                    {t('rfxa.pricing.sampleDate')}
+                  </label>
+                  <input
+                    id={`${p}-sample-date`}
+                    type="date"
+                    disabled={disabled}
+                    value={value.sample?.readyDate ?? ''}
+                    onChange={(e) =>
+                      onChange({
+                        ...value,
+                        sample: {
+                          canSample: true,
+                          ...(e.target.value ? { readyDate: e.target.value } : {})
+                        }
+                      })
+                    }
+                    className={inputClass}
+                  />
+                </div>
+              ))}
           </div>
         )}
-        <div>
-          <label className={labelClass} htmlFor={`${p}-timeline`}>
-            {t('rfxa.pricing.timeline')}
-          </label>
-          <textarea
-            id={`${p}-timeline`}
-            rows={3}
-            disabled={disabled}
-            value={value.timelineNote ?? ''}
-            onChange={(e) => onChange({ ...value, timelineNote: e.target.value })}
-            className="w-full bg-white border border-border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:border-action disabled:bg-bg-hover"
-          />
-        </div>
+        {answeredIn.timeline ? (
+          <div data-testid={`${p}-timeline-copied`}>
+            <span className={labelClass}>{t('rfxa.pricing.timeline')}</span>
+            <p className="text-xs text-text-tertiary">
+              {t('rfx.form.copiedFrom', { question: answeredIn.timeline })}
+            </p>
+          </div>
+        ) : (
+          <div>
+            <label className={labelClass} htmlFor={`${p}-timeline`}>
+              {t('rfxa.pricing.timeline')}
+            </label>
+            <textarea
+              id={`${p}-timeline`}
+              rows={3}
+              disabled={disabled}
+              value={value.timelineNote ?? ''}
+              onChange={(e) => onChange({ ...value, timelineNote: e.target.value })}
+              className="w-full bg-white border border-border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:border-action disabled:bg-bg-hover"
+            />
+          </div>
+        )}
         <div>
           <label className={labelClass} htmlFor={`${p}-valid-until`}>
             {t('rfxa.pricing.validUntil')}

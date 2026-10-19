@@ -81,46 +81,51 @@ const fillOslo = (skip) => {
       target: { value: dayFromNow(7) }
     }
   );
+  // S-06 — Oslo's buyer question already asks the sample ready date, so the
+  // sample offer asks only Yes or No and takes the date from that answer.
   fireEvent.click(within(screen.getByTestId('sample-offer')).getByRole('button', { name: 'Yes' }));
-  fireEvent.change(within(screen.getByTestId('sample-offer')).getByLabelText('Sample ready date'), {
-    target: { value: dayFromNow(7) }
-  });
+  expect(screen.getByTestId('sample-offer-date-copied')).toHaveTextContent('Sample ready date');
   fireEvent.change(screen.getByLabelText('Quote valid until'), {
     target: { value: dayFromNow(45) }
   });
 };
 
+// S-02 (RFx UX 2026-10) — a gap is said where it sits and in the banner, all
+// at once, and Submit is off while it stands; nothing is sent to be refused.
 describe('the quote grid — refused out loud, accepted whole', () => {
-  it('a missing price at one break is said on the panel, naming the item, and mints nothing', async () => {
+  it('a missing price at one break is said on the field and in the banner, and mints nothing', async () => {
     await openOsloGrid();
     fillOslo({ item: 1, qty: 50000 });
     const before = quotationStore.forRfq('rfq-021').length;
-    fireEvent.click(screen.getByRole('button', { name: 'Submit quotation' }));
-    expect(await screen.findByTestId('grid-refusal')).toHaveTextContent(
-      'Give a unit price at every quantity break. (item 1)'
-    );
-    expect(screen.getByTestId('grid-item-1').className).toMatch(/border-danger/);
+    expect(screen.getByTestId('grid-item-1-price-50000-note')).toHaveTextContent('Still missing');
+    expect(screen.getByTestId('quote-problems')).toHaveTextContent(/Item 1: price at 50/);
+    expect(screen.getByTestId('quote-send-reason')).toHaveTextContent(/1 answer is given or fixed/);
+    const submit = screen.getByRole('button', { name: 'Submit quotation' });
+    expect(submit).toBeDisabled();
+    fireEvent.click(submit);
     expect(quotationStore.forRfq('rfq-021')).toHaveLength(before);
   });
 
-  it('a missing required supplier spec field is refused by name', async () => {
+  it('a missing required supplier spec field is named on its own field', async () => {
     await openOsloGrid();
     fillOslo();
     type('grid-item-2-spec-dieCutType', '');
-    fireEvent.click(screen.getByRole('button', { name: 'Submit quotation' }));
-    expect(await screen.findByTestId('grid-refusal')).toHaveTextContent(
-      'Fill in every required spec field. (item 2)'
+    expect(screen.getByTestId('grid-item-2-spec-dieCutType-note')).toHaveTextContent(
+      'Still missing'
     );
+    expect(screen.getByRole('button', { name: 'Submit quotation' })).toBeDisabled();
   });
 
   it('a requested one-time cost left blank is refused; zero is an answer', async () => {
     await openOsloGrid();
     fillOslo();
+    // Zero is an answer: the printing plate at 0 raises nothing.
+    expect(screen.queryByTestId('grid-item-1-cost-printingPlate-note')).toBeNull();
     type('grid-item-1-cost-printingPlate', '');
-    fireEvent.click(screen.getByRole('button', { name: 'Submit quotation' }));
-    expect(await screen.findByTestId('grid-refusal')).toHaveTextContent(
-      /every one-time cost the buyer asked for/
+    expect(screen.getByTestId('grid-item-1-cost-printingPlate-note')).toHaveTextContent(
+      'Still missing'
     );
+    expect(screen.getByRole('button', { name: 'Submit quotation' })).toBeDisabled();
   });
 
   it('KNOWN-GOOD: the full grid is sent and stored, with the sample offer and an added cost', async () => {

@@ -242,7 +242,10 @@ describe('REQ-E03-02 — the information request', () => {
     );
     // A half-filled response cannot be sent, and the page says why.
     expect(screen.getByTestId('supplier-rfi-submit-rfi-001')).toBeDisabled();
-    expect(screen.getByTestId('supplier-rfi-missing-rfi-001')).toBeInTheDocument();
+    // S-02 — the banner names every missing answer, with a jump link to each.
+    expect(screen.getByTestId('supplier-rfi-problems-rfi-001')).toHaveTextContent(
+      /answers? still missing or not valid/
+    );
     // Saving a draft is NOT blocked — that is the point of a draft.
     expect(screen.getByTestId('supplier-rfi-save-rfi-001')).not.toBeDisabled();
   });
