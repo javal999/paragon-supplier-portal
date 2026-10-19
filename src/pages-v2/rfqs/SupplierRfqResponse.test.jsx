@@ -1,16 +1,18 @@
 // ────────────────────────────────────────────────────────────────────────────
 // The supplier's response to a tiered RFQ, at the SURFACE (RFx spec
 // 2026-09-21): intent, the confidentiality gate, the quote grid, clarification
-// Q&A — and the buyer's read-only view on the side panel. The rules themselves
+// Q&A — and the buyer's read-only view on the RFQ event page (moved off the
+// side panel by RFx UX B-02, owner ruling 2026-10-19). The rules themselves
 // are probed at the verb in `rfqEngagementCommand.test.js`; what these add is
 // that the supplier is TOLD, and that the grid sends what the verb accepts.
 // ────────────────────────────────────────────────────────────────────────────
 
+import { Routes, Route } from 'react-router-dom';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
 import SupplierRFQs from '../SupplierRFQs';
-import RfqEngagementSection from '../sourcing/RfqEngagementSection';
+import BuyerSourcingEvent from '../BuyerSourcingEvent';
 import { rfqStore } from '@services/data/mock/stores/rfqStore';
 import { quotationStore } from '@services/data/mock/stores/quotationStore';
 import {
@@ -248,7 +250,7 @@ describe("a seat without the atoms reads the wait, in each control's own slot", 
   });
 });
 
-describe("the buyer's side panel — read-only intent, and the answer", () => {
+describe("the buyer's event page — read-only intent, and the answer", () => {
   it('shows the decline with its reason and words, and answers a question published with the asker hidden', async () => {
     rfqClarificationStore.add({
       id: 'rc-test',
@@ -258,10 +260,13 @@ describe("the buyer's side panel — read-only intent, and the answer", () => {
       question: 'Is the roll core 76 mm?',
       visibility: 'private'
     });
-    const oslo = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
-    renderWithProviders(<RfqEngagementSection rfq={oslo} nameOf={(id) => `Name of ${id}`} />, {
-      identity: BUYER
-    });
+    // RFx UX B-02 — driven on the event page, where the section now lives.
+    renderWithProviders(
+      <Routes>
+        <Route path="/buyer/rfq/:rfqId" element={<BuyerSourcingEvent />} />
+      </Routes>,
+      { identity: BUYER, route: '/buyer/rfq/rfq-021' }
+    );
     await waitFor(() =>
       expect(screen.getByTestId('engagement-row-sup-008')).toHaveTextContent(
         /Declined\s*Lead time too short — Our flexo line is booked until the end of October/

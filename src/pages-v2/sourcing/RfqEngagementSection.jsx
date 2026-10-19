@@ -15,14 +15,14 @@ import { useRfqEngagementCommand } from '@services/query/commandHooks';
 import { rfqResponseRefusal } from '../rfqs/rfqResponseText';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// THE BUYER'S VIEW OF THE SUPPLIER RESPONSE on the RFQ side panel (RFx working
+// THE BUYER'S VIEW OF THE SUPPLIER RESPONSE on the RFQ event page (RFx working
 // spec, 2026-09-21): one READ-ONLY row per invitee with its intent — and a
 // decline's reason and words — and, on a confidential RFQ, when it accepted the
 // terms; then the clarification questions, each answerable privately or
 // published to every invitee with the asker's name removed.
 //
-// Kept in its own file and mounted with one line, because the side panel is
-// another batch's workspace.
+// Mounted on the event page (`BuyerSourcingEvent`, `#event-clarifications`)
+// since RFx UX B-02 — owner ruling 2026-10-19 moved it off the side panel.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @type {React.FC<{ clarification: RfqClarificationView }>} */

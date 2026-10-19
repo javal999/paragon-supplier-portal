@@ -17,6 +17,7 @@ import {
   useNegotiationRounds,
   useQuotations,
   useRFQs,
+  useRfqClarifications,
   useRfqComplianceGate,
   useSuppliers
 } from '@services/query/hooks';
@@ -26,6 +27,7 @@ import { daysToDeadline, effectiveDeadline } from '@services/transitions/rfxRule
 import { awardsInForce, trailOfViews } from '@services/sourcing/awardStatus';
 import { rfxNow } from '../rfx/rfxDisplay';
 import { RfqContentSection } from '../rfx/TieredRfq';
+import RfqEngagementSection from '../sourcing/RfqEngagementSection';
 import { QualificationWarningsNote, useSourcingTypeMap } from '../rfx/eligibilityDisplay';
 import { useEventCommand } from './hooks/useEventCommand';
 import { useEventScoring } from './hooks/useEventScoring';
@@ -80,6 +82,11 @@ import EventSectionNav from './components/EventSectionNav';
 // a sticky "Jump to" nav (`EventSectionNav`) with counts sit above and beside
 // the sections; each section is wrapped in the element the nav scrolls to.
 // `?section=award` still lands on `#event-award`.
+//
+// RFx UX B-02 (owner ruling 2026-10-19, "move, then trim") — the invitees'
+// answers and the clarification questions (`RfqEngagementSection`, with its
+// answer form and the `rfqclarification:answer` notice) moved here from the
+// board's side panel, under "Clarifications" in the nav.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @type {React.FC} */
@@ -94,6 +101,8 @@ const BuyerSourcingEvent = () => {
   // CR-23 — who passes the compliance gate on THIS event. Read from the same
   // model the award verb refuses on, so the page and the verb cannot disagree.
   const gates = useRfqComplianceGate(rfqId);
+  // RFx UX B-02 — the clarification questions, for the nav count.
+  const clarifications = useRfqClarifications();
   // Material G2 — a Draft reads its sourcing type from the map in force.
   const sourcingMap = useSourcingTypeMap();
   const negotiate = useVerbAvailability('rfq:negotiate');
@@ -177,11 +186,21 @@ const BuyerSourcingEvent = () => {
   const itemCount = rfq.items?.length ?? rfq.lineItems?.length ?? 0;
   const docCount = current.reduce((n, q) => n + documentsOf(q).length, 0);
   const openRounds = eventRounds.filter((r) => !r.closed).length;
+  const questions = (clarifications.data?.items ?? []).filter((c) => c.rfqId === rfq.id);
+  const openQuestions = questions.filter((c) => c.state === 'Asked').length;
   const navEntries = [
     {
       id: 'event-invitees',
       labelKey: 'rfx.nav.invitees',
       count: String(rfq.invitedSupplierIds.length)
+    },
+    {
+      id: 'event-clarifications',
+      labelKey: 'rfx.nav.clarifications',
+      count:
+        openQuestions > 0
+          ? t('rfx.nav.unanswered', { count: openQuestions })
+          : String(questions.length)
     },
     ...(hasItems
       ? [{ id: 'event-items', labelKey: 'rfx.nav.items', count: String(itemCount) }]
@@ -258,6 +277,14 @@ const BuyerSourcingEvent = () => {
               setExtendOnly={setExtendOnly}
               run={run}
             />
+          </div>
+
+          {/* — RFx UX B-02: the invitees' answers and the clarification questions — */}
+          <div
+            id="event-clarifications"
+            className="mb-6 scroll-mt-4 bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-4"
+          >
+            <RfqEngagementSection rfq={rfq} nameOf={supplierName} />
           </div>
 
           {/* — REQ-E03-03: the items being sourced, each answerable with its own price — */}

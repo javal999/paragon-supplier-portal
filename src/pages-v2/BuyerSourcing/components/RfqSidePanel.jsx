@@ -1,9 +1,12 @@
 // ────────────────────────────────────────────────────────────────────────────
 // The RFQ side panel — a WORKSPACE on the selected RFQ (§76): the event-page
-// link, save-as-template, invitees' engagement, the award summary, the RFQ
-// summary, the lifecycle acts, the timeline, the quote comparison and the link
-// to the award. Moved out of `BuyerSourcing.jsx` by the Phase 5 page split (no
+// link, save-as-template, the award summary, the RFQ summary, the lifecycle
+// acts, the timeline, the quote comparison and the link to the award. Moved out of `BuyerSourcing.jsx` by the Phase 5 page split (no
 // behaviour change); every section keeps its order.
+//
+// Owner ruling 2026-10-19 (B-02): clarifications moved to the event page
+// (`/buyer/rfq/:id`, "Clarifications"). Review and FX rate follow once the
+// comparison's trim is settled.
 // ────────────────────────────────────────────────────────────────────────────
 /** @import React from 'react' */
 /** @import { TFunction } from 'i18next' */
@@ -21,7 +24,6 @@ import Timeline from '@components/ui-v2/Timeline';
 import Button from '@components/ui-v2/Button';
 import { useToast } from '@hooks/useToast';
 import { templateContentFromRfq } from '../../sourcing/rfqDraft';
-import RfqEngagementSection from '../../sourcing/RfqEngagementSection';
 import { buildTimeline, FOOTER_ACTION, FOOTER_LABEL, FOOTER_VARIANT } from '../utils';
 import AwardSummary from './AwardSummary';
 import RfqSummary from './RfqSummary';
@@ -169,7 +171,6 @@ const RfqSidePanel = ({
     {selectedRfq && (
       <div className="space-y-6">
         <PanelLinks selectedRfq={selectedRfq} setTemplateToSave={setTemplateToSave} t={t} />
-        <RfqEngagementSection rfq={selectedRfq} nameOf={(id) => supplierNameById.get(id) ?? id} />
         {selectedRfq.status === 'Awarded' && (
           <AwardSummary
             selectedRfq={selectedRfq}
