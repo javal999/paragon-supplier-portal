@@ -1,0 +1,103 @@
+{
+  "_source": "SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10 design rule 4: the team's own examples (OSIP Playbook PPT 7, 8, 9). A default that cannot reproduce them fails CI.",
+  "ppt7": {
+    "material": "2000041501",
+    "weeks": ["W33", "W34", "W35", "W36", "W37", "W38", "W39", "W40", "W41", "W42", "W43", "W44"],
+    "ltp": [193872, 129248, 64624, 64624, 64624, 64624, 64624, 64624, 64624, 64624, 129248, 64624],
+    "leadTimeWeeks": 5,
+    "mpq": 61224,
+    "soh": 116329,
+    "ospo": 0,
+    "ospr": 0,
+    "expected": {
+      "cycleStock": 516992,
+      "safetyOrder": 244896,
+      "ropOrder": 761888,
+      "prGenerated": -645559,
+      "incomingDa": [438768, 129248, 64624, 64624, 64624],
+      "totalDa": 761888,
+      "planCheckGap": 0,
+      "projectedSoh": [361225, 361225, 361225, 361225, 361225]
+    }
+  },
+  "ppt8": {
+    "leadTimeWeeks": 4,
+    "week1": {
+      "weeks": ["W1", "W2", "W3", "W4", "W5"],
+      "ltp": [10, 10, 10, 10, 5],
+      "ospoPrev": 0,
+      "callOffPrev": 0,
+      "callOff": 5,
+      "carryTo": "firstOutside",
+      "supplierAgreedFirstOutside": true,
+      "expected": {
+        "da": [10, 10, 10, 10],
+        "ospo": 0,
+        "additionalPo": 40,
+        "remainder": 5,
+        "carry": {
+          "week": "W5",
+          "qty": 5,
+          "fromWeek": "W1"
+        }
+      }
+    },
+    "week2": {
+      "weeks": ["W2", "W3", "W4", "W5", "W6"],
+      "ltp": [10, 10, 10, 5, 0],
+      "ospoPrev": 40,
+      "callOffPrev": 5,
+      "callOff": 10,
+      "expected": {
+        "da": [10, 10, 10, 10],
+        "ospo": 35,
+        "additionalPo": 5,
+        "remainder": 0,
+        "carry": null
+      }
+    }
+  },
+  "ppt9": {
+    "_ospoNote": "OSPO chains week to week with ospoIncludesNewPo on (owner, 2026-10-19): OSPO(w) = OSPO(w-1) - call-off of the previous week + the PO placed that week. Week 3: 35 - 10 (week-2 call-off) + 5 (week-2 additional PO) = 30, which the slide writes as '35 - 5'; week 4: 30 - 5 + 0 = 25.",
+    "leadTimeWeeks": 4,
+    "week3": {
+      "weeks": ["W3", "W4", "W5", "W6", "W7"],
+      "ltp": [10, 10, 5, 0, 0],
+      "ospoPrev": 35,
+      "callOffPrev": 10,
+      "callOff": 5,
+      "expected": {
+        "da": [10, 10, 10, 0],
+        "daAfterCarry": [10, 10, 10, 5],
+        "ospo": 30,
+        "additionalPo": 0,
+        "remainder": 5,
+        "carry": {
+          "week": "W6",
+          "qty": 5,
+          "fromWeek": "W3"
+        }
+      },
+      "newPoPrev": 5
+    },
+    "week4": {
+      "weeks": ["W4", "W5", "W6", "W7", "W8"],
+      "ltp": [10, 5, 0, 0, 0],
+      "ospoPrev": 30,
+      "callOffPrev": 5,
+      "callOff": 5,
+      "expected": {
+        "da": [10, 10, 5, 0],
+        "ospo": 25,
+        "additionalPo": 0,
+        "remainder": 5,
+        "carry": {
+          "week": "W7",
+          "qty": 5,
+          "fromWeek": "W4"
+        }
+      },
+      "newPoPrev": 0
+    }
+  }
+}

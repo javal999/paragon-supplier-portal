@@ -378,8 +378,8 @@ describe('My tasks leads the planner into This week (F-03)', () => {
   });
 });
 
-describe('Procurement on the end-of-cycle stock check (FUX-D6, F-15)', () => {
-  const K8801 = 'packaging|2026-08-31|sup-007|PK-PETB-8801';
+describe('Procurement on the feedstock reconcile (FUX-D6, F-15; DRC-15a)', () => {
+  const K8801 = 'sup-007|PK-PETB-8801';
 
   it('the page names Performance as its section for a BUY viewer', async () => {
     setHubRole('BUY');

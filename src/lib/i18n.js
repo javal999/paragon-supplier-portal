@@ -88,14 +88,17 @@ import { demandAnticipationEn, demandAnticipationId } from './i18n/demandAnticip
 import { supplyGapEn, supplyGapId } from './i18n/supplyGap';
 import { sapInterfaceEn, sapInterfaceId } from './i18n/sapInterface';
 import { consumptionEn, consumptionId } from './i18n/consumption';
+// — DRC-18 LTP vs FG demand (BL-203); DRC-6 lead time by step (BL-192) —
+import { ltpFgDemandEn, ltpFgDemandId } from './i18n/ltpFgDemand';
+import { leadTimeStepsEn, leadTimeStepsId } from './i18n/leadTimeSteps';
 import { adminCalendarEn, adminCalendarId } from './i18n/adminCalendar';
 import { performanceEn, performanceId } from './i18n/performance';
 import { inventoryCapacityEn, inventoryCapacityId } from './i18n/inventoryCapacity';
 import { forecastCollaborationEn, forecastCollaborationId } from './i18n/forecastCollaboration';
 // — REQ-E14-02 supplier reliability and PTI plan-change measures (BL-99) —
 import { reliabilityEn, reliabilityId } from './i18n/reliability';
-// — REQ-E06-04 fixed stock reconcile (ENG-D21, BL-134) —
-import { fixedStockReconcileEn, fixedStockReconcileId } from './i18n/fixedStockReconcile';
+// — DRC-15a feedstock reconcile (BL-201; replaced REQ-E06-04's fixed stock reconcile) —
+import { feedstockReconcileEn, feedstockReconcileId } from './i18n/feedstockReconcile';
 // — REQ-E14-03 material requirement —
 import { materialRequirementEn, materialRequirementId } from './i18n/materialRequirement';
 // — REQ-E14-04 safety stock, safety lead time and reorder point —
@@ -224,12 +227,14 @@ export const resources = {
       ...supplyGapEn,
       ...sapInterfaceEn,
       ...consumptionEn,
+      ...ltpFgDemandEn,
+      ...leadTimeStepsEn,
       ...adminCalendarEn,
       ...performanceEn,
       ...inventoryCapacityEn,
       ...forecastCollaborationEn,
       ...reliabilityEn,
-      ...fixedStockReconcileEn,
+      ...feedstockReconcileEn,
       ...materialRequirementEn,
       ...safetyStockEn,
       ...orderPlanEn,
@@ -731,12 +736,14 @@ export const resources = {
       ...supplyGapId,
       ...sapInterfaceId,
       ...consumptionId,
+      ...ltpFgDemandId,
+      ...leadTimeStepsId,
       ...adminCalendarId,
       ...performanceId,
       ...inventoryCapacityId,
       ...forecastCollaborationId,
       ...reliabilityId,
-      ...fixedStockReconcileId,
+      ...feedstockReconcileId,
       ...materialRequirementId,
       ...safetyStockId,
       ...orderPlanId,

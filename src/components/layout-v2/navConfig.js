@@ -189,8 +189,8 @@ export const PTI_NAV = [
   },
   {
     // FUX-D2 — a Material Planner sees the scorecard under Review instead.
-    // FUX-D6 (F-15) — Procurement sets max stock on the end-of-cycle stock
-    // check, so it gets a menu path too; `maxstock:set`'s HandoffNotice still
+    // FUX-D6 (F-15) — Procurement sets max stock on the feedstock reconcile
+    // (DRC-15a BR-03), so it gets a menu path too; `maxstock:set`'s HandoffNotice still
     // gates the act on the page.
     id: 'performance',
     labelKey: 'hub.nav.section.performance',

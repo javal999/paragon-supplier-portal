@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Accepted 2026-10-19.** The owner approved every requirement, default, backlog row and decision in this file ("approve all", 2026-10-19). Nothing here is built yet. Values tagged [Default] are starting values until the Material Planning team confirms them (section 4) |
+| Status | **Accepted 2026-10-19.** The owner approved every requirement, default, backlog row and decision in this file ("approve all", 2026-10-19). Wave 1 (BL-187, BL-192, BL-200, BL-201, BL-203) is built in GitLab MR !4, 2026-10-19; build decisions in section 6a. Values tagged [Default] are starting values until the Material Planning team confirms them (section 4) |
 | Date | 2026-10-19 |
 | Source meeting | Weekly SC Hub, 2026-10-14: DA, ROP and call-off. Cited as [MoM n] |
 | Other sources | *OSIP Playbook.pptx* (SharePoint, FSE Laboratory), cited [PPT n] by slide; *Framework OSIP PM 2026* (Google Sheets), cited [XLS sheet]. Neither is stored in this repository |
@@ -132,7 +132,7 @@ DRC-16 (daily FS reconcile) is merged into DRC-15a.
 - BR-02. DA(w) = LTP(w). Week 1 also carries the safety order (DRC-7) [Default A1; PPT 7].
 - BR-03. Remainder(w) = DA(w) − call-off(w). It moves to the last week of the horizon. With the supplier's agreement, recorded on the move, it can go to the first week outside the horizon instead [Owner, 2026-10-16, A8].
 - BR-04. Each supplier has a carry-over limit. Its default is the quantity of the last 4 weeks of sales orders [Owner, 2026-10-16, A8; unit is a Default, see A8b].
-- BR-05. Additional PO = Σ DA over the horizon − OSPO; OSPO(w) = OSPO(w−1) − call-off(w) [Default A9; PPT 8].
+- BR-05. Additional PO = Σ DA over the horizon − OSPO; OSPO(w) = OSPO(w−1) − call-off of the previous week + the PO placed that week [Default A9; PPT 8, 9; Owner, 2026-10-19]. Only this reading chains the slides' OSPO 35, 30, 25 with their own call-offs (5, 10, 5) and POs (40, 5, 0).
 - AC-01. PPT 8 reproduces: W1 PO 40, call-off 5, remainder 5; in week 2, OSPO is 35 and the additional PO is 5.
 - AC-02. PPT 9 reproduces: remainders of 5 carried, with OSPO 30 and 25.
 - AC-03. PPT 7 reproduces: incoming DA W33 438,768, then 129,248 and 64,624 × 3; total 761,888.
@@ -206,7 +206,7 @@ Rule (DRC-D9): when sources conflict, the newest wins, so MoM (14 Oct), then the
 | A2 | The check includes SOH | PPT 7 arithmetic | Switch | MoM wording (OSPO + PR only) |
 | A6 | "Call Off 86,400" not used | PPT 7 (feeds no figure) | — | — |
 | A8b | Carry-over limit = quantity of the last 4 weeks of sales orders | Owner, 2026-10-16, A8 | Value | Count of carry-overs |
-| A9 | Additional PO = Σ DA − OSPO | PPT 8 | Switch | — |
+| A9 | Additional PO = Σ DA − OSPO; OSPO counts the new PO (`ospoIncludesNewPo` on, owner 2026-10-19) | PPT 8, 9 | Switch | OSPO without new POs |
 | A11 | Moving average over 13 weeks (3 months) | XLS ROP Fisik Non stc | Value | — |
 | B1 | ROP Fisik safety per deck | PPT 11 | Switch | XLS formula |
 | B2 | SD of LTP over the horizon | MoM 2A, PPT 11 | Switch | SD of 12-week consumption (XLS) |
@@ -305,6 +305,27 @@ Each row carries its question ID into the code comment and the "Provisional" lab
 | DRC-D16 | Audit of past figures after a rule changes | Each figure keeps its inputs and rules version; recalculate forward only |
 
 ---
+
+## 6a. Build decisions, wave 1 (2026-10-19)
+
+Readings the builders made where the sources leave a gap. Each sits behind a rules key or a single function, so a Material Planning answer changes one place. Code: `src/services/transitions/osipRules.js` (`OSIP_RULES`, `RULES_VERSION`).
+
+| ID | Item | Decision |
+|---|---|---|
+| DRC-B1 | OSPO chain (DRC-2 BR-05) | `ospoIncludesNewPo` on: OSPO(w) = OSPO(w−1) − call-off + last week's new PO [Owner, 2026-10-19] |
+| DRC-B2 | Safety order SD (DRC-7 BR-01) | Sample standard deviation (n−1). PPT 7 rounds to the same 244,896 either way |
+| DRC-B3 | ROP Fisik cycle part (DRC-10) | Read as CEILING(demand × f, MPQ), the same form as the safety term; the literal "× MPQ" would multiply twice |
+| DRC-B4 | ROP Fisik units (DRC-10) | Demand inputs are daily rates, because f and g are in days |
+| DRC-B5 | Levels 5 and 6 (DRC-10) | Level 5 = CEILING(demand × f, MDQ) + safety; level 6 (JIT) = CEILING(c × d, pallet), no safety; any other level uses level 4 and is flagged. The deck gives no full formula |
+| DRC-B6 | Carry-over (DRC-2 BR-03, BR-04) | A carry is capped at the carry-over limit; the excess is returned as "uncarried". "First week outside" without the supplier's agreement falls back to the last week, flagged |
+| DRC-B7 | Plan check (DRC-4) | Surplus comes off the last week's DA, never below 0; what is left is returned as "unabsorbed" |
+| DRC-B8 | Supply area (DRC-14, BL-200) | From the supplier's country and city: not Indonesia = import; Jakarta, Bogor, Depok, Tangerang, Bekasi, Cikarang = Jabodetabek; Karawang and an Indonesian supplier without a city = outside Jabodetabek |
+| DRC-B9 | Lead-time route (DRC-6) | Indonesian supplier = local; foreign = import; foreign with SAP type ROH = imported raw material. Sample step splits keep each source's existing total, so sample imported raw materials (30 days) sit below the XLS ranges |
+| DRC-B10 | FG demand (DRC-18) | The engine's gross requirement (FG plan and sales orders through the BOM), split by the supplier's LTP share. On sample data it is not calibrated against the LTP fixtures |
+| DRC-B11 | Moving average (DRC-18) | 13 weeks ending at each grid week, capped at the current hub week; weeks with no record are left out, not counted as 0 |
+| DRC-B12 | Feedstock reconcile rows (DRC-15a) | A row for every supplier × material with a PO line or a released call-off. No blanket-PO flag exists, so direct POs show their full quantity as "not yet called off" |
+| DRC-B13 | Feedstock reconcile quantities (DRC-15a) | PO ordered excludes rejected POs; value-only PO lines add no quantity (noted). Called off = requested quantity on released call-offs. ASN requested counts Submitted, In Transit, Delivered and Discrepancy |
+| DRC-B14 | Fixed stock cycle setting (REQ-E06-04 BR-01) | Kept in Administration, marked "not in use"; no page reads it |
 
 ## 7. Build order
 

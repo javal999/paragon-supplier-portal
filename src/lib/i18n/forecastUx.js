@@ -23,7 +23,7 @@ export const forecastUxEn = {
   'fux.purpose.forecastQuality':
     'Whether the engine’s demand forecast is good enough to trust, compared with SAP’s plan.',
   'fux.purpose.stockCheck':
-    'Whether each supplier’s committed, called-off and held stock balanced at the end of the cycle.',
+    'What PTI ordered from each supplier on POs, against what it called off and what was shipped on ASNs, each day.',
   'fux.purpose.materialRequirement':
     'How much of each material is needed, after stock, confirmed deliveries and safety stock.',
   'fux.purpose.safetyStock':
@@ -115,7 +115,7 @@ export const forecastUxId = {
   'fux.purpose.forecastQuality':
     'Apakah prakiraan permintaan mesin cukup baik untuk dipercaya, dibandingkan rencana SAP.',
   'fux.purpose.stockCheck':
-    'Apakah stok yang dikomitmenkan, di-call-off, dan disimpan setiap pemasok seimbang di akhir siklus.',
+    'Apa yang dipesan PTI dari setiap pemasok pada PO, terhadap apa yang di-call-off dan dikirim pada ASN, setiap hari.',
   'fux.purpose.materialRequirement':
     'Berapa banyak setiap material yang dibutuhkan, setelah stok, pengiriman terkonfirmasi, dan stok pengaman.',
   'fux.purpose.safetyStock':

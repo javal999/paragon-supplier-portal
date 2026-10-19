@@ -10,6 +10,7 @@ import { formatDate, formatNumber } from '@lib/format';
 import { signedDelta } from '../display';
 import { supplyRows } from './supplyRows';
 import { consumptionRows } from '../consumptionRows';
+import { ltpFgDemandRows } from './ltpFgDemandRows';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CAP-10 — one supplier × material's weeks as columns (CAP-1 WeekGrid).
@@ -60,6 +61,8 @@ const AnticipationGrid = ({ row, rowKey, currentWeek }) => {
         );
       }
     },
+    // DRC-18 (BL-203) — FG demand, LTP − FG demand, consumption 13-week average (read only).
+    ...ltpFgDemandRows(row, rowKey, t),
     ...[
       /** @type {const} */ (['stockShare', 'demandAnt.row.stockShare']),
       /** @type {const} */ (['ropShare', 'demandAnt.row.ropShare'])

@@ -93,6 +93,27 @@
  * @property {number} moq
  * @property {number} orderMultiple
  * @property {number} share -  Share of the material's demand allocated to this supplier (0–1).
+ * @property {LeadTimeRoute} [leadTimeRoute] DRC-6 (BL-192) — the supply route the steps follow.
+ *   Absent when the feed carries no steps.
+ * @property {readonly LeadTimeStep[]} [leadTimeSteps] DRC-6 (BL-192) — the lead time by step, in
+ *   route order. Σ days = `leadTimeDays` (data health `leadTimeStepsSum`); `leadTimeDays`
+ *   stays the field every reader uses. Absent when the feed carries no steps.
+ */
+
+/**
+ * DRC-6 [XLS Guidance] — local: machine queue + production + delivery; import:
+ * ordering material + queue + production + shipment; imported raw material:
+ * order to principal + queue + production + shipment + delivery.
+ */
+/** @typedef {'local' | 'import' | 'importedRawMaterial'} LeadTimeRoute */
+
+/** @typedef {'orderToPrincipal' | 'orderingMaterial' | 'machineQueue' | 'production' | 'shipment' | 'delivery'} LeadTimeStepId */
+
+/**
+ * One step of a lead time, in whole days.
+ * @typedef {object} LeadTimeStep
+ * @property {LeadTimeStepId} step
+ * @property {number} days
  */
 
 /** @typedef {'packaging' | 'rawMaterial'} WarehouseKind */

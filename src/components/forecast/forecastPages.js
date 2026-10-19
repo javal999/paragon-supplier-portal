@@ -10,7 +10,7 @@
 //
 // The links follow the menu order: This week (phase 2, B1) → What to order → Make warehouse room
 // → Publish to suppliers → Supplier responses → Supplier performance → Forecast
-// quality → End-of-cycle stock check, and back to What to order for the next
+// quality → Feedstock reconcile, and back to What to order for the next
 // cycle. An engine page links to the page whose input it is, or that reaches
 // it (`fux-build-00-brief.md`, "Reached from").
 //
@@ -110,6 +110,8 @@ export const FORECAST_PAGES = Object.freeze({
     uses: 'performance',
     next: 'stockCheck'
   },
+  // DRC-15a: the Feedstock reconcile (was the End-of-cycle stock check); the id
+  // and route are kept so links and the menu key stay as they are.
   stockCheck: {
     path: '/buyer/fs-reconcile',
     titleKey: 'hub.nav.pti.stockCheck',
