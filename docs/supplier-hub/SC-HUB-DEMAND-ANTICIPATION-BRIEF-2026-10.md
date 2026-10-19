@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Accepted 2026-10-13.** The owner accepted every recommendation in section 9 (CAP-D10 to CAP-D17). Nothing here is built yet; build order in section 7 |
+| Status | **Accepted 2026-10-13; superseded in part 2026-10-19.** The owner accepted every recommendation in section 9 (CAP-D10 to CAP-D17). The formula (CAP-D12), the freezing (CAP-D13) and the fixed horizons (CAP-D17) are superseded by DRC-2 in `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md`; the name, grain, consumption record and open supply (CAP-D10, D11, D14, D15) stand. Build order in section 7 |
 | Date | 2026-10-13 |
 | Parent | `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` section 8 (CAP-10 BR-01 to BR-04, CAP-11 BR-01 to BR-05, CAP-12 BR-01 to BR-03); backlog BL-179 to BL-181 |
 | Code read | `main` at `b1cc133` |
@@ -154,9 +154,9 @@ B and C run in parallel once A is merged. Each step runs its own specs; the full
 |---|---|---|---|
 | CAP-D10 | Name | "Demand anticipation" on screen, `demandAnticipation` in code, never "DA" (it means Delivery Agreement today) | Accepted, 2026-10-13 |
 | CAP-D11 | Grain and splitting | Supplier × material × week; monthly raw-material LTP spread by day; stock on hand and reorder point shared by LTP share over the frozen 4 weeks | Accepted, 2026-10-13 |
-| CAP-D12 | Formula | Stock and reorder point counted once, in week 1 (top up to the reorder point, or use the stock above it first); later weeks equal the LTP; open orders not netted. One function, checked by Ary's fixture | Accepted, 2026-10-13 |
-| CAP-D13 | Freezing | An append-only publication store; a planner "Publish demand anticipation" verb on the `forecast:publish` atom; a frozen week keeps its first value; "would be" beside it; the horizon rolls on publish; one publication seeded | Accepted, 2026-10-13 |
+| CAP-D12 | Formula | Stock and reorder point counted once, in week 1 (top up to the reorder point, or use the stock above it first); later weeks equal the LTP; open orders not netted. One function, checked by Ary's fixture | Accepted, 2026-10-13; superseded 2026-10-19 by DRC-2 BR-02 (DA = LTP, safety order in week 1) |
+| CAP-D13 | Freezing | An append-only publication store; a planner "Publish demand anticipation" verb on the `forecast:publish` atom; a frozen week keeps its first value; "would be" beside it; the horizon rolls on publish; one publication seeded | Accepted, 2026-10-13; freezing superseded 2026-10-19 by DRC-2 (rolling horizon with carry-over). The append-only store is kept and stamped per DRC-D16 |
 | CAP-D14 | Consumption | Recorded by the planner, typed or uploaded, marked as awaiting the SAP goods-issue feed; split by demand anticipation share; never derived from stock changes | Accepted, 2026-10-13 |
 | CAP-D15 | Open supply and the extra PO | Released call-offs by need week; gap = demand anticipation − open supply; call-off on the oldest blanket line first, otherwise "New PO needed"; its own section on What to order | Accepted, 2026-10-13 |
-| CAP-D16 | Ary's numbers | A golden fixture and a test; placeholders in one config block | Accepted, 2026-10-13 |
-| CAP-D17 | How the frozen window moves | Fixed 4-week horizons; Publish freezes the horizon containing the current week, once, never a future one | Accepted, 2026-10-13 |
+| CAP-D16 | Ary's numbers | A golden fixture and a test; placeholders in one config block | Accepted, 2026-10-13; the fixture moves to BL-209 beside the PPT 7 to 9 fixtures (DRC design rule 4) |
+| CAP-D17 | How the frozen window moves | Fixed 4-week horizons; Publish freezes the horizon containing the current week, once, never a future one | Accepted, 2026-10-13; superseded 2026-10-19 by DRC-2 BR-01 (horizon = lead time, rolling weekly) |

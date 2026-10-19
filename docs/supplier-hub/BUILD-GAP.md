@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 3.14, 2026-10-12 |
+| Version | 3.15, 2026-10-19 |
 | Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.12 with the prototype on `main` at `80a4281` (PR #27 merged, 2026-09-22). The RFx rows cover PRs #21, #24, #25, #26 and #27; the RFP → RFQ pre-fill was built in PR #30. The RFx improvements (supplier documents, RFP award, multi-supplier award) were added on 2026-09-28 from PRs #54 to #64, #66 and #67, read on `main` at `20341d1`. The SC Hub Material build (MR-1 to MR-10: PRs #84 to #93, #97, #101 to #110, all merged 2026-09-29) was added on 2026-09-29, read on `main` at `d7ac421`; section 1.1 maps each MR to its rules and PRs. CAP-1 wave 1 (PR #191, merged 2026-10-12) was added on 2026-10-12, read on `main` at `a5eaac3`; section 1.2 covers CAP-1 to CAP-12. |
 | Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4, E06-R); 2026-09-21 for the working calendar (Q-18, BL-14) and the commitment deadline (CR-26, BL-05), built as BL-50 and BL-48; 2026-09-21 for RFx (RFX-D1 to RFX-D5), built in PRs #21 and #24 to #27; 2026-09-25 for the RFx improvements (RFX-D6 to RFX-D14), built in PRs #54 to #64, #66 and #67. Also 2026-09-29 for the SC Hub Material build (MAT-D1 to MAT-D15, and the build rulings MAT-D16 to MAT-D21), built in PRs #84 to #93, #97 and #101 to #110 |
 | Gate evidence, RFx improvements | From 2026-09-25 08:13 UTC GitHub Actions could not run the gates: the `build · floor · test:gate` job was not started because of the account's billing limit, and the check reads as failed. That covers the final heads of PRs #54 to #56, #58 to #64, #67 and #69. The final heads of #57 and #66, which reached `main` inside #67, passed in Actions earlier on 2026-09-25. Each of these PRs reports a green local `npm run gates` run on Node 22 in its body, and the merges to `main` were gated on those runs; for the heads Actions did not run, that local run is the only gate record. The counts are held in `scripts/floor.json` and are not restated here |
@@ -108,9 +108,20 @@ The requirements are `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` (decisions CAP-D1
 | CAP-6, CAP-7 Commitment date removed, Request revision hidden (BL-175, BL-176) | Built | #200 | No date on the commitment screens (period start stored); `REQUEST_REVISION_ENABLED = false` |
 | CAP-8 Move demand to several suppliers (BL-177) | Built | #213 | One verb with `allocations`, capped at the shortfall; headroom warns. Moves only the entered quantities |
 | CAP-9 Blanket PO run-out (BL-178) | Built | #217 | `blanketPoRules.js`; lines of one supplier × material drawn oldest first (CAP-D9); one alert per group |
-| CAP-10 Demand anticipation frozen per horizon (BL-179) | Built | #221 | `demandAnticipationRules.js`, append-only `demandAnticipationStore`, `t_demandanticipation_publish`; fixed 4-week horizons (CAP-D17); page `/buyer/demand-anticipation` |
-| CAP-11 Recorded consumption and absorbing the excess (BL-180) | Built | this PR | `consumptionStore`, `t_consumption_record` (0 accepted), typed or uploaded; excess absorbed into the next horizon's open weeks; `demandAnticipationUnabsorbed` alert. Waits on the SAP goods-issue feed for real data |
-| CAP-12 Supply below demand anticipation (BL-181) | Built | this PR | Open supply = released call-offs by need week; gap and an oldest-blanket-first call-off proposal or "New PO needed"; own section on What to order |
+| CAP-10 Demand anticipation frozen per horizon (BL-179) | Built | #221 | `demandAnticipationRules.js`, append-only `demandAnticipationStore`, `t_demandanticipation_publish`; fixed 4-week horizons (CAP-D17); page `/buyer/demand-anticipation` Rework 2026-10-19: horizon = lead time, rolling, with carry-over (DRC-2, BL-188) |
+| CAP-11 Recorded consumption and absorbing the excess (BL-180) | Built | #227 | `consumptionStore`, `t_consumption_record` (0 accepted), typed or uploaded; excess absorbed into the next horizon's open weeks; `demandAnticipationUnabsorbed` alert. Waits on the SAP goods-issue feed for real data Rework 2026-10-19: the weeks 5 to 8 absorbing rule is replaced by DRC-2 BR-03 (BL-188); the consumption record is kept |
+| CAP-12 Supply below demand anticipation (BL-181) | Built | #227 | Open supply = released call-offs by need week; gap and an oldest-blanket-first call-off proposal or "New PO needed"; own section on What to order |
+
+### 1.3 SC Hub DA, ROP and call-off (DRC-1 to DRC-19)
+
+The requirements are `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` (accepted 2026-10-19; decisions DRC-D1 to DRC-D16). Nothing is built yet. Backlog BL-187 to BL-209; build order in section 7 of that file. Values tagged [Default] are starting values until Material Planning confirms them.
+
+| DRC | Status | What exists today |
+|---|---|---|
+| DRC-2 Rolling demand anticipation (BL-188) | Not built; rework | CAP-10 and CAP-11 (#221, #227) build a fixed 4-week horizon and absorb over weeks 5 to 8. The store, page and consumption record are reused |
+| DRC-15a Feedstock reconcile (BL-201) | Not built; rework | REQ-E06-04 fixed stock reconcile compares commitment, called off and held; it is renamed and rewritten |
+| DRC-10 ROPs by level (BL-196) | Not built | PTI ROP comes from SAP fixtures or the engine (REQ-E14-04); supplier ROP is typed by the supplier (REQ-E08-02 BR-06) |
+| Every other DRC | Not built | — |
 
 ## 2. Build list
 
