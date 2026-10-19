@@ -3,9 +3,13 @@
 /** @import { Quotation } from '@data/mockQuotations' */
 /** @import { QuoteScore, ScoreStanding, ScoringOptions, ScoringOutcome } from '@lib/quoteScore' */
 /** @import { RfqSupplierGateView } from '@services/sourcing/views' */
+/** @import { VerbAvailability } from '@services/transitions/handoff' */
+/** @import { BidCurrency } from '@lib/currencyPolicy' */
 import { useTranslation } from 'react-i18next';
 import { EvaluationBreakSelect, TieredComparison } from '../../rfx/TieredRfq';
 import ComparisonTable from './ComparisonTable';
+import FxRefusalBanner from './FxRefusalBanner';
+import FxBasisPanel from './FxBasisPanel';
 
 /**
  * REQ-E03-05 AC-01 — the comparison section: its heading and basis notes, the
@@ -13,6 +17,14 @@ import ComparisonTable from './ComparisonTable';
  * the comparison table, the tie / decimal / none-qualified / single-bid notes,
  * and the tiered per-item comparison. Moved out of `BuyerSourcingEvent.jsx` by
  * the Phase 5 page split (no behaviour change).
+ *
+ * RFx UX B-02 (owner ruling 2026-10-19) — the FX arc moved here from the board's
+ * side panel: a refused comparison now shows the bids, with "—" where the
+ * scores were and the banner naming each currency (and, when stale, the rate's
+ * date) above them, instead of one line in place of the table. Only what is
+ * displayed changed — the scoring and the award verb's refusal are untouched.
+ * The recorded basis per foreign currency, and the act to record or supersede a
+ * rate, sit under the banner.
  * @type {React.FC<{
  *   rfq: RFQ;
  *   tiered: boolean;
@@ -32,6 +44,11 @@ import ComparisonTable from './ComparisonTable';
  *   bestId: string | null;
  *   standing: ScoreStanding;
  *   tied: boolean;
+ *   foreignCurrencies: readonly BidCurrency[];
+ *   onPin: (currency: BidCurrency) => void;
+ *   reviewAvailability: VerbAvailability;
+ *   onReview: (quotationId: string) => void;
+ *   reviewPending: boolean;
  * }>}
  */
 const ComparisonSection = ({
@@ -52,7 +69,12 @@ const ComparisonSection = ({
   scoreById,
   bestId,
   standing,
-  tied
+  tied,
+  foreignCurrencies,
+  onPin,
+  reviewAvailability,
+  onReview,
+  reviewPending
 }) => {
   const { t } = useTranslation();
   return (
@@ -66,12 +88,19 @@ const ComparisonSection = ({
             <EvaluationBreakSelect rfq={rfq} value={evalQty} onChange={setChosenBreak} />
           </div>
         )}
+        {scoring.kind === 'refused' && (
+          <FxRefusalBanner rfq={rfq} reason={scoring.reason} currencies={scoring.currencies} />
+        )}
+        {/* 2e-c-4 — the recorded basis, whenever a foreign bid exists —
+            including while the comparison is refused, which is exactly when
+            a buyer needs to see what is missing and act on it. */}
+        {foreignCurrencies.length > 0 && (
+          <div className="mt-3">
+            <FxBasisPanel currencies={foreignCurrencies} pins={rfq.fxPins} onPin={onPin} t={t} />
+          </div>
+        )}
       </div>
-      {scoring.kind === 'refused' ? (
-        <p className="px-4 py-8 text-center text-sm text-warning-hover" data-testid="cmp-refused">
-          {t('rfx.cmp.refused')}
-        </p>
-      ) : current.length === 0 ? (
+      {current.length === 0 ? (
         <p className="px-4 py-8 text-center text-sm text-text-tertiary" data-testid="cmp-empty">
           {t('rfx.cmp.empty')}
         </p>
@@ -90,6 +119,9 @@ const ComparisonSection = ({
           bestId={bestId}
           standing={standing}
           tied={tied}
+          reviewAvailability={reviewAvailability}
+          onReview={onReview}
+          reviewPending={reviewPending}
         />
       )}
       {(standing.oneDecimal || tied) && current.length > 0 && (

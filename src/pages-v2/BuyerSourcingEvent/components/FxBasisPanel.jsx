@@ -1,7 +1,8 @@
 // ────────────────────────────────────────────────────────────────────────────
 // The recorded FX basis, per foreign currency bid on the RFQ (CP-0 · 2e-c-4).
 // Moved out of `BuyerSourcing.jsx` by the Phase 5 page split (no behaviour
-// change). The block comment on the basis's purpose is in `../const.js`
+// change), then to the event page by RFx UX B-02 (owner ruling 2026-10-19).
+// The block comment on the basis's purpose is in `BuyerSourcing/const.js`
 // beside `PinDraft`.
 // ────────────────────────────────────────────────────────────────────────────
 /** @import React from 'react' */

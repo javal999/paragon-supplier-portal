@@ -16,7 +16,6 @@
 /** @import { Quotation } from '@data/mockQuotations' */
 /** @import { PurchaseRequisition, PRStatus } from '@services/data/types' */
 /** @import { Supplier } from '@services/data/types' */
-/** @import { PinDraft } from './const' */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
@@ -39,7 +38,7 @@ import { downloadComparison } from '../rfx/comparisonExport';
 import { useRfqBoard } from './hooks/useRfqBoard';
 import { useRfqWizard } from './hooks/useRfqWizard';
 import { useRfqPanelActions } from './hooks/useRfqPanelActions';
-import { useQuoteComparison } from './hooks/useQuoteComparison';
+import { usePanelQuotes } from './hooks/usePanelQuotes';
 import { useWizardDeepLinks } from './hooks/useWizardDeepLinks';
 import { useInviteeSearch } from './hooks/useInviteeSearch';
 import SourcingHeader from './components/SourcingHeader';
@@ -48,16 +47,20 @@ import RfqBoardFilters from './components/RfqBoardFilters';
 import RfqBoardTable from './components/RfqBoardTable';
 import AwardsHistory from './components/AwardsHistory';
 import RfqSidePanel from './components/RfqSidePanel';
-import FxPinDialog from './components/FxPinDialog';
 import RfqWizardModal from './components/RfqWizardModal';
 
 // The names other modules import from this page (the footer spec, the 2e-c
 // i18n sweep), re-exported from where they now live.
 export { FOOTER_ACTION, FOOTER_LABEL, FOOTER_VARIANT } from './utils';
-export { FX_REFUSAL_KEY } from './components/QuoteComparison';
-export { FX_RATE_REFUSAL_KEY, FX_VINTAGE_REFUSAL_KEY } from './components/FxPinDialog';
-export { FX_PIN_SOURCE_KEY } from './components/FxBasisPanel';
-export { SPREAD_SILENT_KEY } from './components/ComparisonParts';
+// RFx UX B-02 — the FX and spread maps moved to the event page with the
+// comparison they render on; re-exported here so their importers resolve.
+export { FX_REFUSAL_KEY } from '../BuyerSourcingEvent/components/FxRefusalBanner';
+export {
+  FX_RATE_REFUSAL_KEY,
+  FX_VINTAGE_REFUSAL_KEY
+} from '../BuyerSourcingEvent/components/FxPinDialog';
+export { FX_PIN_SOURCE_KEY } from '../BuyerSourcingEvent/components/FxBasisPanel';
+export { SPREAD_SILENT_KEY } from '../BuyerSourcingEvent/components/ComparisonParts';
 
 /**
  * @typedef {object} SourcingWorkspaceProps
@@ -70,11 +73,12 @@ export { SPREAD_SILENT_KEY } from './components/ComparisonParts';
  */
 
 /**
- * The workspace: the board, the side panel on the selected RFQ, the FX-pin
- * dialog, the template picker and save dialog, and the RFQ wizard.
+ * The workspace: the board, the side panel on the selected RFQ, the template
+ * picker and save dialog, and the RFQ wizard. (RFx UX B-02 moved the FX-pin
+ * dialog to the event page with the comparison.)
  *
  * Section map (render order): SourcingHeader · SourcingKpis · RfqBoardFilters ·
- * RfqBoardTable · AwardsHistory · RfqSidePanel · FxPinDialog · TemplatePicker ·
+ * RfqBoardTable · AwardsHistory · RfqSidePanel · TemplatePicker ·
  * SaveTemplateDialog · RfqWizardModal.
  * @type {React.FC<SourcingWorkspaceProps>}
  */
@@ -121,10 +125,6 @@ const SourcingWorkspace = ({
   // WHO ACTS NEXT (S2a). `RFQStatus` matches the machine exactly — no
   // projection member — so `status` is the canonical state on this surface.
   const nextAct = useNextAct('rfq', selectedRfq?.status);
-  // 2e-c-4 — the pin draft a buyer confirms before a rate is recorded. Null =
-  // no dialog. Recording the basis a contract will be awarded on is a governed
-  // act, so it is confirm-before-commit like every other one on this surface.
-  const [pinDraft, setPinDraft] = useState(/** @type {PinDraft | null} */ (null));
   const wizard = useRfqWizard({ baseRfqs, sourceablePrs });
 
   // §73 — the seat's authority over `t_rfq_create` (atom `rfq:create`,
@@ -154,14 +154,16 @@ const SourcingWorkspace = ({
   //
   // `useVerbAvailabilities` needed no change to carry this: it is already one
   // independent resolution per atom, and the group was imposed on top of it.
+  //
+  // RFx UX B-02 (owner ruling 2026-10-19) — `quotation:review` and
+  // `rfq:fx-pin` left this surface with their acts: the event page resolves
+  // them, one notice per verb in the act's own slot, as here.
   const rfqVerbs = useVerbAvailabilities(
     /** @type {const} */ ({
       publish: 'rfq:publish',
       reopen: 'rfq:reopen',
       cancel: 'rfq:cancel',
-      award: 'rfq:award',
-      review: 'quotation:review',
-      fxPin: 'rfq:fx-pin'
+      award: 'rfq:award'
     })
   );
   const { toast } = useToast();
@@ -197,14 +199,14 @@ const SourcingWorkspace = ({
     setSelectedRfqId(null);
   }
 
-  const actions = useRfqPanelActions({ selectedRfq, pinDraft, setPinDraft, closePanel });
+  const actions = useRfqPanelActions({ selectedRfq, closePanel });
 
   /** @param {RFQ} r */
   const openRfq = (r) => {
     setSelectedRfqId(r.id);
   };
 
-  const comparison = useQuoteComparison({ selectedRfq, quotations, suppliers });
+  const panelQuotes = usePanelQuotes({ selectedRfq, quotations });
 
   useWizardDeepLinks({
     sourceablePrs,
@@ -263,29 +265,17 @@ const SourcingWorkspace = ({
       <RfqSidePanel
         selectedRfq={selectedRfq}
         closePanel={closePanel}
-        exportComparison={exportComparison}
         supplierNameById={supplierNameById}
         nextAct={nextAct}
         rfqCreateAvailability={rfqCreateAvailability}
         rfqVerbs={rfqVerbs}
         actions={actions}
-        comparison={comparison}
+        panelQuotes={panelQuotes}
+        awards={awardsQuery.data?.items ?? []}
         openWizardForEdit={wizard.openWizardForEdit}
         setTemplateToSave={wizard.setTemplateToSave}
-        setPinDraft={setPinDraft}
         t={t}
       />
-
-      {pinDraft && selectedRfq && (
-        <FxPinDialog
-          pinDraft={pinDraft}
-          setPinDraft={setPinDraft}
-          fxPinAvailability={rfqVerbs.fxPin}
-          fxPinPending={actions.fxPinMutation.isPending}
-          handlePinConfirm={actions.handlePinConfirm}
-          t={t}
-        />
-      )}
 
       {wizard.pickerOpen && rfqCreateAvailability.kind === 'held' && (
         <TemplatePicker

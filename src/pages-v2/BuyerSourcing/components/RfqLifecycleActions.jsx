@@ -8,9 +8,9 @@ import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 
 /**
  * @typedef {object} RfqLifecycleActionsProps
- * @property {RFQ} selectedRfq Must be Draft, Open or Closed — the workspace renders this only then.
+ * @property {RFQ} selectedRfq Any status; the verbs below render only in their own from-states.
  * @property {VerbAvailability} rfqCreateAvailability `rfq:create`, which also edits a Draft (BL-93).
- * @property {Readonly<Record<'publish' | 'reopen' | 'cancel' | 'award' | 'review' | 'fxPin', VerbAvailability>>} rfqVerbs The seat's per-verb availability (§76).
+ * @property {Readonly<Record<'publish' | 'reopen' | 'cancel' | 'award', VerbAvailability>>} rfqVerbs The seat's per-verb availability (§76).
  * @property {(rfq: RFQ) => void} openWizardForEdit
  * @property {() => void} handlePublish
  * @property {() => void} handleReopen
@@ -18,6 +18,7 @@ import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
  * @property {boolean} publishPending
  * @property {boolean} reopenPending
  * @property {boolean} cancelPending
+ * @property {() => void} onSaveTemplate D2 — "Save as template", a secondary act on any status.
  * @property {TFunction} t
  */
 
@@ -26,6 +27,10 @@ import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
  * edit draft, publish, reopen, cancel — each in its own slot, or the handoff
  * notice naming whose act it is. Moved out of `BuyerSourcing.jsx` by the
  * Phase 5 page split (no behaviour change).
+ *
+ * RFx UX B-02 (owner ruling 2026-10-19) — the row now renders on every status:
+ * cancel keeps its own from-states (Draft, Open, Closed — never the terminal
+ * Awarded or Cancelled), and "Save as template" sits last as a secondary act.
  * @type {React.FC<RfqLifecycleActionsProps>}
  */
 const RfqLifecycleActions = ({
@@ -39,6 +44,7 @@ const RfqLifecycleActions = ({
   publishPending,
   reopenPending,
   cancelPending,
+  onSaveTemplate,
   t
 }) => (
   <section>
@@ -106,19 +112,28 @@ const RfqLifecycleActions = ({
       {/* CANCEL — legal from all three of this section's states,
           so its notice is the one a withheld seat always reads
           here, beside whichever of publish/reopen applies. */}
-      {rfqVerbs.cancel.kind === 'held' ? (
-        <Button
-          variant="secondary"
-          icon={Ban}
-          className="text-danger"
-          disabled={cancelPending}
-          onClick={handleCancel}
-        >
-          {cancelPending ? t('sourcing.cancel.submitting') : t('sourcing.cancel.submit')}
-        </Button>
-      ) : (
-        <HandoffNotice availability={rfqVerbs.cancel} testId="handoff-rfq-cancel" />
-      )}
+      {(selectedRfq.status === 'Draft' ||
+        selectedRfq.status === 'Open' ||
+        selectedRfq.status === 'Closed') &&
+        (rfqVerbs.cancel.kind === 'held' ? (
+          <Button
+            variant="secondary"
+            icon={Ban}
+            className="text-danger"
+            disabled={cancelPending}
+            onClick={handleCancel}
+          >
+            {cancelPending ? t('sourcing.cancel.submitting') : t('sourcing.cancel.submit')}
+          </Button>
+        ) : (
+          <HandoffNotice availability={rfqVerbs.cancel} testId="handoff-rfq-cancel" />
+        ))}
+      {/* D2 — keep this RFQ's content as a template. Holds no atom: a
+          template is the buyer's own authoring aid in this browser, and
+          starting an RFQ from it is what the create gate guards. */}
+      <Button variant="secondary" data-testid="panel-save-template" onClick={onSaveTemplate}>
+        {t('rfqAuthoring.template.saveAs')}
+      </Button>
     </div>
   </section>
 );

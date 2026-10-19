@@ -1,15 +1,16 @@
 // ────────────────────────────────────────────────────────────────────────────
 // CP-0 · 2e-c-4 — the confirm-before-commit dialog that records (or
 // supersedes) an FX pin. Moved out of `BuyerSourcing.jsx` by the Phase 5 page
-// split (no behaviour change). The typed-field refusal maps live HERE, beside
-// the two fields that render them.
+// split (no behaviour change), then to the event page by RFx UX B-02 (owner
+// ruling 2026-10-19). The typed-field refusal maps live HERE, beside the two
+// fields that render them.
 // ────────────────────────────────────────────────────────────────────────────
 /** @import React from 'react' */
 /** @import { TFunction } from 'i18next' */
 /** @import { FxPinSource } from '@lib/fxPin' */
 /** @import { VerbAvailability } from '@services/transitions/handoff' */
 /** @import { FxRateRefusalReason, FxVintageRefusalReason } from '../../sourcing/fxRateInput' */
-/** @import { PinDraft } from '../const' */
+/** @import { PinDraft } from '../../BuyerSourcing/const' */
 import Data from '@components/ui-v2/Data';
 import Button from '@components/ui-v2/Button';
 import ModalOverlay from '@components/ui-v2/ModalOverlay';
@@ -17,7 +18,7 @@ import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { formatDate, formatMoney } from '@lib/format';
 import { BASE_CURRENCY, FX_PIN_MAX_AGE_DAYS } from '@lib/currencyPolicy';
 import { readFxRate, readFxVintage } from '../../sourcing/fxRateInput';
-import { inputClass, labelClass } from '../const';
+import { inputClass, labelClass } from '../../BuyerSourcing/const';
 
 /** @type {Record<FxRateRefusalReason, string>} */
 export const FX_RATE_REFUSAL_KEY = {

@@ -3,19 +3,26 @@
 /** @import { Quotation } from '@data/mockQuotations' */
 /** @import { QuoteScore, ScoreStanding } from '@lib/quoteScore' */
 /** @import { RfqSupplierGateView } from '@services/sourcing/views' */
+/** @import { VerbAvailability } from '@services/transitions/handoff' */
 import { useTranslation } from 'react-i18next';
 import Data from '@components/ui-v2/Data';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import StatusPill from '@components/ui-v2/StatusPill';
 import Table from '@components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
 import TableRow from '@components/ui-v2/TableRow';
 import TableCell from '@components/ui-v2/TableCell';
-import { compositeText } from '@lib/quoteScore';
+import { AXIS_LIVENESS, COMPOSITE_LIVENESS, compositeText } from '@lib/quoteScore';
+import { formatMoney, formatNumber } from '@lib/format';
+import { BASE_CURRENCY } from '@lib/currencyPolicy';
+import { spreadForQuote } from '@lib/shouldCostSpread';
 import { eventPiecesAt, quoteTotalAt } from '@services/sourcing/rfqComparison';
 import { documentsOf } from '@services/transitions/rfxDocumentRules';
 import { DocumentsStatus } from '../../rfx/SupplierDocumentsPanel';
-import { GateMarker, OtifOrNoHistory, money, qty } from '../../rfx/rfxDisplay';
+import { GateMarker, OtifOrNoHistory, qty } from '../../rfx/rfxDisplay';
+import { SPREAD_DEPS } from '../../BuyerSourcing/const';
 import { byId } from '../utils';
+import { RowTag, SpreadCell } from './ComparisonParts';
 
 /**
  * REQ-E03-05 AC-01 — the comparison table: one column per CURRENT bid (best
@@ -24,6 +31,12 @@ import { byId } from '../utils';
  * documents rows. On a tiered RFQ the price rows are read at the evaluation
  * break. Moved out of `BuyerSourcingEvent.jsx` by the Phase 5 page split (no
  * behaviour change).
+ *
+ * RFx UX B-02 (owner ruling 2026-10-19) — what the board's side panel carried
+ * moved here: price per UOM in the bid's own currency, the should-cost spread
+ * row, the "Estimated" tag on both lead-time rows, "No minimum stated", and the
+ * last row — each quote's status with "Move to review" (one act PER QUOTE, so
+ * one `quotation:review` notice per quote), or on an Awarded RFQ the outcome.
  * @type {React.FC<{
  *   rfq: RFQ;
  *   tiered: boolean;
@@ -38,6 +51,9 @@ import { byId } from '../utils';
  *   bestId: string | null;
  *   standing: ScoreStanding;
  *   tied: boolean;
+ *   reviewAvailability: VerbAvailability;
+ *   onReview: (quotationId: string) => void;
+ *   reviewPending: boolean;
  * }>}
  */
 const ComparisonTable = ({
@@ -53,10 +69,12 @@ const ComparisonTable = ({
   scoreById,
   bestId,
   standing,
-  tied
+  tied,
+  reviewAvailability,
+  onReview,
+  reviewPending
 }) => {
   const { t } = useTranslation();
-
   /**
    * A tiered quote's figures AT THE EVALUATION BREAK — its total cost there and
    * that total per piece. `undefined` for a legacy RFQ, whose header figures
@@ -70,6 +88,21 @@ const ComparisonTable = ({
     const pieces = eventPiecesAt(rfq, evalQty);
     return total === null || pieces <= 0 ? undefined : { total, perPiece: total / pieces };
   };
+  /** @param {string} id */
+  const currencyOf = (id) => byId(current, id).currency ?? currency ?? BASE_CURRENCY;
+  /** @param {string} id */
+  const unitOf = (id) => atBreak(id)?.perPiece ?? byId(current, id).unitPrice;
+  const estimated = (
+    <RowTag tag={t('sourcing.cmp.estimated')} title={t('sourcing.cmp.estimatedTitle')} />
+  );
+  // B-02 — the "Simulated" honesty marker the panel carried: an axis with no
+  // live source (reliability), and the composite that inherits its weakest
+  // link. Rendered from the same liveness constants, so it disappears by
+  // itself the day the axis goes live.
+  const simulated = (
+    <RowTag tag={t('sourcing.cmp.simulated')} title={t('sourcing.cmp.simulatedTitle')} />
+  );
+
   /**
    * The price rows say which break they are read at, on a tiered RFQ.
    * @param {string} labelKey
@@ -91,22 +124,27 @@ const ComparisonTable = ({
         <TableHeaderCell>{t('rfx.cmp.col.criterion')}</TableHeaderCell>
         {current.map((q) => (
           <TableHeaderCell key={q.id}>
-            {supplierName(q.supplierId)}
-            {!tied && q.id === bestId && (
-              <StatusPill variant="success" className="ml-2">
-                {t('rfx.cmp.best')}
-              </StatusPill>
-            )}
-            {tied && standing.tiedIds.includes(q.id) && (
-              <span className="ml-2" data-testid={`cmp-tied-${q.supplierId}`}>
-                <StatusPill variant="success">{t('rfx.cmp.tied')}</StatusPill>
-              </span>
-            )}
-            {(q.roundNumber ?? 0) > 0 && (
-              <div className="text-xs font-normal normal-case text-text-tertiary">
-                {t('rfx.cmp.round', { round: q.roundNumber })}
-              </div>
-            )}
+            <div data-testid={`cmp-head-${q.supplierId}`}>
+              {supplierName(q.supplierId)}
+              {!tied && q.id === bestId && (
+                <StatusPill variant="success" className="ml-2">
+                  {t('rfx.cmp.best')}
+                </StatusPill>
+              )}
+              {!tied && q.id === bestId && COMPOSITE_LIVENESS === 'simulated' && (
+                <span data-testid="cmp-best-simulated">{simulated}</span>
+              )}
+              {tied && standing.tiedIds.includes(q.id) && (
+                <span className="ml-2" data-testid={`cmp-tied-${q.supplierId}`}>
+                  <StatusPill variant="success">{t('rfx.cmp.tied')}</StatusPill>
+                </span>
+              )}
+              {(q.roundNumber ?? 0) > 0 && (
+                <div className="text-xs font-normal normal-case text-text-tertiary">
+                  {t('rfx.cmp.round', { round: q.roundNumber })}
+                </div>
+              )}
+            </div>
           </TableHeaderCell>
         ))}
       </TableHeader>
@@ -115,50 +153,81 @@ const ComparisonTable = ({
           /** @type {const} */ ([
             [
               'rfx.cmp.row.unitPrice',
+              // B-02 — per UOM, in the bid's own currency and precision (the
+              // panel's rendering: "€2.85/KG", never rounded to the unit).
               /** @param {string} id */ (id) =>
-                money(
-                  atBreak(id)?.perPiece ?? byId(current, id).unitPrice,
-                  byId(current, id).currency ?? currency
-                )
+                `${formatMoney(unitOf(id), currencyOf(id))}/${rfq.uom}`,
+              null
+            ],
+            [
+              'sourcing.cmp.row.spread',
+              // CI-2 — the should-cost-vs-quote spread, read-only, right under
+              // unit price: a MODELED, banded reference, or honest silence with
+              // its reason. Never fed into the score; never a verdict.
+              /** @param {string} id */ (id) => (
+                <SpreadCell
+                  result={spreadForQuote(
+                    rfq.materialIds?.[0],
+                    rfq.uom,
+                    unitOf(id),
+                    currencyOf(id),
+                    SPREAD_DEPS
+                  )}
+                  t={t}
+                />
+              ),
+              null
             ],
             [
               'rfx.cmp.row.totalPrice',
               /** @param {string} id */ (id) =>
-                money(
-                  atBreak(id)?.total ?? byId(current, id).totalPrice,
-                  byId(current, id).currency ?? currency
-                )
+                formatMoney(atBreak(id)?.total ?? byId(current, id).totalPrice, currencyOf(id)),
+              null
             ],
             [
+              // CP-0 2e-b-1a — the lead time is a REQUIRED ESTIMATE at quote
+              // stage, not a commitment. Still scored and ranked on; the tag
+              // says what it is. The firm date is confirmed at PO.
               'rfx.cmp.row.leadTime',
               /** @param {string} id */ (id) =>
-                `${byId(current, id).leadTimeDays} ${t('rfx.unit.days')}`
+                `${byId(current, id).leadTimeDays} ${t('rfx.unit.days')}`,
+              estimated
             ],
             [
               'rfx.cmp.row.moq',
+              // CP-0 2e-b-2 — an ABSENT minimum is a real answer ("same as the
+              // RFQ quantity"), so it reads as a sentence, never a 0 or a dash.
               /** @param {string} id */ (id) => {
-                // Read once into a local so the `undefined` check narrows it — the
-                // TS original used `!`; a cast through `ReturnType<typeof byId>`
-                // loses `byId`'s generic and resolves to `{ id }`.
                 const moq = byId(current, id).moq;
-                return moq === undefined ? '—' : qty(moq);
-              }
+                return moq === undefined ? (
+                  <span className="text-text-tertiary">{t('sourcing.cmp.moqNone')}</span>
+                ) : (
+                  `${formatNumber(moq)} ${rfq.uom}`
+                );
+              },
+              null
             ],
             [
               'rfx.cmp.row.payment',
-              /** @param {string} id */ (id) => byId(current, id).paymentTermsOffered
+              /** @param {string} id */ (id) => byId(current, id).paymentTermsOffered,
+              null
             ],
             [
               'rfx.cmp.row.priceScore',
-              /** @param {string} id */ (id) => String(scoreById.get(id)?.priceScore ?? '—')
+              /** @param {string} id */ (id) => String(scoreById.get(id)?.priceScore ?? '—'),
+              null
             ],
             [
               'rfx.cmp.row.leadTimeScore',
-              /** @param {string} id */ (id) => String(scoreById.get(id)?.leadTimeScore ?? '—')
+              /** @param {string} id */ (id) => String(scoreById.get(id)?.leadTimeScore ?? '—'),
+              estimated
             ]
-          ]).map(([labelKey, render]) => (
+          ]).map(([labelKey, render, tag]) => (
             <TableRow key={labelKey} data-testid={`cmp-row-${labelKey}`}>
-              <TableCell className="text-sm text-text-secondary">{rowLabel(labelKey)}</TableCell>
+              <TableCell className="text-sm text-text-secondary">
+                {rowLabel(labelKey)}
+                {tag}
+              </TableCell>
               {current.map((q) => (
                 <TableCell key={q.id}>
                   <Data>{render(q.id)}</Data>
@@ -186,6 +255,7 @@ const ComparisonTable = ({
         <TableRow data-testid="cmp-row-reliability">
           <TableCell className="text-sm text-text-secondary">
             {t('rfx.cmp.row.reliabilityScore')}
+            {AXIS_LIVENESS.reliability === 'simulated' && simulated}
           </TableCell>
           {current.map((q) => (
             <TableCell key={q.id}>
@@ -202,6 +272,7 @@ const ComparisonTable = ({
         <TableRow data-testid="cmp-row-weighted">
           <TableCell className="text-sm font-semibold text-text-primary">
             {t('rfx.cmp.row.weighted')}
+            {COMPOSITE_LIVENESS === 'simulated' && simulated}
           </TableCell>
           {current.map((q) => (
             <TableCell
@@ -244,6 +315,64 @@ const ComparisonTable = ({
                   documents={documentsOf(q)}
                   testId={`cmp-documents-${q.supplierId}`}
                 />
+              </TableCell>
+            ))}
+          </TableRow>
+        )}
+        {/* B-02 — the last row, moved from the side panel. Awarded: the ACTUAL
+            outcome per quote (winner Awarded, others Rejected). Otherwise each
+            quote's status, and on a `Submitted` quote the buyer's move to
+            review (t_quotation_review, Submitted → Under Review) — or, for a
+            seat without `quotation:review`, the owner IN THAT QUOTE'S CELL. */}
+        {rfq.status === 'Awarded' ? (
+          <TableRow data-testid="cmp-row-result">
+            <TableCell className="text-sm text-text-secondary">
+              {t('sourcing.cmp.row.result')}
+            </TableCell>
+            {current.map((q) => (
+              <TableCell key={q.id}>
+                <StatusPill
+                  variant={
+                    q.status === 'Awarded'
+                      ? 'success'
+                      : q.status === 'Rejected'
+                        ? 'danger'
+                        : 'neutral'
+                  }
+                >
+                  {q.status}
+                </StatusPill>
+              </TableCell>
+            ))}
+          </TableRow>
+        ) : (
+          <TableRow data-testid="cmp-row-status">
+            <TableCell className="text-sm text-text-secondary">
+              {t('sourcing.cmp.row.status')}
+            </TableCell>
+            {current.map((q) => (
+              <TableCell key={q.id}>
+                <div className="flex flex-col items-start gap-1.5">
+                  <StatusPill variant={q.status === 'Under Review' ? 'info' : 'neutral'}>
+                    {q.status}
+                  </StatusPill>
+                  {q.status === 'Submitted' &&
+                    (reviewAvailability.kind === 'held' ? (
+                      <button
+                        type="button"
+                        onClick={() => onReview(q.id)}
+                        disabled={reviewPending}
+                        className="text-xs font-semibold text-action hover:text-action-hover disabled:opacity-50"
+                      >
+                        {t('sourcing.cmp.moveToReview')}
+                      </button>
+                    ) : (
+                      <HandoffNotice
+                        availability={reviewAvailability}
+                        testId="handoff-rfq-review"
+                      />
+                    ))}
+                </div>
               </TableCell>
             ))}
           </TableRow>
