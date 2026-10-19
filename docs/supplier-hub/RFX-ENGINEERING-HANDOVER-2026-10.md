@@ -84,6 +84,8 @@ No other PTI role or supplier lane holds an RFx atom. A seat that lacks the atom
 
 ## 4. Screens
 
+Screenshots of every screen below, taken on the final build: `user-guide/screens/rfx-2026-10/` (index in its `README.md`).
+
 ### 4.1 Buyer
 
 | Route | Screen | What it does |
