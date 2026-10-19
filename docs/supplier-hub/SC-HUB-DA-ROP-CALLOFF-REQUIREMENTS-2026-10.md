@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Accepted 2026-10-19.** The owner approved every requirement, default, backlog row and decision in this file ("approve all", 2026-10-19). Wave 1 (BL-187, BL-192, BL-200, BL-201, BL-203) is built in GitLab MR !4, 2026-10-19; build decisions in section 6a. Values tagged [Default] are starting values until the Material Planning team confirms them (section 4) |
+| Status | **Accepted 2026-10-19.** The owner approved every requirement, default, backlog row and decision in this file ("approve all", 2026-10-19). Wave 1 (BL-187, BL-192, BL-200, BL-201, BL-203) is built in GitLab MR !4 and wave 2 (BL-188, BL-190, BL-193, BL-195, BL-197) in MR !5, 2026-10-19; build decisions in sections 6a and 6b. Values tagged [Default] are starting values until the Material Planning team confirms them (section 4) |
 | Date | 2026-10-19 |
 | Source meeting | Weekly SC Hub, 2026-10-14: DA, ROP and call-off. Cited as [MoM n] |
 | Other sources | *OSIP Playbook.pptx* (SharePoint, FSE Laboratory), cited [PPT n] by slide; *Framework OSIP PM 2026* (Google Sheets), cited [XLS sheet]. Neither is stored in this repository |
@@ -326,6 +326,25 @@ Readings the builders made where the sources leave a gap. Each sits behind a rul
 | DRC-B12 | Feedstock reconcile rows (DRC-15a) | A row for every supplier × material with a PO line or a released call-off. No blanket-PO flag exists, so direct POs show their full quantity as "not yet called off" |
 | DRC-B13 | Feedstock reconcile quantities (DRC-15a) | PO ordered excludes rejected POs; value-only PO lines add no quantity (noted). Called off = requested quantity on released call-offs. ASN requested counts Submitted, In Transit, Delivered and Discrepancy |
 | DRC-B14 | Fixed stock cycle setting (REQ-E06-04 BR-01) | Kept in Administration, marked "not in use"; no page reads it |
+
+## 6b. Build decisions, wave 2 (2026-10-19)
+
+| ID | Item | Decision |
+|---|---|---|
+| DRC-B15 | MPQ (DRC-2, DRC-7) | MPQ = `MaterialSource.orderMultiple` until the master data feed carries MPQ |
+| DRC-B16 | Carry-over limit (DRC-2 BR-04, A8b) | Not applied: sales orders are per FG SKU, so the hub has no quantity per supplier × material. Each figure is flagged; the limit path is built and tested |
+| DRC-B17 | OSPR (DRC-4) | Counts 0, flagged: the hub's purchase requisitions carry no material code |
+| DRC-B18 | OSPO start (DRC-2 BR-05) | Chains from the previous planning week's publication; with none, starts from the open PO not yet called off (blanket balance), flagged |
+| DRC-B19 | PR in the plan check (DRC-4) | The PR ZPE007 would generate, max(0, −PR generated), as in the PPT 7 fixture |
+| DRC-B20 | No lead time (DRC-2 BR-01) | A pair without a lead time uses a 4-week horizon, flagged |
+| DRC-B21 | Publishing (DRC-2, CAP-D13) | One verb records the week's figures and the supplier's agreement to carry outside the horizon (`agreedFirstOutside`, that planning week only). Re-publishing in the same week appends a record that supersedes the earlier one; an identical one is refused. CAP-D13's "once only" is dropped |
+| DRC-B22 | Own remainder (DRC-2 BR-03) | A remainder made this planning week shows as "carried to Wxx" and enters the figures from the next planning week, as PPT 8 week 2 reads |
+| DRC-B23 | Surplus alert (DRC-4 BR-02) | `demandAnticipationUnabsorbed` now fires on a surplus the last week cannot take (replaces the CAP-11 weeks 5 to 8 alert) |
+| DRC-B24 | ROP Fisik safety inputs (DRC-7 BR-02) | Production capacity is left out of the min (no PTI figure); "highest consumption of 3 months" = highest recorded week of the last 13 ÷ 7; the LTP term = mean weekly LTP over the lead time ÷ 7 |
+| DRC-B25 | Consumption per supplier (DRC-7, DRC-18) | The OSIP safety figures and the DRC-18 rows split a material's consumption by the supplier's LTP share over the share window (CAP-D11). The recorded-consumption grid on Demand anticipation keeps CAP-D14's split by each supplier's share of that week's demand anticipation. Aligning the two is open |
+| DRC-B26 | CV (DRC-11) | Historical weekly sell-in for the 26 weeks before now, stock-outs filled as the engine fills them; each SKU is its own variant (no variant grouping in the data) |
+| DRC-B27 | Production limit (DRC-9b) | The existing "Allocated" row on PTI Capacity is the production limit, relabelled and marked Provisional |
+| DRC-B28 | Strategic buffer (DRC-9a) | Festive window = the months from the first day of Ramadan to Lebaran (event calendar); CNY is not in the calendar and is not shown; an incomplete baseline shows "—" |
 
 ## 7. Build order
 
