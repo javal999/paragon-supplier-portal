@@ -41,7 +41,12 @@ import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 // tell the reader their own action happened weeks ago.
 export const TODAY = DECLARED_PRESENT;
 
-/** @typedef {'all' | 'open' | 'pending' | 'awarded' | 'closed'} GroupTab */
+// RFx UX 1D (B-04) — the board opens on "Needs my action"; "All" is gone and
+// Draft has its own tab, so every status sits in exactly one tab.
+/** @typedef {'action' | 'open' | 'pending' | 'draft' | 'awarded' | 'closed'} GroupTab */
+
+// RFx UX 1D (B-04) — a KPI tile, clicked, filters the table to the RFQs it counts.
+/** @typedef {'active' | 'awaiting' | 'ready' | 'awarded'} KpiFilter */
 
 // Category label keys — the RFQCategory enum stays the logic value; only the
 // rendered label is localized (mirrors the type-label precedent in contracts.js).
