@@ -374,6 +374,14 @@ export const rfxEn = {
   'rfx.confirm.cancel.title': 'Confirm cancelling the award',
   'rfx.confirm.cancel.who': 'Suppliers named in this award: {{names}}',
   'rfx.confirm.cancel.kept': 'The award stays on record, marked Cancelled.',
+  // — BL-212: cancelling a whole RFQ from the board's side panel —
+  'rfx.confirm.cancelRfq.title': 'Confirm cancelling the RFQ',
+  'rfx.confirm.cancelRfq.confirm': 'Cancel the RFQ',
+  'rfx.confirm.cancelRfq.who': '{{invited}} suppliers invited; {{quoted}} sent a quote.',
+  'rfx.confirm.cancelRfq.closes':
+    'The RFQ moves to Cancelled: suppliers can no longer quote and no award can be recorded.',
+  'rfx.confirm.cancelRfq.quotes': 'Quotes already sent stay as they are; none is rejected.',
+  'rfx.confirm.cancelRfq.final': 'This cannot be undone: a cancelled RFQ cannot be reopened.',
   // — RFx UX 1C (B-01): the RFQ event page's stage bar and section nav —
   'rfx.stage.label': 'Stage',
   'rfx.stage.next': 'Next',
@@ -1043,6 +1051,16 @@ export const rfxId = {
   'rfx.confirm.cancel.title': 'Konfirmasi pembatalan penetapan',
   'rfx.confirm.cancel.who': 'Pemasok dalam penetapan ini: {{names}}',
   'rfx.confirm.cancel.kept': 'Penetapan tetap tercatat, dengan status Dibatalkan.',
+  // — BL-212: membatalkan seluruh RFQ dari panel samping —
+  'rfx.confirm.cancelRfq.title': 'Konfirmasi pembatalan RFQ',
+  'rfx.confirm.cancelRfq.confirm': 'Batalkan RFQ',
+  'rfx.confirm.cancelRfq.who': '{{invited}} pemasok diundang; {{quoted}} mengirim penawaran.',
+  'rfx.confirm.cancelRfq.closes':
+    'RFQ berstatus Dibatalkan: pemasok tidak dapat lagi menawar dan pemenang tidak dapat dicatat.',
+  'rfx.confirm.cancelRfq.quotes':
+    'Penawaran yang sudah masuk tetap seperti adanya; tidak ada yang ditolak.',
+  'rfx.confirm.cancelRfq.final':
+    'Tindakan ini tidak dapat dibatalkan: RFQ yang dibatalkan tidak dapat dibuka kembali.',
   // — RFx UX 1C (B-01): the RFQ event page's stage bar and section nav —
   'rfx.stage.label': 'Tahap',
   'rfx.stage.next': 'Berikutnya',

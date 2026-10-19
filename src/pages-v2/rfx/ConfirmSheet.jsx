@@ -98,6 +98,24 @@ export function closeEffects(t, { invited, responded }) {
 }
 
 /**
+ * BL-212 — cancelling a whole RFQ (`t_rfq_cancel`, Draft/Open/Closed →
+ * Cancelled): who is affected, what closes, and that no verb leaves Cancelled.
+ * The verb takes no reason (`requiredFields: []`) and declares no cascade, so
+ * the quotes already in are left as they are — the sheet says exactly that.
+ * @param {TFunction} t
+ * @param {{ invited: number; quoted: number }} counts
+ * @returns {Effect[]}
+ */
+export function cancelRfqEffects(t, { invited, quoted }) {
+  return [
+    { key: 'who', text: t('rfx.confirm.cancelRfq.who', { invited, quoted }) },
+    { key: 'closes', text: t('rfx.confirm.cancelRfq.closes') },
+    { key: 'quotes', text: t('rfx.confirm.cancelRfq.quotes') },
+    { key: 'final', text: t('rfx.confirm.cancelRfq.final') }
+  ];
+}
+
+/**
  * The suppliers a FINAL award records as not awarded, read as the award verb
  * writes `notAwardedSupplierIds`: everyone in `pool` (an RFQ's invitees, an
  * RFP's responders) that neither an award in force nor this one names. A

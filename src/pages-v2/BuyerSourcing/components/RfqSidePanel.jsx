@@ -134,6 +134,7 @@ const RfqSidePanel = ({
           {/* Lifecycle actions (F0.3): the non-award sourcing verbs, each in
               its own from-states, and "Save as template". */}
           <RfqLifecycleActions
+            key={selectedRfq.id}
             selectedRfq={selectedRfq}
             rfqCreateAvailability={rfqCreateAvailability}
             rfqVerbs={rfqVerbs}
@@ -144,6 +145,7 @@ const RfqSidePanel = ({
             publishPending={actions.publishMutation.isPending}
             reopenPending={actions.reopenMutation.isPending}
             cancelPending={actions.cancelMutation.isPending}
+            quotedCount={new Set(panelQuotes.quotesForSelected.map((q) => q.supplierId)).size}
             onSaveTemplate={saveTemplate}
             t={t}
           />
