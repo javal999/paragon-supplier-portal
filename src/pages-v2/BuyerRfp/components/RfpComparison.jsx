@@ -14,6 +14,16 @@ import { DocumentsStatus } from '../../rfx/SupplierDocumentsPanel';
 import { qty } from '../../rfx/rfxDisplay';
 
 /**
+ * How many term rows the comparison lists — read by the comparison AND by the
+ * event page's "Jump to" nav (RFx UX 2F), so the count is the rows shown.
+ * Null for a Draft with no proposal, which shows "No proposals received yet".
+ * @param {RfpEventView} event
+ * @returns {number | null}
+ */
+export const rfpComparisonTermCount = (event) =>
+  event.responses.length === 0 && event.status === 'Draft' ? null : event.terms.length;
+
+/**
  * REQ-E03-04 — terms as rows, suppliers as columns, deviations highlighted.
  * RFx UX B-06 — from publish onward the grid shows what was sent: before the
  * first proposal it is "Terms sent" with the "PTI asks for" column alone, then
@@ -32,7 +42,7 @@ const RfpComparison = ({ event }) => {
   );
 
   const none = event.responses.length === 0;
-  if (none && event.status === 'Draft') {
+  if (rfpComparisonTermCount(event) === null) {
     return (
       <p className="py-10 text-center text-sm text-text-tertiary" data-testid="rfp-no-proposals">
         {t('rfx.rfp.noProposals')}

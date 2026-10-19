@@ -33,7 +33,7 @@ export const rfxEn = {
   'rfx.cancel': 'Cancel',
   'rfx.save': 'Save draft',
   'rfx.send': 'Send',
-  'rfx.close': 'Close',
+  'rfx.collapse': 'Collapse',
 
   // — Purchasing groups (REQ-E03-01 BR-01) ——————————————————————————————
   'rfx.pg.101': 'Primary packaging',
@@ -720,7 +720,7 @@ export const rfxId = {
   'rfx.cancel': 'Batal',
   'rfx.save': 'Simpan draf',
   'rfx.send': 'Kirim',
-  'rfx.close': 'Tutup',
+  'rfx.collapse': 'Ciutkan',
 
   'rfx.pg.101': 'Kemasan primer',
   'rfx.pg.102': 'Bahan baku',

@@ -393,7 +393,7 @@ const SupplierRfi = () => {
                     data-testid={`supplier-rfi-open-${event.id}`}
                   >
                     {opened
-                      ? t('rfx.close')
+                      ? t('rfx.collapse')
                       : rowAction === 'answer'
                         ? t('rfx.rfi.answer')
                         : t(`rfxa.row.${rowAction}`)}

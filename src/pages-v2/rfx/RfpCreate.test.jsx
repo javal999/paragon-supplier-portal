@@ -129,10 +129,12 @@ describe('section 3.6a — the buyer raises a proposal request', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Send to suppliers' }));
 
-    const detail = await screen.findByTestId('rfp-detail-rfp-0005');
-    expect(detail).toHaveTextContent('RFP-2026-005');
-    expect(detail).toHaveTextContent(TITLE);
-    expect(within(detail).getByText('Open')).toBeInTheDocument();
+    await screen.findByTestId('rfp-detail-rfp-0005');
+    // RFx UX 2F — the number, title and status are the page header's (the
+    // About card no longer repeats them).
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(TITLE);
+    expect(screen.getByText('RFP-2026-005')).toBeInTheDocument();
+    expect(screen.getByTestId('rfp-event-status')).toHaveTextContent('Open');
     // An Open event offers Close, never Send again.
     expect(screen.queryByTestId('rfp-send-rfp-0005')).not.toBeInTheDocument();
     expect(screen.getByTestId('rfp-close-rfp-0005')).toBeInTheDocument();
@@ -169,8 +171,8 @@ describe('section 3.6a — the buyer raises a proposal request', () => {
     await walkToReview();
     fireEvent.click(screen.getByTestId('rfp-new-save-draft'));
 
-    const detail = await screen.findByTestId('rfp-detail-rfp-0005');
-    expect(within(detail).getByText('Draft')).toBeInTheDocument();
+    await screen.findByTestId('rfp-detail-rfp-0005');
+    expect(screen.getByTestId('rfp-event-status')).toHaveTextContent('Draft');
     expect(screen.getByTestId('rfp-draft-notice-rfp-0005')).toBeInTheDocument();
     expect(screen.getByTestId('rfp-send-rfp-0005')).toBeInTheDocument();
     expect(screen.queryByTestId('rfp-close-rfp-0005')).not.toBeInTheDocument();

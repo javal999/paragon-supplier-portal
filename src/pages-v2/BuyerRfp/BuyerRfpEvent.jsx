@@ -33,6 +33,7 @@ import { RFP_STAGE_STEPS, rfpStageOf } from '../rfx/rfxEventStage';
 import { rfxNow } from '../rfx/rfxDisplay';
 import EventSectionNav from '../BuyerSourcingEvent/components/EventSectionNav';
 import RfpDetail, { rfpSectionsShown } from './components/RfpDetail';
+import { rfpComparisonTermCount } from './components/RfpComparison';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ONE PROPOSAL REQUEST — REQ-E03-04 (BUY), on its own page.
@@ -154,11 +155,18 @@ const BuyerRfpEvent = () => {
     done: ''
   };
   const shown = rfpSectionsShown(open);
+  const termCount = rfpComparisonTermCount(open);
   const docCount = open.responses.reduce((n, r) => n + (r.documents ?? []).length, 0);
   const navEntries = [
     { id: 'rfp-event-about', labelKey: 'rfx.nav.about', count: '' },
     { id: 'rfp-event-invitees', labelKey: 'rfx.nav.invited', count: String(invited) },
-    { id: 'rfp-event-comparison', labelKey: 'rfx.nav.terms', count: String(responded) },
+    // RFx UX 2F — each count is what its section lists: the terms comparison
+    // lists one row per term sent, before and after proposals.
+    {
+      id: 'rfp-event-comparison',
+      labelKey: 'rfx.nav.terms',
+      count: termCount === null ? '' : String(termCount)
+    },
     ...(shown.pricing
       ? [
           {
@@ -169,7 +177,15 @@ const BuyerRfpEvent = () => {
         ]
       : []),
     ...(shown.firmUp
-      ? [{ id: 'rfp-event-firmup', labelKey: 'rfx.nav.firmUp', count: String(openRounds.length) }]
+      ? [
+          {
+            // The firm-offer rounds the section lists; no count before the first
+            // round, since "0" beside two choices reads as missing data.
+            id: 'rfp-event-firmup',
+            labelKey: 'rfx.nav.firmUp',
+            count: openRounds.length > 0 ? String(openRounds.length) : ''
+          }
+        ]
       : []),
     ...(shown.award
       ? [

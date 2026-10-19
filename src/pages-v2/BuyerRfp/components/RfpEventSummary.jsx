@@ -1,28 +1,22 @@
 /** @import React from 'react' */
 /** @import { RfpEventView } from '@services/sourcing/views' */
 import { useTranslation } from 'react-i18next';
-import Data from '@components/ui-v2/Data';
-import StatusPill from '@components/ui-v2/StatusPill';
 import { EventSourcingType, QualificationWarningsNote } from '../../rfx/eligibilityDisplay';
 import { DraftRevisionNote } from '../../rfx/draftEdit';
 
 /**
- * The open event's identity block: number, title, status, sourcing type, the
- * published qualification warnings, the RFI it came from and the last edit.
- * Moved out of `BuyerRfp.jsx` by the Phase 5 page split (no behaviour change).
+ * The open event's identity block: sourcing type, the published qualification
+ * warnings, the RFI it came from and the last edit. The number, title and
+ * status are the page header's, so the card does not repeat them (RFx UX 2F).
+ * Moved out of `BuyerRfp.jsx` by the Phase 5 page split.
  * @type {React.FC<{ open: RfpEventView; supplierName: (supplierId: string) => string }>}
  */
 const RfpEventSummary = ({ open, supplierName }) => {
   const { t } = useTranslation();
   return (
     <div>
-      <Data className="font-semibold">{open.eventNumber}</Data>
-      <h3 className="text-sm font-semibold text-text-primary">{open.title}</h3>
-      <StatusPill variant={open.closed ? 'neutral' : 'info'} className="mt-1">
-        {t(`rfx.status.${open.status}`)}
-      </StatusPill>
       {/* Material G2 (MR-10 BR-06) — the type, fixed at publish. */}
-      <div className="mt-1">
+      <div>
         <EventSourcingType
           event={{
             kind: 'rfp',

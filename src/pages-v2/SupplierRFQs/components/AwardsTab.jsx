@@ -13,6 +13,17 @@ import Data from '@components/ui-v2/Data';
 const RESULT_PILL = { awarded: 'success', notAwarded: 'neutral', withdrawn: 'warning' };
 
 /**
+ * RFx UX 2F — the one placeholder for an empty value cell: the same dash, at
+ * the same weight and colour, whichever column it stands in.
+ * @type {React.FC<{ testId: string }>}
+ */
+const NoValue = ({ testId }) => (
+  <span className="text-sm font-normal text-text-tertiary" data-testid={testId}>
+    —
+  </span>
+);
+
+/**
  * The "Award history" tab: one row per event the supplier reads an award on,
  * from the award record (RFx UX S-03); the empty state when nothing has been
  * decided. `rows` is `buildAwardRows`' output. The win-rate tile is gone (owner
@@ -62,10 +73,20 @@ const AwardsTab = ({ rows }) => {
               <TableCell className="text-text-tertiary text-sm whitespace-nowrap">
                 <Data>{row.awardDate}</Data>
               </TableCell>
-              <TableCell className="text-right font-semibold whitespace-nowrap">
-                <Data>{row.awardedValue}</Data>
+              <TableCell className="text-right whitespace-nowrap">
+                {row.awardedValue === null ? (
+                  <NoValue testId={`award-none-value-${row.eventId}`} />
+                ) : (
+                  <Data className="font-semibold">{row.awardedValue}</Data>
+                )}
               </TableCell>
-              <TableCell className="text-xs text-text-secondary">{row.poIssued}</TableCell>
+              <TableCell className="text-xs text-text-secondary">
+                {row.poIssued === null ? (
+                  <NoValue testId={`award-none-po-${row.eventId}`} />
+                ) : (
+                  row.poIssued
+                )}
+              </TableCell>
             </TableRow>
           ))}
         </tbody>

@@ -82,7 +82,7 @@ export const sourcingEn = {
   'sourcing.awards.col.actions': 'Actions',
   'sourcing.awards.empty': 'No awarded RFQs yet.',
   // — Side panel —
-  'sourcing.panel.title': 'RFQ {{number}} — {{title}}',
+  'sourcing.panel.title': '{{number}} — {{title}}',
   'sourcing.panel.exportComparison': 'Export comparison',
   'sourcing.panel.awardSummary': 'Award summary',
   'sourcing.panel.awardedTo': 'Awarded to',
@@ -443,7 +443,7 @@ export const sourcingId = {
   'sourcing.awards.col.actions': 'Tindakan',
   'sourcing.awards.empty': 'Belum ada RFQ yang dimenangkan.',
   // — Side panel —
-  'sourcing.panel.title': 'RFQ {{number}} — {{title}}',
+  'sourcing.panel.title': '{{number}} — {{title}}',
   'sourcing.panel.exportComparison': 'Ekspor perbandingan',
   'sourcing.panel.awardSummary': 'Ringkasan pemenangan',
   'sourcing.panel.awardedTo': 'Dimenangkan oleh',

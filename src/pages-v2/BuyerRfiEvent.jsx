@@ -267,14 +267,10 @@ const RfiDetail = ({
         id="rfi-event-about"
         className="scroll-mt-4 bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-4"
       >
+        {/* RFx UX 2F — the number, title and status are the page header's; the card does not repeat them. */}
         <div>
-          <Data className="font-semibold">{event.eventNumber}</Data>
-          <h3 className="text-sm font-semibold text-text-primary">{event.title}</h3>
-          <StatusPill variant={event.closed ? 'neutral' : 'info'} className="mt-1">
-            {t(`rfx.status.${event.status}`)}
-          </StatusPill>
           {/* Material G2 (MR-10 BR-06) — the type, fixed at publish. */}
-          <div className="mt-1">
+          <div>
             <EventSourcingType
               event={{
                 kind: 'rfi',
