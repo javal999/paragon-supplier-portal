@@ -314,6 +314,8 @@ describe('REQ-E03-02 — closing the window stops the answers', () => {
     renderWithProviders(<BuyerRfi />, { identity: BUYER_SEAT });
     fireEvent.click(await screen.findByTestId('rfi-open-rfi-001'));
     fireEvent.click(await screen.findByTestId('rfi-close-rfi-001'));
+    // RFx UX 1C (B-05) — the close is dispatched from its confirmation sheet.
+    fireEvent.click(await screen.findByTestId('rfi-close-confirm-rfi-001'));
     await waitFor(() => expect(rfiEventStore.get('rfi-001')?.status).toBe('Closed'));
     // A Closed event offers Extend and no longer offers Close.
     expect(screen.queryByTestId('rfi-close-rfi-001')).not.toBeInTheDocument();

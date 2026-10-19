@@ -297,6 +297,8 @@ describe('REQ-E03-04 — closing the window stops the proposals', () => {
     renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-001'));
     fireEvent.click(await screen.findByTestId('rfp-close-rfp-001'));
+    // RFx UX 1C (B-05) — the close is dispatched from its confirmation sheet.
+    fireEvent.click(await screen.findByTestId('rfp-close-confirm-rfp-001'));
     await waitFor(() => expect(rfpEventStore.get('rfp-001')?.status).toBe('Closed'));
     // Closed no longer offers Close, and still offers Extend.
     expect(screen.queryByTestId('rfp-close-rfp-001')).not.toBeInTheDocument();

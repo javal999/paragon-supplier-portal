@@ -1,4 +1,5 @@
 /** @import React from 'react' */
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
@@ -6,8 +7,9 @@ import { useVerbAvailability } from '@hooks/useVerbAvailability';
 /** @import { RfpAwardView, RfpEventView, RfpOfferRoundView } from '@services/sourcing/views' */
 /** @import { RfxCommandVars } from '@services/query/commandHooks' */
 /** @import { ItemPanelAward } from './AwardPanel' */
-import { RfpAwardPanel, awardableFirmPrices } from './AwardPanel';
+import { RfpAwardPanel, awardableFirmPrices, optionsOfRounds } from './AwardPanel';
 import { RfpAwardRecords } from './AwardRecords';
+import { ConfirmSheet, awardEffects, notAwardedOnFinal } from './ConfirmSheet';
 /** @import { RfpAwardLine } from '@services/sourcing/types' */
 import { rfpAwardedOptionRefs } from '@services/sourcing/rfpAward';
 import { rfxNow } from './rfxDisplay';
@@ -66,6 +68,12 @@ export const RfpAwardSection = ({ event, rounds, awards, gateOf, supplierName, p
   /** @param {string} sid */
   const qualifies = (sid) => gateOf(sid).passes;
   const noneAwardable = bidders.length > 0 && bidders.every((sid) => !qualifies(sid));
+  // RFx UX 1C (B-05) — the award the panel asked for, held for the
+  // confirmation sheet. Nothing is dispatched until the buyer confirms it.
+  const [draft, setDraft] = useState(/** @type {ItemPanelAward<RfpAwardLine> | null} */ (null));
+  const options = optionsOfRounds(rounds);
+  /** @param {string} ref */
+  const optionTitle = (ref) => options.find((o) => o.ref === ref)?.title ?? ref;
 
   /** @param {ItemPanelAward<RfpAwardLine>} a */
   const sendAward = (a) =>
@@ -81,6 +89,20 @@ export const RfpAwardSection = ({ event, rounds, awards, gateOf, supplierName, p
         : { verb: 'awardRfpPartial', rfpId: event.id, awardLines: a.lines, awardReason: a.reason },
       'rfx.toast.awarded'
     );
+  const effects = draft
+    ? awardEffects(t, {
+        award: draft,
+        // NR-2 BR-09 — a final RFP award names the responders no award named.
+        notAwarded: notAwardedOnFinal(
+          draft,
+          inForce,
+          event.responses.map((r) => r.supplierId)
+        ),
+        supplierName,
+        lineItem: (line) => ({ key: line.optionRef, label: optionTitle(line.optionRef) }),
+        itemLabel: optionTitle
+      })
+    : [];
 
   return (
     <section
@@ -171,8 +193,22 @@ export const RfpAwardSection = ({ event, rounds, awards, gateOf, supplierName, p
                 supplierName={supplierName}
                 noneAwardable={noneAwardable}
                 pending={pending}
-                onAward={sendAward}
+                onAward={setDraft}
               />
+              {!!draft && (
+                <ConfirmSheet
+                  title={t('rfx.confirm.award.title')}
+                  effects={effects}
+                  confirmLabel={t('rfx.confirm.award.record')}
+                  pending={pending}
+                  onConfirm={() => {
+                    sendAward(draft);
+                    setDraft(null);
+                  }}
+                  onBack={() => setDraft(null)}
+                  testId="award-sheet"
+                />
+              )}
             </div>
           )}
           {awards.length === 0 && (

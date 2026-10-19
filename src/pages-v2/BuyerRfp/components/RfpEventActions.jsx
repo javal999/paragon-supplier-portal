@@ -2,9 +2,11 @@
 /** @import { RfpEventView } from '@services/sourcing/views' */
 /** @import { VerbAvailability } from '@services/transitions/handoff' */
 /** @import { RfxCommandVars } from '@services/query/commandHooks' */
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Button from '@components/ui-v2/Button';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { ConfirmSheet, closeEffects } from '../../rfx/ConfirmSheet';
 
 /**
  * The acts the open event's STATE allows: Edit draft / Send / Discard on a
@@ -21,6 +23,10 @@ import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
  */
 const RfpEventActions = ({ open, create, publish, run, setEditingId }) => {
   const { t } = useTranslation();
+  // RFx UX 1C (B-05) — "Close the event" opens a confirmation sheet; the
+  // close is dispatched only from the sheet.
+  // Held by event id, so moving to another event never carries the sheet over.
+  const [confirmClose, setConfirmClose] = useState(/** @type {string | null} */ (null));
   return (
     <div className="flex flex-wrap items-center gap-3">
       {open.status === 'Draft' &&
@@ -64,10 +70,30 @@ const RfpEventActions = ({ open, create, publish, run, setEditingId }) => {
           variant="secondary"
           disabled={publish.kind !== 'held'}
           data-testid={`rfp-close-${open.id}`}
-          onClick={() => run({ verb: 'closeRfp', rfpId: open.id }, 'rfx.toast.closed')}
+          onClick={() => setConfirmClose(open.id)}
         >
           {t('rfx.rfp.closeEvent')}
         </Button>
+      )}
+      {confirmClose === open.id && open.status === 'Open' && (
+        <div className="basis-full">
+          <ConfirmSheet
+            title={t('rfx.confirm.close.title')}
+            effects={closeEffects(t, {
+              invited: open.invitedSuppliers.length,
+              responded: open.responses.length
+            })}
+            confirmLabel={t('rfx.rfp.closeEvent')}
+            confirmDisabled={publish.kind !== 'held'}
+            onConfirm={() => {
+              setConfirmClose(null);
+              run({ verb: 'closeRfp', rfpId: open.id }, 'rfx.toast.closed');
+            }}
+            onBack={() => setConfirmClose(null)}
+            testId={`rfp-close-sheet-${open.id}`}
+            confirmTestId={`rfp-close-confirm-${open.id}`}
+          />
+        </div>
       )}
     </div>
   );

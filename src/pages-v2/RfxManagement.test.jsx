@@ -1133,6 +1133,8 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     });
     await waitFor(() => expect(screen.getByTestId('award-confirm')).toBeEnabled());
     fireEvent.click(screen.getByTestId('award-confirm'));
+    // RFx UX 1C (B-05) — the award is dispatched from its confirmation sheet.
+    fireEvent.click(await screen.findByTestId('award-sheet-confirm'));
     await waitFor(() =>
       expect(
         /** @type {import('@services/sourcing/types').RfpEvent} */ (rfpEventStore.get('rfp-002'))
@@ -1240,6 +1242,8 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     });
     await waitFor(() => expect(within(settle).getByTestId('award-will-not-rest')).toBeEnabled());
     fireEvent.click(within(settle).getByTestId('award-will-not-rest'));
+    // RFx UX 1C (B-05) — the award is dispatched from its confirmation sheet.
+    fireEvent.click(await screen.findByTestId('award-sheet-confirm'));
     await waitFor(() =>
       expect(
         /** @type {import('@services/sourcing/types').RfpEvent} */ (rfpEventStore.get('rfp-002'))

@@ -110,19 +110,26 @@ const ComparisonSection = ({
           {t('rfx.cmp.single')}
         </p>
       )}
+      {/* RFx UX 1C (B-01) — the per-item, per-break tables fold behind the
+          summary above; the buyer opens them with "Show every break". */}
       {tiered && evalQty !== null && current.length > 0 && (
-        <div className="p-4 border-t border-border-subtle">
-          <TieredComparison
-            rfq={rfq}
-            quotes={current}
-            evalQty={evalQty}
-            qualifies={qualifies}
-            gateOf={gateOf}
-            supplierName={supplierName}
-            reliabilityOf={reliabilityOf}
-            scoringOpts={scoringOpts}
-          />
-        </div>
+        <details className="p-4 border-t border-border-subtle" data-testid="cmp-every-break">
+          <summary className="cursor-pointer text-sm text-action-hover">
+            {t('rfx.cmp.showEveryBreak')}
+          </summary>
+          <div className="mt-3">
+            <TieredComparison
+              rfq={rfq}
+              quotes={current}
+              evalQty={evalQty}
+              qualifies={qualifies}
+              gateOf={gateOf}
+              supplierName={supplierName}
+              reliabilityOf={reliabilityOf}
+              scoringOpts={scoringOpts}
+            />
+          </div>
+        </details>
       )}
     </section>
   );
