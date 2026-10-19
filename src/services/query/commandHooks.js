@@ -2794,7 +2794,10 @@ export function useOsipLevelCommand() {
       qc.invalidateQueries({
         predicate: (q) =>
           q.queryKey[0] === 'procurement' &&
-          (q.queryKey[1] === 'safetyStock' || q.queryKey[1] === 'npdReviews')
+          (q.queryKey[1] === 'safetyStock' ||
+            q.queryKey[1] === 'npdReviews' ||
+            // BL-205 — the protection buffer reads the level in force.
+            q.queryKey[1] === 'protectionBufferInputs')
       });
     }
   });
