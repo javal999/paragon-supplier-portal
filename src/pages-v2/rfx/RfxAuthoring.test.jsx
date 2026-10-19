@@ -139,8 +139,10 @@ describe('the supplier form renders and validates every kind (the Oslo RFI)', ()
     }
     // The buyer-added section and the buyer's documents are there.
     expect(screen.getByText('Printing and finishing')).toBeInTheDocument();
+    // RFx UX S-11 — a PTI file this session does not hold tells the supplier
+    // whom to ask, not "not available in this session".
     expect(screen.getByTestId('supplier-rfi-attachments-rfi-002')).toHaveTextContent(
-      /not available in this session/i
+      "PTI's file is not stored yet; ask your buyer for it"
     );
     expect(screen.getByTestId('rfi-field-indicative-oslo-price')).toHaveTextContent('Indicative');
     expect(screen.getByTestId('rfi-field-oslo-machine')).toHaveTextContent(

@@ -64,6 +64,7 @@ import { builtInDuplicates, builtInLabels, copyAnsweredFields } from './rfx/buil
 /** @import { DocumentDraft } from './rfx/ResponseDocumentsSection' */
 import ResponseDocumentsSection from './rfx/ResponseDocumentsSection';
 import { ResponseVersionLine, ReviseControls } from './rfx/ResponseRevise';
+import { DaysLeftPill, rfpAwardedTo, supplierRowAction } from './rfx/supplierRowState';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER PROPOSAL REQUESTS — REQ-E03-04 (SUP).
@@ -463,6 +464,19 @@ const SupplierRfp = () => {
               ? [{ anchor: `supplier-rfp-docs-${event.id}`, label: t('rfx.form.anchor.documents') }]
               : [])
           ]);
+          const deadline =
+            event.invitedSuppliers.find((i) => i.supplierId === supplierId)?.deadline ??
+            event.responseDeadline;
+          const eventAwards = (rfpAwards.data?.items ?? []).filter((a) => a.eventId === event.id);
+          // S-10 — the button says what the supplier can do on this row, and an
+          // award in force for this supplier shows on the row, not only inside.
+          const rowAction = supplierRowAction({
+            submitted,
+            windowOpen,
+            closed: event.closed,
+            held: answerVerb.kind === 'held'
+          });
+          const awarded = rfpAwardedTo(eventAwards, supplierId);
           return (
             <section
               key={event.id}
@@ -485,13 +499,18 @@ const SupplierRfp = () => {
                   {event.confidentiality && (
                     <StatusPill variant="neutral">{t('rfxa.conf.pill')}</StatusPill>
                   )}
-                  <DeadlinePill
-                    deadline={
-                      event.invitedSuppliers.find((i) => i.supplierId === supplierId)?.deadline ??
-                      event.responseDeadline
-                    }
-                    done={mine?.status === 'Submitted'}
+                  <DeadlinePill deadline={deadline} done={mine?.status === 'Submitted'} />
+                  <DaysLeftPill
+                    deadline={deadline}
+                    nowIso={rfxNow()}
+                    done={submitted || event.closed}
+                    testId={`supplier-rfp-days-left-${event.id}`}
                   />
+                  {awarded ? (
+                    <span data-testid={`supplier-rfp-awarded-${event.id}`}>
+                      <StatusPill variant="success">{t('rfxa.row.awarded')}</StatusPill>
+                    </span>
+                  ) : null}
                   <StatusPill
                     variant={
                       mine?.status === 'Submitted' ? 'success' : started ? 'info' : 'neutral'
@@ -506,7 +525,11 @@ const SupplierRfp = () => {
                     onClick={() => setOpenId(opened ? null : event.id)}
                     data-testid={`supplier-rfp-open-${event.id}`}
                   >
-                    {opened ? t('rfx.close') : t('rfx.rfp.answer')}
+                    {opened
+                      ? t('rfx.close')
+                      : rowAction === 'answer'
+                        ? t('rfx.rfp.answer')
+                        : t(`rfxa.row.${rowAction}`)}
                   </Button>
                 </div>
               </header>
@@ -886,7 +909,7 @@ const SupplierRfp = () => {
               <SupplierFirmOffers
                 event={event}
                 rounds={(offerRounds.data?.items ?? []).filter((r) => r.rfpId === event.id)}
-                awards={(rfpAwards.data?.items ?? []).filter((a) => a.eventId === event.id)}
+                awards={eventAwards}
                 supplierId={supplierId}
                 pending={command.isPending}
                 send={(vars, successKey) => command.mutate(vars, report(successKey))}

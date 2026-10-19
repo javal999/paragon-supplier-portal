@@ -16,6 +16,7 @@ import {
 } from '../../rfqs/RfqEngagementControls';
 import { CHANNEL_ICON } from '../const';
 import EvalBar from './EvalBar';
+import RfqStepStrip from './RfqStepStrip';
 /** @import { RfqClarificationView, RfqEngagementView } from '@services/sourcing/rfqResponse' */
 /** @import { OpenRFQ } from '../utils' */
 
@@ -30,9 +31,9 @@ import EvalBar from './EvalBar';
 
 /**
  * One open RFQ as a card: its header (number, deadline, project, channel), the
- * quantities and dates, the tiered items, the special requirements, the CR-15
- * evaluation bar, the engagement controls (confidentiality, intent), and the
- * quote entrance. `onSubmitQuote` opens the quote panel on this RFQ; the
+ * quantities and dates, the tiered items, the special requirements when the RFQ
+ * states any, the CR-15 evaluation bar, the step strip, the engagement controls
+ * (confidentiality, intent), and the quote entrance. `onSubmitQuote` opens the quote panel on this RFQ; the
  * entrance renders the handoff notice instead for a seat without
  * `quotation:submit`. `engagement` and `clarifications` are this supplier's own
  * engagement reads.
@@ -47,17 +48,27 @@ const RFQCard = ({ rfq, onSubmitQuote, supplierId, engagement, clarifications })
   const Icon = CHANNEL_ICON[rfq.receivedVia] ?? Inbox;
   const accentClass = urgent ? 'border-l-warning' : 'border-l-teal';
   const reqs = rfq.specialRequirements;
-  const showLongReqs = reqs.text.length > 80;
+  const showLongReqs = (reqs?.length ?? 0) > 80;
   const items = rfq.rfq.items ?? [];
   const tiered = items.length > 0;
   const intent = engagement?.intent?.intent;
   const declined = intent === 'decline';
-  // RFx spec 2026-09-21 — on the rebuilt (tiered) RFQ the supplier first says
-  // it will respond, and on a confidential one accepts the terms, before the
-  // quote grid opens. A legacy RFQ keeps today's single-price entrance: quoting
-  // it is itself the statement of intent.
+  // RFx UX S-07 — ONE entry pattern on every card, legacy and tiered alike:
+  // step 1 says whether the supplier will respond, step 2 is the quote, and a
+  // confidential RFQ puts its terms first as step 0. The quote opens once the
+  // steps before it are done. (RFx spec 2026-09-21 let a legacy RFQ skip step 1,
+  // quoting being itself the statement of intent; that made three entrances on
+  // one list, and S-07 retires the exception.)
   const termsOpen = !rfq.rfq.confidential || Boolean(engagement?.confidentialityAcceptedAt);
-  const quoteReady = !declined && (!tiered || (intent === 'respond' && termsOpen));
+  const responding = intent === 'respond';
+  const quoteReady = !declined && responding && termsOpen;
+  const steps = [
+    ...(rfq.rfq.confidential
+      ? [{ id: 'terms', label: t('rfqs.steps.terms'), done: termsOpen }]
+      : []),
+    { id: 'respond', label: t('rfqs.steps.respond'), done: responding },
+    { id: 'quote', label: t('rfqs.steps.quote'), done: false }
+  ];
 
   return (
     <div
@@ -107,7 +118,9 @@ const RFQCard = ({ rfq, onSubmitQuote, supplierId, engagement, clarifications })
           </span>
           <span>
             {t('rfqs.card.deadline')}{' '}
-            <strong className={urgent ? 'text-danger' : 'text-text-primary'}>{rfq.deadline}</strong>
+            <strong className={urgent ? 'text-danger' : 'text-text-primary'}>
+              {rfq.deadlineText}
+            </strong>
           </span>
         </div>
 
@@ -137,35 +150,34 @@ const RFQCard = ({ rfq, onSubmitQuote, supplierId, engagement, clarifications })
           </ul>
         )}
 
-        <div className="bg-bg-hover rounded-md px-3 py-2 mb-3">
-          <div className="text-label text-text-tertiary uppercase mb-1 flex items-center gap-2">
-            {t('rfqs.card.specialReqs')}
-            {/* Still illustrative where the RFQ states nothing of its own. */}
-            {reqs.sample && (
-              <StatusPill variant="neutral">{t('rfqs.card.sampleDetail')}</StatusPill>
-            )}
+        {/* S-12 — only what the RFQ itself states; no illustrative block. */}
+        {reqs ? (
+          <div className="bg-bg-hover rounded-md px-3 py-2 mb-3" data-testid={`rfq-reqs-${rfq.id}`}>
+            <div className="text-label text-text-tertiary uppercase mb-1">
+              {t('rfqs.card.specialReqs')}
+            </div>
+            <div className="text-xs text-text-secondary leading-relaxed">
+              {expanded || !showLongReqs ? reqs : reqs.slice(0, 80) + '…'}
+            </div>
+            {showLongReqs ? (
+              <button
+                type="button"
+                onClick={() => setExpanded(!expanded)}
+                className="mt-1 text-xs font-semibold text-teal-hover hover:text-teal-hover inline-flex items-center gap-1"
+              >
+                {expanded ? (
+                  <>
+                    {t('rfqs.card.showLess')} <ChevronUp size={11} />
+                  </>
+                ) : (
+                  <>
+                    {t('rfqs.card.showMore')} <ChevronDown size={11} />
+                  </>
+                )}
+              </button>
+            ) : null}
           </div>
-          <div className="text-xs text-text-secondary leading-relaxed">
-            {expanded || !showLongReqs ? reqs.text : reqs.text.slice(0, 80) + '…'}
-          </div>
-          {showLongReqs && (
-            <button
-              type="button"
-              onClick={() => setExpanded(!expanded)}
-              className="mt-1 text-xs font-semibold text-teal-hover hover:text-teal-hover inline-flex items-center gap-1"
-            >
-              {expanded ? (
-                <>
-                  {t('rfqs.card.showLess')} <ChevronUp size={11} />
-                </>
-              ) : (
-                <>
-                  {t('rfqs.card.showMore')} <ChevronDown size={11} />
-                </>
-              )}
-            </button>
-          )}
-        </div>
+        ) : null}
 
         <div className="mb-4">
           <div className="text-label text-text-tertiary uppercase mb-2">
@@ -179,6 +191,8 @@ const RFQCard = ({ rfq, onSubmitQuote, supplierId, engagement, clarifications })
             {t('rfqs.eval.gate')}
           </p>
         </div>
+
+        {declined ? null : <RfqStepStrip steps={steps} testId={`rfq-steps-${rfq.id}`} />}
 
         <div className="mb-3 space-y-3">
           <RfqConfidentialityGate rfq={rfq.rfq} supplierId={supplierId} engagement={engagement} />
@@ -203,11 +217,7 @@ const RFQCard = ({ rfq, onSubmitQuote, supplierId, engagement, clarifications })
                 </Button>
               ) : (
                 <span className="text-xs text-text-tertiary" data-testid={`quote-waits-${rfq.id}`}>
-                  {t(
-                    intent === 'respond'
-                      ? 'rfqResponse.card.acceptFirst'
-                      : 'rfqResponse.card.respondFirst'
-                  )}
+                  {t(responding ? 'rfqResponse.card.acceptFirst' : 'rfqResponse.card.respondFirst')}
                 </span>
               )
             ) : (

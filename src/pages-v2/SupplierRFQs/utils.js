@@ -5,6 +5,7 @@
 import { BASE_CURRENCY } from '@lib/currencyPolicy';
 import { daysUntil } from '@services/data/dayProjection';
 import { formatDate, formatMoney, formatNumber } from '@lib/format';
+import { tiersForItem } from '@services/sourcing/rfqModel';
 import { EVAL_WEIGHTS } from './const';
 import {
   awardedValueOf,
@@ -26,16 +27,18 @@ import {
  * @property {number} totalQty -  The same quantity as a number — what the total-price preview multiplies.
  * @property {RFQ} rfq -  The RFQ itself, for the tiered response (items, breaks, questions).
  * @property {string} delivery -  The delivery terms the RFQ states (its incoterms).
- * @property {string} awardBy -  The date the buyer means to award by.
- * @property {string} deadline
+ * @property {string} awardBy -  The date the buyer means to award by, formatted (`formatDate`, S-08).
+ * @property {string} deadline -  The response deadline as stored (ISO), for the rules and the toast.
+ * @property {string} deadlineText -  The same deadline formatted (`formatDate`, S-08).
+ * @property {string} daysLeft -  The days left to the deadline in words ("5 days left", S-08).
  * @property {number} daysRemaining
- * @property {{ text: string; sample: boolean }} specialRequirements What the RFQ itself asks beyond the price: item notes, samples requested,
- *   alternatives allowed. `sample: true` when the RFQ states none of it and the
- *   card shows illustrative text, marked as such.
+ * @property {string | null} specialRequirements What the RFQ itself asks beyond the price: item notes, samples requested,
+ *   alternatives allowed. `null` when the RFQ states none of it: the card then
+ *   shows no block (RFx UX S-12 dropped the illustrative placeholder).
  * @property {{ price: number; leadTime: number; reliability: number; }} evaluationCriteria -  How the quote is scored — the platform's CR-15 weights, in percent.
  * @property {string} status
  * @property {string} receivedVia
- * @property {string} receivedDate
+ * @property {string} receivedDate -  Formatted (`formatDate`, S-08).
  */
 
 /**
@@ -52,7 +55,64 @@ import {
  * @property {string} status
  * @property {Quotation} quote -  The quotation itself, for a revision.
  * @property {boolean} current -  False once a later version supersedes this one.
+ * @property {TieredQuoteSummary | null} tiered -  RFx UX S-09: on a tiered quote, what the supplier priced per item. `null`
+ *   on a legacy single-price quote, whose `unitPrice` and `moq` stay as they were.
  */
+
+/**
+ * One item of a tiered quote as the supplier stated it (RFx UX S-09): the
+ * break-1 price and the item's own minimum order quantity. No derived average.
+ * @typedef {object} TieredItemLine
+ * @property {number} lineNo
+ * @property {string} description
+ * @property {string} break1Price The price at the RFQ's first break for this item, or '—' when not priced.
+ * @property {string} break1Qty The first break's quantity, formatted.
+ * @property {string} moq The item's MOQ, or the "same as RFQ qty" default when none was stated.
+ */
+
+/**
+ * @typedef {object} TieredQuoteSummary
+ * @property {number} priced How many of the RFQ's items carry a break-1 price.
+ * @property {number} total How many items the RFQ has.
+ * @property {TieredItemLine[]} lines
+ */
+
+/**
+ * A tiered quote read back per item (RFx UX S-09): items priced, the break-1
+ * price per item and the per-item MOQ. The header `unitPrice` is an average
+ * derived across items (`deriveQuoteHeader`) and is not the supplier's price,
+ * so it stays off. `null` for a legacy single-price quote or a quote whose RFQ
+ * has no items.
+ * @param {RFQ | undefined} rfq
+ * @param {Quotation} q
+ * @param {TFunction} t
+ * @returns {TieredQuoteSummary | null}
+ */
+export const tieredQuoteSummary = (rfq, q, t) => {
+  const items = rfq?.items ?? [];
+  if (!rfq || items.length === 0 || !q.itemQuotes) return null;
+  const currency = q.currency ?? BASE_CURRENCY;
+  const lines = items.map((item) => {
+    const first = tiersForItem(rfq, item)[0];
+    const quote = q.itemQuotes?.find((iq) => iq.itemLineNo === item.lineNo);
+    const price = first ? quote?.tierPrices.find((p) => p.tierQty === first.qty) : undefined;
+    return {
+      lineNo: item.lineNo,
+      description: item.description,
+      break1Price: price ? formatMoney(price.unitPrice, currency) : '—',
+      break1Qty: first ? formatNumber(first.qty) : '—',
+      moq:
+        quote?.moq === undefined
+          ? t('rfqs.quotes.moqNone')
+          : `${formatNumber(quote.moq)} ${item.uom}`.trim()
+    };
+  });
+  return {
+    priced: lines.filter((l) => l.break1Price !== '—').length,
+    total: items.length,
+    lines
+  };
+};
 
 // The supplier's OWN submitted quotations (Task 3b), joined to their RFQ for
 // display. HONEST-BY-CONSTRUCTION (3b-C): own quote facts + status ONLY — NO
@@ -109,7 +169,8 @@ export const buildSubmittedQuotes = (quotations, rfqById, t) => {
           ? t('rfqs.quotes.moqNone')
           : `${formatNumber(q.moq)} ${rfq?.uom ?? ''}`.trim(),
       validUntil: formatDate(q.validUntil),
-      status: q.status
+      status: q.status,
+      tiered: tieredQuoteSummary(rfq, q, t)
     };
   });
 };
@@ -208,9 +269,9 @@ export const daysLeftText = (t, deadline, nowIso) => {
 // Adapter: canonical RFQ → the page's OpenRFQ display shape. Real fields come
 // from the read (number, material, category, qty, deadline, received date);
 // the evaluation weights are the platform's own CR-15 policy (`CRITERIA_WEIGHTS`);
-// the detail the RFQ entity does NOT carry — special requirements on a legacy
-// RFQ, received-via — is illustrative sample, flagged with a "Sample detail"
-// pill (partial migration).
+// received-via, which the RFQ entity does NOT carry, is the one fixed value
+// (partial migration); a legacy RFQ's absent special requirements show nothing
+// (S-12).
 // ⚠️ `RFQ_TODAY_MS = new Date('2026-04-25')` IS DELETED. It was the SECOND pin
 // in this app and it disagreed with `BuyerSourcing`'s by 23 days, so the same
 // RFQ deadline produced two different day-counts depending on which persona was
@@ -223,9 +284,10 @@ export const daysLeftText = (t, deadline, nowIso) => {
 // for what it is: a deadline 111 days past renders "0 days remaining", which
 // reads as *due today*. Filed, not fixed.
 /**
- * What the RFQ itself asks beyond the price. Real where the rebuilt RFQ carries
- * it (item notes, samples requested, alternatives allowed); a legacy RFQ states
- * none of it, so the card keeps the illustrative line and marks it sample.
+ * What the RFQ itself asks beyond the price: item notes, samples requested,
+ * alternatives allowed. A legacy RFQ states none of it, and the RFQ carries no
+ * description of its own, so the card shows no block at all (RFx UX S-12): the
+ * illustrative "Paragon sourcing packet" line promised a packet that never came.
  * @param {RFQ} r
  * @param {TFunction} t
  * @returns {OpenRFQ['specialRequirements']}
@@ -243,9 +305,7 @@ export const specialRequirementsOf = (r, t) => {
       : []),
     ...(r.allowAlternatives ? [t('rfqResponse.card.alternativesAllowed')] : [])
   ];
-  return parts.length > 0
-    ? { text: parts.join(' · '), sample: false }
-    : { text: t('rfqResponse.card.sampleRequirements'), sample: true };
+  return parts.length > 0 ? parts.join(' · ') : null;
 };
 
 /**
@@ -277,13 +337,17 @@ export const toOpenRfq = (r, nowIso, t) => {
     // RFx spec 2026-09-21 — the delivery terms are the RFQ's own incoterms; the
     // hard-coded warehouse that stood here was sample text on every card.
     delivery: r.incoterms,
-    awardBy: r.awardDeadline,
+    // S-08 — every date on the card through `formatDate` ("06 Sept 2026"),
+    // the format of every other RFx screen; the deadline also in days left.
+    awardBy: formatDate(r.awardDeadline),
     deadline: r.responseDeadline,
+    deadlineText: formatDate(r.responseDeadline),
+    daysLeft: daysLeftText(t, r.responseDeadline, nowIso),
     daysRemaining,
     specialRequirements: specialRequirementsOf(r, t),
     evaluationCriteria: EVAL_WEIGHTS,
     status: r.status === 'Open' ? 'Open — Awaiting Your Quote' : r.status,
     receivedVia: 'Web Portal',
-    receivedDate: r.createdAt
+    receivedDate: formatDate(r.createdAt)
   };
 };

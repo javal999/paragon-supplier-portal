@@ -16,6 +16,7 @@ import { resetRfxStores } from '@services/data/mock/stores/rfxStores';
 import { rfqStore } from '@services/data/mock/stores/rfqStore';
 import { quotationStore } from '@services/data/mock/stores/quotationStore';
 import { sdcClock } from '@services/sdc';
+import { resetRfqEngagementStores } from '@services/data/mock/stores/rfqEngagementStores';
 import SupplierRfi from '../SupplierRfi';
 import SupplierRfp from '../SupplierRfp';
 import SupplierRFQs from '../SupplierRFQs';
@@ -25,6 +26,7 @@ beforeEach(() => {
   resetRfxStores();
   rfqStore.reset();
   quotationStore.reset();
+  resetRfqEngagementStores();
   sdcClock.reset();
 });
 afterEach(() => vi.restoreAllMocks());
@@ -162,7 +164,9 @@ describe('S-01 / S-02 — the RFQ quote drawer', () => {
   const openLegacy = async () => {
     renderWithProviders(<SupplierRFQs />, { identity: SUPPLIER });
     expect(await screen.findByText('RFQ-2026-010')).toBeInTheDocument();
-    fireEvent.click(screen.getAllByRole('button', { name: /Submit Quote/i })[0]);
+    // RFx UX S-07 — a legacy card opens its quote after step 1, like every card.
+    fireEvent.click(screen.getByTestId('intent-respond-rfq-010'));
+    fireEvent.click((await screen.findAllByRole('button', { name: /Submit Quote/i }))[0]);
     return /** @type {HTMLInputElement} */ (screen.getByLabelText('Unit price'));
   };
   const submit = () => screen.getByRole('button', { name: 'Submit quotation' });

@@ -43,7 +43,9 @@ const openOsloGrid = async () => {
   const oslo = await card('rfq-021');
   // The grid waits for intent: no Submit on a tiered RFQ yet.
   expect(oslo.queryByRole('button', { name: 'Submit quote' })).toBeNull();
-  expect(oslo.getByTestId('quote-waits-rfq-021')).toHaveTextContent(/Say you will respond/);
+  expect(oslo.getByTestId('quote-waits-rfq-021')).toHaveTextContent(
+    /Say if you will respond first/
+  );
   fireEvent.click(oslo.getByTestId('intent-respond-rfq-021'));
   const submit = await oslo.findByRole('button', { name: 'Submit quote' });
   fireEvent.click(submit);
@@ -179,10 +181,17 @@ describe('intent and the confidentiality gate, on the card', () => {
     ).toBe('decline');
   });
 
-  it('a LEGACY RFQ keeps its single-price entrance: no intent needed, no grid', async () => {
+  // RFx UX S-07 — the legacy card follows the same 2-step entry as a tiered
+  // one (it used to quote with no intent); its quote is still single-price.
+  it('a LEGACY RFQ opens its single-price quote after step 1, like every card, and no grid', async () => {
     renderWithProviders(<SupplierRFQs />, { identity: SUPPLIER });
     const legacy = await card('rfq-010');
-    fireEvent.click(legacy.getByRole('button', { name: 'Submit quote' }));
+    expect(legacy.queryByRole('button', { name: 'Submit quote' })).toBeNull();
+    expect(legacy.getByTestId('quote-waits-rfq-010')).toHaveTextContent(
+      /Say if you will respond first/
+    );
+    fireEvent.click(legacy.getByTestId('intent-respond-rfq-010'));
+    fireEvent.click(await legacy.findByRole('button', { name: 'Submit quote' }));
     expect(await screen.findByLabelText('Unit price')).toBeInTheDocument();
     expect(screen.queryByTestId('tiered-quote-form')).toBeNull();
   });
