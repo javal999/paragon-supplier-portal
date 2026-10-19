@@ -25,8 +25,7 @@ import { quotationStore } from '@services/data/mock/stores/quotationStore';
 import { sdcClock } from '@services/sdc';
 import SupplierRfi from '../SupplierRfi';
 import SupplierRfp from '../SupplierRfp';
-import BuyerRfi from '../BuyerRfi';
-import BuyerRfp from '../BuyerRfp';
+import BuyerRfxRoutes from '@test/buyerRfxRoutes';
 import { MockProcurementService } from '@services/data/mock/MockProcurementService';
 import { supplierSourcingQueue } from '@services/sourcing/supplierOutcome';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
@@ -196,7 +195,8 @@ describe('the supplier RFP row', () => {
 
 describe('the buyer invitee table', () => {
   it('RFP: sup-015 reads "Declined: <reason> — <words>" on rfp-003; sup-007 still "Not started"', async () => {
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    // RFx UX 2A (B-09): the RFP detail is its own page, reached from the list.
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-003'));
     const declined = await screen.findByTestId('rfp-invitee-sup-015');
     expect(within(declined).getByTestId('invitee-intent-declined')).toHaveTextContent(
@@ -218,7 +218,8 @@ describe('the buyer invitee table', () => {
       intent: 'respond',
       at: sdcClock.now()
     });
-    renderWithProviders(<BuyerRfi />, { identity: BUYER_SEAT });
+    // RFx UX 2A (B-09): the RFI detail is its own page, reached from the list.
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfi' });
     fireEvent.click(await screen.findByTestId('rfi-open-rfi-002'));
     const row = await screen.findByTestId('rfi-invitee-rfi-002-sup-007');
     expect(within(row).getByTestId('invitee-intent-responding')).toHaveTextContent('Will respond');
