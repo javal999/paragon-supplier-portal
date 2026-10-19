@@ -1,13 +1,21 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 /** @import React from 'react' */
-/** @import { RfiQuestion, RfiQuestionType } from '@services/sourcing/types' */
+/** @import { RfiQuestion, RfiQuestionType, RfxBuiltInField } from '@services/sourcing/types' */
 /** @import { RfqAuthoringDraft } from '../../rfqDraft' */
 import { Plus, X } from 'lucide-react';
 import Button from '@components/ui-v2/Button';
 import SessionAttachments from '@components/ui-v2/SessionAttachments';
 import { inputClass, labelClass } from '../const';
 import { StepRefusal } from './StepRefusal';
+import { builtInFits } from '@services/sourcing/rfxBuiltIn';
+
+/**
+ * BL-215 — the built-in field an RFQ question can fill: the sample offer's
+ * ready date (the RFQ form has no development timeline).
+ * @type {readonly RfxBuiltInField[]}
+ */
+const RFQ_BUILT_INS = ['sampleReadyDate'];
 
 // i18n-defer: question-type ids, not copy — each renders through t(`rfqAuthoring.q.type.<id>`)
 /** @type {readonly RfiQuestionType[]} */
@@ -22,10 +30,11 @@ const LIGHT_QUESTION_TYPES = ['yesNo', 'text', 'date', 'numberWithUnit'];
 export const QuestionsOptionsStep = ({ draft, update, refusal }) => {
   const { t } = useTranslation();
   const [q, setQ] = useState(
-    /** @type {{ prompt: string; type: RfiQuestionType; required: boolean }} */ ({
+    /** @type {{ prompt: string; type: RfiQuestionType; required: boolean; builtIn: RfxBuiltInField | '' }} */ ({
       prompt: '',
       type: 'yesNo',
-      required: true
+      required: true,
+      builtIn: ''
     })
   );
 
@@ -40,11 +49,14 @@ export const QuestionsOptionsStep = ({ draft, update, refusal }) => {
       // fallback returns them verbatim — the RFI one-off question precedent.
       promptKey: prompt,
       type: q.type,
-      required: q.required
+      required: q.required,
+      ...(q.builtIn && builtInFits(q.builtIn, q.type) ? { builtIn: q.builtIn } : {})
     };
     update({ questions: [...draft.questions, question] });
-    setQ({ prompt: '', type: 'yesNo', required: true });
+    setQ({ prompt: '', type: 'yesNo', required: true, builtIn: '' });
   };
+
+  const fitting = RFQ_BUILT_INS.filter((f) => builtInFits(f, q.type));
 
   return (
     <div className="space-y-6" data-testid="rfq-options-step">
@@ -67,6 +79,15 @@ export const QuestionsOptionsStep = ({ draft, update, refusal }) => {
                     · {t(`rfqAuthoring.q.type.${x.type}`)}
                   </span>
                   {x.required && <span className="text-danger"> *</span>}
+                  {!!x.builtIn && (
+                    <span
+                      className="text-xs text-text-secondary"
+                      data-testid={`rfq-q-builtin-${x.id}`}
+                    >
+                      {' '}
+                      · {t('rfxa.q.builtIn.fills', { field: t(`rfxa.q.builtIn.${x.builtIn}`) })}
+                    </span>
+                  )}
                 </span>
                 <button
                   type="button"
@@ -104,7 +125,11 @@ export const QuestionsOptionsStep = ({ draft, update, refusal }) => {
               id="rfq-q-type"
               value={q.type}
               onChange={(e) =>
-                setQ((s) => ({ ...s, type: /** @type {RfiQuestionType} */ (e.target.value) }))
+                setQ((s) => ({
+                  ...s,
+                  type: /** @type {RfiQuestionType} */ (e.target.value),
+                  builtIn: ''
+                }))
               }
               className={`${inputClass} w-40`}
             >
@@ -115,6 +140,32 @@ export const QuestionsOptionsStep = ({ draft, update, refusal }) => {
               ))}
             </select>
           </div>
+          {fitting.length > 0 && (
+            <div>
+              <label className={labelClass} htmlFor="rfq-q-builtin">
+                {t('rfxa.q.builtIn')}
+              </label>
+              <select
+                id="rfq-q-builtin"
+                data-testid="rfq-q-builtin"
+                value={q.builtIn}
+                onChange={(e) =>
+                  setQ((s) => ({
+                    ...s,
+                    builtIn: /** @type {RfxBuiltInField | ''} */ (e.target.value)
+                  }))
+                }
+                className={`${inputClass} w-48`}
+              >
+                <option value="">{t('rfxa.q.builtIn.none')}</option>
+                {fitting.map((f) => (
+                  <option key={f} value={f}>
+                    {t(`rfxa.q.builtIn.${f}`)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <label className="inline-flex items-center gap-1.5 text-sm text-text-secondary h-9">
             <input
               type="checkbox"

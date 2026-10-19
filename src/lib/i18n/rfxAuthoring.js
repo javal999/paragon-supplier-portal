@@ -49,6 +49,12 @@ export const rfxAuthoringEn = {
   'rfxa.q.section': 'Section',
   'rfxa.q.help': 'Help text (optional)',
   'rfxa.q.help.ph': 'What a good answer looks like.',
+  // — BL-215: the built-in field a question repeats —
+  'rfxa.q.builtIn': 'Fills the built-in field',
+  'rfxa.q.builtIn.none': 'None (its own question)',
+  'rfxa.q.builtIn.sampleReadyDate': 'Sample ready date',
+  'rfxa.q.builtIn.developmentTimeline': 'Development timeline',
+  'rfxa.q.builtIn.fills': 'Fills: {{field}}',
   'rfxa.q.options': 'Options',
   'rfxa.q.option': 'Option {{n}}',
   'rfxa.q.option.add': 'Add an option',
@@ -225,6 +231,8 @@ export const rfxAuthoringEn = {
   'rfxa.refusal.BAD_BOUNDS': 'The minimum and maximum do not fit together.',
   'rfxa.refusal.BOUNDS_NOT_APPLICABLE': 'Only a number question can have a minimum or maximum.',
   'rfxa.refusal.CURRENCY_REQUIRED': 'Choose a currency.',
+  'rfxa.refusal.BUILT_IN_MISMATCH':
+    'This question cannot fill that field: a sample ready date needs a date question, a development timeline a text question.',
   'rfxa.refusal.UNKNOWN_SECTION': 'The section no longer exists.',
   'rfxa.refusal.DUPLICATE_QUESTION': 'This question is already on the request.',
   'rfxa.refusal.CUSTOM_TERM_LABEL_REQUIRED': 'Name the term.',
@@ -332,6 +340,12 @@ export const rfxAuthoringId = {
   'rfxa.q.section': 'Bagian',
   'rfxa.q.help': 'Teks bantuan (opsional)',
   'rfxa.q.help.ph': 'Seperti apa jawaban yang baik.',
+  // — BL-215: kolom bawaan yang diulang oleh pertanyaan —
+  'rfxa.q.builtIn': 'Mengisi kolom bawaan',
+  'rfxa.q.builtIn.none': 'Tidak ada (pertanyaan tersendiri)',
+  'rfxa.q.builtIn.sampleReadyDate': 'Tanggal sampel siap',
+  'rfxa.q.builtIn.developmentTimeline': 'Jadwal pengembangan',
+  'rfxa.q.builtIn.fills': 'Mengisi: {{field}}',
   'rfxa.q.options': 'Pilihan',
   'rfxa.q.option': 'Pilihan {{n}}',
   'rfxa.q.option.add': 'Tambah pilihan',
@@ -506,6 +520,8 @@ export const rfxAuthoringId = {
   'rfxa.refusal.BOUNDS_NOT_APPLICABLE':
     'Hanya pertanyaan angka yang dapat memiliki minimum atau maksimum.',
   'rfxa.refusal.CURRENCY_REQUIRED': 'Pilih mata uang.',
+  'rfxa.refusal.BUILT_IN_MISMATCH':
+    'Pertanyaan ini tidak dapat mengisi kolom tersebut: tanggal sampel siap memerlukan pertanyaan tanggal, jadwal pengembangan memerlukan pertanyaan teks.',
   'rfxa.refusal.UNKNOWN_SECTION': 'Bagian tersebut sudah tidak ada.',
   'rfxa.refusal.DUPLICATE_QUESTION': 'Pertanyaan ini sudah ada di permintaan.',
   'rfxa.refusal.CUSTOM_TERM_LABEL_REQUIRED': 'Beri nama ketentuannya.',

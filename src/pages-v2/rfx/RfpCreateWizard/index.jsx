@@ -63,6 +63,7 @@ import RfxInviteeStep from '../RfxInviteeStep';
 import { useSourcingTypeMap } from '../eligibilityDisplay';
 import { mappedSourcingType } from '@services/sourcing/sourcingType';
 import RfxQuestionEditor from '../RfxQuestionEditor';
+import { RFX_BUILT_IN_FIELDS } from '@services/sourcing/rfxBuiltIn';
 import { RfpPricingEditor } from '../RfpPricing';
 import { authored } from '../rfxAuthoringDisplay';
 import { rfxNow } from '../rfxDisplay';
@@ -281,6 +282,7 @@ const RfpCreateWizard = ({
           }
           defaultCurrency={/** @type {BidCurrency} */ (draft.currency)}
           testIdPrefix="rfp-new"
+          builtIns={RFX_BUILT_IN_FIELDS}
         />
       )
     },

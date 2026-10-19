@@ -27,7 +27,8 @@ import {
   rfxSectionsOf
 } from '@services/sourcing/rfxConfig';
 import { rfiQuestionRefusal } from '@services/transitions/rfxRules';
-/** @import { RfiQuestion, RfiQuestionType, RfxCustomSection } from '@services/sourcing/types' */
+import { builtInFits } from '@services/sourcing/rfxBuiltIn';
+/** @import { RfiQuestion, RfiQuestionType, RfxBuiltInField, RfxCustomSection } from '@services/sourcing/types' */
 import { authored, optionLabel, sectionTitle, IndicativePill } from './rfxAuthoringDisplay';
 
 /**
@@ -44,6 +45,9 @@ import { authored, optionLabel, sectionTitle, IndicativePill } from './rfxAuthor
  * @property {readonly RfiQuestion[]} [library] -  Offer "add from the library" (the RFI). Absent on the RFP.
  * @property {BidCurrency} defaultCurrency -  The currency a new money / price-range question starts in.
  * @property {string} testIdPrefix
+ * @property {readonly RfxBuiltInField[]} [builtIns] -  BL-215 — the built-in fields this event's form
+ *   carries (the RFP: sample ready date, development timeline). A question can be linked to one that
+ *   fits its type. Absent (the RFI): no link is offered.
  */
 
 /**
@@ -58,6 +62,7 @@ import { authored, optionLabel, sectionTitle, IndicativePill } from './rfxAuthor
  * @property {string} min
  * @property {string} max
  * @property {BidCurrency} currency
+ * @property {RfxBuiltInField | ''} builtIn
  */
 
 /**
@@ -90,7 +95,8 @@ const blank = (currency) => ({
   unit: '',
   min: '',
   max: '',
-  currency
+  currency,
+  builtIn: ''
 });
 
 /**
@@ -101,7 +107,14 @@ const blank = (currency) => ({
 export const refusalCode = (reason) => reason.split(':')[0].trim();
 
 /** @type {React.FC<RfxQuestionEditorProps>} */
-const RfxQuestionEditor = ({ value, onChange, library, defaultCurrency, testIdPrefix: p }) => {
+const RfxQuestionEditor = ({
+  value,
+  onChange,
+  library,
+  defaultCurrency,
+  testIdPrefix: p,
+  builtIns = []
+}) => {
   const { t } = useTranslation();
   const [draft, setDraft] = useState(/** @type {NewQuestion} */ (blank(defaultCurrency)));
   const [libraryPick, setLibraryPick] = useState('');
@@ -166,10 +179,15 @@ const RfxQuestionEditor = ({ value, onChange, library, defaultCurrency, testIdPr
         : {}),
       ...(isBoundedType(draft.type) && num(draft.min) !== undefined ? { min: num(draft.min) } : {}),
       ...(isBoundedType(draft.type) && num(draft.max) !== undefined ? { max: num(draft.max) } : {}),
-      ...(draft.type === 'money' || draft.type === 'priceRange' ? { currency: draft.currency } : {})
+      ...(draft.type === 'money' || draft.type === 'priceRange'
+        ? { currency: draft.currency }
+        : {}),
+      ...(draft.builtIn ? { builtIn: draft.builtIn } : {})
     };
   };
 
+  // BL-215 — the built-in fields a question of the draft's type can fill.
+  const fitting = builtIns.filter((f) => builtInFits(f, draft.type));
   const hasPrompt = draft.prompt.trim().length > 0;
   const refusal = hasPrompt ? rfiQuestionRefusal(candidate(), customIds) : null;
 
@@ -250,6 +268,14 @@ const RfxQuestionEditor = ({ value, onChange, library, defaultCurrency, testIdPr
                     </span>
                     {q.help && (
                       <p className="text-xs text-text-tertiary mt-0.5">{authored(t, q.help)}</p>
+                    )}
+                    {!!q.builtIn && (
+                      <p
+                        className="text-xs text-text-secondary mt-0.5"
+                        data-testid={`${p}-builtin-${q.id}`}
+                      >
+                        {t('rfxa.q.builtIn.fills', { field: t(`rfxa.q.builtIn.${q.builtIn}`) })}
+                      </p>
                     )}
                     {isChoiceType(q.type) && (
                       <p className="text-xs text-text-secondary mt-0.5">
@@ -379,7 +405,11 @@ const RfxQuestionEditor = ({ value, onChange, library, defaultCurrency, testIdPr
               data-testid={`${p}-oneoff-type`}
               value={draft.type}
               onChange={(e) =>
-                setDraft((d) => ({ ...d, type: /** @type {RfiQuestionType} */ (e.target.value) }))
+                setDraft((d) => ({
+                  ...d,
+                  type: /** @type {RfiQuestionType} */ (e.target.value),
+                  builtIn: ''
+                }))
               }
               className={inputClass}
             >
@@ -526,6 +556,32 @@ const RfxQuestionEditor = ({ value, onChange, library, defaultCurrency, testIdPr
               {BID_CURRENCIES.map((c) => (
                 <option key={c} value={c}>
                   {c}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        {fitting.length > 0 && (
+          <div className="max-w-[16rem]">
+            <label className={labelClass} htmlFor={`${p}-oneoff-builtin`}>
+              {t('rfxa.q.builtIn')}
+            </label>
+            <select
+              id={`${p}-oneoff-builtin`}
+              data-testid={`${p}-oneoff-builtin`}
+              value={draft.builtIn}
+              onChange={(e) =>
+                setDraft((d) => ({
+                  ...d,
+                  builtIn: /** @type {RfxBuiltInField | ''} */ (e.target.value)
+                }))
+              }
+              className={inputClass}
+            >
+              <option value="">{t('rfxa.q.builtIn.none')}</option>
+              {fitting.map((f) => (
+                <option key={f} value={f}>
+                  {t(`rfxa.q.builtIn.${f}`)}
                 </option>
               ))}
             </select>

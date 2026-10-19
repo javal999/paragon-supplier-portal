@@ -27,6 +27,7 @@ import { BID_CURRENCIES } from '@lib/currencyPolicy';
 import { normalizeQty } from '@lib/localeNumber';
 /** @import { DocumentRequest, ResponseDocument, RfiAnswer, RfiQuestion, RfiQuestionType } from './types' */
 import { documentRequestsRefusal } from '../transitions/rfxDocumentRules';
+import { builtInRefusal } from './rfxBuiltIn';
 
 // ── The item ────────────────────────────────────────────────────────────────
 
@@ -505,6 +506,9 @@ export function rfqCreateRefusal(payload) {
       if (!q.id || !q.promptKey || !String(q.promptKey).trim()) {
         return 'QUESTION_INCOMPLETE: every question names itself and what it asks';
       }
+      // BL-215 — a link to a built-in field fits only a question of its shape.
+      const link = builtInRefusal(q);
+      if (link) return link;
     }
   }
   if (payload.samplesRequested !== undefined) {
