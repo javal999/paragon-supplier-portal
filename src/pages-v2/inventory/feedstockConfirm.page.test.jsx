@@ -1,0 +1,155 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
+import { feedstockConfirmationStore } from '@services/data/mock/stores/feedstockConfirmationStore';
+import { MockCommandService } from '@services/data/mock/MockCommandService';
+import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
+import { addDays, dayOf } from '@services/transitions/inventoryRules';
+import { sdcClock } from '@services/sdc';
+import { NO_PERSON } from '@context/noPerson';
+import SupplierInventory from '../SupplierInventory';
+import BuyerInventory from '../BuyerInventory';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BL-194 · the feedstock confirmation on the real pages (DRC-8; DRC-D17):
+// the supplier's weekly "Current feedstock" panel on its Stock page, and PTI's
+// read-only "Feedstock (confirmed …)" line beside the supplier stock.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CODE = 'PK-PETB-8801';
+const today = () => dayOf(sdcClock.now());
+
+beforeEach(() => {
+  feedstockConfirmationStore.reset();
+  sdcClock.reset();
+});
+
+describe('supplier · Current feedstock', () => {
+  it('lists every assigned material as due, with the Provisional label (E1, E2) and no DA figure', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    const panel = await screen.findByTestId('feedstock-confirm');
+    expect(within(panel).getByTestId('feedstock-provisional').textContent).toBe(
+      'Provisional: rule awaiting Material Planning (E1, E2)'
+    );
+    expect(within(panel).getByTestId(`feedstock-status-${CODE}`).textContent).toBe('Due');
+    expect(within(panel).getByTestId(`feedstock-latest-${CODE}`).textContent).toBe(
+      'Not confirmed yet'
+    );
+    // DRC-D10 — no demand anticipation reaches a supplier.
+    expect(within(panel).queryByText(/anticipation|Target/i)).toBeNull();
+  });
+
+  it('refuses a future date in the form, then confirms; the material reads Confirmed', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    fireEvent.click(await screen.findByTestId(`feedstock-open-${CODE}`));
+    fireEvent.change(screen.getByTestId('feedstock-qty'), { target: { value: '0' } });
+    fireEvent.change(screen.getByTestId('feedstock-date'), {
+      target: { value: addDays(today(), 1) }
+    });
+    expect(screen.getByTestId('feedstock-refusal').textContent).toBe(
+      'The confirmation date cannot be in the future.'
+    );
+    const submit = /** @type {HTMLButtonElement} */ (screen.getByTestId('feedstock-submit'));
+    expect(submit.disabled).toBe(true);
+    fireEvent.change(screen.getByTestId('feedstock-date'), { target: { value: today() } });
+    expect(screen.queryByTestId('feedstock-refusal')).toBeNull();
+    fireEvent.click(submit);
+    await waitFor(() =>
+      expect(screen.getByTestId(`feedstock-status-${CODE}`).textContent).toBe('Confirmed')
+    );
+    // 0 is allowed (BR-a), and the record is the supplier's own.
+    expect(feedstockConfirmationStore.all()).toMatchObject([
+      { supplierId: 'sup-007', materialCode: CODE, feedstockQty: 0, confirmedOn: today() }
+    ]);
+  });
+
+  it('a material confirmed in an earlier week but not this one reads Missed (MR-1 cycle)', async () => {
+    const now = sdcClock.now();
+    // 16 days back lies before the cycle that just closed, whatever weekday now is.
+    sdcClock.set(new Date(Date.parse(now) - 16 * 24 * 3_600_000).toISOString());
+    const r = await new MockCommandService().dispatch(
+      {
+        personaType: 'supplier',
+        supplierId: 'sup-007',
+        businessRoles: PERSONA_SYSTEM_ROLES.supplier,
+        actor: NO_PERSON
+      },
+      {
+        transitionId: 't_feedstock_confirm',
+        entity: 'feedstockConfirmation',
+        payload: {
+          supplierId: 'sup-007',
+          materialCode: CODE,
+          feedstockQty: 40,
+          confirmedOn: today()
+        }
+      }
+    );
+    expect(r.status, r.reason).toBe('done');
+    sdcClock.reset();
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    expect((await screen.findByTestId(`feedstock-status-${CODE}`)).textContent).toBe('Missed');
+    expect(screen.getByTestId('feedstock-missed').textContent).toContain('1 materials');
+  });
+
+  it('the stock figure on the row does not move after a confirmation (MoM 2B)', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    const before = (await screen.findByTestId(`sup-stock-row-${CODE}`)).textContent;
+    fireEvent.click(screen.getByTestId(`feedstock-open-${CODE}`));
+    fireEvent.change(screen.getByTestId('feedstock-qty'), { target: { value: '987654' } });
+    fireEvent.click(screen.getByTestId('feedstock-submit'));
+    await waitFor(() =>
+      expect(screen.getByTestId(`feedstock-status-${CODE}`).textContent).toBe('Confirmed')
+    );
+    expect(screen.getByTestId(`sup-stock-row-${CODE}`).textContent).toBe(before);
+  });
+});
+
+describe('PTI · the feedstock line beside the supplier stock', () => {
+  it('reads "Feedstock not confirmed" until the supplier confirms, then the figure, who, and target 0 (E1)', async () => {
+    const { unmount } = renderWithProviders(<BuyerInventory />, {
+      identity: BUYER,
+      route: '/buyer/inventory?type=VERP'
+    });
+    expect((await screen.findByTestId(`pti-feedstock-none-sup-007-${CODE}`)).textContent).toBe(
+      'Feedstock not confirmed'
+    );
+    unmount();
+
+    const r = await new MockCommandService().dispatch(
+      {
+        personaType: 'supplier',
+        supplierId: 'sup-007',
+        businessRoles: PERSONA_SYSTEM_ROLES.supplier,
+        actor: NO_PERSON
+      },
+      {
+        transitionId: 't_feedstock_confirm',
+        entity: 'feedstockConfirmation',
+        payload: {
+          supplierId: 'sup-007',
+          materialCode: CODE,
+          feedstockQty: 1500,
+          confirmedOn: today()
+        }
+      }
+    );
+    expect(r.status, r.reason).toBe('done');
+
+    renderWithProviders(<BuyerInventory />, {
+      identity: BUYER,
+      route: '/buyer/inventory?type=VERP'
+    });
+    const line = await screen.findByTestId(`pti-feedstock-sup-007-${CODE}`);
+    expect(line.textContent).toMatch(/^Feedstock \(confirmed .+\) 1,500 /);
+    expect(screen.getByTestId(`pti-feedstock-by-sup-007-${CODE}`).textContent).toMatch(
+      /^Confirmed by supplier on /
+    );
+    expect(screen.getByTestId(`pti-feedstock-target-sup-007-${CODE}`).textContent).toMatch(
+      /^Target 0 /
+    );
+    expect(screen.getByTestId(`pti-feedstock-provisional-sup-007-${CODE}`).textContent).toBe(
+      'Provisional: rule awaiting Material Planning (E1, E2)'
+    );
+  });
+});

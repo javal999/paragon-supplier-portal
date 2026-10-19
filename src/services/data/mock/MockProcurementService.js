@@ -126,6 +126,8 @@ import { labelOf, materialEntry } from '../../sdc/materialMaster';
 import { withMrpController } from './mrpControllerReadModel';
 // Material C2 — supplier trade names, narrowed per reader (MR-3 BR-03).
 import { materialNameRowsFor, withTradeName } from './materialNameReadModel';
+// BL-194 — the supplier's feedstock confirmation in force (DRC-8).
+import { withFeedstock } from './feedstockConfirmationReadModel';
 import { FEEDS, dataHealth } from '../../engine/dataHealth';
 import { currentDemandForecast, currentForecastBias, withOverrides } from './demandForecastRun';
 import { forecastOverrideStore } from './stores/forecastOverrideStore';
@@ -440,7 +442,12 @@ export class MockProcurementService {
       }));
     }
     // Material C2 — the supplier's approved trade name beside PTI's description.
-    return { items: rows.map((r) => withTradeName(withMrpController(r, r.materialCode, scope))) };
+    // BL-194 (DRC-8) — the feedstock in force, as its own field beside SOH.
+    return {
+      items: rows.map((r) =>
+        withFeedstock(withTradeName(withMrpController(r, r.materialCode, scope)))
+      )
+    };
   }
 
   // Material C2 (MR-3 BR-03) — narrowed in the read model: a supplier reads its

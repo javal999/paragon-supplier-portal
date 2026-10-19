@@ -1850,6 +1850,48 @@ export function useMaterialNameLoad() {
   });
 }
 
+// ── BL-194 · SUPPLIER FEEDSTOCK CONFIRMATION (DRC-8 BR-a; DRC-D17) ───────────
+//
+// The supplier confirms its current feedstock for one assigned material. The
+// unit, `recordedAt` and `recordedBy` are set by the target from the master,
+// the hub clock and the session; none is a payload field. The confirmation
+// shows on both stock pages, so the whole cache is invalidated.
+/**
+ * @typedef {object} FeedstockConfirmVars
+ * @property {string} supplierId
+ * @property {string} materialCode
+ * @property {number} feedstockQty
+ * @property {string} confirmedOn
+ * @property {string} [note]
+ */
+
+/** A supplier confirms its current feedstock (`t_feedstock_confirm`). */
+export function useFeedstockConfirm() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, FeedstockConfirmVars>} */ (
+    useMutation
+  )({
+    mutationFn: ({ supplierId, materialCode, feedstockQty, confirmedOn, note }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_feedstock_confirm',
+        entity: 'feedstockConfirmation',
+        payload: {
+          supplierId,
+          materialCode,
+          feedstockQty,
+          confirmedOn,
+          ...(note && note.trim() !== '' ? { note } : {})
+        }
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    }
+  });
+}
+
 // ── BL-50 · A RULING ON ONE DAY OF THE HUB'S WORKING CALENDAR ────────────────
 //
 // ⚠️ **`entityId` IS THE DATE, AND THERE IS NO `date` PAYLOAD FIELD** — the

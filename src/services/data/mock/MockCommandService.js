@@ -171,6 +171,8 @@ import { osipLevelTarget } from './targets/osipLevel';
 import { observeNpdTags } from './osipRopReadModel';
 import { observeCallOffTriggers } from './callOffTriggerReadModel';
 import { ptiStockStore } from './stores/ptiStockStore';
+// BL-194 — the supplier's feedstock confirmation (its own module, DRC-8).
+import { feedstockConfirmationTarget } from './targets/feedstockConfirmation';
 // Material G1 — the qualification lists (its own module, MAT-R13).
 import { qualificationRuleTarget } from './targets/qualificationRule';
 // Material G2 — the sourcing type map (its own module, MAT-R13) and bidding
@@ -6216,6 +6218,9 @@ const TARGETS = {
   consumption: consumptionTarget,
   // DRC-D11 (BL-196) — the OSIP level per material. Ships in the same commit as its flow.
   osipLevel: osipLevelTarget,
+  // BL-194 / DRC-8 BR-a — a supplier's feedstock confirmation, append-only.
+  // Ships in the same commit as its flow.
+  feedstockConfirmation: feedstockConfirmationTarget,
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx event types, the answers to
   // them, and the negotiation window. Each ships in the same commit as its flow,
   // so no entity joins the target-less set even for one merge.
