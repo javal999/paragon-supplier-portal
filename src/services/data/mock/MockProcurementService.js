@@ -14,6 +14,7 @@ import { stockAccessStore } from './stores/inventoryHubStores';
 import { allPlanningGroups } from './planningGroupReadModel';
 import { allDemandAnticipationWithSupply } from './supplyBelowDemandReadModel';
 import { withLtpFgDemandRead } from './ltpFgDemandReadModel';
+import { osipSafetyInputs } from './osipSafetyReadModel';
 /** @import { DemandAnticipationSupplyRow } from '../../transitions/supplyBelowDemandRules' */
 import { stockSimulationRows } from './stockSimulationReadModel';
 import {
@@ -972,6 +973,9 @@ export class MockProcurementService {
       packaging: engineSafetyStock(previousAsOf.packaging),
       rawMaterial: engineSafetyStock(previousAsOf.rawMaterial)
     });
+    // BL-193 (DRC-7) / BL-197 (DRC-11) — the OSIP inputs per material; the
+    // page applies the rules (the default, or a switch variant).
+    const osip = osipSafetyInputs();
     return {
       ...run,
       previousAsOf,
@@ -981,6 +985,9 @@ export class MockProcurementService {
         supplierName: m.supplierId ? forecastSupplierName(m.supplierId) : null,
         change: /** @type {import('../../engine/safetyStock').SafetyStockChange} */ (
           changes.get(m.materialCode)
+        ),
+        osip: /** @type {import('../../transitions/osipSafetyRules').MaterialOsipInputs} */ (
+          osip.get(m.materialCode)
         )
       }))
     };

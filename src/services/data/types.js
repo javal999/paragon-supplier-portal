@@ -45,6 +45,7 @@
 /** @import { UpdateCompliance } from '../transitions/updateCompliance' */
 /** @import { MaterialPlan, MaterialRequirementRun } from '../engine/requirement' */
 /** @import { MaterialSafetyStock, SafetyStockChange, SafetyStockRun } from '../engine/safetyStock' */
+/** @import { MaterialOsipInputs } from '../transitions/osipSafetyRules' */
 /** @import { MaterialOrderPlan, OrderPlanRun, WarehousePlan } from '../engine/orderSizing' */
 /** @import { InfoLine, PlanChangeBaseline, Proposal, ProposalType, RescheduleRun, WarehouseReschedule } from '../engine/reschedule' */
 /** @import { SupplierCfot } from '../engine/cfot' */
@@ -852,11 +853,14 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
 /** One material's safety stock, safety lead time and ROP as served (REQ-E14-04). */
 /**
  * `change`:  BR-06 (BL-116) — the change since the last run of the material's stream, and why.
+ * `osip`:  BL-193 (DRC-7) / BL-197 (DRC-11) — the inputs of the OSIP safety order, ROP Fisik
+ *   safety and CV; the page applies the OSIP rules to them at read.
  *
  * @typedef {MaterialSafetyStock & {
  *     readonly materialLabel: string;
  *     readonly supplierName: string | null;
  *     readonly change: SafetyStockChange;
+ *     readonly osip: MaterialOsipInputs;
  *   }} MaterialSafetyStockView
  */
 
