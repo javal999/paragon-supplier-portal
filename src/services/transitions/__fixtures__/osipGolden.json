@@ -35,7 +35,11 @@
         "ospo": 0,
         "additionalPo": 40,
         "remainder": 5,
-        "carry": { "week": "W5", "qty": 5, "fromWeek": "W1" }
+        "carry": {
+          "week": "W5",
+          "qty": 5,
+          "fromWeek": "W1"
+        }
       }
     },
     "week2": {
@@ -54,13 +58,13 @@
     }
   },
   "ppt9": {
-    "_ospoNote": "Each week's OSPO inputs are the slide's own expression (week 3: 35 - 5 = 30; week 4: 30 - 5 = 25). PPT 8 week 2 had a call-off of 10 and an additional PO of 5, so the week-3 '- 5' is either a call-off of 5 (ospoIncludesNewPo false) or -10 + 5 (true). Both readings are tested in osipRules.test.js.",
+    "_ospoNote": "OSPO chains week to week with ospoIncludesNewPo on (owner, 2026-10-19): OSPO(w) = OSPO(w-1) - call-off of the previous week + the PO placed that week. Week 3: 35 - 10 (week-2 call-off) + 5 (week-2 additional PO) = 30, which the slide writes as '35 - 5'; week 4: 30 - 5 + 0 = 25.",
     "leadTimeWeeks": 4,
     "week3": {
       "weeks": ["W3", "W4", "W5", "W6", "W7"],
       "ltp": [10, 10, 5, 0, 0],
       "ospoPrev": 35,
-      "callOffPrev": 5,
+      "callOffPrev": 10,
       "callOff": 5,
       "expected": {
         "da": [10, 10, 10, 0],
@@ -68,8 +72,13 @@
         "ospo": 30,
         "additionalPo": 0,
         "remainder": 5,
-        "carry": { "week": "W6", "qty": 5, "fromWeek": "W3" }
-      }
+        "carry": {
+          "week": "W6",
+          "qty": 5,
+          "fromWeek": "W3"
+        }
+      },
+      "newPoPrev": 5
     },
     "week4": {
       "weeks": ["W4", "W5", "W6", "W7", "W8"],
@@ -82,8 +91,13 @@
         "ospo": 25,
         "additionalPo": 0,
         "remainder": 5,
-        "carry": { "week": "W7", "qty": 5, "fromWeek": "W4" }
-      }
+        "carry": {
+          "week": "W7",
+          "qty": 5,
+          "fromWeek": "W4"
+        }
+      },
+      "newPoPrev": 0
     }
   }
 }

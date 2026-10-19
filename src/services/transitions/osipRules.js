@@ -29,7 +29,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Bump on any change to a key or a formula; stamped on every stored figure. */
-export const RULES_VERSION = 'osip-2026-10-19.1';
+export const RULES_VERSION = 'osip-2026-10-19.2';
 
 /** @typedef {'import' | 'jabodetabek' | 'outsideJabodetabek'} SupplyArea */
 
@@ -97,8 +97,8 @@ export const OSIP_RULES = Object.freeze({
   carryOverLimit: /** @type {'salesOrderQty4w'} */ ('salesOrderQty4w'),
   /** [Default A11] consumption moving average window (BL-203 builds the average). */
   consumptionMovingAvgWeeks: 13,
-  /** [Default A9] OSPO(w) = OSPO(w−1) − call-off, plus last week's new PO when true. PPT 8/9: see the decision note in the report. */
-  ospoIncludesNewPo: false
+  /** [Default A9; owner 2026-10-19] OSPO(w) = OSPO(w−1) − call-off, plus last week's new PO: the only reading that chains PPT 8/9 to 35, 30, 25. */
+  ospoIncludesNewPo: true
 });
 
 /**

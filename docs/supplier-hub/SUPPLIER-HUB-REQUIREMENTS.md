@@ -1722,7 +1722,7 @@ The owner confirmed the recommendations for this section on 2026-09-17 (E06-R). 
 
 #### REQ-E06-04  Fixed stock (FS) reconcile
 
-> **Superseded 2026-10-19 (DRC-D14).** FS means feedstock, not fixed stock [Owner, 2026-10-16]. The page is renamed "Feedstock reconcile" and compares, per supplier × material, the POs ordered with the call-offs and ASNs requested, daily (DRC-15a in `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md`). The outcomes and settlement below stay in force until BL-201 is built; the leftover rule is on hold (DRC-15b, BL-207).
+> **Superseded 2026-10-19 (DRC-D14).** FS means feedstock, not fixed stock [Owner, 2026-10-16]. The page is renamed "Feedstock reconcile" and compares, per supplier × material, the POs ordered with the call-offs and ASNs requested, daily (DRC-15a in `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md`). BL-201 is built (GitLab MR !4, 2026-10-19), so the outcomes and settlement below are retired; they are kept here as the record of the 2026-09-29 rules. The leftover rule is on hold (DRC-15b, BL-207).
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|

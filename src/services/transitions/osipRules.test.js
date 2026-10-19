@@ -178,9 +178,10 @@ describe('PPT 8 → 9 chained with the stated call-offs (5, 10, 5) and POs (40, 
     expect(chain(rulesWith({ ospoIncludesNewPo: true }))).toEqual([35, 30, 25]);
   });
 
-  it('ospoIncludesNewPo false (default) does not', () => {
-    expect(OSIP_RULES.ospoIncludesNewPo).toBe(false);
-    expect(chain(OSIP_RULES)).toEqual([-5, -15, -20]);
+  it('ospoIncludesNewPo is on by default (owner, 2026-10-19); false does not chain', () => {
+    expect(OSIP_RULES.ospoIncludesNewPo).toBe(true);
+    expect(chain(OSIP_RULES)).toEqual([35, 30, 25]);
+    expect(chain(rulesWith({ ospoIncludesNewPo: false }))).toEqual([-5, -15, -20]);
   });
 });
 
@@ -206,7 +207,7 @@ describe('OSIP_RULES and stamp', () => {
       planCheckIncludesSoh: true,
       carryOverTarget: 'lastWeek',
       consumptionMovingAvgWeeks: 13,
-      ospoIncludesNewPo: false
+      ospoIncludesNewPo: true
     });
   });
 

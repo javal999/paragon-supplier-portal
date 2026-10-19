@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.27, 2026-10-19 |
+| Version | 2.28, 2026-10-19 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -142,16 +142,14 @@ The owner reviewed the requirements and accepted CAP-D1 to CAP-D8 on 2026-10-12.
 
 ### 4b. Weekly SC Hub 2026-10-14: DA, ROP and call-off, accepted 2026-10-19
 
-The owner approved every requirement, default and decision in `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` on 2026-10-19 ("approve all"). Items are built on documented defaults (section 4 of that file) and corrected when Material Planning answers; the five "On hold" rows wait because their shape is unknown. Build order is section 7 of that file.
+The owner approved every requirement, default and decision in `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` on 2026-10-19 ("approve all"). Items are built on documented defaults (section 4 of that file) and corrected when Material Planning answers; the five "On hold" rows wait because their shape is unknown. Build order is section 7 of that file. Wave 1 (BL-187, BL-192, BL-200, BL-201, BL-203) is built and in section 6.
 
 | ID | Item | Why | Size | Blocked by | Detail |
 |---|---|---|---|---|---|
-| BL-187 | Calculation module and rules block: one set of pure functions for demand anticipation, safety, every ROP, Max, CV, PR need and carry-over; every [Default] a named key; stored figures stamped with inputs and rules version; golden fixtures from PPT 7 to 9 | Every later item reads it; an answer from Material Planning changes one key | L | Nothing | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` Design rules 1 to 4 |
 | BL-188 | Rolling demand anticipation over the lead time with carry-over (rework of BL-179 and BL-180) | Replaces the fixed 4-week horizon and the weeks 5 to 8 absorbing rule | L | BL-187 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-2 |
 | BL-189 | Demand anticipation history with carry-over origin; audit view for Procurement and Finance | Every version is kept for audit | M | BL-188 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-3 |
 | BL-190 | Plan vs execution check: Total DA = ROP Order = SOH + OSPO + OSPR + PR; surplus absorbed in the last week, shortfall a PR recommendation | Shows when planning and execution disagree | M | BL-187 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-4 |
 | BL-191 | Supplier approval for a call-off delayed by an LTP drop, with the DA adjustment | MoM 1B | M | BL-188 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-5 |
-| BL-192 | Lead time per material, broken down by step (order, queue, production, shipment, delivery) | Drives the horizon and ROP Order | M | Nothing | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-6 |
 | BL-193 | Safety order (ROP Order) and ROP Fisik safety, with the deck and sheet variants behind switches | MoM 2A | M | BL-187 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-7 |
 | BL-194 | Supplier confirms Incoming DA plus current feedstock, with a date | MoM 2B | M | BL-188 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-8 |
 | BL-195 | Strategic buffer (LTP minus baseline) and production limit | MoM 3 | M | BL-187 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-9a, DRC-9b |
@@ -159,10 +157,7 @@ The owner approved every requirement, default and decision in `SC-HUB-DA-ROP-CAL
 | BL-197 | CV per variant, SKU and component; stable or fluctuative | MoM 4B | M | BL-187 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-11 |
 | BL-198 | NPD tag and ROP review after the first order | MoM 4C | S | BL-196 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-12a |
 | BL-199 | Call-off drafted at ROP Fisik for planner approval; SAP PR recommendation when the umbrella PO runs out; max stock caps call-offs; SOH plant stored | MoM 5A | L | BL-196 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-13 |
-| BL-200 | Replenishment cycle f by area: import 1 week, Jabodetabek 1 day, outside 2 days | MoM 5B | S | Nothing | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-14 |
-| BL-201 | Feedstock reconcile: POs ordered vs call-offs and ASNs requested, daily; replaces the fixed stock reconcile page (REQ-E06-04) | MoM 5C | M | Nothing | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-15a |
 | BL-202 | What-if sandbox: one material, editable inputs and rule switches, 52 weeks RM / 24 weeks PM, named scenarios compared up to 3, PTI planners only, analysis only | Also the tool to confirm defaults with Material Planning | L | BL-187, BL-196 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-17 |
-| BL-203 | LTP vs FG demand and consumption moving average (13 weeks) | MoM 1A | S | Nothing | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-18 |
 | BL-204 | On hold: supplier view of demand anticipation | Suppliers must not plan on unconfirmed figures (DRC-D10) | M | Material Planning: A1, A2, B1 to B4 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-1 |
 | BL-205 | On hold: protection buffer | Uplift for non-festive materials unknown | ? | Material Planning: C3 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-9c |
 | BL-206 | On hold: NPD vs CMM rules and material-code prefixes | MoM 4C action item | ? | MDM and Material Planner: D2 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-12b |
@@ -198,6 +193,11 @@ The owner approved every requirement, default and decision in `SC-HUB-DA-ROP-CAL
 
 | ID | Item | Closed | By |
 |---|---|---|---|
+| BL-203 | LTP vs FG demand and consumption moving average (13 weeks) | 2026-10-19 | Built in GitLab MR !4: three rows on Demand anticipation; 13-week average from the rules block |
+| BL-201 | Feedstock reconcile: POs ordered vs call-offs and ASNs requested, daily; replaces the fixed stock reconcile page (REQ-E06-04) | 2026-10-19 | Built in GitLab MR !4: feedstock reconcile replaces the fixed stock reconcile; decisions DRC-B12 to DRC-B14 |
+| BL-200 | Replenishment cycle f by area: import 1 week, Jabodetabek 1 day, outside 2 days | 2026-10-19 | Built in GitLab MR !4: `replenishmentCycleDays` and `supplyAreaOf` in `osipRules.js` |
+| BL-192 | Lead time per material, broken down by step (order, queue, production, shipment, delivery) | 2026-10-19 | Built in GitLab MR !4: `leadTimeSteps.js`, steps on each source, data-health check, shown on Material requirement |
+| BL-187 | Calculation module and rules block: one set of pure functions for demand anticipation, safety, every ROP, Max, CV, PR need and carry-over; every [Default] a named key; stored figures stamped with inputs and rules version; golden fixtures from PPT 7 to 9 | 2026-10-19 | Built in GitLab MR !4: `osipRules.js` with `OSIP_RULES` and `RULES_VERSION`, golden fixtures PPT 7 to 9, 50 tests; OSPO counts new POs (owner, 2026-10-19). Wiring is BL-188 and BL-196 |
 | BL-181 | CAP-12 PO below DA: recommend an additional PO (blanket call-off first) on What to order | 2026-10-13 | Built on branch `feat/cap11-cap12-consumption-supply-gap`: open supply = released call-offs by need-date week; gap = demand anticipation in force − open supply; proposal walks the blanket lines oldest first (CAP-9 order) and shares their balance across weeks, else "New PO needed"; "Below demand anticipation" section on What to order, separate from the engine list; drafts carry no engine origin |
 | BL-180 | CAP-11 Lower consumption: excess taken off DA from week 5, fully absorbed by week 8, alert if it cannot be | 2026-10-13 | Built on branch `feat/cap11-cap12-consumption-supply-gap`: `consumptionStore` and `t_consumption_record` (planner-recorded, typed or CSV/XLSX upload, 0 accepted, marked as awaiting the SAP goods-issue feed); split by demand anticipation share; the excess of a frozen horizon is absorbed into the next horizon's open weeks, never a frozen one; `demandAnticipationUnabsorbed` PTI-only alert for what is left Superseded 2026-10-19: rework is BL-188 (DRC-2). |
 | BL-179 | CAP-10 DA frozen in the current 4-week horizon; recalculation changes week 5 onward only | 2026-10-13 | Built in PR #221 (merge `c3507f8`): `demandAnticipationWeeks` (stock and reorder point counted once, in week 1), append-only `demandAnticipationStore` seeded with one sample publication, `t_demandanticipation_publish` on `forecast:publish`, fixed 4-week horizons (CAP-D17: publish freezes the horizon holding the current week, once), page `/buyer/demand-anticipation` with locked weeks and "would be" Superseded 2026-10-19: rework is BL-188 (DRC-2). |
