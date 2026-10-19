@@ -11,9 +11,11 @@
 //                    Rejected call-off gave its quantity back. Neither is supply.
 //   gap(w)         = max(0, demand anticipation(w) − open supply(w)), where the
 //                    demand anticipation is the read's `qty`: the figure IN
-//                    FORCE for the week (frozen or today's). It is read, never
-//                    recomputed here, so a later adjustment of `qty` (CAP-11
-//                    absorbing an excess) flows into the gap unchanged.
+//                    FORCE for the week (published or today's, over the
+//                    rolling horizon, DRC-2; null outside it). It is read,
+//                    never recomputed here, so an adjustment of `qty` (DRC-4
+//                    absorbing a surplus in the last week) flows into the gap
+//                    unchanged.
 //
 // A blanket balance that has not been called off is not dated supply (CAP-9
 // shows it as run-out); every open PO line in a call-off state is a blanket
