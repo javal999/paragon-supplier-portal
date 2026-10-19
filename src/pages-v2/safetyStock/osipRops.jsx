@@ -26,6 +26,7 @@ import {
 } from '@services/transitions/osipRopRules';
 import { qtyOf } from '../materialPlan/planDisplay';
 import { ProvisionalNote } from './osipSafety';
+import { LevelSuggestion } from './levelSuggestion';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BL-196 (DRC-10, DRC-D11) and BL-198 (DRC-12a) on the Safety stock targets page:
@@ -355,6 +356,13 @@ export const RopDetail = ({ materialCode, uom, osip, rop, figures, npdRule }) =>
               <HandoffNotice availability={availability} testId="handoff-osip-level" />
             )}
           </div>
+          {/* BL-208 (DRC-19) [Proposed] — a suggestion; only the planner sets the level. */}
+          <LevelSuggestion
+            materialCode={materialCode}
+            osip={osip}
+            current={rop.level.level}
+            held={availability.kind === 'held'}
+          />
         </div>
         <div data-testid="sst-rop-detail-npd">
           <p className="text-sm">

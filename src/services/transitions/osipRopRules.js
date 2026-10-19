@@ -109,8 +109,10 @@ export const OSIP_ROP_QUESTIONS = Object.freeze({
 // ─── Level (DRC-D11) ─────────────────────────────────────────────────────────
 
 /**
- * `source`: who set the level — the planner (`t_osiplevel_set`), or the
- * automatic classification (DRC-19, on hold; it appends to the same ledger).
+ * `source`: how the level was set — the planner's own pick, or the planner
+ * confirming the suggested level (`classification`, BL-208 / DRC-19
+ * [Proposed]). Both come through `t_osiplevel_set`; nothing sets a level
+ * automatically.
  * @typedef {'planner' | 'classification'} OsipLevelSource
  */
 
