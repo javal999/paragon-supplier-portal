@@ -79,13 +79,13 @@ export const RfpFirmOfferRounds = ({ event, rounds, gateOf, settled, pending, ru
   const negotiate = useVerbAvailability('rfp:negotiate');
   const [asking, setAsking] = useState(false);
   const canAsk = RFP_ROUND_READY_STATUSES.includes(event.status) && !!event.pricing;
+  // RFx UX B-07 — the choice sits in the "Firm up the prices" block, which
+  // carries its title and rule; while the RFP is Open the button is shown
+  // disabled with "Close the RFP first".
+  const isOpen = event.status === 'Open';
   return (
-    <div
-      className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-4 space-y-4"
-      data-testid={`rfp-rounds-${event.id}`}
-    >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h4 className="text-sm font-semibold text-text-primary">{t('rfx.firm.title')}</h4>
+    <div className="space-y-4" data-testid={`rfp-rounds-${event.id}`}>
+      <div className="flex flex-wrap items-center gap-3">
         {canAsk && !asking && negotiate.kind === 'held' && (
           <Button
             variant="outline"
@@ -98,10 +98,20 @@ export const RfpFirmOfferRounds = ({ event, rounds, gateOf, settled, pending, ru
         {canAsk && negotiate.kind !== 'held' && (
           <HandoffNotice availability={negotiate} testId="handoff-rfp-negotiate" />
         )}
+        {isOpen ? (
+          <>
+            <Button variant="outline" disabled data-testid={`rfp-ask-firm-${event.id}`}>
+              {t('rfx.firm.ask')}
+            </Button>
+            <span
+              className="text-xs text-text-tertiary"
+              data-testid={`rfp-firmup-close-first-firm-${event.id}`}
+            >
+              {t('rfx.firmUp.closeFirst')}
+            </span>
+          </>
+        ) : null}
       </div>
-      {event.status === 'Open' && !!event.pricing && (
-        <p className="text-xs text-text-tertiary">{t('rfx.firm.needsClosed')}</p>
-      )}
       {asking && negotiate.kind === 'held' && (
         <RoundForm
           event={event}

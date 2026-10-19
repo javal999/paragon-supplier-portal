@@ -13,7 +13,7 @@ export const sourcingEn = {
   'sourcing.crumb.acquire': 'ACQUIRE',
   'sourcing.crumb.sourcing': 'SOURCING & RFQ',
   // — Page header —
-  'sourcing.header.title': 'Quotation requests',
+  'sourcing.header.title': 'RFQ · Quotation requests',
   'sourcing.header.subtitle': 'Active sourcing events, quote evaluation, and award history.',
   // — Header actions —
   'sourcing.action.export': 'Export',
@@ -378,7 +378,7 @@ export const sourcingId = {
   'sourcing.crumb.acquire': 'PENGADAAN',
   'sourcing.crumb.sourcing': 'SUMBER & RFQ',
   // — Page header —
-  'sourcing.header.title': 'Permintaan penawaran harga',
+  'sourcing.header.title': 'RFQ · Permintaan penawaran harga',
   'sourcing.header.subtitle': 'Acara sumber aktif, evaluasi penawaran, dan riwayat pemenangan.',
   // — Header actions —
   'sourcing.action.export': 'Ekspor',

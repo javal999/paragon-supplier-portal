@@ -252,6 +252,21 @@ const rfqFromRfp = (sourceRfpOptionRefs) =>
     }
   });
 
+/**
+ * An RFQ created from rfp-002 BEFORE owner ruling Q1 (2026-10-19) closed the
+ * RFQ path for an option in a firm-offer round: created through the verb with
+ * no option refs, then given the refs it was recorded with. Round 1 names
+ * both options, so this is the only way an RFQ can still source one of them.
+ * @param {readonly string[]} sourceRfpOptionRefs
+ */
+const legacyRfqFromRfp = async (sourceRfpOptionRefs) => {
+  const res = await rfqFromRfp([]);
+  expect(res.status, res.reason).toBe('done');
+  const id = /** @type {NonNullable<typeof res.entityId>} */ (res.entityId);
+  rfqStore.update(id, (r) => ({ ...r, sourceRfpOptionRefs }));
+  return res;
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('RFX-D15 — the fixture the rule is probed against exists', () => {
@@ -364,8 +379,10 @@ describe('RFX-D15 — a firm-offer round on a Partly awarded RFP', () => {
 
   it('(e) KNOWN-BAD — an option an RFQ created from this RFP sources is refused ROUND_OPTION_SETTLED; once the RFQ is cancelled it opens', async () => {
     await partlyAwarded();
-    const rfq = await rfqFromRfp([PUMP_CAP]);
-    expect(rfq.status, rfq.reason).toBe('done');
+    // Owner ruling Q1: round 1 names the pump and cap, so a new RFQ for it is
+    // refused; one recorded before the ruling still sources it.
+    expect(codeOf((await rfqFromRfp([PUMP_CAP])).reason)).toBe('RFQ_OPTION_IN_FIRM_ROUND');
+    const rfq = await legacyRfqFromRfp([PUMP_CAP]);
     const refused = await openRound([PUMP_CAP]);
     expect(refused.status).toBe('failed');
     expect(codeOf(refused.reason)).toBe('ROUND_OPTION_SETTLED');
@@ -400,7 +417,7 @@ describe('RFX-D15 — the same "open options only" rule on a Closed RFP', () => 
   it('KNOWN-BAD — on a Closed RFP an option an RFQ already sources is refused too; the other option opens', async () => {
     await firstRound();
     expect(statusOf()).toBe('Closed');
-    expect((await rfqFromRfp([FULL_SET])).status).toBe('done');
+    await legacyRfqFromRfp([FULL_SET]);
     const refused = await openRound([FULL_SET]);
     expect(codeOf(refused.reason)).toBe('ROUND_OPTION_SETTLED');
     const ok = await openRound([PUMP_CAP]);
