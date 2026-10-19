@@ -45,6 +45,7 @@ import { AnswerValue, IndicativePill, authored, sectionTitle } from './rfx/rfxAu
 import { DraftRevisionNote } from './rfx/draftEdit';
 import { SupplierDocumentsPanel } from './rfx/SupplierDocumentsPanel';
 import { ConfirmSheet, closeEffects } from './rfx/ConfirmSheet';
+import { extendOffered } from './rfx/rfxExtend';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ONE INFORMATION REQUEST — REQ-E03-02 (BUY), on its own page.
@@ -250,6 +251,8 @@ const RfiDetail = ({
 }) => {
   const { t } = useTranslation();
   const [only, setOnly] = useState(/** @type {string[]} */ ([]));
+  // BL-219 — extend is offered only where `t_rfi_extend` accepts the status.
+  const canExtend = extendOffered('t_rfi_extend', event.status);
   const [deadline, setDeadline] = useState('');
   // RFx UX 1C (B-05) — "Close the event" opens a confirmation sheet; the
   // close is dispatched only from the sheet.
@@ -358,40 +361,45 @@ const RfiDetail = ({
             </Button>
           )}
           {/* REQ-E03-02 edge case — extend for everyone, or for the suppliers
-              ticked in "Invited suppliers" below. */}
-          <div>
-            <label
-              className="block text-xs font-semibold text-text-secondary mb-1"
-              htmlFor={`extend-${event.id}`}
-            >
-              {t('rfx.rfi.extend')}
-            </label>
-            <input
-              id={`extend-${event.id}`}
-              type="date"
-              value={deadline}
-              onChange={(e) => setDeadline(e.target.value)}
-              className="bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
-            />
-          </div>
-          <Button
-            variant="outline"
-            disabled={!canPublish || !deadline}
-            data-testid={`rfi-extend-${event.id}`}
-            onClick={() =>
-              run(
-                {
-                  verb: 'extendRfi',
-                  rfiId: event.id,
-                  deadline,
-                  ...(only.length > 0 ? { supplierIds: only } : {})
-                },
-                'rfx.toast.extended'
-              )
-            }
-          >
-            {only.length > 0 ? t('rfx.rfi.extendSelected') : t('rfx.rfi.extendAll')}
-          </Button>
+              ticked in "Invited suppliers" below. BL-219 — offered only in the
+              from-states of `t_rfi_extend`. */}
+          {canExtend ? (
+            <>
+              <div>
+                <label
+                  className="block text-xs font-semibold text-text-secondary mb-1"
+                  htmlFor={`extend-${event.id}`}
+                >
+                  {t('rfx.rfi.extend')}
+                </label>
+                <input
+                  id={`extend-${event.id}`}
+                  type="date"
+                  value={deadline}
+                  onChange={(e) => setDeadline(e.target.value)}
+                  className="bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
+                />
+              </div>
+              <Button
+                variant="outline"
+                disabled={!canPublish || !deadline}
+                data-testid={`rfi-extend-${event.id}`}
+                onClick={() =>
+                  run(
+                    {
+                      verb: 'extendRfi',
+                      rfiId: event.id,
+                      deadline,
+                      ...(only.length > 0 ? { supplierIds: only } : {})
+                    },
+                    'rfx.toast.extended'
+                  )
+                }
+              >
+                {only.length > 0 ? t('rfx.rfi.extendSelected') : t('rfx.rfi.extendAll')}
+              </Button>
+            </>
+          ) : null}
           <Button variant="secondary" onClick={onCreateRfq} data-testid={`rfi-to-rfq-${event.id}`}>
             {t('rfx.rfi.createRfq')}
           </Button>
@@ -521,7 +529,7 @@ const RfiDetail = ({
             <TableHeaderCell>{t('rfx.deadline.own')}</TableHeaderCell>
             <TableHeaderCell>{t('rfx.response.submitted')}</TableHeaderCell>
             {!!event.confidentiality && <TableHeaderCell>{t('rfxa.conf.col')}</TableHeaderCell>}
-            <TableHeaderCell>{t('rfx.rfi.extendSelected')}</TableHeaderCell>
+            {canExtend ? <TableHeaderCell>{t('rfx.rfi.extendSelected')}</TableHeaderCell> : null}
           </TableHeader>
           <tbody>
             {event.invitedSuppliers.map((invitee) => (
@@ -560,21 +568,23 @@ const RfiDetail = ({
                     )}
                   </TableCell>
                 )}
-                <TableCell>
-                  <input
-                    type="checkbox"
-                    className="accent-teal"
-                    aria-label={invitee.supplierName}
-                    checked={only.includes(invitee.supplierId)}
-                    onChange={() =>
-                      setOnly((prev) =>
-                        prev.includes(invitee.supplierId)
-                          ? prev.filter((s) => s !== invitee.supplierId)
-                          : [...prev, invitee.supplierId]
-                      )
-                    }
-                  />
-                </TableCell>
+                {canExtend ? (
+                  <TableCell>
+                    <input
+                      type="checkbox"
+                      className="accent-teal"
+                      aria-label={invitee.supplierName}
+                      checked={only.includes(invitee.supplierId)}
+                      onChange={() =>
+                        setOnly((prev) =>
+                          prev.includes(invitee.supplierId)
+                            ? prev.filter((s) => s !== invitee.supplierId)
+                            : [...prev, invitee.supplierId]
+                        )
+                      }
+                    />
+                  </TableCell>
+                ) : null}
               </TableRow>
             ))}
           </tbody>

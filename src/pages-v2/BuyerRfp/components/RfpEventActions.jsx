@@ -12,6 +12,7 @@ import { ConfirmSheet, closeEffects } from '../../rfx/ConfirmSheet';
 import RfxMoreMenu from '../../rfx/RfxMoreMenu';
 import RfxSaveTemplate from '../../rfx/RfxSaveTemplate';
 import { rfxNow } from '../../rfx/rfxDisplay';
+import { extendOffered } from '../../rfx/rfxExtend';
 
 /**
  * The acts the open event's STATE allows, in ONE row (RFx UX 2A, B-10):
@@ -90,31 +91,36 @@ const RfpEventActions = ({ open, create, publish, run, onEdit }) => {
             {t('rfx.rfp.closeEvent')}
           </Button>
         )}
-        <div>
-          <label
-            className="block text-xs font-semibold text-text-secondary mb-1"
-            htmlFor={`rfp-extend-${open.id}`}
-          >
-            {t('rfx.rfi.extend')}
-          </label>
-          <input
-            id={`rfp-extend-${open.id}`}
-            type="date"
-            value={extendTo}
-            onChange={(e) => setExtendTo(e.target.value)}
-            className="bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
-          />
-        </div>
-        <Button
-          variant="outline"
-          disabled={publish.kind !== 'held' || !extendTo}
-          onClick={() =>
-            run({ verb: 'extendRfp', rfpId: open.id, deadline: extendTo }, 'rfx.toast.extended')
-          }
-          data-testid={`rfp-extend-btn-${open.id}`}
-        >
-          {t('rfx.rfi.extendAll')}
-        </Button>
+        {/* BL-219 — the deadline extension, only where `t_rfp_extend` accepts the status. */}
+        {extendOffered('t_rfp_extend', open.status) ? (
+          <>
+            <div>
+              <label
+                className="block text-xs font-semibold text-text-secondary mb-1"
+                htmlFor={`rfp-extend-${open.id}`}
+              >
+                {t('rfx.rfi.extend')}
+              </label>
+              <input
+                id={`rfp-extend-${open.id}`}
+                type="date"
+                value={extendTo}
+                onChange={(e) => setExtendTo(e.target.value)}
+                className="bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
+              />
+            </div>
+            <Button
+              variant="outline"
+              disabled={publish.kind !== 'held' || !extendTo}
+              onClick={() =>
+                run({ verb: 'extendRfp', rfpId: open.id, deadline: extendTo }, 'rfx.toast.extended')
+              }
+              data-testid={`rfp-extend-btn-${open.id}`}
+            >
+              {t('rfx.rfi.extendAll')}
+            </Button>
+          </>
+        ) : null}
         <RfxMoreMenu
           testId={`rfp-more-${open.id}`}
           items={[
