@@ -24,7 +24,8 @@ import {
   useNegotiationRounds,
   useSupplierInvoices,
   useAwards,
-  useRfpAwards
+  useRfpAwards,
+  useRfqEngagement
 } from '@services/query/hooks';
 import {
   outcomeShareText,
@@ -73,6 +74,9 @@ const SupplierHome = () => {
   const rfiEvents = useRfiEvents();
   const rfpEvents = useRfpEvents();
   const rounds = useNegotiationRounds();
+  // Lane 2D follow-up — this supplier's intent per RFQ: a declined RFQ leaves
+  // "RFQ invitations to answer".
+  const rfqEngagement = useRfqEngagement();
   // RFx UX S-04 — this supplier's own award reads (RFQ and RFP), narrowed by
   // the read model to its own lines.
   const rfqAwards = useAwards();
@@ -113,6 +117,7 @@ const SupplierHome = () => {
         rfis: rfiEvents.data?.items ?? [],
         rfps: rfpEvents.data?.items ?? [],
         rounds: rounds.data?.items ?? [],
+        rfqEngagement: rfqEngagement.data?.items ?? [],
         supplierId: supplierId ?? null
       });
       const docs = documents.data?.items ?? [];
@@ -519,6 +524,7 @@ const SupplierHome = () => {
       rfiEvents.data,
       rfpEvents.data,
       rounds.data,
+      rfqEngagement.data,
       rfqAwards.data,
       rfpAwards.data,
       supplierId,

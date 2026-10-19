@@ -860,7 +860,8 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    * an award in force on that RFP already placed (AWARD_OPTION_SOURCED_ELSEWHERE).
    * The rule is `rfpOptionSourcedRefusal`, the one the RFP → RFQ pre-fill uses.
    * Owner ruling Q1 (2026-10-19) — nor an option a firm-offer round of that RFP
-   * names (RFQ_OPTION_IN_FIRM_ROUND, `rfqOptionInRoundRefusal`).
+   * names (RFQ_OPTION_IN_FIRM_ROUND, `rfqOptionInRoundRefusal`). BL-216 — nor
+   * from an RFP that is still Open (RFQ_SOURCE_RFP_OPEN, `rfqFromOpenRfpRefusal`).
    */
   RFQ_CREATE_RFP_OPTIONS_FREE: 'rfq_create_rfp_options_free'
 });

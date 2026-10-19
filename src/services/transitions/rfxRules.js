@@ -28,6 +28,7 @@ import { isAttachmentMeta } from '../attachments/sessionAttachments';
 /** @import { BiddingEligibility, SourcingType } from '../sourcing/sourcingType' */
 /** @import { CertValidity, PerformanceBand, SupplierFilters } from '../sourcing/supplierFilters' */
 import { matchesSupplierFilters } from '../sourcing/supplierFilters';
+import { builtInRefusal } from '../sourcing/rfxBuiltIn';
 
 // ── REQ-E03-01 — who may be invited ─────────────────────────────────────────
 
@@ -359,7 +360,8 @@ export function rfiQuestionRefusal(q, customSectionIds = []) {
   ) {
     return `BAD_WEIGHT: ${q.id} a weight is a number above zero`;
   }
-  return null;
+  // BL-215 — a link to a built-in field fits only a question of its shape.
+  return builtInRefusal(q);
 }
 
 /**

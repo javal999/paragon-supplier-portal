@@ -15,7 +15,7 @@ import { rfqStore } from '@services/data/mock/stores/rfqStore';
 import { quotationStore } from '@services/data/mock/stores/quotationStore';
 import { rfqTemplateStore } from '@services/sourcing/rfqTemplates';
 import { mockDataService } from '@services/data/mock/mockDataService';
-import { awardStore, resetRfxStores } from '@services/data/mock/stores/rfxStores';
+import { awardStore, resetRfxStores, rfpEventStore } from '@services/data/mock/stores/rfxStores';
 import { sdcClock } from '@services/sdc';
 
 // `<Toaster />` lives in AppRouter, not in the page, so it is mounted here for
@@ -310,7 +310,20 @@ describe('RFI → RFQ pre-fill (/buyer/rfq?rfi=<id>)', () => {
   });
 });
 
+/**
+ * PREMISE CHANGED (BL-216, RFX-D16): an RFQ is created from a CLOSED RFP only,
+ * so the pre-fill cases close Tundra (rfp-002, Open in the fixture) first.
+ */
+const closeTundra = () =>
+  rfpEventStore.update('rfp-002', (e) => ({ ...e, status: /** @type {const} */ ('Closed') }));
+
 describe('RFP → RFQ pre-fill (/buyer/rfq?rfp=<id>&options=<ids>, spec D3)', () => {
+  beforeEach(() => {
+    resetRfxStores();
+    closeTundra();
+  });
+  afterEach(() => resetRfxStores());
+
   it('Tundra: "pump and cap only" and the supplier-proposed stock bottle land as items, points as breaks, responders invited', async () => {
     renderWithProviders(<BuyerSourcing />, {
       route: '/buyer/rfq?rfp=rfp-002&options=opt-pump-cap,sup-opt-1'
@@ -400,6 +413,7 @@ describe('RFP → RFQ pre-fill (/buyer/rfq?rfp=<id>&options=<ids>, spec D3)', ()
   describe('with an award in force on the RFP', () => {
     beforeEach(() => {
       resetRfxStores();
+      closeTundra();
       sdcClock.reset();
       awardStore.add({
         id: 'AWD-RFP-D3',

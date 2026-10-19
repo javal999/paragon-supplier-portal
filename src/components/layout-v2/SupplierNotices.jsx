@@ -61,6 +61,12 @@ const useShellRfps = () =>
     (svc, scope) => svc.procurement.getRfpEvents(scope),
     SHELL
   );
+const useShellRfqEngagement = () =>
+  useServiceQuery(
+    ['procurement', 'rfqEngagement'],
+    (svc, scope) => svc.procurement.getRfqEngagement(scope),
+    SHELL
+  );
 const useShellRounds = () =>
   useServiceQuery(
     ['procurement', 'negotiationRounds'],
@@ -207,11 +213,13 @@ export const SupplierMenuCount = ({ path }) => {
   const rfis = useShellRfis();
   const rfps = useShellRfps();
   const rounds = useShellRounds();
+  const rfqEngagement = useShellRfqEngagement();
   const queue = supplierSourcingQueue({
     rfqs: rfqs.data?.items ?? [],
     rfis: rfis.data?.items ?? [],
     rfps: rfps.data?.items ?? [],
     rounds: rounds.data?.items ?? [],
+    rfqEngagement: rfqEngagement.data?.items ?? [],
     supplierId: identity.supplierId
   });
   const text =

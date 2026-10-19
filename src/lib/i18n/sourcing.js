@@ -111,11 +111,6 @@ export const sourcingEn = {
   'sourcing.panel.awardedToLine': 'Awarded to {{names}}',
   'sourcing.panel.partlyAwardedTo': 'Partly awarded to {{names}}',
   // — Quote comparison —
-  'sourcing.cmp.title.one': 'Quote comparison ({{count}} quote)',
-  'sourcing.cmp.title.other': 'Quote comparison ({{count}} quotes)',
-  'sourcing.cmp.empty': 'No quotes received yet.',
-  'sourcing.cmp.criterion': 'Criterion',
-  'sourcing.cmp.topRanked': 'Top-ranked',
   // — 2e-c-3 FX refusals. Both name the currencies and both name the REMEDY:
   //   a refusal a buyer cannot act on is only half a refusal.
   'sourcing.cmp.fx.refused.FX_UNPINNED':
@@ -181,9 +176,6 @@ export const sourcingEn = {
   'sourcing.cmp.simulated': 'Simulated',
   'sourcing.cmp.simulatedTitle':
     'Rehearsal — awaiting a live source (compliance & reliability data)',
-  'sourcing.cmp.row.unitPrice': 'Unit Price',
-  'sourcing.cmp.row.totalPrice': 'Total Price',
-  'sourcing.cmp.row.leadTime': 'Lead Time',
   // CP-0 2e-b-1a — the quote-stage lead time is a required ESTIMATE, not a
   // commitment. It is still scored and ranked on; the tag only stops the buyer
   // reading it as firmer than it is. The firm date is confirmed at PO.
@@ -194,18 +186,9 @@ export const sourcingEn = {
   // buyer for the first time (it was collected on the quote form and dropped).
   // Display only this batch: whether a minimum ABOVE the RFQ quantity should
   // warn, flag or block the award is MOQ-FIND-01, not built here.
-  'sourcing.cmp.row.moq': 'Min. Order Qty',
   'sourcing.cmp.moqNone': 'No minimum stated',
-  'sourcing.cmp.row.paymentTerms': 'Payment Terms',
-  'sourcing.cmp.row.compliance': 'Compliance gate',
-  'sourcing.cmp.row.priceScore': 'Price Score',
-  'sourcing.cmp.row.leadTimeScore': 'Lead Time Score',
-  'sourcing.cmp.row.reliability': 'Reliability',
-  'sourcing.cmp.row.composite': 'Composite',
   'sourcing.cmp.row.result': 'Result',
   'sourcing.cmp.row.status': 'Status',
-  'sourcing.cmp.leadTimeDays_one': '{{count}} day',
-  'sourcing.cmp.leadTimeDays_other': '{{count}} days',
   'sourcing.cmp.moveToReview': 'Move to review',
   // — CI-2 should-cost-vs-quote spread (read-only, MODELED × SIMULATED) —
   'sourcing.cmp.row.spread': 'vs Should-Cost',
@@ -489,11 +472,6 @@ export const sourcingId = {
   'sourcing.panel.awardedToLine': 'Dimenangkan oleh {{names}}',
   'sourcing.panel.partlyAwardedTo': 'Sebagian dimenangkan oleh {{names}}',
   // — Quote comparison —
-  'sourcing.cmp.title.one': 'Perbandingan penawaran ({{count}} penawaran)',
-  'sourcing.cmp.title.other': 'Perbandingan penawaran ({{count}} penawaran)',
-  'sourcing.cmp.empty': 'Belum ada penawaran diterima.',
-  'sourcing.cmp.criterion': 'Kriteria',
-  'sourcing.cmp.topRanked': 'Peringkat teratas',
   'sourcing.cmp.fx.refused.FX_UNPINNED':
     'Tidak diperingkat — penawaran dihargai dalam {{currencies}} dan belum ada kurs yang dicatat untuk RFQ ini. Catat kurs untuk membandingkannya; penawaran di bawah ditampilkan sesuai yang diajukan.',
   'sourcing.cmp.fx.refused.FX_STALE':
@@ -548,23 +526,12 @@ export const sourcingId = {
   'sourcing.toast.fxPinFailed.default': 'Silakan coba lagi.',
   'sourcing.cmp.simulated': 'Simulasi',
   'sourcing.cmp.simulatedTitle': 'Latihan — menunggu sumber langsung (data kepatuhan & keandalan)',
-  'sourcing.cmp.row.unitPrice': 'Harga Satuan',
-  'sourcing.cmp.row.totalPrice': 'Harga Total',
-  'sourcing.cmp.row.leadTime': 'Waktu Tunggu',
   'sourcing.cmp.estimated': 'Perkiraan',
   'sourcing.cmp.estimatedTitle':
     'Bersifat indikatif pada tahap penawaran — pemasok mengonfirmasi tanggal pengiriman pasti saat PO. Tetap dinilai dan diperingkat.',
-  'sourcing.cmp.row.moq': 'Kuantitas Pesanan Min.',
   'sourcing.cmp.moqNone': 'Tidak ada minimum',
-  'sourcing.cmp.row.paymentTerms': 'Syarat Pembayaran',
-  'sourcing.cmp.row.compliance': 'Gerbang kepatuhan',
-  'sourcing.cmp.row.priceScore': 'Skor Harga',
-  'sourcing.cmp.row.leadTimeScore': 'Skor Waktu Tunggu',
-  'sourcing.cmp.row.reliability': 'Keandalan',
-  'sourcing.cmp.row.composite': 'Komposit',
   'sourcing.cmp.row.result': 'Hasil',
   'sourcing.cmp.row.status': 'Status',
-  'sourcing.cmp.leadTimeDays_other': '{{count}} hari',
   'sourcing.cmp.moveToReview': 'Pindahkan ke tinjauan',
   // — Selisih should-cost vs penawaran CI-2 (hanya-baca, MODELED × SIMULASI) —
   'sourcing.cmp.row.spread': 'vs Should-Cost',

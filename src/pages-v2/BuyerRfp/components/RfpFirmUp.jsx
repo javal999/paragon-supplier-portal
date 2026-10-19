@@ -5,7 +5,7 @@
 /** @import { RfxCommandVars } from '@services/query/commandHooks' */
 import { useTranslation } from 'react-i18next';
 import Button from '@components/ui-v2/Button';
-import { rfpRoundedOptionRefs } from '@services/sourcing/rfpAward';
+import { rfpRoundedOptionRefs, rfqFromOpenRfpRefusal } from '@services/sourcing/rfpAward';
 import { RfpFirmOfferRounds } from '../../rfx/RfpFirmOffers';
 import { awardedRefsOf } from '../../rfx/RfpAwardSection';
 import { rfpToRfqOffered } from '../utils';
@@ -32,7 +32,8 @@ import RfpToRfq from './RfpToRfq';
  */
 const RfpFirmUp = ({ event, rounds, awards, gateOf, settled, pending, run }) => {
   const { t } = useTranslation();
-  const isOpen = event.status === 'Open';
+  // BL-216 — the RFQ choice is held by the rule the RFQ create policy refuses by.
+  const isOpen = rfqFromOpenRfpRefusal(event.status, event.eventNumber) !== null;
   return (
     <section
       className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-4 space-y-3"

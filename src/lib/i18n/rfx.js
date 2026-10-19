@@ -79,7 +79,6 @@ export const rfxEn = {
   'rfx.rfi.answer': 'Answer',
   'rfx.rfi.submit': 'Send answers',
   'rfx.rfi.required': 'Required',
-  'rfx.rfi.missing': 'Answer every required question before sending.',
   'rfx.rfi.description': 'Description',
   'rfx.rfi.identityFromMaster':
     'Company name, tax number, address and bank details come from your company profile and are not asked again.',
@@ -308,8 +307,6 @@ export const rfxEn = {
   'rfx.cmp.decimalNote':
     'Two scores round to the same whole number, so they are shown to one decimal. Best scored follows the unrounded score.',
   'rfx.cmp.single': 'Single quote',
-  'rfx.cmp.refused':
-    'The quotes are in different currencies and no exchange rate has been recorded, so they are not ranked.',
   'rfx.cmp.empty': 'No quote has been received yet.',
   'rfx.cmp.versions': 'Quote versions',
   'rfx.cmp.round': 'Round {{round}}',
@@ -339,7 +336,7 @@ export const rfxEn = {
   'rfx.neg.awaiting': '{{count}} still to answer',
   'rfx.neg.revised': 'Revised',
   'rfx.neg.notRevised': 'Not revised',
-  'rfx.neg.supplier.title': 'Revised quotes',
+  'rfx.neg.supplier.title': 'RFQ rounds · Revised quotes',
   'rfx.neg.supplier.subtitle': 'PTI has asked you to revise your quote.',
   'rfx.neg.supplier.empty': 'No revised quote has been requested.',
   'rfx.neg.submitRevision': 'Send the revised quote',
@@ -374,6 +371,14 @@ export const rfxEn = {
   'rfx.confirm.cancel.title': 'Confirm cancelling the award',
   'rfx.confirm.cancel.who': 'Suppliers named in this award: {{names}}',
   'rfx.confirm.cancel.kept': 'The award stays on record, marked Cancelled.',
+  // — BL-212: cancelling a whole RFQ from the board's side panel —
+  'rfx.confirm.cancelRfq.title': 'Confirm cancelling the RFQ',
+  'rfx.confirm.cancelRfq.confirm': 'Cancel the RFQ',
+  'rfx.confirm.cancelRfq.who': '{{invited}} suppliers invited; {{quoted}} sent a quote.',
+  'rfx.confirm.cancelRfq.closes':
+    'The RFQ moves to Cancelled: suppliers can no longer quote and no award can be recorded.',
+  'rfx.confirm.cancelRfq.quotes': 'Quotes already sent stay as they are; none is rejected.',
+  'rfx.confirm.cancelRfq.final': 'This cannot be undone: a cancelled RFQ cannot be reopened.',
   // — RFx UX 1C (B-01): the RFQ event page's stage bar and section nav —
   'rfx.stage.label': 'Stage',
   'rfx.stage.next': 'Next',
@@ -758,7 +763,6 @@ export const rfxId = {
   'rfx.rfi.answer': 'Jawab',
   'rfx.rfi.submit': 'Kirim jawaban',
   'rfx.rfi.required': 'Wajib',
-  'rfx.rfi.missing': 'Jawab semua pertanyaan wajib sebelum mengirim.',
   'rfx.rfi.description': 'Keterangan',
   'rfx.rfi.identityFromMaster':
     'Nama perusahaan, NPWP, alamat, dan rekening bank diambil dari profil perusahaan Anda dan tidak ditanyakan lagi.',
@@ -979,8 +983,6 @@ export const rfxId = {
   'rfx.cmp.decimalNote':
     'Dua skor dibulatkan ke bilangan bulat yang sama, jadi ditampilkan dengan satu desimal. Nilai tertinggi mengikuti skor sebelum dibulatkan.',
   'rfx.cmp.single': 'Penawaran tunggal',
-  'rfx.cmp.refused':
-    'Penawaran memakai mata uang berbeda dan belum ada kurs yang dicatat, jadi belum diperingkat.',
   'rfx.cmp.empty': 'Belum ada penawaran yang masuk.',
   'rfx.cmp.versions': 'Versi penawaran',
   'rfx.cmp.round': 'Putaran {{round}}',
@@ -1009,7 +1011,7 @@ export const rfxId = {
   'rfx.neg.awaiting': '{{count}} belum menjawab',
   'rfx.neg.revised': 'Sudah direvisi',
   'rfx.neg.notRevised': 'Belum direvisi',
-  'rfx.neg.supplier.title': 'Penawaran revisi',
+  'rfx.neg.supplier.title': 'Putaran RFQ · Penawaran revisi',
   'rfx.neg.supplier.subtitle': 'PTI meminta Anda merevisi penawaran.',
   'rfx.neg.supplier.empty': 'Tidak ada permintaan penawaran revisi.',
   'rfx.neg.submitRevision': 'Kirim penawaran revisi',
@@ -1043,6 +1045,16 @@ export const rfxId = {
   'rfx.confirm.cancel.title': 'Konfirmasi pembatalan penetapan',
   'rfx.confirm.cancel.who': 'Pemasok dalam penetapan ini: {{names}}',
   'rfx.confirm.cancel.kept': 'Penetapan tetap tercatat, dengan status Dibatalkan.',
+  // — BL-212: membatalkan seluruh RFQ dari panel samping —
+  'rfx.confirm.cancelRfq.title': 'Konfirmasi pembatalan RFQ',
+  'rfx.confirm.cancelRfq.confirm': 'Batalkan RFQ',
+  'rfx.confirm.cancelRfq.who': '{{invited}} pemasok diundang; {{quoted}} mengirim penawaran.',
+  'rfx.confirm.cancelRfq.closes':
+    'RFQ berstatus Dibatalkan: pemasok tidak dapat lagi menawar dan pemenang tidak dapat dicatat.',
+  'rfx.confirm.cancelRfq.quotes':
+    'Penawaran yang sudah masuk tetap seperti adanya; tidak ada yang ditolak.',
+  'rfx.confirm.cancelRfq.final':
+    'Tindakan ini tidak dapat dibatalkan: RFQ yang dibatalkan tidak dapat dibuka kembali.',
   // — RFx UX 1C (B-01): the RFQ event page's stage bar and section nav —
   'rfx.stage.label': 'Tahap',
   'rfx.stage.next': 'Berikutnya',

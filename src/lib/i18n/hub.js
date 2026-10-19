@@ -149,7 +149,7 @@ export const hubEn = {
   'hub.home.task.receipts': 'Goods receipts to review',
   'hub.home.task.inboundAsn': 'Inbound shipments to receive',
   'hub.home.task.chase': 'Suppliers to follow up on forecasts or deliveries',
-  'hub.home.task.rfqAward': 'Sourcing events ready to award',
+  'hub.home.task.rfqAward': 'RFQ ready to award',
   // REQ-E03-05 / REQ-E03-02 / REQ-E03-04 — the RFx tasks (Phase 6a).
   'hub.home.task.negotiationClosing': 'Negotiation rounds closing soon',
   'hub.home.task.sapMessagesFailed': 'SAP messages failed',
@@ -341,7 +341,7 @@ export const hubId = {
   'hub.home.task.receipts': 'Penerimaan barang untuk ditinjau',
   'hub.home.task.inboundAsn': 'Pengiriman masuk untuk diterima',
   'hub.home.task.chase': 'Pemasok yang perlu ditindaklanjuti untuk prakiraan atau pengiriman',
-  'hub.home.task.rfqAward': 'Event sourcing yang siap diputuskan pemenangnya',
+  'hub.home.task.rfqAward': 'RFQ siap ditetapkan pemenangnya',
   'hub.home.task.negotiationClosing': 'Putaran negosiasi yang segera ditutup',
   'hub.home.task.sapMessagesFailed': 'Pesan SAP gagal terkirim',
   'hub.home.task.rfiToAnswer': 'RFI untuk dijawab',

@@ -1365,7 +1365,8 @@ describe('Home tasks — RFx work reaches the task list on both sides', () => {
     );
     // The task that already existed still works — Phase 6a added to this list
     // rather than replacing it.
-    expect(screen.getByTestId('home-task-rfq-award')).toBeInTheDocument();
+    // BL-217 (RFX-D23) — the row names the module first.
+    expect(screen.getByTestId('home-task-rfq-award')).toHaveTextContent('RFQ ready to award');
   });
 
   it('the supplier still to answer sees BOTH requests on its list', async () => {

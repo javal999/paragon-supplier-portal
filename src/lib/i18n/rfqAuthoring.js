@@ -225,6 +225,13 @@ export const rfqAuthoringEn = {
   'rfqAuthoring.prefill.rfpMissing.title': 'RFP options not found',
   'rfqAuthoring.prefill.rfpMissing.desc':
     'The RFP {{id}} or the options chosen on it are not available, so no RFQ was started.',
+  'rfqAuthoring.prefill.rfpOpen.title': 'Close the RFP first',
+  'rfqAuthoring.prefill.rfpOpen.desc':
+    '{{rfp}} is still Open, so no RFQ was started from it. Close the RFP, then create the RFQ.',
+  'rfqAuthoring.prefill.rfpLeftOut.title': 'Some options were left out',
+  'rfqAuthoring.prefill.rfpLeftOut.none': 'No option can go to an RFQ',
+  'rfqAuthoring.prefill.rfpLeftOut.awarded': '{{option}}: already awarded on the RFP',
+  'rfqAuthoring.prefill.rfpLeftOut.inRound': '{{option}}: in firm-offer round {{n}}',
 
   // — Step refusals (why Next is disabled) —
   'rfqAuthoring.refusal.NO_ITEMS': 'Add at least one item.',
@@ -461,6 +468,13 @@ export const rfqAuthoringId = {
   'rfqAuthoring.prefill.rfpMissing.title': 'Pilihan RFP tidak ditemukan',
   'rfqAuthoring.prefill.rfpMissing.desc':
     'RFP {{id}} atau pilihan yang dipilih di dalamnya tidak tersedia, jadi tidak ada RFQ yang dimulai.',
+  'rfqAuthoring.prefill.rfpOpen.title': 'Tutup RFP terlebih dahulu',
+  'rfqAuthoring.prefill.rfpOpen.desc':
+    '{{rfp}} masih Terbuka, jadi tidak ada RFQ yang dimulai darinya. Tutup RFP, lalu buat RFQ.',
+  'rfqAuthoring.prefill.rfpLeftOut.title': 'Beberapa pilihan tidak disertakan',
+  'rfqAuthoring.prefill.rfpLeftOut.none': 'Tidak ada pilihan yang dapat masuk ke RFQ',
+  'rfqAuthoring.prefill.rfpLeftOut.awarded': '{{option}}: sudah ditetapkan pemenangnya di RFP',
+  'rfqAuthoring.prefill.rfpLeftOut.inRound': '{{option}}: dalam putaran penawaran pasti {{n}}',
 
   'rfqAuthoring.refusal.NO_ITEMS': 'Tambahkan minimal satu item.',
   'rfqAuthoring.refusal.ITEM_TYPE_UNKNOWN': 'Pilih jenis item untuk setiap item.',

@@ -68,6 +68,12 @@
 
 /** One question of an RFI, from the library or added for a single event. */
 /**
+ * BL-215 — the built-in response field a buyer question repeats: the sample
+ * offer's ready date (RFQ and RFP) or the RFP pricing's development timeline.
+ * @typedef {'sampleReadyDate' | 'developmentTimeline'} RfxBuiltInField
+ */
+
+/**
  * @typedef {object} RfiQuestion
  * @property {string} id
  * @property {RfiSectionId | RfxCustomSectionId} sectionId
@@ -90,6 +96,9 @@
  *   read, not scored — which is the honest state of every descriptive question.
  * @property {Readonly<Record<string, number>>} [optionScores] -  Per-option points (0–100) for a weighted choice question.
  * @property {RfiNumberScale} [scale] -  The scale for a weighted `numberWithUnit` question.
+ * @property {RfxBuiltInField} [builtIn] BL-215 — the built-in field this question repeats, set by the
+ *   buyer in the question editor. The supplier answers the question only, and the answer fills that
+ *   field on send (`builtInDuplicates`). Absent = no stored link (the word match is the fallback).
  */
 
 /** A reusable template Procurement keeps per category family. */

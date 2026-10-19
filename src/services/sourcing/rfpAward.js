@@ -269,3 +269,19 @@ export function rfqOptionInRoundRefusal(refs, rounded, rfpNumber, options = []) 
     ? null
     : `RFQ_OPTION_IN_FIRM_ROUND: ${rfpOptionName(ref, options)} is in firm-offer round ${rounded.get(ref)} on ${rfpNumber}; its prices are firmed up there, not in an RFQ`;
 }
+
+/**
+ * BL-216 (RFX-D16) — an RFQ may not be created from an RFP while that RFP is
+ * Open: its suppliers can still send and change proposals, so the options and
+ * prices an RFQ would copy are not settled (`RFQ_SOURCE_RFP_OPEN`), or null.
+ * Called by the RFQ create policy and by the RFP page, which holds "Create RFQ
+ * from this RFP" with "Close the RFP first" by the same rule (RFX-R2).
+ * @param {string} rfpStatus
+ * @param {string} rfpNumber
+ * @returns {string | null}
+ */
+export function rfqFromOpenRfpRefusal(rfpStatus, rfpNumber) {
+  return rfpStatus === 'Open'
+    ? `RFQ_SOURCE_RFP_OPEN: ${rfpNumber} is still Open; close it before creating an RFQ from it`
+    : null;
+}
