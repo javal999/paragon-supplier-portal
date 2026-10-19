@@ -118,7 +118,7 @@
 | DRC-13 | Call-off trigger at ROP Fisik on eWM SOH; planner approval; SAP PR recommendation when the umbrella PO runs out; max stock caps call-offs | Build now | F1 as [Default]; real-time needs the eWM feed |
 | DRC-14 | Replenishment cycle f by area | Build now | B6 as [Default] |
 | DRC-15a | Feedstock reconcile: POs ordered vs call-offs + ASNs requested, daily view | Build now | — |
-| DRC-15b | Feedstock reconcile leftover rule and final formula | Hold | Owner: "discussed later" |
+| DRC-15b | Feedstock reconcile leftover rule and final formula | Built, proposal | Built as a proposal, awaiting owner review: switch `leftoverRule` (default flag the liability, not priced, capped at max stock; `showOnly`, `carryToNextPo`). Overrides DRC-15a BR-02 until ruled |
 | DRC-17 | What-if sandbox | After module | Scope accepted 2026-10-16 |
 | DRC-18 | LTP vs FG demand; consumption moving average | Build now | A11 as [Default] |
 | DRC-19 | Automatic OSIP level classification | Hold | C2, F5; the level field exists from DRC-D11 |
