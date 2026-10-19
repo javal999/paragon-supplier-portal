@@ -12,9 +12,9 @@ export const demandAnticipationHistoryEn = {
   'daHist.asOf': 'As of',
   'daHist.back': 'Back to Demand anticipation',
   'daHist.openHistory': 'Publication history',
-  'daHist.refused.title': 'Not available for this seat',
-  'daHist.refused.body':
-    'The demand anticipation history is read by Material Planning, Procurement and Finance seats. Suppliers do not see PTI’s plan.',
+  'daHist.supplier.title': 'Not available to suppliers',
+  'daHist.supplier.body':
+    'The demand anticipation history is PTI’s own plan; suppliers do not see it.',
   'daHist.filter.supplier': 'Supplier',
   'daHist.filter.material': 'Material',
   'daHist.filter.from': 'Planning week from',
@@ -90,9 +90,9 @@ export const demandAnticipationHistoryId = {
   'daHist.asOf': 'Per',
   'daHist.back': 'Kembali ke Antisipasi permintaan',
   'daHist.openHistory': 'Riwayat publikasi',
-  'daHist.refused.title': 'Tidak tersedia untuk peran ini',
-  'daHist.refused.body':
-    'Riwayat antisipasi permintaan dibaca oleh peran Material Planning, Procurement, dan Finance. Pemasok tidak melihat rencana PTI.',
+  'daHist.supplier.title': 'Tidak tersedia untuk pemasok',
+  'daHist.supplier.body':
+    'Riwayat antisipasi permintaan adalah rencana PTI sendiri; pemasok tidak melihatnya.',
   'daHist.filter.supplier': 'Pemasok',
   'daHist.filter.material': 'Material',
   'daHist.filter.from': 'Minggu perencanaan dari',

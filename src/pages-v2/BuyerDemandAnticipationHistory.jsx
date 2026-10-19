@@ -24,7 +24,6 @@ import {
   DA_HISTORY_CSV_COLUMNS,
   DA_HISTORY_RULES,
   daHistoryCsv,
-  daHistoryReadRefusal,
   defaultHistoryRange,
   filterDaHistory
 } from '@services/transitions/demandAnticipationHistory';
@@ -51,9 +50,10 @@ import { weekDates, weekLabel } from './BuyerDemandAnticipation/display';
 // export as CSV (the hub's comparison-export pattern: built in the browser,
 // nothing sent).
 //
-// Who sees it [Owner A10]: Material Planning, Procurement and Finance seats.
-// The read refuses every other seat (`daHistoryReadRefusal`); the page mirrors
-// it as a courtesy and says so rather than showing an error.
+// Who sees it [Owner A10]: Material Planning (under Review), Procurement and
+// Finance (under Audit) reach it from their menus. The page is not gated on
+// business role (CLAUDE.md §65); a supplier persona reads an empty page and is
+// told the history is PTI's own plan.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @param {DaHistoryRow} r */
@@ -70,8 +70,7 @@ const actorText = (actor, t) =>
 const BuyerDemandAnticipationHistory = () => {
   const { t } = useTranslation();
   const { identity } = useCurrentIdentity();
-  const refusal = daHistoryReadRefusal(identity);
-  const query = useDemandAnticipationHistory(identity.businessRoles ?? [], refusal === null);
+  const query = useDemandAnticipationHistory();
   const [params, setParams] = useSearchParams();
   const nowIso = inventoryNow();
   const crumb = [t('hub.nav.section.review'), t('hub.nav.pti.demandAnticipationHistory')];
@@ -82,18 +81,18 @@ const BuyerDemandAnticipationHistory = () => {
   const from = params.get('from') ?? range.from;
   const to = params.get('to') ?? range.to;
 
-  if (refusal !== null)
+  if (identity.personaType !== 'buyer')
     return (
       <AppShellV2>
         <PageHeader breadcrumb={crumb} title={t('hub.nav.pti.demandAnticipationHistory')} />
         <div
           className="bg-bg-surface border border-border-subtle rounded-lg py-10 px-6 text-center"
-          data-testid="dah-refused"
+          data-testid="dah-supplier"
         >
           <p className="text-base font-semibold text-text-primary mb-1">
-            {t('daHist.refused.title')}
+            {t('daHist.supplier.title')}
           </p>
-          <p className="text-sm text-text-tertiary">{t('daHist.refused.body')}</p>
+          <p className="text-sm text-text-tertiary">{t('daHist.supplier.body')}</p>
         </div>
       </AppShellV2>
     );

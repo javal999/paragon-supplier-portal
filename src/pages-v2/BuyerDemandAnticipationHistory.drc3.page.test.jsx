@@ -2,8 +2,8 @@
 // DRC-3 (BL-189) on the screen — the Demand anticipation history page on
 // fixture data: the seeded publication with its stamp and parts, a superseded
 // publication named, the filters (in the page address), the "Provisional"
-// label, the link from the Demand anticipation page, who may see it [Owner
-// A10], and both locales with the figure never abbreviated to "DA".
+// label, the link from the Demand anticipation page, who sees it [Owner A10]
+// (every PTI seat; never a supplier), and both locales with the figure never abbreviated to "DA".
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { fireEvent, screen, within } from '@testing-library/react';
@@ -124,8 +124,8 @@ describe('the filters', () => {
   });
 });
 
-describe('who sees it [Owner A10]', () => {
-  it.each([['planning'], ['procurement'], ['finance']])(
+describe('who sees it [Owner A10] — no business-role gate (CLAUDE.md §65)', () => {
+  it.each([['planning'], ['procurement'], ['finance'], ['requisitioner']])(
     'a %s seat sees the publications',
     async (role) => {
       renderWithProviders(<BuyerDemandAnticipationHistory />, {
@@ -136,20 +136,10 @@ describe('who sees it [Owner A10]', () => {
     }
   );
 
-  it('a supplier, and a PTI seat with none of those roles, is told it is not available', async () => {
+  it('a supplier is told the history is PTI’s own plan, and sees no publication', async () => {
     renderWithProviders(<BuyerDemandAnticipationHistory />, { identity: SUPPLIER, route: ROUTE });
-    expect(await screen.findByTestId('dah-refused')).toHaveTextContent(
-      'Suppliers do not see PTI’s plan'
-    );
+    expect(await screen.findByTestId('dah-supplier')).toHaveTextContent('suppliers do not see it');
     expect(screen.queryByTestId(`dah-card-${EMUL}`)).toBeNull();
-  });
-
-  it('a requisitioner seat is refused too', async () => {
-    renderWithProviders(<BuyerDemandAnticipationHistory />, {
-      identity: seat(['requisitioner']),
-      route: ROUTE
-    });
-    expect(await screen.findByTestId('dah-refused')).toBeInTheDocument();
   });
 });
 

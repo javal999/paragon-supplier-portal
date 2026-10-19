@@ -3092,9 +3092,8 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *   inputs, and (CAP-12) each week's open supply, gap and proposal. PTI only: a supplier scope reads an empty page.
  * @property {(scope: QueryScope) => Promise<Page<DaHistoryRow>>} getDemandAnticipationHistory DRC-3 (BL-189) — every demand anticipation publication ever recorded,
  *   one row per publication × supplier × material, with its stamped figure, its
- *   carry-over origin and the delayed call-offs it reflects (DRC-5). Planning,
- *   procurement and finance seats only: a supplier scope, or a buyer seat holding
- *   none of those roles, is refused with `SCOPE_DENIED`.
+ *   carry-over origin and the delayed call-offs it reflects (DRC-5). PTI only:
+ *   a supplier scope reads an empty page.
  * @property {(scope: QueryScope) => Promise<Page<PlanningGroupView>>} getPlanningGroups Material C5 (MR-8) — the planning groups with their materials and changes.
  *   PTI: every group. Supplier: the groups holding its own materials, narrowed
  *   to those materials, with no change history.

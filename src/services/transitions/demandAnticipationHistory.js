@@ -26,19 +26,17 @@
 // date, and who proposed and approved it — so the auditor sees why the figure
 // moved. Computed at read from the call-offs' stored delay records (law 0.5).
 //
-// WHO MAY READ IT [Owner A10]: PTI's planning, procurement and finance seats,
-// and the two superset roles (`SUPERSET_ROLES`). A supplier never: the
-// publication is PTI's own plan (DRC-D10 holds the supplier view, BL-204).
-// Reads in this hub hold no atom (§75e: atoms are the `requiredRole`s of
-// transitions, and a read is not one), so the gate is the seat's BUSINESS
-// ROLES — the narrowest read access the existing patterns allow.
+// WHO READS IT [Owner A10]: PTI — Material Planning, Procurement and Finance
+// reach it from their menus (nav). It is NOT gated on business role (CLAUDE.md
+// §65: no page gates on role; owner decision 2026-10-19). A supplier persona
+// reads an empty page: service scoping by persona, as `getDemandAnticipation`
+// does — the publication is PTI's own plan (DRC-D10 holds the supplier view).
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @import { ActorAttribution } from '@lib/enforcement' */
 /** @import { CallOff } from '../data/types' */
 /** @import { Carry } from './osipRules' */
 /** @import { DemandAnticipationPublication, RollingDaFlag } from './demandAnticipationRules' */
-import { SUPERSET_ROLES } from './businessRoles';
 import { addDays, dayOf, mondayOf } from './inventoryRules';
 
 /**
@@ -46,34 +44,10 @@ import { addDays, dayOf, mondayOf } from './inventoryRules';
  *   · historyWeeksBack: [MoM 1A] the page opens on at least this many planning
  *                       weeks back from the current one. The store keeps every
  *                       publication; this is only the default date range.
- *   · readRoles:        [Owner A10] the business roles that read the history
- *                       (the planners, Procurement and Finance), besides the
- *                       superset roles.
  */
 export const DA_HISTORY_RULES = Object.freeze({
-  historyWeeksBack: 52,
-  readRoles: Object.freeze(
-    /** @type {readonly string[]} */ (['planning', 'procurement', 'finance'])
-  )
+  historyWeeksBack: 52
 });
-
-/**
- * Why a seat may not read the history, or null when it may.
- *   · SUPPLIER — a supplier seat: the publication is PTI's own plan.
- *   · ROLE — a PTI seat holding none of the read roles.
- * @param {{ readonly personaType: string; readonly businessRoles?: readonly string[] }} scope
- * @returns {'SUPPLIER' | 'ROLE' | null}
- */
-export function daHistoryReadRefusal(scope) {
-  if (scope.personaType !== 'buyer') return 'SUPPLIER';
-  const roles = scope.businessRoles ?? [];
-  const allowed = roles.some(
-    (r) =>
-      DA_HISTORY_RULES.readRoles.includes(r) ||
-      /** @type {ReadonlySet<string>} */ (SUPERSET_ROLES).has(r)
-  );
-  return allowed ? null : 'ROLE';
-}
 
 /**
  * One horizon week of a published figure, as stored.

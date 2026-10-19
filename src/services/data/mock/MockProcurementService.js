@@ -17,9 +17,7 @@ import { withLtpFgDemandRead } from './ltpFgDemandReadModel';
 import { osipSafetyInputs } from './osipSafetyReadModel';
 /** @import { DemandAnticipationSupplyRow } from '../../transitions/supplyBelowDemandRules' */
 /** @import { DaHistoryRow } from '../../transitions/demandAnticipationHistory' */
-import { daHistoryReadRefusal } from '../../transitions/demandAnticipationHistory';
 import { allDemandAnticipationHistory } from './demandAnticipationHistoryReadModel';
-import { DataError } from '../types';
 import { stockSimulationRows } from './stockSimulationReadModel';
 import {
   allCommitmentLines,
@@ -501,17 +499,10 @@ export class MockProcurementService {
    * @returns {Promise<Page<DaHistoryRow>>}
    */
   async getDemandAnticipationHistory(scope) {
-    // DRC-3 (BL-189), [Owner A10] — the audit view of every publication, for
-    // PTI's planning, procurement and finance seats. A supplier, or a PTI seat
-    // holding none of those roles, is refused (MockEnforcementService's shape).
-    const refusal = daHistoryReadRefusal(scope);
-    if (refusal === 'SUPPLIER')
-      throw new DataError('SCOPE_DENIED', 'demand anticipation history is PTI’s own plan');
-    if (refusal === 'ROLE')
-      throw new DataError(
-        'SCOPE_DENIED',
-        'demand anticipation history is read by planning, procurement and finance seats'
-      );
+    // DRC-3 (BL-189), [Owner A10] — the audit view of every publication. PTI's
+    // own plan: a supplier reads none (persona scoping, as getDemandAnticipation).
+    // No business-role gate (CLAUDE.md §65; owner decision 2026-10-19).
+    if (scope.personaType !== 'buyer') return { items: [] };
     return { items: allDemandAnticipationHistory() };
   }
 

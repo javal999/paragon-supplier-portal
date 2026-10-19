@@ -4,7 +4,8 @@
 // REAL publish verb: every publication listed with its stamp (DRC-D16), the
 // superseded one kept and named, the carry-over origin after the week rolls,
 // the DRC-5 (BL-191) adjustment with its origin, the filters, the CSV, and who
-// may read it [Owner A10].
+// reads it [Owner A10]: every PTI seat (no business-role gate, CLAUDE.md §65),
+// never a supplier.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -16,7 +17,6 @@ import { callOffStore } from './stores/callOffStore';
 import { asnStore } from './stores/asnStore';
 import { purchaseOrderStore } from './stores/purchaseOrderStore';
 /** @import { QueryScope } from '../types' */
-import { DataError } from '../types';
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { RULES_VERSION } from '../../transitions/osipRules';
 import { LTP_DROPPED_CODE } from '../../transitions/callOffRules';
@@ -24,7 +24,6 @@ import {
   DA_HISTORY_CSV_COLUMNS,
   DA_HISTORY_RULES,
   daHistoryCsv,
-  daHistoryReadRefusal,
   defaultHistoryRange,
   filterDaHistory
 } from '../../transitions/demandAnticipationHistory';
@@ -266,20 +265,25 @@ describe('the CSV export', () => {
   });
 });
 
-describe('who may read it [Owner A10]', () => {
-  it('planning, procurement, finance and the superset roles read; others are refused', async () => {
-    for (const roles of [['planning'], ['procurement'], ['finance'], ['admin'], ['buyer_all']])
-      expect((await history(seat(roles))).length, roles.join()).toBeGreaterThan(0);
-    for (const roles of [['requisitioner'], ['receiving'], ['compliance'], []]) {
-      await expect(history(seat(roles)), roles.join()).rejects.toBeInstanceOf(DataError);
-      await expect(history(seat(roles))).rejects.toMatchObject({ code: 'SCOPE_DENIED' });
-    }
+describe('who reads it [Owner A10] — persona scoping, no business-role gate (§65)', () => {
+  it('every PTI seat reads it, whatever its business roles', async () => {
+    const full = (await history()).map((r) => r.id);
+    expect(full.length).toBeGreaterThan(0);
+    for (const roles of [
+      ['planning'],
+      ['procurement'],
+      ['finance'],
+      ['requisitioner'],
+      ['receiving'],
+      []
+    ])
+      expect(
+        (await history(seat(roles))).map((r) => r.id),
+        roles.join()
+      ).toEqual(full);
   });
 
-  it('a supplier never reads it', async () => {
-    await expect(history(supplier)).rejects.toMatchObject({ code: 'SCOPE_DENIED' });
-    expect(daHistoryReadRefusal(supplier)).toBe('SUPPLIER');
-    expect(daHistoryReadRefusal(seat(['requisitioner']))).toBe('ROLE');
-    expect(daHistoryReadRefusal(seat(['finance']))).toBeNull();
+  it('a supplier reads an empty page', async () => {
+    expect(await history(supplier)).toEqual([]);
   });
 });
