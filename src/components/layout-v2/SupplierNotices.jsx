@@ -27,7 +27,10 @@ import {
 // `retryOnMount: false`: the shell remounts whenever a page swaps its Loading
 // shell for its Error shell, and a shell read that re-fetched an errored query
 // on mount would flip that page back to Loading, for ever.
-const SHELL = { retryOnMount: false };
+// And `gcTime: Infinity`: these six reads back the shell on every supplier page,
+// so they are never garbage-collected — which also means unmounting the shell
+// schedules no gc timer (a finite gcTime leaves one pending per read).
+const SHELL = { retryOnMount: false, gcTime: Infinity };
 const useShellRfqs = () =>
   useServiceQuery(
     ['procurement', 'rfqs', undefined],
