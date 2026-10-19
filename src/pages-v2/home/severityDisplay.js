@@ -44,6 +44,10 @@ export function withSeverity(tasks, nowIso, t) {
       label: task.label,
       count: task.count,
       to: task.to,
+      // X-02 — the lane a grouped list (Supplier Home) files the row under, and
+      // the oldest deadline the lane orders by. Absent lane: a flat list.
+      ...(task.lane === undefined ? {} : { lane: task.lane }),
+      deadline: s.deadline,
       severity: FLAG[s.severity],
       // A grey row is still "Due soon", not "To review".
       chipLabel: s.severity === 'dueSoonGrey' ? t('hub.home.severity.warning') : undefined,

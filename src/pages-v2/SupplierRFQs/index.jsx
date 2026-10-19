@@ -14,8 +14,12 @@ import {
   useRFQs,
   useQuotations,
   useRfqClarifications,
-  useRfqEngagement
+  useRfqEngagement,
+  useAwards,
+  useNegotiationRounds
 } from '@services/query/hooks';
+import { supplierRfqOutcome } from '@services/sourcing/supplierOutcome';
+/** @import { AwardView, NegotiationRoundView } from '@services/sourcing/views' */
 /** @import { RFQ, Quotation, Supplier } from '@services/data/types' */
 import { rfxNow } from '../rfx/rfxDisplay';
 import { buildAwardRows, buildSubmittedQuotes, toOpenRfq } from './utils';
@@ -27,6 +31,7 @@ import RfqKpiRow from './components/RfqKpiRow';
 import OpenRFQsTab from './components/OpenRFQsTab';
 import MyQuotesTab from './components/MyQuotesTab';
 import AwardsTab from './components/AwardsTab';
+import RfqEventStrips from './components/RfqEventStrips';
 import QuotePanel from './components/QuotePanel';
 
 /**
@@ -37,6 +42,8 @@ import QuotePanel from './components/QuotePanel';
  * @property {Quotation[]} quotations
  * @property {Map<string, RFQ>} rfqById
  * @property {AwardRow[]} awardRows
+ * @property {readonly AwardView[]} awards This supplier's narrowed RFQ award read (RFX-R4).
+ * @property {readonly NegotiationRoundView[]} rounds This supplier's own revision rounds.
  * @property {string} nowIso
  */
 
@@ -55,6 +62,8 @@ const RfqWorkspace = ({
   quotations,
   rfqById,
   awardRows,
+  awards,
+  rounds,
   nowIso
 }) => {
   const { t } = useTranslation();
@@ -119,6 +128,31 @@ const RfqWorkspace = ({
     [quotations]
   );
 
+  // RFx UX S-04 / S-05 — the latest round and the award outcome of an RFQ, as
+  // strips on its card. A round counts as revised once this supplier holds a
+  // quote version for that round number.
+  /** @param {string} rfqId */
+  const strips = (rfqId) => {
+    const round = rounds
+      .filter((r) => r.rfqId === rfqId)
+      .slice()
+      .sort((a, b) => a.roundNumber - b.roundNumber)
+      .pop();
+    const rfq = rfqById.get(rfqId);
+    return (
+      <RfqEventStrips
+        rfqId={rfqId}
+        round={round}
+        revised={
+          !!round &&
+          quotations.some((q) => q.rfqId === rfqId && q.roundNumber === round.roundNumber)
+        }
+        outcome={rfq ? supplierRfqOutcome(rfq, awards, supplierId) : null}
+        nowIso={nowIso}
+      />
+    );
+  };
+
   return (
     <AppShellV2>
       <RfqPageHeader
@@ -159,6 +193,7 @@ const RfqWorkspace = ({
           quotes={submittedQuotes}
           canRevise={submission.canRevise}
           onRevise={submission.handleRevise}
+          strips={strips}
         />
       )}
       {activeTab === 'history' && <AwardsTab rows={awardRows} />}
@@ -184,6 +219,10 @@ const SupplierRFQs = () => {
   const supplierQuery = useCurrentSupplier();
   const rfqsQuery = useRFQs();
   const quotationsQuery = useQuotations();
+  // RFx UX S-03 / S-04 / S-05 — the award record and the rounds. Neither holds
+  // the page: until they arrive the history is empty and no strip shows.
+  const awardsQuery = useAwards();
+  const roundsQuery = useNegotiationRounds();
   // ONE clock read, captured once — the replacement for the deleted
   // `RFQ_TODAY_MS` pin. ⚠️ It sits ABOVE every early return deliberately: this
   // component returns early four ways, and a hook below them is a CONDITIONAL
@@ -229,11 +268,12 @@ const SupplierRFQs = () => {
 
   const initialRfqs = rfqs.filter((r) => r.status === 'Open').map((r) => toOpenRfq(r, nowIso, t));
 
-  // Award outcome is a real read: the supplier's terminal quotations joined to
-  // their RFQ. Awarding an RFQ (buyer) flips this supplier's quote to Awarded /
-  // Rejected via the cascade, so this re-derives after the buyer's award.
+  // RFx UX S-03 — award history is read from the AWARD RECORD (one row per
+  // event), not from the quotation statuses, which listed an RFQ once per quote
+  // version and dated it with the planned award deadline.
   const rfqById = new Map(rfqs.map((r) => [r.id, r]));
-  const awardRows = buildAwardRows(quotations, rfqById);
+  const awards = awardsQuery.data?.items ?? [];
+  const awardRows = buildAwardRows(awards, rfqById, quotations, supplierId, t);
 
   return (
     <RfqWorkspace
@@ -243,6 +283,8 @@ const SupplierRFQs = () => {
       quotations={quotations}
       rfqById={rfqById}
       awardRows={awardRows}
+      awards={awards}
+      rounds={roundsQuery.data?.items ?? []}
       nowIso={nowIso}
     />
   );

@@ -191,6 +191,20 @@ export const hubEn = {
   'hub.home.task.sup.commitmentsDueSoon': 'Forecast commitments due soon',
   'hub.home.task.sup.commitmentsOverdue': 'Forecast commitments overdue',
   'hub.home.task.sup.revisionRequested': 'Forecast commitments PTI asked you to revise',
+  // RFx UX X-02 / S-04 — the supplier To do grouped by lane, Sourcing rows
+  // with the event and days left, the award row and the in-hub notices.
+  'hub.home.lane.other': 'Invoices and documents',
+  'hub.home.task.sup.awarded': 'Awarded to you · {{event}} · {{share}}',
+  'hub.home.poFollowsFromSap': 'The purchase order follows from SAP',
+  'hub.home.nextEvent': '{{event}} · {{when}}',
+  'hub.home.daysLeft_one': '{{count}} day left',
+  'hub.home.daysLeft_other': '{{count}} days left',
+  'hub.home.dueToday': 'due today',
+  'hub.nav.count.rounds_one': '{{count}} round',
+  'hub.nav.count.rounds_other': '{{count}} rounds',
+  'topbar.notices.empty': 'No award news yet',
+  'topbar.notices.awarded': 'Awarded to you · {{event}} · {{share}}',
+  'topbar.notices.withdrawn': 'Award withdrawn · {{event}} · {{date}}',
 
   // Sample data marker (SC-04)
   'hub.sample.label': 'Sample data',
@@ -363,6 +377,16 @@ export const hubId = {
   'hub.home.task.sup.commitmentsDueSoon': 'Komitmen prakiraan yang segera jatuh tempo',
   'hub.home.task.sup.commitmentsOverdue': 'Komitmen prakiraan yang lewat tenggat',
   'hub.home.task.sup.revisionRequested': 'Komitmen prakiraan yang diminta PTI untuk direvisi',
+  'hub.home.lane.other': 'Faktur dan dokumen',
+  'hub.home.task.sup.awarded': 'Dimenangkan oleh Anda · {{event}} · {{share}}',
+  'hub.home.poFollowsFromSap': 'Pesanan pembelian (PO) menyusul dari SAP',
+  'hub.home.nextEvent': '{{event}} · {{when}}',
+  'hub.home.daysLeft_other': '{{count}} hari lagi',
+  'hub.home.dueToday': 'jatuh tempo hari ini',
+  'hub.nav.count.rounds_other': '{{count}} putaran',
+  'topbar.notices.empty': 'Belum ada kabar pemenangan',
+  'topbar.notices.awarded': 'Dimenangkan oleh Anda · {{event}} · {{share}}',
+  'topbar.notices.withdrawn': 'Pemenangan ditarik · {{event}} · {{date}}',
 
   'hub.sample.label': 'Data contoh',
   'hub.sample.hint':
