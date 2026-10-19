@@ -42,7 +42,7 @@ export const feedstockReconcileEn = {
   'fsr.leftover.note.showOnly':
     'Proposed leftover rule (DRC-15b), switch “show only”: the remainders are shown only, with no liability and nothing carried.',
   'fsr.leftover.note.flagLiability':
-    'Proposed leftover rule (DRC-15b), switch “flag liability”: of what is not yet called off, the part up to the max stock is flagged as a liability, not priced and agreed outside the Hub, as for the old fixed stock reconcile (ENG-D17). With no max stock agreed, the whole remainder is flagged.',
+    'Proposed leftover rule (DRC-15b), switch “flag liability”: of what is not yet called off, the part up to the max stock is flagged as a liability, not priced and agreed outside the Hub, as for the old fixed stock reconcile. With no max stock agreed, the whole remainder is flagged.',
   'fsr.leftover.note.carryToNextPo':
     'Proposed leftover rule (DRC-15b), switch “carry to next PO”: what is not yet called off is shown as carried into the next PO for the supplier and material. Nothing is created.',
 
@@ -106,7 +106,7 @@ export const feedstockReconcileId = {
   'fsr.leftover.note.showOnly':
     'Usulan aturan sisa (DRC-15b), pilihan “hanya tampilkan”: sisa hanya ditampilkan, tanpa liabilitas dan tanpa dibawa ke PO berikutnya.',
   'fsr.leftover.note.flagLiability':
-    'Usulan aturan sisa (DRC-15b), pilihan “tandai liabilitas”: dari yang belum di-call-off, bagian hingga stok maksimum ditandai sebagai liabilitas, tanpa harga dan disepakati di luar Hub, seperti pada rekonsiliasi stok tetap sebelumnya (ENG-D17). Jika belum ada stok maksimum yang disepakati, seluruh sisa ditandai.',
+    'Usulan aturan sisa (DRC-15b), pilihan “tandai liabilitas”: dari yang belum di-call-off, bagian hingga stok maksimum ditandai sebagai liabilitas, tanpa harga dan disepakati di luar Hub, seperti pada rekonsiliasi stok tetap sebelumnya. Jika belum ada stok maksimum yang disepakati, seluruh sisa ditandai.',
   'fsr.leftover.note.carryToNextPo':
     'Usulan aturan sisa (DRC-15b), pilihan “bawa ke PO berikutnya”: yang belum di-call-off ditampilkan sebagai dibawa ke PO berikutnya untuk pemasok dan material tersebut. Tidak ada yang dibuat.',
 
