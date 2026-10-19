@@ -430,6 +430,9 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       // Material B1 — MR-1 BR-03 and BR-05, read when the positions are built.
       // Material B2 and B3 — the weekly-update panel and the compliance read model read the cutoff.
       updateCycleSettings: [
+        // BL-194 (DRC-8 BR-b, [Default E2]) — the feedstock confirmation is due
+        // with the same weekly stock update cycle.
+        'src/pages-v2/inventory/FeedstockConfirmPanel.jsx',
         'src/pages-v2/inventory/WeeklyUpdatePanel.jsx',
         'src/services/data/mock/updateComplianceReadModel.js',
         'src/services/transitions/inventoryConfig.js',

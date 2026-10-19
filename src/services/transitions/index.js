@@ -78,6 +78,7 @@ export { forecastOverrideFlow } from './flows/forecastOverride.flow';
 export { warehouseDecisionFlow } from './flows/warehouseDecision.flow';
 export { demandAnticipationFlow } from './flows/demandAnticipation.flow';
 export { consumptionFlow } from './flows/consumption.flow';
+export { feedstockConfirmationFlow } from './flows/feedstockConfirmation.flow';
 export { rfiEventFlow } from './flows/rfiEvent.flow';
 export { rfiResponseFlow } from './flows/rfiResponse.flow';
 export { rfpEventFlow } from './flows/rfpEvent.flow';
@@ -139,6 +140,7 @@ import { forecastOverrideFlow } from './flows/forecastOverride.flow';
 import { warehouseDecisionFlow } from './flows/warehouseDecision.flow';
 import { demandAnticipationFlow } from './flows/demandAnticipation.flow';
 import { consumptionFlow } from './flows/consumption.flow';
+import { feedstockConfirmationFlow } from './flows/feedstockConfirmation.flow';
 import { rfiEventFlow } from './flows/rfiEvent.flow';
 import { rfiResponseFlow } from './flows/rfiResponse.flow';
 import { rfpEventFlow } from './flows/rfpEvent.flow';
@@ -250,6 +252,9 @@ flowRegistry.register(forecastOverrideFlow); // REQ-E14-11 X-06 — a planner's 
 flowRegistry.register(warehouseDecisionFlow); // FUX-D3 — a planner's decision for a warehouse week that does not fit
 flowRegistry.register(demandAnticipationFlow); // CAP-10 — the planner freezes the demand anticipation of the current horizon
 flowRegistry.register(consumptionFlow); // CAP-11 — the planner records a material's weekly consumption
+// BL-194 / DRC-8 — the supplier confirms its current feedstock with a date: the
+// same degenerate single-state snapshot shape, append-only (DRC-D17).
+flowRegistry.register(feedstockConfirmationFlow); // BL-194 — supplier feedstock confirmation
 // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx event types and the
 // negotiation window. RFQ keeps its own machine (`rfqFlow`); these are the two
 // event types it did not cover plus the round the award is negotiated in.

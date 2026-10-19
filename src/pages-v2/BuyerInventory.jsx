@@ -43,6 +43,7 @@ import {
   useInventoryRunner
 } from './inventory/inventoryDisplay';
 import StockEntryPanel from './inventory/StockEntryPanel';
+import FeedstockLine from './inventory/FeedstockLine';
 import { weeklyUpdateView } from './inventory/WeeklyUpdatePanel';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
 import { TradeNameBeside } from './materials/tradeNameDisplay';
@@ -427,6 +428,8 @@ const BuyerInventory = () => {
                   </TableCell>
                   <TableCell className="text-right whitespace-nowrap">
                     <Figure value={p.supplierSoh} uom={p.uom} absentKey="inv.figure.noSubmission" />
+                    {/* BL-194 (DRC-8 BR-c) — feedstock, its own line; never added to SOH. */}
+                    <FeedstockLine position={p} />
                   </TableCell>
                   <TableCell className="text-right whitespace-nowrap">
                     <Figure value={p.ptiSoh} uom={p.uom} absentKey="inv.figure.none" />

@@ -125,6 +125,7 @@ import { mrpControllerStore } from './mrpControllerStore';
 import { warehouseDecisionStore } from '../data/mock/stores/warehouseDecisionStore';
 import { demandAnticipationStore } from '../data/mock/stores/demandAnticipationStore';
 import { materialNameStore } from '../data/mock/stores/materialNameStore';
+import { feedstockConfirmationStore } from '../data/mock/stores/feedstockConfirmationStore';
 import { simulationOverrideStore } from '../data/mock/stores/simulationOverrideStore';
 import { hubSettingsStore, settingValue } from './hubSettingsStore';
 import { reasonCodeStore } from './reasonCodes';
@@ -297,6 +298,9 @@ async function realIds() {
     // CAP-11 — a consumption record is creation-only (unprobeable) and its store
     // starts empty (no consumption history is invented); a well-formed id.
     consumption: 'con-0001',
+    // BL-194 — a feedstock confirmation is creation-only (unprobeable) and its
+    // store starts empty (every material is due until confirmed); a well-formed id.
+    feedstockConfirmation: 'fsc-0001',
     // REQ-E14-13 — a "taken to SAP" mark is creation-only (unprobeable) and its
     // store starts empty (nothing is marked while the engine data is simulated);
     // the id is a well-formed one so the coverage control can see the target.
@@ -475,6 +479,7 @@ const resetAll = () => {
   mrpControllerStore.reset();
   warehouseDecisionStore.reset();
   materialNameStore.reset();
+  feedstockConfirmationStore.reset();
   simulationOverrideStore.reset();
   hubSettingsStore.reset();
   reasonCodeStore.reset();
@@ -578,6 +583,7 @@ describe('POPULATION — nothing below means anything without this', () => {
     // So is a stock simulation planner input (Material E1, AR-20) and a forecast override (REQ-E14-11).
     // So is a demand anticipation publication (CAP-10): it is followed, never changed.
     // And a consumption record (CAP-11): a later record supersedes it at read.
+    // And a feedstock confirmation (BL-194): append-only, the latest in force.
     expect(unprobeable).toEqual([
       'rfqConfidentiality',
       'inventoryDeclaration',
@@ -589,7 +595,8 @@ describe('POPULATION — nothing below means anything without this', () => {
       'sapChangeMark',
       'forecastOverride',
       'demandAnticipation',
-      'consumption'
+      'consumption',
+      'feedstockConfirmation'
     ]);
   });
 

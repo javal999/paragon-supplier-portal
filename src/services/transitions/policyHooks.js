@@ -478,6 +478,15 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    */
   MATERIAL_NAME_VALID: 'material_name_valid',
   /**
+   * BL-194 / DRC-8 BR-a — a supplier's feedstock confirmation: the material is
+   * assigned to the supplier (NOT_ASSIGNED), the quantity is a number of 0 or
+   * more (QTY_INVALID), the confirmation date is given (DATE_REQUIRED), is a
+   * date (DATE_INVALID) and is not after today (DATE_IN_FUTURE), and the note
+   * is text of at most the rules' length (NOTE_INVALID, NOTE_TOO_LONG). The
+   * rule is `feedstockEntryRefusal`, the one the supplier form calls.
+   */
+  FEEDSTOCK_CONFIRMATION_VALID: 'feedstock_confirmation_valid',
+  /**
    * Material E1 (MR-7 BR-06, BR-08) — a planner input to the stock simulation:
    * a known supplier (UNKNOWN_SUPPLIER) and material (UNKNOWN_MATERIAL), one of
    * soh / inProduction / toDistributor (UNKNOWN_FIELD), a quantity of 0 or more

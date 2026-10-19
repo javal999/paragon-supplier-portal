@@ -489,7 +489,10 @@ const LANE_BUNDLES = Object.freeze({
     'capacity:confirm',
     // Material C2 (MR-3 BR-02) — the supplier's own name for a material it
     // supplies: the same people who declare its stock.
-    'materialname:submit'
+    'materialname:submit',
+    // BL-194 / DRC-8 BR-a — confirming current feedstock with a date: the same
+    // people who declare the stock, in the same weekly cycle [Default E2].
+    'feedstock:confirm'
   ]),
   // ── BACK OFFICE — the paperwork ─────────────────────────────────────────
   // *"The admin people are the ones who upload the certificates"* (operator).

@@ -543,6 +543,7 @@ export class DataError extends Error {
  * `lastSync`:  The latest API sync attempt for this supplier, if any.
  * `mrpController`:  Material C4 — the material's MRP controller (MR-5 BR-03), narrowed per reader.
  * `tradeName`: Material C2 — this supplier's APPROVED trade name for the material (MR-3 BR-02), shown beside PTI's description. Projected at read, never stored; absent while no name is approved or the material is no longer assigned.
+ * `feedstock`: BL-194 (DRC-8) — the supplier's latest feedstock confirmation for the material, projected at read; absent while none is on record. A separate line, never part of `supplierSoh` (MoM 2B).
  *
  * @typedef {{
  *   readonly supplierId: string;
@@ -572,7 +573,32 @@ export class DataError extends Error {
  *   readonly batches: readonly { readonly batchNumber: string; readonly qty: number; readonly manufacturingDate?: string; readonly expiryDate?: string; }[];
  *   readonly mrpController?: MrpControllerRef;
  *   readonly tradeName?: string;
+ *   readonly feedstock?: FeedstockConfirmation;
  * }} InventoryPosition
+ */
+
+// ─── Supplier feedstock confirmation (BL-194 · DRC-8 BR-a; DRC-D17) ─────────
+
+/**
+ * One supplier confirmation of its current feedstock for an assigned material,
+ * append-only; the latest recorded per supplier × material is in force. It is
+ * NOT stock (MoM 2B): no stock figure, simulation or call-off check reads it.
+ *
+ * `feedstockQty`:  In the material's unit (`uom`, copied from the master); 0 allowed.
+ * `confirmedOn`:  `YYYY-MM-DD`, the day the supplier confirms the figure as of; never after the day it was recorded.
+ * `recordedAt` / `recordedBy`:  When and by whom the hub accepted it (hub clock, session), never from the payload.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly feedstockQty: number;
+ *   readonly uom: string;
+ *   readonly confirmedOn: string;
+ *   readonly note?: string;
+ *   readonly recordedAt: string;
+ *   readonly recordedBy: ActorAttribution;
+ * }} FeedstockConfirmation
  */
 
 // ─── Supplier trade names (Material C2 · MR-3 BR-01 to BR-06) ───────────────
