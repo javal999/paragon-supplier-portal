@@ -24,6 +24,7 @@ import {
 import { qty } from './rfxDisplay';
 import { itemLabel } from './AwardPanel';
 import { QualificationWarningsNote } from './eligibilityDisplay';
+import { ConfirmSheet } from './ConfirmSheet';
 
 // ────────────────────────────────────────────────────────────────────────────
 // THE RECORDED AWARDS OF ONE EVENT (RFx C3; NR-3 BR-09 to BR-11). Every award
@@ -327,6 +328,7 @@ const AwardRecordActions = ({
   eventType,
   award,
   awards,
+  supplierName,
   cancelVerb,
   sapVerb,
   pending,
@@ -366,8 +368,31 @@ const AwardRecordActions = ({
         : 'rfqCompare.award.cancelToClosed';
 
   if (mode === 'cancel' && cancelVerb.kind === 'held') {
+    // RFx UX 1C (B-05) — the cancel is a confirmation sheet: who the award
+    // named, where the event goes, and that the record is kept (AR-08).
+    const named = [...new Set(award.lines.map((l) => l.supplierId))].map(supplierName);
+    const effects = [
+      ...(named.length > 0
+        ? [{ key: 'who', text: t('rfx.confirm.cancel.who', { names: named.join(', ') }) }]
+        : []),
+      { key: 'state', text: t(cancelNote) },
+      { key: 'kept', text: t('rfx.confirm.cancel.kept') }
+    ];
     return (
-      <div className="space-y-2" data-testid={`award-cancel-form-${award.id}`}>
+      <ConfirmSheet
+        title={t('rfx.confirm.cancel.title')}
+        effects={effects}
+        confirmLabel={t('rfqCompare.award.cancelConfirm')}
+        pending={pending}
+        confirmDisabled={cancelBlocked}
+        onConfirm={() => {
+          onCancel(award, reason.trim(), partial);
+          close();
+        }}
+        onBack={close}
+        testId={`award-cancel-form-${award.id}`}
+        confirmTestId={`award-cancel-confirm-${award.id}`}
+      >
         <label
           className="block text-xs font-semibold text-text-secondary"
           htmlFor={`award-cancel-reason-${award.id}`}
@@ -381,24 +406,7 @@ const AwardRecordActions = ({
           onChange={(e) => setReason(e.target.value)}
           className={inputClass}
         />
-        <p className="text-xs text-text-tertiary">{t(cancelNote)}</p>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            disabled={pending || cancelBlocked}
-            data-testid={`award-cancel-confirm-${award.id}`}
-            onClick={() => {
-              onCancel(award, reason.trim(), partial);
-              close();
-            }}
-          >
-            {t('rfqCompare.award.cancelConfirm')}
-          </Button>
-          <Button variant="secondary" onClick={close}>
-            {t('rfqCompare.award.close')}
-          </Button>
-        </div>
-      </div>
+      </ConfirmSheet>
     );
   }
 

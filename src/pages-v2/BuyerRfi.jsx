@@ -43,6 +43,7 @@ import {
 import { AnswerValue, IndicativePill, authored, sectionTitle } from './rfx/rfxAuthoringDisplay';
 import { DraftRevisionNote } from './rfx/draftEdit';
 import { SupplierDocumentsPanel } from './rfx/SupplierDocumentsPanel';
+import { ConfirmSheet, closeEffects } from './rfx/ConfirmSheet';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI INFORMATION REQUESTS — REQ-E03-02 (BUY).
@@ -303,6 +304,10 @@ const RfiDetail = ({
   const { t } = useTranslation();
   const only = extendOnly[event.id] ?? [];
   const deadline = extendFor[event.id] ?? '';
+  // RFx UX 1C (B-05) — "Close the event" opens a confirmation sheet; the
+  // close is dispatched only from the sheet.
+  // Held by event id, so moving to another event never carries the sheet over.
+  const [confirmClose, setConfirmClose] = useState(/** @type {string | null} */ (null));
 
   return (
     <section className="mt-6 space-y-6" data-testid={`rfi-detail-${event.id}`}>
@@ -392,13 +397,33 @@ const RfiDetail = ({
                 variant="secondary"
                 disabled={!canPublish}
                 data-testid={`rfi-close-${event.id}`}
-                onClick={() => run({ verb: 'closeRfi', rfiId: event.id }, 'rfx.toast.closed')}
+                onClick={() => setConfirmClose(event.id)}
               >
                 {t('rfx.rfi.closeEvent')}
               </Button>
             )}
           </div>
         </div>
+        {confirmClose === event.id && event.status === 'Open' && (
+          <div className="mt-3">
+            <ConfirmSheet
+              title={t('rfx.confirm.close.title')}
+              effects={closeEffects(t, {
+                invited: event.invitedSuppliers.length,
+                responded: event.responses.length
+              })}
+              confirmLabel={t('rfx.rfi.closeEvent')}
+              confirmDisabled={!canPublish}
+              onConfirm={() => {
+                setConfirmClose(null);
+                run({ verb: 'closeRfi', rfiId: event.id }, 'rfx.toast.closed');
+              }}
+              onBack={() => setConfirmClose(null)}
+              testId={`rfi-close-sheet-${event.id}`}
+              confirmTestId={`rfi-close-confirm-${event.id}`}
+            />
+          </div>
+        )}
         {event.description && (
           <div className="mt-3">
             <h4 className="text-xs uppercase tracking-wide text-text-tertiary">

@@ -286,6 +286,8 @@ describe('the award, item by item', () => {
     // both items follow their best score, so no reason is asked
     expect(screen.queryByTestId('award-reason-required')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('award-confirm'));
+    // RFx UX 1C (B-05) — the award is dispatched from its confirmation sheet.
+    fireEvent.click(await screen.findByTestId('award-sheet-confirm'));
     const recorded = await screen.findByTestId('award-recorded');
     expect(within(recorded).getByTestId('award-line-1-sup-015')).toHaveTextContent('70%');
     expect(within(recorded).getByTestId('award-line-1-sup-015')).toHaveTextContent('3,000');
@@ -459,6 +461,8 @@ describe('RFx C3 — the award panel on a legacy RFQ (rfq-014)', () => {
     reasonIfAsked();
     expect(screen.queryByTestId('award-item-refusal')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('award-confirm'));
+    // RFx UX 1C (B-05) — the award is dispatched from its confirmation sheet.
+    fireEvent.click(await screen.findByTestId('award-sheet-confirm'));
 
     const recorded = await screen.findByTestId('award-recorded');
     expect(within(recorded).getByTestId(`award-line-${BOTTLE}-sup-015`)).toHaveTextContent(
@@ -513,6 +517,8 @@ describe('RFx C3 — the award panel on a legacy RFQ (rfq-014)', () => {
     expect(screen.getByTestId('award-confirm')).toHaveTextContent('Award these items');
     reasonIfAsked();
     fireEvent.click(screen.getByTestId('award-confirm'));
+    // RFx UX 1C (B-05) — the award is dispatched from its confirmation sheet.
+    fireEvent.click(await screen.findByTestId('award-sheet-confirm'));
     await waitFor(() =>
       expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
         'Partly awarded'
@@ -528,6 +534,8 @@ describe('RFx C3 — the award panel on a legacy RFQ (rfq-014)', () => {
     type(LABEL, 'sup-015', '100');
     reasonIfAsked();
     fireEvent.click(screen.getByTestId('award-confirm'));
+    // RFx UX 1C (B-05) — the award is dispatched from its confirmation sheet.
+    fireEvent.click(await screen.findByTestId('award-sheet-confirm'));
     await waitFor(() =>
       expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
         'Awarded'
@@ -545,6 +553,8 @@ describe('RFx C3 — the award panel on a legacy RFQ (rfq-014)', () => {
     expect(partial.status, partial.reason).toBe('done');
     renderEvent('rfq-014');
     fireEvent.click(await screen.findByTestId('award-will-not-rest'));
+    // RFx UX 1C (B-05) — the award is dispatched from its confirmation sheet.
+    fireEvent.click(await screen.findByTestId('award-sheet-confirm'));
     await waitFor(() =>
       expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
         'Awarded'
