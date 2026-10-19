@@ -25,8 +25,9 @@ import { quotationStore } from '@services/data/mock/stores/quotationStore';
 import { sdcClock } from '@services/sdc';
 import SupplierRfi from '../SupplierRfi';
 import SupplierRfp from '../SupplierRfp';
-import BuyerRfi from '../BuyerRfi';
-import BuyerRfp from '../BuyerRfp';
+import { Routes, Route } from 'react-router-dom';
+import BuyerRfiEvent from '../BuyerRfiEvent';
+import BuyerRfpEvent from '../BuyerRfp/BuyerRfpEvent';
 import { MockProcurementService } from '@services/data/mock/MockProcurementService';
 import { supplierSourcingQueue } from '@services/sourcing/supplierOutcome';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
@@ -196,8 +197,13 @@ describe('the supplier RFP row', () => {
 
 describe('the buyer invitee table', () => {
   it('RFP: sup-015 reads "Declined: <reason> — <words>" on rfp-003; sup-007 still "Not started"', async () => {
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
-    fireEvent.click(await screen.findByTestId('rfp-open-rfp-003'));
+    // RFx UX 2A (RFX-D17) — the RFP's details are its own page now.
+    renderWithProviders(
+      <Routes>
+        <Route path="/buyer/rfp/:rfpId" element={<BuyerRfpEvent />} />
+      </Routes>,
+      { identity: BUYER_SEAT, route: '/buyer/rfp/rfp-003' }
+    );
     const declined = await screen.findByTestId('rfp-invitee-sup-015');
     expect(within(declined).getByTestId('invitee-intent-declined')).toHaveTextContent(
       'Declined Not a product we make — We fill lip products but do not develop formulas.'
@@ -218,8 +224,13 @@ describe('the buyer invitee table', () => {
       intent: 'respond',
       at: sdcClock.now()
     });
-    renderWithProviders(<BuyerRfi />, { identity: BUYER_SEAT });
-    fireEvent.click(await screen.findByTestId('rfi-open-rfi-002'));
+    // RFx UX 2A (RFX-D17) — the RFI's details are its own page now.
+    renderWithProviders(
+      <Routes>
+        <Route path="/buyer/rfi/:rfiId" element={<BuyerRfiEvent />} />
+      </Routes>,
+      { identity: BUYER_SEAT, route: '/buyer/rfi/rfi-002' }
+    );
     const row = await screen.findByTestId('rfi-invitee-rfi-002-sup-007');
     expect(within(row).getByTestId('invitee-intent-responding')).toHaveTextContent('Will respond');
     // sup-008 sent its answers: "Submitted", whatever was said.
