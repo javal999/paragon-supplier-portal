@@ -1,7 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// RECORDED CONSUMPTION AND ABSORBING THE EXCESS — CAP-11 (BL-180),
-// SC-HUB-DEMAND-ANTICIPATION-BRIEF-2026-10 §5 (CAP-D14), with the fixed 4-week
-// horizons of CAP-D17. Requirements §8 CAP-11 BR-01 to BR-05.
+// RECORDED CONSUMPTION — CAP-11 (BL-180) BR-01 and BR-05, kept under DRC-D13;
+// SC-HUB-DEMAND-ANTICIPATION-BRIEF-2026-10 §5 (CAP-D14).
 //
 // Consumption is recorded by the planner per MATERIAL × week (typed or
 // uploaded; later the SAP goods-issue feed). It is never derived from stock
@@ -10,38 +9,26 @@
 //
 //   1. IN FORCE. A later record for the same material × week supersedes the
 //      earlier one at read; both stay stored (append-only).
-//   2. SPLIT (CAP-D14, [Placeholder]). A material's weekly consumption is
-//      shared across its suppliers by each one's share of that week's FROZEN
-//      demand anticipation (`consumptionSplit`), in whole units.
-//   3. EXCESS (BR-01). Per supplier × material × fixed horizon: the sum, over
-//      the horizon's frozen weeks that HAVE consumption recorded, of
-//      max(0, frozen demand anticipation − consumption). A week with no
-//      consumption recorded adds nothing (AC-03).
-//   4. ABSORB (BR-02, BR-03, CAP-D17). Into the NEXT horizon's weeks, spread
-//      evenly (whole units, the remainder on the earliest weeks), never below
-//      0 in a week; what a week cannot take moves on to the next week. What is
-//      still left after the next horizon's last week is UNABSORBED (BR-04).
-//   5. A FROZEN WEEK NEVER CHANGES. Absorbing touches only the next horizon's
-//      weeks no publication froze. When the next horizon is published, its
-//      weeks freeze WITH the absorption (`absorbed` on the frozen entry), and
-//      that frozen absorption counts as already absorbed at every later read,
-//      so it is never taken twice. A larger excess found after that freeze
-//      can no longer be absorbed: it is unabsorbed and raises the alert.
+//   2. SPLIT (CAP-D14, `consumptionSplit`). A material's weekly consumption is
+//      shared across its suppliers by each one's demand anticipation in force
+//      that week, in whole units.
 //
-// Everything here is pure: the records, the publications, today's figures
-// and the hub clock's now are inputs. Every [Placeholder] is in the one
-// `DEMAND_ANTICIPATION_RULES` block.
+// ⚠️ ABSORBING THE EXCESS OVER WEEKS 5 TO 8 IS RETIRED. CAP-11 BR-02 and BR-03
+// (and `absorptionPlan`, `spreadExcess`, `seriesInForce`, `rowsInForce`) are
+// superseded by DRC-4 BR-02 (BL-190): supply above the demand anticipation is
+// absorbed in the LAST week of the rolling horizon (`planCheck`, osipRules.js,
+// read by `demandAnticipationRules`). The consumption record and its upload
+// stay; they feed the grid's "Recorded consumption" row and the DRC-18 moving
+// average.
+//
+// Everything here is pure: the records and the rows are inputs.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @import { ActorAttribution } from '@lib/enforcement' */
-/** @import { DemandAnticipationAbsorbed, DemandAnticipationPublication, DemandAnticipationRowCore, DemandAnticipationSeries, DemandAnticipationWeekView } from './demandAnticipationRules' */
+/** @import { DemandAnticipationRowCore, DemandAnticipationWeekView } from './demandAnticipationRules' */
 import { normalizeQty } from '@lib/localeNumber';
-import {
-  DEMAND_ANTICIPATION_RULES,
-  horizonAnchor,
-  horizonContaining
-} from './demandAnticipationRules';
-import { addDays, dayOf, mondayOf } from './inventoryRules';
+import { DEMAND_ANTICIPATION_RULES } from './demandAnticipationRules';
+import { dayOf, mondayOf } from './inventoryRules';
 
 /** @typedef {'manual' | 'upload' | 'sap'} ConsumptionSource */
 
@@ -120,12 +107,6 @@ export function consumptionRefusal(payload, ctx) {
  * @param {string} week
  */
 const mwKey = (materialCode, week) => `${materialCode}|${week}`;
-/**
- * @param {string} supplierId
- * @param {string} materialCode
- * @param {string} week
- */
-const smwKey = (supplierId, materialCode, week) => `${supplierId}|${materialCode}|${week}`;
 
 /**
  * 1 — the record in force per material × week: the LATEST appended (the store
@@ -141,8 +122,8 @@ export function consumptionInForce(records) {
 }
 
 /**
- * 2 — each supplier's share of a material's week (CAP-D14). By frozen demand
- * anticipation; evenly when the setting says so or when the week's total is 0.
+ * 2 — each supplier's share of a material's week (CAP-D14). By its demand
+ * anticipation in force that week; evenly when the setting says so or when the week's total is 0.
  * @param {readonly { readonly supplierId: string; readonly qty: number }[]} holders
  * @returns {Map<string, number>}
  */
@@ -152,29 +133,6 @@ export function consumptionShares(holders) {
   return new Map(
     holders.map((h) => [h.supplierId, even ? 1 / holders.length : Math.max(0, h.qty) / total])
   );
-}
-
-/**
- * 4 — spread `total` over weeks that can take at most `caps[i]` each: evenly
- * (whole units, the remainder on the earliest weeks), never below 0 in a
- * week, and what a week cannot take moves on to the next week.
- * @param {number} total
- * @param {readonly number[]} caps
- * @returns {{ takes: number[]; left: number }}
- */
-export function spreadExcess(total, caps) {
-  const whole = Math.max(0, Math.round(total));
-  if (caps.length === 0) return { takes: [], left: whole };
-  const base = Math.floor(whole / caps.length);
-  const extra = whole - base * caps.length;
-  let carry = 0;
-  const takes = caps.map((cap, i) => {
-    const want = base + (i < extra ? 1 : 0) + carry;
-    const take = Math.min(want, Math.max(0, cap));
-    carry = want - take;
-    return take;
-  });
-  return { takes, left: carry };
 }
 
 /**
@@ -191,71 +149,30 @@ export function spreadExcess(total, caps) {
  */
 
 /**
- * One supplier × material horizon whose excess is not fully absorbed (BR-04).
- * `fromWeeks`:  The horizon the excess arose in.
- * `intoWeeks`:  The next horizon it was absorbed into.
- * `remaining`:  What is left after the next horizon's last week.
- *
- * @typedef {{
- *   readonly supplierId: string;
- *   readonly materialCode: string;
- *   readonly fromWeeks: readonly string[];
- *   readonly intoWeeks: readonly string[];
- *   readonly excess: number;
- *   readonly remaining: number;
- * }} UnabsorbedExcess
+ * CAP-11 BR-05 (kept) — every row's weeks with the supplier's share of the
+ * material's recorded consumption, split across the material's suppliers by
+ * their demand anticipation in force that week (CAP-D14).
+ * @template {DemandAnticipationRowCore} R
+ * @param {readonly R[]} rows
+ * @param {readonly ConsumptionRecord[]} records
+ * @returns {R[]}
  */
-
-/**
- * @typedef {{
- *   readonly consumption: ReadonlyMap<string, ConsumptionShare>;
- *   readonly absorbed: ReadonlyMap<string, DemandAnticipationAbsorbed>;
- *   readonly unabsorbed: readonly UnabsorbedExcess[];
- * }} AbsorptionPlan
- */
-
-/**
- * 2 to 5 — the consumption shares, the absorption per supplier × material ×
- * week (`supplierId|materialCode|week`), and what stays unabsorbed. A frozen
- * week's absorption is the one it froze with; an open week's is computed now
- * against today's figure.
- * @param {{
- *   readonly publications: readonly DemandAnticipationPublication[];
- *   readonly today: readonly DemandAnticipationSeries[];
- *   readonly records: readonly ConsumptionRecord[];
- * }} input
- * @param {string} nowIso
- * @returns {AbsorptionPlan}
- */
-export function absorptionPlan({ publications, today, records }, nowIso) {
-  const anchor = horizonAnchor(publications, nowIso);
-  const n = DEMAND_ANTICIPATION_RULES.horizonWeeks;
-  /** @param {string} start */
-  const horizonOf = (start) => horizonContaining(anchor, start);
-
-  // The frozen figure per supplier × material × week: the FIRST publication's.
-  /** @type {Map<string, DemandAnticipationPublication['entries'][number]>} */
-  const frozen = new Map();
-  /** @type {Map<string, { supplierId: string; qty: number }[]>} */
-  const holders = new Map();
-  for (const p of publications)
-    for (const e of p.entries) {
-      const k = smwKey(e.supplierId, e.materialCode, e.week);
-      if (frozen.has(k)) continue;
-      frozen.set(k, e);
-      const mw = mwKey(e.materialCode, e.week);
-      holders.set(mw, [...(holders.get(mw) ?? []), { supplierId: e.supplierId, qty: e.qty }]);
-    }
-
-  // 2 — the split, over the suppliers frozen in that week.
+export function withConsumption(rows, records) {
+  const inForce = consumptionInForce(records);
   /** @type {Map<string, ConsumptionShare>} */
-  const consumption = new Map();
-  for (const [mw, record] of consumptionInForce(records)) {
-    const of = holders.get(mw) ?? [];
-    const shares = consumptionShares(of);
-    for (const h of of) {
+  const byPairWeek = new Map();
+  for (const [mw, record] of inForce) {
+    const holders = rows.flatMap((r) =>
+      r.materialCode === record.materialCode
+        ? r.weeks
+            .filter((w) => w.week === record.week)
+            .map((w) => ({ supplierId: r.supplierId, qty: w.qty ?? 0 }))
+        : []
+    );
+    const shares = consumptionShares(holders);
+    for (const h of holders) {
       const share = shares.get(h.supplierId) ?? 0;
-      consumption.set(smwKey(h.supplierId, record.materialCode, record.week), {
+      byPairWeek.set(`${h.supplierId}|${mw}`, {
         qty: Math.round(record.qty * share),
         materialQty: record.qty,
         share,
@@ -263,113 +180,10 @@ export function absorptionPlan({ publications, today, records }, nowIso) {
       });
     }
   }
-
-  // 3 — the excess per supplier × material × horizon.
-  /** @type {Map<string, { supplierId: string; materialCode: string; from: string[]; qty: number }>} */
-  const excess = new Map();
-  for (const [k, c] of consumption) {
-    const e = /** @type {NonNullable<ReturnType<typeof frozen.get>>} */ (frozen.get(k));
-    const from = horizonOf(e.week);
-    const hk = smwKey(e.supplierId, e.materialCode, from[0]);
-    const prev = excess.get(hk) ?? {
-      supplierId: e.supplierId,
-      materialCode: e.materialCode,
-      from,
-      qty: 0
-    };
-    excess.set(hk, { ...prev, qty: prev.qty + Math.max(0, e.qty - c.qty) });
-  }
-
-  // Today's figure per supplier × material × week (what an open week can take).
-  /** @type {Map<string, number>} */
-  const figure = new Map();
-  for (const s of today)
-    for (const w of s.weeks) figure.set(smwKey(s.supplierId, s.materialCode, w.week), w.qty);
-
-  // 5 — the absorption frozen weeks carry.
-  /** @type {Map<string, DemandAnticipationAbsorbed>} */
-  const absorbed = new Map();
-  for (const [k, e] of frozen)
-    if (e.absorbed && e.absorbed.qty > 0)
-      absorbed.set(k, { ...e.absorbed, fromWeeks: horizonOf(e.absorbed.fromHorizonStart) });
-
-  // 4 — absorb into the next horizon's open weeks.
-  /** @type {UnabsorbedExcess[]} */
-  const unabsorbed = [];
-  for (const x of [...excess.values()].sort((a, b) =>
-    `${a.supplierId}|${a.materialCode}|${a.from[0]}`.localeCompare(
-      `${b.supplierId}|${b.materialCode}|${b.from[0]}`
-    )
-  )) {
-    if (x.qty <= 0) continue;
-    const into = horizonOf(addDays(x.from[0], n * 7));
-    const keys = into.map((w) => smwKey(x.supplierId, x.materialCode, w));
-    const already = keys.reduce((sum, k) => {
-      const a = frozen.get(k)?.absorbed;
-      return sum + (a && a.fromHorizonStart === x.from[0] ? a.qty : 0);
-    }, 0);
-    const open = keys.filter((k) => !frozen.has(k));
-    const { takes, left } = spreadExcess(
-      x.qty - already,
-      open.map((k) => figure.get(k) ?? 0)
-    );
-    open.forEach((k, i) => {
-      if (takes[i] > 0)
-        absorbed.set(k, { qty: takes[i], fromHorizonStart: x.from[0], fromWeeks: x.from });
-    });
-    if (left > 0)
-      unabsorbed.push({
-        supplierId: x.supplierId,
-        materialCode: x.materialCode,
-        fromWeeks: x.from,
-        intoWeeks: into,
-        excess: x.qty,
-        remaining: left
-      });
-  }
-  return { consumption, absorbed, unabsorbed };
-}
-
-/**
- * The figures a publication made now freezes: today's, less the absorption of
- * each open week, carrying that absorption so it is never taken twice (5).
- * @param {readonly DemandAnticipationSeries[]} today
- * @param {AbsorptionPlan} plan
- * @returns {DemandAnticipationSeries[]}
- */
-export function seriesInForce(today, plan) {
-  return today.map((s) => ({
-    ...s,
-    weeks: s.weeks.map((w) => {
-      const a = plan.absorbed.get(smwKey(s.supplierId, s.materialCode, w.week));
-      return a
-        ? {
-            ...w,
-            qty: w.qty - a.qty,
-            absorbed: { qty: a.qty, fromHorizonStart: a.fromHorizonStart }
-          }
-        : w;
-    })
-  }));
-}
-
-/**
- * The page's rows with consumption and absorption (CAP-11). An open week's
- * `qty` — the figure in force — is today's figure less what it absorbs; a
- * frozen week keeps its published figure, and its "would be" carries the
- * absorption it froze with, so the two compare like for like.
- * @template {DemandAnticipationRowCore} R
- * @param {readonly R[]} rows
- * @param {AbsorptionPlan} plan
- * @returns {R[]}
- */
-export function rowsInForce(rows, plan) {
   return rows.map((r) => ({
     ...r,
     weeks: r.weeks.map((w) => {
-      const k = smwKey(r.supplierId, r.materialCode, w.week);
-      const c = plan.consumption.get(k) ?? null;
-      const a = plan.absorbed.get(k) ?? null;
+      const c = byPairWeek.get(`${r.supplierId}|${mwKey(r.materialCode, w.week)}`) ?? null;
       /** @type {DemandAnticipationWeekView} */
       const view = {
         ...w,
@@ -382,19 +196,9 @@ export function rowsInForce(rows, plan) {
               recordedAt: c.record.recordedAt,
               recordId: c.record.id
             }
-          : null,
-        absorbed: a
+          : null
       };
-      if (!a) return view;
-      if (w.frozen) {
-        const wouldBe = w.wouldBe === null ? null : Math.max(0, w.wouldBe - a.qty);
-        return {
-          ...view,
-          wouldBe,
-          delta: wouldBe !== null && w.published !== null ? wouldBe - w.published : null
-        };
-      }
-      return { ...view, qty: w.qty === null ? null : w.qty - a.qty };
+      return view;
     })
   }));
 }

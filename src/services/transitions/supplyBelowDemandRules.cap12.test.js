@@ -77,31 +77,36 @@ const po = (id, orderDate, line) =>
  * @param {Record<string, number | null>} qtyByWeek
  * @returns {DemandAnticipationRow}
  */
-const row = (qtyByWeek) => ({
-  supplierId: SUP,
-  materialCode: MAT,
-  share: 1,
-  stockOnRecord: true,
-  supplierName: 'Supplier X',
-  materialLabel: 'Material 1',
-  uom: 'PCS',
-  weeks: Object.entries(qtyByWeek).map(
-    ([week, qty]) =>
-      /** @type {DemandAnticipationWeekView} */ ({
-        week,
-        qty,
-        frozen: false,
-        published: null,
-        // A "would be" that disagrees with `qty`: the gap must read `qty`.
-        wouldBe: qty === null ? null : qty + 99_999,
-        delta: null,
-        inputs: null,
-        horizonStart: '2026-08-31',
-        horizonFrozen: false,
-        frozenBy: null
-      })
-  )
-});
+const row = (qtyByWeek) =>
+  /** @type {DemandAnticipationRow} */ (
+    /** @type {unknown} */ ({
+      supplierId: SUP,
+      materialCode: MAT,
+      share: 1,
+      stockOnRecord: true,
+      supplierName: 'Supplier X',
+      materialLabel: 'Material 1',
+      uom: 'PCS',
+      weeks: Object.entries(qtyByWeek).map(
+        ([week, qty]) =>
+          /** @type {DemandAnticipationWeekView} */ ({
+            week,
+            // DRC-2 — a week outside the horizon reads null.
+            inHorizon: qty !== null,
+            qty,
+            published: null,
+            // A "would be" that disagrees with `qty`: the gap must read `qty`.
+            wouldBe: qty === null ? null : qty + 99_999,
+            delta: null,
+            inputs: { ltp: 0, safety: 0, carriedIn: [] },
+            absorbed: 0,
+            publishedBy: null,
+            consumption: null,
+            consumptionRecord: null
+          })
+      )
+    })
+  );
 
 describe('AC-01 — demand anticipation 30,000 and open supply 22,000 in week 6', () => {
   it('gives a gap of 8,000', () => {

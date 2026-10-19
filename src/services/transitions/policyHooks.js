@@ -194,9 +194,11 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    */
   WAREHOUSE_DECISION_VALID: 'warehousedecision_valid',
   /**
-   * Demand anticipation publish (CAP-10 BR-01 / BR-02): the confirm names the
-   * current hub week as the horizon start (STALE_HORIZON otherwise), and the
-   * horizon holds at least one week not frozen yet (NOTHING_TO_FREEZE).
+   * Demand anticipation publish (DRC-2, BL-188): the confirm names the current
+   * planning week (STALE_WEEK otherwise); a recorded supplier agreement names
+   * a pair with a remainder to carry (BAD_AGREEMENT, [Owner A8]); some pair has
+   * an LTP (NOTHING_TO_PUBLISH); and the figures or agreements differ from the
+   * publication in force for the week (NOTHING_CHANGED).
    */
   DEMAND_ANTICIPATION_PUBLISH_VALID: 'demandanticipation_publish_valid',
   /**

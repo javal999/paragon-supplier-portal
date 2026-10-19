@@ -95,33 +95,42 @@ describe('withLtpFgDemand', () => {
    * @param {number | undefined} ltp
    * @returns {DemandAnticipationWeekView}
    */
-  const wk = (week, ltp) => ({
-    week,
-    qty: ltp ?? null,
-    frozen: false,
-    published: null,
-    wouldBe: ltp ?? null,
-    delta: null,
-    inputs: ltp === undefined ? null : { ltp, stockShare: null, ropShare: null },
-    horizonStart: week,
-    horizonFrozen: false,
-    frozenBy: null,
-    consumption: null,
-    consumptionRecord: null,
-    absorbed: null
-  });
+  const wk = (week, ltp) =>
+    /** @type {DemandAnticipationWeekView} */ (
+      /** @type {unknown} */ ({
+        week,
+        inHorizon: true,
+        qty: ltp ?? null,
+        published: null,
+        wouldBe: ltp ?? null,
+        delta: null,
+        // A week the read carries no LTP for (the rule reads `inputs?.ltp`).
+        inputs: ltp === undefined ? null : { ltp, safety: 0, carriedIn: [] },
+        absorbed: 0,
+        publishedBy: null,
+        consumption: null,
+        consumptionRecord: null
+      })
+    );
   const W2 = addDays(NOW_WEEK, 7);
-  /** @param {number | null} share @returns {DemandAnticipationRow} */
-  const row = (share) => ({
-    supplierId: 'sup-x',
-    materialCode: MAT,
-    share,
-    stockOnRecord: true,
-    supplierName: 'X',
-    materialLabel: 'Test',
-    uom: 'KG',
-    weeks: [wk(NOW_WEEK, 500), wk(W2, 300)]
-  });
+  /**
+   * A read row with only the fields the rule reads.
+   * @param {number | null} share
+   * @returns {DemandAnticipationRow}
+   */
+  const row = (share) =>
+    /** @type {DemandAnticipationRow} */ (
+      /** @type {unknown} */ ({
+        supplierId: 'sup-x',
+        materialCode: MAT,
+        share,
+        stockOnRecord: true,
+        supplierName: 'X',
+        materialLabel: 'Test',
+        uom: 'KG',
+        weeks: [wk(NOW_WEEK, 500), wk(W2, 300)]
+      })
+    );
   const fg = new Map([[MAT, new Map([[NOW_WEEK, 800]])]]);
   const records = [rec(NOW_WEEK, 200), rec(last13[11], 100)];
 

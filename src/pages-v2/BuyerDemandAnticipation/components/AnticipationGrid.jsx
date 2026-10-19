@@ -1,28 +1,29 @@
 /** @import React from 'react' */
 import { useTranslation } from 'react-i18next';
-import { Lock } from 'lucide-react';
 import Data from '@components/ui-v2/Data';
 import StatusPill from '@components/ui-v2/StatusPill';
 import WeekGrid from '@components/ui-v2/WeekGrid';
 import { formatDate, formatNumber } from '@lib/format';
 /** @import { DemandAnticipationRow, DemandAnticipationWeekView } from '@services/transitions/demandAnticipationRules' */
 /** @import { WeekGridRow } from '@components/ui-v2/WeekGrid' */
-import { signedDelta } from '../display';
+import { signedDelta, weekLabel } from '../display';
 import { supplyRows } from './supplyRows';
 import { consumptionRows } from '../consumptionRows';
 import { ltpFgDemandRows } from './ltpFgDemandRows';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CAP-10 — one supplier × material's weeks as columns (CAP-1 WeekGrid).
+// DRC-2 (BL-188) — one supplier × material's weeks as columns (CAP-1 WeekGrid).
 //
-// Rows for step A: LTP, PTI stock share, reorder point share (both counted once,
-// in the current week), Demand anticipation (the frozen figure with a lock in a
-// frozen week, today's figure otherwise) and Would be (frozen weeks only, read
-// only: today's recomputation and its difference, BR-03). A frozen column
-// carries a "Frozen" marker in its header.
-//
-// Later rows, NOT built here: recorded consumption and absorbed (CAP-11), open
-// supply and gap (CAP-12). Each is one more entry in `rows` below.
+// Rows: LTP; the DRC-18 rows (FG demand, LTP − FG demand, consumption
+// average); Safety order (week 1 [Default A1]); Carried in (remainders earlier
+// planning weeks moved here, with the week they came from); Demand
+// anticipation (the figure in force over the horizon: published, or today's);
+// Would be (today's recomputation beside a published figure, read only);
+// Absorbed (DRC-4 BR-02: the surplus the horizon's last week took); Recorded
+// consumption (CAP-11, kept); Open supply and Gap (CAP-12, reading the rolling
+// figure). Weeks in the horizon carry a marker in their header: "Published"
+// when the planning week's publication holds them, "Horizon" otherwise.
+// No figure is computed here; every number is the read's.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const dash = <span className="text-text-tertiary">—</span>;
@@ -35,14 +36,6 @@ const AnticipationGrid = ({ row, rowKey, currentWeek }) => {
   /** @param {string} week */
   const weekOf = (week) =>
     /** @type {DemandAnticipationWeekView} */ (row.weeks.find((w) => w.week === week));
-  const first = row.weeks[0]?.week;
-  /**
-   * Stock and reorder point count once, in the current week.
-   * @param {string} week
-   * @param {'stockShare' | 'ropShare'} field
-   */
-  const onceValue = (week, field) =>
-    week === first ? (weekOf(week).inputs?.[field] ?? null) : null;
 
   /** @type {WeekGridRow[]} */
   const rows = [
@@ -51,40 +44,56 @@ const AnticipationGrid = ({ row, rowKey, currentWeek }) => {
       label: t('demandAnt.row.ltp'),
       unit: row.uom,
       combine: 'sum',
-      value: (week) => weekOf(week).inputs?.ltp ?? 0,
-      cell: (week) => {
-        const v = weekOf(week).inputs?.ltp;
-        return v === undefined ? (
-          dash
-        ) : (
-          <Data data-testid={`dant-ltp-${rowKey}-${week}`}>{formatNumber(v)}</Data>
-        );
-      }
+      value: (week) => weekOf(week).inputs.ltp,
+      cell: (week) => (
+        <Data data-testid={`dant-ltp-${rowKey}-${week}`}>
+          {formatNumber(weekOf(week).inputs.ltp)}
+        </Data>
+      )
     },
     // DRC-18 (BL-203) — FG demand, LTP − FG demand, consumption 13-week average (read only).
     ...ltpFgDemandRows(row, rowKey, t),
-    ...[
-      /** @type {const} */ (['stockShare', 'demandAnt.row.stockShare']),
-      /** @type {const} */ (['ropShare', 'demandAnt.row.ropShare'])
-    ].map(
-      ([field, labelKey]) =>
-        /** @type {WeekGridRow} */ ({
-          id: field,
-          label: t(labelKey),
-          unit: row.uom,
-          combine: 'sum',
-          value: (week) => onceValue(week, field) ?? 0,
-          monthNote: t('demandAnt.row.onceNote'),
-          cell: (week) => {
-            const v = onceValue(week, field);
-            return v === null ? (
-              dash
-            ) : (
-              <Data data-testid={`dant-${field}-${rowKey}`}>{formatNumber(v)}</Data>
-            );
-          }
-        })
-    ),
+    {
+      id: 'safety',
+      label: t('demandAnt.row.safety'),
+      unit: row.uom,
+      combine: 'sum',
+      value: (week) => weekOf(week).inputs.safety,
+      cell: (week) => {
+        const v = weekOf(week).inputs.safety;
+        return v === 0 ? (
+          dash
+        ) : (
+          <Data data-testid={`dant-safety-${rowKey}-${week}`}>{formatNumber(v)}</Data>
+        );
+      }
+    },
+    {
+      id: 'carriedIn',
+      label: t('demandAnt.row.carriedIn'),
+      unit: row.uom,
+      combine: 'sum',
+      value: (week) => weekOf(week).inputs.carriedIn.reduce((n, c) => n + c.qty, 0),
+      cell: (week) => {
+        const parts = weekOf(week).inputs.carriedIn;
+        if (parts.length === 0) return dash;
+        return (
+          <Data
+            data-testid={`dant-carried-${rowKey}-${week}`}
+            title={parts
+              .map((c) =>
+                t('demandAnt.row.carriedFrom', {
+                  qty: formatNumber(c.qty),
+                  week: weekLabel(c.fromWeek)
+                })
+              )
+              .join(' · ')}
+          >
+            {formatNumber(parts.reduce((n, c) => n + c.qty, 0))}
+          </Data>
+        );
+      }
+    },
     {
       id: 'figure',
       label: t('demandAnt.row.figure'),
@@ -95,25 +104,22 @@ const AnticipationGrid = ({ row, rowKey, currentWeek }) => {
       cell: (week) => {
         const w = weekOf(week);
         if (w.qty === null) return dash;
-        if (!w.frozen || w.frozenBy === null)
+        if (w.published === null || w.publishedBy === null)
           return <Data data-testid={`dant-figure-${rowKey}-${week}`}>{formatNumber(w.qty)}</Data>;
-        const inputs = w.frozenBy.inputs;
         return (
-          <span
-            className="inline-flex items-center gap-1"
+          <Data
+            className="font-semibold"
             data-testid={`dant-figure-${rowKey}-${week}`}
-            data-frozen="true"
-            title={t('demandAnt.frozenInputs', {
-              date: formatDate(w.frozenBy.publishedAt),
-              ltp: formatNumber(inputs.ltp),
-              stock: formatNumber(inputs.stockShare),
-              rop: formatNumber(inputs.ropShare)
+            data-published="true"
+            title={t('demandAnt.publishedParts', {
+              date: formatDate(w.publishedBy.publishedAt),
+              ltp: formatNumber(w.inputs.ltp),
+              safety: formatNumber(w.inputs.safety),
+              carried: formatNumber(w.inputs.carriedIn.reduce((n, c) => n + c.qty, 0))
             })}
           >
-            <Lock size={12} aria-hidden="true" className="text-text-tertiary" />
-            <span className="sr-only">{t('demandAnt.frozen')} </span>
-            <Data className="font-semibold">{formatNumber(w.qty)}</Data>
-          </span>
+            {formatNumber(w.qty)}
+          </Data>
         );
       }
     },
@@ -123,7 +129,7 @@ const AnticipationGrid = ({ row, rowKey, currentWeek }) => {
       unit: row.uom,
       cell: (week) => {
         const w = weekOf(week);
-        if (!w.frozen || w.wouldBe === null || w.delta === null) return dash;
+        if (w.published === null || w.wouldBe === null || w.delta === null) return dash;
         const delta = signedDelta(w.delta);
         return (
           <span
@@ -136,6 +142,25 @@ const AnticipationGrid = ({ row, rowKey, currentWeek }) => {
             ) : (
               <Data className="text-text-secondary">{`(${delta})`}</Data>
             )}
+          </span>
+        );
+      }
+    },
+    {
+      id: 'absorbed',
+      label: t('demandAnt.row.absorbed'),
+      unit: row.uom,
+      combine: 'sum',
+      value: (week) => weekOf(week).absorbed,
+      cell: (week) => {
+        const v = weekOf(week).absorbed;
+        if (v === 0) return dash;
+        return (
+          <span
+            className="text-xs text-text-secondary"
+            data-testid={`dant-absorbed-${rowKey}-${week}`}
+          >
+            {t('demandAnt.row.absorbedCell', { qty: formatNumber(v) })}
           </span>
         );
       }
@@ -154,13 +179,13 @@ const AnticipationGrid = ({ row, rowKey, currentWeek }) => {
       weeks={row.weeks.map((w) => ({
         week: w.week,
         testId: `dant-week-${rowKey}-${w.week}`,
-        headerAttrs: { 'data-frozen': w.frozen ? 'true' : undefined },
-        marker: w.frozen ? (
+        headerAttrs: {
+          'data-in-horizon': w.inHorizon ? 'true' : undefined,
+          'data-published': w.published !== null ? 'true' : undefined
+        },
+        marker: w.inHorizon ? (
           <StatusPill variant="neutral">
-            <span className="inline-flex items-center gap-1">
-              <Lock size={10} aria-hidden="true" />
-              {t('demandAnt.frozen')}
-            </span>
+            {w.published !== null ? t('demandAnt.published') : t('demandAnt.horizon')}
           </StatusPill>
         ) : undefined
       }))}

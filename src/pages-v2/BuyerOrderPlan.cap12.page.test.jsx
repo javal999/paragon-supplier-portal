@@ -28,8 +28,11 @@ const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 const ROUTE = '/buyer/order-plan';
 /** @type {import('@services/data/types').QueryScope} */
 const scope = { personaType: 'buyer', supplierId: null, businessRoles: SEEDED_SEAT_ROLES.buyer };
-// Week 6 from the hub's present (Monday 31 August 2026, W36): W41.
-const W6 = '2026-10-05';
+// DRC-2 (BL-188): the demand anticipation covers each pair's lead time, so
+// the AC-02 probe uses W38, inside sup-002 × RM-STEAR-7300's 7-week horizon
+// with a blanket balance (week 6 of sup-007 × PK-PETB-8801 is outside its
+// 2-week horizon now).
+const W3 = '2026-09-14';
 // The page runs the engine first; under a loaded machine the default 1 s wait is too short.
 const WAIT = { timeout: 5000 };
 
@@ -47,15 +50,22 @@ afterEach(() => {
 const gaps = async () =>
   supplyGapRows((await mockDataService.procurement.getDemandAnticipation(scope)).items);
 
-/** Opens every gap row (the section shows the earliest 20 first). */
-const showAll = async () =>
-  fireEvent.click(await screen.findByTestId('op-below-demand-toggle', {}, WAIT));
+/** Opens every gap row (the section shows the earliest 20 first), when there are more. */
+const showAll = async () => {
+  await screen.findByTestId('op-below-demand', {}, WAIT);
+  await screen.findAllByTestId(/^op-gap-sup-/, {}, WAIT);
+  const toggle = screen.queryByTestId('op-below-demand-toggle');
+  if (toggle) fireEvent.click(toggle);
+};
 
 /** @param {{ supplierId: string; materialCode: string; week: string }} g */
 const keyOf = (g) => `${g.supplierId}-${g.materialCode}-${g.week}`;
 
 describe('CAP-12 — "Below demand anticipation" on What to order', () => {
   it('lists every gap of the read, marked as hub sample data, after the engine’s list', async () => {
+    // W38: with the rolling horizons the sample holds more than 20 gaps from
+    // here (19 at the hub's present), so "Show all" is reachable.
+    sdcClock.set('2026-09-14T03:00:00.000Z');
     const all = await gaps();
     expect(all.length).toBeGreaterThan(0);
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: ROUTE });
@@ -103,9 +113,9 @@ describe('CAP-12 — "Below demand anticipation" on What to order', () => {
     ).toHaveLength(recs.length);
   });
 
-  it('AC-02 — the draft lands on the oldest blanket line with the gap quantity and the week-6 need date', async () => {
+  it('AC-02 — the draft lands on the oldest blanket line with the gap quantity and its week’s need date', async () => {
     const g = (await gaps()).find(
-      (x) => x.supplierId === 'sup-007' && x.materialCode === 'PK-PETB-8801' && x.week === W6
+      (x) => x.supplierId === 'sup-002' && x.materialCode === 'RM-STEAR-7300' && x.week === W3
     );
     const proposed = g?.proposal.callOffs[0];
     expect(proposed).toBeDefined();
@@ -126,9 +136,9 @@ describe('CAP-12 — "Below demand anticipation" on What to order', () => {
       poId: c.poId,
       poLineId: c.lineId,
       quantity: c.qty,
-      needDate: W6,
-      supplierId: 'sup-007',
-      materialCode: 'PK-PETB-8801'
+      needDate: W3,
+      supplierId: 'sup-002',
+      materialCode: 'RM-STEAR-7300'
     });
     // Hub sample data, not the engine's: no engine origin (X-03 does not apply).
     expect(draft?.origin).toBeUndefined();

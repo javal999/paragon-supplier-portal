@@ -44,19 +44,20 @@
 // supplier × material group, on its last (newest) PO; subject = that PO id. PTI-only. High when
 // the week is this week or passed, Medium otherwise; impact at that week.
 //
-// CAP-11 BR-04 (BL-180) — `demandAnticipationUnabsorbed`: consumption below the
-// frozen demand anticipation left an excess the next horizon's weeks could not
-// take (`consumptionRules`). One alert per supplier × material; subject = the
-// material; it carries the remaining amount. PTI-only. Medium by rule (an
-// excess is stock PTI will not need yet, not a shortage); impact at the end of
-// the horizon that could not absorb it.
+// DRC-4 BR-02 / DRC-B7 (BL-190; rewired from CAP-11 BR-04, whose absorbing
+// over weeks 5 to 8 is superseded) — `demandAnticipationUnabsorbed`: supply
+// above the rolling demand anticipation is more than the last week of the
+// horizon can absorb (`planCheck`'s `unabsorbed`, `demandAnticipationRules`).
+// One alert per supplier × material; subject = the material; it carries the
+// remaining amount. PTI-only. Medium by rule (a surplus is stock PTI will not
+// need yet, not a shortage); impact at the end of the horizon's last week.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @import { CapacityPlan, ForecastCommitmentLine, InventoryAlert, InventoryAlertRule, InventoryPosition, RiskBasis, RiskClass } from '../data/types' */
 /** @import { ActorAttribution } from '@lib/enforcement' */
 import { deepLink } from '@lib/deepLink';
 /** @import { BlanketPoAlertSubject } from './blanketPoRules' */
-/** @import { UnabsorbedExcess } from './consumptionRules' */
+/** @import { UnabsorbedExcess } from './demandAnticipationRules' */
 import { gapWeeks } from './capacityRules';
 import { DEMAND_ANTICIPATION_RULES } from './demandAnticipationRules';
 import { DISCONTINUED_CODE, NOTE_REQUIRED_CODE, isActiveReasonCode } from './reasonCodes';
@@ -107,7 +108,7 @@ export const PTI_ONLY_RULES = [
   'supplyDiscontinued',
   // CAP-9 BR-05 — raising the next PO is PTI's act; the projection is PTI's estimate.
   'blanketPoRunOut',
-  // CAP-11 BR-04 — the demand anticipation and consumption are PTI's own figures.
+  // DRC-4 — the demand anticipation and the supply check are PTI's own figures.
   'demandAnticipationUnabsorbed'
 ];
 
@@ -480,7 +481,7 @@ export function deriveAlertConditions(
   for (const b of blanketRunOuts) {
     push('blanketPoRunOut', b, b.poId, b.label, byRule(b.riskClass), b.daysToImpact);
   }
-  // CAP-11 BR-04 — an excess the next horizon could not absorb, with what is left.
+  // DRC-4 BR-02 / DRC-B7 — a surplus the horizon's last week could not absorb, with what is left.
   for (const u of unabsorbed) {
     push(
       'demandAnticipationUnabsorbed',
@@ -496,10 +497,9 @@ export function deriveAlertConditions(
 }
 
 /**
- * CAP-11 BR-04 — one supplier × material whose excess outlasts the next
- * horizon. `remaining` sums every horizon of the pair with an excess left;
- * `fromWeeks` / `intoWeeks` are those horizons' weeks and the weeks that
- * could not take it.
+ * DRC-4 / DRC-B7 — one supplier × material whose surplus outlasts the last
+ * week of its horizon. `remaining` is what that week could not take;
+ * `fromWeeks` is the horizon and `intoWeeks` its last week.
  * @typedef {{
  *   readonly supplierId: string;
  *   readonly supplierName: string;
@@ -514,9 +514,9 @@ export function deriveAlertConditions(
  */
 
 /**
- * BR-04 — the alert subjects: one per supplier × material whose unabsorbed
- * excess reaches `unabsorbedAlertMinQty`. Impact: days from today to the end
- * of the last horizon that could not take it, 0 once passed.
+ * The alert subjects: one per supplier × material whose unabsorbed surplus
+ * reaches `unabsorbedAlertMinQty`. Impact: days from today to the end of the
+ * week that could not take it, 0 once passed.
  * @param {readonly UnabsorbedExcess[]} rows
  * @param {string} nowIso
  * @param {{ readonly supplierName: (id: string) => string; readonly materialLabel: (code: string) => string; readonly uom: (code: string) => string }} names
@@ -749,7 +749,7 @@ export function alertHref(a, persona) {
     if (a.rule === 'blanketPoRunOut') {
       return deepLink('/buyer/call-offs', { po: a.subject });
     }
-    // CAP-11 BR-04 — the subject is the material; the page filters to the supplier × material.
+    // DRC-4 — the subject is the material; the page filters to the supplier × material.
     if (a.rule === 'demandAnticipationUnabsorbed') {
       return deepLink('/buyer/demand-anticipation', {
         supplier: a.supplierId,
