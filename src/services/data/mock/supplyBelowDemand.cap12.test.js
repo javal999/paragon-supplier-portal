@@ -3,6 +3,11 @@
 // demand anticipation read carries them per week (no new method), a draft
 // dispatched through the real MockCommandService is not supply, and releasing
 // it is — the gap falls by exactly the released quantity.
+//
+// DRC-2 (BL-188): the demand anticipation now covers the pair's lead time, so
+// the draft-and-release probe uses a week inside a horizon with a blanket
+// balance (sup-002 × RM-STEAR-7300, 7 weeks) rather than week 6 of
+// sup-007 × PK-PETB-8801, whose horizon is 2 weeks.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -34,8 +39,10 @@ const supplier = {
   actor: NO_PERSON
 };
 
-// Week 6 from the hub's present (Monday 31 August 2026, W36): W41.
-const W6 = '2026-10-05';
+// Week 3 from the hub's present (Monday 31 August 2026, W36): W38, inside
+// sup-002 × RM-STEAR-7300's 7-week horizon.
+const W3 = '2026-09-14';
+const Q = 1_000;
 
 beforeEach(() => {
   sdcClock.reset();
@@ -45,10 +52,14 @@ beforeEach(() => {
   forecastVersionStore.reset();
 });
 
-const weekOf = async (/** @type {string} */ week) => {
+const weekOf = async (
+  /** @type {string} */ week,
+  supplierId = 'sup-007',
+  materialCode = 'PK-PETB-8801'
+) => {
   const page = await svc.getDemandAnticipation(planner);
   const row = page.items.find(
-    (r) => r.supplierId === 'sup-007' && r.materialCode === 'PK-PETB-8801'
+    (r) => r.supplierId === supplierId && r.materialCode === materialCode
   );
   const w = row?.weeks.find((x) => x.week === week);
   if (!w) throw new Error(`no week ${week}`);
@@ -83,9 +94,10 @@ describe('CAP-12 — the demand anticipation read carries open supply and the ga
 });
 
 describe('CAP-12 — a draft is not supply; releasing it is', () => {
-  it('drafting 10,000 for W41 leaves the gap; releasing it lowers the gap by 10,000', async () => {
-    const before = await weekOf(W6);
-    expect(before.gap).toBeGreaterThan(10_000);
+  it('drafting 1,000 for W38 leaves the gap; releasing it lowers the gap by 1,000', async () => {
+    const stear = /** @param {string} w */ (w) => weekOf(w, 'sup-002', 'RM-STEAR-7300');
+    const before = await stear(W3);
+    expect(before.gap).toBeGreaterThan(Q);
     const line = /** @type {NonNullable<typeof before.proposal>} */ (before.proposal).callOffs[0];
     expect(line).toBeDefined();
     const drafted = await cmd.dispatch(planner, {
@@ -94,22 +106,23 @@ describe('CAP-12 — a draft is not supply; releasing it is', () => {
       payload: {
         poId: line?.poId,
         poLineId: line?.lineId,
-        quantity: 10_000,
-        needDate: W6,
+        quantity: Q,
+        needDate: W3,
         type: 'forecast'
       }
     });
     expect(drafted.status).not.toBe('failed');
-    const afterDraft = await weekOf(W6);
+    const afterDraft = await stear(W3);
     expect(afterDraft.openSupply).toBe(before.openSupply);
     expect(afterDraft.gap).toBe(before.gap);
 
-    // The seed already holds a 37,000 Draft for W41 (not supply either); this is the new one.
-    const before10k = callOffStore
+    const drafts = callOffStore
       .all()
-      .filter((c) => c.status === 'Draft' && c.quantity === 10_000);
-    expect(before10k).toHaveLength(1);
-    const id = /** @type {string} */ (before10k[0]?.id);
+      .filter(
+        (c) => c.status === 'Draft' && c.quantity === Q && c.materialCode === 'RM-STEAR-7300'
+      );
+    expect(drafts).toHaveLength(1);
+    const id = /** @type {string} */ (drafts[0]?.id);
     const released = await cmd.dispatch(planner, {
       transitionId: 't_calloff_release_draft',
       entity: 'callOff',
@@ -117,8 +130,8 @@ describe('CAP-12 — a draft is not supply; releasing it is', () => {
       payload: {}
     });
     expect(released.status).not.toBe('failed');
-    const afterRelease = await weekOf(W6);
-    expect(afterRelease.openSupply).toBe(before.openSupply + 10_000);
-    expect(afterRelease.gap).toBe(/** @type {number} */ (before.gap) - 10_000);
+    const afterRelease = await stear(W3);
+    expect(afterRelease.openSupply).toBe(before.openSupply + Q);
+    expect(afterRelease.gap).toBe(/** @type {number} */ (before.gap) - Q);
   });
 });

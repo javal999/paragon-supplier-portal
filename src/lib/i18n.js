@@ -94,6 +94,8 @@ import { leadTimeStepsEn, leadTimeStepsId } from './i18n/leadTimeSteps';
 import { adminCalendarEn, adminCalendarId } from './i18n/adminCalendar';
 import { performanceEn, performanceId } from './i18n/performance';
 import { inventoryCapacityEn, inventoryCapacityId } from './i18n/inventoryCapacity';
+// — DRC-9a strategic buffer, DRC-9b production limit (BL-195) —
+import { drcBuffersEn, drcBuffersId } from './i18n/drcBuffers';
 import { forecastCollaborationEn, forecastCollaborationId } from './i18n/forecastCollaboration';
 // — REQ-E14-02 supplier reliability and PTI plan-change measures (BL-99) —
 import { reliabilityEn, reliabilityId } from './i18n/reliability';
@@ -232,6 +234,7 @@ export const resources = {
       ...adminCalendarEn,
       ...performanceEn,
       ...inventoryCapacityEn,
+      ...drcBuffersEn,
       ...forecastCollaborationEn,
       ...reliabilityEn,
       ...feedstockReconcileEn,
@@ -741,6 +744,7 @@ export const resources = {
       ...adminCalendarId,
       ...performanceId,
       ...inventoryCapacityId,
+      ...drcBuffersId,
       ...forecastCollaborationId,
       ...reliabilityId,
       ...feedstockReconcileId,

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.28, 2026-10-19 |
+| Version | 2.29, 2026-10-19 |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -142,19 +142,14 @@ The owner reviewed the requirements and accepted CAP-D1 to CAP-D8 on 2026-10-12.
 
 ### 4b. Weekly SC Hub 2026-10-14: DA, ROP and call-off, accepted 2026-10-19
 
-The owner approved every requirement, default and decision in `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` on 2026-10-19 ("approve all"). Items are built on documented defaults (section 4 of that file) and corrected when Material Planning answers; the five "On hold" rows wait because their shape is unknown. Build order is section 7 of that file. Wave 1 (BL-187, BL-192, BL-200, BL-201, BL-203) is built and in section 6.
+The owner approved every requirement, default and decision in `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` on 2026-10-19 ("approve all"). Items are built on documented defaults (section 4 of that file) and corrected when Material Planning answers; the five "On hold" rows wait because their shape is unknown. Build order is section 7 of that file. Waves 1 and 2 (BL-187, 188, 190, 192, 193, 195, 197, 200, 201, 203) are built and in section 6.
 
 | ID | Item | Why | Size | Blocked by | Detail |
 |---|---|---|---|---|---|
-| BL-188 | Rolling demand anticipation over the lead time with carry-over (rework of BL-179 and BL-180) | Replaces the fixed 4-week horizon and the weeks 5 to 8 absorbing rule | L | BL-187 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-2 |
 | BL-189 | Demand anticipation history with carry-over origin; audit view for Procurement and Finance | Every version is kept for audit | M | BL-188 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-3 |
-| BL-190 | Plan vs execution check: Total DA = ROP Order = SOH + OSPO + OSPR + PR; surplus absorbed in the last week, shortfall a PR recommendation | Shows when planning and execution disagree | M | BL-187 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-4 |
 | BL-191 | Supplier approval for a call-off delayed by an LTP drop, with the DA adjustment | MoM 1B | M | BL-188 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-5 |
-| BL-193 | Safety order (ROP Order) and ROP Fisik safety, with the deck and sheet variants behind switches | MoM 2A | M | BL-187 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-7 |
 | BL-194 | Supplier confirms Incoming DA plus current feedstock, with a date | MoM 2B | M | BL-188 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-8 |
-| BL-195 | Strategic buffer (LTP minus baseline) and production limit | MoM 3 | M | BL-187 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-9a, DRC-9b |
 | BL-196 | System-calculated ROP Order, ROP Fisik, supplier ROPs and Max, by level (level a planner-editable field, default 4) | Every ROP is calculated by the system [Owner, 2026-10-16] | L | BL-187, BL-193 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-10 |
-| BL-197 | CV per variant, SKU and component; stable or fluctuative | MoM 4B | M | BL-187 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-11 |
 | BL-198 | NPD tag and ROP review after the first order | MoM 4C | S | BL-196 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-12a |
 | BL-199 | Call-off drafted at ROP Fisik for planner approval; SAP PR recommendation when the umbrella PO runs out; max stock caps call-offs; SOH plant stored | MoM 5A | L | BL-196 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-13 |
 | BL-202 | What-if sandbox: one material, editable inputs and rule switches, 52 weeks RM / 24 weeks PM, named scenarios compared up to 3, PTI planners only, analysis only | Also the tool to confirm defaults with Material Planning | L | BL-187, BL-196 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-17 |
@@ -193,6 +188,11 @@ The owner approved every requirement, default and decision in `SC-HUB-DA-ROP-CAL
 
 | ID | Item | Closed | By |
 |---|---|---|---|
+| BL-197 | CV per variant, SKU and component; stable or fluctuative | 2026-10-19 | Built in GitLab MR !5: CV and category per material on Safety stock targets |
+| BL-195 | Strategic buffer (LTP minus baseline) and production limit | 2026-10-19 | Built in GitLab MR !5: production limit row and strategic buffer section on PTI Capacity; protection buffer still on hold (BL-205) |
+| BL-193 | Safety order (ROP Order) and ROP Fisik safety, with the deck and sheet variants behind switches | 2026-10-19 | Built in GitLab MR !5: OSIP safety order and ROP Fisik safety on Safety stock targets, engine fill rate as challenger |
+| BL-190 | Plan vs execution check: Total DA = ROP Order = SOH + OSPO + OSPR + PR; surplus absorbed in the last week, shortfall a PR recommendation | 2026-10-19 | Built in GitLab MR !5: plan check panel on Demand anticipation |
+| BL-188 | Rolling demand anticipation over the lead time with carry-over (rework of BL-179 and BL-180) | 2026-10-19 | Built in GitLab MR !5: rolling demand anticipation over the lead time with carry-over; supersedes the BL-179/BL-180 rules; decisions DRC-B15 to B23 |
 | BL-203 | LTP vs FG demand and consumption moving average (13 weeks) | 2026-10-19 | Built in GitLab MR !4: three rows on Demand anticipation; 13-week average from the rules block |
 | BL-201 | Feedstock reconcile: POs ordered vs call-offs and ASNs requested, daily; replaces the fixed stock reconcile page (REQ-E06-04) | 2026-10-19 | Built in GitLab MR !4: feedstock reconcile replaces the fixed stock reconcile; decisions DRC-B12 to DRC-B14 |
 | BL-200 | Replenishment cycle f by area: import 1 week, Jabodetabek 1 day, outside 2 days | 2026-10-19 | Built in GitLab MR !4: `replenishmentCycleDays` and `supplyAreaOf` in `osipRules.js` |

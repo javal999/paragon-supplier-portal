@@ -23,7 +23,7 @@ import { buildInventoryPositions } from '../../transitions/inventoryRules';
 import { buildCapacityPlans } from '../../transitions/capacityRules';
 /** @import { BlanketPoRunOut } from '../../transitions/blanketPoRules' */
 import { blanketPoAlertSubjects, blanketPoRunOuts } from '../../transitions/blanketPoRules';
-import { demandAnticipationAbsorption } from './demandAnticipationReadModel';
+import { demandAnticipationUnabsorbed } from './demandAnticipationReadModel';
 import { commitmentAlertSubjects } from '../../transitions/forecastRules';
 import { allCommitmentLines } from './forecastReadModel';
 /** @import { AlertCondition } from '../../transitions/inventoryAlertRules' */
@@ -289,8 +289,8 @@ export function activeAlertConditions(nowIso = sdcClock.now()) {
     discontinuedSubjects(plans, lines, (code) => materialEntry(code)?.label ?? code, nowIso),
     // CAP-9 BR-05 — a blanket PO needs its next PO within 4 weeks.
     blanketPoAlertSubjects(allBlanketPoRunOuts(nowIso), nowIso),
-    // CAP-11 BR-04 — an excess the next horizon of demand anticipation cannot absorb.
-    unabsorbedAlertSubjects(demandAnticipationAbsorption(nowIso).unabsorbed, nowIso, {
+    // DRC-4 BR-02 / DRC-B7 — a surplus the last week of the horizon cannot absorb.
+    unabsorbedAlertSubjects(demandAnticipationUnabsorbed(nowIso), nowIso, {
       supplierName: supplierNameOf,
       materialLabel: (code) => materialEntry(code)?.label ?? code,
       uom: (code) => materialEntry(code)?.canonicalUom ?? ''

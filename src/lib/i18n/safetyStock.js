@@ -98,7 +98,57 @@ export const safetyStockEn = {
   'sst.def.rop':
     'Reorder point: expected demand over the lead time plus the review week, plus the safety stock.',
   'sst.def.change':
-    'Since last run: each run is compared with the last run of its stream — packaging a week before, raw material four weeks before — and the cause is read from what changed in the inputs: the tier or target, the forecast errors, the expected order per cycle, the lead time window, or, for the reorder point, the plan.'
+    'Since last run: each run is compared with the last run of its stream — packaging a week before, raw material four weeks before — and the cause is read from what changed in the inputs: the tier or target, the forecast errors, the expected order per cycle, the lead time window, or, for the reorder point, the plan.',
+
+  // BL-193 (DRC-7) / BL-197 (DRC-11) — the OSIP default rule beside the
+  // engine's fill-rate challenger. "ROP Order", "ROP Fisik", "MPQ", "MOQ",
+  // "LTP", "koli", "CV" and "FG" are the planners' own terms, kept in both languages.
+  'sst.osip.col.safetyOrder': 'Safety order (ROP Order)',
+  'sst.osip.col.fisikSafety': 'ROP Fisik safety',
+  'sst.osip.col.cv': 'Demand CV',
+  'sst.osip.provisional': 'Provisional: rule awaiting Material Planning ({{questions}})',
+  'sst.osip.challenger': 'Challenger: engine fill rate',
+  'sst.osip.noCapacity': 'Production capacity not available: left out of the min',
+  'sst.osip.unavailable.NO_LTP': 'No LTP over the lead time',
+  'sst.osip.unavailable.NO_CONSUMPTION': 'No consumption recorded',
+  'sst.osip.unavailable.NO_SUPPLY_AREA': 'No supply area for f',
+  'sst.osip.flag.LTP_NOT_AVAILABLE': 'No LTP: left out of the min',
+  'sst.osip.flag.NO_ROUNDING_SIZE': 'No rounding size: rounded to a unit',
+  'sst.osip.soTitle': 'SD {{sd}} · lead time {{weeks}} weeks · rounded up to {{roundTo}}',
+  'sst.osip.fisikTitle': 'Demand {{demand}} a day · f {{f}} days',
+  'sst.osip.cv.stable': 'Stable',
+  'sst.osip.cv.fluctuative': 'Fluctuative',
+  'sst.osip.cv.noBom': 'No BOM line',
+  'sst.osip.cv.noDemand': 'No FG demand in the window',
+  'sst.osip.cv.title_one':
+    '{{count}} finished good over {{weeks}} weeks; each finished good is its own variant',
+  'sst.osip.cv.title_other':
+    '{{count}} finished goods over {{weeks}} weeks, weighted by demand; each finished good is its own variant',
+  'sst.osip.rules.title': 'OSIP rule switches',
+  'sst.osip.rules.note':
+    'Read only: the OSIP figures are recalculated under the rules chosen here. Nothing is saved, and the plan keeps the defaults.',
+  'sst.osip.rules.changed': 'Not the default rules: the OSIP figures below are a what-if.',
+  'sst.osip.rules.sdSource': 'SD behind the safety order (B2)',
+  'sst.osip.rules.sdSource.ltp': 'LTP over the lead time (default)',
+  'sst.osip.rules.sdSource.consumption12w': 'Consumption, last 12 weeks (sheet)',
+  'sst.osip.rules.safetyRounding': 'Safety order rounds up to (B4)',
+  'sst.osip.rules.safetyRounding.mpq': 'MPQ (default)',
+  'sst.osip.rules.safetyRounding.koli': 'Koli (units per pallet)',
+  'sst.osip.rules.safetyRounding.moq': 'MOQ',
+  'sst.osip.rules.fisikSafety': 'ROP Fisik safety formula (B1)',
+  'sst.osip.rules.fisikSafety.deck': 'Deck: g × lowest demand, up to the MPQ (default)',
+  'sst.osip.rules.fisikSafety.sheet': 'Sheet: Z × √f × SD + g × average demand',
+  'sst.osip.rules.fisikDemandIncludesLtp': 'ROP Fisik demand (B5)',
+  'sst.osip.rules.fisikDemandIncludesLtp.on': 'Lowest includes LTP (default)',
+  'sst.osip.rules.fisikDemandIncludesLtp.off': 'Lowest without LTP (sheet)',
+  'sst.osip.def.safetyOrder':
+    'Safety order (ROP Order) = 1.65 × √(lead time in weeks) × the standard deviation of the supplier’s LTP over the lead time, rounded up to a multiple of the MPQ. Until the master data carries an MPQ, the order multiple is used.',
+  'sst.osip.def.fisik':
+    'ROP Fisik safety = 1 day × the lowest of the highest daily consumption of the last 3 months and the daily LTP, rounded up to the MPQ. Consumption is the material’s recorded consumption times the supplier’s share. Production capacity also belongs in the lowest; the hub has no figure for it, so it is left out.',
+  'sst.osip.def.cv':
+    'CV = standard deviation ÷ average of each finished good’s weekly demand over the last 26 weeks. A component takes its finished goods’ CVs weighted by their average demand. Stable below 0.5, fluctuative from 0.5. Finished goods carry no variant grouping yet, so each one is its own variant.',
+  'sst.osip.def.challenger':
+    'The OSIP figures are the default rule. The engine’s fill-rate safety stock stays beside them as the challenger.'
 };
 
 /** @type {Record<string, string>} */
@@ -195,5 +245,53 @@ export const safetyStockId = {
   'sst.def.rop':
     'Titik pesan ulang: perkiraan permintaan selama waktu tunggu ditambah minggu tinjauan, ditambah stok pengaman.',
   'sst.def.change':
-    'Sejak perhitungan terakhir: setiap perhitungan dibandingkan dengan perhitungan terakhir alirannya — kemasan seminggu sebelumnya, bahan baku empat minggu sebelumnya — dan penyebabnya dibaca dari masukan yang berubah: tingkat atau target, kesalahan prakiraan, perkiraan pesanan per siklus, jendela waktu tunggu, atau, untuk titik pesan ulang, rencananya.'
+    'Sejak perhitungan terakhir: setiap perhitungan dibandingkan dengan perhitungan terakhir alirannya — kemasan seminggu sebelumnya, bahan baku empat minggu sebelumnya — dan penyebabnya dibaca dari masukan yang berubah: tingkat atau target, kesalahan prakiraan, perkiraan pesanan per siklus, jendela waktu tunggu, atau, untuk titik pesan ulang, rencananya.',
+
+  // BL-193 (DRC-7) / BL-197 (DRC-11). Istilah planner (ROP Order, ROP Fisik,
+  // MPQ, MOQ, LTP, koli, CV, FG) dipertahankan.
+  'sst.osip.col.safetyOrder': 'Pesanan pengaman (ROP Order)',
+  'sst.osip.col.fisikSafety': 'Pengaman ROP Fisik',
+  'sst.osip.col.cv': 'CV permintaan',
+  'sst.osip.provisional': 'Sementara: aturan menunggu Material Planning ({{questions}})',
+  'sst.osip.challenger': 'Pembanding: tingkat pemenuhan mesin',
+  'sst.osip.noCapacity': 'Kapasitas produksi tidak tersedia: tidak ikut dalam nilai terendah',
+  'sst.osip.unavailable.NO_LTP': 'Tidak ada LTP selama waktu tunggu',
+  'sst.osip.unavailable.NO_CONSUMPTION': 'Tidak ada konsumsi tercatat',
+  'sst.osip.unavailable.NO_SUPPLY_AREA': 'Tidak ada area pasokan untuk f',
+  'sst.osip.flag.LTP_NOT_AVAILABLE': 'Tidak ada LTP: tidak ikut dalam nilai terendah',
+  'sst.osip.flag.NO_ROUNDING_SIZE': 'Tidak ada ukuran pembulatan: dibulatkan ke satuan',
+  'sst.osip.soTitle':
+    'SD {{sd}} · waktu tunggu {{weeks}} minggu · dibulatkan ke atas ke {{roundTo}}',
+  'sst.osip.fisikTitle': 'Permintaan {{demand}} per hari · f {{f}} hari',
+  'sst.osip.cv.stable': 'Stabil',
+  'sst.osip.cv.fluctuative': 'Fluktuatif',
+  'sst.osip.cv.noBom': 'Tidak ada baris BOM',
+  'sst.osip.cv.noDemand': 'Tidak ada permintaan FG dalam jendela',
+  'sst.osip.cv.title_other':
+    '{{count}} barang jadi selama {{weeks}} minggu, dibobot permintaan; setiap barang jadi adalah varian tersendiri',
+  'sst.osip.rules.title': 'Pengalih aturan OSIP',
+  'sst.osip.rules.note':
+    'Hanya baca: angka OSIP dihitung ulang dengan aturan yang dipilih di sini. Tidak ada yang disimpan, dan rencana tetap memakai aturan bawaan.',
+  'sst.osip.rules.changed': 'Bukan aturan bawaan: angka OSIP di bawah adalah simulasi.',
+  'sst.osip.rules.sdSource': 'SD untuk pesanan pengaman (B2)',
+  'sst.osip.rules.sdSource.ltp': 'LTP selama waktu tunggu (bawaan)',
+  'sst.osip.rules.sdSource.consumption12w': 'Konsumsi, 12 minggu terakhir (sheet)',
+  'sst.osip.rules.safetyRounding': 'Pesanan pengaman dibulatkan ke atas ke (B4)',
+  'sst.osip.rules.safetyRounding.mpq': 'MPQ (bawaan)',
+  'sst.osip.rules.safetyRounding.koli': 'Koli (unit per palet)',
+  'sst.osip.rules.safetyRounding.moq': 'MOQ',
+  'sst.osip.rules.fisikSafety': 'Rumus pengaman ROP Fisik (B1)',
+  'sst.osip.rules.fisikSafety.deck': 'Deck: g × permintaan terendah, ke atas ke MPQ (bawaan)',
+  'sst.osip.rules.fisikSafety.sheet': 'Sheet: Z × √f × SD + g × permintaan rata-rata',
+  'sst.osip.rules.fisikDemandIncludesLtp': 'Permintaan ROP Fisik (B5)',
+  'sst.osip.rules.fisikDemandIncludesLtp.on': 'Nilai terendah termasuk LTP (bawaan)',
+  'sst.osip.rules.fisikDemandIncludesLtp.off': 'Nilai terendah tanpa LTP (sheet)',
+  'sst.osip.def.safetyOrder':
+    'Pesanan pengaman (ROP Order) = 1,65 × √(waktu tunggu dalam minggu) × simpangan baku LTP pemasok selama waktu tunggu, dibulatkan ke atas ke kelipatan MPQ. Sampai data master memuat MPQ, kelipatan pesanan yang dipakai.',
+  'sst.osip.def.fisik':
+    'Pengaman ROP Fisik = 1 hari × nilai terendah dari konsumsi harian tertinggi 3 bulan terakhir dan LTP harian, dibulatkan ke atas ke MPQ. Konsumsi adalah konsumsi material yang tercatat dikali porsi pemasok. Kapasitas produksi juga termasuk dalam nilai terendah; hub tidak punya angkanya, jadi tidak diikutkan.',
+  'sst.osip.def.cv':
+    'CV = simpangan baku ÷ rata-rata permintaan mingguan setiap barang jadi selama 26 minggu terakhir. Komponen memakai CV barang jadinya, dibobot permintaan rata-ratanya. Stabil di bawah 0,5, fluktuatif mulai 0,5. Barang jadi belum punya pengelompokan varian, jadi setiap barang jadi adalah varian tersendiri.',
+  'sst.osip.def.challenger':
+    'Angka OSIP adalah aturan bawaan. Stok pengaman tingkat pemenuhan dari mesin tetap di sampingnya sebagai pembanding.'
 };

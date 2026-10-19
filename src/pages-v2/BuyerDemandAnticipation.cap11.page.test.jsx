@@ -1,18 +1,22 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // CAP-11 (BL-180) on the screen — the Demand anticipation page after recording
-// consumption in the frozen horizon: the Recorded consumption and Absorbed
-// rows ("−n absorbed from the W36–W39 excess", BR-05), the Record consumption
-// panel (typed, uploaded, an odd file refused with one line, the template
-// download), the handoff notice for a seat without `forecast:publish`, the
-// unabsorbed alert on PTI alerts linking back to the supplier × material
-// (BR-04), and both locales with the figure never abbreviated to "DA".
+// consumption: the Recorded consumption row, the Record consumption panel
+// (typed, uploaded, an odd file refused with one line, the template download),
+// the handoff notice for a seat without `forecast:publish`, the surplus alert
+// on PTI alerts linking back to the supplier × material, and both locales with
+// the figure never abbreviated to "DA".
+//
+// RETIRED with CAP-11 BR-02/03 (superseded by DRC-4 BR-02, BL-190): the
+// "−n absorbed from the W36–W39 excess" cells, and "at W40, before W40–W43 is
+// published, no week can be typed". Recorded consumption no longer lowers the
+// demand anticipation; the alert test below is rewired to DRC-4's surplus.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderWithProviders, BUYER } from '@test/test-utils';
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
-import { MockCommandService } from '@services/data/mock/MockCommandService';
+import { mockDataService } from '@services/data/mock/mockDataService';
 import { consumptionStore } from '@services/data/mock/stores/consumptionStore';
 import { demandAnticipationStore } from '@services/data/mock/stores/demandAnticipationStore';
 import { forecastVersionStore } from '@services/data/mock/stores/forecastHubStores';
@@ -26,10 +30,9 @@ import { readFileText } from './inventory/inventoryDisplay';
 
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 const ROUTE = '/buyer/demand-anticipation';
-// sup-002 × RM-STEAR-7300 — one supplier; W36 is frozen at 4,120 KG by the seed.
+// sup-002 × RM-STEAR-7300 — one supplier; W36 is published at 3,220 KG by the seed.
 const KEY = 'sup-002-RM-STEAR-7300';
 const W36 = '2026-08-31';
-const H2 = ['2026-09-28', '2026-10-05', '2026-10-12', '2026-10-19'];
 
 beforeEach(() => {
   sdcClock.reset();
@@ -52,8 +55,8 @@ const upload = (csv, name = 'consumption.csv') =>
     target: { files: [new File([csv], name, { type: 'text/csv' })] }
   });
 
-describe('recording consumption in the frozen horizon (typed)', () => {
-  it('shows Recorded consumption on W36 and −780 absorbed from the W36–W39 excess on W40–W43', async () => {
+describe('recording consumption (typed)', () => {
+  it('shows Recorded consumption on W36 and leaves the demand anticipation as it was', async () => {
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
     const panel = await screen.findByTestId('consumption-panel');
     expect(within(panel).getByTestId('consumption-source-marker')).toHaveTextContent(
@@ -62,10 +65,12 @@ describe('recording consumption in the frozen horizon (typed)', () => {
     fireEvent.change(within(panel).getByLabelText('Material'), {
       target: { value: 'RM-STEAR-7300' }
     });
-    // At the present only W36 is frozen and not in the future.
-    expect(
-      [...within(panel).getByLabelText('Week').querySelectorAll('option')].map((o) => o.value)
-    ).toEqual([W36]);
+    // The current week and the 12 before it (the moving average's 13 weeks), newest first.
+    const options = [...within(panel).getByLabelText('Week').querySelectorAll('option')].map(
+      (o) => o.value
+    );
+    expect(options).toHaveLength(13);
+    expect(options.slice(0, 2)).toEqual([W36, '2026-08-24']);
     fireEvent.change(within(panel).getByTestId('consumption-qty'), { target: { value: '1000' } });
     fireEvent.click(within(panel).getByTestId('consumption-record'));
     await waitFor(() => expect(consumptionStore.all()).toHaveLength(1));
@@ -81,30 +86,23 @@ describe('recording consumption in the frozen horizon (typed)', () => {
       '1,000'
     );
     expect(within(card).getByText('Recorded consumption')).toBeInTheDocument();
-    expect(within(card).getByText('Absorbed')).toBeInTheDocument();
-    // 4,120 − 1,000 = 3,120 over four weeks.
-    for (const w of H2)
-      expect(within(card).getByTestId(`dant-absorbed-${KEY}-${w}`)).toHaveTextContent(
-        '−780 absorbed from the W36–W39 excess'
-      );
-    // The frozen week keeps its figure; the next horizon's figure in force drops.
-    expect(within(card).getByTestId(`dant-figure-${KEY}-${W36}`)).toHaveTextContent('4,120');
-    expect(within(card).getByTestId(`dant-figure-${KEY}-${H2[1]}`)).toHaveTextContent('2,155');
+    // DRC-4 BR-02 replaced absorbing an excess: the published figure stays.
+    expect(within(card).getByTestId(`dant-figure-${KEY}-${W36}`)).toHaveTextContent('3,220');
+    expect(within(card).queryByTestId(/^dant-absorbed-/)).toBeNull();
     expect(screen.getByTestId('consumption-recorded-now')).toHaveTextContent(
       'Recorded for this week: 1,000 KG (typed).'
     );
     expectNoAbbreviation();
   });
 
-  it('control — before anything is recorded the two rows read a dash', async () => {
+  it('control — before anything is recorded the row reads a dash', async () => {
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
     const card = await screen.findByTestId(`dant-card-${KEY}`);
     expect(within(card).getByText('Recorded consumption')).toBeInTheDocument();
     expect(within(card).queryByTestId(`dant-consumption-${KEY}-${W36}`)).toBeNull();
-    expect(within(card).queryByTestId(`dant-absorbed-${KEY}-${H2[0]}`)).toBeNull();
   });
 
-  it('a typed 0 is recorded: the whole frozen 4,120 is the excess (1,030 a week)', async () => {
+  it('a typed 0 is recorded and shows 0', async () => {
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
     const panel = await screen.findByTestId('consumption-panel');
     fireEvent.change(within(panel).getByLabelText('Material'), {
@@ -113,28 +111,17 @@ describe('recording consumption in the frozen horizon (typed)', () => {
     fireEvent.change(within(panel).getByTestId('consumption-qty'), { target: { value: '0' } });
     fireEvent.click(within(panel).getByTestId('consumption-record'));
     await waitFor(() => expect(consumptionStore.all().map((r) => r.qty)).toEqual([0]));
-    expect(await screen.findByTestId(`dant-absorbed-${KEY}-${H2[0]}`)).toHaveTextContent(
-      '−1,030 absorbed from the W36–W39 excess'
-    );
+    expect(await screen.findByTestId(`dant-consumption-${KEY}-${W36}`)).toHaveTextContent('0');
   });
 
-  it('at W39 the week choice is the frozen horizon’s weeks up to now, newest first', async () => {
+  it('at W39 the week choice starts at W39, newest first, and still holds W36', async () => {
     sdcClock.set('2026-09-21T03:00:00.000Z');
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
     const panel = await screen.findByTestId('consumption-panel');
-    expect(
-      [...within(panel).getByLabelText('Week').querySelectorAll('option')].map((o) => o.value)
-    ).toEqual(['2026-09-21', '2026-09-14', '2026-09-07', W36]);
-  });
-
-  it('at W40, before W40–W43 is published, no week can be typed and the upload stays', async () => {
-    sdcClock.set('2026-09-28T03:00:00.000Z');
-    renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
-    expect(await screen.findByTestId('consumption-no-weeks')).toHaveTextContent(
-      'The current horizon is not frozen yet'
+    const options = [...within(panel).getByLabelText('Week').querySelectorAll('option')].map(
+      (o) => o.value
     );
-    expect(screen.queryByTestId('consumption-record')).toBeNull();
-    expect(screen.getByTestId('consumption-upload-choose')).toBeInTheDocument();
+    expect(options.slice(0, 4)).toEqual(['2026-09-21', '2026-09-14', '2026-09-07', W36]);
   });
 });
 
@@ -163,9 +150,7 @@ describe('the upload', () => {
     expect(consumptionStore.all()).toMatchObject([
       { materialCode: 'RM-STEAR-7300', week: W36, qty: 1_000, source: 'upload' }
     ]);
-    expect(await screen.findByTestId(`dant-absorbed-${KEY}-${H2[0]}`)).toHaveTextContent(
-      '−780 absorbed from the W36–W39 excess'
-    );
+    expect(await screen.findByTestId(`dant-consumption-${KEY}-${W36}`)).toHaveTextContent('1,000');
   });
 
   it('refuses an old or unrelated file with one line and records nothing', async () => {
@@ -227,42 +212,39 @@ describe('a seat without forecast:publish', () => {
   });
 });
 
-describe('BR-04 — the unabsorbed excess on PTI alerts', () => {
+describe('DRC-4 BR-02 — a surplus the last week cannot absorb, on PTI alerts', () => {
   it('shows the remaining amount and links to the supplier × material on Demand anticipation', async () => {
-    // W39: record 100 KG in each frozen week; the excess outgrows W40–W43.
-    sdcClock.set('2026-09-21T03:00:00.000Z');
-    const cmd = new MockCommandService();
-    for (const week of [W36, '2026-09-07', '2026-09-14', '2026-09-21']) {
-      const res = await cmd.dispatch(
-        { personaType: 'buyer', supplierId: null, businessRoles: ['planning'], actor: NO_PERSON },
-        {
-          transitionId: 't_consumption_record',
-          entity: 'consumption',
-          payload: { materialCode: 'RM-STEAR-7300', week, qty: 100, unit: 'KG', source: 'manual' }
-        }
-      );
-      expect(res.status, res.reason).toBe('done');
-    }
+    // sup-007 × PK-PETB-8801: SOH share and open POs exceed its 2-week horizon.
+    const row = (
+      await mockDataService.procurement.getDemandAnticipation({
+        personaType: 'buyer',
+        supplierId: null,
+        businessRoles: SEEDED_SEAT_ROLES.buyer
+      })
+    ).items.find((r) => r.supplierId === 'sup-007' && r.materialCode === 'PK-PETB-8801');
+    const plan = /** @type {NonNullable<typeof row>} */ (row).plan;
+    expect(plan.unabsorbed).toBeGreaterThan(0);
     renderWithProviders(<BuyerAlerts />, { identity: PLANNER, route: '/buyer/alerts' });
     const alert = await screen.findByTestId(
-      'alert-demandAnticipationUnabsorbed|RM-STEAR-7300|sup-002'
+      'alert-demandAnticipationUnabsorbed|PK-PETB-8801|sup-007'
     );
     expect(alert).toHaveTextContent(
-      'Consumption below demand anticipation left an excess the next horizon cannot absorb'
+      'Supply above demand anticipation is more than the last week of the horizon can absorb'
     );
-    // 12,940 frozen − 400 consumed − 11,742 the next horizon can take.
     expect(
       within(alert).getByTestId(
-        'alert-unabsorbed-demandAnticipationUnabsorbed|RM-STEAR-7300|sup-002'
+        'alert-unabsorbed-demandAnticipationUnabsorbed|PK-PETB-8801|sup-007'
       )
-    ).toHaveTextContent('798 KG of the W36–W39 excess cannot be absorbed by W43.');
+    ).toHaveTextContent(
+      `${plan.unabsorbed.toLocaleString('en-US')} ${row?.uom} of the supply above demand anticipation over W36–W37 cannot be absorbed in W37.`
+    );
     expect(
       within(alert).getByRole('link', { name: 'Open demand anticipation' }).getAttribute('href')
-    ).toMatch(/\/buyer\/demand-anticipation\?supplier=sup-002&material=RM-STEAR-7300$/);
+    ).toMatch(/\/buyer\/demand-anticipation\?supplier=sup-007&material=PK-PETB-8801$/);
     expectNoAbbreviation();
   });
 
-  it('control — no consumption recorded, no such alert', async () => {
+  it('control — a pair whose check balances raises no such alert', async () => {
     renderWithProviders(<BuyerAlerts />, { identity: PLANNER, route: '/buyer/alerts' });
     await screen.findAllByTestId(/^alert-group-/);
     expect(
@@ -272,11 +254,10 @@ describe('BR-04 — the unabsorbed excess on PTI alerts', () => {
 });
 
 describe('both locales (CAP-D10)', () => {
-  it('renders the rows, the panel and the absorbed cell in Indonesian, with no "DA"', async () => {
+  it('renders the rows and the panel in Indonesian, with no "DA"', async () => {
     try {
       await i18n.changeLanguage('id');
-      const cmd = new MockCommandService();
-      await cmd.dispatch(
+      await mockDataService.commands.dispatch(
         { personaType: 'buyer', supplierId: null, businessRoles: ['planning'], actor: NO_PERSON },
         {
           transitionId: 't_consumption_record',
@@ -293,10 +274,8 @@ describe('both locales (CAP-D10)', () => {
       renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
       const card = await screen.findByTestId(`dant-card-${KEY}`);
       expect(within(card).getByText('Pemakaian tercatat')).toBeInTheDocument();
-      expect(within(card).getByText('Diserap')).toBeInTheDocument();
-      expect(within(card).getByTestId(`dant-absorbed-${KEY}-${H2[0]}`)).toHaveTextContent(
-        /^−780 diserap dari kelebihan W36–W39$/
-      );
+      expect(within(card).getByText('Kelebihan diserap')).toBeInTheDocument();
+      expect(within(card).getByTestId(`dant-consumption-${KEY}-${W36}`)).toHaveTextContent('1.000');
       expect(screen.getByTestId('consumption-source-marker')).toHaveTextContent(
         'Pemakaian dicatat oleh perencana · menunggu umpan pengeluaran barang SAP'
       );

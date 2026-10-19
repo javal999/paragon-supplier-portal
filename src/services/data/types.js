@@ -45,6 +45,7 @@
 /** @import { UpdateCompliance } from '../transitions/updateCompliance' */
 /** @import { MaterialPlan, MaterialRequirementRun } from '../engine/requirement' */
 /** @import { MaterialSafetyStock, SafetyStockChange, SafetyStockRun } from '../engine/safetyStock' */
+/** @import { MaterialOsipInputs } from '../transitions/osipSafetyRules' */
 /** @import { MaterialOrderPlan, OrderPlanRun, WarehousePlan } from '../engine/orderSizing' */
 /** @import { InfoLine, PlanChangeBaseline, Proposal, ProposalType, RescheduleRun, WarehouseReschedule } from '../engine/reschedule' */
 /** @import { SupplierCfot } from '../engine/cfot' */
@@ -852,11 +853,14 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
 /** One material's safety stock, safety lead time and ROP as served (REQ-E14-04). */
 /**
  * `change`:  BR-06 (BL-116) — the change since the last run of the material's stream, and why.
+ * `osip`:  BL-193 (DRC-7) / BL-197 (DRC-11) — the inputs of the OSIP safety order, ROP Fisik
+ *   safety and CV; the page applies the OSIP rules to them at read.
  *
  * @typedef {MaterialSafetyStock & {
  *     readonly materialLabel: string;
  *     readonly supplierName: string | null;
  *     readonly change: SafetyStockChange;
+ *     readonly osip: MaterialOsipInputs;
  *   }} MaterialSafetyStockView
  */
 
@@ -1237,7 +1241,7 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *  MR-6 BR-13 — a confirmed call-off due within the lead time is larger than declared SOH + production.
  *  CAP-4 BR-03 (CAP-D2) — the supplier gave Discontinued as a shortfall reason; PTI must find another source.
  *  CAP-9 BR-05 — a blanket PO's "new PO needed by" week is within 4 weeks (or passed); PTI raises the next PO.
- *  CAP-11 BR-04 — consumption below the frozen demand anticipation left an excess the next horizon cannot absorb.
+ *  DRC-4 BR-02 / DRC-B7 (rewired from CAP-11 BR-04) — supply above the rolling demand anticipation is more than the horizon's last week can absorb.
  *
  * @typedef {| 'ptiBelowRop'
  *   | 'supplierBelowRop'
@@ -1282,7 +1286,7 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * `daysToImpact`: MR-9 BR-03 — days until the risk bites, the order within a class (derived with the alert, never stored): days of cover or to the projected stock-out, days to the first capacity gap week, minus the days stale, else 0.
  * `closeReason`:  MR-9 BR-04 — the `alertClose` code; absent on a closure recorded before reasons (counts as Other).
  * `mrpController`:  Material C4 — the MRP controller of the material an alert is about. Absent  on a capacity alert, whose subject is a material group.
- * `unabsorbed`:  CAP-11 BR-04 — on `demandAnticipationUnabsorbed` only: the excess left after the next horizon (derived with the alert, never stored), its unit, the horizon weeks it arose in and the weeks that could not take it.
+ * `unabsorbed`:  DRC-4 BR-02 / DRC-B7 (rewired from CAP-11 BR-04) — on `demandAnticipationUnabsorbed` only: the surplus the last week of the rolling horizon could not absorb (derived with the alert, never stored), its unit, the horizon weeks and the last week that took what it could.
  *
  * @typedef {{
  *   readonly key: string;

@@ -2723,28 +2723,33 @@ export function useWarehouseDecisionCommand() {
 }
 
 /**
- * CAP-10 — freeze the demand anticipation of the current horizon (fires
- * `t_demandanticipation_publish`). `horizonStart` is the Monday the confirm
- * named; the verb refuses it once the hub week has moved on.
+ * DRC-2 (BL-188) — publish the rolling demand anticipation of the current
+ * planning week (fires `t_demandanticipation_publish`). `planningWeek` is the
+ * Monday the confirm named; the verb refuses it once the hub week has moved on.
+ * `agreedFirstOutside` records the suppliers who agreed to take the remainder
+ * in the first week outside the horizon [Owner A8]. The figure moves the
+ * surplus alert (DRC-4), so both reads are refreshed.
  */
 export function useDemandAnticipationCommand() {
   const svc = useDataService();
   const scope = useScope();
   const qc = useQueryClient();
 
-  return /** @type {typeof useMutation<CommandResult, Error, { readonly horizonStart: string }>} */ (
+  return /** @type {typeof useMutation<CommandResult, Error, { readonly planningWeek: string; readonly agreedFirstOutside: readonly string[] }>} */ (
     useMutation
   )({
     mutationFn: (vars) =>
       svc.commands.dispatch(scope, {
         transitionId: 't_demandanticipation_publish',
         entity: 'demandAnticipation',
-        payload: { horizonStart: vars.horizonStart }
+        payload: { planningWeek: vars.planningWeek, agreedFirstOutside: vars.agreedFirstOutside }
       }),
     onSuccess: (result) => {
       if (result.status === 'failed') return;
       qc.invalidateQueries({
-        predicate: (q) => q.queryKey[0] === 'procurement' && q.queryKey[1] === 'demandAnticipation'
+        predicate: (q) =>
+          q.queryKey[0] === 'procurement' &&
+          (q.queryKey[1] === 'demandAnticipation' || q.queryKey[1] === 'inventoryAlerts')
       });
     }
   });
@@ -2752,9 +2757,8 @@ export function useDemandAnticipationCommand() {
 
 /**
  * CAP-11 — record a material's consumption in a week (fires
- * `t_consumption_record`). It moves the demand anticipation in force for the
- * next horizon and may raise or clear the unabsorbed-excess alert, so both
- * reads are refreshed.
+ * `t_consumption_record`). It moves the grid's recorded consumption and the
+ * DRC-18 moving average; the alerts read is refreshed with it.
  */
 export function useConsumptionRecordCommand() {
   const svc = useDataService();
