@@ -79,6 +79,7 @@ export { warehouseDecisionFlow } from './flows/warehouseDecision.flow';
 export { demandAnticipationFlow } from './flows/demandAnticipation.flow';
 export { consumptionFlow } from './flows/consumption.flow';
 export { osipLevelFlow } from './flows/osipLevel.flow';
+export { whatIfScenarioFlow } from './flows/whatIfScenario.flow';
 export { feedstockConfirmationFlow } from './flows/feedstockConfirmation.flow';
 export { rfiEventFlow } from './flows/rfiEvent.flow';
 export { rfiResponseFlow } from './flows/rfiResponse.flow';
@@ -142,6 +143,7 @@ import { warehouseDecisionFlow } from './flows/warehouseDecision.flow';
 import { demandAnticipationFlow } from './flows/demandAnticipation.flow';
 import { consumptionFlow } from './flows/consumption.flow';
 import { osipLevelFlow } from './flows/osipLevel.flow';
+import { whatIfScenarioFlow } from './flows/whatIfScenario.flow';
 import { feedstockConfirmationFlow } from './flows/feedstockConfirmation.flow';
 import { rfiEventFlow } from './flows/rfiEvent.flow';
 import { rfiResponseFlow } from './flows/rfiResponse.flow';
@@ -255,6 +257,7 @@ flowRegistry.register(warehouseDecisionFlow); // FUX-D3 — a planner's decision
 flowRegistry.register(demandAnticipationFlow); // CAP-10 — the planner freezes the demand anticipation of the current horizon
 flowRegistry.register(consumptionFlow); // CAP-11 — the planner records a material's weekly consumption
 flowRegistry.register(osipLevelFlow); // DRC-D11 — the planner sets a material's OSIP level
+flowRegistry.register(whatIfScenarioFlow); // DRC-17 — the planner saves a what-if scenario
 // BL-194 / DRC-8 — the supplier confirms its current feedstock with a date: the
 // same degenerate single-state snapshot shape, append-only (DRC-D17).
 flowRegistry.register(feedstockConfirmationFlow); // BL-194 — supplier feedstock confirmation

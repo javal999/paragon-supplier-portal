@@ -542,6 +542,10 @@ export const processFlowPurposeEn = {
     'A material’s OSIP level, which picks the formula of its physical reorder point (ROP Fisik). A material nobody has set is at level 4. Every change keeps the level before it, who set it and when; the latest is in force.',
   'processFlows.purpose.t_osiplevel_set':
     'The Material Planner sets or confirms a material’s OSIP level, from 1 to 6. Confirming it closes the “Review ROP after first order” task. Nothing is sent to SAP or a supplier.',
+  'processFlows.purpose.entity.whatIfScenario':
+    'A what-if scenario the Material Planner kept for one supplier and material: the figures it was run on, its rule choices and the rules version in force at the time. Nothing is edited or deleted; keeping other numbers makes a new scenario.',
+  'processFlows.purpose.t_whatifscenario_save':
+    'The Material Planner keeps a what-if scenario under a title, to compare it with the current plan later. Analysis only: nothing changes the plan or reaches suppliers or SAP.',
   'processFlows.purpose.entity.feedstockConfirmation':
     'A supplier’s confirmation of its current feedstock for one material: the quantity in the material’s unit, the day the figure holds for, and an optional note. Feedstock is not stock until it is produced, so it never adds to the supplier’s stock on hand. A newer confirmation replaces the earlier one; every confirmation stays on record.',
   'processFlows.purpose.t_feedstock_confirm':
@@ -1123,6 +1127,10 @@ export const processFlowPurposeId = {
     'Level OSIP suatu material, yang menentukan rumus titik pemesanan ulang fisiknya (ROP Fisik). Material yang belum diatur berada di level 4. Setiap perubahan menyimpan level sebelumnya, siapa yang mengatur, dan kapan; yang terakhir berlaku.',
   'processFlows.purpose.t_osiplevel_set':
     'Perencana Material mengatur atau mengonfirmasi level OSIP suatu material, dari 1 sampai 6. Mengonfirmasinya menutup tugas “Tinjau ROP setelah pesanan pertama”. Tidak ada yang dikirim ke SAP atau pemasok.',
+  'processFlows.purpose.entity.whatIfScenario':
+    'Skenario what-if yang disimpan Perencana Material untuk satu pemasok dan material: angka yang dipakai, pilihan aturannya, dan versi aturan yang berlaku saat itu. Tidak ada yang diubah atau dihapus; angka lain menjadi skenario baru.',
+  'processFlows.purpose.t_whatifscenario_save':
+    'Perencana Material menyimpan skenario what-if dengan sebuah judul, untuk dibandingkan dengan rencana saat ini nanti. Hanya analisis: tidak ada yang mengubah rencana atau sampai ke pemasok atau SAP.',
   'processFlows.purpose.entity.feedstockConfirmation':
     'Konfirmasi pemasok atas feedstock saat ini untuk satu material: jumlah dalam satuan material, tanggal konfirmasi, dan catatan opsional. Feedstock belum menjadi stok sampai diproduksi, sehingga tidak pernah menambah stok pemasok. Konfirmasi yang lebih baru menggantikan yang lama; setiap konfirmasi tetap tercatat.',
   'processFlows.purpose.t_feedstock_confirm':

@@ -61,6 +61,8 @@ export const hubEn = {
   'hub.nav.pti.supplierResponses': 'Supplier responses',
   'hub.nav.pti.demandAnticipation': 'Demand anticipation',
   'hub.nav.pti.demandAnticipationHistory': 'Demand anticipation history',
+  // DRC-17 (BL-202) — the what-if sandbox, in the Weekly plan menu.
+  'hub.nav.pti.whatIfSandbox': 'What-if sandbox',
   'hub.nav.pti.forecastQuality': 'Forecast quality',
   'hub.nav.pti.stockCheck': 'Feedstock reconcile',
   // Planning engine pages, in the user menu (F-04).
@@ -244,6 +246,7 @@ export const hubId = {
   'hub.nav.pti.supplierResponses': 'Tanggapan pemasok',
   'hub.nav.pti.demandAnticipation': 'Antisipasi permintaan',
   'hub.nav.pti.demandAnticipationHistory': 'Riwayat antisipasi permintaan',
+  'hub.nav.pti.whatIfSandbox': 'Sandbox what-if',
   'hub.nav.pti.forecastQuality': 'Kualitas prakiraan',
   'hub.nav.pti.stockCheck': 'Rekonsiliasi feedstock',
   'hub.nav.pti.engine.materialRequirement': 'Mesin perencanaan · Kebutuhan material',

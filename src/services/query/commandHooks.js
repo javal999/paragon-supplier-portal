@@ -2801,6 +2801,47 @@ export function useOsipLevelCommand() {
 }
 
 /**
+ * DRC-17 BR-05 (BL-202) — save a what-if scenario (fires
+ * `t_whatifscenario_save`). Only the sandbox's own read refreshes: the verb
+ * changes no plan (BR-06).
+ * @typedef {{
+ *   readonly name: string;
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly inputs: import('../transitions/whatIfSandboxRules').WhatIfInputs;
+ *   readonly switches: import('../transitions/whatIfSandboxRules').WhatIfSwitches;
+ * }} WhatIfScenarioVars
+ */
+
+/** Save a what-if scenario (fires `t_whatifscenario_save`). */
+export function useWhatIfScenarioCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, WhatIfScenarioVars>} */ (useMutation)({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_whatifscenario_save',
+        entity: 'whatIfScenario',
+        payload: {
+          name: vars.name,
+          supplierId: vars.supplierId,
+          materialCode: vars.materialCode,
+          inputs: vars.inputs,
+          switches: vars.switches
+        }
+      }),
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      qc.invalidateQueries({
+        predicate: (q) => q.queryKey[0] === 'procurement' && q.queryKey[1] === 'whatIf'
+      });
+    }
+  });
+}
+
+/**
  * DRC-2 (BL-188) — publish the rolling demand anticipation of the current
  * planning week (fires `t_demandanticipation_publish`). `planningWeek` is the
  * Monday the confirm named; the verb refuses it once the hub week has moved on.

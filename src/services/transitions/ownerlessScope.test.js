@@ -128,6 +128,7 @@ import { demandAnticipationStore } from '../data/mock/stores/demandAnticipationS
 import { materialNameStore } from '../data/mock/stores/materialNameStore';
 import { feedstockConfirmationStore } from '../data/mock/stores/feedstockConfirmationStore';
 import { simulationOverrideStore } from '../data/mock/stores/simulationOverrideStore';
+import { whatIfScenarioStore } from '../data/mock/stores/whatIfScenarioStore';
 import { hubSettingsStore, settingValue } from './hubSettingsStore';
 import { reasonCodeStore } from './reasonCodes';
 
@@ -314,6 +315,9 @@ async function realIds() {
     // Material E1 — a stock simulation planner input is creation-only
     // (unprobeable, AR-20) and its store starts empty; a well-formed id.
     simulationOverride: 'sim-0001',
+    // BL-202 — a what-if scenario is creation-only (unprobeable) and its store
+    // starts empty (no scenario is invented); a well-formed id.
+    whatIfScenario: 'wis-0001',
     // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — every RFx store is seeded, so each
     // first row is a real id. The two RESPONSE targets are supplier-owned and
     // therefore land in `ownerful`; the three buyer-owned ones land in
@@ -486,6 +490,7 @@ const resetAll = () => {
   materialNameStore.reset();
   feedstockConfirmationStore.reset();
   simulationOverrideStore.reset();
+  whatIfScenarioStore.reset();
   hubSettingsStore.reset();
   reasonCodeStore.reset();
   // NR-2 — the id supply closes rfp-002 and opens a firm-offer round.
@@ -589,6 +594,7 @@ describe('POPULATION — nothing below means anything without this', () => {
     // So is a demand anticipation publication (CAP-10): it is followed, never changed.
     // And a consumption record (CAP-11): a later record supersedes it at read.
     // And a feedstock confirmation (BL-194): append-only, the latest in force.
+    // And a what-if scenario (BL-202): saved once, never changed.
     expect(unprobeable).toEqual([
       'rfqConfidentiality',
       'inventoryDeclaration',
@@ -601,6 +607,7 @@ describe('POPULATION — nothing below means anything without this', () => {
       'forecastOverride',
       'demandAnticipation',
       'consumption',
+      'whatIfScenario',
       'feedstockConfirmation'
     ]);
   });

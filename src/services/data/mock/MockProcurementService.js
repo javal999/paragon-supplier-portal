@@ -17,6 +17,8 @@ import { allDemandAnticipationWithSupply } from './supplyBelowDemandReadModel';
 import { withLtpFgDemandRead } from './ltpFgDemandReadModel';
 import { osipSafetyInputs } from './osipSafetyReadModel';
 import { npdReviews, osipRopInputs, systemRopSuppliers } from './osipRopReadModel';
+import { whatIfPairs, whatIfSandbox } from './whatIfSandboxReadModel';
+/** @import { WhatIfPair, WhatIfSandbox } from './whatIfSandboxReadModel' */
 import { ropFisikPrRecommendations } from './callOffTriggerReadModel';
 /** @import { PrRecommendationView } from '../../transitions/callOffTriggerRules' */
 /** @import { DemandAnticipationSupplyRow } from '../../transitions/supplyBelowDemandRules' */
@@ -1053,6 +1055,30 @@ export class MockProcurementService {
     // raised once when a material's NPD tag drops. PTI only (X-03).
     if (scope.personaType !== 'buyer') return { items: [] };
     return { items: npdReviews() };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<WhatIfPair>>}
+   */
+  async getWhatIfPairs(scope) {
+    // DRC-17 BR-01 / BR-07 (BL-202) — the pairs the sandbox offers. PTI's own
+    // analysis: a supplier persona reads nothing (no role gate, CLAUDE.md §65).
+    if (scope.personaType !== 'buyer') return { items: [] };
+    return { items: whatIfPairs() };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @param {string} supplierId
+   * @param {string} materialCode
+   * @returns {Promise<WhatIfSandbox | null>}
+   */
+  async getWhatIfSandbox(scope, supplierId, materialCode) {
+    // DRC-17 BR-02 / BR-05 (BL-202) — one pair's live inputs and saved
+    // scenarios. A supplier persona reads nothing (BR-07).
+    if (scope.personaType !== 'buyer') return null;
+    return whatIfSandbox(supplierId, materialCode);
   }
 
   // ─── Sourcing ─────────────────────────────────────────────────────────────

@@ -349,6 +349,7 @@ export const TRANSITION_PURPOSE = Object.freeze({
   t_demandanticipation_publish: { purposeKey: 'processFlows.purpose.t_demandanticipation_publish' },
   t_consumption_record: { purposeKey: 'processFlows.purpose.t_consumption_record' },
   t_osiplevel_set: { purposeKey: 'processFlows.purpose.t_osiplevel_set' },
+  t_whatifscenario_save: { purposeKey: 'processFlows.purpose.t_whatifscenario_save' },
   t_feedstock_confirm: { purposeKey: 'processFlows.purpose.t_feedstock_confirm' },
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — RFx management.
   t_rfi_create: { purposeKey: 'processFlows.purpose.t_rfi_create' },
@@ -444,6 +445,7 @@ export const ENTITY_PURPOSE = Object.freeze({
   demandAnticipation: { purposeKey: 'processFlows.purpose.entity.demandAnticipation' },
   consumption: { purposeKey: 'processFlows.purpose.entity.consumption' },
   osipLevel: { purposeKey: 'processFlows.purpose.entity.osipLevel' },
+  whatIfScenario: { purposeKey: 'processFlows.purpose.entity.whatIfScenario' },
   feedstockConfirmation: { purposeKey: 'processFlows.purpose.entity.feedstockConfirmation' },
   rfiEvent: { purposeKey: 'processFlows.purpose.entity.rfiEvent' },
   rfiResponse: { purposeKey: 'processFlows.purpose.entity.rfiResponse' },

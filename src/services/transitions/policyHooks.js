@@ -199,6 +199,14 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    */
   OSIP_LEVEL_VALID: 'osiplevel_valid',
   /**
+   * What-if scenario save (DRC-17 BR-05, BL-202): a name (NAME_REQUIRED,
+   * NAME_TOO_LONG), a pair the sandbox offers (UNKNOWN_PAIR), well-formed
+   * inputs (INPUTS_INVALID:<field>) and switches each catalogue entry allows
+   * (SWITCHES_INVALID:<path>). The rule is `scenarioRefusal`, the one the
+   * page's save form calls.
+   */
+  WHAT_IF_SCENARIO_VALID: 'whatifscenario_valid',
+  /**
    * Demand anticipation publish (DRC-2, BL-188): the confirm names the current
    * planning week (STALE_WEEK otherwise); a recorded supplier agreement names
    * a pair with a remainder to carry (BAD_AGREEMENT, [Owner A8]); some pair has

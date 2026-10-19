@@ -61,10 +61,10 @@ describe('Material Planner menu — Weekly plan and Review (F-03, F-04)', () => 
       ['review', 'hub.nav.pti.stockCheck', '/buyer/fs-reconcile']
     ]);
     // FUX phase 2 B1 — This week joins Weekly plan as its first item; CAP-10 —
-    // Demand anticipation joins it as its last.
+    // Demand anticipation joins it; DRC-17 (BL-202) — the What-if sandbox is last.
     expect(
       /** @type {import('./navConfig').NavSection} */ (mp.find((s) => s.id === 'weeklyPlan')).items
-    ).toHaveLength(6);
+    ).toHaveLength(7);
     // DRC-3 (BL-189) — Demand anticipation history joins Review as its last item.
     expect(
       /** @type {import('./navConfig').NavSection} */ (mp.find((s) => s.id === 'review')).items
@@ -114,8 +114,12 @@ describe('FUX phase 2 B1 — This week and the Procurement path to the stock che
       ['hub.nav.pti.publishToSuppliers', '/buyer/stabilise'],
       ['hub.nav.pti.supplierResponses', '/buyer/collaboration'],
       // CAP-10 — the demand anticipation, frozen per 4-week horizon.
-      ['hub.nav.pti.demandAnticipation', '/buyer/demand-anticipation']
+      ['hub.nav.pti.demandAnticipation', '/buyer/demand-anticipation'],
+      // DRC-17 (BL-202) BR-07 — PTI planners find the sandbox in Weekly plan.
+      ['hub.nav.pti.whatIfSandbox', '/buyer/what-if']
     ]);
+    expect(hubEn['hub.nav.pti.whatIfSandbox']).toBe('What-if sandbox');
+    expect(hubId['hub.nav.pti.whatIfSandbox']).toBe('Sandbox what-if');
     expect(hubEn['hub.nav.pti.thisWeek']).toBe('This week');
     expect(hubEn['hub.nav.pti.demandAnticipation']).toBe('Demand anticipation');
     expect(hubId['hub.nav.pti.demandAnticipation']).toBe('Antisipasi permintaan');

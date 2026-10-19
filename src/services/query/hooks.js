@@ -184,6 +184,24 @@ export const useNpdReviews = () =>
     svc.procurement.getNpdReviews(scope)
   );
 
+/** DRC-17 (BL-202) — the pairs the what-if sandbox offers (PTI only). */
+export const useWhatIfPairs = () =>
+  useServiceQuery(['procurement', 'whatIf', 'pairs'], (svc, scope) =>
+    svc.procurement.getWhatIfPairs(scope)
+  );
+
+/**
+ * DRC-17 (BL-202) — one pair's live inputs and saved scenarios (PTI only).
+ * @param {string | null} supplierId
+ * @param {string | null} materialCode
+ */
+export const useWhatIfSandbox = (supplierId, materialCode) =>
+  useServiceQuery(
+    ['procurement', 'whatIf', 'sandbox', supplierId ?? '', materialCode ?? ''],
+    (svc, scope) => svc.procurement.getWhatIfSandbox(scope, supplierId ?? '', materialCode ?? ''),
+    { enabled: supplierId !== null && materialCode !== null }
+  );
+
 /** BL-199 (DRC-13 BR-02) — the open "Create a PR in SAP" recommendations at ROP Fisik (PTI only). */
 export const useRopFisikPrRecommendations = () =>
   useServiceQuery(['procurement', 'ropFisikPrRecommendations'], (svc, scope) =>
