@@ -1,17 +1,17 @@
 // ────────────────────────────────────────────────────────────────────────────
-// The quote-comparison table's building blocks: a row, a cell, a score that
-// may be honestly absent, and the should-cost spread cell. Moved out of
-// `BuyerSourcing.jsx` by the Phase 5 page split (no behaviour change).
+// The comparison's building blocks: the honest-marker row tag and the
+// should-cost spread cell. Moved out of `BuyerSourcing.jsx` by the Phase 5 page
+// split, then from the side panel to the event page by RFx UX B-02 (owner
+// ruling 2026-10-19); the panel-only row and cell wrappers were retired.
 // ────────────────────────────────────────────────────────────────────────────
 /** @import React from 'react' */
 /** @import { TFunction } from 'i18next' */
 /** @import { QuoteSpread, SilentReason } from '@lib/shouldCostSpread' */
 import { ArrowLeftRight } from 'lucide-react';
-import ScoreBadge from '@components/ui-v2/ScoreBadge';
 import LivenessPill from '@components/ui-v2/LivenessPill';
 import ModelMarker from '@components/ui-v2/ModelMarker';
 import { formatMoney } from '@lib/format';
-import { fmtSignedPct } from '../utils';
+import { fmtSignedPct } from '../../BuyerSourcing/utils';
 
 /** Honest silence on the should-cost cell — one key per named cause. The
  * @type {Record<SilentReason, string>}
@@ -23,55 +23,22 @@ export const SPREAD_SILENT_KEY = {
   'currency-unsupported': 'sourcing.cmp.spread.silent.currency-unsupported'
 };
 
-// A score axis, or honest silence (2e-c-3). The score cells used to read
-// `scoreById.get(id)?.priceScore ?? 0`, which was harmless while the engine
-// always scored — the map was never missing an entry. Now that a comparison can
-// be REFUSED the map is legitimately empty, and `?? 0` would render every axis
-// as a real score of 0: the WORST value on each bar, for quotes the engine
-// explicitly declined to rank. An absent score is not a bad score.
 /**
- * A score bar, or an em dash when the engine declined to score.
- * @type {React.FC<{ score: number | undefined }>}
+ * An honest-marker tag on a comparison row label, with a tooltip explaining it.
+ * Two DIFFERENT qualifiers use this grammar and must not be conflated:
+ * "Simulated" (the axis has no live data source yet) and "Estimated" (REAL
+ * supplier input, indicative at this stage rather than a commitment — the lead
+ * time, 2e-b-1a). Was the `tag` / `tagTitle` pair on the side panel's
+ * `ComparisonRow`; moved here with the comparison (RFx UX B-02).
+ * @type {React.FC<{ tag: string; title: string }>}
  */
-export const ScoreOrSilence = ({ score }) =>
-  score === undefined ? (
-    <span className="text-text-tertiary">—</span>
-  ) : (
-    <ScoreBadge score={score} size="sm" variant="bar" />
-  );
-
-/**
- * One comparison row: a row header with an optional honesty tag, then a cell per quote.
- *
- * `tag`: An honest-marker tag on the row label, with a tooltip explaining it. Two
- * `tag`: DIFFERENT qualifiers use it, and they must not be conflated:
- * `tag`:   · "Simulated" — the axis has no live data source yet (compliance /
- * `tag`:     reliability / the composite that inherits their weakest link);
- * `tag`:   · "Estimated" — the data is REAL supplier input, but it is indicative at
- * `tag`:     this stage rather than a commitment (lead time, 2e-b-1a).
- * `tag`: Generalised from the old `sim`/`simLabel`/`simTitle` triple so the second
- * `tag`: qualifier reuses the grammar instead of inventing a rival one. Rows with no
- * `tag`: qualifier render plain.
- * @type {React.FC<{ label: string; tag?: string; tagTitle?: string; children: React.ReactNode; }>}
- */
-export const ComparisonRow = ({ label, tag, tagTitle, children }) => (
-  <tr className="border-t border-border-subtle">
-    <th
-      scope="row"
-      className="text-left px-2 py-2 font-medium text-text-tertiary uppercase tracking-wider text-[10px] w-36 min-w-[9rem] align-middle"
-    >
-      {label}
-      {tag && (
-        <span
-          title={tagTitle}
-          className="ml-1.5 inline-block normal-case tracking-normal text-[9px] font-medium text-text-tertiary border border-border-subtle rounded px-1 py-px align-middle"
-        >
-          {tag}
-        </span>
-      )}
-    </th>
-    {children}
-  </tr>
+export const RowTag = ({ tag, title }) => (
+  <span
+    title={title}
+    className="ml-1.5 inline-block normal-case tracking-normal text-[9px] font-medium text-text-tertiary border border-border-subtle rounded px-1 py-px align-middle"
+  >
+    {tag}
+  </span>
 );
 
 // The CI-2 spread cell: a MODELED, banded reference the buyer READS beside the
@@ -133,17 +100,3 @@ export const SpreadCell = ({ result, t }) => {
     </div>
   );
 };
-
-/**
- * One comparison cell; `highlight` marks the top-ranked (or awarded) column.
- * @type {React.FC<{ highlight?: boolean; children: React.ReactNode; }>}
- */
-export const ComparisonCell = ({ highlight, children }) => (
-  <td
-    className={`px-2 py-2 align-middle ${
-      highlight ? 'border-x-2 border-action bg-action-soft/40' : ''
-    }`}
-  >
-    {children}
-  </td>
-);

@@ -1,4 +1,5 @@
 /** @import React from 'react' */
+/** @import { PinDraft } from '../BuyerSourcing/const' */
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +13,8 @@ import ErrorState from '@components/ui-v2/ErrorState';
 import NotFound from '../NotFound';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { formatDate } from '@lib/format';
+import { BASE_CURRENCY } from '@lib/currencyPolicy';
+import { effectivePin } from '@lib/fxPin';
 import {
   useAwards,
   useNegotiationRounds,
@@ -32,6 +35,9 @@ import { QualificationWarningsNote, useSourcingTypeMap } from '../rfx/eligibilit
 import { useEventCommand } from './hooks/useEventCommand';
 import { useEventScoring } from './hooks/useEventScoring';
 import { useNewRoundForm } from './hooks/useNewRoundForm';
+import { useEvaluationActions } from './hooks/useEvaluationActions';
+import { blankPinDraft } from '../BuyerSourcing/utils';
+import FxPinDialog from './components/FxPinDialog';
 import EventStatusBar from './components/EventStatusBar';
 import ResponseWindowSection from './components/ResponseWindowSection';
 import EventItemsSection from './components/EventItemsSection';
@@ -86,7 +92,12 @@ import EventSectionNav from './components/EventSectionNav';
 // RFx UX B-02 (owner ruling 2026-10-19, "move, then trim") — the invitees'
 // answers and the clarification questions (`RfqEngagementSection`, with its
 // answer form and the `rfqclarification:answer` notice) moved here from the
-// board's side panel, under "Clarifications" in the nav.
+// board's side panel, under "Clarifications" in the nav. So did the evaluation
+// acts: "Move to review" per quote (`quotation:review`) and recording an FX rate
+// (`rfq:fx-pin`, confirm-before-commit in `FxPinDialog`), each with its own
+// handoff notice in its own slot, inside the comparison.
+// `?section=<comparison|award|…>` lands on that section, so the panel's three
+// links open the page where their act is.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @type {React.FC} */
@@ -114,6 +125,9 @@ const BuyerSourcingEvent = () => {
   // REQ-E03-03 BR-05 — moving the response window is the PUBLISH authority, the
   // same atom that sent the invitation out; it is not the award authority.
   const publish = useVerbAvailability('rfq:publish');
+  // RFx UX B-02 — the two evaluation acts moved here from the board's panel.
+  const reviewVerb = useVerbAvailability('quotation:review');
+  const fxPinVerb = useVerbAvailability('rfq:fx-pin');
   const { command, run } = useEventCommand();
 
   const roundForm = useNewRoundForm();
@@ -122,6 +136,9 @@ const BuyerSourcingEvent = () => {
   // RFx spec "Evaluation and award" — the break a TIERED RFQ is compared and
   // awarded at. Unset = the default, the break nearest the RFQ's `totalQty`.
   const [chosenBreak, setChosenBreak] = useState(/** @type {number | null} */ (null));
+  // 2e-c-4 — the pin draft a buyer confirms before a rate is recorded. Null =
+  // no dialog.
+  const [pinDraft, setPinDraft] = useState(/** @type {PinDraft | null} */ (null));
 
   // The eyebrow is the menu section alone: "Sourcing", as the board's is. It
   // read "Sourcing · Sourcing event", naming the section twice.
@@ -154,13 +171,17 @@ const BuyerSourcingEvent = () => {
     chosenBreak
   });
 
-  // The board panel's "Award RFQ" / "View award details" open this page at its
-  // award section (`?section=award`), so the footer lands where its act is.
+  const evaluation = useEvaluationActions({ selectedRfq: rfq, pinDraft, setPinDraft });
+
+  // The board panel's links and its "Award RFQ" / "View award details" open this
+  // page at a section (`?section=award`, `?section=comparison`), so each lands
+  // where its act is. Only a section the page has is scrolled to.
   const [params] = useSearchParams();
   const loaded = !rfqs.isPending && !quotes.isPending && !gates.isPending && rfq !== null;
   useEffect(() => {
-    if (loaded && params.get('section') === 'award') {
-      document.getElementById('event-award')?.scrollIntoView?.({ block: 'start' });
+    const section = params.get('section');
+    if (loaded && section && /^[a-z]+$/.test(section)) {
+      document.getElementById(`event-${section}`)?.scrollIntoView?.({ block: 'start' });
     }
   }, [loaded, params]);
 
@@ -180,6 +201,10 @@ const BuyerSourcingEvent = () => {
   const awardable =
     rfq.status === 'Open' || rfq.status === 'Closed' || rfq.status === 'Partly awarded';
   const currency = rfq.currency;
+  /** The non-base currencies actually bid on this event — what needs a basis. */
+  const foreignCurrencies = [...new Set(current.map((q) => q.currency ?? BASE_CURRENCY))].filter(
+    (c) => c !== BASE_CURRENCY
+  );
   // RFx UX 1C (B-01) — days left on the response window, while it is open.
   const daysLeft = daysToDeadline(rfq.responseDeadline, rfxNow());
   const hasItems = (rfq.lineItems?.length ?? 0) > 0 || tiered;
@@ -318,6 +343,11 @@ const BuyerSourcingEvent = () => {
               bestId={bestId}
               standing={standing}
               tied={tied}
+              foreignCurrencies={foreignCurrencies}
+              onPin={(c) => setPinDraft(blankPinDraft(c, effectivePin(rfq.fxPins, c)))}
+              reviewAvailability={reviewVerb}
+              onReview={evaluation.handleReview}
+              reviewPending={evaluation.reviewMutation.isPending}
             />
             {/* — REQ-E03-05 AC-03: every quote version, kept and viewable — */}
             {allQuotes.length > current.length && (
@@ -386,6 +416,17 @@ const BuyerSourcingEvent = () => {
           />
         </div>
       </div>
+
+      {!!pinDraft && (
+        <FxPinDialog
+          pinDraft={pinDraft}
+          setPinDraft={setPinDraft}
+          fxPinAvailability={fxPinVerb}
+          fxPinPending={evaluation.fxPinMutation.isPending}
+          handlePinConfirm={evaluation.handlePinConfirm}
+          t={t}
+        />
+      )}
     </AppShellV2>
   );
 };

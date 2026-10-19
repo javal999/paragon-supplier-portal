@@ -1,3 +1,4 @@
+import { Routes, Route } from 'react-router-dom';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { renderWithProviders } from '@test/test-utils';
 import { mockDataService } from '@services/data/mock/mockDataService';
@@ -8,6 +9,7 @@ import { quotationStore } from '@services/data/mock/stores/quotationStore';
 import { rfqStore } from '@services/data/mock/stores/rfqStore';
 import i18n from '@lib/i18n';
 import BuyerSourcing from './BuyerSourcing';
+import BuyerSourcingEvent from './BuyerSourcingEvent';
 import { mockRfqs } from '@data/mockRfqs';
 import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
 import { mockSuppliers } from '@data/mockSuppliers';
@@ -36,6 +38,27 @@ const passGateForSup005 = () => {
     s.halalCertified = saved.halalCertified;
     s.certExpiryDate = saved.certExpiryDate;
   });
+};
+
+// ⚠️ RFx UX B-02 (owner ruling 2026-10-19) — the quote comparison, the move to
+// review and the FX arc moved from the board's side panel to the RFQ event page.
+// The specs below that read them now drive `/buyer/rfq/:id`; each keeps its
+// fact, and where only the event page's label differs the assertion names that
+// label ("Top-ranked" → "Best scored", "Unit Price" → "Unit price", …).
+/**
+ * Open the RFQ event page and wait for its comparison.
+ * @param {string} rfqId
+ * @returns {Promise<HTMLElement>} The comparison section.
+ */
+const openEvent = async (rfqId) => {
+  renderWithProviders(
+    <Routes>
+      <Route path="/buyer/rfq/:rfqId" element={<BuyerSourcingEvent />} />
+    </Routes>,
+    { route: `/buyer/rfq/${rfqId}` }
+  );
+  await screen.findByTestId('cmp-row-rfx.cmp.row.unitPrice');
+  return /** @type {HTMLElement} */ (document.getElementById('event-comparison'));
 };
 
 const alwaysFails = withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 });
@@ -90,19 +113,15 @@ describe('BuyerSourcing — four honest states', () => {
 // than inventing a rival one; "Simulated" (no live source) and "Estimated"
 // (real data, indicative at this stage) are DIFFERENT qualifiers sharing it.
 describe('BuyerSourcing — the lead-time axis is labelled an estimate', () => {
-  const openComparison = async () => {
-    renderWithProviders(<BuyerSourcing />);
-    // rfq-011 is the neutral award fixture — two quotes separable only on lead
-    // time, so the comparison drawer is where the label matters most.
-    fireEvent.click(await screen.findByText('RFQ-2026-011'));
-    return screen.findByText(/QUOTE COMPARISON/i);
-  };
+  // rfq-011 is the neutral award fixture — two quotes separable only on lead
+  // time, so the comparison is where the label matters most.
+  const openComparison = () => openEvent('rfq-011');
 
   it('POSITIVE TWIN — the lead-time value is still shown, and still scored', async () => {
     await openComparison();
     // The label does not hide the number or the score; qt-011a promises 4 days.
     expect(screen.getByText(/4 days/)).toBeInTheDocument();
-    expect(screen.getByText('Lead Time Score')).toBeInTheDocument();
+    expect(screen.getByText('Lead-time score')).toBeInTheDocument();
   });
 
   it('tags BOTH lead-time rows Estimated — the value and the score it drives', async () => {
@@ -127,7 +146,11 @@ describe('BuyerSourcing — the lead-time axis is labelled an estimate', () => {
     await openComparison();
     // The negation that gives the tag meaning: if everything were "Estimated",
     // nothing would be.
-    expect(screen.getByText('Unit Price')).toBeInTheDocument();
+    // B-02 — the event page also names "Unit price" in its item table, so the
+    // comparison's own row is read.
+    const priceRow = screen.getByTestId('cmp-row-rfx.cmp.row.unitPrice');
+    expect(priceRow).toHaveTextContent('Unit price');
+    expect(within(priceRow).queryByText('Estimated')).not.toBeInTheDocument();
     expect(screen.getAllByText('Estimated')).toHaveLength(2); // not 3, not 5
   });
 });
@@ -147,11 +170,7 @@ describe('BuyerSourcing — the minimum order quantity reaches the comparison', 
     rfqStore.reset();
   });
 
-  const openComparison = async () => {
-    renderWithProviders(<BuyerSourcing />);
-    fireEvent.click(await screen.findByText('RFQ-2026-011'));
-    return screen.findByText(/QUOTE COMPARISON/i);
-  };
+  const openComparison = () => openEvent('rfq-011');
 
   it('THE LOCK — a minimum submitted through the real spine lands in the comparison', async () => {
     // The whole chain, end to end: the dispatcher + store the supplier's submit
@@ -177,15 +196,15 @@ describe('BuyerSourcing — the minimum order quantity reaches the comparison', 
         }
       }
     );
-    await openComparison();
+    const comparison = await openComparison();
 
-    expect(screen.getByText('Min. Order Qty')).toBeInTheDocument();
+    expect(screen.getByText('Minimum order quantity')).toBeInTheDocument();
     // 100,000 PCS against an RFQ for 80,000 — the case JJ named: a minimum that
     // EXCEEDS what is being sourced. Shown as a fact, with no verdict attached.
     // PREMISE CHANGED (RFx spec 2026-09-21): the board now also lists
     // RFQ-2026-023 (Redwood 2.0), sourced at 100,000 PCS, so the assertion is
-    // aimed at the open panel rather than at the first match on the page.
-    expect(within(screen.getByRole('dialog')).getByText(/100,000 PCS/)).toBeInTheDocument();
+    // aimed at the comparison rather than at the first match on the page.
+    expect(within(comparison).getByText(/100,000 PCS/)).toBeInTheDocument();
   });
 
   it('a quote with no stated minimum reads as an ANSWER, not as missing data', async () => {
@@ -367,11 +386,7 @@ describe('BuyerSourcing — the should-cost spread refuses an unpriceable curren
     rfqStore.reset();
   });
 
-  const openComparison = async () => {
-    renderWithProviders(<BuyerSourcing />);
-    fireEvent.click(await screen.findByText('RFQ-2026-009'));
-    return screen.findByText(/QUOTE COMPARISON/i);
-  };
+  const openComparison = () => openEvent('rfq-009');
 
   it('BASELINE — a USD quote on this RFQ still renders a real spread', async () => {
     // Without this, every assertion below could pass because the spread was
@@ -443,10 +458,7 @@ describe('BuyerSourcing — the should-cost spread refuses an unpriceable curren
     quotationStore.update('qt-009a', (q) => ({ ...q, currency: 'EUR' }));
     await i18n.changeLanguage('id');
     try {
-      // Deliberately NOT reusing `openComparison` — its wait anchors on the
-      // English panel heading, which is exactly what changes under ID.
-      renderWithProviders(<BuyerSourcing />);
-      fireEvent.click(await screen.findByText('RFQ-2026-009'));
+      await openEvent('rfq-009');
       expect(await screen.findByText(/mata uang yang tidak dihargai model/)).toBeInTheDocument();
     } finally {
       await i18n.changeLanguage('en');
@@ -476,11 +488,7 @@ describe('BuyerSourcing — a comparison with no FX basis withholds the ranking'
     rfqStore.reset();
   });
 
-  const openComparison = async () => {
-    renderWithProviders(<BuyerSourcing />);
-    fireEvent.click(await screen.findByText('RFQ-2026-009'));
-    return screen.findByText(/QUOTE COMPARISON/i);
-  };
+  const openComparison = () => openEvent('rfq-009');
 
   const makeMixed = () => quotationStore.update('qt-009a', (q) => ({ ...q, currency: 'EUR' }));
 
@@ -489,7 +497,7 @@ describe('BuyerSourcing — a comparison with no FX basis withholds the ranking'
     // It is also the HOMOGENEOUS-SET EXEMPTION proved on the real surface: two
     // USD quotes, no pin anywhere, a normal ranking.
     await openComparison();
-    expect(screen.getByText('Top-ranked')).toBeInTheDocument();
+    expect(screen.getByText('Best scored')).toBeInTheDocument();
     expect(screen.queryByTestId('fx-refusal')).not.toBeInTheDocument();
   });
 
@@ -498,7 +506,7 @@ describe('BuyerSourcing — a comparison with no FX basis withholds the ranking'
     await openComparison();
     // No recommendation at all. Not a fallback to the first quote, not the
     // previous winner — there is no basis on which one bid beats another.
-    expect(screen.queryByText('Top-ranked')).not.toBeInTheDocument();
+    expect(screen.queryByText('Best scored')).not.toBeInTheDocument();
   });
 
   it('says WHY, and names EVERY currency that needs a rate', async () => {
@@ -529,8 +537,8 @@ describe('BuyerSourcing — a comparison with no FX basis withholds the ranking'
     // count, since every Open RFQ in the fixture is now past its deadline — and
     // a page-wide query for '0' started matching a KPI tile that this test was
     // never about. The assertion is unchanged in meaning: NO SCORE CELL reads 0.
-    const panel = /** @type {HTMLElement} */ (document.querySelector('aside[role="dialog"]'));
-    expect(panel, 'the comparison panel must be open').not.toBeNull();
+    const panel = /** @type {HTMLElement} */ (document.getElementById('event-comparison'));
+    expect(panel, 'the comparison must be on the page').not.toBeNull();
     expect(within(panel).queryByText('0')).not.toBeInTheDocument();
     // Em dashes where the bars were.
     expect(within(panel).getAllByText('—').length).toBeGreaterThan(0);
@@ -568,7 +576,7 @@ describe('BuyerSourcing — a comparison with no FX basis withholds the ranking'
     }
     await openComparison();
     expect(screen.queryByTestId('fx-refusal')).not.toBeInTheDocument();
-    expect(screen.getByText('Top-ranked')).toBeInTheDocument();
+    expect(screen.getByText('Best scored')).toBeInTheDocument();
   });
 
   it('a STALE rate refuses too, and says so differently', async () => {
@@ -606,15 +614,14 @@ describe('BuyerSourcing — a comparison with no FX basis withholds the ranking'
     // A recorded-but-aged rate is a different situation from no rate at all,
     // and the remedy differs (supersede vs record), so the copy must differ.
     expect(banner).toHaveTextContent(/older than this comparison allows/i);
-    expect(screen.queryByText('Top-ranked')).not.toBeInTheDocument();
+    expect(screen.queryByText('Best scored')).not.toBeInTheDocument();
   });
 
   it('renders the refusal in Indonesian too', async () => {
     makeMixed();
     await i18n.changeLanguage('id');
     try {
-      renderWithProviders(<BuyerSourcing />);
-      fireEvent.click(await screen.findByText('RFQ-2026-009'));
+      await openEvent('rfq-009');
       expect(await screen.findByTestId('fx-refusal')).toHaveTextContent(
         /belum ada kurs yang dicatat/i
       );
@@ -641,11 +648,7 @@ describe('BuyerSourcing — the FX basis is visible, and recordable (2e-c-4)', (
     rfqStore.reset();
   });
 
-  const openComparison = async () => {
-    renderWithProviders(<BuyerSourcing />);
-    fireEvent.click(await screen.findByText('RFQ-2026-009'));
-    return screen.findByText(/QUOTE COMPARISON/i);
-  };
+  const openComparison = () => openEvent('rfq-009');
 
   const makeMixed = () => quotationStore.update('qt-009a', (q) => ({ ...q, currency: 'EUR' }));
 
@@ -679,9 +682,7 @@ describe('BuyerSourcing — the FX basis is visible, and recordable (2e-c-4)', (
   it('does NOT show it for an all-domestic RFQ — nothing to convert', async () => {
     // RFQ-2026-011's only quote is currency-absent (= IDR), the homogeneous
     // domestic case that is every current persona's reality.
-    renderWithProviders(<BuyerSourcing />);
-    fireEvent.click(await screen.findByText('RFQ-2026-011'));
-    await screen.findByText(/QUOTE COMPARISON/i);
+    await openEvent('rfq-011');
     expect(screen.queryByText('Exchange rate basis')).not.toBeInTheDocument();
   });
 
@@ -753,9 +754,7 @@ describe('BuyerSourcing — recording a rate is confirm-before-commit (2e-c-4)',
         }
       );
     }
-    renderWithProviders(<BuyerSourcing />);
-    fireEvent.click(await screen.findByText('RFQ-2026-009'));
-    await screen.findByText(/QUOTE COMPARISON/i);
+    await openEvent('rfq-009');
   };
 
   const eurPins = () => {
@@ -914,9 +913,7 @@ describe('BuyerSourcing — a supersede reads as a NEW RECORDED ACT (2e-c-4)', (
         payload: { quote: 'EUR', rate: 16_000, asOf: '2026-07-20', source: 'MANUAL' }
       }
     );
-    renderWithProviders(<BuyerSourcing />);
-    fireEvent.click(await screen.findByText('RFQ-2026-009'));
-    await screen.findByText(/QUOTE COMPARISON/i);
+    await openEvent('rfq-009');
     fireEvent.click(screen.getByRole('button', { name: /Supersede EUR rate/ }));
     return screen.findByTestId('fx-pin-dialog');
   };
@@ -1004,13 +1001,19 @@ describe('BuyerSourcing — the award summary states the currency it was awarded
         }
       }
     );
-    renderWithProviders(<BuyerSourcing />);
-    fireEvent.click(await screen.findByText('RFQ-2026-009'));
-    // TWICE: the award-summary row AND the comparison's total-price cell. Both
+    // TWICE: the award summary AND the comparison's total-price cell. Both
     // used to disagree — the cell said $22,800.00 while the summary directly
     // above it said Rp 22.800, for the same quote on the same screen.
-    expect(await screen.findAllByText('$22,800.00')).toHaveLength(2);
-    expect(screen.queryByText('Rp 22.800')).not.toBeInTheDocument();
+    // B-02 — the summary is the panel's one award line; the cell is on the
+    // event page. Each is read where it now lives.
+    const { unmount } = renderWithProviders(<BuyerSourcing />);
+    fireEvent.click(await screen.findByText('RFQ-2026-009'));
+    expect(await screen.findByTestId('panel-award-line')).toHaveTextContent('$22,800.00');
+    expect(screen.queryByText(/Rp 22\.800/)).not.toBeInTheDocument();
+    unmount();
+    await openEvent('rfq-009');
+    expect(screen.getByTestId('cmp-row-rfx.cmp.row.totalPrice')).toHaveTextContent('$22,800.00');
+    expect(screen.queryByText(/Rp 22\.800/)).not.toBeInTheDocument();
   });
 });
 
@@ -1037,7 +1040,7 @@ describe('BuyerSourcing drawer — an RFQ no bidder can win says so (BL-64)', ()
     rfqStore.update(rfqId, (r) => ({ ...r, status: 'Open' }));
     renderWithProviders(<BuyerSourcing />);
     fireEvent.click(await screen.findByText(rfqNumber));
-    await screen.findByText(/QUOTE COMPARISON/i);
+    await screen.findByTestId('panel-summary');
   };
 
   it('rfq-020 — every bidder fails: the notice replaces the award prompt and no award button is offered', async () => {
@@ -1048,17 +1051,22 @@ describe('BuyerSourcing drawer — an RFQ no bidder can win says so (BL-64)', ()
     expect(screen.queryByRole('button', { name: 'Award to selected' })).not.toBeInTheDocument();
     // RFx C3 — the per-quote pick row that carried `drawer-award-blocked-*` is
     // gone with the single-winner award; the compliance row names the reason.
-    expect(screen.getByTestId('drawer-gate-sup-004')).toHaveTextContent('Cannot be awarded');
+    // B-02 — that row is the event page's comparison now.
+    await openEvent('rfq-020');
+    expect(screen.getByTestId('cmp-gate-sup-004')).toHaveTextContent('Cannot be awarded');
   });
 
   it('KNOWN-GOOD twin — rfq-016 has passing bidders, so the prompt and the award link stay', async () => {
     await openDrawer('rfq-016', 'RFQ-2026-016');
-    await waitFor(() =>
-      expect(screen.getByTestId('drawer-gate-sup-018')).toHaveTextContent('Cannot be awarded')
-    );
+    expect(await screen.findByTestId('panel-tiered-award')).toBeInTheDocument();
     expect(screen.queryByTestId('drawer-award-none-qualified')).not.toBeInTheDocument();
     // RFx C3 — the award is the event page's: a link, not an "Award to selected" button.
     expect(screen.getByTestId('panel-open-tiered-award')).toBeInTheDocument();
+    // B-02 — the compliance row is the event page's comparison now.
+    await openEvent('rfq-016');
+    await waitFor(() =>
+      expect(screen.getByTestId('cmp-gate-sup-018')).toHaveTextContent('Cannot be awarded')
+    );
   });
 });
 
@@ -1087,7 +1095,7 @@ describe('BuyerSourcing drawer — a legacy RFQ is awarded on the event page (AC
   it('KNOWN-GOOD twin — an Awarded legacy RFQ (rfq-015) has nothing left to award: no box', async () => {
     renderWithProviders(<BuyerSourcing />);
     fireEvent.click(await screen.findByText('RFQ-2026-015'));
-    await screen.findByText(/QUOTE COMPARISON/i);
+    await screen.findByTestId('panel-summary');
     expect(screen.queryByTestId('panel-tiered-award')).not.toBeInTheDocument();
   });
 });
