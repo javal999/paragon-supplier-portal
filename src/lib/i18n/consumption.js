@@ -9,9 +9,9 @@ export const consumptionEn = {
   'consumption.title': 'Record consumption',
   'consumption.marker': 'Consumption recorded by the planner · awaiting SAP goods-issue feed',
   'consumption.howItWorks':
-    'Record what a material actually used in a frozen week, up to the current one. Where it is below the frozen demand anticipation, the excess is taken off the next 4-week horizon: spread evenly, never below zero in a week, and what a week cannot take moves to the next. A material’s consumption is shared across its suppliers by their share of that week’s demand anticipation. A later record for the same material and week replaces the earlier one.',
+    'Record what a material actually used in a week, up to the current one. It shows on the grid and feeds the consumption average. A material’s consumption is shared across its suppliers by their share of that week’s demand anticipation. A later record for the same material and week replaces the earlier one.',
   'consumption.noWeeks':
-    'The current horizon is not frozen yet, so there is no week to type consumption for. A week of an earlier horizon can be uploaded.',
+    'No material has demand anticipation, so there is nothing to record consumption for.',
   'consumption.field.material': 'Material',
   'consumption.field.week': 'Week',
   'consumption.field.qty': 'Consumption ({{uom}})',
@@ -46,10 +46,9 @@ export const consumptionEn = {
   'consumption.row.recorded': 'Recorded consumption',
   'consumption.row.recordedTitle':
     '{{share}} of the material’s {{material}}, {{source}} on {{date}} ({{id}})',
-  'consumption.row.absorbed': 'Absorbed',
-  'consumption.row.absorbedCell': '−{{qty}} absorbed from the {{range}} excess',
   // The alert (CAP-11 BR-04).
-  'consumption.alert.detail': '{{qty}} {{uom}} of the {{from}} excess cannot be absorbed by {{by}}.'
+  'consumption.alert.detail':
+    '{{qty}} {{uom}} of the supply above demand anticipation over {{from}} cannot be absorbed in {{by}}.'
 };
 
 /** @type {Record<string, string>} */
@@ -57,9 +56,9 @@ export const consumptionId = {
   'consumption.title': 'Catat pemakaian',
   'consumption.marker': 'Pemakaian dicatat oleh perencana · menunggu umpan pengeluaran barang SAP',
   'consumption.howItWorks':
-    'Catat pemakaian aktual material pada minggu yang dibekukan, sampai minggu ini. Jika di bawah antisipasi permintaan yang dibekukan, kelebihannya dikurangkan dari horizon 4 minggu berikutnya: dibagi rata, tidak pernah di bawah nol dalam satu minggu, dan yang tidak dapat ditampung satu minggu pindah ke minggu berikutnya. Pemakaian material dibagi ke pemasoknya menurut bagian masing-masing atas antisipasi permintaan minggu itu. Catatan yang lebih baru untuk material dan minggu yang sama menggantikan yang lebih lama.',
+    'Catat pemakaian aktual material pada suatu minggu, sampai minggu ini. Pemakaian tampil di grid dan masuk ke rata-rata pemakaian. Pemakaian material dibagi ke pemasoknya menurut bagian masing-masing atas antisipasi permintaan minggu itu. Catatan yang lebih baru untuk material dan minggu yang sama menggantikan yang lebih lama.',
   'consumption.noWeeks':
-    'Horizon saat ini belum dibekukan, jadi tidak ada minggu untuk diketik pemakaiannya. Minggu dari horizon sebelumnya dapat diunggah.',
+    'Tidak ada material dengan antisipasi permintaan, jadi tidak ada pemakaian untuk dicatat.',
   'consumption.field.material': 'Material',
   'consumption.field.week': 'Minggu',
   'consumption.field.qty': 'Pemakaian ({{uom}})',
@@ -92,8 +91,6 @@ export const consumptionId = {
   'consumption.row.recorded': 'Pemakaian tercatat',
   'consumption.row.recordedTitle':
     '{{share}} dari {{material}} material, {{source}} pada {{date}} ({{id}})',
-  'consumption.row.absorbed': 'Diserap',
-  'consumption.row.absorbedCell': '−{{qty}} diserap dari kelebihan {{range}}',
   'consumption.alert.detail':
-    '{{qty}} {{uom}} dari kelebihan {{from}} tidak dapat diserap sampai {{by}}.'
+    '{{qty}} {{uom}} dari pasokan di atas antisipasi permintaan selama {{from}} tidak dapat diserap pada {{by}}.'
 };

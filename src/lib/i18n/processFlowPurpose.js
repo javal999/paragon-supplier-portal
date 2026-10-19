@@ -531,13 +531,13 @@ export const processFlowPurposeEn = {
   'processFlows.purpose.t_warehousedecision_record':
     'The Material Planner records how a week that does not fit the warehouse will be handled. Accepting the overflow needs a note. The decision is a record of intent: it changes no order and is never sent to SAP or a supplier.',
   'processFlows.purpose.entity.demandAnticipation':
-    'A publication of the demand anticipation per supplier, material and week: the LTP, plus the supplier’s share of the gap to PTI’s reorder point, or less its share of the stock above it, counted once in the first week. It freezes the fixed 4-week horizon that holds the current week, once. A frozen week keeps the figure of the first publication that froze it; every publication stays on record.',
+    'A publication of the demand anticipation of one planning week, per supplier and material, over the lead time: each week’s LTP plus any remainder carried into it, with the safety order in the first week. Each figure keeps its inputs and the rules version that made it. A later publication of the same week supersedes it; every publication stays on record.',
   'processFlows.purpose.t_demandanticipation_publish':
-    'The Material Planner freezes the demand anticipation of the 4-week horizon that holds the current week. Each horizon is frozen once and never ahead of time, so the next horizon stays open until it starts. Nothing is sent to SAP or a supplier.',
+    'The Material Planner records the current planning week’s demand anticipation, and any supplier’s agreement to take a remainder in the first week after the horizon. The next week’s publication rolls forward from it. Nothing is sent to SAP or a supplier.',
   'processFlows.purpose.entity.consumption':
     'How much of a material PTI used in one Monday-to-Sunday period, typed in or uploaded by the Material Planner until the SAP goods-issue feed exists. A later entry for the same material and period replaces the earlier one; both are kept.',
   'processFlows.purpose.t_consumption_record':
-    'The Material Planner enters how much of a material was used in one Monday-to-Sunday period. Where that is below the frozen demand anticipation, the excess is taken off the next horizon, spread evenly and never below zero. Nothing is sent to SAP or a supplier.',
+    'The Material Planner enters how much of a material was used in one Monday-to-Sunday period. It shows beside the demand anticipation and feeds the moving average of use. Nothing is sent to SAP or a supplier.',
 
   // ── RFx management (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ─────────────────
   'processFlows.purpose.entity.rfiEvent':
@@ -1104,13 +1104,13 @@ export const processFlowPurposeId = {
   'processFlows.purpose.t_warehousedecision_record':
     'Perencana Material mencatat cara menangani minggu yang tidak muat di gudang. Menerima kelebihan memerlukan catatan. Keputusan ini catatan niat: tidak mengubah pesanan apa pun dan tidak pernah dikirim ke SAP atau pemasok.',
   'processFlows.purpose.entity.demandAnticipation':
-    'Publikasi antisipasi permintaan per pemasok, material, dan minggu: LTP, ditambah bagian pemasok atas kekurangan terhadap titik pemesanan ulang PTI, atau dikurangi bagiannya atas stok di atasnya, dihitung sekali pada minggu pertama. Publikasi membekukan horizon tetap 4 minggu yang memuat minggu ini, satu kali. Minggu yang dibekukan mempertahankan angka dari publikasi pertama yang membekukannya; setiap publikasi tetap tercatat.',
+    'Publikasi antisipasi permintaan satu minggu perencanaan, per pemasok dan material, sepanjang waktu tunggu: LTP tiap minggu ditambah sisa yang dibawa ke minggu itu, dengan safety order di minggu pertama. Tiap angka menyimpan inputnya dan versi aturan yang menghasilkannya. Publikasi berikutnya untuk minggu yang sama menggantikannya; setiap publikasi tetap tercatat.',
   'processFlows.purpose.t_demandanticipation_publish':
-    'Perencana Material membekukan antisipasi permintaan untuk horizon 4 minggu yang memuat minggu ini. Tiap horizon dibekukan satu kali dan tidak pernah lebih awal, sehingga horizon berikutnya tetap terbuka sampai dimulai. Tidak ada yang dikirim ke SAP atau pemasok.',
+    'Perencana Material mencatat antisipasi permintaan minggu perencanaan saat ini, dan persetujuan pemasok untuk menerima sisa di minggu pertama setelah horizon. Publikasi minggu berikutnya bergulir maju darinya. Tidak ada yang dikirim ke SAP atau pemasok.',
   'processFlows.purpose.entity.consumption':
     'Pemakaian material yang tercatat dalam satu minggu, diketik atau diunggah oleh Perencana Material sampai umpan pengeluaran barang SAP tersedia. Catatan yang lebih baru untuk material dan minggu yang sama menggantikan yang lebih lama; keduanya tetap tercatat.',
   'processFlows.purpose.t_consumption_record':
-    'Perencana Material mencatat berapa banyak material yang dipakai dalam satu minggu. Jika di bawah antisipasi permintaan yang dibekukan, kelebihannya dikurangkan dari horizon 4 minggu berikutnya, dibagi rata dan tidak pernah di bawah nol dalam satu minggu. Tidak ada yang dikirim ke SAP atau pemasok.',
+    'Perencana Material mencatat berapa banyak material yang dipakai dalam satu minggu. Pemakaian tampil di samping antisipasi permintaan dan masuk ke rata-rata pemakaian. Tidak ada yang dikirim ke SAP atau pemasok.',
 
   // ── RFx (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ────────────────────────────
   'processFlows.purpose.entity.rfiEvent':

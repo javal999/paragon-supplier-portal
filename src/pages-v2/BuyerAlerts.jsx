@@ -410,7 +410,7 @@ const BuyerAlerts = () => {
                             )}
                           </div>
                           {a.unabsorbed ? (
-                            // CAP-11 BR-04 — the remaining amount and the horizons it concerns.
+                            // DRC-4 BR-02 / DRC-B7 — the remaining surplus, the horizon and its last week.
                             <div
                               className="text-xs text-text-secondary mt-1"
                               data-testid={`alert-unabsorbed-${a.key}`}

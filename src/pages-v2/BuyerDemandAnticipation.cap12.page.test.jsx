@@ -21,8 +21,9 @@ import BuyerDemandAnticipation from './BuyerDemandAnticipation';
 
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 const ROUTE = '/buyer/demand-anticipation';
-// sup-007 × PK-PETB-8801: released call-offs in W36 and W37, none later.
-const KEY = 'sup-007-PK-PETB-8801';
+// sup-007 × PK-PETB-8802 (DRC-2: a 2-week horizon): W36 is covered by its
+// released call-offs, W37 has none, so it shows a gap.
+const KEY = 'sup-007-PK-PETB-8802';
 
 beforeEach(() => {
   sdcClock.reset();
@@ -47,7 +48,7 @@ const readRow = async () => {
 };
 
 describe('CAP-12 — Open supply and Gap rows', () => {
-  it('follow the CAP-11 rows (brief order), carry the read’s figures, and a gap above 0 is in warning tone', async () => {
+  it('follow the consumption row, carry the read’s figures, and a gap above 0 is in warning tone', async () => {
     const row = await readRow();
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
     const grid = await screen.findByTestId(`dant-grid-${KEY}`);
@@ -56,20 +57,20 @@ describe('CAP-12 — Open supply and Gap rows', () => {
       .map((h) => h.textContent ?? '');
     const at = (/** @type {string} */ name) => labels.findIndex((l) => l.startsWith(name));
     expect(at('Would be')).toBeGreaterThan(-1);
-    // Brief section 4 row order: … Would be, Recorded consumption, Absorbed (CAP-11), Open supply, Gap.
-    expect(at('Recorded consumption')).toBe(at('Would be') + 1);
-    expect(at('Absorbed')).toBe(at('Recorded consumption') + 1);
-    expect(at('Open supply')).toBe(at('Absorbed') + 1);
+    // Row order: … Would be, Surplus absorbed (DRC-4), Recorded consumption, Open supply, Gap.
+    expect(at('Surplus absorbed')).toBe(at('Would be') + 1);
+    expect(at('Recorded consumption')).toBe(at('Surplus absorbed') + 1);
+    expect(at('Open supply')).toBe(at('Recorded consumption') + 1);
     expect(at('Gap')).toBe(at('Open supply') + 1);
 
-    const withSupply = row.weeks.find((w) => w.openSupply > 0 && w.gap !== null && w.gap > 0);
-    const covered = row.weeks.find((w) => w.gap === 0);
-    expect(withSupply).toBeDefined();
+    const short = row.weeks.find((w) => w.gap !== null && w.gap > 0);
+    const covered = row.weeks.find((w) => w.openSupply > 0 && w.gap === 0);
+    expect(short).toBeDefined();
     expect(covered).toBeDefined();
-    const ws = /** @type {NonNullable<typeof withSupply>} */ (withSupply);
+    const ws = /** @type {NonNullable<typeof short>} */ (short);
     const cv = /** @type {NonNullable<typeof covered>} */ (covered);
-    expect(screen.getByTestId(`dant-supply-${KEY}-${ws.week}`)).toHaveTextContent(
-      formatNumber(ws.openSupply)
+    expect(screen.getByTestId(`dant-supply-${KEY}-${cv.week}`)).toHaveTextContent(
+      formatNumber(cv.openSupply)
     );
     const gap = screen.getByTestId(`dant-gap-${KEY}-${ws.week}`);
     expect(gap).toHaveTextContent(formatNumber(/** @type {number} */ (ws.gap)));

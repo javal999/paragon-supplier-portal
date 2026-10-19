@@ -1,75 +1,105 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// DEMAND ANTICIPATION — CAP-10 (BL-179), SC-HUB-DEMAND-ANTICIPATION-BRIEF-2026-10
-// sections 2 to 4 (CAP-D10 to CAP-D13, CAP-D16).
+// ROLLING DEMAND ANTICIPATION — DRC-2 (BL-188) and the PLAN VS EXECUTION CHECK
+// — DRC-4 (BL-190), SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10 §3, with build
+// decisions DRC-B1, DRC-B6 and DRC-B7 (§6a). Reworks CAP-10 (BL-179) under
+// DRC-D13: the publication store, the page and the consumption record are kept;
+// the fixed 4-week horizons (CAP-D17), the LTP + ROP − SOH formula (CAP-D12)
+// and absorbing over weeks 5 to 8 (CAP-11 BR-02/03) are superseded.
 //
-// Per supplier × material × week, from the current hub week (CAP-D11):
+// Per supplier × material, for the planning week (the current hub week):
 //
-//   share       = the supplier's share of the material's LTP over the share
-//                 window (the 4 frozen weeks); an even split when the window
-//                 carries no LTP for the material at all.
-//   stock share = share × PTI stock on hand (SAP)   — whole units
-//   ROP share   = share × PTI reorder point (SAP)   — whole units
-//   start       = stock share − ROP share
+//   horizon   = the pair's lead time in weeks, rounded up (DRC-2 BR-01), read
+//               from `leadTimeBreakdown` (DRC-6). It rolls: next week's
+//               planning week starts one week later.
+//   DA(w)     = LTP(w) + carried in, plus the safety order in week 1
+//               [Default A1] — `rollingDaWeek` (BR-02 to BR-05).
+//   OSPO      = chained from the previous planning week's publication [Default
+//               A9, DRC-B1]; with no publication of that week, the chain starts
+//               from the hub's open PO quantity not yet called off.
+//   ROP Order = cycle stock + safety order [Default B9]; PR generated =
+//               −(ROP Order − SOH − OSPO − OSPR) (DRC-4 AC-01).
+//   check     = Total DA − (SOH + OSPO + OSPR + PR) [Default A2] — `planCheck`
+//               (DRC-4 BR-01). A surplus is absorbed in the last week of the
+//               horizon, never below 0 [DRC-B7]; a shortfall is a PR
+//               recommendation the planner raises in SAP. The hub posts nothing.
 //
-//   start < 0 (below the reorder point): week 1 = LTP(1) + (ROP share − stock
-//     share); every later week = its LTP.
-//   start ≥ 0 (above it): the surplus is used up first, week by week:
-//     figure(w) = max(0, LTP(w) − surplus left), and the surplus left falls by
-//     LTP(w) until it reaches 0.
+// Every formula is `osipRules.js`'s (design rule 1): this module only gathers
+// inputs, calls it, and shapes the result for the publication and the page.
 //
-// Stock and reorder point are a stock POSITION, not a weekly flow, so they
-// count once, in week 1 (brief §3). Open orders are not netted here: CAP-12
-// compares supply with this figure, so netting them would count them twice.
+// PUBLISHING. A publication is the record of what was sent for ONE planning
+// week, each pair's figure stamped with its inputs and `RULES_VERSION`
+// (DRC-D16). Publishing again in the same week appends a newer record that
+// supersedes the earlier one at read; both stay stored (DRC-3 history). The
+// next planning week's publication rolls forward: it chains OSPO and the new
+// PO from this one and reads the remainders it carried.
 //
-// Freezing (CAP-D13; FIXED 4-WEEK HORIZONS, CAP-D17, owner 2026-10-13): weeks
-// fall into consecutive horizons of `horizonWeeks` weeks, anchored on the
-// first published horizon (the seed: W36–W39, then W40–W43, W44–W47, …), or
-// on the current hub week while nothing is published (`horizonAnchor`).
-// Publishing freezes the horizon that CONTAINS the current hub week, once
-// (`currentHorizon`); it never freezes a future horizon, so the next one's
-// weeks stay adjustable (CAP-11 absorbs into them). A week keeps the figure
-// of the FIRST publication that froze it (BR-02). "Would be" is today's
-// recomputation of a frozen week, shown beside it, read only (BR-03).
+// CARRY-OVER. A positive remainder goes to the last week of the horizon. It
+// goes to the first week OUTSIDE the horizon only when the planner recorded the
+// supplier's agreement for that pair and planning week [Owner A8]; the record
+// is part of the publish act (its payload), so it has an actor, a time and an
+// audit event. The carry-over limit [Default A8b] needs sales-order quantity per
+// supplier × material, which the hub does not hold: no limit is applied, and
+// every figure says so.
 //
-// Everything here is a pure function of its inputs and the hub clock's now:
-// today's figure and "would be" are computed at read, never stored (law 0.5).
-// Only a publication's frozen figures are stored, because freezing them is
-// what a publication is.
-//
-// Every [Placeholder] value is in ONE block, `DEMAND_ANTICIPATION_RULES`, so
-// Ary Hidayat's spike use case (brief §8) can change a value in one line.
+// Today's figures and "would be" are computed at read (law 0.5). Only a
+// publication's figures are stored, because recording them is what a
+// publication is.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @import { LtpLine } from './capacityRules' */
 /** @import { PtiStockRecord } from './inventoryRules' */
 /** @import { ActorAttribution } from '@lib/enforcement' */
+/** @import { Carry, DaWeek, OsipRules, Stamped } from './osipRules' */
 import { groupWeekLtp } from './capacityRules';
 import { addDays, dayOf, mondayOf } from './inventoryRules';
+import {
+  OSIP_RULES,
+  cycleStock,
+  horizonWeeksOf,
+  planCheck,
+  prGenerated,
+  ropOrder,
+  rollingDaWeek,
+  safetyOrder,
+  stamp
+} from './osipRules';
 
 /**
- * [Placeholder, CAP-D16] — every value Ary's use case may change.
- *   · horizonWeeks:     CAP-10 BR-01 / CAP-D17 — the length of every fixed
- *                       horizon; a publication freezes the one that holds the
- *                       current hub week.
- *   · shareWindowWeeks: CAP-D11 — the weeks whose LTP decides each supplier's
- *                       share of the material's stock and reorder point.
- *   · shownWeeks:       how many weeks the page shows, from the current week.
- *   · consumptionSplit: CAP-11 / CAP-D14 — how a material's recorded weekly
- *                       consumption is shared across its suppliers:
- *                       'demandAnticipation' (each one's share of that week's
- *                       frozen demand anticipation) or 'even'.
- *   · unabsorbedAlertMinQty: CAP-11 BR-04 — the smallest excess left after the
- *                       next horizon that raises the planner's alert.
- * The excess is absorbed into the NEXT fixed horizon (weeks 5 to 8, BR-02 /
- * BR-03, CAP-D17), so its length is `horizonWeeks`, not a key of its own.
+ * The page's and the read model's own values. Every formula value is a key of
+ * `OSIP_RULES` (osipRules.js); these are the ones that only say where an input
+ * comes from or how much the page shows.
+ *   · shareWindowWeeks: CAP-D11 (kept) — the weeks whose LTP decides each
+ *                       supplier's share of PTI's stock on hand (the SOH share
+ *                       the plan check reads).
+ *   · shownWeeks:       how many weeks the page shows from the current week; it
+ *                       grows to the horizon plus one when a lead time is longer.
+ *   · consumptionSplit: CAP-11 / CAP-D14 (kept) — how a material's recorded
+ *                       consumption is shared across its suppliers: by each
+ *                       one's demand anticipation that week, or evenly.
+ *   · unabsorbedAlertMinQty: the smallest surplus the last week cannot take
+ *                       (DRC-B7 "unabsorbed") that raises the planner's alert.
+ *   · mpqField:         [Default, wave 2] MPQ = orderMultiple until the master
+ *                       data feed carries MPQ (wave 2 default). The safety order
+ *                       rounds up to it [Default B4].
+ *   · fallbackHorizonWeeks: the horizon of a pair with no lead time on record,
+ *                       flagged `LEAD_TIME_MISSING` on every figure.
  */
 export const DEMAND_ANTICIPATION_RULES = Object.freeze({
-  horizonWeeks: 4,
   shareWindowWeeks: 4,
   shownWeeks: 13,
   consumptionSplit: /** @type {'demandAnticipation' | 'even'} */ ('demandAnticipation'),
-  unabsorbedAlertMinQty: 1
+  unabsorbedAlertMinQty: 1,
+  // MPQ = orderMultiple until the master data feed carries MPQ (wave 2 default).
+  mpqField: /** @type {'orderMultiple'} */ ('orderMultiple'),
+  fallbackHorizonWeeks: 4
 });
+
+/**
+ * Design rule 5 — the [Default] questions a rolling figure is built on, for the
+ * "Provisional" label: A1 (safety order in week 1), A2 (SOH in the check),
+ * A8b (carry-over limit), A9 (OSPO chain).
+ */
+export const DA_PROVISIONAL_QUESTIONS = Object.freeze(['A1', 'A2', 'A8b', 'A9']);
 
 /**
  * The Mondays from the current hub week.
@@ -80,131 +110,6 @@ export const DEMAND_ANTICIPATION_RULES = Object.freeze({
 export function hubWeeks(nowIso, count) {
   const first = mondayOf(dayOf(nowIso));
   return Array.from({ length: count }, (_, i) => addDays(first, i * 7));
-}
-
-/**
- * CAP-D17 — the Monday the fixed horizons are counted from: the first
- * publication's horizon start (publications are kept oldest first), or the
- * current hub week while nothing is published.
- * @param {readonly { readonly horizonStart: string }[]} publications
- * @param {string} nowIso
- * @returns {string}
- */
-export function horizonAnchor(publications, nowIso) {
-  return publications[0]?.horizonStart ?? mondayOf(dayOf(nowIso));
-}
-
-/**
- * CAP-D17 — the fixed horizon that holds `week` (any Monday, before or after
- * the anchor): its `horizonWeeks` Mondays.
- * @param {string} anchor
- * @param {string} week
- * @returns {string[]}
- */
-export function horizonContaining(anchor, week) {
-  const n = DEMAND_ANTICIPATION_RULES.horizonWeeks;
-  const weeksFromAnchor = Math.round(
-    (Date.parse(`${week}T00:00:00Z`) - Date.parse(`${anchor}T00:00:00Z`)) / (7 * 86_400_000)
-  );
-  const first = addDays(anchor, Math.floor(weeksFromAnchor / n) * n * 7);
-  return Array.from({ length: n }, (_, i) => addDays(first, i * 7));
-}
-
-/**
- * CAP-D17 — the horizon that contains the current hub week, and whether a
- * publication has already frozen it. Publishing freezes exactly this one,
- * once; a future horizon is never frozen ahead of its time.
- *
- * ⚠️ A SKIPPED HORIZON STAYS UNFROZEN. The hub clock can jump past a whole
- * horizon nobody published (the demo clock moves only through its test seam;
- * a real one moves while a planner is away). Publishing then freezes the
- * CURRENT horizon only: the skipped weeks are history by then, and freezing
- * them after the fact would invent a commitment nobody made at the time.
- * @param {readonly { readonly horizonStart: string }[]} publications
- * @param {string} nowIso
- * @returns {{ weeks: string[]; frozen: boolean; next: string[] }}
- */
-export function currentHorizon(publications, nowIso) {
-  const anchor = horizonAnchor(publications, nowIso);
-  const weeks = horizonContaining(anchor, mondayOf(dayOf(nowIso)));
-  const n = DEMAND_ANTICIPATION_RULES.horizonWeeks;
-  return {
-    weeks,
-    frozen: publications.some((p) => p.horizonStart === weeks[0]),
-    next: horizonContaining(anchor, addDays(weeks[0], n * 7))
-  };
-}
-
-/**
- * What one week's figure came from. Stock share and ROP share are null when
- * SAP holds no PTI stock record for the material; the figure is then the LTP.
- * @typedef {{
- *   readonly ltp: number;
- *   readonly stockShare: number | null;
- *   readonly ropShare: number | null;
- * }} DemandAnticipationInputs
- */
-
-/**
- * CAP-11 — what a week absorbs of an earlier horizon's excess (BR-05).
- * `fromHorizonStart`:  The Monday of the horizon the excess arose in.
- *
- * @typedef {{
- *   readonly qty: number;
- *   readonly fromHorizonStart: string;
- * }} DemandAnticipationAbsorbedStored
- */
-
-/**
- * The absorption as the read shows it: with the source horizon's weeks.
- * @typedef {DemandAnticipationAbsorbedStored & {
- *   readonly fromWeeks: readonly string[];
- * }} DemandAnticipationAbsorbed
- */
-
-/**
- * `absorbed`:  CAP-11 — set only on a figure already lowered by an absorption.
- *
- * @typedef {{
- *   readonly week: string;
- *   readonly qty: number;
- *   readonly inputs: DemandAnticipationInputs;
- *   readonly absorbed?: DemandAnticipationAbsorbedStored;
- * }} DemandAnticipationWeek
- */
-
-/**
- * `share`:  The supplier's share of the material's LTP over the share window (0 to 1).
- * `stockOnRecord`:  Whether SAP holds a PTI stock record for the material.
- *
- * @typedef {{
- *   readonly supplierId: string;
- *   readonly materialCode: string;
- *   readonly share: number;
- *   readonly stockOnRecord: boolean;
- *   readonly weeks: readonly DemandAnticipationWeek[];
- * }} DemandAnticipationSeries
- */
-
-/**
- * Brief §3 — the formula for one supplier × material, week 1 first. Stock
- * and reorder point count once, in week 1.
- * @param {{
- *   readonly ltp: readonly number[];
- *   readonly stockShare: number | null;
- *   readonly ropShare: number | null;
- * }} input
- * @returns {number[]}
- */
-export function demandAnticipationFigures({ ltp, stockShare, ropShare }) {
-  const start = stockShare === null || ropShare === null ? 0 : stockShare - ropShare;
-  if (start < 0) return ltp.map((l, i) => (i === 0 ? l - start : l));
-  let surplus = start;
-  return ltp.map((l) => {
-    const qty = Math.max(0, l - surplus);
-    surplus = Math.max(0, surplus - l);
-    return qty;
-  });
 }
 
 /**
@@ -225,21 +130,28 @@ export function materialShares(ltpLines, materialCode, suppliers, windowWeeks) {
 }
 
 /**
- * CAP-10 — the demand anticipation of every supplier × material the LTP
- * names, for `count` weeks from the current hub week, with each week's inputs.
- * @param {{
- *   readonly ltpLines: readonly LtpLine[];
- *   readonly ptiStock: readonly PtiStockRecord[];
- * }} input
- * @param {string} nowIso
- * @param {number} [count]
- * @returns {DemandAnticipationSeries[]}
+ * One supplier × material the LTP names, with its weekly LTP from the current
+ * hub week and its share of PTI's stock on hand.
+ * `soh`:  share × PTI stock on hand (SAP), whole units; null with no stock record.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly share: number;
+ *   readonly soh: number | null;
+ *   readonly weeks: readonly string[];
+ *   readonly ltp: readonly number[];
+ * }} DemandAnticipationPair
  */
-export function demandAnticipationWeeks(
-  { ltpLines, ptiStock },
-  nowIso,
-  count = DEMAND_ANTICIPATION_RULES.shownWeeks
-) {
+
+/**
+ * Every supplier × material the LTP names, `count` weeks from the current week.
+ * @param {{ readonly ltpLines: readonly LtpLine[]; readonly ptiStock: readonly PtiStockRecord[] }} input
+ * @param {string} nowIso
+ * @param {number} count
+ * @returns {DemandAnticipationPair[]}
+ */
+export function demandAnticipationPairs({ ltpLines, ptiStock }, nowIso, count) {
   const weeks = hubWeeks(nowIso, Math.max(count, DEMAND_ANTICIPATION_RULES.shareWindowWeeks));
   const window = weeks.slice(0, DEMAND_ANTICIPATION_RULES.shareWindowWeeks);
   const shown = weeks.slice(0, count);
@@ -249,7 +161,7 @@ export function demandAnticipationWeeks(
     const list = suppliersOf.get(l.materialCode) ?? [];
     if (!list.includes(l.supplierId)) suppliersOf.set(l.materialCode, [...list, l.supplierId]);
   }
-  /** @type {DemandAnticipationSeries[]} */
+  /** @type {DemandAnticipationPair[]} */
   const out = [];
   for (const materialCode of [...suppliersOf.keys()].sort()) {
     const suppliers = [...(suppliersOf.get(materialCode) ?? [])].sort();
@@ -257,56 +169,232 @@ export function demandAnticipationWeeks(
     const stock = ptiStock.find((s) => s.materialCode === materialCode);
     for (const supplierId of suppliers) {
       const share = shares.get(supplierId) ?? 0;
-      const stockShare = stock ? Math.round(share * stock.ptiSoh) : null;
-      const ropShare = stock ? Math.round(share * stock.ptiRop) : null;
-      const ltp = shown.map((w) => groupWeekLtp(ltpLines, supplierId, [materialCode], w));
-      const figures = demandAnticipationFigures({ ltp, stockShare, ropShare });
       out.push({
         supplierId,
         materialCode,
         share,
-        stockOnRecord: stock !== undefined,
-        weeks: shown.map((week, i) => ({
-          week,
-          qty: figures[i],
-          inputs: { ltp: ltp[i], stockShare, ropShare }
-        }))
+        soh: stock ? Math.round(share * stock.ptiSoh) : null,
+        weeks: shown,
+        ltp: shown.map((w) => groupWeekLtp(ltpLines, supplierId, [materialCode], w))
       });
     }
   }
   return out;
 }
 
+// ─── One pair's rolling figure (DRC-2) and check (DRC-4) ────────────────────
+
 /**
- * One frozen figure of a publication.
- * `absorbed`:  CAP-11 — the excess this week froze with (its `qty` is already
- *   lowered by it), so the absorption is never taken twice.
+ * Why a figure is not built on the data the rule names. Each one shows on the
+ * page beside the figure.
+ *   · LEAD_TIME_MISSING — no lead time on record: the horizon is the fallback.
+ *   · NO_STOCK_RECORD — SAP holds no PTI stock for the material: SOH counts 0.
+ *   · OSPO_FROM_STORE — no publication of the previous planning week: the
+ *     OSPO chain starts from the open PO quantity not yet called off.
+ *   · OSPR_NOT_AVAILABLE — the hub's PRs carry no material code: OSPR counts 0.
+ *   · CARRY_LIMIT_NO_SALES_ORDERS — no sales-order quantity per supplier ×
+ *     material: the carry-over limit [Default A8b] is not applied.
+ * Plus `rollingDaWeek`'s own flags (CARRY_FIRST_OUTSIDE_NOT_AGREED,
+ * CARRY_FIRST_OUTSIDE_WEEK_MISSING, CARRY_OVER_LIMIT).
+ * @typedef {| 'LEAD_TIME_MISSING'
+ *   | 'NO_STOCK_RECORD'
+ *   | 'OSPO_FROM_STORE'
+ *   | 'OSPR_NOT_AVAILABLE'
+ *   | 'CARRY_LIMIT_NO_SALES_ORDERS'
+ *   | string} RollingDaFlag
+ */
+
+/**
+ * The inputs of one pair's figure, all of them stored with a publication.
+ * `weeks` / `ltp`:  From the planning week, at least the horizon plus one week.
+ * `leadTimeWeeks`:  `leadTimeBreakdown(...).totalWeeks`; null when no lead time is on record.
+ * `mpq`:  The safety order's rounding size (`mpqField`).
+ * `soh`:  PTI's SOH share; null with no stock record.
+ * `ospoOpen`:  Open PO quantity not yet called off (the chain's start).
+ * `previous`:  The previous planning week's published OSPO and additional PO, or null.
+ * `callOffPrev`:  Released call-offs needed in the previous planning week.
+ * `carries`:  Remainders earlier planning weeks moved forward.
+ * `callOff`:  Released call-offs needed in the planning week.
+ * `agreedFirstOutside`:  The planner recorded the supplier's agreement [Owner A8].
+ * `salesOrderQty4w`:  Sales-order quantity of the last 4 weeks [Default A8b]; null when the hub holds none.
+ * `ospr`:  Open PR quantity; null when the hub holds none.
  *
+ * @typedef {{
+ *   readonly weeks: readonly string[];
+ *   readonly ltp: readonly number[];
+ *   readonly leadTimeWeeks: number | null;
+ *   readonly mpq: number;
+ *   readonly soh: number | null;
+ *   readonly ospoOpen: number;
+ *   readonly previous: { readonly ospo: number; readonly additionalPo: number } | null;
+ *   readonly callOffPrev: number;
+ *   readonly carries: readonly Carry[];
+ *   readonly callOff: number;
+ *   readonly agreedFirstOutside: boolean;
+ *   readonly salesOrderQty4w: number | null;
+ *   readonly ospr: number | null;
+ * }} RollingDaInputs
+ */
+
+/**
+ * One pair's rolling figure for the planning week, with the check.
+ * `weeks`:  `rollingDaWeek`'s weeks (LTP, safety, carried in, DA) over the horizon.
+ * `daInForce`:  DA per horizon week after the check absorbed a surplus in the last week (DRC-B7).
+ * `carryTarget`:  Where the remainder went; `carry` is null when nothing was carried.
+ * `pr`:  The PR quantity ZPE007 would generate from ROP Order (−PR generated, never below 0).
+ *
+ * @typedef {{
+ *   readonly planningWeek: string;
+ *   readonly horizonWeeks: readonly string[];
+ *   readonly leadTimeWeeks: number;
+ *   readonly weeks: readonly DaWeek[];
+ *   readonly daInForce: readonly number[];
+ *   readonly totalDa: number;
+ *   readonly safetyOrder: number;
+ *   readonly cycleStock: number;
+ *   readonly ropOrder: number;
+ *   readonly soh: number;
+ *   readonly ospo: number;
+ *   readonly ospr: number;
+ *   readonly pr: number;
+ *   readonly supply: number;
+ *   readonly gap: number;
+ *   readonly prRecommendation: number;
+ *   readonly absorbedLastWeek: number;
+ *   readonly unabsorbed: number;
+ *   readonly additionalPo: number;
+ *   readonly callOff: number;
+ *   readonly remainder: number;
+ *   readonly carry: Carry | null;
+ *   readonly uncarried: number;
+ *   readonly carries: readonly Carry[];
+ *   readonly carryTarget: 'lastWeek' | 'firstOutside';
+ *   readonly firstOutsideWeek: string | null;
+ *   readonly flags: readonly RollingDaFlag[];
+ * }} RollingDaFigure
+ */
+
+/**
+ * DRC-2 + DRC-4 — one pair's figure for the planning week `weeks[0]`. Every
+ * formula is `osipRules.js`'s; this only feeds it.
+ * @param {RollingDaInputs} input
+ * @param {OsipRules} [rules]
+ * @returns {RollingDaFigure}
+ */
+export function rollingDaFigure(input, rules = OSIP_RULES) {
+  /** @type {RollingDaFlag[]} */
+  const flags = [];
+  if (input.leadTimeWeeks === null) flags.push('LEAD_TIME_MISSING');
+  // DRC-2 BR-01 — the horizon is the lead time in weeks.
+  const n = horizonWeeksOf(input.leadTimeWeeks ?? DEMAND_ANTICIPATION_RULES.fallbackHorizonWeeks);
+  const weeks = input.weeks.slice(0, n + 1);
+  const ltp = input.ltp.slice(0, n + 1);
+  // DRC-7 BR-01 — the safety order [Default B1–B4]; MPQ per `mpqField`.
+  const safety = safetyOrder({ ltp, leadTimeWeeks: n, mpq: input.mpq }, rules).value;
+  if (input.soh === null) flags.push('NO_STOCK_RECORD');
+  const soh = input.soh ?? 0;
+  if (input.previous === null) flags.push('OSPO_FROM_STORE');
+  if (input.ospr === null) flags.push('OSPR_NOT_AVAILABLE');
+  const ospr = input.ospr ?? 0;
+  if (input.salesOrderQty4w === null) flags.push('CARRY_LIMIT_NO_SALES_ORDERS');
+
+  // DRC-2 BR-02 to BR-05 [Default A1, A9; Owner A8; DRC-B1, DRC-B6].
+  const da = rollingDaWeek(
+    {
+      weeks,
+      ltp,
+      leadTimeWeeks: n,
+      safetyOrder: safety,
+      carries: input.carries,
+      // The chain [Default A9]: from the previous planning week's publication,
+      // else from the open PO quantity with nothing to subtract or add.
+      ospoPrev: input.previous ? input.previous.ospo : input.ospoOpen,
+      callOffPrev: input.previous ? input.callOffPrev : 0,
+      newPoPrev: input.previous ? input.previous.additionalPo : 0,
+      callOff: input.callOff,
+      // [Owner A8] — outside the horizon only with the recorded agreement.
+      carryTo: input.agreedFirstOutside ? 'firstOutside' : 'lastWeek',
+      supplierAgreedFirstOutside: input.agreedFirstOutside,
+      carryOverLimit: input.salesOrderQty4w ?? undefined
+    },
+    rules
+  );
+  flags.push(...da.flags);
+
+  // DRC-10 / [Default B9] — ROP Order; DRC-4 AC-01 — PR generated.
+  const cycle = cycleStock(ltp, n);
+  const rop = ropOrder({ cycleStock: cycle, safetyOrder: safety });
+  const pr = Math.max(0, -prGenerated({ ropOrder: rop, soh, ospo: da.ospo, ospr }));
+  // DRC-4 BR-01 / BR-02 [Default A2; DRC-B7].
+  const check = planCheck(
+    { daWeeks: da.weeks.map((w) => w.da), soh, ospo: da.ospo, ospr, pr },
+    rules
+  );
+  /** @type {'lastWeek' | 'firstOutside'} */
+  const carryTarget =
+    input.agreedFirstOutside && !da.flags.includes('CARRY_FIRST_OUTSIDE_WEEK_MISSING')
+      ? 'firstOutside'
+      : 'lastWeek';
+  return {
+    planningWeek: weeks[0],
+    horizonWeeks: weeks.slice(0, n),
+    leadTimeWeeks: n,
+    weeks: da.weeks,
+    daInForce: check.daWeeks,
+    totalDa: check.totalDa,
+    safetyOrder: safety,
+    cycleStock: cycle,
+    ropOrder: rop,
+    soh,
+    ospo: da.ospo,
+    ospr,
+    pr,
+    supply: check.supply,
+    gap: check.gap,
+    prRecommendation: check.prRecommendation,
+    absorbedLastWeek: check.absorbedLastWeek,
+    unabsorbed: check.unabsorbed,
+    additionalPo: da.additionalPo,
+    callOff: da.callOff,
+    remainder: da.remainder,
+    carry: da.carry,
+    uncarried: da.uncarried,
+    carries: da.carries,
+    carryTarget,
+    firstOutsideWeek: weeks[n] ?? null,
+    flags
+  };
+}
+
+// ─── Publications ───────────────────────────────────────────────────────────
+
+/**
+ * One pair's published figure: the figure stamped with its inputs and the
+ * rules version (DRC-D16).
  * @typedef {{
  *   readonly supplierId: string;
  *   readonly materialCode: string;
- *   readonly week: string;
- *   readonly qty: number;
- *   readonly inputs: DemandAnticipationInputs;
- *   readonly absorbed?: DemandAnticipationAbsorbedStored;
+ *   readonly figure: Stamped<RollingDaFigure>;
  * }} DemandAnticipationEntry
  */
 
 /**
  * `source`:  `publish` — the planner's verb. `sampleSeed` — the one publication
- *   the sample data opens with, computed by `demandAnticipationWeeks` at the
- *   hub's present; nobody published it, and the page says so.
+ *   the sample data opens with, computed by the same function at the hub's
+ *   present; nobody published it, and the page says so.
  * `actor`:  Who published it. The seed carries `UNATTRIBUTED`: no person acted.
- * `horizonWeeks`:  The weeks the publication froze at, from `horizonStart` (BR-01).
- * `entries`:  Only the weeks it froze FIRST; a week frozen earlier keeps that value.
+ * `planningWeek`:  The Monday of the planning week it records (DRC-2 BR-01).
+ * `agreedFirstOutside`:  The pairs (`supplierId|materialCode`) whose supplier
+ *   agreed to take the remainder in the first week outside the horizon [Owner A8].
+ * `entries`:  Every pair's figure for that planning week.
  *
  * @typedef {{
  *   readonly id: string;
  *   readonly publishedAt: string;
  *   readonly actor: ActorAttribution;
  *   readonly source: 'publish' | 'sampleSeed';
- *   readonly horizonStart: string;
- *   readonly horizonWeeks: readonly string[];
+ *   readonly planningWeek: string;
+ *   readonly agreedFirstOutside: readonly string[];
  *   readonly entries: readonly DemandAnticipationEntry[];
  * }} DemandAnticipationPublication
  */
@@ -314,90 +402,176 @@ export function demandAnticipationWeeks(
 /**
  * @param {string} supplierId
  * @param {string} materialCode
- * @param {string} week
  */
-const entryKey = (supplierId, materialCode, week) => `${supplierId}|${materialCode}|${week}`;
+export const pairKey = (supplierId, materialCode) => `${supplierId}|${materialCode}`;
 
 /**
- * BR-02 / BR-04 — the figure a week is frozen at: the FIRST publication (in
- * publication order) holding it. Null while no publication has frozen it.
+ * The publication in force for a planning week: the LATEST one recording it
+ * (publications are kept oldest first). Null when none does.
  * @param {readonly DemandAnticipationPublication[]} publications
- * @param {string} supplierId
- * @param {string} materialCode
- * @param {string} week
- * @returns {{ entry: DemandAnticipationEntry; publication: DemandAnticipationPublication } | null}
+ * @param {string} planningWeek
+ * @returns {DemandAnticipationPublication | null}
  */
-export function frozenEntryOf(publications, supplierId, materialCode, week) {
-  for (const publication of publications) {
-    const entry = publication.entries.find(
-      (e) => e.supplierId === supplierId && e.materialCode === materialCode && e.week === week
-    );
-    if (entry) return { entry, publication };
-  }
+export function publicationOf(publications, planningWeek) {
+  for (let i = publications.length - 1; i >= 0; i -= 1)
+    if (publications[i].planningWeek === planningWeek) return publications[i];
   return null;
 }
 
 /**
- * BR-01 / BR-02 — what a publication made now would freeze: every supplier ×
- * material × week of the horizon that no earlier publication froze, at
- * today's figure. Empty when the whole horizon is already frozen.
- * @param {readonly DemandAnticipationPublication[]} publications
- * @param {readonly DemandAnticipationSeries[]} today
- * @param {readonly string[]} horizon
- * @returns {DemandAnticipationEntry[]}
+ * @param {DemandAnticipationPublication | null} publication
+ * @param {string} supplierId
+ * @param {string} materialCode
+ * @returns {DemandAnticipationEntry | null}
  */
-export function entriesToFreeze(publications, today, horizon) {
-  const frozen = new Set(
-    publications.flatMap((p) =>
-      p.entries.map((e) => entryKey(e.supplierId, e.materialCode, e.week))
-    )
-  );
-  return today.flatMap((s) =>
-    s.weeks
-      .filter((w) => horizon.includes(w.week))
-      .filter((w) => !frozen.has(entryKey(s.supplierId, s.materialCode, w.week)))
-      .map((w) => ({
-        supplierId: s.supplierId,
-        materialCode: s.materialCode,
-        week: w.week,
-        qty: w.qty,
-        inputs: w.inputs,
-        // CAP-11 — a figure lowered by an absorption freezes with it.
-        ...(w.absorbed ? { absorbed: w.absorbed } : {})
-      }))
+export function entryOf(publication, supplierId, materialCode) {
+  return (
+    publication?.entries.find(
+      (e) => e.supplierId === supplierId && e.materialCode === materialCode
+    ) ?? null
   );
 }
 
 /**
- * `qty`:  The figure in force: the frozen one in a frozen week, today's otherwise.
- * `published`:  The frozen figure, or null when the week is not frozen.
- * `wouldBe`:  Today's recomputation (BR-03); null when today names no LTP for the pair.
- * `delta`:  wouldBe − published in a frozen week; null otherwise.
- * `inputs`:  Today's inputs (LTP, stock share, ROP share); null as `wouldBe`.
- * `frozenBy`:  The publication that froze the week, with the inputs it froze.
- * `horizonStart`:  CAP-D17 — the first Monday of the fixed horizon the week belongs to.
- * `horizonFrozen`:  Whether a publication froze that horizon.
- * `consumption`:  CAP-11 — the supplier's share of the material's recorded
- *   consumption that week, or null when none is recorded.
- * `consumptionRecord`:  The record in force behind it: the material's figure, the
- *   supplier's share, the source and when it was recorded.
- * `absorbed`:  CAP-11 BR-05 — the excess of an earlier horizon this week absorbs.
+ * What the planning week reads from earlier publications for one pair:
+ *   · `previous` — the previous planning week's published OSPO and additional
+ *     PO (the chain, [Default A9]); null when that week was not published.
+ *   · `carries` — the remainders the latest earlier publication moved forward,
+ *     into this planning week or later.
+ *   · `agreedFirstOutside` — whether the publication in force for THIS planning
+ *     week recorded the supplier's agreement for the pair.
+ * @param {readonly DemandAnticipationPublication[]} publications
+ * @param {string} supplierId
+ * @param {string} materialCode
+ * @param {string} planningWeek
+ * @returns {{ previous: { ospo: number; additionalPo: number } | null; carries: Carry[]; agreedFirstOutside: boolean }}
+ */
+export function chainFor(publications, supplierId, materialCode, planningWeek) {
+  const prevEntry = entryOf(
+    publicationOf(publications, addDays(planningWeek, -7)),
+    supplierId,
+    materialCode
+  );
+  const earlier = [...publications]
+    .reverse()
+    .find((p) => p.planningWeek < planningWeek && entryOf(p, supplierId, materialCode) !== null);
+  const earlierEntry = earlier ? entryOf(earlier, supplierId, materialCode) : null;
+  const current = publicationOf(publications, planningWeek);
+  return {
+    previous: prevEntry
+      ? { ospo: prevEntry.figure.value.ospo, additionalPo: prevEntry.figure.value.additionalPo }
+      : null,
+    carries: (earlierEntry?.figure.value.carries ?? []).filter((c) => c.week >= planningWeek),
+    agreedFirstOutside: current
+      ? current.agreedFirstOutside.includes(pairKey(supplierId, materialCode))
+      : false
+  };
+}
+
+/**
+ * Two figures are the same publication when every stored number and week is.
+ * @param {RollingDaFigure} a
+ * @param {RollingDaFigure} b
+ */
+export const sameFigure = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+/**
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly inputs: RollingDaInputs;
+ *   readonly figure: RollingDaFigure;
+ * }} PairFigure
+ */
+
+/**
+ * Design rule 3 / DRC-D16 — the entries a publication stores.
+ * @param {readonly PairFigure[]} figures
+ * @returns {DemandAnticipationEntry[]}
+ */
+export function entriesOf(figures) {
+  return figures.map((f) => ({
+    supplierId: f.supplierId,
+    materialCode: f.materialCode,
+    figure: stamp(f.figure, f.inputs)
+  }));
+}
+
+/**
+ * The publish verb's refusal, or null when it may proceed.
+ *   · STALE_WEEK — the confirm named another planning week than the current
+ *     one (the hub week moved on while it was open).
+ *   · BAD_AGREEMENT — `agreedFirstOutside` is not a list of pairs on the page
+ *     with a remainder to carry. An agreement is recorded only where something
+ *     moves [Owner A8].
+ *   · NOTHING_TO_PUBLISH — no supplier × material has an LTP.
+ *   · NOTHING_CHANGED — the publication in force for this week already holds
+ *     these figures and these agreements.
+ * @param {{ readonly planningWeek?: unknown; readonly agreedFirstOutside?: unknown }} payload
+ * @param {{
+ *   readonly planningWeek: string;
+ *   readonly remainders: ReadonlyMap<string, number>;
+ *   readonly inForce: DemandAnticipationPublication | null;
+ *   readonly figures: readonly PairFigure[];
+ * }} ctx  `remainders` per pair key at today's figures; `figures` computed with the payload's agreements.
+ * @returns {'STALE_WEEK' | 'BAD_AGREEMENT' | 'NOTHING_TO_PUBLISH' | 'NOTHING_CHANGED' | null}
+ */
+export function publishRefusal(payload, ctx) {
+  if (payload.planningWeek !== ctx.planningWeek) return 'STALE_WEEK';
+  const agreed = payload.agreedFirstOutside ?? [];
+  if (
+    !Array.isArray(agreed) ||
+    agreed.some((k) => typeof k !== 'string' || !((ctx.remainders.get(k) ?? 0) > 0))
+  )
+    return 'BAD_AGREEMENT';
+  if (ctx.figures.length === 0) return 'NOTHING_TO_PUBLISH';
+  const inForce = ctx.inForce;
+  if (
+    inForce &&
+    [...inForce.agreedFirstOutside].sort().join(',') === [...agreed].sort().join(',') &&
+    inForce.entries.length === ctx.figures.length &&
+    ctx.figures.every((f) => {
+      const e = entryOf(inForce, f.supplierId, f.materialCode);
+      return e !== null && sameFigure(e.figure.value, f.figure);
+    })
+  )
+    return 'NOTHING_CHANGED';
+  return null;
+}
+
+// ─── The read ───────────────────────────────────────────────────────────────
+
+/**
+ * One week of a row as the page shows it.
+ * `inHorizon`:  The week is in the horizon of the figure in force.
+ * `qty`:  Demand anticipation in force: the published figure when the planning
+ *   week is published, today's otherwise; after the check's absorption. Null
+ *   outside the horizon.
+ * `published`:  The published figure, or null.
+ * `wouldBe`:  Today's recomputation; null outside today's horizon.
+ * `delta`:  wouldBe − published when both exist.
+ * `inputs`:  The week's LTP, safety order and carried-in remainders (of the figure in force).
+ * `absorbed`:  DRC-4 BR-02 — the surplus the last week absorbed (0 elsewhere).
+ * `publishedBy`:  The publication behind `published`.
+ * `consumption` / `consumptionRecord`:  CAP-11 (kept) — filled by `withConsumption`.
  *
  * @typedef {{
  *   readonly week: string;
+ *   readonly inHorizon: boolean;
  *   readonly qty: number | null;
- *   readonly frozen: boolean;
  *   readonly published: number | null;
  *   readonly wouldBe: number | null;
  *   readonly delta: number | null;
- *   readonly inputs: DemandAnticipationInputs | null;
- *   readonly horizonStart: string;
- *   readonly horizonFrozen: boolean;
- *   readonly frozenBy: {
+ *   readonly inputs: {
+ *     readonly ltp: number;
+ *     readonly safety: number;
+ *     readonly carriedIn: readonly { readonly qty: number; readonly fromWeek: string }[];
+ *   };
+ *   readonly absorbed: number;
+ *   readonly publishedBy: {
  *     readonly publicationId: string;
  *     readonly publishedAt: string;
  *     readonly source: DemandAnticipationPublication['source'];
- *     readonly inputs: DemandAnticipationInputs;
  *   } | null;
  *   readonly consumption: number | null;
  *   readonly consumptionRecord: {
@@ -407,16 +581,27 @@ export function entriesToFreeze(publications, today, horizon) {
  *     readonly recordedAt: string;
  *     readonly recordId: string;
  *   } | null;
- *   readonly absorbed: DemandAnticipationAbsorbed | null;
  * }} DemandAnticipationWeekView
  */
 
 /**
+ * `plan`:  The figure in force (published, or today's); `planSource` says which.
+ * `today`:  Today's recomputation.
+ * `changed`:  Today's figure differs from the published one, or the week is not published.
+ * `agreedFirstOutside`:  The agreement in force for this planning week.
+ *
  * @typedef {{
  *   readonly supplierId: string;
  *   readonly materialCode: string;
  *   readonly share: number | null;
  *   readonly stockOnRecord: boolean;
+ *   readonly planningWeek: string;
+ *   readonly plan: RollingDaFigure;
+ *   readonly planSource: 'published' | 'today';
+ *   readonly today: RollingDaFigure;
+ *   readonly changed: boolean;
+ *   readonly agreedFirstOutside: boolean;
+ *   readonly publishedBy: DemandAnticipationWeekView['publishedBy'];
  *   readonly weeks: readonly DemandAnticipationWeekView[];
  * }} DemandAnticipationRowCore
  */
@@ -431,70 +616,65 @@ export function entriesToFreeze(publications, today, horizon) {
  */
 
 /**
- * The page's rows: every supplier × material today's figures or a frozen
- * week name, over the shown weeks from the current hub week.
+ * The page's rows: per pair, the figure in force, today's recomputation and
+ * the shown weeks.
  * @param {readonly DemandAnticipationPublication[]} publications
- * @param {readonly DemandAnticipationSeries[]} today
- * @param {string} nowIso
+ * @param {readonly (DemandAnticipationPair & { readonly today: RollingDaFigure })[]} pairs
+ * @param {string} planningWeek
  * @returns {DemandAnticipationRowCore[]}
  */
-export function demandAnticipationRows(publications, today, nowIso) {
-  const shown = hubWeeks(nowIso, DEMAND_ANTICIPATION_RULES.shownWeeks);
-  const anchor = horizonAnchor(publications, nowIso);
-  const publishedStarts = new Set(publications.map((p) => p.horizonStart));
-  /** @param {string} week */
-  const horizonOfWeek = (week) => horizonContaining(anchor, week)[0];
-  const pairs = new Map(today.map((s) => [`${s.supplierId}|${s.materialCode}`, s]));
-  /** @type {Map<string, { supplierId: string; materialCode: string }>} */
-  const keys = new Map(
-    today.map((s) => [
-      `${s.supplierId}|${s.materialCode}`,
-      { supplierId: s.supplierId, materialCode: s.materialCode }
-    ])
-  );
-  for (const p of publications)
-    for (const e of p.entries)
-      if (shown.includes(e.week) && !keys.has(`${e.supplierId}|${e.materialCode}`))
-        keys.set(`${e.supplierId}|${e.materialCode}`, {
-          supplierId: e.supplierId,
-          materialCode: e.materialCode
-        });
-  return [...keys.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, { supplierId, materialCode }]) => {
-      const series = pairs.get(key);
+export function demandAnticipationRows(publications, pairs, planningWeek) {
+  const pub = publicationOf(publications, planningWeek);
+  return [...pairs]
+    .sort((a, b) =>
+      pairKey(a.supplierId, a.materialCode).localeCompare(pairKey(b.supplierId, b.materialCode))
+    )
+    .map((p) => {
+      const entry = entryOf(pub, p.supplierId, p.materialCode);
+      const published = entry ? entry.figure.value : null;
+      const plan = published ?? p.today;
+      /** @type {DemandAnticipationWeekView['publishedBy']} */
+      const publishedBy =
+        pub && entry
+          ? { publicationId: pub.id, publishedAt: pub.publishedAt, source: pub.source }
+          : null;
       return {
-        supplierId,
-        materialCode,
-        share: series ? series.share : null,
-        stockOnRecord: series ? series.stockOnRecord : false,
-        weeks: shown.map((week) => {
-          const now = series?.weeks.find((w) => w.week === week) ?? null;
-          const hit = frozenEntryOf(publications, supplierId, materialCode, week);
-          const wouldBe = now ? now.qty : null;
-          const published = hit ? hit.entry.qty : null;
+        supplierId: p.supplierId,
+        materialCode: p.materialCode,
+        share: p.share,
+        stockOnRecord: p.soh !== null,
+        planningWeek,
+        plan,
+        planSource: published ? 'published' : 'today',
+        today: p.today,
+        changed: published === null || !sameFigure(published, p.today),
+        agreedFirstOutside: pub
+          ? pub.agreedFirstOutside.includes(pairKey(p.supplierId, p.materialCode))
+          : false,
+        publishedBy,
+        weeks: p.weeks.map((week, i) => {
+          const at = plan.horizonWeeks.indexOf(week);
+          const todayAt = p.today.horizonWeeks.indexOf(week);
+          const pubAt = published ? published.horizonWeeks.indexOf(week) : -1;
+          const pubQty = published && pubAt >= 0 ? published.daInForce[pubAt] : null;
+          const wouldBe = todayAt >= 0 ? p.today.daInForce[todayAt] : null;
+          const w = at >= 0 ? plan.weeks[at] : null;
           return {
             week,
-            qty: hit ? published : wouldBe,
-            frozen: hit !== null,
-            published,
+            inHorizon: at >= 0,
+            qty: at >= 0 ? plan.daInForce[at] : null,
+            published: pubQty,
             wouldBe,
-            delta: hit && wouldBe !== null ? wouldBe - hit.entry.qty : null,
-            inputs: now ? now.inputs : null,
-            horizonStart: horizonOfWeek(week),
-            horizonFrozen: publishedStarts.has(horizonOfWeek(week)),
-            frozenBy: hit
-              ? {
-                  publicationId: hit.publication.id,
-                  publishedAt: hit.publication.publishedAt,
-                  source: hit.publication.source,
-                  inputs: hit.entry.inputs
-                }
-              : null,
-            // CAP-11 — filled by `rowsInForce` (consumptionRules).
+            delta: pubQty !== null && wouldBe !== null ? wouldBe - pubQty : null,
+            inputs: {
+              ltp: w ? w.ltp : (p.ltp[i] ?? 0),
+              safety: w ? w.safety : 0,
+              carriedIn: w ? w.carriedIn : []
+            },
+            absorbed: at >= 0 && at === plan.horizonWeeks.length - 1 ? plan.absorbedLastWeek : 0,
+            publishedBy: pubQty !== null ? publishedBy : null,
             consumption: null,
-            consumptionRecord: null,
-            absorbed: null
+            consumptionRecord: null
           };
         })
       };
@@ -502,18 +682,40 @@ export function demandAnticipationRows(publications, today, nowIso) {
 }
 
 /**
- * The publish verb's refusal, or null when it may proceed.
- *   · NOTHING_TO_FREEZE — the current horizon is already frozen (CAP-D17:
- *     once), or holds no figure to freeze.
- *   · STALE_HORIZON — the confirm named another horizon than the current one
- *     (the hub week moved into the next horizon while it was open).
- * @param {unknown} horizonStart
- * @param {{ readonly weeks: readonly string[]; readonly frozen: boolean }} horizon
- * @param {number} toFreeze
- * @returns {'STALE_HORIZON' | 'NOTHING_TO_FREEZE' | null}
+ * DRC-4 / DRC-B7 — a surplus the last week of the horizon could not take.
+ * `fromWeeks`:  The horizon whose surplus it is.
+ * `intoWeeks`:  The week that absorbed what it could (the horizon's last).
+ * `excess`:  The whole surplus (supply − Total DA).
+ * `remaining`:  What the last week could not take.
+ *
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly fromWeeks: readonly string[];
+ *   readonly intoWeeks: readonly string[];
+ *   readonly excess: number;
+ *   readonly remaining: number;
+ * }} UnabsorbedExcess
  */
-export function publishRefusal(horizonStart, horizon, toFreeze) {
-  if (horizon.frozen || toFreeze === 0) return 'NOTHING_TO_FREEZE';
-  if (horizonStart !== horizon.weeks[0]) return 'STALE_HORIZON';
-  return null;
+
+/**
+ * The surpluses the figure in force could not absorb, for the planner's alert.
+ * @param {readonly DemandAnticipationRowCore[]} rows
+ * @returns {UnabsorbedExcess[]}
+ */
+export function unabsorbedOf(rows) {
+  return rows.flatMap((r) =>
+    r.plan.unabsorbed > 0
+      ? [
+          {
+            supplierId: r.supplierId,
+            materialCode: r.materialCode,
+            fromWeeks: r.plan.horizonWeeks,
+            intoWeeks: r.plan.horizonWeeks.slice(-1),
+            excess: -r.plan.gap,
+            remaining: r.plan.unabsorbed
+          }
+        ]
+      : []
+  );
 }
