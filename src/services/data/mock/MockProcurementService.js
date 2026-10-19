@@ -1,6 +1,7 @@
 import { callOffStore } from './stores/callOffStore';
 /** @import { CallOff } from '../types' */
 /** @import { BlanketPoRunOut } from '../../transitions/blanketPoRules' */
+/** @import { NpdReview } from '../../transitions/osipRopRules' */
 import { purchaseOrderStore } from './stores/purchaseOrderStore';
 import {
   allAlerts,
@@ -15,6 +16,7 @@ import { allPlanningGroups } from './planningGroupReadModel';
 import { allDemandAnticipationWithSupply } from './supplyBelowDemandReadModel';
 import { withLtpFgDemandRead } from './ltpFgDemandReadModel';
 import { osipSafetyInputs } from './osipSafetyReadModel';
+import { npdReviews, osipRopInputs, systemRopSuppliers } from './osipRopReadModel';
 /** @import { DemandAnticipationSupplyRow } from '../../transitions/supplyBelowDemandRules' */
 import { stockSimulationRows } from './stockSimulationReadModel';
 import {
@@ -424,6 +426,15 @@ export class MockProcurementService {
     }
     if (filter?.supplierId) rows = rows.filter((r) => r.supplierId === filter.supplierId);
     if (filter?.materialCode) rows = rows.filter((r) => r.materialCode === filter.materialCode);
+    // DRC-D15 (BL-196) — PTI reads the system's ROP Supplier beside the
+    // supplier's own reorder point, which is display only. A supplier reads none.
+    if (scope.personaType === 'buyer' && rows.length > 0) {
+      const system = systemRopSuppliers();
+      rows = rows.map((r) => ({
+        ...r,
+        systemRopSupplier: system.get(`${r.supplierId}|${r.materialCode}`) ?? null
+      }));
+    }
     // Material C2 — the supplier's approved trade name beside PTI's description.
     return { items: rows.map((r) => withTradeName(withMrpController(r, r.materialCode, scope))) };
   }
@@ -976,6 +987,8 @@ export class MockProcurementService {
     // BL-193 (DRC-7) / BL-197 (DRC-11) — the OSIP inputs per material; the
     // page applies the rules (the default, or a switch variant).
     const osip = osipSafetyInputs();
+    // BL-196 (DRC-D11) / BL-198 (DRC-12a) — each material's level and NPD tags.
+    const rop = osipRopInputs(run.materials.map((m) => m.materialCode));
     return {
       ...run,
       previousAsOf,
@@ -988,9 +1001,23 @@ export class MockProcurementService {
         ),
         osip: /** @type {import('../../transitions/osipSafetyRules').MaterialOsipInputs} */ (
           osip.get(m.materialCode)
+        ),
+        rop: /** @type {import('../../transitions/osipRopRules').MaterialRopInputs} */ (
+          rop.get(m.materialCode)
         )
       }))
     };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<NpdReview>>}
+   */
+  async getNpdReviews(scope) {
+    // DRC-12a (BL-198) — the planner's "Review ROP after first order" tasks,
+    // raised once when a material's NPD tag drops. PTI only (X-03).
+    if (scope.personaType !== 'buyer') return { items: [] };
+    return { items: npdReviews() };
   }
 
   // ─── Sourcing ─────────────────────────────────────────────────────────────

@@ -194,6 +194,11 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    */
   WAREHOUSE_DECISION_VALID: 'warehousedecision_valid',
   /**
+   * OSIP level per material (DRC-D11, BL-196): the level is a whole number
+   * from 1 to 6 (OSIP_LEVEL_INVALID).
+   */
+  OSIP_LEVEL_VALID: 'osiplevel_valid',
+  /**
    * Demand anticipation publish (DRC-2, BL-188): the confirm names the current
    * planning week (STALE_WEEK otherwise); a recorded supplier agreement names
    * a pair with a remainder to carry (BAD_AGREEMENT, [Owner A8]); some pair has

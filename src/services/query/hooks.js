@@ -169,6 +169,12 @@ export const useSafetyStock = () =>
     svc.procurement.getSafetyStock(scope)
   );
 
+/** DRC-12a (BL-198) — the open "Review ROP after first order" tasks (PTI only). */
+export const useNpdReviews = () =>
+  useServiceQuery(['procurement', 'npdReviews'], (svc, scope) =>
+    svc.procurement.getNpdReviews(scope)
+  );
+
 /** REQ-E14-05 — the order plan: sized orders, warehouse fill and rented space (PTI only). */
 export const useOrderPlan = () =>
   useServiceQuery(['procurement', 'orderPlan'], (svc, scope) =>

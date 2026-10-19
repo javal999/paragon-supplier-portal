@@ -379,6 +379,9 @@ const LANE_BUNDLES = Object.freeze({
     // FUX-D3 — the Material Planner records the decision for a warehouse week
     // that does not fit (rent, push out, reduce, accept with a note).
     'warehousedecision:record',
+    // DRC-D11 (BL-196) — the Material Planner sets each material's OSIP level,
+    // which picks its ROP Fisik formula (DRC-10).
+    'osiplevel:set',
     // Material C5 (MR-8 BR-03) — Material Planning maintains the planning
     // groups capacity is kept by: create, rename, move materials, retire.
     'planninggroup:manage',

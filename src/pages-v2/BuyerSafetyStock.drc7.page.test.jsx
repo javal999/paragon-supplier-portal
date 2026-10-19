@@ -1,9 +1,10 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { fireEvent, screen, within } from '@testing-library/react';
 import { renderWithProviders, BUYER } from '@test/test-utils';
 import BuyerSafetyStock from './BuyerSafetyStock';
 import { mockDataService } from '@services/data/mock/mockDataService';
 import { consumptionStore } from '@services/data/mock/stores/consumptionStore';
+import { goodsReceiptStore } from '@services/data/mock/stores/goodsReceiptStore';
 import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
 import { NO_PERSON } from '@context/noPerson';
 import i18n from '@lib/i18n';
@@ -24,8 +25,42 @@ const buyerScope = {
   businessRoles: PERSONA_SYSTEM_ROLES.buyer
 };
 
+// BL-198 (DRC-12a) — these specs read RM-STEAR-7300 as an EXISTING material.
+// On the sample data its first order (PO-2025-00116, 15,000 KG) is only 8,000
+// KG received, so the default NPD rule [Default D1] would tag it NPD and its
+// ROP Fisik demand would take the NPD branch. Receive the rest of that order
+// first, so the tag drops and the consumption branch these specs test applies.
+beforeEach(() => {
+  goodsReceiptStore.add({
+    id: 'gr-drc7-first-order',
+    grNumber: 'GR-2026-DRC7',
+    asnId: 'asn-drc7',
+    asnNumber: 'ASN-DRC7',
+    poNumber: 'PO-2025-00116',
+    supplierId: 'sup-002',
+    supplierName: 'PT Sample Specialty Fats',
+    receivedDate: '2026-08-20',
+    receivedBy: 'Warehouse Supervisor',
+    status: 'Posted to SAP',
+    inspectionResults: [
+      {
+        materialCode: 'RM-STEAR-7300',
+        description: 'Stearic acid',
+        qtyExpected: 7000,
+        qtyReceived: 7000,
+        qtyAccepted: 7000,
+        qtyRejected: 0,
+        visualCheck: 'Pass',
+        packagingCheck: 'Pass'
+      }
+    ],
+    disposition: 'Accept'
+  });
+});
+
 afterEach(() => {
   consumptionStore.reset();
+  goodsReceiptStore.reset();
   void i18n.changeLanguage('en');
 });
 

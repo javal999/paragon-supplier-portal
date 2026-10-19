@@ -293,8 +293,24 @@ describe('alert conditions on a position (REQ-E08-05 BR-01)', () => {
     expect(isPtiBelowRop(position({ ptiSoh: 399, ptiRop: 400 }))).toBe(true);
     expect(isPtiBelowRop(position({ ptiSoh: 400, ptiRop: 400 }))).toBe(false);
     expect(isPtiBelowRop(position({ ptiSoh: null }))).toBe(false);
-    expect(isSupplierBelowRop(position({ supplierSoh: 10, supplierRop: 11 }))).toBe(true);
-    expect(isSupplierBelowRop(position({ supplierSoh: 10, supplierRop: null }))).toBe(false);
+    // Owner 2026-10-19 / DRC-D15 — against the SYSTEM ROP Supplier; the typed ROP is display only.
+    /**
+     * @param {number | null} value
+     * @returns {import('./osipRopRules').RopFigure}
+     */
+    const sys = (value) => ({ value, unavailable: value === null ? 'NOT_ON_ROUTE' : null });
+    expect(isSupplierBelowRop(position({ supplierSoh: 10, systemRopSupplier: sys(11) }))).toBe(
+      true
+    );
+    expect(isSupplierBelowRop(position({ supplierSoh: 11, systemRopSupplier: sys(11) }))).toBe(
+      false
+    );
+    expect(
+      isSupplierBelowRop(
+        position({ supplierSoh: 10, supplierRop: 11, systemRopSupplier: sys(null) })
+      )
+    ).toBe(false);
+    expect(isSupplierBelowRop(position({ supplierSoh: 10, supplierRop: 11 }))).toBe(false);
   });
 
   it('projected stock-out: PTI cover shorter than the days until the next incoming date', () => {

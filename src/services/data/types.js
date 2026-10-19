@@ -531,7 +531,12 @@ export class DataError extends Error {
 /**
  * `materialType`:  ROH = raw material, VERP = packaging (BR-07).
  * `supplierSoh`:  Latest supplier stock submission; null when the supplier never submitted.
- * `supplierRop`:  The supplier's own reorder point; null reads "Not provided".
+ * `supplierRop`:  The supplier's own reorder point; null reads "Not provided". DISPLAY ONLY
+ *   (DRC-D15): suppliers may still send it, but no calculation or alert reads it; the
+ *   `supplierBelowRop` alert compares the supplier's stock with `systemRopSupplier`.
+ * `systemRopSupplier`:  DRC-D15 (BL-196) — the system's ROP Supplier for this pair (`osipRopRules`),
+ *   shown beside `supplierRop` on PTI's read; a figure or why not. Absent on a supplier's read;
+ *   null when the pair has no engine source.
  * `ptiSoh`:  PTI stock and reorder point from SAP. Null for a supplier without access.
  * `ptiStockShared`:  Whether PTI stock is shown on this row (always true for PTI users).
  * `consignment`:  Consignment material (MN-INV-10).
@@ -554,6 +559,7 @@ export class DataError extends Error {
  *   readonly uom: string;
  *   readonly supplierSoh: number | null;
  *   readonly supplierRop: number | null;
+ *   readonly systemRopSupplier?: import('../transitions/osipRopRules').RopFigure | null;
  *   readonly ptiSoh: number | null;
  *   readonly ptiRop: number | null;
  *   readonly ptiStockShared: boolean;
@@ -855,12 +861,15 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * `change`:  BR-06 (BL-116) — the change since the last run of the material's stream, and why.
  * `osip`:  BL-193 (DRC-7) / BL-197 (DRC-11) — the inputs of the OSIP safety order, ROP Fisik
  *   safety and CV; the page applies the OSIP rules to them at read.
+ * `rop`:  BL-196 (DRC-D11) / BL-198 (DRC-12a) — the material's OSIP level in force and its NPD
+ *   tag under every variant; the page computes the ROPs and Max from `osip` at that level.
  *
  * @typedef {MaterialSafetyStock & {
  *     readonly materialLabel: string;
  *     readonly supplierName: string | null;
  *     readonly change: SafetyStockChange;
  *     readonly osip: MaterialOsipInputs;
+ *     readonly rop: import('../transitions/osipRopRules').MaterialRopInputs;
  *   }} MaterialSafetyStockView
  */
 
@@ -3052,6 +3061,9 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *   its own assigned materials only. PTI: every supplier × material with a name.
  * @property {(scope: QueryScope) => Promise<Page<StockAccessGrant>>} getStockAccess -  Supplier access to PTI stock. PTI: every supplier with its log. Supplier: its own.
  * @property {(scope: QueryScope) => Promise<Page<CapacityPlan>>} getCapacityPlans -  Capacity against demand per supplier × planning group, 13 weeks.
+ * @property {(scope: QueryScope) => Promise<Page<import('../transitions/osipRopRules').NpdReview>>} getNpdReviews DRC-12a (BL-198) — the open "Review ROP after first order" tasks: a material
+ *   whose NPD tag the hub saw drop, until the planner sets or confirms its OSIP level. PTI only:
+ *   a supplier scope reads an empty page.
  * @property {(scope: QueryScope) => Promise<Page<BlanketPoRunOut>>} getBlanketPoRunOuts CAP-9 — every open blanket PO line projected against the LTP: its
  *   run-out and "new PO needed by" weeks, derived at read. PTI only: a supplier
  *   scope reads an empty page.

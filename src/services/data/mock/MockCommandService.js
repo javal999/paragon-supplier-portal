@@ -163,6 +163,8 @@ import { forecastOverrideTarget } from './targets/forecastOverride';
 import { warehouseDecisionTarget } from './targets/warehouseDecision';
 import { demandAnticipationTarget } from './targets/demandAnticipation';
 import { consumptionTarget } from './targets/consumption';
+import { osipLevelTarget } from './targets/osipLevel';
+import { observeNpdTags } from './osipRopReadModel';
 // Material G1 — the qualification lists (its own module, MAT-R13).
 import { qualificationRuleTarget } from './targets/qualificationRule';
 // Material G2 — the sourcing type map (its own module, MAT-R13) and bidding
@@ -6065,6 +6067,8 @@ const TARGETS = {
   demandAnticipation: demandAnticipationTarget,
   // CAP-11 — the recorded consumption. Ships in the same commit as its flow.
   consumption: consumptionTarget,
+  // DRC-D11 (BL-196) — the OSIP level per material. Ships in the same commit as its flow.
+  osipLevel: osipLevelTarget,
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx event types, the answers to
   // them, and the negotiation window. Each ships in the same commit as its flow,
   // so no entity joins the target-less set even for one merge.
@@ -6433,10 +6437,18 @@ export class MockCommandService {
     // so every event this dispatch emits groups to the first command's
     // correlationId (DR-10). The dispatcher has always accepted this third arg
     // (cascades use it); this exposes it on the public seam.
+    //
+    // DRC-12a (BL-198) — first, the NPD tags as they stand BEFORE the command:
+    // the baseline the observation after it is compared with, so a tag the
+    // command drops raises its review task once.
+    observeNpdTags();
     const result = await dispatcher.dispatch(scope, input, causationId);
     // REQ-E08-05 BR-05 — only a command changes the figures an alert reads, so
     // after one lands, record which closed alerts' conditions have cleared.
-    if (result.status !== 'failed') observeAlertConditions();
+    if (result.status !== 'failed') {
+      observeAlertConditions();
+      observeNpdTags();
+    }
     return result;
   }
 

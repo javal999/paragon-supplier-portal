@@ -414,11 +414,18 @@ export function stockFreshness(p, nowIso) {
 export const isPtiBelowRop = (p) => p.ptiSoh !== null && p.ptiRop !== null && p.ptiSoh < p.ptiRop;
 
 /**
- * @param {Pick<InventoryPosition, 'supplierSoh' | 'supplierRop'>} p
+ * REQ-E08-05 `supplierBelowRop`, rewired by the owner (2026-10-19, DRC-D15):
+ * the supplier's stock against the SYSTEM-calculated ROP Supplier
+ * (`systemRopSupplier`, BL-196), never the supplier-typed `supplierRop`, which
+ * is display only. No system figure ("Not available", e.g. a lead-time leg the
+ * hub does not hold) → the rule does not fire for the pair.
+ * @param {Pick<InventoryPosition, 'supplierSoh' | 'systemRopSupplier'>} p
  * @returns {boolean}
  */
-export const isSupplierBelowRop = (p) =>
-  p.supplierSoh !== null && p.supplierRop !== null && p.supplierSoh < p.supplierRop;
+export const isSupplierBelowRop = (p) => {
+  const rop = p.systemRopSupplier?.value ?? null;
+  return p.supplierSoh !== null && rop !== null && p.supplierSoh < rop;
+};
 
 /**
  * Projected stock-out before the next incoming date: PTI SOH ÷ the material's

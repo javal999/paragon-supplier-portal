@@ -2723,6 +2723,38 @@ export function useWarehouseDecisionCommand() {
 }
 
 /**
+ * DRC-D11 (BL-196) — set or confirm one material's OSIP level (fires
+ * `t_osiplevel_set`). The Safety stock targets page re-reads, so the ROP
+ * Fisik formula follows the new level, and Home re-reads its review task.
+ * @typedef {{ readonly materialCode: string; readonly level: number }} OsipLevelVars
+ */
+
+/** Set or confirm a material's OSIP level (fires `t_osiplevel_set`). */
+export function useOsipLevelCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, OsipLevelVars>} */ (useMutation)({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_osiplevel_set',
+        entity: 'osipLevel',
+        entityId: vars.materialCode,
+        payload: { osipLevel: vars.level }
+      }),
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      qc.invalidateQueries({
+        predicate: (q) =>
+          q.queryKey[0] === 'procurement' &&
+          (q.queryKey[1] === 'safetyStock' || q.queryKey[1] === 'npdReviews')
+      });
+    }
+  });
+}
+
+/**
  * DRC-2 (BL-188) — publish the rolling demand anticipation of the current
  * planning week (fires `t_demandanticipation_publish`). `planningWeek` is the
  * Monday the confirm named; the verb refuses it once the hub week has moved on.
