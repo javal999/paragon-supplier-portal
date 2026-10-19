@@ -113,6 +113,8 @@ describe('the option editor (BL-36) — a choice question is written, refused, t
     cleanup();
     renderWithProviders(<SupplierRfi />, { identity: SUP_007 });
     fireEvent.click(await screen.findByTestId('supplier-rfi-open-rfi-0004'));
+    // BL-132 — the form opens once the supplier says it will respond.
+    fireEvent.click(await screen.findByTestId('supplier-rfi-rfi-0004-intent-respond'));
     const field = await screen.findByTestId('rfi-field-event-1');
     expect(within(field).getByRole('option', { name: 'Sheet' })).toBeInTheDocument();
   });
@@ -122,6 +124,9 @@ describe('the supplier form renders and validates every kind (the Oslo RFI)', ()
   it('each kind is drawn; a misfit answer is named and blocks sending; the price range says Indicative', async () => {
     renderWithProviders(<SupplierRfi />, { identity: SUP_007 });
     fireEvent.click(await screen.findByTestId('supplier-rfi-open-rfi-002'));
+    // BL-132 — the form opens once the supplier says it will respond.
+    fireEvent.click(await screen.findByTestId('supplier-rfi-rfi-002-intent-respond'));
+    await screen.findByTestId('rfi-field-oslo-machine');
     for (const id of [
       'oslo-machine',
       'oslo-dieCut',
@@ -313,6 +318,8 @@ describe('the gates as the supplier meets them (ICY)', () => {
 
     fireEvent.click(screen.getByTestId('supplier-rfp-gate-rfp-003-accept'));
     expect(await screen.findByTestId('supplier-rfp-accepted-rfp-003')).toBeInTheDocument();
+    // BL-132 — step 0 done; the form opens once the supplier says it will respond.
+    fireEvent.click(await screen.findByTestId('supplier-rfp-rfp-003-intent-respond'));
     expect(await screen.findByTestId('supplier-rfp-term-custom-formula-owner')).toBeInTheDocument();
     expect(screen.getByTestId('supplier-rfp-rfp-003-pricing-indicative')).toHaveTextContent(
       'Indicative'

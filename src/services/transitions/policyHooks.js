@@ -762,6 +762,15 @@ export const POLICY_HOOKS = /** @type {const} */ ({
   /** RFQ intent (RFx spec): invited, the event open and inside its deadline,
    *  one intent per invitee, a decline with a listed reason and words. */
   RFQ_INTENT_VALID: 'rfq_intent_valid',
+  /** BL-132 — RFI / RFP intent: the RFQ's rule over an RFx event (`rfxIntentRefusal`):
+   *  invited, the event open and inside its deadline, one intent per invitee, a
+   *  decline with a listed reason and words, no decline once the response is
+   *  submitted. Bound once, for both `rfiIntent` and `rfpIntent`. */
+  RFX_INTENT_VALID: 'rfx_intent_valid',
+  /** BL-132 — RFI / RFP response save, submit and revise: a supplier that declined
+   *  the event is refused `INTENT_DECLINED` (`rfxDeclinedRefusal`), as a declined
+   *  RFQ cannot be quoted. */
+  RFX_RESPONSE_NOT_DECLINED: 'rfx_response_not_declined',
   /** RFQ confidentiality: the RFQ is confidential, the supplier invited, and
    *  the terms not accepted already. */
   RFQ_CONFIDENTIALITY_ACCEPTABLE: 'rfq_confidentiality_acceptable',

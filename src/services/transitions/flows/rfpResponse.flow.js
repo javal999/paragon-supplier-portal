@@ -8,6 +8,9 @@
 // WITHOUT A COMMENT IS REFUSED. A proposal that says "we deviate" and nothing
 // else changes what PTI would sign and says nothing about how — and a screen
 // that merely marks the field red is a screen a hand-made dispatch walks past.
+//
+// BL-132 — a supplier that declined the event (`rfpIntent`) is refused
+// INTENT_DECLINED on save, submit and revise (RFX_RESPONSE_NOT_DECLINED).
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import { FlowDefinition } from '../schema' */
@@ -36,7 +39,9 @@ export const rfpResponseFlow = {
         // NR-1 AC-07 — no upload, replace or delete after the deadline.
         POLICY_HOOKS.RFX_RESPONSE_WINDOW_OPEN,
         // NR-1 BR-08 — a Submitted response changes only through revise.
-        POLICY_HOOKS.RFX_RESPONSE_NOT_SUBMITTED
+        POLICY_HOOKS.RFX_RESPONSE_NOT_SUBMITTED,
+        // BL-132 — a supplier that declined the event does not answer it.
+        POLICY_HOOKS.RFX_RESPONSE_NOT_DECLINED
       ],
       surfaceable: { surfaced: true },
       version: 1
@@ -49,6 +54,7 @@ export const rfpResponseFlow = {
       requiredRole: 'rfpresponse:answer',
       requiredFields: [],
       policyHooks: [
+        POLICY_HOOKS.RFX_RESPONSE_NOT_DECLINED,
         POLICY_HOOKS.RFP_SUBMIT_TERMS_ANSWERED,
         POLICY_HOOKS.RFX_RESPONSE_DOCUMENTS_COMPLETE
       ],
@@ -69,6 +75,7 @@ export const rfpResponseFlow = {
       requiredFields: [],
       policyHooks: [
         POLICY_HOOKS.RFX_RESPONSE_WINDOW_OPEN,
+        POLICY_HOOKS.RFX_RESPONSE_NOT_DECLINED,
         POLICY_HOOKS.RFP_SUBMIT_TERMS_ANSWERED,
         POLICY_HOOKS.RFX_RESPONSE_DOCUMENTS_COMPLETE
       ],

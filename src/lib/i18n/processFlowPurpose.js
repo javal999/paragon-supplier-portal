@@ -612,6 +612,21 @@ export const processFlowPurposeEn = {
     'The supplier sends its terms to PTI. Anything it will not match has to carry an explanation, so a departure is never silent.',
   'processFlows.purpose.t_rfpresponse_revise':
     'The supplier corrects a proposal it already sent, up to the deadline, with the same checks as the first send. Each sent version and its files are kept, so PTI reads the latest and can still see the earlier ones.',
+  'processFlows.purpose.entity.rfiIntent':
+    'Whether an invited supplier will answer an information request at all, and if not, why — so a silent supplier and one that said no are not the same row.',
+  'processFlows.purpose.t_rfiintent_respond':
+    'The supplier says it will answer the information request.',
+  'processFlows.purpose.t_rfiintent_decline':
+    'The supplier says it will not answer, picks why from the list and explains in its own words. Buying reads both.',
+  'processFlows.purpose.t_rfiintent_withdraw':
+    'A supplier that said it would answer changes its mind before sending, picks why from the list and explains in its own words. When it first said yes stays on record.',
+  'processFlows.purpose.entity.rfpIntent':
+    'Whether an invited supplier will send a proposal at all, and if not, why — so a silent supplier and one that said no are not the same row.',
+  'processFlows.purpose.t_rfpintent_respond': 'The supplier says it will send a proposal.',
+  'processFlows.purpose.t_rfpintent_decline':
+    'The supplier says it will not send a proposal, picks why from the list and explains in its own words. Buying reads both.',
+  'processFlows.purpose.t_rfpintent_withdraw':
+    'A supplier that said it would send a proposal changes its mind before sending, picks why from the list and explains in its own words. When it first said yes stays on record.',
   'processFlows.purpose.entity.negotiationRound':
     'A round of asking a shortlist to improve what they offered, with a date to answer by and an optional target.',
   'processFlows.purpose.t_negotiationround_open':
@@ -1197,6 +1212,21 @@ export const processFlowPurposeId = {
     'Pemasok mengirim syaratnya ke PTI. Hal yang tidak bisa dipenuhi wajib disertai penjelasan, sehingga penyimpangan tidak pernah senyap.',
   'processFlows.purpose.t_rfpresponse_revise':
     'Pemasok memperbaiki proposal yang sudah dikirim, sampai batas waktu, dengan pemeriksaan yang sama seperti pengiriman pertama. Setiap versi yang dikirim beserta berkasnya disimpan, sehingga PTI membaca yang terbaru dan tetap bisa melihat yang sebelumnya.',
+  'processFlows.purpose.entity.rfiIntent':
+    'Apakah pemasok yang diundang akan menjawab permintaan informasi, dan jika tidak, mengapa — sehingga pemasok yang diam dan yang menolak tidak tampil sebagai baris yang sama.',
+  'processFlows.purpose.t_rfiintent_respond':
+    'Pemasok menyatakan akan menjawab permintaan informasi.',
+  'processFlows.purpose.t_rfiintent_decline':
+    'Pemasok menyatakan tidak akan menjawab, memilih alasan dari daftar dan menjelaskannya dengan kata-katanya sendiri. Pembelian membaca keduanya.',
+  'processFlows.purpose.t_rfiintent_withdraw':
+    'Pemasok yang tadinya akan menjawab berubah pikiran sebelum mengirim, dengan alasan dan penjelasannya sendiri. Kapan ia pertama menyatakan ya tetap tercatat.',
+  'processFlows.purpose.entity.rfpIntent':
+    'Apakah pemasok yang diundang akan mengirim proposal, dan jika tidak, mengapa — sehingga pemasok yang diam dan yang menolak tidak tampil sebagai baris yang sama.',
+  'processFlows.purpose.t_rfpintent_respond': 'Pemasok menyatakan akan mengirim proposal.',
+  'processFlows.purpose.t_rfpintent_decline':
+    'Pemasok menyatakan tidak akan mengirim proposal, memilih alasan dari daftar dan menjelaskannya dengan kata-katanya sendiri. Pembelian membaca keduanya.',
+  'processFlows.purpose.t_rfpintent_withdraw':
+    'Pemasok yang tadinya akan mengirim proposal berubah pikiran sebelum mengirim, dengan alasan dan penjelasannya sendiri. Kapan ia pertama menyatakan ya tetap tercatat.',
   'processFlows.purpose.entity.negotiationRound':
     'Satu putaran meminta daftar pendek memperbaiki tawarannya, dengan tanggal untuk menjawab dan target yang boleh dicantumkan.',
   'processFlows.purpose.t_negotiationround_open':

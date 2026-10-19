@@ -8,6 +8,9 @@
 //
 // The submit verb is where the required-question rule bites: a screen can grey
 // a button out, only the verb can refuse the act (RFI_SUBMIT_COMPLETE).
+//
+// BL-132 — a supplier that declined the event (`rfiIntent`) is refused
+// INTENT_DECLINED on save, submit and revise (RFX_RESPONSE_NOT_DECLINED).
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import { FlowDefinition } from '../schema' */
@@ -38,7 +41,9 @@ export const rfiResponseFlow = {
         // NR-1 AC-07 — no upload, replace or delete after the deadline.
         POLICY_HOOKS.RFX_RESPONSE_WINDOW_OPEN,
         // NR-1 BR-08 — a Submitted response changes only through revise.
-        POLICY_HOOKS.RFX_RESPONSE_NOT_SUBMITTED
+        POLICY_HOOKS.RFX_RESPONSE_NOT_SUBMITTED,
+        // BL-132 — a supplier that declined the event does not answer it.
+        POLICY_HOOKS.RFX_RESPONSE_NOT_DECLINED
       ],
       surfaceable: { surfaced: true },
       version: 1
@@ -50,7 +55,11 @@ export const rfiResponseFlow = {
       trigger: 'user',
       requiredRole: 'rfiresponse:answer',
       requiredFields: [],
-      policyHooks: [POLICY_HOOKS.RFI_SUBMIT_COMPLETE, POLICY_HOOKS.RFX_RESPONSE_DOCUMENTS_COMPLETE],
+      policyHooks: [
+        POLICY_HOOKS.RFX_RESPONSE_NOT_DECLINED,
+        POLICY_HOOKS.RFI_SUBMIT_COMPLETE,
+        POLICY_HOOKS.RFX_RESPONSE_DOCUMENTS_COMPLETE
+      ],
       surfaceable: { surfaced: true },
       version: 1
     },
@@ -72,6 +81,7 @@ export const rfiResponseFlow = {
       requiredFields: [],
       policyHooks: [
         POLICY_HOOKS.RFX_RESPONSE_WINDOW_OPEN,
+        POLICY_HOOKS.RFX_RESPONSE_NOT_DECLINED,
         POLICY_HOOKS.RFI_SUBMIT_COMPLETE,
         POLICY_HOOKS.RFX_RESPONSE_DOCUMENTS_COMPLETE
       ],

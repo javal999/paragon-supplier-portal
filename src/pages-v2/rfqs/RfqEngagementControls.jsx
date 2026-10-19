@@ -63,9 +63,11 @@ function useEngagementAct() {
 
 /**
  * The decline form: a reason from the list and the supplier's own words.
- * @type {React.FC<{ onCancel: () => void; onConfirm: (reason: RfqDeclineReason, text: string) => void; pending: boolean; testId: string; }>}
+ * Exported for the RFI and RFP intent (BL-132), which name their own confirm
+ * button through `confirmLabel`.
+ * @type {React.FC<{ onCancel: () => void; onConfirm: (reason: RfqDeclineReason, text: string) => void; pending: boolean; testId: string; confirmLabel?: string; }>}
  */
-const DeclineForm = ({ onCancel, onConfirm, pending, testId }) => {
+export const DeclineForm = ({ onCancel, onConfirm, pending, testId, confirmLabel }) => {
   const { t } = useTranslation();
   const [reason, setReason] = useState(/** @type {RfqDeclineReason | ''} */ (''));
   const [text, setText] = useState('');
@@ -115,7 +117,7 @@ const DeclineForm = ({ onCancel, onConfirm, pending, testId }) => {
           onClick={() => reason && onConfirm(reason, text)}
           data-testid={`${testId}-confirm`}
         >
-          {t('rfqResponse.decline.confirm')}
+          {confirmLabel ?? t('rfqResponse.decline.confirm')}
         </Button>
       </div>
     </div>

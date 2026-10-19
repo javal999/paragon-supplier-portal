@@ -65,7 +65,7 @@ const RfpInvitees = ({ event }) => {
                 />
               </TableCell>
               <TableCell>
-                <ResponseStatePill state={invitee.responseState} />
+                <ResponseStatePill state={invitee.responseState} intent={invitee.intent} />
               </TableCell>
               {event.confidentiality &&
                 acceptedCell(

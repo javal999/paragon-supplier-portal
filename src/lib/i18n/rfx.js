@@ -611,7 +611,35 @@ export const rfxEn = {
   'rfx.rfpAward.noRound':
     'Close a firm-offer round to award: an RFP is awarded on firm prices only.',
   'rfx.rfpAward.outcome': 'Your award outcome',
-  'rfx.rfpAward.atPoint': 'at the {{qty}} quantity point'
+  'rfx.rfpAward.atPoint': 'at the {{qty}} quantity point',
+
+  // — BL-132 · intent on an RFI and an RFP (the RFQ card's strip) ——————————
+  'rfx.steps.terms': 'Step 0: Accept the confidentiality terms',
+  'rfx.steps.respond': 'Step 1: Say if you will respond',
+  'rfx.steps.answerRfi': 'Step 2: Answer',
+  'rfx.steps.answerRfp': 'Step 2: Send your proposal',
+  'rfx.intent.respond': 'I will respond',
+  'rfx.intent.decline': 'Decline',
+  'rfx.intent.responding': 'You will respond',
+  'rfx.intent.declined': 'Declined',
+  'rfx.intent.withdraw': 'Decline after all',
+  'rfx.intent.confirmRfi': 'Decline this information request',
+  'rfx.intent.confirmRfp': 'Decline this proposal request',
+  'rfx.intent.respondFirst': 'Say if you will respond first. The answer form opens once you do.',
+  'rfx.intent.declinedNote': 'You declined this request, so it takes no answer.',
+  'rfx.response.willRespond': 'Will respond',
+  'rfx.response.declined': 'Declined',
+  'rfx.intent.refusal.EVENT_NOT_FOUND': 'This request could not be found.',
+  'rfx.intent.refusal.NOT_INVITED': 'You are not invited to this request.',
+  'rfx.intent.refusal.EVENT_NOT_OPEN': 'This request is no longer open.',
+  'rfx.intent.refusal.PAST_DEADLINE': 'The response deadline has passed.',
+  'rfx.intent.refusal.NOT_RESPONDING': 'Only a stated “I will respond” can be withdrawn.',
+  'rfx.intent.refusal.INTENT_ALREADY_STATED': 'You have already said whether you will respond.',
+  'rfx.intent.refusal.DECLINE_REASON_UNKNOWN': 'Choose a reason from the list.',
+  'rfx.intent.refusal.DECLINE_TEXT_MISSING': 'Say why in your own words as well.',
+  'rfx.intent.refusal.RESPONSE_ALREADY_SENT':
+    'You have sent your response, so this request cannot be declined.',
+  'rfx.intent.refusal.INTENT_DECLINED': 'You declined this request, so it takes no answer.'
 };
 
 /** @type {Record<string, string>} */
@@ -1206,5 +1234,36 @@ export const rfxId = {
   'rfx.rfpAward.noRound':
     'Tutup putaran penawaran pasti untuk menetapkan: RFP hanya ditetapkan atas harga pasti.',
   'rfx.rfpAward.outcome': 'Hasil penetapan Anda',
-  'rfx.rfpAward.atPoint': 'pada titik kuantitas {{qty}}'
+  'rfx.rfpAward.atPoint': 'pada titik kuantitas {{qty}}',
+
+  // — BL-132 · niat pada RFI dan RFP ——————————————————————————————————————
+  'rfx.steps.terms': 'Langkah 0: Terima syarat kerahasiaan',
+  'rfx.steps.respond': 'Langkah 1: Nyatakan apakah Anda akan menanggapi',
+  'rfx.steps.answerRfi': 'Langkah 2: Jawab',
+  'rfx.steps.answerRfp': 'Langkah 2: Kirim proposal Anda',
+  'rfx.intent.respond': 'Saya akan menanggapi',
+  'rfx.intent.decline': 'Tolak',
+  'rfx.intent.responding': 'Anda akan menanggapi',
+  'rfx.intent.declined': 'Ditolak',
+  'rfx.intent.withdraw': 'Tetap tolak',
+  'rfx.intent.confirmRfi': 'Tolak permintaan informasi ini',
+  'rfx.intent.confirmRfp': 'Tolak permintaan proposal ini',
+  'rfx.intent.respondFirst':
+    'Nyatakan dulu apakah Anda akan menanggapi. Formulir jawaban terbuka setelahnya.',
+  'rfx.intent.declinedNote':
+    'Anda menolak permintaan ini, sehingga tidak ada jawaban yang dikirim.',
+  'rfx.response.willRespond': 'Akan menanggapi',
+  'rfx.response.declined': 'Menolak',
+  'rfx.intent.refusal.EVENT_NOT_FOUND': 'Permintaan ini tidak ditemukan.',
+  'rfx.intent.refusal.NOT_INVITED': 'Anda tidak diundang ke permintaan ini.',
+  'rfx.intent.refusal.EVENT_NOT_OPEN': 'Permintaan ini sudah tidak terbuka.',
+  'rfx.intent.refusal.PAST_DEADLINE': 'Batas waktu tanggapan sudah lewat.',
+  'rfx.intent.refusal.NOT_RESPONDING': 'Hanya pernyataan “Saya akan menanggapi” yang bisa ditarik.',
+  'rfx.intent.refusal.INTENT_ALREADY_STATED': 'Anda sudah menyatakan apakah akan menanggapi.',
+  'rfx.intent.refusal.DECLINE_REASON_UNKNOWN': 'Pilih alasan dari daftar.',
+  'rfx.intent.refusal.DECLINE_TEXT_MISSING': 'Jelaskan juga alasannya dengan kata-kata Anda.',
+  'rfx.intent.refusal.RESPONSE_ALREADY_SENT':
+    'Anda sudah mengirim tanggapan, sehingga permintaan ini tidak bisa ditolak.',
+  'rfx.intent.refusal.INTENT_DECLINED':
+    'Anda menolak permintaan ini, sehingga tidak ada jawaban yang dikirim.'
 };
