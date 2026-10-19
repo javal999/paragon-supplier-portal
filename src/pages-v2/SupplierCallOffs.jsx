@@ -40,8 +40,10 @@ import {
   checkTolerance,
   isConfirmedAndAccepted,
   isDueWithoutHeadsUp,
+  pendingDelay,
   proposedDeliveries
 } from '@services/transitions/callOffRules';
+import CallOffDelays from './callOffs/CallOffDelays';
 import {
   ConfirmationPill,
   DeliveryPill,
@@ -525,10 +527,36 @@ const SupplierCallOffs = () => {
               </section>
             )}
 
+            {/* DRC-5 (BL-191) — delays PTI proposed for an LTP drop, and the answers. */}
+            <CallOffDelays callOff={selected.callOff} testId="supplier-calloff-delays" />
+
             {selected.callOff.status === 'Awaiting Confirmation' && (
               <section className="space-y-3" data-testid="supplier-calloff-respond">
                 <h3 className="text-label text-text-tertiary uppercase">{t('co.respond.title')}</h3>
-                {confirmAvailability.kind === 'held' ? (
+                {confirmAvailability.kind === 'held' && pendingDelay(selected.callOff) ? (
+                  <DelayAnswerForm
+                    view={selected}
+                    comment={form.comment}
+                    setComment={(comment) => setForm({ ...form, comment })}
+                    busy={command.isPending}
+                    onAnswer={(delayAnswer) =>
+                      void run(
+                        {
+                          verb: 'confirm',
+                          id: selected.callOff.id,
+                          delayAnswer,
+                          comment: form.comment.trim() || undefined
+                        },
+                        t(
+                          delayAnswer === 'approve'
+                            ? 'co.toast.delayApproved'
+                            : 'co.toast.delayRejected',
+                          { number: selected.callOff.callOffNumber }
+                        )
+                      )
+                    }
+                  />
+                ) : confirmAvailability.kind === 'held' ? (
                   <RespondForm
                     view={selected}
                     form={form}
@@ -691,6 +719,62 @@ const SupplierCallOffs = () => {
         )}
       </SidePanel>
     </AppShellV2>
+  );
+};
+
+/**
+ * DRC-5 (BL-191) — the answer to a delay PTI proposed because the LTP dropped:
+ * approve (the need date moves) or reject (the call-off stays on its date).
+ * Both are the confirm verb with `delayAnswer`, so the call-off is confirmed
+ * either way.
+ * @type {React.FC<{ view: CallOffView; comment: string; setComment: (c: string) => void; busy: boolean; onAnswer: (a: 'approve' | 'reject') => void }>}
+ */
+const DelayAnswerForm = ({ view, comment, setComment, busy, onAnswer }) => {
+  const { t } = useTranslation();
+  const d = pendingDelay(view.callOff);
+  if (!d) return null;
+  const from = formatDate(d.fromNeedDate);
+  return (
+    <div className="space-y-3" data-testid="supplier-calloff-delay-answer">
+      <p className="text-sm text-text-primary">
+        {t('co.delay.sup.intro', { from, to: formatDate(d.toNeedDate) })}
+      </p>
+      {d.reason ? (
+        <p className="text-sm text-text-secondary">
+          <span className="text-text-tertiary">{t('co.delay.sup.reason')}: </span>“{d.reason}”
+        </p>
+      ) : null}
+      <div>
+        <label htmlFor="co-delay-comment" className={labelClass}>
+          {t('co.respond.comment')}
+        </label>
+        <textarea
+          id="co-delay-comment"
+          rows={2}
+          className={inputClass}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+        />
+      </div>
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button
+          variant="secondary"
+          disabled={busy}
+          onClick={() => onAnswer('reject')}
+          data-testid="supplier-calloff-delay-reject"
+        >
+          {t('co.delay.sup.reject', { from })}
+        </Button>
+        <Button
+          variant="outline"
+          disabled={busy}
+          onClick={() => onAnswer('approve')}
+          data-testid="supplier-calloff-delay-approve"
+        >
+          {t('co.delay.sup.approve')}
+        </Button>
+      </div>
+    </div>
   );
 };
 

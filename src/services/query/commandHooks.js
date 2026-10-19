@@ -20,6 +20,7 @@ import { scopeKey } from './useServiceQuery';
 /** @import { FxPinSource } from '@lib/fxPin' */
 /** @import { CommandResult, CommandStatus, QueryScope, InspectionResult, CommandDecision, CertificateDeclaration, SupplierDocumentCategory, PoLineResponse, PoRejectionCause, InvoiceLine, CallOffDelivery, CallOffType, CallOffOrigin, StockUpdateMode, QualificationRequiredDoc, QualificationRuleLevel } from '../data/types' */
 /** @import { AsnLineInput } from '../transitions/fulfilmentRules' */
+/** @import { DelayAnswer } from '../transitions/callOffRules' */
 /** @import { SourcingType, SourcingTypeKey } from '../sourcing/sourcingType' */
 /** @import { ProposalType } from '../engine/reschedule' */
 /** @import { SimulationOverrideField } from '../data/types' */
@@ -2450,6 +2451,8 @@ export function useApplicationReject() {
 /**
  *  X-03 — set by the Order plan: the draft comes from an engine recommendation.
  *  REQ-E14-13 — set by the reschedule report: the change comes from an engine proposal (X-03).
+ *  BL-32 / DRC-5 (BL-191) — `reasonCode` on a change: the coded reason (`callOffChange`);
+ *  `ltp-dropped` proposes a delay the supplier answers with `delayAnswer` on `confirm`.
  *
  * @typedef {| { verb: 'release'; poId: string; poLineId: string; quantity: number; needDate: string; type: CallOffType }
  *   | {
@@ -2468,11 +2471,12 @@ export function useApplicationReject() {
  *       verb: 'change';
  *       id: string;
  *       reason: string;
+ *       reasonCode?: string;
  *       quantity?: number;
  *       needDate?: string;
  *       origin?: CallOffOrigin;
  *     }
- *   | { verb: 'confirm'; id: string; comment?: string }
+ *   | { verb: 'confirm'; id: string; comment?: string; delayAnswer?: DelayAnswer }
  *   | { verb: 'confirmNewDate'; id: string; confirmedDate: string; comment?: string }
  *   | { verb: 'confirmChanges'; id: string; confirmedQty: number; confirmedDate?: string; comment?: string }
  *   | { verb: 'confirmPartial'; id: string; deliveries: CallOffDelivery[]; comment?: string }

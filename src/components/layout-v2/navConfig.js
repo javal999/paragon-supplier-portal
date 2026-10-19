@@ -18,6 +18,7 @@ import {
   DatabaseZap,
   Factory,
   FlaskConical,
+  History,
   FileQuestion,
   FileSearch,
   FileText,
@@ -133,7 +134,13 @@ export const PTI_NAV = [
     items: [
       { labelKey: 'hub.nav.pti.performance', icon: Award, path: '/buyer/scorecard' },
       { labelKey: 'hub.nav.pti.forecastQuality', icon: TrendingUp, path: '/buyer/demand-forecast' },
-      { labelKey: 'hub.nav.pti.stockCheck', icon: Scale, path: '/buyer/fs-reconcile' }
+      { labelKey: 'hub.nav.pti.stockCheck', icon: Scale, path: '/buyer/fs-reconcile' },
+      // DRC-3 (BL-189) — every demand anticipation publication, read only.
+      {
+        labelKey: 'hub.nav.pti.demandAnticipationHistory',
+        icon: History,
+        path: '/buyer/demand-anticipation-history'
+      }
     ]
   },
   {
@@ -186,6 +193,20 @@ export const PTI_NAV = [
     labelKey: 'hub.nav.section.invoices',
     roles: ['FIN'],
     items: [{ labelKey: 'hub.nav.pti.invoices', icon: Receipt, path: '/buyer/invoices' }]
+  },
+  {
+    // DRC-3 (BL-189), [Owner A10] — Procurement and Finance audit the demand
+    // anticipation history; a Material Planner reaches it under Review.
+    id: 'audit',
+    labelKey: 'hub.nav.section.audit',
+    roles: ['BUY', 'FIN'],
+    items: [
+      {
+        labelKey: 'hub.nav.pti.demandAnticipationHistory',
+        icon: History,
+        path: '/buyer/demand-anticipation-history'
+      }
+    ]
   },
   {
     // FUX-D2 — a Material Planner sees the scorecard under Review instead.

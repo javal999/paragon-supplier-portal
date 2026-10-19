@@ -32,6 +32,9 @@ export const adminReasonsEn = {
   'adminRsn.list.forecastOverride': 'Demand forecast — override',
   'adminRsn.list.forecastOverride.hint':
     'REQ-E14-11 · why a Material Planning team member overrides the demand forecast. Required when the override raises it. "Other" needs a note.',
+  'adminRsn.list.callOffChange': 'Call-off — change',
+  'adminRsn.list.callOffChange.hint':
+    'DRC-5 · why a planner changes a call-off the supplier answered. Optional; the written reason is still required. "LTP dropped" makes a later need date a delay the supplier must approve.',
 
   'adminRsn.col.code': 'Code',
   'adminRsn.col.labelEn': 'English label',
@@ -116,6 +119,9 @@ export const adminReasonsId = {
   'adminRsn.list.forecastOverride': 'Prakiraan permintaan — penyesuaian',
   'adminRsn.list.forecastOverride.hint':
     'REQ-E14-11 · mengapa anggota tim Perencanaan Material menyesuaikan prakiraan permintaan. Wajib bila penyesuaian menaikkannya. "Lainnya" memerlukan catatan.',
+  'adminRsn.list.callOffChange': 'Call-off — ubah',
+  'adminRsn.list.callOffChange.hint':
+    'DRC-5 · mengapa perencana mengubah call-off yang sudah dijawab pemasok. Opsional; alasan tertulis tetap wajib. "LTP turun" menjadikan tanggal kebutuhan yang lebih lambat sebagai penundaan yang harus disetujui pemasok.',
 
   'adminRsn.col.code': 'Kode',
   'adminRsn.col.labelEn': 'Label bahasa Inggris',

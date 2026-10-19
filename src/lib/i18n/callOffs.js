@@ -211,6 +211,27 @@ export const callOffsEn = {
   'co.change.intro':
     'Changing the quantity or need date sends the call-off back to the supplier to confirm again.',
   'co.change.submit': 'Change and ask again',
+  // DRC-5 (BL-191) — a delay for an LTP drop, and the coded change reason (BL-32).
+  'co.changeReason.ltp-dropped': 'LTP dropped',
+  'co.change.reasonCode': 'Reason type',
+  'co.change.reasonCodeNone': 'Not coded',
+  'co.change.delayHint':
+    'LTP dropped: choose a later need date and keep the quantity. The need date moves only when the supplier approves; until then the call-off stays on its current date and in the demand anticipation.',
+  'co.delay.title': 'Delay for an LTP drop',
+  'co.delay.pending': 'Proposed {{from}} → {{to}}, waiting for the supplier',
+  'co.delay.approved': '{{from}} → {{to}}: approved by the supplier',
+  'co.delay.rejected':
+    '{{from}} → {{to}}: rejected by the supplier; the call-off stayed on {{from}}',
+  'co.delay.proposedAt': 'Proposed {{date}}',
+  'co.delay.answeredAt': 'Answered {{date}}',
+  'co.delay.unattributed': 'not attributed to a person',
+  'co.delay.sup.intro':
+    'PTI proposes to move this call-off from {{from}} to {{to}} because the LTP dropped. The need date changes only if you approve.',
+  'co.delay.sup.reason': 'PTI’s reason',
+  'co.delay.sup.approve': 'Approve the delay',
+  'co.delay.sup.reject': 'Reject the delay, keep {{from}}',
+  'co.toast.delayApproved': '{{number}}: delay approved',
+  'co.toast.delayRejected': '{{number}}: delay rejected, the date stays',
   'co.review.title': 'Confirmation outside tolerance',
   'co.review.intro':
     'Approve to accept the date and quantity the supplier confirmed, or reject with a comment to ask the supplier again.',
@@ -514,6 +535,26 @@ export const callOffsId = {
   'co.change.intro':
     'Mengubah kuantitas atau tanggal kebutuhan mengembalikan call-off ke pemasok untuk dikonfirmasi ulang.',
   'co.change.submit': 'Ubah dan minta konfirmasi ulang',
+  // DRC-5 (BL-191) — penundaan karena LTP turun, dan alasan perubahan berkode (BL-32).
+  'co.changeReason.ltp-dropped': 'LTP turun',
+  'co.change.reasonCode': 'Jenis alasan',
+  'co.change.reasonCodeNone': 'Tanpa kode',
+  'co.change.delayHint':
+    'LTP turun: pilih tanggal kebutuhan yang lebih lambat dan pertahankan kuantitasnya. Tanggal kebutuhan baru berubah bila pemasok menyetujui; sampai itu call-off tetap pada tanggalnya sekarang dan dalam antisipasi permintaan.',
+  'co.delay.title': 'Penundaan karena LTP turun',
+  'co.delay.pending': 'Diusulkan {{from}} → {{to}}, menunggu pemasok',
+  'co.delay.approved': '{{from}} → {{to}}: disetujui pemasok',
+  'co.delay.rejected': '{{from}} → {{to}}: ditolak pemasok; call-off tetap pada {{from}}',
+  'co.delay.proposedAt': 'Diusulkan {{date}}',
+  'co.delay.answeredAt': 'Dijawab {{date}}',
+  'co.delay.unattributed': 'tidak diatribusikan ke seseorang',
+  'co.delay.sup.intro':
+    'PTI mengusulkan memindahkan call-off ini dari {{from}} ke {{to}} karena LTP turun. Tanggal kebutuhan hanya berubah bila Anda menyetujui.',
+  'co.delay.sup.reason': 'Alasan PTI',
+  'co.delay.sup.approve': 'Setujui penundaan',
+  'co.delay.sup.reject': 'Tolak penundaan, tetap {{from}}',
+  'co.toast.delayApproved': '{{number}}: penundaan disetujui',
+  'co.toast.delayRejected': '{{number}}: penundaan ditolak, tanggal tetap',
   'co.review.title': 'Konfirmasi di luar toleransi',
   'co.review.intro':
     'Setujui untuk menerima tanggal dan kuantitas yang dikonfirmasi pemasok, atau tolak dengan komentar untuk meminta ulang.',

@@ -24,7 +24,15 @@
 //                           demand forecast. Required on an upward override;
 //                           "Other" needs a note. Read by the override verb
 //                           (`overrideRefusal`), and FVA reports by it (BR-02).
-// ⚠️ Call-off reject / change reasons and goods-receipt dispute reasons are FREE
+// A seventh, new (DRC-5, BL-191, SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10):
+//   · callOffChange       — the coded reason of a planner's change to a released
+//                           call-off. Optional: the free-text `reason` stays
+//                           required on every change. Its starter code
+//                           `ltp-dropped` is the one that makes a change a
+//                           DELAY the supplier must approve before the need date
+//                           moves (`LTP_DROPPED_CODE`, callOffRules). A code the
+//                           administrator adds records why, and changes nothing else.
+// ⚠️ Call-off REJECT reasons and goods-receipt dispute reasons are still FREE
 // TEXT in this build (`reason`, `comment` fields), not coded lists — there is
 // no list for an administrator to maintain, so none is invented here.
 //
@@ -47,6 +55,7 @@ import { orderCollaborationEn, orderCollaborationId } from '@lib/i18n/orderColla
 import { inventoryCapacityEn, inventoryCapacityId } from '@lib/i18n/inventoryCapacity';
 import { forecastCollaborationEn, forecastCollaborationId } from '@lib/i18n/forecastCollaboration';
 import { forecastBiasEn, forecastBiasId } from '@lib/i18n/forecastBias';
+import { callOffsEn, callOffsId } from '@lib/i18n/callOffs';
 
 export const REASON_LISTS = /** @type {const} */ ([
   'poAdjust',
@@ -54,7 +63,8 @@ export const REASON_LISTS = /** @type {const} */ ([
   'capacityShortfall',
   'commitmentShortfall',
   'alertClose',
-  'forecastOverride'
+  'forecastOverride',
+  'callOffChange'
 ]);
 /** @typedef {(typeof REASON_LISTS)[number]} ReasonListId */
 
@@ -113,7 +123,10 @@ export const STARTER_REASON_CODES = Object.freeze({
     'market-info',
     'data-correction',
     'other'
-  ])
+  ]),
+  // DRC-5 (BL-191) — the coded reason of a planner's call-off change. One
+  // starter code: "LTP dropped", the delay the supplier must approve [MoM 1B].
+  callOffChange: Object.freeze(['ltp-dropped'])
 });
 
 /**
@@ -126,7 +139,8 @@ export const BUILT_IN_LABEL_PREFIX = Object.freeze({
   capacityShortfall: 'inv.capacity.reason.',
   commitmentShortfall: 'fc.reason.',
   alertClose: 'inv.alerts.closeReason.',
-  forecastOverride: 'fb.reason.'
+  forecastOverride: 'fb.reason.',
+  callOffChange: 'co.changeReason.'
 });
 
 /**
@@ -326,14 +340,16 @@ const EN = {
   ...orderCollaborationEn,
   ...inventoryCapacityEn,
   ...forecastCollaborationEn,
-  ...forecastBiasEn
+  ...forecastBiasEn,
+  ...callOffsEn
 };
 /** @type {Record<string, string>} */
 const ID = {
   ...orderCollaborationId,
   ...inventoryCapacityId,
   ...forecastCollaborationId,
-  ...forecastBiasId
+  ...forecastBiasId,
+  ...callOffsId
 };
 
 /**

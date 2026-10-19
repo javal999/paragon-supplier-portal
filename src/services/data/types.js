@@ -26,6 +26,7 @@
 /** @import { FsRow } from '../transitions/feedstockReconcile' */
 /** @import { BlanketPoRunOut } from '../transitions/blanketPoRules' */
 /** @import { DemandAnticipationSupplyRow } from '../transitions/supplyBelowDemandRules' */
+/** @import { DaHistoryRow } from '../transitions/demandAnticipationHistory' */
 /** @import { SimulationRefusal, StockSimulation } from '../transitions/simulateSupplierStock' */
 /** @import { RfqClarificationView, RfqEngagementView } from '../sourcing/rfqResponse' */
 /** @import { AwardView, NegotiationRoundView, RfiEventView, RfpEventView, RfpAwardView, RfpOfferRoundView, RfqSupplierGateView } from '../sourcing/views' */
@@ -422,11 +423,40 @@ export class DataError extends Error {
 
 /** A planner or supplier note kept on the call-off (reasons are required). */
 /**
+ * `code`:  BL-32 / DRC-5 (BL-191) — the coded reason of a planner's change
+ *   (`callOffChange` list), when the planner chose one; the text stays required.
+ *
  * @typedef {{
  *   readonly action: 'edit' | 'dismiss' | 'change' | 'reject' | 'returned';
  *   readonly text: string;
  *   readonly at: string;
+ *   readonly code?: string;
  * }} CallOffNote
+ */
+
+/**
+ * DRC-5 (BL-191) — a delay the planner proposed because the LTP dropped, and
+ * the supplier's answer. The audit trail of who proposed, who answered and
+ * when; kept on the call-off, never removed.
+ * `fromNeedDate` / `toNeedDate`:  The need date before and the later one proposed.
+ * `quantity`:  The call-off quantity the delay moves (unchanged by it).
+ * `reasonCode`:  The `callOffChange` code (`ltp-dropped`).
+ * `answer`:  null while the supplier has not answered; the need date moves only on `approved`.
+ * `comment`:  The supplier's note with its answer, if any.
+ *
+ * @typedef {{
+ *   readonly fromNeedDate: string;
+ *   readonly toNeedDate: string;
+ *   readonly quantity: number;
+ *   readonly reasonCode: string;
+ *   readonly reason: string;
+ *   readonly proposedAt: string;
+ *   readonly proposedBy: ActorAttribution;
+ *   readonly answer: 'approved' | 'rejected' | null;
+ *   readonly answeredAt?: string;
+ *   readonly answeredBy?: ActorAttribution;
+ *   readonly comment?: string;
+ * }} CallOffDelay
  */
 
 /** The origin a call-off can carry (see `CallOff.origin`). */
@@ -459,6 +489,7 @@ export class DataError extends Error {
  * `origin`: Where the call-off came from, when not typed by the planner. `'engine'`: a draft the Order plan created from a forecast-engine recommendation (REQ-E14-05 BR-05). While the engine dataset is not live, such a draft is refused on release (X-03, owner decision 2026-09-23). `'ropFisik'`: BL-199 (DRC-13) — a draft the hub created when PTI SOH reached ROP Fisik, for the planner to approve. Absent for every call-off created on the Call-offs page.
  * `trigger`: BL-199 (DRC-13) — on a `'ropFisik'` draft only: the figures behind it (SOH, ROP Fisik, Max, quantity), stamped with their inputs and rules version (DRC-D16). PTI only: a supplier's read never carries it.
  * `mrpController`:  Material C4 — the material's MRP controller, projected at read (never stored).
+ * `delays`:  DRC-5 (BL-191) — every delay proposed for an LTP drop, oldest first; the last may be awaiting the supplier's answer. Absent when none was proposed.
  *
  * @typedef {{
  *   readonly id: string;
@@ -485,6 +516,7 @@ export class DataError extends Error {
  *   readonly trigger?: import('../transitions/osipRules').Stamped<import('../transitions/callOffTriggerRules').TriggerFigures>;
  *   readonly dispatches: readonly CallOffDispatch[];
  *   readonly notes: readonly CallOffNote[];
+ *   readonly delays?: readonly CallOffDelay[];
  *   readonly mrpController?: MrpControllerRef;
  * }} CallOff
  */
@@ -3075,6 +3107,10 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * @property {(scope: QueryScope) => Promise<Page<DemandAnticipationSupplyRow>>} getDemandAnticipation CAP-10 — demand anticipation per supplier × material × week: the
  *   frozen figure of each frozen week, today's recomputation ("would be") and its
  *   inputs, and (CAP-12) each week's open supply, gap and proposal. PTI only: a supplier scope reads an empty page.
+ * @property {(scope: QueryScope) => Promise<Page<DaHistoryRow>>} getDemandAnticipationHistory DRC-3 (BL-189) — every demand anticipation publication ever recorded,
+ *   one row per publication × supplier × material, with its stamped figure, its
+ *   carry-over origin and the delayed call-offs it reflects (DRC-5). PTI only:
+ *   a supplier scope reads an empty page.
  * @property {(scope: QueryScope) => Promise<Page<PlanningGroupView>>} getPlanningGroups Material C5 (MR-8) — the planning groups with their materials and changes.
  *   PTI: every group. Supplier: the groups holding its own materials, narrowed
  *   to those materials, with no change history.

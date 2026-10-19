@@ -94,6 +94,15 @@ export const useDemandAnticipation = () =>
     svc.procurement.getDemandAnticipation(scope)
   );
 
+/**
+ * DRC-3 (BL-189) — every demand anticipation publication, for the audit view.
+ * Under `demandAnticipation`, so every act that refreshes that read refreshes this.
+ */
+export const useDemandAnticipationHistory = () =>
+  useServiceQuery(['procurement', 'demandAnticipation', 'history'], (svc, scope) =>
+    svc.procurement.getDemandAnticipationHistory(scope)
+  );
+
 /** Material C5 (MR-8) — the planning groups, their materials and changes. */
 export const usePlanningGroups = () =>
   useServiceQuery(['procurement', 'planningGroups'], (svc, scope) =>

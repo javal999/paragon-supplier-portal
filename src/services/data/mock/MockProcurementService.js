@@ -20,6 +20,8 @@ import { npdReviews, osipRopInputs, systemRopSuppliers } from './osipRopReadMode
 import { ropFisikPrRecommendations } from './callOffTriggerReadModel';
 /** @import { PrRecommendationView } from '../../transitions/callOffTriggerRules' */
 /** @import { DemandAnticipationSupplyRow } from '../../transitions/supplyBelowDemandRules' */
+/** @import { DaHistoryRow } from '../../transitions/demandAnticipationHistory' */
+import { allDemandAnticipationHistory } from './demandAnticipationHistoryReadModel';
 import { stockSimulationRows } from './stockSimulationReadModel';
 import {
   allCommitmentLines,
@@ -503,6 +505,18 @@ export class MockProcurementService {
     // DRC-18 (BL-203) — with FG demand, LTP − FG demand and the consumption
     // moving average per week, read only.
     return { items: withLtpFgDemandRead(allDemandAnticipationWithSupply()) };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<DaHistoryRow>>}
+   */
+  async getDemandAnticipationHistory(scope) {
+    // DRC-3 (BL-189), [Owner A10] — the audit view of every publication. PTI's
+    // own plan: a supplier reads none (persona scoping, as getDemandAnticipation).
+    // No business-role gate (CLAUDE.md §65; owner decision 2026-10-19).
+    if (scope.personaType !== 'buyer') return { items: [] };
+    return { items: allDemandAnticipationHistory() };
   }
 
   /**

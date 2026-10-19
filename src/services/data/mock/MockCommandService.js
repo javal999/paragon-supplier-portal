@@ -70,6 +70,10 @@ import {
   isAwaitingApproval,
   isCallOffDate,
   isConfirmedAndAccepted,
+  LTP_DROPPED_CODE,
+  delayAnswerRefusal,
+  delayProposalRefusal,
+  pendingDelay,
   asnCallOffWarnings,
   callOffViews,
   isPositiveQty,
@@ -1350,11 +1354,17 @@ const callOffTarget = {
   readState: (id) => callOffStore.get(id)?.status ?? null,
   readScopeOwner: (id) => callOffStore.get(id)?.supplierId ?? null,
   readEntity: (id) => callOffStore.get(id) ?? null,
-  applyTransition: (id, toState, payload) => {
+  applyTransition: (id, toState, payload, scope) => {
     const now = sdcClock.now();
     const current = callOffStore.get(id);
     if (!current) return;
     const reason = nonBlank(payload.reason);
+    // BL-32 / DRC-5 — the coded reason of a change, when the planner chose one
+    // (the policy has refused a retired or unknown code).
+    const code = isActiveReasonCode('callOffChange', payload.reasonCode)
+      ? payload.reasonCode
+      : undefined;
+    const actor = scope?.actor ?? NO_PERSON;
     /**
      * @param {CallOff} c
      * @returns {CallOff}
@@ -1400,6 +1410,38 @@ const callOffTarget = {
             ]
           };
         });
+      } else if (code === LTP_DROPPED_CODE) {
+        // DRC-5 (BL-191) — a delay for an LTP drop: back to the supplier, but the
+        // need date stays where it is until the supplier approves. The proposal
+        // is recorded with who made it and when (the audit trail); what both
+        // sides had agreed is kept, as on every change (BL-66 (2)).
+        callOffStore.update(id, (c) => {
+          const { confirmation: _dropped, rejectionReason: _cleared, ...rest } = c;
+          const agreed =
+            isConfirmedAndAccepted(c) && c.confirmation
+              ? c.confirmation.deliveries
+              : c.agreedDeliveries;
+          return {
+            ...rest,
+            ...(agreed ? { agreedDeliveries: agreed } : {}),
+            status: 'Awaiting Confirmation',
+            releasedAt: now,
+            delays: [
+              ...(c.delays ?? []),
+              {
+                fromNeedDate: c.needDate,
+                toNeedDate: String(payload.needDate),
+                quantity: c.quantity,
+                reasonCode: LTP_DROPPED_CODE,
+                reason: reason ?? '',
+                proposedAt: now,
+                proposedBy: actor,
+                answer: null
+              }
+            ],
+            notes: [...c.notes, { action: 'change', text: reason ?? '', at: now, code }]
+          };
+        });
       } else {
         // The planner changes a released call-off: the supplier confirms again.
         // What both sides had agreed is kept, so OTIF measures against it until
@@ -1416,7 +1458,10 @@ const callOffTarget = {
             ...(agreed ? { agreedDeliveries: agreed } : {}),
             status: 'Awaiting Confirmation',
             releasedAt: now,
-            notes: [...c.notes, { action: 'change', text: reason ?? '', at: now }]
+            notes: [
+              ...c.notes,
+              { action: 'change', text: reason ?? '', at: now, ...(code ? { code } : {}) }
+            ]
           };
         });
       }
@@ -1472,11 +1517,35 @@ const callOffTarget = {
     // Supplier confirmation: the tolerance rule decides auto or awaiting.
     const kind = kindForState(toState);
     if (!kind) return;
-    const proposal = proposedDeliveries(current, kind, payload);
+    // DRC-5 (BL-191) — the answer to a pending delay: approving moves the need
+    // date to the proposed one and confirms it; rejecting confirms the call-off
+    // on its old date. The answer is recorded on the delay (who and when).
+    const delay = pendingDelay(current);
+    const approved = delay !== null && payload.delayAnswer === 'approve';
+    const answered = delay && approved ? { ...current, needDate: delay.toNeedDate } : current;
+    const proposal = proposedDeliveries(answered, kind, payload);
     if (!('deliveries' in proposal)) return;
-    const within = checkTolerance(current, proposal.deliveries).within;
+    const within = checkTolerance(answered, proposal.deliveries).within;
     callOffStore.update(id, (c) => ({
       ...c,
+      ...(delay
+        ? {
+            needDate: answered.needDate,
+            delays: (c.delays ?? []).map((d) =>
+              d.answer === null
+                ? {
+                    ...d,
+                    answer: /** @type {'approved' | 'rejected'} */ (
+                      approved ? 'approved' : 'rejected'
+                    ),
+                    answeredAt: now,
+                    answeredBy: actor,
+                    ...(nonBlank(payload.comment) ? { comment: nonBlank(payload.comment) } : {})
+                  }
+                : d
+            )
+          }
+        : {}),
       status: /** @type {CallOffStatus} */ (toState),
       confirmation: {
         kind,
@@ -1664,7 +1733,24 @@ bindPolicyHook(POLICY_HOOKS.CALLOFF_EDIT_VALID, ({ payload }) => {
   return { ok: true };
 });
 
-bindPolicyHook(POLICY_HOOKS.CALLOFF_CHANGEABLE, ({ entityId }) => {
+/** @type {Record<NonNullable<ReturnType<typeof delayAnswerRefusal>>, string>} */
+const DELAY_ANSWER_REFUSAL = {
+  DELAY_PENDING:
+    'DELAY_PENDING: PTI proposed a later need date because the LTP dropped; approve or reject the delay',
+  NO_DELAY_PENDING: 'NO_DELAY_PENDING: no delay is waiting for an answer on this call-off'
+};
+
+/** @type {Record<NonNullable<ReturnType<typeof delayProposalRefusal>>, string>} */
+const DELAY_PROPOSAL_REFUSAL = {
+  NOT_CONFIRMED:
+    'DELAY_NOT_CONFIRMED: a delay for an LTP drop is proposed on a call-off the supplier confirmed',
+  NEED_DATE_REQUIRED: 'DELAY_NEED_DATE_REQUIRED: a delay for an LTP drop needs the new need date',
+  NOT_LATER: 'DELAY_NOT_LATER: a delay for an LTP drop moves the need date later',
+  QUANTITY_CHANGED:
+    'DELAY_QUANTITY_CHANGED: a delay for an LTP drop moves the date only; change the quantity separately'
+};
+
+bindPolicyHook(POLICY_HOOKS.CALLOFF_CHANGEABLE, ({ entityId, payload }) => {
   const c = callOffStore.get(entityId);
   if (!c) return { ok: false, reason: 'call-off not found' };
   if (isAwaitingApproval(c)) {
@@ -1673,12 +1759,29 @@ bindPolicyHook(POLICY_HOOKS.CALLOFF_CHANGEABLE, ({ entityId }) => {
   if (headsUpsFor(c, asnStore.all()).length > 0) {
     return { ok: false, reason: `ALREADY_DISPATCHED: ${c.callOffNumber} has already shipped` };
   }
+  // BL-32 — a coded reason, when given, is one the list offers now.
+  if (payload.reasonCode !== undefined && !isActiveReasonCode('callOffChange', payload.reasonCode))
+    return {
+      ok: false,
+      reason: `REASON_CODE_UNKNOWN: '${String(payload.reasonCode)}' is not an active call-off change reason`
+    };
+  // DRC-5 (BL-191) — a delay for an LTP drop: a later date on a confirmed call-off.
+  if (payload.reasonCode === LTP_DROPPED_CODE) {
+    const refusal = delayProposalRefusal(c, payload);
+    if (refusal) return { ok: false, reason: DELAY_PROPOSAL_REFUSAL[refusal] };
+  }
   return { ok: true };
 });
 
-bindPolicyHook(POLICY_HOOKS.CALLOFF_REASON_AUTHORED, ({ payload }) =>
-  nonBlank(payload.reason) ? { ok: true } : { ok: false, reason: 'a reason is required' }
-);
+bindPolicyHook(POLICY_HOOKS.CALLOFF_REASON_AUTHORED, ({ entityId, toState, payload }) => {
+  if (!nonBlank(payload.reason)) return { ok: false, reason: 'a reason is required' };
+  // DRC-5 (BL-191) — while a delay awaits the supplier, rejecting the whole
+  // call-off is not the answer it asked for: approve or reject the delay.
+  const c = toState === 'Rejected' ? callOffStore.get(entityId) : undefined;
+  if (c && delayAnswerRefusal(c, 'reject', undefined))
+    return { ok: false, reason: DELAY_ANSWER_REFUSAL.DELAY_PENDING };
+  return { ok: true };
+});
 
 // REQ-E09-03 BR-02 — the answer is well formed for its kind. The kind is the
 // verb's own target state, so a caller cannot label one answer as another.
@@ -1686,6 +1789,9 @@ bindPolicyHook(POLICY_HOOKS.CALLOFF_CONFIRMATION_VALID, ({ entityId, toState, pa
   const c = callOffStore.get(entityId);
   const kind = kindForState(toState);
   if (!c || !kind) return { ok: false, reason: 'call-off not found' };
+  // DRC-5 (BL-191) — a pending delay is answered with approve or reject only.
+  const delayRefusal = delayAnswerRefusal(c, kind, payload.delayAnswer);
+  if (delayRefusal) return { ok: false, reason: DELAY_ANSWER_REFUSAL[delayRefusal] };
   const proposal = proposedDeliveries(c, kind, payload);
   if ('refusal' in proposal) return { ok: false, reason: `confirmation: ${proposal.refusal}` };
   return { ok: true };
