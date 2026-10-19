@@ -24,6 +24,9 @@ import { ropFisikPrRecommendations } from './callOffTriggerReadModel';
 /** @import { DemandAnticipationSupplyRow } from '../../transitions/supplyBelowDemandRules' */
 /** @import { DaHistoryRow } from '../../transitions/demandAnticipationHistory' */
 import { allDemandAnticipationHistory } from './demandAnticipationHistoryReadModel';
+/** @import { SupplierDaRow } from './demandAnticipationReadModel' */
+import { supplierDemandAnticipation } from './demandAnticipationReadModel';
+import { SUPPLIER_DA_VIEW_ENABLED } from '../../transitions/supplierDaView';
 import { stockSimulationRows } from './stockSimulationReadModel';
 import {
   allCommitmentLines,
@@ -514,6 +517,19 @@ export class MockProcurementService {
     // DRC-18 (BL-203) — with FG demand, LTP − FG demand and the consumption
     // moving average per week, read only.
     return { items: withLtpFgDemandRead(allDemandAnticipationWithSupply()) };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<SupplierDaRow>>}
+   */
+  async getSupplierDemandAnticipation(scope) {
+    // BL-204 (DRC-1) — built ahead and switched off (DRC-D10): while the flag
+    // is false nobody reads anything here.
+    if (!SUPPLIER_DA_VIEW_ENABLED) return { items: [] };
+    // Scoped by persona, never by page: a supplier reads its own pairs only;
+    // PTI reads every pair (what its suppliers would see).
+    return { items: applySupplierScope(scope, supplierDemandAnticipation()) };
   }
 
   /**

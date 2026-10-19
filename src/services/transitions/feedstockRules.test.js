@@ -58,7 +58,11 @@ describe('DRC-8 BR-a · feedstockEntryRefusal', () => {
       ['DATE_INVALID', { confirmedOn: '2026-02-30' }],
       ['DATE_IN_FUTURE', { confirmedOn: '2026-10-16' }],
       ['NOTE_INVALID', { note: 5 }],
-      ['NOTE_TOO_LONG', { note: 'x'.repeat(FEEDSTOCK_RULES.noteMaxLength + 1) }]
+      ['NOTE_TOO_LONG', { note: 'x'.repeat(FEEDSTOCK_RULES.noteMaxLength + 1) }],
+      // BL-204 — Incoming DA: a boolean, and a "yes" needs a published DA with the view on.
+      ['INCOMING_DA_INVALID', { incomingDaConfirmed: 'yes' }],
+      ['INCOMING_DA_NOT_AVAILABLE', { incomingDaConfirmed: true }],
+      ['INCOMING_DA_NOT_AVAILABLE', { incomingDaConfirmed: true, incomingDaAvailable: false }]
     ])
   )('%s', (code, over) => {
     expect(feedstockEntryRefusal(entry(over))).toBe(code);
@@ -70,7 +74,15 @@ describe('DRC-8 BR-a · feedstockEntryRefusal', () => {
     );
     expect(feedstockRefusalOf('SCOPE_DENIED')).toBeNull();
     expect(feedstockRefusalOf(undefined)).toBeNull();
-    expect(FEEDSTOCK_REFUSALS).toHaveLength(7);
+    expect(FEEDSTOCK_REFUSALS).toHaveLength(9);
+  });
+
+  it('BL-204 — Incoming DA is optional: absent or "no" passes, "yes" passes when available', () => {
+    expect(feedstockEntryRefusal(entry({ incomingDaConfirmed: false }))).toBeNull();
+    expect(feedstockEntryRefusal(entry({ incomingDaConfirmed: null }))).toBeNull();
+    expect(
+      feedstockEntryRefusal(entry({ incomingDaConfirmed: true, incomingDaAvailable: true }))
+    ).toBeNull();
   });
 });
 

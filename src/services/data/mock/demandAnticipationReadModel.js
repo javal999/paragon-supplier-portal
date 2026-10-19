@@ -54,6 +54,8 @@ import { engineDataset } from './fixtures/engineDataset';
 import { ptiStockStore } from './stores/ptiStockStore';
 import { supplierNameOf } from './inventoryReadModel';
 import { demandAnticipationStore } from './stores/demandAnticipationStore';
+/** @import { SupplierDaRowCore } from '../../transitions/supplierDaView' */
+import { supplierDaRows } from '../../transitions/supplierDaView';
 
 /**
  * The pair's source in the engine dataset (lead time, MPQ), or undefined.
@@ -231,4 +233,45 @@ export function allDemandAnticipation(nowIso = sdcClock.now()) {
  */
 export function demandAnticipationUnabsorbed(nowIso = sdcClock.now()) {
   return unabsorbedOf(allDemandAnticipation(nowIso));
+}
+
+/**
+ * BL-204 (DRC-1) — one supplier view row: the latest publication's figure for
+ * the pair, with names for the page.
+ * @typedef {SupplierDaRowCore & {
+ *   readonly supplierName: string;
+ *   readonly materialLabel: string;
+ *   readonly uom: string;
+ * }} SupplierDaRow
+ */
+
+/**
+ * BL-204 (DRC-1) — every pair's published DA as a supplier may read it (the
+ * service narrows it to the reader). Stored figures only: the same numbers the
+ * planner's page shows as published for the pair.
+ * @returns {SupplierDaRow[]}
+ */
+export function supplierDemandAnticipation() {
+  return supplierDaRows(demandAnticipationStore.all()).map((r) => {
+    const entry = materialEntry(r.materialCode);
+    return {
+      ...r,
+      supplierName: supplierNameOf(r.supplierId),
+      materialLabel: entry?.label ?? r.materialCode,
+      uom: entry?.canonicalUom ?? ''
+    };
+  });
+}
+
+/**
+ * BL-204 (DRC-8) — the published DA a supplier confirms as Incoming DA for one
+ * pair, or undefined when no publication holds the pair.
+ * @param {string} supplierId
+ * @param {string} materialCode
+ * @returns {SupplierDaRowCore | undefined}
+ */
+export function incomingDaFor(supplierId, materialCode) {
+  return supplierDaRows(demandAnticipationStore.all()).find(
+    (r) => r.supplierId === supplierId && r.materialCode === materialCode
+  );
 }
