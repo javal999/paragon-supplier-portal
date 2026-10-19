@@ -165,6 +165,8 @@ import { demandAnticipationTarget } from './targets/demandAnticipation';
 import { consumptionTarget } from './targets/consumption';
 import { osipLevelTarget } from './targets/osipLevel';
 import { observeNpdTags } from './osipRopReadModel';
+import { observeCallOffTriggers } from './callOffTriggerReadModel';
+import { ptiStockStore } from './stores/ptiStockStore';
 // Material G1 — the qualification lists (its own module, MAT-R13).
 import { qualificationRuleTarget } from './targets/qualificationRule';
 // Material G2 — the sourcing type map (its own module, MAT-R13) and bidding
@@ -1512,6 +1514,15 @@ const callOffTarget = {
       ...(toState === 'Awaiting Confirmation' ? { releasedAt: sdcClock.now() } : {}),
       // X-03 — the Order plan names the engine as the origin of its drafts.
       ...(payload.origin === 'engine' ? { origin: /** @type {const} */ ('engine') } : {}),
+      // BL-199 (DRC-13) — a draft the hub made at ROP Fisik keeps the figures
+      // behind it. Only the trigger reaches this: a dispatched payload naming
+      // this origin is refused by CALLOFF_LINE_VALID before creation.
+      ...(payload.origin === 'ropFisik' && toState === 'Draft' && payload.trigger
+        ? {
+            origin: /** @type {const} */ ('ropFisik'),
+            trigger: /** @type {NonNullable<CallOff['trigger']>} */ (payload.trigger)
+          }
+        : {}),
       dispatches: [],
       notes: []
     };
@@ -1519,6 +1530,36 @@ const callOffTarget = {
     return { entityId: row.id };
   }
 };
+
+// BL-199 (DRC-13) — the call-off trigger at ROP Fisik drafts through the
+// call-off target's own creation (status Draft): the existing draft act, not a
+// second way to make a call-off. No dispatcher scope exists for it: the hub,
+// not a person, drafts it, and the planner approves it by releasing the draft
+// through `t_calloff_release_draft` [Owner F2]. The call-off's creation reads
+// no scope (its owner is the umbrella PO's supplier); the PTI tenancy is named
+// with no business role and no person, because none acted.
+const observeTriggers = () =>
+  observeCallOffTriggers((payload) =>
+    /** @type {NonNullable<CommandTarget['create']>} */ (callOffTarget.create)(
+      /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (payload)),
+      'Draft',
+      { personaType: 'buyer', supplierId: null }
+    )
+  );
+
+/**
+ * BL-199 (DRC-13 BR-04) — the eWM refresh seam: records a PTI SOH update in the
+ * hub's stock records and runs the call-off trigger on it at once ("the check
+ * runs on every PTI SOH update"). The eWM feed is not connected; until it is,
+ * this is how an update reaches the hub's stock records. No timer runs it.
+ * @param {readonly import('./stores/ptiStockStore').PtiSohUpdate[]} updates
+ * @returns {number} The update's sequence number.
+ */
+export function applyPtiStockRefresh(updates) {
+  const seq = ptiStockStore.record(updates, sdcClock.now());
+  observeTriggers();
+  return seq;
+}
 
 // REQ-E09-01 BR-02 — a call-off references an open umbrella PO line.
 bindPolicyHook(POLICY_HOOKS.CALLOFF_LINE_VALID, ({ payload }) => {
@@ -6442,12 +6483,16 @@ export class MockCommandService {
     // the baseline the observation after it is compared with, so a tag the
     // command drops raises its review task once.
     observeNpdTags();
+    // BL-199 (DRC-13 BR-04) — and any PTI SOH update not yet checked, before
+    // the command reads the call-off store.
+    observeTriggers();
     const result = await dispatcher.dispatch(scope, input, causationId);
     // REQ-E08-05 BR-05 — only a command changes the figures an alert reads, so
     // after one lands, record which closed alerts' conditions have cleared.
     if (result.status !== 'failed') {
       observeAlertConditions();
       observeNpdTags();
+      observeTriggers();
     }
     return result;
   }

@@ -453,11 +453,15 @@ export function materialDailyDemand(positions, materialCode) {
 // ── Building the positions (the ONE inventory model) ─────────────────────────
 
 /**
+ * `plant`: DRC-D12 (BL-199) — the plant the stock sits in (J6, J2). Every
+ * record in the hub carries it; optional here only for callers of the pure
+ * rules that build a record without one.
  * @typedef {{
  *   readonly materialCode: string;
  *   readonly ptiSoh: number;
  *   readonly ptiRop: number;
  *   readonly consignment: boolean;
+ *   readonly plant?: import('./callOffTriggerRules').PtiPlant;
  * }} PtiStockRecord
  */
 

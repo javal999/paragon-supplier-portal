@@ -49,11 +49,12 @@ import {
 import {
   API_CONNECTIONS,
   PLANNING_DAILY_DEMAND,
-  PTI_STOCK,
   SUPPLIER_LEAD_TIME_DAYS,
   SUPPLY_ASSIGNMENTS
 } from './fixtures/inventoryHub';
 import { stockUpdateModeOf } from './supplierMaster';
+// BL-199 (DRC-13 BR-04) — PTI SOH from the hub's stock records, all plants combined.
+import { ptiStockStore } from './stores/ptiStockStore';
 import { hubWorkingCalendar } from '../../transitions/workingCalendarStore';
 import { planningGroupMoves } from './planningGroupReadModel';
 
@@ -190,7 +191,7 @@ export function allPositions(nowIso = sdcClock.now()) {
       currentDeclaration: (s, m) => inventoryDeclarationStore.latestFor(s, m),
       master: materialEntry,
       supplierName: supplierNameOf,
-      ptiStock: PTI_STOCK,
+      ptiStock: ptiStockStore.combined(),
       forecastLines: forecastLines(),
       planningEstimate,
       leadTime: leadTimeOf,

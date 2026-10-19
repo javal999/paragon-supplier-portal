@@ -175,6 +175,12 @@ export const useNpdReviews = () =>
     svc.procurement.getNpdReviews(scope)
   );
 
+/** BL-199 (DRC-13 BR-02) — the open "Create a PR in SAP" recommendations at ROP Fisik (PTI only). */
+export const useRopFisikPrRecommendations = () =>
+  useServiceQuery(['procurement', 'ropFisikPrRecommendations'], (svc, scope) =>
+    svc.procurement.getRopFisikPrRecommendations(scope)
+  );
+
 /** REQ-E14-05 — the order plan: sized orders, warehouse fill and rented space (PTI only). */
 export const useOrderPlan = () =>
   useServiceQuery(['procurement', 'orderPlan'], (svc, scope) =>

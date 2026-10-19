@@ -61,6 +61,7 @@ import {
   callOffTolerance
 } from '@services/transitions/callOffTolerance';
 import { numberOf } from './callOffs/callOffDisplay';
+import { RopFisikFigures, RopFisikMarker } from './callOffs/ropFisikTrigger';
 import { PicCell, PicFilter, PicHeader, ptiPicOf, usePicFilter } from './materials/picDisplay';
 import MaterialSearch, {
   MaterialMatchReason,
@@ -753,6 +754,12 @@ const BuyerCallOffs = () => {
                               />
                             </div>
                           )}
+                          {/* BL-199 (DRC-13) — a draft the hub made at ROP Fisik. */}
+                          {v.callOff.origin === 'ropFisik' && (
+                            <div className="mt-1">
+                              <RopFisikMarker testId={`calloff-origin-rop-fisik-${v.callOff.id}`} />
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell className="text-xs text-text-secondary whitespace-nowrap">
                           {t(`co.type.${v.callOff.type}`)}
@@ -1149,6 +1156,8 @@ const CallOffPanelBody = ({
   return (
     <div className="space-y-6">
       {withheld && <EngineOriginMarker testId="calloff-panel-origin-engine" />}
+      {/* BL-199 (DRC-13) — the figures behind a draft the hub made at ROP Fisik. */}
+      <RopFisikFigures callOff={c} />
       <dl className="grid grid-cols-[150px_1fr] gap-y-2 text-sm">
         <dt className="text-text-tertiary">{t('co.col.supplier')}</dt>
         <dd className="text-text-primary">{c.supplierName}</dd>

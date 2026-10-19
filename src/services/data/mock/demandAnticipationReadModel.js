@@ -7,7 +7,7 @@
 // the publish target and its policy hook see the same figures:
 //   · LTP — every current forecast version's lines (`allCommitmentLines`),
 //     spread by day per week (`groupWeekLtp`), as capacity and CAP-9 read it;
-//   · SOH — the supplier's share of PTI's stock on hand (`PTI_STOCK`), as the
+//   · SOH — the supplier's share of PTI's stock on hand (`ptiStockStore`, BL-199), as the
 //     page computed it before (CAP-D11);
 //   · lead time and MPQ — the pair's source in the engine dataset:
 //     `leadTimeBreakdown(...).totalWeeks` (DRC-6, BL-192) and `orderMultiple`
@@ -51,7 +51,7 @@ import { callOffStore } from './stores/callOffStore';
 import { purchaseOrderStore } from './stores/purchaseOrderStore';
 import { allCommitmentLines } from './forecastReadModel';
 import { engineDataset } from './fixtures/engineDataset';
-import { PTI_STOCK } from './fixtures/inventoryHub';
+import { ptiStockStore } from './stores/ptiStockStore';
 import { supplierNameOf } from './inventoryReadModel';
 import { demandAnticipationStore } from './stores/demandAnticipationStore';
 
@@ -82,7 +82,7 @@ export function leadTimeWeeksOf(supplierId, materialCode) {
  * @returns {DemandAnticipationPair[]}
  */
 function pairsAt(nowIso) {
-  const input = { ltpLines: allCommitmentLines(null), ptiStock: PTI_STOCK };
+  const input = { ltpLines: allCommitmentLines(null), ptiStock: ptiStockStore.combined() };
   const first = demandAnticipationPairs(input, nowIso, DEMAND_ANTICIPATION_RULES.shownWeeks);
   const longest = Math.max(
     0,

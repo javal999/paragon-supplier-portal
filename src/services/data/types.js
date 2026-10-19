@@ -430,7 +430,7 @@ export class DataError extends Error {
  */
 
 /** The origin a call-off can carry (see `CallOff.origin`). */
-/** @typedef {'engine'} CallOffOrigin */
+/** @typedef {'engine' | 'ropFisik'} CallOffOrigin */
 
 /**
  * Material C4 (MR-5 BR-01 to BR-04) — a material's MRP controller (PIC) as the
@@ -456,7 +456,8 @@ export class DataError extends Error {
  * `releasedAt`:  When the supplier was last asked to confirm; the 1-working-day deadline counts from here.
  * `agreedDeliveries`: The deliveries last agreed by BOTH sides (BL-66 (2); REQ-E10-01 edge case "measure against the latest date agreed by both sides"). Kept when the planner changes a call-off the supplier had confirmed and that confirmation was accepted; OTIF measures against these until the supplier confirms the change and it is accepted. Absent when nothing was ever agreed.
  * `rejectionReason`:  The supplier's reason when it rejected the call-off.
- * `origin`: Where the call-off came from, when not typed by the planner. `'engine'`: a draft the Order plan created from a forecast-engine recommendation (REQ-E14-05 BR-05). While the engine dataset is not live, such a draft is refused on release (X-03, owner decision 2026-09-23). Absent for every call-off created on the Call-offs page.
+ * `origin`: Where the call-off came from, when not typed by the planner. `'engine'`: a draft the Order plan created from a forecast-engine recommendation (REQ-E14-05 BR-05). While the engine dataset is not live, such a draft is refused on release (X-03, owner decision 2026-09-23). `'ropFisik'`: BL-199 (DRC-13) — a draft the hub created when PTI SOH reached ROP Fisik, for the planner to approve. Absent for every call-off created on the Call-offs page.
+ * `trigger`: BL-199 (DRC-13) — on a `'ropFisik'` draft only: the figures behind it (SOH, ROP Fisik, Max, quantity), stamped with their inputs and rules version (DRC-D16). PTI only: a supplier's read never carries it.
  * `mrpController`:  Material C4 — the material's MRP controller, projected at read (never stored).
  *
  * @typedef {{
@@ -481,6 +482,7 @@ export class DataError extends Error {
  *   readonly agreedDeliveries?: readonly CallOffDelivery[];
  *   readonly rejectionReason?: string;
  *   readonly origin?: CallOffOrigin;
+ *   readonly trigger?: import('../transitions/osipRules').Stamped<import('../transitions/callOffTriggerRules').TriggerFigures>;
  *   readonly dispatches: readonly CallOffDispatch[];
  *   readonly notes: readonly CallOffNote[];
  *   readonly mrpController?: MrpControllerRef;
@@ -3060,6 +3062,9 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *   its own assigned materials only. PTI: every supplier × material with a name.
  * @property {(scope: QueryScope) => Promise<Page<StockAccessGrant>>} getStockAccess -  Supplier access to PTI stock. PTI: every supplier with its log. Supplier: its own.
  * @property {(scope: QueryScope) => Promise<Page<CapacityPlan>>} getCapacityPlans -  Capacity against demand per supplier × planning group, 13 weeks.
+ * @property {(scope: QueryScope) => Promise<Page<import('../transitions/callOffTriggerRules').PrRecommendationView>>} getRopFisikPrRecommendations BL-199 (DRC-13 BR-02) — the open "Create a PR in SAP" recommendations:
+ *   a material whose PTI SOH reached ROP Fisik with no umbrella PO balance left for what it needs. A
+ *   recommendation only; the hub posts nothing to SAP. PTI only: a supplier scope reads an empty page.
  * @property {(scope: QueryScope) => Promise<Page<import('../transitions/osipRopRules').NpdReview>>} getNpdReviews DRC-12a (BL-198) — the open "Review ROP after first order" tasks: a material
  *   whose NPD tag the hub saw drop, until the planner sets or confirms its OSIP level. PTI only:
  *   a supplier scope reads an empty page.
