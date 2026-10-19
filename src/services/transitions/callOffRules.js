@@ -523,8 +523,10 @@ export function isCallOffEscalated(c, nowIso) {
  */
 
 /** ASN states that mean goods have left (a draft has not shipped, nor has an
- *  ASN awaiting a shelf-life exception — MR-6 BR-08). */
-const SHIPPED_ASN_STATES = ['Submitted', 'In Transit', 'Delivered', 'Discrepancy'];
+ *  ASN awaiting a shelf-life exception — MR-6 BR-08). Also read by the
+ *  feedstock reconcile (DRC-15a BR-01) for "ASN requested".
+ * @type {readonly ASN['status'][]} */
+export const SHIPPED_ASN_STATES = ['Submitted', 'In Transit', 'Delivered', 'Discrepancy'];
 
 /**
  * The call-off's heads-ups: its own dispatch notices, plus every shipped ASN

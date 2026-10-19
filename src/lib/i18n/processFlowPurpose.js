@@ -427,9 +427,9 @@ export const processFlowPurposeEn = {
 
   // ── maximum stock (REQ-E06-04) ───────────────────────────────────────
   'processFlows.purpose.entity.maxStock':
-    'The most a supplier may hold for PTI of one material, agreed with the supplier. The fixed stock reconcile caps what PTI may owe at it, and stock above it is the supplier\u2019s own.',
+    'The most a supplier may hold for PTI of one material, agreed with the supplier. It is shown on the feedstock reconcile.',
   'processFlows.purpose.t_maxstock_set':
-    'Procurement sets, changes or clears the maximum stock of one supplier and material. Every change is kept with the value before it, so a settlement can be read against the maximum that stood at the time.',
+    'Procurement sets, changes or clears the maximum stock of one supplier and material. Every change is kept with the value before it, so the maximum that stood at any time can be read back.',
 
   // ── supplierApplication ──────────────────────────────────────────────
   'processFlows.purpose.entity.supplierApplication':
@@ -1000,9 +1000,9 @@ export const processFlowPurposeId = {
 
   // ── maximum stock (REQ-E06-04) ───────────────────────────────────────
   'processFlows.purpose.entity.maxStock':
-    'Jumlah terbanyak yang boleh dipegang pemasok untuk PTI atas satu material, sesuai kesepakatan dengan pemasok. Rekonsiliasi stok tetap membatasi kewajiban PTI sampai angka ini, dan stok di atasnya adalah milik pemasok.',
+    'Jumlah terbanyak yang boleh dipegang pemasok untuk PTI atas satu material, sesuai kesepakatan dengan pemasok. Angka ini ditampilkan pada rekonsiliasi feedstock.',
   'processFlows.purpose.t_maxstock_set':
-    'Procurement menetapkan, mengubah, atau menghapus stok maksimum satu pemasok dan material. Setiap perubahan disimpan beserta nilai sebelumnya, sehingga penyelesaian dapat dibaca terhadap stok maksimum yang berlaku saat itu.',
+    'Procurement menetapkan, mengubah, atau menghapus stok maksimum satu pemasok dan material. Setiap perubahan disimpan beserta nilai sebelumnya, sehingga stok maksimum yang berlaku pada waktu mana pun dapat dibaca kembali.',
 
   // ── supplierApplication ──────────────────────────────────────────────
   'processFlows.purpose.entity.supplierApplication':

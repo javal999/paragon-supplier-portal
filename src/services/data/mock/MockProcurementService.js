@@ -23,7 +23,7 @@ import {
   currentPlanVersion,
   forecastSupplierName
 } from './forecastReadModel';
-import { allFixedStockRows } from './fixedStockReadModel';
+import { allFeedstockRows } from './feedstockReadModel';
 import { maskForSupplier } from '../../transitions/inventoryRules';
 import { PTI_ONLY_RULES } from '../../transitions/inventoryAlertRules';
 import { mockShipments } from '@data/mockShipments';
@@ -582,9 +582,11 @@ export class MockProcurementService {
    * @returns {Promise<Page<FixedStockReconcileRow>>}
    */
   async getFixedStockReconcile(scope) {
-    // REQ-E06-04 BR-12 — the planner reads every supplier; a supplier reads only
-    // its own rows, scoped HERE so another supplier's figures never reach the page.
-    return { items: applySupplierScope(scope, allFixedStockRows()) };
+    // DRC-15a BR-04 (was REQ-E06-04 BR-12) — the FEEDSTOCK reconcile. The method
+    // keeps its contract name (C1-methods) since FS now reads "feedstock". The
+    // planner reads every supplier; a supplier reads only its own rows, scoped
+    // HERE so another supplier's figures never reach the page.
+    return { items: applySupplierScope(scope, allFeedstockRows()) };
   }
 
   /**

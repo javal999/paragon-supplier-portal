@@ -135,8 +135,9 @@ export const useForecastCoverage = () =>
   );
 
 /**
- * REQ-E06-04 — the fixed stock reconcile per supplier × material × cycle. The
- * planner reads every supplier; a supplier reads only its own rows (scoped in the service).
+ * DRC-15a — the feedstock reconcile per supplier × material, daily (the hook
+ * keeps its name; FS now reads "feedstock", DRC-D14). The planner reads every
+ * supplier; a supplier reads only its own rows (scoped in the service).
  */
 export const useFixedStockReconcile = () =>
   useServiceQuery(['procurement', 'fixedStockReconcile'], (svc, scope) =>
