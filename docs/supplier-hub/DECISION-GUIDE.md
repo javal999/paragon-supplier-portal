@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Version | 1.7, 2026-09-29 (SC Hub Material decisions MAT-D1 to MAT-D21 added) |
-| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
+| Version | 1.8, 2026-10-19 (RFx UX decisions RFX-D16 to RFX-D24 added) |
+| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, BL-12 call-off record, and three values (BL-54 invoice cap, BL-55 gate OTIF minimum, BL-56 early allowance). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
 | Evidence | Market practice is cited at the end. Where a claim is a judgement rather than a published practice, it says so |
@@ -299,6 +299,43 @@ The owner accepted every recommendation in section 7 of `RFX-IMPROVEMENT-REQUIRE
 **Decision.** Allow it. A firm-offer round opens on a Closed or a Partly awarded RFP, for the options still open: an option named by an award in force, or sourced by an RFQ created from the RFP, is refused by name. The newer round's firm prices replace the older ones for the same supplier and option, and the final award on the remaining options moves the RFP to Awarded. RFP → RFQ stays available for any open option. **Amends** REQ-E03-04 BR-15e; closes FU-7 and BL-128. Built in PR #71.
 
 **What would change this.** If buyers keep sending the open options to an RFQ anyway, the second round adds a path nobody uses and could be withdrawn. If suppliers reprice options already awarded through a later round, the settled check already refuses that; a need to reopen an awarded option would instead mean cancelling its award first.
+
+---
+
+## RFx UX decisions (decided 2026-10-19)
+
+The owner ruled on the open questions of the RFx UX evaluation (`research/RFX-UX-EVALUATION-2026-10.md`, section 9, plus BL-132 and the module names) on 2026-10-19, and on B-02 during the build. They are recorded here as RFX-D16 to RFX-D24 and built in GitLab MRs for waves 1 and 2 (branches `feat/rfx-ux-wave1` and `feat/rfx-ux-wave2`). Build status per finding is in section 10 of the evaluation.
+
+### RFX-D16 · Firm-offer round or RFQ from the RFP (Q1, B-07)
+**Decision.** A firm-offer round firms up full-service and ODM options settled inside the RFP. "Create RFQ from this RFP" is for components tendered per item. Once an option is named by a firm-offer round, the RFQ path closes for that option: the RFQ create policy refuses it (`RFQ_OPTION_IN_FIRM_ROUND`) and the RFP page shows it greyed "In firm-offer round N". **Amends** RFX-D15's "RFP → RFQ stays available for any open option" and REQ-E03-04 BR-08 for options in a round.
+
+**What would change this.** Buyers needing a per-item tender for part of a full-service option would need the option split first.
+
+### RFX-D17 · RFI and RFP details on their own pages (Q2, B-09)
+**Decision.** The RFI and RFP details become pages of their own (`/buyer/rfi/:id`, `/buyer/rfp/:id`), like the RFQ event page. Creation stays the modal wizard opened from the list page; after saving, the wizard opens the new event's page instead of expanding a row.
+
+### RFX-D18 · Award notice to the supplier at award (Q3, S-04)
+**Decision.** The supplier's award notice (To do row and the hub bell) appears when the award is recorded, not when it is marked raised in SAP, with the line "The purchase order follows from SAP". A withdrawal is notified the same way. Email stays BL-120.
+
+### RFX-D19 · Incoterms default FOB (Q4, B-03)
+**Decision.** "CIF Jakarta" is not added to the option list. A new RFQ draft defaults to FOB; a stored value outside the list is shown red on the Review step ("Choose a term on the Terms step"), not refused.
+
+### RFX-D20 · Supplier To do grouped by lane (Q5, X-02)
+**Decision.** The supplier To do is grouped by lane (Orders, Stock, Sourcing, Forecast and commitments, then Invoices and documents), each lane ordered by deadline. Levi approves the ordering. A red row no longer jumps above other lanes.
+
+### RFX-D21 · Intent and decline on the RFI and RFP (Q6, S-13)
+**Decision.** BL-132 is approved for build: the supplier says it will respond or declines with a reason on the RFI and the RFP, as on the RFQ.
+
+### RFX-D22 · No win rate in the supplier's award history (Q7, S-03)
+**Decision.** The win-rate tile is dropped. Award history is one row per event, read from the award record.
+
+### RFX-D23 · One name per module (Q8, X-01)
+**Decision.** The names in proposal X-01 are used in menu, page titles, To do and toasts, with the acronym first ("RFQ · Quotation requests"). The Indonesian section header "Sourcing" becomes "Pengadaan", which is also the Indonesian name of the Procurement role.
+
+### RFX-D24 · The RFQ side panel becomes a summary (B-02)
+**Decision.** Move, then trim. Move to review, recording the exchange rate and answering clarifications move from the board's side panel to the RFQ event page, each with its own handoff notice; the panel keeps status, Next, deadline, response counts, three links, lifecycle actions, the award box (award notice, "no supplier can win" notice, award link), Save as template and the timeline. **Amends** the §76 reading of the panel as a workspace for these actions only. With no recorded exchange rate the event page keeps the bids visible with "—" scores under a banner naming each currency and the rate date; the award rule is unchanged.
+
+**What would change this.** If buyers review quotes mostly from the board, a "Review" link straight to the comparison section is the cheaper fix than moving the actions back.
 
 ---
 

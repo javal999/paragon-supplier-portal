@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.31, 2026-10-19 |
+| Version | 2.32, 2026-10-19 (section 4c: RFx UX follow-ups BL-212 to BL-220) |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -156,6 +156,22 @@ The owner approved every requirement, default and decision in `SC-HUB-DA-ROP-CAL
 | BL-209 | Golden fixture from Ary Hidayat's spike use case (moves from CAP-D16) | Checks the rolling formula against Ary's numbers | S | Ary | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` CAP-D16 |
 
 ---
+
+### 4c. RFx UX build 2026-10-19: follow-ups
+
+Found while building the RFx UX evaluation (`research/RFX-UX-EVALUATION-2026-10.md`, decisions RFX-D16 to RFX-D24). Each is a judgement the build made or a gap it left; none blocks the build.
+
+| ID | Item | Why | Size | Blocked by | Detail |
+|---|---|---|---|---|---|
+| BL-212 | Confirmation sheet on "Cancel RFQ" in the board's side panel | B-05 added sheets to close, award and cancel-award; cancelling the whole RFQ still dispatches on click | S | Nothing | Evaluation B-05 |
+| BL-213 | Read and unread state for the supplier bell; real counts on the PTI bell (it shows a fixed "3"); menu counts beyond RFI, RFQ and RFP | The supplier bell counts every award and withdrawal notice it has ever shown | S | Notification store (with BL-120) | Evaluation S-04 |
+| BL-214 | Response drafts kept on the server (the "Save draft" verb) and a "Discard draft" control | Autosave keeps the draft in this browser only, so it does not follow the supplier to another device; Cancel on the quote drawer keeps the draft with no way to drop it | M | Stage F backend | Evaluation S-01 |
+| BL-215 | A stored link from a buyer question to the built-in field it repeats (sample ready date, development timeline) | Today the duplicate is found by matching words in the question, and the question's answer overwrites the built-in field on send | S | Nothing | Evaluation S-06 |
+| BL-216 | Refuse "Create RFQ from this RFP" at the verb while the RFP is Open, and leave in-round options out of the RFQ wizard's pre-fill link | Both are held on the RFP page only; a hand-made link reaches the wizard and is refused only on save | S | Nothing | RFX-D16 |
+| BL-217 | Rename the buyer To do row "Sourcing events ready to award" and the supplier page "Revised quotes" to the RFX-D23 names | Proposal X-01 did not name them, so they kept the old wording | S | Nothing | RFX-D23 |
+| BL-218 | Remove the i18n keys the build left unused (`rfx.rfi.missing`, `rfxa.answer.fixInvalid`, `rfxa.blocker.*`, the panel's `sourcing.cmp.*`, `rfx.cmp.refused`) | Dead strings in both languages | S | Nothing | Evaluation S-02, B-02 |
+| BL-219 | Offer "Extend the deadline" on the RFI and RFP pages only where the extend verb accepts it (Open or Closed) | The button shows in every status; pressing it on another status is refused | S | Nothing | Evaluation B-10 |
+| BL-220 | One stage-bar component for the RFQ, RFI and RFP pages | Wave 2 added a copy for the RFI and RFP beside the RFQ one | S | Nothing | Evaluation B-01, B-09 |
 
 ## 5. Other teams and later phases
 

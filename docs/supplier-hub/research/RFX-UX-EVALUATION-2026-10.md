@@ -339,3 +339,28 @@ Not exercised, not dropped: the late-quote refusal (`PAST_DEADLINE`). The hub cl
 5. "Menu for" offers "Buyer"; the roles catalogue and the docs say Procurement. Which name do first-time PTI users know?
 6. Is "CIF Jakarta" a term Procurement uses? If so it belongs in the option list; if not, the default should be FOB.
 7. Who owns the supplier To do ordering across lanes (Material Planning set the stock SOP; Procurement owns the sourcing rows)?
+
+---
+
+## 10. BUILD STATUS
+
+The owner ruled on section 9, on BL-132 and the module names on 2026-10-19, and on B-02 during the build (recorded as RFX-D16 to RFX-D24 in `DECISION-GUIDE.md`). Wave 1 built the Blocker and the 14 Major findings on branch `feat/rfx-ux-wave1`; wave 2 builds the 17 Minor and Polish findings on `feat/rfx-ux-wave2`, cut from wave 1. Each lane's commit is the head of its lane branch, merged into the wave branch with a merge commit.
+
+| ID | Severity | Status | Lane · commit | Pinned by |
+|---|---|---|---|---|
+| S-01 | Blocker | Built: draft kept in this browser as the supplier types, "Draft saved on this device at HH:MM", leave guard when the save fails; RFI, RFP and RFQ quote drawer. Stepper not built | 1A · `66afbe90` | `rfx/responseDraft.test.jsx`, `rfx/SupplierResponseForms.test.jsx` |
+| B-01 | Major | Built: stage bar, Next pill, days left, sticky section nav with counts, per-break tables folded | 1C · `1aa58900` | `BuyerSourcingEvent/eventStage.test.jsx` |
+| B-02 | Major | Built (RFX-D24): side panel is a summary; review, exchange rate and clarifications on the event page | 1D2 · `a7fc4126` | `BuyerSourcing/rfxUxB02.test.jsx` |
+| B-03 | Major | Built (RFX-D19): FOB default, out-of-list value red on Review | 1D · `88c64995` | `BuyerSourcing/rfxUx1D.test.jsx` |
+| B-04 | Major | Built: "Needs my action" by next deadline, KPI tiles filter, Draft tab, Next column | 1D · `88c64995` | `BuyerSourcing/rfxUx1D.test.jsx` |
+| B-05 | Major | Built: confirmation sheet before close (RFI, RFP), award and cancel-award (RFQ, RFP). RFQ cancel in the side panel has none (BL-212) | 1C · `1aa58900` | `rfx/RfxConfirmSheets.test.jsx` |
+| B-06 | Major | Built: "Terms sent" and the option list before any proposal | 1E · `370eade0` | `BuyerRfp/rfpDetailUx.test.jsx` |
+| B-07 | Major | Built (RFX-D16): "Firm up the prices" block; RFQ refused for an option in a firm-offer round | 1E · `370eade0` | `BuyerRfp/rfpDetailUx.test.jsx`, `services/sourcing/rfqOptionInRound.test.js` |
+| S-02 | Major | Built: "Still missing" under each field, banner with jump links, every gap at once, Send disabled with the count | 1A · `66afbe90` | `rfqs/tieredDraftProblems.test.js`, `rfx/SupplierResponseForms.test.jsx` |
+| S-03 | Major | Built (RFX-D22): one row per event from the award record, no win rate | 1B · `1f7d8f81` | `SupplierRFQs/rfxUx1B.test.jsx` |
+| S-04 | Major | Built (RFX-D18): To do row and hub bell at award and withdrawal, "The purchase order follows from SAP", outcome strip | 1B · `1f7d8f81` | `SupplierRFQs/rfxUx1B.test.jsx`, `home/supplierLanes.test.jsx` |
+| S-05 | Major | Built: round strip with deadline and days left, button to the revision, "1 round" on the menu | 1B · `1f7d8f81` | `SupplierRFQs/rfxUx1B.test.jsx` |
+| S-06 | Major | Built: sample as Yes/No; a buyer question repeating a built-in field shown once | 1A · `66afbe90` | `rfx/builtInDuplicates.test.jsx` |
+| X-01 | Major | Built (RFX-D23): acronym-first titles, To do names, "Pengadaan" | 1E · `370eade0` | `lib/i18n/rfxModuleNames.test.js` |
+| X-02 | Major | Built (RFX-D20): To do grouped by lane, deadline order inside each, event number and days left | 1B · `1f7d8f81` | `home/supplierLanes.test.jsx` |
+| B-08 to B-16, S-07 to S-13, X-03 | Minor, Polish | Wave 2 (see the wave 2 report) | 2A to 2D | — |
