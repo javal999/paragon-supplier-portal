@@ -27,6 +27,8 @@ import TieredRevisionFields, {
   revisionPricesFrom
 } from './rfqs/TieredRevisionFields';
 import { itemLabel } from './rfx/AwardPanel';
+import { tieredQuoteSummary } from './SupplierRFQs/utils';
+import TieredQuoteLines from './SupplierRFQs/components/TieredQuoteLines';
 /** @import { SupplierItemOutcome } from '@services/sourcing/awardOutcome' */
 import { supplierItemOutcomes } from '@services/sourcing/awardOutcome';
 /** @import { AwardView } from '@services/sourcing/views' */
@@ -158,6 +160,7 @@ const SupplierNegotiations = () => {
           const tiered = Boolean(rfq && (rfq.items ?? []).length > 0 && last?.itemQuotes);
           const typedTiers = tierPrices[round.id] ?? revisionPricesFrom(last);
           const revision = tiered && rfq && last ? readRevision(rfq, last, typedTiers) : null;
+          const lastTiered = last ? tieredQuoteSummary(rfq, last, t) : null;
 
           return (
             <section
@@ -189,8 +192,28 @@ const SupplierNegotiations = () => {
                     {t('rfx.neg.target')}: <Data>{money(round.targetUnitPrice, currency)}</Data>
                   </p>
                 )}
-                {last && (
-                  <p className="text-sm text-text-tertiary">
+                {/* S-09 — a tiered quote reads back per item (break-1 price and
+                    MOQ); its header unit price is a derived average, not the
+                    supplier's price. A single-price quote reads as before. */}
+                {!!last && !!lastTiered && (
+                  <div
+                    className="text-sm text-text-tertiary"
+                    data-testid={`round-last-${round.id}`}
+                  >
+                    <div>
+                      {t('rfx.neg.yourLastQuote')}:{' '}
+                      <Data>
+                        {last.leadTimeDays} {t('rfx.unit.days')}
+                      </Data>
+                    </div>
+                    <TieredQuoteLines
+                      summary={lastTiered}
+                      testId={`round-last-items-${round.id}`}
+                    />
+                  </div>
+                )}
+                {!!last && !lastTiered && (
+                  <p className="text-sm text-text-tertiary" data-testid={`round-last-${round.id}`}>
                     {t('rfx.neg.yourLastQuote')}: <Data>{money(last.unitPrice, currency)}</Data> ·{' '}
                     <Data>
                       {last.leadTimeDays} {t('rfx.unit.days')}

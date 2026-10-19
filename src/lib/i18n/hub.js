@@ -127,7 +127,8 @@ export const hubEn = {
   'hub.home.weeklyPlan.pass': 'Input check: all checks pass',
   'hub.home.weeklyPlan.unknown': 'Input check: not checked yet',
   'hub.home.sup.title': 'To do',
-  'hub.home.sup.subtitle': 'What Paragon is waiting for from you, most urgent first.',
+  'hub.home.sup.subtitle':
+    'What Paragon is waiting for from you, grouped by area, nearest deadline first in each.',
   'hub.home.empty.title': 'Nothing needs your action',
   'hub.home.empty.body': 'New tasks appear here as soon as something is waiting for you.',
   'hub.home.open': 'Open',
@@ -321,7 +322,8 @@ export const hubId = {
   'hub.home.weeklyPlan.pass': 'Cek masukan: semua pemeriksaan lolos',
   'hub.home.weeklyPlan.unknown': 'Cek masukan: belum diperiksa',
   'hub.home.sup.title': 'Yang perlu dikerjakan',
-  'hub.home.sup.subtitle': 'Yang ditunggu Paragon dari Anda, paling mendesak di atas.',
+  'hub.home.sup.subtitle':
+    'Yang ditunggu Paragon dari Anda, dikelompokkan per area, tenggat terdekat di atas pada tiap area.',
   'hub.home.empty.title': 'Tidak ada yang perlu ditindaklanjuti',
   'hub.home.empty.body': 'Tugas baru muncul di sini begitu ada yang menunggu Anda.',
   'hub.home.open': 'Buka',

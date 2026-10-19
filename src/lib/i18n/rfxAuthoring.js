@@ -62,6 +62,8 @@ export const rfxAuthoringEn = {
 
   // — Answers ——————————————————————————————————————————————————————————
   'rfxa.answer.bounds': 'Between {{min}} and {{max}}.',
+  // RFx UX S-11 — the per-question comment waits behind this link.
+  'rfxa.answer.addComment': 'Add a comment',
   'rfxa.answer.rangeMin': 'From',
   'rfxa.answer.rangeMax': 'To',
   'rfxa.answer.files': 'Your files',
@@ -84,6 +86,12 @@ export const rfxAuthoringEn = {
   // — Attachments ——————————————————————————————————————————————————————
   'rfxa.att.buyer': 'Documents for the suppliers',
   'rfxa.att.title': 'Documents from PTI',
+  // RFx UX S-11 — a PTI file whose bytes this session does not hold (BL-27).
+  'rfxa.att.buyerFileNotStored': "PTI's file is not stored yet; ask your buyer for it",
+  // RFx UX S-10 — the supplier RFI and RFP row: button by state, award pill.
+  'rfxa.row.view': 'View',
+  'rfxa.row.revise': 'Revise',
+  'rfxa.row.awarded': 'Awarded',
   'rfxa.att.count_one': '{{count}} document',
   'rfxa.att.count_other': '{{count}} documents',
 
@@ -344,6 +352,7 @@ export const rfxAuthoringId = {
 
   // — Jawaban —————————————————————————————————————————————————————————
   'rfxa.answer.bounds': 'Antara {{min}} dan {{max}}.',
+  'rfxa.answer.addComment': 'Tambah komentar',
   'rfxa.answer.rangeMin': 'Dari',
   'rfxa.answer.rangeMax': 'Sampai',
   'rfxa.answer.files': 'Berkas Anda',
@@ -366,6 +375,10 @@ export const rfxAuthoringId = {
   // — Lampiran ————————————————————————————————————————————————————————
   'rfxa.att.buyer': 'Dokumen untuk pemasok',
   'rfxa.att.title': 'Dokumen dari PTI',
+  'rfxa.att.buyerFileNotStored': 'Berkas PTI belum tersimpan; mintalah ke pembeli Anda',
+  'rfxa.row.view': 'Lihat',
+  'rfxa.row.revise': 'Revisi',
+  'rfxa.row.awarded': 'Dimenangkan',
   'rfxa.att.count_other': '{{count}} dokumen',
 
   // — Kerahasiaan —————————————————————————————————————————————————————

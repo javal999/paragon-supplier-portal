@@ -3,10 +3,15 @@ import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 import { mockDataService } from '@services/data/mock/mockDataService';
 import { quotationStore } from '@services/data/mock/stores/quotationStore';
 import { rfqStore } from '@services/data/mock/stores/rfqStore';
+import { resetRfqEngagementStores } from '@services/data/mock/stores/rfqEngagementStores';
 import { withChaos } from '@services/data/mock/withChaos';
 /** @import { IDataService } from '@services/data/types' */
 import SupplierRFQs from './SupplierRFQs';
 import i18n from '@lib/i18n';
+
+// RFx UX S-07 — opening a legacy quote now states intent ("I will respond")
+// first, and that intent is stored: each spec starts with none stated.
+beforeEach(() => resetRfqEngagementStores());
 
 const alwaysFails = withChaos(mockDataService, { minMs: 0, maxMs: 0, failureRate: 1 });
 const alwaysPending = withChaos(mockDataService, { minMs: 1e7, maxMs: 1e7, failureRate: 0 });
@@ -77,7 +82,9 @@ describe('SupplierRFQs — the bid price is read once, and refused out loud', ()
     renderWithProviders(<SupplierRFQs />, { identity: SUPPLIER });
     // rfq-010 is the one Open RFQ sup-007 is invited to and has not quoted.
     expect(await screen.findByText('RFQ-2026-010')).toBeInTheDocument();
-    fireEvent.click(screen.getAllByRole('button', { name: /Submit Quote/i })[0]);
+    // RFx UX S-07 — a legacy card opens its quote after step 1, like every card.
+    fireEvent.click(screen.getByTestId('intent-respond-rfq-010'));
+    fireEvent.click((await screen.findAllByRole('button', { name: /Submit Quote/i }))[0]);
     return screen.getByLabelText('Unit price');
   };
 
@@ -175,7 +182,9 @@ describe('SupplierRFQs — the lead time is read once, in four honest states', (
   const openQuotePanel = async () => {
     renderWithProviders(<SupplierRFQs />, { identity: SUPPLIER });
     expect(await screen.findByText('RFQ-2026-010')).toBeInTheDocument();
-    fireEvent.click(screen.getAllByRole('button', { name: /Submit Quote/i })[0]);
+    // RFx UX S-07 — a legacy card opens its quote after step 1, like every card.
+    fireEvent.click(screen.getByTestId('intent-respond-rfq-010'));
+    fireEvent.click((await screen.findAllByRole('button', { name: /Submit Quote/i }))[0]);
     // A clean price and validity throughout — these tests are about the lead
     // time, and the price gate fires first.
     fireEvent.change(screen.getByLabelText('Unit price'), { target: { value: '15000' } });
@@ -346,7 +355,9 @@ describe('SupplierRFQs — the minimum order quantity stops being dropped', () =
   const openQuotePanel = async () => {
     renderWithProviders(<SupplierRFQs />, { identity: SUPPLIER });
     expect(await screen.findByText('RFQ-2026-010')).toBeInTheDocument();
-    fireEvent.click(screen.getAllByRole('button', { name: /Submit Quote/i })[0]);
+    // RFx UX S-07 — a legacy card opens its quote after step 1, like every card.
+    fireEvent.click(screen.getByTestId('intent-respond-rfq-010'));
+    fireEvent.click((await screen.findAllByRole('button', { name: /Submit Quote/i }))[0]);
     // A complete, clean quote around the field under test — the price and
     // lead-time gates both fire before this one.
     fireEvent.change(screen.getByLabelText('Unit price'), { target: { value: '15000' } });
@@ -545,7 +556,9 @@ describe('SupplierRFQs — display consistency (2e-b-3)', () => {
     quotationStore.reset();
     render();
     expect(await screen.findByText('RFQ-2026-010')).toBeInTheDocument();
-    fireEvent.click(screen.getAllByRole('button', { name: /Submit Quote/i })[0]);
+    // RFx UX S-07 — a legacy card opens its quote after step 1, like every card.
+    fireEvent.click(screen.getByTestId('intent-respond-rfq-010'));
+    fireEvent.click((await screen.findAllByRole('button', { name: /Submit Quote/i }))[0]);
     fireEvent.change(screen.getByLabelText('Unit price'), { target: { value: '15000' } });
     fireEvent.change(screen.getByLabelText('Lead time'), { target: { value: '1' } });
     fireEvent.change(screen.getByLabelText('Quote valid until'), {
@@ -591,7 +604,9 @@ describe('SupplierRFQs — the bid currency survives, end to end (2e-c-2)', () =
   const openQuotePanel = async () => {
     renderWithProviders(<SupplierRFQs />, { identity: SUPPLIER });
     expect(await screen.findByText('RFQ-2026-010')).toBeInTheDocument();
-    fireEvent.click(screen.getAllByRole('button', { name: /Submit Quote/i })[0]);
+    // RFx UX S-07 — a legacy card opens its quote after step 1, like every card.
+    fireEvent.click(screen.getByTestId('intent-respond-rfq-010'));
+    fireEvent.click((await screen.findAllByRole('button', { name: /Submit Quote/i }))[0]);
     fireEvent.change(screen.getByLabelText('Unit price'), { target: { value: '3' } });
     fireEvent.change(screen.getByLabelText('Lead time'), { target: { value: '14' } });
     fireEvent.change(screen.getByLabelText('Quote valid until'), {

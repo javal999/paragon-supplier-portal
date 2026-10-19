@@ -207,8 +207,9 @@ const RfqWorkspace = ({
 // hooks and renders the four honest states; the workspace inner holds the local
 // (Phase-2′, non-persisting) quote-submission state seeded from the mapped read.
 // Partial migration (ruling B): the open-RFQ list + counts are wired; the RFQ
-// entity's missing supplier-facing detail is sampled and pilled per card, and
-// the quote/award tabs stay illustrative (pilled).
+// entity's missing supplier-facing detail was sampled and pilled per card until
+// RFx UX S-12 dropped the sampled special requirements (a card now shows only
+// what the RFQ states), and the quote/award tabs stay illustrative (pilled).
 /** @type {React.FC} */
 const SupplierRFQs = () => {
   const { t } = useTranslation();

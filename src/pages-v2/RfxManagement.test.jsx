@@ -1191,6 +1191,8 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     const outcome = await screen.findByTestId(`supplier-rfp-outcome-rfp-002-${FULL_SET}`);
     expect(outcome).toHaveTextContent('Your share: 60% (6,000) at the 10,000 quantity point');
     expect(outcome).not.toHaveTextContent('40%');
+    // RFx UX S-10 — the award shows on the row too, not only inside the card.
+    expect(screen.getByTestId('supplier-rfp-awarded-rfp-002')).toHaveTextContent('Awarded');
     // The buyer's reason stays on the buyer's read.
     expect(screen.queryByText(/Dual source on the full set/)).not.toBeInTheDocument();
   });

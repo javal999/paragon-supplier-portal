@@ -1,5 +1,5 @@
 /** @import React from 'react' */
-import { describe, it, expect } from 'vitest';
+import { beforeEach, describe, it, expect } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 import SupplierOrders from './SupplierOrders';
@@ -8,6 +8,7 @@ import { supplierOrdersEn } from '@lib/i18n/supplierOrders';
 import { rfqsEn } from '@lib/i18n/rfqs';
 import { availabilityOfAtom } from '@services/transitions/handoff';
 import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import { resetRfqEngagementStores } from '@services/data/mock/stores/rfqEngagementStores';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -55,6 +56,9 @@ const NarrowSeat = ({ to }) => {
   );
 };
 
+// RFx UX S-07 — each spec states its intent on rfq-010 afresh.
+beforeEach(() => resetRfqEngagementStores());
+
 describe('POPULATION GUARD — the seats below really do differ on the atom', () => {
   it('resolves through the SAME function the surfaces gate on, both ways on both atoms', () => {
     // `availabilityOfAtom` is what `useVerbAvailability` calls; asking a
@@ -101,6 +105,8 @@ describe('SupplierOrders — the row label names what pressing it does', () => {
 describe('SupplierRFQs — the open quote panel is gated by the SEAT, not by the entrance', () => {
   it('a commercial seat opens the panel and reaches the submit control', async () => {
     renderWithProviders(<SupplierRFQs />, { identity: HOLDS_QUOTE });
+    // RFx UX S-07 — the quote opens after step 1 on every card.
+    fireEvent.click(await screen.findByTestId('intent-respond-rfq-010'));
     const open = await screen.findAllByText(rfqsEn['rfqs.card.submitQuote']);
     fireEvent.click(open[0]);
     await waitFor(() => expect(screen.getByText(rfqsEn['rfqs.panel.submit'])).toBeTruthy());
@@ -123,6 +129,7 @@ describe('SupplierRFQs — the open quote panel is gated by the SEAT, not by the
       </>,
       { identity: HOLDS_QUOTE }
     );
+    fireEvent.click(await screen.findByTestId('intent-respond-rfq-010'));
     const open = await screen.findAllByText(rfqsEn['rfqs.card.submitQuote']);
     fireEvent.click(open[0]);
     // Known-GOOD control: the commit really was reachable a moment ago, so the

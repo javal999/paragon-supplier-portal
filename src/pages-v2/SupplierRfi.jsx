@@ -49,6 +49,7 @@ import RfxConfidentialityGate from './rfx/RfxConfidentialityGate';
 /** @import { DocumentDraft } from './rfx/ResponseDocumentsSection' */
 import ResponseDocumentsSection from './rfx/ResponseDocumentsSection';
 import { ResponseVersionLine, ReviseControls } from './rfx/ResponseRevise';
+import { DaysLeftPill, supplierRowAction } from './rfx/supplierRowState';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER INFORMATION REQUESTS — REQ-E03-02 (SUP).
@@ -314,6 +315,16 @@ const SupplierRfi = () => {
           // An acceptance-only row is not a started answer (the read says the same).
           const started =
             !!mine && (submitted || mine.answers.length > 0 || (mine.documents ?? []).length > 0);
+          const deadline =
+            event.invitedSuppliers.find((i) => i.supplierId === supplierId)?.deadline ??
+            event.responseDeadline;
+          // S-10 — the button says what the supplier can do on this row.
+          const rowAction = supplierRowAction({
+            submitted,
+            windowOpen,
+            closed: event.closed,
+            held: answer.kind === 'held'
+          });
           return (
             <section
               key={event.id}
@@ -337,12 +348,15 @@ const SupplierRfi = () => {
                     <StatusPill variant="neutral">{t('rfxa.conf.pill')}</StatusPill>
                   )}
                   <DeadlinePill
-                    deadline={
-                      event.invitedSuppliers.find((i) => i.supplierId === supplierId)?.deadline ??
-                      event.responseDeadline
-                    }
+                    deadline={deadline}
                     done={mine?.status === 'Submitted'}
                     testId={`supplier-rfi-deadline-${event.id}`}
+                  />
+                  <DaysLeftPill
+                    deadline={deadline}
+                    nowIso={rfxNow()}
+                    done={submitted || event.closed}
+                    testId={`supplier-rfi-days-left-${event.id}`}
                   />
                   <StatusPill
                     variant={
@@ -358,7 +372,11 @@ const SupplierRfi = () => {
                     onClick={() => setOpenId(opened ? null : event.id)}
                     data-testid={`supplier-rfi-open-${event.id}`}
                   >
-                    {opened ? t('rfx.close') : t('rfx.rfi.answer')}
+                    {opened
+                      ? t('rfx.close')
+                      : rowAction === 'answer'
+                        ? t('rfx.rfi.answer')
+                        : t(`rfxa.row.${rowAction}`)}
                   </Button>
                 </div>
               </header>
@@ -398,6 +416,7 @@ const SupplierRfi = () => {
                       <SessionAttachments
                         value={event.attachments ?? []}
                         label={t('rfxa.att.title')}
+                        notHeldText={t('rfxa.att.buyerFileNotStored')}
                         testId={`supplier-rfi-attachments-${event.id}`}
                       />
                     </div>

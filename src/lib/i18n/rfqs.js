@@ -35,7 +35,6 @@ export const rfqsEn = {
   'rfqs.card.daysRemaining_other': '{{count}} days remaining',
   'rfqs.card.daysToDeadline_one': '{{count}} day to deadline',
   'rfqs.card.daysToDeadline_other': '{{count}} days to deadline',
-  'rfqs.card.sampleDetail': 'Sample detail',
   'rfqs.card.via': 'via {{channel}}',
   'rfqs.card.received': 'Received {{date}}',
   'rfqs.card.qty': 'Qty:',
@@ -71,6 +70,14 @@ export const rfqsEn = {
   // the default it means, never a 0 and never a dash.
   'rfqs.quotes.col.moq': 'Min. order qty',
   'rfqs.quotes.moqNone': 'Same as RFQ qty',
+  // RFx UX S-09 — a tiered quote read back per item, never as a derived average.
+  'rfqs.quotes.itemsPriced': '{{priced}} of {{total}} items priced',
+  'rfqs.quotes.break1': 'Break 1:',
+  'rfqs.quotes.itemMoq': 'MOQ:',
+  // RFx UX S-07 — one entry strip on every RFQ card; step 0 only when confidential.
+  'rfqs.steps.terms': 'Step 0: Accept the confidentiality terms',
+  'rfqs.steps.respond': 'Step 1: Say if you will respond',
+  'rfqs.steps.quote': 'Step 2: Quote',
   'rfqs.quotes.col.validUntil': 'Valid until',
   // awards tab
   'rfqs.awards.emptyTitle': 'No award decisions yet',
@@ -237,7 +244,6 @@ export const rfqsId = {
   // RFQ card
   'rfqs.card.daysRemaining_other': '{{count}} hari tersisa',
   'rfqs.card.daysToDeadline_other': '{{count}} hari menuju tenggat',
-  'rfqs.card.sampleDetail': 'Detail contoh',
   'rfqs.card.via': 'melalui {{channel}}',
   'rfqs.card.received': 'Diterima {{date}}',
   'rfqs.card.qty': 'Jml:',
@@ -269,6 +275,12 @@ export const rfqsId = {
   'rfqs.quotes.leadTimeDays.other': '{{days}} hari',
   'rfqs.quotes.col.moq': 'Kuantitas pesanan min.',
   'rfqs.quotes.moqNone': 'Sama dengan jml RFQ',
+  'rfqs.quotes.itemsPriced': '{{priced}} dari {{total}} item diberi harga',
+  'rfqs.quotes.break1': 'Jenjang 1:',
+  'rfqs.quotes.itemMoq': 'MOQ:',
+  'rfqs.steps.terms': 'Langkah 0: Terima syarat kerahasiaan',
+  'rfqs.steps.respond': 'Langkah 1: Nyatakan apakah Anda akan menanggapi',
+  'rfqs.steps.quote': 'Langkah 2: Kirim penawaran',
   'rfqs.quotes.col.validUntil': 'Berlaku hingga',
   // awards tab
   'rfqs.awards.emptyTitle': 'Belum ada keputusan pemenangan',
