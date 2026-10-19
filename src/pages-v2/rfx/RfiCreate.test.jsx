@@ -126,10 +126,12 @@ describe('section 3.6a — the buyer raises an information request', () => {
 
     // The board lands on the NEW event, in Open — the act just performed is the
     // one in view, and its number came from the store rather than from the page.
-    const detail = await screen.findByTestId('rfi-detail-rfi-0004');
-    expect(detail).toHaveTextContent('RFI-2026-004');
-    expect(detail).toHaveTextContent(TITLE);
-    expect(within(detail).getByText('Open')).toBeInTheDocument();
+    await screen.findByTestId('rfi-detail-rfi-0004');
+    // RFx UX 2F — the number, title and status are the page header's (the
+    // About card no longer repeats them).
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(TITLE);
+    expect(screen.getByText('RFI-2026-004')).toBeInTheDocument();
+    expect(screen.getByTestId('rfi-event-status')).toHaveTextContent('Open');
     // An Open event offers Close, never Send again.
     expect(screen.queryByTestId('rfi-send-rfi-0004')).not.toBeInTheDocument();
     expect(screen.getByTestId('rfi-close-rfi-0004')).toBeInTheDocument();
@@ -147,8 +149,8 @@ describe('section 3.6a — the buyer raises an information request', () => {
 
     fireEvent.click(screen.getByTestId('rfi-new-save-draft'));
 
-    const detail = await screen.findByTestId('rfi-detail-rfi-0004');
-    expect(within(detail).getByText('Draft')).toBeInTheDocument();
+    await screen.findByTestId('rfi-detail-rfi-0004');
+    expect(screen.getByTestId('rfi-event-status')).toHaveTextContent('Draft');
     expect(screen.getByTestId('rfi-draft-notice-rfi-0004')).toBeInTheDocument();
     // A Draft offers Send and not Close.
     expect(screen.getByTestId('rfi-send-rfi-0004')).toBeInTheDocument();

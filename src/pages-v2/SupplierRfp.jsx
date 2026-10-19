@@ -543,7 +543,7 @@ const SupplierRfp = () => {
                     data-testid={`supplier-rfp-open-${event.id}`}
                   >
                     {opened
-                      ? t('rfx.close')
+                      ? t('rfx.collapse')
                       : rowAction === 'answer'
                         ? t('rfx.rfp.answer')
                         : t(`rfxa.row.${rowAction}`)}

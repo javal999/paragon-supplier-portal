@@ -188,8 +188,10 @@ export const buildSubmittedQuotes = (quotations, rfqById, t) => {
  * @property {string} resultText The result in words: "Awarded · 60% of item 1", "Not awarded" or
  *   "Award withdrawn · 05 Sept 2026".
  * @property {string} awardDate The award RECORD's date.
- * @property {string} awardedValue This supplier's lines in force at its own quoted prices, or '—'.
- * @property {string} poIssued "Raised in SAP", "Follows from SAP" (awarded, not yet raised) or '—'.
+ * @property {string | null} awardedValue This supplier's lines in force at its own quoted prices;
+ *   null when there is none (the tab prints the one placeholder, RFx UX 2F).
+ * @property {string | null} poIssued "Raised in SAP", "Follows from SAP" (awarded, not yet raised);
+ *   null when the supplier was not awarded.
  */
 
 /**
@@ -236,10 +238,10 @@ export const buildAwardRows = (awards, rfqById, quotations, supplierId, t) =>
             result: outcome.kind,
             resultText: outcomeText(t, outcome),
             awardDate: formatDate(outcome.awardedAt),
-            awardedValue: value ? formatMoney(value.amount, value.currency ?? BASE_CURRENCY) : '—',
+            awardedValue: value ? formatMoney(value.amount, value.currency ?? BASE_CURRENCY) : null,
             poIssued:
               outcome.kind !== 'awarded'
-                ? '—'
+                ? null
                 : t(outcome.raisedInSap ? 'rfqs.awards.po.raised' : 'rfqs.awards.po.follows')
           })
         }
