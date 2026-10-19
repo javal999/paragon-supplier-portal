@@ -65,6 +65,11 @@ import {
 } from './osipRules';
 
 /**
+ * BL-211 — how a material's recorded consumption is split across its suppliers.
+ * @typedef {'ltpShare' | 'demandAnticipation' | 'even'} ConsumptionSplit
+ */
+
+/**
  * The page's and the read model's own values. Every formula value is a key of
  * `OSIP_RULES` (osipRules.js); these are the ones that only say where an input
  * comes from or how much the page shows.
@@ -73,9 +78,13 @@ import {
  *                       the plan check reads).
  *   · shownWeeks:       how many weeks the page shows from the current week; it
  *                       grows to the horizon plus one when a lead time is longer.
- *   · consumptionSplit: CAP-11 / CAP-D14 (kept) — how a material's recorded
- *                       consumption is shared across its suppliers: by each
- *                       one's demand anticipation that week, or evenly.
+ *   · consumptionSplit: BL-211 (owner ruling 2026-10-19) — how a material's
+ *                       recorded consumption is shared across its suppliers:
+ *                       `ltpShare` (in force) by each one's LTP share over the
+ *                       share window (CAP-D11, `materialShares`), the split the
+ *                       OSIP safety figures, DRC-18 and the sandbox use;
+ *                       `demandAnticipation` by each one's demand anticipation
+ *                       that week (CAP-D14); or `even`.
  *   · unabsorbedAlertMinQty: the smallest surplus the last week cannot take
  *                       (DRC-B7 "unabsorbed") that raises the planner's alert.
  *   · mpqField:         [Default, wave 2] MPQ = orderMultiple until the master
@@ -87,7 +96,8 @@ import {
 export const DEMAND_ANTICIPATION_RULES = Object.freeze({
   shareWindowWeeks: 4,
   shownWeeks: 13,
-  consumptionSplit: /** @type {'demandAnticipation' | 'even'} */ ('demandAnticipation'),
+  // BL-211 owner ruling 2026-10-19: the LTP share everywhere (CAP-D11).
+  consumptionSplit: /** @type {ConsumptionSplit} */ ('ltpShare'),
   unabsorbedAlertMinQty: 1,
   // MPQ = orderMultiple until the master data feed carries MPQ (wave 2 default).
   mpqField: /** @type {'orderMultiple'} */ ('orderMultiple'),
@@ -218,6 +228,12 @@ export function demandAnticipationPairs({ ltpLines, ptiStock }, nowIso, count) {
  * `agreedFirstOutside`:  The planner recorded the supplier's agreement [Owner A8].
  * `salesOrderQty4w`:  Sales-order quantity of the last 4 weeks [Default A8b]; null when the hub holds none.
  * `ospr`:  Open PR quantity; null when the hub holds none.
+ * `consumption` / `moq` / `koli`:  BL-210 — what ROP Order's safety order also
+ *   reads (`osipSafetySizes`): the supplier's share of recorded weekly
+ *   consumption (oldest first), MOQ and units per pallet. With them the
+ *   week-1 safety order is ROP Order's under `sdSource: 'consumption12w'` and
+ *   `safetyRounding: 'koli' | 'moq'`; absent, those variants read none.
+ * `sd`:  BL-210 — a typed SD (the sandbox's); absent or null, it is computed.
  *
  * @typedef {{
  *   readonly weeks: readonly string[];
@@ -233,6 +249,10 @@ export function demandAnticipationPairs({ ltpLines, ptiStock }, nowIso, count) {
  *   readonly agreedFirstOutside: boolean;
  *   readonly salesOrderQty4w: number | null;
  *   readonly ospr: number | null;
+ *   readonly consumption?: readonly number[];
+ *   readonly moq?: number;
+ *   readonly koli?: number | null;
+ *   readonly sd?: number | null;
  * }} RollingDaInputs
  */
 
@@ -290,7 +310,20 @@ export function rollingDaFigure(input, rules = OSIP_RULES) {
   const weeks = input.weeks.slice(0, n + 1);
   const ltp = input.ltp.slice(0, n + 1);
   // DRC-7 BR-01 — the safety order [Default B1–B4]; MPQ per `mpqField`.
-  const safety = safetyOrder({ ltp, leadTimeWeeks: n, mpq: input.mpq }, rules).value;
+  // BL-210 — with ROP Order's consumption, MOQ and koli (and a typed SD), so
+  // every `sdSource` and `safetyRounding` variant gives ROP Order's figure.
+  const safety = safetyOrder(
+    {
+      ltp,
+      leadTimeWeeks: n,
+      mpq: input.mpq,
+      ...(input.moq !== undefined ? { moq: input.moq } : {}),
+      ...(input.koli !== undefined && input.koli !== null ? { koli: input.koli } : {}),
+      ...(input.consumption !== undefined ? { consumption: input.consumption } : {}),
+      ...(typeof input.sd === 'number' ? { sd: input.sd } : {})
+    },
+    rules
+  ).value;
   if (input.soh === null) flags.push('NO_STOCK_RECORD');
   const soh = input.soh ?? 0;
   if (input.previous === null) flags.push('OSPO_FROM_STORE');
