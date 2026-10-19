@@ -6,8 +6,15 @@ import { BASE_CURRENCY } from '@lib/currencyPolicy';
 import { daysUntil } from '@services/data/dayProjection';
 import { formatDate, formatMoney, formatNumber } from '@lib/format';
 import { EVAL_WEIGHTS } from './const';
+import {
+  awardedValueOf,
+  outcomeShareText,
+  supplierRfqOutcome
+} from '@services/sourcing/supplierOutcome';
 /** @import { TFunction } from 'i18next' */
 /** @import { RFQ, Quotation } from '@services/data/types' */
+/** @import { AwardView } from '@services/sourcing/views' */
+/** @import { SupplierEventOutcome } from '@services/sourcing/supplierOutcome' */
 
 /**
  * @typedef {object} OpenRFQ
@@ -108,46 +115,95 @@ export const buildSubmittedQuotes = (quotations, rfqById, t) => {
 };
 
 /**
+ * One award history row: ONE PER EVENT, read from the award record (RFx UX
+ * S-03). It replaced a row per quotation version, which listed an RFQ twice
+ * ("Awarded" and "Not Awarded") once a revision superseded the first quote, and
+ * dated both with the RFQ's planned award deadline.
  * @typedef {object} AwardRow
- * @property {string} quotationId The quotation this outcome belongs to — the row's identity and React key.
- *   rfqNumber is not a safe key: nothing guarantees one decided quotation per
- *   RFQ for a supplier, and it falls back to rfqId when the RFQ is missing.
+ * @property {string} eventId The RFQ — the row's identity and React key.
  * @property {string} rfqNumber
  * @property {string} material
- * @property {'Awarded' | 'Not Awarded'} result
- * @property {string} awardDate
- * @property {string} contractValue
- * @property {string} poIssued
+ * @property {'awarded' | 'notAwarded' | 'withdrawn'} result
+ * @property {string} resultText The result in words: "Awarded · 60% of item 1", "Not awarded" or
+ *   "Award withdrawn · 05 Sept 2026".
+ * @property {string} awardDate The award RECORD's date.
+ * @property {string} awardedValue This supplier's lines in force at its own quoted prices, or '—'.
+ * @property {string} poIssued "Raised in SAP", "Follows from SAP" (awarded, not yet raised) or '—'.
  */
 
-// Award outcome is a REAL read (batch iv): the supplier's own quotations that
-// reached a terminal award decision (Awarded / Rejected via the RFQ-award
-// cascade), joined to their RFQ for display. `poIssued` is honestly always '—' —
-// award mints NO PO (PO issuance is a separate buyer verb, a future batch).
 /**
- * @param {Quotation[]} quotations
+ * An outcome in words, as the history row and the card's strip say it.
+ * @param {TFunction} t
+ * @param {SupplierEventOutcome} outcome
+ * @returns {string}
+ */
+export const outcomeText = (t, outcome) =>
+  outcome.kind === 'awarded'
+    ? t('rfqs.awards.result.awarded', { share: outcomeShareText(t, outcome.shares) })
+    : outcome.kind === 'withdrawn'
+      ? t('rfqs.awards.result.withdrawn', {
+          date: formatDate(outcome.withdrawnAt ?? outcome.awardedAt)
+        })
+      : t('rfqs.awards.result.notAwarded');
+
+/**
+ * The supplier's award history from its narrowed award read: one row per RFQ
+ * it reads an award on, newest award first. Superseded quotation versions play
+ * no part — the shares and the value come from the award record's own lines.
+ * @param {readonly AwardView[]} awards
  * @param {Map<string, RFQ>} rfqById
+ * @param {readonly Quotation[]} quotations
+ * @param {string} supplierId
+ * @param {TFunction} t
  * @returns {AwardRow[]}
  */
-export const buildAwardRows = (quotations, rfqById) =>
-  quotations
-    .filter((q) => q.status === 'Awarded' || q.status === 'Rejected')
-    .map((q) => {
-      const rfq = rfqById.get(q.rfqId);
-      const won = q.status === 'Awarded';
-      return {
-        quotationId: q.id,
-        rfqNumber: rfq?.rfqNumber ?? q.rfqId,
-        material: rfq?.title ?? '—',
-        result: won ? 'Awarded' : 'Not Awarded',
-        awardDate: rfq ? formatDate(rfq.awardDeadline) : '—',
-        // COS-05, same leg: an awarded foreign quote's contract value is stated
-        // in the currency it was awarded in. Rupiah here would misprice the
-        // award itself, which is the row a supplier is most likely to act on.
-        contractValue: won ? formatMoney(q.totalPrice, q.currency ?? BASE_CURRENCY) : '—',
-        poIssued: '—'
-      };
-    });
+export const buildAwardRows = (awards, rfqById, quotations, supplierId, t) =>
+  [...new Set(awards.filter((a) => a.eventType === 'rfq').map((a) => a.eventId))]
+    .flatMap((eventId) => {
+      const rfq = rfqById.get(eventId);
+      const outcome = rfq ? supplierRfqOutcome(rfq, awards, supplierId) : null;
+      if (!rfq || !outcome) return [];
+      const value =
+        outcome.kind === 'awarded' ? awardedValueOf(rfq, awards, quotations, supplierId) : null;
+      return [
+        {
+          at: outcome.awardedAt,
+          row: /** @type {AwardRow} */ ({
+            eventId,
+            rfqNumber: rfq.rfqNumber,
+            material: rfq.title,
+            result: outcome.kind,
+            resultText: outcomeText(t, outcome),
+            awardDate: formatDate(outcome.awardedAt),
+            awardedValue: value ? formatMoney(value.amount, value.currency ?? BASE_CURRENCY) : '—',
+            poIssued:
+              outcome.kind !== 'awarded'
+                ? '—'
+                : t(outcome.raisedInSap ? 'rfqs.awards.po.raised' : 'rfqs.awards.po.follows')
+          })
+        }
+      ];
+    })
+    .sort((a, b) => b.at.localeCompare(a.at))
+    .map(({ row }) => row);
+
+/**
+ * Days left to a deadline in words: "5 days left", "due today", or "Overdue 2
+ * days" (a date that is today is due today, not past — the zero boundary is
+ * `dayProjection`'s; this only words it).
+ * @param {TFunction} t
+ * @param {string} deadline
+ * @param {string} nowIso
+ * @returns {string}
+ */
+export const daysLeftText = (t, deadline, nowIso) => {
+  const days = daysUntil(deadline, nowIso) ?? 0;
+  return days > 0
+    ? t('hub.home.daysLeft', { count: days })
+    : days === 0
+      ? t('hub.home.dueToday')
+      : t('hub.home.overdueBy', { count: -days });
+};
 
 // Adapter: canonical RFQ → the page's OpenRFQ display shape. Real fields come
 // from the read (number, material, category, qty, deadline, received date);

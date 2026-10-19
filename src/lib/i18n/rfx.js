@@ -324,6 +324,8 @@ export const rfxEn = {
   'rfx.neg.supplier.subtitle': 'PTI has asked you to revise your quote.',
   'rfx.neg.supplier.empty': 'No revised quote has been requested.',
   'rfx.neg.submitRevision': 'Send the revised quote',
+  // RFx UX S-05 — the rounds page as a filtered view of one round.
+  'rfx.neg.showAllRounds': 'Show all rounds',
   'rfx.neg.yourLastQuote': 'Your last quote',
   'rfx.award.title': 'Award',
   'rfx.award.new': 'Record the award',
@@ -853,6 +855,7 @@ export const rfxId = {
   'rfx.neg.supplier.subtitle': 'PTI meminta Anda merevisi penawaran.',
   'rfx.neg.supplier.empty': 'Tidak ada permintaan penawaran revisi.',
   'rfx.neg.submitRevision': 'Kirim penawaran revisi',
+  'rfx.neg.showAllRounds': 'Tampilkan semua putaran',
   'rfx.neg.yourLastQuote': 'Penawaran terakhir Anda',
   'rfx.award.title': 'Pemenang',
   'rfx.award.new': 'Catat pemenang',

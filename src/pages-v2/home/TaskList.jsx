@@ -17,6 +17,9 @@ import Data from '@components/ui-v2/Data';
  * `chipLabel`:  The chip's text when it is not the severity's own label.
  * `rank`:  Urgency rank (1 = most urgent) where the page ranks its tasks; it
  *          orders rows within a severity ahead of the count.
+ * `lane`:  RFx UX X-02 — the lane (section) a grouped list files the row under.
+ * `deadline`:  The oldest deadline the row counts (`YYYY-MM-DD`), or null; a
+ *              lane orders its rows by it.
  *
  * @typedef {{
  *     readonly id: string;
@@ -27,7 +30,14 @@ import Data from '@components/ui-v2/Data';
  *     readonly detail?: string;
  *     readonly chipLabel?: string;
  *     readonly rank?: number;
+ *     readonly lane?: string;
+ *     readonly deadline?: string | null;
  *   }} HomeTask
+ */
+
+/**
+ * A lane of a grouped To do: its id (matched against `HomeTask.lane`) and header.
+ * @typedef {{ readonly id: string; readonly label: string }} TaskLane
  */
 
 /** @type {Record<FlagSeverity, number>} */
@@ -71,8 +81,52 @@ function byRank(a, b) {
   return b.rank === undefined ? -1 : a.rank - b.rank;
 }
 
-/** @type {React.FC<{ tasks: readonly HomeTask[] }>} */
-const TaskList = ({ tasks }) => {
+/**
+ * RFx UX X-02 (owner ruling Q5, 2026-10-19) — the supplier To do GROUPED BY
+ * LANE, in the order `lanes` gives, each lane ordered by deadline: the oldest
+ * deadline first, a row with no deadline after every dated one, and a row
+ * outside the urgency ranking (`none`: money PTI owes) last. Within one
+ * deadline the severity and then the count decide, as in `sortTasks`. Empty
+ * lanes and zero-count rows are dropped; a row naming no listed lane is kept
+ * in a trailing lane rather than hidden.
+ * @param {readonly HomeTask[]} tasks
+ * @param {readonly TaskLane[]} lanes
+ * @returns {{ lane: TaskLane; tasks: HomeTask[] }[]}
+ */
+export function groupTasksByLane(tasks, lanes) {
+  const known = new Set(lanes.map((l) => l.id));
+  const shown = tasks.filter((task) => task.count > 0);
+  const strays = shown.filter((task) => !known.has(task.lane ?? ''));
+  const all = strays.length > 0 ? [...lanes, { id: '', label: '' }] : lanes;
+  return all
+    .map((lane) => ({
+      lane,
+      tasks: shown
+        .filter((task) => (lane.id === '' ? !known.has(task.lane ?? '') : task.lane === lane.id))
+        .sort(byDeadline)
+    }))
+    .filter((group) => group.tasks.length > 0);
+}
+
+/**
+ * @param {HomeTask} a
+ * @param {HomeTask} b
+ * @returns {number}
+ */
+function byDeadline(a, b) {
+  const none = Number(a.severity === 'none') - Number(b.severity === 'none');
+  if (none !== 0) return none;
+  const da = a.deadline ?? '9999-12-31';
+  const db = b.deadline ?? '9999-12-31';
+  return da.localeCompare(db) || RANK[a.severity] - RANK[b.severity] || b.count - a.count;
+}
+
+/**
+ * The To do list. Flat and ranked (`sortTasks`) by default; grouped into lane
+ * sections (`groupTasksByLane`) when `lanes` is given.
+ * @type {React.FC<{ tasks: readonly HomeTask[]; lanes?: readonly TaskLane[] }>}
+ */
+const TaskList = ({ tasks, lanes }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const sorted = sortTasks(tasks);
@@ -92,45 +146,63 @@ const TaskList = ({ tasks }) => {
     );
   }
 
+  /** @param {HomeTask} task */
+  const row = (task) => {
+    const severity = task.severity === 'none' ? 'info' : task.severity;
+    return (
+      <li key={task.id}>
+        <button
+          type="button"
+          onClick={() => navigate(task.to)}
+          data-testid={`home-task-${task.id}`}
+          className="relative w-full flex items-center gap-4 rounded-lg border border-border-subtle bg-bg-surface pl-5 pr-4 py-3 text-left hover:bg-bg-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-action"
+        >
+          <span
+            aria-hidden="true"
+            className={`absolute left-0 top-2 bottom-2 w-1 rounded-r ${STRIPE[severity]}`}
+          />
+          <Data className="text-section w-10 text-right">{task.count}</Data>
+          <span className="flex-1 min-w-0 text-sm text-text-primary">
+            {task.label}
+            {task.detail ? (
+              <span
+                className="block text-xs text-text-secondary"
+                data-testid={`home-task-detail-${task.id}`}
+              >
+                {task.detail}
+              </span>
+            ) : null}
+          </span>
+          <span className={`text-label uppercase px-2 py-0.5 rounded ${CHIP[severity]}`}>
+            {task.chipLabel ?? t(`hub.home.severity.${severity}`)}
+          </span>
+          <span className="inline-flex items-center gap-1 text-sm text-action">
+            {t('hub.home.open')}
+            <ChevronRight size={14} />
+          </span>
+        </button>
+      </li>
+    );
+  };
+
+  if (lanes) {
+    return (
+      <div className="space-y-5" data-testid="home-tasks">
+        {groupTasksByLane(tasks, lanes).map(({ lane, tasks: laneTasks }) => (
+          <section key={lane.id || 'other'} data-testid={`home-lane-${lane.id || 'other'}`}>
+            {lane.label ? (
+              <h2 className="text-label uppercase text-text-tertiary mb-2">{lane.label}</h2>
+            ) : null}
+            <ul className="space-y-2">{laneTasks.map(row)}</ul>
+          </section>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <ul className="space-y-2" data-testid="home-tasks">
-      {sorted.map((task) => {
-        const severity = task.severity === 'none' ? 'info' : task.severity;
-        return (
-          <li key={task.id}>
-            <button
-              type="button"
-              onClick={() => navigate(task.to)}
-              data-testid={`home-task-${task.id}`}
-              className="relative w-full flex items-center gap-4 rounded-lg border border-border-subtle bg-bg-surface pl-5 pr-4 py-3 text-left hover:bg-bg-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-action"
-            >
-              <span
-                aria-hidden="true"
-                className={`absolute left-0 top-2 bottom-2 w-1 rounded-r ${STRIPE[severity]}`}
-              />
-              <Data className="text-section w-10 text-right">{task.count}</Data>
-              <span className="flex-1 min-w-0 text-sm text-text-primary">
-                {task.label}
-                {task.detail ? (
-                  <span
-                    className="block text-xs text-text-secondary"
-                    data-testid={`home-task-detail-${task.id}`}
-                  >
-                    {task.detail}
-                  </span>
-                ) : null}
-              </span>
-              <span className={`text-label uppercase px-2 py-0.5 rounded ${CHIP[severity]}`}>
-                {task.chipLabel ?? t(`hub.home.severity.${severity}`)}
-              </span>
-              <span className="inline-flex items-center gap-1 text-sm text-action">
-                {t('hub.home.open')}
-                <ChevronRight size={14} />
-              </span>
-            </button>
-          </li>
-        );
-      })}
+      {sorted.map(row)}
     </ul>
   );
 };

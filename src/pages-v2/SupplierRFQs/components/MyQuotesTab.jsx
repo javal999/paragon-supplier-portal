@@ -15,9 +15,12 @@ import { useVerbAvailability } from '@hooks/useVerbAvailability';
  * `quotation:submit`). `onRevise` opens the quote panel on that version.
  *
  * `canRevise`:  Whether a version can still be revised: current, and its RFQ still open.
- * @type {React.FC<{ quotes: SubmittedQuote[]; canRevise: (q: SubmittedQuote) => boolean; onRevise: (q: SubmittedQuote) => void; }>}
+ * `strips`:  RFx UX S-04 / S-05 — the round request and award outcome strips for
+ *            an RFQ, shown on its CURRENT version's card: a quoted RFQ leaves the
+ *            Open tab, so this card is the one the supplier's event lives on.
+ * @type {React.FC<{ quotes: SubmittedQuote[]; canRevise: (q: SubmittedQuote) => boolean; onRevise: (q: SubmittedQuote) => void; strips?: (rfqId: string) => React.ReactNode; }>}
  */
-const MyQuotesTab = ({ quotes, canRevise, onRevise }) => {
+const MyQuotesTab = ({ quotes, canRevise, onRevise, strips }) => {
   const { t } = useTranslation();
   const quoteAvailability = useVerbAvailability('quotation:submit');
 
@@ -78,6 +81,8 @@ const MyQuotesTab = ({ quotes, canRevise, onRevise }) => {
                 ))}
             </div>
           </div>
+
+          {q.current && strips ? strips(q.quote.rfqId) : null}
 
           <dl className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
             {[

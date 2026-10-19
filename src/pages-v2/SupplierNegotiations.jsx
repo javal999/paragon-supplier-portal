@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link, useSearchParams } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
 import PageMetaLine from '@components/ui-v2/PageMetaLine';
@@ -64,7 +65,14 @@ const SupplierNegotiations = () => {
   const [tierPrices, setTierPrices] = useState(/** @type {Record<string, RevisionPrices>} */ ({}));
 
   const crumb = [t('hub.nav.section.sourcing'), t('rfx.neg.supplier.title')];
-  const items = useMemo(() => rounds.data?.items ?? [], [rounds.data]);
+  // RFx UX S-05 — the RFQ card's "Send a revised quote" lands here with
+  // `?round=<id>`: the page becomes a filtered view of that one round. An id
+  // the read does not hold shows every round rather than an empty page.
+  const [searchParams] = useSearchParams();
+  const roundParam = searchParams.get('round');
+  const allItems = useMemo(() => rounds.data?.items ?? [], [rounds.data]);
+  const focused = allItems.some((r) => r.id === roundParam);
+  const items = focused ? allItems.filter((r) => r.id === roundParam) : allItems;
 
   if (rounds.isPending) return <LoadingState breadcrumb={crumb} />;
   if (rounds.isError)
@@ -112,6 +120,18 @@ const SupplierNegotiations = () => {
           <HandoffNotice availability={submit} testId="handoff-quotation-revise" />
         </div>
       )}
+
+      {focused ? (
+        <p className="mb-3 text-sm">
+          <Link
+            to="/supplier/rfq/rounds"
+            className="text-action hover:underline"
+            data-testid="supplier-rounds-show-all"
+          >
+            {t('rfx.neg.showAllRounds')}
+          </Link>
+        </p>
+      ) : null}
 
       {items.length === 0 && (
         <p
@@ -201,7 +221,7 @@ const SupplierNegotiations = () => {
                           id={`price-${round.id}`}
                           type="number"
                           disabled={locked}
-                          value={price[round.id] ?? ''}
+                          value={price[round.id] ?? (last ? String(last.unitPrice) : '')}
                           onChange={(e) =>
                             setPrice((prev) => ({ ...prev, [round.id]: e.target.value }))
                           }
@@ -230,7 +250,9 @@ const SupplierNegotiations = () => {
                   )}
                   <Button
                     variant="outline"
-                    disabled={locked || (tiered ? revision === null : !price[round.id])}
+                    disabled={
+                      locked || (tiered ? revision === null : !(price[round.id] ?? last?.unitPrice))
+                    }
                     data-testid={`supplier-round-submit-${round.id}`}
                     onClick={() =>
                       tiered && revision && last
@@ -269,7 +291,8 @@ const SupplierNegotiations = () => {
                             ...(last && documentsOf(last).length > 0
                               ? { documents: documentsOf(last) }
                               : {}),
-                            unitPrice: Number(price[round.id]),
+                            // S-05 — the revision starts from the last quote's price.
+                            unitPrice: Number(price[round.id] ?? last?.unitPrice),
                             leadTimeDays: Number(lead[round.id] ?? last?.leadTimeDays ?? 0),
                             currency,
                             ...(last?.paymentTermsOffered
