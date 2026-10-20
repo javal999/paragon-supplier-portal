@@ -40,7 +40,9 @@ import { DeadlinePill, EmptyRow, rfxNow } from './rfx/rfxDisplay';
 // RFx UX 2A (B-08): the row button reads "Open" for every event. It read
 // "Answer" — the supplier's verb — and "Close" when the row was expanded,
 // 300 px from "Close the event"; with the detail on its own page there is no
-// expanded row and no toggle.
+// expanded row and no toggle. RFx UX 2G — the Submitted column reads "3 of 4
+// submitted", and the event page opens on its Compare tab once an answer is
+// in (Overview before).
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @type {React.FC} */
@@ -125,8 +127,11 @@ const BuyerRfi = () => {
                     {t('rfx.rfi.questions', { count: event.questions.length })}
                   </div>
                 </TableCell>
-                <TableCell className="align-top text-sm">
-                  {t('rfx.rfi.responses', { count: event.responses.length })}
+                <TableCell className="align-top text-sm" data-testid={`rfi-submitted-${event.id}`}>
+                  {t('rfx.list.submittedOf', {
+                    n: event.responses.length,
+                    m: event.invitedSuppliers.length
+                  })}
                 </TableCell>
                 <TableCell className="align-top text-right">
                   <Button

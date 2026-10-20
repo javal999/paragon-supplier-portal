@@ -6,7 +6,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, within } from '@testing-library/react';
 import { renderWithProviders, BUYER } from '@test/test-utils';
-import BuyerRfxRoutes from '@test/buyerRfxRoutes';
+import BuyerRfxRoutes, { selectEventTab } from '@test/buyerRfxRoutes';
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { mockDataService } from '@services/data/mock/mockDataService';
 import { SessionFileService } from '@services/data/mock/SessionFileService';
@@ -101,6 +101,8 @@ describe('the RFP detail lists every supplier file (rfp-001)', () => {
       route: '/buyer/rfp?open=rfp-001',
       service
     });
+    // RFx UX 2G — the supplier files panel is on the Overview tab.
+    await selectEventTab('Overview');
     const panel = await screen.findByTestId('rfp-documents-rfp-001');
 
     const expired = within(panel).getByTestId('rfp-documents-rfp-001-sup-007-file-d-old-cert');
@@ -126,6 +128,8 @@ describe('the RFP detail lists every supplier file (rfp-001)', () => {
       route: '/buyer/rfp?open=rfp-001',
       service
     });
+    // RFx UX 2G — the supplier files panel is on the Overview tab.
+    await selectEventTab('Overview');
     const panel = await screen.findByTestId('rfp-documents-rfp-001');
     const cell = within(panel).getByTestId('rfp-documents-rfp-001-sup-007-file-d-old-uploaded-by');
     expect(cell).toHaveTextContent(/^Not recorded$/);

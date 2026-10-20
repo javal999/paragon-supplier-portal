@@ -1,34 +1,25 @@
 /** @import React from 'react' */
 /** @import { RfpEventView } from '@services/sourcing/views' */
-/** @import { VerbAvailability } from '@services/transitions/handoff' */
-/** @import { RfxCommandVars } from '@services/query/commandHooks' */
 import { useTranslation } from 'react-i18next';
 import SessionAttachments from '@components/ui-v2/SessionAttachments';
 import RfpEventSummary from './RfpEventSummary';
-import RfpEventActions from './RfpEventActions';
 
 /**
- * The open event's card: its identity, ONE row of the acts its state allows
- * (RFx UX 2A, B-10: Edit, Send, Discard, Close, Extend, and "Save as a
- * template" in the "More actions" menu), the draft notice, scope, attachments,
- * confidentiality and T&C.
+ * The open event's card on the Overview tab: its identity, the draft notice,
+ * scope, attachments, confidentiality and T&C. RFx UX 2G — the ONE row of
+ * acts its state allows (`RfpEventActions`, RFx UX 2A B-10) sits above the
+ * tabs, so it is no longer in this card.
  * Moved out of `BuyerRfp.jsx` by the Phase 5 page split.
  * @type {React.FC<{
  *   open: RfpEventView;
- *   create: VerbAvailability;
- *   publish: VerbAvailability;
- *   run: (vars: RfxCommandVars, successKey: string) => void;
- *   onEdit: () => void;
  *   supplierName: (supplierId: string) => string;
  * }>}
  */
-const RfpEventCard = ({ open, create, publish, run, onEdit, supplierName }) => {
+const RfpEventCard = ({ open, supplierName }) => {
   const { t } = useTranslation();
   return (
     <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-4">
-      {/* — The event, and the acts its STATE allows. — */}
       <RfpEventSummary open={open} supplierName={supplierName} />
-      <RfpEventActions open={open} create={create} publish={publish} run={run} onEdit={onEdit} />
       {open.status === 'Draft' && (
         <p className="text-xs text-text-tertiary mt-3" data-testid={`rfp-draft-notice-${open.id}`}>
           {t('rfx.status.draftHiddenFromSuppliers')}

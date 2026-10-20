@@ -9,9 +9,14 @@
 // navigation, so it renders this instead with `route` set to the list (or to a
 // deep link). Anything the pages navigate to outside these four routes lands
 // on a probe that prints the location (`rfx-routes-elsewhere`).
+//
+// RFx UX 2G: the event page is three tabs (Overview · Compare · By supplier)
+// and opens on Compare once anything is submitted. A spec that reads a
+// section on another tab selects it with `selectEventTab` first.
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import React from 'react' */
+import { fireEvent, screen } from '@testing-library/react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import BuyerRfi from '@pages-v2/BuyerRfi';
 import BuyerRfiEvent from '@pages-v2/BuyerRfiEvent';
@@ -34,5 +39,13 @@ const BuyerRfxRoutes = () => (
     <Route path="*" element={<Elsewhere />} />
   </Routes>
 );
+
+/**
+ * Select one tab of the RFI/RFP event page by its English label (the Compare
+ * tab's name carries its count, so the label is matched as a prefix).
+ * @param {'Overview' | 'Compare' | 'By supplier'} label
+ */
+export const selectEventTab = async (label) =>
+  fireEvent.click(await screen.findByRole('tab', { name: new RegExp(`^${label}`) }));
 
 export default BuyerRfxRoutes;

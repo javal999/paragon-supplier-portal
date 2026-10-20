@@ -13,7 +13,7 @@ import { Routes, Route } from 'react-router-dom';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER } from '@test/test-utils';
-import BuyerRfxRoutes from '@test/buyerRfxRoutes';
+import BuyerRfxRoutes, { selectEventTab } from '@test/buyerRfxRoutes';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { NO_PERSON } from '@context/noPerson';
@@ -223,6 +223,8 @@ describe('REQ-E03-02 — the information request', () => {
     expect(await screen.findByTestId('rfi-row-rfi-001')).toHaveTextContent('RFI-2026-001');
     fireEvent.click(screen.getByTestId('rfi-open-rfi-001'));
     const detail = await screen.findByTestId('rfi-detail-rfi-001');
+    // RFx UX 2G — the invitee table is on the Overview tab, the answers on Compare.
+    await selectEventTab('Overview');
     // PREMISE CHANGED (REQ-E10-01) — calculated, not authored.
     expect(within(detail).getByTestId('rfi-otif-sup-007')).toHaveTextContent('83%');
     // ⚠️ the new supplier's OTIF is a sentence, not a zero.
@@ -230,6 +232,7 @@ describe('REQ-E03-02 — the information request', () => {
     // BR-10 shape — the DRAFT author is listed as an invitee but its answers
     // are NOT in the comparison.
     expect(detail).toHaveTextContent('PT Sample Packaging Indonesia');
+    await selectEventTab('Compare');
     expect(detail).toHaveTextContent('2 responses');
   });
 
@@ -1046,6 +1049,8 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     await closedTundra(new MockCommandService());
     renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
+    // RFx UX 2G — firm-up and award sit on the Overview tab.
+    await selectEventTab('Overview');
     fireEvent.click(await screen.findByTestId('rfp-ask-firm-rfp-002'));
     const form = await screen.findByTestId('rfp-round-form-rfp-002');
     // sup-008 is listed with the reason and cannot be picked; sup-015 can.
@@ -1117,6 +1122,8 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     expect(
       await screen.findByTestId(`rfp-pricing-rfp-002-firm-${FULL_SET}-sup-015`)
     ).toHaveTextContent('Firm');
+    // RFx UX 2G — firm-up and award sit on the Overview tab.
+    await selectEventTab('Overview');
     const item = await screen.findByTestId(`award-item-${FULL_SET}`);
     fireEvent.change(
       within(within(item).getByTestId(`award-input-${FULL_SET}-sup-007`)).getByLabelText(/Share/i),
@@ -1208,6 +1215,8 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
 
     renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
+    // RFx UX 2G — firm-up and award sit on the Overview tab.
+    await selectEventTab('Overview');
     fireEvent.click(await screen.findByTestId('rfp-ask-firm-rfp-002'));
     const form = await screen.findByTestId('rfp-round-form-rfp-002');
     // The awarded full set is listed, disabled, saying why; the pump and cap can be picked.
@@ -1245,6 +1254,8 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     await partlyAwardedTundra(svc);
     renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
+    // RFx UX 2G — firm-up and award sit on the Overview tab.
+    await selectEventTab('Overview');
     const settle = await screen.findByTestId('award-settle-rest');
     expect(settle).toHaveTextContent('Marks every open option “Will not award”');
     // NR-2 BR-06 — the close-out is an RFP award too: it waits for the reason.
@@ -1278,6 +1289,8 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     await fullSetOffersClosed(svc);
     renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
+    // RFx UX 2G — firm-up and award sit on the Overview tab.
+    await selectEventTab('Overview');
     // Population control: the award panel is on the page.
     expect(await screen.findByTestId(`award-item-${FULL_SET}`)).toBeInTheDocument();
     expect(screen.queryByTestId('award-settle-rest')).not.toBeInTheDocument();
@@ -1343,6 +1356,8 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
 
     renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
+    // RFx UX 2G — firm-up and award sit on the Overview tab.
+    await selectEventTab('Overview');
     const seen = await screen.findByTestId(`rfp-round-docs-${roundId}-sup-007`);
     expect(seen).toHaveTextContent('Documents from');
     expect(seen).toHaveTextContent('revised-drawing.pdf');

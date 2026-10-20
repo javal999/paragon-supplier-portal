@@ -2,8 +2,9 @@
 // RFx UX 2A — the buyer RFI and RFP pages (B-08, B-09, B-10).
 //
 // B-08 · the list row's button reads "Open" (it read "Answer", the supplier's
-//        verb, and "Close" when expanded); "Compare proposals" only once a
-//        proposal exists.
+//        verb, and "Close" when expanded). RFx UX 2G retired "Compare
+//        proposals": "Open" is the one row button, and the page opens on
+//        Compare once a proposal is in.
 // B-09 · the detail is its own page (`/buyer/rfi/:rfiId`, `/buyer/rfp/:rfpId`,
 //        owner ruling Q2 2026-10-19): header with status and days left, a stage
 //        bar, a "Jump to" nav with counts; the old `?open=` link redirects.
@@ -15,7 +16,7 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER } from '@test/test-utils';
-import BuyerRfxRoutes from '@test/buyerRfxRoutes';
+import BuyerRfxRoutes, { selectEventTab } from '@test/buyerRfxRoutes';
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { resetRfxStores } from '@services/data/mock/stores/rfxStores';
 import { rfqStore } from '@services/data/mock/stores/rfqStore';
@@ -45,11 +46,12 @@ describe('B-08 — the list rows', () => {
     expect(within(row).queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
   });
 
-  it('"Compare proposals" shows on an RFP with a proposal and not on one with none', async () => {
+  it('RFx UX 2G — one row button, "Open", with or without proposals ("Compare proposals" is gone)', async () => {
     at('/buyer/rfp');
-    // PASSES — rfp-001 holds proposals.
-    expect(await screen.findByTestId('rfp-compare-rfp-001')).toHaveTextContent('Compare proposals');
-    // REFUSED — ICY (rfp-003) has 0 proposals: only "Open".
+    // rfp-001 holds proposals: still only "Open" (the page opens on Compare).
+    expect(await screen.findByTestId('rfp-open-rfp-001')).toHaveTextContent(/^Open$/);
+    expect(screen.queryByTestId('rfp-compare-rfp-001')).not.toBeInTheDocument();
+    // ICY (rfp-003) has 0 proposals: only "Open".
     expect(screen.queryByTestId('rfp-compare-rfp-003')).not.toBeInTheDocument();
     expect(screen.getByTestId('rfp-open-rfp-003')).toHaveTextContent(/^Open$/);
   });
@@ -67,11 +69,15 @@ describe('B-09 — the RFI and RFP details are their own pages', () => {
     const stage = screen.getByTestId('rfi-event-stage');
     expect(within(stage).getByTestId('rfi-event-stage-sent')).toHaveAttribute('data-state', 'done');
     expect(screen.getByTestId('rfi-event-stage-next')).toHaveTextContent('Next:');
-    const nav = screen.getByTestId('event-nav');
-    expect(within(nav).getByTestId('event-nav-rfi-event-invitees')).toHaveTextContent(
-      'Invited suppliers'
-    );
-    expect(within(nav).getByTestId('event-nav-rfi-event-answers')).toHaveTextContent(/Answers\d+/);
+    // RFx UX 2G — the nav lists the active tab's sections: Compare (the
+    // default with answers in) holds the answers, Overview the invitees.
+    expect(
+      within(screen.getByTestId('event-nav')).getByTestId('event-nav-rfi-event-answers')
+    ).toHaveTextContent(/Answers\d+/);
+    await selectEventTab('Overview');
+    expect(
+      within(screen.getByTestId('event-nav')).getByTestId('event-nav-rfi-event-invitees')
+    ).toHaveTextContent('Invited suppliers');
     // And back to the list.
     fireEvent.click(screen.getByTestId('rfi-event-back'));
     expect(await screen.findByTestId('rfi-row-rfi-001')).toBeInTheDocument();
@@ -87,9 +93,9 @@ describe('B-09 — the RFI and RFP details are their own pages', () => {
     expect(screen.queryByTestId('rfi-detail-rfi-404')).not.toBeInTheDocument();
   });
 
-  it('"Compare proposals" lands on the RFP page', async () => {
+  it('"Open" on an RFP with proposals lands on its page, on the comparison (RFx UX 2G: the Compare tab)', async () => {
     at('/buyer/rfp');
-    fireEvent.click(await screen.findByTestId('rfp-compare-rfp-001'));
+    fireEvent.click(await screen.findByTestId('rfp-open-rfp-001'));
     expect(await screen.findByTestId('rfp-detail-rfp-001')).toBeInTheDocument();
     expect(screen.getByTestId('event-nav-rfp-event-comparison')).toBeInTheDocument();
   });
@@ -145,12 +151,15 @@ describe('B-10 — one actions row; the template is a menu item', () => {
   });
 
   it('the live invitee tables read "Invited suppliers", not "Invite suppliers"', async () => {
+    // RFx UX 2G — the invitee tables are on the Overview tab.
     const first = at('/buyer/rfi/rfi-001');
+    await selectEventTab('Overview');
     expect(await screen.findByTestId('rfi-invitees-title-rfi-001')).toHaveTextContent(
       /^Invited suppliers$/
     );
     first.unmount();
     at('/buyer/rfp/rfp-001');
+    await selectEventTab('Overview');
     expect(await screen.findByTestId('rfp-invitees-title-rfp-001')).toHaveTextContent(
       /^Invited suppliers$/
     );

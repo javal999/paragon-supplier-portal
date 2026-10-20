@@ -25,7 +25,7 @@ import { quotationStore } from '@services/data/mock/stores/quotationStore';
 import { sdcClock } from '@services/sdc';
 import SupplierRfi from '../SupplierRfi';
 import SupplierRfp from '../SupplierRfp';
-import BuyerRfxRoutes from '@test/buyerRfxRoutes';
+import BuyerRfxRoutes, { selectEventTab } from '@test/buyerRfxRoutes';
 import { MockProcurementService } from '@services/data/mock/MockProcurementService';
 import { supplierSourcingQueue } from '@services/sourcing/supplierOutcome';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
@@ -221,6 +221,8 @@ describe('the buyer invitee table', () => {
     // RFx UX 2A (B-09): the RFI detail is its own page, reached from the list.
     renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfi' });
     fireEvent.click(await screen.findByTestId('rfi-open-rfi-002'));
+    // RFx UX 2G — the invitee table is on the Overview tab.
+    await selectEventTab('Overview');
     const row = await screen.findByTestId('rfi-invitee-rfi-002-sup-007');
     expect(within(row).getByTestId('invitee-intent-responding')).toHaveTextContent('Will respond');
     // sup-008 sent its answers: "Submitted", whatever was said.

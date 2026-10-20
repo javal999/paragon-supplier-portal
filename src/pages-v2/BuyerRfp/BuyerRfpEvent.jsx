@@ -31,9 +31,7 @@ import RfpCreateWizard from '../rfx/RfpCreateWizard';
 import RfxStageBar from '../rfx/RfxStageBar';
 import { RFP_STAGE_STEPS, rfpStageOf } from '../rfx/rfxEventStage';
 import { rfxNow } from '../rfx/rfxDisplay';
-import EventSectionNav from '../BuyerSourcingEvent/components/EventSectionNav';
-import RfpDetail, { rfpSectionsShown } from './components/RfpDetail';
-import { rfpComparisonTermCount } from './components/RfpComparison';
+import RfpDetail from './components/RfpDetail';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ONE PROPOSAL REQUEST — REQ-E03-04 (BUY), on its own page.
@@ -43,8 +41,12 @@ import { rfpComparisonTermCount } from './components/RfpComparison';
 // shaped like the RFQ event page: a header with the status and the deadline
 // with days left, a stage bar, and a sticky "Jump to" nav with counts beside
 // the sections. The list's rows open it; `/buyer/rfp?open=<id>` redirects here;
-// `?section=<id>` lands on one section (the list's "Compare proposals" lands on
-// the terms comparison).
+// `?section=<id>` lands on one section.
+//
+// RFx UX 2G (owner ruling 2026-10-20): under the actions row the detail is
+// three tabs — Overview, Compare, By supplier — kept in the URL (`?tab=`,
+// `&supplier=`); `?section=<id>` selects the tab holding that section, and the
+// "Jump to" nav lists the active tab's sections only (`RfpDetail`).
 //
 // Everything the inline detail held is kept, with the state, queries and verb
 // runner that `BuyerRfp` held for it: the lifecycle offered BY STATE (Send on a
@@ -154,60 +156,6 @@ const BuyerRfpEvent = () => {
     award: inForce.length > 0 ? t(`rfx.status.${open.status}`) : '',
     done: ''
   };
-  const shown = rfpSectionsShown(open);
-  const termCount = rfpComparisonTermCount(open);
-  const docCount = open.responses.reduce((n, r) => n + (r.documents ?? []).length, 0);
-  const navEntries = [
-    { id: 'rfp-event-about', labelKey: 'rfx.nav.about', count: '' },
-    { id: 'rfp-event-invitees', labelKey: 'rfx.nav.invited', count: String(invited) },
-    // RFx UX 2F — each count is what its section lists: the terms comparison
-    // lists one row per term sent, before and after proposals.
-    {
-      id: 'rfp-event-comparison',
-      labelKey: 'rfx.nav.terms',
-      count: termCount === null ? '' : String(termCount)
-    },
-    ...(shown.pricing
-      ? [
-          {
-            id: 'rfp-event-pricing',
-            labelKey: 'rfx.nav.pricing',
-            count: String(open.pricing?.options.length ?? 0)
-          }
-        ]
-      : []),
-    ...(shown.firmUp
-      ? [
-          {
-            // The firm-offer rounds the section lists; no count before the first
-            // round, since "0" beside two choices reads as missing data.
-            id: 'rfp-event-firmup',
-            labelKey: 'rfx.nav.firmUp',
-            count: openRounds.length > 0 ? String(openRounds.length) : ''
-          }
-        ]
-      : []),
-    ...(shown.award
-      ? [
-          {
-            id: 'rfp-event-award',
-            labelKey: 'rfx.nav.award',
-            count: inForce.length > 0 ? t(`rfx.status.${open.status}`) : t('rfx.nav.notYet')
-          }
-        ]
-      : []),
-    ...(shown.questions
-      ? [
-          {
-            id: 'rfp-event-questions',
-            labelKey: 'rfx.nav.questions',
-            count: String((open.questions ?? []).length)
-          }
-        ]
-      : []),
-    { id: 'rfp-event-documents', labelKey: 'rfx.nav.documents', count: String(docCount) }
-  ];
-
   return (
     <AppShellV2>
       <PageHeader breadcrumb={crumb} title={open.title} subtitle={open.eventNumber} />
@@ -251,24 +199,20 @@ const BuyerRfpEvent = () => {
         testId="rfp-event-stage"
       />
 
-      <div className="lg:grid lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-6">
-        <EventSectionNav entries={navEntries} />
-        <div className="min-w-0">
-          <RfpDetail
-            open={open}
-            create={create}
-            publish={publish}
-            run={run}
-            pending={command.isPending}
-            onEdit={() => setEditing(true)}
-            supplierName={supplierName}
-            gateOf={gateOf}
-            openRounds={openRounds}
-            openAwards={openAwards}
-            openSettled={openSettled}
-          />
-        </div>
-      </div>
+      <RfpDetail
+        open={open}
+        create={create}
+        publish={publish}
+        run={run}
+        pending={command.isPending}
+        onEdit={() => setEditing(true)}
+        supplierName={supplierName}
+        gateOf={gateOf}
+        openRounds={openRounds}
+        openAwards={openAwards}
+        openSettled={openSettled}
+        awardCount={inForce.length > 0 ? t(`rfx.status.${open.status}`) : t('rfx.nav.notYet')}
+      />
 
       {!!editing && open.status === 'Draft' && create.kind === 'held' && (
         <RfpCreateWizard

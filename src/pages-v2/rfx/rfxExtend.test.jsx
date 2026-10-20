@@ -12,6 +12,7 @@ import { sdcClock } from '@services/sdc';
 import BuyerRfiEvent from '../BuyerRfiEvent';
 import BuyerRfpEvent from '../BuyerRfp/BuyerRfpEvent';
 import { extendOffered } from './rfxExtend';
+import { selectEventTab } from '@test/buyerRfxRoutes';
 
 /** @type {CurrentIdentity} */
 const PROCUREMENT = { ...BUYER, businessRoles: ['procurement'] };
@@ -57,6 +58,8 @@ describe('BL-219 — the RFI page', () => {
   it('KNOWN-GOOD — an Open RFI offers the extension', async () => {
     renderRfi('rfi-002');
     expect(await screen.findByTestId('rfi-extend-rfi-002')).toBeInTheDocument();
+    // RFx UX 2G — the "extend for" column is in the invitee table, on Overview.
+    await selectEventTab('Overview');
     expect(screen.getAllByText('For the selected suppliers').length).toBeGreaterThan(0);
   });
 

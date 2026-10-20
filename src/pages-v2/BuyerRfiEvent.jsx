@@ -29,7 +29,7 @@ import { formatDate } from '@lib/format';
 import { useRfiEvents } from '@services/query/hooks';
 import { useRfxCommand } from '@services/query/commandHooks';
 /** @import { RfxCommandVars } from '@services/query/commandHooks' */
-import { rfxFamilyForCategory, rfxSectionsOf } from '@services/sourcing/rfxConfig';
+import { rfxFamilyForCategory } from '@services/sourcing/rfxConfig';
 import { rfiTemplateStore } from '@services/sourcing/rfxTemplates';
 import { daysToDeadline, isPastDeadline } from '@services/transitions/rfxRules';
 /** @import { RfiEventView } from '@services/sourcing/views' */
@@ -41,11 +41,16 @@ import RfxMoreMenu from './rfx/RfxMoreMenu';
 import RfxStageBar from './rfx/RfxStageBar';
 import { RFI_STAGE_STEPS, rfiStageOf } from './rfx/rfxEventStage';
 import { DeadlinePill, OtifOrNoHistory, ResponseStatePill, rfxNow } from './rfx/rfxDisplay';
-import { AnswerValue, IndicativePill, authored, sectionTitle } from './rfx/rfxAuthoringDisplay';
 import { DraftRevisionNote } from './rfx/draftEdit';
 import { SupplierDocumentsPanel } from './rfx/SupplierDocumentsPanel';
 import { ConfirmSheet, closeEffects } from './rfx/ConfirmSheet';
 import { extendOffered } from './rfx/rfxExtend';
+import { inviteeTally, rfiSummaryCards } from './rfx/rfxCompare';
+/** @import { RfxEventTab } from './rfx/rfxCompare' */
+/** @import { NavEntry } from './BuyerSourcingEvent/components/EventSectionNav' */
+import { InviteeTallyLine, RfxEventTabBar, RfxTabEmpty, useRfxEventTab } from './rfx/RfxEventTabs';
+import { QuestionsSent } from './rfx/RfxProposalViews';
+import { RfiAnswersGrid, RfiSummaryStrip, RfiSupplierView } from './rfx/RfiProposals';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ONE INFORMATION REQUEST — REQ-E03-02 (BUY), on its own page.
@@ -56,6 +61,13 @@ import { extendOffered } from './rfx/rfxExtend';
 // header with the status and the deadline with days left, a stage bar, and a
 // sticky "Jump to" nav with counts beside the sections. The list's rows open
 // it; `/buyer/rfi?open=<id>` redirects here.
+//
+// RFx UX 2G (owner ruling 2026-10-20): under the stage bar and the actions
+// row the detail is three tabs — Overview (about, questions sent, invited
+// suppliers, files), Compare (summary strip, invitee one-liner, the answers
+// side by side) and By supplier (one response at a time) — kept in the URL
+// (`?tab=`, `&supplier=`). `?section=<id>` selects the tab holding that
+// section; the "Jump to" nav lists the active tab's sections only.
 //
 // RFx UX 2A (B-10): the acts sit in ONE actions row — Edit, Send and Discard
 // on a Draft, Close on an Open event, Extend, Create RFQ, Create RFP — and
@@ -81,6 +93,63 @@ import { extendOffered } from './rfx/rfxExtend';
 //     (spec D3) opens the RFP wizard (`/buyer/rfp?rfi=…`), on an Open or Closed
 //     RFI only — a Draft has no responders to carry, a Cancelled one no standing.
 // ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * RFx UX 2G — the tab that holds each section, so a `?section=<id>` deep
+ * link selects it.
+ * @type {Readonly<Record<string, RfxEventTab>>}
+ */
+export const RFI_SECTION_TAB = {
+  'rfi-event-about': 'overview',
+  'rfi-event-questions-sent': 'overview',
+  'rfi-event-invitees': 'overview',
+  'rfi-event-documents': 'overview',
+  'rfi-event-summary': 'compare',
+  'rfi-event-answers': 'compare',
+  'rfi-supplier-answers': 'supplier',
+  'rfi-supplier-documents': 'supplier',
+  'rfi-supplier-versions': 'supplier'
+};
+
+/**
+ * The "Jump to" entries of ONE tab, each with the count of what it lists.
+ * @param {RfiEventView} event
+ * @param {RfxEventTab} tab
+ * @returns {NavEntry[]}
+ */
+export const rfiNavEntries = (event, tab) => {
+  const responded = event.responses.length;
+  if (tab === 'overview')
+    return [
+      { id: 'rfi-event-about', labelKey: 'rfx.nav.about', count: '' },
+      {
+        id: 'rfi-event-questions-sent',
+        labelKey: 'rfx.nav.questions',
+        count: String(event.questions.length)
+      },
+      {
+        id: 'rfi-event-invitees',
+        labelKey: 'rfx.nav.invited',
+        count: String(event.invitedSuppliers.length)
+      },
+      {
+        id: 'rfi-event-documents',
+        labelKey: 'rfx.nav.documents',
+        count: String(event.responses.reduce((n, r) => n + (r.documents ?? []).length, 0))
+      }
+    ];
+  if (responded === 0) return [];
+  if (tab === 'compare')
+    return [
+      { id: 'rfi-event-summary', labelKey: 'rfx.nav.summary', count: String(responded) },
+      { id: 'rfi-event-answers', labelKey: 'rfx.nav.answers', count: String(responded) }
+    ];
+  return [
+    { id: 'rfi-supplier-answers', labelKey: 'rfx.nav.answers', count: '' },
+    { id: 'rfi-supplier-documents', labelKey: 'rfx.nav.documents', count: '' },
+    { id: 'rfi-supplier-versions', labelKey: 'rfx.nav.versions', count: '' }
+  ];
+};
 
 /** @type {React.FC} */
 const BuyerRfiEvent = () => {
@@ -143,14 +212,6 @@ const BuyerRfiEvent = () => {
     answersIn: t('rfx.stage.d.quoted', { quoted: responded, invited }),
     closed: event.status === 'Closed' ? t(`rfx.status.${event.status}`) : ''
   };
-  const docCount = event.responses.reduce((n, r) => n + (r.documents ?? []).length, 0);
-  const navEntries = [
-    { id: 'rfi-event-about', labelKey: 'rfx.nav.about', count: '' },
-    { id: 'rfi-event-invitees', labelKey: 'rfx.nav.invited', count: String(invited) },
-    { id: 'rfi-event-answers', labelKey: 'rfx.nav.answers', count: String(responded) },
-    { id: 'rfi-event-documents', labelKey: 'rfx.nav.documents', count: String(docCount) }
-  ];
-
   return (
     <AppShellV2>
       <PageHeader breadcrumb={crumb} title={event.title} subtitle={event.eventNumber} />
@@ -194,22 +255,17 @@ const BuyerRfiEvent = () => {
         testId="rfi-event-stage"
       />
 
-      <div className="lg:grid lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-6">
-        <EventSectionNav entries={navEntries} />
-        <div className="min-w-0">
-          <RfiDetail
-            event={event}
-            run={run}
-            onCreateRfq={() => navigate(`/buyer/rfq?rfi=${event.id}`)}
-            onCreateRfp={() => navigate(`/buyer/rfp?rfi=${event.id}`)}
-            createRfpAvailability={createRfp}
-            canPublish={publish.kind === 'held'}
-            publishAvailability={publish}
-            createAvailability={create}
-            onEdit={() => setEditing(true)}
-          />
-        </div>
-      </div>
+      <RfiDetail
+        event={event}
+        run={run}
+        onCreateRfq={() => navigate(`/buyer/rfq?rfi=${event.id}`)}
+        onCreateRfp={() => navigate(`/buyer/rfp?rfi=${event.id}`)}
+        createRfpAvailability={createRfp}
+        canPublish={publish.kind === 'held'}
+        publishAvailability={publish}
+        createAvailability={create}
+        onEdit={() => setEditing(true)}
+      />
 
       {!!editing && event.status === 'Draft' && create.kind === 'held' && (
         <RfiCreateWizard
@@ -259,50 +315,21 @@ const RfiDetail = ({
   const [confirmClose, setConfirmClose] = useState(false);
   // RFx UX 2A (B-10) — "Save as a template" is opened from the menu.
   const [saveTemplate, setSaveTemplate] = useState(false);
+  // RFx UX 2G — the tab and the supplier shown, from the URL.
+  const submitted = event.responses.length;
+  const { tab, supplier, select } = useRfxEventTab({ submitted, sectionTab: RFI_SECTION_TAB });
+  const cards = rfiSummaryCards(event);
+  const current =
+    cards.find((c) => c.response.supplierId === supplier)?.response.supplierId ??
+    cards[0]?.response.supplierId ??
+    '';
+  const entries = rfiNavEntries(event, tab);
 
   return (
-    <section className="space-y-6" data-testid={`rfi-detail-${event.id}`}>
-      {/* — The event itself, and the acts its STATE allows. — */}
-      <div
-        id="rfi-event-about"
-        className="scroll-mt-4 bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-4"
-      >
-        {/* RFx UX 2F — the number, title and status are the page header's; the card does not repeat them. */}
-        <div>
-          {/* Material G2 (MR-10 BR-06) — the type, fixed at publish. */}
-          <div>
-            <EventSourcingType
-              event={{
-                kind: 'rfi',
-                status: event.status,
-                materialCategory: event.materialCategory,
-                ...(event.purchasingGroup ? { purchasingGroup: event.purchasingGroup } : {}),
-                ...(event.sourcingType ? { sourcingType: event.sourcingType } : {})
-              }}
-              testId={`rfi-sourcing-type-${event.id}`}
-            />
-          </div>
-          {/* BL-147 — the invitees published below the level on placeholder rules, as recorded. */}
-          {!!event.qualificationWarnings && event.qualificationWarnings.length > 0 && (
-            <div className="mt-2">
-              <QualificationWarningsNote
-                kind="published"
-                warnings={event.qualificationWarnings}
-                supplierName={(sid) =>
-                  event.invitedSuppliers.find((i) => i.supplierId === sid)?.supplierName ?? sid
-                }
-                testId={`rfi-published-warnings-${event.id}`}
-              />
-            </div>
-          )}
-          <DraftRevisionNote revisions={event.revisions} testId={`rfi-last-edited-${event.id}`} />
-        </div>
-
-        {/* RFx UX 2A (B-10) — ONE actions row. */}
-        <div
-          className="flex flex-wrap items-end gap-3 mt-4 pt-4 border-t border-border-subtle"
-          data-testid={`rfi-actions-${event.id}`}
-        >
+    <section data-testid={`rfi-detail-${event.id}`}>
+      {/* The acts the event's STATE allows stay above the tabs (RFx UX 2G). */}
+      <div className="mb-4 bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-4">
+        <div className="flex flex-wrap items-end gap-3" data-testid={`rfi-actions-${event.id}`}>
           {event.status === 'Draft' &&
             (createAvailability.kind === 'held' ? (
               <Button variant="secondary" onClick={onEdit} data-testid={`rfi-edit-${event.id}`}>
@@ -472,211 +499,244 @@ const RfiDetail = ({
             />
           </div>
         )}
-        {!!event.description && (
-          <div className="mt-3">
-            <h4 className="text-xs uppercase tracking-wide text-text-tertiary">
-              {t('rfx.rfi.about')}
-            </h4>
-            <p className="text-sm text-text-secondary">{event.description}</p>
-          </div>
-        )}
-        {event.status === 'Draft' && (
-          <p
-            className="text-xs text-text-tertiary mt-3"
-            data-testid={`rfi-draft-notice-${event.id}`}
-          >
-            {t('rfx.status.draftHiddenFromSuppliers')}
-          </p>
-        )}
-        {(event.attachments ?? []).length > 0 && (
-          <div className="mt-3">
-            <SessionAttachments
-              value={event.attachments ?? []}
-              label={t('rfxa.att.buyer')}
-              testId={`rfi-attachments-${event.id}`}
-            />
-          </div>
-        )}
-        {!!event.confidentiality && (
-          <p
-            className="text-xs text-text-tertiary mt-3"
-            data-testid={`rfi-confidential-${event.id}`}
-          >
-            {t('rfxa.conf.buyerNote')}
-          </p>
-        )}
       </div>
 
-      {/* — Invitees, their OTIF and where their answer stands — */}
+      <RfxEventTabBar tab={tab} submitted={submitted} onSelect={(next) => select(next)} />
+
       <div
-        id="rfi-event-invitees"
-        className="scroll-mt-4 bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto"
+        className={entries.length > 0 ? 'lg:grid lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-6' : ''}
       >
-        <div
-          className="px-4 py-3 border-b border-border-subtle text-sm font-semibold text-text-primary"
-          data-testid={`rfi-invitees-title-${event.id}`}
-        >
-          {t('rfx.invited.title')}
-        </div>
-        <Table>
-          <TableHeader>
-            <TableHeaderCell>{t('rfx.invite.col.supplier')}</TableHeaderCell>
-            <TableHeaderCell>{t('rfx.invite.col.otif')}</TableHeaderCell>
-            <TableHeaderCell>{t('rfx.deadline.own')}</TableHeaderCell>
-            <TableHeaderCell>{t('rfx.response.submitted')}</TableHeaderCell>
-            {!!event.confidentiality && <TableHeaderCell>{t('rfxa.conf.col')}</TableHeaderCell>}
-            {canExtend ? <TableHeaderCell>{t('rfx.rfi.extendSelected')}</TableHeaderCell> : null}
-          </TableHeader>
-          <tbody>
-            {event.invitedSuppliers.map((invitee) => (
-              <TableRow
-                key={invitee.supplierId}
-                data-testid={`rfi-invitee-${event.id}-${invitee.supplierId}`}
+        {entries.length > 0 ? <EventSectionNav entries={entries} /> : null}
+        <div className="min-w-0 space-y-6" role="tabpanel" data-testid={`rfi-tab-${tab}`}>
+          {tab === 'overview' ? (
+            <>
+              <div
+                id="rfi-event-about"
+                className="scroll-mt-4 bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-4"
               >
-                <TableCell>
-                  {invitee.supplierName}
-                  {/* BL-147 — Material G2's marker: below the level for this event's type, today. */}
-                  <div className="mt-1">
-                    <EligibilityMarker
-                      eligibility={invitee.eligibility}
-                      testId={`rfi-invitee-elig-${event.id}-${invitee.supplierId}`}
+                {/* RFx UX 2F — the number, title and status are the page header's; the card does not repeat them. */}
+                <div>
+                  {/* Material G2 (MR-10 BR-06) — the type, fixed at publish. */}
+                  <div>
+                    <EventSourcingType
+                      event={{
+                        kind: 'rfi',
+                        status: event.status,
+                        materialCategory: event.materialCategory,
+                        ...(event.purchasingGroup
+                          ? { purchasingGroup: event.purchasingGroup }
+                          : {}),
+                        ...(event.sourcingType ? { sourcingType: event.sourcingType } : {})
+                      }}
+                      testId={`rfi-sourcing-type-${event.id}`}
                     />
                   </div>
-                </TableCell>
-                <TableCell>
-                  <OtifOrNoHistory otif={invitee.otif} testId={`rfi-otif-${invitee.supplierId}`} />
-                </TableCell>
-                <TableCell className="whitespace-nowrap">
-                  <DeadlinePill
-                    deadline={invitee.deadline}
-                    done={invitee.responseState === 'submitted'}
+                  {/* BL-147 — the invitees published below the level on placeholder rules, as recorded. */}
+                  {!!event.qualificationWarnings && event.qualificationWarnings.length > 0 && (
+                    <div className="mt-2">
+                      <QualificationWarningsNote
+                        kind="published"
+                        warnings={event.qualificationWarnings}
+                        supplierName={(sid) =>
+                          event.invitedSuppliers.find((i) => i.supplierId === sid)?.supplierName ??
+                          sid
+                        }
+                        testId={`rfi-published-warnings-${event.id}`}
+                      />
+                    </div>
+                  )}
+                  <DraftRevisionNote
+                    revisions={event.revisions}
+                    testId={`rfi-last-edited-${event.id}`}
                   />
-                </TableCell>
-                <TableCell>
-                  <ResponseStatePill state={invitee.responseState} intent={invitee.intent} />
-                </TableCell>
-                {!!event.confidentiality && (
-                  <TableCell data-testid={`rfi-accepted-${event.id}-${invitee.supplierId}`}>
-                    {invitee.confidentialityAcceptedAt ? (
-                      <Data>{formatDate(invitee.confidentialityAcceptedAt)}</Data>
-                    ) : (
-                      <span className="text-xs text-text-tertiary">{t('rfxa.conf.notYet')}</span>
-                    )}
-                  </TableCell>
-                )}
-                {canExtend ? (
-                  <TableCell>
-                    <input
-                      type="checkbox"
-                      className="accent-teal"
-                      aria-label={invitee.supplierName}
-                      checked={only.includes(invitee.supplierId)}
-                      onChange={() =>
-                        setOnly((prev) =>
-                          prev.includes(invitee.supplierId)
-                            ? prev.filter((s) => s !== invitee.supplierId)
-                            : [...prev, invitee.supplierId]
-                        )
-                      }
-                    />
-                  </TableCell>
-                ) : null}
-              </TableRow>
-            ))}
-          </tbody>
-        </Table>
-      </div>
-
-      {/* — The answers, side by side. Submitted only. — */}
-      <div
-        id="rfi-event-answers"
-        className="scroll-mt-4 bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto"
-      >
-        <div className="px-4 py-3 border-b border-border-subtle">
-          <span className="text-sm font-semibold text-text-primary">
-            {t('rfx.rfi.responses', { count: event.responses.length })}
-          </span>
-          <p className="text-xs text-text-tertiary mt-1">{t('rfx.rfi.scoreBasis')}</p>
-        </div>
-        {event.responses.length === 0 ? (
-          <p
-            className="px-4 py-8 text-center text-sm text-text-tertiary"
-            data-testid="rfi-no-responses"
-          >
-            {t('rfx.rfi.empty')}
-          </p>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableHeaderCell>{t('rfx.rfi.section')}</TableHeaderCell>
-              {event.responses.map((r) => (
-                <TableHeaderCell key={r.id}>
-                  {r.supplierName}
-                  <div className="text-xs font-normal normal-case text-text-tertiary">
-                    {t('rfx.rfi.score')}:{' '}
-                    {r.score === null ? t('rfx.rfi.noScore') : <Data>{r.score}</Data>}
+                </div>
+                {!!event.description && (
+                  <div className="mt-3">
+                    <h4 className="text-xs uppercase tracking-wide text-text-tertiary">
+                      {t('rfx.rfi.about')}
+                    </h4>
+                    <p className="text-sm text-text-secondary">{event.description}</p>
                   </div>
-                </TableHeaderCell>
-              ))}
-            </TableHeader>
-            <tbody>
-              {rfxSectionsOf(event.customSections).flatMap((section) =>
-                event.questions
-                  .filter((q) => q.sectionId === section.id)
-                  .map((q) => (
-                    <TableRow key={q.id} data-testid={`rfi-answer-row-${q.id}`}>
-                      <TableCell className="align-top">
-                        <div className="text-xs text-text-tertiary">{sectionTitle(t, section)}</div>
-                        <div className="text-sm text-text-primary">{authored(t, q.promptKey)}</div>
-                        {!!q.required && (
-                          <StatusPill variant="neutral" className="mt-1">
-                            {t('rfx.rfi.required')}
-                          </StatusPill>
-                        )}
-                        {q.type === 'priceRange' && <IndicativePill className="mt-1 ml-1" />}
-                      </TableCell>
-                      {event.responses.map((r) => {
-                        const answer = r.answers.find((a) => a.questionId === q.id);
-                        return (
-                          <TableCell
-                            key={r.id}
-                            className="align-top"
-                            data-testid={`rfi-answer-${q.id}-${r.supplierId}`}
-                          >
-                            <div className="text-sm text-text-primary">
-                              <AnswerValue
-                                q={q}
-                                a={answer}
-                                testId={`rfi-answer-files-${q.id}-${r.supplierId}`}
-                              />
-                            </div>
-                            {!!answer?.description && (
-                              <div className="text-xs text-text-tertiary mt-1">
-                                {answer.description}
-                              </div>
+                )}
+                {event.status === 'Draft' && (
+                  <p
+                    className="text-xs text-text-tertiary mt-3"
+                    data-testid={`rfi-draft-notice-${event.id}`}
+                  >
+                    {t('rfx.status.draftHiddenFromSuppliers')}
+                  </p>
+                )}
+                {(event.attachments ?? []).length > 0 && (
+                  <div className="mt-3">
+                    <SessionAttachments
+                      value={event.attachments ?? []}
+                      label={t('rfxa.att.buyer')}
+                      testId={`rfi-attachments-${event.id}`}
+                    />
+                  </div>
+                )}
+                {!!event.confidentiality && (
+                  <p
+                    className="text-xs text-text-tertiary mt-3"
+                    data-testid={`rfi-confidential-${event.id}`}
+                  >
+                    {t('rfxa.conf.buyerNote')}
+                  </p>
+                )}
+              </div>
+              <div id="rfi-event-questions-sent" className="scroll-mt-4">
+                <QuestionsSent
+                  title={t('rfx.questionsSent')}
+                  questions={event.questions}
+                  customSections={event.customSections}
+                  testId={`rfi-questions-sent-${event.id}`}
+                />
+              </div>
+
+              {/* — Invitees, their OTIF and where their answer stands — */}
+              <div
+                id="rfi-event-invitees"
+                className="scroll-mt-4 bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto"
+              >
+                <div
+                  className="px-4 py-3 border-b border-border-subtle text-sm font-semibold text-text-primary"
+                  data-testid={`rfi-invitees-title-${event.id}`}
+                >
+                  {t('rfx.invited.title')}
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableHeaderCell>{t('rfx.invite.col.supplier')}</TableHeaderCell>
+                    <TableHeaderCell>{t('rfx.invite.col.otif')}</TableHeaderCell>
+                    <TableHeaderCell>{t('rfx.deadline.own')}</TableHeaderCell>
+                    <TableHeaderCell>{t('rfx.response.submitted')}</TableHeaderCell>
+                    {!!event.confidentiality && (
+                      <TableHeaderCell>{t('rfxa.conf.col')}</TableHeaderCell>
+                    )}
+                    {canExtend ? (
+                      <TableHeaderCell>{t('rfx.rfi.extendSelected')}</TableHeaderCell>
+                    ) : null}
+                  </TableHeader>
+                  <tbody>
+                    {event.invitedSuppliers.map((invitee) => (
+                      <TableRow
+                        key={invitee.supplierId}
+                        data-testid={`rfi-invitee-${event.id}-${invitee.supplierId}`}
+                      >
+                        <TableCell>
+                          {invitee.supplierName}
+                          {/* BL-147 — Material G2's marker: below the level for this event's type, today. */}
+                          <div className="mt-1">
+                            <EligibilityMarker
+                              eligibility={invitee.eligibility}
+                              testId={`rfi-invitee-elig-${event.id}-${invitee.supplierId}`}
+                            />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <OtifOrNoHistory
+                            otif={invitee.otif}
+                            testId={`rfi-otif-${invitee.supplierId}`}
+                          />
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <DeadlinePill
+                            deadline={invitee.deadline}
+                            done={invitee.responseState === 'submitted'}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <ResponseStatePill
+                            state={invitee.responseState}
+                            intent={invitee.intent}
+                          />
+                        </TableCell>
+                        {!!event.confidentiality && (
+                          <TableCell data-testid={`rfi-accepted-${event.id}-${invitee.supplierId}`}>
+                            {invitee.confidentialityAcceptedAt ? (
+                              <Data>{formatDate(invitee.confidentialityAcceptedAt)}</Data>
+                            ) : (
+                              <span className="text-xs text-text-tertiary">
+                                {t('rfxa.conf.notYet')}
+                              </span>
                             )}
                           </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  ))
-              )}
-            </tbody>
-          </Table>
-        )}
-      </div>
+                        )}
+                        {canExtend ? (
+                          <TableCell>
+                            <input
+                              type="checkbox"
+                              className="accent-teal"
+                              aria-label={invitee.supplierName}
+                              checked={only.includes(invitee.supplierId)}
+                              onChange={() =>
+                                setOnly((prev) =>
+                                  prev.includes(invitee.supplierId)
+                                    ? prev.filter((s) => s !== invitee.supplierId)
+                                    : [...prev, invitee.supplierId]
+                                )
+                              }
+                            />
+                          </TableCell>
+                        ) : null}
+                      </TableRow>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
 
-      {/* — RFx B5: every supplier file, submitted responses only (NR-1 buyer step 5) — */}
-      <div id="rfi-event-documents" className="scroll-mt-4">
-        <SupplierDocumentsPanel
-          requests={event.documentRequests}
-          responses={event.responses}
-          deadlineFor={(supplierId) =>
-            event.invitedSuppliers.find((i) => i.supplierId === supplierId)?.deadline ??
-            event.responseDeadline
-          }
-          testId={`rfi-documents-${event.id}`}
-        />
+              {/* — RFx B5: every supplier file, submitted responses only (NR-1 buyer step 5) — */}
+              <div id="rfi-event-documents" className="scroll-mt-4">
+                <SupplierDocumentsPanel
+                  requests={event.documentRequests}
+                  responses={event.responses}
+                  deadlineFor={(supplierId) =>
+                    event.invitedSuppliers.find((i) => i.supplierId === supplierId)?.deadline ??
+                    event.responseDeadline
+                  }
+                  testId={`rfi-documents-${event.id}`}
+                />
+              </div>
+            </>
+          ) : submitted === 0 ? (
+            <RfxTabEmpty text={t('rfx.tab.noAnswers')} testId={`rfi-tab-empty-${tab}`} />
+          ) : tab === 'compare' ? (
+            <>
+              <div id="rfi-event-summary" className="scroll-mt-4 space-y-2">
+                <RfiSummaryStrip
+                  event={event}
+                  cards={cards}
+                  onView={(id) => select('supplier', { supplier: id })}
+                />
+                <InviteeTallyLine
+                  tally={inviteeTally(event.invitedSuppliers)}
+                  onOpen={() => select('overview', { section: 'rfi-event-invitees' })}
+                  testId={`rfi-tally-${event.id}`}
+                />
+              </div>
+              {/* — The answers, side by side. Submitted only. — */}
+              <div
+                id="rfi-event-answers"
+                className="scroll-mt-4 bg-bg-surface border border-border-subtle rounded-lg shadow-sm"
+              >
+                <div className="px-4 py-3 border-b border-border-subtle">
+                  <span className="text-sm font-semibold text-text-primary">
+                    {t('rfx.rfi.responses', { count: event.responses.length })}
+                  </span>
+                  <p className="text-xs text-text-tertiary mt-1">{t('rfx.rfi.scoreBasis')}</p>
+                </div>
+                <RfiAnswersGrid event={event} />
+              </div>
+            </>
+          ) : (
+            <RfiSupplierView
+              event={event}
+              cards={cards}
+              supplierId={current}
+              onPick={(id) => select('supplier', { supplier: id })}
+            />
+          )}
+        </div>
       </div>
     </section>
   );

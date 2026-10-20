@@ -18,7 +18,7 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
-import BuyerRfxRoutes from '@test/buyerRfxRoutes';
+import BuyerRfxRoutes, { selectEventTab } from '@test/buyerRfxRoutes';
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { NO_PERSON } from '@context/noPerson';
 import {
@@ -74,9 +74,11 @@ describe('1 — the RFP nav counts are what each section lists', () => {
       .getAllByRole('row')
       .filter((r) => (r.getAttribute('data-testid') ?? '').startsWith('rfp-term-'));
     expect(rows.length).toBeGreaterThan(0);
-    expect(navCount('rfp-event-comparison', 'Terms')).toBe(String(rows.length));
+    // RFx UX 2G — "Terms sent" is the Overview tab's Terms section
+    // (`rfp-event-terms`); `rfp-event-comparison` is the Compare grid.
+    expect(navCount('rfp-event-terms', 'Terms')).toBe(String(rows.length));
     // KNOWN-BAD — the old count was the proposals, 0 here.
-    expect(navCount('rfp-event-comparison', 'Terms')).not.toBe('0');
+    expect(navCount('rfp-event-terms', 'Terms')).not.toBe('0');
     const event = rfpEventStore.get('rfp-003');
     expect(rows).toHaveLength(event?.terms.length ?? -1);
   });
@@ -99,6 +101,8 @@ describe('1 — the RFP nav counts are what each section lists', () => {
       openedAt: rfxNow()
     });
     at('/buyer/rfp/rfp-002');
+    // RFx UX 2G — "Firm up the prices" is on the Overview tab.
+    await selectEventTab('Overview');
     await screen.findByTestId('rfp-round-rfp-round-2f');
     expect(navCount('rfp-event-firmup', 'Firm up the prices')).toBe('1');
   });
@@ -136,6 +140,8 @@ describe('2 — the About card does not repeat the page header', () => {
   it('RFI: the same', async () => {
     at('/buyer/rfi/rfi-001');
     await screen.findByTestId('rfi-detail-rfi-001');
+    // RFx UX 2G — the About card is on the Overview tab.
+    await selectEventTab('Overview');
     const card = /** @type {HTMLElement} */ (document.getElementById('rfi-event-about'));
     const header = screen.getByRole('heading', { level: 1 });
     const title = header.textContent ?? '';

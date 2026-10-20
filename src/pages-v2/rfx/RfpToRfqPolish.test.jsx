@@ -17,7 +17,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { fireEvent, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
-import BuyerRfxRoutes from '@test/buyerRfxRoutes';
+import BuyerRfxRoutes, { selectEventTab } from '@test/buyerRfxRoutes';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { resetRfxStores, rfpEventStore } from '@services/data/mock/stores/rfxStores';
@@ -142,6 +142,8 @@ describe('"Create RFQ from this RFP" on the board', () => {
     closeTundra();
     renderBoard();
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
+    // RFx UX 2G — "Firm up the prices" is on the Overview tab.
+    await selectEventTab('Overview');
     const panel = await screen.findByTestId('rfp-to-rfq-rfp-002');
     // PTI's options and the one sup-007 proposed, the latter named as such.
     expect(within(panel).getByText('Pump and cap only')).toBeInTheDocument();
@@ -179,6 +181,8 @@ describe('"Create RFQ from this RFP" on the board', () => {
     closeTundra();
     renderBoard(RECEIVING);
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
+    // RFx UX 2G — "Firm up the prices" is on the Overview tab.
+    await selectEventTab('Overview');
     const panel = await screen.findByTestId('rfp-to-rfq-rfp-002');
     expect(within(panel).queryByTestId('rfp-to-rfq-btn-rfp-002')).not.toBeInTheDocument();
     expect(within(panel).getByTestId('handoff-rfp-to-rfq')).toBeInTheDocument();
@@ -312,10 +316,11 @@ describe('plurals — "1 proposal", never "1 proposals"', () => {
   it('the RFP board and comparison read the singular at one', async () => {
     renderBoard();
     const tundraRow = await screen.findByTestId('rfp-row-rfp-002');
-    expect(tundraRow).toHaveTextContent('1 proposal');
+    // RFx UX 2G — the board's Submitted column reads "N of M submitted"
+    // (it read "1 proposal" / "3 proposals"); the count is the same fact.
+    expect(tundraRow).toHaveTextContent('1 of 2 submitted');
     expect(tundraRow).not.toHaveTextContent('1 proposals');
-    // …and the plural where there are several.
-    expect(screen.getByTestId('rfp-row-rfp-001')).toHaveTextContent('3 proposals');
+    expect(screen.getByTestId('rfp-row-rfp-001')).toHaveTextContent('3 of 4 submitted');
     fireEvent.click(screen.getByTestId('rfp-open-rfp-002'));
     const detail = await screen.findByTestId('rfp-detail-rfp-002');
     expect(detail).toHaveTextContent('1 deviation');
