@@ -100,7 +100,7 @@
 
 | ID | Requirement | Build | Waits on |
 |---|---|---|---|
-| DRC-1 | Suppliers see their own DA, read only | Built, proposal | Built behind `SUPPLIER_DA_VIEW_ENABLED = false` (DRC-D10 holds): supplier page of its own published figures, and the Incoming demand anticipation confirmation on the feedstock panel; turning it on is one value |
+| DRC-1 | Suppliers see their own DA, read only | Built, proposal (merged 2026-10-20) | Built behind `SUPPLIER_DA_VIEW_ENABLED = false` (DRC-D10 holds): supplier page of its own published figures, and the Incoming demand anticipation confirmation on the feedstock panel; turning it on is one value |
 | DRC-2 | Rolling DA over the lead time, with carry-over | Build now | A1, A9 as [Default] |
 | DRC-3 | Full DA history with carry-over origin; audit view for Procurement and Finance | Build now | — |
 | DRC-4 | Plan vs execution check: Total DA = ROP Order = SOH + OSPO + OSPR + PR; surplus absorbed in the last week, shortfall becomes a PR recommendation | Build now | A2 as [Default] |
@@ -110,7 +110,7 @@
 | DRC-8 | Supplier confirms Incoming DA + current feedstock, with a date | Build now | E1, E2 as [Default] |
 | DRC-9a | Strategic buffer = LTP − baseline | After module | C4 as [Default] |
 | DRC-9b | Production limit | Build now | E3 as [Default] |
-| DRC-9c | Protection buffer | Built, proposal | Built as a proposal, awaiting owner review: protection buffer = CEILING(max(0, LTP − average LTP of the 3 previous months), production MPQ), levels 5 to 7 only, display only; switch `protectionUplift` |
+| DRC-9c | Protection buffer | Built, proposal (merged 2026-10-20) | Built as a proposal, awaiting owner review: protection buffer = CEILING(max(0, LTP − average LTP of the 3 previous months), production MPQ), levels 5 to 7 only, display only; switch `protectionUplift` |
 | DRC-10 | System-calculated ROPs and Max, per the material's level | After module | B5–B9 as [Default]; DRC-D11 |
 | DRC-11 | CV per variant, SKU and component; stable/fluctuative | After module | C1 as [Default] |
 | DRC-12a | NPD tag and ROP review after first order | After module | D1 as [Default] |
@@ -118,10 +118,10 @@
 | DRC-13 | Call-off trigger at ROP Fisik on eWM SOH; planner approval; SAP PR recommendation when the umbrella PO runs out; max stock caps call-offs | Build now | F1 as [Default]; real-time needs the eWM feed |
 | DRC-14 | Replenishment cycle f by area | Build now | B6 as [Default] |
 | DRC-15a | Feedstock reconcile: POs ordered vs call-offs + ASNs requested, daily view | Build now | — |
-| DRC-15b | Feedstock reconcile leftover rule and final formula | Built, proposal | Built as a proposal, awaiting owner review: switch `leftoverRule` (default flag the liability, not priced, capped at max stock; `showOnly`, `carryToNextPo`). Overrides DRC-15a BR-02 until ruled |
+| DRC-15b | Feedstock reconcile leftover rule and final formula | Built, proposal (merged 2026-10-20) | Built as a proposal, awaiting owner review: switch `leftoverRule` (default flag the liability, not priced, capped at max stock; `showOnly`, `carryToNextPo`). Overrides DRC-15a BR-02 until ruled |
 | DRC-17 | What-if sandbox | After module | Scope accepted 2026-10-16 |
 | DRC-18 | LTP vs FG demand; consumption moving average | Build now | A11 as [Default] |
-| DRC-19 | Automatic OSIP level classification | Built, proposal | Built as a proposal, awaiting owner review: the system suggests a level (CV stable 4, fluctuative 3; order-method tags when master data carries them; JIT not suggested without pallet-mix data); the planner confirms it through `t_osiplevel_set` |
+| DRC-19 | Automatic OSIP level classification | Built, proposal (merged 2026-10-20) | Built as a proposal, awaiting owner review: the system suggests a level (CV stable 4, fluctuative 3; order-method tags when master data carries them; JIT not suggested without pallet-mix data); the planner confirms it through `t_osiplevel_set` |
 
 DRC-16 (daily FS reconcile) is merged into DRC-15a.
 
@@ -256,11 +256,11 @@ Each row carries its question ID into the code comment and the "Provisional" lab
 | BL-201 | Feedstock reconcile (replaces fixed stock reconcile) | M | — | DRC-15a |
 | BL-202 | What-if sandbox | L | BL-187, BL-196 | DRC-17 |
 | BL-203 | LTP vs FG demand and moving average | S | — | DRC-18 |
-| BL-204 | On hold: supplier view of DA | M | Material Planning: A1, A2, B1–B4 | DRC-1 |
-| BL-205 | On hold: protection buffer | ? | C3 | DRC-9c |
+| BL-204 | Merged 2026-10-20 (MR !13), awaiting owner review: supplier view of DA | M | Material Planning: A1, A2, B1–B4 | DRC-1 |
+| BL-205 | Merged 2026-10-20 (MR !12), awaiting owner review: protection buffer | ? | C3 | DRC-9c |
 | BL-206 | On hold: NPD vs CMM rules | ? | MDM: D2 | DRC-12b |
-| BL-207 | On hold: feedstock reconcile leftover rule | ? | Owner | DRC-15b |
-| BL-208 | On hold: automatic OSIP level classification | L | C2, F5 | DRC-19 |
+| BL-207 | Merged 2026-10-20 (MR !11), awaiting owner review: feedstock reconcile leftover rule | ? | Owner | DRC-15b |
+| BL-208 | Merged 2026-10-20 (MR !10), awaiting owner review: automatic OSIP level classification | L | C2, F5 | DRC-19 |
 | BL-209 | Golden fixture from Ary's spike case (moves from CAP-D16) | S | Ary | CAP-D16 |
 
 **Changes to existing rows and docs**

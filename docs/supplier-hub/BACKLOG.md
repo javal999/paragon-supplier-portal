@@ -146,11 +146,11 @@ The owner approved every requirement, default and decision in `SC-HUB-DA-ROP-CAL
 
 | ID | Item | Why | Size | Blocked by | Detail |
 |---|---|---|---|---|---|
-| BL-204 | Awaiting owner review (built as a proposal): supplier view of demand anticipation, and the supplier confirming Incoming DA (moved from BL-194, DRC-D17) | Suppliers must not plan on unconfirmed figures (DRC-D10) | M | Material Planning: A1, A2, B1 to B4 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-1 |
-| BL-205 | Awaiting owner review (built as a proposal): protection buffer | Uplift for non-festive materials unknown | ? | Material Planning: C3 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-9c |
+| BL-204 | Merged 2026-10-20 (MR !13), rule still awaiting owner review: supplier view of demand anticipation, and the supplier confirming Incoming DA (moved from BL-194, DRC-D17) | Suppliers must not plan on unconfirmed figures (DRC-D10) | M | Material Planning: A1, A2, B1 to B4 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-1 |
+| BL-205 | Merged 2026-10-20 (MR !12), rule still awaiting owner review: protection buffer | Uplift for non-festive materials unknown | ? | Material Planning: C3 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-9c |
 | BL-206 | On hold: NPD vs CMM rules and material-code prefixes | MoM 4C action item | ? | MDM and Material Planner: D2 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-12b |
-| BL-207 | Awaiting owner review (built as a proposal): feedstock reconcile leftover rule and final formula | "Discussed later" [Owner, 2026-10-16] | ? | Owner | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-15b |
-| BL-208 | Awaiting owner review (built as a proposal): automatic OSIP level classification | Number of levels unknown (6, 7 or 8) | L | Material Planning: C2, F5 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-19 |
+| BL-207 | Merged 2026-10-20 (MR !11), rule still awaiting owner review: feedstock reconcile leftover rule and final formula | "Discussed later" [Owner, 2026-10-16] | ? | Owner | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-15b |
+| BL-208 | Merged 2026-10-20 (MR !10), rule still awaiting owner review: automatic OSIP level classification | Number of levels unknown (6, 7 or 8) | L | Material Planning: C2, F5 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-19 |
 | BL-209 | Golden fixture from Ary Hidayat's spike use case (moves from CAP-D16) | Checks the rolling formula against Ary's numbers | S | Ary | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` CAP-D16 |
 
 ---
