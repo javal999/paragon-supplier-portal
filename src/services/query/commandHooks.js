@@ -1863,6 +1863,7 @@ export function useMaterialNameLoad() {
  * @property {number} feedstockQty
  * @property {string} confirmedOn
  * @property {string} [note]
+ * @property {boolean} [incomingDaConfirmed] BL-204 — also confirms the Incoming DA (flag-gated).
  */
 
 /** A supplier confirms its current feedstock (`t_feedstock_confirm`). */
@@ -1874,7 +1875,14 @@ export function useFeedstockConfirm() {
   return /** @type {typeof useMutation<CommandResult, Error, FeedstockConfirmVars>} */ (
     useMutation
   )({
-    mutationFn: ({ supplierId, materialCode, feedstockQty, confirmedOn, note }) =>
+    mutationFn: ({
+      supplierId,
+      materialCode,
+      feedstockQty,
+      confirmedOn,
+      note,
+      incomingDaConfirmed
+    }) =>
       svc.commands.dispatch(scope, {
         transitionId: 't_feedstock_confirm',
         entity: 'feedstockConfirmation',
@@ -1883,7 +1891,8 @@ export function useFeedstockConfirm() {
           materialCode,
           feedstockQty,
           confirmedOn,
-          ...(note && note.trim() !== '' ? { note } : {})
+          ...(note && note.trim() !== '' ? { note } : {}),
+          ...(incomingDaConfirmed === true ? { incomingDaConfirmed: true } : {})
         }
       }),
     onSuccess: (result) => {

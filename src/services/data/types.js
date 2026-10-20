@@ -627,6 +627,8 @@ export class DataError extends Error {
  * `feedstockQty`:  In the material's unit (`uom`, copied from the master); 0 allowed.
  * `confirmedOn`:  `YYYY-MM-DD`, the day the supplier confirms the figure as of; never after the day it was recorded.
  * `recordedAt` / `recordedBy`:  When and by whom the hub accepted it (hub clock, session), never from the payload.
+ * `incomingDa`:  BL-204 (DRC-8) — present when the supplier also confirmed its Incoming DA: the
+ *   publication it confirmed, resolved by the target (only possible with `SUPPLIER_DA_VIEW_ENABLED`).
  *
  * @typedef {{
  *   readonly id: string;
@@ -636,6 +638,11 @@ export class DataError extends Error {
  *   readonly uom: string;
  *   readonly confirmedOn: string;
  *   readonly note?: string;
+ *   readonly incomingDa?: {
+ *     readonly publicationId: string;
+ *     readonly planningWeek: string;
+ *     readonly totalDa: number;
+ *   };
  *   readonly recordedAt: string;
  *   readonly recordedBy: ActorAttribution;
  * }} FeedstockConfirmation
@@ -3142,6 +3149,10 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * @property {(scope: QueryScope) => Promise<Page<DemandAnticipationSupplyRow>>} getDemandAnticipation CAP-10 — demand anticipation per supplier × material × week: the
  *   frozen figure of each frozen week, today's recomputation ("would be") and its
  *   inputs, and (CAP-12) each week's open supply, gap and proposal. PTI only: a supplier scope reads an empty page.
+ * @property {(scope: QueryScope) => Promise<Page<import('./mock/demandAnticipationReadModel').SupplierDaRow>>} getSupplierDemandAnticipation BL-204 (DRC-1) — the supplier view of demand anticipation: per
+ *   supplier × material, the latest publication's figures per horizon week, read only. Built ahead and
+ *   switched off (DRC-D10, `SUPPLIER_DA_VIEW_ENABLED`): while off, every scope reads an empty page. On,
+ *   a supplier reads its own pairs only and PTI every pair.
  * @property {(scope: QueryScope) => Promise<Page<DaHistoryRow>>} getDemandAnticipationHistory DRC-3 (BL-189) — every demand anticipation publication ever recorded,
  *   one row per publication × supplier × material, with its stamped figure, its
  *   carry-over origin and the delayed call-offs it reflects (DRC-5). PTI only:

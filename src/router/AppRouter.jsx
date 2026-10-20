@@ -80,6 +80,7 @@ import SupplierRegistrationV2 from '@pages-v2/SupplierRegistration';
 import SupplierDeliveryAgreements from '@pages-v2/SupplierDeliveryAgreements';
 import SupplierCallOffs from '@pages-v2/SupplierCallOffs';
 import SupplierCapacity from '@pages-v2/SupplierCapacity';
+import SupplierDemandAnticipation from '@pages-v2/SupplierDemandAnticipation';
 import BuyerCommitments from '@pages-v2/BuyerCommitments';
 import BuyerReliability from '@pages-v2/BuyerReliability';
 import {
@@ -298,6 +299,9 @@ const AppRouter = () => {
               The earlier responses and shipment reports stay reachable beneath it;
               its Stock tab only points to the Stock page (BL-60, one stock entry). */}
             <Route path="/supplier/forecasts" element={<SupplierForecastCommitments />} />
+            {/* BL-204 (DRC-1) — the supplier's own published demand anticipation; shows
+              "not available yet" while SUPPLIER_DA_VIEW_ENABLED is off (DRC-D10). */}
+            <Route path="/supplier/demand-anticipation" element={<SupplierDemandAnticipation />} />
             {/* DRC-15a — the supplier's own feedstock reconcile rows (path kept, BR-05). */}
             <Route path="/supplier/fs-reconcile" element={<SupplierFixedStockReconcile />} />
             <Route

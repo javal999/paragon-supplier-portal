@@ -40,6 +40,15 @@ export const feedstockConfirmEn = {
   'fsConfirm.refusal.DATE_IN_FUTURE': 'The confirmation date cannot be in the future.',
   'fsConfirm.refusal.NOTE_INVALID': 'The note must be text.',
   'fsConfirm.refusal.NOTE_TOO_LONG': 'The note is too long (at most {{max}} characters).',
+  // BL-204 (DRC-8) — Incoming DA, shown only with the supplier view on. On
+  // screen it is never "DA" (CAP-D10: that abbreviation means Delivery Agreement).
+  'fsConfirm.refusal.INCOMING_DA_INVALID':
+    'Incoming demand anticipation confirmed must be yes or no.',
+  'fsConfirm.refusal.INCOMING_DA_NOT_AVAILABLE':
+    'There is no published demand anticipation to confirm for this material.',
+  'fsConfirm.incomingDa.label': 'Incoming demand anticipation confirmed',
+  'fsConfirm.incomingDa.hint': 'Published for planning week {{week}}, total',
+  'fsConfirm.incomingDa.confirmed': 'Incoming demand anticipation confirmed ({{week}} publication)',
   'fsConfirm.toast.done': 'Feedstock confirmed for {{code}}',
   'fsConfirm.toast.refused': 'Not confirmed: {{reason}}',
   'fsConfirm.pti.line': 'Feedstock (confirmed {{date}})',
@@ -82,6 +91,13 @@ export const feedstockConfirmId = {
   'fsConfirm.refusal.DATE_IN_FUTURE': 'Tanggal konfirmasi tidak boleh di masa depan.',
   'fsConfirm.refusal.NOTE_INVALID': 'Catatan harus berupa teks.',
   'fsConfirm.refusal.NOTE_TOO_LONG': 'Catatan terlalu panjang (maksimal {{max}} karakter).',
+  'fsConfirm.refusal.INCOMING_DA_INVALID':
+    'Konfirmasi antisipasi permintaan masuk harus ya atau tidak.',
+  'fsConfirm.refusal.INCOMING_DA_NOT_AVAILABLE':
+    'Tidak ada antisipasi permintaan terbit yang dapat dikonfirmasi untuk material ini.',
+  'fsConfirm.incomingDa.label': 'Antisipasi permintaan masuk dikonfirmasi',
+  'fsConfirm.incomingDa.hint': 'Terbit untuk minggu perencanaan {{week}}, total',
+  'fsConfirm.incomingDa.confirmed': 'Antisipasi permintaan masuk dikonfirmasi (terbitan {{week}})',
   'fsConfirm.toast.done': 'Feedstock dikonfirmasi untuk {{code}}',
   'fsConfirm.toast.refused': 'Tidak dikonfirmasi: {{reason}}',
   'fsConfirm.pti.line': 'Feedstock (dikonfirmasi {{date}})',
