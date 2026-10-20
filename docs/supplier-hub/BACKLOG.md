@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.33, 2026-10-19 (RFx UX: BL-212 to BL-220 added; BL-132, BL-212, BL-215 to BL-220 closed) |
+| Version | 2.34, 2026-10-20 (BL-221 added) |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -165,6 +165,7 @@ Found while building the RFx UX evaluation (`research/RFX-UX-EVALUATION-2026-10.
 |---|---|---|---|---|---|
 | BL-213 | Read and unread state for the supplier bell; real counts on the PTI bell (it shows a fixed "3"); menu counts beyond RFI, RFQ and RFP | The supplier bell counts every award and withdrawal notice it has ever shown | S | Notification store (with BL-120) | Evaluation S-04 |
 | BL-214 | Response drafts kept on the server (the "Save draft" verb) and a "Discard draft" control | Autosave keeps the draft in this browser only, so it does not follow the supplier to another device; Cancel on the quote drawer keeps the draft with no way to drop it | M | Stage F backend | Evaluation S-01 |
+| BL-221 | Order the RFP and RFI Compare grid columns like the summary cards (best scored first) | The cards are ordered by score while the grid keeps the invitation order, so the same supplier sits in different positions | S | Nothing | RFX-D25 |
 
 ## 5. Other teams and later phases
 

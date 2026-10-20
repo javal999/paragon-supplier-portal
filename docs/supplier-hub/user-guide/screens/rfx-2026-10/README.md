@@ -1,6 +1,6 @@
 # RFx screens, 2026-10-19
 
-Taken from the build on `feat/rfx-ux-wave2` (`fd90db66`) in the preview, demo date 31 Aug 2026, 1440 × 900, "Menu for: Buyer" on the PTI side and sup-007 on the supplier side. Used by `RFX-ENGINEERING-HANDOVER-2026-10.md` and section 4 of the URS & RNI form.
+Taken from the build on `feat/rfx-ux-wave2` (`fd90db66`; 12, 15, 16, 32 and 33 retaken on 2026-10-20 after RFX-D25) in the preview, demo date 31 Aug 2026, 1440 × 900, "Menu for: Buyer" on the PTI side and sup-007 on the supplier side. Used by `RFX-ENGINEERING-HANDOVER-2026-10.md` and section 4 of the URS & RNI form.
 
 | File | Shows |
 |---|---|
@@ -15,11 +15,11 @@ Taken from the build on `feat/rfx-ux-wave2` (`fd90db66`) in the preview, demo da
 | `09-buyer-rfq-fx-banner.jpg` | No exchange rate recorded: bids stay visible, not ranked, with "Record USD rate" |
 | `10-buyer-rfq-wizard.jpg` | RFQ wizard, Scope step |
 | `11-buyer-rfi-list.jpg` | RFI list with row button "Open" |
-| `12-buyer-rfi-event.jpg` | RFI event page with stage bar, nav and one actions row |
+| `12-buyer-rfi-event.jpg` | RFI page on the Compare tab: summary cards with response scores, one-line invitee count (RFX-D25) |
 | `13-buyer-rfi-invited-suppliers.jpg` | "Invited suppliers" with each supplier's state |
 | `14-buyer-rfi-close-sheet.jpg` | "Close the event" confirms on a sheet listing who is affected |
-| `15-buyer-rfp-list.jpg` | RFP list: "Compare proposals" only when a proposal exists |
-| `16-buyer-rfp-event.jpg` | RFP event page |
+| `15-buyer-rfp-list.jpg` | RFP list: one "Open" button and "N of M submitted" (RFX-D25) |
+| `16-buyer-rfp-event.jpg` | RFP page with no proposals: opens on the Overview tab |
 | `17-buyer-rfp-terms-sent.jpg` | "Terms sent" before any proposal; a declined supplier shows its reason |
 | `18-buyer-rfp-firm-up.jpg` | "Firm up the prices": firm-offer round or RFQ from this RFP, each with its rule |
 | `19-supplier-todo.jpg` | Supplier To do grouped by lane |
@@ -35,3 +35,5 @@ Taken from the build on `feat/rfx-ux-wave2` (`fd90db66`) in the preview, demo da
 | `29-supplier-rfp-draft-saved.jpg` | "Draft saved on this device at HH:MM" |
 | `30-supplier-rfp-sample-yes-no.jpg` | Sample as Yes/No, the timeline asked once, Send off with the count |
 | `31-supplier-rfi-decline-form.jpg` | Decline with a reason and own words |
+| `32-buyer-rfp-compare.jpg` | RFP Compare tab: summary cards best scored first, invitee count, "Show deviations only" (RFX-D25) |
+| `33-buyer-rfp-by-supplier.jpg` | RFP By supplier tab: one proposal at a time with Previous/Next (RFX-D25) |

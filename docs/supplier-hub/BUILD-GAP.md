@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 3.21, 2026-10-19 (RFx UX waves 1 and 2: X-76 to X-87 and the RFx rows) |
+| Version | 3.22, 2026-10-20 (X-88, proposal view) |
 | Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.12 with the prototype on `main` at `80a4281` (PR #27 merged, 2026-09-22). The RFx rows cover PRs #21, #24, #25, #26 and #27; the RFP → RFQ pre-fill was built in PR #30. The RFx improvements (supplier documents, RFP award, multi-supplier award) were added on 2026-09-28 from PRs #54 to #64, #66 and #67, read on `main` at `20341d1`. The SC Hub Material build (MR-1 to MR-10: PRs #84 to #93, #97, #101 to #110, all merged 2026-09-29) was added on 2026-09-29, read on `main` at `d7ac421`; section 1.1 maps each MR to its rules and PRs. CAP-1 wave 1 (PR #191, merged 2026-10-12) was added on 2026-10-12, read on `main` at `a5eaac3`; section 1.2 covers CAP-1 to CAP-12. |
 | Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4, E06-R); 2026-09-21 for the working calendar (Q-18, BL-14) and the commitment deadline (CR-26, BL-05), built as BL-50 and BL-48; 2026-09-21 for RFx (RFX-D1 to RFX-D5), built in PRs #21 and #24 to #27; 2026-09-25 for the RFx improvements (RFX-D6 to RFX-D14), built in PRs #54 to #64, #66 and #67. Also 2026-09-29 for the SC Hub Material build (MAT-D1 to MAT-D15, and the build rulings MAT-D16 to MAT-D21), built in PRs #84 to #93, #97 and #101 to #110 |
 | Gate evidence, RFx improvements | From 2026-09-25 08:13 UTC GitHub Actions could not run the gates: the `build · floor · test:gate` job was not started because of the account's billing limit, and the check reads as failed. That covers the final heads of PRs #54 to #56, #58 to #64, #67 and #69. The final heads of #57 and #66, which reached `main` inside #67, passed in Actions earlier on 2026-09-25. Each of these PRs reports a green local `npm run gates` run on Node 22 in its body, and the merges to `main` were gated on those runs; for the heads Actions did not run, that local run is the only gate record. The counts are held in `scripts/floor.json` and are not restated here |
@@ -230,6 +230,7 @@ The requirements are `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` (accepted 2
 | X-85 | RFx UX 2D: intent and decline on the RFI and RFP (S-13, BL-132) | Done (`feat/rfx-ux-2D`, wave 2 MR) |
 | X-86 | RFx UX 2E: follow-ups BL-212, BL-215 to BL-220, declined RFQ leaves the To do | Done (`feat/rfx-ux-2E`, wave 2 MR) |
 | X-87 | RFx UX 2F: fixes from the final preview review: RFP nav counts, no repeated header in the About card, side panel title, "Collapse" on supplier rows, one empty-cell placeholder | Done (`feat/rfx-ux-2F`, wave 2 MR) |
+| X-88 | RFx UX 2G: proposal view on the RFI and RFP pages, tabs Overview / Compare / By supplier, summary cards, deviations-only, "Best" tag, "Open" on list rows (RFX-D25) | Done (`feat/rfx-ux-2G`, wave 2 MR) |
 
 ### 2.1 Navigation and screens
 

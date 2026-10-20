@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.0, 2026-10-19 |
+| Version | 1.1, 2026-10-20 (RFX-D25 proposal view) |
 | For | The engineering team that builds the production RFx module (RFI, RFQ, RFP) of the PTI Supplier Hub |
 | What this is | The final requirement for RFx: what the prototype does, the decisions behind it, the rules, the states, the refusals, the screens, and what production must add. It replaces reading the RFx history document by document |
 | Built on | The prototype on branch `feat/rfx-ux-wave2` (GitLab MRs !8 and the wave 2 MR), which holds every RFx change to 2026-10-19 |
@@ -57,6 +57,7 @@ Every decision below is binding unless the owner changes it. Full text: `DECISIO
 | RFX-D22 | No win rate in the supplier's award history; one row per event from the award record |
 | RFX-D23 | One name per module, acronym first ("RFQ · Quotation requests"); Indonesian section header "Pengadaan" |
 | RFX-D24 | The RFQ side panel is a summary; review, exchange rate and clarifications live on the RFQ event page |
+| RFX-D25 | The RFI and RFP pages have Overview, Compare and By supplier tabs; Compare opens once a proposal is in, with summary cards, deviations-only, a neutral "Best" tag and a sticky supplier header |
 
 **Calls made during the 2026-10-19 build that wait for owner review** are in section 12. Each is built as recommended there.
 
@@ -90,16 +91,18 @@ Screenshots of every screen below, taken on the final build: `user-guide/screens
 
 | Route | Screen | What it does |
 |---|---|---|
-| `/buyer/rfi` | RFI list | Rows with number, deadline, template, responses; row button "Open"; "New information request" opens the wizard |
+| `/buyer/rfi` | RFI list | Rows with number, deadline, template and "N of M submitted"; row button "Open"; "New information request" opens the wizard |
 | `/buyer/rfi/:rfiId` | RFI event page | Header with status and days left, stage bar (Sent · Answers in · Closed), section nav with counts, one actions row (Edit, Send, Discard, Close, Extend, Create RFQ, Create RFP, More → Save as a template), "Invited suppliers" with each supplier's intent and response state, answers side by side, supplier documents |
 | `/buyer/rfq` | RFQ board | Opens on "Needs my action", ordered by next deadline; tabs Needs my action · Open · Pending award · Draft · Awarded · Closed; KPI tiles filter the table; a Next column; "As of" date line; side panel as a summary with links to the event page |
 | `/buyer/rfq/:rfqId` | RFQ event page | Header with status, deadline, days left and the stage stated in words; stage bar (Sent · Quotes in · Round · Award · Raised in SAP · Done) with a Next pill; sticky section nav (Invitees, Clarifications, What is quoted, Comparison, Rounds, Documents, Award) with counts; comparison with "Move to review", exchange-rate banner and dialog, per-break tables folded under "Show every break"; negotiation rounds; award panel with a legend for its pills; award records with cancel and "Mark raised in SAP" |
-| `/buyer/rfp` | RFP list | Rows; "Compare proposals" only when at least one proposal exists |
+| `/buyer/rfp` | RFP list | Rows with "N of M submitted"; row button "Open" |
 | `/buyer/rfp/:rfpId` | RFP event page | As the RFI page, plus "Terms sent" before any proposal, the terms comparison, indicative pricing, "Firm up the prices" (firm-offer round or RFQ from this RFP), firm-offer rounds, RFP award |
 
 **Wizards** (modal, opened from the list page): RFI (Scope, Questions, Invitees, Documents, Review), RFQ (Scope, Items, Breaks, Questions and options, Suppliers, Terms, Documents, Review), RFP (as RFI plus Terms, Pricing). The RFQ wizard seeds the first break from the Scope quantity, defaults the unit by category (Packaging → PCS, others KG) and Incoterms to FOB, and offers "Save and send to suppliers" on Review. After saving, the RFI and RFP wizards open the new event's page.
 
 **Confirmation sheets.** Close (RFI, RFP), award and cancel-award (RFQ, RFP) open a sheet listing who is affected, the shares, the reason, and what can be undone. Nothing is dispatched until the buyer confirms ("Record the award" / "Catat pemenang"; "Back to edit" / "Kembali").
+
+**Proposal view on the RFI and RFP pages (RFX-D25).** Three tabs under the actions row, held in the URL (`?tab=overview|compare|supplier`, `&supplier=<id>`): Overview (scope, terms or questions sent, invitees, documents, firm-up, award), Compare (summary cards best scored first, one-line invitee count, the grid with "Show deviations only", collapsible groups, sticky supplier header and a neutral "Best" tag, indicative prices with the lowest per option and quantity tagged; for the RFI, section accordions and "Show answers that differ"), and By supplier (one proposal at a time with Previous/Next). Compare is the default once anything is submitted. "Best" comes from `bestValueIds` in `src/pages-v2/rfx/rfxCompare.js`: lowest price basis, shortest lead time, most payment days, longest price validity; other terms get none.
 
 ### 4.2 Supplier
 
