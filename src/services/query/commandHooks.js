@@ -2781,7 +2781,9 @@ export function useWarehouseDecisionCommand() {
  * DRC-D11 (BL-196) — set or confirm one material's OSIP level (fires
  * `t_osiplevel_set`). The Safety stock targets page re-reads, so the ROP
  * Fisik formula follows the new level, and Home re-reads its review task.
- * @typedef {{ readonly materialCode: string; readonly level: number }} OsipLevelVars
+ * `fromSuggestion`: BL-208 [Proposed] — the planner confirms the system's
+ * suggested level; the row records `source: 'classification'`.
+ * @typedef {{ readonly materialCode: string; readonly level: number; readonly fromSuggestion?: boolean }} OsipLevelVars
  */
 
 /** Set or confirm a material's OSIP level (fires `t_osiplevel_set`). */
@@ -2796,14 +2798,19 @@ export function useOsipLevelCommand() {
         transitionId: 't_osiplevel_set',
         entity: 'osipLevel',
         entityId: vars.materialCode,
-        payload: { osipLevel: vars.level }
+        payload: vars.fromSuggestion
+          ? { osipLevel: vars.level, levelSource: 'classification' }
+          : { osipLevel: vars.level }
       }),
     onSuccess: (result) => {
       if (result.status === 'failed') return;
       qc.invalidateQueries({
         predicate: (q) =>
           q.queryKey[0] === 'procurement' &&
-          (q.queryKey[1] === 'safetyStock' || q.queryKey[1] === 'npdReviews')
+          (q.queryKey[1] === 'safetyStock' ||
+            q.queryKey[1] === 'npdReviews' ||
+            // BL-205 — the protection buffer reads the level in force.
+            q.queryKey[1] === 'protectionBufferInputs')
       });
     }
   });

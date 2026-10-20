@@ -21,8 +21,10 @@
 // Called off, not yet shipped = max(0, called off − ASN requested)
 // An excess is never a negative remainder; it shows as a note.
 //
-// DRC-15a BR-02 — the remainders are SHOWN ONLY: no outcome, no liability flag,
-// no settlement. What happens to a remainder is DRC-15b (BL-207), on hold.
+// DRC-15a BR-02 — the remainders carry no outcome and no settlement. What
+// happens to the "not yet called off" remainder is DRC-15b (BL-207): the owner
+// said it "will be discussed later", so a RECOMMENDATION is built behind the
+// switch `FEEDSTOCK_LEFTOVER_RULES.leftoverRule` [Proposed BL-207], for review.
 // DRC-15a BR-03 — the max stock Procurement maintains (`maxStock.js`) stays on
 // the row; it caps nothing here.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -41,6 +43,75 @@ import { SHIPPED_ASN_STATES, isReleased } from './callOffRules';
 export const FEEDSTOCK_PO_EXCLUDED_STATES = [POStatus.REJECTED];
 
 /**
+ * DRC-15b (BL-207) [Proposed] — what the "not yet called off" remainder means.
+ *   · `'showOnly'`       — shown only (DRC-15a BR-02, the behaviour before BL-207).
+ *   · `'flagLiability'`  — min(remainder, max stock where set) is flagged
+ *                          "liability, not priced", mirroring the settlement the
+ *                          owner ruled for the old fixed stock reconcile
+ *                          (REQ-E06-04 BR-09, ENG-D17: flagged, never priced,
+ *                          agreed outside the Hub). No max stock → the full remainder.
+ *   · `'carryToNextPo'`  — the remainder is shown as carried into the pair's next
+ *                          PO. Display only: nothing is created.
+ * @typedef {'showOnly' | 'flagLiability' | 'carryToNextPo'} FsLeftoverRule
+ */
+
+/** @type {readonly FsLeftoverRule[]} */
+export const FS_LEFTOVER_RULE_VARIANTS = Object.freeze([
+  'showOnly',
+  'flagLiability',
+  'carryToNextPo'
+]);
+
+/**
+ * DRC-15b (BL-207) — the leftover rules block. Every key is [Proposed]: built on
+ * the owner's request for review while the rule is "discussed later", so the
+ * page labels each figure built on it "Proposed: awaiting owner review (BL-207)".
+ */
+export const FEEDSTOCK_LEFTOVER_RULES = Object.freeze({
+  /** [Proposed BL-207] DRC-15b — the recommended variant; `FS_LEFTOVER_RULE_VARIANTS` lists the alternatives. */
+  leftoverRule: /** @type {FsLeftoverRule} */ ('flagLiability')
+});
+
+/**
+ * `rule`:  The variant that produced this outcome.
+ * `liabilityQty`:  `'flagLiability'` only: the quantity flagged "liability, not priced"; null otherwise or with no remainder.
+ * `noMaxAgreed`:  `'flagLiability'` only: the liability is the full remainder because no max stock is set.
+ * `carriedQty`:  `'carryToNextPo'` only: the remainder shown as carried into the next PO; null otherwise or with no remainder.
+ *
+ * @typedef {{
+ *   readonly rule: FsLeftoverRule;
+ *   readonly liabilityQty: number | null;
+ *   readonly noMaxAgreed: boolean;
+ *   readonly carriedQty: number | null;
+ * }} FsLeftover
+ */
+
+/**
+ * DRC-15b (BL-207) [Proposed] — the outcome of the "not yet called off"
+ * remainder under one variant. A remainder of 0 carries no flag.
+ * @param {{ readonly notYetCalledOff: number; readonly maxStock: number | null }} f
+ * @param {FsLeftoverRule} [rule]
+ * @returns {FsLeftover}
+ */
+export function feedstockLeftover(f, rule = FEEDSTOCK_LEFTOVER_RULES.leftoverRule) {
+  const none = { rule, liabilityQty: null, noMaxAgreed: false, carriedQty: null };
+  if (f.notYetCalledOff <= 0) return none;
+  switch (rule) {
+    case 'showOnly':
+      return none;
+    case 'flagLiability':
+      // [Proposed BL-207] mirrors REQ-E06-04 BR-09 / ENG-D17: flagged, never priced.
+      return f.maxStock === null
+        ? { ...none, liabilityQty: f.notYetCalledOff, noMaxAgreed: true }
+        : { ...none, liabilityQty: Math.min(f.notYetCalledOff, f.maxStock) };
+    case 'carryToNextPo':
+      return { ...none, carriedQty: f.notYetCalledOff };
+    default:
+      throw new Error(`Unknown feedstock leftover rule: ${String(rule)}`);
+  }
+}
+
+/**
  * @typedef {Pick<PurchaseOrder, 'poNumber' | 'supplierId' | 'supplierName' | 'status' | 'lineItems'>} FsPoInput
  * @typedef {Pick<CallOff, 'id' | 'callOffNumber' | 'supplierId' | 'supplierName' | 'materialCode' | 'description' | 'uom' | 'status' | 'quantity'>} FsCallOffInput
  * @typedef {Pick<ASN, 'asnNumber' | 'status' | 'callOffId' | 'lineItems'>} FsAsnInput
@@ -48,6 +119,7 @@ export const FEEDSTOCK_PO_EXCLUDED_STATES = [POStatus.REJECTED];
 
 /**
  * `asOf`:  The hub day the reconcile is read on (`YYYY-MM-DD`).
+ * `leftoverRule`:  DRC-15b variant; defaults to `FEEDSTOCK_LEFTOVER_RULES.leftoverRule` [Proposed BL-207].
  * `maxStock`:  The max stock Procurement maintains for a pair, or null (BR-03).
  * `maxStockSettable`:  Whether the pair is one the hub assigns, so the governed verb can address it.
  *
@@ -58,6 +130,7 @@ export const FEEDSTOCK_PO_EXCLUDED_STATES = [POStatus.REJECTED];
  *   readonly maxStock: (supplierId: string, materialCode: string) => number | null;
  *   readonly maxStockSettable: (supplierId: string, materialCode: string) => boolean;
  *   readonly asOf: string;
+ *   readonly leftoverRule?: FsLeftoverRule;
  * }} FsInputs
  */
 
@@ -67,6 +140,7 @@ export const FEEDSTOCK_PO_EXCLUDED_STATES = [POStatus.REJECTED];
  * `valueOnlyLines`:  Value-limit PO lines for the pair: they carry no quantity, so they add nothing to `poOrdered`.
  * `calledBeyondPo`:  Called off beyond the PO ordered (0 when not).
  * `shippedBeyondCalledOff`:  ASN requested beyond the called-off quantity (0 when not).
+ * `leftover`:  DRC-15b [Proposed BL-207] — what the "not yet called off" remainder means.
  *
  * @typedef {{
  *   readonly key: string;
@@ -89,6 +163,7 @@ export const FEEDSTOCK_PO_EXCLUDED_STATES = [POStatus.REJECTED];
  *   readonly shippedBeyondCalledOff: number;
  *   readonly maxStock: number | null;
  *   readonly maxStockSettable: boolean;
+ *   readonly leftover: FsLeftover;
  * }} FsRow
  */
 
@@ -206,6 +281,8 @@ export function buildFeedstockReconcile(input) {
   /** @type {FsRow[]} */
   const rows = [];
   for (const [key, g] of groups) {
+    const remainders = feedstockRemainders(g);
+    const maxStock = input.maxStock(g.supplierId, g.materialCode);
     rows.push({
       key,
       asOf: input.asOf,
@@ -221,9 +298,14 @@ export function buildFeedstockReconcile(input) {
       callOffNumbers: [...g.callOffNumbers].sort(),
       asnRequested: g.asnRequested,
       asnNumbers: [...g.asnNumbers].sort(),
-      ...feedstockRemainders(g),
-      maxStock: input.maxStock(g.supplierId, g.materialCode),
-      maxStockSettable: input.maxStockSettable(g.supplierId, g.materialCode)
+      ...remainders,
+      maxStock,
+      maxStockSettable: input.maxStockSettable(g.supplierId, g.materialCode),
+      // DRC-15b [Proposed BL-207]
+      leftover: feedstockLeftover(
+        { notYetCalledOff: remainders.notYetCalledOff, maxStock },
+        input.leftoverRule ?? FEEDSTOCK_LEFTOVER_RULES.leftoverRule
+      )
     });
   }
   return rows.sort(

@@ -9,6 +9,7 @@
 import { describe, expect, it } from 'vitest';
 import golden from './__fixtures__/osipGolden.json';
 import { OSIP_RULES, RULES_VERSION } from './osipRules';
+import { npdLtpWeeks } from './osipRopRules';
 import {
   DEFAULT_SWITCHES,
   HEADLINE_KEYS,
@@ -304,5 +305,140 @@ describe('BR-05 · saved scenarios: the save rule and the rules version', () => 
     expect(merged.osip.z).toBe(2);
     expect(merged.maxCap).toBe(DEFAULT_SWITCHES.maxCap);
     expect(changedSwitches(merged).sort()).toEqual(['npdRule', 'osip.z']);
+  });
+});
+
+describe('BL-212 · the NPD LTP window is read from the rules in use', () => {
+  // An NPD material: 70 a week for the first 13 weeks, then 700. The NPD demand
+  // is the highest LTP over the window ÷ 7 (DRC-10 [Default B5]).
+  const npdHand = () =>
+    hand({
+      ltp: MONDAYS.slice(0, 24).map((_, i) => (i < 13 ? 70 : 700)),
+      npd: { firstOrderFulfilled: true, oneYearAfterLaunch: true, '52WeeksHistory': true }
+    });
+
+  it('the default window (13 weeks, [Default A11]) reads 70 a week → 10 a day', () => {
+    expect(npdLtpWeeks()).toBe(13);
+    expect(npdLtpWeeks(OSIP_RULES)).toBe(OSIP_RULES.consumptionMovingAvgWeeks);
+    expect(runWhatIf(npdHand()).safety.fisik.demandPerDay).toBe(10);
+  });
+
+  it('a 26-week window through a rules variant reaches the 700 weeks: 100 a day, and ROP Fisik moves', () => {
+    const plan = runWhatIf(npdHand());
+    const wide = runWhatIf(
+      npdHand(),
+      withSwitch(DEFAULT_SWITCHES, 'osip.consumptionMovingAvgWeeks', 26)
+    );
+    expect(npdLtpWeeks({ ...OSIP_RULES, consumptionMovingAvgWeeks: 26 })).toBe(26);
+    expect(wide.safety.fisik.demandPerDay).toBe(100);
+    expect(h(wide, 'ropFisik')).not.toBe(h(plan, 'ropFisik'));
+  });
+
+  it('the window switch is listed as feeding a sandbox figure', () => {
+    expect(SWITCH_CATALOG.find((s) => s.path === 'osip.consumptionMovingAvgWeeks')?.feeds).toBe(
+      true
+    );
+  });
+});
+
+describe('BL-210 · the live functions read every input the sandbox changes', () => {
+  /**
+   * The hand material with a varied LTP and consumption, so SD, koli and MOQ
+   * all matter: LTP 50, 90 over the 2-week lead time; consumption 35 to 100.
+   * @param {Partial<WhatIfInputs>} [over]
+   * @returns {WhatIfInputs}
+   */
+  const varied = (over = {}) =>
+    hand({
+      ltp: MONDAYS.slice(0, 24).map((_, i) => (i % 2 === 0 ? 50 : 90)),
+      consumption: [40, 70, 100, 70, 40, 100, 70, 40, 100, 70, 40, 100, 35],
+      mpq: 10,
+      moq: 25,
+      koli: 50,
+      ...over
+    });
+
+  it('DA’s week-1 safety order equals ROP Order’s under every switch value', () => {
+    /** @type {WhatIfSwitches[]} */
+    const variants = [DEFAULT_SWITCHES];
+    for (const spec of SWITCH_CATALOG) {
+      const values =
+        spec.kind === 'boolean'
+          ? [true, false]
+          : spec.kind === 'choice'
+            ? (spec.options ?? [])
+            : [/** @type {number} */ (switchValue(DEFAULT_SWITCHES, spec.path)) + 1, 1];
+      for (const v of values) variants.push(withSwitch(DEFAULT_SWITCHES, spec.path, v));
+    }
+    // And the two switches that used to split them, together.
+    for (const sdSource of /** @type {const} */ (['ltp', 'consumption12w']))
+      for (const safetyRounding of /** @type {const} */ (['mpq', 'koli', 'moq']))
+        variants.push({ ...DEFAULT_SWITCHES, osip: { ...OSIP_RULES, sdSource, safetyRounding } });
+    for (const switches of variants) {
+      const run = runWhatIf(varied(), switches);
+      const label = JSON.stringify(
+        changedSwitches(switches).map((p) => [p, switchValue(switches, p)])
+      );
+      expect(run.safety.safetyOrder.value, label).not.toBeNull();
+      expect(run.da?.safetyOrder, label).toBe(run.safety.safetyOrder.value);
+    }
+    // Control, worked by hand: 1.65 × √2 × SD(50, 90) = 1.65 × √2 × 28.28 = 66.0
+    // → MPQ 10: 70, koli 50: 100, MOQ 25: 75 — the variants really differ.
+    /** @param {string} rounding */
+    const daSafety = (rounding) =>
+      runWhatIf(varied(), withSwitch(DEFAULT_SWITCHES, 'osip.safetyRounding', rounding)).da
+        ?.safetyOrder;
+    expect([daSafety('mpq'), daSafety('koli'), daSafety('moq')]).toEqual([70, 100, 75]);
+    const fromConsumption = runWhatIf(
+      varied(),
+      withSwitch(DEFAULT_SWITCHES, 'osip.sdSource', 'consumption12w')
+    );
+    // The consumption SD is not the LTP's √800 = 28.28; DA reads the same one.
+    expect(fromConsumption.safety.safetyOrder.sd).not.toBeCloseTo(Math.sqrt(800), 3);
+    const z5 = { ...DEFAULT_SWITCHES, osip: { ...OSIP_RULES, z: 5 } };
+    expect(
+      runWhatIf(varied(), {
+        ...z5,
+        osip: { ...z5.osip, sdSource: 'consumption12w' }
+      }).da?.safetyOrder
+    ).not.toBe(runWhatIf(varied(), z5).da?.safetyOrder);
+  });
+
+  it('the consumption window [A11] moves ROP Fisik: 13 weeks → 10 a day (LTP binds), 1 week → 5 a day', () => {
+    const spec = SWITCH_CATALOG.find((s) => s.path === 'osip.consumptionMovingAvgWeeks');
+    expect(spec).toMatchObject({ feeds: true });
+    expect(spec?.note).toBeUndefined();
+    // LTP 70 a week, MPQ 1. 13 weeks: highest day 100/7, min with LTP 70/7 = 10.
+    // The last week only: 35/7 = 5 a day.
+    const inputs = varied({ ltp: MONDAYS.slice(0, 24).map(() => 70), mpq: 1 });
+    const wide = runWhatIf(inputs);
+    const narrow = runWhatIf(
+      inputs,
+      withSwitch(DEFAULT_SWITCHES, 'osip.consumptionMovingAvgWeeks', 1)
+    );
+    expect(wide.safety.fisik.demandPerDay).toBe(10);
+    expect(narrow.safety.fisik.demandPerDay).toBe(5);
+    expect(wide.safety.fisik.value).toBe(10);
+    expect(narrow.safety.fisik.value).toBe(5);
+    expect(h(narrow, 'ropFisik')).not.toBe(h(wide, 'ropFisik'));
+  });
+
+  it('a typed SD drives the safety order in ROP Order and in DA alike; blank keeps the computed one', () => {
+    const base = runWhatIf(varied());
+    expect(runWhatIf(varied({ sd: null })).safety.safetyOrder).toEqual(base.safety.safetyOrder);
+    // 1.65 × √2 × 100 = 233.35 → up to the MPQ 10 → 240.
+    const typed = runWhatIf(varied({ sd: 100 }));
+    expect(typed.safety.safetyOrder).toMatchObject({ sd: 100, value: 240 });
+    expect(typed.da?.safetyOrder).toBe(240);
+    expect(typed.rops.ropOrder.value).toBe(
+      /** @type {number} */ (base.rops.ropOrder.value) - 70 + 240
+    );
+  });
+
+  it('a typed SD is checked like any input; a scenario saved without one still passes', () => {
+    expect(inputsProblem(varied({ sd: -1 }))).toBe('sd');
+    expect(inputsProblem(varied({ sd: 12.5 }))).toBeNull();
+    const { sd: _omit, ...old } = varied();
+    expect(inputsProblem(old)).toBeNull();
   });
 });

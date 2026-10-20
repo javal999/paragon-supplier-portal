@@ -180,7 +180,8 @@ export function cycleStock(ltp, leadTimeWeeks) {
  * DRC-7 BR-01 — safety order = z × √LT(weeks) × SD, rounded up per
  * `safetyRounding` [Default B4]. SD per `sdSource` [Default B2]: the sample
  * SD of LTP over the lead-time weeks, or of the last `consumptionSdWeeks`
- * weeks of consumption.
+ * weeks of consumption. BL-210 — an `sd` given (the sandbox's typed SD)
+ * replaces the computed one; absent, nothing changes.
  * @param {{
  *   readonly ltp: readonly number[];
  *   readonly leadTimeWeeks: number;
@@ -188,6 +189,7 @@ export function cycleStock(ltp, leadTimeWeeks) {
  *   readonly koli?: number;
  *   readonly moq?: number;
  *   readonly consumption?: readonly number[];
+ *   readonly sd?: number | null;
  * }} input
  * @param {OsipRules} [rules]
  * @returns {{ value: number; sd: number; raw: number; roundTo: number }}
@@ -197,7 +199,8 @@ export function safetyOrder(input, rules = OSIP_RULES) {
     rules.sdSource === 'consumption12w'
       ? (input.consumption ?? []).slice(-rules.consumptionSdWeeks)
       : input.ltp.slice(0, horizonWeeksOf(input.leadTimeWeeks));
-  const sd = sampleStdev(series);
+  // BL-210 — the override, when given, stands in for the series' SD.
+  const sd = typeof input.sd === 'number' ? input.sd : sampleStdev(series);
   const raw = rules.z * Math.sqrt(input.leadTimeWeeks) * sd;
   const roundTo =
     rules.safetyRounding === 'koli'

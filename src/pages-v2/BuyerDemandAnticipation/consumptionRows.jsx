@@ -10,7 +10,7 @@ import { sharePct } from './display';
 // grid adds it with one entry (as CAP-12 adds "Open supply" and "Gap").
 //
 //   · Recorded consumption: the supplier's share of the material's recorded
-//     consumption that week (CAP-D14: split by demand anticipation share); the
+//     consumption that week (BL-211: split by LTP share, CAP-D11); the
 //     title names the material's figure, the share, the source and the date.
 // CAP-11's "Absorbed" row (an earlier horizon's excess spread over weeks 5 to
 // 8) is retired with BR-02/03: DRC-4 BR-02 absorbs a surplus in the last week

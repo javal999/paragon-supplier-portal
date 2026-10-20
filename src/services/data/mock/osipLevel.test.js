@@ -175,6 +175,38 @@ describe('DRC-D11 — the level verb', () => {
     expect(osipLevelStore.all()).toEqual([]);
   });
 
+  it('BL-208 — a confirmed suggestion records source classification; any other levelSource records planner', async () => {
+    /** @param {unknown} levelSource @param {number} osipLevel */
+    const confirm = (levelSource, osipLevel) =>
+      cmd.dispatch(planning, {
+        transitionId: 't_osiplevel_set',
+        entity: 'osipLevel',
+        entityId: 'RM-STEAR-7300',
+        payload: { osipLevel, levelSource }
+      });
+    expect((await confirm('classification', 3)).status).toBe('done');
+    expect((await confirm('system', 5)).status).toBe('done');
+    expect(osipLevelStore.all().map((r) => [r.level, r.previous, r.source])).toEqual([
+      [3, 4, 'classification'],
+      [5, 3, 'planner']
+    ]);
+    expect(osipRopInputs(['RM-STEAR-7300']).get('RM-STEAR-7300')?.level.source).toBe('planner');
+    expect(
+      commandAuditSink.byEvent('t_osiplevel_set').filter((e) => e.outcome === 'done')
+    ).toHaveLength(2);
+  });
+
+  it('BL-208 — a confirmed suggestion is still refused for a seat without osiplevel:set', async () => {
+    const res = await cmd.dispatch(seat(['procurement']), {
+      transitionId: 't_osiplevel_set',
+      entity: 'osipLevel',
+      entityId: 'RM-STEAR-7300',
+      payload: { osipLevel: 3, levelSource: 'classification' }
+    });
+    expect(res.reason).toMatch(/^ROLE_NOT_PERMITTED/);
+    expect(osipLevelStore.all()).toEqual([]);
+  });
+
   it('OSIP_LEVEL_INVALID fires on 7 and passes on 6', async () => {
     const bad = await setLevel(planning, 7);
     expect(bad.status).toBe('failed');
@@ -231,6 +263,21 @@ describe('DRC-12a — the review task appears once when the tag drops, and not a
     expect(await tasks()).toEqual([]);
     observeNpdTags();
     await setLevel(planning, 4, 'PK-PETB-8801');
+    expect(await tasks()).toEqual([]);
+  });
+
+  it('BL-208 — confirming the suggested level (source classification) closes it too', async () => {
+    observeNpdTags();
+    receiveRestOfFirstOrder();
+    observeNpdTags();
+    expect(npdReviews().map((r) => r.materialCode)).toEqual(['RM-STEAR-7300']);
+    const res = await cmd.dispatch(planning, {
+      transitionId: 't_osiplevel_set',
+      entity: 'osipLevel',
+      entityId: 'RM-STEAR-7300',
+      payload: { osipLevel: 4, levelSource: 'classification' }
+    });
+    expect(res.status, res.reason).toBe('done');
     expect(await tasks()).toEqual([]);
   });
 

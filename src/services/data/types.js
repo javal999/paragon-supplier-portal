@@ -3140,6 +3140,9 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * @property {(scope: QueryScope) => Promise<Page<import('../transitions/osipRopRules').NpdReview>>} getNpdReviews DRC-12a (BL-198) — the open "Review ROP after first order" tasks: a material
  *   whose NPD tag the hub saw drop, until the planner sets or confirms its OSIP level. PTI only:
  *   a supplier scope reads an empty page.
+ * @property {(scope: QueryScope) => Promise<Page<import('../transitions/drcBufferRules').ProtectionBufferInput>>} getProtectionBufferInputs DRC-9c (BL-205, [Proposed]) — per supplier × material, the OSIP level in
+ *   force and the production MPQ (orderMultiple) the protection buffer reads beside the LTP. PTI
+ *   only: a supplier scope reads an empty page.
  * @property {(scope: QueryScope) => Promise<Page<BlanketPoRunOut>>} getBlanketPoRunOuts CAP-9 — every open blanket PO line projected against the LTP: its
  *   run-out and "new PO needed by" weeks, derived at read. PTI only: a supplier
  *   scope reads an empty page.

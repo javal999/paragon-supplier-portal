@@ -10,6 +10,10 @@
 //     a supplier seat is denied at SCOPE on every code, real or not (§86).
 //   · `applyTransition` APPENDS a row: the level from the payload; `previous`,
 //     `setAt` (hub clock) and `setBy` (the session's actor) are assigned here.
+//   · BL-208 (DRC-19) [Proposed] — the optional payload field `levelSource:
+//     'classification'` marks a row as the planner CONFIRMING the system's
+//     suggested level; any other value (or none) records `planner`. The
+//     system never dispatches this itself: a person always fires the verb.
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import { CommandTarget } from '../../../transitions' */
@@ -32,7 +36,8 @@ export const osipLevelTarget = {
       materialCode: id,
       level: /** @type {number} */ (payload.osipLevel),
       previous: osipLevelInForce(osipLevelStore.forMaterial(id)).level,
-      source: 'planner',
+      // BL-208 — a confirmed suggestion; anything else is the planner's own pick.
+      source: payload.levelSource === 'classification' ? 'classification' : 'planner',
       setAt: sdcClock.now(),
       setBy: scope.actor ?? NO_PERSON
     });

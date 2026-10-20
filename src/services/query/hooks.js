@@ -197,6 +197,12 @@ export const useNpdReviews = () =>
     svc.procurement.getNpdReviews(scope)
   );
 
+/** DRC-9c (BL-205, [Proposed]) — level and production MPQ per supplier × material (PTI only). */
+export const useProtectionBufferInputs = () =>
+  useServiceQuery(['procurement', 'protectionBufferInputs'], (svc, scope) =>
+    svc.procurement.getProtectionBufferInputs(scope)
+  );
+
 /** DRC-17 (BL-202) — the pairs the what-if sandbox offers (PTI only). */
 export const useWhatIfPairs = () =>
   useServiceQuery(['procurement', 'whatIf', 'pairs'], (svc, scope) =>
