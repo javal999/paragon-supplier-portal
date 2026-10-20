@@ -270,6 +270,8 @@ export function whatIfLiveInputs(supplierId, materialCode, nowIso = sdcClock.now
     supplyArea: s.supplyArea,
     f: s.supplyArea ? OSIP_RULES.replenishmentCycleDays[s.supplyArea] : null,
     consumption: [...s.consumption],
+    // BL-210 — no typed SD: computed per `sdSource`.
+    sd: null,
     // [Default, wave 2] MPQ = orderMultiple until the master data feed carries MPQ (wave 2 default).
     mpq: s.mpq,
     moq: s.moq,

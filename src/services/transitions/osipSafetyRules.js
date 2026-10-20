@@ -40,20 +40,27 @@ import {
  *   · mpqSource: MPQ = orderMultiple until the master data feed carries MPQ
  *     (wave 2 default). The material master has no MPQ field; the read model
  *     passes `MaterialSource.orderMultiple` as `mpq`.
- *   · fisikConsumptionWeeks: DRC-10 "highest of the last 3 months'
- *     consumption" read as the highest recorded week of the last 13 weekly
- *     buckets, the same 3 months as [Default A11].
  *   · daysPerWeek: DRC-B4 — f and g are days, so every weekly figure is
  *     divided by 7 before it enters ROP Fisik.
+ * The ROP Fisik consumption window is `fisikConsumptionWeeks(rules)`, read
+ * from the rules passed in at call time (BL-210), not fixed here at load.
  */
 export const OSIP_SAFETY_READ = Object.freeze({
   /** [Default, wave 2] MPQ = orderMultiple until the master data feed carries MPQ (wave 2 default). */
   mpqSource: /** @type {'orderMultiple'} */ ('orderMultiple'),
-  /** DRC-10 "last 3 months" in weekly buckets (= [Default A11]). */
-  fisikConsumptionWeeks: OSIP_RULES.consumptionMovingAvgWeeks,
   /** DRC-B4 — weekly → daily. */
   daysPerWeek: 7
 });
+
+/**
+ * DRC-10 "highest of the last 3 months' consumption", read as the highest
+ * recorded week of the last `consumptionMovingAvgWeeks` weekly buckets, the
+ * same 3 months as [Default A11]. BL-210 — read from the rules in use, so the
+ * sandbox's consumption-window switch moves ROP Fisik.
+ * @param {OsipRules} [rules]
+ * @returns {number}
+ */
+export const fisikConsumptionWeeks = (rules = OSIP_RULES) => rules.consumptionMovingAvgWeeks;
 
 /**
  * The question IDs each figure rests on, for its "Provisional" label
@@ -82,6 +89,9 @@ export const OSIP_SAFETY_QUESTIONS = Object.freeze({
  *   (`OSIP_ROP_READ.npdLtpWeeks` weeks from the current hub week).
  * `npd`:  BL-198 (DRC-12a) — the material is NPD under the NPD rule in force: ROP Fisik demand
  *   takes `fisikDemand`'s NPD branch, min(highest LTP over the next 3 months, capacity).
+ * `sd`:  BL-210 — a typed SD for the safety order (the sandbox's); absent or
+ *   null, the safety order computes it per `sdSource`. ROP Fisik's sheet
+ *   variant keeps the SD of daily consumption.
  *
  * @typedef {{
  *   readonly supplierId: string;
@@ -96,6 +106,7 @@ export const OSIP_SAFETY_QUESTIONS = Object.freeze({
  *   readonly leadTimeSteps?: readonly import('../engine/types').LeadTimeStep[];
  *   readonly ltpNext3m?: readonly number[];
  *   readonly npd?: boolean;
+ *   readonly sd?: number | null;
  * }} OsipSafetyInput
  */
 
@@ -145,10 +156,11 @@ export const OSIP_SAFETY_QUESTIONS = Object.freeze({
  * Safety order (BR-01): `safetyOrder` over the LTP of the lead-time weeks
  * (`sdSource: 'ltp'`) or the last `consumptionSdWeeks` recorded weeks
  * (`'consumption12w'`), rounded per `safetyRounding` (MPQ, koli or MOQ).
- * Unavailable with no LTP over the horizon, or fewer than two recorded weeks.
+ * Unavailable with no LTP over the horizon, or fewer than two recorded weeks,
+ * unless an SD is typed (`sd`, BL-210), which replaces the computed one.
  *
  * ROP Fisik safety (BR-02), every input a daily rate (DRC-B4):
- *   a = highest recorded week of the last `fisikConsumptionWeeks` ÷ 7
+ *   a = highest recorded week of the last `fisikConsumptionWeeks(rules)` ÷ 7
  *   b = production capacity — NOT IN THE HUB: left out of the min, flagged
  *   c = mean weekly LTP over the lead-time weeks ÷ 7; left out (flagged) when
  *       the supplier has no LTP; dropped by `fisikDemandIncludesLtp: false`
@@ -177,9 +189,12 @@ export function osipSafety(input, rules = OSIP_RULES) {
   // ── Safety order (DRC-7 BR-01) ──
   // `safetyOrder` reads the last `consumptionSdWeeks` recorded weeks.
   const sdWeeks = Math.min(input.consumption.length, rules.consumptionSdWeeks);
+  // BL-210 — a typed SD needs no series behind it.
+  const typedSd = typeof input.sd === 'number';
   /** @type {OsipUnavailable | null} */
-  const orderGap =
-    rules.sdSource === 'consumption12w'
+  const orderGap = typedSd
+    ? null
+    : rules.sdSource === 'consumption12w'
       ? sdWeeks < 2
         ? 'NO_CONSUMPTION'
         : null
@@ -193,14 +208,16 @@ export function osipSafety(input, rules = OSIP_RULES) {
       mpq: input.mpq,
       moq: input.moq,
       koli: input.koli ?? undefined,
-      consumption: input.consumption
+      consumption: input.consumption,
+      ...(typedSd ? { sd: input.sd } : {})
     },
     rules
   );
   if (so.roundTo <= 0) flags.push('NO_ROUNDING_SIZE');
 
   // ── ROP Fisik safety (DRC-7 BR-02, DRC-B4) ──
-  const window = input.consumption.slice(-OSIP_SAFETY_READ.fisikConsumptionWeeks);
+  // BL-210 — the window from the rules in use, not fixed at load.
+  const window = input.consumption.slice(-fisikConsumptionWeeks(rules));
   const daily = window.map((q) => q / perDay);
   const consumptionPerDay = daily.length === 0 ? null : Math.max(...daily);
   const ltpPerDay = hasLtp ? mean(horizon) / perDay : null;

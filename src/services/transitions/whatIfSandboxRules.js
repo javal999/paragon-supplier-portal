@@ -103,6 +103,8 @@ export const WHAT_IF_RULES = Object.freeze({
  * `leadTime`:  The source's lead time: route, steps (DRC-6) and total days; null when none is on record.
  * `supplyArea` / `f`:  The supply area and its replenishment cycle f in days (null = the rules' value).
  * `consumption`:  The supplier's share of recorded weekly consumption, oldest first.
+ * `sd`:  BL-210 — a typed SD for the safety order; null (or absent, a scenario
+ *   saved before it existed) = computed per `sdSource` [Default B2].
  * `mpq`:  [Default, wave 2] MPQ = orderMultiple until the master data feed carries MPQ.
  * `maxOverride`:  A PTI Max typed by the planner; null = the system's Max (DRC-10).
  * `soh`:  PTI SOH per plant (DRC-D12), this supplier's share; `stockOnRecord` false = SAP holds no stock.
@@ -130,6 +132,7 @@ export const WHAT_IF_RULES = Object.freeze({
  *   readonly supplyArea: SupplyArea | null;
  *   readonly f: number | null;
  *   readonly consumption: readonly number[];
+ *   readonly sd?: number | null;
  *   readonly mpq: number;
  *   readonly moq: number;
  *   readonly koli: number | null;
@@ -183,7 +186,7 @@ export const DEFAULT_SWITCHES = Object.freeze({
  *   readonly kind: 'number' | 'boolean' | 'choice';
  *   readonly options?: readonly string[];
  *   readonly feeds: boolean;
- *   readonly note?: 'cvOnly' | 'carryTarget' | 'unitName' | 'movingAverage' | 'capacity' | 'levelInput';
+ *   readonly note?: 'cvOnly' | 'carryTarget' | 'unitName' | 'capacity' | 'levelInput';
  * }} SwitchSpec
  */
 
@@ -221,14 +224,8 @@ export const SWITCH_CATALOG = Object.freeze([
     note: 'unitName'
   },
   { path: 'osip.ospoIncludesNewPo', question: 'A9', kind: 'boolean', feeds: true },
-  // `osipSafety` reads OSIP_SAFETY_READ.fisikConsumptionWeeks, fixed from this key at load.
-  {
-    path: 'osip.consumptionMovingAvgWeeks',
-    question: 'A11',
-    kind: 'number',
-    feeds: false,
-    note: 'movingAverage'
-  },
+  // BL-210 — `osipSafety` reads the ROP Fisik consumption window from the rules in use.
+  { path: 'osip.consumptionMovingAvgWeeks', question: 'A11', kind: 'number', feeds: true },
   {
     path: 'osip.fisikSafety',
     question: 'B1',
@@ -400,10 +397,9 @@ export const horizonOf = (materialClass) => WHAT_IF_RULES.horizonWeeks[materialC
  * Why a figure is shown as not available, beyond the module functions' own.
  *   · LEAD_TIME_BEYOND_HORIZON — the lead time is longer than the sandbox horizon: no DA.
  *   · NO_TRIGGER — no ROP Fisik or no Max: the trigger drafts nothing (projected SOH has no call-offs).
- *   · DA_SAFETY_LTP_ONLY — `sdSource: 'consumption12w'`: the live DA's safety order
- *     (`rollingDaFigure`) takes no consumption, so its week-1 safety differs from ROP Order's.
- *   · DA_SAFETY_MPQ_ONLY — `safetyRounding` koli or MOQ: `rollingDaFigure` passes only the MPQ.
- * @typedef {'LEAD_TIME_BEYOND_HORIZON' | 'NO_TRIGGER' | 'DA_SAFETY_LTP_ONLY' | 'DA_SAFETY_MPQ_ONLY'} WhatIfFlag
+ * (BL-210 retired DA_SAFETY_LTP_ONLY and DA_SAFETY_MPQ_ONLY: `rollingDaFigure`
+ * now takes the consumption, MOQ and koli ROP Order's safety order reads.)
+ * @typedef {'LEAD_TIME_BEYOND_HORIZON' | 'NO_TRIGGER'} WhatIfFlag
  */
 
 /**
@@ -527,7 +523,9 @@ export function runWhatIf(inputs, switches = DEFAULT_SWITCHES) {
     supplyArea: area,
     leadTimeSteps: lt ? lt.steps : [],
     ltpNext3m: ltp.slice(0, OSIP_ROP_READ.npdLtpWeeks),
-    npd: inputs.npd[switches.npdRule]
+    npd: inputs.npd[switches.npdRule],
+    // BL-210 — the typed SD, when there is one.
+    sd: inputs.sd ?? null
   };
   const safety = osipSafety(osipInput, rules);
   const rops = osipRops(osipInput, safety, inputs.level, rules);
@@ -556,12 +554,15 @@ export function runWhatIf(inputs, switches = DEFAULT_SWITCHES) {
         callOff: inputs.callOff,
         agreedFirstOutside: inputs.agreedFirstOutside,
         salesOrderQty4w: inputs.carryOverLimit,
-        ospr: inputs.ospr
+        ospr: inputs.ospr,
+        // BL-210 — the same consumption, MOQ, koli and SD as ROP Order's safety order.
+        consumption: inputs.consumption,
+        moq: inputs.moq,
+        koli: inputs.koli,
+        sd: inputs.sd ?? null
       },
       rules
     );
-    if (rules.sdSource === 'consumption12w') flags.push('DA_SAFETY_LTP_ONLY');
-    if (rules.safetyRounding !== 'mpq') flags.push('DA_SAFETY_MPQ_ONLY');
   }
 
   // DRC-13 — the trigger through the horizon, day by day (BR-04: "the check
@@ -882,6 +883,8 @@ export function inputsProblem(raw) {
     return 'leadTime';
   if (!isQtyOrNull(i.f)) return 'f';
   if (!isQtyList(i.consumption)) return 'consumption';
+  // BL-210 — absent in a scenario saved before the typed SD existed.
+  if (i.sd !== undefined && !isQtyOrNull(i.sd)) return 'sd';
   for (const k of ['mpq', 'moq', 'ospoStart', 'newPoPrev', 'callOffPrev', 'callOff'])
     if (!isQty(i[k])) return k;
   for (const k of ['koli', 'maxOverride', 'carryOverLimit', 'ospr', 'feedstock'])
@@ -976,6 +979,7 @@ export function ppt7Inputs(golden, weeks) {
     supplyArea: null,
     f: null,
     consumption: [],
+    sd: null,
     mpq: golden.mpq,
     moq: 0,
     koli: null,

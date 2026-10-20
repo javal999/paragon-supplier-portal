@@ -17,6 +17,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { MockCommandService, commandAuditSink } from './MockCommandService';
 import { MockProcurementService } from './MockProcurementService';
 import { consumptionStore } from './stores/consumptionStore';
+import { osipSafetyInputs } from './osipSafetyReadModel';
+import { whatIfLiveInputs } from './whatIfSandboxReadModel';
 import { demandAnticipationStore } from './stores/demandAnticipationStore';
 import { forecastVersionStore } from './stores/forecastHubStores';
 /** @import { QueryScope } from '../types' */
@@ -128,19 +130,41 @@ describe('recording consumption', () => {
     ).toHaveLength(1);
   });
 
-  it('splits a material shared by two suppliers by their demand anticipation share (CAP-D14)', async () => {
+  it('BL-211 — one split, by LTP share, on the grid, the safety figures, DRC-18 and the sandbox', async () => {
     const a = weekOf(await rowOf('sup-002', 'RM-EMUL-9410'), H1[0]);
-    const b = weekOf(await rowOf('sup-005', 'RM-EMUL-9410'), H1[0]);
-    const total = /** @type {number} */ (a.qty) + /** @type {number} */ (b.qty);
+    const shareA = /** @type {number} */ ((await rowOf('sup-002', 'RM-EMUL-9410')).share);
+    const shareB = /** @type {number} */ ((await rowOf('sup-005', 'RM-EMUL-9410')).share);
+    // The two suppliers' LTP shares over the share window add up to the whole.
+    expect(shareA + shareB).toBeCloseTo(1, 12);
+    expect(shareA).toBeGreaterThan(0);
+    expect(shareB).toBeGreaterThan(0);
     expect((await record(planning, { materialCode: 'RM-EMUL-9410', qty: 600 })).status).toBe(
       'done'
     );
-    const a2 = weekOf(await rowOf('sup-002', 'RM-EMUL-9410'), H1[0]);
-    const b2 = weekOf(await rowOf('sup-005', 'RM-EMUL-9410'), H1[0]);
-    expect(a2.consumption).toBe(Math.round((600 * /** @type {number} */ (a.qty)) / total));
-    expect(b2.consumption).toBe(Math.round((600 * /** @type {number} */ (b.qty)) / total));
-    expect(a2.consumptionRecord?.share).toBeCloseTo(/** @type {number} */ (a.qty) / total);
-    // Recorded consumption no longer moves the demand anticipation (CAP-11 BR-02 retired).
+    const rowA = await rowOf('sup-002', 'RM-EMUL-9410');
+    const rowB = await rowOf('sup-005', 'RM-EMUL-9410');
+    const a2 = weekOf(rowA, H1[0]);
+    const b2 = weekOf(rowB, H1[0]);
+    // The grid: 600 × the LTP share, whole units (CAP-D11).
+    expect(a2.consumption).toBe(Math.round(600 * shareA));
+    expect(b2.consumption).toBe(Math.round(600 * shareB));
+    expect(a2.consumptionRecord?.share).toBeCloseTo(shareA, 12);
+    // DRC-18: one record, so the average is 600, × the same share.
+    // (The read adds DRC-18's fields at runtime; the service's week type does not name them.)
+    const drc18 = /** @type {{ consumptionAverage?: number | null }} */ (
+      /** @type {unknown} */ (a2)
+    );
+    expect(drc18.consumptionAverage).toBe(Math.round(600 * shareA));
+    // The OSIP safety figures and the sandbox read the same share of the same week.
+    const osip = osipSafetyInputs().get('RM-EMUL-9410');
+    expect(osip?.suppliers.find((s) => s.supplierId === 'sup-002')?.consumption).toEqual([
+      600 * shareA
+    ]);
+    expect(osip?.suppliers.find((s) => s.supplierId === 'sup-005')?.consumption).toEqual([
+      600 * shareB
+    ]);
+    expect(whatIfLiveInputs('sup-002', 'RM-EMUL-9410')?.consumption).toEqual([600 * shareA]);
+    // Recorded consumption does not move the demand anticipation (CAP-11 BR-02 retired).
     expect(a2.qty).toBe(a.qty);
   });
 
