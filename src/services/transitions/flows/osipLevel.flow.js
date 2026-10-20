@@ -9,9 +9,10 @@
 //   · THE ENTITY IS THE MATERIAL CODE, and only a code the material master
 //     resolves is addressable — a level for an unknown code is NOT_FOUND.
 //   · `previous`, `setAt` and `setBy` are target-assigned, never read from the
-//     payload. Every row records its `source`: `planner` here; DRC-19's
-//     automatic classification (on hold) appends `classification` rows to the
-//     same ledger, so the level field needs no migration when it lands.
+//     payload. Every row records its `source`: `planner` for the planner's own
+//     pick, `classification` when the planner confirms the suggested level
+//     (optional payload `levelSource`, BL-208 / DRC-19 [Proposed]). The system
+//     never fires this verb on its own.
 //   · Setting the level in force again is accepted: it records the planner's
 //     confirmation, which is how the NPD review task closes (DRC-12a, BL-198).
 //
