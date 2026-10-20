@@ -121,7 +121,7 @@
 | DRC-15b | Feedstock reconcile leftover rule and final formula | Built, proposal | Built as a proposal, awaiting owner review: switch `leftoverRule` (default flag the liability, not priced, capped at max stock; `showOnly`, `carryToNextPo`). Overrides DRC-15a BR-02 until ruled |
 | DRC-17 | What-if sandbox | After module | Scope accepted 2026-10-16 |
 | DRC-18 | LTP vs FG demand; consumption moving average | Build now | A11 as [Default] |
-| DRC-19 | Automatic OSIP level classification | Hold | C2, F5; the level field exists from DRC-D11 |
+| DRC-19 | Automatic OSIP level classification | Built, proposal | Built as a proposal, awaiting owner review: the system suggests a level (CV stable 4, fluctuative 3; order-method tags when master data carries them; JIT not suggested without pallet-mix data); the planner confirms it through `t_osiplevel_set` |
 
 DRC-16 (daily FS reconcile) is merged into DRC-15a.
 
@@ -307,6 +307,7 @@ Each row carries its question ID into the code comment and the "Provisional" lab
 | DRC-D18 | Access to the DA history (DRC-3, BL-189) | Accepted 2026-10-19: no role gate, as `CLAUDE.md` §65 holds for every page; planners find it under Review, Procurement and Finance under Audit; a supplier reads nothing |
 | DRC-D19 | NPD default on sample data (DRC-12a) | Accepted 2026-10-19: keep "until first order fulfilled" (D1); the page notes that sample PO history is partial, so most sample materials read as NPD |
 | DRC-D20 | Supplier-below-ROP alert after DRC-D15 (REQ-E08-05) | Accepted 2026-10-19: the alert compares supplier stock with the system ROP Supplier; it does not fire where that figure is not available |
+| DRC-D21 | One consumption split per supplier (BL-211) | Accepted 2026-10-19: every page splits a material's recorded consumption across its suppliers by LTP share over the share window (CAP-D11); `consumptionSplit` defaults to `'ltpShare'`, with the DA-share (CAP-D14) and even splits kept as variants |
 
 ---
 
@@ -345,7 +346,7 @@ Readings the builders made where the sources leave a gap. Each sits behind a rul
 | DRC-B22 | Own remainder (DRC-2 BR-03) | A remainder made this planning week shows as "carried to Wxx" and enters the figures from the next planning week, as PPT 8 week 2 reads |
 | DRC-B23 | Surplus alert (DRC-4 BR-02) | `demandAnticipationUnabsorbed` now fires on a surplus the last week cannot take (replaces the CAP-11 weeks 5 to 8 alert) |
 | DRC-B24 | ROP Fisik safety inputs (DRC-7 BR-02) | Production capacity is left out of the min (no PTI figure); "highest consumption of 3 months" = highest recorded week of the last 13 ÷ 7; the LTP term = mean weekly LTP over the lead time ÷ 7 |
-| DRC-B25 | Consumption per supplier (DRC-7, DRC-18) | The OSIP safety figures and the DRC-18 rows split a material's consumption by the supplier's LTP share over the share window (CAP-D11). The recorded-consumption grid on Demand anticipation keeps CAP-D14's split by each supplier's share of that week's demand anticipation. Aligning the two is open |
+| DRC-B25 | Consumption per supplier (DRC-7, DRC-18) | Split by the supplier's LTP share over the share window (CAP-D11) on every page, the Demand anticipation grid included (DRC-D21, BL-211) |
 | DRC-B26 | CV (DRC-11) | Historical weekly sell-in for the 26 weeks before now, stock-outs filled as the engine fills them; each SKU is its own variant (no variant grouping in the data) |
 | DRC-B27 | Production limit (DRC-9b) | The existing "Allocated" row on PTI Capacity is the production limit, relabelled and marked Provisional |
 | DRC-B28 | Strategic buffer (DRC-9a) | Festive window = the months from the first day of Ramadan to Lebaran (event calendar); CNY is not in the calendar and is not shown; an incomplete baseline shows "—" |
@@ -378,7 +379,7 @@ Readings the builders made where the sources leave a gap. Each sits behind a rul
 | DRC-B45 | RM or PM horizon (DRC-17) | SAP material type VERP = packaging (24 weeks), anything else = raw material (52 weeks) |
 | DRC-B46 | Saving (DRC-17) | `t_whatifscenario_save`, atom `whatifscenario:save` in the planning lane, append-only, stamped with `RULES_VERSION`; no page role gate (§65, DRC-D18) |
 | DRC-B47 | PPT 7 preset (DRC-17) | Offered as its own pair so a confirmed result can be saved; runs on the hub's Mondays; ROP Fisik, Max and the trigger read "Not available" because the slide gives no consumption or supply area |
-| DRC-B48 | Inputs that feed no figure (DRC-17) | Listed on the page with the reason: feedstock (E1), CV threshold and window (CV not shown), carry-over target and limit, the consumption window, the production-limit source. SD cannot be typed, only its source switched. Gaps in live functions are BL-210 |
+| DRC-B48 | Inputs that feed no figure (DRC-17) | Listed on the page with the reason: feedstock (E1), CV threshold and window (CV not shown), carry-over target and limit, the production-limit source. Since BL-210, SD can be typed (it replaces the computed SD in the safety order) and the consumption window moves ROP Fisik |
 
 ## 7. Build order
 

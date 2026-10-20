@@ -9,7 +9,7 @@ export const consumptionEn = {
   'consumption.title': 'Record consumption',
   'consumption.marker': 'Consumption recorded by the planner · awaiting SAP goods-issue feed',
   'consumption.howItWorks':
-    'Record what a material actually used in a week, up to the current one. It shows on the grid and feeds the consumption average. A material’s consumption is shared across its suppliers by their share of that week’s demand anticipation. A later record for the same material and week replaces the earlier one.',
+    'Record what a material actually used in a week, up to the current one. It shows on the grid and feeds the consumption average. A material’s consumption is shared across its suppliers by their share of the material’s LTP (the share shown on each card), the same split the safety figures use. A later record for the same material and week replaces the earlier one.',
   'consumption.noWeeks':
     'No material has demand anticipation, so there is nothing to record consumption for.',
   'consumption.field.material': 'Material',
@@ -56,7 +56,7 @@ export const consumptionId = {
   'consumption.title': 'Catat pemakaian',
   'consumption.marker': 'Pemakaian dicatat oleh perencana · menunggu umpan pengeluaran barang SAP',
   'consumption.howItWorks':
-    'Catat pemakaian aktual material pada suatu minggu, sampai minggu ini. Pemakaian tampil di grid dan masuk ke rata-rata pemakaian. Pemakaian material dibagi ke pemasoknya menurut bagian masing-masing atas antisipasi permintaan minggu itu. Catatan yang lebih baru untuk material dan minggu yang sama menggantikan yang lebih lama.',
+    'Catat pemakaian aktual material pada suatu minggu, sampai minggu ini. Pemakaian tampil di grid dan masuk ke rata-rata pemakaian. Pemakaian material dibagi ke pemasoknya menurut bagian masing-masing atas LTP material (bagian yang tampil di tiap kartu), pembagian yang sama dengan angka pengaman. Catatan yang lebih baru untuk material dan minggu yang sama menggantikan yang lebih lama.',
   'consumption.noWeeks':
     'Tidak ada material dengan antisipasi permintaan, jadi tidak ada pemakaian untuk dicatat.',
   'consumption.field.material': 'Material',
