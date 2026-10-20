@@ -133,7 +133,11 @@ The requirements are `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` (accepted 2
 | DRC-13 Call-off trigger (BL-199) | Built | MR !6 | `callOffTriggerRules.js`, `ptiStockStore`; drafts marked "Drafted at ROP Fisik"; "Create a PR in SAP" on What to order and Home. Fires only on PTI SOH updates (no eWM feed yet) |
 | DRC-3 DA history (BL-189) | Built | MR !6 | `/buyer/demand-anticipation-history`, filters and CSV; ungated (DRC-D18) |
 | DRC-5 Delayed call-off (BL-191) | Built | MR !6 | "LTP dropped" change, supplier approve or reject on the call-off |
-| DRC-8 Feedstock confirmation (BL-194) | Built, feedstock only | MR !6 | Supplier "Current feedstock" panel; PTI line on Inventory; Incoming DA waits for BL-204 |
+| DRC-8 Feedstock confirmation (BL-194) | Built | MR !6, !13 | Supplier "Current feedstock" panel; PTI line on Inventory; the Incoming DA confirmation is built behind `SUPPLIER_DA_VIEW_ENABLED = false` (BL-204) |
+| DRC-1 Supplier view of DA (BL-204) | Built, switched off | MR !13 | Supplier page of its own published figures; flag `SUPPLIER_DA_VIEW_ENABLED = false` until Material Planning confirms A1, A2, B1 to B4 (DRC-D10) |
+| DRC-9c Protection buffer (BL-205) | Built, proposal | MR !12 | `PROTECTION_BUFFER_RULES.protectionUplift`: CEILING(max(0, LTP − average LTP of the 3 previous months), production MPQ), levels 5 to 7, display only on PTI Capacity; marked Proposed |
+| DRC-15b Feedstock leftover rule (BL-207) | Built, proposal | MR !11 | `FEEDSTOCK_LEFTOVER_RULES.leftoverRule` = `flagLiability`: remainder flagged as liability, not priced, capped at max stock; `showOnly` restores DRC-15a BR-02; marked Proposed |
+| DRC-19 Suggested OSIP level (BL-208) | Built, proposal | MR !10 | `osipLevelSuggestion.js`: suggests a level from CV (stable 4, fluctuative 3) or order-method tags; the planner confirms through `t_osiplevel_set`; JIT not suggested without pallet-mix data; marked Proposed |
 | DRC-17 What-if sandbox (BL-202) | Built | MR !7 | `/buyer/what-if`: one supplier × material, live inputs and rule switches, results against the current plan, 52/24-week projection, named scenarios compared up to 3, PPT 7 preset; analysis only |
 | Every other DRC | Not built | — | — |
 
