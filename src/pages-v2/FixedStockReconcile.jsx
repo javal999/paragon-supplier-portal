@@ -29,6 +29,7 @@ import { useFixedStockReconcile } from '@services/query/hooks';
 import { useMaxStockSet } from '@services/query/commandHooks';
 /** @import { FixedStockReconcileRow } from '@services/data/types' */
 import { maxStockRefusal } from '@services/transitions/maxStock';
+import { FEEDSTOCK_LEFTOVER_RULES } from '@services/transitions/feedstockReconcile';
 import { forecastNow } from './forecasts/forecastDisplay';
 import { inputClass, labelClass } from './inventory/inventoryDisplay';
 
@@ -44,8 +45,10 @@ const fieldClass = `${inputClass} ${FIELD_FOCUS_RING}`;
 //
 // Per supplier × material, read on the hub's current day (BR-01): what PTI
 // ordered on POs, what it called off, what the supplier shipped on ASNs against
-// those call-offs, and the two remainders. The remainders are shown only — no
-// outcome, liability or settlement (BR-02); what happens to them is DRC-15b.
+// those call-offs, and the two remainders, with no outcome or settlement (BR-02).
+// What "not yet called off" means is DRC-15b (BL-207), built as a recommendation
+// behind `FEEDSTOCK_LEFTOVER_RULES.leftoverRule` and labelled [Proposed]: the
+// row shows the liability flag or the carry the rows were built with.
 // The max stock stays on the row and Procurement sets it with `maxstock:set`
 // (BR-03); any other PTI seat sees whose act it is; a supplier reads it only.
 // The planner sees every supplier; the supplier sees its own rows, scoped by
@@ -83,6 +86,8 @@ const FixedStockReconcile = ({ persona }) => {
 
   const rows = query.data?.items ?? [];
   const cols = isPti ? 8 : 7;
+  // DRC-15b [Proposed BL-207] — the variant the rows were built with.
+  const leftoverRule = rows[0]?.leftover.rule ?? FEEDSTOCK_LEFTOVER_RULES.leftoverRule;
   const draftQty = draft.trim() === '' ? null : Number(draft.trim());
   const draftInvalid =
     draft.trim() !== '' && (Number.isNaN(draftQty) || maxStockRefusal(draftQty) !== null);
@@ -120,6 +125,37 @@ const FixedStockReconcile = ({ persona }) => {
             })
     });
     setEditing(null);
+  };
+
+  /**
+   * DRC-15b [Proposed BL-207] — the leftover outcome under "Not yet called off".
+   * @param {FixedStockReconcileRow} r
+   */
+  const leftoverNotes = (r) => {
+    const { liabilityQty, noMaxAgreed, carriedQty } = r.leftover;
+    if (liabilityQty === null && carriedQty === null) return null;
+    return (
+      <>
+        {liabilityQty !== null && (
+          <span className={note} data-testid={`fsr-liability-${r.key}`}>
+            {t('fsr.leftover.liability')} <Qty value={liabilityQty} uom={r.uom} />
+          </span>
+        )}
+        {liabilityQty !== null && noMaxAgreed ? (
+          <span className={note} data-testid={`fsr-liability-nomax-${r.key}`}>
+            {t('fsr.leftover.noMax')}
+          </span>
+        ) : null}
+        {carriedQty !== null && (
+          <span className={note} data-testid={`fsr-carried-${r.key}`}>
+            {t('fsr.leftover.carried')} <Qty value={carriedQty} uom={r.uom} />
+          </span>
+        )}
+        <span className={note} data-testid={`fsr-proposed-${r.key}`}>
+          {t('fsr.proposed')}
+        </span>
+      </>
+    );
   };
 
   /** @param {FixedStockReconcileRow} r */
@@ -230,6 +266,7 @@ const FixedStockReconcile = ({ persona }) => {
                       {t('fsr.calledBeyond')} <Qty value={r.calledBeyondPo} uom={r.uom} />
                     </span>
                   )}
+                  {leftoverNotes(r)}
                 </TableCell>
                 <TableCell className="align-top">
                   <Qty
@@ -260,9 +297,13 @@ const FixedStockReconcile = ({ persona }) => {
           </tbody>
         </Table>
       </div>
-      {/* DRC-15a BR-02 — the remainders are shown only; the leftover rule is DRC-15b. */}
-      <p className="text-sm text-text-secondary mb-6" data-testid="fsr-remainder-note">
-        {t('fsr.remainderUndecided')}
+      {/* DRC-15b [Proposed BL-207] — names the proposed leftover rule and its switch. */}
+      <p
+        className="text-sm text-text-secondary mb-6"
+        data-testid="fsr-remainder-note"
+        data-leftover-rule={leftoverRule}
+      >
+        {t(`fsr.leftover.note.${leftoverRule}`)} {t('fsr.proposed')}
       </p>
 
       <section
