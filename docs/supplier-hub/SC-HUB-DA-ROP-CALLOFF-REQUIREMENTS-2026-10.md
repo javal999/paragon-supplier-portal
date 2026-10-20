@@ -110,7 +110,7 @@
 | DRC-8 | Supplier confirms Incoming DA + current feedstock, with a date | Build now | E1, E2 as [Default] |
 | DRC-9a | Strategic buffer = LTP − baseline | After module | C4 as [Default] |
 | DRC-9b | Production limit | Build now | E3 as [Default] |
-| DRC-9c | Protection buffer | Hold | C3: uplift for non-festive materials unknown |
+| DRC-9c | Protection buffer | Built, proposal | Built as a proposal, awaiting owner review: protection buffer = CEILING(max(0, LTP − average LTP of the 3 previous months), production MPQ), levels 5 to 7 only, display only; switch `protectionUplift` |
 | DRC-10 | System-calculated ROPs and Max, per the material's level | After module | B5–B9 as [Default]; DRC-D11 |
 | DRC-11 | CV per variant, SKU and component; stable/fluctuative | After module | C1 as [Default] |
 | DRC-12a | NPD tag and ROP review after first order | After module | D1 as [Default] |

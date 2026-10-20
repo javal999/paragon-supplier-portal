@@ -29,7 +29,34 @@ export const drcBuffersEn = {
   'buffers.strategic.noWindow': 'No festive window in the LTP months',
   'buffers.strategic.loading': 'Loading the LTP…',
   'buffers.strategic.error': 'The LTP could not be loaded.',
-  'buffers.strategic.empty': 'No supplier × material with LTP matches the filters.'
+  'buffers.strategic.empty': 'No supplier × material with LTP matches the filters.',
+  // DRC-9c (BL-205) — protection buffer, [Proposed].
+  'buffers.proposed': 'Proposed: awaiting owner review (BL-205, {{question}})',
+  'buffers.protection.title': 'Protection buffer, OSIP levels 5 to 7',
+  'buffers.protection.subtitle':
+    'Protection buffer = CEILING(uplift, production MPQ), uplift = LTP − average LTP of the {{months}} months before; never below 0. Levels 5, 6 and 7 only: level 4 has none, levels 1 to 3 take the strategic buffer. Read only: ROP Fisik and Max do not include it.',
+  'buffers.protection.absorbed': 'Planned stock: PTI absorbs it even if demand does not rise',
+  'buffers.protection.switchedOff': 'Protection buffer switched off: no figure is computed.',
+  'buffers.protection.col.supplier': 'Supplier',
+  'buffers.protection.col.material': 'Material',
+  'buffers.protection.col.level': 'OSIP level',
+  'buffers.protection.col.month': 'Month',
+  'buffers.protection.col.ltp': 'LTP',
+  'buffers.protection.col.baseline': 'Baseline',
+  'buffers.protection.col.uplift': 'Uplift',
+  'buffers.protection.col.buffer': 'Protection buffer',
+  'buffers.protection.levelDefault': 'Level {{level}} (default)',
+  'buffers.protection.level': 'Level {{level}}',
+  'buffers.protection.mpq': 'MPQ {{mpq}}',
+  'buffers.protection.noMpq': 'No MPQ',
+  'buffers.protection.reason.level4': 'Level 4: no protection buffer',
+  'buffers.protection.reason.strategicLevel': 'Level {{level}}: strategic buffer instead',
+  'buffers.protection.reason.otherLevel': 'Level {{level}}: no protection buffer',
+  'buffers.protection.reason.switchedOff': 'Switched off',
+  'buffers.protection.baselineIncomplete': 'Baseline incomplete',
+  'buffers.protection.loading': 'Loading the protection buffer…',
+  'buffers.protection.error': 'The protection buffer could not be loaded.',
+  'buffers.protection.empty': 'No supplier × material with LTP matches the filters.'
 };
 
 /** @type {Record<string, string>} */
@@ -56,5 +83,32 @@ export const drcBuffersId = {
   'buffers.strategic.noWindow': 'Tidak ada periode hari raya dalam bulan LTP',
   'buffers.strategic.loading': 'Memuat LTP…',
   'buffers.strategic.error': 'LTP tidak dapat dimuat.',
-  'buffers.strategic.empty': 'Tidak ada pemasok × material dengan LTP yang sesuai filter.'
+  'buffers.strategic.empty': 'Tidak ada pemasok × material dengan LTP yang sesuai filter.',
+  // DRC-9c (BL-205) — protection buffer, [Proposed].
+  'buffers.proposed': 'Usulan: menunggu tinjauan pemilik (BL-205, {{question}})',
+  'buffers.protection.title': 'Buffer proteksi, level OSIP 5 sampai 7',
+  'buffers.protection.subtitle':
+    'Buffer proteksi = CEILING(kenaikan, MPQ produksi), kenaikan = LTP − rata-rata LTP {{months}} bulan sebelumnya; tidak pernah di bawah 0. Hanya level 5, 6 dan 7: level 4 tanpa buffer proteksi, level 1 sampai 3 memakai buffer strategis. Hanya baca: ROP Fisik dan Max tidak memasukkannya.',
+  'buffers.protection.absorbed': 'Stok terencana: PTI menyerapnya walaupun permintaan tidak naik',
+  'buffers.protection.switchedOff': 'Buffer proteksi dimatikan: tidak ada angka yang dihitung.',
+  'buffers.protection.col.supplier': 'Pemasok',
+  'buffers.protection.col.material': 'Material',
+  'buffers.protection.col.level': 'Level OSIP',
+  'buffers.protection.col.month': 'Bulan',
+  'buffers.protection.col.ltp': 'LTP',
+  'buffers.protection.col.baseline': 'Baseline',
+  'buffers.protection.col.uplift': 'Kenaikan',
+  'buffers.protection.col.buffer': 'Buffer proteksi',
+  'buffers.protection.levelDefault': 'Level {{level}} (bawaan)',
+  'buffers.protection.level': 'Level {{level}}',
+  'buffers.protection.mpq': 'MPQ {{mpq}}',
+  'buffers.protection.noMpq': 'Tidak ada MPQ',
+  'buffers.protection.reason.level4': 'Level 4: tanpa buffer proteksi',
+  'buffers.protection.reason.strategicLevel': 'Level {{level}}: memakai buffer strategis',
+  'buffers.protection.reason.otherLevel': 'Level {{level}}: tanpa buffer proteksi',
+  'buffers.protection.reason.switchedOff': 'Dimatikan',
+  'buffers.protection.baselineIncomplete': 'Baseline tidak lengkap',
+  'buffers.protection.loading': 'Memuat buffer proteksi…',
+  'buffers.protection.error': 'Buffer proteksi tidak dapat dimuat.',
+  'buffers.protection.empty': 'Tidak ada pemasok × material dengan LTP yang sesuai filter.'
 };

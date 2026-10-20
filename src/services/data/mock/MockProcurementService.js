@@ -18,6 +18,8 @@ import { withLtpFgDemandRead } from './ltpFgDemandReadModel';
 import { osipSafetyInputs } from './osipSafetyReadModel';
 import { npdReviews, osipRopInputs, systemRopSuppliers } from './osipRopReadModel';
 import { whatIfPairs, whatIfSandbox } from './whatIfSandboxReadModel';
+import { protectionBufferInputs } from './protectionBufferReadModel';
+/** @import { ProtectionBufferInput } from '../../transitions/drcBufferRules' */
 /** @import { WhatIfPair, WhatIfSandbox } from './whatIfSandboxReadModel' */
 import { ropFisikPrRecommendations } from './callOffTriggerReadModel';
 /** @import { PrRecommendationView } from '../../transitions/callOffTriggerRules' */
@@ -1105,6 +1107,18 @@ export class MockProcurementService {
     // raised once when a material's NPD tag drops. PTI only (X-03).
     if (scope.personaType !== 'buyer') return { items: [] };
     return { items: npdReviews() };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<ProtectionBufferInput>>}
+   */
+  async getProtectionBufferInputs(scope) {
+    // DRC-9c (BL-205) [Proposed] — level and production MPQ per supplier ×
+    // material; the page applies the rule. PTI's planning read: a supplier
+    // persona reads nothing.
+    if (scope.personaType !== 'buyer') return { items: [] };
+    return { items: protectionBufferInputs() };
   }
 
   /**
