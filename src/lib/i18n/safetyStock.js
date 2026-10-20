@@ -161,7 +161,7 @@ export const safetyStockEn = {
   'sst.rop.level': 'Level {{level}}',
   'sst.rop.levelSource.default': 'Default level (C2)',
   'sst.rop.levelSource.planner': 'Set by the planner',
-  'sst.rop.levelSource.classification': 'Set by classification',
+  'sst.rop.levelSource.classification': 'Suggested level, confirmed by the planner',
   'sst.rop.npd': 'NPD',
   'sst.rop.npdSampleNote':
     'NPD: the sample PO and goods-receipt history is partial, so most sample materials read as NPD until real PO history arrives.',
@@ -220,6 +220,33 @@ export const safetyStockEn = {
   'sst.rop.levelForm.saved': 'Level saved',
   'sst.rop.levelForm.savedDesc': 'Level {{level}} is in force for {{material}}.',
   'sst.rop.levelForm.refused': 'The level was not saved',
+  // BL-208 (DRC-19) [Proposed] — the suggested level
+  'sst.rop.suggest.level': 'Suggested: level {{level}} ({{method}}), because {{reason}}.',
+  'sst.rop.suggest.noLevel': 'Suggested: {{method}}, because {{reason}}.',
+  'sst.rop.suggest.none': 'No level suggested.',
+  'sst.rop.suggest.method.manualOrder': 'Manual Order',
+  'sst.rop.suggest.method.projectOrder': 'Project Order',
+  'sst.rop.suggest.method.continuousReview': 'Continuous Review',
+  'sst.rop.suggest.method.periodicReview': 'Periodic Review',
+  'sst.rop.suggest.method.fixedOrder': 'Fixed Order',
+  'sst.rop.suggest.method.exceptionBased': 'Exception Based, strategic buffer, no OSIP level',
+  'sst.rop.suggest.reason.tag': 'the material is tagged {{tag}}',
+  'sst.rop.suggest.reason.cvFluctuative': 'CV {{cv}} is {{threshold}} or above (fluctuative)',
+  'sst.rop.suggest.reason.cvStable': 'CV {{cv}} is below {{threshold}} (stable)',
+  'sst.rop.suggest.tag.pipo': 'PIPO',
+  'sst.rop.suggest.tag.oneShot': 'one shot',
+  'sst.rop.suggest.tag.festive': 'festive / uplift / CNY',
+  'sst.rop.suggest.tag.commodity': 'commodity',
+  'sst.rop.suggest.gap.NO_TAG': 'No order-method tag in the hub: decided by demand pattern.',
+  'sst.rop.suggest.gap.NO_CV': 'No CV: no parent SKU with demand.',
+  'sst.rop.suggest.gap.NO_SOURCE': 'No purchasing source: no MPQ, so JIT (level 6) is not checked.',
+  'sst.rop.suggest.gap.NO_CONSUMPTION':
+    'No recorded consumption: no MPQ rate, so JIT (level 6) is not checked.',
+  'sst.rop.suggest.gap.NO_PALLET_MIX':
+    'MPQ rate {{rate}} days is {{max}} or less (continuous): JIT (level 6) needs pallet-mix data.',
+  'sst.rop.suggest.proposed': 'Proposed: awaiting owner review ({{refs}})',
+  'sst.rop.suggest.use': 'Use suggestion',
+  'sst.rop.suggest.matches': 'The level in force matches the suggestion.',
   'sst.rop.def.level':
     'OSIP level: set per material by the Material Planner; a material nobody set is at level 4 (warehouse replenishment). The level picks the ROP Fisik formula.',
   'sst.rop.def.rops':
@@ -387,7 +414,7 @@ export const safetyStockId = {
   'sst.rop.level': 'Level {{level}}',
   'sst.rop.levelSource.default': 'Level bawaan (C2)',
   'sst.rop.levelSource.planner': 'Diatur perencana',
-  'sst.rop.levelSource.classification': 'Diatur klasifikasi',
+  'sst.rop.levelSource.classification': 'Level saran, dikonfirmasi perencana',
   'sst.rop.npd': 'NPD',
   'sst.rop.npdSampleNote':
     'NPD: riwayat PO dan penerimaan barang di data contoh belum lengkap, jadi sebagian besar material contoh terbaca NPD sampai riwayat PO nyata tersedia.',
@@ -449,6 +476,36 @@ export const safetyStockId = {
   'sst.rop.levelForm.saved': 'Level tersimpan',
   'sst.rop.levelForm.savedDesc': 'Level {{level}} berlaku untuk {{material}}.',
   'sst.rop.levelForm.refused': 'Level tidak tersimpan',
+  // BL-208 (DRC-19) [Proposed] — level saran
+  'sst.rop.suggest.level': 'Saran: level {{level}} ({{method}}), karena {{reason}}.',
+  'sst.rop.suggest.noLevel': 'Saran: {{method}}, karena {{reason}}.',
+  'sst.rop.suggest.none': 'Tidak ada level yang disarankan.',
+  'sst.rop.suggest.method.manualOrder': 'Manual Order',
+  'sst.rop.suggest.method.projectOrder': 'Project Order',
+  'sst.rop.suggest.method.continuousReview': 'Continuous Review',
+  'sst.rop.suggest.method.periodicReview': 'Periodic Review',
+  'sst.rop.suggest.method.fixedOrder': 'Fixed Order',
+  'sst.rop.suggest.method.exceptionBased': 'Exception Based, buffer strategis, tanpa level OSIP',
+  'sst.rop.suggest.reason.tag': 'material ditandai {{tag}}',
+  'sst.rop.suggest.reason.cvFluctuative':
+    'CV {{cv}} sama dengan atau di atas {{threshold}} (fluktuatif)',
+  'sst.rop.suggest.reason.cvStable': 'CV {{cv}} di bawah {{threshold}} (stabil)',
+  'sst.rop.suggest.tag.pipo': 'PIPO',
+  'sst.rop.suggest.tag.oneShot': 'one shot',
+  'sst.rop.suggest.tag.festive': 'festive / uplift / CNY',
+  'sst.rop.suggest.tag.commodity': 'komoditas',
+  'sst.rop.suggest.gap.NO_TAG':
+    'Tidak ada tag metode order di hub: ditentukan oleh pola permintaan.',
+  'sst.rop.suggest.gap.NO_CV': 'Tidak ada CV: tidak ada SKU induk dengan permintaan.',
+  'sst.rop.suggest.gap.NO_SOURCE':
+    'Tidak ada sumber pembelian: tidak ada MPQ, jadi JIT (level 6) tidak diperiksa.',
+  'sst.rop.suggest.gap.NO_CONSUMPTION':
+    'Tidak ada konsumsi tercatat: tidak ada rasio MPQ, jadi JIT (level 6) tidak diperiksa.',
+  'sst.rop.suggest.gap.NO_PALLET_MIX':
+    'Rasio MPQ {{rate}} hari, {{max}} atau kurang (kontinu): JIT (level 6) memerlukan data pallet mix.',
+  'sst.rop.suggest.proposed': 'Usulan: menunggu tinjauan pemilik ({{refs}})',
+  'sst.rop.suggest.use': 'Pakai saran',
+  'sst.rop.suggest.matches': 'Level yang berlaku sama dengan saran.',
   'sst.rop.def.level':
     'Level OSIP: diatur per material oleh Perencana Material; material yang belum diatur berada di level 4 (pengisian ulang gudang). Level menentukan rumus ROP Fisik.',
   'sst.rop.def.rops':

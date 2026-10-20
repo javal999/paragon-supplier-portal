@@ -41,6 +41,7 @@ import {
   OSIP_LEVELS,
   OSIP_ROP_QUESTIONS,
   OSIP_ROP_READ,
+  npdLtpWeeks,
   osipRops
 } from './osipRopRules';
 import {
@@ -224,6 +225,7 @@ export const SWITCH_CATALOG = Object.freeze([
     note: 'unitName'
   },
   { path: 'osip.ospoIncludesNewPo', question: 'A9', kind: 'boolean', feeds: true },
+  // BL-212 — the NPD demand's LTP window (`npdLtpWeeks(rules)`) reads this key from the rules in use.
   // BL-210 — `osipSafety` reads the ROP Fisik consumption window from the rules in use.
   { path: 'osip.consumptionMovingAvgWeeks', question: 'A11', kind: 'number', feeds: true },
   {
@@ -522,7 +524,8 @@ export function runWhatIf(inputs, switches = DEFAULT_SWITCHES) {
     consumption: inputs.consumption,
     supplyArea: area,
     leadTimeSteps: lt ? lt.steps : [],
-    ltpNext3m: ltp.slice(0, OSIP_ROP_READ.npdLtpWeeks),
+    // BL-212 — the NPD window from the scenario's rules.
+    ltpNext3m: ltp.slice(0, npdLtpWeeks(rules)),
     npd: inputs.npd[switches.npdRule],
     // BL-210 — the typed SD, when there is one.
     sd: inputs.sd ?? null

@@ -86,7 +86,7 @@ export const OSIP_SAFETY_QUESTIONS = Object.freeze({
  * `leadTimeSteps`:  BL-196 — the source's lead time by step (DRC-6), empty when the feed carries
  *   none; the supplier-side ROPs read them (`osipRopRules`).
  * `ltpNext3m`:  BL-198 — weekly LTP of this supplier × material over the next 3 months
- *   (`OSIP_ROP_READ.npdLtpWeeks` weeks from the current hub week).
+ *   (`npdLtpWeeks(rules)` weeks from the current hub week).
  * `npd`:  BL-198 (DRC-12a) — the material is NPD under the NPD rule in force: ROP Fisik demand
  *   takes `fisikDemand`'s NPD branch, min(highest LTP over the next 3 months, capacity).
  * `sd`:  BL-210 — a typed SD for the safety order (the sandbox's); absent or

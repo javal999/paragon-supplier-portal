@@ -9,6 +9,7 @@
 import { describe, expect, it } from 'vitest';
 import golden from './__fixtures__/osipGolden.json';
 import { OSIP_RULES, RULES_VERSION } from './osipRules';
+import { npdLtpWeeks } from './osipRopRules';
 import {
   DEFAULT_SWITCHES,
   HEADLINE_KEYS,
@@ -304,6 +305,39 @@ describe('BR-05 · saved scenarios: the save rule and the rules version', () => 
     expect(merged.osip.z).toBe(2);
     expect(merged.maxCap).toBe(DEFAULT_SWITCHES.maxCap);
     expect(changedSwitches(merged).sort()).toEqual(['npdRule', 'osip.z']);
+  });
+});
+
+describe('BL-212 · the NPD LTP window is read from the rules in use', () => {
+  // An NPD material: 70 a week for the first 13 weeks, then 700. The NPD demand
+  // is the highest LTP over the window ÷ 7 (DRC-10 [Default B5]).
+  const npdHand = () =>
+    hand({
+      ltp: MONDAYS.slice(0, 24).map((_, i) => (i < 13 ? 70 : 700)),
+      npd: { firstOrderFulfilled: true, oneYearAfterLaunch: true, '52WeeksHistory': true }
+    });
+
+  it('the default window (13 weeks, [Default A11]) reads 70 a week → 10 a day', () => {
+    expect(npdLtpWeeks()).toBe(13);
+    expect(npdLtpWeeks(OSIP_RULES)).toBe(OSIP_RULES.consumptionMovingAvgWeeks);
+    expect(runWhatIf(npdHand()).safety.fisik.demandPerDay).toBe(10);
+  });
+
+  it('a 26-week window through a rules variant reaches the 700 weeks: 100 a day, and ROP Fisik moves', () => {
+    const plan = runWhatIf(npdHand());
+    const wide = runWhatIf(
+      npdHand(),
+      withSwitch(DEFAULT_SWITCHES, 'osip.consumptionMovingAvgWeeks', 26)
+    );
+    expect(npdLtpWeeks({ ...OSIP_RULES, consumptionMovingAvgWeeks: 26 })).toBe(26);
+    expect(wide.safety.fisik.demandPerDay).toBe(100);
+    expect(h(wide, 'ropFisik')).not.toBe(h(plan, 'ropFisik'));
+  });
+
+  it('the window switch is listed as feeding a sandbox figure', () => {
+    expect(SWITCH_CATALOG.find((s) => s.path === 'osip.consumptionMovingAvgWeeks')?.feeds).toBe(
+      true
+    );
   });
 });
 
