@@ -302,7 +302,10 @@ describe('custom terms and indicative pricing on the RFP surfaces', () => {
     expect(within(cmp).getByTestId('rfp-pricing-rfp-002-row-sup-opt-1')).toHaveTextContent(
       'Proposed by PT Sample Packaging Indonesia'
     );
-    // Custom terms sit in the comparison with the buyer's label.
+    // Custom terms sit in the comparison with the buyer's label. RFx UX 2G —
+    // the grid opens on "Show deviations only" (sup-007 deviates on lead
+    // time), so the spec turns it off to read the complying custom rows.
+    fireEvent.click(screen.getByTestId('rfp-only-deviations-rfp-002'));
     expect(screen.getByTestId('rfp-term-custom-dosage')).toHaveTextContent(
       'Pump dosage per stroke'
     );

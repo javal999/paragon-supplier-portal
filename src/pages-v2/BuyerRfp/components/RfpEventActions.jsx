@@ -15,7 +15,8 @@ import { rfxNow } from '../../rfx/rfxDisplay';
 import { extendOffered } from '../../rfx/rfxExtend';
 
 /**
- * The acts the open event's STATE allows, in ONE row (RFx UX 2A, B-10):
+ * The acts the open event's STATE allows, in ONE row (RFx UX 2A, B-10),
+ * above the page's tabs (RFx UX 2G):
  * Edit draft / Send / Discard on a Draft, Close on an Open one, the deadline
  * extension, and "More actions" holding "Save as a template". `create` gates
  * Edit (`rfp:create`), `publish` gates the rest (`rfp:publish`); every verb
@@ -40,10 +41,7 @@ const RfpEventActions = ({ open, create, publish, run, onEdit }) => {
   const [saveTemplate, setSaveTemplate] = useState(false);
   return (
     <>
-      <div
-        className="flex flex-wrap items-end gap-3 mt-4 pt-4 border-t border-border-subtle"
-        data-testid={`rfp-actions-${open.id}`}
-      >
+      <div className="flex flex-wrap items-end gap-3" data-testid={`rfp-actions-${open.id}`}>
         {open.status === 'Draft' &&
           (create.kind === 'held' ? (
             <Button variant="secondary" onClick={onEdit} data-testid={`rfp-edit-${open.id}`}>

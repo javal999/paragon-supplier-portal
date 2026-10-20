@@ -13,9 +13,10 @@ import { DeadlinePill, EmptyRow } from '../../rfx/rfxDisplay';
 
 /**
  * The RFP list: one row per event (number, title, status, deadline, terms,
- * proposals) with "Open", which goes to the event's own page (RFx UX 2A,
- * B-08 and B-09). "Compare proposals" sits beside it only once a proposal
- * exists, and lands on the page's terms comparison.
+ * "N of M submitted") with ONE row button, "Open", which goes to the event's
+ * own page (RFx UX 2A, B-08 and B-09). RFx UX 2G — the separate "Compare
+ * proposals" button is gone: the page opens on its Compare tab once a
+ * proposal is in, and on Overview before.
  * Moved out of `BuyerRfp.jsx` by the Phase 5 page split.
  * @type {React.FC<{ items: readonly RfpEventView[] }>}
  */
@@ -67,28 +68,20 @@ const RfpEventTable = ({ items }) => {
                   </div>
                 )}
               </TableCell>
-              <TableCell className="align-top text-sm">
-                {t('rfx.rfp.proposals', { count: event.responses.length })}
+              <TableCell className="align-top text-sm" data-testid={`rfp-submitted-${event.id}`}>
+                {t('rfx.list.submittedOf', {
+                  n: event.responses.length,
+                  m: event.invitedSuppliers.length
+                })}
               </TableCell>
               <TableCell className="align-top text-right">
-                <div className="flex flex-wrap justify-end gap-2">
-                  {event.responses.length > 0 && (
-                    <Button
-                      variant="secondary"
-                      onClick={() => navigate(`${pageOf(event.id)}?section=rfp-event-comparison`)}
-                      data-testid={`rfp-compare-${event.id}`}
-                    >
-                      {t('rfx.rfp.compare')}
-                    </Button>
-                  )}
-                  <Button
-                    variant="secondary"
-                    onClick={() => navigate(pageOf(event.id))}
-                    data-testid={`rfp-open-${event.id}`}
-                  >
-                    {t('rfx.row.open')}
-                  </Button>
-                </div>
+                <Button
+                  variant="secondary"
+                  onClick={() => navigate(pageOf(event.id))}
+                  data-testid={`rfp-open-${event.id}`}
+                >
+                  {t('rfx.row.open')}
+                </Button>
               </TableCell>
             </TableRow>
           ))}
