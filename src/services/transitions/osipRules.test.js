@@ -277,6 +277,23 @@ describe('safetyOrder switches', () => {
   it('z is read from the rules', () => {
     expect(safetyOrder(base, rulesWith({ z: 0 })).value).toBe(0);
   });
+
+  it('BL-210 — a typed sd replaces the computed SD; absent or null, nothing changes', () => {
+    const computed = safetyOrder(base);
+    expect(computed.value).toBe(golden.ppt7.expected.safetyOrder);
+    expect(safetyOrder({ ...base, sd: null })).toEqual(computed);
+    // The slide's own SD typed in reproduces the slide's safety order.
+    expect(safetyOrder({ ...base, sd: 57801.5 }).value).toBe(golden.ppt7.expected.safetyOrder);
+    // 1.65 × √5 × 10,000 = 36,894 → up to the MPQ 61,224.
+    const typed = safetyOrder({ ...base, sd: 10000 });
+    expect(typed.sd).toBe(10000);
+    expect(typed.raw).toBeCloseTo(1.65 * Math.sqrt(5) * 10000, 6);
+    expect(typed.value).toBe(61224);
+    // The override wins over either source.
+    expect(safetyOrder({ ...base, sd: 0 }, rulesWith({ sdSource: 'consumption12w' })).value).toBe(
+      0
+    );
+  });
 });
 
 // ─── ROP Fisik, supply area, Max ────────────────────────────────────────────

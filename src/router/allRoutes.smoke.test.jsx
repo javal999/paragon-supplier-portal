@@ -113,6 +113,7 @@ import SupplierRegistrationV2 from '@pages-v2/SupplierRegistration';
 import SupplierDeliveryAgreements from '@pages-v2/SupplierDeliveryAgreements';
 import SupplierCallOffs from '@pages-v2/SupplierCallOffs';
 import SupplierCapacity from '@pages-v2/SupplierCapacity';
+import SupplierDemandAnticipation from '@pages-v2/SupplierDemandAnticipation';
 import SupplierPerformance from '@pages-v2/SupplierPerformance';
 import NotFound from '@pages-v2/NotFound';
 import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
@@ -773,6 +774,13 @@ const ROUTES = [
     pattern: '/supplier/capacity',
     at: '/supplier/capacity',
     element: <SupplierCapacity />,
+    identity: SUPPLIER
+  },
+  {
+    name: 'supplier/demand-anticipation',
+    pattern: '/supplier/demand-anticipation',
+    at: '/supplier/demand-anticipation',
+    element: <SupplierDemandAnticipation />,
     identity: SUPPLIER
   },
   {

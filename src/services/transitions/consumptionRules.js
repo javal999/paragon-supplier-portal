@@ -9,9 +9,12 @@
 //
 //   1. IN FORCE. A later record for the same material × week supersedes the
 //      earlier one at read; both stay stored (append-only).
-//   2. SPLIT (CAP-D14, `consumptionSplit`). A material's weekly consumption is
-//      shared across its suppliers by each one's demand anticipation in force
-//      that week, in whole units.
+//   2. SPLIT (`consumptionSplit`, BL-211 owner ruling 2026-10-19). A
+//      material's weekly consumption is shared across its suppliers by each
+//      one's LTP share over the share window (CAP-D11, `materialShares`), in
+//      whole units: the split the OSIP safety figures, the DRC-18 rows and the
+//      sandbox use, so one week's consumption is divided one way only.
+//      CAP-D14's split by that week's demand anticipation stays a variant.
 //
 // ⚠️ ABSORBING THE EXCESS OVER WEEKS 5 TO 8 IS RETIRED. CAP-11 BR-02 and BR-03
 // (and `absorptionPlan`, `spreadExcess`, `seriesInForce`, `rowsInForce`) are
@@ -25,7 +28,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @import { ActorAttribution } from '@lib/enforcement' */
-/** @import { DemandAnticipationRowCore, DemandAnticipationWeekView } from './demandAnticipationRules' */
+/** @import { ConsumptionSplit, DemandAnticipationRowCore, DemandAnticipationWeekView } from './demandAnticipationRules' */
 import { normalizeQty } from '@lib/localeNumber';
 import { DEMAND_ANTICIPATION_RULES } from './demandAnticipationRules';
 import { dayOf, mondayOf } from './inventoryRules';
@@ -122,17 +125,23 @@ export function consumptionInForce(records) {
 }
 
 /**
- * 2 — each supplier's share of a material's week (CAP-D14). By its demand
- * anticipation in force that week; evenly when the setting says so or when the week's total is 0.
- * @param {readonly { readonly supplierId: string; readonly qty: number }[]} holders
+ * 2 — each supplier's share of a material's week, per `split`
+ * (`DEMAND_ANTICIPATION_RULES.consumptionSplit`):
+ *   · `ltpShare` (default, BL-211 owner ruling 2026-10-19) — its LTP share
+ *     over the share window (CAP-D11), `ltpShare`;
+ *   · `demandAnticipation` (CAP-D14) — its demand anticipation in force that week, `qty`;
+ *   · `even` — the same part each.
+ * Evenly when the weights add up to 0.
+ * @param {readonly { readonly supplierId: string; readonly qty: number; readonly ltpShare?: number | null }[]} holders
+ * @param {ConsumptionSplit} [split]
  * @returns {Map<string, number>}
  */
-export function consumptionShares(holders) {
-  const total = holders.reduce((n, h) => n + Math.max(0, h.qty), 0);
-  const even = DEMAND_ANTICIPATION_RULES.consumptionSplit === 'even' || total <= 0;
-  return new Map(
-    holders.map((h) => [h.supplierId, even ? 1 / holders.length : Math.max(0, h.qty) / total])
-  );
+export function consumptionShares(holders, split = DEMAND_ANTICIPATION_RULES.consumptionSplit) {
+  /** @param {(typeof holders)[number]} h */
+  const weight = (h) => (split === 'ltpShare' ? Math.max(0, h.ltpShare ?? 0) : Math.max(0, h.qty));
+  const total = holders.reduce((n, h) => n + weight(h), 0);
+  const even = split === 'even' || total <= 0;
+  return new Map(holders.map((h) => [h.supplierId, even ? 1 / holders.length : weight(h) / total]));
 }
 
 /**
@@ -150,14 +159,16 @@ export function consumptionShares(holders) {
 
 /**
  * CAP-11 BR-05 (kept) — every row's weeks with the supplier's share of the
- * material's recorded consumption, split across the material's suppliers by
- * their demand anticipation in force that week (CAP-D14).
+ * material's recorded consumption, split across the material's suppliers per
+ * `consumptionSplit`: by default each row's LTP share over the share window
+ * (`row.share`, CAP-D11; BL-211 owner ruling 2026-10-19).
  * @template {DemandAnticipationRowCore} R
  * @param {readonly R[]} rows
  * @param {readonly ConsumptionRecord[]} records
+ * @param {ConsumptionSplit} [split]
  * @returns {R[]}
  */
-export function withConsumption(rows, records) {
+export function withConsumption(rows, records, split = DEMAND_ANTICIPATION_RULES.consumptionSplit) {
   const inForce = consumptionInForce(records);
   /** @type {Map<string, ConsumptionShare>} */
   const byPairWeek = new Map();
@@ -166,10 +177,10 @@ export function withConsumption(rows, records) {
       r.materialCode === record.materialCode
         ? r.weeks
             .filter((w) => w.week === record.week)
-            .map((w) => ({ supplierId: r.supplierId, qty: w.qty ?? 0 }))
+            .map((w) => ({ supplierId: r.supplierId, qty: w.qty ?? 0, ltpShare: r.share }))
         : []
     );
-    const shares = consumptionShares(holders);
+    const shares = consumptionShares(holders, split);
     for (const h of holders) {
       const share = shares.get(h.supplierId) ?? 0;
       byPairWeek.set(`${h.supplierId}|${mw}`, {

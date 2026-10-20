@@ -103,6 +103,19 @@ export const useDemandAnticipationHistory = () =>
     svc.procurement.getDemandAnticipationHistory(scope)
   );
 
+/**
+ * BL-204 (DRC-1) — the supplier view of demand anticipation (empty while
+ * `SUPPLIER_DA_VIEW_ENABLED` is off). Under `demandAnticipation`, so a
+ * publication refreshes it.
+ * @param {boolean} [enabled]
+ */
+export const useSupplierDemandAnticipation = (enabled = true) =>
+  useServiceQuery(
+    ['procurement', 'demandAnticipation', 'supplier'],
+    (svc, scope) => svc.procurement.getSupplierDemandAnticipation(scope),
+    { enabled }
+  );
+
 /** Material C5 (MR-8) — the planning groups, their materials and changes. */
 export const usePlanningGroups = () =>
   useServiceQuery(['procurement', 'planningGroups'], (svc, scope) =>
@@ -182,6 +195,12 @@ export const useSafetyStock = () =>
 export const useNpdReviews = () =>
   useServiceQuery(['procurement', 'npdReviews'], (svc, scope) =>
     svc.procurement.getNpdReviews(scope)
+  );
+
+/** DRC-9c (BL-205, [Proposed]) — level and production MPQ per supplier × material (PTI only). */
+export const useProtectionBufferInputs = () =>
+  useServiceQuery(['procurement', 'protectionBufferInputs'], (svc, scope) =>
+    svc.procurement.getProtectionBufferInputs(scope)
   );
 
 /** DRC-17 (BL-202) — the pairs the what-if sandbox offers (PTI only). */
