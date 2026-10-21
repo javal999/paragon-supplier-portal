@@ -3,7 +3,7 @@
 /** @import { BuyerInvoice } from '@services/data/types' */
 /** @import { SettleFault } from '@services/transitions' */
 /** @import { PanelMode } from '../const' */
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   useInvoiceReleasePayment,
   useInvoiceSettlePayment,
@@ -42,6 +42,16 @@ export function useInvoiceCommands({
   const settleMutation = useInvoiceSettlePayment();
   const disputeMutation = useInvoiceDispute();
   const resolveMutation = useInvoiceResolve();
+  // The settles scheduled after a release, by timer id. Cleared on unmount, so a
+  // page that closes inside the delay dispatches no settle and runs no setter.
+  const settleTimers = useRef(/** @type {Set<number>} */ (new Set()));
+  useEffect(() => {
+    const timers = settleTimers.current;
+    return () => {
+      timers.forEach((id) => window.clearTimeout(id));
+      timers.clear();
+    };
+  }, []);
   // ── THE SETTLE WATCH ──────────────────────────────────────────────────────
   // A settle that fails leaves the command `submitted` and the invoice parked in
   // the interim 'Releasing Payment' — the dispatcher's deliberate design, so the
@@ -153,7 +163,8 @@ export function useInvoiceCommands({
           });
           const { correlationId } = res;
           watchSettle(inv.id, correlationId, null);
-          window.setTimeout(() => {
+          const timerId = window.setTimeout(() => {
+            settleTimers.current.delete(timerId);
             settleMutation.mutate(
               { correlationId },
               {
@@ -176,6 +187,7 @@ export function useInvoiceCommands({
               }
             );
           }, 1200);
+          settleTimers.current.add(timerId);
         },
         onError: () =>
           toast({
@@ -308,6 +320,7 @@ export function useInvoiceCommands({
   return {
     releasePending: releaseMutation.isPending,
     disputePending: disputeMutation.isPending,
+    resolvePending: resolveMutation.isPending,
     settleWatch,
     handleFooterAction,
     handleReleasePayment,

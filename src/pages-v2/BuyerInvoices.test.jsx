@@ -1,4 +1,4 @@
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { renderWithProviders } from '@test/test-utils';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 import { mockDataService } from '@services/data/mock/mockDataService';
@@ -348,6 +348,111 @@ describe('BuyerInvoices — the settle failure branch', () => {
     expect(await screen.findByText(/Awaiting SAP settlement/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Release payment' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Send remittance' })).not.toBeInTheDocument();
+  });
+});
+
+/** mockDataService whose `commands.dispatch` hangs for one transition id and
+ * records every call for it; every other dispatch runs as shipped.
+ * @param {string} transitionId
+ * @returns {{ service: IDataService; calls: unknown[] }} */
+const withHangingDispatch = (transitionId) => {
+  /** @type {unknown[]} */
+  const calls = [];
+  const service = /** @type {IDataService} */ ({
+    ...mockDataService,
+    commands: new Proxy(mockDataService.commands, {
+      get(target, prop) {
+        const v = Reflect.get(target, prop, target);
+        if (prop === 'dispatch') {
+          return (/** @type {unknown} */ scope, /** @type {{ transitionId: string }} */ input) => {
+            if (input.transitionId !== transitionId)
+              return /** @type {(...a: unknown[]) => unknown} */ (v).call(target, scope, input);
+            calls.push(input);
+            return new Promise(() => {});
+          };
+        }
+        return typeof v === 'function'
+          ? /** @type {(...a: unknown[]) => unknown} */ (v).bind(target)
+          : v;
+      }
+    })
+  });
+  return { service, calls };
+};
+
+// The detail footer's primary button runs Resolve on a Disputed invoice, and it
+// was disabled only while a RELEASE was pending. A resolve in flight left it
+// live, so a second click dispatched a second resolve.
+describe('BuyerInvoices — Resolve cannot be sent twice', () => {
+  usePinnedDemoClock();
+
+  it('KNOWN-GOOD FIRST: the Resolve button is enabled before it is clicked', async () => {
+    invoiceStore.reset();
+    renderWithProviders(<BuyerInvoices />);
+    fireEvent.click(await screen.findByText('INV-2025-BRL-0043'));
+    expect(await screen.findByRole('button', { name: 'Resolve dispute' })).not.toBeDisabled();
+  });
+
+  it('a resolve in flight disables the button, so a second click sends nothing', async () => {
+    invoiceStore.reset();
+    const { service, calls } = withHangingDispatch('t_invoice_resolve');
+    renderWithProviders(<BuyerInvoices />, { service });
+    fireEvent.click(await screen.findByText('INV-2025-BRL-0043'));
+    const resolve = await screen.findByRole('button', { name: 'Resolve dispute' });
+    fireEvent.click(resolve);
+    await waitFor(() => expect(resolve).toBeDisabled());
+    fireEvent.click(resolve);
+    expect(calls).toHaveLength(1);
+  });
+});
+
+// The release schedules its settle 1200 ms later with `window.setTimeout`, and
+// nothing cleared it. A page that unmounted inside that window still dispatched
+// the settle and ran its callbacks against an unmounted component.
+describe('BuyerInvoices — the scheduled settle dies with the page', () => {
+  usePinnedDemoClock();
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  /** Renders, releases inv-giv-0892, and lets the release resolve on fake
+   * timers short of the 1200 ms settle delay. */
+  const releaseOnFakeTimers = async () => {
+    invoiceStore.reset();
+    const settle = vi.fn(() => /** @type {Promise<never>} */ (new Promise(() => {})));
+    const view = renderWithProviders(<BuyerInvoices />, { service: withSettle(settle) });
+    await screen.findByText('Invoices & Payment');
+    await openApprovedInvoice();
+    fireEvent.click(await screen.findByRole('button', { name: 'Release payment' }));
+    const confirm = await screen.findByRole('button', { name: /Confirm release/ });
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    fireEvent.click(confirm);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(200);
+    });
+    expect(
+      /** @type {import('@services/data/types').Invoice} */ (invoiceStore.get('inv-giv-0892'))
+        .status
+    ).toBe('Releasing Payment');
+    expect(settle).not.toHaveBeenCalled();
+    return { view, settle };
+  };
+
+  it('KNOWN-GOOD FIRST: on a page that stays open, the settle is dispatched', async () => {
+    const { settle } = await releaseOnFakeTimers();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1500);
+    });
+    expect(settle).toHaveBeenCalledTimes(1);
+  });
+
+  it('unmounting before 1200 ms means the settle is never dispatched', async () => {
+    const { view, settle } = await releaseOnFakeTimers();
+    view.unmount();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1500);
+    });
+    expect(settle).not.toHaveBeenCalled();
   });
 });
 

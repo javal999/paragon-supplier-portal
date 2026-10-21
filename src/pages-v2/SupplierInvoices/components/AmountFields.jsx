@@ -84,7 +84,8 @@ export const NewAmountField = ({ newAmount, setNewAmount, amountRead, t }) => (
 );
 
 /**
- * The corrected invoice's amount: the text input and its inline refusal.
+ * The corrected invoice's amount: the text input and its two inline refusals
+ * (unreadable, and not above zero).
  * @type {React.FC<{ fixAmount: string; setFixAmount: (v: string) => void; fixAmountRead: AmountRead; t: TFunction }>}
  */
 export const FixAmountField = ({ fixAmount, setFixAmount, fixAmountRead, t }) => (
@@ -107,5 +108,14 @@ export const FixAmountField = ({ fixAmount, setFixAmount, fixAmountRead, t }) =>
         <GlossaryTermChip refTo={{ sourceType: 'QtyRefusalReason', term: fixAmountRead.reason }} />
       </div>
     )}
+    {fixAmountRead.ok && fixAmountRead.value <= 0 ? (
+      <div
+        role="alert"
+        data-testid="invoice-fix-amount-zero"
+        className="mt-1 text-[11px] text-danger"
+      >
+        {t('supplierInvoices.new.amount.mustExceedZero')}
+      </div>
+    ) : null}
   </div>
 );
