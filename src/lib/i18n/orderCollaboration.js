@@ -254,7 +254,6 @@ export const orderCollaborationId = {
   'oc.respondedLate': 'Pemasok menanggapi setelah batas waktu.',
 
   'oc.steps.title': 'Tahapan pesanan',
-  'oc.steps.callOffs_one': '{{count}} call-off untuk pesanan ini',
   'oc.steps.callOffs_other': '{{count}} call-off untuk pesanan ini',
   'oc.step.response': 'Tanggapan',
   'oc.step.confirmations': 'Konfirmasi',

@@ -52,6 +52,7 @@ import { latestPublication, publishPreview, sharePct, weekDates, weekLabel } fro
 const keyOf = (r) => `${r.supplierId}-${r.materialCode}`;
 
 /** P-12 — the page's tabs, in order; the first opens by default. */
+// i18n-defer: tab identifiers, not copy — each renders through t(`demandAnt.tab.${id}`)
 export const DEMAND_ANTICIPATION_TABS = /** @type {const} */ (['thisWeek', 'consumption']);
 
 /** @type {React.FC} */

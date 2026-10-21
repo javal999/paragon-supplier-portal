@@ -65,6 +65,8 @@ describe('routerPages — the router derivation, probed both ways', () => {
     expect(routed).not.toContain('contracts/RaisedElsewhere.jsx');
     // And the files pageFiles already had are still routed, not replaced.
     expect(routed).toContain('BuyerCommHub.jsx');
-    expect(routed).toContain('BuyerCollaboration.jsx');
+    // (BuyerCollaboration was the second member until IA P-04 made it a lazy
+    // tab of Foresight commitments; the router no longer imports it.)
+    expect(routed).toContain('BuyerCallOffs.jsx');
   });
 });

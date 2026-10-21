@@ -114,6 +114,7 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** P-12 — the page's tabs, in order; the first opens by default. */
+// i18n-defer: tab identifiers, not copy — each renders through t(`co.tab.${id}`)
 export const CALL_OFF_TABS = /** @type {const} */ (['toAct', 'all', 'runOut']);
 /** @typedef {(typeof CALL_OFF_TABS)[number]} CallOffTab */
 

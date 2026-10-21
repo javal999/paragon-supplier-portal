@@ -88,6 +88,7 @@ import DefinitionsSection from './components/DefinitionsSection';
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** P-12 — the page's tabs, in order; the first opens by default. */
+// i18n-defer: tab identifiers, not copy — each renders through t(`op.tab.${id}`)
 export const ORDER_PLAN_TABS = /** @type {const} */ (['orders', 'fill', 'sizing']);
 
 /** @type {React.FC} */

@@ -46,7 +46,7 @@ async function reachConfirmStage() {
 describe('§74 · BuyerChannelTriage — inventorydeclaration:record', () => {
   it('HELD: a planning seat reaches the entry control, and gets NO notice', async () => {
     renderWithProviders(<BuyerChannelTriage />, { identity: PLANNING });
-    await screen.findAllByText(/Triage/i);
+    await screen.findAllByText(/Record a reply/i);
     await reachConfirmStage();
     expect(screen.getByTestId('triage-enter-0')).toBeInTheDocument();
     expect(screen.queryByTestId('handoff-triage-record')).not.toBeInTheDocument();
@@ -54,7 +54,7 @@ describe('§74 · BuyerChannelTriage — inventorydeclaration:record', () => {
 
   it('WITHHELD: a finance seat reaches the same stage and reads the owner instead', async () => {
     renderWithProviders(<BuyerChannelTriage />, { identity: FINANCE });
-    await screen.findAllByText(/Triage/i);
+    await screen.findAllByText(/Record a reply/i);
     await reachConfirmStage();
     expect(screen.queryByTestId('triage-enter-0')).not.toBeInTheDocument();
     expect(screen.getByTestId('handoff-triage-record')).toHaveTextContent('Awaiting Planning');

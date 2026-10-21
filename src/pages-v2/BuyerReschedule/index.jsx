@@ -84,6 +84,7 @@ import { weekLabel } from './utils';
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** P-12 — the page's tabs, in order; the first opens by default. */
+// i18n-defer: tab identifiers, not copy — each renders through t(`rs.tab.${id}`)
 export const RESCHEDULE_TABS = /** @type {const} */ (['relief', 'fill', 'values']);
 
 /** @type {React.FC} */
