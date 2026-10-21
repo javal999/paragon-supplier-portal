@@ -10,7 +10,7 @@ const alwaysPending = withChaos(mockDataService, { minMs: 1e7, maxMs: 1e7, failu
 describe('BuyerSuppliers — four honest states', () => {
   it('data: renders the directory once the suppliers resolve', async () => {
     renderWithProviders(<BuyerSuppliers />);
-    expect(await screen.findByText('Supplier Directory')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Suppliers' })).toBeInTheDocument();
     expect(await screen.findByText(/records · last updated/)).toBeInTheDocument();
   });
 
@@ -39,7 +39,7 @@ describe('BuyerSuppliers — four honest states', () => {
   it('loading: shows LoadingState while the read is pending', () => {
     renderWithProviders(<BuyerSuppliers />, { service: alwaysPending });
     expect(screen.getByText('Loading…')).toBeInTheDocument();
-    expect(screen.queryByText('Supplier Directory')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Suppliers' })).not.toBeInTheDocument();
   });
 
   it('error: shows ErrorState when the read throws', async () => {

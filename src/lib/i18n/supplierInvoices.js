@@ -16,9 +16,10 @@
 export const supplierInvoicesEn = {
   // — Breadcrumb —
   'supplierInvoices.crumb.settle': 'SETTLE',
-  'supplierInvoices.crumb.invoices': 'MY INVOICES',
+  'supplierInvoices.crumb.invoices': 'INVOICES',
   // — Page header —
-  'supplierInvoices.header.title': 'My Invoices',
+  // IA P-11 — the page title is the menu label.
+  'supplierInvoices.header.title': 'Invoices',
   'supplierInvoices.header.subtitle':
     'Submit and track invoices · view payment status and remittance advice — {{supplier}}.',
   'supplierInvoices.action.export': 'Export',
@@ -136,9 +137,9 @@ export const supplierInvoicesEn = {
 export const supplierInvoicesId = {
   // — Breadcrumb —
   'supplierInvoices.crumb.settle': 'PENYELESAIAN',
-  'supplierInvoices.crumb.invoices': 'FAKTUR SAYA',
+  'supplierInvoices.crumb.invoices': 'FAKTUR',
   // — Page header —
-  'supplierInvoices.header.title': 'Faktur Saya',
+  'supplierInvoices.header.title': 'Faktur',
   'supplierInvoices.header.subtitle':
     'Ajukan dan lacak faktur · lihat status pembayaran dan bukti pembayaran — {{supplier}}.',
   'supplierInvoices.action.export': 'Ekspor',

@@ -32,7 +32,7 @@ describe('BuyerGoodsReceipt — four honest states', () => {
     renderWithProviders(<BuyerGoodsReceipt />);
     // KPI strip only renders in the data branch.
     expect(await screen.findByText('Rejection Rate (30d)')).toBeInTheDocument();
-    expect(screen.getByText('Goods Receipt & Quality Control')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Goods receipts' })).toBeInTheDocument();
   });
 
   it('loading: shows LoadingState while the reads are pending', () => {

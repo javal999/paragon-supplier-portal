@@ -21,11 +21,12 @@
 export const goodsReceiptEn = {
   // — Breadcrumb —
   'goodsReceipt.crumb.transact': 'TRANSACT',
-  'goodsReceipt.crumb.gr': 'GOODS RECEIPT & QC',
+  'goodsReceipt.crumb.gr': 'GOODS RECEIPTS',
   // — Page header —
-  'goodsReceipt.header.title': 'Goods Receipt & Quality Control',
+  // IA P-11 — the page title is the menu label.
+  'goodsReceipt.header.title': 'Goods receipts',
   'goodsReceipt.header.subtitle':
-    'Receipt posting, inspection workflows, lab results, and disposition decisions.',
+    'Goods receipt and quality control: receipt posting, inspection workflows, lab results, and disposition decisions.',
   // — Header actions —
   'goodsReceipt.action.export': 'Export',
   'goodsReceipt.action.labResults': 'Lab Results',
@@ -43,6 +44,7 @@ export const goodsReceiptEn = {
   'goodsReceipt.kpi.rejectionRate.subtitle': 'Qty rejected / received',
   // — Group tabs —
   'goodsReceipt.tab.all': 'All',
+  'goodsReceipt.tab.action': 'Needs action',
   'goodsReceipt.tab.pending': 'Pending',
   'goodsReceipt.tab.underInspection': 'Under Inspection',
   'goodsReceipt.tab.approved': 'Approved',
@@ -318,11 +320,11 @@ export const goodsReceiptEn = {
 export const goodsReceiptId = {
   // — Breadcrumb —
   'goodsReceipt.crumb.transact': 'TRANSAKSI',
-  'goodsReceipt.crumb.gr': 'PENERIMAAN BARANG & QC',
+  'goodsReceipt.crumb.gr': 'PENERIMAAN BARANG',
   // — Page header —
-  'goodsReceipt.header.title': 'Penerimaan Barang & Kontrol Kualitas',
+  'goodsReceipt.header.title': 'Penerimaan barang',
   'goodsReceipt.header.subtitle':
-    'Posting penerimaan, alur inspeksi, hasil lab, dan keputusan disposisi.',
+    'Penerimaan barang dan kontrol kualitas: posting penerimaan, alur inspeksi, hasil lab, dan keputusan disposisi.',
   // — Header actions —
   'goodsReceipt.action.export': 'Ekspor',
   'goodsReceipt.action.labResults': 'Hasil Lab',
@@ -340,6 +342,7 @@ export const goodsReceiptId = {
   'goodsReceipt.kpi.rejectionRate.subtitle': 'Jml ditolak / diterima',
   // — Group tabs —
   'goodsReceipt.tab.all': 'Semua',
+  'goodsReceipt.tab.action': 'Perlu tindakan',
   'goodsReceipt.tab.pending': 'Menunggu',
   'goodsReceipt.tab.underInspection': 'Dalam Inspeksi',
   'goodsReceipt.tab.approved': 'Disetujui',

@@ -15,6 +15,7 @@ import EmptyState from '@components/ui-v2/EmptyState';
 import { useTranslation } from 'react-i18next';
 import { useRequisitions } from '@services/query/hooks';
 import { useVerbAvailabilities, useNextAct } from '@hooks/useVerbAvailability';
+import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { formatDate } from '@lib/format';
 import { normalizeQty } from '@lib/localeNumber';
@@ -125,6 +126,20 @@ const BuyerRequisitions = () => {
   );
 
   useRequisitionDeepLinks({ prs, createAvailability, setSelectedRow, setForm, setNewOpen });
+  // IA P-03 — `?status=Pending Approval` opens the tab Home's "Requisitions to
+  // approve" counts (`?open=<id>` opens the one requisition a count of one names).
+  useUrlEnumParam(
+    'status',
+    /** @type {GroupTab[]} */ ([
+      'all',
+      'Draft',
+      'Pending Approval',
+      'Approved',
+      'Sourcing Event',
+      'PO Created'
+    ]),
+    setGroup
+  );
 
   const counts = useMemo(() => countByStatus(prs), [prs]);
   const maxCreatedDate = useMemo(() => latestCreatedDate(prs), [prs]);

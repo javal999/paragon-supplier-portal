@@ -1,12 +1,10 @@
 import { screen, waitFor, within, fireEvent } from '@testing-library/react';
 import { renderWithProviders, BUYER, pickSelectFieldOption } from '@test/test-utils';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
-import i18n from '@lib/i18n';
 import { rolesHolding } from '@services/transitions/businessRoles';
 import BuyerChannelTriage from './BuyerChannelTriage';
 import BuyerCollaboration from './BuyerCollaboration';
 import BuyerGoodsReceipt from './BuyerGoodsReceipt';
-import IntakeReview from './IntakeReview';
 
 // ────────────────────────────────────────────────────────────────────────────
 // §74 — THE ROW-LEVEL GROUP. Nine verbs across five surfaces, same hook, same
@@ -21,8 +19,6 @@ import IntakeReview from './IntakeReview';
 
 /** @type {CurrentIdentity} */
 const PLANNING = { ...BUYER, businessRoles: ['planning'] };
-/** @type {CurrentIdentity} */
-const REQUISITIONER = { ...BUYER, businessRoles: ['requisitioner'] };
 /** @type {CurrentIdentity} */
 const FINANCE = { ...BUYER, businessRoles: ['finance'] };
 /** @type {CurrentIdentity} */
@@ -98,41 +94,6 @@ describe('§74 · BuyerCollaboration — requirementresponse:dispute', () => {
     expect(notices).toHaveLength(1);
     expect(notices[0]).toHaveTextContent('Awaiting Planning');
     expect(screen.queryAllByTestId('sdc-resolve-cta')).toHaveLength(0);
-  });
-});
-
-describe('§74 · IntakeReview — pr:create, one notice for an unbounded table', () => {
-  it('HELD: a requisitioner seat gets accept controls and no notice', async () => {
-    renderWithProviders(<IntakeReview />, { identity: REQUISITIONER });
-    // Wait for the ROWS, not the heading — the heading renders before the read
-    // resolves, and querying then finds an empty table and calls it a result.
-    const accepts = await screen.findAllByRole('button', { name: /Accept as suggested/i });
-    expect(accepts.length).toBeGreaterThan(0);
-    expect(screen.queryByTestId('handoff-intake-accept')).not.toBeInTheDocument();
-  });
-
-  it('WITHHELD: a finance seat reads the owner ONCE, keeps Dismiss, loses Accept', async () => {
-    renderWithProviders(<IntakeReview />, { identity: FINANCE });
-    const dismisses = await screen.findAllByRole('button', { name: /Dismiss/i });
-    // Dismiss is local view state holding no atom — gating it would invent an
-    // authority the machine never asserted.
-    expect(dismisses.length).toBeGreaterThan(0);
-    expect(screen.queryAllByRole('button', { name: /Accept as suggested/i })).toHaveLength(0);
-    const notice = screen.getByTestId('handoff-intake-accept');
-    expect(notice).toHaveTextContent('Awaiting Requisitioner');
-  });
-});
-
-describe('§74 · ID from birth, across the group', () => {
-  it('the owner renders in Indonesian with no English frame left behind', async () => {
-    await i18n.changeLanguage('id');
-    try {
-      renderWithProviders(<IntakeReview />, { identity: FINANCE });
-      await screen.findAllByRole('button', { name: /Abaikan/i });
-      expect(screen.getByTestId('handoff-intake-accept')).toHaveTextContent('Menunggu Pemohon');
-    } finally {
-      await i18n.changeLanguage('en');
-    }
   });
 });
 

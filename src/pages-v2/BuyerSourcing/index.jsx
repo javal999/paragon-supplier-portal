@@ -248,7 +248,10 @@ const SourcingWorkspace = ({
         // The queue's own empty line only when the queue itself is empty; a
         // category or search that hides its rows reads the filter line.
         emptyText={
-          board.kpi === null && board.group === 'action' && board.counts.action === 0
+          board.kpi === null &&
+          !board.roundsClosing &&
+          board.group === 'action' &&
+          board.counts.action === 0
             ? t('sourcing.table.emptyAction')
             : t('sourcing.table.empty')
         }

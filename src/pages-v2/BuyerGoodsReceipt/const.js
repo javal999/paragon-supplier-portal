@@ -22,7 +22,9 @@ import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 export const TODAY = DECLARED_PRESENT;
 
 /**
+ * `action` (IA P-08) — every receipt Home's "Goods receipts to review" counts.
  * @typedef {| 'all'
+ *   | 'action'
  *   | 'pending'
  *   | 'under-inspection'
  *   | 'approved'

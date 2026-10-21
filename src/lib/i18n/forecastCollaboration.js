@@ -116,7 +116,8 @@ export const forecastCollaborationEn = {
     'More than the shortfall. The commitment may have changed; reload the page.',
 
   // Supplier — Forecast & commitments
-  'fc.sup.title': 'Forecast & commitments',
+  // IA P-11 — owner ruling 2026-10-21: the page title is the menu label.
+  'fc.sup.title': 'Foresight commitments',
   'fc.sup.subtitle':
     'PTI’s forecast for your materials, what changed, and your commitment per period',
   'fc.sup.empty': 'PTI has not published a forecast for your materials yet.',
@@ -394,7 +395,7 @@ export const forecastCollaborationId = {
   'fc.refusal.aboveShortfall':
     'Melebihi kekurangan. Komitmen mungkin telah berubah; muat ulang halaman.',
 
-  'fc.sup.title': 'Prakiraan & komitmen',
+  'fc.sup.title': 'Komitmen foresight',
   'fc.sup.subtitle':
     'Prakiraan PTI untuk material Anda, apa yang berubah, dan komitmen Anda per periode',
   'fc.sup.empty': 'PTI belum menerbitkan prakiraan untuk material Anda.',

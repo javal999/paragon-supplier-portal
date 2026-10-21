@@ -136,7 +136,9 @@ export const orderCollaborationEn = {
   'oc.summary.short.foresight': 'Fore',
   'oc.summary.short.shipping': 'Ship',
   'oc.summary.col.capacity': 'Capacity',
-  'oc.summary.col.foresight': 'Foresight / fixed stock',
+  // IA P-11 — owner ruling 2026-10-21: one name, "Foresight commitments", in the
+  // menu, the page titles and this column.
+  'oc.summary.col.foresight': 'Foresight commitments',
   'oc.summary.col.shipping': 'Shipping notice',
   'oc.summary.capacity.notStarted': 'Not started',
   'oc.summary.capacity.outdated': 'Update needed',
@@ -357,10 +359,10 @@ export const orderCollaborationId = {
   'oc.summary.col.asns': 'ASN',
   'oc.summary.col.confirmations': 'Konfirmasi',
   'oc.summary.short.capacity': 'Kap',
-  'oc.summary.short.foresight': 'Prak',
+  'oc.summary.short.foresight': 'Fore',
   'oc.summary.short.shipping': 'Kirim',
   'oc.summary.col.capacity': 'Kapasitas',
-  'oc.summary.col.foresight': 'Prakiraan / stok tetap',
+  'oc.summary.col.foresight': 'Komitmen foresight',
   'oc.summary.col.shipping': 'Pemberitahuan pengiriman',
   'oc.summary.capacity.notStarted': 'Belum dimulai',
   'oc.summary.capacity.outdated': 'Perlu diperbarui',

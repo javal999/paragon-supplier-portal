@@ -94,11 +94,13 @@ const BuyerDeliveryAgreements = () => {
     : undefined;
   const selectedItem = selectedView?.items.find((iv) => iv.item.lineSeq === selected?.itemSeq);
 
+  // IA P-10 — no menu item of its own: the crumb names the menu section of the
+  // page it belongs to (Order collaboration), never a section the menu lacks (NV-05).
   if (query.isPending) return <LoadingState />;
   if (views.length === 0) {
     return (
       <EmptyState
-        breadcrumb={[t('delivery.crumb.settle'), t('delivery.crumb.title')]}
+        breadcrumb={[t('hub.nav.section.orders'), t('delivery.crumb.title')]}
         title={t('delivery.header.title')}
         subtitle={t('delivery.header.subtitle')}
         message={t('delivery.empty')}
@@ -147,7 +149,7 @@ const BuyerDeliveryAgreements = () => {
   return (
     <AppShellV2>
       <PageHeader
-        breadcrumb={[t('delivery.crumb.settle'), t('delivery.crumb.title')]}
+        breadcrumb={[t('hub.nav.section.orders'), t('delivery.crumb.title')]}
         title={t('delivery.header.title')}
         subtitle={t('delivery.header.subtitle')}
         actions={<LivenessPill capability="deliveryAgreements" />}

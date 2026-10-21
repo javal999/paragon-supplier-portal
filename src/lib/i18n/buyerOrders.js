@@ -12,7 +12,8 @@ export const buyerOrdersEn = {
   'buyerOrders.crumb.transact': 'TRANSACT',
   'buyerOrders.crumb.purchaseOrders': 'PURCHASE ORDERS',
   // — Page header —
-  'buyerOrders.header.title': 'Purchase Orders',
+  // IA P-11 — the page title is the menu label.
+  'buyerOrders.header.title': 'Purchase orders',
   'buyerOrders.header.subtitle':
     'Active and historical purchase orders across your supplier network.',
   // — Header actions —
@@ -112,7 +113,7 @@ export const buyerOrdersId = {
   'buyerOrders.crumb.transact': 'TRANSAKSI',
   'buyerOrders.crumb.purchaseOrders': 'PESANAN PEMBELIAN',
   // — Page header —
-  'buyerOrders.header.title': 'Pesanan Pembelian',
+  'buyerOrders.header.title': 'Pesanan pembelian',
   'buyerOrders.header.subtitle':
     'Pesanan pembelian aktif dan historis di seluruh jaringan pemasok Anda.',
   // — Header actions —

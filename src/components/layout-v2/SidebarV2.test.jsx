@@ -73,7 +73,10 @@ describe('SidebarV2 — hub sections (REQUIREMENTS §3.7)', () => {
     renderWithProviders(<SidebarV2 />, { route: '/buyer/home' });
     const nav = screen.getByRole('navigation');
     expect(within(nav).getByText('Order collaboration')).toBeInTheDocument();
-    expect(within(nav).getByText('Call-offs', { selector: 'div' })).toBeInTheDocument();
+    // IA P-09 — Call-offs is an item of Order collaboration, not a section.
+    expect(within(nav).getByRole('button', { name: 'Call-offs' })).toBeInTheDocument();
+    expect(within(nav).queryByText('Call-offs', { selector: 'div' })).toBeNull();
+    expect(within(nav).getByText('Sourcing')).toBeInTheDocument();
     expect(within(nav).queryByText('Acquire')).toBeNull();
     expect(within(nav).queryByText('Marketplace')).toBeNull();
   });
@@ -101,15 +104,19 @@ describe('SidebarV2 — hub sections (REQUIREMENTS §3.7)', () => {
       'To do',
       'Purchase orders',
       'Call-offs',
-      'Forecast & commitments',
+      'Foresight commitments',
       'RFI invitations',
       'RFQ invitations',
       'RFP invitations',
-      'Profile & documents'
+      'Profile & documents',
+      'My performance'
     ]) {
       expect(within(nav).getByRole('button', { name })).toBeInTheDocument();
     }
     expect(within(nav).queryByRole('button', { name: 'Channel Inbox' })).toBeNull();
+    // IA P-02 / P-09 — no Order summary item; Performance folded into Company.
+    expect(within(nav).queryByRole('button', { name: 'Order summary' })).toBeNull();
+    expect(within(nav).queryByText('Performance', { selector: 'div' })).toBeNull();
   });
 });
 

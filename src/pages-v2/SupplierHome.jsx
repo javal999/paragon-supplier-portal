@@ -132,6 +132,9 @@ const SupplierHome = () => {
       const expiring = certsDue.filter(
         (doc) => documentDisplayState(doc, DECLARED_PRESENT) === 'expiring'
       );
+      // IA P-03 (IA-S02) — UC5 step 2: a document PTI asked for and this
+      // supplier has not sent yet (the read is scoped to the supplier).
+      const docsRequested = docs.filter((doc) => doc.status === 'Awaiting Upload');
       const unpaid = (invoices.data?.items ?? []).filter(
         (i) => i.status !== 'Payment Released' && i.status !== 'Remittance Received'
       );
@@ -391,7 +394,8 @@ const SupplierHome = () => {
           deadlines: [],
           stock: coverOf(poMaterials(noNotice)),
           noDeadlineAmber: true,
-          to: '/supplier/order-summary'
+          // IA P-02 — Order summary is the `?view=summary` view of Purchase orders.
+          to: deepLink('/supplier/orders', { view: 'summary' })
         },
         {
           // Ship by the confirmed delivery date (several orders carry an empty
@@ -476,19 +480,28 @@ const SupplierHome = () => {
           label: t('hub.home.task.sup.certs'),
           count: certsDue.length,
           deadlines: certsDue.map((doc) => doc.expiryDate),
-          // D6 (PR #74 review): the page's `expiry` filter is single-valued
-          // (all/expired/expiring). Narrow to whichever kind the count is
-          // entirely made of; when both kinds are present, no single value
-          // covers the whole count, so link unfiltered rather than hiding
-          // half of it.
+          // D6 (PR #74 review): narrow to whichever kind the count is entirely
+          // made of. IA P-08 — when both kinds are present, `due` (expired or
+          // expiring) holds the whole count, so the link never shows less.
           to: deepLink('/supplier/documents', {
             expiry:
               expired.length > 0 && expiring.length === 0
                 ? 'expired'
                 : expiring.length > 0 && expired.length === 0
                   ? 'expiring'
-                  : undefined
+                  : 'due'
           })
+        },
+        {
+          // IA P-03 (IA-S02) — the documents PTI asked this supplier for. No
+          // deadline is recorded on the request.
+          id: 'docs-requested',
+          lane: 'money',
+          label: t('hub.home.task.sup.docsRequested'),
+          count: docsRequested.length,
+          deadlines: [],
+          noDeadlineAmber: true,
+          to: deepLink('/supplier/documents', { status: 'awaiting-upload' })
         }
       ];
       return [

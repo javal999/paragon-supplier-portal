@@ -150,7 +150,9 @@ describe('the purpose-header map', () => {
     expect(FORECAST_PAGES.whatToOrder.next).toBe('makeRoom');
     expect(FORECAST_PAGES.makeRoom.next).toBe('publish');
     expect(FORECAST_PAGES.publish.next).toBe('responses');
-    expect(FORECAST_PAGES.responses.next).toBe('performance');
+    // IA P-07 (IA-B10) — the weekly cycle ends back at This week.
+    expect(FORECAST_PAGES.responses.next).toBe('thisWeek');
+    expect(FORECAST_PAGES.thisWeek.sectionKey).toBe(FORECAST_PAGES.responses.sectionKey);
     expect(FORECAST_PAGES.forecastQuality.uses).toBe('performance');
     expect(FORECAST_PAGES.forecastQuality.next).toBe('stockCheck');
   });

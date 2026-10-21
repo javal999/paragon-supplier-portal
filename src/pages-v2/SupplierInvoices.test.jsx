@@ -26,7 +26,7 @@ const SUPPLIER_NO_INVOICES = {
 describe('SupplierInvoices — four honest states', () => {
   it('data: renders the scoped invoice workspace for the seeded supplier', async () => {
     renderWithProviders(<SupplierInvoices />, { identity: SUPPLIER });
-    expect(await screen.findByText('My Invoices')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Invoices' })).toBeInTheDocument();
     expect(await screen.findByText('Payments Received')).toBeInTheDocument();
   });
 
@@ -59,7 +59,7 @@ describe('SupplierInvoices — Submit dispatches the real verb', () => {
   it('submits a Draft invoice through the command seam (Draft → Submitted)', async () => {
     invoiceStore.reset();
     renderWithProviders(<SupplierInvoices />, { identity: SUPPLIER });
-    await screen.findByText('My Invoices');
+    await screen.findByRole('heading', { name: 'Invoices' });
 
     // sup-007 has exactly one Draft: INV-2026-BRL-0055 (inv-brl-0055).
     fireEvent.click(await screen.findByRole('button', { name: 'Submit' }));
@@ -89,7 +89,7 @@ describe('SupplierInvoices — Submit dispatches the real verb', () => {
 describe('SupplierInvoices — the new-invoice amount is text, so the parser is load-bearing', () => {
   const openNewInvoice = async () => {
     renderWithProviders(<SupplierInvoices />, { identity: SUPPLIER });
-    await screen.findByText('My Invoices');
+    await screen.findByRole('heading', { name: 'Invoices' });
     fireEvent.click(screen.getByRole('button', { name: 'New invoice' }));
     return screen.findByLabelText('Amount (IDR)');
   };

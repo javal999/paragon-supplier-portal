@@ -125,7 +125,9 @@ const ContractDetailView = ({ contract, obligations, suppliers }) => {
     [suppliers, contract.supplierId]
   );
 
-  const CRUMB = [t('contracts.crumb.acquire'), t('contracts.crumb.contracts')];
+  // IA P-10 — no menu item of its own: the crumb names the menu section of the
+  // page it belongs to (Sourcing), never a section the menu does not have (NV-05).
+  const CRUMB = [t('hub.nav.section.sourcing'), t('contracts.crumb.contracts')];
 
   return (
     <AppShellV2>
@@ -226,7 +228,7 @@ const BuyerContractDetail = () => {
   const contractsQuery = useContracts();
   const obligationsQuery = useObligations();
   const suppliersQuery = useSuppliers();
-  const CRUMB = [t('contracts.crumb.acquire'), t('contracts.crumb.contracts')];
+  const CRUMB = [t('hub.nav.section.sourcing'), t('contracts.crumb.contracts')];
 
   if (contractsQuery.isPending || obligationsQuery.isPending || suppliersQuery.isPending)
     return <LoadingState breadcrumb={CRUMB} />;

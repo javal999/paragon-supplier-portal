@@ -147,12 +147,13 @@ export function drillHref(column, persona, target) {
 }
 
 /**
- * Where "Back to order summary" points (BR-04).
+ * Where "Back to order summary" points (BR-04). IA P-02 — the summary is a view
+ * of Purchase orders; its old path only redirects there.
  * @param {Persona} persona
  * @returns {string}
  */
 export const orderSummaryPath = (persona) =>
-  persona === 'buyer' ? '/buyer/order-summary' : '/supplier/order-summary';
+  persona === 'buyer' ? '/buyer/orders?view=summary' : '/supplier/orders?view=summary';
 
 // ── The empty-cell contract (BR-03) ─────────────────────────────────────────
 

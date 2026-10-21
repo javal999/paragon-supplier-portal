@@ -19,9 +19,10 @@
 export const supplierDocumentsEn = {
   // — Breadcrumb —
   'supplierDocuments.crumb.settle': 'SETTLE',
-  'supplierDocuments.crumb.myDocuments': 'MY DOCUMENTS',
+  'supplierDocuments.crumb.myDocuments': 'PROFILE & DOCUMENTS',
   // — Page header —
-  'supplierDocuments.header.title': 'My Documents',
+  // IA P-11 — the page title is the menu label.
+  'supplierDocuments.header.title': 'Profile & documents',
   'supplierDocuments.header.subtitle':
     'Certifications, compliance documents, COAs, and contracts · Halal & BPOM tracking — {{name}}.',
   'supplierDocuments.common.supplierFallback': 'Supplier',
@@ -60,6 +61,9 @@ export const supplierDocumentsEn = {
   'supplierDocuments.filter.count': '{{shown}} of {{total}} documents',
   'supplierDocuments.filter.expired': 'Expired',
   'supplierDocuments.filter.expiring': 'Expiring soon',
+  // IA P-03 / P-08 — the filters the supplier To do items land on.
+  'supplierDocuments.filter.due': 'Expired or expiring',
+  'supplierDocuments.filter.requested': 'Requested by PTI',
   // — Table columns —
   'supplierDocuments.table.document': 'Document',
   'supplierDocuments.table.category': 'Category',
@@ -148,9 +152,9 @@ export const supplierDocumentsEn = {
 export const supplierDocumentsId = {
   // — Breadcrumb —
   'supplierDocuments.crumb.settle': 'PENYELESAIAN',
-  'supplierDocuments.crumb.myDocuments': 'DOKUMEN SAYA',
+  'supplierDocuments.crumb.myDocuments': 'PROFIL & DOKUMEN',
   // — Page header —
-  'supplierDocuments.header.title': 'Dokumen Saya',
+  'supplierDocuments.header.title': 'Profil & dokumen',
   'supplierDocuments.header.subtitle':
     'Sertifikasi, dokumen kepatuhan, COA, dan kontrak · Pelacakan Halal & BPOM — {{name}}.',
   'supplierDocuments.common.supplierFallback': 'Pemasok',
@@ -190,6 +194,8 @@ export const supplierDocumentsId = {
   'supplierDocuments.filter.count': '{{shown}} dari {{total}} dokumen',
   'supplierDocuments.filter.expired': 'Kedaluwarsa',
   'supplierDocuments.filter.expiring': 'Akan kedaluwarsa',
+  'supplierDocuments.filter.due': 'Kedaluwarsa atau akan kedaluwarsa',
+  'supplierDocuments.filter.requested': 'Diminta PTI',
   // — Table columns —
   'supplierDocuments.table.document': 'Dokumen',
   'supplierDocuments.table.category': 'Kategori',

@@ -55,7 +55,7 @@ describe('matchEntries — case-insensitive substring on the translated label', 
 
   it('matches regardless of case and names the matching pages', () => {
     const labels = matchEntries(entries, 'SUPPLIER', t).map((r) => r.label);
-    expect(labels).toContain('Supplier replies');
+    expect(labels).toContain('Supplier follow-ups');
     expect(labels).toContain('Suppliers');
     expect(labels).toContain('Planning engine · Supplier reliability');
     expect(labels).not.toContain('Purchase orders');

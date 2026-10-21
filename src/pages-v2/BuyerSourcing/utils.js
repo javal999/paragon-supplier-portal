@@ -19,6 +19,7 @@ import { isRfqCategory, isRfqUom } from '../sourcing/requisitionPrefill';
 import { newItemDraft } from '../sourcing/rfqDraft';
 import { formatDate } from '@lib/format';
 import { daysUntil } from '@services/data/dayProjection';
+import { isClosingSoon } from '@services/transitions/rfxRules';
 import { rfqStageOf } from '../BuyerSourcingEvent/utils';
 import { CATEGORY_LABEL_KEY } from './const';
 
@@ -274,6 +275,26 @@ export const matchesGroup = (r, group, next) => {
 };
 
 /**
+ * IA P-08 (IA-B03) — an RFQ ready to award: open, and every invited supplier
+ * has answered. The ONE predicate behind the board's "Ready to award" tile and
+ * Home's "RFQ ready to award" task, so the two counts cannot disagree.
+ * @param {RFQ} r
+ * @returns {boolean}
+ */
+export const isReadyToAward = (r) => r.status === 'Open' && isAllResponded(r);
+
+/**
+ * REQ-E03-05 BR-03 — a negotiation round still open, with invitees yet to
+ * answer, whose deadline is close. The ONE predicate behind Home's "Negotiation
+ * rounds closing soon" task and the board's matching view (IA P-08).
+ * @param {{ closed: boolean; awaiting: number; deadline: string }} round
+ * @param {string} nowIso
+ * @returns {boolean}
+ */
+export const isRoundClosingSoon = (round, nowIso) =>
+  !round.closed && round.awaiting > 0 && isClosingSoon(round.deadline, nowIso);
+
+/**
  * Whether an RFQ is counted by a KPI tile — the one predicate behind the tile's
  * number and the rows it filters to, so the two cannot disagree.
  * @param {RFQ} r
@@ -289,7 +310,7 @@ export const matchesKpi = (r, kpi, nowIso) => {
     // An unreadable deadline is not evidence a response is due this week.
     return d !== null && d <= 7 && d >= 0;
   }
-  if (kpi === 'ready') return r.status === 'Open' && isAllResponded(r);
+  if (kpi === 'ready') return isReadyToAward(r);
   if (r.status !== 'Awarded') return false;
   const d = daysUntil(r.createdAt, nowIso);
   return d !== null && -d <= 90;

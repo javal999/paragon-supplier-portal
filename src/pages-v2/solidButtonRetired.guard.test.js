@@ -101,7 +101,7 @@ describe('⚠️ §68 · THE MATCHER ITSELF, BEFORE ANY CLAIM ABOUT THE TREE', (
     // count — the file list grows, and a count would rot.
     const files = shippedTsx(SRC).map((f) => relative(SRC, f).replace(/\\/g, '/'));
     expect(files).toContain('pages-v2/BuyerRequisitions/index.jsx');
-    expect(files).toContain('pages-v2/SupplierWhatsApp/index.jsx');
+    expect(files).toContain('pages-v2/SupplierDocuments.jsx');
     expect(files).toContain('components/ui-v2/BulkActionsBar.jsx');
   });
 });

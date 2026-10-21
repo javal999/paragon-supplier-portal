@@ -17,7 +17,7 @@ const alwaysPending = withChaos(mockDataService, { minMs: 1e7, maxMs: 1e7, failu
 describe('BuyerRequisitions — four honest states', () => {
   it('data: renders the requisitions workspace with wired reads', async () => {
     renderWithProviders(<BuyerRequisitions />);
-    expect(await screen.findByText('Purchase Requisitions')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Requisitions' })).toBeInTheDocument();
     // A relocated PR proves the read resolved and drove the table.
     expect(await screen.findByText('PR-2026-00341')).toBeInTheDocument();
     // Numeric estimatedValue renders through the compact IDR formatter (lowercase jt).
@@ -27,7 +27,7 @@ describe('BuyerRequisitions — four honest states', () => {
   it('loading: shows LoadingState while the read is pending', () => {
     renderWithProviders(<BuyerRequisitions />, { service: alwaysPending });
     expect(screen.getByText('Loading…')).toBeInTheDocument();
-    expect(screen.queryByText('Purchase Requisitions')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Requisitions' })).not.toBeInTheDocument();
   });
 
   it('error: shows ErrorState when the read throws', async () => {
@@ -45,7 +45,7 @@ describe('BuyerRequisitions — the fabricated-number toast stub is retired (G1.
   it('New PR submit dispatches a REAL t_pr_create — store-assigned PR-2026-9xx, not a fabricated 00xx', async () => {
     purchaseRequisitionStore.reset();
     renderWithProviders(<BuyerRequisitions />);
-    await screen.findByText('Purchase Requisitions');
+    await screen.findByRole('heading', { name: 'Requisitions' });
 
     // Open the New PR panel and fill the required fields (material + qty + date +
     // cost center gate `canSubmit`; t_pr_create requires material + quantity).
@@ -98,7 +98,7 @@ const PROBE_MATERIAL = 'Niacinamide B3 USP Grade (2b probe)';
 /** @param {string} qty */
 const openNewPrForm = async (qty) => {
   renderWithProviders(<BuyerRequisitions />);
-  await screen.findByText('Purchase Requisitions');
+  await screen.findByRole('heading', { name: 'Requisitions' });
   fireEvent.click(screen.getByRole('button', { name: 'New PR' }));
   fireEvent.change(screen.getByPlaceholderText('e.g. Niacinamide B3 USP Grade'), {
     target: { value: PROBE_MATERIAL }

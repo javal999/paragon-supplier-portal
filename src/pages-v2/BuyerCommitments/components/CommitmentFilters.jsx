@@ -91,7 +91,10 @@ const CommitmentFilters = ({
           onChange={onReasonsChange}
           testId="fc-reason-filter"
         />
-        <Link to="/buyer/chase" className="text-sm text-action-hover hover:underline self-center">
+        <Link
+          to="/buyer/comm-hub?tab=follow-up"
+          className="text-sm text-action-hover hover:underline self-center"
+        >
           {t('fc.pti.gaps.followUp')}
         </Link>
         <Link

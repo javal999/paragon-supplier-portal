@@ -14,9 +14,10 @@
 export const supplierOrdersEn = {
   // — Breadcrumb —
   'supplierOrders.crumb.transact': 'TRANSACT',
-  'supplierOrders.crumb.myOrders': 'MY ORDERS',
+  'supplierOrders.crumb.myOrders': 'PURCHASE ORDERS',
   // — Page header —
-  'supplierOrders.header.title': 'My Orders',
+  // IA P-11 — the page title is the menu label.
+  'supplierOrders.header.title': 'Purchase orders',
   'supplierOrders.header.subtitle': 'Purchase orders received from Paragon Corp — {{supplier}}.',
   // — Meta line —
   'supplierOrders.meta.orders.one': '{{count}} order',
@@ -136,9 +137,9 @@ export const supplierOrdersEn = {
 export const supplierOrdersId = {
   // — Breadcrumb —
   'supplierOrders.crumb.transact': 'TRANSAKSI',
-  'supplierOrders.crumb.myOrders': 'PESANAN SAYA',
+  'supplierOrders.crumb.myOrders': 'PESANAN PEMBELIAN',
   // — Page header —
-  'supplierOrders.header.title': 'Pesanan Saya',
+  'supplierOrders.header.title': 'Pesanan pembelian',
   'supplierOrders.header.subtitle': 'Pesanan pembelian diterima dari Paragon Corp — {{supplier}}.',
   // — Meta line —
   'supplierOrders.meta.orders.one': '{{count}} pesanan',

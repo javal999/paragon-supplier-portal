@@ -83,11 +83,19 @@ const GR_VARIANCE = /** @type {Set<GoodsReceipt['status']>} */ (
 );
 
 /**
+ * IA P-08 — a receipt status the planner still acts on: inspection pending or
+ * under way, or a variance to decide. The ONE predicate behind Home's "Goods
+ * receipts to review" and the Goods receipts page's "Needs action" tab.
+ * @param {GoodsReceipt['status']} status
+ * @returns {boolean}
+ */
+export const grStatusNeedsAction = (status) => GR_PENDING.has(status) || GR_VARIANCE.has(status);
+
+/**
  * @param {GoodsReceipt[]} rows
  * @returns {GoodsReceipt[]}
  */
-export const grNeedingAction = (rows) =>
-  rows.filter((g) => GR_PENDING.has(g.status) || GR_VARIANCE.has(g.status));
+export const grNeedingAction = (rows) => rows.filter((g) => grStatusNeedsAction(g.status));
 
 /**
  * @param {GoodsReceipt[]} rows

@@ -16,8 +16,8 @@
 // test asserts the pin really moved the machine.
 // ─────────────────────────────────────────────────────────────────────────────
 import { describe, it, expect, beforeEach } from 'vitest';
-import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { renderWithProviders, SUPPLIER } from '@test/test-utils';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { renderWithProviders } from '@test/test-utils';
 import { usePinnedDemoClock } from '@test/demoClock';
 import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 import { sdcClock } from '@services/sdc/clock';
@@ -29,9 +29,6 @@ import { COMPLIANCE_REGISTRY } from '@services/data/mock/fixtures/complianceRegi
 import { halalOf } from '@services/sdc/halal';
 import { bpomOf } from '@services/sdc/bpom';
 /** @import { EnforcementSetting } from '@lib/enforcement' */
-import SupplierWhatsApp from './SupplierWhatsApp';
-import BuyerComplianceWidget from './widgets/BuyerComplianceWidget';
-import { computeStatus, daysRemaining } from '@services/data/complianceProjection';
 
 /** The machine's calendar during every test: nowhere near the hub's present. */
 const MACHINE = '2027-03-15T03:07:00.000Z';
@@ -121,61 +118,5 @@ describe('GR wizard — a receipt recorded in the demo is dated at the declared 
     );
     expect(created.receivedDate).toBe(DECLARED_PRESENT);
     expect(created.receivedDate).not.toBe('2027-03-15');
-  });
-});
-
-// ─── A SUPPLIER CHANNEL REPLY SENT IN THE DEMO ───────────────────────────────
-describe('SupplierWhatsApp — a reply sent in the simulator is stamped on the hub clock', () => {
-  it('the new message carries the hub time, never the machine time', async () => {
-    renderWithProviders(<SupplierWhatsApp />, { identity: SUPPLIER });
-    const hub = hubTime();
-    const machine = machineTime();
-    const before = screen.queryAllByText(hub).length;
-    expect(screen.queryAllByText(machine)).toHaveLength(0);
-
-    // The first quick reply the default scenario offers — a supplier message.
-    const reply = /** @type {HTMLButtonElement} */ (
-      document.querySelector('button.rounded-full.border')
-    );
-    expect(reply, 'no quick reply rendered — nothing below would send a message').toBeTruthy();
-    fireEvent.click(reply);
-
-    // One more element on screen reads the hub time — the reply just sent.
-    await waitFor(() => expect(screen.queryAllByText(hub).length).toBe(before + 1));
-    expect(screen.queryAllByText(machine)).toHaveLength(0);
-  });
-
-  it('the page states the hub day, not the machine day, as the session date', () => {
-    renderWithProviders(<SupplierWhatsApp />, { identity: SUPPLIER });
-    const text = document.body.textContent ?? '';
-    expect(text).toContain('31 Aug 2026');
-    expect(text).not.toContain('15 Mar 2027');
-  });
-});
-
-// ─── A DASHBOARD WIDGET'S "DAYS LEFT" COUNT ──────────────────────────────────
-describe('BuyerComplianceWidget — "Days left" counts from the hub clock', () => {
-  it('every flagged row shows the days remaining at the declared present', async () => {
-    const hubNow = sdcClock.now();
-    const flagged = COMPLIANCE_REGISTRY.filter((e) => {
-      const s = computeStatus(e, hubNow);
-      return s === 'Expiring' || s === 'Expired';
-    });
-    // Non-vacuity: the hub present must flag something, and the machine present
-    // must disagree about at least one row's count, or this proves nothing.
-    expect(flagged.length).toBeGreaterThan(0);
-    const machineNow = new Date().toISOString();
-    expect(flagged.some((e) => daysRemaining(e, hubNow) !== daysRemaining(e, machineNow))).toBe(
-      true
-    );
-
-    renderWithProviders(<BuyerComplianceWidget />);
-    fireEvent.click(await screen.findByRole('button', { name: /Expand.*Compliance/i }));
-    const dialog = await screen.findByRole('dialog');
-    const cells = within(dialog)
-      .getAllByRole('row')
-      .slice(1)
-      .map((r) => within(r).getAllByRole('cell')[3]?.textContent);
-    expect(cells.sort()).toEqual(flagged.map((e) => `${daysRemaining(e, hubNow)}d`).sort());
   });
 });

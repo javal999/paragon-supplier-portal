@@ -184,7 +184,9 @@ describe('BL-73 · the stock verbs are driven only by the Stock page’s two met
   });
 });
 
-describe('BL-73 · both channel-triage surfaces lead into the entry form', () => {
+// IA P-10 (owner ruled 2026-10-21) — the supplier channel triage
+// (`/supplier/comm-hub`) was retired with its page; the PTI triage remains.
+describe('BL-73 · the channel-triage surface leads into the entry form', () => {
   /** @param {string} file */
   const modesOf = (file) =>
     entryPanelModes(
@@ -193,8 +195,7 @@ describe('BL-73 · both channel-triage surfaces lead into the entry form', () =>
       file
     );
 
-  it('the supplier triage opens it in supplier mode; the PTI triage in PTI mode', () => {
-    expect(modesOf('pages-v2/CommHubInbound.jsx')).toEqual(['supplier']);
+  it('the PTI triage opens it in PTI mode', () => {
     expect(modesOf('pages-v2/BuyerChannelTriage.jsx')).toEqual(['pti']);
   });
 
@@ -204,7 +205,7 @@ describe('BL-73 · both channel-triage surfaces lead into the entry form', () =>
   });
 
   it('no triage surface imports a stock path of its own', () => {
-    for (const file of ['pages-v2/CommHubInbound.jsx', 'pages-v2/BuyerChannelTriage.jsx']) {
+    for (const file of ['pages-v2/BuyerChannelTriage.jsx']) {
       const text = /** @type {NonNullable<ReturnType<typeof FILES.find>>} */ (
         FILES.find((f) => f.file === file)
       ).text;
