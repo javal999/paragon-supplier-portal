@@ -25,24 +25,30 @@ const noOrders = {
 
 describe('BuyerOrders — four honest states', () => {
   it('data: renders the PO workspace with wired reads', async () => {
-    renderWithProviders(<BuyerOrders />);
+    renderWithProviders(<BuyerOrders />, { route: '/buyer/orders?view=list' });
     // The KPI strip only renders in the data branch — proof the read resolved.
     expect(await screen.findByText('Total Open POs')).toBeInTheDocument();
   });
 
   it('loading: shows LoadingState while the read is pending', () => {
-    renderWithProviders(<BuyerOrders />, { service: alwaysPending });
+    renderWithProviders(<BuyerOrders />, {
+      service: alwaysPending,
+      route: '/buyer/orders?view=list'
+    });
     expect(screen.getByText('Loading…')).toBeInTheDocument();
     expect(screen.queryByText('Total Open POs')).not.toBeInTheDocument();
   });
 
   it('error: shows ErrorState when the read throws', async () => {
-    renderWithProviders(<BuyerOrders />, { service: alwaysFails });
+    renderWithProviders(<BuyerOrders />, {
+      service: alwaysFails,
+      route: '/buyer/orders?view=list'
+    });
     expect(await screen.findByText('Unable to load this page')).toBeInTheDocument();
   });
 
   it('empty: shows EmptyState when there are no purchase orders', async () => {
-    renderWithProviders(<BuyerOrders />, { service: noOrders });
+    renderWithProviders(<BuyerOrders />, { service: noOrders, route: '/buyer/orders?view=list' });
     expect(await screen.findByText('No purchase orders yet')).toBeInTheDocument();
   });
 });
@@ -61,14 +67,14 @@ describe('BuyerOrders — who acts next', () => {
   // shipping notice, so the buyer reads `theirs` there; the S/4HANA wait moved
   // to Delivered (PO-2025-00101), where every exit is still an S/4HANA fact.
   it('a PO in Confirmed now waits on the supplier — the shipping notice is theirs', async () => {
-    renderWithProviders(<BuyerOrders />);
+    renderWithProviders(<BuyerOrders />, { route: '/buyer/orders?view=list' });
     fireEvent.click(await screen.findByText('PO-2025-00102'));
     const line = await screen.findByTestId('next-act-buyer-po');
     expect(line).toHaveAttribute('data-next-act', 'theirs');
   });
 
   it('a PO in Delivered names S/4HANA to the buyer — the wait is SAP’s, not the supplier’s', async () => {
-    renderWithProviders(<BuyerOrders />);
+    renderWithProviders(<BuyerOrders />, { route: '/buyer/orders?view=list' });
     fireEvent.click(await screen.findByText('PO-2025-00101'));
     const line = await screen.findByTestId('next-act-buyer-po');
     expect(line).toHaveAttribute('data-next-act', 'external');
@@ -76,7 +82,7 @@ describe('BuyerOrders — who acts next', () => {
   });
 
   it('⚠️ a CLOSED PO says NOTHING — an ended document has nobody acting next', async () => {
-    renderWithProviders(<BuyerOrders />);
+    renderWithProviders(<BuyerOrders />, { route: '/buyer/orders?view=list' });
     fireEvent.click(await screen.findByText('PO-2025-00111'));
     // The drawer is open on a terminal document…
     expect(await screen.findByText('PO-2025-00111')).toBeInTheDocument();

@@ -1,7 +1,8 @@
 /** @import React from 'react' */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { AlertTriangle, Truck } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
 import {
@@ -61,6 +62,7 @@ import MaterialSearch, {
   useMaterialMatcher
 } from '@components/ui-v2/MaterialSearch';
 import { searchMaterials } from '@services/transitions/matchMaterial';
+import { createAsnHref, useAsnWizardAvailability } from './shipments/asnWizardEntry';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER CALL-OFFS — REQ-E09-03 (confirmation) and REQ-E09-04 (dispatch).
@@ -105,6 +107,9 @@ const SupplierCallOffs = () => {
   const command = useCallOffCommand();
   const confirmAvailability = useVerbAvailability('calloff:confirm');
   const dispatchAvailability = useVerbAvailability('calloff:dispatch');
+  // IA-S04 — the ASN for a confirmed call-off is made in the Create-ASN wizard,
+  // which needs both ASN atoms.
+  const asnWizard = useAsnWizardAvailability();
   const [selectedId, setSelectedId] = useState(/** @type {string | null} */ (null));
   const [form, setForm] = useState(EMPTY);
   const crumb = [t('hub.nav.section.supplierOrders'), t('co.sup.title')];
@@ -611,6 +616,23 @@ const SupplierCallOffs = () => {
                   </ul>
                 )}
                 <p className="text-xs text-text-tertiary">{t('co.dispatch.asnCounts')}</p>
+                {/* IA-S04 — the wizard opens on this call-off's PO with the
+                    call-off chosen (REQ-E09-03 BR-06, SCENARIOS UC3 step 4). */}
+                {asnWizard.held ? (
+                  <Link
+                    to={createAsnHref({
+                      poId: selected.callOff.poId,
+                      callOffId: selected.callOff.id
+                    })}
+                    data-testid="calloff-create-asn"
+                    className="inline-flex items-center gap-1.5 text-sm text-action-hover hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-action rounded"
+                  >
+                    <Truck size={14} aria-hidden="true" />
+                    {t('co.dispatch.createAsn')}
+                  </Link>
+                ) : (
+                  <HandoffNotice availability={asnWizard.notice} testId="handoff-asn-create" />
+                )}
                 {dispatchAvailability.kind === 'held' ? (
                   <>
                     <div className="grid grid-cols-2 gap-3">

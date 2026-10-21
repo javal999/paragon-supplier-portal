@@ -13,8 +13,10 @@ import { usePurchaseOrders } from '@services/query/hooks';
 import {
   FROM_ORDER_SUMMARY,
   FROM_PARAM,
+  FROM_PO,
   PO_PARAM,
   orderSummaryPath,
+  purchaseOrderPath,
   parseIdParam,
   parseListParam,
   parseWeeksParam
@@ -61,12 +63,13 @@ import {
  *
  * @typedef {| { readonly kind: 'none' }
  *   | { readonly kind: 'pending' }
- *   | { readonly kind: 'malformed'; readonly fromSummary: boolean }
- *   | { readonly kind: 'notFound'; readonly fromSummary: boolean }
+ *   | { readonly kind: 'malformed'; readonly fromSummary: boolean; readonly fromPo: boolean }
+ *   | { readonly kind: 'notFound'; readonly fromSummary: boolean; readonly fromPo: boolean }
  *   | {
  *       readonly kind: 'filtered';
  *       readonly po: PurchaseOrder;
  *       readonly fromSummary: boolean;
+ *       readonly fromPo: boolean;
  *       readonly focus: PoFocus | null;
  *       readonly groups: readonly string[] | null;
  *       readonly weeks: readonly string[] | null;
@@ -102,14 +105,16 @@ export function usePoDrillFilter() {
   const ordersQuery = usePurchaseOrders();
   const raw = params.get(PO_PARAM);
   const fromSummary = params.get(FROM_PARAM) === FROM_ORDER_SUMMARY;
+  // P-01 — opened from a PO record's lifecycle step.
+  const fromPo = params.get(FROM_PARAM) === FROM_PO;
 
   const parsed = parseIdParam(raw);
   if (parsed.kind === 'absent') return { kind: 'none' };
-  if (parsed.kind === 'malformed') return { kind: 'malformed', fromSummary };
+  if (parsed.kind === 'malformed') return { kind: 'malformed', fromSummary, fromPo };
   if (ordersQuery.isPending) return { kind: 'pending' };
 
   const po = (ordersQuery.data?.items ?? []).find((p) => p.id === parsed.value) ?? null;
-  if (!po) return { kind: 'notFound', fromSummary };
+  if (!po) return { kind: 'notFound', fromSummary, fromPo };
 
   const groups = parseListParam(params.get('groups'));
   const weeks = parseWeeksParam(params.get('weeks'));
@@ -122,6 +127,7 @@ export function usePoDrillFilter() {
     kind: 'filtered',
     po,
     fromSummary,
+    fromPo,
     focus,
     groups: groups.kind === 'ok' ? groups.value : null,
     weeks: weeks.kind === 'ok' ? weeks.value : null,
@@ -145,6 +151,25 @@ export const BackToOrderSummary = ({ persona }) => {
     >
       <ArrowLeft size={14} aria-hidden="true" />
       {t('oc.drill.back')}
+    </Link>
+  );
+};
+
+/**
+ * "Back to purchase order <PO number>" — P-01. Rendered only when the page was
+ * opened from that PO's lifecycle steps; it reopens the PO on Purchase orders.
+ * @type {React.FC<{ persona: Persona; po: PurchaseOrder }>}
+ */
+export const BackToPurchaseOrder = ({ persona, po }) => {
+  const { t } = useTranslation();
+  return (
+    <Link
+      to={purchaseOrderPath(persona, po.id)}
+      data-testid="back-to-purchase-order"
+      className="inline-flex items-center gap-1 text-sm text-action hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-action rounded"
+    >
+      <ArrowLeft size={14} aria-hidden="true" />
+      {t('oc.drill.backToPo', { poNumber: po.poNumber })}
     </Link>
   );
 };
@@ -225,6 +250,11 @@ export const PoFilterBanner = ({
             <BackToOrderSummary persona={persona} />
           </span>
         )}
+        {drill.fromPo ? (
+          <span className="ml-auto">
+            <BackToPurchaseOrder persona={persona} po={po} />
+          </span>
+        ) : null}
       </div>
       {reason && (
         <div className="mt-1 text-text-tertiary" data-testid="po-filter-reason">

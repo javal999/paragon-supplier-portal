@@ -8,7 +8,7 @@
 /** @import { AsnForm } from './const' */
 import { asnCallOffWarnings } from '@services/transitions/callOffRules';
 import { defaultCarrier } from '../shipments/CarrierPicker';
-import { openLinesFor, readLines } from '../shipments/asnLines';
+import { openLinesFor, readLines, seedLines } from '../shipments/asnLines';
 import { EMPTY_FORM } from './const';
 
 /**
@@ -49,6 +49,21 @@ export const asnForCheck = (base, read, eta, shipDate) => ({
  * @returns {AsnForm}
  */
 export const newAsnForm = () => ({ ...EMPTY_FORM, ...defaultCarrier() });
+
+/**
+ * The form patch for picking a PO at step 1: its open lines seeded, and no
+ * call-off chosen yet. The PO card and an address naming the PO both use it.
+ * @param {PurchaseOrder} po
+ * @param {readonly ASN[]} asns  Every ASN the supplier holds.
+ * @returns {Partial<AsnForm>}
+ */
+export const poSelection = (po, asns) => ({
+  poId: po.id,
+  lines: seedLines(openLinesFor(po, asns)),
+  overShipReason: '',
+  callOffId: '',
+  callOffFinal: false
+});
 
 /**
  * The lines a draft is submitted with: its PO's lines (open quantity leaving
