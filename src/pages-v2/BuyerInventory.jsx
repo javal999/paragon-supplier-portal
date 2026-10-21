@@ -48,6 +48,7 @@ import { weeklyUpdateView } from './inventory/WeeklyUpdatePanel';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
 import { TradeNameBeside } from './materials/tradeNameDisplay';
 import TryWhatIfLink from './BuyerWhatIfSandbox/TryWhatIfLink';
+import SeeEstimateLink from './inventory/SeeEstimateLink';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI INVENTORY — REQ-E08-01 (visibility), REQ-E08-02 (API sync, recording a
@@ -426,6 +427,15 @@ const BuyerInventory = () => {
                         supplierId={p.supplierId}
                         supplierName={p.supplierName}
                         testId={`pti-stock-whatif-${p.supplierId}-${p.materialCode}`}
+                      />
+                      <span aria-hidden="true" className="mx-1.5 text-xs text-text-tertiary">
+                        ·
+                      </span>
+                      <SeeEstimateLink
+                        materialCode={p.materialCode}
+                        supplierId={p.supplierId}
+                        supplierName={p.supplierName}
+                        testId={`pti-stock-estimate-${p.supplierId}-${p.materialCode}`}
                       />
                     </div>
                   </TableCell>
