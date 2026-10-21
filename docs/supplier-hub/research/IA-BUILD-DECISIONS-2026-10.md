@@ -44,3 +44,12 @@ Branch: `ia/integration`, stacked on `feat/rfx-ux-wave2`. Nothing here is on `ma
 ## 3. Withdrawn finding
 
 IA-B14 ("setting max stock needs a Menu for switch") was wrong and is withdrawn: Menu for only filters the menu. See the report's DROPPED section.
+
+## 4. Follow-ups found in the browser check (not fixed in this MR)
+
+| ID | What was seen | Suggested next step |
+|---|---|---|
+| F-1 | What to order: the decision now starts at 787 px, above the fold (it was about 1,440 px), but the Orders tab is still about 14,400 px tall, because its 84 recommendation rows are tall | Compact the rows or page the list |
+| F-2 | Make warehouse room: "Warehouse relief, ranked" starts at about 1,560 px, under "Weeks that do not fit" and "Supplier stability" | Put the ranked relief first in the Relief tab |
+| F-3 | With one PO's panel already open, editing the address to another `?po=` keeps the first panel. No in-app link does this; every link tested opened the right PO | Read `po` on every address change in the PO panel |
+| F-4 | The supplier ASN form opened from a PO shows the PO filter banner, which reads "No record on this order" before an ASN exists | Hide the banner's empty note on the create tab |
