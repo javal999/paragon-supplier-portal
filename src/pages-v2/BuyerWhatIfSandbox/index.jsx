@@ -51,7 +51,7 @@ import ScenariosPanel from './components/ScenariosPanel';
 // supplier × material ("Try a what-if", `TryWhatIfLink`); "New blank scenario"
 // clears the pair, so the sandbox starts blank with or without a link.
 //
-// BR-07 — PTI planners find it in the Weekly plan menu. No role gate (CLAUDE.md
+// BR-07 — PTI planners open it from a material row (P-07), not the menu. No role gate (CLAUDE.md
 // §65, DRC-D18): the save verb shows its HandoffNotice to a seat without the
 // atom. A supplier persona reads nothing and is told the sandbox is PTI's own.
 // ─────────────────────────────────────────────────────────────────────────────

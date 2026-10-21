@@ -50,7 +50,7 @@ export const buyerCommHubEn = {
   'buyerCommHub.provenance.correlation': 'Correlation',
   'buyerCommHub.provenance.noCorrelation': 'No correlation yet',
   // — Triage panel (C4d — in-place recording confirm) —
-  'buyerCommHub.triage.title': 'Triage a channel reply',
+  'buyerCommHub.triage.title': 'Record a reply',
   'buyerCommHub.triage.subtitle':
     'Record a reply a supplier sent you over a channel. You check and save it in the stock entry form before anything is recorded, and it is recorded by Paragon — the supplier’s words, not their self-submission.',
   'buyerCommHub.triage.supplierLabel': 'Whose conversation is this?',
@@ -136,7 +136,7 @@ export const buyerCommHubId = {
   'buyerCommHub.provenance.correlation': 'Korelasi',
   'buyerCommHub.provenance.noCorrelation': 'Belum ada korelasi',
   // — Triage panel (C4d — konfirmasi pencatatan langsung) —
-  'buyerCommHub.triage.title': 'Triase balasan kanal',
+  'buyerCommHub.triage.title': 'Catat balasan',
   'buyerCommHub.triage.subtitle':
     'Catat balasan yang dikirim pemasok kepada Anda melalui kanal. Anda memeriksa dan menyimpannya di formulir isi stok sebelum apa pun dicatat, dan ini dicatat oleh Paragon — kata-kata pemasok, bukan kiriman mandiri mereka.',
   'buyerCommHub.triage.supplierLabel': 'Ini percakapan siapa?',
