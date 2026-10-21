@@ -280,6 +280,8 @@ export const callOffsEn = {
   'co.respond.send': 'Send confirmation',
   'co.respond.sendReject': 'Send rejection',
   'co.dispatch.title': 'Dispatch notice',
+  // IA-S04 — the ASN form, started for this call-off's PO and the call-off.
+  'co.dispatch.createAsn': 'Create the ASN for this call-off',
   'co.dispatch.asnCounts':
     'An ASN you create for this call-off counts as a dispatch notice, so you do not need to report the same shipment twice.',
   'co.dispatch.shippedDate': 'Shipped date',
@@ -610,6 +612,7 @@ export const callOffsId = {
   'co.respond.send': 'Kirim konfirmasi',
   'co.respond.sendReject': 'Kirim penolakan',
   'co.dispatch.title': 'Pemberitahuan pengiriman',
+  'co.dispatch.createAsn': 'Buat ASN untuk call-off ini',
   'co.dispatch.asnCounts':
     'ASN yang Anda buat untuk call-off ini dihitung sebagai pemberitahuan pengiriman, sehingga pengiriman yang sama tidak perlu dilaporkan dua kali.',
   'co.dispatch.shippedDate': 'Tanggal dikirim',

@@ -1,5 +1,6 @@
 /** @import React from 'react' */
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Download } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
@@ -9,7 +10,6 @@ import BulkActionsBar from '@components/ui-v2/BulkActionsBar';
 import SubTabs from '@components/ui-v2/SubTabs';
 /** @import { WizardStep } from '@components/ui-v2/Wizard' */
 import Wizard from '@components/ui-v2/Wizard';
-import { useVerbAvailabilities } from '@hooks/useVerbAvailability';
 import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { useTranslation } from 'react-i18next';
@@ -27,8 +27,10 @@ import ErrorState from '@components/ui-v2/ErrorState';
 import EmptyState from '@components/ui-v2/EmptyState';
 /** @import { AsnStatus } from '@services/data/types' */
 /** @import { StatusFilter, TabKey } from './const' */
-import { OrderNotFound, PoFilterBanner } from '../orders/PoDrillFilter';
-import { readWizard } from './utils';
+import { OrderNotFound, PoFilterBanner, drilledPoId } from '../orders/PoDrillFilter';
+import { isConfirmedAndAccepted } from '@services/transitions/callOffRules';
+import { CALL_OFF_PARAM, useAsnWizardAvailability } from '../shipments/asnWizardEntry';
+import { poSelection, readWizard } from './utils';
 import { useShipmentsData } from './hooks/useShipmentsData';
 import { useExpandedAsns } from './hooks/useExpandedAsns';
 import { useAsnSubmitDrawer } from './hooks/useAsnSubmitDrawer';
@@ -73,14 +75,10 @@ const SupplierShipments = () => {
   // built bundle, which is exactly what that QA bar exists for.
   //
   // BOTH atoms, because the wizard fires both: offering it on a seat that can
-  // create but not submit would strand a draft at the last click.
-  const wizardVerbs = useVerbAvailabilities(
-    /** @type {const} */ ({
-      create: 'asn:create',
-      submit: 'asn:submit'
-    })
-  );
-  const wizardHeld = wizardVerbs.create.kind === 'held' && wizardVerbs.submit.kind === 'held';
+  // create but not submit would strand a draft at the last click. The PO and
+  // call-off pages that open this wizard ask the same pair through the same hook.
+  const wizardEntry = useAsnWizardAvailability();
+  const wizardHeld = wizardEntry.held;
   const [tab, setTab] = useState(/** @type {TabKey} */ ('shipments'));
   // Deep-link read: `?tab=create` lands "confirmed orders ready to ship" on
   // the create-ASN tab.
@@ -110,6 +108,31 @@ const SupplierShipments = () => {
     counts
   } = useShipmentsData(supplierId);
   const { expanded, toggleExpand } = useExpandedAsns(drilledPo, visibleAsns);
+
+  // IA-S01 / IA-S04 — `?tab=create&po=<id>` (and `&callOff=<id>`) starts the
+  // wizard for that PO, as if its card had been picked, and for that call-off
+  // when it is a confirmed one on the PO. Applied once per address, so a
+  // supplier who then picks another PO is not overruled; a PO that is not
+  // shippable, or a call-off that is not confirmed, leaves the choice open.
+  const [searchParams] = useSearchParams();
+  const startedFor = useRef('');
+  const startPoId = searchParams.get('tab') === 'create' ? drilledPoId(drill) : null;
+  const startCallOffId = searchParams.get(CALL_OFF_PARAM);
+  useEffect(() => {
+    if (startPoId === null) return;
+    if (startCallOffId !== null && callOffsQuery.isPending) return;
+    const key = `${startPoId}|${startCallOffId ?? ''}`;
+    if (startedFor.current === key) return;
+    const po = SHIPPABLE_POS.find((p) => p.id === startPoId);
+    if (!po) return;
+    startedFor.current = key;
+    const callOff = (callOffsQuery.data?.items ?? []).find(
+      (c) => c.id === startCallOffId && c.poId === po.id && isConfirmedAndAccepted(c)
+    );
+    wizard.updateForm({ ...poSelection(po, asns), ...(callOff ? { callOffId: callOff.id } : {}) });
+    // `wizard.updateForm` is a fresh closure each render over a state setter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startPoId, startCallOffId, SHIPPABLE_POS, asns, callOffsQuery.isPending, callOffsQuery.data]);
   const drawer = useAsnSubmitDrawer({
     asns,
     shippablePos: SHIPPABLE_POS,
@@ -303,12 +326,7 @@ const SupplierShipments = () => {
         // here with the tab already selected. That is reachable, so it is not a
         // dead branch — it is the one place on this page where the notice has to
         // answer in the body rather than in the tab row.
-        <HandoffNotice
-          availability={
-            wizardVerbs.create.kind === 'held' ? wizardVerbs.submit : wizardVerbs.create
-          }
-          testId="handoff-asn-wizard"
-        />
+        <HandoffNotice availability={wizardEntry.notice} testId="handoff-asn-wizard" />
       )}
 
       {tab === 'create' && wizardHeld && (

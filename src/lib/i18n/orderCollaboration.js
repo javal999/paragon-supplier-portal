@@ -207,6 +207,12 @@ export const orderCollaborationEn = {
 
   // The destination side of the contract (BR-04, BR-05, AC-07, AC-08).
   'oc.drill.back': 'Back to order summary',
+  // P-01 — a stage page opened from a PO's lifecycle steps.
+  'oc.drill.backToPo': 'Back to purchase order {{poNumber}}',
+  // P-02 — Purchase orders opens on the summary; the list is the other view.
+  'oc.view.label': 'View',
+  'oc.view.summary': 'Summary',
+  'oc.view.list': 'List',
   'oc.drill.filtered': 'Filtered to order {{poNumber}}',
   'oc.drill.filtered.supplier': 'Filtered to {{supplier}}, order {{poNumber}}',
   'oc.drill.count.one': '{{count}} record on this order.',
@@ -430,6 +436,10 @@ export const orderCollaborationId = {
   'oc.summary.returned': 'Dikembalikan',
 
   'oc.drill.back': 'Kembali ke ringkasan pesanan',
+  'oc.drill.backToPo': 'Kembali ke pesanan pembelian {{poNumber}}',
+  'oc.view.label': 'Tampilan',
+  'oc.view.summary': 'Ringkasan',
+  'oc.view.list': 'Daftar',
   'oc.drill.filtered': 'Disaring ke pesanan {{poNumber}}',
   'oc.drill.filtered.supplier': 'Disaring ke {{supplier}}, pesanan {{poNumber}}',
   'oc.drill.count.one': '{{count}} catatan pada pesanan ini.',

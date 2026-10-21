@@ -34,7 +34,10 @@ const noOrders = {
 
 describe('SupplierOrders — four honest states', () => {
   it('data: renders the scoped PO workspace with wired reads', async () => {
-    renderWithProviders(<SupplierOrders />, { identity: SUPPLIER });
+    renderWithProviders(<SupplierOrders />, {
+      identity: SUPPLIER,
+      route: '/supplier/orders?view=list'
+    });
     // KPI strip only renders in the data branch.
     expect(await screen.findByText('Total Value Pending')).toBeInTheDocument();
     // A real sup-007 PO proves the scoped read drove the table.
@@ -44,7 +47,8 @@ describe('SupplierOrders — four honest states', () => {
   it('loading: shows LoadingState while the reads are pending', () => {
     renderWithProviders(<SupplierOrders />, {
       identity: SUPPLIER,
-      service: alwaysPending
+      service: alwaysPending,
+      route: '/supplier/orders?view=list'
     });
     expect(screen.getByText('Loading…')).toBeInTheDocument();
     expect(screen.queryByText('Total Value Pending')).not.toBeInTheDocument();
@@ -53,7 +57,8 @@ describe('SupplierOrders — four honest states', () => {
   it('error: shows ErrorState when a read throws', async () => {
     renderWithProviders(<SupplierOrders />, {
       identity: SUPPLIER,
-      service: alwaysFails
+      service: alwaysFails,
+      route: '/supplier/orders?view=list'
     });
     expect(await screen.findByText('Unable to load this page')).toBeInTheDocument();
   });
@@ -61,7 +66,8 @@ describe('SupplierOrders — four honest states', () => {
   it('empty: shows EmptyState for a supplier with no purchase orders', async () => {
     renderWithProviders(<SupplierOrders />, {
       identity: SUPPLIER,
-      service: noOrders
+      service: noOrders,
+      route: '/supplier/orders?view=list'
     });
     expect(await screen.findByText('No purchase orders yet')).toBeInTheDocument();
   });
@@ -69,7 +75,10 @@ describe('SupplierOrders — four honest states', () => {
 
 describe('SupplierOrders — PO-confirm end-to-end proof (Step 3.10)', () => {
   it('confirms a Sent PO through the dispatcher: store mutates + event emitted', async () => {
-    renderWithProviders(<SupplierOrders />, { identity: SUPPLIER });
+    renderWithProviders(<SupplierOrders />, {
+      identity: SUPPLIER,
+      route: '/supplier/orders?view=list'
+    });
 
     // The Sent PO (PO-2025-00108 / po-008) surfaces a "Confirm" row action.
     // ⚠️ SCOPED TO ITS OWN ROW. This read `screen.getByRole('button', {name:
@@ -172,7 +181,10 @@ describe('SupplierOrders — PO-confirm end-to-end proof (Step 3.10)', () => {
 describe('SupplierOrders — the confirm cells are text, so the parser is load-bearing', () => {
   /** Open PO-2025-00108 (sup-007, Sent, one line: 150,000 PCS) in editing mode. */
   const openEditing = async () => {
-    renderWithProviders(<SupplierOrders />, { identity: SUPPLIER });
+    renderWithProviders(<SupplierOrders />, {
+      identity: SUPPLIER,
+      route: '/supplier/orders?view=list'
+    });
     // Scoped to the row — sup-007 has more than one order awaiting a response
     // since the demo-data batch. See the note in the dispatcher proof above.
     const row = /** @type {HTMLTableRowElement} */ (
@@ -286,7 +298,10 @@ describe('SupplierOrders — who acts next on a stranded PO', () => {
     purchaseOrderStore.update('po-007', (po) => ({ ...po, status: POStatus.DELIVERED }));
 
   it('a Confirmed PO is the supplier’s own next act — the shipping notice', async () => {
-    renderWithProviders(<SupplierOrders />, { identity: SUPPLIER });
+    renderWithProviders(<SupplierOrders />, {
+      identity: SUPPLIER,
+      route: '/supplier/orders?view=list'
+    });
     fireEvent.click(await screen.findByText('PO-2025-00107'));
     const line = await screen.findByTestId('next-act-supplier-po');
     expect(line).toHaveAttribute('data-next-act', 'mine');
@@ -294,7 +309,10 @@ describe('SupplierOrders — who acts next on a stranded PO', () => {
 
   it('a PO in Delivered names S/4HANA, on the supplier side', async () => {
     deliverPo007();
-    renderWithProviders(<SupplierOrders />, { identity: SUPPLIER });
+    renderWithProviders(<SupplierOrders />, {
+      identity: SUPPLIER,
+      route: '/supplier/orders?view=list'
+    });
     // PO-2025-00107 is sup-007's, moved to `Delivered` above.
     fireEvent.click(await screen.findByText('PO-2025-00107'));
     const line = await screen.findByTestId('next-act-supplier-po');
@@ -309,7 +327,10 @@ describe('SupplierOrders — who acts next on a stranded PO', () => {
     await i18n.changeLanguage('id');
     try {
       deliverPo007();
-      renderWithProviders(<SupplierOrders />, { identity: SUPPLIER });
+      renderWithProviders(<SupplierOrders />, {
+        identity: SUPPLIER,
+        route: '/supplier/orders?view=list'
+      });
       fireEvent.click(await screen.findByText('PO-2025-00107'));
       const line = await screen.findByTestId('next-act-supplier-po');
       expect(line).toHaveTextContent('Menunggu S/4HANA');

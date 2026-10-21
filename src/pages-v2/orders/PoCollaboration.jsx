@@ -1,5 +1,6 @@
 /** @import React from 'react' */
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { useReasonLabel } from '../admin/reasonCodeDisplay';
 import { Check, Circle, CircleDot, XCircle } from 'lucide-react';
 import Data from '@components/ui-v2/Data';
@@ -17,12 +18,15 @@ import {
 } from '@services/data/poResponseProjection';
 import { sdcClock } from '@services/sdc/clock';
 import { poLineQuantityText } from './poLineQuantity';
+/** @import { Persona } from '@components/layout-v2/navConfig' */
+import { lifecycleStepHref } from './orderSummaryDrill';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Order collaboration read blocks shared by the PTI and supplier PO panels:
 // the response deadline (REQ-E07-02), the response record, the shipping notice
 // (REQ-E07-05) and the PO's steps (SC-02). Read-only; the actions stay on the
-// pages that own them.
+// pages that own them. A reached step links to the page that owns its records,
+// filtered to this PO (P-01); navigating is a read, so no role is consulted.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -101,10 +105,13 @@ const STEP_CLASS = {
 };
 
 /**
- * The PO lifecycle as steps, with the current step highlighted (SC-02).
- * @type {React.FC<{ po: PurchaseOrder; asnCount: number }>}
+ * The PO lifecycle as steps, with the current step highlighted (SC-02). A step
+ * the PO has reached (done, current or stopped) links to its stage page
+ * filtered to this PO (P-01); a step not reached yet stays plain text, because
+ * there is nothing behind it to open.
+ * @type {React.FC<{ po: PurchaseOrder; asnCount: number; persona: Persona }>}
  */
-export const PoLifecycleSteps = ({ po, asnCount }) => {
+export const PoLifecycleSteps = ({ po, asnCount, persona }) => {
   const { t } = useTranslation();
   const steps = lifecycleSteps(po, asnCount);
   return (
@@ -114,17 +121,32 @@ export const PoLifecycleSteps = ({ po, asnCount }) => {
         {steps.map((step) => {
           const Icon = STEP_ICON[step.state];
           const current = step.state === 'current' || step.state === 'blocked';
+          const content = (
+            <>
+              <Icon size={12} aria-hidden="true" />
+              <span>{t(`oc.step.${step.id}`)}</span>
+              <span className="sr-only">({t(`oc.stepState.${step.state}`)})</span>
+            </>
+          );
           return (
             <li
               key={step.id}
               aria-current={current ? 'step' : undefined}
               data-step={step.id}
               data-state={step.state}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs ${STEP_CLASS[step.state]}`}
+              className={`inline-flex items-center rounded-full border text-xs ${STEP_CLASS[step.state]}`}
             >
-              <Icon size={12} aria-hidden="true" />
-              <span>{t(`oc.step.${step.id}`)}</span>
-              <span className="sr-only">({t(`oc.stepState.${step.state}`)})</span>
+              {step.state === 'upcoming' ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1">{content}</span>
+              ) : (
+                <Link
+                  to={lifecycleStepHref(step.id, persona, po.id)}
+                  data-testid={`po-step-link-${step.id}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
+                >
+                  {content}
+                </Link>
+              )}
             </li>
           );
         })}

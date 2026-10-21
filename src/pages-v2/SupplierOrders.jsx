@@ -1,8 +1,10 @@
 /** @import React from 'react' */
 import { useEffect, useMemo, useState } from 'react';
 import { isActiveAsn } from '@services/transitions/fulfilmentRules';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { OrderNotFound, PoFilterBanner, usePoDrillFilter } from './orders/PoDrillFilter';
+import OrdersViewSwitch, { useOrdersView } from './orders/OrdersViewSwitch';
+import SupplierOrderSummary from './SupplierOrderSummary';
 import { Clock, CheckCircle2, Wallet, Truck, ChevronRight, AlertCircle } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
@@ -63,6 +65,7 @@ import { readConfirmedQty, readConfirmedQuantities, seedConfirmQty } from './ord
 import GlossaryTermChip from '@components/ui-v2/GlossaryTermChip';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { poLineQuantityText } from './orders/poLineQuantity';
+import { createAsnHref, useAsnWizardAvailability } from './shipments/asnWizardEntry';
 
 /** @typedef {'all' | 'action' | 'progress' | 'completed'} TabKey */
 // `adjusting` and `rejecting` are the other two answers to a PO (REQ-E07-02);
@@ -144,8 +147,11 @@ const PO_QTY_REFUSAL_KEY = {
   AMBIGUOUS_QTY: 'supplierOrders.confirm.qty.refused.ambiguous'
 };
 
-/** @type {React.FC} */
-const SupplierOrders = () => {
+/**
+ * The List view of Purchase orders: the PO worklist and its panel.
+ * @type {React.FC}
+ */
+const SupplierOrdersList = () => {
   const { t } = useTranslation();
   // BL-32 — the administrator's lists in force: only active codes are offered.
   const adjustReasons = useActiveReasonCodes('poAdjust');
@@ -176,6 +182,10 @@ const SupplierOrders = () => {
   const adjustAvailability = useVerbAvailability('po:adjust');
   const rejectAvailability = useVerbAvailability('po:reject');
   const shippingAvailability = useVerbAvailability('po:shipping-notice');
+  // IA-S01 — "Create ASN" opens the Create-ASN wizard started for this PO, so
+  // it asks the wizard's own pair of atoms (create and submit).
+  const asnWizard = useAsnWizardAvailability();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(/** @type {TabKey} */ ('all'));
   // Deep-link read: `?tab=action` lands "purchase orders to respond to" on
@@ -548,16 +558,16 @@ const SupplierOrders = () => {
     );
   };
 
+  /**
+   * IA-S01 — open the Create-ASN wizard on Shipments & ASN, started for this
+   * PO, with the way back to it.
+   * @param {PurchaseOrder} po
+   */
+  const openAsnWizard = (po) => navigate(createAsnHref({ poId: po.id, fromPo: true }));
+
   const goToASN = () => {
     if (!selected) return;
-    toast({
-      variant: 'warning',
-      title: t('supplierOrders.toast.asnNotCreated.title', {
-        poNumber: selected.poNumber
-      }),
-      description: t('supplierOrders.toast.asnContinue')
-    });
-    closePanel();
+    openAsnWizard(selected);
   };
 
   /**
@@ -568,13 +578,8 @@ const SupplierOrders = () => {
     e.stopPropagation();
     if (ACTION_STATUSES.includes(po.status)) {
       openOrderPanel(po, 'editing');
-    } else if (po.status === POStatus.CONFIRMED) {
-      toast({
-        title: t('supplierOrders.toast.creatingAsn.title', {
-          poNumber: po.poNumber
-        }),
-        description: t('supplierOrders.toast.asnContinue')
-      });
+    } else if (po.status === POStatus.CONFIRMED && asnWizard.held) {
+      openAsnWizard(po);
     } else {
       openOrderPanel(po, 'detail');
     }
@@ -608,8 +613,9 @@ const SupplierOrders = () => {
   // ALREADY THERE in the detail footer. `confirmAvailability` is seat-level, not
   // per-row, so this costs no per-row derivation.
   //
-  // `createAsn` is untouched: it holds no atom (its handler is a toast —
-  // ungoverned per §75e), so there is nothing to narrow it against.
+  // `createAsn` follows the same rule (IA-S01): it opens the Create-ASN wizard,
+  // so a seat without `asn:create` and `asn:submit` reads View, and the row
+  // opens the order, whose footer states the wait.
   const canConfirmHere = confirmAvailability.kind === 'held';
 
   // ── ACKNOWLEDGE (`t_po_acknowledge`) ───────────────────────────────────────
@@ -678,7 +684,10 @@ const SupplierOrders = () => {
   const panelActionLabel = (po) => {
     if (ACTION_STATUSES.includes(po.status))
       return canConfirmHere ? t('supplierOrders.action.confirm') : t('supplierOrders.action.view');
-    if (po.status === POStatus.CONFIRMED) return t('supplierOrders.action.createAsn');
+    if (po.status === POStatus.CONFIRMED)
+      return asnWizard.held
+        ? t('supplierOrders.action.createAsn')
+        : t('supplierOrders.action.view');
     return t('supplierOrders.action.view');
   };
 
@@ -702,6 +711,8 @@ const SupplierOrders = () => {
             true signal; a green "Live" would claim the orders are real. Both. */}
         <ProvenanceMarker capability="purchaseOrders" className="ml-3 align-middle" />
       </PageMetaLine>
+
+      <OrdersViewSwitch persona="supplier" view="list" />
 
       {/* REQ-E07-08 AC-03 — this page reads SAP data; say how old it is. */}
       <SapDataAgeBanner page="purchaseOrders" className="mb-4" />
@@ -913,9 +924,13 @@ const SupplierOrders = () => {
                       />
                     )
                   ) : (selectedLive ?? selected).status === POStatus.CONFIRMED ? (
-                    <Button variant="outline" onClick={goToASN}>
-                      {t('supplierOrders.action.createAsn')}
-                    </Button>
+                    asnWizard.held ? (
+                      <Button variant="outline" onClick={goToASN}>
+                        {t('supplierOrders.action.createAsn')}
+                      </Button>
+                    ) : (
+                      <HandoffNotice availability={asnWizard.notice} testId="handoff-asn-create" />
+                    )
                   ) : null}
                 </>
               )}
@@ -981,9 +996,13 @@ const SupplierOrders = () => {
                   <Button variant="secondary" onClick={closePanel}>
                     {t('supplierOrders.action.close')}
                   </Button>
-                  <Button variant="outline" icon={Truck} onClick={goToASN}>
-                    {t('supplierOrders.action.createAsnNow')}
-                  </Button>
+                  {asnWizard.held ? (
+                    <Button variant="outline" icon={Truck} onClick={goToASN}>
+                      {t('supplierOrders.action.createAsnNow')}
+                    </Button>
+                  ) : (
+                    <HandoffNotice availability={asnWizard.notice} testId="handoff-asn-create" />
+                  )}
                 </>
               )}
             </>
@@ -1422,6 +1441,7 @@ const SupplierOrders = () => {
                   )
                 }
                 <PoLifecycleSteps
+                  persona="supplier"
                   po={selectedLive ?? selected}
                   asnCount={
                     (asnsQuery.data?.items ?? []).filter(
@@ -1489,5 +1509,14 @@ const SupplierOrders = () => {
     </AppShellV2>
   );
 };
+
+/**
+ * Purchase orders (P-02): the Summary view by default, the List view for
+ * `?view=list` or any list parameter (`tab`, `po`, `focus`, …), so every link
+ * written for the list still lands on it.
+ * @type {React.FC}
+ */
+const SupplierOrders = () =>
+  useOrdersView() === 'summary' ? <SupplierOrderSummary /> : <SupplierOrdersList />;
 
 export default SupplierOrders;
