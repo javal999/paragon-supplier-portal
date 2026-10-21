@@ -14,6 +14,7 @@ import { formatDate, formatIDR, formatNumber } from '@lib/format';
 import { qtyOf } from '../../materialPlan/planDisplay';
 import { weekLabel, whyId } from '../utils';
 import RecActionCell from './RecActionCell';
+import TryWhatIfLink from '../../BuyerWhatIfSandbox/TryWhatIfLink';
 
 /**
  * @typedef {object} RecommendationRowProps
@@ -23,7 +24,7 @@ import RecActionCell from './RecActionCell';
  * @property {boolean} whyIsOpen Whether this order's "Why this quantity" panel is open.
  * @property {() => void} onOpenWhy Opens this order's panel (and closes any other).
  * @property {(r: Recommendation) => void} onCloseWhy Closes the panel and returns focus to its toggle.
- * @property {boolean} drafted Whether this page already drafted a call-off for it.
+ * @property {string | null} draftId The call-off this page drafted for it, or `null`.
  * @property {VerbAvailability} planAvailability The seat's answer for `calloff:plan`.
  * @property {boolean} pending A draft command is in flight.
  * @property {boolean} releaseWithheld X-03: release refuses engine drafts while the dataset is not live.
@@ -45,7 +46,7 @@ const RecommendationRow = ({
   whyIsOpen,
   onOpenWhy,
   onCloseWhy,
-  drafted,
+  draftId,
   planAvailability,
   pending,
   releaseWithheld,
@@ -64,6 +65,17 @@ const RecommendationRow = ({
               <StatusPill variant="warning">{t('op.moqFlag')}</StatusPill>
             </div>
           )}
+          {/* P-07 (IA-B10) — the what-if sandbox opens on this supplier × material. */}
+          {r.supplierId ? (
+            <div>
+              <TryWhatIfLink
+                materialCode={r.materialCode}
+                supplierId={r.supplierId}
+                supplierName={m.supplierName ?? r.supplierId}
+                testId={`op-whatif-${r.materialCode}-${r.weekStart}`}
+              />
+            </div>
+          ) : null}
         </TableCell>
         <TableCell className="align-top">{m.supplierName ?? '—'}</TableCell>
         <TableCell className="align-top whitespace-nowrap">
@@ -157,7 +169,7 @@ const RecommendationRow = ({
         <RecActionCell
           r={r}
           line={line}
-          drafted={drafted}
+          draftId={draftId}
           planAvailability={planAvailability}
           pending={pending}
           releaseWithheld={releaseWithheld}

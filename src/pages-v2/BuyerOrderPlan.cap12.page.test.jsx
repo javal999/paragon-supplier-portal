@@ -143,6 +143,22 @@ describe('CAP-12 — "Below demand anticipation" on What to order', () => {
     // Hub sample data, not the engine's: no engine origin (X-03 does not apply).
     expect(draft?.origin).toBeUndefined();
     expect(await within(row).findByText('Draft created', {}, WAIT)).toBeInTheDocument();
+    // IA-B13 — the drafted proposal links to that draft on Call-offs.
+    const open = within(row).getByTestId(`op-gap-open-draft-${keyOf(gap)}-${c.poNumber}`);
+    expect(open).toHaveTextContent('Open the draft call-off');
+    expect(open).toHaveAttribute('href', `/buyer/call-offs?highlight=${draft?.id}`);
+  });
+
+  it('P-07 — each gap row opens the what-if sandbox on its supplier × material', async () => {
+    const gap = (await gaps())[0];
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: ROUTE });
+    await showAll();
+    const link = await screen.findByTestId(`op-gap-whatif-${keyOf(gap)}`, {}, WAIT);
+    expect(link).toHaveTextContent('Try a what-if');
+    const href = new URL(/** @type {string} */ (link.getAttribute('href')), 'http://x');
+    expect(href.pathname).toBe('/buyer/what-if');
+    expect(href.searchParams.get('material')).toBe(gap.materialCode);
+    expect(href.searchParams.get('supplier')).toBe(gap.supplierId);
   });
 
   it('AC-03 — no blanket balance left reads "New PO needed" with the gap and the unit', async () => {

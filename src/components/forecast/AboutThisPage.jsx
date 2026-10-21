@@ -24,16 +24,26 @@ import { FOCUS_RING } from './focusRing';
  *     readonly testId: string;
  *     readonly className?: string;
  *     readonly detailsClassName?: string;
+ *     readonly defaultOpen?: boolean;
  *     readonly children: React.ReactNode;
  *   }} CollapsedSectionProps
  */
 
 /**
  * A collapsed section with its `h2` outside the toggle. `testId` goes on the
- * `<details>`, which stays closed until opened.
+ * `<details>`, which stays closed until opened — unless `defaultOpen`: a
+ * section that is the whole of a page's tab (P-12, the "Warehouse fill" tabs)
+ * opens shown, and its toggle still hides it.
  * @type {React.FC<CollapsedSectionProps>}
  */
-export const CollapsedSection = ({ title, testId, className, detailsClassName, children }) => {
+export const CollapsedSection = ({
+  title,
+  testId,
+  className,
+  detailsClassName,
+  defaultOpen,
+  children
+}) => {
   const { t } = useTranslation();
   const headingId = useId();
   return (
@@ -41,7 +51,11 @@ export const CollapsedSection = ({ title, testId, className, detailsClassName, c
       <h2 id={headingId} className="text-section text-text-primary">
         {title}
       </h2>
-      <details className={`group ${detailsClassName ?? ''}`} data-testid={testId}>
+      <details
+        className={`group ${detailsClassName ?? ''}`}
+        data-testid={testId}
+        open={defaultOpen}
+      >
         {/* C2: on a touch screen the summary row is at least 44 px tall. */}
         <summary
           className={`mt-1 w-fit cursor-pointer text-sm text-action-hover [@media(pointer:coarse)]:py-2.5 ${FOCUS_RING}`}

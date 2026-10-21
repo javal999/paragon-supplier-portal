@@ -4,6 +4,7 @@ import StatusPill from '@components/ui-v2/StatusPill';
 import TableCell from '@components/ui-v2/TableCell';
 import Button from '@components/ui-v2/Button';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import OpenCallOffLink from '../../callOffs/OpenCallOffLink';
 /** @import { VerbAvailability } from '@services/transitions/handoff' */
 /** @import { Recommendation } from '@services/engine/orderSizing' */
 /** @import { umbrellaLineFor } from '@pages-v2/orderPlan/orderPlanRelease' */
@@ -16,7 +17,7 @@ import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
  * @typedef {object} RecActionCellProps
  * @property {Recommendation} r The recommendation this cell acts on.
  * @property {UmbrellaLine | null} line The supplier's open umbrella line for the material, if any.
- * @property {boolean} drafted Whether this page already drafted a call-off for it.
+ * @property {string | null} draftId The call-off this page drafted for it, or `null` (`''` when the command named no id).
  * @property {VerbAvailability} planAvailability The seat's answer for `calloff:plan`.
  * @property {boolean} pending A draft command is in flight (disables the button).
  * @property {boolean} releaseWithheld X-03: release refuses engine drafts while the dataset is not live.
@@ -25,7 +26,8 @@ import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 
 /**
  * The "Action" cell of a recommended order (BR-05): no umbrella PO line (with
- * the reason read out), already drafted, the Draft button for a seat holding
+ * the reason read out), already drafted (with the link to that draft on
+ * Call-offs, IA-B13), the Draft button for a seat holding
  * `calloff:plan` (with the PO it lands on and the X-03 release note), or the
  * handoff notice naming who acts instead.
  * @type {React.FC<RecActionCellProps>}
@@ -33,7 +35,7 @@ import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 const RecActionCell = ({
   r,
   line,
-  drafted,
+  draftId,
   planAvailability,
   pending,
   releaseWithheld,
@@ -51,8 +53,19 @@ const RecActionCell = ({
           <StatusPill variant="neutral">{t('op.action.noPo')}</StatusPill>
           <span className="sr-only">{t('op.action.noPo.hint')}</span>
         </span>
-      ) : drafted ? (
-        <StatusPill variant="success">{t('op.action.drafted')}</StatusPill>
+      ) : draftId !== null ? (
+        <div>
+          <StatusPill variant="success">{t('op.action.drafted')}</StatusPill>
+          {draftId ? (
+            <div>
+              <OpenCallOffLink
+                callOffId={draftId}
+                label={t('op.action.openDraft')}
+                testId={`op-open-draft-${r.materialCode}-${r.weekStart}`}
+              />
+            </div>
+          ) : null}
+        </div>
       ) : planAvailability.kind === 'held' ? (
         <div>
           <Button

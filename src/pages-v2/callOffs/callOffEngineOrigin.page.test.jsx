@@ -35,6 +35,12 @@ import { NO_PERSON } from '@context/noPerson';
 import i18n from '@lib/i18n';
 
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
+
+/**
+ * P-12 — opens one of the Call-offs tabs, by its visible name.
+ * @param {string} name
+ */
+const openTab = async (name) => fireEvent.click(await screen.findByRole('tab', { name }));
 const panel = () =>
   within(/** @type {HTMLElement} */ (document.querySelector('aside[role="dialog"]')));
 
@@ -90,6 +96,7 @@ describe('X-03 on the Call-offs page — while the engine dataset is simulated',
   it('the engine draft is marked on its row and in the panel; release shows the reason, not a button', async () => {
     const id = await makeDraft('engine');
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    await openTab('All call-offs');
     expect(await screen.findByTestId(`calloff-origin-engine-${id}`)).toHaveTextContent(
       'From the order plan — simulated data'
     );
@@ -112,6 +119,7 @@ describe('X-03 on the Call-offs page — while the engine dataset is simulated',
   it('dismissing the engine draft still works, and the store agrees', async () => {
     const id = await makeDraft('engine');
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    await openTab('All call-offs');
     await openDraft(id);
     fireEvent.change(panel().getByLabelText('Reason'), { target: { value: 'Plan changed' } });
     fireEvent.click(panel().getByRole('button', { name: 'Dismiss draft' }));
@@ -125,6 +133,7 @@ describe('X-03 on the Call-offs page — while the engine dataset is simulated',
   it('known-good: an ordinary draft carries no marker and its release still acts', async () => {
     const id = await makeDraft();
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    await openTab('All call-offs');
     await openDraft(id);
     expect(screen.queryByTestId(`calloff-origin-engine-${id}`)).toBeNull();
     expect(panel().queryByTestId('calloff-draft-release-withheld')).toBeNull();
@@ -140,6 +149,7 @@ describe('X-03 on the Call-offs page — while the engine dataset is simulated',
     const id = await makeDraft('engine');
     await i18n.changeLanguage('id');
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    await openTab('Semua call-off');
     expect(await screen.findByTestId(`calloff-origin-engine-${id}`)).toHaveTextContent(
       'Dari rencana pesanan — data simulasi'
     );
@@ -158,6 +168,7 @@ describe('X-03 on the Call-offs page — once the engine dataset is live', () =>
     const id = await makeDraft('engine');
     flip.engineDataset = true;
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    await openTab('All call-offs');
     await openDraft(id);
     expect(screen.queryByTestId(`calloff-origin-engine-${id}`)).toBeNull();
     expect(panel().queryByTestId('calloff-draft-release-withheld')).toBeNull();

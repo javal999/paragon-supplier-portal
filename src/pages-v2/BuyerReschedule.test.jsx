@@ -45,6 +45,11 @@ const report = async () =>
   );
 /** @param {number} x */
 const pct = (x) => `${Math.round(x * 100)}%`;
+/**
+ * P-12 — opens one of the page's tabs, by its visible name.
+ * @param {string} name
+ */
+const openTab = async (name) => fireEvent.click(await screen.findByRole('tab', { name }));
 
 describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
   it('renders inside the app shell with the SIMULATED engine pill — never Live — and says nothing here reaches a supplier yet', async () => {
@@ -56,7 +61,9 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
       'Sample data. Nothing here reaches suppliers or SAP.'
     );
     expect(screen.queryByText('Live')).toBeNull();
-    expect(screen.getByTestId('rs-withheld-note')).toHaveTextContent(
+    // P-12 — About this page sits under "Values and method".
+    await openTab('Values and method');
+    expect(await screen.findByTestId('rs-withheld-note')).toHaveTextContent(
       'Master Data Management team’s SAP feed is live'
     );
     expect(screen.getAllByRole('navigation').length).toBeGreaterThan(0);
@@ -64,6 +71,7 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
 
   it('ENG-D15 and the cost rates in use: the threshold (1 week, decided) beside the placeholder rent and penalty', async () => {
     renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
+    await openTab('Values and method');
     expect(await screen.findByTestId('rs-setting-threshold')).toHaveTextContent('1 week');
     expect(screen.getByTestId('rs-setting-threshold')).toHaveTextContent('Decided by the owner');
     expect(screen.getByTestId('rs-setting-rent')).toHaveTextContent('Rp 35.000');
@@ -117,12 +125,6 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
     await waitFor(() =>
       expect(screen.getByTestId('rs-guard-selected')).toHaveTextContent(String(free.length))
     );
-    for (const [i, wk] of pk.weeks.entries()) {
-      expect(screen.getByTestId(`rs-fill-selected-${wk.weekStart}`)).toHaveTextContent(
-        pct(eff.fill[i])
-      );
-      expect(screen.getByTestId(`rs-fill-now-${wk.weekStart}`)).toHaveTextContent(pct(wk.fill));
-    }
     expect(screen.getByTestId('rs-selection-freed')).toHaveTextContent(
       `${Math.round(eff.freedOverPalletWeeks).toLocaleString('id-ID')} pallet-weeks`
     );
@@ -132,6 +134,15 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
     expect(screen.getByTestId('rs-guard-after').textContent).toBe(
       screen.getByTestId('rs-guard-before').textContent
     );
+    // P-12 — the selection is the page's, so the "Warehouse fill" tab shows its effect.
+    await openTab('Warehouse fill');
+    await screen.findByTestId('rs-fill');
+    for (const [i, wk] of pk.weeks.entries()) {
+      expect(screen.getByTestId(`rs-fill-selected-${wk.weekStart}`)).toHaveTextContent(
+        pct(eff.fill[i])
+      );
+      expect(screen.getByTestId(`rs-fill-now-${wk.weekStart}`)).toHaveTextContent(pct(wk.fill));
+    }
   });
 
   it('BR-09: ticking a proposal inside the lead time moves PTI’s plan-change share by the engine’s own count', async () => {
@@ -245,8 +256,9 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
     expect(screen.getByTestId('rs-onhand-note')).toHaveTextContent(
       'No open order can relieve them'
     );
+    await openTab('Warehouse fill');
     expect(
-      within(screen.getByTestId(`rs-week-${weeks[0].weekStart}`)).getByText(
+      within(await screen.findByTestId(`rs-week-${weeks[0].weekStart}`)).getByText(
         'Cannot be relieved by open orders'
       )
     ).toBeInTheDocument();
@@ -261,14 +273,21 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
       info.find((i) => i.reason === 'dispatched')
     );
     renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
+    await openTab('Values and method');
     expect(await screen.findByTestId(`rs-info-${dispatched.line.id}`)).toHaveTextContent(
       'already dispatched'
     );
   });
 
-  it('F-07: the proposals come first — the relief table renders before the context sections, which are collapsed', async () => {
+  it('F-07 / P-12: the proposals come first — the Relief tab opens on them; the fill and the context sections are tabs after it', async () => {
     renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
     const relief = await screen.findByTestId('rs-relief');
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+      'Relief',
+      'Warehouse fill',
+      'Values and method'
+    ]);
+    expect(screen.getByRole('tab', { name: 'Relief' })).toHaveAttribute('aria-selected', 'true');
     expect(
       screen.getByTestId('rs-kpis').compareDocumentPosition(relief) &
         Node.DOCUMENT_POSITION_FOLLOWING
@@ -286,17 +305,25 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
         screen.getByTestId('rs-kpis')
       ) & Node.DOCUMENT_POSITION_FOLLOWING
     ).toBeTruthy();
-    for (const id of ['rs-fill', 'rs-info', 'rs-settings', 'rs-definitions']) {
-      const el = screen.getByTestId(id);
-      expect(el.tagName).toBe('DETAILS');
-      expect(el).not.toHaveAttribute('open');
-      expect(relief.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    for (const id of ['rs-fill', 'rs-info', 'rs-settings', 'rs-definitions', 'about-this-page']) {
+      expect(screen.queryByTestId(id), id).toBeNull();
     }
+    expect(await screen.findByTestId('data-health-chip-failing')).toHaveTextContent('failing');
+    // The fill is the whole of its tab, so it opens shown.
+    await openTab('Warehouse fill');
+    const fill = await screen.findByTestId('rs-fill');
+    expect(fill.tagName).toBe('DETAILS');
+    expect(fill).toHaveAttribute('open');
     // F-22 — "Now" says it is the Order plan's fill plus released call-offs.
     expect(screen.getByTestId('rs-fill-basis')).toHaveTextContent(
       'recommended orders included, plus released call-offs'
     );
-    expect(await screen.findByTestId('data-health-chip-failing')).toHaveTextContent('failing');
+    await openTab('Values and method');
+    for (const id of ['rs-info', 'rs-settings', 'rs-definitions', 'about-this-page']) {
+      const el = await screen.findByTestId(id);
+      expect(el.tagName).toBe('DETAILS');
+      expect(el).not.toHaveAttribute('open');
+    }
   });
 
   it('renders in Indonesian', async () => {
@@ -305,7 +332,8 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
     expect(
       await screen.findByRole('heading', { name: 'Kosongkan ruang gudang' })
     ).toBeInTheDocument();
-    expect(screen.getByTestId('rs-setting-rent')).toHaveTextContent(
+    await openTab('Nilai dan metode');
+    expect(await screen.findByTestId('rs-setting-rent')).toHaveTextContent(
       'Sementara — menunggu konfirmasi Keuangan'
     );
   });

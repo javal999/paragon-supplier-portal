@@ -19,7 +19,7 @@ import RecommendationRow from './RecommendationRow';
  * @property {string | null} whyOpen The key of the row whose "Why this quantity" panel is open.
  * @property {(key: string) => void} onOpenWhy Opens one row's panel.
  * @property {(r: Recommendation) => void} onCloseWhy Closes the panel and returns focus to its toggle.
- * @property {ReadonlySet<string>} drafted Keys of the rows this page has drafted.
+ * @property {ReadonlyMap<string, string>} drafted The rows this page has drafted, by key, with the call-off id each created.
  * @property {VerbAvailability} planAvailability The seat's answer for `calloff:plan`.
  * @property {boolean} pending A draft command is in flight.
  * @property {boolean} releaseWithheld X-03: release refuses engine drafts while the dataset is not live.
@@ -100,7 +100,7 @@ const RecommendationsSection = ({
                     whyIsOpen={whyOpen === key}
                     onOpenWhy={() => onOpenWhy(key)}
                     onCloseWhy={onCloseWhy}
-                    drafted={drafted.has(key)}
+                    draftId={drafted.get(key) ?? null}
                     planAvailability={planAvailability}
                     pending={pending}
                     releaseWithheld={releaseWithheld}

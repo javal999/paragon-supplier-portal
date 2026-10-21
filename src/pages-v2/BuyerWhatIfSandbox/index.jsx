@@ -47,6 +47,10 @@ import ScenariosPanel from './components/ScenariosPanel';
 // anticipation, POs, call-offs, levels, settings or SAP; saving writes only the
 // scenario store.
 //
+// P-07 (IA-B10) — rows on What to order and Inventory open it on their
+// supplier × material ("Try a what-if", `TryWhatIfLink`); "New blank scenario"
+// clears the pair, so the sandbox starts blank with or without a link.
+//
 // BR-07 — PTI planners find it in the Weekly plan menu. No role gate (CLAUDE.md
 // §65, DRC-D18): the save verb shows its HandoffNotice to a seat without the
 // atom. A supplier persona reads nothing and is told the sandbox is PTI's own.
@@ -251,6 +255,16 @@ const BuyerWhatIfSandbox = () => {
         {ppt7 ? (
           <Button variant="secondary" onClick={() => pick(ppt7)} data-testid="wi-load-ppt7">
             {t('whatIf.pick.loadPpt7')}
+          </Button>
+        ) : null}
+        {/* P-07 — opened from a material row, the sandbox still starts blank on request. */}
+        {selected ? (
+          <Button
+            variant="secondary"
+            onClick={() => setParams(new URLSearchParams())}
+            data-testid="wi-new-blank"
+          >
+            {t('whatIf.newBlank')}
           </Button>
         ) : null}
       </div>

@@ -5,6 +5,7 @@ import Data from '@components/ui-v2/Data';
 import Button from '@components/ui-v2/Button';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { formatDate } from '@lib/format';
+import OpenCallOffLink from '../../callOffs/OpenCallOffLink';
 /** @import { RescheduleProposalView, SapChangeMark } from '@services/data/types' */
 /** @import { VerbAvailability } from '@services/transitions/handoff' */
 import { WITHHELD_ID } from '../const';
@@ -49,8 +50,22 @@ const ProposalAction = ({
   if (p.line.kind === 'callOff') {
     if (p.type === 'cancel')
       return <span className="text-xs text-text-tertiary">{t('rs.action.callOffCancel')}</span>;
+    // IA-B13 — the changed call-off, one click away on Call-offs.
     if (sent.has(p.id))
-      return <StatusPill variant="info">{t('rs.action.awaitingConfirmation')}</StatusPill>;
+      return (
+        <div>
+          <StatusPill variant="info">{t('rs.action.awaitingConfirmation')}</StatusPill>
+          {p.line.callOffId ? (
+            <div>
+              <OpenCallOffLink
+                callOffId={p.line.callOffId}
+                label={t('rs.action.openCallOff')}
+                testId={`rs-open-calloff-${p.id}`}
+              />
+            </div>
+          ) : null}
+        </div>
+      );
     if (planAvailability.kind !== 'held')
       return <HandoffNotice availability={planAvailability} testId="handoff-reschedule-change" />;
     // Simulated data: the act is shown, switched off, with a one-word reason;
