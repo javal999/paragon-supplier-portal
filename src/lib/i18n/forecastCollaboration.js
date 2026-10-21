@@ -125,7 +125,6 @@ export const forecastCollaborationEn = {
   'fc.sup.tab.forecast': 'Forecast',
   'fc.sup.tab.changes': 'Changes',
   'fc.sup.downloadForecast': 'Download forecast',
-  'fc.sup.earlierResponses': 'Earlier responses and shipment reports',
   'fc.sup.ackOnly': 'Forecast period: acknowledge that you have seen it. No commitment is needed.',
   'fc.sup.acknowledge': 'Acknowledge',
   'fc.sup.acknowledgeFor': 'Acknowledge {{period}}',
@@ -217,7 +216,6 @@ export const forecastCollaborationEn = {
   'fc.pti.gaps.banner':
     'Commitments outside tolerance: {{exceptions}}. Commitments missing past the deadline: {{missing}}.',
   'fc.pti.gaps.followUp': 'Supplier follow-up list',
-  'fc.pti.gaps.earlierResponses': 'Earlier response review',
   'fc.pti.gaps.exceptions': 'Exceptions ({{count}})',
   'fc.pti.gaps.exceptionsHint':
     'Overdue first, then Firm periods, then the lowest days of supply. Commitments within tolerance need no action.',
@@ -281,7 +279,18 @@ export const forecastCollaborationEn = {
   'fc.coverage.noFigures': 'No stock figures',
   'fc.coverage.distributor': 'Distributor: {{days}} days from principal',
   'fc.coverage.manufacturer': 'Manufacturer',
-  'fc.coverage.unbridgeable': 'Principal cannot deliver in time'
+  'fc.coverage.unbridgeable': 'Principal cannot deliver in time',
+
+  // P-04 (IA-B05, IA-S03) — one commitments page per persona; the
+  // consolidation view is its second tab and says which plan it reads.
+  'fc.pti.pageTab.gaps': 'Commitments & gaps',
+  'fc.pti.pageTab.consolidation': 'Consolidation (sample plan)',
+  'fc.pti.pageTab.consolidationNote':
+    'This tab reads the published sample plan, not the commitments on the first tab, so its figures differ from Commitments & gaps.',
+  'fc.sup.pageTab.commitments': 'Commitments',
+  'fc.sup.pageTab.responses': 'Responses & shipments (sample plan)',
+  'fc.sup.pageTab.responsesNote':
+    'This tab reads the published sample plan, not the forecast on the first tab, so its figures differ from Commitments. Report incoming shipments here.'
 };
 
 /** @type {Record<string, string>} */
@@ -403,7 +412,6 @@ export const forecastCollaborationId = {
   'fc.sup.tab.forecast': 'Prakiraan',
   'fc.sup.tab.changes': 'Perubahan',
   'fc.sup.downloadForecast': 'Unduh prakiraan',
-  'fc.sup.earlierResponses': 'Tanggapan dan laporan pengiriman sebelumnya',
   'fc.sup.ackOnly': 'Periode prakiraan: tandai bahwa Anda sudah melihatnya. Tidak perlu komitmen.',
   'fc.sup.acknowledge': 'Tandai diterima',
   'fc.sup.acknowledgeFor': 'Tandai diterima {{period}}',
@@ -497,7 +505,6 @@ export const forecastCollaborationId = {
   'fc.pti.gaps.banner':
     'Komitmen di luar toleransi: {{exceptions}}. Komitmen yang belum masuk lewat tenggat: {{missing}}.',
   'fc.pti.gaps.followUp': 'Daftar tindak lanjut pemasok',
-  'fc.pti.gaps.earlierResponses': 'Tinjauan tanggapan sebelumnya',
   'fc.pti.gaps.exceptions': 'Pengecualian ({{count}})',
   'fc.pti.gaps.exceptionsHint':
     'Lewat tenggat lebih dulu, lalu periode Pasti, lalu hari persediaan terendah. Komitmen dalam toleransi tidak perlu tindakan.',
@@ -563,5 +570,14 @@ export const forecastCollaborationId = {
   'fc.coverage.noFigures': 'Belum ada angka stok',
   'fc.coverage.distributor': 'Distributor: {{days}} hari dari prinsipal',
   'fc.coverage.manufacturer': 'Produsen',
-  'fc.coverage.unbridgeable': 'Prinsipal tidak dapat mengirim tepat waktu'
+  'fc.coverage.unbridgeable': 'Prinsipal tidak dapat mengirim tepat waktu',
+
+  'fc.pti.pageTab.gaps': 'Komitmen & selisih',
+  'fc.pti.pageTab.consolidation': 'Konsolidasi (rencana sampel)',
+  'fc.pti.pageTab.consolidationNote':
+    'Tab ini membaca rencana sampel yang diterbitkan, bukan komitmen di tab pertama, sehingga angkanya berbeda dari Komitmen & selisih.',
+  'fc.sup.pageTab.commitments': 'Komitmen',
+  'fc.sup.pageTab.responses': 'Tanggapan & pengiriman (rencana sampel)',
+  'fc.sup.pageTab.responsesNote':
+    'Tab ini membaca rencana sampel yang diterbitkan, bukan prakiraan di tab pertama, sehingga angkanya berbeda dari Komitmen. Laporkan pengiriman masuk di sini.'
 };

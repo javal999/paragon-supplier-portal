@@ -1,5 +1,5 @@
 /** @import React from 'react' */
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { Info, Lock, MessageCircle } from 'lucide-react';
 /** @import { Column, CellProps } from 'react-datasheet-grid' */
 import { DataSheetGrid } from 'react-datasheet-grid';
@@ -358,8 +358,14 @@ const ReasonPanel = ({
   );
 };
 
-/** @type {React.FC} */
-const BuyerCollaboration = () => {
+/**
+ * P-04 (IA-B05) — `embedded` renders the view inside another page's shell: the
+ * Foresight commitments page's Consolidation tab. It drops the shell and the
+ * page header (the host page owns both) and keeps everything else, the
+ * subtitle and the liveness pill included.
+ * @type {React.FC<{ embedded?: boolean }>}
+ */
+const BuyerCollaboration = ({ embedded = false }) => {
   const { t } = useTranslation();
   const refusalText = useRefusalText();
 
@@ -801,16 +807,25 @@ const BuyerCollaboration = () => {
   const horizon = CURRENT?.horizon ?? [];
   const CRUMB = [t('sdc.crumb.section'), t('sdc.crumb.page')];
 
-  return (
-    <AppShellV2>
-      <PageHeader
-        breadcrumb={CRUMB}
-        title={t('sdc.header.title')}
-        subtitle={t('sdc.header.subtitle')}
-        actions={<LivenessPill capability="forecastPublications" />}
-      />
+  const Shell = embedded ? Fragment : AppShellV2;
 
-      <PageMetaLine className="-mt-6 mb-6">
+  return (
+    <Shell>
+      {embedded ? (
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-text-secondary">{t('sdc.header.subtitle')}</p>
+          <LivenessPill capability="forecastPublications" />
+        </div>
+      ) : (
+        <PageHeader
+          breadcrumb={CRUMB}
+          title={t('sdc.header.title')}
+          subtitle={t('sdc.header.subtitle')}
+          actions={<LivenessPill capability="forecastPublications" />}
+        />
+      )}
+
+      <PageMetaLine className={embedded ? 'mb-6' : '-mt-6 mb-6'}>
         {t('sdc.meta.summary', {
           lines: rows.length,
           suppliers: rollups.length,
@@ -1281,7 +1296,7 @@ const BuyerCollaboration = () => {
           }}
         />
       )}
-    </AppShellV2>
+    </Shell>
   );
 };
 

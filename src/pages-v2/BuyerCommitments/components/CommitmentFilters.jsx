@@ -7,8 +7,9 @@ import ReasonFilter from '../../inventory/ReasonFilter';
 /** @import { ForecastStream } from '@services/sdc/types' */
 
 /**
- * The stream tabs, the supplier, material and reason filters, and the links to
- * the supplier follow-up list and the earlier responses. Switching stream
+ * The stream tabs, the supplier, material and reason filters, and the link to
+ * the supplier follow-up list (the earlier responses are the page's
+ * Consolidation tab now, P-04). Switching stream
  * clears every filter (the page's `onStreamChange`). CAP-5 — the Reason filter
  * narrows the exception list by the supplier's shortfall reason.
  * @type {React.FC<{
@@ -93,12 +94,6 @@ const CommitmentFilters = ({
         />
         <Link to="/buyer/chase" className="text-sm text-action-hover hover:underline self-center">
           {t('fc.pti.gaps.followUp')}
-        </Link>
-        <Link
-          to="/buyer/collaboration/responses"
-          className="text-sm text-action-hover hover:underline self-center"
-        >
-          {t('fc.pti.gaps.earlierResponses')}
         </Link>
       </div>
     </div>

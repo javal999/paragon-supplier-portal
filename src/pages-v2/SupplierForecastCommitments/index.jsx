@@ -1,7 +1,7 @@
 /** @import React from 'react' */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { OrderNotFound, PoFilterBanner, usePoDrillFilter } from '../orders/PoDrillFilter';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
@@ -15,6 +15,7 @@ import EmptyState from '@components/ui-v2/EmptyState';
 import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
 import SupplierReliabilityPanel from '../reliability/SupplierReliabilityPanel';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
 import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import { formatDate } from '@lib/format';
 import {
@@ -28,7 +29,8 @@ import { usePlanningGroupLabel } from '../inventory/planningGroupDisplay';
 import { useActiveReasonCodes, useReasonLabel } from '../admin/reasonCodeDisplay';
 import { deadlineState } from '@services/transitions/forecastRules';
 import { forecastNow, useForecastRunner, usePeriodLabel } from '../forecasts/forecastDisplay';
-/** @import { ViewMode, WeekReason } from './const' */
+/** @import { PageTab, ViewMode, WeekReason } from './const' */
+import { PAGE_TABS } from './const';
 import { buildPeriodRows } from './utils';
 import { useCommitmentActions } from './hooks/useCommitmentActions';
 import { useCommitmentDrafts } from './hooks/useCommitmentDrafts';
@@ -41,6 +43,8 @@ import MaterialSection from './components/MaterialSection';
 import PeriodSubmitSection from './components/PeriodSubmitSection';
 import VersionSection from './components/VersionSection';
 import ViewToolbar from './components/ViewToolbar';
+import PageTabs from './components/PageTabs';
+import SampleResponsesTab from './components/SampleResponsesTab';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER FORECAST & COMMITMENTS — REQ-E06-01 (SUP) and REQ-E06-02.
@@ -66,6 +70,12 @@ import ViewToolbar from './components/ViewToolbar';
 // `components/`, the drafts, upload, acts and view record in `hooks/`, the
 // pure helpers in `utils.js` and the shared typedefs in `const.js`. This file
 // keeps the page's reads, its derived state and the render order.
+//
+// P-04 (IA-S03) — one commitments page: the content above is the first,
+// default tab, and the earlier responses and incoming-shipment reports
+// (SDC-2b/3b, which read the published sample plan) are the second,
+// `?tab=responses`. The deep-link reads (`stream`, `material`, `po`) are made
+// once, whichever tab opens.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @type {React.FC} */
@@ -77,6 +87,11 @@ const SupplierForecastCommitments = () => {
   const groupLabel = usePlanningGroupLabel();
   const { identity } = useCurrentIdentity();
   const [params] = useSearchParams();
+  // P-04 — the tab: read once on arrival, and again when the address changes.
+  const [tab, setTab] = useState(
+    /** @type {PageTab} */ (params.get('tab') === 'responses' ? 'responses' : 'commitments')
+  );
+  useUrlEnumParam('tab', PAGE_TABS, setTab);
   const linesQuery = useForecastCommitments();
   const plansQuery = useCapacityPlans();
   const [weekReasons, setWeekReasons] = useState(/** @type {Record<string, WeekReason>} */ ({}));
@@ -126,9 +141,23 @@ const SupplierForecastCommitments = () => {
   });
 
   // REQ-E06-01 — opening a version is recorded once, for PTI to see who viewed it.
-  useRecordView(current, supplierId, viewAvail, run);
+  // P-04 — only the Commitments tab shows the version, so only it records the view.
+  useRecordView(tab === 'commitments' ? current : null, supplierId, viewAvail, run);
 
   if (!supplierId) return <NoSupplierIdentity />;
+  // P-04 — the Responses & shipments tab reads its own stores, so it waits for none of the reads below.
+  if (tab === 'responses')
+    return (
+      <AppShellV2>
+        <PageHeader breadcrumb={crumb} title={t('fc.sup.title')} subtitle={t('fc.sup.subtitle')} />
+        <PageMetaLine className="-mt-6 mb-4">
+          {t('fc.asOf')} <Data>{formatDate(nowIso)}</Data>
+          <SampleDataBadge className="ml-3 align-middle" />
+        </PageMetaLine>
+        <PageTabs value={tab} onChange={setTab} />
+        <SampleResponsesTab />
+      </AppShellV2>
+    );
   if (linesQuery.isPending || versionsQuery.isPending || plansQuery.isPending)
     return <LoadingState breadcrumb={crumb} />;
   if (drill.kind === 'pending') return <LoadingState breadcrumb={crumb} />;
@@ -195,114 +224,116 @@ const SupplierForecastCommitments = () => {
         {t('fc.asOf')} <Data>{formatDate(nowIso)}</Data>
         <SampleDataBadge className="ml-3 align-middle" />
       </PageMetaLine>
+      <PageTabs value={tab} onChange={setTab} />
 
-      {/* REQ-E07-03 BR-04 / BR-05 — the filter, why these rows, and the way back. */}
-      <PoFilterBanner
-        drill={drill}
-        persona="supplier"
-        count={shownMaterials.length}
-        reason="foresight"
-      />
-
-      {awaiting > 0 && <CommitmentsBanner awaiting={awaiting} overdue={overdue} />}
-
-      {streams.length > 1 && (
-        <SubTabs
-          options={streams.map((s) => ({ id: s, label: t(`fc.stream.${s}`) }))}
-          value={activeStream}
-          onChange={(s) => {
-            setStream(s);
-            setMaterial('');
-          }}
-          className="mb-4"
+      {/* P-04 — everything below is the first tab's panel. */}
+      <div
+        role="tabpanel"
+        aria-label={t('fc.sup.pageTab.commitments')}
+        data-testid="fc-sup-commitments-tab"
+      >
+        {/* REQ-E07-03 BR-04 / BR-05 — the filter, why these rows, and the way back. */}
+        <PoFilterBanner
+          drill={drill}
+          persona="supplier"
+          count={shownMaterials.length}
+          reason="foresight"
         />
-      )}
 
-      {current && (
-        <VersionSection
-          activeStream={activeStream}
-          current={current}
-          previous={previous}
-          streamLines={streamLines}
-          language={language}
-          canCommit={canCommit}
-          fileRef={fileRef}
-          busy={busy}
-          fileError={fileError}
-          upload={upload}
-          onFile={handleFile}
+        {awaiting > 0 && <CommitmentsBanner awaiting={awaiting} overdue={overdue} />}
+
+        {streams.length > 1 && (
+          <SubTabs
+            options={streams.map((s) => ({ id: s, label: t(`fc.stream.${s}`) }))}
+            value={activeStream}
+            onChange={(s) => {
+              setStream(s);
+              setMaterial('');
+            }}
+            className="mb-4"
+          />
+        )}
+
+        {current && (
+          <VersionSection
+            activeStream={activeStream}
+            current={current}
+            previous={previous}
+            streamLines={streamLines}
+            language={language}
+            canCommit={canCommit}
+            fileRef={fileRef}
+            busy={busy}
+            fileError={fileError}
+            upload={upload}
+            onFile={handleFile}
+          />
+        )}
+
+        {/* REQ-E14-02 BR-07 — the supplier's own reliability and PTI's plan changes on its materials. */}
+        <SupplierReliabilityPanel />
+
+        {/* BL-133 (ENG-D19) — capacity before the LTP; one Submit all per period. */}
+        {periodRows.length > 0 && (
+          <PeriodSubmitSection
+            periodRows={periodRows}
+            periodLabel={periodLabel}
+            canCommit={canCommit}
+            pending={pending}
+            submitAvail={submitAvail}
+            commitmentReasons={commitmentReasons}
+            reasonLabel={reasonLabel}
+            groupLabel={groupLabel}
+            setWeekReasons={setWeekReasons}
+            onSubmitAll={submitAll}
+          />
+        )}
+
+        <ViewToolbar
+          mode={mode}
+          onModeChange={setMode}
+          changeCount={changed.length + added.length}
+          material={material}
+          onMaterialChange={setMaterial}
+          materials={materials}
         />
-      )}
 
-      {/* REQ-E14-02 BR-07 — the supplier's own reliability and PTI's plan changes on its materials. */}
-      <SupplierReliabilityPanel />
-
-      {/* BL-133 (ENG-D19) — capacity before the LTP; one Submit all per period. */}
-      {periodRows.length > 0 && (
-        <PeriodSubmitSection
-          periodRows={periodRows}
-          periodLabel={periodLabel}
-          canCommit={canCommit}
-          pending={pending}
-          submitAvail={submitAvail}
-          commitmentReasons={commitmentReasons}
-          reasonLabel={reasonLabel}
-          groupLabel={groupLabel}
-          setWeekReasons={setWeekReasons}
-          onSubmitAll={submitAll}
-        />
-      )}
-
-      <ViewToolbar
-        mode={mode}
-        onModeChange={setMode}
-        changeCount={changed.length + added.length}
-        material={material}
-        onMaterialChange={setMaterial}
-        materials={materials}
-      />
-
-      {mode === 'changes' ? (
-        <ChangesTable
-          previous={previous}
-          current={current}
-          changed={changed}
-          added={added}
-          shownMaterials={shownMaterials}
-          periodLabel={periodLabel}
-        />
-      ) : (
-        <div className="space-y-6">
-          {/* A11y finding 19, supplier side — the Due column's rule, once and visible, above the material tables so it is not read in every cell. */}
-          <DueRuleNote />
-          {shownMaterials.map((code) => (
-            <MaterialSection
-              key={code}
-              code={code}
-              mine={streamLines.filter((l) => l.materialCode === code)}
-              periodLabel={periodLabel}
-              nowIso={nowIso}
-              canCommit={canCommit}
-              canAck={canAck}
-              pending={pending}
-              submitAvail={submitAvail}
-              ackAvail={ackAvail}
-              commitmentReasons={commitmentReasons}
-              reasonLabel={reasonLabel}
-              readRow={readRow}
-              setRow={setRow}
-              onCommitRow={commitRow}
-              onAcknowledge={acknowledge}
-            />
-          ))}
-        </div>
-      )}
-
-      <p className="mt-6 text-sm">
-        <Link to="/supplier/forecasts/responses" className="text-action-hover hover:underline">
-          {t('fc.sup.earlierResponses')}
-        </Link>
-      </p>
+        {mode === 'changes' ? (
+          <ChangesTable
+            previous={previous}
+            current={current}
+            changed={changed}
+            added={added}
+            shownMaterials={shownMaterials}
+            periodLabel={periodLabel}
+          />
+        ) : (
+          <div className="space-y-6">
+            {/* A11y finding 19, supplier side — the Due column's rule, once and visible, above the material tables so it is not read in every cell. */}
+            <DueRuleNote />
+            {shownMaterials.map((code) => (
+              <MaterialSection
+                key={code}
+                code={code}
+                mine={streamLines.filter((l) => l.materialCode === code)}
+                periodLabel={periodLabel}
+                nowIso={nowIso}
+                canCommit={canCommit}
+                canAck={canAck}
+                pending={pending}
+                submitAvail={submitAvail}
+                ackAvail={ackAvail}
+                commitmentReasons={commitmentReasons}
+                reasonLabel={reasonLabel}
+                readRow={readRow}
+                setRow={setRow}
+                onCommitRow={commitRow}
+                onAcknowledge={acknowledge}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </AppShellV2>
   );
 };
