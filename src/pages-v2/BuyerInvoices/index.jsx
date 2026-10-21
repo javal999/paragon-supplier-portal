@@ -108,6 +108,7 @@ const BuyerInvoicesView = ({ invoices: allInvoices }) => {
   const {
     releasePending,
     disputePending,
+    resolvePending,
     settleWatch,
     handleFooterAction,
     handleReleasePayment,
@@ -278,6 +279,7 @@ const BuyerInvoicesView = ({ invoices: allInvoices }) => {
               commitAction={commitAction}
               releasePending={releasePending}
               disputePending={disputePending}
+              resolvePending={resolvePending}
               handleFooterAction={handleFooterAction}
               handleReleasePayment={handleReleasePayment}
               confirmDispute={confirmDispute}

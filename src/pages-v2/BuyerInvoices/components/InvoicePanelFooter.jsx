@@ -27,6 +27,7 @@ import { fmtCompact } from '../utils';
  * @property {{ labelKey: string } | null} commitAction  The machine's reserved commit, if any.
  * @property {boolean} releasePending  The release mutation is running.
  * @property {boolean} disputePending  The dispute mutation is running.
+ * @property {boolean} resolvePending  The resolve mutation is running.
  * @property {() => void} handleFooterAction
  * @property {() => void} handleReleasePayment
  * @property {() => void} confirmDispute
@@ -57,6 +58,7 @@ const InvoicePanelFooter = ({
   commitAction,
   releasePending,
   disputePending,
+  resolvePending,
   handleFooterAction,
   handleReleasePayment,
   confirmDispute,
@@ -117,7 +119,11 @@ const InvoicePanelFooter = ({
           // the ownership statement is untouched by the change.)
           <HandoffNotice availability={commitAvailability} testId="handoff-commit" />
         ) : (
-          <Button variant="outline" disabled={releasePending} onClick={handleFooterAction}>
+          <Button
+            variant="outline"
+            disabled={releasePending || resolvePending}
+            onClick={handleFooterAction}
+          >
             {t(commitAction ? commitAction.labelKey : FOOTER_ACTION_KEY[selected.status])}
           </Button>
         )}
