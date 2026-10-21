@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 /** @import { Shipment, ASN } from '@services/data/types' */
 /** @import { GrSource, LineDraft, SourceMode } from '../utils' */
 import { sourceFromAsn, sourceFromShipment } from '../utils';
@@ -6,7 +6,9 @@ import { ELIGIBLE_STATUSES, RECEIVABLE_ASN_STATUSES } from '../const';
 
 /**
  * @typedef {object} UseGrSourceArgs
- * @property {string} [initialAsnId] -  Pre-selects a source when the page opens the wizard for one ASN.
+ * @property {SourceMode} sourceMode -  The draft's step 1 lane.
+ * @property {string} selectedSourceId -  The draft's dock pick (seeded from `initialAsnId`).
+ * @property {string} manualASN -  The draft's typed ASN number.
  * @property {Shipment[]} shipments
  * @property {ASN[]} asns
  * @property {LineDraft[]} lines -  The drafted lines; read so the auto-populate fills only an empty draft.
@@ -14,20 +16,22 @@ import { ELIGIBLE_STATUSES, RECEIVABLE_ASN_STATUSES } from '../const';
  */
 
 /**
- * Step 1's state and the source it resolves to: the receivable sources (dock
- * shipments ∪ live receivable ASNs), the dock pick or the typed ASN number,
- * and the active source. Auto-populates the line drafts when a source resolves
- * and none are drafted yet.
+ * The source step 1 resolves to: the receivable sources (dock shipments ∪ live
+ * receivable ASNs), the typed ASN number's match, and the active source.
+ * Auto-populates the line drafts when a source resolves and none are drafted
+ * yet. Step 1's values themselves live in the draft (`useInspectionDraft`'s
+ * `useForm`); this hook only derives from them.
  * @param {UseGrSourceArgs} args
  */
-const useGrSource = ({ initialAsnId, shipments, asns, lines, setLines }) => {
-  // Step 1 state
-  const [sourceMode, setSourceMode] = useState(/** @type {SourceMode} */ ('shipment'));
-  const [selectedSourceId, setSelectedSourceId] = useState(
-    /** @type {string} */ (initialAsnId ?? '')
-  );
-  const [manualASN, setManualASN] = useState('');
-
+const useGrSource = ({
+  sourceMode,
+  selectedSourceId,
+  manualASN,
+  shipments,
+  asns,
+  lines,
+  setLines
+}) => {
   // Receivable GR sources = shipments at dock ∪ live receivable ASNs (deduped by
   // ASN number; the shipment wins when both exist since it carries dock data).
   const sources = useMemo(() => {
@@ -73,12 +77,6 @@ const useGrSource = ({ initialAsnId, shipments, asns, lines, setLines }) => {
   const sourceValid = !!activeSource;
 
   return {
-    sourceMode,
-    setSourceMode,
-    selectedSourceId,
-    setSelectedSourceId,
-    manualASN,
-    setManualASN,
     sources,
     manualAsnMatch,
     manualNotFound,

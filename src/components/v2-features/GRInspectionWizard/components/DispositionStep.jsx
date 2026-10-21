@@ -1,42 +1,31 @@
 /** @import * as React from 'react' */
 import { useTranslation } from 'react-i18next';
+import { useFormContext } from 'react-hook-form';
 import FormSection from '../../../ui-v2/FormSection';
 import Data from '../../../ui-v2/Data';
 import { labelFor, inputCls } from './fieldParts';
 import { formatNumber } from '../utils';
 /** @import { GrHeaderDisposition } from '@services/transitions' */
+/** @import { GrDraftForm } from '../utils' */
 
 /**
  * @typedef {object} DispositionStepProps
  * @property {GrHeaderDisposition} derivedDisposition -  The header disposition ROLLED UP from the lines — shown, never chosen.
  * @property {(d: string) => string} dispositionLabel -  Localized label for a disposition token.
  * @property {{ items: number; accepted: number; rejected: number }} totals -  Summed from the parsed quantity pairs.
- * @property {string} dispositionReason
- * @property {(value: string) => void} setDispositionReason
- * @property {boolean} autoPostSap
- * @property {(value: boolean) => void} setAutoPostSap
- * @property {string} finalNotes
- * @property {(value: string) => void} setFinalNotes
+ * @property {boolean} autoPostSap -  The draft's opt-in, as `useInspectionDraft` watches it — read by the summary tile.
  */
 
 /**
  * Step 4 — the derived header disposition with its roll-up, the full-lot
  * rejection reason when the roll-up is Rejected, the post-to-SAP opt-in, final
- * notes, and the summary tiles.
+ * notes, and the summary tiles. The three fields are `register`ed on the draft
+ * through `useFormContext()`.
  * @type {React.FC<DispositionStepProps>}
  */
-const DispositionStep = ({
-  derivedDisposition,
-  dispositionLabel,
-  totals,
-  dispositionReason,
-  setDispositionReason,
-  autoPostSap,
-  setAutoPostSap,
-  finalNotes,
-  setFinalNotes
-}) => {
+const DispositionStep = ({ derivedDisposition, dispositionLabel, totals, autoPostSap }) => {
   const { t } = useTranslation();
+  const { register } = /** @type {GrDraftForm} */ (useFormContext());
   return (
     <div className="flex flex-col gap-5">
       <FormSection title={t('goodsReceipt.wizard.section.finalDisposition')}>
@@ -73,8 +62,7 @@ const DispositionStep = ({
             <textarea
               rows={2}
               aria-label={t('goodsReceipt.wizard.aria.headerRejectionReason')}
-              value={dispositionReason}
-              onChange={(e) => setDispositionReason(e.target.value)}
+              {...register('dispositionReason')}
               className={inputCls}
               placeholder={t('goodsReceipt.wizard.placeholder.fullLotRejection')}
             />
@@ -83,11 +71,7 @@ const DispositionStep = ({
 
         {(derivedDisposition === 'Approved' || derivedDisposition === 'Partially Approved') && (
           <label className="flex items-center gap-2 text-sm text-text-primary cursor-pointer">
-            <input
-              type="checkbox"
-              checked={autoPostSap}
-              onChange={(e) => setAutoPostSap(e.target.checked)}
-            />
+            <input type="checkbox" {...register('autoPostSap')} />
             {t('goodsReceipt.wizard.autoPostSap')}
           </label>
         )}
@@ -96,8 +80,7 @@ const DispositionStep = ({
           {labelFor(t('goodsReceipt.wizard.field.finalNotes'))}
           <textarea
             rows={2}
-            value={finalNotes}
-            onChange={(e) => setFinalNotes(e.target.value)}
+            {...register('finalNotes')}
             className={inputCls}
             placeholder={t('goodsReceipt.wizard.placeholder.optional')}
           />

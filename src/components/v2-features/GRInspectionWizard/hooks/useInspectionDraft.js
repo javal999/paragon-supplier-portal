@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 /** @import { Shipment, ASN } from '@services/data/types' */
 /** @import { InspectionResult } from '@data/mockGoodsReceipts' */
 /** @import { GrLineQtyOutcome } from '../../grLineQuantities' */
@@ -12,7 +13,7 @@ import { verifyHalalAtReceipt } from '@services/data/halalVerification';
 /** @import { ComplianceRegistryEntry } from '@services/data/types' */
 import { sdcClock } from '@services/sdc/clock';
 import { approvedShelfLifeLines } from '@services/transitions/fulfilmentRules';
-/** @import { LineDraft } from '../utils' */
+/** @import { GrDraft, LineDraft } from '../utils' */
 import { ROLES, LOCATIONS } from '../components/ReceiptStep';
 import useGrSource from './useGrSource';
 
@@ -35,6 +36,16 @@ import useGrSource from './useGrSource';
  * Moved verbatim out of `GRInspectionWizard` (frontend-standard Phase 5). The
  * gates that read the source (`bpomApplicability`, `halalApplicability`,
  * `halalVerification`, `enforcement`) read this file through the wizard folder.
+ *
+ * ⚠️ **THE DRAFT IS A REACT-HOOK-FORM `useForm`; THE GATES ARE NOT ITS.** The
+ * house pattern (`SupplierRegistration/hooks/useRegistrationWizard.js`): no
+ * field is registered with rules and `handleSubmit` is never called, so
+ * react-hook-form never validates. Every gate below is derived from the live
+ * values (`useWatch`), on every change, exactly as it was over the `useState`
+ * draft — which is why each refusal shows at the same moment it always did,
+ * and why an untouched field still says nothing. The steps read and write the
+ * draft through `FormProvider` (`register` for typed fields, `setValue` for the
+ * clicked ones); `methods` is returned for the wizard to provide.
  * @param {UseInspectionDraftArgs} args
  */
 const useInspectionDraft = ({
@@ -44,36 +55,61 @@ const useInspectionDraft = ({
   enforcementSettings,
   complianceRegistry
 }) => {
-  // Step 2 state
-  // The receipt is dated on the HUB clock by default — the day the demo hub says
-  // it is (`sdcClock`), not a literal and not the machine's calendar. It read
-  // `'2026-05-20'` (the day the wizard was authored), so every receipt recorded
-  // in the demo was back-dated three months behind the hub around it.
-  const [receivedDate, setReceivedDate] = useState(() => sdcClock.now().slice(0, 10));
-  const [receivedBy, setReceivedBy] = useState(ROLES[0]);
-  const [warehouse, setWarehouse] = useState(LOCATIONS[0]);
-  const [notes, setNotes] = useState('');
-  const [lines, setLines] = useState(/** @type {LineDraft[]} */ ([]));
-
-  // Step 4 state — NO free-choice disposition: the header is DERIVED from the
-  // lines (see derivedDisposition below), never asserted.
-  const [dispositionReason, setDispositionReason] = useState('');
-  const [autoPostSap, setAutoPostSap] = useState(true);
-  const [finalNotes, setFinalNotes] = useState('');
-
+  // The draft's starting values, built ONCE (the `useState` initializer), so the
+  // hub clock below is read once per opened wizard, as it was.
+  const [initialDraft] = useState(
+    () =>
+      /** @type {GrDraft} */ ({
+        // Step 1 — a page that opens the wizard for one ASN pre-selects it.
+        sourceMode: 'shipment',
+        selectedSourceId: initialAsnId ?? '',
+        manualASN: '',
+        // Step 2
+        // The receipt is dated on the HUB clock by default — the day the demo hub
+        // says it is (`sdcClock`), not a literal and not the machine's calendar.
+        // It read `'2026-05-20'` (the day the wizard was authored), so every
+        // receipt recorded in the demo was back-dated three months behind the
+        // hub around it.
+        receivedDate: sdcClock.now().slice(0, 10),
+        receivedBy: ROLES[0],
+        warehouse: LOCATIONS[0],
+        notes: '',
+        lines: [],
+        // Step 4 — NO free-choice disposition: the header is DERIVED from the
+        // lines (see derivedDisposition below), never asserted.
+        dispositionReason: '',
+        autoPostSap: true,
+        finalNotes: ''
+      })
+  );
+  const methods = useForm({ defaultValues: initialDraft });
+  const { control, setValue, getValues } = methods;
+  // Every value, re-read on every change: the gates below derive from them.
   const {
     sourceMode,
-    setSourceMode,
     selectedSourceId,
-    setSelectedSourceId,
     manualASN,
-    setManualASN,
-    sources,
-    manualAsnMatch,
-    manualNotFound,
-    activeSource,
-    sourceValid
-  } = useGrSource({ initialAsnId, shipments, asns, lines, setLines });
+    receivedDate,
+    receivedBy,
+    notes,
+    lines,
+    dispositionReason,
+    autoPostSap,
+    finalNotes
+  } = /** @type {GrDraft} */ (useWatch({ control }));
+
+  /** @param {LineDraft[]} next */
+  const setLines = (next) => setValue('lines', next);
+
+  const { sources, manualAsnMatch, manualNotFound, activeSource, sourceValid } = useGrSource({
+    sourceMode,
+    selectedSourceId,
+    manualASN,
+    shipments,
+    asns,
+    lines,
+    setLines
+  });
 
   // Finalized inspection lines + the header disposition ROLLED UP from them. The
   // header is DERIVED, never a free-choice assertion (law 0.6) — the same rollup
@@ -346,8 +382,8 @@ const useInspectionDraft = ({
    * @param {Partial<LineDraft>} patch
    */
   const updateLine = (idx, patch) => {
-    setLines((prev) =>
-      prev.map((l, i) => {
+    setLines(
+      getValues('lines').map((l, i) => {
         if (i !== idx) return l;
         const next = { ...l, ...patch };
         if (patch.labSampleRequired === true && !next.labRequestId) {
@@ -375,32 +411,19 @@ const useInspectionDraft = ({
   }, [lineQtys]);
 
   return {
-    sourceMode,
-    setSourceMode,
-    selectedSourceId,
-    setSelectedSourceId,
-    manualASN,
-    setManualASN,
+    methods,
     sources,
     manualAsnMatch,
     manualNotFound,
     activeSource,
+    manualASN,
     receivedDate,
-    setReceivedDate,
     receivedBy,
-    setReceivedBy,
-    warehouse,
-    setWarehouse,
     notes,
-    setNotes,
     lines,
-    setLines,
     dispositionReason,
-    setDispositionReason,
     autoPostSap,
-    setAutoPostSap,
     finalNotes,
-    setFinalNotes,
     blockedCodes,
     lineQtys,
     inspectionResults,
