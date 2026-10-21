@@ -1,0 +1,36 @@
+---
+title: Data map · Compliance document
+---
+flowchart LR
+  subgraph WritesPTI["Writes · PTI"]
+    nbuyer_compliance["Compliance Tracker"]:::urlonly
+  end
+  subgraph Writessupplier["Writes · supplier"]
+    nsupplier_documents["Profile & documents"]:::menu
+  end
+  OBJ(["Compliance document<br/><small>Awaiting Upload → Under Review → Valid / Rejected</small>"]):::obj
+  subgraph ReadsPTI["Reads · PTI"]
+    nbuyer_dashboard["Procurement Command Center"]:::urlonly
+    nbuyer_suppliers["Suppliers"]:::menu
+    nbuyer_goods_receipt["Goods receipts"]:::menu
+    nbuyer_risk["Supply Risk & Scenario Intelligence"]:::urlonly
+    nbuyer_admin_qualification["Vendor qualification"]:::avatar
+  end
+  subgraph Readssupplier["Reads · supplier"]
+    nsupplier_home["To do"]:::menu
+    nsupplier_dashboard["Supplier welcome dashboard"]:::urlonly
+  end
+  nbuyer_compliance -->|writes| OBJ
+  nsupplier_documents -->|writes| OBJ
+  OBJ --> nbuyer_dashboard
+  OBJ --> nbuyer_suppliers
+  OBJ --> nbuyer_goods_receipt
+  OBJ --> nbuyer_risk
+  OBJ --> nbuyer_admin_qualification
+  OBJ --> nsupplier_home
+  OBJ --> nsupplier_dashboard
+  classDef menu fill:#eef4ff,stroke:#3b6fd8,color:#10213f
+  classDef avatar fill:#f3eefc,stroke:#7a52c7,color:#24124a
+  classDef urlonly fill:#fff4e5,stroke:#c77700,stroke-dasharray:5 3,color:#3d2600
+  classDef detail fill:#f2f2f2,stroke:#777,color:#222
+  classDef obj fill:#e9f7ef,stroke:#2e8b57,color:#0f3020

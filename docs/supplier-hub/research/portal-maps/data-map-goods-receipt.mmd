@@ -1,0 +1,52 @@
+---
+title: Data map · Goods receipt
+---
+flowchart LR
+  subgraph WritesPTI["Writes · PTI"]
+    nbuyer_goods_receipt["Goods receipts"]:::menu
+    nbuyer_interface_monitor["Interface monitor"]:::avatar
+  end
+  OBJ(["Goods receipt<br/><small>Pending Inspection → Under Inspection → Quality Hold → Approved / Partially Approved / Rejected → Posting to SAP</small>"]):::obj
+  subgraph ReadsPTI["Reads · PTI"]
+    nbuyer_home["My tasks"]:::menu
+    nbuyer_dashboard["Procurement Command Center"]:::urlonly
+    nbuyer_order_summary["Order summary"]:::menu
+    nbuyer_order_plan["What to order"]:::menu
+    nbuyer_call_offs["Call-offs"]:::menu
+    nbuyer_shipments["Shipments & ASN"]:::menu
+    nbuyer_invoices["Invoices"]:::menu
+    nbuyer_scorecard["Supplier performance"]:::menu
+    nbuyer_analytics["Analytics & Procurement Intelligence"]:::urlonly
+  end
+  subgraph Readssupplier["Reads · supplier"]
+    nsupplier_home["To do"]:::menu
+    nsupplier_order_summary["Order summary"]:::menu
+    nsupplier_shipments["Shipments & ASN"]:::menu
+    nsupplier_goods_receipts["Goods receipts"]:::menu
+    nsupplier_invoices["Invoices"]:::menu
+    nsupplier_call_offs["Call-offs"]:::menu
+    nsupplier_performance["My performance"]:::menu
+  end
+  nbuyer_goods_receipt -->|writes| OBJ
+  nbuyer_interface_monitor -->|writes| OBJ
+  OBJ --> nbuyer_home
+  OBJ --> nbuyer_dashboard
+  OBJ --> nbuyer_order_summary
+  OBJ --> nbuyer_order_plan
+  OBJ --> nbuyer_call_offs
+  OBJ --> nbuyer_shipments
+  OBJ --> nbuyer_invoices
+  OBJ --> nbuyer_scorecard
+  OBJ --> nbuyer_analytics
+  OBJ --> nsupplier_home
+  OBJ --> nsupplier_order_summary
+  OBJ --> nsupplier_shipments
+  OBJ --> nsupplier_goods_receipts
+  OBJ --> nsupplier_invoices
+  OBJ --> nsupplier_call_offs
+  OBJ --> nsupplier_performance
+  classDef menu fill:#eef4ff,stroke:#3b6fd8,color:#10213f
+  classDef avatar fill:#f3eefc,stroke:#7a52c7,color:#24124a
+  classDef urlonly fill:#fff4e5,stroke:#c77700,stroke-dasharray:5 3,color:#3d2600
+  classDef detail fill:#f2f2f2,stroke:#777,color:#222
+  classDef obj fill:#e9f7ef,stroke:#2e8b57,color:#0f3020

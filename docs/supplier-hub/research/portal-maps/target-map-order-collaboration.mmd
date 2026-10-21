@@ -1,0 +1,31 @@
+---
+title: Target map · Order collaboration (PTI) and Orders (supplier) (P-01, P-02)
+---
+flowchart LR
+  subgraph PTI["PTI · Order collaboration"]
+    bpo["Purchase orders (Order summary is its default view)"]:::changed
+    bsh["Shipments & ASN"]:::menu
+    bgr["Goods receipts"]:::menu
+    bco["Call-offs (moved in from its own section)"]:::changed
+    binv["Invoices (Finance menu)"]:::menu
+  end
+  subgraph SUP["Supplier · Orders"]
+    spo["Purchase orders (Order summary is its default view)"]:::changed
+    sco["Call-offs"]:::menu
+    ssh["Shipments & ASN"]:::menu
+    sgr["Goods receipts"]:::menu
+    sinv["Invoices"]:::menu
+  end
+  bpo -->|lifecycle step links, ?po=| bsh
+  bpo -->|lifecycle step links, ?po=| bgr
+  bpo -->|lifecycle step links, ?po=| binv
+  bpo -->|lifecycle step links, ?po=| bco
+  bsh -->|back to the PO| bpo
+  bgr -->|back to the PO| bpo
+  spo -->|Create ASN opens the form for this PO| ssh
+  spo -->|lifecycle step links, ?po=| sgr
+  spo -->|lifecycle step links, ?po=| sinv
+  sco -->|Create the ASN for this call-off| ssh
+  classDef menu fill:#eef4ff,stroke:#3b6fd8,color:#10213f
+  classDef changed fill:#e9f7ef,stroke:#2e8b57,color:#0f3020
+  classDef gone fill:#fdecec,stroke:#b42318,stroke-dasharray:5 3,color:#4a0d0d

@@ -1,0 +1,30 @@
+---
+title: UC1 Sourcing · requisition to RFQ award (positive path)
+---
+sequenceDiagram
+  autonumber
+  participant Req as PTI · Requisitioner
+  participant Proc as PTI · Procurement
+  participant Com as Supplier · Commercial
+  Note over Req: Purchase Requisitions has no menu item (URL or Stock simulation row only)
+  Req->>Req: Purchase Requisitions · New PR, Submit · PR Draft → Pending Approval
+  Req-->>Proc: hand-off with no My tasks item
+  Note over Proc: reached by URL
+  Proc->>Proc: Purchase Requisitions · Approve · PR → Approved
+  Proc->>Proc: Purchase Requisitions → RFQ wizard (link) · Raise sourcing event · PR → Sourcing Event
+  Proc->>Proc: RFQ · Save draft, Publish RFQ · RFQ Draft → Open
+  Proc-->>Com: To do "Sourcing invitations to answer" (filtered to open)
+  Com->>Com: RFQ invitations · I will respond, Submit quotation · Quotation submitted
+  Com-->>Proc: My tasks "Sourcing events ready to award" (16, opens the unfiltered RFQ list)
+  Note over Proc: menu or unfiltered list, then find the event
+  Proc->>Proc: RFQ · Move to review · RFQ Open → Closed (Under Review)
+  Proc->>Proc: RFQ event page (link from list) · Open the round · Round Open
+  Proc-->>Com: To do "Revised quote requested"
+  Com->>Com: Revised quotes (no menu item) · Send the revised quote · Quotation revised
+  Com-->>Proc: My tasks "Negotiation rounds closing soon" (unfiltered RFQ list)
+  Note over Proc: menu: RFQ, then the event row
+  Proc->>Proc: RFQ event page · Close round, Award the event · RFQ → Awarded
+  Proc->>Proc: RFQ event page · Mark raised in SAP · award locked
+  Proc-->>Com: no To do task for an award
+  Note over Com: menu: RFQ invitations, Awards & history
+  Com->>Com: RFQ invitations · reads "Your share: x%"

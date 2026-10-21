@@ -1,0 +1,22 @@
+---
+title: Target map · Inventory & capacity (PTI · Material Planner) (P-06 as ruled, P-09)
+---
+flowchart LR
+  subgraph Inv["Inventory & capacity"]
+    inv["Stock (was Inventory; each row links to the estimate)"]:::changed
+    sim["Stock simulation (stays its own page, MAT-D2)"]:::menu
+    cap["Capacity"]:::menu
+    al["Alerts"]:::menu
+    acc["Supplier access"]:::menu
+    tn["Trade names (moved in from Materials)"]:::changed
+  end
+  subgraph Gone["No longer separate"]
+    mat["Materials section"]:::gone
+  end
+  inv -->|See estimate for a date| sim
+  al -->|row link| inv
+  al -->|row link| cap
+  mat -.->|item moves to| tn
+  classDef menu fill:#eef4ff,stroke:#3b6fd8,color:#10213f
+  classDef changed fill:#e9f7ef,stroke:#2e8b57,color:#0f3020
+  classDef gone fill:#fdecec,stroke:#b42318,stroke-dasharray:5 3,color:#4a0d0d

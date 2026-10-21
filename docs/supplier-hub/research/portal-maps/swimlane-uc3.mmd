@@ -1,0 +1,15 @@
+---
+title: UC3 Call-offs against agreements (positive path)
+---
+sequenceDiagram
+  autonumber
+  participant Plan as PTI · Planning
+  participant Ful as Supplier · Fulfilment
+  Note over Plan: menu: Call-offs (section Call-offs)
+  Plan->>Plan: Call-offs · New call-off, Release to supplier · Call-off → Awaiting Confirmation
+  Plan-->>Ful: To do task "Call-offs to confirm" (filtered)
+  Ful->>Ful: Call-offs · Respond, Confirm as requested · Call-off → Confirmed
+  Ful->>Ful: Call-offs · Send dispatch notice · Confirmed (dispatched)
+  Note over Ful: no link from the call-off to its ASN, menu: Shipments & ASN
+  Ful->>Ful: Shipments & ASN · Create the ASN for the confirmed call-off · ASN → Submitted
+  Ful-->>Plan: My tasks call-off items only for approval, escalation, risk or drift

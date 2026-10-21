@@ -1,0 +1,57 @@
+---
+title: Page map: Help & administration (avatar menu, PTI)
+---
+flowchart LR
+  subgraph Help["Help"]
+    nglossary["Help & glossary"]:::avatar
+    nbuyer_roles["Roles"]:::avatar
+    nbuyer_roles__roleid["Role detail"]:::detail
+    nbuyer_process_flows["Process flows"]:::avatar
+    nbuyer_interface_monitor["Interface monitor"]:::avatar
+  end
+  subgraph Administration["Administration"]
+    nbuyer_admin_working_calendar["Working calendar"]:::avatar
+    nbuyer_admin_3pl_tracking["3PL tracking links"]:::avatar
+    nbuyer_admin_suppliers["Supplier stock update mode"]:::avatar
+    nbuyer_admin_qualification["Vendor qualification"]:::avatar
+    nbuyer_admin_sourcing_types["Sourcing types"]:::avatar
+    nbuyer_admin_planning_groups["Planning groups"]:::avatar
+    nbuyer_admin_mrp_controllers["MRP controllers (PIC)"]:::avatar
+    nbuyer_admin_tolerances["Tolerances and rule values"]:::avatar
+    nbuyer_admin_alert_thresholds["Alert thresholds and stale periods"]:::avatar
+    nbuyer_admin_reason_codes["Reason codes"]:::avatar
+  end
+  subgraph Planningengine["Planning engine"]
+    nbuyer_material_requirement["Planning engine · Material requirement"]:::avatar
+    nbuyer_safety_stock["Planning engine · Safety stock targets"]:::avatar
+    nbuyer_data_health["Planning engine · Data health"]:::avatar
+    nbuyer_model_backtest["Planning engine · Model backtest"]:::avatar
+    nbuyer_reliability["Planning engine · Supplier reliability"]:::avatar
+  end
+  subgraph Mainmenupageslinked["Main menu pages linked"]
+    nbuyer_home["My tasks"]:::menu
+    nbuyer_order_plan["What to order"]:::menu
+    nbuyer_this_week["This week"]:::menu
+  end
+  nbuyer_data_health -->|next| nbuyer_order_plan
+  nbuyer_home -->|task| nbuyer_interface_monitor
+  nbuyer_home -->|task| nbuyer_order_plan
+  nbuyer_home -->|task| nbuyer_safety_stock
+  nbuyer_material_requirement -->|link| nbuyer_order_plan
+  nbuyer_material_requirement -->|next| nbuyer_order_plan
+  nbuyer_order_plan -->|link| nbuyer_material_requirement
+  nbuyer_order_plan -->|link| nbuyer_safety_stock
+  nbuyer_roles -->|link| nbuyer_roles__roleid
+  nbuyer_roles__roleid -->|link| nbuyer_home
+  nbuyer_roles__roleid -->|link| nbuyer_roles
+  nbuyer_safety_stock -->|next| nbuyer_order_plan
+  nbuyer_this_week -->|next| nbuyer_data_health
+  nbuyer_this_week -->|link| nbuyer_home
+  nbuyer_this_week -->|next| nbuyer_order_plan
+  nglossary -->|link| nbuyer_process_flows
+  nbuyer_this_week -->|link| nbuyer_data_health
+  classDef menu fill:#eef4ff,stroke:#3b6fd8,color:#10213f
+  classDef avatar fill:#f3eefc,stroke:#7a52c7,color:#24124a
+  classDef urlonly fill:#fff4e5,stroke:#c77700,stroke-dasharray:5 3,color:#3d2600
+  classDef detail fill:#f2f2f2,stroke:#777,color:#222
+  classDef obj fill:#e9f7ef,stroke:#2e8b57,color:#0f3020

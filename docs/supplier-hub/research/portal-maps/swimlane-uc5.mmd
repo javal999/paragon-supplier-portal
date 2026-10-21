@@ -1,0 +1,15 @@
+---
+title: UC5 Compliance documents (positive path)
+---
+sequenceDiagram
+  autonumber
+  participant Cmp as PTI · Compliance
+  participant BO as Supplier · Back Office
+  Note over Cmp: Compliance Tracker has no menu item and no My tasks item
+  Cmp->>Cmp: Compliance Tracker (URL only) · Ask for a document, Open the request · Document → Awaiting Upload
+  Cmp-->>BO: no To do task for a new request (To do counts only expired or expiring certificates)
+  Note over BO: menu: Company, Profile & documents
+  BO->>BO: Profile & documents · Declare, Record declaration · Document → Under Review
+  BO-->>Cmp: no My tasks item for declared certificates
+  Note over Cmp: reached by URL again
+  Cmp->>Cmp: Compliance Tracker · Confirm · Document → Valid

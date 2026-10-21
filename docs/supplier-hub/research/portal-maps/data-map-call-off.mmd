@@ -1,0 +1,46 @@
+---
+title: Data map · Call-off
+---
+flowchart LR
+  subgraph WritesPTI["Writes · PTI"]
+    nbuyer_order_plan["What to order"]:::menu
+    nbuyer_reschedule["Make warehouse room"]:::menu
+    nbuyer_call_offs["Call-offs"]:::menu
+  end
+  subgraph Writessupplier["Writes · supplier"]
+    nsupplier_call_offs["Call-offs"]:::menu
+  end
+  OBJ(["Call-off<br/><small>Draft → Awaiting Confirmation → Confirmed / with New Date / with Changes / Partially Confirmed / Rejected; Dismissed</small>"]):::obj
+  subgraph ReadsPTI["Reads · PTI"]
+    nbuyer_home["My tasks"]:::menu
+    nbuyer_order_summary["Order summary"]:::menu
+    nbuyer_contracts__id["Contract detail"]:::detail
+    nbuyer_shipments["Shipments & ASN"]:::menu
+    nbuyer_scorecard["Supplier performance"]:::menu
+    nbuyer_analytics["Analytics & Procurement Intelligence"]:::urlonly
+  end
+  subgraph Readssupplier["Reads · supplier"]
+    nsupplier_home["To do"]:::menu
+    nsupplier_order_summary["Order summary"]:::menu
+    nsupplier_shipments["Shipments & ASN"]:::menu
+    nsupplier_performance["My performance"]:::menu
+  end
+  nbuyer_order_plan -->|writes| OBJ
+  nbuyer_reschedule -->|writes| OBJ
+  nbuyer_call_offs -->|writes| OBJ
+  nsupplier_call_offs -->|writes| OBJ
+  OBJ --> nbuyer_home
+  OBJ --> nbuyer_order_summary
+  OBJ --> nbuyer_contracts__id
+  OBJ --> nbuyer_shipments
+  OBJ --> nbuyer_scorecard
+  OBJ --> nbuyer_analytics
+  OBJ --> nsupplier_home
+  OBJ --> nsupplier_order_summary
+  OBJ --> nsupplier_shipments
+  OBJ --> nsupplier_performance
+  classDef menu fill:#eef4ff,stroke:#3b6fd8,color:#10213f
+  classDef avatar fill:#f3eefc,stroke:#7a52c7,color:#24124a
+  classDef urlonly fill:#fff4e5,stroke:#c77700,stroke-dasharray:5 3,color:#3d2600
+  classDef detail fill:#f2f2f2,stroke:#777,color:#222
+  classDef obj fill:#e9f7ef,stroke:#2e8b57,color:#0f3020

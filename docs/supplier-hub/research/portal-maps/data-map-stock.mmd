@@ -1,0 +1,44 @@
+---
+title: Data map · Stock
+---
+flowchart LR
+  subgraph WritesPTI["Writes · PTI"]
+    nbuyer_inventory["Inventory"]:::menu
+    nbuyer_stock_simulation["Stock simulation"]:::menu
+    nbuyer_supplier_access["Supplier access"]:::menu
+    nbuyer_comm_hub["Supplier replies"]:::menu
+    nbuyer_admin_suppliers["Supplier stock update mode"]:::avatar
+  end
+  subgraph Writessupplier["Writes · supplier"]
+    nsupplier_comm_hub["Channel Inbox"]:::urlonly
+    nsupplier_inventory["Stock"]:::menu
+  end
+  OBJ(["Stock<br/><small>Declared (by supplier or recorded by PTI), synced, access granted or removed</small>"]):::obj
+  subgraph ReadsPTI["Reads · PTI"]
+    nbuyer_dashboard["Procurement Command Center"]:::urlonly
+    nbuyer_collaboration["Supplier responses"]:::menu
+    nbuyer_admin_tolerances["Tolerances and rule values"]:::avatar
+    nbuyer_admin_alert_thresholds["Alert thresholds and stale periods"]:::avatar
+  end
+  subgraph Readssupplier["Reads · supplier"]
+    nsupplier_home["To do"]:::menu
+    nsupplier_shipments["Shipments & ASN"]:::menu
+  end
+  nbuyer_inventory -->|writes| OBJ
+  nbuyer_stock_simulation -->|writes| OBJ
+  nbuyer_supplier_access -->|writes| OBJ
+  nbuyer_comm_hub -->|writes| OBJ
+  nbuyer_admin_suppliers -->|writes| OBJ
+  nsupplier_comm_hub -->|writes| OBJ
+  nsupplier_inventory -->|writes| OBJ
+  OBJ --> nbuyer_dashboard
+  OBJ --> nbuyer_collaboration
+  OBJ --> nbuyer_admin_tolerances
+  OBJ --> nbuyer_admin_alert_thresholds
+  OBJ --> nsupplier_home
+  OBJ --> nsupplier_shipments
+  classDef menu fill:#eef4ff,stroke:#3b6fd8,color:#10213f
+  classDef avatar fill:#f3eefc,stroke:#7a52c7,color:#24124a
+  classDef urlonly fill:#fff4e5,stroke:#c77700,stroke-dasharray:5 3,color:#3d2600
+  classDef detail fill:#f2f2f2,stroke:#777,color:#222
+  classDef obj fill:#e9f7ef,stroke:#2e8b57,color:#0f3020
