@@ -53,3 +53,43 @@ IA-B14 ("setting max stock needs a Menu for switch") was wrong and is withdrawn:
 | F-2 | Make warehouse room: "Warehouse relief, ranked" starts at about 1,560 px, under "Weeks that do not fit" and "Supplier stability" | Put the ranked relief first in the Relief tab |
 | F-3 | With one PO's panel already open, editing the address to another `?po=` keeps the first panel. No in-app link does this; every link tested opened the right PO | Read `po` on every address change in the PO panel |
 | F-4 | The supplier ASN form opened from a PO shows the PO filter banner, which reads "No record on this order" before an ASN exists | Hide the banner's empty note on the create tab |
+
+## 5. Build record (gates, floor, browser check, known follow-ups)
+
+### Gates
+
+`npm run gates` on Node 24.22.0 at the code head (`1c02cf27` plus docs-only commits): **GATES GREEN**.
+- build emitted a bundle; specs typecheck clean
+- 9854 tests across 628 files, 9854 passed, 0 failed, 0 skipped
+- SEC-GATE-01: 7 gate tests passing
+- lint: 1872 files, 628 warnings (ceiling 628); Prettier clean; README and CLAUDE.md pointers ok
+
+A first run found 6 failures, all from combining the lanes, and they are fixed in `1c02cf27`: an Indonesian `_one` plural key, the planner tab-id constants needing an `i18n-defer` reason, two specs looking for the old "Triage" heading, a router spec expecting a page the router no longer imports, and an Indonesian smoke test that read the page before it loaded.
+
+### Test floor
+
+`scripts/floor.json` goes from tests 10069 / files 638 to **9854 / 628**, and the lint ceiling from 671 to **628**. The drop was measured per file at `dc6129d5` and at this head:
+- 22 deleted test files held 171 tests (the 11 retired pages, their widgets, Intake Review, Chase)
+- edited test files lost 134 tests, and every removed block tests a deleted page or file (Intake Review and its drawer, the dashboards, Marketplace, My Catalog, Channel Demo); population-driven guards shrank because those pages left their populations
+- 12 new test files add 90
+- net −215, equal to the gate's drop; no `skip` or `todo` was added
+
+### Browser check
+
+`vite preview` of this build at 1440×900, Demo Mode, checked as PTI (Menu for: All) and as the supplier:
+- **Menus:** both match the target map. PTI: Home 2, Order collaboration 4, Weekly plan 6, Review 4, Inventory & capacity 6, Sourcing 6, Invoices 1, Audit 1, Performance 2. Supplier: 15 items in 6 sections.
+- **My tasks:** "RFQ ready to award" (4) opens the board on that tile with 4 rows. "Requisitions to approve" opens PR-2026-00344. "Declared certificates to review" opens the review queue. "Suppliers to follow up" opens the follow-up tab. Goods receipts and inbound shipments open filtered.
+- **Redirects:** `/buyer/order-summary` → `/buyer/orders?view=summary`; `/buyer/chase` → follow-up tab; `/buyer/collaboration/responses` → Consolidation tab; `/supplier/forecasts/responses` → its tab. `/buyer/dashboard` and `/marketplace` show the 404 page.
+- **PO record (po-002):** steps link to their filtered pages, unreached steps stay plain, and the record shows "2 call-offs against this order". From the Summary view a PO click opens that PO.
+- **Call-offs from a PO:** opens All call-offs with "Back to purchase order PO-2025-00107".
+- **Tabs:** every planner page, Foresight commitments (both personas) and Supplier follow-ups show their tabs, with the first selected.
+- **Stock:** title "Stock", each row has "See estimate for a date" and "Try a what-if", and no estimated figure is on the page.
+- **Supplier:** To do lists "Documents PTI asked for". Create ASN opens the ASN form with PO-2026-00127 picked.
+
+Four small follow-ups found here are listed in the decisions log, section 4 (F-1 to F-4).
+
+### Known follow-ups
+
+- `CLAUDE.md`'s Routing section still names `/marketplace` and `/buyer/dashboard`. It is flagged here and not edited (D-21).
+- `main` holds 28 commits that the RFx base lacks (DRC !9 to !13 and !15). A trial merge conflicts in 3 files: `docs/contracts/C1-methods.md`, `docs/supplier-hub/BACKLOG.md` and `src/lib/i18n/hub.js`. These are resolved when the RFx waves merge `main`. Since then, `main` (77e646b9, MR !2) also split BuyerInvoices and SupplierInvoices into folders and moved its floor to 9876 tests / 619 files. This branch touches only those pages' tests and i18n, so the floor is re-measured at that merge. The FE-boilerplate session is holding its splits of BuyerCallOffs, BuyerCollaboration, BuyerOrders, SupplierOrders, SupplierCallOffs and SupplierDocuments until this lands.
+- BUILD-GAP and BACKLOG rows are left for the docs pass after the merge to `main`, as usual. Requirements 3.7 and the user-guide menu directory are updated here.
