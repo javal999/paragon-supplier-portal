@@ -97,7 +97,7 @@ describe('TABLE-WRAPPER-CLIPS-COLUMNS', () => {
   it('the population reaches the wrappers this guard exists for', () => {
     const files = new Set(sites.map((s) => s.file));
     expect(files).toContain('src/pages-v2/BuyerOrders.jsx');
-    expect(files).toContain('src/pages-v2/BuyerInvoices.jsx');
+    expect(files).toContain('src/pages-v2/BuyerInvoices/components/RemittanceSection.jsx');
     expect(files).toContain('src/pages-v2/contracts/contractView.jsx');
   });
 
