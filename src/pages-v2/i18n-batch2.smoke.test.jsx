@@ -24,8 +24,12 @@ describe('Batch 2 — bilingual render (no EN leak in chrome)', () => {
   it('BuyerCommHub: ID chrome header, English gone', async () => {
     await setLang('id');
     renderWithProviders(<BuyerCommHub />);
-    expect((await screen.findAllByText('Pusat Komunikasi')).length).toBeGreaterThan(0);
-    expect(screen.queryByText('Communication Hub')).not.toBeInTheDocument();
+    expect((await screen.findAllByText('Tindak lanjut pemasok')).length).toBeGreaterThan(0);
+    expect(
+      screen.getByRole('tab', { name: /Pemasok yang perlu ditindaklanjuti/ })
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Supplier follow-ups')).not.toBeInTheDocument();
+    expect(screen.queryByText('Suppliers to follow up')).not.toBeInTheDocument();
   });
 
   it('SupplierWhatsApp: ID chrome header, English gone', async () => {

@@ -2,7 +2,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Info, MessageCircle } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
 import PageMetaLine from '@components/ui-v2/PageMetaLine';
@@ -10,11 +10,9 @@ import LivenessPill from '@components/ui-v2/LivenessPill';
 import LoadingState from '@components/ui-v2/LoadingState';
 import EmptyState from '@components/ui-v2/EmptyState';
 import ErrorState from '@components/ui-v2/ErrorState';
-import StatusPill from '@components/ui-v2/StatusPill';
-import Data from '@components/ui-v2/Data';
 import { useUnifiedChase } from '@services/query/chaseHooks';
 import { useSuppliers } from '@services/query/hooks';
-/** @import { ChaseSeverityLevel } from '@services/chase' */
+import ChaseList from './ChaseList';
 import { SDC_SIMULATED_NOW } from '@services/sdc';
 import { formatDate } from '@lib/format';
 
@@ -35,16 +33,12 @@ import { formatDate } from '@lib/format';
 // pushes through the EXISTING WhatsApp/email chrome; the callout + the per-card
 // "Push via WhatsApp" link frame that honestly and open that chrome (no sender is
 // built here). Buyer-gated: a supplier persona resolves an empty chase list.
+//
+// ⚠️ BEING RETIRED (IA P-05). The list now lives on Supplier follow-ups
+// (`/buyer/comm-hub?tab=follow-up`), which renders the same ChaseList. This page
+// stays only while `AppRouter` and `allRoutes.smoke` still import it; once
+// `/buyer/chase` redirects there, delete this file and its spec.
 // ─────────────────────────────────────────────────────────────────────────────
-
-/** Severity → the quiet StatusPill tone. hard = Urgent (danger); soft = Advisory
- * @type {Record<ChaseSeverityLevel, 'danger' | 'warning' | 'neutral'>}
- *  (warning); none never appears (a listed supplier always has ≥1 live reason). */
-const SEVERITY_VARIANT = {
-  hard: 'danger',
-  soft: 'warning',
-  none: 'neutral'
-};
 
 /** @type {React.FC} */
 const BuyerChase = () => {
@@ -92,96 +86,23 @@ const BuyerChase = () => {
         <LivenessPill capability="deliveryAgreements" />
       </PageMetaLine>
 
-      {/* Honest framing — a derived chase list; push happens through the existing
-          WhatsApp/email chrome, nothing is sent from here. */}
-      <div className="bg-info-soft border-l-2 border-info rounded px-4 py-3 mb-6 text-sm text-text-primary flex items-start gap-2">
-        <Info size={14} className="text-info shrink-0 mt-0.5" />
-        <span>
-          <strong className="text-info">{t('chase.honestyTitle')}</strong> {t('chase.honestyBody')}
-        </span>
-      </div>
-
-      <div className="space-y-4">
-        {views.map((view) => (
-          <div
-            key={view.supplierId}
-            className="border border-border-subtle rounded-lg bg-white overflow-hidden"
-            data-testid="chase-card"
+      {/* The list itself (cards + its honesty callout) is the shared ChaseList,
+          the same component Supplier follow-ups renders on its first tab. */}
+      <ChaseList
+        views={views}
+        nameOf={nameOf}
+        renderAction={() => (
+          // Push affordance — opens the EXISTING WhatsApp chrome; no sender is
+          // built here (channel dispatch deferred).
+          <Link
+            to="/buyer/comm-hub"
+            className="inline-flex items-center gap-1.5 rounded-md border border-action px-3 py-1.5 text-sm font-medium text-action hover:bg-action-soft transition-colors"
           >
-            {/* Card header — supplier + overall severity + count. */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-border-subtle bg-bg-subtle">
-              <span className="text-sm font-semibold text-text-primary">
-                {nameOf(view.supplierId)}
-              </span>
-              <StatusPill variant={SEVERITY_VARIANT[view.overallSeverity]}>
-                {t(`chase.severity.${view.overallSeverity}`)}
-              </StatusPill>
-              <span className="ml-auto text-xs text-text-tertiary">
-                {t('chase.count', { n: view.chaseCount })}
-              </span>
-            </div>
-
-            <div className="px-4 py-3 flex flex-col gap-4">
-              {/* Forecast-response staleness (the data family). */}
-              {view.dataReasons.length > 0 && (
-                <div>
-                  <div className="text-[10px] uppercase tracking-wide text-text-tertiary mb-1.5">
-                    {t('chase.section.forecast')}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {view.dataReasons.map((reason, i) => (
-                      // eslint-disable-next-line react/no-array-index-key -- reason codes can repeat and have no id; read-only, stateless pills recomputed whole from the chase view
-                      <StatusPill key={`${reason}-${i}`} variant="warning">
-                        {t(`chase.data.${reason}`)}
-                      </StatusPill>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Delivery commitments (the commitment family) — mode × type ×
-                  severity, material, due date. The per-row tone carries the
-                  hard/soft split (a firm miss reads danger). */}
-              {view.commitmentEntries.length > 0 && (
-                <div>
-                  <div className="text-[10px] uppercase tracking-wide text-text-tertiary mb-1.5">
-                    {t('chase.section.commitment')}
-                  </div>
-                  <ul className="flex flex-col divide-y divide-border-subtle">
-                    {view.commitmentEntries.map((e) => (
-                      <li
-                        key={`${e.agreementId}-${e.itemSeq}-${e.mode}-${e.releaseSeq ?? 'drift'}`}
-                        className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-sm"
-                      >
-                        <StatusPill variant={SEVERITY_VARIANT[e.severity]}>
-                          {t(`chase.mode.${e.mode}`)}
-                        </StatusPill>
-                        <StatusPill variant="neutral">{t(`chase.type.${e.type}`)}</StatusPill>
-                        <Data className="text-sm">{e.materialCode}</Data>
-                        <span className="text-text-tertiary text-xs">
-                          {t('chase.due', { date: formatDate(e.dueDate) })}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Push affordance — opens the EXISTING WhatsApp chrome; no sender
-                  is built here (channel dispatch deferred). */}
-              <div>
-                <Link
-                  to="/buyer/comm-hub"
-                  className="inline-flex items-center gap-1.5 rounded-md border border-action px-3 py-1.5 text-sm font-medium text-action hover:bg-action-soft transition-colors"
-                >
-                  <MessageCircle size={14} />
-                  {t('chase.pushWhatsApp')}
-                </Link>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+            <MessageCircle size={14} />
+            {t('chase.pushWhatsApp')}
+          </Link>
+        )}
+      />
     </AppShellV2>
   );
 };

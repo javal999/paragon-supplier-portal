@@ -117,10 +117,15 @@ const labelClass = 'block text-label text-text-tertiary uppercase mb-1';
  * @typedef {object} BuyerChannelTriageProps
  * @property {() => void} [onRecorded] -  Called after a declaration is recorded, so the parent's channel-sourced
  *    audit trail (which reads the append-only provenance store) re-renders.
+ * @property {string} [initialSupplierId] - The subject supplier to start bound to (Supplier follow-ups'
+ *    "Record a reply" on a supplier's row). Read once, at mount; an id the supplier roster does not hold
+ *    is dropped once the roster has loaded, so the panel never binds to an unknown supplier.
+ * @property {(supplierId: string) => void} [onSupplierChange] - Called when the subject supplier changes
+ *    ('' when cleared), so the parent can keep it in the page address.
  */
 
 /** @type {React.FC<BuyerChannelTriageProps>} */
-const BuyerChannelTriage = ({ onRecorded }) => {
+const BuyerChannelTriage = ({ onRecorded, initialSupplierId = '', onSupplierChange }) => {
   const { t } = useTranslation();
   const suppliersQuery = useSuppliers();
   const suppliers = useMemo(() => suppliersQuery.data?.items ?? [], [suppliersQuery.data]);
@@ -135,7 +140,7 @@ const BuyerChannelTriage = ({ onRecorded }) => {
   // THE BINDING, FIRST: the subject supplier is chosen at capture. Everything
   // downstream (the ChannelMessage, the material suggestion, the entry form)
   // derives from it. There is no free supplierId field anywhere after this.
-  const [subjectSupplierId, setSubjectSupplierId] = useState('');
+  const [subjectSupplierId, setSubjectSupplierId] = useState(initialSupplierId);
   const [channel, setChannel] = useState(/** @type {Channel} */ ('whatsapp'));
   const [rawText, setRawText] = useState('');
   const [parsed, setParsed] = useState(/** @type {ChannelParseResult | null} */ (null));
@@ -213,6 +218,7 @@ const BuyerChannelTriage = ({ onRecorded }) => {
   /** @param {string} id */
   const pickSupplier = (id) => {
     setSubjectSupplierId(id);
+    onSupplierChange?.(id);
     setParsed(null);
     setMessage(null);
     setRows([]);
@@ -220,6 +226,21 @@ const BuyerChannelTriage = ({ onRecorded }) => {
     setEntry(null);
     sessionRef.current = null;
   };
+
+  // A preselected subject the roster does not hold (a stale or hand-typed
+  // `?supplier=`) is dropped once the roster has loaded, rather than binding a
+  // message to a supplier nobody can see. Adjusted during render (React's
+  // pattern for state that follows loaded data), so no frame shows the unknown
+  // id bound; only a preselection can be unknown, and nothing has been parsed
+  // against it yet.
+  const rosterLoaded = suppliersQuery.data !== undefined;
+  if (
+    rosterLoaded &&
+    subjectSupplierId !== '' &&
+    !suppliers.some((s) => s.id === subjectSupplierId)
+  ) {
+    setSubjectSupplierId('');
+  }
 
   const reset = () => {
     setRawText('');
@@ -416,7 +437,6 @@ const BuyerChannelTriage = ({ onRecorded }) => {
                     </span>
                     <span className="inline-flex flex-wrap gap-1">
                       {parsed.diagnostics.matchedTokens.map((tok, i) => (
-                        // eslint-disable-next-line react/no-array-index-key -- immutable parser output (max 4 tokens), replaced wholesale per parse; tokens can repeat
                         <Data
                           key={i}
                           className="rounded bg-teal-soft px-1.5 py-0.5 text-teal-hover"

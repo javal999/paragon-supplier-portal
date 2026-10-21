@@ -1,4 +1,5 @@
 import { screen, within, fireEvent, waitFor } from '@testing-library/react';
+import { useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderWithProviders, pickSelectFieldOption } from '@test/test-utils';
 import BuyerCommHub from './BuyerCommHub';
@@ -100,10 +101,21 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe('BuyerCommHub — the buyer/planner Communication Hub (C4a)', () => {
-  it('renders the Communication Hub header and honest framing', () => {
+// The Request log tab holds the outbound queue and the provenance trail.
+const LOG = { route: '/?tab=log' };
+const REPLY = { route: '/?tab=reply' };
+
+/** Renders the page address, so a spec can read what the page wrote to it. */
+const LocationProbe = () => {
+  const { search } = useLocation();
+  return <output data-testid="location-search">{search}</output>;
+};
+
+describe('BuyerCommHub — Supplier follow-ups (IA P-05, on the C4a Communication Hub)', () => {
+  it('renders the Supplier follow-ups header and honest framing', () => {
     renderWithProviders(<BuyerCommHub />);
-    expect(screen.getAllByText('Communication Hub').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Supplier follow-ups').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Communication Hub')).not.toBeInTheDocument();
     expect(screen.getByText('No live channel — nothing is sent from here.')).toBeInTheDocument();
   });
 
@@ -132,7 +144,7 @@ describe('BuyerCommHub — the buyer/planner Communication Hub (C4a)', () => {
       )
     );
 
-    renderWithProviders(<BuyerCommHub />);
+    renderWithProviders(<BuyerCommHub />, LOG);
 
     // All three derived statuses render.
     expect(screen.getByText('Awaiting reply')).toBeInTheDocument();
@@ -152,7 +164,7 @@ describe('BuyerCommHub — the buyer/planner Communication Hub (C4a)', () => {
     vi.mocked(useUnifiedChase).mockReturnValue(
       chaseResult([view('sup-005', 'hard'), view('sup-007', 'soft')])
     );
-    renderWithProviders(<BuyerCommHub />);
+    renderWithProviders(<BuyerCommHub />, LOG);
     const rows = screen.getAllByTestId('commhub-outbound-row');
     expect(rows).toHaveLength(2);
     for (const row of rows) {
@@ -162,12 +174,12 @@ describe('BuyerCommHub — the buyer/planner Communication Hub (C4a)', () => {
 
   it('shows an honest empty state when the chase is clear', () => {
     vi.mocked(useUnifiedChase).mockReturnValue(chaseResult([]));
-    renderWithProviders(<BuyerCommHub />);
+    renderWithProviders(<BuyerCommHub />, LOG);
     expect(screen.getByText('No outstanding requests — the chase is clear.')).toBeInTheDocument();
   });
 
   it('provenance: shows an honest empty state when nothing is channel-sourced yet', () => {
-    renderWithProviders(<BuyerCommHub />);
+    renderWithProviders(<BuyerCommHub />, LOG);
     const section = screen.getByTestId('commhub-provenance');
     expect(
       within(section).getByText(/No channel-sourced submissions recorded yet/)
@@ -179,7 +191,7 @@ describe('BuyerCommHub — the buyer/planner Communication Hub (C4a)', () => {
     session.attempt('InventoryDeclaration', 'inv-1', 'corr-9');
     channelProvenanceStore.append(makeProvenanceRef('cm-777', session.envelope()));
 
-    renderWithProviders(<BuyerCommHub />);
+    renderWithProviders(<BuyerCommHub />, LOG);
     const rows = screen.getAllByTestId('commhub-provenance-row');
     expect(rows).toHaveLength(1);
     expect(within(rows[0]).getByText('cm-777')).toBeInTheDocument();
@@ -188,7 +200,7 @@ describe('BuyerCommHub — the buyer/planner Communication Hub (C4a)', () => {
   });
 
   it('the C4a deep-link is gone; the C4d in-place triage panel replaces it (supplier binding first)', () => {
-    renderWithProviders(<BuyerCommHub />);
+    renderWithProviders(<BuyerCommHub />, REPLY);
     // The old honest deep-link to the supplier Channel Inbox is retired.
     expect(screen.queryByRole('link', { name: /Open Channel Inbox/i })).not.toBeInTheDocument();
     // The in-place triage panel is present, gated on picking a supplier FIRST.
@@ -202,11 +214,12 @@ describe('BuyerCommHub — the buyer/planner Communication Hub (C4a)', () => {
   });
 
   it('recording via the in-place panel adds a row to the Channel-sourced submissions trail', async () => {
-    renderWithProviders(<BuyerCommHub />);
+    renderWithProviders(<BuyerCommHub />, LOG);
     // Empty audit trail to begin.
     expect(
       within(screen.getByTestId('commhub-provenance')).getByText(/No channel-sourced submissions/)
     ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Record a reply' }));
     // Bind the subject, paste, parse, open the entry form, save (BL-73: the form
     // is the Inventory page's own, and its save is the record dispatch).
     await pickSelectFieldOption('triage-supplier', 'sup-007');
@@ -222,10 +235,118 @@ describe('BuyerCommHub — the buyer/planner Communication Hub (C4a)', () => {
     fireEvent.change(form.getByLabelText('Stock on hand (PCS)'), { target: { value: '2400' } });
     fireEvent.change(form.getByLabelText('In production (PCS)'), { target: { value: '0' } }); // MAT-D4 — required, 0 allowed
     fireEvent.click(form.getByTestId('stock-entry-submit'));
-    // The onRecorded refresh re-reads the append-only store → a provenance row shows.
+    await waitFor(() => expect(screen.getByTestId('triage-result')).toBeInTheDocument());
+    // The onRecorded refresh re-reads the append-only store → a provenance row shows
+    // on the Request log tab.
+    fireEvent.click(screen.getByRole('tab', { name: 'Request log' }));
     await waitFor(() => expect(screen.getAllByTestId('commhub-provenance-row').length).toBe(1));
     expect(
       within(screen.getByTestId('commhub-provenance')).getByText('Recorded')
+    ).toBeInTheDocument();
+  });
+
+  it('opens on "Suppliers to follow up" by default and shows the chase list there', () => {
+    vi.mocked(useUnifiedChase).mockReturnValue(
+      chaseResult([view('sup-005', 'hard'), view('sup-007', 'soft')])
+    );
+    renderWithProviders(<BuyerCommHub />);
+    expect(screen.getByRole('tab', { name: /Suppliers to follow up/ })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    const cards = screen.getAllByTestId('chase-card');
+    expect(cards).toHaveLength(2);
+    // Worst first, as the chase reducer ordered them.
+    expect(within(cards[0]).getByText('PT Beta')).toBeInTheDocument();
+    expect(within(cards[1]).getByText('PT Sample Packaging Indonesia')).toBeInTheDocument();
+    // The list keeps its own honesty statement; the other tabs' sections are not shown.
+    expect(screen.getByText(/no message is sent from here/)).toBeInTheDocument();
+    expect(screen.queryByTestId('commhub-triage')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('commhub-log')).not.toBeInTheDocument();
+  });
+
+  it('shows an honest empty follow-up list when nobody needs chasing', () => {
+    renderWithProviders(<BuyerCommHub />);
+    expect(
+      screen.getByText('Nothing to chase — every supplier is responsive and on-calendar.')
+    ).toBeInTheDocument();
+    expect(screen.queryAllByTestId('chase-card')).toHaveLength(0);
+  });
+
+  it.each([
+    ['follow-up', 'Suppliers to follow up', 'commhub-followup'],
+    ['reply', 'Record a reply', 'commhub-triage'],
+    ['log', 'Request log', 'commhub-log']
+  ])('?tab=%s renders its own section (%s) and only that one', (key, label, testId) => {
+    renderWithProviders(<BuyerCommHub />, { route: `/?tab=${key}` });
+    expect(screen.getByRole('tab', { name: new RegExp(label) })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    for (const id of ['commhub-followup', 'commhub-triage', 'commhub-log']) {
+      if (id === testId) expect(screen.getByTestId(id)).toBeInTheDocument();
+      else expect(screen.queryByTestId(id)).not.toBeInTheDocument();
+    }
+    // The page-level honesty banner stays on every tab.
+    expect(screen.getByText('No live channel — nothing is sent from here.')).toBeInTheDocument();
+  });
+
+  it('clicking a tab shows its section and writes ?tab= to the address', () => {
+    renderWithProviders(
+      <>
+        <BuyerCommHub />
+        <LocationProbe />
+      </>
+    );
+    fireEvent.click(screen.getByRole('tab', { name: 'Request log' }));
+    expect(screen.getByTestId('commhub-outbound')).toBeInTheDocument();
+    expect(screen.getByTestId('commhub-provenance')).toBeInTheDocument();
+    expect(screen.getByTestId('location-search')).toHaveTextContent('?tab=log');
+    fireEvent.click(screen.getByRole('tab', { name: 'Record a reply' }));
+    expect(screen.getByTestId('commhub-triage')).toBeInTheDocument();
+    expect(screen.getByTestId('location-search')).toHaveTextContent('?tab=reply');
+  });
+
+  it('"Record a reply" on a supplier row opens the reply tab with that supplier preselected', () => {
+    vi.mocked(useUnifiedChase).mockReturnValue(
+      chaseResult([view('sup-005', 'hard'), view('sup-007', 'soft')])
+    );
+    renderWithProviders(
+      <>
+        <BuyerCommHub />
+        <LocationProbe />
+      </>
+    );
+    const row = screen.getAllByTestId('chase-card')[1];
+    fireEvent.click(within(row).getByRole('button', { name: 'Record a reply' }));
+    expect(screen.getByRole('tab', { name: 'Record a reply' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    const triage = screen.getByTestId('commhub-triage');
+    // Bound to the row's supplier: the recording-for banner names it and the
+    // message field (shown only once a supplier is bound) is open.
+    expect(
+      within(triage).getByText('PT Sample Packaging Indonesia', { selector: 'strong' })
+    ).toBeInTheDocument();
+    expect(within(triage).getByTestId('triage-message')).toBeInTheDocument();
+    expect(screen.getByTestId('location-search')).toHaveTextContent('?tab=reply&supplier=sup-007');
+  });
+
+  it('a ?tab=reply&supplier= deep link preselects that supplier; an unknown id binds nobody', () => {
+    const { unmount } = renderWithProviders(<BuyerCommHub />, {
+      route: '/?tab=reply&supplier=sup-005'
+    });
+    expect(
+      within(screen.getByTestId('commhub-triage')).getByText('PT Beta', { selector: 'strong' })
+    ).toBeInTheDocument();
+    unmount();
+
+    renderWithProviders(<BuyerCommHub />, { route: '/?tab=reply&supplier=sup-999' });
+    const triage = screen.getByTestId('commhub-triage');
+    expect(within(triage).queryByTestId('triage-message')).not.toBeInTheDocument();
+    expect(
+      within(triage).getByText('Pick a supplier to begin — the reply is recorded against them.')
     ).toBeInTheDocument();
   });
 

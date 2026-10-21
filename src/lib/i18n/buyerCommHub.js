@@ -1,13 +1,19 @@
-// Comm Hub C4a — the buyer/planner Communication Hub (chase-derived outbound queue
-// + channel-sourced provenance trail). EN/ID parity is guarded by fragments.test.js.
+// Supplier follow-ups (IA P-05), built on Comm Hub C4a — the buyer/planner
+// follow-up list, reply triage and request log (chase-derived outbound queue +
+// channel-sourced provenance trail). EN/ID parity is guarded by fragments.test.js.
 
 /** @type {Record<string, string>} */
 export const buyerCommHubEn = {
   'buyerCommHub.crumb.intelligence': 'Intelligence',
-  'buyerCommHub.crumb.hub': 'Communication Hub',
-  'buyerCommHub.header.title': 'Communication Hub',
+  'buyerCommHub.crumb.hub': 'Supplier follow-ups',
+  'buyerCommHub.header.title': 'Supplier follow-ups',
   'buyerCommHub.header.subtitle':
-    'The cyclical requests you owe suppliers and the replies you have recorded — derived from the chase, honest about what is sent.',
+    'Suppliers to chase on forecasts and deliveries, the replies you record, and the requests you have composed — derived from the chase, honest about what is sent.',
+  // — Tabs (IA P-05) —
+  'buyerCommHub.tab.followUp': 'Suppliers to follow up',
+  'buyerCommHub.tab.reply': 'Record a reply',
+  'buyerCommHub.tab.log': 'Request log',
+  'buyerCommHub.followUp.recordReply': 'Record a reply',
   'buyerCommHub.meta.line': 'Chase-derived · simulated timeline, as of {{date}}',
   'buyerCommHub.honesty.title': 'No live channel — nothing is sent from here.',
   'buyerCommHub.honesty.body':
@@ -85,10 +91,15 @@ export const buyerCommHubEn = {
 /** @type {Record<string, string>} */
 export const buyerCommHubId = {
   'buyerCommHub.crumb.intelligence': 'Intelijen',
-  'buyerCommHub.crumb.hub': 'Pusat Komunikasi',
-  'buyerCommHub.header.title': 'Pusat Komunikasi',
+  'buyerCommHub.crumb.hub': 'Tindak lanjut pemasok',
+  'buyerCommHub.header.title': 'Tindak lanjut pemasok',
   'buyerCommHub.header.subtitle':
-    'Permintaan berkala yang Anda ajukan ke pemasok dan balasan yang telah Anda catat — diturunkan dari pengejaran, jujur tentang apa yang terkirim.',
+    'Pemasok yang perlu ditindaklanjuti soal prakiraan dan pengiriman, balasan yang Anda catat, dan permintaan yang telah Anda susun — diturunkan dari pengejaran, jujur tentang apa yang terkirim.',
+  // — Tab (IA P-05) —
+  'buyerCommHub.tab.followUp': 'Pemasok yang perlu ditindaklanjuti',
+  'buyerCommHub.tab.reply': 'Catat balasan',
+  'buyerCommHub.tab.log': 'Log permintaan',
+  'buyerCommHub.followUp.recordReply': 'Catat balasan',
   'buyerCommHub.meta.line': 'Diturunkan dari pengejaran · lini masa simulasi, per {{date}}',
   'buyerCommHub.honesty.title': 'Tanpa kanal langsung — tidak ada yang dikirim dari sini.',
   'buyerCommHub.honesty.body':
