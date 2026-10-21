@@ -2,7 +2,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { screen, within, render } from '@testing-library/react';
+import { screen, within, render, fireEvent } from '@testing-library/react';
 import { renderWithProviders, BUYER } from '@test/test-utils';
 import i18n from '@lib/i18n';
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
@@ -56,6 +56,28 @@ const PAGES = {
   reliability: BuyerReliability
 };
 const IDS = /** @type {ForecastPageId[]} */ (Object.keys(PAGES));
+
+/**
+ * P-12 — the pages split into tabs, and the tab that holds "About this page".
+ * @type {Partial<Record<ForecastPageId, string>>}
+ */
+const ABOUT_TAB = { whatToOrder: 'How it is sized', makeRoom: 'Values and method' };
+
+/**
+ * The rendered text of every tab of the page (P-12), so a scan of the page's
+ * text still reads what a tab other than the first holds.
+ * @returns {string}
+ */
+const textOfEveryTab = () => {
+  const tabs = screen.queryAllByRole('tab');
+  if (tabs.length === 0) return document.body.textContent ?? '';
+  return tabs
+    .map((tab) => {
+      fireEvent.click(tab);
+      return document.body.textContent ?? '';
+    })
+    .join('\n');
+};
 
 /** The router's own paths, read from its source — a link is "working" when it is one of them. */
 const ROUTES = new Set(
@@ -201,13 +223,15 @@ describe.each(IDS)('%s', (page) => {
 
     // F-26 — one "Data as of" line; F-08 — the explanations sit in About.
     expect(screen.getByTestId('data-as-of')).toHaveTextContent('Data as of');
+    const aboutTab = ABOUT_TAB[page];
+    if (aboutTab) fireEvent.click(screen.getByRole('tab', { name: aboutTab }));
     expect(screen.getByTestId('about-this-page').tagName).toBe('DETAILS');
     expect(screen.getByTestId('about-this-page')).not.toHaveAttribute('open');
   });
 
   it('shows no requirement code anywhere in its rendered text', async () => {
     await renderPage(page);
-    const text = document.body.textContent ?? '';
+    const text = textOfEveryTab();
     expect(text.match(new RegExp(REQUIREMENT_CODE, 'g')) ?? []).toEqual([]);
   });
 

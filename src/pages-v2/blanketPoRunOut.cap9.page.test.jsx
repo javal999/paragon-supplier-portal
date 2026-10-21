@@ -8,7 +8,7 @@
 // answers from and pinned by name.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER } from '@test/test-utils';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
@@ -35,6 +35,12 @@ beforeEach(() => {
 });
 
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
+
+/**
+ * P-12 — opens one of the Call-offs tabs, by its visible name.
+ * @param {string} name
+ */
+const openTab = async (name) => fireEvent.click(await screen.findByRole('tab', { name }));
 /** @type {CurrentIdentity} */
 const SUP_007 = {
   personaType: 'supplier',
@@ -82,6 +88,7 @@ describe('CAP-9 — sup-007 × PK-PETB-8801: three blanket POs, drawn down oldes
 
   it('panels: the older POs show their run-out and the next in line; the last shows "new PO needed by"', async () => {
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    await openTab('All call-offs');
     const p007 = await screen.findByTestId('calloff-runout-li-007a');
     expect(within(p007).getByTestId('calloff-runout-week-li-007a')).toHaveTextContent(
       `W36 · ${formatDate('2026-08-31')}`
@@ -138,6 +145,7 @@ describe('CAP-9 BR-04 — a single-line group is unchanged', () => {
     expect(projectionOf('li-002a').hasLtp).toBe(true);
 
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    await openTab('All call-offs');
     const panel = await screen.findByTestId('calloff-umbrella-po-002-li-002a');
     expect(within(panel).getByTestId('calloff-runout-covers-li-002a')).toHaveTextContent(
       /^Covers the forecast horizon \(26 wk\)$/
@@ -159,6 +167,7 @@ describe('CAP-9 BR-04 — "Blanket POs running out", per group, sorted by "new P
       ['li-016a', []]
     ]);
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    await openTab('Blanket POs running out');
     const list = await screen.findByTestId('calloff-runout-list');
     expect(within(list).getByText('Blanket POs running out')).toBeInTheDocument();
     expect(within(list).getByTestId('sample-data-badge')).toBeInTheDocument();
@@ -193,6 +202,7 @@ describe('CAP-9 BR-04 — "Blanket POs running out", per group, sorted by "new P
       identity: PLANNER,
       route: '/buyer/call-offs?po=po-024'
     });
+    await openTab('Blanket POs running out');
     const list = await screen.findByTestId('calloff-runout-list');
     expect(
       within(list)
@@ -206,6 +216,7 @@ describe('CAP-9 BR-04 — "Blanket POs running out", per group, sorted by "new P
     // Nothing more was called off, so the same 122,000 pcs meet the LTP a week later.
     expect(projectionOf('li-027a').runOut).toEqual({ index: 4, week: '2026-09-28' });
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    await openTab('All call-offs');
     expect(await screen.findByTestId('calloff-runout-week-li-027a')).toHaveTextContent(
       `W40 · ${formatDate('2026-09-28')}`
     );

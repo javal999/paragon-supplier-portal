@@ -110,7 +110,9 @@ export const demandAnticipationEn = {
     'OSPR counts 0: the hub’s purchase requisitions carry no material code.',
   'demandAnt.flag.CARRY_LIMIT_NO_SALES_ORDERS':
     'No carry-over limit applied: the hub holds no sales-order quantity per supplier × material (A8b).',
-  'demandAnt.flag.CARRY_OVER_LIMIT': '{{qty}} above the carry-over limit was not carried.'
+  'demandAnt.flag.CARRY_OVER_LIMIT': '{{qty}} above the carry-over limit was not carried.',
+  'demandAnt.tab.thisWeek': 'This week',
+  'demandAnt.tab.consumption': 'Record consumption'
 };
 
 /** @type {Record<string, string>} */
@@ -204,5 +206,7 @@ export const demandAnticipationId = {
     'OSPR dihitung 0: permintaan pembelian di hub tidak memuat kode material.',
   'demandAnt.flag.CARRY_LIMIT_NO_SALES_ORDERS':
     'Batas pemindahan sisa tidak diterapkan: hub tidak menyimpan kuantitas pesanan penjualan per pemasok × material (A8b).',
-  'demandAnt.flag.CARRY_OVER_LIMIT': '{{qty}} di atas batas pemindahan sisa tidak dipindah.'
+  'demandAnt.flag.CARRY_OVER_LIMIT': '{{qty}} di atas batas pemindahan sisa tidak dipindah.',
+  'demandAnt.tab.thisWeek': 'Minggu ini',
+  'demandAnt.tab.consumption': 'Catat pemakaian'
 };

@@ -47,6 +47,7 @@ import FeedstockLine from './inventory/FeedstockLine';
 import { weeklyUpdateView } from './inventory/WeeklyUpdatePanel';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
 import { TradeNameBeside } from './materials/tradeNameDisplay';
+import TryWhatIfLink from './BuyerWhatIfSandbox/TryWhatIfLink';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI INVENTORY — REQ-E08-01 (visibility), REQ-E08-02 (API sync, recording a
@@ -59,7 +60,8 @@ import { TradeNameBeside } from './materials/tradeNameDisplay';
 // CR-02 bands where the lead time is missing), and the last update time with
 // the stale flag. There is no
 // "available" figure (BR-01, AC-02). Raw material and packaging are separate
-// views (BR-07).
+// views (BR-07). Each row opens the what-if sandbox on its supplier ×
+// material ("Try a what-if", P-07).
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @typedef {'all' | RiskClass | 'stale'} BandFilter */
@@ -418,6 +420,14 @@ const BuyerInventory = () => {
                         {t('inv.consignment')}
                       </StatusPill>
                     )}
+                    <div>
+                      <TryWhatIfLink
+                        materialCode={p.materialCode}
+                        supplierId={p.supplierId}
+                        supplierName={p.supplierName}
+                        testId={`pti-stock-whatif-${p.supplierId}-${p.materialCode}`}
+                      />
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="text-sm text-text-primary">{p.supplierName}</div>

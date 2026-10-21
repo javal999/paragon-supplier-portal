@@ -46,6 +46,12 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+/**
+ * P-12 — opens one of the page's tabs, by its visible name.
+ * @param {string} name
+ */
+const openTab = async (name) => fireEvent.click(await screen.findByRole('tab', { name }));
+
 /** No figure, label or message reads "DA" — it labels Delivery Agreements (CAP-D10). */
 const expectNoAbbreviation = () => expect(document.body.textContent ?? '').not.toMatch(/\bDA\b/);
 
@@ -58,6 +64,8 @@ const upload = (csv, name = 'consumption.csv') =>
 describe('recording consumption (typed)', () => {
   it('shows Recorded consumption on W36 and leaves the demand anticipation as it was', async () => {
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    // P-12 — the panel is the "Record consumption" tab; the cards are "This week".
+    await openTab('Record consumption');
     const panel = await screen.findByTestId('consumption-panel');
     expect(within(panel).getByTestId('consumption-source-marker')).toHaveTextContent(
       'Consumption recorded by the planner · awaiting SAP goods-issue feed'
@@ -81,7 +89,12 @@ describe('recording consumption (typed)', () => {
       unit: 'KG',
       source: 'manual'
     });
-    const card = screen.getByTestId(`dant-card-${KEY}`);
+    expect(await screen.findByTestId('consumption-recorded-now')).toHaveTextContent(
+      'Recorded for this week: 1,000 KG (typed).'
+    );
+    expectNoAbbreviation();
+    await openTab('This week');
+    const card = await screen.findByTestId(`dant-card-${KEY}`);
     expect(await within(card).findByTestId(`dant-consumption-${KEY}-${W36}`)).toHaveTextContent(
       '1,000'
     );
@@ -89,9 +102,6 @@ describe('recording consumption (typed)', () => {
     // DRC-4 BR-02 replaced absorbing an excess: the published figure stays.
     expect(within(card).getByTestId(`dant-figure-${KEY}-${W36}`)).toHaveTextContent('3,220');
     expect(within(card).queryByTestId(/^dant-absorbed-/)).toBeNull();
-    expect(screen.getByTestId('consumption-recorded-now')).toHaveTextContent(
-      'Recorded for this week: 1,000 KG (typed).'
-    );
     expectNoAbbreviation();
   });
 
@@ -104,6 +114,7 @@ describe('recording consumption (typed)', () => {
 
   it('a typed 0 is recorded and shows 0', async () => {
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    await openTab('Record consumption');
     const panel = await screen.findByTestId('consumption-panel');
     fireEvent.change(within(panel).getByLabelText('Material'), {
       target: { value: 'RM-STEAR-7300' }
@@ -111,12 +122,14 @@ describe('recording consumption (typed)', () => {
     fireEvent.change(within(panel).getByTestId('consumption-qty'), { target: { value: '0' } });
     fireEvent.click(within(panel).getByTestId('consumption-record'));
     await waitFor(() => expect(consumptionStore.all().map((r) => r.qty)).toEqual([0]));
+    await openTab('This week');
     expect(await screen.findByTestId(`dant-consumption-${KEY}-${W36}`)).toHaveTextContent('0');
   });
 
   it('at W39 the week choice starts at W39, newest first, and still holds W36', async () => {
     sdcClock.set('2026-09-21T03:00:00.000Z');
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    await openTab('Record consumption');
     const panel = await screen.findByTestId('consumption-panel');
     const options = [...within(panel).getByLabelText('Week').querySelectorAll('option')].map(
       (o) => o.value
@@ -128,6 +141,7 @@ describe('recording consumption (typed)', () => {
 describe('the upload', () => {
   it('records the template’s rows and lists each refused row', async () => {
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    await openTab('Record consumption');
     await screen.findByTestId('consumption-panel');
     upload(
       [
@@ -150,11 +164,13 @@ describe('the upload', () => {
     expect(consumptionStore.all()).toMatchObject([
       { materialCode: 'RM-STEAR-7300', week: W36, qty: 1_000, source: 'upload' }
     ]);
+    await openTab('This week');
     expect(await screen.findByTestId(`dant-consumption-${KEY}-${W36}`)).toHaveTextContent('1,000');
   });
 
   it('refuses an old or unrelated file with one line and records nothing', async () => {
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    await openTab('Record consumption');
     await screen.findByTestId('consumption-panel');
     upload('Material code,Stock on hand,Unit\nRM-STEAR-7300,100,KG\n', 'stock-template.csv');
     expect(await screen.findByTestId('consumption-upload-error')).toHaveTextContent(
@@ -180,6 +196,7 @@ describe('the upload', () => {
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
     try {
       renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+      await openTab('Record consumption');
       fireEvent.click(await screen.findByTestId('consumption-template-download'));
       expect(create).toHaveBeenCalledTimes(1);
       expect(click).toHaveBeenCalledTimes(1);
@@ -198,15 +215,17 @@ describe('a seat without forecast:publish', () => {
       identity: { ...BUYER, businessRoles: ['procurement'] },
       route: ROUTE
     });
+    expect(await screen.findByTestId(`dant-card-${KEY}`)).toBeInTheDocument();
+    await openTab('Record consumption');
     expect(await screen.findByTestId('handoff-consumption-record')).toBeInTheDocument();
     expect(screen.queryByTestId('consumption-record')).toBeNull();
     expect(screen.queryByTestId('consumption-upload-file')).toBeNull();
     expect(screen.getByTestId('consumption-template-download')).toBeInTheDocument();
-    expect(screen.getByTestId(`dant-card-${KEY}`)).toBeInTheDocument();
   });
 
   it('control — the planner seat sees the form and no notice', async () => {
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    await openTab('Record consumption');
     expect(await screen.findByTestId('consumption-record')).toBeInTheDocument();
     expect(screen.queryByTestId('handoff-consumption-record')).toBeNull();
   });
@@ -276,7 +295,9 @@ describe('both locales (CAP-D10)', () => {
       expect(within(card).getByText('Pemakaian tercatat')).toBeInTheDocument();
       expect(within(card).getByText('Kelebihan diserap')).toBeInTheDocument();
       expect(within(card).getByTestId(`dant-consumption-${KEY}-${W36}`)).toHaveTextContent('1.000');
-      expect(screen.getByTestId('consumption-source-marker')).toHaveTextContent(
+      expectNoAbbreviation();
+      await openTab('Catat pemakaian');
+      expect(await screen.findByTestId('consumption-source-marker')).toHaveTextContent(
         'Pemakaian dicatat oleh perencana · menunggu umpan pengeluaran barang SAP'
       );
       expect(screen.getByTestId('consumption-record')).toHaveTextContent('Catat pemakaian');

@@ -187,6 +187,8 @@ describe('planner — "Mismatch" with the current figures, and "not in declared 
   it('the call-off page marks the call-off and its ASN', async () => {
     const asnNumber = await submitOver();
     renderWithProviders(<BuyerCallOffs />, { identity: BUYER, route: '/buyer/call-offs' });
+    // P-12 — every call-off is under "All call-offs".
+    fireEvent.click(await screen.findByRole('tab', { name: 'All call-offs' }));
     expect(await screen.findByTestId('calloff-mismatch-co-0006')).toHaveTextContent('Mismatch');
     // Known-good: a call-off with no mismatching ASN carries none.
     expect(screen.queryByTestId('calloff-mismatch-co-0002')).toBeNull();

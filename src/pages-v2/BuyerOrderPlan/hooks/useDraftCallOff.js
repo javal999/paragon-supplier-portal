@@ -12,12 +12,13 @@ import { keyOf } from '../utils';
  * BR-05 — the planner's act on a recommendation: draft a call-off on the
  * supplier's open umbrella line with the EXISTING `draft` verb
  * (with the engine as its origin), then toast the outcome. Holds which recommendations
- * this page has drafted, by `keyOf` key.
+ * this page has drafted, by `keyOf` key, with the id of the call-off each one
+ * created (IA-B13: the row links to that draft on Call-offs).
  *
  * @param {string} today The SDC clock's date (`YYYY-MM-DD`); a past week's need date moves to it.
  * @param {boolean} releaseWithheld X-03: the success toast says release will refuse the draft.
  * @returns {{
- *   drafted: ReadonlySet<string>;
+ *   drafted: ReadonlyMap<string, string>;
  *   pending: boolean;
  *   createDraft: (r: Recommendation, line: UmbrellaLine) => Promise<void>;
  * }}
@@ -27,7 +28,7 @@ export const useDraftCallOff = (today, releaseWithheld) => {
   const { toast } = useToast();
   const refusalText = useRefusalText();
   const command = useCallOffCommand();
-  const [drafted, setDrafted] = useState(/** @type {ReadonlySet<string>} */ (new Set()));
+  const [drafted, setDrafted] = useState(/** @type {ReadonlyMap<string, string>} */ (new Map()));
 
   /**
    * @param {Recommendation} r
@@ -52,7 +53,7 @@ export const useDraftCallOff = (today, releaseWithheld) => {
         });
         return;
       }
-      setDrafted((prev) => new Set(prev).add(keyOf(r)));
+      setDrafted((prev) => new Map(prev).set(keyOf(r), res.entityId ?? ''));
       toast({
         variant: 'success',
         title: t('op.toast.drafted'),

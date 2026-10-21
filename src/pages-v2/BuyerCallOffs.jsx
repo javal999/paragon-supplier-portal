@@ -5,6 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
+import Tabs from '@components/ui-v2/Tabs';
 import {
   OrderNotFound,
   PoFilterBanner,
@@ -12,6 +13,7 @@ import {
   usePoDrillFilter
 } from './orders/PoDrillFilter';
 import { callOffsForPo } from './orders/orderSummaryModel';
+import { PO_PARAM } from './orders/orderSummaryDrill';
 import PageMetaLine from '@components/ui-v2/PageMetaLine';
 import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
 import StatusPill from '@components/ui-v2/StatusPill';
@@ -29,6 +31,9 @@ import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
+import { usePageTab } from '@hooks/usePageTab';
+import { HIGHLIGHTED_ROW_CLASS, useRowHighlight } from '@hooks/useRowHighlight';
+import { HIGHLIGHT_PARAM } from '@lib/deepLink';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import { isLive } from '@services/liveness';
 import { refusedByPolicy } from '@services/transitions/refusalMessage';
@@ -91,7 +96,58 @@ import {
 // and value (CR-04), its call-offs with confirmation and delivery status, and
 // the planner's actions. Every rule the form mirrors is enforced again by the
 // verb's policy — the page never decides what is allowed.
+//
+// P-12 (IA-B06) — TABS, THE DECISION FIRST. The header, the as-of line with
+// the Sample data badge, the PO drill-through banner and the action banner
+// stay above the tabs. "To act" holds what the banner counts: the umbrella
+// lines with a call-off awaiting approval, escalated or at risk (only those
+// rows), and the lines with delivery drift (all their rows), with the status
+// chips that narrow it. "All call-offs" holds every umbrella line and every
+// call-off. "Blanket POs running out" holds the run-out list (CAP-9). Search
+// and the PIC filter work on both call-off tabs. The tab is
+// `?tab=toAct|all|runOut`; without one, `?status=` opens To act (All for
+// `status=all`), and `?po=`, `?newFor=` and `?highlight=` open All call-offs.
+//
+// IA-B13 — `?highlight=<call-off id>` (the link What to order and Make
+// warehouse room show after a draft or a change) opens All call-offs on that
+// row, marks it and opens its panel.
 // ─────────────────────────────────────────────────────────────────────────────
+
+/** P-12 — the page's tabs, in order; the first opens by default. */
+export const CALL_OFF_TABS = /** @type {const} */ (['toAct', 'all', 'runOut']);
+/** @typedef {(typeof CALL_OFF_TABS)[number]} CallOffTab */
+
+/** The `?status=` values that name something on the To act tab. */
+const TO_ACT_STATUSES = ['awaitingApproval', 'escalated', 'atRisk', 'drift'];
+
+/**
+ * The tab a link's other params imply when it names no `?tab=` (P-12), so
+ * every link made before the split still opens the tab holding what it filters.
+ * @param {URLSearchParams} params
+ * @returns {CallOffTab | null}
+ */
+export const impliedCallOffTab = (params) => {
+  const status = params.get('status');
+  if (status !== null && TO_ACT_STATUSES.includes(status)) return 'toAct';
+  if (
+    status === 'all' ||
+    params.get(PO_PARAM) !== null ||
+    params.get(HIGHLIGHT_PARAM) !== null ||
+    params.get('newFor') !== null
+  )
+    return 'all';
+  return null;
+};
+
+/**
+ * Whether one call-off is something the planner acts on (the banner's counts).
+ * @param {CallOffView} v
+ * @returns {boolean}
+ */
+const needsAction = (v) =>
+  v.confirmation === 'Awaiting Approval' ||
+  v.confirmation === 'Escalated' ||
+  v.delivery === 'atRisk';
 
 /**
  * @typedef {| { kind: 'new'; poId: string; lineId: string }
@@ -219,6 +275,11 @@ const BuyerCallOffs = () => {
   const [search, setSearch] = useState('');
   const matchOf = useMaterialMatcher();
   const drilledPo = drilledPoId(drill);
+  const [addressParams] = useSearchParams();
+  const { tab, select } = usePageTab(CALL_OFF_TABS, impliedCallOffTab(addressParams));
+  const onToAct = tab === 'toAct';
+  // IA-B13 — the one call-off a link names, looked up in every call-off.
+  const highlight = useRowHighlight((id) => views.some((v) => v.callOff.id === id));
   /** @typedef {'all' | 'awaitingApproval' | 'escalated' | 'atRisk' | 'drift'} StatusFilter */
   const [statusFilter, setStatusFilter] = useState(/** @type {StatusFilter} */ ('all'));
   // Deep-link read: `?status=` narrows the My Tasks call-off tasks to the
@@ -232,10 +293,6 @@ const BuyerCallOffs = () => {
     () => new Set(deliveryDrift(views).map((d) => `${d.supplierId}|${d.materialCode}`)),
     [views]
   );
-  const rowFilterActive =
-    statusFilter === 'awaitingApproval' ||
-    statusFilter === 'escalated' ||
-    statusFilter === 'atRisk';
   /** @param {CallOffView} v */
   const matchesStatusFilter = (v) =>
     statusFilter === 'awaitingApproval'
@@ -256,29 +313,69 @@ const BuyerCallOffs = () => {
     [views, drilledPo]
   );
 
-  const sections = useMemo(() => {
+  // Every umbrella line with every call-off on it (within a PO drill-through,
+  // that PO's). The panels and the prefill look lines up here, so a line the
+  // current tab or filter hides is still found.
+  const allSections = useMemo(() => {
     /** @type {readonly PurchaseOrder[]} */
     const pos = posQuery.data?.items ?? [];
     const all = views.map((v) => v.callOff);
     return pos
       .flatMap((po) =>
         po.lineItems.map((line) => {
-          const baseRows = (drilledViews ?? views).filter((v) => v.callOff.poLineId === line.id);
-          const rows = (rowFilterActive ? baseRows.filter(matchesStatusFilter) : baseRows).sort(
-            (a, b) => a.callOff.needDate.localeCompare(b.callOff.needDate)
-          );
+          const rows = (drilledViews ?? views)
+            .filter((v) => v.callOff.poLineId === line.id)
+            .sort((a, b) => a.callOff.needDate.localeCompare(b.callOff.needDate));
           return { po, line, remaining: umbrellaRemaining(line, all), rows };
         })
       )
-      .filter((s) => drilledPo === null || s.po.id === drilledPo)
-      .filter((s) => !rowFilterActive || s.rows.length > 0)
-      .filter(
-        (s) =>
-          statusFilter !== 'drift' || driftKeys.has(`${s.po.supplierId}|${s.line.materialCode}`)
-      )
-      .sort((a, b) => b.rows.length - a.rows.length || a.po.poNumber.localeCompare(b.po.poNumber));
+      .filter((s) => drilledPo === null || s.po.id === drilledPo);
+  }, [posQuery.data, views, drilledViews, drilledPo]);
+
+  // P-12 — what the current tab lists. All call-offs: every line. To act: the
+  // lines with a row to act on (only those rows) and the drifting lines (all
+  // their rows), narrowed by the status chip.
+  const sections = useMemo(
+    () =>
+      allSections
+        .flatMap((s) => {
+          if (!onToAct) return [s];
+          const drifting = driftKeys.has(`${s.po.supplierId}|${s.line.materialCode}`);
+          if (statusFilter === 'drift') return drifting ? [s] : [];
+          const rows =
+            statusFilter === 'all'
+              ? drifting
+                ? s.rows
+                : s.rows.filter(needsAction)
+              : s.rows.filter(matchesStatusFilter);
+          return rows.length > 0 ? [{ ...s, rows }] : [];
+        })
+        .sort(
+          (a, b) => b.rows.length - a.rows.length || a.po.poNumber.localeCompare(b.po.poNumber)
+        ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [posQuery.data, views, drilledViews, drilledPo, statusFilter, driftKeys]);
+    [allSections, onToAct, statusFilter, driftKeys]
+  );
+
+  // IA-B13 — a link naming one call-off opens its panel once, on arrival.
+  // Adjusted during render, not in an effect (react-hooks/set-state-in-effect),
+  // the same way `useRowHighlight` resets itself: the stale render is dropped.
+  const [openedHighlight, setOpenedHighlight] = useState(/** @type {string | null} */ (null));
+  const arriving =
+    highlight.id !== null && highlight.id !== openedHighlight
+      ? views.find((x) => x.callOff.id === highlight.id)
+      : undefined;
+  if (arriving) {
+    setOpenedHighlight(arriving.callOff.id);
+    setForm({
+      quantity: String(arriving.callOff.quantity),
+      needDate: arriving.callOff.needDate,
+      type: arriving.callOff.type,
+      reason: '',
+      comment: ''
+    });
+    setPanel({ kind: 'callOff', id: arriving.callOff.id });
+  }
 
   // Material E2 (MR-7 step 6) — "Create call-off" from the stock simulation
   // lands here with `?newFor=<supplier>&material=<code>` and opens the new
@@ -293,7 +390,7 @@ const BuyerCallOffs = () => {
   );
   useEffect(() => {
     if (!prefillSupplier || !prefillMaterial || posQuery.isPending || isPending) return;
-    const lines = sections
+    const lines = allSections
       .filter((s) => s.po.supplierId === prefillSupplier && s.line.materialCode === prefillMaterial)
       .sort((a, b) => (b.remaining.remainingQty ?? 0) - (a.remaining.remainingQty ?? 0));
     const first = lines[0];
@@ -309,7 +406,7 @@ const BuyerCallOffs = () => {
     next.delete('material');
     setPrefillParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefillSupplier, prefillMaterial, sections, posQuery.isPending, isPending]);
+  }, [prefillSupplier, prefillMaterial, allSections, posQuery.isPending, isPending]);
 
   if (posQuery.isPending || isPending || runOutQuery.isPending || drill.kind === 'pending')
     return <LoadingState breadcrumb={crumb} />;
@@ -358,7 +455,7 @@ const BuyerCallOffs = () => {
     panel?.kind === 'callOff' ? (views.find((v) => v.callOff.id === panel.id) ?? null) : null;
   const panelLine =
     panel && panel.kind !== 'callOff'
-      ? (sections.find((s) => s.po.id === panel.poId && s.line.id === panel.lineId) ?? null)
+      ? (allSections.find((s) => s.po.id === panel.poId && s.line.id === panel.lineId) ?? null)
       : null;
 
   const resetForms = () => {
@@ -493,7 +590,7 @@ const BuyerCallOffs = () => {
 
   /** @type {POLineItem | null} */
   const selectedLine = selectedView
-    ? (sections.find((s) => s.line.id === selectedView.callOff.poLineId)?.line ?? null)
+    ? (allSections.find((s) => s.line.id === selectedView.callOff.poLineId)?.line ?? null)
     : null;
   /**
    * @param {number} quantity
@@ -564,259 +661,328 @@ const BuyerCallOffs = () => {
         </div>
       )}
 
-      <RunningOutList groups={runOutGroups} />
-
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <div className="flex-1 min-w-[240px]">
-          <MaterialSearch
-            mode="filter"
-            query={search}
-            onQueryChange={setSearch}
-            testId="calloff-search"
-          />
+      {highlight.missing ? (
+        <div
+          role="status"
+          data-testid="calloff-highlight-missing"
+          className="bg-bg-hover border border-border-subtle rounded px-4 py-3 mb-4 text-sm text-text-secondary"
+        >
+          {t('co.highlight.missing')}
         </div>
-        <PicFilter
-          refs={sections.map((s) => ptiPicOf(s.line.materialCode))}
-          persona="buyer"
-          filter={pic.filter}
-          setFilter={pic.setFilter}
-          myCode={pic.myCode}
-        />
-      </div>
+      ) : null}
 
-      <FilterChipsBar
-        options={[
-          { id: 'all', label: t('co.pti.filter.all') },
-          {
-            id: 'awaitingApproval',
-            label: t('co.pti.filter.awaitingApproval'),
-            count: awaitingApproval
-          },
-          { id: 'escalated', label: t('co.pti.filter.escalated'), count: escalated },
-          { id: 'atRisk', label: t('co.pti.filter.atRisk'), count: atRisk },
-          { id: 'drift', label: t('co.pti.filter.drift'), count: drift.length }
-        ]}
-        value={statusFilter}
-        onChange={setStatusFilter}
+      <Tabs
+        tabs={CALL_OFF_TABS.map((id) => ({ id, label: t(`co.tab.${id}`) }))}
+        active={tab}
+        onChange={(id) => {
+          highlight.clear();
+          select(/** @type {CallOffTab} */ (id));
+        }}
         className="mb-4"
       />
 
-      {statusFilter !== 'all' && sections.length === 0 && (
-        <p
-          className="text-sm text-text-tertiary py-8 text-center"
-          data-testid="calloff-filter-empty"
-        >
-          {t('co.pti.filter.empty')}
-        </p>
-      )}
+      <div role="tabpanel" aria-label={t(`co.tab.${tab}`)} data-testid={`calloff-tabpanel-${tab}`}>
+        {tab === 'runOut' ? (
+          <RunningOutList groups={runOutGroups} />
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <div className="flex-1 min-w-[240px]">
+                <MaterialSearch
+                  mode="filter"
+                  query={search}
+                  onQueryChange={setSearch}
+                  testId="calloff-search"
+                />
+              </div>
+              <PicFilter
+                refs={sections.map((s) => ptiPicOf(s.line.materialCode))}
+                persona="buyer"
+                filter={pic.filter}
+                setFilter={pic.setFilter}
+                myCode={pic.myCode}
+              />
+            </div>
 
-      <div className="space-y-6">
-        {shownSections.length === 0 && (
-          <p
-            className="text-sm text-text-tertiary py-8 text-center"
-            data-testid="calloff-pic-empty"
-          >
-            {search.trim()
-              ? t('matSearch.noMatch', { query: search.trim() })
-              : t('pic.filter.empty')}
-          </p>
-        )}
-        {shownSections.map(({ item: { po, line, remaining, rows }, match }) => (
-          <section
-            key={`${po.id}-${line.id}`}
-            data-testid={`calloff-umbrella-${po.id}-${line.id}`}
-            className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm"
-          >
-            <header className="px-4 py-3 border-b border-border-subtle flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div
-                  id={`calloff-umbrella-title-${po.id}-${line.id}`}
-                  className="flex items-center gap-2 flex-wrap"
+            {onToAct ? (
+              <FilterChipsBar
+                options={[
+                  { id: 'all', label: t('co.toAct.filter.any') },
+                  {
+                    id: 'awaitingApproval',
+                    label: t('co.pti.filter.awaitingApproval'),
+                    count: awaitingApproval
+                  },
+                  { id: 'escalated', label: t('co.pti.filter.escalated'), count: escalated },
+                  { id: 'atRisk', label: t('co.pti.filter.atRisk'), count: atRisk },
+                  { id: 'drift', label: t('co.pti.filter.drift'), count: drift.length }
+                ]}
+                value={statusFilter}
+                onChange={setStatusFilter}
+                className="mb-4"
+              />
+            ) : null}
+
+            {onToAct && statusFilter !== 'all' && sections.length === 0 ? (
+              <p
+                className="text-sm text-text-tertiary py-8 text-center"
+                data-testid="calloff-filter-empty"
+              >
+                {t('co.pti.filter.empty')}
+              </p>
+            ) : null}
+
+            {onToAct && statusFilter === 'all' && sections.length === 0 ? (
+              <p
+                className="text-sm text-text-tertiary py-8 text-center"
+                data-testid="calloff-toact-empty"
+              >
+                {t('co.toAct.empty')}
+              </p>
+            ) : null}
+
+            <div className="space-y-6">
+              {shownSections.length === 0 && !(onToAct && sections.length === 0) && (
+                <p
+                  className="text-sm text-text-tertiary py-8 text-center"
+                  data-testid="calloff-pic-empty"
                 >
-                  <Data className="text-sm font-bold text-text-primary">{po.poNumber}</Data>
-                  <span className="text-sm text-text-primary">{po.supplierName}</span>
-                </div>
-                <div className="text-xs text-text-secondary mt-0.5">
-                  <Data className="text-text-tertiary">{line.materialCode}</Data> ·{' '}
-                  {line.description}
-                </div>
-                <MaterialMatchReason match={match} testId={`calloff-match-${line.id}`} />
-                <div className="text-xs text-text-secondary mt-1 flex flex-wrap items-center gap-2">
-                  <PicHeader />
-                  <PicCell value={ptiPicOf(line.materialCode)} testId={`calloff-pic-${line.id}`} />
-                </div>
-                {/* CR-04 / BL-49 — a line's own basis: quantity by default, value
+                  {search.trim()
+                    ? t('matSearch.noMatch', { query: search.trim() })
+                    : t('pic.filter.empty')}
+                </p>
+              )}
+              {shownSections.map(({ item: { po, line, remaining, rows }, match }) => (
+                <section
+                  key={`${po.id}-${line.id}`}
+                  data-testid={`calloff-umbrella-${po.id}-${line.id}`}
+                  className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm"
+                >
+                  <header className="px-4 py-3 border-b border-border-subtle flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div
+                        id={`calloff-umbrella-title-${po.id}-${line.id}`}
+                        className="flex items-center gap-2 flex-wrap"
+                      >
+                        <Data className="text-sm font-bold text-text-primary">{po.poNumber}</Data>
+                        <span className="text-sm text-text-primary">{po.supplierName}</span>
+                      </div>
+                      <div className="text-xs text-text-secondary mt-0.5">
+                        <Data className="text-text-tertiary">{line.materialCode}</Data> ·{' '}
+                        {line.description}
+                      </div>
+                      <MaterialMatchReason match={match} testId={`calloff-match-${line.id}`} />
+                      <div className="text-xs text-text-secondary mt-1 flex flex-wrap items-center gap-2">
+                        <PicHeader />
+                        <PicCell
+                          value={ptiPicOf(line.materialCode)}
+                          testId={`calloff-pic-${line.id}`}
+                        />
+                      </div>
+                      {/* CR-04 / BL-49 — a line's own basis: quantity by default, value
                     only where the line carries no quantity. */}
-                <dl className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-xs">
-                  <div>
-                    <dt className="inline text-text-tertiary">
-                      {t(
-                        remaining.basis === 'quantity'
-                          ? 'co.umbrella.ordered'
-                          : 'co.umbrella.orderedValue'
-                      )}{' '}
-                    </dt>
-                    <dd className="inline">
-                      <Data>
-                        {remaining.orderedQty === null
-                          ? formatIDR(remaining.orderedValue)
-                          : `${qty(remaining.orderedQty)} ${line.uom}`}
-                      </Data>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="inline text-text-tertiary">{t('co.umbrella.released')} </dt>
-                    <dd className="inline">
-                      <Data>
-                        {remaining.basis === 'quantity'
-                          ? `${qty(remaining.releasedQty)} ${line.uom}`
-                          : formatIDR(remaining.releasedValue)}
-                      </Data>
-                    </dd>
-                  </div>
-                  {remaining.remainingQty !== null && (
-                    <div>
-                      <dt className="inline text-text-tertiary">{t('co.umbrella.remaining')} </dt>
-                      <dd className="inline" data-testid={`calloff-remaining-${line.id}`}>
-                        <Data className="font-semibold">{`${qty(remaining.remainingQty)} ${line.uom}`}</Data>
-                      </dd>
+                      <dl className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-xs">
+                        <div>
+                          <dt className="inline text-text-tertiary">
+                            {t(
+                              remaining.basis === 'quantity'
+                                ? 'co.umbrella.ordered'
+                                : 'co.umbrella.orderedValue'
+                            )}{' '}
+                          </dt>
+                          <dd className="inline">
+                            <Data>
+                              {remaining.orderedQty === null
+                                ? formatIDR(remaining.orderedValue)
+                                : `${qty(remaining.orderedQty)} ${line.uom}`}
+                            </Data>
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="inline text-text-tertiary">
+                            {t('co.umbrella.released')}{' '}
+                          </dt>
+                          <dd className="inline">
+                            <Data>
+                              {remaining.basis === 'quantity'
+                                ? `${qty(remaining.releasedQty)} ${line.uom}`
+                                : formatIDR(remaining.releasedValue)}
+                            </Data>
+                          </dd>
+                        </div>
+                        {remaining.remainingQty !== null && (
+                          <div>
+                            <dt className="inline text-text-tertiary">
+                              {t('co.umbrella.remaining')}{' '}
+                            </dt>
+                            <dd className="inline" data-testid={`calloff-remaining-${line.id}`}>
+                              <Data className="font-semibold">{`${qty(remaining.remainingQty)} ${line.uom}`}</Data>
+                            </dd>
+                          </div>
+                        )}
+                        <div>
+                          <dt className="inline text-text-tertiary">
+                            {t('co.umbrella.remainingValue')}{' '}
+                          </dt>
+                          <dd className="inline" data-testid={`calloff-remaining-value-${line.id}`}>
+                            <Data
+                              className={remaining.basis === 'value' ? 'font-semibold' : undefined}
+                            >
+                              {formatIDR(remaining.remainingValue)}
+                            </Data>
+                          </dd>
+                        </div>
+                      </dl>
+                      <p
+                        className="mt-1 text-[11px] text-text-tertiary"
+                        data-testid={`calloff-basis-${line.id}`}
+                      >
+                        {t(
+                          remaining.basis === 'quantity'
+                            ? 'co.umbrella.byQuantity'
+                            : 'co.umbrella.noQuantity'
+                        )}
+                      </p>
+                      <RunOutFacts row={runOutByLine.get(line.id)} />
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      {planHeld ? (
+                        <>
+                          {/* BL-31 (WCAG 2.4.6): these two buttons repeat on every agreement line;
+                        describedby ties each to its PO and supplier. */}
+                          <Button
+                            variant="secondary"
+                            aria-describedby={`calloff-umbrella-title-${po.id}-${line.id}`}
+                            onClick={() => open({ kind: 'series', poId: po.id, lineId: line.id })}
+                          >
+                            {t('co.action.series')}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            aria-describedby={`calloff-umbrella-title-${po.id}-${line.id}`}
+                            onClick={() => open({ kind: 'new', poId: po.id, lineId: line.id })}
+                          >
+                            {t('co.action.new')}
+                          </Button>
+                        </>
+                      ) : (
+                        <HandoffNotice
+                          availability={planAvailability}
+                          testId="handoff-calloff-plan"
+                        />
+                      )}
+                    </div>
+                  </header>
+                  {rows.length === 0 ? (
+                    <p className="px-4 py-4 text-sm text-text-tertiary">{t('co.umbrella.none')}</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableHeaderCell>{t('co.col.callOff')}</TableHeaderCell>
+                          <TableHeaderCell>{t('co.col.type')}</TableHeaderCell>
+                          <TableHeaderCell className="text-right">
+                            {t('co.col.quantity')}
+                          </TableHeaderCell>
+                          <TableHeaderCell>{t('co.col.needDate')}</TableHeaderCell>
+                          <TableHeaderCell>{t('co.col.confirmation')}</TableHeaderCell>
+                          <TableHeaderCell>{t('co.col.delivery')}</TableHeaderCell>
+                          <TableHeaderCell className="text-right">
+                            {t('co.col.action')}
+                          </TableHeaderCell>
+                        </TableHeader>
+                        <tbody>
+                          {rows.map((v) => (
+                            <TableRow
+                              key={v.callOff.id}
+                              data-testid={`calloff-row-${v.callOff.id}`}
+                              ref={highlight.id === v.callOff.id ? highlight.scrollRef : undefined}
+                              aria-current={highlight.id === v.callOff.id ? 'true' : undefined}
+                              className={
+                                highlight.id === v.callOff.id ? HIGHLIGHTED_ROW_CLASS : undefined
+                              }
+                            >
+                              <TableCell>
+                                <Data className="text-xs font-bold text-text-primary whitespace-nowrap">
+                                  {v.callOff.callOffNumber}
+                                </Data>
+                                {releaseWithheld(v.callOff) && (
+                                  <div className="mt-1">
+                                    <EngineOriginMarker
+                                      testId={`calloff-origin-engine-${v.callOff.id}`}
+                                    />
+                                  </div>
+                                )}
+                                {/* BL-199 (DRC-13) — a draft the hub made at ROP Fisik. */}
+                                {v.callOff.origin === 'ropFisik' && (
+                                  <div className="mt-1">
+                                    <RopFisikMarker
+                                      testId={`calloff-origin-rop-fisik-${v.callOff.id}`}
+                                    />
+                                  </div>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-xs text-text-secondary whitespace-nowrap">
+                                {t(`co.type.${v.callOff.type}`)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Data>{qty(v.callOff.quantity)}</Data>
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap">
+                                <Data className="text-xs">{formatDate(v.callOff.needDate)}</Data>
+                              </TableCell>
+                              <TableCell>
+                                <ConfirmationPill status={v.confirmation} />
+                                {/* CR-05 — the rule that decided this confirmation. */}
+                                {v.tolerance && v.callOff.confirmation && (
+                                  <ToleranceTags
+                                    check={v.tolerance}
+                                    uom={v.callOff.uom}
+                                    approval={v.callOff.confirmation.approval}
+                                    testId={`calloff-tol-${v.callOff.id}`}
+                                  />
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <DeliveryPill status={v.delivery} />
+                                {(linkedAsns.get(v.callOff.id) ?? []).some(
+                                  (l) => l.warnings.length > 0
+                                ) ? (
+                                  <div
+                                    className="mt-1"
+                                    data-testid={`calloff-mismatch-${v.callOff.id}`}
+                                  >
+                                    <StatusPill variant="warning">
+                                      {t('co.asn.mismatch')}
+                                    </StatusPill>
+                                  </div>
+                                ) : null}
+                              </TableCell>
+                              <TableCell className="text-right whitespace-nowrap">
+                                <Button
+                                  variant={
+                                    v.confirmation === 'Awaiting Approval' ||
+                                    v.callOff.status === 'Draft'
+                                      ? 'outline'
+                                      : 'secondary'
+                                  }
+                                  onClick={() => open({ kind: 'callOff', id: v.callOff.id })}
+                                  aria-label={`${t(actionKey(v))} ${v.callOff.callOffNumber}`}
+                                >
+                                  {t(actionKey(v))}
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </tbody>
+                      </Table>
                     </div>
                   )}
-                  <div>
-                    <dt className="inline text-text-tertiary">
-                      {t('co.umbrella.remainingValue')}{' '}
-                    </dt>
-                    <dd className="inline" data-testid={`calloff-remaining-value-${line.id}`}>
-                      <Data className={remaining.basis === 'value' ? 'font-semibold' : undefined}>
-                        {formatIDR(remaining.remainingValue)}
-                      </Data>
-                    </dd>
-                  </div>
-                </dl>
-                <p
-                  className="mt-1 text-[11px] text-text-tertiary"
-                  data-testid={`calloff-basis-${line.id}`}
-                >
-                  {t(
-                    remaining.basis === 'quantity'
-                      ? 'co.umbrella.byQuantity'
-                      : 'co.umbrella.noQuantity'
-                  )}
-                </p>
-                <RunOutFacts row={runOutByLine.get(line.id)} />
-              </div>
-              <div className="flex gap-2 shrink-0">
-                {planHeld ? (
-                  <>
-                    {/* BL-31 (WCAG 2.4.6): these two buttons repeat on every agreement line;
-                        describedby ties each to its PO and supplier. */}
-                    <Button
-                      variant="secondary"
-                      aria-describedby={`calloff-umbrella-title-${po.id}-${line.id}`}
-                      onClick={() => open({ kind: 'series', poId: po.id, lineId: line.id })}
-                    >
-                      {t('co.action.series')}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      aria-describedby={`calloff-umbrella-title-${po.id}-${line.id}`}
-                      onClick={() => open({ kind: 'new', poId: po.id, lineId: line.id })}
-                    >
-                      {t('co.action.new')}
-                    </Button>
-                  </>
-                ) : (
-                  <HandoffNotice availability={planAvailability} testId="handoff-calloff-plan" />
-                )}
-              </div>
-            </header>
-            {rows.length === 0 ? (
-              <p className="px-4 py-4 text-sm text-text-tertiary">{t('co.umbrella.none')}</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableHeaderCell>{t('co.col.callOff')}</TableHeaderCell>
-                    <TableHeaderCell>{t('co.col.type')}</TableHeaderCell>
-                    <TableHeaderCell className="text-right">{t('co.col.quantity')}</TableHeaderCell>
-                    <TableHeaderCell>{t('co.col.needDate')}</TableHeaderCell>
-                    <TableHeaderCell>{t('co.col.confirmation')}</TableHeaderCell>
-                    <TableHeaderCell>{t('co.col.delivery')}</TableHeaderCell>
-                    <TableHeaderCell className="text-right">{t('co.col.action')}</TableHeaderCell>
-                  </TableHeader>
-                  <tbody>
-                    {rows.map((v) => (
-                      <TableRow key={v.callOff.id} data-testid={`calloff-row-${v.callOff.id}`}>
-                        <TableCell>
-                          <Data className="text-xs font-bold text-text-primary whitespace-nowrap">
-                            {v.callOff.callOffNumber}
-                          </Data>
-                          {releaseWithheld(v.callOff) && (
-                            <div className="mt-1">
-                              <EngineOriginMarker
-                                testId={`calloff-origin-engine-${v.callOff.id}`}
-                              />
-                            </div>
-                          )}
-                          {/* BL-199 (DRC-13) — a draft the hub made at ROP Fisik. */}
-                          {v.callOff.origin === 'ropFisik' && (
-                            <div className="mt-1">
-                              <RopFisikMarker testId={`calloff-origin-rop-fisik-${v.callOff.id}`} />
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-xs text-text-secondary whitespace-nowrap">
-                          {t(`co.type.${v.callOff.type}`)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Data>{qty(v.callOff.quantity)}</Data>
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          <Data className="text-xs">{formatDate(v.callOff.needDate)}</Data>
-                        </TableCell>
-                        <TableCell>
-                          <ConfirmationPill status={v.confirmation} />
-                          {/* CR-05 — the rule that decided this confirmation. */}
-                          {v.tolerance && v.callOff.confirmation && (
-                            <ToleranceTags
-                              check={v.tolerance}
-                              uom={v.callOff.uom}
-                              approval={v.callOff.confirmation.approval}
-                              testId={`calloff-tol-${v.callOff.id}`}
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <DeliveryPill status={v.delivery} />
-                          {(linkedAsns.get(v.callOff.id) ?? []).some(
-                            (l) => l.warnings.length > 0
-                          ) ? (
-                            <div className="mt-1" data-testid={`calloff-mismatch-${v.callOff.id}`}>
-                              <StatusPill variant="warning">{t('co.asn.mismatch')}</StatusPill>
-                            </div>
-                          ) : null}
-                        </TableCell>
-                        <TableCell className="text-right whitespace-nowrap">
-                          <Button
-                            variant={
-                              v.confirmation === 'Awaiting Approval' || v.callOff.status === 'Draft'
-                                ? 'outline'
-                                : 'secondary'
-                            }
-                            onClick={() => open({ kind: 'callOff', id: v.callOff.id })}
-                            aria-label={`${t(actionKey(v))} ${v.callOff.callOffNumber}`}
-                          >
-                            {t(actionKey(v))}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </tbody>
-                </Table>
-              </div>
-            )}
-          </section>
-        ))}
+                </section>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       {/* ── New call-off / series ─────────────────────────────────────────── */}

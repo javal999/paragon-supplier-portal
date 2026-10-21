@@ -18,6 +18,12 @@ import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import i18n from '@lib/i18n';
 
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
+
+/**
+ * P-12 — opens one of the Call-offs tabs, by its visible name.
+ * @param {string} name
+ */
+const openTab = async (name) => fireEvent.click(await screen.findByRole('tab', { name }));
 const panel = () =>
   within(/** @type {HTMLElement} */ (document.querySelector('aside[role="dialog"]')));
 
@@ -49,6 +55,7 @@ describe('BL-199 — a draft made at ROP Fisik on the Call-offs page', () => {
   it('is marked on its row, and its panel shows the figures behind it, provisional', async () => {
     const id = dropToRopFisik();
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    await openTab('All call-offs');
     expect(await screen.findByTestId(`calloff-origin-rop-fisik-${id}`)).toHaveTextContent(
       'Drafted at ROP Fisik'
     );
@@ -72,6 +79,7 @@ describe('BL-199 — a draft made at ROP Fisik on the Call-offs page', () => {
   it('the planner approves it by releasing it, and the store agrees', async () => {
     const id = dropToRopFisik();
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    await openTab('All call-offs');
     await openDraft(id);
     fireEvent.click(panel().getByRole('button', { name: 'Release to supplier' }));
     await waitFor(() => expect(callOffStore.get(id)?.status).toBe('Awaiting Confirmation'));
@@ -79,6 +87,7 @@ describe('BL-199 — a draft made at ROP Fisik on the Call-offs page', () => {
 
   it('known-good: a draft the planner typed carries no ROP Fisik marker', async () => {
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    await openTab('All call-offs');
     // co-0012 is a seeded planner draft (PK-PETB-8801).
     await screen.findByTestId('calloff-row-co-0012');
     expect(screen.queryByTestId('calloff-origin-rop-fisik-co-0012')).toBeNull();
@@ -90,6 +99,7 @@ describe('BL-199 — a draft made at ROP Fisik on the Call-offs page', () => {
     const id = dropToRopFisik();
     await i18n.changeLanguage('id');
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    await openTab('Semua call-off');
     expect(await screen.findByTestId(`calloff-origin-rop-fisik-${id}`)).toHaveTextContent(
       'Didraf pada ROP Fisik'
     );

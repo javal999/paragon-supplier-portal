@@ -158,7 +158,11 @@ describe('This week — the page (F-03)', () => {
     const shown = leadingNumber(screen.getByTestId('tw-count-makeRoom'));
     cleanup();
 
-    renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
+    // P-12 — the fill table is the "Warehouse fill" tab.
+    renderWithProviders(<BuyerReschedule />, {
+      identity: PLANNER,
+      route: '/buyer/reschedule?tab=fill'
+    });
     let over = 0;
     for (const name of ['Packaging warehouse', 'Raw material warehouse']) {
       fireEvent.click(await screen.findByRole('radio', { name }, SLOW));
