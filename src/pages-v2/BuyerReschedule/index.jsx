@@ -229,7 +229,7 @@ const BuyerReschedule = () => {
           </ul>
         )}
 
-        {tab === 'relief' && w && effect && (
+        {tab === 'relief' && w && effect ? (
           <>
             {planW && rentRate !== null && planW.shortfallWeeks.length > 0 && (
               <DecisionCard
@@ -308,13 +308,13 @@ const BuyerReschedule = () => {
               </details>
             )}
           </>
-        )}
+        ) : null}
 
-        {tab === 'fill' && w && effect && <FillSection w={w} effect={effect} />}
+        {tab === 'fill' && w && effect ? <FillSection w={w} effect={effect} /> : null}
 
         {tab === 'values' && (
           <>
-            {w && w.info.length > 0 && (
+            {w && w.info.length > 0 ? (
               <CollapsedSection
                 title={t('rs.info.title')}
                 testId="rs-info"
@@ -341,7 +341,7 @@ const BuyerReschedule = () => {
                   ))}
                 </ul>
               </CollapsedSection>
-            )}
+            ) : null}
 
             {run && <SettingsSection run={run} />}
 

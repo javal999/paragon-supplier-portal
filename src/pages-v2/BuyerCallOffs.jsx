@@ -358,22 +358,24 @@ const BuyerCallOffs = () => {
   );
 
   // IA-B13 — a link naming one call-off opens its panel once, on arrival.
-  const openedHighlight = useRef(/** @type {string | null} */ (null));
-  useEffect(() => {
-    const id = highlight.id;
-    if (id === null || openedHighlight.current === id) return;
-    const v = views.find((x) => x.callOff.id === id);
-    if (!v) return;
-    openedHighlight.current = id;
+  // Adjusted during render, not in an effect (react-hooks/set-state-in-effect),
+  // the same way `useRowHighlight` resets itself: the stale render is dropped.
+  const [openedHighlight, setOpenedHighlight] = useState(/** @type {string | null} */ (null));
+  const arriving =
+    highlight.id !== null && highlight.id !== openedHighlight
+      ? views.find((x) => x.callOff.id === highlight.id)
+      : undefined;
+  if (arriving) {
+    setOpenedHighlight(arriving.callOff.id);
     setForm({
-      quantity: String(v.callOff.quantity),
-      needDate: v.callOff.needDate,
-      type: v.callOff.type,
+      quantity: String(arriving.callOff.quantity),
+      needDate: arriving.callOff.needDate,
+      type: arriving.callOff.type,
       reason: '',
       comment: ''
     });
-    setPanel({ kind: 'callOff', id });
-  }, [highlight.id, views]);
+    setPanel({ kind: 'callOff', id: arriving.callOff.id });
+  }
 
   // Material E2 (MR-7 step 6) — "Create call-off" from the stock simulation
   // lands here with `?newFor=<supplier>&material=<code>` and opens the new
@@ -721,23 +723,23 @@ const BuyerCallOffs = () => {
               />
             ) : null}
 
-            {onToAct && statusFilter !== 'all' && sections.length === 0 && (
+            {onToAct && statusFilter !== 'all' && sections.length === 0 ? (
               <p
                 className="text-sm text-text-tertiary py-8 text-center"
                 data-testid="calloff-filter-empty"
               >
                 {t('co.pti.filter.empty')}
               </p>
-            )}
+            ) : null}
 
-            {onToAct && statusFilter === 'all' && sections.length === 0 && (
+            {onToAct && statusFilter === 'all' && sections.length === 0 ? (
               <p
                 className="text-sm text-text-tertiary py-8 text-center"
                 data-testid="calloff-toact-empty"
               >
                 {t('co.toAct.empty')}
               </p>
-            )}
+            ) : null}
 
             <div className="space-y-6">
               {shownSections.length === 0 && !(onToAct && sections.length === 0) && (

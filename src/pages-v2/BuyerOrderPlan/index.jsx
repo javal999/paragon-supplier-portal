@@ -182,7 +182,7 @@ const BuyerOrderPlan = () => {
       <div role="tabpanel" aria-label={t(`op.tab.${tab}`)} data-testid={`op-tabpanel-${tab}`}>
         {tab === 'orders' && (
           <>
-            {w && (
+            {w ? (
               <RecommendationsSection
                 rows={rows}
                 pos={pos}
@@ -195,12 +195,12 @@ const BuyerOrderPlan = () => {
                 releaseWithheld={releaseWithheld}
                 onDraft={createDraft}
               />
-            )}
+            ) : null}
 
             {/* FUX-D3 (F-10): the decision for these weeks is made and saved on Make warehouse room. */}
-            {w && w.shortfallWeeks.length > 0 && (
+            {w && w.shortfallWeeks.length > 0 ? (
               <ShortfallNotice count={w.shortfallWeeks.length} />
-            )}
+            ) : null}
 
             {/* CAP-12 — the hub's own gaps, separate from the engine's list above (brief §6). */}
             <BelowDemandSection today={today} drafts={gapDrafts} />
@@ -210,7 +210,7 @@ const BuyerOrderPlan = () => {
           </>
         )}
 
-        {tab === 'fill' && w && (
+        {tab === 'fill' && w ? (
           <CollapsedSection
             title={t('op.fill.title')}
             testId="op-fill"
@@ -224,7 +224,7 @@ const BuyerOrderPlan = () => {
             <FillChart w={w} />
             <FillTable w={w} />
           </CollapsedSection>
-        )}
+        ) : null}
 
         {tab === 'sizing' && (
           <>
