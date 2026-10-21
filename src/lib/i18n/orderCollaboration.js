@@ -12,6 +12,8 @@ export const orderCollaborationEn = {
 
   // Steps (SC-02)
   'oc.steps.title': 'Order steps',
+  'oc.steps.callOffs_one': '{{count}} call-off against this order',
+  'oc.steps.callOffs_other': '{{count}} call-offs against this order',
   'oc.step.response': 'Response',
   'oc.step.confirmations': 'Confirmations',
   'oc.step.asn': 'ASN',
@@ -252,6 +254,8 @@ export const orderCollaborationId = {
   'oc.respondedLate': 'Pemasok menanggapi setelah batas waktu.',
 
   'oc.steps.title': 'Tahapan pesanan',
+  'oc.steps.callOffs_one': '{{count}} call-off untuk pesanan ini',
+  'oc.steps.callOffs_other': '{{count}} call-off untuk pesanan ini',
   'oc.step.response': 'Tanggapan',
   'oc.step.confirmations': 'Konfirmasi',
   'oc.step.asn': 'ASN',

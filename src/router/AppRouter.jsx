@@ -1,10 +1,8 @@
 /** @import React from 'react' */
-import { lazy, Suspense } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LegacyRedirect from './LegacyRedirect';
 import { CurrentIdentityProvider } from '@context/CurrentIdentityContext';
 import { mockIdentitySource } from '@context/identitySources';
-import LoadingState from '@components/ui-v2/LoadingState';
 import Login from '@pages/auth/Login';
 
 // V2 pages (canonical)
@@ -90,13 +88,10 @@ import SupplierForecastCommitments from '@pages-v2/SupplierForecastCommitments';
 import SupplierPerformance from '@pages-v2/SupplierPerformance';
 import NotFound from '@pages-v2/NotFound';
 
-// SDC-1b — the react-datasheet-grid consumer. Lazy, so the grid engine ships in
-// its own async chunk and never enters the entry chunk; first paint stays flat.
-// (Stage G's Plan Grid, the first route-split, was retired by IA P-10.)
-const BuyerCollaboration = lazy(() => import('@pages-v2/BuyerCollaboration'));
-// SDC-2b — the P1 supplier submission surface (no DSG; lazy keeps the SDC
-// module out of the entry chunk).
-const SupplierForecasts = lazy(() => import('@pages-v2/SupplierForecasts'));
+// SDC-1b / SDC-2b — the consolidation grid and the supplier submission surface
+// are tabs of Foresight commitments since IA P-04; each tab lazy-loads its page
+// (`ConsolidationTab`, `SampleResponsesTab`), so the grid engine still ships in
+// its own async chunk. (Stage G's Plan Grid was retired by IA P-10.)
 
 import { ToastProvider } from '@hooks/useToast';
 import Toaster from '@components/ui-v2/Toaster';
@@ -186,13 +181,10 @@ const AppRouter = () => {
             />
             {/* REQ-E14-10 — choosing each SKU's model by simulated service (SIMULATED; PTI only). */}
             <Route path="/buyer/model-backtest" element={<BuyerModelBacktest />} />
+            {/* IA P-04 — the consolidation view is a tab of Foresight commitments. */}
             <Route
               path="/buyer/collaboration/responses"
-              element={
-                <Suspense fallback={<LoadingState />}>
-                  <BuyerCollaboration />
-                </Suspense>
-              }
+              element={<LegacyRedirect to="/buyer/collaboration?tab=consolidation" />}
             />
             <Route path="/buyer/contracts" element={<BuyerContracts />} />
             {/* Nested contract detail — the traceability spine's leaf (Overview |
@@ -280,13 +272,10 @@ const AppRouter = () => {
             <Route path="/supplier/forecasts" element={<SupplierForecastCommitments />} />
             {/* DRC-15a — the supplier's own feedstock reconcile rows (path kept, BR-05). */}
             <Route path="/supplier/fs-reconcile" element={<SupplierFixedStockReconcile />} />
+            {/* IA P-04 — responses and shipments are a tab of Foresight commitments. */}
             <Route
               path="/supplier/forecasts/responses"
-              element={
-                <Suspense fallback={<LoadingState />}>
-                  <SupplierForecasts />
-                </Suspense>
-              }
+              element={<LegacyRedirect to="/supplier/forecasts?tab=responses" />}
             />
             <Route path="/supplier/shipments" element={<SupplierShipments />} />
             <Route path="/supplier/goods-receipts" element={<SupplierGoodsReceipts />} />

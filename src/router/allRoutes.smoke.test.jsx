@@ -36,7 +36,6 @@ import BuyerSourcingEvent from '@pages-v2/BuyerSourcingEvent';
 import SupplierRfi from '@pages-v2/SupplierRfi';
 import SupplierRfp from '@pages-v2/SupplierRfp';
 import SupplierNegotiations from '@pages-v2/SupplierNegotiations';
-import BuyerCollaboration from '@pages-v2/BuyerCollaboration';
 import BuyerContracts from '@pages-v2/BuyerContracts';
 import BuyerContractDetail from '@pages-v2/BuyerContractDetail';
 import BuyerDeliveryAgreements from '@pages-v2/BuyerDeliveryAgreements';
@@ -72,7 +71,6 @@ import Glossary from '@pages-v2/Glossary';
 import SupplierDocumentsV2 from '@pages-v2/SupplierDocuments';
 import SupplierOrders from '@pages-v2/SupplierOrders';
 import SupplierRFQsV2 from '@pages-v2/SupplierRFQs';
-import SupplierForecasts from '@pages-v2/SupplierForecasts';
 import SupplierForecastCommitments from '@pages-v2/SupplierForecastCommitments';
 import BuyerCommitments from '@pages-v2/BuyerCommitments';
 import BuyerReliability from '@pages-v2/BuyerReliability';
@@ -309,13 +307,6 @@ const ROUTES = [
     pattern: '/buyer/model-backtest',
     at: '/buyer/model-backtest',
     element: <BuyerModelBacktest />,
-    identity: BUYER
-  },
-  {
-    name: 'buyer/collaboration/responses',
-    pattern: '/buyer/collaboration/responses',
-    at: '/buyer/collaboration/responses',
-    element: <BuyerCollaboration />,
     identity: BUYER
   },
   {
@@ -617,13 +608,6 @@ const ROUTES = [
     identity: SUPPLIER
   },
   {
-    name: 'supplier/forecasts/responses',
-    pattern: '/supplier/forecasts/responses',
-    at: '/supplier/forecasts/responses',
-    element: <SupplierForecasts />,
-    identity: SUPPLIER
-  },
-  {
     name: 'supplier/shipments',
     pattern: '/supplier/shipments',
     at: '/supplier/shipments',
@@ -720,8 +704,8 @@ describe('sp-001 — every route mounts without crashing', () => {
     // THIS FILE.** The first cut was `/<Route\s+path="…"\s+element=\{<(\w+)/`,
     // which requires `element=` to follow `path=` directly. Three routes wrap
     // their element in `<Suspense>` across several lines
-    // (`/buyer/collaboration/responses`, `/supplier/forecasts/responses`, and the
-    // retired `/buyer/plan-grid`), so the
+    // (`/buyer/collaboration/responses`, `/supplier/forecasts/responses` and
+    // `/buyer/plan-grid`, all retired or redirected by IA P-04 / P-10), so the
     // narrowing that correctly excluded redirects silently DROPPED them from the
     // derived population — and they then read as stale smoke rows. Narrowing a
     // matcher creates blind spots as readily as widening one creates false

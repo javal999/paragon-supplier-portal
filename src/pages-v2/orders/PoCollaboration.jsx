@@ -19,7 +19,9 @@ import {
 import { sdcClock } from '@services/sdc/clock';
 import { poLineQuantityText } from './poLineQuantity';
 /** @import { Persona } from '@components/layout-v2/navConfig' */
-import { lifecycleStepHref } from './orderSummaryDrill';
+import { lifecycleStepHref, drillPath, PO_PARAM, FROM_PARAM, FROM_PO } from './orderSummaryDrill';
+import { callOffsForPo } from './orderSummaryModel';
+import { useCallOffViews } from '../callOffs/callOffDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Order collaboration read blocks shared by the PTI and supplier PO panels:
@@ -151,7 +153,33 @@ export const PoLifecycleSteps = ({ po, asnCount, persona }) => {
           );
         })}
       </ol>
+      <PoCallOffsLink poId={po.id} persona={persona} />
     </section>
+  );
+};
+
+/**
+ * The call-offs released against this PO. They have no lifecycle step of their
+ * own (a call-off is a delivery under the PO, not a stage of it), so the link
+ * sits under the steps and only when the PO has any (IA P-01, integration).
+ * @type {React.FC<{ poId: string; persona: Persona }>}
+ */
+const PoCallOffsLink = ({ poId, persona }) => {
+  const { t } = useTranslation();
+  const { views } = useCallOffViews();
+  const count = callOffsForPo(views ?? [], poId).length;
+  if (count === 0) return null;
+  const q = new URLSearchParams();
+  q.set(PO_PARAM, poId);
+  q.set(FROM_PARAM, FROM_PO);
+  return (
+    <Link
+      to={`${drillPath('callOffs', persona)}?${q.toString()}`}
+      data-testid="po-calloffs-link"
+      className="inline-block mt-2 text-xs text-action-hover underline"
+    >
+      {t('oc.steps.callOffs', { count })}
+    </Link>
   );
 };
 

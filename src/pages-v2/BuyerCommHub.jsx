@@ -34,7 +34,7 @@ import { formatDate } from '@lib/format';
 // SUPPLIER FOLLOW-UPS (IA P-05) — the buyer/planner follow-up page, built on the
 // Comm Hub C4a COMMUNICATION HUB (DEC-COMMS-PRIMARY front door).
 //
-// P-05 merged the Chase page (`/buyer/chase`) into this one: one follow-up job,
+// P-05 merged the Chase page into this one (its old address redirects here): one follow-up job,
 // one page, one name. Three tabs, in the order a planner works them, with the
 // active tab in `?tab=` (`follow-up` is the default):
 //   · `follow-up` — SUPPLIERS TO FOLLOW UP: the unified chase list (5a–5e),
