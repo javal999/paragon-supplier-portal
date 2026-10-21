@@ -290,7 +290,6 @@ describe('BL-46 sites — one function computes the risk class, and nothing else
       // function to rate its supply tasks ("Cover 4 days · Lead time 14 days").
       'src/pages-v2/SupplierHome.jsx',
       'src/pages-v2/inventory/inventoryDisplay.jsx',
-      'src/pages-v2/widgets/BuyerInventoryWidget.jsx',
       'src/services/transitions/inventoryAlertRules.js'
     ]);
     // Known-false: the alert list shows the class the alert carries; it does not recompute it.

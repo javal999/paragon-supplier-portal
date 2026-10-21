@@ -33,7 +33,7 @@ const PROCUREMENT = { ...BUYER, businessRoles: ['procurement'] };
 const PENDING_PR = 'PR-2026-00344';
 
 const openPending = async () => {
-  await screen.findByText('Purchase Requisitions');
+  await screen.findByRole('heading', { name: 'Requisitions' });
   fireEvent.click(await screen.findByText(PENDING_PR));
   await screen.findByText(`PR ${PENDING_PR}`);
 };
@@ -148,7 +148,7 @@ describe('⚠️ §67 · REJECT CARRIES ITS REASON, AND THE COMMIT IS DISABLED U
       rejectionReason: 'Supplier is not halal-certified for this material.'
     }));
     renderWithProviders(<BuyerRequisitions />, { identity: PROCUREMENT });
-    await screen.findByText('Purchase Requisitions');
+    await screen.findByRole('heading', { name: 'Requisitions' });
     fireEvent.click(await screen.findByText(PENDING_PR));
 
     expect(await screen.findByTestId('pr-rejection-reason')).toHaveTextContent(
@@ -160,7 +160,7 @@ describe('⚠️ §67 · REJECT CARRIES ITS REASON, AND THE COMMIT IS DISABLED U
 describe('⚠️ §67 · THE THREE RETIRED AFFORDANCES ARE GONE, AND SAY WHY', () => {
   it('an APPROVED requisition states its terminality — no button implying a next step', async () => {
     renderWithProviders(<BuyerRequisitions />);
-    await screen.findByText('Purchase Requisitions');
+    await screen.findByRole('heading', { name: 'Requisitions' });
     // PR-2026-00342 is the seeded Approved row.
     fireEvent.click(await screen.findByText('PR-2026-00342'));
 
@@ -173,7 +173,7 @@ describe('⚠️ §67 · THE THREE RETIRED AFFORDANCES ARE GONE, AND SAY WHY', (
 
   it('a DRAFT requisition states why nothing here submits it', async () => {
     renderWithProviders(<BuyerRequisitions />);
-    await screen.findByText('Purchase Requisitions');
+    await screen.findByRole('heading', { name: 'Requisitions' });
     // PR-2026-00345 is the seeded Draft row.
     fireEvent.click(await screen.findByText('PR-2026-00345'));
 

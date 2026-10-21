@@ -57,7 +57,9 @@ const SupplierDeliveryAgreements = () => {
   // (reuse 5a; no new read). Memoised before the guards so hook order is stable.
   const obligations = useMemo(() => shapeObligations(views, SDC_SIMULATED_NOW), [views]);
 
-  const CRUMB = [t('delivery.crumb.settle'), t('delivery.supplier.title')];
+  // IA P-10 — no menu item of its own: the crumb names the menu section of the
+  // page it belongs to (Orders), never a section the menu does not have (NV-05).
+  const CRUMB = [t('hub.nav.section.supplierOrders'), t('delivery.supplier.title')];
 
   // A buyer (or a scopeless session) has no supplier workspace here — guard like
   // every other #/supplier/* page.

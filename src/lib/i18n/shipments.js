@@ -17,6 +17,9 @@
 export const shipmentsEn = {
   // — Breadcrumb —
   'shipments.crumb.transact': 'TRANSACT',
+  // IA P-08 — the ASNs Home's "Inbound shipments to receive" counts.
+  'shipments.toReceive.title': 'ASNs to receive',
+  'shipments.toReceive.empty': 'No ASN is submitted or in transit.',
   'shipments.crumb.shipments': 'SHIPMENTS & ASN',
   // — Page header —
   'shipments.header.title': 'Shipments & ASN',
@@ -131,6 +134,8 @@ export const shipmentsEn = {
 export const shipmentsId = {
   // — Breadcrumb —
   'shipments.crumb.transact': 'TRANSAKSI',
+  'shipments.toReceive.title': 'ASN untuk diterima',
+  'shipments.toReceive.empty': 'Tidak ada ASN yang diajukan atau dalam perjalanan.',
   'shipments.crumb.shipments': 'PENGIRIMAN & ASN',
   // — Page header —
   'shipments.header.title': 'Pengiriman & ASN',

@@ -79,7 +79,8 @@ export const inventoryCapacityEn = {
   'inv.incoming.source.asn': 'In transit (shipping notice)',
   'inv.incoming.source.dispatch': 'In transit (call-off dispatch)',
 
-  'inv.pti.title': 'Inventory',
+  // IA P-11 (IA-X02) — the page title is the menu label, Stock on both personas.
+  'inv.pti.title': 'Stock',
   'inv.pti.subtitle':
     'Supplier and PTI stock, reorder points and incoming supply per material and supplier.',
   'inv.pti.empty': 'No supplier stock to show yet.',

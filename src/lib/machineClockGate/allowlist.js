@@ -62,34 +62,10 @@ export const MACHINE_CLOCK_ALLOWLIST = [
     reason: 'Submission-session id suffix; its openedAt reads the hub clock.'
   },
   {
-    key: 'src/pages-v2/CommHubInbound.jsx::CommHubInbound.runParse.cm.id::Date.now()',
-    count: 1,
-    why: 'unique-id',
-    reason: 'Channel-message id suffix; receivedAt beside it reads the hub clock.'
-  },
-  {
-    key: 'src/pages-v2/CommHubInbound.jsx::CommHubInbound.onSubmitted::Date.now()',
-    count: 1,
-    why: 'unique-id',
-    reason: 'Submission-session id suffix; its openedAt reads the hub clock.'
-  },
-  {
     key: 'src/pages-v2/SupplierForecasts/index.jsx::ForecastWorkspace.recordAttempt::Date.now()',
     count: 1,
     why: 'unique-id',
     reason: 'Submission-session id suffix; its openedAt reads the hub clock.'
-  },
-  {
-    key: 'src/pages-v2/SupplierMyStorefront/index.jsx::StorefrontEditor.submitNewMaterial.id::Date.now()',
-    count: 1,
-    why: 'unique-id',
-    reason: 'Catalogue-row id for a material added in the session; never rendered.'
-  },
-  {
-    key: 'src/pages-v2/SupplierWhatsApp/components/WhatsAppPanel.jsx::WhatsAppPanel.addMessage.id::Date.now()',
-    count: 1,
-    why: 'unique-id',
-    reason: "Simulator message id (React key); the message's shown time reads the hub clock."
   },
   {
     key: 'src/pages-v2/rfx/responseDraft.js::draftSavedNow::new Date()',

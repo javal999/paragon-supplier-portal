@@ -28,7 +28,8 @@ export const supplierPerformanceEn = {
   'supplierPerformance.crumb.intelligence': 'INTELLIGENCE',
   'supplierPerformance.crumb.myPerformance': 'MY PERFORMANCE',
   // — Page header —
-  'supplierPerformance.header.title': 'My Performance',
+  // IA P-11 — the page title is the menu label.
+  'supplierPerformance.header.title': 'My performance',
   'supplierPerformance.header.subtitle':
     'Paragon scorecard · Rolling 12-week KPIs · Improvement tracking',
   'supplierPerformance.action.exportReport': 'Export Report',
@@ -102,7 +103,7 @@ export const supplierPerformanceId = {
   'supplierPerformance.crumb.intelligence': 'INTELIJEN',
   'supplierPerformance.crumb.myPerformance': 'KINERJA SAYA',
   // — Page header —
-  'supplierPerformance.header.title': 'Kinerja Saya',
+  'supplierPerformance.header.title': 'Kinerja saya',
   'supplierPerformance.header.subtitle':
     'Kartu skor Paragon · KPI bergulir 12 minggu · Pelacakan peningkatan',
   'supplierPerformance.action.exportReport': 'Ekspor Laporan',

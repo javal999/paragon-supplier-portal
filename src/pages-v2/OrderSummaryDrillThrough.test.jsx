@@ -638,6 +638,7 @@ describe('every address the summary generates resolves to a route the router act
 
   // P-02 — the summary is the default view of Purchase orders, named by `view`.
   it('"Back to order summary" addresses a served route on both sides', () => {
+    // IA P-02 — the summary is the `?view=summary` view of Purchase orders.
     expect(orderSummaryPath('buyer')).toBe('/buyer/orders?view=summary');
     expect(orderSummaryPath('supplier')).toBe('/supplier/orders?view=summary');
     expect(servedBy(orderSummaryPath('buyer').split('?')[0])).toBe('/buyer/orders');

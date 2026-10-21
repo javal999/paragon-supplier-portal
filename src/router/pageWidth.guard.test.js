@@ -125,15 +125,15 @@ describe('⚠️ §70 · THE MATCHER, BEFORE ANY CLAIM ABOUT THE TREE', () => {
     // read only default imports and the route matcher only one-line routes, so
     // these seven shell pages were never checked: the four named imports
     // (AdminTolerances, AdminAlertThresholds, Buyer/SupplierFixedStockReconcile)
-    // and the three `lazy()` pages inside `<Suspense>` (PlanGrid,
-    // BuyerCollaboration, SupplierForecasts).
+    // and the `lazy()` pages inside `<Suspense>` (BuyerCollaboration,
+    // SupplierForecasts; PlanGrid was the third until IA P-10 retired it).
     expect(sourceOf('AdminTolerances')).toMatch(/admin\/AdminRuleValues\/index\.jsx$/);
     expect(sourceOf('SupplierFixedStockReconcile')).toMatch(/FixedStockReconcile\.jsx$/);
-    expect(sourceOf('PlanGrid')).toMatch(/PlanGrid\.jsx$/);
+    expect(sourceOf('BuyerCollaboration')).toMatch(/BuyerCollaboration\.jsx$/);
     const byComponent = new Map(routes().map((r) => [r.component, r.path]));
     expect(byComponent.get('AdminTolerances')).toBe('/buyer/admin/tolerances');
-    expect(byComponent.has('PlanGrid')).toBe(true);
     expect(byComponent.has('BuyerCollaboration')).toBe(true);
+    expect(byComponent.has('SupplierForecasts')).toBe(true);
     // Known-false: a wrapper is never taken for the page it wraps.
     expect(byComponent.has('Suspense')).toBe(false);
     expect(byComponent.has('LoadingState')).toBe(false);

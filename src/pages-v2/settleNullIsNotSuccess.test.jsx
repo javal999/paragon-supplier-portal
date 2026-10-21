@@ -153,7 +153,7 @@ describe('§90 KNOWN-GOOD FIRST — a real settle still completes and still says
         <ToastSpy />
       </>
     );
-    await screen.findByText('Invoices & Payment');
+    await screen.findByRole('heading', { name: 'Invoices' });
     fireEvent.click(await screen.findByText('INV-2025-GIV-0892'));
     fireEvent.click(await screen.findByRole('button', { name: 'Release payment' }));
     fireEvent.click(await screen.findByRole('button', { name: /Confirm release/ }));
@@ -225,7 +225,7 @@ describe('§90 THE DEFECT — a null settle renders a refusal, never a success',
       </>,
       { service: settleReturnsNull() }
     );
-    await screen.findByText('Invoices & Payment');
+    await screen.findByRole('heading', { name: 'Invoices' });
     fireEvent.click(await screen.findByText('INV-2025-GIV-0892'));
     fireEvent.click(await screen.findByRole('button', { name: 'Release payment' }));
     fireEvent.click(await screen.findByRole('button', { name: /Confirm release/ }));
@@ -261,7 +261,7 @@ describe('§90 THE DEFECT — a null settle renders a refusal, never a success',
       </>,
       { service: settleReturnsNull() }
     );
-    await screen.findByText('Invoices & Payment');
+    await screen.findByRole('heading', { name: 'Invoices' });
     fireEvent.click(await screen.findByText('INV-2025-GIV-0892'));
     fireEvent.click(await screen.findByRole('button', { name: 'Release payment' }));
     fireEvent.click(await screen.findByRole('button', { name: /Confirm release/ }));

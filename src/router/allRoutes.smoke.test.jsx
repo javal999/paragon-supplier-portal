@@ -22,15 +22,10 @@ import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 
 import Login from '@pages/auth/Login';
-import BuyerDashboard from '@pages-v2/BuyerDashboard';
 import BuyerHome from '@pages-v2/BuyerHome';
 import SupplierHome from '@pages-v2/SupplierHome';
-import BuyerOrderSummary from '@pages-v2/BuyerOrderSummary';
-import SupplierOrderSummary from '@pages-v2/SupplierOrderSummary';
 import BuyerSuppliers from '@pages-v2/BuyerSuppliers';
 import BuyerSupplierProfile from '@pages-v2/BuyerSupplierProfile';
-import Marketplace from '@pages-v2/Marketplace';
-import SupplierStorefrontV2 from '@pages-v2/SupplierStorefront';
 import BuyerOrders from '@pages-v2/BuyerOrders';
 import BuyerSourcing from '@pages-v2/BuyerSourcing';
 import BuyerRfi from '@pages-v2/BuyerRfi';
@@ -41,13 +36,11 @@ import BuyerSourcingEvent from '@pages-v2/BuyerSourcingEvent';
 import SupplierRfi from '@pages-v2/SupplierRfi';
 import SupplierRfp from '@pages-v2/SupplierRfp';
 import SupplierNegotiations from '@pages-v2/SupplierNegotiations';
-import PlanGrid from '@pages-v2/PlanGrid';
 import BuyerCollaboration from '@pages-v2/BuyerCollaboration';
 import BuyerContracts from '@pages-v2/BuyerContracts';
 import BuyerContractDetail from '@pages-v2/BuyerContractDetail';
 import BuyerDeliveryAgreements from '@pages-v2/BuyerDeliveryAgreements';
 import BuyerCallOffs from '@pages-v2/BuyerCallOffs';
-import BuyerChase from '@pages-v2/BuyerChase';
 import BuyerInventory from '@pages-v2/BuyerInventory';
 import BuyerStockSimulation from '@pages-v2/BuyerStockSimulation';
 import BuyerCapacity from '@pages-v2/BuyerCapacity';
@@ -55,13 +48,10 @@ import BuyerAlerts from '@pages-v2/BuyerAlerts';
 import BuyerSupplierAccess from '@pages-v2/BuyerSupplierAccess';
 import BuyerShipments from '@pages-v2/BuyerShipments';
 import BuyerGoodsReceipt from '@pages-v2/BuyerGoodsReceipt';
-import BuyerDiscovery from '@pages-v2/BuyerDiscovery';
 import BuyerRequisitions from '@pages-v2/BuyerRequisitions';
 import BuyerSupplierApplications from '@pages-v2/BuyerSupplierApplications';
 import BuyerInvoices from '@pages-v2/BuyerInvoices';
 import BuyerScorecard from '@pages-v2/BuyerScorecard';
-import BuyerAnalytics from '@pages-v2/BuyerAnalytics';
-import BuyerRisk from '@pages-v2/BuyerRisk';
 import BuyerCommHub from '@pages-v2/BuyerCommHub';
 import BuyerCompliance from '@pages-v2/BuyerCompliance';
 import ProcessFlows from '@pages-v2/ProcessFlows';
@@ -79,12 +69,7 @@ import AdminReasonCodes from '@pages-v2/admin/AdminReasonCodes';
 import RolesCatalogue from '@pages-v2/RolesCatalogue';
 import RoleDetail from '@pages-v2/RoleDetail';
 import Glossary from '@pages-v2/Glossary';
-import IntakeReview from '@pages-v2/IntakeReview';
-import SupplierDashboardV2 from '@pages-v2/SupplierDashboard';
-import SupplierMyStorefront from '@pages-v2/SupplierMyStorefront';
 import SupplierDocumentsV2 from '@pages-v2/SupplierDocuments';
-import SupplierWhatsApp from '@pages-v2/SupplierWhatsApp';
-import CommHubInbound from '@pages-v2/CommHubInbound';
 import SupplierOrders from '@pages-v2/SupplierOrders';
 import SupplierRFQsV2 from '@pages-v2/SupplierRFQs';
 import SupplierForecasts from '@pages-v2/SupplierForecasts';
@@ -157,13 +142,6 @@ const ROUTES = [
     identity: BUYER
   },
   {
-    name: 'buyer/dashboard',
-    pattern: '/buyer/dashboard',
-    at: '/buyer/dashboard',
-    element: <BuyerDashboard />,
-    identity: BUYER
-  },
-  {
     name: 'buyer/suppliers',
     pattern: '/buyer/suppliers',
     at: '/buyer/suppliers',
@@ -175,27 +153,6 @@ const ROUTES = [
     pattern: '/buyer/suppliers/:id',
     at: '/buyer/suppliers/sup-007',
     element: <BuyerSupplierProfile />,
-    identity: BUYER
-  },
-  {
-    name: 'marketplace',
-    pattern: '/marketplace',
-    at: '/marketplace',
-    element: <Marketplace />,
-    identity: BUYER
-  },
-  {
-    name: 'marketplace/supplier/:id',
-    pattern: '/marketplace/supplier/:id',
-    at: '/marketplace/supplier/sup-007',
-    element: <SupplierStorefrontV2 />,
-    identity: BUYER
-  },
-  {
-    name: 'buyer/order-summary',
-    pattern: '/buyer/order-summary',
-    at: '/buyer/order-summary',
-    element: <BuyerOrderSummary />,
     identity: BUYER
   },
   {
@@ -247,13 +204,6 @@ const ROUTES = [
     pattern: '/buyer/rfq/:rfqId',
     at: '/buyer/rfq/rfq-014',
     element: <BuyerSourcingEvent />,
-    identity: BUYER
-  },
-  {
-    name: 'buyer/plan-grid',
-    pattern: '/buyer/plan-grid',
-    at: '/buyer/plan-grid',
-    element: <PlanGrid />,
     identity: BUYER
   },
   {
@@ -397,13 +347,6 @@ const ROUTES = [
     identity: BUYER
   },
   {
-    name: 'buyer/chase',
-    pattern: '/buyer/chase',
-    at: '/buyer/chase',
-    element: <BuyerChase />,
-    identity: BUYER
-  },
-  {
     name: 'buyer/inventory',
     pattern: '/buyer/inventory',
     at: '/buyer/inventory',
@@ -453,13 +396,6 @@ const ROUTES = [
     identity: BUYER
   },
   {
-    name: 'buyer/discovery',
-    pattern: '/buyer/discovery',
-    at: '/buyer/discovery',
-    element: <BuyerDiscovery />,
-    identity: BUYER
-  },
-  {
     name: 'buyer/purchase-requisition',
     pattern: '/buyer/purchase-requisition',
     at: '/buyer/purchase-requisition',
@@ -485,20 +421,6 @@ const ROUTES = [
     pattern: '/buyer/scorecard',
     at: '/buyer/scorecard',
     element: <BuyerScorecard />,
-    identity: BUYER
-  },
-  {
-    name: 'buyer/analytics',
-    pattern: '/buyer/analytics',
-    at: '/buyer/analytics',
-    element: <BuyerAnalytics />,
-    identity: BUYER
-  },
-  {
-    name: 'buyer/risk',
-    pattern: '/buyer/risk',
-    at: '/buyer/risk',
-    element: <BuyerRisk />,
     identity: BUYER
   },
   {
@@ -625,13 +547,6 @@ const ROUTES = [
   // but neither was covered by the route table that claimed to cover all of
   // AppRouter, and nothing would have reported that until a route was deleted.
   {
-    name: 'buyer/intake-review',
-    pattern: '/buyer/intake-review',
-    at: '/buyer/intake-review',
-    element: <IntakeReview />,
-    identity: BUYER
-  },
-  {
     name: 'glossary',
     pattern: '/glossary',
     at: '/glossary',
@@ -646,45 +561,10 @@ const ROUTES = [
     identity: SUPPLIER
   },
   {
-    name: 'supplier/dashboard',
-    pattern: '/supplier/dashboard',
-    at: '/supplier/dashboard',
-    element: <SupplierDashboardV2 />,
-    identity: SUPPLIER
-  },
-  {
-    name: 'supplier/storefront',
-    pattern: '/supplier/storefront',
-    at: '/supplier/storefront',
-    element: <SupplierMyStorefront />,
-    identity: SUPPLIER
-  },
-  {
     name: 'supplier/documents',
     pattern: '/supplier/documents',
     at: '/supplier/documents',
     element: <SupplierDocumentsV2 />,
-    identity: SUPPLIER
-  },
-  {
-    name: 'supplier/whatsapp',
-    pattern: '/supplier/whatsapp',
-    at: '/supplier/whatsapp',
-    element: <SupplierWhatsApp />,
-    identity: SUPPLIER
-  },
-  {
-    name: 'supplier/comm-hub',
-    pattern: '/supplier/comm-hub',
-    at: '/supplier/comm-hub',
-    element: <CommHubInbound />,
-    identity: SUPPLIER
-  },
-  {
-    name: 'supplier/order-summary',
-    pattern: '/supplier/order-summary',
-    at: '/supplier/order-summary',
-    element: <SupplierOrderSummary />,
     identity: SUPPLIER
   },
   {
@@ -840,7 +720,8 @@ describe('sp-001 — every route mounts without crashing', () => {
     // THIS FILE.** The first cut was `/<Route\s+path="…"\s+element=\{<(\w+)/`,
     // which requires `element=` to follow `path=` directly. Three routes wrap
     // their element in `<Suspense>` across several lines
-    // (`/buyer/collaboration/responses`, `/buyer/plan-grid`, `/supplier/forecasts/responses`), so the
+    // (`/buyer/collaboration/responses`, `/supplier/forecasts/responses`, and the
+    // retired `/buyer/plan-grid`), so the
     // narrowing that correctly excluded redirects silently DROPPED them from the
     // derived population — and they then read as stale smoke rows. Narrowing a
     // matcher creates blind spots as readily as widening one creates false

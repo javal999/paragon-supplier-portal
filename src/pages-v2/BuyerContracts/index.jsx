@@ -385,10 +385,12 @@ const ContractsWorkspace = ({ baseContracts, obligations, suppliers }) => {
   const toggleType = (t) =>
     setSelectedTypes((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
 
+  // IA P-10 — no menu item of its own: the crumb names the menu section of the
+  // page it belongs to (Sourcing), never a section the menu lacks (NV-05).
   return (
     <AppShellV2>
       <PageHeader
-        breadcrumb={[t('contracts.crumb.acquire'), t('contracts.crumb.contracts')]}
+        breadcrumb={[t('hub.nav.section.sourcing'), t('contracts.crumb.contracts')]}
         title={t('contracts.header.title')}
         subtitle={t('contracts.header.subtitle')}
         actions={
@@ -516,7 +518,7 @@ const BuyerContracts = () => {
   const contractsQuery = useContracts();
   const obligationsQuery = useObligations();
   const suppliersQuery = useSuppliers();
-  const CONTRACTS_CRUMB = [t('contracts.crumb.acquire'), t('contracts.crumb.contracts')];
+  const CONTRACTS_CRUMB = [t('hub.nav.section.sourcing'), t('contracts.crumb.contracts')];
 
   if (contractsQuery.isPending || obligationsQuery.isPending || suppliersQuery.isPending)
     return <LoadingState breadcrumb={CONTRACTS_CRUMB} />;

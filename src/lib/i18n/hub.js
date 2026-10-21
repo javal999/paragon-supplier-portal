@@ -34,12 +34,14 @@ export const hubEn = {
 
   // PTI items
   'hub.nav.pti.tasks': 'My tasks',
-  'hub.nav.pti.replies': 'Supplier replies',
+  // IA P-05 — one Home page for following suppliers up (Chase merged into it).
+  'hub.nav.pti.replies': 'Supplier follow-ups',
   'hub.nav.pti.orderSummary': 'Order summary',
   'hub.nav.pti.purchaseOrders': 'Purchase orders',
   'hub.nav.pti.shipments': 'Shipments & ASN',
   'hub.nav.pti.goodsReceipts': 'Goods receipts',
-  'hub.nav.pti.inventory': 'Inventory',
+  // IA P-11 (IA-X02) — one name per object: the supplier menu says Stock too.
+  'hub.nav.pti.inventory': 'Stock',
   'hub.nav.pti.stockSimulation': 'Stock simulation',
   'hub.nav.pti.capacity': 'Capacity',
   'hub.nav.pti.alerts': 'Alerts',
@@ -50,6 +52,9 @@ export const hubEn = {
   'hub.nav.pti.rfq': 'RFQ',
   'hub.nav.pti.rfp': 'RFP',
   'hub.nav.pti.suppliers': 'Suppliers',
+  // IA P-03 — Sourcing's menu homes for requisitions and supplier documents.
+  'hub.nav.pti.requisitions': 'Requisitions',
+  'hub.nav.pti.supplierDocuments': 'Supplier documents',
   'hub.nav.pti.invoices': 'Invoices',
   'hub.nav.pti.performance': 'Supplier performance',
   // FUX phase 1 — Weekly plan and Review items. The old item keys above stay:
@@ -58,7 +63,8 @@ export const hubEn = {
   'hub.nav.pti.whatToOrder': 'What to order',
   'hub.nav.pti.makeRoom': 'Make warehouse room',
   'hub.nav.pti.publishToSuppliers': 'Publish to suppliers',
-  'hub.nav.pti.supplierResponses': 'Supplier responses',
+  // IA P-11 (IA-X02) — the same object on both personas has the same name.
+  'hub.nav.pti.supplierResponses': 'Foresight commitments',
   'hub.nav.pti.demandAnticipation': 'Demand anticipation',
   'hub.nav.pti.demandAnticipationHistory': 'Demand anticipation history',
   // DRC-17 (BL-202) — the what-if sandbox, in the Weekly plan menu.
@@ -79,7 +85,7 @@ export const hubEn = {
   'hub.nav.sup.callOffs': 'Call-offs',
   'hub.nav.sup.shipments': 'Shipments & ASN',
   'hub.nav.sup.goodsReceipts': 'Goods receipts',
-  'hub.nav.sup.forecast': 'Forecast & commitments',
+  'hub.nav.sup.forecast': 'Foresight commitments',
   'hub.nav.sup.fsReconcile': 'Feedstock reconcile',
   'hub.nav.sup.stock': 'Stock',
   'hub.nav.sup.capacity': 'Capacity',
@@ -173,6 +179,9 @@ export const hubEn = {
     'Create a PR in SAP: materials at ROP Fisik with no umbrella PO balance left',
   'hub.home.task.missingCommitments': 'Missing forecast commitments',
   'hub.home.task.commitmentExceptions': 'Forecast commitments outside tolerance to review',
+  // IA P-03 — UC1 step 2 and UC5 step 3 start from My tasks.
+  'hub.home.task.requisitionsToApprove': 'Requisitions to approve',
+  'hub.home.task.certsToReview': 'Declared certificates to review',
 
   'hub.home.task.sup.confirmOrders': 'Purchase orders to respond to',
   'hub.home.task.sup.shippingNotice': 'Confirmed orders without an expected completion date',
@@ -181,6 +190,8 @@ export const hubEn = {
   // acronym the menu uses, in the To do rows too.
   'hub.home.task.sup.rfq': 'RFQ invitations to answer',
   'hub.home.task.sup.certs': 'Certificates expired or expiring',
+  // IA P-03 (IA-S02) — UC5 step 2: a document PTI asked for and the supplier has not sent.
+  'hub.home.task.sup.docsRequested': 'Documents PTI asked for',
   'hub.home.task.sup.invoices': 'Invoices awaiting payment',
   'hub.home.task.sup.receiptDiscrepancies': 'Receipt discrepancies to acknowledge or dispute',
   'hub.home.task.sup.returnedInvoices': 'Returned invoices to correct and resubmit',
@@ -239,7 +250,7 @@ export const hubId = {
   'hub.nav.section.planningEngine': 'Mesin perencanaan',
 
   'hub.nav.pti.tasks': 'Tugas saya',
-  'hub.nav.pti.replies': 'Balasan pemasok',
+  'hub.nav.pti.replies': 'Tindak lanjut pemasok',
   'hub.nav.pti.orderSummary': 'Ringkasan pesanan',
   'hub.nav.pti.purchaseOrders': 'Pesanan pembelian',
   'hub.nav.pti.shipments': 'Pengiriman & ASN',
@@ -255,13 +266,15 @@ export const hubId = {
   'hub.nav.pti.rfq': 'RFQ',
   'hub.nav.pti.rfp': 'RFP',
   'hub.nav.pti.suppliers': 'Pemasok',
+  'hub.nav.pti.requisitions': 'Permintaan pembelian',
+  'hub.nav.pti.supplierDocuments': 'Dokumen pemasok',
   'hub.nav.pti.invoices': 'Faktur',
   'hub.nav.pti.performance': 'Kinerja pemasok',
   'hub.nav.pti.thisWeek': 'Minggu ini',
   'hub.nav.pti.whatToOrder': 'Apa yang dipesan',
   'hub.nav.pti.makeRoom': 'Kosongkan ruang gudang',
   'hub.nav.pti.publishToSuppliers': 'Terbitkan ke pemasok',
-  'hub.nav.pti.supplierResponses': 'Tanggapan pemasok',
+  'hub.nav.pti.supplierResponses': 'Komitmen foresight',
   'hub.nav.pti.demandAnticipation': 'Antisipasi permintaan',
   'hub.nav.pti.demandAnticipationHistory': 'Riwayat antisipasi permintaan',
   'hub.nav.pti.whatIfSandbox': 'Sandbox what-if',
@@ -279,7 +292,7 @@ export const hubId = {
   'hub.nav.sup.callOffs': 'Call-off',
   'hub.nav.sup.shipments': 'Pengiriman & ASN',
   'hub.nav.sup.goodsReceipts': 'Penerimaan barang',
-  'hub.nav.sup.forecast': 'Prakiraan & komitmen',
+  'hub.nav.sup.forecast': 'Komitmen foresight',
   'hub.nav.sup.fsReconcile': 'Rekonsiliasi feedstock',
   'hub.nav.sup.stock': 'Stok',
   'hub.nav.sup.capacity': 'Kapasitas',
@@ -361,12 +374,15 @@ export const hubId = {
   'hub.home.task.ropFisikPr': 'Buat PR di SAP: material pada ROP Fisik tanpa saldo PO induk',
   'hub.home.task.missingCommitments': 'Komitmen prakiraan yang belum masuk',
   'hub.home.task.commitmentExceptions': 'Komitmen prakiraan di luar toleransi untuk ditinjau',
+  'hub.home.task.requisitionsToApprove': 'Permintaan pembelian untuk disetujui',
+  'hub.home.task.certsToReview': 'Sertifikat yang dideklarasikan untuk ditinjau',
 
   'hub.home.task.sup.confirmOrders': 'Pesanan pembelian yang perlu ditanggapi',
   'hub.home.task.sup.shippingNotice': 'Pesanan terkonfirmasi tanpa perkiraan tanggal selesai',
   'hub.home.task.sup.createAsn': 'Pesanan terkonfirmasi siap dikirim: buat ASN',
   'hub.home.task.sup.rfq': 'Undangan RFQ untuk dijawab',
   'hub.home.task.sup.certs': 'Sertifikat kedaluwarsa atau akan kedaluwarsa',
+  'hub.home.task.sup.docsRequested': 'Dokumen yang diminta PTI',
   'hub.home.task.sup.invoices': 'Faktur yang menunggu pembayaran',
   'hub.home.task.sup.receiptDiscrepancies': 'Selisih penerimaan untuk diakui atau disanggah',
   'hub.home.task.sup.returnedInvoices':

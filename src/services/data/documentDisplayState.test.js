@@ -160,17 +160,18 @@ describe('⚠️ THE WIRING, BY SITE — a working classifier proves nothing abo
       .replace(/\/\*[\s\S]*?\*\//g, ' ')
       .replace(/\/\/[^\n]*/g, ' ');
 
+  // IA P-10 (owner ruled 2026-10-21) — the supplier dashboard and its expiring-
+  // certificates widget were retired with their page, so SupplierDocuments is
+  // the render site left; Supplier Home's To do reads the classifier too.
   const DOCS_PAGE = 'src/pages-v2/SupplierDocuments.jsx';
-  const DASHBOARD = 'src/pages-v2/SupplierDashboard';
-  const WIDGET = 'src/pages-v2/widgets/SupplierCertsExpiringWidget.jsx';
+  const HOME = 'src/pages-v2/SupplierHome.jsx';
 
-  it('CONTROL: the strip left real code behind on all three files', () => {
+  it('CONTROL: the strip left real code behind on every file read', () => {
     // Without this, every `not.toMatch` below could pass over an empty string —
     // the shape that made a sibling gate accuse this widget of reading
     // `doc.status` when a JSX comment was all it had matched.
     expect(read(DOCS_PAGE)).toContain('SupplierDocuments');
-    expect(read(DASHBOARD)).toContain('SupplierDashboard');
-    expect(read(WIDGET)).toContain('SupplierCertsExpiringWidget');
+    expect(read(HOME)).toContain('SupplierHome');
   });
 
   it('SITE 1 · SupplierDocuments — the per-row BADGE reads the classifier', () => {
@@ -193,32 +194,16 @@ describe('⚠️ THE WIRING, BY SITE — a working classifier proves nothing abo
     expect(code).toContain("d.status === 'Rejected'");
   });
 
-  it('SITE 3 · SupplierDashboard — the BADGE reads the classifier', () => {
-    const code = read(DASHBOARD);
-    expect(code).toContain('documentDisplayState(doc, nowIso)');
-    expect(code).toContain('DISPLAY_STATE_TONE[display]');
-    expect(code).not.toContain('DOC_STATUS_TONE');
-  });
-
-  it('SITE 4 · SupplierDashboard — the ACTION LABEL reads the classifier', () => {
-    // ⚠️ The hard one. A badge that computes beside a label that does not is the
-    // same split one field over, and the label is the half a supplier acts on.
-    const code = read(DASHBOARD);
-    expect(code).toContain('DISPLAY_STATE_ACTION_KEY[display]');
-    expect(code).not.toContain('DOC_STATUS_ACTION_KEY');
-  });
-
-  it('SITE 5 · SupplierCertsExpiringWidget — on the SHARED classifier, not merely on a projection', () => {
-    const code = read(WIDGET);
-    expect(code).toContain('documentDisplayState');
-    expect(code).not.toMatch(/\b(d|doc)\.status\b/);
+  it('SITE 3 · SupplierHome — the certificates task reads the classifier', () => {
+    const code = read(HOME);
+    expect(code).toContain('documentDisplayState(doc, DECLARED_PRESENT)');
   });
 
   it('⚠️ NO render site reads a clock-bearing stored member any more', () => {
     // The population is the two CLOCK members. The lifecycle members are
     // legitimately read (they are the dispatcher's cursor and carry no clock),
     // so a blanket `.status` ban would be wrong in the other direction.
-    for (const f of [DOCS_PAGE, DASHBOARD, WIDGET]) {
+    for (const f of [DOCS_PAGE, HOME]) {
       const code = read(f);
       expect(code, `${f} still branches on the stored clock literal`).not.toContain(
         "=== 'Expiring Soon'"

@@ -38,6 +38,8 @@ const GoodsReceiptFilters = ({
     <SubTabs
       options={[
         { id: 'all', label: t('goodsReceipt.tab.all'), count: counts.all },
+        // IA P-08 — the receipts Home's "Goods receipts to review" counts.
+        { id: 'action', label: t('goodsReceipt.tab.action'), count: counts.action },
         { id: 'pending', label: t('goodsReceipt.tab.pending'), count: counts.pending },
         {
           id: 'under-inspection',
