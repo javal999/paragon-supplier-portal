@@ -7,12 +7,18 @@ import Button from '@components/ui-v2/Button';
 import StatusPill from '@components/ui-v2/StatusPill';
 import Data from '@components/ui-v2/Data';
 import { formatNumber } from '@lib/format';
-import { useInventoryAlerts, usePurchaseOrders, useStockSimulation } from '@services/query/hooks';
+import {
+  useCallOffs,
+  useInventoryAlerts,
+  usePurchaseOrders,
+  useStockSimulation
+} from '@services/query/hooks';
 /** @import { InventoryPosition, RiskBasis, RiskClass } from '@services/data/types' */
 import { CALL_OFF_PO_STATES } from '@services/transitions/callOffRules';
 import { dayOf, incomingTotals } from '@services/transitions/inventoryRules';
 import { Figure, RiskPill, inventoryNow, labelClass } from './inventoryDisplay';
 import FeedstockLine from './FeedstockLine';
+import { agreementLineFor } from './stockSimulationDisplay';
 import { PicCell, PicHeader } from '../materials/picDisplay';
 import { TradeNameBeside } from '../materials/tradeNameDisplay';
 
@@ -24,9 +30,8 @@ import { TradeNameBeside } from '../materials/tradeNameDisplay';
 // alerts on the pair, the supplier's stock update mode (INV-D6: shown, changed
 // only on the admin page), and the actions that work for the pair.
 //
-// "Create call-off" shows only when the pair has an agreement line — the same
-// lookup the call-off page's prefill makes (a confirmed or partly delivered PO
-// of this supplier with a line for the material, `CALL_OFF_PO_STATES`);
+// "Create call-off" shows only when the pair has an agreement line with
+// quantity left — `agreementLineFor`, the rule Stock simulation uses (P-06);
 // otherwise "Create PO request", with the call-off page's own "No agreement
 // line" sentence as the reason.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -135,11 +140,15 @@ const MaterialDrawer = ({
   const alerts = (alertsQuery.data?.items ?? []).filter(
     (a) => a.status === 'open' && a.supplierId === p.supplierId && a.subject === p.materialCode
   );
-  const hasAgreementLine = (posQuery.data?.items ?? []).some(
-    (po) =>
-      po.supplierId === p.supplierId &&
-      po.lineItems.some((line) => line.materialCode === p.materialCode)
-  );
+  const callOffsQuery = useCallOffs();
+  // One rule with Stock simulation (P-06): a call-off only on a line with quantity left.
+  const hasAgreementLine =
+    agreementLineFor(
+      posQuery.data?.items ?? [],
+      callOffsQuery.data?.items ?? [],
+      p.supplierId,
+      p.materialCode
+    ).state === 'line';
   const simRow = (simQuery.data?.items ?? []).find((r) => r.materialCode === p.materialCode);
   const free = simRow?.simulation?.freeToCallOff ?? null;
   const ptiBelow = p.ptiSoh !== null && p.ptiRop !== null && p.ptiSoh < p.ptiRop;
@@ -297,7 +306,7 @@ const MaterialDrawer = ({
               {t('inv.drawer.action.simulation.hint')}
             </p>
           </div>
-          {posQuery.isPending ? null : hasAgreementLine ? (
+          {posQuery.isPending || callOffsQuery.isPending ? null : hasAgreementLine ? (
             <Button
               variant="outline"
               onClick={() =>
