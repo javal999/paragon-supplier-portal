@@ -8,7 +8,7 @@ import { PicCell, PicHeader } from '../materials/picDisplay';
 import { TradeNameBeside } from '../materials/tradeNameDisplay';
 import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
-import { formatDate, formatDateTime } from '@lib/format';
+import { formatDate, formatDateTime, formatNumber } from '@lib/format';
 /** @import { StatusTone } from '@lib/statusTone' */
 import { sdcClock } from '@services/sdc';
 /** @import { CommandResult, InventoryPosition, RiskBasis, RiskClass } from '@services/data/types' */
@@ -31,8 +31,13 @@ import { useInventoryCommand } from '@services/query/commandHooks';
  */
 export const inventoryNow = () => sdcClock.now();
 
-/** @param {number} n */
-export const qty = (n) => n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+/**
+ * A quantity in the reader's locale (X-01): "85,000" in English, "85.000" in
+ * Indonesian, at most two decimals. Templates and CSV exports do not use this;
+ * they keep plain digits.
+ * @param {number} n
+ */
+export const qty = (n) => formatNumber(n, { maximumFractionDigits: 2 });
 
 export const inputClass =
   'w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action';
