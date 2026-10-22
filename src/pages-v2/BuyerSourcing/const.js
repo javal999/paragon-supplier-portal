@@ -126,6 +126,7 @@ export const SPREAD_DEPS = {
 /**
  * `sourceRequisitionId`:  C.2 — set ONLY when the buyer started from a requisition.
  * `origin`:  Where a seeded draft came from — the review names it ("Created from …").
+ * `uom`:  `''` until the buyer picks a unit for an `Other` RFQ (RFX-D30); Scope does not advance on it.
  * `unlinkedDocRequestIds`: NR-1 BR-02 — document requests whose item the buyer removed. Wizard state only (never in the payload): the Documents step names each one until it is edited or dismissed.
  *
  * @typedef {RfqAuthoringDraft & {
@@ -133,7 +134,7 @@ export const SPREAD_DEPS = {
  *     category: RFQCategory | '';
  *     materials: string[];
  *     totalQty: string;
- *     uom: (typeof UOM_OPTIONS)[number];
+ *     uom: (typeof UOM_OPTIONS)[number] | '';
  *     budget: string;
  *     responseDeadline: string;
  *     awardDeadline: string;

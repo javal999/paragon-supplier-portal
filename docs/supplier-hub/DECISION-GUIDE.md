@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Version | 1.9, 2026-10-20 (RFX-D25 added: proposal view on the RFI and RFP pages) |
-| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
+| Version | 1.10, 2026-10-22 (RFX-D26 to RFX-D31 added: owner rulings on RFx UX waves 1 and 2) |
+| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20) and RFX-D26 to RFX-D31 (2026-10-22); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, BL-12 call-off record, and three values (BL-54 invoice cap, BL-55 gate OTIF minimum, BL-56 early allowance). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
 | Evidence | Market practice is cited at the end. Where a claim is a judgement rather than a published practice, it says so |
@@ -341,6 +341,40 @@ The owner ruled on the open questions of the RFx UX evaluation (`research/RFX-UX
 **Decision.** The RFI and RFP pages get three tabs: Overview, Compare and By supplier. Compare opens by default once a proposal or answer is submitted; Overview opens when none is. Compare starts with one summary card per supplier, best scored first, then the grid: "Show deviations only" (on by default when a deviation exists), collapsible term groups with their deviation counts, a sticky supplier header, and a neutral "Best" tag on comparable rows (lowest price, shortest lead time, most payment days, longest price validity) and on the lowest indicative price per option and quantity. By supplier shows one proposal at a time. The invitee table stays on Overview; Compare shows a one-line count. List rows have one "Open" button and read "N of M submitted". Display only: no score, rule or award changes. Built in lane 2G (wave 2 MR).
 
 **What would change this.** If buyers read "Best" as a recommendation to award, drop the tag and keep the deviations view.
+
+## RFx owner rulings (decided 2026-10-22)
+
+Levi ruled on six points left open after RFx UX waves 1 and 2 on 2026-10-22. RFX-D26 to RFX-D28 keep what waves 1 and 2 built; RFX-D29 to RFX-D31 are built on branch `feat/rfx-ux-owner-rulings-1022`.
+
+### RFX-D26 · Legacy RFQs need "I will respond" before quoting
+**Decision.** Keep. A supplier states "I will respond" on a legacy RFQ before the quote form opens, as on a tiered RFQ (built in wave 2).
+
+**What would change this.** Suppliers skipping legacy RFQs because of the extra step, seen as fewer quotes on legacy events than before wave 2.
+
+### RFX-D27 · A decline on the RFI and RFP is final
+**Decision.** Keep. A supplier that declines an RFI or RFP cannot take the decline back or answer afterwards; "I will respond" can still become a decline until the response is sent (built).
+
+**What would change this.** Buyers asking to re-invite a supplier that declined by mistake; the fix then is a buyer re-invite, not an undo for the supplier.
+
+### RFX-D28 · Response drafts stay in the browser
+**Decision.** Keep. A supplier's unsent RFI or RFP answers are kept in its own browser; drafts on the server are BL-214 (built).
+
+**What would change this.** Suppliers losing drafts when they switch device or clear the browser, which moves BL-214 up.
+
+### RFX-D29 · "Best" on MOQ, allocation and OTIF
+**Decision.** The "Best" tag on the RFP Compare grid also marks the lowest minimum order quantity (`moq`), the most capacity allocated to PTI per month (`allocation`) and the highest on-time-in-full commitment (`otifCommitment`), beside price, lead time, payment days and price validity. Quantities are read in pieces or kilograms (a bare number in pieces) and allocation per month; OTIF is a percentage from 0 to 100. A value that cannot be read as a number in the row's common unit gets no tag, and a row split evenly between two units gets none. Display only, as RFX-D25.
+
+**What would change this.** Suppliers writing these terms in units the reader cannot convert, so the tag is missing on most rows; the term would then need a number-with-unit field.
+
+### RFX-D30 · No default unit for an "Other" RFQ
+**Decision.** The RFQ wizard defaults the unit by category: Packaging to PCS; Fragrance, Active Ingredients, Emulsifiers and Botanical to KG; Other to none. With no unit the Scope step does not advance and says "Choose a unit". The create verb refuses an empty unit (`UOM_MISSING`) or one off the list (`UOM_UNKNOWN`) by the same rule. A unit the buyer picked is kept when the category changes.
+
+**What would change this.** Most "Other" RFQs ending up in one unit, which would make that unit the default.
+
+### RFX-D31 · Decline reasons per event type
+**Decision.** A shared core (not our product range, no capacity, compliance not met, specification unclear, other) plus reasons that fit the event: the RFQ adds lead time too short and quantity too small; the RFI adds confidentiality or T&C terms not acceptable; the RFP adds the T&C reason, commercial terms not met and cannot develop the formula or design (ODM). The supplier's own words stay required. Each intent verb refuses a reason off its event type's list (`DECLINE_REASON_UNKNOWN`). Seeded declines keep valid reasons.
+
+**What would change this.** Many declines filed as "Other" with the same words, which names a reason the list is missing.
 
 ---
 

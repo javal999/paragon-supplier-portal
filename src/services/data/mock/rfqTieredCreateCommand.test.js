@@ -190,6 +190,14 @@ describe('rfq_create_valid — each refusal by name, probed both ways', () => {
     expect(await refused({ currency: 'JPY' })).toMatch(/^CURRENCY_NOT_PERMITTED/);
   });
 
+  it('UOM_MISSING / UOM_UNKNOWN — RFX-D30: an empty or off-list unit; a listed one passes', async () => {
+    expect(await refused({ materialCategory: 'Other', uom: '' })).toMatch(/^UOM_MISSING/);
+    expect(await refused({ uom: 'BOX' })).toMatch(/^UOM_UNKNOWN/);
+    const res = await svc.dispatch(buyer, create({ materialCategory: 'Other', uom: 'L' }));
+    expect(res.status, res.reason).toBe('done');
+    expect(rfqStore.get(String(res.entityId))?.uom).toBe('L');
+  });
+
   it('NO_ITEMS — an empty item list', async () => {
     expect(await refused({ items: [] })).toMatch(/^NO_ITEMS/);
   });

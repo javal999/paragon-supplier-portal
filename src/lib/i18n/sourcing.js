@@ -280,6 +280,7 @@ export const sourcingEn = {
   // specially: this one modelled the exact number a blank must NOT become.
   'sourcing.wizard.placeholder.qty': 'e.g. 2400',
   'sourcing.wizard.field.uom': 'UoM',
+  'sourcing.wizard.uom.choose': 'Choose a unit',
   // — Wizard: the numeric refusals (CP-0 · W1 · 2e-b-4a) —
   'sourcing.wizard.qty.refused.empty':
     'Enter the total quantity you are sourcing — suppliers quote a unit price against it, so an RFQ without it cannot be answered.',
@@ -628,6 +629,7 @@ export const sourcingId = {
   'sourcing.wizard.budget.refused.ambiguous':
     'Ini bisa dibaca dua cara — "1.500" berarti seribu lima ratus dalam bahasa Indonesia dan satu koma lima dalam bahasa Inggris. Ketik tanpa pemisah: 1500.',
   'sourcing.wizard.field.uom': 'Satuan',
+  'sourcing.wizard.uom.choose': 'Pilih satuan',
   // — Wizard: suppliers —
   'sourcing.wizard.ai.title': 'Rekomendasi AI',
   'sourcing.wizard.ai.basis': '· Berdasarkan kategori, tingkat, dan OTIF',

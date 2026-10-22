@@ -28,6 +28,7 @@ import SupplierRfp from '../SupplierRfp';
 import BuyerRfxRoutes, { selectEventTab } from '@test/buyerRfxRoutes';
 import { MockProcurementService } from '@services/data/mock/MockProcurementService';
 import { supplierSourcingQueue } from '@services/sourcing/supplierOutcome';
+import { RFX_DECLINE_REASONS } from '@services/sourcing/rfxIntent';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 /** @import { SystemRoleId } from '@services/transitions/businessRoles' */
 
@@ -52,6 +53,12 @@ const seat = (supplierId, roles = SEEDED_SEAT_ROLES.supplier) => ({
   actor: NO_PERSON
 });
 const SUP_007 = seat('sup-007');
+
+/** @param {HTMLElement} form */
+const optionValues = (form) =>
+  within(form)
+    .getAllByRole('option')
+    .map((o) => /** @type {HTMLOptionElement} */ (o).value);
 const BUYER_SEAT = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 
 describe('the supplier RFI row (rfi-002, sup-007 has said nothing)', () => {
@@ -97,6 +104,14 @@ describe('the supplier RFI row (rfi-002, sup-007 has said nothing)', () => {
     const form = screen.getByTestId('supplier-rfi-rfi-002-decline-form');
     const confirm = within(form).getByTestId('supplier-rfi-rfi-002-decline-form-confirm');
     expect(confirm).toHaveTextContent('Decline this information request');
+    // RFX-D31 — the RFI's own reasons: the T&C reason, no lead time or quantity.
+    expect(optionValues(form)).toEqual(['', ...RFX_DECLINE_REASONS.rfi]);
+    expect(
+      within(form).getByRole('option', { name: 'Confidentiality or T&C terms not acceptable' })
+    ).toBeInTheDocument();
+    expect(
+      within(form).queryByRole('option', { name: 'Lead time too short' })
+    ).not.toBeInTheDocument();
     // KNOWN-BAD — no reason, no words: the confirm stays off.
     expect(confirm).toBeDisabled();
     fireEvent.change(within(form).getByRole('combobox'), { target: { value: 'notOurProduct' } });
@@ -109,7 +124,7 @@ describe('the supplier RFI row (rfi-002, sup-007 has said nothing)', () => {
 
     const declined = await screen.findByTestId('supplier-rfi-rfi-002-intent-declined');
     expect(declined).toHaveTextContent('Declined');
-    expect(declined).toHaveTextContent('Not a product we make — We print labels but not on rolls.');
+    expect(declined).toHaveTextContent('Not our product range — We print labels but not on rolls.');
     expect(screen.queryByTestId('supplier-rfi-rfi-002-steps')).not.toBeInTheDocument();
     expect(screen.getByTestId('supplier-rfi-intent-first-rfi-002')).toHaveTextContent(
       'You declined this request'
@@ -178,6 +193,14 @@ describe('the supplier RFP row', () => {
     expect(within(form).getByTestId('supplier-rfp-rfp-002-decline-form-confirm')).toHaveTextContent(
       'Decline this proposal request'
     );
+    // RFX-D31 — the RFP's own reasons, the ODM and commercial ones among them.
+    expect(optionValues(form)).toEqual(['', ...RFX_DECLINE_REASONS.rfp]);
+    expect(
+      within(form).getByRole('option', { name: 'Cannot develop the formula or design (ODM)' })
+    ).toBeInTheDocument();
+    expect(
+      within(form).queryByRole('option', { name: 'Quantity too small' })
+    ).not.toBeInTheDocument();
     fireEvent.change(within(form).getByRole('combobox'), { target: { value: 'specUnclear' } });
     fireEvent.change(within(form).getByRole('textbox'), {
       target: { value: 'The pump spec is open; we only supply fixed designs.' }
@@ -200,7 +223,7 @@ describe('the buyer invitee table', () => {
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-003'));
     const declined = await screen.findByTestId('rfp-invitee-sup-015');
     expect(within(declined).getByTestId('invitee-intent-declined')).toHaveTextContent(
-      'Declined Not a product we make — We fill lip products but do not develop formulas.'
+      'Declined Not our product range — We fill lip products but do not develop formulas.'
     );
     // KNOWN-GOOD — the silent invitee is still "Not started".
     expect(screen.getByTestId('rfp-invitee-sup-007')).toHaveTextContent('Not started');

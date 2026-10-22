@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Version | 1.1, 2026-10-20 (RFX-D25 proposal view) |
+| Version | 1.2, 2026-10-22 (RFX-D26 to RFX-D31 owner rulings) |
 | For | The engineering team that builds the production RFx module (RFI, RFQ, RFP) of the PTI Supplier Hub |
 | What this is | The final requirement for RFx: what the prototype does, the decisions behind it, the rules, the states, the refusals, the screens, and what production must add. It replaces reading the RFx history document by document |
 | Built on | The prototype on branch `feat/rfx-ux-wave2` (GitLab MRs !8 and the wave 2 MR), which holds every RFx change to 2026-10-19 |
-| Owner | Achmad Fahlevi (product owner). Decisions are recorded in `DECISION-GUIDE.md` as RFX-D1 to RFX-D24 |
+| Owner | Achmad Fahlevi (product owner). Decisions are recorded in `DECISION-GUIDE.md` as RFX-D1 to RFX-D31 |
 | Paths | `src/…` paths are in `paragon-supplier-portal`. Line numbers were read on `feat/rfx-ux-wave2` on 2026-10-19 and will move |
 
 **In one paragraph.** PTI runs three separate sourcing modules: an RFI collects capability information, an RFQ collects firm, comparable quotes on items with quantity breaks, and an RFP collects commercial terms, options and indicative prices for open-spec purchases. A buyer creates and sends events, compares responses, negotiates in rounds, and records a split award per item; the purchase order or contract is then raised in SAP by hand. A supplier says whether it will respond, answers, quotes, revises until the deadline, and sees its own outcome. The prototype implements all of this against in-memory stores, with every state change going through a governed verb. Production must replace the stores with a backend, add the SAP hand-off, email, file storage and sign-in, and keep the rules, states and refusals listed here.
@@ -58,6 +58,12 @@ Every decision below is binding unless the owner changes it. Full text: `DECISIO
 | RFX-D23 | One name per module, acronym first ("RFQ · Quotation requests"); Indonesian section header "Pengadaan" |
 | RFX-D24 | The RFQ side panel is a summary; review, exchange rate and clarifications live on the RFQ event page |
 | RFX-D25 | The RFI and RFP pages have Overview, Compare and By supplier tabs; Compare opens once a proposal is in, with summary cards, deviations-only, a neutral "Best" tag and a sticky supplier header |
+| RFX-D26 | Legacy RFQs need "I will respond" before quoting, as tiered RFQs do |
+| RFX-D27 | A supplier's decline on the RFI and RFP is final |
+| RFX-D28 | Supplier response drafts stay in the browser; server drafts are BL-214 |
+| RFX-D29 | "Best" also marks the lowest MOQ, the most allocation per month and the highest OTIF commitment; a value not readable in the row's common unit gets no tag |
+| RFX-D30 | RFQ wizard unit by category: Packaging PCS, Other none (Scope waits for a unit; the create verb refuses `UOM_MISSING`), every other category KG |
+| RFX-D31 | Decline reasons per event type: a shared core plus RFQ, RFI and RFP reasons; each intent verb refuses a reason off its list (`DECLINE_REASON_UNKNOWN`) |
 
 **Calls made during the 2026-10-19 build that wait for owner review** are in section 12. Each is built as recommended there.
 
@@ -102,7 +108,7 @@ Screenshots of every screen below, taken on the final build: `user-guide/screens
 
 **Confirmation sheets.** Close (RFI, RFP), award and cancel-award (RFQ, RFP) open a sheet listing who is affected, the shares, the reason, and what can be undone. Nothing is dispatched until the buyer confirms ("Record the award" / "Catat pemenang"; "Back to edit" / "Kembali").
 
-**Proposal view on the RFI and RFP pages (RFX-D25).** Three tabs under the actions row, held in the URL (`?tab=overview|compare|supplier`, `&supplier=<id>`): Overview (scope, terms or questions sent, invitees, documents, firm-up, award), Compare (summary cards best scored first, one-line invitee count, the grid with "Show deviations only", collapsible groups, sticky supplier header and a neutral "Best" tag, indicative prices with the lowest per option and quantity tagged; for the RFI, section accordions and "Show answers that differ"), and By supplier (one proposal at a time with Previous/Next). Compare is the default once anything is submitted. "Best" comes from `bestValueIds` in `src/pages-v2/rfx/rfxCompare.js`: lowest price basis, shortest lead time, most payment days, longest price validity; other terms get none.
+**Proposal view on the RFI and RFP pages (RFX-D25).** Three tabs under the actions row, held in the URL (`?tab=overview|compare|supplier`, `&supplier=<id>`): Overview (scope, terms or questions sent, invitees, documents, firm-up, award), Compare (summary cards best scored first, one-line invitee count, the grid with "Show deviations only", collapsible groups, sticky supplier header and a neutral "Best" tag, indicative prices with the lowest per option and quantity tagged; for the RFI, section accordions and "Show answers that differ"), and By supplier (one proposal at a time with Previous/Next). Compare is the default once anything is submitted. "Best" comes from `bestValueIds` in `src/pages-v2/rfx/rfxCompare.js`: lowest price basis, shortest lead time, most payment days, longest price validity, lowest MOQ, most allocation per month and highest OTIF commitment (RFX-D29); other terms get none. Values are compared in one common unit (MOQ and allocation in pieces or kilograms, allocation per month, OTIF as a percentage); a value that cannot be read in that unit gets no tag.
 
 ### 4.2 Supplier
 
@@ -189,7 +195,7 @@ A refused verb returns `POLICY_REJECTED` with a detail `CODE: sentence`. The scr
 - **Event and invitees:** NO_QUESTIONS, NO_INVITEES, SUPPLIER_NOT_SELECTABLE, SUPPLIER_NOT_QUALIFIED, NOT_INVITED, NOT_AN_EXTENSION, EVENT_NOT_OPEN, BAD_DEADLINE, TC_DOCUMENT_EMPTY, UNKNOWN_SOURCE_RFI.
 - **Responses:** RESPONSE_DEADLINE_PASSED, RESPONSE_ALREADY_SUBMITTED, PAST_DEADLINE, CONFIDENTIALITY_NOT_ACCEPTED, TC_NOT_ACCEPTED, REQUIRED_UNANSWERED, ANSWER_INVALID, TERMS_UNANSWERED, TERM_ANSWER_INVALID, DEVIATION_NEEDS_COMMENT, INTENT_DECLINED.
 - **Intent:** EVENT_NOT_FOUND, NOT_RESPONDING, INTENT_ALREADY_STATED, DECLINE_REASON_UNKNOWN, DECLINE_TEXT_MISSING, RESPONSE_ALREADY_SENT, QUOTE_ALREADY_SUBMITTED.
-- **RFQ authoring:** BUILT_IN_MISMATCH (a question linked to a built-in field of the wrong type), NO_ITEMS, ITEM_SPEC_MISSING, TIER_COUNT, TIERS_NOT_INCREASING, CURRENCY_NOT_PERMITTED, SAMPLES_INVALID, and the item and question rules.
+- **RFQ authoring:** BUILT_IN_MISMATCH (a question linked to a built-in field of the wrong type), UOM_MISSING, UOM_UNKNOWN (RFX-D30), NO_ITEMS, ITEM_SPEC_MISSING, TIER_COUNT, TIERS_NOT_INCREASING, CURRENCY_NOT_PERMITTED, SAMPLES_INVALID, and the item and question rules.
 - **Quotes:** TIER_PRICE_MISSING, SPEC_VALUE_MISSING, ONE_TIME_COST_MISSING, SAMPLE_OFFER_MISSING, MOQ_INVALID, LEAD_TIME_INVALID, ALTERNATIVES_NOT_ALLOWED, ANSWER_MISSING.
 - **Rounds:** ROUND_CLOSED, NOT_IN_ROUND, NO_SHORTLIST, NOT_A_BIDDER, RFP_NOT_ROUND_READY, ROUND_OPTION_SETTLED, OFFER_VALIDITY_MISSING.
 - **Award:** AWARD_SPLIT_INCOMPLETE, AWARD_ITEM_NOT_QUOTED, AWARD_ITEMS_OPEN, AWARD_REASON_REQUIRED, AWARD_REASON_COMPLIANCE_FLAG, AWARD_OFFER_EXPIRED, AWARD_OPTION_SOURCED_ELSEWHERE, COMPLIANCE_GATE_FAILED, RFQ_OPTION_IN_FIRM_ROUND, RFQ_SOURCE_RFP_OPEN (an RFQ from an RFP that is still Open), AWARD_RAISED_IN_SAP, AWARD_SAP_DOCUMENT_REQUIRED.
@@ -234,7 +240,7 @@ A refused verb returns `POLICY_REJECTED` with a detail `CODE: sentence`. The scr
 ## 11. Source documents
 
 - `research/RFX-UX-EVALUATION-2026-10.md` — the 32 UX findings, design proposals, mockups and build status (section 10).
-- `DECISION-GUIDE.md` — RFX-D1 to RFX-D24.
+- `DECISION-GUIDE.md` — RFX-D1 to RFX-D31.
 - `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md`, `RFX-BUILD-PLAN-2026-09.md` — the 2026-09 improvements.
 - `SUPPLIER-HUB-REQUIREMENTS.md` — REQ-E03-01 to REQ-E03-05.
 - `BUILD-GAP.md` — what is built per requirement; `BACKLOG.md` — what is left.
@@ -249,18 +255,18 @@ Built as recommended; the owner may change any of them.
 
 | Area | Call | Recommendation |
 |---|---|---|
-| Supplier forms | Drafts are kept in the browser, not on the server | Keep until the backend (BL-214) |
+| Supplier forms | Drafts are kept in the browser, not on the server | Decided 2026-10-22: keep until the backend (BL-214) (RFX-D28) |
 | Supplier forms | A repeated buyer question is shown and the built-in field hidden; its answer fills the built-in field on send | Keep; a stored link replaces the word match (BL-215) |
 | Supplier forms | Single-price Submit is disabled until price, validity and documents are in | Keep |
-| Supplier RFQ | Legacy RFQs also need "I will respond" before quoting (reverses the 2026-09-21 rule that quoting was the statement of intent) | Keep: one entry pattern on every card |
+| Supplier RFQ | Legacy RFQs also need "I will respond" before quoting (reverses the 2026-09-21 rule that quoting was the statement of intent) | Decided 2026-10-22: keep (RFX-D26) |
 | Supplier RFQ | Round and outcome strips sit on the My Quotes card | Keep |
 | Supplier RFQ | A non-tiered round prefills the last unit price | Keep |
-| Supplier intent | A decline is final; a declined supplier cannot save a draft; decline reasons reuse the RFQ list | Keep; Procurement may want a separate RFI/RFP list |
+| Supplier intent | A decline is final; a declined supplier cannot save a draft; decline reasons reuse the RFQ list | Decided 2026-10-22: the decline stays final (RFX-D27); reasons become a shared core plus a list per event type (RFX-D31) |
 | To do | Lanes in a fixed order; a red row no longer jumps above other lanes | Keep (RFX-D20) |
 | Bell | No read state; the badge counts every award notice | Keep until BL-213 |
 | RFQ board | "Needs my action" leaves out Open and Closed RFQs with no quote; awarded RFQs awaiting "Raised in SAP" count | Keep |
 | RFQ board | "All" tab removed; an out-of-list Incoterm is flagged, not refused | Keep |
-| RFQ wizard | Unit by category: Packaging → PCS, others KG | Keep; confirm with Procurement |
+| RFQ wizard | Unit by category: Packaging → PCS, others KG | Decided 2026-10-22: Packaging PCS, Other no unit until the buyer picks one, the rest KG (RFX-D30) |
 | RFQ wizard | Seeded first break is a total break | Keep |
 | RFQ side panel | The "Your move" line is replaced by the stage-derived Next | Keep |
 | RFQ comparison | With no exchange rate, bids stay visible with "—" scores | Keep (RFX-D24) |
