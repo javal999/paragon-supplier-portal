@@ -9,6 +9,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import React from 'react' */
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import SessionAttachments from '@components/ui-v2/SessionAttachments';
 import { rfxSectionsOf } from '@services/sourcing/rfxConfig';
@@ -25,6 +26,7 @@ import { StillMissing } from './ResponseFormState';
  * @property {boolean} disabled
  * @property {(questionId: string, patch: Partial<RfiAnswer>) => void} onChange
  * @property {boolean} [withDescription] -  Ask for the BR-02 description under each answer (the RFI does; the RFP does not).
+ *   RFx UX S-11: it sits behind "Add a comment" until opened or already filled.
  * @property {readonly string[]} [missing] -  S-02 — the required questions still unanswered: each is marked "Still missing" where it sits.
  */
 
@@ -102,13 +104,16 @@ export const QuestionField = ({
   /** @param {string} raw */
   const numberValue = (raw) => (raw.trim() === '' ? undefined : Number(raw));
 
+  // S-11 — the range line only when both bounds are set: "Between — and 5."
+  // named a bound nobody gave. The verb still checks whichever bound exists.
   const bounds =
-    question.min !== undefined || question.max !== undefined
-      ? t('rfxa.answer.bounds', {
-          min: question.min ?? '—',
-          max: question.max ?? '—'
-        })
+    question.min !== undefined && question.max !== undefined
+      ? t('rfxa.answer.bounds', { min: question.min, max: question.max })
       : '';
+  // S-11 — the comment waits behind "Add a comment"; one already written shows.
+  const [commenting, setCommenting] = useState(false);
+  const hasComment = !!answer?.description;
+  const showComment = withDescription && (hasComment || commenting);
 
   return (
     <div id={questionAnchor(question.id)} data-testid={`rfi-field-${question.id}`}>
@@ -275,8 +280,19 @@ export const QuestionField = ({
         </p>
       )}
 
-      {/* REQ-E03-02 BR-02 — every structured entry carries a description. */}
-      {withDescription && (
+      {/* REQ-E03-02 BR-02 — every structured entry can carry a description;
+          S-11 folds it behind "Add a comment" so 11 questions are not 22 boxes. */}
+      {withDescription && !showComment && !disabled ? (
+        <button
+          type="button"
+          onClick={() => setCommenting(true)}
+          className="mt-1 text-xs font-semibold text-action hover:underline"
+          data-testid={`rfi-field-add-comment-${question.id}`}
+        >
+          {t('rfxa.answer.addComment')}
+        </button>
+      ) : null}
+      {showComment && (
         <input
           type="text"
           disabled={disabled}

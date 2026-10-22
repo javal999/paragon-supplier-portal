@@ -45,8 +45,9 @@ import ComparisonSection from './components/ComparisonSection';
 import QuoteVersionsSection from './components/QuoteVersionsSection';
 import NegotiationSection from './components/NegotiationSection';
 import AwardSection from './components/AwardSection';
-import EventStageBar from './components/EventStageBar';
+import RfxStageBar from '../rfx/RfxStageBar';
 import EventSectionNav from './components/EventSectionNav';
+import { rfqStageBar, rfqStageLine, roundBeforeWindowCloses } from './utils';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ONE SOURCING EVENT — REQ-E03-03 and REQ-E03-05 (BUY).
@@ -84,7 +85,7 @@ import EventSectionNav from './components/EventSectionNav';
 // `hooks/useEventCommand`, the new-round fields `hooks/useNewRoundForm`.
 // Nothing rendered or dispatched changed in the move.
 //
-// RFx UX 1C (B-01): a stage bar (`EventStageBar`, derived by `rfqStageOf`) and
+// RFx UX 1C (B-01): a stage bar (`RfxStageBar` over `rfqStageBar`, BL-220) and
 // a sticky "Jump to" nav (`EventSectionNav`) with counts sit above and beside
 // the sections; each section is wrapped in the element the nav scrolls to.
 // `?section=award` still lands on `#event-award`.
@@ -207,6 +208,24 @@ const BuyerSourcingEvent = () => {
   );
   // RFx UX 1C (B-01) — days left on the response window, while it is open.
   const daysLeft = daysToDeadline(rfq.responseDeadline, rfxNow());
+  // RFx UX B-15 — the stage in words for the header, and whether a round
+  // opened now would open inside the response window (a warning only).
+  const quoted = new Set(current.map((q) => q.supplierId)).size;
+  const invited = rfq.invitedSupplierIds.length;
+  const stageLine = rfqStageLine({
+    status: rfq.status,
+    invited,
+    quoted,
+    rounds: eventRounds,
+    inForce
+  });
+  const earlyRound = roundBeforeWindowCloses({
+    status: rfq.status,
+    responseDeadline: rfq.responseDeadline,
+    nowIso: rfxNow(),
+    invited,
+    quoted
+  });
   const hasItems = (rfq.lineItems?.length ?? 0) > 0 || tiered;
   const itemCount = rfq.items?.length ?? rfq.lineItems?.length ?? 0;
   const docCount = current.reduce((n, q) => n + documentsOf(q).length, 0);
@@ -264,13 +283,17 @@ const BuyerSourcingEvent = () => {
         <SampleDataBadge className="ml-3 align-middle" />
       </PageMetaLine>
 
-      <EventStatusBar rfq={rfq} rfqs={rfqs.data?.items ?? []} sourcingMap={sourcingMap} />
-      {/* RFx UX 1C (B-01) — where the event stands, and what the buyer does next. */}
-      <EventStageBar
+      <EventStatusBar
         rfq={rfq}
-        quoted={new Set(current.map((q) => q.supplierId)).size}
-        rounds={eventRounds}
-        inForce={inForce}
+        rfqs={rfqs.data?.items ?? []}
+        sourcingMap={sourcingMap}
+        stageLine={stageLine}
+      />
+      {/* RFx UX 1C (B-01) — where the event stands, and what the buyer does next. */}
+      <RfxStageBar
+        {...rfqStageBar(t, { rfq, quoted, rounds: eventRounds, inForce })}
+        testId="event-stage"
+        nextTestId="event-next"
       />
       {/* BL-147 — the invitees published below the level on placeholder rules, as recorded. */}
       {!!rfq.qualificationWarnings && rfq.qualificationWarnings.length > 0 && (
@@ -368,6 +391,7 @@ const BuyerSourcingEvent = () => {
               currency={currency}
               negotiate={negotiate}
               supplierName={supplierName}
+              earlyRound={earlyRound ? { notQuoted: invited - quoted } : null}
               form={roundForm}
               run={run}
             />

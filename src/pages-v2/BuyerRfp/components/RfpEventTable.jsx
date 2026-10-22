@@ -1,5 +1,6 @@
 /** @import React from 'react' */
 /** @import { RfpEventView } from '@services/sourcing/views' */
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Button from '@components/ui-v2/Button';
 import Data from '@components/ui-v2/Data';
@@ -12,16 +13,18 @@ import { DeadlinePill, EmptyRow } from '../../rfx/rfxDisplay';
 
 /**
  * The RFP list: one row per event (number, title, status, deadline, terms,
- * proposals) with the button that opens or closes its detail below.
- * Moved out of `BuyerRfp.jsx` by the Phase 5 page split (no behaviour change).
- * @type {React.FC<{
- *   items: readonly RfpEventView[];
- *   openId: string | null;
- *   setOpenId: (id: string | null) => void;
- * }>}
+ * "N of M submitted") with ONE row button, "Open", which goes to the event's
+ * own page (RFx UX 2A, B-08 and B-09). RFx UX 2G — the separate "Compare
+ * proposals" button is gone: the page opens on its Compare tab once a
+ * proposal is in, and on Overview before.
+ * Moved out of `BuyerRfp.jsx` by the Phase 5 page split.
+ * @type {React.FC<{ items: readonly RfpEventView[] }>}
  */
-const RfpEventTable = ({ items, openId, setOpenId }) => {
+const RfpEventTable = ({ items }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  /** @param {string} id */
+  const pageOf = (id) => `/buyer/rfp/${encodeURIComponent(id)}`;
   return (
     <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
       <Table>
@@ -65,20 +68,19 @@ const RfpEventTable = ({ items, openId, setOpenId }) => {
                   </div>
                 )}
               </TableCell>
-              <TableCell className="align-top text-sm">
-                {t('rfx.rfp.proposals', { count: event.responses.length })}
+              <TableCell className="align-top text-sm" data-testid={`rfp-submitted-${event.id}`}>
+                {t('rfx.list.submittedOf', {
+                  n: event.responses.length,
+                  m: event.invitedSuppliers.length
+                })}
               </TableCell>
               <TableCell className="align-top text-right">
                 <Button
                   variant="secondary"
-                  onClick={() => setOpenId(openId === event.id ? null : event.id)}
+                  onClick={() => navigate(pageOf(event.id))}
                   data-testid={`rfp-open-${event.id}`}
                 >
-                  {openId === event.id
-                    ? t('rfx.close')
-                    : event.status === 'Draft'
-                      ? t('rfx.rfp.openEvent')
-                      : t('rfx.rfp.compare')}
+                  {t('rfx.row.open')}
                 </Button>
               </TableCell>
             </TableRow>

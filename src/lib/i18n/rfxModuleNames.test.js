@@ -74,6 +74,45 @@ describe('X-01 — one name per module', () => {
     expect(Object.values(hubId)).not.toContain('Undangan sourcing yang perlu dijawab');
   });
 
+  it('BL-217 — the buyer award row and the supplier rounds page lead with the acronym, EN and ID', () => {
+    expect([
+      hubEn['hub.home.task.rfqAward'],
+      rfqsEn['rfqs.rounds.link'],
+      rfxEn['rfx.neg.supplier.title']
+    ]).toEqual([
+      'RFQ ready to award',
+      'RFQ rounds · Revised quotes',
+      'RFQ rounds · Revised quotes'
+    ]);
+    expect([
+      hubId['hub.home.task.rfqAward'],
+      rfqsId['rfqs.rounds.link'],
+      rfxId['rfx.neg.supplier.title']
+    ]).toEqual([
+      'RFQ siap ditetapkan pemenangnya',
+      'Putaran RFQ · Penawaran revisi',
+      'Putaran RFQ · Penawaran revisi'
+    ]);
+    // KNOWN-BAD — the old names are gone in both languages.
+    const all = [
+      ...Object.values(hubEn),
+      ...Object.values(rfqsEn),
+      ...Object.values(rfxEn),
+      ...Object.values(hubId),
+      ...Object.values(rfqsId),
+      ...Object.values(rfxId)
+    ];
+    for (const old of [
+      'Sourcing events ready to award',
+      'Revised quotes (negotiation rounds)',
+      'Revised quotes',
+      'Event sourcing yang siap diputuskan pemenangnya',
+      'Penawaran revisi (putaran negosiasi)',
+      'Penawaran revisi'
+    ])
+      expect(all).not.toContain(old);
+  });
+
   it('the section header is "Sourcing" in English and "Pengadaan" in Bahasa Indonesia', () => {
     expect(hubEn['hub.nav.section.sourcing']).toBe('Sourcing');
     expect(hubId['hub.nav.section.sourcing']).toBe('Pengadaan');

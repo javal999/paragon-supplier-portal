@@ -16,6 +16,7 @@
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderWithProviders, BUYER } from '@test/test-utils';
+import BuyerRfxRoutes from '@test/buyerRfxRoutes';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { NO_PERSON } from '@context/noPerson';
@@ -26,9 +27,9 @@ import { sdcClock } from '@services/sdc';
 import { rfiEventViews } from '@services/data/mock/rfxReadModel';
 import { mockDataService } from '@services/data/mock/mockDataService';
 import { useToast } from '@hooks/useToast';
-import BuyerRfi from '../BuyerRfi';
 import SupplierRfi from '../SupplierRfi';
 import { rfxNow } from './rfxDisplay';
+import { formatDate } from '@lib/format';
 
 beforeEach(() => {
   resetRfxStores();
@@ -86,10 +87,10 @@ const TITLE = 'Q1 2027 bottle capability survey';
 const openWizard = async (identity = BUYER_SEAT) => {
   renderWithProviders(
     <>
-      <BuyerRfi />
+      <BuyerRfxRoutes />
       <ToastSpy />
     </>,
-    { identity }
+    { identity, route: '/buyer/rfi' }
   );
   fireEvent.click(await screen.findByTestId('rfi-new'));
 };
@@ -125,10 +126,12 @@ describe('section 3.6a — the buyer raises an information request', () => {
 
     // The board lands on the NEW event, in Open — the act just performed is the
     // one in view, and its number came from the store rather than from the page.
-    const detail = await screen.findByTestId('rfi-detail-rfi-0004');
-    expect(detail).toHaveTextContent('RFI-2026-004');
-    expect(detail).toHaveTextContent(TITLE);
-    expect(within(detail).getByText('Open')).toBeInTheDocument();
+    await screen.findByTestId('rfi-detail-rfi-0004');
+    // RFx UX 2F — the number, title and status are the page header's (the
+    // About card no longer repeats them).
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(TITLE);
+    expect(screen.getByText('RFI-2026-004')).toBeInTheDocument();
+    expect(screen.getByTestId('rfi-event-status')).toHaveTextContent('Open');
     // An Open event offers Close, never Send again.
     expect(screen.queryByTestId('rfi-send-rfi-0004')).not.toBeInTheDocument();
     expect(screen.getByTestId('rfi-close-rfi-0004')).toBeInTheDocument();
@@ -146,8 +149,8 @@ describe('section 3.6a — the buyer raises an information request', () => {
 
     fireEvent.click(screen.getByTestId('rfi-new-save-draft'));
 
-    const detail = await screen.findByTestId('rfi-detail-rfi-0004');
-    expect(within(detail).getByText('Draft')).toBeInTheDocument();
+    await screen.findByTestId('rfi-detail-rfi-0004');
+    expect(screen.getByTestId('rfi-event-status')).toHaveTextContent('Draft');
     expect(screen.getByTestId('rfi-draft-notice-rfi-0004')).toBeInTheDocument();
     // A Draft offers Send and not Close.
     expect(screen.getByTestId('rfi-send-rfi-0004')).toBeInTheDocument();
@@ -193,7 +196,9 @@ describe('section 3.6a — the buyer raises an information request', () => {
     fireEvent.change(screen.getByLabelText('Title'), { target: { value: TITLE } });
     fireEvent.change(screen.getByTestId('rfi-new-family'), { target: { value: 'packaging' } });
     expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
-    expect(screen.getByTestId('rfi-new-deadline-refusal')).toBeInTheDocument();
+    // RFx UX 2A (B-11) — PREMISE CHANGED: the refusal no longer shows before
+    // the buyer has touched the field; it shows once they leave it (on blur).
+    expect(screen.queryByTestId('rfi-new-deadline-refusal')).not.toBeInTheDocument();
 
     // A date already past is refused the way a blank one is — the reading is the
     // submit verb's own, so the wizard cannot admit a window it would close.
@@ -201,6 +206,8 @@ describe('section 3.6a — the buyer raises an information request', () => {
       target: { value: dayFromNow(-3) }
     });
     expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+    fireEvent.blur(screen.getByLabelText('Response deadline'));
+    expect(screen.getByTestId('rfi-new-deadline-refusal')).toBeInTheDocument();
 
     // POSITIVE TWIN.
     fireEvent.change(screen.getByLabelText('Response deadline'), {
@@ -284,6 +291,8 @@ describe('section 3.6a — the buyer raises an information request', () => {
     cleanup();
     renderWithProviders(<SupplierRfi />, { identity: SUP_007 });
     fireEvent.click(await screen.findByTestId('supplier-rfi-open-rfi-0004'));
+    // BL-132 — the form opens once the supplier says it will respond.
+    fireEvent.click(await screen.findByTestId('supplier-rfi-rfi-0004-intent-respond'));
     expect(await screen.findByTestId('rfi-field-event-1')).toHaveTextContent(
       'Which port do you ship from?'
     );
@@ -293,7 +302,7 @@ describe('section 3.6a — the buyer raises an information request', () => {
   });
 
   it('CE-06 · a seat that may not send reads WHOSE act it is instead of a dead button', async () => {
-    renderWithProviders(<BuyerRfi />, { identity: DRAFTER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: DRAFTER_SEAT, route: '/buyer/rfi' });
     await screen.findByTestId('rfi-row-rfi-001');
     // It holds neither atom, so both the create entry and the publish slot name
     // their owner rather than vanishing.
@@ -303,7 +312,7 @@ describe('section 3.6a — the buyer raises an information request', () => {
 
     // POSITIVE TWIN — the procurement seat keeps both and reads no notice.
     cleanup();
-    renderWithProviders(<BuyerRfi />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfi' });
     expect(await screen.findByTestId('rfi-new')).toBeInTheDocument();
     expect(screen.queryByTestId('handoff-rfi-create')).not.toBeInTheDocument();
   });
@@ -311,7 +320,7 @@ describe('section 3.6a — the buyer raises an information request', () => {
 
 describe('REQ-E03-02 — closing the window stops the answers', () => {
   it('a closed event is still readable, and there is no box to answer in', async () => {
-    renderWithProviders(<BuyerRfi />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfi' });
     fireEvent.click(await screen.findByTestId('rfi-open-rfi-001'));
     fireEvent.click(await screen.findByTestId('rfi-close-rfi-001'));
     // RFx UX 1C (B-05) — the close is dispatched from its confirmation sheet.
@@ -425,5 +434,57 @@ describe('NR-1 BR-02 — the buyer asks for documents on the RFI (B3)', () => {
     expect(await screen.findByTestId('rfi-new-doc-doc-1-name')).toHaveValue('Halal certificate');
     expect(screen.getByTestId('rfi-new-doc-doc-1-type')).toHaveValue('certificate');
     expect(screen.getByTestId('rfi-new-doc-doc-1-required')).toBeChecked();
+  });
+});
+
+// ── RFx UX 2A (B-09, B-11) ──────────────────────────────────────────────────
+
+describe('RFx UX 2A · B-11 — the RFI wizard, polished', () => {
+  it('the deadline refusal waits for blur: a past date left fires it, a future one does not', async () => {
+    await openWizard();
+    const field = screen.getByLabelText('Response deadline');
+    // Before any input: no refusal (it read as an error on an empty form).
+    expect(screen.queryByTestId('rfi-new-deadline-refusal')).not.toBeInTheDocument();
+    // FAILS — a past date, field left: the refusal shows.
+    fireEvent.change(field, { target: { value: dayFromNow(-2) } });
+    expect(screen.queryByTestId('rfi-new-deadline-refusal')).not.toBeInTheDocument();
+    fireEvent.blur(field);
+    expect(screen.getByTestId('rfi-new-deadline-refusal')).toHaveTextContent(/future/i);
+    // PASSES — a future date: the refusal is gone.
+    fireEvent.change(field, { target: { value: dayFromNow(10) } });
+    fireEvent.blur(field);
+    expect(screen.queryByTestId('rfi-new-deadline-refusal')).not.toBeInTheDocument();
+  });
+
+  it('Review shows the deadline as the lists do, and the invitees by name', async () => {
+    await openWizard();
+    const deadline = dayFromNow(14);
+    await walkToReview(deadline);
+    const review = screen.getByTestId('rfi-new-review');
+    expect(review).toHaveTextContent(formatDate(deadline));
+    expect(review).not.toHaveTextContent(deadline);
+    await waitFor(() =>
+      expect(screen.getByTestId('rfi-new-review-invitees')).toHaveTextContent(
+        'PT Sample Packaging Indonesia'
+      )
+    );
+    expect(review).not.toHaveTextContent('1 selected');
+  });
+
+  it('the modal keeps one height on every step, so Next does not move', async () => {
+    await openWizard();
+    const box = () => /** @type {HTMLElement} */ (screen.getByRole('dialog').firstElementChild);
+    expect(box().className).toContain('h-[90vh]');
+    await walkToReview();
+    expect(box().className).toContain('h-[90vh]');
+  });
+
+  it('B-09 — after "Send to suppliers" the buyer lands on the new event\'s own page', async () => {
+    await openWizard();
+    await walkToReview();
+    fireEvent.click(screen.getByRole('button', { name: 'Send to suppliers' }));
+    await screen.findByTestId('rfi-detail-rfi-0004');
+    expect(screen.getByTestId('rfi-event-back')).toBeInTheDocument();
+    expect(screen.queryByTestId('rfi-new')).not.toBeInTheDocument();
   });
 });

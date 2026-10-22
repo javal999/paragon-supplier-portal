@@ -8,6 +8,7 @@ import PageMetaLine from '@components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
 import BulkActionsBar from '@components/ui-v2/BulkActionsBar';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import Data from '@components/ui-v2/Data';
 import { formatDate } from '@lib/format';
 import { TODAY } from '../const';
 
@@ -15,7 +16,7 @@ import { TODAY } from '../const';
  * @typedef {object} SourcingHeaderProps
  * @property {readonly RFQ[]} rfqs The board's RFQs (count, and the export's scope).
  * @property {number} activeCount Open RFQs, for the meta line.
- * @property {string} lastUpdated The latest `createdAt`, for the meta line.
+ * @property {string} nowIso The board's one clock read — the date its day counts are relative to (B-13).
  * @property {VerbAvailability} rfqCreateAvailability `rfq:create` — gates New RFQ and Templates (§73, §84).
  * @property {(scope: readonly RFQ[], filename: string) => void} exportComparison
  * @property {() => void} onNewRfq Opens an empty wizard.
@@ -32,7 +33,7 @@ import { TODAY } from '../const';
 const SourcingHeader = ({
   rfqs,
   activeCount,
-  lastUpdated,
+  nowIso,
   rfqCreateAvailability,
   exportComparison,
   onNewRfq,
@@ -100,10 +101,17 @@ const SourcingHeader = ({
     />
 
     <PageMetaLine className="-mt-6 mb-6">
-      {t(activeCount === 1 ? 'sourcing.meta.summary.one' : 'sourcing.meta.summary.other', {
-        count: activeCount,
-        date: formatDate(lastUpdated)
-      })}
+      {/* RFx UX B-13 — the "As of" line the RFI and RFP pages carry, read from
+          the clock every day count on this board uses. It read "last updated"
+          with the newest RFQ's creation date, which named no present at all. */}
+      <span data-testid="rfq-board-as-of">
+        {t('rfx.asOf')} <Data>{formatDate(nowIso)}</Data>
+      </span>
+      <span className="ml-3">
+        {t(activeCount === 1 ? 'sourcing.meta.summary.one' : 'sourcing.meta.summary.other', {
+          count: activeCount
+        })}
+      </span>
       {/* D-CENSUS-8 — MARKER-SCOPE-01. The existing pills here are scoped to the
           commodity / market-intel panels; the RFQ pipeline itself was unmarked.
           PARTLY REAL: award genuinely dispatches through the wired `rfq` target

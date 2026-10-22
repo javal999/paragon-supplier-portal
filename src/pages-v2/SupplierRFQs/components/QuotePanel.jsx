@@ -121,8 +121,9 @@ const QuotePanel = ({ submission }) => {
                     effectiveQuotePanelRFQ.daysRemaining <= 7 ? 'text-danger' : 'text-text-primary'
                   }
                 >
-                  {effectiveQuotePanelRFQ.deadline}
-                </strong>
+                  {effectiveQuotePanelRFQ.deadlineText}
+                </strong>{' '}
+                <span data-testid="quote-panel-days-left">· {effectiveQuotePanelRFQ.daysLeft}</span>
               </span>
             </div>
           </section>

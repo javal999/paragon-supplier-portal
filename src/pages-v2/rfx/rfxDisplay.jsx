@@ -14,6 +14,7 @@ import { formatDate } from '@lib/format';
 import { sdcClock } from '@services/sdc/clock';
 import { isClosingSoon, isPastDeadline } from '@services/transitions/rfxRules';
 /** @import { InviteeResponseState } from '@services/sourcing/views' */
+/** @import { RfxIntentView } from '@services/sourcing/rfxIntent' */
 /** @import { GateResult } from '@services/sourcing/complianceGate' */
 import { gateMinOtifPct } from '@services/sourcing/complianceGateConfig';
 
@@ -94,11 +95,31 @@ const RESPONSE_VARIANT = {
 };
 
 /**
- * What an invitee has done with its invitation.
- * @type {React.FC<{ state: InviteeResponseState }>}
+ * What an invitee has done with its invitation. BL-132 — with the invitee's
+ * intent: a supplier that has not sent anything reads "Will respond" once it
+ * said so, and "Declined: <reason> — <its words>" once it declined, instead of
+ * "Not started" for ever. A sent response reads "Submitted" whatever was said.
+ * @type {React.FC<{ state: InviteeResponseState; intent?: RfxIntentView | null }>}
  */
-export const ResponseStatePill = ({ state }) => {
+export const ResponseStatePill = ({ state, intent }) => {
   const { t } = useTranslation();
+  if (state !== 'submitted' && intent?.intent === 'decline') {
+    return (
+      <span className="text-xs text-text-secondary" data-testid="invitee-intent-declined">
+        <StatusPill variant="neutral">{t('rfx.response.declined')}</StatusPill>{' '}
+        {t(`rfqResponse.decline.reasonLabel.${intent.reason}`)} — {intent.text}{' '}
+        <Data>{formatDate(intent.at)}</Data>
+      </span>
+    );
+  }
+  if (state === 'notStarted' && intent?.intent === 'respond') {
+    return (
+      <span data-testid="invitee-intent-responding">
+        <StatusPill variant="info">{t('rfx.response.willRespond')}</StatusPill>{' '}
+        <Data>{formatDate(intent.at)}</Data>
+      </span>
+    );
+  }
   return <StatusPill variant={RESPONSE_VARIANT[state]}>{t(`rfx.response.${state}`)}</StatusPill>;
 };
 

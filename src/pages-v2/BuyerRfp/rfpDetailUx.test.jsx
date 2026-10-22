@@ -16,6 +16,7 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER } from '@test/test-utils';
+import BuyerRfxRoutes, { selectEventTab } from '@test/buyerRfxRoutes';
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import {
   resetRfxStores,
@@ -26,7 +27,6 @@ import { rfqStore } from '@services/data/mock/stores/rfqStore';
 import { quotationStore } from '@services/data/mock/stores/quotationStore';
 import { sdcClock } from '@services/sdc';
 import { rfxNow } from '../rfx/rfxDisplay';
-import BuyerRfp from '.';
 
 /** @type {CurrentIdentity} */
 const BUYER_SEAT = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
@@ -40,7 +40,7 @@ beforeEach(() => {
 
 /** @param {string} id */
 const openDetail = async (id) => {
-  renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+  renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
   fireEvent.click(await screen.findByTestId(`rfp-open-${id}`));
   return screen.findByTestId(`rfp-detail-${id}`);
 };
@@ -79,6 +79,8 @@ describe('B-06 — the RFP detail shows the terms and options sent, before any p
 describe('B-07 — "Firm up the prices": two labelled choices with their rule', () => {
   it('Open RFP: both choices are disabled and say "Close the RFP first"', async () => {
     const detail = await openDetail('rfp-002');
+    // RFx UX 2G — "Firm up the prices" is on the Overview tab.
+    await selectEventTab('Overview');
     const block = within(detail).getByTestId('rfp-firmup-rfp-002');
     expect(within(block).getByRole('heading', { name: 'Firm up the prices' })).toBeInTheDocument();
     const firm = within(block).getByTestId('rfp-firmup-firm-rfp-002');
@@ -112,6 +114,7 @@ describe('B-07 — "Firm up the prices": two labelled choices with their rule', 
       openedAt: rfxNow()
     });
     const detail = await openDetail('rfp-002');
+    await selectEventTab('Overview');
     const firm = within(detail).getByTestId('rfp-firmup-firm-rfp-002');
     expect(within(firm).getByTestId('rfp-ask-firm-rfp-002')).toBeEnabled();
     expect(

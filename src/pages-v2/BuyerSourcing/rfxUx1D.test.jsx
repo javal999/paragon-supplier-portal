@@ -44,7 +44,7 @@ describe("B-04 — rfqNextStep: the buyer's next act, derived from state", () =>
     expect(rfqNextStep(rfq({}), { ...none, quoted: 2 })).toBe('award');
   });
 
-  it('an open round → Close round; an award not in SAP → Raise in SAP', () => {
+  it('an open round → close the round; an award not in SAP → raise in SAP', () => {
     expect(
       rfqNextStep(rfq({ status: 'Closed' }), { ...none, quoted: 1, rounds: [{ closed: false }] })
     ).toBe('round');
@@ -97,7 +97,14 @@ describe('B-04 — the board opens on "Needs my action"', () => {
     expect(screen.getByRole('columnheader', { name: 'Next' })).toBeInTheDocument();
     const next = await screen.findAllByTestId(/^rfq-next-/);
     expect(next.length).toBeGreaterThan(0);
-    const labels = ['Publish', 'Review quotes', 'Close round', 'Award', 'Raise in SAP'];
+    // RFx UX B-15/B-16 — the Next column speaks the stage bar's words.
+    const labels = [
+      'Send to suppliers',
+      'Review quotes',
+      'Close the round',
+      'Award',
+      'Mark the award Raised in SAP'
+    ];
     for (const cell of next) expect(labels).toContain(cell.textContent);
   });
 
@@ -165,9 +172,9 @@ describe('B-03 — the wizard seeds Incoterms from the list and Review shows the
         supplierNameById={new Map()}
         editingRfqId={null}
         publishAvailability={/** @type {any} */ ({ kind: 'held' })}
-        revisePending={false}
+        sendPending={false}
         isStepValid={() => true}
-        saveEdit={() => {}}
+        saveAndSend={() => {}}
         setWizardStep={() => {}}
         setTemplateToSave={() => {}}
         t={i18n.t}

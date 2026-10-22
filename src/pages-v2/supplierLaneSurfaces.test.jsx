@@ -4,6 +4,7 @@ import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 import { purchaseOrderStore } from '@services/data/mock/stores/purchaseOrderStore';
 import { commandAuditSink } from '@services/data/mock/MockCommandService';
+import { resetRfqEngagementStores } from '@services/data/mock/stores/rfqEngagementStores';
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import IdentityPanel from '@components/layout-v2/IdentityPanel';
 import SupplierOrders from './SupplierOrders';
@@ -26,6 +27,7 @@ import i18n from '@lib/i18n';
 
 beforeEach(() => {
   purchaseOrderStore.reset();
+  resetRfqEngagementStores();
   commandAuditSink.clear();
 });
 
@@ -78,6 +80,8 @@ describe('⚠️ SupplierOrders — `po:confirm` is FULFILMENT’s', () => {
 describe('⚠️ SupplierRFQs — `quotation:submit` is COMMERCIAL’s', () => {
   it('the SEEDED seat gets the affordance', async () => {
     renderWithProviders(<SupplierRFQs />, { identity: SUPPLIER });
+    // RFx UX S-07 — the quote opens after step 1 on every card.
+    fireEvent.click(await screen.findByTestId('intent-respond-rfq-010'));
     expect(await screen.findAllByText(i18n.t('rfqs.card.submitQuote'))).not.toHaveLength(0);
   });
 

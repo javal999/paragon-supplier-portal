@@ -7,7 +7,7 @@ import { useQuotationSubmit } from '@services/query/commandHooks';
 import { daysUntil } from '@services/data/dayProjection';
 import { documentsOf, responseDocumentsRefusal } from '@services/transitions/rfxDocumentRules';
 import { BASE_CURRENCY, BID_CURRENCIES } from '@lib/currencyPolicy';
-import { formatMoney, formatNumber } from '@lib/format';
+import { formatDate, formatMoney, formatNumber } from '@lib/format';
 import {
   draftFromQuote,
   emptyTieredDraft,
@@ -385,7 +385,7 @@ export const useQuoteSubmission = ({ supplierId, rfqById, nowIso, onSubmitted })
       toast({
         variant: 'success',
         title: t('rfqs.toast.submitted.title', { rfq: rfqNumber }),
-        description: t('rfqs.toast.submitted.body', { date: deadline })
+        description: t('rfqs.toast.submitted.body', { date: formatDate(deadline) })
       });
       // S-01 — sent: the kept draft has done its job.
       if (storeKey) clearDraft(storeKey);

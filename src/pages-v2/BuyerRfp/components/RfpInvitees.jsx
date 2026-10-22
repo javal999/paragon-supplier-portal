@@ -13,7 +13,9 @@ import { DeadlinePill, OtifOrNoHistory, ResponseStatePill } from '../../rfx/rfxD
 /**
  * The invited suppliers: OTIF, own deadline, response state, and — where the RFP
  * asks for them — when each accepted the confidentiality terms and the T&C.
- * Moved out of `BuyerRfp.jsx` by the Phase 5 page split (no behaviour change).
+ * RFx UX 2A (B-10) — titled "Invited suppliers": on a live event nobody can be
+ * added here ("Invite suppliers" is the wizard's step, where they can).
+ * Moved out of `BuyerRfp.jsx` by the Phase 5 page split.
  * @type {React.FC<{ event: RfpEventView }>}
  */
 const RfpInvitees = ({ event }) => {
@@ -33,6 +35,12 @@ const RfpInvitees = ({ event }) => {
   );
   return (
     <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
+      <div
+        className="px-4 py-3 border-b border-border-subtle text-sm font-semibold text-text-primary"
+        data-testid={`rfp-invitees-title-${event.id}`}
+      >
+        {t('rfx.invited.title')}
+      </div>
       <Table>
         <TableHeader>
           <TableHeaderCell>{t('rfx.invite.col.supplier')}</TableHeaderCell>
@@ -65,7 +73,7 @@ const RfpInvitees = ({ event }) => {
                 />
               </TableCell>
               <TableCell>
-                <ResponseStatePill state={invitee.responseState} />
+                <ResponseStatePill state={invitee.responseState} intent={invitee.intent} />
               </TableCell>
               {event.confidentiality &&
                 acceptedCell(

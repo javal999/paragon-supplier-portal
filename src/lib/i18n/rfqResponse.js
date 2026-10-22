@@ -14,10 +14,9 @@ export const rfqResponseEn = {
   'rfqResponse.card.confidential': 'Confidential',
   'rfqResponse.card.samplesRequested': 'Samples requested: {{qty}} by {{date}}',
   'rfqResponse.card.alternativesAllowed': 'Alternative offers are welcome',
-  'rfqResponse.card.sampleRequirements':
-    'Full RFQ specifics arrive with the Paragon sourcing packet (illustrative sample).',
-  'rfqResponse.card.respondFirst': 'Say you will respond to open the quote grid.',
-  'rfqResponse.card.acceptFirst': 'Accept the confidentiality terms to open the quote grid.',
+  'rfqResponse.card.respondFirst': 'Say if you will respond first; the quote opens after that.',
+  'rfqResponse.card.acceptFirst':
+    'Accept the confidentiality terms first; the quote opens after that.',
   'rfqResponse.basis.perVariant': 'per variant',
   'rfqResponse.basis.total': 'total',
 
@@ -199,10 +198,9 @@ export const rfqResponseId = {
   'rfqResponse.card.confidential': 'Rahasia',
   'rfqResponse.card.samplesRequested': 'Sampel diminta: {{qty}} sebelum {{date}}',
   'rfqResponse.card.alternativesAllowed': 'Penawaran alternatif dipersilakan',
-  'rfqResponse.card.sampleRequirements':
-    'Rincian lengkap RFQ menyusul dalam paket pengadaan Paragon (contoh ilustratif).',
-  'rfqResponse.card.respondFirst': 'Nyatakan Anda akan menanggapi untuk membuka tabel penawaran.',
-  'rfqResponse.card.acceptFirst': 'Terima syarat kerahasiaan untuk membuka tabel penawaran.',
+  'rfqResponse.card.respondFirst':
+    'Nyatakan dulu apakah Anda akan menanggapi; penawaran terbuka setelah itu.',
+  'rfqResponse.card.acceptFirst': 'Terima dulu syarat kerahasiaan; penawaran terbuka setelah itu.',
   'rfqResponse.basis.perVariant': 'per varian',
   'rfqResponse.basis.total': 'total',
 

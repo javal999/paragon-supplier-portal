@@ -13,6 +13,7 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER } from '@test/test-utils';
+import BuyerRfxRoutes from '@test/buyerRfxRoutes';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { customRoleStore } from '@services/transitions/customRoles';
@@ -25,8 +26,6 @@ import { MockCommandService } from '@services/data/mock/MockCommandService';
 import { sdcClock } from '@services/sdc';
 import { rfiTemplate } from '@services/sourcing/rfxConfig';
 import Toaster from '@components/ui-v2/Toaster';
-import BuyerRfi from '../BuyerRfi';
-import BuyerRfp from '../BuyerRfp';
 import BuyerSourcingPage from '../BuyerSourcing';
 /** @import { QueryScope } from '@services/data/types' */
 
@@ -350,7 +349,7 @@ describe('BL-93 · RFI — Edit draft on the event detail', () => {
     const before = withoutTrail(rfiEventStore.get(RFI_ID));
     renderWithProviders(
       <>
-        <BuyerRfi />
+        <BuyerRfxRoutes />
         <Toaster />
       </>,
       { identity: BUYER_SEAT, route: `/buyer/rfi?open=${RFI_ID}` }
@@ -390,7 +389,7 @@ describe('BL-93 · RFI — Edit draft on the event detail', () => {
   });
 
   it('a drafter seat can save the edit and cannot send it', async () => {
-    renderWithProviders(<BuyerRfi />, {
+    renderWithProviders(<BuyerRfxRoutes />, {
       identity: DRAFTER_SEAT,
       route: `/buyer/rfi?open=${RFI_ID}`
     });
@@ -410,14 +409,17 @@ describe('BL-93 · RFI — Edit draft on the event detail', () => {
   });
 
   it('a seat without rfi:create reads whose act it is; an Open RFI offers no Edit', async () => {
-    const { unmount } = renderWithProviders(<BuyerRfi />, {
+    const { unmount } = renderWithProviders(<BuyerRfxRoutes />, {
       identity: RECEIVING,
       route: `/buyer/rfi?open=${RFI_ID}`
     });
     expect(await screen.findByTestId(`handoff-rfi-edit-${RFI_ID}`)).toBeInTheDocument();
     expect(screen.queryByTestId(`rfi-edit-${RFI_ID}`)).not.toBeInTheDocument();
     unmount();
-    renderWithProviders(<BuyerRfi />, { identity: BUYER_SEAT, route: '/buyer/rfi?open=rfi-001' });
+    renderWithProviders(<BuyerRfxRoutes />, {
+      identity: BUYER_SEAT,
+      route: '/buyer/rfi?open=rfi-001'
+    });
     await screen.findByTestId('rfi-detail-rfi-001');
     expect(screen.queryByTestId('rfi-edit-rfi-001')).not.toBeInTheDocument();
     expect(screen.queryByTestId('handoff-rfi-edit-rfi-001')).not.toBeInTheDocument();
@@ -483,7 +485,7 @@ describe('BL-93 · RFP — Edit draft on the event detail', () => {
     const before = withoutTrail(rfpEventStore.get(RFP_ID));
     renderWithProviders(
       <>
-        <BuyerRfp />
+        <BuyerRfxRoutes />
         <Toaster />
       </>,
       { identity: BUYER_SEAT, route: `/buyer/rfp?open=${RFP_ID}` }
@@ -504,13 +506,16 @@ describe('BL-93 · RFP — Edit draft on the event detail', () => {
   });
 
   it('a seat without rfp:create reads whose act it is; an Open RFP offers no Edit', async () => {
-    const { unmount } = renderWithProviders(<BuyerRfp />, {
+    const { unmount } = renderWithProviders(<BuyerRfxRoutes />, {
       identity: RECEIVING,
       route: `/buyer/rfp?open=${RFP_ID}`
     });
     expect(await screen.findByTestId(`handoff-rfp-edit-${RFP_ID}`)).toBeInTheDocument();
     unmount();
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT, route: '/buyer/rfp?open=rfp-001' });
+    renderWithProviders(<BuyerRfxRoutes />, {
+      identity: BUYER_SEAT,
+      route: '/buyer/rfp?open=rfp-001'
+    });
     await screen.findByTestId('rfp-detail-rfp-001');
     expect(screen.queryByTestId('rfp-edit-rfp-001')).not.toBeInTheDocument();
   });
@@ -522,7 +527,7 @@ describe('BL-93 · Discard draft (t_rfi_cancel / t_rfp_cancel from Draft)', () =
   it('RFI — the draft is Cancelled, nothing was sent, and Edit is gone', async () => {
     renderWithProviders(
       <>
-        <BuyerRfi />
+        <BuyerRfxRoutes />
         <Toaster />
       </>,
       { identity: BUYER_SEAT, route: `/buyer/rfi?open=${RFI_ID}` }
@@ -539,13 +544,16 @@ describe('BL-93 · Discard draft (t_rfi_cancel / t_rfp_cancel from Draft)', () =
   });
 
   it('RFP — the same, and a seat without rfp:publish cannot press it', async () => {
-    const { unmount } = renderWithProviders(<BuyerRfp />, {
+    const { unmount } = renderWithProviders(<BuyerRfxRoutes />, {
       identity: DRAFTER_SEAT,
       route: `/buyer/rfp?open=${RFP_ID}`
     });
     expect(await screen.findByTestId(`rfp-discard-${RFP_ID}`)).toBeDisabled();
     unmount();
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT, route: `/buyer/rfp?open=${RFP_ID}` });
+    renderWithProviders(<BuyerRfxRoutes />, {
+      identity: BUYER_SEAT,
+      route: `/buyer/rfp?open=${RFP_ID}`
+    });
     fireEvent.click(await screen.findByTestId(`rfp-discard-${RFP_ID}`));
     await waitFor(() =>
       expect(
@@ -556,7 +564,10 @@ describe('BL-93 · Discard draft (t_rfi_cancel / t_rfp_cancel from Draft)', () =
   });
 
   it('KNOWN-BAD twin — an Open event offers no Discard', async () => {
-    renderWithProviders(<BuyerRfi />, { identity: BUYER_SEAT, route: '/buyer/rfi?open=rfi-001' });
+    renderWithProviders(<BuyerRfxRoutes />, {
+      identity: BUYER_SEAT,
+      route: '/buyer/rfi?open=rfi-001'
+    });
     await screen.findByTestId('rfi-detail-rfi-001');
     expect(screen.queryByTestId('rfi-discard-rfi-001')).not.toBeInTheDocument();
   });

@@ -35,6 +35,7 @@ import { DECLARED_PRESENT } from '../../fixturePresent';
 /** @import { Quotation } from '@data/mockQuotations' */
 import { rfiTemplate } from '../../../sourcing/rfxConfig';
 /** @import { AwardRecord, NegotiationRound, RfiEvent, RfiResponse, RfpEvent, RfpResponse } from '../../../sourcing/types' */
+/** @import { RfxIntentRecord } from '../../../sourcing/rfxIntent' */
 
 const DAY_MS = 86_400_000;
 const P = Date.parse(`${DECLARED_PRESENT}T00:00:00.000Z`);
@@ -781,6 +782,32 @@ export const RFP_RESPONSE_SEED = [
         'Samples 3 weeks after PTI confirms the option; first production 7 weeks after sample approval.',
       validUntil: day(120)
     }
+  }
+];
+
+// ── BL-132 — intent on an RFI and an RFP ────────────────────────────────────
+//
+//   · sup-013 said "I will respond" on rfi-001 before it began its draft.
+//   · sup-015 DECLINED rfp-003 (ICY), with a reason from the list and its own
+//     words, before accepting the confidentiality terms. The buyer reads both
+//     on the invitee table. sup-007, the demo supplier seat, has said nothing
+//     anywhere, so the whole intent path is open to it.
+
+/** @type {readonly RfxIntentRecord[]} */
+export const RFI_INTENT_SEED = [
+  { id: 'rfii-0001', eventId: 'rfi-001', supplierId: 'sup-013', intent: 'respond', at: at(-2) }
+];
+
+/** @type {readonly RfxIntentRecord[]} */
+export const RFP_INTENT_SEED = [
+  {
+    id: 'rfpi-0001',
+    eventId: 'rfp-003',
+    supplierId: 'sup-015',
+    intent: 'decline',
+    reason: 'notOurProduct',
+    text: 'We fill lip products but do not develop formulas. We could quote filling and the pack only.',
+    at: at(-1)
   }
 ];
 

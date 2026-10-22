@@ -6,7 +6,8 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '@hooks/useToast';
-import { useRfiEvents, useRfpEvents, useRfpAwards } from '@services/query/hooks';
+import { useRfiEvents, useRfpEvents, useRfpAwards, useRfpOfferRounds } from '@services/query/hooks';
+import { rfpRoundedOptionRefs, rfqFromOpenRfpRefusal } from '@services/sourcing/rfpAward';
 import { prefillRfqFromRfi, prefillRfqItemsFromRfp } from '@services/sourcing/rfxPrefill';
 import { prefillFromRequisition } from '../../sourcing/requisitionPrefill';
 import { seedFromRfiPrefill, seedFromRfp } from '../../sourcing/rfqDraft';
@@ -116,9 +117,20 @@ export const useWizardDeepLinks = ({
   // RFx D3 (NR-2 BR-08) — the RFP's awards in force: an option one of them
   // placed is left out of the pre-fill, by the rule the create policy refuses it by.
   const rfpAwards = useRfpAwards();
+  // BL-216 (RFX-D16) — and so is an option a firm-offer round of the RFP names
+  // (`rfpRoundedOptionRefs`, the map the create policy refuses by); the toast
+  // names each option left out and why. An RFP still Open opens no wizard: the
+  // create policy would refuse it (`rfqFromOpenRfpRefusal`).
+  const rfpRounds = useRfpOfferRounds();
   const consumedRfp = useRef(/** @type {string | null | null} */ (null));
   useEffect(() => {
-    if (!rfpParam || consumedRfp.current === rfpParam || rfpEvents.isPending || rfpAwards.isPending)
+    if (
+      !rfpParam ||
+      consumedRfp.current === rfpParam ||
+      rfpEvents.isPending ||
+      rfpAwards.isPending ||
+      rfpRounds.isPending
+    )
       return;
     consumedRfp.current = rfpParam;
     const event = (rfpEvents.data?.items ?? []).find((e) => e.id === rfpParam);
@@ -126,16 +138,50 @@ export const useWizardDeepLinks = ({
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean);
-    const awarded = [
-      ...awardedRefsOf((rfpAwards.data?.items ?? []).filter((a) => a.eventId === rfpParam)).keys()
-    ];
-    const seed = event ? prefillRfqItemsFromRfp(event, event.responses, chosen, awarded) : null;
+    const awarded = awardedRefsOf(
+      (rfpAwards.data?.items ?? []).filter((a) => a.eventId === rfpParam)
+    );
+    const rounded = rfpRoundedOptionRefs(rfpRounds.data?.items ?? [], rfpParam);
+    const closedRefs = [...awarded.keys(), ...rounded.keys()];
+    const seed = event ? prefillRfqItemsFromRfp(event, event.responses, chosen, closedRefs) : null;
+    // What the buyer asked for, before the closed options are taken out.
+    const asked = event ? prefillRfqItemsFromRfp(event, event.responses, chosen) : null;
+    const leftOut = (asked?.items ?? [])
+      .filter((i) => !(seed?.items ?? []).some((s) => s.sourceOptionRef === i.sourceOptionRef))
+      .map((i) =>
+        awarded.has(i.sourceOptionRef)
+          ? t('rfqAuthoring.prefill.rfpLeftOut.awarded', { option: i.description })
+          : t('rfqAuthoring.prefill.rfpLeftOut.inRound', {
+              option: i.description,
+              n: rounded.get(i.sourceOptionRef)
+            })
+      );
+    const openRefusal = event ? rfqFromOpenRfpRefusal(event.status, event.eventNumber) : null;
     if (rfqCreateAvailability.kind !== 'held') {
       // The entrance is the unit (§84): a seat without `rfq:create` does not get
       // a wizard the dispatcher would refuse at the end. The page header's
       // handoff notice already names whose act it is.
+    } else if (event && openRefusal) {
+      toast({
+        variant: 'error',
+        title: t('rfqAuthoring.prefill.rfpOpen.title'),
+        description: t('rfqAuthoring.prefill.rfpOpen.desc', { rfp: event.eventNumber })
+      });
     } else if (event && seed && seed.items.length > 0) {
       openWizardFromSeed(seedFromRfp(seed, event.eventNumber));
+      if (leftOut.length > 0) {
+        toast({
+          variant: 'info',
+          title: t('rfqAuthoring.prefill.rfpLeftOut.title'),
+          description: leftOut.join('; ')
+        });
+      }
+    } else if (leftOut.length > 0) {
+      toast({
+        variant: 'error',
+        title: t('rfqAuthoring.prefill.rfpLeftOut.none'),
+        description: leftOut.join('; ')
+      });
     } else {
       toast({
         variant: 'error',
@@ -148,5 +194,13 @@ export const useWizardDeepLinks = ({
     next.delete('options');
     setSearchParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rfpParam, rfpEvents.isPending, rfpEvents.data, rfpAwards.isPending, rfpAwards.data]);
+  }, [
+    rfpParam,
+    rfpEvents.isPending,
+    rfpEvents.data,
+    rfpAwards.isPending,
+    rfpAwards.data,
+    rfpRounds.isPending,
+    rfpRounds.data
+  ]);
 };

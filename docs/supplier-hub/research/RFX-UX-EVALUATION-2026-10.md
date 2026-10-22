@@ -344,7 +344,7 @@ Not exercised, not dropped: the late-quote refusal (`PAST_DEADLINE`). The hub cl
 
 ## 10. BUILD STATUS
 
-The owner ruled on section 9, on BL-132 and the module names on 2026-10-19, and on B-02 during the build (recorded as RFX-D16 to RFX-D24 in `DECISION-GUIDE.md`). Wave 1 built the Blocker and the 14 Major findings on branch `feat/rfx-ux-wave1`; wave 2 builds the 17 Minor and Polish findings on `feat/rfx-ux-wave2`, cut from wave 1. Each lane's commit is the head of its lane branch, merged into the wave branch with a merge commit.
+The owner ruled on section 9, on BL-132 and the module names on 2026-10-19, and on B-02 during the build (recorded as RFX-D16 to RFX-D24 in `DECISION-GUIDE.md`). Wave 1 built the Blocker and the 14 Major findings on branch `feat/rfx-ux-wave1`; wave 2 built the 17 Minor and Polish findings on `feat/rfx-ux-wave2`, cut from wave 1. Each lane's commit is the head of its lane branch, merged into the wave branch with a merge commit.
 
 | ID | Severity | Status | Lane · commit | Pinned by |
 |---|---|---|---|---|
@@ -363,4 +363,24 @@ The owner ruled on section 9, on BL-132 and the module names on 2026-10-19, and 
 | S-06 | Major | Built: sample as Yes/No; a buyer question repeating a built-in field shown once | 1A · `66afbe90` | `rfx/builtInDuplicates.test.jsx` |
 | X-01 | Major | Built (RFX-D23): acronym-first titles, To do names, "Pengadaan" | 1E · `370eade0` | `lib/i18n/rfxModuleNames.test.js` |
 | X-02 | Major | Built (RFX-D20): To do grouped by lane, deadline order inside each, event number and days left | 1B · `1f7d8f81` | `home/supplierLanes.test.jsx` |
-| B-08 to B-16, S-07 to S-13, X-03 | Minor, Polish | Wave 2 (see the wave 2 report) | 2A to 2D | — |
+| B-08 | Minor | Built: row button "Open"; "Compare proposals" only with at least one proposal | 2A · `26ec98b5` | `rfx/rfxUx2A.test.jsx` |
+| B-09 | Minor | Built (RFX-D17): `/buyer/rfi/:id` and `/buyer/rfp/:id` with stage bar and section nav; the wizard opens the new page; `?open=` redirects | 2A · `26ec98b5` | `rfx/rfxUx2A.test.jsx`, `allRoutes.smoke.test.jsx` |
+| B-10 | Minor | Built: one actions row, "Save as a template" under More actions, "Invited suppliers" | 2A · `26ec98b5` | `rfx/rfxUx2A.test.jsx` |
+| B-11 | Minor | Built: deadline checked on blur, `formatDate` on Review, invitee names, fixed modal height | 2A · `26ec98b5` | `rfx/RfiCreate.test.jsx` |
+| B-12 | Minor | Built: first break from the Scope quantity, unit by category, "Save and send to suppliers"; recommendation panel kept in the RFQ wizard only | 2B · `bb68fcf6` | `BuyerSourcing/rfxUx2B.test.jsx` |
+| B-13 | Minor | Built: "As of" line; tiered Est. value "—" with a tooltip | 2B · `bb68fcf6` | `BuyerSourcing/rfxUx2B.test.jsx` |
+| B-14 | Minor | Built: compact qualification pill with the explanation as a tooltip; full text once in the invitee table | 2B · `bb68fcf6` | `BuyerSourcing/rfxUx2B.test.jsx` |
+| B-15 | Minor | Built: stage stated in the header; warning when a round opens early; panel, board and event page share one Next | 2B · `bb68fcf6` | `BuyerSourcing/rfxUx2B.test.jsx` |
+| B-16 | Polish | Built: "Send to suppliers" and "Close the round" everywhere, EN and ID | 2B · `bb68fcf6` | `BuyerSourcing/rfxUx2B.test.jsx` |
+| X-03 | Minor | Built: legend above the award table, tooltips on the pills | 2B · `bb68fcf6` | `BuyerSourcing/rfxUx2B.test.jsx` |
+| S-07 | Minor | Built: step strip on every RFQ card, confidentiality as step 0; legacy RFQs also need "I will respond" first | 2C · `aa3d4763` | `SupplierRFQs/rfxUx2C.test.jsx` |
+| S-08 | Minor | Built: `formatDate` on cards and toasts, days left by deadlines | 2C · `aa3d4763` | `SupplierRFQs/rfxUx2C.test.jsx` |
+| S-09 | Minor | Built: tiered quotes show items priced, break-1 price and MOQ per item | 2C · `aa3d4763` | `SupplierRFQs/rfxUx2C.test.jsx` |
+| S-10 | Minor | Built: days-left pill, Answer / Revise / View, "Awarded" pill | 2C · `aa3d4763` | `SupplierRFQs/rfxUx2C.test.jsx`, `RfxManagement.test.jsx` |
+| S-11 | Minor | Built: comment behind "Add a comment", bound text only with both bounds, file line reworded | 2C · `aa3d4763` | `SupplierRFQs/rfxUx2C.test.jsx`, `rfx/RfxAuthoring.test.jsx` |
+| S-12 | Minor | Built: placeholder block removed from legacy cards | 2C · `aa3d4763` | `SupplierRFQs/rfxUx2C.test.jsx` |
+| S-13 | Minor | Built as BL-132 (RFX-D21): intent and decline on the RFI and RFP, `INTENT_DECLINED` on save, submit and revise | 2D · `c1aadbd7` | `rfx/RfxIntent.test.jsx`, `services/sourcing/rfxIntent.test.js`, `services/data/mock/rfxIntentCommand.test.js` |
+
+Follow-ups built in wave 2 (lane 2E, `b5e10ac3`): BL-222 cancel-RFQ sheet, BL-215 question-to-field link, BL-216 RFQ refused from an Open RFP (`RFQ_SOURCE_RFP_OPEN`), BL-217 names, BL-218 unused keys removed, BL-219 Extend only where allowed, BL-220 one stage bar, and a declined RFQ leaves the supplier's To do. Defects found in the final preview review were fixed in lane 2F.
+
+**Ledger:** 32 of 32 findings built. None waits on the owner; the calls made during the build are listed in section 12 of `RFX-ENGINEERING-HANDOVER-2026-10.md` for review.

@@ -30,6 +30,8 @@ import { rfpOptionRef } from '@services/sourcing/rfpFirmOffer';
 import StatusPill from '@components/ui-v2/StatusPill';
 import { FirmPill, IndicativePill, moneyIn } from './rfxAuthoringDisplay';
 import { refusalCode } from './RfxQuestionEditor';
+import { lowestIndicativePrices } from './rfxCompare';
+import { BestTag } from './RfxEventTabs';
 
 const inputClass =
   'w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action disabled:bg-bg-hover';
@@ -565,16 +567,19 @@ export const RfpPricingForm = ({
 // ── The buyer's comparison: options × suppliers ─────────────────────────────
 
 /**
- * One supplier's indicative prices on one option, by quantity point.
- * @type {React.FC<{ prices: readonly RfpIndicativePrice[]; currency: string }>}
+ * One supplier's indicative prices on one option, by quantity point. RFx UX
+ * 2G — `lowestAt` names the quantity points where this price is the lowest
+ * any supplier gave, marked "Best" (neutral; it informs, it does not award).
+ * @type {React.FC<{ prices: readonly RfpIndicativePrice[]; currency: string; lowestAt?: ReadonlySet<number>; testId?: string }>}
  */
-const IndicativePriceList = ({ prices, currency }) => (
+const IndicativePriceList = ({ prices, currency, lowestAt, testId }) => (
   <ul className="space-y-0.5">
     {prices.map((x) => (
       <li key={x.qty} className="text-sm">
         <Data className="text-text-tertiary">{qtyText(x.qty)}</Data>
         {' · '}
         <Data>{moneyIn(x.unitPrice, currency)}</Data>
+        {lowestAt?.has(x.qty) ? <BestTag testId={`${testId}-best-${x.qty}`} /> : null}
       </li>
     ))}
   </ul>
@@ -613,10 +618,26 @@ const FirmPricesInCell = ({ prices, currency, testId }) => {
 
 /**
  * `firmPrices`:  RFx D3 — the firm prices in force from the RFP's firm-offer rounds (the buyer's read).
- * @type {React.FC<{ request: RfpPricingRequest; currency: string; responses: readonly RfpResponseView[]; testId: string; firmPrices?: readonly RfpFirmPriceView[]; }>}
+ * `markLowest`:  RFx UX 2G — mark the lowest indicative price per option × quantity (Compare tab).
+ * @type {React.FC<{ request: RfpPricingRequest; currency: string; responses: readonly RfpResponseView[]; testId: string; firmPrices?: readonly RfpFirmPriceView[]; markLowest?: boolean; }>}
  */
-export const RfpPricingComparison = ({ request, currency, responses, testId, firmPrices = [] }) => {
+export const RfpPricingComparison = ({
+  request,
+  currency,
+  responses,
+  testId,
+  firmPrices = [],
+  markLowest = false
+}) => {
   const { t } = useTranslation();
+  const lowest = markLowest ? lowestIndicativePrices(request.options, responses) : new Map();
+  /**
+   * @param {string} optionId
+   * @param {string} responseId
+   * @returns {ReadonlySet<number>}
+   */
+  const lowestAt = (optionId, responseId) =>
+    new Set(request.quantityPoints.filter((q) => lowest.get(`${optionId}|${q}`)?.has(responseId)));
   const proposed = responses.flatMap((r) =>
     (r.pricing?.proposedOptions ?? []).map((o) => ({ option: o, by: r }))
   );
@@ -702,7 +723,12 @@ export const RfpPricingComparison = ({ request, currency, responses, testId, fir
                             {t('rfxa.pricing.notPriced')}
                           </span>
                         ) : (
-                          <IndicativePriceList prices={prices} currency={currency} />
+                          <IndicativePriceList
+                            prices={prices}
+                            currency={currency}
+                            lowestAt={lowestAt(option.id, r.id)}
+                            testId={`${testId}-cell-${option.id}-${r.supplierId}`}
+                          />
                         )}
                         {firm.length > 0 && (
                           <FirmPricesInCell

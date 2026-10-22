@@ -8,7 +8,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
-import { useRfqCreate, useRfqReviseDraft } from '@services/query/commandHooks';
+import { useRfqCreate, useRfqPublish, useRfqReviseDraft } from '@services/query/commandHooks';
 import { documentRequestsRefusal } from '@services/transitions/rfxDocumentRules';
 import { prefillFromRequisition } from '../../sourcing/requisitionPrefill';
 import { refusalMessage } from '../../sourcing/RfqAuthoring';
@@ -26,7 +26,7 @@ import {
   readRfqTotalQty
 } from '../../sourcing/rfqCreateModel';
 import { draftEditRefusal } from '../../rfx/draftEdit';
-import { applyPrefill, applySeed, emptyDraft } from '../utils';
+import { applyPrefill, applySeed, emptyDraft, seedFirstBreak, withCategory } from '../utils';
 // The refusal-key helper lives beside the qty/budget message maps it reads, in
 // the scope step that renders them (GL-1's chip guard reads map and use in ONE file).
 import { rfqRefusalKey } from '../components/WizardScopeStep';
@@ -38,6 +38,11 @@ import { rfqRefusalKey } from '../components/WizardScopeStep';
  * draft edits; the ONE parse of the two wizard numbers and each step's gate;
  * and the two dispatches (`t_rfq_create`, `t_rfq_revise_draft`). Moved out of
  * `SourcingWorkspace` by the Phase 5 page split (no behaviour change).
+ *
+ * RFx UX B-12 — a category picks its usual unit (`withCategory`), the Breaks
+ * step opens on the Scope quantity (`seedFirstBreak`), and a new RFQ can be
+ * saved and sent in one act (`submitWizard(true)`: `t_rfq_create`, then the
+ * same `t_rfq_publish` the panel's "Send to suppliers" dispatches).
  * @param {{ baseRfqs: readonly RFQ[]; sourceablePrs: readonly PurchaseRequisition[] }} args
  */
 export const useRfqWizard = ({ baseRfqs, sourceablePrs }) => {
@@ -65,6 +70,7 @@ export const useRfqWizard = ({ baseRfqs, sourceablePrs }) => {
   const refusalText = useRefusalText();
   const createMutation = useRfqCreate();
   const reviseMutation = useRfqReviseDraft();
+  const publishMutation = useRfqPublish();
 
   // ⚠️ **THE ONE ENTRY POINT, AND IT TAKES THE PREFILL AS AN ARGUMENT.** The
   // page's own "New RFQ" button calls it with nothing; the in-wizard requisition
@@ -135,6 +141,9 @@ export const useRfqWizard = ({ baseRfqs, sourceablePrs }) => {
     setDraft((d) => ({ ...d, [key]: value }));
   };
 
+  /** @param {DraftRfq['category']} category */
+  const changeCategory = (category) => setDraft((d) => withCategory(d, category));
+
   /** @param {string} m */
   const toggleMaterial = (m) => {
     setDraft((d) => ({
@@ -179,6 +188,14 @@ export const useRfqWizard = ({ baseRfqs, sourceablePrs }) => {
 
   const qtyRead = useMemo(() => readRfqTotalQty(draft.totalQty), [draft.totalQty]);
   const budgetRead = useMemo(() => readRfqBudget(draft.budget), [draft.budget]);
+
+  // RFx UX B-12 — entering the Breaks step with no break seeds the first one
+  // from the Scope quantity; every other step change is a plain move.
+  /** @param {number} step */
+  const changeStep = (step) => {
+    if (step === 2) setDraft((d) => seedFirstBreak(d, readRfqTotalQty(d.totalQty)));
+    setWizardStep(step);
+  };
 
   const itemsRefusal = useMemo(() => itemsStepRefusal(draft.items), [draft.items]);
   const tiersRefusal = useMemo(() => tiersStepRefusal(draft.tiers), [draft.tiers]);
@@ -296,7 +313,54 @@ export const useRfqWizard = ({ baseRfqs, sourceablePrs }) => {
     );
   };
 
-  const submitWizard = () => {
+  /**
+   * Toast for a send that follows the save (B-12), and close the wizard: the
+   * draft exists either way, so a refused send leaves it on the board as a
+   * Draft and says so.
+   * @param {string} rfqId
+   * @param {number} invitedCount
+   */
+  const sendAfterSave = (rfqId, invitedCount) =>
+    publishMutation.mutate(
+      { rfqId },
+      {
+        onSuccess: (result) => {
+          setWizardOpen(false);
+          if (result.status === 'failed') {
+            toast({
+              variant: 'error',
+              title: t('sourcing.toast.savedNotSent.title', { rfqNumber: rfqId }),
+              description:
+                refusalText(result.reason) ??
+                result.reason ??
+                t('sourcing.toast.publishFailed.default')
+            });
+            return;
+          }
+          toast({
+            variant: 'success',
+            title: t('sourcing.toast.published.title', { rfqNumber: rfqId }),
+            description: t(
+              invitedCount === 1
+                ? 'sourcing.toast.published.desc.one'
+                : 'sourcing.toast.published.desc.other',
+              { count: invitedCount }
+            )
+          });
+        },
+        onError: () => {
+          setWizardOpen(false);
+          toast({
+            variant: 'error',
+            title: t('sourcing.toast.savedNotSent.title', { rfqNumber: rfqId }),
+            description: t('sourcing.toast.publishFailed.dispatch')
+          });
+        }
+      }
+    );
+
+  /** @param {boolean} [send] B-12 — also send the new draft to its suppliers. */
+  const submitWizard = (send = false) => {
     // The parse gate fires FIRST and it BLOCKS. `isStepValid(0)` already keeps
     // the wizard from reaching this step, so this is the SECOND lock: a
     // programmatic or race-y submit cannot slip an unreadable quantity into a
@@ -313,7 +377,7 @@ export const useRfqWizard = ({ baseRfqs, sourceablePrs }) => {
       return;
     }
     if (editingRfqId) {
-      saveEdit(false);
+      saveEdit(send);
       return;
     }
     const invitedCount = draft.invitedSupplierIds.length;
@@ -345,6 +409,10 @@ export const useRfqWizard = ({ baseRfqs, sourceablePrs }) => {
             });
             return;
           }
+          if (send && result.entityId) {
+            sendAfterSave(result.entityId, invitedCount);
+            return;
+          }
           setWizardOpen(false);
           toast({
             variant: 'success',
@@ -372,7 +440,7 @@ export const useRfqWizard = ({ baseRfqs, sourceablePrs }) => {
     editingRfqId,
     editingRfq,
     wizardStep,
-    setWizardStep,
+    setWizardStep: changeStep,
     draft,
     setDraft,
     pickerOpen,
@@ -382,12 +450,15 @@ export const useRfqWizard = ({ baseRfqs, sourceablePrs }) => {
     supplierSearch,
     setSupplierSearch,
     reviseMutation,
+    createMutation,
+    publishMutation,
     openWizard,
     openWizardFromSeed,
     applySource,
     openWizardForEdit,
     closeWizard,
     updateDraft,
+    changeCategory,
     toggleMaterial,
     toggleSupplier,
     updateAuthoring,

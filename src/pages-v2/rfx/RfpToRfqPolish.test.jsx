@@ -17,6 +17,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { fireEvent, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
+import BuyerRfxRoutes, { selectEventTab } from '@test/buyerRfxRoutes';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { resetRfxStores, rfpEventStore } from '@services/data/mock/stores/rfxStores';
@@ -32,7 +33,7 @@ import { obviousItemType, seedFromRfp } from '../sourcing/rfqDraft';
 import { defaultEvaluationTierQty, topRankedOf } from '@services/sourcing/rfqComparison';
 import { bestScoredByItem } from '@services/data/mock/rfxReadModel';
 import BuyerRfp from '../BuyerRfp';
-import BuyerRfi from '../BuyerRfi';
+import BuyerRfpEvent from '../BuyerRfp/BuyerRfpEvent';
 import BuyerRequisitions from '../BuyerRequisitions';
 import BuyerSourcingEvent from '../BuyerSourcingEvent';
 import SupplierRFQs from '../SupplierRFQs';
@@ -126,6 +127,7 @@ const renderBoard = (identity = BUYER_SEAT) =>
   renderWithProviders(
     <Routes>
       <Route path="/buyer/rfp" element={<BuyerRfp />} />
+      <Route path="/buyer/rfp/:rfpId" element={<BuyerRfpEvent />} />
       <Route path="/buyer/rfq" element={<LocationProbe />} />
     </Routes>,
     { identity, route: '/buyer/rfp' }
@@ -140,6 +142,8 @@ describe('"Create RFQ from this RFP" on the board', () => {
     closeTundra();
     renderBoard();
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
+    // RFx UX 2G — "Firm up the prices" is on the Overview tab.
+    await selectEventTab('Overview');
     const panel = await screen.findByTestId('rfp-to-rfq-rfp-002');
     // PTI's options and the one sup-007 proposed, the latter named as such.
     expect(within(panel).getByText('Pump and cap only')).toBeInTheDocument();
@@ -166,7 +170,9 @@ describe('"Create RFQ from this RFP" on the board', () => {
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-001'));
     await screen.findByTestId('rfp-detail-rfp-001');
     expect(screen.queryByTestId('rfp-to-rfq-rfp-001')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId('rfp-open-rfp-003'));
+    // B-09 — the detail is its own page: back to the list, then the next event.
+    fireEvent.click(screen.getByTestId('rfp-event-back'));
+    fireEvent.click(await screen.findByTestId('rfp-open-rfp-003'));
     await screen.findByTestId('rfp-detail-rfp-003');
     expect(screen.queryByTestId('rfp-to-rfq-rfp-003')).not.toBeInTheDocument();
   });
@@ -175,6 +181,8 @@ describe('"Create RFQ from this RFP" on the board', () => {
     closeTundra();
     renderBoard(RECEIVING);
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-002'));
+    // RFx UX 2G — "Firm up the prices" is on the Overview tab.
+    await selectEventTab('Overview');
     const panel = await screen.findByTestId('rfp-to-rfq-rfp-002');
     expect(within(panel).queryByTestId('rfp-to-rfq-btn-rfp-002')).not.toBeInTheDocument();
     expect(within(panel).getByTestId('handoff-rfp-to-rfq')).toBeInTheDocument();
@@ -203,7 +211,7 @@ describe('"Created from …" names every recorded source by its document number,
     renderEvent('rfq-021');
     const el = await at('event-from-rfp');
     expect(el).toHaveTextContent('Created from RFP-2026-002');
-    expect(hrefOf(el)).toBe('/buyer/rfp?open=rfp-002');
+    expect(hrefOf(el)).toBe('/buyer/rfp/rfp-002');
   });
 
   it('sourceRfiId → RFI-2026-002 (the number, not the internal id rfi-002), linked', async () => {
@@ -212,7 +220,7 @@ describe('"Created from …" names every recorded source by its document number,
     const el = await at('event-from-rfi');
     expect(el).toHaveTextContent('Created from RFI-2026-002');
     expect(el).not.toHaveTextContent('rfi-002');
-    expect(hrefOf(el)).toBe('/buyer/rfi?open=rfi-002');
+    expect(hrefOf(el)).toBe('/buyer/rfi/rfi-002');
   });
 
   it('the requisition → PR-2026-00343, read from the PR that records this RFQ as its linked document', async () => {
@@ -261,13 +269,13 @@ describe('"Created from …" names every recorded source by its document number,
   });
 
   it('the links land: ?open= opens the RFP, the RFI and the requisition', async () => {
-    const { unmount } = renderWithProviders(<BuyerRfp />, {
+    const { unmount } = renderWithProviders(<BuyerRfxRoutes />, {
       identity: BUYER_SEAT,
       route: '/buyer/rfp?open=rfp-002'
     });
     expect(await screen.findByTestId('rfp-detail-rfp-002')).toBeInTheDocument();
     unmount();
-    const r2 = renderWithProviders(<BuyerRfi />, {
+    const r2 = renderWithProviders(<BuyerRfxRoutes />, {
       identity: BUYER_SEAT,
       route: '/buyer/rfi?open=rfi-002'
     });
@@ -308,10 +316,11 @@ describe('plurals — "1 proposal", never "1 proposals"', () => {
   it('the RFP board and comparison read the singular at one', async () => {
     renderBoard();
     const tundraRow = await screen.findByTestId('rfp-row-rfp-002');
-    expect(tundraRow).toHaveTextContent('1 proposal');
+    // RFx UX 2G — the board's Submitted column reads "N of M submitted"
+    // (it read "1 proposal" / "3 proposals"); the count is the same fact.
+    expect(tundraRow).toHaveTextContent('1 of 2 submitted');
     expect(tundraRow).not.toHaveTextContent('1 proposals');
-    // …and the plural where there are several.
-    expect(screen.getByTestId('rfp-row-rfp-001')).toHaveTextContent('3 proposals');
+    expect(screen.getByTestId('rfp-row-rfp-001')).toHaveTextContent('3 of 4 submitted');
     fireEvent.click(screen.getByTestId('rfp-open-rfp-002'));
     const detail = await screen.findByTestId('rfp-detail-rfp-002');
     expect(detail).toHaveTextContent('1 deviation');

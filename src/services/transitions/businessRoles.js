@@ -439,6 +439,10 @@ const LANE_BUNDLES = Object.freeze({
     // price. The three are one conversation and one lane.
     'rfiresponse:answer',
     'rfpresponse:answer',
+    // BL-132 — saying "I will respond" or declining an RFI or an RFP: the same
+    // seat that answers it, as `rfqintent:declare` sits beside the quote.
+    'rfiintent:declare',
+    'rfpintent:declare',
     // NR-2 BR-01 / BR-03 (D-1) — a firm offer in an RFP round binds the
     // supplier to its price until the validity date: the same seat that
     // answered the RFP and that quotes.

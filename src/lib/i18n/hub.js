@@ -129,7 +129,8 @@ export const hubEn = {
   'hub.home.weeklyPlan.pass': 'Input check: all checks pass',
   'hub.home.weeklyPlan.unknown': 'Input check: not checked yet',
   'hub.home.sup.title': 'To do',
-  'hub.home.sup.subtitle': 'What Paragon is waiting for from you, most urgent first.',
+  'hub.home.sup.subtitle':
+    'What Paragon is waiting for from you, grouped by area, nearest deadline first in each.',
   'hub.home.empty.title': 'Nothing needs your action',
   'hub.home.empty.body': 'New tasks appear here as soon as something is waiting for you.',
   'hub.home.open': 'Open',
@@ -150,7 +151,7 @@ export const hubEn = {
   'hub.home.task.receipts': 'Goods receipts to review',
   'hub.home.task.inboundAsn': 'Inbound shipments to receive',
   'hub.home.task.chase': 'Suppliers to follow up on forecasts or deliveries',
-  'hub.home.task.rfqAward': 'Sourcing events ready to award',
+  'hub.home.task.rfqAward': 'RFQ ready to award',
   // REQ-E03-05 / REQ-E03-02 / REQ-E03-04 — the RFx tasks (Phase 6a).
   'hub.home.task.negotiationClosing': 'Negotiation rounds closing soon',
   'hub.home.task.sapMessagesFailed': 'SAP messages failed',
@@ -324,7 +325,8 @@ export const hubId = {
   'hub.home.weeklyPlan.pass': 'Cek masukan: semua pemeriksaan lolos',
   'hub.home.weeklyPlan.unknown': 'Cek masukan: belum diperiksa',
   'hub.home.sup.title': 'Yang perlu dikerjakan',
-  'hub.home.sup.subtitle': 'Yang ditunggu Paragon dari Anda, paling mendesak di atas.',
+  'hub.home.sup.subtitle':
+    'Yang ditunggu Paragon dari Anda, dikelompokkan per area, tenggat terdekat di atas pada tiap area.',
   'hub.home.empty.title': 'Tidak ada yang perlu ditindaklanjuti',
   'hub.home.empty.body': 'Tugas baru muncul di sini begitu ada yang menunggu Anda.',
   'hub.home.open': 'Buka',
@@ -342,7 +344,7 @@ export const hubId = {
   'hub.home.task.receipts': 'Penerimaan barang untuk ditinjau',
   'hub.home.task.inboundAsn': 'Pengiriman masuk untuk diterima',
   'hub.home.task.chase': 'Pemasok yang perlu ditindaklanjuti untuk prakiraan atau pengiriman',
-  'hub.home.task.rfqAward': 'Event sourcing yang siap diputuskan pemenangnya',
+  'hub.home.task.rfqAward': 'RFQ siap ditetapkan pemenangnya',
   'hub.home.task.negotiationClosing': 'Putaran negosiasi yang segera ditutup',
   'hub.home.task.sapMessagesFailed': 'Pesan SAP gagal terkirim',
   'hub.home.task.rfiToAnswer': 'RFI untuk dijawab',

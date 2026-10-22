@@ -64,6 +64,9 @@ import { builtInDuplicates, builtInLabels, copyAnsweredFields } from './rfx/buil
 /** @import { DocumentDraft } from './rfx/ResponseDocumentsSection' */
 import ResponseDocumentsSection from './rfx/ResponseDocumentsSection';
 import { ResponseVersionLine, ReviseControls } from './rfx/ResponseRevise';
+import { DaysLeftPill, rfpAwardedTo, supplierRowAction } from './rfx/supplierRowState';
+import RfxIntentControls from './rfx/RfxIntentControls';
+import { rfxDeclinedRefusal } from '@services/sourcing/rfxIntent';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER PROPOSAL REQUESTS — REQ-E03-04 (SUP).
@@ -400,6 +403,15 @@ const SupplierRfp = () => {
           const submitted = mine?.status === 'Submitted';
           // NR-1 BR-08 — the window the revise verb judges, read by the same rule.
           const windowOpen = responseWindowRefusal(event, supplierId, rfxNow()) === null;
+          // BL-132 — this supplier's own intent (the read narrows the roster to it).
+          const intent =
+            event.invitedSuppliers.find((i) => i.supplierId === supplierId)?.intent ?? null;
+          const declined =
+            rfxDeclinedRefusal(intent ?? undefined, supplierId, event.eventNumber) !== null;
+          // The form opens once the supplier said it will respond (the RFQ rule);
+          // a proposal already sent stays readable and revisable, and a closed
+          // event stays readable (read-only) unless it was declined.
+          const showForm = submitted || intent?.intent === 'respond' || (event.closed && !declined);
           const isRevising =
             submitted && windowOpen && answerVerb.kind === 'held' && !!revising[event.id];
           const documents = documentsFor(event);
@@ -422,7 +434,11 @@ const SupplierRfp = () => {
           // act cannot accept. An unaccepted T&C locks it for the verb's
           // `TC_NOT_ACCEPTED`, for the same reason.
           const locked =
-            (submitted && !isRevising) || event.closed || answerVerb.kind !== 'held' || tcPending;
+            (submitted && !isRevising) ||
+            event.closed ||
+            answerVerb.kind !== 'held' ||
+            tcPending ||
+            !showForm;
           const blockers = [
             ...(missing.length > 0 ? ['terms'] : []),
             ...(badValues.length > 0 ? ['termValues'] : []),
@@ -463,6 +479,21 @@ const SupplierRfp = () => {
               ? [{ anchor: `supplier-rfp-docs-${event.id}`, label: t('rfx.form.anchor.documents') }]
               : [])
           ]);
+          const deadline =
+            event.invitedSuppliers.find((i) => i.supplierId === supplierId)?.deadline ??
+            event.responseDeadline;
+          const eventAwards = (rfpAwards.data?.items ?? []).filter((a) => a.eventId === event.id);
+          // S-10 — the button says what the supplier can do on this row, and an
+          // award in force for this supplier shows on the row, not only inside.
+          const rowAction = declined
+            ? 'view'
+            : supplierRowAction({
+                submitted,
+                windowOpen,
+                closed: event.closed,
+                held: answerVerb.kind === 'held'
+              });
+          const awarded = rfpAwardedTo(eventAwards, supplierId);
           return (
             <section
               key={event.id}
@@ -485,20 +516,25 @@ const SupplierRfp = () => {
                   {event.confidentiality && (
                     <StatusPill variant="neutral">{t('rfxa.conf.pill')}</StatusPill>
                   )}
-                  <DeadlinePill
-                    deadline={
-                      event.invitedSuppliers.find((i) => i.supplierId === supplierId)?.deadline ??
-                      event.responseDeadline
-                    }
-                    done={mine?.status === 'Submitted'}
+                  <DeadlinePill deadline={deadline} done={mine?.status === 'Submitted'} />
+                  <DaysLeftPill
+                    deadline={deadline}
+                    nowIso={rfxNow()}
+                    done={submitted || event.closed || declined}
+                    testId={`supplier-rfp-days-left-${event.id}`}
                   />
+                  {awarded ? (
+                    <span data-testid={`supplier-rfp-awarded-${event.id}`}>
+                      <StatusPill variant="success">{t('rfxa.row.awarded')}</StatusPill>
+                    </span>
+                  ) : null}
                   <StatusPill
                     variant={
                       mine?.status === 'Submitted' ? 'success' : started ? 'info' : 'neutral'
                     }
                   >
                     {t(
-                      `rfx.response.${mine?.status === 'Submitted' ? 'submitted' : started ? 'draft' : 'notStarted'}`
+                      `rfx.response.${mine?.status === 'Submitted' ? 'submitted' : declined ? 'declined' : started ? 'draft' : 'notStarted'}`
                     )}
                   </StatusPill>
                   <Button
@@ -506,12 +542,32 @@ const SupplierRfp = () => {
                     onClick={() => setOpenId(opened ? null : event.id)}
                     data-testid={`supplier-rfp-open-${event.id}`}
                   >
-                    {opened ? t('rfx.close') : t('rfx.rfp.answer')}
+                    {opened
+                      ? t('rfx.collapse')
+                      : rowAction === 'answer'
+                        ? t('rfx.rfp.answer')
+                        : t(`rfxa.row.${rowAction}`)}
                   </Button>
                 </div>
               </header>
 
-              {opened && event.confidentialityLocked && (
+              {opened ? (
+                <div className="px-4 pt-4">
+                  <RfxIntentControls
+                    kind="rfp"
+                    eventId={event.id}
+                    supplierId={supplierId}
+                    intent={intent}
+                    confidential={!!event.confidentiality}
+                    termsAccepted={!event.confidentialityLocked}
+                    submitted={submitted}
+                    closed={event.closed}
+                    testIdPrefix={`supplier-rfp-${event.id}`}
+                  />
+                </div>
+              ) : null}
+
+              {opened && event.confidentialityLocked && !declined && (
                 <div className="px-4 py-4">
                   <RfxConfidentialityGate
                     terms={event.confidentiality?.terms}
@@ -550,7 +606,16 @@ const SupplierRfp = () => {
                     </div>
                   )}
 
-                  {event.termsDocument && (
+                  {!showForm && (
+                    <p
+                      className="text-sm text-text-secondary bg-bg-hover rounded px-3 py-2"
+                      data-testid={`supplier-rfp-intent-first-${event.id}`}
+                    >
+                      {t(declined ? 'rfx.intent.declinedNote' : 'rfx.intent.respondFirst')}
+                    </p>
+                  )}
+
+                  {!!event.termsDocument && !!showForm && (
                     <div
                       className="border border-border-subtle rounded-md px-3 py-3 space-y-2"
                       data-testid={`supplier-rfp-tc-${event.id}`}
@@ -643,7 +708,7 @@ const SupplierRfp = () => {
                     />
                   )}
 
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto" hidden={!showForm}>
                     <Table>
                       <TableHeader>
                         <TableHeaderCell>{t('rfx.rfp.col.term')}</TableHeaderCell>
@@ -750,7 +815,7 @@ const SupplierRfp = () => {
                     </Table>
                   </div>
 
-                  <div>
+                  <div hidden={!showForm}>
                     <label
                       className="block text-sm font-semibold text-text-primary mb-1"
                       htmlFor={`other-${event.id}`}
@@ -771,7 +836,7 @@ const SupplierRfp = () => {
                     />
                   </div>
 
-                  {questions.length > 0 && (
+                  {questions.length > 0 && !!showForm && (
                     <div className="space-y-4" data-testid={`supplier-rfp-questions-${event.id}`}>
                       <RfxQuestionForm
                         questions={questions}
@@ -786,7 +851,7 @@ const SupplierRfp = () => {
                     </div>
                   )}
 
-                  {event.pricing && (
+                  {!!event.pricing && !!showForm && (
                     <RfpPricingForm
                       request={event.pricing}
                       currency={event.currency}
@@ -808,7 +873,7 @@ const SupplierRfp = () => {
                     />
                   )}
 
-                  <div id={`supplier-rfp-docs-${event.id}`}>
+                  <div id={`supplier-rfp-docs-${event.id}`} hidden={!showForm}>
                     <ResponseDocumentsSection
                       key={`${event.id}-${isRevising ? 'revising' : 'stored'}-${mine?.versions.length ?? 0}`}
                       requests={event.documentRequests ?? []}
@@ -828,7 +893,7 @@ const SupplierRfp = () => {
 
                   {/* NR-1 BR-08 — while revising, Save and Submit give way to the
                       revise verb's controls: a Submitted response is never saved. */}
-                  {!isRevising && (
+                  {!isRevising && !!showForm && (
                     <div className="flex flex-wrap gap-3">
                       <Button
                         variant="secondary"
@@ -886,7 +951,7 @@ const SupplierRfp = () => {
               <SupplierFirmOffers
                 event={event}
                 rounds={(offerRounds.data?.items ?? []).filter((r) => r.rfpId === event.id)}
-                awards={(rfpAwards.data?.items ?? []).filter((a) => a.eventId === event.id)}
+                awards={eventAwards}
                 supplierId={supplierId}
                 pending={command.isPending}
                 send={(vars, successKey) => command.mutate(vars, report(successKey))}

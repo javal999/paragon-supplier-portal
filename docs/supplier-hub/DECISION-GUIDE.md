@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Version | 1.8, 2026-10-19 (RFx UX decisions RFX-D16 to RFX-D24 added) |
-| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
+| Version | 1.9, 2026-10-20 (RFX-D25 added: proposal view on the RFI and RFP pages) |
+| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, BL-12 call-off record, and three values (BL-54 invoice cap, BL-55 gate OTIF minimum, BL-56 early allowance). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
 | Evidence | Market practice is cited at the end. Where a claim is a judgement rather than a published practice, it says so |
@@ -336,6 +336,11 @@ The owner ruled on the open questions of the RFx UX evaluation (`research/RFX-UX
 **Decision.** Move, then trim. Move to review, recording the exchange rate and answering clarifications move from the board's side panel to the RFQ event page, each with its own handoff notice; the panel keeps status, Next, deadline, response counts, three links, lifecycle actions, the award box (award notice, "no supplier can win" notice, award link), Save as template and the timeline. **Amends** the §76 reading of the panel as a workspace for these actions only. With no recorded exchange rate the event page keeps the bids visible with "—" scores under a banner naming each currency and the rate date; the award rule is unchanged.
 
 **What would change this.** If buyers review quotes mostly from the board, a "Review" link straight to the comparison section is the cheaper fix than moving the actions back.
+
+### RFX-D25 · Proposal view on the RFI and RFP pages (decided 2026-10-20)
+**Decision.** The RFI and RFP pages get three tabs: Overview, Compare and By supplier. Compare opens by default once a proposal or answer is submitted; Overview opens when none is. Compare starts with one summary card per supplier, best scored first, then the grid: "Show deviations only" (on by default when a deviation exists), collapsible term groups with their deviation counts, a sticky supplier header, and a neutral "Best" tag on comparable rows (lowest price, shortest lead time, most payment days, longest price validity) and on the lowest indicative price per option and quantity. By supplier shows one proposal at a time. The invitee table stays on Overview; Compare shows a one-line count. List rows have one "Open" button and read "N of M submitted". Display only: no score, rule or award changes. Built in lane 2G (wave 2 MR).
+
+**What would change this.** If buyers read "Best" as a recommendation to award, drop the tag and keep the deviations view.
 
 ---
 

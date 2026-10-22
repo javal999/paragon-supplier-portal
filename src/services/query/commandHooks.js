@@ -3369,6 +3369,12 @@ export function useForecastCommand() {
  *       documents?: readonly ResponseDocumentInput[];
  *     }
  *   | { verb: 'acceptRfi'; rfiId: string; supplierId: string }
+ *   | { verb: 'respondRfi'; rfiId: string; supplierId: string }
+ *   | { verb: 'declineRfi'; rfiId: string; supplierId: string; reason: RfqDeclineReason; text: string }
+ *   | { verb: 'withdrawRfiIntent'; intentId: string; reason: RfqDeclineReason; text: string }
+ *   | { verb: 'respondRfp'; rfpId: string; supplierId: string }
+ *   | { verb: 'declineRfp'; rfpId: string; supplierId: string; reason: RfqDeclineReason; text: string }
+ *   | { verb: 'withdrawRfpIntent'; intentId: string; reason: RfqDeclineReason; text: string }
  *   | ({
  *       verb: 'createRfp';
  *       title: string;
@@ -3656,6 +3662,57 @@ export function useRfxCommand() {
             transitionId: 't_rfiresponse_save',
             entity: 'rfiResponse',
             payload: { rfiId: vars.rfiId, supplierId: vars.supplierId, acceptConfidentiality: true }
+          });
+        // BL-132 — intent on an RFI or RFP, the RFQ's three verbs per event type.
+        case 'respondRfi':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfiintent_respond',
+            entity: 'rfiIntent',
+            payload: { rfiId: vars.rfiId, supplierId: vars.supplierId }
+          });
+        case 'declineRfi':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfiintent_decline',
+            entity: 'rfiIntent',
+            payload: {
+              rfiId: vars.rfiId,
+              supplierId: vars.supplierId,
+              reason: vars.reason,
+              text: vars.text
+            }
+          });
+        case 'withdrawRfiIntent':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfiintent_withdraw',
+            entity: 'rfiIntent',
+            entityId: vars.intentId,
+            expectedState: 'Responding',
+            payload: { reason: vars.reason, text: vars.text }
+          });
+        case 'respondRfp':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfpintent_respond',
+            entity: 'rfpIntent',
+            payload: { rfpId: vars.rfpId, supplierId: vars.supplierId }
+          });
+        case 'declineRfp':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfpintent_decline',
+            entity: 'rfpIntent',
+            payload: {
+              rfpId: vars.rfpId,
+              supplierId: vars.supplierId,
+              reason: vars.reason,
+              text: vars.text
+            }
+          });
+        case 'withdrawRfpIntent':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_rfpintent_withdraw',
+            entity: 'rfpIntent',
+            entityId: vars.intentId,
+            expectedState: 'Responding',
+            payload: { reason: vars.reason, text: vars.text }
           });
         case 'acceptRfp':
           return svc.commands.dispatch(scope, {

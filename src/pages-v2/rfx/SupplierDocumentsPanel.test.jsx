@@ -6,6 +6,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen, within } from '@testing-library/react';
 import { renderWithProviders, BUYER } from '@test/test-utils';
+import BuyerRfxRoutes, { selectEventTab } from '@test/buyerRfxRoutes';
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { mockDataService } from '@services/data/mock/mockDataService';
 import { SessionFileService } from '@services/data/mock/SessionFileService';
@@ -21,7 +22,6 @@ import { sdcClock } from '@services/sdc';
 import { sessionAttachments } from '@services/attachments/sessionAttachments';
 /** @import { AttachmentMeta } from '@services/attachments/sessionAttachments' */
 /** @import { DocumentRequest, ResponseDocument } from '@services/sourcing/types' */
-import BuyerRfp from '../BuyerRfp';
 import { NO_PERSON } from '@context/noPerson';
 import { SupplierDocumentsPanel } from './SupplierDocumentsPanel';
 
@@ -96,11 +96,13 @@ describe('the RFP detail lists every supplier file (rfp-001)', () => {
 
   it('a submitted response with a Certificate shows its number, and Expired when it expired before the deadline', async () => {
     const { service } = freshService();
-    renderWithProviders(<BuyerRfp />, {
+    renderWithProviders(<BuyerRfxRoutes />, {
       identity: BUYER_SEAT,
       route: '/buyer/rfp?open=rfp-001',
       service
     });
+    // RFx UX 2G — the supplier files panel is on the Overview tab.
+    await selectEventTab('Overview');
     const panel = await screen.findByTestId('rfp-documents-rfp-001');
 
     const expired = within(panel).getByTestId('rfp-documents-rfp-001-sup-007-file-d-old-cert');
@@ -121,11 +123,13 @@ describe('the RFP detail lists every supplier file (rfp-001)', () => {
   it('CE-11i — a document stored before the uploader was recorded reads "Not recorded", never a name', async () => {
     // `certDoc` is the shape every document had before CE-11i: no `uploadedBy`.
     const { service } = freshService();
-    renderWithProviders(<BuyerRfp />, {
+    renderWithProviders(<BuyerRfxRoutes />, {
       identity: BUYER_SEAT,
       route: '/buyer/rfp?open=rfp-001',
       service
     });
+    // RFx UX 2G — the supplier files panel is on the Overview tab.
+    await selectEventTab('Overview');
     const panel = await screen.findByTestId('rfp-documents-rfp-001');
     const cell = within(panel).getByTestId('rfp-documents-rfp-001-sup-007-file-d-old-uploaded-by');
     expect(cell).toHaveTextContent(/^Not recorded$/);
@@ -134,7 +138,7 @@ describe('the RFP detail lists every supplier file (rfp-001)', () => {
 
   it('the comparison has a Documents row: Complete, or Missing with the request named', async () => {
     const { service } = freshService();
-    renderWithProviders(<BuyerRfp />, {
+    renderWithProviders(<BuyerRfxRoutes />, {
       identity: BUYER_SEAT,
       route: '/buyer/rfp?open=rfp-001',
       service

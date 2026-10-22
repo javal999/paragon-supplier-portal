@@ -21,6 +21,8 @@ import BuyerOrders from '@pages-v2/BuyerOrders';
 import BuyerSourcing from '@pages-v2/BuyerSourcing';
 import BuyerRfi from '@pages-v2/BuyerRfi';
 import BuyerRfp from '@pages-v2/BuyerRfp';
+import BuyerRfpEvent from '@pages-v2/BuyerRfp/BuyerRfpEvent';
+import BuyerRfiEvent from '@pages-v2/BuyerRfiEvent';
 import BuyerSourcingEvent from '@pages-v2/BuyerSourcingEvent';
 import SupplierRfi from '@pages-v2/SupplierRfi';
 import SupplierRfp from '@pages-v2/SupplierRfp';
@@ -140,9 +142,14 @@ const AppRouter = () => {
               sourcing item). An event's detail page sits under /buyer/rfq, so
               NV-03's "a menu item stays highlighted on its detail pages" holds. */}
             <Route path="/buyer/rfi" element={<BuyerRfi />} />
+            {/* RFx UX 2A (B-09, owner ruling 2026-10-19) — the RFI and RFP
+              details are their own pages, like the RFQ event page. The old
+              `?open=<id>` deep links redirect here from the list pages. */}
+            <Route path="/buyer/rfi/:rfiId" element={<BuyerRfiEvent />} />
             <Route path="/buyer/rfq" element={<BuyerSourcing />} />
             <Route path="/buyer/rfq/:rfqId" element={<BuyerSourcingEvent />} />
             <Route path="/buyer/rfp" element={<BuyerRfp />} />
+            <Route path="/buyer/rfp/:rfpId" element={<BuyerRfpEvent />} />
             {/* The retired paths redirect, keeping query, state and params, so old
               links in tasks, toasts and notifications still land. */}
             <Route path="/buyer/sourcing" element={<LegacyRedirect to="/buyer/rfq" />} />

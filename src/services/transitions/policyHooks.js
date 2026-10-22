@@ -765,6 +765,15 @@ export const POLICY_HOOKS = /** @type {const} */ ({
   /** RFQ intent (RFx spec): invited, the event open and inside its deadline,
    *  one intent per invitee, a decline with a listed reason and words. */
   RFQ_INTENT_VALID: 'rfq_intent_valid',
+  /** BL-132 — RFI / RFP intent: the RFQ's rule over an RFx event (`rfxIntentRefusal`):
+   *  invited, the event open and inside its deadline, one intent per invitee, a
+   *  decline with a listed reason and words, no decline once the response is
+   *  submitted. Bound once, for both `rfiIntent` and `rfpIntent`. */
+  RFX_INTENT_VALID: 'rfx_intent_valid',
+  /** BL-132 — RFI / RFP response save, submit and revise: a supplier that declined
+   *  the event is refused `INTENT_DECLINED` (`rfxDeclinedRefusal`), as a declined
+   *  RFQ cannot be quoted. */
+  RFX_RESPONSE_NOT_DECLINED: 'rfx_response_not_declined',
   /** RFQ confidentiality: the RFQ is confidential, the supplier invited, and
    *  the terms not accepted already. */
   RFQ_CONFIDENTIALITY_ACCEPTABLE: 'rfq_confidentiality_acceptable',
@@ -854,7 +863,8 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    * an award in force on that RFP already placed (AWARD_OPTION_SOURCED_ELSEWHERE).
    * The rule is `rfpOptionSourcedRefusal`, the one the RFP → RFQ pre-fill uses.
    * Owner ruling Q1 (2026-10-19) — nor an option a firm-offer round of that RFP
-   * names (RFQ_OPTION_IN_FIRM_ROUND, `rfqOptionInRoundRefusal`).
+   * names (RFQ_OPTION_IN_FIRM_ROUND, `rfqOptionInRoundRefusal`). BL-216 — nor
+   * from an RFP that is still Open (RFQ_SOURCE_RFP_OPEN, `rfqFromOpenRfpRefusal`).
    */
   RFQ_CREATE_RFP_OPTIONS_FREE: 'rfq_create_rfp_options_free'
 });

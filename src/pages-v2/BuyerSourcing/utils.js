@@ -350,6 +350,47 @@ export const applyPrefill = (base, p) => ({
   sourceRequisitionId: p.sourceRequisitionId
 });
 
+// ── RFx UX B-12 — the wizard fills what Scope already said ───────────────────
+
+/**
+ * The unit an RFQ of this category is usually counted in: pieces for
+ * packaging, kilograms for everything else. A default the buyer can change,
+ * never a rule: the Scope step's select still offers every unit.
+ * @param {RFQCategory | ''} category
+ * @returns {DraftRfq['uom']}
+ */
+export const uomForCategory = (category) => (category === 'Packaging' ? 'PCS' : 'KG');
+
+/**
+ * The draft with a new category. The materials picked for the old one are
+ * cleared (they belong to its catalogue), and the unit follows the category
+ * ONLY while it is still the old category's default: a unit the buyer chose,
+ * or one a requisition carried, is kept.
+ * @param {DraftRfq} d
+ * @param {RFQCategory | ''} category
+ * @returns {DraftRfq}
+ */
+export const withCategory = (d, category) => ({
+  ...d,
+  category,
+  materials: [],
+  uom: d.uom === uomForCategory(d.category) ? uomForCategory(category) : d.uom
+});
+
+/**
+ * The draft with its first quantity break seeded from the Scope step's total
+ * quantity, as a TOTAL break. Only an empty break list is seeded, and only
+ * from a readable whole quantity: a break the buyer set is never replaced, and
+ * an unreadable quantity seeds nothing (the Breaks step then asks for one).
+ * @param {DraftRfq} d
+ * @param {{ ok: true; value: number } | { ok: false }} qty The ONE parse of `totalQty`.
+ * @returns {DraftRfq}
+ */
+export const seedFirstBreak = (d, qty) =>
+  d.tiers.length === 0 && qty.ok && Number.isInteger(qty.value) && qty.value > 0
+    ? { ...d, tiers: [{ qty: qty.value, basis: 'total' }] }
+    : d;
+
 /**
  * A fresh draft. A function, not a constant: every opening gets its own item.
  * @returns {DraftRfq}

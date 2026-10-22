@@ -6,6 +6,8 @@ import { useMemo, useState } from 'react';
 import { awardsInForce, trailOfViews } from '@services/sourcing/awardStatus';
 import { TODAY } from '../const';
 import { byNextDeadline, matchesGroup, matchesKpi, rfqNextStep } from '../utils';
+import { rfqStageOf } from '../../BuyerSourcingEvent/utils';
+/** @import { StageNext } from '../../BuyerSourcingEvent/utils' */
 
 /**
  * @typedef {object} RfqBoardContext
@@ -38,34 +40,48 @@ export const useRfqBoard = (rfqs, { quotations, rounds, awards }) => {
   // day-count below — the replacement for the deleted `REFERENCE_TODAY` pin.
   const nowIso = TODAY;
 
-  const lastUpdated = useMemo(
-    () =>
-      rfqs.reduce((acc, r) => (r.createdAt > acc ? r.createdAt : acc), rfqs[0]?.createdAt ?? ''),
-    [rfqs]
-  );
-
-  // The buyer's next act on each RFQ, from the state the event page reads.
-  const nextById = useMemo(() => {
-    /** @type {Map<string, RfqNextStep | null>} */
+  // The buyer's next act on each RFQ, from the state the event page reads:
+  // the queue's step (`rfqNextStep`), and — for the side panel (B-15) — the
+  // stage bar's own `next` and the quoted count its wording reads.
+  const stageById = useMemo(() => {
+    /** @type {Map<string, { step: RfqNextStep | null; next: StageNext; quoted: number }>} */
     const out = new Map();
     for (const r of rfqs) {
       const quoted = new Set(quotations.filter((q) => q.rfqId === r.id).map((q) => q.supplierId))
         .size;
       const eventAwards = awards.filter((a) => a.eventType === 'rfq' && a.eventId === r.id);
-      out.set(
-        r.id,
-        rfqNextStep(r, {
-          quoted,
-          rounds: rounds.filter((x) => x.rfqId === r.id),
-          inForce: awardsInForce(eventAwards, trailOfViews(eventAwards))
-        })
-      );
+      const ctx = {
+        quoted,
+        rounds: rounds.filter((x) => x.rfqId === r.id),
+        inForce: awardsInForce(eventAwards, trailOfViews(eventAwards))
+      };
+      const { next } = rfqStageOf({
+        status: r.status,
+        invited: r.invitedSupplierIds.length,
+        ...ctx
+      });
+      out.set(r.id, { step: rfqNextStep(r, ctx), next, quoted });
     }
     return out;
   }, [rfqs, quotations, rounds, awards]);
+  const nextById = useMemo(
+    () => new Map([...stageById].map(([id, s]) => [id, s.step])),
+    [stageById]
+  );
 
   /** @param {RFQ} r */
   const nextOf = (r) => nextById.get(r.id) ?? null;
+  /** @param {RFQ} r */
+  const quotedOf = (r) => stageById.get(r.id)?.quoted ?? 0;
+  /**
+   * The stage bar's `next` for an RFQ, and the quoted count its label reads.
+   * @param {RFQ} r
+   * @returns {{ next: StageNext; quoted: number } | null}
+   */
+  const stageOf = (r) => {
+    const s = stageById.get(r.id);
+    return s ? { next: s.next, quoted: s.quoted } : null;
+  };
 
   /** @type {Record<GroupTab, number>} */
   const counts = useMemo(() => {
@@ -133,12 +149,13 @@ export const useRfqBoard = (rfqs, { quotations, rounds, awards }) => {
     kpi,
     toggleKpi,
     nextOf,
+    quotedOf,
+    stageOf,
     selectedCats,
     toggleCategory,
     search,
     setSearch,
     nowIso,
-    lastUpdated,
     counts,
     kpis,
     activeFiltered,

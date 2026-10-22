@@ -22,7 +22,7 @@ import AppShellV2 from '@components/layout-v2/AppShellV2';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import EmptyState from '@components/ui-v2/EmptyState';
-import { useVerbAvailability, useVerbAvailabilities, useNextAct } from '@hooks/useVerbAvailability';
+import { useVerbAvailability, useVerbAvailabilities } from '@hooks/useVerbAvailability';
 import { useToast } from '@hooks/useToast';
 import {
   useRFQs,
@@ -122,9 +122,11 @@ const SourcingWorkspace = ({
     [baseRfqs, selectedRfqId]
   );
 
-  // WHO ACTS NEXT (S2a). `RFQStatus` matches the machine exactly — no
-  // projection member — so `status` is the canonical state on this surface.
-  const nextAct = useNextAct('rfq', selectedRfq?.status);
+  // WHAT COMES NEXT (RFx UX B-15). The panel reads the same derivation as the
+  // board's Next column and the event page's stage bar (`rfqStageOf`), so the
+  // three agree. It replaced the S2a role line ("Your move"), which read the
+  // status alone and called an RFQ still waiting on quotes the buyer's move.
+  const panelStage = selectedRfq ? board.stageOf(selectedRfq) : null;
   const wizard = useRfqWizard({ baseRfqs, sourceablePrs });
 
   // §73 — the seat's authority over `t_rfq_create` (atom `rfq:create`,
@@ -226,7 +228,7 @@ const SourcingWorkspace = ({
       <SourcingHeader
         rfqs={rfqs}
         activeCount={board.kpis.active}
-        lastUpdated={board.lastUpdated}
+        nowIso={board.nowIso}
         rfqCreateAvailability={rfqCreateAvailability}
         exportComparison={exportComparison}
         onNewRfq={() => wizard.openWizard()}
@@ -242,6 +244,7 @@ const SourcingWorkspace = ({
         rows={board.activeFiltered}
         nowIso={board.nowIso}
         nextOf={board.nextOf}
+        quotedOf={board.quotedOf}
         // The queue's own empty line only when the queue itself is empty; a
         // category or search that hides its rows reads the filter line.
         emptyText={
@@ -266,7 +269,7 @@ const SourcingWorkspace = ({
         selectedRfq={selectedRfq}
         closePanel={closePanel}
         supplierNameById={supplierNameById}
-        nextAct={nextAct}
+        stage={panelStage}
         rfqCreateAvailability={rfqCreateAvailability}
         rfqVerbs={rfqVerbs}
         actions={actions}

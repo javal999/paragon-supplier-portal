@@ -26,6 +26,9 @@ import { useDataService } from '@services/data/DataServiceContext';
  * @property {string} testId
  * @property {boolean} [readOnly] Read-only lists render no add or remove control.
  * @property {boolean} [single] One file only (an RFP's T&C document): adding replaces it.
+ * @property {string} [notHeldText] What a file whose bytes are not held says, in place of the default
+ *   "not available in this session" (RFx UX S-11: a supplier reading PTI's file is
+ *   told to ask the buyer for it).
  * @property {(file: File, acceptedBefore: number) => string | null} [refuse] NR-1 BR-05 — the pre-check on pick. Called for each picked file, in order,
  * with how many files of this pick were accepted before it; a returned text
  * refuses that file, which is never put, and the text is shown. Absent =
@@ -43,7 +46,8 @@ const SessionAttachments = ({
   testId,
   readOnly: readOnlyProp = false,
   single = false,
-  refuse
+  refuse,
+  notHeldText
 }) => {
   const { t } = useTranslation();
   const { files: fileService } = useDataService();
@@ -155,7 +159,7 @@ const SessionAttachments = ({
                   <Data className="text-text-tertiary text-xs">{formatBytes(a.size)}</Data>
                   {!url && (
                     <span className="ml-2 text-xs text-text-tertiary">
-                      {t('attachments.notHeld')}
+                      {notHeldText ?? t('attachments.notHeld')}
                     </span>
                   )}
                 </span>

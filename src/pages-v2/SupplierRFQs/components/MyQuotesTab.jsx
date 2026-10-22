@@ -6,6 +6,7 @@ import Button from '@components/ui-v2/Button';
 import Data from '@components/ui-v2/Data';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import TieredQuoteLines from './TieredQuoteLines';
 /** @import { SubmittedQuote } from '../utils' */
 
 /**
@@ -88,14 +89,17 @@ const MyQuotesTab = ({ quotes, canRevise, onRevise, strips }) => {
             {[
               { label: t('rfqs.quotes.col.quoteNo'), value: q.quoteNumber },
               { label: t('rfqs.quotes.col.submitted'), value: q.submittedDate },
-              { label: t('rfqs.quotes.col.unitPrice'), value: q.unitPrice },
+              // S-09 — a tiered quote's header unit price is an average derived
+              // across items, not a price the supplier gave; its per-item
+              // prices and MOQs sit below instead. A legacy quote keeps both.
+              ...(q.tiered ? [] : [{ label: t('rfqs.quotes.col.unitPrice'), value: q.unitPrice }]),
               { label: t('rfqs.quotes.col.totalPrice'), value: q.totalPrice },
               { label: t('rfqs.quotes.col.leadTime'), value: q.leadTime },
               // 2e-b-2 — the minimum order quantity appears here for the first
               // time. It was collected on the form and dropped before this card
               // existed, so the supplier's own record of their quote silently
               // omitted a term they had stated.
-              { label: t('rfqs.quotes.col.moq'), value: q.moq },
+              ...(q.tiered ? [] : [{ label: t('rfqs.quotes.col.moq'), value: q.moq }]),
               { label: t('rfqs.quotes.col.validUntil'), value: q.validUntil }
             ].map((d) => (
               <div key={d.label} className="bg-bg-hover rounded-md px-3 py-2">
@@ -106,6 +110,11 @@ const MyQuotesTab = ({ quotes, canRevise, onRevise, strips }) => {
               </div>
             ))}
           </dl>
+          {q.tiered ? (
+            <div className="mt-3">
+              <TieredQuoteLines summary={q.tiered} testId={`quote-items-${q.quoteNumber}`} />
+            </div>
+          ) : null}
         </div>
       ))}
     </div>

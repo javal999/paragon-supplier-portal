@@ -49,6 +49,9 @@ import RfxConfidentialityGate from './rfx/RfxConfidentialityGate';
 /** @import { DocumentDraft } from './rfx/ResponseDocumentsSection' */
 import ResponseDocumentsSection from './rfx/ResponseDocumentsSection';
 import { ResponseVersionLine, ReviseControls } from './rfx/ResponseRevise';
+import { DaysLeftPill, supplierRowAction } from './rfx/supplierRowState';
+import RfxIntentControls from './rfx/RfxIntentControls';
+import { rfxDeclinedRefusal } from '@services/sourcing/rfxIntent';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER INFORMATION REQUESTS — REQ-E03-02 (SUP).
@@ -83,6 +86,12 @@ import { ResponseVersionLine, ReviseControls } from './rfx/ResponseRevise';
 // saved HH:MM on this device". Every required question left empty is marked
 // "Still missing" where it sits, a banner lists every missing or unfit answer
 // at once with a jump link to each, and Send says why it is off.
+//
+// BL-132 (S-13) — THE RFQ CARD'S FIRST ANSWER, ON EVERY ROW. Opened, a row
+// shows the step strip and "I will respond" / "Decline" (`RfxIntentControls`).
+// The answer form opens once the supplier says it will respond, as the RFQ
+// quote does; a declined row takes no answer (the response verbs refuse
+// `INTENT_DECLINED` too) and reads "Declined" with its reason.
 //
 // COMPANY IDENTITY IS NEVER ASKED. Legal name, tax number, address and bank
 // come from the company profile, and the page says so rather than leaving the
@@ -287,9 +296,19 @@ const SupplierRfi = () => {
           const submitted = mine?.status === 'Submitted';
           // NR-1 BR-08 — the window the revise verb judges, read by the same rule.
           const windowOpen = responseWindowRefusal(event, supplierId, rfxNow()) === null;
+          // BL-132 — this supplier's own intent (the read narrows the roster to it).
+          const intent =
+            event.invitedSuppliers.find((i) => i.supplierId === supplierId)?.intent ?? null;
+          const declined =
+            rfxDeclinedRefusal(intent ?? undefined, supplierId, event.eventNumber) !== null;
+          // The form opens once the supplier said it will respond (the RFQ rule);
+          // a response already sent stays readable and revisable, and a closed
+          // event stays readable (read-only) unless it was declined.
+          const showForm = submitted || intent?.intent === 'respond' || (event.closed && !declined);
           const canRevise = submitted && windowOpen && answer.kind === 'held';
           const isRevising = canRevise && !!revising[event.id];
-          const locked = (submitted && !isRevising) || answer.kind !== 'held' || event.closed;
+          const locked =
+            (submitted && !isRevising) || answer.kind !== 'held' || event.closed || !showForm;
           const documents = documentsFor(event);
           const answerFiles = answers.reduce((n, a) => n + (a.attachments?.length ?? 0), 0);
           const docRefusal = responseDocumentsRefusal(
@@ -314,6 +333,18 @@ const SupplierRfi = () => {
           // An acceptance-only row is not a started answer (the read says the same).
           const started =
             !!mine && (submitted || mine.answers.length > 0 || (mine.documents ?? []).length > 0);
+          const deadline =
+            event.invitedSuppliers.find((i) => i.supplierId === supplierId)?.deadline ??
+            event.responseDeadline;
+          // S-10 — the button says what the supplier can do on this row.
+          const rowAction = declined
+            ? 'view'
+            : supplierRowAction({
+                submitted,
+                windowOpen,
+                closed: event.closed,
+                held: answer.kind === 'held'
+              });
           return (
             <section
               key={event.id}
@@ -337,12 +368,15 @@ const SupplierRfi = () => {
                     <StatusPill variant="neutral">{t('rfxa.conf.pill')}</StatusPill>
                   )}
                   <DeadlinePill
-                    deadline={
-                      event.invitedSuppliers.find((i) => i.supplierId === supplierId)?.deadline ??
-                      event.responseDeadline
-                    }
+                    deadline={deadline}
                     done={mine?.status === 'Submitted'}
                     testId={`supplier-rfi-deadline-${event.id}`}
+                  />
+                  <DaysLeftPill
+                    deadline={deadline}
+                    nowIso={rfxNow()}
+                    done={submitted || event.closed || declined}
+                    testId={`supplier-rfi-days-left-${event.id}`}
                   />
                   <StatusPill
                     variant={
@@ -350,7 +384,7 @@ const SupplierRfi = () => {
                     }
                   >
                     {t(
-                      `rfx.response.${mine?.status === 'Submitted' ? 'submitted' : started ? 'draft' : 'notStarted'}`
+                      `rfx.response.${mine?.status === 'Submitted' ? 'submitted' : declined ? 'declined' : started ? 'draft' : 'notStarted'}`
                     )}
                   </StatusPill>
                   <Button
@@ -358,12 +392,32 @@ const SupplierRfi = () => {
                     onClick={() => setOpenId(opened ? null : event.id)}
                     data-testid={`supplier-rfi-open-${event.id}`}
                   >
-                    {opened ? t('rfx.close') : t('rfx.rfi.answer')}
+                    {opened
+                      ? t('rfx.collapse')
+                      : rowAction === 'answer'
+                        ? t('rfx.rfi.answer')
+                        : t(`rfxa.row.${rowAction}`)}
                   </Button>
                 </div>
               </header>
 
-              {opened && event.confidentialityLocked && (
+              {opened ? (
+                <div className="px-4 pt-4">
+                  <RfxIntentControls
+                    kind="rfi"
+                    eventId={event.id}
+                    supplierId={supplierId}
+                    intent={intent}
+                    confidential={!!event.confidentiality}
+                    termsAccepted={!event.confidentialityLocked}
+                    submitted={submitted}
+                    closed={event.closed}
+                    testIdPrefix={`supplier-rfi-${event.id}`}
+                  />
+                </div>
+              ) : null}
+
+              {opened && event.confidentialityLocked && !declined && (
                 <div className="px-4 py-4">
                   <RfxConfidentialityGate
                     terms={event.confidentiality?.terms}
@@ -398,6 +452,7 @@ const SupplierRfi = () => {
                       <SessionAttachments
                         value={event.attachments ?? []}
                         label={t('rfxa.att.title')}
+                        notHeldText={t('rfxa.att.buyerFileNotStored')}
                         testId={`supplier-rfi-attachments-${event.id}`}
                       />
                     </div>
@@ -408,6 +463,14 @@ const SupplierRfi = () => {
                       versions={mine.versions}
                       testId={`supplier-rfi-version-${event.id}`}
                     />
+                  )}
+                  {!showForm && (
+                    <p
+                      className="text-sm text-text-secondary bg-bg-hover rounded px-3 py-2"
+                      data-testid={`supplier-rfi-intent-first-${event.id}`}
+                    >
+                      {t(declined ? 'rfx.intent.declinedNote' : 'rfx.intent.respondFirst')}
+                    </p>
                   )}
                   {mine?.status === 'Draft' && started && (
                     <p
@@ -425,17 +488,19 @@ const SupplierRfi = () => {
                     />
                   )}
 
-                  <RfxQuestionForm
-                    questions={event.questions}
-                    customSections={event.customSections}
-                    answers={answers}
-                    disabled={locked}
-                    withDescription
-                    missing={editable ? missing : []}
-                    onChange={(questionId, patch) => setAnswer(event, questionId, patch)}
-                  />
+                  {!!showForm && (
+                    <RfxQuestionForm
+                      questions={event.questions}
+                      customSections={event.customSections}
+                      answers={answers}
+                      disabled={locked}
+                      withDescription
+                      missing={editable ? missing : []}
+                      onChange={(questionId, patch) => setAnswer(event, questionId, patch)}
+                    />
+                  )}
 
-                  <div id={`supplier-rfi-docs-${event.id}`}>
+                  <div id={`supplier-rfi-docs-${event.id}`} hidden={!showForm}>
                     <ResponseDocumentsSection
                       key={`${event.id}-${isRevising ? 'revising' : 'stored'}-${mine?.versions.length ?? 0}`}
                       requests={event.documentRequests ?? []}
@@ -467,7 +532,7 @@ const SupplierRfi = () => {
 
                   {/* NR-1 BR-08 — while revising, Save and Submit give way to the
                       revise verb's controls: a Submitted response is never saved. */}
-                  {!isRevising && (
+                  {!isRevising && !!showForm && (
                     <div className="flex flex-wrap gap-3">
                       <Button
                         variant="secondary"

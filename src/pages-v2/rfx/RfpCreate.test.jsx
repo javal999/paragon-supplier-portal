@@ -15,6 +15,7 @@
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderWithProviders, BUYER } from '@test/test-utils';
+import BuyerRfxRoutes from '@test/buyerRfxRoutes';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { NO_PERSON } from '@context/noPerson';
@@ -24,7 +25,6 @@ import { quotationStore } from '@services/data/mock/stores/quotationStore';
 import { sdcClock } from '@services/sdc';
 import { rfpEventViews } from '@services/data/mock/rfxReadModel';
 import { mockDataService } from '@services/data/mock/mockDataService';
-import BuyerRfp from '../BuyerRfp';
 import SupplierRfp from '../SupplierRfp';
 import { rfxNow } from './rfxDisplay';
 
@@ -69,7 +69,7 @@ const TITLE = 'Q1 2027 bottle supply proposal';
 
 /** @param {CurrentIdentity} [identity] */
 const openWizard = async (identity = BUYER_SEAT) => {
-  renderWithProviders(<BuyerRfp />, { identity });
+  renderWithProviders(<BuyerRfxRoutes />, { identity, route: '/buyer/rfp' });
   fireEvent.click(await screen.findByTestId('rfp-new'));
 };
 
@@ -129,10 +129,12 @@ describe('section 3.6a — the buyer raises a proposal request', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Send to suppliers' }));
 
-    const detail = await screen.findByTestId('rfp-detail-rfp-0005');
-    expect(detail).toHaveTextContent('RFP-2026-005');
-    expect(detail).toHaveTextContent(TITLE);
-    expect(within(detail).getByText('Open')).toBeInTheDocument();
+    await screen.findByTestId('rfp-detail-rfp-0005');
+    // RFx UX 2F — the number, title and status are the page header's (the
+    // About card no longer repeats them).
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(TITLE);
+    expect(screen.getByText('RFP-2026-005')).toBeInTheDocument();
+    expect(screen.getByTestId('rfp-event-status')).toHaveTextContent('Open');
     // An Open event offers Close, never Send again.
     expect(screen.queryByTestId('rfp-send-rfp-0005')).not.toBeInTheDocument();
     expect(screen.getByTestId('rfp-close-rfp-0005')).toBeInTheDocument();
@@ -169,8 +171,8 @@ describe('section 3.6a — the buyer raises a proposal request', () => {
     await walkToReview();
     fireEvent.click(screen.getByTestId('rfp-new-save-draft'));
 
-    const detail = await screen.findByTestId('rfp-detail-rfp-0005');
-    expect(within(detail).getByText('Draft')).toBeInTheDocument();
+    await screen.findByTestId('rfp-detail-rfp-0005');
+    expect(screen.getByTestId('rfp-event-status')).toHaveTextContent('Draft');
     expect(screen.getByTestId('rfp-draft-notice-rfp-0005')).toBeInTheDocument();
     expect(screen.getByTestId('rfp-send-rfp-0005')).toBeInTheDocument();
     expect(screen.queryByTestId('rfp-close-rfp-0005')).not.toBeInTheDocument();
@@ -278,7 +280,7 @@ describe('section 3.6a — the buyer raises a proposal request', () => {
   });
 
   it('CE-06 · a seat holding neither atom reads WHOSE act each one is', async () => {
-    renderWithProviders(<BuyerRfp />, { identity: DRAFTER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: DRAFTER_SEAT, route: '/buyer/rfp' });
     await screen.findByTestId('rfp-row-rfp-001');
     expect(screen.queryByTestId('rfp-new')).not.toBeInTheDocument();
     expect(screen.getByTestId('handoff-rfp-create')).toHaveAttribute('data-handoff', 'withheld');
@@ -286,7 +288,7 @@ describe('section 3.6a — the buyer raises a proposal request', () => {
 
     // POSITIVE TWIN.
     cleanup();
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     expect(await screen.findByTestId('rfp-new')).toBeInTheDocument();
     expect(screen.queryByTestId('handoff-rfp-create')).not.toBeInTheDocument();
   });
@@ -294,7 +296,7 @@ describe('section 3.6a — the buyer raises a proposal request', () => {
 
 describe('REQ-E03-04 — closing the window stops the proposals', () => {
   it('a closed RFP is still readable, and the term boxes are shut', async () => {
-    renderWithProviders(<BuyerRfp />, { identity: BUYER_SEAT });
+    renderWithProviders(<BuyerRfxRoutes />, { identity: BUYER_SEAT, route: '/buyer/rfp' });
     fireEvent.click(await screen.findByTestId('rfp-open-rfp-001'));
     fireEvent.click(await screen.findByTestId('rfp-close-rfp-001'));
     // RFx UX 1C (B-05) — the close is dispatched from its confirmation sheet.
@@ -317,8 +319,10 @@ describe('REQ-E03-04 — closing the window stops the proposals', () => {
   it('POSITIVE TWIN — while it is Open the same supplier may still save a draft', async () => {
     renderWithProviders(<SupplierRfp />, { identity: SUP_013 });
     fireEvent.click(await screen.findByTestId('supplier-rfp-open-rfp-001'));
+    // BL-132 — the form opens once the supplier says it will respond.
+    fireEvent.click(await screen.findByTestId('supplier-rfp-rfp-001-intent-respond'));
     expect(screen.queryByTestId('supplier-rfp-closed-rfp-001')).not.toBeInTheDocument();
-    expect(screen.getByTestId('supplier-rfp-save-rfp-001')).not.toBeDisabled();
+    expect(await screen.findByTestId('supplier-rfp-save-rfp-001')).not.toBeDisabled();
   });
 });
 

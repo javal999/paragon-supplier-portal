@@ -227,6 +227,7 @@ import {
   rfpRoundedOptionRefs,
   rfpSettledOptionRefs,
   rfqOptionInRoundRefusal,
+  rfqFromOpenRfpRefusal,
   rfqSourcedOptionRefs
 } from '../../sourcing/rfpAward';
 import { isTieredRfq } from '../../sourcing/rfqComparison';
@@ -265,6 +266,9 @@ import {
   rfqConfidentialityTarget,
   rfqIntentTarget
 } from './rfqEngagementCommand';
+// BL-132 — intent to respond, and a reasoned decline, on an RFI and an RFP.
+// Importing the module binds its two policies (side effect).
+import { rfiIntentTarget, rfpIntentTarget } from './rfxIntentCommand';
 /** @import { AttachmentMeta } from '../../attachments/sessionAttachments' */
 import { isAttachmentMeta } from '../../attachments/sessionAttachments';
 // NR-1 — document requests and response documents. Importing the module binds
@@ -5393,6 +5397,8 @@ bindPolicyHook(POLICY_HOOKS.RFP_AWARD_SAP_GOVERNED, ({ payload, entityId }) => {
 // Owner ruling Q1 (2026-10-19, RFx UX B-07) — nor an option a firm-offer round
 // of that RFP names: once an option is in a round, the RFQ path is closed for
 // it (`rfqOptionInRoundRefusal`, the rule the RFP page's picker reads too).
+// BL-216 (RFX-D16) — and never from an RFP that is still Open
+// (`rfqFromOpenRfpRefusal`, the rule the RFP page holds its button by).
 bindPolicyHook(POLICY_HOOKS.RFQ_CREATE_RFP_OPTIONS_FREE, ({ payload }) => {
   const rfpId = typeof payload.sourceRfpId === 'string' ? payload.sourceRfpId.trim() : '';
   const refs = Array.isArray(payload.sourceRfpOptionRefs)
@@ -5400,8 +5406,11 @@ bindPolicyHook(POLICY_HOOKS.RFQ_CREATE_RFP_OPTIONS_FREE, ({ payload }) => {
         /** @returns {x is string} */ (x) => typeof x === 'string'
       )
     : [];
-  if (!rfpId || refs.length === 0) return { ok: true };
+  if (!rfpId) return { ok: true };
   const rfp = rfpEventStore.get(rfpId);
+  const open = rfp ? rfqFromOpenRfpRefusal(rfp.status, rfp.eventNumber) : null;
+  if (open) return { ok: false, reason: open };
+  if (refs.length === 0) return { ok: true };
   const refusal = rfpOptionSourcedRefusal(
     refs,
     rfpAwardedOptionRefs(rfpAwardsOf(rfpId)),
@@ -6248,7 +6257,11 @@ const TARGETS = {
   negotiationRound: negotiationRoundTarget,
   // NR-2 (D-1) — the firm-offer round on an RFP and the supplier's firm offer.
   rfpOfferRound: rfpOfferRoundTarget,
-  rfpFirmOffer: rfpFirmOfferTarget
+  rfpFirmOffer: rfpFirmOfferTarget,
+  // BL-132 — the supplier's intent on an RFI or RFP. Ships in the same commit
+  // as its flow.
+  rfiIntent: rfiIntentTarget,
+  rfpIntent: rfpIntentTarget
 };
 
 // The behavior-wiring census (was the contract package's "6"; 7 with the G1.1

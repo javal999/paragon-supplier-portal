@@ -99,6 +99,7 @@ export const rfqRefusalKey = (refusal) =>
  * @property {(prefill: RequisitionPrefill | null) => void} applySource Re-point the open wizard at a requisition.
  * @property {ReturnType<typeof useRfqWizard>['updateDraft']} updateDraft
  * @property {(m: string) => void} toggleMaterial
+ * @property {ReturnType<typeof useRfqWizard>['changeCategory']} changeCategory B-12 — the category, its materials cleared and its usual unit.
  * @property {ReturnType<typeof readRfqTotalQty>} qtyRead The quantity field's own read (2e-b-4b).
  * @property {ReturnType<typeof readRfqBudget>} budgetRead The budget field's own read (2e-b-4b).
  * @property {TFunction} t
@@ -116,6 +117,7 @@ const WizardScopeStep = ({
   sourceablePrs,
   applySource,
   updateDraft,
+  changeCategory,
   toggleMaterial,
   qtyRead,
   budgetRead,
@@ -231,10 +233,7 @@ const WizardScopeStep = ({
           </span>
           <select
             value={draft.category}
-            onChange={(e) => {
-              updateDraft('category', /** @type {RFQCategory} */ (e.target.value));
-              updateDraft('materials', []);
-            }}
+            onChange={(e) => changeCategory(/** @type {RFQCategory} */ (e.target.value))}
             className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
           >
             <option value="">{t('sourcing.wizard.select.category')}</option>
@@ -353,6 +352,7 @@ const WizardScopeStep = ({
           </span>
           <select
             value={draft.uom}
+            data-testid="rfq-wizard-uom"
             onChange={(e) =>
               updateDraft('uom', /** @type {(typeof UOM_OPTIONS)[number]} */ (e.target.value))
             }

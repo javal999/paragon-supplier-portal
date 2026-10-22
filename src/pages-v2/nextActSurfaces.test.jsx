@@ -125,11 +125,17 @@ describe('S2a · BuyerGoodsReceipt — the line says who acts on a receipt', () 
   });
 });
 
-describe('S2a · BuyerSourcing — the line says who acts on an RFQ', () => {
-  it('an Open RFQ is the buyer’s move', async () => {
+// RFx UX B-15 (coordinator ruling 2026-10-19) — the RFQ panel's line no longer
+// reads the role arm ("Your move" from the status alone): it names the next
+// act from the same `rfqStageOf` as the board's Next column and the event
+// page's stage bar. Pinned against those in `BuyerSourcing/rfxUxB15.test.jsx`.
+describe('S2a · BuyerSourcing — the line says what comes next on an RFQ', () => {
+  it('an Open RFQ names its next act, not "Your move"', async () => {
     renderWithProviders(<BuyerSourcing />);
     fireEvent.click(await screen.findByText('RFQ-2026-001'));
-    await expectLine('next-act-buyer-rfq', 'mine', /Your move/);
+    const line = await screen.findByTestId('next-act-buyer-rfq');
+    expect(line).toHaveTextContent(/^Next: /);
+    expect(line).not.toHaveTextContent(/Your move/);
   });
 });
 

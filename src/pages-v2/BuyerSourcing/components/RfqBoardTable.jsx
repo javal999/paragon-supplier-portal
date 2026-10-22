@@ -13,27 +13,16 @@ import { daysUntil } from '@services/data/dayProjection';
 import { formatDate, formatIDR, formatNumber } from '@lib/format';
 import { STATUS_VARIANT } from '../const';
 import { categoryLabel } from '../utils';
-
-/**
- * The label of each next step on the board's "Next" column.
- * @type {Record<RfqNextStep, string>}
- */
-const NEXT_LABEL_KEY = {
-  send: 'sourcing.next.publish',
-  quotes: 'sourcing.next.reviewQuotes',
-  round: 'sourcing.next.closeRound',
-  award: 'sourcing.next.award',
-  sap: 'sourcing.next.raiseInSap'
-};
+import { nextActKey } from '../../BuyerSourcingEvent/utils';
 
 /**
  * One board row: number, project tag and title, category, responses with a
  * bar, quantity, estimated value, the response deadline with its day-count
  * tone, status, and the buyer's next act (B-04; "—" when nothing is the
  * buyer's to do). Clicking opens the side panel.
- * @type {React.FC<{ r: RFQ; next: RfqNextStep | null; nowIso: string; onOpen: (r: RFQ) => void; t: TFunction }>}
+ * @type {React.FC<{ r: RFQ; next: RfqNextStep | null; quoted: number; nowIso: string; onOpen: (r: RFQ) => void; t: TFunction }>}
  */
-const RfqBoardRow = ({ r, next, nowIso, onOpen, t }) => {
+const RfqBoardRow = ({ r, next, quoted, nowIso, onOpen, t }) => {
   const responded = r.respondedSupplierIds.length;
   const invited = r.invitedSupplierIds.length;
   const pct = invited === 0 ? 0 : (responded / invited) * 100;
@@ -81,7 +70,24 @@ const RfqBoardRow = ({ r, next, nowIso, onOpen, t }) => {
         </Data>
       </TableCell>
       <TableCell className="text-right font-semibold text-text-primary whitespace-nowrap">
-        <Data>{formatIDR(r.estimatedValue)}</Data>
+        {/* RFx UX B-13 — Est. value is the buyer's stated budget. With none
+            stated it stays "—", and says why: a tiered RFQ's breaks carry
+            quantities, not prices, so no value can be computed honestly. */}
+        {r.estimatedValue === undefined ? (
+          <span
+            className="text-text-tertiary cursor-help"
+            title={t(
+              (r.tiers?.length ?? 0) > 0
+                ? 'sourcing.table.estValue.tieredNoBudget'
+                : 'sourcing.table.estValue.noBudget'
+            )}
+            data-testid={`rfq-est-value-none-${r.id}`}
+          >
+            —
+          </span>
+        ) : (
+          <Data>{formatIDR(r.estimatedValue)}</Data>
+        )}
       </TableCell>
       <TableCell>
         <Data as="div" className={`text-sm whitespace-nowrap ${deadlineTone}`}>
@@ -116,7 +122,8 @@ const RfqBoardRow = ({ r, next, nowIso, onOpen, t }) => {
         className="text-sm font-medium text-text-primary whitespace-nowrap"
         data-testid={`rfq-next-${r.id}`}
       >
-        {next ? t(NEXT_LABEL_KEY[next]) : <span className="text-text-tertiary">—</span>}
+        {/* B-15 — the stage bar's own wording for the same step (`nextActKey`). */}
+        {next ? t(nextActKey(next, quoted)) : <span className="text-text-tertiary">—</span>}
       </TableCell>
       <TableCell className="text-right">
         <ChevronRight size={16} className="text-text-tertiary inline-block" />
@@ -133,12 +140,13 @@ const RfqBoardRow = ({ r, next, nowIso, onOpen, t }) => {
  *   rows: readonly RFQ[];
  *   nowIso: string;
  *   nextOf: (r: RFQ) => RfqNextStep | null;
+ *   quotedOf: (r: RFQ) => number;
  *   emptyText: string;
  *   onOpen: (r: RFQ) => void;
  *   t: TFunction;
  * }>}
  */
-const RfqBoardTable = ({ rows, nowIso, nextOf, emptyText, onOpen, t }) => (
+const RfqBoardTable = ({ rows, nowIso, nextOf, quotedOf, emptyText, onOpen, t }) => (
   <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-hidden mb-8">
     <Table>
       <TableHeader>
@@ -154,7 +162,15 @@ const RfqBoardTable = ({ rows, nowIso, nextOf, emptyText, onOpen, t }) => (
       </TableHeader>
       <tbody>
         {rows.map((r) => (
-          <RfqBoardRow key={r.id} r={r} next={nextOf(r)} nowIso={nowIso} onOpen={onOpen} t={t} />
+          <RfqBoardRow
+            key={r.id}
+            r={r}
+            next={nextOf(r)}
+            quoted={quotedOf(r)}
+            nowIso={nowIso}
+            onOpen={onOpen}
+            t={t}
+          />
         ))}
         {rows.length === 0 && (
           <tr>

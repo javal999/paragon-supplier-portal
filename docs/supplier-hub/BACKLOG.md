@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.32, 2026-10-19 (section 4c: RFx UX follow-ups BL-213 to BL-220 and BL-222) |
+| Version | 2.34, 2026-10-20 (BL-221 added; the RFx 'Cancel RFQ' follow-up is BL-222, renumbered from BL-212) |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -161,15 +161,9 @@ Found while building the RFx UX evaluation (`research/RFX-UX-EVALUATION-2026-10.
 
 | ID | Item | Why | Size | Blocked by | Detail |
 |---|---|---|---|---|---|
-| BL-222 | Confirmation sheet on "Cancel RFQ" in the board's side panel | B-05 added sheets to close, award and cancel-award; cancelling the whole RFQ still dispatches on click | S | Nothing | Evaluation B-05 |
 | BL-213 | Read and unread state for the supplier bell; real counts on the PTI bell (it shows a fixed "3"); menu counts beyond RFI, RFQ and RFP | The supplier bell counts every award and withdrawal notice it has ever shown | S | Notification store (with BL-120) | Evaluation S-04 |
 | BL-214 | Response drafts kept on the server (the "Save draft" verb) and a "Discard draft" control | Autosave keeps the draft in this browser only, so it does not follow the supplier to another device; Cancel on the quote drawer keeps the draft with no way to drop it | M | Stage F backend | Evaluation S-01 |
-| BL-215 | A stored link from a buyer question to the built-in field it repeats (sample ready date, development timeline) | Today the duplicate is found by matching words in the question, and the question's answer overwrites the built-in field on send | S | Nothing | Evaluation S-06 |
-| BL-216 | Refuse "Create RFQ from this RFP" at the verb while the RFP is Open, and leave in-round options out of the RFQ wizard's pre-fill link | Both are held on the RFP page only; a hand-made link reaches the wizard and is refused only on save | S | Nothing | RFX-D16 |
-| BL-217 | Rename the buyer To do row "Sourcing events ready to award" and the supplier page "Revised quotes" to the RFX-D23 names | Proposal X-01 did not name them, so they kept the old wording | S | Nothing | RFX-D23 |
-| BL-218 | Remove the i18n keys the build left unused (`rfx.rfi.missing`, `rfxa.answer.fixInvalid`, `rfxa.blocker.*`, the panel's `sourcing.cmp.*`, `rfx.cmp.refused`) | Dead strings in both languages | S | Nothing | Evaluation S-02, B-02 |
-| BL-219 | Offer "Extend the deadline" on the RFI and RFP pages only where the extend verb accepts it (Open or Closed) | The button shows in every status; pressing it on another status is refused | S | Nothing | Evaluation B-10 |
-| BL-220 | One stage-bar component for the RFQ, RFI and RFP pages | Wave 2 added a copy for the RFI and RFP beside the RFQ one | S | Nothing | Evaluation B-01, B-09 |
+| BL-221 | Order the RFP and RFI Compare grid columns like the summary cards (best scored first) | The cards are ordered by score while the grid keeps the invitation order, so the same supplier sits in different positions | S | Nothing | RFX-D25 |
 
 ## 5. Other teams and later phases
 
@@ -185,7 +179,6 @@ Found while building the RFx UX evaluation (`research/RFX-UX-EVALUATION-2026-10.
 | BL-90 | Award optimisation: scenarios with constraints such as maximum suppliers or capacity. Later, not in the MVP | Build team, after the MVP | Requirements 5.2 and 8.3 |
 | BL-91 | Admin screen for the RFx libraries: question library, term list, item-type spec templates (CE-05). Later, not in the MVP; Procurement asks IT meanwhile. Same family as BL-32 | Build team, after the MVP | Requirements 3.6a |
 | BL-92 | Amendments to a live RFx event that notify invitees and flag responses to revisit (deadline extension exists). Later, not in the MVP | Build team, after the MVP | Requirements 5.2 and 8.3 |
-| BL-132 | Intent to respond, and decline with a reason, on the RFI and the RFP, as the RFQ has. Proposed as a follow-on, not part of the 2026-09-25 decisions (finding F-13 of `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md`) | Build team, after owner review | Requirements 5.2 |
 | BL-42 | Phase 2 epics: contract management (E04), catalog management (E05), reporting and analytics (E11), API shipment aggregator (E13.02), supplier quality | Per the deck and charter | Requirements section 6 |
 | BL-103 | Forecast engine feed specification: each input, its grain, refresh and quality check, handed to the Master Data Management team, who own the data and the SAP integration | Master Data Management team | Drafted: `FORECAST-ENGINE-FEED-SPEC.md` (2026-09-23), handed to the team for confirmation of sources and owners. `FORECAST-ENGINE-REQUIREMENTS.md` E14-01; PRD I14 |
 | BL-118 | Where to hold buffers (E14-12, Phase 2): guaranteed-service model with the MOQ extension, deciding at which level (finished good, bulk, packaging) safety stock sits | Build team, Phase 2; after REPL (BL-01) | `FORECAST-ENGINE-REQUIREMENTS.md` REQ-E14-12 |
@@ -197,6 +190,14 @@ Found while building the RFx UX evaluation (`research/RFX-UX-EVALUATION-2026-10.
 
 | ID | Item | Closed | By |
 |---|---|---|---|
+| BL-132 | Intent to respond, and decline with a reason, on the RFI and the RFP | 2026-10-19 | Built in the RFx UX wave 2 MR (lane 2D, RFX-D21): verbs `t_{rfi,rfp}intent_respond/_decline/_withdraw`, `INTENT_DECLINED` on save, submit and revise, the buyer's invitee table shows the intent and the reason |
+| BL-222 | Confirmation sheet on "Cancel RFQ" | 2026-10-19 | Built in the RFx UX wave 2 MR (lane 2E) |
+| BL-215 | Stored link from a buyer question to the built-in field it repeats | 2026-10-19 | Built in the RFx UX wave 2 MR (lane 2E): optional `builtIn` on the question, word match kept as a fallback, `BUILT_IN_MISMATCH` |
+| BL-216 | Refuse "Create RFQ from this RFP" while the RFP is Open; pre-fill leaves out in-round options | 2026-10-19 | Built in the RFx UX wave 2 MR (lane 2E): `RFQ_SOURCE_RFP_OPEN` on create and revise-draft |
+| BL-217 | RFX-D23 names for "ready to award" and "Revised quotes" | 2026-10-19 | Built in the RFx UX wave 2 MR (lane 2E): "RFQ ready to award", "RFQ rounds · Revised quotes" |
+| BL-218 | Remove the i18n keys the build left unused | 2026-10-19 | Built in the RFx UX wave 2 MR (lane 2E): 25 keys removed |
+| BL-219 | "Extend the deadline" only where the verb accepts it | 2026-10-19 | Built in the RFx UX wave 2 MR (lane 2E): read from the extend verbs' from-states |
+| BL-220 | One stage-bar component for RFQ, RFI and RFP | 2026-10-19 | Built in the RFx UX wave 2 MR (lane 2E) |
 | BL-212 | `OSIP_ROP_READ.npdLtpWeeks` (`osipRopRules.js`) is read from `consumptionMovingAvgWeeks` when the module loads, so a sandbox change to that window does not reach the NPD demand branch; read it at call time, as BL-210 did for `fisikConsumptionWeeks` | 2026-10-19 | Branch `feat/drc-bl208-212`: `npdLtpWeeks(rules)` read at call time |
 | BL-211 | One consumption split per supplier: the recorded-consumption grid on Demand anticipation splits by DA share (CAP-D14), the OSIP safety figures and the DRC-18 rows by LTP share (CAP-D11) | 2026-10-19 | GitLab MR !8: LTP share everywhere (DRC-D21) |
 | BL-210 | Align the live functions with the sandbox: `rollingDaFigure` takes no consumption, koli or MOQ, so under `sdSource: consumption12w` or `safetyRounding: koli/moq` DA's week-1 safety order differs from ROP Order's; `safetyOrder` takes no typed SD; `OSIP_SAFETY_READ.fisikConsumptionWeeks` is fixed when the module loads, so the consumption-window switch moves no figure | 2026-10-19 | GitLab MR !8: DA week-1 safety equals ROP Order safety under every switch; consumption window read at call time; SD override in `safetyOrder` |

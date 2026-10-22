@@ -5,17 +5,20 @@
 // sample offer; the RFP asks for a development timeline as a question and again
 // as the pricing block's "Timeline". The supplier typed the same fact twice.
 //
-// A question carries no link to a built-in field (the buyer writes it in their
-// own words), so the match is made on the words: a DATE question whose prompt
-// contains the built-in "Sample ready date" label, or a TEXT question whose
-// prompt contains the "Timeline" word, in English or Indonesian. When one
-// matches, the form shows the question only and copies its answer into the
-// built-in field, so both the buyer's question and the built-in field are sent.
-// A question that does not match is left alone: two fields is the old
-// behaviour, never a lost answer.
+// BL-215 — a question can carry a STORED LINK to the built-in field it repeats
+// (`builtIn`: 'sampleReadyDate' | 'developmentTimeline'), set by the buyer in
+// the question editor. The link is read FIRST. Only a question WITHOUT a link
+// (the seeded fixtures, and events written before the link existed) is matched
+// on the words: a DATE question whose prompt contains the built-in "Sample
+// ready date" label, or a TEXT question whose prompt contains the "Timeline"
+// word, in English or Indonesian. When one matches, the form shows the
+// question only and copies its answer into the built-in field, so both the
+// buyer's question and the built-in field are sent. A question that does not
+// match is left alone: two fields is the old behaviour, never a lost answer.
 // ────────────────────────────────────────────────────────────────────────────
 
-/** @import { RfiAnswer, RfiQuestion, RfpPricingAnswer } from '@services/sourcing/types' */
+/** @import { RfiAnswer, RfiQuestion, RfpPricingAnswer, RfxBuiltInField } from '@services/sourcing/types' */
+import { builtInFits } from '@services/sourcing/rfxBuiltIn';
 
 /** @typedef {'sampleReadyDate' | 'timeline'} BuiltInField */
 
@@ -48,7 +51,19 @@ const mentions = (prompt, labels) => {
 export function builtInDuplicates(questions, promptOf, labels) {
   /** @type {Partial<Record<BuiltInField, RfiQuestion>>} */
   const found = {};
+  // BL-215 — the stored link first. A link whose type does not fit is ignored
+  // (the create verbs refuse it; this keeps a hand-made one from filling a date
+  // with text).
+  /** @type {Record<RfxBuiltInField, BuiltInField>} */
+  const slot = { sampleReadyDate: 'sampleReadyDate', developmentTimeline: 'timeline' };
   for (const q of questions) {
+    if (q.builtIn === undefined || !builtInFits(q.builtIn, q.type)) continue;
+    const field = slot[q.builtIn];
+    if (!found[field]) found[field] = q;
+  }
+  // The word match, only for questions without a link.
+  for (const q of questions) {
+    if (q.builtIn !== undefined) continue;
     const texts = [promptOf(q), q.promptKey];
     if (
       !found.sampleReadyDate &&
