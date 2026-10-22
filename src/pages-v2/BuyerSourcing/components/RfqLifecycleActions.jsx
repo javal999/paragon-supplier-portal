@@ -20,7 +20,7 @@ import { ConfirmSheet, cancelRfqEffects } from '../../rfx/ConfirmSheet';
  * @property {boolean} publishPending
  * @property {boolean} reopenPending
  * @property {boolean} cancelPending
- * @property {number} quotedCount BL-212 — how many invited suppliers sent a quote, for the cancel sheet.
+ * @property {number} quotedCount BL-222 — how many invited suppliers sent a quote, for the cancel sheet.
  * @property {() => void} onSaveTemplate D2 — "Save as template", a secondary act on any status.
  * @property {TFunction} t
  */
@@ -35,7 +35,7 @@ import { ConfirmSheet, cancelRfqEffects } from '../../rfx/ConfirmSheet';
  * cancel keeps its own from-states (Draft, Open, Closed — never the terminal
  * Awarded or Cancelled), and "Save as template" sits last as a secondary act.
  *
- * BL-212 — "Cancel RFQ" opens a confirmation sheet (who is affected, what
+ * BL-222 — "Cancel RFQ" opens a confirmation sheet (who is affected, what
  * closes, that it cannot be undone); nothing dispatches until it is confirmed.
  * @type {React.FC<RfqLifecycleActionsProps>}
  */

@@ -27,6 +27,7 @@ import {
   allocatedIsProductionLimit
 } from '@services/transitions/drcBufferRules';
 import StrategicBufferSection from './inventory/StrategicBufferSection';
+import ProtectionBufferSection from './inventory/ProtectionBufferSection';
 import {
   CapacityStatusPill,
   LtpCheckPill,
@@ -687,6 +688,11 @@ const BuyerCapacity = () => {
 
       {/* DRC-9a (BL-195) — the strategic buffer, read only, under the plans. */}
       <StrategicBufferSection
+        supplierId={filters.supplierId ?? (drill.kind === 'filtered' ? drill.po.supplierId : null)}
+        materialCode={filters.materialCode}
+      />
+      {/* DRC-9c (BL-205) [Proposed] — the protection buffer, read only, beside it. */}
+      <ProtectionBufferSection
         supplierId={filters.supplierId ?? (drill.kind === 'filtered' ? drill.po.supplierId : null)}
         materialCode={filters.materialCode}
       />

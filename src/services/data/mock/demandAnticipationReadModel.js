@@ -23,7 +23,11 @@
 //   · OSPR and the last 4 weeks of sales orders per supplier × material — the
 //     hub holds neither (PRs carry no material code; sales orders are per FG
 //     SKU), so both are passed as null and every figure is flagged;
-//   · recorded consumption — `consumptionStore` (CAP-11, kept).
+//   · recorded consumption — `consumptionStore` (CAP-11, kept), split by LTP
+//     share (BL-211);
+//   · BL-210 — the supplier's consumption share, MOQ and koli as ROP Order's
+//     safety order reads them (`osipSafetySizes`), so the week-1 safety order
+//     is ROP Order's under every `sdSource` and `safetyRounding` variant.
 // Today's figures and "would be" are computed here at read, never stored.
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -54,6 +58,9 @@ import { engineDataset } from './fixtures/engineDataset';
 import { ptiStockStore } from './stores/ptiStockStore';
 import { supplierNameOf } from './inventoryReadModel';
 import { demandAnticipationStore } from './stores/demandAnticipationStore';
+import { osipSafetySizes } from './osipSafetyReadModel';
+/** @import { SupplierDaRowCore } from '../../transitions/supplierDaView' */
+import { supplierDaRows } from '../../transitions/supplierDaView';
 
 /**
  * The pair's source in the engine dataset (lead time, MPQ), or undefined.
@@ -110,11 +117,14 @@ function pairInputs(publications, nowIso, agreed) {
   const pos = purchaseOrderStore.all();
   const callOffs = callOffStore.all();
   const supply = openSupplyIndex(callOffs);
+  const sizes = osipSafetySizes(nowIso);
   return pairsAt(nowIso).map((p) => {
     const chain = chainFor(publications, p.supplierId, p.materialCode, planningWeek);
     /** @param {string} week */
     const calledOff = (week) => supply.get(`${p.supplierId}|${p.materialCode}|${week}`) ?? 0;
     const src = sourceOf(p.supplierId, p.materialCode);
+    // BL-210 — ROP Order's own consumption, MOQ and koli; none for a pair with no source.
+    const size = sizes.get(pairKey(p.supplierId, p.materialCode));
     return {
       ...p,
       inputs: {
@@ -137,7 +147,8 @@ function pairInputs(publications, nowIso, agreed) {
         // [Default A8b] — the hub holds no sales-order quantity per supplier × material.
         salesOrderQty4w: null,
         // The hub's PRs carry no material code: no open PR quantity per pair.
-        ospr: null
+        ospr: null,
+        ...(size ? { consumption: size.consumption, moq: size.moq, koli: size.koli } : {})
       }
     };
   });
@@ -231,4 +242,45 @@ export function allDemandAnticipation(nowIso = sdcClock.now()) {
  */
 export function demandAnticipationUnabsorbed(nowIso = sdcClock.now()) {
   return unabsorbedOf(allDemandAnticipation(nowIso));
+}
+
+/**
+ * BL-204 (DRC-1) — one supplier view row: the latest publication's figure for
+ * the pair, with names for the page.
+ * @typedef {SupplierDaRowCore & {
+ *   readonly supplierName: string;
+ *   readonly materialLabel: string;
+ *   readonly uom: string;
+ * }} SupplierDaRow
+ */
+
+/**
+ * BL-204 (DRC-1) — every pair's published DA as a supplier may read it (the
+ * service narrows it to the reader). Stored figures only: the same numbers the
+ * planner's page shows as published for the pair.
+ * @returns {SupplierDaRow[]}
+ */
+export function supplierDemandAnticipation() {
+  return supplierDaRows(demandAnticipationStore.all()).map((r) => {
+    const entry = materialEntry(r.materialCode);
+    return {
+      ...r,
+      supplierName: supplierNameOf(r.supplierId),
+      materialLabel: entry?.label ?? r.materialCode,
+      uom: entry?.canonicalUom ?? ''
+    };
+  });
+}
+
+/**
+ * BL-204 (DRC-8) — the published DA a supplier confirms as Incoming DA for one
+ * pair, or undefined when no publication holds the pair.
+ * @param {string} supplierId
+ * @param {string} materialCode
+ * @returns {SupplierDaRowCore | undefined}
+ */
+export function incomingDaFor(supplierId, materialCode) {
+  return supplierDaRows(demandAnticipationStore.all()).find(
+    (r) => r.supplierId === supplierId && r.materialCode === materialCode
+  );
 }

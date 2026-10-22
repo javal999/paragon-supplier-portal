@@ -90,6 +90,10 @@ import {
   demandAnticipationHistoryId
 } from './i18n/demandAnticipationHistory';
 import { whatIfSandboxEn, whatIfSandboxId } from './i18n/whatIfSandbox';
+import {
+  supplierDemandAnticipationEn,
+  supplierDemandAnticipationId
+} from './i18n/supplierDemandAnticipation';
 import { supplyGapEn, supplyGapId } from './i18n/supplyGap';
 import { sapInterfaceEn, sapInterfaceId } from './i18n/sapInterface';
 import { consumptionEn, consumptionId } from './i18n/consumption';
@@ -237,6 +241,7 @@ export const resources = {
       ...demandAnticipationEn,
       ...demandAnticipationHistoryEn,
       ...whatIfSandboxEn,
+      ...supplierDemandAnticipationEn,
       ...supplyGapEn,
       ...sapInterfaceEn,
       ...consumptionEn,
@@ -751,6 +756,7 @@ export const resources = {
       ...demandAnticipationId,
       ...demandAnticipationHistoryId,
       ...whatIfSandboxId,
+      ...supplierDemandAnticipationId,
       ...supplyGapId,
       ...sapInterfaceId,
       ...consumptionId,

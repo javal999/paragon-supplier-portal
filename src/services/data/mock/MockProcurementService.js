@@ -18,12 +18,17 @@ import { withLtpFgDemandRead } from './ltpFgDemandReadModel';
 import { osipSafetyInputs } from './osipSafetyReadModel';
 import { npdReviews, osipRopInputs, systemRopSuppliers } from './osipRopReadModel';
 import { whatIfPairs, whatIfSandbox } from './whatIfSandboxReadModel';
+import { protectionBufferInputs } from './protectionBufferReadModel';
+/** @import { ProtectionBufferInput } from '../../transitions/drcBufferRules' */
 /** @import { WhatIfPair, WhatIfSandbox } from './whatIfSandboxReadModel' */
 import { ropFisikPrRecommendations } from './callOffTriggerReadModel';
 /** @import { PrRecommendationView } from '../../transitions/callOffTriggerRules' */
 /** @import { DemandAnticipationSupplyRow } from '../../transitions/supplyBelowDemandRules' */
 /** @import { DaHistoryRow } from '../../transitions/demandAnticipationHistory' */
 import { allDemandAnticipationHistory } from './demandAnticipationHistoryReadModel';
+/** @import { SupplierDaRow } from './demandAnticipationReadModel' */
+import { supplierDemandAnticipation } from './demandAnticipationReadModel';
+import { SUPPLIER_DA_VIEW_ENABLED } from '../../transitions/supplierDaView';
 import { stockSimulationRows } from './stockSimulationReadModel';
 import {
   allCommitmentLines,
@@ -326,18 +331,68 @@ function trendForScope(scope) {
 // ─────────────────────────────────────────────────────────────────────────────
 const INVOICE_NOW = `${DECLARED_PRESENT}T00:00:00.000Z`;
 
+// ── The E14-04 run, computed once per input (perf, 2026-10-19) ───────────────
+// Measured: one Safety stock targets read is three engine runs (today, and the
+// last packaging and raw-material runs, BR-06) at ~28 ms each, ~85 ms of the
+// ~92 ms read; the OSIP inputs are ~7 ms. The page and every other reader of
+// the run (sizing, stabilise) asked for the same runs again on every read.
+//
+// `safetyStockRun` is pure. Its whole input is: the engine dataset, the day,
+// the service targets and the safety lead time percentile in force, and the
+// frozen DEFAULT_SAFETY_STOCK_OPTIONS. It reads no store a command writes. So
+// the run is kept per input and is thrown away whenever any input changes:
+//   · the dataset — `engineDataset()` is memoised per hub present and returns a
+//     NEW object when the hub clock moves, so the whole cache is dropped then;
+//   · the day — part of the key;
+//   · the targets and the percentile (`t_setting_set`, BL-32) — read in force
+//     on every call and part of the key, so a changed value misses the cache.
+// The run is frozen so a reader that tried to change a shared run would throw
+// instead of changing the next read's figures.
+/** The most runs kept for one dataset (the reads ask for a handful of days). */
+const SAFETY_STOCK_RUNS_KEPT = 32;
+/** @type {{ data: ReturnType<typeof engineDataset>; runs: Map<string, SafetyStockRun> } | null} */
+let safetyStockRuns = null;
+
+/**
+ * @param {SafetyStockRun} run
+ * @returns {SafetyStockRun}
+ */
+function frozenRun(run) {
+  for (const m of run.materials) {
+    Object.freeze(m.errors);
+    Object.freeze(m);
+  }
+  Object.freeze(run.materials);
+  for (const s of run.safetyLeadTimes) Object.freeze(s);
+  Object.freeze(run.safetyLeadTimes);
+  Object.freeze(run.parameters);
+  return Object.freeze(run);
+}
+
 /**
  * REQ-E14-04 on the engine dataset, at the hub's present (or `asOf`), with the values in force.
  * @param {string} [asOf]
  * @returns {SafetyStockRun}
  */
 function engineSafetyStock(asOf = dayOf(sdcClock.now())) {
-  return safetyStockRun(engineDataset(), {
-    ...DEFAULT_SAFETY_STOCK_OPTIONS,
-    asOf,
-    targets: engineServiceTargets(),
-    safetyLeadTimePercentile: safetyLeadTimePercentile()
-  });
+  const data = engineDataset();
+  const targets = engineServiceTargets();
+  const percentile = safetyLeadTimePercentile();
+  if (safetyStockRuns?.data !== data) safetyStockRuns = { data, runs: new Map() };
+  const key = [asOf, targets.high, targets.standard, targets.slow, percentile].join('|');
+  const kept = safetyStockRuns.runs.get(key);
+  if (kept) return kept;
+  const run = frozenRun(
+    safetyStockRun(data, {
+      ...DEFAULT_SAFETY_STOCK_OPTIONS,
+      asOf,
+      targets,
+      safetyLeadTimePercentile: percentile
+    })
+  );
+  if (safetyStockRuns.runs.size >= SAFETY_STOCK_RUNS_KEPT) safetyStockRuns.runs.clear();
+  safetyStockRuns.runs.set(key, run);
+  return run;
 }
 
 /**
@@ -514,6 +569,19 @@ export class MockProcurementService {
     // DRC-18 (BL-203) — with FG demand, LTP − FG demand and the consumption
     // moving average per week, read only.
     return { items: withLtpFgDemandRead(allDemandAnticipationWithSupply()) };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<SupplierDaRow>>}
+   */
+  async getSupplierDemandAnticipation(scope) {
+    // BL-204 (DRC-1) — built ahead and switched off (DRC-D10): while the flag
+    // is false nobody reads anything here.
+    if (!SUPPLIER_DA_VIEW_ENABLED) return { items: [] };
+    // Scoped by persona, never by page: a supplier reads its own pairs only;
+    // PTI reads every pair (what its suppliers would see).
+    return { items: applySupplierScope(scope, supplierDemandAnticipation()) };
   }
 
   /**
@@ -1055,6 +1123,18 @@ export class MockProcurementService {
     // raised once when a material's NPD tag drops. PTI only (X-03).
     if (scope.personaType !== 'buyer') return { items: [] };
     return { items: npdReviews() };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<ProtectionBufferInput>>}
+   */
+  async getProtectionBufferInputs(scope) {
+    // DRC-9c (BL-205) [Proposed] — level and production MPQ per supplier ×
+    // material; the page applies the rule. PTI's planning read: a supplier
+    // persona reads nothing.
+    if (scope.personaType !== 'buyer') return { items: [] };
+    return { items: protectionBufferInputs() };
   }
 
   /**

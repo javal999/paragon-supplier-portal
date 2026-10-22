@@ -1,5 +1,6 @@
 /** @import * as React from 'react' */
 import { useTranslation } from 'react-i18next';
+import { useFormContext } from 'react-hook-form';
 import FormSection from '../../../ui-v2/FormSection';
 import Data from '../../../ui-v2/Data';
 // GL-1 - the glossary destination for this surface's refusals.
@@ -7,7 +8,7 @@ import GlossaryTermChip from '../../../ui-v2/GlossaryTermChip';
 import { BlockedStockMarker } from '@pages-v2/shipments/ShelfLifeParts';
 import { labelFor, inputCls } from './fieldParts';
 import { formatNumber } from '../utils';
-/** @import { LineDraft } from '../utils' */
+/** @import { GrDraftForm, LineDraft } from '../utils' */
 /** @import { GrLineQtyOutcome } from '../../grLineQuantities' */
 /** @import { QtyRefusalReason } from '@lib/localeNumber' */
 
@@ -34,60 +35,32 @@ export const LOCATIONS = ['NDC J6 Jakarta', 'RM Warehouse', 'PM Warehouse'];
 
 /**
  * @typedef {object} ReceiptStepProps
- * @property {string} receivedDate
- * @property {(value: string) => void} setReceivedDate
- * @property {string} receivedBy
- * @property {(value: string) => void} setReceivedBy
- * @property {string} warehouse
- * @property {(value: string) => void} setWarehouse
- * @property {string} notes
- * @property {(value: string) => void} setNotes
- * @property {LineDraft[]} lines
+ * @property {LineDraft[]} lines -  The drafted lines, as `useInspectionDraft` watches them — index-aligned with `lineQtys`.
  * @property {GrLineQtyOutcome[]} lineQtys -  The ONE parse of every line's quantity pair, index-aligned with `lines`.
  * @property {Set<string>} blockedCodes -  Materials Quality approved into blocked stock on this source's ASN.
- * @property {(idx: number, patch: Partial<LineDraft>) => void} updateLine
  */
 
 /**
  * Step 2 — receipt details: date, receiver, warehouse and notes, then each
  * line's received and accepted quantity with its refusal and rejection reason.
+ * Every field is `register`ed on the draft through `useFormContext()`; the
+ * refusals and the derived figures read `lineQtys`, parsed from the same draft.
  * @type {React.FC<ReceiptStepProps>}
  */
-const ReceiptStep = ({
-  receivedDate,
-  setReceivedDate,
-  receivedBy,
-  setReceivedBy,
-  warehouse,
-  setWarehouse,
-  notes,
-  setNotes,
-  lines,
-  lineQtys,
-  blockedCodes,
-  updateLine
-}) => {
+const ReceiptStep = ({ lines, lineQtys, blockedCodes }) => {
   const { t } = useTranslation();
+  const { register } = /** @type {GrDraftForm} */ (useFormContext());
   return (
     <div className="flex flex-col gap-5">
       <FormSection title={t('goodsReceipt.wizard.section.receiptInfo')}>
         <div className="grid grid-cols-2 gap-4">
           <label className="block">
             {labelFor(t('goodsReceipt.wizard.field.receivedDate'))}
-            <input
-              type="date"
-              value={receivedDate}
-              onChange={(e) => setReceivedDate(e.target.value)}
-              className={inputCls}
-            />
+            <input type="date" {...register('receivedDate')} className={inputCls} />
           </label>
           <label className="block">
             {labelFor(t('goodsReceipt.wizard.field.receivedBy'))}
-            <select
-              value={receivedBy}
-              onChange={(e) => setReceivedBy(e.target.value)}
-              className={inputCls}
-            >
+            <select {...register('receivedBy')} className={inputCls}>
               {ROLES.map((r) => (
                 <option key={r} value={r}>
                   {r}
@@ -97,11 +70,7 @@ const ReceiptStep = ({
           </label>
           <label className="block">
             {labelFor(t('goodsReceipt.wizard.field.warehouseLocation'))}
-            <select
-              value={warehouse}
-              onChange={(e) => setWarehouse(e.target.value)}
-              className={inputCls}
-            >
+            <select {...register('warehouse')} className={inputCls}>
               {LOCATIONS.map((l) => (
                 <option key={l} value={l}>
                   {l}
@@ -113,8 +82,7 @@ const ReceiptStep = ({
             {labelFor(t('goodsReceipt.wizard.field.notes'))}
             <textarea
               rows={2}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              {...register('notes')}
               placeholder={t('goodsReceipt.wizard.placeholder.notes')}
               className={inputCls}
             />
@@ -170,8 +138,7 @@ const ReceiptStep = ({
                           code: l.materialCode
                         })}
                         aria-invalid={!qty.ok && qty.field === 'received'}
-                        value={l.qtyReceivedRaw}
-                        onChange={(e) => updateLine(i, { qtyReceivedRaw: e.target.value })}
+                        {...register(`lines.${i}.qtyReceivedRaw`)}
                         className={inputCls}
                       />
                       {!qty.ok && qty.field === 'received' && (
@@ -200,8 +167,7 @@ const ReceiptStep = ({
                           code: l.materialCode
                         })}
                         aria-invalid={!qty.ok && qty.field === 'accepted'}
-                        value={l.qtyAcceptedRaw}
-                        onChange={(e) => updateLine(i, { qtyAcceptedRaw: e.target.value })}
+                        {...register(`lines.${i}.qtyAcceptedRaw`)}
                         className={inputCls}
                       />
                       {!qty.ok && qty.field === 'accepted' && (
@@ -236,12 +202,7 @@ const ReceiptStep = ({
                             aria-label={t('goodsReceipt.wizard.aria.rejectionReason', {
                               code: l.materialCode
                             })}
-                            value={l.rejectionReason}
-                            onChange={(e) =>
-                              updateLine(i, {
-                                rejectionReason: e.target.value
-                              })
-                            }
+                            {...register(`lines.${i}.rejectionReason`)}
                             placeholder={t('goodsReceipt.wizard.placeholder.rejectionReason')}
                             className={inputCls}
                           />

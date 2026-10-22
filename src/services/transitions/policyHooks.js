@@ -495,8 +495,11 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    * assigned to the supplier (NOT_ASSIGNED), the quantity is a number of 0 or
    * more (QTY_INVALID), the confirmation date is given (DATE_REQUIRED), is a
    * date (DATE_INVALID) and is not after today (DATE_IN_FUTURE), and the note
-   * is text of at most the rules' length (NOTE_INVALID, NOTE_TOO_LONG). The
-   * rule is `feedstockEntryRefusal`, the one the supplier form calls.
+   * is text of at most the rules' length (NOTE_INVALID, NOTE_TOO_LONG). BL-204:
+   * an optional Incoming DA confirmation is a boolean (INCOMING_DA_INVALID) and
+   * a "yes" needs the supplier DA view on and a published DA for the pair
+   * (INCOMING_DA_NOT_AVAILABLE). The rule is `feedstockEntryRefusal`, the one
+   * the supplier form calls.
    */
   FEEDSTOCK_CONFIRMATION_VALID: 'feedstock_confirmation_valid',
   /**

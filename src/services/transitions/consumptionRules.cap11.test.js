@@ -1,7 +1,8 @@
 // ────────────────────────────────────────────────────────────────────────────
 // CAP-11 (BL-180) — the pure rules that stay under DRC-D13: the record in
-// force, the split across suppliers by demand anticipation (CAP-D14), the
-// verb's refusals and the upload template check.
+// force, the split across suppliers (BL-211: by LTP share, CAP-D11; CAP-D14's
+// split by demand anticipation kept as a variant), the verb's refusals and the
+// upload template check.
 //
 // RETIRED with CAP-11 BR-02/03 (superseded by DRC-4 BR-02, BL-190, which
 // absorbs a surplus in the last week of the rolling horizon): the excess of a
@@ -22,6 +23,7 @@ import {
   validateConsumptionRows,
   withConsumption
 } from './consumptionRules';
+import { DEMAND_ANTICIPATION_RULES } from './demandAnticipationRules';
 import { unabsorbedAlertSubjects } from './inventoryAlertRules';
 import { parseCsv } from './inventoryRules';
 /** @import { ConsumptionRecord } from './consumptionRules' */
@@ -31,18 +33,20 @@ const NOW = '2026-08-31T12:00:00.000Z';
 const H1 = ['2026-08-31', '2026-09-07', '2026-09-14', '2026-09-21'];
 
 /**
- * A page row holding `qty` in force every week of `weeks` (only the fields
- * the split reads).
+ * A page row holding `qty` in force every week of `weeks` and the LTP share
+ * `share` (only the fields the split reads).
  * @param {string} supplierId
  * @param {number} qty
  * @param {readonly string[]} [weeks]
+ * @param {number | null} [share]
  * @returns {DemandAnticipationRowCore}
  */
-const row = (supplierId, qty, weeks = H1) =>
+const row = (supplierId, qty, weeks = H1, share = 1) =>
   /** @type {DemandAnticipationRowCore} */ (
     /** @type {unknown} */ ({
       supplierId,
       materialCode: 'RM-1',
+      share,
       weeks: weeks.map((week) => ({ week, qty, consumption: null, consumptionRecord: null }))
     })
   );
@@ -68,35 +72,48 @@ const rec = (week, qty, material = 'RM-1') => {
   };
 };
 
-describe('the split across suppliers (CAP-D14)', () => {
-  it('shares a material’s week by each supplier’s demand anticipation in force', () => {
-    const [a, b] = withConsumption(
-      [row('sup-A', 30_000), row('sup-B', 10_000)],
-      [rec(H1[0], 20_000)]
-    );
-    expect(a.weeks[0]).toMatchObject({ consumption: 15_000 });
-    expect(b.weeks[0]).toMatchObject({ consumption: 5_000 });
+describe('the split across suppliers (BL-211, owner ruling 2026-10-19)', () => {
+  // Worked by hand: 20,000 recorded; LTP shares 0.6 / 0.4; DA in force
+  // 10,000 / 30,000 (the opposite way round, so the two splits disagree).
+  const rows = () => [row('sup-A', 10_000, H1, 0.6), row('sup-B', 30_000, H1, 0.4)];
+
+  it('the default is the LTP share: 20,000 × 0.6 = 12,000 and × 0.4 = 8,000', () => {
+    expect(DEMAND_ANTICIPATION_RULES.consumptionSplit).toBe('ltpShare');
+    const [a, b] = withConsumption(rows(), [rec(H1[0], 20_000)]);
+    expect(a.weeks[0]).toMatchObject({ consumption: 12_000 });
+    expect(b.weeks[0]).toMatchObject({ consumption: 8_000 });
     expect(a.weeks[0].consumptionRecord).toMatchObject({
       materialQty: 20_000,
-      share: 0.75,
+      share: 0.6,
       source: 'manual'
     });
     // A week with no record reads null.
     expect(a.weeks[1].consumption).toBeNull();
   });
 
-  it('splits evenly when the week’s demand anticipation is 0', () => {
-    expect(
-      consumptionShares([
-        { supplierId: 'a', qty: 0 },
-        { supplierId: 'b', qty: 0 }
-      ])
-    ).toEqual(
-      new Map([
-        ['a', 0.5],
-        ['b', 0.5]
-      ])
-    );
+  it('variant demandAnticipation (CAP-D14): by the DA in force, 5,000 / 15,000', () => {
+    const [a, b] = withConsumption(rows(), [rec(H1[0], 20_000)], 'demandAnticipation');
+    expect(a.weeks[0]).toMatchObject({ consumption: 5_000 });
+    expect(b.weeks[0]).toMatchObject({ consumption: 15_000 });
+    expect(a.weeks[0].consumptionRecord?.share).toBe(0.25);
+  });
+
+  it('variant even: 10,000 each', () => {
+    const [a, b] = withConsumption(rows(), [rec(H1[0], 20_000)], 'even');
+    expect([a.weeks[0].consumption, b.weeks[0].consumption]).toEqual([10_000, 10_000]);
+  });
+
+  it('splits evenly when the weights add up to 0, under either weighted split', () => {
+    const zero = [
+      { supplierId: 'a', qty: 0, ltpShare: 0 },
+      { supplierId: 'b', qty: 0, ltpShare: null }
+    ];
+    const half = new Map([
+      ['a', 0.5],
+      ['b', 0.5]
+    ]);
+    expect(consumptionShares(zero)).toEqual(half);
+    expect(consumptionShares(zero, 'demandAnticipation')).toEqual(half);
   });
 });
 

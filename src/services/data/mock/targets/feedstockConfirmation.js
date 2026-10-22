@@ -12,6 +12,9 @@
 //   · `create` APPENDS a record. The unit comes from the material master,
 //     never the payload; the time (hub clock) and the actor (the session's)
 //     are assigned here.
+//   · BL-204 (DRC-8, Incoming DA): an optional `incomingDaConfirmed: true`
+//     stores the publication it confirms (`incomingDa`). The hook refuses it
+//     while `SUPPLIER_DA_VIEW_ENABLED` is off or no publication holds the pair.
 //   · `applyTransition` is a no-op: a record is never changed; a later record
 //     for the same supplier × material supersedes it at read.
 //
@@ -29,6 +32,8 @@ import { NO_PERSON } from '@context/noPerson';
 import { feedstockConfirmationStore } from '../stores/feedstockConfirmationStore';
 import { isAssignedMaterial } from '../inventoryReadModel';
 import { isKnownSupplier } from '../supplierMaster';
+import { incomingDaFor } from '../demandAnticipationReadModel';
+import { SUPPLIER_DA_VIEW_ENABLED } from '../../../transitions/supplierDaView';
 
 /**
  * @param {unknown} v
@@ -51,15 +56,29 @@ export const feedstockConfirmationTarget = {
   },
   create: (payload, _toState, scope) => {
     // The policy hook has refused every payload this could not store.
+    const supplierId = str(payload.supplierId);
     const materialCode = str(payload.materialCode);
     const note = str(payload.note);
+    // BL-204 (DRC-8) — a "yes" to Incoming DA stores WHICH publication the
+    // supplier confirmed, resolved here, never taken from the payload.
+    const da =
+      payload.incomingDaConfirmed === true ? incomingDaFor(supplierId, materialCode) : undefined;
     const row = feedstockConfirmationStore.insert({
-      supplierId: str(payload.supplierId),
+      supplierId,
       materialCode,
       feedstockQty: Number(payload.feedstockQty),
       uom: materialEntry(materialCode)?.canonicalUom ?? '',
       confirmedOn: str(payload.confirmedOn),
       ...(note !== '' ? { note } : {}),
+      ...(da
+        ? {
+            incomingDa: {
+              publicationId: da.publicationId,
+              planningWeek: da.planningWeek,
+              totalDa: da.totalDa
+            }
+          }
+        : {}),
       recordedAt: sdcClock.now(),
       recordedBy: scope.actor ?? NO_PERSON
     });
@@ -75,7 +94,12 @@ bindPolicyHook(POLICY_HOOKS.FEEDSTOCK_CONFIRMATION_VALID, ({ payload }) => {
     feedstockQty: payload.feedstockQty,
     confirmedOn: payload.confirmedOn,
     note: payload.note,
-    today: dayOf(sdcClock.now())
+    today: dayOf(sdcClock.now()),
+    // BL-204 — available only with the supplier view on (DRC-D10) and a publication for the pair.
+    incomingDaConfirmed: payload.incomingDaConfirmed,
+    incomingDaAvailable:
+      SUPPLIER_DA_VIEW_ENABLED &&
+      incomingDaFor(str(payload.supplierId), str(payload.materialCode)) !== undefined
   });
   return refusal ? { ok: false, reason: refusal } : { ok: true };
 });
