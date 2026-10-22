@@ -112,3 +112,23 @@ Decisions taken in these fixes:
 | D-23 | Long lists open on their first 20 rows with "Show all", on What to order and on the ranked relief | Same pattern the page already used for Below demand anticipation; the rows are sorted so the first 20 are the soonest or highest-ranked | `RECS_FIRST_ROWS` / `RELIEF_FIRST_ROWS` |
 | D-24 | "Weeks that do not fit" stays above the proposals instead of moving below them | FUX-D3 (forecast phase 2 build) placed it there and a spec pins it; moving it would reverse that decision | Reorder in `BuyerReschedule/index.jsx` and update the FUX-D3 spec |
 | D-25 | A selected relief proposal stays visible when the list folds | Nothing is sent that the planner cannot see | `ReliefSection.jsx` filter |
+
+## 7. Review items 1 and 2 (2026-10-22)
+
+Levi asked for items 1 and 2 of the prototype review in the follow-up MR. Each change has a spec that fails without it (mutation-probed) and was checked in the browser on the rebuilt app.
+
+| Item | Change | Measured after |
+|---|---|---|
+| 1 | Demand anticipation cards show their header and plan vs execution check; the 12-row weeks grid opens with "Show the weeks". A card shown alone opens unfolded | Page height about 6,700 px → 2,700 px with 6 cards folded; one card unfolded adds about 750 px |
+| 1 | Forecast quality opens both SKU lists (SKUs, and the demand range SKUs) on their first 10 rows with "Show all N SKUs"; the selected SKU stays listed | 10 of 20 and 10 of 19 rows shown; page height about 7,300 px → 5,900 px |
+| 2 | My tasks "Orders whose expected completion moved later" opens the Summary view with `moved=1` when several orders moved: only those orders, a banner with the count, and "Show all orders". One order still opens that order | The demo seed has no moved order, so the task stays hidden there; the spec moves 2 orders and gets exactly those 2 rows |
+
+Decisions taken in these changes:
+
+| ID | Decision | Why | To reverse |
+|---|---|---|---|
+| D-26 | Demand anticipation folds the weeks grid, not the plan vs execution check | The check is the decision (shortfall, surplus or balanced, and the PR to raise); the grid is read-only detail of about 700 px per card | `CardWeeks` in `BuyerDemandAnticipation/index.jsx` |
+| D-27 | A Demand anticipation card shown alone opens unfolded | A supplier and material deep link asks for that card's weeks; making the planner click again would undo the link | `open` default in the same file |
+| D-28 | Forecast quality lists cut at 10 rows, not 20 | Both lists hold 20 SKUs or fewer, so a 20-row cut would change nothing | `FQ_FIRST_ROWS` in `demandForecast/firstRows.js` |
+| D-29 | The demand range Materials table is left as it is | It already scrolls inside its own 384 px box, so it does not lengthen the page | None needed |
+| D-30 | The moved filter reads the same rule as the task count (`completionMovedLater`), from the address | The count and the rows cannot disagree, and the link can be shared | `MOVED_PARAM` in `orders/OrderSummaryView.jsx` |
