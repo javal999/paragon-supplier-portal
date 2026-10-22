@@ -281,8 +281,14 @@ const SupplierShipments = () => {
 
       <ShipmentsKpiRow counts={counts} statusFilter={statusFilter} onSelect={setKpiFilter} />
 
-      {/* BR-04 / AC-02 — the filter is visible, and the way back is offered. */}
-      <PoFilterBanner drill={drill} persona="supplier" count={visibleAsns.length} />
+      {/* BR-04 / AC-02 — the filter is visible, and the way back is offered.
+        IA F-4 — the count is the shipment list's, so it shows on that tab only;
+        on the ASN form it would read "No record on this order" before one exists. */}
+      <PoFilterBanner
+        drill={drill}
+        persona="supplier"
+        count={tab === 'shipments' ? visibleAsns.length : undefined}
+      />
 
       <SubTabs
         options={[

@@ -45,7 +45,7 @@ Branch: `ia/integration`, stacked on `feat/rfx-ux-wave2`. Nothing here is on `ma
 
 IA-B14 ("setting max stock needs a Menu for switch") was wrong and is withdrawn: Menu for only filters the menu. See the report's DROPPED section.
 
-## 4. Follow-ups found in the browser check (not fixed in this MR)
+## 4. Follow-ups found in the browser check (fixed on 2026-10-22, see section 6)
 
 | ID | What was seen | Suggested next step |
 |---|---|---|
@@ -93,3 +93,42 @@ Four small follow-ups found here are listed in the decisions log, section 4 (F-1
 - `CLAUDE.md`'s Routing section still names `/marketplace` and `/buyer/dashboard`. It is flagged here and not edited (D-21).
 - `main` holds 28 commits that the RFx base lacks (DRC !9 to !13 and !15). A trial merge conflicts in 3 files: `docs/contracts/C1-methods.md`, `docs/supplier-hub/BACKLOG.md` and `src/lib/i18n/hub.js`. These are resolved when the RFx waves merge `main`. Since then, `main` (77e646b9, MR !2) also split BuyerInvoices and SupplierInvoices into folders and moved its floor to 9876 tests / 619 files. This branch touches only those pages' tests and i18n, so the floor is re-measured at that merge. The FE-boilerplate session is holding its splits of BuyerCallOffs, BuyerCollaboration, BuyerOrders, SupplierOrders, SupplierCallOffs and SupplierDocuments until this lands.
 - BUILD-GAP and BACKLOG rows are left for the docs pass after the merge to `main`, as usual. Requirements 3.7 and the user-guide menu directory are updated here.
+
+## 6. Follow-ups fixed (2026-10-22)
+
+Levi asked to fix F-1 to F-4. Each fix has a spec that fails without it (mutation-probed) and was checked in the browser on the rebuilt app.
+
+| ID | Fix | Measured after |
+|---|---|---|
+| F-1 | What to order's recommended orders open on the first 20 rows (sorted by week, so the soonest), with "Show all N recommended orders" | 20 of 65 rows shown; page height about 15,100 px → 7,500 px |
+| F-2 | The ranked relief on Make warehouse room opens on its 20 highest-ranked proposals, with "Show all N proposals"; a selected proposal always stays visible when the list folds. The decision card also folds past its first 2 weeks | 20 of 50 rows shown; page height about 14,000 px → 6,300 px. The relief still starts at about 1,560 px, under the one-week decision card and the guard, which stay above it by FUX-D3 and F-07 |
+| F-3 | Purchase orders (both personas) opens the PO named by a changed `?po=` even while another PO is open; a refetch never pulls the panel back from a PO picked in the table | po-007 open, address changed to po-002: the panel shows po-002 |
+| F-4 | The PO filter banner shows its count on the shipment list only; the ASN form shows the order and the way back | The form reads "Filtered to order PO-2026-00127 · Back to purchase order"; the list still says "No record on this order", which is true there |
+
+Decisions taken in these fixes:
+
+| ID | Decision | Why | To reverse |
+|---|---|---|---|
+| D-23 | Long lists open on their first 20 rows with "Show all", on What to order and on the ranked relief | Same pattern the page already used for Below demand anticipation; the rows are sorted so the first 20 are the soonest or highest-ranked | `RECS_FIRST_ROWS` / `RELIEF_FIRST_ROWS` |
+| D-24 | "Weeks that do not fit" stays above the proposals instead of moving below them | FUX-D3 (forecast phase 2 build) placed it there and a spec pins it; moving it would reverse that decision | Reorder in `BuyerReschedule/index.jsx` and update the FUX-D3 spec |
+| D-25 | A selected relief proposal stays visible when the list folds | Nothing is sent that the planner cannot see | `ReliefSection.jsx` filter |
+
+## 7. Review items 1 and 2 (2026-10-22)
+
+Levi asked for items 1 and 2 of the prototype review in the follow-up MR. Each change has a spec that fails without it (mutation-probed) and was checked in the browser on the rebuilt app.
+
+| Item | Change | Measured after |
+|---|---|---|
+| 1 | Demand anticipation cards show their header and plan vs execution check; the 12-row weeks grid opens with "Show the weeks". A card shown alone opens unfolded | Page height about 6,700 px → 2,700 px with 6 cards folded; one card unfolded adds about 750 px |
+| 1 | Forecast quality opens both SKU lists (SKUs, and the demand range SKUs) on their first 10 rows with "Show all N SKUs"; the selected SKU stays listed | 10 of 20 and 10 of 19 rows shown; page height about 7,300 px → 5,900 px |
+| 2 | My tasks "Orders whose expected completion moved later" opens the Summary view with `moved=1` when several orders moved: only those orders, a banner with the count, and "Show all orders". One order still opens that order | The demo seed has no moved order, so the task stays hidden there; the spec moves 2 orders and gets exactly those 2 rows |
+
+Decisions taken in these changes:
+
+| ID | Decision | Why | To reverse |
+|---|---|---|---|
+| D-26 | Demand anticipation folds the weeks grid, not the plan vs execution check | The check is the decision (shortfall, surplus or balanced, and the PR to raise); the grid is read-only detail of about 700 px per card | `CardWeeks` in `BuyerDemandAnticipation/index.jsx` |
+| D-27 | A Demand anticipation card shown alone opens unfolded | A supplier and material deep link asks for that card's weeks; making the planner click again would undo the link | `open` default in the same file |
+| D-28 | Forecast quality lists cut at 10 rows, not 20 | Both lists hold 20 SKUs or fewer, so a 20-row cut would change nothing | `FQ_FIRST_ROWS` in `demandForecast/firstRows.js` |
+| D-29 | The demand range Materials table is left as it is | It already scrolls inside its own 384 px box, so it does not lengthen the page | None needed |
+| D-30 | The moved filter reads the same rule as the task count (`completionMovedLater`), from the address | The count and the rows cannot disagree, and the link can be shared | `MOVED_PARAM` in `orders/OrderSummaryView.jsx` |

@@ -56,6 +56,8 @@ export const demandAnticipationEn = {
   // One supplier × material.
   'demandAnt.card.share': 'Share {{pct}}',
   'demandAnt.card.noStock': 'No PTI stock record in SAP: the check counts no stock on hand.',
+  'demandAnt.card.showWeeks': 'Show the weeks',
+  'demandAnt.card.hideWeeks': 'Hide the weeks',
   'demandAnt.grid.corner': 'Week',
   // The grid rows.
   'demandAnt.row.ltp': 'LTP',
@@ -156,6 +158,8 @@ export const demandAnticipationId = {
   'demandAnt.empty.filtered': 'Tidak ada pemasok × material yang cocok dengan filter ini.',
   'demandAnt.card.share': 'Bagian {{pct}}',
   'demandAnt.card.noStock': 'Tidak ada catatan stok PTI di SAP: pemeriksaan menghitung stok 0.',
+  'demandAnt.card.showWeeks': 'Tampilkan minggu',
+  'demandAnt.card.hideWeeks': 'Sembunyikan minggu',
   'demandAnt.grid.corner': 'Minggu',
   'demandAnt.row.ltp': 'LTP',
   'demandAnt.row.safety': 'Safety order',

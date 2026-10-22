@@ -1,5 +1,5 @@
 /** @import React from 'react' */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { isActiveAsn } from '@services/transitions/fulfilmentRules';
 import { useSearchParams } from 'react-router-dom';
 import { OrderNotFound, PoFilterBanner, usePoDrillFilter } from './orders/PoDrillFilter';
@@ -349,11 +349,21 @@ const BuyerOrdersList = () => {
       setGroup(/** @type {GroupTab} */ (linkedTab));
     }
   }, [linkedTab]);
+  // IA F-3 — the panel follows the address: a new `?po=` opens that PO even
+  // while another is open. Only a CHANGE of the parameter acts, so a refetch
+  // never pulls the panel back from a PO the user picked in the table.
+  const appliedPoId = useRef(/** @type {string | null} */ (null));
   useEffect(() => {
-    if (!linkedPoId || selectedPO) return;
+    if (!linkedPoId) {
+      appliedPoId.current = null;
+      return;
+    }
+    if (appliedPoId.current === linkedPoId) return;
     const po = (ordersQuery.data?.items ?? []).find((p) => p.id === linkedPoId);
-    if (po) setSelectedPO(po);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (po) {
+      appliedPoId.current = linkedPoId;
+      setSelectedPO(po);
+    }
   }, [linkedPoId, ordersQuery.data]);
 
   // Country flags are a cosmetic cross-supplier join — best-effort off the

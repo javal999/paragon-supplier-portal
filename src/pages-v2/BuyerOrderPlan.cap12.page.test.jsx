@@ -106,6 +106,8 @@ describe('CAP-12 — "Below demand anticipation" on What to order', () => {
     const recs = w.materials.flatMap((m) => m.recommendations);
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: ROUTE });
     const section = await screen.findByTestId('op-recs', {}, WAIT);
+    // IA F-1 — the list opens on its first rows; open it all before counting.
+    fireEvent.click(within(section).getByTestId('op-recs-toggle'));
     expect(
       within(section)
         .getAllByTestId(/^op-rec-/)

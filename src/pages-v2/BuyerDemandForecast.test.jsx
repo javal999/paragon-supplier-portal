@@ -70,6 +70,8 @@ describe('BuyerDemandForecast — the planner page', () => {
       route: '/buyer/demand-forecast'
     });
     await screen.findByTestId(`df-sku-${v.skus[0].skuCode}`);
+    // IA review item 1 — the list opens on its first rows; open all of them.
+    fireEvent.click(screen.getByTestId('df-skus-toggle'));
     for (const s of v.skus) {
       expect(screen.getByTestId(`df-method-${s.skuCode}`)).toHaveTextContent(
         demandForecastEn[`df.method.${s.method}`]
@@ -182,6 +184,7 @@ describe('BuyerDemandForecast — the planner page', () => {
       route: '/buyer/demand-forecast'
     });
     await screen.findByTestId('df-skus');
+    fireEvent.click(screen.getByTestId('df-skus-toggle'));
     for (const s of fresh) {
       expect(screen.getByTestId(`df-method-${s.skuCode}`)).toHaveTextContent(
         'SAP’s plan (new SKU)'
@@ -232,6 +235,7 @@ describe('BuyerDemandForecast — the demand range (REQ-E14-09)', () => {
         )
       )
     );
+    fireEvent.click(within(section).getByTestId('df-range-skus-toggle'));
     for (const s of r.skus) {
       expect(within(section).getByTestId(`df-range-sku-${s.key}-p90`)).toHaveTextContent(
         formatNumber(

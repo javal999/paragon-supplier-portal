@@ -170,6 +170,8 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
     ).materials.flatMap((m) => m.recommendations);
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
     await screen.findByTestId('op-recs');
+    // IA F-1 — the list opens on its first rows; open it all to read every row.
+    fireEvent.click(screen.getByTestId('op-recs-toggle'));
     for (const r of recs) {
       expect(screen.getByTestId(`op-rec-${r.materialCode}-${r.weekStart}`)).toBeInTheDocument();
       expect(
