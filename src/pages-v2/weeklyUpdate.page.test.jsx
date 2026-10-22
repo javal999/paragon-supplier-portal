@@ -69,17 +69,14 @@ describe('MAT B2 · manual supplier panel (MR-1 AC-01)', () => {
     renderWithProviders(<SupplierInventory />, { identity: SUPPLIER, service });
     const panel = await screen.findByTestId('weekly-update');
     const missing = codes()[2];
-    expect(within(panel).getByTestId('weekly-due').textContent).toMatch(
-      /^Weekly stock update due Thursday 10 Sept? 23:59 WIB · 2 d 13 h left$/
+    // Inventory UX S-02 (INV-D4) — one status on the stock-update cutoff.
+    expect(within(panel).getByTestId('weekly-status').textContent).toMatch(
+      /^Weekly stock update · 2 of 3 sent · due Thu 10 Sept? 23:59 WIB$/
     );
-    expect(within(panel).getByTestId('weekly-count').textContent).toBe('2 of 3 updated');
     expect(within(panel).getByTestId(`weekly-missing-${missing}`)).toBeTruthy();
     expect(within(panel).queryByTestId(`weekly-missing-${codes()[0]}`)).toBeNull();
-    expect(within(panel).getByTestId('weekly-sop').textContent).toBe(
-      'Weekly update is part of the supplier SOP set by Material Planning.'
-    );
-    // Updated in the closed cycle, so not missed; 2 working days out, so no reminder.
-    expect(within(panel).queryByTestId('weekly-missed')).toBeNull();
+    // No second deadline and no SOP line (INV-D4); 2 working days out, so no reminder.
+    expect(panel.textContent).not.toMatch(/SOP|left/);
     expect(within(panel).queryByTestId('weekly-reminder')).toBeNull();
 
     fireEvent.click(within(panel).getByTestId(`weekly-enter-${missing}`));
@@ -91,13 +88,21 @@ describe('MAT B2 · manual supplier panel (MR-1 AC-01)', () => {
     );
   });
 
-  it('after the cutoff: the missed state shows for the material not updated in the closed cycle', async () => {
+  it('S-02: after the cutoff there is no "Missed" strip; the status counts the new cycle and names what is out of date and since when', async () => {
     sdcClock.set('2026-09-11T03:00:00.000Z'); // Friday 10:00 WIB, the next cycle
-    const { service } = withRows([IN_CYCLE, IN_CYCLE, LAST_CYCLE]);
+    const { service } = withRows([IN_CYCLE, IN_CYCLE, LAST_CYCLE], {
+      staleAt: '2026-09-03T16:59:00.000Z'
+    });
     renderWithProviders(<SupplierInventory />, { identity: SUPPLIER, service });
-    const missed = await screen.findByTestId('weekly-missed');
-    expect(missed.textContent).toMatch(/^Missed: 1 material was not updated/);
-    expect(screen.getByTestId('weekly-count').textContent).toBe('0 of 3 updated');
+    const panel = await screen.findByTestId('weekly-update');
+    expect(within(panel).getByTestId('weekly-status').textContent).toMatch(
+      /^Weekly stock update · 0 of 3 sent · due Thu 17 Sept? 23:59 WIB$/
+    );
+    expect(within(panel).getByTestId('weekly-out-of-date').textContent).toMatch(
+      /^3 out of date since 3 Sept?$/
+    );
+    expect(screen.queryByTestId('weekly-missed')).toBeNull();
+    expect(panel.textContent).not.toMatch(/Missed/);
   });
 
   it('the in-hub reminder appears 1 working day before the cutoff (09:00 WIB) and not 2', async () => {
@@ -107,9 +112,6 @@ describe('MAT B2 · manual supplier panel (MR-1 AC-01)', () => {
     const first = renderWithProviders(<SupplierHome />, { identity: SUPPLIER, service });
     await screen.findByTestId('weekly-update');
     expect(screen.queryByTestId('weekly-reminder')).toBeNull();
-    expect(
-      screen.queryByText('Weekly stock update: materials still to send before the cutoff')
-    ).toBeNull();
     first.unmount();
 
     sdcClock.set('2026-09-09T02:00:00.000Z'); // Wednesday 09:00 WIB, 1 working day before
@@ -117,9 +119,12 @@ describe('MAT B2 · manual supplier panel (MR-1 AC-01)', () => {
     expect((await screen.findByTestId('weekly-reminder')).textContent).toBe(
       'Reminder: materials still needing a stock figure before the cutoff: 1'
     );
-    expect(
-      screen.getByText('Weekly stock update: materials still to send before the cutoff')
-    ).toBeTruthy();
+    // S-02 — the To do Stock row says what the panel says, in the same words.
+    const row = await screen.findByTestId('home-task-weekly-update');
+    const status = screen.getByTestId('weekly-status').textContent ?? '';
+    expect(status).toMatch(/^Weekly stock update · 2 of 3 sent · due Thu 10 Sept? 23:59 WIB$/);
+    expect(row.textContent).toContain(status);
+    expect(screen.queryByTestId('home-task-stale-stock')).toBeNull();
   });
 
   it('every material updated: no reminder even on the cutoff day, and the panel says so', async () => {

@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import { AlertTriangle, PencilLine } from 'lucide-react';
+import { PencilLine } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
 import SapDataAgeBanner from '@components/ui-v2/SapDataAgeBanner';
@@ -39,7 +39,11 @@ import {
   inventoryNow
 } from './inventory/inventoryDisplay';
 import StockEntryPanel from './inventory/StockEntryPanel';
-import StockUploadPanel from './inventory/StockUploadPanel';
+import StockUploadPanel, {
+  StockUploadButton,
+  StockUploadResult,
+  useStockUpload
+} from './inventory/StockUploadPanel';
 import SupplierSyncPanel from './inventory/SupplierSyncPanel';
 import WeeklyUpdatePanel from './inventory/WeeklyUpdatePanel';
 import FeedstockConfirmPanel from './inventory/FeedstockConfirmPanel';
@@ -64,7 +68,18 @@ import MaterialSearch, {
 // how, and whether it is past its data-update SLA. PTI stock columns appear
 // only when PTI has granted access, and only carry figures for the permitted
 // materials — the read already removed everything else.
+//
+// Inventory UX S-01 — the page leads with this week and the table: the header
+// carries "Enter stock on screen" and "Upload template" (its result directly
+// under it), then the one weekly status (S-02), then the tabs — My stock (the
+// table), Feedstock to confirm, My materials, Template guide — kept in the
+// address as `?tab=`.
 // ─────────────────────────────────────────────────────────────────────────────
+
+/** @typedef {'stock' | 'feedstock' | 'materials' | 'template'} StockPageTab */
+
+/** @type {readonly StockPageTab[]} */
+const PAGE_TABS = ['stock', 'feedstock', 'materials', 'template'];
 
 /** @type {React.FC} */
 const SupplierInventory = () => {
@@ -85,15 +100,16 @@ const SupplierInventory = () => {
   useUrlEnumParam('stale', /** @type {('all' | 'stale')[]} */ (['all', 'stale']), setStaleFilter);
   // Material C4 — the PIC filter (by name: a supplier never sees the code).
   const pic = usePicFilter();
-  // Material C2 — the "My materials" tab (trade names), kept in the address.
+  // Material C2 / S-01 — the page tabs, kept in the address (`?tab=`).
   const [params, setParams] = useSearchParams();
-  /** @type {'stock' | 'materials'} */
-  const pageTab = params.get('tab') === 'materials' ? 'materials' : 'stock';
-  /** @param {'stock' | 'materials'} v */
+  const tabParam = /** @type {StockPageTab} */ (params.get('tab'));
+  /** @type {StockPageTab} */
+  const pageTab = PAGE_TABS.includes(tabParam) ? tabParam : 'stock';
+  /** @param {StockPageTab} v */
   const setPageTab = (v) => {
     const next = new URLSearchParams(params);
-    if (v === 'materials') next.set('tab', 'materials');
-    else next.delete('tab');
+    if (v === 'stock') next.delete('tab');
+    else next.set('tab', v);
     setParams(next, { replace: true });
   };
   // Material B2 — a missing material's link opens the entry form on it (`?enter=`).
@@ -114,6 +130,8 @@ const SupplierInventory = () => {
   const crumb = [t('hub.nav.section.planning'), t('inv.sup.title')];
 
   const rows = useMemo(() => inventory.data?.items ?? [], [inventory.data]);
+  // S-01 / S-03 — one upload state: the header control and its result.
+  const upload = useStockUpload(supplierId ?? '', rows);
   const highlight = useRowHighlight((id) => rows.some((r) => r.materialCode === id));
   const counts = useMemo(
     () => ({
@@ -159,7 +177,6 @@ const SupplierInventory = () => {
     ofStaleFilter.filter((r) => pic.matches(r.mrpController)),
     (r) => ({ code: r.materialCode, description: r.materialLabel, supplierId: r.supplierId })
   );
-  const needUpdate = rows.filter((r) => stockFreshness(r, nowIso) !== 'current').length;
   const sharesPti = rows.some((r) => r.ptiStockShared);
   const grant = (access.data?.items ?? []).find((g) => g.supplierId === supplierId);
 
@@ -167,8 +184,10 @@ const SupplierInventory = () => {
   const pageTabs = (
     <SubTabs
       options={[
-        { id: 'stock', label: t('matName.tab.stock') },
-        { id: 'materials', label: t('matName.tab.myMaterials') }
+        { id: 'stock', label: t('inv.sup.tab.stock') },
+        { id: 'feedstock', label: t('inv.sup.tab.feedstock') },
+        { id: 'materials', label: t('matName.tab.myMaterials') },
+        { id: 'template', label: t('inv.sup.tab.template') }
       ]}
       value={pageTab}
       onChange={setPageTab}
@@ -212,14 +231,17 @@ const SupplierInventory = () => {
         subtitle={t('inv.sup.subtitle')}
         actions={
           held ? (
-            <Button
-              variant="outline"
-              icon={PencilLine}
-              onClick={() => setEntryOpen(true)}
-              data-testid="stock-entry-open"
-            >
-              {t('inv.sup.enter')}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                icon={PencilLine}
+                onClick={() => setEntryOpen(true)}
+                data-testid="stock-entry-open"
+              >
+                {t('inv.sup.enterOnScreen')}
+              </Button>
+              <StockUploadButton upload={upload} />
+            </div>
           ) : (
             <HandoffNotice availability={declare} testId="handoff-inventory-declare" />
           )
@@ -230,195 +252,207 @@ const SupplierInventory = () => {
         <SampleDataBadge className="ml-3 align-middle" />
       </PageMetaLine>
 
+      {/* S-03 — the upload result, directly under the header's upload control. */}
+      <StockUploadResult upload={upload} />
+
+      {/* Material B2 / S-02 — the one weekly status (manual) or the sync schedule (API). */}
+      <WeeklyUpdatePanel supplierId={supplierId} positions={rows} nowIso={nowIso} />
+
       {pageTabs}
 
-      {/* REQ-E07-08 AC-03 — this page reads SAP data; say how old it is. */}
-      <SapDataAgeBanner page="inventory" className="mb-4" />
-
-      {highlight.missing ? (
-        <div
-          role="status"
-          data-testid="inv-highlight-missing"
-          className="bg-bg-hover border border-border-subtle rounded px-4 py-3 mb-4 text-sm text-text-secondary"
-        >
-          {t('inv.highlight.missing')}
-        </div>
+      {pageTab === 'feedstock' ? (
+        // BL-194 (DRC-8) — the weekly feedstock confirmation; never part of SOH.
+        <FeedstockConfirmPanel supplierId={supplierId} positions={rows} nowIso={nowIso} />
       ) : null}
+      {pageTab === 'template' ? (
+        <StockUploadPanel supplierId={supplierId} positions={rows} />
+      ) : null}
+      {pageTab === 'stock' ? (
+        <>
+          {/* REQ-E07-08 AC-03 — this page reads SAP data; say how old it is. */}
+          <SapDataAgeBanner page="inventory" className="mb-4" />
 
-      {/* Material B2 — the weekly update (manual) or the sync schedule (API). */}
-      <WeeklyUpdatePanel supplierId={supplierId} positions={rows} nowIso={nowIso} />
-      {/* BL-194 (DRC-8) — the weekly feedstock confirmation; never part of SOH. */}
-      <FeedstockConfirmPanel supplierId={supplierId} positions={rows} nowIso={nowIso} />
+          {highlight.missing ? (
+            <div
+              role="status"
+              data-testid="inv-highlight-missing"
+              className="bg-bg-hover border border-border-subtle rounded px-4 py-3 mb-4 text-sm text-text-secondary"
+            >
+              {t('inv.highlight.missing')}
+            </div>
+          ) : null}
 
-      {needUpdate > 0 && (
-        <div
-          role="status"
-          data-testid="sup-stock-banner"
-          className="bg-warning-soft border-l-2 border-warning rounded px-4 py-3 mb-4 text-sm text-warning-hover flex items-center gap-2"
-        >
-          <AlertTriangle size={14} aria-hidden="true" />
-          {t('inv.sup.banner.update', { count: needUpdate })}
-        </div>
-      )}
+          {grant?.active && (
+            <p className="text-sm text-text-secondary mb-4" data-testid="sup-pti-access-note">
+              {grant.materials.length === 0
+                ? t('inv.sup.access.all')
+                : t('inv.sup.access.some', { count: grant.materials.length })}
+            </p>
+          )}
 
-      {grant?.active && (
-        <p className="text-sm text-text-secondary mb-4" data-testid="sup-pti-access-note">
-          {grant.materials.length === 0
-            ? t('inv.sup.access.all')
-            : t('inv.sup.access.some', { count: grant.materials.length })}
-        </p>
-      )}
-
-      <SupplierSyncPanel
-        supplierId={supplierId}
-        positions={rows}
-        grant={grant}
-        refetch={() => inventory.refetch()}
-      />
-
-      <StockUploadPanel supplierId={supplierId} positions={rows} canSubmit={held} />
-
-      {splitByType && (
-        <SubTabs
-          options={[
-            { id: 'ROH', label: t('inv.type.ROH'), count: counts.ROH },
-            { id: 'VERP', label: t('inv.type.VERP'), count: counts.VERP }
-          ]}
-          value={activeType}
-          onChange={(v) => {
-            setType(v);
-            setTypeChosen(true);
-          }}
-          className="mb-4"
-        />
-      )}
-
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <div className="flex-1 min-w-[240px]">
-          <MaterialSearch
-            mode="filter"
-            query={search}
-            onQueryChange={setSearch}
-            testId="sup-stock-search"
+          <SupplierSyncPanel
+            supplierId={supplierId}
+            positions={rows}
+            grant={grant}
+            refetch={() => inventory.refetch()}
           />
-        </div>
-        <FilterChipsBar
-          options={[
-            { id: 'all', label: t('inv.filter.all') },
-            {
-              id: 'stale',
-              label: t('inv.sup.filter.stale'),
-              count: ofType.filter((r) => stockFreshness(r, nowIso) !== 'current').length
-            }
-          ]}
-          value={staleFilter}
-          onChange={setStaleFilter}
-        />
-        <PicFilter
-          refs={ofType.map((r) => r.mrpController)}
-          persona="supplier"
-          filter={pic.filter}
-          setFilter={pic.setFilter}
-          myCode={pic.myCode}
-        />
-      </div>
 
-      <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableHeaderCell>{t('inv.col.material')}</TableHeaderCell>
-            <TableHeaderCell>
-              <PicHeader />
-            </TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('inv.col.supplierSoh')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('inv.col.yourRop')}</TableHeaderCell>
-            {sharesPti && (
-              <TableHeaderCell className="text-right">{t('inv.col.ptiSoh')}</TableHeaderCell>
-            )}
-            {sharesPti && (
-              <TableHeaderCell className="text-right">{t('inv.col.ptiRop')}</TableHeaderCell>
-            )}
-            <TableHeaderCell>{t('inv.col.incoming')}</TableHeaderCell>
-            <TableHeaderCell>{t('inv.col.daysOfSupply')}</TableHeaderCell>
-            <TableHeaderCell>{t('inv.col.lastUpdate')}</TableHeaderCell>
-          </TableHeader>
-          <tbody>
-            {shown.map(({ item: p, match }) => {
-              const isHighlighted = highlight.id === p.materialCode;
-              return (
-                <TableRow
-                  key={p.materialCode}
-                  ref={isHighlighted ? highlight.scrollRef : undefined}
-                  data-testid={`sup-stock-row-${p.materialCode}`}
-                  aria-current={isHighlighted ? 'true' : undefined}
-                  className={isHighlighted ? HIGHLIGHTED_ROW_CLASS : undefined}
-                >
-                  <TableCell>
-                    <Data className="text-xs font-bold text-text-primary">{p.materialCode}</Data>
-                    <div className="text-sm text-text-primary">{p.materialLabel}</div>
-                    <TradeNameBeside
-                      name={p.tradeName}
-                      viewer="supplier"
-                      testId={`sup-stock-trade-name-${p.materialCode}`}
-                    />
-                    <MaterialMatchReason
-                      match={match}
-                      testId={`sup-stock-match-${p.materialCode}`}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <PicCell value={p.mrpController} testId={`sup-stock-pic-${p.materialCode}`} />
-                  </TableCell>
-                  <TableCell className="text-right whitespace-nowrap">
-                    <Figure value={p.supplierSoh} uom={p.uom} absentKey="inv.figure.noSubmission" />
-                  </TableCell>
-                  <TableCell className="text-right whitespace-nowrap">
-                    <Figure value={p.supplierRop} uom={p.uom} absentKey="inv.figure.notProvided" />
-                  </TableCell>
-                  {sharesPti && (
-                    <TableCell className="text-right whitespace-nowrap">
-                      {p.ptiStockShared ? (
-                        <Figure value={p.ptiSoh} uom={p.uom} absentKey="inv.figure.none" />
-                      ) : (
-                        <span className="text-xs text-text-tertiary">
-                          {t('inv.figure.notShared')}
-                        </span>
+          {splitByType && (
+            <SubTabs
+              options={[
+                { id: 'ROH', label: t('inv.type.ROH'), count: counts.ROH },
+                { id: 'VERP', label: t('inv.type.VERP'), count: counts.VERP }
+              ]}
+              value={activeType}
+              onChange={(v) => {
+                setType(v);
+                setTypeChosen(true);
+              }}
+              className="mb-4"
+            />
+          )}
+
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <div className="flex-1 min-w-[240px]">
+              <MaterialSearch
+                mode="filter"
+                query={search}
+                onQueryChange={setSearch}
+                testId="sup-stock-search"
+              />
+            </div>
+            <FilterChipsBar
+              options={[
+                { id: 'all', label: t('inv.filter.all') },
+                {
+                  id: 'stale',
+                  label: t('inv.sup.filter.stale'),
+                  count: ofType.filter((r) => stockFreshness(r, nowIso) !== 'current').length
+                }
+              ]}
+              value={staleFilter}
+              onChange={setStaleFilter}
+            />
+            <PicFilter
+              refs={ofType.map((r) => r.mrpController)}
+              persona="supplier"
+              filter={pic.filter}
+              setFilter={pic.setFilter}
+              myCode={pic.myCode}
+            />
+          </div>
+
+          <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableHeaderCell>{t('inv.col.material')}</TableHeaderCell>
+                <TableHeaderCell>
+                  <PicHeader />
+                </TableHeaderCell>
+                <TableHeaderCell className="text-right">{t('inv.col.supplierSoh')}</TableHeaderCell>
+                <TableHeaderCell className="text-right">{t('inv.col.yourRop')}</TableHeaderCell>
+                {sharesPti && (
+                  <TableHeaderCell className="text-right">{t('inv.col.ptiSoh')}</TableHeaderCell>
+                )}
+                {sharesPti && (
+                  <TableHeaderCell className="text-right">{t('inv.col.ptiRop')}</TableHeaderCell>
+                )}
+                <TableHeaderCell>{t('inv.col.incoming')}</TableHeaderCell>
+                <TableHeaderCell>{t('inv.col.daysOfSupply')}</TableHeaderCell>
+                <TableHeaderCell>{t('inv.col.lastUpdate')}</TableHeaderCell>
+              </TableHeader>
+              <tbody>
+                {shown.map(({ item: p, match }) => {
+                  const isHighlighted = highlight.id === p.materialCode;
+                  return (
+                    <TableRow
+                      key={p.materialCode}
+                      ref={isHighlighted ? highlight.scrollRef : undefined}
+                      data-testid={`sup-stock-row-${p.materialCode}`}
+                      aria-current={isHighlighted ? 'true' : undefined}
+                      className={isHighlighted ? HIGHLIGHTED_ROW_CLASS : undefined}
+                    >
+                      <TableCell>
+                        <Data className="text-xs font-bold text-text-primary">
+                          {p.materialCode}
+                        </Data>
+                        <div className="text-sm text-text-primary">{p.materialLabel}</div>
+                        <TradeNameBeside
+                          name={p.tradeName}
+                          viewer="supplier"
+                          testId={`sup-stock-trade-name-${p.materialCode}`}
+                        />
+                        <MaterialMatchReason
+                          match={match}
+                          testId={`sup-stock-match-${p.materialCode}`}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <PicCell
+                          value={p.mrpController}
+                          testId={`sup-stock-pic-${p.materialCode}`}
+                        />
+                      </TableCell>
+                      <TableCell className="text-right whitespace-nowrap">
+                        <Figure
+                          value={p.supplierSoh}
+                          uom={p.uom}
+                          absentKey="inv.figure.noSubmission"
+                        />
+                      </TableCell>
+                      <TableCell className="text-right whitespace-nowrap">
+                        <Figure
+                          value={p.supplierRop}
+                          uom={p.uom}
+                          absentKey="inv.figure.notProvided"
+                        />
+                      </TableCell>
+                      {sharesPti && (
+                        <TableCell className="text-right whitespace-nowrap">
+                          {p.ptiStockShared ? (
+                            <Figure value={p.ptiSoh} uom={p.uom} absentKey="inv.figure.none" />
+                          ) : (
+                            <span className="text-xs text-text-tertiary">
+                              {t('inv.figure.notShared')}
+                            </span>
+                          )}
+                        </TableCell>
                       )}
-                    </TableCell>
-                  )}
-                  {sharesPti && (
-                    <TableCell className="text-right whitespace-nowrap">
-                      {p.ptiStockShared ? (
-                        <Figure value={p.ptiRop} uom={p.uom} absentKey="inv.figure.none" />
-                      ) : (
-                        <span className="text-xs text-text-tertiary">
-                          {t('inv.figure.notShared')}
-                        </span>
+                      {sharesPti && (
+                        <TableCell className="text-right whitespace-nowrap">
+                          {p.ptiStockShared ? (
+                            <Figure value={p.ptiRop} uom={p.uom} absentKey="inv.figure.none" />
+                          ) : (
+                            <span className="text-xs text-text-tertiary">
+                              {t('inv.figure.notShared')}
+                            </span>
+                          )}
+                        </TableCell>
                       )}
-                    </TableCell>
-                  )}
-                  <TableCell>
-                    <IncomingButton position={p} onOpen={() => setIncoming(p)} />
-                  </TableCell>
-                  <TableCell>
-                    <SupplyPill position={p} />
-                  </TableCell>
-                  <TableCell>
-                    <LastUpdateCell position={p} nowIso={nowIso} />
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-            {shown.length === 0 && (
-              <tr>
-                <td colSpan={9} className="py-10 text-center text-sm text-text-tertiary">
-                  {t('inv.table.empty')}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </Table>
-      </div>
+                      <TableCell>
+                        <IncomingButton position={p} onOpen={() => setIncoming(p)} />
+                      </TableCell>
+                      <TableCell>
+                        <SupplyPill position={p} />
+                      </TableCell>
+                      <TableCell>
+                        <LastUpdateCell position={p} nowIso={nowIso} />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {shown.length === 0 && (
+                  <tr>
+                    <td colSpan={9} className="py-10 text-center text-sm text-text-tertiary">
+                      {t('inv.table.empty')}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </Table>
+          </div>
+        </>
+      ) : null}
 
       <IncomingPanel position={incoming} base="/supplier" onClose={() => setIncoming(null)} />
       {held && (

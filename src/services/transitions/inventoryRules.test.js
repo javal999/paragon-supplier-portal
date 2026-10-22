@@ -30,7 +30,8 @@ import {
   stockTemplateCsv,
   supplyBand,
   templateFieldFor,
-  validateStockRows
+  validateStockRows,
+  isBlankStockRow
 } from './inventoryRules';
 import { supplyBands, updateSlaFor } from './inventoryConfig';
 import { hubSetting } from './hubSettingsStore';
@@ -415,6 +416,40 @@ describe('the stock template and row-by-row validation (REQ-E08-02 BR-05 to BR-0
     ]);
   });
 
+  it('S-03 (INV-D10): a row left blank is not refused; it comes back as blank, not sent', () => {
+    const csv = [
+      stockTemplateCsv(assigned, 'en').split('\n')[0],
+      'PK-PETB-8801,,PCS,,,,,,,', // row 2 — as downloaded: blank
+      'PK-PETB-8802,700,PCS,,0,,,,,', // row 3 — filled and valid
+      'PK-CAPF-8820,,PCS,,5,,,,,', // row 4 — filled, no SOH: refused
+      ',,PCS,,,,,,,' // row 5 — code and figures empty: blank
+    ].join('\n');
+    const { accepted, refused, blank } = validateStockRows(parseCsv(csv).rows, ctx);
+    expect(accepted.map((a) => a.materialCode)).toEqual(['PK-PETB-8802']);
+    expect(refused).toEqual([
+      { row: 4, materialCode: 'PK-CAPF-8820', reason: 'missingField', field: 'soh' }
+    ]);
+    expect(blank).toEqual([
+      { row: 2, materialCode: 'PK-PETB-8801' },
+      { row: 5, materialCode: '' }
+    ]);
+  });
+
+  it('S-03: a value under a column the template does not know makes the row filled', () => {
+    expect(isBlankStockRow({ 'Material code': 'PK-PETB-8801', Unit: 'PCS', Stock: '' })).toBe(true);
+    expect(isBlankStockRow({ 'Material code': 'PK-PETB-8801', Unit: 'PCS', Stock: '50' })).toBe(
+      false
+    );
+    const { refused, blank } = validateStockRows(
+      [{ 'Material code': 'PK-PETB-8801', Unit: 'PCS', Stock: '50' }],
+      ctx
+    );
+    expect(blank).toEqual([]);
+    expect(refused).toEqual([
+      { row: 2, materialCode: 'PK-PETB-8801', reason: 'missingField', field: 'soh' }
+    ]);
+  });
+
   it('known-bad rows are refused with row number and reason, and the valid rows still pass', () => {
     const csv = [
       'Material code,Stock on hand,Unit,Supplier reorder point,In-production quantity,Expected production completion date (YYYY-MM-DD),Batch number,Batch quantity,Expiry date (YYYY-MM-DD)',
@@ -457,7 +492,13 @@ describe('the stock template and row-by-row validation (REQ-E08-02 BR-05 to BR-0
   it('missing SOH, wrong unit and a bad date are each refused by name', () => {
     /** @type {Record<string, string>[]} */
     const rows = [
-      { 'Material code': 'PK-PETB-8801', 'Stock on hand': '', Unit: 'PCS' },
+      // Filled (a reorder point), so not blank (S-03): the missing SOH is refused.
+      {
+        'Material code': 'PK-PETB-8801',
+        'Stock on hand': '',
+        Unit: 'PCS',
+        'Supplier reorder point': '100'
+      },
       { 'Material code': 'PK-PETB-8802', 'Stock on hand': '5', Unit: 'KG' },
       {
         'Kode material': 'PK-CAPF-8820',

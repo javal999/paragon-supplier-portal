@@ -119,8 +119,11 @@ export const inventoryCapacityEn = {
   'inv.sup.subtitle':
     'Share your stock, reorder points and production for the materials you supply to PTI.',
   'inv.sup.empty': 'No materials are assigned to you yet.',
-  'inv.sup.enter': 'Enter stock',
-  'inv.sup.banner.update': 'Materials that need updated stock figures: {{count}}',
+  // Inventory UX S-01 — the Stock page leads with this week and the table.
+  'inv.sup.enterOnScreen': 'Enter stock on screen',
+  'inv.sup.tab.stock': 'My stock',
+  'inv.sup.tab.feedstock': 'Feedstock to confirm',
+  'inv.sup.tab.template': 'Template guide',
   'inv.sup.access.all': 'PTI shares its stock with you for every material you supply.',
   'inv.sup.access.some': 'PTI shares its stock with you for {{count}} of your materials.',
 
@@ -161,7 +164,12 @@ export const inventoryCapacityEn = {
   'inv.upload.error.unreadable':
     'This file could not be read. Upload the template as CSV or Excel.',
   'inv.upload.error.empty': 'The file has no rows to check.',
-  'inv.upload.saved': 'Materials saved: {{count}}',
+  // Inventory UX S-03 (INV-D10) — a blank row is not an error; name what was sent.
+  'inv.upload.uploadTemplate': 'Upload template',
+  'inv.upload.sentTo': 'Sent to PTI:',
+  'inv.upload.nothingSent': 'Nothing was sent to PTI.',
+  'inv.upload.blank_one': '{{count}} row left blank, not sent',
+  'inv.upload.blank_other': '{{count}} rows left blank, not sent',
   'inv.upload.refused': 'Rows not saved: {{count}}',
   'inv.upload.col.row': 'Row',
   'inv.upload.col.material': 'Material',
@@ -461,20 +469,17 @@ export const inventoryCapacityEn = {
 
   // ── Material B2 — the weekly-update panel, reminders, "This cycle" (MR-1 d) ──
   'inv.weekly.title': 'Weekly stock update',
-  'inv.weekly.due': 'Weekly stock update due',
-  'inv.weekly.left': '{{time}} left',
-  'inv.weekly.count': '{{updated}} of {{total}} updated',
+  // Inventory UX S-02 (INV-D4) — one weekly status on the stock-update cutoff.
+  'inv.weekly.sent': '{{sent}} of {{total}} sent',
+  'inv.weekly.dueOn': 'due',
+  'inv.weekly.outOfDate': '{{count}} out of date',
+  'inv.weekly.outOfDateSince': '{{count}} out of date since {{date}}',
   'inv.weekly.missingTitle': 'Still missing this cycle',
   'inv.weekly.enter': 'Enter stock',
   'inv.weekly.enterFor': 'Enter stock for {{material}}',
   'inv.weekly.allDone': 'Every material is updated for this cycle.',
-  // BL-159 — a real plural ("1 material was", "2 materials were").
-  'inv.weekly.missed_one': 'Missed: {{count}} material was not updated',
-  'inv.weekly.missed_other': 'Missed: {{count}} materials were not updated',
-  'inv.weekly.missedHint': 'Each stays marked until you send its figure.',
   'inv.weekly.reminder':
     'Reminder: materials still needing a stock figure before the cutoff: {{count}}',
-  'inv.weekly.sop': 'Weekly update is part of the supplier SOP set by Material Planning.',
   'inv.weekly.api.title': 'Stock sync schedule',
   'inv.weekly.api.last': 'Last sync',
   'inv.weekly.api.next': 'Next sync',
@@ -599,8 +604,10 @@ export const inventoryCapacityId = {
   'inv.sup.subtitle':
     'Bagikan stok, titik pemesanan ulang, dan produksi untuk material yang Anda pasok ke PTI.',
   'inv.sup.empty': 'Belum ada material yang ditugaskan kepada Anda.',
-  'inv.sup.enter': 'Isi stok',
-  'inv.sup.banner.update': 'Material yang perlu diperbarui angka stoknya: {{count}}',
+  'inv.sup.enterOnScreen': 'Isi stok di layar',
+  'inv.sup.tab.stock': 'Stok saya',
+  'inv.sup.tab.feedstock': 'Feedstock untuk dikonfirmasi',
+  'inv.sup.tab.template': 'Panduan templat',
   'inv.sup.access.all': 'PTI membagikan stoknya kepada Anda untuk semua material yang Anda pasok.',
   'inv.sup.access.some': 'PTI membagikan stoknya kepada Anda untuk {{count}} material Anda.',
 
@@ -640,7 +647,10 @@ export const inventoryCapacityId = {
   'inv.upload.error.unreadable':
     'Berkas ini tidak dapat dibaca. Unggah templat sebagai CSV atau Excel.',
   'inv.upload.error.empty': 'Berkas tidak memiliki baris untuk diperiksa.',
-  'inv.upload.saved': 'Material tersimpan: {{count}}',
+  'inv.upload.uploadTemplate': 'Unggah templat',
+  'inv.upload.sentTo': 'Terkirim ke PTI:',
+  'inv.upload.nothingSent': 'Tidak ada yang terkirim ke PTI.',
+  'inv.upload.blank_other': '{{count}} baris kosong, tidak dikirim',
   'inv.upload.refused': 'Baris tidak tersimpan: {{count}}',
   'inv.upload.col.row': 'Baris',
   'inv.upload.col.material': 'Material',
@@ -940,19 +950,16 @@ export const inventoryCapacityId = {
 
   // ── Material B2 ──
   'inv.weekly.title': 'Pembaruan stok mingguan',
-  'inv.weekly.due': 'Pembaruan stok mingguan jatuh tempo',
-  'inv.weekly.left': 'sisa {{time}}',
-  'inv.weekly.count': '{{updated}} dari {{total}} diperbarui',
+  'inv.weekly.sent': '{{sent}} dari {{total}} terkirim',
+  'inv.weekly.dueOn': 'jatuh tempo',
+  'inv.weekly.outOfDate': '{{count}} belum diperbarui',
+  'inv.weekly.outOfDateSince': '{{count}} belum diperbarui sejak {{date}}',
   'inv.weekly.missingTitle': 'Belum diperbarui siklus ini',
   'inv.weekly.enter': 'Isi stok',
   'inv.weekly.enterFor': 'Isi stok untuk {{material}}',
   'inv.weekly.allDone': 'Semua material sudah diperbarui untuk siklus ini.',
-  'inv.weekly.missed_other': 'Terlewat: {{count}} material tidak diperbarui',
-  'inv.weekly.missedHint': 'Setiap tanda tetap sampai Anda mengirim angkanya.',
   'inv.weekly.reminder':
     'Pengingat: material yang masih perlu angka stok sebelum batas waktu: {{count}}',
-  'inv.weekly.sop':
-    'Pembaruan mingguan adalah bagian dari SOP pemasok yang ditetapkan oleh Material Planning.',
   'inv.weekly.api.title': 'Jadwal sinkronisasi stok',
   'inv.weekly.api.last': 'Sinkronisasi terakhir',
   'inv.weekly.api.next': 'Sinkronisasi berikutnya',

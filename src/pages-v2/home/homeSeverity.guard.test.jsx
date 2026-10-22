@@ -103,7 +103,8 @@ describe('Home pages render at most 3 red rows on the sample data', () => {
       'commitments-overdue',
       'invoices',
       'certs',
-      'stale-stock',
+      // Inventory UX S-02 — a manual supplier's stock is the one weekly row.
+      'weekly-update',
       'rfq'
     ]);
     const all = stripes();
@@ -111,7 +112,10 @@ describe('Home pages render at most 3 red rows on the sample data', () => {
     expect(red.length).toBeGreaterThan(0);
     expect(red.length).toBeLessThanOrEqual(3);
     for (const [id] of red) {
-      expect(screen.getByTestId(`home-task-detail-${id}`)).toHaveTextContent(/Overdue|Cover/);
+      // S-02 — the weekly row's reason is its figures out of date since a day.
+      expect(screen.getByTestId(`home-task-detail-${id}`)).toHaveTextContent(
+        /Overdue|Cover|out of date since/
+      );
     }
     // Money PTI owes the supplier stays outside the ranking, as "To review", last.
     expect(screen.getByTestId('home-task-invoices')).toHaveTextContent('To review');
