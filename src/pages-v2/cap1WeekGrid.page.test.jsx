@@ -175,8 +175,10 @@ describe('CAP-1 Table B — PTI Capacity', () => {
       for (const id of ['ltp', 'allocated', 'reason'])
         expect(cellAt(grid, id, w.week).className.includes('bg-warning-soft')).toBe(gap);
     }
-    // B-AC3 — the header and seven metric rows, whatever the horizon.
-    expect(grid.querySelectorAll('tbody tr')).toHaveLength(7);
+    // B-AC3 — the header and seven metric rows, whatever the horizon, plus
+    // PTI's decision row (INV-D8, P-07).
+    expect(grid.querySelectorAll('tbody tr')).toHaveLength(8);
+    expect(grid.querySelector('tr[data-row="ptiDecision"]')).not.toBeNull();
   });
 
   it('B-AC1 — PT Sample Packaging Indonesia, W38 (14 Sep): the gap week reads as specified', async () => {
@@ -207,8 +209,8 @@ describe('CAP-1 Table B — PTI Capacity', () => {
         .map((w) => w.week);
       expect(expected.length).toBeGreaterThan(0);
       expect(weekColumns(grid)).toEqual(expected);
-      // Rows are metrics, so the filter never changes them.
-      expect(grid.querySelectorAll('tbody tr')).toHaveLength(7);
+      // Rows are metrics (and PTI's decision, INV-D8), so the filter never changes them.
+      expect(grid.querySelectorAll('tbody tr')).toHaveLength(8);
     }
     expect(weekColumns(screen.getByTestId('capacity-grid-sup-007-pg-MG-20'))).toEqual([
       '2026-09-14'

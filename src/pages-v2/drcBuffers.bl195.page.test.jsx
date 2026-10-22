@@ -71,8 +71,9 @@ describe('DRC-9b — the allocated capacity is named Production limit', () => {
     }
     // Known-good control: the plan has stated weeks, so the loop compared figures.
     expect(stated).toBeGreaterThan(0);
-    // Not a second row: the grid keeps its seven metric rows.
-    expect(grid.querySelectorAll('tbody tr')).toHaveLength(7);
+    // Not a second row: the grid keeps its seven metric rows, plus PTI's
+    // decision row (INV-D8, P-07).
+    expect(grid.querySelectorAll('tbody tr')).toHaveLength(8);
   });
 
   it('reads in Indonesian', async () => {
