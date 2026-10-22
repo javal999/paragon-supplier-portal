@@ -249,7 +249,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
 | 1 | PTI-Cmp | Sourcing → **Supplier documents** | **Ask for a document** → **Check it over** → **Open the request** | Awaiting Upload | `pages-v2/BuyerCompliance/hooks/useDocumentRequest.js:30,70-86`; `pages-v2/BuyerCompliance/components/RequestPanelFooter.jsx:23-44` |
-| 2 | Sup-BO | Company → **Profile & documents** | **Declare** → **Record declaration** | Under Review | `pages-v2/SupplierDocuments.jsx:402-430,844-856` |
+| 2 | Sup-BO | Company → **Profile & documents** | **Declare** → **Record declaration** | Under Review | `pages-v2/SupplierDocuments/hooks/useDeclarationPanel.js:105-133`; `pages-v2/SupplierDocuments/components/DeclarationPanel.jsx:61-73` |
 | 3 | PTI-Cmp | Compliance → "Declared certificates awaiting review" | **Confirm** | Valid | `pages-v2/BuyerCompliance/hooks/useDocumentReview.js:42-51`; `pages-v2/BuyerCompliance/components/ReviewQueueItem.jsx:65-73` |
 
 **Negative end-to-end: declaration refused**
@@ -265,7 +265,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 |---|---|---|---|---|
 | Certificate expired (doc-001) | Red "Expired" pill; banner "…immediate renewal required" | Sup-BO | Profile & documents | `services/data/dayProjection.js:138,210-219`; `lib/i18n/supplierDocuments.js:33-37` |
 | Expiring within 180 days (doc-005, doc-008) | Amber "Expiring" pill; a Home task "Certificates expired or expiring" | Sup-BO | Profile & documents; To do | `services/data/documentDisplayState.js:153-179`; `lib/i18n/hub.js:157` |
-| No expiry date (BPJPH) | Treated as no expiry | – | Profile & documents | `pages-v2/SupplierDocuments.jsx:409-411` |
+| No expiry date (BPJPH) | Treated as no expiry | – | Profile & documents | `pages-v2/SupplierDocuments/hooks/useDeclarationPanel.js:112-114` |
 | Confirming a document | Does not update the compliance registry table (a separate fixed list) | – | Compliance | `pages-v2/BuyerCompliance/index.jsx:65-69` |
 
 ### UC6 Shared stock, capacity and supplier replies
@@ -469,7 +469,7 @@ A reader might expect these to work. The code shows they do not, or that they ar
 **Compliance**
 
 12. **The compliance certificate registry cannot be edited.** Its approval actions cannot fire. (`services/data/mock/MockCommandService.js:5938-6035`; `services/transitions/flows/compliance.flow.js:45,57,76`)
-13. **No file is sent to Paragon.** "View" download is not available yet, and "Renew" opens a read-only walkthrough. (`lib/i18n/supplierDocuments.js:95,121-122`; `pages-v2/SupplierDocuments.jsx:740-760`)
+13. **No file is sent to Paragon.** "View" download is not available yet, and "Renew" opens a read-only walkthrough. (`lib/i18n/supplierDocuments.js:95,121-122`; `pages-v2/SupplierDocuments/components/DocumentRow.jsx:140-160`)
 14. **"Export Report" and "Remind" are simulated.** (`lib/i18n/compliance.js:26-27`; `pages-v2/BuyerCompliance/components/RegistryRow.jsx:111-125`)
 
 **Communication and performance**

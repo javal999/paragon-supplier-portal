@@ -163,7 +163,7 @@ describe('⚠️ THE WIRING, BY SITE — a working classifier proves nothing abo
   // IA P-10 (owner ruled 2026-10-21) — the supplier dashboard and its expiring-
   // certificates widget were retired with their page, so SupplierDocuments is
   // the render site left; Supplier Home's To do reads the classifier too.
-  const DOCS_PAGE = 'src/pages-v2/SupplierDocuments.jsx';
+  const DOCS_PAGE = 'src/pages-v2/SupplierDocuments';
   const HOME = 'src/pages-v2/SupplierHome.jsx';
 
   it('CONTROL: the strip left real code behind on every file read', () => {
