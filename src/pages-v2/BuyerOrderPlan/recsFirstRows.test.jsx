@@ -12,6 +12,7 @@ import BuyerOrderPlan from '../BuyerOrderPlan';
 import { RECS_FIRST_ROWS } from './components/RecommendationsSection';
 
 const WAIT = { timeout: 15000 };
+/** @param {HTMLElement} section */
 const recRows = (section) =>
   within(section)
     .getAllByTestId(/^op-rec-/)

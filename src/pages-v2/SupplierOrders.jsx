@@ -308,7 +308,6 @@ const SupplierOrdersList = () => {
       appliedPoId.current = linkedPoId;
       openOrderPanel(po, 'detail');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linkedPoId, MY_POS]);
 
   if (!supplierId) return <NoSupplierIdentity />;

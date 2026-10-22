@@ -364,7 +364,6 @@ const BuyerOrdersList = () => {
       appliedPoId.current = linkedPoId;
       setSelectedPO(po);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linkedPoId, ordersQuery.data]);
 
   // Country flags are a cosmetic cross-supplier join — best-effort off the

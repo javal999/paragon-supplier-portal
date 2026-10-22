@@ -29,18 +29,18 @@ import RecommendationRow from './RecommendationRow';
  */
 
 /**
- * "Recommended orders": the title, intro and the links to the two pages that
- * explain a quantity (Material requirement, Safety stock), then either the
- * empty line or the table of recommendations, one `RecommendationRow` each.
- * @type {React.FC<RecommendationsSectionProps>}
- */
-/**
  * IA F-1 — the list opens on its soonest rows (they are sorted by week), so the
  * decision is not buried under the whole horizon; "Show all" reveals the rest,
  * the same pattern as Below demand anticipation on this page.
  */
 export const RECS_FIRST_ROWS = 20;
 
+/**
+ * "Recommended orders": the title, intro and the links to the two pages that
+ * explain a quantity (Material requirement, Safety stock), then either the
+ * empty line or the table of recommendations, one `RecommendationRow` each.
+ * @type {React.FC<RecommendationsSectionProps>}
+ */
 const RecommendationsSection = ({
   rows,
   pos,

@@ -19,16 +19,16 @@ import DecisionInForce from './DecisionInForce';
 // (`warehouseDecisionRefusal`, MAT-R2). A seat without the atom sees who acts.
 
 /**
- * The card: every week of the warehouse shown that does not fit, its saved decision, and the control.
- * @type {React.FC<{ plan: WarehousePlanView; rate: number; ledger: readonly WarehouseDecision[]; currentVersion: number | null; }>}
- */
-/**
  * IA F-2 — the card stays above the proposals (FUX-D3) but opens on its soonest
  * weeks, so the ranked relief is not pushed screens down; "Show all" reveals
  * the rest.
  */
 export const DECIDE_FIRST_WEEKS = 2;
 
+/**
+ * The card: every week of the warehouse shown that does not fit, its saved decision, and the control.
+ * @type {React.FC<{ plan: WarehousePlanView; rate: number; ledger: readonly WarehouseDecision[]; currentVersion: number | null; }>}
+ */
 const DecisionCard = ({ plan, rate, ledger, currentVersion }) => {
   const { t } = useTranslation();
   const availability = useVerbAvailability('warehousedecision:record');
