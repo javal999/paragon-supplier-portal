@@ -183,6 +183,8 @@ export const rescheduleEn = {
   'rs.def.unconfirmed_other':
     '{{count}} open PO lines are not yet confirmed by their suppliers. Like the material requirement, this report leaves them out of the projection until they are confirmed.',
   // FUX-D3 (F-10, F-22) — the warehouse-week decision, moved here from What to order and saved.
+  'rs.decide.showAll': 'Show all {{count}} weeks',
+  'rs.decide.showFewer': 'Show the first {{count}}',
   'rs.decide.title': 'Weeks that do not fit, even with the most rented space',
   'rs.decide.intro':
     'In these weeks the stock is above owned capacity plus the {{max}} rented pallets the plan may use. Decide for each week how it will be handled.',
@@ -422,6 +424,8 @@ export const rescheduleId = {
   'rs.def.unconfirmed_other':
     '{{count}} baris PO terbuka belum dikonfirmasi pemasoknya. Seperti kebutuhan material, laporan ini tidak memasukkannya ke proyeksi sampai dikonfirmasi.',
   // FUX-D3 (F-10, F-22) — keputusan minggu gudang, dipindah dari Apa yang dipesan dan disimpan.
+  'rs.decide.showAll': 'Tampilkan semua {{count}} minggu',
+  'rs.decide.showFewer': 'Tampilkan {{count}} pertama',
   'rs.decide.title': 'Minggu yang tidak muat, meski dengan ruang sewa terbanyak',
   'rs.decide.intro':
     'Pada minggu-minggu ini stok melebihi kapasitas sendiri ditambah {{max}} palet sewa yang boleh dipakai rencana. Putuskan untuk setiap minggu cara menanganinya.',
