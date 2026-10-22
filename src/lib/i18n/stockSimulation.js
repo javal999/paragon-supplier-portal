@@ -112,7 +112,9 @@ export const stockSimulationEn = {
   'sim.action.lineLeft': '{{qty}} {{uom}} left on {{po}}',
   'sim.action.lineLeftValue': '{{value}} left on {{po}}',
   'sim.action.lineExhausted': 'Nothing left on {{po}}',
-  'sim.action.noLine': 'No agreement line'
+  'sim.action.noLine': 'No agreement line',
+  // Lane 2D — P-05: the over-called row's "Ask supplier" hint (INV-D9).
+  'sim.action.askProductionDate': 'Ask supplier for a production date'
 };
 
 /** @type {Record<string, string>} */
@@ -224,5 +226,7 @@ export const stockSimulationId = {
   'sim.action.lineLeft': 'Sisa {{qty}} {{uom}} di {{po}}',
   'sim.action.lineLeftValue': 'Sisa {{value}} di {{po}}',
   'sim.action.lineExhausted': 'Tidak ada sisa di {{po}}',
-  'sim.action.noLine': 'Belum ada baris perjanjian'
+  'sim.action.noLine': 'Belum ada baris perjanjian',
+  // Lane 2D — P-05: the over-called row's "Ask supplier" hint (INV-D9).
+  'sim.action.askProductionDate': 'Minta tanggal produksi ke pemasok'
 };

@@ -269,6 +269,23 @@ describe('Stock simulation page (MR-7 section e)', () => {
     expect(within(dialog).getByDisplayValue('PK-PETB-8802')).toBeInTheDocument();
   });
 
+  it('P-05 / INV-D9 — an over-called row offers "Ask supplier" for a production date beside "Create PO request"; a row with free stock does not', async () => {
+    renderWithProviders(app, { identity: PLANNER, route: '/buyer/stock-simulation' });
+    await screen.findByTestId(`sim-row-${PET}`);
+    const ask = screen.getByTestId(`sim-ask-${PET}`);
+    expect(ask).toHaveAttribute('data-topic', 'productionDate');
+    expect(ask).toHaveTextContent(stockSimulationEn['sim.action.askProductionDate']);
+    expect(screen.getByTestId(`sim-po-${PET}`)).toBeInTheDocument();
+    // PK-PETB-8802 already has an open ask (seeded): the control shows it instead.
+    expect(await screen.findByTestId(`sim-ask-${PET2}-existing`)).toBeInTheDocument();
+    expect(screen.queryByTestId(`sim-ask-${EMUL}`)).toBeNull();
+    expect(screen.queryByTestId(`sim-ask-${CART}`)).toBeNull();
+    // The dialog opens on the topic; the click does not open the row's detail.
+    fireEvent.click(within(ask).getByTestId(`sim-ask-${PET}-open`));
+    expect(await screen.findByTestId(`sim-ask-${PET}-topic`)).toHaveValue('productionDate');
+    expect(screen.queryByTestId(`sim-detail-${PET}`)).toBeNull();
+  });
+
   it('P-05 — zero and positive free figures read as figures, with no over-called flag', async () => {
     renderWithProviders(<BuyerStockSimulation />, {
       identity: PLANNER,

@@ -33,6 +33,8 @@ import { dayOf, isIsoDay } from '@services/transitions/inventoryRules';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { inventoryNow, inputClass, labelClass } from './inventory/inventoryDisplay';
 import { planningGroupLabel } from './inventory/planningGroupDisplay';
+import AskSupplierButton from './inventory/AskSupplierButton';
+import { callOffHref, poRequestHref } from './inventory/inventoryLinks';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
 /** @import { AgreementLine } from './inventory/stockSimulationDisplay' */
 import {
@@ -64,6 +66,8 @@ import {
 // (with what is left on the agreement line) only where the supplier has an
 // agreement line with quantity left and the pair is not over-called;
 // otherwise "Create PO request" is the outline action, with a grey note why.
+// An over-called row adds "Ask supplier" for a production date beside it
+// (INV-D9, lane 2D).
 // ─────────────────────────────────────────────────────────────────────────────
 
 const COLUMNS = 12;
@@ -161,15 +165,9 @@ const BuyerStockSimulation = () => {
     setOpenInput(field);
   };
   /** @param {StockSimulationRow} r */
-  const createCallOff = (r) =>
-    navigate(
-      `/buyer/call-offs?newFor=${encodeURIComponent(r.supplierId)}&material=${encodeURIComponent(r.materialCode)}`
-    );
+  const createCallOff = (r) => navigate(callOffHref(r.supplierId, r.materialCode));
   /** @param {StockSimulationRow} r */
-  const createPoRequest = (r) =>
-    navigate(
-      `/buyer/purchase-requisition?new=1&material=${encodeURIComponent(r.materialCode)}&supplier=${encodeURIComponent(r.supplierId)}`
-    );
+  const createPoRequest = (r) => navigate(poRequestHref(r.supplierId, r.materialCode));
 
   return (
     <AppShellV2>
@@ -492,6 +490,7 @@ const SimulationRow = ({
  * line has quantity left and the pair is not over-called; otherwise "Create PO
  * request" is the outline action, with a grey note when there is no line or it
  * is used up (an over-called row's reason is its flag).
+ * An over-called row also offers "Ask supplier" for a production date (INV-D9).
  * @type {React.FC<{ row: StockSimulationRow; line: AgreementLine; overCalled: boolean; onCallOff: (e: React.MouseEvent) => void; onPoRequest: (e: React.MouseEvent) => void; }>}
  */
 const RowActions = ({ row: r, line, overCalled, onCallOff, onPoRequest }) => {
@@ -548,6 +547,26 @@ const RowActions = ({ row: r, line, overCalled, onCallOff, onPoRequest }) => {
         >
           {note}
         </span>
+      ) : null}
+      {overCalled ? (
+        // P-05 / INV-D9 — the hub ask beside "Create PO request". Clicks inside
+        // (the dialog included) stay out of the row, which opens on a click.
+        <div
+          className="flex flex-col items-end gap-1"
+          onClick={(e) => e.stopPropagation()}
+          data-testid={`sim-ask-${key}`}
+          data-topic="productionDate"
+        >
+          <AskSupplierButton
+            supplierId={r.supplierId}
+            materialCode={r.materialCode}
+            topic="productionDate"
+            testId={`sim-ask-${key}`}
+          />
+          <span className="text-[11px] text-text-tertiary whitespace-nowrap">
+            {t('sim.action.askProductionDate')}
+          </span>
+        </div>
       ) : null}
     </div>
   );
