@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
+import Tabs from '@components/ui-v2/Tabs';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import Data from '@components/ui-v2/Data';
 import LoadingState from '@components/ui-v2/LoadingState';
@@ -15,6 +16,7 @@ import AboutThisPage, { CollapsedSection } from '@components/forecast/AboutThisP
 import DataAsOf from '@components/forecast/DataAsOf';
 import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { usePageTab } from '@hooks/usePageTab';
 import { formatDate, formatNumber } from '@lib/format';
 import { useOrderPlan, useReschedule } from '@services/query/hooks';
 /** @import { RescheduleView } from '@services/data/types' */
@@ -30,6 +32,7 @@ import ReliefSection from './components/ReliefSection';
 import RescheduleKpis from './components/RescheduleKpis';
 import SettingsSection from './components/SettingsSection';
 import { useProposalActions } from './hooks/useProposalActions';
+import OpenCallOffLink from '../callOffs/OpenCallOffLink';
 import { weekLabel } from './utils';
 /** @import { ProposalActionContext } from './components/ProposalAction' */
 
@@ -60,11 +63,29 @@ import { weekLabel } from './utils';
 // Every figure is computed by the forecast engine at read time on its
 // SYNTHETIC dataset (the `engineDataset` pill, X-03).
 //
+// P-12 (IA-B06) — TABS, THE DECISION FIRST. The page header, purpose line,
+// step strip, simulated-data banner, data date, warehouse choice, capacity
+// line and KPIs stay above the tabs; below them "Relief" (the weeks that do
+// not fit, the supplier-stability guard, the ranked relief, the on-hand
+// caveat, shortage and the proposals with no saving), then "Warehouse fill",
+// then "Values and method" (open orders for information, values in use, how
+// this is calculated, About this page). Nothing was removed; each block moved
+// under a tab. The tab is `?tab=relief|fill|values`.
+//
+// IA-B13 — a sent call-off change links to that call-off on Call-offs: on its
+// row while the row stands, in the "sent" lines at the top of Relief once the
+// pending change takes the proposal off the list, and on the call-off's line
+// under "Open orders for information".
+//
 // FOLDER MAP (frontend-standard Phase 5, PAGE-SPLIT-GUIDE): this file holds the
 // page's state, selection and section order; each section is a file in
 // `components/`, the two proposal acts are `hooks/useProposalActions.js`, and
 // the number formatters are `utils.js`.
 // ─────────────────────────────────────────────────────────────────────────────
+
+/** P-12 — the page's tabs, in order; the first opens by default. */
+// i18n-defer: tab identifiers, not copy — each renders through t(`rs.tab.${id}`)
+export const RESCHEDULE_TABS = /** @type {const} */ (['relief', 'fill', 'values']);
 
 /** @type {React.FC} */
 const BuyerReschedule = () => {
@@ -78,6 +99,7 @@ const BuyerReschedule = () => {
   const [kind, setKind] = useState(/** @type {WarehouseKind} */ ('packaging'));
   const [selected, setSelected] = useState(/** @type {ReadonlySet<string>} */ (new Set()));
   const crumb = forecastCrumb(t, 'makeRoom');
+  const { tab, select } = usePageTab(RESCHEDULE_TABS);
   /** @type {RescheduleView | null} */
   const run = query.data ?? null;
   // X-03 — the registry's own answer, read at render; each verb reads it again.
@@ -178,116 +200,162 @@ const BuyerReschedule = () => {
           </p>
 
           <RescheduleKpis w={w} freeCount={freeCount} />
-
-          {planW && rentRate !== null && planW.shortfallWeeks.length > 0 && (
-            <DecisionCard
-              key={planW.kind}
-              plan={planW}
-              rate={rentRate}
-              ledger={/** @type {RescheduleView} */ (run).warehouseDecisions}
-              currentVersion={/** @type {RescheduleView} */ (run).planVersions[planW.kind]}
-            />
-          )}
-
-          <PlanChangeGuard
-            run={/** @type {RescheduleView} */ (run)}
-            selectedCount={mine.size}
-            effect={effect}
-            guardAfter={guardAfter}
-          />
-
-          <ReliefSection
-            relief={relief}
-            withheld={withheld}
-            freeCount={freeCount}
-            onSelectFree={selectFree}
-            onClear={clearSelection}
-            selected={selected}
-            onToggle={toggle}
-            action={action}
-          />
-
-          {/* FUX A4 (F-08): the on-hand caveat sits under the proposals, not above them. */}
-          {onHandWeeks.length > 0 && (
-            <p className="text-sm text-text-secondary mb-4" data-testid="rs-onhand-note">
-              {t('rs.onHand.note', {
-                count: onHandWeeks.length,
-                first: weekLabel(onHandWeeks[0].weekStart),
-                last: weekLabel(onHandWeeks[onHandWeeks.length - 1].weekStart)
-              })}
-            </p>
-          )}
-
-          {shortage.length > 0 && (
-            <section
-              className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6"
-              data-testid="rs-shortage"
-            >
-              <h2 className="text-section text-text-primary mb-1">{t('rs.shortage.title')}</h2>
-              <p className="text-xs text-text-tertiary mb-3">{t('rs.shortage.intro')}</p>
-              <ProposalTable
-                rows={shortage}
-                selectable
-                testPrefix="rs-shortage"
-                selected={selected}
-                onToggle={toggle}
-                action={action}
-              />
-            </section>
-          )}
-
-          {noSaving.length > 0 && (
-            <details
-              className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6"
-              data-testid="rs-nosaving"
-            >
-              <summary className="text-section text-text-primary cursor-pointer">
-                {t('rs.noSaving.title', { count: noSaving.length })}
-              </summary>
-              <p className="text-xs text-text-tertiary my-3">{t('rs.noSaving.intro')}</p>
-              <ProposalTable
-                rows={noSaving}
-                selectable={false}
-                testPrefix="rs-nosaving"
-                selected={selected}
-                onToggle={toggle}
-                action={action}
-              />
-            </details>
-          )}
-
-          <FillSection w={w} effect={effect} />
-
-          {w.info.length > 0 && (
-            <CollapsedSection
-              title={t('rs.info.title')}
-              testId="rs-info"
-              className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6"
-            >
-              <p className="text-xs text-text-tertiary my-3">{t('rs.info.intro')}</p>
-              <ul className="text-sm space-y-1">
-                {w.info.map((i) => (
-                  <li key={i.line.id} data-testid={`rs-info-${i.line.id}`}>
-                    <Data>{i.line.reference}</Data> · {i.materialLabel} ·{' '}
-                    <Data>{formatDate(i.line.date)}</Data> —{' '}
-                    <span className="text-text-secondary">{t(`rs.info.reason.${i.reason}`)}</span>
-                  </li>
-                ))}
-              </ul>
-            </CollapsedSection>
-          )}
         </>
       )}
 
-      {run && <SettingsSection run={run} />}
+      <Tabs
+        tabs={RESCHEDULE_TABS.map((id) => ({ id, label: t(`rs.tab.${id}`) }))}
+        active={tab}
+        onChange={(id) => select(/** @type {(typeof RESCHEDULE_TABS)[number]} */ (id))}
+        className="mb-4"
+      />
 
-      <DefinitionsSection run={run} />
+      <div role="tabpanel" aria-label={t(`rs.tab.${tab}`)} data-testid={`rs-tabpanel-${tab}`}>
+        {tab === 'relief' && actions.sentCallOffs.length > 0 && (
+          <ul
+            role="status"
+            className="bg-bg-surface border border-border-subtle rounded-lg px-4 py-3 mb-4 text-sm space-y-1"
+            data-testid="rs-sent"
+          >
+            {actions.sentCallOffs.map((c) => (
+              <li key={c.callOffId} data-testid={`rs-sent-${c.callOffId}`}>
+                {t('rs.sent.line', { reference: c.reference })}{' '}
+                <OpenCallOffLink
+                  callOffId={c.callOffId}
+                  label={t('rs.action.openCallOff')}
+                  testId={`rs-sent-open-${c.callOffId}`}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
 
-      <AboutThisPage>
-        <p>{t('rs.subtitle')}</p>
-        <p data-testid="rs-synthetic-note">{t('rs.synthetic')}</p>
-        {withheld && <p data-testid="rs-withheld-note">{t('rs.withheld')}</p>}
-      </AboutThisPage>
+        {tab === 'relief' && w && effect ? (
+          <>
+            {planW && rentRate !== null && planW.shortfallWeeks.length > 0 && (
+              <DecisionCard
+                key={planW.kind}
+                plan={planW}
+                rate={rentRate}
+                ledger={/** @type {RescheduleView} */ (run).warehouseDecisions}
+                currentVersion={/** @type {RescheduleView} */ (run).planVersions[planW.kind]}
+              />
+            )}
+
+            <PlanChangeGuard
+              run={/** @type {RescheduleView} */ (run)}
+              selectedCount={mine.size}
+              effect={effect}
+              guardAfter={guardAfter}
+            />
+
+            <ReliefSection
+              relief={relief}
+              withheld={withheld}
+              freeCount={freeCount}
+              onSelectFree={selectFree}
+              onClear={clearSelection}
+              selected={selected}
+              onToggle={toggle}
+              action={action}
+            />
+
+            {/* FUX A4 (F-08): the on-hand caveat sits under the proposals, not above them. */}
+            {onHandWeeks.length > 0 && (
+              <p className="text-sm text-text-secondary mb-4" data-testid="rs-onhand-note">
+                {t('rs.onHand.note', {
+                  count: onHandWeeks.length,
+                  first: weekLabel(onHandWeeks[0].weekStart),
+                  last: weekLabel(onHandWeeks[onHandWeeks.length - 1].weekStart)
+                })}
+              </p>
+            )}
+
+            {shortage.length > 0 && (
+              <section
+                className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6"
+                data-testid="rs-shortage"
+              >
+                <h2 className="text-section text-text-primary mb-1">{t('rs.shortage.title')}</h2>
+                <p className="text-xs text-text-tertiary mb-3">{t('rs.shortage.intro')}</p>
+                <ProposalTable
+                  rows={shortage}
+                  selectable
+                  testPrefix="rs-shortage"
+                  selected={selected}
+                  onToggle={toggle}
+                  action={action}
+                />
+              </section>
+            )}
+
+            {noSaving.length > 0 && (
+              <details
+                className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6"
+                data-testid="rs-nosaving"
+              >
+                <summary className="text-section text-text-primary cursor-pointer">
+                  {t('rs.noSaving.title', { count: noSaving.length })}
+                </summary>
+                <p className="text-xs text-text-tertiary my-3">{t('rs.noSaving.intro')}</p>
+                <ProposalTable
+                  rows={noSaving}
+                  selectable={false}
+                  testPrefix="rs-nosaving"
+                  selected={selected}
+                  onToggle={toggle}
+                  action={action}
+                />
+              </details>
+            )}
+          </>
+        ) : null}
+
+        {tab === 'fill' && w && effect ? <FillSection w={w} effect={effect} /> : null}
+
+        {tab === 'values' && (
+          <>
+            {w && w.info.length > 0 ? (
+              <CollapsedSection
+                title={t('rs.info.title')}
+                testId="rs-info"
+                className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6"
+              >
+                <p className="text-xs text-text-tertiary my-3">{t('rs.info.intro')}</p>
+                <ul className="text-sm space-y-1">
+                  {w.info.map((i) => (
+                    <li key={i.line.id} data-testid={`rs-info-${i.line.id}`}>
+                      <Data>{i.line.reference}</Data> · {i.materialLabel} ·{' '}
+                      <Data>{formatDate(i.line.date)}</Data> —{' '}
+                      <span className="text-text-secondary">{t(`rs.info.reason.${i.reason}`)}</span>
+                      {i.line.callOffId ? (
+                        <>
+                          {' '}
+                          <OpenCallOffLink
+                            callOffId={i.line.callOffId}
+                            label={t('rs.action.openCallOff')}
+                            testId={`rs-info-open-${i.line.id}`}
+                          />
+                        </>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              </CollapsedSection>
+            ) : null}
+
+            {run && <SettingsSection run={run} />}
+
+            <DefinitionsSection run={run} />
+
+            <AboutThisPage>
+              <p>{t('rs.subtitle')}</p>
+              <p data-testid="rs-synthetic-note">{t('rs.synthetic')}</p>
+              {withheld && <p data-testid="rs-withheld-note">{t('rs.withheld')}</p>}
+            </AboutThisPage>
+          </>
+        )}
+      </div>
     </AppShellV2>
   );
 };

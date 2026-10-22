@@ -8,6 +8,10 @@ import { foresightAnswerOf } from '@services/transitions/forecastRules';
 /** @import { SummaryInvoice } from './orders/OrderSummaryView' */
 import OrderSummaryView from './orders/OrderSummaryView';
 
+// P-02 — this is the Summary view of Purchase orders: `/<persona>/orders`
+// renders it by default (`BuyerOrders` / `SupplierOrders`), and the old
+// `order-summary` route renders the same page until it redirects there.
+//
 // Supplier Order summary (REQ-E07-03 BR-06): the same summary over the
 // supplier's own POs only. Foresight answers are the supplier's own forecast
 // commitments (REQ-E06-02); a saved draft is still awaiting until submitted.

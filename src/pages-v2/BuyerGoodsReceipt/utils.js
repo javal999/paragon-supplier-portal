@@ -12,6 +12,7 @@
 /** @import { GoodsReceipt, GRStatus, InspectionResult } from '@services/data/types' */
 /** @import { DateFilter, GroupTab } from './const' */
 import { DAY_MS, TODAY } from './const';
+import { grStatusNeedsAction } from '../widgets/buyerDerivations';
 
 /**
  * A quantity or count in Indonesian grouping (`1.250`).
@@ -61,6 +62,7 @@ export const isInRange = (iso, filter) => {
  */
 export const matchesGroup = (s, g) => {
   if (g === 'all') return true;
+  if (g === 'action') return grStatusNeedsAction(s);
   if (g === 'pending') return s === 'Pending Inspection';
   if (g === 'under-inspection') return s === 'Under Inspection';
   if (g === 'approved') return s === 'Approved' || s === 'Partially Approved';

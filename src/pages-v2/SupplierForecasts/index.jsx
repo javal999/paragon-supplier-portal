@@ -1,5 +1,5 @@
 /** @import React from 'react' */
-import { useRef, useState } from 'react';
+import { Fragment, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Info } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
@@ -37,6 +37,7 @@ import ShipmentsTab from './components/ShipmentsTab';
 import ConfirmPanel from './components/ConfirmPanel';
 import AcknowledgePanel from './components/AcknowledgePanel';
 import ShipmentReportPanel from './components/ShipmentReportPanel';
+import EmbeddedState from './components/EmbeddedState';
 
 // ────────────────────────────────────────────────────────────────────────────
 // SupplierForecasts (SDC-2b → SDC-3b) — the P1 supplier SUBMISSION HUB. One
@@ -88,6 +89,7 @@ import ShipmentReportPanel from './components/ShipmentReportPanel';
  * @property {readonly CollaboratedMaterialView[]} materials
  * @property {readonly IncomingShipmentView[]} shipments
  * @property {readonly ASN[]} asns
+ * @property {boolean} [embedded] P-04 — rendered as a tab of another page: no shell, no page header.
  */
 
 /**
@@ -106,7 +108,8 @@ const ForecastWorkspace = ({
   responses,
   materials,
   shipments,
-  asns
+  asns,
+  embedded = false
 }) => {
   const { t } = useTranslation();
   const refusalText = useRefusalText();
@@ -202,16 +205,28 @@ const ForecastWorkspace = ({
     }
   };
 
-  return (
-    <AppShellV2>
-      <PageHeader
-        breadcrumb={crumb}
-        title={t('sdcSup.header.title')}
-        subtitle={t('sdcSup.header.subtitle', { supplier: supplierName })}
-        actions={<LivenessPill capability="forecastPublications" />}
-      />
+  // P-04 (IA-S03) — embedded as the commitments page's tab, the host owns the shell and header.
+  const Shell = embedded ? Fragment : AppShellV2;
 
-      <PageMetaLine className="-mt-6 mb-6">
+  return (
+    <Shell>
+      {embedded ? (
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-text-secondary">
+            {t('sdcSup.header.subtitle', { supplier: supplierName })}
+          </p>
+          <LivenessPill capability="forecastPublications" />
+        </div>
+      ) : (
+        <PageHeader
+          breadcrumb={crumb}
+          title={t('sdcSup.header.title')}
+          subtitle={t('sdcSup.header.subtitle', { supplier: supplierName })}
+          actions={<LivenessPill capability="forecastPublications" />}
+        />
+      )}
+
+      <PageMetaLine className={embedded ? 'mb-6' : '-mt-6 mb-6'}>
         {t('sdcSup.meta.summary', {
           lines: lines.length,
           responses: responses.length,
@@ -317,7 +332,7 @@ const ForecastWorkspace = ({
         recordAttempt={recordAttempt}
         failToast={failToast}
       />
-    </AppShellV2>
+    </Shell>
   );
 };
 
@@ -325,8 +340,11 @@ const ForecastWorkspace = ({
 // SupplierRFQs shape. The four SDC-3b reads carry own-facts-only data into the
 // hub; they resolve fast (store reads), so they pass through with [] fallbacks
 // rather than gating the whole page.
-/** @type {React.FC} */
-const SupplierForecasts = () => {
+// P-04 (IA-S03) — `embedded` renders the hub as the second tab of the
+// supplier's commitments page (`/supplier/forecasts?tab=responses`): no shell,
+// and the honest states inline (`EmbeddedState`) rather than as full pages.
+/** @type {React.FC<{ embedded?: boolean }>} */
+const SupplierForecasts = ({ embedded = false }) => {
   const { t } = useTranslation();
   const crumb = [t('sdcSup.crumb.section'), t('sdcSup.crumb.page')];
   const { identity } = useCurrentIdentity();
@@ -338,29 +356,34 @@ const SupplierForecasts = () => {
   const shipmentsQuery = useOwnIncomingShipments();
   const asnsQuery = useOwnSupplierAsns();
 
-  if (!supplierId) return <NoSupplierIdentity />;
+  const retry = () => {
+    supplierQuery.refetch();
+    linesQuery.refetch();
+    responsesQuery.refetch();
+  };
+  if (!supplierId) return embedded ? <EmbeddedState kind="noSupplier" /> : <NoSupplierIdentity />;
   if (supplierQuery.isPending || linesQuery.isPending || responsesQuery.isPending)
-    return <LoadingState breadcrumb={crumb} />;
+    return embedded ? <EmbeddedState kind="loading" /> : <LoadingState breadcrumb={crumb} />;
   if (supplierQuery.isError || linesQuery.isError || responsesQuery.isError)
-    return (
+    return embedded ? (
+      <EmbeddedState kind="error" onRetry={retry} />
+    ) : (
       <ErrorState
         breadcrumb={crumb}
         error={supplierQuery.error ?? linesQuery.error ?? responsesQuery.error}
-        onRetry={() => {
-          supplierQuery.refetch();
-          linesQuery.refetch();
-          responsesQuery.refetch();
-        }}
+        onRetry={retry}
       />
     );
 
   const mySupplier = supplierQuery.data ?? null;
-  if (!mySupplier) return <NoSupplierIdentity />;
+  if (!mySupplier) return embedded ? <EmbeddedState kind="noSupplier" /> : <NoSupplierIdentity />;
 
   const read = linesQuery.data;
   const responses = responsesQuery.data ?? [];
   if (!read?.publication)
-    return (
+    return embedded ? (
+      <EmbeddedState kind="empty" supplierName={mySupplier.name} />
+    ) : (
       <EmptyState
         breadcrumb={crumb}
         title={t('sdcSup.empty.title')}
@@ -380,6 +403,7 @@ const SupplierForecasts = () => {
       materials={materialsQuery.data ?? []}
       shipments={shipmentsQuery.data ?? []}
       asns={asnsQuery.data ?? []}
+      embedded={embedded}
     />
   );
 };

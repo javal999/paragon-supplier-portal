@@ -15,8 +15,8 @@
 // **The supplier-side site tests the SUPERTYPE.** `grep "instanceof DataError"`
 // returns it not at all, and it is the only member of the class on that persona.
 //
-// NOT converted, deliberately: `IntakeReview.jsx:87` and
-// `plan-grid/IntakeAdjustDrawer.jsx:146`. Both read `e.code` and feed it to
+// NOT converted, deliberately (until IA P-10 retired both pages): IntakeReview
+// and the plan grid's IntakeAdjustDrawer. Both read `e.code` and feed it to
 // `applyPushResult({ ok: false, reason })` — the code is a STATE TOKEN driving
 // control flow, never rendered as prose. Translating it would be this batch's
 // own defect pointed backwards. Asserted below rather than left to a comment.
@@ -31,8 +31,6 @@
 
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { renderWithProviders, BUYER } from '@test/test-utils';
 import { pageFolderSource } from '@test/pageFiles';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
@@ -72,7 +70,7 @@ const throwingOn = (err) => ({
 });
 
 // The walk is LOCALE-AWARE, and that was measured rather than foreseen: the
-// page heading is itself translated, so a hardcoded 'Purchase Requisitions'
+// page heading is itself translated, so a hardcoded 'Requisitions'
 // made every ID test fail before it ever reached a toast — a walk that never
 // arrives at its subject, which is the exact lesson this file opens with.
 const openPendingAndApprove = async () => {
@@ -113,7 +111,7 @@ describe('PR2 · CONTROLS — the walk reaches its subject', () => {
       ).status
     ).toBe('Pending Approval');
     renderPage(mockDataService);
-    await screen.findByText('Purchase Requisitions');
+    await screen.findByRole('heading', { name: 'Requisitions' });
     fireEvent.click(await screen.findByText(PENDING_PR));
     await screen.findByText(`PR ${PENDING_PR}`);
     expect(screen.getByTestId('pr-approve')).toBeInTheDocument();
@@ -185,12 +183,10 @@ describe('PR2 · ADDITIVITY — what this batch does NOT own is byte-identical',
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-describe('PR2 · the population — six converted, two deliberately NOT', () => {
+describe('PR2 · the population — six converted (the two deliberately-not sites were retired)', () => {
   // ⚠️ **DERIVED FROM SOURCE, BOTH DIRECTIONS.** A count alone cannot say which
   // sites were converted, and the two exclusions are a RULING that a later batch
   // could undo by accident while every other test here stayed green.
-  /** @param {string} rel */
-  const read = (rel) => readFileSync(path.resolve(__dirname, rel), 'utf-8');
 
   it('all five BuyerRequisitions sites route through the helper, and none renders `e.message` raw', () => {
     const src = pageFolderSource(__dirname, 'BuyerRequisitions');
@@ -214,17 +210,7 @@ describe('PR2 · the population — six converted, two deliberately NOT', () => 
     expect(src).toMatch(/dataErrorText\(e instanceof DataError \? e\.code : undefined\)/);
   });
 
-  it('⚠️ THE CONTROL-FLOW SITES ARE UNTOUCHED, and that is a ruling rather than an omission', () => {
-    // `e.code` here is a STATE TOKEN fed to `applyPushResult`. Translating a
-    // value that drives control flow is precisely the defect this batch exists
-    // to remove, pointed backwards — a localized string would be compared
-    // against an English constant and the comparison would silently stop
-    // matching in Indonesian.
-    for (const rel of ['IntakeReview.jsx', 'plan-grid/IntakeAdjustDrawer.jsx']) {
-      const src = read(rel);
-      expect(src, rel).toMatch(/const reasonCode = e instanceof DataError \? e\.code : 'ERROR';/);
-      expect(src, rel).not.toContain('useDataErrorText');
-      expect(src, rel).not.toContain('describeDataError');
-    }
-  });
+  // IA P-10 (owner ruled 2026-10-21) — the two control-flow sites this block
+  // pinned (IntakeReview and the plan grid's intake drawer) were retired with
+  // their pages, so the ruling they carried has no site left to hold.
 });

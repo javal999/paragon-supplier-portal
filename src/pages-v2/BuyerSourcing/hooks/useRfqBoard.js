@@ -3,16 +3,24 @@
 /** @import { GroupTab, KpiFilter } from '../const' */
 /** @import { RfqNextStep } from '../utils' */
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { awardsInForce, trailOfViews } from '@services/sourcing/awardStatus';
 import { TODAY } from '../const';
-import { byNextDeadline, matchesGroup, matchesKpi, rfqNextStep } from '../utils';
+import {
+  byNextDeadline,
+  isRoundClosingSoon,
+  matchesGroup,
+  matchesKpi,
+  rfqNextStep
+} from '../utils';
+import { rfxNow } from '../../rfx/rfxDisplay';
 import { rfqStageOf } from '../../BuyerSourcingEvent/utils';
 /** @import { StageNext } from '../../BuyerSourcingEvent/utils' */
 
 /**
  * @typedef {object} RfqBoardContext
  * @property {readonly Quotation[]} quotations Every quotation the buyer reads.
- * @property {readonly { rfqId: string; closed: boolean }[]} rounds Every negotiation round.
+ * @property {readonly { rfqId: string; closed: boolean; awaiting: number; deadline: string }[]} rounds Every negotiation round.
  * @property {readonly ({ id: string; eventType: string; eventId: string; status: string; lines: readonly unknown[] } & Parameters<typeof trailOfViews>[0][number])[]} awards Every recorded award, cancelled ones included.
  */
 
@@ -26,14 +34,27 @@ import { rfqStageOf } from '../../BuyerSourcingEvent/utils';
  * replaces the tab filter with its own (clicked again, or a tab clicked, it is
  * cleared); every view is ordered by next deadline with Closed last.
  *
+ * IA P-08 — Home's tasks land on the rows they count: `?kpi=ready` opens the
+ * board on the "Ready to award" tile, and `?view=roundsClosing` on the RFQs
+ * with a negotiation round closing soon (the rounds Home counts, read with the
+ * same predicate and the same RFx clock). A tile or a tab, clicked, leaves
+ * that view.
+ *
  * The board reads the seam list ALONE (`rfqs`): a created RFQ arrives through
  * getRFQs after the create dispatch invalidates.
  * @param {readonly RFQ[]} rfqs
  * @param {RfqBoardContext} ctx
  */
 export const useRfqBoard = (rfqs, { quotations, rounds, awards }) => {
+  const [params] = useSearchParams();
   const [group, setGroupState] = useState(/** @type {GroupTab} */ ('action'));
-  const [kpi, setKpi] = useState(/** @type {KpiFilter | null} */ (null));
+  const [kpi, setKpiState] = useState(() => {
+    const linked = params.get('kpi');
+    return /** @type {KpiFilter | null} */ (
+      linked && ['active', 'awaiting', 'ready', 'awarded'].includes(linked) ? linked : null
+    );
+  });
+  const [roundsClosing, setRoundsClosing] = useState(() => params.get('view') === 'roundsClosing');
   const [selectedCats, setSelectedCats] = useState(/** @type {RFQCategory[]} */ ([]));
   const [search, setSearch] = useState('');
   // ONE clock read for the board, captured once and injected into every
@@ -68,6 +89,12 @@ export const useRfqBoard = (rfqs, { quotations, rounds, awards }) => {
     () => new Map([...stageById].map(([id, s]) => [id, s.step])),
     [stageById]
   );
+
+  // The RFQs holding a round Home's "Negotiation rounds closing soon" counts.
+  const closingRfqIds = useMemo(() => {
+    const now = rfxNow();
+    return new Set(rounds.filter((x) => isRoundClosingSoon(x, now)).map((x) => x.rfqId));
+  }, [rounds]);
 
   /** @param {RFQ} r */
   const nextOf = (r) => nextById.get(r.id) ?? null;
@@ -111,7 +138,11 @@ export const useRfqBoard = (rfqs, { quotations, rounds, awards }) => {
   const activeFiltered = useMemo(() => {
     return rfqs
       .filter((r) =>
-        kpi ? matchesKpi(r, kpi, nowIso) : matchesGroup(r, group, nextById.get(r.id) ?? null)
+        roundsClosing
+          ? closingRfqIds.has(r.id)
+          : kpi
+            ? matchesKpi(r, kpi, nowIso)
+            : matchesGroup(r, group, nextById.get(r.id) ?? null)
       )
       .filter((r) => (selectedCats.length === 0 ? true : selectedCats.includes(r.materialCategory)))
       .filter((r) => {
@@ -124,16 +155,23 @@ export const useRfqBoard = (rfqs, { quotations, rounds, awards }) => {
         );
       })
       .sort(byNextDeadline);
-  }, [rfqs, group, kpi, nowIso, nextById, selectedCats, search]);
+  }, [rfqs, group, kpi, roundsClosing, closingRfqIds, nowIso, nextById, selectedCats, search]);
 
   /** A tab, clicked, clears any KPI-tile filter. @param {GroupTab} g */
   const setGroup = (g) => {
-    setKpi(null);
+    setRoundsClosing(false);
+    setKpiState(null);
     setGroupState(g);
   };
 
   /** A tile toggles its own filter. @param {KpiFilter} k */
-  const toggleKpi = (k) => setKpi((prev) => (prev === k ? null : k));
+  const toggleKpi = (k) => {
+    setRoundsClosing(false);
+    setKpiState((prev) => (prev === k ? null : k));
+  };
+
+  /** Leaves the rounds-closing view for the default tab. */
+  const clearRoundsClosing = () => setRoundsClosing(false);
 
   const awarded = useMemo(() => rfqs.filter((r) => r.status === 'Awarded'), [rfqs]);
 
@@ -148,6 +186,8 @@ export const useRfqBoard = (rfqs, { quotations, rounds, awards }) => {
     setGroup,
     kpi,
     toggleKpi,
+    roundsClosing,
+    clearRoundsClosing,
     nextOf,
     quotedOf,
     stageOf,

@@ -70,7 +70,8 @@ export const materialNamesEn = {
   'matName.toast.refused': 'Not saved: {{reason}}',
 
   'matName.pti.crumb': 'Trade names',
-  'matName.pti.title': 'Supplier trade names',
+  // IA P-11 — the page title is the menu label.
+  'matName.pti.title': 'Trade names',
   'matName.pti.subtitle':
     'The names suppliers use for PTI materials. Approve a name and it shows beside PTI’s description for that supplier; each supplier has at most one approved name per material. A rejection needs a reason, which the supplier sees.',
   'matName.pti.meta_one': '{{count}} name on record',
@@ -162,7 +163,7 @@ export const materialNamesId = {
   'matName.toast.refused': 'Tidak tersimpan: {{reason}}',
 
   'matName.pti.crumb': 'Nama dagang',
-  'matName.pti.title': 'Nama dagang pemasok',
+  'matName.pti.title': 'Nama dagang',
   'matName.pti.subtitle':
     'Nama yang dipakai pemasok untuk material PTI. Setujui sebuah nama dan nama itu tampil di samping deskripsi PTI untuk pemasok tersebut; setiap pemasok memiliki paling banyak satu nama yang disetujui per material. Penolakan memerlukan alasan, yang dilihat pemasok.',
   'matName.pti.meta_other': '{{count}} nama tercatat',

@@ -13,6 +13,9 @@ import { BlockedStockMarker, approvedIntoBlockedStock } from '../../shipments/Sh
  * @property {Map<string, { asn: ASN; warnings: CallOffWarning[] }>} asnByNumber
  *   Each ASN with its CURRENT call-off warnings (MR-6 BR-12).
  * @property {TFunction} t
+ * @property {string} [title]  The section heading; the drilled PO's by default.
+ * @property {string} [emptyText]  What an empty list says; the drilled PO's by default.
+ * @property {string} [testId]  The section's test id; `drill-asn-section` by default.
  */
 
 /**
@@ -21,17 +24,19 @@ import { BlockedStockMarker, approvedIntoBlockedStock } from '../../shipments/Sh
  * out of `BuyerShipments.jsx` by the Phase 5 page split (no behaviour change).
  * @type {React.FC<DrilledAsnSectionProps>}
  */
-const DrilledAsnSection = ({ drilledAsns, asnByNumber, t }) => (
+const DrilledAsnSection = ({ drilledAsns, asnByNumber, t, title, emptyText, testId }) => (
   <section
     className="border border-border-subtle rounded-lg bg-bg-surface mb-6 overflow-x-auto"
-    data-testid="drill-asn-section"
-    aria-label={t('oc.drill.asnSection')}
+    data-testid={testId ?? 'drill-asn-section'}
+    aria-label={title ?? t('oc.drill.asnSection')}
   >
     <h2 className="text-sm font-semibold text-text-primary px-4 py-3 border-b border-border-subtle">
-      {t('oc.drill.asnSection')}
+      {title ?? t('oc.drill.asnSection')}
     </h2>
     {drilledAsns.length === 0 ? (
-      <p className="px-4 py-4 text-sm text-text-tertiary">{t('oc.summary.empty.asns.why')}</p>
+      <p className="px-4 py-4 text-sm text-text-tertiary">
+        {emptyText ?? t('oc.summary.empty.asns.why')}
+      </p>
     ) : (
       <ul className="divide-y divide-border-subtle">
         {drilledAsns.map((a) => (

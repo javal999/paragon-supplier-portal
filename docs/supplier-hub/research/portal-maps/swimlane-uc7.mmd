@@ -1,0 +1,14 @@
+---
+title: UC7 Inventory and capacity alerts (positive path)
+---
+sequenceDiagram
+  autonumber
+  participant Sup as Supplier · Fulfilment or Commercial
+  participant Plan as PTI · Planning (Material Planner menu)
+  Sup->>Sup: Stock, Capacity or Forecast & commitments · update (or miss) the figures
+  Sup-->>Plan: alert computed live, My tasks "High-risk inventory and capacity alerts"
+  Plan->>Plan: Alerts (task, filtered to open and high) · review highest risk first · Alert Open
+  Sup->>Sup: To do · "Alerts about your materials" · row links to Stock, Capacity or Forecast & commitments
+  Plan->>Plan: Alerts row link → Inventory, Capacity, Call-offs, Supplier responses or Demand anticipation · act there
+  Note over Plan: back to Alerts by browser back or menu
+  Plan->>Plan: Alerts · Close alert with a reason · Alert → Closed

@@ -1,9 +1,11 @@
 /** @import React from 'react' */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Info, Send, Radio } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Info, Send, Radio, MessageSquareReply } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import BuyerChannelTriage from './BuyerChannelTriage';
+import ChaseList from './ChaseList';
 import PageHeader from '@components/ui-v2/PageHeader';
 import PageMetaLine from '@components/ui-v2/PageMetaLine';
 import LivenessPill from '@components/ui-v2/LivenessPill';
@@ -11,6 +13,9 @@ import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import StatusPill from '@components/ui-v2/StatusPill';
 import Data from '@components/ui-v2/Data';
+import Button from '@components/ui-v2/Button';
+import SubTabs from '@components/ui-v2/SubTabs';
+import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
 import { useUnifiedChase } from '@services/query/chaseHooks';
 import { useConsolidationRows } from '@services/query/sdcBuyerHooks';
 import { useSuppliers } from '@services/query/hooks';
@@ -26,26 +31,36 @@ import { sdcClock } from '@services/sdc';
 import { formatDate } from '@lib/format';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Comm Hub C4a — the buyer/planner COMMUNICATION HUB (DEC-COMMS-PRIMARY front door).
+// SUPPLIER FOLLOW-UPS (IA P-05) — the buyer/planner follow-up page, built on the
+// Comm Hub C4a COMMUNICATION HUB (DEC-COMMS-PRIMARY front door).
 //
-// The honest replacement for the retired WhatsApp-Hub engagement mock. It renders
-// ONLY what the spine genuinely produces today — no fabricated threads, no fake
-// read-receipts, no presence, no "sent" affordance:
-//   · OUTBOUND QUEUE — deriveOutboundQueue (C3) over the buyer-gated unified chase
-//     (5a–5e). Per-supplier composed / awaiting / stale, worst-first. SIMULATED via
-//     the LivenessRegistry two-gate — every ask reads "composed — not sent" (no
-//     transport exists; invariant b).
-//   · CHANNEL-SOURCED SUBMISSIONS — the channelProvenanceStore audit trail: replies
-//     that were CONFIRMED into the governed ledger (C2), each linked to its channel
-//     message + submission session. A true audit trail, not a conversation replay.
-//   · TRIAGE — an honest note: no live inbound transport; a reply is triaged on the
-//     Channel Inbox (C2) under a supplier's context. Cross-supplier buyer triage +
-//     the buyer recording verb arrive in C4b/C4c (adjudicated).
+// P-05 merged the Chase page into this one (its old address redirects here): one follow-up job,
+// one page, one name. Three tabs, in the order a planner works them, with the
+// active tab in `?tab=` (`follow-up` is the default):
+//   · `follow-up` — SUPPLIERS TO FOLLOW UP: the unified chase list (5a–5e),
+//     worst-first, rendered by the shared ChaseList. Each card's "Record a reply"
+//     opens the `reply` tab with that supplier bound (`?supplier=<id>`).
+//   · `reply` — RECORD A REPLY: the C4d in-place triage (BuyerChannelTriage). An
+//     honest note: no live inbound transport; the operator pastes a reply under a
+//     supplier's context and records stock through the Inventory entry form.
+//   · `log` — REQUEST LOG:
+//       OUTBOUND QUEUE — deriveOutboundQueue (C3) over the buyer-gated unified
+//       chase. Per-supplier composed / awaiting / stale, worst-first. SIMULATED
+//       via the LivenessRegistry two-gate — every ask reads "composed — not sent"
+//       (no transport exists; invariant b).
+//       CHANNEL-SOURCED SUBMISSIONS — the channelProvenanceStore audit trail:
+//       replies that were CONFIRMED into the governed ledger (C2), each linked to
+//       its channel message + submission session. A true audit trail, not a
+//       conversation replay.
 //
-// RENDER-ONLY: reads the hooks + the append-only stores, derives the queue via the
-// pure C3 selector, and joins supplier names for display. It writes NOTHING and
-// dispatches NOTHING (C4a scope — reads + retirement + relabel). Buyer-gated: the
-// unified-chase read resolves [] for a supplier persona.
+// The no-live-channel banner sits above the tabs, so it is on screen whichever
+// tab is open.
+//
+// The page itself is RENDER-ONLY: it reads the hooks + the append-only stores,
+// derives the queue via the pure C3 selector, and joins supplier names for
+// display. The one write is the triage panel's, through the Inventory page's own
+// entry form. Buyer-gated: the unified-chase read resolves [] for a supplier
+// persona.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -65,6 +80,19 @@ const STATUS_VARIANT = {
   awaiting: 'success',
   stale: 'danger',
   composed: 'neutral'
+};
+
+/** The page's tabs, in display order; the first is the default.
+ * @typedef {'follow-up' | 'reply' | 'log'} FollowUpTab */
+// i18n-defer: tab identifiers (the `?tab=` values), not copy — each renders through t(TAB_LABEL_KEY[id])
+/** @type {readonly FollowUpTab[]} */
+const TABS = ['follow-up', 'reply', 'log'];
+
+/** @type {Record<FollowUpTab, string>} */
+const TAB_LABEL_KEY = {
+  'follow-up': 'buyerCommHub.tab.followUp',
+  reply: 'buyerCommHub.tab.reply',
+  log: 'buyerCommHub.tab.log'
 };
 
 /**
@@ -92,6 +120,15 @@ function foldReplies(rows) {
 /** @type {React.FC} */
 const BuyerCommHub = () => {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [tab, setTab] = useState(/** @type {FollowUpTab} */ ('follow-up'));
+  // Deep-link read: `?tab=reply&supplier=sup-007` lands on Record a reply with
+  // that supplier bound; a plain visit from the menu opens the follow-up list.
+  useUrlEnumParam('tab', TABS, setTab);
+  // The supplier the reply tab opens bound to. Held in state as well as in the
+  // address: an address write lands a render later than a state change, and the
+  // triage panel reads its supplier once, when it mounts.
+  const [replySupplierId, setReplySupplierId] = useState(() => searchParams.get('supplier') ?? '');
   const chaseQuery = useUnifiedChase();
   const consolidationQuery = useConsolidationRows();
   const suppliersQuery = useSuppliers();
@@ -119,6 +156,46 @@ const BuyerCommHub = () => {
   }, [suppliersQuery.data]);
 
   const CRUMB = [t('buyerCommHub.crumb.intelligence'), t('buyerCommHub.crumb.hub')];
+
+  /**
+   * Write the page address in place (no new history entry), so Back still
+   * returns to the page the user came from rather than to an earlier tab.
+   * @param {(params: URLSearchParams) => void} edit
+   */
+  const editParams = (edit) =>
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        edit(next);
+        return next;
+      },
+      { replace: true }
+    );
+
+  /** @param {FollowUpTab} next */
+  const changeTab = (next) => {
+    setTab(next);
+    editParams((p) => p.set('tab', next));
+  };
+
+  /**
+   * "Record a reply" on a follow-up card: open the reply tab bound to that supplier.
+   * @param {string} supplierId
+   */
+  const recordReplyFor = (supplierId) => {
+    setReplySupplierId(supplierId);
+    setTab('reply');
+    editParams((p) => {
+      p.set('tab', 'reply');
+      p.set('supplier', supplierId);
+    });
+  };
+
+  /** @param {string} supplierId */
+  const keepReplySupplier = (supplierId) => {
+    setReplySupplierId(supplierId);
+    editParams((p) => (supplierId ? p.set('supplier', supplierId) : p.delete('supplier')));
+  };
 
   if (chaseQuery.isPending) return <LoadingState breadcrumb={CRUMB} />;
   if (chaseQuery.isError)
@@ -153,150 +230,200 @@ const BuyerCommHub = () => {
         </div>
       </div>
 
-      {/* ── Outbound requests (chase-derived; composed — not sent) ─────────── */}
-      <section className="mb-8" data-testid="commhub-outbound">
-        <div className="flex items-center gap-2 mb-1">
-          <Send size={16} className="text-teal" aria-hidden="true" />
-          <h2 className="text-section text-text-primary">{t('buyerCommHub.outbound.title')}</h2>
-        </div>
-        <p className="text-sm text-text-tertiary mb-4">{t('buyerCommHub.outbound.subtitle')}</p>
+      <SubTabs
+        options={TABS.map((id) => ({
+          id,
+          label: t(TAB_LABEL_KEY[id]),
+          ...(id === 'follow-up' ? { count: views.length } : {})
+        }))}
+        value={tab}
+        onChange={changeTab}
+        className="mb-6"
+      />
 
-        {queue.length === 0 ? (
-          <div className="border border-border-subtle rounded-lg bg-white px-6 py-8 text-center text-sm text-text-tertiary">
-            {t('buyerCommHub.outbound.empty')}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {queue.map((entry) => (
-              <div
-                key={entry.supplierId}
-                className="border border-border-subtle rounded-lg bg-white overflow-hidden"
-                data-testid="commhub-outbound-row"
+      {/* ── Suppliers to follow up (the unified chase list) ────────────────── */}
+      {tab === 'follow-up' && (
+        <section data-testid="commhub-followup">
+          <ChaseList
+            views={views}
+            nameOf={nameOf}
+            renderAction={(view) => (
+              <Button
+                variant="outline"
+                icon={MessageSquareReply}
+                onClick={() => recordReplyFor(view.supplierId)}
+                data-testid={`followup-record-reply-${view.supplierId}`}
               >
-                <div className="flex flex-wrap items-center gap-3 px-4 py-3 border-b border-border-subtle bg-bg-subtle">
-                  <span className="text-sm font-semibold text-text-primary">
-                    {nameOf(entry.supplierId)}
-                  </span>
-                  <StatusPill variant={SEVERITY_VARIANT[entry.severity]}>
-                    {t(`buyerCommHub.severity.${entry.severity}`)}
-                  </StatusPill>
-                  <StatusPill variant={STATUS_VARIANT[entry.status]}>
-                    {t(`buyerCommHub.status.${entry.status}`)}
-                  </StatusPill>
-                  {/* Honesty: no transport — every ask reads composed, never sent. */}
-                  <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-warning-hover">
-                    <span
-                      className="h-1.5 w-1.5 rounded-full border border-warning"
-                      aria-hidden="true"
-                    />
-                    {t('buyerCommHub.outbound.composedNotSent')}
-                  </span>
-                </div>
+                {t('buyerCommHub.followUp.recordReply')}
+              </Button>
+            )}
+          />
+        </section>
+      )}
 
-                <div className="px-4 py-3 flex flex-col gap-3">
-                  {entry.dataReasons.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {entry.dataReasons.map((reason, i) => (
-                        // eslint-disable-next-line react/no-array-index-key -- reason codes can repeat and have no id; read-only, stateless pills recomputed whole from the chase view
-                        <StatusPill key={`${reason}-${i}`} variant="warning">
-                          {t(`buyerCommHub.reason.${reason}`)}
-                        </StatusPill>
-                      ))}
-                    </div>
-                  )}
+      {/* ── Record a reply (C4d — in-place recording confirm) ──────────────── */}
+      {tab === 'reply' && (
+        <BuyerChannelTriage
+          initialSupplierId={replySupplierId}
+          onSupplierChange={keepReplySupplier}
+          onRecorded={() => setRecordTick((n) => n + 1)}
+        />
+      )}
 
-                  {entry.subjectRefs.length > 0 && (
-                    <ul className="flex flex-col divide-y divide-border-subtle">
-                      {entry.subjectRefs.map((ref) => (
-                        <li
-                          key={`${ref.agreementId}-${ref.itemSeq}-${ref.releaseSeq ?? 'item'}`}
-                          className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-sm"
-                        >
-                          <Data className="text-sm">{ref.materialCode}</Data>
-                          <span className="text-text-tertiary text-xs">
-                            {t('buyerCommHub.outbound.subjectDue', { date: formatDate(ref.dueAt) })}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+      {/* ── Request log (outbound requests + channel-sourced submissions) ──── */}
+      {tab === 'log' && (
+        <div data-testid="commhub-log">
+          {/* ── Outbound requests (chase-derived; composed — not sent) ─────────── */}
+          <section className="mb-8" data-testid="commhub-outbound">
+            <div className="flex items-center gap-2 mb-1">
+              <Send size={16} className="text-teal" aria-hidden="true" />
+              <h2 className="text-section text-text-primary">{t('buyerCommHub.outbound.title')}</h2>
+            </div>
+            <p className="text-sm text-text-tertiary mb-4">{t('buyerCommHub.outbound.subtitle')}</p>
 
-                  <div className="text-xs text-text-tertiary">
-                    {entry.lastSentAt ? (
-                      <span>
-                        {t('buyerCommHub.outbound.lastAsked', {
-                          date: formatDate(entry.lastSentAt)
-                        })}
-                        {entry.lastChannel && (
-                          <>
-                            {' '}
-                            ·{' '}
-                            {t('buyerCommHub.outbound.channel', {
-                              channel: t(`buyerCommHub.channel.${entry.lastChannel}`)
-                            })}
-                          </>
-                        )}
-                      </span>
-                    ) : (
-                      <span>{t('buyerCommHub.outbound.neverAsked')}</span>
-                    )}
-                  </div>
-                </div>
+            {queue.length === 0 ? (
+              <div className="border border-border-subtle rounded-lg bg-white px-6 py-8 text-center text-sm text-text-tertiary">
+                {t('buyerCommHub.outbound.empty')}
               </div>
-            ))}
-          </div>
-        )}
-      </section>
+            ) : (
+              <div className="space-y-3">
+                {queue.map((entry) => (
+                  <div
+                    key={entry.supplierId}
+                    className="border border-border-subtle rounded-lg bg-white overflow-hidden"
+                    data-testid="commhub-outbound-row"
+                  >
+                    <div className="flex flex-wrap items-center gap-3 px-4 py-3 border-b border-border-subtle bg-bg-subtle">
+                      <span className="text-sm font-semibold text-text-primary">
+                        {nameOf(entry.supplierId)}
+                      </span>
+                      <StatusPill variant={SEVERITY_VARIANT[entry.severity]}>
+                        {t(`buyerCommHub.severity.${entry.severity}`)}
+                      </StatusPill>
+                      <StatusPill variant={STATUS_VARIANT[entry.status]}>
+                        {t(`buyerCommHub.status.${entry.status}`)}
+                      </StatusPill>
+                      {/* Honesty: no transport — every ask reads composed, never sent. */}
+                      <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-warning-hover">
+                        <span
+                          className="h-1.5 w-1.5 rounded-full border border-warning"
+                          aria-hidden="true"
+                        />
+                        {t('buyerCommHub.outbound.composedNotSent')}
+                      </span>
+                    </div>
 
-      {/* ── Channel-sourced submissions (provenance audit trail) ───────────── */}
-      <section className="mb-8" data-testid="commhub-provenance">
-        <div className="flex items-center gap-2 mb-1">
-          <Radio size={16} className="text-teal" aria-hidden="true" />
-          <h2 className="text-section text-text-primary">{t('buyerCommHub.provenance.title')}</h2>
+                    <div className="px-4 py-3 flex flex-col gap-3">
+                      {entry.dataReasons.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {entry.dataReasons.map((reason, i) => (
+                            // eslint-disable-next-line react/no-array-index-key -- reason codes can repeat and have no id; read-only, stateless pills recomputed whole from the chase view
+                            <StatusPill key={`${reason}-${i}`} variant="warning">
+                              {t(`buyerCommHub.reason.${reason}`)}
+                            </StatusPill>
+                          ))}
+                        </div>
+                      )}
+
+                      {entry.subjectRefs.length > 0 && (
+                        <ul className="flex flex-col divide-y divide-border-subtle">
+                          {entry.subjectRefs.map((ref) => (
+                            <li
+                              key={`${ref.agreementId}-${ref.itemSeq}-${ref.releaseSeq ?? 'item'}`}
+                              className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-sm"
+                            >
+                              <Data className="text-sm">{ref.materialCode}</Data>
+                              <span className="text-text-tertiary text-xs">
+                                {t('buyerCommHub.outbound.subjectDue', {
+                                  date: formatDate(ref.dueAt)
+                                })}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                      <div className="text-xs text-text-tertiary">
+                        {entry.lastSentAt ? (
+                          <span>
+                            {t('buyerCommHub.outbound.lastAsked', {
+                              date: formatDate(entry.lastSentAt)
+                            })}
+                            {entry.lastChannel && (
+                              <>
+                                {' '}
+                                ·{' '}
+                                {t('buyerCommHub.outbound.channel', {
+                                  channel: t(`buyerCommHub.channel.${entry.lastChannel}`)
+                                })}
+                              </>
+                            )}
+                          </span>
+                        ) : (
+                          <span>{t('buyerCommHub.outbound.neverAsked')}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* ── Channel-sourced submissions (provenance audit trail) ───────────── */}
+          <section className="mb-8" data-testid="commhub-provenance">
+            <div className="flex items-center gap-2 mb-1">
+              <Radio size={16} className="text-teal" aria-hidden="true" />
+              <h2 className="text-section text-text-primary">
+                {t('buyerCommHub.provenance.title')}
+              </h2>
+            </div>
+            <p className="text-sm text-text-tertiary mb-4">
+              {t('buyerCommHub.provenance.subtitle')}
+            </p>
+
+            {provenance.length === 0 ? (
+              <div className="border border-border-subtle rounded-lg bg-white px-6 py-8 text-center text-sm text-text-tertiary">
+                {t('buyerCommHub.provenance.empty')}
+              </div>
+            ) : (
+              <ul className="space-y-2">
+                {provenance.map((ref) => (
+                  <li
+                    // Key: channelMessageId. Both writers append at most one ref per
+                    // message (they check forMessage() first), so it is unique.
+                    key={ref.channelMessageId}
+                    className="border border-border-subtle rounded-lg bg-white px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm"
+                    data-testid="commhub-provenance-row"
+                  >
+                    <StatusPill variant="success">
+                      {t('buyerCommHub.provenance.recorded')}
+                    </StatusPill>
+                    <span className="text-text-secondary">
+                      {t('buyerCommHub.provenance.message')}{' '}
+                      <Data className="text-text-primary">{ref.channelMessageId}</Data>
+                    </span>
+                    <span className="text-text-tertiary text-xs">
+                      {t('buyerCommHub.provenance.session')}{' '}
+                      <Data className="text-text-secondary">{ref.sessionId}</Data>
+                    </span>
+                    <span className="text-text-tertiary text-xs">
+                      {ref.causationAnchor ? (
+                        <>
+                          {t('buyerCommHub.provenance.correlation')}{' '}
+                          <Data className="text-text-secondary">{ref.causationAnchor}</Data>
+                        </>
+                      ) : (
+                        t('buyerCommHub.provenance.noCorrelation')
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         </div>
-        <p className="text-sm text-text-tertiary mb-4">{t('buyerCommHub.provenance.subtitle')}</p>
-
-        {provenance.length === 0 ? (
-          <div className="border border-border-subtle rounded-lg bg-white px-6 py-8 text-center text-sm text-text-tertiary">
-            {t('buyerCommHub.provenance.empty')}
-          </div>
-        ) : (
-          <ul className="space-y-2">
-            {provenance.map((ref) => (
-              <li
-                // Key: channelMessageId. Both writers append at most one ref per
-                // message (they check forMessage() first), so it is unique.
-                key={ref.channelMessageId}
-                className="border border-border-subtle rounded-lg bg-white px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm"
-                data-testid="commhub-provenance-row"
-              >
-                <StatusPill variant="success">{t('buyerCommHub.provenance.recorded')}</StatusPill>
-                <span className="text-text-secondary">
-                  {t('buyerCommHub.provenance.message')}{' '}
-                  <Data className="text-text-primary">{ref.channelMessageId}</Data>
-                </span>
-                <span className="text-text-tertiary text-xs">
-                  {t('buyerCommHub.provenance.session')}{' '}
-                  <Data className="text-text-secondary">{ref.sessionId}</Data>
-                </span>
-                <span className="text-text-tertiary text-xs">
-                  {ref.causationAnchor ? (
-                    <>
-                      {t('buyerCommHub.provenance.correlation')}{' '}
-                      <Data className="text-text-secondary">{ref.causationAnchor}</Data>
-                    </>
-                  ) : (
-                    t('buyerCommHub.provenance.noCorrelation')
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      {/* ── Triage a channel reply (C4d — in-place recording confirm) ──────── */}
-      <BuyerChannelTriage onRecorded={() => setRecordTick((n) => n + 1)} />
+      )}
     </AppShellV2>
   );
 };

@@ -1,0 +1,24 @@
+---
+title: Data map · Order plan
+---
+flowchart LR
+  subgraph WritesPTI["Writes · PTI"]
+    nbuyer_reschedule["Make warehouse room"]:::menu
+    nbuyer_what_if["What-if sandbox"]:::menu
+  end
+  OBJ(["Order plan<br/><small>Recommended orders, warehouse decisions, SAP change marks, what-if scenarios</small>"]):::obj
+  subgraph ReadsPTI["Reads · PTI"]
+    nbuyer_this_week["This week"]:::menu
+    nbuyer_order_plan["What to order"]:::menu
+    nbuyer_stabilise["Publish to suppliers"]:::menu
+  end
+  nbuyer_reschedule -->|writes| OBJ
+  nbuyer_what_if -->|writes| OBJ
+  OBJ --> nbuyer_this_week
+  OBJ --> nbuyer_order_plan
+  OBJ --> nbuyer_stabilise
+  classDef menu fill:#eef4ff,stroke:#3b6fd8,color:#10213f
+  classDef avatar fill:#f3eefc,stroke:#7a52c7,color:#24124a
+  classDef urlonly fill:#fff4e5,stroke:#c77700,stroke-dasharray:5 3,color:#3d2600
+  classDef detail fill:#f2f2f2,stroke:#777,color:#222
+  classDef obj fill:#e9f7ef,stroke:#2e8b57,color:#0f3020

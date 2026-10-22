@@ -40,7 +40,7 @@ describe('BL-204 · flag off (DRC-D10)', () => {
     await screen.findByTestId('supda-not-available');
     // The rendered sidebar holds the Planning items but no entry for this page.
     const nav = screen.getByRole('navigation');
-    expect(within(nav).getByRole('button', { name: 'Forecast & commitments' })).toBeInTheDocument();
+    expect(within(nav).getByRole('button', { name: 'Foresight commitments' })).toBeInTheDocument();
     expect(within(nav).queryByRole('button', { name: 'Demand anticipation' })).toBeNull();
   });
 

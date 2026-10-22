@@ -29,7 +29,7 @@ export const gapDraftKey = (g, c) =>
  *
  * @param {string} today The SDC clock's date (`YYYY-MM-DD`).
  * @returns {{
- *   drafted: ReadonlySet<string>;
+ *   drafted: ReadonlyMap<string, string>;
  *   pending: boolean;
  *   createDraft: (g: SupplyGapRow, c: ProposedCallOff) => Promise<void>;
  * }}
@@ -39,7 +39,7 @@ export const useDraftGapCallOff = (today) => {
   const { toast } = useToast();
   const refusalText = useRefusalText();
   const command = useCallOffCommand();
-  const [drafted, setDrafted] = useState(/** @type {ReadonlySet<string>} */ (new Set()));
+  const [drafted, setDrafted] = useState(/** @type {ReadonlyMap<string, string>} */ (new Map()));
 
   /**
    * @param {SupplyGapRow} g
@@ -63,7 +63,7 @@ export const useDraftGapCallOff = (today) => {
         });
         return;
       }
-      setDrafted((prev) => new Set(prev).add(gapDraftKey(g, c)));
+      setDrafted((prev) => new Map(prev).set(gapDraftKey(g, c), res.entityId ?? ''));
       toast({
         variant: 'success',
         title: t('supplyGap.toast.drafted'),

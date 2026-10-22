@@ -125,15 +125,16 @@ describe('⚠️ §70 · THE MATCHER, BEFORE ANY CLAIM ABOUT THE TREE', () => {
     // read only default imports and the route matcher only one-line routes, so
     // these seven shell pages were never checked: the four named imports
     // (AdminTolerances, AdminAlertThresholds, Buyer/SupplierFixedStockReconcile)
-    // and the three `lazy()` pages inside `<Suspense>` (PlanGrid,
-    // BuyerCollaboration, SupplierForecasts).
+    // and the `lazy()` pages inside `<Suspense>`. IA P-04 and P-10 (2026-10-21)
+    // left the router with no lazy route: the two SDC pages are lazy-loaded tabs
+    // of Foresight commitments now, and PlanGrid is retired. The named imports
+    // still resolve, and no route may name a page the router no longer imports.
     expect(sourceOf('AdminTolerances')).toMatch(/admin\/AdminRuleValues\/index\.jsx$/);
     expect(sourceOf('SupplierFixedStockReconcile')).toMatch(/FixedStockReconcile\.jsx$/);
-    expect(sourceOf('PlanGrid')).toMatch(/PlanGrid\.jsx$/);
     const byComponent = new Map(routes().map((r) => [r.component, r.path]));
     expect(byComponent.get('AdminTolerances')).toBe('/buyer/admin/tolerances');
-    expect(byComponent.has('PlanGrid')).toBe(true);
-    expect(byComponent.has('BuyerCollaboration')).toBe(true);
+    expect(byComponent.has('BuyerCollaboration')).toBe(false);
+    expect(byComponent.has('SupplierForecasts')).toBe(false);
     // Known-false: a wrapper is never taken for the page it wraps.
     expect(byComponent.has('Suspense')).toBe(false);
     expect(byComponent.has('LoadingState')).toBe(false);
@@ -179,8 +180,10 @@ describe('§70 · every page folder the router imports is read as its whole fold
     expect(pages.length).toBeGreaterThan(0);
     expect(pages).toContain('BuyerSourcing');
     expect(pages).toContain('SupplierShipments');
-    // A lazy import is found too.
-    expect(pages).toContain('SupplierForecasts');
+    // A page folder behind a redirect-free route is found; the SDC folders are
+    // tabs now (IA P-04), reached through their host page, not the router.
+    expect(pages).toContain('BuyerCommitments');
+    expect(pages).not.toContain('SupplierForecasts');
     // Known-false: a routed single-file page is not a page folder.
     expect(pages).not.toContain('RolesCatalogue');
     // Every member is a page folder in the tree. (Not the converse: a page the

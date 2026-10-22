@@ -1,0 +1,19 @@
+---
+title: UC4 Forecast collaboration (positive path)
+---
+sequenceDiagram
+  autonumber
+  participant Plan as PTI · Planning (Material Planner menu)
+  participant Com as Supplier · Commercial
+  participant BO as Supplier · Back Office
+  Note over Plan: My tasks weekly card or menu: This week
+  Plan->>Plan: This week · reads the cycle cards, opens the next step (step strip)
+  Plan-->>Com: To do "Forecast commitments due soon" (filtered)
+  Com->>Com: Forecast & commitments · enter qty, Save draft · Commitment Draft
+  Com->>Com: Forecast & commitments · Submit all · Commitment → Submitted
+  Note over Com: if capacity is not confirmed, link to Capacity
+  Com-->>BO: same page, no separate task
+  BO->>BO: Forecast & commitments · Acknowledge forecast rows
+  Com-->>Plan: My tasks "Forecast commitments outside tolerance to review" (filtered)
+  Plan->>Plan: Supplier responses · Accept · Commitment → Accepted
+  Note over Plan: page also links to a second commitments page, Supplier Collaboration (no menu item)

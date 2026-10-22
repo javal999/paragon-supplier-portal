@@ -9,9 +9,9 @@
 // before) and "Next" (the step after).
 //
 // The links follow the menu order: This week (phase 2, B1) → What to order → Make warehouse room
-// → Publish to suppliers → Supplier responses → Supplier performance → Forecast
-// quality → Feedstock reconcile, and back to What to order for the next
-// cycle. An engine page links to the page whose input it is, or that reaches
+// → Publish to suppliers → Foresight commitments, and back to This week for the
+// next cycle (IA P-07). The Review pages run Supplier performance → Forecast
+// quality → Feedstock reconcile, and back to What to order. An engine page links to the page whose input it is, or that reaches
 // it (`fux-build-00-brief.md`, "Reached from").
 //
 // FUX phase 2 B2 (F-01): Published versions is no longer a page. It is the
@@ -101,7 +101,9 @@ export const FORECAST_PAGES = Object.freeze({
     titleKey: 'hub.nav.pti.supplierResponses',
     sectionKey: WEEKLY,
     uses: 'publish',
-    next: 'performance'
+    // IA P-07 (IA-B10) — the weekly cycle ends back at This week, inside its
+    // own section, instead of jumping to Supplier performance.
+    next: 'thisWeek'
   },
   forecastQuality: {
     path: '/buyer/demand-forecast',

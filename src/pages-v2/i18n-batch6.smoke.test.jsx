@@ -3,12 +3,8 @@ import { screen, act } from '@testing-library/react';
 import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 import i18n from '@lib/i18n';
 import BuyerSuppliers from './BuyerSuppliers';
-import BuyerAnalytics from './BuyerAnalytics';
 import BuyerScorecard from './BuyerScorecard';
 import BuyerInventory from './BuyerInventory';
-import Marketplace from './Marketplace';
-import BuyerDashboard from './BuyerDashboard';
-import SupplierMyStorefront from './SupplierMyStorefront';
 import SupplierInventory from './SupplierInventory';
 import SupplierPerformance from './SupplierPerformance';
 
@@ -35,15 +31,8 @@ describe('Batch 6 — tail-sweep bilingual render (no header EN leak)', () => {
   it('BuyerSuppliers: ID header, English gone', async () => {
     await setLang('id');
     renderWithProviders(<BuyerSuppliers />, { route: '/buyer/suppliers' });
-    expect(await screen.findByText('Direktori Pemasok')).toBeInTheDocument();
-    expect(screen.queryByText('Supplier Directory')).not.toBeInTheDocument();
-  });
-
-  it('BuyerAnalytics: ID header, English gone', async () => {
-    await setLang('id');
-    renderWithProviders(<BuyerAnalytics />, { route: '/buyer/analytics' });
-    expect(await screen.findByText('Analitik & Intelijen Pengadaan')).toBeInTheDocument();
-    expect(screen.queryByText('Analytics & Procurement Intelligence')).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Pemasok' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Suppliers' })).not.toBeInTheDocument();
   });
 
   it('BuyerScorecard: ID header, English gone', async () => {
@@ -60,30 +49,6 @@ describe('Batch 6 — tail-sweep bilingual render (no header EN leak)', () => {
     // REQ-E08-01 renamed the page to the menu item (NV-05): Inventory / Stok.
     expect(await screen.findByRole('heading', { name: 'Stok' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Inventory' })).not.toBeInTheDocument();
-  });
-
-  it('Marketplace: ID header, English gone', async () => {
-    await setLang('id');
-    renderWithProviders(<Marketplace />, { route: '/marketplace' });
-    expect(await screen.findByText('Pasar Pemasok Global')).toBeInTheDocument();
-    expect(screen.queryByText('Global Supplier Marketplace')).not.toBeInTheDocument();
-  });
-
-  it('BuyerDashboard: ID shell header, English gone', async () => {
-    await setLang('id');
-    renderWithProviders(<BuyerDashboard />, { route: '/buyer/dashboard' });
-    expect(await screen.findByText('Pusat Komando Pengadaan')).toBeInTheDocument();
-    expect(screen.queryByText('Procurement Command Center')).not.toBeInTheDocument();
-  });
-
-  it('SupplierMyStorefront: ID header, English gone', async () => {
-    await setLang('id');
-    renderWithProviders(<SupplierMyStorefront />, {
-      identity: SUPPLIER,
-      route: '/supplier/storefront'
-    });
-    expect(await screen.findByText('Katalog Saya')).toBeInTheDocument();
-    expect(screen.queryByText('My Catalog')).not.toBeInTheDocument();
   });
 
   it('SupplierInventory: ID header, English gone', async () => {
@@ -103,7 +68,7 @@ describe('Batch 6 — tail-sweep bilingual render (no header EN leak)', () => {
       identity: SUPPLIER,
       route: '/supplier/performance'
     });
-    expect(await screen.findByText('Kinerja Saya')).toBeInTheDocument();
-    expect(screen.queryByText('My Performance')).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Kinerja saya' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'My performance' })).not.toBeInTheDocument();
   });
 });

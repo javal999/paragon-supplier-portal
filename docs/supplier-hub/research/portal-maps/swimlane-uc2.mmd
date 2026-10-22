@@ -1,0 +1,24 @@
+---
+title: UC2 Purchase order to payment (positive path)
+---
+sequenceDiagram
+  autonumber
+  participant Ful as Supplier · Fulfilment
+  participant Rcv as PTI · Receiving
+  participant BO as Supplier · Back Office
+  participant Fin as PTI · Finance
+  Note over Ful: To do "Purchase orders to respond to" (filtered)
+  Ful->>Ful: Purchase orders · Acknowledge receipt · PO Sent → Acknowledged
+  Ful->>Ful: Purchase orders · Confirm order · PO → Confirmed
+  Ful->>Ful: Purchase orders · Create ASN → toast "Open My Shipments & ASN to create it there."
+  Note over Ful: menu, or To do "Confirmed orders ready to ship: create the ASN"
+  Ful->>Ful: Shipments & ASN · Create ASN, Submit ASN · ASN Draft → Submitted
+  Ful-->>Rcv: My tasks "Inbound shipments to receive" (opens unfiltered Shipments & ASN)
+  Rcv->>Rcv: Shipments & ASN → Goods receipts (link)
+  Rcv->>Rcv: Goods receipts · New GR, 4-step wizard, Create GR · GR Approved → Posting to SAP
+  Rcv-->>BO: no To do task for a posted receipt
+  Note over BO: menu: Invoices (To do lists only "Invoices awaiting payment")
+  BO->>BO: Invoices · New invoice, Submit invoice · Invoice Submitted → Matched
+  BO-->>Fin: My tasks "Overdue supplier invoices" only when overdue
+  Note over Fin: menu: Invoices (Approved invoices only can be released)
+  Fin->>Fin: Invoices · Release payment · Invoice → Releasing Payment

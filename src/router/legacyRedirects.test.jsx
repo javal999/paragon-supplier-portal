@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 // ─────────────────────────────────────────────────────────────────────────────
 // The retired RFx paths (operator decision 2026-09-21: RFI, RFQ and RFP became
-// three modules with their own routes). Every old path must still land, and
+// three modules with their own routes) and, since IA P-02, the retired Order
+// summary paths (now a view of Purchase orders). Every old path must still land, and
 // must land CARRYING what the old link carried — `?rfi=<id>`, router state, an
 // event id. The redirect rows are DERIVED from AppRouter's source, never listed
 // here, so a redirect added later is covered without anybody remembering to.
@@ -55,7 +56,7 @@ const Probe = () => {
 const fill = (pattern) =>
   pattern.replace(/:(\w+)/g, /** @param {string} name */ (_m, name) => `${name}-x1`);
 
-describe('the retired RFx paths redirect to their modules', () => {
+describe('the retired paths redirect to their pages', () => {
   it('the population is derived from the router, and holds the known members', () => {
     // Population guard FIRST: a derivation that returns nothing reports clean.
     const from = REDIRECTS.map((r) => r.from);
@@ -68,12 +69,24 @@ describe('the retired RFx paths redirect to their modules', () => {
     expect(PAGES).not.toContain('/buyer/sourcing');
   });
 
+  it('IA P-02 — the retired Order summary paths are rows, each naming its view', () => {
+    expect(REDIRECTS).toContainEqual({
+      from: '/buyer/order-summary',
+      to: '/buyer/orders?view=summary'
+    });
+    expect(REDIRECTS).toContainEqual({
+      from: '/supplier/order-summary',
+      to: '/supplier/orders?view=summary'
+    });
+  });
+
   it('every redirect points at a page the router serves, never at another redirect', () => {
-    const missing = REDIRECTS.filter((r) => !PAGES.includes(r.to));
+    const missing = REDIRECTS.filter((r) => !PAGES.includes(r.to.split('?')[0]));
     expect(missing).toEqual([]);
   });
 
   it.each(REDIRECTS)('$from lands on $to, keeping query, state and params', ({ from, to }) => {
+    const [toPath, toQuery = ''] = to.split('?');
     render(
       <MemoryRouter
         initialEntries={[
@@ -82,19 +95,39 @@ describe('the retired RFx paths redirect to their modules', () => {
       >
         <Routes>
           <Route path={from} element={<LegacyRedirect to={to} />} />
-          <Route path={to} element={<Probe />} />
+          <Route path={toPath} element={<Probe />} />
         </Routes>
       </MemoryRouter>
     );
     const seen = JSON.parse(screen.getByTestId('probe').textContent ?? '{}');
     expect(seen.pathname).toBe(
       generatePath(
-        to,
-        Object.fromEntries([...to.matchAll(/:(\w+)/g)].map((m) => [m[1], `${m[1]}-x1`]))
+        toPath,
+        Object.fromEntries([...toPath.matchAll(/:(\w+)/g)].map((m) => [m[1], `${m[1]}-x1`]))
       )
     );
-    expect(seen.search).toBe('?rfi=rfi-001');
+    // The redirect's own params come first; the incoming ones ride along after.
+    expect(seen.search).toBe(toQuery ? `?${toQuery}&rfi=rfi-001` : '?rfi=rfi-001');
     expect(seen.state).toEqual({ sourceRequisitionId: 'PR-1' });
+  });
+
+  it("a redirect's own param wins over an incoming one of the same name; the rest are kept", () => {
+    render(
+      <MemoryRouter
+        initialEntries={[{ pathname: '/buyer/order-summary', search: '?view=list&po=po-001' }]}
+      >
+        <Routes>
+          <Route
+            path="/buyer/order-summary"
+            element={<LegacyRedirect to="/buyer/orders?view=summary" />}
+          />
+          <Route path="/buyer/orders" element={<Probe />} />
+        </Routes>
+      </MemoryRouter>
+    );
+    const seen = JSON.parse(screen.getByTestId('probe').textContent ?? '{}');
+    expect(seen.pathname).toBe('/buyer/orders');
+    expect(seen.search).toBe('?view=summary&po=po-001');
   });
 
   it('no in-app link still names a retired path — only the router does', () => {

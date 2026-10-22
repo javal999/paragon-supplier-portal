@@ -1,0 +1,20 @@
+---
+title: Target map · PTI Home (P-03, P-05, P-08)
+---
+flowchart LR
+  subgraph Home["Home"]
+    tasks["My tasks"]:::changed
+    follow["Supplier follow-ups (was Supplier replies + Chase)"]:::changed
+  end
+  subgraph Gone["Leaves the portal's page list"]
+    chase["Chase (URL only)"]:::gone
+  end
+  tasks -->|task opens the filtered queue or the record| follow
+  tasks -->|task| po["Purchase orders"]:::menu
+  tasks -->|task, filtered to Ready to award| rfq["RFQ"]:::menu
+  tasks -->|new task: requisitions to approve| pr["Requisitions"]:::changed
+  tasks -->|new task: declared certificates to review| docs["Supplier documents"]:::changed
+  chase -.->|merged into| follow
+  classDef menu fill:#eef4ff,stroke:#3b6fd8,color:#10213f
+  classDef changed fill:#e9f7ef,stroke:#2e8b57,color:#0f3020
+  classDef gone fill:#fdecec,stroke:#b42318,stroke-dasharray:5 3,color:#4a0d0d

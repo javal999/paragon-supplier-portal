@@ -169,7 +169,11 @@ export const orderPlanEn = {
   // FUX-D3 — the decision moved to Make warehouse room; this page keeps the count.
   'op.short.count_one': '{{count}} week does not fit.',
   'op.short.count_other': '{{count}} weeks do not fit.',
-  'op.short.decide': 'Decide on Make warehouse room.'
+  'op.short.decide': 'Decide on Make warehouse room.',
+  'op.tab.orders': 'Orders',
+  'op.tab.fill': 'Warehouse fill',
+  'op.tab.sizing': 'How it is sized',
+  'op.action.openDraft': 'Open the draft call-off'
 };
 
 /** @type {Record<string, string>} */
@@ -333,5 +337,9 @@ export const orderPlanId = {
   'op.fill.beyondCap': '{{value}} melebihi batas',
   // FUX-D3 — keputusan dipindah ke Kosongkan ruang gudang; halaman ini menyimpan jumlahnya.
   'op.short.count_other': '{{count}} minggu tidak muat.',
-  'op.short.decide': 'Putuskan di Kosongkan ruang gudang.'
+  'op.short.decide': 'Putuskan di Kosongkan ruang gudang.',
+  'op.tab.orders': 'Pesanan',
+  'op.tab.fill': 'Isi gudang',
+  'op.tab.sizing': 'Cara jumlahnya dihitung',
+  'op.action.openDraft': 'Buka draf call-off'
 };

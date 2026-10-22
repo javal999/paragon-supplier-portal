@@ -5,6 +5,7 @@ import { drilledPoNumber, usePoDrillFilter } from '../../orders/PoDrillFilter';
 import { receiptsForPo } from '../../orders/orderSummaryModel';
 import { TODAY } from '../const';
 import { isInRange, matchesGroup, totals } from '../utils';
+import { grStatusNeedsAction } from '../../widgets/buyerDerivations';
 
 /**
  * @typedef {object} GoodsReceiptListInput
@@ -51,6 +52,7 @@ export function useGoodsReceiptList({ goodsReceipts, tab, dateFilter, search }) 
     }
     return {
       all: allGRs.length,
+      action: allGRs.filter((g) => grStatusNeedsAction(g.status)).length,
       pending,
       underInspection,
       approved,

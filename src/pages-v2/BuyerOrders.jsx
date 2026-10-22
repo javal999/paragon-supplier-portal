@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { isActiveAsn } from '@services/transitions/fulfilmentRules';
 import { useSearchParams } from 'react-router-dom';
 import { OrderNotFound, PoFilterBanner, usePoDrillFilter } from './orders/PoDrillFilter';
+import OrdersViewSwitch, { useOrdersView } from './orders/OrdersViewSwitch';
+import BuyerOrderSummary from './BuyerOrderSummary';
 import { useTranslation } from 'react-i18next';
 /** @import { TFunction } from 'i18next' */
 /** @import { LucideIcon } from 'lucide-react' */
@@ -299,8 +301,11 @@ const buildComms = (po) => [
  */
 const lineTotal = (li) => poLineValue(li);
 
-/** @type {React.FC} */
-const BuyerOrders = () => {
+/**
+ * The List view of Purchase orders: the PO worklist and its panel.
+ * @type {React.FC}
+ */
+const BuyerOrdersList = () => {
   const { t } = useTranslation();
   const ORDERS_CRUMB = [t('buyerOrders.crumb.transact'), t('buyerOrders.crumb.purchaseOrders')];
   const [group, setGroup] = useState(/** @type {GroupTab} */ ('all'));
@@ -512,6 +517,8 @@ const BuyerOrders = () => {
             flat "Sample" here would understate a real signal. */}
         <ProvenanceMarker capability="purchaseOrders" className="ml-3 align-middle" />
       </PageMetaLine>
+
+      <OrdersViewSwitch persona="buyer" view="list" />
 
       {/* REQ-E07-08 AC-03 — this page reads SAP data; say how old it is. */}
       <SapDataAgeBanner page="purchaseOrders" className="mb-4" />
@@ -791,6 +798,7 @@ const BuyerOrders = () => {
             <RespondByLine po={livePO ?? selectedPO} nowIso={nowIso} />
 
             <PoLifecycleSteps
+              persona="buyer"
               po={livePO ?? selectedPO}
               asnCount={asnCountFor(livePO ?? selectedPO)}
             />
@@ -995,5 +1003,14 @@ const BuyerOrders = () => {
     </AppShellV2>
   );
 };
+
+/**
+ * Purchase orders (P-02): the Summary view by default, the List view for
+ * `?view=list` or any list parameter (`tab`, `po`, `focus`, …), so every link
+ * written for the list still lands on it.
+ * @type {React.FC}
+ */
+const BuyerOrders = () =>
+  useOrdersView() === 'summary' ? <BuyerOrderSummary /> : <BuyerOrdersList />;
 
 export default BuyerOrders;

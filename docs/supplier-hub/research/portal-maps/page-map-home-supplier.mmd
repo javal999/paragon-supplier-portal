@@ -1,0 +1,63 @@
+---
+title: Page map: supplier Home (To do)
+---
+flowchart LR
+  subgraph Home["Home"]
+    nsupplier_home["To do"]:::menu
+  end
+  subgraph DestinationsofTodo["Destinations of To do"]
+    nsupplier_orders["Purchase orders"]:::menu
+    nsupplier_call_offs["Call-offs"]:::menu
+    nsupplier_inventory["Stock"]:::menu
+    nsupplier_capacity["Capacity"]:::menu
+    nsupplier_forecasts["Forecast & commitments"]:::menu
+    nsupplier_order_summary["Order summary"]:::menu
+    nsupplier_shipments["Shipments & ASN"]:::menu
+    nsupplier_goods_receipts["Goods receipts"]:::menu
+    nsupplier_invoices["Invoices"]:::menu
+    nsupplier_rfq["RFQ invitations"]:::menu
+    nsupplier_rfi["RFI invitations"]:::menu
+    nsupplier_rfp["RFP invitations"]:::menu
+    nsupplier_rfq_rounds["Revised quotes"]:::urlonly
+    nsupplier_documents["Profile & documents"]:::menu
+  end
+  subgraph Pageswithnotask["Pages with no task"]
+    nsupplier_fs_reconcile["Feedstock reconcile"]:::menu
+    nsupplier_performance["My performance"]:::menu
+  end
+  nsupplier_call_offs -.->|back| nsupplier_order_summary
+  nsupplier_capacity -.->|back| nsupplier_order_summary
+  nsupplier_forecasts -->|link| nsupplier_capacity
+  nsupplier_forecasts -.->|back| nsupplier_order_summary
+  nsupplier_goods_receipts -.->|back| nsupplier_order_summary
+  nsupplier_home -->|task| nsupplier_call_offs
+  nsupplier_home -->|task| nsupplier_capacity
+  nsupplier_home -->|task| nsupplier_documents
+  nsupplier_home -->|task| nsupplier_forecasts
+  nsupplier_home -->|task| nsupplier_goods_receipts
+  nsupplier_home -->|task| nsupplier_inventory
+  nsupplier_home -->|task| nsupplier_invoices
+  nsupplier_home -->|task| nsupplier_order_summary
+  nsupplier_home -->|task| nsupplier_orders
+  nsupplier_home -->|task| nsupplier_rfi
+  nsupplier_home -->|task| nsupplier_rfp
+  nsupplier_home -->|task| nsupplier_rfq
+  nsupplier_home -->|task| nsupplier_rfq_rounds
+  nsupplier_home -->|task| nsupplier_shipments
+  nsupplier_invoices -.->|back| nsupplier_order_summary
+  nsupplier_order_summary -->|link| nsupplier_call_offs
+  nsupplier_order_summary -->|link| nsupplier_capacity
+  nsupplier_order_summary -->|link| nsupplier_forecasts
+  nsupplier_order_summary -->|link| nsupplier_goods_receipts
+  nsupplier_order_summary -->|link| nsupplier_invoices
+  nsupplier_order_summary -->|link| nsupplier_orders
+  nsupplier_order_summary -->|link| nsupplier_shipments
+  nsupplier_orders -.->|back| nsupplier_order_summary
+  nsupplier_orders -.->|toast only| nsupplier_shipments
+  nsupplier_rfq -->|link| nsupplier_rfq_rounds
+  nsupplier_shipments -.->|back| nsupplier_order_summary
+  classDef menu fill:#eef4ff,stroke:#3b6fd8,color:#10213f
+  classDef avatar fill:#f3eefc,stroke:#7a52c7,color:#24124a
+  classDef urlonly fill:#fff4e5,stroke:#c77700,stroke-dasharray:5 3,color:#3d2600
+  classDef detail fill:#f2f2f2,stroke:#777,color:#222
+  classDef obj fill:#e9f7ef,stroke:#2e8b57,color:#0f3020

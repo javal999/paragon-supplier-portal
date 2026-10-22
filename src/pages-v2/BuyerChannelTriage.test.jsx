@@ -418,7 +418,7 @@ describe('BuyerChannelTriage — i18n (ID)', () => {
     await i18n.changeLanguage('id');
     try {
       renderWithProviders(<BuyerChannelTriage />);
-      expect(await screen.findByText('Triase balasan kanal')).toBeInTheDocument();
+      expect(await screen.findByText('Catat balasan')).toBeInTheDocument();
       expect(screen.getByText('Ini percakapan siapa?')).toBeInTheDocument();
     } finally {
       await i18n.changeLanguage('en');

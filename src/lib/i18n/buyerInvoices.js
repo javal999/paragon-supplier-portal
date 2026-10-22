@@ -19,11 +19,12 @@
 export const buyerInvoicesEn = {
   // — Breadcrumb —
   'buyerInvoices.crumb.transact': 'TRANSACT',
-  'buyerInvoices.crumb.invoices': 'INVOICES & PAYMENT',
+  'buyerInvoices.crumb.invoices': 'INVOICES',
   // — Page header —
-  'buyerInvoices.header.title': 'Invoices & Payment',
+  // IA P-11 — the page title is the menu label.
+  'buyerInvoices.header.title': 'Invoices',
   'buyerInvoices.header.subtitle':
-    '3-way match · approval queue · payment release · SAP FI integration.',
+    'Invoices and payment: 3-way match · approval queue · payment release · SAP FI integration.',
   // — Bulk actions + their toasts —
   'buyerInvoices.action.sapApExport': 'SAP AP Export',
   'buyerInvoices.action.exportReport': 'Export Report',
@@ -183,11 +184,11 @@ export const buyerInvoicesEn = {
 export const buyerInvoicesId = {
   // — Breadcrumb —
   'buyerInvoices.crumb.transact': 'TRANSAKSI',
-  'buyerInvoices.crumb.invoices': 'FAKTUR & PEMBAYARAN',
+  'buyerInvoices.crumb.invoices': 'FAKTUR',
   // — Page header —
-  'buyerInvoices.header.title': 'Faktur & Pembayaran',
+  'buyerInvoices.header.title': 'Faktur',
   'buyerInvoices.header.subtitle':
-    'Pencocokan 3 arah · antrean persetujuan · pelepasan pembayaran · integrasi SAP FI.',
+    'Faktur dan pembayaran: pencocokan 3 arah · antrean persetujuan · pelepasan pembayaran · integrasi SAP FI.',
   // — Bulk actions + their toasts —
   'buyerInvoices.action.sapApExport': 'Ekspor SAP AP',
   'buyerInvoices.action.exportReport': 'Ekspor Laporan',

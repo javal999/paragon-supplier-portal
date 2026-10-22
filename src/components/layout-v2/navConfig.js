@@ -8,8 +8,8 @@ import {
   BookOpen,
   Boxes,
   Building2,
-  Calculator,
-  ClipboardCheck,
+  CalendarSearch,
+  ClipboardList,
   Container,
   CalendarCheck,
   CalendarClock,
@@ -20,6 +20,7 @@ import {
   Factory,
   FlaskConical,
   History,
+  FileCheck,
   FileQuestion,
   FileSearch,
   FileText,
@@ -97,8 +98,12 @@ export const PTI_NAV = [
     labelKey: 'hub.nav.section.orders',
     roles: ['MP'],
     items: [
-      { labelKey: 'hub.nav.pti.orderSummary', icon: ClipboardCheck, path: '/buyer/order-summary' },
+      // IA P-02 — Order summary is the default view of Purchase orders
+      // (`/buyer/orders?view=summary`), so it has no menu item of its own.
       { labelKey: 'hub.nav.pti.purchaseOrders', icon: ShoppingCart, path: '/buyer/orders' },
+      // IA P-09 — Call-offs left its one-item section and sits beside the
+      // orders it calls off, as on the supplier menu.
+      { labelKey: 'hub.nav.pti.callOffs', icon: CalendarClock, path: '/buyer/call-offs' },
       { labelKey: 'hub.nav.pti.shipments', icon: Truck, path: '/buyer/shipments' },
       { labelKey: 'hub.nav.pti.goodsReceipts', icon: PackageCheck, path: '/buyer/goods-receipt' }
     ]
@@ -123,9 +128,9 @@ export const PTI_NAV = [
         labelKey: 'hub.nav.pti.demandAnticipation',
         icon: LockKeyhole,
         path: '/buyer/demand-anticipation'
-      },
-      // DRC-17 (BL-202) BR-07 — the what-if sandbox: analysis only, last in the cycle.
-      { labelKey: 'hub.nav.pti.whatIfSandbox', icon: Calculator, path: '/buyer/what-if' }
+      }
+      // IA P-07 — the What-if sandbox left the menu: it is a tool, not a step of
+      // the cycle, and opens from a material row (`/buyer/what-if?material=`).
     ]
   },
   {
@@ -155,29 +160,17 @@ export const PTI_NAV = [
       { labelKey: 'hub.nav.pti.inventory', icon: Boxes, path: '/buyer/inventory' },
       {
         labelKey: 'hub.nav.pti.stockSimulation',
-        icon: CalendarClock,
+        // NV-04 — its own icon; Call-offs keeps the calendar clock.
+        icon: CalendarSearch,
         path: '/buyer/stock-simulation'
       },
       { labelKey: 'hub.nav.pti.capacity', icon: Gauge, path: '/buyer/capacity' },
       { labelKey: 'hub.nav.pti.alerts', icon: AlertTriangle, path: '/buyer/alerts' },
-      { labelKey: 'hub.nav.pti.supplierAccess', icon: KeyRound, path: '/buyer/supplier-access' }
-    ]
-  },
-  {
-    // Material C2 — Materials → Trade names (MR-3 d): Material Planning approves
-    // the names suppliers give PTI materials.
-    id: 'materials',
-    labelKey: 'hub.nav.section.materials',
-    roles: ['MP'],
-    items: [
+      { labelKey: 'hub.nav.pti.supplierAccess', icon: KeyRound, path: '/buyer/supplier-access' },
+      // Material C2 (MR-3 d) — Material Planning approves the names suppliers
+      // give PTI materials. IA P-09 — it left its one-item Materials section.
       { labelKey: 'hub.nav.pti.tradeNames', icon: Tags, path: '/buyer/materials/trade-names' }
     ]
-  },
-  {
-    id: 'calloffs',
-    labelKey: 'hub.nav.section.calloffs',
-    roles: ['MP'],
-    items: [{ labelKey: 'hub.nav.pti.callOffs', icon: CalendarClock, path: '/buyer/call-offs' }]
   },
   {
     id: 'sourcing',
@@ -186,10 +179,18 @@ export const PTI_NAV = [
     items: [
       // Operator decision 2026-09-21 (reverses NV-06's one-sourcing-item ruling):
       // RFI, RFQ and RFP are three modules, each with its own menu item and route.
+      // IA P-03 — Requisitions comes first: a requisition is where sourcing starts.
+      {
+        labelKey: 'hub.nav.pti.requisitions',
+        icon: ClipboardList,
+        path: '/buyer/purchase-requisition'
+      },
       { labelKey: 'hub.nav.pti.rfi', icon: FileQuestion, path: '/buyer/rfi' },
       { labelKey: 'hub.nav.pti.rfq', icon: FileSearch, path: '/buyer/rfq' },
       { labelKey: 'hub.nav.pti.rfp', icon: FileText, path: '/buyer/rfp' },
-      { labelKey: 'hub.nav.pti.suppliers', icon: Users, path: '/buyer/suppliers' }
+      { labelKey: 'hub.nav.pti.suppliers', icon: Users, path: '/buyer/suppliers' },
+      // IA P-03 — the certificates and documents PTI asks suppliers for.
+      { labelKey: 'hub.nav.pti.supplierDocuments', icon: FileCheck, path: '/buyer/compliance' }
     ]
   },
   {
@@ -238,11 +239,7 @@ export const SUPPLIER_NAV = [
     id: 'orders',
     labelKey: 'hub.nav.section.supplierOrders',
     items: [
-      {
-        labelKey: 'hub.nav.sup.orderSummary',
-        icon: ClipboardCheck,
-        path: '/supplier/order-summary'
-      },
+      // IA P-02 — Order summary is the default view of Purchase orders.
       { labelKey: 'hub.nav.sup.purchaseOrders', icon: ShoppingCart, path: '/supplier/orders' },
       { labelKey: 'hub.nav.sup.callOffs', icon: CalendarClock, path: '/supplier/call-offs' },
       { labelKey: 'hub.nav.sup.shipments', icon: Truck, path: '/supplier/shipments' },
@@ -290,14 +287,13 @@ export const SUPPLIER_NAV = [
     items: [{ labelKey: 'hub.nav.sup.invoices', icon: Receipt, path: '/supplier/invoices' }]
   },
   {
-    id: 'performance',
-    labelKey: 'hub.nav.section.performance',
-    items: [{ labelKey: 'hub.nav.sup.performance', icon: Award, path: '/supplier/performance' }]
-  },
-  {
+    // IA P-09 — Performance and Company were one-item sections; they are one.
     id: 'company',
     labelKey: 'hub.nav.section.company',
-    items: [{ labelKey: 'hub.nav.sup.documents', icon: Building2, path: '/supplier/documents' }]
+    items: [
+      { labelKey: 'hub.nav.sup.documents', icon: Building2, path: '/supplier/documents' },
+      { labelKey: 'hub.nav.sup.performance', icon: Award, path: '/supplier/performance' }
+    ]
   }
 ];
 

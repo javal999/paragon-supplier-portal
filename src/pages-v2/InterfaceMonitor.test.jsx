@@ -72,7 +72,7 @@ describe('REQ-E07-08 AC-03 — the data-age banner sits on the pages that read S
   beforeEach(() => sapMessageStore.reset());
 
   it('purchase orders show how old the SAP data is, in plain words', async () => {
-    renderWithProviders(<BuyerOrders />);
+    renderWithProviders(<BuyerOrders />, { route: '/buyer/orders?view=list' });
     const banner = await screen.findByTestId('sap-data-age-banner');
     expect(banner).toHaveTextContent('SAP data last updated');
   });

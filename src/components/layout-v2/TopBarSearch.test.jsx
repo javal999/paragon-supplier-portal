@@ -77,12 +77,12 @@ describe('TopBarSearch — the dropdown', () => {
       within(home)
         .getAllByRole('option')
         .map((o) => o.textContent)
-    ).toEqual(['Supplier replies']);
+    ).toEqual(['Supplier follow-ups']);
     const sourcing = screen.getByRole('group', { name: 'Sourcing' });
     expect(within(sourcing).getByRole('option', { name: 'Suppliers' })).toBeInTheDocument();
     expect(screen.getByRole('group', { name: 'Help & administration' })).toBeInTheDocument();
 
-    const mark = within(screen.getByRole('option', { name: 'Supplier replies' })).getByText(
+    const mark = within(screen.getByRole('option', { name: 'Supplier follow-ups' })).getByText(
       'Supplier'
     );
     expect(mark.tagName).toBe('MARK');

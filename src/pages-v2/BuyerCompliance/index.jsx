@@ -13,6 +13,7 @@ import LivenessPill from '@components/ui-v2/LivenessPill';
 import { isLive, readinessNote } from '@services/liveness';
 import { formatDate } from '@lib/format';
 import { useToast } from '@hooks/useToast';
+import { useSectionParam } from '@hooks/useSectionParam';
 import { useComplianceRegistry, useDocuments } from '@services/query/hooks';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import {
@@ -71,6 +72,9 @@ const BuyerCompliance = () => {
     () => (docsQuery.data?.items ?? []).filter((d) => d.status === 'Under Review'),
     [docsQuery.data]
   );
+  // IA P-03 — Home's "Declared certificates to review" lands on the queue
+  // (`?section=review`), which lists exactly the documents it counts.
+  useSectionParam('compliance-section', ['review'], reviewQueue.length > 0);
   const reviewer = useDocumentReview(t, refusalText, toast);
   const requester = useDocumentRequest(t, refusalText, dataErrorText, toast);
   const { request, requestOpen, setRequestOpen, closeRequest } = requester;
@@ -224,7 +228,9 @@ const BuyerCompliance = () => {
           unverified claim look like a registry fact, which is exactly what
           `lifecycleState` exists to keep apart. */}
       {reviewQueue.length > 0 && (
-        <ReviewQueue reviewQueue={reviewQueue} reviewer={reviewer} t={t} />
+        <div id="compliance-section-review" className="scroll-mt-4">
+          <ReviewQueue reviewQueue={reviewQueue} reviewer={reviewer} t={t} />
+        </div>
       )}
 
       <BpjphMandate bpjph={bpjph} deadline={deadline} t={t} />

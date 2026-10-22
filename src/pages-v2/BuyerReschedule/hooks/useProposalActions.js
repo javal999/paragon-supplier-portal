@@ -10,8 +10,17 @@ import { qtyOf } from '../../materialPlan/planDisplay';
 import { weekLabel } from '../utils';
 
 /**
+ * A call-off whose change this page sent (IA-B13): the page links to it,
+ * because the proposal itself leaves the relief list once the change is pending.
+ * @typedef {object} SentCallOff
+ * @property {string} callOffId
+ * @property {string} reference the call-off number a person reads
+ */
+
+/**
  * @typedef {object} ProposalActions
  * @property {ReadonlySet<string>} sent the proposals whose call-off change was sent this session
+ * @property {readonly SentCallOff[]} sentCallOffs the call-offs those changes were sent for, in order
  * @property {(p: RescheduleProposalView) => Promise<void>} sendChange send a call-off change (BR-07)
  * @property {(p: RescheduleProposalView) => Promise<void>} markSap record a PO-line change as taken to SAP (ENG-D16)
  * @property {boolean} sendPending a call-off change is in flight
@@ -34,6 +43,7 @@ export const useProposalActions = () => {
   const callOffCommand = useCallOffCommand();
   const sapCommand = useSapChangeMarkCommand();
   const [sent, setSent] = useState(/** @type {ReadonlySet<string>} */ (new Set()));
+  const [sentCallOffs, setSentCallOffs] = useState(/** @type {readonly SentCallOff[]} */ ([]));
 
   /** @param {RescheduleProposalView} p */
   const reasonFor = (p) =>
@@ -62,6 +72,12 @@ export const useProposalActions = () => {
         return;
       }
       setSent((prev) => new Set(prev).add(p.id));
+      const callOffId = p.line.callOffId;
+      if (callOffId)
+        setSentCallOffs((prev) => [
+          ...prev.filter((c) => c.callOffId !== callOffId),
+          { callOffId, reference: p.line.reference }
+        ]);
       toast({ variant: 'success', title: t('rs.toast.sent'), description: t('rs.toast.sentDesc') });
     } catch {
       toast({ variant: 'error', title: t('rs.toast.refused') });
@@ -93,6 +109,7 @@ export const useProposalActions = () => {
 
   return {
     sent,
+    sentCallOffs,
     sendChange,
     markSap,
     sendPending: callOffCommand.isPending,

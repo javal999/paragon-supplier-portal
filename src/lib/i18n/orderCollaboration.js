@@ -12,6 +12,8 @@ export const orderCollaborationEn = {
 
   // Steps (SC-02)
   'oc.steps.title': 'Order steps',
+  'oc.steps.callOffs_one': '{{count}} call-off against this order',
+  'oc.steps.callOffs_other': '{{count}} call-offs against this order',
   'oc.step.response': 'Response',
   'oc.step.confirmations': 'Confirmations',
   'oc.step.asn': 'ASN',
@@ -136,7 +138,9 @@ export const orderCollaborationEn = {
   'oc.summary.short.foresight': 'Fore',
   'oc.summary.short.shipping': 'Ship',
   'oc.summary.col.capacity': 'Capacity',
-  'oc.summary.col.foresight': 'Foresight / fixed stock',
+  // IA P-11 — owner ruling 2026-10-21: one name, "Foresight commitments", in the
+  // menu, the page titles and this column.
+  'oc.summary.col.foresight': 'Foresight commitments',
   'oc.summary.col.shipping': 'Shipping notice',
   'oc.summary.capacity.notStarted': 'Not started',
   'oc.summary.capacity.outdated': 'Update needed',
@@ -207,6 +211,12 @@ export const orderCollaborationEn = {
 
   // The destination side of the contract (BR-04, BR-05, AC-07, AC-08).
   'oc.drill.back': 'Back to order summary',
+  // P-01 — a stage page opened from a PO's lifecycle steps.
+  'oc.drill.backToPo': 'Back to purchase order {{poNumber}}',
+  // P-02 — Purchase orders opens on the summary; the list is the other view.
+  'oc.view.label': 'View',
+  'oc.view.summary': 'Summary',
+  'oc.view.list': 'List',
   'oc.drill.filtered': 'Filtered to order {{poNumber}}',
   'oc.drill.filtered.supplier': 'Filtered to {{supplier}}, order {{poNumber}}',
   'oc.drill.count.one': '{{count}} record on this order.',
@@ -244,6 +254,7 @@ export const orderCollaborationId = {
   'oc.respondedLate': 'Pemasok menanggapi setelah batas waktu.',
 
   'oc.steps.title': 'Tahapan pesanan',
+  'oc.steps.callOffs_other': '{{count}} call-off untuk pesanan ini',
   'oc.step.response': 'Tanggapan',
   'oc.step.confirmations': 'Konfirmasi',
   'oc.step.asn': 'ASN',
@@ -357,10 +368,10 @@ export const orderCollaborationId = {
   'oc.summary.col.asns': 'ASN',
   'oc.summary.col.confirmations': 'Konfirmasi',
   'oc.summary.short.capacity': 'Kap',
-  'oc.summary.short.foresight': 'Prak',
+  'oc.summary.short.foresight': 'Fore',
   'oc.summary.short.shipping': 'Kirim',
   'oc.summary.col.capacity': 'Kapasitas',
-  'oc.summary.col.foresight': 'Prakiraan / stok tetap',
+  'oc.summary.col.foresight': 'Komitmen foresight',
   'oc.summary.col.shipping': 'Pemberitahuan pengiriman',
   'oc.summary.capacity.notStarted': 'Belum dimulai',
   'oc.summary.capacity.outdated': 'Perlu diperbarui',
@@ -430,6 +441,10 @@ export const orderCollaborationId = {
   'oc.summary.returned': 'Dikembalikan',
 
   'oc.drill.back': 'Kembali ke ringkasan pesanan',
+  'oc.drill.backToPo': 'Kembali ke pesanan pembelian {{poNumber}}',
+  'oc.view.label': 'Tampilan',
+  'oc.view.summary': 'Ringkasan',
+  'oc.view.list': 'Daftar',
   'oc.drill.filtered': 'Disaring ke pesanan {{poNumber}}',
   'oc.drill.filtered.supplier': 'Disaring ke {{supplier}}, pesanan {{poNumber}}',
   'oc.drill.count.one': '{{count}} catatan pada pesanan ini.',

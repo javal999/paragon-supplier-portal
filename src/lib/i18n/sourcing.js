@@ -64,6 +64,9 @@ export const sourcingEn = {
   'sourcing.table.col.status': 'Status',
   'sourcing.table.col.actions': 'Actions',
   'sourcing.table.empty': 'No RFQs match the current filters.',
+  // IA P-08 — the board view Home's "Negotiation rounds closing soon" opens.
+  'sourcing.view.roundsClosing': 'Showing the RFQs with a negotiation round closing soon.',
+  'sourcing.view.showAll': 'Show all RFQs',
   'sourcing.table.emptyAction': 'Nothing needs your action today',
   'sourcing.table.col.next': 'Next',
   // — Deadline compact labels —
@@ -425,6 +428,8 @@ export const sourcingId = {
   'sourcing.table.col.status': 'Status',
   'sourcing.table.col.actions': 'Tindakan',
   'sourcing.table.empty': 'Tidak ada RFQ yang cocok dengan filter saat ini.',
+  'sourcing.view.roundsClosing': 'Menampilkan RFQ dengan putaran negosiasi yang segera ditutup.',
+  'sourcing.view.showAll': 'Tampilkan semua RFQ',
   'sourcing.table.emptyAction': 'Tidak ada yang perlu Anda tindak lanjuti hari ini',
   'sourcing.table.col.next': 'Berikutnya',
   // — Deadline compact labels —

@@ -26,8 +26,8 @@ export const supplierShipmentsEn = {
   'supplierShipments.crumb.shipments': 'SHIPMENTS & ASN',
   // — Page header —
   'supplierShipments.header.title': 'Shipments & ASN',
-  'supplierShipments.header.subtitle':
-    'Advance Ship Notices · Paragon WMS integration · EDI 856 — {{name}}.',
+  // IA-S07 — the task, not the systems behind it.
+  'supplierShipments.header.subtitle': 'Tell PTI what you are shipping and when — {{name}}.',
   // — Meta line —
   'supplierShipments.meta.summary': '{{shipments}} shipments · {{pos}} confirmed POs ready to ship',
   // — KPI tiles (ASN status counts) —
@@ -158,8 +158,7 @@ export const supplierShipmentsId = {
   'supplierShipments.crumb.shipments': 'PENGIRIMAN & ASN',
   // — Page header —
   'supplierShipments.header.title': 'Pengiriman & ASN',
-  'supplierShipments.header.subtitle':
-    'Advance Ship Notices · integrasi Paragon WMS · EDI 856 — {{name}}.',
+  'supplierShipments.header.subtitle': 'Beri tahu PTI apa yang Anda kirim dan kapan — {{name}}.',
   // — Meta line —
   'supplierShipments.meta.summary':
     '{{shipments}} pengiriman · {{pos}} PO terkonfirmasi siap dikirim',

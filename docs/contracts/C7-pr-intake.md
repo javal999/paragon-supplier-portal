@@ -16,7 +16,9 @@ product code — the intake dispatch, the Grid, and the SOMO wire are all downst
 true at #67 and is **false now**: a wired `CommandTarget` (`MockCommandService.js:547-593`,
 registered `:983`), a mutable store (`stores/purchaseRequisitionStore.js`), a read seam
 (`types.js:1194`), a liveness capability (`registry.js:51`) and two consuming surfaces
-(`IntakeReview.jsx`, `PlanGrid.jsx`) have all landed since. The SOMO wire remains SPEC (§5).
+(IntakeReview and PlanGrid) landed since. IA P-10 (2026-10-21) retired both surfaces (no
+menu item, no inbound link); the machine, target, store and read seam stay, and
+`/buyer/purchase-requisition` still creates requisitions. The SOMO wire remains SPEC (§5).
 
 **Grounding (real sources):**
 - the shipped PR machine — `src/services/transitions/flows/purchaseRequisition.flow.js` (cited `file:line`);

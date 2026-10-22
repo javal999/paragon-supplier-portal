@@ -344,7 +344,7 @@ describe('AC-06 — every destination offers "Back to order summary", and return
   ])('%s offers the way back', async (_name, ui, route) => {
     renderWithProviders(ui, { identity: BUYER, route });
     const back = await screen.findByTestId('back-to-order-summary');
-    expect(back).toHaveAttribute('href', '/buyer/order-summary');
+    expect(back).toHaveAttribute('href', '/buyer/orders?view=summary');
   });
 
   it('the summary restores the filter the user left it with', async () => {
@@ -389,7 +389,7 @@ describe('AC-07 — a supplier sees only its own POs, and another supplier’s P
     expect(body).not.toContain('PT Sample Oleochemicals');
     expect(screen.getByTestId('back-to-order-summary')).toHaveAttribute(
       'href',
-      '/supplier/order-summary'
+      '/supplier/orders?view=summary'
     );
   });
 
@@ -418,7 +418,7 @@ describe('AC-08 — an address naming a PO that does not exist shows "Order not 
     expect(await screen.findByRole('heading', { name: 'Order not found' })).toBeInTheDocument();
     expect(screen.getByTestId('back-to-order-summary')).toHaveAttribute(
       'href',
-      '/buyer/order-summary'
+      '/buyer/orders?view=summary'
     );
   });
 
@@ -577,7 +577,7 @@ describe('AC-12 — every rule above holds on the supplier summary too', () => {
     });
     expect(await screen.findByTestId('back-to-order-summary')).toHaveAttribute(
       'href',
-      '/supplier/order-summary'
+      '/supplier/orders?view=summary'
     );
   });
 });
@@ -636,9 +636,13 @@ describe('every address the summary generates resolves to a route the router act
     }
   );
 
+  // P-02 — the summary is the default view of Purchase orders, named by `view`.
   it('"Back to order summary" addresses a served route on both sides', () => {
-    expect(servedBy(orderSummaryPath('buyer'))).toBe('/buyer/order-summary');
-    expect(servedBy(orderSummaryPath('supplier'))).toBe('/supplier/order-summary');
+    // IA P-02 — the summary is the `?view=summary` view of Purchase orders.
+    expect(orderSummaryPath('buyer')).toBe('/buyer/orders?view=summary');
+    expect(orderSummaryPath('supplier')).toBe('/supplier/orders?view=summary');
+    expect(servedBy(orderSummaryPath('buyer').split('?')[0])).toBe('/buyer/orders');
+    expect(servedBy(orderSummaryPath('supplier').split('?')[0])).toBe('/supplier/orders');
   });
 });
 

@@ -1,7 +1,7 @@
 // SupplierForecastCommitments — the page's shared typedefs.
-// Moved out of the page file unchanged (frontend-standard Phase 5 split). The
-// page has no module-scope constants; this file holds the types its sections
-// and hooks share.
+// Moved out of the page file unchanged (frontend-standard Phase 5 split). This
+// file holds the types its sections and hooks share, and the page's tab ids
+// (P-04).
 
 /** @import { CapacityReason, ForecastCommitmentLine } from '@services/data/types' */
 /** @import { CommitmentCapacityRefusal, PeriodCapacityCheck } from '@services/transitions/capacityRules' */
@@ -10,6 +10,15 @@
 /** @import { ForecastCommandVars } from '@services/query/commandHooks' */
 
 /** @typedef {'forecast' | 'changes'} ViewMode */
+
+/**
+ * P-04 (IA-S03) — the page's tabs: the commitments (the default), and the
+ * responses and shipment reports that had their own page at
+ * /supplier/forecasts/responses. `?tab=responses` opens the second.
+ * @typedef {'commitments' | 'responses'} PageTab
+ */
+/** @type {readonly PageTab[]} */
+export const PAGE_TABS = ['commitments', 'responses'];
 
 /**
  * The forecast runner (`useForecastRunner().run`): sends one act, toasts when

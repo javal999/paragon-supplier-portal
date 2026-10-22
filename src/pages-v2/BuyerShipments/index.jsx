@@ -1,6 +1,6 @@
 /** @import React from 'react' */
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useModeLabel } from '@hooks/useModeLabel';
 import { FileSpreadsheet, Plus } from 'lucide-react';
@@ -13,6 +13,7 @@ import {
   usePoDrillFilter
 } from '../orders/PoDrillFilter';
 import { asnsForPo } from '../orders/orderSummaryModel';
+import { pendingAsns } from '../widgets/buyerDerivations';
 import { useASNs } from '@services/query/hooks';
 import { useCallOffViews } from '../callOffs/callOffDisplay';
 import { asnCallOffWarnings } from '@services/transitions/callOffRules';
@@ -151,6 +152,16 @@ const BuyerShipments = () => {
     });
   }, [shipments, tab, selectedModes, search, drilledPo]);
 
+  // IA P-08 — Home's "Inbound shipments to receive" counts ASNs, not shipment
+  // rows, so `?asns=toReceive` lists exactly those ASNs (the same predicate,
+  // `pendingAsns`). One ASN arrives open, as a drilled PO's single ASN does.
+  const [linkParams] = useSearchParams();
+  const asnsToReceive = useMemo(
+    () =>
+      linkParams.get('asns') === 'toReceive' ? pendingAsns(asnsQuery.data?.items ?? []) : null,
+    [linkParams, asnsQuery.data]
+  );
+
   /** The PO's ASNs — the records the summary's ASN cell counted (BR-09). */
   const drilledAsns = useMemo(
     () => (drilledPo === null ? [] : asnsForPo(asnsQuery.data?.items ?? [], drilledPo)),
@@ -277,6 +288,17 @@ const BuyerShipments = () => {
 
       {drill.kind === 'filtered' && (
         <DrilledAsnSection drilledAsns={drilledAsns} asnByNumber={asnByNumber} t={t} />
+      )}
+
+      {asnsToReceive !== null && (
+        <DrilledAsnSection
+          drilledAsns={asnsToReceive}
+          asnByNumber={asnByNumber}
+          t={t}
+          title={t('shipments.toReceive.title')}
+          emptyText={t('shipments.toReceive.empty')}
+          testId="asns-to-receive"
+        />
       )}
 
       <SubTabs

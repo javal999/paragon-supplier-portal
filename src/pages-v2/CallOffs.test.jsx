@@ -40,6 +40,12 @@ const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 const panel = () =>
   within(/** @type {HTMLElement} */ (document.querySelector('aside[role="dialog"]')));
 
+/**
+ * P-12 — opens one of the Call-offs tabs, by its visible name.
+ * @param {string} name
+ */
+const openTab = async (name) => fireEvent.click(await screen.findByRole('tab', { name }));
+
 describe('menu and copy', () => {
   it('both menus point Call-offs at the new pages; the old routes are out of the menu', () => {
     const all = [...PTI_NAV, ...SUPPLIER_NAV].flatMap((s) => s.items.map((i) => i.path));
@@ -64,6 +70,8 @@ describe('menu and copy', () => {
 describe('PTI Call-offs page (REQ-E09-01, REQ-E09-03)', () => {
   it('shows each umbrella PO line with remaining quantity and its call-offs in their states', async () => {
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    // P-12 — every call-off, in every state, is under "All call-offs".
+    await openTab('All call-offs');
     const pet = await screen.findByTestId('calloff-umbrella-po-007-li-007a');
     expect(within(pet).getByTestId('calloff-remaining-li-007a')).toHaveTextContent('15,000 PCS');
     /** @param {string} id */
@@ -424,6 +432,7 @@ describe('CR-04 on the screens — release by remaining quantity, value only wit
 
   it('draft CO-2026-0018 over the remaining quantity: refused on the panel, release disabled', async () => {
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    await openTab('All call-offs');
     fireEvent.click(
       within(await screen.findByTestId('calloff-row-co-0018')).getByRole('button', {
         name: /Open draft/
@@ -440,6 +449,7 @@ describe('CR-04 on the screens — release by remaining quantity, value only wit
 
   it('draft CO-2026-0019 of exactly the remainder releases, and the store agrees', async () => {
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    await openTab('All call-offs');
     fireEvent.click(
       within(await screen.findByTestId('calloff-row-co-0019')).getByRole('button', {
         name: /Open draft/
@@ -456,6 +466,7 @@ describe('CR-04 on the screens — release by remaining quantity, value only wit
 
   it('the value-limit line (po-028) shows no quantity, checks value, and refuses draft CO-2026-0021 on value', async () => {
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    await openTab('All call-offs');
     const line = await screen.findByTestId('calloff-umbrella-po-028-li-028a');
     expect(within(line).getByTestId('calloff-basis-li-028a')).toHaveTextContent(
       'No quantity on this line'
@@ -475,6 +486,7 @@ describe('CR-04 on the screens — release by remaining quantity, value only wit
 
   it('the demo rows carry their CR-05 tag on the planner rows: +5.1% (0014), partial (0015), earlier (0016)', async () => {
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    await openTab('All call-offs');
     expect(await screen.findByTestId('calloff-tol-co-0014')).toHaveTextContent(
       '408 PCS over (5.1%), needs approval'
     );
@@ -492,6 +504,7 @@ describe('CR-04 on the screens — release by remaining quantity, value only wit
   // rule's; the verdict is the call-off's.
   it('after the planner approves CO-2026-0014, its row says approved — not "needs approval"', async () => {
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    await openTab('All call-offs');
     fireEvent.click(
       within(await screen.findByTestId('calloff-row-co-0014')).getByRole('button', {
         name: /Review/
@@ -589,11 +602,21 @@ describe('D9 — the `?status=` deep link BuyerCallOffs/SupplierCallOffs read', 
     );
   });
 
-  it('BuyerCallOffs: no `status` param renders exactly as before this feature — `All` selected, every row shown', async () => {
+  it('BuyerCallOffs: no `status` param opens To act with every chip off (`Everything to act on`), and All call-offs still shows every row', async () => {
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER, route: '/buyer/call-offs' });
     expect(await screen.findByTestId('calloff-row-co-0004')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'To act' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('radio', { name: /^Everything to act on/ })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
+    // P-12 — a dispatched call-off with nothing to act on is not in To act.
+    expect(screen.queryByTestId('calloff-row-co-0002')).toBeNull();
+    await openTab('All call-offs');
+    expect(await screen.findByTestId('calloff-row-co-0002')).toBeInTheDocument();
     expect(screen.getByTestId('calloff-row-co-0001')).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: /^All/ })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByTestId('calloff-row-co-0004')).toBeInTheDocument();
+    expect(screen.queryByRole('radio', { name: /^Everything to act on/ })).toBeNull();
   });
 
   it("SupplierCallOffs: `?status=toConfirm` selects that chip and keeps only the call-off awaiting this supplier's confirmation", async () => {

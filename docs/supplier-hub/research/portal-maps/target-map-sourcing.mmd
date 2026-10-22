@@ -1,0 +1,20 @@
+---
+title: Target map · Sourcing (PTI · Buyer) (P-03)
+---
+flowchart LR
+  subgraph Sourcing["Sourcing"]
+    pr["Requisitions (new menu item, was URL only)"]:::changed
+    rfi["RFI"]:::menu
+    rfq["RFQ"]:::menu
+    rfp["RFP"]:::menu
+    sup["Suppliers"]:::menu
+    docs["Supplier documents (new menu item, was Compliance Tracker, URL only)"]:::changed
+  end
+  pr -->|Raise sourcing event| rfq
+  rfi -->|pre-fill| rfq
+  rfi -->|pre-fill| rfp
+  sup -->|profile tab: documents| docs
+  rfq -->|compliance gate links to the supplier's documents| docs
+  classDef menu fill:#eef4ff,stroke:#3b6fd8,color:#10213f
+  classDef changed fill:#e9f7ef,stroke:#2e8b57,color:#0f3020
+  classDef gone fill:#fdecec,stroke:#b42318,stroke-dasharray:5 3,color:#4a0d0d

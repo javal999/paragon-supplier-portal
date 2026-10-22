@@ -18,11 +18,13 @@
 export const complianceEn = {
   // — Breadcrumb —
   'compliance.crumb.intelligence': 'INTELLIGENCE',
-  'compliance.crumb.tracker': 'COMPLIANCE TRACKER',
+  'compliance.crumb.tracker': 'SUPPLIER DOCUMENTS',
   // — Page header —
-  'compliance.header.title': 'Compliance Tracker',
+  // IA P-03 / P-11 — the page is Sourcing's Supplier documents; the old
+  // title moves into the subtitle.
+  'compliance.header.title': 'Supplier documents',
   'compliance.header.subtitle':
-    'Halal · BPOM · ISO · REACH · GMP — October 2026 BPJPH mandatory transition.',
+    'Compliance tracker for Halal · BPOM · ISO · REACH · GMP — October 2026 BPJPH mandatory transition.',
   'compliance.action.exportReport': 'Export Report',
   'compliance.toast.exporting': 'Compliance report not available yet — no PDF was generated.',
   // — Meta line —
@@ -193,11 +195,11 @@ export const complianceEn = {
 export const complianceId = {
   // — Breadcrumb —
   'compliance.crumb.intelligence': 'INTELIJEN',
-  'compliance.crumb.tracker': 'PELACAK KEPATUHAN',
+  'compliance.crumb.tracker': 'DOKUMEN PEMASOK',
   // — Page header —
-  'compliance.header.title': 'Pelacak Kepatuhan',
+  'compliance.header.title': 'Dokumen pemasok',
   'compliance.header.subtitle':
-    'Halal · BPOM · ISO · REACH · GMP — transisi wajib BPJPH Oktober 2026.',
+    'Pelacak kepatuhan untuk Halal · BPOM · ISO · REACH · GMP — transisi wajib BPJPH Oktober 2026.',
   'compliance.action.exportReport': 'Ekspor Laporan',
   'compliance.toast.exporting': 'Laporan kepatuhan belum tersedia — tidak ada PDF yang dibuat.',
   // — Meta line —

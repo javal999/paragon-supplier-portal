@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
+import Tabs from '@components/ui-v2/Tabs';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
@@ -13,6 +14,7 @@ import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
 import AboutThisPage, { CollapsedSection } from '@components/forecast/AboutThisPage';
 import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { usePageTab } from '@hooks/usePageTab';
 import { useOrderPlan, usePurchaseOrders } from '@services/query/hooks';
 import { CALL_OFF_PO_STATES } from '@services/transitions/callOffRules';
 /** @import { Recommendation } from '@services/engine/orderSizing' */
@@ -22,6 +24,7 @@ import { sdcClock } from '@services/sdc/clock';
 import { isLive } from '@services/liveness';
 import { whyId } from './utils';
 import { useDraftCallOff } from './hooks/useDraftCallOff';
+import { useDraftGapCallOff } from './hooks/useDraftGapCallOff';
 import FillChart from './components/FillChart';
 import FillTable from './components/FillTable';
 import PlanAsOf from './components/PlanAsOf';
@@ -70,11 +73,23 @@ import DefinitionsSection from './components/DefinitionsSection';
 // Every figure is computed by the forecast engine at read time on its
 // SYNTHETIC dataset (the `engineDataset` pill, X-03).
 //
+// P-12 (IA-B06) — TABS, THE DECISION FIRST. The page header, purpose line,
+// step strip, simulated-data banner, plan date, warehouse choice, warehouse
+// facts and KPIs stay above the tabs; below them "Orders" (recommended orders,
+// the weeks that do not fit, below demand anticipation, ROP Fisik PRs), then
+// "Warehouse fill" (projected fill by week), then "How it is sized" (cost
+// rates, how the plan is sized, About this page). Nothing was removed; each
+// block moved under a tab. The tab is `?tab=orders|fill|sizing`.
+//
 // FOLDER (frontend-standard Phase 5, PAGE-SPLIT-GUIDE): this file holds the
 // page's queries, its state and the section order; each section is a file in
 // `components/`, the draft act is `hooks/useDraftCallOff.js`, and the pure
 // helpers and the 80% standard are `utils.js` / `const.js`.
 // ─────────────────────────────────────────────────────────────────────────────
+
+/** P-12 — the page's tabs, in order; the first opens by default. */
+// i18n-defer: tab identifiers, not copy — each renders through t(`op.tab.${id}`)
+export const ORDER_PLAN_TABS = /** @type {const} */ (['orders', 'fill', 'sizing']);
 
 /** @type {React.FC} */
 const BuyerOrderPlan = () => {
@@ -91,6 +106,9 @@ const BuyerOrderPlan = () => {
   // X-03 — the registry's own answer, read at render; the verb reads it again at release.
   const releaseWithheld = !isLive('engineDataset');
   const { drafted, pending, createDraft } = useDraftCallOff(today, releaseWithheld);
+  // CAP-12 drafts are held here, not in their section, so they outlive a change of tab.
+  const gapDrafts = useDraftGapCallOff(today);
+  const { tab, select } = usePageTab(ORDER_PLAN_TABS);
 
   const w = run?.warehouses.find((x) => x.kind === kind) ?? run?.warehouses[0] ?? null;
   /** @type {RecRow[]} */
@@ -152,25 +170,52 @@ const BuyerOrderPlan = () => {
         <>
           <WarehouseFacts w={w} />
           <WarehouseKpis w={w} peak={peak} />
-          <RecommendationsSection
-            rows={rows}
-            pos={pos}
-            whyOpen={whyOpen}
-            onOpenWhy={setWhyOpen}
-            onCloseWhy={closeWhy}
-            drafted={drafted}
-            planAvailability={planAvailability}
-            pending={pending}
-            releaseWithheld={releaseWithheld}
-            onDraft={createDraft}
-          />
+        </>
+      )}
 
-          {/* FUX-D3 (F-10): the decision for these weeks is made and saved on Make warehouse room. */}
-          {w.shortfallWeeks.length > 0 && <ShortfallNotice count={w.shortfallWeeks.length} />}
+      <Tabs
+        tabs={ORDER_PLAN_TABS.map((id) => ({ id, label: t(`op.tab.${id}`) }))}
+        active={tab}
+        onChange={(id) => select(/** @type {(typeof ORDER_PLAN_TABS)[number]} */ (id))}
+        className="mb-4"
+      />
 
+      <div role="tabpanel" aria-label={t(`op.tab.${tab}`)} data-testid={`op-tabpanel-${tab}`}>
+        {tab === 'orders' && (
+          <>
+            {w ? (
+              <RecommendationsSection
+                rows={rows}
+                pos={pos}
+                whyOpen={whyOpen}
+                onOpenWhy={setWhyOpen}
+                onCloseWhy={closeWhy}
+                drafted={drafted}
+                planAvailability={planAvailability}
+                pending={pending}
+                releaseWithheld={releaseWithheld}
+                onDraft={createDraft}
+              />
+            ) : null}
+
+            {/* FUX-D3 (F-10): the decision for these weeks is made and saved on Make warehouse room. */}
+            {w && w.shortfallWeeks.length > 0 ? (
+              <ShortfallNotice count={w.shortfallWeeks.length} />
+            ) : null}
+
+            {/* CAP-12 — the hub's own gaps, separate from the engine's list above (brief §6). */}
+            <BelowDemandSection today={today} drafts={gapDrafts} />
+
+            {/* BL-199 (DRC-13 BR-02) — no umbrella PO balance left at ROP Fisik: a PR in SAP. */}
+            <RopFisikPrSection />
+          </>
+        )}
+
+        {tab === 'fill' && w ? (
           <CollapsedSection
             title={t('op.fill.title')}
             testId="op-fill"
+            defaultOpen
             className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6"
           >
             <p className="text-xs text-text-secondary mt-3 mb-1" data-testid="op-fill-basis">
@@ -180,23 +225,21 @@ const BuyerOrderPlan = () => {
             <FillChart w={w} />
             <FillTable w={w} />
           </CollapsedSection>
-        </>
-      )}
+        ) : null}
 
-      {/* CAP-12 — the hub's own gaps, separate from the engine's list above (brief §6). */}
-      <BelowDemandSection today={today} />
+        {tab === 'sizing' && (
+          <>
+            {costs && <CostRatesSection costs={costs} />}
 
-      {/* BL-199 (DRC-13 BR-02) — no umbrella PO balance left at ROP Fisik: a PR in SAP. */}
-      <RopFisikPrSection />
+            <DefinitionsSection />
 
-      {costs && <CostRatesSection costs={costs} />}
-
-      <DefinitionsSection />
-
-      <AboutThisPage>
-        <p>{t('op.subtitle')}</p>
-        <p data-testid="op-synthetic-note">{t('op.synthetic')}</p>
-      </AboutThisPage>
+            <AboutThisPage>
+              <p>{t('op.subtitle')}</p>
+              <p data-testid="op-synthetic-note">{t('op.synthetic')}</p>
+            </AboutThisPage>
+          </>
+        )}
+      </div>
     </AppShellV2>
   );
 };

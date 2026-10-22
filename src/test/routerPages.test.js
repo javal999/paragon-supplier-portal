@@ -64,7 +64,9 @@ describe('routerPages — the router derivation, probed both ways', () => {
     // Known-false: a feature component no route renders is not routed.
     expect(routed).not.toContain('contracts/RaisedElsewhere.jsx');
     // And the files pageFiles already had are still routed, not replaced.
-    expect(routed).toContain('PlanGrid.jsx');
-    expect(routed).toContain('BuyerCollaboration.jsx');
+    expect(routed).toContain('BuyerCommHub.jsx');
+    // (BuyerCollaboration was the second member until IA P-04 made it a lazy
+    // tab of Foresight commitments; the router no longer imports it.)
+    expect(routed).toContain('BuyerCallOffs.jsx');
   });
 });

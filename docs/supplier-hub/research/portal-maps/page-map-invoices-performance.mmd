@@ -1,0 +1,42 @@
+---
+title: Page map: Invoices, Review/Performance/Audit (PTI) and Invoices, Performance, Company (supplier)
+---
+flowchart LR
+  subgraph PTIFinance["PTI · Finance"]
+    nbuyer_invoices["Invoices"]:::menu
+    nbuyer_demand_anticipation_history["Demand anticipation history"]:::menu
+  end
+  subgraph PTIBuyerandMaterialPlanner["PTI · Buyer and Material Planner"]
+    nbuyer_scorecard["Supplier performance"]:::menu
+    nbuyer_fs_reconcile["Feedstock reconcile"]:::menu
+    nbuyer_reliability["Planning engine · Supplier reliability"]:::avatar
+    nbuyer_demand_forecast["Forecast quality"]:::menu
+    nbuyer_home["My tasks"]:::menu
+    nbuyer_goods_receipt["Goods receipts"]:::menu
+  end
+  subgraph Nomenuitem["No menu item"]
+    nbuyer_compliance["Compliance Tracker"]:::urlonly
+    nbuyer_dashboard["Procurement Command Center"]:::urlonly
+    nbuyer_analytics["Analytics & Procurement Intelligence"]:::urlonly
+  end
+  subgraph Supplier["Supplier"]
+    nsupplier_home["To do"]:::menu
+    nsupplier_invoices["Invoices"]:::menu
+    nsupplier_performance["My performance"]:::menu
+    nsupplier_documents["Profile & documents"]:::menu
+    nsupplier_fs_reconcile["Feedstock reconcile"]:::menu
+  end
+  nbuyer_dashboard -->|link| nbuyer_compliance
+  nbuyer_dashboard -->|link| nbuyer_goods_receipt
+  nbuyer_dashboard -->|link| nbuyer_invoices
+  nbuyer_demand_forecast -->|next| nbuyer_fs_reconcile
+  nbuyer_home -->|task| nbuyer_goods_receipt
+  nbuyer_home -->|task| nbuyer_invoices
+  nbuyer_scorecard -->|link| nbuyer_reliability
+  nsupplier_home -->|task| nsupplier_documents
+  nsupplier_home -->|task| nsupplier_invoices
+  classDef menu fill:#eef4ff,stroke:#3b6fd8,color:#10213f
+  classDef avatar fill:#f3eefc,stroke:#7a52c7,color:#24124a
+  classDef urlonly fill:#fff4e5,stroke:#c77700,stroke-dasharray:5 3,color:#3d2600
+  classDef detail fill:#f2f2f2,stroke:#777,color:#222
+  classDef obj fill:#e9f7ef,stroke:#2e8b57,color:#0f3020

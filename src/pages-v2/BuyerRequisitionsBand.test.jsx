@@ -29,7 +29,7 @@ const UNBANDED_PR = 'PR-2026-00345'; // pr-005, 84M, ''
 
 /** @param {string} number */
 const open = async (number) => {
-  await screen.findByText('Purchase Requisitions');
+  await screen.findByRole('heading', { name: 'Requisitions' });
   fireEvent.click(await screen.findByText(number));
   await screen.findByText(`PR ${number}`);
 };

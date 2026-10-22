@@ -243,7 +243,12 @@ export const rescheduleEn = {
   'rs.decide.earlier_other': '{{count}} earlier decisions kept on record',
   'rs.decide.toast.saved': 'Decision saved',
   'rs.decide.toast.savedDesc': 'Recorded for {{week}}. No order was changed.',
-  'rs.decide.toast.refused': 'Decision not saved'
+  'rs.decide.toast.refused': 'Decision not saved',
+  'rs.tab.relief': 'Relief',
+  'rs.tab.fill': 'Warehouse fill',
+  'rs.tab.values': 'Values and method',
+  'rs.action.openCallOff': 'Open the call-off',
+  'rs.sent.line': 'Change sent for {{reference}}, awaiting the supplier’s confirmation.'
 };
 
 /** @type {Record<string, string>} */
@@ -472,5 +477,10 @@ export const rescheduleId = {
   'rs.decide.earlier_other': '{{count}} keputusan sebelumnya tetap tercatat',
   'rs.decide.toast.saved': 'Keputusan disimpan',
   'rs.decide.toast.savedDesc': 'Dicatat untuk {{week}}. Tidak ada pesanan yang diubah.',
-  'rs.decide.toast.refused': 'Keputusan tidak disimpan'
+  'rs.decide.toast.refused': 'Keputusan tidak disimpan',
+  'rs.tab.relief': 'Keringanan',
+  'rs.tab.fill': 'Isi gudang',
+  'rs.tab.values': 'Nilai dan metode',
+  'rs.action.openCallOff': 'Buka call-off',
+  'rs.sent.line': 'Perubahan terkirim untuk {{reference}}, menunggu konfirmasi pemasok.'
 };

@@ -15,6 +15,7 @@ import AboutThisPage from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
 import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
 import {
   useCapacityPlans,
   useForecastCommitments,
@@ -33,6 +34,10 @@ import ExceptionsSection from './components/ExceptionsSection';
 import CoverageDetails from './components/CoverageDetails';
 import SupplierCoverage from './components/SupplierCoverage';
 import ActionPanel from './components/ActionPanel';
+import CommitmentTabs from './components/CommitmentTabs';
+import ConsolidationTab from './components/ConsolidationTab';
+import { COMMITMENTS_TABS } from './const';
+/** @import { CommitmentsTab } from './const' */
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI COMMITMENTS & GAPS — REQ-E06-03 (with REQ-E06-02 from the planner's side).
@@ -52,6 +57,11 @@ import ActionPanel from './components/ActionPanel';
 // holds the page's state, queries and early returns; the sections live in
 // `components/`, the action state and submit in `hooks/useCommitmentAction`,
 // and the derived view in `utils.commitmentView`.
+//
+// P-04 (IA-B05) — one commitments page: the content above is the first,
+// default tab, and the consolidation view (SDC-1b, which reads the published
+// sample plan) is the second, `?tab=consolidation`. The deep-link reads below
+// (`stream`, `supplier`, `material`, `po`) are made once, whichever tab opens.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @type {React.FC} */
@@ -66,6 +76,11 @@ const BuyerCommitments = () => {
     other: t('adminSet.unit.workingDays', { count: dueDays.other })
   });
   const [params] = useSearchParams();
+  // P-04 — the tab: read once on arrival, and again when the address changes.
+  const [tab, setTab] = useState(
+    /** @type {CommitmentsTab} */ (params.get('tab') === 'consolidation' ? 'consolidation' : 'gaps')
+  );
+  useUrlEnumParam('tab', COMMITMENTS_TABS, setTab);
   const linesQuery = useForecastCommitments();
   const coverageQuery = useForecastCoverage();
   const inventory = useInventory();
@@ -122,6 +137,17 @@ const BuyerCommitments = () => {
         )
       : null;
 
+  // P-04 — the Consolidation tab reads its own stores, so it waits for none of the reads below.
+  if (tab === 'consolidation')
+    return (
+      <AppShellV2>
+        <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'responses')} />
+        <PurposeHeader page="responses" />
+        <CycleSteps current="responses" />
+        <CommitmentTabs value={tab} onChange={setTab} />
+        <ConsolidationTab />
+      </AppShellV2>
+    );
   if (linesQuery.isPending || drill.kind === 'pending') return <LoadingState breadcrumb={crumb} />;
   // AC-08 — an address naming a PO that does not exist, with a way back.
   if (drill.kind === 'notFound') return <OrderNotFound persona="buyer" breadcrumb={crumb} />;
@@ -165,70 +191,74 @@ const BuyerCommitments = () => {
       <PageHeader breadcrumb={crumb} title={forecastTitle(t, 'responses')} />
       <PurposeHeader page="responses" />
       <CycleSteps current="responses" />
-      <SimulatedDataBanner capability="forecastPublications" />
-      <DataAsOf date={nowIso} />
+      <CommitmentTabs value={tab} onChange={setTab} />
+      {/* P-04 — everything up to the side panel is the first tab's panel. */}
+      <div role="tabpanel" aria-label={t('fc.pti.pageTab.gaps')} data-testid="fc-pti-gaps-tab">
+        <SimulatedDataBanner capability="forecastPublications" />
+        <DataAsOf date={nowIso} />
 
-      {(missing > 0 || outside > 0) && (
-        <div
-          role="status"
-          data-testid="fc-pti-gaps-banner"
-          className="bg-danger-soft border-l-2 border-danger rounded px-4 py-3 mb-4 text-sm text-danger"
-        >
-          {t('fc.pti.gaps.banner', { exceptions: outside, missing })}
-        </div>
-      )}
+        {(missing > 0 || outside > 0) && (
+          <div
+            role="status"
+            data-testid="fc-pti-gaps-banner"
+            className="bg-danger-soft border-l-2 border-danger rounded px-4 py-3 mb-4 text-sm text-danger"
+          >
+            {t('fc.pti.gaps.banner', { exceptions: outside, missing })}
+          </div>
+        )}
 
-      <CommitmentFilters
-        activeStream={activeStream}
-        onStreamChange={(s) => {
-          setStream(s);
-          setSupplier('');
-          setMaterial('');
-          setReasons([]);
-        }}
-        supplier={supplier}
-        onSupplierChange={setSupplier}
-        suppliers={suppliers}
-        material={material}
-        onMaterialChange={setMaterial}
-        materials={materials}
-        reasons={reasons}
-        onReasonsChange={setReasons}
-        reasonOptions={reasonOptions}
-      />
+        <CommitmentFilters
+          activeStream={activeStream}
+          onStreamChange={(s) => {
+            setStream(s);
+            setSupplier('');
+            setMaterial('');
+            setReasons([]);
+          }}
+          supplier={supplier}
+          onSupplierChange={setSupplier}
+          suppliers={suppliers}
+          material={material}
+          onMaterialChange={setMaterial}
+          materials={materials}
+          reasons={reasons}
+          onReasonsChange={setReasons}
+          reasonOptions={reasonOptions}
+        />
 
-      {/* REQ-E07-03 BR-04 / BR-05 — the filter, why these rows, and the way back. */}
-      <PoFilterBanner drill={drill} persona="buyer" count={shown.length} reason="foresight" />
+        {/* REQ-E07-03 BR-04 / BR-05 — the filter, why these rows, and the way back. */}
+        <PoFilterBanner drill={drill} persona="buyer" count={shown.length} reason="foresight" />
 
-      {/* BR-04 / BR-05 — the ranked exception list and the planner's actions. */}
-      <ExceptionsSection
-        exceptions={exceptions}
-        dueRule={dueRule}
-        daysOfSupplyOf={daysOfSupplyOf}
-        periodLabel={periodLabel}
-        reasonLabel={reasonLabel}
-        nowIso={nowIso}
-        review={review}
-        publish={publish}
-        onAction={openAction}
-      />
+        {/* BR-04 / BR-05 — the ranked exception list and the planner's actions. */}
+        <ExceptionsSection
+          exceptions={exceptions}
+          dueRule={dueRule}
+          daysOfSupplyOf={daysOfSupplyOf}
+          periodLabel={periodLabel}
+          reasonLabel={reasonLabel}
+          nowIso={nowIso}
+          review={review}
+          publish={publish}
+          onAction={openAction}
+        />
 
-      {/* F-23 — the exceptions drive action; the grid and the cumulative chart
+        {/* F-23 — the exceptions drive action; the grid and the cumulative chart
           are context, collapsed below them. Same data, same order inside. */}
-      <CoverageDetails
-        shown={shown}
-        rows={rows}
-        periods={periods}
-        periodLabel={periodLabel}
-        nowIso={nowIso}
-      />
+        <CoverageDetails
+          shown={shown}
+          rows={rows}
+          periods={periods}
+          periodLabel={periodLabel}
+          nowIso={nowIso}
+        />
 
-      {/* BR-07 — supplier coverage per material (CR-03), an estimate. */}
-      <SupplierCoverage coverage={coverage} />
+        {/* BR-07 — supplier coverage per material (CR-03), an estimate. */}
+        <SupplierCoverage coverage={coverage} />
 
-      <AboutThisPage>
-        <p>{t('fc.pti.gaps.subtitle')}</p>
-      </AboutThisPage>
+        <AboutThisPage>
+          <p>{t('fc.pti.gaps.subtitle')}</p>
+        </AboutThisPage>
+      </div>
 
       <ActionPanel
         action={action}

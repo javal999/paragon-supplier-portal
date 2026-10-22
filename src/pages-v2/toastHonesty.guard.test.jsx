@@ -1034,14 +1034,29 @@ describe('a named function wired to an on* prop is an affordance', () => {
     expect(keysOf(wired)).toContain('probe.sent.title');
   });
 
-  // POSITIVE CONTROL ON THE REAL TREE: the defect #228 fixed is now in the
-  // population, and its repaired copy admits — so it passes the admission
-  // tests above rather than being skipped by them.
-  it('ScenarioTab.sendToWarRoom is in the population, and its copy admits', () => {
-    const site = SITES.find(
-      (s) =>
-        s.file === 'BuyerRisk/components/ScenarioTab.jsx' &&
-        s.keys.includes('risk.toast.warRoomNotSent.title')
+  // POSITIVE CONTROL ON THE DEFECT THE TREE REALLY HAD: #228's war-room
+  // handler. IA P-10 (owner ruled 2026-10-21) retired its page (BuyerRisk), so
+  // the shipped matcher is fired at the handler's last shipped source, quoted
+  // here verbatim, and its repaired copy (still in the i18n layer) must admit.
+  it('ScenarioTab.sendToWarRoom, as last shipped, is a site, and its copy admits', () => {
+    const shipped = [
+      'const ScenarioTab = () => {',
+      '  const sendToWarRoom = () => {',
+      '    toast({',
+      "      variant: 'warning',",
+      "      title: t('risk.toast.warRoomNotSent.title'),",
+      "      description: t('risk.toast.warRoomNotSent.desc', { title: featured.title })",
+      '    });',
+      '  };',
+      '  return (',
+      '    <Button variant="outline" icon={Send} onClick={sendToWarRoom} className="shrink-0">',
+      "      {t('risk.scenario.sendWarRoom')}",
+      '    </Button>',
+      '  );',
+      '};'
+    ].join('\n');
+    const site = sitesIn('BuyerRisk/components/ScenarioTab.jsx', shipped, []).find((x) =>
+      x.keys.includes('risk.toast.warRoomNotSent.title')
     );
     expect(site, 'the named war-room handler must be a site').toBeDefined();
     const keys = site?.keys ?? [];
