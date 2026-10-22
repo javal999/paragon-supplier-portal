@@ -17,7 +17,17 @@ import ErrorState from '@components/ui-v2/ErrorState';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { formatDate, formatDateTime, formatNumber } from '@lib/format';
-import { useInventoryAlerts } from '@services/query/hooks';
+import {
+  useCallOffs,
+  useCapacityPlans,
+  useInventory,
+  useInventoryAlerts,
+  usePlanningGroups,
+  usePurchaseOrders,
+  useStockSimulation
+} from '@services/query/hooks';
+import { CALL_OFF_PO_STATES } from '@services/transitions/callOffRules';
+import { dayOf } from '@services/transitions/inventoryRules';
 /** @import { InventoryAlert, RiskClass } from '@services/data/types' */
 import {
   alertCloseRefusal,
@@ -30,7 +40,6 @@ import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
 import { NOTE_REQUIRED_CODE } from '@services/transitions/reasonCodes';
 import { useActiveReasonCodes, useReasonLabel } from './admin/reasonCodeDisplay';
 import {
-  RiskBasisNote,
   RiskPill,
   inputClass,
   inventoryNow,
@@ -38,7 +47,6 @@ import {
   useInventoryRunner
 } from './inventory/inventoryDisplay';
 import { alertPlanningGroup, usePlanningGroupLabel } from './inventory/planningGroupDisplay';
-import { usePlanningGroups } from '@services/query/hooks';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
 import MaterialSearch, {
   MaterialMatchReason,
@@ -46,6 +54,7 @@ import MaterialSearch, {
 } from '@components/ui-v2/MaterialSearch';
 import { searchMaterials } from '@services/transitions/matchMaterial';
 import { weekLabel, weekRange } from './BuyerDemandAnticipation/display';
+import { ALERT_PLAN, AlertBasis, AlertImpact, AlertNextStep } from './inventory/alertNextStep';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PTI ALERTS — REQ-E08-05.
@@ -61,6 +70,13 @@ import { weekLabel, weekRange } from './BuyerDemandAnticipation/display';
 // Closed tab filters by reason (kept in the address as `?reason=`) and counts
 // closures per rule per reason (BR-06). Alerts are delivered in the hub; email
 // delivery is outside the prototype.
+//
+// Inventory UX P-03 / P-08 (INV-D1, INV-D5, INV-D9) — each alert shows when it
+// bites ("Impact in N days"), its own basis (PTI stock against the PTI ROP,
+// the capacity shortfall and first gap week, or supplier cover with the lead
+// time), a one-line next step and the actions that fit the rule
+// (`inventory/alertNextStep.jsx`). The per-supplier grouping stays until the
+// rule list is final (P-04 waits for BL-150).
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @typedef {'open' | 'closed'} StatusTab */
@@ -151,6 +167,21 @@ const BuyerAlerts = () => {
   const crumb = [t('hub.nav.section.inventory'), t('inv.alerts.title')];
 
   const alerts = useMemo(() => alertsQuery.data?.items ?? [], [alertsQuery.data]);
+  // P-03 / P-08 — the figures the next step and the basis read, once per page.
+  const positionsQuery = useInventory();
+  const plansQuery = useCapacityPlans();
+  const posQuery = usePurchaseOrders({ status: [...CALL_OFF_PO_STATES] });
+  const callOffsQuery = useCallOffs();
+  const simQuery = useStockSimulation(dayOf(nowIso));
+  /** @type {import('./inventory/alertNextStep').AlertContext} */
+  const ctx = {
+    positions: positionsQuery.data?.items ?? [],
+    plans: plansQuery.data?.items ?? [],
+    pos: posQuery.data?.items ?? [],
+    callOffs: callOffsQuery.data?.items ?? [],
+    simulation: simQuery.data?.items ?? [],
+    ordersReady: posQuery.isSuccess && callOffsQuery.isSuccess && !simQuery.isPending
+  };
 
   if (alertsQuery.isPending) return <LoadingState breadcrumb={crumb} />;
   if (alertsQuery.isError)
@@ -394,8 +425,9 @@ const BuyerAlerts = () => {
                       >
                         <RiskPill riskClass={a.riskClass} />
                         <div className="min-w-0 flex-1">
-                          <div className="text-sm text-text-primary">
-                            {t(`inv.alerts.rule.${a.rule}`)}
+                          <div className="text-sm text-text-primary flex flex-wrap items-baseline gap-x-3">
+                            <span>{t(`inv.alerts.rule.${a.rule}`)}</span>
+                            <AlertImpact alert={a} />
                           </div>
                           <div className="text-xs text-text-secondary">
                             {a.rule === 'capacityBelowDemand' ? (
@@ -429,11 +461,7 @@ const BuyerAlerts = () => {
                             match={matchByKey.get(a.key) ?? null}
                             testId={`alert-match-${a.key}`}
                           />
-                          <RiskBasisNote
-                            basis={a.riskBasis}
-                            testId={`alert-basis-${a.key}`}
-                            withCover
-                          />
+                          <AlertBasis alert={a} ctx={ctx} />
                           {!!a.mrpController && (
                             <div className="text-xs text-text-secondary mt-1 flex flex-wrap items-center gap-2">
                               <PicHeader />
@@ -451,24 +479,27 @@ const BuyerAlerts = () => {
                               {a.actionNote ? `: ${a.actionNote}` : ''}
                             </div>
                           )}
+                          {a.status === 'open' ? <AlertNextStep alert={a} ctx={ctx} /> : null}
                         </div>
-                        <Link
-                          to={alertHref(a, 'buyer')}
-                          className="text-sm text-action hover:underline"
-                        >
-                          {t(
-                            a.rule === 'capacityBelowDemand'
-                              ? 'inv.alerts.openCapacity'
-                              : a.rule === 'commitmentBelowForecast' ||
-                                  a.rule === 'supplyDiscontinued'
-                                ? 'inv.alerts.openCommitments'
-                                : a.rule === 'blanketPoRunOut'
-                                  ? 'inv.alerts.openBlanketPo'
-                                  : a.rule === 'demandAnticipationUnabsorbed'
-                                    ? 'inv.alerts.openDemandAnticipation'
-                                    : 'inv.alerts.openInventory'
-                          )}
-                        </Link>
+                        {ALERT_PLAN[a.rule].link || a.status === 'closed' ? (
+                          <Link
+                            to={alertHref(a, 'buyer')}
+                            className="text-sm text-action hover:underline"
+                          >
+                            {t(
+                              a.rule === 'capacityBelowDemand'
+                                ? 'inv.alerts.openCapacity'
+                                : a.rule === 'commitmentBelowForecast' ||
+                                    a.rule === 'supplyDiscontinued'
+                                  ? 'inv.alerts.openCommitments'
+                                  : a.rule === 'blanketPoRunOut'
+                                    ? 'inv.alerts.openBlanketPo'
+                                    : a.rule === 'demandAnticipationUnabsorbed'
+                                      ? 'inv.alerts.openDemandAnticipation'
+                                      : 'inv.alerts.openInventory'
+                            )}
+                          </Link>
+                        ) : null}
                         {a.status === 'open' &&
                           (close.kind === 'held' ? (
                             <Button

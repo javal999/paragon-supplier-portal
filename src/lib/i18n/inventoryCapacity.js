@@ -471,6 +471,49 @@ export const inventoryCapacityEn = {
   'inv.alerts.counts.count': 'Closed',
   'inv.alerts.closedAt': 'Closed',
   'inv.alerts.toast.closed': 'Alert closed',
+  // Inventory UX P-03 (INV-D5) — days to impact, the next step and its actions.
+  'inv.alerts.impact': 'Impact in {{count}} days',
+  'inv.alerts.impact.now': 'Impact now',
+  'inv.alerts.impact.stale': 'Out of date for {{count}} days',
+  'inv.alerts.impact.staleToday': 'Out of date since today',
+  'inv.alerts.impact.neverSent': 'No figures ever sent',
+  'inv.alerts.nextStep': 'Next step',
+  'inv.alerts.next.ptiBelowRop':
+    'PTI stock is under its reorder point; refill it before it runs out.',
+  'inv.alerts.next.projectedStockOut':
+    'PTI stock runs out before the next delivery arrives; get material in sooner.',
+  'inv.alerts.next.coverage':
+    'Supplier stock and incoming fall short of the next 30 days; secure more supply.',
+  'inv.alerts.next.supplierBelowRop':
+    'Supplier stock is under its system ROP; ask when its next production finishes.',
+  'inv.alerts.next.callOffNotCovered':
+    'The supplier’s stock cannot cover a confirmed call-off; ask for a production date.',
+  'inv.alerts.next.staleData':
+    'The supplier’s figures are out of date; ask for current stock figures.',
+  'inv.alerts.next.leadTimeMissing':
+    'Ask the supplier for its lead time and record it; until then the class uses day bands.',
+  'inv.alerts.next.capacityBelowDemand':
+    'Allocated capacity falls short from {{week}}; ask the supplier to add capacity, or review the week on Capacity.',
+  'inv.alerts.next.commitmentBelowForecast':
+    'The supplier committed less than the forecast; review the gap on Commitments & gaps.',
+  'inv.alerts.next.supplyDiscontinued':
+    'The supplier will not supply this material any more; move demand to another source.',
+  'inv.alerts.next.blanketPoRunOut':
+    'The blanket PO runs out soon; raise the next PO before it does.',
+  'inv.alerts.next.demandAnticipationUnabsorbed':
+    'Supply exceeds the demand anticipation past its horizon; review the anticipation.',
+  'inv.alerts.next.order.callOff': 'Bring a call-off forward.',
+  'inv.alerts.next.order.po': 'No agreement line has quantity left, so raise a PO request.',
+  'inv.alerts.next.order.overCalled': 'The pair is already over-called, so raise a PO request.',
+  'inv.alerts.ask.leadTime': 'What is your lead time for this material, in days?',
+  // Inventory UX P-08 (INV-D1) — each rule's own basis.
+  'inv.alerts.basis.pti': 'PTI {{pti}} / ROP {{rop}} {{uom}}',
+  'inv.alerts.basis.ptiNone': 'No PTI stock figure',
+  'inv.alerts.basis.short': 'Short by {{qty}} {{uom}} · {{week}}',
+  'inv.alerts.basis.supplierCover': 'Supplier cover {{cover}} days · lead time {{lead}} days',
+  'inv.alerts.basis.supplierCoverBands': 'Supplier cover {{cover}} days · day bands: {{band}}',
+  'inv.alerts.basis.firm': 'Firm period short',
+  'inv.alerts.basis.tradeOff': 'Trade-off period short',
   // INV-D9 — "Ask supplier": PTI's hub ask, and the supplier's "PTI is asking"
   // block (S-04).
   'supplierAsk.button': 'Ask supplier',
@@ -1044,6 +1087,52 @@ export const inventoryCapacityId = {
   'inv.alerts.counts.count': 'Ditutup',
   'inv.alerts.closedAt': 'Ditutup',
   'inv.alerts.toast.closed': 'Peringatan ditutup',
+  // Inventory UX P-03 (INV-D5) — hari menuju dampak, langkah berikutnya dan tindakannya.
+  'inv.alerts.impact': 'Berdampak dalam {{count}} hari',
+  'inv.alerts.impact.now': 'Berdampak sekarang',
+  'inv.alerts.impact.stale': 'Kedaluwarsa {{count}} hari',
+  'inv.alerts.impact.staleToday': 'Kedaluwarsa sejak hari ini',
+  'inv.alerts.impact.neverSent': 'Belum pernah mengirim angka',
+  'inv.alerts.nextStep': 'Langkah berikutnya',
+  'inv.alerts.next.ptiBelowRop':
+    'Stok PTI di bawah titik pemesanan ulang; isi kembali sebelum habis.',
+  'inv.alerts.next.projectedStockOut':
+    'Stok PTI habis sebelum pengiriman berikutnya tiba; datangkan material lebih cepat.',
+  'inv.alerts.next.coverage':
+    'Stok dan kiriman pemasok tidak mencukupi 30 hari ke depan; amankan pasokan tambahan.',
+  'inv.alerts.next.supplierBelowRop':
+    'Stok pemasok di bawah ROP sistem; tanyakan kapan produksi berikutnya selesai.',
+  'inv.alerts.next.callOffNotCovered':
+    'Stok pemasok tidak mencukupi call-off yang sudah dikonfirmasi; minta tanggal produksi.',
+  'inv.alerts.next.staleData': 'Angka pemasok kedaluwarsa; minta angka stok terbaru.',
+  'inv.alerts.next.leadTimeMissing':
+    'Tanyakan waktu tunggu ke pemasok lalu catat; sampai itu, kelas memakai pita hari.',
+  'inv.alerts.next.capacityBelowDemand':
+    'Kapasitas yang dialokasikan kurang mulai {{week}}; minta pemasok menambah kapasitas, atau tinjau minggu itu di Kapasitas.',
+  'inv.alerts.next.commitmentBelowForecast':
+    'Pemasok berkomitmen di bawah forecast; tinjau selisihnya di Komitmen & selisih.',
+  'inv.alerts.next.supplyDiscontinued':
+    'Pemasok tidak lagi memasok material ini; pindahkan permintaan ke sumber lain.',
+  'inv.alerts.next.blanketPoRunOut':
+    'PO induk segera habis; terbitkan PO berikutnya sebelum habis.',
+  'inv.alerts.next.demandAnticipationUnabsorbed':
+    'Pasokan melebihi antisipasi permintaan melewati horizonnya; tinjau antisipasinya.',
+  'inv.alerts.next.order.callOff': 'Majukan call-off.',
+  'inv.alerts.next.order.po':
+    'Tidak ada baris perjanjian dengan sisa kuantitas, jadi ajukan permintaan PO.',
+  'inv.alerts.next.order.overCalled':
+    'Pasangan ini sudah melebihi call-off, jadi ajukan permintaan PO.',
+  'inv.alerts.ask.leadTime': 'Berapa hari waktu tunggu Anda untuk material ini?',
+  // Inventory UX P-08 (INV-D1) — dasar tiap aturan.
+  'inv.alerts.basis.pti': 'PTI {{pti}} / ROP {{rop}} {{uom}}',
+  'inv.alerts.basis.ptiNone': 'Tidak ada angka stok PTI',
+  'inv.alerts.basis.short': 'Kurang {{qty}} {{uom}} · {{week}}',
+  'inv.alerts.basis.supplierCover':
+    'Cakupan stok pemasok {{cover}} hari · waktu tunggu {{lead}} hari',
+  'inv.alerts.basis.supplierCoverBands':
+    'Cakupan stok pemasok {{cover}} hari · pita hari: {{band}}',
+  'inv.alerts.basis.firm': 'Periode Firm kurang',
+  'inv.alerts.basis.tradeOff': 'Periode Trade-off kurang',
   // INV-D9 — "Tanyakan ke pemasok" dan blok "PTI bertanya" (S-04).
   'supplierAsk.button': 'Tanyakan ke pemasok',
   'supplierAsk.view': 'Lihat pertanyaan',
