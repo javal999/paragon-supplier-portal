@@ -10,6 +10,7 @@ import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { useRfqCreate, useRfqPublish, useRfqReviseDraft } from '@services/query/commandHooks';
 import { documentRequestsRefusal } from '@services/transitions/rfxDocumentRules';
+import { rfqCreateRefusal } from '@services/sourcing/rfqModel';
 import { prefillFromRequisition } from '../../sourcing/requisitionPrefill';
 import { refusalMessage } from '../../sourcing/RfqAuthoring';
 import {
@@ -200,6 +201,9 @@ export const useRfqWizard = ({ baseRfqs, sourceablePrs }) => {
   const itemsRefusal = useMemo(() => itemsStepRefusal(draft.items), [draft.items]);
   const tiersRefusal = useMemo(() => tiersStepRefusal(draft.tiers), [draft.tiers]);
   const optionsRefusal = optionsStepRefusal(draft);
+  // RFX-D30 — the create verb's own unit rule (`rfqCreateRefusal`), so Scope
+  // refuses exactly the unit the verb would.
+  const uomRefusal = rfqCreateRefusal({ uom: draft.uom });
   // NR-1 BR-02 — the items a document request may name, as the payload numbers
   // them (`toRfqItem`: line = position + 1), so the level select and the verb's
   // `itemLineNo` check read the same numbers.
@@ -234,7 +238,8 @@ export const useRfqWizard = ({ baseRfqs, sourceablePrs }) => {
         // anonymous disabled button is 4a-FIND-02 — a commercial ruling, not a
         // parsing one, and not taken here.
         rfqNumbers.ok &&
-        rfqNumbers.value.totalQty > 0
+        rfqNumbers.value.totalQty > 0 &&
+        uomRefusal === null
       );
     }
     // The three authoring steps are judged by the SAME rules the create verb
@@ -471,6 +476,7 @@ export const useRfqWizard = ({ baseRfqs, sourceablePrs }) => {
     optionsRefusal,
     docItems,
     isStepValid,
+    uomRefusal,
     saveEdit,
     submitWizard
   };

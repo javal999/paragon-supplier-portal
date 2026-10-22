@@ -235,6 +235,8 @@ export const rfqAuthoringEn = {
 
   // — Step refusals (why Next is disabled) —
   'rfqAuthoring.refusal.NO_ITEMS': 'Add at least one item.',
+  'rfqAuthoring.refusal.UOM_MISSING': 'Choose a unit.',
+  'rfqAuthoring.refusal.UOM_UNKNOWN': 'Choose a unit from the list.',
   'rfqAuthoring.refusal.ITEM_TYPE_UNKNOWN': 'Choose an item type for every item.',
   'rfqAuthoring.refusal.ITEM_INCOMPLETE': 'Every item needs a description.',
   'rfqAuthoring.refusal.VARIANTS_INVALID':
@@ -477,6 +479,8 @@ export const rfqAuthoringId = {
   'rfqAuthoring.prefill.rfpLeftOut.inRound': '{{option}}: dalam putaran penawaran pasti {{n}}',
 
   'rfqAuthoring.refusal.NO_ITEMS': 'Tambahkan minimal satu item.',
+  'rfqAuthoring.refusal.UOM_MISSING': 'Pilih satuan.',
+  'rfqAuthoring.refusal.UOM_UNKNOWN': 'Pilih satuan dari daftar.',
   'rfqAuthoring.refusal.ITEM_TYPE_UNKNOWN': 'Pilih jenis item untuk setiap item.',
   'rfqAuthoring.refusal.ITEM_INCOMPLETE': 'Setiap item membutuhkan deskripsi.',
   'rfqAuthoring.refusal.VARIANTS_INVALID':

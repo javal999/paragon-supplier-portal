@@ -8,6 +8,7 @@ import KpiCard from '@components/ui-v2/KpiCard';
 import Tabs from '@components/ui-v2/Tabs';
 import StatusPill from '@components/ui-v2/StatusPill';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
+import Button from '@components/ui-v2/Button';
 import Table from '@components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
 import TableRow from '@components/ui-v2/TableRow';
@@ -23,6 +24,7 @@ import { useDemandForecast } from '@services/query/hooks';
 /** @import { DemandForecastSkuView } from '@services/data/types' */
 /** @import { SeriesRange } from '@services/engine/demandRange' */
 import DemandRangeSection from './demandForecast/DemandRangeSection';
+import { FQ_FIRST_ROWS, firstRows } from './demandForecast/firstRows';
 import PurposeHeader from '@components/forecast/PurposeHeader';
 import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
 import AboutThisPage from '@components/forecast/AboutThisPage';
@@ -431,6 +433,7 @@ const DemandForecastTab = ({ frame }) => {
   const run = query.data ?? null;
   const [brand, setBrand] = useState(/** @type {string} */ ('all'));
   const [selected, setSelected] = useState(/** @type {string | null} */ (null));
+  const [showAllSkus, setShowAllSkus] = useState(false);
   const skus = useMemo(() => run?.skus ?? [], [run]);
 
   if (query.isPending) return <LoadingState breadcrumb={crumb} />;
@@ -625,7 +628,7 @@ const DemandForecastTab = ({ frame }) => {
               <TableHeaderCell>{t('df.skus.col.diff')}</TableHeaderCell>
             </TableHeader>
             <tbody>
-              {shown.map((s) => {
+              {firstRows(shown, showAllSkus, (s) => s.skuCode === current?.skuCode).map((s) => {
                 const f = /** @type {NonNullable<ReturnType<typeof sum>>} */ (sum(s.forecast));
                 const sap = sum(s.sapPlan);
                 return (
@@ -677,6 +680,19 @@ const DemandForecastTab = ({ frame }) => {
               })}
             </tbody>
           </Table>
+          {shown.length > FQ_FIRST_ROWS ? (
+            <div className="mt-3">
+              <Button
+                variant="secondary"
+                onClick={() => setShowAllSkus((v) => !v)}
+                data-testid="df-skus-toggle"
+              >
+                {showAllSkus
+                  ? t('df.skus.showFewer', { count: FQ_FIRST_ROWS })
+                  : t('df.skus.showAll', { count: shown.length })}
+              </Button>
+            </div>
+          ) : null}
         </div>
       </section>
 

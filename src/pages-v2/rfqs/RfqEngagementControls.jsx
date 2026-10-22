@@ -64,10 +64,18 @@ function useEngagementAct() {
 /**
  * The decline form: a reason from the list and the supplier's own words.
  * Exported for the RFI and RFP intent (BL-132), which name their own confirm
- * button through `confirmLabel`.
- * @type {React.FC<{ onCancel: () => void; onConfirm: (reason: RfqDeclineReason, text: string) => void; pending: boolean; testId: string; confirmLabel?: string; }>}
+ * button through `confirmLabel` and pass their own reason list through
+ * `reasons` (RFX-D31); the RFQ's list is the default.
+ * @type {React.FC<{ onCancel: () => void; onConfirm: (reason: RfqDeclineReason, text: string) => void; pending: boolean; testId: string; confirmLabel?: string; reasons?: readonly RfqDeclineReason[]; }>}
  */
-export const DeclineForm = ({ onCancel, onConfirm, pending, testId, confirmLabel }) => {
+export const DeclineForm = ({
+  onCancel,
+  onConfirm,
+  pending,
+  testId,
+  confirmLabel,
+  reasons = RFQ_DECLINE_REASONS
+}) => {
   const { t } = useTranslation();
   const [reason, setReason] = useState(/** @type {RfqDeclineReason | ''} */ (''));
   const [text, setText] = useState('');
@@ -87,7 +95,7 @@ export const DeclineForm = ({ onCancel, onConfirm, pending, testId, confirmLabel
           className={inputClass}
         >
           <option value="">{t('rfqResponse.decline.choose')}</option>
-          {RFQ_DECLINE_REASONS.map((r) => (
+          {reasons.map((r) => (
             <option key={r} value={r}>
               {t(`rfqResponse.decline.reasonLabel.${r}`)}
             </option>

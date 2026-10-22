@@ -375,12 +375,15 @@ export const applyPrefill = (base, p) => ({
 
 /**
  * The unit an RFQ of this category is usually counted in: pieces for
- * packaging, kilograms for everything else. A default the buyer can change,
+ * packaging, NONE for `Other` (RFX-D30, owner ruling 2026-10-22: an "other"
+ * material has no usual unit, so the buyer picks one and the Scope step waits
+ * for it), kilograms for everything else. A default the buyer can change,
  * never a rule: the Scope step's select still offers every unit.
  * @param {RFQCategory | ''} category
  * @returns {DraftRfq['uom']}
  */
-export const uomForCategory = (category) => (category === 'Packaging' ? 'PCS' : 'KG');
+export const uomForCategory = (category) =>
+  category === 'Packaging' ? 'PCS' : category === 'Other' ? '' : 'KG';
 
 /**
  * The draft with a new category. The materials picked for the old one are

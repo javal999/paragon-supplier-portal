@@ -79,9 +79,16 @@ const raiseWeek2 = () => {
   });
 };
 
+/** IA review item 1 — the cards open folded; unfold every card's weeks grid. */
+const openAllWeeks = async () => {
+  await screen.findByTestId('dant-filters', {}, { timeout: 15000 });
+  for (const b of screen.getAllByTestId(/^dant-weeks-toggle-/)) fireEvent.click(b);
+};
+
 describe('the page opens on the published planning week', () => {
   it('names W36, says it is published from the sample, and marks only the horizon weeks', async () => {
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    await openAllWeeks();
     const card = await screen.findByTestId(`dant-card-${KEY}`);
     expect(screen.getByTestId('dant-planning-week')).toHaveTextContent('W36');
     expect(screen.getByTestId('dant-publication-state')).toHaveTextContent(
@@ -108,6 +115,7 @@ describe('the page opens on the published planning week', () => {
   it('shows the new rows: safety order in week 1, and the rows in order', async () => {
     const row = await rowOf(KEY);
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    await openAllWeeks();
     const grid = await screen.findByTestId(`dant-grid-${KEY}`);
     const labels = within(grid)
       .getAllByRole('rowheader')
@@ -163,6 +171,7 @@ describe('DRC-4 — the plan vs execution check on each card', () => {
     const key = 'sup-007-PK-PETB-8801';
     const { plan } = await rowOf(key);
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    await openAllWeeks();
     const check = await screen.findByTestId(`dant-check-${key}`);
     expect(within(check).getByTestId(`dant-check-result-${key}`)).toHaveTextContent(
       `Surplus: ${formatNumber(plan.absorbedLastWeek)} absorbed in W37; ${formatNumber(plan.unabsorbed)} more than that week can take`
@@ -196,6 +205,7 @@ describe('"would be" and publishing', () => {
     const before = (await rowOf(KEY)).weeks[1];
     raiseWeek2();
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    await openAllWeeks();
     expect(await screen.findByTestId(`dant-figure-${KEY}-${W37}`)).toHaveTextContent(
       formatNumber(/** @type {number} */ (before.published))
     );
@@ -264,6 +274,7 @@ describe('both locales (CAP-D10)', () => {
     try {
       await i18n.changeLanguage('id');
       renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+      await openAllWeeks();
       const card = await screen.findByTestId(`dant-card-${KEY}`);
       expect(screen.getAllByText('Antisipasi permintaan').length).toBeGreaterThan(0);
       for (const label of ['Sisa dibawa masuk', 'Jika dihitung ulang', 'Kelebihan diserap'])

@@ -1516,7 +1516,7 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *
  *   ⚠️ **AND THE PAGE ALREADY COMPUTES EXPIRY WITHOUT THIS MEMBER, WHICH IS
  *   WHY THE RETIREMENT IS BEHAVIOUR-PRESERVING RATHER THAN MERELY HARMLESS.**
- *   `SupplierDocuments.jsx` derives its expired KPI, its alert banner and its
+ *   `SupplierDocuments/` derives its expired KPI, its alert banner and its
  *   per-row "expired N days ago" from `daysUntil(expiryDate)` — never from
  *   `status`. The status member was not the source of the expiry story on the
  *   one surface that tells it. (The parenthetical here read *"`SupplierCerts

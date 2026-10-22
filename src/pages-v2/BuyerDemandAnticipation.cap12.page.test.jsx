@@ -5,7 +5,7 @@
 // figure never abbreviated to "DA" (CAP-D10).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER } from '@test/test-utils';
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
@@ -47,10 +47,17 @@ const readRow = async () => {
   return row;
 };
 
+/** IA review item 1 — the cards open folded; unfold every card's weeks grid. */
+const openAllWeeks = async () => {
+  await screen.findByTestId('dant-filters', {}, { timeout: 15000 });
+  for (const b of screen.getAllByTestId(/^dant-weeks-toggle-/)) fireEvent.click(b);
+};
+
 describe('CAP-12 — Open supply and Gap rows', () => {
   it('follow the consumption row, carry the read’s figures, and a gap above 0 is in warning tone', async () => {
     const row = await readRow();
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    await openAllWeeks();
     const grid = await screen.findByTestId(`dant-grid-${KEY}`);
     const labels = within(grid)
       .getAllByRole('rowheader')
@@ -85,6 +92,7 @@ describe('CAP-12 — Open supply and Gap rows', () => {
   it('reads in Indonesian, never abbreviated', async () => {
     await i18n.changeLanguage('id');
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    await openAllWeeks();
     const grid = await screen.findByTestId(`dant-grid-${KEY}`);
     expect(within(grid).getByText('Pasokan terbuka')).toBeInTheDocument();
     expect(within(grid).getByText('Kekurangan')).toBeInTheDocument();

@@ -70,6 +70,38 @@ describe('B-12 — the wizard fills what Scope already said', () => {
   it('KNOWN-BAD twin — a unit the buyer chose is not overwritten by a category', () => {
     const chosen = { ...emptyDraft(), uom: /** @type {const} */ ('L') };
     expect(withCategory(chosen, 'Packaging').uom).toBe('L');
+    expect(withCategory(chosen, 'Other').uom).toBe('L');
+  });
+
+  it('RFX-D30 — an Other RFQ has no default unit; leaving Other takes the new default', () => {
+    expect(uomForCategory('Other')).toBe('');
+    expect(uomForCategory('Botanical')).toBe('KG');
+    const other = withCategory(withCategory(emptyDraft(), 'Packaging'), 'Other');
+    expect(other.uom).toBe('');
+    expect(withCategory(other, 'Packaging').uom).toBe('PCS');
+  });
+
+  it('RFX-D30 — Scope waits for a unit on an Other RFQ, and says so; a picked unit lets it on', async () => {
+    renderWithProviders(<BuyerSourcing />, { identity: PROCUREMENT });
+    fireEvent.click(await screen.findByText('New RFQ'));
+    fireEvent.change(await screen.findByPlaceholderText(/e\.g\. Q3 2026 Fragrance Sourcing/i), {
+      target: { value: 'Other unit' }
+    });
+    const category = /** @type {HTMLElement} */ (
+      screen
+        .getAllByRole('combobox')
+        .find((el) => within(el).queryByRole('option', { name: 'Packaging' }) !== null)
+    );
+    fireEvent.change(category, { target: { value: 'Other' } });
+    fireEvent.change(screen.getByLabelText('Total quantity'), { target: { value: '500' } });
+    // KNOWN-BAD — no unit: Next stays off and the step says why.
+    expect(screen.getByTestId('rfq-wizard-uom')).toHaveValue('');
+    expect(screen.getByTestId('rfq-uom-step-refusal')).toHaveTextContent('Choose a unit.');
+    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+    // KNOWN-GOOD — one field away: the buyer picks a unit.
+    fireEvent.change(screen.getByTestId('rfq-wizard-uom'), { target: { value: 'L' } });
+    expect(screen.queryByTestId('rfq-uom-step-refusal')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Next' })).not.toBeDisabled();
   });
 
   it('the first break is seeded from a readable Scope quantity, as a total', () => {

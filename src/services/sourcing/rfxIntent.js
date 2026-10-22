@@ -4,9 +4,9 @@
 // `intentRefusal`).
 //
 // The supplier's first answer to an RFI or RFP invitation: "I will respond",
-// or a decline with a reason from the RFQ's list and words of its own. The
-// buyer reads both on the invitee table, so a silent invitee and a supplier
-// that said no are no longer the same row.
+// or a decline with a reason from its event type's list (RFX-D31) and words
+// of its own. The buyer reads both on the invitee table, so a silent invitee
+// and a supplier that said no are no longer the same row.
 //
 // The rules mirror the RFQ's one for one:
 //   · one intent per invitee per event; a second respond or decline is refused
@@ -21,15 +21,38 @@
 
 /** @import { RfqDeclineReason } from './rfqModel' */
 /** @import { RfxInvitee } from './types' */
-import { RFQ_DECLINE_REASONS } from './rfqModel';
 import { effectiveDeadline, isPastDeadline } from '../transitions/rfxRules';
 
+/** @typedef {'rfi' | 'rfp'} RfxIntentKind */
+
 /**
- * The decline reasons. The RFQ's list, so the buyer reads one vocabulary
- * across the three event types.
- * @type {readonly RfqDeclineReason[]}
+ * The decline reasons per event type (owner ruling 2026-10-22, RFX-D31): the
+ * core the RFQ shares (not our product, no capacity, compliance, unclear,
+ * other) plus the reasons that fit the event. One vocabulary across the three
+ * types — the same id reads the same words everywhere — but each type offers,
+ * and its verb accepts, only its own list.
+ * @type {Readonly<Record<RfxIntentKind, readonly RfqDeclineReason[]>>}
  */
-export const RFX_DECLINE_REASONS = RFQ_DECLINE_REASONS;
+export const RFX_DECLINE_REASONS = {
+  rfi: [
+    'notOurProduct',
+    'noCapacity',
+    'complianceNotMet',
+    'termsNotAcceptable',
+    'specUnclear',
+    'other'
+  ],
+  rfp: [
+    'notOurProduct',
+    'noCapacity',
+    'complianceNotMet',
+    'termsNotAcceptable',
+    'commercialTermsNotMet',
+    'cannotDevelop',
+    'specUnclear',
+    'other'
+  ]
+};
 
 /**
  * An intent on an RFI or RFP as the store keeps it. `eventId` names the RFI or
@@ -97,11 +120,13 @@ export const rfxIntentView = (r) => {
  */
 
 /**
+ * `kind`:       The event type: its decline reasons are the ones accepted.
  * `act`:        respond, decline, or withdraw (a decline after "I will respond").
  * `existing`:   The intent this supplier already stated on this event, if any.
  * `submitted`:  True when this supplier's response to the event is Submitted.
  *
  * @typedef {{
+ *   readonly kind: RfxIntentKind;
  *   readonly event: RfxIntentEvent | undefined;
  *   readonly supplierId: string;
  *   readonly act: 'respond' | 'decline' | 'withdraw';
@@ -147,8 +172,8 @@ export function rfxIntentRefusal(input) {
     return `INTENT_ALREADY_STATED: ${supplierId} already answered ${event.eventNumber}`;
   }
   if (input.act === 'respond') return null;
-  if (!RFX_DECLINE_REASONS.includes(/** @type {RfqDeclineReason} */ (input.reason))) {
-    return `DECLINE_REASON_UNKNOWN: ${String(input.reason)} is not a decline reason on the list`;
+  if (!RFX_DECLINE_REASONS[input.kind].includes(/** @type {RfqDeclineReason} */ (input.reason))) {
+    return `DECLINE_REASON_UNKNOWN: ${String(input.reason)} is not a decline reason on the ${input.kind.toUpperCase()} list`;
   }
   if (!hasText(input.text)) return 'DECLINE_TEXT_MISSING: a decline says why in words as well';
   if (input.submitted) {

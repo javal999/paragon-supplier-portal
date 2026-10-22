@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link, useSearchParams } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
 import PageMetaLine from '@components/ui-v2/PageMetaLine';
@@ -25,6 +26,7 @@ import {
 /** @import { PurchaseOrder } from '@services/data/types' */
 /** @import { ForesightAnswer, ForesightStatus, ResponseStatus, ShippingNoticeStatus } from '@services/data/poResponseProjection' */
 import {
+  completionMovedLater,
   foresightStatus,
   responseStatus,
   shippingNoticeStatus
@@ -47,10 +49,13 @@ import {
   receiptsForPo
 } from './orderSummaryModel';
 /** @import { DrillTarget } from './orderSummaryDrill' */
-import { drillHref, EMPTY_CONTRACT, NOT_REQUIRED } from './orderSummaryDrill';
+import { drillHref, drillPath, EMPTY_CONTRACT, NOT_REQUIRED } from './orderSummaryDrill';
 import { DrillLink, EmptyCell } from './DrillCell';
 import { readOrderSummaryViewState, saveOrderSummaryViewState } from './orderSummaryViewState';
 import OrdersViewSwitch, { PURCHASE_ORDERS_HEADER } from './OrdersViewSwitch';
+
+/** IA review item 2 — the Summary view's "moved later" filter parameter. */
+export const MOVED_PARAM = 'moved';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ORDER COLLABORATION SUMMARY — REQ-E07-03 (MN-ORD-10 to MN-ORD-13).
@@ -224,6 +229,11 @@ const OrderSummaryView = ({ persona, foresightAnswers, invoices }) => {
   const stored = useRef(readOrderSummaryViewState(persona));
   const [search, setSearch] = useState(stored.current.search);
   const [attentionOnly, setAttentionOnly] = useState(stored.current.attentionOnly);
+  // IA review item 2 — My tasks "Orders whose expected completion moved later"
+  // lands here with `moved=1`: only those orders, by the same rule the task
+  // counts with (`completionMovedLater`), and a way to clear it.
+  const [params] = useSearchParams();
+  const movedOnly = params.get(MOVED_PARAM) === '1';
 
   useEffect(() => {
     saveOrderSummaryViewState(persona, { search, attentionOnly, scrollY: stored.current.scrollY });
@@ -304,6 +314,7 @@ const OrderSummaryView = ({ persona, foresightAnswers, invoices }) => {
     // "Needs attention" is the requirement's own first two bands (BR-11):
     // escalated or overdue, and orders carrying a gap or a discrepancy.
     if (attentionOnly && attentionBand(r.attention) > 1) return false;
+    if (movedOnly && !completionMovedLater(r.po)) return false;
     if (q === '') return true;
     const hay = `${r.po.poNumber} ${r.po.supplierName} ${r.po.lineItems.map((li) => `${li.materialCode} ${li.description}`).join(' ')}`;
     return hay.toLowerCase().includes(q);
@@ -404,6 +415,23 @@ const OrderSummaryView = ({ persona, foresightAnswers, invoices }) => {
           {t('oc.summary.filter.attentionOnly')}
         </label>
       </div>
+
+      {movedOnly ? (
+        <div
+          role="status"
+          className="bg-action-soft border-l-2 border-action rounded px-4 py-3 mb-4 text-sm text-text-secondary flex flex-wrap items-center gap-x-3 gap-y-1"
+          data-testid="order-summary-moved-filter"
+        >
+          <span>{t('oc.summary.filter.moved', { count: shown.length })}</span>
+          <Link
+            to={`${drillPath('po', persona)}?view=summary`}
+            className="text-action-hover underline"
+            data-testid="order-summary-moved-clear"
+          >
+            {t('oc.summary.filter.movedClear')}
+          </Link>
+        </div>
+      ) : null}
 
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>

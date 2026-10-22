@@ -52,6 +52,8 @@ export const demandForecastEn = {
   'df.skus.title': 'SKUs',
   'df.skus.intro': 'Select a SKU to see its weeks.',
   'df.skus.all': 'All brands',
+  'df.skus.showAll': 'Show all {{count}} SKUs',
+  'df.skus.showFewer': 'Show the first {{count}}',
   'df.skus.col.sku': 'SKU',
   'df.skus.col.brand': 'Brand',
   'df.skus.col.method': 'Method',
@@ -166,6 +168,8 @@ export const demandForecastEn = {
   'df.range.levels.intro':
     'A brand’s range is calibrated on the brand’s own past errors, so it is narrower than its SKUs’ ranges added up: SKUs’ misses partly cancel out.',
   'df.range.skus.title': 'SKUs',
+  'df.range.skus.showAll': 'Show all {{count}} SKUs',
+  'df.range.skus.showFewer': 'Show the first {{count}}',
   'df.range.skus.intro':
     'A new SKU on SAP’s plan is calibrated on the past errors of SAP’s plan for that SKU, or of the brand’s SKUs where it has too few, and its range is wider.',
   'df.range.materials.title': 'Materials',
@@ -244,6 +248,8 @@ export const demandForecastId = {
   'df.skus.title': 'SKU',
   'df.skus.intro': 'Pilih SKU untuk melihat minggunya.',
   'df.skus.all': 'Semua merek',
+  'df.skus.showAll': 'Tampilkan semua {{count}} SKU',
+  'df.skus.showFewer': 'Tampilkan {{count}} pertama',
   'df.skus.col.sku': 'SKU',
   'df.skus.col.brand': 'Merek',
   'df.skus.col.method': 'Metode',
@@ -355,6 +361,8 @@ export const demandForecastId = {
   'df.range.levels.intro':
     'Rentang merek dikalibrasi pada kesalahan masa lalu merek itu sendiri, sehingga lebih sempit daripada jumlah rentang SKU-nya: meleset antar-SKU sebagian saling menutup.',
   'df.range.skus.title': 'SKU',
+  'df.range.skus.showAll': 'Tampilkan semua {{count}} SKU',
+  'df.range.skus.showFewer': 'Tampilkan {{count}} pertama',
   'df.range.skus.intro':
     'SKU baru yang memakai rencana SAP dikalibrasi pada kesalahan masa lalu rencana SAP untuk SKU itu, atau SKU merek tersebut bila datanya terlalu sedikit, dan rentangnya lebih lebar.',
   'df.range.materials.title': 'Material',

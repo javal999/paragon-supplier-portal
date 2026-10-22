@@ -67,6 +67,8 @@ export const orderPlanEn = {
   'op.fill.status.within': 'Within 80%',
 
   'op.recs.title': 'Recommended orders',
+  'op.recs.showAll': 'Show all {{count}} recommended orders',
+  'op.recs.showFewer': 'Show the first {{count}}',
   'op.why': 'Full pages behind each quantity:',
   'op.why.requirement': 'Material requirement',
   'op.why.safety': 'Safety stock targets',
@@ -239,6 +241,8 @@ export const orderPlanId = {
   'op.fill.status.within': 'Dalam 80%',
 
   'op.recs.title': 'Pesanan yang disarankan',
+  'op.recs.showAll': 'Tampilkan semua {{count}} pesanan yang disarankan',
+  'op.recs.showFewer': 'Tampilkan {{count}} pertama',
   'op.why': 'Halaman lengkap di balik setiap kuantitas:',
   'op.why.requirement': 'Kebutuhan material',
   'op.why.safety': 'Target stok pengaman',

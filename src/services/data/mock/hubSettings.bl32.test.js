@@ -358,12 +358,12 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
     /** @type {Record<string, string[]>} */
     const table = {
       callOffTolerance: [
-        'src/pages-v2/BuyerCallOffs.jsx',
+        'src/pages-v2/BuyerCallOffs/components/NewCallOffPanel.jsx',
         'src/services/transitions/callOffRules.js',
         'src/services/transitions/callOffTolerance.js'
       ],
       callOffConfirmWorkingDays: [
-        'src/pages-v2/BuyerCallOffs.jsx',
+        'src/pages-v2/BuyerCallOffs/components/CallOffBanner.jsx',
         'src/services/transitions/callOffRules.js',
         'src/services/transitions/callOffTolerance.js'
       ],

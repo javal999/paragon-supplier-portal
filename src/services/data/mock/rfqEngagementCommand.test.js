@@ -28,7 +28,7 @@ import { currentQuotesFor, rfxNow } from './rfxReadModel';
 import { comparisonRows } from '../../sourcing/rfqComparison';
 import { NO_PERSON } from '@context/noPerson';
 /** @import { QuotationItemQuote } from '../../sourcing/rfqModel' */
-import { deriveQuoteHeader } from '../../sourcing/rfqModel';
+import { RFQ_DECLINE_REASONS, deriveQuoteHeader } from '../../sourcing/rfqModel';
 
 const svc = new MockCommandService();
 const reads = new MockProcurementService();
@@ -710,5 +710,40 @@ describe("the grid's quote is what B4's comparison and award read", () => {
       ).id
     );
     expect(w.reason).toMatch(/QUOTE_ALREADY_SUBMITTED/);
+  });
+});
+
+describe('RFX-D31 — an RFQ decline takes a reason from the RFQ list only', () => {
+  /** @param {string} reason */
+  const decline = (reason) =>
+    intent(sup007, 't_rfqintent_decline', {
+      rfqId: 'rfq-021',
+      supplierId: 'sup-007',
+      reason,
+      text: 'Our words, as the buyer reads them'
+    });
+
+  it.each(['complianceNotMet', 'leadTimeTooShort', 'quantityTooSmall'])(
+    'PASSES — %s is on the RFQ list',
+    async (reason) => {
+      const res = await decline(reason);
+      expect(res.status, res.reason).toBe('done');
+    }
+  );
+
+  it.each(['termsNotAcceptable', 'commercialTermsNotMet', 'cannotDevelop'])(
+    'REFUSED — %s is an RFI or RFP reason, not an RFQ one (DECLINE_REASON_UNKNOWN)',
+    async (reason) => {
+      const res = await decline(reason);
+      expect(res.status).toBe('failed');
+      expect(res.reason).toMatch(/DECLINE_REASON_UNKNOWN/);
+    }
+  );
+
+  it('every seeded RFQ decline still holds a reason on the RFQ list', () => {
+    const declines = rfqIntentStore.all().filter((r) => r.intent === 'decline');
+    expect(declines.length).toBeGreaterThan(0);
+    for (const r of declines)
+      expect(RFQ_DECLINE_REASONS).toContain(r.intent === 'decline' ? r.reason : '');
   });
 });

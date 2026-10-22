@@ -170,6 +170,10 @@ export const orderCollaborationEn = {
   'oc.summary.filter.search': 'Find an order',
   'oc.summary.filter.searchPlaceholder': 'Order number, supplier or material',
   'oc.summary.filter.attentionOnly': 'Needs attention only',
+  'oc.summary.filter.moved_one': 'Showing {{count}} order whose expected completion moved later.',
+  'oc.summary.filter.moved_other':
+    'Showing {{count}} orders whose expected completion moved later.',
+  'oc.summary.filter.movedClear': 'Show all orders',
   'oc.summary.filter.none': 'No order matches this filter.',
   'oc.summary.filter.clear': 'Clear the filter',
 
@@ -401,6 +405,9 @@ export const orderCollaborationId = {
   'oc.summary.filter.search': 'Cari pesanan',
   'oc.summary.filter.searchPlaceholder': 'Nomor pesanan, pemasok, atau material',
   'oc.summary.filter.attentionOnly': 'Hanya yang perlu perhatian',
+  'oc.summary.filter.moved_other':
+    'Menampilkan {{count}} pesanan yang perkiraan selesainya mundur.',
+  'oc.summary.filter.movedClear': 'Tampilkan semua pesanan',
   'oc.summary.filter.none': 'Tidak ada pesanan yang cocok dengan filter ini.',
   'oc.summary.filter.clear': 'Hapus filter',
 

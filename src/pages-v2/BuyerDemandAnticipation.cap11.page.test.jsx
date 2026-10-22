@@ -61,9 +61,16 @@ const upload = (csv, name = 'consumption.csv') =>
     target: { files: [new File([csv], name, { type: 'text/csv' })] }
   });
 
+/** IA review item 1 — the cards open folded; unfold every card's weeks grid. */
+const openAllWeeks = async () => {
+  await screen.findByTestId('dant-filters', {}, { timeout: 15000 });
+  for (const b of screen.getAllByTestId(/^dant-weeks-toggle-/)) fireEvent.click(b);
+};
+
 describe('recording consumption (typed)', () => {
   it('shows Recorded consumption on W36 and leaves the demand anticipation as it was', async () => {
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    await openAllWeeks();
     // P-12 — the panel is the "Record consumption" tab; the cards are "This week".
     await openTab('Record consumption');
     const panel = await screen.findByTestId('consumption-panel');
@@ -107,6 +114,7 @@ describe('recording consumption (typed)', () => {
 
   it('control — before anything is recorded the row reads a dash', async () => {
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    await openAllWeeks();
     const card = await screen.findByTestId(`dant-card-${KEY}`);
     expect(within(card).getByText('Recorded consumption')).toBeInTheDocument();
     expect(within(card).queryByTestId(`dant-consumption-${KEY}-${W36}`)).toBeNull();
@@ -114,6 +122,7 @@ describe('recording consumption (typed)', () => {
 
   it('a typed 0 is recorded and shows 0', async () => {
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    await openAllWeeks();
     await openTab('Record consumption');
     const panel = await screen.findByTestId('consumption-panel');
     fireEvent.change(within(panel).getByLabelText('Material'), {
@@ -141,6 +150,7 @@ describe('recording consumption (typed)', () => {
 describe('the upload', () => {
   it('records the template’s rows and lists each refused row', async () => {
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    await openAllWeeks();
     await openTab('Record consumption');
     await screen.findByTestId('consumption-panel');
     upload(
@@ -291,6 +301,7 @@ describe('both locales (CAP-D10)', () => {
         }
       );
       renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+      await openAllWeeks();
       const card = await screen.findByTestId(`dant-card-${KEY}`);
       expect(within(card).getByText('Pemakaian tercatat')).toBeInTheDocument();
       expect(within(card).getByText('Kelebihan diserap')).toBeInTheDocument();

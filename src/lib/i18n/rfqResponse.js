@@ -30,8 +30,14 @@ export const rfqResponseEn = {
   'rfqResponse.decline.text': 'In your own words',
   'rfqResponse.decline.buyerSees': 'The buyer reads both the reason and your words.',
   'rfqResponse.decline.confirm': 'Decline this RFQ',
-  'rfqResponse.decline.reasonLabel.noCapacity': 'No capacity',
-  'rfqResponse.decline.reasonLabel.notOurProduct': 'Not a product we make',
+  'rfqResponse.decline.reasonLabel.notOurProduct': 'Not our product range',
+  'rfqResponse.decline.reasonLabel.noCapacity': 'No capacity for this',
+  'rfqResponse.decline.reasonLabel.complianceNotMet':
+    'Cannot meet compliance requirements (halal, BPOM, GMP)',
+  'rfqResponse.decline.reasonLabel.termsNotAcceptable':
+    'Confidentiality or T&C terms not acceptable',
+  'rfqResponse.decline.reasonLabel.commercialTermsNotMet': 'Cannot meet the commercial terms asked',
+  'rfqResponse.decline.reasonLabel.cannotDevelop': 'Cannot develop the formula or design (ODM)',
   'rfqResponse.decline.reasonLabel.leadTimeTooShort': 'Lead time too short',
   'rfqResponse.decline.reasonLabel.quantityTooSmall': 'Quantity too small',
   'rfqResponse.decline.reasonLabel.specUnclear': 'Specification unclear',
@@ -214,8 +220,16 @@ export const rfqResponseId = {
   'rfqResponse.decline.text': 'Dengan kata-kata Anda sendiri',
   'rfqResponse.decline.buyerSees': 'Pembeli membaca alasan dan penjelasan Anda.',
   'rfqResponse.decline.confirm': 'Tolak RFQ ini',
-  'rfqResponse.decline.reasonLabel.noCapacity': 'Kapasitas tidak tersedia',
-  'rfqResponse.decline.reasonLabel.notOurProduct': 'Bukan produk yang kami buat',
+  'rfqResponse.decline.reasonLabel.notOurProduct': 'Bukan lini produk kami',
+  'rfqResponse.decline.reasonLabel.noCapacity': 'Tidak ada kapasitas untuk ini',
+  'rfqResponse.decline.reasonLabel.complianceNotMet':
+    'Tidak dapat memenuhi persyaratan kepatuhan (halal, BPOM, GMP)',
+  'rfqResponse.decline.reasonLabel.termsNotAcceptable':
+    'Ketentuan kerahasiaan atau syarat & ketentuan tidak dapat diterima',
+  'rfqResponse.decline.reasonLabel.commercialTermsNotMet':
+    'Tidak dapat memenuhi ketentuan komersial yang diminta',
+  'rfqResponse.decline.reasonLabel.cannotDevelop':
+    'Tidak dapat mengembangkan formula atau desain (ODM)',
   'rfqResponse.decline.reasonLabel.leadTimeTooShort': 'Waktu tunggu terlalu singkat',
   'rfqResponse.decline.reasonLabel.quantityTooSmall': 'Kuantitas terlalu kecil',
   'rfqResponse.decline.reasonLabel.specUnclear': 'Spesifikasi kurang jelas',

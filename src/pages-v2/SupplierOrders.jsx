@@ -1,5 +1,5 @@
 /** @import React from 'react' */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { isActiveAsn } from '@services/transitions/fulfilmentRules';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { OrderNotFound, PoFilterBanner, usePoDrillFilter } from './orders/PoDrillFilter';
@@ -293,11 +293,21 @@ const SupplierOrdersList = () => {
   // REQ-E07-03 — the drill-through filter. A supplier addressing another
   // supplier's PO lands in `notFound`: the PO read never returned it (BR-06).
   const drill = usePoDrillFilter();
+  // IA F-3 — the panel follows the address: a new `?po=` opens that PO even
+  // while another is open. Only a CHANGE of the parameter acts, so a refetch
+  // never pulls the panel back from a PO the supplier picked in the table.
+  const appliedPoId = useRef(/** @type {string | null} */ (null));
   useEffect(() => {
-    if (!linkedPoId || selected) return;
+    if (!linkedPoId) {
+      appliedPoId.current = null;
+      return;
+    }
+    if (appliedPoId.current === linkedPoId) return;
     const po = MY_POS.find((p) => p.id === linkedPoId);
-    if (po) openOrderPanel(po, 'detail');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (po) {
+      appliedPoId.current = linkedPoId;
+      openOrderPanel(po, 'detail');
+    }
   }, [linkedPoId, MY_POS]);
 
   if (!supplierId) return <NoSupplierIdentity />;
