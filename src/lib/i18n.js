@@ -101,6 +101,8 @@ import { consumptionEn, consumptionId } from './i18n/consumption';
 import { ltpFgDemandEn, ltpFgDemandId } from './i18n/ltpFgDemand';
 // — BL-194 the supplier's feedstock confirmation (DRC-8) —
 import { feedstockConfirmEn, feedstockConfirmId } from './i18n/feedstockConfirm';
+// — INV-D8 PTI's capacity gap decision (Inventory UX P-07) —
+import { capacityDecisionEn, capacityDecisionId } from './i18n/capacityDecision';
 import { leadTimeStepsEn, leadTimeStepsId } from './i18n/leadTimeSteps';
 import { adminCalendarEn, adminCalendarId } from './i18n/adminCalendar';
 import { performanceEn, performanceId } from './i18n/performance';
@@ -247,6 +249,7 @@ export const resources = {
       ...consumptionEn,
       ...ltpFgDemandEn,
       ...feedstockConfirmEn,
+      ...capacityDecisionEn,
       ...leadTimeStepsEn,
       ...adminCalendarEn,
       ...performanceEn,
@@ -762,6 +765,7 @@ export const resources = {
       ...consumptionId,
       ...ltpFgDemandId,
       ...feedstockConfirmId,
+      ...capacityDecisionId,
       ...leadTimeStepsId,
       ...adminCalendarId,
       ...performanceId,

@@ -345,23 +345,23 @@ Folder: `docs/supplier-hub/research/inventory-ux-mockups/`. Self-contained HTML,
 
 ## 10. BUILD STATUS
 
-Scope ruled 2026-10-22: the 13 Major findings except P-04 (waits for BL-150, INV-D5); Minor and Polish findings are not in this build. Brief: `sc-hub-vision/prompts/inventory-ux-build.md`. Wave 1 on branch `feat/inv-ux-wave1`.
+Scope ruled 2026-10-22: the 13 Major findings except P-04 (waits for BL-150, INV-D5); Minor and Polish findings are not in this build. Brief: `sc-hub-vision/prompts/inventory-ux-build.md`. Wave 1 on branch `feat/inv-ux-wave1` (MR !28); wave 2 on `feat/inv-ux-wave2`, stacked on it.
 
 | ID | Status | Wave | Pinned by |
 |---|---|---|---|
 | P-01 | Built | 1 (lane 1A) | `pages-v2/BuyerInventory.riskFirst.page.test.jsx` (P-01) |
-| P-02 | Built, without "Ask supplier" (wave 2) | 1 (1A) | `BuyerInventory.riskFirst.page.test.jsx` (P-02, INV-D6) |
-| P-03 | Planned | 2 (2B) | – |
+| P-02 | Built; Ask supplier added in wave 2 (2D) | 1 (1A), 2 (2D) | `BuyerInventory.riskFirst.page.test.jsx` (P-02, INV-D6) |
+| P-03 | Built | 2 (2B) | `pages-v2/BuyerAlerts.nextStep.p03.page.test.jsx` (P-03) |
 | P-04 | Waiting on owner (BL-150, INV-D5) | – | – |
-| P-05 | Built, without "Ask supplier" (wave 2) | 1 (1B) | `pages-v2/BuyerStockSimulation.test.jsx` (P-05); drawer: `BuyerInventory.riskFirst.page.test.jsx` |
+| P-05 | Built; Ask supplier added in wave 2 (2D) | 1 (1B), 2 (2D) | `pages-v2/BuyerStockSimulation.test.jsx` (P-05); drawer: `BuyerInventory.riskFirst.page.test.jsx` |
 | P-06 | Built | 1 (1B) | `BuyerStockSimulation.test.jsx` (P-06); `inventory/stockSimulationDisplay.test.js` |
-| P-07 | Planned | 2 (2C) | – |
-| P-08 | Built on Inventory; Alerts in wave 2 (2B) | 1 (1A) | `BuyerInventory.riskFirst.page.test.jsx` (P-08) |
+| P-07 | Built (Move demand not built, INV-D8; alert rule INV-D12, accept rule INV-D13) | 2 (2C) | `services/data/mock/capacityDecision.test.js`; `pages-v2/inventory/capacityGapActions.p07.page.test.jsx` |
+| P-08 | Built on Inventory and Alerts | 1 (1A), 2 (2B) | `BuyerInventory.riskFirst.page.test.jsx` (P-08) |
 | P-09 | Built | 1 (1B) | `services/transitions/simulateSupplierStock.test.js` (INV-D7) |
-| S-01 | Built, without the "PTI is asking" block (S-04, wave 2) | 1 (1C) | `pages-v2/inventory/stockPageUx.page.test.jsx` (S-01) |
+| S-01 | Built; the "PTI is asking" block added in wave 2 | 1 (1C), 2 (2A) | `pages-v2/inventory/stockPageUx.page.test.jsx` (S-01) |
 | S-02 | Built | 1 (1C) | `stockPageUx.page.test.jsx` (S-02); `weeklyUpdate.page.test.jsx` |
 | S-03 | Built | 1 (1C) | `stockPageUx.page.test.jsx` (S-03); `services/transitions/inventoryRules.test.js` |
-| S-04 | Planned | 2 (2A) | – |
+| S-04 | Built (the hub ask, INV-D9) | 2 (2A) | `services/data/mock/supplierAsk.test.js`; `pages-v2/inventory/ptiAsks.s04.page.test.jsx`; `AskSupplierButton.page.test.jsx` |
 | X-01 | Built (Call-offs page left: BL-223) | 1 (1D) | `pages-v2/inventory/inventoryDisplay.qty.test.js`; `inventory/localeQty.x01.page.test.jsx` |
 | P-10 to P-17, S-05 to S-12, X-02 to X-05 | Not in scope (Minor, Polish) | – | – |
 

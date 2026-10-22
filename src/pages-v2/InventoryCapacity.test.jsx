@@ -865,14 +865,18 @@ describe('Alerts (REQ-E08-05)', () => {
         })
       ])
     );
-    // BL-46 — the class says why: cover against the lead time.
+    // P-08 (INV-D1) — a PTI-stock alert states its own basis, PTI stock against the PTI ROP…
     expect(
       within(alert).getByTestId('alert-basis-ptiBelowRop|RM-STEAR-7300|sup-002')
-    ).toHaveTextContent('Cover 10 days · Lead time 21 days');
+    ).toHaveTextContent('PTI 900 / ROP 2,500 KG');
+    // …while a supplier rule keeps BL-46's basis, named "Supplier cover".
+    expect(screen.getByTestId('alert-basis-coverage|RM-STEAR-7300|sup-002')).toHaveTextContent(
+      'Supplier cover 10 days · lead time 21 days'
+    );
     // …and the one material with no lead time raises its own alert, on the fallback.
     const missing = screen.getByTestId('alert-leadTimeMissing|RM-EMUL-9430|sup-010');
     expect(missing).toHaveTextContent('No supplier lead time on record');
-    expect(missing).toHaveTextContent('Cover 6 days · No lead time · day bands: Critical');
+    expect(missing).toHaveTextContent('Supplier cover 6 days · day bands: Critical');
     // The hand-written geopolitical banners are not part of the alert experience.
     expect(screen.queryByText(/geopolitic/i)).toBeNull();
   });

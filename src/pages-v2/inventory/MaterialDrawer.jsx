@@ -15,9 +15,11 @@ import {
 } from '@services/query/hooks';
 /** @import { InventoryPosition, RiskBasis, RiskClass } from '@services/data/types' */
 import { CALL_OFF_PO_STATES } from '@services/transitions/callOffRules';
-import { dayOf, incomingTotals } from '@services/transitions/inventoryRules';
+import { dayOf, incomingTotals, stockFreshness } from '@services/transitions/inventoryRules';
 import { Figure, RiskPill, inventoryNow, labelClass } from './inventoryDisplay';
+import AskSupplierButton from './AskSupplierButton';
 import FeedstockLine from './FeedstockLine';
+import { callOffHref, poRequestHref, stockSimulationHref } from './inventoryLinks';
 import { agreementLineFor, isOverCalled } from './stockSimulationDisplay';
 import { PicCell, PicHeader } from '../materials/picDisplay';
 import { TradeNameBeside } from '../materials/tradeNameDisplay';
@@ -34,6 +36,9 @@ import { TradeNameBeside } from '../materials/tradeNameDisplay';
 // quantity left — `agreementLineFor`, the rule Stock simulation uses (P-06);
 // otherwise "Create PO request", with the call-off page's own "No agreement
 // line" sentence as the reason.
+//
+// "Ask supplier" (INV-D9, lane 2D) is the hub ask: on stock figures when the
+// pair has none or they are out of date, otherwise on a production date.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -155,7 +160,9 @@ const MaterialDrawer = ({
   const overCalled = isOverCalled(simRow?.simulation ?? null);
   const ptiBelow = p.ptiSoh !== null && p.ptiRop !== null && p.ptiSoh < p.ptiRop;
   const supplierCover = risk.basis.kind === 'leadTime' || risk.basis.kind === 'fallbackBands';
-  const query = `supplier=${encodeURIComponent(p.supplierId)}&material=${encodeURIComponent(p.materialCode)}`;
+  // INV-D9 — no figures or out-of-date figures: ask for stock; otherwise for a production date.
+  const askTopic =
+    stockFreshness(p, inventoryNow()) === 'current' ? 'productionDate' : 'stockFigures';
 
   return (
     <SidePanel open onClose={onClose} title={`${p.materialCode} · ${p.materialLabel}`}>
@@ -295,11 +302,7 @@ const MaterialDrawer = ({
           <div>
             <Button
               variant="outline"
-              onClick={() =>
-                navigate(
-                  `/buyer/stock-simulation?q=${encodeURIComponent(p.materialCode)}&supplier=${encodeURIComponent(p.supplierId)}`
-                )
-              }
+              onClick={() => navigate(stockSimulationHref(p.supplierId, p.materialCode))}
               data-testid="material-drawer-simulation"
             >
               {t('inv.drawer.action.simulation')}
@@ -312,11 +315,7 @@ const MaterialDrawer = ({
             !overCalled ? (
             <Button
               variant="outline"
-              onClick={() =>
-                navigate(
-                  `/buyer/call-offs?newFor=${encodeURIComponent(p.supplierId)}&material=${encodeURIComponent(p.materialCode)}`
-                )
-              }
+              onClick={() => navigate(callOffHref(p.supplierId, p.materialCode))}
               data-testid="material-drawer-calloff"
             >
               {t('inv.drawer.action.callOff')}
@@ -325,7 +324,7 @@ const MaterialDrawer = ({
             <div>
               <Button
                 variant="outline"
-                onClick={() => navigate(`/buyer/purchase-requisition?new=1&${query}`)}
+                onClick={() => navigate(poRequestHref(p.supplierId, p.materialCode))}
                 data-testid="material-drawer-po"
               >
                 {t('inv.drawer.action.po')}
@@ -337,6 +336,18 @@ const MaterialDrawer = ({
               </p>
             </div>
           )}
+          <div data-testid="material-drawer-ask" data-topic={askTopic}>
+            <AskSupplierButton
+              supplierId={p.supplierId}
+              materialCode={p.materialCode}
+              topic={askTopic}
+              riskClass={risk.riskClass}
+              testId="material-drawer-ask"
+            />
+            <p className="mt-1 text-xs text-text-tertiary">
+              {t(`inv.drawer.action.ask.${askTopic}`)}
+            </p>
+          </div>
           {onSync ? (
             <Button
               variant="outline"

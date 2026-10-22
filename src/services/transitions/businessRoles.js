@@ -393,7 +393,16 @@ const LANE_BUNDLES = Object.freeze({
     'materialname:review',
     // Material E1 (MR-7 BR-08) — the planner fills a figure the supplier has
     // not given, for the stock simulation only.
-    'inventory:simulate'
+    'inventory:simulate',
+    // INV-D9 — "Ask supplier": the lane that closes inventory alerts asks the
+    // supplier about the material or capacity week behind them, and closes or
+    // withdraws the ask.
+    'supplierask:raise',
+    'supplierask:close',
+    // INV-D8 (P-07) — the planner who reads the capacity gap accepts the
+    // supplier's additional capacity on an amber week. Not a supplier lane:
+    // the supplier offers the capacity, PTI accepts it.
+    'capacitydecision:accept'
   ]),
   // Raising and revising a requisition — split from approving one, which is
   // the segregation `pr:approve` living in `procurement` expresses.
@@ -502,7 +511,11 @@ const LANE_BUNDLES = Object.freeze({
     'materialname:submit',
     // BL-194 / DRC-8 BR-a — confirming current feedstock with a date: the same
     // people who declare the stock, in the same weekly cycle [Default E2].
-    'feedstock:confirm'
+    'feedstock:confirm',
+    // INV-D9 — answering PTI's ask about a material's stock, production date
+    // or a capacity week: the people who declare the stock and confirm the
+    // capacity it asks about.
+    'supplierask:answer'
   ]),
   // ── BACK OFFICE — the paperwork ─────────────────────────────────────────
   // *"The admin people are the ones who upload the certificates"* (operator).

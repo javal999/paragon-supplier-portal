@@ -138,6 +138,24 @@ export const useInventoryAlerts = () =>
     svc.procurement.getInventoryAlerts(scope)
   );
 
+/**
+ * INV-D9 — PTI's "Ask supplier" hub asks, newest first. A supplier reads only
+ * the asks that name it; PTI reads every ask.
+ */
+export const useSupplierAsks = () =>
+  useServiceQuery(['procurement', 'supplierAsks'], (svc, scope) =>
+    svc.procurement.getSupplierAsks(scope)
+  );
+
+/**
+ * INV-D8 — PTI's decisions on capacity gap weeks. A supplier reads only the
+ * decisions on its own capacity; PTI reads every decision.
+ */
+export const useCapacityDecisions = () =>
+  useServiceQuery(['procurement', 'capacityDecisions'], (svc, scope) =>
+    svc.procurement.getCapacityDecisions(scope)
+  );
+
 /** Published forecast versions with who viewed them (REQ-E06-01). */
 export const useForecastVersions = () =>
   useServiceQuery(['procurement', 'forecastVersions'], (svc, scope) =>

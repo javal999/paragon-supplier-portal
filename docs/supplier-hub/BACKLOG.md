@@ -110,6 +110,7 @@ Nothing blocks these.
 |---|---|---|---|---|
 | BL-223 | The Call-offs page formats quantities with its own `qty` in `en-US` (`pages-v2/callOffs/callOffDisplay.jsx:230`), so Indonesian screens there still show "15,000 PCS"; the inventory screens use the locale-aware `formatNumber` since X-01 | Same ambiguity CR-18 refuses on entry | S | Found building X-01 (inventory UX wave 1, 2026-10-22) |
 | BL-224 | Inventory UX wave 1 leftovers: unused i18n keys `hub.home.task.sup.weeklyUpdate` and `matName.tab.stock`; the template upload result names the materials sent but not their quantities (S-03 proposal) | Cleanup and a small finish | S | Inventory UX wave 1 report (2026-10-22) |
+| BL-227 | Inventory UX wave 2 polish: the supplier block reads "PTI is asking about N of your materials" while a capacity ask names a planning group and week, not a material; the Ask supplier button keeps one label (the P-02/P-05 wording is a hint line); an accepted capacity week cannot be undone and stays "Accepted" if the week later turns red | Wording and edge states | S | Inventory UX wave 2 report (2026-10-22) |
 | BL-39 | Non-conformance and complaint tracking (E10.02), the part of Supplier Performance never detailed | Named in the deck as MVP, still a stub | M | Requirements section 6 |
 | BL-75 | Supplier new-invoice form takes one total, not an amount per line; a total that differs from its lines is checked under the strictest line rule | CR-12 is per line since BL-44 | S | REQ-E07-07 |
 | BL-76 | The Risk page uses its own day thresholds (under 30 red, under 50 amber) over sample categories with no supplier or material; align with CR-24 or retire it | Contradicts CR-02 / CR-24 | S | REQ-E08-05 |
@@ -188,6 +189,8 @@ Found while building the RFx UX evaluation (`research/RFX-UX-EVALUATION-2026-10.
 
 | ID | Item | Closed | By |
 |---|---|---|---|
+| BL-225 | Capacity alert after PTI accepts additional capacity | 2026-10-22 | Owner decision INV-D12: an accepted amber week stops counting, a red week always counts, the alert clears once every gap week is accepted; built on `feat/inv-ux-wave2` (`alertGapWeeks`, spec in `inventoryAlertRules.test.js`) |
+| BL-226 | May PTI accept additional capacity before the supplier confirms it | 2026-10-22 | Owner decision INV-D13: yes, as built in wave 2 |
 | BL-65 | Capacity entry: one number with overrides, or per week | 2026-10-22 | Owner decision INV-D2: per week on the 13-week grid, plus "Copy to all weeks" (evaluation S-05); build pending |
 | BL-68 | Days of cover in CR-24: supplier stock or PTI stock | 2026-10-22 | Owner decision INV-D1: supplier stock ÷ demand, labelled "Supplier cover", PTI cover shown beside it (evaluation P-08); build pending |
 | BL-144 | Who may change a supplier's stock update mode | 2026-10-22 | Owner decision INV-D6: the administrator lane keeps `supplier:set-update-mode`; Inventory shows the current mode with a link to the admin page (evaluation P-14); build pending |

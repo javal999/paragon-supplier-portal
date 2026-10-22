@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Version | 1.12, 2026-10-22 (RFX-D26 to RFX-D31 added: owner rulings on RFx UX waves 1 and 2; INV-D1 to INV-D11 added: Inventory & Capacity UX rulings) |
-| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20) and RFX-D26 to RFX-D31 (2026-10-22); the Inventory & Capacity UX decisions INV-D1 to INV-D11 (2026-10-22); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
+| Version | 1.13, 2026-10-22 (INV-D12, INV-D13 added: accepted capacity and the alert; 1.12 added RFX-D26 to RFX-D31 and INV-D1 to INV-D11) |
+| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20) and RFX-D26 to RFX-D31 (2026-10-22); the Inventory & Capacity UX decisions INV-D1 to INV-D13 (2026-10-22); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, BL-12 call-off record, and three values (BL-54 invoice cap, BL-55 gate OTIF minimum, BL-56 early allowance). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
 | Evidence | Market practice is cited at the end. Where a claim is a judgement rather than a published practice, it says so |
@@ -380,7 +380,7 @@ Levi ruled on six points left open after RFx UX waves 1 and 2 on 2026-10-22. RFX
 
 ## Inventory & Capacity UX decisions (decided 2026-10-22)
 
-The owner accepted every recommendation on the open questions of the Inventory & Capacity UX evaluation (`research/INVENTORY-UX-EVALUATION-2026-10.md`, section 9) on 2026-10-22. They are recorded here as INV-D1 to INV-D11. Four close backlog decisions (BL-65, BL-68, BL-144, BL-148); two stay open with an interim build rule (BL-149, BL-150).
+The owner accepted every recommendation on the open questions of the Inventory & Capacity UX evaluation (`research/INVENTORY-UX-EVALUATION-2026-10.md`, section 9) on 2026-10-22. They are recorded here as INV-D1 to INV-D11; INV-D12 and INV-D13 follow the owner's rulings on BL-225 and BL-226 during the wave 2 build. Four close backlog decisions (BL-65, BL-68, BL-144, BL-148); two stay open with an interim build rule (BL-149, BL-150).
 
 ### INV-D1 · Risk class on supplier cover, named as such (BL-68, P-08)
 **Decision.** CR-24 days of cover stay supplier stock ÷ demand. The figure is labelled "Supplier cover" (ID "Cakupan stok pemasok") wherever it drives a risk class; PTI cover is shown beside it as a second figure. An alert about PTI stock states its own basis instead of borrowing supplier cover. Labels change; the rule does not.
@@ -416,6 +416,14 @@ The owner accepted every recommendation on the open questions of the Inventory &
 
 ### INV-D11 · The supplier is told when PTI stock access is removed (S-10)
 **Decision.** When PTI removes a supplier's access to PTI stock, the supplier's Stock page shows one line saying PTI stock is no longer shared, with no reason given.
+
+### INV-D12 · Accepted additional capacity and the capacity alert (BL-225, decided 2026-10-22)
+**Decision.** An amber week (LTP above capacity, within capacity + additional capacity) that PTI accepted under INV-D8 no longer counts toward the "Allocated capacity below the LTP" alert. A red week (LTP above BE) always counts, whatever is recorded on it. When every gap week of a plan is accepted, the plan raises no capacity alert; days to impact run to the first week that still counts. Built on `feat/inv-ux-wave2` (`alertGapWeeks` in `capacityRules.js`).
+
+**What would change this.** If accepted weeks later fall short in delivery, the alert should count an accepted week again once the supplier resubmits below the accepted figure.
+
+### INV-D13 · PTI may accept before the supplier confirms (BL-226, decided 2026-10-22)
+**Decision.** PTI can accept a week's additional capacity whether or not the supplier has confirmed it under CAP-3 BR-03. Unchanged from the wave 2 build.
 
 ---
 

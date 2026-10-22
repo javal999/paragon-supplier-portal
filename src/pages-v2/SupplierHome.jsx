@@ -58,6 +58,7 @@ import WeeklyUpdatePanel, {
   useWeeklyStatusText,
   weeklyUpdateView
 } from './inventory/WeeklyUpdatePanel';
+import PtiAsksBlock from './inventory/PtiAsksBlock';
 
 // Supplier Home — "To do" (REQUIREMENTS §3.8 SC-01): what Paragon is waiting for
 // from this supplier. Filters match the supplier dashboard widgets they replace.
@@ -601,6 +602,8 @@ const SupplierHome = () => {
         positions={stock.data?.items ?? []}
         nowIso={inventoryNow()}
       />
+      {/* Inventory UX S-04 (INV-D9) — PTI's asks first, above the To do lanes. */}
+      <PtiAsksBlock supplierId={supplierId} />
       <TaskList tasks={tasks} lanes={lanes} />
       {openAlerts.length > 0 && (
         <section className="mt-6" data-testid="supplier-home-alerts">

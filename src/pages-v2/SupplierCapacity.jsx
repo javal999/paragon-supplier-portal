@@ -20,7 +20,7 @@ import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import { formatDate, formatDateTime } from '@lib/format';
-import { useCapacityPlans } from '@services/query/hooks';
+import { useCapacityDecisions, useCapacityPlans } from '@services/query/hooks';
 /** @import { CapacityPlan, CapacityReason } from '@services/data/types' */
 /** @import { CapacityRefusal } from '@services/transitions/capacityRules' */
 import { useActiveReasonCodes, useReasonLabel } from './admin/reasonCodeDisplay';
@@ -67,6 +67,11 @@ import { ReEntryPill, usePlanningGroupLabel } from './inventory/planningGroupDis
 // `t_capacity_submit` as the figures, as `upsideConfirmed: true` on the week —
 // no new verb — and is sent only for a week that is amber when submitted.
 // Changing the additional capacity clears it: a new figure is a new promise.
+//
+// INV-D8 (Inventory UX P-07) — when PTI accepts the additional capacity on a
+// week, that week reads "PTI accepted your additional capacity on <date>", read
+// only, in a "PTI's decision" row shown only when the group has one. The read
+// is narrowed to the supplier's own decisions; the entry flow is unchanged.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -159,6 +164,7 @@ const SupplierCapacity = () => {
   const reasonLabel = useReasonLabel();
   const { identity } = useCurrentIdentity();
   const plansQuery = useCapacityPlans();
+  const decisionsQuery = useCapacityDecisions();
   const confirm = useVerbAvailability('capacity:confirm');
   const { run, pending } = useInventoryRunner();
   const [params] = useSearchParams();
@@ -250,6 +256,12 @@ const SupplierCapacity = () => {
     plan.weeks.map((w) => w.week)
   );
   const held = confirm.kind === 'held';
+  // INV-D8 — PTI's acceptances on this group, by week (the read is the supplier's own).
+  const accepted = new Map(
+    (decisionsQuery.data?.items ?? [])
+      .filter((d) => d.supplierId === plan.supplierId && d.planningGroupId === plan.planningGroupId)
+      .map((d) => [d.week, d])
+  );
 
   /**
    * @param {number} i
@@ -517,6 +529,26 @@ const SupplierCapacity = () => {
                       />
                     )}
                   </div>
+                ) : (
+                  <span className="text-xs text-text-tertiary">—</span>
+                );
+              }
+            },
+            {
+              // INV-D8 — PTI's decision, read only; the row shows once PTI has one.
+              id: 'ptiDecision',
+              label: t('capDecision.row'),
+              align: 'start',
+              hidden: accepted.size === 0,
+              cell: (week) => {
+                const d = accepted.get(week);
+                return d ? (
+                  <span
+                    className="text-xs text-text-secondary"
+                    data-testid={`capacity-pti-accepted-${week}`}
+                  >
+                    {t('capDecision.supplier.accepted')} <Data>{formatDate(d.decidedAt)}</Data>
+                  </span>
                 ) : (
                   <span className="text-xs text-text-tertiary">—</span>
                 );

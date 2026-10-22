@@ -64,6 +64,13 @@ const ALLOWED_DOMAINS = [
       'A DATA-LICENCE ATTRIBUTION in a comment (CC-BY 4.0). Citing a source is the ' +
       'opposite of the defect this arc removes; deleting it would strip provenance.'
   },
+  {
+    domain: 'wa.me',
+    because:
+      "A FUNCTIONAL ENDPOINT, NOT A PARTY'S IDENTITY — WhatsApp's own share link, " +
+      'built in one place (`lib/whatsAppShare.js`) for the owner-ruled optional ' +
+      'WhatsApp share of a supplier ask (INV-D9). It names no supplier or customer.'
+  },
   { domain: 'example.com', because: 'RFC 2606 reserved — a placeholder by standard.' },
   { domain: 'example.org', because: 'RFC 2606 reserved.' },
   { domain: 'example.net', because: 'RFC 2606 reserved.' }

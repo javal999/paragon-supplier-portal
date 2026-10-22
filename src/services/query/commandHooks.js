@@ -1850,6 +1850,130 @@ export function useMaterialNameLoad() {
   });
 }
 
+// ── INV-D9 · "ASK SUPPLIER" — PTI'S HUB ASK ─────────────────────────────────
+//
+// Four acts on one ask: PTI raises it (a creation; the store mints the id),
+// the supplier answers it, PTI closes it after the answer or withdraws it while
+// it is open. The time and the actor are set by the target; none is a payload
+// field. Only the asks read (and the shell's menu count, same key) refreshes.
+/**
+ * @typedef {| {
+ *       readonly verb: 'raise';
+ *       readonly supplierId: string;
+ *       readonly materialCode?: string;
+ *       readonly planningGroupId?: string;
+ *       readonly week?: string;
+ *       readonly topic: import('../transitions/supplierAskRules').SupplierAskTopic;
+ *       readonly question: string;
+ *       readonly dueDate?: string;
+ *       readonly riskClass?: import('../data/types').RiskClass;
+ *     }
+ *   | { readonly verb: 'answer'; readonly askId: string; readonly answer: string; readonly answerDate?: string }
+ *   | { readonly verb: 'close'; readonly askId: string }
+ *   | { readonly verb: 'withdraw'; readonly askId: string }} SupplierAskVars
+ */
+
+/** Raise, answer, close or withdraw a hub ask (`t_supplierask_*`). */
+export function useSupplierAskCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, SupplierAskVars>} */ (useMutation)({
+    mutationFn: (vars) => {
+      switch (vars.verb) {
+        case 'raise':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_supplierask_raise',
+            entity: 'supplierAsk',
+            payload: {
+              supplierId: vars.supplierId,
+              ...(vars.materialCode
+                ? { materialCode: vars.materialCode }
+                : { planningGroupId: vars.planningGroupId ?? '', week: vars.week ?? '' }),
+              topic: vars.topic,
+              question: vars.question,
+              ...(vars.dueDate ? { dueDate: vars.dueDate } : {}),
+              ...(vars.riskClass ? { riskClass: vars.riskClass } : {})
+            }
+          });
+        case 'answer':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_supplierask_answer',
+            entity: 'supplierAsk',
+            entityId: vars.askId,
+            expectedState: 'Open',
+            payload: {
+              answer: vars.answer,
+              ...(vars.answerDate ? { answerDate: vars.answerDate } : {})
+            }
+          });
+        case 'close':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_supplierask_close',
+            entity: 'supplierAsk',
+            entityId: vars.askId,
+            expectedState: 'Answered',
+            payload: {}
+          });
+        case 'withdraw':
+          return svc.commands.dispatch(scope, {
+            transitionId: 't_supplierask_withdraw',
+            entity: 'supplierAsk',
+            entityId: vars.askId,
+            expectedState: 'Open',
+            payload: {}
+          });
+      }
+    },
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      void qc.invalidateQueries({
+        predicate: (q) => q.queryKey[0] === 'procurement' && q.queryKey[1] === 'supplierAsks'
+      });
+    }
+  });
+}
+
+// ── INV-D8 · PTI'S CAPACITY GAP DECISION ────────────────────────────────────
+//
+// PTI accepts the additional capacity a supplier offered on one amber week
+// (a creation; the store mints the id). The time and the actor are set by the
+// target; none is a payload field. Only the decisions read refreshes.
+/**
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly planningGroupId: string;
+ *   readonly week: string;
+ * }} CapacityAcceptVars
+ */
+
+/** Accept additional capacity on one gap week (`t_capacitydecision_accept`). */
+export function useCapacityDecisionCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, CapacityAcceptVars>} */ (useMutation)({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_capacitydecision_accept',
+        entity: 'capacityDecision',
+        payload: {
+          supplierId: vars.supplierId,
+          planningGroupId: vars.planningGroupId,
+          week: vars.week
+        }
+      }),
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      void qc.invalidateQueries({
+        predicate: (q) => q.queryKey[0] === 'procurement' && q.queryKey[1] === 'capacityDecisions'
+      });
+    }
+  });
+}
+
 // ── BL-194 · SUPPLIER FEEDSTOCK CONFIRMATION (DRC-8 BR-a; DRC-D17) ───────────
 //
 // The supplier confirms its current feedstock for one assigned material. The

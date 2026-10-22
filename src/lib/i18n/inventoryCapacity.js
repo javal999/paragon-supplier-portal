@@ -127,6 +127,9 @@ export const inventoryCapacityEn = {
   'inv.drawer.action.simulation.hint': 'Weekly figures for this supplier and material',
   'inv.drawer.action.callOff': 'Create call-off',
   'inv.drawer.action.po': 'Create PO request',
+  // Lane 2D — the hint under the drawer's "Ask supplier" (INV-D9).
+  'inv.drawer.action.ask.productionDate': 'Ask the supplier for a production date',
+  'inv.drawer.action.ask.stockFigures': 'Ask the supplier for current stock figures',
 
   'inv.sync.title': 'Suppliers connected by system',
   'inv.sync.subtitle': 'Pull the latest stock figures directly from the supplier system.',
@@ -471,6 +474,107 @@ export const inventoryCapacityEn = {
   'inv.alerts.counts.count': 'Closed',
   'inv.alerts.closedAt': 'Closed',
   'inv.alerts.toast.closed': 'Alert closed',
+  // Inventory UX P-03 (INV-D5) — days to impact, the next step and its actions.
+  'inv.alerts.impact': 'Impact in {{count}} days',
+  'inv.alerts.impact.now': 'Impact now',
+  'inv.alerts.impact.stale': 'Out of date for {{count}} days',
+  'inv.alerts.impact.staleToday': 'Out of date since today',
+  'inv.alerts.impact.neverSent': 'No figures ever sent',
+  'inv.alerts.nextStep': 'Next step',
+  'inv.alerts.next.ptiBelowRop':
+    'PTI stock is under its reorder point; refill it before it runs out.',
+  'inv.alerts.next.projectedStockOut':
+    'PTI stock runs out before the next delivery arrives; get material in sooner.',
+  'inv.alerts.next.coverage':
+    'Supplier stock and incoming fall short of the next 30 days; secure more supply.',
+  'inv.alerts.next.supplierBelowRop':
+    'Supplier stock is under its system ROP; ask when its next production finishes.',
+  'inv.alerts.next.callOffNotCovered':
+    'The supplier’s stock cannot cover a confirmed call-off; ask for a production date.',
+  'inv.alerts.next.staleData':
+    'The supplier’s figures are out of date; ask for current stock figures.',
+  'inv.alerts.next.leadTimeMissing':
+    'Ask the supplier for its lead time and record it; until then the class uses day bands.',
+  'inv.alerts.next.capacityBelowDemand':
+    'Allocated capacity falls short from {{week}}; ask the supplier to add capacity, or review the week on Capacity.',
+  'inv.alerts.next.commitmentBelowForecast':
+    'The supplier committed less than the forecast; review the gap on Commitments & gaps.',
+  'inv.alerts.next.supplyDiscontinued':
+    'The supplier will not supply this material any more; move demand to another source.',
+  'inv.alerts.next.blanketPoRunOut':
+    'The blanket PO runs out soon; raise the next PO before it does.',
+  'inv.alerts.next.demandAnticipationUnabsorbed':
+    'Supply exceeds the demand anticipation past its horizon; review the anticipation.',
+  'inv.alerts.next.order.callOff': 'Bring a call-off forward.',
+  'inv.alerts.next.order.po': 'No agreement line has quantity left, so raise a PO request.',
+  'inv.alerts.next.order.overCalled': 'The pair is already over-called, so raise a PO request.',
+  'inv.alerts.ask.leadTime': 'What is your lead time for this material, in days?',
+  // Inventory UX P-08 (INV-D1) — each rule's own basis.
+  'inv.alerts.basis.pti': 'PTI {{pti}} / ROP {{rop}} {{uom}}',
+  'inv.alerts.basis.ptiNone': 'No PTI stock figure',
+  'inv.alerts.basis.short': 'Short by {{qty}} {{uom}} · {{week}}',
+  'inv.alerts.basis.supplierCover': 'Supplier cover {{cover}} days · lead time {{lead}} days',
+  'inv.alerts.basis.supplierCoverBands': 'Supplier cover {{cover}} days · day bands: {{band}}',
+  'inv.alerts.basis.firm': 'Firm period short',
+  'inv.alerts.basis.tradeOff': 'Trade-off period short',
+  // INV-D9 — "Ask supplier": PTI's hub ask, and the supplier's "PTI is asking"
+  // block (S-04).
+  'supplierAsk.button': 'Ask supplier',
+  'supplierAsk.view': 'View ask',
+  'supplierAsk.existing.Open': 'Asked, waiting for the supplier',
+  'supplierAsk.existing.Answered': 'The supplier answered',
+  'supplierAsk.dialog.title': 'Ask the supplier',
+  'supplierAsk.dialog.viewTitle': 'Ask to the supplier',
+  'supplierAsk.field.subject': 'About',
+  'supplierAsk.field.topic': 'Topic',
+  'supplierAsk.field.question': 'Question',
+  'supplierAsk.field.dueDate': 'Answer needed by (optional)',
+  'supplierAsk.topic.productionDate': 'Production date',
+  'supplierAsk.topic.stockFigures': 'Stock figures',
+  'supplierAsk.topic.capacityGap': 'Capacity gap',
+  'supplierAsk.topic.other': 'Other',
+  'supplierAsk.default.productionDate':
+    'When does production of this material start, and when will it reach PTI?',
+  'supplierAsk.default.stockFigures': 'Please send your current stock figures for this material.',
+  'supplierAsk.default.capacityGap':
+    'Your capacity for this week is below PTI demand. Can you add capacity, and how much?',
+  'supplierAsk.default.other': 'Please tell PTI about this.',
+  'supplierAsk.submit': 'Send ask',
+  'supplierAsk.cancel': 'Cancel',
+  'supplierAsk.closeDialog': 'Close',
+  'supplierAsk.close': 'Close ask',
+  'supplierAsk.withdraw': 'Withdraw ask',
+  'supplierAsk.shareWhatsApp': 'Share on WhatsApp',
+  'supplierAsk.share.text': 'PTI has a question for you in the Supplier Hub: {{link}}',
+  'supplierAsk.state.Open': 'Waiting for the supplier',
+  'supplierAsk.state.Answered': 'Answered',
+  'supplierAsk.state.Closed': 'Closed',
+  'supplierAsk.state.Withdrawn': 'Withdrawn',
+  'supplierAsk.askedLabel': 'Asked',
+  'supplierAsk.dueLabel': 'Due',
+  'supplierAsk.answerLabel': 'Supplier’s answer',
+  'supplierAsk.answerDateLabel': 'Date given',
+  'supplierAsk.toast.raised': 'Ask sent to the supplier',
+  'supplierAsk.toast.answered': 'Answer sent to PTI',
+  'supplierAsk.toast.closed': 'Ask closed',
+  'supplierAsk.toast.withdrawn': 'Ask withdrawn',
+  'supplierAsk.toast.refused': 'Not sent: {{reason}}',
+  'supplierAsk.refusal.TOPIC_UNKNOWN': 'Choose a topic.',
+  'supplierAsk.refusal.SUBJECT_REQUIRED': 'Name a material, or a planning group and week.',
+  'supplierAsk.refusal.NOT_SUPPLIED': 'This supplier does not supply this material or week.',
+  'supplierAsk.refusal.QUESTION_REQUIRED': 'Write the question.',
+  'supplierAsk.refusal.TEXT_TOO_LONG': 'Keep the text to {{max}} characters.',
+  'supplierAsk.refusal.DUE_DATE_INVALID': 'Choose a due date from today on.',
+  'supplierAsk.refusal.ASK_ALREADY_OPEN': 'PTI already asked about this. Close that ask first.',
+  'supplierAsk.refusal.ANSWER_REQUIRED': 'Write your answer.',
+  'supplierAsk.refusal.ANSWER_DATE_INVALID': 'The date is not valid.',
+  'supplierAsk.block.title_one': 'PTI is asking about {{count}} of your materials',
+  'supplierAsk.block.title_other': 'PTI is asking about {{count}} of your materials',
+  'supplierAsk.block.empty': 'Nothing PTI is waiting on',
+  'supplierAsk.answer': 'Answer',
+  'supplierAsk.reply.text': 'Your answer',
+  'supplierAsk.reply.date': 'Date (optional)',
+  'supplierAsk.reply.submit': 'Send answer',
   'inv.alerts.sup.title': 'Alerts about your materials',
   'inv.alerts.sup.rule.supplierBelowRop':
     'Your stock is below the reorder point PTI’s system calculated for you (ROP Supplier)',
@@ -646,6 +750,9 @@ export const inventoryCapacityId = {
   'inv.drawer.action.simulation.hint': 'Angka mingguan untuk pemasok dan material ini',
   'inv.drawer.action.callOff': 'Buat call-off',
   'inv.drawer.action.po': 'Buat permintaan PO',
+  // Lane 2D — the hint under the drawer's "Ask supplier" (INV-D9).
+  'inv.drawer.action.ask.productionDate': 'Minta tanggal produksi ke pemasok',
+  'inv.drawer.action.ask.stockFigures': 'Minta angka stok terbaru ke pemasok',
 
   'inv.sync.title': 'Pemasok yang terhubung lewat sistem',
   'inv.sync.subtitle': 'Tarik angka stok terbaru langsung dari sistem pemasok.',
@@ -986,6 +1093,109 @@ export const inventoryCapacityId = {
   'inv.alerts.counts.count': 'Ditutup',
   'inv.alerts.closedAt': 'Ditutup',
   'inv.alerts.toast.closed': 'Peringatan ditutup',
+  // Inventory UX P-03 (INV-D5) — hari menuju dampak, langkah berikutnya dan tindakannya.
+  'inv.alerts.impact': 'Berdampak dalam {{count}} hari',
+  'inv.alerts.impact.now': 'Berdampak sekarang',
+  'inv.alerts.impact.stale': 'Kedaluwarsa {{count}} hari',
+  'inv.alerts.impact.staleToday': 'Kedaluwarsa sejak hari ini',
+  'inv.alerts.impact.neverSent': 'Belum pernah mengirim angka',
+  'inv.alerts.nextStep': 'Langkah berikutnya',
+  'inv.alerts.next.ptiBelowRop':
+    'Stok PTI di bawah titik pemesanan ulang; isi kembali sebelum habis.',
+  'inv.alerts.next.projectedStockOut':
+    'Stok PTI habis sebelum pengiriman berikutnya tiba; datangkan material lebih cepat.',
+  'inv.alerts.next.coverage':
+    'Stok dan kiriman pemasok tidak mencukupi 30 hari ke depan; amankan pasokan tambahan.',
+  'inv.alerts.next.supplierBelowRop':
+    'Stok pemasok di bawah ROP sistem; tanyakan kapan produksi berikutnya selesai.',
+  'inv.alerts.next.callOffNotCovered':
+    'Stok pemasok tidak mencukupi call-off yang sudah dikonfirmasi; minta tanggal produksi.',
+  'inv.alerts.next.staleData': 'Angka pemasok kedaluwarsa; minta angka stok terbaru.',
+  'inv.alerts.next.leadTimeMissing':
+    'Tanyakan waktu tunggu ke pemasok lalu catat; sampai itu, kelas memakai pita hari.',
+  'inv.alerts.next.capacityBelowDemand':
+    'Kapasitas yang dialokasikan kurang mulai {{week}}; minta pemasok menambah kapasitas, atau tinjau minggu itu di Kapasitas.',
+  'inv.alerts.next.commitmentBelowForecast':
+    'Pemasok berkomitmen di bawah forecast; tinjau selisihnya di Komitmen & selisih.',
+  'inv.alerts.next.supplyDiscontinued':
+    'Pemasok tidak lagi memasok material ini; pindahkan permintaan ke sumber lain.',
+  'inv.alerts.next.blanketPoRunOut':
+    'PO induk segera habis; terbitkan PO berikutnya sebelum habis.',
+  'inv.alerts.next.demandAnticipationUnabsorbed':
+    'Pasokan melebihi antisipasi permintaan melewati horizonnya; tinjau antisipasinya.',
+  'inv.alerts.next.order.callOff': 'Majukan call-off.',
+  'inv.alerts.next.order.po':
+    'Tidak ada baris perjanjian dengan sisa kuantitas, jadi ajukan permintaan PO.',
+  'inv.alerts.next.order.overCalled':
+    'Pasangan ini sudah melebihi call-off, jadi ajukan permintaan PO.',
+  'inv.alerts.ask.leadTime': 'Berapa hari waktu tunggu Anda untuk material ini?',
+  // Inventory UX P-08 (INV-D1) — dasar tiap aturan.
+  'inv.alerts.basis.pti': 'PTI {{pti}} / ROP {{rop}} {{uom}}',
+  'inv.alerts.basis.ptiNone': 'Tidak ada angka stok PTI',
+  'inv.alerts.basis.short': 'Kurang {{qty}} {{uom}} · {{week}}',
+  'inv.alerts.basis.supplierCover':
+    'Cakupan stok pemasok {{cover}} hari · waktu tunggu {{lead}} hari',
+  'inv.alerts.basis.supplierCoverBands':
+    'Cakupan stok pemasok {{cover}} hari · pita hari: {{band}}',
+  'inv.alerts.basis.firm': 'Periode Firm kurang',
+  'inv.alerts.basis.tradeOff': 'Periode Trade-off kurang',
+  // INV-D9 — "Tanyakan ke pemasok" dan blok "PTI bertanya" (S-04).
+  'supplierAsk.button': 'Tanyakan ke pemasok',
+  'supplierAsk.view': 'Lihat pertanyaan',
+  'supplierAsk.existing.Open': 'Sudah ditanyakan, menunggu pemasok',
+  'supplierAsk.existing.Answered': 'Pemasok sudah menjawab',
+  'supplierAsk.dialog.title': 'Tanyakan ke pemasok',
+  'supplierAsk.dialog.viewTitle': 'Pertanyaan ke pemasok',
+  'supplierAsk.field.subject': 'Tentang',
+  'supplierAsk.field.topic': 'Topik',
+  'supplierAsk.field.question': 'Pertanyaan',
+  'supplierAsk.field.dueDate': 'Jawaban diperlukan paling lambat (opsional)',
+  'supplierAsk.topic.productionDate': 'Tanggal produksi',
+  'supplierAsk.topic.stockFigures': 'Angka stok',
+  'supplierAsk.topic.capacityGap': 'Kekurangan kapasitas',
+  'supplierAsk.topic.other': 'Lainnya',
+  'supplierAsk.default.productionDate':
+    'Kapan produksi material ini dimulai, dan kapan sampai di PTI?',
+  'supplierAsk.default.stockFigures': 'Mohon kirim angka stok terbaru untuk material ini.',
+  'supplierAsk.default.capacityGap':
+    'Kapasitas Anda untuk minggu ini di bawah kebutuhan PTI. Dapatkah Anda menambah kapasitas, dan berapa banyak?',
+  'supplierAsk.default.other': 'Mohon beri tahu PTI tentang hal ini.',
+  'supplierAsk.submit': 'Kirim pertanyaan',
+  'supplierAsk.cancel': 'Batal',
+  'supplierAsk.closeDialog': 'Tutup',
+  'supplierAsk.close': 'Tutup pertanyaan',
+  'supplierAsk.withdraw': 'Tarik pertanyaan',
+  'supplierAsk.shareWhatsApp': 'Bagikan di WhatsApp',
+  'supplierAsk.share.text': 'PTI punya pertanyaan untuk Anda di Supplier Hub: {{link}}',
+  'supplierAsk.state.Open': 'Menunggu pemasok',
+  'supplierAsk.state.Answered': 'Dijawab',
+  'supplierAsk.state.Closed': 'Ditutup',
+  'supplierAsk.state.Withdrawn': 'Ditarik',
+  'supplierAsk.askedLabel': 'Ditanyakan',
+  'supplierAsk.dueLabel': 'Tenggat',
+  'supplierAsk.answerLabel': 'Jawaban pemasok',
+  'supplierAsk.answerDateLabel': 'Tanggal dari pemasok',
+  'supplierAsk.toast.raised': 'Pertanyaan terkirim ke pemasok',
+  'supplierAsk.toast.answered': 'Jawaban terkirim ke PTI',
+  'supplierAsk.toast.closed': 'Pertanyaan ditutup',
+  'supplierAsk.toast.withdrawn': 'Pertanyaan ditarik',
+  'supplierAsk.toast.refused': 'Tidak terkirim: {{reason}}',
+  'supplierAsk.refusal.TOPIC_UNKNOWN': 'Pilih topik.',
+  'supplierAsk.refusal.SUBJECT_REQUIRED': 'Sebutkan material, atau grup perencanaan dan minggu.',
+  'supplierAsk.refusal.NOT_SUPPLIED': 'Pemasok ini tidak memasok material atau minggu ini.',
+  'supplierAsk.refusal.QUESTION_REQUIRED': 'Tulis pertanyaannya.',
+  'supplierAsk.refusal.TEXT_TOO_LONG': 'Batasi teks hingga {{max}} karakter.',
+  'supplierAsk.refusal.DUE_DATE_INVALID': 'Pilih tenggat mulai hari ini.',
+  'supplierAsk.refusal.ASK_ALREADY_OPEN':
+    'PTI sudah menanyakan hal ini. Tutup pertanyaan itu dulu.',
+  'supplierAsk.refusal.ANSWER_REQUIRED': 'Tulis jawaban Anda.',
+  'supplierAsk.refusal.ANSWER_DATE_INVALID': 'Tanggal tidak valid.',
+  'supplierAsk.block.title_other': 'PTI bertanya tentang {{count}} material Anda',
+  'supplierAsk.block.empty': 'Tidak ada yang sedang ditunggu PTI',
+  'supplierAsk.answer': 'Jawab',
+  'supplierAsk.reply.text': 'Jawaban Anda',
+  'supplierAsk.reply.date': 'Tanggal (opsional)',
+  'supplierAsk.reply.submit': 'Kirim jawaban',
   'inv.alerts.sup.title': 'Peringatan tentang material Anda',
   'inv.alerts.sup.rule.supplierBelowRop':
     'Stok Anda di bawah titik pemesanan ulang yang dihitung sistem PTI untuk Anda (ROP Pemasok)',

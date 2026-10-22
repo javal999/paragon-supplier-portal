@@ -87,7 +87,7 @@ import {
   IMPROVEMENT_ACTIONS,
   SUP_007_SUPPLIER_ID
 } from './fixtures/supplierPerformance';
-/** @import { IProcurementService, Page, QueryScope, PurchaseOrder, POFilter, InventoryPosition, MaterialNameRow, StockAccessGrant, CapacityPlan, PlanningGroupView, StockSimulationFilter, StockSimulationRow, InventoryAlert, ForecastVersionView, ForecastCommitmentLine, ForecastCoverageRow, FixedStockReconcileRow, InventoryFilter, Shipment, ShipmentFilter, ASN, ASNFilter, GoodsReceipt, GRFilter, Contract, ContractFilter, ContractObligation, ObligationFilter, RFQ, RFQFilter, Quotation, QuotationFilter, BuyerInvoice, SupplierInvoice, InvoiceFilter, SupplierDocument, CatalogItem, ProfileCert, StorefrontProduct, KpiSnapshot, PerformancePoint, TrendRange, ProductionLineRow, SupplierHealthRow, SupplierScorecard, PurchaseRequisition, PRFilter, PrIntakeLine, SupplierApplication, ReliabilityWindowWeeks, SupplierReliabilityView, MaterialRequirementView, SafetyStockView, OrderPlanView, RescheduleView, StabiliseRunView, StabilisedPlanView, DataHealthView, DemandForecastView, ForecastBiasView, ModelBacktestView } from '../types' */
+/** @import { IProcurementService, Page, QueryScope, PurchaseOrder, POFilter, InventoryPosition, MaterialNameRow, StockAccessGrant, CapacityPlan, PlanningGroupView, StockSimulationFilter, StockSimulationRow, InventoryAlert, SupplierAsk, CapacityDecision, ForecastVersionView, ForecastCommitmentLine, ForecastCoverageRow, FixedStockReconcileRow, InventoryFilter, Shipment, ShipmentFilter, ASN, ASNFilter, GoodsReceipt, GRFilter, Contract, ContractFilter, ContractObligation, ObligationFilter, RFQ, RFQFilter, Quotation, QuotationFilter, BuyerInvoice, SupplierInvoice, InvoiceFilter, SupplierDocument, CatalogItem, ProfileCert, StorefrontProduct, KpiSnapshot, PerformancePoint, TrendRange, ProductionLineRow, SupplierHealthRow, SupplierScorecard, PurchaseRequisition, PRFilter, PrIntakeLine, SupplierApplication, ReliabilityWindowWeeks, SupplierReliabilityView, MaterialRequirementView, SafetyStockView, OrderPlanView, RescheduleView, StabiliseRunView, StabilisedPlanView, DataHealthView, DemandForecastView, ForecastBiasView, ModelBacktestView } from '../types' */
 import { PR_INTAKE_LINES } from './fixtures/prIntake';
 import { engineDataset } from './fixtures/engineDataset';
 import { supplierReliability, trailingWindow } from '../../engine/reliability';
@@ -152,6 +152,10 @@ import { DEFAULT_STOCK_ACCURACY_TOLERANCE } from '../../engine/stock';
 import { agreedCfot, supplierCfot } from '../../engine/cfot';
 import { lineHistories } from '../../engine/lines';
 import { sdcClock } from '../../sdc/clock';
+// INV-D9 — PTI's "Ask supplier" hub asks.
+import { supplierAskStore } from './stores/supplierAskStore';
+// INV-D8 — PTI's capacity gap decisions.
+import { capacityDecisionStore } from './stores/capacityDecisionStore';
 import { withOwnQualificationWarnings } from '../../sourcing/sourcingType';
 
 /** REQ-E14-10 — the backtest's heavy half per engine dataset, keyed by hub date and the values it reads. */
@@ -624,6 +628,26 @@ export class MockProcurementService {
   async getStockSimulation(scope, checkDate, filter) {
     // Material E2 (MR-7) — PTI's estimate; a supplier scope reads none.
     return { items: stockSimulationRows(scope, checkDate, filter) };
+  }
+
+  /**
+   * INV-D9 — PTI's hub asks, newest first. A supplier reads only the asks that
+   * name it (its own subject, its own history); PTI reads every ask.
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<SupplierAsk>>}
+   */
+  async getSupplierAsks(scope) {
+    return { items: [...applySupplierScope(scope, supplierAskStore.all())].reverse() };
+  }
+
+  /**
+   * INV-D8 — PTI's decisions on capacity gap weeks. A supplier reads only the
+   * decisions on its own capacity; PTI reads every decision.
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<CapacityDecision>>}
+   */
+  async getCapacityDecisions(scope) {
+    return { items: applySupplierScope(scope, capacityDecisionStore.all()) };
   }
 
   /**

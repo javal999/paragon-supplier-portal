@@ -58,7 +58,8 @@
 import { deepLink } from '@lib/deepLink';
 /** @import { BlanketPoAlertSubject } from './blanketPoRules' */
 /** @import { UnabsorbedExcess } from './demandAnticipationRules' */
-import { gapWeeks } from './capacityRules';
+import { alertGapWeeks } from './capacityRules';
+/** @import { AcceptedWeek } from './capacityRules' */
 import { DEMAND_ANTICIPATION_RULES } from './demandAnticipationRules';
 import { DISCONTINUED_CODE, NOTE_REQUIRED_CODE, isActiveReasonCode } from './reasonCodes';
 import {
@@ -186,13 +187,15 @@ function staleDaysToImpact(p, nowIso) {
 }
 
 /**
- * MR-9 BR-03 — capacity: whole days from today to the first gap week (0 once it has begun).
+ * MR-9 BR-03 — capacity: whole days from today to the first gap week the
+ * alert counts (INV-D12), 0 once it has begun.
  * @param {CapacityPlan} plan
  * @param {string} nowIso
+ * @param {AcceptedWeek} [accepted]
  * @returns {number}
  */
-function capacityDaysToImpact(plan, nowIso) {
-  const first = gapWeeks(plan)[0];
+function capacityDaysToImpact(plan, nowIso, accepted) {
+  const first = alertGapWeeks(plan, accepted)[0];
   return first ? Math.max(0, daysBetween(dayOf(nowIso), first.week)) : 0;
 }
 
@@ -342,6 +345,7 @@ export function callOffCoverGap(p, deliveries, nowIso) {
  * @param {readonly DiscontinuedSubject[]} [discontinued]
  * @param {readonly BlanketPoAlertSubject[]} [blanketRunOuts]
  * @param {readonly UnabsorbedAlertSubject[]} [unabsorbed]
+ * @param {AcceptedWeek} [acceptedWeek]  INV-D12 — PTI accepted a week's additional capacity.
  * @returns {AlertCondition[]}
  */
 export function deriveAlertConditions(
@@ -352,7 +356,8 @@ export function deriveAlertConditions(
   callOffSubjects = [],
   discontinued = [],
   blanketRunOuts = [],
-  unabsorbed = []
+  unabsorbed = [],
+  acceptedWeek = () => false
 ) {
   const out = /** @type {Map<string, AlertCondition>} */ (new Map());
   /** @typedef {{ riskClass: RiskClass; basis: RiskBasis }} Risk */
@@ -427,7 +432,8 @@ export function deriveAlertConditions(
       push('leadTimeMissing', p, p.materialCode, p.materialLabel, risk);
   }
   for (const plan of plans) {
-    if (gapWeeks(plan).length === 0) continue;
+    // INV-D12 (BL-225) — an accepted amber week no longer counts; red always does.
+    if (alertGapWeeks(plan, acceptedWeek).length === 0) continue;
     // The group's class is its worst material's, with that material's basis.
     const risks = positions
       .filter((p) => p.supplierId === plan.supplierId && plan.materials.includes(p.materialCode))
@@ -443,7 +449,7 @@ export function deriveAlertConditions(
       plan.planningGroupId,
       plan.planningGroupId,
       worst ?? byRule('low'),
-      capacityDaysToImpact(plan, nowIso)
+      capacityDaysToImpact(plan, nowIso, acceptedWeek)
     );
   }
   // REQ-E08-05 BR-01 — committed quantity below forecast beyond tolerance
