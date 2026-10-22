@@ -263,7 +263,7 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
     expect(callersOf(/\buseActiveReasonCodes\s*\(/)).toEqual([
       'src/pages-v2/BuyerAlerts.jsx',
       // DRC-5 (BL-191) — the reason type of a call-off change.
-      'src/pages-v2/BuyerCallOffs.jsx',
+      'src/pages-v2/BuyerCallOffs/components/CallOffPanelBody.jsx',
       // CAP-5 — the Reason filters offer the active shortfall lists.
       'src/pages-v2/BuyerCapacity.jsx',
       'src/pages-v2/BuyerCommitments/index.jsx',
@@ -276,7 +276,7 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
     ]);
     expect(callersOf(/\buseReasonLabel\s*\(/)).toEqual([
       'src/pages-v2/BuyerAlerts.jsx',
-      'src/pages-v2/BuyerCallOffs.jsx',
+      'src/pages-v2/BuyerCallOffs/components/CallOffPanelBody.jsx',
       'src/pages-v2/BuyerCapacity.jsx',
       'src/pages-v2/BuyerCommitments/index.jsx',
       'src/pages-v2/BuyerForecastBias.jsx',

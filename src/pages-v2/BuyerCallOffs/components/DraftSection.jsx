@@ -1,0 +1,139 @@
+/** @import React from 'react' */
+/** @import { CallOffCommandVars } from '@services/query/commandHooks' */
+/** @import { useVerbAvailability } from '@hooks/useVerbAvailability' */
+/** @import { CallOffView, ReleaseCheck } from '@services/transitions/callOffRules' */
+/** @import { CallOffForm } from '../utils' */
+import { useTranslation } from 'react-i18next';
+import Button from '@components/ui-v2/Button';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { formatIDR } from '@lib/format';
+import { qty } from '../../callOffs/callOffDisplay';
+import DraftFields from './DraftFields';
+import ExceedsNotice from './ExceedsNotice';
+
+/**
+ * @typedef {object} DraftSectionProps
+ * @property {CallOffView['callOff']} c The draft.
+ * @property {CallOffForm} form The page's call-off form.
+ * @property {(f: CallOffForm) => void} setForm
+ * @property {boolean} busy A call-off command is in flight.
+ * @property {boolean} planHeld Whether the seat holds `calloff:plan`; otherwise the handoff notice shows.
+ * @property {ReturnType<typeof useVerbAvailability>} planAvailability
+ * @property {string} today
+ * @property {(vars: CallOffCommandVars, success: string, close?: boolean) => Promise<boolean>} run
+ * @property {string} reason The typed reason, trimmed; dismiss and save need one.
+ * @property {{ quantity?: number; needDate?: string }} edits What the form changes on the draft.
+ * @property {ReleaseCheck | null} draftRelease BL-49 — the release check at the draft's own quantity.
+ * @property {boolean} withheld X-03 — the draft's release is withheld (engine data not live).
+ */
+
+/**
+ * A draft's actions: edit (with reason), release (checked against what remains
+ * on its line, or withheld with the reason, X-03) and dismiss (with reason).
+ * Rendered by the panel only for a draft. Moved out of `BuyerCallOffs.jsx` by
+ * the Phase 5 page split (no behaviour change).
+ * @type {React.FC<DraftSectionProps>}
+ */
+const DraftSection = ({
+  c,
+  form,
+  setForm,
+  busy,
+  planHeld,
+  planAvailability,
+  today,
+  run,
+  reason,
+  edits,
+  draftRelease,
+  withheld
+}) => {
+  const { t } = useTranslation();
+  return (
+    <section className="space-y-3" data-testid="calloff-draft-actions">
+      <h3 className="text-label text-text-tertiary uppercase">{t('co.draft.title')}</h3>
+      {planHeld ? (
+        <>
+          <DraftFields form={form} setForm={setForm} uom={c.uom} today={today} withType />
+          {/* BL-49 — releasing this draft is checked against what remains on
+                  its own line, and refused with the figures when it does not fit. */}
+          {draftRelease && (
+            <>
+              <p className="text-xs text-text-secondary" data-testid="calloff-draft-remaining">
+                {draftRelease.remaining.remainingQty === null
+                  ? t('co.new.remainingValue', {
+                      value: formatIDR(draftRelease.remaining.remainingValue)
+                    })
+                  : t('co.new.remaining', {
+                      quantity: qty(draftRelease.remaining.remainingQty),
+                      uom: c.uom,
+                      value: formatIDR(draftRelease.remaining.remainingValue)
+                    })}
+              </p>
+              <ExceedsNotice
+                check={draftRelease}
+                uom={c.uom}
+                testId="calloff-draft-exceeds-remaining"
+              />
+            </>
+          )}
+          <div className="flex flex-wrap gap-2 justify-end">
+            <Button
+              variant="secondary"
+              disabled={busy || reason === ''}
+              onClick={() =>
+                void run({ verb: 'dismiss', id: c.id, reason }, t('co.toast.dismissed'))
+              }
+            >
+              {t('co.draft.dismiss')}
+            </Button>
+            <Button
+              variant="secondary"
+              disabled={
+                busy || reason === '' || (Object.keys(edits).length === 0 && form.type === c.type)
+              }
+              onClick={() =>
+                void run(
+                  {
+                    verb: 'editDraft',
+                    id: c.id,
+                    reason,
+                    ...edits,
+                    ...(form.type !== c.type ? { type: form.type } : {})
+                  },
+                  t('co.toast.draftSaved'),
+                  false
+                )
+              }
+            >
+              {t('co.draft.save')}
+            </Button>
+            {/* X-03 — the release is withheld and says why, rather than acting
+                    and being refused. Edit and dismiss above stay available. */}
+            {withheld ? (
+              <p
+                role="note"
+                className="basis-full text-xs text-text-secondary text-right"
+                data-testid="calloff-draft-release-withheld"
+              >
+                {t('co.draft.releaseWithheld')}
+              </p>
+            ) : (
+              <Button
+                variant="outline"
+                disabled={busy || (draftRelease?.exceeds ?? false)}
+                onClick={() => void run({ verb: 'releaseDraft', id: c.id }, t('co.toast.released'))}
+              >
+                {t('co.draft.release')}
+              </Button>
+            )}
+          </div>
+        </>
+      ) : (
+        <HandoffNotice availability={planAvailability} testId="handoff-calloff-draft" />
+      )}
+    </section>
+  );
+};
+
+export default DraftSection;
