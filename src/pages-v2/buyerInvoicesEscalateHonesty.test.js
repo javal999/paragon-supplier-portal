@@ -30,11 +30,12 @@
 // branch acquits every other branch of the same handler.
 // -----------------------------------------------------------------------------
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { resources } from '@lib/i18n';
+import { pageFolderSource } from '@test/pageFiles';
 
-const SRC = join(process.cwd(), 'src', 'pages-v2', 'BuyerInvoices.jsx');
+// `BuyerInvoices` is a page FOLDER (Phase 5 split): the whole folder is read.
+const PAGES_DIR = join(process.cwd(), 'src', 'pages-v2');
 
 /**
  * Length-preserving comment blank — line numbers and offsets survive.
@@ -68,7 +69,7 @@ const codeOnly = (s) =>
  * @returns {string}
  */
 function overdueBranch() {
-  const code = codeOnly(readFileSync(SRC, 'utf8'));
+  const code = codeOnly(pageFolderSource(PAGES_DIR, 'BuyerInvoices'));
   const start = code.indexOf("if (selected.status === 'Overdue')");
   if (start < 0) return '';
   const open = code.indexOf('{', start);

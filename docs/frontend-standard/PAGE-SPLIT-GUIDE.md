@@ -1,6 +1,7 @@
 # Page split guide — frontend-standard Phase 5
 
-**Status:** started 2026-10-06. **Applies to:** every page or feature component in `src/` over
+**Status:** started 2026-10-06; waves 1–9 merged by 2026-10-21. See "Where it stands" at the end.
+**Applies to:** every page or feature component in `src/` over
 800 lines. Largest first, **one PR per page**. Phases 1–4 and 7 (the JavaScript conversion) are
 done; see `JS-CONVERSION-PLAYBOOK.md`.
 
@@ -127,3 +128,28 @@ converts it.
 Non-page files over 800 lines (`MockCommandService.js`, `commandHooks.js`, `types.js`, the i18n
 tables and fixtures) are out of scope: they are lists, not components, and splitting them buys
 nothing a reader needs.
+
+## Where it stands (2026-10-21)
+
+**Done.** Waves 1–9 are merged. Every page and feature component that was over 800 lines and is
+not listed below now lives in the folder shape. The last merge was MR !2 (GitLab), which split
+`BuyerInvoices` and `SupplierInvoices`. `react-hook-form` is in `SupplierRegistration` and
+`GRInspectionWizard` (MR !21). Before the conversion, 31 specs in
+`GRInspectionWizard.formStates.test.jsx` pinned the wizard's behaviour.
+
+**Held, and why.** These pages are still single files over 800 lines. The IA work
+(`ia/integration`) edits all six, and a split moves the whole file, so each one is split after
+that work is on `main`:
+
+| Page | Lines (2026-10-21) | Edited by |
+|---|---|---|
+| `BuyerCallOffs` | 1,586 | `ia/lane-planner` (an earlier split, `refactor/split-buyer-call-offs`, is stale) |
+| `SupplierOrders` | 1,493 | `ia/lane-orders` |
+| `BuyerCollaboration` | 1,288 | `ia/lane-commitments-inventory` |
+| `SupplierDocuments` | 1,037 | `ia/lane-nav` |
+| `BuyerOrders` | 999 | `ia/lane-orders` |
+| `SupplierCallOffs` | 925 | `ia/lane-orders` |
+
+The `react-hook-form` conversion of `RfpCreateWizard` and `RfiCreateWizard` is held for the same
+reason: `feat/rfx-ux-wave2` and `ia/integration` both edit them.
+

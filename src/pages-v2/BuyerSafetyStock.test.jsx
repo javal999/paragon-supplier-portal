@@ -54,23 +54,25 @@ describe('BuyerSafetyStock — the planner page', () => {
     );
     renderWithProviders(<BuyerSafetyStock />, { identity: BUYER, route: '/buyer/safety-stock' });
     await screen.findByTestId(`sst-row-${run.materials[0].materialCode}`);
+    // Each figure is looked up inside its own row: one page-wide scan per
+    // material instead of six (the page grew to ~3,600 nodes with the DRC
+    // columns, and page-wide scans made this test time out under load).
     for (const m of run.materials) {
-      expect(
-        within(screen.getByTestId(`sst-row-${m.materialCode}`)).getByText(m.materialCode)
-      ).toBeInTheDocument();
-      expect(screen.getByTestId(`sst-ss-${m.materialCode}`)).toHaveTextContent(
+      const row = within(screen.getByTestId(`sst-row-${m.materialCode}`));
+      expect(row.getByText(m.materialCode)).toBeInTheDocument();
+      expect(row.getByTestId(`sst-ss-${m.materialCode}`)).toHaveTextContent(
         qtyOf(m.safetyStock, m.uom)
       );
-      expect(screen.getByTestId(`sst-sap-${m.materialCode}`)).toHaveTextContent(
+      expect(row.getByTestId(`sst-sap-${m.materialCode}`)).toHaveTextContent(
         qtyOf(m.sapSafetyStock, m.uom)
       );
-      expect(screen.getByTestId(`sst-rop-${m.materialCode}`)).toHaveTextContent(
+      expect(row.getByTestId(`sst-rop-${m.materialCode}`)).toHaveTextContent(
         qtyOf(m.reorderPoint, m.uom)
       );
-      expect(screen.getByTestId(`sst-target-${m.materialCode}`)).toHaveTextContent(
+      expect(row.getByTestId(`sst-target-${m.materialCode}`)).toHaveTextContent(
         `${Math.round(m.target * 1000) / 10}%`
       );
-      expect(screen.getByTestId(`sst-tier-source-${m.materialCode}`)).toHaveTextContent('default');
+      expect(row.getByTestId(`sst-tier-source-${m.materialCode}`)).toHaveTextContent('default');
     }
     expect(screen.getByTestId('sst-kpi-fallback')).toHaveTextContent(
       String(run.materials.filter((m) => m.source === 'sap').length)

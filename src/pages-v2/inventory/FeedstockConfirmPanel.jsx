@@ -13,6 +13,9 @@ import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { useToast } from '@hooks/useToast';
 import { formatDate, formatDateTime } from '@lib/format';
 import { useFeedstockConfirm } from '@services/query/commandHooks';
+import { useSupplierDemandAnticipation } from '@services/query/hooks';
+import { SUPPLIER_DA_VIEW_ENABLED } from '@services/transitions/supplierDaView';
+import { isoWeek } from '@services/engine/dates';
 /** @import { InventoryPosition } from '@services/data/types' */
 import { updateCycleSettings } from '@services/transitions/inventoryConfig';
 import { dayOf } from '@services/transitions/inventoryRules';
@@ -37,8 +40,12 @@ import { qty } from './inventoryDisplay';
 // list is MR-1's own `weeklyUpdateStatus` over the latest confirmation, so it
 // counts the same weeks). It does NOT feed the MR-2 update-compliance score.
 //
-// No DA figure is shown here (DRC-D10, BL-204 on hold). Feedstock is NOT stock
-// (MoM 2B): this panel never touches the stock figures above it.
+// No DA figure is shown here while `SUPPLIER_DA_VIEW_ENABLED` is off (DRC-D10).
+// BL-204 builds the deferred half of DRC-8 behind that flag: with it on, a
+// material with a published DA offers an optional "Incoming DA confirmed"
+// box, stored with the confirmation (the target records which publication).
+// Feedstock is NOT stock (MoM 2B): this panel never touches the stock figures
+// above it.
 //
 // The form is the only entrance to `t_feedstock_confirm`, gated on the MODE
 // (§84): a seat without the atom reads the list and is told whose act it is.
@@ -55,6 +62,7 @@ const INPUT_CLASS = 'w-full mt-1 px-3 py-2 text-sm border border-border-subtle r
  * @property {string} qty
  * @property {string} confirmedOn
  * @property {string} note
+ * @property {boolean} incomingDa BL-204 — "Incoming DA confirmed" ticked.
  */
 
 /**
@@ -87,6 +95,15 @@ const FeedstockConfirmPanel = ({ supplierId, positions, nowIso }) => {
   const availability = useVerbAvailability('feedstock:confirm');
   const held = availability.kind === 'held';
   const [draft, setDraft] = useState(/** @type {Draft | null} */ (null));
+  // BL-204 — the supplier's own published DA; not even fetched while the flag is off.
+  const daQuery = useSupplierDemandAnticipation(SUPPLIER_DA_VIEW_ENABLED);
+  const daByCode = new Map(
+    SUPPLIER_DA_VIEW_ENABLED
+      ? (daQuery.data?.items ?? [])
+          .filter((r) => r.supplierId === supplierId)
+          .map((r) => [r.materialCode, r])
+      : []
+  );
 
   const own = positions.filter((p) => p.supplierId === supplierId);
   if (own.length === 0) return null;
@@ -114,7 +131,9 @@ const FeedstockConfirmPanel = ({ supplierId, positions, nowIso }) => {
         feedstockQty: qtyOf(draft.qty),
         confirmedOn: draft.confirmedOn,
         note: draft.note,
-        today
+        today,
+        incomingDaConfirmed: draft.incomingDa,
+        incomingDaAvailable: daByCode.has(draft.materialCode)
       })
     : null;
   const refusalMsg = refusalText(refusal);
@@ -127,7 +146,8 @@ const FeedstockConfirmPanel = ({ supplierId, positions, nowIso }) => {
       uom: p.uom,
       qty: p.feedstock ? String(p.feedstock.feedstockQty) : '',
       confirmedOn: today,
-      note: ''
+      note: '',
+      incomingDa: false
     });
 
   /** @param {React.FormEvent} e */
@@ -139,7 +159,8 @@ const FeedstockConfirmPanel = ({ supplierId, positions, nowIso }) => {
       materialCode: draft.materialCode,
       feedstockQty: Number(draft.qty),
       confirmedOn: draft.confirmedOn,
-      note: draft.note
+      note: draft.note,
+      ...(draft.incomingDa ? { incomingDaConfirmed: true } : {})
     });
     if (result.status === 'failed') {
       const known = refusalText(feedstockRefusalOf(result.reason));
@@ -160,6 +181,7 @@ const FeedstockConfirmPanel = ({ supplierId, positions, nowIso }) => {
   // feature does not open with every material marked missed.
   const confirmedEver = new Set(own.filter((p) => p.feedstock).map((p) => p.materialCode));
   const missed = status.missed.filter((code) => confirmedEver.has(code));
+  const draftDa = draft ? daByCode.get(draft.materialCode) : undefined;
   /** @param {string} code */
   const stateOf = (code) =>
     status.updated.includes(code)
@@ -257,6 +279,29 @@ const FeedstockConfirmPanel = ({ supplierId, positions, nowIso }) => {
               onChange={(e) => setDraft((d) => (d ? { ...d, note: e.target.value } : d))}
             />
           </label>
+          {/* BL-204 (DRC-8) — only with the supplier view on and a published DA. */}
+          {draftDa ? (
+            <label className="flex items-start gap-2" data-testid="feedstock-incoming-da">
+              <input
+                type="checkbox"
+                className="mt-1"
+                data-testid="feedstock-incoming-da-box"
+                checked={draft.incomingDa}
+                onChange={(e) => setDraft((d) => (d ? { ...d, incomingDa: e.target.checked } : d))}
+              />
+              <span className="text-sm text-text-primary">
+                {t('fsConfirm.incomingDa.label')}
+                <span className="block text-xs text-text-tertiary">
+                  {t('fsConfirm.incomingDa.hint', {
+                    week: `W${isoWeek(draftDa.planningWeek)}`
+                  })}{' '}
+                  <Data>
+                    {qty(draftDa.totalDa)} {draft.uom}
+                  </Data>
+                </span>
+              </span>
+            </label>
+          ) : null}
           {refusalMsg !== null && (
             <p className="text-xs text-danger" data-testid="feedstock-refusal">
               {t(refusalMsg[0], refusalMsg[1])}
@@ -306,6 +351,16 @@ const FeedstockConfirmPanel = ({ supplierId, positions, nowIso }) => {
                       <div className="text-xs text-text-tertiary">
                         {t('fsConfirm.asOf')} <Data>{formatDate(p.feedstock.confirmedOn)}</Data>
                       </div>
+                      {SUPPLIER_DA_VIEW_ENABLED && p.feedstock.incomingDa ? (
+                        <div
+                          className="text-xs text-text-tertiary"
+                          data-testid={`feedstock-incoming-da-${p.materialCode}`}
+                        >
+                          {t('fsConfirm.incomingDa.confirmed', {
+                            week: `W${isoWeek(p.feedstock.incomingDa.planningWeek)}`
+                          })}
+                        </div>
+                      ) : null}
                     </>
                   ) : (
                     <span className="text-xs text-text-tertiary">{t('fsConfirm.none')}</span>

@@ -47,6 +47,7 @@ import {
   Workflow
 } from 'lucide-react';
 /** @import { HubRole } from './hubRole' */
+import { SUPPLIER_DA_VIEW_ENABLED } from '@services/transitions/supplierDaView';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE HUB MENU — one definition, read by the sidebar AND by every page header.
@@ -257,6 +258,16 @@ export const SUPPLIER_NAV = [
     labelKey: 'hub.nav.section.planning',
     items: [
       { labelKey: 'hub.nav.sup.forecast', icon: ChartLine, path: '/supplier/forecasts' },
+      // BL-204 (DRC-1) — built ahead, listed only once DRC-D10 lifts (the flag).
+      ...(SUPPLIER_DA_VIEW_ENABLED
+        ? [
+            {
+              labelKey: 'hub.nav.sup.demandAnticipation',
+              icon: LockKeyhole,
+              path: '/supplier/demand-anticipation'
+            }
+          ]
+        : []),
       { labelKey: 'hub.nav.sup.fsReconcile', icon: Scale, path: '/supplier/fs-reconcile' },
       { labelKey: 'hub.nav.sup.stock', icon: Boxes, path: '/supplier/inventory' },
       { labelKey: 'hub.nav.sup.capacity', icon: Factory, path: '/supplier/capacity' }

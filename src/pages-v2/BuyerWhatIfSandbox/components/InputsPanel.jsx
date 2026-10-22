@@ -3,7 +3,8 @@
 // prefilled with today's live values: demand, lead time and replenishment,
 // safety, order and stock sizes, position, OSIP level. LTP per week is edited
 // in the week grid. Z, g and the SD source are rule switches ([Default] B3, B7,
-// B2) shown here because the brief groups them under Safety.
+// B2) shown here because the brief groups them under Safety; the SD itself can
+// be typed (BL-210), blank = computed from the source.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @import React from 'react' */
@@ -157,6 +158,15 @@ const SafetyAndSizes = ({ inputs, onInputs, switches, onSwitch, run }) => {
               <option value="consumption12w">{t('whatIf.opt.consumption12w')}</option>
             </select>
           </div>
+          {/* BL-210 — a typed SD replaces the computed one; blank = computed. */}
+          <NumberField
+            id="wi-in-sd-typed"
+            label={t('whatIf.in.sdTyped')}
+            value={inputs.sd ?? null}
+            blank
+            note={t('whatIf.in.sdTypedNote')}
+            onChange={(v) => onInputs({ sd: v })}
+          />
         </div>
         <p className="text-xs text-text-tertiary mt-2" data-testid="wi-in-sd">
           {sd === null

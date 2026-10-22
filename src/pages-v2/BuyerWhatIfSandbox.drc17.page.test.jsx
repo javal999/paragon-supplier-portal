@@ -71,6 +71,23 @@ describe('BR-08 · the PPT 7 golden case', () => {
     expect(screen.getByTestId('wi-scn-safetyOrder-diff')).toHaveTextContent('no change');
   });
 
+  it('BL-210 — a typed SD moves the safety order: 1.65 × √5 × 10,000 = 36,894 → MPQ 61,224', async () => {
+    renderWithProviders(<BuyerWhatIfSandbox />, {
+      route: `${ROUTE}?supplier=ppt7-golden&material=2000041501`
+    });
+    const sd = await screen.findByLabelText('SD (blank = computed)');
+    expect(screen.getByTestId('wi-in-sd')).toHaveTextContent('SD in use: 57,801');
+    fireEvent.change(sd, { target: { value: '10000' } });
+    expect(screen.getByTestId('wi-in-sd')).toHaveTextContent('SD in use: 10,000');
+    expect(screen.getByTestId('wi-scn-safetyOrder')).toHaveTextContent('61,224');
+    expect(screen.getByTestId('wi-scn-safetyOrder-diff')).toHaveTextContent('−183,672');
+    // Blank again: computed from the source, as the current plan.
+    fireEvent.change(sd, { target: { value: '' } });
+    expect(screen.getByTestId('wi-scn-safetyOrder-diff')).toHaveTextContent('no change');
+    // The consumption window now feeds a figure: no "moves nothing" note on it.
+    expect(screen.getByTestId('wi-switches')).not.toHaveTextContent(/fixed from this key/);
+  });
+
   it('lists every rule switch with its question ID', async () => {
     renderWithProviders(<BuyerWhatIfSandbox />, {
       route: `${ROUTE}?supplier=ppt7-golden&material=2000041501`

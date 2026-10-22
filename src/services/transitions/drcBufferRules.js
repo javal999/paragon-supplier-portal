@@ -28,7 +28,7 @@
 // windows, and are not used here.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { strategicBuffer } from './osipRules';
+import { OSIP_RULES, ceilingTo, strategicBuffer } from './osipRules';
 import { RAMADAN_TABLE } from '../engine/eventCalendar';
 /** @import { CapacityPlan } from '../data/types' */
 /** @import { MaterialMasterEntry } from '../sdc/types' */
@@ -344,6 +344,220 @@ export function strategicBufferRows(lines, options = {}) {
         windows: windows
           .filter((w) => w.months.some((m) => months.has(m)))
           .map((w) => windowBuffer(mine, head.supplierId, head.materialCode, w, rules))
+      };
+    })
+    .sort(
+      (a, b) =>
+        a.supplierName.localeCompare(b.supplierName) || a.materialCode.localeCompare(b.materialCode)
+    );
+}
+
+// ─── Protection buffer (DRC-9c, BL-205) [Proposed] ──────────────────────────
+//
+// DRC-9c is on hold on question C3 (the uplift of a non-festive material is
+// unknown). The owner asked for the recommended option built behind a switch,
+// for review, so every key below is [Proposed], not a ruling:
+//
+//   protection buffer = CEILING(uplift, production MPQ), per supplier × material
+//                       × month, where uplift = max(0, LTP of the month −
+//                       average LTP of the 3 months before it): PPT 12's
+//                       strategic buffer formula (`osipRules.strategicBuffer`)
+//                       applied to every month, the baseline rolling with it.
+//   levels            = 5, 6 and 7 only: XLS Guidance "risk protection =
+//                       Ceiling(Uplift, MPQ Produksi)" for levels 4 to 7, with
+//                       the revision "level 4 tanpa protection buffer". Levels
+//                       1 to 3 carry a strategic buffer instead.
+//   MPQ               = `MaterialSource.orderMultiple` (wave 2 default).
+//
+// MoM 3: anticipatory stock, "planned to be absorbed": PTI takes it even if
+// demand does not rise. Read only: it does NOT feed ROP Fisik or Max (out of
+// scope for BL-205; a decision for the owner). Computed at read, stored
+// nowhere, so not stamped (DRC-D16).
+
+/** @typedef {'rollingBaseline' | 'off'} ProtectionUplift */
+
+/**
+ * @typedef {{
+ *   readonly protectionUplift: ProtectionUplift;
+ *   readonly baselineMonths: number;
+ *   readonly levels: readonly number[];
+ *   readonly mpqSource: 'orderMultiple';
+ * }} ProtectionBufferRules
+ */
+
+/**
+ * The [Proposed] keys of BL-205, awaiting owner review (question C3).
+ * @type {ProtectionBufferRules}
+ */
+export const PROTECTION_BUFFER_RULES = Object.freeze({
+  /** [Proposed BL-205, C3] DRC-9c — the uplift: 'rollingBaseline' (LTP − average of the previous months) or 'off' (no protection buffer). */
+  protectionUplift: /** @type {ProtectionUplift} */ ('rollingBaseline'),
+  /** [Proposed BL-205, C3] months of LTP the rolling baseline averages (PPT 12's 3). */
+  baselineMonths: 3,
+  /** [Proposed BL-205, C3] the OSIP levels that carry one: XLS Guidance levels 4–7, less level 4 by its revision note. */
+  levels: Object.freeze([5, 6, 7]),
+  /** [Default, wave 2] MPQ = orderMultiple until the master data feed carries MPQ (wave 2 default). */
+  mpqSource: /** @type {'orderMultiple'} */ ('orderMultiple')
+});
+
+/** The variants of `protectionUplift`, the proposed one first. @type {readonly ProtectionUplift[]} */
+export const PROTECTION_UPLIFTS = Object.freeze(
+  /** @type {ProtectionUplift[]} */ (['rollingBaseline', 'off'])
+);
+
+/** The question the [Proposed] label names. */
+export const PROTECTION_BUFFER_QUESTION = 'C3';
+/** The [Default]s a protection figure also rests on (design rule 5): level C2, MPQ. */
+export const PROTECTION_BUFFER_DEFAULTS = Object.freeze(['C2', 'MPQ']);
+
+/**
+ * One supplier × material's inputs the rule reads beyond its LTP: the OSIP
+ * level in force (DRC-D11, [Default C2] when none set) and the production MPQ.
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly level: number;
+ *   readonly levelSource: 'planner' | 'classification' | 'default';
+ *   readonly mpq: number | null;
+ * }} ProtectionBufferInput
+ */
+
+/**
+ * `baseline`: null when a previous month has no LTP. `uplift` / `buffer`: null
+ * when the month or its baseline has no LTP; `buffer` also null with no MPQ.
+ * @typedef {MonthLtp & {
+ *   readonly baselineMonths: readonly MonthLtp[];
+ *   readonly baseline: number | null;
+ *   readonly uplift: number | null;
+ *   readonly buffer: number | null;
+ *   readonly status: 'ok' | 'noLtp' | 'baselineIncomplete' | 'noMpq';
+ * }} ProtectionMonth
+ */
+
+/** @typedef {'switchedOff' | 'level4' | 'strategicLevel' | 'otherLevel'} ProtectionExclusion */
+
+/**
+ * `applies`: false with a `reason` when the material carries none:
+ * `switchedOff` ('off' variant), `level4` (Guidance revision), `strategicLevel`
+ * (levels 1–3: strategic buffer instead), `otherLevel` (any level outside the
+ * rule's list). `months` is empty then.
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly supplierName: string;
+ *   readonly materialCode: string;
+ *   readonly materialLabel: string;
+ *   readonly uom: string;
+ *   readonly level: number;
+ *   readonly levelSource: ProtectionBufferInput['levelSource'];
+ *   readonly mpq: number | null;
+ *   readonly applies: boolean;
+ *   readonly reason: ProtectionExclusion | null;
+ *   readonly months: readonly ProtectionMonth[];
+ * }} ProtectionBufferRow
+ */
+
+/**
+ * DRC-9c [Proposed BL-205, C3] — one month's protection buffer.
+ * @param {readonly LtpLine[]} lines
+ * @param {string} supplierId
+ * @param {string} materialCode
+ * @param {string} month YYYY-MM
+ * @param {number | null} mpq
+ * @param {ProtectionBufferRules} [rules]
+ * @returns {ProtectionMonth}
+ */
+export function protectionMonth(
+  lines,
+  supplierId,
+  materialCode,
+  month,
+  mpq,
+  rules = PROTECTION_BUFFER_RULES
+) {
+  const n = rules.baselineMonths;
+  const m = monthLtp(lines, supplierId, materialCode, month);
+  const baselineMonths = Array.from({ length: n }, (_, i) =>
+    monthLtp(lines, supplierId, materialCode, addMonths(month, i - n))
+  );
+  const complete = baselineMonths.every((b) => b.qty !== null);
+  const preFestiveLtp = baselineMonths.map((b) => b.qty ?? 0);
+  const baseline = complete ? strategicBuffer({ ltp: 0, preFestiveLtp }).baseline : null;
+  const base = { ...m, baselineMonths, baseline };
+  if (m.qty === null) return { ...base, uplift: null, buffer: null, status: 'noLtp' };
+  if (!complete) return { ...base, uplift: null, buffer: null, status: 'baselineIncomplete' };
+  // Design rule 1 — PPT 12's formula is the calculation module's, applied to every month.
+  const uplift = strategicBuffer({ ltp: m.qty, preFestiveLtp }).value;
+  // XLS Guidance — Ceiling(Uplift, MPQ Produksi). No MPQ, no figure (never guessed).
+  if (mpq === null || !(mpq > 0)) return { ...base, uplift, buffer: null, status: 'noMpq' };
+  return { ...base, uplift, buffer: ceilingTo(uplift, mpq), status: 'ok' };
+}
+
+/**
+ * DRC-9c [Proposed BL-205] — why a material at `level` carries no protection
+ * buffer, or null when it does.
+ * @param {number} level
+ * @param {ProtectionBufferRules} [rules]
+ * @returns {ProtectionExclusion | null}
+ */
+export function protectionExclusion(level, rules = PROTECTION_BUFFER_RULES) {
+  if (rules.protectionUplift === 'off') return 'switchedOff';
+  if (rules.levels.includes(level)) return null;
+  // XLS Guidance revision: "level 4 tanpa protection buffer".
+  if (level === 4) return 'level4';
+  if (level >= 1 && level <= 3) return 'strategicLevel';
+  return 'otherLevel';
+}
+
+/**
+ * DRC-9c [Proposed BL-205, C3] — every supplier × material with LTP, with its
+ * protection buffer per LTP month when its level carries one. Read only:
+ * nothing is ordered from it, and ROP Fisik and Max do not include it.
+ * @param {readonly NamedLtpLine[]} lines
+ * @param {readonly ProtectionBufferInput[]} inputs
+ * @param {{ rules?: ProtectionBufferRules }} [options]
+ * @returns {ProtectionBufferRow[]}
+ */
+export function protectionBufferRows(lines, inputs, options = {}) {
+  const rules = options.rules ?? PROTECTION_BUFFER_RULES;
+  const byPair = new Map(inputs.map((i) => [`${i.supplierId}|${i.materialCode}`, i]));
+  /** @type {Map<string, NamedLtpLine[]>} */
+  const pairs = new Map();
+  for (const l of lines) {
+    const key = `${l.supplierId}|${l.materialCode}`;
+    pairs.set(key, [...(pairs.get(key) ?? []), l]);
+  }
+  return [...pairs.entries()]
+    .map(([key, mine]) => {
+      const head = mine[0];
+      const input = byPair.get(key);
+      // [Default C2] a pair with no input is at the default level, with no MPQ.
+      const level = input?.level ?? OSIP_RULES.defaultLevel;
+      const mpq = input?.mpq ?? null;
+      const reason = protectionExclusion(level, rules);
+      /** @type {Set<string>} */
+      const months = new Set();
+      for (const l of mine)
+        for (let m = monthOf(l.periodStart); m <= monthOf(l.periodEnd); m = addMonths(m, 1))
+          months.add(m);
+      return {
+        supplierId: head.supplierId,
+        supplierName: head.supplierName ?? head.supplierId,
+        materialCode: head.materialCode,
+        materialLabel: head.materialLabel ?? head.materialCode,
+        uom: head.uom ?? '',
+        level,
+        levelSource: input?.levelSource ?? /** @type {const} */ ('default'),
+        mpq,
+        applies: reason === null,
+        reason,
+        months:
+          reason === null
+            ? [...months]
+                .sort()
+                .map((m) =>
+                  protectionMonth(mine, head.supplierId, head.materialCode, m, mpq, rules)
+                )
+            : []
       };
     })
     .sort(

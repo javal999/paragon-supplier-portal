@@ -353,7 +353,7 @@ The owner ruled on section 9, on BL-132 and the module names on 2026-10-19, and 
 | B-02 | Major | Built (RFX-D24): side panel is a summary; review, exchange rate and clarifications on the event page | 1D2 · `a7fc4126` | `BuyerSourcing/rfxUxB02.test.jsx` |
 | B-03 | Major | Built (RFX-D19): FOB default, out-of-list value red on Review | 1D · `88c64995` | `BuyerSourcing/rfxUx1D.test.jsx` |
 | B-04 | Major | Built: "Needs my action" by next deadline, KPI tiles filter, Draft tab, Next column | 1D · `88c64995` | `BuyerSourcing/rfxUx1D.test.jsx` |
-| B-05 | Major | Built: confirmation sheet before close (RFI, RFP), award and cancel-award (RFQ, RFP). RFQ cancel in the side panel has none (BL-212) | 1C · `1aa58900` | `rfx/RfxConfirmSheets.test.jsx` |
+| B-05 | Major | Built: confirmation sheet before close (RFI, RFP), award and cancel-award (RFQ, RFP). RFQ cancel in the side panel has none (BL-222) | 1C · `1aa58900` | `rfx/RfxConfirmSheets.test.jsx` |
 | B-06 | Major | Built: "Terms sent" and the option list before any proposal | 1E · `370eade0` | `BuyerRfp/rfpDetailUx.test.jsx` |
 | B-07 | Major | Built (RFX-D16): "Firm up the prices" block; RFQ refused for an option in a firm-offer round | 1E · `370eade0` | `BuyerRfp/rfpDetailUx.test.jsx`, `services/sourcing/rfqOptionInRound.test.js` |
 | S-02 | Major | Built: "Still missing" under each field, banner with jump links, every gap at once, Send disabled with the count | 1A · `66afbe90` | `rfqs/tieredDraftProblems.test.js`, `rfx/SupplierResponseForms.test.jsx` |

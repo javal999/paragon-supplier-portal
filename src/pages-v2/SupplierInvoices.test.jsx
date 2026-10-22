@@ -1,4 +1,4 @@
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 import { mockDataService } from '@services/data/mock/mockDataService';
@@ -178,5 +178,41 @@ describe('SupplierInvoices — the new-invoice amount is text, so the parser is 
     expect(screen.queryByTestId('invoice-amount-refusal')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create draft' })).not.toBeDisabled();
     expect(screen.getByRole('button', { name: 'Submit invoice' })).not.toBeDisabled();
+  });
+});
+
+// The resubmit amount had the `> 0` rule with no voice: a typed zero parses, so
+// no refusal showed, and `fixReady` kept the resubmit shut with no reason given.
+// The new-invoice field already says so (`invoice-amount-zero`); the fix field
+// now says the same thing, with the same key.
+describe('SupplierInvoices — the resubmit amount says why a zero is refused', () => {
+  const openFix = async () => {
+    invoiceStore.reset();
+    invoiceStore.update('inv-brl-0055', (i) => ({
+      ...i,
+      status: 'Disputed',
+      returnReason: 'Amount above PO price'
+    }));
+    renderWithProviders(<SupplierInvoices />, { identity: SUPPLIER });
+    const row = /** @type {HTMLTableRowElement} */ (
+      (await screen.findByText('INV-2026-BRL-0055')).closest('tr')
+    );
+    fireEvent.click(within(row).getByRole('button', { name: 'Correct and resubmit' }));
+    return screen.findByLabelText('Amount (IDR)');
+  };
+
+  it('KNOWN-GOOD FIRST: a positive amount shows no zero message', async () => {
+    const amount = await openFix();
+    fireEvent.change(amount, { target: { value: '185000000' } });
+    expect(screen.queryByTestId('invoice-fix-amount-zero')).not.toBeInTheDocument();
+  });
+
+  it('a typed zero names the rule, and the resubmit stays shut', async () => {
+    const amount = await openFix();
+    fireEvent.change(amount, { target: { value: '0' } });
+    const zero = screen.getByTestId('invoice-fix-amount-zero');
+    expect(zero).toHaveAttribute('role', 'alert');
+    expect(zero.textContent).toMatch(/greater than zero/i);
+    expect(screen.getByRole('button', { name: 'Resubmit invoice' })).toBeDisabled();
   });
 });
