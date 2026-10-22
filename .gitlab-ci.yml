@@ -1,0 +1,51 @@
+# ────────────────────────────────────────────────────────────────────────────
+# THE GATES ON GITLAB — the pre-merge check moved here from GitHub Actions on
+# 2026-10-14 (owner ruling: GitHub minutes are budget-limited).
+#
+# Same contract as `.github/workflows/gates.yml`, which this replaces as the
+# merge gate:
+#   · MERGE REQUEST — every MR runs the full floor (`npm run gates`) before it
+#     can merge, whatever its target branch.
+#   · SCHEDULE — main is re-run daily with no commit involved, plus the clock
+#     drift reader, which goes red on a calendar day with nobody touching a
+#     file. Create the schedule once in GitLab: Build → Pipeline schedules →
+#     daily 00:17 UTC on `main`. GitLab emails the schedule owner when a
+#     scheduled pipeline fails.
+#   · WEB — a manual run from Build → Pipelines → Run pipeline.
+# No push-to-main run, deliberately (as on GitHub since 2026-09-29): a merged
+# MR was already gated, and the daily run re-tests main.
+# No path filters, deliberately: the C9 contract pin reads docs/contracts/*.md.
+# ────────────────────────────────────────────────────────────────────────────
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+    - if: $CI_PIPELINE_SOURCE == "web"
+  # A newer push to the same MR supersedes a running pipeline for it.
+  auto_cancel:
+    on_new_commit: interruptible
+
+gates:
+  # Node 24, pinned to `.nvmrc` and the GitHub job: CI must run the runtime the
+  # gates are green on locally (Node 26 breaks the jsdom localStorage specs).
+  image: node:24
+  # 35 minutes, as on GitHub: a green full run takes ~20–29 min.
+  timeout: 35m
+  interruptible: true
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - .npm/
+  script:
+    # `npm ci`, not `npm install`: it fails on a lockfile that drifted from
+    # package.json instead of quietly resolving something else.
+    - npm ci --cache .npm --prefer-offline
+    # The same command run locally: build, spec typecheck, vitest against the
+    # floor in scripts/floor.json, test:gate, lint ceiling, Prettier.
+    - npm run gates
+    # The clock drift reader runs on the schedule only: in an MR it would go red
+    # on a calendar day for a change that did not cause it.
+    - if [ "$CI_PIPELINE_SOURCE" = "schedule" ]; then npm run drift; fi

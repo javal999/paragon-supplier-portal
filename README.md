@@ -526,8 +526,8 @@ something:
 | 5 | `npm run lint` + `npm run format:check` | an ESLint error, warnings above the ceiling, or unformatted code |
 
 It also fails if this README stops naming `src/services/transitions/schema.js`
-and `/buyer/process-flows`. CI runs the same command on every pull request and
-daily at 00:17 UTC (`.github/workflows/gates.yml`).
+and `/buyer/process-flows`. CI runs the same command on every GitLab merge request and
+daily at 00:17 UTC (`.gitlab-ci.yml`); the GitHub workflow is manual-only.
 
 ### 4. Try the gate locally (optional)
 

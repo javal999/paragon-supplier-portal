@@ -21,40 +21,14 @@
 
 name: gates
 
+# ⚠️ MANUAL ONLY SINCE 2026-10-14. The merge gate moved to GitLab
+# (`.gitlab-ci.yml`): GitHub Actions minutes are budget-limited, and this job
+# costs ~20–29 min per run. The `pull_request` trigger (every PR, every base,
+# including `edited` for retargets) and the daily `schedule` at 00:17 UTC now
+# live in GitLab as merge-request and scheduled pipelines. This workflow is
+# kept so the gates can still be run here by hand (Actions → gates → Run
+# workflow), and so restoring the triggers is a one-block change.
 on:
-  # ⚠️ THERE IS NO `branches:` FILTER HERE, AND THE ABSENCE IS THE FIX.
-  # It read `branches: [main]` until 2026-08-27, so a PR targeting a FEATURE
-  # branch never triggered this workflow — and a PR with no required check is
-  # reported by GitHub as `mergeStateStatus: CLEAN`. Three PRs of one stack
-  # reached CLEAN having never been gated. CLEAN meant "no check was
-  # required", not "every check passed", and nothing in the PR view says which.
-  #
-  # ⚠️ AND `types:` IS SPELLED OUT BECAUSE THE DEFAULT OMITS THE ONE CASE THAT
-  # MATTERS. Absent, it defaults to [opened, synchronize, reopened]. GitHub has
-  # no `base_changed` action: RETARGETING a PR emits `edited` (carrying
-  # `changes.base`), which that default does not contain. Measured on the same
-  # drain — two PRs retargeted to main with `gh pr edit --base main` reached
-  # CLEAN with no gate run, i.e. the fix for the first defect would have been
-  # undone by the second.
-  #
-  # `edited` also fires on a title or body edit, so the gates will sometimes
-  # run for a prose change. THAT IS THE DELIBERATE TRADE. The alternative is an
-  # `if:` guard on `github.event.changes.base`, and a guard that is wrong SKIPS
-  # THE GATE IN SILENCE — the exact failure class this trigger exists to close.
-  # A wasted run is loud and cheap; a skipped one is neither.
-  pull_request:
-    types: [opened, synchronize, reopened, edited]
-  # NO `push: branches: [main]`, deliberately (removed 2026-09-29). Every merge
-  # re-ran the full suite (~10 min) after its PR had already been gated: 83 runs and
-  # 766 of 2,554 billed minutes (30%) from 2026-09-15 to 09-29, on a private
-  # repo that pays for them. The daily run below re-tests main and files the
-  # `gates-failure` issue. THE TRADE, ACCEPTED: a merge that breaks main is
-  # caught within 24 hours, not within ~10 minutes.
-  schedule:
-    # 00:17 UTC daily. Just after the UTC date rolls over, so a clock-decay
-    # break is caught within the hour rather than at the weekend; off the hour
-    # because on-the-hour crons queue behind everyone else's.
-    - cron: '17 0 * * *'
   workflow_dispatch:
 
 permissions:
