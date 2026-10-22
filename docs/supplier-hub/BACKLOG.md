@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.34, 2026-10-20 (BL-221 added) |
+| Version | 2.34, 2026-10-20 (BL-221 added; the RFx 'Cancel RFQ' follow-up is BL-222, renumbered from BL-212) |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -146,13 +146,11 @@ The owner approved every requirement, default and decision in `SC-HUB-DA-ROP-CAL
 
 | ID | Item | Why | Size | Blocked by | Detail |
 |---|---|---|---|---|---|
-| BL-210 | Align the live functions with the sandbox: `rollingDaFigure` takes no consumption, koli or MOQ, so under `sdSource: consumption12w` or `safetyRounding: koli/moq` DA's week-1 safety order differs from ROP Order's; `safetyOrder` takes no typed SD; `OSIP_SAFETY_READ.fisikConsumptionWeeks` is fixed when the module loads, so the consumption-window switch moves no figure | Found by the sandbox build (DRC-B48) | S | Nothing | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-17 |
-| BL-211 | One consumption split per supplier: the recorded-consumption grid on Demand anticipation splits by DA share (CAP-D14), the OSIP safety figures and the DRC-18 rows by LTP share (CAP-D11) | Same consumption divided two ways (DRC-B25) | S | Owner: which split | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-B25 |
-| BL-204 | On hold: supplier view of demand anticipation, and the supplier confirming Incoming DA (moved from BL-194, DRC-D17) | Suppliers must not plan on unconfirmed figures (DRC-D10) | M | Material Planning: A1, A2, B1 to B4 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-1 |
-| BL-205 | On hold: protection buffer | Uplift for non-festive materials unknown | ? | Material Planning: C3 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-9c |
+| BL-204 | Merged 2026-10-20 (MR !13), rule still awaiting owner review: supplier view of demand anticipation, and the supplier confirming Incoming DA (moved from BL-194, DRC-D17) | Suppliers must not plan on unconfirmed figures (DRC-D10) | M | Material Planning: A1, A2, B1 to B4 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-1 |
+| BL-205 | Merged 2026-10-20 (MR !12), rule still awaiting owner review: protection buffer | Uplift for non-festive materials unknown | ? | Material Planning: C3 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-9c |
 | BL-206 | On hold: NPD vs CMM rules and material-code prefixes | MoM 4C action item | ? | MDM and Material Planner: D2 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-12b |
-| BL-207 | On hold: feedstock reconcile leftover rule and final formula | "Discussed later" [Owner, 2026-10-16] | ? | Owner | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-15b |
-| BL-208 | On hold: automatic OSIP level classification | Number of levels unknown (6, 7 or 8) | L | Material Planning: C2, F5 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-19 |
+| BL-207 | Merged 2026-10-20 (MR !11), rule still awaiting owner review: feedstock reconcile leftover rule and final formula | "Discussed later" [Owner, 2026-10-16] | ? | Owner | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-15b |
+| BL-208 | Merged 2026-10-20 (MR !10), rule still awaiting owner review: automatic OSIP level classification | Number of levels unknown (6, 7 or 8) | L | Material Planning: C2, F5 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-19 |
 | BL-209 | Golden fixture from Ary Hidayat's spike use case (moves from CAP-D16) | Checks the rolling formula against Ary's numbers | S | Ary | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` CAP-D16 |
 
 ---
@@ -193,13 +191,16 @@ Found while building the RFx UX evaluation (`research/RFX-UX-EVALUATION-2026-10.
 | ID | Item | Closed | By |
 |---|---|---|---|
 | BL-132 | Intent to respond, and decline with a reason, on the RFI and the RFP | 2026-10-19 | Built in the RFx UX wave 2 MR (lane 2D, RFX-D21): verbs `t_{rfi,rfp}intent_respond/_decline/_withdraw`, `INTENT_DECLINED` on save, submit and revise, the buyer's invitee table shows the intent and the reason |
-| BL-212 | Confirmation sheet on "Cancel RFQ" | 2026-10-19 | Built in the RFx UX wave 2 MR (lane 2E) |
+| BL-222 | Confirmation sheet on "Cancel RFQ" | 2026-10-19 | Built in the RFx UX wave 2 MR (lane 2E) |
 | BL-215 | Stored link from a buyer question to the built-in field it repeats | 2026-10-19 | Built in the RFx UX wave 2 MR (lane 2E): optional `builtIn` on the question, word match kept as a fallback, `BUILT_IN_MISMATCH` |
 | BL-216 | Refuse "Create RFQ from this RFP" while the RFP is Open; pre-fill leaves out in-round options | 2026-10-19 | Built in the RFx UX wave 2 MR (lane 2E): `RFQ_SOURCE_RFP_OPEN` on create and revise-draft |
 | BL-217 | RFX-D23 names for "ready to award" and "Revised quotes" | 2026-10-19 | Built in the RFx UX wave 2 MR (lane 2E): "RFQ ready to award", "RFQ rounds · Revised quotes" |
 | BL-218 | Remove the i18n keys the build left unused | 2026-10-19 | Built in the RFx UX wave 2 MR (lane 2E): 25 keys removed |
 | BL-219 | "Extend the deadline" only where the verb accepts it | 2026-10-19 | Built in the RFx UX wave 2 MR (lane 2E): read from the extend verbs' from-states |
 | BL-220 | One stage-bar component for RFQ, RFI and RFP | 2026-10-19 | Built in the RFx UX wave 2 MR (lane 2E) |
+| BL-212 | `OSIP_ROP_READ.npdLtpWeeks` (`osipRopRules.js`) is read from `consumptionMovingAvgWeeks` when the module loads, so a sandbox change to that window does not reach the NPD demand branch; read it at call time, as BL-210 did for `fisikConsumptionWeeks` | 2026-10-19 | Branch `feat/drc-bl208-212`: `npdLtpWeeks(rules)` read at call time |
+| BL-211 | One consumption split per supplier: the recorded-consumption grid on Demand anticipation splits by DA share (CAP-D14), the OSIP safety figures and the DRC-18 rows by LTP share (CAP-D11) | 2026-10-19 | GitLab MR !8: LTP share everywhere (DRC-D21) |
+| BL-210 | Align the live functions with the sandbox: `rollingDaFigure` takes no consumption, koli or MOQ, so under `sdSource: consumption12w` or `safetyRounding: koli/moq` DA's week-1 safety order differs from ROP Order's; `safetyOrder` takes no typed SD; `OSIP_SAFETY_READ.fisikConsumptionWeeks` is fixed when the module loads, so the consumption-window switch moves no figure | 2026-10-19 | GitLab MR !8: DA week-1 safety equals ROP Order safety under every switch; consumption window read at call time; SD override in `safetyOrder` |
 | BL-202 | What-if sandbox: one material, editable inputs and rule switches, 52 weeks RM / 24 weeks PM, named scenarios compared up to 3, PTI planners only, analysis only | 2026-10-19 | Built in GitLab MR !7: `/buyer/what-if`; decisions DRC-B42 to B48 |
 | BL-199 | Call-off drafted at ROP Fisik for planner approval; SAP PR recommendation when the umbrella PO runs out; max stock caps call-offs; SOH plant stored | 2026-10-19 | Built in GitLab MR !6: call-off drafted at ROP Fisik for planner approval, SAP PR recommendation; fires on PTI SOH updates only until the eWM feed exists |
 | BL-198 | NPD tag and ROP review after the first order | 2026-10-19 | Built in GitLab MR !6: NPD tag (default first order fulfilled, DRC-D19) and the review task |

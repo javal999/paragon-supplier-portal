@@ -370,7 +370,7 @@ export const rfxEn = {
   'rfx.confirm.cancel.title': 'Confirm cancelling the award',
   'rfx.confirm.cancel.who': 'Suppliers named in this award: {{names}}',
   'rfx.confirm.cancel.kept': 'The award stays on record, marked Cancelled.',
-  // — BL-212: cancelling a whole RFQ from the board's side panel —
+  // — BL-222: cancelling a whole RFQ from the board's side panel —
   'rfx.confirm.cancelRfq.title': 'Confirm cancelling the RFQ',
   'rfx.confirm.cancelRfq.confirm': 'Cancel the RFQ',
   'rfx.confirm.cancelRfq.who': '{{invited}} suppliers invited; {{quoted}} sent a quote.',
@@ -1081,7 +1081,7 @@ export const rfxId = {
   'rfx.confirm.cancel.title': 'Konfirmasi pembatalan penetapan',
   'rfx.confirm.cancel.who': 'Pemasok dalam penetapan ini: {{names}}',
   'rfx.confirm.cancel.kept': 'Penetapan tetap tercatat, dengan status Dibatalkan.',
-  // — BL-212: membatalkan seluruh RFQ dari panel samping —
+  // — BL-222: membatalkan seluruh RFQ dari panel samping —
   'rfx.confirm.cancelRfq.title': 'Konfirmasi pembatalan RFQ',
   'rfx.confirm.cancelRfq.confirm': 'Batalkan RFQ',
   'rfx.confirm.cancelRfq.who': '{{invited}} pemasok diundang; {{quoted}} mengirim penawaran.',

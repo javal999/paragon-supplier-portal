@@ -67,6 +67,8 @@ export const whatIfSandboxEn = {
   'whatIf.in.g': 'Fixed safety days g',
   'whatIf.in.sdSource': 'SD from',
   'whatIf.in.sd': 'SD in use: {{sd}}',
+  'whatIf.in.sdTyped': 'SD (blank = computed)',
+  'whatIf.in.sdTypedNote': 'A typed SD replaces the one computed from the source above.',
   'whatIf.in.consumption_one': '{{count}} recorded week of consumption',
   'whatIf.in.consumption_other': '{{count}} recorded weeks of consumption',
   'whatIf.in.mpq': 'MPQ',
@@ -98,8 +100,6 @@ export const whatIfSandboxEn = {
   'whatIf.switch.note.carryTarget':
     'The live plan carries outside the horizon only with the supplier’s recorded agreement (input above), so this key moves no figure.',
   'whatIf.switch.note.unitName': 'Names the limit’s unit; the limit itself is an input above.',
-  'whatIf.switch.note.movingAverage':
-    'The ROP Fisik consumption window is fixed from this key when the hub loads, so it moves no sandbox figure.',
   'whatIf.switch.note.capacity':
     'Production capacity is left out of ROP Fisik’s demand (no PTI figure), so this moves no figure.',
   'whatIf.switch.note.levelInput': 'Used only for a level with no formula of its own.',
@@ -173,10 +173,6 @@ export const whatIfSandboxEn = {
     'The lead time is longer than the horizon: no demand anticipation.',
   'whatIf.flag.NO_TRIGGER':
     'No ROP Fisik or Max: the call-off trigger drafts nothing, so projected SOH has no call-offs.',
-  'whatIf.flag.DA_SAFETY_LTP_ONLY':
-    'The demand anticipation’s safety order reads LTP only (the live function takes no consumption), so its week-1 safety differs from ROP Order’s.',
-  'whatIf.flag.DA_SAFETY_MPQ_ONLY':
-    'The demand anticipation’s safety order rounds to the MPQ only (the live function takes no koli or MOQ).',
   'whatIf.reading':
     'How the weeks are run: the trigger checks SOH against ROP Fisik every day before that day’s demand (the week’s LTP spread over 7 days); a call-off fills up to Max from the open PO and arrives f days later, approved; what no open PO covers is a PR recommendation. A shortage week is one where stock runs out on any day.',
 
@@ -284,6 +280,8 @@ export const whatIfSandboxId = {
   'whatIf.in.g': 'Hari pengaman tetap g',
   'whatIf.in.sdSource': 'SD dari',
   'whatIf.in.sd': 'SD yang dipakai: {{sd}}',
+  'whatIf.in.sdTyped': 'SD (kosong = dihitung)',
+  'whatIf.in.sdTypedNote': 'SD yang diketik menggantikan SD yang dihitung dari sumber di atas.',
   'whatIf.in.consumption_other': '{{count}} minggu konsumsi tercatat',
   'whatIf.in.mpq': 'MPQ',
   'whatIf.in.mpqNote': 'MPQ = kelipatan pesanan sampai data induk memuat MPQ.',
@@ -315,8 +313,6 @@ export const whatIfSandboxId = {
   'whatIf.switch.note.carryTarget':
     'Rencana aktual memindahkan sisa ke luar horizon hanya dengan persetujuan pemasok yang tercatat (input di atas), jadi kunci ini tidak mengubah angka.',
   'whatIf.switch.note.unitName': 'Menamai satuan batas; batasnya sendiri adalah input di atas.',
-  'whatIf.switch.note.movingAverage':
-    'Jendela konsumsi ROP Fisik ditetapkan dari kunci ini saat hub dimuat, jadi tidak mengubah angka sandbox.',
   'whatIf.switch.note.capacity':
     'Kapasitas produksi tidak masuk ke permintaan ROP Fisik (tidak ada angka PTI), jadi ini tidak mengubah angka.',
   'whatIf.switch.note.levelInput': 'Hanya dipakai untuk level yang tidak punya rumus sendiri.',
@@ -390,10 +386,6 @@ export const whatIfSandboxId = {
     'Lead time lebih panjang dari horizon: tidak ada antisipasi permintaan.',
   'whatIf.flag.NO_TRIGGER':
     'Tidak ada ROP Fisik atau Max: pemicu call-off tidak membuat apa pun, jadi proyeksi SOH tanpa call-off.',
-  'whatIf.flag.DA_SAFETY_LTP_ONLY':
-    'Safety order dalam antisipasi permintaan hanya membaca LTP (fungsi aktual tidak menerima konsumsi), jadi pengaman minggu 1-nya berbeda dari ROP Order.',
-  'whatIf.flag.DA_SAFETY_MPQ_ONLY':
-    'Safety order dalam antisipasi permintaan hanya dibulatkan ke MPQ (fungsi aktual tidak menerima koli atau MOQ).',
   'whatIf.reading':
     'Cara minggu dihitung: pemicu membandingkan SOH dengan ROP Fisik setiap hari sebelum permintaan hari itu (LTP minggu itu dibagi ke 7 hari); call-off mengisi sampai Max dari PO terbuka dan tiba f hari kemudian, disetujui; yang tidak tertutup PO terbuka menjadi rekomendasi PR. Minggu kekurangan adalah minggu ketika stok habis pada hari mana pun.',
 

@@ -224,7 +224,12 @@ import { join } from 'node:path';
 import ts from 'typescript';
 import { resources } from '@lib/i18n';
 import { scriptKindOf } from '@test/sourceFiles';
-import { folderSourceFiles, pageFiles as pagesOf, pagesDirFolders } from '@test/pageFiles';
+import {
+  folderSourceFiles,
+  pageFiles as pagesOf,
+  pageFolderFiles,
+  pagesDirFolders
+} from '@test/pageFiles';
 import { routedPageFiles } from '@test/routerPages';
 
 const PAGES_DIR = __dirname;
@@ -1168,7 +1173,16 @@ describe('the refusal class reads a declared error; a hook-bound mutate is an ac
 });
 
 describe('the branch unit, fired at the defect it was built for (#352)', () => {
-  const SRC = join(PAGES_DIR, 'BuyerInvoices.jsx');
+  // `BuyerInvoices` is a page FOLDER (Phase 5 split): the handler lives in
+  // whichever file of the folder holds the Overdue toast, found by content.
+  const SRC = join(
+    PAGES_DIR,
+    /** @type {string} */ (
+      pageFolderFiles(PAGES_DIR, 'BuyerInvoices').find((f) =>
+        readFileSync(join(PAGES_DIR, f), 'utf8').includes("t('buyerInvoices.toast.escalate.title'")
+      )
+    )
+  );
   const RETIRED_EN = 'Routed to Finance Controller for urgent action.';
 
   it('the retired claim would not have admitted anything', () => {
@@ -1178,13 +1192,7 @@ describe('the branch unit, fired at the defect it was built for (#352)', () => {
   it('the Overdue branch is in the population, and the handler body is not', () => {
     const raw = readFileSync(SRC, 'utf8');
     const src = codeOnly(raw);
-    const sf = ts.createSourceFile(
-      'BuyerInvoices.jsx',
-      raw,
-      ts.ScriptTarget.Latest,
-      true,
-      ts.ScriptKind.TSX
-    );
+    const sf = ts.createSourceFile(SRC, raw, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
     const idx = src.indexOf("t('buyerInvoices.toast.escalate.title'");
     expect(idx, 'the Overdue branch must still be findable').toBeGreaterThan(0);
     const pre = src.slice(0, idx);

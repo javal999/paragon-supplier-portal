@@ -1,4 +1,4 @@
-// BL-212 — "Cancel RFQ" in the board's side panel opens a confirmation sheet:
+// BL-222 — "Cancel RFQ" in the board's side panel opens a confirmation sheet:
 // who is affected (invited, quoted), what closes, and that it cannot be undone.
 // Nothing dispatches until the sheet's own verb is pressed.
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
@@ -32,7 +32,7 @@ const openSheet = async () => {
   return within(panel).findByTestId('rfq-cancel-sheet');
 };
 
-describe('BL-212 — the cancel sheet', () => {
+describe('BL-222 — the cancel sheet', () => {
   it('pressing Cancel RFQ opens the sheet and dispatches nothing', async () => {
     const sheet = await openSheet();
     const rfq = /** @type {RFQ} */ (rfqStore.get('rfq-003'));

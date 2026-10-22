@@ -226,7 +226,7 @@ A refused verb returns `POLICY_REJECTED` with a detail `CODE: sentence`. The scr
 ## 10. Testing
 
 - Gates: `npx -y -p node@24 -- sh -c 'node scripts/gates.mjs'` runs build, spec typecheck, the full vitest suite, the access-gate suite, lint and format, and asserts the floor in `scripts/floor.json`. Node 24 is required (`.nvmrc`).
-- About 90 RFx spec files; the RFx UX build specs are `rfx/rfxUx2A`, `BuyerSourcing/rfxUx1D`, `rfxUx2B`, `rfxUxB02`, `BuyerSourcingEvent/eventStage`, `SupplierRFQs/rfxUx1B`, `rfxUx2C`, `rfx/RfxConfirmSheets`, `SupplierResponseForms`, `responseDraft`, `builtInDuplicates`, `RfxIntent`, `services/sourcing/rfxIntent`, `rfqOptionInRound`, `services/data/mock/rfxIntentCommand`, `rfqFromOpenRfp`, `rfx/builtInLink`, `rfx/rfxExtend`, `rfx/oneStageBar.guard`, `BuyerSourcing/rfxUxBl212`, `rfxUxBl216`.
+- About 90 RFx spec files; the RFx UX build specs are `rfx/rfxUx2A`, `BuyerSourcing/rfxUx1D`, `rfxUx2B`, `rfxUxB02`, `BuyerSourcingEvent/eventStage`, `SupplierRFQs/rfxUx1B`, `rfxUx2C`, `rfx/RfxConfirmSheets`, `SupplierResponseForms`, `responseDraft`, `builtInDuplicates`, `RfxIntent`, `services/sourcing/rfxIntent`, `rfqOptionInRound`, `services/data/mock/rfxIntentCommand`, `rfqFromOpenRfp`, `rfx/builtInLink`, `rfx/rfxExtend`, `rfx/oneStageBar.guard`, `BuyerSourcing/rfxUxBl222`, `rfxUxBl216`.
 - Each refusal is pinned by a passing and a failing case. Production tests should port these cases against the server.
 
 ---
@@ -267,7 +267,7 @@ Built as recommended; the owner may change any of them.
 | RFQ event page | Early negotiation round warns, never blocks | Keep |
 | RFP | "Create RFQ from this RFP" is refused while the RFP is Open, at the verb as well as on the page; it also refuses revising a draft RFQ whose RFP was extended back to Open | Keep (BL-216) |
 | RFI and RFP pages | "Extend" shown only in the statuses the extend verb accepts (Open, Closed) | Keep (BL-219) |
-| RFQ side panel | "Cancel RFQ" confirms on a sheet with no reason field, because the verb takes none and Cancelled is final | Keep (BL-212) |
+| RFQ side panel | "Cancel RFQ" confirms on a sheet with no reason field, because the verb takes none and Cancelled is final | Keep (BL-222) |
 | Questions | A buyer question can be linked to the built-in field it repeats; the word match stays only for unlinked questions | Keep (BL-215) |
 | Award panels | Compact qualification pill with the explanation as a tooltip; the full text once in the invitee table | Keep |
 

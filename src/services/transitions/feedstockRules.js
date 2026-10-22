@@ -2,8 +2,9 @@
 // SUPPLIER FEEDSTOCK CONFIRMATION — BL-194, DRC-8 (feedstock part only),
 // SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10; owner decision 2026-10-19
 // (DRC-D17): the supplier confirms its CURRENT FEEDSTOCK with a confirmation
-// date. Confirming Incoming DA waits for BL-204 (DRC-D10), so nothing here
-// reads or shows a DA figure to a supplier.
+// date. Confirming Incoming DA waits for BL-204 (DRC-D10): BL-204 built it
+// behind `SUPPLIER_DA_VIEW_ENABLED` (supplierDaView.js), which ships false, so
+// the optional Incoming DA "yes" is refused until the flag is on.
 //
 // Pure: no store, no clock, no UI. The policy hook and the supplier form call
 // the SAME `feedstockEntryRefusal`, so the page cannot accept what the verb
@@ -51,7 +52,7 @@ export const FEEDSTOCK_PROVISIONAL_QUESTIONS = Object.freeze(['E1', 'E2']);
 
 /**
  * Why a confirmation is refused, or null when it is accepted.
- * @typedef {'NOT_ASSIGNED' | 'QTY_INVALID' | 'DATE_REQUIRED' | 'DATE_INVALID' | 'DATE_IN_FUTURE' | 'NOTE_INVALID' | 'NOTE_TOO_LONG'} FeedstockRefusal
+ * @typedef {'NOT_ASSIGNED' | 'QTY_INVALID' | 'DATE_REQUIRED' | 'DATE_INVALID' | 'DATE_IN_FUTURE' | 'NOTE_INVALID' | 'NOTE_TOO_LONG' | 'INCOMING_DA_INVALID' | 'INCOMING_DA_NOT_AVAILABLE'} FeedstockRefusal
  */
 
 /** Every refusal code, in the order the rule checks them. */
@@ -63,7 +64,9 @@ export const FEEDSTOCK_REFUSALS = /** @type {readonly FeedstockRefusal[]} */ (
     'DATE_INVALID',
     'DATE_IN_FUTURE',
     'NOTE_INVALID',
-    'NOTE_TOO_LONG'
+    'NOTE_TOO_LONG',
+    'INCOMING_DA_INVALID',
+    'INCOMING_DA_NOT_AVAILABLE'
   ])
 );
 
@@ -82,6 +85,9 @@ const isIsoDay = (v) =>
  * `feedstockQty`:  In the material's unit; 0 allowed (BR-a).
  * `confirmedOn`:  `YYYY-MM-DD`, required, not after `today` (BR-a).
  * `today`:  The hub's day, `YYYY-MM-DD` (the caller reads the clock).
+ * `incomingDaConfirmed`:  BL-204 — the supplier also confirms its Incoming DA; optional, a boolean.
+ * `incomingDaAvailable`:  BL-204 — the supplier view is on (`SUPPLIER_DA_VIEW_ENABLED`) and a
+ *   publication holds the pair (the caller resolves it).
  *
  * @typedef {{
  *   readonly assigned: boolean;
@@ -89,6 +95,8 @@ const isIsoDay = (v) =>
  *   readonly confirmedOn: unknown;
  *   readonly note?: unknown;
  *   readonly today: string;
+ *   readonly incomingDaConfirmed?: unknown;
+ *   readonly incomingDaAvailable?: boolean;
  * }} FeedstockEntry
  */
 
@@ -116,6 +124,12 @@ export function feedstockEntryRefusal(e, rules = FEEDSTOCK_RULES) {
   if (typeof e.note === 'string' && e.note.trim().length > rules.noteMaxLength) {
     return 'NOTE_TOO_LONG';
   }
+  // BL-204 (DRC-8, the Incoming DA part DRC-D17 deferred): optional, a yes/no.
+  // A "yes" needs the supplier view switched on (DRC-D10) AND a published DA
+  // for the pair to confirm; otherwise it is refused, never silently dropped.
+  const inc = e.incomingDaConfirmed;
+  if (inc !== undefined && inc !== null && typeof inc !== 'boolean') return 'INCOMING_DA_INVALID';
+  if (inc === true && e.incomingDaAvailable !== true) return 'INCOMING_DA_NOT_AVAILABLE';
   return null;
 }
 

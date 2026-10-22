@@ -98,7 +98,7 @@ export function closeEffects(t, { invited, responded }) {
 }
 
 /**
- * BL-212 — cancelling a whole RFQ (`t_rfq_cancel`, Draft/Open/Closed →
+ * BL-222 — cancelling a whole RFQ (`t_rfq_cancel`, Draft/Open/Closed →
  * Cancelled): who is affected, what closes, and that no verb leaves Cancelled.
  * The verb takes no reason (`requiredFields: []`) and declares no cascade, so
  * the quotes already in are left as they are — the sheet says exactly that.

@@ -5,6 +5,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import { Shipment, ASN } from '@services/data/types' */
+/** @import { UseFormReturn } from 'react-hook-form' */
 import { seedQty } from '../grLineQuantities';
 import { bpomOf } from '@services/sdc/bpom';
 /** @import { BpomOutcome } from '@services/sdc/bpom' */
@@ -68,6 +69,30 @@ import { halalOf } from '@services/sdc/halal';
  *    `halalSealCheck` above and `seedBpom` below.
  * @property {boolean} labSampleRequired
  * @property {string} [labRequestId]
+ */
+
+/**
+ * The wizard's draft: every value a clerk edits, held in one react-hook-form
+ * `useForm` (frontend-standard "Forms"). Nothing here is validated by
+ * react-hook-form — the gates are derived from these values in
+ * `useInspectionDraft`, exactly as they were over the `useState` draft.
+ * @typedef {object} GrDraft
+ * @property {SourceMode} sourceMode Step 1: the dock list or a typed ASN number.
+ * @property {string} selectedSourceId Step 1: the picked dock source's id.
+ * @property {string} manualASN Step 1: the typed ASN number, untrimmed.
+ * @property {string} receivedDate Step 2.
+ * @property {string} receivedBy Step 2: a `ROLES` value, recorded verbatim.
+ * @property {string} warehouse Step 2: a `LOCATIONS` value.
+ * @property {string} notes Step 2.
+ * @property {LineDraft[]} lines Steps 2 and 3: one draft per source line.
+ * @property {string} dispositionReason Step 4: owed only by a Rejected roll-up.
+ * @property {boolean} autoPostSap Step 4.
+ * @property {string} finalNotes Step 4.
+ */
+
+/**
+ * The react-hook-form handle every step reads through `useFormContext()`.
+ * @typedef {UseFormReturn<GrDraft>} GrDraftForm
  */
 
 // A normalized GR source — a shipment at dock OR a live submitted ASN. The dock

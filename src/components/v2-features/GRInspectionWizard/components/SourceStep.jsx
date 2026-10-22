@@ -1,48 +1,36 @@
 /** @import * as React from 'react' */
 import { useTranslation } from 'react-i18next';
+import { useFormContext, useWatch } from 'react-hook-form';
 import Data from '../../../ui-v2/Data';
 import { labelFor, inputCls } from './fieldParts';
 /** @import { ASN } from '@services/data/types' */
-/** @import { GrSource, LineDraft, SourceMode } from '../utils' */
+/** @import { GrSource, GrDraftForm } from '../utils' */
 
 /**
  * @typedef {object} SourceStepProps
- * @property {SourceMode} sourceMode
- * @property {(mode: SourceMode) => void} setSourceMode
  * @property {GrSource[]} sources -  Receivable sources: shipments at dock ∪ live receivable ASNs.
- * @property {string} selectedSourceId
- * @property {(id: string) => void} setSelectedSourceId
- * @property {(lines: LineDraft[]) => void} setLines -  Picking a dock source replaces the drafted lines with that source's.
- * @property {string} manualASN
- * @property {(value: string) => void} setManualASN
  * @property {boolean} manualNotFound
  * @property {ASN | undefined} manualAsnMatch
  */
 
 /**
  * Step 1 — pick the GR source: a shipment at the dock, or an ASN number typed
- * by hand and resolved against the live ASNs.
+ * by hand and resolved against the live ASNs. Reads and writes the draft
+ * through `useFormContext()`; picking a dock source replaces the drafted lines
+ * with that source's.
  * @type {React.FC<SourceStepProps>}
  */
-const SourceStep = ({
-  sourceMode,
-  setSourceMode,
-  sources,
-  selectedSourceId,
-  setSelectedSourceId,
-  setLines,
-  manualASN,
-  setManualASN,
-  manualNotFound,
-  manualAsnMatch
-}) => {
+const SourceStep = ({ sources, manualNotFound, manualAsnMatch }) => {
   const { t } = useTranslation();
+  const { register, setValue, control } = /** @type {GrDraftForm} */ (useFormContext());
+  const sourceMode = useWatch({ control, name: 'sourceMode' });
+  const selectedSourceId = useWatch({ control, name: 'selectedSourceId' });
   return (
     <div className="flex flex-col gap-4">
       <div className="flex gap-2">
         <button
           type="button"
-          onClick={() => setSourceMode('shipment')}
+          onClick={() => setValue('sourceMode', 'shipment')}
           className={`flex-1 rounded-md border px-4 py-3 text-sm font-medium transition-colors ${
             sourceMode === 'shipment'
               ? 'border-action bg-action-soft text-action-hover'
@@ -53,7 +41,7 @@ const SourceStep = ({
         </button>
         <button
           type="button"
-          onClick={() => setSourceMode('manual')}
+          onClick={() => setValue('sourceMode', 'manual')}
           className={`flex-1 rounded-md border px-4 py-3 text-sm font-medium transition-colors ${
             sourceMode === 'manual'
               ? 'border-action bg-action-soft text-action-hover'
@@ -76,8 +64,8 @@ const SourceStep = ({
               key={s.id}
               type="button"
               onClick={() => {
-                setSelectedSourceId(s.id);
-                setLines(s.lines);
+                setValue('selectedSourceId', s.id);
+                setValue('lines', s.lines);
               }}
               className={`w-full flex items-center justify-between gap-4 px-4 py-3 text-left transition-colors ${
                 selectedSourceId === s.id ? 'bg-action-soft' : 'hover:bg-bg-hover'
@@ -104,8 +92,7 @@ const SourceStep = ({
             {labelFor(t('goodsReceipt.wizard.field.asnNumber'))}
             <input
               type="text"
-              value={manualASN}
-              onChange={(e) => setManualASN(e.target.value)}
+              {...register('manualASN')}
               placeholder="ASN-2026-XXX"
               className={inputCls}
             />

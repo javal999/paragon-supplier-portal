@@ -4,14 +4,16 @@
 // finalize / post / settle through the dispatcher.
 //
 // Split into a folder by frontend-standard Phase 5 (PAGE-SPLIT-GUIDE):
-//   hooks/useInspectionDraft.js  the draft state and every gate over it
-//   hooks/useGrSource.js         step 1's state and the source it resolves to
+//   hooks/useInspectionDraft.js  the draft (a react-hook-form `useForm`) and
+//                                every gate over it
+//   hooks/useGrSource.js         the source step 1's values resolve to
 //   hooks/useCompleteReceipt.js  the create → finalize → post → settle sequence
 //   components/*Step.jsx         one file per wizard step
 //   components/RegulatoryCheck.jsx, CertificateNotice.jsx, fieldParts.jsx
 //   utils.js / const.js          line-draft builders and receivable statuses
 // ────────────────────────────────────────────────────────────────────────────
 import { useState } from 'react';
+import { FormProvider } from 'react-hook-form';
 /** @import * as React from 'react' */
 /** @import { WizardStep } from '../../ui-v2/Wizard' */
 import Wizard from '../../ui-v2/Wizard';
@@ -138,14 +140,7 @@ const GRInspectionWizard = ({
       description: t('goodsReceipt.wizard.step.source.desc'),
       content: (
         <SourceStep
-          sourceMode={draft.sourceMode}
-          setSourceMode={draft.setSourceMode}
           sources={draft.sources}
-          selectedSourceId={draft.selectedSourceId}
-          setSelectedSourceId={draft.setSelectedSourceId}
-          setLines={draft.setLines}
-          manualASN={draft.manualASN}
-          setManualASN={draft.setManualASN}
           manualNotFound={draft.manualNotFound}
           manualAsnMatch={draft.manualAsnMatch}
         />
@@ -158,18 +153,9 @@ const GRInspectionWizard = ({
       description: t('goodsReceipt.wizard.step.details.desc'),
       content: (
         <ReceiptStep
-          receivedDate={draft.receivedDate}
-          setReceivedDate={draft.setReceivedDate}
-          receivedBy={draft.receivedBy}
-          setReceivedBy={draft.setReceivedBy}
-          warehouse={draft.warehouse}
-          setWarehouse={draft.setWarehouse}
-          notes={draft.notes}
-          setNotes={draft.setNotes}
           lines={draft.lines}
           lineQtys={draft.lineQtys}
           blockedCodes={draft.blockedCodes}
-          updateLine={draft.updateLine}
         />
       )
     },
@@ -199,28 +185,27 @@ const GRInspectionWizard = ({
           derivedDisposition={draft.derivedDisposition}
           dispositionLabel={dispositionLabel}
           totals={draft.totals}
-          dispositionReason={draft.dispositionReason}
-          setDispositionReason={draft.setDispositionReason}
           autoPostSap={draft.autoPostSap}
-          setAutoPostSap={draft.setAutoPostSap}
-          finalNotes={draft.finalNotes}
-          setFinalNotes={draft.setFinalNotes}
         />
       )
     }
   ];
 
+  // The steps read and write the draft through the context (`useFormContext`);
+  // FormProvider renders no element, so the modal's markup is unchanged.
   return (
     <ModalOverlay onClose={onClose} scrim="dark">
-      <Wizard
-        steps={steps}
-        currentStep={step}
-        onStepChange={setStep}
-        onCancel={onClose}
-        onComplete={handleComplete}
-        isStepValid={draft.isStepValid}
-        completeLabel={t('goodsReceipt.wizard.complete')}
-      />
+      <FormProvider {...draft.methods}>
+        <Wizard
+          steps={steps}
+          currentStep={step}
+          onStepChange={setStep}
+          onCancel={onClose}
+          onComplete={handleComplete}
+          isStepValid={draft.isStepValid}
+          completeLabel={t('goodsReceipt.wizard.complete')}
+        />
+      </FormProvider>
     </ModalOverlay>
   );
 };

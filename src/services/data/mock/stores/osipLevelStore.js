@@ -4,8 +4,9 @@
 // Append-only (MAT-R3): a change is a new row with the level before it, its
 // source, when and by whom. The latest row of a material is in force; with
 // none, the material is at [Default C2] (`osipLevelInForce`). Written by
-// `t_osiplevel_set` (source `planner`); DRC-19's automatic classification, on
-// hold, appends `classification` rows to the same ledger.
+// `t_osiplevel_set` only: source `planner` for the planner's own pick,
+// `classification` when the planner confirms the suggested level (BL-208,
+// DRC-19 [Proposed]). The system never appends a row on its own.
 //
 // Held in memory like every other record in the prototype: lost on reload.
 // Empty at start: no level history is invented.
@@ -44,11 +45,16 @@ export const osipLevelStore = {
   },
   /**
    * How many rows the planner recorded for a material (the NPD review reads it).
+   * BL-208 — a confirmed suggestion (`classification`) is a planner act too:
+   * every row comes through `t_osiplevel_set`, fired by a person.
    * @param {string} materialCode
    * @returns {number}
    */
   plannerCount(materialCode) {
-    return rows.filter((r) => r.materialCode === materialCode && r.source === 'planner').length;
+    return rows.filter(
+      (r) =>
+        r.materialCode === materialCode && (r.source === 'planner' || r.source === 'classification')
+    ).length;
   },
   /**
    * @param {OsipLevelRow} row

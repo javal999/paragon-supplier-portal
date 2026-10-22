@@ -86,6 +86,8 @@ export const hubEn = {
   'hub.nav.sup.shipments': 'Shipments & ASN',
   'hub.nav.sup.goodsReceipts': 'Goods receipts',
   'hub.nav.sup.forecast': 'Foresight commitments',
+  // BL-204 (DRC-1) — the supplier view of demand anticipation (only with SUPPLIER_DA_VIEW_ENABLED).
+  'hub.nav.sup.demandAnticipation': 'Demand anticipation',
   'hub.nav.sup.fsReconcile': 'Feedstock reconcile',
   'hub.nav.sup.stock': 'Stock',
   'hub.nav.sup.capacity': 'Capacity',
@@ -293,6 +295,7 @@ export const hubId = {
   'hub.nav.sup.shipments': 'Pengiriman & ASN',
   'hub.nav.sup.goodsReceipts': 'Penerimaan barang',
   'hub.nav.sup.forecast': 'Komitmen foresight',
+  'hub.nav.sup.demandAnticipation': 'Antisipasi permintaan',
   'hub.nav.sup.fsReconcile': 'Rekonsiliasi feedstock',
   'hub.nav.sup.stock': 'Stok',
   'hub.nav.sup.capacity': 'Kapasitas',
