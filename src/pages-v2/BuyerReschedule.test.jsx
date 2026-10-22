@@ -90,6 +90,8 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
     expect(relief.length).toBeGreaterThan(0);
     renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
     const section = await screen.findByTestId('rs-relief');
+    // IA F-2 — the ranked relief opens on its first rows; open it all to read every row.
+    fireEvent.click(within(section).getByTestId('rs-show-all-relief'));
     const rows = within(section).getAllByTestId(/^rs-relief-/);
     expect(rows.map((row) => row.getAttribute('data-testid'))).toEqual(
       relief.map((p) => `rs-relief-${p.id}`)
@@ -156,6 +158,8 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
     const after = planChangeAfter(r.planChange, pk.proposals, new Set([inside.id]));
     expect(after.changedInsideLeadTime).toBe(r.planChange.changedInsideLeadTime + 1);
     renderWithProviders(<BuyerReschedule />, { identity: PLANNER, route: '/buyer/reschedule' });
+    // IA F-2 — the proposal may sit past the first rows; open the whole list.
+    fireEvent.click(await screen.findByTestId('rs-show-all-relief'));
     const rowBox = await screen.findByTestId(`rs-select-${inside.id}`);
     // A11y finding 15: the 13 px checkbox is unchanged; its label carries the
     // 44 px coarse-pointer tap area (src/index.css), and clicking still toggles.

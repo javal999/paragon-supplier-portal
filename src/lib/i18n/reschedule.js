@@ -88,6 +88,8 @@ export const rescheduleEn = {
   'rs.relief.selectFree_one': 'Select the {{count}} proposal without supplier agreement',
   'rs.relief.selectFree_other': 'Select the {{count}} proposals without supplier agreement',
   'rs.relief.clear': 'Clear selection',
+  'rs.relief.showAll': 'Show all {{count}} proposals',
+  'rs.relief.showFewer': 'Show the first {{count}}',
   'rs.relief.selectHint':
     'Tick proposals to see their effect on warehouse fill and supplier stability. Ticking sends nothing.',
   'rs.relief.withheld':
@@ -331,6 +333,8 @@ export const rescheduleId = {
     'Tidak ada pesanan terbuka di gudang ini yang dapat membebaskan ruang di minggu di atas kapasitas.',
   'rs.relief.selectFree_other': 'Pilih {{count}} usulan tanpa persetujuan pemasok',
   'rs.relief.clear': 'Hapus pilihan',
+  'rs.relief.showAll': 'Tampilkan semua {{count}} usulan',
+  'rs.relief.showFewer': 'Tampilkan {{count}} pertama',
   'rs.relief.selectHint':
     'Centang usulan untuk melihat dampaknya pada isi gudang dan stabilitas pemasok. Mencentang tidak mengirim apa pun.',
   'rs.relief.withheld':

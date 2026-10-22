@@ -1,4 +1,5 @@
 /** @import React from 'react' */
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Button from '@components/ui-v2/Button';
 /** @import { RescheduleProposalView } from '@services/data/types' */
@@ -19,6 +20,13 @@ import ProposalTable from './ProposalTable';
  */
 
 /**
+ * IA F-2 — the ranked relief opens on its highest-ranked rows; "Show all"
+ * reveals the rest. A selected proposal always stays visible, so nothing is
+ * sent that the planner cannot see.
+ */
+export const RELIEF_FIRST_ROWS = 20;
+
+/**
  * The relief proposals, ranked by net saving: the one line saying why the acts
  * are off on sample data, the selection buttons, and the selectable table — or
  * the empty line when nothing relieves the warehouse.
@@ -35,6 +43,10 @@ const ReliefSection = ({
   action
 }) => {
   const { t } = useTranslation();
+  const [showAll, setShowAll] = useState(false);
+  const shown = showAll
+    ? relief
+    : relief.filter((p, i) => i < RELIEF_FIRST_ROWS || selected.has(p.id));
   return (
     <section
       className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6"
@@ -69,13 +81,26 @@ const ReliefSection = ({
             </Button>
           </div>
           <ProposalTable
-            rows={relief}
+            rows={shown}
             selectable
             testPrefix="rs-relief"
             selected={selected}
             onToggle={onToggle}
             action={action}
           />
+          {relief.length > RELIEF_FIRST_ROWS ? (
+            <div className="mt-3">
+              <Button
+                variant="secondary"
+                onClick={() => setShowAll((v) => !v)}
+                data-testid="rs-show-all-relief"
+              >
+                {showAll
+                  ? t('rs.relief.showFewer', { count: RELIEF_FIRST_ROWS })
+                  : t('rs.relief.showAll', { count: relief.length })}
+              </Button>
+            </div>
+          ) : null}
         </>
       )}
     </section>
