@@ -77,6 +77,7 @@ const RfqWizardModal = ({
           toggleMaterial={wizard.toggleMaterial}
           qtyRead={wizard.qtyRead}
           budgetRead={wizard.budgetRead}
+          uomRefusal={wizard.uomRefusal}
           t={t}
         />
       )

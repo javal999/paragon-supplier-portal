@@ -8,8 +8,10 @@
 //     (the read model's `score`). No new score is made here.
 //   · "Best" marks the best VALUE on a row whose values can be compared as
 //     numbers (lowest price, shortest lead time, longest payment days, longest
-//     validity). A row this module cannot compare gets no marker, rather than
-//     a guess. It says nothing about which supplier should win.
+//     validity; RFX-D29 adds lowest MOQ, most allocation per month, highest
+//     OTIF). A value this module cannot read in the row's common unit gets no
+//     marker, rather than a guess. It says nothing about which supplier
+//     should win.
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import { RfiEventView, RfiResponseView, RfpEventView, RfpResponseView, RfxInviteeView } from '@services/sourcing/views' */
@@ -90,13 +92,19 @@ export function inviteeTally(invitees) {
  * The RFP terms whose proposed values compare as numbers, and which way is
  * better. Every other term — free text, a choice, a custom term whose
  * direction the buyer never stated — is not comparable and gets no marker.
+ * RFX-D29 (owner ruling 2026-10-22) added the lowest minimum order quantity,
+ * the most capacity allocated to PTI per month and the highest OTIF
+ * commitment.
  * @type {Readonly<Record<string, 'min' | 'max'>>}
  */
 export const RFP_BEST_DIRECTION = {
   priceBasis: 'min',
   leadTime: 'min',
   paymentTerms: 'max',
-  priceValidity: 'max'
+  priceValidity: 'max',
+  moq: 'min',
+  allocation: 'max',
+  otifCommitment: 'max'
 };
 
 /** Days per unit, for a validity written "12 months" or "6 weeks". */
@@ -108,29 +116,149 @@ const DAYS_PER = /** @type {Readonly<Record<string, number>>} */ ({
 });
 
 /**
- * The number a comparable term's value holds, or null when it holds none.
- * A validity needs its unit (days, weeks, months, years) and is read in days;
- * the other comparable terms read the first number in the value.
+ * The quantity units a MOQ or an allocation may be written in, each as its
+ * common unit and the factor into it. Pieces and kilograms are two units: a
+ * value in one is never compared with a value in the other.
+ * i18n-defer: unit words as suppliers type them, matched, never shown.
+ */
+const QTY_UNITS = /** @type {Readonly<Record<string, { unit: string; per: number }>>} */ ({
+  pc: { unit: 'pcs', per: 1 },
+  pcs: { unit: 'pcs', per: 1 },
+  piece: { unit: 'pcs', per: 1 },
+  unit: { unit: 'pcs', per: 1 },
+  ea: { unit: 'pcs', per: 1 },
+  g: { unit: 'kg', per: 0.001 },
+  gram: { unit: 'kg', per: 0.001 },
+  kg: { unit: 'kg', per: 1 },
+  kgs: { unit: 'kg', per: 1 },
+  kilogram: { unit: 'kg', per: 1 },
+  ton: { unit: 'kg', per: 1000 },
+  tonne: { unit: 'kg', per: 1000 },
+  mt: { unit: 'kg', per: 1000 }
+});
+
+/**
+ * One comparable value: the number in the row's common unit, and that unit.
+ * @typedef {{ n: number; unit: string }} ComparableReading
+ */
+
+/**
+ * The first number in a value and the word after it.
+ * @param {string} value
+ * @returns {{ n: number; word: string } | null}
+ */
+const firstNumber = (value) => {
+  const match = value.match(/(\d[\d,]*(?:\.\d+)?)\s*([a-z%]*)/i);
+  if (!match) return null;
+  const n = Number((match[1] ?? '').replace(/,/g, ''));
+  return Number.isFinite(n) ? { n, word: (match[2] ?? '').toLowerCase() } : null;
+};
+
+/**
+ * A quantity (MOQ, allocation) in pieces or kilograms. A bare number is
+ * read in pieces; a unit the table does not hold is not read.
+ * @param {string} word
+ * @param {number} n
+ * @returns {ComparableReading | null}
+ */
+const quantityReading = (word, n) => {
+  if (word === '') return { n, unit: 'pcs' };
+  const known = QTY_UNITS[word] ?? QTY_UNITS[word.replace(/s$/, '')];
+  return known ? { n: n * known.per, unit: known.unit } : null;
+};
+
+/**
+ * The period words an allocation may name, EN and ID, as the `DAYS_PER` unit.
+ * i18n-defer: words as suppliers type them, matched, never shown.
+ */
+const PERIOD_OF = /** @type {Readonly<Record<string, string>>} */ ({
+  day: 'day',
+  daily: 'day',
+  hari: 'day',
+  week: 'week',
+  weekly: 'week',
+  minggu: 'week',
+  month: 'month',
+  monthly: 'month',
+  bulan: 'month',
+  year: 'year',
+  yearly: 'year',
+  annually: 'year',
+  tahun: 'year'
+});
+
+/**
+ * An allocation is per month: "400,000 pcs per month". A value naming another
+ * period ("per week", "/year", "weekly") is converted to a month of 30 days;
+ * one naming none is read as per month, which is what the term asks. A
+ * period this table does not hold ("per batch") is not read.
+ * @param {string} value
+ * @param {ComparableReading} q
+ * @returns {ComparableReading | null}
+ */
+const perMonth = (value, q) => {
+  const named = value
+    .toLowerCase()
+    .match(
+      /(?:\/|\bper\b|\ba\b|\beach\b|\bsetiap\b)\s*([a-z]+)|\b(daily|weekly|monthly|yearly|annually)\b/
+    );
+  const word = named ? (named[1] ?? named[2] ?? '').replace(/s$/, '') : 'month';
+  const period = PERIOD_OF[word];
+  const days = period === undefined ? undefined : DAYS_PER[period];
+  return days === undefined ? null : { n: (q.n * 30) / days, unit: `${q.unit}/month` };
+};
+
+/**
+ * The number a comparable term's value holds, in the row's common unit, or
+ * null when it holds none:
+ *   · a validity needs its unit (days, weeks, months, years) and is read in days;
+ *   · a MOQ or an allocation is read in pieces or kilograms (a bare number in
+ *     pieces), an allocation per month;
+ *   · an OTIF commitment is a percentage, 0 to 100 ("95%" or "95");
+ *   · the other comparable terms read the first number in the value.
+ * @param {string} termId
+ * @param {string | undefined} value
+ * @returns {ComparableReading | null}
+ */
+export function comparableReading(termId, value) {
+  if (!(termId in RFP_BEST_DIRECTION) || value === undefined) return null;
+  const first = firstNumber(value);
+  if (!first) return null;
+  const { n, word } = first;
+  switch (termId) {
+    case 'priceValidity': {
+      const per = DAYS_PER[word.replace(/s$/, '')];
+      return per === undefined ? null : { n: n * per, unit: 'day' };
+    }
+    case 'moq':
+      return quantityReading(word, n);
+    case 'allocation': {
+      const q = quantityReading(word, n);
+      return q ? perMonth(value, q) : null;
+    }
+    case 'otifCommitment':
+      return (word === '%' || word === '') && n <= 100 ? { n, unit: '%' } : null;
+    default:
+      return { n, unit: '' };
+  }
+}
+
+/**
+ * The number a comparable term's value holds, or null when it holds none
+ * (`comparableReading` without its unit).
  * @param {string} termId
  * @param {string | undefined} value
  * @returns {number | null}
  */
-export function comparableNumber(termId, value) {
-  if (!(termId in RFP_BEST_DIRECTION) || value === undefined) return null;
-  const match = value.match(/(\d[\d,]*(?:\.\d+)?)\s*([a-z]*)/i);
-  if (!match) return null;
-  const n = Number((match[1] ?? '').replace(/,/g, ''));
-  if (!Number.isFinite(n)) return null;
-  if (termId !== 'priceValidity') return n;
-  const unit = (match[2] ?? '').toLowerCase().replace(/s$/, '');
-  const per = DAYS_PER[unit];
-  return per === undefined ? null : n * per;
-}
+export const comparableNumber = (termId, value) => comparableReading(termId, value)?.n ?? null;
 
 /**
  * The ids holding the best value on one term row, or null when the row is not
  * comparable. Empty when fewer than two values can be read or every value is
- * the same: a "Best" with nothing to beat says nothing.
+ * the same: a "Best" with nothing to beat says nothing. Values are compared
+ * only in one common unit — the unit most readable values on the row share; a
+ * supplier whose value is in another unit gets no marker, and a row split
+ * evenly between two units gets none at all.
  * @param {string} termId
  * @param {readonly { id: string; value: string | undefined }[]} entries
  * @returns {ReadonlySet<string> | null}
@@ -138,10 +266,19 @@ export function comparableNumber(termId, value) {
 export function bestValueIds(termId, entries) {
   const direction = RFP_BEST_DIRECTION[termId];
   if (!direction) return null;
-  const read = entries
-    .map((e) => ({ id: e.id, n: comparableNumber(termId, e.value) }))
-    .filter((e) => e.n !== null);
-  const values = read.map((e) => /** @type {number} */ (e.n));
+  /** @type {{ id: string; n: number; unit: string }[]} */
+  const readable = entries.flatMap((e) => {
+    const r = comparableReading(termId, e.value);
+    return r ? [{ id: e.id, ...r }] : [];
+  });
+  /** @type {Map<string, number>} */
+  const perUnit = new Map();
+  for (const r of readable) perUnit.set(r.unit, (perUnit.get(r.unit) ?? 0) + 1);
+  const counts = [...perUnit.values()].sort((a, b) => b - a);
+  if (counts.length > 1 && counts[0] === counts[1]) return new Set();
+  const common = [...perUnit.entries()].find(([, c]) => c === counts[0])?.[0];
+  const read = readable.filter((r) => r.unit === common);
+  const values = read.map((e) => e.n);
   if (read.length < 2 || Math.min(...values) === Math.max(...values)) return new Set();
   const best = direction === 'min' ? Math.min(...values) : Math.max(...values);
   return new Set(read.filter((e) => e.n === best).map((e) => e.id));

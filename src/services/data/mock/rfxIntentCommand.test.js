@@ -25,6 +25,7 @@ import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { rfxNow } from './rfxReadModel';
 import { sdcClock } from '../../sdc';
 import { NO_PERSON } from '@context/noPerson';
+import { RFX_DECLINE_REASONS } from '../../sourcing/rfxIntent';
 
 const svc = new MockCommandService();
 const reads = new MockProcurementService();
@@ -422,5 +423,64 @@ describe("the read: the buyer reads every invitee's intent, a supplier only its 
     )?.invitedSuppliers;
     expect(sup007Rows?.map((i) => i.supplierId)).toEqual(['sup-007']);
     expect(JSON.stringify(sup007Rows)).not.toContain('rfii-0001');
+  });
+});
+
+describe('RFX-D31 — each event type accepts only its own decline reasons', () => {
+  const CASES = [
+    {
+      k: KINDS[0],
+      pass: ['termsNotAcceptable', 'complianceNotMet', 'notOurProduct'],
+      refuse: ['commercialTermsNotMet', 'cannotDevelop', 'leadTimeTooShort', 'quantityTooSmall']
+    },
+    {
+      k: KINDS[1],
+      pass: ['commercialTermsNotMet', 'cannotDevelop', 'termsNotAcceptable'],
+      refuse: ['leadTimeTooShort', 'quantityTooSmall']
+    }
+  ];
+
+  describe.each(CASES)('$k.entity', ({ k, pass, refuse }) => {
+    it.each(pass)('PASSES — %s is on the list', async (reason) => {
+      const res = await intent(k, sup007, 'decline', ev(k, k.open, { ...DECLINE, reason }));
+      expect(res.status, res.reason).toBe('done');
+    });
+
+    it.each(refuse)('REFUSED — %s is not on the list (DECLINE_REASON_UNKNOWN)', async (reason) => {
+      const res = await intent(k, sup007, 'decline', ev(k, k.open, { ...DECLINE, reason }));
+      expect(res.status).toBe('failed');
+      expect(res.reason).toMatch(/DECLINE_REASON_UNKNOWN/);
+    });
+
+    it('the withdraw judges the reason against the same list', async () => {
+      const yes = await intent(k, sup007, 'respond', ev(k, k.open));
+      const bad = await intent(
+        k,
+        sup007,
+        'withdraw',
+        { reason: refuse[0], text: DECLINE.text },
+        String(yes.entityId)
+      );
+      expect(bad.reason).toMatch(/DECLINE_REASON_UNKNOWN/);
+      const good = await intent(
+        k,
+        sup007,
+        'withdraw',
+        { reason: pass[0], text: DECLINE.text },
+        String(yes.entityId)
+      );
+      expect(good.status, good.reason).toBe('done');
+    });
+  });
+
+  it('every seeded RFI and RFP decline still holds a reason on its own list', () => {
+    for (const [kind, store] of /** @type {const} */ ([
+      ['rfi', rfiIntentStore],
+      ['rfp', rfpIntentStore]
+    ]))
+      for (const r of store.all())
+        if (r.intent === 'decline') expect(RFX_DECLINE_REASONS[kind]).toContain(r.reason);
+    // sup-015's decline on rfp-003 is the one seeded decline today.
+    expect(rfpIntentStore.all().some((r) => r.intent === 'decline')).toBe(true);
   });
 });

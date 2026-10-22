@@ -22,6 +22,7 @@
 import GlossaryTermChip from '@components/ui-v2/GlossaryTermChip';
 import { prefillFromRequisition } from '../../sourcing/requisitionPrefill';
 import { RfqPrefillBanner } from '../../rfx/rfqSources';
+import { StepRefusal } from '../../sourcing/RfqAuthoring';
 import { CATEGORY_OPTIONS, UOM_OPTIONS } from '../const';
 import { categoryLabel } from '../utils';
 
@@ -102,6 +103,7 @@ export const rfqRefusalKey = (refusal) =>
  * @property {ReturnType<typeof useRfqWizard>['changeCategory']} changeCategory B-12 — the category, its materials cleared and its usual unit.
  * @property {ReturnType<typeof readRfqTotalQty>} qtyRead The quantity field's own read (2e-b-4b).
  * @property {ReturnType<typeof readRfqBudget>} budgetRead The budget field's own read (2e-b-4b).
+ * @property {string | null} uomRefusal RFX-D30 — the create verb's unit rule on the draft's unit; null when it passes.
  * @property {TFunction} t
  */
 
@@ -121,6 +123,7 @@ const WizardScopeStep = ({
   toggleMaterial,
   qtyRead,
   budgetRead,
+  uomRefusal,
   t
 }) => (
   <div className="space-y-5">
@@ -358,6 +361,13 @@ const WizardScopeStep = ({
             }
             className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
           >
+            {/* RFX-D30 — an `Other` RFQ starts with no unit; the empty
+                choice shows only until the buyer picks one. */}
+            {draft.uom === '' ? (
+              <option value="" disabled>
+                {t('sourcing.wizard.uom.choose')}
+              </option>
+            ) : null}
             {UOM_OPTIONS.map((u) => (
               <option key={u} value={u}>
                 {u}
@@ -365,6 +375,9 @@ const WizardScopeStep = ({
             ))}
           </select>
         </label>
+        <div className="mt-1">
+          <StepRefusal reason={uomRefusal} testId="rfq-uom-step-refusal" />
+        </div>
       </div>
     </div>
   </div>

@@ -14,6 +14,7 @@ import { useRfxCommand } from '@services/query/commandHooks';
 import { refusalCode } from '@services/sourcing/rfqModel';
 /** @import { RfqDeclineReason } from '@services/sourcing/rfqModel' */
 /** @import { RfxIntentView } from '@services/sourcing/rfxIntent' */
+import { RFX_DECLINE_REASONS } from '@services/sourcing/rfxIntent';
 import { DeclineForm } from '../rfqs/RfqEngagementControls';
 import RfqStepStrip from '../SupplierRFQs/components/RfqStepStrip';
 
@@ -21,8 +22,8 @@ import RfqStepStrip from '../SupplierRFQs/components/RfqStepStrip';
 // BL-132 (RFx UX S-13) — the RFQ card's first answer, on an RFI or RFP row:
 // the step strip ("Step 1: Say if you will respond · Step 2: Answer", with the
 // confidentiality terms as step 0 where they apply) and the intent controls
-// ("I will respond", or "Decline" with a reason from the list and words of the
-// supplier's own). Every control dispatches a real verb through
+// ("I will respond", or "Decline" with a reason from the event type's list and
+// words of the supplier's own). Every control dispatches a real verb through
 // `useRfxCommand` and toasts what the verb decided. A seat without the atom
 // reads the wait in the controls' own slot.
 //
@@ -222,6 +223,7 @@ const RfxIntentControls = ({
           testId={`${testIdPrefix}-decline-form`}
           pending={command.isPending}
           confirmLabel={t(kind === 'rfi' ? 'rfx.intent.confirmRfi' : 'rfx.intent.confirmRfp')}
+          reasons={RFX_DECLINE_REASONS[kind]}
           onCancel={() => setDeclining(false)}
           onConfirm={async (reason, text) => {
             const ok = await act(

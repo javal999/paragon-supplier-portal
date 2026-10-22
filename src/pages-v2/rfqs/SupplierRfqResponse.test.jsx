@@ -22,6 +22,7 @@ import {
 } from '@services/data/mock/stores/rfqEngagementStores';
 import { rfxNow } from '@services/data/mock/rfxReadModel';
 import { sdcClock } from '@services/sdc';
+import { RFQ_DECLINE_REASONS } from '@services/sourcing/rfqModel';
 
 beforeEach(() => {
   rfqStore.reset();
@@ -168,6 +169,16 @@ describe('intent and the confidentiality gate, on the card', () => {
     fireEvent.click(legacy.getByTestId('intent-decline-rfq-010'));
     const confirm = legacy.getByTestId('decline-form-rfq-010-confirm');
     expect(confirm).toBeDisabled();
+    // RFX-D31 — the RFQ's own reasons: compliance yes, the RFI/RFP T&C one no.
+    const reasons = legacy.getByLabelText('Reason');
+    expect(
+      within(reasons)
+        .getAllByRole('option')
+        .map((o) => /** @type {HTMLOptionElement} */ (o).value)
+    ).toEqual(['', ...RFQ_DECLINE_REASONS]);
+    expect(
+      within(reasons).queryByRole('option', { name: 'Confidentiality or T&C terms not acceptable' })
+    ).toBeNull();
     fireEvent.change(legacy.getByLabelText('Reason'), { target: { value: 'noCapacity' } });
     expect(confirm).toBeDisabled();
     fireEvent.change(legacy.getByLabelText('In your own words'), {
@@ -175,7 +186,7 @@ describe('intent and the confidentiality gate, on the card', () => {
     });
     fireEvent.click(confirm);
     expect(await legacy.findByTestId('intent-declined-rfq-010')).toHaveTextContent(
-      'No capacity — Line full until December'
+      'No capacity for this — Line full until December'
     );
     expect(legacy.queryByRole('button', { name: 'Submit quote' })).toBeNull();
     expect(

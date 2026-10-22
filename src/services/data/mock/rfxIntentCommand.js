@@ -39,6 +39,7 @@ const str = (payload, k) =>
 /**
  * The facts one event type brings: its stores and the payload key that names it.
  * @typedef {{
+ *   readonly kind: 'rfi' | 'rfp';
  *   readonly eventKey: 'rfiId' | 'rfpId';
  *   readonly intents: typeof rfiIntentStore;
  *   readonly event: (id: string) => import('../../sourcing/rfxIntent').RfxIntentEvent | undefined;
@@ -48,6 +49,7 @@ const str = (payload, k) =>
 
 /** @type {IntentKind} */
 const RFI = {
+  kind: 'rfi',
   eventKey: 'rfiId',
   intents: rfiIntentStore,
   event: (id) => rfiEventStore.get(id),
@@ -59,6 +61,7 @@ const RFI = {
 
 /** @type {IntentKind} */
 const RFP = {
+  kind: 'rfp',
   eventKey: 'rfpId',
   intents: rfpIntentStore,
   event: (id) => rfpEventStore.get(id),
@@ -143,6 +146,7 @@ bindPolicyHook(
     const act =
       currentState === 'Responding' ? 'withdraw' : toState === 'Responding' ? 'respond' : 'decline';
     const reason = rfxIntentRefusal({
+      kind: kind.kind,
       event: kind.event(eventId),
       supplierId,
       act,

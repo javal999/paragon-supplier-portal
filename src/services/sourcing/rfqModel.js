@@ -238,18 +238,30 @@ export const MAX_QUANTITY_TIERS = 8;
 // ── The supplier-response records (model only; the screens come later) ──────
 
 /**
- * @typedef {| 'noCapacity'
- *   | 'notOurProduct'
+ * Every decline reason a supplier may give on an RFQ, RFI or RFP (owner ruling
+ * 2026-10-22, RFX-D31): a shared core plus the reasons that fit only some
+ * event types. Each event type takes ITS list (`RFQ_DECLINE_REASONS` here,
+ * `RFX_DECLINE_REASONS` in `rfxIntent.js`).
+ * @typedef {| 'notOurProduct'
+ *   | 'noCapacity'
+ *   | 'complianceNotMet'
+ *   | 'termsNotAcceptable'
+ *   | 'commercialTermsNotMet'
+ *   | 'cannotDevelop'
  *   | 'leadTimeTooShort'
  *   | 'quantityTooSmall'
  *   | 'specUnclear'
  *   | 'other'} RfqDeclineReason
  */
 
-/** @type {readonly RfqDeclineReason[]} */
+/**
+ * The reasons an RFQ may be declined for, in the order the form lists them.
+ * @type {readonly RfqDeclineReason[]}
+ */
 export const RFQ_DECLINE_REASONS = [
-  'noCapacity',
   'notOurProduct',
+  'noCapacity',
+  'complianceNotMet',
   'leadTimeTooShort',
   'quantityTooSmall',
   'specUnclear',
@@ -466,6 +478,12 @@ export function itemRefusal(
 }
 
 /**
+ * The units an RFQ's total quantity may be counted in.
+ * @type {readonly ('KG' | 'PCS' | 'L' | 'MT')[]}
+ */
+export const RFQ_UOMS = ['KG', 'PCS', 'L', 'MT'];
+
+/**
  * THE RULE `rfq_create_valid` BINDS, as a pure function so a template read, the
  * wizard's own gate and the verb can call the SAME judgement (the customRoles
  * precedent: one rule, several callers, no second copy to drift).
@@ -477,6 +495,17 @@ export function itemRefusal(
  * @returns {string | null}
  */
 export function rfqCreateRefusal(payload) {
+  // RFX-D30 — an `Other` RFQ starts with no unit, and the wizard sends `''`
+  // until the buyer picks one. A unit, when sent, must be one on the list:
+  // the store used to read anything else as KG.
+  if (payload.uom !== undefined) {
+    if (payload.uom === '' || payload.uom === null) {
+      return 'UOM_MISSING: choose the unit the quantity is counted in';
+    }
+    if (!(/** @type {readonly unknown[]} */ (RFQ_UOMS).includes(payload.uom))) {
+      return `UOM_UNKNOWN: ${String(payload.uom)} is not a unit an RFQ is counted in`;
+    }
+  }
   if (
     payload.currency !== undefined &&
     !BID_CURRENCIES.includes(/** @type {BidCurrency} */ (payload.currency))

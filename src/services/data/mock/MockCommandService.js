@@ -258,7 +258,7 @@ import { complianceFlaggedAt, complianceSnapshot } from './updateComplianceReadM
 import { rfiTemplate } from '../../sourcing/rfxConfig';
 /** @import { AwardLine, RfqAwardRecord, RfpAwardLine, RfiAnswer, RfiEvent, RfiQuestion, RfiResponse, RfpEvent, RfpFirmOffer, RfpFirmPrice, RfpPricingAnswer, RfpPricingRequest, RfpResponse, RfpTermAnswer, RfpTermRow, RfpTermsDocument, RfxConfidentiality, RfxCustomSection, RfxEventStatus, RfpEventStatus, RfxInvitee, RfxResponseStatus } from '../../sourcing/types' */
 import { BID_CURRENCIES } from '@lib/currencyPolicy';
-import { deriveQuoteHeader, readRfqAuthoringFields } from '../../sourcing/rfqModel';
+import { RFQ_UOMS, deriveQuoteHeader, readRfqAuthoringFields } from '../../sourcing/rfqModel';
 // RFx spec 2026-09-21 — the supplier's side of a tiered RFQ (intent,
 // confidentiality, clarifications) and the tiered quotation rule.
 import {
@@ -1864,8 +1864,6 @@ const RFQ_CATEGORIES = [
   'Botanical',
   'Other'
 ];
-/** @type {readonly RFQ['uom'][]} */
-const RFQ_UOMS = ['KG', 'PCS', 'L', 'MT'];
 
 /**
  * THE CONTENT an RFQ payload stores — everything the buyer authors, and the one

@@ -258,7 +258,7 @@ export function intentRefusal(input) {
   }
   if (input.act === 'respond') return null;
   if (!RFQ_DECLINE_REASONS.includes(/** @type {RfqDeclineReason} */ (input.reason))) {
-    return `DECLINE_REASON_UNKNOWN: ${String(input.reason)} is not a decline reason on the list`;
+    return `DECLINE_REASON_UNKNOWN: ${String(input.reason)} is not a decline reason on the RFQ list`;
   }
   if (!hasText(input.text)) return 'DECLINE_TEXT_MISSING: a decline says why in words as well';
   if (input.hasQuote)

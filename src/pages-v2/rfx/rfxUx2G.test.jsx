@@ -447,3 +447,95 @@ describe('F — the list rows', () => {
     expect(rfxId).not.toHaveProperty(['rfx.rfp.compare']);
   });
 });
+
+describe('RFX-D29 — "Best" on MOQ, allocation and OTIF (pure)', () => {
+  /** @param {readonly [string, string | undefined][]} pairs */
+  const entries = (pairs) => pairs.map(([id, value]) => ({ id, value }));
+  /** @param {string} termId @param {readonly [string, string | undefined][]} pairs */
+  const best = (termId, pairs) => [...(bestValueIds(termId, entries(pairs)) ?? [])];
+
+  it('PASSES — moq: the lowest minimum order quantity, read in pieces', () => {
+    expect(
+      best('moq', [
+        ['a', '10,000 pcs'],
+        ['b', '5000 pieces'],
+        ['c', '20000']
+      ])
+    ).toEqual(['b']);
+    expect(comparableNumber('moq', '2 tons')).toBe(2000);
+  });
+
+  it('REFUSED — moq: an unreadable value, or one in another unit, gets no tag', () => {
+    expect(
+      best('moq', [
+        ['a', '10,000 pcs'],
+        ['b', 'to be agreed'],
+        ['c', '5,000 pcs']
+      ])
+    ).toEqual(['c']);
+    expect(comparableNumber('moq', '3 pallets')).toBeNull();
+    // b is in kilograms: the row's common unit is pieces, so b is not tagged.
+    expect(
+      best('moq', [
+        ['a', '10,000 pcs'],
+        ['b', '100 kg'],
+        ['c', '8,000 pcs']
+      ])
+    ).toEqual(['c']);
+    // An even split between two units: no common unit, no tag.
+    expect(
+      best('moq', [
+        ['a', '10,000 pcs'],
+        ['b', '100 kg']
+      ])
+    ).toEqual([]);
+  });
+
+  it('PASSES — allocation: the most capacity per month, another period converted', () => {
+    expect(comparableNumber('allocation', '400,000 pcs per month')).toBe(400_000);
+    expect(comparableNumber('allocation', '100,000 pcs per week')).toBeCloseTo(428_571.43, 1);
+    expect(
+      best('allocation', [
+        ['a', '400,000 pcs per month'],
+        ['b', '100,000 pcs per week'],
+        ['c', '350000']
+      ])
+    ).toEqual(['b']);
+  });
+
+  it('REFUSED — allocation: no number, an unknown unit or an unknown period gets no tag', () => {
+    expect(comparableNumber('allocation', 'as available')).toBeNull();
+    expect(comparableNumber('allocation', '400,000 boxes per month')).toBeNull();
+    expect(comparableNumber('allocation', '50,000 pcs per batch')).toBeNull();
+    expect(
+      best('allocation', [
+        ['a', '400,000 pcs per month'],
+        ['b', 'as available'],
+        ['c', '300,000 pcs per month']
+      ])
+    ).toEqual(['a']);
+  });
+
+  it('PASSES — otifCommitment: the highest percentage', () => {
+    expect(
+      best('otifCommitment', [
+        ['a', '95%'],
+        ['b', '98 %'],
+        ['c', '90']
+      ])
+    ).toEqual(['b']);
+  });
+
+  it('REFUSED — otifCommitment: a value that is not a percentage gets no tag', () => {
+    expect(comparableNumber('otifCommitment', 'best effort')).toBeNull();
+    expect(comparableNumber('otifCommitment', '120%')).toBeNull();
+    expect(comparableNumber('otifCommitment', '95 days')).toBeNull();
+    expect(
+      best('otifCommitment', [
+        ['a', '95%'],
+        ['b', 'best effort'],
+        ['c', '97%']
+      ])
+    ).toEqual(['c']);
+  });
+});
