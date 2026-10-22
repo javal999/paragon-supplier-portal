@@ -54,7 +54,10 @@ import Data from '@components/ui-v2/Data';
 import { RiskPill, inventoryNow } from './inventory/inventoryDisplay';
 import { sdcClock } from '@services/sdc/clock';
 import { deepLink, sharedValue } from '@lib/deepLink';
-import WeeklyUpdatePanel, { weeklyUpdateView } from './inventory/WeeklyUpdatePanel';
+import WeeklyUpdatePanel, {
+  useWeeklyStatusText,
+  weeklyUpdateView
+} from './inventory/WeeklyUpdatePanel';
 
 // Supplier Home — "To do" (REQUIREMENTS §3.8 SC-01): what Paragon is waiting for
 // from this supplier. Filters match the supplier dashboard widgets they replace.
@@ -95,6 +98,8 @@ const SupplierHome = () => {
   // REQ-E06-01 / REQ-E06-03 BR-06 — new versions and commitment reminders.
   const forecastLines = useForecastCommitments();
   const forecastVersions = useForecastVersions();
+  // Inventory UX S-02 — the weekly status in the panel's own words.
+  const weeklyStatusText = useWeeklyStatusText();
 
   const tasks = /** @type {HomeTask[]} */ (
     useMemo(() => {
@@ -163,7 +168,15 @@ const SupplierHome = () => {
         supplierId && positions.length > 0 && !positions.some((p) => p.apiConnected)
           ? weeklyUpdateView(supplierId, positions, inventoryNow())
           : null;
-      const weeklyMissing = weekly?.reminder ? weekly.status.missing : [];
+      // Inventory UX S-02 (INV-D4) — for a manual supplier ONE Stock row, the
+      // weekly status: it shows while the reminder is in force or any figure is
+      // out of date (when either old row showed), counts the materials still
+      // to send, and reads as the panel does. Its severity still weighs the
+      // out-of-date figures' own stale instants and the cutoff.
+      const weeklyShown =
+        weekly !== null && (weekly.reminder !== null || stalePositions.length > 0);
+      const weeklyMissing = weeklyShown ? weekly.status.missing : [];
+      const weeklyText = weekly ? weeklyStatusText(weekly.status, positions, inventoryNow()) : null;
       const capacityDue = (capacity.data?.items ?? []).filter(
         (p) => planStatus(p) === 'notStarted' || planStatus(p) === 'outdated'
       );
@@ -299,23 +312,30 @@ const SupplierHome = () => {
           to: deepLink('/supplier/call-offs', { status: 'dueSoon' })
         },
         {
-          // REQ-E08-01 AC-05 — figures past their data-update SLA, or never sent
-          // (a figure never sent is due at this cycle's cutoff).
+          // REQ-E08-01 AC-05 — figures past their data-update SLA. S-02: only
+          // for an API supplier, which has no weekly status; a manual supplier's
+          // out-of-date figures are the weekly row's second line.
           id: 'stale-stock',
           lane: 'stock',
           label: t('hub.home.task.sup.staleStock'),
-          count: stalePositions.length,
-          deadlines: stalePositions.map((p) => p.staleAt ?? weekly?.status.cycle.cutoff),
+          count: weekly === null ? stalePositions.length : 0,
+          deadlines: stalePositions.map((p) => p.staleAt),
           stock: coverOf(stalePositions.map((p) => p.materialCode)),
           to: deepLink('/supplier/inventory', { stale: 'stale' })
         },
         {
+          // S-02 — "Weekly stock update · 2 of 4 sent · due Thu 3 Sept 23:59 WIB".
           id: 'weekly-update',
           lane: 'stock',
-          label: t('hub.home.task.sup.weeklyUpdate'),
+          label: weeklyText?.headline ?? t('inv.weekly.title'),
           count: weeklyMissing.length,
-          deadlines: weekly ? [weekly.status.cycle.cutoff] : [],
-          stock: coverOf(weeklyMissing),
+          deadlines: weekly
+            ? [
+                ...stalePositions.map((p) => p.staleAt ?? weekly.status.cycle.cutoff),
+                weekly.status.cycle.cutoff
+              ]
+            : [],
+          stock: coverOf([...weeklyMissing, ...stalePositions.map((p) => p.materialCode)]),
           to: '/supplier/inventory'
         },
         {
@@ -506,7 +526,13 @@ const SupplierHome = () => {
       ];
       return [
         ...withSeverity(rated, nowIso, t).map((task) =>
-          sourcingDetail[task.id] ? { ...task, detail: sourcingDetail[task.id] } : task
+          sourcingDetail[task.id]
+            ? { ...task, detail: sourcingDetail[task.id] }
+            : // S-02 — the weekly row's second line is the panel's: "2 out of
+              // date since 13 Aug", or none; its due date is in the label.
+              task.id === 'weekly-update'
+              ? { ...task, detail: weeklyText?.outOfDate ?? undefined }
+              : task
         ),
         ...awardRows,
         // Money PTI owes this supplier, not something the supplier does: it stays
@@ -541,6 +567,7 @@ const SupplierHome = () => {
       rfqAwards.data,
       rfpAwards.data,
       supplierId,
+      weeklyStatusText,
       t
     ])
   );

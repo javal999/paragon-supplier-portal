@@ -920,18 +920,47 @@ export function readStockNumber(raw) {
 }
 
 /**
+ * Inventory UX S-03 (INV-D10) — a template row the supplier left blank: every
+ * cell is empty except the material code and the unit, which the downloaded
+ * template fills in. A value under ANY other column, a column the template
+ * does not know included, makes the row filled, so a renamed column is still
+ * refused by name rather than passed over as blank.
+ * @param {Readonly<Record<string, string>>} row  One file row keyed by its header.
+ * @returns {boolean}
+ */
+export function isBlankStockRow(row) {
+  return Object.entries(row).every(([header, value]) => {
+    const f = templateFieldFor(header);
+    return f === 'materialCode' || f === 'unit' || (value ?? '').trim() === '';
+  });
+}
+
+/**
+ * `row`:  1-based file row number, as in `RefusedStockRow`.
+ *
+ * @typedef {{ readonly row: number; readonly materialCode: string }} BlankStockRow
+ */
+
+/**
  * Validate an uploaded file row by row (BR-05). A material's rows (one row, or
  * one row per batch) are accepted or refused together, because batch
  * quantities must add up to the SOH (CR-19); every other material's rows are
  * unaffected. Valid materials become drafts; every refused row is listed with
  * its row number and reason.
+ *
+ * S-03 (INV-D10) — a material whose rows are all blank (`isBlankStockRow`)
+ * is neither accepted nor refused: its rows come back in `blank`, "left blank,
+ * not sent". A blank row beside a filled row of the same material stays part
+ * of that material, as before.
  * @param {readonly Record<string, string>[]} rows
  * @param {StockRowContext} ctx
- * @returns {{ accepted: StockSubmissionDraft[]; refused: RefusedStockRow[] }}
+ * @returns {{ accepted: StockSubmissionDraft[]; refused: RefusedStockRow[]; blank: BlankStockRow[] }}
  */
 export function validateStockRows(rows, ctx) {
   /** @type {RefusedStockRow[]} */
   const refused = [];
+  /** @type {BlankStockRow[]} */
+  const blank = [];
   // Re-key every row by template field.
   const keyed = rows.map((r, index) => {
     /** @type {Partial<Record<StockTemplateField, string>>} */
@@ -940,15 +969,19 @@ export function validateStockRows(rows, ctx) {
       const f = templateFieldFor(header);
       if (f) rec[f] = (value ?? '').trim();
     }
-    return { row: index + 2, rec };
+    return { row: index + 2, rec, isBlank: isBlankStockRow(r) };
   });
 
   const groups =
-    /** @type {Map<string, { row: number; rec: Partial<Record<StockTemplateField, string>> }[]>} */ (
+    /** @type {Map<string, { row: number; rec: Partial<Record<StockTemplateField, string>>; isBlank: boolean }[]>} */ (
       new Map()
     );
   for (const k of keyed) {
     const code = k.rec.materialCode ?? '';
+    if (code === '' && k.isBlank) {
+      blank.push({ row: k.row, materialCode: '' });
+      continue;
+    }
     if (code === '') {
       refused.push({ row: k.row, materialCode: '', reason: 'missingField', field: 'materialCode' });
       continue;
@@ -960,6 +993,10 @@ export function validateStockRows(rows, ctx) {
   const accepted = [];
   for (const [code, members] of groups) {
     const rowNumbers = members.map((m) => m.row);
+    if (members.every((m) => m.isBlank)) {
+      for (const m of members) blank.push({ row: m.row, materialCode: code });
+      continue;
+    }
     /**
      * @param {StockRowRefusal} reason
      * @param {StockTemplateField} [field]
@@ -1094,7 +1131,8 @@ export function validateStockRows(rows, ctx) {
     });
   }
   refused.sort((a, b) => a.row - b.row);
-  return { accepted, refused };
+  blank.sort((a, b) => a.row - b.row);
+  return { accepted, refused, blank };
 }
 
 /**

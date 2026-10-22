@@ -95,7 +95,11 @@ describe('BL-204 · flag on — the supplier page (DRC-1)', () => {
 
 describe('BL-204 · flag on — Incoming DA on the feedstock confirmation (DRC-8)', () => {
   it('offers the box for a material with a publication and stores it with the confirmation', async () => {
-    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    renderWithProviders(<SupplierInventory />, {
+      identity: SUPPLIER,
+      // Inventory UX S-01 — the feedstock confirmation is its own tab.
+      route: '/supplier/inventory?tab=feedstock'
+    });
     fireEvent.click(await screen.findByTestId('feedstock-open-PK-PETB-8802'));
     const box = await screen.findByTestId('feedstock-incoming-da-box');
     expect(screen.getByTestId('feedstock-incoming-da').textContent).toContain(
@@ -120,7 +124,11 @@ describe('BL-204 · flag on — Incoming DA on the feedstock confirmation (DRC-8
   });
 
   it('left unticked, the confirmation stores no Incoming DA', async () => {
-    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    renderWithProviders(<SupplierInventory />, {
+      identity: SUPPLIER,
+      // Inventory UX S-01 — the feedstock confirmation is its own tab.
+      route: '/supplier/inventory?tab=feedstock'
+    });
     fireEvent.click(await screen.findByTestId('feedstock-open-PK-PETB-8802'));
     await screen.findByTestId('feedstock-incoming-da-box');
     fireEvent.change(screen.getByTestId('feedstock-qty'), { target: { value: '3' } });

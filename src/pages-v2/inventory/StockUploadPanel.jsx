@@ -31,6 +31,15 @@ import {
 // listed with its row number and reason, and nothing else is held back. A row
 // the verb itself refuses is listed the same way.
 //
+// Inventory UX S-01 / S-03 (INV-D10) — the Stock page splits this file three
+// ways: the "Upload template" control sits in the page header
+// (`StockUploadButton`), its result directly under it (`StockUploadResult`),
+// and the download, the column guide and the incoming cards in the "Template
+// guide" tab (the default export). One `useStockUpload` state feeds the first
+// two. The result names the materials sent to PTI, counts the rows left blank
+// in neutral text ("3 rows left blank, not sent"), and lists only a filled row
+// that breaks a rule as refused, with its row, material and reason.
+//
 // In transit (BR-10, BL-60): the template has no in-transit column — a supplier
 // never enters it. The panel shows it read-only per material, beside the
 // in-production figure last submitted, from ASNs and dispatched call-offs.
@@ -98,34 +107,37 @@ const StockTemplateColumns = () => {
 };
 
 /**
+ * `blankRows`:  How many file rows were left blank and not sent (S-03).
+ *
  * @typedef {object} UploadResult
  * @property {string[]} savedMaterials
+ * @property {number} blankRows
  * @property {(RefusedStockRow | { row: number; materialCode: string; message: string })[]} refused
  */
 
-/** @type {React.FC<{ supplierId: string; positions: readonly InventoryPosition[]; canSubmit: boolean }>} */
-const StockUploadPanel = ({ supplierId, positions, canSubmit }) => {
-  const { t, i18n } = useTranslation();
+/**
+ * The upload's state, shared by the header control and the result under it.
+ * @typedef {{
+ *     readonly busy: boolean;
+ *     readonly fileError: string | null;
+ *     readonly result: UploadResult | null;
+ *     readonly handleFile: (file: File | undefined) => Promise<void>;
+ *   }} StockUpload
+ */
+
+/**
+ * @param {string} supplierId
+ * @param {readonly InventoryPosition[]} positions
+ * @returns {StockUpload}
+ */
+export function useStockUpload(supplierId, positions) {
+  const { t } = useTranslation();
   const { run } = useInventoryRunner();
-  const fileRef = useRef(/** @type {HTMLInputElement | null} */ (null));
   const [busy, setBusy] = useState(false);
   const [fileError, setFileError] = useState(/** @type {string | null} */ (null));
   const [result, setResult] = useState(/** @type {UploadResult | null} */ (null));
 
   const assigned = positions.map((p) => ({ materialCode: p.materialCode, uom: p.uom }));
-
-  const download = () => {
-    const csv = stockTemplateCsv(assigned, i18n.language.startsWith('id') ? 'id' : 'en');
-    if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') return;
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `stock-template-${supplierId}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  };
 
   /** @param {File | undefined} file */
   const handleFile = async (file) => {
@@ -153,7 +165,11 @@ const StockUploadPanel = ({ supplierId, positions, canSubmit }) => {
     }
     const checked = validateStockRows(rows, { assigned, today: dayOf(inventoryNow()) });
     /** @type {UploadResult} */
-    const out = { savedMaterials: [], refused: [...checked.refused] };
+    const out = {
+      savedMaterials: [],
+      blankRows: checked.blank.length,
+      refused: [...checked.refused]
+    };
     for (const draft of checked.accepted) {
       const { rows: rowNumbers, ...payload } = draft;
       const res = await run({ verb: 'declare', channel: 'template', supplierId, ...payload });
@@ -165,13 +181,175 @@ const StockUploadPanel = ({ supplierId, positions, canSubmit }) => {
     out.refused.sort((a, b) => a.row - b.row);
     setResult(out);
     setBusy(false);
-    if (fileRef.current) fileRef.current.value = '';
+  };
+
+  return { busy, fileError, result, handleFile };
+}
+
+/**
+ * S-01 — the header's "Upload template" control: a hidden file input and the
+ * button that opens it.
+ * @type {React.FC<{ upload: StockUpload }>}
+ */
+export const StockUploadButton = ({ upload }) => {
+  const { t } = useTranslation();
+  const fileRef = useRef(/** @type {HTMLInputElement | null} */ (null));
+  return (
+    <>
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".csv,.xlsx,text/csv"
+        className="hidden"
+        data-testid="stock-upload-file"
+        aria-label={t('inv.upload.choose')}
+        onChange={(e) => {
+          const input = e.target;
+          // Cleared once read, so choosing the same file again re-runs the check.
+          void upload.handleFile(input.files?.[0]).then(() => {
+            input.value = '';
+          });
+        }}
+      />
+      <Button
+        variant="secondary"
+        icon={Upload}
+        disabled={upload.busy}
+        onClick={() => fileRef.current?.click()}
+        data-testid="stock-upload-open"
+      >
+        {t('inv.upload.uploadTemplate')}
+      </Button>
+    </>
+  );
+};
+
+/**
+ * S-03 (INV-D10) — the upload's result, directly under the control: what was
+ * sent to PTI by material, the rows left blank in neutral text, and the
+ * refused rows with row, material and reason. Nothing while idle.
+ * @type {React.FC<{ upload: StockUpload }>}
+ */
+export const StockUploadResult = ({ upload }) => {
+  const { t } = useTranslation();
+  const { busy, fileError, result } = upload;
+  if (!busy && fileError === null && result === null) return null;
+  return (
+    <div className="mb-4 space-y-2" data-testid="stock-upload-status">
+      {busy ? <p className="text-sm text-text-tertiary">{t('inv.upload.checking')}</p> : null}
+      {fileError !== null ? (
+        <p role="alert" className="text-sm text-danger">
+          {fileError}
+        </p>
+      ) : null}
+      {result !== null ? (
+        <div
+          className="bg-bg-surface border border-border-subtle rounded-lg p-4 space-y-2"
+          data-testid="stock-upload-result"
+          role="status"
+        >
+          {result.savedMaterials.length > 0 ? (
+            <p className="text-sm text-success" data-testid="stock-upload-sent">
+              {t('inv.upload.sentTo')}{' '}
+              {result.savedMaterials.map((code, i) => (
+                <span key={code}>
+                  {i > 0 ? ', ' : ''}
+                  <Data>{code}</Data>
+                </span>
+              ))}
+            </p>
+          ) : (
+            <p className="text-sm text-text-secondary" data-testid="stock-upload-sent">
+              {t('inv.upload.nothingSent')}
+            </p>
+          )}
+          {result.blankRows > 0 ? (
+            <p className="text-sm text-text-secondary" data-testid="stock-upload-blank">
+              {t('inv.upload.blank', { count: result.blankRows })}
+            </p>
+          ) : null}
+          {result.refused.length > 0 ? <RefusedRows refused={result.refused} /> : null}
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+/** @type {React.FC<{ refused: UploadResult['refused'] }>} */
+const RefusedRows = ({ refused }) => {
+  const { t } = useTranslation();
+  return (
+    <div>
+      <p className="text-sm text-danger mb-2">
+        {t('inv.upload.refused', { count: refused.length })}
+      </p>
+      <div className="relative w-full min-w-0 overflow-x-auto">
+        <table className="w-full text-sm" data-testid="stock-upload-refused">
+          <thead>
+            <tr className="text-label text-text-tertiary uppercase">
+              <th className="text-left py-1">{t('inv.upload.col.row')}</th>
+              <th className="text-left py-1">{t('inv.upload.col.material')}</th>
+              <th className="text-left py-1">{t('inv.upload.col.reason')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* A file row is refused at most once (validateStockRows refuses each
+              row once; the declare refusals cover only rows it accepted), so
+              the file row number is unique here. */}
+            {refused.map((r) => (
+              <tr
+                key={r.row}
+                className="border-t border-border-subtle"
+                data-testid={`stock-upload-refused-row-${r.row}`}
+              >
+                <td className="py-1.5">
+                  <Data>{r.row}</Data>
+                </td>
+                <td className="py-1.5">
+                  <Data>{r.materialCode || '—'}</Data>
+                </td>
+                <td className="py-1.5 text-text-secondary">
+                  {'message' in r
+                    ? r.message
+                    : t(`inv.upload.reason.${r.reason}`, {
+                        field: r.field ? t(`inv.template.${r.field}`) : ''
+                      })}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * S-01 — the "Template guide" tab: the download, the column guide and the
+ * incoming stock the template does not take.
+ * @type {React.FC<{ supplierId: string; positions: readonly InventoryPosition[] }>}
+ */
+const StockUploadPanel = ({ supplierId, positions }) => {
+  const { t, i18n } = useTranslation();
+  const assigned = positions.map((p) => ({ materialCode: p.materialCode, uom: p.uom }));
+
+  const download = () => {
+    const csv = stockTemplateCsv(assigned, i18n.language.startsWith('id') ? 'id' : 'en');
+    if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') return;
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `stock-template-${supplierId}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   };
 
   return (
     <section
       className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6"
-      data-testid="stock-upload"
+      data-testid="stock-template-guide"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -187,27 +365,6 @@ const StockUploadPanel = ({ supplierId, positions, canSubmit }) => {
           >
             {t('inv.upload.download')}
           </Button>
-          {canSubmit && (
-            <>
-              <input
-                ref={fileRef}
-                type="file"
-                accept=".csv,.xlsx,text/csv"
-                className="hidden"
-                data-testid="stock-upload-file"
-                aria-label={t('inv.upload.choose')}
-                onChange={(e) => void handleFile(e.target.files?.[0])}
-              />
-              <Button
-                variant="outline"
-                icon={Upload}
-                disabled={busy}
-                onClick={() => fileRef.current?.click()}
-              >
-                {t('inv.upload.choose')}
-              </Button>
-            </>
-          )}
         </div>
       </div>
       <StockTemplateColumns />
@@ -243,63 +400,6 @@ const StockUploadPanel = ({ supplierId, positions, canSubmit }) => {
           })}
         </div>
       </details>
-      {busy && <p className="mt-3 text-sm text-text-tertiary">{t('inv.upload.checking')}</p>}
-      {fileError && (
-        <p role="alert" className="mt-3 text-sm text-danger">
-          {fileError}
-        </p>
-      )}
-      {result && (
-        <div className="mt-4 space-y-3" data-testid="stock-upload-result">
-          <p className="text-sm text-text-primary" data-testid="stock-upload-saved">
-            {t('inv.upload.saved', { count: result.savedMaterials.length })}
-          </p>
-          {result.refused.length > 0 && (
-            <div>
-              <p className="text-sm text-danger mb-2">
-                {t('inv.upload.refused', { count: result.refused.length })}
-              </p>
-              <div className="relative w-full min-w-0 overflow-x-auto">
-                <table className="w-full text-sm" data-testid="stock-upload-refused">
-                  <thead>
-                    <tr className="text-label text-text-tertiary uppercase">
-                      <th className="text-left py-1">{t('inv.upload.col.row')}</th>
-                      <th className="text-left py-1">{t('inv.upload.col.material')}</th>
-                      <th className="text-left py-1">{t('inv.upload.col.reason')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {/* A file row is refused at most once (validateStockRows refuses each
-                      row once; the declare refusals cover only rows it accepted), so
-                      the file row number is unique here. */}
-                    {result.refused.map((r) => (
-                      <tr
-                        key={r.row}
-                        className="border-t border-border-subtle"
-                        data-testid={`stock-upload-refused-row-${r.row}`}
-                      >
-                        <td className="py-1.5">
-                          <Data>{r.row}</Data>
-                        </td>
-                        <td className="py-1.5">
-                          <Data>{r.materialCode || '—'}</Data>
-                        </td>
-                        <td className="py-1.5 text-text-secondary">
-                          {'message' in r
-                            ? r.message
-                            : t(`inv.upload.reason.${r.reason}`, {
-                                field: r.field ? t(`inv.template.${r.field}`) : ''
-                              })}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
     </section>
   );
 };
