@@ -14,6 +14,15 @@ const INCOTERMS_OPTIONS = ['FOB', 'CIF', 'EXW', 'DDP', 'FCA'];
 const PAYMENT_TERMS_OPTIONS = ['Net 30', 'Net 45', 'Net 60', 'Letter of Credit', 'Advance Payment'];
 
 /**
+ * RFx UX 1D (B-03) — whether a stored Incoterm is one the select offers. A
+ * value from a seed (a copied RFQ, a template, an RFI) can be outside the
+ * list; the select then cannot show it, so the Review step flags it.
+ * @param {string} value
+ * @returns {boolean}
+ */
+export const isIncotermOption = (value) => INCOTERMS_OPTIONS.includes(value);
+
+/**
  * The Terms step's content. `updateDraft` writes each field back to the draft.
  * @type {React.FC<{ draft: DraftRfq; updateDraft: ReturnType<typeof useRfqWizard>['updateDraft']; t: TFunction }>}
  */

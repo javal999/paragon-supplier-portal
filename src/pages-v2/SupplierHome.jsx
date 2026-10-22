@@ -22,12 +22,20 @@ import {
   useRfiEvents,
   useRfpEvents,
   useNegotiationRounds,
-  useSupplierInvoices
+  useSupplierInvoices,
+  useAwards,
+  useRfpAwards
 } from '@services/query/hooks';
+import {
+  outcomeShareText,
+  supplierAwardNotices,
+  supplierSourcingQueue
+} from '@services/sourcing/supplierOutcome';
+import { daysLeftText } from './SupplierRFQs/utils';
 import { POStatus } from '@services/data/types';
 import { documentDisplayState } from '@services/data/documentDisplayState';
 import { DECLARED_PRESENT } from '@services/data/fixturePresent';
-/** @import { HomeTask } from './home/TaskList' */
+/** @import { HomeTask, TaskLane } from './home/TaskList' */
 import TaskList from './home/TaskList';
 /** @import { UnratedTask } from './home/severityDisplay' */
 import { withSeverity } from './home/severityDisplay';
@@ -65,6 +73,10 @@ const SupplierHome = () => {
   const rfiEvents = useRfiEvents();
   const rfpEvents = useRfpEvents();
   const rounds = useNegotiationRounds();
+  // RFx UX S-04 — this supplier's own award reads (RFQ and RFP), narrowed by
+  // the read model to its own lines.
+  const rfqAwards = useAwards();
+  const rfpAwards = useRfpAwards();
   const invoices = useSupplierInvoices();
   const documents = useDocuments();
   const receipts = useGoodsReceipts();
@@ -94,9 +106,15 @@ const SupplierHome = () => {
           (po.status === POStatus.CONFIRMED || po.status === POStatus.PARTIALLY_DELIVERED) &&
           !po.shippingNotice?.expectedCompletionDate
       );
-      const openRfqs = (rfqs.data?.items ?? []).filter(
-        (r) => r.status === 'Open' && !!supplierId && !r.respondedSupplierIds.includes(supplierId)
-      );
+      // RFx UX X-02 — the sourcing work, from the one derivation the menu
+      // counts read too.
+      const { openRfqs, openRfis, openRfps, openRounds } = supplierSourcingQueue({
+        rfqs: rfqs.data?.items ?? [],
+        rfis: rfiEvents.data?.items ?? [],
+        rfps: rfpEvents.data?.items ?? [],
+        rounds: rounds.data?.items ?? [],
+        supplierId: supplierId ?? null
+      });
       const docs = documents.data?.items ?? [];
       const certsDue = docs.filter((doc) => {
         const state = documentDisplayState(doc, DECLARED_PRESENT);
@@ -152,13 +170,70 @@ const SupplierHome = () => {
       const overdueLines = lines.filter((l) => deadlineState(l, forecastNow()) === 'overdue');
       const dueSoonLines = lines.filter((l) => deadlineState(l, forecastNow()) === 'dueSoon');
       const revisionLines = lines.filter((l) => l.state === 'revisionRequested');
-      const openRfis = (rfiEvents.data?.items ?? []).filter(
-        (e) => !e.closed && e.responses.every((r) => r.status !== 'Submitted')
-      );
-      const openRfps = (rfpEvents.data?.items ?? []).filter(
-        (e) => !e.closed && e.responses.every((r) => r.status !== 'Submitted')
-      );
-      const openRounds = (rounds.data?.items ?? []).filter((r) => !r.closed && r.awaiting > 0);
+      /**
+       * X-02 — a Sourcing row names its nearest event and the days left to it.
+       * @param {readonly { number: string; deadline: string }[]} events
+       * @returns {string | undefined}
+       */
+      const nextEvent = (events) => {
+        const next = events.slice().sort((a, b) => a.deadline.localeCompare(b.deadline))[0];
+        return next
+          ? t('hub.home.nextEvent', {
+              event: next.number,
+              when: daysLeftText(t, next.deadline, nowIso)
+            })
+          : undefined;
+      };
+      const sid = supplierId ?? '';
+      /** @type {Record<string, string | undefined>} */
+      const sourcingDetail = {
+        rfq: nextEvent(
+          openRfqs.map((r) => ({
+            number: r.rfqNumber,
+            deadline: effectiveDeadline(r.responseDeadline, r.inviteeDeadlines ?? [], sid)
+          }))
+        ),
+        'rfi-answer': nextEvent(
+          openRfis.map((e) => ({
+            number: e.eventNumber,
+            deadline: effectiveDeadline(e.responseDeadline, e.invitedSuppliers, sid)
+          }))
+        ),
+        'rfp-answer': nextEvent(
+          openRfps.map((e) => ({
+            number: e.eventNumber,
+            deadline: effectiveDeadline(e.responseDeadline, e.invitedSuppliers, sid)
+          }))
+        ),
+        'revised-quote': nextEvent(
+          openRounds.map((r) => ({ number: r.rfqNumber, deadline: r.deadline }))
+        )
+      };
+      // RFx UX S-04 (owner ruling Q3) — an award shows here from the moment it
+      // is recorded, with the note that the purchase order follows from SAP;
+      // once PTI raises it in SAP the order itself takes over.
+      const awardRows = supplierAwardNotices({
+        rfqs: rfqs.data?.items ?? [],
+        rfqAwards: rfqAwards.data?.items ?? [],
+        rfpAwards: rfpAwards.data?.items ?? [],
+        supplierId: sid
+      })
+        .filter((n) => n.kind === 'awarded' && !n.raisedInSap)
+        .map((n) => ({
+          id: `awarded-${n.eventType}-${n.eventId}`,
+          label: t('hub.home.task.sup.awarded', {
+            event: n.eventNumber,
+            share: outcomeShareText(t, n.shares)
+          }),
+          count: 1,
+          severity: /** @type {const} */ ('none'),
+          lane: 'sourcing',
+          detail: t('hub.home.poFollowsFromSap'),
+          to:
+            n.eventType === 'rfq'
+              ? deepLink('/supplier/rfq', { tab: 'history' })
+              : deepLink('/supplier/rfp', {})
+        }));
 
       /**
        * CR-24 — this supplier's cover against its lead time, for the materials a
@@ -188,6 +263,7 @@ const SupplierHome = () => {
         {
           // REQ-E07-02 — the 1-working-day response deadline.
           id: 'confirm-orders',
+          lane: 'orders',
           label: t('hub.home.task.sup.confirmOrders'),
           count: toConfirm.length,
           deadlines: toConfirm.map((po) => responseDeadline(po).toISOString()),
@@ -197,6 +273,7 @@ const SupplierHome = () => {
         {
           // REQ-E09-03 — released call-offs waiting for this supplier's answer.
           id: 'confirm-calloffs',
+          lane: 'orders',
           label: t('hub.home.task.sup.callOffsConfirm'),
           count: toConfirmCallOffs.length,
           deadlines: toConfirmCallOffs.map((v) => v.deadline?.toISOString() ?? v.callOff.needDate),
@@ -206,6 +283,7 @@ const SupplierHome = () => {
         {
           // CR-09 — confirmed, due within 7 days, and no ASN or dispatch notice yet.
           id: 'calloffs-due',
+          lane: 'orders',
           label: t('hub.home.task.sup.callOffsDue'),
           count: dueCallOffs.length,
           deadlines: dueCallOffs.map((v) => v.dueDate),
@@ -216,6 +294,7 @@ const SupplierHome = () => {
           // REQ-E08-01 AC-05 — figures past their data-update SLA, or never sent
           // (a figure never sent is due at this cycle's cutoff).
           id: 'stale-stock',
+          lane: 'stock',
           label: t('hub.home.task.sup.staleStock'),
           count: stalePositions.length,
           deadlines: stalePositions.map((p) => p.staleAt ?? weekly?.status.cycle.cutoff),
@@ -224,6 +303,7 @@ const SupplierHome = () => {
         },
         {
           id: 'weekly-update',
+          lane: 'stock',
           label: t('hub.home.task.sup.weeklyUpdate'),
           count: weeklyMissing.length,
           deadlines: weekly ? [weekly.status.cycle.cutoff] : [],
@@ -234,6 +314,7 @@ const SupplierHome = () => {
           // REQ-E08-04 — a material group with no current capacity confirmation.
           // No due date is defined; the first week the plan does not cover stands in.
           id: 'capacity-due',
+          lane: 'stock',
           label: t('hub.home.task.sup.capacityDue'),
           count: capacityDue.length,
           deadlines: capacityDue.map(
@@ -250,6 +331,7 @@ const SupplierHome = () => {
           // REQ-E06-01 — a published version this supplier has not opened yet. No
           // view-by date exists; the version's earliest commitment deadline stands in.
           id: 'new-forecast',
+          lane: 'forecast',
           label: t('hub.home.task.sup.newForecast'),
           count: unviewed.length,
           deadlines: unviewedLines.map((l) => l.dueAt),
@@ -261,6 +343,7 @@ const SupplierHome = () => {
         {
           // REQ-E06-03 BR-06 — the reminder at the deadline.
           id: 'commitments-overdue',
+          lane: 'forecast',
           label: t('hub.home.task.sup.commitmentsOverdue'),
           count: overdueLines.length,
           deadlines: overdueLines.map((l) => l.dueAt),
@@ -272,6 +355,7 @@ const SupplierHome = () => {
         {
           // REQ-E06-03 BR-06 — the reminder at half the deadline.
           id: 'commitments-due-soon',
+          lane: 'forecast',
           label: t('hub.home.task.sup.commitmentsDueSoon'),
           count: dueSoonLines.length,
           deadlines: dueSoonLines.map((l) => l.dueAt),
@@ -283,6 +367,7 @@ const SupplierHome = () => {
         {
           // REQ-E06-03 BR-05 — the planner asked for a revision, with a note.
           id: 'commitments-revision',
+          lane: 'forecast',
           label: t('hub.home.task.sup.revisionRequested'),
           count: revisionLines.length,
           deadlines: [],
@@ -295,6 +380,7 @@ const SupplierHome = () => {
         {
           // REQ-E07-05 — a confirmed order still owes its expected completion date.
           id: 'shipping-notice',
+          lane: 'orders',
           label: t('hub.home.task.sup.shippingNotice'),
           count: noNotice.length,
           deadlines: [],
@@ -306,6 +392,7 @@ const SupplierHome = () => {
           // Ship by the confirmed delivery date (several orders carry an empty
           // one), else the requested date.
           id: 'create-asn',
+          lane: 'orders',
           label: t('hub.home.task.sup.createAsn'),
           count: readyToShip.length,
           deadlines: readyToShip.map((po) => po.confirmedDeliveryDate || po.requestedDeliveryDate),
@@ -314,6 +401,7 @@ const SupplierHome = () => {
         },
         {
           id: 'receipt-discrepancies',
+          lane: 'orders',
           label: t('hub.home.task.sup.receiptDiscrepancies'),
           count: toAnswer.length,
           deadlines: [],
@@ -324,6 +412,7 @@ const SupplierHome = () => {
         {
           // REQ-E07-07 — Finance returned the invoice with a reason.
           id: 'returned-invoices',
+          lane: 'money',
           label: t('hub.home.task.sup.returnedInvoices'),
           count: returned.length,
           deadlines: [],
@@ -333,6 +422,7 @@ const SupplierHome = () => {
         {
           // REQ-E03-03 BR-05 — this supplier's own deadline, extension included.
           id: 'rfq',
+          lane: 'sourcing',
           label: t('hub.home.task.sup.rfq'),
           count: openRfqs.length,
           deadlines: openRfqs.map((r) =>
@@ -344,6 +434,7 @@ const SupplierHome = () => {
           // REQ-E03-02 — an information request still to answer: invited, and no
           // SUBMITTED response (a draft is still "to answer").
           id: 'rfi-answer',
+          lane: 'sourcing',
           label: t('hub.home.task.rfiToAnswer'),
           count: openRfis.length,
           deadlines: openRfis.map((e) =>
@@ -354,6 +445,7 @@ const SupplierHome = () => {
         {
           // REQ-E03-04 — a proposal request still to answer.
           id: 'rfp-answer',
+          lane: 'sourcing',
           label: t('hub.home.task.rfpToAnswer'),
           count: openRfps.length,
           deadlines: openRfps.map((e) =>
@@ -365,6 +457,7 @@ const SupplierHome = () => {
           // REQ-E03-05 — PTI asked for a revised quote and this supplier has not
           // sent one. The read already narrows the round to its own thread.
           id: 'revised-quote',
+          lane: 'sourcing',
           label: t('hub.home.task.revisedQuote'),
           count: openRounds.length,
           deadlines: openRounds.map((r) => r.deadline),
@@ -374,6 +467,7 @@ const SupplierHome = () => {
           // An expired certificate's deadline has passed; an expiring one is due
           // on its expiry date.
           id: 'certs',
+          lane: 'money',
           label: t('hub.home.task.sup.certs'),
           count: certsDue.length,
           deadlines: certsDue.map((doc) => doc.expiryDate),
@@ -393,12 +487,16 @@ const SupplierHome = () => {
         }
       ];
       return [
-        ...withSeverity(rated, nowIso, t),
+        ...withSeverity(rated, nowIso, t).map((task) =>
+          sourcingDetail[task.id] ? { ...task, detail: sourcingDetail[task.id] } : task
+        ),
+        ...awardRows,
         // Money PTI owes this supplier, not something the supplier does: it stays
         // "To review", outside the urgency ranking, and last (`none` renders as
         // `info` but sorts below every due task).
         {
           id: 'invoices',
+          lane: 'money',
           label: t('hub.home.task.sup.invoices'),
           count: unpaid.length,
           severity: /** @type {const} */ ('none'),
@@ -421,10 +519,23 @@ const SupplierHome = () => {
       rfiEvents.data,
       rfpEvents.data,
       rounds.data,
+      rfqAwards.data,
+      rfpAwards.data,
       supplierId,
       t
     ])
   );
+
+  // RFx UX X-02 (owner ruling Q5) — the To do grouped by lane, each lane in
+  // deadline order (`groupTasksByLane`). The headers reuse the menu's own names.
+  /** @type {TaskLane[]} */
+  const lanes = [
+    { id: 'orders', label: t('hub.nav.section.supplierOrders') },
+    { id: 'stock', label: t('hub.nav.sup.stock') },
+    { id: 'sourcing', label: t('hub.nav.section.sourcing') },
+    { id: 'forecast', label: t('hub.nav.sup.forecast') },
+    { id: 'money', label: t('hub.home.lane.other') }
+  ];
 
   if (!supplierId) return <NoSupplierIdentity />;
 
@@ -444,7 +555,7 @@ const SupplierHome = () => {
         positions={stock.data?.items ?? []}
         nowIso={inventoryNow()}
       />
-      <TaskList tasks={tasks} />
+      <TaskList tasks={tasks} lanes={lanes} />
       {openAlerts.length > 0 && (
         <section className="mt-6" data-testid="supplier-home-alerts">
           <h2 className="text-section text-text-primary mb-2">{t('inv.alerts.sup.title')}</h2>

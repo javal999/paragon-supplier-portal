@@ -44,6 +44,7 @@ const QuotePriceSection = ({ form, setForm, bidPrice, totalPrice }) => {
             // Not "0" / "0.00": a placeholder must never model a value the
             // field refuses, and it must not model a separator either.
             placeholder="15000"
+            id="quote-unit-price"
             aria-label={t('rfqs.field.unitPrice')}
             aria-invalid={form.unitPrice.trim() !== '' && !bidPrice.ok}
             value={form.unitPrice}

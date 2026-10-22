@@ -40,14 +40,16 @@ describe('Batch 2 — bilingual render (no EN leak in chrome)', () => {
   it('BuyerSourcing: ID chrome header, English gone', async () => {
     await setLang('id');
     renderWithProviders(<BuyerSourcing />);
-    expect(await screen.findByText('Permintaan penawaran harga')).toBeInTheDocument();
-    expect(screen.queryByText('Quotation requests')).not.toBeInTheDocument();
+    // RFx UX X-01 — the title leads with the acronym the menu uses.
+    expect(await screen.findByText('RFQ · Permintaan penawaran harga')).toBeInTheDocument();
+    expect(screen.queryByText('RFQ · Quotation requests')).not.toBeInTheDocument();
   });
 
   it('SupplierRFQs: ID chrome header, English gone', async () => {
     await setLang('id');
     renderWithProviders(<SupplierRFQs />, { identity: SUPPLIER });
-    expect(await screen.findByText('Permintaan penawaran harga')).toBeInTheDocument();
-    expect(screen.queryByText('Quotation requests')).not.toBeInTheDocument();
+    // RFx UX X-01 — the title leads with the acronym the menu uses.
+    expect(await screen.findByText('RFQ · Permintaan penawaran harga')).toBeInTheDocument();
+    expect(screen.queryByText('RFQ · Quotation requests')).not.toBeInTheDocument();
   });
 });

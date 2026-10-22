@@ -8,11 +8,14 @@
 /** @import { VerbAvailability } from '@services/transitions/handoff' */
 /** @import { PanelAward } from '../../rfx/AwardPanel' */
 /** @import { RunCommand } from '../hooks/useEventCommand' */
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { bestScoredByItemAt } from '@services/sourcing/rfqComparison';
-import { AwardPanel } from '../../rfx/AwardPanel';
+import { awardItemsOf, itemOfAwardLine } from '@services/sourcing/awardShape';
+import { AwardPanel, itemLabel } from '../../rfx/AwardPanel';
 import { AwardRecords } from '../../rfx/AwardRecords';
+import { ConfirmSheet, awardEffects, notAwardedOnFinal } from '../../rfx/ConfirmSheet';
 
 /**
  * REQ-E03-05 BR-06 to BR-09 — the award section (`#event-award`, where the
@@ -68,6 +71,10 @@ const AwardSection = ({
   run
 }) => {
   const { t } = useTranslation();
+  // RFx UX 1C (B-05) — the award the panel asked for, held for the
+  // confirmation sheet. Nothing is dispatched until the buyer confirms it.
+  const [draft, setDraft] = useState(/** @type {PanelAward | null} */ (null));
+  const items = awardItemsOf(rfq);
 
   /** BL-64 — quotes exist and not one comes from a supplier passing CR-23: nothing can be awarded. */
   const noneAwardable = current.length > 0 && qualified.length === 0;
@@ -113,6 +120,25 @@ const AwardSection = ({
       'rfx.toast.awarded'
     );
   };
+  /** @param {string} key */
+  const labelOfKey = (key) => {
+    const item = items.find((i) => i.key === key);
+    return item ? itemLabel(t, rfq, item) : key;
+  };
+  const effects = draft
+    ? awardEffects(t, {
+        award: draft,
+        notAwarded: notAwardedOnFinal(draft, inForce, rfq.invitedSupplierIds),
+        supplierName,
+        lineItem: (line) => {
+          const item = itemOfAwardLine(items, line);
+          return item
+            ? { key: item.key, label: itemLabel(t, rfq, item) }
+            : { key: line.itemCode || 'event', label: line.itemCode || '—' };
+        },
+        itemLabel: labelOfKey
+      })
+    : [];
 
   return (
     <section
@@ -186,8 +212,22 @@ const AwardSection = ({
             supplierName={supplierName}
             noneAwardable={noneAwardable}
             pending={pending}
-            onAward={sendAward}
+            onAward={setDraft}
           />
+          {!!draft && (
+            <ConfirmSheet
+              title={t('rfx.confirm.award.title')}
+              effects={effects}
+              confirmLabel={t('rfx.confirm.award.record')}
+              pending={pending}
+              onConfirm={() => {
+                sendAward(draft);
+                setDraft(null);
+              }}
+              onBack={() => setDraft(null)}
+              testId="award-sheet"
+            />
+          )}
         </div>
       )}
       {eventAwards.length === 0 && (

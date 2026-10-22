@@ -2,6 +2,7 @@
 import { useTranslation } from 'react-i18next';
 import FormSection from '@components/ui-v2/FormSection';
 import { LEAD_TIME_REFUSAL_KEY, MOQ_REFUSAL_KEY, inputClass, labelClass } from '../const';
+import { StillMissing } from '../../rfx/ResponseFormState';
 /** @import { QuoteForm } from '../const' */
 /** @import { LeadTimeOutcome, LeadTimeUnit } from '../../rfqs/quotationLeadTime' */
 /** @import { MoqOutcome } from '../../rfqs/quotationMoq' */
@@ -12,6 +13,7 @@ import { LEAD_TIME_REFUSAL_KEY, MOQ_REFUSAL_KEY, inputClass, labelClass } from '
  * @property {(form: QuoteForm) => void} setForm
  * @property {LeadTimeOutcome} leadTime -  The ONE read of the lead time (number + unit).
  * @property {MoqOutcome} moq -  The ONE read of the minimum order quantity.
+ * @property {boolean} [showMissing] -  S-02 — say "Still missing" under an empty validity date (once the supplier has started).
  */
 
 /**
@@ -21,7 +23,7 @@ import { LEAD_TIME_REFUSAL_KEY, MOQ_REFUSAL_KEY, inputClass, labelClass } from '
  * `useQuoteSubmission`, the same values the submit gate judges.
  * @type {React.FC<QuoteTermsSectionProps>}
  */
-const QuoteTermsSection = ({ form, setForm, leadTime, moq }) => {
+const QuoteTermsSection = ({ form, setForm, leadTime, moq, showMissing = false }) => {
   const { t } = useTranslation();
   return (
     <FormSection
@@ -43,6 +45,7 @@ const QuoteTermsSection = ({ form, setForm, leadTime, moq }) => {
             type="text"
             inputMode="numeric"
             placeholder="14"
+            id="quote-lead-time"
             aria-label={t('rfqs.field.leadTime')}
             aria-invalid={!leadTime.ok}
             value={form.leadTimeNum}
@@ -96,6 +99,7 @@ const QuoteTermsSection = ({ form, setForm, leadTime, moq }) => {
         disabled until this is ticked. */}
         {leadTime.ok && leadTime.requiresSameDayAck && (
           <div
+            id="quote-leadtime-sameday"
             data-testid="quote-leadtime-sameday"
             className="mt-2 rounded border border-warning bg-warning-soft px-3 py-2"
           >
@@ -118,11 +122,16 @@ const QuoteTermsSection = ({ form, setForm, leadTime, moq }) => {
         <label className={labelClass}>{t('rfqs.panel.validUntil')}</label>
         <input
           type="date"
+          id="quote-valid-until"
           aria-label={t('rfqs.field.validUntil')}
           value={form.validUntil}
           onChange={(e) => setForm({ ...form, validUntil: e.target.value })}
           className={inputClass}
         />
+        {/* S-02 — said where it sits once the supplier has started. */}
+        {!!showMissing && !form.validUntil.trim() && (
+          <StillMissing testId="quote-valid-until-missing" />
+        )}
       </div>
       <div>
         <label className={labelClass}>{t('rfqs.panel.moq')}</label>
@@ -135,6 +144,7 @@ const QuoteTermsSection = ({ form, setForm, leadTime, moq }) => {
           type="text"
           inputMode="numeric"
           placeholder={t('rfqs.panel.moqPlaceholder')}
+          id="quote-moq"
           aria-label={t('rfqs.field.moq')}
           aria-invalid={!moq.ok}
           value={form.moq}

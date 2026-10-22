@@ -853,6 +853,8 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    * RFx D2 (NR-2 BR-08) — an RFQ created from an RFP may not source an option
    * an award in force on that RFP already placed (AWARD_OPTION_SOURCED_ELSEWHERE).
    * The rule is `rfpOptionSourcedRefusal`, the one the RFP → RFQ pre-fill uses.
+   * Owner ruling Q1 (2026-10-19) — nor an option a firm-offer round of that RFP
+   * names (RFQ_OPTION_IN_FIRM_ROUND, `rfqOptionInRoundRefusal`).
    */
   RFQ_CREATE_RFP_OPTIONS_FREE: 'rfq_create_rfp_options_free'
 });

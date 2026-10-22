@@ -1,9 +1,11 @@
-import { screen, fireEvent } from '@testing-library/react';
+import { Routes, Route } from 'react-router-dom';
+import { screen, fireEvent, within } from '@testing-library/react';
 import { renderWithProviders, BUYER } from '@test/test-utils';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 import i18n from '@lib/i18n';
 import { rolesHolding, SYSTEM_ROLES, SUPERSET_ROLES } from '@services/transitions/businessRoles';
 import BuyerSourcing from './BuyerSourcing';
+import BuyerSourcingEvent from './BuyerSourcingEvent';
 
 // ────────────────────────────────────────────────────────────────────────────
 // §76 — THE DRAWER, PER VERB. The RFQ side panel is a WORKSPACE, not a
@@ -58,6 +60,22 @@ const AWARD_RFQ = 'RFQ-2026-009'; //   Open + ALL invited suppliers responded �
 const openRfq = async (rfqNumber) => {
   fireEvent.click(await screen.findByText(rfqNumber));
 };
+
+// ⚠️ RFx UX B-02 (owner ruling 2026-10-19) — "Move to review" moved from the
+// drawer's comparison to the RFQ event page, with its notice, still one per
+// Submitted quote in that quote's own cell. Its specs drive the event page.
+const REVIEW_RFQ_ID = 'rfq-011';
+/**
+ * @param {CurrentIdentity} identity
+ * @param {string} rfqId
+ */
+const renderEvent = (identity, rfqId) =>
+  renderWithProviders(
+    <Routes>
+      <Route path="/buyer/rfq/:rfqId" element={<BuyerSourcingEvent />} />
+    </Routes>,
+    { identity, route: `/buyer/rfq/${rfqId}` }
+  );
 
 describe('§76 · the drawer — publish (Draft only)', () => {
   it('HELD: a procurement seat keeps Publish RFQ and reads no notice', async () => {
@@ -128,17 +146,15 @@ describe('§76 · the drawer — cancel', () => {
   });
 });
 
-describe('§76 · the drawer — move to review (PER QUOTE)', () => {
+describe('§76 · the event page — move to review (PER QUOTE)', () => {
   it('HELD: a procurement seat keeps the move on the Submitted quote', async () => {
-    renderWithProviders(<BuyerSourcing />, { identity: PROCUREMENT });
-    await openRfq(REVIEW_RFQ);
+    renderEvent(PROCUREMENT, REVIEW_RFQ_ID);
     expect(await screen.findByRole('button', { name: /Move to review/i })).toBeInTheDocument();
     expect(screen.queryByTestId('handoff-rfq-review')).not.toBeInTheDocument();
   });
 
   it('WITHHELD: the owner is read in the QUOTE CELL, once per Submitted quote', async () => {
-    renderWithProviders(<BuyerSourcing />, { identity: RECEIVING });
-    await openRfq(REVIEW_RFQ);
+    renderEvent(RECEIVING, REVIEW_RFQ_ID);
     const notices = await screen.findAllByTestId('handoff-rfq-review');
     // ⚠️ THE COUNT IS DERIVED FROM THE HELD SEAT, NOT HARDCODED. A literal `1`
     // here would pass over a fixture change that removed the Submitted quote,
@@ -187,12 +203,17 @@ describe('§76 · the grouping is GONE, and cannot come back quietly', () => {
     // answered, so no RFQ offered both. The award slot now links to the event
     // page for every RFQ that can be awarded (Open, Closed, Partly awarded), so
     // REVIEW_RFQ offers both — and they still answer as TWO notices, never one.
+    // B-02 — the review slot is on the event page, the award slot stays in the
+    // drawer: still TWO notices, each in its own act's slot, never one.
     const { unmount } = renderWithProviders(<BuyerSourcing />, { identity: RECEIVING });
     await openRfq(REVIEW_RFQ);
-    expect(await screen.findByTestId('handoff-rfq-review')).toBeInTheDocument();
-    expect(screen.getByTestId('handoff-rfq-award')).toBeInTheDocument();
+    expect(await screen.findByTestId('handoff-rfq-award')).toBeInTheDocument();
     expect(screen.queryByTestId('handoff-rfq-drawer')).not.toBeInTheDocument();
     unmount();
+    const event = renderEvent(RECEIVING, REVIEW_RFQ_ID);
+    expect(await screen.findByTestId('handoff-rfq-review')).toBeInTheDocument();
+    expect(screen.queryByTestId('handoff-rfq-drawer')).not.toBeInTheDocument();
+    event.unmount();
 
     renderWithProviders(<BuyerSourcing />, { identity: RECEIVING });
     await openRfq(AWARD_RFQ);
@@ -273,5 +294,7 @@ describe('§76 · why a PARTIALLY-held seat cannot be demonstrated today', () =>
  * @returns {number}
  */
 function submittedQuoteCount() {
-  return screen.getAllByText('Submitted').length;
+  // B-02 — read from the comparison's status row on the event page, which
+  // also shows other statuses (documents, versions) elsewhere.
+  return within(screen.getByTestId('cmp-row-status')).getAllByText('Submitted').length;
 }

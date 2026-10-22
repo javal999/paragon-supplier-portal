@@ -4,21 +4,22 @@
 /** @import { RfpOptionSettlement } from '@services/sourcing/rfpAward' */
 /** @import { VerbAvailability } from '@services/transitions/handoff' */
 /** @import { RfxCommandVars } from '@services/query/commandHooks' */
-import { RfpFirmOfferRounds } from '../../rfx/RfpFirmOffers';
-import { RfpAwardSection, awardedRefsOf } from '../../rfx/RfpAwardSection';
+import { RfpAwardSection } from '../../rfx/RfpAwardSection';
 import { RfpPricingComparison } from '../../rfx/RfpPricing';
 import { SupplierDocumentsPanel } from '../../rfx/SupplierDocumentsPanel';
-import { rfpToRfqOffered } from '../utils';
 import RfpEventCard from './RfpEventCard';
 import RfpInvitees from './RfpInvitees';
 import RfpComparison from './RfpComparison';
-import RfpToRfq from './RfpToRfq';
+import RfpFirmUp from './RfpFirmUp';
 import RfpQuestionAnswers from './RfpQuestionAnswers';
 
 /**
  * The open event's detail, in render order: the event card, invitees, the
- * terms comparison, indicative pricing, firm-offer rounds, the award section,
- * "Create RFQ from this RFP", the question answers and the supplier files.
+ * terms comparison, indicative pricing, "Firm up the prices" (firm-offer
+ * rounds beside "Create RFQ from this RFP", RFx UX B-07), the award section,
+ * the question answers and the supplier files. RFx UX B-06 — before the first
+ * proposal the terms comparison shows the terms and options sent, so the
+ * indicative-pricing grid (supplier columns only) waits for a proposal.
  * The page computes the event's rounds, awards and settled options (it holds
  * the queries) and passes them in.
  * Moved out of `BuyerRfp.jsx` by the Phase 5 page split (no behaviour change).
@@ -70,7 +71,7 @@ const RfpDetail = ({
 
     <RfpInvitees event={open} />
     <RfpComparison event={open} />
-    {open.pricing && (
+    {!!open.pricing && (open.responses.length > 0 || open.status === 'Draft') && (
       <RfpPricingComparison
         request={open.pricing}
         currency={open.currency}
@@ -80,9 +81,10 @@ const RfpDetail = ({
       />
     )}
     {open.status !== 'Draft' && !!open.pricing && (
-      <RfpFirmOfferRounds
+      <RfpFirmUp
         event={open}
         rounds={openRounds}
+        awards={openAwards}
         gateOf={gateOf}
         settled={openSettled}
         pending={pending}
@@ -102,7 +104,6 @@ const RfpDetail = ({
         run={run}
       />
     )}
-    {rfpToRfqOffered(open) && <RfpToRfq event={open} awardedRefs={awardedRefsOf(openAwards)} />}
     {(open.questions ?? []).length > 0 && <RfpQuestionAnswers event={open} />}
     {/* RFx B5 — every supplier file, submitted proposals only (NR-1 buyer step 5). */}
     <SupplierDocumentsPanel

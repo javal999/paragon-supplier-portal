@@ -242,7 +242,10 @@ describe('REQ-E03-02 — the information request', () => {
     );
     // A half-filled response cannot be sent, and the page says why.
     expect(screen.getByTestId('supplier-rfi-submit-rfi-001')).toBeDisabled();
-    expect(screen.getByTestId('supplier-rfi-missing-rfi-001')).toBeInTheDocument();
+    // S-02 — the banner names every missing answer, with a jump link to each.
+    expect(screen.getByTestId('supplier-rfi-problems-rfi-001')).toHaveTextContent(
+      /answers? still missing or not valid/
+    );
     // Saving a draft is NOT blocked — that is the point of a draft.
     expect(screen.getByTestId('supplier-rfi-save-rfi-001')).not.toBeDisabled();
   });
@@ -1103,7 +1106,7 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     );
   });
 
-  it('buyer steps 5–7 / BR-08 — the buyer awards option 1 at 60/40: the RFP reads Awarded, "Create RFQ" is gone for option 1 and kept for option 2', async () => {
+  it('buyer steps 5–7 / BR-08 — the buyer awards option 1 at 60/40: the RFP reads Awarded, "Create RFQ" reads "Awarded" for option 1 and is kept for option 2', async () => {
     const svc = new MockCommandService();
     await closedTundra(svc);
     await fullSetOffersClosed(svc);
@@ -1133,6 +1136,8 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     });
     await waitFor(() => expect(screen.getByTestId('award-confirm')).toBeEnabled());
     fireEvent.click(screen.getByTestId('award-confirm'));
+    // RFx UX 1C (B-05) — the award is dispatched from its confirmation sheet.
+    fireEvent.click(await screen.findByTestId('award-sheet-confirm'));
     await waitFor(() =>
       expect(
         /** @type {import('@services/sourcing/types').RfpEvent} */ (rfpEventStore.get('rfp-002'))
@@ -1141,9 +1146,12 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     );
     await waitFor(() => expect(screen.getByTestId('rfp-row-rfp-002')).toHaveTextContent('Awarded'));
     expect(await screen.findByTestId(`award-line-${FULL_SET}-sup-007`)).toHaveTextContent('60%');
+    // RFx UX B-07 — the awarded option stays listed, greyed "Awarded" and not
+    // pickable; the open one can still go to an RFQ.
     const toRfq = screen.getByTestId('rfp-to-rfq-rfp-002');
-    expect(within(toRfq).queryByTestId(`rfp-to-rfq-option-${FULL_SET}`)).not.toBeInTheDocument();
-    expect(within(toRfq).getByTestId('rfp-to-rfq-option-opt-pump-cap')).toBeInTheDocument();
+    expect(within(toRfq).getByTestId(`rfp-to-rfq-option-${FULL_SET}`)).toBeDisabled();
+    expect(within(toRfq).getByTestId(`rfp-to-rfq-closed-${FULL_SET}`)).toHaveTextContent('Awarded');
+    expect(within(toRfq).getByTestId('rfp-to-rfq-option-opt-pump-cap')).toBeEnabled();
   });
 
   it('BR-09 / AC-07 — the supplier reads its own share on option 1, and no rival share', async () => {
@@ -1240,6 +1248,8 @@ describe('RFx D3 — the RFP screens for firm-offer rounds and award (NR-2)', ()
     });
     await waitFor(() => expect(within(settle).getByTestId('award-will-not-rest')).toBeEnabled());
     fireEvent.click(within(settle).getByTestId('award-will-not-rest'));
+    // RFx UX 1C (B-05) — the award is dispatched from its confirmation sheet.
+    fireEvent.click(await screen.findByTestId('award-sheet-confirm'));
     await waitFor(() =>
       expect(
         /** @type {import('@services/sourcing/types').RfpEvent} */ (rfpEventStore.get('rfp-002'))
@@ -1353,18 +1363,15 @@ describe('Home tasks — RFx work reaches the task list on both sides', () => {
     // sup-013 holds a DRAFT on the information request and has not opened the
     // proposal request at all — a draft is still "to answer".
     renderWithProviders(<SupplierHome />, { identity: SUP_013 });
-    expect(await screen.findByTestId('home-task-rfi-answer')).toHaveTextContent(
-      'Information requests to answer'
-    );
-    expect(screen.getByTestId('home-task-rfp-answer')).toHaveTextContent(
-      'Proposal requests to answer'
-    );
+    // RFx UX X-01 (owner ruling Q8) — the To do rows use the module's acronym.
+    expect(await screen.findByTestId('home-task-rfi-answer')).toHaveTextContent('RFI to answer');
+    expect(screen.getByTestId('home-task-rfp-answer')).toHaveTextContent('RFP to answer');
   });
 
-  it('the supplier PTI is waiting on sees "Revised quote requested"; the one that answered does not', async () => {
+  it('the supplier PTI is waiting on sees "RFQ round to answer"; the one that answered does not', async () => {
     renderWithProviders(<SupplierHome />, { identity: SUP_007 });
     expect(await screen.findByTestId('home-task-revised-quote')).toHaveTextContent(
-      'Revised quote requested'
+      'RFQ round to answer'
     );
   });
 

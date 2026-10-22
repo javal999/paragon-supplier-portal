@@ -286,6 +286,8 @@ describe('the award, item by item', () => {
     // both items follow their best score, so no reason is asked
     expect(screen.queryByTestId('award-reason-required')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('award-confirm'));
+    // RFx UX 1C (B-05) — the award is dispatched from its confirmation sheet.
+    fireEvent.click(await screen.findByTestId('award-sheet-confirm'));
     const recorded = await screen.findByTestId('award-recorded');
     expect(within(recorded).getByTestId('award-line-1-sup-015')).toHaveTextContent('70%');
     expect(within(recorded).getByTestId('award-line-1-sup-015')).toHaveTextContent('3,000');
@@ -459,6 +461,8 @@ describe('RFx C3 — the award panel on a legacy RFQ (rfq-014)', () => {
     reasonIfAsked();
     expect(screen.queryByTestId('award-item-refusal')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('award-confirm'));
+    // RFx UX 1C (B-05) — the award is dispatched from its confirmation sheet.
+    fireEvent.click(await screen.findByTestId('award-sheet-confirm'));
 
     const recorded = await screen.findByTestId('award-recorded');
     expect(within(recorded).getByTestId(`award-line-${BOTTLE}-sup-015`)).toHaveTextContent(
@@ -513,6 +517,8 @@ describe('RFx C3 — the award panel on a legacy RFQ (rfq-014)', () => {
     expect(screen.getByTestId('award-confirm')).toHaveTextContent('Award these items');
     reasonIfAsked();
     fireEvent.click(screen.getByTestId('award-confirm'));
+    // RFx UX 1C (B-05) — the award is dispatched from its confirmation sheet.
+    fireEvent.click(await screen.findByTestId('award-sheet-confirm'));
     await waitFor(() =>
       expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
         'Partly awarded'
@@ -528,6 +534,8 @@ describe('RFx C3 — the award panel on a legacy RFQ (rfq-014)', () => {
     type(LABEL, 'sup-015', '100');
     reasonIfAsked();
     fireEvent.click(screen.getByTestId('award-confirm'));
+    // RFx UX 1C (B-05) — the award is dispatched from its confirmation sheet.
+    fireEvent.click(await screen.findByTestId('award-sheet-confirm'));
     await waitFor(() =>
       expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
         'Awarded'
@@ -545,6 +553,8 @@ describe('RFx C3 — the award panel on a legacy RFQ (rfq-014)', () => {
     expect(partial.status, partial.reason).toBe('done');
     renderEvent('rfq-014');
     fireEvent.click(await screen.findByTestId('award-will-not-rest'));
+    // RFx UX 1C (B-05) — the award is dispatched from its confirmation sheet.
+    fireEvent.click(await screen.findByTestId('award-sheet-confirm'));
     await waitFor(() =>
       expect(/** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-014')).status).toBe(
         'Awarded'
@@ -719,7 +729,11 @@ describe('the RFQ panel defers a tiered award to the event page', () => {
     expect(document.querySelector('input[name="award-select"]')).toBeNull();
   });
 
-  it('the panel ranks Oslo at the default break, and agrees with the event page', async () => {
+  // RFx UX B-02 (owner ruling 2026-10-19) — the panel no longer ranks: its
+  // comparison moved to the event page. These two specs keep their facts — the
+  // comparison opens at the default break, the panel links to it, and the
+  // best-scored supplier follows the break — now read on the event page.
+  it('the panel links to the comparison, and the event page ranks Oslo at the default break', async () => {
     const { bestScoredQuotationId, rfxNow } = await import('@services/data/mock/rfxReadModel');
     const { defaultEvaluationTierQty } = await import('@services/sourcing/rfqComparison');
     const oslo = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
@@ -731,21 +745,23 @@ describe('the RFQ panel defers a tiered award to the event page', () => {
       )
     );
     expect(best).toBe('qt-021b'); // population control: the event page's best at 3K
-    renderWithProviders(<BuyerSourcing />, { identity: BUYER_SEAT });
+    const { unmount } = renderWithProviders(<BuyerSourcing />, { identity: BUYER_SEAT });
     fireEvent.click(await screen.findByText('RFQ-2026-021'));
-    const note = await screen.findByTestId('panel-eval-break');
-    expect(note).toHaveTextContent('3,000 break');
-    expect(within(note).getByTestId('panel-compare-by-break')).toHaveAttribute(
+    expect(await screen.findByTestId('panel-link-comparison')).toHaveAttribute(
       'href',
-      expect.stringMatching(/\/buyer\/rfq\/rfq-021$/)
+      expect.stringMatching(/\/buyer\/rfq\/rfq-021\?section=comparison$/)
     );
+    unmount();
+    renderEvent('rfq-021');
+    const select = /** @type {HTMLSelectElement} */ (await screen.findByTestId('eval-break'));
+    expect(select.value).toBe('3000');
     await waitFor(() =>
-      expect(screen.getByTestId('panel-cmp-head-sup-013')).toHaveTextContent('Top-ranked')
+      expect(screen.getByTestId('cmp-head-sup-013')).toHaveTextContent('Best scored')
     );
-    expect(screen.getByTestId('panel-cmp-head-sup-015')).not.toHaveTextContent('Top-ranked');
+    expect(screen.getByTestId('cmp-head-sup-015')).not.toHaveTextContent('Best scored');
   });
 
-  it('⚠️ where the default break is NOT the first break, the panel follows the break, not the stored header', async () => {
+  it('⚠️ where the default break is NOT the first break, the comparison follows the break, not the stored header', async () => {
     // 400,000 pieces = 25K per variant × 8 × 2, so the default break is 25K,
     // where sup-015 ranks first — while the first-break header would rank sup-013.
     rfqStore.update('rfq-021', (r) => ({ ...r, totalQty: 400_000 }));
@@ -757,13 +773,13 @@ describe('the RFQ panel defers a tiered award to the event page', () => {
         25_000
       )
     ).toBe('qt-021a');
-    renderWithProviders(<BuyerSourcing />, { identity: BUYER_SEAT });
-    fireEvent.click(await screen.findByText('RFQ-2026-021'));
-    expect(await screen.findByTestId('panel-eval-break')).toHaveTextContent('25,000 break');
+    renderEvent('rfq-021');
+    const select = /** @type {HTMLSelectElement} */ (await screen.findByTestId('eval-break'));
+    expect(select.value).toBe('25000');
     await waitFor(() =>
-      expect(screen.getByTestId('panel-cmp-head-sup-015')).toHaveTextContent('Top-ranked')
+      expect(screen.getByTestId('cmp-head-sup-015')).toHaveTextContent('Best scored')
     );
-    expect(screen.getByTestId('panel-cmp-head-sup-013')).not.toHaveTextContent('Top-ranked');
+    expect(screen.getByTestId('cmp-head-sup-013')).not.toHaveTextContent('Best scored');
   });
 
   it('the footer offers only acts that exist: none for an Open RFQ still awaiting bids', async () => {
@@ -793,7 +809,7 @@ describe('the RFQ panel defers a tiered award to the event page', () => {
   it('RFx C3 (AR-03) — a legacy RFQ now gets the same box, and no one-winner pick', async () => {
     renderWithProviders(<BuyerSourcing />, { identity: BUYER_SEAT });
     fireEvent.click(await screen.findByText('RFQ-2026-011'));
-    await screen.findByText(/QUOTE COMPARISON/i);
+    await screen.findByTestId('panel-summary');
     expect(document.querySelector('input[name="award-select"]')).toBeNull();
     expect(
       within(screen.getByTestId('panel-tiered-award')).getByTestId('panel-open-tiered-award')

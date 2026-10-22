@@ -232,3 +232,40 @@ export function rfpOptionSourcedRefusal(refs, taken, how, options = []) {
  *   in a JSDoc type predicate as a use of its `@import`)
  */
 export const isRfpAward = (a) => a.eventType === 'rfp';
+
+/**
+ * OWNER RULING Q1 (2026-10-19, RFx UX B-07) — the options of one RFP that any
+ * of its firm-offer rounds names, open or closed, each with the number of the
+ * first round that named it. Such an option is firmed up inside the RFP (the
+ * full-service and ODM path), so the RFQ path is closed for it.
+ * @param {readonly Pick<RfpOfferRound, 'rfpId' | 'roundNumber' | 'optionRefs'>[]} rounds
+ * @param {string} rfpId
+ * @returns {ReadonlyMap<string, number>}
+ */
+export function rfpRoundedOptionRefs(rounds, rfpId) {
+  const out = /** @type {Map<string, number>} */ (new Map());
+  for (const round of [...rounds]
+    .filter((r) => r.rfpId === rfpId)
+    .sort((a, b) => a.roundNumber - b.roundNumber)) {
+    for (const ref of round.optionRefs) if (!out.has(ref)) out.set(ref, round.roundNumber);
+  }
+  return out;
+}
+
+/**
+ * OWNER RULING Q1 — the refusal an RFQ created from an RFP earns when it names
+ * an option a firm-offer round of that RFP already names
+ * (`RFQ_OPTION_IN_FIRM_ROUND`), or null. Called by the RFQ create policy; the
+ * RFP page leaves the same options unpickable through `rfpRoundedOptionRefs`.
+ * @param {readonly string[]} refs
+ * @param {ReadonlyMap<string, number>} rounded
+ * @param {string} rfpNumber
+ * @param {readonly RfpAwardOptionName[]} [options]
+ * @returns {string | null}
+ */
+export function rfqOptionInRoundRefusal(refs, rounded, rfpNumber, options = []) {
+  const ref = refs.find((r) => rounded.has(r));
+  return ref === undefined
+    ? null
+    : `RFQ_OPTION_IN_FIRM_ROUND: ${rfpOptionName(ref, options)} is in firm-offer round ${rounded.get(ref)} on ${rfpNumber}; its prices are firmed up there, not in an RFQ`;
+}

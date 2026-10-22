@@ -5,6 +5,8 @@ import { resolveEnvBadge } from '@lib/envBadge';
 import LanguageMenu from './LanguageMenu';
 import IdentityPanel from './IdentityPanel';
 import TopBarSearch from './TopBarSearch';
+import { SupplierNoticeBell } from './SupplierNotices';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 
 /**
  * @typedef {object} TopBarV2Props
@@ -17,6 +19,7 @@ import TopBarSearch from './TopBarSearch';
 /** @type {React.FC<TopBarV2Props>} */
 const TopBarV2 = ({ navOpen = false, navControlsId, navButtonRef, onToggleNav }) => {
   const { t } = useTranslation();
+  const { identity } = useCurrentIdentity();
   const badge = resolveEnvBadge(
     import.meta.env.DEV,
     __DEPLOY_ENV__,
@@ -63,16 +66,22 @@ const TopBarV2 = ({ navOpen = false, navControlsId, navButtonRef, onToggleNav })
       {/* Right cluster */}
       <div className="flex shrink-0 items-center gap-1 sm:gap-3">
         <LanguageMenu />
-        <button
-          type="button"
-          aria-label={t('topbar.notifications')}
-          className="relative p-2 rounded-md text-text-secondary hover:bg-bg-hover"
-        >
-          <Bell size={18} />
-          <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-danger text-white text-[10px] font-bold flex items-center justify-center">
-            3
-          </span>
-        </button>
+        {/* RFx UX S-04 — a supplier seat's bell lists its award and withdrawal
+            notices, derived from its own award reads. The PTI bell is unchanged. */}
+        {identity.personaType === 'supplier' && identity.supplierId ? (
+          <SupplierNoticeBell />
+        ) : (
+          <button
+            type="button"
+            aria-label={t('topbar.notifications')}
+            className="relative p-2 rounded-md text-text-secondary hover:bg-bg-hover"
+          >
+            <Bell size={18} />
+            <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-danger text-white text-[10px] font-bold flex items-center justify-center">
+              3
+            </span>
+          </button>
+        )}
         {/* The avatar is now a PANEL, not a decoration: the current role and the
             scope it grants live here, because identity belongs with identity. */}
         <IdentityPanel />

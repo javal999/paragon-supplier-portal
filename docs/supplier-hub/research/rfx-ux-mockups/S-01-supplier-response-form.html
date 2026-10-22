@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S-01 · Supplier response form: autosave, inline errors, jump list</title>
+<style>
+  :root{--bg:#f6f7f9;--surface:#fff;--border:#e4e7ec;--text:#111827;--text2:#4b5563;--text3:#6b7280;--action:#1d4ed8;--action-soft:#eff4ff;--teal:#0f766e;--danger:#b91c1c;--danger-soft:#fef2f2;--warn:#b45309;--warn-soft:#fffbeb;--ok:#047857;--ok-soft:#ecfdf5;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;color:var(--text);background:var(--bg)}
+  .shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+  .side{background:var(--surface);border-right:1px solid var(--border);padding:16px 12px}
+  .brand{font-weight:700;font-size:13px;margin-bottom:14px}
+  .persona{display:flex;border:1px solid var(--border);border-radius:999px;padding:2px;margin-bottom:18px;font-size:12px}
+  .persona span{flex:1;text-align:center;padding:4px;border-radius:999px}
+  .persona .on{background:#eef2f7;font-weight:600}
+  .sect{font-size:10px;letter-spacing:.08em;color:var(--text3);margin:14px 8px 6px}
+  .nav a{display:block;padding:7px 8px;border-radius:8px;color:var(--text);text-decoration:none}
+  .nav a.active{background:var(--action-soft);color:var(--action);font-weight:600}
+  main{padding:20px 28px 60px}
+  .eyebrow{font-size:10px;letter-spacing:.08em;color:var(--text3)}
+  h1{font-size:22px;margin:4px 0 2px}
+  .sub{color:var(--text2);margin:0 0 14px}
+  .layout{display:grid;grid-template-columns:1fr 260px;gap:20px;align-items:start}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .card .hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600}
+  .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--border);color:var(--text2);background:#f9fafb}
+  .pill.ok{background:var(--ok-soft);color:var(--ok);border-color:#a7f3d0}
+  .pill.warn{background:var(--warn-soft);color:var(--warn);border-color:#fde68a}
+  .pill.danger{background:var(--danger-soft);color:var(--danger);border-color:#fecaca}
+  .stepper{display:flex;gap:0;border-bottom:1px solid var(--border);padding:0 16px;overflow:auto}
+  .stepper div{padding:10px 12px;font-size:12px;color:var(--text3);border-bottom:2px solid transparent;white-space:nowrap}
+  .stepper div.cur{color:var(--action);border-color:var(--action);font-weight:600}
+  .stepper div.done{color:var(--ok)}
+  .stepper div.err{color:var(--danger)}
+  .sec{padding:16px}
+  .sec h3{font-size:13px;margin:0 0 4px}
+  .sec .hint{font-size:12px;color:var(--text3);margin:0 0 12px}
+  .q{padding:10px 0;border-top:1px solid var(--border)}
+  .q label{display:block;font-weight:600;margin-bottom:6px}
+  .q .req{color:var(--danger)}
+  input,select,textarea{width:100%;font:inherit;padding:8px 10px;border:1px solid #d0d5dd;border-radius:8px;background:#fff}
+  .q.invalid input,.q.invalid select{border-color:var(--danger);background:var(--danger-soft)}
+  .err{color:var(--danger);font-size:12px;margin-top:4px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  details.desc{margin-top:6px}
+  details.desc summary{font-size:12px;color:var(--action);cursor:pointer}
+  .footer{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:12px;border-radius:0 0 10px 10px}
+  .btn{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid #d0d5dd;background:#fff;cursor:pointer}
+  .btn.primary{background:var(--action);border-color:var(--action);color:#fff;font-weight:600}
+  .btn[disabled]{opacity:.5;cursor:not-allowed}
+  .saved{font-size:12px;color:var(--text3);margin-left:auto}
+  .aside{position:sticky;top:16px}
+  .aside h4{font-size:12px;margin:0 0 8px;letter-spacing:.06em;color:var(--text3)}
+  .aside ul{list-style:none;margin:0;padding:0}
+  .aside li{display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid var(--border);font-size:13px}
+  .aside li a{color:var(--text);text-decoration:none}
+  .aside li .n{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+  .aside li.bad a{color:var(--danger);font-weight:600}
+  .progress{height:6px;background:#eef2f7;border-radius:999px;overflow:hidden;margin:8px 0 4px}
+  .progress div{height:100%;width:62%;background:var(--teal)}
+  .note{font-size:12px;color:var(--text3)}
+  .banner{display:flex;gap:10px;align-items:flex-start;background:var(--danger-soft);border:1px solid #fecaca;color:var(--danger);border-radius:8px;padding:10px 12px;margin:0 16px 0}
+  .banner a{color:var(--danger)}
+  .legend{margin-top:24px;font-size:12px;color:var(--text3)}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand">Paragon Supplier Portal</div>
+    <div class="persona"><span>PTI</span><span class="on">Supplier</span></div>
+    <div class="sect">HOME</div><div class="nav"><a>To do</a></div>
+    <div class="sect">SOURCING</div>
+    <div class="nav"><a>RFI invitations</a><a>RFQ invitations</a><a class="active">RFP invitations</a></div>
+  </aside>
+  <main>
+    <div class="eyebrow">SOURCING · RFP INVITATIONS</div>
+    <h1>RFP-2026-003 · ICY — full-service lip product</h1>
+    <p class="sub">Answer each commercial term PTI asked for. Your draft is saved as you type and is not visible to PTI until you send it.</p>
+
+    <div class="layout">
+      <div class="card">
+        <div class="hd">
+          <div><span class="mono">RFP-2026-003</span> &nbsp; <span class="pill">Confidential</span> &nbsp; <span class="pill warn">Due 12 Sept 2026 · 12 days left</span></div>
+          <div><span class="pill">Draft · saved 19:04</span></div>
+        </div>
+        <div class="stepper">
+          <div class="done">1 Terms</div>
+          <div class="done">2 Questions</div>
+          <div class="cur">3 Indicative prices</div>
+          <div class="err">4 Sample &amp; validity</div>
+          <div>5 Documents</div>
+          <div>6 Review &amp; send</div>
+        </div>
+
+        <div class="banner" style="margin-top:12px">
+          <strong>2 answers still missing before you can send.</strong>
+          <span>&nbsp;<a href="#sample">Can you provide a sample?</a> · <a href="#valid">Prices valid until</a></span>
+        </div>
+
+        <div class="sec">
+          <h3>Indicative prices <span class="pill">Indicative</span></h3>
+          <p class="hint">A unit price per option at each quantity, in IDR. Leave an option empty if you do not offer it.</p>
+          <div class="q">
+            <label>Formula option 1: matte lip cream</label>
+            <div class="row"><input value="18500" aria-label="25,000"><input value="17200" aria-label="50,000"></div>
+          </div>
+          <div class="q">
+            <label>Formula option 2: satin lip tint</label>
+            <div class="row"><input value="16900" aria-label="25,000"><input value="15800" aria-label="50,000"></div>
+          </div>
+          <div class="q">
+            <label>Secondary pack option 3: printed sleeve, 1 colour</label>
+            <div class="row"><input placeholder="Not offered" aria-label="25,000"><input placeholder="Not offered" aria-label="50,000"></div>
+          </div>
+        </div>
+
+        <div class="sec" id="sample">
+          <h3>Sample and validity</h3>
+          <p class="hint">Asked once. The buyer's own question about the sample date was merged into this block.</p>
+          <div class="q invalid">
+            <label>Can you provide a sample batch? <span class="req">*</span></label>
+            <select><option>— choose —</option><option>Yes</option><option>No</option></select>
+            <div class="err">Choose Yes or No. PTI asks for 20 samples by 14 Sept 2026.</div>
+          </div>
+          <div class="q">
+            <label>Sample ready date</label>
+            <input placeholder="dd/mm/yyyy" disabled>
+            <div class="note">Shown once you answer Yes above.</div>
+          </div>
+          <div class="q invalid" id="valid">
+            <label>Prices valid until <span class="req">*</span></label>
+            <input placeholder="dd/mm/yyyy">
+            <div class="err">A date is needed so PTI knows how long the prices hold.</div>
+          </div>
+          <div class="q">
+            <label>Development timeline from brief to first production</label>
+            <textarea rows="2">Brief to lab sample 4 weeks, pilot batch 8 weeks, first production 16 weeks.</textarea>
+            <details class="desc"><summary>Add a comment for PTI (optional)</summary><input placeholder="Comment"></details>
+          </div>
+        </div>
+
+        <div class="footer">
+          <button class="btn">Back</button>
+          <button class="btn primary">Next: Documents</button>
+          <button class="btn" disabled title="2 answers still missing">Send proposal</button>
+          <span class="saved">Saved to draft 2 seconds ago · PTI sees nothing until you send</span>
+        </div>
+      </div>
+
+      <aside class="aside">
+        <div class="card" style="padding:14px">
+          <h4>YOUR PROGRESS</h4>
+          <div class="progress"><div></div></div>
+          <div class="note">18 of 22 answers given</div>
+          <ul style="margin-top:10px">
+            <li><a href="#">Terms</a><span class="n ok">6/6</span></li>
+            <li><a href="#">Questions</a><span class="n">3/3</span></li>
+            <li><a href="#">Indicative prices</a><span class="n">8/10</span></li>
+            <li class="bad"><a href="#sample">Sample &amp; validity</a><span class="n">1/3</span></li>
+            <li><a href="#">Documents</a><span class="n">0 files</span></li>
+          </ul>
+        </div>
+        <div class="card" style="padding:14px;margin-top:12px">
+          <h4>FROM PTI</h4>
+          <div class="note">Scope, T&amp;C and the brief are above the form. Confidentiality accepted 31 Aug 2026.</div>
+        </div>
+      </aside>
+    </div>
+
+    <p class="legend">Mockup S-01 for the RFx UX evaluation (2026-10). Shows: autosaved draft with a visible save state and a leave guard, a step stepper with per-section counts, inline errors on the field plus a jump list at the top, the sample question asked once, and the optional comment collapsed by default. The same pattern applies to the RFI form and the RFQ quote drawer.</p>
+  </main>
+</div>
+</body>
+</html>

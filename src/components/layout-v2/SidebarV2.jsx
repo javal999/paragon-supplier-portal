@@ -11,6 +11,7 @@ import { NO_PERSON } from '@context/noPerson';
 /** @import { Persona } from './navConfig' */
 import { HOME_PATH, isItemActive, navFor } from './navConfig';
 import { useHubRole } from './hubRole';
+import { SUPPLIER_COUNTED_PATHS, SupplierMenuCount } from './SupplierNotices';
 
 const SEED_SUPPLIER_ID = 'sup-007';
 const SEED_SUPPLIER_NAME = mockSuppliers.find((s) => s.id === SEED_SUPPLIER_ID)?.name ?? null;
@@ -209,7 +210,7 @@ const SidebarV2 = ({ id, open = false, onClose }) => {
                   const isActive = isItemActive(item, currentPath);
                   const Icon = item.icon;
                   return (
-                    <li key={item.path}>
+                    <li key={item.path} className="relative">
                       <button
                         type="button"
                         aria-current={isActive ? 'page' : undefined}
@@ -229,6 +230,13 @@ const SidebarV2 = ({ id, open = false, onClose }) => {
                         <Icon size={18} className="shrink-0" />
                         <span>{t(item.labelKey)}</span>
                       </button>
+                      {/* RFx UX S-05 / X-02 — a supplier Sourcing item's count,
+                          beside the button so the item keeps its own name. */}
+                      {persona === 'supplier' && SUPPLIER_COUNTED_PATHS.includes(item.path) ? (
+                        <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">
+                          <SupplierMenuCount path={item.path} />
+                        </span>
+                      ) : null}
                     </li>
                   );
                 })}

@@ -135,6 +135,8 @@ import { rfqResponseEn, rfqResponseId } from './i18n/rfqResponse';
 // — RFx spec 2026-09-21: RFQ evaluation and the per-item split award —
 import { rfqCompareEn, rfqCompareId } from './i18n/rfqCompare';
 import { rfxFilesEn, rfxFilesId } from './i18n/rfxFiles';
+// — RFx UX 2026-10: supplier response forms (autosave, inline validation) —
+import { rfxResponseFormEn, rfxResponseFormId } from './i18n/rfxResponseForm';
 // — BL-51 3PL tracking links (REQ-E07-04 BR-05) —
 import { threePlEn, threePlId } from './i18n/threePl';
 // — Material A1 administration · suppliers (MR-1 BR-02) —
@@ -269,6 +271,7 @@ export const resources = {
       ...rfqResponseEn,
       ...rfqCompareEn,
       ...rfxFilesEn,
+      ...rfxResponseFormEn,
       ...threePlEn,
       ...adminSuppliersEn,
       ...qualificationEn,
@@ -783,6 +786,7 @@ export const resources = {
       ...rfqResponseId,
       ...rfqCompareId,
       ...rfxFilesId,
+      ...rfxResponseFormId,
       ...threePlId,
       ...adminSuppliersId,
       ...qualificationId,

@@ -37,12 +37,30 @@ import { responseDocumentsRefusal } from '@services/transitions/rfxDocumentRules
 /** @import { RfiAnswer, RfpPricingAnswer, RfpTermAnswer } from '@services/sourcing/types' */
 /** @import { RfpEventView } from '@services/sourcing/views' */
 import { DeadlinePill, rfxNow } from './rfx/rfxDisplay';
-import RfxQuestionForm from './rfx/RfxQuestionForm';
+import RfxQuestionForm, { questionAnchor } from './rfx/RfxQuestionForm';
 import RfxConfidentialityGate from './rfx/RfxConfidentialityGate';
 import { TermValueInput } from './rfx/RfpTermControls';
 import { EMPTY_PRICING_ANSWER, RfpPricingForm } from './rfx/RfpPricing';
 import { refusalCode } from './rfx/RfxQuestionEditor';
-import { termLabel, termValueText } from './rfx/rfxAuthoringDisplay';
+import { authored, termLabel, termValueText } from './rfx/rfxAuthoringDisplay';
+import {
+  draftKey,
+  draftSavedNow,
+  readDraft,
+  restoredIds,
+  staleDraftIds,
+  useAutosave,
+  useLeaveGuard,
+  withoutIds
+} from './rfx/responseDraft';
+import {
+  DraftSaveState,
+  ResponseProblemsBanner,
+  SendBlockedReason,
+  StillMissing,
+  uniqueProblems
+} from './rfx/ResponseFormState';
+import { builtInDuplicates, builtInLabels, copyAnsweredFields } from './rfx/builtInDuplicates';
 /** @import { DocumentDraft } from './rfx/ResponseDocumentsSection' */
 import ResponseDocumentsSection from './rfx/ResponseDocumentsSection';
 import { ResponseVersionLine, ReviseControls } from './rfx/ResponseRevise';
@@ -68,6 +86,14 @@ import { ResponseVersionLine, ReviseControls } from './rfx/ResponseRevise';
 //   4. then the DOCUMENTS section (NR-1, B4): one slot per document PTI asked
 //      for, and "Other documents", judged by the rule the verbs call.
 //
+// RFx UX 2026-10. S-01: the local edits are written to this browser as they
+// are typed and read back when the page opens ("Draft saved HH:MM on this
+// device" by the title). S-02: every missing or unfit answer is marked where it
+// sits, a banner lists them all with jump links, and Send says why it is off.
+// S-06: the sample is a Yes/No control, and a buyer question that asks what a
+// pricing field asks (the sample ready date, the timeline) is answered once —
+// the answer is copied into the pricing field when the proposal is sent.
+//
 // A SUBMITTED proposal is never saved again: before the deadline "Revise
 // response" re-opens the form on the latest version and dispatches the REVISE
 // verb, which appends a version (NR-1 BR-08); after it the proposal and its
@@ -87,19 +113,63 @@ const SupplierRfp = () => {
   const answerVerb = useVerbAvailability('rfpresponse:answer');
   const command = useRfxCommand();
   const [openId, setOpenId] = useState(/** @type {string | null} */ (null));
-  const [draft, setDraft] = useState(/** @type {Record<string, RfpTermAnswer[]>} */ ({}));
-  const [other, setOther] = useState(/** @type {Record<string, string>} */ ({}));
-  const [qDraft, setQDraft] = useState(/** @type {Record<string, RfiAnswer[]>} */ ({}));
-  const [pDraft, setPDraft] = useState(/** @type {Record<string, RfpPricingAnswer>} */ ({}));
-  const [tcTicked, setTcTicked] = useState(/** @type {Record<string, boolean>} */ ({}));
-  const [docDraft, setDocDraft] = useState(
-    /** @type {Record<string, readonly DocumentDraft[]>} */ ({})
+  // S-01 — the edits this browser kept from the last visit, read once.
+  const storeKey = draftKey('rfp', identity.supplierId ?? '');
+  const [stored] = useState(() => readDraft(storeKey) ?? {});
+  const [keptDraft, setDraft] = useState(
+    /** @type {Record<string, RfpTermAnswer[]>} */ (stored.draft ?? {})
   );
-  const [revising, setRevising] = useState(/** @type {Record<string, boolean>} */ ({}));
+  const [keptOther, setOther] = useState(
+    /** @type {Record<string, string>} */ (stored.other ?? {})
+  );
+  const [keptQ, setQDraft] = useState(
+    /** @type {Record<string, RfiAnswer[]>} */ (stored.qDraft ?? {})
+  );
+  const [keptP, setPDraft] = useState(
+    /** @type {Record<string, RfpPricingAnswer>} */ (stored.pDraft ?? {})
+  );
+  const [tcTicked, setTcTicked] = useState(/** @type {Record<string, boolean>} */ ({}));
+  const [keptDocs, setDocDraft] = useState(
+    /** @type {Record<string, readonly DocumentDraft[]>} */ (stored.docDraft ?? {})
+  );
+  const [revising, setRevising] = useState(
+    /** @type {Record<string, boolean>} */ (stored.revising ?? {})
+  );
+  // When each event's local edits were last written, for the header stamp.
+  const [keptSavedAt, setSavedAt] = useState(
+    /** @type {Record<string, string>} */ (stored.savedAt ?? {})
+  );
 
   // The eyebrow is the menu section alone (the `PageHeader` rule).
   const crumb = [t('hub.nav.section.sourcing')];
   const items = useMemo(() => events.data?.items ?? [], [events.data]);
+
+  // A proposal that can no longer take an edit — sent (and not being revised)
+  // or closed — keeps nothing in this browser, and an edit kept from an
+  // earlier visit is not shown on it, so a locked form shows the stored proposal.
+  const stale = staleDraftIds(items, revising);
+  const [restored] = useState(() => restoredIds(stored));
+  const hidden = new Set([...stale].filter((id) => restored.has(id)));
+  const draft = withoutIds(keptDraft, hidden);
+  const other = withoutIds(keptOther, hidden);
+  const qDraft = withoutIds(keptQ, hidden);
+  const pDraft = withoutIds(keptP, hidden);
+  const docDraft = withoutIds(keptDocs, hidden);
+  const kept = {
+    draft: withoutIds(keptDraft, stale),
+    other: withoutIds(keptOther, stale),
+    qDraft: withoutIds(keptQ, stale),
+    pDraft: withoutIds(keptP, stale),
+    docDraft: withoutIds(keptDocs, stale),
+    revising,
+    savedAt: withoutIds(keptSavedAt, stale)
+  };
+  const keptMaps = [kept.draft, kept.other, kept.qDraft, kept.pDraft, kept.docDraft];
+  /** @param {string} eventId */
+  const hasLocalFor = (eventId) => keptMaps.some((m) => m[eventId] !== undefined);
+  const hasLocal = keptMaps.some((m) => Object.keys(m).length > 0);
+  const saveFailed = useAutosave(storeKey, kept, hasLocal);
+  useLeaveGuard(saveFailed && hasLocal, t('rfx.form.leave'));
 
   if (events.isPending) return <LoadingState breadcrumb={crumb} />;
   if (events.isError)
@@ -141,7 +211,33 @@ const SupplierRfp = () => {
     setQDraft(({ [eventId]: _q, ...rest }) => rest);
     setPDraft(({ [eventId]: _p, ...rest }) => rest);
     setDocDraft(({ [eventId]: _d, ...rest }) => rest);
+    setSavedAt(({ [eventId]: _s, ...rest }) => rest);
   };
+
+  /** @param {string} eventId */
+  const touch = (eventId) => setSavedAt((prev) => ({ ...prev, [eventId]: draftSavedNow() }));
+
+  /**
+   * S-06 — the buyer questions that ask what a pricing field asks.
+   * @param {RfpEventView} event
+   */
+  const duplicatesFor = (event) =>
+    event.pricing
+      ? builtInDuplicates(
+          event.questions ?? [],
+          (q) => authored(t, q.promptKey),
+          builtInLabels(t, 'rfxa.pricing.sampleDate', 'rfxa.pricing.timeline')
+        )
+      : {};
+
+  /**
+   * The pricing as it is sent: a duplicated field carries the question's
+   * answer (S-06), so the buyer's question and the pricing field agree.
+   * @param {RfpEventView} event
+   * @returns {RfpPricingAnswer}
+   */
+  const pricingToSend = (event) =>
+    copyAnsweredFields(pricingFor(event), duplicatesFor(event), questionAnswersFor(event));
 
   /**
    * @param {RfpEventView} event
@@ -157,6 +253,7 @@ const SupplierRfp = () => {
           { termId, proposedValue: '', stance: /** @type {const} */ ('comply'), ...patch }
         ];
     setDraft((prev) => ({ ...prev, [event.id]: next }));
+    touch(event.id);
   };
 
   /**
@@ -170,6 +267,7 @@ const SupplierRfp = () => {
       ? current.map((a) => (a.questionId === questionId ? { ...a, ...patch } : a))
       : [...current, { questionId, ...patch }];
     setQDraft((prev) => ({ ...prev, [event.id]: next }));
+    touch(event.id);
   };
 
   /** @param {string} successKey */
@@ -195,7 +293,7 @@ const SupplierRfp = () => {
     answers: answersFor(event),
     otherTerms: other[event.id] ?? event.responses[0]?.otherTerms ?? '',
     ...((event.questions ?? []).length > 0 ? { questionAnswers: questionAnswersFor(event) } : {}),
-    ...(event.pricing ? { pricing: pricingFor(event) } : {}),
+    ...(event.pricing ? { pricing: pricingToSend(event) } : {}),
     documents: documentsFor(event)
   });
 
@@ -285,9 +383,18 @@ const SupplierRfp = () => {
           const questions = event.questions ?? [];
           const qMissing = missingRequiredAnswers(questions, qAnswers);
           const qInvalid = invalidAnswers(questions, qAnswers);
+          const sent = pricingToSend(event);
+          // S-02 — the sample question is judged on its own, so it is named with
+          // every other gap rather than hiding the next pricing refusal.
+          const sampleMissing =
+            !!event.pricing?.samplesRequested && typeof sent.sample?.canSample !== 'boolean';
           const pricingRefusal = event.pricing
-            ? rfpPricingAnswerRefusal(event.pricing, pricing)
+            ? rfpPricingAnswerRefusal(
+                event.pricing,
+                sampleMissing ? { ...sent, sample: { canSample: false } } : sent
+              )
             : null;
+          const dups = duplicatesFor(event);
           const opened = openId === event.id;
           const tcPending = !!event.termsDocument && !mine?.termsAcceptedAt;
           const submitted = mine?.status === 'Submitted';
@@ -323,7 +430,39 @@ const SupplierRfp = () => {
             ...(qMissing.length > 0 ? ['questions'] : []),
             ...(qInvalid.length > 0 ? ['answers'] : [])
           ];
-          const blocked = blockers.length > 0 || pricingRefusal !== null || docRefusal !== null;
+          const blocked =
+            blockers.length > 0 || sampleMissing || pricingRefusal !== null || docRefusal !== null;
+          const editable = !locked && !event.closed;
+          const pricingPrefix = `supplier-rfp-${event.id}`;
+          const pricingText = pricingRefusal
+            ? t(`rfxa.refusal.${refusalCode(pricingRefusal)}`, { defaultValue: pricingRefusal })
+            : null;
+          // S-02 — every field still to fill or fix, at once, in form order.
+          const problems = uniqueProblems([
+            ...event.terms
+              .filter(
+                (row) =>
+                  missing.includes(row.termId) ||
+                  badValues.includes(row.termId) ||
+                  uncommented.includes(row.termId)
+              )
+              .map((row) => ({
+                anchor: `supplier-rfp-term-${row.termId}`,
+                label: termLabel(t, row)
+              })),
+            ...questions
+              .filter((q) => qMissing.includes(q.id) || qInvalid.includes(q.id))
+              .map((q) => ({ anchor: questionAnchor(q.id), label: authored(t, q.promptKey) })),
+            ...(sampleMissing
+              ? [{ anchor: `${pricingPrefix}-sample`, label: t('rfxa.pricing.canSample') }]
+              : []),
+            ...(pricingRefusal
+              ? [{ anchor: `${pricingPrefix}-pricing`, label: t('rfx.form.anchor.pricing') }]
+              : []),
+            ...(docRefusal
+              ? [{ anchor: `supplier-rfp-docs-${event.id}`, label: t('rfx.form.anchor.documents') }]
+              : [])
+          ]);
           return (
             <section
               key={event.id}
@@ -336,6 +475,13 @@ const SupplierRfp = () => {
                   <div className="text-sm text-text-primary">{event.title}</div>
                 </div>
                 <div className="flex items-center gap-3">
+                  {!!hasLocalFor(event.id) && (
+                    <DraftSaveState
+                      savedAt={kept.savedAt[event.id]}
+                      failed={saveFailed}
+                      testId={`supplier-rfp-saved-${event.id}`}
+                    />
+                  )}
                   {event.confidentiality && (
                     <StatusPill variant="neutral">{t('rfxa.conf.pill')}</StatusPill>
                   )}
@@ -490,6 +636,13 @@ const SupplierRfp = () => {
                     </p>
                   )}
 
+                  {!!editable && !tcPending && (
+                    <ResponseProblemsBanner
+                      problems={problems}
+                      testId={`supplier-rfp-problems-${event.id}`}
+                    />
+                  )}
+
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
@@ -507,10 +660,12 @@ const SupplierRfp = () => {
                               const a = answers.find((x) => x.termId === row.termId);
                               const deviates = a?.stance === 'deviate';
                               const needsComment = deviates && uncommented.includes(row.termId);
+                              const termMissing = editable && missing.includes(row.termId);
                               const label = termLabel(t, row);
                               return (
                                 <TableRow
                                   key={row.termId}
+                                  id={`supplier-rfp-term-${row.termId}`}
                                   data-testid={`supplier-rfp-term-${row.termId}`}
                                 >
                                   <TableCell className="align-top">
@@ -531,8 +686,13 @@ const SupplierRfp = () => {
                                       }
                                       ariaLabel={label}
                                       disabled={locked}
-                                      invalid={badValues.includes(row.termId)}
+                                      invalid={badValues.includes(row.termId) || termMissing}
                                     />
+                                    {!!termMissing && (
+                                      <StillMissing
+                                        testId={`supplier-rfp-term-missing-${row.termId}`}
+                                      />
+                                    )}
                                     {badValues.includes(row.termId) && (
                                       <div
                                         className="text-xs text-danger mt-1"
@@ -603,9 +763,10 @@ const SupplierRfp = () => {
                       rows={2}
                       disabled={locked}
                       value={other[event.id] ?? mine?.otherTerms ?? ''}
-                      onChange={(e) =>
-                        setOther((prev) => ({ ...prev, [event.id]: e.target.value }))
-                      }
+                      onChange={(e) => {
+                        setOther((prev) => ({ ...prev, [event.id]: e.target.value }));
+                        touch(event.id);
+                      }}
                       className="w-full bg-white border border-border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:border-action disabled:bg-bg-hover"
                     />
                   </div>
@@ -617,6 +778,7 @@ const SupplierRfp = () => {
                         customSections={event.customSections}
                         answers={qAnswers}
                         disabled={locked}
+                        missing={editable ? qMissing : []}
                         onChange={(questionId, patch) =>
                           setQuestionAnswer(event, questionId, patch)
                         }
@@ -629,42 +791,40 @@ const SupplierRfp = () => {
                       request={event.pricing}
                       currency={event.currency}
                       value={pricing}
-                      onChange={(next) => setPDraft((prev) => ({ ...prev, [event.id]: next }))}
+                      onChange={(next) => {
+                        setPDraft((prev) => ({ ...prev, [event.id]: next }));
+                        touch(event.id);
+                      }}
                       disabled={locked}
-                      testIdPrefix={`supplier-rfp-${event.id}`}
+                      testIdPrefix={pricingPrefix}
+                      sampleMissing={editable && sampleMissing}
+                      pricingError={editable ? pricingText : null}
+                      answeredIn={{
+                        ...(dups.sampleReadyDate
+                          ? { sampleReadyDate: authored(t, dups.sampleReadyDate.promptKey) }
+                          : {}),
+                        ...(dups.timeline ? { timeline: authored(t, dups.timeline.promptKey) } : {})
+                      }}
                     />
                   )}
 
-                  <ResponseDocumentsSection
-                    key={`${event.id}-${isRevising ? 'revising' : 'stored'}-${mine?.versions.length ?? 0}`}
-                    requests={event.documentRequests ?? []}
-                    value={documents}
-                    onChange={
-                      locked
-                        ? undefined
-                        : (next) => setDocDraft((prev) => ({ ...prev, [event.id]: next }))
-                    }
-                    filesAlready={answerFiles}
-                    testId={`supplier-rfp-docs-${event.id}`}
-                  />
-
-                  {!event.closed && !tcPending && (blockers.length > 0 || pricingRefusal) && (
-                    <ul
-                      className="text-sm text-danger list-disc pl-5"
-                      data-testid={`supplier-rfp-blockers-${event.id}`}
-                    >
-                      {blockers.map((b) => (
-                        <li key={b}>{t(`rfxa.blocker.${b}`)}</li>
-                      ))}
-                      {pricingRefusal && (
-                        <li data-testid={`supplier-rfp-pricing-refusal-${event.id}`}>
-                          {t(`rfxa.refusal.${refusalCode(pricingRefusal)}`, {
-                            defaultValue: pricingRefusal
-                          })}
-                        </li>
-                      )}
-                    </ul>
-                  )}
+                  <div id={`supplier-rfp-docs-${event.id}`}>
+                    <ResponseDocumentsSection
+                      key={`${event.id}-${isRevising ? 'revising' : 'stored'}-${mine?.versions.length ?? 0}`}
+                      requests={event.documentRequests ?? []}
+                      value={documents}
+                      onChange={
+                        locked
+                          ? undefined
+                          : (next) => {
+                              setDocDraft((prev) => ({ ...prev, [event.id]: next }));
+                              touch(event.id);
+                            }
+                      }
+                      filesAlready={answerFiles}
+                      testId={`supplier-rfp-docs-${event.id}`}
+                    />
+                  </div>
 
                   {/* NR-1 BR-08 — while revising, Save and Submit give way to the
                       revise verb's controls: a Submitted response is never saved. */}
@@ -686,6 +846,12 @@ const SupplierRfp = () => {
                       >
                         {t('rfx.rfp.submit')}
                       </Button>
+                      {!!editable && !tcPending && (
+                        <SendBlockedReason
+                          count={problems.length}
+                          testId={`supplier-rfp-send-reason-${event.id}`}
+                        />
+                      )}
                     </div>
                   )}
                   {submitted && mine && (
@@ -706,6 +872,12 @@ const SupplierRfp = () => {
                       }}
                       onSend={() => sendRevision(event, mine.id)}
                       testIdPrefix={`supplier-rfp-${event.id}`}
+                    />
+                  )}
+                  {!!isRevising && (
+                    <SendBlockedReason
+                      count={problems.length}
+                      testId={`supplier-rfp-send-reason-${event.id}`}
                     />
                   )}
                 </div>

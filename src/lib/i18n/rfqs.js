@@ -6,7 +6,7 @@
 export const rfqsEn = {
   // breadcrumb
   // header + meta
-  'rfqs.header.title': 'Quotation requests',
+  'rfqs.header.title': 'RFQ · Quotation requests',
   'rfqs.rounds.link': 'Revised quotes (negotiation rounds)',
   'rfqs.header.subtitle': 'RFQs received from Paragon Corp procurement team — {{supplier}}.',
   'rfqs.meta.event.one': 'open event',
@@ -79,16 +79,25 @@ export const rfqsEn = {
   'rfqs.awards.col.material': 'Material',
   'rfqs.awards.col.result': 'Result',
   'rfqs.awards.col.awardDate': 'Award date',
-  'rfqs.awards.col.contractValue': 'Contract value',
   'rfqs.awards.col.poIssued': 'PO issued',
-  'rfqs.awards.col.notes': 'Notes',
-  'rfqs.awards.note.won': 'Awarded — your quotation was selected',
-  'rfqs.awards.note.lost': 'Not awarded — another quotation was selected',
-  'rfqs.awards.winRate.one':
-    'Your win rate: {{awarded}} of {{total}} decided RFQ awarded ({{pct}}%)',
-  'rfqs.awards.winRate.other':
-    'Your win rate: {{awarded}} of {{total}} decided RFQs awarded ({{pct}}%)',
-  'rfqs.awards.winRateLabel': 'Win rate',
+  // RFx UX S-03 / S-04 / S-05 — one row per event from the award record, the
+  // outcome and round strips on the RFQ's card.
+  'rfqs.awards.col.awardedValue': 'Your awarded value',
+  'rfqs.awards.result.awarded': 'Awarded · {{share}}',
+  'rfqs.awards.result.notAwarded': 'Not awarded',
+  'rfqs.awards.result.withdrawn': 'Award withdrawn · {{date}}',
+  'rfqs.awards.share.item': '{{share}}% of item {{n}}',
+  'rfqs.awards.share.whole': '{{share}}% of the event',
+  'rfqs.awards.share.option': '{{share}}% of {{option}}',
+  'rfqs.awards.po.raised': 'Raised in SAP',
+  'rfqs.awards.po.follows': 'Follows from SAP',
+  'rfqs.strip.awarded': 'Awarded to you · {{share}}',
+  'rfqs.strip.yourShare': 'Your share: {{share}} ({{qty}} pcs). Awarded {{date}}.',
+  'rfqs.strip.poNote': 'PTI raises the purchase order in SAP; it appears under Purchase orders.',
+  'rfqs.strip.round': 'PTI asked for a revised quote · Revise by {{date}} · {{left}}',
+  'rfqs.strip.roundRevised': 'Round {{n}}: your revised quote is sent',
+  'rfqs.strip.roundClosed': 'Round {{n}} closed',
+  'rfqs.strip.sendRevision': 'Send a revised quote',
   // quote side panel
   'rfqs.panel.title': 'Submit quotation — {{rfq}}',
   'rfqs.panel.cancel': 'Cancel',
@@ -201,7 +210,7 @@ export const rfqsEn = {
 export const rfqsId = {
   // breadcrumb
   // header + meta
-  'rfqs.header.title': 'Permintaan penawaran harga',
+  'rfqs.header.title': 'RFQ · Permintaan penawaran harga',
   'rfqs.rounds.link': 'Penawaran revisi (putaran negosiasi)',
   'rfqs.header.subtitle': 'RFQ diterima dari tim pengadaan Paragon Corp — {{supplier}}.',
   'rfqs.meta.event.one': 'acara terbuka',
@@ -269,16 +278,23 @@ export const rfqsId = {
   'rfqs.awards.col.material': 'Material',
   'rfqs.awards.col.result': 'Hasil',
   'rfqs.awards.col.awardDate': 'Tanggal pemenangan',
-  'rfqs.awards.col.contractValue': 'Nilai kontrak',
   'rfqs.awards.col.poIssued': 'PO diterbitkan',
-  'rfqs.awards.col.notes': 'Catatan',
-  'rfqs.awards.note.won': 'Dimenangkan — penawaran Anda dipilih',
-  'rfqs.awards.note.lost': 'Tidak dimenangkan — penawaran lain dipilih',
-  'rfqs.awards.winRate.one':
-    'Tingkat kemenangan Anda: {{awarded}} dari {{total}} RFQ diputuskan dimenangkan ({{pct}}%)',
-  'rfqs.awards.winRate.other':
-    'Tingkat kemenangan Anda: {{awarded}} dari {{total}} RFQ diputuskan dimenangkan ({{pct}}%)',
-  'rfqs.awards.winRateLabel': 'Tingkat kemenangan',
+  'rfqs.awards.col.awardedValue': 'Nilai yang Anda menangkan',
+  'rfqs.awards.result.awarded': 'Dimenangkan · {{share}}',
+  'rfqs.awards.result.notAwarded': 'Tidak dimenangkan',
+  'rfqs.awards.result.withdrawn': 'Pemenangan ditarik · {{date}}',
+  'rfqs.awards.share.item': '{{share}}% dari item {{n}}',
+  'rfqs.awards.share.whole': '{{share}}% dari acara',
+  'rfqs.awards.share.option': '{{share}}% dari {{option}}',
+  'rfqs.awards.po.raised': 'Dibuat di SAP',
+  'rfqs.awards.po.follows': 'Menyusul dari SAP',
+  'rfqs.strip.awarded': 'Dimenangkan oleh Anda · {{share}}',
+  'rfqs.strip.yourShare': 'Bagian Anda: {{share}} ({{qty}} pcs). Dimenangkan {{date}}.',
+  'rfqs.strip.poNote': 'PTI membuat pesanan pembelian di SAP; pesanan muncul di Pesanan pembelian.',
+  'rfqs.strip.round': 'PTI meminta penawaran revisi · Revisi sebelum {{date}} · {{left}}',
+  'rfqs.strip.roundRevised': 'Putaran {{n}}: penawaran revisi Anda terkirim',
+  'rfqs.strip.roundClosed': 'Putaran {{n}} ditutup',
+  'rfqs.strip.sendRevision': 'Kirim penawaran revisi',
   // quote side panel
   'rfqs.panel.title': 'Kirim penawaran — {{rfq}}',
   'rfqs.panel.cancel': 'Batal',

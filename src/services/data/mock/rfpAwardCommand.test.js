@@ -253,6 +253,22 @@ const rfqFromRfp = (sourceRfpOptionRefs) =>
     }
   });
 
+/**
+ * An RFQ created from rfp-002 BEFORE owner ruling Q1 (2026-10-19) closed the
+ * RFQ path for an option in a firm-offer round: created through the verb with
+ * no option refs, then given the refs it was recorded with. This is the only
+ * way an RFQ can still source an option a round names, and the RFP award must
+ * keep refusing to place that option twice.
+ * @param {readonly string[]} sourceRfpOptionRefs
+ */
+const legacyRfqFromRfp = async (sourceRfpOptionRefs) => {
+  const res = await rfqFromRfp([]);
+  expect(res.status, res.reason).toBe('done');
+  const id = /** @type {NonNullable<typeof res.entityId>} */ (res.entityId);
+  rfqStore.update(id, (r) => ({ ...r, sourceRfpOptionRefs }));
+  return res;
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('D2 — the fixture the award is probed against exists', () => {
@@ -588,13 +604,12 @@ describe('NR-2 BR-08 / AC-06 — one option, one route', () => {
     expect(refused.status).toBe('failed');
     expect(codeOf(refused.reason)).toBe('AWARD_OPTION_SOURCED_ELSEWHERE');
     expect(refused.reason).toContain('RFP-2026-002');
-    const ok = await rfqFromRfp(seed.sourceRfpOptionRefs);
-    expect(ok.status, ok.reason).toBe('done');
-    expect(
-      /** @type {import('@data/mockRfqs').RFQ} */ (
-        rfqStore.get(/** @type {NonNullable<typeof ok.entityId>} */ (ok.entityId))
-      ).sourceRfpOptionRefs
-    ).toEqual([PUMP_CAP]);
+    // PREMISE CHANGED (owner ruling Q1, 2026-10-19): the pump and cap was in
+    // the same firm-offer round, so its RFQ path is closed as well; it is
+    // firmed up in the RFP. (The pass case is in the Q1 describe below.)
+    const inRound = await rfqFromRfp(seed.sourceRfpOptionRefs);
+    expect(inRound.status).toBe('failed');
+    expect(codeOf(inRound.reason)).toBe('RFQ_OPTION_IN_FIRM_ROUND');
   });
 
   it('an RFP award is refused for an option an RFQ created from the RFP already sources; the other option is awarded', async () => {
@@ -605,7 +620,9 @@ describe('NR-2 BR-08 / AC-06 — one option, one route', () => {
       ],
       'sup-015': [{ optionRef: FULL_SET, qty: 50_000, unitPrice: 4_180 }]
     });
-    expect((await rfqFromRfp([FULL_SET])).status).toBe('done');
+    // An RFQ recorded before ruling Q1 sources the full set (the verb now
+    // refuses a new one: the option is in a firm-offer round).
+    await legacyRfqFromRfp([FULL_SET]);
     const res = await award(split6040(offers));
     expect(res.status).toBe('failed');
     expect(codeOf(res.reason)).toBe('AWARD_OPTION_SOURCED_ELSEWHERE');
@@ -626,6 +643,27 @@ describe('NR-2 BR-08 / AC-06 — one option, one route', () => {
     expect(
       /** @type {import('../../sourcing/types').RfpEvent} */ (rfpEventStore.get('rfp-002')).status
     ).toBe('Awarded');
+  });
+});
+
+describe('owner ruling Q1 (2026-10-19) — once an option is in a firm-offer round, the RFQ path closes for it', () => {
+  it('KNOWN-BAD — an RFQ from the RFP naming an option in round 1 is refused RFQ_OPTION_IN_FIRM_ROUND, naming the option, the round and the RFP', async () => {
+    await roundWithOffers([FULL_SET], {
+      'sup-007': [{ optionRef: FULL_SET, qty: 50_000, unitPrice: 4_100 }]
+    });
+    const res = await rfqFromRfp([FULL_SET]);
+    expect(res.status).toBe('failed');
+    expect(codeOf(res.reason)).toBe('RFQ_OPTION_IN_FIRM_ROUND');
+    expect(res.reason).toContain('firm-offer round 1');
+    expect(res.reason).toContain('RFP-2026-002');
+  });
+
+  it('KNOWN-GOOD — the option no round names still goes to an RFQ', async () => {
+    await roundWithOffers([FULL_SET], {
+      'sup-007': [{ optionRef: FULL_SET, qty: 50_000, unitPrice: 4_100 }]
+    });
+    const res = await rfqFromRfp([PUMP_CAP]);
+    expect(res.status, res.reason).toBe('done');
   });
 });
 
@@ -682,10 +720,13 @@ describe('RULING — two suppliers both propose sup-opt-1, and they stay two opt
       )
     ).toEqual([SUP7]);
 
-    // The guard compares refs: sup-007's is taken, sup-015's is free.
+    // The guard compares refs: sup-007's is awarded; sup-015's is not, and is
+    // refused for its own reason — it is in the firm-offer round (owner
+    // ruling Q1, 2026-10-19), which names it by ITS ref.
     expect(codeOf((await rfqFromRfp([SUP7])).reason)).toBe('AWARD_OPTION_SOURCED_ELSEWHERE');
-    const free = await rfqFromRfp([SUP15]);
-    expect(free.status, free.reason).toBe('done');
+    const inRound = await rfqFromRfp([SUP15]);
+    expect(codeOf(inRound.reason)).toBe('RFQ_OPTION_IN_FIRM_ROUND');
+    expect(inRound.reason).toContain('Airless 150 ml bottle, snap-on pump');
 
     // The pre-fill finds each option's own proposer by the ref.
     const seed = prefillRfqItemsFromRfp(rfp, rfpResponseStore.all(), [SUP7, SUP15], [SUP7]);

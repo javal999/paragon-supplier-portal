@@ -1,7 +1,7 @@
 # Paragon Supplier Portal: use-case scenario catalog
 
 **Status:** Phase 1, approved by PTI on 2026-10-06 with supplier onboarding removed. The deck is built from this file after approval.
-**Basis:** the code on `main` at `7078ea3`. All paths are under `src/`. Every behavior cites a `file:line`. Citations into pages later split into folders (frontend-standard Phase 5) were re-pointed on 2026-10-08 to the file in the folder that now holds the code; every other line number is as of `7078ea3`. If a behavior has no citation, it is under section 4 (Unverified and known limits).
+**Basis:** the code on `main` at `7078ea3`; UC1 updated on 2026-10-19 for the RFx UX build (decisions RFX-D16 to RFX-D24). All paths are under `src/`. Every behavior cites a `file:line`. Citations into pages later split into folders (frontend-standard Phase 5) were re-pointed on 2026-10-08 to the file in the folder that now holds the code; every other line number is as of `7078ea3`. If a behavior has no citation, it is under section 4 (Unverified and known limits).
 **Data:** all data is in-memory demo data. Nothing reaches SAP. The demo date is 2026-08-31 (`services/data/fixturePresent.js:184,206`).
 
 ---
@@ -73,16 +73,16 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | 3 | PTI-Proc | same | **Raise sourcing event**. Opens the RFQ wizard pre-filled; saving the RFQ moves the PR. | PR: Sourcing Event | `pages-v2/BuyerRequisitions/hooks/useRequisitionActions.js:281-282`; `pages-v2/BuyerRequisitions/components/StatusNotes.jsx:114-121`; `services/transitions/cascades.js:62` |
 | 4 | PTI-Proc | Sourcing → **RFQ** | **New RFQ** → Define Scope / Invite Suppliers / Terms & Deadlines / Review & Submit → **Save RFQ draft**, then **Publish RFQ** | Draft → Open | `pages-v2/BuyerSourcing/components/SourcingHeader.jsx:82`; `pages-v2/BuyerSourcing/components/RfqWizardModal.jsx:216`; `pages-v2/BuyerSourcing/components/RfqLifecycleActions.jsx:83-87` |
 | 5 | Sup-Com | Sourcing → **RFQ invitations** | **I will respond** → **Submit quote** → **Submit quotation** | Quotation Submitted | `pages-v2/rfqs/RfqEngagementControls.jsx:192`; `pages-v2/SupplierRFQs/components/RFQCard.jsx:201`; `pages-v2/SupplierRFQs/components/QuotePanel.jsx:76-78` |
-| 6 | PTI-Proc | RFQ | **Move to review** | Under Review | `pages-v2/BuyerSourcing/components/ComparisonTable.jsx:134-138` |
+| 6 | PTI-Proc | RFQ → event page, Comparison | **Move to review** (moved from the board's side panel, RFX-D24) | Under Review | `pages-v2/BuyerSourcingEvent/components/ComparisonTable.jsx:367` |
 | 7 | PTI-Proc | RFQ → event page | **Open the round**, for a shortlist of suppliers who quoted | Round Open | `pages-v2/BuyerSourcingEvent/components/NewRoundForm.jsx:121-140` |
 | 8 | Sup-Com | RFQ invitations → revised quotes | **Send the revised quote** | Quotation revised | `pages-v2/SupplierNegotiations.jsx:231-283` |
-| 9 | PTI-Proc | RFQ event page | **Close the round**, then award per item (Award, or Split by % / by quantity) → **Award the event** | Awarded (or Partly awarded) | `pages-v2/BuyerSourcingEvent/components/NegotiationSection.jsx:104-111`; `pages-v2/BuyerSourcingEvent/components/AwardSection.jsx:118-191`; `pages-v2/rfx/AwardPanel/components/ItemAwardForm.jsx:227` |
+| 9 | PTI-Proc | RFQ event page | **Close the round**, then award per item (Award, or Split by % / by quantity) → **Award the event** → check the confirmation sheet (suppliers affected, shares, reason) → **Record the award** | Awarded (or Partly awarded) | `pages-v2/BuyerSourcingEvent/components/NegotiationSection.jsx:104-111`; `pages-v2/BuyerSourcingEvent/components/AwardSection.jsx:118-191`; `pages-v2/rfx/AwardPanel/components/ItemAwardForm.jsx:227`; confirmation `pages-v2/BuyerSourcingEvent/components/AwardSection.jsx:218-221`, `lib/i18n/rfx.js:352` |
 | 10 | PTI-Proc | same | **Mark raised in SAP** → **Save SAP number** | Award locked | `services/transitions/flows/rfq.flow.js:210-257` |
-| 11 | Sup-Com | RFQ invitations → Awards & history | Sees "Your share: x%" | – | `pages-v2/SupplierRFQs/utils.js:132-135`; `pages-v2/SupplierNegotiations.jsx:347-353` |
+| 11 | Sup-Com | To do (Sourcing) and the bell; RFQ invitations → Awards & history | Sees "Awarded to you · RFQ-… · x% of item n" with "The purchase order follows from SAP" as soon as the award is recorded (RFX-D18); Awards & history shows one row per event with the share, the award date and the awarded value | – | `lib/i18n/hub.js:199-200,208`; `services/sourcing/supplierOutcome.js:78,258`; `pages-v2/SupplierRFQs/utils.js:140-147` |
 
 **RFI and RFP use the same pattern:**
-- **RFI:** **New information request** → **Send to suppliers** (Open) → supplier **Send answers** → **Close the event** (`pages-v2/BuyerRfi.jsx:156,369,395`; `pages-v2/SupplierRfi.jsx:409`).
-- **RFP:** adds **Ask for firm offers** and an award that always needs a reason (`pages-v2/BuyerRfp/components/RfpEventActions.jsx:43,67`; `pages-v2/rfx/RfpFirmOffers.jsx:90-96`; `services/transitions/flows/rfpEvent.flow.js:117-135`).
+- **RFI:** **New information request** → **Send to suppliers** (Open) → supplier **Send answers** (the form keeps a draft in the browser and marks each missing answer "Still missing") → **Close the event** → confirm on the sheet (`pages-v2/BuyerRfi.jsx:156,369,409-423`; `pages-v2/SupplierRfi.jsx`; `pages-v2/rfx/ConfirmSheet.jsx`).
+- **RFP:** adds **Ask for firm offers** and an award that always needs a reason. After the RFP is closed, "Firm up the prices" offers the firm-offer round (full-service or ODM options) or **Create RFQ from this RFP** (components tendered per item); an option in a firm-offer round cannot go to an RFQ (RFX-D16, `pages-v2/BuyerRfp/components/RfpFirmUp.jsx`). Close and award confirm on a sheet (`pages-v2/BuyerRfp/components/RfpEventActions.jsx:80`) (`pages-v2/BuyerRfp/components/RfpEventActions.jsx:43,67`; `pages-v2/rfx/RfpFirmOffers.jsx:90-96`; `services/transitions/flows/rfpEvent.flow.js:117-135`).
 
 **Negative end-to-end: supplier declines**
 

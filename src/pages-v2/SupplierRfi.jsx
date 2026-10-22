@@ -27,7 +27,24 @@ import { responseDocumentsRefusal } from '@services/transitions/rfxDocumentRules
 /** @import { RfiAnswer } from '@services/sourcing/types' */
 /** @import { RfiEventView } from '@services/sourcing/views' */
 import { DeadlinePill, rfxNow } from './rfx/rfxDisplay';
-import RfxQuestionForm from './rfx/RfxQuestionForm';
+import RfxQuestionForm, { questionAnchor } from './rfx/RfxQuestionForm';
+import { authored } from './rfx/rfxAuthoringDisplay';
+import {
+  draftKey,
+  draftSavedNow,
+  readDraft,
+  restoredIds,
+  staleDraftIds,
+  useAutosave,
+  useLeaveGuard,
+  withoutIds
+} from './rfx/responseDraft';
+import {
+  DraftSaveState,
+  ResponseProblemsBanner,
+  SendBlockedReason,
+  uniqueProblems
+} from './rfx/ResponseFormState';
 import RfxConfidentialityGate from './rfx/RfxConfidentialityGate';
 /** @import { DocumentDraft } from './rfx/ResponseDocumentsSection' */
 import ResponseDocumentsSection from './rfx/ResponseDocumentsSection';
@@ -60,6 +77,13 @@ import { ResponseVersionLine, ReviseControls } from './rfx/ResponseRevise';
 // verb, which appends a version; after it, the response and its files are
 // read-only and the action is absent, not disabled (the verb refuses anyway).
 //
+// S-01 / S-02 (RFx UX 2026-10). The local edits are written to this browser as
+// they are typed (`useAutosave`) and read back when the page opens, so a To do
+// link or a toast no longer throws the answers away; the header says "Draft
+// saved HH:MM on this device". Every required question left empty is marked
+// "Still missing" where it sits, a banner lists every missing or unfit answer
+// at once with a jump link to each, and Send says why it is off.
+//
 // COMPANY IDENTITY IS NEVER ASKED. Legal name, tax number, address and bank
 // come from the company profile, and the page says so rather than leaving the
 // supplier to wonder why the form starts at "what can you make".
@@ -74,15 +98,47 @@ const SupplierRfi = () => {
   const answer = useVerbAvailability('rfiresponse:answer');
   const command = useRfxCommand();
   const [openId, setOpenId] = useState(/** @type {string | null} */ (null));
-  const [draft, setDraft] = useState(/** @type {Record<string, RfiAnswer[]>} */ ({}));
-  const [docDraft, setDocDraft] = useState(
-    /** @type {Record<string, readonly DocumentDraft[]>} */ ({})
+  // S-01 — the edits this browser kept from the last visit, read once.
+  const storeKey = draftKey('rfi', identity.supplierId ?? '');
+  const [stored] = useState(() => readDraft(storeKey) ?? {});
+  const [keptDraft, setDraft] = useState(
+    /** @type {Record<string, RfiAnswer[]>} */ (stored.draft ?? {})
   );
-  const [revising, setRevising] = useState(/** @type {Record<string, boolean>} */ ({}));
+  const [keptDocs, setDocDraft] = useState(
+    /** @type {Record<string, readonly DocumentDraft[]>} */ (stored.docDraft ?? {})
+  );
+  const [revising, setRevising] = useState(
+    /** @type {Record<string, boolean>} */ (stored.revising ?? {})
+  );
+  // When each event's local edits were last written, for the header stamp.
+  const [keptSavedAt, setSavedAt] = useState(
+    /** @type {Record<string, string>} */ (stored.savedAt ?? {})
+  );
 
   // The eyebrow is the menu section alone (the `PageHeader` rule).
   const crumb = [t('hub.nav.section.sourcing')];
   const items = useMemo(() => events.data?.items ?? [], [events.data]);
+
+  // A response that can no longer take an edit — sent (and not being revised)
+  // or closed — keeps nothing in this browser, and an edit kept from an
+  // earlier visit is not shown on it, so a locked form shows the stored answers.
+  const stale = staleDraftIds(items, revising);
+  const [restored] = useState(() => restoredIds(stored));
+  const hidden = new Set([...stale].filter((id) => restored.has(id)));
+  const draft = withoutIds(keptDraft, hidden);
+  const docDraft = withoutIds(keptDocs, hidden);
+  const kept = {
+    draft: withoutIds(keptDraft, stale),
+    docDraft: withoutIds(keptDocs, stale),
+    revising,
+    savedAt: withoutIds(keptSavedAt, stale)
+  };
+  /** @param {string} eventId */
+  const keptFor = (eventId) =>
+    kept.draft[eventId] !== undefined || kept.docDraft[eventId] !== undefined;
+  const hasLocal = Object.keys(kept.draft).length + Object.keys(kept.docDraft).length > 0;
+  const saveFailed = useAutosave(storeKey, kept, hasLocal);
+  useLeaveGuard(saveFailed && hasLocal, t('rfx.form.leave'));
 
   if (events.isPending) return <LoadingState breadcrumb={crumb} />;
   if (events.isError)
@@ -111,7 +167,11 @@ const SupplierRfi = () => {
   const resetLocal = (eventId) => {
     setDraft(({ [eventId]: _a, ...rest }) => rest);
     setDocDraft(({ [eventId]: _d, ...rest }) => rest);
+    setSavedAt(({ [eventId]: _s, ...rest }) => rest);
   };
+
+  /** @param {string} eventId */
+  const touch = (eventId) => setSavedAt((prev) => ({ ...prev, [eventId]: draftSavedNow() }));
 
   /**
    * @param {RfiEventView} event
@@ -124,6 +184,7 @@ const SupplierRfi = () => {
       ? current.map((a) => (a.questionId === questionId ? { ...a, ...patch } : a))
       : [...current, { questionId, ...patch }];
     setDraft((prev) => ({ ...prev, [event.id]: next }));
+    touch(event.id);
   };
 
   /** @param {string} successKey */
@@ -237,6 +298,19 @@ const SupplierRfi = () => {
             answerFiles
           );
           const blocked = missing.length > 0 || invalid.length > 0 || docRefusal !== null;
+          /** @param {string} questionId */
+          const promptOf = (questionId) =>
+            authored(t, event.questions.find((q) => q.id === questionId)?.promptKey ?? questionId);
+          // S-02 — every field still to fill or fix, at once, in form order.
+          const problems = uniqueProblems([
+            ...event.questions
+              .filter((q) => missing.includes(q.id) || invalid.includes(q.id))
+              .map((q) => ({ anchor: questionAnchor(q.id), label: promptOf(q.id) })),
+            ...(docRefusal
+              ? [{ anchor: `supplier-rfi-docs-${event.id}`, label: t('rfx.form.anchor.documents') }]
+              : [])
+          ]);
+          const editable = !locked;
           // An acceptance-only row is not a started answer (the read says the same).
           const started =
             !!mine && (submitted || mine.answers.length > 0 || (mine.documents ?? []).length > 0);
@@ -252,6 +326,13 @@ const SupplierRfi = () => {
                   <div className="text-sm text-text-primary">{event.title}</div>
                 </div>
                 <div className="flex items-center gap-3">
+                  {keptFor(event.id) && (
+                    <DraftSaveState
+                      savedAt={kept.savedAt[event.id]}
+                      failed={saveFailed}
+                      testId={`supplier-rfi-saved-${event.id}`}
+                    />
+                  )}
                   {event.confidentiality && (
                     <StatusPill variant="neutral">{t('rfxa.conf.pill')}</StatusPill>
                   )}
@@ -337,44 +418,40 @@ const SupplierRfi = () => {
                     </p>
                   )}
 
+                  {!!editable && (
+                    <ResponseProblemsBanner
+                      problems={problems}
+                      testId={`supplier-rfi-problems-${event.id}`}
+                    />
+                  )}
+
                   <RfxQuestionForm
                     questions={event.questions}
                     customSections={event.customSections}
                     answers={answers}
                     disabled={locked}
                     withDescription
+                    missing={editable ? missing : []}
                     onChange={(questionId, patch) => setAnswer(event, questionId, patch)}
                   />
 
-                  <ResponseDocumentsSection
-                    key={`${event.id}-${isRevising ? 'revising' : 'stored'}-${mine?.versions.length ?? 0}`}
-                    requests={event.documentRequests ?? []}
-                    value={documents}
-                    onChange={
-                      locked
-                        ? undefined
-                        : (next) => setDocDraft((prev) => ({ ...prev, [event.id]: next }))
-                    }
-                    filesAlready={answerFiles}
-                    testId={`supplier-rfi-docs-${event.id}`}
-                  />
-
-                  {missing.length > 0 && !event.closed && (
-                    <p
-                      className="text-sm text-danger"
-                      data-testid={`supplier-rfi-missing-${event.id}`}
-                    >
-                      {t('rfx.rfi.missing')}
-                    </p>
-                  )}
-                  {invalid.length > 0 && !event.closed && (
-                    <p
-                      className="text-sm text-danger"
-                      data-testid={`supplier-rfi-invalid-${event.id}`}
-                    >
-                      {t('rfxa.answer.fixInvalid')}
-                    </p>
-                  )}
+                  <div id={`supplier-rfi-docs-${event.id}`}>
+                    <ResponseDocumentsSection
+                      key={`${event.id}-${isRevising ? 'revising' : 'stored'}-${mine?.versions.length ?? 0}`}
+                      requests={event.documentRequests ?? []}
+                      value={documents}
+                      onChange={
+                        locked
+                          ? undefined
+                          : (next) => {
+                              setDocDraft((prev) => ({ ...prev, [event.id]: next }));
+                              touch(event.id);
+                            }
+                      }
+                      filesAlready={answerFiles}
+                      testId={`supplier-rfi-docs-${event.id}`}
+                    />
+                  </div>
 
                   {/* REQ-E03-02 — PTI closed the window. The verb refuses an answer
                       to a non-Open event (`EVENT_NOT_OPEN`), so offering the box
@@ -408,6 +485,12 @@ const SupplierRfi = () => {
                       >
                         {t('rfx.rfi.submit')}
                       </Button>
+                      {!!editable && (
+                        <SendBlockedReason
+                          count={problems.length}
+                          testId={`supplier-rfi-send-reason-${event.id}`}
+                        />
+                      )}
                     </div>
                   )}
                   {submitted && mine && (
@@ -428,6 +511,12 @@ const SupplierRfi = () => {
                       }}
                       onSend={() => sendRevision(event, mine.id)}
                       testIdPrefix={`supplier-rfi-${event.id}`}
+                    />
+                  )}
+                  {!!isRevising && (
+                    <SendBlockedReason
+                      count={problems.length}
+                      testId={`supplier-rfi-send-reason-${event.id}`}
                     />
                   )}
                 </div>

@@ -19,6 +19,7 @@ import { templateContentFromDraft } from '../../sourcing/rfqDraft';
 import { DocumentRequestsSummary } from '../../rfx/DocumentRequestsEditor';
 import { categoryLabel } from '../utils';
 import ReviewSection from './ReviewSection';
+import { isIncotermOption } from './WizardTermsStep';
 
 /**
  * @typedef {ReturnType<typeof useRfqWizard>} RfqWizard
@@ -162,7 +163,17 @@ const WizardReviewStep = ({
       rows={[
         [t('sourcing.wizard.review.row.responseDeadline'), draft.responseDeadline || '—'],
         [t('sourcing.wizard.review.row.awardDeadline'), draft.awardDeadline || '—'],
-        [t('sourcing.wizard.review.row.incoterms'), draft.incoterms],
+        [
+          t('sourcing.wizard.review.row.incoterms'),
+          // B-03 — the STORED value, and red when the Terms select cannot show it.
+          isIncotermOption(draft.incoterms) ? (
+            draft.incoterms
+          ) : (
+            <span className="text-danger" data-testid="review-incoterms-out-of-list">
+              {draft.incoterms || '—'} · {t('sourcing.wizard.review.incotermsOutOfList')}
+            </span>
+          )
+        ],
         [t('sourcing.wizard.review.row.paymentTerms'), draft.paymentTerms],
         [t('sourcing.wizard.review.row.currency'), draft.currency]
       ]}

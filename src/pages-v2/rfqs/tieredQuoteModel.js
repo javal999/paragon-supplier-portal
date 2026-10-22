@@ -16,9 +16,13 @@ import { normalizeQty } from '@lib/localeNumber';
 /** @import { RFQ } from '@data/mockRfqs' */
 /** @import { Quotation } from '@data/mockQuotations' */
 /** @import { RfiAnswer } from '@services/sourcing/types' */
-/** @import { OneTimeCostQuote, QuotationAlternative, QuotationItemQuote, RfqItem, RfqOneTimeCostId, TierPrice } from '@services/sourcing/rfqModel' */
+/** @import { OneTimeCostQuote, QuotationAlternative, QuotationItemQuote, RfqItem, RfqOneTimeCostId, RfqSpecField, TierPrice } from '@services/sourcing/rfqModel' */
 import { deriveQuoteHeader, tiersForItem } from '@services/sourcing/rfqModel';
-import { headerLeadTimeDays, tieredQuoteRefusal } from '@services/sourcing/rfqResponse';
+import {
+  answerTypeRefusal,
+  headerLeadTimeDays,
+  tieredQuoteRefusal
+} from '@services/sourcing/rfqResponse';
 import { readBidPrice } from './quotationPrice';
 import { readMoq } from './quotationMoq';
 import { readLeadTimeDays } from './quotationLeadTime';
@@ -337,3 +341,145 @@ export const refusalItem = (reason) => {
   const m = /item (\d+)/.exec(reason);
   return m ? Number(m[1]) : null;
 };
+
+// ── S-02 · every gap in the grid, at once ──────────────────────────────────
+
+/**
+ * One field of the grid the supplier still has to fill (`missing`) or fix.
+ * `anchor` is the field's DOM id in `TieredQuoteForm`; `field` says what it is,
+ * so the panel can name it in the reader's language.
+ * @typedef {{
+ *   readonly anchor: string;
+ *   readonly missing: boolean;
+ *   readonly field:
+ *     | { readonly kind: 'price' | 'altPrice'; readonly n: number; readonly qty: number }
+ *     | { readonly kind: 'spec'; readonly n: number; readonly spec: RfqSpecField }
+ *     | { readonly kind: 'moq' | 'lead' | 'altDescription'; readonly n: number }
+ *     | { readonly kind: 'cost'; readonly n: number; readonly costId: RfqOneTimeCostId }
+ *     | { readonly kind: 'extraCost'; readonly n: number; readonly index: number }
+ *     | { readonly kind: 'question'; readonly questionId: string }
+ *     | { readonly kind: 'validUntil' | 'sample' | 'sampleDate' | 'documents' };
+ * }} GridProblem
+ */
+
+/** @param {RfiAnswer | undefined} a */
+const isAnswered = (a) => {
+  const v = a?.value;
+  if (Array.isArray(v)) return v.length > 0;
+  if (typeof v === 'number') return Number.isFinite(v);
+  return typeof v === 'string' && v.trim().length > 0;
+};
+
+/** @param {string} v */
+const isCalendarDate = (v) =>
+  /^\d{4}-\d{2}-\d{2}$/.test(v) && Number.isFinite(Date.parse(`${v}T00:00:00Z`));
+
+/**
+ * S-02 — EVERY field of the grid that `readTieredDraft` would refuse, in form
+ * order, so the panel can list them all and mark each where it sits instead
+ * of saying the first one. It reads the grid with the same parsers
+ * (`readBidPrice`, `readMoq`, `readLeadTimeDays`, `normalizeQty`) and the same
+ * answer rule (`answerTypeRefusal`) as `readTieredDraft`; Submit still goes
+ * through `readTieredDraft`, which stays the one gate.
+ * `sampleDateQuestionId` (S-06): the buyer question that asks the sample ready
+ * date, when the form asks it there instead of in the sample offer.
+ * @param {RFQ} rfq
+ * @param {TieredDraft} draft
+ * @param {string | null} [sampleDateQuestionId]
+ * @returns {GridProblem[]}
+ */
+export function tieredDraftProblems(rfq, draft, sampleDateQuestionId = null) {
+  /** @type {GridProblem[]} */
+  const out = [];
+  /**
+   * @param {string} anchor
+   * @param {boolean} missing
+   * @param {GridProblem['field']} field
+   */
+  const add = (anchor, missing, field) => out.push({ anchor, missing, field });
+  /**
+   * @param {RfqItem} item
+   * @param {Readonly<Record<number, string>>} typed
+   * @param {string} prefix
+   * @param {'price' | 'altPrice'} kind
+   */
+  const prices = (item, typed, prefix, kind) => {
+    for (const tier of tiersForItem(rfq, item)) {
+      const raw = (typed[tier.qty] ?? '').trim();
+      if (!raw) add(`${prefix}-${tier.qty}`, true, { kind, n: item.lineNo, qty: tier.qty });
+      else if (!readBidPrice(raw).ok)
+        add(`${prefix}-${tier.qty}`, false, { kind, n: item.lineNo, qty: tier.qty });
+    }
+  };
+  for (const item of rfq.items ?? []) {
+    const d = draft.items.find((x) => x.lineNo === item.lineNo) ?? emptyItem(item);
+    const n = item.lineNo;
+    const tid = `grid-item-${n}`;
+    for (const spec of item.specFields.filter((f) => f.filledBy === 'supplier')) {
+      const v = (d.specValues[spec.key] ?? '').trim();
+      const anchor = `${tid}-spec-${spec.key}`;
+      if (!v) {
+        if (spec.required) add(anchor, true, { kind: 'spec', n, spec });
+      } else if (
+        (spec.kind === 'number' && !normalizeQty(v).ok) ||
+        (spec.kind === 'choice' && !(spec.options ?? []).includes(v))
+      ) {
+        add(anchor, false, { kind: 'spec', n, spec });
+      }
+    }
+    prices(item, d.prices, `${tid}-price`, 'price');
+    if (!readMoq(d.moq).ok) add(`${tid}-moq`, false, { kind: 'moq', n });
+    const lead = readLeadTimeDays(d.leadTimeDays, 'days');
+    if (!lead.ok) add(`${tid}-lead`, !d.leadTimeDays.trim(), { kind: 'lead', n });
+    else if (lead.days === 0) add(`${tid}-lead`, false, { kind: 'lead', n });
+    for (const costId of item.oneTimeCosts ?? []) {
+      const raw = (d.requestedCosts[costId] ?? '').trim();
+      if (!raw) add(`${tid}-cost-${costId}`, true, { kind: 'cost', n, costId });
+      else if (readAmount(raw) === null)
+        add(`${tid}-cost-${costId}`, false, { kind: 'cost', n, costId });
+    }
+    d.extraCosts.forEach((c, index) => {
+      if (!c.name.trim() && !c.amount.trim()) return;
+      if (!c.name.trim() || readAmount(c.amount) === null)
+        add(`${tid}-extra-${c.id}`, false, { kind: 'extraCost', n, index });
+    });
+    if (rfq.allowAlternatives && d.alternative.enabled) {
+      if (!d.alternative.description.trim())
+        add(`${tid}-alt-description`, true, { kind: 'altDescription', n });
+      prices(item, d.alternative.prices, `${tid}-alt-price`, 'altPrice');
+    }
+  }
+  if (!draft.validUntil.trim()) add('grid-valid-until', true, { kind: 'validUntil' });
+  for (const q of rfq.questions ?? []) {
+    const a = draft.answers[q.id];
+    const anchor = `grid-q-${q.id}`;
+    if (!isAnswered(a)) {
+      if (q.required) add(anchor, true, { kind: 'question', questionId: q.id });
+      continue;
+    }
+    const read =
+      q.type === 'numberWithUnit' && typeof a.value === 'string' ? normalizeQty(a.value) : null;
+    const judged = read?.ok ? { ...a, value: read.value } : a;
+    if (answerTypeRefusal(q, judged)) add(anchor, false, { kind: 'question', questionId: q.id });
+  }
+  if (rfq.samplesRequested && draft.canSample === null)
+    add('grid-sample', true, { kind: 'sample' });
+  if (draft.canSample === true && !isCalendarDate(draft.sampleReadyDate)) {
+    if (sampleDateQuestionId)
+      add(`grid-q-${sampleDateQuestionId}`, true, {
+        kind: 'question',
+        questionId: sampleDateQuestionId
+      });
+    else add('grid-sample-date', !draft.sampleReadyDate, { kind: 'sampleDate' });
+  }
+  // The files counted the way `readTieredDraft` counts them: on given answers.
+  const answerFiles = Object.values(draft.answers)
+    .filter((a) => a.value !== undefined && a.value !== '')
+    .reduce((count, a) => count + (a.attachments?.length ?? 0), 0);
+  if (responseDocumentsRefusal(rfq.documentRequests ?? [], draft.documents, answerFiles))
+    add('grid-documents', false, { kind: 'documents' });
+  // One field, one entry: a sample-date question that is also required and
+  // empty is named once.
+  const seen = new Set();
+  return out.filter((p) => (seen.has(p.anchor) ? false : (seen.add(p.anchor), true)));
+}

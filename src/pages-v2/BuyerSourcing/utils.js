@@ -13,11 +13,13 @@
 /** @import { FxPin } from '@lib/fxPin' */
 /** @import { RequisitionPrefill } from '../sourcing/requisitionPrefill' */
 /** @import { RfqDraftSeed } from '../sourcing/rfqDraft' */
-/** @import { DraftRfq, GroupTab, PinDraft } from './const' */
+/** @import { DraftRfq, GroupTab, KpiFilter, PinDraft } from './const' */
 import { FileText, CheckCircle2, Send, ClipboardCheck, Trophy, Archive } from 'lucide-react';
 import { isRfqCategory, isRfqUom } from '../sourcing/requisitionPrefill';
 import { newItemDraft } from '../sourcing/rfqDraft';
 import { formatDate } from '@lib/format';
+import { daysUntil } from '@services/data/dayProjection';
+import { rfqStageOf } from '../BuyerSourcingEvent/utils';
 import { CATEGORY_LABEL_KEY } from './const';
 
 /**
@@ -223,19 +225,102 @@ export const fmtSignedPct = (frac) => {
   return `${sign}${Math.abs(pct)}%`;
 };
 
+// ── RFx UX 1D (B-04) — the board as a work queue ─────────────────────────────
+//
+// "Needs my action" is DERIVED, never stored: the buyer's next act on an RFQ is
+// the stage the event page's stage bar names (`rfqStageOf`, lane 1C), read from
+// the status, the suppliers with a quote, the negotiation rounds and the awards
+// in force. Waiting on suppliers is not the buyer's act, so an RFQ with no quote
+// in has nothing to review or award and is not in the queue.
+
+/** @typedef {'send' | 'quotes' | 'round' | 'award' | 'sap'} RfqNextStep */
+
 /**
- * Whether an RFQ belongs to a board tab.
+ * The buyer's next act on an RFQ, or `null` when nothing is the buyer's to do.
+ * @param {RFQ} r
+ * @param {{ quoted: number; rounds: readonly { closed: boolean }[]; inForce: readonly { status: string; lines: readonly unknown[] }[] }} ctx
+ * @returns {RfqNextStep | null}
+ */
+export const rfqNextStep = (r, { quoted, rounds, inForce }) => {
+  const { next } = rfqStageOf({
+    status: r.status,
+    invited: r.invitedSupplierIds.length,
+    quoted,
+    rounds,
+    inForce
+  });
+  if (next === 'none' || next === 'cancelled') return null;
+  if ((next === 'quotes' || next === 'award') && quoted === 0) return null;
+  return next;
+};
+
+/**
+ * Whether an RFQ belongs to a board tab. `next` is its `rfqNextStep`.
  * @param {RFQ} r
  * @param {GroupTab} group
+ * @param {RfqNextStep | null} next
  * @returns {boolean}
  */
-export const matchesGroup = (r, group) => {
-  if (group === 'all') return true;
+export const matchesGroup = (r, group, next) => {
+  if (group === 'action') return next !== null;
   if (group === 'open') return r.status === 'Open' && !isAllResponded(r);
-  if (group === 'pending') return r.status === 'Open' && isAllResponded(r);
+  // A partly awarded RFQ still has an award to finish, so it waits here.
+  if (group === 'pending')
+    return (r.status === 'Open' && isAllResponded(r)) || r.status === 'Partly awarded';
+  if (group === 'draft') return r.status === 'Draft';
   if (group === 'awarded') return r.status === 'Awarded';
   if (group === 'closed') return r.status === 'Closed' || r.status === 'Cancelled';
-  return true;
+  return false;
+};
+
+/**
+ * Whether an RFQ is counted by a KPI tile — the one predicate behind the tile's
+ * number and the rows it filters to, so the two cannot disagree.
+ * @param {RFQ} r
+ * @param {KpiFilter} kpi
+ * @param {string} nowIso
+ * @returns {boolean}
+ */
+export const matchesKpi = (r, kpi, nowIso) => {
+  if (kpi === 'active') return r.status === 'Open';
+  if (kpi === 'awaiting') {
+    if (r.status !== 'Open') return false;
+    const d = daysUntil(r.responseDeadline, nowIso);
+    // An unreadable deadline is not evidence a response is due this week.
+    return d !== null && d <= 7 && d >= 0;
+  }
+  if (kpi === 'ready') return r.status === 'Open' && isAllResponded(r);
+  if (r.status !== 'Awarded') return false;
+  const d = daysUntil(r.createdAt, nowIso);
+  return d !== null && -d <= 90;
+};
+
+/**
+ * The deadline the buyer's next act runs against: the response deadline until
+ * the RFQ is out of its response window, the award deadline after.
+ * @param {RFQ} r
+ * @returns {string}
+ */
+export const nextDeadlineOf = (r) =>
+  r.status === 'Draft' || r.status === 'Open' ? r.responseDeadline : r.awardDeadline;
+
+/** @param {RFQ} r */
+const isClosedRow = (r) => r.status === 'Closed' || r.status === 'Cancelled';
+
+/**
+ * Board order: by next deadline, soonest (and overdue) first, an RFQ with no
+ * readable deadline after the dated ones, and Closed or Cancelled last.
+ * @param {RFQ} a
+ * @param {RFQ} b
+ * @returns {number}
+ */
+export const byNextDeadline = (a, b) => {
+  const closed = Number(isClosedRow(a)) - Number(isClosedRow(b));
+  if (closed !== 0) return closed;
+  const da = nextDeadlineOf(a) || '\uffff';
+  const db = nextDeadlineOf(b) || '\uffff';
+  if (da !== db) return da < db ? -1 : 1;
+  return a.rfqNumber.localeCompare(b.rfqNumber);
 };
 
 /**
@@ -278,7 +363,10 @@ export const emptyDraft = () => ({
   budget: '',
   responseDeadline: '',
   awardDeadline: '',
-  incoterms: 'CIF Jakarta',
+  // RFx UX 1D (B-03) — seeded from the Terms step's option list, so the select
+  // shows the value the draft stores. FOB by owner ruling (Q4, 2026-10-19):
+  // "CIF Jakarta" is not an option, and it used to be the silent default.
+  incoterms: 'FOB',
   paymentTerms: 'Net 30',
   currency: 'IDR',
   invitedSupplierIds: [],

@@ -1,16 +1,18 @@
 // ────────────────────────────────────────────────────────────────────────────
 // The supplier's response to a tiered RFQ, at the SURFACE (RFx spec
 // 2026-09-21): intent, the confidentiality gate, the quote grid, clarification
-// Q&A — and the buyer's read-only view on the side panel. The rules themselves
+// Q&A — and the buyer's read-only view on the RFQ event page (moved off the
+// side panel by RFx UX B-02, owner ruling 2026-10-19). The rules themselves
 // are probed at the verb in `rfqEngagementCommand.test.js`; what these add is
 // that the supplier is TOLD, and that the grid sends what the verb accepts.
 // ────────────────────────────────────────────────────────────────────────────
 
+import { Routes, Route } from 'react-router-dom';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
 import SupplierRFQs from '../SupplierRFQs';
-import RfqEngagementSection from '../sourcing/RfqEngagementSection';
+import BuyerSourcingEvent from '../BuyerSourcingEvent';
 import { rfqStore } from '@services/data/mock/stores/rfqStore';
 import { quotationStore } from '@services/data/mock/stores/quotationStore';
 import {
@@ -81,46 +83,51 @@ const fillOslo = (skip) => {
       target: { value: dayFromNow(7) }
     }
   );
+  // S-06 — Oslo's buyer question already asks the sample ready date, so the
+  // sample offer asks only Yes or No and takes the date from that answer.
   fireEvent.click(within(screen.getByTestId('sample-offer')).getByRole('button', { name: 'Yes' }));
-  fireEvent.change(within(screen.getByTestId('sample-offer')).getByLabelText('Sample ready date'), {
-    target: { value: dayFromNow(7) }
-  });
+  expect(screen.getByTestId('sample-offer-date-copied')).toHaveTextContent('Sample ready date');
   fireEvent.change(screen.getByLabelText('Quote valid until'), {
     target: { value: dayFromNow(45) }
   });
 };
 
+// S-02 (RFx UX 2026-10) — a gap is said where it sits and in the banner, all
+// at once, and Submit is off while it stands; nothing is sent to be refused.
 describe('the quote grid — refused out loud, accepted whole', () => {
-  it('a missing price at one break is said on the panel, naming the item, and mints nothing', async () => {
+  it('a missing price at one break is said on the field and in the banner, and mints nothing', async () => {
     await openOsloGrid();
     fillOslo({ item: 1, qty: 50000 });
     const before = quotationStore.forRfq('rfq-021').length;
-    fireEvent.click(screen.getByRole('button', { name: 'Submit quotation' }));
-    expect(await screen.findByTestId('grid-refusal')).toHaveTextContent(
-      'Give a unit price at every quantity break. (item 1)'
-    );
-    expect(screen.getByTestId('grid-item-1').className).toMatch(/border-danger/);
+    expect(screen.getByTestId('grid-item-1-price-50000-note')).toHaveTextContent('Still missing');
+    expect(screen.getByTestId('quote-problems')).toHaveTextContent(/Item 1: price at 50/);
+    expect(screen.getByTestId('quote-send-reason')).toHaveTextContent(/1 answer is given or fixed/);
+    const submit = screen.getByRole('button', { name: 'Submit quotation' });
+    expect(submit).toBeDisabled();
+    fireEvent.click(submit);
     expect(quotationStore.forRfq('rfq-021')).toHaveLength(before);
   });
 
-  it('a missing required supplier spec field is refused by name', async () => {
+  it('a missing required supplier spec field is named on its own field', async () => {
     await openOsloGrid();
     fillOslo();
     type('grid-item-2-spec-dieCutType', '');
-    fireEvent.click(screen.getByRole('button', { name: 'Submit quotation' }));
-    expect(await screen.findByTestId('grid-refusal')).toHaveTextContent(
-      'Fill in every required spec field. (item 2)'
+    expect(screen.getByTestId('grid-item-2-spec-dieCutType-note')).toHaveTextContent(
+      'Still missing'
     );
+    expect(screen.getByRole('button', { name: 'Submit quotation' })).toBeDisabled();
   });
 
   it('a requested one-time cost left blank is refused; zero is an answer', async () => {
     await openOsloGrid();
     fillOslo();
+    // Zero is an answer: the printing plate at 0 raises nothing.
+    expect(screen.queryByTestId('grid-item-1-cost-printingPlate-note')).toBeNull();
     type('grid-item-1-cost-printingPlate', '');
-    fireEvent.click(screen.getByRole('button', { name: 'Submit quotation' }));
-    expect(await screen.findByTestId('grid-refusal')).toHaveTextContent(
-      /every one-time cost the buyer asked for/
+    expect(screen.getByTestId('grid-item-1-cost-printingPlate-note')).toHaveTextContent(
+      'Still missing'
     );
+    expect(screen.getByRole('button', { name: 'Submit quotation' })).toBeDisabled();
   });
 
   it('KNOWN-GOOD: the full grid is sent and stored, with the sample offer and an added cost', async () => {
@@ -243,7 +250,7 @@ describe("a seat without the atoms reads the wait, in each control's own slot", 
   });
 });
 
-describe("the buyer's side panel — read-only intent, and the answer", () => {
+describe("the buyer's event page — read-only intent, and the answer", () => {
   it('shows the decline with its reason and words, and answers a question published with the asker hidden', async () => {
     rfqClarificationStore.add({
       id: 'rc-test',
@@ -253,10 +260,13 @@ describe("the buyer's side panel — read-only intent, and the answer", () => {
       question: 'Is the roll core 76 mm?',
       visibility: 'private'
     });
-    const oslo = /** @type {import('@data/mockRfqs').RFQ} */ (rfqStore.get('rfq-021'));
-    renderWithProviders(<RfqEngagementSection rfq={oslo} nameOf={(id) => `Name of ${id}`} />, {
-      identity: BUYER
-    });
+    // RFx UX B-02 — driven on the event page, where the section now lives.
+    renderWithProviders(
+      <Routes>
+        <Route path="/buyer/rfq/:rfqId" element={<BuyerSourcingEvent />} />
+      </Routes>,
+      { identity: BUYER, route: '/buyer/rfq/rfq-021' }
+    );
     await waitFor(() =>
       expect(screen.getByTestId('engagement-row-sup-008')).toHaveTextContent(
         /Declined\s*Lead time too short — Our flexo line is booked until the end of October/
