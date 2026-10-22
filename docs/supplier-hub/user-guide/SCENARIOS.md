@@ -276,10 +276,10 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | Sup-Ful | Planning → **Stock** | **Enter stock** → **Save stock** | Declared | `pages-v2/SupplierInventory.jsx:183-192,359-366` |
+| 1 | Sup-Ful | Planning → **Stock** | **Enter stock on screen** (or **Upload template**) → **Save stock**; the "Weekly stock update · N of M sent" line counts it | Declared | `pages-v2/SupplierInventory.jsx:241`; `pages-v2/inventory/WeeklyUpdatePanel.jsx` |
 | 2 | Sup-Ful | Planning → **Capacity** | **Submit capacity** | Submitted | `pages-v2/SupplierCapacity.jsx:176-185,369-376` |
 | 3 | PTI-Plan | Home → **Supplier follow-ups** → Record a reply | Pick supplier → paste reply → **Parse reply** → **Record this stock** → **Record stock** | Declared ("Recorded by Paragon from {channel}…") | `pages-v2/BuyerChannelTriage.jsx:236-262,366-373,575-586` |
-| 4 | PTI (MP menu) | Inventory & capacity → **Stock** / **Capacity** | Reviews stock and capacity; Capacity is read-only | – | `pages-v2/BuyerInventory.jsx:182-191`; `pages-v2/BuyerCapacity.jsx:286,501` |
+| 4 | PTI (MP menu) | Inventory & capacity → **Stock** / **Capacity** | Reviews stock by risk and supplier cover; a row opens the material drawer (why the class, alerts, Open stock simulation, Create call-off or Create PO request); Capacity is read-only | – | `pages-v2/BuyerInventory.jsx:429,520`; `pages-v2/inventory/MaterialDrawer.jsx`; `pages-v2/BuyerCapacity.jsx:286,501` |
 | 5 | PTI-Plan | Inventory & capacity → **Alerts** | **Close alert** → reason | Closed | `pages-v2/BuyerAlerts.jsx:224-240,446-461` |
 | 6 | PTI-Proc | Performance → **Feedstock reconcile** | **Set max stock** → **Save** | Max stock set | `pages-v2/FixedStockReconcile.jsx:123,315-330,387-404` |
 
@@ -295,7 +295,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
 | 1 | PTI or Supplier | **Feedstock reconcile** | Reads, per material, PO ordered against called off and ASN requested: "Not yet called off" and "Called off, not yet shipped" (DRC-15a; what happens to a remainder is still open, DRC-15b) | – | `lib/i18n/feedstockReconcile.js` |
-| 2 | Sup-Ful | To do | "Stock figures to update" → **Enter stock** | Declared | `lib/i18n/hub.js:163`; `pages-v2/SupplierInventory.jsx:183-192` |
+| 2 | Sup-Ful | To do | "Weekly stock update · N of M sent · due …" → **Enter stock** (API suppliers keep "Stock figures to update") | Declared | `pages-v2/SupplierHome.jsx:328`; `pages-v2/SupplierInventory.jsx:241` |
 
 **Edge cases**
 
