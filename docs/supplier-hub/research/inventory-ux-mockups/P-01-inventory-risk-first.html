@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P-01 · PTI Inventory: risk first, row opens the material</title>
+<style>
+  :root{--bg:#f5f6f7;--surface:#fff;--border:#e4e7ec;--text:#0d1b2a;--text2:#354a5f;--text3:#6b7785;--action:#0070f2;--action-soft:#eef5ff;--data:#1e3a5f;--ok:#107e3e;--ok-soft:#ecf8f1;--warn:#d97706;--warn-text:#8a5606;--warn-soft:#fef3d6;--danger:#b42318;--danger-soft:#fdecea}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;color:var(--text);background:var(--bg)}
+  .top{height:56px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px}
+  .top b{font-size:15px}.preview{font-size:11px;font-weight:700;color:var(--warn-text);background:var(--warn-soft);border-radius:999px;padding:2px 8px}
+  .shell{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 56px)}
+  .side{background:#fff;border-right:1px solid var(--border);padding:16px 12px}
+  .persona{display:flex;background:#f1f3f5;border-radius:999px;padding:3px;margin-bottom:18px;font-size:13px}
+  .persona span{flex:1;text-align:center;padding:6px;border-radius:999px;color:var(--text3)}.persona .on{background:#fff;color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .sect{font-size:11px;letter-spacing:.08em;color:var(--text3);margin:16px 12px 6px;font-weight:600}
+  .nav a{display:block;padding:8px 12px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+  .nav a.active{background:var(--action-soft);color:var(--action);font-weight:600}
+  .nav a .n{float:right;font-size:11px;background:var(--danger-soft);color:var(--danger);border-radius:999px;padding:0 7px;font-weight:600}
+  main{padding:24px 32px 60px;min-width:0}
+  .eyebrow{font-size:11px;letter-spacing:.08em;color:var(--text3);font-weight:600}
+  h1{font-size:28px;margin:6px 0 4px}
+  .sub{color:var(--text2);margin:0 0 6px}
+  .meta{font-size:12px;color:var(--text3);margin-bottom:16px}.meta .s{color:var(--warn-text);font-weight:700;margin-left:10px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--data)}
+  .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+  .tile{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer}
+  .tile .k{font-size:12px;color:var(--text3)}.tile .v{font-size:22px;font-weight:700;margin-top:2px}
+  .tile.sel{border-color:var(--action);box-shadow:0 0 0 1px var(--action) inset}
+  .tile .v.d{color:var(--danger)}.tile .v.w{color:var(--warn-text)}
+  .tile .h{font-size:11px;color:var(--text3);margin-top:2px}
+  .bar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+  .search{flex:1;min-width:240px;border:1px solid #c9ced6;border-radius:8px;padding:9px 12px;color:var(--text3);background:#fff}
+  .tabs{display:flex;gap:18px;border-bottom:1px solid var(--border);margin-bottom:12px}
+  .tabs div{padding:8px 2px;color:var(--text3);border-bottom:2px solid transparent}.tabs .cur{color:var(--action);border-color:var(--action);font-weight:600}
+  .chip{border:1px solid var(--border);border-radius:999px;padding:5px 10px;font-size:13px;background:#fff;color:var(--text2)}
+  .chip.on{border-color:var(--action);color:var(--action);background:var(--action-soft)}
+  .wrap{display:grid;grid-template-columns:1fr 380px;gap:16px;align-items:start}
+  .card{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{font-size:11px;letter-spacing:.06em;color:var(--text3);text-align:left;padding:10px;background:#f8f9fa;border-bottom:1px solid var(--border);font-weight:600}
+  th.r,td.r{text-align:right}
+  td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top}
+  tr.sel td{background:#f3f8ff}
+  tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--action)}
+  .pill{display:inline-block;font-size:12px;padding:2px 8px;border-radius:6px;border:1px solid;white-space:nowrap}
+  .pill.d{background:var(--danger-soft);color:var(--danger);border-color:#f5c2bd}
+  .pill.w{background:var(--warn-soft);color:var(--warn-text);border-color:#f7d79a}
+  .pill.n{background:#f3f4f6;color:var(--text2);border-color:var(--border)}
+  .pill.o{background:var(--ok-soft);color:var(--ok);border-color:#b7e3c8}
+  .small{font-size:12px;color:var(--text3)}
+  .below{color:var(--danger);font-weight:600}
+  .icon{display:inline-block;width:16px;height:16px;border-radius:50%;background:#eef1f4;color:var(--text3);font-size:11px;text-align:center;line-height:16px;margin-left:4px}
+  .drawer{background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px}
+  .drawer h2{font-size:16px;margin:0}.drawer .who{font-size:13px;color:var(--text2);margin:2px 0 12px}
+  .figs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .fig{border:1px solid var(--border);border-radius:8px;padding:8px 10px}.fig .k{font-size:11px;color:var(--text3)}.fig .v{font-family:ui-monospace,Menlo,monospace;color:var(--data);font-weight:600;margin-top:2px}
+  .sec{font-size:11px;letter-spacing:.06em;color:var(--text3);font-weight:600;margin:14px 0 6px}
+  .alert{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--border);font-size:13px}
+  .why{background:var(--danger-soft);border:1px solid #f5c2bd;border-radius:8px;padding:10px;font-size:13px;color:#7a1a12;margin-bottom:12px}
+  .btn{font:inherit;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid #c9ced6;background:#fff;color:var(--text);cursor:pointer}
+  .btn.p{border-color:var(--action);color:var(--action);font-weight:600}
+  .actions{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+  .actions .btn{text-align:left}.actions .btn span{display:block;font-size:12px;color:var(--text3);font-weight:400}
+  .note{margin-top:24px;font-size:12px;color:var(--text3);border-top:1px dashed var(--border);padding-top:10px}
+</style>
+</head>
+<body>
+<div class="top"><b>Paragon Supplier Portal</b><span class="preview">PREVIEW</span></div>
+<div class="shell">
+  <aside class="side">
+    <div class="persona"><span class="on">PTI</span><span>Supplier</span></div>
+    <div class="sect">INVENTORY &amp; CAPACITY</div>
+    <div class="nav"><a class="active">Inventory</a><a>Stock simulation</a><a>Capacity</a><a>Alerts <span class="n">9</span></a><a>Supplier access</a></div>
+  </aside>
+  <main>
+    <div class="eyebrow">INVENTORY &amp; CAPACITY · INVENTORY</div>
+    <h1>Inventory</h1>
+    <p class="sub">Supplier and PTI stock per material and supplier, riskiest first. Open a row to see why and what to do.</p>
+    <div class="meta">As of <span class="mono">31 Aug 2026</span> · SAP data 10 hours old<span class="s">○ SAMPLE DATA</span></div>
+
+    <div class="summary">
+      <div class="tile sel"><div class="k">High risk</div><div class="v d">8</div><div class="h">cover below supplier lead time</div></div>
+      <div class="tile"><div class="k">PTI stock below PTI ROP</div><div class="v w">5</div><div class="h">all types</div></div>
+      <div class="tile"><div class="k">Supplier figures out of date</div><div class="v w">5</div><div class="h">past their weekly cutoff</div></div>
+      <div class="tile"><div class="k">No lead time on record</div><div class="v">1</div><div class="h">risk uses day bands</div></div>
+    </div>
+
+    <div class="tabs"><div>All types · 19</div><div>Raw material · 14</div><div class="cur">Packaging · 5</div></div>
+    <div class="bar"><div class="search">Search code, description, trade name or supplier</div><span class="chip on">High (1)</span><span class="chip">Medium (2)</span><span class="chip">Low (2)</span><span class="chip">Out of date (2)</span><span class="chip">PIC: All</span></div>
+
+    <div class="wrap">
+      <div class="card">
+        <table>
+          <thead><tr><th>Material · supplier</th><th>Risk · supplier cover</th><th class="r">Supplier stock</th><th class="r">PTI stock / ROP</th><th>Incoming</th><th>Updated</th></tr></thead>
+          <tbody>
+            <tr class="sel"><td><span class="mono"><b>PK-PETB-8802</b></span><br>PET Bottle 100ml Clear<br><span class="small">PT Sample Packaging Indonesia</span></td>
+              <td><span class="pill d">High · 4 days</span><br><span class="small">Lead time 14 days</span></td>
+              <td class="r mono">22,000 PCS</td><td class="r"><span class="mono">55,000</span> / <span class="mono">50,000</span></td><td class="small">Nothing incoming</td><td class="small"><span class="mono">30 Aug 09:00</span><br>Template</td></tr>
+            <tr><td><span class="mono"><b>PK-PETB-8801</b></span><br>PET Bottle 200ml Frosted<br><span class="small">PT Sample Packaging Indonesia</span></td>
+              <td><span class="pill w">Medium · 17 days</span><br><span class="small">Lead time 14 days</span></td>
+              <td class="r mono">85,000 PCS</td><td class="r"><span class="mono below">30,000</span> / <span class="mono">40,000</span></td><td class="small">In production <span class="mono">60,000</span><br>In transit <span class="mono">25,500</span> · next <span class="mono">03 Sept</span></td><td class="small"><span class="mono">31 Aug 09:00</span><br>Template</td></tr>
+            <tr><td><span class="mono"><b>PK-CAPF-8820</b></span><br>Flip-Top Cap 24mm<br><span class="small">PT Sample Packaging Indonesia</span></td>
+              <td><span class="pill n">No stock figures</span></td>
+              <td class="r small">Not sent</td><td class="r"><span class="mono">80,000</span> / <span class="mono">60,000</span></td><td class="small">Nothing incoming</td><td class="small"><span class="pill w">Out of date</span><br>missing since <span class="mono">13 Aug</span></td></tr>
+            <tr><td><span class="mono"><b>PK-PETB-8810</b></span><br>PET Bottle 250ml<br><span class="small">PT Sample Packaging Indonesia</span></td>
+              <td><span class="pill n">Low · 30 days</span><br><span class="small">Lead time 14 days</span></td>
+              <td class="r mono">45,000 PCS</td><td class="r"><span class="mono">20,000</span> / <span class="mono">15,000</span></td><td class="small">Nothing incoming</td><td class="small"><span class="pill w">Out of date</span><br><span class="mono">05 Aug 16:20</span></td></tr>
+          </tbody>
+        </table>
+        <div class="small" style="padding:8px 10px">PIC, this-cycle count, supplier ROP (and the system ROP Supplier) and feedstock move into the row detail. <span class="icon">i</span></div>
+      </div>
+
+      <aside class="drawer" aria-label="Material detail">
+        <h2><span class="mono">PK-PETB-8802</span> · PET Bottle 100ml Clear</h2>
+        <div class="who">PT Sample Packaging Indonesia · PIC P12 Packaging desk · Consignment</div>
+        <div class="why"><b>High:</b> supplier stock covers 4 days of demand; the supplier needs 14 days to make more. Nothing is in production or in transit.</div>
+        <div class="figs">
+          <div class="fig"><div class="k">Supplier stock</div><div class="v">22,000 PCS</div></div>
+          <div class="fig"><div class="k">PTI stock / PTI ROP</div><div class="v">55,000 / 50,000</div></div>
+          <div class="fig"><div class="k">Supplier ROP (supplier's figure)</div><div class="v">30,000 PCS</div></div>
+          <div class="fig"><div class="k">Free to call off today</div><div class="v" style="color:var(--danger)">−121,000 PCS</div></div>
+        </div>
+        <div class="sec">OPEN ALERTS ON THIS MATERIAL · 3</div>
+        <div class="alert"><span class="pill d">High</span><span>Supplier stock and incoming do not cover the next 30 days</span></div>
+        <div class="alert"><span class="pill d">High</span><span>Supplier stock below the system ROP Supplier</span></div>
+        <div class="alert"><span class="pill w">Medium</span><span>Committed quantity below forecast</span></div>
+        <div class="sec">WHAT TO DO</div>
+        <div class="actions">
+          <button class="btn p">Open stock simulation<span>13 weeks for this supplier and material</span></button>
+          <button class="btn">Create PO request<span>No agreement line for this pair, so a call-off is not possible</span></button>
+          <button class="btn">Ask the supplier for a production date<span>Message on the material, shown on the supplier's To do</span></button>
+          <button class="btn">Record stock from a supplier message</button>
+        </div>
+      </aside>
+    </div>
+    <div class="note">Mockup for findings P-01 and P-02 (with P-08 and P-12). The risk class is the second column, so it is visible at 1440 px without horizontal scroll. Summary tiles filter the table. A row opens the detail, which explains the class and offers only the actions that work for that pair. Labels in Indonesian: "Risiko · cakupan pemasok", "Buka simulasi stok", "Buat permintaan PO", "Minta tanggal produksi ke pemasok".</div>
+  </main>
+</div>
+</body>
+</html>
