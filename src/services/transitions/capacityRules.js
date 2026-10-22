@@ -146,6 +146,30 @@ export const isGapWeek = (w) => w.entry !== null && w.entry.allocated < w.demand
 export const gapWeeks = (plan) => plan.weeks.filter(isGapWeek);
 
 /**
+ * `(supplierId, planningGroupId, week)` → PTI accepted the additional capacity
+ * on that week (INV-D8).
+ * @typedef {(supplierId: string, planningGroupId: string, week: string) => boolean} AcceptedWeek
+ */
+
+/**
+ * INV-D12 (BL-225) — the gap weeks the capacity alert counts. An amber week
+ * (LTP within capacity + additional capacity) that PTI accepted no longer
+ * counts; a red week (LTP above BE) always counts. With every gap week
+ * accepted, the plan raises no capacity alert.
+ * @param {CapacityPlan} plan
+ * @param {AcceptedWeek} [accepted]
+ * @returns {CapacityPlan['weeks']}
+ */
+export const alertGapWeeks = (plan, accepted = () => false) =>
+  gapWeeks(plan).filter(
+    (w) =>
+      !(
+        ltpCapacityLevel(w.demand, w.entry) === 'needsAdditional' &&
+        accepted(plan.supplierId, plan.planningGroupId, w.week)
+      )
+  );
+
+/**
  * Current = the latest submission states every week of the horizon, and no
  * week needs re-entry after a planning-group move (MR-8 BR-05).
  * @param {CapacityPlan} plan

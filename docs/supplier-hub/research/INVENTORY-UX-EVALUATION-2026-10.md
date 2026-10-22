@@ -355,7 +355,7 @@ Scope ruled 2026-10-22: the 13 Major findings except P-04 (waits for BL-150, INV
 | P-04 | Waiting on owner (BL-150, INV-D5) | – | – |
 | P-05 | Built; Ask supplier added in wave 2 (2D) | 1 (1B), 2 (2D) | `pages-v2/BuyerStockSimulation.test.jsx` (P-05); drawer: `BuyerInventory.riskFirst.page.test.jsx` |
 | P-06 | Built | 1 (1B) | `BuyerStockSimulation.test.jsx` (P-06); `inventory/stockSimulationDisplay.test.js` |
-| P-07 | Built (Move demand not built, INV-D8; open: BL-225, BL-226) | 2 (2C) | `services/data/mock/capacityDecision.test.js`; `pages-v2/inventory/capacityGapActions.p07.page.test.jsx` |
+| P-07 | Built (Move demand not built, INV-D8; alert rule INV-D12, accept rule INV-D13) | 2 (2C) | `services/data/mock/capacityDecision.test.js`; `pages-v2/inventory/capacityGapActions.p07.page.test.jsx` |
 | P-08 | Built on Inventory and Alerts | 1 (1A), 2 (2B) | `BuyerInventory.riskFirst.page.test.jsx` (P-08) |
 | P-09 | Built | 1 (1B) | `services/transitions/simulateSupplierStock.test.js` (INV-D7) |
 | S-01 | Built; the "PTI is asking" block added in wave 2 | 1 (1C), 2 (2A) | `pages-v2/inventory/stockPageUx.page.test.jsx` (S-01) |

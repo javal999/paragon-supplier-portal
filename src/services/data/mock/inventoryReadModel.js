@@ -37,6 +37,7 @@ import {
 } from '../../transitions/inventoryAlertRules';
 import { inventoryDeclarationStore } from './stores/inventoryDeclarationStore';
 import { asnStore } from './stores/asnStore';
+import { capacityDecisionStore } from './stores/capacityDecisionStore';
 import { callOffStore } from './stores/callOffStore';
 import { purchaseOrderStore } from './stores/purchaseOrderStore';
 import { goodsReceiptStore } from './stores/goodsReceiptStore';
@@ -301,7 +302,10 @@ export function activeAlertConditions(nowIso = sdcClock.now()) {
       supplierName: supplierNameOf,
       materialLabel: (code) => materialEntry(code)?.label ?? code,
       uom: (code) => materialEntry(code)?.canonicalUom ?? ''
-    })
+    }),
+    // INV-D12 (BL-225) — PTI's accepted additional capacity (INV-D8).
+    (supplierId, planningGroupId, week) =>
+      capacityDecisionStore.find(supplierId, planningGroupId, week)?.decision === 'accepted'
   );
 }
 

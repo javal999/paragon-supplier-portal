@@ -237,6 +237,79 @@ describe('MR-9 BR-03 — days to impact per rule', () => {
     ).toBe(14);
   });
 
+  describe('INV-D12 (BL-225) — accepted additional capacity and the capacity alert', () => {
+    /** Week i: allocated 10 against demand 100; `upside` decides amber or red. */
+    const withGaps = (/** @type {Record<number, number>} */ upsideByWeek) =>
+      plan({
+        weeks: HORIZON.map((week, i) => ({
+          week,
+          demand: 100,
+          entry:
+            i in upsideByWeek
+              ? { week, allocated: 10, upside: upsideByWeek[i], reason: 'capacity' }
+              : { week, allocated: 100 }
+        }))
+      });
+    /** @param {string[]} weeks */
+    const acceptedOn =
+      (weeks) => (/** @type {string} */ s, /** @type {string} */ g, /** @type {string} */ w) =>
+        s === 'sup-007' && g === 'pg-MG-20' && weeks.includes(w);
+    const capacity = (/** @type {ReturnType<typeof deriveAlertConditions>} */ c) =>
+      c.find((x) => x.rule === 'capacityBelowDemand');
+
+    it('every gap week amber and accepted: no capacity alert', () => {
+      const c = deriveAlertConditions(
+        [],
+        [withGaps({ 2: 100, 4: 100 })],
+        NOW,
+        [],
+        [],
+        [],
+        [],
+        [],
+        acceptedOn([HORIZON[2], HORIZON[4]])
+      );
+      expect(capacity(c)).toBeUndefined();
+    });
+
+    it('one amber week still not accepted: the alert stays, impact at that week', () => {
+      const c = deriveAlertConditions(
+        [],
+        [withGaps({ 2: 100, 4: 100 })],
+        NOW,
+        [],
+        [],
+        [],
+        [],
+        [],
+        acceptedOn([HORIZON[2]])
+      );
+      // Week 5 of the horizon starts 28 days after 2026-08-31.
+      expect(capacity(c)?.daysToImpact).toBe(28);
+    });
+
+    it('a red week always counts, even if a decision names it', () => {
+      // Upside 50 → BE 60 < demand 100: red ("Cannot be supplied").
+      const c = deriveAlertConditions(
+        [],
+        [withGaps({ 2: 50 })],
+        NOW,
+        [],
+        [],
+        [],
+        [],
+        [],
+        acceptedOn([HORIZON[2]])
+      );
+      expect(capacity(c)?.daysToImpact).toBe(14);
+    });
+
+    it('control: with no decisions the amber weeks raise the alert as before', () => {
+      const c = deriveAlertConditions([], [withGaps({ 2: 100, 4: 100 })], NOW);
+      expect(capacity(c)?.daysToImpact).toBe(14);
+    });
+  });
+
   it('stale data: minus the days since it went stale, so the oldest comes first', () => {
     const c = deriveAlertConditions(
       [
