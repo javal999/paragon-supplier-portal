@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S-01 · Supplier Stock: this week's update first, one table, one way in</title>
+<style>
+  :root{--bg:#f5f6f7;--surface:#fff;--border:#e4e7ec;--text:#0d1b2a;--text2:#354a5f;--text3:#6b7785;--action:#0070f2;--action-soft:#eef5ff;--data:#1e3a5f;--ok:#107e3e;--ok-soft:#ecf8f1;--warn-text:#8a5606;--warn-soft:#fef3d6;--danger:#b42318;--danger-soft:#fdecea}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;color:var(--text);background:var(--bg)}
+  .top{height:56px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px}
+  .top b{font-size:15px}.preview{font-size:11px;font-weight:700;color:var(--warn-text);background:var(--warn-soft);border-radius:999px;padding:2px 8px}
+  .lang{margin-left:auto;font-size:13px;color:var(--text2)}
+  .shell{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 56px)}
+  .side{background:#fff;border-right:1px solid var(--border);padding:16px 12px}
+  .persona{display:flex;background:#f1f3f5;border-radius:999px;padding:3px;margin-bottom:18px;font-size:13px}
+  .persona span{flex:1;text-align:center;padding:6px;border-radius:999px;color:var(--text3)}.persona .on{background:#fff;color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .sect{font-size:11px;letter-spacing:.08em;color:var(--text3);margin:16px 12px 6px;font-weight:600}
+  .nav a{display:block;padding:8px 12px;border-radius:8px;color:var(--text);text-decoration:none}
+  .nav a.active{background:var(--action-soft);color:var(--action);font-weight:600}
+  .nav a .n{float:right;font-size:11px;background:var(--warn-soft);color:var(--warn-text);border-radius:999px;padding:0 7px;font-weight:600}
+  main{padding:24px 32px 60px;max-width:1200px}
+  .head{display:flex;align-items:flex-start;gap:16px}
+  .head .acts{margin-left:auto;display:flex;gap:8px}
+  .eyebrow{font-size:11px;letter-spacing:.08em;color:var(--text3);font-weight:600}
+  h1{font-size:28px;margin:6px 0 4px}.sub{color:var(--text2);margin:0 0 6px}
+  .meta{font-size:12px;color:var(--text3);margin-bottom:16px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--data)}
+  .btn{font:inherit;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid #c9ced6;background:#fff;color:var(--text);cursor:pointer;white-space:nowrap}
+  .btn.p{border-color:var(--action);color:var(--action);font-weight:600}
+  .week{background:#fff;border:1px solid var(--border);border-left:3px solid #d97706;border-radius:10px;padding:14px 16px;margin-bottom:12px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+  .week .t{font-weight:700;font-size:16px}
+  .week .d{font-size:13px;color:var(--text2);margin-top:4px}
+  .prog{height:8px;background:#eef1f4;border-radius:999px;overflow:hidden;margin-top:8px;width:320px}.prog i{display:block;height:100%;width:50%;background:#d97706}
+  .alerts{background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:12px}
+  .alerts .h{padding:10px 16px;border-bottom:1px solid var(--border);font-weight:600;display:flex;gap:8px;align-items:center}
+  .alerts .r{display:flex;gap:10px;align-items:center;padding:9px 16px;border-top:1px solid var(--border);font-size:13px}
+  .alerts .r:first-of-type{border-top:0}
+  .alerts .ask{color:var(--text2)}.alerts .r .btn{margin-left:auto}
+  .pill{display:inline-block;font-size:12px;padding:2px 8px;border-radius:6px;border:1px solid;white-space:nowrap}
+  .pill.d{background:var(--danger-soft);color:var(--danger);border-color:#f5c2bd}
+  .pill.w{background:var(--warn-soft);color:var(--warn-text);border-color:#f7d79a}
+  .pill.n{background:#f3f4f6;color:var(--text2);border-color:var(--border)}
+  .pill.o{background:var(--ok-soft);color:var(--ok);border-color:#b7e3c8}
+  .tabs{display:flex;gap:18px;border-bottom:1px solid var(--border);margin:16px 0 12px}
+  .tabs div{padding:8px 2px;color:var(--text3);border-bottom:2px solid transparent}.tabs .cur{color:var(--action);border-color:var(--action);font-weight:600}
+  .card{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{font-size:11px;letter-spacing:.06em;color:var(--text3);text-align:left;padding:10px;background:#f8f9fa;border-bottom:1px solid var(--border);font-weight:600}
+  th.r,td.r{text-align:right}
+  td{padding:10px;border-bottom:1px solid var(--border);vertical-align:middle}
+  tr.miss td{background:#fffaf0}
+  .small{font-size:12px;color:var(--text3)}
+  .result{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-top:12px;font-size:13px}
+  .result .ok{color:var(--ok);font-weight:600}
+  .result .skip{color:var(--text2)}
+  .fold{margin-top:12px;font-size:13px;color:var(--action)}
+  .note{margin-top:24px;font-size:12px;color:var(--text3);border-top:1px dashed var(--border);padding-top:10px}
+</style>
+</head>
+<body>
+<div class="top"><b>Paragon Supplier Portal</b><span class="preview">PREVIEW</span><span class="lang">EN ▾</span></div>
+<div class="shell">
+  <aside class="side">
+    <div class="persona"><span>PTI</span><span class="on">Supplier</span></div>
+    <div class="sect">HOME</div><div class="nav"><a>To do</a></div>
+    <div class="sect">PLANNING</div>
+    <div class="nav"><a>Forecast &amp; commitments</a><a>Feedstock reconcile</a><a class="active">Stock <span class="n">2 due</span></a><a>Capacity <span class="n">1</span></a></div>
+  </aside>
+  <main>
+    <div class="head">
+      <div>
+        <div class="eyebrow">PLANNING · STOCK</div>
+        <h1>Stock</h1>
+        <p class="sub">Send PTI your stock every week, by screen or by template. PTI sees each figure as soon as you send it.</p>
+        <div class="meta">As of <span class="mono">31 Aug 2026</span> · ○ SAMPLE DATA</div>
+      </div>
+      <div class="acts"><button class="btn p">Enter stock on screen</button><button class="btn">Upload template</button></div>
+    </div>
+
+    <section class="week">
+      <div>
+        <div class="t">This week: 2 of 4 materials sent</div>
+        <div class="d">Due <b class="mono">Thursday 3 Sept, 23:59 WIB</b> · 3 days 4 hours left. <b>PK-CAPF-8820</b> and <b>PK-PETB-8810</b> also missed last week, so PTI already shows them out of date (the oldest since <span class="mono">13 Aug</span>).</div>
+        <div class="prog"><i></i></div>
+      </div>
+      <div class="small">Part of the supplier SOP set by Material Planning</div>
+    </section>
+
+    <section class="alerts">
+      <div class="h">PTI is asking about 3 of your materials <span class="pill d">2 High</span></div>
+      <div class="r"><span class="pill d">High</span><span class="mono">PK-PETB-8802</span><span class="ask">Your stock covers 4 days of PTI demand and nothing is in production. Tell PTI when production starts.</span><button class="btn p">Enter stock</button></div>
+      <div class="r"><span class="pill d">High</span><span>Rigid plastic packaging</span><span class="ask">W38 capacity is below PTI's LTP. PTI is checking your additional capacity.</span><button class="btn">Open capacity</button></div>
+      <div class="r"><span class="pill n">Low</span><span class="mono">PK-CAPF-8820</span><span class="ask">No stock figure since you were assigned. Send one this week.</span><button class="btn">Enter stock</button></div>
+    </section>
+
+    <div class="tabs"><div class="cur">My stock · 4</div><div>Feedstock to confirm · 4</div><div>My materials and trade names</div><div>Template guide</div></div>
+
+    <div class="card">
+      <table>
+        <thead><tr><th>Material</th><th>This week</th><th class="r">Your stock</th><th>Incoming to PTI</th><th>Days of supply</th><th class="r">PTI stock</th><th></th></tr></thead>
+        <tbody>
+          <tr class="miss"><td><span class="mono"><b>PK-CAPF-8820</b></span><br>Flip-Top Cap 24mm</td><td><span class="pill w">Not sent</span></td><td class="r small">No figure yet</td><td class="small">Nothing incoming</td><td class="small">—</td><td class="r small">Not shared</td><td><button class="btn p">Enter</button></td></tr>
+          <tr><td><span class="mono"><b>PK-PETB-8801</b></span><br>PET Bottle 200ml Frosted</td><td><span class="pill o">Sent 31 Aug</span></td><td class="r mono">85,000 PCS</td><td class="small">In production <span class="mono">60,000</span> · in transit <span class="mono">25,500</span></td><td><span class="pill w">Medium · 17 days</span></td><td class="r mono">30,000</td><td><button class="btn">Update</button></td></tr>
+          <tr><td><span class="mono"><b>PK-PETB-8802</b></span><br>PET Bottle 100ml Clear</td><td><span class="pill o">Sent 30 Aug</span></td><td class="r mono">22,000 PCS</td><td class="small">Nothing incoming</td><td><span class="pill d">High · 4 days</span></td><td class="r mono">55,000</td><td><button class="btn">Update</button></td></tr>
+          <tr class="miss"><td><span class="mono"><b>PK-PETB-8810</b></span><br>PET Bottle 250ml</td><td><span class="pill w">Not sent</span></td><td class="r mono">45,000 PCS</td><td class="small">Nothing incoming</td><td><span class="pill n">Low · 30 days</span></td><td class="r small">Not shared</td><td><button class="btn p">Enter</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="result">
+      <b>Example, after an upload at 19:00</b> — <span class="ok">Sent to PTI: PK-PETB-8810 (2 batches, 45,000 PCS)</span> · <span class="skip">3 rows left blank were not sent</span> · nothing refused.
+    </div>
+    <div class="fold">▸ Template columns: required and optional (10)</div>
+
+    <div class="note">Mockup for findings S-01, S-02, S-03 and S-04 (with S-13 and X-01). One weekly status replaces the panel, the "Missed" strip and the To do row's 13 Aug deadline; PTI's questions sit above the table with the ask in words; the table is the first thing below them; feedstock and the template guide move to tabs; the upload result sits under the table, names what was sent and does not refuse blank rows. In Indonesian the same figures read <span class="mono">85.000 PCS</span>, <span class="mono">60.000</span>: "Minggu ini: 2 dari 4 material terkirim", "Isi stok di layar", "Unggah templat", "PTI bertanya tentang 3 material Anda", "Terkirim ke PTI".</div>
+  </main>
+</div>
+</body>
+</html>
