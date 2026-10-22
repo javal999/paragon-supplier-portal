@@ -214,7 +214,10 @@ export const whatIfSandboxEn = {
   'whatIf.saved.rulesPill': 'Rules changed',
   'whatIf.loading': 'Reading the live values…',
   'whatIf.error': 'The live values could not be read.',
-  'whatIf.retry': 'Try again'
+  'whatIf.retry': 'Try again',
+  'whatIf.row.try': 'Try a what-if',
+  'whatIf.row.tryAria': 'Try a what-if for {{material}} from {{supplier}}',
+  'whatIf.newBlank': 'New blank scenario'
 };
 
 export const whatIfSandboxId = {
@@ -425,5 +428,8 @@ export const whatIfSandboxId = {
   'whatIf.saved.rulesPill': 'Aturan berubah',
   'whatIf.loading': 'Membaca nilai aktual…',
   'whatIf.error': 'Nilai aktual tidak dapat dibaca.',
-  'whatIf.retry': 'Coba lagi'
+  'whatIf.retry': 'Coba lagi',
+  'whatIf.row.try': 'Coba what-if',
+  'whatIf.row.tryAria': 'Coba what-if untuk {{material}} dari {{supplier}}',
+  'whatIf.newBlank': 'Skenario kosong baru'
 };

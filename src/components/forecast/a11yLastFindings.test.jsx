@@ -41,9 +41,12 @@ const headingsInSummary = (root) =>
  * The check for one collapsed section, by its `<details>` test id: the
  * heading is outside the summary, is an `h2`, names the section, and the
  * summary is the details' first child (the element Enter and Space activate).
+ * A section that is the whole of a tab (P-12, `defaultOpen`) starts open and
+ * the same toggle closes and reopens it.
  * @param {string} testId
+ * @param {{ open?: boolean }} [opts]
  */
-const expectCollapsedSection = (testId) => {
+const expectCollapsedSection = (testId, { open = false } = {}) => {
   const details = screen.getByTestId(testId);
   expect(details.tagName).toBe('DETAILS');
   expect(headingsInSummary(details), testId).toEqual([]);
@@ -60,12 +63,23 @@ const expectCollapsedSection = (testId) => {
   expect(summary.tagName).toBe('SUMMARY');
   // Keyboard activation of a summary (Enter, Space) dispatches its click; the
   // click toggles the details open and closed again.
-  expect(details).not.toHaveAttribute('open');
+  const shown = () =>
+    open ? expect(details).toHaveAttribute('open') : expect(details).not.toHaveAttribute('open');
+  const toggled = () =>
+    open ? expect(details).not.toHaveAttribute('open') : expect(details).toHaveAttribute('open');
+  shown();
   fireEvent.click(summary);
-  expect(details).toHaveAttribute('open');
+  toggled();
   fireEvent.click(summary);
-  expect(details).not.toHaveAttribute('open');
+  shown();
 };
+
+/**
+ * P-12 — opens one of the page's tabs, by its visible name.
+ * @param {string} name
+ */
+const openTab = async (name) =>
+  fireEvent.click(await screen.findByRole('tab', { name }, { timeout: 15000 }));
 
 describe('finding 33 — the probe fails on the old AboutThisPage markup', () => {
   it('finds the heading the old component put inside its summary', () => {
@@ -87,8 +101,13 @@ describe('finding 33 — collapsed section headings are outside the summary', ()
       identity: PLANNER,
       route: FORECAST_PAGES.whatToOrder.path
     });
+    // P-12 — the fill is its own tab and opens shown; the rest sit under "How it is sized".
+    await openTab('Warehouse fill');
     await screen.findByTestId('op-fill', {}, { timeout: 15000 });
-    for (const id of ['about-this-page', 'op-fill', 'op-costs', 'op-definitions']) {
+    expectCollapsedSection('op-fill', { open: true });
+    expect(headingsInSummary(document.body)).toEqual([]);
+    await openTab('How it is sized');
+    for (const id of ['about-this-page', 'op-costs', 'op-definitions']) {
       expectCollapsedSection(id);
     }
     expect(headingsInSummary(document.body)).toEqual([]);
@@ -101,8 +120,14 @@ describe('finding 33 — collapsed section headings are outside the summary', ()
       identity: PLANNER,
       route: FORECAST_PAGES.makeRoom.path
     });
+    // P-12 — the fill is its own tab and opens shown; the rest sit under "Values and method".
+    await openTab('Warehouse fill');
+    await screen.findByTestId('rs-fill', {}, { timeout: 15000 });
+    expectCollapsedSection('rs-fill', { open: true });
+    expect(headingsInSummary(document.body)).toEqual([]);
+    await openTab('Values and method');
     await screen.findByTestId('rs-info', {}, { timeout: 15000 });
-    for (const id of ['about-this-page', 'rs-fill', 'rs-info', 'rs-settings', 'rs-definitions']) {
+    for (const id of ['about-this-page', 'rs-info', 'rs-settings', 'rs-definitions']) {
       expectCollapsedSection(id);
     }
     expect(headingsInSummary(document.body)).toEqual([]);

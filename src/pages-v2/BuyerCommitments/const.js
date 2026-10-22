@@ -12,3 +12,12 @@ export const fieldClass = `${inputClass} ${FIELD_FOCUS_RING}`;
  * The planner action the side panel stands open on, and the line it acts on.
  * @typedef {{ kind: 'accept' | 'revise' | 'reassign'; line: ForecastCommitmentLine }} Action
  */
+
+/**
+ * P-04 (IA-B05) — the page's tabs: the commitments and gaps (the default), and
+ * the consolidation view that had its own page at /buyer/collaboration/responses.
+ * `?tab=consolidation` opens the second.
+ * @typedef {'gaps' | 'consolidation'} CommitmentsTab
+ */
+/** @type {readonly CommitmentsTab[]} */
+export const COMMITMENTS_TABS = ['gaps', 'consolidation'];

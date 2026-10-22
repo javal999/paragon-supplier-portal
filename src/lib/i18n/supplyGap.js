@@ -47,7 +47,8 @@ export const supplyGapEn = {
   'supplyGap.toast.drafted': 'Draft call-off created',
   'supplyGap.toast.draftedDesc':
     'It is not supply until it is released. Release it from the Call-offs page.',
-  'supplyGap.toast.refused': 'The draft was not created'
+  'supplyGap.toast.refused': 'The draft was not created',
+  'supplyGap.action.openDraft': 'Open the draft call-off'
 };
 
 /** @type {Record<string, string>} */
@@ -87,5 +88,6 @@ export const supplyGapId = {
   'supplyGap.toast.drafted': 'Draf call-off dibuat',
   'supplyGap.toast.draftedDesc':
     'Draf belum menjadi pasokan sampai dirilis. Rilis dari halaman Call-off.',
-  'supplyGap.toast.refused': 'Draf tidak dibuat'
+  'supplyGap.toast.refused': 'Draf tidak dibuat',
+  'supplyGap.action.openDraft': 'Buka draf call-off'
 };

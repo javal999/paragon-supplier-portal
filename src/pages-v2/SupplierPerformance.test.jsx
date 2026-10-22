@@ -25,7 +25,7 @@ const SUPPLIER_NO_PERF = {
 describe('SupplierPerformance — four honest states', () => {
   it('data: renders the scorecard for the seeded supplier', async () => {
     renderWithProviders(<SupplierPerformance />, { identity: SUPPLIER });
-    expect(await screen.findByText('My Performance')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'My performance' })).toBeInTheDocument();
     // PREMISE CHANGED (REQ-E10-01): the authored "OTIF Rate" row left this
     // fixture — OTIF is calculated now and sits in its own KPI card above.
     expect(await screen.findByText('KPI Scorecard — 5 metrics')).toBeInTheDocument();

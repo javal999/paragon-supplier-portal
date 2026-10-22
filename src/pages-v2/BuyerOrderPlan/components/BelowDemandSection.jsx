@@ -11,13 +11,16 @@ import Button from '@components/ui-v2/Button';
 import StatusPill from '@components/ui-v2/StatusPill';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { formatDate, formatNumber } from '@lib/format';
+/** @import { useDraftGapCallOff } from '../hooks/useDraftGapCallOff' */
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { useDemandAnticipation } from '@services/query/hooks';
 import { supplyGapRows } from '@services/transitions/supplyBelowDemandRules';
 /** @import { SupplyGapRow } from '@services/transitions/supplyBelowDemandRules' */
 import { draftNeedDate } from '../../orderPlan/orderPlanRelease';
-import { useDraftGapCallOff, gapDraftKey } from '../hooks/useDraftGapCallOff';
+import { gapDraftKey } from '../hooks/useDraftGapCallOff';
 import { weekLabel } from '../utils';
+import OpenCallOffLink from '../../callOffs/OpenCallOffLink';
+import TryWhatIfLink from '../../BuyerWhatIfSandbox/TryWhatIfLink';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CAP-12 (BL-181) — "Below demand anticipation" on What to order, brief §6.
@@ -32,7 +35,10 @@ import { weekLabel } from '../utils';
 // line with balance, then the next, each with "Create draft call-off" (the
 // existing draft verb, `useDraftGapCallOff`); and "New PO needed" for what no
 // line covers, which the planner raises in SAP (CAP-D4: the hub recommends).
-// Each row links to the supplier × material on the Demand anticipation page.
+// Each row links to the supplier × material on the Demand anticipation page,
+// and to the what-if sandbox on that pair (P-07). A drafted proposal links to
+// its draft on Call-offs (IA-B13). The draft state is the page's
+// (`useDraftGapCallOff` in `index.jsx`), so it outlives a change of tab.
 //
 // Every input is the hub's sample data (the sample LTP, SAP stock fixtures and
 // the hub's POs and call-offs), and the section says so in its own line. Not
@@ -48,14 +54,14 @@ export const BELOW_DEMAND_FIRST_ROWS = 20;
 const rowKeyOf = (g) => `${g.supplierId}-${g.materialCode}-${g.week}`;
 
 /**
- * @param {{ today: string }} props
+ * @param {{ today: string; drafts: ReturnType<typeof useDraftGapCallOff> }} props
  * @returns {React.ReactNode}
  */
-const BelowDemandSection = ({ today }) => {
+const BelowDemandSection = ({ today, drafts }) => {
   const { t } = useTranslation();
   const query = useDemandAnticipation();
   const planAvailability = useVerbAvailability('calloff:plan');
-  const { drafted, pending, createDraft } = useDraftGapCallOff(today);
+  const { drafted, pending, createDraft } = drafts;
   const gaps = supplyGapRows(query.data?.items ?? []);
   const [showAll, setShowAll] = useState(false);
   const shown = showAll ? gaps : gaps.slice(0, BELOW_DEMAND_FIRST_ROWS);
@@ -129,6 +135,14 @@ const BelowDemandSection = ({ today }) => {
                         <Data className="text-action-hover">{g.materialCode}</Data>
                       </Link>
                       <span className="text-xs text-text-tertiary"> {g.materialLabel}</span>
+                      <div>
+                        <TryWhatIfLink
+                          materialCode={g.materialCode}
+                          supplierId={g.supplierId}
+                          supplierName={g.supplierName}
+                          testId={`op-gap-whatif-${key}`}
+                        />
+                      </div>
                     </TableCell>
                     <TableCell className="align-top">
                       <Data className="whitespace-nowrap">{weekLabel(g.week)}</Data>{' '}
@@ -170,9 +184,20 @@ const BelowDemandSection = ({ today }) => {
                                 </span>
                               </div>
                               {drafted.has(dKey) ? (
-                                <StatusPill variant="success">
-                                  {t('supplyGap.action.drafted')}
-                                </StatusPill>
+                                <div>
+                                  <StatusPill variant="success">
+                                    {t('supplyGap.action.drafted')}
+                                  </StatusPill>
+                                  {drafted.get(dKey) ? (
+                                    <div>
+                                      <OpenCallOffLink
+                                        callOffId={drafted.get(dKey) ?? ''}
+                                        label={t('supplyGap.action.openDraft')}
+                                        testId={`op-gap-open-draft-${key}-${c.poNumber}`}
+                                      />
+                                    </div>
+                                  ) : null}
+                                </div>
                               ) : planAvailability.kind === 'held' ? (
                                 <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                                   <Button

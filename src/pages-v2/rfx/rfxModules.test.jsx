@@ -27,18 +27,22 @@ const supplierSourcing = /** @type {import('@components/layout-v2/navConfig').Na
 );
 
 describe('the menu — one item per event type', () => {
-  it('PTI Sourcing: RFI, RFQ, RFP, then Suppliers', () => {
+  it('PTI Sourcing: Requisitions, RFI, RFQ, RFP, Suppliers, then Supplier documents (IA P-03)', () => {
     expect(buyerSourcing.items.map((i) => i.path)).toEqual([
+      '/buyer/purchase-requisition',
       '/buyer/rfi',
       '/buyer/rfq',
       '/buyer/rfp',
-      '/buyer/suppliers'
+      '/buyer/suppliers',
+      '/buyer/compliance'
     ]);
     expect(buyerSourcing.items.map((i) => hubEn[i.labelKey])).toEqual([
+      'Requisitions',
       'RFI',
       'RFQ',
       'RFP',
-      'Suppliers'
+      'Suppliers',
+      'Supplier documents'
     ]);
   });
 

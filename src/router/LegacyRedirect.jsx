@@ -8,6 +8,10 @@
 // `:rfqId` on an event's detail page. So `to` may name params
 // (`/buyer/rfq/:rfqId`), which are filled from the matched route, and search,
 // hash and state ride along.
+//
+// IA P-02 — `to` may also carry its own query (`/buyer/orders?view=summary`).
+// Its params are set first and win; every incoming param it does not name
+// (`?po=`, `from=`) is kept after them.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @import React from 'react' */
@@ -17,10 +21,20 @@ import { Navigate, generatePath, useLocation, useParams } from 'react-router-dom
 const LegacyRedirect = ({ to }) => {
   const params = useParams();
   const location = useLocation();
+  const [pathname, fixed = ''] = to.split('?');
+  const search = new URLSearchParams(fixed);
+  for (const [key, value] of new URLSearchParams(location.search)) {
+    if (!search.has(key)) search.append(key, value);
+  }
+  const query = search.toString();
   return (
     <Navigate
       replace
-      to={{ pathname: generatePath(to, params), search: location.search, hash: location.hash }}
+      to={{
+        pathname: generatePath(pathname, params),
+        search: query ? `?${query}` : '',
+        hash: location.hash
+      }}
       state={location.state}
     />
   );

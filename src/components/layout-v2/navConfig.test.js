@@ -61,10 +61,10 @@ describe('Material Planner menu — Weekly plan and Review (F-03, F-04)', () => 
       ['review', 'hub.nav.pti.stockCheck', '/buyer/fs-reconcile']
     ]);
     // FUX phase 2 B1 — This week joins Weekly plan as its first item; CAP-10 —
-    // Demand anticipation joins it; DRC-17 (BL-202) — the What-if sandbox is last.
+    // Demand anticipation joins it. IA P-07 — the What-if sandbox left the menu.
     expect(
       /** @type {import('./navConfig').NavSection} */ (mp.find((s) => s.id === 'weeklyPlan')).items
-    ).toHaveLength(7);
+    ).toHaveLength(6);
     // DRC-3 (BL-189) — Demand anticipation history joins Review as its last item.
     expect(
       /** @type {import('./navConfig').NavSection} */ (mp.find((s) => s.id === 'review')).items
@@ -114,12 +114,11 @@ describe('FUX phase 2 B1 — This week and the Procurement path to the stock che
       ['hub.nav.pti.publishToSuppliers', '/buyer/stabilise'],
       ['hub.nav.pti.supplierResponses', '/buyer/collaboration'],
       // CAP-10 — the demand anticipation, frozen per 4-week horizon.
-      ['hub.nav.pti.demandAnticipation', '/buyer/demand-anticipation'],
-      // DRC-17 (BL-202) BR-07 — PTI planners find the sandbox in Weekly plan.
-      ['hub.nav.pti.whatIfSandbox', '/buyer/what-if']
+      ['hub.nav.pti.demandAnticipation', '/buyer/demand-anticipation']
+      // IA P-07 (IA-B10) — the What-if sandbox is a row action, not a menu item.
     ]);
-    expect(hubEn['hub.nav.pti.whatIfSandbox']).toBe('What-if sandbox');
-    expect(hubId['hub.nav.pti.whatIfSandbox']).toBe('Sandbox what-if');
+    const paths = navFor('buyer', 'ALL').flatMap((s) => s.items.map((i) => i.path));
+    expect(paths).not.toContain('/buyer/what-if');
     expect(hubEn['hub.nav.pti.thisWeek']).toBe('This week');
     expect(hubEn['hub.nav.pti.demandAnticipation']).toBe('Demand anticipation');
     expect(hubId['hub.nav.pti.demandAnticipation']).toBe('Antisipasi permintaan');
@@ -249,5 +248,105 @@ describe('DRC-3 (BL-189) — the demand anticipation history: planners, Procurem
     expect(hubEn['hub.nav.pti.demandAnticipationHistory']).toBe('Demand anticipation history');
     expect(hubId['hub.nav.pti.demandAnticipationHistory']).toBe('Riwayat antisipasi permintaan');
     expect(hubEn['hub.nav.section.audit']).toBe('Audit');
+  });
+});
+
+describe('IA evaluation 2026-10 — menu homes, folded sections, one name per object', () => {
+  /** @param {readonly import('./navConfig').NavSection[]} nav */
+  const ids = (nav) => nav.map((s) => s.id);
+  /**
+   * @param {readonly import('./navConfig').NavSection[]} nav
+   * @param {string} id
+   */
+  const itemsOf = (nav, id) =>
+    /** @type {import('./navConfig').NavSection} */ (nav.find((s) => s.id === id)).items.map(
+      (i) => [i.labelKey, i.path]
+    );
+
+  it('P-03 — Sourcing holds Requisitions first and Supplier documents last, for Procurement', () => {
+    expect(itemsOf(navFor('buyer', 'BUY'), 'sourcing')).toEqual([
+      ['hub.nav.pti.requisitions', '/buyer/purchase-requisition'],
+      ['hub.nav.pti.rfi', '/buyer/rfi'],
+      ['hub.nav.pti.rfq', '/buyer/rfq'],
+      ['hub.nav.pti.rfp', '/buyer/rfp'],
+      ['hub.nav.pti.suppliers', '/buyer/suppliers'],
+      ['hub.nav.pti.supplierDocuments', '/buyer/compliance']
+    ]);
+    expect(hubEn['hub.nav.pti.requisitions']).toBe('Requisitions');
+    expect(hubId['hub.nav.pti.requisitions']).toBe('Permintaan pembelian');
+    expect(hubEn['hub.nav.pti.supplierDocuments']).toBe('Supplier documents');
+    expect(hubId['hub.nav.pti.supplierDocuments']).toBe('Dokumen pemasok');
+  });
+
+  it('P-03 / NV-05 — both pages take their section label from the menu, on any role', () => {
+    for (const role of /** @type {const} */ (['BUY', 'MP', 'FIN'])) {
+      expect(sectionForPath('/buyer/purchase-requisition', role)?.id).toBe('sourcing');
+      expect(sectionForPath('/buyer/compliance', role)?.id).toBe('sourcing');
+    }
+  });
+
+  it('P-02 / P-09 — Order collaboration has no Order summary and holds Call-offs', () => {
+    expect(itemsOf(navFor('buyer', 'MP'), 'orders')).toEqual([
+      ['hub.nav.pti.purchaseOrders', '/buyer/orders'],
+      ['hub.nav.pti.callOffs', '/buyer/call-offs'],
+      ['hub.nav.pti.shipments', '/buyer/shipments'],
+      ['hub.nav.pti.goodsReceipts', '/buyer/goods-receipt']
+    ]);
+    const all = [...PTI_NAV, ...SUPPLIER_NAV].flatMap((s) => s.items.map((i) => i.path));
+    expect(all).not.toContain('/buyer/order-summary');
+    expect(all).not.toContain('/supplier/order-summary');
+    // Known-good beside the absences: Purchase orders is on both menus.
+    expect(all).toContain('/supplier/orders');
+  });
+
+  it('P-09 — the one-item sections are folded; the per-role duplicates stay', () => {
+    expect(ids(PTI_NAV)).not.toContain('materials');
+    expect(ids(PTI_NAV)).not.toContain('calloffs');
+    expect(itemsOf(PTI_NAV, 'inventory').slice(-1)).toEqual([
+      ['hub.nav.pti.tradeNames', '/buyer/materials/trade-names']
+    ]);
+    expect(ids(SUPPLIER_NAV)).not.toContain('performance');
+    expect(itemsOf(SUPPLIER_NAV, 'company')).toEqual([
+      ['hub.nav.sup.documents', '/supplier/documents'],
+      ['hub.nav.sup.performance', '/supplier/performance']
+    ]);
+    // RFx F-11 / DRC-D18 — kept as decided.
+    expect(sectionForPath('/buyer/scorecard', 'BUY')?.id).toBe('performance');
+    expect(sectionForPath('/buyer/demand-anticipation-history', 'FIN')?.id).toBe('audit');
+  });
+
+  it('NV-04 — every page in the menus has its own icon, never one another page uses', () => {
+    /** @type {Record<string, string>} */
+    const SAME_OBJECT = {
+      'goods-receipts': 'goods-receipt',
+      forecasts: 'collaboration',
+      performance: 'scorecard'
+    };
+    /** @type {Map<unknown, Set<string>>} */
+    const pagesByIcon = new Map();
+    for (const item of [...PTI_NAV, ...SUPPLIER_NAV].flatMap((s) => s.items)) {
+      // The same page on two menus, or the two personas' pages of one object
+      // (call-offs, invoices), shares an icon; two different pages never do.
+      const tail = item.path.replace(/^\/(buyer|supplier)\//, '');
+      // The same object under a different path on each persona.
+      const page = SAME_OBJECT[tail] ?? tail;
+      pagesByIcon.set(item.icon, (pagesByIcon.get(item.icon) ?? new Set()).add(page));
+    }
+    const shared = [...pagesByIcon.values()].filter((p) => p.size > 1).map((p) => [...p]);
+    expect(shared).toEqual([]);
+    // Control: the walk reaches the menus' icons.
+    expect(pagesByIcon.size).toBeGreaterThan(20);
+  });
+
+  it('P-11 — one name per object, the same on both personas, in EN and ID', () => {
+    expect(hubEn['hub.nav.pti.inventory']).toBe(hubEn['hub.nav.sup.stock']);
+    expect(hubId['hub.nav.pti.inventory']).toBe(hubId['hub.nav.sup.stock']);
+    // Owner ruling 2026-10-21 — "Foresight commitments"; "Foresight" stays untranslated.
+    expect(hubEn['hub.nav.pti.supplierResponses']).toBe('Foresight commitments');
+    expect(hubEn['hub.nav.sup.forecast']).toBe('Foresight commitments');
+    expect(hubId['hub.nav.pti.supplierResponses']).toBe('Komitmen foresight');
+    expect(hubId['hub.nav.sup.forecast']).toBe('Komitmen foresight');
+    expect(hubEn['hub.nav.pti.replies']).toBe('Supplier follow-ups');
+    expect(hubId['hub.nav.pti.replies']).toBe('Tindak lanjut pemasok');
   });
 });

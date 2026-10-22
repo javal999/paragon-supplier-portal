@@ -18,14 +18,15 @@
 export const buyerSuppliersEn = {
   // — Breadcrumb —
   'buyerSuppliers.crumb.acquire': 'ACQUIRE',
-  'buyerSuppliers.crumb.directory': 'SUPPLIER DIRECTORY',
+  'buyerSuppliers.crumb.directory': 'SUPPLIERS',
   // — All-empty state —
   'buyerSuppliers.empty.title': 'No suppliers yet',
   'buyerSuppliers.empty.subtitle': 'The supplier directory is empty.',
   'buyerSuppliers.empty.message':
     'Suppliers will appear here once they are onboarded to the network.',
   // — Page header —
-  'buyerSuppliers.header.title': 'Supplier Directory',
+  // IA P-11 — the page title is the menu label.
+  'buyerSuppliers.header.title': 'Suppliers',
   'buyerSuppliers.header.subtitle': 'Manage your global supplier network across 12 countries.',
   // — Bulk actions —
   'buyerSuppliers.actions.bulkUpload': 'Bulk upload',
@@ -65,13 +66,13 @@ export const buyerSuppliersEn = {
 export const buyerSuppliersId = {
   // — Breadcrumb —
   'buyerSuppliers.crumb.acquire': 'PENGADAAN',
-  'buyerSuppliers.crumb.directory': 'DIREKTORI PEMASOK',
+  'buyerSuppliers.crumb.directory': 'PEMASOK',
   // — All-empty state —
   'buyerSuppliers.empty.title': 'Belum ada pemasok',
   'buyerSuppliers.empty.subtitle': 'Direktori pemasok masih kosong.',
   'buyerSuppliers.empty.message': 'Pemasok akan muncul di sini setelah onboarding ke jaringan.',
   // — Page header —
-  'buyerSuppliers.header.title': 'Direktori Pemasok',
+  'buyerSuppliers.header.title': 'Pemasok',
   'buyerSuppliers.header.subtitle': 'Kelola jaringan pemasok global Anda di 12 negara.',
   // — Bulk actions —
   'buyerSuppliers.actions.bulkUpload': 'Unggah massal',

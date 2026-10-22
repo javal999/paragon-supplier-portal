@@ -23,6 +23,12 @@ import BuyerCallOffs from '../BuyerCallOffs';
 import SupplierCallOffs from '../SupplierCallOffs';
 
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
+
+/**
+ * P-12 — opens one of the Call-offs tabs, by its visible name.
+ * @param {string} name
+ */
+const openTab = async (name) => fireEvent.click(await screen.findByRole('tab', { name }));
 /** @type {CurrentIdentity} */
 const SUP_008 = {
   personaType: 'supplier',
@@ -64,6 +70,7 @@ describe('the planner proposes the delay on the PTI Call-offs panel', () => {
   /** Open co-0006's panel and fill the change. */
   const openAndFill = async (/** @type {string} */ date) => {
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
+    await openTab('All call-offs');
     fireEvent.click(
       within(await screen.findByTestId(`calloff-row-${ID}`)).getByRole('button', { name: /View/ })
     );

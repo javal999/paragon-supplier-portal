@@ -5,12 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
 import { buildRepoProgram } from '@lib/storedFieldGate/derive';
 import { isTestFile, scriptKindOf } from '@test/sourceFiles';
-import {
-  folderSourceFiles,
-  pageFiles as pagesOf,
-  pageFolderSource,
-  pagesDirFolders
-} from '@test/pageFiles';
+import { folderSourceFiles, pageFiles as pagesOf, pagesDirFolders } from '@test/pageFiles';
 import { routedPageFiles } from '@test/routerPages';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -504,7 +499,7 @@ describe('⚠️ DP2-PALETTE-01 · THE INSTRUMENT ITSELF', () => {
     expect(files.length).toBeGreaterThan(200);
     // known-present, three directories deep and across the pages/components split
     expect(files).toContain('lib/chartPalette.js');
-    expect(files).toContain('pages-v2/BuyerRisk/components/WorldMap.jsx');
+    expect(files).toContain('pages-v2/BuyerCommitments/components/CumulativeCard.jsx');
     expect(files).toContain('components/ui-v2/ScoreBadge.jsx');
     expect(files).toContain('pages-v2/process-flows/FlowDiagram.jsx');
     // known-ABSENT: specs are excluded, and a fabrication is not present
@@ -533,7 +528,8 @@ describe('⚠️ DP2-PALETTE-01 · THE INSTRUMENT ITSELF', () => {
   it('⚠️ AND THE PAINTING SUBSET IS NON-EMPTY AND DERIVED', () => {
     const painting = paintingFiles();
     expect(painting.length).toBeGreaterThan(3);
-    expect(painting).toContain('pages-v2/BuyerRisk/components/WorldMap.jsx');
+    // (BuyerRisk's WorldMap was the deep member until IA P-10 retired the page.)
+    expect(painting).toContain('pages-v2/BuyerCommitments/components/CumulativeCard.jsx');
     expect(painting).toContain('components/ui-v2/ScoreBadge.jsx');
     // a page with no paint of any kind must NOT be in it
     expect(painting).not.toContain('lib/chartPalette.js');
@@ -584,25 +580,17 @@ describe('DP2-PALETTE-01 — no raw hex in any paint position, tree-wide', () =>
     ).toEqual([]);
   });
 
-  it("⚠️ SupplierWhatsApp's chrome consts are ACQUITTED BY CONSTRUCTION", () => {
-    // Not an exemption — a measurement. They are hex, they are page-local, and
-    // no paint position consumes them. If one ever does, this file says so with
-    // nobody editing it.
-    const chrome = pageFolderSource(join(SRC, 'pages-v2'), 'SupplierWhatsApp');
-    expect(chrome, 'the control is vacuous if the consts have gone').toMatch(
-      /const WHATSAPP_BG = '#/
-    );
-    expect(consumedHexBindings(chrome)).toEqual([]);
-  });
+  // IA P-10 (owner ruled 2026-10-21) — SupplierWhatsApp, whose chrome consts
+  // were acquitted here by construction, was retired with its page.
 
-  it('⚠️ AND THE THREE GRADE RAMPS ARE ACQUITTED ON POSITION, NOT ON A REASON', () => {
+  it('⚠️ AND THE GRADE RAMPS ARE ACQUITTED ON POSITION, NOT ON A REASON', () => {
     // The eight retired rows, re-derived. Each file still declares its ramp and
     // still holds raw hex; none of it sits in a paint position. If any ramp is
     // ever wired to an SVG paint, the zero above turns red on its own.
     for (const f of [
       'pages-v2/BuyerScorecard.jsx',
-      'pages-v2/SupplierPerformance.jsx',
-      'pages-v2/SupplierDashboard/components/GradeBadge.jsx'
+      // SupplierDashboard's GradeBadge held the third ramp until IA P-10.
+      'pages-v2/SupplierPerformance.jsx'
     ]) {
       const src = readSrc(f);
       // The declaration in EITHER form: TS `GRADE_TONE: Record<Grade, …>` or, once
@@ -833,7 +821,7 @@ describe('DP2-BUTTON-01 — Export never occupies the primary (action-blue) slot
 
     const scanned = exportScanned();
     expect(scanned.length).toBeGreaterThan(20);
-    expect(scanned).toContain('BuyerAnalytics.jsx');
+    expect(scanned).toContain('BuyerInvoices/index.jsx');
     // The former carve-out is scanned like any page (COMPLIANCE-CARVEOUT-01 closed).
     expect(scanned).toContain('BuyerCompliance/index.jsx');
     // Routed pages in feature folders are scanned (routedPageFiles).

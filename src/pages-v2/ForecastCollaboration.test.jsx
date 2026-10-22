@@ -65,7 +65,7 @@ const responsesFor = (supplierId, material, period) =>
     );
 
 describe('menu and copy (section 3.7)', () => {
-  it('PTI Weekly plan: This week, What to order, Make warehouse room, Publish, Supplier responses, then Demand anticipation and the what-if sandbox (FUX phase 1 and phase 2 B1, F-03; CAP-10; DRC-17)', () => {
+  it('PTI Weekly plan: This week, What to order, Make warehouse room, Publish, Foresight commitments, then Demand anticipation (FUX phase 1 and phase 2 B1, F-03; CAP-10; IA P-07)', () => {
     const weekly = /** @type {import('@components/layout-v2/navConfig').NavSection} */ (
       PTI_NAV.find((s) => s.id === 'weeklyPlan')
     );
@@ -75,9 +75,8 @@ describe('menu and copy (section 3.7)', () => {
       ['hub.nav.pti.makeRoom', '/buyer/reschedule'],
       ['hub.nav.pti.publishToSuppliers', '/buyer/stabilise'],
       ['hub.nav.pti.supplierResponses', '/buyer/collaboration'],
-      ['hub.nav.pti.demandAnticipation', '/buyer/demand-anticipation'],
-      // DRC-17 (BL-202) — the what-if sandbox, last in the weekly cycle.
-      ['hub.nav.pti.whatIfSandbox', '/buyer/what-if']
+      ['hub.nav.pti.demandAnticipation', '/buyer/demand-anticipation']
+      // IA P-07 (IA-B10) — the what-if sandbox left the menu for a row action.
     ]);
     expect(PTI_NAV.find((s) => s.id === 'forecast')).toBeUndefined();
   });

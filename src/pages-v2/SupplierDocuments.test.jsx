@@ -27,7 +27,7 @@ const SUPPLIER_NO_DOCS = {
 describe('SupplierDocuments — four honest states', () => {
   it('data: renders the scoped document table for the seeded supplier', async () => {
     renderWithProviders(<SupplierDocuments />, { identity: SUPPLIER });
-    expect(await screen.findByText('My Documents')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Profile & documents' })).toBeInTheDocument();
     // The KPI header count is present once real data resolves.
     expect(await screen.findByText('Total Documents')).toBeInTheDocument();
   });

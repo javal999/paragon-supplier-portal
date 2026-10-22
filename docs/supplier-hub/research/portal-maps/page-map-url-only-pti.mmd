@@ -1,0 +1,56 @@
+---
+title: Page map: PTI pages with no menu item
+---
+flowchart LR
+  subgraph Nomenuitemlinkedfromamenupage["No menu item, linked from a menu page"]
+    nbuyer_purchase_requisition["Purchase Requisitions"]:::urlonly
+    nbuyer_compliance["Compliance Tracker"]:::urlonly
+    nbuyer_chase["Chase"]:::urlonly
+    nbuyer_collaboration_responses["Supplier Collaboration"]:::urlonly
+    nbuyer_risk["Supply Risk & Scenario Intelligence"]:::urlonly
+    nbuyer_contracts["Contract Management"]:::urlonly
+    nbuyer_contracts__id["Contract detail"]:::detail
+    nbuyer_plan_grid["Plan Grid"]:::urlonly
+    nmarketplace["Global Supplier Marketplace"]:::urlonly
+    nmarketplace_supplier__id["Supplier storefront"]:::detail
+  end
+  subgraph Nomenuitemandnoinboundlink["No menu item and no inbound link"]
+    nbuyer_dashboard["Procurement Command Center"]:::urlonly
+    nbuyer_analytics["Analytics & Procurement Intelligence"]:::urlonly
+    nbuyer_discovery["Supplier Discovery"]:::urlonly
+    nbuyer_supplier_applications["Supplier Applications"]:::urlonly
+    nbuyer_intake_review["Intake Review"]:::urlonly
+    nbuyer_delivery_agreements["Delivery Overview"]:::urlonly
+  end
+  subgraph Menupagesthatlinkin["Menu pages that link in"]
+    nbuyer_home["My tasks"]:::menu
+    nbuyer_stock_simulation["Stock simulation"]:::menu
+    nbuyer_rfq["RFQ"]:::menu
+    nbuyer_collaboration["Supplier responses"]:::menu
+    nbuyer_comm_hub["Supplier replies"]:::menu
+  end
+  nbuyer_chase -->|link| nbuyer_comm_hub
+  nbuyer_collaboration -->|link| nbuyer_chase
+  nbuyer_collaboration -->|link| nbuyer_collaboration_responses
+  nbuyer_contracts -->|link| nbuyer_contracts__id
+  nbuyer_contracts__id -->|link| nbuyer_contracts
+  nbuyer_contracts__id -->|link| nbuyer_home
+  nbuyer_dashboard -->|link| nbuyer_compliance
+  nbuyer_dashboard -->|link| nbuyer_rfq
+  nbuyer_dashboard -->|link| nbuyer_risk
+  nbuyer_delivery_agreements -->|link| nbuyer_contracts__id
+  nbuyer_discovery -->|link| nmarketplace
+  nbuyer_home -->|task| nbuyer_chase
+  nbuyer_home -->|task| nbuyer_collaboration
+  nbuyer_home -->|task| nbuyer_rfq
+  nbuyer_intake_review -->|link| nbuyer_plan_grid
+  nbuyer_purchase_requisition -->|link| nbuyer_rfq
+  nbuyer_rfq -->|link| nbuyer_purchase_requisition
+  nbuyer_stock_simulation -->|link| nbuyer_purchase_requisition
+  nmarketplace -->|link| nmarketplace_supplier__id
+  nmarketplace_supplier__id -->|link| nmarketplace
+  classDef menu fill:#eef4ff,stroke:#3b6fd8,color:#10213f
+  classDef avatar fill:#f3eefc,stroke:#7a52c7,color:#24124a
+  classDef urlonly fill:#fff4e5,stroke:#c77700,stroke-dasharray:5 3,color:#3d2600
+  classDef detail fill:#f2f2f2,stroke:#777,color:#222
+  classDef obj fill:#e9f7ef,stroke:#2e8b57,color:#0f3020

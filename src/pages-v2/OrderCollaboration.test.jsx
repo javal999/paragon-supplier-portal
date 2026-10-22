@@ -31,7 +31,7 @@ const panel = () =>
 
 /** @param {string} poNumber */
 const openSupplierPo = async (poNumber, identity = SUPPLIER) => {
-  renderWithProviders(<SupplierOrders />, { identity });
+  renderWithProviders(<SupplierOrders />, { identity, route: '/supplier/orders?view=list' });
   fireEvent.click(await screen.findByText(poNumber));
   await waitFor(() =>
     expect(panel().getByRole('heading', { name: new RegExp(poNumber) })).toBeInTheDocument()
@@ -161,7 +161,7 @@ describe('planner — counter-offer review on BuyerOrders', () => {
 
   it('accepting confirms the PO at the counter-offer', async () => {
     adjustPo008();
-    renderWithProviders(<BuyerOrders />, { identity: BUYER });
+    renderWithProviders(<BuyerOrders />, { identity: BUYER, route: '/buyer/orders?view=list' });
     fireEvent.click(await screen.findByText('PO-2025-00108'));
     expect(panel().getByTestId('po-response-details')).toHaveTextContent('Material');
     fireEvent.click(panel().getByRole('button', { name: 'Accept counter-offer' }));
@@ -180,7 +180,7 @@ describe('planner — counter-offer review on BuyerOrders', () => {
 
   it('rejecting needs a comment, and reopens the PO for the supplier', async () => {
     adjustPo008();
-    renderWithProviders(<BuyerOrders />, { identity: BUYER });
+    renderWithProviders(<BuyerOrders />, { identity: BUYER, route: '/buyer/orders?view=list' });
     fireEvent.click(await screen.findByText('PO-2025-00108'));
     fireEvent.click(panel().getByRole('button', { name: 'Reject counter-offer' }));
     const send = panel().getByRole('button', { name: 'Send back to supplier' });
@@ -201,7 +201,10 @@ describe('planner — counter-offer review on BuyerOrders', () => {
   it('a buyer seat without procurement reads the wait, naming Procurement', async () => {
     adjustPo008();
     const receivingOnly = { ...BUYER, businessRoles: ['receiving'] };
-    renderWithProviders(<BuyerOrders />, { identity: receivingOnly });
+    renderWithProviders(<BuyerOrders />, {
+      identity: receivingOnly,
+      route: '/buyer/orders?view=list'
+    });
     fireEvent.click(await screen.findByText('PO-2025-00108'));
     const notice = panel().getByTestId('handoff-po-review-response');
     expect(notice).toHaveTextContent(i18n.t('roles.owner.procurement'));
@@ -218,7 +221,7 @@ describe('planner — counter-offer review on BuyerOrders', () => {
         rejectionCauses: ['date']
       }
     }));
-    renderWithProviders(<BuyerOrders />, { identity: BUYER });
+    renderWithProviders(<BuyerOrders />, { identity: BUYER, route: '/buyer/orders?view=list' });
     fireEvent.click(await screen.findByRole('tab', { name: /^Rejected/ }));
     const row = /** @type {HTMLTableRowElement} */ (
       (await screen.findByText('PO-2025-00108')).closest('tr')

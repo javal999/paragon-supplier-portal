@@ -21,6 +21,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @import { Persona } from '@components/layout-v2/navConfig' */
+/** @import { LifecycleStepId } from '@services/data/poResponseProjection' */
 
 /** The columns of the summary, in the order BR-01 lists them. */
 /**
@@ -53,6 +54,8 @@ export const DRILL_COLUMNS = [
 /** The parameter that marks a destination as reached FROM the summary (BR-04). */
 export const FROM_PARAM = 'from';
 export const FROM_ORDER_SUMMARY = 'order-summary';
+/** The `from` value that marks a stage page as reached FROM a PO record (P-01). */
+export const FROM_PO = 'po';
 /** The PO filter parameter — the convention `/buyer/orders?po=` already set. */
 export const PO_PARAM = 'po';
 
@@ -147,12 +150,57 @@ export function drillHref(column, persona, target) {
 }
 
 /**
- * Where "Back to order summary" points (BR-04).
+ * Where "Back to order summary" points (BR-04). The summary is the default
+ * view of Purchase orders (P-02); `view=summary` names it explicitly so the
+ * address still says which view it opens.
  * @param {Persona} persona
  * @returns {string}
  */
-export const orderSummaryPath = (persona) =>
-  persona === 'buyer' ? '/buyer/order-summary' : '/supplier/order-summary';
+export const orderSummaryPath = (persona) => `${drillPath('po', persona)}?view=summary`;
+
+// ── The PO record's own links (P-01) ────────────────────────────────────────
+
+/**
+ * Which summary column each PO lifecycle step opens. The step reads the same
+ * record the column does, so it reuses the column's destination rather than
+ * keeping a second map of pages.
+ * @type {Record<LifecycleStepId, DrillColumn>}
+ */
+const STEP_COLUMN = {
+  response: 'response',
+  confirmations: 'shipping',
+  asn: 'asns',
+  goodsReceipt: 'receipts',
+  invoice: 'invoices'
+};
+
+/**
+ * The address a reached lifecycle step links to, filtered to its PO. The
+ * response and shipping-notice steps open the PO itself, so they carry
+ * `focus` and no way back; the stage pages carry `from=po`, so they can offer
+ * "Back to purchase order".
+ * @param {LifecycleStepId} step
+ * @param {Persona} persona
+ * @param {string} poId
+ * @returns {string}
+ */
+export function lifecycleStepHref(step, persona, poId) {
+  const column = STEP_COLUMN[step];
+  const q = new URLSearchParams();
+  q.set(PO_PARAM, poId);
+  if (column === 'response' || column === 'shipping') q.set('focus', column);
+  else q.set(FROM_PARAM, FROM_PO);
+  return `${drillPath(column, persona)}?${q.toString()}`;
+}
+
+/**
+ * Where "Back to purchase order" points: the PO opened on Purchase orders.
+ * @param {Persona} persona
+ * @param {string} poId
+ * @returns {string}
+ */
+export const purchaseOrderPath = (persona, poId) =>
+  `${drillPath('po', persona)}?${PO_PARAM}=${encodeURIComponent(poId)}`;
 
 // ── The empty-cell contract (BR-03) ─────────────────────────────────────────
 

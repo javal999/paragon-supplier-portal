@@ -6,6 +6,10 @@ import { foresightAnswerOf } from '@services/transitions/forecastRules';
 /** @import { SummaryInvoice } from './orders/OrderSummaryView' */
 import OrderSummaryView from './orders/OrderSummaryView';
 
+// P-02 — this is the Summary view of Purchase orders: `/<persona>/orders`
+// renders it by default (`BuyerOrders` / `SupplierOrders`), and the old
+// `order-summary` route renders the same page until it redirects there.
+//
 // PTI Order summary (REQ-E07-03). Foresight answers come from the forecast
 // commitments (REQ-E06-02): each current forecast line and where its
 // commitment stands. PTI never reads a supplier's draft.

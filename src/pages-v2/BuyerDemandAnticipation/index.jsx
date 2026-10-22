@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
+import Tabs from '@components/ui-v2/Tabs';
 import PageMetaLine from '@components/ui-v2/PageMetaLine';
 import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
 import Data from '@components/ui-v2/Data';
@@ -11,6 +12,7 @@ import Button from '@components/ui-v2/Button';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { formatDate } from '@lib/format';
+import { usePageTab } from '@hooks/usePageTab';
 import { useDemandAnticipation } from '@services/query/hooks';
 /** @import { DemandAnticipationRow } from '@services/transitions/demandAnticipationRules' */
 import { inputClass, inventoryNow, labelClass } from '../inventory/inventoryDisplay';
@@ -37,10 +39,21 @@ import { latestPublication, publishPreview, sharePct, weekDates, weekLabel } fro
 // Every input is sample data (the sample LTP and SAP stock fixtures), so the
 // Sample data marker always shows. The figure is never shown as "DA": that
 // abbreviation labels Delivery Agreements (CAP-D10).
+//
+// P-12 (IA-B06) — TABS. The header and the as-of line with the Sample data
+// badge stay above the tabs; below them "This week" (the publication, the
+// filters and the per-material cards), then "Record consumption" (CAP-11).
+// The publication history stays its own page, linked beside the tabs and
+// from the publication. The tab is `?tab=thisWeek|consumption`; the
+// `supplier=` / `material=` filters live on This week, which is the default.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @param {DemandAnticipationRow} r */
 const keyOf = (r) => `${r.supplierId}-${r.materialCode}`;
+
+/** P-12 — the page's tabs, in order; the first opens by default. */
+// i18n-defer: tab identifiers, not copy — each renders through t(`demandAnt.tab.${id}`)
+export const DEMAND_ANTICIPATION_TABS = /** @type {const} */ (['thisWeek', 'consumption']);
 
 /** @type {React.FC} */
 const BuyerDemandAnticipation = () => {
@@ -52,6 +65,7 @@ const BuyerDemandAnticipation = () => {
   const rows = useMemo(() => query.data?.items ?? [], [query.data]);
   const supplier = params.get('supplier');
   const material = params.get('material');
+  const { tab, select } = usePageTab(DEMAND_ANTICIPATION_TABS);
 
   if (query.isPending) return <LoadingState breadcrumb={crumb} />;
   if (query.isError)
@@ -95,142 +109,185 @@ const BuyerDemandAnticipation = () => {
         <SampleDataBadge className="ml-3 align-middle" />
       </PageMetaLine>
 
-      <section
-        className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-4"
-        data-testid="dant-publication"
-      >
-        <p className="text-sm text-text-primary mb-1" data-testid="dant-planning-week">
-          <span className="text-text-secondary">{t('demandAnt.pub.label')}: </span>
-          <Data>{weekLabel(planningWeek)}</Data>{' '}
-          <span className="text-text-secondary">({weekDates([planningWeek])})</span>
-          {' · '}
-          <span data-testid="dant-publication-state">
-            {published
-              ? changed > 0
-                ? t('demandAnt.pub.publishedChanged', { count: changed })
-                : t('demandAnt.pub.publishedSame')
-              : t('demandAnt.pub.none')}
-          </span>
-        </p>
-        {latest ? (
-          <p className="text-xs text-text-tertiary mb-3" data-testid="dant-latest-publication">
-            {latest.source === 'sampleSeed'
-              ? t('demandAnt.pub.sampleSeed', { date: formatDate(latest.publishedAt) })
-              : `${t('demandAnt.pub.published', { date: formatDate(latest.publishedAt) })} · ${t('demandAnt.pub.unattributed')}`}
-          </p>
-        ) : null}
-        <p className="text-xs text-text-tertiary mb-3">
-          {t('demandAnt.howItWorks')}{' '}
-          {/* DRC-3 (BL-189) — every publication, with its stamp and carry origin. */}
-          <Link
-            to="/buyer/demand-anticipation-history"
-            className="text-action-hover hover:underline"
-            data-testid="dant-history-link"
-          >
-            {t('daHist.openHistory')}
-          </Link>
-        </p>
-        <PublishPanel rows={rows} planningWeek={planningWeek} changed={changed} />
-      </section>
-
-      {/* CAP-11 (kept) — the planner records consumption; it feeds the grid and the DRC-18 average. */}
-      <ConsumptionPanel rows={rows} nowIso={nowIso} />
-
-      <div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(2,minmax(0,16rem))_auto] items-end gap-3 mb-4"
-        data-testid="dant-filters"
-      >
-        <div>
-          <label htmlFor="dant-filter-supplier" className={labelClass}>
-            {t('demandAnt.filter.supplier')}
-          </label>
-          <select
-            id="dant-filter-supplier"
-            className={inputClass}
-            value={supplier ?? ''}
-            onChange={(e) => setFilter('supplier', e.target.value)}
-          >
-            <option value="">{t('demandAnt.filter.all')}</option>
-            {supplierOptions.map(([id, name]) => (
-              <option key={id} value={id}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="dant-filter-material" className={labelClass}>
-            {t('demandAnt.filter.material')}
-          </label>
-          <select
-            id="dant-filter-material"
-            className={inputClass}
-            value={material ?? ''}
-            onChange={(e) => setFilter('material', e.target.value)}
-          >
-            <option value="">{t('demandAnt.filter.all')}</option>
-            {materialOptions.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-        </div>
-        {filtered ? (
-          <Button
-            variant="secondary"
-            onClick={() => setParams(new URLSearchParams(), { replace: true })}
-            data-testid="dant-filters-clear"
-          >
-            {t('demandAnt.filter.clear')}
-          </Button>
-        ) : null}
+      <div className="flex flex-wrap items-end justify-between gap-x-6 mb-4">
+        <Tabs
+          tabs={DEMAND_ANTICIPATION_TABS.map((id) => ({ id, label: t(`demandAnt.tab.${id}`) }))}
+          active={tab}
+          onChange={(id) => select(/** @type {(typeof DEMAND_ANTICIPATION_TABS)[number]} */ (id))}
+          className="flex-1"
+        />
+        {/* P-12 — the history is its own page, linked beside the tabs. */}
+        <Link
+          to="/buyer/demand-anticipation-history"
+          className="py-3 text-sm text-action-hover hover:underline"
+          data-testid="dant-history-tab-link"
+        >
+          {t('daHist.openHistory')}
+        </Link>
       </div>
 
-      <p className="text-xs text-text-tertiary mb-3">{t('demandAnt.wouldBeHelp')}</p>
-
-      <div className="space-y-3">
-        {shown.map((r) => (
-          <section
-            key={keyOf(r)}
-            data-testid={`dant-card-${keyOf(r)}`}
-            className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm"
-          >
-            <header className="px-4 py-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <span className="text-sm font-semibold text-text-primary">{r.supplierName}</span>
-              <Data className="text-sm">{r.materialCode}</Data>
-              <span className="text-sm text-text-secondary">{r.materialLabel}</span>
-              {r.share !== null ? (
-                <span
-                  className="ml-auto text-xs text-text-tertiary"
-                  data-testid={`dant-share-${keyOf(r)}`}
-                >
-                  {t('demandAnt.card.share', { pct: sharePct(r.share) })}
+      <div
+        role="tabpanel"
+        aria-label={t(`demandAnt.tab.${tab}`)}
+        data-testid={`dant-tabpanel-${tab}`}
+      >
+        {tab === 'thisWeek' && (
+          <>
+            <section
+              className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-4"
+              data-testid="dant-publication"
+            >
+              <p className="text-sm text-text-primary mb-1" data-testid="dant-planning-week">
+                <span className="text-text-secondary">{t('demandAnt.pub.label')}: </span>
+                <Data>{weekLabel(planningWeek)}</Data>{' '}
+                <span className="text-text-secondary">({weekDates([planningWeek])})</span>
+                {' · '}
+                <span data-testid="dant-publication-state">
+                  {published
+                    ? changed > 0
+                      ? t('demandAnt.pub.publishedChanged', { count: changed })
+                      : t('demandAnt.pub.publishedSame')
+                    : t('demandAnt.pub.none')}
                 </span>
+              </p>
+              {latest ? (
+                <p
+                  className="text-xs text-text-tertiary mb-3"
+                  data-testid="dant-latest-publication"
+                >
+                  {latest.source === 'sampleSeed'
+                    ? t('demandAnt.pub.sampleSeed', { date: formatDate(latest.publishedAt) })
+                    : `${t('demandAnt.pub.published', { date: formatDate(latest.publishedAt) })} · ${t('demandAnt.pub.unattributed')}`}
+                </p>
               ) : null}
-            </header>
-            {!r.stockOnRecord ? (
-              <p className="px-4 pb-2 text-xs text-warning-hover">{t('demandAnt.card.noStock')}</p>
-            ) : null}
-            <PlanCheck row={r} rowKey={keyOf(r)} />
-            <div className="border-t border-border-subtle">
-              <AnticipationGrid row={r} rowKey={keyOf(r)} currentWeek={nowIso.slice(0, 10)} />
+              <p className="text-xs text-text-tertiary mb-3">
+                {t('demandAnt.howItWorks')}{' '}
+                {/* DRC-3 (BL-189) — every publication, with its stamp and carry origin. */}
+                <Link
+                  to="/buyer/demand-anticipation-history"
+                  className="text-action-hover hover:underline"
+                  data-testid="dant-history-link"
+                >
+                  {t('daHist.openHistory')}
+                </Link>
+              </p>
+              <PublishPanel rows={rows} planningWeek={planningWeek} changed={changed} />
+            </section>
+
+            <div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(2,minmax(0,16rem))_auto] items-end gap-3 mb-4"
+              data-testid="dant-filters"
+            >
+              <div>
+                <label htmlFor="dant-filter-supplier" className={labelClass}>
+                  {t('demandAnt.filter.supplier')}
+                </label>
+                <select
+                  id="dant-filter-supplier"
+                  className={inputClass}
+                  value={supplier ?? ''}
+                  onChange={(e) => setFilter('supplier', e.target.value)}
+                >
+                  <option value="">{t('demandAnt.filter.all')}</option>
+                  {supplierOptions.map(([id, name]) => (
+                    <option key={id} value={id}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="dant-filter-material" className={labelClass}>
+                  {t('demandAnt.filter.material')}
+                </label>
+                <select
+                  id="dant-filter-material"
+                  className={inputClass}
+                  value={material ?? ''}
+                  onChange={(e) => setFilter('material', e.target.value)}
+                >
+                  <option value="">{t('demandAnt.filter.all')}</option>
+                  {materialOptions.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {filtered ? (
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    const next = new URLSearchParams(params);
+                    next.delete('supplier');
+                    next.delete('material');
+                    setParams(next, { replace: true });
+                  }}
+                  data-testid="dant-filters-clear"
+                >
+                  {t('demandAnt.filter.clear')}
+                </Button>
+              ) : null}
             </div>
-          </section>
-        ))}
-        {shown.length === 0 ? (
-          <div
-            className="bg-bg-surface border border-border-subtle rounded-lg py-10 px-6 text-center"
-            data-testid="dant-empty"
-          >
-            <p className="text-base font-semibold text-text-primary mb-1">
-              {t('demandAnt.empty.title')}
-            </p>
-            <p className="text-sm text-text-tertiary">
-              {filtered ? t('demandAnt.empty.filtered') : t('demandAnt.empty.body')}
-            </p>
-          </div>
-        ) : null}
+
+            <p className="text-xs text-text-tertiary mb-3">{t('demandAnt.wouldBeHelp')}</p>
+
+            <div className="space-y-3">
+              {shown.map((r) => (
+                <section
+                  key={keyOf(r)}
+                  data-testid={`dant-card-${keyOf(r)}`}
+                  className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm"
+                >
+                  <header className="px-4 py-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <span className="text-sm font-semibold text-text-primary">
+                      {r.supplierName}
+                    </span>
+                    <Data className="text-sm">{r.materialCode}</Data>
+                    <span className="text-sm text-text-secondary">{r.materialLabel}</span>
+                    {r.share !== null ? (
+                      <span
+                        className="ml-auto text-xs text-text-tertiary"
+                        data-testid={`dant-share-${keyOf(r)}`}
+                      >
+                        {t('demandAnt.card.share', { pct: sharePct(r.share) })}
+                      </span>
+                    ) : null}
+                  </header>
+                  {!r.stockOnRecord ? (
+                    <p className="px-4 pb-2 text-xs text-warning-hover">
+                      {t('demandAnt.card.noStock')}
+                    </p>
+                  ) : null}
+                  <PlanCheck row={r} rowKey={keyOf(r)} />
+                  <div className="border-t border-border-subtle">
+                    <AnticipationGrid row={r} rowKey={keyOf(r)} currentWeek={nowIso.slice(0, 10)} />
+                  </div>
+                </section>
+              ))}
+              {shown.length === 0 ? (
+                <div
+                  className="bg-bg-surface border border-border-subtle rounded-lg py-10 px-6 text-center"
+                  data-testid="dant-empty"
+                >
+                  <p className="text-base font-semibold text-text-primary mb-1">
+                    {t('demandAnt.empty.title')}
+                  </p>
+                  <p className="text-sm text-text-tertiary">
+                    {filtered ? t('demandAnt.empty.filtered') : t('demandAnt.empty.body')}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          </>
+        )}
+
+        {tab === 'consumption' && (
+          <>
+            {/* CAP-11 (kept) — the planner records consumption; it feeds the grid and the DRC-18 average. */}
+            <ConsumptionPanel rows={rows} nowIso={nowIso} />
+          </>
+        )}
       </div>
     </AppShellV2>
   );

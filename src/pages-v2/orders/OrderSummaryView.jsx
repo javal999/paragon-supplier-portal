@@ -50,6 +50,7 @@ import {
 import { drillHref, EMPTY_CONTRACT, NOT_REQUIRED } from './orderSummaryDrill';
 import { DrillLink, EmptyCell } from './DrillCell';
 import { readOrderSummaryViewState, saveOrderSummaryViewState } from './orderSummaryViewState';
+import OrdersViewSwitch, { PURCHASE_ORDERS_HEADER } from './OrdersViewSwitch';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ORDER COLLABORATION SUMMARY — REQ-E07-03 (MN-ORD-10 to MN-ORD-13).
@@ -73,6 +74,9 @@ import { readOrderSummaryViewState, saveOrderSummaryViewState } from './orderSum
 //
 // A supplier sees its own POs only: the PO read is already scoped to the
 // session's supplier (BR-06), so nothing here filters by supplier by hand.
+//
+// P-02 — this is the Summary view of Purchase orders: it wears that page's
+// title and breadcrumb, and the "Summary | List" switch sits under the header.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @type {Record<ResponseStatus, StatusTone>} */
@@ -213,10 +217,8 @@ const OrderSummaryView = ({ persona, foresightAnswers, invoices }) => {
   const callOffs = useCallOffViews();
   const capacityPlans = useCapacityPlans();
   const nowIso = ordersNow();
-  const crumb = [
-    t(persona === 'buyer' ? 'hub.nav.section.orders' : 'hub.nav.section.supplierOrders'),
-    t('oc.summary.title')
-  ];
+  const header = PURCHASE_ORDERS_HEADER[persona];
+  const crumb = header.crumb.map((key) => t(key));
 
   // BR-04 / AC-06 — the filters and the scroll offset the user left behind.
   const stored = useRef(readOrderSummaryViewState(persona));
@@ -352,13 +354,15 @@ const OrderSummaryView = ({ persona, foresightAnswers, invoices }) => {
     <AppShellV2>
       <PageHeader
         breadcrumb={crumb}
-        title={t('oc.summary.title')}
+        title={t(header.title)}
         subtitle={t(persona === 'buyer' ? 'oc.summary.subtitle.pti' : 'oc.summary.subtitle.sup')}
       />
       <PageMetaLine className="-mt-6 mb-4">
         {t('oc.summary.asOf')} <Data>{formatDate(nowIso)}</Data>
         <SampleDataBadge className="ml-3 align-middle" />
       </PageMetaLine>
+
+      <OrdersViewSwitch persona={persona} view="summary" />
 
       {escalated > 0 && (
         <div

@@ -269,13 +269,25 @@ const SupplierDocuments = () => {
   const nowIso = TODAY;
   const [filterCat, setFilterCat] = useState(/** @type {CategoryFilter} */ ('All'));
   const [expiryFilter, setExpiryFilter] = useState(
-    /** @type {'all' | 'expired' | 'expiring'} */ ('all')
+    /** @type {'all' | 'expired' | 'expiring' | 'due' | 'awaiting-upload'} */ ('all')
   );
-  // Deep-link read: `?expiry=expired|expiring` narrows the "certificates
-  // expired or expiring" task.
+  // Deep-link read: `?expiry=expired|expiring|due` narrows the "certificates
+  // expired or expiring" task (`due` is both kinds, IA P-08: the task counts
+  // both, so no single kind may stand for it), and `?status=awaiting-upload`
+  // the "Documents PTI asked for" task (IA P-03).
   useUrlEnumParam(
     'expiry',
-    /** @type {('all' | 'expired' | 'expiring')[]} */ (['all', 'expired', 'expiring']),
+    /** @type {('all' | 'expired' | 'expiring' | 'due')[]} */ ([
+      'all',
+      'expired',
+      'expiring',
+      'due'
+    ]),
+    setExpiryFilter
+  );
+  useUrlEnumParam(
+    'status',
+    /** @type {'awaiting-upload'[]} */ (['awaiting-upload']),
     setExpiryFilter
   );
   const [search, setSearch] = useState('');
@@ -314,8 +326,11 @@ const SupplierDocuments = () => {
     () =>
       docs.filter((d) => {
         const matchCat = filterCat === 'All' || d.category === filterCat;
+        const state = documentDisplayState(d, nowIso);
         const matchExpiry =
-          expiryFilter === 'all' || documentDisplayState(d, nowIso) === expiryFilter;
+          expiryFilter === 'all' ||
+          state === expiryFilter ||
+          (expiryFilter === 'due' && (state === 'expired' || state === 'expiring'));
         const q = search.toLowerCase();
         const matchSearch =
           q === '' || d.name.toLowerCase().includes(q) || d.issuedBy.toLowerCase().includes(q);
@@ -620,7 +635,9 @@ const SupplierDocuments = () => {
             options={[
               { id: 'all', label: t('inv.filter.all') },
               { id: 'expired', label: t('supplierDocuments.filter.expired') },
-              { id: 'expiring', label: t('supplierDocuments.filter.expiring') }
+              { id: 'expiring', label: t('supplierDocuments.filter.expiring') },
+              { id: 'due', label: t('supplierDocuments.filter.due') },
+              { id: 'awaiting-upload', label: t('supplierDocuments.filter.requested') }
             ]}
             value={expiryFilter}
             onChange={setExpiryFilter}

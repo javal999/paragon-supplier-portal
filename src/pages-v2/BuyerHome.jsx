@@ -13,9 +13,10 @@ import {
   useInventoryAlerts,
   useGoodsReceipts,
   usePurchaseOrders,
-  useQuotations,
   useRFQs,
   useNegotiationRounds,
+  useRequisitions,
+  useDocuments,
   useNpdReviews,
   useRopFisikPrRecommendations
 } from '@services/query/hooks';
@@ -39,9 +40,9 @@ import { deliveryDrift, isDriftResult } from '@services/transitions/callOffRules
 import { useCallOffViews } from './callOffs/callOffDisplay';
 import { gapWeeks, planStatus } from '@services/transitions/capacityRules';
 import { deadlineState } from '@services/transitions/forecastRules';
-import { isClosingSoon } from '@services/transitions/rfxRules';
 import { forecastNow } from './forecasts/forecastDisplay';
 import { rfxNow } from './rfx/rfxDisplay';
+import { isReadyToAward, isRoundClosingSoon } from './BuyerSourcing/utils';
 import { ordersNow } from './orders/PoCollaboration';
 import { useSapInterface } from './interface/sapInterfaceDisplay';
 import { isRetryable } from '@services/data/sapInterfaceRules';
@@ -63,7 +64,10 @@ const BuyerHome = () => {
   const invoices = useBuyerInvoices();
   const pos = usePurchaseOrders();
   const rfqs = useRFQs();
-  const quotes = useQuotations();
+  // IA P-03 — requisitions waiting for approval and supplier declarations
+  // waiting for review (UC1 step 2, UC5 step 3).
+  const requisitions = useRequisitions();
+  const documents = useDocuments();
   const grs = useGoodsReceipts();
   const asns = useASNs();
   const chase = useUnifiedChase();
@@ -98,7 +102,6 @@ const BuyerHome = () => {
       const poItems = pos.data?.items ?? [];
       const invItems = invoices.data?.items ?? [];
       const rfqItems = rfqs.data?.items ?? [];
-      const quoteItems = quotes.data?.items ?? [];
       const grItems = grs.data?.items ?? [];
       const asnItems = asns.data?.items ?? [];
       const chaseRows = chase.data ?? [];
@@ -126,9 +129,31 @@ const BuyerHome = () => {
         // away from it between bumps — so a round that closes in two days
         // would read as long overdue and the task would silently vanish. The
         // forecast tasks above read `forecastNow()` for the same reason.
-        (r) => !r.closed && r.awaiting > 0 && isClosingSoon(r.deadline, rfxNow())
+        // IA P-08 — the RFQ board's rounds-closing view reads the same
+        // predicate with the same clock.
+        (r) => isRoundClosingSoon(r, rfxNow())
       );
-      const awardRfqs = d.pendingAwardRfqs(rfqItems, quoteItems);
+      // IA P-08 (IA-B03) — the board's "Ready to award" predicate, so the task
+      // and the tile count the same RFQs.
+      const awardRfqs = rfqItems.filter(isReadyToAward);
+      const receiptsToReview = d.grNeedingAction(grItems);
+      const disputedReceipts = grItems.filter(isOpenDispute);
+      const prsToApprove = (requisitions.data?.items ?? []).filter(
+        (pr) => pr.status === 'Pending Approval'
+      );
+      const declarationsToReview = (documents.data?.items ?? []).filter(
+        (doc) => doc.status === 'Under Review'
+      );
+      /**
+       * The record a count of one names, else `undefined`.
+       * @template T
+       * @param {readonly T[]} items
+       * @param {(item: T) => string} id
+       * @returns {string | undefined}
+       */
+      const onlyOne = (items, id) => (items.length === 1 ? id(items[0]) : undefined);
+      const closingRfqId = sharedValue(closingRounds, (r) => r.rfqId);
+      const awardRfqId = onlyOne(awardRfqs, (r) => r.id);
       const asnsDue = d.pendingAsns(asnItems);
       const overdueInv = d.overdueInvoices(invItems);
       // Each task names the deadline of every line item it counts and, for stock,
@@ -169,7 +194,12 @@ const BuyerHome = () => {
           label: t('hub.home.task.completionMoved'),
           count: movedPos.length,
           deadlines: movedPos.map((po) => po.requestedDeliveryDate),
-          to: '/buyer/order-summary'
+          // IA P-02 — Order summary is the `?view=summary` view of Purchase
+          // orders; a count of one opens that order.
+          to: deepLink('/buyer/orders', {
+            view: 'summary',
+            po: onlyOne(movedPos, (po) => po.id)
+          })
         },
         {
           id: 'calloffs-approval',
@@ -298,16 +328,23 @@ const BuyerHome = () => {
           label: t('hub.home.task.chase'),
           count: chaseRows.length,
           deadlines: chaseRows.flatMap((r) => r.commitmentEntries.map((e) => e.dueDate)),
-          to: '/buyer/chase'
+          // IA P-05 — the follow-up tab of Supplier follow-ups lists every
+          // supplier this count is over.
+          to: deepLink('/buyer/comm-hub', { tab: 'follow-up' })
         },
         {
           // No deadline is recorded on a goods receipt to review.
           id: 'receipts',
           roles: ['MP'],
           label: t('hub.home.task.receipts'),
-          count: d.grNeedingAction(grItems).length,
+          count: receiptsToReview.length,
           deadlines: [],
-          to: '/buyer/goods-receipt'
+          // IA P-08 — the "Needs action" tab holds exactly these receipts; a
+          // count of one opens the receipt.
+          to: deepLink('/buyer/goods-receipt', {
+            tab: 'action',
+            open: onlyOne(receiptsToReview, (gr) => gr.id)
+          })
         },
         {
           // REQ-E07-06 — a supplier disputed a receipt discrepancy; the planner
@@ -315,9 +352,10 @@ const BuyerHome = () => {
           id: 'disputed-receipts',
           roles: ['MP'],
           label: t('hub.home.task.disputedReceipts'),
-          count: grItems.filter(isOpenDispute).length,
+          count: disputedReceipts.length,
           deadlines: [],
-          to: '/buyer/goods-receipt'
+          // IA P-08 — the disputes section lists exactly these receipts.
+          to: deepLink('/buyer/goods-receipt', { section: 'disputes' })
         },
         {
           id: 'inbound-asn',
@@ -325,10 +363,10 @@ const BuyerHome = () => {
           label: t('hub.home.task.inboundAsn'),
           count: asnsDue.length,
           deadlines: asnsDue.map((a) => a.eta),
-          // D4 (PR #74 review): pendingAsns (Submitted/In Transit) is not the
-          // shipments page's Pending-tab predicate (Pending ASN/ASN Received)
-          // — link unfiltered rather than hiding every counted row.
-          to: '/buyer/shipments'
+          // D4 (PR #74 review): pendingAsns (Submitted/In Transit) counts ASNs,
+          // not the shipment rows the page's tabs filter. IA P-08 — the page
+          // lists exactly these ASNs under `?asns=toReceive`; one arrives open.
+          to: deepLink('/buyer/shipments', { asns: 'toReceive' })
         },
         {
           // REQ-E03-05 BR-03 — a round whose deadline is close and whose invitees
@@ -338,9 +376,13 @@ const BuyerHome = () => {
           label: t('hub.home.task.negotiationClosing'),
           count: closingRounds.length,
           deadlines: closingRounds.map((r) => r.deadline),
-          // D3 (PR #74 review): the round closing soon need not be Open, so
-          // the Open tab can hide the one round this task counts — unfiltered.
-          to: '/buyer/rfq'
+          // D3 (PR #74 review): the round closing soon need not be Open, so no
+          // status tab holds it. IA P-08 — the board's rounds-closing view
+          // shows the RFQs holding these rounds; when they are all on one RFQ,
+          // its event page opens at its rounds.
+          to: closingRfqId
+            ? deepLink(`/buyer/rfq/${closingRfqId}`, { section: 'rounds' })
+            : deepLink('/buyer/rfq', { view: 'roundsClosing' })
         },
         {
           id: 'rfq-award',
@@ -348,10 +390,34 @@ const BuyerHome = () => {
           label: t('hub.home.task.rfqAward'),
           count: awardRfqs.length,
           deadlines: awardRfqs.map((r) => r.awardDeadline),
-          // D2 (PR #74 review): pendingAwardRfqs is not the Pending tab's own
-          // predicate (it also counts Closed/partially-answered Open rounds)
-          // — link unfiltered.
-          to: '/buyer/rfq'
+          // IA P-08 — the "Ready to award" tile filters to exactly these RFQs;
+          // a count of one opens the RFQ at its award section.
+          to: awardRfqId
+            ? deepLink(`/buyer/rfq/${awardRfqId}`, { section: 'award' })
+            : deepLink('/buyer/rfq', { kpi: 'ready' })
+        },
+        {
+          // IA P-03 (IA-B01) — UC1 step 2: a requisition waiting for Procurement's approval.
+          id: 'requisitions-to-approve',
+          roles: ['BUY'],
+          label: t('hub.home.task.requisitionsToApprove'),
+          count: prsToApprove.length,
+          deadlines: prsToApprove.map((pr) => pr.requiredDate),
+          to: deepLink('/buyer/purchase-requisition', {
+            ...(prsToApprove.length === 1
+              ? { open: prsToApprove[0].id }
+              : { status: 'Pending Approval' })
+          })
+        },
+        {
+          // IA P-03 (IA-B02) — UC5 step 3: a certificate a supplier declared,
+          // waiting for PTI to verify or reject it. No deadline is recorded.
+          id: 'certs-to-review',
+          roles: ['BUY'],
+          label: t('hub.home.task.certsToReview'),
+          count: declarationsToReview.length,
+          deadlines: [],
+          to: deepLink('/buyer/compliance', { section: 'review' })
         },
         {
           // REQ-E07-08 AC-02 — only a RETRYABLE failure is a task: a business
@@ -383,7 +449,8 @@ const BuyerHome = () => {
       pos.data,
       invoices.data,
       rfqs.data,
-      quotes.data,
+      requisitions.data,
+      documents.data,
       grs.data,
       asns.data,
       chase.data,

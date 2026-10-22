@@ -59,14 +59,20 @@ describe('⚠️ SupplierOrders — `po:confirm` is FULFILMENT’s', () => {
   };
 
   it('the SEEDED seat gets the affordance (the held control)', async () => {
-    renderWithProviders(<SupplierOrders />, { identity: SUPPLIER });
+    renderWithProviders(<SupplierOrders />, {
+      identity: SUPPLIER,
+      route: '/supplier/orders?view=list'
+    });
     await openFirstOrder();
     expect(await screen.findByText(i18n.t('po.confirm.action'))).toBeInTheDocument();
     expect(screen.queryByTestId('handoff-po-confirm')).not.toBeInTheDocument();
   });
 
   it('⚠️ a COMMERCIAL-only seat reads the WAIT, and it NAMES the lane', async () => {
-    renderWithProviders(<SupplierOrders />, { identity: COMMERCIAL_ONLY });
+    renderWithProviders(<SupplierOrders />, {
+      identity: COMMERCIAL_ONLY,
+      route: '/supplier/orders?view=list'
+    });
     await openFirstOrder();
     const notice = await screen.findByTestId('handoff-po-confirm');
     // Not merely "withheld" — the owner is what makes a handoff a handoff.
@@ -239,7 +245,10 @@ describe('⚠️ §84 SupplierOrders — the ROW-ACTION entrance, which bypassed
   const VIEW_LABEL = () => i18n.t('supplierOrders.action.view');
 
   it('⚠️ a COMMERCIAL seat reaches NO commit by the ROW-ACTION door either', async () => {
-    renderWithProviders(<SupplierOrders />, { identity: COMMERCIAL_ONLY });
+    renderWithProviders(<SupplierOrders />, {
+      identity: COMMERCIAL_ONLY,
+      route: '/supplier/orders?view=list'
+    });
     await clickRowAction(VIEW_LABEL());
     // and the label it did NOT get, asserted here too — the button that opens
     // this panel must not still be claiming the verb behind it.
@@ -259,7 +268,10 @@ describe('⚠️ §84 SupplierOrders — the ROW-ACTION entrance, which bypassed
   });
 
   it('…and a BACK_OFFICE seat is refused by the same door, naming the same lane', async () => {
-    renderWithProviders(<SupplierOrders />, { identity: BACK_OFFICE_ONLY });
+    renderWithProviders(<SupplierOrders />, {
+      identity: BACK_OFFICE_ONLY,
+      route: '/supplier/orders?view=list'
+    });
     await clickRowAction(VIEW_LABEL());
     expect(screen.queryByText(CONFIRM_LABEL())).not.toBeInTheDocument();
     expect(await screen.findByTestId('handoff-po-confirm')).toHaveTextContent(
@@ -269,7 +281,10 @@ describe('⚠️ §84 SupplierOrders — the ROW-ACTION entrance, which bypassed
   });
 
   it('…and a FULFILMENT seat still reaches the commit BY THAT SAME DOOR', async () => {
-    renderWithProviders(<SupplierOrders />, { identity: FULFILMENT_ONLY });
+    renderWithProviders(<SupplierOrders />, {
+      identity: FULFILMENT_ONLY,
+      route: '/supplier/orders?view=list'
+    });
     await clickRowAction(CONFIRM_LABEL());
     // The editing mode is intact for the seat that holds the verb — the fix
     // gated the mode, it did not delete the path.
@@ -281,7 +296,10 @@ describe('⚠️ §84 SupplierOrders — the ROW-ACTION entrance, which bypassed
   });
 
   it('⚠️ …and it DISPATCHES end to end — the held path is proved, not assumed', async () => {
-    renderWithProviders(<SupplierOrders />, { identity: FULFILMENT_ONLY });
+    renderWithProviders(<SupplierOrders />, {
+      identity: FULFILMENT_ONLY,
+      route: '/supplier/orders?view=list'
+    });
     await clickRowAction(CONFIRM_LABEL());
     fireEvent.click(await screen.findByText(i18n.t('po.confirm.action')));
     await waitFor(() => {
@@ -298,7 +316,10 @@ describe('⚠️ §84 SupplierOrders — the ROW-ACTION entrance, which bypassed
     // The shell already carries the identity panel — rendering a second one
     // here made `identity-avatar` ambiguous, which is the honest signal that the
     // control under test is the SHELL's, reached the way a person reaches it.
-    renderWithProviders(<SupplierOrders />, { identity: SUPPLIER });
+    renderWithProviders(<SupplierOrders />, {
+      identity: SUPPLIER,
+      route: '/supplier/orders?view=list'
+    });
     await clickRowAction(CONFIRM_LABEL());
     expect(
       await screen.findByText(i18n.t('supplierOrders.panel.lineItemsConfirm'))

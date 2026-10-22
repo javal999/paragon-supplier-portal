@@ -1,0 +1,61 @@
+---
+title: Page map: Weekly plan and Review (PTI · Material Planner)
+---
+flowchart LR
+  subgraph Weeklyplan["Weekly plan"]
+    nbuyer_this_week["This week"]:::menu
+    nbuyer_order_plan["What to order"]:::menu
+    nbuyer_reschedule["Make warehouse room"]:::menu
+    nbuyer_stabilise["Publish to suppliers"]:::menu
+    nbuyer_collaboration["Supplier responses"]:::menu
+    nbuyer_demand_anticipation["Demand anticipation"]:::menu
+    nbuyer_what_if["What-if sandbox"]:::menu
+  end
+  subgraph Review["Review"]
+    nbuyer_scorecard["Supplier performance"]:::menu
+    nbuyer_demand_forecast["Forecast quality"]:::menu
+    nbuyer_fs_reconcile["Feedstock reconcile"]:::menu
+    nbuyer_demand_anticipation_history["Demand anticipation history"]:::menu
+  end
+  subgraph AvatarmenuPlanningengine["Avatar menu · Planning engine"]
+    nbuyer_data_health["Planning engine · Data health"]:::avatar
+    nbuyer_material_requirement["Planning engine · Material requirement"]:::avatar
+    nbuyer_safety_stock["Planning engine · Safety stock targets"]:::avatar
+    nbuyer_model_backtest["Planning engine · Model backtest"]:::avatar
+    nbuyer_reliability["Planning engine · Supplier reliability"]:::avatar
+  end
+  subgraph Nomenuitem["No menu item"]
+    nbuyer_collaboration_responses["Supplier Collaboration"]:::urlonly
+    nbuyer_chase["Chase"]:::urlonly
+  end
+  nbuyer_collaboration -->|link| nbuyer_chase
+  nbuyer_collaboration -->|link| nbuyer_collaboration_responses
+  nbuyer_collaboration -->|next| nbuyer_scorecard
+  nbuyer_data_health -->|next| nbuyer_order_plan
+  nbuyer_demand_anticipation -->|link| nbuyer_demand_anticipation_history
+  nbuyer_demand_anticipation_history -->|link| nbuyer_demand_anticipation
+  nbuyer_demand_forecast -->|next| nbuyer_fs_reconcile
+  nbuyer_demand_forecast -->|link| nbuyer_model_backtest
+  nbuyer_fs_reconcile -->|next| nbuyer_order_plan
+  nbuyer_material_requirement -->|link| nbuyer_order_plan
+  nbuyer_material_requirement -->|next| nbuyer_order_plan
+  nbuyer_model_backtest -->|next| nbuyer_demand_forecast
+  nbuyer_order_plan -->|link| nbuyer_demand_anticipation
+  nbuyer_order_plan -->|link| nbuyer_material_requirement
+  nbuyer_order_plan -->|link| nbuyer_reschedule
+  nbuyer_order_plan -->|next| nbuyer_reschedule
+  nbuyer_order_plan -->|link| nbuyer_safety_stock
+  nbuyer_reliability -->|next| nbuyer_reschedule
+  nbuyer_reschedule -->|next| nbuyer_stabilise
+  nbuyer_safety_stock -->|next| nbuyer_order_plan
+  nbuyer_scorecard -->|link| nbuyer_reliability
+  nbuyer_stabilise -->|next| nbuyer_collaboration
+  nbuyer_stabilise -->|link| nbuyer_demand_forecast
+  nbuyer_this_week -->|next| nbuyer_data_health
+  nbuyer_this_week -->|next| nbuyer_order_plan
+  nbuyer_scorecard -->|next| nbuyer_demand_forecast
+  classDef menu fill:#eef4ff,stroke:#3b6fd8,color:#10213f
+  classDef avatar fill:#f3eefc,stroke:#7a52c7,color:#24124a
+  classDef urlonly fill:#fff4e5,stroke:#c77700,stroke-dasharray:5 3,color:#3d2600
+  classDef detail fill:#f2f2f2,stroke:#777,color:#222
+  classDef obj fill:#e9f7ef,stroke:#2e8b57,color:#0f3020

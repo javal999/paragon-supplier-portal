@@ -31,13 +31,13 @@ const SUPPLIER_NO_INVOICES = {
 describe('BuyerInvoices — four honest states', () => {
   it('data: renders the invoice workspace once the list resolves', async () => {
     renderWithProviders(<BuyerInvoices />);
-    expect(await screen.findByText('Invoices & Payment')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Invoices' })).toBeInTheDocument();
   });
 
   it('loading: shows LoadingState while the list is pending', () => {
     renderWithProviders(<BuyerInvoices />, { service: alwaysPending });
     expect(screen.getByText('Loading…')).toBeInTheDocument();
-    expect(screen.queryByText('Invoices & Payment')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Invoices' })).not.toBeInTheDocument();
   });
 
   it('error: shows ErrorState when the list read throws', async () => {
@@ -64,7 +64,7 @@ describe('BuyerInvoices — release payment is Option B (no fabrication)', () =>
   it('release → Releasing Payment (no ref) → settle → Payment Released (real ref)', async () => {
     invoiceStore.reset();
     renderWithProviders(<BuyerInvoices />);
-    await screen.findByText('Invoices & Payment');
+    await screen.findByRole('heading', { name: 'Invoices' });
 
     // inv-giv-0892 is Approved (matched), no payment ref yet.
     fireEvent.click(await screen.findByText('INV-2025-GIV-0892'));
@@ -187,7 +187,7 @@ describe('BuyerInvoices — the release affordance survives the clock', () => {
   it('⚠️ THE REGRESSION: a PAST-DUE Approved invoice still offers Release payment', async () => {
     invoiceStore.reset();
     renderWithProviders(<BuyerInvoices />);
-    await screen.findByText('Invoices & Payment');
+    await screen.findByRole('heading', { name: 'Invoices' });
     await openOverdueApprovedInvoice();
 
     // ⚠️ THE PREMISE IS ASSERTED, NOT ASSUMED. This block passed for one commit
@@ -222,7 +222,7 @@ describe('BuyerInvoices — the release affordance survives the clock', () => {
   it('offers Dispute wherever the MACHINE allows it, past due included', async () => {
     invoiceStore.reset();
     renderWithProviders(<BuyerInvoices />);
-    await screen.findByText('Invoices & Payment');
+    await screen.findByRole('heading', { name: 'Invoices' });
     await openOverdueApprovedInvoice();
     expect(await screen.findByRole('button', { name: 'Dispute' })).toBeInTheDocument();
   });
@@ -244,7 +244,7 @@ describe('BuyerInvoices — the settle failure branch', () => {
         <ToastSpy />
       </>
     );
-    await screen.findByText('Invoices & Payment');
+    await screen.findByRole('heading', { name: 'Invoices' });
     await openApprovedInvoice();
     await releaseIt();
 
@@ -279,7 +279,7 @@ describe('BuyerInvoices — the settle failure branch', () => {
       </>,
       { service: boom }
     );
-    await screen.findByText('Invoices & Payment');
+    await screen.findByRole('heading', { name: 'Invoices' });
     await openApprovedInvoice();
     await releaseIt();
 
@@ -316,7 +316,7 @@ describe('BuyerInvoices — the settle failure branch', () => {
       </>,
       { service: denied }
     );
-    await screen.findByText('Invoices & Payment');
+    await screen.findByRole('heading', { name: 'Invoices' });
     await openApprovedInvoice();
     await releaseIt();
 
@@ -333,7 +333,7 @@ describe('BuyerInvoices — the settle failure branch', () => {
     invoiceStore.reset();
     const hangs = withSettle(() => /** @type {Promise<never>} */ (new Promise(() => {})));
     renderWithProviders(<BuyerInvoices />, { service: hangs });
-    await screen.findByText('Invoices & Payment');
+    await screen.findByRole('heading', { name: 'Invoices' });
     await openApprovedInvoice();
     await releaseIt();
 
@@ -421,7 +421,7 @@ describe('BuyerInvoices — the scheduled settle dies with the page', () => {
     invoiceStore.reset();
     const settle = vi.fn(() => /** @type {Promise<never>} */ (new Promise(() => {})));
     const view = renderWithProviders(<BuyerInvoices />, { service: withSettle(settle) });
-    await screen.findByText('Invoices & Payment');
+    await screen.findByRole('heading', { name: 'Invoices' });
     await openApprovedInvoice();
     fireEvent.click(await screen.findByRole('button', { name: 'Release payment' }));
     const confirm = await screen.findByRole('button', { name: /Confirm release/ });

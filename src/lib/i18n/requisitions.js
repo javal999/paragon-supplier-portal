@@ -25,9 +25,10 @@ export const requisitionsEn = {
   'requisitions.flow.sourcingEvent.label': 'Sourcing Event',
   'requisitions.flow.sourcingEvent.sub': 'No source',
   // — Page header —
-  'requisitions.header.title': 'Purchase Requisitions',
+  // IA P-11 — the page title is the menu label.
+  'requisitions.header.title': 'Requisitions',
   'requisitions.header.subtitle':
-    'Starting point of procurement · PR → Approval → Source check → PO or Sourcing Event.',
+    'Purchase requisitions, the starting point of procurement · PR → Approval → Source check → PO or Sourcing Event.',
   // — Header actions —
   'requisitions.action.export': 'Export',
   'requisitions.action.bulkDownload': 'Bulk download',
@@ -243,7 +244,7 @@ export const requisitionsId = {
   'requisitions.flow.sourcingEvent.label': 'Acara Sourcing',
   'requisitions.flow.sourcingEvent.sub': 'Tidak ada sumber',
   // — Page header —
-  'requisitions.header.title': 'Permintaan Pembelian',
+  'requisitions.header.title': 'Permintaan pembelian',
   'requisitions.header.subtitle':
     'Titik awal pengadaan · PR → Persetujuan → Cek sumber → PO atau Acara Sourcing.',
   // — Header actions —

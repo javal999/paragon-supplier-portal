@@ -58,7 +58,7 @@ const panel = () =>
   within(/** @type {HTMLElement} */ (document.querySelector('aside[role="dialog"]')));
 
 describe('menu and copy (section 3.7)', () => {
-  it('PTI Inventory & capacity: Inventory, Stock simulation (Material E2), Capacity, Alerts, Supplier access; supplier Planning adds Capacity', () => {
+  it('PTI Inventory & capacity: Stock, Stock simulation (Material E2), Capacity, Alerts, Supplier access, Trade names (IA P-09); supplier Planning adds Capacity', () => {
     const inventory = /** @type {import('@components/layout-v2/navConfig').NavSection} */ (
       PTI_NAV.find((s) => s.id === 'inventory')
     );
@@ -67,7 +67,8 @@ describe('menu and copy (section 3.7)', () => {
       '/buyer/stock-simulation',
       '/buyer/capacity',
       '/buyer/alerts',
-      '/buyer/supplier-access'
+      '/buyer/supplier-access',
+      '/buyer/materials/trade-names'
     ]);
     const planning = /** @type {import('@components/layout-v2/navConfig').NavSection} */ (
       SUPPLIER_NAV.find((s) => s.id === 'planning')

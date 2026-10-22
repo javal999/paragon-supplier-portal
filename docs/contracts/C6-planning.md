@@ -315,7 +315,8 @@ mints a Draft that stays simulated, **never a live procurement instruction**.
 **As-built (G1.2b):** the gate + payload + decision are pure functions
 (`src/pages-v2/plan-grid/planGridModel.js` — `overrideBlocked` / `buildQtyDecision` /
 `buildPrCreatePayload` / `applyPushResult`); the governed surface is **plain DOM** so the
-reason-gate is headless-provable (`plan-grid/IntakeAdjustDrawer.jsx`); the push is
+reason-gate was headless-provable (the IntakeAdjustDrawer, retired with the Plan Grid page
+by IA P-10 on 2026-10-21; the pure functions above remain); the push is
 `usePurchaseRequisitionCreate` (`services/query/commandHooks.js`) through the G1.1
 `purchaseRequisition` target; and the opaque carrier is `CommandDecision`
 (`services/data/types.js`) forwarded by `dispatcher.js:143-166` onto the `TransitionEvent`
@@ -337,5 +338,7 @@ Every seam cited traces to a `file:line` in the shipped tree:
 `src/pages-v2/BuyerSourcing/index.jsx` (the `extraRfqs` anti-pattern — RETIRED in PR #77; RFQ
 creation now rides `t_rfq_create` on the dispatcher). §1-7 were
 authored pre-grid (FORK-3 harvest); §8 (C6-LOCK) is recorded at **G1.2b** alongside its first
-implementation — the grid product code now exists (`src/pages-v2/PlanGrid.jsx` +
-`plan-grid/*`, G1.2a/b), and §8's as-built block cites it directly.
+implementation — the grid product code existed (the PlanGrid page + `plan-grid/*`,
+G1.2a/b), and §8's as-built block cites it directly. IA P-10 (2026-10-21) retired the
+PlanGrid page and its intake drawer, which had no menu item and no inbound link; the
+`plan-grid/*` model and cells remain, read by the SDC consolidation grid.

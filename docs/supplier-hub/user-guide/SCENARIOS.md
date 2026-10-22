@@ -1,7 +1,7 @@
 # Paragon Supplier Portal: use-case scenario catalog
 
 **Status:** Phase 1, approved by PTI on 2026-10-06 with supplier onboarding removed. The deck is built from this file after approval.
-**Basis:** the code on `main` at `7078ea3`; UC1 updated on 2026-10-19 for the RFx UX build (decisions RFX-D16 to RFX-D24). All paths are under `src/`. Every behavior cites a `file:line`. Citations into pages later split into folders (frontend-standard Phase 5) were re-pointed on 2026-10-08 to the file in the folder that now holds the code; every other line number is as of `7078ea3`. If a behavior has no citation, it is under section 4 (Unverified and known limits).
+**Basis:** the code on `main` at `7078ea3`; UC1 updated on 2026-10-19 for the RFx UX build (decisions RFX-D16 to RFX-D24). All paths are under `src/`. Every behavior cites a `file:line`. Citations into pages later split into folders (frontend-standard Phase 5) were re-pointed on 2026-10-08 to the file in the folder that now holds the code; every other line number is as of `7078ea3`. If a behavior has no citation, it is under section 4 (Unverified and known limits). Menu names and section 3 updated on 2026-10-21 for the IA navigation build; line citations in section 2 were not re-checked then.
 **Data:** all data is in-memory demo data. Nothing reaches SAP. The demo date is 2026-08-31 (`services/data/fixturePresent.js:184,206`).
 
 ---
@@ -68,7 +68,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | PTI-Req | Purchase requisitions (URL `/buyer/purchase-requisition`) | **New PR**, then **Submit for approval** | Draft → Pending Approval | `pages-v2/BuyerRequisitions/index.jsx:203`; `pages-v2/BuyerRequisitions/components/RequisitionPanelFooter.jsx:89-104` |
+| 1 | PTI-Req | Sourcing → **Requisitions** | **New PR**, then **Submit for approval** | Draft → Pending Approval | `pages-v2/BuyerRequisitions/index.jsx:203`; `pages-v2/BuyerRequisitions/components/RequisitionPanelFooter.jsx:89-104` |
 | 2 | PTI-Proc | same | **Approve** | Approved | `pages-v2/BuyerRequisitions/components/RequisitionPanelFooter.jsx:173-215` |
 | 3 | PTI-Proc | same | **Raise sourcing event**. Opens the RFQ wizard pre-filled; saving the RFQ moves the PR. | PR: Sourcing Event | `pages-v2/BuyerRequisitions/hooks/useRequisitionActions.js:281-282`; `pages-v2/BuyerRequisitions/components/StatusNotes.jsx:114-121`; `services/transitions/cascades.js:62` |
 | 4 | PTI-Proc | Sourcing → **RFQ** | **New RFQ** → Define Scope / Invite Suppliers / Terms & Deadlines / Review & Submit → **Save RFQ draft**, then **Send to suppliers** (or **Save and send to suppliers** on Review) | Draft → Open | `pages-v2/BuyerSourcing/components/SourcingHeader.jsx:82`; `pages-v2/BuyerSourcing/components/RfqWizardModal.jsx:216`; `pages-v2/BuyerSourcing/components/RfqLifecycleActions.jsx:83-87` |
@@ -102,7 +102,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | PTI-Proc | Purchase requisitions | **Reject** → reason → **Confirm rejection** | Rejected | `pages-v2/BuyerRequisitions/components/RequisitionPanelFooter.jsx:173-215` |
+| 1 | PTI-Proc | Requisitions | **Reject** → reason → **Confirm rejection** | Rejected | `pages-v2/BuyerRequisitions/components/RequisitionPanelFooter.jsx:173-215` |
 | 2 | PTI-Req | same | **Revise and return to draft** | Draft | `pages-v2/BuyerRequisitions/components/DecisionCaptures.jsx:67-85` |
 
 **Edge cases**
@@ -170,7 +170,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | PTI-Plan | Call-offs → **Call-offs** | **New call-off** → **Release to supplier** | Awaiting Confirmation | `pages-v2/BuyerCallOffs.jsx:636-648,745-775` |
+| 1 | PTI-Plan | Order collaboration → **Call-offs** | **New call-off** → **Release to supplier** | Awaiting Confirmation | `pages-v2/BuyerCallOffs.jsx:636-648,745-775` |
 | 2 | Sup-Ful | Orders → **Call-offs** | **Respond** → **Confirm as requested** → **Send confirmation** | Confirmed | `pages-v2/SupplierCallOffs.jsx:206-232,385-391,795` |
 | 3 | Sup-Ful | same | **Send dispatch notice** | Confirmed (dispatched) | `pages-v2/SupplierCallOffs.jsx:618-631` |
 | 4 | Sup-Ful | Shipments & ASN | Create the ASN for the confirmed call-off | ASN Submitted | `services/data/mock/MockCommandService.js:719-742` |
@@ -209,35 +209,35 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
 | 1 | PTI (MP menu) | Weekly plan → **This week** | Reads the cycle cards and opens the next step | – | `pages-v2/BuyerThisWeek.jsx:75-80,145-207` |
-| 2 | Sup-Com | Planning → **Forecast & commitments** | Opens the page (the view is recorded); enters qty per row → **Save draft** | Draft ("not visible to PTI") | `pages-v2/SupplierForecastCommitments/hooks/useRecordView.js:20-26`; `pages-v2/SupplierForecastCommitments/components/CommitmentRow.jsx:84-91,159-166` |
+| 2 | Sup-Com | Planning → **Foresight commitments** | Opens the page (the view is recorded); enters qty per row → **Save draft** | Draft ("not visible to PTI") | `pages-v2/SupplierForecastCommitments/hooks/useRecordView.js:20-26`; `pages-v2/SupplierForecastCommitments/components/CommitmentRow.jsx:84-91,159-166` |
 | 3 | Sup-Com | same, "Submit by period" | **Submit all** | Submitted | `pages-v2/SupplierForecastCommitments/hooks/useCommitmentActions.js:54-87`; `pages-v2/SupplierForecastCommitments/components/PeriodSubmitRow.jsx:114-122` |
 | 4 | Sup-BO | same | **Acknowledge** on Forecast-zone rows | Acknowledged | `pages-v2/SupplierForecastCommitments/components/ForecastZoneRow.jsx:57-66` |
-| 5 | PTI-Plan | Weekly plan → **Supplier responses** | **Accept** → **Accept** | Accepted by PTI | `pages-v2/BuyerCommitments/hooks/useCommitmentAction.js:36-44`; `pages-v2/BuyerCommitments/components/ExceptionRow.jsx:106-112` |
+| 5 | PTI-Plan | Weekly plan → **Foresight commitments** | **Accept** → **Accept** | Accepted by PTI | `pages-v2/BuyerCommitments/hooks/useCommitmentAction.js:36-44`; `pages-v2/BuyerCommitments/components/ExceptionRow.jsx:106-112` |
 
 **Negative end-to-end: commitment below forecast, PTI asks for revision**
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | Sup-Com | Forecast & commitments | Commits below forecast. A reason is required ("Below forecast: choose a reason."). | Submitted, Outside tolerance | `services/transitions/forecastRules.js:493-505,516-522` |
-| 2 | PTI-Plan | Supplier responses | **Request revision** → note → **Send request** | Revision requested | `pages-v2/BuyerCommitments/hooks/useCommitmentAction.js:45-54`; `pages-v2/BuyerCommitments/components/ExceptionRow.jsx:113-119` |
-| 3 | Sup-Com | Forecast & commitments | Sees "PTI asked for a revision", revises, **Submit all** | Submitted | `pages-v2/SupplierForecastCommitments/components/CommitmentLogRow.jsx:16-30`; `pages-v2/SupplierForecastCommitments/components/PeriodSubmitRow.jsx:114-122` |
+| 1 | Sup-Com | Foresight commitments | Commits below forecast. A reason is required ("Below forecast: choose a reason."). | Submitted, Outside tolerance | `services/transitions/forecastRules.js:493-505,516-522` |
+| 2 | PTI-Plan | Foresight commitments | **Request revision** → note → **Send request** | Revision requested | `pages-v2/BuyerCommitments/hooks/useCommitmentAction.js:45-54`; `pages-v2/BuyerCommitments/components/ExceptionRow.jsx:113-119` |
+| 3 | Sup-Com | Foresight commitments | Sees "PTI asked for a revision", revises, **Submit all** | Submitted | `pages-v2/SupplierForecastCommitments/components/CommitmentLogRow.jsx:16-30`; `pages-v2/SupplierForecastCommitments/components/PeriodSubmitRow.jsx:114-122` |
 
 **Negative end-to-end: capacity not confirmed**
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | Sup-Com | Forecast & commitments | **Submit all**; blocked with "Confirm capacity for {group} first." | Draft | `pages-v2/SupplierForecastCommitments/utils.js:150-153`; `pages-v2/SupplierForecastCommitments/components/PeriodSubmitRow.jsx:123-135` |
+| 1 | Sup-Com | Foresight commitments | **Submit all**; blocked with "Confirm capacity for {group} first." | Draft | `pages-v2/SupplierForecastCommitments/utils.js:150-153`; `pages-v2/SupplierForecastCommitments/components/PeriodSubmitRow.jsx:123-135` |
 | 2 | Sup-Ful | Planning → **Capacity** | **Submit capacity** | Capacity Submitted | `pages-v2/SupplierCapacity.jsx:176-185,369-376` |
 
 **Edge cases**
 
 | Condition | What the system does | Who acts next | Menu | Evidence |
 |---|---|---|---|---|
-| New forecast version | A commitment carries forward if the period qty is unchanged; otherwise it goes back to awaiting. The supplier sees "was {qty}" and a Changes tab. | Sup-Com | Forecast & commitments | `services/transitions/forecastRules.js:15-16`; `pages-v2/SupplierForecastCommitments/components/CommitmentRow.jsx:70-74`; `pages-v2/SupplierForecastCommitments/components/ChangesTable.jsx`; `pages-v2/SupplierForecastCommitments/components/ViewToolbar.jsx` |
-| Emergency republish | "Emergency re-publication" badge | Sup-Com | Forecast & commitments | `pages-v2/SupplierForecastCommitments/components/VersionSection.jsx:58-62` |
-| Firm vs Trade-off line | Firm: any shortfall is an exception. Trade-off: up to 10% short is auto-accepted. | PTI-Plan | Supplier responses | `services/transitions/forecastRules.js:516-522` |
-| Commitment deadline | Firm lines due 1 working day after publish, others 3. Overdue lines become exceptions. | Sup-Com | Forecast & commitments | `services/transitions/forecastRules.js:524-537,838-840` |
-| PTI moves demand | **Move demand** publishes a new version | Sup-Com re-commits | Supplier responses | `pages-v2/BuyerCommitments/hooks/useCommitmentAction.js:55-66`; `pages-v2/BuyerCommitments/components/ExceptionRow.jsx:125-131` |
+| New forecast version | A commitment carries forward if the period qty is unchanged; otherwise it goes back to awaiting. The supplier sees "was {qty}" and a Changes tab. | Sup-Com | Foresight commitments | `services/transitions/forecastRules.js:15-16`; `pages-v2/SupplierForecastCommitments/components/CommitmentRow.jsx:70-74`; `pages-v2/SupplierForecastCommitments/components/ChangesTable.jsx`; `pages-v2/SupplierForecastCommitments/components/ViewToolbar.jsx` |
+| Emergency republish | "Emergency re-publication" badge | Sup-Com | Foresight commitments | `pages-v2/SupplierForecastCommitments/components/VersionSection.jsx:58-62` |
+| Firm vs Trade-off line | Firm: any shortfall is an exception. Trade-off: up to 10% short is auto-accepted. | PTI-Plan | Foresight commitments | `services/transitions/forecastRules.js:516-522` |
+| Commitment deadline | Firm lines due 1 working day after publish, others 3. Overdue lines become exceptions. | Sup-Com | Foresight commitments | `services/transitions/forecastRules.js:524-537,838-840` |
+| PTI moves demand | **Move demand** publishes a new version | Sup-Com re-commits | Foresight commitments | `pages-v2/BuyerCommitments/hooks/useCommitmentAction.js:55-66`; `pages-v2/BuyerCommitments/components/ExceptionRow.jsx:125-131` |
 | Supplier wants to dispute | No supplier dispute action exists; the supplier commits below forecast with a reason | – | – | `services/transitions/businessRoles.js:441-443,520-528` |
 
 ### UC5 Compliance documents
@@ -248,7 +248,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | PTI-Cmp | Compliance (URL `/buyer/compliance`, not in menu) | **Ask for a document** → **Check it over** → **Open the request** | Awaiting Upload | `pages-v2/BuyerCompliance/hooks/useDocumentRequest.js:30,70-86`; `pages-v2/BuyerCompliance/components/RequestPanelFooter.jsx:23-44` |
+| 1 | PTI-Cmp | Sourcing → **Supplier documents** | **Ask for a document** → **Check it over** → **Open the request** | Awaiting Upload | `pages-v2/BuyerCompliance/hooks/useDocumentRequest.js:30,70-86`; `pages-v2/BuyerCompliance/components/RequestPanelFooter.jsx:23-44` |
 | 2 | Sup-BO | Company → **Profile & documents** | **Declare** → **Record declaration** | Under Review | `pages-v2/SupplierDocuments.jsx:402-430,844-856` |
 | 3 | PTI-Cmp | Compliance → "Declared certificates awaiting review" | **Confirm** | Valid | `pages-v2/BuyerCompliance/hooks/useDocumentReview.js:42-51`; `pages-v2/BuyerCompliance/components/ReviewQueueItem.jsx:65-73` |
 
@@ -278,16 +278,16 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 |---|---|---|---|---|---|
 | 1 | Sup-Ful | Planning → **Stock** | **Enter stock** → **Save stock** | Declared | `pages-v2/SupplierInventory.jsx:183-192,359-366` |
 | 2 | Sup-Ful | Planning → **Capacity** | **Submit capacity** | Submitted | `pages-v2/SupplierCapacity.jsx:176-185,369-376` |
-| 3 | PTI-Plan | Home → **Supplier replies** | Pick supplier → paste reply → **Parse reply** → **Record this stock** → **Record stock** | Declared ("Recorded by Paragon from {channel}…") | `pages-v2/BuyerChannelTriage.jsx:236-262,366-373,575-586` |
-| 4 | PTI (MP menu) | Inventory & capacity → **Inventory** / **Capacity** | Reviews stock and capacity; Capacity is read-only | – | `pages-v2/BuyerInventory.jsx:182-191`; `pages-v2/BuyerCapacity.jsx:286,501` |
+| 3 | PTI-Plan | Home → **Supplier follow-ups** → Record a reply | Pick supplier → paste reply → **Parse reply** → **Record this stock** → **Record stock** | Declared ("Recorded by Paragon from {channel}…") | `pages-v2/BuyerChannelTriage.jsx:236-262,366-373,575-586` |
+| 4 | PTI (MP menu) | Inventory & capacity → **Stock** / **Capacity** | Reviews stock and capacity; Capacity is read-only | – | `pages-v2/BuyerInventory.jsx:182-191`; `pages-v2/BuyerCapacity.jsx:286,501` |
 | 5 | PTI-Plan | Inventory & capacity → **Alerts** | **Close alert** → reason | Closed | `pages-v2/BuyerAlerts.jsx:224-240,446-461` |
-| 6 | PTI-Proc | Performance → **End-of-cycle stock check** | **Set max stock** → **Save** | Max stock set | `pages-v2/FixedStockReconcile.jsx:123,315-330,387-404` |
+| 6 | PTI-Proc | Performance → **Feedstock reconcile** | **Set max stock** → **Save** | Max stock set | `pages-v2/FixedStockReconcile.jsx:123,315-330,387-404` |
 
 **Negative end-to-end: supplier reply cannot be read**
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | PTI-Plan | Supplier replies | **Parse reply** on free text | "Could not interpret this as a stock update." | `lib/i18n/commHubInbound.js:37` |
+| 1 | PTI-Plan | Supplier follow-ups | **Parse reply** on free text | "Could not interpret this as a stock update." | `lib/i18n/commHubInbound.js:37` |
 | 2 | PTI-Plan | Inventory | **Record stock from a supplier message**, entered by hand | Declared | `pages-v2/BuyerInventory.jsx:182-191` |
 
 **Negative end-to-end: stock check shows a gap**
@@ -331,7 +331,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | Sup-Ful / Sup-Com | Stock · Capacity · Forecast & commitments | Updates data (or fails to) | – | `services/transitions/inventoryAlertRules.js:240-364` |
+| 1 | Sup-Ful / Sup-Com | Stock · Capacity · Foresight commitments | Updates data (or fails to) | – | `services/transitions/inventoryAlertRules.js:240-364` |
 | 2 | PTI (MP menu) | Home → **My tasks** / Inventory & capacity → **Alerts** | Reviews open alerts, highest risk first; filters by severity, planning group, PIC | Open | `pages-v2/BuyerHome.jsx:156-164`; `pages-v2/BuyerAlerts.jsx:255,282-296,322` |
 | 3 | Sup (any lane) | Home → **To do** → "Alerts about your materials" | Sees own open alerts from 5 rules | Open | `pages-v2/SupplierHome.jsx:334-354`; `services/data/mock/MockProcurementService.js:503-506` |
 | 4 | PTI-Plan | Alerts | Acts (call-off, PO, chase), then **Close alert** → reason | Closed | `pages-v2/BuyerAlerts.jsx:224-240,445-461`; `services/transitions/reasonCodes.js:78-86`; `services/transitions/businessRoles.js:368` |
@@ -364,78 +364,61 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 
 ## 3. Menu Directory
 
-Every item in `components/layout-v2/navConfig.js`. "Role" is the **Menu for** view that shows the item. Being able to see a menu does not mean the user can take its actions (section 1).
+Every item in `components/layout-v2/navConfig.js`, as built on 2026-10-21 by the navigation evaluation (`research/PORTAL-IA-EVALUATION-2026-10.md`). "Role" is the **Menu for** view that shows the item. Being able to see a menu does not mean the user can take its actions (section 1).
 
-### PTI main menu (`components/layout-v2/navConfig.js:82-196`)
+### PTI main menu
 
 | Menu label | Section | Role | What it does | Use case |
 |---|---|---|---|---|
-| My tasks | Home | All | Counts what needs action, with an **Open** link per task | All |
-| Supplier replies | Home | All | Records stock from a pasted supplier message | UC6 |
-| Order summary | Order collaboration | Material Planner | Links to each order stage, read-only | UC2 |
-| Purchase orders | Order collaboration | Material Planner | Tracks POs; answers supplier counter-offers | UC2 |
+| My tasks | Home | All | Counts what needs action; each **Open** lands on the rows its count names | All |
+| Supplier follow-ups | Home | All | Suppliers to follow up, record a reply, request log | UC6 |
+| Purchase orders | Order collaboration | Material Planner | Summary view (each order's response, ASNs and confirmations) and List view; a PO's steps link to its stage pages | UC2 |
+| Call-offs | Order collaboration | Material Planner | Releases call-offs and reviews supplier confirmations; tabs To act, All call-offs, Blanket POs running out | UC3 |
 | Shipments & ASN | Order collaboration | Material Planner | Tracks ASNs; approves shelf-life exceptions | UC2 |
 | Goods receipts | Order collaboration | Material Planner | Creates and posts GRs; reconciles ASN discrepancies | UC2 |
 | This week | Weekly plan | Material Planner | Starting point of the weekly planning cycle | UC4 |
-| What to order | Weekly plan | Material Planner | Proposes orders; creates draft call-offs | Not walked through |
+| What to order | Weekly plan | Material Planner | Proposes orders; creates draft call-offs; rows open a what-if | Not walked through |
 | Make warehouse room | Weekly plan | Material Planner | Records a decision when the warehouse overflows | Not walked through |
 | Publish to suppliers | Weekly plan | Material Planner | Publishes forecast versions (blocked on sample data) | UC4 |
-| Supplier responses | Weekly plan | Material Planner | Accepts or returns supplier forecast commitments | UC4 |
+| Foresight commitments | Weekly plan | Material Planner | Accepts or returns supplier commitments; Consolidation tab reads the sample plan | UC4 |
+| Demand anticipation | Weekly plan | Material Planner | Weekly demand anticipation; Record consumption tab | Not walked through |
 | Supplier performance | Review | Material Planner | Supplier scorecard per period | Not walked through |
 | Forecast quality | Review | Material Planner | 26-week sell-in forecast per finished good and its bias | Not walked through |
-| End-of-cycle stock check | Review | Material Planner | Commitments, call-offs and stock against max stock | UC6 |
-| Inventory | Inventory & capacity | Material Planner | Supplier and PTI stock, reorder points, incoming supply | UC6 |
+| Feedstock reconcile | Review | Material Planner | Ordered against called off and shipped, per day; max stock | UC6 |
+| Demand anticipation history | Review | Material Planner | Every publication with its rules version | Not walked through |
+| Stock | Inventory & capacity | Material Planner | Supplier and PTI stock, reorder points, incoming supply; rows link to the estimate and to a what-if | UC6 |
 | Stock simulation | Inventory & capacity | Material Planner | Estimated supplier stock on a check date | Not walked through |
 | Capacity | Inventory & capacity | Material Planner | Supplier capacity against the LTP per week, read-only | UC6 |
 | Alerts | Inventory & capacity | Material Planner | Stock and commitment alerts, closed with a reason | UC7 |
 | Supplier access | Inventory & capacity | Material Planner | Grants suppliers a view of PTI stock | Not walked through |
-| Trade names | Materials | Material Planner | Approves the names suppliers use for PTI materials | Not walked through |
-| Call-offs | Call-offs | Material Planner | Releases call-offs and reviews supplier confirmations | UC3 |
+| Trade names | Inventory & capacity | Material Planner | Approves the names suppliers use for PTI materials | Not walked through |
+| Requisitions | Sourcing | Buyer | Creates, submits and approves requisitions; raises a sourcing event | UC1 |
 | RFI | Sourcing | Buyer | Information requests to suppliers | UC1 |
 | RFQ | Sourcing | Buyer | Quotation requests, negotiation rounds, award | UC1 |
 | RFP | Sourcing | Buyer | Proposal requests, firm-offer rounds, award | UC1 |
 | Suppliers | Sourcing | Buyer | Supplier list and profile, read-only | Not walked through |
+| Supplier documents | Sourcing | Buyer | Asks for certificates and confirms or refuses declarations | UC5 |
 | Invoices | Invoices | Finance | Invoice match, dispute, payment release | UC2 |
+| Demand anticipation history | Audit | Buyer, Finance | Same page as under Review (DRC-D18) | Not walked through |
 | Supplier performance | Performance | Buyer | Same scorecard page as under Review | Not walked through |
-| End-of-cycle stock check | Performance | Buyer | Same page as under Review; Buyer sets max stock | UC6 |
+| Feedstock reconcile | Performance | Buyer | Same page as under Review; Procurement sets max stock | UC6 |
 
-### PTI Help & administration, avatar menu (`components/layout-v2/navConfig.js:266-325`)
+The What-if sandbox has no menu item: it opens from a row on What to order or Stock, or blank from its own "New blank scenario".
 
-| Menu label | What it does | Use case |
-|---|---|---|
-| Help & glossary | What each portal term means | Not walked through |
-| Roles | Read-only catalogue of permission bundles | Section 1 |
-| Process flows | Every status flow and its transitions | Not walked through |
-| Interface monitor | Data exchanged with SAP, with retry | Not walked through |
-| Working calendar | Working days that every hub deadline counts | Not walked through |
-| 3PL tracking links | Logistics providers a supplier can name on an ASN | Not walked through |
-| Supplier stock update mode | How each supplier shares stock: own system or entered | UC6 |
-| Vendor qualification | Documents each qualification level requires | Out of scope (onboarding) |
-| Sourcing types | Direct or Indirect per sourcing category | Not walked through |
-| Planning groups | Groups that supplier capacity is kept by | Not walked through |
-| MRP controllers (PIC) | Who each SAP MRP controller code is | Not walked through |
-| Tolerances and rule values | Values that used to live in configuration files | Not walked through |
-| Alert thresholds and stale periods | When an alert fires and when stock counts as stale | UC7 |
-| Reason codes | Reasons offered for adjustments, rejections, alert closure | UC7 |
-| Planning engine · Material requirement | What each material needs, when, and how much | Not walked through |
-| Planning engine · Safety stock targets | Safety stock and reorder points from forecast error | Not walked through |
-| Planning engine · Data health | Freshness and quality of each forecast input | Not walked through |
-| Planning engine · Model backtest | Forecast model chosen per SKU by replayed service | Not walked through |
-| Planning engine · Supplier reliability | Why deliveries are missed, by cause | Not walked through |
+### PTI Help & administration, avatar menu
 
-Purposes come from each page's subtitle in `lib/i18n/` (for example `rel.pti.subtitle`, `mrq.subtitle`, `adminCal.subtitle`, `tpl.subtitle`, `adminSup.subtitle`, `adminRsn.subtitle`), from `components/layout-v2/navConfig.js` comments, or from the use cases above.
+Unchanged: Help & glossary, Roles, Process flows, Interface monitor, Working calendar, 3PL tracking links, Supplier stock update mode, Vendor qualification, Sourcing types, Planning groups, MRP controllers (PIC), Tolerances and rule values, Alert thresholds and stale periods, Reason codes, and the five Planning engine pages (Material requirement, Safety stock targets, Data health, Model backtest, Supplier reliability).
 
-### Supplier menu (`components/layout-v2/navConfig.js:199-260,326`)
+### Supplier menu
 
 | Menu label | Section | What it does | Use case |
 |---|---|---|---|
-| To do | Home | What Paragon waits for, most urgent first (not filtered by lane) | All |
-| Order summary | Orders | Links to each order stage, read-only | UC2 |
-| Purchase orders | Orders | Acknowledge, confirm, adjust or reject POs | UC2 |
-| Call-offs | Orders | Confirm, change or reject call-offs; send dispatch notice | UC3 |
+| To do | Home | What Paragon waits for, most urgent first, including documents PTI asked for | All |
+| Purchase orders | Orders | Summary and List views; acknowledge, confirm, adjust or reject; Create ASN opens the ASN form for the PO | UC2 |
+| Call-offs | Orders | Confirm, change or reject call-offs; send dispatch notice; create the ASN for a call-off | UC3 |
 | Shipments & ASN | Orders | Create and submit ASNs | UC2 |
 | Goods receipts | Orders | See receipts; acknowledge or dispute discrepancies | UC2 |
-| Forecast & commitments | Planning | Commit per period; acknowledge forecast rows | UC4 |
+| Foresight commitments | Planning | Commit per period; acknowledge forecast rows; Responses & shipments tab reads the sample plan | UC4 |
 | Feedstock reconcile | Planning | PO ordered against call-offs and ASNs requested, daily, read-only; max stock shown | UC6 |
 | Stock | Planning | Enter stock; see PTI stock if shared | UC6 |
 | Capacity | Planning | Submit capacity per material group and week | UC4, UC6 |
@@ -443,11 +426,11 @@ Purposes come from each page's subtitle in `lib/i18n/` (for example `rel.pti.sub
 | RFQ invitations | Sourcing | Quote, decline, revise in rounds, see awards | UC1 |
 | RFP invitations | Sourcing | Send proposals and firm offers | UC1 |
 | Invoices | Invoices | Create, submit, correct and resubmit invoices | UC2 |
-| My performance | Performance | Own scorecard, read-only | Not walked through |
 | Profile & documents | Company | Declare certificates; see expiry | UC5 |
+| My performance | Company | Own scorecard, read-only | Not walked through |
 | Help & glossary (avatar menu) | – | What each portal term means | Not walked through |
 
-**Pages reachable only by URL** (not in any menu): `/buyer/purchase-requisition`, `/buyer/compliance`, `/buyer/contracts`, `/buyer/delivery-agreements`, `/buyer/chase`, `/supplier/comm-hub`, `/supplier/whatsapp`, `/supplier/delivery-agreements`. Each one is a route in `router/AppRouter.jsx` with no `components/layout-v2/navConfig.js` entry.
+**Pages with no menu item:** `/buyer/contracts`, `/buyer/delivery-agreements`, `/buyer/supplier-applications`, `/supplier/delivery-agreements` and the RFQ revised-quotes page, each reached from another page. Redirects: `/buyer/order-summary` and `/supplier/order-summary` to the Summary view of Purchase orders, `/buyer/chase` to Supplier follow-ups, and the two old commitments pages to their tabs. The 11 legacy pages with no menu item and no inbound link (Procurement Command Center, Analytics, Supply Risk, Supplier Discovery, the marketplace and its storefront page, Plan Grid, Intake Review, the supplier welcome dashboard, My Catalog, Channel Demo and Channel Inbox) were deleted on 2026-10-21 [Owner].
 
 ---
 
@@ -491,7 +474,7 @@ A reader might expect these to work. The code shows they do not, or that they ar
 
 **Communication and performance**
 
-15. **Nothing is sent from Supplier replies:** "No live channel — nothing is sent from here." (`pages-v2/BuyerCommHub.jsx:151-192`)
+15. **Nothing is sent from Supplier follow-ups:** "No live channel — nothing is sent from here." (`pages-v2/BuyerCommHub.jsx:151-192`)
 16. **The supplier WhatsApp/Email page is scripted.** Its buttons show success banners and dispatch nothing. (`pages-v2/SupplierWhatsApp/components/EmailBody.jsx:17-63`)
 17. **These buttons only show a toast, or a false success toast:**
     - "Send improvement plan" (scorecard). (`pages-v2/BuyerScorecard.jsx:684-695`)

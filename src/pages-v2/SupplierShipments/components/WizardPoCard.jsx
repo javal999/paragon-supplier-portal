@@ -3,9 +3,9 @@ import { useTranslation } from 'react-i18next';
 import Data from '@components/ui-v2/Data';
 /** @import { ASN, PurchaseOrder } from '@services/data/types' */
 /** @import { AsnForm } from '../const' */
-import { openLinesFor, seedLines } from '../../shipments/asnLines';
+import { openLinesFor } from '../../shipments/asnLines';
 import { poLineQuantityText } from '../../orders/poLineQuantity';
-import { fmtDate } from '../utils';
+import { fmtDate, poSelection } from '../utils';
 
 /**
  * One shippable PO as a pressable card at wizard step 1. Picking it seeds the
@@ -20,15 +20,7 @@ const WizardPoCard = ({ po, asns, selected, updateForm }) => {
   return (
     <button
       type="button"
-      onClick={() =>
-        updateForm({
-          poId: po.id,
-          lines: seedLines(openLinesFor(po, asns)),
-          overShipReason: '',
-          callOffId: '',
-          callOffFinal: false
-        })
-      }
+      onClick={() => updateForm(poSelection(po, asns))}
       aria-pressed={selected}
       className={`text-left rounded-md p-4 border transition-colors ${
         selected

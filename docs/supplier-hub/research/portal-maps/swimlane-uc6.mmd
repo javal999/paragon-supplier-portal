@@ -1,0 +1,19 @@
+---
+title: UC6 Shared stock, capacity and supplier replies (positive path)
+---
+sequenceDiagram
+  autonumber
+  participant Ful as Supplier · Fulfilment
+  participant Plan as PTI · Planning (Material Planner menu)
+  participant Proc as PTI · Procurement (Buyer menu)
+  Note over Ful: To do task "Stock figures to update" (filtered)
+  Ful->>Ful: Stock · Enter stock, Save stock · Stock Declared
+  Ful->>Ful: Capacity (To do task or menu) · Submit capacity · Capacity Submitted
+  Note over Plan: menu: Home, Supplier replies
+  Plan->>Plan: Supplier replies (page title "Communication Hub") · Parse reply, Record stock · Stock Declared
+  Note over Plan: menu: Inventory & capacity
+  Plan->>Plan: Inventory and Capacity · review (Capacity is read-only)
+  Plan->>Plan: Alerts (My tasks, filtered) · Close alert with a reason · Alert → Closed
+  Plan-->>Proc: hand-off to Procurement, no My tasks item for max stock
+  Note over Proc: menu: Performance, Feedstock reconcile (same page as Review)
+  Proc->>Proc: Feedstock reconcile · Set max stock, Save · Max stock set

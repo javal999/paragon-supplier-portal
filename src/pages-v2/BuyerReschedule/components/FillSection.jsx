@@ -15,7 +15,7 @@ import { pct, weekLabel } from '../utils';
 import FillChart from './FillChart';
 
 /**
- * The collapsed fill section: the chart, then a week-by-week table of the fill
+ * The fill section, the whole of the "Warehouse fill" tab (P-12), so it opens shown: the chart, then a week-by-week table of the fill
  * now, after the selection, after every relief proposal, and of stock on hand,
  * with each week's status against capacity and the standard.
  * @type {React.FC<{ w: WarehouseRescheduleView; effect: SelectionEffect }>}
@@ -26,6 +26,7 @@ const FillSection = ({ w, effect }) => {
     <CollapsedSection
       title={t('rs.fill.title')}
       testId="rs-fill"
+      defaultOpen
       className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6"
     >
       <p className="text-xs text-text-secondary mt-3 mb-1" data-testid="rs-fill-basis">

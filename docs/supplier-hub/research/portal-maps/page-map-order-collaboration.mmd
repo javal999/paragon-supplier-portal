@@ -1,0 +1,62 @@
+---
+title: Page map: Order collaboration (PTI) and Orders (supplier)
+---
+flowchart LR
+  subgraph PTIMaterialPlanner["PTI · Material Planner"]
+    nbuyer_order_summary["Order summary"]:::menu
+    nbuyer_orders["Purchase orders"]:::menu
+    nbuyer_shipments["Shipments & ASN"]:::menu
+    nbuyer_goods_receipt["Goods receipts"]:::menu
+    nbuyer_call_offs["Call-offs"]:::menu
+    nbuyer_capacity["Capacity"]:::menu
+    nbuyer_collaboration["Supplier responses"]:::menu
+    nbuyer_invoices["Invoices"]:::menu
+    nbuyer_suppliers__id["Supplier profile"]:::detail
+  end
+  subgraph Supplier["Supplier"]
+    nsupplier_order_summary["Order summary"]:::menu
+    nsupplier_orders["Purchase orders"]:::menu
+    nsupplier_call_offs["Call-offs"]:::menu
+    nsupplier_shipments["Shipments & ASN"]:::menu
+    nsupplier_goods_receipts["Goods receipts"]:::menu
+    nsupplier_capacity["Capacity"]:::menu
+    nsupplier_forecasts["Forecast & commitments"]:::menu
+    nsupplier_invoices["Invoices"]:::menu
+  end
+  nbuyer_call_offs -.->|back| nbuyer_order_summary
+  nbuyer_capacity -.->|back| nbuyer_order_summary
+  nbuyer_collaboration -.->|back| nbuyer_order_summary
+  nbuyer_goods_receipt -.->|back| nbuyer_order_summary
+  nbuyer_invoices -.->|back| nbuyer_order_summary
+  nbuyer_order_summary -->|link| nbuyer_call_offs
+  nbuyer_order_summary -->|link| nbuyer_capacity
+  nbuyer_order_summary -->|link| nbuyer_collaboration
+  nbuyer_order_summary -->|link| nbuyer_goods_receipt
+  nbuyer_order_summary -->|link| nbuyer_invoices
+  nbuyer_order_summary -->|link| nbuyer_orders
+  nbuyer_order_summary -->|link| nbuyer_shipments
+  nbuyer_orders -.->|back| nbuyer_order_summary
+  nbuyer_shipments -->|link| nbuyer_goods_receipt
+  nbuyer_shipments -.->|back| nbuyer_order_summary
+  nbuyer_suppliers__id -.->|back| nbuyer_order_summary
+  nsupplier_call_offs -.->|back| nsupplier_order_summary
+  nsupplier_capacity -.->|back| nsupplier_order_summary
+  nsupplier_forecasts -->|link| nsupplier_capacity
+  nsupplier_forecasts -.->|back| nsupplier_order_summary
+  nsupplier_goods_receipts -.->|back| nsupplier_order_summary
+  nsupplier_invoices -.->|back| nsupplier_order_summary
+  nsupplier_order_summary -->|link| nsupplier_call_offs
+  nsupplier_order_summary -->|link| nsupplier_capacity
+  nsupplier_order_summary -->|link| nsupplier_forecasts
+  nsupplier_order_summary -->|link| nsupplier_goods_receipts
+  nsupplier_order_summary -->|link| nsupplier_invoices
+  nsupplier_order_summary -->|link| nsupplier_orders
+  nsupplier_order_summary -->|link| nsupplier_shipments
+  nsupplier_orders -.->|back| nsupplier_order_summary
+  nsupplier_orders -.->|toast only| nsupplier_shipments
+  nsupplier_shipments -.->|back| nsupplier_order_summary
+  classDef menu fill:#eef4ff,stroke:#3b6fd8,color:#10213f
+  classDef avatar fill:#f3eefc,stroke:#7a52c7,color:#24124a
+  classDef urlonly fill:#fff4e5,stroke:#c77700,stroke-dasharray:5 3,color:#3d2600
+  classDef detail fill:#f2f2f2,stroke:#777,color:#222
+  classDef obj fill:#e9f7ef,stroke:#2e8b57,color:#0f3020

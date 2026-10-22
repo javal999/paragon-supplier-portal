@@ -73,7 +73,10 @@ describe('POPULATION GUARD — the seats below really do differ on the atom', ()
 
 describe('SupplierOrders — the row label names what pressing it does', () => {
   it('a seat holding po:confirm still sees Confirm', async () => {
-    renderWithProviders(<SupplierOrders />, { identity: HOLDS_CONFIRM });
+    renderWithProviders(<SupplierOrders />, {
+      identity: HOLDS_CONFIRM,
+      route: '/supplier/orders?view=list'
+    });
     await waitFor(() =>
       expect(
         screen.getAllByText(supplierOrdersEn['supplierOrders.action.confirm']).length
@@ -82,7 +85,10 @@ describe('SupplierOrders — the row label names what pressing it does', () => {
   });
 
   it('a seat that cannot confirm sees View — the LABEL, not only the act', async () => {
-    renderWithProviders(<SupplierOrders />, { identity: LACKS_CONFIRM });
+    renderWithProviders(<SupplierOrders />, {
+      identity: LACKS_CONFIRM,
+      route: '/supplier/orders?view=list'
+    });
     await waitFor(() =>
       expect(
         screen.getAllByText(supplierOrdersEn['supplierOrders.action.view']).length
@@ -93,7 +99,10 @@ describe('SupplierOrders — the row label names what pressing it does', () => {
   });
 
   it('and the row still OPENS the order — the fix is the label, not a removed affordance', async () => {
-    renderWithProviders(<SupplierOrders />, { identity: LACKS_CONFIRM });
+    renderWithProviders(<SupplierOrders />, {
+      identity: LACKS_CONFIRM,
+      route: '/supplier/orders?view=list'
+    });
     const buttons = await screen.findAllByText(supplierOrdersEn['supplierOrders.action.view']);
     fireEvent.click(buttons[0]);
     // The panel opens and states the wait rather than offering the commit —

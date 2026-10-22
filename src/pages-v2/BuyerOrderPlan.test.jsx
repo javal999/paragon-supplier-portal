@@ -49,6 +49,12 @@ const plan = async () =>
   /** @type {import('@services/data/types').OrderPlanView} */ (
     await mockDataService.procurement.getOrderPlan(buyerScope)
   );
+/**
+ * P-12 — opens one of the page's tabs, by its visible name.
+ * @param {string} name
+ */
+const openTab = async (name) => fireEvent.click(await screen.findByRole('tab', { name }));
+
 const openPos = async () =>
   (
     await mockDataService.procurement.getPurchaseOrders(buyerScope, {
@@ -66,6 +72,8 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
       'Sample data. Nothing here reaches suppliers or SAP.'
     );
     expect(screen.queryByText('Live')).toBeNull();
+    // P-12 — the cost rates sit under "How it is sized".
+    await openTab('How it is sized');
     for (const k of ['holding', 'order', 'rent']) {
       expect(screen.getByTestId(`op-cost-placeholder-${k}`)).toHaveTextContent(
         'Placeholder — Finance to confirm'
@@ -84,6 +92,8 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
       p.warehouses.find((w) => w.kind === 'packaging')
     );
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    // P-12 — the weekly fill is the "Warehouse fill" tab.
+    await openTab('Warehouse fill');
     await screen.findByTestId('op-fill');
     expect(screen.getByTestId('op-capacity')).toHaveTextContent('SYN-WH-PK');
     expect(screen.getByTestId('op-capacity')).toHaveTextContent('1,800 pallets');
@@ -115,12 +125,7 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
     const n = pk.shortfallWeeks.length;
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
     const line = await screen.findByTestId('op-shortfall-count');
-    expect(screen.getByTestId('op-cost-maxRent')).toHaveTextContent('25% of owned capacity');
-    expect(screen.getByTestId('op-cost-placeholder-maxRent')).toHaveTextContent(
-      'Placeholder — the Warehouse to confirm'
-    );
     expect(screen.getByTestId('op-max-rented')).toHaveTextContent('450 pallets');
-    expect(screen.getByTestId(`op-beyond-${sw.weekStart}`)).toHaveTextContent('beyond the limit');
     // One line: the count and where to decide.
     expect(line).toHaveTextContent(
       `${n} ${n === 1 ? 'week does' : 'weeks do'} not fit. Decide on Make warehouse room.`
@@ -135,6 +140,16 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
       screen.queryAllByRole('group', { name: /cover the shortfall|handle this week/ })
     ).toEqual([]);
     expect(screen.queryByText(/is not saved/)).toBeNull();
+    // P-12 — the cap is on "How it is sized", the weeks beyond it on "Warehouse fill".
+    await openTab('How it is sized');
+    expect(await screen.findByTestId('op-cost-maxRent')).toHaveTextContent('25% of owned capacity');
+    expect(screen.getByTestId('op-cost-placeholder-maxRent')).toHaveTextContent(
+      'Placeholder — the Warehouse to confirm'
+    );
+    await openTab('Warehouse fill');
+    expect(await screen.findByTestId(`op-beyond-${sw.weekStart}`)).toHaveTextContent(
+      'beyond the limit'
+    );
   });
 
   it('FUX-D3: the count line renders in Indonesian', async () => {
@@ -287,11 +302,20 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
     expect(await screen.findByText(/weighed against last week’s plan/)).toBeInTheDocument();
   });
 
-  it('F-07: the decision comes first — Recommended orders renders before the weekly fill, which is collapsed with the cost rates and How it works', async () => {
+  it('F-07 / P-12: the decision comes first — the Orders tab opens on Recommended orders; the weekly fill and the cost rates and How it works are tabs after it', async () => {
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
     const recs = await screen.findByTestId('op-recs');
-    const fill = screen.getByTestId('op-fill');
-    expect(recs.compareDocumentPosition(fill) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+      'Orders',
+      'Warehouse fill',
+      'How it is sized'
+    ]);
+    expect(screen.getByRole('tab', { name: 'Orders' })).toHaveAttribute('aria-selected', 'true');
+    expect(within(screen.getByRole('tabpanel')).getByTestId('op-recs')).toBe(recs);
+    expect(screen.getByTestId('op-below-demand')).toBeInTheDocument();
+    for (const id of ['op-fill', 'op-costs', 'op-definitions', 'about-this-page']) {
+      expect(screen.queryByTestId(id), id).toBeNull();
+    }
     expect(
       screen.getByTestId('op-kpis').compareDocumentPosition(recs) & Node.DOCUMENT_POSITION_FOLLOWING
     ).toBeTruthy();
@@ -300,16 +324,22 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
         screen.getByTestId('op-kpis')
       ) & Node.DOCUMENT_POSITION_FOLLOWING
     ).toBeTruthy();
-    for (const id of ['op-fill', 'op-costs', 'op-definitions']) {
-      const el = screen.getByTestId(id);
-      expect(el.tagName).toBe('DETAILS');
-      expect(el).not.toHaveAttribute('open');
-      expect(recs.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    }
+    // The fill is the whole of its tab, so it opens shown.
+    await openTab('Warehouse fill');
+    const fill = await screen.findByTestId('op-fill');
+    expect(fill.tagName).toBe('DETAILS');
+    expect(fill).toHaveAttribute('open');
+    expect(screen.queryByTestId('op-recs')).toBeNull();
     // F-22 — the fill says it includes the recommended orders, and why Reschedule can read higher.
     expect(screen.getByTestId('op-fill-basis')).toHaveTextContent(
       'Includes the recommended orders'
     );
+    await openTab('How it is sized');
+    for (const id of ['op-costs', 'op-definitions', 'about-this-page']) {
+      const el = await screen.findByTestId(id);
+      expect(el.tagName).toBe('DETAILS');
+      expect(el).not.toHaveAttribute('open');
+    }
   });
 
   it('F-06 / F-02: the plan source and its date, the links to the full pages behind each quantity, and the Data health chip', async () => {
@@ -337,7 +367,8 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
     await i18n.changeLanguage('id');
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
     expect(await screen.findByRole('heading', { name: 'Apa yang dipesan' })).toBeInTheDocument();
-    expect(screen.getByTestId('op-cost-placeholder-rent')).toHaveTextContent(
+    await openTab('Cara jumlahnya dihitung');
+    expect(await screen.findByTestId('op-cost-placeholder-rent')).toHaveTextContent(
       'Sementara — menunggu konfirmasi Keuangan'
     );
   });
@@ -565,4 +596,79 @@ describe('BuyerOrderPlan — "Why this quantity" panel (FUX2 B3)', () => {
     },
     PANEL_TIMEOUT
   );
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// P-12 / P-07 / IA-B13 — the tabs in the address, the what-if row link, and
+// the link from a created draft to that draft on Call-offs.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('BuyerOrderPlan — tabs, what-if and the draft link (P-12, P-07, IA-B13)', () => {
+  it('?tab=fill opens Warehouse fill; ?tab=sizing opens How it is sized; an unknown tab opens Orders', async () => {
+    const fill = renderWithProviders(<BuyerOrderPlan />, {
+      identity: PLANNER,
+      route: '/buyer/order-plan?tab=fill'
+    });
+    expect(await screen.findByTestId('op-fill')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Warehouse fill' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    expect(screen.queryByTestId('op-recs')).toBeNull();
+    fill.unmount();
+
+    const sizing = renderWithProviders(<BuyerOrderPlan />, {
+      identity: PLANNER,
+      route: '/buyer/order-plan?tab=sizing'
+    });
+    expect(await screen.findByTestId('op-costs')).toBeInTheDocument();
+    expect(screen.queryByTestId('op-recs')).toBeNull();
+    sizing.unmount();
+
+    renderWithProviders(<BuyerOrderPlan />, {
+      identity: PLANNER,
+      route: '/buyer/order-plan?tab=bogus'
+    });
+    expect(await screen.findByTestId('op-recs')).toBeInTheDocument();
+  });
+
+  it('each recommendation carries "Try a what-if" with its material and supplier', async () => {
+    const { rec: r, m } = await firstRec();
+    expect(r.supplierId).not.toBeNull();
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    const link = await screen.findByTestId(`op-whatif-${r.materialCode}-${r.weekStart}`);
+    expect(link).toHaveTextContent('Try a what-if');
+    const href = new URL(/** @type {string} */ (link.getAttribute('href')), 'http://x');
+    expect(href.pathname).toBe('/buyer/what-if');
+    expect(href.searchParams.get('material')).toBe(r.materialCode);
+    expect(href.searchParams.get('supplier')).toBe(r.supplierId);
+    expect(link).toHaveAccessibleName(
+      `Try a what-if for ${r.materialCode} from ${m.supplierName ?? r.supplierId}`
+    );
+  });
+
+  it('after "Create draft call-off", the row links to that draft on Call-offs — EN and ID', async () => {
+    const p = await plan();
+    const pos = await openPos();
+    const r = /** @type {import('@services/engine/orderSizing').Recommendation} */ (
+      p.warehouses
+        .flatMap((w) => w.materials.flatMap((m) => m.recommendations))
+        .find((x) => umbrellaLineFor(pos, x.supplierId, x.materialCode) !== null)
+    );
+    const before = new Set(callOffStore.all().map((c) => c.id));
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    const testId = `op-open-draft-${r.materialCode}-${r.weekStart}`;
+    fireEvent.click(await screen.findByTestId(`op-draft-${r.materialCode}-${r.weekStart}`));
+    const link = await screen.findByTestId(testId);
+    const made = /** @type {import('@services/data/types').CallOff} */ (
+      callOffStore.all().find((c) => !before.has(c.id))
+    );
+    expect(link).toHaveTextContent('Open the draft call-off');
+    expect(link).toHaveAttribute(
+      'href',
+      `/buyer/call-offs?highlight=${encodeURIComponent(made.id)}`
+    );
+    await i18n.changeLanguage('id');
+    await waitFor(() => expect(screen.getByTestId(testId)).toHaveTextContent('Buka draf call-off'));
+  });
 });

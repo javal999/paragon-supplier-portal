@@ -25,8 +25,8 @@ describe('Batch 5 — supplier spine bilingual render (no chrome EN leak)', () =
   it('SupplierOrders: ID header, English gone', async () => {
     await setLang('id');
     renderWithProviders(<SupplierOrders />, { identity: SUPPLIER });
-    expect(await screen.findByText('Pesanan Saya')).toBeInTheDocument();
-    expect(screen.queryByText('My Orders')).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Pesanan pembelian' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Purchase orders' })).not.toBeInTheDocument();
   });
 
   it('SupplierShipments: ID header, English gone', async () => {
@@ -39,14 +39,14 @@ describe('Batch 5 — supplier spine bilingual render (no chrome EN leak)', () =
   it('SupplierInvoices: ID header, English gone', async () => {
     await setLang('id');
     renderWithProviders(<SupplierInvoices />, { identity: SUPPLIER });
-    expect(await screen.findByText('Faktur Saya')).toBeInTheDocument();
-    expect(screen.queryByText('My Invoices')).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Faktur' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Invoices' })).not.toBeInTheDocument();
   });
 
   it('SupplierDocuments: ID header, English gone', async () => {
     await setLang('id');
     renderWithProviders(<SupplierDocuments />, { identity: SUPPLIER });
-    expect(await screen.findByText('Dokumen Saya')).toBeInTheDocument();
-    expect(screen.queryByText('My Documents')).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Profil & dokumen' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Profile & documents' })).not.toBeInTheDocument();
   });
 });

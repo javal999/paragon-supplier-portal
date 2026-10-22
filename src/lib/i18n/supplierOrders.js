@@ -14,9 +14,10 @@
 export const supplierOrdersEn = {
   // — Breadcrumb —
   'supplierOrders.crumb.transact': 'TRANSACT',
-  'supplierOrders.crumb.myOrders': 'MY ORDERS',
+  'supplierOrders.crumb.myOrders': 'PURCHASE ORDERS',
   // — Page header —
-  'supplierOrders.header.title': 'My Orders',
+  // IA P-11 — the page title is the menu label.
+  'supplierOrders.header.title': 'Purchase orders',
   'supplierOrders.header.subtitle': 'Purchase orders received from Paragon Corp — {{supplier}}.',
   // — Meta line —
   'supplierOrders.meta.orders.one': '{{count}} order',
@@ -120,12 +121,6 @@ export const supplierOrdersEn = {
   // — Toasts (page-local; PO-confirm toasts reuse shared po.confirm.*) —
   'supplierOrders.toast.changeSubmitted.title': 'Change request for {{poNumber}} submitted',
   'supplierOrders.toast.changeSubmitted.desc': 'Paragon team will review.',
-  // #229 — was 'ASN creation for {{poNumber}}', which read as an ASN started.
-  'supplierOrders.toast.asnNotCreated.title':
-    'ASN creation not available here — nothing was created for {{poNumber}}.',
-  'supplierOrders.toast.asnContinue': 'Open My Shipments & ASN to create it there.',
-  'supplierOrders.toast.creatingAsn.title':
-    'ASN creation not available from this card — nothing was created for {{poNumber}}.',
   // — Empty state (all-empty early return) —
   'supplierOrders.empty.title': 'No purchase orders yet',
   'supplierOrders.empty.subtitle': 'No purchase orders on file for {{supplier}}.',
@@ -136,9 +131,9 @@ export const supplierOrdersEn = {
 export const supplierOrdersId = {
   // — Breadcrumb —
   'supplierOrders.crumb.transact': 'TRANSAKSI',
-  'supplierOrders.crumb.myOrders': 'PESANAN SAYA',
+  'supplierOrders.crumb.myOrders': 'PESANAN PEMBELIAN',
   // — Page header —
-  'supplierOrders.header.title': 'Pesanan Saya',
+  'supplierOrders.header.title': 'Pesanan pembelian',
   'supplierOrders.header.subtitle': 'Pesanan pembelian diterima dari Paragon Corp — {{supplier}}.',
   // — Meta line —
   'supplierOrders.meta.orders.one': '{{count}} pesanan',
@@ -235,11 +230,6 @@ export const supplierOrdersId = {
   // — Toasts (page-local; PO-confirm toasts reuse shared po.confirm.*) —
   'supplierOrders.toast.changeSubmitted.title': 'Permintaan perubahan untuk {{poNumber}} dikirim',
   'supplierOrders.toast.changeSubmitted.desc': 'Tim Paragon akan meninjau.',
-  'supplierOrders.toast.asnNotCreated.title':
-    'Pembuatan ASN tidak tersedia di sini — tidak ada yang dibuat untuk {{poNumber}}.',
-  'supplierOrders.toast.asnContinue': 'Buka Pengiriman & ASN Saya untuk membuatnya di sana.',
-  'supplierOrders.toast.creatingAsn.title':
-    'Pembuatan ASN tidak tersedia dari kartu ini — tidak ada yang dibuat untuk {{poNumber}}.',
   // — Empty state (all-empty early return) —
   'supplierOrders.empty.title': 'Belum ada pesanan pembelian',
   'supplierOrders.empty.subtitle': 'Tidak ada pesanan pembelian tercatat untuk {{supplier}}.',

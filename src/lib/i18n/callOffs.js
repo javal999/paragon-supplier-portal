@@ -280,6 +280,8 @@ export const callOffsEn = {
   'co.respond.send': 'Send confirmation',
   'co.respond.sendReject': 'Send rejection',
   'co.dispatch.title': 'Dispatch notice',
+  // IA-S04 — the ASN form, started for this call-off's PO and the call-off.
+  'co.dispatch.createAsn': 'Create the ASN for this call-off',
   'co.dispatch.asnCounts':
     'An ASN you create for this call-off counts as a dispatch notice, so you do not need to report the same shipment twice.',
   'co.dispatch.shippedDate': 'Shipped date',
@@ -325,7 +327,13 @@ export const callOffsEn = {
   'co.asn.warn.hint':
     'These are warnings. You can go back and change the ASN, or submit it as it is.',
   'co.asn.warn.recorded': 'Warnings shown at submit',
-  'co.asn.mismatch': 'Mismatch'
+  'co.asn.mismatch': 'Mismatch',
+  'co.tab.toAct': 'To act',
+  'co.tab.all': 'All call-offs',
+  'co.tab.runOut': 'Blanket POs running out',
+  'co.toAct.filter.any': 'Everything to act on',
+  'co.toAct.empty': 'Nothing to act on right now. Every call-off is under All call-offs.',
+  'co.highlight.missing': 'The call-off this link names is not on this page.'
 };
 
 /** @type {Record<string, string>} */
@@ -604,6 +612,7 @@ export const callOffsId = {
   'co.respond.send': 'Kirim konfirmasi',
   'co.respond.sendReject': 'Kirim penolakan',
   'co.dispatch.title': 'Pemberitahuan pengiriman',
+  'co.dispatch.createAsn': 'Buat ASN untuk call-off ini',
   'co.dispatch.asnCounts':
     'ASN yang Anda buat untuk call-off ini dihitung sebagai pemberitahuan pengiriman, sehingga pengiriman yang sama tidak perlu dilaporkan dua kali.',
   'co.dispatch.shippedDate': 'Tanggal dikirim',
@@ -641,5 +650,12 @@ export const callOffsId = {
   'co.asn.warn.hint':
     'Ini peringatan. Anda dapat kembali dan mengubah ASN, atau mengirimnya apa adanya.',
   'co.asn.warn.recorded': 'Peringatan yang ditampilkan saat dikirim',
-  'co.asn.mismatch': 'Tidak sesuai'
+  'co.asn.mismatch': 'Tidak sesuai',
+  'co.tab.toAct': 'Perlu tindakan',
+  'co.tab.all': 'Semua call-off',
+  'co.tab.runOut': 'PO induk yang akan habis',
+  'co.toAct.filter.any': 'Semua yang perlu tindakan',
+  'co.toAct.empty':
+    'Tidak ada yang perlu ditindaklanjuti saat ini. Setiap call-off ada di Semua call-off.',
+  'co.highlight.missing': 'Call-off yang disebut tautan ini tidak ada di halaman ini.'
 };

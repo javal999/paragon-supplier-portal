@@ -11,6 +11,9 @@ import Data from '@components/ui-v2/Data';
 /** @import { FailedSettle } from '@components/v2-features/GRInspectionWizard' */
 import GRInspectionWizard from '@components/v2-features/GRInspectionWizard';
 import { useToast } from '@hooks/useToast';
+import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
+import { useSectionParam } from '@hooks/useSectionParam';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useEnumLabel } from '@hooks/useEnumLabel';
 import LoadingState from '@components/ui-v2/LoadingState';
@@ -85,7 +88,11 @@ const GoodsReceiptWorkspace = ({
   const [tab, setTab] = useState(/** @type {GroupTab} */ ('all'));
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState(/** @type {DateFilter} */ ('all'));
-  const [selectedId, setSelectedId] = useState(/** @type {string | null} */ (null));
+  // IA P-08 — `?open=<id>` opens the one receipt a Home count of one names.
+  const [linkParams] = useSearchParams();
+  const [selectedId, setSelectedId] = useState(
+    /** @type {string | null} */ (linkParams.get('open'))
+  );
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardAsnId, setWizardAsnId] = useState(/** @type {string | undefined} */ (undefined));
 
@@ -133,6 +140,26 @@ const GoodsReceiptWorkspace = ({
   useEffect(() => {
     if (onlyGrId !== null) setSelectedId(onlyGrId);
   }, [onlyGrId]);
+
+  // IA P-08 — Home's goods receipt tasks land on the rows they count:
+  // `?tab=action` opens the "Needs action" tab, `?open=<id>` opens the one
+  // receipt a count of one names, and `?section=disputes` scrolls to the
+  // disputed receipts (`?open=` is read where the selection is held, above).
+  useUrlEnumParam(
+    'tab',
+    /** @type {GroupTab[]} */ ([
+      'all',
+      'action',
+      'pending',
+      'under-inspection',
+      'approved',
+      'hold',
+      'rejected',
+      'posted'
+    ]),
+    setTab
+  );
+  useSectionParam('gr-section', ['disputes'], true);
 
   const selected = selectedId ? (allGRs.find((g) => g.id === selectedId) ?? null) : null;
   const selectedSupplier = selected ? supplierById.get(selected.supplierId) : undefined;
@@ -241,7 +268,9 @@ const GoodsReceiptWorkspace = ({
       <PoFilterBanner drill={drill} persona="buyer" count={allGRs.length} />
 
       {/* REQ-E07-06 — supplier disputes of a receipt discrepancy, for the planner. */}
-      <ReceiptDisputesSection goodsReceipts={goodsReceipts} />
+      <div id="gr-section-disputes" className="scroll-mt-4">
+        <ReceiptDisputesSection goodsReceipts={goodsReceipts} />
+      </div>
 
       <GoodsReceiptFilters
         counts={counts}

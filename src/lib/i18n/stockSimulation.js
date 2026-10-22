@@ -7,6 +7,8 @@
 /** @type {Record<string, string>} */
 export const stockSimulationEn = {
   'sim.title': 'Stock simulation',
+  'sim.row.seeEstimate': 'See estimate for a date',
+  'sim.row.seeEstimateAria': 'See the estimated stock of {{material}} from {{supplier}} on a date',
   'sim.subtitle':
     "Each supplier's estimated stock on the check date: its last update plus what has happened since.",
   'sim.asOf': 'Hub date',
@@ -108,6 +110,9 @@ export const stockSimulationEn = {
 /** @type {Record<string, string>} */
 export const stockSimulationId = {
   'sim.title': 'Simulasi stok',
+  'sim.row.seeEstimate': 'Lihat perkiraan pada tanggal',
+  'sim.row.seeEstimateAria':
+    'Lihat perkiraan stok {{material}} dari {{supplier}} pada suatu tanggal',
   'sim.subtitle':
     'Perkiraan stok tiap pemasok pada tanggal cek: pembaruan terakhirnya ditambah yang terjadi sesudahnya.',
   'sim.asOf': 'Tanggal hub',

@@ -208,7 +208,7 @@ describe('BuyerScorecard — purpose header, banner and measure basis (B6)', () 
     expect(screen.getByTestId('purpose-decision')).toHaveTextContent(
       'Which suppliers to follow up this month.'
     );
-    expect(screen.getByTestId('purpose-uses')).toHaveTextContent('Supplier responses');
+    expect(screen.getByTestId('purpose-uses')).toHaveTextContent('Foresight commitments');
     expect(screen.getByTestId('purpose-uses')).toHaveAttribute('href', '/buyer/collaboration');
     expect(screen.getByTestId('purpose-next')).toHaveTextContent('Forecast quality');
     expect(screen.getByTestId('purpose-next')).toHaveAttribute('href', '/buyer/demand-forecast');

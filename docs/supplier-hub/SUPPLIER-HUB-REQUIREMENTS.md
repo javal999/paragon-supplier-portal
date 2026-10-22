@@ -221,30 +221,32 @@ How an RFI, RFQ or RFP comes into being, before it reaches suppliers [Owner, A-0
 
 The menu follows the hub's own sections, not procurement stages, and each PTI user sees only the sections for their role [Owner, 2026-09-17]. Item names are the same for PTI and suppliers wherever the object is the same.
 
-**PTI users**
+**PTI users** (as built on 2026-10-21 by the navigation evaluation, `research/PORTAL-IA-EVALUATION-2026-10.md`)
 
 | Section | Items | Roles | Requirements |
 |---|---|---|---|
-| Home | My tasks | All | Section 3.8 |
-| Order collaboration | Order summary; Purchase orders; Shipments & ASN; Goods receipts | MP | REQ-E07-01 to REQ-E07-06 |
-| Forecast | Forecasts; Commitments & gaps; Fixed stock reconcile (to become Feedstock reconcile, DRC-D14) | MP | REQ-E06-01 to REQ-E06-04 |
-| Inventory & capacity | Inventory; Capacity; Alerts; Supplier access | MP | REQ-E08-01 to REQ-E08-05 |
-| Call-offs | Recommendations; Call-offs | MP | REQ-E09-01 to REQ-E09-04 |
-| Sourcing | RFI; RFQ (quotation requests); RFP; Suppliers | BUY | REQ-E03-01 to REQ-E03-05; Foundation |
+| Home | My tasks; Supplier follow-ups | All | Section 3.8 |
+| Order collaboration | Purchase orders (Summary and List views); Call-offs; Shipments & ASN; Goods receipts | MP | REQ-E07-01 to REQ-E07-06, REQ-E09-01 to REQ-E09-04 |
+| Weekly plan | This week; What to order; Make warehouse room; Publish to suppliers; Foresight commitments; Demand anticipation | MP | REQ-E06-01 to REQ-E06-03, DRC |
+| Review | Supplier performance; Forecast quality; Feedstock reconcile; Demand anticipation history | MP | REQ-E10-01, REQ-E06-04, DRC-D14, DRC-D18 |
+| Inventory & capacity | Stock; Stock simulation; Capacity; Alerts; Supplier access; Trade names | MP | REQ-E08-01 to REQ-E08-08 |
+| Sourcing | Requisitions; RFI; RFQ; RFP; Suppliers; Supplier documents | BUY | REQ-E03-01 to REQ-E03-05; Foundation |
 | Invoices | Invoices | FIN | REQ-E07-07 |
-| Performance | Supplier performance | MP, BUY | REQ-E10-01 |
+| Audit | Demand anticipation history | BUY, FIN | DRC-D18 |
+| Performance | Supplier performance; Feedstock reconcile | BUY | REQ-E10-01, REQ-E06-04 |
 
 **Suppliers**
 
 | Section | Items | Requirements |
 |---|---|---|
 | Home | To do | Section 3.8 |
-| Orders | Purchase orders; Call-offs; Shipments & ASN; Goods receipts | REQ-E07-01 to REQ-E07-06, REQ-E09-03, REQ-E09-04 |
-| Planning | Forecast & commitments; Fixed stock reconcile; Stock; Capacity | REQ-E06-01, REQ-E06-02, REQ-E06-04, REQ-E08-02, REQ-E08-04 |
+| Orders | Purchase orders (Summary and List views); Call-offs; Shipments & ASN; Goods receipts | REQ-E07-01 to REQ-E07-06, REQ-E09-03, REQ-E09-04 |
+| Planning | Foresight commitments; Feedstock reconcile; Stock; Capacity | REQ-E06-01, REQ-E06-02, REQ-E06-04, REQ-E08-02, REQ-E08-04 |
 | Sourcing | RFI invitations; RFQ invitations (with negotiation rounds); RFP invitations | REQ-E03-02 to REQ-E03-05 |
 | Invoices | Invoices | REQ-E07-07 |
-| Performance | My performance | REQ-E10-01 |
-| Company | Profile & documents | Foundation |
+| Company | Profile & documents; My performance | Foundation; REQ-E10-01 |
+
+"Foresight commitments" is the one name for REQ-E06-02 on both personas and on the Order summary column [Owner, 2026-10-21; the business's word, MN-ORD-11]. Stock simulation stays its own page until MAT-D2's review, so the Stock page keeps BR-01's "no separate available figure"; each Stock row links to it [Owner, 2026-10-21].
 
 **Rules.**
 - NV-01. Help, glossary, and administration (reason codes, working calendar, tolerances and rule values, alert thresholds and stale periods, 3PL list, SAP interface monitor, roles) sit in the user menu, not the main menu [Owner]. Every administration change is recorded with who, when, and the old and new value.
@@ -2265,3 +2267,4 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | 0.28 | 2026-09-29 | REQ-E08-04 BR-08 to BR-12 and REQ-E06-02 BR-11 to BR-13: capacity before the LTP, two-level check against capacity and BE, one Submit all per week, the LTP as the only capacity demand figure, "Additional capacity" (BL-133, PR #80). New REQ-E06-04 Fixed stock reconcile, Validated (BL-134, PR #79) |
 | 0.30 | 2026-09-29 | Forecast engine: REQ-E14-09 demand range, REQ-E14-10 model backtest and REQ-E14-11 forecast bias and planner overrides built on synthetic data (PRs #100, #96, #98); build decisions accepted (`FORECAST-ENGINE-REQUIREMENTS.md` 0.15) |
 | 0.31 | 2026-10-19 | Weekly SC Hub 2026-10-14 (DA, ROP and call-off) accepted as `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` (DRC-1 to DRC-19, DRC-D1 to DRC-D16, BL-187 to BL-209). REQ-E06-04 superseded by DRC-15a; notes on REQ-E08-02, REQ-E09-01 and REQ-E09-03 |
+| 0.32 | 2026-10-21 | Section 3.7 menu tables rewritten to the as-built navigation of the IA evaluation (`research/PORTAL-IA-EVALUATION-2026-10.md`, P-01 to P-12): Requisitions and Supplier documents in Sourcing; Order summary is a view of Purchase orders; Call-offs and Trade names joined their sections; Supplier follow-ups replaces Supplier replies and Chase; Foresight commitments names REQ-E06-02 everywhere; supplier Company holds My performance. The table had still shown the pre-FUX "Forecast" section |

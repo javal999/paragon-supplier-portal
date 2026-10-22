@@ -1,0 +1,30 @@
+---
+title: Target map · Weekly plan and Review (PTI · Material Planner) (P-04, P-07, P-11)
+---
+flowchart LR
+  subgraph Weekly["Weekly plan"]
+    tw["This week"]:::menu
+    wto["What to order"]:::menu
+    mwr["Make warehouse room"]:::menu
+    pub["Publish to suppliers"]:::menu
+    resp["Foresight commitments (was Supplier responses; one page)"]:::changed
+    da["Demand anticipation"]:::menu
+  end
+  subgraph Review["Review"]
+    perf["Supplier performance"]:::menu
+    fq["Forecast quality"]:::menu
+    fr["Feedstock reconcile"]:::menu
+    dah["Demand anticipation history"]:::menu
+  end
+  subgraph Gone["No longer separate pages"]
+    wi["What-if sandbox (opened from a material row)"]:::gone
+    sc["Supplier Collaboration (URL only)"]:::gone
+  end
+  tw -->|next| wto -->|next| mwr -->|next| pub -->|next| resp
+  resp -->|cycle ends| tw
+  wto -->|Try a what-if for this material| wi
+  sc -.->|consolidation becomes a tab of| resp
+  perf --> fq --> fr
+  classDef menu fill:#eef4ff,stroke:#3b6fd8,color:#10213f
+  classDef changed fill:#e9f7ef,stroke:#2e8b57,color:#0f3020
+  classDef gone fill:#fdecec,stroke:#b42318,stroke-dasharray:5 3,color:#4a0d0d

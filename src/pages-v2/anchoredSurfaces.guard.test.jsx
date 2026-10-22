@@ -45,7 +45,8 @@
 // `INVOICE_NOW` rather than `new Date()`. The surface is asserted below like any
 // other, at the same two instants ~5 years apart.
 //
-// ⚠️ **`BuyerDashboard` HAS JOINED TOO (2026-09-22).** The paragraph below is the
+// ⚠️ **`BuyerDashboard` HAS JOINED TOO (2026-09-22)** — and was retired with its
+// route by IA P-10 (2026-10-21), so its case is gone. The paragraph below is the
 // exclusion it carried, kept as the record of why it was out:
 //
 // WHAT WAS DELIBERATELY NOT HERE: `BuyerDashboard` and the two widgets
@@ -65,7 +66,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 /** @import React from 'react' */
 import { describe, it, expect, afterEach } from 'vitest';
-import { cleanup, fireEvent, screen } from '@testing-library/react';
+import { cleanup } from '@testing-library/react';
 import { act } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
@@ -79,13 +80,8 @@ import BuyerInvoices from './BuyerInvoices';
 import BuyerCompliance from './BuyerCompliance';
 import BuyerContractDetail from './BuyerContractDetail';
 import BuyerContracts from './BuyerContracts';
-import BuyerRisk from './BuyerRisk';
 import BuyerSourcing from './BuyerSourcing';
-import SupplierDashboard from './SupplierDashboard';
-import BuyerDashboard from './BuyerDashboard';
 import SupplierDocuments from './SupplierDocuments';
-import SupplierStorefront from './SupplierStorefront';
-import SupplierCertsExpiringWidget from './widgets/SupplierCertsExpiringWidget';
 
 /** Two instants ~5 years apart. Both are OFFSETS from the real clock, so the
  *  pair moves with the calendar and neither is a dated literal. */
@@ -307,61 +303,8 @@ describe('anchored surfaces — clock-independent by construction', () => {
     });
   });
 
-  // ⚠️ The clock read lives in `ComplianceRisksTab`, and the default tab is
-  //    `geo` — so this MUST open the compliance tab. Rendered at the default
-  //    tab this page is byte-identical whether or not it is anchored, which is
-  //    how it read as acquitted in the census that preceded this batch.
-  it('BuyerRisk is anchored (compliance tab — where its day-counts live)', async () => {
-    await expectAnchored({
-      el: <BuyerRisk />,
-      route: '/buyer/risk',
-      reveal: () => fireEvent.click(screen.getByText('Compliance Risks'))
-    });
-  });
-
   it('BuyerSourcing is anchored', async () => {
     await expectAnchored({ el: <BuyerSourcing />, route: '/buyer/rfq' });
-  });
-
-  // ⚠️ **SUPPLIERDASHBOARD WAS ASSERTED IN TWO HALVES, BY RULING — AND THE
-  //    RULING IS REVERSED (operator, 2026-09-22).** Its briefing greeting was
-  //    withheld from anchoring on 2026-09-10 ("anchoring that would change what
-  //    the reader is told today is"). The demo hub now runs on ONE clock, so the
-  //    greeting tells the reader the hub's day, the same day every badge beneath
-  //    it is computed at. The withheld-half test is not deleted but INVERTED: it
-  //    asserted the greeting MOVES; it now asserts the greeting is anchored AND
-  //    names the declared present, so re-withholding it goes red by name.
-  const GREETING = /(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday), \d{2} \w+ \d{4}/;
-  /** @type {Surface} */
-  const supplierDash = {
-    el: <SupplierDashboard />,
-    route: '/supplier/dashboard',
-    supplier: true
-  };
-
-  it('SupplierDashboard is anchored — badges AND greeting', async () => {
-    await expectAnchored(supplierDash);
-  });
-
-  it('SupplierDashboard — the briefing GREETING names the declared present', async () => {
-    const a = await textAt(supplierDash, Date.now() + FAR_A);
-    const expected = new Date(`${DECLARED_PRESENT}T12:00:00.000Z`).toLocaleDateString('en-GB', {
-      weekday: 'long',
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
-    });
-    // non-vacuity: the greeting is on screen, and it is the hub's day
-    expect(a.match(GREETING)?.[0]).toBe(expected);
-  });
-
-  // ⚠️ **BUYERDASHBOARD JOINS THE POPULATION.** Its exclusion (header) rested
-  //    on wall-clock reads — the 48h-unacknowledged count (`BuyerDashboard.jsx`)
-  //    and the widgets' day counts (`BuyerAlertsBar`, `BuyerOpenPoWidget`,
-  //    `BuyerRfqAwaitingAwardWidget`, `BuyerComplianceWidget`). All now read the
-  //    hub clock, and `src/lib/machineClockGate` keeps them there.
-  it('BuyerDashboard is anchored', async () => {
-    await expectAnchored({ el: <BuyerDashboard />, route: '/buyer/dashboard' });
   });
 
   it('SupplierDocuments is anchored', async () => {
@@ -372,29 +315,9 @@ describe('anchored surfaces — clock-independent by construction', () => {
     });
   });
 
-  // ⚠️ Mounted under its real route: without a matching <Route> `useParams()` is
-  //    empty, the page renders "not found", and the comparison passes over a
-  //    surface that never rendered.
-  it('SupplierStorefront is anchored', async () => {
-    await expectAnchored({
-      el: <SupplierStorefront />,
-      path: '/marketplace/supplier/:id',
-      route: '/marketplace/supplier/sup-007'
-    });
-  });
-
-  it('SupplierCertsExpiringWidget is anchored', async () => {
-    const a = await textAt(
-      { el: <SupplierCertsExpiringWidget />, route: '/supplier/dashboard', supplier: true },
-      Date.now() + FAR_A
-    );
-    const b = await textAt(
-      { el: <SupplierCertsExpiringWidget />, route: '/supplier/dashboard', supplier: true },
-      Date.now() + FAR_B
-    );
-    expect(a.length).toBeGreaterThan(20);
-    expect(b).toBe(a);
-  });
+  // IA P-10 (owner ruled 2026-10-21) — BuyerRisk, SupplierDashboard,
+  // BuyerDashboard, SupplierStorefront and SupplierCertsExpiringWidget were
+  // retired with their pages, so their anchoring cases left with them.
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

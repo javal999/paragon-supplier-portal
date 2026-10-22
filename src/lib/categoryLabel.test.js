@@ -1,6 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import {
   categoryLabelKey,
   categoryResourcesEn,
@@ -90,69 +88,17 @@ describe('categoryLabel — category SSoT invariants (SEAT2-I18N-CATEGORY-01)', 
 // category raw is a different finding and is not this guard's business.
 // ═════════════════════════════════════════════════════════════════════════════
 
-const ROOT = join(__dirname, '..', '..');
-
-/**
- * Literal members of a module-scope `const NAME = [ ... ]` array, from source.
- * @param {string} relPath
- * @param {string} name
- * @returns {string[]}
- */
-function constLiterals(relPath, name) {
-  const src = readFileSync(join(ROOT, relPath), 'utf8');
-  const decl = new RegExp(`^\\s*(?:export\\s+)?const ${name}\\b`, 'm').exec(src);
-  if (!decl) throw new Error(`declaration not found: ${relPath}::${name}`);
-  const open = src.indexOf('[', decl.index);
-  let depth = 0;
-  let i = open;
-  for (; i < src.length; i++) {
-    if (src[i] === '[') depth++;
-    else if (src[i] === ']' && --depth === 0) break;
-  }
-  return [...src.slice(open, i + 1).matchAll(/'([^']+)'/g)].map((m) => m[1]);
-}
-
-/** @type {readonly { label: string; file: string; name: string }[]} */
-const SURFACES = [
-  {
-    label: 'Marketplace filter chips',
-    file: 'src/pages-v2/Marketplace.jsx',
-    name: 'CATEGORIES'
-  },
-  {
-    label: 'SupplierMyStorefront add-material categories',
-    file: 'src/pages-v2/SupplierMyStorefront/components/AddMaterialForm.jsx',
-    name: 'CATEGORY_OPTIONS'
-  }
-];
+// IA P-10 (owner ruled 2026-10-21) — the two surfaces this block read (the
+// Marketplace filter chips and the supplier storefront's add-material form)
+// were retired with their pages, so the token-list derivation left with them.
+// The surviving callers of `useCategoryLabel()` render categories from data,
+// not from a module-scope list, and the vocabulary checks below still hold.
 
 describe('categoryLabel — the surfaces that route through this map (S2a)', () => {
   // ── THE POPULATION GUARD RUNS FIRST, AND ASSERTS MEMBERSHIP, NEVER A COUNT.
   // `EMPTY-INPUT-REPORTS-CLEAN-01`: a regex that matched nothing would report a
   // perfectly clean tree, and "0 tokens fall through" is exactly what success
   // looks like here. Membership both ways is the only thing separating them.
-  it('read a real token list off each surface', () => {
-    for (const { label, file, name } of SURFACES) {
-      const toks = constLiterals(file, name);
-      expect(toks.length, `${label}: empty derivation`).toBeGreaterThan(3);
-      expect(toks, label).toContain('Sustainable Packaging');
-      expect(toks, `${label}: known-false member present`).not.toContain('Semiconductors');
-    }
-  });
-
-  it('every category these surfaces offer resolves — none falls through to raw EN', () => {
-    for (const { label, file, name } of SURFACES) {
-      const unresolved = constLiterals(file, name).filter((tok) => categoryLabelKey(tok) === null);
-      expect(
-        unresolved,
-        `${label} renders these in English regardless of locale, because ` +
-          `categoryLabelKey returns null and useCategoryLabel falls back to the ` +
-          `raw token. Add a row to CATEGORY_ID (or an alias, if the slug is ` +
-          `already taken):\n  ${unresolved.join('\n  ')}`
-      ).toEqual([]);
-    }
-  });
-
   it('the marketplace / storefront vocabulary localizes', () => {
     expect(categoryResourcesId[slug('Natural & Botanical')]).toBe('Alami & Botani');
     expect(categoryResourcesId[slug('Surfactants & Emulsifiers')]).toBe('Surfaktan & Pengemulsi');
