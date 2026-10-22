@@ -21,15 +21,26 @@ import Data from '@components/ui-v2/Data';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { formatDate, formatDateTime } from '@lib/format';
-import { usePlanningGroups, useStockSimulation } from '@services/query/hooks';
+import {
+  useCallOffs,
+  usePlanningGroups,
+  usePurchaseOrders,
+  useStockSimulation
+} from '@services/query/hooks';
+import { CALL_OFF_PO_STATES } from '@services/transitions/callOffRules';
 /** @import { SimulationOverrideField, StockSimulationFilter, StockSimulationRow } from '@services/data/types' */
 import { dayOf, isIsoDay } from '@services/transitions/inventoryRules';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { inventoryNow, inputClass, labelClass } from './inventory/inventoryDisplay';
 import { planningGroupLabel } from './inventory/planningGroupDisplay';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
+/** @import { AgreementLine } from './inventory/stockSimulationDisplay' */
 import {
+  agreementLineFor,
   FlagList,
+  FreeCell,
+  isOverCalled,
+  lineLeftText,
   PlannerInputLabel,
   QtyCell,
   SIMULATE_ATOM,
@@ -48,6 +59,11 @@ import {
 // figure (BR-02). A row opens the 13 weekly buckets and the planner inputs.
 // The check date and every filter live in the page address, so a reload or a
 // shared link keeps them.
+//
+// P-05 / P-06 — the row offers the act the hub can complete: "Create call-off"
+// (with what is left on the agreement line) only where the supplier has an
+// agreement line with quantity left and the pair is not over-called;
+// otherwise "Create PO request" is the outline action, with a grey note why.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const COLUMNS = 12;
@@ -95,6 +111,9 @@ const BuyerStockSimulation = () => {
   // The option lists come from every row at the date, not the filtered ones.
   const everyRow = useStockSimulation(date);
   const groups = usePlanningGroups();
+  // P-06 — the agreement lines, read the way the call-off page reads them.
+  const posQuery = usePurchaseOrders({ status: [...CALL_OFF_PO_STATES] });
+  const callOffsQuery = useCallOffs();
   const crumb = [t('hub.nav.section.inventory'), t('sim.title')];
 
   const rows = useMemo(() => query.data?.items ?? [], [query.data]);
@@ -105,9 +124,13 @@ const BuyerStockSimulation = () => {
     supplierId: r.supplierId
   }));
 
-  if (query.isPending) return <LoadingState breadcrumb={crumb} />;
-  if (query.isError)
-    return <ErrorState breadcrumb={crumb} error={query.error} onRetry={() => query.refetch()} />;
+  if (query.isPending || posQuery.isPending || callOffsQuery.isPending)
+    return <LoadingState breadcrumb={crumb} />;
+  const failed = [query, posQuery, callOffsQuery].find((x) => x.isError);
+  if (failed)
+    return <ErrorState breadcrumb={crumb} error={failed.error} onRetry={() => failed.refetch()} />;
+  const pos = posQuery.data?.items ?? [];
+  const callOffs = callOffsQuery.data?.items ?? [];
 
   const all = everyRow.data?.items ?? rows;
   const suppliers = [...new Map(all.map((r) => [r.supplierId, r.supplierName])).entries()].sort(
@@ -282,6 +305,7 @@ const BuyerStockSimulation = () => {
                     onToggle={() => toggle(key)}
                     canInput={canInput}
                     onInput={(f) => openInputFor(key, f)}
+                    line={agreementLineFor(pos, callOffs, r.supplierId, r.materialCode)}
                     onCallOff={() => createCallOff(r)}
                     onPoRequest={() => createPoRequest(r)}
                     matchReason={<MaterialMatchReason match={match} testId={`sim-match-${key}`} />}
@@ -316,7 +340,7 @@ const BuyerStockSimulation = () => {
 
 /**
  * One supplier × material row: the figures side by side, never summed (BR-02).
- * @type {React.FC<{ row: StockSimulationRow; open: boolean; onToggle: () => void; canInput: boolean; onInput: (field: SimulationOverrideField) => void; onCallOff: () => void; onPoRequest: () => void; matchReason: React.ReactNode; }>}
+ * @type {React.FC<{ row: StockSimulationRow; open: boolean; onToggle: () => void; canInput: boolean; onInput: (field: SimulationOverrideField) => void; line: AgreementLine; onCallOff: () => void; onPoRequest: () => void; matchReason: React.ReactNode; }>}
  */
 const SimulationRow = ({
   row: r,
@@ -324,6 +348,7 @@ const SimulationRow = ({
   onToggle,
   canInput,
   onInput,
+  line,
   onCallOff,
   onPoRequest,
   matchReason
@@ -339,6 +364,8 @@ const SimulationRow = ({
     fn();
   };
   const Chevron = open ? ChevronDown : ChevronRight;
+  const overCalled = isOverCalled(s);
+  const flags = s?.flags ?? [];
   return (
     // BL-31 — the row opens on a click anywhere; from the keyboard, the toggle
     // button is the one tab stop (the row itself stays out of the tab order).
@@ -403,7 +430,7 @@ const SimulationRow = ({
       </TableCell>
       <TableCell className="text-right whitespace-nowrap" data-testid={`sim-free-${key}`}>
         {s && s.freeToCallOff !== null ? (
-          <QtyCell value={s.freeToCallOff} uom={r.uom} strong />
+          <FreeCell value={s.freeToCallOff} uom={r.uom} />
         ) : (
           <span className="text-text-tertiary">—</span>
         )}
@@ -433,19 +460,59 @@ const SimulationRow = ({
         ) : null}
       </TableCell>
       <TableCell>
-        <FlagList
-          flags={s?.flags ?? []}
-          canInput={canInput}
-          onInput={onInput}
-          testId={`sim-flags-${key}`}
-        />
+        {overCalled ? (
+          <div className="mb-1" data-testid={`sim-overcalled-${key}`}>
+            <StatusPill variant="danger">{t('sim.overCalledMeans')}</StatusPill>
+          </div>
+        ) : null}
+        {overCalled && flags.length === 0 ? null : (
+          <FlagList
+            flags={flags}
+            canInput={canInput}
+            onInput={onInput}
+            testId={`sim-flags-${key}`}
+          />
+        )}
       </TableCell>
       <TableCell className="text-right">
-        <div className="flex flex-col items-end gap-1">
+        <RowActions
+          row={r}
+          line={line}
+          overCalled={overCalled}
+          onCallOff={stop(onCallOff)}
+          onPoRequest={stop(onPoRequest)}
+        />
+      </TableCell>
+    </TableRow>
+  );
+};
+
+/**
+ * P-05 / P-06 — the row's actions. "Create call-off" only where an agreement
+ * line has quantity left and the pair is not over-called; otherwise "Create PO
+ * request" is the outline action, with a grey note when there is no line or it
+ * is used up (an over-called row's reason is its flag).
+ * @type {React.FC<{ row: StockSimulationRow; line: AgreementLine; overCalled: boolean; onCallOff: (e: React.MouseEvent) => void; onPoRequest: (e: React.MouseEvent) => void; }>}
+ */
+const RowActions = ({ row: r, line, overCalled, onCallOff, onPoRequest }) => {
+  const { t } = useTranslation();
+  const key = `${r.supplierId}-${r.materialCode}`;
+  const callOff = !overCalled && line.state === 'line';
+  const note = callOff
+    ? null
+    : line.state === 'none'
+      ? t('sim.action.noLine')
+      : line.state === 'exhausted' && !overCalled
+        ? t('sim.action.lineExhausted', { po: line.poNumber })
+        : null;
+  return (
+    <div className="flex flex-col items-end gap-1">
+      {!overCalled && line.state === 'line' ? (
+        <>
           <Button
             variant="outline"
             className="!px-3 !py-1.5 text-xs whitespace-nowrap"
-            onClick={stop(onCallOff)}
+            onClick={onCallOff}
             aria-label={t('sim.action.callOffFor', {
               material: r.materialCode,
               supplier: r.supplierName
@@ -454,21 +521,35 @@ const SimulationRow = ({
           >
             {t('sim.action.callOff')}
           </Button>
-          <Button
-            variant="secondary"
-            className="!px-3 !py-1.5 text-xs whitespace-nowrap"
-            onClick={stop(onPoRequest)}
-            aria-label={t('sim.action.poFor', {
-              material: r.materialCode,
-              supplier: r.supplierName
-            })}
-            data-testid={`sim-po-${key}`}
+          <span
+            className="text-[11px] text-text-secondary whitespace-nowrap"
+            data-testid={`sim-line-${key}`}
           >
-            {t('sim.action.po')}
-          </Button>
-        </div>
-      </TableCell>
-    </TableRow>
+            {lineLeftText(t, line, r.uom)}
+          </span>
+        </>
+      ) : null}
+      <Button
+        variant={callOff ? 'secondary' : 'outline'}
+        className="!px-3 !py-1.5 text-xs whitespace-nowrap"
+        onClick={onPoRequest}
+        aria-label={t('sim.action.poFor', {
+          material: r.materialCode,
+          supplier: r.supplierName
+        })}
+        data-testid={`sim-po-${key}`}
+      >
+        {t('sim.action.po')}
+      </Button>
+      {note ? (
+        <span
+          className="text-[11px] text-text-tertiary whitespace-nowrap"
+          data-testid={`sim-noline-${key}`}
+        >
+          {note}
+        </span>
+      ) : null}
+    </div>
   );
 };
 

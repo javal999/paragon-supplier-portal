@@ -7,9 +7,11 @@ import StatusPill from '@components/ui-v2/StatusPill';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { useToast } from '@hooks/useToast';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
-import { formatDate, formatDateTime } from '@lib/format';
+import { formatDate, formatDateTime, formatIDR } from '@lib/format';
 import { useSimulationOverrideSet } from '@services/query/commandHooks';
-/** @import { SimulationOverrideField, StockSimulationRow } from '@services/data/types' */
+/** @import { CallOff, PurchaseOrder, SimulationOverrideField, StockSimulationRow } from '@services/data/types' */
+/** @import { UmbrellaRemaining } from '@services/transitions/callOffRules' */
+import { CALL_OFF_PO_STATES, umbrellaRemaining } from '@services/transitions/callOffRules';
 /** @import { PlannerInputRef, SimulationComponent, SimulationFlag, SimulationOverrideRefusal, StockSimulation } from '@services/transitions/simulateSupplierStock' */
 import {
   SIMULATION_OVERRIDE_FIELDS,
@@ -36,6 +38,93 @@ export const FLAG_INPUT = {
   noStockUpdate: 'soh',
   productionDateMissing: 'inProduction',
   etaMissing: 'toDistributor'
+};
+
+// ── P-06 · the action that fits the pair ─────────────────────────────────────
+
+/**
+ * The supplier's agreement line for a material, by the rule the call-off page
+ * uses for "Create call-off" (`BuyerCallOffs`' prefill): an open PO
+ * (`CALL_OFF_PO_STATES`) of this supplier with a line for this material, the
+ * one with the most left to release. `line`: that line has quantity (or value)
+ * left; `exhausted`: it has none left; `none`: there is no such line, which is
+ * when the call-off page says "No agreement line".
+ *
+ * @typedef {| { readonly state: 'line'; readonly poNumber: string; readonly remaining: UmbrellaRemaining }
+ *   | { readonly state: 'exhausted'; readonly poNumber: string; readonly remaining: UmbrellaRemaining }
+ *   | { readonly state: 'none' }} AgreementLine
+ */
+
+/**
+ * @param {readonly PurchaseOrder[]} pos
+ * @param {readonly CallOff[]} callOffs
+ * @param {string} supplierId
+ * @param {string} materialCode
+ * @returns {AgreementLine}
+ */
+export function agreementLineFor(pos, callOffs, supplierId, materialCode) {
+  const lines = pos
+    .filter((po) => po.supplierId === supplierId && CALL_OFF_PO_STATES.includes(po.status))
+    .flatMap((po) =>
+      po.lineItems
+        .filter((line) => line.materialCode === materialCode)
+        .map((line) => ({ po, remaining: umbrellaRemaining(line, callOffs) }))
+    )
+    .sort((a, b) => (b.remaining.remainingQty ?? 0) - (a.remaining.remainingQty ?? 0));
+  const first = lines[0];
+  if (!first) return { state: 'none' };
+  const left =
+    first.remaining.basis === 'quantity'
+      ? (first.remaining.remainingQty ?? 0)
+      : first.remaining.remainingValue;
+  return {
+    state: left > 0 ? 'line' : 'exhausted',
+    poNumber: first.po.poNumber,
+    remaining: first.remaining
+  };
+}
+
+/**
+ * P-06 — "70,000 PCS left on PO-…" under "Create call-off", in the line's own basis.
+ * @param {(k: string, o?: Record<string, unknown>) => string} t
+ * @param {{ poNumber: string; remaining: UmbrellaRemaining }} line
+ * @param {string} uom
+ * @returns {string}
+ */
+export const lineLeftText = (t, line, uom) =>
+  line.remaining.basis === 'quantity'
+    ? t('sim.action.lineLeft', {
+        qty: qty(line.remaining.remainingQty ?? 0),
+        uom,
+        po: line.poNumber
+      })
+    : t('sim.action.lineLeftValue', {
+        value: formatIDR(line.remaining.remainingValue),
+        po: line.poNumber
+      });
+
+/**
+ * P-05 — a negative "Free to call off" is a state: PTI has called off more
+ * than the supplier holds. Zero and positive read as figures, as before.
+ * @param {Pick<StockSimulation, 'freeToCallOff'> | null} sim
+ * @returns {boolean}
+ */
+export const isOverCalled = (sim) => !!sim && sim.freeToCallOff !== null && sim.freeToCallOff < 0;
+
+/**
+ * P-05 — the Free to call off cell: the figure, or "Over-called by N UOM" in red.
+ * @type {React.FC<{ value: number; uom: string; testId?: string }>}
+ */
+export const FreeCell = ({ value, uom, testId }) => {
+  const { t } = useTranslation();
+  return value < 0 ? (
+    <span className="text-danger font-semibold" data-testid={testId}>
+      {t('sim.overCalled')}{' '}
+      <Data className="text-danger font-semibold">{`${qty(-value)} ${uom}`}</Data>
+    </span>
+  ) : (
+    <QtyCell value={value} uom={uom} strong testId={testId} />
+  );
 };
 
 /**
@@ -143,6 +232,9 @@ const ComponentLine = ({ c, uom }) => {
       ) : null}
       {c.date ? <Data className="text-text-secondary">{formatDate(c.date)}</Data> : null}
       {c.reference ? <Data className="text-text-tertiary">{c.reference}</Data> : null}
+      {c.dispatchOnly && c.kind === 'ptiInbound' ? (
+        <StatusPill variant="neutral">{t('sim.event.dispatchOnly')}</StatusPill>
+      ) : null}
       {c.etaBasis && c.etaBasis !== 'eta' ? (
         <span className="text-text-tertiary">{t(`sim.eta.${c.etaBasis}`)}</span>
       ) : null}
