@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import Button from '@components/ui-v2/Button';
 import KpiCard from '@components/ui-v2/KpiCard';
 import StatusPill from '@components/ui-v2/StatusPill';
 import Table from '@components/ui-v2/Table';
@@ -12,6 +13,7 @@ import { formatDate, formatNumber } from '@lib/format';
 /** @import { DemandRangeRun, RangeExperience, SeriesRange } from '@services/engine/demandRange' */
 import TermTip from '@components/forecast/TermTip';
 import { FIELD_FOCUS_RING } from '@components/forecast/focusRing';
+import { FQ_FIRST_ROWS, firstRows } from './firstRows';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DEMAND RANGE — REQ-E14-09 on the Demand forecast page (BL-111). Experience:
@@ -87,6 +89,7 @@ const Values = ({ s, i, prefix }) => (
 const DemandRangeSection = ({ range }) => {
   const { t } = useTranslation();
   const [week, setWeek] = useState(0);
+  const [showAllSkus, setShowAllSkus] = useState(false);
   const levels = range.levels;
   const p90 = idxOf(levels, 0.9);
   const p50 = idxOf(levels, 0.5);
@@ -253,7 +256,7 @@ const DemandRangeSection = ({ range }) => {
             <TableHeaderCell>{t('df.range.col.above')}</TableHeaderCell>
           </TableHeader>
           <tbody>
-            {range.skus.map((s) => {
+            {firstRows(range.skus, showAllSkus).map((s) => {
               const src = s.source[week];
               return (
                 <TableRow key={s.key} data-testid={`df-range-sku-${s.key}`}>
@@ -285,6 +288,19 @@ const DemandRangeSection = ({ range }) => {
             })}
           </tbody>
         </Table>
+        {range.skus.length > FQ_FIRST_ROWS ? (
+          <div className="mt-3">
+            <Button
+              variant="secondary"
+              onClick={() => setShowAllSkus((v) => !v)}
+              data-testid="df-range-skus-toggle"
+            >
+              {showAllSkus
+                ? t('df.range.skus.showFewer', { count: FQ_FIRST_ROWS })
+                : t('df.range.skus.showAll', { count: range.skus.length })}
+            </Button>
+          </div>
+        ) : null}
       </div>
 
       <h3 className="text-sm font-semibold text-text-primary mb-1">
