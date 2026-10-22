@@ -1,6 +1,8 @@
 /** @import React from 'react' */
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import Button from '@components/ui-v2/Button';
 import Table from '@components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
 /** @import { PurchaseOrder } from '@services/data/types' */
@@ -32,6 +34,13 @@ import RecommendationRow from './RecommendationRow';
  * empty line or the table of recommendations, one `RecommendationRow` each.
  * @type {React.FC<RecommendationsSectionProps>}
  */
+/**
+ * IA F-1 — the list opens on its soonest rows (they are sorted by week), so the
+ * decision is not buried under the whole horizon; "Show all" reveals the rest,
+ * the same pattern as Below demand anticipation on this page.
+ */
+export const RECS_FIRST_ROWS = 20;
+
 const RecommendationsSection = ({
   rows,
   pos,
@@ -45,6 +54,8 @@ const RecommendationsSection = ({
   onDraft
 }) => {
   const { t } = useTranslation();
+  const [showAll, setShowAll] = useState(false);
+  const shown = showAll ? rows : rows.slice(0, RECS_FIRST_ROWS);
   return (
     <section
       className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6"
@@ -89,7 +100,7 @@ const RecommendationsSection = ({
               <TableHeaderCell>{t('op.col.action')}</TableHeaderCell>
             </TableHeader>
             <tbody>
-              {rows.map(({ rec: r, material: m }) => {
+              {shown.map(({ rec: r, material: m }) => {
                 const key = keyOf(r);
                 return (
                   <RecommendationRow
@@ -110,6 +121,19 @@ const RecommendationsSection = ({
               })}
             </tbody>
           </Table>
+          {rows.length > RECS_FIRST_ROWS ? (
+            <div className="mt-3">
+              <Button
+                variant="secondary"
+                onClick={() => setShowAll((v) => !v)}
+                data-testid="op-recs-toggle"
+              >
+                {showAll
+                  ? t('op.recs.showFewer', { count: RECS_FIRST_ROWS })
+                  : t('op.recs.showAll', { count: rows.length })}
+              </Button>
+            </div>
+          ) : null}
         </div>
       )}
     </section>
