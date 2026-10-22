@@ -108,6 +108,8 @@ Nothing blocks these.
 
 | ID | Item | Why | Size | Detail |
 |---|---|---|---|---|
+| BL-223 | The Call-offs page formats quantities with its own `qty` in `en-US` (`pages-v2/callOffs/callOffDisplay.jsx:230`), so Indonesian screens there still show "15,000 PCS"; the inventory screens use the locale-aware `formatNumber` since X-01 | Same ambiguity CR-18 refuses on entry | S | Found building X-01 (inventory UX wave 1, 2026-10-22) |
+| BL-224 | Inventory UX wave 1 leftovers: unused i18n keys `hub.home.task.sup.weeklyUpdate` and `matName.tab.stock`; the template upload result names the materials sent but not their quantities (S-03 proposal) | Cleanup and a small finish | S | Inventory UX wave 1 report (2026-10-22) |
 | BL-39 | Non-conformance and complaint tracking (E10.02), the part of Supplier Performance never detailed | Named in the deck as MVP, still a stub | M | Requirements section 6 |
 | BL-75 | Supplier new-invoice form takes one total, not an amount per line; a total that differs from its lines is checked under the strictest line rule | CR-12 is per line since BL-44 | S | REQ-E07-07 |
 | BL-76 | The Risk page uses its own day thresholds (under 30 red, under 50 amber) over sample categories with no supplier or material; align with CR-24 or retire it | Contradicts CR-02 / CR-24 | S | REQ-E08-05 |

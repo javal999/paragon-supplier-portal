@@ -6,13 +6,18 @@
 //
 //   Supplier available stock(d) = SOH(t0)
 //     − ASNs shipped in (t0, d]            (Submitted, In Transit, Delivered, Discrepancy, Awaiting exception)
+//     − call-offs dispatched in (t0, d] with no ASN yet   (INV-D7)
 //     + to-distributor legs with ETA in (t0, d]   (Booked, Shipped or Arrived; distributors only, BR-09)
 //     + in production completing in (t0, d], capped by allocated capacity (BR-04)
-//   Already called off, not shipped = confirmed call-offs not yet covered by an ASN (BR-07)
+//   Already called off, not shipped = confirmed call-offs not yet covered by an ASN
+//     or a dispatch notice (BR-07; INV-D7 — a call-off counts as shipped from
+//     dispatch, and an ASN that arrives later confirms the same quantity)
 //   Free to call off = available − already called off, not shipped (BR-07, MAT-D10)
 //   PTI inbound(d) = in transit to PTI with ETA on or after d (`inTransitItems`)
 //
 // Available and PTI inbound are separate fields and are never added (BR-02).
+// A dispatched call-off with no ASN yet is listed once, as PTI inbound marked
+// `dispatchOnly` (INV-D7); it is never also "called off, not shipped".
 // Nothing here is stored (AD-1): the only stored input the simulation owns is
 // the planner's `SimulationOverride`, which applies until the supplier's next
 // stock record and never touches the record itself (BR-08).
@@ -96,6 +101,7 @@ const OPEN_LEG_STATES = ['Booked', 'Shipped', 'Arrived'];
 /**
  * @typedef {| 'soh'
  *   | 'asnShipped'
+ *   | 'dispatchShipped'
  *   | 'toDistributor'
  *   | 'inProduction'
  *   | 'calledOffNotShipped'
@@ -114,6 +120,7 @@ const OPEN_LEG_STATES = ['Booked', 'Shipped', 'Arrived'];
  * `reference`:  ASN number, shipment id, call-off number or declaration id.
  * `uncappedQty`:  In production: the quantity before the capacity cap.
  * `plannerInput`:  Present when the figure is the planner's, not the supplier's (BR-08).
+ * `dispatchOnly`:  INV-D7 — a call-off dispatched with no ASN yet (shipped or in transit on the dispatch notice alone).
  *
  * @typedef {{
  *   readonly kind: SimulationComponentKind;
@@ -124,6 +131,7 @@ const OPEN_LEG_STATES = ['Booked', 'Shipped', 'Arrived'];
  *   readonly uncappedQty?: number;
  *   readonly etaBasis?: EtaBasis;
  *   readonly plannerInput?: PlannerInputRef;
+ *   readonly dispatchOnly?: true;
  * }} SimulationComponent
  */
 
@@ -434,9 +442,10 @@ function legEta(leg, world) {
  * @param {Pick<SimulationQuery, 'supplierId' | 'materialCode'>} q
  * @param {MaterialBasis} basis
  * @param {SimulationFlag[]} flags
+ * @param {readonly DispatchOnly[]} dispatched
  * @returns {SimulationComponent[]}
  */
-function movementsAfterT0(world, overrides, q, basis, flags) {
+function movementsAfterT0(world, overrides, q, basis, flags, dispatched) {
   const { supplierId, materialCode } = q;
   const t0Day = basis.t0Day;
   if (!t0Day) return [];
@@ -458,6 +467,20 @@ function movementsAfterT0(world, overrides, q, basis, flags) {
       qty: -qty,
       date: day,
       reference: a.asnNumber
+    });
+  }
+
+  // − call-offs dispatched after t0 with no ASN yet (INV-D7, the ASN rule above
+  //   applied to the dispatch notice: on or before t0 it is in the record).
+  for (const d of dispatched) {
+    if (d.date <= t0Day) continue;
+    out.push({
+      kind: 'dispatchShipped',
+      figure: 'available',
+      qty: -d.qty,
+      date: d.date,
+      reference: d.reference,
+      dispatchOnly: true
     });
   }
 
@@ -531,34 +554,102 @@ function movementsAfterT0(world, overrides, q, basis, flags) {
   return out.sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''));
 }
 
-// ── BR-07 · already called off, not shipped ─────────────────────────────────
+// ── BR-07 · already called off, not shipped (INV-D7: shipped from dispatch) ─
+
+/**
+ * One dispatch notice not (yet) confirmed by an ASN, or the part of it no ASN covers.
+ * `date`:  The day it left the supplier (`YYYY-MM-DD`).
+ * `arrival`:  The expected arrival at PTI (`YYYY-MM-DD`).
+ * `inTransit`:  The call-off's delivery reads dispatched or at risk: not yet received.
+ *
+ * @typedef {{
+ *   readonly qty: number;
+ *   readonly date: string;
+ *   readonly arrival: string;
+ *   readonly reference: string;
+ *   readonly inTransit: boolean;
+ * }} DispatchOnly
+ */
+
+/**
+ * @param {readonly { qty: number }[]} xs
+ * @returns {number}
+ */
+const sumQty = (xs) => xs.reduce((s, x) => s + x.qty, 0);
+
+/**
+ * @param {ASN} a
+ * @param {string} materialCode
+ * @returns {number}
+ */
+const asnQtyOf = (a, materialCode) =>
+  a.lineItems.filter((l) => l.materialCode === materialCode).reduce((s, l) => s + l.shippedQty, 0);
+
+/**
+ * INV-D7 — what a confirmed call-off has shipped: its shipped ASNs (linked by
+ * `callOffId` or named by a dispatch notice), plus every dispatch notice no ASN
+ * confirms yet. An ASN confirms a dispatch rather than adding to it: a notice
+ * that names a shipped ASN is that ASN, and an ASN no notice names first
+ * confirms the earliest unnamed notices.
+ * @param {Pick<CallOffView, 'callOff' | 'delivery'>} view
+ * @param {readonly ASN[]} asns
+ * @param {string} materialCode
+ * @returns {{ asnQty: number; dispatchOnly: DispatchOnly[] }}
+ */
+export function callOffShipped(view, asns, materialCode) {
+  const c = view.callOff;
+  const dispatches = c.dispatches ?? [];
+  const named = new Set(dispatches.map((d) => d.asnNumber).filter(Boolean));
+  const linked = asns.filter(
+    (a) =>
+      (a.callOffId === c.id || named.has(a.asnNumber)) &&
+      SIMULATION_SHIPPED_ASN_STATES.includes(a.status)
+  );
+  const linkedNumbers = new Set(linked.map((a) => a.asnNumber));
+  let pool = linked
+    .filter((a) => !named.has(a.asnNumber))
+    .reduce((s, a) => s + asnQtyOf(a, materialCode), 0);
+  const inTransit = view.delivery === 'dispatched' || view.delivery === 'atRisk';
+  /** @type {DispatchOnly[]} */
+  const dispatchOnly = [];
+  for (const d of [...dispatches].sort((a, b) => a.shippedDate.localeCompare(b.shippedDate))) {
+    if (d.asnNumber && linkedNumbers.has(d.asnNumber)) continue;
+    const covered = Math.min(pool, d.quantity);
+    pool -= covered;
+    const rest = d.quantity - covered;
+    if (rest > 0)
+      dispatchOnly.push({
+        qty: rest,
+        date: dayOf(d.shippedDate),
+        arrival: dayOf(d.expectedArrival),
+        reference: c.callOffNumber,
+        inTransit
+      });
+  }
+  return { asnQty: linked.reduce((s, a) => s + asnQtyOf(a, materialCode), 0), dispatchOnly };
+}
 
 /**
  * @param {SimulationWorld} world
  * @param {string} supplierId
  * @param {string} materialCode
- * @returns {SimulationComponent[]}
+ * @returns {{ items: SimulationComponent[]; dispatched: DispatchOnly[] }}
  */
 function calledOffNotShippedItems(world, supplierId, materialCode) {
   /** @type {SimulationComponent[]} */
-  const out = [];
-  for (const { callOff: c } of world.callOffViews) {
+  const items = [];
+  /** @type {DispatchOnly[]} */
+  const dispatched = [];
+  for (const view of world.callOffViews) {
+    const c = view.callOff;
     if (c.supplierId !== supplierId || c.materialCode !== materialCode) continue;
     if (!CALL_OFF_CONFIRMED_STATES.includes(c.status)) continue;
     const confirmed = approvedDeliveries(c).reduce((s, d) => s + d.quantity, 0);
-    const shipped = world.asns
-      .filter((a) => a.callOffId === c.id && SIMULATION_SHIPPED_ASN_STATES.includes(a.status))
-      .reduce(
-        (s, a) =>
-          s +
-          a.lineItems
-            .filter((l) => l.materialCode === materialCode)
-            .reduce((t, l) => t + l.shippedQty, 0),
-        0
-      );
-    const open = Math.max(0, confirmed - shipped);
+    const { asnQty, dispatchOnly } = callOffShipped(view, world.asns, materialCode);
+    dispatched.push(...dispatchOnly);
+    const open = Math.max(0, confirmed - asnQty - sumQty(dispatchOnly));
     if (open > 0)
-      out.push({
+      items.push({
         kind: 'calledOffNotShipped',
         figure: 'calledOffNotShipped',
         qty: open,
@@ -566,7 +657,7 @@ function calledOffNotShippedItems(world, supplierId, materialCode) {
         reference: c.callOffNumber
       });
   }
-  return out;
+  return { items, dispatched };
 }
 
 // ── PTI inbound ──────────────────────────────────────────────────────────────
@@ -578,12 +669,6 @@ function calledOffNotShippedItems(world, supplierId, materialCode) {
  * @returns {IncomingItem[]}
  */
 const ptiInboundOn = (items, day) => items.filter((i) => i.date === null || i.date >= day);
-
-/**
- * @param {readonly { qty: number }[]} xs
- * @returns {number}
- */
-const sumQty = (xs) => xs.reduce((s, x) => s + x.qty, 0);
 
 /**
  * @param {readonly SimulationFlag[]} flags
@@ -618,10 +703,27 @@ export function simulateSupplierStock(query, world) {
   const flags = [];
   if (!latestDeclaration(world.declarations, supplierId, materialCode))
     flags.push({ code: 'noStockUpdate' });
-  const movements = movementsAfterT0(world, overrides, query, basis, flags);
-  const calledOff = calledOffNotShippedItems(world, supplierId, materialCode);
+  const { items: calledOff, dispatched } = calledOffNotShippedItems(
+    world,
+    supplierId,
+    materialCode
+  );
+  const movements = movementsAfterT0(world, overrides, query, basis, flags, dispatched);
   const calledOffNotShipped = sumQty(calledOff);
-  const transit = inTransitItems(supplierId, materialCode, world.asns, world.callOffViews);
+  // PTI inbound: the in-transit ASNs, plus each call-off dispatched with no ASN
+  // yet and not yet received (INV-D7). A dispatch an ASN confirms is that ASN.
+  /** @type {IncomingItem[]} */
+  const transit = [
+    ...inTransitItems(supplierId, materialCode, world.asns, []),
+    ...dispatched
+      .filter((d) => d.inTransit)
+      .map((d) => ({
+        source: /** @type {const} */ ('dispatch'),
+        date: d.arrival,
+        quantity: d.qty,
+        reference: d.reference
+      }))
+  ];
 
   /**
    * @param {string} day
@@ -659,11 +761,12 @@ export function simulateSupplierStock(query, world) {
         ];
   /** @type {SimulationComponent[]} */
   const ptiComponents = ptiInboundOn(transit, checkDate).map((i) => ({
-    kind: 'ptiInbound',
-    figure: 'ptiInbound',
+    kind: /** @type {const} */ ('ptiInbound'),
+    figure: /** @type {const} */ ('ptiInbound'),
     qty: i.quantity,
     date: i.date,
-    reference: i.reference
+    reference: i.reference,
+    ...(i.source === 'dispatch' ? { dispatchOnly: /** @type {const} */ (true) } : {})
   }));
   const components = [...sohComponent, ...counted, ...calledOff, ...ptiComponents];
   const available = availableOn(checkDate);

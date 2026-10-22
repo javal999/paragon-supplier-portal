@@ -340,3 +340,28 @@ Folder: `docs/supplier-hub/research/inventory-ux-mockups/`. Self-contained HTML,
 9. Should a blank template row be ignored or refused (S-03)?
 10. Should a supplier be told when PTI removes its stock access (S-10)?
 11. Is "Ask supplier" a hub message the supplier answers on To do, or a WhatsApp/email hand-off outside the hub (P-02, P-07)?
+
+---
+
+## 10. BUILD STATUS
+
+Scope ruled 2026-10-22: the 13 Major findings except P-04 (waits for BL-150, INV-D5); Minor and Polish findings are not in this build. Brief: `sc-hub-vision/prompts/inventory-ux-build.md`. Wave 1 on branch `feat/inv-ux-wave1`.
+
+| ID | Status | Wave | Pinned by |
+|---|---|---|---|
+| P-01 | Built | 1 (lane 1A) | `pages-v2/BuyerInventory.riskFirst.page.test.jsx` (P-01) |
+| P-02 | Built, without "Ask supplier" (wave 2) | 1 (1A) | `BuyerInventory.riskFirst.page.test.jsx` (P-02, INV-D6) |
+| P-03 | Planned | 2 (2B) | – |
+| P-04 | Waiting on owner (BL-150, INV-D5) | – | – |
+| P-05 | Built, without "Ask supplier" (wave 2) | 1 (1B) | `pages-v2/BuyerStockSimulation.test.jsx` (P-05); drawer: `BuyerInventory.riskFirst.page.test.jsx` |
+| P-06 | Built | 1 (1B) | `BuyerStockSimulation.test.jsx` (P-06); `inventory/stockSimulationDisplay.test.js` |
+| P-07 | Planned | 2 (2C) | – |
+| P-08 | Built on Inventory; Alerts in wave 2 (2B) | 1 (1A) | `BuyerInventory.riskFirst.page.test.jsx` (P-08) |
+| P-09 | Built | 1 (1B) | `services/transitions/simulateSupplierStock.test.js` (INV-D7) |
+| S-01 | Built, without the "PTI is asking" block (S-04, wave 2) | 1 (1C) | `pages-v2/inventory/stockPageUx.page.test.jsx` (S-01) |
+| S-02 | Built | 1 (1C) | `stockPageUx.page.test.jsx` (S-02); `weeklyUpdate.page.test.jsx` |
+| S-03 | Built | 1 (1C) | `stockPageUx.page.test.jsx` (S-03); `services/transitions/inventoryRules.test.js` |
+| S-04 | Planned | 2 (2A) | – |
+| X-01 | Built (Call-offs page left: BL-223) | 1 (1D) | `pages-v2/inventory/inventoryDisplay.qty.test.js`; `inventory/localeQty.x01.page.test.jsx` |
+| P-10 to P-17, S-05 to S-12, X-02 to X-05 | Not in scope (Minor, Polish) | – | – |
+

@@ -46,6 +46,8 @@ export const stockSimulationEn = {
   'sim.refusal.INVALID_CHECK_DATE': 'The check date is not a valid date',
   'sim.basis.supplier': 'Supplier data',
   'sim.basis.plannerInput': 'Includes planner input',
+  'sim.overCalled': 'Over-called by',
+  'sim.overCalledMeans': 'Called off more than the supplier holds',
 
   'sim.flag.noStockUpdate': 'No stock update',
   'sim.flag.asnShipDateMissing': 'ASN ship date missing',
@@ -72,6 +74,8 @@ export const stockSimulationEn = {
   'sim.event.inProduction': 'Production finishes',
   'sim.event.calledOffNotShipped': 'Called off, not shipped',
   'sim.event.ptiInbound': 'In transit to PTI',
+  'sim.event.dispatchShipped': 'Shipped on dispatch',
+  'sim.event.dispatchOnly': 'Dispatched, no ASN yet',
   'sim.event.uncapped': 'of {{qty}}, capped',
   'sim.eta.etdPlusLeadTime': 'ETA = ETD + principal lead time',
   'sim.eta.plannerInput': 'ETA entered by planner',
@@ -104,7 +108,11 @@ export const stockSimulationEn = {
   'sim.action.callOff': 'Create call-off',
   'sim.action.po': 'Create PO request',
   'sim.action.callOffFor': 'Create call-off for {{material}} from {{supplier}}',
-  'sim.action.poFor': 'Create PO request for {{material}} from {{supplier}}'
+  'sim.action.poFor': 'Create PO request for {{material}} from {{supplier}}',
+  'sim.action.lineLeft': '{{qty}} {{uom}} left on {{po}}',
+  'sim.action.lineLeftValue': '{{value}} left on {{po}}',
+  'sim.action.lineExhausted': 'Nothing left on {{po}}',
+  'sim.action.noLine': 'No agreement line'
 };
 
 /** @type {Record<string, string>} */
@@ -150,6 +158,8 @@ export const stockSimulationId = {
   'sim.refusal.INVALID_CHECK_DATE': 'Tanggal cek bukan tanggal yang valid',
   'sim.basis.supplier': 'Data pemasok',
   'sim.basis.plannerInput': 'Termasuk input perencana',
+  'sim.overCalled': 'Melebihi stok sebesar',
+  'sim.overCalledMeans': 'Call-off melebihi stok yang dimiliki pemasok',
 
   'sim.flag.noStockUpdate': 'Belum ada pembaruan stok',
   'sim.flag.asnShipDateMissing': 'Tanggal kirim ASN tidak ada',
@@ -176,6 +186,8 @@ export const stockSimulationId = {
   'sim.event.inProduction': 'Produksi selesai',
   'sim.event.calledOffNotShipped': 'Sudah di-call-off, belum dikirim',
   'sim.event.ptiInbound': 'Dalam perjalanan ke PTI',
+  'sim.event.dispatchShipped': 'Dikirim sesuai pemberitahuan kirim',
+  'sim.event.dispatchOnly': 'Sudah dikirim, belum ada ASN',
   'sim.event.uncapped': 'dari {{qty}}, dibatasi',
   'sim.eta.etdPlusLeadTime': 'ETA = ETD + waktu tunggu prinsipal',
   'sim.eta.plannerInput': 'ETA diisi perencana',
@@ -208,5 +220,9 @@ export const stockSimulationId = {
   'sim.action.callOff': 'Buat call-off',
   'sim.action.po': 'Buat permintaan PO',
   'sim.action.callOffFor': 'Buat call-off untuk {{material}} dari {{supplier}}',
-  'sim.action.poFor': 'Buat permintaan PO untuk {{material}} dari {{supplier}}'
+  'sim.action.poFor': 'Buat permintaan PO untuk {{material}} dari {{supplier}}',
+  'sim.action.lineLeft': 'Sisa {{qty}} {{uom}} di {{po}}',
+  'sim.action.lineLeftValue': 'Sisa {{value}} di {{po}}',
+  'sim.action.lineExhausted': 'Tidak ada sisa di {{po}}',
+  'sim.action.noLine': 'Belum ada baris perjanjian'
 };

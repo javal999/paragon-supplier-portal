@@ -17,6 +17,8 @@ import BuyerInventory from '../BuyerInventory';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const CODE = 'PK-PETB-8801';
+// Inventory UX S-01 — the feedstock confirmation is the Stock page's own tab.
+const FEEDSTOCK_TAB = '/supplier/inventory?tab=feedstock';
 const today = () => dayOf(sdcClock.now());
 
 beforeEach(() => {
@@ -26,7 +28,7 @@ beforeEach(() => {
 
 describe('supplier · Current feedstock', () => {
   it('lists every assigned material as due, with the Provisional label (E1, E2) and no DA figure', async () => {
-    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER, route: FEEDSTOCK_TAB });
     const panel = await screen.findByTestId('feedstock-confirm');
     expect(within(panel).getByTestId('feedstock-provisional').textContent).toBe(
       'Provisional: rule awaiting Material Planning (E1, E2)'
@@ -40,7 +42,7 @@ describe('supplier · Current feedstock', () => {
   });
 
   it('refuses a future date in the form, then confirms; the material reads Confirmed', async () => {
-    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER, route: FEEDSTOCK_TAB });
     fireEvent.click(await screen.findByTestId(`feedstock-open-${CODE}`));
     fireEvent.change(screen.getByTestId('feedstock-qty'), { target: { value: '0' } });
     fireEvent.change(screen.getByTestId('feedstock-date'), {
@@ -87,7 +89,7 @@ describe('supplier · Current feedstock', () => {
     );
     expect(r.status, r.reason).toBe('done');
     sdcClock.reset();
-    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER, route: FEEDSTOCK_TAB });
     expect((await screen.findByTestId(`feedstock-status-${CODE}`)).textContent).toBe('Missed');
     expect(screen.getByTestId('feedstock-missed').textContent).toContain('1 materials');
   });
@@ -95,13 +97,16 @@ describe('supplier · Current feedstock', () => {
   it('the stock figure on the row does not move after a confirmation (MoM 2B)', async () => {
     renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
     const before = (await screen.findByTestId(`sup-stock-row-${CODE}`)).textContent;
-    fireEvent.click(screen.getByTestId(`feedstock-open-${CODE}`));
+    // S-01 — feedstock is its own tab beside My stock.
+    fireEvent.click(screen.getByRole('tab', { name: 'Feedstock to confirm' }));
+    fireEvent.click(await screen.findByTestId(`feedstock-open-${CODE}`));
     fireEvent.change(screen.getByTestId('feedstock-qty'), { target: { value: '987654' } });
     fireEvent.click(screen.getByTestId('feedstock-submit'));
     await waitFor(() =>
       expect(screen.getByTestId(`feedstock-status-${CODE}`).textContent).toBe('Confirmed')
     );
-    expect(screen.getByTestId(`sup-stock-row-${CODE}`).textContent).toBe(before);
+    fireEvent.click(screen.getByRole('tab', { name: 'My stock' }));
+    expect((await screen.findByTestId(`sup-stock-row-${CODE}`)).textContent).toBe(before);
   });
 });
 
@@ -111,6 +116,8 @@ describe('PTI · the feedstock line beside the supplier stock', () => {
       identity: BUYER,
       route: '/buyer/inventory?type=VERP'
     });
+    // Inventory UX P-01 — the feedstock line sits in the material drawer.
+    fireEvent.click(await screen.findByTestId(`pti-stock-row-sup-007-${CODE}`));
     expect((await screen.findByTestId(`pti-feedstock-none-sup-007-${CODE}`)).textContent).toBe(
       'Feedstock not confirmed'
     );
@@ -140,6 +147,7 @@ describe('PTI · the feedstock line beside the supplier stock', () => {
       identity: BUYER,
       route: '/buyer/inventory?type=VERP'
     });
+    fireEvent.click(await screen.findByTestId(`pti-stock-row-sup-007-${CODE}`));
     const line = await screen.findByTestId(`pti-feedstock-sup-007-${CODE}`);
     expect(line.textContent).toMatch(/^Feedstock \(confirmed .+\) 1,500 /);
     expect(screen.getByTestId(`pti-feedstock-by-sup-007-${CODE}`).textContent).toMatch(

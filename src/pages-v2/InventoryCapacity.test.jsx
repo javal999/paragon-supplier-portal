@@ -101,7 +101,10 @@ describe('PTI Inventory (REQ-E08-01)', () => {
     expect(stear).toHaveTextContent('4,200 KG');
     expect(stear).toHaveTextContent('900 KG');
     expect(stear).toHaveTextContent('2,500 KG');
-    expect(stear).toHaveTextContent('5,000 KG');
+    // Inventory UX P-01 — the supplier ROP moved from the table into the material drawer.
+    expect(stear).not.toHaveTextContent('5,000 KG');
+    fireEvent.click(stear);
+    expect(panel().getByTestId('material-drawer')).toHaveTextContent('5,000 KG');
     // PREMISE CHANGED (BL-46, CR-24): the cell showed the CR-02 band ("10 days ·
     // Critical"). It now shows the risk class against the supplier lead time and
     // says which basis decided it.
@@ -109,8 +112,9 @@ describe('PTI Inventory (REQ-E08-01)', () => {
     expect(within(stear).getByText('Lead time 21 days')).toBeInTheDocument();
     expect(stear).toHaveTextContent(/In production\s*6,000/);
     const glycerin = screen.getByTestId('pti-stock-row-sup-002-RM-EMUL-3310');
-    expect(glycerin).toHaveTextContent('Not provided');
     expect(within(glycerin).getByText('Out of date')).toBeInTheDocument();
+    fireEvent.click(glycerin);
+    expect(panel().getByTestId('material-drawer')).toHaveTextContent('Not provided');
     expect(screen.queryByText(/available/i)).toBeNull();
   });
 
@@ -122,8 +126,10 @@ describe('PTI Inventory (REQ-E08-01)', () => {
     expect(fallback).toHaveTextContent('No lead time · day bands: Critical');
     // Known-false: a lead-time row never claims the fallback.
     expect(screen.getByTestId('risk-sup-002-RM-STEAR-7300')).not.toHaveTextContent('day bands');
-    expect(screen.getByTestId('pti-inventory-banner-lead-time')).toHaveTextContent(
-      'Materials with no supplier lead time on record, using the day bands: 1'
+    // Inventory UX P-01 — the text banner is now a filtering tile.
+    expect(screen.queryByTestId('pti-inventory-banner-lead-time')).toBeNull();
+    expect(screen.getByTestId('inv-tile-noLeadTime')).toHaveTextContent(
+      'No lead time on record1Risk uses the day bands'
     );
   });
 
@@ -206,7 +212,7 @@ describe('Supplier Stock (REQ-E08-01 SUP, REQ-E08-02, REQ-E08-03)', () => {
 
   it('uploaded template rows are checked one by one: valid rows saved, invalid rows listed with row and reason', async () => {
     renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
-    await screen.findByTestId('stock-upload');
+    await screen.findByTestId('stock-upload-open');
     const csv = [
       'Material code,Stock on hand,Unit,Supplier reorder point,In-production quantity,Expected production completion date (YYYY-MM-DD),Batch number,Batch quantity,Expiry date (YYYY-MM-DD)',
       'PK-CAPF-8820,50000,PCS,20000,0,,,,',
@@ -216,8 +222,8 @@ describe('Supplier Stock (REQ-E08-01 SUP, REQ-E08-02, REQ-E08-03)', () => {
     const file = new File([csv], 'stock.csv', { type: 'text/csv' });
     fireEvent.change(screen.getByTestId('stock-upload-file'), { target: { files: [file] } });
     const result = await screen.findByTestId('stock-upload-result');
-    expect(within(result).getByTestId('stock-upload-saved')).toHaveTextContent(
-      'Materials saved: 1'
+    expect(within(result).getByTestId('stock-upload-sent')).toHaveTextContent(
+      /^Sent to PTI: PK-CAPF-8820$/
     );
     expect(within(result).getByTestId('stock-upload-refused-row-3')).toHaveTextContent(
       'This material is not assigned to you'
@@ -368,7 +374,10 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
   });
 
   it('MR-4 AC-03: the upload panel lists every column A to J as Required or Optional, with the batch note', async () => {
-    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    renderWithProviders(<SupplierInventory />, {
+      identity: SUPPLIER,
+      route: '/supplier/inventory?tab=template'
+    });
     const table = await screen.findByTestId('stock-template-columns');
     /** @type {Record<StockTemplateField, string>} */
     const expected = {
@@ -398,7 +407,7 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
 
   it('MAT-D4: an uploaded row with in production above 0 and no completion date is refused by name', async () => {
     renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
-    await screen.findByTestId('stock-upload');
+    await screen.findByTestId('stock-upload-open');
     const csv = [
       'Material code,Stock on hand,Unit,In-production quantity,Expected production completion date (YYYY-MM-DD)',
       'PK-CAPF-8820,300,PCS,50,',
@@ -408,8 +417,8 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
       target: { files: [new File([csv], 's.csv', { type: 'text/csv' })] }
     });
     const result = await screen.findByTestId('stock-upload-result');
-    expect(within(result).getByTestId('stock-upload-saved')).toHaveTextContent(
-      'Materials saved: 1'
+    expect(within(result).getByTestId('stock-upload-sent')).toHaveTextContent(
+      /^Sent to PTI: PK-PETB-8802$/
     );
     expect(within(result).getByTestId('stock-upload-refused-row-2')).toHaveTextContent(
       'The in-production quantity is above 0, so the expected production completion date is required'
@@ -433,7 +442,10 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
   });
 
   it('template: in transit shown read-only per material, and a manufacturing date column is saved', async () => {
-    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    renderWithProviders(<SupplierInventory />, {
+      identity: SUPPLIER,
+      route: '/supplier/inventory?tab=template'
+    });
     const incoming = await screen.findByTestId('stock-upload-incoming');
     const bottle = within(incoming).getByTestId('stock-upload-in-transit-PK-PETB-8801');
     expect(
@@ -450,8 +462,8 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
       target: { files: [new File([csv], 's.csv', { type: 'text/csv' })] }
     });
     const result = await screen.findByTestId('stock-upload-result');
-    expect(within(result).getByTestId('stock-upload-saved')).toHaveTextContent(
-      'Materials saved: 1'
+    expect(within(result).getByTestId('stock-upload-sent')).toHaveTextContent(
+      /^Sent to PTI: PK-CAPF-8820$/
     );
     expect(within(result).getByTestId('stock-upload-refused-row-3')).toHaveTextContent(
       'The manufacturing date is in the future'
@@ -972,11 +984,14 @@ describe('Home tasks', () => {
     );
   });
 
-  it('supplier: stale stock, capacity confirmations due, and its own alerts', async () => {
+  it('supplier: the weekly stock status, capacity confirmations due, and its own alerts', async () => {
     renderWithProviders(<SupplierHome />, { identity: SUPPLIER });
-    expect(await screen.findByTestId('home-task-stale-stock')).toHaveTextContent(
-      'Stock figures to update'
+    // Inventory UX S-02 — a manual supplier's out-of-date figures sit on the
+    // one weekly row, not on a separate "Stock figures to update" row.
+    expect(await screen.findByTestId('home-task-weekly-update')).toHaveTextContent(
+      /^\d+Weekly stock update · \d+ of \d+ sent · due /
     );
+    expect(screen.queryByTestId('home-task-stale-stock')).toBeNull();
     expect(await screen.findByTestId('home-task-capacity-due')).toHaveTextContent(
       'Capacity confirmations due'
     );

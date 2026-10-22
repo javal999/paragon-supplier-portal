@@ -71,7 +71,11 @@ describe('BL-204 · flag off (DRC-D10)', () => {
         (r) => r.supplierId === 'sup-007' && r.materialCode === 'PK-PETB-8802'
       )
     ).toBe(true);
-    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    renderWithProviders(<SupplierInventory />, {
+      identity: SUPPLIER,
+      // Inventory UX S-01 — the feedstock confirmation is its own tab.
+      route: '/supplier/inventory?tab=feedstock'
+    });
     fireEvent.click(await screen.findByTestId('feedstock-open-PK-PETB-8802'));
     expect(screen.getByTestId('feedstock-form')).toBeInTheDocument();
     expect(screen.queryByTestId('feedstock-incoming-da')).toBeNull();

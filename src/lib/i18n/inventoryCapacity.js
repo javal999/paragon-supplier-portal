@@ -85,10 +85,48 @@ export const inventoryCapacityEn = {
     'Supplier and PTI stock, reorder points and incoming supply per material and supplier.',
   'inv.pti.empty': 'No supplier stock to show yet.',
   'inv.pti.record': 'Record stock from a supplier message',
-  'inv.pti.banner.high': 'Materials at High risk (cover below the supplier lead time): {{count}}',
-  'inv.pti.banner.leadTimeMissing':
-    'Materials with no supplier lead time on record, using the day bands: {{count}}',
-  'inv.pti.banner.stale': 'Supplier figures past their update deadline: {{count}}',
+  // Inventory UX P-01 — risk first: four summary tiles that filter the table
+  // (they replace the text banner), "All types", and six columns.
+  'inv.type.all': 'All types',
+  'inv.tiles.label': 'Summary filters',
+  'inv.tile.high': 'High risk',
+  'inv.tile.high.hint': 'Supplier cover below the supplier lead time',
+  'inv.tile.belowRop': 'PTI stock below PTI ROP',
+  'inv.tile.belowRop.hint': 'PTI stock under its reorder point',
+  'inv.tile.stale': 'Supplier figures out of date',
+  'inv.tile.stale.hint': 'Past their update deadline',
+  'inv.tile.noLeadTime': 'No lead time on record',
+  'inv.tile.noLeadTime.hint': 'Risk uses the day bands',
+  'inv.col.materialSupplier': 'Material · supplier',
+  // Inventory UX P-08 (INV-D1) — whose stock decides the class.
+  'inv.col.riskCover': 'Risk · supplier cover',
+  'inv.col.ptiSohRop': 'PTI stock / ROP',
+  'inv.col.updated': 'Updated',
+  'inv.ptiCover': 'PTI cover {{count}} days',
+  'inv.ptiCover.none': 'PTI cover: no figure',
+  'inv.supplierCover': 'Supplier cover {{count}} days',
+  // Inventory UX P-02 — the material drawer a row opens.
+  'inv.drawer.why.leadTime':
+    '{{risk}}: supplier stock covers {{cover}} days of demand; the supplier lead time is {{lead}} days.',
+  'inv.drawer.why.fallback':
+    '{{risk}}: supplier stock covers {{cover}} days of demand. No lead time on record, so the day bands decide: {{band}}.',
+  'inv.drawer.why.noFigures':
+    'No stock figures from the supplier yet, so the risk cannot be assessed. Record the stock when the supplier sends it.',
+  'inv.drawer.why.noDemand': 'No demand in the next 30 days, so supplier stock is not at risk.',
+  'inv.drawer.why.nothingIncoming': 'Nothing is in production or in transit.',
+  'inv.drawer.fig.ptiSohRop': 'PTI stock / PTI ROP',
+  'inv.drawer.fig.free': 'Free to call off today',
+  'inv.drawer.fig.freeSimulated': 'Simulated by the stock simulation',
+  'inv.drawer.cover': 'Cover',
+  'inv.drawer.mode': 'Stock update mode',
+  'inv.drawer.mode.link': 'Changed by an administrator on Suppliers',
+  'inv.drawer.alerts': 'Open alerts on this material · {{count}}',
+  'inv.drawer.alerts.none': 'No open alerts on this material.',
+  'inv.drawer.actions': 'What to do',
+  'inv.drawer.action.simulation': 'Open stock simulation',
+  'inv.drawer.action.simulation.hint': 'Weekly figures for this supplier and material',
+  'inv.drawer.action.callOff': 'Create call-off',
+  'inv.drawer.action.po': 'Create PO request',
 
   'inv.sync.title': 'Suppliers connected by system',
   'inv.sync.subtitle': 'Pull the latest stock figures directly from the supplier system.',
@@ -119,8 +157,11 @@ export const inventoryCapacityEn = {
   'inv.sup.subtitle':
     'Share your stock, reorder points and production for the materials you supply to PTI.',
   'inv.sup.empty': 'No materials are assigned to you yet.',
-  'inv.sup.enter': 'Enter stock',
-  'inv.sup.banner.update': 'Materials that need updated stock figures: {{count}}',
+  // Inventory UX S-01 — the Stock page leads with this week and the table.
+  'inv.sup.enterOnScreen': 'Enter stock on screen',
+  'inv.sup.tab.stock': 'My stock',
+  'inv.sup.tab.feedstock': 'Feedstock to confirm',
+  'inv.sup.tab.template': 'Template guide',
   'inv.sup.access.all': 'PTI shares its stock with you for every material you supply.',
   'inv.sup.access.some': 'PTI shares its stock with you for {{count}} of your materials.',
 
@@ -161,7 +202,12 @@ export const inventoryCapacityEn = {
   'inv.upload.error.unreadable':
     'This file could not be read. Upload the template as CSV or Excel.',
   'inv.upload.error.empty': 'The file has no rows to check.',
-  'inv.upload.saved': 'Materials saved: {{count}}',
+  // Inventory UX S-03 (INV-D10) — a blank row is not an error; name what was sent.
+  'inv.upload.uploadTemplate': 'Upload template',
+  'inv.upload.sentTo': 'Sent to PTI:',
+  'inv.upload.nothingSent': 'Nothing was sent to PTI.',
+  'inv.upload.blank_one': '{{count}} row left blank, not sent',
+  'inv.upload.blank_other': '{{count}} rows left blank, not sent',
   'inv.upload.refused': 'Rows not saved: {{count}}',
   'inv.upload.col.row': 'Row',
   'inv.upload.col.material': 'Material',
@@ -461,20 +507,17 @@ export const inventoryCapacityEn = {
 
   // ── Material B2 — the weekly-update panel, reminders, "This cycle" (MR-1 d) ──
   'inv.weekly.title': 'Weekly stock update',
-  'inv.weekly.due': 'Weekly stock update due',
-  'inv.weekly.left': '{{time}} left',
-  'inv.weekly.count': '{{updated}} of {{total}} updated',
+  // Inventory UX S-02 (INV-D4) — one weekly status on the stock-update cutoff.
+  'inv.weekly.sent': '{{sent}} of {{total}} sent',
+  'inv.weekly.dueOn': 'due',
+  'inv.weekly.outOfDate': '{{count}} out of date',
+  'inv.weekly.outOfDateSince': '{{count}} out of date since {{date}}',
   'inv.weekly.missingTitle': 'Still missing this cycle',
   'inv.weekly.enter': 'Enter stock',
   'inv.weekly.enterFor': 'Enter stock for {{material}}',
   'inv.weekly.allDone': 'Every material is updated for this cycle.',
-  // BL-159 — a real plural ("1 material was", "2 materials were").
-  'inv.weekly.missed_one': 'Missed: {{count}} material was not updated',
-  'inv.weekly.missed_other': 'Missed: {{count}} materials were not updated',
-  'inv.weekly.missedHint': 'Each stays marked until you send its figure.',
   'inv.weekly.reminder':
     'Reminder: materials still needing a stock figure before the cutoff: {{count}}',
-  'inv.weekly.sop': 'Weekly update is part of the supplier SOP set by Material Planning.',
   'inv.weekly.api.title': 'Stock sync schedule',
   'inv.weekly.api.last': 'Last sync',
   'inv.weekly.api.next': 'Next sync',
@@ -564,11 +607,45 @@ export const inventoryCapacityId = {
     'Stok pemasok dan PTI, titik pemesanan ulang, dan pasokan yang akan datang per material dan pemasok.',
   'inv.pti.empty': 'Belum ada stok pemasok untuk ditampilkan.',
   'inv.pti.record': 'Catat stok dari pesan pemasok',
-  'inv.pti.banner.high':
-    'Material berisiko Tinggi (cakupan di bawah waktu tunggu pemasok): {{count}}',
-  'inv.pti.banner.leadTimeMissing':
-    'Material tanpa waktu tunggu pemasok, memakai pita hari: {{count}}',
-  'inv.pti.banner.stale': 'Angka pemasok yang melewati batas pembaruan: {{count}}',
+  'inv.type.all': 'Semua jenis',
+  'inv.tiles.label': 'Filter ringkasan',
+  'inv.tile.high': 'Risiko tinggi',
+  'inv.tile.high.hint': 'Cakupan pemasok di bawah waktu tunggu pemasok',
+  'inv.tile.belowRop': 'Stok PTI di bawah ROP PTI',
+  'inv.tile.belowRop.hint': 'Stok PTI di bawah titik pemesanan ulangnya',
+  'inv.tile.stale': 'Angka pemasok kedaluwarsa',
+  'inv.tile.stale.hint': 'Melewati batas pembaruan',
+  'inv.tile.noLeadTime': 'Waktu tunggu belum tercatat',
+  'inv.tile.noLeadTime.hint': 'Risiko memakai pita hari',
+  'inv.col.materialSupplier': 'Material · pemasok',
+  'inv.col.riskCover': 'Risiko · cakupan pemasok',
+  'inv.col.ptiSohRop': 'Stok PTI / ROP',
+  'inv.col.updated': 'Diperbarui',
+  'inv.ptiCover': 'Cakupan stok PTI {{count}} hari',
+  'inv.ptiCover.none': 'Cakupan stok PTI: tidak ada angka',
+  'inv.supplierCover': 'Cakupan stok pemasok {{count}} hari',
+  'inv.drawer.why.leadTime':
+    '{{risk}}: stok pemasok mencakup {{cover}} hari kebutuhan; waktu tunggu pemasok {{lead}} hari.',
+  'inv.drawer.why.fallback':
+    '{{risk}}: stok pemasok mencakup {{cover}} hari kebutuhan. Waktu tunggu belum tercatat, jadi pita hari yang menentukan: {{band}}.',
+  'inv.drawer.why.noFigures':
+    'Belum ada angka stok dari pemasok, jadi risiko belum bisa dinilai. Catat stok saat pemasok mengirimkannya.',
+  'inv.drawer.why.noDemand':
+    'Tidak ada kebutuhan dalam 30 hari ke depan, jadi stok pemasok tidak berisiko.',
+  'inv.drawer.why.nothingIncoming': 'Tidak ada yang sedang diproduksi atau dalam perjalanan.',
+  'inv.drawer.fig.ptiSohRop': 'Stok PTI / ROP PTI',
+  'inv.drawer.fig.free': 'Bebas di-call-off hari ini',
+  'inv.drawer.fig.freeSimulated': 'Disimulasikan oleh simulasi stok',
+  'inv.drawer.cover': 'Cakupan',
+  'inv.drawer.mode': 'Mode pembaruan stok',
+  'inv.drawer.mode.link': 'Diubah oleh administrator di halaman Pemasok',
+  'inv.drawer.alerts': 'Peringatan terbuka untuk material ini · {{count}}',
+  'inv.drawer.alerts.none': 'Tidak ada peringatan terbuka untuk material ini.',
+  'inv.drawer.actions': 'Yang perlu dilakukan',
+  'inv.drawer.action.simulation': 'Buka simulasi stok',
+  'inv.drawer.action.simulation.hint': 'Angka mingguan untuk pemasok dan material ini',
+  'inv.drawer.action.callOff': 'Buat call-off',
+  'inv.drawer.action.po': 'Buat permintaan PO',
 
   'inv.sync.title': 'Pemasok yang terhubung lewat sistem',
   'inv.sync.subtitle': 'Tarik angka stok terbaru langsung dari sistem pemasok.',
@@ -599,8 +676,10 @@ export const inventoryCapacityId = {
   'inv.sup.subtitle':
     'Bagikan stok, titik pemesanan ulang, dan produksi untuk material yang Anda pasok ke PTI.',
   'inv.sup.empty': 'Belum ada material yang ditugaskan kepada Anda.',
-  'inv.sup.enter': 'Isi stok',
-  'inv.sup.banner.update': 'Material yang perlu diperbarui angka stoknya: {{count}}',
+  'inv.sup.enterOnScreen': 'Isi stok di layar',
+  'inv.sup.tab.stock': 'Stok saya',
+  'inv.sup.tab.feedstock': 'Feedstock untuk dikonfirmasi',
+  'inv.sup.tab.template': 'Panduan templat',
   'inv.sup.access.all': 'PTI membagikan stoknya kepada Anda untuk semua material yang Anda pasok.',
   'inv.sup.access.some': 'PTI membagikan stoknya kepada Anda untuk {{count}} material Anda.',
 
@@ -640,7 +719,10 @@ export const inventoryCapacityId = {
   'inv.upload.error.unreadable':
     'Berkas ini tidak dapat dibaca. Unggah templat sebagai CSV atau Excel.',
   'inv.upload.error.empty': 'Berkas tidak memiliki baris untuk diperiksa.',
-  'inv.upload.saved': 'Material tersimpan: {{count}}',
+  'inv.upload.uploadTemplate': 'Unggah templat',
+  'inv.upload.sentTo': 'Terkirim ke PTI:',
+  'inv.upload.nothingSent': 'Tidak ada yang terkirim ke PTI.',
+  'inv.upload.blank_other': '{{count}} baris kosong, tidak dikirim',
   'inv.upload.refused': 'Baris tidak tersimpan: {{count}}',
   'inv.upload.col.row': 'Baris',
   'inv.upload.col.material': 'Material',
@@ -940,19 +1022,16 @@ export const inventoryCapacityId = {
 
   // ── Material B2 ──
   'inv.weekly.title': 'Pembaruan stok mingguan',
-  'inv.weekly.due': 'Pembaruan stok mingguan jatuh tempo',
-  'inv.weekly.left': 'sisa {{time}}',
-  'inv.weekly.count': '{{updated}} dari {{total}} diperbarui',
+  'inv.weekly.sent': '{{sent}} dari {{total}} terkirim',
+  'inv.weekly.dueOn': 'jatuh tempo',
+  'inv.weekly.outOfDate': '{{count}} belum diperbarui',
+  'inv.weekly.outOfDateSince': '{{count}} belum diperbarui sejak {{date}}',
   'inv.weekly.missingTitle': 'Belum diperbarui siklus ini',
   'inv.weekly.enter': 'Isi stok',
   'inv.weekly.enterFor': 'Isi stok untuk {{material}}',
   'inv.weekly.allDone': 'Semua material sudah diperbarui untuk siklus ini.',
-  'inv.weekly.missed_other': 'Terlewat: {{count}} material tidak diperbarui',
-  'inv.weekly.missedHint': 'Setiap tanda tetap sampai Anda mengirim angkanya.',
   'inv.weekly.reminder':
     'Pengingat: material yang masih perlu angka stok sebelum batas waktu: {{count}}',
-  'inv.weekly.sop':
-    'Pembaruan mingguan adalah bagian dari SOP pemasok yang ditetapkan oleh Material Planning.',
   'inv.weekly.api.title': 'Jadwal sinkronisasi stok',
   'inv.weekly.api.last': 'Sinkronisasi terakhir',
   'inv.weekly.api.next': 'Sinkronisasi berikutnya',

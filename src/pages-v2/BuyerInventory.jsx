@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import { AlertTriangle, MessageSquarePlus, RefreshCw } from 'lucide-react';
+import { MessageSquarePlus, RefreshCw } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
 import SapDataAgeBanner from '@components/ui-v2/SapDataAgeBanner';
@@ -32,7 +32,14 @@ import { formatDate, formatDateTime, formatNumber } from '@lib/format';
 import { useInventory } from '@services/query/hooks';
 /** @import { InventoryPosition, RiskClass } from '@services/data/types' */
 /** @import { MaterialType } from '@services/sdc/types' */
-import { hasLeadTime, positionRisk, stockFreshness } from '@services/transitions/inventoryRules';
+import {
+  daysOfSupply,
+  hasLeadTime,
+  isPtiBelowRop,
+  materialDailyDemand,
+  positionRisk,
+  stockFreshness
+} from '@services/transitions/inventoryRules';
 import {
   Figure,
   IncomingButton,
@@ -43,9 +50,9 @@ import {
   useInventoryRunner
 } from './inventory/inventoryDisplay';
 import StockEntryPanel from './inventory/StockEntryPanel';
-import FeedstockLine from './inventory/FeedstockLine';
+import MaterialDrawer from './inventory/MaterialDrawer';
 import { weeklyUpdateView } from './inventory/WeeklyUpdatePanel';
-import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
+import { PicFilter, usePicFilter } from './materials/picDisplay';
 import { TradeNameBeside } from './materials/tradeNameDisplay';
 import TryWhatIfLink from './BuyerWhatIfSandbox/TryWhatIfLink';
 import SeeEstimateLink from './inventory/SeeEstimateLink';
@@ -54,34 +61,36 @@ import SeeEstimateLink from './inventory/SeeEstimateLink';
 // PTI INVENTORY — REQ-E08-01 (visibility), REQ-E08-02 (API sync, recording a
 // supplier's WhatsApp or email reply).
 //
-// One row per material × supplier from the ONE inventory model: supplier SOH,
-// PTI SOH, PTI ROP, supplier ROP, incoming split into in production and in
-// transit with the next date (opening the per-date detail), days of supply
-// with its risk class and the basis it was decided on (CR-24: lead time, or the
-// CR-02 bands where the lead time is missing), and the last update time with
-// the stale flag. There is no
-// "available" figure (BR-01, AC-02). Raw material and packaging are separate
-// views (BR-07). Each row opens the what-if sandbox on its supplier ×
-// material ("Try a what-if", P-07).
+// One row per material × supplier from the ONE inventory model. Inventory UX
+// P-01: risk first, six columns — material · supplier, risk · supplier cover
+// (CR-24 on supplier stock ÷ demand, INV-D1 / P-08, with PTI cover beside it),
+// supplier stock, PTI stock / ROP (red when below), incoming (opening the
+// per-date detail, AC-04) and the last update with the stale flag. Four summary
+// tiles filter the table. PIC, this cycle, supplier ROP, the system ROP
+// Supplier and feedstock live in the material drawer a row opens (P-02). There
+// is no "available" figure (BR-01, AC-02). Raw material and packaging are
+// separate views (BR-07), with "All types" beside them. Each row opens the
+// what-if sandbox on its supplier × material ("Try a what-if", P-07).
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** @typedef {'all' | RiskClass | 'stale'} BandFilter */
+/** @typedef {'all' | RiskClass | 'stale' | 'belowRop' | 'noLeadTime'} BandFilter */
+/** @typedef {MaterialType | 'all'} TypeFilter */
 
-/**
- * Material B2 — the supplier's weekly update this cycle, or "API".
- * @type {React.FC<{ value: { api: true } | { api: false; updated: number; total: number } | undefined }>}
- */
-const CycleCell = ({ value }) => {
-  const { t } = useTranslation();
-  if (!value) return null;
-  if (value.api)
-    return <span className="text-xs text-text-secondary">{t('inv.thisCycle.api')}</span>;
-  return (
-    <Data className={`text-xs ${value.updated < value.total ? 'text-warning-hover' : ''}`}>
-      {t('inv.thisCycle.count', { updated: value.updated, total: value.total })}
-    </Data>
-  );
-};
+/** @type {readonly BandFilter[]} */
+const BAND_FILTERS = ['all', 'high', 'medium', 'low', 'stale', 'belowRop', 'noLeadTime'];
+
+// P-01 — the four summary tiles, each a filter on the table.
+// i18n-defer: filter identifiers and CSS classes, not copy — each label renders through t(`inv.tile.<id>`)
+/** @type {readonly { id: BandFilter; tone: string }[]} */
+const TILES = [
+  { id: 'high', tone: 'text-danger' },
+  { id: 'belowRop', tone: 'text-warning-hover' },
+  { id: 'stale', tone: 'text-warning-hover' },
+  { id: 'noLeadTime', tone: '' }
+];
+
+/** Stops a click on a control inside a row from also opening the drawer. */
+const stopRowClick = (/** @type {React.MouseEvent} */ e) => e.stopPropagation();
 
 /** @type {React.FC} */
 const BuyerInventory = () => {
@@ -95,20 +104,21 @@ const BuyerInventory = () => {
   // null, `type` below derives from `?material=`'s own row instead of a
   // fixed default — a pure render-time fallback, not an effect, so a stale
   // lookup (before `rows` has loaded) is never possible.
-  const [manualType, setManualType] = useState(/** @type {MaterialType | null} */ (null));
+  const [manualType, setManualType] = useState(/** @type {TypeFilter | null} */ (null));
   const [band, setBand] = useState(/** @type {BandFilter} */ ('all'));
   // Deep-link read: `?type=` / `?band=` narrow the alert's destination;
   // `?material=` (one-shot, like the existing one-shot params elsewhere)
   // pre-fills the search so the row is found regardless of which page it
   // sits on.
-  useUrlEnumParam('type', /** @type {MaterialType[]} */ (['ROH', 'VERP']), setManualType);
-  useUrlEnumParam(
-    'band',
-    /** @type {BandFilter[]} */ (['all', 'high', 'medium', 'low', 'stale']),
-    setBand
-  );
+  useUrlEnumParam('type', /** @type {TypeFilter[]} */ (['all', 'ROH', 'VERP']), setManualType);
+  useUrlEnumParam('band', /** @type {BandFilter[]} */ ([...BAND_FILTERS]), setBand);
   const [search, setSearch] = useState(() => params.get('material') ?? '');
   const [incoming, setIncoming] = useState(/** @type {InventoryPosition | null} */ (null));
+  // P-02 — the row whose material drawer is open.
+  const [drawer, setDrawer] = useState(/** @type {InventoryPosition | null} */ (null));
+  const [recordInitial, setRecordInitial] = useState(
+    /** @type {{ supplierId: string; materialCode: string } | null} */ (null)
+  );
   // Material C4 — the PIC filter, kept in the page address (MR-5 BR-03).
   const pic = usePicFilter();
   const [recordOpen, setRecordOpen] = useState(false);
@@ -123,22 +133,27 @@ const BuyerInventory = () => {
   const materialRow = materialParam
     ? rows.find((r) => r.materialCode === materialParam)
     : undefined;
-  const type = manualType ?? materialRow?.materialType ?? /** @type {MaterialType} */ ('ROH');
+  const type = manualType ?? materialRow?.materialType ?? /** @type {TypeFilter} */ ('ROH');
   const setType = setManualType;
-  const ofType = rows.filter((r) => r.materialType === type);
-  /** @param {BandFilter} b */
-  const bandCount = (b) =>
+  const ofType = type === 'all' ? rows : rows.filter((r) => r.materialType === type);
+  /**
+   * @param {BandFilter} b
+   * @param {InventoryPosition} r
+   * @returns {boolean}
+   */
+  const admits = (b, r) =>
     b === 'all'
-      ? ofType.length
+      ? true
       : b === 'stale'
-        ? ofType.filter((r) => stockFreshness(r, nowIso) !== 'current').length
-        : ofType.filter((r) => positionRisk(r).riskClass === b).length;
-  const filtered = ofType.filter((r) => {
-    if (!pic.matches(r.mrpController)) return false;
-    if (band === 'stale' && stockFreshness(r, nowIso) === 'current') return false;
-    if (band !== 'all' && band !== 'stale' && positionRisk(r).riskClass !== band) return false;
-    return true;
-  });
+        ? stockFreshness(r, nowIso) !== 'current'
+        : b === 'belowRop'
+          ? isPtiBelowRop(r)
+          : b === 'noLeadTime'
+            ? !hasLeadTime(r.leadTimeDays)
+            : positionRisk(r).riskClass === b;
+  /** @param {BandFilter} b */
+  const bandCount = (b) => ofType.filter((r) => admits(b, r)).length;
+  const filtered = ofType.filter((r) => pic.matches(r.mrpController) && admits(band, r));
   // Material C3 — the one material search (MR-3 BR-04): code, PTI description
   // and this row's supplier's approved trade name, best match first. A row
   // whose supplier name holds the query still shows (the search always did).
@@ -198,9 +213,18 @@ const BuyerInventory = () => {
       />
     );
 
-  const high = rows.filter((r) => positionRisk(r).riskClass === 'high').length;
-  const noLeadTime = rows.filter((r) => !hasLeadTime(r.leadTimeDays)).length;
-  const stale = rows.filter((r) => stockFreshness(r, nowIso) !== 'current').length;
+  // P-01 — the tiles count every type, so a tile opens "All types".
+  /** @param {BandFilter} b */
+  const tileCount = (b) => rows.filter((r) => admits(b, r)).length;
+  /** @param {BandFilter} b */
+  const pickTile = (b) => {
+    setType('all');
+    setBand(band === b ? 'all' : b);
+  };
+  // INV-D1 — PTI cover, the second figure: PTI stock ÷ the material's daily
+  // demand across all its suppliers (the basis the projected stock-out rule uses).
+  /** @param {InventoryPosition} p */
+  const ptiCoverOf = (p) => daysOfSupply(p.ptiSoh, materialDailyDemand(rows, p.materialCode));
 
   return (
     <AppShellV2>
@@ -213,7 +237,10 @@ const BuyerInventory = () => {
             <Button
               variant="outline"
               icon={MessageSquarePlus}
-              onClick={() => setRecordOpen(true)}
+              onClick={() => {
+                setRecordInitial(null);
+                setRecordOpen(true);
+              }}
               data-testid="stock-record-open"
             >
               {t('inv.pti.record')}
@@ -241,26 +268,36 @@ const BuyerInventory = () => {
         </div>
       ) : null}
 
-      {(high > 0 || noLeadTime > 0 || stale > 0) && (
-        <div
-          role="status"
-          data-testid="pti-inventory-banner"
-          className="bg-warning-soft border-l-2 border-warning rounded px-4 py-3 mb-4 text-sm text-warning-hover space-y-1"
-        >
-          {high > 0 && (
-            <div className="flex items-center gap-2">
-              <AlertTriangle size={14} aria-hidden="true" />
-              {t('inv.pti.banner.high', { count: high })}
-            </div>
-          )}
-          {noLeadTime > 0 && (
-            <div data-testid="pti-inventory-banner-lead-time">
-              {t('inv.pti.banner.leadTimeMissing', { count: noLeadTime })}
-            </div>
-          )}
-          {stale > 0 && <div>{t('inv.pti.banner.stale', { count: stale })}</div>}
-        </div>
-      )}
+      <div
+        role="group"
+        aria-label={t('inv.tiles.label')}
+        className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4"
+        data-testid="inv-tiles"
+      >
+        {TILES.map((tile) => (
+          <button
+            key={tile.id}
+            type="button"
+            aria-pressed={band === tile.id}
+            onClick={() => pickTile(tile.id)}
+            data-testid={`inv-tile-${tile.id}`}
+            className={`text-left bg-bg-surface border rounded-lg px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-action ${band === tile.id ? 'border-action' : 'border-border-subtle hover:bg-bg-hover'}`}
+          >
+            <span className="block text-label text-text-tertiary uppercase">
+              {t(`inv.tile.${tile.id}`)}
+            </span>
+            <Data
+              className={`block text-xl font-semibold ${tile.tone}`}
+              data-testid={`inv-tile-${tile.id}-count`}
+            >
+              {tileCount(tile.id)}
+            </Data>
+            <span className="block text-xs text-text-secondary">
+              {t(`inv.tile.${tile.id}.hint`)}
+            </span>
+          </button>
+        ))}
+      </div>
 
       {connected.length > 0 && (
         <section
@@ -321,6 +358,7 @@ const BuyerInventory = () => {
 
       <SubTabs
         options={[
+          { id: 'all', label: t('inv.type.all'), count: rows.length },
           {
             id: 'ROH',
             label: t('inv.type.ROH'),
@@ -349,7 +387,7 @@ const BuyerInventory = () => {
         </div>
         <FilterChipsBar
           options={
-            /** @type {BandFilter[]} */ (['all', 'high', 'medium', 'low', 'stale']).map((b) => ({
+            /** @type {BandFilter[]} */ (BAND_FILTERS.slice(0, 5)).map((b) => ({
               id: b,
               label: `${b === 'high' || b === 'medium' || b === 'low' ? t(`inv.risk.${b}`) : t(`inv.filter.${b}`)} (${bandCount(b)})`
             }))
@@ -369,32 +407,18 @@ const BuyerInventory = () => {
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableHeaderCell>{t('inv.col.material')}</TableHeaderCell>
-            <TableHeaderCell>{t('inv.col.supplier')}</TableHeaderCell>
-            <TableHeaderCell>{t('inv.col.thisCycle')}</TableHeaderCell>
-            <TableHeaderCell>
-              <PicHeader />
-            </TableHeaderCell>
+            <TableHeaderCell>{t('inv.col.materialSupplier')}</TableHeaderCell>
+            <TableHeaderCell>{t('inv.col.riskCover')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('inv.col.supplierSoh')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('inv.col.ptiSoh')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('inv.col.ptiRop')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">
-              {t('inv.col.supplierRop')}
-              <span
-                className="block text-xs font-normal normal-case text-text-tertiary"
-                data-testid="inv-supplier-rop-display-only"
-              >
-                {t('inv.col.supplierRop.displayOnly')}
-              </span>
-            </TableHeaderCell>
+            <TableHeaderCell className="text-right">{t('inv.col.ptiSohRop')}</TableHeaderCell>
             <TableHeaderCell>{t('inv.col.incoming')}</TableHeaderCell>
-            <TableHeaderCell>{t('inv.col.daysOfSupply')}</TableHeaderCell>
-            <TableHeaderCell>{t('inv.col.lastUpdate')}</TableHeaderCell>
+            <TableHeaderCell>{t('inv.col.updated')}</TableHeaderCell>
           </TableHeader>
           <tbody>
             {shown.map(({ item: p, match }) => {
               const rowId = `${p.supplierId}-${p.materialCode}`;
               const isHighlighted = highlight.id === rowId;
+              const ptiCover = ptiCoverOf(p);
               return (
                 <TableRow
                   key={rowId}
@@ -402,10 +426,12 @@ const BuyerInventory = () => {
                   data-testid={`pti-stock-row-${p.supplierId}-${p.materialCode}`}
                   aria-current={isHighlighted ? 'true' : undefined}
                   className={isHighlighted ? HIGHLIGHTED_ROW_CLASS : undefined}
+                  onClick={() => setDrawer(p)}
                 >
                   <TableCell>
                     <Data className="text-xs font-bold text-text-primary">{p.materialCode}</Data>
                     <div className="text-sm text-text-primary">{p.materialLabel}</div>
+                    <div className="text-xs text-text-secondary">{p.supplierName}</div>
                     {/* Material C2 — the supplier's approved trade name (MR-3 d, planner step 3). */}
                     <TradeNameBeside
                       name={p.tradeName}
@@ -421,7 +447,7 @@ const BuyerInventory = () => {
                         {t('inv.consignment')}
                       </StatusPill>
                     )}
-                    <div>
+                    <div onClick={stopRowClick}>
                       <TryWhatIfLink
                         materialCode={p.materialCode}
                         supplierId={p.supplierId}
@@ -440,53 +466,37 @@ const BuyerInventory = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm text-text-primary">{p.supplierName}</div>
-                  </TableCell>
-                  <TableCell
-                    className="whitespace-nowrap"
-                    data-testid={`pti-stock-cycle-${p.supplierId}-${p.materialCode}`}
-                  >
-                    <CycleCell value={thisCycle.get(p.supplierId)} />
-                  </TableCell>
-                  <TableCell>
-                    <PicCell
-                      value={p.mrpController}
-                      testId={`pti-stock-pic-${p.supplierId}-${p.materialCode}`}
-                    />
+                    <SupplyPill position={p} />
+                    {/* INV-D1 — PTI cover beside supplier cover, a second figure. */}
+                    <span
+                      className="block text-xs text-text-tertiary whitespace-nowrap"
+                      data-testid={`pti-cover-${rowId}`}
+                    >
+                      {ptiCover === null
+                        ? t('inv.ptiCover.none')
+                        : t('inv.ptiCover', { count: Math.floor(ptiCover) })}
+                    </span>
                   </TableCell>
                   <TableCell className="text-right whitespace-nowrap">
                     <Figure value={p.supplierSoh} uom={p.uom} absentKey="inv.figure.noSubmission" />
-                    {/* BL-194 (DRC-8 BR-c) — feedstock, its own line; never added to SOH. */}
-                    <FeedstockLine position={p} />
                   </TableCell>
-                  <TableCell className="text-right whitespace-nowrap">
-                    <Figure value={p.ptiSoh} uom={p.uom} absentKey="inv.figure.none" />
-                  </TableCell>
-                  <TableCell className="text-right whitespace-nowrap">
+                  <TableCell
+                    className="text-right whitespace-nowrap"
+                    data-testid={`pti-stock-pti-${rowId}`}
+                    data-below={isPtiBelowRop(p) ? 'true' : undefined}
+                  >
+                    {p.ptiSoh !== null && isPtiBelowRop(p) ? (
+                      <Data className="text-danger">{`${formatNumber(p.ptiSoh)} ${p.uom}`}</Data>
+                    ) : (
+                      <Figure value={p.ptiSoh} uom={p.uom} absentKey="inv.figure.none" />
+                    )}
+                    <span className="text-text-tertiary"> / </span>
                     <Figure value={p.ptiRop} uom={p.uom} absentKey="inv.figure.none" />
                   </TableCell>
-                  <TableCell className="text-right whitespace-nowrap">
-                    <Figure value={p.supplierRop} uom={p.uom} absentKey="inv.figure.notProvided" />
-                    {/* DRC-D15 (BL-196) — the system's ROP Supplier, labelled. */}
-                    {p.systemRopSupplier !== undefined && (
-                      <div
-                        className="text-xs text-text-tertiary"
-                        title={t('inv.systemRopSupplier.title')}
-                        data-testid={`inv-system-rop-${p.supplierId}-${p.materialCode}`}
-                      >
-                        {p.systemRopSupplier?.value != null
-                          ? t('inv.systemRopSupplier', {
-                              value: `${formatNumber(p.systemRopSupplier.value)} ${p.uom}`
-                            })
-                          : t('inv.systemRopSupplier.none')}
-                      </div>
-                    )}
-                  </TableCell>
                   <TableCell>
-                    <IncomingButton position={p} onOpen={() => setIncoming(p)} />
-                  </TableCell>
-                  <TableCell>
-                    <SupplyPill position={p} />
+                    <span onClick={stopRowClick}>
+                      <IncomingButton position={p} onOpen={() => setIncoming(p)} />
+                    </span>
                   </TableCell>
                   <TableCell>
                     <LastUpdateCell position={p} nowIso={nowIso} />
@@ -496,7 +506,7 @@ const BuyerInventory = () => {
             })}
             {shown.length === 0 && (
               <tr>
-                <td colSpan={11} className="py-10 text-center text-sm text-text-tertiary">
+                <td colSpan={6} className="py-10 text-center text-sm text-text-tertiary">
                   {t('inv.table.empty')}
                 </td>
               </tr>
@@ -506,12 +516,44 @@ const BuyerInventory = () => {
       </div>
 
       <IncomingPanel position={incoming} base="/buyer" onClose={() => setIncoming(null)} />
+      {drawer ? (
+        <MaterialDrawer
+          position={drawer}
+          risk={positionRisk(drawer)}
+          ptiCover={ptiCoverOf(drawer)}
+          cycle={thisCycle.get(drawer.supplierId)}
+          onRecord={
+            record.kind === 'held'
+              ? () => {
+                  setRecordInitial({
+                    supplierId: drawer.supplierId,
+                    materialCode: drawer.materialCode
+                  });
+                  setDrawer(null);
+                  setRecordOpen(true);
+                }
+              : null
+          }
+          onSync={
+            drawer.apiConnected && sync.kind === 'held'
+              ? () =>
+                  void run(
+                    { verb: 'sync', supplierId: drawer.supplierId },
+                    t('inv.sync.done', { supplier: drawer.supplierName })
+                  )
+              : null
+          }
+          syncPending={pending}
+          onClose={() => setDrawer(null)}
+        />
+      ) : null}
       {record.kind === 'held' && (
         <StockEntryPanel
           open={recordOpen}
           onClose={() => setRecordOpen(false)}
           mode="pti"
           positions={rows}
+          initial={recordInitial}
         />
       )}
     </AppShellV2>

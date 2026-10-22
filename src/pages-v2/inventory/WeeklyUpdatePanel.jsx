@@ -1,12 +1,14 @@
 /** @import React from 'react' */
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { AlertTriangle, BellRing } from 'lucide-react';
+import { BellRing } from 'lucide-react';
 import Data from '@components/ui-v2/Data';
 import LivenessPill from '@components/ui-v2/LivenessPill';
 import { formatDateTime } from '@lib/format';
 /** @import { InventoryPosition } from '@services/data/types' */
 import { stockSyncIntervalHours, updateCycleSettings } from '@services/transitions/inventoryConfig';
+import { stockFreshness } from '@services/transitions/inventoryRules';
 /** @import { WeeklyUpdateStatus } from '@services/transitions/updateCycle' */
 import {
   activeUpdateReminder,
@@ -14,19 +16,21 @@ import {
   weeklyUpdateStatus
 } from '@services/transitions/updateCycle';
 import { hubWorkingCalendar } from '@services/transitions/workingCalendarStore';
-import { useDurationText } from '../forecasts/forecastDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE SUPPLIER'S WEEKLY-UPDATE PANEL — Material B2 (MR-1 d, AC-01, BR-06).
 //
 // On the supplier Home and at the top of the supplier Stock page.
 //
-//   · Manual supplier: when the week's update is due and the time left, how
-//     many materials are updated this cycle, and the ones still missing — each
-//     opening the stock entry form on that material. After a cutoff, the
-//     materials missed in the closed cycle read "Missed" until each is sent.
-//     From 09:00 WIB on the working day before the cutoff, and again on the
-//     cutoff day, an in-hub reminder lists what is still missing (d step 2).
+//   · Manual supplier: Inventory UX S-02 (INV-D4) — ONE weekly status on the
+//     stock-update cutoff, the same two lines the To do Stock row shows
+//     (`useWeeklyStatusText`): "Weekly stock update · 2 of 4 sent · due Thu 3
+//     Sept 23:59 WIB", then "2 out of date since 13 Aug" when any figure is
+//     past its update SLA. No second deadline, no SOP line, no "Missed" strip.
+//     Below them, the materials still to send this cycle — each opening the
+//     stock entry form on that material. From 09:00 WIB on the working day
+//     before the cutoff, and again on the cutoff day, an in-hub reminder lists
+//     what is still missing (d step 2).
 //   · API supplier: the last sync attempt and the next scheduled one (last
 //     attempt + `stockSync.intervalHours`), with the note that the schedule is
 //     not running in the prototype and its liveness pill (MAT-R14).
@@ -69,55 +73,95 @@ export const stockEntryLink = (materialCode) =>
 
 const JAKARTA = 'Asia/Jakarta';
 
-/** @returns {(iso: string) => string} */
-function useCutoffText() {
-  const { i18n } = useTranslation();
+/**
+ * `headline`:  "Weekly stock update · 2 of 4 sent · due Thu 3 Sept 23:59 WIB".
+ * `outOfDate`:  "2 out of date since 13 Aug", or null when every figure is current.
+ * `sent`, `total`, `due`:  The headline's parts, for a render that sets the
+ *   due date in the mono face (DP-3).
+ *
+ * @typedef {{
+ *     readonly headline: string;
+ *     readonly outOfDate: string | null;
+ *     readonly sent: number;
+ *     readonly total: number;
+ *     readonly due: string;
+ *   }} WeeklyStatusText
+ */
+
+/**
+ * Inventory UX S-02 (INV-D4) — the one weekly status, worded once for the
+ * panel and the To do Stock row. "Out of date" is the stock freshness rule
+ * (`stockFreshness`, past the update SLA or never sent); "since" is the
+ * earliest instant one of those figures turned stale, when one is on record.
+ * @returns {(status: WeeklyUpdateStatus, positions: readonly InventoryPosition[], nowIso: string) => WeeklyStatusText}
+ */
+export function useWeeklyStatusText() {
+  const { t, i18n } = useTranslation();
   const locale = i18n.language?.startsWith('id') ? 'id-ID' : 'en-GB';
-  return /** @param {string} iso */ (iso) => {
-    const d = new Date(iso);
-    const day = new Intl.DateTimeFormat(locale, {
-      timeZone: JAKARTA,
-      weekday: 'long',
-      day: 'numeric',
-      month: 'short'
-    }).format(d);
-    const time = new Intl.DateTimeFormat('en-GB', {
-      timeZone: JAKARTA,
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }).format(d);
-    return `${day} ${time} WIB`;
-  };
+  return useCallback(
+    (status, positions, nowIso) => {
+      const day = (/** @type {Intl.DateTimeFormatOptions} */ opts) =>
+        new Intl.DateTimeFormat(locale, { timeZone: JAKARTA, ...opts });
+      const cutoff = new Date(status.cycle.cutoff);
+      const time = new Intl.DateTimeFormat('en-GB', {
+        timeZone: JAKARTA,
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      }).format(cutoff);
+      const due = `${day({ weekday: 'short', day: 'numeric', month: 'short' }).format(cutoff)} ${time} WIB`;
+      const out = positions.filter((p) => stockFreshness(p, nowIso) !== 'current');
+      const staleTimes = out
+        .flatMap((p) => (p.staleAt ? [Date.parse(p.staleAt)] : []))
+        .filter(Number.isFinite);
+      const since =
+        staleTimes.length === 0
+          ? null
+          : day({ day: 'numeric', month: 'short' }).format(new Date(Math.min(...staleTimes)));
+      const sent = status.updated.length;
+      const headline = [
+        t('inv.weekly.title'),
+        t('inv.weekly.sent', { sent, total: status.total }),
+        `${t('inv.weekly.dueOn')} ${due}`
+      ].join(' · ');
+      const outOfDate =
+        out.length === 0
+          ? null
+          : since === null
+            ? t('inv.weekly.outOfDate', { count: out.length })
+            : t('inv.weekly.outOfDateSince', { count: out.length, date: since });
+      return { headline, outOfDate, sent, total: status.total, due };
+    },
+    [t, locale]
+  );
 }
 
 /** @type {React.FC<{ positions: readonly InventoryPosition[]; view: WeeklyUpdateView; nowIso: string }>} */
 const ManualPanel = ({ positions, view, nowIso }) => {
   const { t } = useTranslation();
-  const duration = useDurationText();
-  const cutoffText = useCutoffText();
+  const statusText = useWeeklyStatusText();
   const { status, reminder } = view;
+  const text = statusText(status, positions, nowIso);
   /** @param {string} code */
   const labelOf = (code) => positions.find((p) => p.materialCode === code)?.materialLabel ?? '';
-  const msLeft = Date.parse(status.cycle.cutoff) - Date.parse(nowIso);
 
   return (
     <section
       className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6 space-y-3"
       data-testid="weekly-update"
     >
-      <h2 className="text-section text-text-primary">{t('inv.weekly.title')}</h2>
-      {status.missed.length > 0 && (
-        <div
-          role="status"
-          data-testid="weekly-missed"
-          className="bg-danger-soft border-l-2 border-danger rounded px-4 py-2 text-sm text-danger flex items-center gap-2"
-        >
-          <AlertTriangle size={14} aria-hidden="true" />
-          {t('inv.weekly.missed', { count: status.missed.length })}
-          <span className="text-xs text-text-secondary">{t('inv.weekly.missedHint')}</span>
-        </div>
-      )}
+      <div>
+        {/* S-02 — the same two lines as the To do Stock row; data in mono (DP-3). */}
+        <h2 className="text-section text-text-primary" data-testid="weekly-status">
+          {t('inv.weekly.title')} · {t('inv.weekly.sent', { sent: text.sent, total: text.total })} ·{' '}
+          {t('inv.weekly.dueOn')} <Data>{text.due}</Data>
+        </h2>
+        {text.outOfDate !== null && (
+          <p className="text-sm text-warning-hover" data-testid="weekly-out-of-date">
+            {text.outOfDate}
+          </p>
+        )}
+      </div>
       {reminder !== null && (
         <div
           role="status"
@@ -128,16 +172,6 @@ const ManualPanel = ({ positions, view, nowIso }) => {
           {t('inv.weekly.reminder', { count: status.missing.length })}
         </div>
       )}
-      <p className="text-sm text-text-primary" data-testid="weekly-due">
-        {t('inv.weekly.due')} <Data>{cutoffText(status.cycle.cutoff)}</Data>
-        <span className="text-text-tertiary">
-          {' '}
-          · {t('inv.weekly.left', { time: duration(msLeft) })}
-        </span>
-      </p>
-      <p className="text-sm text-text-secondary" data-testid="weekly-count">
-        {t('inv.weekly.count', { updated: status.updated.length, total: status.total })}
-      </p>
       {status.missing.length === 0 ? (
         <p className="text-sm text-success" data-testid="weekly-all-done">
           {t('inv.weekly.allDone')}
@@ -170,10 +204,6 @@ const ManualPanel = ({ positions, view, nowIso }) => {
           </ul>
         </div>
       )}
-      {/* MR-1 BR-06 — no link until the SOP document exists. */}
-      <p className="text-xs text-text-tertiary" data-testid="weekly-sop">
-        {t('inv.weekly.sop')}
-      </p>
     </section>
   );
 };
