@@ -17,6 +17,7 @@ import {
 import {
   InTransitReadOnly,
   inventoryNow,
+  qty,
   readFileText,
   useInventoryRunner
 } from './inventoryDisplay';
@@ -386,8 +387,7 @@ const StockUploadPanel = ({ supplierId, positions }) => {
               >
                 <Data className="text-xs font-bold text-text-primary">{p.materialCode}</Data>
                 <div className="mt-1 text-xs text-text-secondary">
-                  {t('inv.upload.incoming.inProduction')}{' '}
-                  <Data>{inProduction.toLocaleString('en-US')}</Data> {p.uom}
+                  {t('inv.upload.incoming.inProduction')} <Data>{qty(inProduction)}</Data> {p.uom}
                 </div>
                 <div className="mt-2">
                   <InTransitReadOnly

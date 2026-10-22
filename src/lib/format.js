@@ -32,11 +32,20 @@ function isID() {
  * English UI showed "1.234", which an English reader takes for one point two.
  * Rupiah amounts (`formatIDR`) keep the Indonesian grouping in both: that is
  * how rupiah is written, and the "Rp" says which convention applies.
+ *
+ * `opts.maximumFractionDigits` caps the decimals (Intl's default is 3); the
+ * inventory `qty` passes 2 (X-01).
  * @param {number | null} [value]
+ * @param {{ maximumFractionDigits?: number }} [opts]
  * @returns {string}
  */
-export function formatNumber(value) {
+export function formatNumber(value, opts) {
   if (value == null || Number.isNaN(value)) return EMPTY;
+  if (opts?.maximumFractionDigits != null) {
+    return new Intl.NumberFormat(isID() ? 'id-ID' : 'en-US', {
+      maximumFractionDigits: opts.maximumFractionDigits
+    }).format(value);
+  }
   return (isID() ? idID : enUS).format(value);
 }
 
