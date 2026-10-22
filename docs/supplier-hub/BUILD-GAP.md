@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 3.14, 2026-10-12 |
+| Version | 3.19, 2026-10-19 |
 | Compares | `SUPPLIER-HUB-REQUIREMENTS.md` v0.12 with the prototype on `main` at `80a4281` (PR #27 merged, 2026-09-22). The RFx rows cover PRs #21, #24, #25, #26 and #27; the RFP → RFQ pre-fill was built in PR #30. The RFx improvements (supplier documents, RFP award, multi-supplier award) were added on 2026-09-28 from PRs #54 to #64, #66 and #67, read on `main` at `20341d1`. The SC Hub Material build (MR-1 to MR-10: PRs #84 to #93, #97, #101 to #110, all merged 2026-09-29) was added on 2026-09-29, read on `main` at `d7ac421`; section 1.1 maps each MR to its rules and PRs. CAP-1 wave 1 (PR #191, merged 2026-10-12) was added on 2026-10-12, read on `main` at `a5eaac3`; section 1.2 covers CAP-1 to CAP-12. |
 | Owner decisions | 2026-09-17, recorded in section 9 of the requirements (RFX-1 to RFX-3, GAP-1 to GAP-4, E06-R); 2026-09-21 for the working calendar (Q-18, BL-14) and the commitment deadline (CR-26, BL-05), built as BL-50 and BL-48; 2026-09-21 for RFx (RFX-D1 to RFX-D5), built in PRs #21 and #24 to #27; 2026-09-25 for the RFx improvements (RFX-D6 to RFX-D14), built in PRs #54 to #64, #66 and #67. Also 2026-09-29 for the SC Hub Material build (MAT-D1 to MAT-D15, and the build rulings MAT-D16 to MAT-D21), built in PRs #84 to #93, #97 and #101 to #110 |
 | Gate evidence, RFx improvements | From 2026-09-25 08:13 UTC GitHub Actions could not run the gates: the `build · floor · test:gate` job was not started because of the account's billing limit, and the check reads as failed. That covers the final heads of PRs #54 to #56, #58 to #64, #67 and #69. The final heads of #57 and #66, which reached `main` inside #67, passed in Actions earlier on 2026-09-25. Each of these PRs reports a green local `npm run gates` run on Node 22 in its body, and the merges to `main` were gated on those runs; for the heads Actions did not run, that local run is the only gate record. The counts are held in `scripts/floor.json` and are not restated here |
@@ -108,9 +108,38 @@ The requirements are `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` (decisions CAP-D1
 | CAP-6, CAP-7 Commitment date removed, Request revision hidden (BL-175, BL-176) | Built | #200 | No date on the commitment screens (period start stored); `REQUEST_REVISION_ENABLED = false` |
 | CAP-8 Move demand to several suppliers (BL-177) | Built | #213 | One verb with `allocations`, capped at the shortfall; headroom warns. Moves only the entered quantities |
 | CAP-9 Blanket PO run-out (BL-178) | Built | #217 | `blanketPoRules.js`; lines of one supplier × material drawn oldest first (CAP-D9); one alert per group |
-| CAP-10 Demand anticipation frozen per horizon (BL-179) | Built | #221 | `demandAnticipationRules.js`, append-only `demandAnticipationStore`, `t_demandanticipation_publish`; fixed 4-week horizons (CAP-D17); page `/buyer/demand-anticipation` |
-| CAP-11 Recorded consumption and absorbing the excess (BL-180) | Built | this PR | `consumptionStore`, `t_consumption_record` (0 accepted), typed or uploaded; excess absorbed into the next horizon's open weeks; `demandAnticipationUnabsorbed` alert. Waits on the SAP goods-issue feed for real data |
-| CAP-12 Supply below demand anticipation (BL-181) | Built | this PR | Open supply = released call-offs by need week; gap and an oldest-blanket-first call-off proposal or "New PO needed"; own section on What to order |
+| CAP-10 Demand anticipation frozen per horizon (BL-179) | Built | #221 | `demandAnticipationRules.js`, append-only `demandAnticipationStore`, `t_demandanticipation_publish`; fixed 4-week horizons (CAP-D17); page `/buyer/demand-anticipation` Rework 2026-10-19: horizon = lead time, rolling, with carry-over (DRC-2, BL-188) |
+| CAP-11 Recorded consumption and absorbing the excess (BL-180) | Built | #227 | `consumptionStore`, `t_consumption_record` (0 accepted), typed or uploaded; excess absorbed into the next horizon's open weeks; `demandAnticipationUnabsorbed` alert. Waits on the SAP goods-issue feed for real data Rework 2026-10-19: the weeks 5 to 8 absorbing rule is replaced by DRC-2 BR-03 (BL-188); the consumption record is kept |
+| CAP-12 Supply below demand anticipation (BL-181) | Built | #227 | Open supply = released call-offs by need week; gap and an oldest-blanket-first call-off proposal or "New PO needed"; own section on What to order |
+
+### 1.3 SC Hub DA, ROP and call-off (DRC-1 to DRC-19)
+
+The requirements are `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` (accepted 2026-10-19; decisions DRC-D1 to DRC-D16). Waves 1 to 3 and the sandbox are built (GitLab MR !4 to !7, 2026-10-19). Backlog BL-187 to BL-209; build order in section 7 of that file. Values tagged [Default] are starting values until Material Planning confirms them.
+
+| DRC | Status | Built in | What exists today |
+|---|---|---|---|
+| DRC-2 Rolling demand anticipation (BL-188) | Built | MR !5 | Rewritten `demandAnticipationRules.js` feeds `osipRules.js`: horizon = lead time, rolling weekly, carry-over, OSPO chain, stamped publications; absorbing over weeks 5 to 8 removed. Decisions DRC-B15 to B23 |
+| DRC-15a Feedstock reconcile (BL-201) | Built | MR !4 | `feedstockReconcile.js`, `feedstockReadModel.js`; page `/buyer/fs-reconcile` and `/supplier/fs-reconcile` renamed "Feedstock reconcile": PO ordered, called off, ASN requested, the two remainders, max stock. Outcomes and liability removed (DRC-D14). Sample ASNs are not linked to call-offs, so "ASN requested" reads 0 on sample data |
+| DRC-2, 4, 7, 9a, 10, 11 calculations (BL-187) | Built as functions; not wired | MR !4 | `osipRules.js`: rules block, rolling DA with carry-over, plan check, safety order, ROP Order, ROP Fisik by level, Max, CV, strategic buffer, stamping; golden fixtures PPT 7 to 9 (`__fixtures__/osipGolden.json`). Demand anticipation, Safety stock targets and Capacity read them since MR !5; ROP Fisik as a whole and Max wait for BL-196 |
+| DRC-14 Replenishment cycle (BL-200) | Built | MR !4 | `OSIP_RULES.replenishmentCycleDays`, `supplyAreaOf` (DRC-B8) |
+| DRC-6 Lead time by step (BL-192) | Built | MR !4 | `engine/leadTimeSteps.js`; steps on `MaterialSource`; data-health check `leadTimeStepsSum`; shown on Material requirement (`/buyer/material-requirement`) |
+| DRC-18 LTP vs FG demand (BL-203) | Built | MR !4 | `ltpFgDemandRules.js`, `ltpFgDemandReadModel.js`; rows "FG demand", "LTP − FG demand" and "Consumption, 13-week average" on Demand anticipation |
+| DRC-4 Plan vs execution check (BL-190) | Built | MR !5 | `PlanCheck.jsx` on Demand anticipation: Total DA, ROP Order, SOH + OSPO + OSPR + PR, the gap, absorbed or a PR recommendation |
+| DRC-7 Safety order and ROP Fisik safety (BL-193) | Built | MR !5 | `osipSafetyRules.js`, `osipSafetyReadModel.js`; columns on Safety stock targets beside the engine challenger; four read-only rule switches |
+| DRC-11 CV (BL-197) | Built | MR !5 | CV and Stable / Fluctuative per material on Safety stock targets |
+| DRC-9a, 9b Strategic buffer, production limit (BL-195) | Built | MR !5 | `drcBufferRules.js`; "Production limit (allocated capacity)" row and a strategic buffer section on PTI Capacity |
+| DRC-10 ROPs and Max (BL-196) | Built | MR !6 | `osipRopRules.js`, `osipRopReadModel.js`; ROP Order, ROP Fisik, Max, supplier-side ROPs and the level field on Safety stock targets; engine reorder point as challenger |
+| DRC-12a NPD (BL-198) | Built | MR !6 | NPD tag per material and the "Review ROP after first order" Home task |
+| DRC-13 Call-off trigger (BL-199) | Built | MR !6 | `callOffTriggerRules.js`, `ptiStockStore`; drafts marked "Drafted at ROP Fisik"; "Create a PR in SAP" on What to order and Home. Fires only on PTI SOH updates (no eWM feed yet) |
+| DRC-3 DA history (BL-189) | Built | MR !6 | `/buyer/demand-anticipation-history`, filters and CSV; ungated (DRC-D18) |
+| DRC-5 Delayed call-off (BL-191) | Built | MR !6 | "LTP dropped" change, supplier approve or reject on the call-off |
+| DRC-8 Feedstock confirmation (BL-194) | Built | MR !6, !13 | Supplier "Current feedstock" panel; PTI line on Inventory; the Incoming DA confirmation is built behind `SUPPLIER_DA_VIEW_ENABLED = false` (BL-204) |
+| DRC-1 Supplier view of DA (BL-204) | Built, switched off | MR !13 | Supplier page of its own published figures; flag `SUPPLIER_DA_VIEW_ENABLED = false` until Material Planning confirms A1, A2, B1 to B4 (DRC-D10) |
+| DRC-9c Protection buffer (BL-205) | Built, proposal | MR !12 | `PROTECTION_BUFFER_RULES.protectionUplift`: CEILING(max(0, LTP − average LTP of the 3 previous months), production MPQ), levels 5 to 7, display only on PTI Capacity; marked Proposed |
+| DRC-15b Feedstock leftover rule (BL-207) | Built, proposal | MR !11 | `FEEDSTOCK_LEFTOVER_RULES.leftoverRule` = `flagLiability`: remainder flagged as liability, not priced, capped at max stock; `showOnly` restores DRC-15a BR-02; marked Proposed |
+| DRC-19 Suggested OSIP level (BL-208) | Built, proposal | MR !10 | `osipLevelSuggestion.js`: suggests a level from CV (stable 4, fluctuative 3) or order-method tags; the planner confirms through `t_osiplevel_set`; JIT not suggested without pallet-mix data; marked Proposed |
+| DRC-17 What-if sandbox (BL-202) | Built | MR !7 | `/buyer/what-if`: one supplier × material, live inputs and rule switches, results against the current plan, 52/24-week projection, named scenarios compared up to 3, PPT 7 preset; analysis only |
+| Every other DRC | Not built | — | — |
 
 ## 2. Build list
 

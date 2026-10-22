@@ -28,7 +28,7 @@ import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
 import { HIGHLIGHTED_ROW_CLASS, useRowHighlight } from '@hooks/useRowHighlight';
-import { formatDate, formatDateTime } from '@lib/format';
+import { formatDate, formatDateTime, formatNumber } from '@lib/format';
 import { useInventory } from '@services/query/hooks';
 /** @import { InventoryPosition, RiskClass } from '@services/data/types' */
 /** @import { MaterialType } from '@services/sdc/types' */
@@ -43,6 +43,7 @@ import {
   useInventoryRunner
 } from './inventory/inventoryDisplay';
 import StockEntryPanel from './inventory/StockEntryPanel';
+import FeedstockLine from './inventory/FeedstockLine';
 import { weeklyUpdateView } from './inventory/WeeklyUpdatePanel';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
 import { TradeNameBeside } from './materials/tradeNameDisplay';
@@ -374,7 +375,15 @@ const BuyerInventory = () => {
             <TableHeaderCell className="text-right">{t('inv.col.supplierSoh')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('inv.col.ptiSoh')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('inv.col.ptiRop')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('inv.col.supplierRop')}</TableHeaderCell>
+            <TableHeaderCell className="text-right">
+              {t('inv.col.supplierRop')}
+              <span
+                className="block text-xs font-normal normal-case text-text-tertiary"
+                data-testid="inv-supplier-rop-display-only"
+              >
+                {t('inv.col.supplierRop.displayOnly')}
+              </span>
+            </TableHeaderCell>
             <TableHeaderCell>{t('inv.col.incoming')}</TableHeaderCell>
             <TableHeaderCell>{t('inv.col.daysOfSupply')}</TableHeaderCell>
             <TableHeaderCell>{t('inv.col.lastUpdate')}</TableHeaderCell>
@@ -427,6 +436,8 @@ const BuyerInventory = () => {
                   </TableCell>
                   <TableCell className="text-right whitespace-nowrap">
                     <Figure value={p.supplierSoh} uom={p.uom} absentKey="inv.figure.noSubmission" />
+                    {/* BL-194 (DRC-8 BR-c) — feedstock, its own line; never added to SOH. */}
+                    <FeedstockLine position={p} />
                   </TableCell>
                   <TableCell className="text-right whitespace-nowrap">
                     <Figure value={p.ptiSoh} uom={p.uom} absentKey="inv.figure.none" />
@@ -436,6 +447,20 @@ const BuyerInventory = () => {
                   </TableCell>
                   <TableCell className="text-right whitespace-nowrap">
                     <Figure value={p.supplierRop} uom={p.uom} absentKey="inv.figure.notProvided" />
+                    {/* DRC-D15 (BL-196) — the system's ROP Supplier, labelled. */}
+                    {p.systemRopSupplier !== undefined && (
+                      <div
+                        className="text-xs text-text-tertiary"
+                        title={t('inv.systemRopSupplier.title')}
+                        data-testid={`inv-system-rop-${p.supplierId}-${p.materialCode}`}
+                      >
+                        {p.systemRopSupplier?.value != null
+                          ? t('inv.systemRopSupplier', {
+                              value: `${formatNumber(p.systemRopSupplier.value)} ${p.uom}`
+                            })
+                          : t('inv.systemRopSupplier.none')}
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell>
                     <IncomingButton position={p} onOpen={() => setIncoming(p)} />

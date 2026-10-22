@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
 import KpiCard from '@components/ui-v2/KpiCard';
@@ -22,6 +23,25 @@ import AboutThisPage from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
 import TermTip from '@components/forecast/TermTip';
 import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
+import { OSIP_RULES } from '@services/transitions/osipRules';
+import { osipSafety } from '@services/transitions/osipSafetyRules';
+import { osipRops } from '@services/transitions/osipRopRules';
+import {
+  CvCell,
+  FisikSafetyCell,
+  OsipColumnTitle,
+  OsipRuleSwitches,
+  SafetyOrderCell,
+  defaultSwitches
+} from './safetyStock/osipSafety';
+import {
+  LevelCell,
+  RopCell,
+  RopColumnTitle,
+  RopDetail,
+  RopRuleSwitches,
+  defaultRopSwitches
+} from './safetyStock/osipRops';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SAFETY STOCK AND REORDER POINT — REQ-E14-04, the Material Planner's view.
@@ -38,6 +58,19 @@ import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages
 //
 // Computed by the forecast engine at read time on its SYNTHETIC dataset, with
 // the administrator's targets in force (the `engineDataset` pill, X-03).
+//
+// BL-193 (DRC-7) / BL-197 (DRC-11): the OSIP figures are the default rule —
+// the safety order (ROP Order) and the ROP Fisik safety per supplier, and the
+// demand CV — and the engine's fill-rate safety stock above stays beside them
+// as the CHALLENGER (REQ-E14-04, kept behind a switch per DRC-D3). The rule
+// switches recompute the OSIP figures at read; nothing is stored.
+//
+// BL-196 (DRC-10, DRC-D11) / BL-198 (DRC-12a): each material's OSIP level and
+// NPD tag, and ROP Order, ROP Fisik and Max per supplier, sit next to the OSIP
+// safety columns; the engine's reorder point stays as the challenger. The
+// supplier-side ROPs and the level control are in the material's detail panel
+// (the table would be too wide). `?material=` opens a material's panel (the
+// Home task "Review ROP after first order" links here).
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @param {number | null} x */
@@ -129,8 +162,8 @@ const ChangeCell = ({ m }) => {
   );
 };
 
-/** @type {React.FC<{ m: MaterialSafetyStockView }>} */
-const HistoryPanel = ({ m }) => {
+/** @type {React.FC<{ m: MaterialSafetyStockView; children?: React.ReactNode }>} */
+const HistoryPanel = ({ m, children }) => {
   const { t } = useTranslation();
   return (
     <section
@@ -201,6 +234,7 @@ const HistoryPanel = ({ m }) => {
           </tbody>
         </Table>
       </div>
+      {children}
     </section>
   );
 };
@@ -212,8 +246,35 @@ const BuyerSafetyStock = () => {
   const crumb = forecastCrumb(t, 'safetyStock');
   const run = query.data ?? null;
   const materials = useMemo(() => run?.materials ?? [], [run]);
-  const [selected, setSelected] = useState(/** @type {string | null} */ (null));
+  // BL-198 — the Home task links here with `?material=`.
+  const [searchParams] = useSearchParams();
+  const [selected, setSelected] = useState(
+    /** @type {string | null} */ (searchParams.get('material'))
+  );
   const current = materials.find((m) => m.materialCode === selected) ?? null;
+  // BL-193 — the switches in effect; the rules variant is passed to the
+  // module's functions, never stored.
+  const [switches, setSwitches] = useState(defaultSwitches);
+  // BL-196 / BL-198 — the Max rule (B8) and NPD rule (D1) switches.
+  const [ropSwitches, setRopSwitches] = useState(defaultRopSwitches);
+  const { osipFigures, ropFigures } = useMemo(() => {
+    const rules = { ...OSIP_RULES, ...switches, maxRule: ropSwitches.maxRule };
+    /** @type {Map<string, import('@services/transitions/osipSafetyRules').OsipSafetyFigures[]>} */
+    const safety = new Map();
+    /** @type {Map<string, import('@services/transitions/osipRopRules').OsipRopFigures[]>} */
+    const rops = new Map();
+    for (const m of materials) {
+      // BL-198 — an NPD material's ROP Fisik demand is the NPD branch.
+      const npd = m.rop.npd[ropSwitches.npdRule].npd;
+      const figs = m.osip.suppliers.map((s) => osipSafety({ ...s, npd }, rules));
+      safety.set(m.materialCode, figs);
+      rops.set(
+        m.materialCode,
+        m.osip.suppliers.map((s, i) => osipRops(s, figs[i], m.rop.level.level, rules))
+      );
+    }
+    return { osipFigures: safety, ropFigures: rops };
+  }, [materials, switches, ropSwitches]);
 
   if (query.isPending) return <LoadingState breadcrumb={crumb} />;
   if (query.isError)
@@ -296,17 +357,55 @@ const BuyerSafetyStock = () => {
         />
       </div>
 
+      <OsipRuleSwitches value={switches} onChange={setSwitches} />
+      <RopRuleSwitches value={ropSwitches} onChange={setRopSwitches} />
+
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto mb-6">
         <Table>
           <TableHeader>
             <TableHeaderCell>{t('sst.col.material')}</TableHeaderCell>
             <TableHeaderCell>{t('sst.col.tier')}</TableHeaderCell>
-            <TableHeaderCell>{t('sst.col.safetyStock')}</TableHeaderCell>
+            <TableHeaderCell>
+              <OsipColumnTitle column="safetyOrder" />
+            </TableHeaderCell>
+            <TableHeaderCell>
+              <OsipColumnTitle column="fisikSafety" />
+            </TableHeaderCell>
+            <TableHeaderCell>
+              <OsipColumnTitle column="cv" />
+            </TableHeaderCell>
+            <TableHeaderCell>
+              <RopColumnTitle column="level" />
+            </TableHeaderCell>
+            <TableHeaderCell>
+              <RopColumnTitle column="ropOrder" />
+            </TableHeaderCell>
+            <TableHeaderCell>
+              <RopColumnTitle column="ropFisik" />
+            </TableHeaderCell>
+            <TableHeaderCell>
+              <RopColumnTitle column="max" />
+            </TableHeaderCell>
+            <TableHeaderCell>
+              {t('sst.col.safetyStock')}
+              <span
+                className="block text-xs font-normal normal-case text-text-tertiary"
+                data-testid="sst-challenger"
+              >
+                {t('sst.osip.challenger')}
+              </span>
+            </TableHeaderCell>
             <TableHeaderCell>{t('sst.col.sap')}</TableHeaderCell>
             <TableHeaderCell>{t('sst.col.freed')}</TableHeaderCell>
             <TableHeaderCell>{t('sst.col.slt')}</TableHeaderCell>
             <TableHeaderCell>
               <TermTip term="Reorder point">{t('sst.col.rop')}</TermTip>
+              <span
+                className="block text-xs font-normal normal-case text-text-tertiary"
+                data-testid="sst-rop-challenger"
+              >
+                {t('sst.rop.challenger')}
+              </span>
             </TableHeaderCell>
             <TableHeaderCell>{t('sst.col.change')}</TableHeaderCell>
             <TableHeaderCell>{t('sst.col.history')}</TableHeaderCell>
@@ -339,6 +438,46 @@ const BuyerSafetyStock = () => {
                     </span>
                   )}
                 </TableCell>
+                <TableCell className="align-top whitespace-nowrap">
+                  <SafetyOrderCell
+                    materialCode={m.materialCode}
+                    uom={m.uom}
+                    osip={m.osip}
+                    figures={osipFigures.get(m.materialCode) ?? []}
+                  />
+                </TableCell>
+                <TableCell className="align-top whitespace-nowrap">
+                  <FisikSafetyCell
+                    materialCode={m.materialCode}
+                    uom={m.uom}
+                    osip={m.osip}
+                    figures={osipFigures.get(m.materialCode) ?? []}
+                    includesLtp={switches.fisikDemandIncludesLtp}
+                  />
+                </TableCell>
+                <TableCell className="align-top whitespace-nowrap">
+                  <CvCell materialCode={m.materialCode} osip={m.osip} />
+                </TableCell>
+                <TableCell className="align-top whitespace-nowrap">
+                  <LevelCell
+                    materialCode={m.materialCode}
+                    rop={m.rop}
+                    npdRule={ropSwitches.npdRule}
+                  />
+                </TableCell>
+                {
+                  /** @type {const} */ (['ropOrder', 'ropFisik', 'max']).map((column) => (
+                    <TableCell key={column} className="align-top whitespace-nowrap">
+                      <RopCell
+                        column={column}
+                        materialCode={m.materialCode}
+                        uom={m.uom}
+                        osip={m.osip}
+                        figures={ropFigures.get(m.materialCode) ?? []}
+                      />
+                    </TableCell>
+                  ))
+                }
                 <TableCell className="align-top">
                   <Data data-testid={`sst-ss-${m.materialCode}`}>
                     {qtyIn(m.safetyStock, m.uom)}
@@ -428,7 +567,16 @@ const BuyerSafetyStock = () => {
       </div>
 
       {current ? (
-        <HistoryPanel m={current} />
+        <HistoryPanel m={current}>
+          <RopDetail
+            materialCode={current.materialCode}
+            uom={current.uom}
+            osip={current.osip}
+            rop={current.rop}
+            figures={ropFigures.get(current.materialCode) ?? []}
+            npdRule={ropSwitches.npdRule}
+          />
+        </HistoryPanel>
       ) : (
         <p className="text-sm text-text-tertiary mb-6">{t('sst.detail.select')}</p>
       )}
@@ -438,6 +586,15 @@ const BuyerSafetyStock = () => {
         data-testid="sst-definitions"
       >
         <h2 className="text-section text-text-primary">{t('sst.def.title')}</h2>
+        <p data-testid="sst-osip-def-safety-order">{t('sst.osip.def.safetyOrder')}</p>
+        <p data-testid="sst-osip-def-fisik">{t('sst.osip.def.fisik')}</p>
+        <p data-testid="sst-osip-def-cv">{t('sst.osip.def.cv')}</p>
+        <p data-testid="sst-osip-def-challenger">{t('sst.osip.def.challenger')}</p>
+        <p data-testid="sst-rop-def-level">{t('sst.rop.def.level')}</p>
+        <p data-testid="sst-rop-def-rops">{t('sst.rop.def.rops')}</p>
+        <p data-testid="sst-rop-def-max">{t('sst.rop.def.max')}</p>
+        <p data-testid="sst-rop-def-supplier">{t('sst.rop.def.supplier')}</p>
+        <p data-testid="sst-rop-def-npd">{t('sst.rop.def.npd')}</p>
         <p>{t('sst.def.errors')}</p>
         <p>{t('sst.def.fillRate')}</p>
         <p>{t('sst.def.fallback')}</p>

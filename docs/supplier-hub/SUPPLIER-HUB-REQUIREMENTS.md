@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.30 draft, 2026-09-29 |
+| Version | 0.31 draft, 2026-10-19 |
 | Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17); owner RFx decisions RFX-D1 to RFX-D5 (2026-09-21); owner RFx decisions RFX-D6 to RFX-D14 (2026-09-25), from `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md`; owner RFx decision RFX-D15 (2026-09-28); RFx best-practice research, `research/RFX-BEST-PRACTICE-2026-09.md` (2026-09-21); owner decision ENG-1 (2026-09-23) with the forecast research `research/FORECAST-BEST-PRACTICE-2026-09.md` and `research/FORECAST-METHOD-SPEC.md`; owner material decisions MAT-D1 to MAT-D15 (2026-09-29), from `SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md`, and the owner's rulings during the material build MAT-D16 to MAT-D21 (2026-09-29), from section 4.1 of `SC-HUB-MATERIAL-BUILD-PLAN-2026-09.md` |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
@@ -227,7 +227,7 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 |---|---|---|---|
 | Home | My tasks | All | Section 3.8 |
 | Order collaboration | Order summary; Purchase orders; Shipments & ASN; Goods receipts | MP | REQ-E07-01 to REQ-E07-06 |
-| Forecast | Forecasts; Commitments & gaps; Fixed stock reconcile | MP | REQ-E06-01 to REQ-E06-04 |
+| Forecast | Forecasts; Commitments & gaps; Fixed stock reconcile (to become Feedstock reconcile, DRC-D14) | MP | REQ-E06-01 to REQ-E06-04 |
 | Inventory & capacity | Inventory; Capacity; Alerts; Supplier access | MP | REQ-E08-01 to REQ-E08-05 |
 | Call-offs | Recommendations; Call-offs | MP | REQ-E09-01 to REQ-E09-04 |
 | Sourcing | RFI; RFQ (quotation requests); RFP; Suppliers | BUY | REQ-E03-01 to REQ-E03-05; Foundation |
@@ -280,7 +280,7 @@ The menu follows the hub's own sections, not procurement stages, and each PTI us
 | REQ-E06-01 | Forecast publication | E06 | MVP | Validated (owner, E06-R) |
 | REQ-E06-02 | Foresight / fixed-stock confirmation | E06 | MVP | Validated (owner, E06-R) |
 | REQ-E06-03 | Forecast-commit gap monitoring | E06 | MVP | Validated (owner, E06-R) |
-| REQ-E06-04 | Fixed stock (FS) reconcile | E06 | MVP | Validated (team 2026-09-28, ENG-D21; owner 2026-09-29) |
+| REQ-E06-04 | Fixed stock (FS) reconcile; superseded 2026-10-19 by DRC-15a (feedstock reconcile) | E06 | MVP | Validated (team 2026-09-28, ENG-D21; owner 2026-09-29); superseded, rework BL-201 |
 | REQ-E07-01 | PO visibility with quantity and timing breakdown | E07 | MVP | Validated |
 | REQ-E07-02 | PO response: approve, adjust, reject, escalate | E07 | MVP | Validated |
 | REQ-E07-03 | Order Collaboration Summary | E07 | MVP | Validated (drill-through and lifecycle columns, 2026-09-19) |
@@ -1214,6 +1214,8 @@ Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
 
 #### REQ-E08-02  Supplier stock submission
 
+> **Amended 2026-10-19 (DRC-D15).** Every ROP, the supplier ROP included, is calculated by the system [Owner, 2026-10-16, B10]. The supplier ROP column in BR-06 becomes display only once BL-196 is built (`SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-10).
+
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
 | E08.01, E12.01; MN-INV-07 | MVP | P0 [Deck p.7] | Material Planner | SUP, MP, ADM | Validated |
@@ -1386,6 +1388,8 @@ Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
 **Open items.** PQ-02 (horizon and bucket size). Recommended default: weekly buckets for 13 weeks [Proposed].
 
 #### REQ-E08-05  Inventory and capacity alerts
+
+> **Amended 2026-10-19 (DRC-D20).** "Supplier stock below supplier ROP" compares supplier stock with the system-calculated ROP Supplier (`SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-10), not the ROP the supplier types, which is display only (DRC-D15). Where the system figure is not available, the alert does not fire.
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
@@ -1720,6 +1724,8 @@ The owner confirmed the recommendations for this section on 2026-09-17 (E06-R). 
 
 #### REQ-E06-04  Fixed stock (FS) reconcile
 
+> **Superseded 2026-10-19 (DRC-D14).** FS means feedstock, not fixed stock [Owner, 2026-10-16]. The page is renamed "Feedstock reconcile" and compares, per supplier × material, the POs ordered with the call-offs and ASNs requested, daily (DRC-15a in `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md`). BL-201 is built (GitLab MR !4, 2026-10-19), so the outcomes and settlement below are retired; they are kept here as the record of the 2026-09-29 rules. The leftover rule is on hold (DRC-15b, BL-207).
+
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
 | E06.02; ENG-D21; BL-134 | MVP | P1 [Proposed] | Material Planner | MP, SUP, BUY | Validated (reconcile decided by the team 2026-09-28, ENG-D21; rules decided by the owner 2026-09-29) |
@@ -1798,6 +1804,8 @@ All requirements in this section are **Proposed**, written from market practice 
 
 #### REQ-E09-01  Replenishment recommendation from the forecast engine
 
+> **Amended 2026-10-19.** ROP Order and ROP Fisik follow the OSIP formulas by level (`SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-7, DRC-10); the engine's fill-rate safety stock (REQ-E14-04) stays as a challenger behind a switch. A call-off is drafted when SOH reaches ROP Fisik and released only on planner approval; with no umbrella PO balance left the hub recommends a PR in SAP (DRC-13, BL-199).
+
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
 | E09.01; ENG-1 | MVP | P0 [Proposed] | Material Planner | MP | Proposed (source decided, ENG-1) |
@@ -1870,6 +1878,8 @@ All requirements in this section are **Proposed**, written from market practice 
 **Open items.** PQ-09 (confirm this is needed in MVP; lowest-confidence requirement in this file).
 
 #### REQ-E09-03  Call-off release and supplier confirmation
+
+> **Amended 2026-10-19.** A call-off delayed because LTP dropped needs supplier approval, and demand anticipation is adjusted (`SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-5, BL-191). Max stock caps call-offs only (DRC-13 BR-03).
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
@@ -2254,3 +2264,4 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | 0.29 | 2026-09-29 | SC Hub Material build folded in as built (PRs #84 to #93, #97, #101 to #110). Owner decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 recorded (section 9). MR-1, MR-4 and MR-2 BR-01 to BR-05 are REQ-E08-02 BR-12 to BR-27 (BR-06 amended, edge case on a failed sync superseded); MR-2 BR-06, BR-07 are REQ-E03-05 BR-18, BR-19; MR-6 is REQ-E07-04 BR-06 to BR-18 (BR-04 amended); MR-8 is REQ-E08-04 BR-13 to BR-19; MR-9 is REQ-E08-05 BR-06 to BR-12; MR-10 is CE-12a to CE-12j, cited by REQ-E03-02 BR-19, REQ-E03-03 BR-26, REQ-E03-04 BR-17 and REQ-E03-05 BR-20. New REQ-E08-06 (MR-3), REQ-E08-07 (MR-5) and REQ-E08-08 (MR-7). Corrected against the requirements file: the atom `asn:approve-shelf-life` (plan AR-02), the update-mode verb held by `compliance` rather than the Hub administrator only (AR-04), the 180-day document window (AR-18), and the score weight moving grade and band only (AR-09). Open items MAT-D15, MR-1 BR-07 and MR-9 BR-07. Map in `SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md` |
 | 0.28 | 2026-09-29 | REQ-E08-04 BR-08 to BR-12 and REQ-E06-02 BR-11 to BR-13: capacity before the LTP, two-level check against capacity and BE, one Submit all per week, the LTP as the only capacity demand figure, "Additional capacity" (BL-133, PR #80). New REQ-E06-04 Fixed stock reconcile, Validated (BL-134, PR #79) |
 | 0.30 | 2026-09-29 | Forecast engine: REQ-E14-09 demand range, REQ-E14-10 model backtest and REQ-E14-11 forecast bias and planner overrides built on synthetic data (PRs #100, #96, #98); build decisions accepted (`FORECAST-ENGINE-REQUIREMENTS.md` 0.15) |
+| 0.31 | 2026-10-19 | Weekly SC Hub 2026-10-14 (DA, ROP and call-off) accepted as `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` (DRC-1 to DRC-19, DRC-D1 to DRC-D16, BL-187 to BL-209). REQ-E06-04 superseded by DRC-15a; notes on REQ-E08-02, REQ-E09-01 and REQ-E09-03 |

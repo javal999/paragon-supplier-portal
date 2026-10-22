@@ -26,6 +26,7 @@
 
 /** @import { ForecastStream, MaterialType } from '../sdc/types' */
 import { hubSetting } from './hubSettingsStore';
+import { addDays, daysBetween } from '../engine/dates';
 
 /**
  * REQ-E06-01 BR-02 — packaging is published weekly, raw material monthly.
@@ -120,9 +121,12 @@ export function zoneLengthsFor(supplierId, materialGroup, materialType) {
   };
 }
 
-// ── Fixed stock (FS) reconcile — REQ-E06-04 (ENG-D21) ────────────────────────
+// ── Fixed stock (FS) reconcile cycle — REQ-E06-04 (ENG-D21) — DORMANT ────────
 // The cycle LENGTH is the administrator's (owner, 2026-09-29; accessor below);
 // the Monday it is counted from stays fixed here.
+// DRC-15a [DRC-D14]: the reconcile is now the daily FEEDSTOCK reconcile and no
+// longer reads a cycle. The setting, its anchor and `cycleOfDay` are kept, unread
+// by any page, until the owner rules on removing them (BL-201 report).
 
 /**
  * REQ-E06-04 BR-01 [Proposed] — the Monday packaging cycles are counted from:
@@ -130,6 +134,38 @@ export function zoneLengthsFor(supplierId, materialGroup, materialType) {
  * W1 to W3 from it, back to back.
  */
 export const FS_RECONCILE_CYCLE_ANCHOR = '2026-08-31';
+
+/**
+ * `anchor`:  A Monday; packaging cycles run in blocks of `cycleWeeks` from it.
+ *
+ * @typedef {{
+ *   readonly anchor: string;
+ *   readonly cycleWeeks: number;
+ * }} FsCycleConfig
+ */
+
+/**
+ * REQ-E06-04 BR-01 (dormant since DRC-15a) — the cycle a day belongs to.
+ * Packaging: blocks of `cycleWeeks` weeks from the anchor Monday. Raw
+ * material: the calendar month. Moved here from the old reconcile module so
+ * the dormant setting keeps the one rule it decides (BL-32 flip test).
+ * @param {ForecastStream} stream
+ * @param {string} day
+ * @param {FsCycleConfig} cfg
+ * @returns {{ readonly stream: ForecastStream; readonly start: string; readonly end: string }}
+ */
+export function cycleOfDay(stream, day, cfg) {
+  if (stream === 'rawMaterial') {
+    const start = `${day.slice(0, 7)}-01`;
+    const [y, m] = [Number(day.slice(0, 4)), Number(day.slice(5, 7))];
+    const end = new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
+    return { stream, start, end };
+  }
+  const len = cfg.cycleWeeks * 7;
+  const idx = Math.floor(daysBetween(cfg.anchor, day) / len);
+  const start = addDays(cfg.anchor, idx * len);
+  return { stream, start, end: addDays(start, len - 1) };
+}
 
 // ── The administrator's values (BL-32) ───────────────────────────────────────
 // CR-21, CR-22 and CR-26 have their defaults in `hubSettings.js` and are changed
@@ -228,7 +264,8 @@ export function rescheduleOutThresholdWeeks() {
 /**
  * REQ-E06-04 BR-01 — whole weeks in a packaging fixed stock reconcile cycle
  * (3 by default: "FS Reconcile end W3"). Raw material reconciles per month
- * regardless. In force now; the pure rule takes it as an argument.
+ * regardless. DORMANT since DRC-15a: the daily feedstock reconcile reads no
+ * cycle, so no page or read model calls this; kept for the owner's ruling.
  * @returns {number}
  */
 export function fsReconcileCycleWeeks() {

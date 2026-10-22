@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { screen, within, fireEvent, waitFor } from '@testing-library/react';
 import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
 import { BuyerFixedStockReconcile, SupplierFixedStockReconcile } from './FixedStockReconcile';
-import { fixedStockReconcileEn, fixedStockReconcileId } from '@lib/i18n/fixedStockReconcile';
+import { feedstockReconcileEn, feedstockReconcileId } from '@lib/i18n/feedstockReconcile';
 import i18n from '@lib/i18n';
 import { formatNumber } from '@lib/format';
 import { maxStockStore } from '@services/transitions/maxStock';
@@ -11,13 +11,14 @@ import { maxStockStore } from '@services/transitions/maxStock';
 const pcs = (n) => `${formatNumber(n)} PCS`;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// REQ-E06-04 (BL-134) — the planner's Fixed stock reconcile page and the
-// supplier's own view, on the sample data (hub clock 2026-08-31).
+// DRC-15a (BL-201) — the planner's Feedstock reconcile page and the supplier's
+// own view, on the sample data (hub clock 2026-08-31).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const K8801 = 'packaging|2026-08-31|sup-007|PK-PETB-8801';
-const K8802 = 'packaging|2026-08-31|sup-007|PK-PETB-8802';
-const KAUG = 'packaging|2026-08-10|sup-007|PK-PETB-8801';
+const K8801 = 'sup-007|PK-PETB-8801';
+const K8802 = 'sup-007|PK-PETB-8802';
+// A pair the hub does not assign: the max stock verb cannot address it.
+const KUNASSIGNED = 'sup-020|PK-PETB-8801';
 
 beforeEach(() => {
   maxStockStore.reset();
@@ -27,78 +28,81 @@ afterEach(() => {
   void i18n.changeLanguage('en');
 });
 
-describe('Fixed stock reconcile — planner', () => {
-  it('renders in the shell, marked sample data, with the outcome counts', async () => {
+describe('Feedstock reconcile — planner', () => {
+  it('renders in the shell under its new name, marked sample data', async () => {
     renderWithProviders(<BuyerFixedStockReconcile />, {
       identity: BUYER,
       route: '/buyer/fs-reconcile'
     });
-    // FUX A4: the planner's title is the menu label, and the one banner marks the sample data.
-    expect(
-      await screen.findByRole('heading', { name: 'End-of-cycle stock check' })
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Feedstock reconcile' })).toBeInTheDocument();
     expect(screen.getAllByRole('navigation').length).toBeGreaterThan(0);
     expect(screen.getByTestId('simulated-data-banner')).toHaveTextContent(
       'Sample data. Nothing here reaches suppliers or SAP.'
     );
-    expect(screen.queryByTestId('sample-data-badge')).toBeNull();
     await screen.findByTestId(`fsr-row-${K8801}`);
-    expect(screen.getByTestId('fsr-count-underCalled')).toHaveTextContent('1');
-    expect(screen.getByTestId('fsr-count-notCommitted')).toHaveTextContent('1');
-    expect(screen.getByTestId('fsr-count-balanced')).toHaveTextContent('1');
-    expect(screen.getByTestId('fsr-count-supplierShort')).toHaveTextContent('0');
+    expect(screen.getByRole('columnheader', { name: 'Supplier' })).toBeInTheDocument();
   });
 
-  it('shows committed, called off, held, no max stock, and the liability flagged not priced', async () => {
+  it('BR-01: PO ordered, called off, ASN requested and the two remainders', async () => {
     renderWithProviders(<BuyerFixedStockReconcile />, {
       identity: BUYER,
       route: '/buyer/fs-reconcile'
     });
     const row = await screen.findByTestId(`fsr-row-${K8801}`);
     expect(within(row).getByText('PT Sample Packaging Indonesia')).toBeInTheDocument();
-    expect(screen.getByTestId(`fsr-committed-${K8801}`)).toHaveTextContent(pcs(99_600));
-    expect(screen.getByTestId(`fsr-called-${K8801}`)).toHaveTextContent(pcs(45_100));
-    expect(screen.getByTestId(`fsr-uncalled-${K8801}`)).toHaveTextContent(pcs(54_500));
-    expect(screen.getByTestId(`fsr-awaiting-supplier-${K8801}`)).toHaveTextContent(
-      '1 call-off awaiting the supplier — not counted'
-    );
-    expect(screen.getByTestId(`fsr-awaiting-pti-${K8801}`)).toHaveTextContent(
-      '3 counter-offers awaiting PTI — not counted'
-    );
-    expect(screen.getByTestId(`fsr-held-${K8801}`)).toHaveTextContent(pcs(85_000));
+    expect(screen.getByTestId(`fsr-po-${K8801}`)).toHaveTextContent(pcs(470_000));
+    expect(row).toHaveTextContent('on 5 POs');
+    expect(screen.getByTestId(`fsr-called-${K8801}`)).toHaveTextContent(pcs(208_000));
+    expect(row).toHaveTextContent('on 10 call-offs');
+    expect(screen.getByTestId(`fsr-asn-${K8801}`)).toHaveTextContent(pcs(0));
+    expect(screen.getByTestId(`fsr-uncalled-${K8801}`)).toHaveTextContent(pcs(262_000));
+    expect(screen.getByTestId(`fsr-unshipped-${K8801}`)).toHaveTextContent(pcs(208_000));
+    expect(screen.queryByTestId(`fsr-beyond-${K8801}`)).toBeNull();
     expect(screen.getByTestId(`fsr-max-${K8801}`)).toHaveTextContent('No max stock agreed');
-    expect(screen.getByTestId(`fsr-outcome-${K8801}`)).toHaveTextContent('PTI under-called');
+  });
+
+  it('BR-02: no outcome or summary; DRC-15b [Proposed BL-207] flags the liability by default', async () => {
+    renderWithProviders(<BuyerFixedStockReconcile />, {
+      identity: BUYER,
+      route: '/buyer/fs-reconcile'
+    });
+    await screen.findByTestId(`fsr-row-${K8801}`);
+    expect(screen.queryByText(/under-called|Supplier short|Balanced/)).toBeNull();
+    expect(screen.queryByTestId('fsr-summary')).toBeNull();
+    // No max stock on the pair: the liability is the full remainder (262,000).
     expect(screen.getByTestId(`fsr-liability-${K8801}`)).toHaveTextContent(
-      `Liability — not priced: ${pcs(54_500)}`
+      `Liability, not priced: ${pcs(262_000)}`
     );
-    expect(screen.getByTestId(`fsr-state-${K8801}`)).toHaveTextContent('Provisional');
+    expect(screen.getByTestId(`fsr-liability-nomax-${K8801}`)).toHaveTextContent(
+      'No max stock agreed'
+    );
+    expect(screen.getByTestId(`fsr-proposed-${K8801}`)).toHaveTextContent(
+      'Proposed: awaiting owner review (BL-207)'
+    );
+    expect(screen.queryByTestId(`fsr-carried-${K8801}`)).toBeNull();
+    const noteEl = screen.getByTestId('fsr-remainder-note');
+    expect(noteEl).toHaveAttribute('data-leftover-rule', 'flagLiability');
+    expect(noteEl).toHaveTextContent('Proposed leftover rule (DRC-15b), switch “flag liability”');
+    expect(noteEl).toHaveTextContent('Proposed: awaiting owner review (BL-207)');
   });
 
-  it('PTI calling off stock the supplier never committed reads Not committed, with no liability', async () => {
+  it('DRC-15b [Proposed BL-207]: a max stock below the remainder caps the liability', async () => {
     renderWithProviders(<BuyerFixedStockReconcile />, {
       identity: BUYER,
       route: '/buyer/fs-reconcile'
     });
-    await screen.findByTestId(`fsr-row-${KAUG}`);
-    expect(screen.getByTestId(`fsr-outcome-${KAUG}`)).toHaveTextContent('Not committed');
-    expect(screen.queryByTestId(`fsr-liability-${KAUG}`)).toBeNull();
-    expect(screen.getByTestId(`fsr-state-${KAUG}`)).toHaveTextContent('Final');
-  });
-
-  it('not called off never shows a negative number: 0, with the called-beyond note', async () => {
-    renderWithProviders(<BuyerFixedStockReconcile />, {
-      identity: BUYER,
-      route: '/buyer/fs-reconcile'
-    });
-    await screen.findByTestId(`fsr-row-${K8802}`);
-    expect(screen.getByTestId(`fsr-uncalled-${K8802}`)).toHaveTextContent(pcs(0));
-    expect(screen.getByTestId(`fsr-uncalled-${K8802}`).textContent).not.toContain('-');
-    expect(screen.getByTestId(`fsr-beyond-${K8802}`)).toHaveTextContent(
-      `Called off beyond commitment: ${pcs(20_500)}`
+    fireEvent.click(await screen.findByTestId(`fsr-max-edit-${K8801}`));
+    fireEvent.change(screen.getByTestId('fsr-max-input'), { target: { value: '50000' } });
+    fireEvent.click(screen.getByTestId('fsr-max-save'));
+    await waitFor(() =>
+      expect(screen.getByTestId(`fsr-liability-${K8801}`)).toHaveTextContent(
+        `Liability, not priced: ${pcs(50_000)}`
+      )
     );
+    expect(screen.queryByTestId(`fsr-liability-nomax-${K8801}`)).toBeNull();
   });
 
-  it('a seat holding maxstock:set sets the max stock from the row, and the row reads it', async () => {
+  it('BR-03: a seat holding maxstock:set sets the max stock from the row, and the row reads it', async () => {
     renderWithProviders(<BuyerFixedStockReconcile />, {
       identity: BUYER,
       route: '/buyer/fs-reconcile'
@@ -112,17 +116,12 @@ describe('Fixed stock reconcile — planner', () => {
     await waitFor(() =>
       expect(screen.getByTestId(`fsr-max-${K8801}`)).toHaveTextContent(`Max: ${pcs(50_000)}`)
     );
-    // The liability is capped at the max; 35,000 above it is the supplier's own.
-    expect(screen.getByTestId(`fsr-liability-${K8801}`)).toHaveTextContent(
-      `Liability — not priced: ${pcs(50_000)}`
-    );
-    expect(screen.getByTestId(`fsr-row-${K8801}`)).toHaveTextContent(
-      `Above max stock (supplier’s own): ${pcs(35_000)}`
-    );
+    // It caps nothing: the remainders are unchanged.
+    expect(screen.getByTestId(`fsr-uncalled-${K8801}`)).toHaveTextContent(pcs(262_000));
     expect(maxStockStore.get('sup-007', 'PK-PETB-8801')?.quantity).toBe(50_000);
   });
 
-  it('a planner-only seat sees whose act it is, never the control', async () => {
+  it('BR-03: a planner-only seat sees whose act it is, never the control', async () => {
     renderWithProviders(<BuyerFixedStockReconcile />, {
       identity: { ...BUYER, businessRoles: ['planning'] },
       route: '/buyer/fs-reconcile'
@@ -135,53 +134,69 @@ describe('Fixed stock reconcile — planner', () => {
     );
   });
 
-  it('a summary tile filters the list to its outcome, and again clears it', async () => {
+  it('BR-03: a pair the hub does not assign offers no max stock control and says why', async () => {
     renderWithProviders(<BuyerFixedStockReconcile />, {
       identity: BUYER,
       route: '/buyer/fs-reconcile'
     });
-    await screen.findByTestId(`fsr-row-${K8801}`);
-    fireEvent.click(screen.getByTestId('fsr-count-underCalled'));
-    expect(screen.queryByTestId(`fsr-row-${K8802}`)).toBeNull();
-    expect(screen.getByTestId(`fsr-row-${K8801}`)).toBeInTheDocument();
-    fireEvent.click(screen.getByTestId('fsr-count-supplierShort'));
-    expect(screen.getByTestId('fsr-empty')).toBeInTheDocument();
-    fireEvent.click(screen.getByTestId('fsr-count-supplierShort'));
-    expect(screen.getByTestId(`fsr-row-${K8802}`)).toBeInTheDocument();
+    await screen.findByTestId(`fsr-row-${KUNASSIGNED}`);
+    expect(screen.queryByTestId(`fsr-max-edit-${KUNASSIGNED}`)).toBeNull();
+    expect(screen.getByTestId(`fsr-max-unassigned-${KUNASSIGNED}`)).toHaveTextContent(
+      'Not an assigned material, so no max stock can be set'
+    );
   });
 });
 
-describe('Fixed stock reconcile — supplier', () => {
-  it('shows its own rows without a supplier column', async () => {
+describe('Feedstock reconcile — supplier', () => {
+  it('BR-04: shows its own rows only, without a supplier column, read-only', async () => {
     renderWithProviders(<SupplierFixedStockReconcile />, {
       identity: SUPPLIER,
       route: '/supplier/fs-reconcile'
     });
     await screen.findByTestId(`fsr-row-${K8801}`);
+    expect(screen.getByTestId(`fsr-row-${K8802}`)).toBeInTheDocument();
+    expect(screen.queryByTestId(`fsr-row-${KUNASSIGNED}`)).toBeNull();
     expect(screen.queryByRole('columnheader', { name: 'Supplier' })).toBeNull();
-    expect(screen.getByTestId(`fsr-outcome-${K8802}`)).toHaveTextContent('Balanced');
+    expect(screen.getByTestId(`fsr-po-${K8802}`)).toHaveTextContent(pcs(320_000));
     // Read-only: no edit and no handoff notice on the supplier's own view.
     expect(screen.queryByTestId(`fsr-max-edit-${K8801}`)).toBeNull();
     expect(screen.queryByTestId(`handoff-maxstock-${K8801}`)).toBeNull();
-    // FUX A4 touches the planner's view only: the supplier keeps its own title
-    // and sample-data marker, and gets no planner purpose header or banner.
-    expect(screen.getByRole('heading', { name: 'Fixed stock reconcile' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Feedstock reconcile' })).toBeInTheDocument();
     expect(screen.getByTestId('sample-data-badge')).toBeInTheDocument();
     expect(screen.queryByTestId('purpose-header')).toBeNull();
-    expect(screen.queryByTestId('simulated-data-banner')).toBeNull();
+    expect(screen.getByTestId('fsr-remainder-note')).toBeInTheDocument();
+    // DRC-15b [Proposed BL-207] — the supplier sees the flag on its own rows too.
+    expect(screen.getByTestId(`fsr-liability-${K8801}`)).toHaveTextContent(
+      `Liability, not priced: ${pcs(262_000)}`
+    );
+    expect(screen.getByTestId(`fsr-proposed-${K8801}`)).toBeInTheDocument();
+    expect(screen.queryByTestId(`fsr-liability-${KUNASSIGNED}`)).toBeNull();
   });
 
-  it('reads in Indonesian', async () => {
+  it('BR-05: reads in Indonesian', async () => {
     await i18n.changeLanguage('id');
     renderWithProviders(<SupplierFixedStockReconcile />, {
       identity: SUPPLIER,
       route: '/supplier/fs-reconcile'
     });
     expect(
-      await screen.findByRole('heading', { name: 'Rekonsiliasi stok tetap' })
+      await screen.findByRole('heading', { name: 'Rekonsiliasi feedstock' })
     ).toBeInTheDocument();
-    expect(await screen.findByTestId(`fsr-outcome-${K8801}`)).toHaveTextContent(
-      'PTI kurang call-off'
+    expect(
+      await screen.findByRole('columnheader', { name: 'Belum di-call-off' })
+    ).toBeInTheDocument();
+    // DRC-15b [Proposed BL-207] in Indonesian.
+    expect(await screen.findByTestId(`fsr-liability-${K8801}`)).toHaveTextContent(
+      'Liabilitas, tanpa harga:'
+    );
+    expect(screen.getByTestId(`fsr-liability-nomax-${K8801}`)).toHaveTextContent(
+      'Belum ada stok maksimum yang disepakati'
+    );
+    expect(screen.getByTestId(`fsr-proposed-${K8801}`)).toHaveTextContent(
+      'Usulan: menunggu tinjauan pemilik (BL-207)'
+    );
+    expect(screen.getByTestId('fsr-remainder-note')).toHaveTextContent(
+      'Usulan aturan sisa (DRC-15b), pilihan “tandai liabilitas”'
     );
   });
 });
@@ -191,6 +206,6 @@ describe('strings', () => {
     /** @param {Record<string, string>} o */
     const base = (o) =>
       [...new Set(Object.keys(o).map((k) => k.replace(/_(one|other)$/, '')))].sort();
-    expect(base(fixedStockReconcileId)).toEqual(base(fixedStockReconcileEn));
+    expect(base(feedstockReconcileId)).toEqual(base(feedstockReconcileEn));
   });
 });

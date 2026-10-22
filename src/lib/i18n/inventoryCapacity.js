@@ -27,6 +27,12 @@ export const inventoryCapacityEn = {
   'inv.col.ptiSoh': 'PTI stock',
   'inv.col.ptiRop': 'PTI reorder point',
   'inv.col.supplierRop': 'Supplier reorder point',
+  // DRC-D15 (BL-196) — the supplier's figure is display only; the system's sits beside it.
+  'inv.col.supplierRop.displayOnly': 'Supplier’s figure, display only · system ROP Supplier below',
+  'inv.systemRopSupplier': 'System: {{value}}',
+  'inv.systemRopSupplier.none': 'System: no figure (an input is missing)',
+  'inv.systemRopSupplier.title':
+    'System ROP Supplier (OSIP). Provisional: rule awaiting Material Planning (B10, MPQ)',
   'inv.col.yourRop': 'Your reorder point',
   'inv.col.incoming': 'Incoming',
   'inv.col.daysOfSupply': 'Days of supply',
@@ -380,7 +386,8 @@ export const inventoryCapacityEn = {
   'inv.alerts.emptyClosed': 'No closed alerts.',
   'inv.alerts.count': 'Alerts: {{count}}',
   'inv.alerts.rule.ptiBelowRop': 'PTI stock is below the PTI reorder point',
-  'inv.alerts.rule.supplierBelowRop': 'Supplier stock is below the supplier reorder point',
+  'inv.alerts.rule.supplierBelowRop':
+    'Supplier stock is below the system-calculated supplier reorder point (ROP Supplier)',
   'inv.alerts.rule.projectedStockOut': 'PTI stock runs out before the next incoming delivery',
   'inv.alerts.rule.capacityBelowDemand': 'Allocated capacity is below the LTP',
   'inv.alerts.rule.staleData': 'Supplier stock figures are out of date',
@@ -395,7 +402,7 @@ export const inventoryCapacityEn = {
   'inv.alerts.rule.blanketPoRunOut':
     'A blanket PO runs out soon: raise the next PO by its "new PO needed by" week',
   'inv.alerts.rule.demandAnticipationUnabsorbed':
-    'Consumption below demand anticipation left an excess the next horizon cannot absorb',
+    'Supply above demand anticipation is more than the last week of the horizon can absorb',
   'inv.alerts.openInventory': 'Open inventory',
   'inv.alerts.openCapacity': 'Open capacity',
   'inv.alerts.openCommitments': 'Open commitments & gaps',
@@ -418,7 +425,8 @@ export const inventoryCapacityEn = {
   'inv.alerts.closedAt': 'Closed',
   'inv.alerts.toast.closed': 'Alert closed',
   'inv.alerts.sup.title': 'Alerts about your materials',
-  'inv.alerts.sup.rule.supplierBelowRop': 'Your stock is below your reorder point',
+  'inv.alerts.sup.rule.supplierBelowRop':
+    'Your stock is below the reorder point PTI’s system calculated for you (ROP Supplier)',
   'inv.alerts.sup.rule.staleData': 'Your stock figures are out of date',
   'inv.alerts.sup.rule.capacityBelowDemand': 'Your allocated capacity is below PTI’s LTP',
   'inv.alerts.sup.rule.coverage':
@@ -434,7 +442,7 @@ export const inventoryCapacityEn = {
     'You marked this material Discontinued: PTI is finding another source',
   'inv.alerts.sup.rule.blanketPoRunOut': 'A PTI blanket PO with you runs out soon',
   'inv.alerts.sup.rule.demandAnticipationUnabsorbed':
-    'PTI’s demand anticipation for you carries an excess the next horizon cannot absorb',
+    'PTI’s supply for you is more than the last week of the demand anticipation horizon can absorb',
 
   'inv.group.MG-01': 'Surfactants and cleansing actives',
   'inv.group.MG-02': 'Emollients, oils and esters',
@@ -498,6 +506,12 @@ export const inventoryCapacityId = {
   'inv.col.ptiSoh': 'Stok PTI',
   'inv.col.ptiRop': 'Titik pemesanan ulang PTI',
   'inv.col.supplierRop': 'Titik pemesanan ulang pemasok',
+  'inv.col.supplierRop.displayOnly':
+    'Angka pemasok, hanya tampilan · ROP Pemasok sistem di bawahnya',
+  'inv.systemRopSupplier': 'Sistem: {{value}}',
+  'inv.systemRopSupplier.none': 'Sistem: tidak ada angka (input kurang)',
+  'inv.systemRopSupplier.title':
+    'ROP Pemasok sistem (OSIP). Sementara: aturan menunggu Material Planning (B10, MPQ)',
   'inv.col.yourRop': 'Titik pemesanan ulang Anda',
   'inv.col.incoming': 'Akan datang',
   'inv.col.daysOfSupply': 'Hari persediaan',
@@ -848,7 +862,8 @@ export const inventoryCapacityId = {
   'inv.alerts.emptyClosed': 'Tidak ada peringatan yang ditutup.',
   'inv.alerts.count': 'Peringatan: {{count}}',
   'inv.alerts.rule.ptiBelowRop': 'Stok PTI di bawah titik pemesanan ulang PTI',
-  'inv.alerts.rule.supplierBelowRop': 'Stok pemasok di bawah titik pemesanan ulang pemasok',
+  'inv.alerts.rule.supplierBelowRop':
+    'Stok pemasok di bawah titik pemesanan ulang pemasok hasil hitung sistem (ROP Pemasok)',
   'inv.alerts.rule.projectedStockOut': 'Stok PTI habis sebelum kedatangan berikutnya',
   'inv.alerts.rule.capacityBelowDemand': 'Kapasitas yang dialokasikan di bawah LTP',
   'inv.alerts.rule.staleData': 'Angka stok pemasok kedaluwarsa',
@@ -865,7 +880,7 @@ export const inventoryCapacityId = {
   'inv.alerts.rule.blanketPoRunOut':
     'PO induk akan segera habis: buat PO berikutnya sebelum minggu "PO baru diperlukan paling lambat"',
   'inv.alerts.rule.demandAnticipationUnabsorbed':
-    'Pemakaian di bawah antisipasi permintaan menyisakan kelebihan yang tidak dapat diserap horizon berikutnya',
+    'Pasokan di atas antisipasi permintaan melebihi yang dapat diserap minggu terakhir horizon',
   'inv.alerts.openInventory': 'Buka stok',
   'inv.alerts.openCapacity': 'Buka kapasitas',
   'inv.alerts.openCommitments': 'Buka komitmen & selisih',
@@ -889,7 +904,8 @@ export const inventoryCapacityId = {
   'inv.alerts.closedAt': 'Ditutup',
   'inv.alerts.toast.closed': 'Peringatan ditutup',
   'inv.alerts.sup.title': 'Peringatan tentang material Anda',
-  'inv.alerts.sup.rule.supplierBelowRop': 'Stok Anda di bawah titik pemesanan ulang Anda',
+  'inv.alerts.sup.rule.supplierBelowRop':
+    'Stok Anda di bawah titik pemesanan ulang yang dihitung sistem PTI untuk Anda (ROP Pemasok)',
   'inv.alerts.sup.rule.staleData': 'Angka stok Anda kedaluwarsa',
   'inv.alerts.sup.rule.capacityBelowDemand': 'Kapasitas yang Anda alokasikan di bawah LTP PTI',
   'inv.alerts.sup.rule.coverage':
@@ -905,7 +921,7 @@ export const inventoryCapacityId = {
     'Anda menandai material ini Dihentikan: PTI sedang mencari sumber lain',
   'inv.alerts.sup.rule.blanketPoRunOut': 'PO induk PTI dengan Anda akan segera habis',
   'inv.alerts.sup.rule.demandAnticipationUnabsorbed':
-    'Antisipasi permintaan PTI untuk Anda memuat kelebihan yang tidak dapat diserap horizon berikutnya',
+    'Pasokan PTI untuk Anda melebihi yang dapat diserap minggu terakhir horizon antisipasi permintaan',
 
   'inv.group.MG-01': 'Surfaktan dan bahan pembersih',
   'inv.group.MG-02': 'Emolien, minyak, dan ester',

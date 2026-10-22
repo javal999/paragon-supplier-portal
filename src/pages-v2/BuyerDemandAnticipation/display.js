@@ -1,13 +1,13 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// CAP-10 — what the Demand anticipation page derives from the read for display:
-// the hub-week range a publish would freeze, how many figures it would freeze,
-// the publication in force, and the "would be" text. No figure is computed
-// here; every number is the read's.
+// DRC-2 (BL-188) — what the Demand anticipation page derives from the read for
+// display: the planning week, whether it is published and how many figures
+// changed since, the publication in force, the pairs with a remainder a
+// supplier could agree to take outside the horizon, and the "would be" text.
+// No figure is computed here; every number is the read's.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { addDays, isoWeek } from '@services/engine/dates';
 import { formatDate, formatNumber } from '@lib/format';
-import { currentHorizon, horizonContaining } from '@services/transitions/demandAnticipationRules';
 /** @import { DemandAnticipationRow, DemandAnticipationWeekView } from '@services/transitions/demandAnticipationRules' */
 
 /** `W42` for a week's Monday. @param {string} week */
@@ -36,66 +36,40 @@ export const weekDates = (weeks) =>
     : `${formatDate(weeks[0])} – ${formatDate(addDays(weeks[weeks.length - 1], 6))}`;
 
 /**
- * The shown weeks frozen for at least one row, in order.
- * @param {readonly DemandAnticipationRow[]} rows
- * @returns {string[]}
- */
-export const frozenWeeks = (rows) =>
-  [...new Set(rows.flatMap((r) => r.weeks.filter((w) => w.frozen).map((w) => w.week)))].sort();
-
-/**
- * CAP-D17 — the fixed horizon holding the current hub week (named by the read
- * on every week: `horizonStart`, `horizonFrozen`), the one after it, whether
- * the current one is frozen, and how many supplier × material × weeks a
- * publish would freeze in it. With no row to read, nothing is published, so
- * the horizon is the 4 weeks from the current week.
+ * DRC-2 — the planning week (the current hub week, as the read names it on
+ * every row), whether a publication records it for every pair, and how many
+ * pairs' figures today differ from the published ones (or are unpublished).
  * @param {readonly DemandAnticipationRow[]} rows
  * @param {string} nowIso
- * @returns {{ horizon: string[]; next: string[]; frozen: boolean; toFreeze: number }}
+ * @returns {{ planningWeek: string; published: boolean; changed: number }}
  */
 export function publishPreview(rows, nowIso) {
-  const first = rows[0]?.weeks[0];
-  if (!first) {
-    const h = currentHorizon([], nowIso);
-    return { horizon: h.weeks, next: h.next, frozen: false, toFreeze: 0 };
-  }
-  const horizon = horizonContaining(first.horizonStart, first.horizonStart);
-  const next = horizonContaining(first.horizonStart, addDays(horizon[0], horizon.length * 7));
-  const frozen = first.horizonFrozen;
-  const toFreeze = frozen
-    ? 0
-    : rows.reduce(
-        (n, r) =>
-          n +
-          r.weeks.filter((w) => horizon.includes(w.week) && !w.frozen && w.wouldBe !== null).length,
-        0
-      );
-  return { horizon, next, frozen, toFreeze };
+  const planningWeek = rows[0]?.planningWeek ?? nowIso.slice(0, 10);
+  return {
+    planningWeek,
+    published: rows.length > 0 && rows.every((r) => r.planSource === 'published'),
+    changed: rows.filter((r) => r.changed).length
+  };
 }
 
 /**
- * The newest publication any shown week is frozen by, or null. The demo hub
- * clock does not move by itself, so two publications can share `publishedAt`;
- * the store's ids rise with every append and break the tie.
+ * The publication in force for the planning week, or null.
  * @param {readonly DemandAnticipationRow[]} rows
- * @returns {NonNullable<DemandAnticipationWeekView['frozenBy']> | null}
+ * @returns {DemandAnticipationWeekView['publishedBy']}
  */
 export function latestPublication(rows) {
-  /** @type {NonNullable<DemandAnticipationWeekView['frozenBy']> | null} */
-  let latest = null;
-  for (const r of rows)
-    for (const w of r.weeks) {
-      const p = w.frozenBy;
-      if (
-        p &&
-        (latest === null ||
-          p.publishedAt > latest.publishedAt ||
-          (p.publishedAt === latest.publishedAt && p.publicationId > latest.publicationId))
-      )
-        latest = p;
-    }
-  return latest;
+  return rows.find((r) => r.publishedBy !== null)?.publishedBy ?? null;
 }
+
+/**
+ * [Owner A8] — the pairs whose remainder a supplier could agree to take in the
+ * first week outside the horizon: a remainder above 0 today and a week to put
+ * it in.
+ * @param {readonly DemandAnticipationRow[]} rows
+ * @returns {DemandAnticipationRow[]}
+ */
+export const agreementCandidates = (rows) =>
+  rows.filter((r) => r.today.remainder > 0 && r.today.firstOutsideWeek !== null);
 
 /**
  * `+2,800` / `−1,000` / null for no change.

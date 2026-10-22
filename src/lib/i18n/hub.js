@@ -28,6 +28,8 @@ export const hubEn = {
   // FUX phase 1 (F-03, F-04, F-19) — the Forecast group's replacements.
   'hub.nav.section.weeklyPlan': 'Weekly plan',
   'hub.nav.section.review': 'Review',
+  // DRC-3 (BL-189) — Procurement's and Finance's audit section.
+  'hub.nav.section.audit': 'Audit',
   'hub.nav.section.planningEngine': 'Planning engine',
 
   // PTI items
@@ -58,8 +60,11 @@ export const hubEn = {
   'hub.nav.pti.publishToSuppliers': 'Publish to suppliers',
   'hub.nav.pti.supplierResponses': 'Supplier responses',
   'hub.nav.pti.demandAnticipation': 'Demand anticipation',
+  'hub.nav.pti.demandAnticipationHistory': 'Demand anticipation history',
+  // DRC-17 (BL-202) — the what-if sandbox, in the Weekly plan menu.
+  'hub.nav.pti.whatIfSandbox': 'What-if sandbox',
   'hub.nav.pti.forecastQuality': 'Forecast quality',
-  'hub.nav.pti.stockCheck': 'End-of-cycle stock check',
+  'hub.nav.pti.stockCheck': 'Feedstock reconcile',
   // Planning engine pages, in the user menu (F-04).
   'hub.nav.pti.engine.materialRequirement': 'Planning engine · Material requirement',
   'hub.nav.pti.engine.safetyStock': 'Planning engine · Safety stock targets',
@@ -75,7 +80,9 @@ export const hubEn = {
   'hub.nav.sup.shipments': 'Shipments & ASN',
   'hub.nav.sup.goodsReceipts': 'Goods receipts',
   'hub.nav.sup.forecast': 'Forecast & commitments',
-  'hub.nav.sup.fsReconcile': 'Fixed stock reconcile',
+  // BL-204 (DRC-1) — the supplier view of demand anticipation (only with SUPPLIER_DA_VIEW_ENABLED).
+  'hub.nav.sup.demandAnticipation': 'Demand anticipation',
+  'hub.nav.sup.fsReconcile': 'Feedstock reconcile',
   'hub.nav.sup.stock': 'Stock',
   'hub.nav.sup.capacity': 'Capacity',
   'hub.nav.sup.rfiInvitations': 'RFI invitations',
@@ -159,6 +166,12 @@ export const hubEn = {
     'Delivery drift: suppliers late or missing 2 or more call-offs of a material',
   'hub.home.task.inventoryHighAlerts': 'High-risk inventory and capacity alerts',
   'hub.home.task.capacityGaps': 'Suppliers with capacity below demand',
+  // DRC-12a (BL-198) — a material's NPD tag dropped: review its ROP on its real demand.
+  'hub.home.task.npdRopReview':
+    'Review ROP after first order: materials no longer NPD, review on CO and IR (real demand)',
+  // BL-199 (DRC-13 BR-02) — no umbrella PO balance left at ROP Fisik.
+  'hub.home.task.ropFisikPr':
+    'Create a PR in SAP: materials at ROP Fisik with no umbrella PO balance left',
   'hub.home.task.missingCommitments': 'Missing forecast commitments',
   'hub.home.task.commitmentExceptions': 'Forecast commitments outside tolerance to review',
 
@@ -206,6 +219,7 @@ export const hubId = {
   'hub.nav.section.company': 'Perusahaan',
   'hub.nav.section.weeklyPlan': 'Rencana mingguan',
   'hub.nav.section.review': 'Evaluasi',
+  'hub.nav.section.audit': 'Audit',
   'hub.nav.section.planningEngine': 'Mesin perencanaan',
 
   'hub.nav.pti.tasks': 'Tugas saya',
@@ -233,8 +247,10 @@ export const hubId = {
   'hub.nav.pti.publishToSuppliers': 'Terbitkan ke pemasok',
   'hub.nav.pti.supplierResponses': 'Tanggapan pemasok',
   'hub.nav.pti.demandAnticipation': 'Antisipasi permintaan',
+  'hub.nav.pti.demandAnticipationHistory': 'Riwayat antisipasi permintaan',
+  'hub.nav.pti.whatIfSandbox': 'Sandbox what-if',
   'hub.nav.pti.forecastQuality': 'Kualitas prakiraan',
-  'hub.nav.pti.stockCheck': 'Cek stok akhir siklus',
+  'hub.nav.pti.stockCheck': 'Rekonsiliasi feedstock',
   'hub.nav.pti.engine.materialRequirement': 'Mesin perencanaan · Kebutuhan material',
   'hub.nav.pti.engine.safetyStock': 'Mesin perencanaan · Target stok pengaman',
   'hub.nav.pti.engine.dataHealth': 'Mesin perencanaan · Kesehatan data',
@@ -248,7 +264,8 @@ export const hubId = {
   'hub.nav.sup.shipments': 'Pengiriman & ASN',
   'hub.nav.sup.goodsReceipts': 'Penerimaan barang',
   'hub.nav.sup.forecast': 'Prakiraan & komitmen',
-  'hub.nav.sup.fsReconcile': 'Rekonsiliasi stok tetap',
+  'hub.nav.sup.demandAnticipation': 'Antisipasi permintaan',
+  'hub.nav.sup.fsReconcile': 'Rekonsiliasi feedstock',
   'hub.nav.sup.stock': 'Stok',
   'hub.nav.sup.capacity': 'Kapasitas',
   'hub.nav.sup.rfiInvitations': 'Undangan RFI',
@@ -323,6 +340,9 @@ export const hubId = {
     'Pergeseran pengiriman: pemasok terlambat atau tidak mengirim 2 call-off atau lebih untuk satu material',
   'hub.home.task.inventoryHighAlerts': 'Peringatan stok dan kapasitas berisiko tinggi',
   'hub.home.task.capacityGaps': 'Pemasok dengan kapasitas di bawah kebutuhan',
+  'hub.home.task.npdRopReview':
+    'Tinjau ROP setelah pesanan pertama: material bukan NPD lagi, tinjau berdasarkan CO dan IR (permintaan nyata)',
+  'hub.home.task.ropFisikPr': 'Buat PR di SAP: material pada ROP Fisik tanpa saldo PO induk',
   'hub.home.task.missingCommitments': 'Komitmen prakiraan yang belum masuk',
   'hub.home.task.commitmentExceptions': 'Komitmen prakiraan di luar toleransi untuk ditinjau',
 

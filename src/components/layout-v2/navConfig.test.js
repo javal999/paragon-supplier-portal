@@ -6,7 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, expect, it } from 'vitest';
-import { PTI_NAV, UTILITY_NAV, navFor, sectionForPath } from './navConfig';
+import { PTI_NAV, SUPPLIER_NAV, UTILITY_NAV, navFor, sectionForPath } from './navConfig';
 import { hubEn, hubId } from '@lib/i18n/hub';
 import { safetyStockEn, safetyStockId } from '@lib/i18n/safetyStock';
 
@@ -61,13 +61,14 @@ describe('Material Planner menu — Weekly plan and Review (F-03, F-04)', () => 
       ['review', 'hub.nav.pti.stockCheck', '/buyer/fs-reconcile']
     ]);
     // FUX phase 2 B1 — This week joins Weekly plan as its first item; CAP-10 —
-    // Demand anticipation joins it as its last.
+    // Demand anticipation joins it; DRC-17 (BL-202) — the What-if sandbox is last.
     expect(
       /** @type {import('./navConfig').NavSection} */ (mp.find((s) => s.id === 'weeklyPlan')).items
-    ).toHaveLength(6);
+    ).toHaveLength(7);
+    // DRC-3 (BL-189) — Demand anticipation history joins Review as its last item.
     expect(
       /** @type {import('./navConfig').NavSection} */ (mp.find((s) => s.id === 'review')).items
-    ).toHaveLength(3);
+    ).toHaveLength(4);
     expect(mp.map((s) => s.id)).not.toContain('forecast');
   });
 
@@ -87,7 +88,7 @@ describe('Material Planner menu — Weekly plan and Review (F-03, F-04)', () => 
 });
 
 describe('Procurement menu keeps Performance → Supplier scorecard (FUX-D2)', () => {
-  it('shows Performance with the scorecard and (FUX-D6) the end-of-cycle stock check, and no Weekly plan or Review', () => {
+  it('shows Performance with the scorecard and (FUX-D6) the feedstock reconcile, and no Weekly plan or Review', () => {
     const buy = navFor('buyer', 'BUY');
     const performance = /** @type {import('./navConfig').NavSection} */ (
       buy.find((s) => s.id === 'performance')
@@ -113,15 +114,19 @@ describe('FUX phase 2 B1 — This week and the Procurement path to the stock che
       ['hub.nav.pti.publishToSuppliers', '/buyer/stabilise'],
       ['hub.nav.pti.supplierResponses', '/buyer/collaboration'],
       // CAP-10 — the demand anticipation, frozen per 4-week horizon.
-      ['hub.nav.pti.demandAnticipation', '/buyer/demand-anticipation']
+      ['hub.nav.pti.demandAnticipation', '/buyer/demand-anticipation'],
+      // DRC-17 (BL-202) BR-07 — PTI planners find the sandbox in Weekly plan.
+      ['hub.nav.pti.whatIfSandbox', '/buyer/what-if']
     ]);
+    expect(hubEn['hub.nav.pti.whatIfSandbox']).toBe('What-if sandbox');
+    expect(hubId['hub.nav.pti.whatIfSandbox']).toBe('Sandbox what-if');
     expect(hubEn['hub.nav.pti.thisWeek']).toBe('This week');
     expect(hubEn['hub.nav.pti.demandAnticipation']).toBe('Demand anticipation');
     expect(hubId['hub.nav.pti.demandAnticipation']).toBe('Antisipasi permintaan');
     expect(hubId['hub.nav.pti.thisWeek']).toBe('Minggu ini');
   });
 
-  it('a BUY menu shows End-of-cycle stock check under Performance; This week stays a planner item', () => {
+  it('a BUY menu shows Feedstock reconcile under Performance; This week stays a planner item', () => {
     const buy = navFor('buyer', 'BUY');
     const where = buy
       .filter((s) => s.items.some((i) => i.path === '/buyer/fs-reconcile'))
@@ -203,5 +208,46 @@ describe('labels (F-19, F-25)', () => {
     expect(hubId['hub.nav.pti.engine.safetyStock']).toBe(
       `Mesin perencanaan · ${safetyStockId['sst.title']}`
     );
+  });
+});
+
+describe('DRC-3 (BL-189) — the demand anticipation history: planners, Procurement and Finance', () => {
+  const PATH = '/buyer/demand-anticipation-history';
+  /** @param {import('./hubRole').HubRole} role */
+  const where = (role) =>
+    navFor('buyer', role)
+      .filter((s) => s.items.some((i) => i.path === PATH))
+      .map((s) => s.id);
+
+  it('a Material Planner reaches it under Review, after the feedstock reconcile', () => {
+    expect(where('MP')).toEqual(['review']);
+    const review = /** @type {import('./navConfig').NavSection} */ (
+      navFor('buyer', 'MP').find((s) => s.id === 'review')
+    );
+    expect(review.items.slice(-1)[0]).toMatchObject({
+      labelKey: 'hub.nav.pti.demandAnticipationHistory',
+      path: PATH
+    });
+  });
+
+  it('Procurement and Finance reach it under Audit; a supplier menu never holds it', () => {
+    expect(where('BUY')).toEqual(['audit']);
+    expect(where('FIN')).toEqual(['audit']);
+    expect(SUPPLIER_NAV.flatMap((s) => s.items).map((i) => i.path)).not.toContain(PATH);
+    expect(
+      navFor('supplier', 'ALL')
+        .flatMap((s) => s.items)
+        .map((i) => i.path)
+    ).not.toContain(PATH);
+    // Known-good beside the absence: the planner's own Demand anticipation stays Weekly plan.
+    expect(where('FIN')).not.toContain('weeklyPlan');
+  });
+
+  it('names its section from the viewer’s own menu, in EN and ID', () => {
+    expect(sectionForPath(PATH, 'MP')?.id).toBe('review');
+    expect(sectionForPath(PATH, 'FIN')?.id).toBe('audit');
+    expect(hubEn['hub.nav.pti.demandAnticipationHistory']).toBe('Demand anticipation history');
+    expect(hubId['hub.nav.pti.demandAnticipationHistory']).toBe('Riwayat antisipasi permintaan');
+    expect(hubEn['hub.nav.section.audit']).toBe('Audit');
   });
 });

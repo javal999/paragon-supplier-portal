@@ -1,128 +1,228 @@
 // ────────────────────────────────────────────────────────────────────────────
-// CAP-10 — the demand anticipation read model over the mock stores.
+// DRC-2 (BL-188) and DRC-4 (BL-190) — the rolling demand anticipation read
+// model over the mock stores.
 //
 // ONE place gathers the inputs and hands them to the pure rules
-// (`demandAnticipationRules`), so the read service, the publish target and
-// its policy hook see the same figures:
-//   · the LTP — every current forecast version's lines (`allCommitmentLines`),
+// (`demandAnticipationRules`, which call `osipRules.js`), so the read service,
+// the publish target and its policy hook see the same figures:
+//   · LTP — every current forecast version's lines (`allCommitmentLines`),
 //     spread by day per week (`groupWeekLtp`), as capacity and CAP-9 read it;
-//   · PTI stock on hand and reorder point — SAP's (`PTI_STOCK`), read by
-//     material code exactly as `buildInventoryPositions` reads it;
-//   · the publications — `demandAnticipationStore`;
-//   · CAP-11 — the recorded consumption (`consumptionStore`): the excess of a
-//     frozen horizon is absorbed into the next one's open weeks, so the figure
-//     in force (`qty`) and what a publication freezes both carry it.
+//   · SOH — the supplier's share of PTI's stock on hand (`ptiStockStore`, BL-199), as the
+//     page computed it before (CAP-D11);
+//   · lead time and MPQ — the pair's source in the engine dataset:
+//     `leadTimeBreakdown(...).totalWeeks` (DRC-6, BL-192) and `orderMultiple`
+//     (MPQ = orderMultiple until the master data feed carries MPQ, wave 2
+//     default);
+//   · call-offs — released call-offs by need-date week (`openSupplyIndex`,
+//     CAP-12's own classification);
+//   · OSPO — open PO quantity not yet called off: the balance of the pair's
+//     blanket lines (`blanketBalances`, CAP-12), the chain's start when the
+//     previous planning week was not published;
+//   · the previous planning week's publication — OSPO and additional PO (the
+//     chain, [Default A9]) and the remainders it carried;
+//   · OSPR and the last 4 weeks of sales orders per supplier × material — the
+//     hub holds neither (PRs carry no material code; sales orders are per FG
+//     SKU), so both are passed as null and every figure is flagged;
+//   · recorded consumption — `consumptionStore` (CAP-11, kept), split by LTP
+//     share (BL-211);
+//   · BL-210 — the supplier's consumption share, MOQ and koli as ROP Order's
+//     safety order reads them (`osipSafetySizes`), so the week-1 safety order
+//     is ROP Order's under every `sdSource` and `safetyRounding` variant.
 // Today's figures and "would be" are computed here at read, never stored.
 // ────────────────────────────────────────────────────────────────────────────
 
-/** @import { DemandAnticipationRow } from '../../transitions/demandAnticipationRules' */
-/** @import { DemandAnticipationEntry, DemandAnticipationSeries } from '../../transitions/demandAnticipationRules' */
-/** @import { AbsorptionPlan } from '../../transitions/consumptionRules' */
+/** @import { DemandAnticipationPair, DemandAnticipationPublication, DemandAnticipationRow, PairFigure, RollingDaInputs, UnabsorbedExcess } from '../../transitions/demandAnticipationRules' */
 import { NO_PERSON } from '@context/noPerson';
 import { SDC_SIMULATED_NOW, materialEntry, sdcClock } from '../../sdc';
+import { leadTimeBreakdown } from '../../engine/leadTimeSteps';
 import {
+  DEMAND_ANTICIPATION_RULES,
+  chainFor,
+  demandAnticipationPairs,
   demandAnticipationRows,
-  demandAnticipationWeeks,
-  entriesToFreeze,
-  currentHorizon,
-  hubWeeks
+  entriesOf,
+  hubWeeks,
+  pairKey,
+  publicationOf,
+  rollingDaFigure,
+  unabsorbedOf
 } from '../../transitions/demandAnticipationRules';
-import { absorptionPlan, rowsInForce, seriesInForce } from '../../transitions/consumptionRules';
+import { withConsumption } from '../../transitions/consumptionRules';
+import { blanketBalances, openSupplyIndex } from '../../transitions/supplyBelowDemandRules';
+import { addDays } from '../../transitions/inventoryRules';
 import { consumptionStore } from './stores/consumptionStore';
+import { callOffStore } from './stores/callOffStore';
+import { purchaseOrderStore } from './stores/purchaseOrderStore';
 import { allCommitmentLines } from './forecastReadModel';
-import { PTI_STOCK } from './fixtures/inventoryHub';
+import { engineDataset } from './fixtures/engineDataset';
+import { ptiStockStore } from './stores/ptiStockStore';
 import { supplierNameOf } from './inventoryReadModel';
 import { demandAnticipationStore } from './stores/demandAnticipationStore';
+import { osipSafetySizes } from './osipSafetyReadModel';
+/** @import { SupplierDaRowCore } from '../../transitions/supplierDaView' */
+import { supplierDaRows } from '../../transitions/supplierDaView';
 
 /**
- * Today's demand anticipation per supplier × material, from the current hub week.
- * @param {string} [nowIso]
- * @returns {DemandAnticipationSeries[]}
+ * The pair's source in the engine dataset (lead time, MPQ), or undefined.
+ * @param {string} supplierId
+ * @param {string} materialCode
  */
-export function todaysDemandAnticipation(nowIso = sdcClock.now()) {
-  return demandAnticipationWeeks(
-    { ltpLines: allCommitmentLines(null), ptiStock: PTI_STOCK },
-    nowIso
+const sourceOf = (supplierId, materialCode) =>
+  engineDataset().sources.find(
+    (s) => s.supplierId === supplierId && s.materialCode === materialCode
   );
+
+/**
+ * DRC-2 BR-01 — the pair's lead time in weeks (DRC-6), or null with no source.
+ * @param {string} supplierId
+ * @param {string} materialCode
+ * @returns {number | null}
+ */
+export function leadTimeWeeksOf(supplierId, materialCode) {
+  const src = sourceOf(supplierId, materialCode);
+  return src ? leadTimeBreakdown(src).totalWeeks : null;
 }
 
 /**
- * CAP-11 — the consumption shares, the absorption per week and what stays
- * unabsorbed, over the publications, today's figures and the recorded
- * consumption.
- * @param {string} [nowIso]
- * @returns {AbsorptionPlan}
+ * Every pair the LTP names, over enough weeks for its horizon plus one.
+ * @param {string} nowIso
+ * @returns {DemandAnticipationPair[]}
  */
-export function demandAnticipationAbsorption(nowIso = sdcClock.now()) {
-  return absorptionPlan(
-    {
-      publications: demandAnticipationStore.all(),
-      today: todaysDemandAnticipation(nowIso),
-      records: consumptionStore.all()
-    },
-    nowIso
+function pairsAt(nowIso) {
+  const input = { ltpLines: allCommitmentLines(null), ptiStock: ptiStockStore.combined() };
+  const first = demandAnticipationPairs(input, nowIso, DEMAND_ANTICIPATION_RULES.shownWeeks);
+  const longest = Math.max(
+    0,
+    ...first.map(
+      (p) =>
+        leadTimeWeeksOf(p.supplierId, p.materialCode) ??
+        DEMAND_ANTICIPATION_RULES.fallbackHorizonWeeks
+    )
   );
+  return longest + 1 <= DEMAND_ANTICIPATION_RULES.shownWeeks
+    ? first
+    : demandAnticipationPairs(input, nowIso, longest + 1);
 }
 
 /**
- * CAP-D17 — the fixed horizon holding the current hub week, and the figures a
- * publication made now would freeze in it: none once it is frozen (once only).
- * Published part-way through, a horizon freezes the weeks from the current
- * week on; its weeks already past are history and are not frozen afterwards.
- * @param {string} [nowIso]
- * @returns {{ horizon: ReturnType<typeof currentHorizon>; entries: DemandAnticipationEntry[] }}
+ * The inputs of every pair's figure for the planning week of `nowIso`.
+ * @param {readonly DemandAnticipationPublication[]} publications
+ * @param {string} nowIso
+ * @param {ReadonlySet<string> | null} agreed  The agreements to compute with; null
+ *   = the ones the publication in force for the planning week recorded.
+ * @returns {(DemandAnticipationPair & { inputs: RollingDaInputs })[]}
  */
-export function demandAnticipationToFreeze(nowIso = sdcClock.now()) {
+function pairInputs(publications, nowIso, agreed) {
+  const planningWeek = hubWeeks(nowIso, 1)[0];
+  const pos = purchaseOrderStore.all();
+  const callOffs = callOffStore.all();
+  const supply = openSupplyIndex(callOffs);
+  const sizes = osipSafetySizes(nowIso);
+  return pairsAt(nowIso).map((p) => {
+    const chain = chainFor(publications, p.supplierId, p.materialCode, planningWeek);
+    /** @param {string} week */
+    const calledOff = (week) => supply.get(`${p.supplierId}|${p.materialCode}|${week}`) ?? 0;
+    const src = sourceOf(p.supplierId, p.materialCode);
+    // BL-210 — ROP Order's own consumption, MOQ and koli; none for a pair with no source.
+    const size = sizes.get(pairKey(p.supplierId, p.materialCode));
+    return {
+      ...p,
+      inputs: {
+        weeks: p.weeks,
+        ltp: p.ltp,
+        leadTimeWeeks: src ? leadTimeBreakdown(src).totalWeeks : null,
+        mpq: src ? src[DEMAND_ANTICIPATION_RULES.mpqField] : 0,
+        soh: p.soh,
+        ospoOpen: blanketBalances(pos, callOffs, p.supplierId, p.materialCode).reduce(
+          (n, l) => n + l.balance,
+          0
+        ),
+        previous: chain.previous,
+        callOffPrev: calledOff(addDays(planningWeek, -7)),
+        carries: chain.carries,
+        callOff: calledOff(planningWeek),
+        agreedFirstOutside: agreed
+          ? agreed.has(pairKey(p.supplierId, p.materialCode))
+          : chain.agreedFirstOutside,
+        // [Default A8b] — the hub holds no sales-order quantity per supplier × material.
+        salesOrderQty4w: null,
+        // The hub's PRs carry no material code: no open PR quantity per pair.
+        ospr: null,
+        ...(size ? { consumption: size.consumption, moq: size.moq, koli: size.koli } : {})
+      }
+    };
+  });
+}
+
+/**
+ * Every pair's figure for the planning week.
+ * @param {readonly DemandAnticipationPublication[]} publications
+ * @param {string} nowIso
+ * @param {ReadonlySet<string> | null} [agreed]
+ * @returns {(PairFigure & DemandAnticipationPair)[]}
+ */
+function figuresAt(publications, nowIso, agreed = null) {
+  return pairInputs(publications, nowIso, agreed).map((p) => ({
+    ...p,
+    figure: rollingDaFigure(p.inputs)
+  }));
+}
+
+/**
+ * What the publish verb and its policy hook read: the planning week, today's
+ * remainders (an agreement needs one), the publication in force for the week,
+ * and the figures a publication with `agreed` would store.
+ * @param {readonly string[]} agreed
+ * @param {string} [nowIso]
+ */
+export function demandAnticipationToPublish(agreed, nowIso = sdcClock.now()) {
   const publications = demandAnticipationStore.all();
-  const horizon = currentHorizon(publications, nowIso);
-  const fromNow = hubWeeks(nowIso, 1)[0];
+  const planningWeek = hubWeeks(nowIso, 1)[0];
+  const today = figuresAt(publications, nowIso);
   return {
-    horizon,
-    entries: horizon.frozen
-      ? []
-      : entriesToFreeze(
-          publications,
-          // CAP-11 — the figure in force: today's, less what each week absorbs.
-          seriesInForce(todaysDemandAnticipation(nowIso), demandAnticipationAbsorption(nowIso)),
-          horizon.weeks.filter((w) => w >= fromNow)
-        )
+    planningWeek,
+    remainders: new Map(
+      today.map((f) => [pairKey(f.supplierId, f.materialCode), f.figure.remainder])
+    ),
+    inForce: publicationOf(publications, planningWeek),
+    figures: figuresAt(publications, nowIso, new Set(agreed))
   };
 }
 
-// The seed (store header): one publication at the hub's present, computed by
-// the same function the verb freezes with. Nobody published it.
+// The seed (store header): one publication of the hub's present planning
+// week, computed by the same function the verb stores with. Nobody published it.
 demandAnticipationStore.useSeeder(() => {
-  // The hub's declared present, not the clock at the first read: a test that
-  // moves the clock before anything reads the store still opens on W36–W39.
+  // The hub's declared present, not the clock at the first read.
   const now = SDC_SIMULATED_NOW;
-  // Nothing published yet: the anchor is the current hub week (CAP-D17).
-  const horizon = currentHorizon([], now).weeks;
-  const entries = entriesToFreeze([], todaysDemandAnticipation(now), horizon);
-  return entries.length === 0
+  const figures = figuresAt([], now);
+  return figures.length === 0
     ? null
     : {
         publishedAt: now,
         actor: NO_PERSON,
         source: 'sampleSeed',
-        horizonStart: horizon[0],
-        horizonWeeks: horizon,
-        entries
+        planningWeek: hubWeeks(now, 1)[0],
+        agreedFirstOutside: [],
+        entries: entriesOf(figures)
       };
 });
 
 /**
- * The page's rows: frozen figures, "would be" and today's inputs per week.
+ * The page's rows: the figure in force, today's recomputation, the weeks and
+ * the recorded consumption.
  * @param {string} [nowIso]
  * @returns {DemandAnticipationRow[]}
  */
 export function allDemandAnticipation(nowIso = sdcClock.now()) {
+  const publications = demandAnticipationStore.all();
   const lines = allCommitmentLines(null);
   /** @param {string} supplierId */
   const nameOf = (supplierId) =>
     lines.find((l) => l.supplierId === supplierId)?.supplierName ?? supplierNameOf(supplierId);
-  return rowsInForce(
-    demandAnticipationRows(demandAnticipationStore.all(), todaysDemandAnticipation(nowIso), nowIso),
-    demandAnticipationAbsorption(nowIso)
+  const pairs = figuresAt(publications, nowIso).map((f) => ({ ...f, today: f.figure }));
+  return withConsumption(
+    demandAnticipationRows(publications, pairs, hubWeeks(nowIso, 1)[0]),
+    consumptionStore.all()
   ).map((r) => {
     const entry = materialEntry(r.materialCode);
     return {
@@ -132,4 +232,55 @@ export function allDemandAnticipation(nowIso = sdcClock.now()) {
       uom: entry?.canonicalUom ?? ''
     };
   });
+}
+
+/**
+ * DRC-4 / DRC-B7 — the surpluses the figure in force could not absorb in the
+ * last week of the horizon (the planner's alert).
+ * @param {string} [nowIso]
+ * @returns {UnabsorbedExcess[]}
+ */
+export function demandAnticipationUnabsorbed(nowIso = sdcClock.now()) {
+  return unabsorbedOf(allDemandAnticipation(nowIso));
+}
+
+/**
+ * BL-204 (DRC-1) — one supplier view row: the latest publication's figure for
+ * the pair, with names for the page.
+ * @typedef {SupplierDaRowCore & {
+ *   readonly supplierName: string;
+ *   readonly materialLabel: string;
+ *   readonly uom: string;
+ * }} SupplierDaRow
+ */
+
+/**
+ * BL-204 (DRC-1) — every pair's published DA as a supplier may read it (the
+ * service narrows it to the reader). Stored figures only: the same numbers the
+ * planner's page shows as published for the pair.
+ * @returns {SupplierDaRow[]}
+ */
+export function supplierDemandAnticipation() {
+  return supplierDaRows(demandAnticipationStore.all()).map((r) => {
+    const entry = materialEntry(r.materialCode);
+    return {
+      ...r,
+      supplierName: supplierNameOf(r.supplierId),
+      materialLabel: entry?.label ?? r.materialCode,
+      uom: entry?.canonicalUom ?? ''
+    };
+  });
+}
+
+/**
+ * BL-204 (DRC-8) — the published DA a supplier confirms as Incoming DA for one
+ * pair, or undefined when no publication holds the pair.
+ * @param {string} supplierId
+ * @param {string} materialCode
+ * @returns {SupplierDaRowCore | undefined}
+ */
+export function incomingDaFor(supplierId, materialCode) {
+  return supplierDaRows(demandAnticipationStore.all()).find(
+    (r) => r.supplierId === supplierId && r.materialCode === materialCode
+  );
 }

@@ -58,27 +58,31 @@ const week = (weeks) => {
 
 /**
  * PTI stock on hand and reorder point per material (SAP, BR-04).
+ * DRC-D12 (BL-199) — every record keeps its plant. ⚠️ SAMPLE plants: raw
+ * materials, actives and fragrances in J6, packaging in J2, until the eWM feed
+ * names the real plant per record. The call-off trigger compares SOH all
+ * plants combined [Default F1], so a per-plant answer needs no migration.
  * @type {readonly PtiStockRecord[]}
  */
 export const PTI_STOCK = [
-  { materialCode: 'RM-COCO-8200', ptiSoh: 12000, ptiRop: 10000, consignment: false },
-  { materialCode: 'RM-LAURIC-7200', ptiSoh: 3000, ptiRop: 5000, consignment: false },
-  { materialCode: 'RM-EMUL-9410', ptiSoh: 1800, ptiRop: 1500, consignment: false },
-  { materialCode: 'RM-STEAR-7300', ptiSoh: 900, ptiRop: 2500, consignment: false },
-  { materialCode: 'RM-EMUL-3310', ptiSoh: 5000, ptiRop: 4000, consignment: false },
-  { materialCode: 'RM-EMUL-9430', ptiSoh: 150, ptiRop: 200, consignment: false },
-  { materialCode: 'FR-WARD-4410', ptiSoh: 60, ptiRop: 40, consignment: false },
-  { materialCode: 'FR-EMIN-4420', ptiSoh: 150, ptiRop: 100, consignment: false },
-  { materialCode: 'AI-NIAC-6601', ptiSoh: 2500, ptiRop: 1500, consignment: false },
-  { materialCode: 'AI-HYALU-6610', ptiSoh: 40, ptiRop: 30, consignment: false },
-  { materialCode: 'AI-VITC-6720', ptiSoh: 90, ptiRop: 60, consignment: false },
-  { materialCode: 'AI-VITC-6730', ptiSoh: 400, ptiRop: 300, consignment: false },
-  { materialCode: 'AI-PANTO-6640', ptiSoh: 700, ptiRop: 400, consignment: false },
-  { materialCode: 'PK-PETB-8801', ptiSoh: 30000, ptiRop: 40000, consignment: true },
-  { materialCode: 'PK-PETB-8802', ptiSoh: 55000, ptiRop: 50000, consignment: true },
-  { materialCode: 'PK-PETB-8810', ptiSoh: 20000, ptiRop: 15000, consignment: false },
-  { materialCode: 'PK-CAPF-8820', ptiSoh: 80000, ptiRop: 60000, consignment: true },
-  { materialCode: 'PK-CART-9901', ptiSoh: 300000, ptiRop: 150000, consignment: false }
+  { materialCode: 'RM-COCO-8200', ptiSoh: 12000, ptiRop: 10000, consignment: false, plant: 'J6' },
+  { materialCode: 'RM-LAURIC-7200', ptiSoh: 3000, ptiRop: 5000, consignment: false, plant: 'J6' },
+  { materialCode: 'RM-EMUL-9410', ptiSoh: 1800, ptiRop: 1500, consignment: false, plant: 'J6' },
+  { materialCode: 'RM-STEAR-7300', ptiSoh: 900, ptiRop: 2500, consignment: false, plant: 'J6' },
+  { materialCode: 'RM-EMUL-3310', ptiSoh: 5000, ptiRop: 4000, consignment: false, plant: 'J6' },
+  { materialCode: 'RM-EMUL-9430', ptiSoh: 150, ptiRop: 200, consignment: false, plant: 'J6' },
+  { materialCode: 'FR-WARD-4410', ptiSoh: 60, ptiRop: 40, consignment: false, plant: 'J6' },
+  { materialCode: 'FR-EMIN-4420', ptiSoh: 150, ptiRop: 100, consignment: false, plant: 'J6' },
+  { materialCode: 'AI-NIAC-6601', ptiSoh: 2500, ptiRop: 1500, consignment: false, plant: 'J6' },
+  { materialCode: 'AI-HYALU-6610', ptiSoh: 40, ptiRop: 30, consignment: false, plant: 'J6' },
+  { materialCode: 'AI-VITC-6720', ptiSoh: 90, ptiRop: 60, consignment: false, plant: 'J6' },
+  { materialCode: 'AI-VITC-6730', ptiSoh: 400, ptiRop: 300, consignment: false, plant: 'J6' },
+  { materialCode: 'AI-PANTO-6640', ptiSoh: 700, ptiRop: 400, consignment: false, plant: 'J6' },
+  { materialCode: 'PK-PETB-8801', ptiSoh: 30000, ptiRop: 40000, consignment: true, plant: 'J2' },
+  { materialCode: 'PK-PETB-8802', ptiSoh: 55000, ptiRop: 50000, consignment: true, plant: 'J2' },
+  { materialCode: 'PK-PETB-8810', ptiSoh: 20000, ptiRop: 15000, consignment: false, plant: 'J2' },
+  { materialCode: 'PK-CAPF-8820', ptiSoh: 80000, ptiRop: 60000, consignment: true, plant: 'J2' },
+  { materialCode: 'PK-CART-9901', ptiSoh: 300000, ptiRop: 150000, consignment: false, plant: 'J2' }
 ];
 
 /**

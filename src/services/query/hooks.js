@@ -94,6 +94,28 @@ export const useDemandAnticipation = () =>
     svc.procurement.getDemandAnticipation(scope)
   );
 
+/**
+ * DRC-3 (BL-189) — every demand anticipation publication, for the audit view.
+ * Under `demandAnticipation`, so every act that refreshes that read refreshes this.
+ */
+export const useDemandAnticipationHistory = () =>
+  useServiceQuery(['procurement', 'demandAnticipation', 'history'], (svc, scope) =>
+    svc.procurement.getDemandAnticipationHistory(scope)
+  );
+
+/**
+ * BL-204 (DRC-1) — the supplier view of demand anticipation (empty while
+ * `SUPPLIER_DA_VIEW_ENABLED` is off). Under `demandAnticipation`, so a
+ * publication refreshes it.
+ * @param {boolean} [enabled]
+ */
+export const useSupplierDemandAnticipation = (enabled = true) =>
+  useServiceQuery(
+    ['procurement', 'demandAnticipation', 'supplier'],
+    (svc, scope) => svc.procurement.getSupplierDemandAnticipation(scope),
+    { enabled }
+  );
+
 /** Material C5 (MR-8) — the planning groups, their materials and changes. */
 export const usePlanningGroups = () =>
   useServiceQuery(['procurement', 'planningGroups'], (svc, scope) =>
@@ -135,8 +157,9 @@ export const useForecastCoverage = () =>
   );
 
 /**
- * REQ-E06-04 — the fixed stock reconcile per supplier × material × cycle. The
- * planner reads every supplier; a supplier reads only its own rows (scoped in the service).
+ * DRC-15a — the feedstock reconcile per supplier × material, daily (the hook
+ * keeps its name; FS now reads "feedstock", DRC-D14). The planner reads every
+ * supplier; a supplier reads only its own rows (scoped in the service).
  */
 export const useFixedStockReconcile = () =>
   useServiceQuery(['procurement', 'fixedStockReconcile'], (svc, scope) =>
@@ -166,6 +189,42 @@ export const useMaterialRequirement = (includeUnconfirmed = false) =>
 export const useSafetyStock = () =>
   useServiceQuery(['procurement', 'safetyStock'], (svc, scope) =>
     svc.procurement.getSafetyStock(scope)
+  );
+
+/** DRC-12a (BL-198) — the open "Review ROP after first order" tasks (PTI only). */
+export const useNpdReviews = () =>
+  useServiceQuery(['procurement', 'npdReviews'], (svc, scope) =>
+    svc.procurement.getNpdReviews(scope)
+  );
+
+/** DRC-9c (BL-205, [Proposed]) — level and production MPQ per supplier × material (PTI only). */
+export const useProtectionBufferInputs = () =>
+  useServiceQuery(['procurement', 'protectionBufferInputs'], (svc, scope) =>
+    svc.procurement.getProtectionBufferInputs(scope)
+  );
+
+/** DRC-17 (BL-202) — the pairs the what-if sandbox offers (PTI only). */
+export const useWhatIfPairs = () =>
+  useServiceQuery(['procurement', 'whatIf', 'pairs'], (svc, scope) =>
+    svc.procurement.getWhatIfPairs(scope)
+  );
+
+/**
+ * DRC-17 (BL-202) — one pair's live inputs and saved scenarios (PTI only).
+ * @param {string | null} supplierId
+ * @param {string | null} materialCode
+ */
+export const useWhatIfSandbox = (supplierId, materialCode) =>
+  useServiceQuery(
+    ['procurement', 'whatIf', 'sandbox', supplierId ?? '', materialCode ?? ''],
+    (svc, scope) => svc.procurement.getWhatIfSandbox(scope, supplierId ?? '', materialCode ?? ''),
+    { enabled: supplierId !== null && materialCode !== null }
+  );
+
+/** BL-199 (DRC-13 BR-02) — the open "Create a PR in SAP" recommendations at ROP Fisik (PTI only). */
+export const useRopFisikPrRecommendations = () =>
+  useServiceQuery(['procurement', 'ropFisikPrRecommendations'], (svc, scope) =>
+    svc.procurement.getRopFisikPrRecommendations(scope)
   );
 
 /** REQ-E14-05 — the order plan: sized orders, warehouse fill and rented space (PTI only). */

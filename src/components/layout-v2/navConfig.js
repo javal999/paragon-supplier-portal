@@ -8,6 +8,7 @@ import {
   BookOpen,
   Boxes,
   Building2,
+  Calculator,
   ClipboardCheck,
   Container,
   CalendarCheck,
@@ -18,6 +19,7 @@ import {
   DatabaseZap,
   Factory,
   FlaskConical,
+  History,
   FileQuestion,
   FileSearch,
   FileText,
@@ -45,6 +47,7 @@ import {
   Workflow
 } from 'lucide-react';
 /** @import { HubRole } from './hubRole' */
+import { SUPPLIER_DA_VIEW_ENABLED } from '@services/transitions/supplierDaView';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE HUB MENU — one definition, read by the sidebar AND by every page header.
@@ -120,7 +123,9 @@ export const PTI_NAV = [
         labelKey: 'hub.nav.pti.demandAnticipation',
         icon: LockKeyhole,
         path: '/buyer/demand-anticipation'
-      }
+      },
+      // DRC-17 (BL-202) BR-07 — the what-if sandbox: analysis only, last in the cycle.
+      { labelKey: 'hub.nav.pti.whatIfSandbox', icon: Calculator, path: '/buyer/what-if' }
     ]
   },
   {
@@ -133,7 +138,13 @@ export const PTI_NAV = [
     items: [
       { labelKey: 'hub.nav.pti.performance', icon: Award, path: '/buyer/scorecard' },
       { labelKey: 'hub.nav.pti.forecastQuality', icon: TrendingUp, path: '/buyer/demand-forecast' },
-      { labelKey: 'hub.nav.pti.stockCheck', icon: Scale, path: '/buyer/fs-reconcile' }
+      { labelKey: 'hub.nav.pti.stockCheck', icon: Scale, path: '/buyer/fs-reconcile' },
+      // DRC-3 (BL-189) — every demand anticipation publication, read only.
+      {
+        labelKey: 'hub.nav.pti.demandAnticipationHistory',
+        icon: History,
+        path: '/buyer/demand-anticipation-history'
+      }
     ]
   },
   {
@@ -188,9 +199,23 @@ export const PTI_NAV = [
     items: [{ labelKey: 'hub.nav.pti.invoices', icon: Receipt, path: '/buyer/invoices' }]
   },
   {
+    // DRC-3 (BL-189), [Owner A10] — Procurement and Finance audit the demand
+    // anticipation history; a Material Planner reaches it under Review.
+    id: 'audit',
+    labelKey: 'hub.nav.section.audit',
+    roles: ['BUY', 'FIN'],
+    items: [
+      {
+        labelKey: 'hub.nav.pti.demandAnticipationHistory',
+        icon: History,
+        path: '/buyer/demand-anticipation-history'
+      }
+    ]
+  },
+  {
     // FUX-D2 — a Material Planner sees the scorecard under Review instead.
-    // FUX-D6 (F-15) — Procurement sets max stock on the end-of-cycle stock
-    // check, so it gets a menu path too; `maxstock:set`'s HandoffNotice still
+    // FUX-D6 (F-15) — Procurement sets max stock on the feedstock reconcile
+    // (DRC-15a BR-03), so it gets a menu path too; `maxstock:set`'s HandoffNotice still
     // gates the act on the page.
     id: 'performance',
     labelKey: 'hub.nav.section.performance',
@@ -233,6 +258,16 @@ export const SUPPLIER_NAV = [
     labelKey: 'hub.nav.section.planning',
     items: [
       { labelKey: 'hub.nav.sup.forecast', icon: ChartLine, path: '/supplier/forecasts' },
+      // BL-204 (DRC-1) — built ahead, listed only once DRC-D10 lifts (the flag).
+      ...(SUPPLIER_DA_VIEW_ENABLED
+        ? [
+            {
+              labelKey: 'hub.nav.sup.demandAnticipation',
+              icon: LockKeyhole,
+              path: '/supplier/demand-anticipation'
+            }
+          ]
+        : []),
       { labelKey: 'hub.nav.sup.fsReconcile', icon: Scale, path: '/supplier/fs-reconcile' },
       { labelKey: 'hub.nav.sup.stock', icon: Boxes, path: '/supplier/inventory' },
       { labelKey: 'hub.nav.sup.capacity', icon: Factory, path: '/supplier/capacity' }

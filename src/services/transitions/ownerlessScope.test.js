@@ -123,9 +123,12 @@ import { planningGroupStore } from '../data/mock/stores/planningGroupStore';
 import { materialOverlayStore } from '../data/mock/stores/materialOverlayStore';
 import { mrpControllerStore } from './mrpControllerStore';
 import { warehouseDecisionStore } from '../data/mock/stores/warehouseDecisionStore';
+import { osipLevelStore } from '../data/mock/stores/osipLevelStore';
 import { demandAnticipationStore } from '../data/mock/stores/demandAnticipationStore';
 import { materialNameStore } from '../data/mock/stores/materialNameStore';
+import { feedstockConfirmationStore } from '../data/mock/stores/feedstockConfirmationStore';
 import { simulationOverrideStore } from '../data/mock/stores/simulationOverrideStore';
+import { whatIfScenarioStore } from '../data/mock/stores/whatIfScenarioStore';
 import { hubSettingsStore, settingValue } from './hubSettingsStore';
 import { reasonCodeStore } from './reasonCodes';
 
@@ -276,6 +279,8 @@ async function realIds() {
     maxStock: 'sup-007|PK-PETB-8801',
     // FUX-D3 — `entityId` IS `<stream>|<weekStart>`; every well-formed id exists.
     warehouseDecision: 'packaging|2026-10-12',
+    // DRC-D11 — `entityId` IS the material code; every master code exists.
+    osipLevel: 'PK-PETB-8801',
     supplierDocument: supplierDocumentStore.all()[0]?.id ?? null,
     supplierApplication: raised.entityId ?? null,
     receiptDiscrepancy: receiptDiscrepancyStore.all()[0]?.receiptId ?? null,
@@ -297,6 +302,9 @@ async function realIds() {
     // CAP-11 — a consumption record is creation-only (unprobeable) and its store
     // starts empty (no consumption history is invented); a well-formed id.
     consumption: 'con-0001',
+    // BL-194 — a feedstock confirmation is creation-only (unprobeable) and its
+    // store starts empty (every material is due until confirmed); a well-formed id.
+    feedstockConfirmation: 'fsc-0001',
     // REQ-E14-13 — a "taken to SAP" mark is creation-only (unprobeable) and its
     // store starts empty (nothing is marked while the engine data is simulated);
     // the id is a well-formed one so the coverage control can see the target.
@@ -307,6 +315,9 @@ async function realIds() {
     // Material E1 — a stock simulation planner input is creation-only
     // (unprobeable, AR-20) and its store starts empty; a well-formed id.
     simulationOverride: 'sim-0001',
+    // BL-202 — a what-if scenario is creation-only (unprobeable) and its store
+    // starts empty (no scenario is invented); a well-formed id.
+    whatIfScenario: 'wis-0001',
     // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — every RFx store is seeded, so each
     // first row is a real id. The two RESPONSE targets are supplier-owned and
     // therefore land in `ownerful`; the three buyer-owned ones land in
@@ -419,6 +430,7 @@ async function walk(entity, t) {
   if (entity === 'reasonCode') return at('poAdjust:capacity', 'Maintained');
   if (entity === 'maxStock') return at('sup-007|PK-PETB-8801', 'Maintained');
   if (entity === 'warehouseDecision') return at('packaging|2026-10-12', 'Maintained');
+  if (entity === 'osipLevel') return at('PK-PETB-8801', 'Maintained');
   if (entity === 'supplierApplication') {
     const raised = await svc.dispatch(buyerSeat('procurement'), {
       transitionId: 't_application_submit',
@@ -474,8 +486,11 @@ const resetAll = () => {
   materialOverlayStore.reset();
   mrpControllerStore.reset();
   warehouseDecisionStore.reset();
+  osipLevelStore.reset();
   materialNameStore.reset();
+  feedstockConfirmationStore.reset();
   simulationOverrideStore.reset();
+  whatIfScenarioStore.reset();
   hubSettingsStore.reset();
   reasonCodeStore.reset();
   // NR-2 — the id supply closes rfp-002 and opens a firm-offer round.
@@ -578,6 +593,8 @@ describe('POPULATION — nothing below means anything without this', () => {
     // So is a stock simulation planner input (Material E1, AR-20) and a forecast override (REQ-E14-11).
     // So is a demand anticipation publication (CAP-10): it is followed, never changed.
     // And a consumption record (CAP-11): a later record supersedes it at read.
+    // And a feedstock confirmation (BL-194): append-only, the latest in force.
+    // And a what-if scenario (BL-202): saved once, never changed.
     expect(unprobeable).toEqual([
       'rfqConfidentiality',
       'inventoryDeclaration',
@@ -589,7 +606,9 @@ describe('POPULATION — nothing below means anything without this', () => {
       'sapChangeMark',
       'forecastOverride',
       'demandAnticipation',
-      'consumption'
+      'consumption',
+      'whatIfScenario',
+      'feedstockConfirmation'
     ]);
   });
 
@@ -697,6 +716,8 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
       // REQ-E03-05 — a negotiation round is PTI's window; a supplier answers
       // it through its own quotation, never by addressing the round.
       'negotiationRound',
+      // DRC-D11 — a material's OSIP level is the Material Planning team's.
+      'osipLevel',
       // Material C5 — planning groups are PTI master data (MR-8, MAT-D12).
       'planningGroup',
       'purchaseRequisition',
@@ -857,6 +878,16 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
     });
     expect(wdRes.status, wdRes.reason).toBe('done');
     expect(warehouseDecisionStore.all().map((r) => r.choice)).toEqual(['rent']);
+
+    // DRC-D11 — the planning lane sets a material's OSIP level.
+    const levelRes = await svc.dispatch(buyerSeat('planning'), {
+      transitionId: 't_osiplevel_set',
+      entity: 'osipLevel',
+      entityId: 'PK-PETB-8801',
+      payload: { osipLevel: 5 }
+    });
+    expect(levelRes.status, levelRes.reason).toBe('done');
+    expect(osipLevelStore.all().map((r) => r.level)).toEqual([5]);
 
     const qualRes = await svc.dispatch(buyerSeat('compliance'), {
       transitionId: 't_qualification_rule_set',

@@ -1,6 +1,7 @@
 import { callOffStore } from './stores/callOffStore';
 /** @import { CallOff } from '../types' */
 /** @import { BlanketPoRunOut } from '../../transitions/blanketPoRules' */
+/** @import { NpdReview } from '../../transitions/osipRopRules' */
 import { purchaseOrderStore } from './stores/purchaseOrderStore';
 import {
   allAlerts,
@@ -13,7 +14,21 @@ import {
 import { stockAccessStore } from './stores/inventoryHubStores';
 import { allPlanningGroups } from './planningGroupReadModel';
 import { allDemandAnticipationWithSupply } from './supplyBelowDemandReadModel';
+import { withLtpFgDemandRead } from './ltpFgDemandReadModel';
+import { osipSafetyInputs } from './osipSafetyReadModel';
+import { npdReviews, osipRopInputs, systemRopSuppliers } from './osipRopReadModel';
+import { whatIfPairs, whatIfSandbox } from './whatIfSandboxReadModel';
+import { protectionBufferInputs } from './protectionBufferReadModel';
+/** @import { ProtectionBufferInput } from '../../transitions/drcBufferRules' */
+/** @import { WhatIfPair, WhatIfSandbox } from './whatIfSandboxReadModel' */
+import { ropFisikPrRecommendations } from './callOffTriggerReadModel';
+/** @import { PrRecommendationView } from '../../transitions/callOffTriggerRules' */
 /** @import { DemandAnticipationSupplyRow } from '../../transitions/supplyBelowDemandRules' */
+/** @import { DaHistoryRow } from '../../transitions/demandAnticipationHistory' */
+import { allDemandAnticipationHistory } from './demandAnticipationHistoryReadModel';
+/** @import { SupplierDaRow } from './demandAnticipationReadModel' */
+import { supplierDemandAnticipation } from './demandAnticipationReadModel';
+import { SUPPLIER_DA_VIEW_ENABLED } from '../../transitions/supplierDaView';
 import { stockSimulationRows } from './stockSimulationReadModel';
 import {
   allCommitmentLines,
@@ -22,7 +37,7 @@ import {
   currentPlanVersion,
   forecastSupplierName
 } from './forecastReadModel';
-import { allFixedStockRows } from './fixedStockReadModel';
+import { allFeedstockRows } from './feedstockReadModel';
 import { maskForSupplier } from '../../transitions/inventoryRules';
 import { PTI_ONLY_RULES } from '../../transitions/inventoryAlertRules';
 import { mockShipments } from '@data/mockShipments';
@@ -118,6 +133,8 @@ import { labelOf, materialEntry } from '../../sdc/materialMaster';
 import { withMrpController } from './mrpControllerReadModel';
 // Material C2 — supplier trade names, narrowed per reader (MR-3 BR-03).
 import { materialNameRowsFor, withTradeName } from './materialNameReadModel';
+// BL-194 — the supplier's feedstock confirmation in force (DRC-8).
+import { withFeedstock } from './feedstockConfirmationReadModel';
 import { FEEDS, dataHealth } from '../../engine/dataHealth';
 import { currentDemandForecast, currentForecastBias, withOverrides } from './demandForecastRun';
 import { forecastOverrideStore } from './stores/forecastOverrideStore';
@@ -314,18 +331,68 @@ function trendForScope(scope) {
 // ─────────────────────────────────────────────────────────────────────────────
 const INVOICE_NOW = `${DECLARED_PRESENT}T00:00:00.000Z`;
 
+// ── The E14-04 run, computed once per input (perf, 2026-10-19) ───────────────
+// Measured: one Safety stock targets read is three engine runs (today, and the
+// last packaging and raw-material runs, BR-06) at ~28 ms each, ~85 ms of the
+// ~92 ms read; the OSIP inputs are ~7 ms. The page and every other reader of
+// the run (sizing, stabilise) asked for the same runs again on every read.
+//
+// `safetyStockRun` is pure. Its whole input is: the engine dataset, the day,
+// the service targets and the safety lead time percentile in force, and the
+// frozen DEFAULT_SAFETY_STOCK_OPTIONS. It reads no store a command writes. So
+// the run is kept per input and is thrown away whenever any input changes:
+//   · the dataset — `engineDataset()` is memoised per hub present and returns a
+//     NEW object when the hub clock moves, so the whole cache is dropped then;
+//   · the day — part of the key;
+//   · the targets and the percentile (`t_setting_set`, BL-32) — read in force
+//     on every call and part of the key, so a changed value misses the cache.
+// The run is frozen so a reader that tried to change a shared run would throw
+// instead of changing the next read's figures.
+/** The most runs kept for one dataset (the reads ask for a handful of days). */
+const SAFETY_STOCK_RUNS_KEPT = 32;
+/** @type {{ data: ReturnType<typeof engineDataset>; runs: Map<string, SafetyStockRun> } | null} */
+let safetyStockRuns = null;
+
+/**
+ * @param {SafetyStockRun} run
+ * @returns {SafetyStockRun}
+ */
+function frozenRun(run) {
+  for (const m of run.materials) {
+    Object.freeze(m.errors);
+    Object.freeze(m);
+  }
+  Object.freeze(run.materials);
+  for (const s of run.safetyLeadTimes) Object.freeze(s);
+  Object.freeze(run.safetyLeadTimes);
+  Object.freeze(run.parameters);
+  return Object.freeze(run);
+}
+
 /**
  * REQ-E14-04 on the engine dataset, at the hub's present (or `asOf`), with the values in force.
  * @param {string} [asOf]
  * @returns {SafetyStockRun}
  */
 function engineSafetyStock(asOf = dayOf(sdcClock.now())) {
-  return safetyStockRun(engineDataset(), {
-    ...DEFAULT_SAFETY_STOCK_OPTIONS,
-    asOf,
-    targets: engineServiceTargets(),
-    safetyLeadTimePercentile: safetyLeadTimePercentile()
-  });
+  const data = engineDataset();
+  const targets = engineServiceTargets();
+  const percentile = safetyLeadTimePercentile();
+  if (safetyStockRuns?.data !== data) safetyStockRuns = { data, runs: new Map() };
+  const key = [asOf, targets.high, targets.standard, targets.slow, percentile].join('|');
+  const kept = safetyStockRuns.runs.get(key);
+  if (kept) return kept;
+  const run = frozenRun(
+    safetyStockRun(data, {
+      ...DEFAULT_SAFETY_STOCK_OPTIONS,
+      asOf,
+      targets,
+      safetyLeadTimePercentile: percentile
+    })
+  );
+  if (safetyStockRuns.runs.size >= SAFETY_STOCK_RUNS_KEPT) safetyStockRuns.runs.clear();
+  safetyStockRuns.runs.set(key, run);
+  return run;
 }
 
 /**
@@ -422,8 +489,22 @@ export class MockProcurementService {
     }
     if (filter?.supplierId) rows = rows.filter((r) => r.supplierId === filter.supplierId);
     if (filter?.materialCode) rows = rows.filter((r) => r.materialCode === filter.materialCode);
+    // DRC-D15 (BL-196) — PTI reads the system's ROP Supplier beside the
+    // supplier's own reorder point, which is display only. A supplier reads none.
+    if (scope.personaType === 'buyer' && rows.length > 0) {
+      const system = systemRopSuppliers();
+      rows = rows.map((r) => ({
+        ...r,
+        systemRopSupplier: system.get(`${r.supplierId}|${r.materialCode}`) ?? null
+      }));
+    }
     // Material C2 — the supplier's approved trade name beside PTI's description.
-    return { items: rows.map((r) => withTradeName(withMrpController(r, r.materialCode, scope))) };
+    // BL-194 (DRC-8) — the feedstock in force, as its own field beside SOH.
+    return {
+      items: rows.map((r) =>
+        withFeedstock(withTradeName(withMrpController(r, r.materialCode, scope)))
+      )
+    };
   }
 
   // Material C2 (MR-3 BR-03) — narrowed in the read model: a supplier reads its
@@ -485,7 +566,34 @@ export class MockProcurementService {
     // CAP-10 — PTI's own plan, frozen per horizon; a supplier reads none.
     if (scope.personaType !== 'buyer') return { items: [] };
     // CAP-12 — with open supply, the gap and its proposal per week.
-    return { items: allDemandAnticipationWithSupply() };
+    // DRC-18 (BL-203) — with FG demand, LTP − FG demand and the consumption
+    // moving average per week, read only.
+    return { items: withLtpFgDemandRead(allDemandAnticipationWithSupply()) };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<SupplierDaRow>>}
+   */
+  async getSupplierDemandAnticipation(scope) {
+    // BL-204 (DRC-1) — built ahead and switched off (DRC-D10): while the flag
+    // is false nobody reads anything here.
+    if (!SUPPLIER_DA_VIEW_ENABLED) return { items: [] };
+    // Scoped by persona, never by page: a supplier reads its own pairs only;
+    // PTI reads every pair (what its suppliers would see).
+    return { items: applySupplierScope(scope, supplierDemandAnticipation()) };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<DaHistoryRow>>}
+   */
+  async getDemandAnticipationHistory(scope) {
+    // DRC-3 (BL-189), [Owner A10] — the audit view of every publication. PTI's
+    // own plan: a supplier reads none (persona scoping, as getDemandAnticipation).
+    // No business-role gate (CLAUDE.md §65; owner decision 2026-10-19).
+    if (scope.personaType !== 'buyer') return { items: [] };
+    return { items: allDemandAnticipationHistory() };
   }
 
   /**
@@ -579,9 +687,11 @@ export class MockProcurementService {
    * @returns {Promise<Page<FixedStockReconcileRow>>}
    */
   async getFixedStockReconcile(scope) {
-    // REQ-E06-04 BR-12 — the planner reads every supplier; a supplier reads only
-    // its own rows, scoped HERE so another supplier's figures never reach the page.
-    return { items: applySupplierScope(scope, allFixedStockRows()) };
+    // DRC-15a BR-04 (was REQ-E06-04 BR-12) — the FEEDSTOCK reconcile. The method
+    // keeps its contract name (C1-methods) since FS now reads "feedstock". The
+    // planner reads every supplier; a supplier reads only its own rows, scoped
+    // HERE so another supplier's figures never reach the page.
+    return { items: applySupplierScope(scope, allFeedstockRows()) };
   }
 
   /**
@@ -967,6 +1077,11 @@ export class MockProcurementService {
       packaging: engineSafetyStock(previousAsOf.packaging),
       rawMaterial: engineSafetyStock(previousAsOf.rawMaterial)
     });
+    // BL-193 (DRC-7) / BL-197 (DRC-11) — the OSIP inputs per material; the
+    // page applies the rules (the default, or a switch variant).
+    const osip = osipSafetyInputs();
+    // BL-196 (DRC-D11) / BL-198 (DRC-12a) — each material's level and NPD tags.
+    const rop = osipRopInputs(run.materials.map((m) => m.materialCode));
     return {
       ...run,
       previousAsOf,
@@ -976,9 +1091,74 @@ export class MockProcurementService {
         supplierName: m.supplierId ? forecastSupplierName(m.supplierId) : null,
         change: /** @type {import('../../engine/safetyStock').SafetyStockChange} */ (
           changes.get(m.materialCode)
+        ),
+        osip: /** @type {import('../../transitions/osipSafetyRules').MaterialOsipInputs} */ (
+          osip.get(m.materialCode)
+        ),
+        rop: /** @type {import('../../transitions/osipRopRules').MaterialRopInputs} */ (
+          rop.get(m.materialCode)
         )
       }))
     };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<PrRecommendationView>>}
+   */
+  async getRopFisikPrRecommendations(scope) {
+    // BL-199 (DRC-13 BR-02) — "Create a PR in SAP" when no umbrella PO balance
+    // is left at ROP Fisik. A recommendation only: the hub posts nothing to
+    // SAP. PTI only (X-03).
+    if (scope.personaType !== 'buyer') return { items: [] };
+    return { items: ropFisikPrRecommendations() };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<NpdReview>>}
+   */
+  async getNpdReviews(scope) {
+    // DRC-12a (BL-198) — the planner's "Review ROP after first order" tasks,
+    // raised once when a material's NPD tag drops. PTI only (X-03).
+    if (scope.personaType !== 'buyer') return { items: [] };
+    return { items: npdReviews() };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<ProtectionBufferInput>>}
+   */
+  async getProtectionBufferInputs(scope) {
+    // DRC-9c (BL-205) [Proposed] — level and production MPQ per supplier ×
+    // material; the page applies the rule. PTI's planning read: a supplier
+    // persona reads nothing.
+    if (scope.personaType !== 'buyer') return { items: [] };
+    return { items: protectionBufferInputs() };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<WhatIfPair>>}
+   */
+  async getWhatIfPairs(scope) {
+    // DRC-17 BR-01 / BR-07 (BL-202) — the pairs the sandbox offers. PTI's own
+    // analysis: a supplier persona reads nothing (no role gate, CLAUDE.md §65).
+    if (scope.personaType !== 'buyer') return { items: [] };
+    return { items: whatIfPairs() };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @param {string} supplierId
+   * @param {string} materialCode
+   * @returns {Promise<WhatIfSandbox | null>}
+   */
+  async getWhatIfSandbox(scope, supplierId, materialCode) {
+    // DRC-17 BR-02 / BR-05 (BL-202) — one pair's live inputs and saved
+    // scenarios. A supplier persona reads nothing (BR-07).
+    if (scope.personaType !== 'buyer') return null;
+    return whatIfSandbox(supplierId, materialCode);
   }
 
   // ─── Sourcing ─────────────────────────────────────────────────────────────
@@ -1235,9 +1415,12 @@ export class MockProcurementService {
     // REQ-E09-03 — call-offs resolve from the mutable store. A supplier sees its
     // own released call-offs only: a draft or a dismissed draft is the planner's.
     const rows = applySupplierScope(scope, callOffStore.all());
+    // BL-199 — the ROP Fisik figures behind a hub-made draft are PTI's.
     const visible =
       scope.personaType === 'supplier'
-        ? rows.filter((c) => c.status !== 'Draft' && c.status !== 'Dismissed')
+        ? rows
+            .filter((c) => c.status !== 'Draft' && c.status !== 'Dismissed')
+            .map(({ trigger: _ptiOnly, ...c }) => c)
         : rows;
     // Material C4 — each call-off names its material's MRP controller (MR-5 BR-03).
     return { items: visible.map((c) => withMrpController(c, c.materialCode, scope)) };

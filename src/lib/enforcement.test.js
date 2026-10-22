@@ -906,6 +906,11 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
     // hide behind a new spec file.
     const suites = referencing.filter((p) => isTestFile(p));
     expect(suites).toEqual([
+      // ⚠️ The react-hook-form pin suite: every form state of the wizard,
+      // written green on the `useState` draft before the conversion. It
+      // consumes `EnforcementSetting` as a TYPE for the empty ledger prop, the
+      // §91 shape exactly. Authorised by the GR wizard RHF batch.
+      '/src/components/v2-features/GRInspectionWizard.formStates.test.jsx',
       '/src/components/v2-features/GRInspectionWizard.test.jsx',
       // ⚠️ §91 — the wizard's COMPLETION path, which had no spec at all until
       // this batch: `GRInspectionWizard.test.jsx` stops at the quality step. It

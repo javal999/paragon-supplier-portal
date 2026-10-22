@@ -80,6 +80,7 @@ import SupplierRegistrationV2 from '@pages-v2/SupplierRegistration';
 import SupplierDeliveryAgreements from '@pages-v2/SupplierDeliveryAgreements';
 import SupplierCallOffs from '@pages-v2/SupplierCallOffs';
 import SupplierCapacity from '@pages-v2/SupplierCapacity';
+import SupplierDemandAnticipation from '@pages-v2/SupplierDemandAnticipation';
 import BuyerCommitments from '@pages-v2/BuyerCommitments';
 import BuyerReliability from '@pages-v2/BuyerReliability';
 import {
@@ -92,6 +93,8 @@ import BuyerOrderPlan from '@pages-v2/BuyerOrderPlan';
 import BuyerThisWeek from '@pages-v2/BuyerThisWeek';
 import BuyerReschedule from '@pages-v2/BuyerReschedule';
 import BuyerDemandAnticipation from '@pages-v2/BuyerDemandAnticipation';
+import BuyerDemandAnticipationHistory from '@pages-v2/BuyerDemandAnticipationHistory';
+import BuyerWhatIfSandbox from '@pages-v2/BuyerWhatIfSandbox';
 import BuyerStabilise from '@pages-v2/BuyerStabilise';
 import BuyerDataHealth from '@pages-v2/BuyerDataHealth';
 import BuyerDemandForecast from '@pages-v2/BuyerDemandForecast';
@@ -168,7 +171,7 @@ const AppRouter = () => {
               element={<Navigate to="/buyer/stabilise?tab=versions" replace />}
             />
             <Route path="/buyer/collaboration" element={<BuyerCommitments />} />
-            {/* REQ-E06-04 — fixed stock reconcile per supplier × material × cycle (ENG-D21). */}
+            {/* DRC-15a — feedstock reconcile per supplier × material, daily (path kept, BR-05). */}
             <Route path="/buyer/fs-reconcile" element={<BuyerFixedStockReconcile />} />
             {/* REQ-E14-02 — supplier reliability and PTI's plan-change measures (BL-99). */}
             <Route path="/buyer/reliability" element={<BuyerReliability />} />
@@ -183,6 +186,13 @@ const AppRouter = () => {
             <Route path="/buyer/reschedule" element={<BuyerReschedule />} />
             {/* CAP-10 — demand anticipation, frozen per 4-week horizon (sample data). */}
             <Route path="/buyer/demand-anticipation" element={<BuyerDemandAnticipation />} />
+            {/* DRC-3 (BL-189) — the publication history and audit view. */}
+            <Route
+              path="/buyer/demand-anticipation-history"
+              element={<BuyerDemandAnticipationHistory />}
+            />
+            {/* DRC-17 (BL-202) — the what-if sandbox: analysis only, never pushed to the plan. */}
+            <Route path="/buyer/what-if" element={<BuyerWhatIfSandbox />} />
             {/* REQ-E14-06 — stabilise and publish the plan to suppliers (SIMULATED; never shown to a supplier). */}
             <Route path="/buyer/stabilise" element={<BuyerStabilise />} />
             {/* REQ-E14-01 — data health of the engine's inputs (SIMULATED). */}
@@ -289,7 +299,10 @@ const AppRouter = () => {
               The earlier responses and shipment reports stay reachable beneath it;
               its Stock tab only points to the Stock page (BL-60, one stock entry). */}
             <Route path="/supplier/forecasts" element={<SupplierForecastCommitments />} />
-            {/* REQ-E06-04 — the supplier's own fixed stock reconcile rows. */}
+            {/* BL-204 (DRC-1) — the supplier's own published demand anticipation; shows
+              "not available yet" while SUPPLIER_DA_VIEW_ENABLED is off (DRC-D10). */}
+            <Route path="/supplier/demand-anticipation" element={<SupplierDemandAnticipation />} />
+            {/* DRC-15a — the supplier's own feedstock reconcile rows (path kept, BR-05). */}
             <Route path="/supplier/fs-reconcile" element={<SupplierFixedStockReconcile />} />
             <Route
               path="/supplier/forecasts/responses"

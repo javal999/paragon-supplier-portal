@@ -1,73 +1,55 @@
 // ────────────────────────────────────────────────────────────────────────────
-// CAP-11 (BL-180) — the pure rules: the record in force, the split across
-// suppliers by demand anticipation share (CAP-D14), the excess of a frozen
-// horizon (BR-01), absorbing it into the next horizon (BR-02, BR-03,
-// CAP-D17), what stays unabsorbed (BR-04), the figure in force on the page's
-// rows, the verb's refusals and the upload template check.
+// CAP-11 (BL-180) — the pure rules that stay under DRC-D13: the record in
+// force, the split across suppliers (BL-211: by LTP share, CAP-D11; CAP-D14's
+// split by demand anticipation kept as a variant), the verb's refusals and the
+// upload template check.
 //
-// Every scenario is built by hand: one frozen horizon W36–W39 (anchor Monday
-// 31 Aug 2026) and today's figures from W36, so each number is the brief's.
+// RETIRED with CAP-11 BR-02/03 (superseded by DRC-4 BR-02, BL-190, which
+// absorbs a surplus in the last week of the rolling horizon): the excess of a
+// frozen horizon, absorbing it into the next horizon, "a frozen week never
+// changes", and `spreadExcess`. Their successors are in
+// `demandAnticipationRules.drc2.test.js` ("DRC-4 BR-02 — supply above the
+// demand anticipation"). The unabsorbed alert subject now reads DRC-4's
+// surplus, tested below.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { describe, expect, it } from 'vitest';
 import { NO_PERSON } from '@context/noPerson';
 import {
-  absorptionPlan,
   consumptionInForce,
   consumptionRefusal,
   consumptionShares,
   consumptionTemplateCsv,
-  rowsInForce,
-  seriesInForce,
-  spreadExcess,
-  validateConsumptionRows
+  validateConsumptionRows,
+  withConsumption
 } from './consumptionRules';
-import { demandAnticipationRows, entriesToFreeze } from './demandAnticipationRules';
+import { DEMAND_ANTICIPATION_RULES } from './demandAnticipationRules';
 import { unabsorbedAlertSubjects } from './inventoryAlertRules';
 import { parseCsv } from './inventoryRules';
 /** @import { ConsumptionRecord } from './consumptionRules' */
-/** @import { DemandAnticipationPublication, DemandAnticipationSeries } from './demandAnticipationRules' */
+/** @import { DemandAnticipationRowCore } from './demandAnticipationRules' */
 
 const NOW = '2026-08-31T12:00:00.000Z';
 const H1 = ['2026-08-31', '2026-09-07', '2026-09-14', '2026-09-21'];
-const H2 = ['2026-09-28', '2026-10-05', '2026-10-12', '2026-10-19'];
-const SHOWN = Array.from({ length: 13 }, (_, i) =>
-  new Date(Date.parse('2026-08-31T00:00:00Z') + i * 7 * 86_400_000).toISOString().slice(0, 10)
-);
-const INPUTS = { ltp: 0, stockShare: null, ropShare: null };
 
 /**
- * One publication freezing `weeks` per supplier at `qty`.
- * @param {Record<string, number>} bySupplier
+ * A page row holding `qty` in force every week of `weeks` and the LTP share
+ * `share` (only the fields the split reads).
+ * @param {string} supplierId
+ * @param {number} qty
  * @param {readonly string[]} [weeks]
- * @param {string} [material]
- * @returns {DemandAnticipationPublication}
+ * @param {number | null} [share]
+ * @returns {DemandAnticipationRowCore}
  */
-const publication = (bySupplier, weeks = H1, material = 'RM-1') => ({
-  id: 'dap-0001',
-  publishedAt: NOW,
-  actor: NO_PERSON,
-  source: 'sampleSeed',
-  horizonStart: weeks[0],
-  horizonWeeks: weeks,
-  entries: Object.entries(bySupplier).flatMap(([supplierId, qty]) =>
-    weeks.map((week) => ({ supplierId, materialCode: material, week, qty, inputs: INPUTS }))
-  )
-});
-
-/**
- * Today's figures: `qty` every shown week per supplier.
- * @param {Record<string, number>} bySupplier
- * @returns {DemandAnticipationSeries[]}
- */
-const today = (bySupplier) =>
-  Object.entries(bySupplier).map(([supplierId, qty]) => ({
-    supplierId,
-    materialCode: 'RM-1',
-    share: 1,
-    stockOnRecord: false,
-    weeks: SHOWN.map((week) => ({ week, qty, inputs: { ...INPUTS, ltp: qty } }))
-  }));
+const row = (supplierId, qty, weeks = H1, share = 1) =>
+  /** @type {DemandAnticipationRowCore} */ (
+    /** @type {unknown} */ ({
+      supplierId,
+      materialCode: 'RM-1',
+      share,
+      weeks: weeks.map((week) => ({ week, qty, consumption: null, consumptionRecord: null }))
+    })
+  );
 
 let n = 0;
 /**
@@ -90,230 +72,48 @@ const rec = (week, qty, material = 'RM-1') => {
   };
 };
 
-/** @param {ReturnType<typeof absorptionPlan>} plan @param {string} s @param {string} w */
-const absorbedOf = (plan, s, w) => plan.absorbed.get(`${s}|RM-1|${w}`)?.qty ?? 0;
+describe('the split across suppliers (BL-211, owner ruling 2026-10-19)', () => {
+  // Worked by hand: 20,000 recorded; LTP shares 0.6 / 0.4; DA in force
+  // 10,000 / 30,000 (the opposite way round, so the two splits disagree).
+  const rows = () => [row('sup-A', 10_000, H1, 0.6), row('sup-B', 30_000, H1, 0.4)];
 
-describe('AC-01 (spec) — an excess of 12,000 over 20,000/wk in the next horizon', () => {
-  it('takes 3,000 off each of W40–W43, so each reads 17,000', () => {
-    const pubs = [publication({ 'sup-A': 20_000 })];
-    // W36 frozen at 20,000, consumption 8,000 → excess 12,000.
-    const plan = absorptionPlan(
-      { publications: pubs, today: today({ 'sup-A': 20_000 }), records: [rec(H1[0], 8_000)] },
-      NOW
-    );
-    expect(H2.map((w) => absorbedOf(plan, 'sup-A', w))).toEqual([3_000, 3_000, 3_000, 3_000]);
-    expect(plan.unabsorbed).toEqual([]);
-    const rows = rowsInForce(demandAnticipationRows(pubs, today({ 'sup-A': 20_000 }), NOW), plan);
-    const weeks = rows[0].weeks;
-    expect(H2.map((w) => weeks.find((x) => x.week === w)?.qty)).toEqual([
-      17_000, 17_000, 17_000, 17_000
-    ]);
-    expect(weeks.find((x) => x.week === H2[0])?.absorbed).toEqual({
-      qty: 3_000,
-      fromHorizonStart: H1[0],
-      fromWeeks: H1
+  it('the default is the LTP share: 20,000 × 0.6 = 12,000 and × 0.4 = 8,000', () => {
+    expect(DEMAND_ANTICIPATION_RULES.consumptionSplit).toBe('ltpShare');
+    const [a, b] = withConsumption(rows(), [rec(H1[0], 20_000)]);
+    expect(a.weeks[0]).toMatchObject({ consumption: 12_000 });
+    expect(b.weeks[0]).toMatchObject({ consumption: 8_000 });
+    expect(a.weeks[0].consumptionRecord).toMatchObject({
+      materialQty: 20_000,
+      share: 0.6,
+      source: 'manual'
     });
-    expect(weeks.find((x) => x.week === H1[0])?.consumption).toBe(8_000);
+    // A week with no record reads null.
+    expect(a.weeks[1].consumption).toBeNull();
   });
-});
 
-describe('AC-02 — an excess of 90,000 over 20,000/wk', () => {
-  const pubs = [publication({ 'sup-A': 30_000 })];
-  // 4 × (30,000 − 7,500) = 90,000.
-  const records = H1.map((w) => rec(w, 7_500));
-  const plan = absorptionPlan(
-    { publications: pubs, today: today({ 'sup-A': 20_000 }), records },
-    NOW
-  );
+  it('variant demandAnticipation (CAP-D14): by the DA in force, 5,000 / 15,000', () => {
+    const [a, b] = withConsumption(rows(), [rec(H1[0], 20_000)], 'demandAnticipation');
+    expect(a.weeks[0]).toMatchObject({ consumption: 5_000 });
+    expect(b.weeks[0]).toMatchObject({ consumption: 15_000 });
+    expect(a.weeks[0].consumptionRecord?.share).toBe(0.25);
+  });
 
-  it('absorbs 20,000 in each week, never below 0, and leaves 10,000 unabsorbed', () => {
-    expect(H2.map((w) => absorbedOf(plan, 'sup-A', w))).toEqual([20_000, 20_000, 20_000, 20_000]);
-    expect(plan.unabsorbed).toEqual([
-      {
-        supplierId: 'sup-A',
-        materialCode: 'RM-1',
-        fromWeeks: H1,
-        intoWeeks: H2,
-        excess: 90_000,
-        remaining: 10_000
-      }
+  it('variant even: 10,000 each', () => {
+    const [a, b] = withConsumption(rows(), [rec(H1[0], 20_000)], 'even');
+    expect([a.weeks[0].consumption, b.weeks[0].consumption]).toEqual([10_000, 10_000]);
+  });
+
+  it('splits evenly when the weights add up to 0, under either weighted split', () => {
+    const zero = [
+      { supplierId: 'a', qty: 0, ltpShare: 0 },
+      { supplierId: 'b', qty: 0, ltpShare: null }
+    ];
+    const half = new Map([
+      ['a', 0.5],
+      ['b', 0.5]
     ]);
-    const rows = rowsInForce(demandAnticipationRows(pubs, today({ 'sup-A': 20_000 }), NOW), plan);
-    for (const w of H2) expect(rows[0].weeks.find((x) => x.week === w)?.qty).toBe(0);
-  });
-
-  it('raises the alert subject with the remaining 10,000', () => {
-    const subjects = unabsorbedAlertSubjects(plan.unabsorbed, NOW, {
-      supplierName: () => 'Supplier A',
-      materialLabel: () => 'Raw one',
-      uom: () => 'kg'
-    });
-    expect(subjects).toEqual([
-      expect.objectContaining({
-        supplierId: 'sup-A',
-        materialCode: 'RM-1',
-        remaining: 10_000,
-        uom: 'kg',
-        fromWeeks: H1,
-        intoWeeks: H2
-      })
-    ]);
-  });
-
-  it('control — an excess within the next horizon raises no alert subject', () => {
-    const within = absorptionPlan(
-      { publications: pubs, today: today({ 'sup-A': 30_000 }), records },
-      NOW
-    );
-    expect(within.unabsorbed).toEqual([]);
-    expect(
-      unabsorbedAlertSubjects(within.unabsorbed, NOW, {
-        supplierName: String,
-        materialLabel: String,
-        uom: String
-      })
-    ).toEqual([]);
-  });
-});
-
-describe('AC-03 — no consumption recorded', () => {
-  it('means no excess and no adjustment: the rows are exactly the CAP-10 rows', () => {
-    const pubs = [publication({ 'sup-A': 20_000 })];
-    const plan = absorptionPlan(
-      { publications: pubs, today: today({ 'sup-A': 20_000 }), records: [] },
-      NOW
-    );
-    expect(plan.absorbed.size).toBe(0);
-    expect(plan.unabsorbed).toEqual([]);
-    const base = demandAnticipationRows(pubs, today({ 'sup-A': 20_000 }), NOW);
-    expect(rowsInForce(base, plan)).toEqual(base);
-  });
-
-  it('a week with consumption at or above the frozen figure adds nothing', () => {
-    const pubs = [publication({ 'sup-A': 20_000 })];
-    const plan = absorptionPlan(
-      {
-        publications: pubs,
-        today: today({ 'sup-A': 20_000 }),
-        records: [rec(H1[0], 25_000), rec(H1[1], 20_000)]
-      },
-      NOW
-    );
-    expect(plan.absorbed.size).toBe(0);
-  });
-});
-
-describe('a frozen week never changes', () => {
-  it('absorbs only into the next horizon’s weeks no publication froze, and keeps a frozen figure', () => {
-    // W40 is already frozen at 20,000 (a partial later publication); W41–W43 are open.
-    const pubs = [
-      publication({ 'sup-A': 20_000 }),
-      { ...publication({ 'sup-A': 20_000 }, [H2[0]]), id: 'dap-0002' }
-    ];
-    const plan = absorptionPlan(
-      { publications: pubs, today: today({ 'sup-A': 20_000 }), records: [rec(H1[0], 8_000)] },
-      NOW
-    );
-    expect(H2.map((w) => absorbedOf(plan, 'sup-A', w))).toEqual([0, 4_000, 4_000, 4_000]);
-    const rows = rowsInForce(demandAnticipationRows(pubs, today({ 'sup-A': 20_000 }), NOW), plan);
-    const w40 = rows[0].weeks.find((x) => x.week === H2[0]);
-    expect(w40?.frozen).toBe(true);
-    expect(w40?.qty).toBe(20_000);
-    expect(w40?.absorbed).toBeNull();
-    // And the frozen horizon the excess arose in keeps its figure too.
-    expect(rows[0].weeks.find((x) => x.week === H1[0])?.qty).toBe(20_000);
-  });
-
-  it('a horizon frozen WITH its absorption is not absorbed twice, and "would be" compares like for like', () => {
-    const plan0 = absorptionPlan(
-      {
-        publications: [publication({ 'sup-A': 20_000 })],
-        today: today({ 'sup-A': 20_000 }),
-        records: [rec(H1[0], 8_000)]
-      },
-      NOW
-    );
-    // Publishing W40–W43 now freezes the figure in force, carrying the absorption.
-    const entries = entriesToFreeze(
-      [publication({ 'sup-A': 20_000 })],
-      seriesInForce(today({ 'sup-A': 20_000 }), plan0),
-      H2
-    );
-    expect(entries.map((e) => e.qty)).toEqual([17_000, 17_000, 17_000, 17_000]);
-    expect(entries[0].absorbed).toEqual({ qty: 3_000, fromHorizonStart: H1[0] });
-    const pubs = [
-      publication({ 'sup-A': 20_000 }),
-      { ...publication({ 'sup-A': 0 }, H2), id: 'dap-0002', entries }
-    ];
-    const plan = absorptionPlan(
-      { publications: pubs, today: today({ 'sup-A': 20_000 }), records: [rec(H1[0], 8_000)] },
-      NOW
-    );
-    expect(plan.unabsorbed).toEqual([]);
-    const rows = rowsInForce(demandAnticipationRows(pubs, today({ 'sup-A': 20_000 }), NOW), plan);
-    const w40 = rows[0].weeks.find((x) => x.week === H2[0]);
-    expect(w40?.qty).toBe(17_000);
-    expect(w40?.absorbed?.qty).toBe(3_000);
-    expect(w40?.wouldBe).toBe(17_000);
-    expect(w40?.delta).toBe(0);
-  });
-
-  it('a larger excess found after the next horizon froze cannot be absorbed: it is unabsorbed', () => {
-    const entries = H2.map((week) => ({
-      supplierId: 'sup-A',
-      materialCode: 'RM-1',
-      week,
-      qty: 17_000,
-      inputs: INPUTS,
-      absorbed: { qty: 3_000, fromHorizonStart: H1[0] }
-    }));
-    const pubs = [
-      publication({ 'sup-A': 20_000 }),
-      { ...publication({ 'sup-A': 0 }, H2), id: 'dap-0002', entries }
-    ];
-    // A later record lowers W36 to 5,000: the excess is now 15,000, 12,000 was absorbed.
-    const plan = absorptionPlan(
-      {
-        publications: pubs,
-        today: today({ 'sup-A': 20_000 }),
-        records: [rec(H1[0], 8_000), rec(H1[0], 5_000)]
-      },
-      NOW
-    );
-    expect(plan.unabsorbed.map((u) => u.remaining)).toEqual([3_000]);
-  });
-});
-
-describe('the split across suppliers (CAP-D14)', () => {
-  it('shares a material’s week by each supplier’s frozen demand anticipation', () => {
-    const pubs = [publication({ 'sup-A': 30_000, 'sup-B': 10_000 })];
-    const plan = absorptionPlan(
-      {
-        publications: pubs,
-        today: today({ 'sup-A': 30_000, 'sup-B': 10_000 }),
-        records: [rec(H1[0], 20_000)]
-      },
-      NOW
-    );
-    expect(plan.consumption.get(`sup-A|RM-1|${H1[0]}`)?.qty).toBe(15_000);
-    expect(plan.consumption.get(`sup-B|RM-1|${H1[0]}`)?.qty).toBe(5_000);
-    // Excess 15,000 and 5,000 → 3,750 and 1,250 a week.
-    expect(absorbedOf(plan, 'sup-A', H2[0])).toBe(3_750);
-    expect(absorbedOf(plan, 'sup-B', H2[0])).toBe(1_250);
-  });
-
-  it('splits evenly when the week’s demand anticipation is 0', () => {
-    expect(
-      consumptionShares([
-        { supplierId: 'a', qty: 0 },
-        { supplierId: 'b', qty: 0 }
-      ])
-    ).toEqual(
-      new Map([
-        ['a', 0.5],
-        ['b', 0.5]
-      ])
-    );
+    expect(consumptionShares(zero)).toEqual(half);
+    expect(consumptionShares(zero, 'demandAnticipation')).toEqual(half);
   });
 });
 
@@ -325,38 +125,55 @@ describe('a later record supersedes the earlier one at read', () => {
     const inForce = consumptionInForce([first, later, other]);
     expect(inForce.get(`RM-1|${H1[0]}`)).toBe(later);
     expect(inForce.size).toBe(2);
-    const plan = absorptionPlan(
-      {
-        publications: [publication({ 'sup-A': 20_000 })],
-        today: today({ 'sup-A': 20_000 }),
-        records: [first, later]
-      },
-      NOW
-    );
-    // 20,000 − 18,000 = 2,000 → 500 a week.
-    expect(absorbedOf(plan, 'sup-A', H2[0])).toBe(500);
+    const [a] = withConsumption([row('sup-A', 20_000)], [first, later]);
+    expect(a.weeks[0].consumption).toBe(18_000);
+    expect(a.weeks[0].consumptionRecord?.recordId).toBe(later.id);
   });
 });
 
-describe('spreadExcess — evenly, never below 0, what a week cannot take moves on', () => {
-  it('puts the remainder on the earliest weeks', () => {
-    expect(spreadExcess(10, [100, 100, 100, 100])).toEqual({ takes: [3, 3, 2, 2], left: 0 });
+describe('the unabsorbed alert subject (rewired to DRC-4 BR-02 / DRC-B7)', () => {
+  const names = {
+    supplierName: () => 'Supplier A',
+    materialLabel: () => 'Material 1',
+    uom: () => 'kg'
+  };
+  it('one subject per pair with the surplus the last week could not take', () => {
+    const [s] = unabsorbedAlertSubjects(
+      [
+        {
+          supplierId: 'sup-A',
+          materialCode: 'RM-1',
+          fromWeeks: H1.slice(0, 2),
+          intoWeeks: [H1[1]],
+          excess: 24,
+          remaining: 16
+        }
+      ],
+      NOW,
+      names
+    );
+    expect(s).toMatchObject({ remaining: 16, intoWeeks: [H1[1]], uom: 'kg' });
+    // Impact: from today to the end of that week (Sunday 13 Sep).
+    expect(s.daysToImpact).toBe(13);
   });
-  it('carries what a small week cannot take to the next one', () => {
-    expect(spreadExcess(12_000, [1_000, 20_000, 20_000, 20_000])).toEqual({
-      takes: [1_000, 5_000, 3_000, 3_000],
-      left: 0
-    });
-  });
-  it('never takes a week below 0, and returns what is left after the last week', () => {
-    expect(spreadExcess(8_000, [1_000, 1_000, 1_000, 3_000])).toEqual({
-      takes: [1_000, 1_000, 1_000, 3_000],
-      left: 2_000
-    });
-    expect(spreadExcess(400, [-50, 100, 100, 100]).takes[0]).toBe(0);
-  });
-  it('with no week to take it, everything is left', () => {
-    expect(spreadExcess(5, [])).toEqual({ takes: [], left: 5 });
+
+  it('control — a surplus below the alert minimum raises no subject', () => {
+    expect(
+      unabsorbedAlertSubjects(
+        [
+          {
+            supplierId: 'sup-A',
+            materialCode: 'RM-1',
+            fromWeeks: H1,
+            intoWeeks: [H1[3]],
+            excess: 0,
+            remaining: 0
+          }
+        ],
+        NOW,
+        names
+      )
+    ).toEqual([]);
   });
 });
 

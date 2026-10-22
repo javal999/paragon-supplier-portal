@@ -379,6 +379,12 @@ const LANE_BUNDLES = Object.freeze({
     // FUX-D3 — the Material Planner records the decision for a warehouse week
     // that does not fit (rent, push out, reduce, accept with a note).
     'warehousedecision:record',
+    // DRC-D11 (BL-196) — the Material Planner sets each material's OSIP level,
+    // which picks its ROP Fisik formula (DRC-10).
+    'osiplevel:set',
+    // DRC-17 (BL-202) — the Material Planner saves what-if scenarios. Analysis
+    // only: the verb changes no plan, PO, call-off, level or setting (BR-06).
+    'whatifscenario:save',
     // Material C5 (MR-8 BR-03) — Material Planning maintains the planning
     // groups capacity is kept by: create, rename, move materials, retire.
     'planninggroup:manage',
@@ -489,7 +495,10 @@ const LANE_BUNDLES = Object.freeze({
     'capacity:confirm',
     // Material C2 (MR-3 BR-02) — the supplier's own name for a material it
     // supplies: the same people who declare its stock.
-    'materialname:submit'
+    'materialname:submit',
+    // BL-194 / DRC-8 BR-a — confirming current feedstock with a date: the same
+    // people who declare the stock, in the same weekly cycle [Default E2].
+    'feedstock:confirm'
   ]),
   // ── BACK OFFICE — the paperwork ─────────────────────────────────────────
   // *"The admin people are the ones who upload the certificates"* (operator).

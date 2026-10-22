@@ -472,6 +472,81 @@ export const isAwaitingApproval = (c) => c.confirmation?.approval === 'awaiting'
 export const isConfirmedAndAccepted = (c) =>
   CALL_OFF_CONFIRMED_STATES.includes(c.status) && !isAwaitingApproval(c);
 
+// ── DRC-5 (BL-191) · a call-off delayed by an LTP drop ─────────────────────
+//
+// SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10 DRC-5, [MoM 1B]: when the LTP
+// drops, the planner may propose moving a CONFIRMED call-off to a later need
+// date; the supplier must approve the delay. It is built on the existing change
+// and confirmation verbs, not beside them:
+//   · the planner's `t_calloff_change` carries the coded reason `ltp-dropped`
+//     (BL-32 list `callOffChange`) and the later need date. The call-off goes
+//     back to Awaiting Confirmation as every change does, but its need date
+//     does NOT move yet: the proposal is recorded as a pending `CallOffDelay`.
+//   · the supplier answers on its confirmation screen with `t_calloff_confirm`
+//     and `delayAnswer`: `approve` moves the need date and confirms it;
+//     `reject` confirms the call-off on its old date. Either way it is
+//     Confirmed again, released, and still supply.
+// Because the need date moves only on approval, the rolling demand
+// anticipation (which buckets released call-offs by need-date week,
+// `openSupplyIndex`) moves only on approval too — nothing here touches it.
+
+/** The `callOffChange` code that makes a change a delay the supplier approves. */
+export const LTP_DROPPED_CODE = 'ltp-dropped';
+
+/** @typedef {'approve' | 'reject'} DelayAnswer */
+/** @type {readonly DelayAnswer[]} */
+export const DELAY_ANSWERS = ['approve', 'reject'];
+
+/**
+ * The delay awaiting the supplier's answer, or null.
+ * @param {Pick<CallOff, 'delays'>} c
+ * @returns {import('../data/types').CallOffDelay | null}
+ */
+export const pendingDelay = (c) => (c.delays ?? []).find((d) => d.answer === null) ?? null;
+
+/**
+ * DRC-5 — why a planner's change proposing a delay for an LTP drop is refused,
+ * or null. The change must name a LATER need date and leave the quantity as it
+ * is (a delay moves the delivery; it does not resize it), and the call-off must
+ * be confirmed and accepted (a delay is proposed against what the supplier
+ * agreed, not against a rejection).
+ *   · NOT_CONFIRMED — the call-off is not confirmed and accepted.
+ *   · NEED_DATE_REQUIRED — no new need date.
+ *   · NOT_LATER — the new need date is not after the current one.
+ *   · QUANTITY_CHANGED — the change also resizes the call-off.
+ * @param {Pick<CallOff, 'status' | 'confirmation' | 'needDate' | 'quantity'>} c
+ * @param {{ readonly needDate?: unknown; readonly quantity?: unknown }} payload
+ * @returns {'NOT_CONFIRMED' | 'NEED_DATE_REQUIRED' | 'NOT_LATER' | 'QUANTITY_CHANGED' | null}
+ */
+export function delayProposalRefusal(c, payload) {
+  if (!isConfirmedAndAccepted(c)) return 'NOT_CONFIRMED';
+  if (!isCallOffDate(payload.needDate)) return 'NEED_DATE_REQUIRED';
+  if (payload.needDate <= c.needDate) return 'NOT_LATER';
+  if (payload.quantity !== undefined && payload.quantity !== c.quantity) return 'QUANTITY_CHANGED';
+  return null;
+}
+
+/**
+ * DRC-5 — why a supplier's answer is refused while a delay is (or is not)
+ * pending, or null.
+ *   · DELAY_PENDING — a delay awaits an answer and this is not `t_calloff_confirm`
+ *     with `delayAnswer` approve or reject (the other answers would confirm or
+ *     reject something the planner did not ask).
+ *   · NO_DELAY_PENDING — `delayAnswer` was sent but no delay awaits one.
+ * @param {Pick<CallOff, 'delays'>} c
+ * @param {'confirm' | 'newDate' | 'changes' | 'partial' | 'reject'} answer
+ * @param {unknown} delayAnswer
+ * @returns {'DELAY_PENDING' | 'NO_DELAY_PENDING' | null}
+ */
+export function delayAnswerRefusal(c, answer, delayAnswer) {
+  const pending = pendingDelay(c) !== null;
+  if (!pending) return delayAnswer === undefined ? null : 'NO_DELAY_PENDING';
+  return answer === 'confirm' &&
+    /** @type {readonly unknown[]} */ (DELAY_ANSWERS).includes(delayAnswer)
+    ? null
+    : 'DELAY_PENDING';
+}
+
 /**
  * The approved need date(s) and quantities OTIF is measured against (BR-07):
  * the accepted confirmation's deliveries; else what both sides last agreed
@@ -523,8 +598,10 @@ export function isCallOffEscalated(c, nowIso) {
  */
 
 /** ASN states that mean goods have left (a draft has not shipped, nor has an
- *  ASN awaiting a shelf-life exception — MR-6 BR-08). */
-const SHIPPED_ASN_STATES = ['Submitted', 'In Transit', 'Delivered', 'Discrepancy'];
+ *  ASN awaiting a shelf-life exception — MR-6 BR-08). Also read by the
+ *  feedstock reconcile (DRC-15a BR-01) for "ASN requested".
+ * @type {readonly ASN['status'][]} */
+export const SHIPPED_ASN_STATES = ['Submitted', 'In Transit', 'Delivered', 'Discrepancy'];
 
 /**
  * The call-off's heads-ups: its own dispatch notices, plus every shipped ASN

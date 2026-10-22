@@ -23,6 +23,12 @@ import { useCapacityPlans } from '@services/query/hooks';
 /** @import { CapacityConfirmationStatus } from '@services/transitions/capacityRules' */
 import { isGapWeek, ltpCapacityWeeks, planStatus } from '@services/transitions/capacityRules';
 import {
+  PRODUCTION_LIMIT_QUESTION,
+  allocatedIsProductionLimit
+} from '@services/transitions/drcBufferRules';
+import StrategicBufferSection from './inventory/StrategicBufferSection';
+import ProtectionBufferSection from './inventory/ProtectionBufferSection';
+import {
   CapacityStatusPill,
   LtpCheckPill,
   inputClass,
@@ -137,7 +143,22 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks }) => {
         },
         {
           id: 'allocated',
-          label: t('inv.capacity.row.allocated'),
+          // DRC-9b [Default E3] — the allocated capacity IS the production limit
+          // (MoM 3): the same figure, named so, not a second row. Under the
+          // reserved 'sadrFeed' source it is not, and the label stays "Allocated".
+          label: allocatedIsProductionLimit() ? (
+            <span>
+              {t('buffers.productionLimit.row')}
+              <span
+                className="block text-xs text-text-tertiary"
+                data-testid={`capacity-production-limit-provisional-${planKey}`}
+              >
+                {t('buffers.provisional', { question: PRODUCTION_LIMIT_QUESTION })}
+              </span>
+            </span>
+          ) : (
+            t('inv.capacity.row.allocated')
+          ),
           unit: plan.uom,
           combine: 'sum',
           value: (week) => byWeek(week).entry?.allocated ?? null,
@@ -664,6 +685,17 @@ const BuyerCapacity = () => {
           </div>
         )}
       </div>
+
+      {/* DRC-9a (BL-195) — the strategic buffer, read only, under the plans. */}
+      <StrategicBufferSection
+        supplierId={filters.supplierId ?? (drill.kind === 'filtered' ? drill.po.supplierId : null)}
+        materialCode={filters.materialCode}
+      />
+      {/* DRC-9c (BL-205) [Proposed] — the protection buffer, read only, beside it. */}
+      <ProtectionBufferSection
+        supplierId={filters.supplierId ?? (drill.kind === 'filtered' ? drill.po.supplierId : null)}
+        materialCode={filters.materialCode}
+      />
     </AppShellV2>
   );
 };

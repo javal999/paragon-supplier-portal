@@ -1,7 +1,7 @@
 /** @import React from 'react' */
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
 import PageMetaLine from '@components/ui-v2/PageMetaLine';
@@ -17,18 +17,22 @@ import { inputClass, inventoryNow, labelClass } from '../inventory/inventoryDisp
 import AnticipationGrid from './components/AnticipationGrid';
 import PublishPanel from './components/PublishPanel';
 import ConsumptionPanel from './components/ConsumptionPanel';
-import { frozenWeeks, latestPublication, publishPreview, sharePct, weekRange } from './display';
+import PlanCheck from './components/PlanCheck';
+import { latestPublication, publishPreview, sharePct, weekDates, weekLabel } from './display';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DEMAND ANTICIPATION — CAP-10 (BL-179), SC-HUB-DEMAND-ANTICIPATION-BRIEF-2026-10
-// §4 (CAP-D10 to CAP-D13). The Material Planner's page, under Weekly plan.
+// DEMAND ANTICIPATION — CAP-10 (BL-179), reworked by DRC-2 (BL-188) and DRC-4
+// (BL-190), SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10. The Material Planner's
+// page, under Weekly plan.
 //
-// One WeekGrid per supplier × material, filtered by supplier and material (in
-// the page address). Frozen weeks show a lock and the published figure; "Would
-// be" beside them is today's recomputation, read only (BR-03). Publish freezes
-// the fixed 4-week horizon holding the current hub week, once; a future horizon
-// stays open, and weeks frozen earlier keep their figure (BR-01, BR-02, CAP-D17). The sample data opens with one seeded publication, and
-// the page says it is a sample publication rather than naming an act.
+// One card per supplier × material, filtered by supplier and material (in the
+// page address): the plan vs execution check (DRC-4) and the carry-over of the
+// planning week above a WeekGrid. The horizon is the pair's lead time, rolling
+// weekly (DRC-2 BR-01). Publish records the current planning week's figures,
+// and the supplier agreements to carry a remainder outside the horizon [Owner
+// A8]; a published week shows "Would be" beside it, today's recomputation, read
+// only. The sample data opens with one seeded publication, and the page says
+// it is a sample publication rather than naming an act.
 //
 // Every input is sample data (the sample LTP and SAP stock fixtures), so the
 // Sample data marker always shows. The figure is never shown as "DA": that
@@ -53,9 +57,8 @@ const BuyerDemandAnticipation = () => {
   if (query.isError)
     return <ErrorState breadcrumb={crumb} error={query.error} onRetry={() => query.refetch()} />;
 
-  const { horizon, next, frozen: horizonFrozen, toFreeze } = publishPreview(rows, nowIso);
+  const { planningWeek, published, changed } = publishPreview(rows, nowIso);
   const latest = latestPublication(rows);
-  const frozen = frozenWeeks(rows);
   const supplierOptions = [
     ...new Map(rows.map((r) => [r.supplierId, r.supplierName])).entries()
   ].sort((a, b) => a[1].localeCompare(b[1]));
@@ -96,9 +99,18 @@ const BuyerDemandAnticipation = () => {
         className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-4"
         data-testid="dant-publication"
       >
-        <p className="text-sm text-text-primary mb-1" data-testid="dant-frozen-weeks">
+        <p className="text-sm text-text-primary mb-1" data-testid="dant-planning-week">
           <span className="text-text-secondary">{t('demandAnt.pub.label')}: </span>
-          {frozen.length > 0 ? <Data>{weekRange(frozen)}</Data> : t('demandAnt.pub.none')}
+          <Data>{weekLabel(planningWeek)}</Data>{' '}
+          <span className="text-text-secondary">({weekDates([planningWeek])})</span>
+          {' · '}
+          <span data-testid="dant-publication-state">
+            {published
+              ? changed > 0
+                ? t('demandAnt.pub.publishedChanged', { count: changed })
+                : t('demandAnt.pub.publishedSame')
+              : t('demandAnt.pub.none')}
+          </span>
         </p>
         {latest ? (
           <p className="text-xs text-text-tertiary mb-3" data-testid="dant-latest-publication">
@@ -107,11 +119,21 @@ const BuyerDemandAnticipation = () => {
               : `${t('demandAnt.pub.published', { date: formatDate(latest.publishedAt) })} · ${t('demandAnt.pub.unattributed')}`}
           </p>
         ) : null}
-        <p className="text-xs text-text-tertiary mb-3">{t('demandAnt.howItWorks')}</p>
-        <PublishPanel horizon={horizon} next={next} frozen={horizonFrozen} toFreeze={toFreeze} />
+        <p className="text-xs text-text-tertiary mb-3">
+          {t('demandAnt.howItWorks')}{' '}
+          {/* DRC-3 (BL-189) — every publication, with its stamp and carry origin. */}
+          <Link
+            to="/buyer/demand-anticipation-history"
+            className="text-action-hover hover:underline"
+            data-testid="dant-history-link"
+          >
+            {t('daHist.openHistory')}
+          </Link>
+        </p>
+        <PublishPanel rows={rows} planningWeek={planningWeek} changed={changed} />
       </section>
 
-      {/* CAP-11 — the planner records consumption; the excess is absorbed into the next horizon. */}
+      {/* CAP-11 (kept) — the planner records consumption; it feeds the grid and the DRC-18 average. */}
       <ConsumptionPanel rows={rows} nowIso={nowIso} />
 
       <div
@@ -190,6 +212,7 @@ const BuyerDemandAnticipation = () => {
             {!r.stockOnRecord ? (
               <p className="px-4 pb-2 text-xs text-warning-hover">{t('demandAnt.card.noStock')}</p>
             ) : null}
+            <PlanCheck row={r} rowKey={keyOf(r)} />
             <div className="border-t border-border-subtle">
               <AnticipationGrid row={r} rowKey={keyOf(r)} currentWeek={nowIso.slice(0, 10)} />
             </div>

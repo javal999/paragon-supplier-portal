@@ -344,7 +344,19 @@ export const LOOSE_END_CENSUS = Object.freeze([
       'it — so there is no separate creation verb to be an entry. A later decision is a new record; ' +
       'nothing is edited or deleted. The verb is statePreserving, so the state is correctly declared terminal.'
   },
-  // ── hubSetting (BL-32) ─────────────────────────────────────────────────────
+  // ── osipLevel (DRC-D11, BL-196) ────────────────────────────────────────────
+  {
+    entity: 'osipLevel',
+    kind: 'initial-integrity',
+    subject: 'Maintained',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE MAXIMUM STOCK: the entity IS one material ' +
+      'the master resolves, addressed by its code, and setting its first level adds it — so there is no ' +
+      'separate creation verb to be an entry. A change is a new row; nothing is edited or deleted. The ' +
+      'verb is statePreserving, so the state is correctly declared terminal.'
+  },
+  // ── hubSetting (BL-32)─────────────────────────────────────────────────────
   {
     entity: 'hubSetting',
     kind: 'initial-integrity',

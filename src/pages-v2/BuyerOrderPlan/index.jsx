@@ -30,6 +30,7 @@ import WarehouseKpis from './components/WarehouseKpis';
 import RecommendationsSection from './components/RecommendationsSection';
 import ShortfallNotice from './components/ShortfallNotice';
 import BelowDemandSection from './components/BelowDemandSection';
+import RopFisikPrSection from './components/RopFisikPrSection';
 import CostRatesSection from './components/CostRatesSection';
 import DefinitionsSection from './components/DefinitionsSection';
 
@@ -184,6 +185,9 @@ const BuyerOrderPlan = () => {
 
       {/* CAP-12 — the hub's own gaps, separate from the engine's list above (brief §6). */}
       <BelowDemandSection today={today} />
+
+      {/* BL-199 (DRC-13 BR-02) — no umbrella PO balance left at ROP Fisik: a PR in SAP. */}
+      <RopFisikPrSection />
 
       {costs && <CostRatesSection costs={costs} />}
 

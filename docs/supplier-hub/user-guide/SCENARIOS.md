@@ -129,8 +129,8 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | 2 | Sup-Ful | same | **Confirm order**, with confirmed qty and date | Confirmed | `pages-v2/SupplierOrders.jsx:897,934-942` |
 | 3 | Sup-Ful | Orders → **Shipments & ASN** | **Create ASN** → **Submit ASN** | ASN Submitted | `pages-v2/SupplierShipments/hooks/useAsnRowCommands.js:66-101`; `pages-v2/SupplierShipments/index.jsx:310-324` |
 | 4 | PTI-Rcv | Order collaboration → **Goods receipts** | **New GR** → 4-step wizard → **Create GR** | Approved → Posted to SAP | `components/v2-features/GRInspectionWizard/hooks/useCompleteReceipt.js:75-226`; `services/transitions/grRollup.js:55-79` |
-| 5 | Sup-BO | Invoices → **Invoices** | **New invoice** → **Submit invoice** | Submitted → Matched | `pages-v2/SupplierInvoices.jsx:429-528`; `services/transitions/cascades.js:44-46` |
-| 6 | PTI-Fin | Invoices → **Invoices** | **Release payment** → **Confirm release — {amount}** (Approved invoices only, see section 4) | Payment Released | `pages-v2/BuyerInvoices.jsx:1136-1157,507-560` |
+| 5 | Sup-BO | Invoices → **Invoices** | **New invoice** → **Submit invoice** | Submitted → Matched | `pages-v2/SupplierInvoices/index.jsx:128-171`; `pages-v2/SupplierInvoices/components/NewInvoicePanel.jsx:65-121`; `services/transitions/cascades.js:44-46` |
+| 6 | PTI-Fin | Invoices → **Invoices** | **Release payment** → **Confirm release — {amount}** (Approved invoices only, see section 4) | Payment Released | `pages-v2/BuyerInvoices/components/InvoicePanelFooter.jsx:111-136`; `pages-v2/BuyerInvoices/hooks/useInvoiceCommands.js:131-188` |
 
 **Negative end-to-end: supplier adjusts the PO and PTI rejects the counter-offer**
 
@@ -148,7 +148,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | 2 | Sup-Ful | Orders → **Goods receipts** | **Respond** → **Acknowledge** or **Dispute** (comment required) | Answered | `pages-v2/SupplierGoodsReceipts.jsx:302-338` |
 | 3 | PTI-Rcv or PTI-Plan | Goods receipts → Shipment discrepancies | **Reconcile**, or **Resolve** a dispute | ASN Delivered | `pages-v2/BuyerGoodsReceipt/components/DiscrepancySection.jsx:34-91`; `pages-v2/receipts/ReceiptDisputesSection.jsx:109-116` |
 | 4 | Sup-BO | Invoices | **Submit invoice** | Match: Qty Mismatch; PTI sees "Pending Match" | `services/transitions/invoiceRollup.js:88-131`; `services/data/invoiceProjection.js:90-97` |
-| 5 | PTI-Fin | Invoices | **Dispute** → reason → **Raise dispute** | Disputed (supplier sees "Returned") | `pages-v2/BuyerInvoices.jsx:1094,1173-1178`; `services/transitions/fulfilmentRules.js:903-904` |
+| 5 | PTI-Fin | Invoices | **Dispute** → reason → **Raise dispute** | Disputed (supplier sees "Returned") | `pages-v2/BuyerInvoices/components/InvoicePanelFooter.jsx:73,138-152`; `services/transitions/fulfilmentRules.js:903-904` |
 | 6 | Sup-BO | Invoices | **Correct and resubmit** | Submitted; the match re-runs | `services/transitions/flows/invoice.flow.js:173-191` |
 
 **Edge cases**
@@ -294,7 +294,7 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | PTI or Supplier | End-of-cycle stock check / **Fixed stock reconcile** | Reads the outcome per material: "Supplier short", "PTI under-called", "Stock not reported", "Above max stock" | – | `lib/i18n/fixedStockReconcile.js:17-29` |
+| 1 | PTI or Supplier | **Feedstock reconcile** | Reads, per material, PO ordered against called off and ASN requested: "Not yet called off" and "Called off, not yet shipped" (DRC-15a; what happens to a remainder is still open, DRC-15b) | – | `lib/i18n/feedstockReconcile.js` |
 | 2 | Sup-Ful | To do | "Stock figures to update" → **Enter stock** | Declared | `lib/i18n/hub.js:163`; `pages-v2/SupplierInventory.jsx:183-192` |
 
 **Edge cases**
@@ -436,7 +436,7 @@ Purposes come from each page's subtitle in `lib/i18n/` (for example `rel.pti.sub
 | Shipments & ASN | Orders | Create and submit ASNs | UC2 |
 | Goods receipts | Orders | See receipts; acknowledge or dispute discrepancies | UC2 |
 | Forecast & commitments | Planning | Commit per period; acknowledge forecast rows | UC4 |
-| Fixed stock reconcile | Planning | End-of-cycle stock against max stock, read-only | UC6 |
+| Feedstock reconcile | Planning | PO ordered against call-offs and ASNs requested, daily, read-only; max stock shown | UC6 |
 | Stock | Planning | Enter stock; see PTI stock if shared | UC6 |
 | Capacity | Planning | Submit capacity per material group and week | UC4, UC6 |
 | RFI invitations | Sourcing | Answer RFIs | UC1 |
@@ -472,7 +472,7 @@ A reader might expect these to work. The code shows they do not, or that they ar
 7. **These buttons only show a toast:**
     - Goods receipts: "Submit inspection results", "Override hold". (`pages-v2/BuyerGoodsReceipt/components/footerForStatus.jsx:77-130`)
     - Shipments: "Send reminder to supplier", "Track shipment". (`pages-v2/BuyerShipments/components/footerForStatus.jsx:29-89`)
-    - Invoices: "Review match", "Escalate". (`pages-v2/BuyerInvoices.jsx:444-476`)
+    - Invoices: "Review match", "Escalate". (`pages-v2/BuyerInvoices/hooks/useInvoiceCommands.js:76-124`)
     - Supplier orders: "Create ASN" on the PO page. (`pages-v2/SupplierOrders.jsx:543-568`)
     - Buyer orders: "Export", "New PO", "View Full Details" have no handler. (`pages-v2/BuyerOrders.jsx:493-496,707-711`)
 8. **ASN In Transit and Delivered, and PO delivered and closed, come from TMS/S4.** No screen produces them. (`services/transitions/flows/advanceShipNotice.flow.js:180-210`)

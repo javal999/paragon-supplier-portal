@@ -64,6 +64,7 @@ import {
   rescheduleOutThresholdWeeks,
   fsReconcileCycleWeeks,
   FS_RECONCILE_CYCLE_ANCHOR,
+  cycleOfDay,
   safetyLeadTimePercentile,
   stabiliseDampingWeight,
   demandRangeExtraQuantilePct
@@ -78,7 +79,6 @@ import { singleItemSolver } from '../../engine/orderSizing';
 import { selectModel } from '../../engine/modelBacktest';
 import { reschedule, termsKey } from '../../engine/reschedule';
 import { addDays } from '../../engine/dates';
-import { cycleOfDay } from '../../transitions/fixedStockReconcile';
 import { getKnownFlows } from '../../transitions';
 import { sdcClock } from '../../sdc';
 
@@ -368,8 +368,8 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
         'src/services/transitions/callOffTolerance.js'
       ],
       invoicePriceTolerance: [
-        'src/pages-v2/BuyerInvoices.jsx',
-        'src/pages-v2/SupplierInvoices.jsx',
+        'src/pages-v2/BuyerInvoices/components/MatchSection.jsx',
+        'src/pages-v2/SupplierInvoices/components/AmountFields.jsx',
         'src/pages-v2/invoices/InvoiceCollaboration.jsx',
         'src/services/transitions/fulfilmentConfig.js',
         'src/services/transitions/invoiceRollup.js'
@@ -430,6 +430,9 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       // Material B1 — MR-1 BR-03 and BR-05, read when the positions are built.
       // Material B2 and B3 — the weekly-update panel and the compliance read model read the cutoff.
       updateCycleSettings: [
+        // BL-194 (DRC-8 BR-b, [Default E2]) — the feedstock confirmation is due
+        // with the same weekly stock update cycle.
+        'src/pages-v2/inventory/FeedstockConfirmPanel.jsx',
         'src/pages-v2/inventory/WeeklyUpdatePanel.jsx',
         'src/services/data/mock/updateComplianceReadModel.js',
         'src/services/transitions/inventoryConfig.js',
@@ -484,12 +487,9 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
         'src/services/data/mock/MockProcurementService.js',
         'src/services/transitions/forecastConfig.js'
       ],
-      // REQ-E06-04 BR-01 — the read model passes it to the pure reconcile; the page states it.
-      fsReconcileCycleWeeks: [
-        'src/pages-v2/FixedStockReconcile.jsx',
-        'src/services/data/mock/fixedStockReadModel.js',
-        'src/services/transitions/forecastConfig.js'
-      ],
+      // REQ-E06-04 BR-01 — DORMANT since DRC-15a: the daily feedstock reconcile
+      // reads no cycle, so no page or read model calls it (BL-201 report).
+      fsReconcileCycleWeeks: ['src/services/transitions/forecastConfig.js'],
       // ENG-D9 / REQ-E14-06 — the same shape: the service passes it to the engine.
       stabiliseDampingWeight: [
         'src/services/data/mock/MockProcurementService.js',

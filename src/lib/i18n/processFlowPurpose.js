@@ -427,9 +427,9 @@ export const processFlowPurposeEn = {
 
   // ── maximum stock (REQ-E06-04) ───────────────────────────────────────
   'processFlows.purpose.entity.maxStock':
-    'The most a supplier may hold for PTI of one material, agreed with the supplier. The fixed stock reconcile caps what PTI may owe at it, and stock above it is the supplier\u2019s own.',
+    'The most a supplier may hold for PTI of one material, agreed with the supplier. It is shown on the feedstock reconcile.',
   'processFlows.purpose.t_maxstock_set':
-    'Procurement sets, changes or clears the maximum stock of one supplier and material. Every change is kept with the value before it, so a settlement can be read against the maximum that stood at the time.',
+    'Procurement sets, changes or clears the maximum stock of one supplier and material. Every change is kept with the value before it, so the maximum that stood at any time can be read back.',
 
   // ── supplierApplication ──────────────────────────────────────────────
   'processFlows.purpose.entity.supplierApplication':
@@ -531,13 +531,25 @@ export const processFlowPurposeEn = {
   'processFlows.purpose.t_warehousedecision_record':
     'The Material Planner records how a week that does not fit the warehouse will be handled. Accepting the overflow needs a note. The decision is a record of intent: it changes no order and is never sent to SAP or a supplier.',
   'processFlows.purpose.entity.demandAnticipation':
-    'A publication of the demand anticipation per supplier, material and week: the LTP, plus the supplier’s share of the gap to PTI’s reorder point, or less its share of the stock above it, counted once in the first week. It freezes the fixed 4-week horizon that holds the current week, once. A frozen week keeps the figure of the first publication that froze it; every publication stays on record.',
+    'A publication of the demand anticipation of one planning week, per supplier and material, over the lead time: each week’s LTP plus any remainder carried into it, with the safety order in the first week. Each figure keeps its inputs and the rules version that made it. A later publication of the same week supersedes it; every publication stays on record.',
   'processFlows.purpose.t_demandanticipation_publish':
-    'The Material Planner freezes the demand anticipation of the 4-week horizon that holds the current week. Each horizon is frozen once and never ahead of time, so the next horizon stays open until it starts. Nothing is sent to SAP or a supplier.',
+    'The Material Planner records the current planning week’s demand anticipation, and any supplier’s agreement to take a remainder in the first week after the horizon. The next week’s publication rolls forward from it. Nothing is sent to SAP or a supplier.',
   'processFlows.purpose.entity.consumption':
     'How much of a material PTI used in one Monday-to-Sunday period, typed in or uploaded by the Material Planner until the SAP goods-issue feed exists. A later entry for the same material and period replaces the earlier one; both are kept.',
   'processFlows.purpose.t_consumption_record':
-    'The Material Planner enters how much of a material was used in one Monday-to-Sunday period. Where that is below the frozen demand anticipation, the excess is taken off the next horizon, spread evenly and never below zero. Nothing is sent to SAP or a supplier.',
+    'The Material Planner enters how much of a material was used in one Monday-to-Sunday period. It shows beside the demand anticipation and feeds the moving average of use. Nothing is sent to SAP or a supplier.',
+  'processFlows.purpose.entity.osipLevel':
+    'A material’s OSIP level, which picks the formula of its physical reorder point (ROP Fisik). A material nobody has set is at level 4. Every change keeps the level before it, who set it and when; the latest is in force.',
+  'processFlows.purpose.t_osiplevel_set':
+    'The Material Planner sets or confirms a material’s OSIP level, from 1 to 6. Confirming it closes the “Review ROP after first order” task. Nothing is sent to SAP or a supplier.',
+  'processFlows.purpose.entity.whatIfScenario':
+    'A what-if scenario the Material Planner kept for one supplier and material: the figures it was run on, its rule choices and the rules version in force at the time. Nothing is edited or deleted; keeping other numbers makes a new scenario.',
+  'processFlows.purpose.t_whatifscenario_save':
+    'The Material Planner keeps a what-if scenario under a title, to compare it with the current plan later. Analysis only: nothing changes the plan or reaches suppliers or SAP.',
+  'processFlows.purpose.entity.feedstockConfirmation':
+    'A supplier’s confirmation of its current feedstock for one material: the quantity in the material’s unit, the day the figure holds for, and an optional note. Feedstock is not stock until it is produced, so it never adds to the supplier’s stock on hand. A newer confirmation replaces the earlier one; every confirmation stays on record.',
+  'processFlows.purpose.t_feedstock_confirm':
+    'The supplier confirms its current feedstock for an assigned material, weekly with the stock update. PTI sees it as its own line beside the supplier stock. Nothing is sent to SAP.',
 
   // ── RFx management (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ─────────────────
   'processFlows.purpose.entity.rfiEvent':
@@ -1000,9 +1012,9 @@ export const processFlowPurposeId = {
 
   // ── maximum stock (REQ-E06-04) ───────────────────────────────────────
   'processFlows.purpose.entity.maxStock':
-    'Jumlah terbanyak yang boleh dipegang pemasok untuk PTI atas satu material, sesuai kesepakatan dengan pemasok. Rekonsiliasi stok tetap membatasi kewajiban PTI sampai angka ini, dan stok di atasnya adalah milik pemasok.',
+    'Jumlah terbanyak yang boleh dipegang pemasok untuk PTI atas satu material, sesuai kesepakatan dengan pemasok. Angka ini ditampilkan pada rekonsiliasi feedstock.',
   'processFlows.purpose.t_maxstock_set':
-    'Procurement menetapkan, mengubah, atau menghapus stok maksimum satu pemasok dan material. Setiap perubahan disimpan beserta nilai sebelumnya, sehingga penyelesaian dapat dibaca terhadap stok maksimum yang berlaku saat itu.',
+    'Procurement menetapkan, mengubah, atau menghapus stok maksimum satu pemasok dan material. Setiap perubahan disimpan beserta nilai sebelumnya, sehingga stok maksimum yang berlaku pada waktu mana pun dapat dibaca kembali.',
 
   // ── supplierApplication ──────────────────────────────────────────────
   'processFlows.purpose.entity.supplierApplication':
@@ -1104,13 +1116,25 @@ export const processFlowPurposeId = {
   'processFlows.purpose.t_warehousedecision_record':
     'Perencana Material mencatat cara menangani minggu yang tidak muat di gudang. Menerima kelebihan memerlukan catatan. Keputusan ini catatan niat: tidak mengubah pesanan apa pun dan tidak pernah dikirim ke SAP atau pemasok.',
   'processFlows.purpose.entity.demandAnticipation':
-    'Publikasi antisipasi permintaan per pemasok, material, dan minggu: LTP, ditambah bagian pemasok atas kekurangan terhadap titik pemesanan ulang PTI, atau dikurangi bagiannya atas stok di atasnya, dihitung sekali pada minggu pertama. Publikasi membekukan horizon tetap 4 minggu yang memuat minggu ini, satu kali. Minggu yang dibekukan mempertahankan angka dari publikasi pertama yang membekukannya; setiap publikasi tetap tercatat.',
+    'Publikasi antisipasi permintaan satu minggu perencanaan, per pemasok dan material, sepanjang waktu tunggu: LTP tiap minggu ditambah sisa yang dibawa ke minggu itu, dengan safety order di minggu pertama. Tiap angka menyimpan inputnya dan versi aturan yang menghasilkannya. Publikasi berikutnya untuk minggu yang sama menggantikannya; setiap publikasi tetap tercatat.',
   'processFlows.purpose.t_demandanticipation_publish':
-    'Perencana Material membekukan antisipasi permintaan untuk horizon 4 minggu yang memuat minggu ini. Tiap horizon dibekukan satu kali dan tidak pernah lebih awal, sehingga horizon berikutnya tetap terbuka sampai dimulai. Tidak ada yang dikirim ke SAP atau pemasok.',
+    'Perencana Material mencatat antisipasi permintaan minggu perencanaan saat ini, dan persetujuan pemasok untuk menerima sisa di minggu pertama setelah horizon. Publikasi minggu berikutnya bergulir maju darinya. Tidak ada yang dikirim ke SAP atau pemasok.',
   'processFlows.purpose.entity.consumption':
     'Pemakaian material yang tercatat dalam satu minggu, diketik atau diunggah oleh Perencana Material sampai umpan pengeluaran barang SAP tersedia. Catatan yang lebih baru untuk material dan minggu yang sama menggantikan yang lebih lama; keduanya tetap tercatat.',
   'processFlows.purpose.t_consumption_record':
-    'Perencana Material mencatat berapa banyak material yang dipakai dalam satu minggu. Jika di bawah antisipasi permintaan yang dibekukan, kelebihannya dikurangkan dari horizon 4 minggu berikutnya, dibagi rata dan tidak pernah di bawah nol dalam satu minggu. Tidak ada yang dikirim ke SAP atau pemasok.',
+    'Perencana Material mencatat berapa banyak material yang dipakai dalam satu minggu. Pemakaian tampil di samping antisipasi permintaan dan masuk ke rata-rata pemakaian. Tidak ada yang dikirim ke SAP atau pemasok.',
+  'processFlows.purpose.entity.osipLevel':
+    'Level OSIP suatu material, yang menentukan rumus titik pemesanan ulang fisiknya (ROP Fisik). Material yang belum diatur berada di level 4. Setiap perubahan menyimpan level sebelumnya, siapa yang mengatur, dan kapan; yang terakhir berlaku.',
+  'processFlows.purpose.t_osiplevel_set':
+    'Perencana Material mengatur atau mengonfirmasi level OSIP suatu material, dari 1 sampai 6. Mengonfirmasinya menutup tugas “Tinjau ROP setelah pesanan pertama”. Tidak ada yang dikirim ke SAP atau pemasok.',
+  'processFlows.purpose.entity.whatIfScenario':
+    'Skenario what-if yang disimpan Perencana Material untuk satu pemasok dan material: angka yang dipakai, pilihan aturannya, dan versi aturan yang berlaku saat itu. Tidak ada yang diubah atau dihapus; angka lain menjadi skenario baru.',
+  'processFlows.purpose.t_whatifscenario_save':
+    'Perencana Material menyimpan skenario what-if dengan sebuah judul, untuk dibandingkan dengan rencana saat ini nanti. Hanya analisis: tidak ada yang mengubah rencana atau sampai ke pemasok atau SAP.',
+  'processFlows.purpose.entity.feedstockConfirmation':
+    'Konfirmasi pemasok atas feedstock saat ini untuk satu material: jumlah dalam satuan material, tanggal konfirmasi, dan catatan opsional. Feedstock belum menjadi stok sampai diproduksi, sehingga tidak pernah menambah stok pemasok. Konfirmasi yang lebih baru menggantikan yang lama; setiap konfirmasi tetap tercatat.',
+  'processFlows.purpose.t_feedstock_confirm':
+    'Pemasok mengonfirmasi feedstock saat ini untuk material yang ditugaskan, setiap minggu bersama pembaruan stok. PTI melihatnya sebagai baris tersendiri di samping stok pemasok. Tidak ada yang dikirim ke SAP.',
 
   // ── RFx (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ────────────────────────────
   'processFlows.purpose.entity.rfiEvent':

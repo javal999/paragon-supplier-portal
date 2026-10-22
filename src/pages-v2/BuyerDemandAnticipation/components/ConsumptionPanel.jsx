@@ -15,8 +15,8 @@ import {
   consumptionTemplateCsv,
   validateConsumptionRows
 } from '@services/transitions/consumptionRules';
-import { dayOf, mondayOf, parseCsv } from '@services/transitions/inventoryRules';
-import { horizonContaining } from '@services/transitions/demandAnticipationRules';
+import { addDays, dayOf, mondayOf, parseCsv } from '@services/transitions/inventoryRules';
+import { OSIP_RULES } from '@services/transitions/osipRules';
 /** @import { DemandAnticipationRow } from '@services/transitions/demandAnticipationRules' */
 /** @import { ConsumptionRowRefusal } from '@services/transitions/consumptionRules' */
 import { inputClass, labelClass, readFileText } from '../../inventory/inventoryDisplay';
@@ -24,7 +24,7 @@ import { weekLabel } from '../display';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CAP-11 (CAP-D14) — "Record consumption": the planner types a material's
-// consumption for a frozen week up to the current one, or uploads the
+// consumption for a week up to the current one, or uploads the
 // template (CSV or XLSX). ONE verb, ONE notice in its slot (§76): a seat
 // without `forecast:publish` sees the handoff notice instead of both entries,
 // and the template download stays (it is a read).
@@ -56,17 +56,13 @@ const ConsumptionPanel = ({ rows, nowIso }) => {
     if (!materials.has(r.materialCode))
       materials.set(r.materialCode, { label: r.materialLabel, uom: r.uom });
   const codes = [...materials.keys()].sort();
-  // The frozen current horizon's weeks up to the current one: what can have
-  // been consumed and compared. The read starts at the current week, so the
-  // horizon's earlier weeks come from its start (CAP-D17), not from the rows.
-  // A week of an earlier horizon is recorded through the upload.
-  const first = rows[0]?.weeks[0];
-  const weeks =
-    first && first.horizonFrozen
-      ? horizonContaining(first.horizonStart, first.horizonStart)
-          .filter((w) => w <= current)
-          .reverse()
-      : [];
+  // The current week and the weeks before it that the consumption moving
+  // average reads ([Default A11], DRC-18), newest first. The fixed horizons
+  // these weeks came from are retired (DRC-2); an older week is recorded
+  // through the upload.
+  const weeks = Array.from({ length: OSIP_RULES.consumptionMovingAvgWeeks }, (_, i) =>
+    addDays(current, -7 * i)
+  );
 
   const [material, setMaterial] = useState('');
   const [week, setWeek] = useState('');

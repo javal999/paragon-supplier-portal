@@ -426,6 +426,8 @@ const DEFS = /** @satisfies {readonly HubSettingDef[]} */ (
       defaultValue: 25,
       placeholder: { owner: 'warehousePlanner', backlogId: 'REQ-E14-05' }
     },
+    // DORMANT since DRC-15a: the daily feedstock reconcile reads no cycle; kept
+    // until the owner rules on removing it (BL-201).
     // REQ-E06-04 BR-01 (owner, 2026-09-29) — the fixed stock reconcile cycle for
     // packaging, in weeks. 3 by default ("FS Reconcile end W3", ENG-D21); the
     // Monday it is counted from stays fixed (FS_RECONCILE_CYCLE_ANCHOR).

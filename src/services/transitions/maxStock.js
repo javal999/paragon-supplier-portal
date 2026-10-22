@@ -2,9 +2,10 @@
 // MAXIMUM STOCK PER SUPPLIER × MATERIAL — REQ-E06-04 BR-06 (owner, 2026-09-29).
 //
 // The most a supplier may hold for PTI of one material, maintained by
-// Procurement with the one governed verb `t_maxstock_set`. The fixed stock
-// reconcile caps the flagged liability at it and shows stock above it as the
-// supplier's own. Where none is set the reconcile reads "No max stock agreed".
+// Procurement with the one governed verb `t_maxstock_set`. The feedstock
+// reconcile (DRC-15a BR-03) shows it per row and caps nothing with it; BL-136
+// will show its history there. Where none is set the reconcile reads "No max
+// stock agreed".
 //
 //   · APPEND-ONLY. Every change is a new row with the value before it, who set
 //     it and when (store-stamped). The value in force is the latest row; a row

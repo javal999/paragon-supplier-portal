@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.15 draft, 2026-09-29 |
+| Version | 0.16 draft, 2026-10-19 |
 | What this is | Detailed requirements for the demand and material forecast engine PTI builds itself (owner decision ENG-1), with each calculation explained |
 | Status | Every requirement is **Proposed**. The decision to build is Validated (ENG-1), and the engine decisions in section 4.1 are decided; section 4.2 lists what is still open. The rest of the detail has not yet been reviewed by the Material Planner |
 | Sources | ENG-1 (`SUPPLIER-HUB-REQUIREMENTS.md` section 9); methods and evidence in `research/FORECAST-METHOD-SPEC.md`; problem analysis in `research/FORECAST-BEST-PRACTICE-2026-09.md` |
@@ -311,6 +311,8 @@ It feeds supplier performance (REQ-E10-01) and sourcing filters (REQ-E03-01). Un
 ---
 
 ### REQ-E14-04  Safety stock, safety lead time and reorder point
+
+> **Amended 2026-10-19.** The Material Planning team's OSIP rule (safety order = 1.65 × √LT × SD, rounded up to the MPQ; ROP Order and ROP Fisik by level) is the default in `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-7 and DRC-10. The fill-rate method below stays as a challenger behind a switch, compared in the what-if sandbox (DRC-17).
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
@@ -1164,7 +1166,7 @@ REQ-E14-11 built on synthetic data. Accepted as recommended (owner, 2026-09-29):
 |---|---|---|---|
 | ENG-D13 | Plan-stability limit used in model selection | Material Planner | E14-10 (set after the first backtest) |
 | ENG-D12a | How far ahead the promotion calendar is fixed | Marketing | E14-08 BR-04 |
-| ENG-D22 | The team's Demand Anticipation (DA = LTP + ROP PTI − SOH). ROP PTI includes lead-time demand (confirmed 2026-09-28), so DA keeps about one lead time of extra stock on hand. Recommended: net to safety stock and count open orders, as E14-03 does, and use the ROP only as the order trigger against stock plus open orders | Material Planning team | The team's DA process; E14-03 already nets this way |
+| ENG-D22 | The team's Demand Anticipation (DA = LTP + ROP PTI − SOH). ROP PTI includes lead-time demand (confirmed 2026-09-28), so DA keeps about one lead time of extra stock on hand. Recommended: net to safety stock and count open orders, as E14-03 does, and use the ROP only as the order trigger against stock plus open orders | Material Planning team | The team's DA process; E14-03 already nets this way Superseded 2026-10-19: the team's process is written as DRC-2 and DRC-4 in `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` (DA = LTP with the safety order in week 1, checked against ROP Order) |
 | C8 §8 | SOMO ratifies the engine producing the totals | SOMO | Publishing engine totals on C8 (BL-101) |
 | REPL | Replenishment method per material segment | Material Planner (consultant) | E14-12, parts of E14-04 |
 
@@ -1189,3 +1191,4 @@ REQ-E14-11 built on synthetic data. Accepted as recommended (owner, 2026-09-29):
 | 0.13 | 2026-09-28 | Owner decided ENG-D8a (±20%), D10 (sell-in for now), D11 (Material Planning reviews), D12 (Marketing owns the promotion calendar; the owner fills it meanwhile), D14 (volume ranking). Team review of the LTP / DA / capacity process added ENG-D18 to D21 (two-level capacity check with BE, capacity before LTP with Submit all per week, OEM demand from the brand's POs, fixed stock reconcile) and opened ENG-D12a and ENG-D22 (the DA formula) |
 | 0.14 | 2026-09-29 | REQ-E14-07 built on synthetic data (BL-110, PR #81); ENG-B60 to B69 accepted with two changes (a known-event index in the fallback; new SKUs on SAP's plan) and ENG-B70 to B74 accepted (sections 4.1h, 4.1i). ENG-D18 and D19 built with BL-133 (PR #80), ENG-D21 with BL-134 (PR #79, REQ-E06-04 in the main requirements) |
 | 0.15 | 2026-09-29 | REQ-E14-09 (BL-111, PR #100), REQ-E14-10 (BL-112, PR #96, merged through PR #98) and REQ-E14-11 (BL-114, PR #98) built on synthetic data; build decisions ENG-B80 to B109 accepted by the owner as recommended (sections 4.1j to 4.1l). Material planning stays on SAP's plan; ENG-D13 unset |
+| 0.16 | 2026-10-19 | REQ-E14-04 note: the OSIP safety and ROP rules are the default, the fill-rate method a challenger. ENG-D22 superseded by DRC-2 and DRC-4 (`SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md`) |

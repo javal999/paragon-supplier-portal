@@ -99,6 +99,8 @@ import BuyerOrderPlan from '@pages-v2/BuyerOrderPlan';
 import BuyerThisWeek from '@pages-v2/BuyerThisWeek';
 import BuyerReschedule from '@pages-v2/BuyerReschedule';
 import BuyerDemandAnticipation from '@pages-v2/BuyerDemandAnticipation';
+import BuyerDemandAnticipationHistory from '@pages-v2/BuyerDemandAnticipationHistory';
+import BuyerWhatIfSandbox from '@pages-v2/BuyerWhatIfSandbox';
 import BuyerStabilise from '@pages-v2/BuyerStabilise';
 import BuyerDataHealth from '@pages-v2/BuyerDataHealth';
 import BuyerDemandForecast from '@pages-v2/BuyerDemandForecast';
@@ -111,6 +113,7 @@ import SupplierRegistrationV2 from '@pages-v2/SupplierRegistration';
 import SupplierDeliveryAgreements from '@pages-v2/SupplierDeliveryAgreements';
 import SupplierCallOffs from '@pages-v2/SupplierCallOffs';
 import SupplierCapacity from '@pages-v2/SupplierCapacity';
+import SupplierDemandAnticipation from '@pages-v2/SupplierDemandAnticipation';
 import SupplierPerformance from '@pages-v2/SupplierPerformance';
 import NotFound from '@pages-v2/NotFound';
 import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
@@ -298,6 +301,20 @@ const ROUTES = [
     pattern: '/buyer/demand-anticipation',
     at: '/buyer/demand-anticipation',
     element: <BuyerDemandAnticipation />,
+    identity: BUYER
+  },
+  {
+    name: 'buyer/demand-anticipation-history',
+    pattern: '/buyer/demand-anticipation-history',
+    at: '/buyer/demand-anticipation-history',
+    element: <BuyerDemandAnticipationHistory />,
+    identity: BUYER
+  },
+  {
+    name: 'buyer/what-if',
+    pattern: '/buyer/what-if',
+    at: '/buyer/what-if',
+    element: <BuyerWhatIfSandbox />,
     identity: BUYER
   },
   {
@@ -757,6 +774,13 @@ const ROUTES = [
     pattern: '/supplier/capacity',
     at: '/supplier/capacity',
     element: <SupplierCapacity />,
+    identity: SUPPLIER
+  },
+  {
+    name: 'supplier/demand-anticipation',
+    pattern: '/supplier/demand-anticipation',
+    at: '/supplier/demand-anticipation',
+    element: <SupplierDemandAnticipation />,
     identity: SUPPLIER
   },
   {

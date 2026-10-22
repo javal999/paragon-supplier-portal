@@ -85,17 +85,33 @@ import {
 } from './i18n/fulfilmentCollaboration';
 import { callOffsEn, callOffsId } from './i18n/callOffs';
 import { demandAnticipationEn, demandAnticipationId } from './i18n/demandAnticipation';
+import {
+  demandAnticipationHistoryEn,
+  demandAnticipationHistoryId
+} from './i18n/demandAnticipationHistory';
+import { whatIfSandboxEn, whatIfSandboxId } from './i18n/whatIfSandbox';
+import {
+  supplierDemandAnticipationEn,
+  supplierDemandAnticipationId
+} from './i18n/supplierDemandAnticipation';
 import { supplyGapEn, supplyGapId } from './i18n/supplyGap';
 import { sapInterfaceEn, sapInterfaceId } from './i18n/sapInterface';
 import { consumptionEn, consumptionId } from './i18n/consumption';
+// — DRC-18 LTP vs FG demand (BL-203); DRC-6 lead time by step (BL-192) —
+import { ltpFgDemandEn, ltpFgDemandId } from './i18n/ltpFgDemand';
+// — BL-194 the supplier's feedstock confirmation (DRC-8) —
+import { feedstockConfirmEn, feedstockConfirmId } from './i18n/feedstockConfirm';
+import { leadTimeStepsEn, leadTimeStepsId } from './i18n/leadTimeSteps';
 import { adminCalendarEn, adminCalendarId } from './i18n/adminCalendar';
 import { performanceEn, performanceId } from './i18n/performance';
 import { inventoryCapacityEn, inventoryCapacityId } from './i18n/inventoryCapacity';
+// — DRC-9a strategic buffer, DRC-9b production limit (BL-195) —
+import { drcBuffersEn, drcBuffersId } from './i18n/drcBuffers';
 import { forecastCollaborationEn, forecastCollaborationId } from './i18n/forecastCollaboration';
 // — REQ-E14-02 supplier reliability and PTI plan-change measures (BL-99) —
 import { reliabilityEn, reliabilityId } from './i18n/reliability';
-// — REQ-E06-04 fixed stock reconcile (ENG-D21, BL-134) —
-import { fixedStockReconcileEn, fixedStockReconcileId } from './i18n/fixedStockReconcile';
+// — DRC-15a feedstock reconcile (BL-201; replaced REQ-E06-04's fixed stock reconcile) —
+import { feedstockReconcileEn, feedstockReconcileId } from './i18n/feedstockReconcile';
 // — REQ-E14-03 material requirement —
 import { materialRequirementEn, materialRequirementId } from './i18n/materialRequirement';
 // — REQ-E14-04 safety stock, safety lead time and reorder point —
@@ -221,15 +237,22 @@ export const resources = {
       ...fulfilmentCollaborationEn,
       ...callOffsEn,
       ...demandAnticipationEn,
+      ...demandAnticipationHistoryEn,
+      ...whatIfSandboxEn,
+      ...supplierDemandAnticipationEn,
       ...supplyGapEn,
       ...sapInterfaceEn,
       ...consumptionEn,
+      ...ltpFgDemandEn,
+      ...feedstockConfirmEn,
+      ...leadTimeStepsEn,
       ...adminCalendarEn,
       ...performanceEn,
       ...inventoryCapacityEn,
+      ...drcBuffersEn,
       ...forecastCollaborationEn,
       ...reliabilityEn,
-      ...fixedStockReconcileEn,
+      ...feedstockReconcileEn,
       ...materialRequirementEn,
       ...safetyStockEn,
       ...orderPlanEn,
@@ -728,15 +751,22 @@ export const resources = {
       ...fulfilmentCollaborationId,
       ...callOffsId,
       ...demandAnticipationId,
+      ...demandAnticipationHistoryId,
+      ...whatIfSandboxId,
+      ...supplierDemandAnticipationId,
       ...supplyGapId,
       ...sapInterfaceId,
       ...consumptionId,
+      ...ltpFgDemandId,
+      ...feedstockConfirmId,
+      ...leadTimeStepsId,
       ...adminCalendarId,
       ...performanceId,
       ...inventoryCapacityId,
+      ...drcBuffersId,
       ...forecastCollaborationId,
       ...reliabilityId,
-      ...fixedStockReconcileId,
+      ...feedstockReconcileId,
       ...materialRequirementId,
       ...safetyStockId,
       ...orderPlanId,

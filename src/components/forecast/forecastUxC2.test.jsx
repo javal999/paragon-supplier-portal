@@ -227,14 +227,12 @@ describe('a switched-off act says why (WCAG 4.1.2)', () => {
     );
   });
 
-  it('End-of-cycle stock check: Save waits for a valid max stock', async () => {
+  it('Feedstock reconcile: Save waits for a valid max stock', async () => {
     renderWithProviders(<BuyerFixedStockReconcile />, {
       identity: PLANNER,
       route: '/buyer/fs-reconcile'
     });
-    fireEvent.click(
-      await screen.findByTestId('fsr-max-edit-packaging|2026-08-31|sup-007|PK-PETB-8801', {}, LOAD)
-    );
+    fireEvent.click(await screen.findByTestId('fsr-max-edit-sup-007|PK-PETB-8801', {}, LOAD));
     fireEvent.change(screen.getByTestId('fsr-max-input'), { target: { value: '' } });
     const save = screen.getByTestId('fsr-max-save');
     expect(save).toBeDisabled();
