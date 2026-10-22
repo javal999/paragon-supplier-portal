@@ -327,6 +327,8 @@ Folder: `docs/supplier-hub/research/inventory-ux-mockups/`. Self-contained HTML,
 
 ## 9. OPEN QUESTIONS
 
+**Ruled 2026-10-22.** The owner accepted every recommendation; the rulings are INV-D1 to INV-D11 in `DECISION-GUIDE.md`: 1 → INV-D1, 2 → INV-D2, 3 → INV-D3, 4 → INV-D4 (BL-149 still open), 5 → INV-D5 (BL-150 still open; P-04 waits), 6 → INV-D6, 7 → INV-D7, 8 → INV-D8, 9 → INV-D10, 10 → INV-D11, 11 → INV-D9.
+
 1. BL-68: days of cover on supplier stock or PTI stock? It decides P-08's labels and every alert's class.
 2. BL-65: one capacity number with weekly overrides, or per week? It decides S-05's "copy to all weeks".
 3. BL-148: do the three labelled sample rows stay on Stock simulation (P-10)?
