@@ -271,7 +271,7 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
       'src/pages-v2/SupplierCapacity.jsx',
       'src/pages-v2/SupplierForecastCommitments/index.jsx',
       'src/pages-v2/SupplierForecasts/components/ConfirmPanel.jsx',
-      'src/pages-v2/SupplierOrders.jsx',
+      'src/pages-v2/SupplierOrders/index.jsx',
       'src/pages-v2/admin/reasonCodeDisplay.js'
     ]);
     expect(callersOf(/\buseReasonLabel\s*\(/)).toEqual([
@@ -284,7 +284,7 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
       'src/pages-v2/SupplierForecastCommitments/index.jsx',
       'src/pages-v2/SupplierForecasts/components/ConfirmPanel.jsx',
       'src/pages-v2/SupplierForecasts/components/ResponsesTab.jsx',
-      'src/pages-v2/SupplierOrders.jsx',
+      'src/pages-v2/SupplierOrders/index.jsx',
       'src/pages-v2/admin/reasonCodeDisplay.js',
       'src/pages-v2/inventory/ReasonFilter.jsx',
       'src/pages-v2/orders/PoCollaboration.jsx'
