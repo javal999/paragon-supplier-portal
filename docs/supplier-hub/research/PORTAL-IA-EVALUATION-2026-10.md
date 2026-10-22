@@ -63,7 +63,7 @@
 | /buyer/data-health | pages-v2/BuyerDataHealth.jsx | Planning engine · Data health | Avatar menu | All | PTI | Engine output | - | menu; 1 pages | 1 pages | - |
 | /buyer/demand-forecast | pages-v2/BuyerDemandForecast.jsx | Forecast quality | Review | MP | PTI | Engine output | Forecast version | menu; 2 pages | 3 pages | - |
 | /buyer/model-backtest | pages-v2/BuyerModelBacktest.jsx | Planning engine · Model backtest | Avatar menu | All | PTI | Engine output | - | menu; 1 pages | 1 pages | - |
-| /buyer/collaboration/responses (URL only, no menu) | pages-v2/BuyerCollaboration.jsx |  |  |  | PTI | Chase, Supplier | Forecast commitment | 1 pages | 0 pages | - |
+| /buyer/collaboration/responses (URL only, no menu) | pages-v2/BuyerCollaboration/index.jsx |  |  |  | PTI | Chase, Supplier | Forecast commitment | 1 pages | 0 pages | - |
 | /buyer/contracts (URL only, no menu) | pages-v2/BuyerContracts/index.jsx |  |  |  | PTI | Delivery agreement, Purchase order, Supplier | - | 1 pages | 1 pages | - |
 | /buyer/contracts/:id (URL only, no menu) | pages-v2/BuyerContractDetail.jsx |  |  |  | PTI | Call-off, Delivery agreement, Purchase order, Supplier | Delivery agreement | 2 pages | 2 pages | - |
 | /buyer/delivery-agreements (URL only, no menu), no inbound link | pages-v2/BuyerDeliveryAgreements.jsx |  |  |  | PTI | Delivery agreement | - | 0 pages | 1 pages | - |
