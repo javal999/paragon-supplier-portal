@@ -6,24 +6,19 @@
 /** @import { ASN, CallOffWarning, PurchaseOrder } from '@services/data/types' */
 /** @import { AsnLinesRead, OpenLine } from '../shipments/asnLines' */
 /** @import { AsnForm } from './const' */
+import { formatDate } from '@lib/format';
 import { asnCallOffWarnings } from '@services/transitions/callOffRules';
 import { defaultCarrier } from '../shipments/CarrierPicker';
 import { openLinesFor, readLines, seedLines } from '../shipments/asnLines';
 import { EMPTY_FORM } from './const';
 
 /**
- * A stored date as "07 Apr 2026", or an em dash when there is none.
+ * A stored date as "31 Aug 2026" in English and "31 Agu 2026" in Indonesian,
+ * or an em dash when there is none.
  * @param {string} s
  * @returns {string}
  */
-export const fmtDate = (s) => {
-  if (!s) return '—';
-  return new Date(s).toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  });
-};
+export const fmtDate = (s) => formatDate(s);
 
 /**
  * MR-6 BR-10 / BR-11 — the ASN as the call-off check reads it, from what the
