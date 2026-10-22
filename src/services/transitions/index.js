@@ -82,6 +82,7 @@ export { osipLevelFlow } from './flows/osipLevel.flow';
 export { whatIfScenarioFlow } from './flows/whatIfScenario.flow';
 export { feedstockConfirmationFlow } from './flows/feedstockConfirmation.flow';
 export { supplierAskFlow } from './flows/supplierAsk.flow';
+export { capacityDecisionFlow } from './flows/capacityDecision.flow';
 export { rfiEventFlow } from './flows/rfiEvent.flow';
 export { rfiResponseFlow } from './flows/rfiResponse.flow';
 export { rfpEventFlow } from './flows/rfpEvent.flow';
@@ -149,6 +150,7 @@ import { osipLevelFlow } from './flows/osipLevel.flow';
 import { whatIfScenarioFlow } from './flows/whatIfScenario.flow';
 import { feedstockConfirmationFlow } from './flows/feedstockConfirmation.flow';
 import { supplierAskFlow } from './flows/supplierAsk.flow';
+import { capacityDecisionFlow } from './flows/capacityDecision.flow';
 import { rfiEventFlow } from './flows/rfiEvent.flow';
 import { rfiResponseFlow } from './flows/rfiResponse.flow';
 import { rfpEventFlow } from './flows/rfpEvent.flow';
@@ -269,6 +271,8 @@ flowRegistry.register(whatIfScenarioFlow); // DRC-17 — the planner saves a wha
 flowRegistry.register(feedstockConfirmationFlow); // BL-194 — supplier feedstock confirmation
 // INV-D9 — "Ask supplier": PTI's hub ask, answered by the supplier in the hub.
 flowRegistry.register(supplierAskFlow); // INV-D9 — a hub ask to one supplier
+// INV-D8 — PTI accepts a supplier's additional capacity on one gap week.
+flowRegistry.register(capacityDecisionFlow); // INV-D8 — PTI's capacity gap decision
 // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx event types and the
 // negotiation window. RFQ keeps its own machine (`rfqFlow`); these are the two
 // event types it did not cover plus the round the award is negotiated in.

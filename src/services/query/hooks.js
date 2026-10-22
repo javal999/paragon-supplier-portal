@@ -147,6 +147,15 @@ export const useSupplierAsks = () =>
     svc.procurement.getSupplierAsks(scope)
   );
 
+/**
+ * INV-D8 — PTI's decisions on capacity gap weeks. A supplier reads only the
+ * decisions on its own capacity; PTI reads every decision.
+ */
+export const useCapacityDecisions = () =>
+  useServiceQuery(['procurement', 'capacityDecisions'], (svc, scope) =>
+    svc.procurement.getCapacityDecisions(scope)
+  );
+
 /** Published forecast versions with who viewed them (REQ-E06-01). */
 export const useForecastVersions = () =>
   useServiceQuery(['procurement', 'forecastVersions'], (svc, scope) =>

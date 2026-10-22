@@ -130,6 +130,7 @@ import { demandAnticipationStore } from '../data/mock/stores/demandAnticipationS
 import { materialNameStore } from '../data/mock/stores/materialNameStore';
 import { feedstockConfirmationStore } from '../data/mock/stores/feedstockConfirmationStore';
 import { supplierAskStore } from '../data/mock/stores/supplierAskStore';
+import { capacityDecisionStore } from '../data/mock/stores/capacityDecisionStore';
 import { simulationOverrideStore } from '../data/mock/stores/simulationOverrideStore';
 import { whatIfScenarioStore } from '../data/mock/stores/whatIfScenarioStore';
 import { hubSettingsStore, settingValue } from './hubSettingsStore';
@@ -311,6 +312,9 @@ async function realIds() {
     // INV-D9 — the ask store opens with two sample asks to sup-007; an ask
     // names its supplier, so it lands in `ownerful`.
     supplierAsk: supplierAskStore.all()[0]?.id ?? null,
+    // INV-D8 — a capacity decision is creation-only (unprobeable); the store
+    // opens with one sample acceptance for sup-005, so the id is real.
+    capacityDecision: capacityDecisionStore.all()[0]?.id ?? null,
     // REQ-E14-13 — a "taken to SAP" mark is creation-only (unprobeable) and its
     // store starts empty (nothing is marked while the engine data is simulated);
     // the id is a well-formed one so the coverage control can see the target.
@@ -500,6 +504,7 @@ const resetAll = () => {
   materialNameStore.reset();
   feedstockConfirmationStore.reset();
   supplierAskStore.reset();
+  capacityDecisionStore.reset();
   simulationOverrideStore.reset();
   whatIfScenarioStore.reset();
   hubSettingsStore.reset();
@@ -610,6 +615,7 @@ describe('POPULATION — nothing below means anything without this', () => {
     // And a consumption record (CAP-11): a later record supersedes it at read.
     // And a feedstock confirmation (BL-194): append-only, the latest in force.
     // And a what-if scenario (BL-202): saved once, never changed.
+    // And PTI's capacity gap decision (INV-D8): recorded once, never changed.
     expect(unprobeable).toEqual([
       'rfqConfidentiality',
       'inventoryDeclaration',
@@ -623,7 +629,8 @@ describe('POPULATION — nothing below means anything without this', () => {
       'demandAnticipation',
       'consumption',
       'whatIfScenario',
-      'feedstockConfirmation'
+      'feedstockConfirmation',
+      'capacityDecision'
     ]);
   });
 
