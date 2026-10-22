@@ -351,6 +351,11 @@ export const TRANSITION_PURPOSE = Object.freeze({
   t_osiplevel_set: { purposeKey: 'processFlows.purpose.t_osiplevel_set' },
   t_whatifscenario_save: { purposeKey: 'processFlows.purpose.t_whatifscenario_save' },
   t_feedstock_confirm: { purposeKey: 'processFlows.purpose.t_feedstock_confirm' },
+  // INV-D9 — "Ask supplier", the hub ask.
+  t_supplierask_raise: { purposeKey: 'processFlows.purpose.t_supplierask_raise' },
+  t_supplierask_answer: { purposeKey: 'processFlows.purpose.t_supplierask_answer' },
+  t_supplierask_close: { purposeKey: 'processFlows.purpose.t_supplierask_close' },
+  t_supplierask_withdraw: { purposeKey: 'processFlows.purpose.t_supplierask_withdraw' },
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — RFx management.
   t_rfi_create: { purposeKey: 'processFlows.purpose.t_rfi_create' },
   t_rfi_revise_draft: { purposeKey: 'processFlows.purpose.t_rfi_revise_draft' },
@@ -453,6 +458,7 @@ export const ENTITY_PURPOSE = Object.freeze({
   osipLevel: { purposeKey: 'processFlows.purpose.entity.osipLevel' },
   whatIfScenario: { purposeKey: 'processFlows.purpose.entity.whatIfScenario' },
   feedstockConfirmation: { purposeKey: 'processFlows.purpose.entity.feedstockConfirmation' },
+  supplierAsk: { purposeKey: 'processFlows.purpose.entity.supplierAsk' },
   rfiEvent: { purposeKey: 'processFlows.purpose.entity.rfiEvent' },
   rfiResponse: { purposeKey: 'processFlows.purpose.entity.rfiResponse' },
   rfpEvent: { purposeKey: 'processFlows.purpose.entity.rfpEvent' },

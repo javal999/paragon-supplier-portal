@@ -47,6 +47,7 @@ import StockUploadPanel, {
 import SupplierSyncPanel from './inventory/SupplierSyncPanel';
 import WeeklyUpdatePanel from './inventory/WeeklyUpdatePanel';
 import FeedstockConfirmPanel from './inventory/FeedstockConfirmPanel';
+import PtiAsksBlock from './inventory/PtiAsksBlock';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
 import SupplierMaterialNames from './materials/SupplierMaterialNames';
 import { TradeNameBeside } from './materials/tradeNameDisplay';
@@ -257,6 +258,9 @@ const SupplierInventory = () => {
 
       {/* Material B2 / S-02 — the one weekly status (manual) or the sync schedule (API). */}
       <WeeklyUpdatePanel supplierId={supplierId} positions={rows} nowIso={nowIso} />
+
+      {/* Inventory UX S-04 (INV-D9) — what PTI is asking, before the tabs. */}
+      <PtiAsksBlock supplierId={supplierId} />
 
       {pageTabs}
 

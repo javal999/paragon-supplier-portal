@@ -50,11 +50,11 @@ describe('S-01 · the Stock page leads with this week and the table', () => {
     expect(before(weekly, tabs)).toBe(true);
     expect(before(tabs, /** @type {Element} */ (table))).toBe(true);
     // The stacked panels moved to their tabs; the out-of-date banner is the
-    // weekly status's second line now; no asks block is built in this lane.
+    // weekly status's second line now. The "PTI is asking" block (S-04, lane
+    // 2A) sits between the weekly status and the tabs: ptiAsks.s04.page.test.jsx.
     expect(screen.queryByTestId('feedstock-confirm')).toBeNull();
     expect(screen.queryByTestId('stock-template-guide')).toBeNull();
     expect(screen.queryByTestId('sup-stock-banner')).toBeNull();
-    expect(screen.queryByText(/PTI is asking/)).toBeNull();
   });
 
   it('the Template guide tab holds the download, the columns and the incoming cards, not the table', async () => {

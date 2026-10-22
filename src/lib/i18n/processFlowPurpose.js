@@ -550,6 +550,16 @@ export const processFlowPurposeEn = {
     'A supplier’s confirmation of its current feedstock for one material: the quantity in the material’s unit, the day the figure holds for, and an optional note. Feedstock is not stock until it is produced, so it never adds to the supplier’s stock on hand. A newer confirmation replaces the earlier one; every confirmation stays on record.',
   'processFlows.purpose.t_feedstock_confirm':
     'The supplier confirms its current feedstock for an assigned material, weekly with the stock update. PTI sees it as its own line beside the supplier stock. Nothing is sent to SAP.',
+  'processFlows.purpose.entity.supplierAsk':
+    'PTI asks one supplier about one material, or about one planning group and week, with an optional due date. The ask shows on the supplier’s To do and Stock page and the supplier replies in the hub. Every step stays on record; nothing is sent by email.',
+  'processFlows.purpose.t_supplierask_raise':
+    'The planner asks a supplier about a material it supplies, or about a capacity planning group and week. A subject can have only one ask waiting at a time. Nothing is sent to SAP.',
+  'processFlows.purpose.t_supplierask_answer':
+    'The supplier replies to PTI’s ask in the hub, with an optional date. Only the supplier the ask names can reply.',
+  'processFlows.purpose.t_supplierask_close':
+    'The planner has read the supplier’s reply and ends the ask. The ask and the reply stay on record.',
+  'processFlows.purpose.t_supplierask_withdraw':
+    'The planner takes back an ask the supplier has not replied to yet, because PTI no longer needs it.',
 
   // ── RFx management (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ─────────────────
   'processFlows.purpose.entity.rfiEvent':
@@ -1150,6 +1160,16 @@ export const processFlowPurposeId = {
     'Konfirmasi pemasok atas feedstock saat ini untuk satu material: jumlah dalam satuan material, tanggal konfirmasi, dan catatan opsional. Feedstock belum menjadi stok sampai diproduksi, sehingga tidak pernah menambah stok pemasok. Konfirmasi yang lebih baru menggantikan yang lama; setiap konfirmasi tetap tercatat.',
   'processFlows.purpose.t_feedstock_confirm':
     'Pemasok mengonfirmasi feedstock saat ini untuk material yang ditugaskan, setiap minggu bersama pembaruan stok. PTI melihatnya sebagai baris tersendiri di samping stok pemasok. Tidak ada yang dikirim ke SAP.',
+  'processFlows.purpose.entity.supplierAsk':
+    'Pertanyaan PTI kepada satu pemasok tentang satu material, atau tentang satu grup perencanaan dan minggu: topik, pertanyaan, dan tenggat opsional. Pertanyaan tampil di Tugas dan halaman Stok pemasok dan dijawab di hub. Setiap langkah tetap tercatat; tidak ada yang dikirim lewat email.',
+  'processFlows.purpose.t_supplierask_raise':
+    'Perencana bertanya kepada pemasok tentang material yang dipasoknya, atau tentang grup perencanaan kapasitas dan minggu. Hanya satu pertanyaan per subjek yang boleh terbuka sekaligus. Tidak ada yang dikirim ke SAP.',
+  'processFlows.purpose.t_supplierask_answer':
+    'Pemasok menjawab pertanyaan PTI di hub, dengan tanggal opsional. Hanya pemasok yang disebut pertanyaan itu yang dapat menjawabnya.',
+  'processFlows.purpose.t_supplierask_close':
+    'Perencana sudah membaca jawaban pemasok dan menutup pertanyaan. Pertanyaan dan jawaban tetap tercatat.',
+  'processFlows.purpose.t_supplierask_withdraw':
+    'Perencana menarik pertanyaan yang belum dijawab pemasok, karena PTI tidak lagi memerlukan jawabannya.',
 
   // ── RFx (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ────────────────────────────
   'processFlows.purpose.entity.rfiEvent':
