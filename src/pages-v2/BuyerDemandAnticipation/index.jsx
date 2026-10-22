@@ -1,5 +1,5 @@
 /** @import React from 'react' */
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
@@ -55,6 +55,34 @@ const keyOf = (r) => `${r.supplierId}-${r.materialCode}`;
 // i18n-defer: tab identifiers, not copy — each renders through t(`demandAnt.tab.${id}`)
 export const DEMAND_ANTICIPATION_TABS = /** @type {const} */ (['thisWeek', 'consumption']);
 
+/**
+ * IA review item 1 — a card's weeks grid, behind a toggle under its plan check.
+ * @type {React.FC<{ row: DemandAnticipationRow; rowKey: string; open: boolean; onToggle: (open: boolean) => void; currentWeek: string }>}
+ */
+const CardWeeks = ({ row, rowKey, open, onToggle, currentWeek }) => {
+  const { t } = useTranslation();
+  return (
+    <>
+      <div className="px-4 pb-3">
+        <Button
+          variant="secondary"
+          aria-expanded={open}
+          aria-controls={`dant-weeks-${rowKey}`}
+          onClick={() => onToggle(!open)}
+          data-testid={`dant-weeks-toggle-${rowKey}`}
+        >
+          {open ? t('demandAnt.card.hideWeeks') : t('demandAnt.card.showWeeks')}
+        </Button>
+      </div>
+      {open ? (
+        <div className="border-t border-border-subtle" id={`dant-weeks-${rowKey}`}>
+          <AnticipationGrid row={row} rowKey={rowKey} currentWeek={currentWeek} />
+        </div>
+      ) : null}
+    </>
+  );
+};
+
 /** @type {React.FC} */
 const BuyerDemandAnticipation = () => {
   const { t } = useTranslation();
@@ -66,6 +94,12 @@ const BuyerDemandAnticipation = () => {
   const supplier = params.get('supplier');
   const material = params.get('material');
   const { tab, select } = usePageTab(DEMAND_ANTICIPATION_TABS);
+  // IA review item 1 — each card opens on its plan check; its weeks grid
+  // (about 700 px) unfolds on request. A card shown alone opens unfolded. The
+  // map holds only the cards the planner toggled.
+  const [weeksOpen, setWeeksOpen] = useState(
+    /** @type {ReadonlyMap<string, boolean>} */ (new Map())
+  );
 
   if (query.isPending) return <LoadingState breadcrumb={crumb} />;
   if (query.isError)
@@ -260,9 +294,13 @@ const BuyerDemandAnticipation = () => {
                     </p>
                   ) : null}
                   <PlanCheck row={r} rowKey={keyOf(r)} />
-                  <div className="border-t border-border-subtle">
-                    <AnticipationGrid row={r} rowKey={keyOf(r)} currentWeek={nowIso.slice(0, 10)} />
-                  </div>
+                  <CardWeeks
+                    row={r}
+                    rowKey={keyOf(r)}
+                    open={weeksOpen.get(keyOf(r)) ?? shown.length === 1}
+                    onToggle={(open) => setWeeksOpen((m) => new Map(m).set(keyOf(r), open))}
+                    currentWeek={nowIso.slice(0, 10)}
+                  />
                 </section>
               ))}
               {shown.length === 0 ? (

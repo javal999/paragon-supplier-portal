@@ -6,7 +6,7 @@
 // never restated.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER } from '@test/test-utils';
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
@@ -52,12 +52,19 @@ function expected() {
   return { row, gross, share: row.share };
 }
 
+/** IA review item 1 — the cards open folded; unfold every card's weeks grid. */
+const openAllWeeks = async () => {
+  await screen.findByTestId('dant-filters', {}, { timeout: 15000 });
+  for (const b of screen.getAllByTestId(/^dant-weeks-toggle-/)) fireEvent.click(b);
+};
+
 describe('DRC-18 — the three rows on the grid', () => {
   it('FG demand is the share of the engine requirement; LTP − FG demand sits beside it', async () => {
     const { row, gross, share } = expected();
     // Named member: the engine holds a positive FG demand for this material in the shown weeks.
     expect(row.weeks.some((w) => (gross.get(w.week) ?? 0) > 0)).toBe(true);
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    await openAllWeeks();
     const card = await screen.findByTestId(`dant-card-${KEY}`);
     expect(within(card).getByText('FG demand')).toBeInTheDocument();
     expect(within(card).getByText('LTP − FG demand')).toBeInTheDocument();
@@ -82,6 +89,7 @@ describe('DRC-18 — the three rows on the grid', () => {
 
   it('with no consumption recorded, the average reads — and the label says why', async () => {
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    await openAllWeeks();
     const card = await screen.findByTestId(`dant-card-${KEY}`);
     expect(within(card).getByTestId(`dant-cavg-note-${KEY}`)).toHaveTextContent(
       'No consumption recorded in the last 13 weeks'
@@ -106,6 +114,7 @@ describe('DRC-18 — the three rows on the grid', () => {
       });
     const { row, share } = expected();
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    await openAllWeeks();
     const card = await screen.findByTestId(`dant-card-${KEY}`);
     expect(within(card).getByTestId(`dant-cavg-note-${KEY}`)).toHaveTextContent(
       'Averages 2 of 13 weeks: only those have consumption recorded'
@@ -120,6 +129,7 @@ describe('DRC-18 — the three rows on the grid', () => {
     try {
       await i18n.changeLanguage('id');
       renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+      await openAllWeeks();
       const card = await screen.findByTestId(`dant-card-${KEY}`);
       expect(within(card).getByText('Permintaan FG')).toBeInTheDocument();
       expect(within(card).getByText('LTP − permintaan FG')).toBeInTheDocument();
