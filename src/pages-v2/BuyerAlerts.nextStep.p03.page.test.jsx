@@ -95,7 +95,9 @@ describe('P-03 · days to impact is shown', () => {
     expect(screen.getByTestId(`alert-impact-${PTI_ROP_LINE}`)).toHaveTextContent(
       'Impact in 10 days'
     );
-    expect(screen.getByTestId(`alert-impact-${CAPACITY}`)).toHaveTextContent('Impact in 42 days');
+    // INV-D12 — the sample acceptance (sup-005 · pg-MG-02 · 12 Oct, 42 days)
+    // no longer counts, so the impact runs to the next gap week, 19 Oct.
+    expect(screen.getByTestId(`alert-impact-${CAPACITY}`)).toHaveTextContent('Impact in 49 days');
     expect(screen.getByTestId(`alert-impact-${STALE}`)).toHaveTextContent(
       'Out of date for 17 days'
     );
