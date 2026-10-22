@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P-03 · PTI Alerts: one card per material, with the next step</title>
+<style>
+  :root{--bg:#f5f6f7;--surface:#fff;--border:#e4e7ec;--text:#0d1b2a;--text2:#354a5f;--text3:#6b7785;--action:#0070f2;--action-soft:#eef5ff;--data:#1e3a5f;--ok:#107e3e;--ok-soft:#ecf8f1;--warn-text:#8a5606;--warn-soft:#fef3d6;--danger:#b42318;--danger-soft:#fdecea}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;color:var(--text);background:var(--bg)}
+  .top{height:56px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px}
+  .top b{font-size:15px}.preview{font-size:11px;font-weight:700;color:var(--warn-text);background:var(--warn-soft);border-radius:999px;padding:2px 8px}
+  .shell{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 56px)}
+  .side{background:#fff;border-right:1px solid var(--border);padding:16px 12px}
+  .persona{display:flex;background:#f1f3f5;border-radius:999px;padding:3px;margin-bottom:18px;font-size:13px}
+  .persona span{flex:1;text-align:center;padding:6px;border-radius:999px;color:var(--text3)}.persona .on{background:#fff;color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .sect{font-size:11px;letter-spacing:.08em;color:var(--text3);margin:16px 12px 6px;font-weight:600}
+  .nav a{display:block;padding:8px 12px;border-radius:8px;color:var(--text);text-decoration:none}
+  .nav a.active{background:var(--action-soft);color:var(--action);font-weight:600}
+  main{padding:24px 32px 60px;max-width:1200px}
+  .eyebrow{font-size:11px;letter-spacing:.08em;color:var(--text3);font-weight:600}
+  h1{font-size:28px;margin:6px 0 4px}.sub{color:var(--text2);margin:0 0 6px}
+  .meta{font-size:12px;color:var(--text3);margin-bottom:16px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--data)}
+  .tabs{display:flex;gap:18px;border-bottom:1px solid var(--border);margin-bottom:12px}
+  .tabs div{padding:8px 2px;color:var(--text3);border-bottom:2px solid transparent}.tabs .cur{color:var(--action);border-color:var(--action);font-weight:600}
+  .bar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+  .chip{border:1px solid var(--border);border-radius:999px;padding:5px 10px;font-size:13px;background:#fff;color:var(--text2)}
+  .chip.on{border-color:var(--action);color:var(--action);background:var(--action-soft)}
+  .count{font-size:13px;color:var(--text2);margin-left:auto}
+  .card{background:#fff;border:1px solid var(--border);border-left:3px solid var(--danger);border-radius:10px;margin-bottom:12px}
+  .card.m{border-left-color:#d97706}
+  .hd{display:flex;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+  .hd .t{font-weight:700}.hd .r{margin-left:auto;font-size:12px;color:var(--text3)}
+  .pill{display:inline-block;font-size:12px;padding:2px 8px;border-radius:6px;border:1px solid;white-space:nowrap}
+  .pill.d{background:var(--danger-soft);color:var(--danger);border-color:#f5c2bd}
+  .pill.w{background:var(--warn-soft);color:var(--warn-text);border-color:#f7d79a}
+  .pill.n{background:#f3f4f6;color:var(--text2);border-color:var(--border)}
+  .bd{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;padding:12px 16px}
+  .rules{margin:0;padding:0;list-style:none}
+  .rules li{display:flex;gap:8px;align-items:baseline;padding:5px 0;font-size:13px;border-top:1px dashed var(--border)}
+  .rules li:first-child{border-top:0}
+  .rules .basis{font-size:12px;color:var(--text3);margin-left:auto;white-space:nowrap}
+  .next{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px}
+  .next .k{font-size:11px;letter-spacing:.06em;color:var(--text3);font-weight:600}
+  .next p{margin:6px 0 10px;font-size:13px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{font:inherit;font-size:13px;padding:7px 12px;border-radius:8px;border:1px solid #c9ced6;background:#fff;color:var(--text);cursor:pointer}
+  .btn.p{border-color:var(--action);color:var(--action);font-weight:600}
+  .link{color:var(--action);font-size:13px;text-decoration:none}
+  .cleared{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:13px}
+  .cleared div{padding:4px 0;color:var(--text2)}
+  .note{margin-top:24px;font-size:12px;color:var(--text3);border-top:1px dashed var(--border);padding-top:10px}
+</style>
+</head>
+<body>
+<div class="top"><b>Paragon Supplier Portal</b><span class="preview">PREVIEW</span></div>
+<div class="shell">
+  <aside class="side">
+    <div class="persona"><span class="on">PTI</span><span>Supplier</span></div>
+    <div class="sect">INVENTORY &amp; CAPACITY</div>
+    <div class="nav"><a>Inventory</a><a>Stock simulation</a><a>Capacity</a><a class="active">Alerts</a><a>Supplier access</a></div>
+  </aside>
+  <main>
+    <div class="eyebrow">INVENTORY &amp; CAPACITY · ALERTS</div>
+    <h1>Alerts</h1>
+    <p class="sub">One card per material and supplier, soonest impact first. Each card says what to do next.</p>
+    <div class="meta">As of <span class="mono">31 Aug 2026</span> · delivered in the hub</div>
+
+    <div class="tabs"><div class="cur">Needs action · 19 materials</div><div>Cleared today · 2</div><div>Closed · 0</div></div>
+    <div class="bar"><span class="chip on">High (9)</span><span class="chip">Medium (6)</span><span class="chip">Low (4)</span><span class="chip">Planning group: All</span><span class="chip">PIC: All</span><span class="count">35 alerts on 19 materials</span></div>
+
+    <section class="card">
+      <div class="hd"><span class="pill d">High</span><span class="t"><span class="mono">RM-STEAR-7300</span> Stearic Acid — Double Pressed</span><span style="color:var(--text2)">PT Sample Specialty Fats</span><span class="r">Impact in <b class="mono">10 days</b></span></div>
+      <div class="bd">
+        <ul class="rules">
+          <li><span class="pill d">High</span>PTI stock runs out before the next incoming delivery<span class="basis">next incoming <span class="mono">06 Sept</span></span></li>
+          <li><span class="pill d">High</span>PTI stock below the PTI reorder point<span class="basis">PTI <span class="mono">900</span> / ROP <span class="mono">2,500</span> KG</span></li>
+          <li><span class="pill d">High</span>Supplier stock and incoming do not cover 30 days<span class="basis">Supplier cover 10 days · lead time 21</span></li>
+          <li><span class="pill d">High</span>Supplier stock below the system ROP Supplier<span class="basis">Supplier cover 10 days</span></li>
+          <li><span class="pill d">High</span>Committed quantity below forecast<span class="basis">Firm period short</span></li>
+        </ul>
+        <div class="next">
+          <div class="k">NEXT STEP</div>
+          <p>Production of <span class="mono">6,000 KG</span> finishes <span class="mono">06 Sept</span>; PTI runs out before it. Bring a call-off forward on blanket PO <span class="mono">PO-2025-00116</span> (<span class="mono">15,000 KG</span> left).</p>
+          <div class="btns"><button class="btn p">Create call-off</button><button class="btn">Open stock simulation</button><button class="btn">Close with reason</button></div>
+          <div style="margin-top:8px"><a class="link" href="#">Open in Inventory</a></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="hd"><span class="pill d">High</span><span class="t"><span class="mono">PK-PETB-8802</span> PET Bottle 100ml Clear</span><span style="color:var(--text2)">PT Sample Packaging Indonesia</span><span class="r">Impact in <b class="mono">4 days</b></span></div>
+      <div class="bd">
+        <ul class="rules">
+          <li><span class="pill d">High</span>Supplier stock and incoming do not cover 30 days<span class="basis">Supplier cover 4 days · lead time 14</span></li>
+          <li><span class="pill d">High</span>Supplier stock below the system ROP Supplier<span class="basis">Supplier cover 4 days</span></li>
+          <li><span class="pill w">Medium</span>Committed quantity below forecast<span class="basis">Trade-off period short</span></li>
+        </ul>
+        <div class="next">
+          <div class="k">NEXT STEP</div>
+          <p>The supplier has nothing in production and is already over-called by <span class="mono">121,000 PCS</span>. Ask for a production date. No agreement line exists, so a call-off is not possible.</p>
+          <div class="btns"><button class="btn p">Ask supplier for a production date</button><button class="btn">Create PO request</button><button class="btn">Close with reason</button></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card m">
+      <div class="hd"><span class="pill w">Medium</span><span class="t">Rigid plastic packaging · capacity</span><span style="color:var(--text2)">PT Sample Packaging Indonesia</span><span class="r">First gap week <b class="mono">W38 · 14 Sept</b></span></div>
+      <div class="bd">
+        <ul class="rules"><li><span class="pill w">Medium</span>Allocated capacity below the LTP in 1 week<span class="basis">Short by <span class="mono">14,560 PCS</span> · additional capacity confirmed</span></li></ul>
+        <div class="next"><div class="k">NEXT STEP</div><p>The supplier confirmed <span class="mono">21,840 PCS</span> additional capacity for W38. Accept it, or move demand to another week or supplier.</p>
+          <div class="btns"><button class="btn p">Accept additional capacity</button><button class="btn">Open capacity</button></div></div>
+      </div>
+    </section>
+
+    <div class="cleared"><b>Cleared today</b>
+      <div><span class="pill n">Low</span> <span class="mono">PK-CAPF-8820</span> stock out of date · cleared <span class="mono">19:00</span> when the supplier sent <span class="mono">1,500 PCS</span></div>
+      <div><span class="pill n">Low</span> <span class="mono">PK-PETB-8810</span> stock out of date · cleared <span class="mono">19:00</span> by template upload</div>
+    </div>
+
+    <div class="note">Mockup for findings P-03 and P-04 (with P-07, P-08, P-11). Rules that share a supplier and material collapse into one card with one close; each rule shows its own basis instead of the supplier cover for every rule; the card carries a next-step sentence and the actions that work for that pair. Indonesian: "Langkah berikutnya", "Buat call-off", "Minta tanggal produksi ke pemasok", "Tutup dengan alasan", "Dihapus hari ini".</div>
+  </main>
+</div>
+</body>
+</html>
