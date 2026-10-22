@@ -18,7 +18,7 @@ import { CALL_OFF_PO_STATES } from '@services/transitions/callOffRules';
 import { dayOf, incomingTotals } from '@services/transitions/inventoryRules';
 import { Figure, RiskPill, inventoryNow, labelClass } from './inventoryDisplay';
 import FeedstockLine from './FeedstockLine';
-import { agreementLineFor } from './stockSimulationDisplay';
+import { agreementLineFor, isOverCalled } from './stockSimulationDisplay';
 import { PicCell, PicHeader } from '../materials/picDisplay';
 import { TradeNameBeside } from '../materials/tradeNameDisplay';
 
@@ -151,6 +151,8 @@ const MaterialDrawer = ({
     ).state === 'line';
   const simRow = (simQuery.data?.items ?? []).find((r) => r.materialCode === p.materialCode);
   const free = simRow?.simulation?.freeToCallOff ?? null;
+  // P-05 — an over-called pair gets no call-off, as on Stock simulation.
+  const overCalled = isOverCalled(simRow?.simulation ?? null);
   const ptiBelow = p.ptiSoh !== null && p.ptiRop !== null && p.ptiSoh < p.ptiRop;
   const supplierCover = risk.basis.kind === 'leadTime' || risk.basis.kind === 'fallbackBands';
   const query = `supplier=${encodeURIComponent(p.supplierId)}&material=${encodeURIComponent(p.materialCode)}`;
@@ -306,7 +308,8 @@ const MaterialDrawer = ({
               {t('inv.drawer.action.simulation.hint')}
             </p>
           </div>
-          {posQuery.isPending || callOffsQuery.isPending ? null : hasAgreementLine ? (
+          {posQuery.isPending || callOffsQuery.isPending ? null : hasAgreementLine &&
+            !overCalled ? (
             <Button
               variant="outline"
               onClick={() =>
@@ -328,7 +331,9 @@ const MaterialDrawer = ({
                 {t('inv.drawer.action.po')}
               </Button>
               <p className="mt-1 text-xs text-text-tertiary" data-testid="material-drawer-no-line">
-                {t('co.prefill.noLine', { supplier: p.supplierName, material: p.materialCode })}
+                {hasAgreementLine && overCalled
+                  ? t('sim.overCalledMeans')
+                  : t('co.prefill.noLine', { supplier: p.supplierName, material: p.materialCode })}
               </p>
             </div>
           )}

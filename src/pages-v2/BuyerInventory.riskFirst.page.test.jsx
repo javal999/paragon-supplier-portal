@@ -177,15 +177,26 @@ describe('P-02 — a row opens the material drawer', () => {
     );
   });
 
-  it('"Create call-off" shows only where an agreement line exists', async () => {
-    render('/buyer/inventory?type=VERP');
-    fireEvent.click(await screen.findByTestId('pti-stock-row-sup-007-PK-PETB-8801'));
+  it('"Create call-off" shows only where an agreement line has quantity left', async () => {
+    render('/buyer/inventory?type=ROH');
+    fireEvent.click(await screen.findByTestId('pti-stock-row-sup-002-RM-EMUL-9410'));
     const callOff = await screen.findByTestId('material-drawer-calloff');
     expect(callOff).toHaveTextContent('Create call-off');
     expect(screen.queryByTestId('material-drawer-po')).toBeNull();
     fireEvent.click(callOff);
     expect(await screen.findByTestId('landed')).toHaveTextContent(
-      '/buyer/call-offs?newFor=sup-007&material=PK-PETB-8801'
+      '/buyer/call-offs?newFor=sup-002&material=RM-EMUL-9410'
+    );
+  });
+
+  it('an over-called pair offers no call-off even with a line left (P-05)', async () => {
+    render('/buyer/inventory?type=VERP');
+    fireEvent.click(await screen.findByTestId('pti-stock-row-sup-007-PK-PETB-8801'));
+    const po = await screen.findByTestId('material-drawer-po');
+    expect(po).toHaveTextContent('Create PO request');
+    expect(screen.queryByTestId('material-drawer-calloff')).toBeNull();
+    expect(screen.getByTestId('material-drawer-no-line')).toHaveTextContent(
+      'Called off more than the supplier holds'
     );
   });
 
