@@ -125,8 +125,8 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | Sup-Ful | Orders → **Purchase orders** | **Acknowledge receipt** | Acknowledged | `pages-v2/SupplierOrders.jsx:865-872` |
-| 2 | Sup-Ful | same | **Confirm order**, with confirmed qty and date | Confirmed | `pages-v2/SupplierOrders.jsx:897,934-942` |
+| 1 | Sup-Ful | Orders → **Purchase orders** | **Acknowledge receipt** | Acknowledged | `pages-v2/SupplierOrders/components/PanelFooter.jsx:94-103`; `pages-v2/SupplierOrders/hooks/usePoCommands.js:203` |
+| 2 | Sup-Ful | same | **Confirm order**, with confirmed qty and date | Confirmed | `pages-v2/SupplierOrders/components/PanelFooter.jsx:163-170`; `pages-v2/SupplierOrders/hooks/usePoCommands.js:74-123` |
 | 3 | Sup-Ful | Orders → **Shipments & ASN** | **Create ASN** → **Submit ASN** | ASN Submitted | `pages-v2/SupplierShipments/hooks/useAsnRowCommands.js:66-101`; `pages-v2/SupplierShipments/index.jsx:310-324` |
 | 4 | PTI-Rcv | Order collaboration → **Goods receipts** | **New GR** → 4-step wizard → **Create GR** | Approved → Posted to SAP | `components/v2-features/GRInspectionWizard/hooks/useCompleteReceipt.js:75-226`; `services/transitions/grRollup.js:55-79` |
 | 5 | Sup-BO | Invoices → **Invoices** | **New invoice** → **Submit invoice** | Submitted → Matched | `pages-v2/SupplierInvoices/index.jsx:128-171`; `pages-v2/SupplierInvoices/components/NewInvoicePanel.jsx:65-121`; `services/transitions/cascades.js:44-46` |
@@ -136,9 +136,9 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | Sup-Ful | Purchase orders | **Adjust** → **Send adjustment** | Adjusted | `pages-v2/SupplierOrders.jsx:918-965` |
-| 2 | PTI (MP menu) | Order collaboration → **Purchase orders** | **Reject counter-offer** → comment → **Send back to supplier** | Sent | `pages-v2/BuyerOrders.jsx:803-855` |
-| 3 | Sup-Ful | Purchase orders | **Confirm order**, or **Reject** with a cause → **Send rejection** | Confirmed or Rejected (terminal) | `pages-v2/SupplierOrders.jsx:918-965` |
+| 1 | Sup-Ful | Purchase orders | **Adjust** → **Send adjustment** | Adjusted | `pages-v2/SupplierOrders/components/AdjustForm.jsx`; `pages-v2/SupplierOrders/components/PanelFooter.jsx:178-185`; `pages-v2/SupplierOrders/hooks/usePoCommands.js:151-163` |
+| 2 | PTI (MP menu) | Order collaboration → **Purchase orders** | **Reject counter-offer** → comment → **Send back to supplier** | Sent | `pages-v2/BuyerOrders/components/PoCounterReview.jsx:63-96` |
+| 3 | Sup-Ful | Purchase orders | **Confirm order**, or **Reject** with a cause → **Send rejection** | Confirmed or Rejected (terminal) | `pages-v2/SupplierOrders/components/RejectForm.jsx`; `pages-v2/SupplierOrders/components/PanelFooter.jsx:163-170,186-193`; `pages-v2/SupplierOrders/hooks/usePoCommands.js:164-175` |
 
 **Negative end-to-end: short receipt, then invoice dispute**
 
@@ -171,15 +171,15 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
 | 1 | PTI-Plan | Order collaboration → **Call-offs** | **New call-off** → **Release to supplier** | Awaiting Confirmation | `pages-v2/BuyerCallOffs/components/UmbrellaSection.jsx:104-110`; `pages-v2/BuyerCallOffs/components/NewCallOffPanel.jsx:87-93` |
-| 2 | Sup-Ful | Orders → **Call-offs** | **Respond** → **Confirm as requested** → **Send confirmation** | Confirmed | `pages-v2/SupplierCallOffs.jsx:206-232,385-391,795` |
-| 3 | Sup-Ful | same | **Send dispatch notice** | Confirmed (dispatched) | `pages-v2/SupplierCallOffs.jsx:618-631` |
+| 2 | Sup-Ful | Orders → **Call-offs** | **Respond** → **Confirm as requested** → **Send confirmation** | Confirmed | `pages-v2/SupplierCallOffs/components/CallOffRow.jsx:82-85`; `pages-v2/SupplierCallOffs/components/RespondForm.jsx:150-152`; `pages-v2/SupplierCallOffs/hooks/useCallOffResponse.js:68` |
+| 3 | Sup-Ful | same | **Send dispatch notice** | Confirmed (dispatched) | `pages-v2/SupplierCallOffs/components/DispatchSection.jsx:165-179` |
 | 4 | Sup-Ful | Shipments & ASN | Create the ASN for the confirmed call-off | ASN Submitted | `services/data/mock/MockCommandService.js:719-742` |
 
 **Negative end-to-end: supplier confirms with changes, PTI rejects and asks again**
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | Sup-Ful | Call-offs | **Respond** → "…new date" → **Send confirmation** | Confirmed with New Date (awaiting approval) | `pages-v2/SupplierCallOffs.jsx:206-232` |
+| 1 | Sup-Ful | Call-offs | **Respond** → "…new date" → **Send confirmation** | Confirmed with New Date (awaiting approval) | `pages-v2/SupplierCallOffs/components/RespondForm.jsx:150-152`; `pages-v2/SupplierCallOffs/hooks/useCallOffResponse.js:52-68` |
 | 2 | PTI-Plan | Call-offs | **Reject**, with a comment | Awaiting Confirmation | `pages-v2/BuyerCallOffs/components/ReviewSection.jsx:48-59`; `services/data/mock/MockCommandService.js:1651` |
 | 3 | PTI-Plan | same | **Change and ask again** | Awaiting Confirmation | `pages-v2/BuyerCallOffs/components/ChangeSection.jsx:99-122` |
 
@@ -457,8 +457,8 @@ A reader might expect these to work. The code shows they do not, or that they ar
     - Goods receipts: "Submit inspection results", "Override hold". (`pages-v2/BuyerGoodsReceipt/components/footerForStatus.jsx:77-130`)
     - Shipments: "Send reminder to supplier", "Track shipment". (`pages-v2/BuyerShipments/components/footerForStatus.jsx:29-89`)
     - Invoices: "Review match", "Escalate". (`pages-v2/BuyerInvoices/hooks/useInvoiceCommands.js:76-124`)
-    - Supplier orders: "Create ASN" on the PO page. (`pages-v2/SupplierOrders.jsx:543-568`)
-    - Buyer orders: "Export", "New PO", "View Full Details" have no handler. (`pages-v2/BuyerOrders.jsx:493-496,707-711`)
+    - Supplier orders: "Create ASN" on the PO page. (`pages-v2/SupplierOrders/index.jsx:337-340`; `pages-v2/SupplierOrders/components/PanelFooter.jsx:133,203`)
+    - Buyer orders: "Export", "New PO", "View Full Details" have no handler. (`pages-v2/BuyerOrders/index.jsx:184-191`; `pages-v2/BuyerOrders/components/PoPanel.jsx:83`)
 8. **ASN In Transit and Delivered, and PO delivered and closed, come from TMS/S4.** No screen produces them. (`services/transitions/flows/advanceShipNotice.flow.js:180-210`)
 
 **Forecast and planning**
