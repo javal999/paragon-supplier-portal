@@ -196,10 +196,12 @@ const BuyerHome = () => {
           deadlines: movedPos.map((po) => po.requestedDeliveryDate),
           // IA P-02 — Order summary is the `?view=summary` view of Purchase
           // orders; a count of one opens that order.
-          to: deepLink('/buyer/orders', {
-            view: 'summary',
-            po: onlyOne(movedPos, (po) => po.id)
-          })
+          // IA review item 2 — one order opens it; several open the Summary
+          // view filtered to exactly the orders this task counts.
+          to:
+            movedPos.length === 1
+              ? deepLink('/buyer/orders', { po: movedPos[0].id })
+              : deepLink('/buyer/orders', { view: 'summary', moved: '1' })
         },
         {
           id: 'calloffs-approval',
