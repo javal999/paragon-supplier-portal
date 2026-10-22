@@ -30,8 +30,12 @@ gates:
   # Node 24, pinned to `.nvmrc` and the GitHub job: CI must run the runtime the
   # gates are green on locally (Node 26 breaks the jsdom localStorage specs).
   image: node:24
-  # 35 minutes, as on GitHub: a green full run takes ~20–29 min.
-  timeout: 35m
+  # 60 minutes (raised from 35 on 2026-10-22). On GitLab's small shared runner
+  # (saas-linux-small-amd64, 2 vCPU) the suite outgrew 35: pipeline #2974445313
+  # at ~9,900 tests was stopped at 35:02 with "exceeded the maximum execution
+  # time"; a week earlier, at ~9,300 tests, it passed in 28:58. 60 is also
+  # GitLab's default project ceiling, so a larger value would be capped anyway.
+  timeout: 60m
   interruptible: true
   cache:
     key:
