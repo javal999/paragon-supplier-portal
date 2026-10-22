@@ -553,6 +553,94 @@ describe('MR-7 edge cases and BR-09 — each produces its named flag', () => {
   });
 });
 
+describe('INV-D7 (P-09) — a call-off counts as shipped from dispatch; an ASN confirms it, never adds', () => {
+  /** @param {Partial<CallOff['dispatches'][number]>} [over] */
+  const dispatch = (over = {}) => ({
+    id: 'dsp-1',
+    shippedDate: '2026-10-04',
+    expectedArrival: '2026-10-08',
+    quantity: 1000,
+    recordedAt: '2026-10-04T02:00:00.000Z',
+    ...over
+  });
+  /** @param {readonly CallOff['dispatches'][number][]} dispatches */
+  const dispatchedView = (dispatches) => ({
+    callOff: callOff({ dispatches }),
+    delivery: /** @type {const} */ ('dispatched')
+  });
+  const asn2 = asn({
+    asnNumber: 'ASN-2',
+    callOffId: 'co-1',
+    shipDate: '2026-10-04',
+    eta: '2026-10-09',
+    lineItems: [
+      { materialCode: MAT, description: '', orderedQty: 1000, shippedQty: 1000, lotNumber: 'L2' }
+    ]
+  });
+
+  it('dispatch only: leaves "not shipped", is subtracted as shipped, and is listed once under PTI inbound marked "no ASN yet"', () => {
+    const r = run(q(), world({ callOffViews: [dispatchedView([dispatch()])] }));
+    expect(r.calledOffNotShipped).toBe(2000);
+    expect(r.available).toBe(7300);
+    expect(r.freeToCallOff).toBe(5300);
+    expect(r.ptiInbound).toBe(2200);
+    const co1 = r.components.filter((c) => c.reference === 'CO-1');
+    expect(co1.map((c) => [c.kind, c.qty, c.date, c.dispatchOnly])).toEqual([
+      ['dispatchShipped', -1000, '2026-10-04', true],
+      ['calledOffNotShipped', 2000, null, undefined],
+      ['ptiInbound', 1000, '2026-10-08', true]
+    ]);
+  });
+
+  it('dispatched on the day of the stock record: already in the record, so only "not shipped" falls and free rises', () => {
+    const r = run(
+      q(),
+      world({ callOffViews: [dispatchedView([dispatch({ shippedDate: '2026-10-01' })])] })
+    );
+    expect(r.available).toBe(8300);
+    expect(r.calledOffNotShipped).toBe(2000);
+    expect(r.freeToCallOff).toBe(6300);
+    expect(r.components.some((c) => c.kind === 'dispatchShipped')).toBe(false);
+  });
+
+  it('ASN present (named by the dispatch): the same 1,000 counts once, as the ASN, with no "no ASN yet" mark', () => {
+    const r = run(
+      q(),
+      world({
+        asns: [asn(), asn2],
+        callOffViews: [dispatchedView([dispatch({ asnNumber: 'ASN-2' })])]
+      })
+    );
+    expect(r.calledOffNotShipped).toBe(2000);
+    expect(r.available).toBe(7300);
+    expect(r.ptiInbound).toBe(2200);
+    expect(r.components.filter((c) => c.dispatchOnly)).toEqual([]);
+    expect(
+      r.components.filter((c) => c.kind === 'ptiInbound').map((c) => [c.qty, c.reference])
+    ).toEqual([
+      [1200, 'ASN-1'],
+      [1000, 'ASN-2']
+    ]);
+  });
+
+  it('ASN present (linked to the call-off, not named by the notice): it confirms the dispatch rather than adding to it', () => {
+    const r = run(
+      q(),
+      world({ asns: [asn(), asn2], callOffViews: [dispatchedView([dispatch()])] })
+    );
+    expect(r.calledOffNotShipped).toBe(2000);
+    expect(r.available).toBe(7300);
+    expect(r.ptiInbound).toBe(2200);
+    expect(r.components.filter((c) => c.dispatchOnly)).toEqual([]);
+  });
+
+  it('neither ASN nor dispatch: the call-off stays "called off, not shipped" (the 9g figures)', () => {
+    const r = run();
+    expect(r.calledOffNotShipped).toBe(3000);
+    expect(r.ptiInbound).toBe(1200);
+  });
+});
+
 describe('simulationOverrideRefusal — every refusal fires, and a good input passes', () => {
   const known = {
     /** @param {string} id */

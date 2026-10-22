@@ -35,6 +35,12 @@ const SAMPLE = 'sup-004-FR-WARD-4410';
 const PET = 'sup-007-PK-PETB-8801';
 const CASE2 = 'sup-002-RM-EMUL-9430';
 const CASE3 = 'sup-007-PK-CART-9910';
+/** P-06 — a pair with an agreement line (PO-2025-00102, 6,000 KG left) and free stock. */
+const EMUL = 'sup-002-RM-EMUL-9410';
+/** P-05 / P-06 — over-called (−121,000 PCS) and no agreement line. */
+const PET2 = 'sup-007-PK-PETB-8802';
+/** P-06 — free stock but no agreement line. */
+const CART = 'sup-008-PK-CART-9901';
 
 beforeEach(() => {
   simulationOverrideStore.reset();
@@ -100,7 +106,8 @@ describe('Stock simulation page (MR-7 section e)', () => {
     );
     expect(screen.getByTestId(`sim-available-${CASE2}`)).toHaveTextContent(/^1,700 KG$/);
     expect(screen.getByTestId(`sim-calledoff-${CASE2}`)).toHaveTextContent(/^2,500 KG$/);
-    expect(screen.getByTestId(`sim-free-${CASE2}`)).toHaveTextContent(/^-800 KG$/);
+    // P-05 — a negative free figure reads as a state, not as "−800 KG".
+    expect(screen.getByTestId(`sim-free-${CASE2}`)).toHaveTextContent(/^Over-called by 800 KG$/);
     expect(screen.getByTestId(`sim-pti-${CASE2}`)).toHaveTextContent(/^1,500 KG$/);
   });
 
@@ -115,7 +122,7 @@ describe('Stock simulation page (MR-7 section e)', () => {
     );
     expect(screen.getByTestId(`sim-available-${CASE3}`)).toHaveTextContent(/^7,000 PCS$/);
     expect(screen.getByTestId(`sim-calledoff-${CASE3}`)).toHaveTextContent(/^10,000 PCS$/);
-    expect(screen.getByTestId(`sim-free-${CASE3}`)).toHaveTextContent(/^-3,000 PCS$/);
+    expect(screen.getByTestId(`sim-free-${CASE3}`)).toHaveTextContent(/^Over-called by 3,000 PCS$/);
     expect(screen.getByTestId(`sim-pti-${CASE3}`)).toHaveTextContent(/^15,000 PCS$/);
     expect(
       within(screen.getByTestId(`sim-flags-${CASE3}`)).getByText(
@@ -199,19 +206,25 @@ describe('Stock simulation page (MR-7 section e)', () => {
     expect(screen.queryByTestId(`sim-row-${SAMPLE}`)).toBeNull();
   });
 
-  it('"Create call-off" opens the new call-off form on the supplier\'s agreement line for the material; nothing is created', async () => {
+  it('"Create call-off" (P-06: line exists) shows what is left on the line and opens the form on it; nothing is created', async () => {
     const before = callOffStore.all().length;
     renderWithProviders(app, { identity: PLANNER, route: '/buyer/stock-simulation' });
-    fireEvent.click(await screen.findByTestId(`sim-calloff-${PET}`));
+    await screen.findByTestId(`sim-row-${EMUL}`);
+    expect(screen.getByTestId(`sim-line-${EMUL}`)).toHaveTextContent(
+      '6,000 KG left on PO-2025-00102'
+    );
+    expect(screen.queryByTestId(`sim-noline-${EMUL}`)).toBeNull();
+    fireEvent.click(screen.getByTestId(`sim-calloff-${EMUL}`));
     const dialog = await screen.findByRole('dialog');
     const poNumber = /New call-off on (\S+)/.exec(
       within(dialog).getByRole('heading').textContent ?? ''
     )?.[1];
+    expect(poNumber).toBe('PO-2025-00102');
     const po = /** @type {import('@services/data/types').PurchaseOrder} */ (
       purchaseOrderStore.all().find((p) => p.poNumber === poNumber)
     );
-    expect(po.supplierId).toBe('sup-007');
-    expect(po.lineItems.some((l) => l.materialCode === 'PK-PETB-8801')).toBe(true);
+    expect(po.supplierId).toBe('sup-002');
+    expect(po.lineItems.some((l) => l.materialCode === 'RM-EMUL-9410')).toBe(true);
     expect(within(dialog).getByTestId('calloff-new-remaining')).toBeInTheDocument();
     // The prefill params are consumed (removed from the address) once. React
     // Router 7 applies `setSearchParams` inside a React transition, so the
@@ -222,11 +235,70 @@ describe('Stock simulation page (MR-7 section e)', () => {
     expect(callOffStore.all()).toHaveLength(before);
   });
 
-  it('"Create call-off" for a pair with no agreement line says so instead of opening a form', async () => {
+  it('P-06 — no agreement line: no "Create call-off"; "Create PO request" is the outline action with a grey "No agreement line"', async () => {
     renderWithProviders(app, { identity: PLANNER, route: '/buyer/stock-simulation' });
-    fireEvent.click(await screen.findByTestId(`sim-calloff-${SAMPLE}`));
-    expect(await screen.findByTestId('calloff-prefill-no-line')).toHaveTextContent('FR-WARD-4410');
-    expect(screen.queryByRole('dialog')).toBeNull();
+    await screen.findByTestId(`sim-row-${CART}`);
+    expect(screen.queryByTestId(`sim-calloff-${CART}`)).toBeNull();
+    expect(screen.getByTestId(`sim-po-${CART}`).className).toMatch(/border-action/);
+    expect(screen.getByTestId(`sim-noline-${CART}`)).toHaveTextContent(
+      stockSimulationEn['sim.action.noLine']
+    );
+    // The sample row's pair has no line either.
+    expect(screen.queryByTestId(`sim-calloff-${SAMPLE}`)).toBeNull();
+    expect(screen.getByTestId(`sim-noline-${SAMPLE}`)).toBeInTheDocument();
+  });
+
+  it('P-05 — an over-called row reads "Over-called by N", flags what it means, and offers "Create PO request" only', async () => {
+    renderWithProviders(app, { identity: PLANNER, route: '/buyer/stock-simulation' });
+    await screen.findByTestId(`sim-row-${PET2}`);
+    expect(screen.getByTestId(`sim-free-${PET2}`)).toHaveTextContent(
+      /^Over-called by 121,000 PCS$/
+    );
+    expect(screen.getByTestId(`sim-free-${PET2}`).querySelector('.text-danger')).not.toBeNull();
+    expect(screen.getByTestId(`sim-overcalled-${PET2}`)).toHaveTextContent(
+      stockSimulationEn['sim.overCalledMeans']
+    );
+    // Over-called with an agreement line (PK-PETB-8801 has 70,000 left on a line):
+    // still no call-off, and no "no line" note — the flag is the reason.
+    expect(screen.queryByTestId(`sim-calloff-${PET2}`)).toBeNull();
+    expect(screen.queryByTestId(`sim-calloff-${PET}`)).toBeNull();
+    expect(screen.getByTestId(`sim-overcalled-${PET}`)).toBeInTheDocument();
+    expect(screen.queryByTestId(`sim-noline-${PET}`)).toBeNull();
+    fireEvent.click(screen.getByTestId(`sim-po-${PET2}`));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByDisplayValue('PK-PETB-8802')).toBeInTheDocument();
+  });
+
+  it('P-05 — zero and positive free figures read as figures, with no over-called flag', async () => {
+    renderWithProviders(<BuyerStockSimulation />, {
+      identity: PLANNER,
+      route: '/buyer/stock-simulation'
+    });
+    await screen.findByTestId(`sim-row-${EMUL}`);
+    expect(screen.getByTestId(`sim-free-${EMUL}`)).toHaveTextContent(/^1,200 KG$/);
+    expect(screen.queryByTestId(`sim-overcalled-${EMUL}`)).toBeNull();
+  });
+
+  it('P-09 / INV-D7 — dispatched call-offs with no ASN count as shipped: listed once, under "In transit to PTI", marked "Dispatched, no ASN yet"', async () => {
+    renderWithProviders(<BuyerStockSimulation />, {
+      identity: PLANNER,
+      route: '/buyer/stock-simulation'
+    });
+    await screen.findByTestId(`sim-row-${PET}`);
+    // CO-2026-0002 (15,000) and CO-2026-0005 (10,500) left "not shipped": 193,100 − 25,500.
+    expect(screen.getByTestId(`sim-calledoff-${PET}`)).toHaveTextContent(/^167,600 PCS$/);
+    expect(screen.getByTestId(`sim-pti-${PET}`)).toHaveTextContent(/^25,500 PCS$/);
+    fireEvent.click(screen.getByTestId(`sim-toggle-${PET}`));
+    const detail = await screen.findByTestId(`sim-detail-${PET}`);
+    const lines = within(detail)
+      .getAllByRole('listitem')
+      .map((li) => li.textContent ?? '');
+    for (const ref of ['CO-2026-0002', 'CO-2026-0005']) {
+      const mine = lines.filter((l) => l.includes(ref));
+      expect(mine).toHaveLength(1);
+      expect(mine[0]).toMatch(/^In transit to PTI/);
+      expect(mine[0]).toContain(stockSimulationEn['sim.event.dispatchOnly']);
+    }
   });
 
   it('"Create PO request" opens the New PR form with the material and a note naming the supplier', async () => {
