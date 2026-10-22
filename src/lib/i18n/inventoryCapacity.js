@@ -127,6 +127,9 @@ export const inventoryCapacityEn = {
   'inv.drawer.action.simulation.hint': 'Weekly figures for this supplier and material',
   'inv.drawer.action.callOff': 'Create call-off',
   'inv.drawer.action.po': 'Create PO request',
+  // Lane 2D — the hint under the drawer's "Ask supplier" (INV-D9).
+  'inv.drawer.action.ask.productionDate': 'Ask the supplier for a production date',
+  'inv.drawer.action.ask.stockFigures': 'Ask the supplier for current stock figures',
 
   'inv.sync.title': 'Suppliers connected by system',
   'inv.sync.subtitle': 'Pull the latest stock figures directly from the supplier system.',
@@ -747,6 +750,9 @@ export const inventoryCapacityId = {
   'inv.drawer.action.simulation.hint': 'Angka mingguan untuk pemasok dan material ini',
   'inv.drawer.action.callOff': 'Buat call-off',
   'inv.drawer.action.po': 'Buat permintaan PO',
+  // Lane 2D — the hint under the drawer's "Ask supplier" (INV-D9).
+  'inv.drawer.action.ask.productionDate': 'Minta tanggal produksi ke pemasok',
+  'inv.drawer.action.ask.stockFigures': 'Minta angka stok terbaru ke pemasok',
 
   'inv.sync.title': 'Pemasok yang terhubung lewat sistem',
   'inv.sync.subtitle': 'Tarik angka stok terbaru langsung dari sistem pemasok.',

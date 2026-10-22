@@ -9,6 +9,7 @@ import { gapWeeks } from '@services/transitions/capacityRules';
 import { NO_DAYS_TO_IMPACT } from '@services/transitions/inventoryAlertRules';
 import AskSupplierButton from './AskSupplierButton';
 import { qty } from './inventoryDisplay';
+import { callOffHref, poRequestHref, stockSimulationHref } from './inventoryLinks';
 import { agreementLineFor, isOverCalled } from './stockSimulationDisplay';
 import { weekLabel } from '../BuyerDemandAnticipation/display';
 
@@ -211,7 +212,6 @@ export const AlertNextStep = ({ alert: a, ctx }) => {
   const plan = ALERT_PLAN[a.rule];
   const gap = a.rule === 'capacityBelowDemand' ? firstGap(a, ctx.plans) : null;
   const order = plan.order && ctx.ordersReady ? orderActionFor(a, ctx) : null;
-  const pair = `supplier=${encodeURIComponent(a.supplierId)}&material=${encodeURIComponent(a.subject)}`;
   const sentence = [
     t(`inv.alerts.next.${a.rule}`, { week: gap ? weekLabel(gap.week) : '' }),
     order ? t(`inv.alerts.next.order.${order}`) : ''
@@ -230,11 +230,7 @@ export const AlertNextStep = ({ alert: a, ctx }) => {
         {plan.simulation ? (
           <Button
             variant="outline"
-            onClick={() =>
-              navigate(
-                `/buyer/stock-simulation?q=${encodeURIComponent(a.subject)}&supplier=${encodeURIComponent(a.supplierId)}`
-              )
-            }
+            onClick={() => navigate(stockSimulationHref(a.supplierId, a.subject))}
             data-testid={`alert-simulation-${a.key}`}
           >
             {t('inv.drawer.action.simulation')}
@@ -243,11 +239,7 @@ export const AlertNextStep = ({ alert: a, ctx }) => {
         {order === 'callOff' ? (
           <Button
             variant="outline"
-            onClick={() =>
-              navigate(
-                `/buyer/call-offs?newFor=${encodeURIComponent(a.supplierId)}&material=${encodeURIComponent(a.subject)}`
-              )
-            }
+            onClick={() => navigate(callOffHref(a.supplierId, a.subject))}
             data-testid={`alert-calloff-${a.key}`}
           >
             {t('inv.drawer.action.callOff')}
@@ -256,7 +248,7 @@ export const AlertNextStep = ({ alert: a, ctx }) => {
         {order === 'po' || order === 'overCalled' ? (
           <Button
             variant="outline"
-            onClick={() => navigate(`/buyer/purchase-requisition?new=1&${pair}`)}
+            onClick={() => navigate(poRequestHref(a.supplierId, a.subject))}
             data-testid={`alert-po-${a.key}`}
           >
             {t('inv.drawer.action.po')}

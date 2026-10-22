@@ -215,12 +215,12 @@ describe('P-02 — a row opens the material drawer', () => {
     );
   });
 
-  it('offers no "Ask supplier" action yet (wave 2)', async () => {
+  it('a pair with current figures offers "Ask supplier" for a production date (INV-D9)', async () => {
     render('/buyer/inventory?type=VERP');
-    fireEvent.click(await screen.findByTestId('pti-stock-row-sup-007-PK-PETB-8802'));
+    // PK-PETB-8801: current figures, over-called, no ask on it yet.
+    fireEvent.click(await screen.findByTestId('pti-stock-row-sup-007-PK-PETB-8801'));
     await screen.findByTestId('material-drawer-po');
     const actions = screen.getByTestId('material-drawer-actions');
-    expect(within(actions).queryByText(/ask/i)).toBeNull();
     expect(
       within(actions)
         .getAllByRole('button')
@@ -228,8 +228,27 @@ describe('P-02 — a row opens the material drawer', () => {
     ).toEqual([
       'Open stock simulation',
       'Create PO request',
+      'Ask supplier',
       'Record stock from a supplier message'
     ]);
+    const ask = screen.getByTestId('material-drawer-ask');
+    expect(ask).toHaveAttribute('data-topic', 'productionDate');
+    expect(ask).toHaveTextContent('Ask the supplier for a production date');
+    fireEvent.click(await screen.findByTestId('material-drawer-ask-open'));
+    expect(await screen.findByTestId('material-drawer-ask-topic')).toHaveValue('productionDate');
+  });
+
+  it.each([
+    ['without figures', 'sup-007-PK-CAPF-8820'],
+    ['with out-of-date figures', 'sup-007-PK-PETB-8810']
+  ])('a pair %s asks the supplier for stock figures (INV-D9)', async (_, pair) => {
+    render('/buyer/inventory?type=VERP');
+    fireEvent.click(await screen.findByTestId(`pti-stock-row-${pair}`));
+    const ask = screen.getByTestId('material-drawer-ask');
+    expect(ask).toHaveAttribute('data-topic', 'stockFigures');
+    expect(ask).toHaveTextContent('Ask the supplier for current stock figures');
+    fireEvent.click(await screen.findByTestId('material-drawer-ask-open'));
+    expect(await screen.findByTestId('material-drawer-ask-topic')).toHaveValue('stockFigures');
   });
 
   it('"Record stock" opens the stock entry on this supplier and material', async () => {
