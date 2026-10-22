@@ -694,6 +694,29 @@ export class DataError extends Error {
  * }} SupplierAsk
  */
 
+// ─── PTI's capacity gap decision (INV-D8; Inventory UX P-07) ────────────────
+
+/**
+ * PTI accepted the additional capacity a supplier offered on one planning
+ * group week (an amber week: LTP above capacity, within BE). A record, never
+ * changed.
+ *
+ * `week`:  The week's Monday, `YYYY-MM-DD`.
+ * `decidedAt` / `decidedBy`:  When and by whom PTI accepted it.
+ * `sample`:  True on the demo row the store opens with (honesty marker).
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly supplierId: string;
+ *   readonly planningGroupId: string;
+ *   readonly week: string;
+ *   readonly decision: 'accepted';
+ *   readonly decidedAt: string;
+ *   readonly decidedBy: ActorAttribution;
+ *   readonly sample?: boolean;
+ * }} CapacityDecision
+ */
+
 // ─── Supplier trade names (Material C2 · MR-3 BR-01 to BR-06) ───────────────
 
 /** Where one supplier trade name stands. `Replaced` = a later name took its place. */
@@ -3213,6 +3236,8 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * @property {(scope: QueryScope) => Promise<Page<InventoryAlert>>} getInventoryAlerts -  Inventory and capacity alerts. A supplier sees its own supplier-side rules.
  * @property {(scope: QueryScope) => Promise<Page<SupplierAsk>>} getSupplierAsks INV-D9 — PTI's hub asks to suppliers, newest first. PTI: every ask.
  *   Supplier: only the asks that name it.
+ * @property {(scope: QueryScope) => Promise<Page<CapacityDecision>>} getCapacityDecisions INV-D8 — PTI's decisions on capacity gap weeks. PTI: every
+ *   decision. Supplier: only the decisions on its own capacity.
  * @property {(scope: QueryScope) => Promise<Page<ForecastVersionView>>} getForecastVersions - — Forecast collaboration (REQ-E06-01 to REQ-E06-03) —
  *    Published forecast versions with who viewed them. A supplier sees versions carrying its lines.
  * @property {(scope: QueryScope) => Promise<Page<ForecastCommitmentLine>>} getForecastCommitments -  The current version's lines with their commitments. A supplier sees its own, with its drafts.

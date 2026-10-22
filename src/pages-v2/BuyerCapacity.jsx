@@ -18,8 +18,8 @@ import Button from '@components/ui-v2/Button';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { formatDate, formatDateTime } from '@lib/format';
-import { useCapacityPlans } from '@services/query/hooks';
-/** @import { CapacityPlan } from '@services/data/types' */
+import { useCapacityDecisions, useCapacityPlans } from '@services/query/hooks';
+/** @import { CapacityDecision, CapacityPlan } from '@services/data/types' */
 /** @import { CapacityConfirmationStatus } from '@services/transitions/capacityRules' */
 import { isGapWeek, ltpCapacityWeeks, planStatus } from '@services/transitions/capacityRules';
 import {
@@ -38,6 +38,8 @@ import {
   qty
 } from './inventory/inventoryDisplay';
 import { ReEntryPill, usePlanningGroupLabel } from './inventory/planningGroupDisplay';
+import { CapacityGapActions, PtiDecisionLine } from './inventory/CapacityGapActions';
+import { capacityDecisionKey } from '@services/transitions/capacityDecisionRules';
 import {
   anyCapacityFilter,
   planMatches,
@@ -71,6 +73,13 @@ import {
 // whether the supplier confirmed its additional capacity (BR-03), and the
 // accordion header counts each non-green state (BR-02).
 //
+// INV-D8 (Inventory UX P-07) — the planner acts on a gap week: a "PTI's
+// decision" row offers "Accept additional capacity" on an amber week (the
+// governed `t_capacitydecision_accept`, recorded on the supplier × planning
+// group × week), says how much a red week's additional capacity cannot cover,
+// and offers "Ask supplier" (lane 2A's hub ask) on both. The row header reads
+// "PTI's decision: pending / accepted <date>". "Move demand" is not built here.
+//
 // CAP-5 BR-02 (BL-174) — the Reason filter over `capacityShortfall`, in the
 // address with the others, narrows WEEKS together with Gaps only; each reason
 // shows how many of the weeks the other filters leave carry it.
@@ -89,9 +98,10 @@ import {
  *   nowIso: string;
  *   ltpWeeks: ReturnType<typeof ltpCapacityWeeks>;
  *   weeks: CapacityPlan['weeks'];
+ *   decisionOf: (week: string) => CapacityDecision | undefined;
  * }>}
  */
-const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks }) => {
+const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks, decisionOf }) => {
   const { t } = useTranslation();
   const reasonLabel = useReasonLabel();
   if (weeks.length === 0)
@@ -297,6 +307,28 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks }) => {
               </span>
             );
           }
+        },
+        {
+          // INV-D8 — PTI's actions on a gap week (weekly view only: Monthly is
+          // read only, CAP-D6, so the month reads "—").
+          id: 'ptiDecision',
+          label: t('capDecision.row'),
+          align: 'start',
+          cell: (week) => {
+            const lw = lwOf(week);
+            return lw && isGapWeek(byWeek(week)) ? (
+              <CapacityGapActions
+                supplierId={plan.supplierId}
+                planningGroupId={plan.planningGroupId}
+                uom={plan.uom}
+                week={lw}
+                decision={decisionOf(week)}
+                testKey={`${planKey}-${week}`}
+              />
+            ) : (
+              <span data-testid={`capacity-no-action-${planKey}-${week}`}>{dash}</span>
+            );
+          }
         }
       ]}
     />
@@ -308,6 +340,7 @@ const BuyerCapacity = () => {
   const { t } = useTranslation();
   const groupLabel = usePlanningGroupLabel();
   const plansQuery = useCapacityPlans();
+  const decisionsQuery = useCapacityDecisions();
   const [filter, setStatusFilter] = useState(/** @type {StatusFilter} */ ('all'));
   const [expanded, setExpanded] = useState(/** @type {Record<string, boolean>} */ ({}));
   const [params, setParams] = useSearchParams();
@@ -365,6 +398,16 @@ const BuyerCapacity = () => {
 
   /** @param {CapacityPlan} p */
   const keyOf = (p) => `${p.supplierId}-${p.planningGroupId}`;
+  // INV-D8 — PTI's decision per supplier × planning group × week.
+  const decisions = new Map(
+    (decisionsQuery.data?.items ?? []).map((d) => [
+      capacityDecisionKey(d.supplierId, d.planningGroupId, d.week),
+      d
+    ])
+  );
+  /** @param {CapacityPlan} p */
+  const decisionOfPlan = (p) => (/** @type {string} */ week) =>
+    decisions.get(capacityDecisionKey(p.supplierId, p.planningGroupId, week));
   const withGap = plans.filter((p) => planStatus(p) === 'gap');
   const ltpByPlan = new Map(plans.map((p) => [keyOf(p), ltpCapacityWeeks(p)]));
   /**
@@ -625,6 +668,11 @@ const BuyerCapacity = () => {
                     ))}
                   </span>
                 )}
+                <PtiDecisionLine
+                  gapWeeks={p.weeks.filter(isGapWeek).map((w) => w.week)}
+                  decisionOf={decisionOfPlan(p)}
+                  testId={`capacity-decision-header-${keyOf(p)}`}
+                />
                 <span className="ml-auto text-xs text-text-tertiary">
                   {p.latest ? (
                     <>
@@ -654,6 +702,7 @@ const BuyerCapacity = () => {
                     nowIso={nowIso}
                     ltpWeeks={ltpByPlan.get(keyOf(p)) ?? []}
                     weeks={shownWeeks(p, filters)}
+                    decisionOf={decisionOfPlan(p)}
                   />
                 </div>
               )}

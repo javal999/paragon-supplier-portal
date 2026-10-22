@@ -1935,6 +1935,45 @@ export function useSupplierAskCommand() {
   });
 }
 
+// ── INV-D8 · PTI'S CAPACITY GAP DECISION ────────────────────────────────────
+//
+// PTI accepts the additional capacity a supplier offered on one amber week
+// (a creation; the store mints the id). The time and the actor are set by the
+// target; none is a payload field. Only the decisions read refreshes.
+/**
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly planningGroupId: string;
+ *   readonly week: string;
+ * }} CapacityAcceptVars
+ */
+
+/** Accept additional capacity on one gap week (`t_capacitydecision_accept`). */
+export function useCapacityDecisionCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, CapacityAcceptVars>} */ (useMutation)({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_capacitydecision_accept',
+        entity: 'capacityDecision',
+        payload: {
+          supplierId: vars.supplierId,
+          planningGroupId: vars.planningGroupId,
+          week: vars.week
+        }
+      }),
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      void qc.invalidateQueries({
+        predicate: (q) => q.queryKey[0] === 'procurement' && q.queryKey[1] === 'capacityDecisions'
+      });
+    }
+  });
+}
+
 // ── BL-194 · SUPPLIER FEEDSTOCK CONFIRMATION (DRC-8 BR-a; DRC-D17) ───────────
 //
 // The supplier confirms its current feedstock for one assigned material. The

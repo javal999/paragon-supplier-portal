@@ -520,6 +520,16 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    */
   SUPPLIER_ASK_ANSWERABLE: 'supplier_ask_answerable',
   /**
+   * INV-D8 (Inventory UX P-07) — PTI accepts a supplier's additional capacity
+   * on one week: the supplier × planning group × week is in a capacity plan
+   * (WEEK_NOT_IN_PLAN) with stated capacity (CAPACITY_NOT_STATED), the week's
+   * LTP is above capacity (NOT_A_GAP_WEEK) and within BE
+   * (ABOVE_ADDITIONAL_CAPACITY), and PTI has not accepted it yet
+   * (ALREADY_ACCEPTED). The rule is `capacityAcceptRefusal`, the one the PTI
+   * Capacity page calls.
+   */
+  CAPACITY_DECISION_ACCEPTABLE: 'capacity_decision_acceptable',
+  /**
    * Material E1 (MR-7 BR-06, BR-08) — a planner input to the stock simulation:
    * a known supplier (UNKNOWN_SUPPLIER) and material (UNKNOWN_MATERIAL), one of
    * soh / inProduction / toDistributor (UNKNOWN_FIELD), a quantity of 0 or more

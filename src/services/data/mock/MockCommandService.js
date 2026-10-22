@@ -177,6 +177,8 @@ import { ptiStockStore } from './stores/ptiStockStore';
 import { feedstockConfirmationTarget } from './targets/feedstockConfirmation';
 // INV-D9 — PTI's "Ask supplier" hub ask (its own module).
 import { supplierAskTarget } from './targets/supplierAsk';
+// INV-D8 — PTI's capacity gap decision (its own module).
+import { capacityDecisionTarget } from './targets/capacityDecision';
 // Material G1 — the qualification lists (its own module, MAT-R13).
 import { qualificationRuleTarget } from './targets/qualificationRule';
 // Material G2 — the sourcing type map (its own module, MAT-R13) and bidding
@@ -6252,6 +6254,9 @@ const TARGETS = {
   // INV-D9 — PTI's hub ask to a supplier, answered in the hub. Ships in the
   // same commit as its flow.
   supplierAsk: supplierAskTarget,
+  // INV-D8 — PTI accepts a supplier's additional capacity on one gap week.
+  // Ships in the same commit as its flow.
+  capacityDecision: capacityDecisionTarget,
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx event types, the answers to
   // them, and the negotiation window. Each ships in the same commit as its flow,
   // so no entity joins the target-less set even for one merge.

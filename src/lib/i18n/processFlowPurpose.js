@@ -560,6 +560,10 @@ export const processFlowPurposeEn = {
     'The planner has read the supplier’s reply and ends the ask. The ask and the reply stay on record.',
   'processFlows.purpose.t_supplierask_withdraw':
     'The planner takes back an ask the supplier has not replied to yet, because PTI no longer needs it.',
+  'processFlows.purpose.entity.capacityDecision':
+    'PTI’s decision on a capacity gap: the planner agrees to use the additional capacity a supplier offered for one planning group in one period of the capacity plan. The supplier sees PTI’s answer on its Capacity page. A decision is never changed.',
+  'processFlows.purpose.t_capacitydecision_accept':
+    'The planner agrees to use the supplier’s additional capacity where the LTP is above capacity but within capacity plus additional capacity. A period above that cannot be taken up. Nothing is sent to SAP.',
 
   // ── RFx management (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ─────────────────
   'processFlows.purpose.entity.rfiEvent':
@@ -1170,6 +1174,10 @@ export const processFlowPurposeId = {
     'Perencana sudah membaca jawaban pemasok dan menutup pertanyaan. Pertanyaan dan jawaban tetap tercatat.',
   'processFlows.purpose.t_supplierask_withdraw':
     'Perencana menarik pertanyaan yang belum dijawab pemasok, karena PTI tidak lagi memerlukan jawabannya.',
+  'processFlows.purpose.entity.capacityDecision':
+    'Keputusan PTI atas kekurangan kapasitas: perencana setuju memakai kapasitas tambahan yang ditawarkan pemasok untuk satu grup perencanaan pada satu periode rencana kapasitas. Pemasok melihat jawaban PTI di halaman Kapasitas. Keputusan tidak pernah diubah.',
+  'processFlows.purpose.t_capacitydecision_accept':
+    'Perencana setuju memakai kapasitas tambahan pemasok bila LTP di atas kapasitas tetapi masih dalam kapasitas ditambah kapasitas tambahan. Periode di atas itu tidak dapat diambil. Tidak ada yang dikirim ke SAP.',
 
   // ── RFx (REQ-E03-02 / REQ-E03-04 / REQ-E03-05) ────────────────────────────
   'processFlows.purpose.entity.rfiEvent':

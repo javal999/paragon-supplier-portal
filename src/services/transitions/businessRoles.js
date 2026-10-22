@@ -398,7 +398,11 @@ const LANE_BUNDLES = Object.freeze({
     // supplier about the material or capacity week behind them, and closes or
     // withdraws the ask.
     'supplierask:raise',
-    'supplierask:close'
+    'supplierask:close',
+    // INV-D8 (P-07) — the planner who reads the capacity gap accepts the
+    // supplier's additional capacity on an amber week. Not a supplier lane:
+    // the supplier offers the capacity, PTI accepts it.
+    'capacitydecision:accept'
   ]),
   // Raising and revising a requisition — split from approving one, which is
   // the segregation `pr:approve` living in `procurement` expresses.
