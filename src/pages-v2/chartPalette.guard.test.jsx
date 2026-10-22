@@ -821,7 +821,7 @@ describe('DP2-BUTTON-01 — Export never occupies the primary (action-blue) slot
 
     const scanned = exportScanned();
     expect(scanned.length).toBeGreaterThan(20);
-    expect(scanned).toContain('BuyerInvoices.jsx');
+    expect(scanned).toContain('BuyerInvoices/index.jsx');
     // The former carve-out is scanned like any page (COMPLIANCE-CARVEOUT-01 closed).
     expect(scanned).toContain('BuyerCompliance/index.jsx');
     // Routed pages in feature folders are scanned (routedPageFiles).

@@ -421,7 +421,7 @@ describe('BuyerInvoices — the scheduled settle dies with the page', () => {
     invoiceStore.reset();
     const settle = vi.fn(() => /** @type {Promise<never>} */ (new Promise(() => {})));
     const view = renderWithProviders(<BuyerInvoices />, { service: withSettle(settle) });
-    await screen.findByText('Invoices & Payment');
+    await screen.findByRole('heading', { name: 'Invoices' });
     await openApprovedInvoice();
     fireEvent.click(await screen.findByRole('button', { name: 'Release payment' }));
     const confirm = await screen.findByRole('button', { name: /Confirm release/ });
