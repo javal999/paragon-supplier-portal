@@ -101,7 +101,10 @@ describe('PTI Inventory (REQ-E08-01)', () => {
     expect(stear).toHaveTextContent('4,200 KG');
     expect(stear).toHaveTextContent('900 KG');
     expect(stear).toHaveTextContent('2,500 KG');
-    expect(stear).toHaveTextContent('5,000 KG');
+    // Inventory UX P-01 — the supplier ROP moved from the table into the material drawer.
+    expect(stear).not.toHaveTextContent('5,000 KG');
+    fireEvent.click(stear);
+    expect(panel().getByTestId('material-drawer')).toHaveTextContent('5,000 KG');
     // PREMISE CHANGED (BL-46, CR-24): the cell showed the CR-02 band ("10 days ·
     // Critical"). It now shows the risk class against the supplier lead time and
     // says which basis decided it.
@@ -109,8 +112,9 @@ describe('PTI Inventory (REQ-E08-01)', () => {
     expect(within(stear).getByText('Lead time 21 days')).toBeInTheDocument();
     expect(stear).toHaveTextContent(/In production\s*6,000/);
     const glycerin = screen.getByTestId('pti-stock-row-sup-002-RM-EMUL-3310');
-    expect(glycerin).toHaveTextContent('Not provided');
     expect(within(glycerin).getByText('Out of date')).toBeInTheDocument();
+    fireEvent.click(glycerin);
+    expect(panel().getByTestId('material-drawer')).toHaveTextContent('Not provided');
     expect(screen.queryByText(/available/i)).toBeNull();
   });
 
@@ -122,8 +126,10 @@ describe('PTI Inventory (REQ-E08-01)', () => {
     expect(fallback).toHaveTextContent('No lead time · day bands: Critical');
     // Known-false: a lead-time row never claims the fallback.
     expect(screen.getByTestId('risk-sup-002-RM-STEAR-7300')).not.toHaveTextContent('day bands');
-    expect(screen.getByTestId('pti-inventory-banner-lead-time')).toHaveTextContent(
-      'Materials with no supplier lead time on record, using the day bands: 1'
+    // Inventory UX P-01 — the text banner is now a filtering tile.
+    expect(screen.queryByTestId('pti-inventory-banner-lead-time')).toBeNull();
+    expect(screen.getByTestId('inv-tile-noLeadTime')).toHaveTextContent(
+      'No lead time on record1Risk uses the day bands'
     );
   });
 

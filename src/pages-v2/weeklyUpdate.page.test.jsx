@@ -162,22 +162,36 @@ describe('MAT B2 · API supplier panel (MR-1 BR-01, MAT-R14)', () => {
   });
 });
 
-describe('MAT B2 · PTI "This cycle" column', () => {
+describe('MAT B2 · PTI "This cycle" (in the material drawer since Inventory UX P-01)', () => {
+  /**
+   * Opens each row's drawer and reads its "This cycle" figure.
+   * @param {RegExp} rowPattern
+   * @param {RegExp} cyclePattern
+   * @returns {string[]}
+   */
+  const cycleTexts = (rowPattern, cyclePattern) =>
+    screen.getAllByTestId(rowPattern).map((row) => {
+      fireEvent.click(row);
+      return screen.getByTestId(cyclePattern).textContent ?? '';
+    });
+
   it('reads "<n> of <m>" for a manual supplier and "API" for a connected one', async () => {
     sdcClock.set('2026-09-08T03:00:00.000Z');
     renderWithProviders(<BuyerInventory />, { identity: BUYER });
     await screen.findAllByTestId(/^pti-stock-row-/);
+    // The table no longer carries the column.
+    expect(screen.queryByRole('columnheader', { name: 'This cycle' })).toBeNull();
     fireEvent.click(screen.getByRole('tab', { name: /Packaging/i }));
-    const manual = screen.getAllByTestId(/^pti-stock-cycle-sup-007-/);
+    const manual = cycleTexts(/^pti-stock-row-sup-007-/, /^pti-stock-cycle-sup-007-/);
     expect(manual.length).toBeGreaterThan(0);
-    for (const cell of manual) expect(cell.textContent).toMatch(/^\d+ of \d+$/);
+    for (const text of manual) expect(text).toMatch(/^\d+ of \d+$/);
     // One supplier, one figure: every row of the supplier reads the same.
-    expect(new Set(manual.map((c) => c.textContent)).size).toBe(1);
+    expect(new Set(manual).size).toBe(1);
     // sup-001 supplies raw material and is connected by API.
     fireEvent.click(screen.getByRole('tab', { name: /Raw material/i }));
-    const api = screen.getAllByTestId(/^pti-stock-cycle-sup-001-/);
+    const api = cycleTexts(/^pti-stock-row-sup-001-/, /^pti-stock-cycle-sup-001-/);
     expect(api.length).toBeGreaterThan(0);
-    for (const cell of api) expect(cell.textContent).toBe('API');
+    for (const text of api) expect(text).toBe('API');
   });
 });
 
