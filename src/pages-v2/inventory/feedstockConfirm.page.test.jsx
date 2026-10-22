@@ -111,6 +111,8 @@ describe('PTI · the feedstock line beside the supplier stock', () => {
       identity: BUYER,
       route: '/buyer/inventory?type=VERP'
     });
+    // Inventory UX P-01 — the feedstock line sits in the material drawer.
+    fireEvent.click(await screen.findByTestId(`pti-stock-row-sup-007-${CODE}`));
     expect((await screen.findByTestId(`pti-feedstock-none-sup-007-${CODE}`)).textContent).toBe(
       'Feedstock not confirmed'
     );
@@ -140,6 +142,7 @@ describe('PTI · the feedstock line beside the supplier stock', () => {
       identity: BUYER,
       route: '/buyer/inventory?type=VERP'
     });
+    fireEvent.click(await screen.findByTestId(`pti-stock-row-sup-007-${CODE}`));
     const line = await screen.findByTestId(`pti-feedstock-sup-007-${CODE}`);
     expect(line.textContent).toMatch(/^Feedstock \(confirmed .+\) 1,500 /);
     expect(screen.getByTestId(`pti-feedstock-by-sup-007-${CODE}`).textContent).toMatch(

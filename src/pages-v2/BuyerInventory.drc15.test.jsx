@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { renderWithProviders, BUYER } from '@test/test-utils';
 import BuyerInventory from './BuyerInventory';
 import { MockProcurementService } from '@services/data/mock/MockProcurementService';
@@ -21,14 +21,18 @@ import { NO_PERSON } from '@context/noPerson';
 
 afterEach(() => goodsReceiptStore.reset());
 
-describe('DRC-D15 — the supplier ROP column is display only', () => {
-  it('the header says so; the system ROP Supplier sits under the supplier’s own figure', async () => {
+describe('DRC-D15 — the supplier ROP figure is display only', () => {
+  it('the label says so; the system ROP Supplier sits under the supplier’s own figure', async () => {
     renderWithProviders(<BuyerInventory />, { identity: BUYER });
     const row = await screen.findByTestId('pti-stock-row-sup-002-RM-STEAR-7300');
-    expect(screen.getByTestId('inv-supplier-rop-display-only')).toHaveTextContent(
+    // Inventory UX P-01 — the supplier ROP moved from the table into the material drawer.
+    expect(screen.queryByTestId('inv-supplier-rop-display-only')).toBeNull();
+    fireEvent.click(row);
+    const drawer = screen.getByTestId('material-drawer');
+    expect(within(drawer).getByTestId('inv-supplier-rop-display-only')).toHaveTextContent(
       'Supplier’s figure, display only'
     );
-    expect(within(row).getByTestId('inv-system-rop-sup-002-RM-STEAR-7300')).toHaveTextContent(
+    expect(within(drawer).getByTestId('inv-system-rop-sup-002-RM-STEAR-7300')).toHaveTextContent(
       'System: 14,300 KG'
     );
   });

@@ -28,9 +28,12 @@ afterEach(() => setMyMrpController(null));
 describe('AC-01 — every surface shows the controller, with the SAP liveness pill', () => {
   it('PTI inventory list: code and name, and the code alone for an unmapped code', async () => {
     renderWithProviders(<BuyerInventory />, { identity: BUYER });
+    // Inventory UX P-01 — the PIC sits in the material drawer a row opens.
+    fireEvent.click(await screen.findByTestId('pti-stock-row-sup-003-FR-WARD-4410'));
     const unmapped = await screen.findByTestId('pti-stock-pic-sup-003-FR-WARD-4410');
     expect(unmapped.textContent).toBe('P13');
     fireEvent.click(screen.getByRole('tab', { name: /Packaging/ }));
+    fireEvent.click(await screen.findByTestId('pti-stock-row-sup-007-PK-PETB-8801'));
     const cell = await screen.findByTestId('pti-stock-pic-sup-007-PK-PETB-8801');
     expect(cell.textContent).toBe(`P12 · ${PACKAGING}`);
     // AR-19 — the header carries the materialMasterSap pill, never "Live".
@@ -94,9 +97,12 @@ describe('AC-02 — "My materials" for P12 shows only P12\'s materials', () => {
     await screen.findByTestId('pic-filter');
     expect(screen.queryAllByTestId(/^pti-stock-row-/)).toHaveLength(0);
     fireEvent.click(screen.getByRole('tab', { name: /Packaging/ }));
-    const pics = await screen.findAllByTestId(/^pti-stock-pic-/);
-    expect(pics.length).toBeGreaterThan(0);
-    for (const p of pics) expect(p.textContent).toBe(`P12 · ${PACKAGING}`);
+    const rows = await screen.findAllByTestId(/^pti-stock-row-/);
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      fireEvent.click(row);
+      expect(screen.getByTestId(/^pti-stock-pic-/).textContent).toBe(`P12 · ${PACKAGING}`);
+    }
     expect(screen.getByTestId('pti-stock-row-sup-007-PK-PETB-8801')).toBeTruthy();
   });
 
