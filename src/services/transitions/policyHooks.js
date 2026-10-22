@@ -503,6 +503,23 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    */
   FEEDSTOCK_CONFIRMATION_VALID: 'feedstock_confirmation_valid',
   /**
+   * INV-D9 — PTI's hub ask to a supplier: a known topic (TOPIC_UNKNOWN), a
+   * material, or a planning group and week (SUBJECT_REQUIRED), that the
+   * supplier supplies (NOT_SUPPLIED), a question (QUESTION_REQUIRED) of at
+   * most the rules' length (TEXT_TOO_LONG), an optional due date from today on
+   * (DUE_DATE_INVALID), and no ask on the same subject still open or answered
+   * (ASK_ALREADY_OPEN). The rule is `supplierAskRaiseRefusal`, the one the PTI
+   * dialog calls.
+   */
+  SUPPLIER_ASK_RAISABLE: 'supplier_ask_raisable',
+  /**
+   * INV-D9 — the supplier's answer: text (ANSWER_REQUIRED) of at most the
+   * rules' length (TEXT_TOO_LONG) and an optional date that is a date
+   * (ANSWER_DATE_INVALID). The rule is `supplierAskAnswerRefusal`, the one the
+   * supplier's reply form calls.
+   */
+  SUPPLIER_ASK_ANSWERABLE: 'supplier_ask_answerable',
+  /**
    * Material E1 (MR-7 BR-06, BR-08) — a planner input to the stock simulation:
    * a known supplier (UNKNOWN_SUPPLIER) and material (UNKNOWN_MATERIAL), one of
    * soh / inProduction / toDistributor (UNKNOWN_FIELD), a quantity of 0 or more

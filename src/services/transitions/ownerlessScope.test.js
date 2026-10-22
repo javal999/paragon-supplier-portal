@@ -129,6 +129,7 @@ import { osipLevelStore } from '../data/mock/stores/osipLevelStore';
 import { demandAnticipationStore } from '../data/mock/stores/demandAnticipationStore';
 import { materialNameStore } from '../data/mock/stores/materialNameStore';
 import { feedstockConfirmationStore } from '../data/mock/stores/feedstockConfirmationStore';
+import { supplierAskStore } from '../data/mock/stores/supplierAskStore';
 import { simulationOverrideStore } from '../data/mock/stores/simulationOverrideStore';
 import { whatIfScenarioStore } from '../data/mock/stores/whatIfScenarioStore';
 import { hubSettingsStore, settingValue } from './hubSettingsStore';
@@ -307,6 +308,9 @@ async function realIds() {
     // BL-194 — a feedstock confirmation is creation-only (unprobeable) and its
     // store starts empty (every material is due until confirmed); a well-formed id.
     feedstockConfirmation: 'fsc-0001',
+    // INV-D9 — the ask store opens with two sample asks to sup-007; an ask
+    // names its supplier, so it lands in `ownerful`.
+    supplierAsk: supplierAskStore.all()[0]?.id ?? null,
     // REQ-E14-13 — a "taken to SAP" mark is creation-only (unprobeable) and its
     // store starts empty (nothing is marked while the engine data is simulated);
     // the id is a well-formed one so the coverage control can see the target.
@@ -495,6 +499,7 @@ const resetAll = () => {
   osipLevelStore.reset();
   materialNameStore.reset();
   feedstockConfirmationStore.reset();
+  supplierAskStore.reset();
   simulationOverrideStore.reset();
   whatIfScenarioStore.reset();
   hubSettingsStore.reset();
@@ -580,6 +585,8 @@ describe('POPULATION — nothing below means anything without this', () => {
     expect(ownerless).toContain('planningGroup');
     // Material C2 — a trade name names the supplier it belongs to.
     expect(ownerful).toContain('materialName');
+    // INV-D9 — an ask names the supplier it is to: another supplier is refused at SCOPE.
+    expect(ownerful).toContain('supplierAsk');
     expect(ownerless).not.toContain('purchaseOrder');
     expect(ownerless).not.toContain('invoice');
     expect(ownerful).toContain('purchaseOrder');

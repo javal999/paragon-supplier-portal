@@ -73,6 +73,13 @@ const useShellRounds = () =>
     (svc, scope) => svc.procurement.getNegotiationRounds(scope),
     SHELL
   );
+// INV-D9 (S-04) — PTI's asks, for the Stock item's count. Same key as `useSupplierAsks()`.
+const useShellSupplierAsks = () =>
+  useServiceQuery(
+    ['procurement', 'supplierAsks'],
+    (svc, scope) => svc.procurement.getSupplierAsks(scope),
+    SHELL
+  );
 
 /**
  * A notice in words: "Awarded to you · RFQ-2026-021 · 60% of item 1" or
@@ -198,10 +205,17 @@ export const SupplierNoticeBell = () => {
 const countText = (n) => (n > 0 ? String(n) : '');
 
 /** The supplier menu items that carry a count. */
-export const SUPPLIER_COUNTED_PATHS = ['/supplier/rfi', '/supplier/rfq', '/supplier/rfp'];
+export const SUPPLIER_COUNTED_PATHS = [
+  '/supplier/rfi',
+  '/supplier/rfq',
+  '/supplier/rfp',
+  // Inventory UX S-04 — the asks PTI is waiting on.
+  '/supplier/inventory'
+];
 
 /**
- * The count beside a supplier Sourcing menu item (RFx UX S-05, X-02): RFIs and
+ * The count beside a supplier menu item (RFx UX S-05, X-02; Inventory UX S-04):
+ * on Stock, the asks PTI is waiting on (INV-D9); RFIs and
  * RFPs still to answer; on RFQ invitations the open revision rounds ("1
  * round") when there are any, else the RFQs still to quote. Nothing when zero.
  * @type {React.FC<{ path: string }>}
@@ -214,6 +228,7 @@ export const SupplierMenuCount = ({ path }) => {
   const rfps = useShellRfps();
   const rounds = useShellRounds();
   const rfqEngagement = useShellRfqEngagement();
+  const asks = useShellSupplierAsks();
   const queue = supplierSourcingQueue({
     rfqs: rfqs.data?.items ?? [],
     rfis: rfis.data?.items ?? [],
@@ -222,14 +237,19 @@ export const SupplierMenuCount = ({ path }) => {
     rfqEngagement: rfqEngagement.data?.items ?? [],
     supplierId: identity.supplierId
   });
+  const openAsks = (asks.data?.items ?? []).filter(
+    (a) => a.supplierId === identity.supplierId && a.state === 'Open'
+  ).length;
   const text =
-    path === '/supplier/rfi'
-      ? countText(queue.openRfis.length)
-      : path === '/supplier/rfp'
-        ? countText(queue.openRfps.length)
-        : queue.openRounds.length > 0
-          ? t('hub.nav.count.rounds', { count: queue.openRounds.length })
-          : countText(queue.openRfqs.length);
+    path === '/supplier/inventory'
+      ? countText(openAsks)
+      : path === '/supplier/rfi'
+        ? countText(queue.openRfis.length)
+        : path === '/supplier/rfp'
+          ? countText(queue.openRfps.length)
+          : queue.openRounds.length > 0
+            ? t('hub.nav.count.rounds', { count: queue.openRounds.length })
+            : countText(queue.openRfqs.length);
   return text ? (
     <span
       className="ml-auto shrink-0 text-xs font-semibold text-warning-hover bg-warning-soft rounded-full px-2 py-0.5"
