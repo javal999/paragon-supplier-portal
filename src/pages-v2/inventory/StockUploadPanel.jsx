@@ -1,4 +1,5 @@
 /** @import React from 'react' */
+/** @import { TFunction } from 'i18next' */
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Download, Upload } from 'lucide-react';
@@ -37,9 +38,11 @@ import {
 // (`StockUploadButton`), its result directly under it (`StockUploadResult`),
 // and the download, the column guide and the incoming cards in the "Template
 // guide" tab (the default export). One `useStockUpload` state feeds the first
-// two. The result names the materials sent to PTI, counts the rows left blank
-// in neutral text ("3 rows left blank, not sent"), and lists only a filled row
-// that breaks a rule as refused, with its row, material and reason.
+// two. The result names the materials sent to PTI with the quantity and batch
+// count of each (BL-224: "PK-PETB-8810 (2 batches, 45,000 PCS)"), counts the
+// rows left blank in neutral text ("3 rows left blank, not sent"), and lists
+// only a filled row that breaks a rule as refused, with its row, material and
+// reason.
 //
 // In transit (BR-10, BL-60): the template has no in-transit column — a supplier
 // never enters it. The panel shows it read-only per material, beside the
@@ -108,10 +111,22 @@ const StockTemplateColumns = () => {
 };
 
 /**
+ * One material the upload sent to PTI (BL-224): its stock on hand, the unit
+ * the template carries for it, and how many batch rows it came with (0 when
+ * the file named no batch).
+ * @typedef {{
+ *   readonly materialCode: string;
+ *   readonly totalQty: number;
+ *   readonly uom: string;
+ *   readonly batchCount: number;
+ * }} SentMaterial
+ */
+
+/**
  * `blankRows`:  How many file rows were left blank and not sent (S-03).
  *
  * @typedef {object} UploadResult
- * @property {string[]} savedMaterials
+ * @property {SentMaterial[]} savedMaterials
  * @property {number} blankRows
  * @property {(RefusedStockRow | { row: number; materialCode: string; message: string })[]} refused
  */
@@ -174,7 +189,13 @@ export function useStockUpload(supplierId, positions) {
     for (const draft of checked.accepted) {
       const { rows: rowNumbers, ...payload } = draft;
       const res = await run({ verb: 'declare', channel: 'template', supplierId, ...payload });
-      if (res.ok) out.savedMaterials.push(draft.materialCode);
+      if (res.ok)
+        out.savedMaterials.push({
+          materialCode: draft.materialCode,
+          totalQty: draft.totalQty,
+          uom: assigned.find((a) => a.materialCode === draft.materialCode)?.uom ?? '',
+          batchCount: draft.batches?.length ?? 0
+        });
       else
         for (const row of rowNumbers)
           out.refused.push({ row, materialCode: draft.materialCode, message: res.reason ?? '' });
@@ -226,6 +247,17 @@ export const StockUploadButton = ({ upload }) => {
 };
 
 /**
+ * BL-224 — "2 batches, 45,000 PCS", or "45,000 PCS" when the file named no
+ * batch; the quantity through the locale-aware `qty`.
+ * @param {TFunction} t
+ * @param {SentMaterial} m
+ */
+const sentDetail = (t, m) => {
+  const amount = t('inv.upload.sentQty', { qty: qty(m.totalQty), uom: m.uom });
+  return m.batchCount > 0 ? t('inv.upload.sentBatches', { count: m.batchCount, amount }) : amount;
+};
+
+/**
  * S-03 (INV-D10) — the upload's result, directly under the control: what was
  * sent to PTI by material, the rows left blank in neutral text, and the
  * refused rows with row, material and reason. Nothing while idle.
@@ -252,10 +284,10 @@ export const StockUploadResult = ({ upload }) => {
           {result.savedMaterials.length > 0 ? (
             <p className="text-sm text-success" data-testid="stock-upload-sent">
               {t('inv.upload.sentTo')}{' '}
-              {result.savedMaterials.map((code, i) => (
-                <span key={code}>
+              {result.savedMaterials.map((m, i) => (
+                <span key={m.materialCode} data-testid={`stock-upload-sent-${m.materialCode}`}>
                   {i > 0 ? ', ' : ''}
-                  <Data>{code}</Data>
+                  <Data>{m.materialCode}</Data> ({sentDetail(t, m)})
                 </span>
               ))}
             </p>

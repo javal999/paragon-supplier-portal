@@ -18,7 +18,7 @@ import { RiskPill, inputClass, labelClass } from './inventoryDisplay';
 import { AskSubject, askOrder, askRefusalText } from './supplierAskDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Inventory UX S-04 (INV-D9) — "PTI is asking about N of your materials".
+// Inventory UX S-04 (INV-D9) — "PTI has N questions for you" (BL-227).
 //
 // On the supplier To do (above the lanes, RFX-D20 keeps the lanes and their
 // order) and on the Stock page (between the weekly status and the tabs). One
