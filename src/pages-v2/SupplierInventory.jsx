@@ -180,6 +180,12 @@ const SupplierInventory = () => {
   );
   const sharesPti = rows.some((r) => r.ptiStockShared);
   const grant = (access.data?.items ?? []).find((g) => g.supplierId === supplierId);
+  // INV-D11 (S-10) — PTI removed all access: say so, with the date, no reason.
+  // The read is the supplier's own grant only; a re-grant makes the latest
+  // event a grant, so the line goes.
+  const lastAccessEvent = grant?.log[grant.log.length - 1];
+  const accessRemovedAt =
+    grant && !grant.active && lastAccessEvent?.action === 'remove' ? lastAccessEvent.at : null;
 
   if (!supplierId) return <NoSupplierIdentity />;
   const pageTabs = (
@@ -284,6 +290,12 @@ const SupplierInventory = () => {
             >
               {t('inv.highlight.missing')}
             </div>
+          ) : null}
+
+          {accessRemovedAt ? (
+            <p className="text-sm text-text-secondary mb-4" data-testid="sup-pti-access-removed">
+              {t('inv.sup.access.removed', { date: formatDate(accessRemovedAt) })}
+            </p>
           ) : null}
 
           {grant?.active && (
