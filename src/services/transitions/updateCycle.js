@@ -177,13 +177,15 @@ export function cycleStatus(supplierId, cycle, records, assignments) {
  * `mode`:  The supplier's update mode at the START of the current cycle (edge case 1).
  * `lastSuccessfulPullAt`:  The latest successful API pull for the supplier; null when none is on record.
  * `overrideDays`:  The administrator's per supplier × material stale period (BL-32), in days; null when none.
- * `apiHours`:  `stale.apiHours` in force.
+ * `groupDays`:  The material group's stale period for a manual supplier (REQ-E08-05 BR-03), in days; null or absent when none.
+ * `apiHours`:  `stale.apiHours` in force (the material group's when it overrides it).
  *
  * @typedef {{
  *   readonly lastUpdatedAt: string | null;
  *   readonly mode: StockUpdateMode;
  *   readonly lastSuccessfulPullAt: string | null;
  *   readonly overrideDays: number | null;
+ *   readonly groupDays?: number | null;
  *   readonly calendar: WorkingCalendar;
  *   readonly cycle: UpdateCycleSettings;
  *   readonly apiHours: number;
@@ -200,6 +202,8 @@ export function cycleStatus(supplierId, cycle, records, assignments) {
  *   · API: `stale.apiHours` after the last successful pull (MAT-D8). A failed
  *     pull is not an update (edge case 3). With no successful pull on record,
  *     the figure's own acceptance time stands in for it.
+ *   · Manual, with a material-group stale period (REQ-E08-05 BR-03): that many
+ *     days after the last update, in place of the weekly cutoff.
  * @param {StaleAtInputs} i
  * @returns {string | null}
  */
@@ -211,6 +215,9 @@ export function staleAtFor(i) {
   if (i.mode === 'api') {
     const base = i.lastSuccessfulPullAt ?? i.lastUpdatedAt;
     return new Date(Date.parse(base) + i.apiHours * HOUR_MS).toISOString();
+  }
+  if (typeof i.groupDays === 'number') {
+    return new Date(Date.parse(i.lastUpdatedAt) + i.groupDays * 24 * HOUR_MS).toISOString();
   }
   const own = updateCycleFor(i.lastUpdatedAt, i.calendar, i.cycle);
   return updateCycleFor(new Date(Date.parse(own.cutoff) + 1), i.calendar, i.cycle).cutoff;

@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Version | 1.13, 2026-10-22 (INV-D12, INV-D13 added: accepted capacity and the alert; 1.12 added RFX-D26 to RFX-D31 and INV-D1 to INV-D11) |
-| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20) and RFX-D26 to RFX-D31 (2026-10-22); the Inventory & Capacity UX decisions INV-D1 to INV-D13 (2026-10-22); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
+| Version | 1.14, 2026-10-23 (INV-D14 added: thresholds per material group; INV-D11 built) |
+| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20) and RFX-D26 to RFX-D31 (2026-10-22); the Inventory & Capacity UX decisions INV-D1 to INV-D13 (2026-10-22) and INV-D14 (2026-10-23); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, BL-12 call-off record, and three values (BL-54 invoice cap, BL-55 gate OTIF minimum, BL-56 early allowance). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
 | Evidence | Market practice is cited at the end. Where a claim is a judgement rather than a published practice, it says so |
@@ -424,6 +424,13 @@ The owner accepted every recommendation on the open questions of the Inventory &
 
 ### INV-D13 · PTI may accept before the supplier confirms (BL-226, decided 2026-10-22)
 **Decision.** PTI can accept a week's additional capacity whether or not the supplier has confirmed it under CAP-3 BR-03. Unchanged from the wave 2 build.
+
+### INV-D14 · Alert thresholds and the stale period per material group (decided 2026-10-23)
+**Decision.** REQ-E08-05 BR-03 is built as first written: each alert threshold (the CR-24 lead-time multiples, the CR-02 fallback bands) and the stale period can be overridden per material group on the Alert thresholds page; unset values use the global setting. Stale period precedence: supplier × material (BL-32), then material group, then global. A group's manual stale period in days replaces the weekly cutoff for manual suppliers in that group; API suppliers use the group's hours. Built on `feat/inv-gaps-1023` through the existing `t_setting_set` with scoped keys. Replaces the 2026-10-23 doc alignment that described thresholds as global only.
+
+**What would change this.** If no group gets an override within a quarter of go-live, retire the per-group section to keep one set of numbers.
+
+**INV-D11 built (2026-10-23).** The supplier's Stock page says "PTI stopped sharing its stock with you on <date>" after a full removal; narrowing to fewer materials shows nothing.
 
 ---
 

@@ -7,7 +7,7 @@ import TableCell from '@components/ui-v2/TableCell';
 import Data from '@components/ui-v2/Data';
 import { formatDateTime } from '@lib/format';
 /** @import { HubSettingDef, HubSettingValue } from '@services/transitions/hubSettings' */
-import { hubSettingDef } from '@services/transitions/hubSettings';
+import { settingDefOf } from '@services/transitions/hubSettings';
 /** @import { HubSettingChange } from '@services/transitions/hubSettingsStore' */
 
 /**
@@ -39,7 +39,8 @@ const ChangeHistory = ({ changes, keyLabel, valueText }) => {
             </TableHeader>
             <tbody>
               {changes.map((c) => {
-                const def = hubSettingDef(c.key) ?? null;
+                // A group override reads in its base key's unit (REQ-E08-05 BR-03).
+                const def = settingDefOf(c.key) ?? null;
                 return (
                   <TableRow key={c.seq} data-testid={`admin-set-change-row-${c.key}`}>
                     <TableCell className="text-sm">{keyLabel(c.key)}</TableCell>

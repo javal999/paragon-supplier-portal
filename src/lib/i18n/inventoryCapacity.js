@@ -167,6 +167,8 @@ export const inventoryCapacityEn = {
   'inv.sup.tab.template': 'Template guide',
   'inv.sup.access.all': 'PTI shares its stock with you for every material you supply.',
   'inv.sup.access.some': 'PTI shares its stock with you for {{count}} of your materials.',
+  // INV-D11 (S-10) — PTI removed all access; the date only, no reason.
+  'inv.sup.access.removed': 'PTI stopped sharing its stock with you on {{date}}.',
 
   'inv.upload.title': 'Stock template',
   'inv.upload.subtitle':
@@ -789,6 +791,7 @@ export const inventoryCapacityId = {
   'inv.sup.tab.template': 'Panduan templat',
   'inv.sup.access.all': 'PTI membagikan stoknya kepada Anda untuk semua material yang Anda pasok.',
   'inv.sup.access.some': 'PTI membagikan stoknya kepada Anda untuk {{count}} material Anda.',
+  'inv.sup.access.removed': 'PTI berhenti membagikan stoknya kepada Anda pada {{date}}.',
 
   'inv.upload.title': 'Templat stok',
   'inv.upload.subtitle':

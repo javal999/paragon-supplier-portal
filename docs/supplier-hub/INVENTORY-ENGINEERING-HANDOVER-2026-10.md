@@ -47,7 +47,8 @@ Every decision below is binding unless the owner changes it. Full text: `DECISIO
 | INV-D8 | On a gap week PTI can "Accept additional capacity" or "Ask supplier", both recorded on the planning group and week; "Move demand" is not built here |
 | INV-D9 | "Ask supplier" is a hub ask on the supplier's To do, with an optional WhatsApp share of the link; no email |
 | INV-D10 | A blank template row is not an error: "N rows left blank, not sent" |
-| INV-D11 | When PTI removes stock access, the supplier's Stock page says PTI stock is no longer shared (not built yet, section 9) |
+| INV-D11 | When PTI removes all stock access, the supplier's Stock page says "PTI stopped sharing its stock with you on <date>" (built 2026-10-23, `SupplierInventory.jsx`) |
+| INV-D14 | Alert thresholds and the stale period can be overridden per material group (built 2026-10-23, `hubSettingsStore.js` `groupSetting`, admin `GroupOverridesPanel.jsx`) |
 | INV-D12 | An accepted amber week no longer counts toward the capacity alert; a red week always counts |
 | INV-D13 | PTI may accept additional capacity before the supplier confirms it |
 | MAT-D1 | Keep CR-24 High, Medium, Low; sort by days to impact within a class, then supplier name |
@@ -307,7 +308,6 @@ A refused verb returns `POLICY_REJECTED:<hook>:<reason>`. The screen translates 
 | Distributor principal on a shipment | ETA fallback uses the distributor's shortest principal lead time | The leg's own principal | BL-158 |
 | Planning groups in SAP | Mastered in the hub | Agree with MDM (MAT-D12) | — |
 | "Copy to all weeks" on supplier Capacity | Not built | Build (INV-D2) | BL-65 |
-| "PTI stock is no longer shared" line | Not built; PTI columns disappear with no message | Build (INV-D11) | — |
 | Move demand | Not on Capacity | On the order plan (INV-D8) | — |
 | Polish | Listed, not built | Wave 2 wording and edge states; wave 1 leftovers; Call-offs quantity format; capacity grid polish; Risk page thresholds | BL-227, BL-224, BL-223, BL-186, BL-76 |
 | Sign-in | No named person | Named actor on every record | F1 |
@@ -349,14 +349,14 @@ Built as recommended; the owner may change any of them.
 | Capacity refusal codes | Five capacity codes are the rule's camelCase name upper-cased (`MISSINGWEEK`); `OTHER_REASON_NEEDS_NOTE` also fires for Force Majeure and Discontinued | Production: `MISSING_WEEK`-style names and one `NOTE_REQUIRED` code, mapped once |
 | Stock declare refusals | 3 codes are lower-case and 7 sentences carry no code | Production: give every refusal an upper-case code |
 
-**Code and documents disagree.** The code is the truth for what is built; each row names the document to correct.
+**Code and documents disagreed; aligned on 2026-10-23.** The code is the truth for what is built, and each case followed a recorded decision, so the documents were corrected to match (branch `docs/inventory-doc-code-align`). The table keeps what each document used to say.
 
-| Topic | Document says | Code does |
+| Topic | Document said | Code does (documents now say the same) |
 |---|---|---|
 | Alert rules | REQ-E08-05 BR-01 lists 8 rules; SCENARIOS UC7 says 9 | 12 rules (`inventoryAlertRules.js:81`) |
 | Supplier below ROP | SCENARIOS UC7: against the ROP the supplier declared | Against the system ROP Supplier (`inventoryRules.js:425`), as DRC-D20 and the REQ-E08-05 amendment say |
 | Failed API sync | SCENARIOS UC6 ("figures kept and flagged stale"), BUILD-GAP REQ-E08-02 ("marked out of date"), and the header comment of `pages-v2/inventory/SupplierSyncPanel.jsx` | A failed pull does not make a figure stale (`inventoryRules.js:401-406`, MAT-D17); the screen says the figures stay up to date until the last successful sync is too old |
-| Alert thresholds | REQ-E08-05 BR-03: configurable per material group | One global set of bands and thresholds; the stale period can be overridden per supplier × material (`services/transitions/hubSettingsStore.js:322`) |
+| Alert thresholds | REQ-E08-05 BR-03: configurable per material group | Built per material group on 2026-10-23 (INV-D14): global set with per-group overrides, stale period supplier × material > group > global (`hubSettingsStore.js`) |
 | MRP controller mapping | REQ-E08-07 BR-02 and the BUILD-GAP REQ-E08-07 row: a mapping cannot be removed | `t_mrpcontroller_unmap` exists (`flows/mrpController.flow.js:51`), as BL-157 and the BUILD-GAP MR-5 row say |
 | Build status | BACKLOG BL-68 and BL-144: "build pending" | Built: "Supplier cover" in the drawer (`MaterialDrawer.jsx:210`) and the update mode with its admin link (`MaterialDrawer.jsx:198`) |
 | File paths | BUILD-GAP section 3 points to `.ts` files (`inventoryRules.ts`, `capacityRules.ts` and others) | Every file is JavaScript (`.js`) |

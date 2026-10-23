@@ -23,6 +23,7 @@ import { normalizeQty } from '@lib/localeNumber';
 import {
   coverageThresholds,
   DEMAND_WINDOW,
+  groupStaleDaysFor,
   leadTimeRisk,
   staleApiHours,
   staleOverrideDaysFor,
@@ -183,13 +184,15 @@ export function daysOfSupply(soh, avgDailyDemand) {
 
 /**
  * CR-02 — THE band function. Null when days of supply cannot be computed.
+ * With a material group, that group's bands (REQ-E08-05 BR-03).
  * @param {number | null} days
+ * @param {string | null} [materialGroup]
  * @returns {SupplyBand | null}
  */
-export function supplyBand(days) {
+export function supplyBand(days, materialGroup) {
   if (days === null) return null;
-  // The administrator's bands in force at THIS call (BL-32).
-  const bands = supplyBands();
+  // The administrator's bands in force at THIS call (BL-32), for the group.
+  const bands = supplyBands(materialGroup);
   if (days < bands.criticalBelow) return 'critical';
   if (days < bands.warningBelow) return 'warning';
   if (days <= bands.healthyUpTo) return 'healthy';
@@ -203,10 +206,10 @@ export function supplyBand(days) {
 export const positionDays = (p) => daysOfSupply(p.supplierSoh, p.avgDailyDemand);
 
 /**
- * @param {Pick<InventoryPosition, 'supplierSoh' | 'avgDailyDemand'>} p
+ * @param {Pick<InventoryPosition, 'supplierSoh' | 'avgDailyDemand'> & Partial<Pick<InventoryPosition, 'materialGroup'>>} p
  * @returns {SupplyBand | null}
  */
-export const positionBand = (p) => supplyBand(positionDays(p));
+export const positionBand = (p) => supplyBand(positionDays(p), p.materialGroup);
 
 // ── Risk class (CR-24, CR-02 as its fallback) ────────────────────────────────
 
@@ -236,34 +239,39 @@ const BAND_RISK = {
  *     Healthy / Excess → Low), and the caller raises "lead time missing".
  *   · Without days of cover: Low, basis `noCover` — the missing figures are the
  *     stale-data alert's business, not a risk.
+ *   · With a material group (REQ-E08-05 BR-03, owner 2026-10-23), the group's
+ *     multiples and bands where it overrides them; the global values otherwise.
  * @param {number | null} daysOfCover
  * @param {number | null} leadTimeDays
+ * @param {string | null} [materialGroup]
  * @returns {{ riskClass: RiskClass; basis: RiskBasis }}
  */
-export function riskFor(daysOfCover, leadTimeDays) {
+export function riskFor(daysOfCover, leadTimeDays, materialGroup) {
   const lead = hasLeadTime(leadTimeDays) ? leadTimeDays : null;
   if (daysOfCover === null)
     return { riskClass: 'low', basis: { kind: 'noCover', leadTimeDays: lead } };
   if (lead !== null) {
+    const m = leadTimeRisk(materialGroup);
     /** @type {RiskClass} */
     const riskClass =
-      daysOfCover < lead
+      daysOfCover < m.highBelowMultiple * lead
         ? 'high'
-        : daysOfCover < leadTimeRisk().mediumBelowMultiple * lead
+        : daysOfCover < m.mediumBelowMultiple * lead
           ? 'medium'
           : 'low';
     return { riskClass, basis: { kind: 'leadTime', leadTimeDays: lead, daysOfCover } };
   }
-  const band = /** @type {SupplyBand} */ (supplyBand(daysOfCover));
+  const band = /** @type {SupplyBand} */ (supplyBand(daysOfCover, materialGroup));
   return { riskClass: BAND_RISK[band], basis: { kind: 'fallbackBands', band, daysOfCover } };
 }
 
 /**
- * CR-24 for one position: its days of supply (CR-01) against its supplier lead time.
- * @param {Pick<InventoryPosition, 'supplierSoh' | 'avgDailyDemand' | 'leadTimeDays'>} p
+ * CR-24 for one position: its days of supply (CR-01) against its supplier lead
+ * time, with the thresholds of the position's material group.
+ * @param {Pick<InventoryPosition, 'supplierSoh' | 'avgDailyDemand' | 'leadTimeDays'> & Partial<Pick<InventoryPosition, 'materialGroup'>>} p
  * @returns {{ riskClass: RiskClass; basis: RiskBasis }}
  */
-export const positionRisk = (p) => riskFor(positionDays(p), p.leadTimeDays);
+export const positionRisk = (p) => riskFor(positionDays(p), p.leadTimeDays, p.materialGroup);
 
 // ── Incoming (REQ-E08-01 BR-05, BR-06) ───────────────────────────────────────
 
@@ -508,7 +516,6 @@ export function buildInventoryPositions(input, nowIso) {
   /** @type {InventoryPosition[]} */
   const rows = [];
   const cycleSettings = updateCycleSettings();
-  const apiHours = staleApiHours();
   const cycleStart = updateCycleFor(nowIso, input.calendar, cycleSettings).start;
   for (const { supplierId, materialCode } of input.assignments) {
     const entry = input.master(materialCode);
@@ -544,9 +551,11 @@ export function buildInventoryPositions(input, nowIso) {
       mode: input.updateModeAt(supplierId, cycleStart),
       lastSuccessfulPullAt: syncs.find((a) => a.outcome === 'success')?.at ?? null,
       overrideDays: staleOverrideDaysFor(supplierId, materialCode),
+      // REQ-E08-05 BR-03 — the material group's periods, below the pair's own.
+      groupDays: groupStaleDaysFor(entry.materialGroup),
       calendar: input.calendar,
       cycle: cycleSettings,
-      apiHours
+      apiHours: staleApiHours(entry.materialGroup)
     });
     rows.push({
       supplierId,
@@ -571,7 +580,7 @@ export function buildInventoryPositions(input, nowIso) {
       leadTimeDays: input.leadTime(supplierId, materialCode),
       lastUpdatedAt,
       channel: decl ? (decl.channel ?? 'manual') : null,
-      updateSla: updateSlaFor(supplierId, materialCode),
+      updateSla: updateSlaFor(supplierId, materialCode, entry.materialGroup),
       staleAt,
       apiConnected: input.apiConnected(supplierId),
       lastSync: syncs[0] ?? null,
