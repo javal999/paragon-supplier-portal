@@ -2,6 +2,7 @@
 /** @import { TimelineEvent } from '@components/ui-v2/Timeline' */
 /** @import { InvoiceLine, SupplierInvoice, SupplierInvoiceStage } from '@services/data/types' */
 import { CheckCircle2, Clock, FileText, Wallet } from 'lucide-react';
+import { formatDate, formatIDR } from '@lib/format';
 import { statusLabelKey } from '@lib/statusLabel';
 import { readQty } from '../invoices/InvoiceCollaboration';
 
@@ -9,14 +10,14 @@ import { readQty } from '../invoices/InvoiceCollaboration';
 // `SupplierInvoices.jsx` by the Phase 5 page split (no behaviour change).
 
 /**
- * Short IDR amount for KPI tiles and table cells (billions as `M`, millions as `jT`).
+ * Short IDR amount for KPI tiles and table cells, through the shared compact
+ * scale: a billion is "B" in English and "M" (miliar) in Indonesian; millions
+ * are "jt" in both (BL-83). It used to write "M" in English too, where it reads
+ * as million.
  * @param {number} n
  * @returns {string}
  */
-export const fmtIDR = (n) => {
-  if (n >= 1_000_000_000) return `Rp ${(n / 1_000_000_000).toFixed(1)}M`;
-  return `Rp ${Math.round(n / 1_000_000)}jT`;
-};
+export const fmtIDR = (n) => formatIDR(n, { compact: true });
 
 /**
  * Full IDR amount, grouped in the Indonesian locale.
@@ -26,18 +27,12 @@ export const fmtIDR = (n) => {
 export const fmtIDRFull = (n) => `Rp ${n.toLocaleString('id-ID')}`;
 
 /**
- * A date as `DD Mon YYYY`, or an em dash when there is none.
+ * A date as `DD Mon YYYY` in the UI language ("31 Agu 2026" in Indonesian),
+ * or an em dash when there is none.
  * @param {string | null} s
  * @returns {string}
  */
-export const fmtDate = (s) => {
-  if (!s) return '—';
-  return new Date(s).toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  });
-};
+export const fmtDate = (s) => formatDate(s);
 
 /**
  * REQ-E07-07 step 5 — Submitted → Verified → Scheduled for payment → Paid.
