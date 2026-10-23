@@ -55,8 +55,7 @@ export function useOrdersWorklist({ orders, suppliersQuery, nowIso, group, range
       delivered: orders.filter((p) => DELIVERED_STATUSES.includes(p.status)).length,
       closed: orders.filter((p) => CLOSED_STATUSES.includes(p.status)).length
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orders]);
+  }, [orders, nowIso]);
 
   const kpis = useMemo(() => {
     const open = orders.filter((p) => isOpen(p.status));
@@ -92,8 +91,7 @@ export function useOrdersWorklist({ orders, suppliersQuery, nowIso, group, range
       }
       return true;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orders, group, range, search, maxOrderDate]);
+  }, [orders, group, range, search, maxOrderDate, nowIso]);
 
   return { supplierCountryById, maxOrderDate, counts, kpis, filtered };
 }
