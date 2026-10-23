@@ -14,7 +14,12 @@ import { rfpScoringOf } from '../../rfx/rfpScoring';
 import { termLabel, termValueText } from '../../rfx/rfxAuthoringDisplay';
 import { DocumentsStatus } from '../../rfx/SupplierDocumentsPanel';
 import { qty } from '../../rfx/rfxDisplay';
-import { bestValueIds, deviationsByGroup, termHasDeviation } from '../../rfx/rfxCompare';
+import {
+  bestValueIds,
+  deviationsByGroup,
+  rfpSummaryCards,
+  termHasDeviation
+} from '../../rfx/rfxCompare';
 import { BestTag, GridFilterToggle } from '../../rfx/RfxEventTabs';
 
 /**
@@ -164,9 +169,12 @@ const RfpComparison = ({ event }) => {
       ? scoring.scores.map((s) => /** @type {const} */ ([s.quoteId, s]))
       : []
   );
+  // BL-221 — the supplier columns in the summary cards' order (best scored
+  // first, unscored after in read order), so a supplier sits in one place.
+  const responses = rfpSummaryCards(event, scoring).map((c) => c.response);
   const groupDeviations = deviationsByGroup(event);
   const filtering = onlyDeviations && anyDeviation;
-  const cols = event.responses.length + 2;
+  const cols = responses.length + 2;
   const stickyTh =
     'sticky top-0 z-10 bg-bg-hover text-left text-label text-text-tertiary uppercase py-3 px-4 align-bottom';
 
@@ -204,7 +212,7 @@ const RfpComparison = ({ event }) => {
               <th scope="col" className={stickyTh}>
                 {t('rfx.rfp.col.requested')}
               </th>
-              {event.responses.map((r) => {
+              {responses.map((r) => {
                 const s = scoreById.get(r.id);
                 return (
                   <th key={r.id} scope="col" className={stickyTh}>
@@ -264,7 +272,7 @@ const RfpComparison = ({ event }) => {
                   ? rows.map((row) => {
                       const best = bestValueIds(
                         row.termId,
-                        event.responses.map((r) => ({
+                        responses.map((r) => ({
                           id: r.id,
                           value: r.answers.find((a) => a.termId === row.termId)?.proposedValue
                         }))
@@ -275,7 +283,7 @@ const RfpComparison = ({ event }) => {
                           <TableCell className="align-top text-sm text-text-secondary">
                             <Data>{termValueText(t, row, row.requestedValue)}</Data>
                           </TableCell>
-                          {event.responses.map((r) => (
+                          {responses.map((r) => (
                             <AnswerCell key={r.id} row={row} r={r} best={!!best?.has(r.id)} />
                           ))}
                         </TableRow>
@@ -293,7 +301,7 @@ const RfpComparison = ({ event }) => {
                 <div className="text-sm text-text-primary">{t('rfx.rfp.otherTerms')}</div>
               </TableCell>
               <TableCell className="align-top text-sm text-text-tertiary">—</TableCell>
-              {event.responses.map((r) => (
+              {responses.map((r) => (
                 <TableCell key={r.id} className="align-top text-sm text-text-secondary">
                   {r.otherTerms ?? '—'}
                 </TableCell>
@@ -305,7 +313,7 @@ const RfpComparison = ({ event }) => {
                 {t('rfxFiles.docs.row')}
               </TableCell>
               <TableCell className="align-top text-sm text-text-tertiary">—</TableCell>
-              {event.responses.map((r) => (
+              {responses.map((r) => (
                 <TableCell key={r.id} className="align-top">
                   <DocumentsStatus
                     requests={event.documentRequests ?? []}

@@ -39,6 +39,7 @@ import {
   lowestIndicativePrices,
   rfxTabOf
 } from './rfxCompare';
+import { RfiAnswersGrid } from './RfiProposals';
 
 /** @type {CurrentIdentity} */
 const BUYER_SEAT = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
@@ -283,6 +284,66 @@ describe('C — the comparison grid', () => {
     fireEvent.click(toggle);
     expect(screen.queryByTestId('rfi-answer-row-a-categories')).not.toBeInTheDocument();
     expect(screen.getByTestId('rfi-answer-row-b-years')).toBeInTheDocument();
+  });
+});
+
+// BL-221 — the grid's supplier columns follow the summary cards' order (the
+// same `rfpSummaryCards` / `rfiSummaryCards` sort), not the invitation order.
+describe('BL-221 — grid columns in the summary cards’ order', () => {
+  /** @param {HTMLElement} head @param {number} skip */
+  const columns = (head, skip) =>
+    within(head)
+      .getAllByRole('columnheader')
+      .slice(skip)
+      .map((th) => th.textContent ?? '');
+
+  it('RFP rfp-001: invited 007 · 008 · 015, scored 007 · 015 · 008 — the grid reads like the cards', async () => {
+    at('/buyer/rfp/rfp-001');
+    const strip = await screen.findByTestId('rfp-summary-rfp-001');
+    const cardNames = within(strip)
+      .getAllByRole('listitem')
+      .map((li) => li.querySelector('[data-testid$="-name"]')?.textContent ?? '');
+    const grid = columns(screen.getByTestId('rfp-grid-head'), 2);
+    expect(grid).toHaveLength(3);
+    grid.forEach((text, i) => expect(text.startsWith(cardNames[i] ?? '\u0000')).toBe(true));
+    // The invitation and read order put sup-008 second; the cards and grid put it last.
+    expect(screen.getByTestId('rfp-card-sup-008')).toBe(within(strip).getAllByRole('listitem')[2]);
+    // The documents row follows the same columns.
+    const docCells = within(screen.getByTestId('rfp-documents-row'))
+      .getAllByTestId(/^rfp-documents-sup-/)
+      .map((el) => el.getAttribute('data-testid'));
+    expect(docCells).toEqual([
+      'rfp-documents-sup-007',
+      'rfp-documents-sup-015',
+      'rfp-documents-sup-008'
+    ]);
+  });
+
+  it('RFI: a higher score read second still heads the grid; a tie keeps read order; unscored go last', () => {
+    /** @param {string} id @param {number | null} score */
+    const resp = (id, score) => ({
+      id: `resp-${id}`,
+      supplierId: id,
+      supplierName: `Supplier ${id}`,
+      score,
+      answers: [],
+      versions: [],
+      submittedAt: null
+    });
+    const event = /** @type {any} */ ({
+      id: 'rfi-bl221',
+      questions: [],
+      customSections: [],
+      responses: [resp('a', null), resp('b', 40), resp('c', 90), resp('d', 40), resp('e', null)]
+    });
+    renderWithProviders(<RfiAnswersGrid event={event} />, { identity: BUYER_SEAT });
+    expect(columns(screen.getByTestId('rfi-grid-head'), 1)).toEqual([
+      'Supplier cResponse score: 90',
+      'Supplier bResponse score: 40',
+      'Supplier dResponse score: 40',
+      'Supplier aResponse score: Not scored',
+      'Supplier eResponse score: Not scored'
+    ]);
   });
 });
 
