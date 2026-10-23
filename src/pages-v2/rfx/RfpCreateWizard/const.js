@@ -30,8 +30,9 @@ import { BASE_CURRENCY } from '@lib/currencyPolicy';
  */
 
 /**
- * The setter every step uses to change the draft (the wizard's `setDraft`).
- * @typedef {import('react').Dispatch<import('react').SetStateAction<Draft>>} SetDraft
+ * The react-hook-form handle over the draft, which every step reads through
+ * `useFormContext()` (`register` for typed fields, `setValue` for the rest).
+ * @typedef {import('react-hook-form').UseFormReturn<Draft>} DraftForm
  */
 
 /** @type {Draft} */

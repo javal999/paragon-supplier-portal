@@ -1,14 +1,14 @@
 import { useTranslation } from 'react-i18next';
+import { useFormContext } from 'react-hook-form';
 /** @import React from 'react' */
 import { RFP_STANDARD_TERMS, RFP_TERM_GROUP_ORDER, rfpTerm } from '@services/sourcing/rfxConfig';
 /** @import { RfpTermRow } from '@services/sourcing/types' */
 import { CustomTermEditor, TermValueInput } from '../../RfpTermControls';
-/** @import { Draft, SetDraft } from '../const' */
+/** @import { Draft, DraftForm } from '../const' */
 
 /**
  * @typedef {object} TermsStepProps
- * @property {Draft} draft
- * @property {SetDraft} setDraft  the custom-term editor writes `customTerms` through it
+ * @property {Draft} draft  the draft as the wizard watches it (`useWatch`)
  * @property {string[]} picked  the picked standard term ids
  * @property {string[]} missingValues  REQ-E03-04 — picked terms still missing PTI's value (or holding one of the wrong kind), NAMED under the list
  * @property {(termId: string) => void} onTogglePick
@@ -18,11 +18,13 @@ import { CustomTermEditor, TermValueInput } from '../../RfpTermControls';
 /**
  * Step 2, "the terms PTI asks for": the standard term list by group (pick a term,
  * then give PTI's requested value), the buyer's own custom terms, and the
- * refusals naming what still blocks the step.
+ * refusals naming what still blocks the step. The custom-term editor writes
+ * `customTerms` with `setValue` through `useFormContext()`.
  * @type {React.FC<TermsStepProps>}
  */
-export const TermsStep = ({ draft, setDraft, picked, missingValues, onTogglePick, onSetValue }) => {
+export const TermsStep = ({ draft, picked, missingValues, onTogglePick, onSetValue }) => {
   const { t } = useTranslation();
+  const { setValue } = /** @type {DraftForm} */ (useFormContext());
   return (
     <div className="space-y-5">
       <p className="text-xs text-text-tertiary">{t('rfx.create.library.note')}</p>
@@ -80,7 +82,7 @@ export const TermsStep = ({ draft, setDraft, picked, missingValues, onTogglePick
 
       <CustomTermEditor
         terms={draft.customTerms}
-        onChange={(next) => setDraft((d) => ({ ...d, customTerms: next }))}
+        onChange={(next) => setValue('customTerms', next)}
       />
 
       {picked.length + draft.customTerms.length === 0 && (

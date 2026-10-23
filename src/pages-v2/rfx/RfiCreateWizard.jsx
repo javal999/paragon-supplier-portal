@@ -34,10 +34,19 @@
 // second event. "Save changes" keeps it a draft; "Save and send" also sends it,
 // which still needs `rfi:publish`. Start-from is hidden: replacing a draft's
 // content from a template is a new event, not an edit.
+//
+// ⚠️ **THE DRAFT IS A REACT-HOOK-FORM `useForm`; THE GATES ARE NOT ITS** (the
+// `GRInspectionWizard` and `SupplierRegistration` pattern). No field is
+// registered with rules and `handleSubmit` is never called: every value is
+// re-read with `useWatch` and the step gates derive from it, exactly as they
+// did over the `useState` draft. The typed fields are `register`ed; the
+// clicked and composite ones (questions, invitees, files, documents,
+// confidentiality) are written with `setValue`.
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import React from 'react' */
 import { useMemo, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import Button from '@components/ui-v2/Button';
 import Data from '@components/ui-v2/Data';
@@ -152,20 +161,57 @@ const contentOf = (d) => ({
   ...(d.documentRequests.length > 0 ? { documentRequests: d.documentRequests } : {})
 });
 
+/**
+ * The react-hook-form handle over the RFI draft.
+ * @typedef {import('react-hook-form').UseFormReturn<Draft>} DraftForm
+ */
+
+/**
+ * Write each key of `patch` into the draft with `setValue`, so a registered
+ * input shows the new value and the `useWatch` reader re-renders.
+ * @param {DraftForm} methods
+ * @param {Partial<Draft>} patch
+ */
+const patchDraft = (methods, patch) => {
+  for (const [key, value] of Object.entries(patch)) {
+    methods.setValue(/** @type {keyof Draft} */ (key), value);
+  }
+};
+
+/**
+ * Replace the WHOLE draft with `next`: a key the draft holds and `next` lacks is
+ * cleared, as replacing the `useState` draft did.
+ * @param {DraftForm} methods
+ * @param {Draft} next
+ */
+const replaceDraft = (methods, next) => {
+  const keys = new Set([...Object.keys(methods.getValues()), ...Object.keys(next)]);
+  /** @type {Record<string, unknown>} */
+  const all = {};
+  for (const key of keys) all[key] = /** @type {Record<string, unknown>} */ (next)[key];
+  patchDraft(methods, /** @type {Partial<Draft>} */ (all));
+};
+
 /** @type {React.FC<RfiCreateWizardProps>} */
 const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], editing }) => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const command = useRfxCommand();
   const [step, setStep] = useState(0);
-  const [draft, setDraft] = useState(
+  // The draft's starting values, built once (the `useState` initializer).
+  const [initialDraft] = useState(
     /** @type {() => Draft} */ (() => (editing ? draftOf(editing) : EMPTY))
   );
+  const methods = /** @type {DraftForm} */ (useForm({ defaultValues: initialDraft }));
+  const { control, register, setValue, getValues } = methods;
+  // Every value, re-read on every change: the step gates derive from them.
+  const draft = /** @type {Draft} */ (useWatch({ control }));
   // Bumped after a save or delete so the picker re-reads the store.
   const [storeVersion, setStoreVersion] = useState(0);
   // RFx UX 2A (B-11) — the deadline refusal waits until the buyer has left the
-  // field once; it read as an error before anything was typed.
-  const [deadlineTouched, setDeadlineTouched] = useState(false);
+  // field once; it read as an error before anything was typed. "Left once" is
+  // react-hook-form's touched state, set on the registered input's blur.
+  const deadlineTouched = !!methods.formState.touchedFields.responseDeadline;
 
   const family = rfxCategoryFamily(draft.family);
   // Material G2 (MR-10 BR-06) — the type comes from the category (and the
@@ -206,28 +252,26 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
 
   /** @param {RfiTemplateContent} c */
   const applyContent = (c) =>
-    setDraft((d) => ({
-      ...d,
+    patchDraft(methods, {
       family: c.familyId,
-      description: c.description ?? d.description,
+      description: c.description ?? getValues('description'),
       questions: c.questions,
       customSections: c.customSections,
       confidential: c.confidential,
       confidentialityTerms: c.confidentialityTerms ?? '',
       documentRequests: c.documentRequests ?? []
-    }));
+    });
 
   /** @param {string} key */
   const applyStart = (key) => {
     const [kind, id] = [key.slice(0, key.indexOf(':')), key.slice(key.indexOf(':') + 1)];
     if (kind === 'system') {
       const fam = RFX_CATEGORY_FAMILIES.find((f) => f.templateId === id);
-      setDraft((d) => ({
-        ...d,
-        family: fam?.id ?? d.family,
+      patchDraft(methods, {
+        family: fam?.id ?? getValues('family'),
         questions: rfiTemplate(id)?.questions ?? [],
         customSections: []
-      }));
+      });
     } else if (kind === 'saved') {
       const tpl = saved.templates.find((x) => x.id === id);
       if (tpl) applyContent(tpl.content);
@@ -235,7 +279,7 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
       const e = pastEvents.find((x) => x.id === id);
       if (!e) return;
       // A COPY carries content and invitees; its dates are cleared (D2).
-      setDraft({
+      replaceDraft(methods, {
         ...EMPTY,
         title: e.title,
         family: rfxFamilyForCategory(e.materialCategory)?.id ?? '',
@@ -253,23 +297,24 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
   };
 
   /**
-   * Choosing the family RE-OPENS the question list from its template.
+   * Choosing the family RE-OPENS the question list from its template. The
+   * family itself is already written by its registered select.
    * @param {string} id
    */
   const chooseFamily = (id) => {
     const tpl = rfxCategoryFamily(id)?.templateId;
     const questions = tpl ? [...(rfiTemplate(tpl)?.questions ?? [])] : [];
-    setDraft((d) => ({ ...d, family: id, questions, customSections: [] }));
+    patchDraft(methods, { questions, customSections: [] });
   };
 
   /** @param {string} supplierId */
-  const toggleSupplier = (supplierId) =>
-    setDraft((d) => ({
-      ...d,
-      invitedSupplierIds: d.invitedSupplierIds.includes(supplierId)
-        ? d.invitedSupplierIds.filter((s) => s !== supplierId)
-        : [...d.invitedSupplierIds, supplierId]
-    }));
+  const toggleSupplier = (supplierId) => {
+    const ids = getValues('invitedSupplierIds');
+    setValue(
+      'invitedSupplierIds',
+      ids.includes(supplierId) ? ids.filter((s) => s !== supplierId) : [...ids, supplierId]
+    );
+  };
 
   // CE-07 — a deadline already past is not a response window. The reading is
   // the VERB's own (`isPastDeadline`, end of the deadline day), not a second
@@ -354,7 +399,7 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
 
   /** @param {string} name */
   const saveTemplate = (name) => {
-    const res = rfiTemplateStore.save(name, contentOf(draft), rfxNow());
+    const res = rfiTemplateStore.save(name, contentOf(getValues()), rfxNow());
     setStoreVersion((v) => v + 1);
     return res;
   };
@@ -401,9 +446,8 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
             </label>
             <input
               id="rfi-new-title"
-              value={draft.title}
+              {...register('title')}
               placeholder={t('rfx.create.field.title.ph')}
-              onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
               className={inputClass}
             />
           </div>
@@ -414,8 +458,7 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
             <select
               id="rfi-new-family"
               data-testid="rfi-new-family"
-              value={draft.family}
-              onChange={(e) => chooseFamily(e.target.value)}
+              {...register('family', { onChange: (e) => chooseFamily(e.target.value) })}
               className={inputClass}
             >
               <option value="">{t('rfx.create.field.family.pick')}</option>
@@ -438,9 +481,8 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
             <textarea
               id="rfi-new-description"
               rows={3}
-              value={draft.description}
+              {...register('description')}
               placeholder={t('rfx.create.field.description.ph')}
-              onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
               className="w-full bg-white border border-border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:border-action"
             />
           </div>
@@ -451,9 +493,7 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
             <input
               id="rfi-new-deadline"
               type="date"
-              value={draft.responseDeadline}
-              onChange={(e) => setDraft((d) => ({ ...d, responseDeadline: e.target.value }))}
-              onBlur={() => setDeadlineTouched(true)}
+              {...register('responseDeadline')}
               className="bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
             />
             {!!deadlineTouched && !deadlineInFuture && (
@@ -465,7 +505,7 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
           <div>
             <SessionAttachments
               value={draft.attachments}
-              onChange={(next) => setDraft((d) => ({ ...d, attachments: next }))}
+              onChange={(next) => setValue('attachments', next)}
               label={t('rfxa.att.buyer')}
               testId="rfi-new-attachments"
             />
@@ -473,9 +513,10 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
           <ConfidentialityFields
             confidential={draft.confidential}
             terms={draft.confidentialityTerms}
-            onChange={(confidential, terms) =>
-              setDraft((d) => ({ ...d, confidential, confidentialityTerms: terms }))
-            }
+            onChange={(confidential, terms) => {
+              setValue('confidential', confidential);
+              setValue('confidentialityTerms', terms);
+            }}
             testIdPrefix="rfi-new"
           />
         </div>
@@ -490,13 +531,10 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
         <div className="space-y-5">
           <RfxQuestionEditor
             value={{ questions: draft.questions, customSections: draft.customSections }}
-            onChange={(next) =>
-              setDraft((d) => ({
-                ...d,
-                questions: next.questions,
-                customSections: next.customSections
-              }))
-            }
+            onChange={(next) => {
+              setValue('questions', next.questions);
+              setValue('customSections', next.customSections);
+            }}
             library={RFI_QUESTION_LIBRARY}
             defaultCurrency={BASE_CURRENCY}
             testIdPrefix="rfi-new"
@@ -532,7 +570,7 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
       content: (
         <DocumentRequestsEditor
           value={draft.documentRequests}
-          onChange={(next) => setDraft((d) => ({ ...d, documentRequests: next }))}
+          onChange={(next) => setValue('documentRequests', next)}
           testIdPrefix="rfi-new"
         />
       )

@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { useFormContext } from 'react-hook-form';
 /** @import React from 'react' */
 import SessionAttachments from '@components/ui-v2/SessionAttachments';
 import { BID_CURRENCIES } from '@lib/currencyPolicy';
@@ -9,12 +10,11 @@ import { RFX_CATEGORY_FAMILIES } from '@services/sourcing/rfxConfig';
 import RfxStartFrom from '../../RfxStartFrom';
 import { ConfidentialityFields } from '../../RfiCreateWizard';
 import { PrefillBanner } from '../../rfqSources';
-/** @import { Draft, SetDraft } from '../const' */
+/** @import { Draft, DraftForm } from '../const' */
 
 /**
  * @typedef {object} ScopeStepProps
- * @property {Draft} draft
- * @property {SetDraft} setDraft  every field writes straight into the wizard's draft
+ * @property {Draft} draft  the draft as the wizard watches it (`useWatch`)
  * @property {RfpPrefill & { readonly sourceRfiNumber: string }} [prefill]  D3 — set: the "pre-filled from RFI" banner shows
  * @property {RfpEvent} [editing]  BL-93 — set: the edit banner replaces the start-from picker
  * @property {StartOption[]} startOptions  saved templates and past events the picker offers
@@ -30,12 +30,13 @@ import { PrefillBanner } from '../../rfqSources';
  * Step 1, "what it is about": the RFI pre-fill banner or the edit banner, the
  * start-from picker (new RFP only), title, family, scope, currency, response
  * deadline (refused unless in the future), buyer attachments, confidentiality,
- * and the T&C text and file.
+ * and the T&C text and file. The typed fields are `register`ed on the draft
+ * through `useFormContext()`; the attachments and confidentiality write it with
+ * `setValue`.
  * @type {React.FC<ScopeStepProps>}
  */
 export const ScopeStep = ({
   draft,
-  setDraft,
   prefill,
   editing,
   startOptions,
@@ -46,6 +47,7 @@ export const ScopeStep = ({
   deadlineInFuture
 }) => {
   const { t } = useTranslation();
+  const { register, setValue } = /** @type {DraftForm} */ (useFormContext());
   const inputClass =
     'w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action';
   const labelClass = 'block text-xs font-semibold text-text-secondary mb-1';
@@ -83,9 +85,8 @@ export const ScopeStep = ({
         </label>
         <input
           id="rfp-new-title"
-          value={draft.title}
+          {...register('title')}
           placeholder={t('rfx.create.field.title.ph')}
-          onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
           className={inputClass}
         />
       </div>
@@ -96,8 +97,7 @@ export const ScopeStep = ({
         <select
           id="rfp-new-family"
           data-testid="rfp-new-family"
-          value={draft.family}
-          onChange={(e) => setDraft((d) => ({ ...d, family: e.target.value }))}
+          {...register('family')}
           className={inputClass}
         >
           <option value="">{t('rfx.create.field.family.pick')}</option>
@@ -115,9 +115,8 @@ export const ScopeStep = ({
         <textarea
           id="rfp-new-scope"
           rows={4}
-          value={draft.scope}
+          {...register('scope')}
           placeholder={t('rfx.rfp.field.scope.ph')}
-          onChange={(e) => setDraft((d) => ({ ...d, scope: e.target.value }))}
           className="w-full bg-white border border-border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:border-action"
         />
       </div>
@@ -129,8 +128,7 @@ export const ScopeStep = ({
           <select
             id="rfp-new-currency"
             data-testid="rfp-new-currency"
-            value={draft.currency}
-            onChange={(e) => setDraft((d) => ({ ...d, currency: e.target.value }))}
+            {...register('currency')}
             className={inputClass}
           >
             {BID_CURRENCIES.map((c) => (
@@ -147,8 +145,7 @@ export const ScopeStep = ({
           <input
             id="rfp-new-deadline"
             type="date"
-            value={draft.responseDeadline}
-            onChange={(e) => setDraft((d) => ({ ...d, responseDeadline: e.target.value }))}
+            {...register('responseDeadline')}
             className="bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
           />
           {draft.responseDeadline !== '' && !deadlineInFuture && (
@@ -161,7 +158,7 @@ export const ScopeStep = ({
       <div>
         <SessionAttachments
           value={draft.attachments}
-          onChange={(next) => setDraft((d) => ({ ...d, attachments: next }))}
+          onChange={(next) => setValue('attachments', next)}
           label={t('rfxa.att.buyer')}
           testId="rfp-new-attachments"
         />
@@ -169,9 +166,10 @@ export const ScopeStep = ({
       <ConfidentialityFields
         confidential={draft.confidential}
         terms={draft.confidentialityTerms}
-        onChange={(confidential, terms) =>
-          setDraft((d) => ({ ...d, confidential, confidentialityTerms: terms }))
-        }
+        onChange={(confidential, terms) => {
+          setValue('confidential', confidential);
+          setValue('confidentialityTerms', terms);
+        }}
         testIdPrefix="rfp-new"
       />
       <div className="space-y-2" data-testid="rfp-new-tc">
@@ -182,14 +180,13 @@ export const ScopeStep = ({
         <textarea
           id="rfp-new-tc-text"
           rows={3}
-          value={draft.termsText}
-          onChange={(e) => setDraft((d) => ({ ...d, termsText: e.target.value }))}
+          {...register('termsText')}
           className="w-full bg-white border border-border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:border-action"
         />
         <SessionAttachments
           value={draft.termsFile}
           single
-          onChange={(next) => setDraft((d) => ({ ...d, termsFile: next }))}
+          onChange={(next) => setValue('termsFile', next)}
           label={t('rfxa.tc.file')}
           testId="rfp-new-tc-file"
         />

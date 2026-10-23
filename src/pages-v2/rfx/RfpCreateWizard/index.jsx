@@ -33,16 +33,19 @@
 // files, invitees) and saves through `t_rfp_revise_draft`. The RFI it came from
 // is not editable content: the verb keeps the stored `sourceRfiId`.
 //
-// SPLIT (frontend-standard Phase 5, wave 7): this file keeps the draft, its
+// SPLIT (frontend-standard Phase 5, wave 7): this file keeps the draft's
 // validity and the step list; the large steps live in `components/`, the
+// draft itself (a react-hook-form `useForm`) in `hooks/useRfpDraft.js`, the
 // start-from / template half in `hooks/useRfpStartFrom.js`, the create/revise
 // command in `hooks/useRfpSubmit.js`, the draft shape in `const.js` and the
-// pure draft mappings in `utils.js`. The draft stays HERE, in the component
-// that renders the Wizard, so it survives every step change.
+// pure draft mappings in `utils.js`. The form is created HERE, in the component
+// that renders the Wizard, so it survives every step change; the steps read and
+// write it through `FormProvider`.
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import React from 'react' */
 import { useState } from 'react';
+import { FormProvider } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 /** @import { WizardStep } from '@components/ui-v2/Wizard' */
 import Wizard from '@components/ui-v2/Wizard';
@@ -65,11 +68,9 @@ import { mappedSourcingType } from '@services/sourcing/sourcingType';
 import RfxQuestionEditor from '../RfxQuestionEditor';
 import { RFX_BUILT_IN_FIELDS } from '@services/sourcing/rfxBuiltIn';
 import { RfpPricingEditor } from '../RfpPricing';
-import { authored } from '../rfxAuthoringDisplay';
 import { rfxNow } from '../rfxDisplay';
-import { EMPTY } from './const';
-/** @import { Draft } from './const' */
-import { draftOf, termRowsOf } from './utils';
+import { termRowsOf } from './utils';
+import { useRfpDraft } from './hooks/useRfpDraft';
 import { useRfpStartFrom } from './hooks/useRfpStartFrom';
 import { useRfpSubmit } from './hooks/useRfpSubmit';
 import { ScopeStep } from './components/ScopeStep';
@@ -97,37 +98,14 @@ const RfpCreateWizard = ({
 }) => {
   const { t } = useTranslation();
   const [step, setStep] = useState(0);
-  const [draft, setDraft] = useState(
-    /** @type {() => Draft} */ (
-      () => {
-        if (editing) return draftOf(editing);
-        if (!prefill) return EMPTY;
-        // D3 — the RFI's questions become the RFP's scope notes, resolved here
-        // because only a component can translate.
-        const notes = prefill.scopeNoteKeys.map((k) => `- ${authored(t, k)}`).join('\n');
-        const scope = [prefill.scope, notes ? `${t('rfxa.fromRfi.notes')}\n${notes}` : '']
-          .filter((s) => s.trim().length > 0)
-          .join('\n\n');
-        return {
-          ...EMPTY,
-          title: prefill.title,
-          family: prefill.familyId,
-          scope,
-          invitedSupplierIds: [...prefill.invitedSupplierIds],
-          attachments: prefill.attachments,
-          confidential: prefill.confidential,
-          confidentialityTerms: prefill.confidentialityTerms ?? '',
-          sourceRfiId: prefill.sourceRfiId,
-          // NR-1 BR-11 — the RFI's requests carry; its responses' documents do not.
-          documentRequests: prefill.documentRequests
-        };
-      }
-    )
+  const { methods, draft, togglePick, setTermValue, toggleSupplier } = useRfpDraft(
+    editing,
+    prefill
   );
+  const { setValue } = methods;
   const { saved, startOptions, applyStart, deleteSaved, saveTemplate } = useRfpStartFrom(
     pastEvents,
-    draft,
-    setDraft
+    methods
   );
 
   const family = rfxCategoryFamily(draft.family);
@@ -144,32 +122,6 @@ const RfpCreateWizard = ({
         sourcingMap
       )
     : undefined;
-
-  /** @param {string} termId */
-  const togglePick = (termId) =>
-    setDraft((d) => {
-      if (termId in d.terms) {
-        const { [termId]: _dropped, ...rest } = d.terms;
-        return { ...d, terms: rest };
-      }
-      return { ...d, terms: { ...d.terms, [termId]: '' } };
-    });
-
-  /**
-   * @param {string} termId
-   * @param {string} value
-   */
-  const setValue = (termId, value) =>
-    setDraft((d) => ({ ...d, terms: { ...d.terms, [termId]: value } }));
-
-  /** @param {string} supplierId */
-  const toggleSupplier = (supplierId) =>
-    setDraft((d) => ({
-      ...d,
-      invitedSupplierIds: d.invitedSupplierIds.includes(supplierId)
-        ? d.invitedSupplierIds.filter((s) => s !== supplierId)
-        : [...d.invitedSupplierIds, supplierId]
-    }));
 
   const picked = Object.keys(draft.terms);
   /** The picked terms still missing PTI's value, or holding one not of the term's kind. */
@@ -225,7 +177,6 @@ const RfpCreateWizard = ({
       content: (
         <ScopeStep
           draft={draft}
-          setDraft={setDraft}
           prefill={prefill}
           editing={editing}
           startOptions={startOptions}
@@ -245,11 +196,10 @@ const RfpCreateWizard = ({
       content: (
         <TermsStep
           draft={draft}
-          setDraft={setDraft}
           picked={picked}
           missingValues={missingValues}
           onTogglePick={togglePick}
-          onSetValue={setValue}
+          onSetValue={setTermValue}
         />
       )
     },
@@ -259,10 +209,7 @@ const RfpCreateWizard = ({
       shortTitle: t('rfxa.step.pricing.short'),
       description: t('rfxa.step.pricing.desc'),
       content: (
-        <RfpPricingEditor
-          value={draft.pricing}
-          onChange={(next) => setDraft((d) => ({ ...d, pricing: next }))}
-        />
+        <RfpPricingEditor value={draft.pricing} onChange={(next) => setValue('pricing', next)} />
       )
     },
     {
@@ -273,13 +220,10 @@ const RfpCreateWizard = ({
       content: (
         <RfxQuestionEditor
           value={{ questions: draft.questions, customSections: draft.customSections }}
-          onChange={(next) =>
-            setDraft((d) => ({
-              ...d,
-              questions: next.questions,
-              customSections: next.customSections
-            }))
-          }
+          onChange={(next) => {
+            setValue('questions', next.questions);
+            setValue('customSections', next.customSections);
+          }}
           defaultCurrency={/** @type {BidCurrency} */ (draft.currency)}
           testIdPrefix="rfp-new"
           builtIns={RFX_BUILT_IN_FIELDS}
@@ -309,7 +253,7 @@ const RfpCreateWizard = ({
       content: (
         <DocumentRequestsEditor
           value={draft.documentRequests}
-          onChange={(next) => setDraft((d) => ({ ...d, documentRequests: next }))}
+          onChange={(next) => setValue('documentRequests', next)}
           testIdPrefix="rfp-new"
         />
       )
@@ -337,17 +281,20 @@ const RfpCreateWizard = ({
 
   return (
     <ModalOverlay onClose={onCancel}>
-      <Wizard
-        steps={steps}
-        currentStep={step}
-        onStepChange={setStep}
-        onCancel={onCancel}
-        onComplete={() => create(true)}
-        isStepValid={(n) => (n === steps.length - 1 ? canPublish && sendable : stepValid(n))}
-        completeLabel={t(editing ? 'rfxEdit.saveAndSend' : 'rfx.create.send')}
-        // RFx UX 2A (B-11) — one height for every step, so Next stays put.
-        className="h-[90vh]"
-      />
+      {/* FormProvider renders no element, so the modal's markup is unchanged. */}
+      <FormProvider {...methods}>
+        <Wizard
+          steps={steps}
+          currentStep={step}
+          onStepChange={setStep}
+          onCancel={onCancel}
+          onComplete={() => create(true)}
+          isStepValid={(n) => (n === steps.length - 1 ? canPublish && sendable : stepValid(n))}
+          completeLabel={t(editing ? 'rfxEdit.saveAndSend' : 'rfx.create.send')}
+          // RFx UX 2A (B-11) — one height for every step, so Next stays put.
+          className="h-[90vh]"
+        />
+      </FormProvider>
     </ModalOverlay>
   );
 };
