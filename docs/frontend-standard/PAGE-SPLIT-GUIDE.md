@@ -140,7 +140,5 @@ three held for the IA work. `react-hook-form` is in `SupplierRegistration` and
 
 **Left.**
 
-- `SupplierRfp.jsx` has grown past the line (967 lines on 2026-10-22) with the RFx UX waves. It
-  is split next, once no open branch edits it.
 - The `react-hook-form` conversion of `RfpCreateWizard` and `RfiCreateWizard`. The RFx and IA
   branches that edited them are now on `main`, so they are no longer held.

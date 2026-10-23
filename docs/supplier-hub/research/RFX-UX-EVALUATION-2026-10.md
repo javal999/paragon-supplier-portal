@@ -15,7 +15,7 @@
 
 **Supplier:** a supplier can answer, quote, revise and read an outcome, but the forms lose work and hide what is missing, and the award is shown three ways that disagree.
 
-1. **Work is lost silently.** A failed send on the RFP form followed by a navigation threw away a 35-field proposal; no autosave, no leave guard exists anywhere in the RFx forms (`SupplierRfp.jsx:89-98`; no `beforeunload` or route blocker in `src/`).
+1. **Work is lost silently.** A failed send on the RFP form followed by a navigation threw away a 35-field proposal; no autosave, no leave guard exists anywhere in the RFx forms (`SupplierRfp/hooks/useRfpDrafts.js:35-56`; no `beforeunload` or route blocker in `src/`).
 2. **The RFQ event page runs about 8 screens** from invitees to the award panel with no section navigation; the only anchor is the board footer's `?section=award` (`BuyerSourcingEvent/index.jsx:142-147`).
 3. **Two award views contradict each other.** "Awards & history" lists RFQ-2026-021 as both Awarded and Not Awarded, dated with the award deadline and valued at the first quote's total (`SupplierRFQs/utils.js:134-147`), while the rounds page says "Your share: 60%".
 4. **The RFQ wizard publishes terms the buyer never chose.** The draft default `incoterms: 'CIF Jakarta'` (`BuyerSourcing/utils.js:281`) is not among the Terms step's five options (`WizardTermsStep.jsx:13`), so the select shows FOB while CIF Jakarta is saved and reaches the supplier card.
@@ -180,7 +180,7 @@
 ### 4.2 Supplier
 
 - **S-01** · Blocker · high · Supplier response · `/supplier/rfp`, `/supplier/rfi`, RFQ quote drawer
-  Evidence: RFP-2026-003 proposal (6 terms, 3 answers, 8 prices, validity) lost after one refused send and a navigation; drafts live in component state (`SupplierRfp.jsx:89-98`, `SupplierRfi.jsx` draft state); no `beforeunload`, `useBlocker` or autosave in `src/pages-v2`.
+  Evidence: RFP-2026-003 proposal (6 terms, 3 answers, 8 prices, validity) lost after one refused send and a navigation; drafts live in component state (`SupplierRfp/hooks/useRfpDrafts.js:35-56`, `SupplierRfi.jsx` draft state); no `beforeunload`, `useBlocker` or autosave in `src/pages-v2`.
   Problem: a supplier who follows a To do link or a toast loses a long form; the "Save draft" button is the only protection and nothing prompts it.
   Recommendation: autosave the draft on change, show "Saved 19:04" by the title, and block navigation with a prompt while unsaved. See mockup `S-01-supplier-response-form.html`.
 
