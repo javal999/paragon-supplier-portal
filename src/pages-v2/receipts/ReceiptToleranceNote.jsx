@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { useTranslation } from 'react-i18next';
 /** @import { ReceiptLineComparison } from '@services/transitions' */
+import { formatNumber } from '@lib/format';
 import { receiptQtyToleranceFor } from '@services/transitions';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -31,7 +32,7 @@ const ReceiptToleranceNote = ({ line, testId }) => {
       {t(
         `fc.gr.tol.${line.qtyOutcome === 'over' && tol.overPct > 0 ? 'overBeyond' : line.qtyOutcome}`,
         {
-          qty: Math.abs(line.difference).toLocaleString('en-US'),
+          qty: formatNumber(Math.abs(line.difference)),
           pct: line.differencePct === null ? '' : `${line.differencePct.toFixed(2)}%`,
           shortPct: tol.shortPct,
           overPct: tol.overPct

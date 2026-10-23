@@ -15,11 +15,9 @@
 import { daysInTransit } from '@services/data/shipmentDisplayState';
 import { AT_DOCK_STATUSES, IN_TRANSIT_STATUSES, PENDING_STATUSES, TODAY } from './const';
 
-/**
- * @param {number} n
- * @returns {string}
- */
-export const formatNumber = (n) => new Intl.NumberFormat('id-ID').format(n);
+// A quantity in the reader's language (BL-223): "1,234" in English, "1.234"
+// in Indonesian. It was hard-coded to id-ID, so English readers saw "1.234".
+export { formatNumber } from '@lib/format';
 
 /**
  * @param {string} [iso]
