@@ -58,9 +58,12 @@ export const useRfpStartFrom = (pastEvents, methods) => {
     } else if (kind === 'past') {
       const e = pastEvents.find((x) => x.id === id);
       if (!e) return;
-      // A COPY carries content and invitees; its dates are cleared (D2).
+      // A COPY carries content and invitees; its dates are cleared (D2). The RFI
+      // the wizard was opened from (D3) is not content: it stays, as the banner
+      // still says it does.
       replaceDraft(methods, {
         ...EMPTY,
+        sourceRfiId: methods.getValues('sourceRfiId'),
         title: e.title,
         family: rfxFamilyForCategory(e.materialCategory)?.id ?? '',
         scope: e.scope,
