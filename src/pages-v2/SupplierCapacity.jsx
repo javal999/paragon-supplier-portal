@@ -31,6 +31,7 @@ import {
   planStatus
 } from '@services/transitions/capacityRules';
 import { readStockNumber } from '@services/transitions/inventoryRules';
+import { isoWeek } from '@services/engine/dates';
 import {
   CapacityStatusPill,
   LtpCheckPill,
@@ -73,6 +74,14 @@ import { ReEntryPill, usePlanningGroupLabel } from './inventory/planningGroupDis
 // week, that week reads "PTI accepted your additional capacity on <date>", read
 // only, in a "PTI's decision" row shown only when the group has one. The read
 // is narrowed to the supplier's own decisions; the entry flow is unchanged.
+//
+// INV-D2 (BL-65, Inventory UX S-05) — capacity stays one value per week. Under
+// the Allocated and Additional capacity labels, "Copy W36 to all weeks" copies
+// the FIRST week's figure into every other week of that row, in the form only:
+// nothing is sent until Submit, which runs the same verb and rules (a week now
+// below the LTP still needs a reason). The other row is untouched. Weekly view
+// only, and only while the seat can submit; a week already holding that figure
+// keeps its additional-capacity confirmation, a changed one loses it (CAP-3).
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -271,6 +280,48 @@ const SupplierCapacity = () => {
   const update = (i, patch) =>
     setDraft((prev) => prev.map((d, j) => (j === i ? { ...d, ...patch } : d)));
 
+  // INV-D2 — the first week is the source; the label names it.
+  const firstWeek = plan.weeks.length > 0 ? `W${isoWeek(plan.weeks[0].week)}` : '';
+  /**
+   * @param {'allocated' | 'upside'} field
+   * @param {string} rowLabel
+   */
+  const copyAction = (field, rowLabel) => {
+    if (!held || plan.weeks.length < 2) return undefined;
+    const source = (draft[0]?.[field] ?? '').trim();
+    const read = readStockNumber(source);
+    const value = read.ok ? read.value : null;
+    const copy = () =>
+      setDraft((prev) =>
+        prev.map((d, j) => {
+          if (j === 0 || d[field] === source) return d;
+          return field === 'upside'
+            ? { ...d, upside: source, upsideConfirmed: false }
+            : { ...d, allocated: source };
+        })
+      );
+    return (
+      <Button
+        variant="outline"
+        className="!px-2 !py-1 text-xs text-left"
+        disabled={value === null}
+        onClick={copy}
+        data-testid={`capacity-copy-${field}`}
+        aria-label={
+          value !== null
+            ? t('inv.capacity.copyToAllFor', {
+                week: firstWeek,
+                row: rowLabel,
+                qty: qty(value)
+              })
+            : t('inv.capacity.copyToAllEmpty', { week: firstWeek, row: rowLabel })
+        }
+      >
+        {t('inv.capacity.copyToAll', { week: firstWeek })}
+      </Button>
+    );
+  };
+
   const submit = () =>
     void run(
       {
@@ -384,6 +435,7 @@ const SupplierCapacity = () => {
               id: 'allocated',
               label: t('inv.capacity.row.allocated'),
               unit: plan.uom,
+              action: copyAction('allocated', t('inv.capacity.row.allocated')),
               // CAP-2 — the month sums what is typed, as the BE and pill do.
               combine: 'sum',
               value: (_w, i) => rows[i].stated?.allocated ?? null,
@@ -404,6 +456,7 @@ const SupplierCapacity = () => {
               id: 'upside',
               label: t('inv.capacity.row.upside'),
               unit: plan.uom,
+              action: copyAction('upside', t('inv.capacity.row.upside')),
               combine: 'sum',
               value: (_w, i) => rows[i].stated?.upside ?? null,
               format: qty,
