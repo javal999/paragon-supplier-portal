@@ -46,10 +46,6 @@ const BuyerOrdersList = () => {
   const [search, setSearch] = useState('');
   const [selectedPO, setSelectedPO] = useState(/** @type {PurchaseOrder | null} */ (null));
 
-  // WHO ACTS NEXT on the selected PO. Unconditional — the hook takes a nullable
-  // state and answers `null` when nothing is selected; a conditional hook would
-  // be a render-order bug the first time the drawer closes.
-  const nextAct = useNextAct('purchaseOrder', selectedPO?.status);
   const [commsOpen, setCommsOpen] = useState(false);
   const [reviewRejecting, setReviewRejecting] = useState(false);
   const [reviewComment, setReviewComment] = useState('');
@@ -66,6 +62,13 @@ const BuyerOrdersList = () => {
   const ordersQuery = usePurchaseOrders();
   const suppliersQuery = useSuppliers();
   const orders = ordersQuery.data?.items ?? [];
+  // The LIVE row, so the panel follows a review the moment it lands.
+  const livePO = selectedPO ? (orders.find((p) => p.id === selectedPO.id) ?? selectedPO) : null;
+
+  // WHO ACTS NEXT on the selected PO, from its live status. Unconditional — the
+  // hook takes a nullable state and answers `null` when nothing is selected; a
+  // conditional hook would be a render-order bug the first time the drawer closes.
+  const nextAct = useNextAct('purchaseOrder', livePO?.status);
 
   // A link from the order summary or Home opens that PO (`?po=<id>`) or tab
   // (`?tab=escalated`).
@@ -139,8 +142,6 @@ const BuyerOrdersList = () => {
     setReviewComment('');
   };
 
-  // The LIVE row, so the panel follows a review the moment it lands.
-  const livePO = selectedPO ? (orders.find((p) => p.id === selectedPO.id) ?? selectedPO) : null;
   /** @param {PurchaseOrder} po */
   const asnCountFor = (po) =>
     (asnsQuery.data?.items ?? []).filter((a) => a.poReference === po.poNumber && isActiveAsn(a))
