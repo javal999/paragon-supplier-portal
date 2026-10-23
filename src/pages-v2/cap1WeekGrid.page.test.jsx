@@ -16,6 +16,7 @@ import { isGapWeek, ltpCapacityWeeks } from '@services/transitions/capacityRules
 import { BUILT_IN_LABEL_PREFIX } from '@services/transitions/reasonCodes';
 import { mockDataService } from '@services/data/mock/mockDataService';
 import { sdcClock } from '@services/sdc';
+import { isoWeek } from '@services/engine/dates';
 import { formatDate, formatNumber } from '@lib/format';
 import i18n from '@lib/i18n';
 import { inventoryCapacityEn, inventoryCapacityId } from '@lib/i18n/inventoryCapacity';
@@ -270,20 +271,34 @@ describe('CAP-1 Table C — supplier Capacity', () => {
     expect(grid.querySelectorAll('tbody tr')).toHaveLength(6);
   });
 
-  it('tab order runs along a row: every Allocated week, then every Additional week, then the reason selects (G-11, C-05)', async () => {
+  it('tab order runs along a row: Copy then every Allocated week, Copy then every Additional week, then the reason selects (G-11, C-05, INV-D2)', async () => {
     const plan = planOf('sup-007-pg-MG-20');
     await openGroup();
     const weeks = plan.weeks.map((w) => formatDate(w.week));
     const reasonWeeks = plan.weeks
       .filter((w) => w.entry && w.entry.allocated < w.demand)
       .map((w) => formatDate(w.week));
+    // INV-D2 — each editable row opens with "Copy W36 to all weeks", in the label
+    // column; with W36 empty the button is disabled and Tab passes it by.
+    const w1 = `W${isoWeek(plan.weeks[0].week)}`;
+    /**
+     * @param {string} row
+     * @param {number | undefined} v
+     * @returns {string[]}
+     */
+    const copyLabel = (row, v) =>
+      v === undefined ? [] : [`Copy ${w1} to all weeks: ${row}, ${qty(v)}`];
     const expected = [
+      ...copyLabel('Allocated', plan.weeks[0].entry?.allocated),
       ...weeks.map((w) => `Allocated capacity for the week of ${w}`),
+      ...copyLabel('Additional capacity', plan.weeks[0].entry?.upside),
       ...weeks.map((w) => `Additional capacity for the week of ${w}`),
       ...reasonWeeks.map((w) => `Reason for the week of ${w}`)
     ];
     // Population control: 13 weeks per row, and at least one reason select.
     expect(weeks).toHaveLength(13);
+    // INV-D2 population control: the seeded W36 carries an allocation to copy.
+    expect(plan.weeks[0].entry?.allocated).toBeDefined();
     expect(reasonWeeks.length).toBeGreaterThan(0);
     // BL-186 — real Tab presses (user-event), from the grid's scroll container:
     // W36 → W37 → … → W48 along Allocated, then the Additional row, then the
