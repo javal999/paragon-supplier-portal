@@ -302,21 +302,21 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | Condition | What the system does | Who acts next | Menu | Evidence |
 |---|---|---|---|---|
 | Supplier on API sync (sup-001) vs manual entry | API suppliers get a sync panel; manual suppliers get the weekly panel. The mode is set in admin. | PTI admin | Supplier stock update mode | `services/data/mock/inventoryReadModel.js:69`; `pages-v2/inventory/WeeklyUpdatePanel.jsx:220-224` |
-| API sync fails (sup-003) | "Last sync failed: {error}"; figures kept and flagged stale | PTI-Plan | Inventory | `pages-v2/BuyerInventory.jsx:249-253` |
+| API sync fails (sup-003) | "Last sync failed: {error}"; the previous figures are kept and stay up to date until the last successful sync is older than 24 hours (MAT-D17) | PTI-Plan | Inventory | `services/transitions/inventoryRules.js:401-406`; `pages-v2/inventory/SupplierSyncPanel.jsx` |
 | Capacity below the LTP | A reason is required | Sup-Ful | Capacity | `lib/i18n/inventoryCapacity.js:344-350` |
 | Closing an alert with reason "Other" | A note is required | PTI-Plan | Alerts | `lib/i18n/inventoryCapacity.js:381-396` |
 | Supplier seat without the Fulfilment lane | "Awaiting Supplier Fulfilment" in place of **Save stock** | Sup-Ful | Stock | `pages-v2/CommHubInbound.jsx:634-640` |
 
 ### UC7 Inventory and capacity alerts
 
-**Purpose:** the portal checks stock, capacity, forecast commitments and call-offs against 9 rules and raises an alert for each risk; Planning acts on it and closes it with a reason. Alerts are computed live each time they are read (`services/data/mock/MockProcurementService.js:499-511`, `services/data/mock/inventoryReadModel.js:269-284`, `services/transitions/inventoryAlertRules.js:240-364`). Demo: 30 open, 17 High, 6 Medium, 7 Low (read from the Alerts screen, 2026-10-06).
+**Purpose:** the portal checks stock, capacity, forecast commitments and call-offs against 12 rules and raises an alert for each risk; Planning acts on it and closes it with a reason. Alerts are computed live each time they are read (`services/data/mock/MockProcurementService.js:499-511`, `services/data/mock/inventoryReadModel.js:269-284`, `services/transitions/inventoryAlertRules.js:240-364`). Demo: 30 open, 17 High, 6 Medium, 7 Low (read from the Alerts screen, 2026-10-06).
 
-**The 9 rules** (`services/transitions/inventoryAlertRules.js:54-77`; labels `lib/i18n/inventoryCapacity.js:367-377`)
+**The 12 rules** (`services/transitions/inventoryAlertRules.js:81-94`, PTI-only list `:103-114`; labels `lib/i18n/inventoryCapacity.js:438-455`)
 
 | Rule | Fires when | Urgency | Supplier sees it | Evidence |
 |---|---|---|---|---|
 | PTI stock below PTI reorder point | PTI stock on hand < PTI reorder point | Cover vs lead time | No | `services/transitions/inventoryRules.js:414,551` |
-| Supplier stock below supplier reorder point | Supplier stock < reorder point the supplier declared | Cover vs lead time | Yes | `services/transitions/inventoryRules.js:420-421,549` |
+| Supplier stock below supplier reorder point | Supplier stock < the system-calculated ROP Supplier (the supplier's own ROP is display only; no system figure, no alert; DRC-D20) | Cover vs lead time | Yes | `services/transitions/inventoryRules.js:420-421,549` |
 | PTI stock runs out before next delivery | PTI stock ÷ daily demand < days to next incoming; no incoming date = no alert | Cover vs lead time | No | `services/transitions/inventoryRules.js:433-439` |
 | Allocated capacity below the LTP | Any of the next 13 weeks: capacity < LTP demand | Worst class in the planning group, else Low | Yes | `services/transitions/capacityRules.js:139-145`; `services/transitions/inventoryAlertRules.js:316-330` |
 | Supplier stock figures out of date | Never submitted, or past the refresh deadline | Always Low | Yes | `services/transitions/inventoryRules.js:394-406`; `services/transitions/inventoryAlertRules.js:301` |
@@ -324,6 +324,9 @@ Evidence: `services/transitions/businessRoles.js:144-180,244-247,353-394,460-521
 | Commitment below forecast beyond tolerance | Short beyond Firm 0% / Trade-off 10%, or revision requested | High if a Firm period, else Medium | Yes | `services/transitions/forecastRules.js:516-521,871-890`; `services/transitions/inventoryAlertRules.js:335-342` |
 | No supplier lead time on record | Lead time missing for the material | Day bands | No | `services/transitions/inventoryAlertRules.js:310-311` |
 | Call-off larger than supplier can deliver | Confirmed call-offs due within lead time > stock + production due | Cover vs lead time | No | `services/transitions/inventoryAlertRules.js:213-229,347-361` |
+| Supply discontinued | The supplier marked a material Discontinued on its commitments: find another source (CAP-D2) | Always High | No | `services/transitions/inventoryAlertRules.js:486-488` |
+| Blanket PO runs out | A blanket PO needs its next PO within 4 weeks (CAP-9 BR-05) | From the run-out projection | No | `services/transitions/inventoryAlertRules.js:489-492`; `services/transitions/blanketPoRules.js` |
+| Supply above demand anticipation | Surplus the last week of the horizon cannot absorb (DRC-4 BR-02) | Always Medium | No | `services/transitions/inventoryAlertRules.js:493-504` |
 
 **Urgency:** High when cover < 1× lead time, Medium < 1.5×, else Low; with no lead time, < 14 days High and < 30 days Medium (`services/transitions/inventoryRules.js:189-197,243-259`). Settings live under Help & administration → Alert thresholds and stale periods, editable by the Compliance role (`pages-v2/admin/AdminRuleValues/index.jsx:61,209,215`; `services/transitions/businessRoles.js:314`), and apply at the next calculation (`services/transitions/inventoryConfig.js:13-17,38-67`).
 

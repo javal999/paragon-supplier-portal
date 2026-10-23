@@ -20,8 +20,9 @@ import { inventoryNow, qty, useInventoryRunner } from './inventoryDisplay';
 //     stock through `t_stocksync_pull` (the supplier's fulfilment atom). The
 //     connection is SIMULATED (sample answers from `API_CONNECTIONS`) and the
 //     section says so. It shows the last attempt's time; a failure shows the
-//     error and time, and the previous figures stay, marked out of date (the
-//     stock rows already read `stale` from the failed attempt).
+//     error and time, and the previous figures stay. A failed pull does not
+//     make them out of date: only a last successful pull older than 24 hours
+//     does (MAT-D17, `stockFreshness` in inventoryRules.js).
 //
 //   · Refresh PTI stock — ONLY for a supplier holding an active PTI stock
 //     access grant (REQ-E08-03). A READ, not a governed act: it re-reads the

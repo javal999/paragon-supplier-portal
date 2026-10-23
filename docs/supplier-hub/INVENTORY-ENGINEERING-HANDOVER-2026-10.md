@@ -349,9 +349,9 @@ Built as recommended; the owner may change any of them.
 | Capacity refusal codes | Five capacity codes are the rule's camelCase name upper-cased (`MISSINGWEEK`); `OTHER_REASON_NEEDS_NOTE` also fires for Force Majeure and Discontinued | Production: `MISSING_WEEK`-style names and one `NOTE_REQUIRED` code, mapped once |
 | Stock declare refusals | 3 codes are lower-case and 7 sentences carry no code | Production: give every refusal an upper-case code |
 
-**Code and documents disagree.** The code is the truth for what is built; each row names the document to correct.
+**Code and documents disagreed; aligned on 2026-10-23.** The code is the truth for what is built, and each case followed a recorded decision, so the documents were corrected to match (branch `docs/inventory-doc-code-align`). The table keeps what each document used to say.
 
-| Topic | Document says | Code does |
+| Topic | Document said | Code does (documents now say the same) |
 |---|---|---|
 | Alert rules | REQ-E08-05 BR-01 lists 8 rules; SCENARIOS UC7 says 9 | 12 rules (`inventoryAlertRules.js:81`) |
 | Supplier below ROP | SCENARIOS UC7: against the ROP the supplier declared | Against the system ROP Supplier (`inventoryRules.js:425`), as DRC-D20 and the REQ-E08-05 amendment say |

@@ -1412,16 +1412,21 @@ Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
 **Business rules.**
 - BR-01. Alert rules [Proposed]:
   - PTI SOH below PTI ROP.
-  - Supplier SOH below supplier ROP.
+  - Supplier SOH below the system-calculated supplier ROP (ROP Supplier); the ROP the supplier declares is display only, and no system figure means no alert (DRC-D15, DRC-D20).
   - Projected stock-out before the next incoming date.
   - Committed quantity below forecast beyond tolerance (REQ-E06-03).
   - Allocated capacity below demand (REQ-E08-04).
   - Supplier data older than the stale period.
   - Supplier coverage At risk or Uncovered (CR-03) [Code].
   - A confirmed call-off due within the lead time not covered by SOH plus production (`callOffNotCovered`, PTI only, REQ-E07-04 BR-18) [Owner, 2026-09-29; PR #101].
+  - No supplier lead time on record (`leadTimeMissing`, PTI only; see BR-02) [Owner, 2026-09-21].
+  - The supplier marked a material Discontinued: find another source (`supplyDiscontinued`, PTI only, High; CAP-4 BR-03) [Owner, CAP-D2].
+  - A blanket PO needs its next PO within 4 weeks (`blanketPoRunOut`, PTI only; CAP-9 BR-05) [Owner, 2026-10-12].
+  - Supply above demand anticipation that the last week of the horizon cannot absorb (`demandAnticipationUnabsorbed`, PTI only, Medium; DRC-4 BR-02) [Owner, 2026-10-19].
+  - Built: 12 rules, 7 of them PTI only (`services/transitions/inventoryAlertRules.js`, `ALERT_RULES`, `PTI_ONLY_RULES`) [Docs aligned to the build, 2026-10-23].
 - BR-02. Each alert has a risk class: High, Medium, Low, set by CR-24 (days of cover against the supplier's lead time). CR-02 applies only where the lead time is missing, and a missing lead time raises its own alert [Owner, 2026-09-21].
-- BR-03. Alert thresholds and the stale period are configurable by ADM, per material group [Proposed; Market].
-- BR-04. Alerts are delivered in the hub and by email [Proposed; Market].
+- BR-03. Alert thresholds (the CR-24 multiples and the CR-02 fallback bands) and the default stale period are one global set, editable by the Compliance role under Help & administration → Alert thresholds and stale periods; the stale period can be overridden per supplier × material (BL-32). Thresholds per material group are not built: CR-24 already differs per material through each material's lead time [Docs aligned to the build, 2026-10-23; was "per material group", Proposed].
+- BR-04. Alerts are delivered in the hub and by email [Proposed; Market]. Built: in the hub only; email waits for the notification service (BACKLOG BL-26).
 - BR-05. The same condition does not raise a new alert until the open one is closed [Proposed].
 - BR-06. Risk classes stay as CR-24 sets them (BR-02): High, Medium, Low, with stale data Low. There is no fourth level (MR-9 BR-01) [Owner, 2026-09-29, MAT-D1].
 - BR-07. Order: risk class High to Low; within a class, fewest days to impact first; then supplier name. A group of alerts under one supplier sits at the place of its most urgent alert (MR-9 BR-02) [Owner, 2026-09-29, MAT-D1; PR #87].
@@ -1510,7 +1515,7 @@ Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
 
 **Business rules.**
 - BR-01. Each material carries its MRP controller code. SAP holds it per plant; the hub keeps 1 value per material until plants are modelled (MR-5 BR-01) [Owner, 2026-09-29; PR #84].
-- BR-02. An administrator maps each code to a name and 1 or more hub users, through a governed verb held by the `compliance` lane. An unmapped code shows the code only (MR-5 BR-02) [Owner, 2026-09-29; PR #90]. A mapping cannot yet be removed (BACKLOG BL-157).
+- BR-02. An administrator maps each code to a name and 1 or more hub users, through a governed verb held by the `compliance` lane. An unmapped code shows the code only (MR-5 BR-02) [Owner, 2026-09-29; PR #90]. An administrator can also remove a mapping (`t_mrpcontroller_unmap`, BACKLOG BL-157, closed 2026-09-29).
 - BR-03. The MRP controller appears on the inventory list and detail, alerts, call-offs and the ASN line, and can be filtered on each of those lists and on the stock simulation, including "My materials" for the code picked for the seat in the identity panel (MR-5 BR-03) [Owner, 2026-09-29; PR #90, #108].
 - BR-04. Suppliers see the name and never the code (MR-5 BR-04) [Owner, 2026-09-29; PR #90].
 - BR-05. The code comes from the SAP material feed, owned by Master Data Management (BL-103). Until the feed runs, it is sample data and labelled as such wherever it is shown (MR-5 BR-05) [Owner, 2026-09-29; PR #84, #90; feed BACKLOG BL-152].

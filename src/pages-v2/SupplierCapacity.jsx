@@ -47,7 +47,8 @@ import { ReEntryPill, usePlanningGroupLabel } from './inventory/planningGroupDis
 //
 // Per material group, 13 weekly buckets: PTI's demand beside the capacity the
 // supplier allocates, with optional upside (BR-05). A week below demand needs a
-// starter reason, and "Other" needs a note (BR-04, AC-02). The form mirrors the
+// starter reason, and Force Majeure, Discontinued and Other need a note
+// (BR-04, AC-02, CAP-D8; `reasonCodes.js`). The form mirrors the
 // rule so the supplier sees why Submit is not ready; the verb's policy decides.
 //
 // BL-133 (ENG-D18) — the week's demand IS the group's LTP (the current
