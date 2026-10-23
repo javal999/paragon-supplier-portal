@@ -5,6 +5,7 @@
 import {
   formatMinutesOfDay,
   hubSettingDef,
+  parseGroupOverrideKey,
   parseStaleOverrideKey,
   parseTimeOfDay
 } from '@services/transitions/hubSettings';
@@ -42,7 +43,7 @@ export function fromInput(key, raw) {
   const def = hubSettingDef(key);
   if (def?.unit === 'boolean') return raw === 'true';
   const trimmed = raw.trim();
-  if (trimmed === '' && parseStaleOverrideKey(key)) return null;
+  if (trimmed === '' && (parseStaleOverrideKey(key) || parseGroupOverrideKey(key))) return null;
   // A time of day goes to the verb as minutes after midnight; an unreadable one as typed.
   if (def?.unit === 'time') return parseTimeOfDay(trimmed) ?? trimmed;
   const n = Number(trimmed);
