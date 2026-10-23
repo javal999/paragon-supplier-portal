@@ -122,7 +122,12 @@ import { inventoryDeclarationStore } from './stores/inventoryDeclarationStore';
 import { incomingShipmentStore } from './stores/incomingShipmentStore';
 import { enforcementSettingStore } from './stores/enforcementSettingStore';
 import { calendarCovers, workingCalendarStore } from '../../transitions/workingCalendarStore';
-import { isHubSettingKey, parseStaleOverrideKey } from '../../transitions/hubSettings';
+import {
+  isHubSettingKey,
+  parseGroupOverrideKey,
+  parseStaleOverrideKey
+} from '../../transitions/hubSettings';
+import { groupLabel } from '../../sdc/materialGroups';
 import { hubSettingsStore, settingValue } from '../../transitions/hubSettingsStore';
 import {
   SHORTFALL_NOTE_REQUIRED_CODES,
@@ -5674,9 +5679,11 @@ const threePlTarget = {
 
 // ── BL-32 · THE ADMINISTRATOR'S RULE VALUES ──────────────────────────────────
 // `entityId` IS the setting key. `readState` answers `Maintained` for a key the
-// registry defines, or a stale-period override of a supplier × material the hub
-// actually assigns — and null otherwise, so an unknown key (or an override for a
-// pair nobody supplies) is NOT_FOUND rather than a silently created setting.
+// registry defines, a stale-period override of a supplier × material the hub
+// actually assigns, or an override for a material group the master declares
+// (REQ-E08-05 BR-03, `<baseKey>@MG-xx`) — and null otherwise, so an unknown key
+// (or an override for a pair nobody supplies, or a group nobody declared) is
+// NOT_FOUND rather than a silently created setting.
 // Owner-less by construction: the values are PTI's, and `readScopeOwner: () =>
 // null` denies every supplier at SCOPE (§86). `applyTransition` APPENDS;
 // `previous` and `setAt` are stamped by the store, never read from the payload.
@@ -5686,6 +5693,8 @@ const threePlTarget = {
  */
 const settingKeyExists = (id) => {
   if (isHubSettingKey(id)) return true;
+  const group = parseGroupOverrideKey(id);
+  if (group) return groupLabel(group.materialGroup) !== null;
   const pair = parseStaleOverrideKey(id);
   return pair !== null && isAssignedMaterial(pair.supplierId, pair.materialCode);
 };

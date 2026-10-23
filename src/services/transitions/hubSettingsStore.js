@@ -31,10 +31,12 @@
 
 /** @import { ActorAttribution } from '@lib/enforcement' */
 import { asActorAttribution } from '@lib/enforcement';
-/** @import { HubSettingKey, HubSettingSection, HubSettingState, HubSettingValue, NumericSettingKey } from './hubSettings' */
+/** @import { GroupOverridableKey, HubSettingKey, HubSettingSection, HubSettingState, HubSettingValue, NumericSettingKey } from './hubSettings' */
 import {
   DEFAULT_SETTING_STATE,
   defaultOfKey,
+  effectiveIn,
+  groupOverrideKey,
   isAddressableSettingKey,
   sectionOfKey,
   settingRefusal,
@@ -326,15 +328,41 @@ export function staleOverrideFor(supplierId, materialCode) {
 }
 
 /**
- * REQ-E08-01 — the stale period (days) for one supplier × material, in force now.
- * @param {string} supplierId
- * @param {string} materialCode
+ * REQ-E08-05 BR-03 (owner, 2026-10-23) — the value in force for one material
+ * group: the group's override, else the global value. Without a group (or with
+ * a group that has no override) it is exactly the global value.
+ * @param {GroupOverridableKey} baseKey
+ * @param {string | null | undefined} materialGroup
  * @returns {number}
  */
-export function stalePeriodFor(supplierId, materialCode) {
+export function groupSetting(baseKey, materialGroup) {
+  return effectiveIn(hubSettingsStore.state(), baseKey, materialGroup);
+}
+
+/**
+ * The material group's own override of one value, or null when it has none.
+ * @param {GroupOverridableKey} baseKey
+ * @param {string | null | undefined} materialGroup
+ * @returns {number | null}
+ */
+export function groupOverrideFor(baseKey, materialGroup) {
+  if (!materialGroup) return null;
+  return hubSettingsStore.state().groupOverrides[groupOverrideKey(baseKey, materialGroup)] ?? null;
+}
+
+/**
+ * REQ-E08-01 — the stale period (days) for one supplier × material, in force
+ * now. Precedence: the supplier × material override (BL-32), then the
+ * material group's override, then the default stale period.
+ * @param {string} supplierId
+ * @param {string} materialCode
+ * @param {string | null} [materialGroup]
+ * @returns {number}
+ */
+export function stalePeriodFor(supplierId, materialCode, materialGroup) {
   const s = hubSettingsStore.state();
   return (
     s.staleOverrides[staleOverrideKey(supplierId, materialCode)] ??
-    /** @type {number} */ (s.values['stale.defaultDays'])
+    effectiveIn(s, 'stale.defaultDays', materialGroup)
   );
 }

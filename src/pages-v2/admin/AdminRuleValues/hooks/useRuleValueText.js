@@ -4,7 +4,11 @@
 import { useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 /** @import { HubSettingDef, HubSettingValue } from '@services/transitions/hubSettings' */
-import { formatMinutesOfDay, parseStaleOverrideKey } from '@services/transitions/hubSettings';
+import {
+  formatMinutesOfDay,
+  parseGroupOverrideKey,
+  parseStaleOverrideKey
+} from '@services/transitions/hubSettings';
 import { hubSettingsStore } from '@services/transitions/hubSettingsStore';
 
 /**
@@ -71,6 +75,8 @@ export function useKeyLabel() {
   return (key) => {
     const pair = parseStaleOverrideKey(key);
     if (pair) return `${t('adminSet.rule.REQ-E08-01')} · ${pair.supplierId} · ${pair.materialCode}`;
+    const group = parseGroupOverrideKey(key);
+    if (group) return `${t(`adminSet.groups.key.${group.baseKey}`)} · ${group.materialGroup}`;
     return t(`adminSet.key.${key}.label`);
   };
 }
