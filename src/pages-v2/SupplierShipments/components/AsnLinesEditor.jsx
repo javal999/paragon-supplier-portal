@@ -11,6 +11,7 @@ import MaterialSearch, {
 import { EMPTY_LINE } from '../../shipments/asnLines';
 import { ShelfLifeLineNote } from '../../shipments/ShelfLifeParts';
 import { inputClass, labelClass } from '../const';
+import { qty } from '../../callOffs/callOffDisplay';
 import BatchCell from './BatchCell';
 
 /**
@@ -79,7 +80,7 @@ const AsnLinesEditor = ({
                     />
                   </td>
                   <td className="py-1.5 pr-2 text-right whitespace-nowrap">
-                    <Data>{`${l.open.toLocaleString('en-US')} ${l.uom}`}</Data>
+                    <Data>{`${qty(l.open)} ${l.uom}`}</Data>
                   </td>
                   <td className="py-1.5 pr-2">
                     <input
