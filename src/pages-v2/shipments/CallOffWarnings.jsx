@@ -11,14 +11,15 @@ import { useTranslation } from 'react-i18next';
 /** @import { TFunction } from 'i18next' */
 import StatusPill from '@components/ui-v2/StatusPill';
 import { formatDate } from '@lib/format';
+import { qty } from '../callOffs/callOffDisplay';
 /** @import { ASN, CallOffWarning } from '@services/data/types' */
 /** @import { AsnLinesRead } from './asnLines' */
 
 /**
- * @param {number | undefined} v
+ * @param {number | null | undefined} v
  * @returns {string}
  */
-const n = (v) => (v ?? 0).toLocaleString('en-US');
+const n = (v) => qty(v ?? 0);
 
 /**
  * One call-off warning in words, with its figures (e.g. "1,200 vs 1,000 called off (+20%)").
@@ -110,9 +111,9 @@ export const AsnSubmitWarnings = ({ aboveAvailable, callOffWarnings, testId }) =
             <p key={l.line.materialCode}>
               {t('fc.asn.batch.aboveAvailable', {
                 material: l.line.materialCode,
-                qty: l.input.shippedQty.toLocaleString('en-US'),
+                qty: qty(l.input.shippedQty),
                 batch: l.input.batchNumber,
-                available: (l.aboveAvailable ?? 0).toLocaleString('en-US')
+                available: n(l.aboveAvailable)
               })}
             </p>
           ))}
