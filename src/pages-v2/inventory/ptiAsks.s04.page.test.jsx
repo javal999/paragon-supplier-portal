@@ -4,11 +4,13 @@ import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 import { inventoryCapacityEn, inventoryCapacityId } from '@lib/i18n/inventoryCapacity';
 import { supplierAskStore } from '@services/data/mock/stores/supplierAskStore';
 import { sdcClock } from '@services/sdc';
+import i18n from '@lib/i18n';
 import SupplierInventory from '../SupplierInventory';
 import SupplierHome from '../SupplierHome';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Inventory UX S-04 (INV-D9) — "PTI is asking about N of your materials", on
+// Inventory UX S-04 (INV-D9) — "PTI has N questions for you" (BL-227: an ask
+// may name a planning group and week, not a material, so it counts questions), on
 // the real supplier To do and Stock page with the sample asks (sup-007).
 //
 //   · the block sits above the To do lanes (RFX-D20 keeps the lanes) and,
@@ -36,7 +38,7 @@ describe('S-04 · the block on the supplier To do', () => {
   it('sits above the lanes, says how many, High first, each line with its ask', async () => {
     renderWithProviders(<SupplierHome />, { identity: SUPPLIER });
     const title = await screen.findByTestId('pti-asks-title');
-    expect(title).toHaveTextContent('PTI is asking about 2 of your materials');
+    expect(title).toHaveTextContent('PTI has 2 questions for you');
     const block = screen.getByTestId('pti-asks');
     const lanes = await screen.findByTestId('home-tasks');
     expect(before(block, lanes)).toBe(true);
@@ -74,9 +76,7 @@ describe('S-04 · the block on the supplier To do', () => {
     expect(send).not.toBeDisabled();
     fireEvent.click(send);
     await waitFor(() =>
-      expect(screen.getByTestId('pti-asks-title')).toHaveTextContent(
-        'PTI is asking about 1 of your materials'
-      )
+      expect(screen.getByTestId('pti-asks-title')).toHaveTextContent('PTI has 1 question for you')
     );
     const row = supplierAskStore.get('ask-0001');
     expect(row?.state).toBe('Answered');
@@ -109,11 +109,22 @@ describe('S-04 · the block on the supplier To do', () => {
   it('the copy has its Indonesian text', () => {
     expect(inventoryCapacityEn['supplierAsk.block.empty']).toBe('Nothing PTI is waiting on');
     expect(inventoryCapacityId['supplierAsk.block.title_other']).toBe(
-      'PTI bertanya tentang {{count}} material Anda'
+      'PTI punya {{count}} pertanyaan untuk Anda'
     );
     expect(inventoryCapacityId['supplierAsk.block.empty']).toBe(
       'Tidak ada yang sedang ditunggu PTI'
     );
+  });
+});
+
+describe('BL-227 · the title counts questions, not materials', () => {
+  it.each([
+    ['en', 1, 'PTI has 1 question for you'],
+    ['en', 3, 'PTI has 3 questions for you'],
+    ['id', 1, 'PTI punya 1 pertanyaan untuk Anda'],
+    ['id', 3, 'PTI punya 3 pertanyaan untuk Anda']
+  ])('%s, %i ask(s): "%s"', (lng, count, text) => {
+    expect(i18n.getFixedT(lng)('supplierAsk.block.title', { count })).toBe(text);
   });
 });
 

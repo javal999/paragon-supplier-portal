@@ -5,6 +5,7 @@ import { inventoryCapacityEn, inventoryCapacityId } from '@lib/i18n/inventoryCap
 import { inventoryDeclarationStore } from '@services/data/mock/stores/inventoryDeclarationStore';
 import { stockTemplateCsv } from '@services/transitions/inventoryRules';
 import { sdcClock } from '@services/sdc';
+import i18n from '@lib/i18n';
 import SupplierInventory from '../SupplierInventory';
 import SupplierHome from '../SupplierHome';
 
@@ -128,7 +129,7 @@ describe('S-03 · template result: blank rows are not errors (INV-D10)', () => {
     });
     const result = await screen.findByTestId('stock-upload-result');
     expect(within(result).getByTestId('stock-upload-sent')).toHaveTextContent(
-      /^Sent to PTI: PK-PETB-8801$/
+      /^Sent to PTI: PK-PETB-8801 \(45,000 PCS\)$/
     );
     const blank = within(result).getByTestId('stock-upload-blank');
     expect(blank).toHaveTextContent(/^2 rows left blank, not sent$/);
@@ -163,6 +164,46 @@ describe('S-03 · template result: blank rows are not errors (INV-D10)', () => {
     expect(refused).toHaveTextContent('PK-PETB-8801');
     expect(refused).toHaveTextContent('Stock on hand is required');
     expect(within(result).queryByTestId('stock-upload-refused-row-3')).toBeNull();
+  });
+
+  it('BL-224: each material sent shows its batch count and quantity', async () => {
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+    await screen.findByTestId('stock-upload-open');
+    const csv = [
+      'Material code,Stock on hand,Unit,In-production quantity,Batch number,Batch quantity',
+      'PK-PETB-8801,45000,PCS,0,B-1,20000',
+      'PK-PETB-8801,45000,PCS,0,B-2,25000',
+      'PK-PETB-8802,1200,PCS,0,,'
+    ].join('\n');
+    fireEvent.change(screen.getByTestId('stock-upload-file'), {
+      target: { files: [new File([csv], 's.csv', { type: 'text/csv' })] }
+    });
+    const result = await screen.findByTestId('stock-upload-result');
+    expect(within(result).getByTestId('stock-upload-sent')).toHaveTextContent(
+      /^Sent to PTI: PK-PETB-8801 \(2 batches, 45,000 PCS\), PK-PETB-8802 \(1,200 PCS\)$/
+    );
+  });
+
+  it('BL-224: in Indonesian, the batch count and the quantity in the Indonesian number format', async () => {
+    await i18n.changeLanguage('id');
+    try {
+      renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
+      await screen.findByTestId('stock-upload-open');
+      const csv = [
+        'Material code,Stock on hand,Unit,In-production quantity,Batch number,Batch quantity',
+        'PK-PETB-8801,45000,PCS,0,B-1,20000',
+        'PK-PETB-8801,45000,PCS,0,B-2,25000'
+      ].join('\n');
+      fireEvent.change(screen.getByTestId('stock-upload-file'), {
+        target: { files: [new File([csv], 's.csv', { type: 'text/csv' })] }
+      });
+      const result = await screen.findByTestId('stock-upload-result');
+      expect(within(result).getByTestId('stock-upload-sent')).toHaveTextContent(
+        /^Terkirim ke PTI: PK-PETB-8801 \(2 batch, 45\.000 PCS\)$/
+      );
+    } finally {
+      await i18n.changeLanguage('en');
+    }
   });
 
   it('the blank line in Indonesian', () => {
