@@ -1,6 +1,6 @@
 # Page split guide — frontend-standard Phase 5
 
-**Status:** started 2026-10-06; waves 1–9 merged by 2026-10-21. See "Where it stands" at the end.
+**Status:** started 2026-10-06; waves 1–11 done by 2026-10-22. See "Where it stands" at the end.
 **Applies to:** every page or feature component in `src/` over
 800 lines. Largest first, **one PR per page**. Phases 1–4 and 7 (the JavaScript conversion) are
 done; see `JS-CONVERSION-PLAYBOOK.md`.
@@ -129,27 +129,18 @@ Non-page files over 800 lines (`MockCommandService.js`, `commandHooks.js`, `type
 tables and fixtures) are out of scope: they are lists, not components, and splitting them buys
 nothing a reader needs.
 
-## Where it stands (2026-10-21)
+## Where it stands (2026-10-22)
 
-**Done.** Waves 1–9 are merged. Every page and feature component that was over 800 lines and is
-not listed below now lives in the folder shape. The last merge was MR !2 (GitLab), which split
-`BuyerInvoices` and `SupplierInvoices`. `react-hook-form` is in `SupplierRegistration` and
+**Done.** Waves 1–11 are merged or in review. Every page that was over 800 lines on 2026-10-21 now
+lives in the folder shape. Wave 10 (MR !27) split `BuyerCallOffs`, `BuyerCollaboration` and
+`SupplierDocuments`. Wave 11 split `SupplierOrders`, `BuyerOrders` and `SupplierCallOffs`, the last
+three held for the IA work. `react-hook-form` is in `SupplierRegistration` and
 `GRInspectionWizard` (MR !21). Before the conversion, 31 specs in
 `GRInspectionWizard.formStates.test.jsx` pinned the wizard's behaviour.
 
-**Held, and why.** These pages are still single files over 800 lines. The IA work
-(`ia/integration`) edits all six, and a split moves the whole file, so each one is split after
-that work is on `main`:
+**Left.**
 
-| Page | Lines (2026-10-21) | Edited by |
-|---|---|---|
-| `BuyerCallOffs` | 1,586 | `ia/lane-planner` (an earlier split, `refactor/split-buyer-call-offs`, is stale) |
-| `SupplierOrders` | 1,493 | `ia/lane-orders` |
-| `BuyerCollaboration` | 1,288 | `ia/lane-commitments-inventory` |
-| `SupplierDocuments` | 1,037 | `ia/lane-nav` |
-| `BuyerOrders` | 999 | `ia/lane-orders` |
-| `SupplierCallOffs` | 925 | `ia/lane-orders` |
-
-The `react-hook-form` conversion of `RfpCreateWizard` and `RfiCreateWizard` is held for the same
-reason: `feat/rfx-ux-wave2` and `ia/integration` both edit them.
-
+- `SupplierRfp.jsx` has grown past the line (967 lines on 2026-10-22) with the RFx UX waves. It
+  is split next, once no open branch edits it.
+- The `react-hook-form` conversion of `RfpCreateWizard` and `RfiCreateWizard`. The RFx and IA
+  branches that edited them are now on `main`, so they are no longer held.
