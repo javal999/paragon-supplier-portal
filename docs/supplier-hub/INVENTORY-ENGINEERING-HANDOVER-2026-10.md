@@ -38,7 +38,7 @@ Every decision below is binding unless the owner changes it. Full text: `DECISIO
 | ID | Decision |
 |---|---|
 | INV-D1 | CR-24 days of cover stay supplier stock ÷ demand, labelled "Supplier cover"; PTI cover is a second figure beside it; an alert about PTI stock states its own basis |
-| INV-D2 | Capacity stays one value per week on the 13-week grid, with "Copy to all weeks" (not built yet, section 9) |
+| INV-D2 | Capacity stays one value per week on the 13-week grid, with "Copy W36 to all weeks" per row (built 2026-10-23, `SupplierCapacity.jsx`) |
 | INV-D3 | The labelled sample row on Stock simulation stays until a seed pair reproduces the MR-7 worked example |
 | INV-D4 | One weekly status on the stock-update cutoff; no second deadline and no SOP link until BL-149 is answered |
 | INV-D5 | Alert next steps now; one card per supplier × material (P-04) waits for the rule list (BL-150) |
@@ -307,7 +307,6 @@ A refused verb returns `POLICY_REJECTED:<hook>:<reason>`. The screen translates 
 | SAP material feed | MRP controller, shelf life and material group are sample values | The feed from Master Data Management | BL-152 |
 | Distributor principal on a shipment | ETA fallback uses the distributor's shortest principal lead time | The leg's own principal | BL-158 |
 | Planning groups in SAP | Mastered in the hub | Agree with MDM (MAT-D12) | — |
-| "Copy to all weeks" on supplier Capacity | Not built | Build (INV-D2) | BL-65 |
 | Move demand | Not on Capacity | On the order plan (INV-D8) | — |
 | Polish | Listed, not built | Wave 2 wording and edge states; wave 1 leftovers; Call-offs quantity format; capacity grid polish; Risk page thresholds | BL-227, BL-224, BL-223, BL-186, BL-76 |
 | Sign-in | No named person | Named actor on every record | F1 |

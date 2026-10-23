@@ -75,6 +75,7 @@ import { combineWeeks, groupWeeksByMonth, weekHeaderDate } from '@lib/weekMonths
  * @property {(n: number) => string} [format] How a combined number is written; `formatNumber` by default.
  * @property {(value: any, month: WeekMonth) => React.ReactNode} [monthCell] Draws the combined value; for `status` it draws the worst status (the week count is added by the grid).
  * @property {React.ReactNode} [monthNote] A line under the label in Monthly only.
+ * @property {React.ReactNode} [action] INV-D2 (BL-65) — a control under the label in Weekly only (Monthly is read only, BR-05).
  */
 
 /**
@@ -436,6 +437,7 @@ const WeekGrid = ({
                       <span className="text-text-tertiary font-normal"> · {r.unit}</span>
                     ) : null}
                   </span>
+                  {!monthly && r.action ? <div className="mt-2">{r.action}</div> : null}
                   {monthly && r.monthNote ? (
                     <span
                       className="block mt-1 text-xs font-normal text-text-tertiary break-words"

@@ -108,9 +108,7 @@ Nothing blocks these.
 
 | ID | Item | Why | Size | Detail |
 |---|---|---|---|---|
-| BL-223 | The Call-offs page formats quantities with its own `qty` in `en-US` (`pages-v2/callOffs/callOffDisplay.jsx:230`), so Indonesian screens there still show "15,000 PCS"; the inventory screens use the locale-aware `formatNumber` since X-01 | Same ambiguity CR-18 refuses on entry | S | Found building X-01 (inventory UX wave 1, 2026-10-22) |
-| BL-224 | Inventory UX wave 1 leftovers: unused i18n keys `hub.home.task.sup.weeklyUpdate` and `matName.tab.stock`; the template upload result names the materials sent but not their quantities (S-03 proposal) | Cleanup and a small finish | S | Inventory UX wave 1 report (2026-10-22) |
-| BL-227 | Inventory UX wave 2 polish: the supplier block reads "PTI is asking about N of your materials" while a capacity ask names a planning group and week, not a material; the Ask supplier button keeps one label (the P-02/P-05 wording is a hint line); an accepted capacity week cannot be undone and stays "Accepted" if the week later turns red | Wording and edge states | S | Inventory UX wave 2 report (2026-10-22) |
+| BL-227 | Inventory UX wave 2 polish (block wording done 2026-10-23: "PTI has N questions for you"); left: the Ask supplier button keeps one label (the P-02/P-05 wording is a hint line); an accepted capacity week cannot be undone and stays "Accepted" if the week later turns red | Wording and edge states | S | Inventory UX wave 2 report (2026-10-22) |
 | BL-39 | Non-conformance and complaint tracking (E10.02), the part of Supplier Performance never detailed | Named in the deck as MVP, still a stub | M | Requirements section 6 |
 | BL-75 | Supplier new-invoice form takes one total, not an amount per line; a total that differs from its lines is checked under the strictest line rule | CR-12 is per line since BL-44 | S | REQ-E07-07 |
 | BL-76 | The Risk page uses its own day thresholds (under 30 red, under 50 amber) over sample categories with no supplier or material; align with CR-24 or retire it | Contradicts CR-02 / CR-24 | S | REQ-E08-05 |
@@ -162,7 +160,6 @@ Found while building the RFx UX evaluation (`research/RFX-UX-EVALUATION-2026-10.
 |---|---|---|---|---|---|
 | BL-213 | Read and unread state for the supplier bell; real counts on the PTI bell (it shows a fixed "3"); menu counts beyond RFI, RFQ and RFP | The supplier bell counts every award and withdrawal notice it has ever shown | S | Notification store (with BL-120) | Evaluation S-04 |
 | BL-214 | Response drafts kept on the server (the "Save draft" verb) and a "Discard draft" control | Autosave keeps the draft in this browser only, so it does not follow the supplier to another device; Cancel on the quote drawer keeps the draft with no way to drop it | M | Stage F backend | Evaluation S-01 |
-| BL-221 | Order the RFP and RFI Compare grid columns like the summary cards (best scored first) | The cards are ordered by score while the grid keeps the invitation order, so the same supplier sits in different positions | S | Nothing | RFX-D25 |
 
 ## 5. Other teams and later phases
 
@@ -189,9 +186,12 @@ Found while building the RFx UX evaluation (`research/RFX-UX-EVALUATION-2026-10.
 
 | ID | Item | Closed | By |
 |---|---|---|---|
+| BL-221 | RFP and RFI Compare grid columns in the summary cards' order | 2026-10-23 | Built on `feat/backlog-quickwins-1023`: the comparison, questions and indicative-price grids order suppliers with `rfpSummaryCards`/`rfiSummaryCards`; spec `rfx/rfxUx2G.test.jsx` (BL-221) |
+| BL-223 | Call-offs page quantities in the reader's language | 2026-10-23 | Built on `feat/backlog-quickwins-1023`: call-off `qty` re-exports the inventory `qty`; 13 sites on Call-offs and Shipments & ASN, plus Buyer shipments (was id-ID for all) and the GR tolerance note; specs `callOffs/callOffDisplay.qty.test.js`, `callOffQtyLocale.bl223.page.test.jsx` |
+| BL-224 | Inventory UX wave 1 leftovers | 2026-10-23 | Built on `feat/backlog-quickwins-1023`: unused keys removed; the upload result shows batch count and quantity per material; spec `inventory/stockPageUx.page.test.jsx` |
 | BL-225 | Capacity alert after PTI accepts additional capacity | 2026-10-22 | Owner decision INV-D12: an accepted amber week stops counting, a red week always counts, the alert clears once every gap week is accepted; built on `feat/inv-ux-wave2` (`alertGapWeeks`, spec in `inventoryAlertRules.test.js`) |
 | BL-226 | May PTI accept additional capacity before the supplier confirms it | 2026-10-22 | Owner decision INV-D13: yes, as built in wave 2 |
-| BL-65 | Capacity entry: one number with overrides, or per week | 2026-10-22 | Owner decision INV-D2: per week on the 13-week grid, plus "Copy to all weeks" (evaluation S-05); build pending |
+| BL-65 | Capacity entry: one number with overrides, or per week | 2026-10-22 | Owner decision INV-D2: per week on the 13-week grid, plus "Copy to all weeks" (evaluation S-05); "Copy W36 to all weeks" built 2026-10-23 on `feat/backlog-quickwins-1023` (spec `capacityCopyWeeks.invd2.page.test.jsx`) |
 | BL-68 | Days of cover in CR-24: supplier stock or PTI stock | 2026-10-22 | Owner decision INV-D1: supplier stock ÷ demand, labelled "Supplier cover", PTI cover shown beside it (evaluation P-08); built in inventory UX wave 1 (`MaterialDrawer.jsx`, MR !28) |
 | BL-144 | Who may change a supplier's stock update mode | 2026-10-22 | Owner decision INV-D6: the administrator lane keeps `supplier:set-update-mode`; Inventory shows the current mode with a link to the admin page (evaluation P-14); built in the material drawer, inventory UX wave 1 (MR !28) |
 | BL-148 | Stock simulation sample row: keep or remove | 2026-10-22 | Owner decision INV-D3: keep the labelled row until a seed pair reproduces the MR-7 worked example, then remove it in that change |

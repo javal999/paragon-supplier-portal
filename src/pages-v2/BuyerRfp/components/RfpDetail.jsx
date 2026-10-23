@@ -295,7 +295,7 @@ const RfpDetail = ({
                   <RfpPricingComparison
                     request={open.pricing}
                     currency={open.currency}
-                    responses={open.responses}
+                    responses={cards.map((c) => c.response)}
                     testId={`rfp-pricing-${open.id}`}
                     firmPrices={firmPrices}
                     markLowest

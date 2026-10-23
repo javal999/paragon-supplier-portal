@@ -4,6 +4,7 @@ import Data from '@components/ui-v2/Data';
 /** @import { ASN } from '@services/data/types' */
 import { callOffWarningText } from '../../shipments/CallOffWarnings';
 import { fmtDate } from '../utils';
+import { qty } from '../../callOffs/callOffDisplay';
 
 /**
  * The expanded ASN's shipment-details card: origin, warehouse, cartons,
@@ -27,13 +28,11 @@ const AsnDetailFacts = ({ asn }) => {
         <dd className="text-text-primary">{asn.details.destinationWarehouse}</dd>
         <dt className="text-text-tertiary">{t('supplierShipments.detail.totalCartons')}</dt>
         <dd className="text-text-primary">
-          <Data>{asn.details.totalCartons ? asn.details.totalCartons.toLocaleString() : '—'}</Data>
+          <Data>{asn.details.totalCartons ? qty(asn.details.totalCartons) : '—'}</Data>
         </dd>
         <dt className="text-text-tertiary">{t('supplierShipments.detail.grossWeight')}</dt>
         <dd className="text-text-primary">
-          <Data>
-            {asn.details.grossWeightKg ? `${asn.details.grossWeightKg.toLocaleString()} kg` : '—'}
-          </Data>
+          <Data>{asn.details.grossWeightKg ? `${qty(asn.details.grossWeightKg)} kg` : '—'}</Data>
         </dd>
         <dt className="text-text-tertiary">{t('supplierShipments.detail.temperature')}</dt>
         {/* i18n-defer: mock/sample data (temperature requirement) */}

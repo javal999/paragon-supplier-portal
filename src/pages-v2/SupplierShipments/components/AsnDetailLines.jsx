@@ -5,6 +5,7 @@ import Data from '@components/ui-v2/Data';
 import { PicCell, PicHeader } from '../../materials/picDisplay';
 import { BlockedStockMarker, approvedIntoBlockedStock } from '../../shipments/ShelfLifeParts';
 import { fmtDate } from '../utils';
+import { qty } from '../../callOffs/callOffDisplay';
 
 /**
  * The expanded ASN's line-items card: material, PIC, ordered and shipped
@@ -58,12 +59,12 @@ const AsnDetailLines = ({ asn }) => {
                     />
                   </td>
                   <td className="py-1.5 text-right text-text-secondary">
-                    <Data>{li.orderedQty.toLocaleString()}</Data>
+                    <Data>{qty(li.orderedQty)}</Data>
                   </td>
                   <td
                     className={`py-1.5 text-right font-semibold ${short ? 'text-warning-hover' : 'text-text-primary'}`}
                   >
-                    <Data>{li.shippedQty.toLocaleString()}</Data>
+                    <Data>{qty(li.shippedQty)}</Data>
                   </td>
                   <td className="py-1.5 text-right text-text-tertiary">
                     <Data>{li.lotNumber}</Data>

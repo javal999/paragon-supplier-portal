@@ -6,6 +6,7 @@ import Data from '@components/ui-v2/Data';
 import { openLinesFor } from '../../shipments/asnLines';
 import { poLineQuantityText } from '../../orders/poLineQuantity';
 import { fmtDate, poSelection } from '../utils';
+import { qty } from '../../callOffs/callOffDisplay';
 
 /**
  * One shippable PO as a pressable card at wizard step 1. Picking it seeds the
@@ -45,8 +46,7 @@ const WizardPoCard = ({ po, asns, selected, updateForm }) => {
             <Data>{fmtDate(po.requestedDeliveryDate)}</Data>
           </div>
           <div className="text-xs text-text-tertiary">
-            {t('fc.asn.select.open')}{' '}
-            <Data>{mat ? `${openTotal.toLocaleString()} ${mat.uom}` : '—'}</Data>
+            {t('fc.asn.select.open')} <Data>{mat ? `${qty(openTotal)} ${mat.uom}` : '—'}</Data>
           </div>
         </div>
       </div>

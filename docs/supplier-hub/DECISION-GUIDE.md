@@ -430,6 +430,8 @@ The owner accepted every recommendation on the open questions of the Inventory &
 
 **What would change this.** If no group gets an override within a quarter of go-live, retire the per-group section to keep one set of numbers.
 
+**INV-D2 built (2026-10-23).** "Copy W36 to all weeks" on the supplier's capacity rows; reasons are never copied.
+
 **INV-D11 built (2026-10-23).** The supplier's Stock page says "PTI stopped sharing its stock with you on <date>" after a full removal; narrowing to fewer materials shows nothing.
 
 ---

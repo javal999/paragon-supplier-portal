@@ -223,7 +223,7 @@ describe('Supplier Stock (REQ-E08-01 SUP, REQ-E08-02, REQ-E08-03)', () => {
     fireEvent.change(screen.getByTestId('stock-upload-file'), { target: { files: [file] } });
     const result = await screen.findByTestId('stock-upload-result');
     expect(within(result).getByTestId('stock-upload-sent')).toHaveTextContent(
-      /^Sent to PTI: PK-CAPF-8820$/
+      /^Sent to PTI: PK-CAPF-8820 \(50,000 PCS\)$/
     );
     expect(within(result).getByTestId('stock-upload-refused-row-3')).toHaveTextContent(
       'This material is not assigned to you'
@@ -418,7 +418,7 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
     });
     const result = await screen.findByTestId('stock-upload-result');
     expect(within(result).getByTestId('stock-upload-sent')).toHaveTextContent(
-      /^Sent to PTI: PK-PETB-8802$/
+      /^Sent to PTI: PK-PETB-8802 \(300 PCS\)$/
     );
     expect(within(result).getByTestId('stock-upload-refused-row-2')).toHaveTextContent(
       'The in-production quantity is above 0, so the expected production completion date is required'
@@ -463,7 +463,7 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
     });
     const result = await screen.findByTestId('stock-upload-result');
     expect(within(result).getByTestId('stock-upload-sent')).toHaveTextContent(
-      /^Sent to PTI: PK-CAPF-8820$/
+      /^Sent to PTI: PK-CAPF-8820 \(1 batch, 300 PCS\)$/
     );
     expect(within(result).getByTestId('stock-upload-refused-row-3')).toHaveTextContent(
       'The manufacturing date is in the future'
