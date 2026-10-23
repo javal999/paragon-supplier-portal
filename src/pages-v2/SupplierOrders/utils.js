@@ -1,6 +1,7 @@
 /** @import { PoLineResponse, PurchaseOrder } from '@services/data/types' */
 /** @import { CounterOfferRefusal } from '@services/transitions/policies' */
 /** @import { AdjustDraft, TabKey } from './const' */
+import { formatDate, formatIDR } from '@lib/format';
 import { userVerbsFrom } from '@services/transitions';
 import { confirmedQtyWithinBounds, counterOfferRefusal } from '@services/transitions/policies';
 import { readConfirmedQty, readConfirmedQuantities } from '../orders/poConfirmModel';
@@ -10,30 +11,22 @@ import { ACTION_STATUSES, COMPLETED_STATUSES, PROGRESS_STATUSES } from './const'
 // by the Phase 5 page split (no behaviour change).
 
 /**
- * Short IDR amount for KPI tiles, table cells and Key Facts (billions as `M`,
- * millions as `jT`, smaller amounts in full).
+ * Short IDR amount for KPI tiles, table cells and Key Facts, through the shared
+ * compact scale: a billion is "B" in English and "M" (miliar) in Indonesian;
+ * millions are "jt" in both (BL-83). It used to write "M" in English too, where
+ * it reads as million.
  * @param {number} v
  * @returns {string}
  */
-export const fmtIDR = (v) => {
-  if (v >= 1_000_000_000) return `Rp ${(v / 1_000_000_000).toFixed(1)}M`;
-  if (v >= 1_000_000) return `Rp ${Math.round(v / 1_000_000)}jT`;
-  return `Rp ${v.toLocaleString()}`;
-};
+export const fmtIDR = (v) => formatIDR(v, { compact: true });
 
 /**
- * A date as `DD Mon YYYY`, or an em dash when there is none.
+ * A date as `DD Mon YYYY` in the UI language ("31 Agu 2026" in Indonesian), or
+ * an em dash when there is none.
  * @param {string} s
  * @returns {string}
  */
-export const fmtDate = (s) => {
-  if (!s) return '—';
-  return new Date(s).toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  });
-};
+export const fmtDate = (s) => formatDate(s);
 
 /**
  * The POs a sub-tab shows: the action, progress or completed status group, or
