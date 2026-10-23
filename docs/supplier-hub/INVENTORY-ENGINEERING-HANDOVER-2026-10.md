@@ -308,7 +308,7 @@ A refused verb returns `POLICY_REJECTED:<hook>:<reason>`. The screen translates 
 | Distributor principal on a shipment | ETA fallback uses the distributor's shortest principal lead time | The leg's own principal | BL-158 |
 | Planning groups in SAP | Mastered in the hub | Agree with MDM (MAT-D12) | — |
 | Move demand | Not on Capacity | On the order plan (INV-D8) | — |
-| Polish | Listed, not built | Wave 2 wording and edge states; wave 1 leftovers; Call-offs quantity format; capacity grid polish; Risk page thresholds | BL-227, BL-224, BL-223, BL-186, BL-76 |
+| Polish | Mostly built 2026-10-23 (BL-221, BL-223, BL-224, BL-227 wording; MR !36); left: capacity accept undo and the Ask supplier label (BL-227) | Wave 2 wording and edge states; wave 1 leftovers; Call-offs quantity format; capacity grid polish; Risk page thresholds | BL-227, BL-224, BL-223, BL-186, BL-76 |
 | Sign-in | No named person | Named actor on every record | F1 |
 
 ---
@@ -341,7 +341,7 @@ Built as recommended; the owner may change any of them.
 | Area | Call | Recommendation |
 |---|---|---|
 | Capacity decision | An accepted week cannot be undone and stays "Accepted" if the week later turns red | Keep until a planner needs to undo; then add a withdraw verb (BL-227) |
-| Supplier To do | The block reads "PTI is asking about N of your materials" while a capacity ask names a planning group and week | Reword to "N questions" (BL-227) |
+| Supplier To do | The block reads "PTI has N questions for you" (BL-227 wording, built 2026-10-23) | Done |
 | Ask supplier | The button keeps one label; the per-surface wording is a hint line | Keep (BL-227) |
 | Alerts | Grouped per supplier; one card per supplier × material waits for the rule list | Keep until BL-150 (INV-D5) |
 | Supplier access | Remove acts at once, with no confirmation (P-13) | Add a confirmation in the Minor findings build |

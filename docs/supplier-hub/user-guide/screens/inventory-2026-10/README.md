@@ -1,6 +1,6 @@
 # Inventory & Capacity screens, October 2026
 
-Screenshots of `main` at 71aaa3d6 (Inventory & Capacity UX waves 1 and 2), taken at 1440 × 900 on the local build with the hub clock at 31 Aug 2026. They are the figures in section 4 of the URS ("URS & RNI Form - PTI Supplier Hub.docx") and illustrate `INVENTORY-ENGINEERING-HANDOVER-2026-10.md`.
+Screenshots of `main` at 71aaa3d6 (Inventory & Capacity UX waves 1 and 2); 4.2-1, 4.4-3 and 4.5-2 retaken on 93397234 (23 Oct 2026, quick wins), taken at 1440 × 900 on the local build with the hub clock at 31 Aug 2026. They are the figures in section 4 of the URS ("URS & RNI Form - PTI Supplier Hub.docx") and illustrate `INVENTORY-ENGINEERING-HANDOVER-2026-10.md`.
 
 | File | Figure | Persona | Route | Shows |
 |---|---|---|---|---|
@@ -11,6 +11,6 @@ Screenshots of `main` at 71aaa3d6 (Inventory & Capacity UX waves 1 and 2), taken
 | `4.3-1-supplier-access.jpg` | 4.3-1 | PTI | `/buyer/supplier-access` | Grant, change or remove PTI stock access |
 | `4.4-1-pti-capacity.jpg` | 4.4-1 | PTI | `/buyer/capacity` | Weekly capacity per supplier and planning group |
 | `4.4-2-pti-capacity-decision.jpg` | 4.4-2 | PTI | `/buyer/capacity` | PTI's decision row: red week still short, open ask |
-| `4.4-3-supplier-capacity.jpg` | 4.4-3 | Supplier (sup-007) | `/supplier/capacity` | Weekly capacity, additional capacity, reason |
+| `4.4-3-supplier-capacity.jpg` | 4.4-3 | Supplier (sup-007) | `/supplier/capacity` | Weekly capacity, additional capacity, reason, "Copy W36 to all weeks" |
 | `4.5-1-pti-alerts.jpg` | 4.5-1 | PTI | `/buyer/alerts` | Impact in days, next step and actions per alert |
-| `4.5-2-supplier-asks.jpg` | 4.5-2 | Supplier (sup-007) | `/supplier/home` | "PTI is asking about 2 of your materials" |
+| `4.5-2-supplier-asks.jpg` | 4.5-2 | Supplier (sup-007) | `/supplier/home` | "PTI has 2 questions for you" |
