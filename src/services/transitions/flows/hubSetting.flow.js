@@ -12,8 +12,12 @@
 //     value recorded cannot disagree and every audit event names it.
 //     `readState` answers `Maintained` for a key in the registry
 //     (`hubSettings.js`) or a well-formed override of an assigned supplier ×
-//     material, and `null` for anything else — a key nobody defined is
-//     NOT_FOUND, never a silently created setting.
+//     material, or an override for a declared material group
+//     (`bands.criticalBelowDays@MG-20`, REQ-E08-05 BR-03, owner 2026-10-23),
+//     and `null` for anything else — a key nobody defined is NOT_FOUND, never
+//     a silently created setting. A group override is a SCOPED KEY on this
+//     verb, not a second verb: same shape (a key and a number), same
+//     authority, same ledger.
 //   · `applyTransition` APPENDS a change. `previous` and `setAt` are
 //     store-assigned, never payload fields; `setBy` comes from the session.
 //   · "RESET TO DEFAULT" IS NOT A SECOND VERB. It is this verb writing the

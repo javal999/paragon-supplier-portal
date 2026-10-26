@@ -4,6 +4,7 @@ import { isConfirmedAndAccepted } from '@services/transitions/callOffRules';
 /** @import { ASN, CallOff, PurchaseOrder } from '@services/data/types' */
 /** @import { AsnForm } from '../const' */
 import { fmtDate } from '../utils';
+import { qty } from '../../callOffs/callOffDisplay';
 import CallOffFinalToggle from './CallOffFinalToggle';
 import WizardPoCard from './WizardPoCard';
 
@@ -50,7 +51,7 @@ const WizardSelectStep = ({ shippablePos, asns, form, updateForm, selectedPO, ca
               .filter((c) => c.poId === selectedPO.id && isConfirmedAndAccepted(c))
               .map((c) => (
                 <option key={c.id} value={c.id}>
-                  {`${c.callOffNumber} · ${c.quantity.toLocaleString()} ${c.uom} · ${fmtDate(c.needDate)}`}
+                  {`${c.callOffNumber} · ${qty(c.quantity)} ${c.uom} · ${fmtDate(c.needDate)}`}
                 </option>
               ))}
           </select>

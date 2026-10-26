@@ -332,7 +332,39 @@ export const adminSettingsEn = {
   'adminSet.stale.form.emptyHint': "Leave empty to follow the supplier's update mode.",
   'adminSet.stale.toast.set': '{{pair}}: stock is now out of date after {{value}}.',
   'adminSet.stale.toast.removed': "{{pair}} now follows its supplier's update mode.",
-  'adminSet.stale.pair': '{{supplier}} · {{material}}'
+  'adminSet.stale.pair': '{{supplier}} · {{material}}',
+  'adminSet.stale.source.group': 'Material group {{group}}',
+
+  // ── Per material group (REQ-E08-05 BR-03, owner 2026-10-23) ─────────────
+  'adminSet.groups.title': 'Per material group',
+  'adminSet.groups.intro':
+    'A material group can have its own risk multiples, fallback day bands and stale periods. A value the group does not set follows the global value above. A supplier and material with its own stale period keeps it.',
+  'adminSet.groups.empty':
+    'No material group has its own values. Every group follows the global values.',
+  'adminSet.groups.form.title': 'Set a value for one material group',
+  'adminSet.groups.form.group': 'Material group',
+  'adminSet.groups.form.pickGroup': 'Choose a material group',
+  'adminSet.groups.form.key': 'Value',
+  'adminSet.groups.form.pickKey': 'Choose a value',
+  'adminSet.groups.form.value': 'Group value',
+  'adminSet.groups.form.emptyHint': 'Leave empty to follow the global value ({{global}}).',
+  'adminSet.groups.form.submit': 'Record group value',
+  'adminSet.groups.col.group': 'Material group',
+  'adminSet.groups.col.value': 'Value',
+  'adminSet.groups.col.override': 'Group value',
+  'adminSet.groups.col.global': 'Global value',
+  'adminSet.groups.action.edit': 'Edit',
+  'adminSet.groups.action.clear': 'Clear',
+  'adminSet.groups.toast.set': '{{group}}: {{label}} is now {{value}}.',
+  'adminSet.groups.toast.cleared': '{{group}}: {{label}} now follows the global value.',
+  'adminSet.groups.key.risk.highBelowMultiple': 'High risk below this multiple of the lead time',
+  'adminSet.groups.key.risk.mediumBelowMultiple':
+    'Medium risk below this multiple of the lead time',
+  'adminSet.groups.key.bands.criticalBelowDays': 'Critical below (days, no lead time on record)',
+  'adminSet.groups.key.bands.warningBelowDays': 'Warning below (days, no lead time on record)',
+  'adminSet.groups.key.bands.healthyUpToDays': 'Healthy up to (days, no lead time on record)',
+  'adminSet.groups.key.stale.defaultDays': 'Stale period for manual suppliers',
+  'adminSet.groups.key.stale.apiHours': 'Stale period for system-connected suppliers'
 };
 
 /** @type {Record<string, string>} */
@@ -663,5 +695,39 @@ export const adminSettingsId = {
   'adminSet.stale.form.emptyHint': 'Kosongkan untuk mengikuti mode pembaruan pemasok.',
   'adminSet.stale.toast.set': '{{pair}}: stok kini usang setelah {{value}}.',
   'adminSet.stale.toast.removed': '{{pair}} kini mengikuti mode pembaruan pemasoknya.',
-  'adminSet.stale.pair': '{{supplier}} · {{material}}'
+  'adminSet.stale.pair': '{{supplier}} · {{material}}',
+  'adminSet.stale.source.group': 'Kelompok material {{group}}',
+
+  // ── Per kelompok material (REQ-E08-05 BR-03, pemilik 2026-10-23) ────────
+  'adminSet.groups.title': 'Per kelompok material',
+  'adminSet.groups.intro':
+    'Kelompok material dapat memiliki kelipatan risiko, pita hari cadangan, dan periode data usang sendiri. Nilai yang tidak diatur kelompok mengikuti nilai global di atas. Pasangan pemasok dan material yang punya periode data usang sendiri tetap memakainya.',
+  'adminSet.groups.empty':
+    'Belum ada kelompok material dengan nilai sendiri. Setiap kelompok mengikuti nilai global.',
+  'adminSet.groups.form.title': 'Atur nilai untuk satu kelompok material',
+  'adminSet.groups.form.group': 'Kelompok material',
+  'adminSet.groups.form.pickGroup': 'Pilih kelompok material',
+  'adminSet.groups.form.key': 'Nilai',
+  'adminSet.groups.form.pickKey': 'Pilih nilai',
+  'adminSet.groups.form.value': 'Nilai kelompok',
+  'adminSet.groups.form.emptyHint': 'Kosongkan untuk mengikuti nilai global ({{global}}).',
+  'adminSet.groups.form.submit': 'Catat nilai kelompok',
+  'adminSet.groups.col.group': 'Kelompok material',
+  'adminSet.groups.col.value': 'Nilai',
+  'adminSet.groups.col.override': 'Nilai kelompok',
+  'adminSet.groups.col.global': 'Nilai global',
+  'adminSet.groups.action.edit': 'Ubah',
+  'adminSet.groups.action.clear': 'Hapus',
+  'adminSet.groups.toast.set': '{{group}}: {{label}} kini {{value}}.',
+  'adminSet.groups.toast.cleared': '{{group}}: {{label}} kini mengikuti nilai global.',
+  'adminSet.groups.key.risk.highBelowMultiple': 'Risiko tinggi di bawah kelipatan waktu tunggu ini',
+  'adminSet.groups.key.risk.mediumBelowMultiple':
+    'Risiko sedang di bawah kelipatan waktu tunggu ini',
+  'adminSet.groups.key.bands.criticalBelowDays':
+    'Kritis di bawah (hari, tanpa waktu tunggu tercatat)',
+  'adminSet.groups.key.bands.warningBelowDays':
+    'Waspada di bawah (hari, tanpa waktu tunggu tercatat)',
+  'adminSet.groups.key.bands.healthyUpToDays': 'Sehat sampai (hari, tanpa waktu tunggu tercatat)',
+  'adminSet.groups.key.stale.defaultDays': 'Periode data usang untuk pemasok manual',
+  'adminSet.groups.key.stale.apiHours': 'Periode data usang untuk pemasok yang terhubung sistem'
 };

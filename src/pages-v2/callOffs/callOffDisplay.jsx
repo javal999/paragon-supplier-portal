@@ -9,6 +9,7 @@ import { formatDate } from '@lib/format';
 /** @import { CallOffConfirmation } from '@services/data/types' */
 import { sdcClock } from '@services/sdc';
 import { normalizeQty } from '@lib/localeNumber';
+import { qty } from '../inventory/inventoryDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Call-off status pills and the shared read (REQ-E09-03, REQ-E09-04). Both the
@@ -225,10 +226,9 @@ export function useCallOffViews() {
   };
 }
 
-/** @param {number} n */
-export function qty(n) {
-  return n.toLocaleString('en-US');
-}
+// A quantity in the reader's locale (X-01, BL-223): the inventory helper, not a
+// second copy. "15,000" in English, "15.000" in Indonesian, at most two decimals.
+export { qty };
 
 export const inputClass =
   'w-full px-3 py-2 text-sm text-text-primary bg-white border border-border-input rounded-md focus:outline-none focus:border-action';

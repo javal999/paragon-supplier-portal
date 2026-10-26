@@ -20,7 +20,7 @@ import { AnswerValue, IndicativePill, authored, sectionTitle } from './rfxAuthor
 import { SupplierDocumentsPanel } from './SupplierDocumentsPanel';
 import { AnswersBySection } from './RfxProposalViews';
 import { GridFilterToggle, SummaryCard, SupplierStepper, VersionHistory } from './RfxEventTabs';
-import { answersDiffer } from './rfxCompare';
+import { answersDiffer, rfiSummaryCards } from './rfxCompare';
 
 /**
  * The Compare tab's summary strip for an RFI.
@@ -68,7 +68,10 @@ export const RfiAnswersGrid = ({ event }) => {
   const { t } = useTranslation();
   const [onlyDiffer, setOnlyDiffer] = useState(false);
   const [collapsed, setCollapsed] = useState(/** @type {ReadonlySet<string>} */ (new Set()));
-  const cols = event.responses.length + 1;
+  // BL-221 — the supplier columns in the summary cards' order (highest score
+  // first, unscored after in read order), so a supplier sits in one place.
+  const responses = rfiSummaryCards(event).map((c) => c.response);
+  const cols = responses.length + 1;
   const stickyTh =
     'sticky top-0 z-10 bg-bg-hover text-left text-label text-text-tertiary uppercase py-3 px-4 align-bottom';
   /** @param {string} id */
@@ -86,7 +89,7 @@ export const RfiAnswersGrid = ({ event }) => {
           label={t('rfx.rfi.cmp.onlyDiffer')}
           checked={onlyDiffer}
           onChange={setOnlyDiffer}
-          {...(event.responses.length < 2 ? { disabledReason: t('rfx.rfi.cmp.needTwo') } : {})}
+          {...(responses.length < 2 ? { disabledReason: t('rfx.rfi.cmp.needTwo') } : {})}
           testId={`rfi-only-differ-${event.id}`}
         />
       </div>
@@ -97,7 +100,7 @@ export const RfiAnswersGrid = ({ event }) => {
               <th scope="col" className={stickyTh}>
                 {t('rfx.rfi.section')}
               </th>
-              {event.responses.map((r) => (
+              {responses.map((r) => (
                 <th key={r.id} scope="col" className={stickyTh}>
                   {r.supplierName}
                   <div className="text-xs font-normal normal-case text-text-tertiary">
@@ -111,10 +114,10 @@ export const RfiAnswersGrid = ({ event }) => {
           <tbody>
             {rfxSectionsOf(event.customSections).flatMap((section) => {
               const all = event.questions.filter((q) => q.sectionId === section.id);
-              const list = onlyDiffer ? all.filter((q) => answersDiffer(q, event.responses)) : all;
+              const list = onlyDiffer ? all.filter((q) => answersDiffer(q, responses)) : all;
               if (list.length === 0) return [];
               const open = !collapsed.has(section.id);
-              const differ = all.filter((q) => answersDiffer(q, event.responses)).length;
+              const differ = all.filter((q) => answersDiffer(q, responses)).length;
               return [
                 <tr
                   key={`section-${section.id}`}
@@ -151,7 +154,7 @@ export const RfiAnswersGrid = ({ event }) => {
                           )}
                           {q.type === 'priceRange' && <IndicativePill className="mt-1 ml-1" />}
                         </TableCell>
-                        {event.responses.map((r) => {
+                        {responses.map((r) => {
                           const answer = r.answers.find((a) => a.questionId === q.id);
                           return (
                             <TableCell

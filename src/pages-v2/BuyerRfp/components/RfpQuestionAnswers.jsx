@@ -7,6 +7,8 @@ import TableRow from '@components/ui-v2/TableRow';
 import TableCell from '@components/ui-v2/TableCell';
 import { rfxSectionsOf } from '@services/sourcing/rfxConfig';
 import { AnswerValue, authored, sectionTitle } from '../../rfx/rfxAuthoringDisplay';
+import { rfpScoringOf } from '../../rfx/rfpScoring';
+import { rfpSummaryCards } from '../../rfx/rfxCompare';
 
 /**
  * The RFP's questions section, answers side by side (submitted proposals only).
@@ -15,7 +17,9 @@ import { AnswerValue, authored, sectionTitle } from '../../rfx/rfxAuthoringDispl
  */
 const RfpQuestionAnswers = ({ event }) => {
   const { t } = useTranslation();
-  if (event.responses.length === 0) return null;
+  // BL-221 — supplier columns in the summary cards' order.
+  const responses = rfpSummaryCards(event, rfpScoringOf(event)).map((c) => c.response);
+  if (responses.length === 0) return null;
   return (
     <div
       className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto"
@@ -27,7 +31,7 @@ const RfpQuestionAnswers = ({ event }) => {
       <Table>
         <TableHeader>
           <TableHeaderCell>{t('rfx.rfi.section')}</TableHeaderCell>
-          {event.responses.map((r) => (
+          {responses.map((r) => (
             <TableHeaderCell key={r.id}>{r.supplierName}</TableHeaderCell>
           ))}
         </TableHeader>
@@ -41,7 +45,7 @@ const RfpQuestionAnswers = ({ event }) => {
                     <div className="text-xs text-text-tertiary">{sectionTitle(t, section)}</div>
                     <div className="text-sm text-text-primary">{authored(t, q.promptKey)}</div>
                   </TableCell>
-                  {event.responses.map((r) => (
+                  {responses.map((r) => (
                     <TableCell key={r.id} className="align-top text-sm">
                       <AnswerValue
                         q={q}

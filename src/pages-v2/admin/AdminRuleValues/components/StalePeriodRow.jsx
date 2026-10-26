@@ -9,8 +9,9 @@ import { formatDateTime } from '@lib/format';
 /** @import { InventoryPosition } from '@services/data/types' */
 /** @import { HubSettingDef, HubSettingValue } from '@services/transitions/hubSettings' */
 import { SEEDED_STALE_OVERRIDES, defaultOfKey } from '@services/transitions/hubSettings';
-import { staleApiHours } from '@services/transitions/inventoryConfig';
+import { groupStaleDaysFor, staleApiHours } from '@services/transitions/inventoryConfig';
 import { stockFreshness } from '@services/transitions/inventoryRules';
+import { groupOverrideFor } from '@services/transitions/hubSettingsStore';
 import { PullFailedNote } from '../../../inventory/inventoryDisplay';
 import { toInput } from '../utils';
 
@@ -48,6 +49,16 @@ const StalePeriodRow = ({
   const { t } = useTranslation();
   const freshness = stockFreshness(p, now);
   const seeded = SEEDED_STALE_OVERRIDES[key];
+  // REQ-E08-05 BR-03 — without a pair period, the material group's period for
+  // the supplier's update mode applies when the group has one.
+  const groupDays = p.apiConnected ? null : groupStaleDaysFor(p.materialGroup);
+  const groupHours = p.apiConnected ? groupOverrideFor('stale.apiHours', p.materialGroup) : null;
+  const source =
+    override !== null
+      ? 'adminSet.stale.source.override'
+      : groupDays !== null || groupHours !== null
+        ? 'adminSet.stale.source.group'
+        : 'adminSet.stale.source.default';
   return (
     <TableRow data-testid={`admin-set-stale-row-${p.supplierId}-${p.materialCode}`}>
       <TableCell className="text-sm">{p.supplierName}</TableCell>
@@ -63,16 +74,18 @@ const StalePeriodRow = ({
       >
         {override !== null ? (
           <Data>{valueText(daysDef, p.updateSla)}</Data>
+        ) : groupDays !== null ? (
+          <Data>{valueText(daysDef, groupDays)}</Data>
         ) : p.apiConnected ? (
           <span className="text-sm">
-            {t('adminSet.stale.byMode.api', { hours: staleApiHours() })}
+            {t('adminSet.stale.byMode.api', { hours: staleApiHours(p.materialGroup) })}
           </span>
         ) : (
           <span className="text-sm">{t('adminSet.stale.byMode.manual')}</span>
         )}
       </TableCell>
       <TableCell className="whitespace-nowrap text-sm">
-        {t(override === null ? 'adminSet.stale.source.default' : 'adminSet.stale.source.override')}
+        {t(source, { group: p.materialGroup })}
       </TableCell>
       <TableCell className="whitespace-nowrap">
         <Data>{p.lastUpdatedAt ? formatDateTime(p.lastUpdatedAt) : '—'}</Data>

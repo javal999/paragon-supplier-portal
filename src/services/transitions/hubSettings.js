@@ -784,6 +784,80 @@ export const SEEDED_STALE_OVERRIDES = Object.freeze({
   [staleOverrideKey('sup-007', 'PK-PETB-8802')]: 3
 });
 
+// ── Overrides per material group (REQ-E08-05 BR-03, owner 2026-10-23) ───────
+//
+// BR-03 as first written: "Alert thresholds and the stale period are
+// configurable by ADM, per material group." The owner ruled on 2026-10-23 to
+// build it that way. A material group (`MG-xx`, the material master's
+// `materialGroup`, the group every inventory position carries) may override:
+//   · the CR-24 multiples — High below N × lead time, Medium below M × lead time;
+//   · the CR-02 fallback day bands;
+//   · the stale period for a manual supplier (days) and for an API supplier (hours).
+// Keyed `<baseKey>@<materialGroup>`; the value is a number, or `null` for "no
+// override — the global value applies". The SAME verb (`t_setting_set`) writes
+// them, so who and when are on the record like any other change.
+//
+// ⚠️ **THE HIGH MULTIPLE HAS NO GLOBAL KEY.** Globally CR-24 says High is cover
+// below the lead time itself — a multiple of 1, which is the rule, not a value
+// anyone has changed. A group can move it; without an override it is 1.
+
+/** The global value a group's High multiple falls back to: CR-24's "below the lead time". */
+export const HIGH_BELOW_MULTIPLE_GLOBAL = 1;
+
+/**
+ * The definition a group override is checked against, per base key. The
+ * multiples are only bounded below by 0 here: whether High sits below Medium is
+ * the group's order rule, judged on the values that will be in force.
+ * @type {Readonly<Record<string, Pick<HubSettingDef, 'rule' | 'unit' | 'integer' | 'min' | 'max' | 'above'>>>}
+ */
+const GROUP_OVERRIDE_DEFS = Object.freeze({
+  'risk.highBelowMultiple': { rule: 'CR-24', unit: 'multiple', above: 0, max: 10 },
+  'risk.mediumBelowMultiple': { rule: 'CR-24', unit: 'multiple', above: 0, max: 10 },
+  'bands.criticalBelowDays': { rule: 'CR-02', unit: 'days', integer: true, min: 1, max: 365 },
+  'bands.warningBelowDays': { rule: 'CR-02', unit: 'days', integer: true, min: 1, max: 365 },
+  'bands.healthyUpToDays': { rule: 'CR-02', unit: 'days', integer: true, min: 1, max: 365 },
+  'stale.defaultDays': { rule: 'REQ-E08-01', unit: 'days', integer: true, min: 1, max: 365 },
+  'stale.apiHours': { rule: 'MR-1', unit: 'hours', integer: true, min: 1, max: 168 }
+});
+
+/** The base keys a material group can override, in page order. */
+export const GROUP_OVERRIDABLE_KEYS = Object.freeze(Object.keys(GROUP_OVERRIDE_DEFS));
+
+/** @typedef {'risk.highBelowMultiple' | 'risk.mediumBelowMultiple' | 'bands.criticalBelowDays' | 'bands.warningBelowDays' | 'bands.healthyUpToDays' | 'stale.defaultDays' | 'stale.apiHours'} GroupOverridableKey */
+
+const GROUP_OVERRIDE_KEY = /^([a-zA-Z.]+)@(MG-[0-9A-Z]+)$/;
+
+/**
+ * @param {string} baseKey
+ * @param {string} materialGroup
+ * @returns {string}
+ */
+export const groupOverrideKey = (baseKey, materialGroup) => `${baseKey}@${materialGroup}`;
+
+/**
+ * The base key and material group an override key names, or null when it is not one.
+ * @param {unknown} key
+ * @returns {{ baseKey: GroupOverridableKey; materialGroup: string } | null}
+ */
+export function parseGroupOverrideKey(key) {
+  if (typeof key !== 'string') return null;
+  const m = GROUP_OVERRIDE_KEY.exec(key);
+  if (!m || !Object.prototype.hasOwnProperty.call(GROUP_OVERRIDE_DEFS, m[1])) return null;
+  return { baseKey: /** @type {GroupOverridableKey} */ (m[1]), materialGroup: m[2] };
+}
+
+/**
+ * The unit and rule a key is shown with: a registry key's own, or — for a
+ * group override — its base key's.
+ * @param {string} key
+ * @returns {Pick<HubSettingDef, 'rule' | 'unit'> | undefined}
+ */
+export function settingDefOf(key) {
+  const g = parseGroupOverrideKey(key);
+  if (g) return GROUP_OVERRIDE_DEFS[g.baseKey];
+  return hubSettingDef(key);
+}
+
 // ── Times of day (unit `time`) ───────────────────────────────────────────────
 
 /**
@@ -821,7 +895,9 @@ export function parseTimeOfDay(text) {
  * @returns {key is string}
  */
 export const isAddressableSettingKey = (key) =>
-  isHubSettingKey(key) || parseStaleOverrideKey(key) !== null;
+  isHubSettingKey(key) ||
+  parseStaleOverrideKey(key) !== null ||
+  parseGroupOverrideKey(key) !== null;
 
 /**
  * Which page section a key's changes are shown in.
@@ -829,7 +905,7 @@ export const isAddressableSettingKey = (key) =>
  * @returns {HubSettingSection | null}
  */
 export function sectionOfKey(key) {
-  if (parseStaleOverrideKey(key)) return 'alerts';
+  if (parseStaleOverrideKey(key) || parseGroupOverrideKey(key)) return 'alerts';
   return hubSettingDef(key)?.section ?? null;
 }
 
@@ -842,21 +918,26 @@ export function defaultOfKey(key) {
   const def = hubSettingDef(key);
   if (def) return def.defaultValue;
   if (parseStaleOverrideKey(key)) return SEEDED_STALE_OVERRIDES[key] ?? null;
+  if (parseGroupOverrideKey(key)) return null;
   return undefined;
 }
 
-/** The value of every fixed key, and the override map, as one state. */
+/** The value of every fixed key, and the override maps, as one state. */
 /**
+ * `groupOverrides`:  Per material group, keyed `<baseKey>@<materialGroup>` (none shipped).
+ *
  * @typedef {{
  *   readonly values: Readonly<Record<string, number | boolean>>;
  *   readonly staleOverrides: Readonly<Record<string, number>>;
+ *   readonly groupOverrides: Readonly<Record<string, number>>;
  * }} HubSettingState
  */
 
 /** @type {HubSettingState} */
 export const DEFAULT_SETTING_STATE = Object.freeze({
   values: Object.freeze(Object.fromEntries(HUB_SETTINGS.map((d) => [d.key, d.defaultValue]))),
-  staleOverrides: SEEDED_STALE_OVERRIDES
+  staleOverrides: SEEDED_STALE_OVERRIDES,
+  groupOverrides: Object.freeze({})
 });
 
 /**
@@ -871,11 +952,17 @@ export function withSetting(state, key, value) {
     const staleOverrides = { ...state.staleOverrides };
     if (value === null) delete staleOverrides[key];
     else staleOverrides[key] = /** @type {number} */ (value);
-    return { values: state.values, staleOverrides };
+    return { ...state, staleOverrides };
+  }
+  if (parseGroupOverrideKey(key)) {
+    const groupOverrides = { ...state.groupOverrides };
+    if (value === null) delete groupOverrides[key];
+    else groupOverrides[key] = /** @type {number} */ (value);
+    return { ...state, groupOverrides };
   }
   return {
-    values: { ...state.values, [key]: /** @type {number | boolean} */ (value) },
-    staleOverrides: state.staleOverrides
+    ...state,
+    values: { ...state.values, [key]: /** @type {number | boolean} */ (value) }
   };
 }
 
@@ -887,7 +974,40 @@ export function withSetting(state, key, value) {
  */
 export function valueIn(state, key) {
   if (parseStaleOverrideKey(key)) return state.staleOverrides[key] ?? null;
+  if (parseGroupOverrideKey(key)) return state.groupOverrides?.[key] ?? null;
   return state.values[key];
+}
+
+/**
+ * The value in force for one material group: the group's override, else the
+ * global value (for the High multiple, CR-24's 1 × lead time). With no group,
+ * or a group with no override, it is exactly the global value.
+ * @param {HubSettingState} state
+ * @param {GroupOverridableKey} baseKey
+ * @param {string | null | undefined} materialGroup
+ * @returns {number}
+ */
+export function effectiveIn(state, baseKey, materialGroup) {
+  const own = materialGroup
+    ? state.groupOverrides?.[groupOverrideKey(baseKey, materialGroup)]
+    : undefined;
+  if (typeof own === 'number') return own;
+  if (baseKey === 'risk.highBelowMultiple') return HIGH_BELOW_MULTIPLE_GLOBAL;
+  return /** @type {number} */ (state.values[baseKey]);
+}
+
+/**
+ * The material groups that hold at least one override in a state, sorted.
+ * @param {HubSettingState} state
+ * @returns {string[]}
+ */
+export function groupsWithOverrides(state) {
+  const groups = new Set();
+  for (const k of Object.keys(state.groupOverrides ?? {})) {
+    const g = parseGroupOverrideKey(k);
+    if (g) groups.add(g.materialGroup);
+  }
+  return /** @type {string[]} */ ([...groups].sort());
 }
 
 // ── The rule a change must pass — the verb's policy AND the store's re-read ──
@@ -971,6 +1091,55 @@ const ORDER_RULES = [
 ];
 
 /**
+ * THE ORDER RULES PER MATERIAL GROUP, judged on the values IN FORCE for the
+ * group (its override, else the global value), so a group cannot end up with
+ * High at or above Medium, or with a band empty or inverted — whichever key
+ * moves, the group's own or the global one.
+ * @type {readonly { readonly keys: readonly GroupOverridableKey[]; readonly holds: (s: HubSettingState, g: string) => boolean; readonly says: (s: HubSettingState, g: string) => string; }[]}
+ */
+const GROUP_ORDER_RULES = [
+  {
+    keys: ['risk.highBelowMultiple', 'risk.mediumBelowMultiple'],
+    holds: (s, g) =>
+      effectiveIn(s, 'risk.highBelowMultiple', g) < effectiveIn(s, 'risk.mediumBelowMultiple', g),
+    says: (s, g) =>
+      `${g}: High must end below where Medium ends (High below ${effectiveIn(s, 'risk.highBelowMultiple', g)} × lead time, Medium below ${effectiveIn(s, 'risk.mediumBelowMultiple', g)} × lead time)`
+  },
+  {
+    keys: ['bands.criticalBelowDays', 'bands.warningBelowDays'],
+    holds: (s, g) =>
+      effectiveIn(s, 'bands.criticalBelowDays', g) < effectiveIn(s, 'bands.warningBelowDays', g),
+    says: (s, g) =>
+      `${g}: bands out of order: Critical must end below where Warning ends (Critical below ${effectiveIn(s, 'bands.criticalBelowDays', g)}, Warning below ${effectiveIn(s, 'bands.warningBelowDays', g)} days)`
+  },
+  {
+    keys: ['bands.warningBelowDays', 'bands.healthyUpToDays'],
+    holds: (s, g) =>
+      effectiveIn(s, 'bands.warningBelowDays', g) <= effectiveIn(s, 'bands.healthyUpToDays', g),
+    says: (s, g) =>
+      `${g}: bands out of order: Healthy would be empty (Warning below ${effectiveIn(s, 'bands.warningBelowDays', g)}, Healthy up to ${effectiveIn(s, 'bands.healthyUpToDays', g)} days)`
+  }
+];
+
+/**
+ * Why the state after a change breaks a group's order, or null. Only the
+ * rules that name `baseKey` are judged, for the groups given.
+ * @param {HubSettingState} next
+ * @param {string} baseKey
+ * @param {readonly string[]} groups
+ * @returns {string | null}
+ */
+function groupOrderRefusal(next, baseKey, groups) {
+  for (const g of groups) {
+    for (const rule of GROUP_ORDER_RULES) {
+      if (/** @type {readonly string[]} */ (rule.keys).includes(baseKey) && !rule.holds(next, g))
+        return `GROUP_OVERRIDE_ORDER: ${rule.says(next, g)}`;
+    }
+  }
+  return null;
+}
+
+/**
  * Why a number is outside a definition's bounds, or null.
  * @param {string} label
  * @param {number} value
@@ -1013,6 +1182,19 @@ export function settingRefusal(key, value, state) {
     }
     return boundsRefusal(key, value, { integer: true, ...STALE_OVERRIDE_BOUNDS });
   }
+  const group = parseGroupOverrideKey(key);
+  if (group) {
+    if (value === null) {
+      // Clearing falls back to the global value, which may itself break the order.
+      return groupOrderRefusal(withSetting(state, key, null), group.baseKey, [group.materialGroup]);
+    }
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      return `GROUP_OVERRIDE_VALUE_INVALID: ${key} must be a number or null (no override), got ${JSON.stringify(value)}`;
+    }
+    const bounds = boundsRefusal(key, value, GROUP_OVERRIDE_DEFS[group.baseKey]);
+    if (bounds) return `GROUP_OVERRIDE_VALUE_INVALID: ${bounds}`;
+    return groupOrderRefusal(withSetting(state, key, value), group.baseKey, [group.materialGroup]);
+  }
   const def = /** @type {NonNullable<ReturnType<typeof hubSettingDef>>} */ (hubSettingDef(key));
   if (def.unit === 'boolean') {
     return typeof value === 'boolean'
@@ -1029,5 +1211,7 @@ export function settingRefusal(key, value, state) {
     if (/** @type {readonly string[]} */ (rule.keys).includes(key) && !rule.holds(next))
       return `${key}: ${rule.says(next)}`;
   }
-  return null;
+  // A global value every group without its own override follows: it may not
+  // break the order of a group that overrides the other end.
+  return groupOrderRefusal(next, key, groupsWithOverrides(next));
 }

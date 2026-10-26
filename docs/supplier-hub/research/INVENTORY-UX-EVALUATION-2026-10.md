@@ -362,6 +362,6 @@ Scope ruled 2026-10-22: the 13 Major findings except P-04 (waits for BL-150, INV
 | S-02 | Built | 1 (1C) | `stockPageUx.page.test.jsx` (S-02); `weeklyUpdate.page.test.jsx` |
 | S-03 | Built | 1 (1C) | `stockPageUx.page.test.jsx` (S-03); `services/transitions/inventoryRules.test.js` |
 | S-04 | Built (the hub ask, INV-D9) | 2 (2A) | `services/data/mock/supplierAsk.test.js`; `pages-v2/inventory/ptiAsks.s04.page.test.jsx`; `AskSupplierButton.page.test.jsx` |
-| X-01 | Built (Call-offs page left: BL-223) | 1 (1D) | `pages-v2/inventory/inventoryDisplay.qty.test.js`; `inventory/localeQty.x01.page.test.jsx` |
+| X-01 | Built; Call-offs and Shipments followed on 2026-10-23 (BL-223) | 1 (1D) | `pages-v2/inventory/inventoryDisplay.qty.test.js`; `inventory/localeQty.x01.page.test.jsx` |
 | P-10 to P-17, S-05 to S-12, X-02 to X-05 | Not in scope (Minor, Polish) | – | – |
 

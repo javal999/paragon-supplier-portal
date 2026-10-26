@@ -19,9 +19,21 @@
 //     threshold anything is compared against;
 //   · `CAPACITY_HORIZON_WEEKS` — decided (PQ-02, BL-08) as the shape of the
 //     capacity grid; changing it changes the grid, not a threshold.
+//
+// ⚠️ **PER MATERIAL GROUP (REQ-E08-05 BR-03, owner 2026-10-23).** The CR-24
+// multiples, the CR-02 bands and the stale periods take an optional material
+// group (the position's `materialGroup`, MG-xx): the group's override wins,
+// else the global value. Called without a group they return exactly what they
+// returned before, so no reader changes unless a group override exists.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { hubSetting, staleOverrideFor, stalePeriodFor } from './hubSettingsStore';
+import {
+  groupOverrideFor,
+  groupSetting,
+  hubSetting,
+  staleOverrideFor,
+  stalePeriodFor
+} from './hubSettingsStore';
 /** @import { UpdateCycleSettings } from './updateCycle' */
 
 /** CR-01 — average daily demand = forecast quantity for the next 30 days ÷ 30. */
@@ -29,14 +41,25 @@ export const DEMAND_WINDOW = 30;
 
 /**
  * CR-24 — risk class against the supplier lead time: High when days of cover
- * are below the lead time; Medium below `mediumBelowMultiple` × lead time
+ * are below `highBelowMultiple` × lead time (1, the lead time itself, unless the
+ * material group overrides it); Medium below `mediumBelowMultiple` × lead time
  * (default 1.5); Low otherwise. "Below" is strict at both cuts: cover EXACTLY
  * at the lead time is Medium, and EXACTLY at the multiple is Low (pinned in
- * inventoryRules.test.js). In force now.
- * @returns {{ readonly mediumBelowMultiple: number }}
+ * inventoryRules.test.js). In force now, for the material group when given.
+ * @param {string | null} [materialGroup]
+ * @returns {{ readonly mediumBelowMultiple: number; readonly highBelowMultiple: number }}
  */
-export function leadTimeRisk() {
-  return { mediumBelowMultiple: hubSetting('risk.mediumBelowMultiple') };
+export function leadTimeRisk(materialGroup) {
+  if (!materialGroup) {
+    return {
+      mediumBelowMultiple: hubSetting('risk.mediumBelowMultiple'),
+      highBelowMultiple: groupSetting('risk.highBelowMultiple', null)
+    };
+  }
+  return {
+    mediumBelowMultiple: groupSetting('risk.mediumBelowMultiple', materialGroup),
+    highBelowMultiple: groupSetting('risk.highBelowMultiple', materialGroup)
+  };
 }
 
 /**
@@ -44,13 +67,22 @@ export function leadTimeRisk() {
  * 60 (the defaults). Since 2026-09-21 a FALLBACK only: the risk class uses these
  * bands where the supplier lead time is missing (CR-24), and that gap raises
  * its own alert. In force now.
+ * For a material group, its overrides win over the global bands.
+ * @param {string | null} [materialGroup]
  * @returns {{ readonly criticalBelow: number; readonly warningBelow: number; readonly healthyUpTo: number }}
  */
-export function supplyBands() {
+export function supplyBands(materialGroup) {
+  if (!materialGroup) {
+    return {
+      criticalBelow: hubSetting('bands.criticalBelowDays'),
+      warningBelow: hubSetting('bands.warningBelowDays'),
+      healthyUpTo: hubSetting('bands.healthyUpToDays')
+    };
+  }
   return {
-    criticalBelow: hubSetting('bands.criticalBelowDays'),
-    warningBelow: hubSetting('bands.warningBelowDays'),
-    healthyUpTo: hubSetting('bands.healthyUpToDays')
+    criticalBelow: groupSetting('bands.criticalBelowDays', materialGroup),
+    warningBelow: groupSetting('bands.warningBelowDays', materialGroup),
+    healthyUpTo: groupSetting('bands.healthyUpToDays', materialGroup)
   };
 }
 
@@ -69,13 +101,26 @@ export function coverageThresholds() {
 /**
  * REQ-E08-01 — the data-update SLA (the stale period, days) for one supplier ×
  * material, in force now: the administrator's override for the pair, else the
- * default stale period (7 days until agreed with suppliers).
+ * material group's stale period, else the default stale period (7 days until
+ * agreed with suppliers).
  * @param {string} supplierId
  * @param {string} materialCode
+ * @param {string | null} [materialGroup]
  * @returns {number}
  */
-export function updateSlaFor(supplierId, materialCode) {
-  return stalePeriodFor(supplierId, materialCode);
+export function updateSlaFor(supplierId, materialCode, materialGroup) {
+  return stalePeriodFor(supplierId, materialCode, materialGroup);
+}
+
+/**
+ * REQ-E08-05 BR-03 — the material group's own stale period for a MANUAL
+ * supplier, in days, or null when the group has none (the weekly cutoff then
+ * decides). A supplier × material override still wins over it.
+ * @param {string | null | undefined} materialGroup
+ * @returns {number | null}
+ */
+export function groupStaleDaysFor(materialGroup) {
+  return groupOverrideFor('stale.defaultDays', materialGroup);
 }
 
 /**
@@ -102,11 +147,15 @@ export function updateCycleSettings() {
 }
 
 /**
- * MR-1 BR-05 (MAT-D8) — hours after the last successful pull that an API supplier's figure turns stale.
+ * MR-1 BR-05 (MAT-D8) — hours after the last successful pull that an API
+ * supplier's figure turns stale; for a material group, its override when set.
+ * @param {string | null} [materialGroup]
  * @returns {number}
  */
-export function staleApiHours() {
-  return hubSetting('stale.apiHours');
+export function staleApiHours(materialGroup) {
+  return materialGroup
+    ? groupSetting('stale.apiHours', materialGroup)
+    : hubSetting('stale.apiHours');
 }
 
 /**

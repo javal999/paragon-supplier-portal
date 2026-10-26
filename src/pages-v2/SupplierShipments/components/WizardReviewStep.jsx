@@ -7,6 +7,7 @@ import FormSection from '@components/ui-v2/FormSection';
 import { AsnSubmitWarnings } from '../../shipments/CallOffWarnings';
 import { ShelfLifeRequestBox } from '../../shipments/ShelfLifeParts';
 import { fmtDate } from '../utils';
+import { qty } from '../../callOffs/callOffDisplay';
 
 /**
  * Wizard step 3 — the summary of what will be sent, the warnings (never a
@@ -29,7 +30,7 @@ const WizardReviewStep = ({ form, updateForm, selectedPO, wizardRead, wizardWarn
             ...wizardRead.lines.map((l) => [
               `${t('supplierShipments.wizard.review.field.material')} · ${l.line.materialCode}`,
               `${l.line.description} · ${
-                Number.isFinite(l.input.shippedQty) ? l.input.shippedQty.toLocaleString() : '—'
+                Number.isFinite(l.input.shippedQty) ? qty(l.input.shippedQty) : '—'
               } ${l.line.uom} · ${t('fc.asn.col.batch')} ${l.input.batchNumber || '—'}${
                 l.input.batchSource === 'typed' ? ` (${t('fc.asn.batch.notDeclared')})` : ''
               }${

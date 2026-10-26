@@ -8,7 +8,6 @@
 
 /** @type {Record<string, string>} */
 export const materialNamesEn = {
-  'matName.tab.stock': 'Stock',
   'matName.tab.myMaterials': 'My materials',
   'matName.beside': 'Your name: {{name}}',
   'matName.besideSupplier': "Supplier's name: {{name}}",
@@ -101,7 +100,6 @@ export const materialNamesEn = {
 
 /** @type {Record<string, string>} */
 export const materialNamesId = {
-  'matName.tab.stock': 'Stok',
   'matName.tab.myMaterials': 'Material saya',
   'matName.beside': 'Nama Anda: {{name}}',
   'matName.besideSupplier': 'Nama pemasok: {{name}}',

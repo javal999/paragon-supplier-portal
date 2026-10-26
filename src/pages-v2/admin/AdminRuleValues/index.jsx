@@ -21,6 +21,7 @@ import SettingForm from './components/SettingForm';
 import SettingGate from './components/SettingGate';
 import RuleGroup from './components/RuleGroup';
 import StalePeriodsPanel from './components/StalePeriodsPanel';
+import GroupOverridesPanel from './components/GroupOverridesPanel';
 import ChangeHistory from './components/ChangeHistory';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -32,8 +33,9 @@ import ChangeHistory from './components/ChangeHistory';
 //     CR-12, CR-25, CR-21, CR-26, CR-22, CR-23, MR-2 (update compliance),
 //     MR-6 (default shelf life);
 //   · Alert thresholds and stale periods — CR-24, CR-02, CR-03, the default
-//     stale period, MR-1 (sync interval, API stale period, weekly cutoff) and
-//     the stale period per supplier × material.
+//     stale period, MR-1 (sync interval, API stale period, weekly cutoff),
+//     the overrides per material group (REQ-E08-05 BR-03) and the stale
+//     period per supplier × material.
 //
 // The layout follows the working calendar and the 3PL list (BL-50, BL-51):
 //   · THE VALUES, each with its value in force, its default, and — while an
@@ -193,6 +195,11 @@ const RuleValuesPage = ({ section }) => {
           valueText={valueText}
         />
       ))}
+
+      {/* REQ-E08-05 BR-03 (owner, 2026-10-23) — the same values per material group. */}
+      {section === 'alerts' && (
+        <GroupOverridesPanel held={held} version={version} record={record} />
+      )}
 
       {section === 'alerts' && <StalePeriodsPanel held={held} version={version} record={record} />}
 

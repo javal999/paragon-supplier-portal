@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { batchModeOf } from '../../shipments/asnLines';
 import { TYPE_BATCH, inputClass } from '../const';
 import { fmtDate } from '../utils';
+import { qty } from '../../callOffs/callOffDisplay';
 
 /**
  * MR-6 BR-01 to BR-04 — the batch field. With declared batches on offer it is
@@ -57,12 +58,12 @@ const BatchCell = ({ materialCode, entry, options, onChange }) => {
             {o.expiryDate
               ? t('fc.asn.batch.option', {
                   batch: o.batchNumber,
-                  available: o.available.toLocaleString('en-US'),
+                  available: qty(o.available),
                   expiry: fmtDate(o.expiryDate)
                 })
               : t('fc.asn.batch.optionNoExpiry', {
                   batch: o.batchNumber,
-                  available: o.available.toLocaleString('en-US')
+                  available: qty(o.available)
                 })}
           </option>
         ))}

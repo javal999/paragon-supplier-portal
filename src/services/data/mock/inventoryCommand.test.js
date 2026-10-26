@@ -511,6 +511,23 @@ describe('supplier access to PTI stock (REQ-E08-03)', () => {
     expect(log.every((e) => e.at === now() && e.actor.kind === 'UNATTRIBUTED')).toBe(true);
   });
 
+  it('INV-D11: a supplier reads only its own access history; PTI reads every supplier', async () => {
+    expect((await act('t_stockaccess_remove', 'sup-007')).status).toBe('done');
+    expect((await act('t_stockaccess_grant', 'sup-002', { materials: [] })).status).toBe('done');
+    const own = (await reads.getStockAccess(sup002)).items;
+    expect(own.map((g) => g.supplierId)).toEqual(['sup-002']);
+    expect(own[0].log.map((e) => e.action)).toEqual(['grant']);
+    expect((await reads.getStockAccess(sup007)).items.map((g) => g.supplierId)).toEqual([
+      'sup-007'
+    ]);
+    const all = (await reads.getStockAccess(buyer)).items;
+    expect(all.find((g) => g.supplierId === 'sup-007')?.log.map((e) => e.action)).toEqual([
+      'grant',
+      'remove'
+    ]);
+    expect(all.some((g) => g.supplierId === 'sup-002')).toBe(true);
+  });
+
   it('known-bad: a material the supplier does not supply, a second grant, removal without access, a supplier granting itself', async () => {
     expect(
       (await act('t_stockaccess_grant', 'sup-002', { materials: ['PK-PETB-8801'] })).reason
