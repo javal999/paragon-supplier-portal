@@ -36,6 +36,7 @@ import { sdcClock } from '@services/sdc';
 import { rfiTemplate } from '@services/sourcing/rfxConfig';
 import { rfiTemplateStore } from '@services/sourcing/rfxTemplates';
 import { useToast } from '@hooks/useToast';
+import i18n from '@lib/i18n';
 import { rfxNow } from './rfxDisplay';
 import RfiCreateWizard from './RfiCreateWizard';
 
@@ -212,16 +213,35 @@ describe('RFI wizard states — step 1, the scope', () => {
     fireEvent.change(deadline(), { target: { value: rfxNow().slice(0, 10) } });
     expect(nextBtn()).toBeEnabled();
     expect(screen.queryByTestId('rfi-new-deadline-refusal')).not.toBeInTheDocument();
-    // Once touched, a cleared date refuses at once.
+    // Once touched, a cleared date says it is required (RFX-D32).
     fireEvent.change(deadline(), { target: { value: '' } });
-    expect(screen.getByTestId('rfi-new-deadline-refusal')).toBeInTheDocument();
+    expect(screen.getByTestId('rfi-new-deadline-refusal')).toHaveTextContent(
+      'Deadline is required.'
+    );
     expect(nextBtn()).toBeDisabled();
   });
 
-  it('a blank deadline left (blurred) without a value shows the refusal', () => {
+  // RFX-D32 (Levi, 2026-10-26): a blank deadline used to say "must be a date in
+  // the future", which is true of no date at all; it now says it is required.
+  it('a blank deadline left (blurred) without a value says it is required', () => {
     renderWizard();
     fireEvent.blur(deadline());
-    expect(screen.getByTestId('rfi-new-deadline-refusal')).toBeInTheDocument();
+    expect(screen.getByTestId('rfi-new-deadline-refusal')).toHaveTextContent(
+      'Deadline is required.'
+    );
+  });
+
+  it('a blank deadline reads "required" in Indonesian too', async () => {
+    await i18n.changeLanguage('id');
+    try {
+      renderWizard();
+      fireEvent.blur(screen.getByLabelText('Batas waktu jawaban'));
+      expect(screen.getByTestId('rfi-new-deadline-refusal')).toHaveTextContent(
+        'Batas waktu wajib diisi.'
+      );
+    } finally {
+      await i18n.changeLanguage('en');
+    }
   });
 
   it('choosing a family names its template and seeds its questions; changing it re-seeds', async () => {

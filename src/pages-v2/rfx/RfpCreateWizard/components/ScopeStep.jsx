@@ -22,8 +22,9 @@ import { PrefillBanner } from '../../rfqSources';
  * @property {(key: string) => void} onDeleteSaved
  * @property {boolean} unreadable  the template store could not be read
  * @property {React.ComponentProps<typeof RfxStartFrom>['rejected']} rejected  stored templates refused on read
- * @property {boolean} deadlineInFuture  CE-07 — false while a date is entered: the deadline refusal shows
- *   under it. An empty date keeps the step shut (index.jsx) but shows no refusal yet.
+ * @property {boolean} deadlineInFuture  CE-07 — false while the date is blank or past: the step stays
+ *   shut (index.jsx). The refusal under the field waits until the buyer has left it once (RFX-D32,
+ *   as the RFI wizard's B-11), then says "required" for a blank date and "in the future" for a past one.
  */
 
 /**
@@ -47,7 +48,8 @@ export const ScopeStep = ({
   deadlineInFuture
 }) => {
   const { t } = useTranslation();
-  const { register, setValue } = /** @type {DraftForm} */ (useFormContext());
+  const { register, setValue, formState } = /** @type {DraftForm} */ (useFormContext());
+  const deadlineTouched = !!formState.touchedFields.responseDeadline;
   const inputClass =
     'w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action';
   const labelClass = 'block text-xs font-semibold text-text-secondary mb-1';
@@ -148,9 +150,13 @@ export const ScopeStep = ({
             {...register('responseDeadline')}
             className="bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
           />
-          {draft.responseDeadline !== '' && !deadlineInFuture && (
+          {!!deadlineTouched && !deadlineInFuture && (
             <p className="text-xs text-danger mt-1" data-testid="rfp-new-deadline-refusal">
-              {t('rfx.create.field.deadline.future')}
+              {t(
+                draft.responseDeadline === ''
+                  ? 'rfx.create.field.deadline.required'
+                  : 'rfx.create.field.deadline.future'
+              )}
             </p>
           )}
         </div>

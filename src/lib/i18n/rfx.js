@@ -508,6 +508,7 @@ export const rfxEn = {
   'rfx.create.field.description.ph': 'What PTI wants to learn, in a sentence or two.',
   'rfx.create.field.deadline': 'Response deadline',
   'rfx.create.field.deadline.future': 'The response deadline must be a date in the future.',
+  'rfx.create.field.deadline.required': 'Deadline is required.',
   'rfx.create.saveDraft': 'Save draft',
   'rfx.create.send': 'Send to suppliers',
   'rfx.create.sendRule':
@@ -1212,6 +1213,7 @@ export const rfxId = {
   'rfx.create.field.description.ph': 'Apa yang ingin diketahui PTI, dalam satu dua kalimat.',
   'rfx.create.field.deadline': 'Batas waktu jawaban',
   'rfx.create.field.deadline.future': 'Batas waktu jawaban harus tanggal di masa depan.',
+  'rfx.create.field.deadline.required': 'Batas waktu wajib diisi.',
   'rfx.create.saveDraft': 'Simpan draf',
   'rfx.create.send': 'Kirim ke pemasok',
   'rfx.create.sendRule':

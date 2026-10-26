@@ -210,7 +210,9 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
   const [storeVersion, setStoreVersion] = useState(0);
   // RFx UX 2A (B-11) — the deadline refusal waits until the buyer has left the
   // field once; it read as an error before anything was typed. "Left once" is
-  // react-hook-form's touched state, set on the registered input's blur.
+  // react-hook-form's touched state, set on the registered input's blur. Then a
+  // blank date says it is required, a past one that it must be in the future
+  // (RFX-D32; the RFP wizard reads the same way).
   const deadlineTouched = !!methods.formState.touchedFields.responseDeadline;
 
   const family = rfxCategoryFamily(draft.family);
@@ -498,7 +500,11 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
             />
             {!!deadlineTouched && !deadlineInFuture && (
               <p className="text-xs text-danger mt-1" data-testid="rfi-new-deadline-refusal">
-                {t('rfx.create.field.deadline.future')}
+                {t(
+                  draft.responseDeadline === ''
+                    ? 'rfx.create.field.deadline.required'
+                    : 'rfx.create.field.deadline.future'
+                )}
               </p>
             )}
           </div>

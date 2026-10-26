@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Version | 1.14, 2026-10-23 (INV-D14 added: thresholds per material group; INV-D11 built) |
-| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20) and RFX-D26 to RFX-D31 (2026-10-22); the Inventory & Capacity UX decisions INV-D1 to INV-D13 (2026-10-22) and INV-D14 (2026-10-23); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
+| Version | 1.15, 2026-10-26 (RFX-D32 added: the RFx deadline is checked on leaving the field; INV-D14 added 2026-10-23) |
+| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20) and RFX-D26 to RFX-D31 (2026-10-22) and RFX-D32 (2026-10-26); the Inventory & Capacity UX decisions INV-D1 to INV-D13 (2026-10-22) and INV-D14 (2026-10-23); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, BL-12 call-off record, and three values (BL-54 invoice cap, BL-55 gate OTIF minimum, BL-56 early allowance). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
 | Evidence | Market practice is cited at the end. Where a claim is a judgement rather than a published practice, it says so |
@@ -375,6 +375,13 @@ Levi ruled on six points left open after RFx UX waves 1 and 2 on 2026-10-22. RFX
 **Decision.** A shared core (not our product range, no capacity, compliance not met, specification unclear, other) plus reasons that fit the event: the RFQ adds lead time too short and quantity too small; the RFI adds confidentiality or T&C terms not acceptable; the RFP adds the T&C reason, commercial terms not met and cannot develop the formula or design (ODM). The supplier's own words stay required. Each intent verb refuses a reason off its event type's list (`DECLINE_REASON_UNKNOWN`). Seeded declines keep valid reasons.
 
 **What would change this.** Many declines filed as "Other" with the same words, which names a reason the list is missing.
+
+### RFX-D32 · The response deadline is checked when the buyer leaves it
+Levi accepted this on 2026-10-26, after the react-hook-form conversion of the RFI and RFP create wizards pinned two differences between them.
+
+**Decision.** Both create wizards check the response deadline when the buyer leaves the field, not while they type. Then a blank deadline says "Deadline is required." ("Batas waktu wajib diisi.") and a past one says "The response deadline must be a date in the future." Until the field has been left, neither shows; Next stays disabled either way. Before this, the RFP refused a past date as it was typed and said nothing about a blank one, and the RFI said "must be a date in the future" for a blank one too. The rule for what counts as past is unchanged: the submit verb's own, end of the deadline day (CE-07).
+
+**What would change this.** Buyers typing a date and pressing Next without leaving the field, so the disabled Next has no reason beside it.
 
 ---
 

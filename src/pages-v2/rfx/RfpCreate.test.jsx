@@ -212,7 +212,9 @@ describe('section 3.6a — the buyer raises a proposal request', () => {
       target: { value: dayFromNow(-2) }
     });
     expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
-    // A past date entered ⇒ the refusal names why.
+    // A past date entered and the field left ⇒ the refusal names why (RFX-D32:
+    // the RFP checks on blur, as the RFI does).
+    fireEvent.blur(screen.getByLabelText('Response deadline'));
     expect(screen.getByTestId('rfp-new-deadline-refusal')).toBeInTheDocument();
 
     // POSITIVE TWIN.
