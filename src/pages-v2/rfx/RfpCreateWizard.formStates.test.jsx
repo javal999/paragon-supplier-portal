@@ -232,22 +232,40 @@ describe('RFP wizard states — step 1, the scope', () => {
     expect(nextBtn()).toBeDisabled();
   });
 
-  it('the deadline refuses as soon as a past date is entered (no blur), never while blank', () => {
+  // RFX-D32 (Levi, 2026-10-26): both wizards check the deadline when the buyer
+  // leaves the field, and a blank one says it is required. The RFP used to
+  // refuse a past date as it was typed and say nothing about a blank one.
+  it('the deadline refuses once the field is left: a past date, then a blank one, each by name', () => {
     renderWizard();
     fireEvent.change(title(), { target: { value: 'T' } });
     fireEvent.change(family(), { target: { value: 'packaging' } });
-    fireEvent.blur(deadline());
-    expect(screen.queryByTestId('rfp-new-deadline-refusal')).not.toBeInTheDocument();
     fireEvent.change(deadline(), { target: { value: dayFromNow(-3) } });
+    expect(nextBtn()).toBeDisabled();
+    // Not left yet: no refusal.
+    expect(screen.queryByTestId('rfp-new-deadline-refusal')).not.toBeInTheDocument();
+    fireEvent.blur(deadline());
     expect(screen.getByTestId('rfp-new-deadline-refusal')).toHaveTextContent(
       'The response deadline must be a date in the future.'
     );
-    expect(nextBtn()).toBeDisabled();
+    // Today (end of the deadline day) is not past.
     fireEvent.change(deadline(), { target: { value: rfxNow().slice(0, 10) } });
     expect(screen.queryByTestId('rfp-new-deadline-refusal')).not.toBeInTheDocument();
     expect(nextBtn()).toBeEnabled();
+    // Once left, a cleared date says it is required.
     fireEvent.change(deadline(), { target: { value: '' } });
+    expect(screen.getByTestId('rfp-new-deadline-refusal')).toHaveTextContent(
+      'Deadline is required.'
+    );
+    expect(nextBtn()).toBeDisabled();
+  });
+
+  it('a blank deadline left without a value says it is required', () => {
+    renderWizard();
     expect(screen.queryByTestId('rfp-new-deadline-refusal')).not.toBeInTheDocument();
+    fireEvent.blur(deadline());
+    expect(screen.getByTestId('rfp-new-deadline-refusal')).toHaveTextContent(
+      'Deadline is required.'
+    );
   });
 
   it('choosing a family touches nothing else', () => {
