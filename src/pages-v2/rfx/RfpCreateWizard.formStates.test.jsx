@@ -481,7 +481,11 @@ describe('RFP wizard states — pre-fill, copy and templates', () => {
     });
   });
 
-  it('PINNED AS FOUND — a past copy over an RFI pre-fill drops the RFI link, the banner stays', async () => {
+  // It used to drop the link while the banner still said "Pre-filled from
+  // RFI-2026-002", so the RFP was created with no tie to its RFI and nothing
+  // said so (Levi, 2026-10-23: keep the link). A copy replaces the content;
+  // the RFI the wizard was opened from is not content.
+  it('a past copy over an RFI pre-fill keeps the RFI link the banner shows', async () => {
     const dispatch = vi.spyOn(mockDataService.commands, 'dispatch');
     renderWizard({ prefill: prefillOf('rfi-002') });
     applyStart('RFP-2026-004 · Redwood 2.0 — mold tooling terms');
@@ -490,7 +494,7 @@ describe('RFP wizard states — pre-fill, copy and templates', () => {
     for (let i = 0; i < 6; i++) next();
     fireEvent.click(await screen.findByTestId('rfp-new-save-draft'));
     await waitFor(() => expect(dispatched(dispatch)).toHaveLength(1));
-    expect(dispatched(dispatch)[0].payload).not.toHaveProperty('sourceRfiId');
+    expect(dispatched(dispatch)[0].payload).toHaveProperty('sourceRfiId', 'rfi-002');
   });
 
   it('a past event is COPIED: content, terms and invitees, never its date', async () => {
