@@ -13,7 +13,7 @@ import { isOverdue } from '../utils';
 /**
  * @typedef {object} PoKeyFactsProps
  * @property {PurchaseOrder} selectedPO  The PO the panel was opened on.
- * @property {PurchaseOrder | null} livePO  The same PO's live row, so the status follows a review.
+ * @property {PurchaseOrder | null} livePO  The same PO's live row; every fact reads it, so a review shows at once.
  * @property {string} nowIso  The orders clock, for the display status.
  * @property {ReturnType<typeof useNextAct>} nextAct  Who acts next on the PO.
  * @property {TFunction} t
@@ -34,27 +34,27 @@ const PoKeyFacts = ({ selectedPO, livePO, nowIso, nextAct, t }) => (
       <div>
         <dt className="text-text-tertiary">{t('buyerOrders.panel.field.orderDate')}</dt>
         <Data as="dd" className="text-text-primary font-medium">
-          {formatDate(selectedPO.orderDate)}
+          {formatDate((livePO ?? selectedPO).orderDate)}
         </Data>
       </div>
       <div>
         <dt className="text-text-tertiary">{t('buyerOrders.panel.field.deliveryDate')}</dt>
         <Data
           as="dd"
-          className={`font-medium ${isOverdue(selectedPO) ? 'text-danger' : 'text-text-primary'}`}
+          className={`font-medium ${isOverdue(livePO ?? selectedPO) ? 'text-danger' : 'text-text-primary'}`}
         >
-          {formatDate(selectedPO.requestedDeliveryDate)}
+          {formatDate((livePO ?? selectedPO).requestedDeliveryDate)}
         </Data>
       </div>
       <div>
         <dt className="text-text-tertiary">{t('buyerOrders.panel.field.totalValue')}</dt>
         <Data as="dd" className="text-text-primary font-semibold">
-          {formatIDR(selectedPO.totalValue)}
+          {formatIDR((livePO ?? selectedPO).totalValue)}
         </Data>
       </div>
       <div>
         <dt className="text-text-tertiary">{t('buyerOrders.panel.field.channel')}</dt>
-        <dd className="text-text-primary font-medium">{selectedPO.channel}</dd>
+        <dd className="text-text-primary font-medium">{(livePO ?? selectedPO).channel}</dd>
       </div>
       <div>
         <dt className="text-text-tertiary">{t('buyerOrders.panel.field.status')}</dt>
@@ -75,7 +75,7 @@ const PoKeyFacts = ({ selectedPO, livePO, nowIso, nextAct, t }) => (
       </div>
       <div>
         <dt className="text-text-tertiary">{t('buyerOrders.panel.field.currency')}</dt>
-        <dd className="text-text-primary font-medium">{selectedPO.currency}</dd>
+        <dd className="text-text-primary font-medium">{(livePO ?? selectedPO).currency}</dd>
       </div>
       <div>
         <dt className="text-text-tertiary">{t('buyerOrders.panel.field.incoterms')}</dt>

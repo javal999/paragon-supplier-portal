@@ -5,8 +5,9 @@ import { rfpTemplateStore } from '@services/sourcing/rfxTemplates';
 /** @import { StartOption } from '../../RfxStartFrom' */
 import { rfxNow } from '../../rfxDisplay';
 import { EMPTY } from '../const';
-/** @import { Draft, SetDraft } from '../const' */
+/** @import { DraftForm } from '../const' */
 import { splitTerms, templateContentOf } from '../utils';
+import { patchDraft, replaceDraft } from './useRfpDraft';
 
 /**
  * The wizard's "start from" and "save as template" half (D2): the saved RFP
@@ -14,10 +15,10 @@ import { splitTerms, templateContentOf } from '../utils';
  * picker offers (saved templates, then past events to copy), and the handlers
  * that apply one to the draft, delete a saved one, or save the draft as one.
  * @param {readonly RfpEvent[]} pastEvents  past events the buyer may copy
- * @param {Draft} draft  the current draft, saved as a template's content
- * @param {SetDraft} setDraft  the wizard's draft setter, which a start option replaces
+ * @param {DraftForm} methods  the wizard's form: a start option writes into it, and
+ *   "save as template" reads the current draft from it
  */
-export const useRfpStartFrom = (pastEvents, draft, setDraft) => {
+export const useRfpStartFrom = (pastEvents, methods) => {
   const [storeVersion, setStoreVersion] = useState(0);
   const saved = useMemo(() => rfpTemplateStore.readState(), [storeVersion]);
 
@@ -41,8 +42,7 @@ export const useRfpStartFrom = (pastEvents, draft, setDraft) => {
     if (kind === 'saved') {
       const c = saved.templates.find((x) => x.id === id)?.content;
       if (!c) return;
-      setDraft((d) => ({
-        ...d,
+      patchDraft(methods, {
         family: c.familyId,
         scope: c.scope,
         currency: c.currency,
@@ -54,12 +54,12 @@ export const useRfpStartFrom = (pastEvents, draft, setDraft) => {
         confidentialityTerms: c.confidentialityTerms ?? '',
         termsText: c.termsText ?? '',
         documentRequests: c.documentRequests ?? []
-      }));
+      });
     } else if (kind === 'past') {
       const e = pastEvents.find((x) => x.id === id);
       if (!e) return;
       // A COPY carries content and invitees; its dates are cleared (D2).
-      setDraft({
+      replaceDraft(methods, {
         ...EMPTY,
         title: e.title,
         family: rfxFamilyForCategory(e.materialCategory)?.id ?? '',
@@ -89,7 +89,7 @@ export const useRfpStartFrom = (pastEvents, draft, setDraft) => {
 
   /** @param {string} name */
   const saveTemplate = (name) => {
-    const res = rfpTemplateStore.save(name, templateContentOf(draft), rfxNow());
+    const res = rfpTemplateStore.save(name, templateContentOf(methods.getValues()), rfxNow());
     setStoreVersion((v) => v + 1);
     return res;
   };

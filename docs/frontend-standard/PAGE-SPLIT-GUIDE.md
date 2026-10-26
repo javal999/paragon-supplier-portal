@@ -1,6 +1,6 @@
 # Page split guide — frontend-standard Phase 5
 
-**Status:** started 2026-10-06; waves 1–11 done by 2026-10-22. See "Where it stands" at the end.
+**Status:** started 2026-10-06; waves 1–12 done by 2026-10-23. See "Where it stands" at the end.
 **Applies to:** every page or feature component in `src/` over
 800 lines. Largest first, **one PR per page**. Phases 1–4 and 7 (the JavaScript conversion) are
 done; see `JS-CONVERSION-PLAYBOOK.md`.
@@ -129,18 +129,16 @@ Non-page files over 800 lines (`MockCommandService.js`, `commandHooks.js`, `type
 tables and fixtures) are out of scope: they are lists, not components, and splitting them buys
 nothing a reader needs.
 
-## Where it stands (2026-10-22)
+## Where it stands (2026-10-23)
 
-**Done.** Waves 1–11 are merged or in review. Every page that was over 800 lines on 2026-10-21 now
-lives in the folder shape. Wave 10 (MR !27) split `BuyerCallOffs`, `BuyerCollaboration` and
-`SupplierDocuments`. Wave 11 split `SupplierOrders`, `BuyerOrders` and `SupplierCallOffs`, the last
-three held for the IA work. `react-hook-form` is in `SupplierRegistration` and
-`GRInspectionWizard` (MR !21). Before the conversion, 31 specs in
-`GRInspectionWizard.formStates.test.jsx` pinned the wizard's behaviour.
+**Done.** Waves 1–12 are merged or in review. No page or feature component under `src/pages-v2`
+is over 800 lines. Wave 11 (MR !31) split `SupplierOrders`, `BuyerOrders` and `SupplierCallOffs`,
+the last three held for the IA work. Wave 12 split `SupplierRfp`, which grew past the line with
+the RFx UX waves.
 
-**Left.**
+**Forms.** `react-hook-form` is in `SupplierRegistration`, `GRInspectionWizard` (MR !21),
+`RfpCreateWizard` and `RfiCreateWizard` (wave 12). Each conversion was preceded by specs that pin
+the form's behaviour and pass unchanged after it: 31 in `GRInspectionWizard.formStates.test.jsx`,
+28 in `RfpCreateWizard.formStates.test.jsx` and 25 in `RfiCreateWizard.formStates.test.jsx`.
 
-- `SupplierRfp.jsx` has grown past the line (967 lines on 2026-10-22) with the RFx UX waves. It
-  is split next, once no open branch edits it.
-- The `react-hook-form` conversion of `RfpCreateWizard` and `RfiCreateWizard`. The RFx and IA
-  branches that edited them are now on `main`, so they are no longer held.
+**Left.** Nothing is held. A page that grows past 800 lines gets the same split.

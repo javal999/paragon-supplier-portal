@@ -144,16 +144,21 @@ const PoPanel = ({
           )
         }
 
-        <PoLineItems selectedPO={selectedPO} t={t} />
+        <PoLineItems selectedPO={livePO ?? selectedPO} t={t} />
 
         <section>
           <h3 className="text-label text-text-tertiary uppercase mb-3">
             {t('buyerOrders.panel.lifecycle')}
           </h3>
-          <Timeline events={buildTimeline(selectedPO, t)} />
+          <Timeline events={buildTimeline(livePO ?? selectedPO, t)} />
         </section>
 
-        <PoComms selectedPO={selectedPO} commsOpen={commsOpen} setCommsOpen={setCommsOpen} t={t} />
+        <PoComms
+          selectedPO={livePO ?? selectedPO}
+          commsOpen={commsOpen}
+          setCommsOpen={setCommsOpen}
+          t={t}
+        />
       </div>
     )}
   </SidePanel>
