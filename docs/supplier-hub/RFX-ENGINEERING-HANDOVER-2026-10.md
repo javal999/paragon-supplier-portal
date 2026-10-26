@@ -2,12 +2,12 @@
 
 | | |
 |---|---|
-| Version | 1.2, 2026-10-22 (RFX-D26 to RFX-D31 owner rulings) |
+| Version | 1.3, 2026-10-26 (RFX-D32 deadline check; BL-221 Compare column order; a copied RFP keeps its RFI link; menu after the IA work; screenshots retaken on `main` `e4d8b1f1`). 1.2, 2026-10-22 (RFX-D26 to RFX-D31 owner rulings) |
 | For | The engineering team that builds the production RFx module (RFI, RFQ, RFP) of the PTI Supplier Hub |
 | What this is | The final requirement for RFx: what the prototype does, the decisions behind it, the rules, the states, the refusals, the screens, and what production must add. It replaces reading the RFx history document by document |
-| Built on | The prototype on branch `feat/rfx-ux-wave2` (GitLab MRs !8 and the wave 2 MR), which holds every RFx change to 2026-10-19 |
-| Owner | Achmad Fahlevi (product owner). Decisions are recorded in `DECISION-GUIDE.md` as RFX-D1 to RFX-D31 |
-| Paths | `src/…` paths are in `paragon-supplier-portal`. Line numbers were read on `feat/rfx-ux-wave2` on 2026-10-19 and will move |
+| Built on | The prototype on `main` at `e4d8b1f1` (2026-10-26). It holds the RFx UX waves (MRs !8, !14), the owner rulings (!24), the IA menu (!19), BL-221 (!36), wave 12 (!33), the RFI-link fix (!38) and RFX-D32 (!39). RFx code work is paused after this commit (owner, 2026-10-26) |
+| Owner | Achmad Fahlevi (product owner). Decisions are recorded in `DECISION-GUIDE.md` as RFX-D1 to RFX-D32 |
+| Paths | `src/…` paths are in `paragon-supplier-portal`. Line numbers were read on `feat/rfx-ux-wave2` on 2026-10-19 and will move; since wave 12 the supplier RFP page is the folder `src/pages-v2/SupplierRfp/` and the RFI and RFP create wizards keep their drafts in react-hook-form (`rfx/RfiCreateWizard/`, `rfx/RfpCreateWizard/hooks/useRfpDraft.js`) |
 
 **In one paragraph.** PTI runs three separate sourcing modules: an RFI collects capability information, an RFQ collects firm, comparable quotes on items with quantity breaks, and an RFP collects commercial terms, options and indicative prices for open-spec purchases. A buyer creates and sends events, compares responses, negotiates in rounds, and records a split award per item; the purchase order or contract is then raised in SAP by hand. A supplier says whether it will respond, answers, quotes, revises until the deadline, and sees its own outcome. The prototype implements all of this against in-memory stores, with every state change going through a governed verb. Production must replace the stores with a backend, add the SAP hand-off, email, file storage and sign-in, and keep the rules, states and refusals listed here.
 
@@ -17,7 +17,7 @@
 
 **In scope (built in the prototype, to be built for production):**
 - RFI, RFQ and RFP as three modules with their own menu items and pages (RFX-D1).
-- Authoring wizards, templates, copying a past event, and allowed links between events (RFI → RFQ, RFI → RFP, RFP → RFQ, purchase requisition → RFQ) (RFX-D2, RFX-D3).
+- Authoring wizards, templates, copying a past event, and allowed links between events (RFI → RFQ, RFI → RFP, RFP → RFQ, purchase requisition → RFQ) (RFX-D2, RFX-D3). An RFP started from an RFI keeps that link when the buyer copies a past event into it.
 - Supplier invitation with qualification and compliance checks, supplier intent and decline, confidentiality and T&C gates, responses with documents, revision until the deadline.
 - RFQ comparison per item at a chosen quantity break, negotiation rounds, split award by share or quantity, partial award, cancel award, "Raised in SAP" marking.
 - RFP terms comparison, indicative pricing, firm-offer rounds, RFP award.
@@ -64,6 +64,7 @@ Every decision below is binding unless the owner changes it. Full text: `DECISIO
 | RFX-D29 | "Best" also marks the lowest MOQ, the most allocation per month and the highest OTIF commitment; a value not readable in the row's common unit gets no tag |
 | RFX-D30 | RFQ wizard unit by category: Packaging PCS, Other none (Scope waits for a unit; the create verb refuses `UOM_MISSING`), every other category KG |
 | RFX-D31 | Decline reasons per event type: a shared core plus RFQ, RFI and RFP reasons; each intent verb refuses a reason off its list (`DECLINE_REASON_UNKNOWN`) |
+| RFX-D32 | Both create wizards check the response deadline when the buyer leaves the field: blank reads "Deadline is required.", past reads "The response deadline must be a date in the future."; Next stays disabled either way |
 
 **Calls made during the 2026-10-19 build that wait for owner review** are in section 12. Each is built as recommended there.
 
@@ -91,7 +92,9 @@ No other PTI role or supplier lane holds an RFx atom. A seat that lacks the atom
 
 ## 4. Screens
 
-Screenshots of every screen below, taken on the final build: `user-guide/screens/rfx-2026-10/` (index in its `README.md`).
+Screenshots of every screen below, taken on `main` `e4d8b1f1`: `user-guide/screens/rfx-2026-10/` (index in its `README.md`).
+
+**Menu.** PTI: section Sourcing ("Pengadaan") holds Requisitions, RFI, RFQ, RFP, Suppliers and Supplier documents, in that order (IA P-03). Supplier: section Sourcing holds RFI invitations, RFQ invitations and RFP invitations, each with its count.
 
 ### 4.1 Buyer
 
@@ -104,11 +107,11 @@ Screenshots of every screen below, taken on the final build: `user-guide/screens
 | `/buyer/rfp` | RFP list | Rows with "N of M submitted"; row button "Open" |
 | `/buyer/rfp/:rfpId` | RFP event page | As the RFI page, plus "Terms sent" before any proposal, the terms comparison, indicative pricing, "Firm up the prices" (firm-offer round or RFQ from this RFP), firm-offer rounds, RFP award |
 
-**Wizards** (modal, opened from the list page): RFI (Scope, Questions, Invitees, Documents, Review), RFQ (Scope, Items, Breaks, Questions and options, Suppliers, Terms, Documents, Review), RFP (as RFI plus Terms, Pricing). The RFQ wizard seeds the first break from the Scope quantity, defaults the unit by category (Packaging → PCS, others KG) and Incoterms to FOB, and offers "Save and send to suppliers" on Review. After saving, the RFI and RFP wizards open the new event's page.
+**Wizards** (modal, opened from the list page): RFI (Scope, Questions, Invitees, Documents, Review), RFQ (Scope, Items, Breaks, Questions and options, Suppliers, Terms, Documents, Review), RFP (as RFI plus Terms, Pricing). The RFQ wizard seeds the first break from the Scope quantity, defaults the unit by category (Packaging → PCS, others KG) and Incoterms to FOB, and offers "Save and send to suppliers" on Review. After saving, the RFI and RFP wizards open the new event's page. **Response deadline (RFX-D32):** both the RFI and RFP wizards check it when the buyer leaves the field. A blank one reads "Deadline is required." ("Batas waktu wajib diisi."), a past one "The response deadline must be a date in the future."; Next stays disabled on either. **Pre-filled from an RFI:** an RFP opened from an RFI shows "Pre-filled from RFI-…"; copying a past event into it keeps the RFI link, and the saved RFP shows "Created from RFI-…" (MR !38; before it the link was dropped without a word).
 
 **Confirmation sheets.** Close (RFI, RFP), award and cancel-award (RFQ, RFP) open a sheet listing who is affected, the shares, the reason, and what can be undone. Nothing is dispatched until the buyer confirms ("Record the award" / "Catat pemenang"; "Back to edit" / "Kembali").
 
-**Proposal view on the RFI and RFP pages (RFX-D25).** Three tabs under the actions row, held in the URL (`?tab=overview|compare|supplier`, `&supplier=<id>`): Overview (scope, terms or questions sent, invitees, documents, firm-up, award), Compare (summary cards best scored first, one-line invitee count, the grid with "Show deviations only", collapsible groups, sticky supplier header and a neutral "Best" tag, indicative prices with the lowest per option and quantity tagged; for the RFI, section accordions and "Show answers that differ"), and By supplier (one proposal at a time with Previous/Next). Compare is the default once anything is submitted. "Best" comes from `bestValueIds` in `src/pages-v2/rfx/rfxCompare.js`: lowest price basis, shortest lead time, most payment days, longest price validity, lowest MOQ, most allocation per month and highest OTIF commitment (RFX-D29); other terms get none. Values are compared in one common unit (MOQ and allocation in pieces or kilograms, allocation per month, OTIF as a percentage); a value that cannot be read in that unit gets no tag.
+**Proposal view on the RFI and RFP pages (RFX-D25).** Three tabs under the actions row, held in the URL (`?tab=overview|compare|supplier`, `&supplier=<id>`): Overview (scope, terms or questions sent, invitees, documents, firm-up, award), Compare (summary cards best scored first, one-line invitee count, the grid with "Show deviations only", collapsible groups, sticky supplier header and a neutral "Best" tag, indicative prices with the lowest per option and quantity tagged; for the RFI, section accordions and "Show answers that differ"), and By supplier (one proposal at a time with Previous/Next). Compare is the default once anything is submitted. In the comparison, questions and indicative-price grids the supplier columns follow the summary cards' order, best scored first (BL-221). "Best" comes from `bestValueIds` in `src/pages-v2/rfx/rfxCompare.js`: lowest price basis, shortest lead time, most payment days, longest price validity, lowest MOQ, most allocation per month and highest OTIF commitment (RFX-D29); other terms get none. Values are compared in one common unit (MOQ and allocation in pieces or kilograms, allocation per month, OTIF as a percentage); a value that cannot be read in that unit gets no tag.
 
 ### 4.2 Supplier
 
@@ -232,7 +235,7 @@ A refused verb returns `POLICY_REJECTED` with a detail `CODE: sentence`. The scr
 ## 10. Testing
 
 - Gates: `npx -y -p node@24 -- sh -c 'node scripts/gates.mjs'` runs build, spec typecheck, the full vitest suite, the access-gate suite, lint and format, and asserts the floor in `scripts/floor.json`. Node 24 is required (`.nvmrc`).
-- About 90 RFx spec files; the RFx UX build specs are `rfx/rfxUx2A`, `BuyerSourcing/rfxUx1D`, `rfxUx2B`, `rfxUxB02`, `BuyerSourcingEvent/eventStage`, `SupplierRFQs/rfxUx1B`, `rfxUx2C`, `rfx/RfxConfirmSheets`, `SupplierResponseForms`, `responseDraft`, `builtInDuplicates`, `RfxIntent`, `services/sourcing/rfxIntent`, `rfqOptionInRound`, `services/data/mock/rfxIntentCommand`, `rfqFromOpenRfp`, `rfx/builtInLink`, `rfx/rfxExtend`, `rfx/oneStageBar.guard`, `BuyerSourcing/rfxUxBl222`, `rfxUxBl216`.
+- About 90 RFx spec files; the RFx UX build specs are `rfx/rfxUx2A`, `BuyerSourcing/rfxUx1D`, `rfxUx2B`, `rfxUxB02`, `BuyerSourcingEvent/eventStage`, `SupplierRFQs/rfxUx1B`, `rfxUx2C`, `rfx/RfxConfirmSheets`, `SupplierResponseForms`, `responseDraft`, `builtInDuplicates`, `RfxIntent`, `services/sourcing/rfxIntent`, `rfqOptionInRound`, `services/data/mock/rfxIntentCommand`, `rfqFromOpenRfp`, `rfx/builtInLink`, `rfx/rfxExtend`, `rfx/oneStageBar.guard`, `BuyerSourcing/rfxUxBl222`, `rfxUxBl216`; since wave 12 also `rfx/RfiCreateWizard.formStates`, `rfx/RfpCreateWizard.formStates` (the form states pinned before the react-hook-form conversion, then RFX-D32) and `rfx/RfpCreate` (the kept RFI link).
 - Each refusal is pinned by a passing and a failing case. Production tests should port these cases against the server.
 
 ---
@@ -240,7 +243,7 @@ A refused verb returns `POLICY_REJECTED` with a detail `CODE: sentence`. The scr
 ## 11. Source documents
 
 - `research/RFX-UX-EVALUATION-2026-10.md` — the 32 UX findings, design proposals, mockups and build status (section 10).
-- `DECISION-GUIDE.md` — RFX-D1 to RFX-D31.
+- `DECISION-GUIDE.md` — RFX-D1 to RFX-D32.
 - `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md`, `RFX-BUILD-PLAN-2026-09.md` — the 2026-09 improvements.
 - `SUPPLIER-HUB-REQUIREMENTS.md` — REQ-E03-01 to REQ-E03-05.
 - `BUILD-GAP.md` — what is built per requirement; `BACKLOG.md` — what is left.
