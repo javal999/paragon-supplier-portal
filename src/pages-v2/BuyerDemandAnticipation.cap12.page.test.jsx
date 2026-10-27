@@ -21,9 +21,10 @@ import BuyerDemandAnticipation from './BuyerDemandAnticipation';
 
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 const ROUTE = '/buyer/demand-anticipation';
-// sup-007 × PK-PETB-8802 (DRC-2: a 2-week horizon): W36 is covered by its
-// released call-offs, W37 has none, so it shows a gap.
-const KEY = 'sup-007-PK-PETB-8802';
+// sup-002 × RM-EMUL-9410: W36 has no call-off, so it shows a gap; W37 is
+// covered by its released call-off. (sup-007 × PK-PETB-8802 served here until
+// BL-228: W36's surplus now carries into W37, so it has no gap left.)
+const KEY = 'sup-002-RM-EMUL-9410';
 
 beforeEach(() => {
   sdcClock.reset();
@@ -98,5 +99,49 @@ describe('CAP-12 — Open supply and Gap rows', () => {
     expect(within(grid).getByText('Kekurangan')).toBeInTheDocument();
     expect(within(grid).queryByText('Open supply')).toBeNull();
     expect(document.body.textContent ?? '').not.toMatch(/\bDA\b/);
+  });
+});
+
+// BL-228 — sup-002 × RM-EMUL-9410 carries W37's call-off above its figure into
+// the next weeks: the owner's example, in the sample data.
+describe('BL-228 — a gap the carry reduced says so', () => {
+  const CARRY_KEY = 'sup-002-RM-EMUL-9410';
+
+  it('AC-06 — the reduced Gap cell names the carried quantity; an unreduced one has no tooltip', async () => {
+    const page = await mockDataService.procurement.getDemandAnticipation({
+      personaType: 'buyer',
+      supplierId: null,
+      businessRoles: SEEDED_SEAT_ROLES.buyer
+    });
+    const row = page.items.find((r) => `${r.supplierId}-${r.materialCode}` === CARRY_KEY);
+    const carried = row?.weeks.filter((w) => w.gap !== null && w.carriedIn > 0) ?? [];
+    const plain = row?.weeks.find((w) => w.gap !== null && w.carriedIn === 0);
+    expect(carried.map((w) => [w.week, w.carriedIn, w.gap])).toContainEqual([
+      '2026-09-21',
+      40,
+      940
+    ]);
+    expect(plain).toBeDefined();
+    renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    await openAllWeeks();
+    for (const w of carried) {
+      expect(screen.getByTestId(`dant-gap-${CARRY_KEY}-${w.week}`)).toHaveAttribute(
+        'title',
+        `${formatNumber(w.carriedIn)} carried from earlier weeks`
+      );
+    }
+    expect(
+      screen.getByTestId(`dant-gap-${CARRY_KEY}-${/** @type {*} */ (plain).week}`)
+    ).not.toHaveAttribute('title');
+  });
+
+  it('reads in Indonesian', async () => {
+    await i18n.changeLanguage('id');
+    renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
+    await openAllWeeks();
+    expect(screen.getByTestId(`dant-gap-${CARRY_KEY}-2026-09-21`)).toHaveAttribute(
+      'title',
+      '40 terbawa dari minggu sebelumnya'
+    );
   });
 });

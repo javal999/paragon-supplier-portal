@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest';
 import { POStatus } from '../data/types';
 import {
   blanketBalances,
+  carryForward,
   openSupplyIndex,
   proposeForGaps,
   supplyGap,
@@ -295,6 +296,99 @@ describe('supplyGapRows — the What to order list', () => {
     ).toEqual([
       [W6, 30_000, 22_000, 8_000],
       ['2026-10-12', 5, 0, 5]
+    ]);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BL-228 (SC-HUB-SUPPLY-GAP-CARRY-REQUIREMENTS-2026-10) — supply above a week's
+// figure carries forward to the next weeks' gaps, never backward, and only
+// across weeks with a figure. The owner's example: 980 a week, 2,000 in W37.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const W37 = '2026-09-07';
+const W38 = '2026-09-14';
+const W39 = '2026-09-21';
+const W40 = '2026-09-28';
+
+describe('BL-228 — supply gap carries surplus forward', () => {
+  it('AC-01 — 2,000 in W37 against 980 a week leaves gaps 0, 0, 940', () => {
+    const [r] = withOpenSupply([row({ [W37]: 980, [W38]: 980, [W39]: 980 })], {
+      pos: [],
+      callOffs: [callOff({ quantity: 2_000, needDate: W37, status: 'Confirmed' })]
+    });
+    expect(r?.weeks.map((w) => [w.openSupply, w.carriedIn, w.gap])).toEqual([
+      [2_000, 0, 0],
+      [0, 1_020, 0],
+      [0, 40, 940]
+    ]);
+  });
+
+  it('AC-02 — What to order lists one line, W39, with a proposal for 940', () => {
+    const rows = withOpenSupply([row({ [W37]: 980, [W38]: 980, [W39]: 980 })], {
+      pos: [po('old', '2026-07-01', { quantity: 5_000 })],
+      callOffs: [callOff({ quantity: 2_000, needDate: W37, status: 'Confirmed' })]
+    });
+    const lines = supplyGapRows(rows);
+    expect(lines.map((g) => [g.week, g.openSupply, g.carriedIn, g.gap])).toEqual([
+      [W39, 0, 40, 940]
+    ]);
+    expect(lines[0]?.proposal).toEqual({
+      callOffs: [{ poId: 'old', poNumber: 'PO-old', lineId: 'old-l1', qty: 940, balance: 5_000 }],
+      newPoQty: 0
+    });
+  });
+
+  it('AC-03 — never backward: 2,000 in W38 does not cover W37', () => {
+    const [r] = withOpenSupply([row({ [W37]: 980, [W38]: 980 })], {
+      pos: [],
+      callOffs: [callOff({ quantity: 2_000, needDate: W38, status: 'Confirmed' })]
+    });
+    expect(r?.weeks.map((w) => w.gap)).toEqual([980, 0]);
+  });
+
+  it('AC-04 — the surplus stops at the horizon: a week with no figure reads no gap and passes nothing on', () => {
+    expect([
+      ...carryForward([
+        { week: W37, qty: 980, openSupply: 3_000 },
+        { week: W38, qty: 980, openSupply: 0 },
+        { week: W39, qty: null, openSupply: 0 },
+        { week: W40, qty: 500, openSupply: 0 }
+      ]).values()
+    ]).toEqual([
+      { carriedIn: 0, gap: 0 },
+      { carriedIn: 2_020, gap: 0 },
+      { carriedIn: 0, gap: null },
+      { carriedIn: 0, gap: 500 }
+    ]);
+  });
+
+  it('AC-05 — no week above its figure: every gap is today’s week-by-week figure', () => {
+    const qty = { [W37]: 980, [W38]: 980, [W39]: 980 };
+    const [r] = withOpenSupply([row(qty)], {
+      pos: [],
+      callOffs: [
+        callOff({ quantity: 500, needDate: W37, status: 'Confirmed' }),
+        callOff({ quantity: 980, needDate: W38, status: 'Confirmed' })
+      ]
+    });
+    expect(r?.weeks.map((w) => w.gap)).toEqual([
+      supplyGap(980, 500),
+      supplyGap(980, 980),
+      supplyGap(980, 0)
+    ]);
+    expect(r?.weeks.every((w) => w.carriedIn === 0)).toBe(true);
+  });
+
+  it('walks the weeks earliest first whatever order the read gives them', () => {
+    const [r] = withOpenSupply([row({ [W39]: 980, [W37]: 980, [W38]: 980 })], {
+      pos: [],
+      callOffs: [callOff({ quantity: 2_000, needDate: W37, status: 'Confirmed' })]
+    });
+    expect(r?.weeks.map((w) => [w.week, w.gap])).toEqual([
+      [W39, 940],
+      [W37, 0],
+      [W38, 0]
     ]);
   });
 });

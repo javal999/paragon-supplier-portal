@@ -208,3 +208,23 @@ describe('CAP-12 — "Below demand anticipation" on What to order', () => {
     expect(document.body.textContent ?? '').not.toMatch(/\bDA\b/);
   });
 });
+
+describe('BL-228 — the What to order line of a gap the carry reduced', () => {
+  it('AC-02/AC-06 — W39 of sup-002 × RM-EMUL-9410 reads 940, with 40 carried in its tooltip', async () => {
+    const g = (await gaps()).find(
+      (x) =>
+        x.supplierId === 'sup-002' && x.materialCode === 'RM-EMUL-9410' && x.week === '2026-09-21'
+    );
+    expect(g).toMatchObject({ carriedIn: 40, gap: 940 });
+    const gap = /** @type {NonNullable<typeof g>} */ (g);
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: ROUTE });
+    await showAll();
+    const qty = await screen.findByTestId(`op-gap-qty-${keyOf(gap)}`, {}, WAIT);
+    expect(qty).toHaveTextContent(formatNumber(940));
+    expect(qty).toHaveAttribute('title', '40 carried from earlier weeks');
+    const plain = (await gaps()).find((x) => x.carriedIn === 0);
+    expect(screen.getByTestId(`op-gap-qty-${keyOf(/** @type {*} */ (plain))}`)).not.toHaveAttribute(
+      'title'
+    );
+  });
+});

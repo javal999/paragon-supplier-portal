@@ -9,13 +9,22 @@
 //                    `isReleased`, callOffRules) whose need date falls in the
 //                    week of Monday w. A Draft is not released; a Dismissed or
 //                    Rejected call-off gave its quantity back. Neither is supply.
-//   gap(w)         = max(0, demand anticipation(w) − open supply(w)), where the
+//   gap(w)         = max(0, demand anticipation(w) − available(w)), where the
 //                    demand anticipation is the read's `qty`: the figure IN
 //                    FORCE for the week (published or today's, over the
 //                    rolling horizon, DRC-2; null outside it). It is read,
 //                    never recomputed here, so an adjustment of `qty` (DRC-4
 //                    absorbing a surplus in the last week) flows into the gap
 //                    unchanged.
+//   available(w)   = open supply(w) + carried in(w). BL-228
+//                    (SC-HUB-SUPPLY-GAP-CARRY-REQUIREMENTS-2026-10): supply
+//                    above a week's figure carries FORWARD to the next weeks,
+//                    carried in(w+1) = max(0, available(w) − demand
+//                    anticipation(w)). Never backward (CAP-D19): a call-off
+//                    needed later does not cover an earlier week. Only across
+//                    weeks with a figure (CAP-D18): a week outside the horizon
+//                    drops what is left. The carry starts at 0 in the first
+//                    week the read gives.
 //
 // A blanket balance that has not been called off is not dated supply (CAP-9
 // shows it as run-out); every open PO line in a call-off state is a blanket
@@ -73,6 +82,30 @@ export function openSupplyIndex(callOffs) {
  */
 export const supplyGap = (demandAnticipation, openSupply) =>
   demandAnticipation === null ? null : Math.max(0, demandAnticipation - openSupply);
+
+/**
+ * BL-228 — one supplier × material's weeks with the surplus carried forward.
+ * The weeks are walked earliest first whatever order they arrive in.
+ * @param {readonly { readonly week: string; readonly qty: number | null; readonly openSupply: number }[]} weeks
+ * @returns {Map<string, { readonly carriedIn: number; readonly gap: number | null }>} keyed by week
+ */
+export function carryForward(weeks) {
+  /** @type {Map<string, { readonly carriedIn: number; readonly gap: number | null }>} */
+  const out = new Map();
+  let carry = 0;
+  for (const { week, qty, openSupply } of [...weeks].sort((a, b) => a.week.localeCompare(b.week))) {
+    if (qty === null) {
+      // CAP-D18 — no figure, nothing to cover; the surplus goes no further.
+      out.set(week, { carriedIn: 0, gap: null });
+      carry = 0;
+      continue;
+    }
+    const available = openSupply + carry;
+    out.set(week, { carriedIn: carry, gap: supplyGap(qty, available) });
+    carry = Math.max(0, available - qty);
+  }
+  return out;
+}
 
 /**
  * One blanket line of a supplier × material, oldest first, with what it can
@@ -181,10 +214,12 @@ export function proposeForGaps(gaps, lines) {
 /**
  * CAP-12 — what one week adds to the demand anticipation read.
  * `openSupply`:  released call-offs needed that week.
- * `gap`:  demand anticipation − open supply where positive; null with no figure.
+ * `carriedIn`:  BL-228 — surplus from earlier weeks counted against this one; 0 when none.
+ * `gap`:  demand anticipation − (open supply + carried in) where positive; null with no figure.
  * `proposal`:  how the gap closes; null when there is no gap.
  * @typedef {{
  *   readonly openSupply: number;
+ *   readonly carriedIn: number;
  *   readonly gap: number | null;
  *   readonly proposal: GapProposal | null;
  * }} SupplyWeekFields
@@ -211,9 +246,16 @@ export function proposeForGaps(gaps, lines) {
 export function withOpenSupply(rows, { pos, callOffs }) {
   const index = openSupplyIndex(callOffs);
   return rows.map((row) => {
-    const measured = row.weeks.map((w) => {
-      const openSupply = index.get(supplyKey(row.supplierId, row.materialCode, w.week)) ?? 0;
-      return { w, openSupply, gap: supplyGap(w.qty, openSupply) };
+    const supplied = row.weeks.map((w) => ({
+      w,
+      openSupply: index.get(supplyKey(row.supplierId, row.materialCode, w.week)) ?? 0
+    }));
+    const carried = carryForward(
+      supplied.map(({ w, openSupply }) => ({ week: w.week, qty: w.qty, openSupply }))
+    );
+    const measured = supplied.map(({ w, openSupply }) => {
+      const c = carried.get(w.week);
+      return { w, openSupply, carriedIn: c?.carriedIn ?? 0, gap: c?.gap ?? null };
     });
     const gaps = measured.flatMap((m) =>
       m.gap !== null && m.gap > 0 ? [{ week: m.w.week, gap: m.gap }] : []
@@ -224,9 +266,10 @@ export function withOpenSupply(rows, { pos, callOffs }) {
         : proposeForGaps(gaps, blanketBalances(pos, callOffs, row.supplierId, row.materialCode));
     return {
       ...row,
-      weeks: measured.map(({ w, openSupply, gap }) => ({
+      weeks: measured.map(({ w, openSupply, carriedIn, gap }) => ({
         ...w,
         openSupply,
+        carriedIn,
         gap,
         proposal: proposals.get(w.week) ?? null
       }))
@@ -245,6 +288,7 @@ export function withOpenSupply(rows, { pos, callOffs }) {
  *   readonly week: string;
  *   readonly demandAnticipation: number;
  *   readonly openSupply: number;
+ *   readonly carriedIn: number;
  *   readonly gap: number;
  *   readonly proposal: GapProposal;
  * }} SupplyGapRow
@@ -270,6 +314,7 @@ export function supplyGapRows(rows) {
                 week: w.week,
                 demandAnticipation: w.qty,
                 openSupply: w.openSupply,
+                carriedIn: w.carriedIn,
                 gap: w.gap,
                 proposal: w.proposal
               }
