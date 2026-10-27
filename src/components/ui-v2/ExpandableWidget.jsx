@@ -219,7 +219,7 @@ const ExpandableWidget = ({
           <div
             aria-hidden
             onClick={() => setExpanded(false)}
-            className="fixed inset-0 z-40 bg-[rgba(13,27,42,0.4)]"
+            className="fixed inset-0 z-40 bg-[var(--pds-color-scrim)]"
           />
           <div
             ref={dialogRef}

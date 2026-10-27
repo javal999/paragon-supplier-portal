@@ -128,10 +128,12 @@ describe('coarse-pointer touch target (findings 31 and 15)', () => {
 });
 
 describe('border-input token (finding 32)', () => {
-  it('is #8291A0 (3.23:1 on white, WCAG 1.4.11)', () => {
+  // Paradise stage 2: a field's edge is --pds-color-border-strong (#7A7A7A,
+  // 4.3:1 on white), which still clears the WCAG 1.4.11 3:1 floor.
+  it('is the Paradise strong border token (4.3:1 on white, WCAG 1.4.11)', () => {
     const config = /** @type {{ theme: { extend: { colors: Record<string, unknown> } } }} */ (
       /** @type {unknown} */ (tailwindConfig)
     );
-    expect(config.theme.extend.colors['border-input']).toBe('#8291A0');
+    expect(config.theme.extend.colors['border-input']).toContain('var(--pds-color-border-strong)');
   });
 });
