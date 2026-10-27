@@ -2,14 +2,14 @@
 
 | Field | Value |
 |---|---|
-| Status | **Proposed, awaiting owner review.** Nothing is built. Decisions CAP-D18 to CAP-D21 (section 6) are recommendations until the owner accepts them |
+| Status | **Accepted 2026-10-27.** The owner accepted every recommendation in section 6 (CAP-D18 to CAP-D21). Nothing is built yet |
 | Date | 2026-10-27 |
 | Source | Owner, 2026-10-27, reviewing the Demand anticipation grid ("yes, log it"). Backlog row BL-228 |
 | Code read | `main` at `3d91b887` |
 | Amends | CAP-12 BR-01 (gap per week) in `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md`, as designed in `SC-HUB-DEMAND-ANTICIPATION-BRIEF-2026-10.md` section 6 |
 | Does not change | DRC-4 plan check, demand anticipation figures, open supply per week, the oldest-first proposal walk (CAP-9, BR-03) |
 
-**Tags.** [Code] = built behaviour, cited `path:line` under `src/`. [Owner, 2026-10-27] = the owner's request. [Proposed] = a value written before review.
+**Tags.** [Code] = built behaviour, cited `path:line` under `src/`. [Owner, 2026-10-27] = the owner's request. [Proposed] = a value written before review; all were accepted on 2026-10-27, and the tag is kept so they can be traced.
 
 ---
 
@@ -86,7 +86,7 @@ Worked through the example: W37 has 2,000 available, gap 0, carries 1,020. W38 h
 
 ---
 
-## 6. Decisions for the owner
+## 6. Decisions (CAP-D18 to CAP-D21 accepted 2026-10-27)
 
 | ID | Question (from BL-228) | Recommendation | Why |
 |---|---|---|---|
@@ -102,4 +102,4 @@ Worked through the example: W37 has 2,000 available, gap 0, carries 1,020. W38 h
 - **Size S.** One pure-function change in `withOpenSupply` (`supplyBelowDemandRules.js:211`): replace the per-week `supplyGap` call with the running carry, and add `carriedIn` to `SupplyWeekFields`. `supplyGapRows` and `proposeForGaps` need no change; they read `gap`.
 - **UI.** The tooltip in `supplyRows.jsx` and `BelowDemandSection.jsx`; two i18n keys (EN, ID) in `lib/i18n/supplyGap.js`.
 - **Tests.** AC-01 to AC-06 in `supplyBelowDemandRules.cap12.test.js` (rules) and `BuyerOrderPlan.cap12.page.test.jsx` (What to order line).
-- **Estimate.** About 2 hours with tests, one builder, after the owner accepts section 6.
+- **Estimate.** About 2 hours with tests, one builder.

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 2.36, 2026-10-27 (BL-228 requirement written: `SC-HUB-SUPPLY-GAP-CARRY-REQUIREMENTS-2026-10.md`, awaiting owner review) |
+| Version | 2.36, 2026-10-27 (BL-228 requirement written: `SC-HUB-SUPPLY-GAP-CARRY-REQUIREMENTS-2026-10.md`, CAP-D18 to D21 accepted) |
 | What this is | Everything known to be outstanding for the Supplier Hub, in one list: decisions waiting on people, work waiting on those decisions, work waiting on the backend, and work that can start today |
 | What this is not | A plan or a commitment. Nothing here has a date. Sequencing belongs to the project owner |
 | Sources | Open items (section 7 of `SUPPLIER-HUB-REQUIREMENTS.md`), open decisions (section 9.3 of `SUPPLIER-HUB-PRD.md`), what is not built (section 5 of `BUILD-GAP.md`), stubs (section 6 of the requirements), and defects or debts found while building |
@@ -136,7 +136,7 @@ The owner reviewed the requirements and accepted CAP-D1 to CAP-D8 on 2026-10-12.
 
 | ID | Item | Why | Size | Blocked by | Detail |
 |---|---|---|---|---|---|
-| BL-228 | Supply gap carries surplus forward: open supply above a week's demand anticipation counts against the next weeks' gaps. Today `supplyGap` works week by week (`supplyBelowDemandRules.js:74`): in the example the owner reviewed, W37 had 2,000 KG called off against 980 KG and W38 and W39 still showed gaps of 980 KG each | Owner, 2026-10-27 ("yes, log it"). The weekly Gap row and the What to order "Below demand anticipation" proposals overstate need when a call-off lands early | S | Requirement written 2026-10-27 in `SC-HUB-SUPPLY-GAP-CARRY-REQUIREMENTS-2026-10.md` (CAP-D18 to CAP-D21 proposed, awaiting owner review; no build before). The questions it answers: (1) carry forward only within the rolling horizon, or beyond it? (2) does a later call-off cover an earlier week, or never backward? (3) the DRC plan check already absorbs supply above the total in the horizon's last week; confirm only the weekly Gap row and the proposals change | `supplyGap`, `withOpenSupply` (`supplyBelowDemandRules.js`); CAP-12 BR-01, DRC-4 |
+| BL-228 | Supply gap carries surplus forward: open supply above a week's demand anticipation counts against the next weeks' gaps. Today `supplyGap` works week by week (`supplyBelowDemandRules.js:74`): in the example the owner reviewed, W37 had 2,000 KG called off against 980 KG and W38 and W39 still showed gaps of 980 KG each | Owner, 2026-10-27 ("yes, log it"). The weekly Gap row and the What to order "Below demand anticipation" proposals overstate need when a call-off lands early | S | Requirement written 2026-10-27 in `SC-HUB-SUPPLY-GAP-CARRY-REQUIREMENTS-2026-10.md` (CAP-D18 to CAP-D21 accepted 2026-10-27; ready to build). The questions it answers: (1) carry forward only within the rolling horizon, or beyond it? (2) does a later call-off cover an earlier week, or never backward? (3) the DRC plan check already absorbs supply above the total in the horizon's last week; confirm only the weekly Gap row and the proposals change | `supplyGap`, `withOpenSupply` (`supplyBelowDemandRules.js`); CAP-12 BR-01, DRC-4 |
 
 ### 4b. Weekly SC Hub 2026-10-14: DA, ROP and call-off, accepted 2026-10-19
 
