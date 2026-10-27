@@ -3,7 +3,8 @@
 - **Paradise snapshot:** 0.2.0-alpha.6 (status: preview; it may still change)
 - **Stack:** React 19 + Tailwind CSS 3.4, Vite 7, npm (package-lock.json), tests `npx vitest run` (plus `npm run gates` for the full five-gate check)
 - **Run date:** 2026-10-19 · **App commit at run:** `2cfbf2b84e0d9336717d4bd43f5f489788e6e405` (branch `fix/currency-number-format`)
-- **Scope approved (2026-10-19):** whole system, stages 1, 2, 3, 4, 5, 5a, 5b. Applied on branch `feat/paradise-foundations`, starting from `main` @ `7062d1bc30becbcac843131fff77d00ec9812eac`. Values marked "no match: decide" keep their current values until decided.
+- **Scope approved (2026-10-19) by the author, @NFathanahDz:** whole system, stages 1, 2, 3, 4, 5, 5a, 5b. Applied on branch `feat/paradise-foundations`, starting from `main` @ `7062d1bc30becbcac843131fff77d00ec9812eac`, then split into one merge request per stage group on `main` @ `3d91b887`. The snapshot is an alpha (`0.2.0-alpha.6`), so token values may still change upstream.
+- **"No match: decide" values (decided 2026-10-27, author):** where this plan gives a proposal, the proposal is accepted (the first option where it offers two). They are applied in a later run, so in these merge requests every such value keeps its current value. Exceptions: the warning colour (split kept, see Gaps and decisions) and the chart palette (no proposal yet, still open).
 - **Preview report:** not in the repository. The preview kit (`paradise/preview/`) was the author's local before/after check and was removed in the review of MR !16; the runtime does not need it.
 - **Split (review of MR !16):** one merge request per stage group, each revertible alone: stages 1 and 3 (tokens and type), stage 2 (colour), stages 4 and 5 (spacing, radius, shadows), stage 5a (logo), stage 5b (icons). The sign-in page change is its own merge request.
 - **This run covers 6 foundations:** Brand, Colours, Typography, Spacing, Radius and Shadows, Icons. Components, motion, dark and auto theme are a later run.
@@ -380,7 +381,7 @@ Mapped but not changed in the preview: `src/services/data/mock/fixtures/buyerAna
 ## Gaps and decisions
 - **Text tones.** Paradise has primary, secondary and disabled text only. The app's tertiary grey (`text-tertiary`, 1,798 uses) is mapped to `--pds-color-text-secondary`, so two tones become one. Proposal: accept.
 - **Teal accent.** Teal is the app's decorative accent (charts, dials, low-emphasis links). Paradise's `--pds-color-accent` is Paragon blue unless a product theme is set, and Supplier Portal is not one of the six approved products. Proposal: accept blue, or ask the Paradise team for a product theme.
-- **Warning colour.** The app splits warning into a bright amber fill (#D97706) and a dark amber text colour. Paradise has one warning ink (`--pds-color-feedback-warning`, dark olive) plus a pale background. Bright amber dots and bars become dark. Proposal: accept, or request a graphical warning token.
+- **Warning colour.** The app splits warning into a bright amber fill (#D97706) and a dark amber text colour. Paradise has one warning ink (`--pds-color-feedback-warning`, dark olive) plus a pale background. **Decided (author, 2026-10-27): keep the split (DP2-WARN-01).** Graphical warning uses (bars, dots, dials, edges, `TARGET_STATUS.near.fill`, Tailwind `warning`) stay bright amber #D97706, because Paradise has no graphical warning token; warning text (`text-warning-hover`, `TARGET_STATUS.near.text`) uses `--pds-color-feedback-warning`. Next step: request a graphical warning token from the Paradise team.
 - **Chart palette.** The app's 5-step teal/navy series ramp maps to `--pds-chart-1` to `--pds-chart-5`, a multi-hue categorical palette. This conflicts with the app's own DP-2 rule (no rainbow charts). Proposal: decide which rule wins before stage 2 reaches charts.
 - **Data colour.** `data-navy` (#1E3A5F) colours every document number and amount; Paradise has no data-value colour. Kept as is. Proposal: `--pds-color-text-primary`.
 - **Most-used radius.** `rounded-md` is 10px (370 uses); Paradise steps are 8px and 12px. Kept at 10px. Proposal: `--radius-large` (8px).
@@ -503,6 +504,6 @@ Choose one scope and the stages to run in it:
 - **Several pages (for example the six previewed screens).** Stages: 1–5, 5a. Risk: Medium. Same mechanism as one page, repeated; navigation between styled and unstyled pages will feel inconsistent. Rollback: Revert the one commit.
 - **Whole system (what the preview shows).** Stages: 1–5, 5a, 5b (choose any subset). Risk: Medium. Largest visible change; tests that pin hex values or class names need updating in the same change; decisions above should be settled first. Rollback: Revert the one commit; each stage can also be its own commit so it can be reverted alone.
 
-| Approved scope | Stages | Starting commit | Date |
-| --- | --- | --- | --- |
-| Whole system | 1, 2, 3, 4, 5, 5a, 5b | `7062d1bc30becbcac843131fff77d00ec9812eac` (main) | 2026-10-19 |
+| Approved scope | Stages | Starting commit | Date | Approved by |
+| --- | --- | --- | --- | --- |
+| Whole system | 1, 2, 3, 4, 5, 5a, 5b | `7062d1bc30becbcac843131fff77d00ec9812eac` (main) | 2026-10-19 | @NFathanahDz (author) |
