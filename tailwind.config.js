@@ -48,8 +48,11 @@ export default {
         'mid': pds('--pds-color-text-secondary'),
         // Status
         'success': { DEFAULT: pds('--pds-color-feedback-success'), soft: pds('--pds-color-feedback-success-background') },
+        // DP2-WARN-01 split kept (review of MR !16): Paradise has no graphical
+        // warning token, so DEFAULT (bars, dots, edges) stays bright amber and
+        // hover (warning TEXT on light) is Paradise's dark warning ink.
         'warning': {
-          DEFAULT: pds('--pds-color-feedback-warning'),
+          DEFAULT: '#D97706',
           hover: pds('--pds-color-feedback-warning'),
           soft: pds('--pds-color-feedback-warning-background'),
         },

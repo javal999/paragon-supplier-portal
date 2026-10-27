@@ -124,7 +124,9 @@ export const EDGE_INK = /** @type {const} */ ({
 // so the encoding is colourblind-safe (position vs the tick, not colour alone).
 //
 // The "near" state consumes the DP2-WARN-01 amber split: bright #D97706 for the
-// bar FILL / tick-adjacent graphic, dark #8A5606 for the value TEXT on light.
+// bar FILL / tick-adjacent graphic, Paradise's dark warning ink for the value
+// TEXT on light. Paradise has no graphical warning token, so the fill keeps its
+// hex (decided in the review of MR !16; see paradise-migration-plan.md).
 // meeting = success green, missing = danger red (both fine as fill AND text).
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -136,7 +138,7 @@ export const EDGE_INK = /** @type {const} */ ({
  */
 export const TARGET_STATUS = /** @type {const} */ ({
   meeting: { fill: 'var(--pds-color-feedback-success)', text: 'var(--pds-color-feedback-success)' }, // success
-  near: { fill: 'var(--pds-color-feedback-warning)', text: 'var(--pds-color-feedback-warning)' }, // DP2-WARN-01 amber split
+  near: { fill: '#D97706', text: 'var(--pds-color-feedback-warning)' }, // DP2-WARN-01 amber split
   missing: { fill: 'var(--pds-color-feedback-danger)', text: 'var(--pds-color-feedback-danger)' } // danger
 });
 
