@@ -615,7 +615,6 @@ describe('POPULATION — nothing below means anything without this', () => {
     // And a consumption record (CAP-11): a later record supersedes it at read.
     // And a feedstock confirmation (BL-194): append-only, the latest in force.
     // And a what-if scenario (BL-202): saved once, never changed.
-    // And PTI's capacity gap decision (INV-D8): recorded once, never changed.
     expect(unprobeable).toEqual([
       'rfqConfidentiality',
       'inventoryDeclaration',
@@ -629,9 +628,10 @@ describe('POPULATION — nothing below means anything without this', () => {
       'demandAnticipation',
       'consumption',
       'whatIfScenario',
-      'feedstockConfirmation',
-      'capacityDecision'
+      'feedstockConfirmation'
     ]);
+    // PTI's capacity gap decision left this list at BL-227: its withdraw verb
+    // is a non-creation transition, and the target names the supplier.
   });
 
   it("CONTROL — the walk lands every probe in one of its verb's from-states", async () => {

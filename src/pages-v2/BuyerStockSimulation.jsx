@@ -563,9 +563,6 @@ const RowActions = ({ row: r, line, overCalled, onCallOff, onPoRequest }) => {
             topic="productionDate"
             testId={`sim-ask-${key}`}
           />
-          <span className="text-[11px] text-text-tertiary whitespace-nowrap">
-            {t('sim.action.askProductionDate')}
-          </span>
         </div>
       ) : null}
     </div>

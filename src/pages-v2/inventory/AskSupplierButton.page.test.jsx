@@ -124,7 +124,9 @@ describe('INV-D9 · Ask supplier — an ask already on the subject', () => {
         topic="capacityGap"
       />
     );
-    expect(await screen.findByTestId('ask-supplier-open')).toHaveTextContent('Ask supplier');
+    expect(await screen.findByTestId('ask-supplier-open')).toHaveTextContent(
+      'Ask about the capacity gap'
+    );
   });
 });
 

@@ -2,8 +2,9 @@
 // CAPACITY DECISION STORE — INV-D8 (Inventory UX P-07).
 //
 // One row per acceptance PTI recorded on a supplier × planning group × week.
-// Only the `capacityDecision` target writes here, through its `create`; a row
-// is never changed or removed (RFX-R3).
+// Only the `capacityDecision` target writes here: `create` inserts a row, and
+// the withdraw verb (BL-227) marks it `withdrawn`. A row is never removed
+// (RFX-R3); a later acceptance on the same week is a new row.
 //
 // SAMPLE DATA: the store opens with one acceptance on sup-005's amber week
 // 2026-10-12 (pg-MG-02), marked `sample: true`, so "PTI's decision" and the
@@ -56,7 +57,8 @@ export const capacityDecisionStore = {
     return rows.find((r) => r.id === id);
   },
   /**
-   * The acceptance on one supplier × planning group × week, if any.
+   * The acceptance in force on one supplier × planning group × week, if any
+   * (a withdrawn one is not in force).
    * @param {string} supplierId
    * @param {string} planningGroupId
    * @param {string} week
@@ -64,7 +66,11 @@ export const capacityDecisionStore = {
    */
   find(supplierId, planningGroupId, week) {
     return rows.find(
-      (r) => r.supplierId === supplierId && r.planningGroupId === planningGroupId && r.week === week
+      (r) =>
+        r.decision === 'accepted' &&
+        r.supplierId === supplierId &&
+        r.planningGroupId === planningGroupId &&
+        r.week === week
     );
   },
   /**
@@ -79,6 +85,27 @@ export const capacityDecisionStore = {
     rows = [...rows, full];
     changed();
     return full;
+  },
+  /**
+   * BL-227 — marks an acceptance withdrawn. Called by the target's
+   * `applyTransition` only.
+   * @param {string} id
+   * @param {string} at
+   * @param {import('../../types').CapacityDecision['decidedBy']} by
+   * @returns {void}
+   */
+  withdraw(id, at, by) {
+    rows = rows.map((r) =>
+      r.id === id
+        ? Object.freeze({
+            ...r,
+            decision: /** @type {const} */ ('withdrawn'),
+            withdrawnAt: at,
+            withdrawnBy: by
+          })
+        : r
+    );
+    changed();
   },
   /**
    * Back to the sample row — test isolation.

@@ -8,7 +8,10 @@ import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { useToast } from '@hooks/useToast';
 import { formatDate } from '@lib/format';
-import { useCapacityDecisionCommand } from '@services/query/commandHooks';
+import {
+  useCapacityDecisionCommand,
+  useCapacityDecisionWithdrawCommand
+} from '@services/query/commandHooks';
 import {
   capacityAcceptRefusal,
   capacityDecisionRefusalOf,
@@ -23,7 +26,10 @@ import { qty } from './inventoryDisplay';
 //
 //   · Amber week ("Needs the additional capacity"): "Accept additional
 //     capacity", recorded on the supplier × planning group × week through
-//     `t_capacitydecision_accept`; once accepted, "Accepted <date>".
+//     `t_capacitydecision_accept`; once accepted, "Accepted <date>" and
+//     "Undo" (`t_capacitydecision_withdraw`, BL-227).
+//   · An accepted week that has since turned red says so: INV-D12 counts a
+//     red week toward the alert whatever PTI accepted. Undo stays offered.
 //   · Red week ("Cannot be supplied"): no accept — the additional capacity
 //     cannot cover it — and the sentence says how much is still short.
 //   · Both: lane 2A's "Ask supplier" on the planning group and week.
@@ -57,6 +63,7 @@ export const CapacityGapActions = ({
   const { toast } = useToast();
   const availability = useVerbAvailability('capacitydecision:accept');
   const command = useCapacityDecisionCommand();
+  const withdraw = useCapacityDecisionWithdrawCommand();
   const canAccept =
     capacityAcceptRefusal({ level: week.level, accepted: decision !== undefined }) === null;
   const uncovered = uncoveredByAdditional(week);
@@ -76,12 +83,41 @@ export const CapacityGapActions = ({
     toast({ variant: 'success', title: t('capDecision.toast.accepted') });
   };
 
+  const undo = async () => {
+    if (!decision) return;
+    const result = await withdraw.mutateAsync({ decisionId: decision.id });
+    if (result.status === 'failed') {
+      toast({
+        variant: 'error',
+        title: t('capDecision.toast.undoRefused', { reason: result.reason ?? '' })
+      });
+      return;
+    }
+    toast({ variant: 'success', title: t('capDecision.toast.undone') });
+  };
+
   return (
     <div className="flex flex-col items-start gap-1.5 min-w-[160px]">
       {decision ? (
         <span className="text-xs text-text-secondary" data-testid={`capacity-accepted-${testKey}`}>
           {t('capDecision.accepted')} <Data>{formatDate(decision.decidedAt)}</Data>
         </span>
+      ) : null}
+      {decision && week.level === 'cannotSupply' ? (
+        <span className="text-xs text-danger" data-testid={`capacity-accepted-now-red-${testKey}`}>
+          {t('capDecision.acceptedNowRed')}
+        </span>
+      ) : null}
+      {decision && availability.kind === 'held' ? (
+        <Button
+          variant="secondary"
+          disabled={withdraw.isPending}
+          onClick={() => void undo()}
+          aria-label={t('capDecision.undoFor', { week: formatDate(week.week) })}
+          data-testid={`capacity-undo-${testKey}`}
+        >
+          {t('capDecision.undo')}
+        </Button>
       ) : null}
       {uncovered !== null ? (
         <span className="text-xs text-danger" data-testid={`capacity-cannot-cover-${testKey}`}>

@@ -698,11 +698,12 @@ export class DataError extends Error {
 
 /**
  * PTI accepted the additional capacity a supplier offered on one planning
- * group week (an amber week: LTP above capacity, within BE). A record, never
- * changed.
+ * group week (an amber week: LTP above capacity, within BE). `decision`
+ * becomes `withdrawn` when the planner undoes it (BL-227); the row stays.
  *
  * `week`:  The week's Monday, `YYYY-MM-DD`.
  * `decidedAt` / `decidedBy`:  When and by whom PTI accepted it.
+ * `withdrawnAt` / `withdrawnBy`:  When and by whom PTI undid it.
  * `sample`:  True on the demo row the store opens with (honesty marker).
  *
  * @typedef {{
@@ -710,9 +711,11 @@ export class DataError extends Error {
  *   readonly supplierId: string;
  *   readonly planningGroupId: string;
  *   readonly week: string;
- *   readonly decision: 'accepted';
+ *   readonly decision: 'accepted' | 'withdrawn';
  *   readonly decidedAt: string;
  *   readonly decidedBy: ActorAttribution;
+ *   readonly withdrawnAt?: string;
+ *   readonly withdrawnBy?: ActorAttribution;
  *   readonly sample?: boolean;
  * }} CapacityDecision
  */

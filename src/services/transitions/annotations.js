@@ -358,6 +358,8 @@ export const TRANSITION_PURPOSE = Object.freeze({
   t_supplierask_withdraw: { purposeKey: 'processFlows.purpose.t_supplierask_withdraw' },
   // INV-D8 — PTI accepts additional capacity on a gap week.
   t_capacitydecision_accept: { purposeKey: 'processFlows.purpose.t_capacitydecision_accept' },
+  // BL-227 — PTI undoes an acceptance.
+  t_capacitydecision_withdraw: { purposeKey: 'processFlows.purpose.t_capacitydecision_withdraw' },
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — RFx management.
   t_rfi_create: { purposeKey: 'processFlows.purpose.t_rfi_create' },
   t_rfi_revise_draft: { purposeKey: 'processFlows.purpose.t_rfi_revise_draft' },

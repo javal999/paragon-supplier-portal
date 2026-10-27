@@ -127,9 +127,6 @@ export const inventoryCapacityEn = {
   'inv.drawer.action.simulation.hint': 'Weekly figures for this supplier and material',
   'inv.drawer.action.callOff': 'Create call-off',
   'inv.drawer.action.po': 'Create PO request',
-  // Lane 2D — the hint under the drawer's "Ask supplier" (INV-D9).
-  'inv.drawer.action.ask.productionDate': 'Ask the supplier for a production date',
-  'inv.drawer.action.ask.stockFigures': 'Ask the supplier for current stock figures',
 
   'inv.sync.title': 'Suppliers connected by system',
   'inv.sync.subtitle': 'Pull the latest stock figures directly from the supplier system.',
@@ -529,7 +526,11 @@ export const inventoryCapacityEn = {
   'inv.alerts.basis.tradeOff': 'Trade-off period short',
   // INV-D9 — "Ask supplier": PTI's hub ask, and the supplier's "PTI is asking"
   // block (S-04).
-  'supplierAsk.button': 'Ask supplier',
+  // BL-227 — the button names what it asks for (P-02 / P-05 wording).
+  'supplierAsk.buttonFor.productionDate': 'Ask for a production date',
+  'supplierAsk.buttonFor.stockFigures': 'Ask for stock figures',
+  'supplierAsk.buttonFor.capacityGap': 'Ask about the capacity gap',
+  'supplierAsk.buttonFor.other': 'Ask supplier',
   'supplierAsk.view': 'View ask',
   'supplierAsk.existing.Open': 'Asked, waiting for the supplier',
   'supplierAsk.existing.Answered': 'The supplier answered',
@@ -760,9 +761,6 @@ export const inventoryCapacityId = {
   'inv.drawer.action.simulation.hint': 'Angka mingguan untuk pemasok dan material ini',
   'inv.drawer.action.callOff': 'Buat call-off',
   'inv.drawer.action.po': 'Buat permintaan PO',
-  // Lane 2D — the hint under the drawer's "Ask supplier" (INV-D9).
-  'inv.drawer.action.ask.productionDate': 'Minta tanggal produksi ke pemasok',
-  'inv.drawer.action.ask.stockFigures': 'Minta angka stok terbaru ke pemasok',
 
   'inv.sync.title': 'Pemasok yang terhubung lewat sistem',
   'inv.sync.subtitle': 'Tarik angka stok terbaru langsung dari sistem pemasok.',
@@ -1157,7 +1155,10 @@ export const inventoryCapacityId = {
   'inv.alerts.basis.firm': 'Periode Firm kurang',
   'inv.alerts.basis.tradeOff': 'Periode Trade-off kurang',
   // INV-D9 — "Tanyakan ke pemasok" dan blok "PTI bertanya" (S-04).
-  'supplierAsk.button': 'Tanyakan ke pemasok',
+  'supplierAsk.buttonFor.productionDate': 'Minta tanggal produksi',
+  'supplierAsk.buttonFor.stockFigures': 'Minta angka stok',
+  'supplierAsk.buttonFor.capacityGap': 'Tanyakan kekurangan kapasitas',
+  'supplierAsk.buttonFor.other': 'Tanyakan ke pemasok',
   'supplierAsk.view': 'Lihat pertanyaan',
   'supplierAsk.existing.Open': 'Sudah ditanyakan, menunggu pemasok',
   'supplierAsk.existing.Answered': 'Pemasok sudah menjawab',

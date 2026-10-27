@@ -344,9 +344,6 @@ const MaterialDrawer = ({
               riskClass={risk.riskClass}
               testId="material-drawer-ask"
             />
-            <p className="mt-1 text-xs text-text-tertiary">
-              {t(`inv.drawer.action.ask.${askTopic}`)}
-            </p>
           </div>
           {onSync ? (
             <Button

@@ -30,7 +30,8 @@ import { AskStatePill, AskSubject, askRefusalText, latestAnswer } from './suppli
 // (lanes 2B–2D place it: alerts, the material drawer, stock simulation,
 // capacity gap weeks).
 //
-//   · No ask on the subject yet → "Ask supplier" opens a dialog: topic, the
+//   · No ask on the subject yet → the button, named for its topic ("Ask for
+//     a production date", BL-227), opens a dialog: topic, the
 //     question (prefilled per topic, editable) and an optional due date.
 //   · A live ask on the same supplier × subject (Open or Answered) → the
 //     control shows that ask instead of offering a duplicate: its state, the
@@ -113,7 +114,7 @@ const AskSupplierButton = ({
   return (
     <>
       <Button variant="outline" onClick={() => setOpen(true)} data-testid={`${testId}-open`}>
-        {t('supplierAsk.button')}
+        {t(`supplierAsk.buttonFor.${topic}`)}
       </Button>
       {open ? (
         <AskRaiseDialog

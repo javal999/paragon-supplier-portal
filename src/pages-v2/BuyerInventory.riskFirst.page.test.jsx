@@ -228,12 +228,12 @@ describe('P-02 — a row opens the material drawer', () => {
     ).toEqual([
       'Open stock simulation',
       'Create PO request',
-      'Ask supplier',
+      'Ask for a production date',
       'Record stock from a supplier message'
     ]);
     const ask = screen.getByTestId('material-drawer-ask');
     expect(ask).toHaveAttribute('data-topic', 'productionDate');
-    expect(ask).toHaveTextContent('Ask the supplier for a production date');
+    expect(ask).toHaveTextContent('Ask for a production date');
     fireEvent.click(await screen.findByTestId('material-drawer-ask-open'));
     expect(await screen.findByTestId('material-drawer-ask-topic')).toHaveValue('productionDate');
   });
@@ -246,7 +246,7 @@ describe('P-02 — a row opens the material drawer', () => {
     fireEvent.click(await screen.findByTestId(`pti-stock-row-${pair}`));
     const ask = screen.getByTestId('material-drawer-ask');
     expect(ask).toHaveAttribute('data-topic', 'stockFigures');
-    expect(ask).toHaveTextContent('Ask the supplier for current stock figures');
+    expect(ask).toHaveTextContent('Ask for stock figures');
     fireEvent.click(await screen.findByTestId('material-drawer-ask-open'));
     expect(await screen.findByTestId('material-drawer-ask-topic')).toHaveValue('stockFigures');
   });

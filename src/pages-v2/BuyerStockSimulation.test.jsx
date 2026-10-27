@@ -274,7 +274,7 @@ describe('Stock simulation page (MR-7 section e)', () => {
     await screen.findByTestId(`sim-row-${PET}`);
     const ask = screen.getByTestId(`sim-ask-${PET}`);
     expect(ask).toHaveAttribute('data-topic', 'productionDate');
-    expect(ask).toHaveTextContent(stockSimulationEn['sim.action.askProductionDate']);
+    expect(ask).toHaveTextContent('Ask for a production date');
     expect(screen.getByTestId(`sim-po-${PET}`)).toBeInTheDocument();
     // PK-PETB-8802 already has an open ask (seeded): the control shows it instead.
     expect(await screen.findByTestId(`sim-ask-${PET2}-existing`)).toBeInTheDocument();
