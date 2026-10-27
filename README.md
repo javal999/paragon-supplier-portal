@@ -466,6 +466,50 @@ Performance thresholds NF2–NF7 are "TBD by IT".
 
 ---
 
+## Security
+
+The security boundary is one shared password at the Vercel edge. Behind it
+the portal is a browser-only prototype on sample data: no backend, no
+database, no SAP connection — so every control below protects *access to the
+prototype*, not users' records.
+
+| | |
+|---|---|
+| **Authentication** | One shared username and password, compared in constant time on both fields so the response does not reveal which was wrong; success issues an HMAC-SHA256 signed session (claims version and expiry checked on every request) — [`gate/handler.js`](gate/handler.js), [`gate/session.js`](gate/session.js), tested by `npm run test:gate` ([`gate/session.test.js`](gate/session.test.js)) |
+| **Session cookie** | `HttpOnly; Secure; SameSite=Lax`, 7-day `Max-Age`; logout clears it — [`gate/handler.js:13,50-52`](gate/handler.js) |
+| **Secrets handling** | `GATE_USER`, `GATE_PASSWORD` and `GATE_SECRET` are server-side variables read at the edge, never `VITE_`-prefixed, so never bundled; the only `VITE_` variables in `src/` are the four `VITE_CHAOS*` test switches. `.env*` is git-ignored — [`middleware.js`](middleware.js), [`.gitignore:18`](.gitignore) |
+| **Fail closed** | Any missing gate secret returns 503 for every path rather than serving the app or accepting a token signed with an empty secret — [`gate/handler.js:70-72`](gate/handler.js) |
+| **Bundle exposure** | The middleware matches `/(.*)` and runs before the SPA rewrite, so the app shell and every `/assets/*` chunk need a valid session; only `/robots.txt` and `/favicon.ico` pass — [`middleware.js`](middleware.js), [`gate/handler.js:66`](gate/handler.js) |
+| **Indexing** | `X-Robots-Tag: noindex, nofollow` and a robots meta tag on the gate page — [`gate/handler.js:16`](gate/handler.js), [`gate/render.js:66`](gate/render.js) |
+| **Input and injection** | No server-side input exists beyond the login form, whose malformed body is treated as a failed attempt; `src/` contains no `dangerouslySetInnerHTML`, so all text goes through React escaping — [`gate/handler.js:86-88`](gate/handler.js) |
+
+npm audit: **15 advisories** across 604 packages — 2 critical, 9 high, 3
+moderate, 1 low; **4 high** in the production tree, all in the
+`@vercel/functions → @vercel/oidc → @vercel/cli-config → zod` chain the
+middleware imports. Run on Node 26.8.1, npm 11.19.0
+([raw output](docs/evidence/npm-audit-2026-10-27.json)). CI does not run an
+audit (R-05).
+
+> **Known residual risk.** Everyone behind the gate is one identity: the
+> password is shared, and the persona and tenant a seat acts as are read
+> from browser storage. That is acceptable only while the data is sample
+> data. Real sign-in is BL-28. Full list: [Residual risks](#residual-risks).
+
+### Residual risks
+
+| ID | Risk | Status | Mitigation / upgrade path |
+|---|---|---|---|
+| R-02 | **The login form has no rate limit or lockout.** `/__gate/login` accepts unlimited attempts. | *Open:* not yet decided | Vercel WAF rate-limit rule on `/__gate/login`, or a per-IP counter in the gate. |
+| R-03 | **Sessions cannot be revoked individually.** A signed cookie stays valid for 7 days; the only revocation is rotating `GATE_SECRET`, which signs everyone out. | *Open:* not yet decided | Shorter TTL, or a session store once real sign-in exists (BL-28). |
+| R-04 | **Security headers cover the gate page only.** `X-Frame-Options`, `nosniff` and `Referrer-Policy` are set on gate responses; authenticated app responses pass through `next()` without them, and [`vercel.json`](vercel.json) sets no `headers` and no Content-Security-Policy. | *Open:* not yet decided | Add a `headers` block to `vercel.json` with the same four headers plus a CSP. |
+| R-05 | **15 known dependency advisories and no audit gate.** Neither the merge gate in [`.gitlab-ci.yml`](.gitlab-ci.yml) nor the manual [`.github/workflows/gates.yml`](.github/workflows/gates.yml) runs `npm audit`; 4 high advisories sit in the production chain. | *Open:* not yet decided | Upgrade `@vercel/functions`, `vite` and `vitest`; add `npm audit --omit=dev --audit-level=high` to the gates. |
+| R-06 | **Credential length leaks by timing.** `timingSafeEqual` returns early when lengths differ ([`gate/session.js:43-46`](gate/session.js)), so response time can reveal the username and password lengths. | *Open:* not yet decided | Compare HMACs of both strings, which are fixed length. |
+| R-07 | **Logout is a GET.** Any page can sign a user out with a link to `/__gate/logout` ([`gate/handler.js:74-76`](gate/handler.js)). | *Open:* not yet decided | Accept logout on POST only. |
+| R-08 | **No access or security logging in the repo.** The gate records no failed logins; only Vercel's platform logs exist. | *Open:* not yet decided | Log failed attempts with IP at the edge; set a retention period. |
+| R-01 | **Authorization is client-side.** Roles, tenant scoping and transition checks run in the browser ([`src/services/transitions/`](src/services/transitions/)). Stored roles are filtered to those the persona may hold, but the persona and tenant themselves are read from `localStorage` ([`src/context/identitySources.js:50-100`](src/context/identitySources.js)), so anyone past the gate can act as any seat the portal offers. | *Accepted:* README states client-side scoping is "acceptable only because there is no real data" ([`README.md:290-291`](README.md)) | Move every check behind `httpDataService` when the backend lands; BL-28 for identity. |
+
+---
+
 ## Prerequisites
 
 | | |
