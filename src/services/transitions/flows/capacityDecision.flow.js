@@ -14,9 +14,10 @@
 // it on the submission would give `Submitted` a second meaning and lose the
 // decision on every resubmission, so it lives here.
 //
-// A DEGENERATE SINGLE-STATE machine, the same shape as `feedstockConfirmation`:
-// a decision is a record, and the one state exists so the act rides the
-// governed dispatch spine (role + fields + scope + policy + DR-10 audit).
+// TWO STATES (BL-227): `Accepted`, and `Withdrawn` when the planner undoes
+// the acceptance. A withdrawn decision stays on record (RFX-R3); the week
+// counts toward the capacity alert again (INV-D12) and Accept is offered
+// again, which records a NEW decision.
 // "Move demand" is not built here (INV-D8); the ask half of INV-D8 is the
 // `supplierAsk` flow.
 // ────────────────────────────────────────────────────────────────────────────
@@ -28,10 +29,10 @@ import { POLICY_HOOKS } from '../policyHooks';
 export const capacityDecisionFlow = {
   entity: 'capacityDecision',
   version: 1,
-  states: ['Accepted'],
+  states: ['Accepted', 'Withdrawn'],
   initial: 'Accepted',
-  /** An acceptance is a record; it is never changed. */
-  terminals: ['Accepted'],
+  /** A withdrawn acceptance stays on record; a new acceptance is a new decision. */
+  terminals: ['Withdrawn'],
   transitions: [
     {
       // PTI accepts the additional capacity on one amber week.
@@ -42,6 +43,19 @@ export const capacityDecisionFlow = {
       requiredRole: 'capacitydecision:accept',
       requiredFields: ['supplierId', 'planningGroupId', 'week'],
       policyHooks: [POLICY_HOOKS.CAPACITY_DECISION_ACCEPTABLE],
+      surfaceable: { surfaced: true },
+      version: 1
+    },
+    {
+      // BL-227 — the planner undoes an acceptance. Same atom as accept: the
+      // seat that may accept may take it back.
+      id: 't_capacitydecision_withdraw',
+      from: ['Accepted'],
+      to: 'Withdrawn',
+      trigger: 'user',
+      requiredRole: 'capacitydecision:accept',
+      requiredFields: [],
+      policyHooks: [],
       surfaceable: { surfaced: true },
       version: 1
     }

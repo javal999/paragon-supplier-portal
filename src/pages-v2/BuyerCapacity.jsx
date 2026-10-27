@@ -411,6 +411,15 @@ const BuyerCapacity = () => {
   const withGap = plans.filter((p) => planStatus(p) === 'gap');
   const ltpByPlan = new Map(plans.map((p) => [keyOf(p), ltpCapacityWeeks(p)]));
   /**
+   * BL-227 / INV-D12 — for the row's "PTI's decision" line: an acceptance on a
+   * week that has since turned red no longer counts as decided.
+   * @param {CapacityPlan} p
+   */
+  const decisionInForceOf = (p) => (/** @type {string} */ week) => {
+    const level = ltpByPlan.get(keyOf(p))?.find((w) => w.week === week)?.level;
+    return level === 'cannotSupply' ? undefined : decisionOfPlan(p)(week);
+  };
+  /**
    * CAP-3 BR-02 — weeks per non-green state. An amber week the supplier has
    * confirmed (BR-03) leaves "Needs additional" for "Confirmed additional".
    * @param {CapacityPlan} p
@@ -670,7 +679,7 @@ const BuyerCapacity = () => {
                 )}
                 <PtiDecisionLine
                   gapWeeks={p.weeks.filter(isGapWeek).map((w) => w.week)}
-                  decisionOf={decisionOfPlan(p)}
+                  decisionOf={decisionInForceOf(p)}
                   testId={`capacity-decision-header-${keyOf(p)}`}
                 />
                 <span className="ml-auto text-xs text-text-tertiary">

@@ -31,7 +31,14 @@ export const capacityDecisionEn = {
     'The LTP is above capacity plus additional capacity, so the additional capacity cannot cover this week.',
   'capDecision.refusal.ALREADY_ACCEPTED':
     'PTI has already accepted the additional capacity for this week.',
-  'capDecision.supplier.accepted': 'PTI accepted your additional capacity on'
+  'capDecision.supplier.accepted': 'PTI accepted your additional capacity on',
+  // BL-227 — undo, and an accepted week that has since turned red.
+  'capDecision.undo': 'Undo',
+  'capDecision.undoFor': 'Undo the acceptance for the week of {{week}}',
+  'capDecision.toast.undone': 'Acceptance undone. The week counts toward the capacity alert again.',
+  'capDecision.toast.undoRefused': 'Not undone: {{reason}}',
+  'capDecision.acceptedNowRed':
+    'Accepted earlier, but the week is now above capacity plus additional capacity, so it counts toward the alert again.'
 };
 
 /** @type {Record<string, string>} */
@@ -56,5 +63,12 @@ export const capacityDecisionId = {
   'capDecision.refusal.ABOVE_ADDITIONAL_CAPACITY':
     'LTP di atas kapasitas ditambah kapasitas tambahan, jadi kapasitas tambahan tidak dapat menutup minggu ini.',
   'capDecision.refusal.ALREADY_ACCEPTED': 'PTI sudah menerima kapasitas tambahan untuk minggu ini.',
-  'capDecision.supplier.accepted': 'PTI menerima kapasitas tambahan Anda pada'
+  'capDecision.supplier.accepted': 'PTI menerima kapasitas tambahan Anda pada',
+  'capDecision.undo': 'Batalkan',
+  'capDecision.undoFor': 'Batalkan penerimaan untuk minggu {{week}}',
+  'capDecision.toast.undone':
+    'Penerimaan dibatalkan. Minggu ini kembali dihitung dalam peringatan kapasitas.',
+  'capDecision.toast.undoRefused': 'Tidak dibatalkan: {{reason}}',
+  'capDecision.acceptedNowRed':
+    'Sudah diterima, tetapi minggu ini sekarang di atas kapasitas ditambah kapasitas tambahan, jadi kembali dihitung dalam peringatan.'
 };

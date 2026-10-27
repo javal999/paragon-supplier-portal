@@ -6,7 +6,7 @@ Screenshots of `main` at 71aaa3d6 (Inventory & Capacity UX waves 1 and 2); 4.2-1
 |---|---|---|---|---|
 | `4.1-1-inventory.jpg` | 4.1-1 | PTI | `/buyer/inventory?type=VERP` | Risk and supplier cover first; tiles filter the table |
 | `4.1-2-material-drawer.jpg` | 4.1-2 | PTI | `/buyer/inventory` row PK-PETB-8801 | Material drawer: why the class, open alerts, actions |
-| `4.1-3-stock-simulation.jpg` | 4.1-3 | PTI | `/buyer/stock-simulation?q=PK-PETB` | Over-called rows offer a PO request and Ask supplier |
+| `4.1-3-stock-simulation.jpg` | 4.1-3 | PTI | `/buyer/stock-simulation?q=PK-PETB` | Over-called rows offer a PO request and Ask supplier (taken before 2026-10-27; the button now reads "Ask for a production date") |
 | `4.2-1-supplier-stock.jpg` | 4.2-1 | Supplier (sup-007) | `/supplier/inventory` | One weekly status, then the table; tabs |
 | `4.3-1-supplier-access.jpg` | 4.3-1 | PTI | `/buyer/supplier-access` | Grant, change or remove PTI stock access |
 | `4.4-1-pti-capacity.jpg` | 4.4-1 | PTI | `/buyer/capacity` | Weekly capacity per supplier and planning group |

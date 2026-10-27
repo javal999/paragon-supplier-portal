@@ -20,6 +20,7 @@ import { supplierAskStore } from '@services/data/mock/stores/supplierAskStore';
 import { capacityWeekLevel } from '@services/data/mock/targets/capacityDecision';
 import { sdcClock } from '@services/sdc';
 import { formatDate } from '@lib/format';
+import { NO_PERSON } from '@context/noPerson';
 import BuyerCapacity from '../BuyerCapacity';
 import SupplierCapacity from '../SupplierCapacity';
 import { qty } from './inventoryDisplay';
@@ -55,7 +56,7 @@ describe('INV-D8 · PTI Capacity — actions on gap weeks only', () => {
     const accept = await screen.findByTestId(`capacity-accept-${key(SUP5, '2026-10-19')}`);
     expect(accept).toHaveTextContent('Accept additional capacity');
     expect(screen.getByTestId(`capacity-ask-${key(SUP5, '2026-10-19')}-open`)).toHaveTextContent(
-      'Ask supplier'
+      'Ask about the capacity gap'
     );
     // The sample acceptance: shown, and no second Accept on that week.
     expect(screen.getByTestId(`capacity-accepted-${key(SUP5, '2026-10-12')}`)).toHaveTextContent(
@@ -167,5 +168,59 @@ describe('INV-D8 · the supplier sees PTI’s acceptance, read only', () => {
     await screen.findByTestId('capacity-grid');
     expect(screen.queryByText('PTI’s decision')).toBeNull();
     expect(screen.queryByTestId(/^capacity-pti-accepted-/)).toBeNull();
+  });
+});
+
+describe('BL-227 · Undo, and an accepted week that has turned red', () => {
+  it('Undo on an accepted amber week takes the acceptance back: Accept returns, the header shows the week pending', async () => {
+    renderWithProviders(<BuyerCapacity />, { route: '/buyer/capacity' });
+    const undo = await screen.findByTestId(`capacity-undo-${key(SUP5, '2026-10-12')}`);
+    expect(undo).toHaveTextContent('Undo');
+    fireEvent.click(undo);
+    expect(
+      await screen.findByTestId(`capacity-accept-${key(SUP5, '2026-10-12')}`)
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId(`capacity-accepted-${key(SUP5, '2026-10-12')}`)).toBeNull();
+    expect(capacityDecisionStore.get('capd-0001')?.decision).toBe('withdrawn');
+    expect(screen.getByTestId(`capacity-decision-header-${SUP5}`)).toHaveTextContent(
+      'PTI’s decision: pending'
+    );
+  });
+
+  it('a week not accepted has no Undo (control)', async () => {
+    renderWithProviders(<BuyerCapacity />, { route: '/buyer/capacity' });
+    await screen.findByTestId(`capacity-accept-${key(SUP5, '2026-10-19')}`);
+    expect(screen.queryByTestId(`capacity-undo-${key(SUP5, '2026-10-19')}`)).toBeNull();
+  });
+
+  it('an acceptance on a week that is now red says it counts again, offers Undo, and the header does not count it', async () => {
+    // The week was amber when PTI accepted; the plan has since turned it red.
+    capacityDecisionStore.insert({
+      supplierId: 'sup-007',
+      planningGroupId: 'pg-MG-20',
+      week: '2026-09-14',
+      decision: 'accepted',
+      decidedAt: '2026-08-20T03:00:00.000Z',
+      decidedBy: NO_PERSON
+    });
+    renderWithProviders(<BuyerCapacity />, { route: '/buyer/capacity' });
+    expect(
+      await screen.findByTestId(`capacity-accepted-now-red-${key(SUP7, '2026-09-14')}`)
+    ).toHaveTextContent('counts toward the alert again');
+    expect(screen.getByTestId(`capacity-undo-${key(SUP7, '2026-09-14')}`)).toBeInTheDocument();
+    expect(screen.getByTestId(`capacity-decision-header-${SUP7}`)).toHaveTextContent(
+      'PTI’s decision: pending'
+    );
+    // An amber accepted week carries no such note (control).
+    expect(screen.queryByTestId(`capacity-accepted-now-red-${key(SUP5, '2026-10-12')}`)).toBeNull();
+  });
+
+  it('a seat without capacitydecision:accept gets no Undo', async () => {
+    renderWithProviders(<BuyerCapacity />, {
+      identity: { ...BUYER, businessRoles: ['procurement'] },
+      route: '/buyer/capacity'
+    });
+    await screen.findByTestId(`capacity-accepted-${key(SUP5, '2026-10-12')}`);
+    expect(screen.queryByTestId(`capacity-undo-${key(SUP5, '2026-10-12')}`)).toBeNull();
   });
 });

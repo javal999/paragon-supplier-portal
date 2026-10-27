@@ -3,7 +3,8 @@
 //
 // `entityId` is the decision id (`capd-0001`, minted by the store).
 //
-//   · `readState` answers `Accepted` for a decision that exists.
+//   · `readState` answers `Accepted`, or `Withdrawn` once the planner undid
+//     it (BL-227).
 //   · `readScopeOwner` NAMES THE SUPPLIER the decision is about (§86), and
 //     `creationOwner` the supplier the payload names, resolved against the
 //     supplier master for every persona (`requireCreationOwner`): nobody can
@@ -11,7 +12,8 @@
 //     holds no `capacitydecision:accept`, so it is refused at the role gate.
 //   · `create` inserts the decision; the time (hub clock) and the actor (the
 //     session's) are assigned here, never taken from the payload.
-//   · `applyTransition` is a no-op: a decision is never changed.
+//   · `applyTransition` marks the decision withdrawn (the only transition out
+//     of `Accepted`); the time and actor are assigned here, as on create.
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import { CommandTarget } from '../../../transitions' */
@@ -35,11 +37,15 @@ const str = (v) => (typeof v === 'string' ? v.trim() : '');
 
 /** @type {CommandTarget} */
 export const capacityDecisionTarget = {
-  readState: (id) => (capacityDecisionStore.get(id) ? 'Accepted' : null),
+  readState: (id) => {
+    const row = capacityDecisionStore.get(id);
+    if (!row) return null;
+    return row.decision === 'withdrawn' ? 'Withdrawn' : 'Accepted';
+  },
   readScopeOwner: (id) => capacityDecisionStore.get(id)?.supplierId ?? null,
   readEntity: (id) => capacityDecisionStore.get(id) ?? null,
-  applyTransition: () => {
-    /* no-op — a decision is never changed */
+  applyTransition: (id, _toState, _payload, scope) => {
+    capacityDecisionStore.withdraw(id, sdcClock.now(), scope.actor ?? NO_PERSON);
   },
   requireCreationOwner: true,
   creationOwner: (payload) => {

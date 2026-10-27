@@ -146,6 +146,7 @@ All state changes go through verbs in `src/services/transitions/flows/`. A verb 
 | `t_stockaccess_remove` | stockAccess | Granted → NoAccess | `stockaccess:manage` | none |
 | `t_capacity_submit` | capacitySubmission | ∅ → Submitted | `capacity:confirm` | CAPACITY_SUBMISSION_VALID |
 | `t_capacitydecision_accept` | capacityDecision | ∅ → Accepted | `capacitydecision:accept` | CAPACITY_DECISION_ACCEPTABLE |
+| `t_capacitydecision_withdraw` | capacityDecision | Accepted → Withdrawn | `capacitydecision:accept` | none (BL-227) |
 | `t_planninggroup_create` | planningGroup | ∅ → Active | `planninggroup:manage` | PLANNING_GROUP_VALID |
 | `t_planninggroup_rename` | planningGroup | Active → Active | `planninggroup:manage` | PLANNING_GROUP_VALID |
 | `t_planninggroup_move_materials` | planningGroup | Active → Active | `planninggroup:manage` | PLANNING_GROUP_VALID |
@@ -164,7 +165,7 @@ Required fields and side effects, flow by flow:
 - **stockSync** (`flows/stockSync.flow.js:38`, `:50`): one attempt per press, success or failure. On success the simulated answer is written as declarations with channel `api`; on failure the attempt is recorded with an error key and the previous figures are kept (`services/data/mock/MockCommandService.js:3244`, `:3291-3292`).
 - **stockAccess** (`flows/stockAccess.flow.js:30-55`): `entityId` is the supplier. An empty material list means every material. Every change appends to the grant's log with the actor and time (`MockCommandService.js:3334-3339`).
 - **capacitySubmission** (`flows/capacitySubmission.flow.js:28`): needs `supplierId`, `planningGroupId` and `weeks`. A changed plan is a new submission; the latest per supplier × planning group wins at read. "Confirm additional capacity" rides this verb as `upsideConfirmed: true` on the week; there is no separate verb.
-- **capacityDecision** (`flows/capacityDecision.flow.js:38`): needs `supplierId`, `planningGroupId` and `week`. A decision is never changed or undone.
+- **capacityDecision** (`flows/capacityDecision.flow.js:38`): needs `supplierId`, `planningGroupId` and `week`. The planner can undo an acceptance (`t_capacitydecision_withdraw`, BL-227): the row is marked withdrawn and kept, the week counts toward the alert again, and Accept records a new decision.
 - **planningGroup** (`flows/planningGroup.flow.js:36-71`): a move appends to the material overlay, which makes a material's group single-valued (`services/data/mock/targets/planningGroup.js:86-101`). A group with materials cannot be retired; `Retired` is terminal.
 - **inventoryAlert** (`flows/inventoryAlert.flow.js:26`): the alert is a condition derived at read, keyed rule × subject × supplier. Only the closure is stored. A closed alert stays closed while its condition persists; once the condition clears and returns, it is a new open alert (`services/transitions/inventoryAlertRules.js:580`, `:594`).
 - **simulationOverride** (`flows/simulationOverride.flow.js:30`): needs supplier, material, field (`soh`, `inProduction`, `toDistributor`) and value. Used by the simulation until the supplier's next stock record; never touches the stock record or update compliance.
@@ -308,7 +309,7 @@ A refused verb returns `POLICY_REJECTED:<hook>:<reason>`. The screen translates 
 | Distributor principal on a shipment | ETA fallback uses the distributor's shortest principal lead time | The leg's own principal | BL-158 |
 | Planning groups in SAP | Mastered in the hub | Agree with MDM (MAT-D12) | — |
 | Move demand | Not on Capacity | On the order plan (INV-D8) | — |
-| Polish | Mostly built 2026-10-23 (BL-221, BL-223, BL-224, BL-227 wording; MR !36); left: capacity accept undo and the Ask supplier label (BL-227) | Wave 2 wording and edge states; wave 1 leftovers; Call-offs quantity format; capacity grid polish; Risk page thresholds | BL-227, BL-224, BL-223, BL-186, BL-76 |
+| Polish | Built (BL-221, BL-223, BL-224 and BL-227 wording, MR !36, 2026-10-23; BL-227 undo and Ask supplier label, 2026-10-27) | Wave 2 wording and edge states; wave 1 leftovers; Call-offs quantity format; capacity grid polish; Risk page thresholds | BL-227, BL-224, BL-223, BL-186, BL-76 |
 | Sign-in | No named person | Named actor on every record | F1 |
 
 ---
@@ -340,9 +341,9 @@ Built as recommended; the owner may change any of them.
 
 | Area | Call | Recommendation |
 |---|---|---|
-| Capacity decision | An accepted week cannot be undone and stays "Accepted" if the week later turns red | Keep until a planner needs to undo; then add a withdraw verb (BL-227) |
+| Capacity decision | Undo is built; an accepted week that turns red says it counts toward the alert again (BL-227, 2026-10-27) | Done |
 | Supplier To do | The block reads "PTI has N questions for you" (BL-227 wording, built 2026-10-23) | Done |
-| Ask supplier | The button keeps one label; the per-surface wording is a hint line | Keep (BL-227) |
+| Ask supplier | The button names its topic ("Ask for a production date"); the hint line is gone (BL-227, 2026-10-27) | Done |
 | Alerts | Grouped per supplier; one card per supplier × material waits for the rule list | Keep until BL-150 (INV-D5) |
 | Supplier access | Remove acts at once, with no confirmation (P-13) | Add a confirmation in the Minor findings build |
 | Capacity refusal codes | Five capacity codes are the rule's camelCase name upper-cased (`MISSINGWEEK`); `OTHER_REASON_NEEDS_NOTE` also fires for Force Majeure and Discontinued | Production: `MISSING_WEEK`-style names and one `NOTE_REQUIRED` code, mapped once |

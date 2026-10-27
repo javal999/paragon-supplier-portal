@@ -1974,6 +1974,31 @@ export function useCapacityDecisionCommand() {
   });
 }
 
+/** BL-227 — undo an acceptance (`t_capacitydecision_withdraw`). */
+export function useCapacityDecisionWithdrawCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, { readonly decisionId: string }>} */ (
+    useMutation
+  )({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_capacitydecision_withdraw',
+        entity: 'capacityDecision',
+        entityId: vars.decisionId,
+        payload: {}
+      }),
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      void qc.invalidateQueries({
+        predicate: (q) => q.queryKey[0] === 'procurement' && q.queryKey[1] === 'capacityDecisions'
+      });
+    }
+  });
+}
+
 // ── BL-194 · SUPPLIER FEEDSTOCK CONFIRMATION (DRC-8 BR-a; DRC-D17) ───────────
 //
 // The supplier confirms its current feedstock for one assigned material. The

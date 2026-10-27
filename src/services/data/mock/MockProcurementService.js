@@ -647,7 +647,13 @@ export class MockProcurementService {
    * @returns {Promise<Page<CapacityDecision>>}
    */
   async getCapacityDecisions(scope) {
-    return { items: applySupplierScope(scope, capacityDecisionStore.all()) };
+    // BL-227 — a withdrawn acceptance is not PTI's decision any more.
+    return {
+      items: applySupplierScope(
+        scope,
+        capacityDecisionStore.all().filter((d) => d.decision === 'accepted')
+      )
+    };
   }
 
   /**

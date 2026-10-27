@@ -209,3 +209,78 @@ describe('scope — PTI decides; a supplier reads only its own decisions', () =>
     expect(capacityDecisionTarget.readScopeOwner('capd-9999')).toBeNull();
   });
 });
+
+describe('BL-227 · PTI undoes an acceptance (t_capacitydecision_withdraw)', () => {
+  /**
+   * @param {string} decisionId
+   * @param {QueryScope} [scope]
+   */
+  const withdraw = (decisionId, scope = planner) =>
+    svc.dispatch(scope, {
+      transitionId: 't_capacitydecision_withdraw',
+      entity: 'capacityDecision',
+      entityId: decisionId,
+      payload: {}
+    });
+
+  it('withdraws: the row stays, marked withdrawn with time and actor; the week is open again', async () => {
+    const r = await accept(AMBER);
+    const id = /** @type {string} */ (r.entityId);
+    const w = await withdraw(id);
+    expect(w.status, w.reason).toBe('done');
+    expect(capacityDecisionStore.get(id)).toMatchObject({
+      ...AMBER,
+      decision: 'withdrawn',
+      withdrawnAt: sdcClock.now()
+    });
+    expect(capacityDecisionStore.find(AMBER.supplierId, AMBER.planningGroupId, AMBER.week)).toBe(
+      undefined
+    );
+    expect(commandAuditSink.byEvent('t_capacitydecision_withdraw').map((e) => e.outcome)).toEqual([
+      'done'
+    ]);
+  });
+
+  it('a withdrawn acceptance is not read back; the sample one still is (control)', async () => {
+    const r = await accept(AMBER);
+    await withdraw(/** @type {string} */ (r.entityId));
+    const buyer = await reads.getCapacityDecisions(planner);
+    expect(buyer.items.map((d) => d.week)).toEqual(['2026-10-12']);
+  });
+
+  it('the week can be accepted again: a new decision, the withdrawn one kept', async () => {
+    const first = await accept(AMBER);
+    await withdraw(/** @type {string} */ (first.entityId));
+    const again = await accept(AMBER);
+    expect(again.status, again.reason).toBe('done');
+    expect(again.entityId).not.toBe(first.entityId);
+    expect(
+      capacityDecisionStore
+        .all()
+        .filter((d) => d.week === AMBER.week)
+        .map((d) => d.decision)
+    ).toEqual(['withdrawn', 'accepted']);
+  });
+
+  it('a withdrawn acceptance cannot be withdrawn again (from-state); an accepted one can (control)', async () => {
+    const r = await accept(AMBER);
+    const id = /** @type {string} */ (r.entityId);
+    expect((await withdraw(id)).status).toBe('done');
+    const twice = await withdraw(id);
+    expect(twice.status).toBe('failed');
+    expect(capacityDecisionStore.get(id)?.decision).toBe('withdrawn');
+  });
+
+  it('a supplier cannot withdraw PTI’s acceptance on its own week (ROLE_NOT_PERMITTED); PTI can', async () => {
+    const own = await withdraw('capd-0001', sup5);
+    expect(own.status).toBe('failed');
+    expect(own.reason?.split(':')[0]).toBe('ROLE_NOT_PERMITTED');
+    expect(capacityDecisionStore.get('capd-0001')?.decision).toBe('accepted');
+    expect((await withdraw('capd-0001')).status).toBe('done');
+  });
+
+  it('another supplier cannot reach sup-005’s decision (SCOPE_DENIED)', async () => {
+    await expect(withdraw('capd-0001', sup7)).rejects.toMatchObject({ code: 'SCOPE_DENIED' });
+    expect(capacityDecisionStore.get('capd-0001')?.decision).toBe('accepted');
+  });
+});
