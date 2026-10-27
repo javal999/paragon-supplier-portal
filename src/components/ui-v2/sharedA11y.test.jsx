@@ -136,4 +136,32 @@ describe('border-input token (finding 32)', () => {
     );
     expect(config.theme.extend.colors['border-input']).toContain('var(--pds-color-border-strong)');
   });
+
+  // The token name alone does not protect the 3:1 floor: Paradise could re-point
+  // the token at a lighter neutral and the line above would still pass. So
+  // resolve it through the light theme to its hex and measure the contrast.
+  it('resolves to #7a7a7a in the light theme, which clears 3:1 on white', () => {
+    const paradise = path.resolve(__dirname, '../../../paradise/tokens');
+    const theme = fs.readFileSync(path.join(paradise, 'theme.css'), 'utf8');
+    const colors = fs.readFileSync(path.join(paradise, 'colors.css'), 'utf8');
+    const start = theme.indexOf(':root,');
+    const light = theme.slice(start, theme.indexOf('}', start));
+    const alias = light.match(/--pds-color-border-strong:\s*var\((--[a-z0-9-]+)\)/)?.[1];
+    expect(alias, 'the light theme no longer aliases border-strong').toBe('--neutral-600');
+    const hex = colors.match(new RegExp(`${alias}:\\s*(#[0-9a-f]{6})`, 'i'))?.[1].toLowerCase();
+    expect(hex).toBe('#7a7a7a');
+
+    /** @param {string} h */
+    const luminance = (h) => {
+      const [r, g, b] = [1, 3, 5].map((i) => {
+        const c = parseInt(h.slice(i, i + 2), 16) / 255;
+        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const ratio = 1.05 / (luminance(/** @type {string} */ (hex)) + 0.05);
+    expect(ratio).toBeGreaterThanOrEqual(3);
+    // Known-bad control: a light grey border (#c6cdd4) fails the same check.
+    expect(1.05 / (luminance('#c6cdd4') + 0.05)).toBeLessThan(3);
+  });
 });

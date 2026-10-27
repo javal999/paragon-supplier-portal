@@ -549,8 +549,11 @@ describe('⚠️ DP2-PALETTE-01 · THE PALETTE IS SCANNED, NOT EXCLUDED', () => 
     const src = readSrc('lib/chartPalette.js');
     // the control: it really does hold the shapes the OLD matcher condemned
     // (a `fill:` declaration). Since Paradise stage 2 the value is a token
-    // string rather than a hex, so the control matches the declaration itself.
-    expect(src, 'vacuous if TARGET_STATUS has gone').toMatch(/meeting:\s*\{\s*fill:\s*'/);
+    // string rather than a hex, so the control pins that token shape — any
+    // quoted string would also match an empty or placeholder value.
+    expect(src, 'vacuous if TARGET_STATUS has gone').toMatch(
+      /meeting:\s*\{\s*fill:\s*'var\(--pds-color-[a-z-]+\)'/
+    );
     expect(paintHexHits(src)).toEqual([]);
     expect(consumedHexBindings(src)).toEqual([]);
   });
