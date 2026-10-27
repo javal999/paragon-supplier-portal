@@ -73,8 +73,10 @@ describe('CAP-12 — the demand anticipation read carries open supply and the ga
     for (const r of page.items)
       for (const w of r.weeks) {
         expect(typeof w.openSupply).toBe('number');
+        expect(typeof w.carriedIn).toBe('number');
+        // BL-228 — the gap counts supply carried from earlier weeks too.
         expect(w.gap === null ? null : w.gap).toBe(
-          w.qty === null ? null : Math.max(0, w.qty - w.openSupply)
+          w.qty === null ? null : Math.max(0, w.qty - w.openSupply - w.carriedIn)
         );
         expect(w.proposal === null).toBe(!(w.gap !== null && w.gap > 0));
       }

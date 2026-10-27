@@ -9,6 +9,8 @@ import { formatNumber } from '@lib/format';
 // CAP-12 (BL-181) — the two rows the Demand anticipation grid shows after
 // "Would be": Open supply (released call-offs needed that week) and Gap
 // (demand anticipation − open supply, where positive; warning tone above 0).
+// BL-228 — the gap also counts supply carried from earlier weeks; a cell the
+// carry reduced says how much in its tooltip.
 // Kept in their own module so the grid adds them with one line, and CAP-11's
 // rows can sit beside them without touching these.
 //
@@ -55,10 +57,13 @@ export function supplyRows(row, rowKey, t) {
       combine: 'sum',
       value: (week) => supplyOf(week).gap ?? 0,
       cell: (week) => {
-        const v = supplyOf(week).gap;
+        const { gap: v, carriedIn = 0 } = supplyOf(week);
         if (v === undefined || v === null) return dash;
+        const title =
+          carriedIn > 0 ? t('supplyGap.carried', { qty: formatNumber(carriedIn) }) : undefined;
         return v > 0 ? (
           <Data
+            title={title}
             className="font-semibold text-warning-hover"
             data-testid={`dant-gap-${rowKey}-${week}`}
             data-tone="warning"
@@ -66,7 +71,11 @@ export function supplyRows(row, rowKey, t) {
             {formatNumber(v)}
           </Data>
         ) : (
-          <Data className="text-text-secondary" data-testid={`dant-gap-${rowKey}-${week}`}>
+          <Data
+            title={title}
+            className="text-text-secondary"
+            data-testid={`dant-gap-${rowKey}-${week}`}
+          >
             {formatNumber(v)}
           </Data>
         );

@@ -158,6 +158,11 @@ const BelowDemandSection = ({ today, drafts }) => {
                     </TableCell>
                     <TableCell className="align-top text-right">
                       <Data
+                        title={
+                          g.carriedIn > 0
+                            ? t('supplyGap.carried', { qty: formatNumber(g.carriedIn) })
+                            : undefined
+                        }
                         className="font-semibold text-warning-hover"
                         data-testid={`op-gap-qty-${key}`}
                       >
