@@ -87,6 +87,15 @@ const GRADE_TONE = {
   }
 };
 
+/**
+ * A grade tone at a given opacity. The tones are `var(--pds-…)` strings, so the
+ * old hex alpha suffix (`${tone}33`) produced invalid CSS that the browser
+ * dropped without a warning; `color-mix` works on any colour value.
+ * @param {string} color
+ * @param {number} pct Opacity, 0–100.
+ */
+const tint = (color, pct) => `color-mix(in srgb, ${color} ${pct}%, transparent)`;
+
 /** @type {{ month: string; grade: Grade; score: number }[]} */
 const GRADE_HISTORY = [
   { month: 'Oct 24', grade: 'C', score: 71 },
@@ -192,9 +201,9 @@ const GradeBadge = ({ grade, score }) => {
       <span
         className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
         style={{
-          backgroundColor: `${tone.soft}33`,
+          backgroundColor: tint(tone.soft, 20),
           color: tone.stroke,
-          border: `1px solid ${tone.stroke}55`
+          border: `1px solid ${tint(tone.stroke, 33)}`
         }}
       >
         {t('supplierPerformance.grade.paragonGrade')}
@@ -498,7 +507,7 @@ const SupplierPerformance = () => {
                       className="rounded-md px-2.5 py-1.5 text-center"
                       style={{
                         backgroundColor: tone.soft,
-                        border: `1px solid ${tone.stroke}55`
+                        border: `1px solid ${tint(tone.stroke, 33)}`
                       }}
                     >
                       <div className="text-[9px] font-semibold" style={{ color: tone.stroke }}>
