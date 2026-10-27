@@ -18,7 +18,9 @@ export const supplyGapEn = {
   'supplyGap.sample':
     'From the hub’s sample data: the sample LTP, SAP stock and the hub’s own POs and call-offs, not the engine’s dataset.',
   'supplyGap.basis':
-    'Open supply is call-offs awaiting confirmation or confirmed, in the week of their need date. Drafts, rejected and dismissed call-offs are not supply, and a blanket balance not yet called off is not dated supply.',
+    'Open supply is call-offs awaiting confirmation or confirmed, in the week of their need date. Drafts, rejected and dismissed call-offs are not supply, and a blanket balance not yet called off is not dated supply. Supply above a week’s demand anticipation counts against the next weeks’ gaps, never an earlier week’s.',
+  // BL-228 — the tooltip on a gap that supply from earlier weeks reduced.
+  'supplyGap.carried': '{{qty}} carried from earlier weeks',
   'supplyGap.count_one': '{{count}} supplier × material × week below demand anticipation',
   'supplyGap.count_other': '{{count}} supplier × material × weeks below demand anticipation',
   'supplyGap.showAll': 'Show all {{count}}',
@@ -61,7 +63,8 @@ export const supplyGapId = {
   'supplyGap.sample':
     'Dari data contoh hub: LTP contoh, stok SAP, serta PO dan call-off hub sendiri, bukan dataset mesin.',
   'supplyGap.basis':
-    'Pasokan terbuka adalah call-off yang menunggu konfirmasi atau sudah dikonfirmasi, pada minggu tanggal kebutuhannya. Draf, call-off yang ditolak dan yang dibatalkan bukan pasokan, dan saldo PO induk yang belum di-call-off bukan pasokan bertanggal.',
+    'Pasokan terbuka adalah call-off yang menunggu konfirmasi atau sudah dikonfirmasi, pada minggu tanggal kebutuhannya. Draf, call-off yang ditolak dan yang dibatalkan bukan pasokan, dan saldo PO induk yang belum di-call-off bukan pasokan bertanggal. Pasokan di atas antisipasi permintaan suatu minggu diperhitungkan untuk kekurangan minggu-minggu berikutnya, tidak pernah untuk minggu sebelumnya.',
+  'supplyGap.carried': '{{qty}} terbawa dari minggu sebelumnya',
   'supplyGap.count_other': '{{count}} pemasok × material × minggu di bawah antisipasi permintaan',
   'supplyGap.showAll': 'Tampilkan semua {{count}}',
   'supplyGap.showFewer': 'Tampilkan {{count}} pertama',
