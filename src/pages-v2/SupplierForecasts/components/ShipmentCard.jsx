@@ -164,7 +164,7 @@ const ShipmentCard = ({ view: { shipment: s, asnTracking }, advance, pending, on
               which localises its own children. */}
           {asnTracking && (
             <div className="flex items-center gap-1.5" data-testid="ship-asn-tracking">
-              <span className="text-[10px] uppercase tracking-wide text-text-tertiary">
+              <span className="text-[length:var(--fs-caption-1)] uppercase tracking-wide text-text-tertiary">
                 {t('sdcSup.ship.asnAxis', { asn: asnTracking.asnRef })}
               </span>
               <StatusPill variant={statusTone(asnTracking.asnStatus)}>

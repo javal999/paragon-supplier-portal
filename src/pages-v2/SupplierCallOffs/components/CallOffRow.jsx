@@ -28,12 +28,18 @@ const CallOffRow = ({ v, match, onOpen }) => {
         <Data as="div" className="text-xs font-bold text-text-primary whitespace-nowrap">
           {c.callOffNumber}
         </Data>
-        <Data as="div" className="text-[11px] text-text-secondary whitespace-nowrap">
+        <Data
+          as="div"
+          className="text-[length:var(--fs-label-3)] text-text-secondary whitespace-nowrap"
+        >
           {c.poNumber}
         </Data>
       </TableCell>
       <TableCell>
-        <Data as="div" className="text-[11px] text-text-tertiary whitespace-nowrap">
+        <Data
+          as="div"
+          className="text-[length:var(--fs-label-3)] text-text-tertiary whitespace-nowrap"
+        >
           {c.materialCode}
         </Data>
         <div className="text-xs text-text-primary">{c.description}</div>
@@ -49,13 +55,15 @@ const CallOffRow = ({ v, match, onOpen }) => {
         <Data as="div" className="text-xs">
           {formatDate(c.needDate)}
         </Data>
-        <div className="text-[11px] text-text-secondary">{t(`co.type.${c.type}`)}</div>
+        <div className="text-[length:var(--fs-label-3)] text-text-secondary">
+          {t(`co.type.${c.type}`)}
+        </div>
       </TableCell>
       <TableCell>
         <ConfirmationPill status={v.confirmation} />
         {needsAnswer && v.deadline && (
           <div
-            className="mt-1 text-[11px] text-text-secondary"
+            className="mt-1 text-[length:var(--fs-label-3)] text-text-secondary"
             data-testid={`supplier-calloff-confirm-by-${c.id}`}
           >
             {t('co.col.confirmBy')}{' '}

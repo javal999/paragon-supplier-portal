@@ -139,7 +139,7 @@ const AdjustForm = ({
                   <div
                     role="alert"
                     data-testid={`po-adjust-refusal-${li.id}`}
-                    className="sm:col-span-2 text-[11px] text-danger"
+                    className="sm:col-span-2 text-[length:var(--fs-label-3)] text-danger"
                   >
                     {t(ADJUST_REFUSAL_KEY[refusal], {
                       ordered: li.quantity,

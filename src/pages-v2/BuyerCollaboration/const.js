@@ -47,7 +47,7 @@ export const CLASS_LABEL_KEY = {
 
 // Quiet-outlined chip base (DP-3 status-chip grammar: soft tint, thin border).
 const CHIP =
-  'inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[11px] font-medium';
+  'inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[length:var(--fs-label-3)] font-medium';
 export const CHIP_NEUTRAL = `${CHIP} border-border-subtle bg-bg-hover text-text-secondary`;
 export const CHIP_SUCCESS = `${CHIP} border-success/30 bg-success-soft text-success`;
 export const CHIP_WARNING = `${CHIP} border-warning/30 bg-warning-soft text-warning-hover`;

@@ -81,7 +81,9 @@ const QuoteTermsSection = ({ form, setForm, leadTime, moq, showMissing = false }
         (2e-b-1a): required so the bid is comparable, indicative
         because a firm date cannot honestly be given before final
         quantity, PO date and capacity are known. */}
-        <div className="mt-1 text-[11px] text-text-tertiary">{t('rfqs.panel.leadTime.hint')}</div>
+        <div className="mt-1 text-[length:var(--fs-label-3)] text-text-tertiary">
+          {t('rfqs.panel.leadTime.hint')}
+        </div>
         {/* An untouched blank does not nag on sight — it refuses at the
         gate, and says so on the field once the supplier has engaged
         with the form (the price precedent, 2e-a). */}
@@ -89,7 +91,7 @@ const QuoteTermsSection = ({ form, setForm, leadTime, moq, showMissing = false }
           <div
             role="alert"
             data-testid="quote-leadtime-refusal"
-            className="mt-1 text-[11px] text-danger"
+            className="mt-1 text-[length:var(--fs-label-3)] text-danger"
           >
             {t(LEAD_TIME_REFUSAL_KEY[leadTime.reason])}
           </div>
@@ -103,10 +105,10 @@ const QuoteTermsSection = ({ form, setForm, leadTime, moq, showMissing = false }
             data-testid="quote-leadtime-sameday"
             className="mt-2 rounded border border-warning bg-warning-soft px-3 py-2"
           >
-            <div className="text-[11px] text-warning-hover">
+            <div className="text-[length:var(--fs-label-3)] text-warning-hover">
               {t('rfqs.panel.leadTime.sameDay.note')}
             </div>
-            <label className="mt-2 flex items-center gap-2 text-[11px] text-text-secondary">
+            <label className="mt-2 flex items-center gap-2 text-[length:var(--fs-label-3)] text-text-secondary">
               <input
                 type="checkbox"
                 checked={form.sameDayAck}
@@ -155,12 +157,14 @@ const QuoteTermsSection = ({ form, setForm, leadTime, moq, showMissing = false }
         placeholder — a placeholder disappears the moment anyone
         types, which is exactly when "blank means X" stops being
         readable. */}
-        <div className="mt-1 text-[11px] text-text-tertiary">{t('rfqs.panel.moq.hint')}</div>
+        <div className="mt-1 text-[length:var(--fs-label-3)] text-text-tertiary">
+          {t('rfqs.panel.moq.hint')}
+        </div>
         {!moq.ok && (
           <div
             role="alert"
             data-testid="quote-moq-refusal"
-            className="mt-1 text-[11px] text-danger"
+            className="mt-1 text-[length:var(--fs-label-3)] text-danger"
           >
             {t(MOQ_REFUSAL_KEY[moq.reason])}
           </div>

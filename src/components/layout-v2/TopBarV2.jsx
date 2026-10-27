@@ -77,7 +77,7 @@ const TopBarV2 = ({ navOpen = false, navControlsId, navButtonRef, onToggleNav })
             className="relative p-2 rounded-md text-text-secondary hover:bg-bg-hover"
           >
             <Bell size={18} />
-            <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-danger text-white text-[10px] font-bold flex items-center justify-center">
+            <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-danger text-white text-[length:var(--fs-caption-1)] font-bold flex items-center justify-center">
               3
             </span>
           </button>

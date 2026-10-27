@@ -126,7 +126,7 @@ const KeyFacts = ({ selectedPR, nextAct, t }) => {
               happens to hold. A note that appeared only when a band was
               present would read as a caveat on that band. */}
           <dd
-            className="mt-1 text-[11px] text-text-tertiary"
+            className="mt-1 text-[length:var(--fs-label-3)] text-text-tertiary"
             data-testid="pr-approval-level-provenance"
           >
             {t('requisitions.panel.approvalLevel.authored')}

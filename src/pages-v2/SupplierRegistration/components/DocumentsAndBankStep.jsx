@@ -66,7 +66,7 @@ const DocumentsAndBankStep = () => {
                 {doc.hasExpiry && d.uploaded && (
                   <div>
                     <label className="block">
-                      <span className="block text-[10px] text-text-tertiary uppercase mb-0.5">
+                      <span className="block text-[length:var(--fs-caption-1)] text-text-tertiary uppercase mb-0.5">
                         {t('registration.documents.expiry')}
                       </span>
                       <input

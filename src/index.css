@@ -1,4 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+/* Paradise 0.2.0-alpha.6 tokens (stage 1) and Lato (stage 3). Inter and
+   JetBrains Mono are no longer fetched from Google Fonts. */
+@import '../paradise/paradise.css';
+
+/* The values below point at Paradise tokens (--font-*). They are defined in
+   ../paradise/tokens/, which the CSS linter does not follow through @import,
+   so it would report each one as unknown. */
+/* eslint-disable css/no-invalid-properties */
 
 /* ─── Design Token System — Paragon Odyssey ─────────────────────────────────── */
 
@@ -26,8 +33,8 @@
   --status-purple-bg:   #EDE9FE;
 
   /* ── TEXT ── */
-  --text-primary:       #0D1B2A;
-  --text-secondary:     #64748B;
+  --app-text-primary:   #0D1B2A;
+  --app-text-secondary: #64748B;
   --text-muted:         #94A3B8;
   --text-white:         #FFFFFF;
   --text-teal:          #0097A7;
@@ -40,8 +47,8 @@
   --surface-border-dark:#1E3A5F;
 
   /* ── TYPOGRAPHY ── */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  --font-sans: var(--font-body);
+  --app-font-mono: var(--font-mono);
 
   /* ── SPACING ── */
   --radius-sm:   4px;
@@ -58,13 +65,13 @@
 /* ─── Global Reset ───────────────────────────────────────────────────────────── */
 
 * {
-  font-family: var(--font-sans);
+  font-family: var(--font-sans), sans-serif;
   box-sizing: border-box;
 }
 
 body {
   background: var(--surface-page);
-  color: var(--text-primary);
+  color: var(--app-text-primary);
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
@@ -81,7 +88,7 @@ body {
 /* ─── Typography utilities ───────────────────────────────────────────────────── */
 
 .mono {
-  font-family: var(--font-mono);
+  font-family: var(--app-font-mono), monospace;
   font-size: 0.9em;
   letter-spacing: 0.3px;
 }
@@ -99,7 +106,7 @@ body {
 .portal-card-header {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--app-text-primary);
   margin-bottom: 16px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--surface-border);
@@ -145,7 +152,7 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 2px;
-  color: var(--text-secondary);
+  color: var(--app-text-secondary);
   padding: 16px 16px 4px;
 }
 
@@ -165,20 +172,20 @@ body {
 .page-title {
   font-size: 20px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--app-text-primary);
   margin: 0 0 4px 0;
 }
 
 .page-subtitle {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--app-text-secondary);
   margin: 0 0 24px 0;
 }
 
 /* ─── Legacy aliases (keep backwards compat) ─────────────────────────────────── */
 
-.portal-page-title   { font-size: 20px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
-.portal-page-subtitle { font-size: 13px; color: var(--text-secondary); }
+.portal-page-title   { font-size: 20px; font-weight: 600; color: var(--app-text-primary); margin-bottom: 4px; }
+.portal-page-subtitle { font-size: 13px; color: var(--app-text-secondary); }
 
 /* ─── BL-31 · chart legend text (WCAG 1.4.3) ─────────────────────────────────── */
 /* Recharts paints each legend LABEL in its series colour, so a teal series reads

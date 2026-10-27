@@ -75,7 +75,7 @@ const EDGE_CLASS = {
  */
 const HonestyDot = ({ live, t }) => (
   <span
-    className={`inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider ${live ? 'text-success' : 'text-warning-hover'}`}
+    className={`inline-flex items-center gap-1.5 text-[length:var(--fs-caption-1)] font-semibold uppercase tracking-wider ${live ? 'text-success' : 'text-warning-hover'}`}
   >
     <span
       aria-hidden="true"

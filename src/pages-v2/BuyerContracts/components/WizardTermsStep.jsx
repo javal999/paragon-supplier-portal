@@ -128,7 +128,7 @@ const WizardTermsStep = ({ draft, updateDraft, noticeRead, valueRead, t }) => (
             <div
               role="alert"
               data-testid="contract-notice-refusal"
-              className="mt-1 text-[11px] text-danger"
+              className="mt-1 text-[length:var(--fs-label-3)] text-danger"
             >
               {t(CONTRACT_NOTICE_REFUSAL_KEY[noticeRead.reason])}{' '}
               <GlossaryTermChip
@@ -160,7 +160,7 @@ const WizardTermsStep = ({ draft, updateDraft, noticeRead, valueRead, t }) => (
         <div
           role="alert"
           data-testid="contract-value-refusal"
-          className="mt-1 text-[11px] text-danger"
+          className="mt-1 text-[length:var(--fs-label-3)] text-danger"
         >
           {t(CONTRACT_VALUE_REFUSAL_KEY[valueRead.reason])}{' '}
           <GlossaryTermChip refTo={{ sourceType: 'QtyRefusalReason', term: valueRead.reason }} />
@@ -173,7 +173,7 @@ const WizardTermsStep = ({ draft, updateDraft, noticeRead, valueRead, t }) => (
         <div
           role="alert"
           data-testid="contract-value-zero"
-          className="mt-1 text-[11px] text-danger"
+          className="mt-1 text-[length:var(--fs-label-3)] text-danger"
         >
           {t('contracts.wizard.value.mustExceedZero')}
         </div>

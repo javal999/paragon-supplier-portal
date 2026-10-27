@@ -78,14 +78,16 @@ const QuotePriceSection = ({ form, setForm, bidPrice, totalPrice }) => {
             ))}
           </select>
         </div>
-        <div className="mt-1 text-[11px] text-text-tertiary">{t('rfqs.panel.price.hint')}</div>
+        <div className="mt-1 text-[length:var(--fs-label-3)] text-text-tertiary">
+          {t('rfqs.panel.price.hint')}
+        </div>
         {/* An untouched blank does not nag; a TYPED price that cannot be
         read — or a zero, which can — says so, and says what to do. */}
         {form.unitPrice.trim() !== '' && !bidPrice.ok && (
           <div
             role="alert"
             data-testid="quote-price-refusal"
-            className="mt-1 text-[11px] text-danger"
+            className="mt-1 text-[length:var(--fs-label-3)] text-danger"
           >
             {t(PRICE_REFUSAL_KEY[bidPrice.reason])}
           </div>

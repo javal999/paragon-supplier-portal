@@ -15,7 +15,7 @@ const DueCell = ({ inv, t }) => (
   <>
     <Data>{fmtDate(inv.dueDate)}</Data>
     {inv.overdue && (
-      <div className="text-[11px] text-danger font-semibold">
+      <div className="text-[length:var(--fs-label-3)] text-danger font-semibold">
         {inv.daysOutstanding === 1
           ? t('fc.inv.overdue.one')
           : t('fc.inv.overdue.other', { count: inv.daysOutstanding })}

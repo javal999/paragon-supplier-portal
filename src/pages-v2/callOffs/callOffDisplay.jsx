@@ -159,7 +159,7 @@ export const ToleranceTags = ({ check, uom, approval, testId }) => {
       {tags.map((f) => (
         <div
           key={f.kind}
-          className={`text-[11px] ${verdictOf(f) === 'needsApproval' ? 'text-warning-hover' : 'text-text-tertiary'}`}
+          className={`text-[length:var(--fs-label-3)] ${verdictOf(f) === 'needsApproval' ? 'text-warning-hover' : 'text-text-tertiary'}`}
         >
           {t('co.tol.tagLine', {
             finding: t(`co.tol.tag.${f.kind}`, {
@@ -172,7 +172,7 @@ export const ToleranceTags = ({ check, uom, approval, testId }) => {
       ))}
       {drift && (
         <div
-          className="text-[11px] text-text-tertiary"
+          className="text-[length:var(--fs-label-3)] text-text-tertiary"
           data-testid={testId ? `${testId}-changed` : undefined}
         >
           {t(`co.tol.changedSince.${drift}`)}

@@ -26,7 +26,7 @@ const CallOffTable = ({ listed, onOpen }) => {
               qualifies, and each header names both, as the Order summary does. */}
           <TableHeaderCell>
             {t('co.col.callOff')}{' '}
-            <span className="block text-[11px] font-normal normal-case text-text-tertiary">
+            <span className="block text-[length:var(--fs-label-3)] font-normal normal-case text-text-tertiary">
               {t('co.col.po')}
             </span>
           </TableHeaderCell>
@@ -34,20 +34,20 @@ const CallOffTable = ({ listed, onOpen }) => {
               call-off: as its own column it pushed the table 257px past 1280. */}
           <TableHeaderCell>
             {t('co.col.material')}{' '}
-            <span className="block text-[11px] font-normal normal-case text-text-tertiary">
+            <span className="block text-[length:var(--fs-label-3)] font-normal normal-case text-text-tertiary">
               <PicHeader wrap />
             </span>
           </TableHeaderCell>
           <TableHeaderCell className="text-right">{t('co.col.quantity')}</TableHeaderCell>
           <TableHeaderCell>
             {t('co.col.needDate')}{' '}
-            <span className="block text-[11px] font-normal normal-case text-text-tertiary">
+            <span className="block text-[length:var(--fs-label-3)] font-normal normal-case text-text-tertiary">
               {t('co.col.type')}
             </span>
           </TableHeaderCell>
           <TableHeaderCell>
             {t('co.col.confirmation')}{' '}
-            <span className="block text-[11px] font-normal normal-case text-text-tertiary">
+            <span className="block text-[length:var(--fs-label-3)] font-normal normal-case text-text-tertiary">
               {t('co.col.confirmBy')}
             </span>
           </TableHeaderCell>

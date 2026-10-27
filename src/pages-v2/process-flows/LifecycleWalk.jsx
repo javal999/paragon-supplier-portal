@@ -95,8 +95,8 @@ const LifecycleWalk = ({ view, cursor, path, onStep, onReset }) => {
               <Data
                 className={
                   i === path.length - 1
-                    ? 'rounded-sm bg-action-soft px-1.5 py-0.5 text-[11px]'
-                    : 'text-[11px] text-text-tertiary'
+                    ? 'rounded-sm bg-action-soft px-1.5 py-0.5 text-[length:var(--fs-label-3)]'
+                    : 'text-[length:var(--fs-label-3)] text-text-tertiary'
                 }
               >
                 {state}
@@ -133,7 +133,7 @@ const LifecycleWalk = ({ view, cursor, path, onStep, onReset }) => {
               className="flex w-full items-center justify-between gap-3 rounded-md border border-border-subtle px-3 py-2 text-left hover:bg-bg-hover"
             >
               <span className="text-meta text-text-secondary">{t('processFlows.walk.seedAt')}</span>
-              <Data className="text-[11px]">{seed}</Data>
+              <Data className="text-[length:var(--fs-label-3)]">{seed}</Data>
             </button>
           ))}
 
@@ -160,17 +160,19 @@ const LifecycleWalk = ({ view, cursor, path, onStep, onReset }) => {
             >
               <span className="min-w-0 flex-1">
                 <span className="flex min-w-0 flex-wrap items-center gap-2">
-                  <Data className="text-[11px]">{verbOf(edge.transitionId)}</Data>
+                  <Data className="text-[length:var(--fs-label-3)]">
+                    {verbOf(edge.transitionId)}
+                  </Data>
                   <ChevronRight size={12} className="text-text-tertiary" />
-                  <Data className="text-[11px]">{edge.to}</Data>
-                  <span className="text-[10px] uppercase tracking-wider text-text-tertiary">
+                  <Data className="text-[length:var(--fs-label-3)]">{edge.to}</Data>
+                  <span className="text-[length:var(--fs-caption-1)] uppercase tracking-wider text-text-tertiary">
                     {edge.settlement
                       ? t('processFlows.walk.viaSettlement')
                       : t(STEP_KIND_KEY[edge.kind])}
                   </span>
                 </span>
                 {purpose && (
-                  <p className="mt-1 max-w-prose text-[11px] leading-relaxed text-text-secondary">
+                  <p className="mt-1 max-w-prose text-[length:var(--fs-label-3)] leading-relaxed text-text-secondary">
                     {t(purpose)}
                   </p>
                 )}
@@ -196,10 +198,12 @@ const LifecycleWalk = ({ view, cursor, path, onStep, onReset }) => {
 
         {facts.length > 0 && (
           <div className="rounded-md border border-dashed border-border-subtle px-3 py-2">
-            <p className="text-[11px] text-text-tertiary">{t('processFlows.walk.factsHere')}</p>
+            <p className="text-[length:var(--fs-label-3)] text-text-tertiary">
+              {t('processFlows.walk.factsHere')}
+            </p>
             <span className="mt-1 flex flex-wrap gap-1.5">
               {facts.map((id) => (
-                <Data key={id} className="text-[11px] text-text-secondary">
+                <Data key={id} className="text-[length:var(--fs-label-3)] text-text-secondary">
                   {verbOf(id)}
                 </Data>
               ))}

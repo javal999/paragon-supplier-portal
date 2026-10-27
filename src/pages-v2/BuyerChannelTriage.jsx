@@ -321,7 +321,7 @@ const BuyerChannelTriage = ({ onRecorded, initialSupplierId = '', onSupplierChan
             onRetry={() => suppliersQuery.refetch()}
             name="triage-supplier"
           />
-          <p className="mt-1 text-[11px] text-text-tertiary">
+          <p className="mt-1 text-[length:var(--fs-label-3)] text-text-tertiary">
             {t('buyerCommHub.triage.supplierHint')}
           </p>
         </div>

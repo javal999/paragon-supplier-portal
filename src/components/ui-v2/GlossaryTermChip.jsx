@@ -57,13 +57,15 @@ const GlossaryTermChip = ({ refTo, className = '' }) => {
       data-glossary-term={anchor}
       aria-label={t('glossary.chip.aria', { term: refTo.term })}
       title={t('glossary.chip.label')}
-      className={`inline-flex max-w-full items-center gap-1 rounded border border-teal/30 bg-teal/5 px-1.5 py-0.5 align-middle text-[10px] text-teal-hover transition-colors hover:bg-teal/10 ${className}`}
+      className={`inline-flex max-w-full items-center gap-1 rounded border border-teal/30 bg-teal/5 px-1.5 py-0.5 align-middle text-[length:var(--fs-caption-1)] text-teal-hover transition-colors hover:bg-teal/10 ${className}`}
     >
       <BookOpen size={10} aria-hidden="true" className="shrink-0" />
       {/* The TOKEN verbatim, mono — the ProcessFlows precedent. It is what a
       reader traces back to the source union, and translating it would put a
       second spelling of a type member into the tree. */}
-      <Data className="truncate text-[10px] text-teal-hover">{refTo.term}</Data>
+      <Data className="truncate text-[length:var(--fs-caption-1)] text-teal-hover">
+        {refTo.term}
+      </Data>
     </Link>
   );
 };

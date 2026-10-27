@@ -80,7 +80,7 @@ const UmbrellaSection = ({
                     only where the line carries no quantity. */}
           <RemainingFacts line={line} remaining={remaining} />
           <p
-            className="mt-1 text-[11px] text-text-tertiary"
+            className="mt-1 text-[length:var(--fs-label-3)] text-text-tertiary"
             data-testid={`calloff-basis-${line.id}`}
           >
             {t(

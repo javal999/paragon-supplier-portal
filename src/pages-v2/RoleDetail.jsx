@@ -55,7 +55,7 @@ const RoleDetail = () => {
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-semibold text-text-primary">{t(role.nameKey)}</h1>
             <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] border border-border-subtle text-text-secondary bg-bg-hover"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[length:var(--fs-label-3)] border border-border-subtle text-text-secondary bg-bg-hover"
               data-testid={`role-badge-${role.id}`}
             >
               <Lock size={10} className="text-teal" />
@@ -82,7 +82,7 @@ const RoleDetail = () => {
             {role.modules.map((m) => (
               <li
                 key={m}
-                className="font-mono text-[11px] text-data-navy bg-bg-hover border border-border-subtle rounded px-1.5 py-0.5"
+                className="font-mono text-[length:var(--fs-label-3)] text-data-navy bg-bg-hover border border-border-subtle rounded px-1.5 py-0.5"
               >
                 {m}
               </li>
@@ -100,7 +100,7 @@ const RoleDetail = () => {
             {role.atoms.map((a) => (
               <li
                 key={a}
-                className="font-mono text-[11px] text-data-navy border border-border-subtle rounded px-1.5 py-0.5"
+                className="font-mono text-[length:var(--fs-label-3)] text-data-navy border border-border-subtle rounded px-1.5 py-0.5"
               >
                 {a}
               </li>
@@ -123,9 +123,11 @@ const RoleDetail = () => {
                 <li key={v.id} className="text-xs flex items-center gap-2">
                   <span className="font-mono text-data-navy">{v.id}</span>
                   <span className="text-text-tertiary">·</span>
-                  <span className="font-mono text-[10px] text-text-tertiary">{v.entity}</span>
+                  <span className="font-mono text-[length:var(--fs-caption-1)] text-text-tertiary">
+                    {v.entity}
+                  </span>
                   {!v.wired && (
-                    <span className="text-[10px] text-text-tertiary italic">
+                    <span className="text-[length:var(--fs-caption-1)] text-text-tertiary italic">
                       {t('roles.page.unwiredNote')}
                     </span>
                   )}

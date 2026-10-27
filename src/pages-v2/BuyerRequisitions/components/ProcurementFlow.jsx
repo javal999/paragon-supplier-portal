@@ -60,11 +60,13 @@ const ProcurementFlow = () => {
           <React.Fragment key={s.label}>
             <div className="flex flex-col items-center min-w-[90px]">
               <span
-                className={`px-3 py-1.5 rounded-sm border text-[11px] font-semibold text-center ${TONE[s.tone]}`}
+                className={`px-3 py-1.5 rounded-sm border text-[length:var(--fs-label-3)] font-semibold text-center ${TONE[s.tone]}`}
               >
                 {s.label}
               </span>
-              <span className="text-[10px] text-text-tertiary mt-1 text-center">{s.sub}</span>
+              <span className="text-[length:var(--fs-caption-1)] text-text-tertiary mt-1 text-center">
+                {s.sub}
+              </span>
             </div>
             {i < steps.length - 1 && <ArrowRight size={14} className="text-text-tertiary -mt-3" />}
           </React.Fragment>

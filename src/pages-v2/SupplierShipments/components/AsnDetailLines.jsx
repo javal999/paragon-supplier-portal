@@ -46,7 +46,7 @@ const AsnDetailLines = ({ asn }) => {
               return (
                 <tr key={li.materialCode} className="border-t border-border-subtle">
                   <td className="py-1.5">
-                    <Data as="div" className="text-[10px] text-text-tertiary">
+                    <Data as="div" className="text-[length:var(--fs-caption-1)] text-text-tertiary">
                       {li.materialCode}
                     </Data>
                     {/* i18n-defer: mock/sample data (material description) */}

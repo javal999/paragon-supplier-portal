@@ -1,0 +1,31 @@
+/* Paradise — Elevation / shadow. Source: Figma "Shadow" foundation (Tokens Shadow table).
+   Colour is the Figma Grey ramp: #2A3D4A at 8% (Grey/100), 10% (200), 12% (300), 14% (400).
+   Bottom = element above the surface; Top = element anchored to the bottom edge (sheets, bars). */
+:root {
+  --pds-shadow-bottom-xs: 0px 4px 4px -2px rgba(42,61,74,0.08);
+  --pds-shadow-bottom-s: 0px 8px 8px -4px rgba(42,61,74,0.08);
+  --pds-shadow-bottom-m: 0px 8px 16px -6px rgba(42,61,74,0.08);
+  --pds-shadow-bottom-l: 0px 8px 24px -14px rgba(42,61,74,0.08);
+  --pds-shadow-bottom-xl: 0px 10px 32px -4px rgba(42,61,74,0.10);
+  --pds-shadow-bottom-2xl: 0px 12px 42px -4px rgba(42,61,74,0.12);
+  --pds-shadow-bottom-3xl: 0px 14px 64px -4px rgba(42,61,74,0.12);
+  --pds-shadow-bottom-dark: 0px 18px 88px -4px rgba(42,61,74,0.14);
+  --pds-shadow-top-xs: 0px -4px 4px -2px rgba(42,61,74,0.08);
+  --pds-shadow-top-s: 0px -8px 8px -4px rgba(42,61,74,0.08);
+  --pds-shadow-top-m: 0px -8px 16px -6px rgba(42,61,74,0.08);
+  --pds-shadow-top-l: 0px -8px 24px -14px rgba(42,61,74,0.08);
+  --pds-shadow-top-xl: 0px -10px 32px -4px rgba(42,61,74,0.10);
+  --pds-shadow-top-2xl: 0px -12px 42px -4px rgba(42,61,74,0.12);
+  --pds-shadow-top-3xl: 0px -14px 64px -4px rgba(42,61,74,0.12);
+  --pds-shadow-top-dark: 0px -18px 88px -4px rgba(42,61,74,0.14);
+
+  /* Existing names, kept for compatibility and remapped to the nearest Figma step.
+     Light = base elements (cards, inputs); Medium = hover, dropdowns, tooltips;
+     Strong = overlays (modals, drawers). Outline has no Figma value and is unchanged. */
+  --shadow-outline: 0px 0px 0px 3px rgba(235,235,235,0.6);
+  --shadow-light: var(--pds-shadow-bottom-xs);
+  --shadow-xs: var(--pds-shadow-bottom-s);
+  --shadow-medium: var(--pds-shadow-bottom-m);
+  --shadow-xl: var(--pds-shadow-bottom-xl);
+  --shadow-strong: var(--pds-shadow-bottom-3xl);
+}

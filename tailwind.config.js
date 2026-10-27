@@ -74,24 +74,33 @@ export default {
         'border-input': '#8291A0',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        sans: ['var(--font-body)'],
+        mono: ['var(--font-mono)'],
       },
       fontSize: {
-        // DP3-FONT-01 canonical type scale. Roles below are the ONLY sanctioned
-        // sizes for their role — no ad-hoc text-2xl/3xl/4xl on titles/KPIs/sections.
-        //  title   — page h1 (via <PageHeader>). Was text-3xl font-semibold.
-        //  section — every card/section header. Replaces 8 ad-hoc variants
-        //            (text-sm..text-2xl, semibold vs bold).
-        //  kpi     — every headline/KPI number. Rendered mono (font-mono
-        //            tabular-nums, semibold) per DP-3 data grammar; kills
-        //            font-extrabold and the text-3xl/2xl hand-rolled tiles.
-        'title': ['30px', { lineHeight: '1.2', fontWeight: '600' }],
-        'section': ['16px', { lineHeight: '1.4', fontWeight: '600' }],
-        'kpi': ['36px', { lineHeight: '1.1', fontWeight: '600' }],
-        'eyebrow': ['12px', { lineHeight: '1.4', letterSpacing: '0.08em', fontWeight: '600' }],
-        'label': ['12px', { lineHeight: '1.3', letterSpacing: '0.06em', fontWeight: '600' }],
-        'meta': ['13px', { lineHeight: '1.4', fontWeight: '400' }],
+        xs: ['var(--fs-body-3)', { lineHeight: '1rem' }],
+        sm: ['var(--fs-body-2)', { lineHeight: '1.25rem' }],
+        base: ['var(--fs-body-1)', { lineHeight: '1.5rem' }],
+        lg: ['var(--fs-heading-8)', { lineHeight: '1.75rem' }],
+        xl: ['var(--fs-heading-7)', { lineHeight: '1.75rem' }],
+        '2xl': ['var(--fs-heading-6)', { lineHeight: '2rem' }],
+        // '3xl' (30px): no match: decide — Tailwind default kept.
+        // title 30px: no match: decide — value kept.
+        'title': ['30px', { lineHeight: '1.2', fontWeight: 'var(--fw-semibold)' }],
+        'section': ['var(--fs-title-2)', { lineHeight: '1.4', fontWeight: 'var(--fw-semibold)' }],
+        'kpi': ['var(--fs-display-3)', { lineHeight: '1.1', fontWeight: 'var(--fw-semibold)' }],
+        'eyebrow': ['var(--fs-label-2)', { lineHeight: '1.4', letterSpacing: '0.08em', fontWeight: 'var(--fw-semibold)' }],
+        'label': ['var(--fs-label-2)', { lineHeight: '1.3', letterSpacing: '0.06em', fontWeight: 'var(--fw-semibold)' }],
+        // meta 13px: no match: decide — value kept.
+        'meta': ['13px', { lineHeight: '1.4', fontWeight: 'var(--fw-regular)' }],
+      },
+      fontWeight: {
+        light: 'var(--fw-light)',
+        normal: 'var(--fw-regular)',
+        medium: 'var(--fw-medium)',
+        semibold: 'var(--fw-semibold)',
+        bold: 'var(--fw-bold)',
+        extrabold: 'var(--fw-extrabold)',
       },
       borderRadius: {
         'sm': '6px',

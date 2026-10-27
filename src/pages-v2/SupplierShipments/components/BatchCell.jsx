@@ -31,7 +31,9 @@ const BatchCell = ({ materialCode, entry, options, onChange }) => {
         placeholder={t('supplierShipments.placeholder.batch')}
         className={`${inputClass} min-w-[110px] ${options.length > 0 ? 'mt-1' : ''}`}
       />
-      <div className="mt-1 text-[11px] text-text-tertiary">{t('fc.asn.batch.notDeclaredNote')}</div>
+      <div className="mt-1 text-[length:var(--fs-label-3)] text-text-tertiary">
+        {t('fc.asn.batch.notDeclaredNote')}
+      </div>
     </>
   );
   if (options.length === 0) return typed;

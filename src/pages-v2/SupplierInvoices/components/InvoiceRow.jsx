@@ -58,7 +58,7 @@ const InvoiceRow = ({
         <Data as="div" className="text-xs font-bold text-text-primary">
           {inv.invoiceNumber}
         </Data>
-        <div className="inline-flex items-center gap-1 text-[10px] text-text-tertiary mt-0.5">
+        <div className="inline-flex items-center gap-1 text-[length:var(--fs-caption-1)] text-text-tertiary mt-0.5">
           <Channel size={10} />
           {t('supplierInvoices.table.via', { channel: inv.channel })}
         </div>

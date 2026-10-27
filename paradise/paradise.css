@@ -1,0 +1,28 @@
+/* Paradise 0.2.0-alpha.6 (status: preview) — tokens-only entry.
+   Loaded first from src/index.css. base.css is deliberately NOT loaded: it
+   restyles html, body and every link. These files only define custom
+   properties, so this import alone changes nothing on screen (stage 1). */
+@import './tokens/colors.css';
+@import './tokens/product-brands.css';
+@import './tokens/typography.css';
+@import './tokens/spacing.css';
+@import './tokens/radius.css';
+@import './tokens/shadow.css';
+@import './tokens/motion.css';
+@import './tokens/layout.css';
+@import './tokens/theme.css';
+
+/* Stage 3: Lato 400 / 700 / 900, self-hosted (paradise/fonts/). */
+@import './fonts/lato.css';
+
+/* Focus rule from paradise/tokens/base.css, scoped to the approved scope. */
+[data-pds-theme] :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: var(--pds-focus-ring-width) solid var(--pds-color-border-focus);
+  outline-offset: var(--pds-focus-ring-offset);
+}
+
+@media (forced-colors: active) {
+  [data-pds-theme] :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline-color: Highlight;
+  }
+}

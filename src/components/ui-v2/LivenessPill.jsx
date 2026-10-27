@@ -39,7 +39,7 @@ const LivenessPill = ({ capability, className = '' }) => {
       : t('widget.honesty.sample');
   return (
     <span
-      className={`inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider ${live ? 'text-success' : 'text-warning-hover'} ${className}`}
+      className={`inline-flex items-center gap-1.5 text-[length:var(--fs-caption-1)] font-semibold uppercase tracking-wider ${live ? 'text-success' : 'text-warning-hover'} ${className}`}
     >
       <span
         aria-hidden="true"

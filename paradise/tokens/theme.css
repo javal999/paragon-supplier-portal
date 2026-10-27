@@ -1,0 +1,408 @@
+/* Paradise — semantic theme contract.
+   Public components consume --pds-* semantic tokens. Product themes are opt-in
+   and may change accent expression, never the Paragon brand or accessibility. */
+:root,
+[data-pds-theme="light"] {
+  color-scheme: light;
+
+  --pds-color-brand-primary: var(--paragon-500);
+  --pds-color-brand-primary-hover: var(--paragon-600);
+  --pds-color-brand-primary-active: var(--paragon-700);
+  --pds-color-brand-subtle: var(--paragon-100);
+  --pds-color-brand-subtle-text: var(--paragon-600);
+
+  --pds-color-background-canvas: var(--semantic-background);
+  --pds-color-background-surface: var(--neutral-white);
+  --pds-color-background-subtle: var(--neutral-100);
+  --pds-color-background-elevated: var(--neutral-white);
+
+  --pds-color-text-primary: var(--semantic-text);
+  --pds-color-text-secondary: var(--neutral-700);
+  --pds-color-text-disabled: var(--neutral-400);
+  --pds-color-text-inverse: var(--neutral-white);
+  --pds-color-text-link: var(--paragon-500);
+
+  --pds-color-border-default: var(--neutral-200);
+  --pds-color-border-strong: var(--neutral-600);
+  --pds-color-border-focus: var(--paragon-500);
+
+  --pds-color-action-primary: var(--paragon-500);
+  --pds-color-action-primary-hover: var(--paragon-600);
+  --pds-color-action-primary-active: var(--paragon-700);
+  --pds-color-action-disabled: var(--neutral-500);
+
+  --pds-color-feedback-success: var(--success-700);
+  --pds-color-feedback-success-background: var(--success-100);
+  --pds-color-feedback-warning: var(--warning-800);
+  --pds-color-feedback-warning-background: var(--warning-100);
+  --pds-color-feedback-danger: var(--error-600);
+  --pds-color-feedback-danger-background: var(--error-100);
+  --pds-color-feedback-info: var(--information-700);
+  --pds-color-feedback-info-background: var(--information-100);
+
+  --pds-color-feedback-danger-hover: var(--error-700);
+  --pds-color-feedback-neutral: var(--neutral-600);
+
+  --pds-color-surface-inverse: var(--neutral-900);
+  --pds-color-feedback-success-inverse: var(--success-300);
+  --pds-color-feedback-warning-inverse: var(--warning-300);
+  --pds-color-feedback-danger-inverse: var(--error-200);
+  --pds-color-feedback-info-inverse: var(--information-200);
+  --pds-color-on-inverse: var(--neutral-white);
+  --pds-color-on-inverse-muted: var(--neutral-200);
+  --pds-color-rating-filled: var(--warning-700);
+
+  --pds-color-scrim: rgb(12 26 51 / 55%);
+  --pds-color-accent: var(--pds-color-brand-primary);
+  --pds-color-accent-hover: var(--pds-color-brand-primary-hover);
+
+  /* Categorical data-visualisation palette, in fixed order (never cycled).
+     Validated with scripts/validate_palette.js (dataviz skill): light mode on #ffffff,
+     adjacent CVD ΔE >= 8, normal-vision ΔE >= 15, every slot >= 3:1 against the surface. */
+  --pds-chart-1: #215aa8;
+  --pds-chart-2: #c9700f;
+  --pds-chart-3: #2e9a5e;
+  --pds-chart-4: #8a6bc0;
+  --pds-chart-5: #d62e44;
+  --pds-chart-6: #3b8ed0;
+  --pds-chart-7: #a38100;
+  --pds-chart-8: #c25a8a;
+  /* Sequential ramp (low -> high) and diverging ramp (negative -> midpoint -> positive) for heat maps,
+     calendars and choropleths. Every step keeps >= 3:1 against the chart surface (WCAG 1.4.11). */
+  --pds-chart-seq-1: #5f86c4;
+  --pds-chart-seq-2: #4e72ab;
+  --pds-chart-seq-3: #3d5f92;
+  --pds-chart-seq-4: #2d4b79;
+  --pds-chart-seq-5: #1c3860;
+  --pds-chart-seq-6: #0b2447;
+  --pds-chart-div-1: #0b2447;
+  --pds-chart-div-2: #355586;
+  --pds-chart-div-3: #5f86c4;
+  --pds-chart-div-4: #7d8590;
+  --pds-chart-div-5: #b26b12;
+  --pds-chart-div-6: #864f09;
+  --pds-chart-div-7: #5a3300;
+  /* Non-data fills: regions with no value, grid lines and qualitative range bands (behind the marks). */
+  --pds-chart-neutral: #d9dde3;
+  --pds-chart-grid: #e4e7ec;
+  --pds-chart-range-1: #d0d5dd;
+  --pds-chart-range-2: #e1e5ea;
+  --pds-chart-range-3: #eef0f3;
+
+  /* Commerce semantics for storefront patterns. Pairs: accent / on-accent, promo / on-promo; subtle,
+     bestseller and new backgrounds take text-primary. */
+  --pds-color-commerce-accent: var(--commerce-teal-900);
+  --pds-color-commerce-on-accent: var(--neutral-white);
+  --pds-color-commerce-accent-subtle: var(--commerce-teal-100);
+  --pds-color-commerce-discount: var(--commerce-teal-700);
+  --pds-color-commerce-promo: var(--commerce-coral-700);
+  --pds-color-commerce-on-promo: var(--neutral-white);
+  --pds-color-commerce-promo-subtle: var(--commerce-coral-200);
+  --pds-color-commerce-bestseller: var(--commerce-amber-200);
+  --pds-color-commerce-new: var(--commerce-lime-100);
+  --pds-color-commerce-level-rising: var(--commerce-orange-700);
+  --pds-color-commerce-level-super: var(--commerce-teal-700);
+}
+
+[data-pds-theme="dark"] {
+  color-scheme: dark;
+
+  --pds-color-background-canvas: #0f1720;
+  --pds-color-background-surface: #18232e;
+  --pds-color-background-subtle: #23313e;
+  --pds-color-background-elevated: #2b3a47;
+
+  --pds-color-text-primary: #f7f9fb;
+  --pds-color-text-secondary: #d3dae1;
+  --pds-color-text-disabled: #9aa8b5;
+  --pds-color-text-inverse: #0c1a33;
+  --pds-color-text-link: var(--paragon-200);
+
+  --pds-color-border-default: #52616e;
+  --pds-color-border-strong: #7b8995;
+  --pds-color-border-focus: var(--paragon-300);
+
+  --pds-color-action-primary: var(--paragon-300);
+  --pds-color-action-primary-hover: var(--paragon-200);
+  --pds-color-action-primary-active: var(--paragon-100);
+  --pds-color-action-disabled: #667582;
+  --pds-color-brand-subtle: var(--paragon-800);
+  --pds-color-brand-subtle-text: var(--paragon-100);
+
+  --pds-color-feedback-success: #8cd9ac;
+  --pds-color-feedback-success-background: #123825;
+  --pds-color-feedback-warning: #ffe86e;
+  --pds-color-feedback-warning-background: #342900;
+  --pds-color-feedback-danger: #fab6be;
+  --pds-color-feedback-danger-background: #5c000b;
+  --pds-color-feedback-info: #99c5ff;
+  --pds-color-feedback-info-background: #062560;
+  --pds-color-feedback-danger-hover: var(--error-300);
+  --pds-color-feedback-neutral: #9aa8b5;
+
+  --pds-color-surface-inverse: #f7f9fb;
+  --pds-color-feedback-success-inverse: var(--success-700);
+  --pds-color-feedback-warning-inverse: var(--warning-800);
+  --pds-color-feedback-danger-inverse: var(--error-600);
+  --pds-color-feedback-info-inverse: var(--magpie-700);
+  --pds-color-on-inverse: #0f1720;
+  --pds-color-on-inverse-muted: #3d4c59;
+  --pds-color-rating-filled: var(--warning-400);
+
+  --pds-color-scrim: rgb(0 0 0 / 70%);
+
+  /* Dark steps of the same eight hues, validated on #18232e. */
+  --pds-chart-1: #5a8fdc;
+  --pds-chart-2: #cf7a1c;
+  --pds-chart-3: #3aa56c;
+  --pds-chart-4: #9a7bd6;
+  --pds-chart-5: #e8505f;
+  --pds-chart-6: #3a96d6;
+  --pds-chart-7: #b08a10;
+  --pds-chart-8: #d0679a;
+  /* Sequential ramp (low -> high) and diverging ramp (negative -> midpoint -> positive) for heat maps,
+     calendars and choropleths. Every step keeps >= 3:1 against the chart surface (WCAG 1.4.11). */
+  --pds-chart-seq-1: #4f7dc2;
+  --pds-chart-seq-2: #6d93cd;
+  --pds-chart-seq-3: #8aa9d8;
+  --pds-chart-seq-4: #a8c0e2;
+  --pds-chart-seq-5: #c5d6ed;
+  --pds-chart-seq-6: #e3ecf8;
+  --pds-chart-div-1: #e3ecf8;
+  --pds-chart-div-2: #a9c1e6;
+  --pds-chart-div-3: #6f97d4;
+  --pds-chart-div-4: #7b8794;
+  --pds-chart-div-5: #d88a2c;
+  --pds-chart-div-6: #f0b56a;
+  --pds-chart-div-7: #fbe3c2;
+  /* Non-data fills: regions with no value, grid lines and qualitative range bands (behind the marks). */
+  --pds-chart-neutral: #34414d;
+  --pds-chart-grid: #34414d;
+  --pds-chart-range-1: #3a4a59;
+  --pds-chart-range-2: #2e3c49;
+  --pds-chart-range-3: #26323d;
+
+  /* Commerce semantics, validated on #18232e. */
+  --pds-color-commerce-accent: #5cc8c2;
+  --pds-color-commerce-on-accent: #0f1720;
+  --pds-color-commerce-accent-subtle: #123f3d;
+  --pds-color-commerce-discount: #5cc8c2;
+  --pds-color-commerce-promo: #ff8a7d;
+  --pds-color-commerce-on-promo: #0f1720;
+  --pds-color-commerce-promo-subtle: #5c1f18;
+  --pds-color-commerce-bestseller: #5c4500;
+  --pds-color-commerce-new: #33461a;
+  --pds-color-commerce-level-rising: #f0a24a;
+  --pds-color-commerce-level-super: #5cc8c2;
+}
+
+/* Opt-in: follow the operating-system colour scheme. Use data-pds-theme="auto";
+   it renders light unless the user prefers dark. Keep this block identical to the
+   dark block above (tests/theme-parity.test.js enforces it). */
+@media (prefers-color-scheme: dark) {
+  [data-pds-theme="auto"] {
+    color-scheme: dark;
+
+    --pds-color-background-canvas: #0f1720;
+    --pds-color-background-surface: #18232e;
+    --pds-color-background-subtle: #23313e;
+    --pds-color-background-elevated: #2b3a47;
+
+    --pds-color-text-primary: #f7f9fb;
+    --pds-color-text-secondary: #d3dae1;
+    --pds-color-text-disabled: #9aa8b5;
+    --pds-color-text-inverse: #0c1a33;
+    --pds-color-text-link: var(--paragon-200);
+
+    --pds-color-border-default: #52616e;
+    --pds-color-border-strong: #7b8995;
+    --pds-color-border-focus: var(--paragon-300);
+
+    --pds-color-action-primary: var(--paragon-300);
+    --pds-color-action-primary-hover: var(--paragon-200);
+    --pds-color-action-primary-active: var(--paragon-100);
+    --pds-color-action-disabled: #667582;
+    --pds-color-brand-subtle: var(--paragon-800);
+    --pds-color-brand-subtle-text: var(--paragon-100);
+
+    --pds-color-feedback-success: #8cd9ac;
+    --pds-color-feedback-success-background: #123825;
+    --pds-color-feedback-warning: #ffe86e;
+    --pds-color-feedback-warning-background: #342900;
+    --pds-color-feedback-danger: #fab6be;
+    --pds-color-feedback-danger-background: #5c000b;
+    --pds-color-feedback-info: #99c5ff;
+    --pds-color-feedback-info-background: #062560;
+    --pds-color-feedback-danger-hover: var(--error-300);
+    --pds-color-feedback-neutral: #9aa8b5;
+
+    --pds-color-surface-inverse: #f7f9fb;
+    --pds-color-feedback-success-inverse: var(--success-700);
+    --pds-color-feedback-warning-inverse: var(--warning-800);
+    --pds-color-feedback-danger-inverse: var(--error-600);
+    --pds-color-feedback-info-inverse: var(--magpie-700);
+    --pds-color-on-inverse: #0f1720;
+    --pds-color-on-inverse-muted: #3d4c59;
+    --pds-color-rating-filled: var(--warning-400);
+
+    --pds-color-scrim: rgb(0 0 0 / 70%);
+
+    /* Dark steps of the same eight hues, validated on #18232e. */
+    --pds-chart-1: #5a8fdc;
+    --pds-chart-2: #cf7a1c;
+    --pds-chart-3: #3aa56c;
+    --pds-chart-4: #9a7bd6;
+    --pds-chart-5: #e8505f;
+    --pds-chart-6: #3a96d6;
+    --pds-chart-7: #b08a10;
+    --pds-chart-8: #d0679a;
+    /* Sequential ramp (low -> high) and diverging ramp (negative -> midpoint -> positive) for heat maps,
+       calendars and choropleths. Every step keeps >= 3:1 against the chart surface (WCAG 1.4.11). */
+    --pds-chart-seq-1: #4f7dc2;
+    --pds-chart-seq-2: #6d93cd;
+    --pds-chart-seq-3: #8aa9d8;
+    --pds-chart-seq-4: #a8c0e2;
+    --pds-chart-seq-5: #c5d6ed;
+    --pds-chart-seq-6: #e3ecf8;
+    --pds-chart-div-1: #e3ecf8;
+    --pds-chart-div-2: #a9c1e6;
+    --pds-chart-div-3: #6f97d4;
+    --pds-chart-div-4: #7b8794;
+    --pds-chart-div-5: #d88a2c;
+    --pds-chart-div-6: #f0b56a;
+    --pds-chart-div-7: #fbe3c2;
+    /* Non-data fills: regions with no value, grid lines and qualitative range bands (behind the marks). */
+    --pds-chart-neutral: #34414d;
+    --pds-chart-grid: #34414d;
+    --pds-chart-range-1: #3a4a59;
+    --pds-chart-range-2: #2e3c49;
+    --pds-chart-range-3: #26323d;
+
+    /* Commerce semantics, validated on #18232e. */
+    --pds-color-commerce-accent: #5cc8c2;
+    --pds-color-commerce-on-accent: #0f1720;
+    --pds-color-commerce-accent-subtle: #123f3d;
+    --pds-color-commerce-discount: #5cc8c2;
+    --pds-color-commerce-promo: #ff8a7d;
+    --pds-color-commerce-on-promo: #0f1720;
+    --pds-color-commerce-promo-subtle: #5c1f18;
+    --pds-color-commerce-bestseller: #5c4500;
+    --pds-color-commerce-new: #33461a;
+    --pds-color-commerce-level-rising: #f0a24a;
+    --pds-color-commerce-level-super: #5cc8c2;
+  }
+}
+
+/* Optional product accents. Set the attribute only when a product chooses an
+   approved theme. Primary actions remain Paragon blue. */
+[data-pds-product="digiso"] {
+  --pds-color-accent: var(--digiso-700);
+  --pds-color-accent-hover: var(--digiso-800);
+}
+
+[data-pds-product="heron"] {
+  --pds-color-accent: var(--heron-600);
+  --pds-color-accent-hover: var(--heron-700);
+}
+
+[data-pds-product="magpie"] {
+  --pds-color-accent: var(--magpie-600);
+  --pds-color-accent-hover: var(--magpie-700);
+}
+
+[data-pds-product="nova"] {
+  --pds-color-accent: var(--nova-dashboard-600);
+  --pds-color-accent-hover: var(--nova-dashboard-700);
+}
+
+[data-pds-product="sagitarius"] {
+  --pds-color-accent: var(--sagitarius-600);
+  --pds-color-accent-hover: var(--sagitarius-700);
+}
+
+[data-pds-product="siglive"] {
+  --pds-color-accent: var(--siglive-600);
+  --pds-color-accent-hover: var(--siglive-700);
+}
+
+/* Explicit high-contrast mode. Keep this separate from dark mode so either can
+   be selected and tested by an application. */
+[data-pds-contrast="high"] {
+  --pds-color-background-canvas: Canvas;
+  --pds-color-background-surface: Canvas;
+  --pds-color-background-subtle: Canvas;
+  --pds-color-background-elevated: Canvas;
+  --pds-color-text-primary: CanvasText;
+  --pds-color-text-secondary: CanvasText;
+  --pds-color-text-disabled: GrayText;
+  --pds-color-text-inverse: Canvas;
+  --pds-color-text-link: LinkText;
+  --pds-color-border-default: CanvasText;
+  --pds-color-border-strong: CanvasText;
+  --pds-color-border-focus: Highlight;
+  /* LinkText is the system colour meant for text on Canvas; Highlight follows the OS
+     accent and can fall below 4.5:1 there (Windows default #0078D7 is 4.49:1). */
+  --pds-color-action-primary: LinkText;
+  --pds-color-action-primary-hover: LinkText;
+  --pds-color-action-primary-active: LinkText;
+  --pds-color-brand-subtle: Canvas;
+  --pds-color-brand-subtle-text: CanvasText;
+  --pds-color-feedback-success: CanvasText;
+  --pds-color-feedback-success-background: Canvas;
+  --pds-color-feedback-warning: CanvasText;
+  --pds-color-feedback-warning-background: Canvas;
+  --pds-color-feedback-danger: CanvasText;
+  --pds-color-feedback-danger-background: Canvas;
+  --pds-color-feedback-info: CanvasText;
+  --pds-color-feedback-info-background: Canvas;
+  --pds-color-feedback-danger-hover: Highlight;
+  --pds-color-feedback-neutral: CanvasText;
+  --pds-color-surface-inverse: CanvasText;
+  --pds-color-feedback-success-inverse: Canvas;
+  --pds-color-feedback-warning-inverse: Canvas;
+  --pds-color-feedback-danger-inverse: Canvas;
+  --pds-color-feedback-info-inverse: Canvas;
+  --pds-color-on-inverse: Canvas;
+  --pds-color-on-inverse-muted: Canvas;
+  --pds-color-rating-filled: Highlight;
+  --pds-color-scrim: rgb(0 0 0 / 70%);
+  --pds-color-commerce-accent: CanvasText;
+  --pds-color-commerce-on-accent: Canvas;
+  --pds-color-commerce-accent-subtle: Canvas;
+  --pds-color-commerce-discount: CanvasText;
+  --pds-color-commerce-promo: CanvasText;
+  --pds-color-commerce-on-promo: Canvas;
+  --pds-color-commerce-promo-subtle: Canvas;
+  --pds-color-commerce-bestseller: Canvas;
+  --pds-color-commerce-new: Canvas;
+  --pds-color-commerce-level-rising: CanvasText;
+  --pds-color-commerce-level-super: CanvasText;
+}
+
+/* Compatibility aliases. New components must use the --pds-* names above. */
+:root,
+[data-pds-theme] {
+  --color-primary: var(--pds-color-action-primary);
+  --color-primary-hover: var(--pds-color-action-primary-hover);
+  --color-primary-active: var(--pds-color-action-primary-active);
+  --color-primary-subtle: var(--pds-color-brand-subtle);
+  --color-bg: var(--pds-color-background-canvas);
+  --color-surface: var(--pds-color-background-surface);
+  --color-surface-sunken: var(--pds-color-background-subtle);
+  --color-border: var(--pds-color-border-default);
+  --color-border-strong: var(--pds-color-border-strong);
+  --text-primary: var(--pds-color-text-primary);
+  --text-secondary: var(--pds-color-text-secondary);
+  --text-disabled: var(--pds-color-text-disabled);
+  --text-inverse: var(--pds-color-text-inverse);
+  --text-link: var(--pds-color-text-link);
+  --color-disabled: var(--pds-color-action-disabled);
+  --color-success: var(--pds-color-feedback-success);
+  --color-success-bg: var(--pds-color-feedback-success-background);
+  --color-warning: var(--pds-color-feedback-warning);
+  --color-warning-bg: var(--pds-color-feedback-warning-background);
+  --color-error: var(--pds-color-feedback-danger);
+  --color-error-bg: var(--pds-color-feedback-danger-background);
+  --color-info: var(--pds-color-feedback-info);
+  --color-info-bg: var(--pds-color-feedback-info-background);
+}

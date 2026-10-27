@@ -29,7 +29,10 @@ export function useConsolidationColumns(t) {
   // deliberately NOT a warning (the line did not move; nothing was voided).
   const carriedToken = useMemo(
     () => (
-      <span className={`${CHIP_NEUTRAL} text-[10px]`} title={t('sdc.state.carriedTitle')}>
+      <span
+        className={`${CHIP_NEUTRAL} text-[length:var(--fs-caption-1)]`}
+        title={t('sdc.state.carriedTitle')}
+      >
         {t('sdc.state.carried')}
       </span>
     ),
@@ -257,7 +260,7 @@ export function useConsolidationColumns(t) {
                   bridgeability is UNKNOWN. Marked, never assumed no-risk. */}
                 {st.expiryBlind && (
                   <span
-                    className="text-[10px] italic text-text-tertiary"
+                    className="text-[length:var(--fs-caption-1)] italic text-text-tertiary"
                     title={t('sdc.coverage.expiryBlindTitle')}
                   >
                     {t('sdc.coverage.expiryBlind')}

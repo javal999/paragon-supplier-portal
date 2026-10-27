@@ -117,7 +117,7 @@ export const RunOutFacts = ({ row }) => {
           </span>
         ) : null}
       </dl>
-      <p className="mt-0.5 text-[11px] text-text-tertiary">
+      <p className="mt-0.5 text-[length:var(--fs-label-3)] text-text-tertiary">
         {p.lastInLine
           ? t(p.leadTime.onRecord ? 'co.runOut.leadTime' : 'co.runOut.leadTimeFallback', {
               weeks: p.leadTime.weeks
