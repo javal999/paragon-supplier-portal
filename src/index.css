@@ -2,9 +2,9 @@
    JetBrains Mono are no longer fetched from Google Fonts. */
 @import '../paradise/paradise.css';
 
-/* The values below point at Paradise tokens (--pds-*, --font-*). They are
-   defined in ../paradise/tokens/, which the CSS linter does not follow through
-   @import, so it would report each one as unknown. */
+/* The values below point at Paradise tokens (--pds-*, --font-*, --radius-*,
+   --shadow-*). They are defined in ../paradise/tokens/, which the CSS linter
+   does not follow through @import, so it would report each one as unknown. */
 /* eslint-disable css/no-invalid-properties */
 
 /* ─── Design Token System — Paragon Odyssey ─────────────────────────────────── */
@@ -51,14 +51,14 @@
   --app-font-mono: var(--font-mono);
 
   /* ── SPACING ── */
-  --radius-sm:   4px;
-  --radius-md:   8px;
-  --radius-lg:   12px;
-  --radius-pill: 9999px;
+  --radius-sm:   var(--radius-base);
+  --radius-md:   var(--radius-large);
+  --radius-lg:   var(--radius-xl);
+  --radius-pill: var(--radius-full);
 
   /* ── SHADOWS ── */
-  --shadow-card:   0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-panel:  0 4px 24px rgba(0, 0, 0, 0.12);
+  --shadow-card:   var(--shadow-light);
+  --shadow-panel:  var(--shadow-strong);
   --shadow-topbar: 0 1px 0px rgba(255, 255, 255, 0.04);
 }
 

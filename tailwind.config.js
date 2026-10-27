@@ -1,4 +1,4 @@
-// Paradise 0.2.0-alpha.6 stage 2 (paradise-migration-plan.md). Every value is
+// Paradise 0.2.0-alpha.6 stages 2, 4 and 5 (paradise-migration-plan.md). Every value is
 // a var(...) reference to a Paradise token, never a resolved hex. Values with no
 // Paradise match keep their original value and are marked "no match: decide".
 //
@@ -91,21 +91,50 @@ export default {
         bold: 'var(--fw-bold)',
         extrabold: 'var(--fw-extrabold)',
       },
+      spacing: {
+        '0.5': 'var(--space-1)',
+        '1': 'var(--space-2)',
+        '1.5': 'var(--space-3)',
+        '2': 'var(--space-4)',
+        '2.5': 'var(--space-5)',
+        '3': 'var(--space-6)',
+        '3.5': 'var(--space-7)',
+        '4': 'var(--space-8)',
+        '5': 'var(--space-10)',
+        '6': 'var(--space-11)',
+        '7': 'var(--space-12)',
+        '8': 'var(--space-13)',
+        '9': 'var(--space-14)',
+        '10': 'var(--space-15)',
+        '12': 'var(--space-16)',
+        '14': 'var(--space-17)',
+        '16': 'var(--space-18)',
+        '20': 'var(--space-19)',
+        '24': 'var(--space-20)',
+        '28': 'var(--space-21)',
+        '32': 'var(--space-22)',
+        '36': 'var(--space-23)',
+        '40': 'var(--space-24)',
+      },
       borderRadius: {
-        'sm': '6px',
+        DEFAULT: 'var(--radius-base)',
+        'sm': 'var(--radius-medium)',
+        // md 10px: no match: decide (Paradise steps are 8px and 12px) — value kept.
         'md': '10px',
-        'lg': '12px',
+        'lg': 'var(--radius-xl)',
+        'xl': 'var(--radius-xl)',
+        '2xl': 'var(--radius-2xl)',
+        '3xl': 'var(--radius-3xl)',
+        'full': 'var(--radius-full)',
       },
       boxShadow: {
-        'sm': '0 1px 2px rgba(13, 27, 42, 0.04)',
-        'md': '0 4px 12px rgba(13, 27, 42, 0.08)',
+        DEFAULT: 'var(--shadow-light)',
+        'sm': 'var(--shadow-light)',
+        'md': 'var(--shadow-medium)',
+        'lg': 'var(--shadow-medium)',
+        '2xl': 'var(--shadow-strong)',
       },
-      // SidePanel's slide-over. These are ANIMATIONS rather than transitions
-      // deliberately: a transition needs the element to persist so a class
-      // change has a previous frame to interpolate from, and the panel now
-      // UNMOUNTS when closed (see `SidePanel.tsx`'s contract note). A keyframe
-      // plays on mount and needs no previous frame, so the enter survives the
-      // contract change. There is no exit pair — the panel is gone by then.
+      // Motion is a later run (stage 5 here is limited to shadows): unchanged.
       keyframes: {
         'panel-in': {
           from: { transform: 'translateX(100%)' },
