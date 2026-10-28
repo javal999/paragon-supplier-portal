@@ -172,6 +172,45 @@ describe('FUX phase 2 B5 — Forecast bias is a tab of Forecast quality, not a m
   });
 });
 
+describe('the "All" role lists each page once (owner ruling 2026-10-28)', () => {
+  const allPaths = () => navFor('buyer', 'ALL').flatMap((s) => s.items.map((i) => i.path));
+
+  it('no page appears twice, and every page a single role sees is still there', () => {
+    const paths = allPaths();
+    expect(paths.filter((p, i) => paths.indexOf(p) !== i)).toEqual([]);
+    const union = new Set(
+      /** @type {const} */ (['MP', 'BUY', 'FIN']).flatMap((role) =>
+        navFor('buyer', role).flatMap((s) => s.items.map((i) => i.path))
+      )
+    );
+    expect(new Set(paths)).toEqual(union);
+  });
+
+  it('the three shared pages sit under Review, and the emptied sections are gone', () => {
+    const review = navFor('buyer', 'ALL').find((s) => s.id === 'review');
+    expect(review?.items.map((i) => i.path)).toEqual(
+      expect.arrayContaining([
+        '/buyer/scorecard',
+        '/buyer/fs-reconcile',
+        '/buyer/demand-anticipation-history'
+      ])
+    );
+    const ids = navFor('buyer', 'ALL').map((s) => s.id);
+    expect(ids).not.toContain('audit');
+    expect(ids).not.toContain('performance');
+    // Known-bad control: the raw menu does repeat them, so the check above can fail.
+    const raw = PTI_NAV.flatMap((s) => s.items.map((i) => i.path));
+    expect(raw.filter((p) => p === '/buyer/scorecard')).toHaveLength(2);
+  });
+
+  it('single roles keep their own sections', () => {
+    expect(navFor('buyer', 'BUY').map((s) => s.id)).toEqual(
+      expect.arrayContaining(['audit', 'performance'])
+    );
+    expect(navFor('buyer', 'FIN').map((s) => s.id)).toContain('audit');
+  });
+});
+
 describe('sectionForPath picks the section by role (NV-05)', () => {
   it('the scorecard is Review for MP and Performance for BUY', () => {
     expect(sectionForPath('/buyer/scorecard', 'MP')?.id).toBe('review');
