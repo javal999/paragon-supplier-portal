@@ -407,7 +407,7 @@ const BuyerInventory = () => {
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableHeaderCell>{t('inv.col.materialSupplier')}</TableHeaderCell>
+            <TableHeaderCell pin="left">{t('inv.col.materialSupplier')}</TableHeaderCell>
             <TableHeaderCell>{t('inv.col.riskCover')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('inv.col.supplierSoh')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('inv.col.ptiSohRop')}</TableHeaderCell>
@@ -428,10 +428,17 @@ const BuyerInventory = () => {
                   className={isHighlighted ? HIGHLIGHTED_ROW_CLASS : undefined}
                   onClick={() => setDrawer(p)}
                 >
-                  <TableCell>
-                    <Data className="text-xs font-bold text-text-primary">{p.materialCode}</Data>
+                  <TableCell pin="left">
+                    <Data className="text-xs font-bold text-text-primary whitespace-nowrap">
+                      {p.materialCode}
+                    </Data>
                     <div className="text-sm text-text-primary">{p.materialLabel}</div>
-                    <div className="text-xs text-text-secondary">{p.supplierName}</div>
+                    <div
+                      className="text-xs text-text-secondary line-clamp-2"
+                      title={p.supplierName}
+                    >
+                      {p.supplierName}
+                    </div>
                     {/* Material C2 — the supplier's approved trade name (MR-3 d, planner step 3). */}
                     <TradeNameBeside
                       name={p.tradeName}

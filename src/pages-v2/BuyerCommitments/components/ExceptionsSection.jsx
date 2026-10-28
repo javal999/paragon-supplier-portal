@@ -2,7 +2,6 @@
 import { useTranslation } from 'react-i18next';
 import Table from '@components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
-import TermTip from '@components/forecast/TermTip';
 import ExceptionRow from './ExceptionRow';
 /** @import { ForecastCommitmentLine } from '@services/data/types' */
 /** @import { VerbAvailability } from '@services/transitions/handoff' */
@@ -50,15 +49,10 @@ const ExceptionsSection = ({
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableHeaderCell>#</TableHeaderCell>
-            <TableHeaderCell>{t('fc.col.supplier')}</TableHeaderCell>
-            <TableHeaderCell>{t('fc.col.material')}</TableHeaderCell>
+            <TableHeaderCell pin="left">#</TableHeaderCell>
+            <TableHeaderCell pin="left">{t('fc.col.supplier')}</TableHeaderCell>
+            <TableHeaderCell pin="left">{t('fc.col.material')}</TableHeaderCell>
             <TableHeaderCell>{t('fc.col.period')}</TableHeaderCell>
-            <TableHeaderCell>
-              <span className="inline-flex items-center gap-1">
-                {t('fc.col.zone')} <TermTip term="Firm" /> <TermTip term="Trade-off" />
-              </span>
-            </TableHeaderCell>
             <TableHeaderCell className="text-right">{t('fc.col.forecastShort')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('fc.col.commitmentShort')}</TableHeaderCell>
             <TableHeaderCell>{t('fc.col.gap')}</TableHeaderCell>
@@ -66,6 +60,10 @@ const ExceptionsSection = ({
             <TableHeaderCell>{t('fc.col.due')}</TableHeaderCell>
             <TableHeaderCell>{t('fc.col.daysOfSupply')}</TableHeaderCell>
             <TableHeaderCell>{t('fc.col.actions')}</TableHeaderCell>
+            {/* Zone lives in each row's expander, which keeps the main row narrower. */}
+            <TableHeaderCell pin="right">
+              <span className="sr-only">{t('fc.col.details')}</span>
+            </TableHeaderCell>
           </TableHeader>
           <tbody>
             {exceptions.map((l, i) => (

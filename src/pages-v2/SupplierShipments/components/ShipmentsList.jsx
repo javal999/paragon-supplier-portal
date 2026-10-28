@@ -109,17 +109,17 @@ const ShipmentsList = ({
         </div>
         <Table>
           <TableHeader>
-            <TableHeaderCell className="w-8">
-              <span className="sr-only">{t('supplierShipments.aria.expand')}</span>
-            </TableHeaderCell>
-            <TableHeaderCell>{t('supplierShipments.col.asn')}</TableHeaderCell>
-            <TableHeaderCell>{t('supplierShipments.col.poRef')}</TableHeaderCell>
-            <TableHeaderCell>{t('supplierShipments.col.status')}</TableHeaderCell>
+            <TableHeaderCell pin="left">{t('supplierShipments.col.asn')}</TableHeaderCell>
+            <TableHeaderCell pin="left">{t('supplierShipments.col.poRef')}</TableHeaderCell>
+            <TableHeaderCell pin="left">{t('supplierShipments.col.status')}</TableHeaderCell>
             <TableHeaderCell>{t('supplierShipments.col.carrier')}</TableHeaderCell>
             <TableHeaderCell>{t('supplierShipments.col.tracking')}</TableHeaderCell>
             <TableHeaderCell>{t('supplierShipments.col.eta')}</TableHeaderCell>
             <TableHeaderCell className="text-right">
               {t('supplierShipments.col.actions')}
+            </TableHeaderCell>
+            <TableHeaderCell pin="right" className="w-8">
+              <span className="sr-only">{t('supplierShipments.aria.expand')}</span>
             </TableHeaderCell>
           </TableHeader>
           <tbody>

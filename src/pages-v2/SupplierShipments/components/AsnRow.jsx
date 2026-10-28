@@ -15,36 +15,25 @@ import { STATUS_VARIANT } from '../const';
 import { fmtDate } from '../utils';
 
 /**
- * One ASN's row in the list: the expand toggle, its identifiers and status,
- * and the action cell — Submit on a Draft, the dock's notice on a
- * Discrepancy, Cancel while cancellable — each verb in its own slot.
+ * One ASN's row in the list: its identifiers and status pinned on the left,
+ * the action cell, and the expand toggle pinned on the right. The action cell
+ * holds Submit on a Draft, the dock's notice on a Discrepancy, and Cancel
+ * while cancellable, each verb in its own slot.
  * @type {React.FC<{ asn: ASN; isOpen: boolean; asnVerbs: AsnVerbs; onToggleExpand: (asnNumber: string) => void; onSubmitAsn: (asnNumber: string) => void; onCancelAsn: (asnNumber: string) => void }>}
  */
 const AsnRow = ({ asn, isOpen, asnVerbs, onToggleExpand, onSubmitAsn, onCancelAsn }) => {
   const { t } = useTranslation();
   return (
     <TableRow>
-      <TableCell>
-        <button
-          type="button"
-          onClick={() => onToggleExpand(asn.asnNumber)}
-          aria-label={
-            isOpen ? t('supplierShipments.aria.collapse') : t('supplierShipments.aria.expand')
-          }
-          className="text-text-tertiary hover:text-text-primary"
-        >
-          {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-        </button>
-      </TableCell>
-      <TableCell>
+      <TableCell pin="left">
         <Data className="text-xs font-bold text-text-primary whitespace-nowrap">
           {asn.asnNumber}
         </Data>
       </TableCell>
-      <TableCell className="text-xs text-text-secondary whitespace-nowrap">
+      <TableCell pin="left" className="text-xs text-text-secondary whitespace-nowrap">
         <Data>{asn.poReference}</Data>
       </TableCell>
-      <TableCell>
+      <TableCell pin="left">
         <StatusPill variant={STATUS_VARIANT[asn.status]}>{asn.status}</StatusPill>
       </TableCell>
       <TableCell className="text-text-secondary whitespace-nowrap">{asn.carrier}</TableCell>
@@ -100,6 +89,18 @@ const AsnRow = ({ asn, isOpen, asnVerbs, onToggleExpand, onSubmitAsn, onCancelAs
         {!ASN_CANCELLABLE_STATES.includes(asn.status) && asn.status !== 'Discrepancy' && (
           <span className="text-text-tertiary text-xs">—</span>
         )}
+      </TableCell>
+      <TableCell pin="right">
+        <button
+          type="button"
+          onClick={() => onToggleExpand(asn.asnNumber)}
+          aria-label={
+            isOpen ? t('supplierShipments.aria.collapse') : t('supplierShipments.aria.expand')
+          }
+          className="text-text-tertiary hover:text-text-primary"
+        >
+          {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+        </button>
       </TableCell>
     </TableRow>
   );
