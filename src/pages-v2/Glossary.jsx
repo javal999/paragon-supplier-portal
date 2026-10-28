@@ -89,25 +89,28 @@ const Appearances = ({ appearances }) => {
       </span>
       <ul className="mt-1.5 space-y-1">
         {appearances.map((a) => (
-          <li key={a.entity} className="flex flex-wrap items-center gap-1.5 text-[11px]">
-            <Data className="text-[11px]">{a.entity}</Data>
+          <li
+            key={a.entity}
+            className="flex flex-wrap items-center gap-1.5 text-[length:var(--fs-label-3)]"
+          >
+            <Data className="text-[length:var(--fs-label-3)]">{a.entity}</Data>
             {a.kinds.map((k) => (
-              <StatusPill key={k} variant="neutral" className="text-[10px]">
+              <StatusPill key={k} variant="neutral" className="text-[length:var(--fs-caption-1)]">
                 {t(APPEARANCE_KIND_KEY[k])}
               </StatusPill>
             ))}
             {a.isInitial && (
-              <span className="text-[10px] text-text-tertiary">
+              <span className="text-[length:var(--fs-caption-1)] text-text-tertiary">
                 {t('glossary.appears.initial')}
               </span>
             )}
             {a.isTerminal && (
-              <span className="text-[10px] text-text-tertiary">
+              <span className="text-[length:var(--fs-caption-1)] text-text-tertiary">
                 {t('glossary.appears.terminal')}
               </span>
             )}
             {a.transitionIds.length > 0 && (
-              <span className="text-[10px] text-text-tertiary">
+              <span className="text-[length:var(--fs-caption-1)] text-text-tertiary">
                 {t('glossary.appears.edges', { count: a.transitionIds.length })}
               </span>
             )}
@@ -119,7 +122,7 @@ const Appearances = ({ appearances }) => {
           sentence about it here would be the second copy. */}
       <Link
         to="/buyer/process-flows"
-        className="mt-1.5 inline-block text-[11px] text-teal-hover hover:underline"
+        className="mt-1.5 inline-block text-[length:var(--fs-label-3)] text-teal-hover hover:underline"
       >
         {t('glossary.appears.seeFlows')}
       </Link>
@@ -144,14 +147,14 @@ const Related = ({ related, onJump }) => {
         {related.map((r) => (
           <li
             key={`${r.relation}#${r.sourceType}.${r.term}`}
-            className="text-[11px] leading-relaxed"
+            className="text-[length:var(--fs-label-3)] leading-relaxed"
           >
             <button
               type="button"
               onClick={() => onJump(`${r.sourceType}.${r.term}`)}
               className="text-teal-hover hover:underline"
             >
-              <Data className="text-[11px] text-teal-hover">
+              <Data className="text-[length:var(--fs-label-3)] text-teal-hover">
                 {r.sourceType}.{r.term}
               </Data>
             </button>
@@ -176,10 +179,12 @@ const TermCard = ({ view, indonesian, highlighted, onJump }) => {
       }`}
     >
       <h3 className="flex flex-wrap items-baseline gap-2">
-        <Data className="text-[14px]">{view.term}</Data>
-        <span className="text-[10px] uppercase tracking-wider text-text-tertiary">
+        <Data className="text-[length:var(--fs-body-2)]">{view.term}</Data>
+        <span className="text-[length:var(--fs-caption-1)] uppercase tracking-wider text-text-tertiary">
           {t('glossary.term.definedBy')}{' '}
-          <Data className="text-[10px] text-text-tertiary">{view.sourceType}</Data>
+          <Data className="text-[length:var(--fs-caption-1)] text-text-tertiary">
+            {view.sourceType}
+          </Data>
         </span>
       </h3>
       {/* THE ONE AUTHORED THING ON THE ROW. The active locale's sentence, read
@@ -188,7 +193,9 @@ const TermCard = ({ view, indonesian, highlighted, onJump }) => {
       <p className="mt-1.5 max-w-prose text-meta leading-relaxed text-text-secondary">
         {indonesian ? view.entry.id : view.entry.en}
       </p>
-      <Data className="mt-1.5 block text-[10px] text-text-tertiary">{view.sourceFile}</Data>
+      <Data className="mt-1.5 block text-[length:var(--fs-caption-1)] text-text-tertiary">
+        {view.sourceFile}
+      </Data>
       <Appearances appearances={view.appearances} />
       <Related related={view.related} onJump={onJump} />
     </article>
@@ -318,14 +325,16 @@ const Glossary = () => {
                 data-testid="glossary-filter-all"
                 onClick={() => setVocabulary(null)}
                 aria-current={vocabulary === null ? 'true' : undefined}
-                className={`flex w-full items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-left text-[12px] transition-colors ${
+                className={`flex w-full items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-left text-[length:var(--fs-label-2)] transition-colors ${
                   vocabulary === null
                     ? 'border-action bg-action-soft'
                     : 'border-border-subtle bg-bg-surface hover:bg-bg-hover'
                 }`}
               >
                 <span className="text-text-primary">{t('glossary.filter.all')}</span>
-                <span className="text-[11px] text-text-tertiary">{all.length}</span>
+                <span className="text-[length:var(--fs-label-3)] text-text-tertiary">
+                  {all.length}
+                </span>
               </button>
             </li>
             {GLOSSARY_REGISTRIES.map((r) => {
@@ -344,8 +353,10 @@ const Glossary = () => {
                         : 'border-border-subtle bg-bg-surface hover:bg-bg-hover'
                     }`}
                   >
-                    <Data className="truncate text-[11px]">{r.sourceType}</Data>
-                    <span className="text-[11px] text-text-tertiary">{count}</span>
+                    <Data className="truncate text-[length:var(--fs-label-3)]">{r.sourceType}</Data>
+                    <span className="text-[length:var(--fs-label-3)] text-text-tertiary">
+                      {count}
+                    </span>
                   </button>
                 </li>
               );
@@ -375,7 +386,7 @@ const Glossary = () => {
                   <h2 className="mb-2 flex items-center gap-2 text-section text-text-primary">
                     <BookOpen size={14} className="text-teal" aria-hidden="true" />
                     <Data className="text-[13px]">{g.sourceType}</Data>
-                    <span className="text-[11px] font-normal text-text-tertiary">
+                    <span className="text-[length:var(--fs-label-3)] font-normal text-text-tertiary">
                       {g.rows.length}
                     </span>
                   </h2>

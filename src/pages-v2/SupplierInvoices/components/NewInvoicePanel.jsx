@@ -251,7 +251,7 @@ const NewInvoicePanel = ({ nw, createMutation, submitMutation, toast, failToast,
               <div
                 role="alert"
                 data-testid="invoice-number-duplicate"
-                className="mt-1 text-[11px] text-danger"
+                className="mt-1 text-[length:var(--fs-label-3)] text-danger"
               >
                 {t('fc.inv.new.duplicate')}
               </div>

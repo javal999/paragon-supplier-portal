@@ -621,6 +621,26 @@ nav groups under one neutral key, `nav.glossary`.
 
 ## Design principles
 
+### DP-0 — Paradise is the token source (owner ruling 2026-10-28)
+The portal takes its colour, type, spacing, radius and shadow values from the
+Paradise design system snapshot in `paradise/` (stages 1–5, 5a, 5b of
+`paradise-migration-plan.md`). Tailwind and `src/index.css` point at Paradise
+tokens through `var(...)`; the hex values quoted in DP-1 to DP-3 below are the
+pre-Paradise values and are kept as the history of each rule. What the owner
+ruled on the three open conflicts:
+- **Teal becomes Paradise blue.** The decorative accent (`teal`,
+  `--paragon-teal`) is `--pds-color-accent` (#215AA8), the same hue as action.
+  The ROLE split in DP-2 still holds: a decorative use stays low-emphasis and
+  is never styled as a button or a selected state.
+- **Charts keep the DP-2 ramp.** `CHART_SERIES` is one ordered ramp (blue →
+  navy → blue-tint → slate → grey); Paradise's multi-colour `--pds-chart-*`
+  palette is not used, because it puts red and green on charts that show no
+  state.
+- **Data keeps JetBrains Mono** (DP-3), self-hosted in `src/styles/fonts/`,
+  with Paradise's system mono stack as the fallback.
+- The DP2-WARN-01 warning split is kept: Paradise has no graphical warning
+  token, so fills stay #D97706 and warning text uses Paradise's warning ink.
+
 ### DP-1 — Fiori-aligned visual language
 - No dark solid backgrounds as content surfaces. Hero/identity cards restyle to
   light surfaces: white / light-neutral card, subtle border, navy (`#0D1B2A`)
@@ -689,7 +709,8 @@ nav groups under one neutral key, `nav.glossary`.
   dashboard perf bars derive from the same helper (target 90). Grade A–D ramps
   are a separate axis, not yet unified here.
 - Charts consume ONE ordered series ramp from `src/lib/chartPalette.js`
-  (`CHART_SERIES`: teal → navy → teal-tint → navy-tint → neutral grey). No
+  (`CHART_SERIES`: accent → navy → accent-tint → navy-tint → neutral grey; the
+  accent is Paradise blue since DP-0). No
   rainbow donuts, no per-page ad-hoc hex. Migrate chart colors opportunistically
   per touched page (SupplierPerformance is the first natural migrant).
 - Decorative color flattens: colored icon backgrounds, gradients, and multi-hue

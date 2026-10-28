@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { targetStatus, TARGET_STATUS } from './chartPalette';
+import { targetStatus, TARGET_STATUS, CHART_SERIES } from './chartPalette';
 
 // DP2-TARGET-01 guard: the ONE target-status system. Locks the meeting/near/
 // missing thresholds and the state → colour map so the seven scattered target-
 // bar systems can't creep back. `near` must be the DP2-WARN-01 amber split
-// (bright fill #D97706 for the bar, dark #8A5606 for text on light).
+// (bright fill #D97706 for the bar, dark warning ink for text on light).
 describe('DP2-TARGET-01 — targetStatus thresholds', () => {
   it('at/above target is meeting', () => {
     expect(targetStatus(95, 95)).toBe('meeting');
@@ -27,14 +27,31 @@ describe('DP2-TARGET-01 — targetStatus thresholds', () => {
   });
 });
 
+// Paradise stage 2 (paradise-migration-plan.md): the map now points at Paradise
+// feedback tokens. Paradise has one warning ink, which `near` uses for its text;
+// its fill stays the bright #D97706, because the DP2-WARN-01 split is kept and
+// Paradise has no graphical warning token.
 describe('DP2-TARGET-01 — state → colour map', () => {
-  it('near is the DP2-WARN-01 amber split (bright fill, dark text)', () => {
+  it('near keeps the DP2-WARN-01 split: bright fill, Paradise warning text', () => {
     expect(TARGET_STATUS.near.fill).toBe('#D97706');
-    expect(TARGET_STATUS.near.text).toBe('#8A5606');
+    expect(TARGET_STATUS.near.text).toBe('var(--pds-color-feedback-warning)');
+    expect(TARGET_STATUS.near.fill).not.toBe(TARGET_STATUS.near.text);
   });
 
-  it('meeting is success green, missing is danger red', () => {
-    expect(TARGET_STATUS.meeting.fill).toBe('#107E3E');
-    expect(TARGET_STATUS.missing.fill).toBe('#BB0000');
+  it('meeting is the Paradise success token, missing is the Paradise danger token', () => {
+    expect(TARGET_STATUS.meeting.fill).toBe('var(--pds-color-feedback-success)');
+    expect(TARGET_STATUS.missing.fill).toBe('var(--pds-color-feedback-danger)');
+  });
+});
+
+// Owner ruling 2026-10-28 (Paradise review, CLAUDE.md DP-0): charts keep the
+// DP-2 ramp with Paradise blue as its accent, and never take Paradise's
+// multi-colour --pds-chart-* palette, which puts red and green on charts that
+// show no state.
+describe('DP-0 — the chart ramp after Paradise', () => {
+  it('starts with the Paradise accent and uses no --pds-chart-* colour', () => {
+    expect(CHART_SERIES[0]).toBe('var(--pds-color-accent)');
+    expect(CHART_SERIES).toHaveLength(5);
+    expect(CHART_SERIES.filter((c) => c.includes('--pds-chart'))).toEqual([]);
   });
 });

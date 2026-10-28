@@ -1,0 +1,23 @@
+/* JetBrains Mono 400 / 700, latin subset, woff2 — the DP-3 data face.
+   Owner ruling 2026-10-28 (Paradise review): data keeps JetBrains Mono rather
+   than Paradise's system monospace stack, so document numbers, amounts and
+   dates read the same on every machine. Self-hosted like Lato; Google Fonts is
+   no longer fetched. 700 serves font-semibold, which Paradise sets to 700.
+   Source: npm package @fontsource/jetbrains-mono 5.3.0
+   (files/jetbrains-mono-latin-*-normal.woff2).
+   Licence: SIL Open Font License 1.1 (LICENSE-JetBrainsMono-OFL.txt). */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./jetbrains-mono-latin-400-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./jetbrains-mono-latin-700-normal.woff2') format('woff2');
+}

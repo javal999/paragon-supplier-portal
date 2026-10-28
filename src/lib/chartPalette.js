@@ -1,8 +1,9 @@
 // ────────────────────────────────────────────────────────────────────────────
 // Chart palette (DP-2) — the single ordered series ramp for every chart/bar
-// surface. One teal accent + navy, with tints and a neutral, so data viz reads
-// as one system and never rainbows. Hex is synced to the Tailwind design tokens
-// (tailwind.config.js): teal #0097A7, navy #0D1B2A, mid #354A5F.
+// surface. One accent + navy, with tints and a neutral, so data viz reads as
+// one system and never rainbows. Owner ruling 2026-10-28 (Paradise review):
+// the ramp stays, and Paradise's multi-colour --pds-chart-1..5 is NOT used;
+// the accent is Paradise blue (--pds-color-accent, #215AA8), which replaced teal.
 //
 // Recharts needs raw hex on stroke/fill props (Tailwind classes can't reach
 // them), so these live here as constants — the single source of truth, mirroring
@@ -12,14 +13,15 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
- * Ordered categorical ramp: teal → navy → teal-tint → navy-tint → neutral grey.
+ * Ordered categorical ramp: blue → navy → blue-tint → navy-tint → neutral grey.
  * Series 0/1/3 clear ~3:1 contrast on white; the two lighter tints (2/4) should
  * carry a hairline border or a darker data label when used as large fills.
+ * Slots 3 and 4 have no Paradise token, so they keep their hex.
  */
 export const CHART_SERIES = /** @type {const} */ ([
-  '#0097A7', // teal — brand accent
-  '#0D1B2A', // navy
-  '#66C2CD', // teal-tint
+  'var(--pds-color-accent)', // blue — brand accent (#215AA8)
+  'var(--pds-color-text-primary)', // navy
+  'var(--paragon-300)', // blue-tint (#7A9CCB)
   '#5C7186', // navy-tint / slate
   '#9BA8B5' // neutral grey
 ]);
@@ -29,14 +31,14 @@ export const CHART_SERIES = /** @type {const} */ ([
  * Used on some chart axes and secondary series strokes; deliberately distinct
  * from the navy-tint series slot (CHART_SERIES[3]) and from CHART_AXIS.
  */
-export const CHART_MID = '#354A5F';
+export const CHART_MID = 'var(--pds-color-text-secondary)';
 
 /** Semantic state colours — use ONLY where the colour informs a decision. */
 export const CHART_SEMANTIC = /** @type {const} */ ({
-  success: '#107E3E',
-  warning: '#B45309',
-  danger: '#BB0000',
-  neutral: '#6B7785'
+  success: 'var(--pds-color-feedback-success)',
+  warning: 'var(--pds-color-feedback-warning)',
+  danger: 'var(--pds-color-feedback-danger)',
+  neutral: 'var(--pds-color-feedback-neutral)'
 });
 
 /**
@@ -48,10 +50,10 @@ export const CHART_SEMANTIC = /** @type {const} */ ({
  * rainbow. Use where a grade/score bar encodes true health state.
  */
 export const SEMANTIC_STATE = /** @type {const} */ ({
-  good: '#107E3E', // success — grade A (healthy)
+  good: 'var(--pds-color-feedback-success)', // success — grade A (healthy)
   fair: '#5B9D6B', // muted green — grade B (positive, lower emphasis)
-  caution: '#B45309', // warning — grade C
-  poor: '#BB0000' // danger — grade D (at-risk)
+  caution: 'var(--pds-color-feedback-warning)', // warning — grade C
+  poor: 'var(--pds-color-feedback-danger)' // danger — grade D (at-risk)
 });
 
 /**
@@ -78,10 +80,10 @@ export const SEMANTIC_STATE = /** @type {const} */ ({
  * the hover band behind bars/points — an INTERACTION colour, not geography.
  */
 export const MAP_BASE = /** @type {const} */ ({
-  land: '#F4F6F8', // landmass fill — the neutral surface a map sits on
-  landStroke: '#D1D8E0', // decorative map hairline, kept light on purpose; no longer mirrors border-input (#8291A0)
-  highlight: '#FEF3D6', // emphasised landmass fill — attention, NOT a state
-  highlightStroke: '#B45309' // emphasised landmass hairline
+  land: 'var(--pds-chart-neutral)', // landmass fill — the neutral surface a map sits on
+  landStroke: 'var(--pds-chart-grid)', // decorative map hairline, kept light on purpose; no longer mirrors border-input (#8291A0)
+  highlight: 'var(--pds-color-feedback-warning-background)', // emphasised landmass fill — attention, NOT a state
+  highlightStroke: 'var(--pds-color-feedback-warning)' // emphasised landmass hairline
 });
 
 /**
@@ -109,9 +111,9 @@ export const MAP_BASE = /** @type {const} */ ({
  * has no home, not because the VALUES lacked one.
  */
 export const EDGE_INK = /** @type {const} */ ({
-  operator: '#354A5F', // a person acts (mirrors CHART_MID / the `mid` token)
-  system: '#6B7785', // the platform acts (mirrors CHART_AXIS / text-tertiary)
-  cross: '#0097A7', // cascade or settlement, crossing documents (teal accent)
+  operator: 'var(--pds-color-text-secondary)', // a person acts (mirrors CHART_MID / the `mid` token)
+  system: 'var(--pds-color-feedback-neutral)', // the platform acts (mirrors CHART_AXIS / text-tertiary)
+  cross: 'var(--pds-color-accent)', // cascade or settlement, crossing documents (teal accent)
   birth: '#1E3A5F' // a creation edge (mirrors the data-navy token)
 });
 
@@ -124,7 +126,9 @@ export const EDGE_INK = /** @type {const} */ ({
 // so the encoding is colourblind-safe (position vs the tick, not colour alone).
 //
 // The "near" state consumes the DP2-WARN-01 amber split: bright #D97706 for the
-// bar FILL / tick-adjacent graphic, dark #8A5606 for the value TEXT on light.
+// bar FILL / tick-adjacent graphic, Paradise's dark warning ink for the value
+// TEXT on light. Paradise has no graphical warning token, so the fill keeps its
+// hex (decided in the review of MR !16; see paradise-migration-plan.md).
 // meeting = success green, missing = danger red (both fine as fill AND text).
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -135,9 +139,9 @@ export const EDGE_INK = /** @type {const} */ ({
  * @type {Record<TargetStatus, { fill: string; text: string }>}
  */
 export const TARGET_STATUS = /** @type {const} */ ({
-  meeting: { fill: '#107E3E', text: '#107E3E' }, // success
-  near: { fill: '#D97706', text: '#8A5606' }, // DP2-WARN-01 amber split
-  missing: { fill: '#BB0000', text: '#BB0000' } // danger
+  meeting: { fill: 'var(--pds-color-feedback-success)', text: 'var(--pds-color-feedback-success)' }, // success
+  near: { fill: '#D97706', text: 'var(--pds-color-feedback-warning)' }, // DP2-WARN-01 amber split
+  missing: { fill: 'var(--pds-color-feedback-danger)', text: 'var(--pds-color-feedback-danger)' } // danger
 });
 
 /**
@@ -161,16 +165,16 @@ export const targetStatus = (pct, target, nearBand = 10) => {
  * from a risk/health state: it marks "ours", not a severity. Replaces the stray
  * categorical blue (#1E5BAE) dropped from the grade dial in the palette census.
  */
-export const CHART_IDENTITY = '#2A6FBF';
+export const CHART_IDENTITY = 'var(--pds-color-brand-primary)';
 
 /** Grid / axis hairline on light surfaces. */
-export const CHART_GRID = '#E5E9EE';
+export const CHART_GRID = 'var(--pds-chart-grid)';
 
 /** Axis tick / label text on light surfaces (mirrors the text-tertiary token). */
-export const CHART_AXIS = '#6B7785';
+export const CHART_AXIS = 'var(--pds-color-text-secondary)';
 
 /** Hover-cursor band fill behind bars/points (mirrors the bg-hover token). */
-export const CHART_CURSOR = '#F4F6F8';
+export const CHART_CURSOR = 'var(--pds-color-background-subtle)';
 
 /**
  * Pick a series colour by index, wrapping when there are more series than slots.

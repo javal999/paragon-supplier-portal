@@ -120,3 +120,38 @@ describe('My performance — calculated (REQ-E10-01)', () => {
     expect(await screen.findByText('This year')).toBeInTheDocument();
   });
 });
+
+// Review !16, S0: the grade tones are `var(--pds-…)` strings, and three lines
+// appended a hex alpha suffix to them (`${tone.soft}33`). That yields
+// `var(--…)33`, which the browser drops without a warning, so the chip tint and
+// both borders vanished. jsdom keeps the invalid value as written, so this
+// asserts the VALUE SHAPE: a color-mix over a Paradise feedback token, and no
+// hex suffix glued onto a closing `var(…)`.
+describe('grade tile tints (review !16, S0)', () => {
+  const MIX =
+    /^(1px solid )?color-mix\(in srgb, var\(--pds-color-feedback-[a-z-]+\) \d+%, transparent\)$/;
+  const SUFFIXED = /var\(--[a-z0-9-]+\)[0-9a-fA-F]{2}\b/;
+
+  it('the matchers separate the old shape from the new one', () => {
+    expect('var(--pds-color-feedback-success-background)33').toMatch(SUFFIXED);
+    expect('1px solid var(--pds-color-feedback-success)55').not.toMatch(MIX);
+    expect('color-mix(in srgb, var(--pds-color-feedback-info) 33%, transparent)').toMatch(MIX);
+  });
+
+  it('the Paragon Grade chip and the grade history tiles use color-mix, not a hex suffix', async () => {
+    renderWithProviders(<SupplierPerformance />, { identity: SUPPLIER });
+    const chip = await screen.findByText('Paragon Grade');
+    expect(chip.style.backgroundColor).toMatch(MIX);
+    expect(chip.style.border).toMatch(MIX);
+
+    const tiles = screen
+      .getAllByText('Oct 24')
+      .map((el) => /** @type {HTMLElement} */ (el.parentElement))
+      .filter((el) => el.style.border !== '');
+    expect(tiles, 'no grade history tile rendered — this probe is vacuous').toHaveLength(1);
+    expect(tiles[0].style.border).toMatch(MIX);
+    for (const el of [chip, tiles[0]]) {
+      expect(el.getAttribute('style')).not.toMatch(SUFFIXED);
+    }
+  });
+});

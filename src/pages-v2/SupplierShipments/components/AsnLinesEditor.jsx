@@ -70,7 +70,7 @@ const AsnLinesEditor = ({
               return (
                 <tr key={l.materialCode} className="border-t border-border-subtle align-top">
                   <td className="py-1.5 pr-2">
-                    <Data as="div" className="text-[11px] text-text-tertiary">
+                    <Data as="div" className="text-[length:var(--fs-label-3)] text-text-tertiary">
                       {l.materialCode}
                     </Data>
                     <div className="text-text-primary">{l.description}</div>
@@ -93,7 +93,9 @@ const AsnLinesEditor = ({
                       className={`${inputClass} min-w-[96px]`}
                     />
                     {bad && (
-                      <div className="mt-1 text-[11px] text-danger">{t('fc.asn.qty.invalid')}</div>
+                      <div className="mt-1 text-[length:var(--fs-label-3)] text-danger">
+                        {t('fc.asn.qty.invalid')}
+                      </div>
                     )}
                   </td>
                   <td className="py-1.5 pr-2">

@@ -105,10 +105,26 @@ const OTIF_MONTHS = [
 
 /** @type {Record<Grade, { stroke: string; soft: string; text: string }>} */
 const GRADE_TONE = {
-  A: { stroke: '#107E3E', soft: '#E8F5EC', text: 'text-success' },
-  B: { stroke: '#1E5BAE', soft: '#E5F0FF', text: 'text-info' },
-  C: { stroke: '#B45309', soft: '#FEF3D6', text: 'text-warning-hover' },
-  D: { stroke: '#BB0000', soft: '#FCE4E4', text: 'text-danger' }
+  A: {
+    stroke: 'var(--pds-color-feedback-success)',
+    soft: 'var(--pds-color-feedback-success-background)',
+    text: 'text-success'
+  },
+  B: {
+    stroke: 'var(--pds-color-feedback-info)',
+    soft: 'var(--pds-color-feedback-info-background)',
+    text: 'text-info'
+  },
+  C: {
+    stroke: 'var(--pds-color-feedback-warning)',
+    soft: 'var(--pds-color-feedback-warning-background)',
+    text: 'text-warning-hover'
+  },
+  D: {
+    stroke: 'var(--pds-color-feedback-danger)',
+    soft: 'var(--pds-color-feedback-danger-background)',
+    text: 'text-danger'
+  }
 };
 
 /** @type {Record<CommLogEntry['status'], 'success' | 'warning' | 'neutral'>} */

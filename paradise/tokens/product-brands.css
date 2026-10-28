@@ -1,0 +1,94 @@
+/* Paradise — Product sub-brand color ramps.
+   Paradise powers seven product shells; each carries its own accent ramp
+   alongside the shared Paragon primary. Values transcribed verbatim from the
+   Figma "Color" collection. Use these for product-specific theming and the
+   confirmation/empty-state illustrations. */
+:root {
+  /* DigiSO — violet */
+  --digiso-100: rgb(249,248,252);
+  --digiso-200: rgb(242,230,241);
+  --digiso-300: rgb(237,214,231);
+  --digiso-400: rgb(204,154,198);
+  --digiso-500: rgb(167,115,176);
+  --digiso-600: rgb(134,74,156);
+  --digiso-700: rgb(118,54,148);
+  --digiso-800: rgb(92,46,144);
+  --digiso-900: rgb(62,36,106);
+  --digiso-950: rgb(36,14,71);
+
+  /* Heron — exagon purple */
+  --heron-100: rgb(213,206,227);
+  --heron-200: rgb(185,174,209);
+  --heron-300: rgb(156,142,191);
+  --heron-400: rgb(128,109,172);
+  --heron-500: rgb(114,93,163);
+  --heron-600: rgb(103,84,147);
+  --heron-700: rgb(80,65,114);
+  --heron-800: rgb(57,47,82);
+  --heron-900: rgb(34,28,49);
+  --heron-exagon-50-base: rgb(114,93,163);
+
+  /* Magpie — bright blue */
+  --magpie-100: rgb(204,226,255);
+  --magpie-200: rgb(153,197,255);
+  --magpie-300: rgb(102,168,255);
+  --magpie-400: rgb(51,139,255);
+  --magpie-500: rgb(0,110,255);
+  --magpie-600: rgb(12,74,192);
+  --magpie-700: rgb(10,62,160);
+  --magpie-800: rgb(6,37,96);
+  --magpie-900: rgb(0,22,51);
+
+  /* Nova — dashboard blue */
+  --nova-dashboard-100: rgb(204,221,245);
+  --nova-dashboard-200: rgb(153,187,235);
+  --nova-dashboard-300: rgb(102,154,224);
+  --nova-dashboard-400: rgb(51,120,214);
+  --nova-dashboard-500: rgb(0,86,204);
+  --nova-dashboard-600: rgb(0,69,163);
+  --nova-dashboard-700: rgb(0,52,122);
+  --nova-dashboard-800: rgb(0,34,82);
+  --nova-dashboard-900: rgb(26,47,80);
+  --nova-dashboard-950: rgb(0,9,20);
+
+  /* Nova — mobile blue */
+  --nova-mobile-100: rgb(237,243,252);
+  --nova-mobile-200: rgb(228,237,251);
+  --nova-mobile-300: rgb(199,218,247);
+  --nova-mobile-400: rgb(75,135,228);
+  --nova-mobile-500: rgb(68,122,205);
+  --nova-mobile-600: rgb(60,108,182);
+  --nova-mobile-700: rgb(56,101,171);
+  --nova-mobile-800: rgb(45,81,137);
+  --nova-mobile-900: rgb(34,61,103);
+  --nova-mobile-950: rgb(26,47,80);
+
+  /* Sagitarius — deep cyan-blue */
+  --sagitarius-100: rgb(230,239,245);
+  --sagitarius-200: rgb(176,204,223);
+  --sagitarius-300: rgb(138,180,208);
+  --sagitarius-400: rgb(51,124,173);
+  --sagitarius-500: rgb(0,91,153);
+  --sagitarius-600: rgb(0,83,139);
+  --sagitarius-700: rgb(0,65,109);
+  --sagitarius-800: rgb(0,50,84);
+  --sagitarius-900: rgb(0,38,64);
+
+  /* Siglive — live blue */
+  --siglive-100: rgb(204,226,255);
+  --siglive-200: rgb(153,197,255);
+  --siglive-300: rgb(102,168,255);
+  --siglive-400: rgb(51,139,255);
+  --siglive-500: rgb(0,110,255);
+  --siglive-600: rgb(0,86,204);
+  --siglive-700: rgb(0,65,153);
+  --siglive-800: rgb(0,43,102);
+  --siglive-900: rgb(0,22,51);
+
+  /* Semantic base */
+  --semantic-white: rgb(255,255,255);
+  --semantic-black: rgb(0,0,0);
+  --light-ink: rgb(0,0,0);       /* status-bar / device-header ink */
+  /* --semantic-text and --semantic-background are declared in colors.css (primitives used by theme.css). */
+  --semantic-outline: rgb(214,214,214);
+}

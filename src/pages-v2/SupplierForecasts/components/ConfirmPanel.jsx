@@ -272,7 +272,7 @@ const ConfirmPanel = ({
                 <div
                   role="alert"
                   data-testid="confirm-qty-refusal"
-                  className="mt-1 text-[11px] text-danger"
+                  className="mt-1 text-[length:var(--fs-label-3)] text-danger"
                 >
                   {t(CONFIRM_REFUSAL_KEY[confirmQty.reason])}{' '}
                   <GlossaryTermChip
@@ -280,7 +280,10 @@ const ConfirmPanel = ({
                   />
                 </div>
               )}
-              <div id="sdcsup-qty-hint" className="mt-1 text-[11px] text-text-tertiary">
+              <div
+                id="sdcsup-qty-hint"
+                className="mt-1 text-[length:var(--fs-label-3)] text-text-tertiary"
+              >
                 {t('sdcSup.panel.qty.hint')}
               </div>
             </div>

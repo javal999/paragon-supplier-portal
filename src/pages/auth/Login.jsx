@@ -6,8 +6,8 @@ import { mockSuppliers } from '@data/mockSuppliers';
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { NO_PERSON } from '@context/noPerson';
 
-const NAVY = '#0D1B2A';
-const TEAL = '#0097A7';
+const NAVY = 'var(--pds-color-text-primary)';
+const TEAL = 'var(--pds-color-accent)';
 
 const SEED_SUPPLIER_ID = 'sup-007';
 const SEED_SUPPLIER_NAME = mockSuppliers.find((s) => s.id === SEED_SUPPLIER_ID)?.name ?? null;
@@ -16,7 +16,7 @@ const SEED_SUPPLIER_NAME = mockSuppliers.find((s) => s.id === SEED_SUPPLIER_ID)?
 const INPUT_STYLE = {
   width: '100%',
   padding: '10px 12px',
-  border: '1px solid #CBD5E1',
+  border: '1px solid var(--pds-color-border-strong)',
   borderRadius: '6px',
   fontSize: '14px',
   fontFamily: 'inherit',
@@ -84,7 +84,7 @@ const Login = () => {
           maxWidth: '400px',
           borderRadius: '12px',
           padding: '40px',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.4)'
+          boxShadow: 'var(--shadow-strong)'
         }}
       >
         {/* Logo + brand */}
@@ -117,7 +117,13 @@ const Login = () => {
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', borderBottom: '1px solid #E2E8F0', marginBottom: '24px' }}>
+        <div
+          style={{
+            display: 'flex',
+            borderBottom: '1px solid var(--pds-color-border-default)',
+            marginBottom: '24px'
+          }}
+        >
           {
             /** @type {const} */ ([
               ['buyer', 'Paragon Team'],
@@ -160,7 +166,7 @@ const Login = () => {
                 style={{
                   fontSize: '12px',
                   fontWeight: 600,
-                  color: '#475569',
+                  color: 'var(--pds-color-text-secondary)',
                   display: 'block',
                   marginBottom: '5px'
                 }}
@@ -183,7 +189,7 @@ const Login = () => {
                 style={{
                   fontSize: '12px',
                   fontWeight: 600,
-                  color: '#475569',
+                  color: 'var(--pds-color-text-secondary)',
                   display: 'block',
                   marginBottom: '5px'
                 }}
@@ -264,13 +270,13 @@ const Login = () => {
 
         {/* Divider */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '20px 0' }}>
-          <div style={{ flex: 1, height: '1px', background: '#E2E8F0' }} />
+          <div style={{ flex: 1, height: '1px', background: 'var(--pds-color-border-default)' }} />
           <span
             style={{ fontSize: '11px', color: '#94A3B8', whiteSpace: 'nowrap', fontWeight: 500 }}
           >
             Demo Mode
           </span>
-          <div style={{ flex: 1, height: '1px', background: '#E2E8F0' }} />
+          <div style={{ flex: 1, height: '1px', background: 'var(--pds-color-border-default)' }} />
         </div>
 
         {/* Demo buttons */}
@@ -280,7 +286,7 @@ const Login = () => {
             style={{
               flex: 1,
               padding: '9px',
-              border: `1.5px solid #CBD5E1`,
+              border: `1.5px solid var(--pds-color-border-strong)`,
               borderRadius: '6px',
               background: 'white',
               cursor: 'pointer',
@@ -291,7 +297,9 @@ const Login = () => {
               transition: 'border-color 0.15s'
             }}
             onMouseEnter={(e) => (e.currentTarget.style.borderColor = NAVY)}
-            onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#CBD5E1')}
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.borderColor = 'var(--pds-color-border-strong)')
+            }
           >
             i View as Buyer
           </button>
@@ -300,7 +308,7 @@ const Login = () => {
             style={{
               flex: 1,
               padding: '9px',
-              border: `1.5px solid #CBD5E1`,
+              border: `1.5px solid var(--pds-color-border-strong)`,
               borderRadius: '6px',
               background: 'white',
               cursor: 'pointer',
@@ -311,7 +319,9 @@ const Login = () => {
               transition: 'border-color 0.15s'
             }}
             onMouseEnter={(e) => (e.currentTarget.style.borderColor = TEAL)}
-            onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#CBD5E1')}
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.borderColor = 'var(--pds-color-border-strong)')
+            }
           >
             i View as Supplier
           </button>
@@ -319,7 +329,14 @@ const Login = () => {
       </div>
 
       {/* Footer */}
-      <div style={{ marginTop: '24px', fontSize: '11px', color: '#475569', textAlign: 'center' }}>
+      <div
+        style={{
+          marginTop: '24px',
+          fontSize: '11px',
+          color: 'var(--pds-color-text-secondary)',
+          textAlign: 'center'
+        }}
+      >
         © 2026 PT Paragon Technology and Innovation. All rights reserved.
       </div>
     </div>

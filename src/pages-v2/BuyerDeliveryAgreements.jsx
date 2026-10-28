@@ -246,7 +246,7 @@ const BuyerDeliveryAgreements = () => {
                 <TableCell>
                   <div className="w-28">
                     <TargetBar pct={r.releasedPct} />
-                    <div className="text-[10px] text-text-tertiary mt-1">
+                    <div className="text-[length:var(--fs-caption-1)] text-text-tertiary mt-1">
                       <Data>{Math.round(r.releasedPct)}%</Data>
                     </div>
                   </div>
@@ -255,7 +255,7 @@ const BuyerDeliveryAgreements = () => {
                   {r.nextDue ? (
                     <div>
                       <Data className="text-sm">{formatDate(r.nextDue.date)}</Data>
-                      <div className="text-[10px] text-text-tertiary uppercase">
+                      <div className="text-[length:var(--fs-caption-1)] text-text-tertiary uppercase">
                         {t(`delivery.rollup.due.${r.nextDue.kind}`)}
                       </div>
                     </div>
@@ -267,7 +267,7 @@ const BuyerDeliveryAgreements = () => {
                   <StatusPill variant={BUCKET_VARIANT[r.bucket]}>
                     {t(`delivery.rollup.tab.${r.bucket}`)}
                   </StatusPill>
-                  <div className="text-[10px] text-text-tertiary mt-0.5">
+                  <div className="text-[length:var(--fs-caption-1)] text-text-tertiary mt-0.5">
                     {countsCaption(r.counts, r.bucket)}
                   </div>
                 </TableCell>
@@ -324,7 +324,7 @@ const BuyerDeliveryAgreements = () => {
 
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <div className="text-[10px] text-text-tertiary uppercase">
+                <div className="text-[length:var(--fs-caption-1)] text-text-tertiary uppercase">
                   {t('delivery.kpi.agreed')}
                 </div>
                 <Data className="text-sm">
@@ -332,7 +332,7 @@ const BuyerDeliveryAgreements = () => {
                 </Data>
               </div>
               <div>
-                <div className="text-[10px] text-text-tertiary uppercase">
+                <div className="text-[length:var(--fs-caption-1)] text-text-tertiary uppercase">
                   {t('delivery.kpi.released')}
                 </div>
                 <Data className="text-sm">
@@ -340,7 +340,7 @@ const BuyerDeliveryAgreements = () => {
                 </Data>
               </div>
               <div>
-                <div className="text-[10px] text-text-tertiary uppercase">
+                <div className="text-[length:var(--fs-caption-1)] text-text-tertiary uppercase">
                   {t('delivery.kpi.delivered')}
                 </div>
                 <Data className="text-sm">
@@ -348,7 +348,7 @@ const BuyerDeliveryAgreements = () => {
                 </Data>
               </div>
               <div>
-                <div className="text-[10px] text-text-tertiary uppercase">
+                <div className="text-[length:var(--fs-caption-1)] text-text-tertiary uppercase">
                   {t('delivery.kpi.remaining')}
                 </div>
                 <Data className="text-sm">

@@ -118,7 +118,7 @@ const LineItemsSection = ({
                     <div
                       role="alert"
                       data-testid={`po-confirm-refusal-${idx}`}
-                      className="mt-1 text-[11px] text-danger text-right"
+                      className="mt-1 text-[length:var(--fs-label-3)] text-danger text-right"
                     >
                       {t(
                         PO_QTY_REFUSAL_KEY[
@@ -141,7 +141,7 @@ const LineItemsSection = ({
                     <div
                       role="alert"
                       data-testid={`po-confirm-bounds-${idx}`}
-                      className="mt-1 text-[11px] text-danger text-right"
+                      className="mt-1 text-[length:var(--fs-label-3)] text-danger text-right"
                     >
                       {t('supplierOrders.confirm.qty.outOfBounds', {
                         ordered: li.quantity,

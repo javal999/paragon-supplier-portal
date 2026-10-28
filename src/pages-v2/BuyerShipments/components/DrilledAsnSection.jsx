@@ -96,7 +96,7 @@ const DrilledAsnLines = ({ a, t }) => (
         {li.batchSource === 'typed' ? (
           <span
             data-testid={`asn-batch-not-declared-${a.asnNumber}-${li.materialCode}`}
-            className="ml-2 inline-block px-1.5 py-0.5 rounded border border-warning bg-warning-soft text-[11px] text-warning-hover"
+            className="ml-2 inline-block px-1.5 py-0.5 rounded border border-warning bg-warning-soft text-[length:var(--fs-label-3)] text-warning-hover"
           >
             {t('fc.asn.batch.notDeclared')}
           </span>

@@ -519,7 +519,7 @@ export const ContractDetailBody = ({ contract, obligations, suppliers }) => {
                   <tr key={o.id} className="border-t border-border-subtle">
                     <td className="px-3 py-2">
                       <div className="text-text-primary font-medium">{o.title}</div>
-                      <div className="text-text-tertiary text-[10px] uppercase tracking-wider mt-0.5">
+                      <div className="text-text-tertiary text-[length:var(--fs-caption-1)] uppercase tracking-wider mt-0.5">
                         {o.category}
                         {o.recurrence ? ` · ${o.recurrence}` : ''}
                       </div>

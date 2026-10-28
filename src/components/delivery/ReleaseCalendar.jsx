@@ -111,7 +111,7 @@ const ReleaseCalendar = ({
                         the PORTAL, not posted to SAP. sapReleaseNumber stays
                         absent until Pattern-B binds it — never claim a SAP release. */}
                     {line.state === 'released' && (
-                      <div className="text-[10px] italic text-text-tertiary mt-0.5">
+                      <div className="text-[length:var(--fs-caption-1)] italic text-text-tertiary mt-0.5">
                         {t('delivery.release.portalNote')}
                       </div>
                     )}
@@ -123,7 +123,10 @@ const ReleaseCalendar = ({
                           {t(`delivery.fulfillment.${fv.fulfillment}`)}
                         </StatusPill>
                         {fv.matchedRef && (
-                          <Data as="div" className="text-[10px] text-text-tertiary mt-0.5">
+                          <Data
+                            as="div"
+                            className="text-[length:var(--fs-caption-1)] text-text-tertiary mt-0.5"
+                          >
                             {fv.matchedRef}
                           </Data>
                         )}
@@ -131,7 +134,7 @@ const ReleaseCalendar = ({
                             authoritative (mirrors derivedFromAsn). Confirmed
                             (explicit-binding) matches carry no such caption. */}
                         {fv.inferred && (
-                          <div className="text-[10px] italic text-text-tertiary">
+                          <div className="text-[length:var(--fs-caption-1)] italic text-text-tertiary">
                             {t(proposedCaptionKey)}
                           </div>
                         )}
@@ -148,7 +151,7 @@ const ReleaseCalendar = ({
                         </Data>
                         {fv.qtyVariance !== undefined && fv.qtyVariance !== 0 && (
                           <div
-                            className={`text-[10px] mt-0.5 ${
+                            className={`text-[length:var(--fs-caption-1)] mt-0.5 ${
                               fv.qtyVariance < 0 ? 'text-danger' : 'text-warning-hover'
                             }`}
                           >
@@ -179,7 +182,7 @@ const ReleaseCalendar = ({
       </div>
 
       {/* eta-proxy known-limitation — recorded, not papered over. */}
-      <div className="text-[10px] text-text-tertiary mt-2 italic">
+      <div className="text-[length:var(--fs-caption-1)] text-text-tertiary mt-2 italic">
         {t('delivery.calendar.etaFootnote')}
       </div>
     </>

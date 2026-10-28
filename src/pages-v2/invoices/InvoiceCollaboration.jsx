@@ -106,7 +106,7 @@ export const PriceCheckCell = ({ check, contractNumber, testId }) => {
         });
   return (
     <div data-testid={testId}>
-      <div className="text-[11px] text-text-tertiary">{rule}</div>
+      <div className="text-[length:var(--fs-label-3)] text-text-tertiary">{rule}</div>
       <div className={check.held ? 'text-danger font-semibold' : 'text-success'}>
         {t(`fc.inv.price.outcome.${check.outcome}`, {
           diff: fmtSignedIdr(check.difference),
@@ -193,7 +193,10 @@ export const InvoiceLinesSection = ({
                         <Data>{l.grNumber}</Data>
                       </td>
                       <td className="py-1.5 pr-2">
-                        <Data as="div" className="text-[11px] text-text-tertiary">
+                        <Data
+                          as="div"
+                          className="text-[length:var(--fs-label-3)] text-text-tertiary"
+                        >
                           {l.materialCode}
                         </Data>
                         <div className="text-text-primary">{l.description}</div>
@@ -215,7 +218,7 @@ export const InvoiceLinesSection = ({
                       <tr>
                         <td colSpan={5} className="pb-2">
                           <div className="rounded bg-bg-hover px-2 py-1.5">
-                            <div className="text-[11px] text-text-tertiary">
+                            <div className="text-[length:var(--fs-label-3)] text-text-tertiary">
                               {t('fc.inv.price.col.check')} · {t('fc.inv.price.col.billed')}{' '}
                               <Data>{fmtIdr(c.billed)}</Data>
                             </div>

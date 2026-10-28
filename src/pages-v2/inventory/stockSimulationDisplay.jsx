@@ -138,7 +138,7 @@ export const PlannerInputLabel = ({ input, testId }) => {
       ? input.enteredBy.person.displayName
       : t('sim.input.unattributed');
   return (
-    <div className="text-[11px] text-text-secondary" data-testid={testId}>
+    <div className="text-[length:var(--fs-label-3)] text-text-secondary" data-testid={testId}>
       {t('sim.input.label', { who, when: formatDateTime(input.enteredAt) })}
     </div>
   );

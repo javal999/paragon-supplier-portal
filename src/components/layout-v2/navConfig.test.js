@@ -6,6 +6,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, expect, it } from 'vitest';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { ListChecks, ListTodo } from 'lucide-react';
 import { PTI_NAV, SUPPLIER_NAV, UTILITY_NAV, navFor, sectionForPath } from './navConfig';
 import { hubEn, hubId } from '@lib/i18n/hub';
 import { safetyStockEn, safetyStockId } from '@lib/i18n/safetyStock';
@@ -336,6 +339,40 @@ describe('IA evaluation 2026-10 — menu homes, folded sections, one name per ob
     expect(shared).toEqual([]);
     // Control: the walk reaches the menus' icons.
     expect(pagesByIcon.size).toBeGreaterThan(20);
+  });
+
+  // The test above compares icon COMPONENTS. Since Paradise stage 5b the
+  // lucide-react alias (paradise/adapters/lucide-react.jsx) can draw two
+  // different components with one Paradise glyph, so this one compares what is
+  // DRAWN: My tasks (ListTodo) and Requisitions (ClipboardList) both drew
+  // CheckListIcon until the owner ruling of 2026-10-28.
+  it('NV-04 — no two pages in the menus draw the same glyph', () => {
+    /** @type {Record<string, string>} */
+    const SAME_OBJECT = {
+      'goods-receipts': 'goods-receipt',
+      forecasts: 'collaboration',
+      performance: 'scorecard'
+    };
+    /** @param {unknown} icon */
+    const drawn = (icon) =>
+      renderToStaticMarkup(createElement(/** @type {any} */ (icon), { size: 16 })).replace(
+        / class="[^"]*"/g,
+        ''
+      );
+    /** @type {Map<string, Set<string>>} */
+    const pagesByGlyph = new Map();
+    for (const item of [...PTI_NAV, ...SUPPLIER_NAV].flatMap((s) => s.items)) {
+      const tail = item.path.replace(/^\/(buyer|supplier)\//, '');
+      const page = SAME_OBJECT[tail] ?? tail;
+      const glyph = drawn(item.icon);
+      pagesByGlyph.set(glyph, (pagesByGlyph.get(glyph) ?? new Set()).add(page));
+    }
+    const shared = [...pagesByGlyph.values()].filter((p) => p.size > 1).map((p) => [...p]);
+    expect(shared).toEqual([]);
+    // Control: the walk reaches the menus' icons and draws real markup.
+    expect(pagesByGlyph.size).toBeGreaterThan(20);
+    // Known-bad control: two names mapped to one glyph do draw the same markup.
+    expect(drawn(ListTodo)).toBe(drawn(ListChecks));
   });
 
   it('P-11 — one name per object, the same on both personas, in EN and ID', () => {

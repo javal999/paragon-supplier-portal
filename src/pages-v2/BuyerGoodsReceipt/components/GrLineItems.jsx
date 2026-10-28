@@ -108,7 +108,9 @@ const GrLineItems = ({ selected, selectedChecks, t }) => (
         <ul className="space-y-1">
           {selectedChecks.map((c) => (
             <li key={c.materialCode} className="text-xs">
-              <Data className="text-[11px] text-text-tertiary mr-2">{c.materialCode}</Data>
+              <Data className="text-[length:var(--fs-label-3)] text-text-tertiary mr-2">
+                {c.materialCode}
+              </Data>
               <ReceiptToleranceNote
                 line={c}
                 testId={`buyer-gr-qty-check-${selected.id}-${c.materialCode}`}

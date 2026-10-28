@@ -548,7 +548,12 @@ describe('⚠️ DP2-PALETTE-01 · THE PALETTE IS SCANNED, NOT EXCLUDED', () => 
   it('⚠️ AND CONTRIBUTES ZERO — it declares colour, it does not paint with it', () => {
     const src = readSrc('lib/chartPalette.js');
     // the control: it really does hold the shapes the OLD matcher condemned
-    expect(src, 'vacuous if TARGET_STATUS has gone').toMatch(/meeting:\s*\{\s*fill:\s*'#/);
+    // (a `fill:` declaration). Since Paradise stage 2 the value is a token
+    // string rather than a hex, so the control pins that token shape — any
+    // quoted string would also match an empty or placeholder value.
+    expect(src, 'vacuous if TARGET_STATUS has gone').toMatch(
+      /meeting:\s*\{\s*fill:\s*'var\(--pds-color-[a-z-]+\)'/
+    );
     expect(paintHexHits(src)).toEqual([]);
     expect(consumedHexBindings(src)).toEqual([]);
   });
@@ -599,7 +604,10 @@ describe('DP2-PALETTE-01 — no raw hex in any paint position, tree-wide', () =>
       expect(src, `${f} no longer declares a grade ramp — this probe is vacuous`).toMatch(
         /GRADE_TONE\s*:\s*Record<\s*Grade\s*,|@type \{Record<\s*Grade\s*,[^\n]*\*\/\s*\n\s*(?:export\s+)?const GRADE_TONE\b/
       );
-      expect(src, `${f} no longer holds raw hex — this probe is vacuous`).toMatch(/'#[0-9A-F]{6}'/);
+      // Since Paradise stage 2 the ramps hold Paradise token strings, not raw hex.
+      expect(src, `${f} no longer holds its ramp colours — this probe is vacuous`).toMatch(
+        /'var\(--pds-color-feedback-[a-z-]+\)'/
+      );
       expect(paintHexHits(src), `${f} now paints with a raw hex`).toEqual([]);
     }
   });

@@ -389,7 +389,10 @@ const SupplierGoodsReceipts = () => {
                       <React.Fragment key={l.materialCode}>
                         <tr className="border-t border-border-subtle">
                           <td className="py-1.5">
-                            <Data as="div" className="text-[11px] text-text-tertiary">
+                            <Data
+                              as="div"
+                              className="text-[length:var(--fs-label-3)] text-text-tertiary"
+                            >
                               {l.materialCode}
                             </Data>
                             <div className="text-text-primary">{l.description}</div>
@@ -416,7 +419,7 @@ const SupplierGoodsReceipts = () => {
                         {/* CR-25 (BL-45) — the quantity check on its own row, full width. */}
                         <tr>
                           <td colSpan={5} className="pb-2">
-                            <span className="text-[11px] text-text-tertiary">
+                            <span className="text-[length:var(--fs-label-3)] text-text-tertiary">
                               {t('fc.gr.col.qtyCheck')}:{' '}
                             </span>
                             <ReceiptToleranceNote

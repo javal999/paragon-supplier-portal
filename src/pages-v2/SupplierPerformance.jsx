@@ -69,11 +69,32 @@ const TOKEN_BORDER = CHART_GRID;
 
 /** @type {Record<Grade, { stroke: string; soft: string }>} */
 const GRADE_TONE = {
-  A: { stroke: '#107E3E', soft: '#E8F5EC' },
-  B: { stroke: '#1E5BAE', soft: '#E5F0FF' },
-  C: { stroke: '#B45309', soft: '#FEF3D6' },
-  D: { stroke: '#BB0000', soft: '#FCE4E4' }
+  A: {
+    stroke: 'var(--pds-color-feedback-success)',
+    soft: 'var(--pds-color-feedback-success-background)'
+  },
+  B: {
+    stroke: 'var(--pds-color-feedback-info)',
+    soft: 'var(--pds-color-feedback-info-background)'
+  },
+  C: {
+    stroke: 'var(--pds-color-feedback-warning)',
+    soft: 'var(--pds-color-feedback-warning-background)'
+  },
+  D: {
+    stroke: 'var(--pds-color-feedback-danger)',
+    soft: 'var(--pds-color-feedback-danger-background)'
+  }
 };
+
+/**
+ * A grade tone at a given opacity. The tones are `var(--pds-…)` strings, so the
+ * old hex alpha suffix (`${tone}33`) produced invalid CSS that the browser
+ * dropped without a warning; `color-mix` works on any colour value.
+ * @param {string} color
+ * @param {number} pct Opacity, 0–100.
+ */
+const tint = (color, pct) => `color-mix(in srgb, ${color} ${pct}%, transparent)`;
 
 /** @type {{ month: string; grade: Grade; score: number }[]} */
 const GRADE_HISTORY = [
@@ -180,9 +201,9 @@ const GradeBadge = ({ grade, score }) => {
       <span
         className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
         style={{
-          backgroundColor: `${tone.soft}33`,
+          backgroundColor: tint(tone.soft, 20),
           color: tone.stroke,
-          border: `1px solid ${tone.stroke}55`
+          border: `1px solid ${tint(tone.stroke, 33)}`
         }}
       >
         {t('supplierPerformance.grade.paragonGrade')}
@@ -486,7 +507,7 @@ const SupplierPerformance = () => {
                       className="rounded-md px-2.5 py-1.5 text-center"
                       style={{
                         backgroundColor: tone.soft,
-                        border: `1px solid ${tone.stroke}55`
+                        border: `1px solid ${tint(tone.stroke, 33)}`
                       }}
                     >
                       <div className="text-[9px] font-semibold" style={{ color: tone.stroke }}>

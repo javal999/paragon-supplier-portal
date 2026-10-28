@@ -99,7 +99,7 @@ const PolicyEditor = ({
         <span className="text-label uppercase text-text-tertiary">
           {t('delivery.policy.edit.title')}
         </span>
-        <span className="text-[10px] text-text-tertiary">
+        <span className="text-[length:var(--fs-caption-1)] text-text-tertiary">
           {t('delivery.policy.edit.contractDefault', { policy: fmtPolicy(contractDefault) })}
         </span>
       </div>
@@ -127,7 +127,10 @@ const PolicyEditor = ({
       {/* The two knobs (custom-editable; a quick-pick just prefills them). */}
       <div className="flex flex-wrap items-end gap-4">
         <div className="flex flex-col gap-1">
-          <label className="text-[10px] uppercase text-text-tertiary" htmlFor="policy-tolerance">
+          <label
+            className="text-[length:var(--fs-caption-1)] uppercase text-text-tertiary"
+            htmlFor="policy-tolerance"
+          >
             {t('delivery.policy.edit.tolerance')}
           </label>
           <div className="flex items-center gap-2">
@@ -164,7 +167,7 @@ const PolicyEditor = ({
             <div
               role="alert"
               data-testid="policy-pct-refusal"
-              className="mt-1 text-[11px] text-danger"
+              className="mt-1 text-[length:var(--fs-label-3)] text-danger"
             >
               {t(PCT_REFUSAL_KEY[pctRead.reason])}{' '}
               <GlossaryTermChip refTo={{ sourceType: 'QtyRefusalReason', term: pctRead.reason }} />
@@ -173,7 +176,10 @@ const PolicyEditor = ({
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-[10px] uppercase text-text-tertiary" htmlFor="policy-enforcement">
+          <label
+            className="text-[length:var(--fs-caption-1)] uppercase text-text-tertiary"
+            htmlFor="policy-enforcement"
+          >
             {t('delivery.policy.edit.enforcement')}
           </label>
           <select
@@ -194,7 +200,10 @@ const PolicyEditor = ({
 
       {/* Required reason — an unattributable deviation is refused at the service. */}
       <div className="flex flex-col gap-1">
-        <label className="text-[10px] uppercase text-text-tertiary" htmlFor="policy-reason">
+        <label
+          className="text-[length:var(--fs-caption-1)] uppercase text-text-tertiary"
+          htmlFor="policy-reason"
+        >
           {t('delivery.policy.edit.reason')}
         </label>
         <input

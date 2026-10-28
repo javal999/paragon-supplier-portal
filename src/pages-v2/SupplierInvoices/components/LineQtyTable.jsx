@@ -39,7 +39,7 @@ const LineQtyTable = ({ lines, entries, onChange }) => {
                   <Data>{l.grNumber}</Data>
                 </td>
                 <td className="py-1.5 pr-2">
-                  <Data as="div" className="text-[11px] text-text-tertiary">
+                  <Data as="div" className="text-[length:var(--fs-label-3)] text-text-tertiary">
                     {l.materialCode}
                   </Data>
                   <div className="text-text-primary">{l.description}</div>
@@ -58,17 +58,19 @@ const LineQtyTable = ({ lines, entries, onChange }) => {
                     onChange={(e) => onChange(key, e.target.value)}
                   />
                   {l.remaining !== null && (
-                    <div className="mt-0.5 text-[11px] text-text-tertiary">
+                    <div className="mt-0.5 text-[length:var(--fs-label-3)] text-text-tertiary">
                       {t('fc.inv.new.upTo', {
                         qty: `${l.remaining.toLocaleString('en-US')} ${l.uom ?? ''}`
                       })}
                     </div>
                   )}
                   {bad && (
-                    <div className="text-[11px] text-danger">{t('fc.inv.new.qtyInvalid')}</div>
+                    <div className="text-[length:var(--fs-label-3)] text-danger">
+                      {t('fc.inv.new.qtyInvalid')}
+                    </div>
                   )}
                   {over && (
-                    <div role="alert" className="text-[11px] text-danger">
+                    <div role="alert" className="text-[length:var(--fs-label-3)] text-danger">
                       {t('fc.inv.new.overInvoiced')}
                     </div>
                   )}

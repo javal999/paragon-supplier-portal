@@ -75,7 +75,7 @@ const EDGE_CLASS = {
  */
 const HonestyDot = ({ live, t }) => (
   <span
-    className={`inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider ${live ? 'text-success' : 'text-warning-hover'}`}
+    className={`inline-flex items-center gap-1.5 text-[length:var(--fs-caption-1)] font-semibold uppercase tracking-wider ${live ? 'text-success' : 'text-warning-hover'}`}
   >
     <span
       aria-hidden="true"
@@ -219,7 +219,7 @@ const ExpandableWidget = ({
           <div
             aria-hidden
             onClick={() => setExpanded(false)}
-            className="fixed inset-0 z-40 bg-[rgba(13,27,42,0.4)]"
+            className="fixed inset-0 z-40 bg-[var(--pds-color-scrim)]"
           />
           <div
             ref={dialogRef}

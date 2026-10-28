@@ -142,7 +142,7 @@ export const CommitmentDeadline = ({ line, nowIso, testId, compact = false }) =>
       <div
         data-testid={testId}
         data-timing={timing.kind}
-        className={`text-[11px] ${tone}`}
+        className={`text-[length:var(--fs-label-3)] ${tone}`}
         title={formatDateTime(due)}
       >
         {text}
@@ -152,7 +152,7 @@ export const CommitmentDeadline = ({ line, nowIso, testId, compact = false }) =>
   return (
     <div data-testid={testId} data-timing={timing.kind}>
       <Data className="text-xs">{formatDateTime(due)}</Data>
-      <div className={`text-[11px] ${tone}`}>{text}</div>
+      <div className={`text-[length:var(--fs-label-3)] ${tone}`}>{text}</div>
     </div>
   );
 };

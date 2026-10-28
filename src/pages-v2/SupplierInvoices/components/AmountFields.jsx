@@ -69,14 +69,18 @@ export const NewAmountField = ({ newAmount, setNewAmount, amountRead, t }) => (
       <div
         role="alert"
         data-testid="invoice-amount-refusal"
-        className="mt-1 text-[11px] text-danger"
+        className="mt-1 text-[length:var(--fs-label-3)] text-danger"
       >
         {t(INVOICE_AMOUNT_REFUSAL_KEY[amountRead.reason])}{' '}
         <GlossaryTermChip refTo={{ sourceType: 'QtyRefusalReason', term: amountRead.reason }} />
       </div>
     )}
     {amountRead.ok && amountRead.value <= 0 && (
-      <div role="alert" data-testid="invoice-amount-zero" className="mt-1 text-[11px] text-danger">
+      <div
+        role="alert"
+        data-testid="invoice-amount-zero"
+        className="mt-1 text-[length:var(--fs-label-3)] text-danger"
+      >
         {t('supplierInvoices.new.amount.mustExceedZero')}
       </div>
     )}
@@ -103,7 +107,7 @@ export const FixAmountField = ({ fixAmount, setFixAmount, fixAmountRead, t }) =>
       onChange={(e) => setFixAmount(e.target.value)}
     />
     {fixAmount.trim() !== '' && !fixAmountRead.ok && (
-      <div role="alert" className="mt-1 text-[11px] text-danger">
+      <div role="alert" className="mt-1 text-[length:var(--fs-label-3)] text-danger">
         {t(INVOICE_AMOUNT_REFUSAL_KEY[fixAmountRead.reason])}{' '}
         <GlossaryTermChip refTo={{ sourceType: 'QtyRefusalReason', term: fixAmountRead.reason }} />
       </div>
@@ -112,7 +116,7 @@ export const FixAmountField = ({ fixAmount, setFixAmount, fixAmountRead, t }) =>
       <div
         role="alert"
         data-testid="invoice-fix-amount-zero"
-        className="mt-1 text-[11px] text-danger"
+        className="mt-1 text-[length:var(--fs-label-3)] text-danger"
       >
         {t('supplierInvoices.new.amount.mustExceedZero')}
       </div>

@@ -75,14 +75,14 @@ const FlowProvenance = ({ view }) => {
   const { t } = useTranslation();
   return (
     <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1">
-      <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-warning-hover">
+      <span className="inline-flex items-center gap-1.5 text-[length:var(--fs-caption-1)] font-semibold uppercase tracking-wider text-warning-hover">
         <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full border border-warning" />
         {view.feed === null
           ? t('processFlows.provenance.noReadSurface')
           : t('processFlows.provenance.fixtureFeed', { capability: view.capability })}
       </span>
       <span
-        className={`inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider ${
+        className={`inline-flex items-center gap-1.5 text-[length:var(--fs-caption-1)] font-semibold uppercase tracking-wider ${
           view.dispatches ? 'text-info' : 'text-text-tertiary'
         }`}
       >
@@ -105,22 +105,24 @@ const LooseEndRow = ({ end }) => {
     <li className="rounded-md border border-warning/40 bg-warning-soft/40 px-3 py-2.5">
       <span className="flex flex-wrap items-center gap-2">
         <AlertTriangle size={13} className="text-warning-hover" aria-hidden="true" />
-        <Data className="text-[11px]">{end.subject}</Data>
-        <span className="text-[11px] text-text-secondary">{t(looseEndKindKey(end.kind))}</span>
+        <Data className="text-[length:var(--fs-label-3)]">{end.subject}</Data>
+        <span className="text-[length:var(--fs-label-3)] text-text-secondary">
+          {t(looseEndKindKey(end.kind))}
+        </span>
         {/* The reason TOKEN, verbatim — it is the census's own closed-vocabulary
             word, and it is what a reader traces back to `looseEndCensus.js`.
             The gloss for each token is in the reading key on the rail. */}
-        <StatusPill variant="warning" className="text-[10px]">
-          <Data className="text-[10px] text-warning-hover">
+        <StatusPill variant="warning" className="text-[length:var(--fs-caption-1)]">
+          <Data className="text-[length:var(--fs-caption-1)] text-warning-hover">
             {end.reason ?? t('processFlows.reason.uncensused')}
           </Data>
         </StatusPill>
       </span>
-      <p className="mt-1.5 font-mono text-[11px] leading-relaxed text-text-secondary">
+      <p className="mt-1.5 font-mono text-[length:var(--fs-label-3)] leading-relaxed text-text-secondary">
         {end.detail}
       </p>
       {end.note ? (
-        <p className="mt-1.5 text-[11px] leading-relaxed text-text-tertiary">
+        <p className="mt-1.5 text-[length:var(--fs-label-3)] leading-relaxed text-text-tertiary">
           <span className="text-label uppercase">{t('processFlows.looseEnd.censusNote')}</span>{' '}
           {end.note}
         </p>
@@ -142,18 +144,18 @@ const TransitionRow = ({ tv }) => {
     <>
       <TableRow className={purpose ? '!border-b-0' : ''}>
         <TableCell className="py-3 align-top">
-          <Data className="text-[11px]">{def.id}</Data>
+          <Data className="text-[length:var(--fs-label-3)]">{def.id}</Data>
         </TableCell>
         <TableCell className="py-3">
           <span className="flex flex-wrap items-center gap-1">
-            <Data className="text-[11px] text-text-secondary">
+            <Data className="text-[length:var(--fs-label-3)] text-text-secondary">
               {def.from.length > 0 ? def.from.join(' · ') : t('processFlows.badge.birth')}
             </Data>
             <span className="text-text-tertiary">→</span>
-            <Data className="text-[11px]">{def.to}</Data>
+            <Data className="text-[length:var(--fs-label-3)]">{def.to}</Data>
           </span>
         </TableCell>
-        <TableCell className="py-3 whitespace-nowrap text-[11px] text-text-secondary">
+        <TableCell className="py-3 whitespace-nowrap text-[length:var(--fs-label-3)] text-text-secondary">
           {t(STEP_KIND_KEY[tv.kind])}
           {/* THE OTHER AXIS, VERBATIM. The badge above answers "can anyone here
             perform this"; this answers "what fires it". They are two questions
@@ -178,7 +180,7 @@ const TransitionRow = ({ tv }) => {
             (`invoiceActionModel.js` header) one surface along. */}
           {!def.surfaceable.surfaced && def.surfaceable.because === 'external-fact' ? (
             <span
-              className="mt-0.5 block text-[10px] text-text-tertiary"
+              className="mt-0.5 block text-[length:var(--fs-caption-1)] text-text-tertiary"
               data-testid="owner-external"
             >
               {t('processFlows.owner.ownedBy', {
@@ -188,7 +190,7 @@ const TransitionRow = ({ tv }) => {
           ) : null}
           {!def.surfaceable.surfaced && def.surfaceable.because === 'computed' ? (
             <span
-              className="mt-0.5 block text-[10px] text-text-tertiary"
+              className="mt-0.5 block text-[length:var(--fs-caption-1)] text-text-tertiary"
               data-testid="owner-computed"
             >
               {t('processFlows.owner.computedHere')}
@@ -196,8 +198,8 @@ const TransitionRow = ({ tv }) => {
           ) : null}
         </TableCell>
         <TableCell className="py-3">
-          <Data className="text-[11px]">{def.requiredRole}</Data>
-          <span className="mt-0.5 block text-[10px] uppercase tracking-wider text-text-tertiary">
+          <Data className="text-[length:var(--fs-label-3)]">{def.requiredRole}</Data>
+          <span className="mt-0.5 block text-[length:var(--fs-caption-1)] uppercase tracking-wider text-text-tertiary">
             {tv.personas.length > 0
               ? tv.personas.map((p) => t(`nav.persona.${p}`)).join(' · ')
               : t('processFlows.role.unmapped')}
@@ -205,14 +207,14 @@ const TransitionRow = ({ tv }) => {
         </TableCell>
         <TableCell className="py-3">
           {def.requiredFields.length > 0 ? (
-            <Data className="block text-[11px] text-text-secondary">
+            <Data className="block text-[length:var(--fs-label-3)] text-text-secondary">
               {def.requiredFields.join(', ')}
             </Data>
           ) : (
-            <span className="text-[11px] text-text-tertiary">—</span>
+            <span className="text-[length:var(--fs-label-3)] text-text-tertiary">—</span>
           )}
           {def.policyHooks.length > 0 ? (
-            <Data className="mt-0.5 block text-[10px] text-text-tertiary">
+            <Data className="mt-0.5 block text-[length:var(--fs-caption-1)] text-text-tertiary">
               {def.policyHooks.join(', ')}
             </Data>
           ) : null}
@@ -220,17 +222,21 @@ const TransitionRow = ({ tv }) => {
         <TableCell className="py-3">
           <span className="flex flex-wrap gap-1">
             {tv.recordsFact && (
-              <StatusPill variant="neutral" className="text-[10px]">
+              <StatusPill variant="neutral" className="text-[length:var(--fs-caption-1)]">
                 {t('processFlows.flag.recordsFact')}
               </StatusPill>
             )}
             {tv.sapBoundary && (
-              <StatusPill variant="info" className="text-[10px]">
+              <StatusPill variant="info" className="text-[length:var(--fs-caption-1)]">
                 {t('processFlows.flag.sapBoundary', { state: tv.settlesTo })}
               </StatusPill>
             )}
             {tv.fansOutTo.map((link) => (
-              <StatusPill key={link.targetTransitionId} variant="info" className="text-[10px]">
+              <StatusPill
+                key={link.targetTransitionId}
+                variant="info"
+                className="text-[length:var(--fs-caption-1)]"
+              >
                 {t('processFlows.flag.fansOut', {
                   entity: link.targetEntity,
                   verb: verbOf(link.targetTransitionId)
@@ -240,7 +246,7 @@ const TransitionRow = ({ tv }) => {
             {def.trigger === 'cascade' && (
               <StatusPill
                 variant={tv.firedBy.length > 0 ? 'info' : 'warning'}
-                className="text-[10px]"
+                className="text-[length:var(--fs-caption-1)]"
               >
                 {tv.firedBy.length > 0
                   ? // ⚠️ ENTITY-QUALIFIED (C.2). A cascade source lives on ANOTHER
@@ -272,7 +278,7 @@ const TransitionRow = ({ tv }) => {
           <TableCell colSpan={6} className="!py-0 !pt-0 pb-3">
             <p
               data-testid={`pf-purpose-${def.id}`}
-              className="max-w-prose border-l-2 border-teal/40 pl-3 text-[11px] leading-relaxed text-text-secondary"
+              className="max-w-prose border-l-2 border-teal/40 pl-3 text-[length:var(--fs-label-3)] leading-relaxed text-text-secondary"
             >
               {t(purpose)}
             </p>
@@ -379,15 +385,15 @@ const ProcessFlows = () => {
                     }`}
                   >
                     <span className="flex items-center justify-between gap-2">
-                      <Data className="text-[12px]">{flow.entity}</Data>
+                      <Data className="text-[length:var(--fs-label-2)]">{flow.entity}</Data>
                       {flow.looseEnds.length > 0 && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-warning-hover">
+                        <span className="inline-flex items-center gap-1 text-[length:var(--fs-caption-1)] font-semibold text-warning-hover">
                           <AlertTriangle size={11} aria-hidden="true" />
                           {flow.looseEnds.length}
                         </span>
                       )}
                     </span>
-                    <span className="mt-0.5 block text-[11px] text-text-tertiary">
+                    <span className="mt-0.5 block text-[length:var(--fs-label-3)] text-text-tertiary">
                       {t('processFlows.catalog.counts', {
                         states: flow.stateCount,
                         transitions: flow.transitionCount
@@ -406,8 +412,13 @@ const ProcessFlows = () => {
           </h2>
           <ul className="space-y-1.5">
             {ALL_REASONS.map((reason) => (
-              <li key={reason} className="text-[11px] leading-relaxed text-text-tertiary">
-                <Data className="text-[10px] font-semibold text-warning-hover">{reason}</Data>
+              <li
+                key={reason}
+                className="text-[length:var(--fs-label-3)] leading-relaxed text-text-tertiary"
+              >
+                <Data className="text-[length:var(--fs-caption-1)] font-semibold text-warning-hover">
+                  {reason}
+                </Data>
                 {' — '}
                 {t(reasonKey(reason))}
               </li>
@@ -444,13 +455,15 @@ const ProcessFlows = () => {
                     version: view.version
                   })}
                 </p>
-                <p className="mt-1 text-[11px] text-text-tertiary">
+                <p className="mt-1 text-[length:var(--fs-label-3)] text-text-tertiary">
                   {t('processFlows.flow.initial')}{' '}
-                  <Data className="text-[11px]">{view.initial}</Data>
+                  <Data className="text-[length:var(--fs-label-3)]">{view.initial}</Data>
                   {' · '}
                   {t('processFlows.flow.terminals')}{' '}
                   {view.terminals.length > 0 ? (
-                    <Data className="text-[11px]">{view.terminals.join(', ')}</Data>
+                    <Data className="text-[length:var(--fs-label-3)]">
+                      {view.terminals.join(', ')}
+                    </Data>
                   ) : (
                     <span>{t('processFlows.flow.noTerminals')}</span>
                   )}

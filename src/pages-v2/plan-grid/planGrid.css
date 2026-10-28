@@ -20,5 +20,5 @@
  * token (#5E6A78, 5.51:1 on white). Scoped to the containers of the two DSG
  * consumers that load this sheet (plan grid, collaboration responses). */
 .dsg-container {
-  --dsg-header-text-color: #5E6A78;
+  --dsg-header-text-color: var(--pds-color-text-secondary);
 }
