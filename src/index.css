@@ -1,6 +1,8 @@
 /* Paradise 0.2.0-alpha.6 tokens (stage 1) and Lato (stage 3). Inter and
    JetBrains Mono are no longer fetched from Google Fonts. */
 @import '../paradise/paradise.css';
+/* DP-3 data face, self-hosted (owner ruling 2026-10-28). */
+@import './styles/fonts/jetbrains-mono.css';
 
 /* The values below point at Paradise tokens (--pds-*, --font-*, --radius-*,
    --shadow-*). They are defined in ../paradise/tokens/, which the CSS linter
@@ -48,7 +50,8 @@
 
   /* ── TYPOGRAPHY ── */
   --font-sans: var(--font-body);
-  --app-font-mono: var(--font-mono);
+  /* DP-3: JetBrains Mono first, Paradise's system mono stack as the fallback. */
+  --app-font-mono: 'JetBrains Mono', var(--font-mono);
 
   /* ── SPACING ── */
   --radius-sm:   var(--radius-base);

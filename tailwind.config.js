@@ -64,7 +64,9 @@ export default {
       },
       fontFamily: {
         sans: ['var(--font-body)'],
-        mono: ['var(--font-mono)'],
+        // DP-3 data face (owner ruling 2026-10-28): JetBrains Mono, self-hosted in
+        // src/styles/fonts/, then Paradise's system mono stack as the fallback.
+        mono: ['"JetBrains Mono"', 'var(--font-mono)'],
       },
       fontSize: {
         xs: ['var(--fs-body-3)', { lineHeight: '1rem' }],
