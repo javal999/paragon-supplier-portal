@@ -69,10 +69,8 @@ describe('DRC-18 — the three rows on the grid', () => {
     expect(within(card).getByText('FG demand')).toBeInTheDocument();
     expect(within(card).getByText('LTP − FG demand')).toBeInTheDocument();
     expect(within(card).getByText('Consumption, 13-week average')).toBeInTheDocument();
-    // Design rule 5 — the [Default A11] figure carries the Provisional label with its question.
-    expect(within(card).getByTestId(`dant-cavg-provisional-${KEY}`)).toHaveTextContent(
-      'Provisional: rule awaiting Material Planning (A11)'
-    );
+    // A11's 13 weeks are confirmed [Team, 2026-10-28]: no Provisional label.
+    expect(within(card).queryByTestId(`dant-cavg-provisional-${KEY}`)).toBeNull();
     for (const w of row.weeks) {
       const fg = Math.round((gross.get(w.week) ?? 0) * share);
       expect(within(card).getByTestId(`dant-fg-${KEY}-${w.week}`)).toHaveTextContent(

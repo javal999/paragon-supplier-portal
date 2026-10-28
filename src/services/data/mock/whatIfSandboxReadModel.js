@@ -41,6 +41,7 @@ import { addDays } from '../../transitions/inventoryRules';
 import { festiveWindows } from '../../transitions/drcBufferRules';
 import { NPD_RULES } from '../../transitions/osipRopRules';
 import { OSIP_RULES, RULES_VERSION } from '../../transitions/osipRules';
+import { cycleDaysOf } from '../../transitions/osipParams';
 import {
   PPT7_SUPPLIER_ID,
   horizonOf,
@@ -90,6 +91,7 @@ import { whatIfScenarioStore } from './stores/whatIfScenarioStore';
  *   readonly live: WhatIfInputs;
  *   readonly scenarios: readonly WhatIfScenarioView[];
  *   readonly rulesVersion: string;
+ *   readonly own: { readonly z: number | null; readonly g: number | null };
  * }} WhatIfSandbox
  */
 
@@ -268,10 +270,13 @@ export function whatIfLiveInputs(supplierId, materialCode, nowIso = sdcClock.now
     upliftPct: 0,
     leadTime: lt ? { route: lt.route, steps: [...lt.steps], days: lt.totalDays } : null,
     supplyArea: s.supplyArea,
-    f: s.supplyArea ? OSIP_RULES.replenishmentCycleDays[s.supplyArea] : null,
+    // [Team B6] the supplier's own f, else its area's.
+    f: cycleDaysOf(s.fDays, s.supplyArea),
     consumption: [...s.consumption],
     // BL-210 — no typed SD: computed per `sdSource`.
     sd: null,
+    // [Team B10] the planner's value, null when not set.
+    bottleneckLeadTimeDays: s.bottleneckLeadTimeDays ?? null,
     // [Default, wave 2] MPQ = orderMultiple until the master data feed carries MPQ (wave 2 default).
     mpq: s.mpq,
     moq: s.moq,
@@ -343,10 +348,15 @@ export function whatIfSandbox(supplierId, materialCode, nowIso = sdcClock.now())
             (f) => f.supplierId === supplierId && f.materialCode === materialCode
           )
         };
+  // [Team B3, B7] the material's own Z and g: the switches the pair opens on.
+  const s = osipSafetyInputs(nowIso)
+    .get(materialCode)
+    ?.suppliers.find((x) => x.supplierId === supplierId);
   return {
     pair,
     live,
     scenarios: whatIfScenarios(supplierId, materialCode),
-    rulesVersion: RULES_VERSION
+    rulesVersion: RULES_VERSION,
+    own: { z: s?.z ?? null, g: s?.g ?? null }
   };
 }

@@ -21,6 +21,9 @@ import { stamp } from './osipRules';
 /** @typedef {import('./callOffTriggerRules').TriggerLine} TriggerLine */
 /** @typedef {import('./callOffTriggerRules').TriggerRow} TriggerRow */
 
+/** The earlier quantity rule, kept as a variant [Team F5]. */
+const FILL = { ...CALL_OFF_TRIGGER_RULES, quantityRule: /** @type {const} */ ('fillToMax') };
+
 /**
  * @param {Partial<TriggerLine> & Pick<TriggerLine, 'poNumber' | 'orderDate' | 'balance'>} l
  * @returns {TriggerLine}
@@ -114,10 +117,107 @@ describe('BR-01b — released call-offs not yet received', () => {
   });
 });
 
-describe('BR-01b / BR-03 [Owner A7] — the quantity: up to the MPQ, capped at Max', () => {
+describe("[Team F5] BR-01b 'minimumDelivery' (default) — the supplier's minimum delivery, rounded like Max", () => {
+  /** @param {Partial<TriggerLine>} [over] */
+  const mdq = (over = {}) =>
+    line({
+      poNumber: 'P1',
+      orderDate: '2026-07-01',
+      balance: 50000,
+      mdq: 1000,
+      roundTo: 240,
+      ...over
+    });
+
+  it('one call-off of the MDQ rounded up to the pallet: MDQ 1,000, pallet 240 → 1,200, whatever the room above it', () => {
+    expect(CALL_OFF_TRIGGER_RULES.quantityRule).toBe('minimumDelivery');
+    // Room 18,000 − 10,000 = 8,000; the call-off is 1,200, not 8,000.
+    const a = allocateCallOffs({ max: 18000, soh: 10000, openSupply: 0, lines: [mdq()] });
+    expect(a).toMatchObject({ room: 8000, prQty: 0, flags: [] });
+    expect(a.callOffs.map((c) => c.qty)).toEqual([1200]);
+  });
+
+  it('import rounds to the MOQ the same way: MDQ 900 on a 500 unit → 1,000; no unit (sheet guidance) → 900', () => {
+    const a = allocateCallOffs({
+      max: 9000,
+      soh: 0,
+      openSupply: 0,
+      lines: [mdq({ mdq: 900, roundTo: 500 })]
+    });
+    expect(a.callOffs[0].qty).toBe(1000);
+    const b = allocateCallOffs({
+      max: 9000,
+      soh: 0,
+      openSupply: 0,
+      lines: [mdq({ mdq: 900, roundTo: 0 })]
+    });
+    expect(b.callOffs[0].qty).toBe(900);
+  });
+
+  it('[Owner BL-230] above Max: the minimum delivery is called off anyway, flagged ABOVE_MAX', () => {
+    expect(CALL_OFF_TRIGGER_RULES.minimumDeliveryAboveMax).toBe('callOff');
+    const a = allocateCallOffs({ max: 1000, soh: 0, openSupply: 0, lines: [mdq()] });
+    expect(a.callOffs[0].qty).toBe(1200);
+    expect(a.flags).toEqual(['ABOVE_MAX']);
+  });
+
+  it("[Owner A7] 'wait': Max caps it: room 1,000 below a 1,200 call-off → 960 (4 pallets); exact → 1,000; room 200 → nothing, flagged", () => {
+    const lines = [mdq()];
+    const wait = {
+      ...CALL_OFF_TRIGGER_RULES,
+      minimumDeliveryAboveMax: /** @type {const} */ ('wait')
+    };
+    expect(
+      allocateCallOffs({ max: 1000, soh: 0, openSupply: 0, lines }, wait).callOffs[0].qty
+    ).toBe(960);
+    expect(
+      allocateCallOffs({ max: 1000, soh: 0, openSupply: 0, lines }, { ...wait, maxCap: 'exact' })
+        .callOffs[0].qty
+    ).toBe(1000);
+    expect(allocateCallOffs({ max: 200, soh: 0, openSupply: 0, lines }, wait)).toEqual({
+      room: 200,
+      callOffs: [],
+      prQty: 0,
+      flags: ['ROOM_BELOW_MIN_DELIVERY']
+    });
+  });
+
+  it('the oldest line first; a short line gives its balance and the next one the rest; what none covers is the PR', () => {
+    const a = allocateCallOffs({
+      max: 18000,
+      soh: 0,
+      openSupply: 0,
+      lines: [
+        mdq({ poNumber: 'P2', orderDate: '2026-08-01', balance: 300, supplierId: 'sup-b' }),
+        mdq({ poNumber: 'P1', orderDate: '2026-07-01', balance: 500 })
+      ]
+    });
+    expect(a.callOffs.map((c) => [c.poNumber, c.qty])).toEqual([
+      ['P1', 500],
+      ['P2', 300]
+    ]);
+    expect(a.prQty).toBe(400);
+  });
+
+  it('a line with no MDQ falls back to the room rounded to its MPQ, flagged; no line at all: the room is the PR', () => {
+    const a = allocateCallOffs({
+      max: 1400,
+      soh: 1000,
+      openSupply: 0,
+      lines: [line({ poNumber: 'P1', orderDate: '2026-07-18', balance: 15000 })]
+    });
+    expect(a.callOffs.map((c) => c.qty)).toEqual([400]);
+    expect(a.flags).toEqual(['NO_MDQ']);
+    expect(allocateCallOffs({ max: 1400, soh: 1000, openSupply: 0, lines: [] }).prQty).toBe(400);
+  });
+});
+
+describe("BR-01b / BR-03 [Owner A7] 'fillToMax' (the earlier reading) — the quantity: up to the MPQ, capped at Max", () => {
   it('rounds the room up to the MPQ when the rounded call-off still fits under Max', () => {
     // Max 1,400 − SOH 1,000 = room 400 → CEILING(400, 25) = 400.
-    expect(allocateCallOffs({ max: 1400, soh: 1000, openSupply: 0, lines: [] }).room).toBe(400);
+    expect(allocateCallOffs({ max: 1400, soh: 1000, openSupply: 0, lines: [] }, FILL).room).toBe(
+      400
+    );
     expect(cappedQuantity(400, 25)).toBe(400);
     // Room 380 is not a multiple of 100 but 400 would pass Max: the largest
     // whole MPQ under Max is 300.
@@ -139,36 +239,42 @@ describe('BR-01b / BR-03 [Owner A7] — the quantity: up to the MPQ, capped at M
 
   it('released call-offs not yet received count as supply: projected stock never passes Max', () => {
     // Max 36,200 − (SOH 1,000 + 118,000 on the way) < 0: room 0, nothing drafted.
-    const a = allocateCallOffs({
-      max: 36200,
-      soh: 1000,
-      openSupply: 118000,
-      lines: [line({ poNumber: 'P1', orderDate: '2026-07-01', balance: 50000 })]
-    });
+    const a = allocateCallOffs(
+      {
+        max: 36200,
+        soh: 1000,
+        openSupply: 118000,
+        lines: [line({ poNumber: 'P1', orderDate: '2026-07-01', balance: 50000 })]
+      },
+      FILL
+    );
     expect(a).toEqual({ room: 0, callOffs: [], prQty: 0, flags: [] });
   });
 });
 
-describe('BR-01a — the oldest blanket line first, the remainder on the next line', () => {
+describe("BR-01a 'fillToMax' — the oldest blanket line first, the remainder on the next line", () => {
   it('walks the lines oldest first across suppliers; a line never gives more than its balance', () => {
     // Max 18,000 − (SOH 10,000 + 0) = room 8,000; MPQ 1,000.
-    const a = allocateCallOffs({
-      max: 18000,
-      soh: 10000,
-      openSupply: 0,
-      lines: [
-        // Listed newest first on purpose: the order is the rule's, not the input's.
-        line({
-          poNumber: 'P3',
-          orderDate: '2026-08-20',
-          balance: 70000,
-          supplierId: 'sup-b',
-          mpq: 1000,
-          f: 7
-        }),
-        line({ poNumber: 'P1', orderDate: '2026-07-28', balance: 3000, mpq: 1000, f: 1 })
-      ]
-    });
+    const a = allocateCallOffs(
+      {
+        max: 18000,
+        soh: 10000,
+        openSupply: 0,
+        lines: [
+          // Listed newest first on purpose: the order is the rule's, not the input's.
+          line({
+            poNumber: 'P3',
+            orderDate: '2026-08-20',
+            balance: 70000,
+            supplierId: 'sup-b',
+            mpq: 1000,
+            f: 7
+          }),
+          line({ poNumber: 'P1', orderDate: '2026-07-28', balance: 3000, mpq: 1000, f: 1 })
+        ]
+      },
+      FILL
+    );
     expect(a.room).toBe(8000);
     expect(a.callOffs.map((c) => [c.poNumber, c.supplierId, c.qty, c.f])).toEqual([
       ['P1', 'sup-a', 3000, 1],
@@ -178,22 +284,25 @@ describe('BR-01a — the oldest blanket line first, the remainder on the next li
   });
 
   it('skips a line with no balance left', () => {
-    const a = allocateCallOffs({
-      max: 1400,
-      soh: 1000,
-      openSupply: 0,
-      lines: [
-        line({ poNumber: 'P0', orderDate: '2026-06-01', balance: 0 }),
-        line({ poNumber: 'P1', orderDate: '2026-07-18', balance: 15000 })
-      ]
-    });
+    const a = allocateCallOffs(
+      {
+        max: 1400,
+        soh: 1000,
+        openSupply: 0,
+        lines: [
+          line({ poNumber: 'P0', orderDate: '2026-06-01', balance: 0 }),
+          line({ poNumber: 'P1', orderDate: '2026-07-18', balance: 15000 })
+        ]
+      },
+      FILL
+    );
     expect(a.callOffs.map((c) => [c.poNumber, c.qty])).toEqual([['P1', 400]]);
   });
 });
 
-describe('BR-02 — what no blanket line covers is a PR recommendation', () => {
+describe("BR-02 'fillToMax' — what no blanket line covers is a PR recommendation", () => {
   it('no balance at all: the whole room is the PR', () => {
-    expect(allocateCallOffs({ max: 18000, soh: 10000, openSupply: 0, lines: [] })).toEqual({
+    expect(allocateCallOffs({ max: 18000, soh: 10000, openSupply: 0, lines: [] }, FILL)).toEqual({
       room: 8000,
       callOffs: [],
       prQty: 8000,
@@ -202,23 +311,29 @@ describe('BR-02 — what no blanket line covers is a PR recommendation', () => {
   });
 
   it('balance short of the room: the lines are used up and the rest is the PR', () => {
-    const a = allocateCallOffs({
-      max: 18000,
-      soh: 10000,
-      openSupply: 0,
-      lines: [line({ poNumber: 'P1', orderDate: '2026-07-01', balance: 2500, mpq: 1000 })]
-    });
+    const a = allocateCallOffs(
+      {
+        max: 18000,
+        soh: 10000,
+        openSupply: 0,
+        lines: [line({ poNumber: 'P1', orderDate: '2026-07-01', balance: 2500, mpq: 1000 })]
+      },
+      FILL
+    );
     expect(a.callOffs.map((c) => c.qty)).toEqual([2500]);
     expect(a.prQty).toBe(5500);
   });
 
   it('room left only because it is smaller than an MPQ is not a PR', () => {
-    const a = allocateCallOffs({
-      max: 1400,
-      soh: 1010,
-      openSupply: 0,
-      lines: [line({ poNumber: 'P1', orderDate: '2026-07-18', balance: 15000 })]
-    });
+    const a = allocateCallOffs(
+      {
+        max: 1400,
+        soh: 1010,
+        openSupply: 0,
+        lines: [line({ poNumber: 'P1', orderDate: '2026-07-18', balance: 15000 })]
+      },
+      FILL
+    );
     expect(a.callOffs.map((c) => c.qty)).toEqual([375]);
     expect(a.prQty).toBe(0);
     expect(a.flags).toEqual(['ROOM_BELOW_MPQ']);
@@ -344,6 +459,7 @@ describe('BR-02 — the open PR recommendations', () => {
   });
 
   it('carries the question IDs behind every figure (design rule 5)', () => {
-    expect(CALL_OFF_TRIGGER_QUESTIONS).toEqual(['F1', 'B5', 'B6', 'B7', 'B8', 'B9', 'MPQ']);
+    // B5, B6, B7 answered or confirmed [Team, 2026-10-28].
+    expect(CALL_OFF_TRIGGER_QUESTIONS).toEqual(['F1', 'B8', 'B9', 'MPQ']);
   });
 });

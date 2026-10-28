@@ -199,6 +199,12 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    */
   OSIP_LEVEL_VALID: 'osiplevel_valid',
   /**
+   * OSIP value per material or supplier (team answers 2026-10-28): a known
+   * kind (OSIP_PARAM_UNKNOWN), a value present, and within its bounds or null
+   * to reset (OSIP_PARAM_INVALID). The rule is `osipParamRefusal`.
+   */
+  OSIP_PARAM_VALID: 'osipparam_valid',
+  /**
    * What-if scenario save (DRC-17 BR-05, BL-202): a name (NAME_REQUIRED,
    * NAME_TOO_LONG), a pair the sandbox offers (UNKNOWN_PAIR), well-formed
    * inputs (INPUTS_INVALID:<field>) and switches each catalogue entry allows

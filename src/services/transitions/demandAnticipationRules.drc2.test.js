@@ -35,6 +35,9 @@ import {
 /** @param {Partial<OsipRules>} over */
 const rulesWith = (over) => /** @type {OsipRules} */ ({ ...OSIP_RULES, ...over });
 
+/** PPT 7's readings, kept as variants on 2026-10-28: lead-time SD [B2], the SOH check [A2]. */
+const PPT7_RULES = rulesWith({ sdSource: 'ltp', planCheckBasis: 'sohOspoOsprPr' });
+
 /** @type {RollingDaInputs} */
 const BASE = {
   weeks: [],
@@ -88,16 +91,19 @@ const publish = (inputs, agreed = [], rules = OSIP_RULES) => {
 
 describe('DRC-2 AC-03 / DRC-4 AC-01 — PPT 7, bottle 2000041501', () => {
   const g = golden.ppt7;
-  const f = rollingDaFigure({
-    ...BASE,
-    weeks: g.weeks,
-    ltp: g.ltp,
-    leadTimeWeeks: g.leadTimeWeeks,
-    mpq: g.mpq,
-    soh: g.soh,
-    ospoOpen: g.ospo,
-    ospr: g.ospr
-  });
+  const f = rollingDaFigure(
+    {
+      ...BASE,
+      weeks: g.weeks,
+      ltp: g.ltp,
+      leadTimeWeeks: g.leadTimeWeeks,
+      mpq: g.mpq,
+      soh: g.soh,
+      ospoOpen: g.ospo,
+      ospr: g.ospr
+    },
+    PPT7_RULES
+  );
 
   it('the horizon is the 5-week lead time and incoming demand anticipation is 438,768 then 129,248 and 64,624 × 3', () => {
     expect(f.horizonWeeks).toEqual(g.weeks.slice(0, 5));
@@ -117,7 +123,26 @@ describe('DRC-2 AC-03 / DRC-4 AC-01 — PPT 7, bottle 2000041501', () => {
     expect(f).toMatchObject({ prRecommendation: 0, absorbedLastWeek: 0, unabsorbed: 0 });
   });
 
-  it('[Default A2] alternative: without SOH the same plan shows a 116,329 shortfall as a PR recommendation', () => {
+  it('[Team A2, B2] under the defaults: SS 183,672 and the check is Total DA 700,664 against Total OSPO 0', () => {
+    const now = rollingDaFigure({
+      ...BASE,
+      weeks: g.weeks,
+      ltp: g.ltp,
+      leadTimeWeeks: g.leadTimeWeeks,
+      mpq: g.mpq,
+      soh: g.soh,
+      ospoOpen: g.ospo,
+      ospr: g.ospr
+    });
+    expect(now.safetyOrder).toBe(183672);
+    expect(now.totalDa).toBe(516992 + 183672);
+    expect(now.supply).toBe(g.ospo);
+    expect(now.gap).toBe(700664);
+    // The PR to raise is the additional PO: both are Total DA − OSPO.
+    expect(now.prRecommendation).toBe(now.additionalPo);
+  });
+
+  it("[A2] 'ospoOsprPr' alternative: without SOH the same plan shows a 116,329 shortfall as a PR recommendation", () => {
     const alt = rollingDaFigure(
       {
         ...BASE,
@@ -128,7 +153,7 @@ describe('DRC-2 AC-03 / DRC-4 AC-01 — PPT 7, bottle 2000041501', () => {
         soh: g.soh,
         ospr: 0
       },
-      rulesWith({ planCheckIncludesSoh: false })
+      { ...PPT7_RULES, planCheckBasis: 'ospoOsprPr' }
     );
     expect(alt.gap).toBe(g.soh);
     expect(alt.prRecommendation).toBe(g.soh);
@@ -137,7 +162,7 @@ describe('DRC-2 AC-03 / DRC-4 AC-01 — PPT 7, bottle 2000041501', () => {
   it('[Default A1] alternative: the safety order spread evenly over the horizon keeps the total', () => {
     const alt = rollingDaFigure(
       { ...BASE, weeks: g.weeks, ltp: g.ltp, leadTimeWeeks: 5, mpq: g.mpq, soh: g.soh, ospr: 0 },
-      rulesWith({ daSafetyPlacement: 'spread' })
+      { ...PPT7_RULES, daSafetyPlacement: 'spread' }
     );
     // Whole units, the odd unit first: 244,896 = 48,980 + 4 × 48,979.
     expect(alt.weeks.map((w) => w.safety)).toEqual([48980, 48979, 48979, 48979, 48979]);
@@ -147,14 +172,17 @@ describe('DRC-2 AC-03 / DRC-4 AC-01 — PPT 7, bottle 2000041501', () => {
   it('the MPQ default is the source’s order multiple (a named key, not a literal)', () => {
     expect(DEMAND_ANTICIPATION_RULES.mpqField).toBe('orderMultiple');
     // Known-bad control: rounding to no MPQ gives the unrounded figure, not 244,896.
-    const unrounded = rollingDaFigure({
-      ...BASE,
-      weeks: g.weeks,
-      ltp: g.ltp,
-      leadTimeWeeks: 5,
-      mpq: 0,
-      ospr: 0
-    });
+    const unrounded = rollingDaFigure(
+      {
+        ...BASE,
+        weeks: g.weeks,
+        ltp: g.ltp,
+        leadTimeWeeks: 5,
+        mpq: 0,
+        ospr: 0
+      },
+      PPT7_RULES
+    );
     expect(unrounded.safetyOrder).not.toBe(g.expected.safetyOrder);
   });
 });
@@ -309,20 +337,24 @@ describe('DRC-4 BR-02 — supply above the demand anticipation (DRC-B7)', () => 
   const base = { ...BASE, weeks, ltp: [10, 10, 10], leadTimeWeeks: 2 };
 
   it('a surplus comes off the last week of the horizon, never below 0; the rest is unabsorbed', () => {
-    const f = rollingDaFigure({ ...base, soh: 25 });
+    // [Team A2] supply is Total OSPO.
+    const f = rollingDaFigure({ ...base, ospoOpen: 25 });
     expect(f.totalDa).toBe(20);
     expect(f.pr).toBe(0);
     expect(f.gap).toBe(-5);
     expect(f.daInForce).toEqual([10, 5]);
     expect(f.absorbedLastWeek).toBe(5);
-    const big = rollingDaFigure({ ...base, soh: 35 });
+    const big = rollingDaFigure({ ...base, ospoOpen: 35 });
     expect(big.daInForce).toEqual([10, 0]);
     expect(big.unabsorbed).toBe(5);
   });
 
-  it('OSPR the hub does not hold counts 0 and is flagged; a known OSPR counts', () => {
+  it('OSPR the hub does not hold counts 0 and is flagged; a known OSPR counts on the SOH check only', () => {
     expect(rollingDaFigure({ ...base, ospr: null }).flags).toContain('OSPR_NOT_AVAILABLE');
-    expect(rollingDaFigure({ ...base, ospr: 25 }).absorbedLastWeek).toBe(5);
+    const full = rulesWith({ planCheckBasis: 'sohOspoOsprPr' });
+    expect(rollingDaFigure({ ...base, ospr: 25 }, full).absorbedLastWeek).toBe(5);
+    expect(rollingDaFigure({ ...base, ospr: 25 }).absorbedLastWeek).toBe(0);
+    expect(rollingDaFigure({ ...base, soh: 25 }).gap).toBe(20);
   });
 
   it('a pair without a lead time uses the fallback horizon, flagged', () => {
@@ -437,7 +469,7 @@ describe('the page’s rows', () => {
   });
 
   it('a surplus the last week cannot take is listed for the alert', () => {
-    const today = rollingDaFigure({ ...inputs, soh: 40 });
+    const today = rollingDaFigure({ ...inputs, ospoOpen: 40 });
     const rows = demandAnticipationRows([], [{ ...pair, soh: 40, today }], Wk(1));
     expect(rows[0].weeks[1].absorbed).toBe(8);
     expect(unabsorbedOf(rows)).toEqual([
@@ -452,8 +484,8 @@ describe('the page’s rows', () => {
     ]);
   });
 
-  it('design rule 5 — the provisional questions are A1, A2, A8b and A9', () => {
-    expect(DA_PROVISIONAL_QUESTIONS).toEqual(['A1', 'A2', 'A8b', 'A9']);
+  it('design rule 5 — the provisional questions are A8b and A9; A1 and A2 are answered [Team, 2026-10-28]', () => {
+    expect(DA_PROVISIONAL_QUESTIONS).toEqual(['A8b', 'A9']);
   });
 });
 

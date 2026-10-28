@@ -11,20 +11,29 @@
 // refuses (and the reverse).
 //
 //   · BR-a  one record per confirmation, append-only; the latest is in force.
-//   · BR-b  cadence: weekly, with the Thursday stock update cycle [Default E2].
-//           The due list reuses `weeklyUpdateStatus` (MR-1) over the latest
-//           confirmation per material, so it counts the SAME weeks the stock
-//           update counts. It is NOT part of the MR-2 update-compliance score.
+//   · BR-b  cadence [Team, 2026-10-28, E2; owner ruling 2026-10-28]: a
+//           supplier on a pull agreement (`osipParams`, per supplier; default
+//           no) confirms DAILY — each hub calendar day, midnight to midnight
+//           WIB; any other supplier every week, with the Thursday stock update
+//           cycle, which is the weekly DA send (Supply Sustainability owns the
+//           DA). The weekly due list reuses `weeklyUpdateStatus` (MR-1) over
+//           the latest confirmation per material, so it counts the SAME weeks
+//           the stock update counts. Neither is part of the MR-2
+//           update-compliance score. What happens when a supplier does not
+//           confirm is OPEN (team answers section 4, Q7): the panel says it is
+//           missed, and nothing else follows.
 //   · BR-c  feedstock never adds to supplier SOH, "supplier available" or
 //           "free to call off" (MoM 2B; MR-7 BR-01): nothing here returns a
 //           stock figure, and the confirmation lives in its own store.
-//   · BR-e  target feedstock = LT spare × weekly demand [Default E1], LT spare
-//           default 0, so the target reads 0 (Provisional).
+//   · BR-e  target feedstock = LT spare × weekly demand [Team, 2026-10-28, E1:
+//           the next model defines no feedstock ROP], LT spare 0, so the
+//           target reads 0. What "LT spare" meant in the current model is open
+//           (team answers section 4, Q8).
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @import { WorkingCalendar } from '@lib/workingCalendar' */
 /** @import { UpdateCycleSettings, WeeklyUpdateStatus } from './updateCycle' */
-import { weeklyUpdateStatus } from './updateCycle';
+import { cycleStatus, weeklyUpdateStatus } from './updateCycle';
 
 /**
  * The [Default] values this feature runs on (design rule 2), one key each,
@@ -32,7 +41,7 @@ import { weeklyUpdateStatus } from './updateCycle';
  * for this build, so the block lives here.
  * @typedef {{
  *   readonly ltSpareWeeks: number;
- *   readonly cadence: 'weeklyStockCycle';
+ *   readonly cadence: 'byPullAgreement' | 'weeklyStockCycle';
  *   readonly noteMaxLength: number;
  * }} FeedstockRules
  */
@@ -41,14 +50,22 @@ import { weeklyUpdateStatus } from './updateCycle';
 export const FEEDSTOCK_RULES = Object.freeze({
   /** [Default E1] LT spare, in weeks of demand, per material; default 0 (target feedstock = 0). */
   ltSpareWeeks: 0,
-  /** [Default E2] the supplier confirms weekly, with the Thursday stock update cycle (MR-1). */
-  cadence: /** @type {'weeklyStockCycle'} */ ('weeklyStockCycle'),
+  /**
+   * [Team, 2026-10-28, E2] 'byPullAgreement': daily for a supplier on a pull
+   * agreement, weekly with the Thursday stock update (the DA send) for any
+   * other; 'weeklyStockCycle': weekly for every supplier (the earlier default).
+   */
+  cadence: /** @type {'byPullAgreement' | 'weeklyStockCycle'} */ ('byPullAgreement'),
   /** DRC-8 BR-a — the optional note's length limit (not a [Default]: a form bound). */
   noteMaxLength: 500
 });
 
-/** The question IDs every figure built on these defaults names in its Provisional label. */
-export const FEEDSTOCK_PROVISIONAL_QUESTIONS = Object.freeze(['E1', 'E2']);
+/**
+ * The question IDs every figure built on these defaults names in its
+ * Provisional label. Empty since 2026-10-28: the team confirmed E1 (feedstock
+ * target 0) and answered E2 (the cadence), which the owner accepted.
+ */
+export const FEEDSTOCK_PROVISIONAL_QUESTIONS = Object.freeze(/** @type {string[]} */ ([]));
 
 /**
  * Why a confirmation is refused, or null when it is accepted.
@@ -177,8 +194,9 @@ export function latestFeedstock(records, supplierId, materialCode) {
 }
 
 /**
- * BR-b [Default E2] — which assigned materials still need this week's
- * confirmation. The cycle is the stock update cycle (MR-1 BR-03): the same
+ * BR-b [Team E2] — which assigned materials still need this cycle's
+ * confirmation: today's for a supplier on a pull agreement, else this week's.
+ * The weekly cycle is the stock update cycle (MR-1 BR-03): the same
  * cutoff, the same holiday shift, the same "missed" carry-over; a material
  * counts as confirmed this week when its latest confirmation was RECORDED
  * inside the open cycle (not by its confirmation date, which the supplier
@@ -188,9 +206,21 @@ export function latestFeedstock(records, supplierId, materialCode) {
  * @param {string} nowIso
  * @param {WorkingCalendar} calendar
  * @param {UpdateCycleSettings} settings
+ * @param {boolean} [pullAgreement]  [Team E2] the supplier is on a pull agreement.
+ * @param {FeedstockRules} [rules]
  * @returns {WeeklyUpdateStatus}
  */
-export function feedstockCycleStatus(supplierId, rows, nowIso, calendar, settings) {
+export function feedstockCycleStatus(
+  supplierId,
+  rows,
+  nowIso,
+  calendar,
+  settings,
+  pullAgreement = false,
+  rules = FEEDSTOCK_RULES
+) {
+  if (rules.cadence === 'byPullAgreement' && pullAgreement)
+    return dailyFeedstockStatus(supplierId, rows, nowIso, calendar);
   return weeklyUpdateStatus(
     supplierId,
     rows.map((r) => ({
@@ -202,6 +232,58 @@ export function feedstockCycleStatus(supplierId, rows, nowIso, calendar, setting
     calendar,
     settings
   );
+}
+
+/**
+ * [Team E2] the hub calendar day an instant falls in, as an update cycle:
+ * from midnight WIB (exclusive of the instant before it) to the next midnight.
+ * @param {string} iso
+ * @param {WorkingCalendar} calendar
+ * @returns {import('./updateCycle').UpdateCycle}
+ */
+export function feedstockDayFor(iso, calendar) {
+  const HOUR = 3_600_000;
+  const ms = Date.parse(iso);
+  const wall = new Date(ms + calendar.utcOffsetHours * HOUR).toISOString().slice(0, 10);
+  const midnight = Date.parse(`${wall}T00:00:00.000Z`) - calendar.utcOffsetHours * HOUR;
+  return {
+    start: new Date(midnight - 1).toISOString(),
+    cutoff: new Date(midnight + 24 * HOUR - 1).toISOString()
+  };
+}
+
+/**
+ * [Team E2] BR-b for a supplier on a pull agreement: the same status as the
+ * weekly one, over the hub's calendar day — confirmed today, still missing
+ * today, and missed yesterday and still not confirmed since.
+ * @param {string} supplierId
+ * @param {readonly { readonly supplierId: string; readonly materialCode: string; readonly feedstockRecordedAt: string | null }[]} rows
+ * @param {string} nowIso
+ * @param {WorkingCalendar} calendar
+ * @returns {WeeklyUpdateStatus}
+ */
+function dailyFeedstockStatus(supplierId, rows, nowIso, calendar) {
+  const own = rows.filter((r) => r.supplierId === supplierId);
+  const records = own.flatMap((r) =>
+    r.feedstockRecordedAt === null
+      ? []
+      : [{ supplierId, materialCode: r.materialCode, declaredAt: r.feedstockRecordedAt }]
+  );
+  const assignments = own.map((r) => ({ supplierId, materialCode: r.materialCode }));
+  const cycle = feedstockDayFor(nowIso, calendar);
+  const closed = feedstockDayFor(cycle.start, calendar);
+  const open = cycleStatus(supplierId, cycle, records, assignments);
+  const before = cycleStatus(supplierId, closed, records, assignments);
+  const missing = open.filter((s) => s.status === 'missing').map((s) => s.materialCode);
+  return {
+    cycle,
+    total: open.length,
+    updated: open.filter((s) => s.status === 'updated').map((s) => s.materialCode),
+    missing,
+    missed: before
+      .filter((s) => s.status === 'missing' && missing.includes(s.materialCode))
+      .map((s) => s.materialCode)
+  };
 }
 
 /**

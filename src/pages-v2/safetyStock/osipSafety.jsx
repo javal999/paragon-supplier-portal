@@ -53,6 +53,8 @@ export const isVariant = (s) =>
  */
 export const ProvisionalNote = ({ questions, testId }) => {
   const { t } = useTranslation();
+  // Every question behind the figure is answered: no label.
+  if (questions.length === 0) return null;
   return (
     <span className="block text-xs font-normal normal-case text-text-tertiary" data-testid={testId}>
       {t('sst.osip.provisional', { questions: questions.join(', ') })}
@@ -127,6 +129,7 @@ export const OsipRuleSwitches = ({ value, onChange }) => {
           'sdSource',
           t('sst.osip.rules.sdSource'),
           [
+            { value: 'ltp13w', label: t('sst.osip.rules.sdSource.ltp13w') },
             { value: 'ltp', label: t('sst.osip.rules.sdSource.ltp') },
             { value: 'consumption12w', label: t('sst.osip.rules.sdSource.consumption12w') }
           ],
@@ -287,7 +290,16 @@ export const CvCell = ({ materialCode, osip }) => {
       </span>
     );
   return (
-    <div title={t('sst.osip.cv.title', { count: c.skus.length, weeks: OSIP_RULES.cvWindowWeeks })}>
+    <div
+      title={t('sst.osip.cv.title', {
+        count: c.skus.length,
+        // [Team C1] six full months, monthly buckets.
+        window:
+          OSIP_RULES.cvBucket === 'month'
+            ? t('sst.osip.cv.windowMonths', { count: OSIP_RULES.cvWindowMonths })
+            : t('sst.osip.cv.windowWeeks', { count: OSIP_RULES.cvWindowWeeks })
+      })}
+    >
       <Data data-testid={`sst-cv-${materialCode}`}>
         {formatNumber(Math.round(c.cv * 100) / 100)}
       </Data>

@@ -1,7 +1,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // BL-187 / BL-200 — the OSIP calculation module. Golden fixtures first (design
-// rule 4: PPT 7, 8, 9 under the defaults), then every function and every
-// switch variant of `OSIP_RULES`.
+// rule 4: PPT 8 and 9 under the defaults; PPT 7 under the two readings the
+// owner kept as variants on 2026-10-28, `PPT7_RULES`), then every function and
+// every switch variant of `OSIP_RULES`.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, expect, it } from 'vitest';
@@ -20,6 +21,7 @@ import {
   horizonWeeksOf,
   maxStock,
   mean,
+  monthlyBuckets,
   planCheck,
   prGenerated,
   projectedSoh,
@@ -42,13 +44,23 @@ import {
 const rulesWith = (over) =>
   /** @type {import('./osipRules').OsipRules} */ ({ ...OSIP_RULES, ...over });
 
+/**
+ * PPT 7's readings: the safety order's SD over the lead-time weeks [B2] and the
+ * plan check against SOH + OSPO + OSPR + PR [A2]. The defaults (13 weeks of
+ * LTP, Total OSPO) give SS 183,672 and a gap of 761,888 on the same slide.
+ */
+const PPT7_RULES = rulesWith({ sdSource: 'ltp', planCheckBasis: 'sohOspoOsprPr' });
+
 // ─── Golden fixtures ────────────────────────────────────────────────────────
 
 describe('golden PPT 7 — bottle 2000041501', () => {
   const g = golden.ppt7;
   const e = g.expected;
   const cs = cycleStock(g.ltp, g.leadTimeWeeks);
-  const ss = safetyOrder({ ltp: g.ltp, leadTimeWeeks: g.leadTimeWeeks, mpq: g.mpq }).value;
+  const ss = safetyOrder(
+    { ltp: g.ltp, leadTimeWeeks: g.leadTimeWeeks, mpq: g.mpq },
+    PPT7_RULES
+  ).value;
   const rop = ropOrder({ cycleStock: cs, safetyOrder: ss });
   const pr = prGenerated({ ropOrder: rop, soh: g.soh, ospo: g.ospo, ospr: g.ospr });
   const da = rollingDaWeek({
@@ -74,13 +86,16 @@ describe('golden PPT 7 — bottle 2000041501', () => {
   });
 
   it('plan check gap is 0 (DRC-4 AC-01)', () => {
-    const check = planCheck({
-      daWeeks: da.weeks.map((w) => w.da),
-      soh: g.soh,
-      ospo: g.ospo,
-      ospr: g.ospr,
-      pr: -pr
-    });
+    const check = planCheck(
+      {
+        daWeeks: da.weeks.map((w) => w.da),
+        soh: g.soh,
+        ospo: g.ospo,
+        ospr: g.ospr,
+        pr: -pr
+      },
+      PPT7_RULES
+    );
     expect(check.gap).toBe(e.planCheckGap);
     expect(check.prRecommendation).toBe(0);
     expect(check.absorbedLastWeek).toBe(0);
@@ -88,6 +103,21 @@ describe('golden PPT 7 — bottle 2000041501', () => {
 
   it('projected SOH with incoming is 361,225 every week', () => {
     expect(projectedSoh(g.soh, e.incomingDa, g.ltp)).toEqual(e.projectedSoh);
+  });
+
+  it('[Team B2, A2] under the defaults the same slide gives SS 183,672 and a gap of Total DA − Total OSPO', () => {
+    // SD of the 12 weeks the slide holds (42,092.1) → 1.65 × √5 × 42,092.1 = 155,299 → 3 × 61,224.
+    const ss13 = safetyOrder({ ltp: g.ltp, leadTimeWeeks: g.leadTimeWeeks, mpq: g.mpq }).value;
+    expect(ss13).toBe(183672);
+    const check = planCheck({
+      daWeeks: da.weeks.map((w) => w.da),
+      soh: g.soh,
+      ospo: g.ospo,
+      ospr: g.ospr,
+      pr: -pr
+    });
+    expect(check.supply).toBe(g.ospo);
+    expect(check.gap).toBe(e.totalDa);
   });
 });
 
@@ -193,7 +223,8 @@ describe('OSIP_RULES and stamp', () => {
     expect(Object.isFrozen(OSIP_RULES.replenishmentCycleDays)).toBe(true);
     expect(OSIP_RULES).toMatchObject({
       z: 1.65,
-      sdSource: 'ltp',
+      sdSource: 'ltp13w',
+      ltpSdWeeks: 13,
       safetyRounding: 'mpq',
       fisikSafety: 'deck',
       fisikDemandIncludesLtp: true,
@@ -201,10 +232,12 @@ describe('OSIP_RULES and stamp', () => {
       maxRule: 'deck',
       replenishmentCycleDays: { import: 7, jabodetabek: 1, outsideJabodetabek: 2 },
       cvThreshold: 0.5,
+      cvBucket: 'month',
+      cvWindowMonths: 6,
       cvWindowWeeks: 26,
       defaultLevel: 4,
       daSafetyPlacement: 'week1',
-      planCheckIncludesSoh: true,
+      planCheckBasis: 'totalOspo',
       carryOverTarget: 'lastWeek',
       consumptionMovingAvgWeeks: 13,
       ospoIncludesNewPo: true
@@ -251,9 +284,19 @@ describe('arithmetic helpers', () => {
 describe('safetyOrder switches', () => {
   const ltp = golden.ppt7.ltp;
   const base = { ltp, leadTimeWeeks: 5, mpq: 61224, koli: 1000, moq: 100000 };
+  const leadTimeSd = rulesWith({ sdSource: 'ltp' });
+
+  it('[Team B2] sdSource ltp13w (default) uses the sample SD of the next 13 weeks of LTP', () => {
+    const r = safetyOrder({ ...base, ltp: [...ltp, 64624, 999999] });
+    expect(r.sd).toBeCloseTo(sampleStdev([...ltp, 64624]));
+    expect(r.raw).toBeCloseTo(1.65 * Math.sqrt(5) * r.sd);
+    // Fewer weeks than the window: the weeks there are.
+    expect(safetyOrder(base).sd).toBeCloseTo(sampleStdev(ltp));
+    expect(safetyOrder(base, rulesWith({ ltpSdWeeks: 5 })).sd).toBeCloseTo(57801.46, 1);
+  });
 
   it('sdSource ltp uses the sample SD of the lead-time LTP', () => {
-    const r = safetyOrder(base);
+    const r = safetyOrder(base, leadTimeSd);
     expect(r.sd).toBeCloseTo(57801.46, 1);
     expect(r.raw).toBeCloseTo(1.65 * Math.sqrt(5) * r.sd);
     expect(r.roundTo).toBe(61224);
@@ -267,11 +310,11 @@ describe('safetyOrder switches', () => {
   });
 
   it('safetyRounding koli / moq round to those sizes', () => {
-    const raw = safetyOrder(base).raw;
-    expect(safetyOrder(base, rulesWith({ safetyRounding: 'koli' })).value).toBe(
+    const raw = safetyOrder(base, leadTimeSd).raw;
+    expect(safetyOrder(base, { ...leadTimeSd, safetyRounding: 'koli' }).value).toBe(
       Math.ceil(raw / 1000) * 1000
     );
-    expect(safetyOrder(base, rulesWith({ safetyRounding: 'moq' })).value).toBe(300000);
+    expect(safetyOrder(base, { ...leadTimeSd, safetyRounding: 'moq' }).value).toBe(300000);
   });
 
   it('z is read from the rules', () => {
@@ -279,10 +322,10 @@ describe('safetyOrder switches', () => {
   });
 
   it('BL-210 — a typed sd replaces the computed SD; absent or null, nothing changes', () => {
-    const computed = safetyOrder(base);
+    const computed = safetyOrder(base, leadTimeSd);
     expect(computed.value).toBe(golden.ppt7.expected.safetyOrder);
-    expect(safetyOrder({ ...base, sd: null })).toEqual(computed);
-    // The slide's own SD typed in reproduces the slide's safety order.
+    expect(safetyOrder({ ...base, sd: null }, leadTimeSd)).toEqual(computed);
+    // The slide's own SD typed in reproduces the slide's safety order, under the default too.
     expect(safetyOrder({ ...base, sd: 57801.5 }).value).toBe(golden.ppt7.expected.safetyOrder);
     // 1.65 × √5 × 10,000 = 36,894 → up to the MPQ 61,224.
     const typed = safetyOrder({ ...base, sd: 10000 });
@@ -428,12 +471,29 @@ describe('maxStock switches', () => {
 // ─── CV and strategic buffer ────────────────────────────────────────────────
 
 describe('CV', () => {
-  it('SD ÷ mean over the last 26 weeks; null on a zero mean', () => {
+  it('[Team C1] SD ÷ mean over the last 6 monthly buckets; null on a zero mean', () => {
+    const months = [1000, 1000, 80, 120, 80, 120, 80, 120];
+    expect(cv(months)).toBeCloseTo(sampleStdev(months.slice(-6)) / 100);
+    expect(cv([0, 0, 0])).toBeNull();
+    expect(cv(months, rulesWith({ cvWindowMonths: 8 }))).toBeGreaterThan(1);
+  });
+
+  it("'week' variant: SD ÷ mean over the last 26 weeks", () => {
+    const weekly = rulesWith({ cvBucket: 'week' });
     const old = Array.from({ length: 10 }, () => 1000);
     const recent = Array.from({ length: 26 }, (_, i) => (i % 2 ? 80 : 120));
-    expect(cv([...old, ...recent])).toBeCloseTo(sampleStdev(recent) / 100);
-    expect(cv([0, 0, 0])).toBeNull();
-    expect(cv([...old, ...recent], rulesWith({ cvWindowWeeks: 36 }))).toBeGreaterThan(1);
+    expect(cv([...old, ...recent], weekly)).toBeCloseTo(sampleStdev(recent) / 100);
+    expect(cv([...old, ...recent], { ...weekly, cvWindowWeeks: 36 })).toBeGreaterThan(1);
+  });
+
+  it('[Team C1] monthlyBuckets spreads each week over its days and keeps full months only', () => {
+    // Monday 2026-01-26 to Sunday 2026-03-08: 6 weeks of 7 a week = 1 a day.
+    const b = monthlyBuckets([7, 7, 7, 7, 7, 7], '2026-01-26');
+    // January starts before the first week, March ends after the last: only February is full.
+    expect(b).toEqual([{ month: '2026-02', qty: 28 }]);
+    // A week across a month end splits by day: the week of 26 January puts its
+    // Sunday (1 Feb, 0) in February; the week of 23 February its Sunday (1 Mar) in March.
+    expect(monthlyBuckets([0, 7, 7, 7, 7], '2026-01-26')).toEqual([{ month: '2026-02', qty: 27 }]);
   });
 
   it('component CV is demand-weighted; null with no demand', () => {
@@ -557,26 +617,43 @@ describe('rollingDaWeek switches and edges', () => {
 describe('planCheck', () => {
   const base = { daWeeks: [10, 10, 10, 10], soh: 5, ospo: 20, ospr: 0, pr: 0 };
 
-  it('a shortfall raises a PR recommendation', () => {
-    expect(planCheck(base)).toMatchObject({ gap: 15, prRecommendation: 15, absorbedLastWeek: 0 });
+  const full = rulesWith({ planCheckBasis: 'sohOspoOsprPr' });
+
+  it('[Team A2] the default checks Total DA against Total OSPO; SOH, OSPR and PR do not count', () => {
+    expect(planCheck({ ...base, ospr: 7, pr: 9 })).toMatchObject({
+      totalDa: 40,
+      supply: 20,
+      gap: 20,
+      prRecommendation: 20
+    });
   });
 
-  it('planCheckIncludesSoh false drops SOH from supply', () => {
-    expect(planCheck(base, rulesWith({ planCheckIncludesSoh: false }))).toMatchObject({
-      supply: 20,
-      gap: 20
+  it('a shortfall raises a PR recommendation', () => {
+    expect(planCheck(base, full)).toMatchObject({
+      gap: 15,
+      prRecommendation: 15,
+      absorbedLastWeek: 0
+    });
+  });
+
+  it("planCheckBasis 'ospoOsprPr' drops SOH from supply", () => {
+    expect(
+      planCheck({ ...base, ospr: 3 }, rulesWith({ planCheckBasis: 'ospoOsprPr' }))
+    ).toMatchObject({
+      supply: 23,
+      gap: 17
     });
   });
 
   it('a surplus is absorbed in the last week, never below 0', () => {
-    expect(planCheck({ ...base, ospo: 38 })).toMatchObject({
+    expect(planCheck({ ...base, ospo: 43 })).toMatchObject({
       gap: -3,
       prRecommendation: 0,
       absorbedLastWeek: 3,
       unabsorbed: 0,
       daWeeks: [10, 10, 10, 7]
     });
-    expect(planCheck({ ...base, ospo: 50 })).toMatchObject({
+    expect(planCheck({ ...base, ospo: 55 })).toMatchObject({
       absorbedLastWeek: 10,
       unabsorbed: 5,
       daWeeks: [10, 10, 10, 0]

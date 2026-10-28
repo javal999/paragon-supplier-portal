@@ -614,6 +614,7 @@ export class DataError extends Error {
  *   readonly mrpController?: MrpControllerRef;
  *   readonly tradeName?: string;
  *   readonly feedstock?: FeedstockConfirmation;
+ *   readonly pullAgreement?: boolean;
  * }} InventoryPosition
  */
 

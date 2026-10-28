@@ -13,6 +13,11 @@ export const feedstockConfirmEn = {
     'Confirm the feedstock you hold for each material, weekly with the stock update. Feedstock is not stock until it is produced: it does not count in your stock on hand.',
   'fsConfirm.provisional': 'Provisional: rule awaiting Material Planning ({{question}})',
   'fsConfirm.due': 'Due with the weekly stock update:',
+  'fsConfirm.daily.intro':
+    'You are on a pull agreement: confirm the feedstock you hold for each material every day. Feedstock is not stock until it is produced: it does not count in your stock on hand.',
+  'fsConfirm.daily.due': 'Due today, by the end of the day:',
+  'fsConfirm.daily.allDone': 'All materials confirmed today.',
+  'fsConfirm.daily.missed': '{{count}} materials missed yesterday’s confirmation.',
   'fsConfirm.count': '{{confirmed}} of {{total}} materials confirmed this week',
   'fsConfirm.allDone': 'All materials confirmed this week.',
   'fsConfirm.missed': '{{count}} materials missed last week’s confirmation.',
@@ -64,6 +69,11 @@ export const feedstockConfirmId = {
     'Konfirmasikan feedstock yang Anda miliki untuk setiap material, setiap minggu bersama pembaruan stok. Feedstock belum menjadi stok sampai diproduksi: tidak dihitung dalam stok Anda.',
   'fsConfirm.provisional': 'Sementara: aturan menunggu Material Planning ({{question}})',
   'fsConfirm.due': 'Jatuh tempo bersama pembaruan stok mingguan:',
+  'fsConfirm.daily.intro':
+    'Anda dalam perjanjian tarik: konfirmasikan feedstock yang Anda miliki untuk setiap material setiap hari. Feedstock belum menjadi stok sampai diproduksi: tidak dihitung dalam stok Anda.',
+  'fsConfirm.daily.due': 'Jatuh tempo hari ini, sampai akhir hari:',
+  'fsConfirm.daily.allDone': 'Semua material sudah dikonfirmasi hari ini.',
+  'fsConfirm.daily.missed': '{{count}} material terlewat konfirmasi kemarin.',
   'fsConfirm.count': '{{confirmed}} dari {{total}} material dikonfirmasi minggu ini',
   'fsConfirm.allDone': 'Semua material sudah dikonfirmasi minggu ini.',
   'fsConfirm.missed': '{{count}} material terlewat konfirmasi minggu lalu.',

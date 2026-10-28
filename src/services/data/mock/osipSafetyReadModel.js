@@ -17,6 +17,9 @@
 //   · FG demand for CV — the engine dataset's weekly sell-in per SKU, stock-out
 //     weeks filled as the engine's forecast fills them (ENG-B62), mapped to
 //     components by the BOM lines valid this week;
+//   · team answers 2026-10-28 — the values the planner set (`osipParamStore`):
+//     Z and g per material, f per supplier, the bottleneck production lead
+//     time per supplier × material; none set, the rules' defaults apply;
 //   · BL-196 / BL-198 — the source's lead time by step (DRC-6), which the
 //     supplier-side ROPs read, and the LTP over the next 3 months, which an NPD
 //     material's ROP Fisik demand reads (DRC-10 [Default B5]); same LTP read.
@@ -43,6 +46,19 @@ import { npdLtpWeeks } from '../../transitions/osipRopRules';
 import { engineDataset } from './fixtures/engineDataset';
 import { allCommitmentLines, forecastSupplierName } from './forecastReadModel';
 import { consumptionStore } from './stores/consumptionStore';
+import { osipParamStore } from './stores/osipParamStore';
+import { osipParamKey } from '../../transitions/osipParams';
+
+/**
+ * The planner's value for one key, or null (the default applies).
+ * @param {import('../../transitions/osipParams').OsipParam} param
+ * @param {{ readonly supplierId?: string; readonly materialCode?: string }} at
+ * @returns {number | null}
+ */
+const ownNumber = (param, at) => {
+  const v = osipParamStore.valueOf(osipParamKey(param, at));
+  return typeof v === 'number' ? v : null;
+};
 
 /**
  * The weeks of consumption read: the longer of the two windows in force. A
@@ -85,12 +101,12 @@ function materialConsumption(code, { lines, inForce, nowIso }) {
 
 /**
  * BL-210 — what ROP Order's safety order reads for a pair besides its LTP,
- * lead time and MPQ: the supplier's share of the recorded consumption, MOQ and
- * koli, exactly as `osipSafetyInputs` gathers them. Keyed `supplierId|materialCode`,
+ * lead time and MPQ: the supplier's share of the recorded consumption, MOQ,
+ * koli and the material's own Z, exactly as `osipSafetyInputs` gathers them. Keyed `supplierId|materialCode`,
  * one entry per engine source. The rolling demand anticipation passes them to
  * `rollingDaFigure`, so its week-1 safety order is ROP Order's under every switch.
  * @param {string} [nowIso]
- * @returns {Map<string, { consumption: number[]; moq: number; koli: number | null }>}
+ * @returns {Map<string, { consumption: number[]; moq: number; koli: number | null; z: number | null }>}
  */
 export function osipSafetySizes(nowIso = sdcClock.now()) {
   const data = engineDataset();
@@ -100,7 +116,7 @@ export function osipSafetySizes(nowIso = sdcClock.now()) {
     nowIso
   };
   const perPallet = new Map(data.volumes.map((v) => [v.materialCode, v.unitsPerPallet]));
-  /** @type {Map<string, { consumption: number[]; moq: number; koli: number | null }>} */
+  /** @type {Map<string, { consumption: number[]; moq: number; koli: number | null; z: number | null }>} */
   const out = new Map();
   for (const code of new Set(data.sources.map((s) => s.materialCode))) {
     const { sources, consumptionOf } = materialConsumption(code, ctx);
@@ -108,7 +124,9 @@ export function osipSafetySizes(nowIso = sdcClock.now()) {
       out.set(`${s.supplierId}|${code}`, {
         consumption: consumptionOf(s.supplierId),
         moq: s.moq,
-        koli: perPallet.get(code) ?? null
+        koli: perPallet.get(code) ?? null,
+        // [Team B3] the material's own Z, so DA's safety order is ROP Order's.
+        z: ownNumber('z', { materialCode: code })
       });
   }
   return out;
@@ -142,7 +160,8 @@ export function osipSafetyInputs(nowIso = sdcClock.now()) {
   const cvs = materialCvs({
     skuWeekly,
     bomLinks,
-    materialCodes: data.materials.map((m) => m.materialCode)
+    materialCodes: data.materials.map((m) => m.materialCode),
+    asOfWeek: week
   });
 
   /** @type {Map<string, MaterialOsipInputs>} */
@@ -158,7 +177,8 @@ export function osipSafetyInputs(nowIso = sdcClock.now()) {
         supplierId: s.supplierId,
         supplierName: forecastSupplierName(s.supplierId),
         materialCode: code,
-        ltp: hubWeeks(nowIso, Math.max(1, leadTimeWeeks)).map((w) =>
+        // [Team B2] long enough for the 13-week SD as well as the horizon.
+        ltp: hubWeeks(nowIso, Math.max(1, leadTimeWeeks, OSIP_RULES.ltpSdWeeks)).map((w) =>
           groupWeekLtp(lines, s.supplierId, [code], w)
         ),
         leadTimeWeeks,
@@ -168,8 +188,20 @@ export function osipSafetyInputs(nowIso = sdcClock.now()) {
         koli: perPallet.get(code) ?? null,
         consumption: consumptionOf(s.supplierId),
         supplyArea: supplier ? supplyAreaOf(supplier) : null,
-        // BL-196 — DRC-6 steps, for ROP Supplier / FS / to principal.
+        // BL-196 — DRC-6 steps, for ROP to principal.
         leadTimeSteps: breakdown.steps,
+        // Team answers 2026-10-28 — the planner's own values, null when not set.
+        z: ownNumber('z', { materialCode: code }),
+        g: ownNumber('g', { materialCode: code }),
+        fDays: ownNumber('f', { supplierId: s.supplierId }),
+        bottleneckLeadTimeDays: ownNumber('bottleneckLeadTimeDays', {
+          supplierId: s.supplierId,
+          materialCode: code
+        }),
+        // [Team E2] shown beside f on the page; the feedstock cadence reads it.
+        pullAgreement:
+          osipParamStore.valueOf(osipParamKey('pullAgreement', { supplierId: s.supplierId })) ===
+          true,
         // BL-198 — DRC-10 "highest LTP over the next 3 months" (NPD).
         ltpNext3m: hubWeeks(nowIso, npdLtpWeeks()).map((w) =>
           groupWeekLtp(lines, s.supplierId, [code], w)

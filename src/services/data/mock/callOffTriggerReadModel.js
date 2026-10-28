@@ -9,8 +9,10 @@
 //     `osipSafety`, at the level in force and the NPD rule in force, exactly as
 //     `systemRopSuppliers` reads them; summed per material (`materialRop`);
 //   · the blanket lines with balance — CAP-12's `blanketBalances` per supplier,
-//     each with that supplier's MPQ (orderMultiple, the wave 2 default) and
-//     replenishment cycle f by supply area (DRC-14);
+//     each with that supplier's MPQ (orderMultiple, the wave 2 default), its
+//     replenishment cycle f (its own, else by supply area; DRC-14, Team B6),
+//     and [Team F5] its minimum delivery quantity (MDQ = MOQ) with the unit
+//     max stock rounds to (`maxRoundingUnit`);
 //   · released call-offs not yet received — the call-off store against the
 //     goods receipts (`deliveryResults`).
 //
@@ -30,12 +32,8 @@
 import { mockSuppliers } from '@data/mockSuppliers';
 import { MATERIAL_MASTER, sdcClock } from '../../sdc';
 import { addDays, dayOf } from '../../engine/dates';
-import {
-  RULES_VERSION,
-  replenishmentCycleDays,
-  stamp,
-  supplyAreaOf
-} from '../../transitions/osipRules';
+import { RULES_VERSION, maxRoundingUnit, stamp, supplyAreaOf } from '../../transitions/osipRules';
+import { cycleDaysOf } from '../../transitions/osipParams';
 import { OSIP_ROP_READ, osipRops } from '../../transitions/osipRopRules';
 import { osipSafety } from '../../transitions/osipSafetyRules';
 import { deliveryResults, receiptEvents } from '../../transitions/callOffRules';
@@ -76,10 +74,14 @@ import { callOffTriggerStore } from './stores/callOffTriggerStore';
 
 /**
  * One supplier's ROP inputs for the trigger.
+ * `mdq` / `roundTo` / `f`: [Team F5, B6] the call-off quantity's inputs and the cycle.
  * @typedef {SupplierRop & {
  *   readonly mpq: number;
  *   readonly demandPerDay: number | null;
  *   readonly leadTimeDays: number;
+ *   readonly mdq: number | null;
+ *   readonly roundTo: number;
+ *   readonly f: number | null;
  * }} SupplierTriggerRop
  */
 
@@ -117,7 +119,11 @@ function supplierRops(materialCodes, nowIso) {
           // [Default] MPQ = orderMultiple until the master data feed carries MPQ (wave 2 default).
           mpq: s.mpq,
           demandPerDay: safety.fisik.demandPerDay,
-          leadTimeDays: s.leadTimeWeeks * 7
+          leadTimeDays: s.leadTimeWeeks * 7,
+          // [Proposed, owner 2026-10-28] MDQ = MOQ until the master data feed carries MDQ.
+          mdq: OSIP_ROP_READ.mdqSource === 'moq' && s.moq > 0 ? s.moq : null,
+          roundTo: maxRoundingUnit({ area: s.supplyArea, koli: s.koli, moq: s.moq }),
+          f: cycleDaysOf(s.fDays, s.supplyArea)
         };
       })
     );
@@ -126,15 +132,14 @@ function supplierRops(materialCodes, nowIso) {
 }
 
 /**
- * BR-01a — DRC-14 [Default B6]: a supplier's replenishment cycle f in days,
- * by its supply area; null when the supplier master has no country.
+ * BR-01a — DRC-14 [Team B6]: the replenishment cycle f in days of a supplier
+ * holding a blanket line but no source of the material: its supply area's.
  * @param {string} supplierId
  * @returns {number | null}
  */
-function cycleDaysOf(supplierId) {
+function areaCycleDays(supplierId) {
   const supplier = mockSuppliers.find((s) => s.id === supplierId);
-  const area = supplier ? supplyAreaOf(supplier) : null;
-  return area === null ? null : replenishmentCycleDays(area);
+  return cycleDaysOf(null, supplier ? supplyAreaOf(supplier) : null);
 }
 
 /**
@@ -154,13 +159,16 @@ function triggerLines(materialCode, rops) {
     )
   ];
   return suppliers.flatMap((supplierId) => {
-    const mpq = rops.find((r) => r.supplierId === supplierId)?.mpq ?? null;
-    const f = cycleDaysOf(supplierId);
+    const r = rops.find((x) => x.supplierId === supplierId);
+    const mpq = r?.mpq ?? null;
+    const f = r ? r.f : areaCycleDays(supplierId);
     return blanketBalances(pos, callOffStore.all(), supplierId, materialCode).map((b) => ({
       ...b,
       supplierId,
       mpq,
-      f
+      f,
+      mdq: r?.mdq ?? null,
+      roundTo: r?.roundTo ?? 0
     }));
   });
 }
@@ -262,7 +270,9 @@ export function observeCallOffTriggers(createDraft, nowIso = sdcClock.now()) {
         supplierId: l.supplierId,
         balance: l.balance,
         mpq: l.mpq,
-        f: l.f
+        f: l.f,
+        mdq: l.mdq ?? null,
+        roundTo: l.roundTo ?? 0
       })),
       rules: CALL_OFF_TRIGGER_RULES
     };

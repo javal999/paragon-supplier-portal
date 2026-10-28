@@ -72,23 +72,30 @@ describe('BL-196 — ROP Order, ROP Fisik, Max for one material, worked by hand'
     expect(r.max).toEqual({ value: 480, unavailable: null });
   });
 
-  it('ROP Supplier = CEILING(107.14 a day × (queue 3 + production 7) days, MPQ) = 1,100; FS and principal are not on a local route', () => {
-    expect(r.supplier.ropSupplier).toMatchObject({ value: 1100, days: 10 });
-    expect(r.supplier.ropFs).toEqual({
-      value: null,
-      unavailable: 'NOT_ON_ROUTE',
-      missing: ['orderingMaterial']
+  it('[Team B10] ROP Supplier = CEILING(107.14 a day × bottleneck 10 days, MPQ) = 1,100; none set: said so', () => {
+    expect(rops(pair({ bottleneckLeadTimeDays: 10 }), 4).supplier.ropSupplier).toMatchObject({
+      value: 1100,
+      days: 10
     });
+    // 107.14 × 4.5 = 482.1 → 500.
+    expect(rops(pair({ bottleneckLeadTimeDays: 4.5 }), 4).supplier.ropSupplier.value).toBe(500);
+    // The lead-time steps no longer feed it: with none set there is no figure.
+    expect(r.supplier.ropSupplier).toEqual({ value: null, unavailable: 'NO_BOTTLENECK_LEAD_TIME' });
+  });
+
+  it('[Team B10] ROP FS is gone; ROP to principal is not on a local route', () => {
+    expect(Object.keys(r.supplier)).toEqual(['ropSupplier', 'ropToPrincipal']);
     expect(r.supplier.ropToPrincipal).toMatchObject({
       unavailable: 'NOT_ON_ROUTE',
       missing: ['orderToPrincipal']
     });
   });
 
-  it('import: f = 7 → ROP Fisik CEILING(750, 100) 800 + 200 = 1,000; Max = CEILING(1,000, MOQ 300) = 1,200; FS = CEILING(107.14 × 5, 100) = 600', () => {
+  it('import: f = 7 → ROP Fisik CEILING(750, 100) 800 + 200 = 1,000; Max = CEILING(1,000, MOQ 300) = 1,200', () => {
     const imp = rops(
       pair({
         supplyArea: 'import',
+        bottleneckLeadTimeDays: 8,
         leadTimeSteps: [
           { step: 'orderingMaterial', days: 5 },
           { step: 'machineQueue', days: 2 },
@@ -101,7 +108,6 @@ describe('BL-196 — ROP Order, ROP Fisik, Max for one material, worked by hand'
     expect(imp.ropFisik.value).toBe(1000);
     expect(imp.max.value).toBe(1200);
     expect(imp.supplier.ropSupplier).toMatchObject({ value: 900, days: 8 });
-    expect(imp.supplier.ropFs).toMatchObject({ value: 600, days: 5 });
     expect(imp.supplier.ropToPrincipal.unavailable).toBe('NOT_ON_ROUTE');
   });
 
@@ -120,7 +126,6 @@ describe('BL-196 — ROP Order, ROP Fisik, Max for one material, worked by hand'
       4
     );
     expect(rm.supplier.ropToPrincipal).toMatchObject({ value: 800, days: 7 });
-    expect(rm.supplier.ropFs.unavailable).toBe('NOT_ON_ROUTE');
   });
 });
 
@@ -174,7 +179,7 @@ describe('BL-196 — Max rounding, local vs import, and the sheet variant', () =
 
 describe('BL-196 — "Not available" names the missing input; nothing is invented', () => {
   it('no consumption: ROP Fisik and Max need the ROP Fisik safety; supplier ROPs need a demand', () => {
-    const r = rops(pair({ consumption: [] }), 4);
+    const r = rops(pair({ consumption: [], bottleneckLeadTimeDays: 10 }), 4);
     expect(r.ropOrder.value).toBe(3500);
     expect(r.ropFisik).toMatchObject({ value: null, unavailable: 'NO_FISIK_SAFETY' });
     expect(r.max).toEqual({ value: null, unavailable: 'NO_FISIK_SAFETY' });
@@ -194,10 +199,21 @@ describe('BL-196 — "Not available" names the missing input; nothing is invente
     });
   });
 
-  it('a source with no lead-time steps: every supplier-side ROP says so', () => {
-    const r = rops(pair({ leadTimeSteps: [] }), 4);
-    for (const k of /** @type {const} */ (['ropSupplier', 'ropFs', 'ropToPrincipal']))
-      expect(r.supplier[k].unavailable).toBe('NO_LEAD_TIME_STEPS');
+  it('a source with no lead-time steps: ROP to principal says so; ROP Supplier reads the bottleneck lead time', () => {
+    const r = rops(pair({ leadTimeSteps: [], bottleneckLeadTimeDays: 10 }), 4);
+    expect(r.supplier.ropToPrincipal.unavailable).toBe('NO_LEAD_TIME_STEPS');
+    expect(r.supplier.ropSupplier.value).toBe(1100);
+  });
+
+  it('[Team B3, B7, B6] the material’s own Z and g and the supplier’s own f replace the defaults', () => {
+    // Z 2 → 2 × √4 × 129.10 = 516.4 → 600; ROP Order 3,600.
+    expect(rops(pair({ z: 2 }), 4).ropOrder.value).toBe(3600);
+    // g 3 → CEILING(3 × 107.14, 100) = 400; ROP Fisik 200 + 400 = 600.
+    expect(rops(pair({ g: 3 }), 4).ropFisik.value).toBe(600);
+    // f 4 → CEILING(107.14 × 4, 100) = 500; ROP Fisik 500 + 200 = 700.
+    expect(rops(pair({ fDays: 4 }), 4).ropFisik.value).toBe(700);
+    // null keeps the default.
+    expect(rops(pair({ z: null, g: null, fDays: null }), 4).ropFisik.value).toBe(400);
   });
 });
 

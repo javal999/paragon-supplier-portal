@@ -15,6 +15,8 @@ import {
 } from '@services/data/mock/stores/inventoryHubStores';
 import { supplierAskStore } from '@services/data/mock/stores/supplierAskStore';
 import { sdcClock } from '@services/sdc';
+import { osipParamStore } from '@services/data/mock/stores/osipParamStore';
+import { seedOsipParam } from '@test/osipParamSeed';
 import BuyerAlerts from './BuyerAlerts';
 import { weekLabel } from './BuyerDemandAnticipation/display';
 
@@ -86,6 +88,13 @@ beforeEach(() => {
   supplierAskStore.reset();
   sdcClock.reset();
   path = '';
+  // [Team B10] ROP Supplier needs the bottleneck production lead time (34 days here).
+  osipParamStore.reset();
+  seedOsipParam(
+    'bottleneckLeadTimeDays',
+    { supplierId: 'sup-002', materialCode: 'RM-STEAR-7300' },
+    34
+  );
 });
 
 describe('P-03 · days to impact is shown', () => {

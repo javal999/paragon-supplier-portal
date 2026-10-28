@@ -126,6 +126,7 @@ import { materialOverlayStore } from '../data/mock/stores/materialOverlayStore';
 import { mrpControllerStore } from './mrpControllerStore';
 import { warehouseDecisionStore } from '../data/mock/stores/warehouseDecisionStore';
 import { osipLevelStore } from '../data/mock/stores/osipLevelStore';
+import { osipParamStore } from '../data/mock/stores/osipParamStore';
 import { demandAnticipationStore } from '../data/mock/stores/demandAnticipationStore';
 import { materialNameStore } from '../data/mock/stores/materialNameStore';
 import { feedstockConfirmationStore } from '../data/mock/stores/feedstockConfirmationStore';
@@ -285,6 +286,8 @@ async function realIds() {
     warehouseDecision: 'packaging|2026-10-12',
     // DRC-D11 — `entityId` IS the material code; every master code exists.
     osipLevel: 'PK-PETB-8801',
+    // Team answers 2026-10-28 — `entityId` IS the value key; any resolvable key exists.
+    osipParam: 'z|PK-PETB-8801',
     supplierDocument: supplierDocumentStore.all()[0]?.id ?? null,
     supplierApplication: raised.entityId ?? null,
     receiptDiscrepancy: receiptDiscrepancyStore.all()[0]?.receiptId ?? null,
@@ -445,6 +448,7 @@ async function walk(entity, t) {
   if (entity === 'maxStock') return at('sup-007|PK-PETB-8801', 'Maintained');
   if (entity === 'warehouseDecision') return at('packaging|2026-10-12', 'Maintained');
   if (entity === 'osipLevel') return at('PK-PETB-8801', 'Maintained');
+  if (entity === 'osipParam') return at('z|PK-PETB-8801', 'Maintained');
   if (entity === 'supplierApplication') {
     const raised = await svc.dispatch(buyerSeat('procurement'), {
       transitionId: 't_application_submit',
@@ -501,6 +505,7 @@ const resetAll = () => {
   mrpControllerStore.reset();
   warehouseDecisionStore.reset();
   osipLevelStore.reset();
+  osipParamStore.reset();
   materialNameStore.reset();
   feedstockConfirmationStore.reset();
   supplierAskStore.reset();
@@ -740,6 +745,8 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
       'negotiationRound',
       // DRC-D11 — a material's OSIP level is the Material Planning team's.
       'osipLevel',
+      // Team answers 2026-10-28 — the OSIP values are the Material Planning team's.
+      'osipParam',
       // Material C5 — planning groups are PTI master data (MR-8, MAT-D12).
       'planningGroup',
       'purchaseRequisition',
@@ -910,6 +917,16 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
     });
     expect(levelRes.status, levelRes.reason).toBe('done');
     expect(osipLevelStore.all().map((r) => r.level)).toEqual([5]);
+
+    // Team answers 2026-10-28 — the planning lane sets a material's Z.
+    const zRes = await svc.dispatch(buyerSeat('planning'), {
+      transitionId: 't_osipparam_set',
+      entity: 'osipParam',
+      entityId: 'z|PK-PETB-8801',
+      payload: { osipParamValue: 2.05 }
+    });
+    expect(zRes.status, zRes.reason).toBe('done');
+    expect(osipParamStore.all().map((r) => r.value)).toEqual([2.05]);
 
     const qualRes = await svc.dispatch(buyerSeat('compliance'), {
       transitionId: 't_qualification_rule_set',

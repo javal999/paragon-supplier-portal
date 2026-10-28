@@ -7,6 +7,11 @@
 // Jabodetabek, f = 2 days, MPQ = orderMultiple 25), ROP Fisik 1,275, Max
 // 1,400, one blanket line PO-2025-00116 with 15,000 KG of balance, and no
 // released call-off on the way. Its seed SOH is 900 (J6).
+//
+// [Team F5, 2026-10-28] the call-off quantity is the supplier's minimum
+// delivery: MDQ = MOQ 1,250, rounded like Max to the pallet (700) → 1,400.
+// That never fits under Max at the trigger (Max 1,400 − SOH ≥ 1,275 < 1,400),
+// so it is called off anyway, flagged ABOVE_MAX [Owner, 2026-10-28, BL-230].
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { afterEach, describe, expect, it } from 'vitest';
@@ -80,13 +85,13 @@ describe('BR-01 — SOH dropping to ROP Fisik drafts a call-off, once', () => {
     const drafts = triggered();
     expect(drafts).toHaveLength(1);
     const d = /** @type {CallOff} */ (drafts[0]);
-    // Max 1,400 − (1,010 + 0) = 390 → CEILING(390, 25) = 400 would pass Max,
-    // so the largest whole MPQ that fits: 375.
+    // Room Max 1,400 − (1,010 + 0) = 390; the call-off is the minimum delivery
+    // CEILING(MOQ 1,250, pallet 700) = 1,400 [Team F5], above the room [Proposed].
     expect(d).toMatchObject({
       status: 'Draft',
       poNumber: 'PO-2025-00116',
       supplierId: 'sup-002',
-      quantity: 375,
+      quantity: 1400,
       type: 'jit',
       // today + f, f = 2 days outside Jabodetabek (DRC-14 [Default B6]).
       needDate: addDays(dayOf(sdcClock.now()), replenishmentCycleDays('outsideJabodetabek'))
@@ -97,8 +102,9 @@ describe('BR-01 — SOH dropping to ROP Fisik drafts a call-off, once', () => {
       max: 1400,
       openSupply: 0,
       room: 390,
-      quantity: 375
+      quantity: 1400
     });
+    expect(d.trigger?.value.flags).toContain('ABOVE_MAX');
     expect(d.trigger?.rulesVersion).toBe(RULES_VERSION);
     expect(d.trigger?.inputs).toMatchObject({ materialCode: MAT, sohSeq: expect.any(Number) });
   });
@@ -111,7 +117,7 @@ describe('BR-01 — SOH dropping to ROP Fisik drafts a call-off, once', () => {
 
   it('exactly at ROP Fisik drafts (at or below)', () => {
     setSoh(1275);
-    expect(triggered().map((c) => c.quantity)).toEqual([125]);
+    expect(triggered().map((c) => c.quantity)).toEqual([1400]);
   });
 });
 
@@ -138,8 +144,8 @@ describe('BR-01 — one open draft per material', () => {
     setSoh(1000);
     const again = triggered().filter((c) => c.status === 'Draft');
     expect(again).toHaveLength(1);
-    // Max 1,400 − 1,000 = 400, a whole MPQ.
-    expect(again[0]?.quantity).toBe(400);
+    // The minimum delivery again: 1,400.
+    expect(again[0]?.quantity).toBe(1400);
   });
 
   it('the planner approves by releasing the draft through the existing verb', async () => {
@@ -212,8 +218,8 @@ describe('BR-05 / DRC-D12 — plant stored, SOH compared all plants combined', (
       { plant: 'J6', soh: 800 },
       { plant: 'J2', soh: 300 }
     ]);
-    // Max 1,400 − 1,100 = 300.
-    expect(d.quantity).toBe(300);
+    // The minimum delivery, 1,400, whatever the plants hold.
+    expect(d.quantity).toBe(1400);
   });
 });
 

@@ -27,14 +27,16 @@ import {
 import { qtyOf } from '../materialPlan/planDisplay';
 import { ProvisionalNote } from './osipSafety';
 import { LevelSuggestion } from './levelSuggestion';
+import { OsipValues } from './osipValues';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BL-196 (DRC-10, DRC-D11) and BL-198 (DRC-12a) on the Safety stock targets page:
 //   · the OSIP level per material, with its NPD tag beside it;
 //   · ROP Order, ROP Fisik (by level) and Max per supplier, as table columns
 //     next to the wave 2 OSIP safety columns;
-//   · ROP Supplier, ROP FS and ROP to principal per supplier, and the level
-//     control, in the material's detail panel (the table would be too wide);
+//   · ROP Supplier and ROP to principal per supplier (ROP FS removed, team
+//     answers 2026-10-28), the level control and the planner's OSIP values
+//     (`osipValues.jsx`), in the material's detail panel;
 //   · two read-only switches (Max rule B8, NPD rule D1) that recompute the view.
 // Every figure is `osipRops`'s (osipRopRules.js) over `osipSafety`'s; none is
 // computed here. Each column carries "Provisional: rule awaiting Material
@@ -229,6 +231,10 @@ export const RopCell = ({ column, materialCode, uom, osip, figures }) => {
                     {t(`sst.rop.flag.${flag}`)}
                   </div>
                 ))}
+            {/* Level 6 (JIT) is held (team answers 3.6): its rows keep B5's label. */}
+            {column === 'ropFisik' && f.ropFisik.level === 6 && (
+              <ProvisionalNote questions={OSIP_ROP_QUESTIONS.level6} testId={`${id}-prov-level6`} />
+            )}
             {column === 'max' && f.flags.includes('NO_MAX_ROUNDING') && (
               <div
                 className="text-xs text-text-tertiary"
@@ -456,6 +462,8 @@ export const RopDetail = ({ materialCode, uom, osip, rop, figures, npdRule }) =>
       <p className="text-xs text-text-tertiary" data-testid="sst-rop-detail-supplier-reading">
         {t('sst.rop.detail.supplierReading')}
       </p>
+      {/* Team answers 2026-10-28 — Z, g, f, the pull agreement, the bottleneck lead time. */}
+      <OsipValues materialCode={materialCode} osip={osip} />
     </div>
   );
 };

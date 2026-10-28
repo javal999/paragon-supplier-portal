@@ -349,6 +349,7 @@ export const TRANSITION_PURPOSE = Object.freeze({
   t_demandanticipation_publish: { purposeKey: 'processFlows.purpose.t_demandanticipation_publish' },
   t_consumption_record: { purposeKey: 'processFlows.purpose.t_consumption_record' },
   t_osiplevel_set: { purposeKey: 'processFlows.purpose.t_osiplevel_set' },
+  t_osipparam_set: { purposeKey: 'processFlows.purpose.t_osipparam_set' },
   t_whatifscenario_save: { purposeKey: 'processFlows.purpose.t_whatifscenario_save' },
   t_feedstock_confirm: { purposeKey: 'processFlows.purpose.t_feedstock_confirm' },
   // INV-D9 — "Ask supplier", the hub ask.
@@ -460,6 +461,7 @@ export const ENTITY_PURPOSE = Object.freeze({
   demandAnticipation: { purposeKey: 'processFlows.purpose.entity.demandAnticipation' },
   consumption: { purposeKey: 'processFlows.purpose.entity.consumption' },
   osipLevel: { purposeKey: 'processFlows.purpose.entity.osipLevel' },
+  osipParam: { purposeKey: 'processFlows.purpose.entity.osipParam' },
   whatIfScenario: { purposeKey: 'processFlows.purpose.entity.whatIfScenario' },
   feedstockConfirmation: { purposeKey: 'processFlows.purpose.entity.feedstockConfirmation' },
   supplierAsk: { purposeKey: 'processFlows.purpose.entity.supplierAsk' },

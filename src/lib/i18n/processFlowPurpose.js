@@ -542,6 +542,10 @@ export const processFlowPurposeEn = {
     'A material’s OSIP level, which picks the formula of its physical reorder point (ROP Fisik). A material nobody has set is at level 4. Every change keeps the level before it, who set it and when; the latest is in force.',
   'processFlows.purpose.t_osiplevel_set':
     'The Material Planner sets or confirms a material’s OSIP level, from 1 to 6. Confirming it closes the “Review ROP after first order” task. Nothing is sent to SAP or a supplier.',
+  'processFlows.purpose.entity.osipParam':
+    'An OSIP value the Material Planner set for one material (service-level factor Z, fixed safety days g), one supplier (replenishment cycle f, pull agreement) or one supplier and material (bottleneck production lead time). With none set, the default applies. Every change keeps the value before it, who set it and when; the latest is in force.',
+  'processFlows.purpose.t_osipparam_set':
+    'The Material Planner sets or resets one OSIP value. The reorder points, the call-off need date and the confirmation cadence follow it. Nothing is sent to SAP or a supplier.',
   'processFlows.purpose.entity.whatIfScenario':
     'A what-if scenario the Material Planner kept for one supplier and material: the figures it was run on, its rule choices and the rules version in force at the time. Nothing is edited or deleted; keeping other numbers makes a new scenario.',
   'processFlows.purpose.t_whatifscenario_save':
@@ -1158,6 +1162,10 @@ export const processFlowPurposeId = {
     'Level OSIP suatu material, yang menentukan rumus titik pemesanan ulang fisiknya (ROP Fisik). Material yang belum diatur berada di level 4. Setiap perubahan menyimpan level sebelumnya, siapa yang mengatur, dan kapan; yang terakhir berlaku.',
   'processFlows.purpose.t_osiplevel_set':
     'Perencana Material mengatur atau mengonfirmasi level OSIP suatu material, dari 1 sampai 6. Mengonfirmasinya menutup tugas “Tinjau ROP setelah pesanan pertama”. Tidak ada yang dikirim ke SAP atau pemasok.',
+  'processFlows.purpose.entity.osipParam':
+    'Nilai OSIP yang diatur Perencana Material untuk satu material (faktor tingkat layanan Z, hari pengaman tetap g), satu pemasok (siklus pengisian ulang f, perjanjian tarik) atau satu pemasok dan material (waktu tunggu produksi bottleneck). Bila belum diatur, nilai bawaan berlaku. Setiap perubahan menyimpan nilai sebelumnya, siapa yang mengatur, dan kapan; yang terakhir berlaku.',
+  'processFlows.purpose.t_osipparam_set':
+    'Perencana Material mengatur atau mengembalikan satu nilai OSIP. Titik pemesanan ulang, tanggal kebutuhan call-off, dan irama konfirmasi mengikutinya. Tidak ada yang dikirim ke SAP atau pemasok.',
   'processFlows.purpose.entity.whatIfScenario':
     'Skenario what-if yang disimpan Perencana Material untuk satu pemasok dan material: angka yang dipakai, pilihan aturannya, dan versi aturan yang berlaku saat itu. Tidak ada yang diubah atau dihapus; angka lain menjadi skenario baru.',
   'processFlows.purpose.t_whatifscenario_save':

@@ -17,10 +17,12 @@ import { formatDate } from '@lib/format';
 import { useWhatIfPairs, useWhatIfSandbox } from '@services/query/hooks';
 import {
   DEFAULT_SWITCHES,
+  PPT7_SWITCHES,
   PPT7_SUPPLIER_ID,
   changedSwitches,
   mergeSwitches,
   runWhatIf,
+  switchesForMaterial,
   withSwitch
 } from '@services/transitions/whatIfSandboxRules';
 import { inputClass, inventoryNow, labelClass } from '../inventory/inventoryDisplay';
@@ -64,14 +66,15 @@ const keyOf = (p) => `${p.supplierId}|${p.materialCode}`;
  * @param {WhatIfInputs} live
  * @param {WhatIfInputs} inputs
  * @param {WhatIfSwitches} switches
+ * @param {WhatIfSwitches} base
  * @returns {number}
  */
-const editedCount = (live, inputs, switches) =>
+const editedCount = (live, inputs, switches, base) =>
   Object.keys(live).filter(
     (k) =>
       JSON.stringify(live[/** @type {keyof WhatIfInputs} */ (k)]) !==
       JSON.stringify(inputs[/** @type {keyof WhatIfInputs} */ (k)])
-  ).length + changedSwitches(switches).length;
+  ).length + changedSwitches(switches, base).length;
 
 /**
  * The editor of one pair: its own inputs and switches, reset when the pair changes.
@@ -80,9 +83,15 @@ const editedCount = (live, inputs, switches) =>
 const Editor = ({ box }) => {
   const { t } = useTranslation();
   const [inputs, setInputs] = useState(box.live);
-  const [switches, setSwitches] = useState(/** @type {WhatIfSwitches} */ (DEFAULT_SWITCHES));
+  // BR-08 — the PPT 7 case opens on the readings its figures come from; a live
+  // pair on its material's own Z and g, when the planner set them [Team B3, B7].
+  const base = useMemo(
+    () => switchesForMaterial(box.pair.preset ? PPT7_SWITCHES : DEFAULT_SWITCHES, box.own ?? {}),
+    [box.pair.preset, box.own]
+  );
+  const [switches, setSwitches] = useState(/** @type {WhatIfSwitches} */ (base));
   const [compare, setCompare] = useState(/** @type {string[]} */ ([]));
-  const plan = useMemo(() => runWhatIf(box.live), [box.live]);
+  const plan = useMemo(() => runWhatIf(box.live, base), [box.live, base]);
   const run = useMemo(() => runWhatIf(inputs, switches), [inputs, switches]);
   const compared = useMemo(
     () =>
@@ -95,7 +104,7 @@ const Editor = ({ box }) => {
         })),
     [box.scenarios, compare]
   );
-  const edited = editedCount(box.live, inputs, switches);
+  const edited = editedCount(box.live, inputs, switches, base);
   /** @param {Partial<WhatIfInputs>} patch */
   const onInputs = (patch) => setInputs((prev) => ({ ...prev, ...patch }));
   /** @param {string} path @param {unknown} value */
@@ -124,7 +133,7 @@ const Editor = ({ box }) => {
           variant="secondary"
           onClick={() => {
             setInputs(box.live);
-            setSwitches(DEFAULT_SWITCHES);
+            setSwitches(base);
           }}
           disabled={edited === 0}
           data-testid="wi-reset"

@@ -154,6 +154,7 @@ const SafetyAndSizes = ({ inputs, onInputs, switches, onSwitch, run }) => {
               value={/** @type {string} */ (switchValue(switches, 'osip.sdSource'))}
               onChange={(e) => onSwitch('osip.sdSource', e.target.value)}
             >
+              <option value="ltp13w">{t('whatIf.opt.ltp13w')}</option>
               <option value="ltp">{t('whatIf.opt.ltp')}</option>
               <option value="consumption12w">{t('whatIf.opt.consumption12w')}</option>
             </select>

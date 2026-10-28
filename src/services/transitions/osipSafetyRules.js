@@ -8,8 +8,10 @@
 //   · safety order (ROP Order)   `safetyOrder`   DRC-7 BR-01 [Default B2–B4]
 //   · ROP Fisik safety           `fisikDemand` + `fisikSafety`
 //                                DRC-7 BR-02 [Default B1, B5, B7], DRC-B4
-//   · replenishment cycle f      `replenishmentCycleDays` by `supplyAreaOf`
-//                                [Default B6]
+//   · replenishment cycle f      the supplier's own (`osipParams`), else
+//                                `replenishmentCycleDays` by `supplyAreaOf` [Team B6]
+//   · Z and g                    the material's own (`osipParams`), else the
+//                                rules' [Team B3, B7]
 //   · CV per component           `cv`, `componentCv`, `cvCategory`
 //                                DRC-11 [Default C1]
 //
@@ -31,9 +33,10 @@ import {
   fisikSafety,
   horizonWeeksOf,
   mean,
-  replenishmentCycleDays,
+  monthlyBuckets,
   safetyOrder
 } from './osipRules';
+import { cycleDaysOf, rulesForMaterial } from './osipParams';
 
 /**
  * Wave 2 readings of inputs the sources do not name, one key each.
@@ -64,12 +67,15 @@ export const fisikConsumptionWeeks = (rules = OSIP_RULES) => rules.consumptionMo
 
 /**
  * The question IDs each figure rests on, for its "Provisional" label
- * (design rule 5). `MPQ` names the wave 2 MPQ default.
+ * (design rule 5). `MPQ` names the wave 2 MPQ default. Left on 2026-10-28
+ * [Team; owner ruling]: B2, B3, B6, B7 (answered or confirmed), B5 (levels
+ * 1–5 and NPD confirmed; level 6 is held, labelled on its own rows) and C1.
+ * An empty list shows no label.
  */
 export const OSIP_SAFETY_QUESTIONS = Object.freeze({
-  safetyOrder: Object.freeze(['B2', 'B3', 'B4', 'MPQ']),
-  fisikSafety: Object.freeze(['B1', 'B5', 'B6', 'B7', 'MPQ']),
-  cv: Object.freeze(['C1'])
+  safetyOrder: Object.freeze(['B4', 'MPQ']),
+  fisikSafety: Object.freeze(['B1', 'MPQ']),
+  cv: Object.freeze(/** @type {string[]} */ ([]))
 });
 
 /**
@@ -92,6 +98,12 @@ export const OSIP_SAFETY_QUESTIONS = Object.freeze({
  * `sd`:  BL-210 — a typed SD for the safety order (the sandbox's); absent or
  *   null, the safety order computes it per `sdSource`. ROP Fisik's sheet
  *   variant keeps the SD of daily consumption.
+ * `z` / `g`:  [Team B3, B7] the material's own service-level factor and fixed
+ *   safety days (`osipParams`); absent or null, the rules' values apply.
+ * `fDays`:  [Team B6] the supplier's own replenishment cycle f; absent or
+ *   null, its supply area's default.
+ * `bottleneckLeadTimeDays`:  [Team B10] the supplier's bottleneck production
+ *   lead time for the material, queueing included; ROP Supplier reads it.
  *
  * @typedef {{
  *   readonly supplierId: string;
@@ -107,12 +119,17 @@ export const OSIP_SAFETY_QUESTIONS = Object.freeze({
  *   readonly ltpNext3m?: readonly number[];
  *   readonly npd?: boolean;
  *   readonly sd?: number | null;
+ *   readonly z?: number | null;
+ *   readonly g?: number | null;
+ *   readonly fDays?: number | null;
+ *   readonly bottleneckLeadTimeDays?: number | null;
  * }} OsipSafetyInput
  */
 
 /**
- * One supplier × material's inputs, with the supplier's name for the page.
- * @typedef {OsipSafetyInput & { readonly supplierName: string }} OsipSupplierInput
+ * One supplier × material's inputs, with the supplier's name for the page and
+ * [Team E2] whether the supplier is on a pull agreement.
+ * @typedef {OsipSafetyInput & { readonly supplierName: string; readonly pullAgreement?: boolean }} OsipSupplierInput
  */
 
 /**
@@ -175,10 +192,12 @@ export const OSIP_SAFETY_QUESTIONS = Object.freeze({
  * is unavailable (`NO_LTP`) with no LTP over those weeks.
  *
  * @param {OsipSafetyInput} input
- * @param {OsipRules} [rules]
+ * @param {OsipRules} [ruleBlock]
  * @returns {OsipSafetyFigures}
  */
-export function osipSafety(input, rules = OSIP_RULES) {
+export function osipSafety(input, ruleBlock = OSIP_RULES) {
+  // [Team B3, B7] the material's own Z and g, when set, over the block's.
+  const rules = rulesForMaterial(ruleBlock, input);
   /** @type {OsipSafetyFlag[]} */
   const flags = ['PRODUCTION_CAPACITY_NOT_AVAILABLE'];
   const perDay = OSIP_SAFETY_READ.daysPerWeek;
@@ -221,7 +240,8 @@ export function osipSafety(input, rules = OSIP_RULES) {
   const daily = window.map((q) => q / perDay);
   const consumptionPerDay = daily.length === 0 ? null : Math.max(...daily);
   const ltpPerDay = hasLtp ? mean(horizon) / perDay : null;
-  const f = input.supplyArea ? replenishmentCycleDays(input.supplyArea, rules) : null;
+  // [Team B6] the supplier's own f, else its area's.
+  const f = cycleDaysOf(input.fDays, input.supplyArea, rules);
   /** @type {OsipUnavailable | null} */
   const fisikGap =
     consumptionPerDay === null
@@ -323,27 +343,50 @@ export function osipSafety(input, rules = OSIP_RULES) {
  */
 
 /**
- * DRC-11 [Default C1] — CV per component: each parent SKU's CV over the last
- * `cvWindowWeeks` weekly buckets (`cv`), weighted by the SKU's average demand
- * over the same buckets (`componentCv`), then `cvCategory`.
+ * DRC-11 [Team C1] — CV per component: each parent SKU's CV (the FG-variant
+ * CV, "CV Comp FG Var") over the window in force (`cv`): the last
+ * `cvWindowMonths` full calendar months (`monthlyBuckets`), or the last
+ * `cvWindowWeeks` weeks (`cvBucket: 'week'`); weighted by the SKU's average
+ * demand over the same buckets (`componentCv`), then `cvCategory`. Under the
+ * monthly buckets a SKU with fewer full months than the window has no CV and
+ * is left out ([Proposed], owner 2026-10-28: not calculated).
  * @param {{
  *   readonly skuWeekly: ReadonlyMap<string, readonly number[]>;
  *   readonly bomLinks: readonly { readonly parentCode: string; readonly componentCode: string }[];
  *   readonly materialCodes: readonly string[];
- * }} input  `skuWeekly`: each SKU's weekly demand, oldest first; `bomLinks`:
- *   the BOM lines valid in the current week.
+ *   readonly asOfWeek?: string;
+ * }} input  `skuWeekly`: each SKU's weekly demand, oldest first, ending the
+ *   week before `asOfWeek` (the Monday of the current week, needed for the
+ *   monthly buckets); `bomLinks`: the BOM lines valid in the current week.
  * @param {OsipRules} [rules]
  * @returns {Map<string, MaterialCv>}
  */
-export function materialCvs({ skuWeekly, bomLinks, materialCodes }, rules = OSIP_RULES) {
+export function materialCvs({ skuWeekly, bomLinks, materialCodes, asOfWeek }, rules = OSIP_RULES) {
+  if (rules.cvBucket === 'month' && asOfWeek === undefined)
+    throw new RangeError('materialCvs: asOfWeek is needed for monthly buckets');
   /** @type {Map<string, SkuCv | null>} */
   const bySku = new Map();
   /** @param {string} sku */
   const skuCv = (sku) => {
     if (bySku.has(sku)) return bySku.get(sku) ?? null;
-    const series = (skuWeekly.get(sku) ?? []).slice(-rules.cvWindowWeeks);
-    const value = cv(series, rules);
-    const out = value === null ? null : { skuCode: sku, cv: value, avgDemand: mean(series) };
+    const weekly = skuWeekly.get(sku) ?? [];
+    /** @type {readonly number[] | null} */
+    let series = weekly.slice(-rules.cvWindowWeeks);
+    if (rules.cvBucket === 'month') {
+      const first = new Date(
+        Date.parse(`${asOfWeek}T00:00:00.000Z`) - weekly.length * 7 * 86_400_000
+      )
+        .toISOString()
+        .slice(0, 10);
+      const months = monthlyBuckets(weekly, first).map((m) => m.qty);
+      series = months.length < rules.cvWindowMonths ? null : months.slice(-rules.cvWindowMonths);
+    }
+    const value = series === null ? null : cv(series, rules);
+    if (series === null || value === null) {
+      bySku.set(sku, null);
+      return null;
+    }
+    const out = { skuCode: sku, cv: value, avgDemand: mean(series) };
     bySku.set(sku, out);
     return out;
   };
