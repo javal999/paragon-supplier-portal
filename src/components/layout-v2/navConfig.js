@@ -371,13 +371,33 @@ export const HOME_PATH = {
 };
 
 /**
+ * The "All" role's menu: every section, but each page once. A page that two
+ * roles reach from different sections (the scorecard, the feedstock reconcile
+ * and the demand anticipation history) keeps its first place, under Review, and
+ * a section left with no items is dropped. Owner ruling 2026-10-28: the
+ * repeats read as a defect.
+ * @type {readonly NavSection[]}
+ */
+const ALL_ROLES_NAV = (() => {
+  const seen = new Set();
+  return PTI_NAV.map((section) => ({
+    ...section,
+    items: section.items.filter((item) => {
+      if (seen.has(item.path)) return false;
+      seen.add(item.path);
+      return true;
+    })
+  })).filter((section) => section.items.length > 0);
+})();
+
+/**
  * @param {Persona} persona
  * @param {HubRole} role
  * @returns {readonly NavSection[]}
  */
 export function navFor(persona, role) {
   if (persona === 'supplier') return SUPPLIER_NAV;
-  if (role === 'ALL') return PTI_NAV;
+  if (role === 'ALL') return ALL_ROLES_NAV;
   return PTI_NAV.filter((s) => !s.roles || s.roles.includes(role));
 }
 
