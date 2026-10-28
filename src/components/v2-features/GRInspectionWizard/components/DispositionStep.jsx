@@ -117,7 +117,8 @@ const DispositionStep = ({ derivedDisposition, dispositionLabel, totals, autoPos
             {t('goodsReceipt.wizard.summary.sapDoc')}
           </div>
           <div className="text-xs text-text-secondary">
-            {autoPostSap
+            {autoPostSap &&
+            (derivedDisposition === 'Approved' || derivedDisposition === 'Partially Approved')
               ? t('goodsReceipt.wizard.summary.assignedBySap')
               : t('goodsReceipt.wizard.summary.notPosted')}
           </div>
