@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Draft, for owner review.** Nothing in the build changes until the owner rules on section 3 |
+| Status | **Ruled 2026-10-28.** The owner accepted changes 3.1, 3.2, 3.3, 3.4, 3.5, 3.7, 3.8 and 3.9, each as recommended. 3.6 waits on the owner's own check. Nothing is built yet |
 | Date | 2026-10-28 |
 | Source | Workbook *Pertanyaan Terakit Forecast SC Hub.xlsx* (SharePoint, owner's OneDrive; file name `PERTANYAAN-TIM-MATERIAL-2026-10-16 (2).xlsx`), sheet *Pertanyaan*, read 2026-10-28. Cited [Team, Qn] |
 | Answered by | Septiana (Material Planning), every answered row. The sheet records no answer dates |
@@ -88,6 +88,8 @@ The *Status* column still reads "Belum dijawab" (not answered) on every row, inc
 ---
 
 ## 3. Changes the answers ask for (owner rules first)
+
+**Owner ruling, 2026-10-28:** 3.1, 3.2, 3.3, 3.4, 3.5, 3.7, 3.8 and 3.9 accepted as recommended, including the "my call" in 3.1 (keep the old check as a variant) and 3.9 (keep the ≤ 6 rule only in the level suggestion). 3.2 is accepted as recommended: ROP Order now; the ROP Fisik part waits on B1. 3.6 is held: the owner checks first.
 
 Each item is one rules-block key or one formula. The golden fixtures (PPT 7–9) must still reproduce, or the item says why not.
 
