@@ -105,10 +105,13 @@ describe('the other four tables pin the columns a row is read by', () => {
     expectSupplierNamesClamped(table);
   });
 
-  it('Inventory: Material and Supplier on the left', async () => {
+  // Since the inventory UX build, Material and Supplier are one column
+  // ("Material · supplier"), so that one column is pinned (rebase onto main,
+  // 2026-10-28).
+  it('Inventory: the Material · supplier column on the left', async () => {
     renderWithProviders(<BuyerInventory />, { identity: BUYER });
     const table = await tableOf('Incoming');
-    expectPins(table, { left: ['Material', 'Supplier'], right: [] });
+    expectPins(table, { left: ['Material · supplier'], right: [] });
     expectSupplierNamesClamped(table);
   });
 

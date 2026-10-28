@@ -433,7 +433,12 @@ const BuyerInventory = () => {
                       {p.materialCode}
                     </Data>
                     <div className="text-sm text-text-primary">{p.materialLabel}</div>
-                    <div className="text-xs text-text-secondary">{p.supplierName}</div>
+                    <div
+                      className="text-xs text-text-secondary line-clamp-2"
+                      title={p.supplierName}
+                    >
+                      {p.supplierName}
+                    </div>
                     {/* Material C2 — the supplier's approved trade name (MR-3 d, planner step 3). */}
                     <TradeNameBeside
                       name={p.tradeName}
