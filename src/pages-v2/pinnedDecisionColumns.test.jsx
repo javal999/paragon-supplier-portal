@@ -55,7 +55,7 @@ const tableOf = async (name) =>
   );
 
 describe('Supplier responses (/buyer/collaboration)', () => {
-  it('pins #, Supplier and Material on the left and the details arrow last, on the right, and moves Zone out of the row into a keyboard-operable expander', async () => {
+  it('pins #, Supplier and Material on the left and the details arrow last, on the right; Zone stays visible as a pill under the period', async () => {
     renderWithProviders(<BuyerCommitments />, { identity: BUYER });
     const section = await screen.findByTestId('fc-exceptions');
     const table = /** @type {HTMLTableElement} */ (section.querySelector('table'));
@@ -66,7 +66,10 @@ describe('Supplier responses (/buyer/collaboration)', () => {
     const row = within(table).getAllByTestId(/^fc-exception-/)[0];
     const toggle = within(row).getByRole('button', { name: /^Show zone for / });
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    expect(within(row).queryByText(/^(Firm|Trade-off|Forecast)$/)).toBeNull();
+    // Zone is readable without opening the row (Levi, 2026-10-26, on !17).
+    const pill = within(row).getByTestId(/^fc-zone-pill-/);
+    expect(within(pill).getByText(/^(Firm|Trade-off|Forecast)$/)).toBeInTheDocument();
+    expect(pill.closest('td')?.dataset.pin).toBeUndefined();
 
     fireEvent.click(toggle);
     const open = within(row).getByRole('button', { name: /^Hide zone for / });
