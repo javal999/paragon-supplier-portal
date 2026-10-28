@@ -107,7 +107,6 @@ const useInspectionDraft = ({
     manualASN,
     shipments,
     asns,
-    lines,
     setLines
   });
 

@@ -326,16 +326,22 @@ describe('GR wizard states — step 1, the source', () => {
     }
   });
 
-  it('a manual match fills an EMPTY draft only — a dock pick already drafted is kept', async () => {
-    // Today's behaviour, pinned as found: the auto-populate fills lines only when
-    // none are drafted, so a manual match after a dock pick keeps the dock lines.
+  it('a manual match REPLACES lines a dock pick drafted (D15a, Levi 2026-10-28)', async () => {
     renderWizard();
     fireEvent.click(await screen.findByText(ANSWERABLE.asnNumber));
     fireEvent.click(screen.getByRole('button', { name: 'Enter ASN number' }));
     const live = receivableAsn();
     fireEvent.change(screen.getByLabelText('ASN Number'), { target: { value: live.asnNumber } });
     fireEvent.click(next());
-    expect(receivedInput(ANSWERABLE.lineItems[0].materialCode)).toBeInTheDocument();
+    for (const li of live.lineItems) {
+      expect(receivedInput(li.materialCode)).toHaveValue(String(li.shippedQty));
+    }
+    const liveCodes = new Set(live.lineItems.map((li) => li.materialCode));
+    for (const li of ANSWERABLE.lineItems.filter((x) => !liveCodes.has(x.materialCode))) {
+      expect(
+        screen.queryByLabelText(`Received quantity for ${li.materialCode}`)
+      ).not.toBeInTheDocument();
+    }
   });
 
   it('a manual match on an empty draft drafts the ASN lines from the shipped quantity', async () => {
@@ -601,8 +607,9 @@ describe('GR wizard states — step 4, disposition', () => {
     expect(reason).toHaveValue('');
     expect(reason).toHaveAttribute('placeholder', 'Explain the full-lot rejection');
     expect(screen.queryByRole('checkbox', { name: 'Auto-post to SAP' })).not.toBeInTheDocument();
-    // Today's summary reads the opt-in even though no post is offered.
-    expect(screen.getByText('Assigned by SAP on posting')).toBeInTheDocument();
+    // A rejected lot never posts, so the summary says so (D15b, Levi 2026-10-28).
+    expect(screen.getByText('Not posted')).toBeInTheDocument();
+    expect(screen.queryByText('Assigned by SAP on posting')).not.toBeInTheDocument();
     // The owed reason nags nobody; Create GR simply waits.
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(createGr()).toBeDisabled();

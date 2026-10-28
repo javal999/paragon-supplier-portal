@@ -11,27 +11,18 @@ import { ELIGIBLE_STATUSES, RECEIVABLE_ASN_STATUSES } from '../const';
  * @property {string} manualASN -  The draft's typed ASN number.
  * @property {Shipment[]} shipments
  * @property {ASN[]} asns
- * @property {LineDraft[]} lines -  The drafted lines; read so the auto-populate fills only an empty draft.
  * @property {(lines: LineDraft[]) => void} setLines
  */
 
 /**
  * The source step 1 resolves to: the receivable sources (dock shipments ∪ live
  * receivable ASNs), the typed ASN number's match, and the active source.
- * Auto-populates the line drafts when a source resolves and none are drafted
- * yet. Step 1's values themselves live in the draft (`useInspectionDraft`'s
+ * Drafts the source's lines whenever the active source changes, replacing any
+ * lines drafted before (D15a, Levi 2026-10-28). Step 1's values themselves live in the draft (`useInspectionDraft`'s
  * `useForm`); this hook only derives from them.
  * @param {UseGrSourceArgs} args
  */
-const useGrSource = ({
-  sourceMode,
-  selectedSourceId,
-  manualASN,
-  shipments,
-  asns,
-  lines,
-  setLines
-}) => {
+const useGrSource = ({ sourceMode, selectedSourceId, manualASN, shipments, asns, setLines }) => {
   // Receivable GR sources = shipments at dock ∪ live receivable ASNs (deduped by
   // ASN number; the shipment wins when both exist since it carries dock data).
   const sources = useMemo(() => {
@@ -64,11 +55,13 @@ const useGrSource = ({
         : undefined
       : sources.find((s) => s.id === selectedSourceId);
 
-  // Auto-populate lines when a source resolves (dock selection, manual match, or
-  // the initial pre-selection) and none are drafted yet.
+  // Draft the lines when a source resolves (dock selection, manual match, or the
+  // initial pre-selection). A newly resolved source REPLACES lines drafted from
+  // an earlier one, as a dock pick does (D15a); Back and Next keep the same
+  // source, so they never fire this.
   const activeSourceId = activeSource?.id;
   React.useEffect(() => {
-    if (activeSource && lines.length === 0) {
+    if (activeSource) {
       setLines(activeSource.lines);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
