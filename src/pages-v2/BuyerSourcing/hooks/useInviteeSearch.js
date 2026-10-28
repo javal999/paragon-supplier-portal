@@ -45,7 +45,10 @@ export const useInviteeSearch = ({ draft, supplierSearch, setSupplierSearch }) =
   const inviteeFilterLabels = useSupplierFilterLabels();
 
   /** @type {readonly string[]} */
-  const cats = draft.category ? CATEGORY_TO_SUPPLIER_CATEGORY[draft.category] : [];
+  const cats = useMemo(
+    () => (draft.category ? CATEGORY_TO_SUPPLIER_CATEGORY[draft.category] : []),
+    [draft.category]
+  );
   // Material G2 (MR-10 BR-06) — the event's type comes from its category; the
   // buyer never types it. It travels with the search so each candidate carries
   // its eligibility (BR-05).

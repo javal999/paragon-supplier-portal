@@ -79,7 +79,7 @@ const BuyerCompliance = () => {
   const requester = useDocumentRequest(t, refusalText, dataErrorText, toast);
   const { request, requestOpen, setRequestOpen, closeRequest } = requester;
 
-  const items = query.data?.items ?? [];
+  const items = useMemo(() => query.data?.items ?? [], [query.data]);
 
   /** @type {Row[]} */
   const rows = useMemo(

@@ -79,7 +79,7 @@ const SupplierDocuments = () => {
   // Material G1 (MR-10 AC-06) — this supplier's own level, narrowed in the read model.
   const qualifications = useVendorQualifications();
   const myQualification = qualifications.data?.items.find((q) => q.supplierId === supplierId);
-  const docs = docsQuery.data?.items ?? [];
+  const docs = useMemo(() => docsQuery.data?.items ?? [], [docsQuery.data]);
   // ONE clock read for the whole page, captured once so every expiry figure on
   // screen is answered against the SAME instant. Deps are empty deliberately:
   // a re-render must not silently move the day under a rendered count.
