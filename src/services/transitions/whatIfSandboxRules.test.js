@@ -257,7 +257,7 @@ describe('BR-03 · the difference against the current plan, worked by hand', () 
     expect(diff.firstShortageWeek).toMatchObject({ plan: MONDAYS[15], scenario: MONDAYS[1] });
   });
 
-  it('[Team F5] the hand material on the default: the call-off is the MOQ 10 rounded to the pallet 50, called off above Max [Proposed]', () => {
+  it('[Team F5] the hand material on the default: the call-off is the MOQ 10 rounded to the pallet 50, called off above Max [Owner BL-230]', () => {
     const run = runWhatIf(hand());
     // Day 8 starts at 20 (at ROP Fisik): room 50 − 20 = 30 < 50, so the 50 is
     // called off anyway, flagged ABOVE_MAX; it lands day 9 at 10 + 50 = 60 > Max

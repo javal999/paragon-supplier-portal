@@ -11,7 +11,7 @@
 // [Team F5, 2026-10-28] the call-off quantity is the supplier's minimum
 // delivery: MDQ = MOQ 1,250, rounded like Max to the pallet (700) → 1,400.
 // That never fits under Max at the trigger (Max 1,400 − SOH ≥ 1,275 < 1,400),
-// so under the [Proposed] default it is called off anyway, flagged ABOVE_MAX.
+// so it is called off anyway, flagged ABOVE_MAX [Owner, 2026-10-28, BL-230].
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { afterEach, describe, expect, it } from 'vitest';

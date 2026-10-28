@@ -76,14 +76,15 @@ export const CALL_OFF_TRIGGER_RULES = Object.freeze({
    */
   quantityRule: /** @type {'minimumDelivery' | 'fillToMax'} */ ('minimumDelivery'),
   /**
-   * [Proposed, 2026-10-28 — awaits the owner] when the minimum delivery,
+   * [Owner, 2026-10-28, BL-230] when the minimum delivery,
    * rounded like Max, does not fit under Max. Max is ROP Fisik rounded up to
    * the same unit, so at the trigger the room below Max is always under one
    * unit: read literally, A7 ("Max caps call-offs") and F5 ("the minimum
    * delivery, rounded like Max") never let a call-off through. 'callOff': the
-   * minimum delivery is called off anyway, flagged `ABOVE_MAX` (stock may pass
-   * Max by less than one unit); 'wait': A7 wins, cut per `maxCap`, and nothing
-   * is called off while not even one unit fits.
+   * minimum delivery is called off anyway, flagged `ABOVE_MAX` (the owner's
+   * ruling; projected stock may pass Max by up to the call-off quantity, e.g.
+   * RM-STEAR-7300: 1,010 + 1,400 = 2,410 against Max 1,400); 'wait': A7 wins,
+   * cut per `maxCap`, and nothing is called off while not even one unit fits.
    */
   minimumDeliveryAboveMax: /** @type {'callOff' | 'wait'} */ ('callOff'),
   /** [Default] MPQ = orderMultiple until the master data feed carries MPQ (wave 2 default). */
@@ -317,7 +318,7 @@ export function deliveryQuantity(line) {
  * [Team F5] BR-01b 'minimumDelivery' — the call-off is the minimum delivery
  * quantity of the oldest line with balance (`deliveryQuantity`), capped by
  * the room below Max (`maxCap`: whole rounding units, or exactly what fits)
- * unless `minimumDeliveryAboveMax` lets it through ([Proposed]), then walked
+ * unless `minimumDeliveryAboveMax` lets it through ([Owner BL-230]), then walked
  * over the lines oldest first; what no line covers is the PR
  * (BR-02). A line with no MDQ falls back to the room rounded to its MPQ
  * (`fillToMax`'s quantity), flagged `NO_MDQ`. No line with balance: the PR is
@@ -349,7 +350,7 @@ function minimumDelivery({ max, soh, openSupply, lines }, rules) {
     want = cappedQuantity(room, first.mpq, rules);
   } else if (unit <= room) want = unit;
   else if (rules.minimumDeliveryAboveMax === 'callOff') {
-    // [Proposed] the minimum delivery is the smallest call-off there is.
+    // [Owner BL-230] the minimum delivery is the smallest call-off there is.
     want = unit;
     flags.push('ABOVE_MAX');
   } else {

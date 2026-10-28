@@ -154,7 +154,7 @@ describe("[Team F5] BR-01b 'minimumDelivery' (default) — the supplier's minimu
     expect(b.callOffs[0].qty).toBe(900);
   });
 
-  it('[Proposed] above Max: by default the minimum delivery is called off anyway, flagged ABOVE_MAX', () => {
+  it('[Owner BL-230] above Max: the minimum delivery is called off anyway, flagged ABOVE_MAX', () => {
     expect(CALL_OFF_TRIGGER_RULES.minimumDeliveryAboveMax).toBe('callOff');
     const a = allocateCallOffs({ max: 1000, soh: 0, openSupply: 0, lines: [mdq()] });
     expect(a.callOffs[0].qty).toBe(1200);
