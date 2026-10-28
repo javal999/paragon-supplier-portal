@@ -1,8 +1,9 @@
 // ────────────────────────────────────────────────────────────────────────────
 // Chart palette (DP-2) — the single ordered series ramp for every chart/bar
-// surface. One teal accent + navy, with tints and a neutral, so data viz reads
-// as one system and never rainbows. Hex is synced to the Tailwind design tokens
-// (tailwind.config.js): teal #0097A7, navy #0D1B2A, mid #354A5F.
+// surface. One accent + navy, with tints and a neutral, so data viz reads as
+// one system and never rainbows. Owner ruling 2026-10-28 (Paradise review):
+// the ramp stays, and Paradise's multi-colour --pds-chart-1..5 is NOT used;
+// the accent is Paradise blue (--pds-color-accent, #215AA8), which replaced teal.
 //
 // Recharts needs raw hex on stroke/fill props (Tailwind classes can't reach
 // them), so these live here as constants — the single source of truth, mirroring
@@ -12,16 +13,17 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
- * Ordered categorical ramp: teal → navy → teal-tint → navy-tint → neutral grey.
+ * Ordered categorical ramp: blue → navy → blue-tint → navy-tint → neutral grey.
  * Series 0/1/3 clear ~3:1 contrast on white; the two lighter tints (2/4) should
  * carry a hairline border or a darker data label when used as large fills.
+ * Slots 3 and 4 have no Paradise token, so they keep their hex.
  */
 export const CHART_SERIES = /** @type {const} */ ([
-  'var(--pds-chart-1)', // teal — brand accent
-  'var(--pds-chart-2)', // navy
-  'var(--pds-chart-3)', // teal-tint
-  'var(--pds-chart-4)', // navy-tint / slate
-  'var(--pds-chart-5)' // neutral grey
+  'var(--pds-color-accent)', // blue — brand accent (#215AA8)
+  'var(--pds-color-text-primary)', // navy
+  'var(--paragon-300)', // blue-tint (#7A9CCB)
+  '#5C7186', // navy-tint / slate
+  '#9BA8B5' // neutral grey
 ]);
 
 /**

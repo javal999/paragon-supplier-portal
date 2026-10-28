@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { targetStatus, TARGET_STATUS } from './chartPalette';
+import { targetStatus, TARGET_STATUS, CHART_SERIES } from './chartPalette';
 
 // DP2-TARGET-01 guard: the ONE target-status system. Locks the meeting/near/
 // missing thresholds and the state → colour map so the seven scattered target-
@@ -41,5 +41,17 @@ describe('DP2-TARGET-01 — state → colour map', () => {
   it('meeting is the Paradise success token, missing is the Paradise danger token', () => {
     expect(TARGET_STATUS.meeting.fill).toBe('var(--pds-color-feedback-success)');
     expect(TARGET_STATUS.missing.fill).toBe('var(--pds-color-feedback-danger)');
+  });
+});
+
+// Owner ruling 2026-10-28 (Paradise review, CLAUDE.md DP-0): charts keep the
+// DP-2 ramp with Paradise blue as its accent, and never take Paradise's
+// multi-colour --pds-chart-* palette, which puts red and green on charts that
+// show no state.
+describe('DP-0 — the chart ramp after Paradise', () => {
+  it('starts with the Paradise accent and uses no --pds-chart-* colour', () => {
+    expect(CHART_SERIES[0]).toBe('var(--pds-color-accent)');
+    expect(CHART_SERIES).toHaveLength(5);
+    expect(CHART_SERIES.filter((c) => c.includes('--pds-chart'))).toEqual([]);
   });
 });
