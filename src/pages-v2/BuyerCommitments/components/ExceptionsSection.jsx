@@ -60,7 +60,7 @@ const ExceptionsSection = ({
             <TableHeaderCell>{t('fc.col.due')}</TableHeaderCell>
             <TableHeaderCell>{t('fc.col.daysOfSupply')}</TableHeaderCell>
             <TableHeaderCell>{t('fc.col.actions')}</TableHeaderCell>
-            {/* Zone lives in each row's expander, which keeps the main row narrower. */}
+            {/* Zone shows as a pill under each row's period; the expander adds its definitions. */}
             <TableHeaderCell pin="right">
               <span className="sr-only">{t('fc.col.details')}</span>
             </TableHeaderCell>

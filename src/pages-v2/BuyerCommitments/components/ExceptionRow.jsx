@@ -25,8 +25,9 @@ import {
  * One ranked exception: rank, supplier and material pinned on the left;
  * period, forecast, commitment (with the supplier's shortfall reason), gap,
  * status, due, days of supply and the planner's actions; then a details
- * toggle pinned on the right. The zone opens in a row of its own under the
- * row, which keeps the main row narrower. Accept and Request revision
+ * toggle pinned on the right. The zone shows as a pill under the period, so a
+ * planner triages without a click (Levi, 2026-10-26, on !17); the details row
+ * repeats it beside the Firm and Trade-off definitions. Accept and Request revision
  * show for an exception with a response when the seat holds
  * `requirementresponse:dispute`; Move demand when it holds `forecast:publish`;
  * otherwise each verb's slot renders its handoff notice (§76). Request revision renders only while
@@ -75,7 +76,12 @@ const ExceptionRow = ({
         <TableCell pin="left" className="whitespace-nowrap">
           <Data>{l.materialCode}</Data>
         </TableCell>
-        <TableCell className="whitespace-nowrap">{periodLabel(l.periodBucket)}</TableCell>
+        <TableCell className="whitespace-nowrap">
+          {periodLabel(l.periodBucket)}
+          <div className="mt-1" data-testid={`fc-zone-pill-${lineKey}`}>
+            <ZonePill zone={l.zone} />
+          </div>
+        </TableCell>
         <TableCell className="text-right">
           <Data>{qtyText(l.forecastQty)}</Data>
         </TableCell>
