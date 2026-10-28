@@ -285,7 +285,7 @@ export const safetyStockEn = {
   'sst.rop.def.max':
     'Max = ROP Fisik rounded up to a koli (units per pallet) for a local supplier, or to the MOQ for an import. It caps call-offs only.',
   'sst.rop.def.supplier':
-    'ROP Supplier, ROP FS and ROP to principal are the supplier-side reorder points. The supplier’s own reorder point on the stock template is shown for reference only; no calculation reads it.',
+    'ROP Supplier and ROP to principal are the supplier-side reorder points. The supplier’s own reorder point on the stock template is shown for reference only; no calculation reads it.',
   'sst.rop.def.npd':
     'NPD: a material is new until its first order is fully received (goods receipts). While it is, its ROP Fisik demand is the highest LTP of the next 3 months. Transition products are not told apart: the data carries no flag for them.'
 };
@@ -573,7 +573,7 @@ export const safetyStockId = {
   'sst.rop.def.max':
     'Maks = ROP Fisik dibulatkan ke atas ke koli (unit per palet) untuk pemasok lokal, atau ke MOQ untuk impor. Hanya membatasi call-off.',
   'sst.rop.def.supplier':
-    'ROP Pemasok, ROP FS dan ROP ke prinsipal adalah titik pemesanan ulang di sisi pemasok. Titik pemesanan ulang pemasok sendiri di templat stok hanya ditampilkan sebagai acuan; tidak ada perhitungan yang membacanya.',
+    'ROP Pemasok dan ROP ke prinsipal adalah titik pemesanan ulang di sisi pemasok. Titik pemesanan ulang pemasok sendiri di templat stok hanya ditampilkan sebagai acuan; tidak ada perhitungan yang membacanya.',
   'sst.rop.def.npd':
     'NPD: material dianggap baru sampai pesanan pertamanya diterima penuh (penerimaan barang). Selama itu, permintaan ROP Fisik-nya adalah LTP tertinggi 3 bulan ke depan. Produk transisi tidak dibedakan: data tidak memuat penandanya.'
 };

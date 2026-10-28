@@ -87,7 +87,7 @@ const NumberValue = ({ id, label, param, current, placeholder, held, onSave, bus
           disabled={!changed || refusal !== null || busy}
           data-testid={`${id}-save`}
         >
-          {t(value === null ? 'sst.values.reset' : 'sst.values.save')}
+          {t(value === null && current !== null ? 'sst.values.reset' : 'sst.values.save')}
         </Button>
       ) : null}
     </div>
