@@ -152,7 +152,7 @@ DRC-16 (daily FS reconcile) is merged into DRC-15a.
 **DRC-7 Safety**
 - BR-01. Safety order (ROP Order) = Z × √LT × SD(LTP over the next 13 weeks), rounded up to a multiple of the MPQ [Team, 2026-10-28, B2; owner ruling 2026-10-28]; [Default B4]. Z is per material, default 1.65 [Team, 2026-10-28, B3; owner ruling 2026-10-28]. Switch `sdSource: 'ltp13w' | 'ltp' | 'consumption12w'`: 'ltp' is the SD over the lead-time weeks (the earlier default), 'consumption12w' the sheet variant.
 - BR-02. Safety (ROP Fisik) = ceiling(g × min(a, b, c), MPQ), g per material, default 1 day [Team, 2026-10-28, B7; owner ruling 2026-10-28]; [Default B1]. Switch `fisikSafety: 'deck' | 'sheet'`. The sheet variant is Z × √f × SD(consumption) + g × average demand [XLS ROP Fisik Non stc]. The team's ROP Fisik SD (GI 261 over 13 weeks) waits on B1.
-- AC-01. PPT 7: LT 5, MPQ 61,224 gives SS 244,896 on the `sdSource: 'ltp'` variant. On the 13-week default the slide's 12 weeks give SD 42,092 and SS 183,672 (decision for the owner: the fixture stays on the variant).
+- AC-01. PPT 7: LT 5, MPQ 61,224 gives SS 244,896 on the `sdSource: 'ltp'` variant. On the 13-week default the slide's 12 weeks give SD 42,092 and SS 183,672 The fixture stays on the variant [Owner, 2026-10-28, BL-231].
 
 **DRC-10 ROPs and Max** [PPT 11; Owner, 2026-10-16, B10]
 - **ROP Order** = c × d + safety order, where c = LTP and d = lead time PO→ETA. Its output is shown as the input to ZPE007 [Default B9]. The hub does not run ZPE007.
@@ -400,7 +400,7 @@ Built on branch `feat/drc-material-answers` from the owner's ruling on SC-HUB-MA
 | DRC-B53 | Pull-agreement cadence (E2) | **[Owner, 2026-10-28]** Flag per supplier, default no. Daily = each hub calendar day, midnight to midnight WIB (working days are not distinguished). Others weekly with the Thursday stock update. A missed confirmation is shown as missed; nothing else follows (team answers 4, Q7) |
 | DRC-B54 | Call-off quantity (F5) | **[Owner, 2026-10-28]** MDQ = MOQ, rounded with `maxRoundingUnit` (the max-stock rule). A line with no MOQ falls back to the earlier fill-to-Max quantity, flagged `NO_MDQ`. With no line at all the PR is the room below Max, as before |
 | DRC-B55 | Minimum delivery above Max (F5 vs A7) | **[Owner, 2026-10-28, BL-230]** keep 'callOff'. Max = ROP Fisik rounded up to the same unit, so the room under Max at the trigger is always below one unit. Default 'callOff': the minimum delivery is called off anyway, flagged `ABOVE_MAX`. 'wait' keeps A7 literal: on the sample, RM-STEAR-7300 (MOQ 1,250, pallet 700) calls off 1,400 at SOH 1,010 under 'callOff'; under 'wait' the what-if hand material only calls off when stock is at 0 and runs short in week 2 |
-| DRC-B56 | PPT 7 golden fixture (A2, B2) | Kept on the variants `sdSource: 'ltp'` and `planCheckBasis: 'sohOspoOsprPr'`; the what-if sandbox opens the PPT 7 case on them. Under the defaults the slide gives SS 183,672 and a gap of Total DA |
+| DRC-B56 | PPT 7 golden fixture (A2, B2) | **[Owner, 2026-10-28, BL-231]** Kept on the variants `sdSource: 'ltp'` and `planCheckBasis: 'sohOspoOsprPr'`; the what-if sandbox opens the PPT 7 case on them. Under the defaults the slide gives SS 183,672 and a gap of Total DA |
 | DRC-B57 | The what-if sandbox and own values | A live pair opens on its material's own Z and g (as switches) and its supplier's own f and bottleneck lead time (as inputs) |
 
 ## 7. Build order

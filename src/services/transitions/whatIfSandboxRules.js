@@ -1018,6 +1018,7 @@ export const PPT7_SUPPLIER_ID = 'ppt7-golden';
  * order's SD over the lead-time weeks (`sdSource: 'ltp'`, B2; 13 weeks gives
  * SS 183,672) and the plan check against SOH + OSPO + OSPR + PR
  * (`planCheckBasis: 'sohOspoOsprPr'`, A2; PR −645,559 is that arithmetic).
+ * The owner ruled PPT 7 stays on these readings [Owner, 2026-10-28, BL-231].
  * @type {WhatIfSwitches}
  */
 export const PPT7_SWITCHES = Object.freeze({

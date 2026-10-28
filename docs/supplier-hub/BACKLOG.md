@@ -23,7 +23,6 @@ Still open. Items decided on 2026-09-21 are in section 6.
 
 | ID | Decision | Owner | What it unblocks | Detail |
 |---|---|---|---|---|
-| BL-231 | **PPT 7 under 13 weeks** — the golden fixture's SS 244,896 needs the lead-time SD; the 13-week default gives 183,672. Built: the fixture stays on the `sdSource: 'ltp'` variant | Owner | Whether PPT 7 is still the team's reference case for B2 | `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-7 AC-01, DRC-B56 |
 | BL-01 | **REPL** — replenishment method and governance | Material Planner (consultant engaged) | The shape of REQ-E09-01, and BL-118 where to hold buffers (E14-12) | PRD 9.3 |
 | BL-11 | **PQ-06** — interface technology and latency target | IT | The real SAP interface, and what the interface monitor watches | REQ-E07-08 |
 | BL-12 | **PQ-11** — is the hub the long-term record for call-offs? Recommended: the hub holds them for the pilot, and SAP scheduling agreement releases become the long-term record. **Awaiting the owner's yes** | Material Planner, IT | Integration scope (BL-11), and whether call-offs migrate to SAP later | REQ-E09-01, E09-03 |
@@ -188,6 +187,7 @@ Found while building the RFx UX evaluation (`research/RFX-UX-EVALUATION-2026-10.
 
 | ID | Item | Closed | By |
 |---|---|---|---|
+| BL-231 | PPT 7 under the 13-week SD: which reading the golden fixture runs on | 2026-10-28 | Owner decision: PPT 7 stays on `sdSource: 'ltp'` and `planCheckBasis: 'sohOspoOsprPr'` (SS 244,896, gap 0), as built on `feat/drc-material-answers`, MR !57; the defaults give SS 183,672; `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-7 AC-01, DRC-B56 |
 | BL-230 | F5 vs A7: the call-off's minimum delivery when it does not fit under Max | 2026-10-28 | Owner decision: call it off anyway, flagged `ABOVE_MAX` (the built default on `feat/drc-material-answers`, MR !57); `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` DRC-13 BR-03, DRC-B55 |
 | BL-227 | Inventory UX wave 2 polish | 2026-10-27 | Block wording done 2026-10-23. Built on `feat/bl-227-inventory-polish`: the Ask supplier button names its topic ("Ask for a production date", "Ask for stock figures", "Ask about the capacity gap"), replacing the hint line under it; PTI can undo an acceptance (`t_capacitydecision_withdraw`, Accepted → Withdrawn, same atom as accept; the row stays on record and the week counts toward the alert again); an accepted week that has turned red says it counts again and is not counted as decided in the row header (INV-D12). Specs: `capacityDecision.test.js`, `capacityGapActions.p07.page.test.jsx` |
 | BL-221 | RFP and RFI Compare grid columns in the summary cards' order | 2026-10-23 | Built on `feat/backlog-quickwins-1023`: the comparison, questions and indicative-price grids order suppliers with `rfpSummaryCards`/`rfiSummaryCards`; spec `rfx/rfxUx2G.test.jsx` (BL-221) |
