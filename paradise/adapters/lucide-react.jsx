@@ -58,7 +58,9 @@ export const BellRing = make('BellRing', 'lucide-bell-ring', 'RemindBellOutlineI
 export const Building2 = make('Building2', 'lucide-building2 lucide-building-2', 'CompanyIcon');
 export const XCircle = make('XCircle', 'lucide-circle-x', 'CloseOutlineIcon');
 export const Minus = make('Minus', 'lucide-minus', 'MinusIcon');
-export const ClipboardList = make('ClipboardList', 'lucide-clipboard-list', 'CheckListIcon');
+// ListIcon, not CheckListIcon: My tasks (ListTodo) holds that glyph, and NV-04 gives
+// every menu item its own icon (owner ruling 2026-10-28).
+export const ClipboardList = make('ClipboardList', 'lucide-clipboard-list', 'ListIcon');
 export const SlidersHorizontal = make('SlidersHorizontal', 'lucide-sliders-horizontal', 'FilterOutlineIcon');
 export const CalendarDays = make('CalendarDays', 'lucide-calendar-days', 'CalendarOutlineIcon');
 export const Layers = make('Layers', 'lucide-layers', 'LayersIcon');
