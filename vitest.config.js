@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig, configDefaults } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { ALIASES } from './aliases';
@@ -9,7 +10,13 @@ import { ALIASES } from './aliases';
 export default defineConfig({
   plugins: [react()],
   // Same aliases as the app build (aliases.js); vitest.drift.config.js inherits them.
-  resolve: { alias: ALIASES },
+  resolve: {
+    // Paradise stage 5b: lucide-react -> paradise/adapters/lucide-react.jsx. Remove this entry to undo.
+    alias: [
+      { find: /^lucide-react$/, replacement: fileURLToPath(new URL('./paradise/adapters/lucide-react.jsx', import.meta.url)) },
+      ...Object.entries(ALIASES).map(([find, replacement]) => ({ find, replacement }))
+    ]
+  },
   // __DEPLOY_ENV__ is injected by vite `define` in the real build; define it here
   // too so components that read it don't hit a ReferenceError under test. Empty
   // string → the badge's hostname fallback path (ENV-BADGE-01).
