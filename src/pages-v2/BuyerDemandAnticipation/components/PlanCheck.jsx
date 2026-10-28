@@ -11,7 +11,9 @@ import { weekLabel, weekRange } from '../display';
 // the DRC-2 carry-over of its planning week, above the grid:
 //   · the horizon (the lead time, DRC-2 BR-01);
 //   · Total demand anticipation, ROP Order (cycle stock + safety order) and
-//     SOH + OSPO + OSPR + PR;
+//     the supply it is checked against: Total OSPO [Team A2, owner 2026-10-28],
+//     with SOH, OSPR and PR shown as SAP MRP context only; a figure stored
+//     under an earlier rules version keeps the basis it was made on;
 //   · the gap and its result: balanced, a surplus absorbed in the last week of
 //     the horizon (DRC-B7), or a PR recommendation the planner raises in SAP —
 //     the hub posts nothing;
@@ -55,6 +57,8 @@ const PlanCheck = ({ row, rowKey }) => {
   const p = row.plan;
   const q = (/** @type {number} */ n) => formatNumber(n);
   const last = p.horizonWeeks[p.horizonWeeks.length - 1];
+  // A figure stored before 2026-10-28 was made on SOH + OSPO + OSPR + PR.
+  const basis = p.supplyBasis ?? 'sohOspoOsprPr';
   const result =
     p.gap > 0
       ? t('demandAnt.check.shortfall', { qty: q(p.prRecommendation) })
@@ -135,22 +139,37 @@ const PlanCheck = ({ row, rowKey }) => {
           }
         />
         <Item
-          label={t('demandAnt.check.supply')}
+          label={t(`demandAnt.check.supply.${basis}`)}
           testId={`dant-check-supply-${rowKey}`}
           value={
-            <>
-              <Data>{q(p.supply)}</Data>{' '}
-              <span className="text-xs text-text-tertiary">
-                {t('demandAnt.check.supplyParts', {
-                  soh: q(p.soh),
-                  ospo: q(p.ospo),
-                  ospr: q(p.ospr),
-                  pr: q(p.pr)
-                })}
-              </span>
-            </>
+            basis === 'totalOspo' ? (
+              <Data>{q(p.supply)}</Data>
+            ) : (
+              <>
+                <Data>{q(p.supply)}</Data>{' '}
+                <span className="text-xs text-text-tertiary">
+                  {t(`demandAnt.check.supplyParts.${basis}`, {
+                    soh: q(p.soh),
+                    ospo: q(p.ospo),
+                    ospr: q(p.ospr),
+                    pr: q(p.pr)
+                  })}
+                </span>
+              </>
+            )
           }
         />
+        {basis === 'totalOspo' ? (
+          <Item
+            label={t('demandAnt.check.mrpContext')}
+            testId={`dant-check-mrp-${rowKey}`}
+            value={
+              <span className="text-xs text-text-tertiary">
+                {t('demandAnt.check.mrpParts', { soh: q(p.soh), ospr: q(p.ospr), pr: q(p.pr) })}
+              </span>
+            }
+          />
+        ) : null}
         <Item
           label={t('demandAnt.check.gap')}
           testId={`dant-check-gap-${rowKey}`}

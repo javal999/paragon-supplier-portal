@@ -137,7 +137,7 @@ describe('the page opens on the published planning week', () => {
 });
 
 describe('DRC-4 — the plan vs execution check on each card', () => {
-  it('shows Total demand anticipation, ROP Order, SOH + OSPO + OSPR + PR, the gap and the result', async () => {
+  it('shows Total demand anticipation, ROP Order, Total OSPO [Team A2] with SOH, OSPR and PR as context, the gap and the result', async () => {
     const { plan } = await rowOf(KEY);
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
     const check = await screen.findByTestId(`dant-check-${KEY}`);
@@ -150,16 +150,26 @@ describe('DRC-4 — the plan vs execution check on each card', () => {
     expect(within(check).getByTestId(`dant-check-rop-${KEY}`)).toHaveTextContent(
       `${formatNumber(plan.ropOrder)} (cycle stock ${formatNumber(plan.cycleStock)} + safety order ${formatNumber(plan.safetyOrder)})`
     );
+    expect(plan.supplyBasis).toBe('totalOspo');
+    expect(plan.supply).toBe(plan.ospo);
     expect(within(check).getByTestId(`dant-check-supply-${KEY}`)).toHaveTextContent(
-      `${formatNumber(plan.supply)} (${formatNumber(plan.soh)} + ${formatNumber(plan.ospo)} + 0 + ${formatNumber(plan.pr)})`
+      formatNumber(plan.ospo)
+    );
+    expect(within(check).getByText('Total OSPO')).toBeInTheDocument();
+    expect(within(check).getByTestId(`dant-check-mrp-${KEY}`)).toHaveTextContent(
+      `SOH ${formatNumber(plan.soh)} · OSPR 0 · PR ${formatNumber(plan.pr)}`
     );
     expect(within(check).getByTestId(`dant-check-gap-${KEY}`)).toHaveTextContent(
       formatNumber(plan.gap)
     );
-    expect(within(check).getByTestId(`dant-check-result-${KEY}`)).toHaveTextContent('Balanced');
-    // Design rule 5 — built on [Default] A1, A2, A8b and A9.
+    // Total DA − Total OSPO: a shortfall is a PR to raise, the same as the additional PO.
+    expect(plan.prRecommendation).toBe(plan.additionalPo);
+    expect(within(check).getByTestId(`dant-check-result-${KEY}`)).toHaveTextContent(
+      plan.gap > 0 ? 'Shortfall' : plan.gap < 0 ? 'Surplus' : 'Balanced'
+    );
+    // Design rule 5 — built on [Default] A8b and A9 (A1, A2 answered).
     expect(within(check).getByTestId(`dant-check-provisional-${KEY}`)).toHaveTextContent(
-      'Provisional: rule awaiting Material Planning (A1, A2, A8b, A9)'
+      'Provisional: rule awaiting Material Planning (A8b, A9)'
     );
     // The data the hub does not hold is named, not hidden.
     const flags = within(check).getByTestId(`dant-check-flags-${KEY}`);
@@ -281,7 +291,7 @@ describe('both locales (CAP-D10)', () => {
         expect(within(card).getByText(label)).toBeInTheDocument();
       expect(within(card).getByText('Rencana vs eksekusi')).toBeInTheDocument();
       expect(screen.getByTestId(`dant-check-provisional-${KEY}`)).toHaveTextContent(
-        'Sementara: aturan menunggu Material Planning (A1, A2, A8b, A9)'
+        'Sementara: aturan menunggu Material Planning (A8b, A9)'
       );
       expect(screen.getByTestId('dant-publish-button')).toHaveTextContent(
         'Publikasikan antisipasi permintaan · W36'

@@ -14,6 +14,7 @@ import {
   DEFAULT_SWITCHES,
   HEADLINE_KEYS,
   PPT7_SUPPLIER_ID,
+  PPT7_SWITCHES,
   SWITCH_CATALOG,
   WHAT_IF_RULES,
   changedSwitches,
@@ -70,7 +71,8 @@ const hand = (over = {}) => ({
 const h = (run, key) => headline(run, key);
 
 describe('BR-08 · the PPT 7 golden case reproduces (bottle 2000041501)', () => {
-  const run = runWhatIf(ppt7());
+  // On the readings the slide used, kept as variants on 2026-10-28 [B2, A2].
+  const run = runWhatIf(ppt7(), PPT7_SWITCHES);
   const e = golden.ppt7.expected;
 
   it('safety order 244,896 and ROP Order 761,888', () => {
@@ -87,12 +89,22 @@ describe('BR-08 · the PPT 7 golden case reproduces (bottle 2000041501)', () => 
     expect(run.prRecommendation).toBe(0);
   });
 
-  it('is a packaging case on the 24-week horizon, under the rules in force', () => {
+  it('is a packaging case on the 24-week horizon, on two switches away from the rules in force', () => {
     const i = ppt7();
     expect(i.supplierId).toBe(PPT7_SUPPLIER_ID);
     expect(i.weeks).toHaveLength(24);
     expect(i.materialClass).toBe('PM');
     expect(changedSwitches(DEFAULT_SWITCHES)).toEqual([]);
+    expect(changedSwitches(PPT7_SWITCHES)).toEqual(['osip.planCheckBasis', 'osip.sdSource']);
+    expect(changedSwitches(PPT7_SWITCHES, PPT7_SWITCHES)).toEqual([]);
+  });
+
+  it('[Team B2, A2] under the rules in force: SS 183,672; Total DA against Total OSPO', () => {
+    // 13 weeks: the slide's 12, then 0 → SD 46,853.1 → 1.65 × √5 × 46,853.1 = 172,865 → 3 × 61,224.
+    const now = runWhatIf(ppt7());
+    expect(now.safety.safetyOrder.value).toBe(183672);
+    expect(now.da?.supply).toBe(golden.ppt7.ospo);
+    expect(now.da?.gap).toBe(now.totalDa);
   });
 
   it('with no consumption or supply area, ROP Fisik, Max and the trigger read not available', () => {
@@ -109,8 +121,8 @@ describe('BR-02 · each switch moves the figure it should and nothing else (samp
    * @param {WhatIfInputs} inputs
    * @param {WhatIfSwitches} switches
    */
-  const moved = (inputs, switches) =>
-    compareRuns(runWhatIf(inputs), runWhatIf(inputs, switches))
+  const moved = (inputs, switches, base = DEFAULT_SWITCHES) =>
+    compareRuns(runWhatIf(inputs, base), runWhatIf(inputs, switches))
       .filter((d) => d.changed)
       .map((d) => d.key);
 
@@ -122,11 +134,8 @@ describe('BR-02 · each switch moves the figure it should and nothing else (samp
   });
 
   it('daSafetyPlacement spread [A1] moves the DA weeks, not their total or ROP Order', () => {
-    const plan = runWhatIf(ppt7());
-    const spread = runWhatIf(
-      ppt7(),
-      withSwitch(DEFAULT_SWITCHES, 'osip.daSafetyPlacement', 'spread')
-    );
+    const plan = runWhatIf(ppt7(), PPT7_SWITCHES);
+    const spread = runWhatIf(ppt7(), withSwitch(PPT7_SWITCHES, 'osip.daSafetyPlacement', 'spread'));
     expect(spread.da?.weeks[0].safety).toBe(48980);
     expect(spread.totalDa).toBe(plan.totalDa);
     expect(
@@ -136,10 +145,17 @@ describe('BR-02 · each switch moves the figure it should and nothing else (samp
     ).not.toContain('ropOrder');
   });
 
-  it('planCheckIncludesSoh off [A2] moves only the PR recommendation of the check', () => {
-    expect(moved(ppt7(), withSwitch(DEFAULT_SWITCHES, 'osip.planCheckIncludesSoh', false))).toEqual(
-      ['prRecommendation']
-    );
+  it('planCheckBasis [A2] moves only the PR recommendation of the check', () => {
+    for (const basis of ['ospoOsprPr', 'totalOspo'])
+      expect(
+        moved(ppt7(), withSwitch(PPT7_SWITCHES, 'osip.planCheckBasis', basis), PPT7_SWITCHES),
+        basis
+      ).toEqual(['prRecommendation']);
+  });
+
+  it('sdSource [B2] moves the safety order and what is built on it', () => {
+    const keys = moved(ppt7(), withSwitch(PPT7_SWITCHES, 'osip.sdSource', 'ltp13w'), PPT7_SWITCHES);
+    expect(keys).toEqual(expect.arrayContaining(['safetyOrder', 'ropOrder', 'totalDa']));
   });
 
   it('g [B7] moves ROP Fisik (and Max and the trigger), not the safety order', () => {
@@ -182,8 +198,11 @@ describe('BR-02 · each switch moves the figure it should and nothing else (samp
 
 describe('BR-03 · the difference against the current plan, worked by hand', () => {
   it('PPT 7 with 100,000 more SOH: PR need 645,559 → 545,559; first shortage W1 → W2', () => {
-    const plan = runWhatIf(ppt7());
-    const more = runWhatIf({ ...ppt7(), soh: { J6: 0, J2: golden.ppt7.soh + 100_000 } });
+    const plan = runWhatIf(ppt7(), PPT7_SWITCHES);
+    const more = runWhatIf(
+      { ...ppt7(), soh: { J6: 0, J2: golden.ppt7.soh + 100_000 } },
+      PPT7_SWITCHES
+    );
     const diff = Object.fromEntries(compareRuns(plan, more).map((d) => [d.key, d]));
     // PR need = ROP Order − SOH − OSPO − OSPR = 761,888 − 216,329 − 0 − 0.
     expect(diff.prNeed).toMatchObject({ plan: 645_559, scenario: 545_559, delta: -100_000 });
@@ -197,8 +216,11 @@ describe('BR-03 · the difference against the current plan, worked by hand', () 
     expect(diff.firstShortageWeek.delta).toBeNull();
   });
 
-  it('the hand material: ROP Order 140, ROP Fisik 20, Max 50; the trigger calls off 30 every 3 days', () => {
-    const run = runWhatIf(hand());
+  // The earlier quantity rule: fill up to Max, rounded to the MPQ [F5 variant].
+  const FILL = withSwitch(DEFAULT_SWITCHES, 'quantityRule', 'fillToMax');
+
+  it("'fillToMax': the hand material: ROP Order 140, ROP Fisik 20, Max 50; the trigger calls off 30 every 3 days", () => {
+    const run = runWhatIf(hand(), FILL);
     // Safety order: SD of [70, 70] = 0 → 0. Cycle stock = 70 + 70.
     expect(run.rops.ropOrder.value).toBe(140);
     // Demand = min(70 ÷ 7, —, 70 ÷ 7) = 10 a day; safety = CEILING(1 × 10, 10)
@@ -222,9 +244,9 @@ describe('BR-03 · the difference against the current plan, worked by hand', () 
     expect(run.prNeed).toBe(0);
   });
 
-  it('the hand material with Max 20 typed: one call-off of 10, then the trigger waits to re-arm', () => {
-    const plan = runWhatIf(hand());
-    const capped = runWhatIf(hand({ maxOverride: 20 }));
+  it("'fillToMax': the hand material with Max 20 typed: one call-off of 10, then the trigger waits to re-arm", () => {
+    const plan = runWhatIf(hand(), FILL);
+    const capped = runWhatIf(hand({ maxOverride: 20 }), FILL);
     expect(capped.maxSource).toBe('override');
     const diff = Object.fromEntries(compareRuns(plan, capped).map((d) => [d.key, d]));
     expect(diff.max).toMatchObject({ plan: 50, scenario: 20, delta: -30 });
@@ -233,6 +255,22 @@ describe('BR-03 · the difference against the current plan, worked by hand', () 
     // Fisik (DRC-B37) — it never rises, so the stock runs out on day 11 (week 2).
     expect(capped.totalDrafted).toBe(10);
     expect(diff.firstShortageWeek).toMatchObject({ plan: MONDAYS[15], scenario: MONDAYS[1] });
+  });
+
+  it('[Team F5] the hand material on the default: the call-off is the MOQ 10 rounded to the pallet 50, called off above Max [Proposed]', () => {
+    const run = runWhatIf(hand());
+    // Day 8 starts at 20 (at ROP Fisik): room 50 − 20 = 30 < 50, so the 50 is
+    // called off anyway, flagged ABOVE_MAX; it lands day 9 at 10 + 50 = 60 > Max
+    // 50, which re-arms the trigger; 10 a day brings it back to 20 on day 13 and
+    // a second 50 goes out: 100 drafted in week 2.
+    expect(run.weeks[1].drafted).toBe(100);
+    expect(run.firstShortageWeek).toBe(MONDAYS[15]);
+    // 'wait' lets A7 win: a pallet fits under Max only once the stock is at 0
+    // (day 10, room 50), so each call-off goes out a day too late and the
+    // stock runs short in week 2, not when the PO balance runs out (week 16).
+    const wait = runWhatIf(hand(), withSwitch(DEFAULT_SWITCHES, 'minimumDeliveryAboveMax', 'wait'));
+    expect(wait.weeks[1].drafted).toBe(50);
+    expect(wait.firstShortageWeek).toBe(MONDAYS[1]);
   });
 
   it('every headline key is compared', () => {
@@ -371,7 +409,7 @@ describe('BL-210 · the live functions read every input the sandbox changes', ()
       for (const v of values) variants.push(withSwitch(DEFAULT_SWITCHES, spec.path, v));
     }
     // And the two switches that used to split them, together.
-    for (const sdSource of /** @type {const} */ (['ltp', 'consumption12w']))
+    for (const sdSource of /** @type {const} */ (['ltp13w', 'ltp', 'consumption12w']))
       for (const safetyRounding of /** @type {const} */ (['mpq', 'koli', 'moq']))
         variants.push({ ...DEFAULT_SWITCHES, osip: { ...OSIP_RULES, sdSource, safetyRounding } });
     for (const switches of variants) {
@@ -382,12 +420,12 @@ describe('BL-210 · the live functions read every input the sandbox changes', ()
       expect(run.safety.safetyOrder.value, label).not.toBeNull();
       expect(run.da?.safetyOrder, label).toBe(run.safety.safetyOrder.value);
     }
-    // Control, worked by hand: 1.65 × √2 × SD(50, 90) = 1.65 × √2 × 28.28 = 66.0
-    // → MPQ 10: 70, koli 50: 100, MOQ 25: 75 — the variants really differ.
+    // Control, worked by hand on the lead-time SD: 1.65 × √2 × SD(50, 90) =
+    // 1.65 × √2 × 28.28 = 66.0 → MPQ 10: 70, koli 50: 100, MOQ 25: 75 — the variants really differ.
+    const leadTimeSd = withSwitch(DEFAULT_SWITCHES, 'osip.sdSource', 'ltp');
     /** @param {string} rounding */
     const daSafety = (rounding) =>
-      runWhatIf(varied(), withSwitch(DEFAULT_SWITCHES, 'osip.safetyRounding', rounding)).da
-        ?.safetyOrder;
+      runWhatIf(varied(), withSwitch(leadTimeSd, 'osip.safetyRounding', rounding)).da?.safetyOrder;
     expect([daSafety('mpq'), daSafety('koli'), daSafety('moq')]).toEqual([70, 100, 75]);
     const fromConsumption = runWhatIf(
       varied(),
@@ -431,7 +469,9 @@ describe('BL-210 · the live functions read every input the sandbox changes', ()
     expect(typed.safety.safetyOrder).toMatchObject({ sd: 100, value: 240 });
     expect(typed.da?.safetyOrder).toBe(240);
     expect(typed.rops.ropOrder.value).toBe(
-      /** @type {number} */ (base.rops.ropOrder.value) - 70 + 240
+      /** @type {number} */ (base.rops.ropOrder.value) -
+        /** @type {number} */ (base.safety.safetyOrder.value) +
+        240
     );
   });
 

@@ -148,7 +148,9 @@ function pairInputs(publications, nowIso, agreed) {
         salesOrderQty4w: null,
         // The hub's PRs carry no material code: no open PR quantity per pair.
         ospr: null,
-        ...(size ? { consumption: size.consumption, moq: size.moq, koli: size.koli } : {})
+        ...(size
+          ? { consumption: size.consumption, moq: size.moq, koli: size.koli, z: size.z }
+          : {})
       }
     };
   });

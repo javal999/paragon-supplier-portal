@@ -35,10 +35,11 @@ import { qty } from './inventoryDisplay';
 //
 // On the supplier Stock page, under the weekly stock update. Per assigned
 // material: the latest confirmation (quantity in the material's unit, the date
-// it is confirmed as of), and whether this week's confirmation is still due
-// (BR-b [Default E2]: weekly, with the Thursday stock update cycle — the due
-// list is MR-1's own `weeklyUpdateStatus` over the latest confirmation, so it
-// counts the same weeks). It does NOT feed the MR-2 update-compliance score.
+// it is confirmed as of), and whether this cycle's confirmation is still due
+// (BR-b [Team E2, owner 2026-10-28]: DAILY for a supplier on a pull agreement,
+// else weekly with the Thursday stock update cycle — the weekly due list is
+// MR-1's own `weeklyUpdateStatus` over the latest confirmation, so it counts
+// the same weeks). It does NOT feed the MR-2 update-compliance score.
 //
 // No DA figure is shown here while `SUPPLIER_DA_VIEW_ENABLED` is off (DRC-D10).
 // BL-204 builds the deferred half of DRC-8 behind that flag: with it on, a
@@ -118,11 +119,17 @@ const FeedstockConfirmPanel = ({ supplierId, positions, nowIso }) => {
     })),
     nowIso,
     hubWorkingCalendar(),
-    updateCycleSettings()
+    updateCycleSettings(),
+    // [Team E2] the flag is the supplier's, so every row of it carries the same.
+    own.some((p) => p.pullAgreement === true)
   );
-  const provisional = t('fsConfirm.provisional', {
-    question: FEEDSTOCK_PROVISIONAL_QUESTIONS.join(', ')
-  });
+  const daily = own.some((p) => p.pullAgreement === true);
+  /** @param {string} key */
+  const cadenceKey = (key) => (daily ? `fsConfirm.daily.${key}` : `fsConfirm.${key}`);
+  const provisional =
+    FEEDSTOCK_PROVISIONAL_QUESTIONS.length > 0
+      ? t('fsConfirm.provisional', { question: FEEDSTOCK_PROVISIONAL_QUESTIONS.join(', ') })
+      : null;
 
   // Every row here is an assigned material (the stock read lists nothing else).
   const refusal = draft
@@ -198,13 +205,17 @@ const FeedstockConfirmPanel = ({ supplierId, positions, nowIso }) => {
       data-testid="feedstock-confirm"
     >
       <h2 className="text-section text-text-primary">{t('fsConfirm.title')}</h2>
-      <p className="text-sm text-text-secondary">{t('fsConfirm.intro')}</p>
-      {/* Design rule 5 — the cadence is a [Default]; say so, with its questions. */}
-      <p className="text-xs text-text-tertiary" data-testid="feedstock-provisional">
-        {provisional}
+      <p className="text-sm text-text-secondary" data-testid="feedstock-intro">
+        {t(cadenceKey('intro'))}
       </p>
+      {/* Design rule 5 — a [Default] says so, with its questions; none is left (E1, E2 answered). */}
+      {provisional !== null && (
+        <p className="text-xs text-text-tertiary" data-testid="feedstock-provisional">
+          {provisional}
+        </p>
+      )}
       <p className="text-sm text-text-primary" data-testid="feedstock-due">
-        {t('fsConfirm.due')} <Data>{formatDateTime(status.cycle.cutoff)}</Data>
+        {t(cadenceKey('due'))} <Data>{formatDateTime(status.cycle.cutoff)}</Data>
         <span className="text-text-tertiary">
           {' '}
           · {t('fsConfirm.count', { confirmed: status.updated.length, total: status.total })}
@@ -212,12 +223,12 @@ const FeedstockConfirmPanel = ({ supplierId, positions, nowIso }) => {
       </p>
       {missed.length > 0 && (
         <p className="text-sm text-danger" role="status" data-testid="feedstock-missed">
-          {t('fsConfirm.missed', { count: missed.length })}
+          {t(cadenceKey('missed'), { count: missed.length })}
         </p>
       )}
       {status.missing.length === 0 && (
         <p className="text-sm text-success" data-testid="feedstock-all-done">
-          {t('fsConfirm.allDone')}
+          {t(cadenceKey('allDone'))}
         </p>
       )}
 

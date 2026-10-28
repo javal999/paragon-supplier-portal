@@ -63,6 +63,7 @@ import {
   safetyOrder,
   stamp
 } from './osipRules';
+import { rulesForMaterial } from './osipParams';
 
 /**
  * BL-211 — how a material's recorded consumption is split across its suppliers.
@@ -106,10 +107,11 @@ export const DEMAND_ANTICIPATION_RULES = Object.freeze({
 
 /**
  * Design rule 5 — the [Default] questions a rolling figure is built on, for the
- * "Provisional" label: A1 (safety order in week 1), A2 (SOH in the check),
- * A8b (carry-over limit), A9 (OSPO chain).
+ * "Provisional" label: A8b (carry-over limit), A9 (OSPO chain). A1 (safety
+ * order in week 1) is confirmed and A2 (the check against Total OSPO) answered
+ * and ruled [Team, 2026-10-28; owner ruling 2026-10-28], so both left.
  */
-export const DA_PROVISIONAL_QUESTIONS = Object.freeze(['A1', 'A2', 'A8b', 'A9']);
+export const DA_PROVISIONAL_QUESTIONS = Object.freeze(['A8b', 'A9']);
 
 /**
  * The Mondays from the current hub week.
@@ -234,6 +236,7 @@ export function demandAnticipationPairs({ ltpLines, ptiStock }, nowIso, count) {
  *   week-1 safety order is ROP Order's under `sdSource: 'consumption12w'` and
  *   `safetyRounding: 'koli' | 'moq'`; absent, those variants read none.
  * `sd`:  BL-210 — a typed SD (the sandbox's); absent or null, it is computed.
+ * `z`:  [Team B3] the material's own Z (`osipParams`); absent or null, the rules'.
  *
  * @typedef {{
  *   readonly weeks: readonly string[];
@@ -253,6 +256,7 @@ export function demandAnticipationPairs({ ltpLines, ptiStock }, nowIso, count) {
  *   readonly moq?: number;
  *   readonly koli?: number | null;
  *   readonly sd?: number | null;
+ *   readonly z?: number | null;
  * }} RollingDaInputs
  */
 
@@ -278,6 +282,7 @@ export function demandAnticipationPairs({ ltpLines, ptiStock }, nowIso, count) {
  *   readonly ospr: number;
  *   readonly pr: number;
  *   readonly supply: number;
+ *   readonly supplyBasis: OsipRules['planCheckBasis'];
  *   readonly gap: number;
  *   readonly prRecommendation: number;
  *   readonly absorbedLastWeek: number;
@@ -312,9 +317,10 @@ export function rollingDaFigure(input, rules = OSIP_RULES) {
   // DRC-7 BR-01 — the safety order [Default B1–B4]; MPQ per `mpqField`.
   // BL-210 — with ROP Order's consumption, MOQ and koli (and a typed SD), so
   // every `sdSource` and `safetyRounding` variant gives ROP Order's figure.
+  // [Team B2] the 13-week SD reads past the horizon, so the whole LTP goes in.
   const safety = safetyOrder(
     {
-      ltp,
+      ltp: input.ltp,
       leadTimeWeeks: n,
       mpq: input.mpq,
       ...(input.moq !== undefined ? { moq: input.moq } : {}),
@@ -322,7 +328,8 @@ export function rollingDaFigure(input, rules = OSIP_RULES) {
       ...(input.consumption !== undefined ? { consumption: input.consumption } : {}),
       ...(typeof input.sd === 'number' ? { sd: input.sd } : {})
     },
-    rules
+    // [Team B3] the material's own Z, when set.
+    rulesForMaterial(rules, { z: input.z })
   ).value;
   if (input.soh === null) flags.push('NO_STOCK_RECORD');
   const soh = input.soh ?? 0;
@@ -383,6 +390,8 @@ export function rollingDaFigure(input, rules = OSIP_RULES) {
     ospr,
     pr,
     supply: check.supply,
+    // [Team A2] what `supply` sums; SOH, OSPR and PR stay on the figure as context.
+    supplyBasis: rules.planCheckBasis,
     gap: check.gap,
     prRecommendation: check.prRecommendation,
     absorbedLastWeek: check.absorbedLastWeek,

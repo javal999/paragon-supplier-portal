@@ -11,7 +11,14 @@ import { consumptionStore } from './stores/consumptionStore';
 import { engineDataset } from './fixtures/engineDataset';
 import { NO_PERSON } from '@context/noPerson';
 import { osipSafety } from '../../transitions/osipSafetyRules';
-import { cv as cvOf, componentCv, mean } from '../../transitions/osipRules';
+import {
+  OSIP_RULES,
+  cv as cvOf,
+  componentCv,
+  mean,
+  monthlyBuckets
+} from '../../transitions/osipRules';
+import { fillStockouts, historyOf } from '../../engine/demandForecast';
 
 afterEach(() => consumptionStore.reset());
 
@@ -41,19 +48,26 @@ describe('osipSafetyInputs — what the rules read', () => {
     ]);
   });
 
-  it('RM-STEAR-7300 × sup-002: 7 lead-time weeks of LTP, MPQ = order multiple 25, outside Jabodetabek (Medan)', () => {
+  it('RM-STEAR-7300 × sup-002: 7 lead-time weeks, 13 weeks of LTP [Team B2], MPQ = order multiple 25, outside Jabodetabek (Medan)', () => {
     const s = pair(all, 'RM-STEAR-7300', 'sup-002');
     expect(s.leadTimeWeeks).toBe(7);
-    expect(s.ltp).toEqual([2520, 2940, 2940, 2940, 2937, 2935, 2935]);
+    expect(s.ltp).toEqual([
+      2520, 2940, 2940, 2940, 2937, 2935, 2935, 2935, 2873, 2497, 2497, 2497, 2497
+    ]);
     expect(s.mpq).toBe(25);
     expect(s.supplyArea).toBe('outsideJabodetabek');
     expect(s.supplierName).not.toBe('');
   });
 
-  it('…and its safety order by hand: SD 157.94 × 1.65 × √7 = 689.50, up to the MPQ 25 → 700', () => {
-    const r = osipSafety(pair(all, 'RM-STEAR-7300', 'sup-002'));
-    expect(r.safetyOrder.sd).toBeCloseTo(157.9424, 4);
-    expect(r.safetyOrder.value).toBe(700);
+  it('…and its safety order by hand: [Team B2] SD of 13 weeks 217.40 × 1.65 × √7 = 949.05, up to the MPQ 25 → 950', () => {
+    const s = pair(all, 'RM-STEAR-7300', 'sup-002');
+    const r = osipSafety(s);
+    expect(r.safetyOrder.sd).toBeCloseTo(217.3982, 4);
+    expect(r.safetyOrder.value).toBe(950);
+    // The lead-time variant: SD of the 7 lead-time weeks 157.94 × 1.65 × √7 = 689.50 → 700.
+    const lt = osipSafety(s, { ...OSIP_RULES, sdSource: 'ltp' });
+    expect(lt.safetyOrder.sd).toBeCloseTo(157.9424, 4);
+    expect(lt.safetyOrder.value).toBe(700);
   });
 
   it('the supply area follows the supplier master: Tangerang = Jabodetabek, Germany = import', () => {
@@ -89,17 +103,30 @@ describe('osipSafetyInputs — what the rules read', () => {
         .map((b) => b.parentCode)
     );
     for (const k of c?.skus ?? []) expect(parents.has(k.skuCode)).toBe(true);
-    // A SKU's figures are its last 26 weeks of sell-in.
+    // [Team C1] a SKU's figures are its last 6 full calendar months of sell-in,
+    // stock-out weeks filled: Feb–Jul 2026 (August is not full at W36).
     const first = /** @type {NonNullable<typeof c>} */ (c).skus[0];
-    const rows = data.sales
-      .filter((s) => s.skuCode === first.skuCode && s.weekStart < '2026-08-31')
-      .sort((a, b) => a.weekStart.localeCompare(b.weekStart))
-      .slice(-26);
-    // No stock-out in this SKU's window, so no week is filled.
-    expect(rows.length).toBe(26);
-    expect(rows.some((r) => r.stockout)).toBe(false);
-    expect(first.avgDemand).toBeCloseTo(mean(rows.map((r) => r.quantity)), 9);
-    expect(first.cv).toBeCloseTo(/** @type {number} */ (cvOf(rows.map((r) => r.quantity))), 12);
+    expect(first.skuCode).toBe('SYN-FG-006');
+    const h = /** @type {NonNullable<ReturnType<typeof historyOf>>} */ (
+      historyOf(
+        data.sales.filter((s) => s.skuCode === first.skuCode),
+        '2026-08-31'
+      )
+    );
+    const months = monthlyBuckets(fillStockouts(h.qty, h.stockout), h.start).slice(-6);
+    expect(months.map((m) => m.month)).toEqual([
+      '2026-02',
+      '2026-03',
+      '2026-04',
+      '2026-05',
+      '2026-06',
+      '2026-07'
+    ]);
+    const qty = months.map((m) => m.qty);
+    expect(first.avgDemand).toBeCloseTo(mean(qty), 9);
+    expect(first.cv).toBeCloseTo(/** @type {number} */ (cvOf(qty)), 12);
+    expect(first.cv).toBeCloseTo(0.0843, 4);
+    expect(c?.category).toBe('stable');
   });
 });
 

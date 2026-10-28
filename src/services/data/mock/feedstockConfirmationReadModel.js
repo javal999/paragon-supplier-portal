@@ -12,12 +12,18 @@
 // compares POs with call-offs and ASNs; this one is the supplier's own figure.
 //
 // MoM 2B (BR-c): this adds a field BESIDE `supplierSoh`; it never changes it.
+//
+// [Team E2] it also attaches `pullAgreement`: whether the planner set the
+// supplier on a pull agreement (`osipParamStore`), which makes its feedstock
+// confirmation daily instead of weekly (`feedstockCycleStatus`).
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import { FeedstockConfirmation } from '../types' */
 import { latestFeedstock } from '../../transitions/feedstockRules';
 import { feedstockConfirmationStore } from './stores/feedstockConfirmationStore';
 import { isAssignedMaterial } from './inventoryReadModel';
+import { osipParamStore } from './stores/osipParamStore';
+import { osipParamKey } from '../../transitions/osipParams';
 
 /**
  * The confirmation in force for a supplier × material, or undefined (none, or not assigned).
@@ -32,12 +38,14 @@ export function feedstockInForce(supplierId, materialCode) {
 
 /**
  * The row with its supplier's feedstock confirmation in force attached
- * (unchanged when there is none).
- * @template {{ readonly supplierId: string; readonly materialCode: string; readonly feedstock?: FeedstockConfirmation }} T
+ * (none when there is none) and [Team E2] its pull-agreement flag.
+ * @template {{ readonly supplierId: string; readonly materialCode: string; readonly feedstock?: FeedstockConfirmation; readonly pullAgreement?: boolean }} T
  * @param {T} row
  * @returns {T}
  */
 export function withFeedstock(row) {
   const fs = feedstockInForce(row.supplierId, row.materialCode);
-  return fs ? { ...row, feedstock: fs } : row;
+  const pullAgreement =
+    osipParamStore.valueOf(osipParamKey('pullAgreement', { supplierId: row.supplierId })) === true;
+  return { ...row, ...(fs ? { feedstock: fs } : {}), pullAgreement };
 }

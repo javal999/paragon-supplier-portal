@@ -12,10 +12,17 @@
 //             `oldestFirst`), across every supplier holding balance; need date
 //             = today + the replenishment cycle f of that supplier's area
 //             (`replenishmentCycleDays` × `supplyAreaOf`, DRC-14 [Default B6]).
-//   · BR-01b  quantity = Max − (SOH + released call-offs not yet received),
-//             rounded up to the MPQ, then capped so projected stock never
-//             exceeds Max (BR-03 [Owner A7]); never above a line's remaining
-//             balance, the remainder on the next-oldest line (CAP-12's walk).
+//   · BR-01b  [Team, 2026-10-28, F5; owner ruling 2026-10-28] quantity = the
+//             supplier's minimum delivery quantity (MDQ = MOQ until the master
+//             carries MDQ, [Proposed] owner 2026-10-28), rounded up the way max
+//             stock rounds (local: pallet/koli; import: MOQ; `maxRule`), then
+//             capped so projected stock never exceeds Max (BR-03 [Owner A7]);
+//             never above a line's remaining balance, the remainder on the
+//             next-oldest line (CAP-12's walk). Call-offs follow ROP Fisik, not
+//             the PO delivery date. The earlier rule — Max − (SOH + released
+//             not received), rounded up to the MPQ — is kept as `fillToMax`.
+//             The ≤ 6 MPQ-rate continuous/batching rule is NOT a call-off rule:
+//             it lives only in the OSIP level suggestion (`osipLevelSuggestion`).
 //   · BR-02   what no blanket line covers is a recommendation: "Create a PR in
 //             SAP for N". The hub posts nothing to SAP.
 //   · BR-05   SOH is compared per material, all plants combined [Default F1];
@@ -61,6 +68,24 @@ export const CALL_OFF_TRIGGER_RULES = Object.freeze({
    * to exactly what fits (the literal "round up, then cap").
    */
   maxCap: /** @type {'mpqMultiple' | 'exact'} */ ('mpqMultiple'),
+  /**
+   * [Team, 2026-10-28, F5; owner ruling 2026-10-28] BR-01b — one call-off's
+   * quantity: 'minimumDelivery' = the supplier's MDQ rounded like max stock
+   * (default); 'fillToMax' = Max − (SOH + released not received), rounded up
+   * to the MPQ (the earlier reading).
+   */
+  quantityRule: /** @type {'minimumDelivery' | 'fillToMax'} */ ('minimumDelivery'),
+  /**
+   * [Proposed, 2026-10-28 — awaits the owner] when the minimum delivery,
+   * rounded like Max, does not fit under Max. Max is ROP Fisik rounded up to
+   * the same unit, so at the trigger the room below Max is always under one
+   * unit: read literally, A7 ("Max caps call-offs") and F5 ("the minimum
+   * delivery, rounded like Max") never let a call-off through. 'callOff': the
+   * minimum delivery is called off anyway, flagged `ABOVE_MAX` (stock may pass
+   * Max by less than one unit); 'wait': A7 wins, cut per `maxCap`, and nothing
+   * is called off while not even one unit fits.
+   */
+  minimumDeliveryAboveMax: /** @type {'callOff' | 'wait'} */ ('callOff'),
   /** [Default] MPQ = orderMultiple until the master data feed carries MPQ (wave 2 default). */
   mpqSource: /** @type {'orderMultiple'} */ ('orderMultiple'),
   /** DRC-13 — a call-off at ROP Fisik replenishes stock already needed: JIT (REQ-E09-01 BR-09). */
@@ -71,17 +96,10 @@ export const CALL_OFF_TRIGGER_RULES = Object.freeze({
 
 /**
  * Design rule 5 — the question IDs behind every trigger figure: the plant rule
- * and the ROP questions (ROP Fisik B5–B7, Max B8, B9), and the MPQ default.
+ * and the ROP questions still open (Max B8, B9), and the MPQ default. B5, B6,
+ * B7 and F5 left on 2026-10-28 [Team; owner ruling].
  */
-export const CALL_OFF_TRIGGER_QUESTIONS = Object.freeze([
-  'F1',
-  'B5',
-  'B6',
-  'B7',
-  'B8',
-  'B9',
-  'MPQ'
-]);
+export const CALL_OFF_TRIGGER_QUESTIONS = Object.freeze(['F1', 'B8', 'B9', 'MPQ']);
 
 // ─── BR-05 — SOH against ROP Fisik ───────────────────────────────────────────
 
@@ -95,7 +113,10 @@ export const CALL_OFF_TRIGGER_QUESTIONS = Object.freeze([
  *   | 'PARTIAL_ROP'
  *   | 'NO_SUPPLY_AREA'
  *   | 'NO_MPQ'
- *   | 'ROOM_BELOW_MPQ'} TriggerFlag
+ *   | 'NO_MDQ'
+ *   | 'ROOM_BELOW_MPQ'
+ *   | 'ROOM_BELOW_MIN_DELIVERY'
+ *   | 'ABOVE_MAX'} TriggerFlag
  */
 
 /**
@@ -198,11 +219,16 @@ export function releasedNotReceived(callOffs, results, materialCode) {
 /**
  * One blanket line the trigger may call off against: the CAP-12 balance, with
  * its supplier, that supplier's MPQ and its replenishment cycle f in days
- * (null when the supplier's area is unknown).
+ * (null when the supplier's area is unknown). [Team F5] `mdq`: the supplier's
+ * minimum delivery quantity (null when the master has none); `roundTo`: the
+ * unit max stock rounds to for that supplier (pallet/koli local, MOQ import;
+ * 0 under the sheet's max rule, which does not round).
  * @typedef {BlanketBalance & {
  *   readonly supplierId: string;
  *   readonly mpq: number | null;
  *   readonly f: number | null;
+ *   readonly mdq?: number | null;
+ *   readonly roundTo?: number;
  * }} TriggerLine
  */
 
@@ -250,9 +276,10 @@ export function cappedQuantity(room, mpq, rules = CALL_OFF_TRIGGER_RULES) {
 }
 
 /**
- * BR-01a / BR-01b / BR-02 — the call-offs that bring projected stock up to
- * Max, oldest blanket line first across every supplier, and the PR for what
- * no line covers.
+ * BR-01a / BR-01b / BR-02 — the call-offs one trigger drafts, oldest blanket
+ * line first across every supplier, and the PR for what no line covers, per
+ * `quantityRule` [Team F5]. Under 'fillToMax' they bring projected stock up to
+ * Max:
  *
  *   room  = max(0, Max − (SOH + released not received))
  *   each line, oldest first: qty = min(`cappedQuantity`(room left, line MPQ),
@@ -269,7 +296,104 @@ export function cappedQuantity(room, mpq, rules = CALL_OFF_TRIGGER_RULES) {
  * @param {CallOffTriggerRules} [rules]
  * @returns {TriggerAllocation}
  */
-export function allocateCallOffs({ max, soh, openSupply, lines }, rules = CALL_OFF_TRIGGER_RULES) {
+export function allocateCallOffs(input, rules = CALL_OFF_TRIGGER_RULES) {
+  return rules.quantityRule === 'fillToMax'
+    ? fillToMax(input, rules)
+    : minimumDelivery(input, rules);
+}
+
+/**
+ * [Team F5] one call-off's quantity on a line: its MDQ rounded up to the max
+ * stock rounding unit; null when the line has no MDQ.
+ * @param {TriggerLine} line
+ * @returns {number | null}
+ */
+export function deliveryQuantity(line) {
+  if (!(typeof line.mdq === 'number' && line.mdq > 0)) return null;
+  return ceilingTo(line.mdq, line.roundTo ?? 0);
+}
+
+/**
+ * [Team F5] BR-01b 'minimumDelivery' — the call-off is the minimum delivery
+ * quantity of the oldest line with balance (`deliveryQuantity`), capped by
+ * the room below Max (`maxCap`: whole rounding units, or exactly what fits)
+ * unless `minimumDeliveryAboveMax` lets it through ([Proposed]), then walked
+ * over the lines oldest first; what no line covers is the PR
+ * (BR-02). A line with no MDQ falls back to the room rounded to its MPQ
+ * (`fillToMax`'s quantity), flagged `NO_MDQ`. No line with balance: the PR is
+ * the room, as before.
+ * @param {{
+ *   readonly max: number;
+ *   readonly soh: number;
+ *   readonly openSupply: number;
+ *   readonly lines: readonly TriggerLine[];
+ * }} input
+ * @param {CallOffTriggerRules} rules
+ * @returns {TriggerAllocation}
+ */
+function minimumDelivery({ max, soh, openSupply, lines }, rules) {
+  const room = Math.max(0, max - (soh + openSupply));
+  /** @type {TriggerFlag[]} */
+  const flags = [];
+  const open = [...lines].sort(oldestFirst).filter((l) => l.balance > 0);
+  if (room <= 0) return { room, callOffs: [], prQty: 0, flags };
+  const first = open[0];
+  if (!first) return { room, callOffs: [], prQty: room, flags };
+  if (first.f === null) flags.push('NO_SUPPLY_AREA');
+  const unit = deliveryQuantity(first);
+  /** @type {number} */
+  let want;
+  if (unit === null) {
+    flags.push('NO_MDQ');
+    if (first.mpq === null) flags.push('NO_MPQ');
+    want = cappedQuantity(room, first.mpq, rules);
+  } else if (unit <= room) want = unit;
+  else if (rules.minimumDeliveryAboveMax === 'callOff') {
+    // [Proposed] the minimum delivery is the smallest call-off there is.
+    want = unit;
+    flags.push('ABOVE_MAX');
+  } else {
+    // [Owner A7] the minimum delivery would pass Max.
+    const step = first.roundTo && first.roundTo > 0 ? first.roundTo : (first.mpq ?? 0);
+    want = rules.maxCap === 'mpqMultiple' && step > 0 ? Math.floor(room / step) * step : room;
+  }
+  if (want <= 0) {
+    flags.push(unit === null ? 'ROOM_BELOW_MPQ' : 'ROOM_BELOW_MIN_DELIVERY');
+    return { room, callOffs: [], prQty: 0, flags };
+  }
+  /** @type {TriggerCallOff[]} */
+  const callOffs = [];
+  let left = want;
+  for (const line of open) {
+    if (left <= 0) break;
+    const qty = Math.min(left, line.balance);
+    callOffs.push({
+      poId: line.poId,
+      poNumber: line.poNumber,
+      lineId: line.lineId,
+      supplierId: line.supplierId,
+      qty,
+      balance: line.balance,
+      mpq: line.mpq,
+      f: line.f
+    });
+    left -= qty;
+  }
+  return { room, callOffs, prQty: left, flags };
+}
+
+/**
+ * BR-01b 'fillToMax' (the earlier reading) — see `allocateCallOffs`.
+ * @param {{
+ *   readonly max: number;
+ *   readonly soh: number;
+ *   readonly openSupply: number;
+ *   readonly lines: readonly TriggerLine[];
+ * }} input
+ * @param {CallOffTriggerRules} rules
+ * @returns {TriggerAllocation}
+ */
+function fillToMax({ max, soh, openSupply, lines }, rules) {
   const room = Math.max(0, max - (soh + openSupply));
   /** @type {TriggerFlag[]} */
   const flags = [];

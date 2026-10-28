@@ -15,13 +15,17 @@
 // `OSIP_ROP_READ` with its question ID, reported as a build decision:
 //   · MDQ (level 5): the master has no MDQ field — MDQ = MOQ [Default].
 //   · JIT days covered (level 6): 1 day, "at least 1 call-off a day" (DRC-B5).
-//   · ROP Supplier, ROP FS and ROP to principal [Owner B10; XLS "ROP Fisik Non
-//     stc" columns "ROP PM in Supplier", "ROP FS in Supplier", "ROP order to
-//     principal"]. The sheet's formulas are not in this repository, so each is
-//     READ as the ROP Fisik demand over one leg of the supplier's lead time
-//     (DRC-6 steps), rounded up to the MPQ like every other OSIP figure. A leg
-//     the source's steps do not carry shows "Not available" naming the missing
-//     input; nothing is invented.
+//   · ROP Supplier [Team, 2026-10-28, B10; owner ruling 2026-10-28]: the
+//     supplier's total physical maximum stock = demand × its bottleneck
+//     production lead time, queueing included — a value per supplier ×
+//     material (`osipParams`), with no default: without it the figure says the
+//     lead time is missing. ROP FS is REMOVED: the team defines no feedstock
+//     ROP, since suppliers cover feedstock from the DA and the POs issued.
+//   · ROP to principal [Owner B10; XLS "ROP order to principal"], unanswered by
+//     the team, stays as built: the ROP Fisik demand over the "order to
+//     principal" leg of the supplier's lead time (DRC-6 steps), rounded up to
+//     the MPQ. A leg the source's steps do not carry shows "Not available"
+//     naming the missing input; nothing is invented.
 //   · NPD (DRC-12a) [Default D1]: three variants, the default on.
 //
 // Pure: plain data in, plain data out. No clock, no store. Computed at read,
@@ -36,7 +40,7 @@ import { OSIP_RULES, ceilingTo, cycleStock, maxStock, ropFisik, ropOrder } from 
 
 /** @typedef {'firstOrderFulfilled' | 'oneYearAfterLaunch' | '52WeeksHistory'} NpdRule */
 
-/** @typedef {'ropSupplier' | 'ropFs' | 'ropToPrincipal'} SupplierRopKey */
+/** @typedef {'ropSupplier' | 'ropToPrincipal'} SupplierRopKey */
 
 /**
  * The readings this file makes where the sources leave a gap, one key each,
@@ -48,20 +52,10 @@ export const OSIP_ROP_READ = Object.freeze({
   /** [Default, DRC-B5] level 6 (JIT): the days one call-off covers — at least 1 call-off a day. */
   jitDays: 1,
   /**
-   * [Owner B10] the lead-time steps (DRC-6) each supplier-side ROP covers:
-   *   ropSupplier    — "ROP PM in Supplier": finished stock the supplier holds
-   *                    while it produces again = machine queue + production.
-   *   ropFs          — "ROP FS in Supplier": feedstock the supplier holds while
-   *                    it orders its own material = ordering material.
-   *   ropToPrincipal — "ROP order to principal" = order to principal.
+   * [Owner B10] the lead-time steps (DRC-6) ROP to principal covers: "order to
+   * principal". ROP Supplier reads the bottleneck lead time instead [Team B10].
    */
-  supplierRopLegs: Object.freeze(
-    /** @type {Readonly<Record<SupplierRopKey, readonly LeadTimeStepId[]>>} */ ({
-      ropSupplier: Object.freeze(/** @type {LeadTimeStepId[]} */ (['machineQueue', 'production'])),
-      ropFs: Object.freeze(/** @type {LeadTimeStepId[]} */ (['orderingMaterial'])),
-      ropToPrincipal: Object.freeze(/** @type {LeadTimeStepId[]} */ (['orderToPrincipal']))
-    })
-  ),
+  principalRopLeg: Object.freeze(/** @type {LeadTimeStepId[]} */ (['orderToPrincipal'])),
   /** [Default D1] DRC-12a — when a material stops being NPD. */
   npdRule: /** @type {NpdRule} */ ('firstOrderFulfilled'),
   /** [Default D1] the `'oneYearAfterLaunch'` variant (XLS): days after the earliest parent SKU's launch. */
@@ -87,7 +81,7 @@ export const NPD_RULES = Object.freeze(
 
 /** The supplier-side ROPs, in display order. @type {readonly SupplierRopKey[]} */
 export const SUPPLIER_ROP_KEYS = Object.freeze(
-  /** @type {SupplierRopKey[]} */ (['ropSupplier', 'ropFs', 'ropToPrincipal'])
+  /** @type {SupplierRopKey[]} */ (['ropSupplier', 'ropToPrincipal'])
 );
 
 /** The OSIP levels a planner may set (DRC-D11). The module calculates 3–6; 1 and 2 use level 4, flagged. */
@@ -99,10 +93,14 @@ export const OSIP_LEVELS = Object.freeze([1, 2, 3, 4, 5, 6]);
  */
 export const OSIP_ROP_QUESTIONS = Object.freeze({
   level: Object.freeze(['C2']),
-  npd: Object.freeze(['D1']),
-  ropOrder: Object.freeze(['B2', 'B3', 'B4', 'B9', 'MPQ']),
-  ropFisik: Object.freeze(['B1', 'B5', 'B6', 'B7', 'C2', 'MPQ', 'MDQ']),
+  // [Team D1, 2026-10-28] confirmed: no label.
+  npd: Object.freeze(/** @type {string[]} */ ([])),
+  ropOrder: Object.freeze(['B4', 'B9', 'MPQ']),
+  ropFisik: Object.freeze(['B1', 'C2', 'MPQ', 'MDQ']),
+  // B5 for level 6 (JIT) only: held (team answers 3.6), labelled on its rows.
+  level6: Object.freeze(['B5']),
   max: Object.freeze(['B8']),
+  // B10 stays: ROP to principal is unanswered (section 4, Q4).
   supplierRops: Object.freeze(['B10', 'MPQ'])
 });
 
@@ -158,6 +156,7 @@ export function osipLevelInForce(rows, rules = OSIP_RULES) {
  *   | 'NO_LTP'
  *   | 'NO_DEMAND'
  *   | 'NO_LEAD_TIME_STEPS'
+ *   | 'NO_BOTTLENECK_LEAD_TIME'
  *   | 'NOT_ON_ROUTE'} RopUnavailable
  */
 
@@ -218,8 +217,10 @@ const figure = (value, unavailable) => ({
  *                an NPD material's demand is the NPD branch (BL-198).
  *   Max        = `maxStock` on ROP Fisik [Default B8]: local CEILING(ROP,
  *                koli), import CEILING(ROP, MOQ); koli = units per pallet.
- *   ROP Supplier / FS / to principal = CEILING(demand × Σ leg days, MPQ),
- *                the leg per `supplierRopLegs` [Owner B10, reading].
+ *   ROP Supplier = CEILING(demand × bottleneck lead time days, MPQ) [Team B10];
+ *                no bottleneck lead time set: `NO_BOTTLENECK_LEAD_TIME`.
+ *   ROP to principal = CEILING(demand × Σ leg days, MPQ), the leg per
+ *                `principalRopLeg` [Owner B10, reading].
  *
  * @param {OsipRopInput} input
  * @param {OsipSafetyFigures} safety  `osipSafety(input, rules)`.
@@ -303,22 +304,34 @@ export function osipRops(input, safety, level, rules = OSIP_RULES) {
         )
       : figure(null, maxGap);
 
-  // ── ROP Supplier, ROP FS, ROP to principal [Owner B10, reading] ──
+  // ── ROP Supplier [Team B10] ──
+  const bottleneck = input.bottleneckLeadTimeDays ?? null;
+  /** @type {RopFigure} */
+  const ropSupplierFig =
+    bottleneck === null
+      ? figure(null, 'NO_BOTTLENECK_LEAD_TIME')
+      : fis.demandPerDay === null
+        ? figure(null, 'NO_DEMAND')
+        : {
+            ...figure(ceilingTo(fis.demandPerDay * bottleneck, input.mpq), null),
+            days: bottleneck
+          };
+
+  // ── ROP to principal [Owner B10, reading] ──
   const steps = input.leadTimeSteps ?? [];
-  /** @type {Record<SupplierRopKey, RopFigure>} */
-  const supplier = /** @type {Record<SupplierRopKey, RopFigure>} */ ({});
-  for (const key of SUPPLIER_ROP_KEYS) {
-    const leg = OSIP_ROP_READ.supplierRopLegs[key];
-    const held = leg.filter((id) => steps.some((s) => s.step === id));
-    const missing = leg.filter((id) => !held.includes(id));
-    if (steps.length === 0) supplier[key] = figure(null, 'NO_LEAD_TIME_STEPS');
-    else if (missing.length > 0) supplier[key] = { ...figure(null, 'NOT_ON_ROUTE'), missing };
-    else if (fis.demandPerDay === null) supplier[key] = figure(null, 'NO_DEMAND');
-    else {
-      const days = steps.filter((s) => leg.includes(s.step)).reduce((n, s) => n + s.days, 0);
-      supplier[key] = { ...figure(ceilingTo(fis.demandPerDay * days, input.mpq), null), days };
-    }
+  const leg = OSIP_ROP_READ.principalRopLeg;
+  const missing = leg.filter((id) => !steps.some((s) => s.step === id));
+  /** @type {RopFigure} */
+  let principalFig;
+  if (steps.length === 0) principalFig = figure(null, 'NO_LEAD_TIME_STEPS');
+  else if (missing.length > 0) principalFig = { ...figure(null, 'NOT_ON_ROUTE'), missing };
+  else if (fis.demandPerDay === null) principalFig = figure(null, 'NO_DEMAND');
+  else {
+    const days = steps.filter((s) => leg.includes(s.step)).reduce((n, s) => n + s.days, 0);
+    principalFig = { ...figure(ceilingTo(fis.demandPerDay * days, input.mpq), null), days };
   }
+  /** @type {Record<SupplierRopKey, RopFigure>} */
+  const supplier = { ropSupplier: ropSupplierFig, ropToPrincipal: principalFig };
 
   return { ropOrder: ropOrderFig, ropFisik: ropFisikFig, max: maxFig, supplier, flags };
 }

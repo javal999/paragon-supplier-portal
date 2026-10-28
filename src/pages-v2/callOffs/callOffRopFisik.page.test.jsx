@@ -67,9 +67,10 @@ describe('BL-199 — a draft made at ROP Fisik on the Call-offs page', () => {
     expect(p.getByTestId('calloff-trigger-soh')).toHaveTextContent('1,010 KG');
     expect(p.getByTestId('calloff-trigger-rop-fisik')).toHaveTextContent('1,275 KG');
     expect(p.getByTestId('calloff-trigger-max')).toHaveTextContent('1,400 KG');
-    expect(p.getByTestId('calloff-trigger-quantity')).toHaveTextContent('375 KG');
+    // [Team F5] the minimum delivery: MOQ 1,250 rounded to the 700 pallet.
+    expect(p.getByTestId('calloff-trigger-quantity')).toHaveTextContent('1,400 KG');
     expect(p.getByTestId('calloff-trigger-provisional')).toHaveTextContent(
-      'Provisional: rule awaiting Material Planning (F1, B5, B6, B7, B8, B9, MPQ)'
+      'Provisional: rule awaiting Material Planning (F1, B8, B9, MPQ)'
     );
     expect(p.getByTestId('calloff-trigger-refresh')).toHaveTextContent(
       'Checks follow the eWM refresh; eWM feed not connected, SOH from the hub’s stock records.'

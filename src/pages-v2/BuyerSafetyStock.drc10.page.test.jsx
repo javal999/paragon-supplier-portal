@@ -6,6 +6,7 @@ import { consumptionStore } from '@services/data/mock/stores/consumptionStore';
 import { goodsReceiptStore } from '@services/data/mock/stores/goodsReceiptStore';
 import { osipLevelStore } from '@services/data/mock/stores/osipLevelStore';
 import { npdTagStore } from '@services/data/mock/stores/npdTagStore';
+import { osipParamStore } from '@services/data/mock/stores/osipParamStore';
 import { NO_PERSON } from '@context/noPerson';
 import i18n from '@lib/i18n';
 
@@ -18,16 +19,18 @@ import i18n from '@lib/i18n';
 //
 // RM-STEAR-7300 × sup-002 (outside Jabodetabek, f = 2; lead time 7 weeks; MPQ
 // 25; MOQ 1,250; koli 700), with 14,000 and 7,000 KG of consumption recorded:
-//   ROP Order  = cycle stock 20,147 + safety order 700 = 20,847
+//   ROP Order  = cycle stock 20,147 + safety order 950 (13-week SD, Team B2) = 21,097
 //   ROP Fisik  = CEILING(411.16 a day × 2, 25) 825 + safety 425 = 1,250 (level 4)
 //   Max        = CEILING(1,250, koli 700) = 1,400
-//   ROP Supplier = CEILING(411.16 × (11 + 23) days, 25) = 14,000
+//   ROP Supplier = CEILING(411.16 × bottleneck 34 days, 25) = 14,000, once the
+//                planner sets the bottleneck lead time (Team B10)
 // ─────────────────────────────────────────────────────────────────────────────
 
 afterEach(() => {
   consumptionStore.reset();
   goodsReceiptStore.reset();
   osipLevelStore.reset();
+  osipParamStore.reset();
   npdTagStore.reset();
   void i18n.changeLanguage('en');
 });
@@ -98,20 +101,19 @@ const ID = 'RM-STEAR-7300-sup-002';
 describe('BL-196 — the ROP columns', () => {
   it('each carries the provisional label with its question IDs; the engine reorder point is the challenger', async () => {
     await render();
+    // [Team, 2026-10-28] D1, B2, B3, B5 (levels 1–5), B6, B7 answered: only the open ones remain.
     expect(screen.getByTestId('sst-rop-prov-level')).toHaveTextContent(
-      'Provisional: rule awaiting Material Planning (C2, D1)'
+      'Provisional: rule awaiting Material Planning (C2)'
     );
-    expect(screen.getByTestId('sst-rop-prov-ropOrder')).toHaveTextContent('(B2, B3, B4, B9, MPQ)');
-    expect(screen.getByTestId('sst-rop-prov-ropFisik')).toHaveTextContent(
-      '(B1, B5, B6, B7, C2, MPQ, MDQ)'
-    );
+    expect(screen.getByTestId('sst-rop-prov-ropOrder')).toHaveTextContent('(B4, B9, MPQ)');
+    expect(screen.getByTestId('sst-rop-prov-ropFisik')).toHaveTextContent('(B1, C2, MPQ, MDQ)');
     expect(screen.getByTestId('sst-rop-prov-max')).toHaveTextContent('(B8)');
     expect(screen.getByTestId('sst-rop-challenger')).toHaveTextContent(
       'Challenger: engine reorder point'
     );
   });
 
-  it('RM-STEAR-7300 × sup-002 at level 4 (default): ROP Order 20,847 · ROP Fisik 1,250 · Max 1,400', async () => {
+  it('RM-STEAR-7300 × sup-002 at level 4 (default): ROP Order 21,097 · ROP Fisik 1,250 · Max 1,400', async () => {
     recordConsumption();
     fulfilFirstOrder();
     await render();
@@ -119,7 +121,7 @@ describe('BL-196 — the ROP columns', () => {
     expect(screen.getByTestId('sst-level-source-RM-STEAR-7300')).toHaveTextContent(
       'Default level (C2)'
     );
-    expect(screen.getByTestId(`sst-rop-ropOrder-${ID}`)).toHaveTextContent('20,847 KG');
+    expect(screen.getByTestId(`sst-rop-ropOrder-${ID}`)).toHaveTextContent('21,097 KG');
     expect(screen.getByTestId(`sst-rop-ropFisik-${ID}`)).toHaveTextContent('1,250 KG');
     expect(screen.getByTestId(`sst-rop-max-${ID}`)).toHaveTextContent('1,400 KG');
   });
@@ -145,19 +147,69 @@ describe('BL-196 — the ROP columns', () => {
   });
 });
 
+describe('[Team B3, B6] the planner’s own values recompute the figures', () => {
+  it('Z 2 for the material: safety order CEILING(2 × √7 × 217.40, 25) = 1,175, ROP Order 21,322; f 3 days for sup-002: ROP Fisik CEILING(411.16 × 3, 25) 1,250 + 425 = 1,675', async () => {
+    recordConsumption();
+    fulfilFirstOrder();
+    await render();
+    fireEvent.click(screen.getByTestId('sst-row-RM-STEAR-7300'));
+    const panel = await screen.findByTestId('sst-rop-detail');
+    fireEvent.change(within(panel).getByTestId('sst-values-z'), { target: { value: '2' } });
+    fireEvent.click(within(panel).getByTestId('sst-values-z-save'));
+    await waitFor(() =>
+      expect(screen.getByTestId(`sst-rop-ropOrder-${ID}`)).toHaveTextContent('21,322 KG')
+    );
+    fireEvent.change(
+      within(screen.getByTestId('sst-rop-detail')).getByTestId('sst-values-sup-002-f'),
+      {
+        target: { value: '3' }
+      }
+    );
+    fireEvent.click(
+      within(screen.getByTestId('sst-rop-detail')).getByTestId('sst-values-sup-002-f-save')
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId(`sst-rop-ropFisik-${ID}`)).toHaveTextContent('1,675 KG')
+    );
+  });
+
+  it('a seat without osipparam:set reads the values and who sets them, not a control', async () => {
+    renderWithProviders(<BuyerSafetyStock />, {
+      identity: { ...BUYER, businessRoles: ['procurement'] },
+      route: '/buyer/safety-stock?material=RM-STEAR-7300'
+    });
+    const panel = await screen.findByTestId('sst-rop-detail');
+    expect(within(panel).getByTestId('handoff-osip-values')).toBeInTheDocument();
+    expect(within(panel).queryByTestId('sst-values-z-save')).toBeNull();
+    expect(within(panel).getByTestId('sst-values-z')).toBeDisabled();
+  });
+});
+
 describe('BL-196 — the detail panel: supplier-side ROPs and the level control', () => {
-  it('ROP Supplier 14,000; ROP FS and ROP to principal name the step a local route lacks', async () => {
+  it('[Team B10] ROP Supplier waits for the bottleneck lead time; set to 34 days it reads 14,000; ROP FS is gone; ROP to principal names the step a local route lacks', async () => {
     recordConsumption();
     fulfilFirstOrder();
     await render();
     fireEvent.click(screen.getByTestId('sst-row-RM-STEAR-7300'));
     const panel = await screen.findByTestId('sst-rop-detail');
     expect(within(panel).getByTestId('sst-rop-detail-sup-002-ropSupplier')).toHaveTextContent(
-      '14,000 KG'
+      'Not available: no bottleneck production lead time set'
     );
-    expect(within(panel).getByTestId('sst-rop-detail-sup-002-ropFs')).toHaveTextContent(
-      'Not available: no ordering-material lead time on this route'
+    expect(within(panel).queryByTestId('sst-rop-detail-sup-002-ropFs')).toBeNull();
+    fireEvent.change(within(panel).getByTestId('sst-values-sup-002-bottleneck'), {
+      target: { value: '34' }
+    });
+    fireEvent.click(within(panel).getByTestId('sst-values-sup-002-bottleneck-save'));
+    await waitFor(() =>
+      expect(
+        within(screen.getByTestId('sst-rop-detail')).getByTestId(
+          'sst-rop-detail-sup-002-ropSupplier'
+        )
+      ).toHaveTextContent('14,000 KG')
     );
+    expect(osipParamStore.all().map((r) => [r.key, r.value])).toEqual([
+      ['bottleneckLeadTimeDays|sup-002|RM-STEAR-7300', 34]
+    ]);
     expect(within(panel).getByTestId('sst-rop-detail-sup-002-ropToPrincipal')).toHaveTextContent(
       'Not available: no order-to-principal lead time on this route'
     );

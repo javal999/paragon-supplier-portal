@@ -22,8 +22,9 @@ import { qty } from './inventoryDisplay';
 //   · BR-d [Default E2] — "confirmed by supplier on …" (the day the hub
 //     recorded it). No "Reviewed by planner" marker: no acknowledge pattern
 //     could be reused without a new verb.
-//   · BR-e [Default E1] — target = LT spare × weekly demand. LT spare is 0 by
-//     default, so the target reads 0, marked Provisional (E1). When LT spare is
+//   · BR-e [Team E1, 2026-10-28] — target = LT spare × weekly demand. LT spare
+//     is 0 (confirmed: the next model defines no feedstock ROP), so the target
+//     reads 0, with no Provisional label since that answer. When LT spare is
 //     above 0 the weekly demand is the forecast's average daily demand × 7,
 //     and the target is left out when there is none.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -68,10 +69,12 @@ const FeedstockLine = ({ position: p }) => {
           </Data>
         </div>
       )}
-      {/* Design rule 5 — the cadence and review (E2) and the target (E1) are [Default]s. */}
-      <div className="text-text-tertiary" data-testid={`pti-feedstock-provisional-${rowKey}`}>
-        {t('fsConfirm.provisional', { question: FEEDSTOCK_PROVISIONAL_QUESTIONS.join(', ') })}
-      </div>
+      {/* Design rule 5 — a [Default] says so; E1 and E2 are answered (2026-10-28), so none is left. */}
+      {FEEDSTOCK_PROVISIONAL_QUESTIONS.length > 0 && (
+        <div className="text-text-tertiary" data-testid={`pti-feedstock-provisional-${rowKey}`}>
+          {t('fsConfirm.provisional', { question: FEEDSTOCK_PROVISIONAL_QUESTIONS.join(', ') })}
+        </div>
+      )}
     </div>
   );
 };

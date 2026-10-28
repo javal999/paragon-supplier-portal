@@ -48,9 +48,11 @@ describe('BR-08 · the PPT 7 golden case', () => {
     expect(screen.getByTestId('wi-plan-prNeed')).toHaveTextContent('645,559');
     // Design rule 5 — each figure built on a [Default] names its questions.
     expect(screen.getByTestId('wi-prov-ropOrder')).toHaveTextContent(
-      'Provisional: rule awaiting Material Planning (B2, B3, B4, B9, MPQ)'
+      'Provisional: rule awaiting Material Planning (B4, B9, MPQ)'
     );
-    expect(screen.getByTestId('wi-prov-totalDa')).toHaveTextContent('A1, A2, A8b, A9');
+    expect(screen.getByTestId('wi-prov-totalDa')).toHaveTextContent('A8b, A9');
+    // It opens on the two readings the slide used, so nothing reads as edited.
+    expect(screen.getByTestId('wi-edited')).toHaveTextContent('0');
     // Without consumption or a supply area, ROP Fisik is not available.
     expect(screen.getByTestId('wi-plan-ropFisik')).toHaveTextContent('Not available');
     expectNoAbbreviation();

@@ -51,7 +51,7 @@ describe('BL-204 · flag on — the supplier page (DRC-1)', () => {
       within(screen.getByRole('navigation')).getByRole('button', { name: 'Demand anticipation' })
     ).toBeInTheDocument();
     expect(screen.getByTestId('supda-provisional').textContent).toBe(
-      'Provisional: rule awaiting Material Planning (A1, A2, A8b, A9)'
+      'Provisional: rule awaiting Material Planning (A8b, A9)'
     );
     // Own pairs only: every card is sup-007's, and every sup-007 pair has one.
     const cards = [...document.querySelectorAll('[data-testid^="supda-card-"]')].map((c) =>
@@ -85,7 +85,7 @@ describe('BL-204 · flag on — the supplier page (DRC-1)', () => {
       const card = await screen.findByTestId(`supda-card-${KEY}`);
       expect(within(card).getByText('Antisipasi permintaan')).toBeInTheDocument();
       expect(screen.getByTestId('supda-provisional').textContent).toBe(
-        'Sementara: aturan menunggu Material Planning (A1, A2, A8b, A9)'
+        'Sementara: aturan menunggu Material Planning (A8b, A9)'
       );
     } finally {
       await i18n.changeLanguage('en');

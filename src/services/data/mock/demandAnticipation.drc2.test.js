@@ -261,9 +261,10 @@ describe('the supplier’s agreement to carry outside the horizon [Owner A8]', (
   });
 
   it('BAD_AGREEMENT for a pair with nothing to carry; nothing is stored', async () => {
-    // PK-PETB-8801 × sup-007: W36 call-offs exceed its demand anticipation.
-    expect((await rowOf('sup-007', 'PK-PETB-8801')).today.remainder).toBeLessThanOrEqual(0);
-    const res = await publish(planning, W[0], ['sup-007|PK-PETB-8801']);
+    // PK-PETB-8802 × sup-007: W36 call-offs exceed its demand anticipation.
+    // (8801 has a remainder since the 13-week SD raised its week-1 safety, B2.)
+    expect((await rowOf('sup-007', 'PK-PETB-8802')).today.remainder).toBeLessThanOrEqual(0);
+    const res = await publish(planning, W[0], ['sup-007|PK-PETB-8802']);
     expect(res.status).toBe('failed');
     expect(refusedByPolicy(res.reason, POLICY_HOOKS.DEMAND_ANTICIPATION_PUBLISH_VALID)).toBe(true);
     expect(res.reason).toMatch(/BAD_AGREEMENT/);

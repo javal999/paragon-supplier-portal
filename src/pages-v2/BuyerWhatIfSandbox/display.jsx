@@ -54,6 +54,8 @@ export function diffText(d, t) {
  */
 export const Provisional = ({ figure, testId }) => {
   const { t } = useTranslation();
+  // Every question behind the figure is answered: no label.
+  if (HEADLINE_QUESTIONS[figure].length === 0) return null;
   return (
     <span className="block text-xs text-warning-hover" data-testid={testId}>
       {t('ltpFg.provisional', { question: HEADLINE_QUESTIONS[figure].join(', ') })}

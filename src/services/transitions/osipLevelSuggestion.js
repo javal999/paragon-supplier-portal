@@ -20,7 +20,10 @@
 //        CV ≥ cvThreshold (fluctuative) → Continuous Review (level 3)
 //        CV <  cvThreshold (stable)      → Periodic Review   (level 4)
 //   3. JIT (level 6) = Periodic Review with a continuous production pattern:
-//      MPQ rate = MPQ ÷ daily consumption ≤ `jitMpqRateMax` [Default F5], AND
+//      MPQ rate = MPQ ÷ daily consumption ≤ `jitMpqRateMax` [Default F5; owner
+//      ruling 2026-10-28: kept HERE ONLY, as a production-pattern marker — it
+//      is no longer a call-off rule, since call-offs follow ROP Fisik with the
+//      minimum delivery quantity (`callOffTriggerRules`, Team F5)], AND
 //      "1 pallet mix HU = Yes". The hub holds no pallet-mix data, so JIT is
 //      never suggested: the suggestion says "needs pallet-mix data" instead.
 // A missing input (no CV, no consumption, no tag, no source) is NAMED in
@@ -65,7 +68,11 @@ import { OSIP_RULES, cvCategory, mean } from './osipRules';
  * [Proposed] The readings this file makes, one key each, with its question ID.
  */
 export const LEVEL_SUGGESTION_RULES = Object.freeze({
-  /** [Default F5] continuous production when MPQ ÷ daily consumption ≤ this; batching above (XLS Logics). */
+  /**
+   * [Default F5; owner ruling 2026-10-28] continuous production when MPQ ÷
+   * daily consumption ≤ this; batching above (XLS Logics). A production-pattern
+   * marker for the level suggestion only, not a call-off rule.
+   */
   jitMpqRateMax: 6,
   /** [Default, wave 2] MPQ = orderMultiple until the master data feed carries MPQ (wave 2 default). */
   mpqSource: /** @type {'orderMultiple'} */ ('orderMultiple'),
@@ -85,8 +92,12 @@ export const ORDER_TAG_METHOD = Object.freeze({
   commodity: Object.freeze({ method: /** @type {OrderMethod} */ ('fixedOrder'), level: 5 })
 });
 
-/** The question IDs the suggestion rests on, for its labels. */
-export const LEVEL_SUGGESTION_QUESTIONS = Object.freeze(['C1', 'C2', 'F5', 'MPQ']);
+/**
+ * The question IDs the suggestion rests on, for its labels. C1 is confirmed
+ * [Team, 2026-10-28] and leaves; F5 stays for the JIT marker, since level 6 is
+ * held (section 3.6 of the team answers).
+ */
+export const LEVEL_SUGGESTION_QUESTIONS = Object.freeze(['C2', 'F5', 'MPQ']);
 
 /** The [Proposed] label's references (BL-208, C2, F5). */
 export const LEVEL_SUGGESTION_PROPOSAL = Object.freeze(['BL-208', 'C2', 'F5']);

@@ -108,13 +108,7 @@ export function ltpFgDemandRows(row, rowKey, t) {
       label: (
         <span>
           {t('ltpFg.row.consumptionAverage', { weeks: weeksN })}
-          {/* Design rule 5 — a figure built on a [Default] says so, with its question. */}
-          <span
-            className="block text-xs text-text-tertiary"
-            data-testid={`dant-cavg-provisional-${rowKey}`}
-          >
-            {t('ltpFg.provisional', { question: 'A11' })}
-          </span>
+          {/* A11's 13 weeks are confirmed [Team, 2026-10-28]: no Provisional label. */}
           {note ? <span className="block text-xs text-text-tertiary">{note}</span> : null}
         </span>
       ),

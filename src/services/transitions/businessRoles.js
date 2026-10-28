@@ -382,6 +382,10 @@ const LANE_BUNDLES = Object.freeze({
     // DRC-D11 (BL-196) — the Material Planner sets each material's OSIP level,
     // which picks its ROP Fisik formula (DRC-10).
     'osiplevel:set',
+    // Team answers 2026-10-28 (B3, B6, B7, B10, E2) — the Material Planner sets
+    // Z and g per material, f and the pull agreement per supplier, and the
+    // bottleneck production lead time per supplier × material.
+    'osipparam:set',
     // DRC-17 (BL-202) — the Material Planner saves what-if scenarios. Analysis
     // only: the verb changes no plan, PO, call-off, level or setting (BR-06).
     'whatifscenario:save',

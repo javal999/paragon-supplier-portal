@@ -356,6 +356,18 @@ export const LOOSE_END_CENSUS = Object.freeze([
       'separate creation verb to be an entry. A change is a new row; nothing is edited or deleted. The ' +
       'verb is statePreserving, so the state is correctly declared terminal.'
   },
+  // ── osipParam (team answers 2026-10-28) ──────────────────────────────────
+  {
+    entity: 'osipParam',
+    kind: 'initial-integrity',
+    subject: 'Maintained',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE OSIP LEVEL: the entity IS one value key ' +
+      '(a material, a supplier or a supplier × material the masters resolve), and setting its first value ' +
+      'adds it — so there is no separate creation verb to be an entry. A change is a new row; nothing is ' +
+      'edited or deleted. The verb is statePreserving, so the state is correctly declared terminal.'
+  },
   // ── hubSetting (BL-32)─────────────────────────────────────────────────────
   {
     entity: 'hubSetting',

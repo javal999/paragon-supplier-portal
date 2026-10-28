@@ -16,6 +16,9 @@ import { fisikConsumptionWeeks, materialCvs, osipSafety } from './osipSafetyRule
 const rulesWith = (over) =>
   /** @type {import('./osipRules').OsipRules} */ ({ ...OSIP_RULES, ...over });
 
+/** [Team C1] the earlier weekly CV buckets, which the hand-worked CV cases use. */
+const WEEKLY_CV = rulesWith({ cvBucket: 'week' });
+
 /**
  * The hand-worked material. LTP 100, 200, 300 over a 3-week lead time, MPQ 50;
  * the supplier's share of recorded consumption 700, 1,400, 2,100 a week
@@ -25,7 +28,7 @@ const rulesWith = (over) =>
 const HAND = Object.freeze({
   supplierId: 'sup-x',
   materialCode: 'MAT-HAND',
-  ltp: [100, 200, 300, 999],
+  ltp: [100, 200, 300],
   leadTimeWeeks: 3,
   mpq: 50,
   moq: 1000,
@@ -38,7 +41,7 @@ describe('osipSafety — one material worked by hand, defaults on', () => {
   const r = osipSafety(HAND);
 
   it('safety order: 1.65 × √3 × SD(100, 200, 300) = 285.79, up to the MPQ 50 → 300 [B2–B4]', () => {
-    // Sample SD of 100, 200, 300 is 100; week 4 (999) is outside the lead time.
+    // Sample SD of 100, 200, 300 is 100 — the LTP weeks there are, up to 13 [Team B2].
     expect(r.safetyOrder.sd).toBe(100);
     expect(r.safetyOrder.roundTo).toBe(50);
     expect(r.safetyOrder.value).toBe(300);
@@ -83,9 +86,21 @@ describe('osipSafety — every switch the page offers, recomputed, nothing store
     expect(imp.fisik.value).toBeCloseTo(1.65 * Math.sqrt(7) * 100 + 200, 9);
   });
 
+  it("[Team B2] the 13-week SD reads past the lead time; 'ltp' reads the lead-time weeks only", () => {
+    const longer = { ...HAND, ltp: [100, 200, 300, 999] };
+    // SD(100, 200, 300, 999) = 407.8 → 1.65 × √3 × 407.8 = 1,165.3 → 1,200.
+    expect(osipSafety(longer).safetyOrder).toMatchObject({ value: 1200 });
+    expect(osipSafety(longer).safetyOrder.sd).toBeCloseTo(407.76, 2);
+    // Week 4 (999) is outside the lead time: SD 100 → 300.
+    expect(osipSafety(longer, rulesWith({ sdSource: 'ltp' })).safetyOrder).toMatchObject({
+      sd: 100,
+      value: 300
+    });
+  });
+
   it('the default rules object is untouched by a variant run', () => {
     osipSafety(HAND, rulesWith({ sdSource: 'consumption12w', fisikSafety: 'sheet' }));
-    expect(OSIP_RULES.sdSource).toBe('ltp');
+    expect(OSIP_RULES.sdSource).toBe('ltp13w');
     expect(OSIP_RULES.fisikSafety).toBe('deck');
   });
 });
@@ -165,9 +180,9 @@ describe('BL-210 — the live function reads what the sandbox changes', () => {
 });
 
 describe('PPT 7 through the read (DRC-7 AC-01)', () => {
-  it('LT 5, MPQ 61,224 and the deck’s LTP give a safety order of 244,896', () => {
+  it('LT 5, MPQ 61,224 and the deck’s LTP give a safety order of 244,896 on the lead-time SD; 183,672 on 13 weeks', () => {
     const g = golden.ppt7;
-    const r = osipSafety({
+    const input = {
       supplierId: 'ppt7',
       materialCode: g.material,
       ltp: g.ltp,
@@ -177,13 +192,16 @@ describe('PPT 7 through the read (DRC-7 AC-01)', () => {
       koli: null,
       consumption: [],
       supplyArea: null
-    });
+    };
+    const r = osipSafety(input, rulesWith({ sdSource: 'ltp' }));
     expect(r.safetyOrder.value).toBe(244896);
     expect(r.safetyOrder.value).toBe(g.expected.safetyOrder);
+    // [Team B2] the default: SD of the 12 weeks the slide holds.
+    expect(osipSafety(input).safetyOrder.value).toBe(183672);
   });
 });
 
-describe('materialCvs — DRC-11 [Default C1]', () => {
+describe('materialCvs — DRC-11, weekly buckets (the earlier [Default C1])', () => {
   // SKU A: 10, 20, 30, 40 → mean 25, sample SD 12.91, CV 0.5164.
   // SKU B: 100 every week → CV 0, mean 100.
   const skuWeekly = new Map([
@@ -197,11 +215,14 @@ describe('materialCvs — DRC-11 [Default C1]', () => {
     { parentCode: 'SKU-A', componentCode: 'CMP-A' },
     { parentCode: 'SKU-C', componentCode: 'CMP-DEAD' }
   ];
-  const out = materialCvs({
-    skuWeekly,
-    bomLinks,
-    materialCodes: ['CMP-SHARED', 'CMP-A', 'CMP-DEAD', 'CMP-NONE']
-  });
+  const out = materialCvs(
+    {
+      skuWeekly,
+      bomLinks,
+      materialCodes: ['CMP-SHARED', 'CMP-A', 'CMP-DEAD', 'CMP-NONE']
+    },
+    WEEKLY_CV
+  );
   const cvA = Math.sqrt(((10 - 25) ** 2 + 5 ** 2 + 5 ** 2 + 15 ** 2) / 3) / 25;
 
   it('a 2-SKU component: (0.5164 × 25 + 0 × 100) ÷ 125 = 0.1033 → stable', () => {
@@ -227,12 +248,57 @@ describe('materialCvs — DRC-11 [Default C1]', () => {
       ...Array.from({ length: 4 }, () => 10_000),
       ...Array.from({ length: 26 }, () => 50)
     ];
-    const r = materialCvs({
-      skuWeekly: new Map([['S', series]]),
-      bomLinks: [{ parentCode: 'S', componentCode: 'C' }],
-      materialCodes: ['C']
-    });
+    const r = materialCvs(
+      {
+        skuWeekly: new Map([['S', series]]),
+        bomLinks: [{ parentCode: 'S', componentCode: 'C' }],
+        materialCodes: ['C']
+      },
+      WEEKLY_CV
+    );
     expect(r.get('C')).toMatchObject({ cv: 0, category: 'stable' });
     expect(r.get('C')?.skus[0].avgDemand).toBe(50);
+  });
+});
+
+describe('materialCvs — DRC-11 [Team C1]: six full calendar months', () => {
+  // asOfWeek Monday 2026-07-06: the series ends the week of 2026-06-29. 30
+  // weeks back starts Monday 2025-12-08, so Jan–Jun 2026 are the full months.
+  const asOfWeek = '2026-07-06';
+  const bomLinks = [{ parentCode: 'S', componentCode: 'C' }];
+  /** @param {number[]} weekly */
+  const run = (weekly) =>
+    materialCvs({ skuWeekly: new Map([['S', weekly]]), bomLinks, materialCodes: ['C'], asOfWeek });
+
+  it('70 a week is 10 a day: months of 31, 28, 31, 30, 31, 30 days → CV 0.0388, stable', () => {
+    const r = run(Array.from({ length: 30 }, () => 70));
+    const months = [310, 280, 310, 300, 310, 300];
+    const m = months.reduce((a, b) => a + b, 0) / 6;
+    const sd = Math.sqrt(months.reduce((n, x) => n + (x - m) ** 2, 0) / 5);
+    expect(r.get('C')?.cv).toBeCloseTo(sd / m, 9);
+    expect(r.get('C')?.cv).toBeCloseTo(0.0388, 4);
+    expect(r.get('C')).toMatchObject({ category: 'stable' });
+    expect(r.get('C')?.skus[0].avgDemand).toBeCloseTo(m, 9);
+  });
+
+  it('a spike in one month: 0 every week but 7,000 in the week of 2 March → fluctuative', () => {
+    const weekly = Array.from({ length: 30 }, () => 0);
+    weekly[12] = 7000; // 2025-12-08 + 12 weeks = 2026-03-02
+    expect(run(weekly).get('C')).toMatchObject({ category: 'fluctuative' });
+  });
+
+  it('[Proposed, owner 2026-10-28] fewer than six full months of history: no CV', () => {
+    // 20 weeks back starts 2026-02-16: only Mar–Jun are full.
+    expect(run(Array.from({ length: 20 }, () => 70)).get('C')).toMatchObject({
+      cv: null,
+      category: null,
+      noBom: false
+    });
+  });
+
+  it('monthly buckets need the current week', () => {
+    expect(() => materialCvs({ skuWeekly: new Map(), bomLinks, materialCodes: ['C'] })).toThrow(
+      RangeError
+    );
   });
 });

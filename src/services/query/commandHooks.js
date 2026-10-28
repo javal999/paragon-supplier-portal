@@ -28,6 +28,7 @@ import { scopeKey } from './useServiceQuery';
 import { reasonCodeEntityId } from '../transitions/reasonCodes';
 /** @import { WarehouseDecisionChoice } from '../transitions/warehouseDecisionRules' */
 import { warehouseDecisionEntityId } from '../transitions/warehouseDecisionRules';
+import { osipParamKey } from '../transitions/osipParams';
 /** @import { ForecastStream } from '../sdc/types' */
 
 /**
@@ -2961,6 +2962,42 @@ export function useOsipLevelCommand() {
             // BL-205 — the protection buffer reads the level in force.
             q.queryKey[1] === 'protectionBufferInputs')
       });
+    }
+  });
+}
+
+/**
+ * Team answers 2026-10-28 (B3, B6, B7, B10, E2) — set or reset one OSIP value
+ * of a material, a supplier or a supplier × material (fires `t_osipparam_set`).
+ * `value` null resets it to the default. Every OSIP read re-reads.
+ * @typedef {{
+ *   readonly param: import('@services/transitions/osipParams').OsipParam;
+ *   readonly supplierId?: string;
+ *   readonly materialCode?: string;
+ *   readonly value: number | boolean | null;
+ * }} OsipParamVars
+ */
+
+/** Set or reset an OSIP value (fires `t_osipparam_set`). */
+export function useOsipParamCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, OsipParamVars>} */ (useMutation)({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_osipparam_set',
+        entity: 'osipParam',
+        entityId: osipParamKey(vars.param, vars),
+        payload: { osipParamValue: vars.value }
+      }),
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      // The ROPs, the DA's safety order, the call-off trigger and the
+      // feedstock cadence all read these values.
+      qc.invalidateQueries({ predicate: (q) => q.queryKey[0] === 'procurement' });
+      qc.invalidateQueries({ predicate: (q) => q.queryKey[0] === 'supplier' });
     }
   });
 }

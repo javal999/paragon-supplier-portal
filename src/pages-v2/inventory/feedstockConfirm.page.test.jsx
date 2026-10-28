@@ -9,6 +9,8 @@ import { sdcClock } from '@services/sdc';
 import { NO_PERSON } from '@context/noPerson';
 import SupplierInventory from '../SupplierInventory';
 import BuyerInventory from '../BuyerInventory';
+import { osipParamStore } from '@services/data/mock/stores/osipParamStore';
+import { seedOsipParam } from '@test/osipParamSeed';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BL-194 · the feedstock confirmation on the real pages (DRC-8; DRC-D17):
@@ -23,15 +25,20 @@ const today = () => dayOf(sdcClock.now());
 
 beforeEach(() => {
   feedstockConfirmationStore.reset();
+  osipParamStore.reset();
   sdcClock.reset();
 });
 
 describe('supplier · Current feedstock', () => {
-  it('lists every assigned material as due, with the Provisional label (E1, E2) and no DA figure', async () => {
+  it('lists every assigned material as due, weekly, with no Provisional label (E1, E2 answered) and no DA figure', async () => {
     renderWithProviders(<SupplierInventory />, { identity: SUPPLIER, route: FEEDSTOCK_TAB });
     const panel = await screen.findByTestId('feedstock-confirm');
-    expect(within(panel).getByTestId('feedstock-provisional').textContent).toBe(
-      'Provisional: rule awaiting Material Planning (E1, E2)'
+    expect(within(panel).queryByTestId('feedstock-provisional')).toBeNull();
+    expect(within(panel).getByTestId('feedstock-intro')).toHaveTextContent(
+      'weekly with the stock update'
+    );
+    expect(within(panel).getByTestId('feedstock-due')).toHaveTextContent(
+      'Due with the weekly stock update'
     );
     expect(within(panel).getByTestId(`feedstock-status-${CODE}`).textContent).toBe('Due');
     expect(within(panel).getByTestId(`feedstock-latest-${CODE}`).textContent).toBe(
@@ -39,6 +46,19 @@ describe('supplier · Current feedstock', () => {
     );
     // DRC-D10 — no demand anticipation reaches a supplier.
     expect(within(panel).queryByText(/anticipation|Target/i)).toBeNull();
+  });
+
+  it('[Team E2] a supplier on a pull agreement confirms daily: the panel says so and its cycle is today', async () => {
+    seedOsipParam('pullAgreement', { supplierId: 'sup-007' }, true);
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER, route: FEEDSTOCK_TAB });
+    const panel = await screen.findByTestId('feedstock-confirm');
+    expect(within(panel).getByTestId('feedstock-intro')).toHaveTextContent(
+      'You are on a pull agreement: confirm the feedstock you hold for each material every day.'
+    );
+    expect(within(panel).getByTestId('feedstock-due')).toHaveTextContent(
+      'Due today, by the end of the day:'
+    );
+    expect(within(panel).getByTestId(`feedstock-status-${CODE}`).textContent).toBe('Due');
   });
 
   it('refuses a future date in the form, then confirms; the material reads Confirmed', async () => {
@@ -156,8 +176,7 @@ describe('PTI · the feedstock line beside the supplier stock', () => {
     expect(screen.getByTestId(`pti-feedstock-target-sup-007-${CODE}`).textContent).toMatch(
       /^Target 0 /
     );
-    expect(screen.getByTestId(`pti-feedstock-provisional-sup-007-${CODE}`).textContent).toBe(
-      'Provisional: rule awaiting Material Planning (E1, E2)'
-    );
+    // E1 and E2 answered [Team, 2026-10-28]: no Provisional label.
+    expect(screen.queryByTestId(`pti-feedstock-provisional-sup-007-${CODE}`)).toBeNull();
   });
 });

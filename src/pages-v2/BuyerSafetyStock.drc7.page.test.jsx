@@ -104,15 +104,14 @@ const render = async () => {
 describe('BL-193 — OSIP safety beside the engine challenger', () => {
   it('the three OSIP columns carry the provisional label with their question IDs; the engine figure is labelled the challenger', async () => {
     await render();
+    // [Team, 2026-10-28] B2, B3, B5, B6, B7 and C1 answered: only the open questions remain.
     expect(screen.getByTestId('sst-osip-prov-safetyOrder')).toHaveTextContent(
-      'Provisional: rule awaiting Material Planning (B2, B3, B4, MPQ)'
+      'Provisional: rule awaiting Material Planning (B4, MPQ)'
     );
     expect(screen.getByTestId('sst-osip-prov-fisikSafety')).toHaveTextContent(
-      'Provisional: rule awaiting Material Planning (B1, B5, B6, B7, MPQ)'
+      'Provisional: rule awaiting Material Planning (B1, MPQ)'
     );
-    expect(screen.getByTestId('sst-osip-prov-cv')).toHaveTextContent(
-      'Provisional: rule awaiting Material Planning (C1)'
-    );
+    expect(screen.queryByTestId('sst-osip-prov-cv')).toBeNull();
     expect(screen.getByTestId('sst-osip-no-capacity')).toHaveTextContent(
       'Production capacity not available'
     );
@@ -128,9 +127,9 @@ describe('BL-193 — OSIP safety beside the engine challenger', () => {
     );
   });
 
-  it('safety order per supplier: RM-STEAR-7300 × sup-002 = 700 (SD 157.94 over 7 LTP weeks, MPQ 25); no LTP reads so', async () => {
+  it('safety order per supplier: RM-STEAR-7300 × sup-002 = 950 (SD 217.40 over 13 LTP weeks [Team B2], MPQ 25); no LTP reads so', async () => {
     const row = await render();
-    expect(within(row).getByTestId('sst-osip-so-RM-STEAR-7300-sup-002')).toHaveTextContent('700');
+    expect(within(row).getByTestId('sst-osip-so-RM-STEAR-7300-sup-002')).toHaveTextContent('950');
     expect(screen.getByTestId('sst-osip-so-AI-PANTO-6640-sup-009')).toHaveTextContent(
       'No LTP over the lead time'
     );
@@ -192,12 +191,16 @@ describe('BL-193 — the rule switches recompute the view and store nothing', ()
     await render();
     const before = consumptionStore.all().length;
     pick('safetyRounding', 'moq');
-    // RM-STEAR-7300 × sup-002: MOQ 1,250 → 689.5 rounds up to 1,250.
+    // RM-STEAR-7300 × sup-002: MOQ 1,250 → 949.05 rounds up to 1,250.
     expect(screen.getByTestId('sst-osip-so-RM-STEAR-7300-sup-002')).toHaveTextContent('1,250');
     pick('fisikSafety', 'sheet');
     pick('safetyRounding', 'mpq');
     pick('fisikSafety', 'deck');
+    expect(screen.getByTestId('sst-osip-so-RM-STEAR-7300-sup-002')).toHaveTextContent('950');
+    // The lead-time SD (the earlier default): SD 157.94 × 1.65 × √7 = 689.50 → 700.
+    pick('sdSource', 'ltp');
     expect(screen.getByTestId('sst-osip-so-RM-STEAR-7300-sup-002')).toHaveTextContent('700');
+    pick('sdSource', 'ltp13w');
     expect(screen.queryByTestId('sst-osip-variant')).toBeNull();
     expect(consumptionStore.all().length).toBe(before);
   });
@@ -239,8 +242,8 @@ describe('Bahasa Indonesia', () => {
     await i18n.changeLanguage('id');
     await render();
     expect(screen.getByText('Pesanan pengaman (ROP Order)')).toBeInTheDocument();
-    expect(screen.getByTestId('sst-osip-prov-cv')).toHaveTextContent(
-      'Sementara: aturan menunggu Material Planning (C1)'
+    expect(screen.getByTestId('sst-osip-prov-safetyOrder')).toHaveTextContent(
+      'Sementara: aturan menunggu Material Planning (B4, MPQ)'
     );
     expect(screen.getByTestId('sst-challenger')).toHaveTextContent('Pembanding');
     expect(screen.getByText('Pengalih aturan OSIP')).toBeInTheDocument();

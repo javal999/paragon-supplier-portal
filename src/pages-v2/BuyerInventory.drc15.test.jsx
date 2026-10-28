@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { fireEvent, screen, within } from '@testing-library/react';
 import { renderWithProviders, BUYER } from '@test/test-utils';
 import BuyerInventory from './BuyerInventory';
@@ -6,6 +6,8 @@ import { MockProcurementService } from '@services/data/mock/MockProcurementServi
 import { goodsReceiptStore } from '@services/data/mock/stores/goodsReceiptStore';
 import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
 import { NO_PERSON } from '@context/noPerson';
+import { osipParamStore } from '@services/data/mock/stores/osipParamStore';
+import { seedOsipParam } from '@test/osipParamSeed';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DRC-D15 (BL-196) — the supplier's ROP on the stock template is DISPLAY ONLY.
@@ -15,11 +17,21 @@ import { NO_PERSON } from '@context/noPerson';
 //
 // RM-STEAR-7300 × sup-002: NPD on the sample data (first order 8,000 of 15,000
 // KG received), so its ROP Fisik demand is the highest LTP of the next 3
-// months, 2,940 a week = 420 a day; ROP Supplier = CEILING(420 × (machine
-// queue 11 + production 23) days, MPQ 25) = 14,300 KG.
+// months, 2,940 a week = 420 a day; ROP Supplier = CEILING(420 × bottleneck
+// production lead time 34 days [Team B10, set here], MPQ 25) = 14,300 KG.
 // ─────────────────────────────────────────────────────────────────────────────
 
-afterEach(() => goodsReceiptStore.reset());
+beforeEach(() =>
+  seedOsipParam(
+    'bottleneckLeadTimeDays',
+    { supplierId: 'sup-002', materialCode: 'RM-STEAR-7300' },
+    34
+  )
+);
+afterEach(() => {
+  goodsReceiptStore.reset();
+  osipParamStore.reset();
+});
 
 describe('DRC-D15 — the supplier ROP figure is display only', () => {
   it('the label says so; the system ROP Supplier sits under the supplier’s own figure', async () => {

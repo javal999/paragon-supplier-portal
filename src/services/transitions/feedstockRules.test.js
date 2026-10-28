@@ -10,6 +10,7 @@ import {
   FEEDSTOCK_REFUSALS,
   FEEDSTOCK_RULES,
   feedstockCycleStatus,
+  feedstockDayFor,
   feedstockEntryRefusal,
   feedstockRefusalOf,
   feedstockTarget,
@@ -28,12 +29,12 @@ const entry = (over = {}) => ({
   ...over
 });
 
-describe('[Default E1, E2] the rules block', () => {
-  it('LT spare defaults to 0 and the cadence is the weekly stock cycle; the label names E1 and E2', () => {
+describe('[Team E1, E2] the rules block', () => {
+  it('LT spare is 0 and the cadence follows the pull agreement; no Provisional label is left', () => {
     expect(FEEDSTOCK_RULES.ltSpareWeeks).toBe(0);
-    expect(FEEDSTOCK_RULES.cadence).toBe('weeklyStockCycle');
+    expect(FEEDSTOCK_RULES.cadence).toBe('byPullAgreement');
     expect(Object.isFrozen(FEEDSTOCK_RULES)).toBe(true);
-    expect([...FEEDSTOCK_PROVISIONAL_QUESTIONS]).toEqual(['E1', 'E2']);
+    expect([...FEEDSTOCK_PROVISIONAL_QUESTIONS]).toEqual([]);
   });
 });
 
@@ -166,7 +167,44 @@ describe('DRC-8 BR-b [Default E2] · due with the stock update cycle', () => {
   });
 });
 
-describe('DRC-8 BR-e [Default E1] · target feedstock = LT spare × weekly demand', () => {
+describe('[Team E2] BR-b · a supplier on a pull agreement confirms daily', () => {
+  const calendar = hubWorkingCalendar();
+  const settings = { cutoffDay: 4, cutoffTime: 15 * 60 };
+  // Tuesday 13 Oct 2026, 10:00 WIB (UTC+7).
+  const now = '2026-10-13T03:00:00.000Z';
+
+  it('the cycle is the hub day, midnight to midnight WIB', () => {
+    expect(feedstockDayFor(now, calendar)).toEqual({
+      start: '2026-10-12T16:59:59.999Z',
+      cutoff: '2026-10-13T16:59:59.999Z'
+    });
+  });
+
+  it('confirmed today is confirmed; yesterday is due today and missed yesterday; the weekly supplier is not due', () => {
+    const rows = [
+      { supplierId: 's1', materialCode: 'A', feedstockRecordedAt: '2026-10-13T01:00:00.000Z' },
+      // Monday 12 Oct, 09:00 WIB: inside the weekly cycle, not today.
+      { supplierId: 's1', materialCode: 'B', feedstockRecordedAt: '2026-10-12T02:00:00.000Z' },
+      // Sunday 11 Oct: missed Monday too.
+      { supplierId: 's1', materialCode: 'C', feedstockRecordedAt: '2026-10-11T02:00:00.000Z' }
+    ];
+    const daily = feedstockCycleStatus('s1', rows, now, calendar, settings, true);
+    expect(daily.updated).toEqual(['A']);
+    expect(daily.missing).toEqual(['B', 'C']);
+    expect(daily.missed).toEqual(['C']);
+    // The same rows with no pull agreement: all inside the weekly cycle (Thu 8 Oct 15:00 → Thu 15 Oct).
+    expect(feedstockCycleStatus('s1', rows, now, calendar, settings, false).missing).toEqual([]);
+    // The earlier rule ignores the flag.
+    expect(
+      feedstockCycleStatus('s1', rows, now, calendar, settings, true, {
+        ...FEEDSTOCK_RULES,
+        cadence: 'weeklyStockCycle'
+      }).missing
+    ).toEqual([]);
+  });
+});
+
+describe('DRC-8 BR-e [Team E1] · target feedstock = LT spare × weekly demand', () => {
   it('with LT spare 0 the target is 0, with or without a demand', () => {
     expect(feedstockTarget({ weeklyDemand: 700 })).toBe(0);
     expect(feedstockTarget({ weeklyDemand: null })).toBe(0);

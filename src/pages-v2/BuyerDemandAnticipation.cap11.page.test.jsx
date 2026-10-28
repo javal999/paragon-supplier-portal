@@ -107,7 +107,8 @@ describe('recording consumption (typed)', () => {
     );
     expect(within(card).getByText('Recorded consumption')).toBeInTheDocument();
     // DRC-4 BR-02 replaced absorbing an excess: the published figure stays.
-    expect(within(card).getByTestId(`dant-figure-${KEY}-${W36}`)).toHaveTextContent('3,220');
+    // LTP 2,520 + safety order 950 (13-week SD, Team B2) in week 1.
+    expect(within(card).getByTestId(`dant-figure-${KEY}-${W36}`)).toHaveTextContent('3,470');
     expect(within(card).queryByTestId(/^dant-absorbed-/)).toBeNull();
     expectNoAbbreviation();
   });

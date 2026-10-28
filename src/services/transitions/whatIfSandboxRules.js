@@ -34,8 +34,15 @@
 /** @import { PtiPlant, TriggerLine } from './callOffTriggerRules' */
 /** @import { RollingDaFigure } from './demandAnticipationRules' */
 /** @import { LeadTimeRoute, LeadTimeStep } from '../engine/types' */
-import { OSIP_RULES, RULES_VERSION, horizonWeeksOf, projectedSoh } from './osipRules';
-import { osipSafety } from './osipSafetyRules';
+import {
+  OSIP_RULES,
+  RULES_VERSION,
+  horizonWeeksOf,
+  maxRoundingUnit,
+  projectedSoh
+} from './osipRules';
+import { OSIP_SAFETY_QUESTIONS, osipSafety } from './osipSafetyRules';
+import { rulesForMaterial } from './osipParams';
 import {
   NPD_RULES,
   OSIP_LEVELS,
@@ -134,6 +141,7 @@ export const WHAT_IF_RULES = Object.freeze({
  *   readonly f: number | null;
  *   readonly consumption: readonly number[];
  *   readonly sd?: number | null;
+ *   readonly bottleneckLeadTimeDays?: number | null;
  *   readonly mpq: number;
  *   readonly moq: number;
  *   readonly koli: number | null;
@@ -163,6 +171,8 @@ export const WHAT_IF_RULES = Object.freeze({
  *   readonly npdRule: NpdRule;
  *   readonly plantComparison: 'combined' | 'perPlant';
  *   readonly maxCap: 'mpqMultiple' | 'exact';
+ *   readonly quantityRule: 'minimumDelivery' | 'fillToMax';
+ *   readonly minimumDeliveryAboveMax: 'callOff' | 'wait';
  *   readonly productionLimitSource: 'allocatedCapacity' | 'sadrFeed';
  * }} WhatIfSwitches
  */
@@ -173,6 +183,8 @@ export const DEFAULT_SWITCHES = Object.freeze({
   npdRule: OSIP_ROP_READ.npdRule,
   plantComparison: CALL_OFF_TRIGGER_RULES.plantComparison,
   maxCap: CALL_OFF_TRIGGER_RULES.maxCap,
+  quantityRule: CALL_OFF_TRIGGER_RULES.quantityRule,
+  minimumDeliveryAboveMax: CALL_OFF_TRIGGER_RULES.minimumDeliveryAboveMax,
   productionLimitSource: BUFFER_RULES.productionLimitSource
 });
 
@@ -205,7 +217,13 @@ export const SWITCH_CATALOG = Object.freeze([
     options: ['week1', 'spread'],
     feeds: true
   },
-  { path: 'osip.planCheckIncludesSoh', question: 'A2', kind: 'boolean', feeds: true },
+  {
+    path: 'osip.planCheckBasis',
+    question: 'A2',
+    kind: 'choice',
+    options: ['totalOspo', 'sohOspoOsprPr', 'ospoOsprPr'],
+    feeds: true
+  },
   // [Owner A8] — the live DA picks the target from the recorded agreement
   // (`rollingDaFigure` passes `carryTo`), so this key moves no live figure.
   {
@@ -239,9 +257,10 @@ export const SWITCH_CATALOG = Object.freeze([
     path: 'osip.sdSource',
     question: 'B2',
     kind: 'choice',
-    options: ['ltp', 'consumption12w'],
+    options: ['ltp13w', 'ltp', 'consumption12w'],
     feeds: true
   },
+  { path: 'osip.ltpSdWeeks', question: 'B2', kind: 'number', feeds: true },
   { path: 'osip.consumptionSdWeeks', question: 'B2', kind: 'number', feeds: true },
   { path: 'osip.z', question: 'B3', kind: 'number', feeds: true },
   {
@@ -261,6 +280,15 @@ export const SWITCH_CATALOG = Object.freeze([
     feeds: true
   },
   { path: 'osip.cvThreshold', question: 'C1', kind: 'number', feeds: false, note: 'cvOnly' },
+  {
+    path: 'osip.cvBucket',
+    question: 'C1',
+    kind: 'choice',
+    options: ['month', 'week'],
+    feeds: false,
+    note: 'cvOnly'
+  },
+  { path: 'osip.cvWindowMonths', question: 'C1', kind: 'number', feeds: false, note: 'cvOnly' },
   { path: 'osip.cvWindowWeeks', question: 'C1', kind: 'number', feeds: false, note: 'cvOnly' },
   { path: 'osip.defaultLevel', question: 'C2', kind: 'number', feeds: true, note: 'levelInput' },
   { path: 'npdRule', question: 'D1', kind: 'choice', options: NPD_RULES, feeds: true },
@@ -279,7 +307,27 @@ export const SWITCH_CATALOG = Object.freeze([
     options: ['combined', 'perPlant'],
     feeds: true
   },
-  { path: 'maxCap', question: 'A7', kind: 'choice', options: ['mpqMultiple', 'exact'], feeds: true }
+  {
+    path: 'maxCap',
+    question: 'A7',
+    kind: 'choice',
+    options: ['mpqMultiple', 'exact'],
+    feeds: true
+  },
+  {
+    path: 'quantityRule',
+    question: 'F5',
+    kind: 'choice',
+    options: ['minimumDelivery', 'fillToMax'],
+    feeds: true
+  },
+  {
+    path: 'minimumDeliveryAboveMax',
+    question: 'F5',
+    kind: 'choice',
+    options: ['callOff', 'wait'],
+    feeds: true
+  }
 ]);
 
 /**
@@ -311,14 +359,28 @@ export function withSwitch(switches, path, value) {
 }
 
 /**
- * The switches a scenario differs from the rules in force on.
+ * The switches a scenario differs from the rules in force on (or from `base`,
+ * the PPT 7 preset's own switches).
  * @param {WhatIfSwitches} switches
+ * @param {WhatIfSwitches} [base]
  * @returns {string[]}
  */
-export function changedSwitches(switches) {
+export function changedSwitches(switches, base = DEFAULT_SWITCHES) {
   return SWITCH_CATALOG.filter(
-    (s) => switchValue(switches, s.path) !== switchValue(DEFAULT_SWITCHES, s.path)
+    (s) => switchValue(switches, s.path) !== switchValue(base, s.path)
   ).map((s) => s.path);
+}
+
+/**
+ * [Team B3, B7] the switches a pair opens on: `base` with the material's own
+ * Z and g (`osipParams`), when the planner set them.
+ * @param {WhatIfSwitches} base
+ * @param {{ readonly z?: number | null; readonly g?: number | null }} own
+ * @returns {WhatIfSwitches}
+ */
+export function switchesForMaterial(base, own) {
+  const osip = rulesForMaterial(base.osip, own);
+  return osip === base.osip ? base : { ...base, osip };
 }
 
 /**
@@ -528,7 +590,9 @@ export function runWhatIf(inputs, switches = DEFAULT_SWITCHES) {
     ltpNext3m: ltp.slice(0, npdLtpWeeks(rules)),
     npd: inputs.npd[switches.npdRule],
     // BL-210 — the typed SD, when there is one.
-    sd: inputs.sd ?? null
+    sd: inputs.sd ?? null,
+    // [Team B10] ROP Supplier's bottleneck production lead time.
+    bottleneckLeadTimeDays: inputs.bottleneckLeadTimeDays ?? null
   };
   const safety = osipSafety(osipInput, rules);
   const rops = osipRops(osipInput, safety, inputs.level, rules);
@@ -575,7 +639,9 @@ export function runWhatIf(inputs, switches = DEFAULT_SWITCHES) {
   const trigRules = {
     ...CALL_OFF_TRIGGER_RULES,
     plantComparison: switches.plantComparison,
-    maxCap: switches.maxCap
+    maxCap: switches.maxCap,
+    quantityRule: switches.quantityRule,
+    minimumDeliveryAboveMax: switches.minimumDeliveryAboveMax
   };
   const plantShare = PTI_PLANTS.map((p) =>
     soh > 0 ? (inputs.soh[p] ?? 0) / soh : p === 'J6' ? 1 : 0
@@ -624,7 +690,10 @@ export function runWhatIf(inputs, switches = DEFAULT_SWITCHES) {
                 balance,
                 supplierId: inputs.supplierId,
                 mpq: inputs.mpq,
-                f
+                f,
+                // [Team F5] MDQ = MOQ; rounded the way max stock rounds.
+                mdq: inputs.moq > 0 ? inputs.moq : null,
+                roundTo: maxRoundingUnit({ area, koli: inputs.koli, moq: inputs.moq }, rules)
               }
             ]
           : [];
@@ -730,7 +799,7 @@ export const HEADLINE_QUESTIONS = Object.freeze({
   ropOrder: OSIP_ROP_QUESTIONS.ropOrder,
   ropFisik: OSIP_ROP_QUESTIONS.ropFisik,
   max: OSIP_ROP_QUESTIONS.max,
-  safetyOrder: Object.freeze(['B2', 'B3', 'B4', 'MPQ']),
+  safetyOrder: OSIP_SAFETY_QUESTIONS.safetyOrder,
   totalDa: DA_PROVISIONAL_QUESTIONS,
   prNeed: Object.freeze([...OSIP_ROP_QUESTIONS.ropOrder, 'A9']),
   prRecommendation: Object.freeze([...DA_PROVISIONAL_QUESTIONS, 'B9']),
@@ -738,7 +807,7 @@ export const HEADLINE_QUESTIONS = Object.freeze({
   triggerPr: CALL_OFF_TRIGGER_QUESTIONS,
   remainder: DA_PROVISIONAL_QUESTIONS,
   carried: Object.freeze(['A8b']),
-  firstShortageWeek: Object.freeze([...CALL_OFF_TRIGGER_QUESTIONS, 'A1']),
+  firstShortageWeek: CALL_OFF_TRIGGER_QUESTIONS,
   weeksAboveMax: Object.freeze([...CALL_OFF_TRIGGER_QUESTIONS])
 });
 
@@ -888,6 +957,9 @@ export function inputsProblem(raw) {
   if (!isQtyList(i.consumption)) return 'consumption';
   // BL-210 — absent in a scenario saved before the typed SD existed.
   if (i.sd !== undefined && !isQtyOrNull(i.sd)) return 'sd';
+  // [Team B10] absent in a scenario saved before 2026-10-28.
+  if (i.bottleneckLeadTimeDays !== undefined && !isQtyOrNull(i.bottleneckLeadTimeDays))
+    return 'bottleneckLeadTimeDays';
   for (const k of ['mpq', 'moq', 'ospoStart', 'newPoPrev', 'callOffPrev', 'callOff'])
     if (!isQty(i[k])) return k;
   for (const k of ['koli', 'maxOverride', 'carryOverLimit', 'ospr', 'feedstock'])
@@ -939,6 +1011,23 @@ export function scenarioRefusal(payload, ctx) {
  * (DRC-17: "record which result they confirm"). It names no real supplier.
  */
 export const PPT7_SUPPLIER_ID = 'ppt7-golden';
+
+/**
+ * BR-08 — the switches the PPT 7 case opens on. The slide's figures come from
+ * the earlier readings the owner kept as variants on 2026-10-28: the safety
+ * order's SD over the lead-time weeks (`sdSource: 'ltp'`, B2; 13 weeks gives
+ * SS 183,672) and the plan check against SOH + OSPO + OSPR + PR
+ * (`planCheckBasis: 'sohOspoOsprPr'`, A2; PR −645,559 is that arithmetic).
+ * @type {WhatIfSwitches}
+ */
+export const PPT7_SWITCHES = Object.freeze({
+  ...DEFAULT_SWITCHES,
+  osip: Object.freeze({
+    ...OSIP_RULES,
+    sdSource: /** @type {const} */ ('ltp'),
+    planCheckBasis: /** @type {const} */ ('sohOspoOsprPr')
+  })
+});
 
 /**
  * The golden case PPT 7 as `__fixtures__/osipGolden.json` holds it.

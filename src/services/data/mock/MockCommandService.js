@@ -173,6 +173,7 @@ import { warehouseDecisionTarget } from './targets/warehouseDecision';
 import { demandAnticipationTarget } from './targets/demandAnticipation';
 import { consumptionTarget } from './targets/consumption';
 import { osipLevelTarget } from './targets/osipLevel';
+import { osipParamTarget } from './targets/osipParam';
 // BL-202 — the what-if sandbox's saved scenarios (its own module, DRC-17).
 import { whatIfScenarioTarget } from './targets/whatIfScenario';
 import { observeNpdTags } from './osipRopReadModel';
@@ -6252,6 +6253,7 @@ const TARGETS = {
   consumption: consumptionTarget,
   // DRC-D11 (BL-196) — the OSIP level per material. Ships in the same commit as its flow.
   osipLevel: osipLevelTarget,
+  osipParam: osipParamTarget,
   // DRC-17 BR-05 (BL-202) — a saved what-if scenario, append-only, analysis
   // only. Ships in the same commit as its flow.
   whatIfScenario: whatIfScenarioTarget,

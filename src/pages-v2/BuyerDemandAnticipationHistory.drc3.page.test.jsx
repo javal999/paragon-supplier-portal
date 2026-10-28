@@ -61,9 +61,9 @@ describe('the publications, with their stamp and parts', () => {
     expect(within(card).getByTestId(`dah-da-${EMUL}-${W36}`).textContent).toMatch(/\d/);
     expect(within(card).getByTestId(`dah-carry-${EMUL}`)).toHaveTextContent('Carried to W');
     expect(within(card).getByTestId(`dah-agreed-${EMUL}`)).toHaveTextContent('No');
-    // Design rule 5 — built on [Default] A1, A2, A8b, A9.
+    // Design rule 5 — built on [Default] A8b, A9 (A1, A2 answered 2026-10-28).
     expect(screen.getByTestId('dah-provisional')).toHaveTextContent(
-      'Provisional: rule awaiting Material Planning (A1, A2, A8b, A9)'
+      'Provisional: rule awaiting Material Planning (A8b, A9)'
     );
     expectNoAbbreviation();
   });

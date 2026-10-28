@@ -15,7 +15,7 @@
 //   CV               = SD ÷ mean; components demand-weighted          (DRC-11)
 //   strategic buffer = LTP − baseline                                 (DRC-9a)
 //   rolling DA       = one supplier × material × planning week        (DRC-2)
-//   plan check       = Total DA − (SOH + OSPO + OSPR + PR)             (DRC-4)
+//   plan check       = Total DA − Total OSPO, per `planCheckBasis`       (DRC-4)
 //
 // Every [Default] is ONE key of `OSIP_RULES` (design rule 2), and every
 // function takes the rules as its last argument, defaulting to `OSIP_RULES`,
@@ -28,8 +28,15 @@
 // spreadsheet's STDEV. PPT 7 reproduces with it (SD 57,801.5 → SS 244,896).
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Bump on any change to a key or a formula; stamped on every stored figure. */
-export const RULES_VERSION = 'osip-2026-10-19.2';
+/**
+ * Bump on any change to a key or a formula; stamped on every stored figure.
+ * 2026-10-28.1 — the Material Planning team's answers, owner ruling
+ * 2026-10-28: plan check vs Total OSPO (A2), 13-week LTP SD (B2), monthly CV
+ * buckets (C1), ROP FS removed and ROP Supplier on the bottleneck lead time
+ * (B10), Z / g / f per material or supplier (B3, B7, B6), daily confirmation
+ * on a pull agreement (E2), call-off quantity = minimum delivery (F5).
+ */
+export const RULES_VERSION = 'osip-2026-10-28.1';
 
 /** @typedef {'import' | 'jabodetabek' | 'outsideJabodetabek'} SupplyArea */
 
@@ -38,7 +45,8 @@ export const RULES_VERSION = 'osip-2026-10-19.2';
  * passes a changed copy).
  * @typedef {{
  *   readonly z: number;
- *   readonly sdSource: 'ltp' | 'consumption12w';
+ *   readonly sdSource: 'ltp13w' | 'ltp' | 'consumption12w';
+ *   readonly ltpSdWeeks: number;
  *   readonly consumptionSdWeeks: number;
  *   readonly safetyRounding: 'mpq' | 'koli' | 'moq';
  *   readonly fisikSafety: 'deck' | 'sheet';
@@ -47,10 +55,12 @@ export const RULES_VERSION = 'osip-2026-10-19.2';
  *   readonly maxRule: 'deck' | 'sheetGuidance';
  *   readonly replenishmentCycleDays: Readonly<Record<SupplyArea, number>>;
  *   readonly cvThreshold: number;
+ *   readonly cvBucket: 'month' | 'week';
+ *   readonly cvWindowMonths: number;
  *   readonly cvWindowWeeks: number;
  *   readonly defaultLevel: number;
  *   readonly daSafetyPlacement: 'week1' | 'spread';
- *   readonly planCheckIncludesSoh: boolean;
+ *   readonly planCheckBasis: 'totalOspo' | 'sohOspoOsprPr' | 'ospoOsprPr';
  *   readonly carryOverTarget: 'lastWeek' | 'firstOutside';
  *   readonly carryOverLimit: 'salesOrderQty4w';
  *   readonly consumptionMovingAvgWeeks: number;
@@ -65,8 +75,16 @@ export const RULES_VERSION = 'osip-2026-10-19.2';
 export const OSIP_RULES = Object.freeze({
   /** [Default B3] safety factor, every material. */
   z: 1.65,
-  /** [Default B2] SD behind the safety order: LTP over the lead-time weeks, or the last `consumptionSdWeeks` weeks of consumption (sheet). */
-  sdSource: /** @type {'ltp' | 'consumption12w'} */ ('ltp'),
+  /**
+   * [Team, 2026-10-28, B2; owner ruling 2026-10-28] SD behind the safety order
+   * (ROP Order): 'ltp13w' = LTP over the next `ltpSdWeeks` weeks (default);
+   * 'ltp' = LTP over the lead-time weeks (the earlier default; PPT 7's golden
+   * SS 244,896 runs on it); 'consumption12w' = the last `consumptionSdWeeks`
+   * weeks of consumption (sheet). The ROP Fisik SD waits on B1: untouched.
+   */
+  sdSource: /** @type {'ltp13w' | 'ltp' | 'consumption12w'} */ ('ltp13w'),
+  /** [Team, 2026-10-28, B2] the LTP window of the `'ltp13w'` variant, in weeks from week 1. */
+  ltpSdWeeks: 13,
   /** [Default B2] the window of the `'consumption12w'` variant. */
   consumptionSdWeeks: 12,
   /** [Default B4] the safety order rounds up to a multiple of this size. */
@@ -81,16 +99,31 @@ export const OSIP_RULES = Object.freeze({
   maxRule: /** @type {'deck' | 'sheetGuidance'} */ ('deck'),
   /** [Default B6] BL-200 / DRC-14: replenishment cycle f, in days, by supply area. */
   replenishmentCycleDays: Object.freeze({ import: 7, jabodetabek: 1, outsideJabodetabek: 2 }),
-  /** [Default C1] stable below, fluctuative at or above. */
+  /** [Team, 2026-10-28, C1] stable below, fluctuative at or above; final. */
   cvThreshold: 0.5,
-  /** [Default C1] CV window, weekly buckets. */
+  /**
+   * [Team, 2026-10-28, C1; owner ruling 2026-10-28] CV buckets: 'month' = the
+   * last `cvWindowMonths` full calendar months (default); 'week' = the last
+   * `cvWindowWeeks` weekly buckets (the earlier default). The category is set
+   * by the FG-variant CV ("CV Comp FG Var"), as `componentCv` weights it.
+   */
+  cvBucket: /** @type {'month' | 'week'} */ ('month'),
+  /** [Team, 2026-10-28, C1] six months. */
+  cvWindowMonths: 6,
+  /** [Default C1] the `'week'` variant's window, weekly buckets. */
   cvWindowWeeks: 26,
   /** [Default C2] OSIP level of a material nobody classified (DRC-D11). */
   defaultLevel: 4,
   /** [Default A1] where the safety order sits in DA: all in week 1, or spread evenly over the horizon. */
   daSafetyPlacement: /** @type {'week1' | 'spread'} */ ('week1'),
-  /** [Default A2] the plan check counts SOH as supply. */
-  planCheckIncludesSoh: true,
+  /**
+   * [Team, 2026-10-28, A2; owner ruling 2026-10-28] the supply the plan check
+   * sets against Total DA: 'totalOspo' (the target "Total OSPO = Total DA";
+   * SOH, OSPR and PR are SAP MRP elements, shown as context only), or the
+   * earlier readings 'sohOspoOsprPr' (SOH + OSPO + OSPR + PR; PPT 7's golden
+   * fixture runs on it) and 'ospoOsprPr' (the same without SOH).
+   */
+  planCheckBasis: /** @type {'totalOspo' | 'sohOspoOsprPr' | 'ospoOsprPr'} */ ('totalOspo'),
   /** [Owner A8] where a remainder goes: the last week of the horizon, or the first week outside it (supplier agreed only). */
   carryOverTarget: /** @type {'lastWeek' | 'firstOutside'} */ ('lastWeek'),
   /** [Default A8b] the carry-over limit is a QUANTITY (last 4 weeks of sales orders), passed in per supplier; this names its unit. */
@@ -177,10 +210,23 @@ export function cycleStock(ltp, leadTimeWeeks) {
 }
 
 /**
+ * The series behind the safety order's SD, per `sdSource` [Team B2]: LTP over
+ * the next `ltpSdWeeks` weeks (as many as `ltp` holds), LTP over the
+ * lead-time weeks, or the last `consumptionSdWeeks` weeks of consumption.
+ * @param {{ readonly ltp: readonly number[]; readonly leadTimeWeeks: number; readonly consumption?: readonly number[] }} input
+ * @param {OsipRules} [rules]
+ * @returns {readonly number[]}
+ */
+export function safetySdSeries(input, rules = OSIP_RULES) {
+  if (rules.sdSource === 'consumption12w')
+    return (input.consumption ?? []).slice(-rules.consumptionSdWeeks);
+  if (rules.sdSource === 'ltp') return input.ltp.slice(0, horizonWeeksOf(input.leadTimeWeeks));
+  return input.ltp.slice(0, rules.ltpSdWeeks);
+}
+
+/**
  * DRC-7 BR-01 — safety order = z × √LT(weeks) × SD, rounded up per
- * `safetyRounding` [Default B4]. SD per `sdSource` [Default B2]: the sample
- * SD of LTP over the lead-time weeks, or of the last `consumptionSdWeeks`
- * weeks of consumption. BL-210 — an `sd` given (the sandbox's typed SD)
+ * `safetyRounding` [Default B4]. SD per `sdSource` (`safetySdSeries`). BL-210 — an `sd` given (the sandbox's typed SD)
  * replaces the computed one; absent, nothing changes.
  * @param {{
  *   readonly ltp: readonly number[];
@@ -195,10 +241,7 @@ export function cycleStock(ltp, leadTimeWeeks) {
  * @returns {{ value: number; sd: number; raw: number; roundTo: number }}
  */
 export function safetyOrder(input, rules = OSIP_RULES) {
-  const series =
-    rules.sdSource === 'consumption12w'
-      ? (input.consumption ?? []).slice(-rules.consumptionSdWeeks)
-      : input.ltp.slice(0, horizonWeeksOf(input.leadTimeWeeks));
+  const series = safetySdSeries(input, rules);
   // BL-210 — the override, when given, stands in for the series' SD.
   const sd = typeof input.sd === 'number' ? input.sd : sampleStdev(series);
   const raw = rules.z * Math.sqrt(input.leadTimeWeeks) * sd;
@@ -375,22 +418,69 @@ export function ropFisik(input, rules = OSIP_RULES) {
  */
 export function maxStock(input, rules = OSIP_RULES) {
   if (rules.maxRule === 'sheetGuidance') return input.rop + (input.cycleStock ?? 0);
-  return ceilingTo(input.rop, input.area === 'import' ? (input.moq ?? 0) : (input.koli ?? 0));
+  return ceilingTo(input.rop, maxRoundingUnit(input, rules));
+}
+
+/**
+ * [Default B8] — the unit max stock rounds up to: local koli, import MOQ
+ * (deck); 0 under the sheet guidance, which does not round. [Team F5] — a
+ * call-off quantity rounds the same way (`callOffTriggerRules`).
+ * @param {{ readonly area: SupplyArea | null; readonly koli?: number | null; readonly moq?: number }} input
+ * @param {OsipRules} [rules]
+ * @returns {number}
+ */
+export function maxRoundingUnit({ area, koli, moq }, rules = OSIP_RULES) {
+  if (rules.maxRule === 'sheetGuidance') return 0;
+  return area === 'import' ? (moq ?? 0) : (koli ?? 0);
 }
 
 // ─── CV (DRC-11) and strategic buffer (DRC-9a) ──────────────────────────────
 
 /**
- * DRC-11 — CV = sample SD ÷ mean over the last `cvWindowWeeks` weekly buckets
- * [Default C1]. Null when the mean is 0.
- * @param {readonly number[]} weekly
+ * DRC-11 — CV = sample SD ÷ mean over the last buckets of the window in force
+ * [Team C1]: `cvWindowMonths` monthly buckets, or `cvWindowWeeks` weekly ones
+ * (`cvBucket`). `buckets` are of that kind, oldest first. Null when the mean is 0.
+ * @param {readonly number[]} buckets
  * @param {OsipRules} [rules]
  * @returns {number | null}
  */
-export function cv(weekly, rules = OSIP_RULES) {
-  const window = weekly.slice(-rules.cvWindowWeeks);
+export function cv(buckets, rules = OSIP_RULES) {
+  const window = buckets.slice(
+    -(rules.cvBucket === 'month' ? rules.cvWindowMonths : rules.cvWindowWeeks)
+  );
   const m = mean(window);
   return m === 0 ? null : sampleStdev(window) / m;
+}
+
+/**
+ * DRC-11 [Team C1] — weekly demand as calendar-month buckets: each week's
+ * quantity spread evenly over its 7 days (the `groupWeekLtp` reading), the
+ * days summed by month. Only FULL months count: every day of the month inside
+ * the weeks given. `firstWeek` is the Monday of `weekly[0]`. Oldest first.
+ * @param {readonly number[]} weekly
+ * @param {string} firstWeek  YYYY-MM-DD.
+ * @returns {{ month: string; qty: number }[]}
+ */
+export function monthlyBuckets(weekly, firstWeek) {
+  const DAY = 86_400_000;
+  const start = Date.parse(`${firstWeek}T00:00:00.000Z`);
+  const end = start + weekly.length * 7 * DAY; // exclusive
+  /** @type {Map<string, number>} */
+  const byMonth = new Map();
+  weekly.forEach((q, w) => {
+    for (let d = 0; d < 7; d++) {
+      const month = new Date(start + (w * 7 + d) * DAY).toISOString().slice(0, 7);
+      byMonth.set(month, (byMonth.get(month) ?? 0) + q / 7);
+    }
+  });
+  return [...byMonth.entries()]
+    .filter(([month]) => {
+      const first = Date.parse(`${month}-01T00:00:00.000Z`);
+      const d = new Date(first);
+      const next = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1);
+      return first >= start && next <= end;
+    })
+    .map(([month, qty]) => ({ month, qty }));
 }
 
 /**
@@ -572,9 +662,9 @@ export function rollingDaWeek(input, rules = OSIP_RULES) {
 // ─── Plan vs execution (DRC-4) ──────────────────────────────────────────────
 
 /**
- * DRC-4 — gap = Total DA − (SOH + OSPO + OSPR + PR), SOH dropped when
- * `planCheckIncludesSoh` is false [Default A2]. `pr` is the PR quantity, a
- * positive number (= −PR generated). A shortfall (gap > 0) is a PR
+ * DRC-4 — gap = Total DA − supply, the supply per `planCheckBasis` [Team A2]:
+ * Total OSPO (default), SOH + OSPO + OSPR + PR, or OSPO + OSPR + PR. `pr` is
+ * the PR quantity, a positive number (= −PR generated). A shortfall (gap > 0) is a PR
  * recommendation for the planner; a surplus (gap < 0) is absorbed in the last
  * week of the DA (BR-02), never below 0 — what the last week cannot take is
  * returned as `unabsorbed`.
@@ -598,7 +688,13 @@ export function rollingDaWeek(input, rules = OSIP_RULES) {
  */
 export function planCheck(input, rules = OSIP_RULES) {
   const totalDa = input.daWeeks.reduce((a, b) => a + b, 0);
-  const supply = (rules.planCheckIncludesSoh ? input.soh : 0) + input.ospo + input.ospr + input.pr;
+  const supply =
+    rules.planCheckBasis === 'totalOspo'
+      ? input.ospo
+      : (rules.planCheckBasis === 'sohOspoOsprPr' ? input.soh : 0) +
+        input.ospo +
+        input.ospr +
+        input.pr;
   const gap = totalDa - supply;
   const daWeeks = [...input.daWeeks];
   let absorbedLastWeek = 0;
