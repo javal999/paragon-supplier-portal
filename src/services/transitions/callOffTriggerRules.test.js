@@ -161,6 +161,88 @@ describe("[Team F5] BR-01b 'minimumDelivery' (default) — the supplier's minimu
     expect(a.flags).toEqual(['ABOVE_MAX']);
   });
 
+  it('[Owner BL-232] PO balance 1,200 under an MDQ of 2,000: calls off 1,200, flags it, and leaves 800 as the PR', () => {
+    const a = allocateCallOffs({
+      max: 50000,
+      soh: 0,
+      openSupply: 0,
+      lines: [mdq({ balance: 1200, mdq: 2000, roundTo: 0 })]
+    });
+    expect(a.callOffs.map((c) => [c.qty, c.minDelivery, c.belowMinDelivery])).toEqual([
+      [1200, 2000, true]
+    ]);
+    expect(a.prQty).toBe(800);
+    expect(a.flags).toEqual(['BELOW_MIN_DELIVERY']);
+  });
+
+  it("[Owner BL-232] the remainder on a second supplier's line is checked against that supplier's MDQ", () => {
+    const a = allocateCallOffs({
+      max: 50000,
+      soh: 0,
+      openSupply: 0,
+      lines: [
+        mdq({ balance: 1200, mdq: 2000, roundTo: 0 }),
+        mdq({
+          poNumber: 'P2',
+          orderDate: '2026-08-01',
+          supplierId: 'sup-b',
+          balance: 9000,
+          mdq: 500,
+          roundTo: 0
+        }),
+        mdq({
+          poNumber: 'P3',
+          orderDate: '2026-09-01',
+          supplierId: 'sup-c',
+          balance: 9000,
+          mdq: 1000,
+          roundTo: 0
+        })
+      ]
+    });
+    // 1,200 on P1 (short of 2,000), 800 on P2 (above sup-b's 500): only P1 is short.
+    expect(a.callOffs.map((c) => [c.poNumber, c.qty, c.belowMinDelivery])).toEqual([
+      ['P1', 1200, true],
+      ['P2', 800, false]
+    ]);
+    expect(a.prQty).toBe(0);
+    const b = allocateCallOffs({
+      max: 50000,
+      soh: 0,
+      openSupply: 0,
+      lines: [
+        mdq({ balance: 1200, mdq: 2000, roundTo: 0 }),
+        mdq({
+          poNumber: 'P2',
+          orderDate: '2026-08-01',
+          supplierId: 'sup-b',
+          balance: 9000,
+          mdq: 1000,
+          roundTo: 0
+        })
+      ]
+    });
+    // The 800 left for P2 is under sup-b's 1,000: flagged too.
+    expect(b.callOffs.map((c) => [c.poNumber, c.qty, c.belowMinDelivery])).toEqual([
+      ['P1', 1200, true],
+      ['P2', 800, true]
+    ]);
+  });
+
+  it('[Owner BL-232] a full minimum delivery, and a line with no MDQ, are never flagged', () => {
+    const full = allocateCallOffs({ max: 50000, soh: 0, openSupply: 0, lines: [mdq()] });
+    expect(full.callOffs[0].belowMinDelivery).toBe(false);
+    expect(full.flags).not.toContain('BELOW_MIN_DELIVERY');
+    const none = allocateCallOffs({
+      max: 1000,
+      soh: 0,
+      openSupply: 0,
+      lines: [mdq({ mdq: null, mpq: 100, balance: 300 })]
+    });
+    expect(none.callOffs[0].minDelivery).toBeNull();
+    expect(none.flags).not.toContain('BELOW_MIN_DELIVERY');
+  });
+
   it("[Owner A7] 'wait': Max caps it: room 1,000 below a 1,200 call-off → 960 (4 pallets); exact → 1,000; room 200 → nothing, flagged", () => {
     const lines = [mdq()];
     const wait = {
@@ -180,6 +262,10 @@ describe("[Team F5] BR-01b 'minimumDelivery' (default) — the supplier's minimu
       prQty: 0,
       flags: ['ROOM_BELOW_MIN_DELIVERY']
     });
+    // A cut by Max under 'wait' is A7's reading, not a BL-232 shortfall.
+    expect(allocateCallOffs({ max: 1000, soh: 0, openSupply: 0, lines }, wait).flags).not.toContain(
+      'BELOW_MIN_DELIVERY'
+    );
   });
 
   it('the oldest line first; a short line gives its balance and the next one the rest; what none covers is the PR', () => {
@@ -356,7 +442,9 @@ describe('BR-01 — one open draft per material; a dismissed draft waits for a r
           qty: 400,
           balance: 15000,
           mpq: 25,
-          f: 2
+          f: 2,
+          minDelivery: null,
+          belowMinDelivery: false
         }
       ],
       prQty: 0,

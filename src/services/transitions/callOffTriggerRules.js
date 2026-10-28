@@ -117,7 +117,8 @@ export const CALL_OFF_TRIGGER_QUESTIONS = Object.freeze(['F1', 'B8', 'B9', 'MPQ'
  *   | 'NO_MDQ'
  *   | 'ROOM_BELOW_MPQ'
  *   | 'ROOM_BELOW_MIN_DELIVERY'
- *   | 'ABOVE_MAX'} TriggerFlag
+ *   | 'ABOVE_MAX'
+ *   | 'BELOW_MIN_DELIVERY'} TriggerFlag
  */
 
 /**
@@ -235,6 +236,10 @@ export function releasedNotReceived(callOffs, results, materialCode) {
 
 /**
  * One call-off the trigger drafts: `qty` on the line, which held `balance`.
+ * `minDelivery`: the line's minimum delivery (`deliveryQuantity`), null when
+ * the line has no MDQ. `belowMinDelivery` [Owner, 2026-10-28, BL-232]: the
+ * call-off is under it because a line's balance ran out (this line's, or the
+ * one before it, which leaves this line the remainder); it is still drafted.
  * @typedef {{
  *   readonly poId: string;
  *   readonly poNumber: string;
@@ -244,6 +249,8 @@ export function releasedNotReceived(callOffs, results, materialCode) {
  *   readonly balance: number;
  *   readonly mpq: number | null;
  *   readonly f: number | null;
+ *   readonly minDelivery: number | null;
+ *   readonly belowMinDelivery: boolean;
  * }} TriggerCallOff
  */
 
@@ -368,6 +375,11 @@ function minimumDelivery({ max, soh, openSupply, lines }, rules) {
   for (const line of open) {
     if (left <= 0) break;
     const qty = Math.min(left, line.balance);
+    const minDelivery = deliveryQuantity(line);
+    // A cut by Max under 'wait' (the first line, balance to spare) is A7's
+    // reading, not a shortfall; a used-up balance, or a remainder, is.
+    const short =
+      minDelivery !== null && qty < minDelivery && (qty === line.balance || line !== first);
     callOffs.push({
       poId: line.poId,
       poNumber: line.poNumber,
@@ -376,10 +388,15 @@ function minimumDelivery({ max, soh, openSupply, lines }, rules) {
       qty,
       balance: line.balance,
       mpq: line.mpq,
-      f: line.f
+      f: line.f,
+      minDelivery,
+      belowMinDelivery: short
     });
     left -= qty;
   }
+  // [Owner, 2026-10-28, BL-232] the short call-off is still drafted; the flag
+  // lets the planner check with the supplier before releasing it.
+  if (callOffs.some((c) => c.belowMinDelivery)) flags.push('BELOW_MIN_DELIVERY');
   return { room, callOffs, prQty: left, flags };
 }
 
@@ -422,7 +439,9 @@ function fillToMax({ max, soh, openSupply, lines }, rules) {
       qty,
       balance: line.balance,
       mpq: line.mpq,
-      f: line.f
+      f: line.f,
+      minDelivery: deliveryQuantity(line),
+      belowMinDelivery: false
     });
     left -= qty;
     if (qty < line.balance && left > 0) {
@@ -457,6 +476,8 @@ function fillToMax({ max, soh, openSupply, lines }, rules) {
  * a draft call-off, that call-off's own. `demandPerDay` / `leadTimeDays`: the
  * material's ROP Fisik demand (summed over its suppliers) and its longest
  * supplier lead time, which rate the PR recommendation's Home task (SC-01).
+ * `minDelivery`: on a draft call-off only, its line's minimum delivery
+ * (BL-232); a draft carries `BELOW_MIN_DELIVERY` only when it is itself short.
  * @typedef {{
  *   readonly soh: number;
  *   readonly plants: readonly { readonly plant: PtiPlant; readonly soh: number }[];
@@ -468,6 +489,7 @@ function fillToMax({ max, soh, openSupply, lines }, rules) {
  *   readonly prQty: number;
  *   readonly demandPerDay: number | null;
  *   readonly leadTimeDays: number | null;
+ *   readonly minDelivery?: number | null;
  *   readonly flags: readonly TriggerFlag[];
  * }} TriggerFigures
  */

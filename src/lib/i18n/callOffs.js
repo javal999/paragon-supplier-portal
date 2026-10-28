@@ -189,7 +189,17 @@ export const callOffsEn = {
   'co.trigger.openSupply': 'Released, not yet received',
   'co.trigger.quantity': 'Drafted quantity',
   'co.trigger.quantityBasis':
-    'Max − (stock on hand + released call-offs not yet received), rounded up to the MPQ and capped so stock never goes above Max.',
+    'The supplier’s minimum delivery (MDQ), rounded up like Max, taken from the oldest blanket PO line with balance and the next line when it runs out. What no line covers becomes a PR recommendation.',
+  // BL-232 / BL-230 — the draft's minimum delivery and its two warnings.
+  'co.trigger.minDelivery': 'Supplier minimum delivery',
+  'co.trigger.belowMinDelivery.pill': 'Below minimum delivery',
+  'co.trigger.belowMinDelivery.body':
+    'This draft is {{quantity}} {{uom}}, below the supplier’s minimum delivery of {{min}} {{uom}}, because the PO line’s balance ran out. Check with the supplier before you release it.',
+  'co.trigger.belowMinDelivery.withPr':
+    'This draft is {{quantity}} {{uom}}, below the supplier’s minimum delivery of {{min}} {{uom}}, because the PO line’s balance ran out. {{pr}} {{uom}} is left as a PR recommendation. Check with the supplier before you release it.',
+  'co.trigger.aboveMax.pill': 'Above Max',
+  'co.trigger.aboveMax.body':
+    'The minimum delivery does not fit under Max, so stock will go above Max when it arrives.',
   'co.trigger.plants': 'By plant: {{plants}}',
   'co.trigger.refresh':
     'Checks follow the eWM refresh; eWM feed not connected, SOH from the hub’s stock records.',
@@ -522,7 +532,16 @@ export const callOffsId = {
   'co.trigger.openSupply': 'Dirilis, belum diterima',
   'co.trigger.quantity': 'Kuantitas draf',
   'co.trigger.quantityBasis':
-    'Maks − (stok + call-off yang dirilis dan belum diterima), dibulatkan ke atas ke MPQ dan dibatasi agar stok tidak pernah melebihi Maks.',
+    'Pengiriman minimum pemasok (MDQ), dibulatkan ke atas seperti Maks, diambil dari baris PO induk tertua yang masih bersaldo lalu baris berikutnya bila saldonya habis. Sisa yang tidak tertutup baris mana pun menjadi rekomendasi PR.',
+  'co.trigger.minDelivery': 'Pengiriman minimum pemasok',
+  'co.trigger.belowMinDelivery.pill': 'Di bawah pengiriman minimum',
+  'co.trigger.belowMinDelivery.body':
+    'Draf ini {{quantity}} {{uom}}, di bawah pengiriman minimum pemasok {{min}} {{uom}}, karena saldo baris PO habis. Konfirmasi ke pemasok sebelum Anda merilisnya.',
+  'co.trigger.belowMinDelivery.withPr':
+    'Draf ini {{quantity}} {{uom}}, di bawah pengiriman minimum pemasok {{min}} {{uom}}, karena saldo baris PO habis. Sisa {{pr}} {{uom}} menjadi rekomendasi PR. Konfirmasi ke pemasok sebelum Anda merilisnya.',
+  'co.trigger.aboveMax.pill': 'Di atas Maks',
+  'co.trigger.aboveMax.body':
+    'Pengiriman minimum tidak muat di bawah Maks, sehingga stok akan melebihi Maks saat barang tiba.',
   'co.trigger.plants': 'Per pabrik: {{plants}}',
   'co.trigger.refresh':
     'Pemeriksaan mengikuti pembaruan eWM; data eWM belum terhubung, stok diambil dari catatan stok hub.',
