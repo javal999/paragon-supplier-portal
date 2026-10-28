@@ -103,20 +103,20 @@
 | DRC-1 | Suppliers see their own DA, read only | Built, proposal (merged 2026-10-20) | Built behind `SUPPLIER_DA_VIEW_ENABLED = false` (DRC-D10 holds): supplier page of its own published figures, and the Incoming demand anticipation confirmation on the feedstock panel; turning it on is one value |
 | DRC-2 | Rolling DA over the lead time, with carry-over | Build now | A1, A9 as [Default] |
 | DRC-3 | Full DA history with carry-over origin; audit view for Procurement and Finance | Build now | — |
-| DRC-4 | Plan vs execution check: Total DA = ROP Order = SOH + OSPO + OSPR + PR; surplus absorbed in the last week, shortfall becomes a PR recommendation | Build now | A2 as [Default] |
+| DRC-4 | Plan vs execution check: Total DA = Total OSPO (SAP MRP elements as context); surplus absorbed in the last week, shortfall becomes a PR recommendation | Build now | A2 answered 2026-10-28 |
 | DRC-5 | A call-off delayed by an LTP drop needs supplier approval; DA adjusted | Build now | — |
 | DRC-6 | Lead time per material, broken down by step | Build now | — |
 | DRC-7 | Safety order (ROP Order) and safety (ROP Fisik) | After module | B1–B4 as [Default] |
-| DRC-8 | Supplier confirms Incoming DA + current feedstock, with a date | Build now | E1, E2 as [Default] |
+| DRC-8 | Supplier confirms Incoming DA + current feedstock, with a date: daily on a pull agreement, else weekly | Build now | E1, E2 answered 2026-10-28 |
 | DRC-9a | Strategic buffer = LTP − baseline | After module | C4 as [Default] |
 | DRC-9b | Production limit | Build now | E3 as [Default] |
 | DRC-9c | Protection buffer | Built, proposal (merged 2026-10-20) | Built as a proposal, awaiting owner review: protection buffer = CEILING(max(0, LTP − average LTP of the 3 previous months), production MPQ), levels 5 to 7 only, display only; switch `protectionUplift` |
 | DRC-10 | System-calculated ROPs and Max, per the material's level | After module | B5–B9 as [Default]; DRC-D11 |
-| DRC-11 | CV per variant, SKU and component; stable/fluctuative | After module | C1 as [Default] |
+| DRC-11 | CV per variant, SKU and component on 6 monthly buckets; stable/fluctuative | After module | C1 answered 2026-10-28 |
 | DRC-12a | NPD tag and ROP review after first order | After module | D1 as [Default] |
 | DRC-12b | NPD vs CMM and material-code rules | Hold | D2, MDM |
-| DRC-13 | Call-off trigger at ROP Fisik on eWM SOH; planner approval; SAP PR recommendation when the umbrella PO runs out; max stock caps call-offs | Build now | F1 as [Default]; real-time needs the eWM feed |
-| DRC-14 | Replenishment cycle f by area | Build now | B6 as [Default] |
+| DRC-13 | Call-off trigger at ROP Fisik on eWM SOH; quantity = the supplier's minimum delivery rounded like Max; planner approval; SAP PR recommendation when the umbrella PO runs out; max stock caps call-offs | Build now | F1 as [Default]; F5 answered 2026-10-28; real-time needs the eWM feed |
+| DRC-14 | Replenishment cycle f per supplier, default by area | Build now | B6 answered 2026-10-28 |
 | DRC-15a | Feedstock reconcile: POs ordered vs call-offs + ASNs requested, daily view | Build now | — |
 | DRC-15b | Feedstock reconcile leftover rule and final formula | Built, proposal (merged 2026-10-20) | Built as a proposal, awaiting owner review: switch `leftoverRule` (default flag the liability, not priced, capped at max stock; `showOnly`, `carryToNextPo`). Overrides DRC-15a BR-02 until ruled |
 | DRC-17 | What-if sandbox | After module | Scope accepted 2026-10-16 |
@@ -139,9 +139,9 @@ DRC-16 (daily FS reconcile) is merged into DRC-15a.
 - Replaces CAP-10 BR-01/02/04 (fixed 4-week horizon, CAP-D17) and CAP-11 BR-02/03 (absorbing over weeks 5–8). It reuses the publication store, the consumption store and the page [Code].
 
 **DRC-4 Plan vs execution check**
-- BR-01. Over the horizon: gap = Total DA − (SOH + OSPO + OSPR + PR generated) [Default A2; PPT 7].
+- BR-01. Over the horizon: gap = Total DA − Total OSPO [Team, 2026-10-28, A2; owner ruling 2026-10-28]. SOH, OSPR and PR are SAP MRP elements, shown as context. The earlier check, Total DA − (SOH + OSPO + OSPR + PR generated) [PPT 7], is kept as the variant `planCheckBasis: 'sohOspoOsprPr'`.
 - BR-02. Supply above DA is absorbed in the last week. A shortfall raises a PR recommendation for the planner [Owner, 2026-10-16, A4].
-- AC-01. PPT 7: Total DA 761,888 = ROP Order 761,888; gap 0; PR generated −645,559.
+- AC-01. PPT 7, on the `sohOspoOsprPr` variant: Total DA 761,888 = ROP Order 761,888; gap 0; PR generated −645,559. Under the default the same slide shows a gap of Total DA − OSPO 0.
 
 **DRC-6 Lead time breakdown** [XLS Guidance]
 - Local: machine queue + production + delivery (ordering material excluded).
@@ -150,16 +150,18 @@ DRC-16 (daily FS reconcile) is merged into DRC-15a.
 - The total drives the DA horizon (DRC-2) and ROP Order (DRC-10).
 
 **DRC-7 Safety**
-- BR-01. Safety order (ROP Order) = 1.65 × √LT × SD(LTP over the horizon), rounded up to a multiple of the MPQ [Default B1–B4; MoM 2A; PPT 11]. Switch `sdSource: 'ltp' | 'consumption12w'` (sheet variant) [B2].
-- BR-02. Safety (ROP Fisik) = ceiling(g × min(a, b, c), MPQ) with g = 1 day [Default B1, B7; PPT 11]. Switch `fisikSafety: 'deck' | 'sheet'`. The sheet variant is Z × √f × SD(consumption) + g × average demand [XLS ROP Fisik Non stc].
-- AC-01. PPT 7: LT 5, MPQ 61,224 gives SS 244,896.
+- BR-01. Safety order (ROP Order) = Z × √LT × SD(LTP over the next 13 weeks), rounded up to a multiple of the MPQ [Team, 2026-10-28, B2; owner ruling 2026-10-28]; [Default B4]. Z is per material, default 1.65 [Team, 2026-10-28, B3; owner ruling 2026-10-28]. Switch `sdSource: 'ltp13w' | 'ltp' | 'consumption12w'`: 'ltp' is the SD over the lead-time weeks (the earlier default), 'consumption12w' the sheet variant.
+- BR-02. Safety (ROP Fisik) = ceiling(g × min(a, b, c), MPQ), g per material, default 1 day [Team, 2026-10-28, B7; owner ruling 2026-10-28]; [Default B1]. Switch `fisikSafety: 'deck' | 'sheet'`. The sheet variant is Z × √f × SD(consumption) + g × average demand [XLS ROP Fisik Non stc]. The team's ROP Fisik SD (GI 261 over 13 weeks) waits on B1.
+- AC-01. PPT 7: LT 5, MPQ 61,224 gives SS 244,896 on the `sdSource: 'ltp'` variant. On the 13-week default the slide's 12 weeks give SD 42,092 and SS 183,672 (decision for the owner: the fixture stays on the variant).
 
 **DRC-10 ROPs and Max** [PPT 11; Owner, 2026-10-16, B10]
 - **ROP Order** = c × d + safety order, where c = LTP and d = lead time PO→ETA. Its output is shown as the input to ZPE007 [Default B9]. The hub does not run ZPE007.
 - **ROP Fisik** = ceiling(demand × f) × MPQ + safety.
   - Demand for an existing material = min(highest of the last 3 months' consumption, production capacity, LTP).
   - Demand for an NPD material = min(highest LTP over the next 3 months, production capacity) [Default B5].
-- **ROP Supplier, ROP FS and ROP to principal** follow the XLS "ROP Fisik Non stc" columns.
+- **ROP Supplier** = demand × the supplier's bottleneck production lead time, queueing included: the supplier's total physical maximum stock. The lead time is a value per supplier × material with no default [Team, 2026-10-28, B10; owner ruling 2026-10-28].
+- **ROP FS** is removed: suppliers cover feedstock from the DA and the POs issued [Team, 2026-10-28, B10; owner ruling 2026-10-28].
+- **ROP to principal** follows the XLS "ROP Fisik Non stc" column, as built (unanswered).
 - **Max:** local = ceiling(ROP, koli), import = ceiling(ROP, MOQ). Koli = pcs per pallet for "Non stc" materials and pcs per pack size for "stc" materials, which we read as sticker [Default B8; XLS ROP Fisik Non stc / stc].
 - **Formula by level** (PPT 11): modal sharing (levels 3–4), fixed order (MDQ), JIT (pallet rounding, at least 1 call-off a day). Level comes from DRC-D11.
 - The supplier ROP column on the stock template becomes display only (DRC-D15).
@@ -167,9 +169,10 @@ DRC-16 (daily FS reconcile) is merged into DRC-15a.
 **DRC-13 Call-off trigger**
 - BR-01. When SOH reaches ROP Fisik, the hub drafts a call-off on the umbrella PO for the planner to approve. The planner can also request one at any time [Owner, 2026-10-16, F2].
 - BR-02. With no umbrella PO balance left, the hub recommends that the planner create a PR in SAP [Owner, 2026-10-16, F2].
-- BR-03. A call-off never takes projected stock above max stock [Owner, 2026-10-16, A7].
+- BR-03. A call-off never takes projected stock above max stock [Owner, 2026-10-16, A7]. [Proposed, 2026-10-28] Exception: when the minimum delivery (BR-06) does not fit under Max it is called off anyway and flagged, because Max is ROP Fisik rounded to the same unit, so at the trigger it never fits (switch `minimumDeliveryAboveMax`, 'wait' keeps A7 literal).
 - BR-04. The check runs on every SOH update. Real time follows the eWM refresh rate once the eWM feed exists [Owner, 2026-10-16, F2]. Until then, SOH comes from the hub's stock records.
 - BR-05. SOH and ROP Fisik are compared per material, all plants combined [Default F1]. Each SOH record keeps its plant (J6, J2) [DRC-D12].
+- BR-06. Quantity per call-off = the supplier's minimum delivery quantity (MDQ = MOQ until the master carries MDQ, [Proposed]), rounded up the way max stock rounds (local koli/pallet, import MOQ). Call-offs follow ROP Fisik, not DDPO [Team, 2026-10-28, F5; owner ruling 2026-10-28]. The earlier fill-to-Max quantity is kept as `quantityRule: 'fillToMax'`.
 
 **DRC-15a Feedstock reconcile**
 - BR-01. Per supplier × material: PO ordered, call-offs requested, ASNs requested, and the remainder, shown daily [Owner, 2026-10-16, F4].
@@ -202,34 +205,37 @@ Rule (DRC-D9): when sources conflict, the newest wins, so MoM (14 Oct), then the
 
 | Q | Default | Source | Kind | Alternative kept |
 |---|---|---|---|---|
-| A1 | Whole safety order in week 1 of DA | PPT 7 | Switch | Spread evenly over the horizon |
-| A2 | The check includes SOH | PPT 7 arithmetic | Switch | MoM wording (OSPO + PR only) |
-| A6 | "Call Off 86,400" not used | PPT 7 (feeds no figure) | — | — |
+| A1 | Whole safety order in week 1 of DA; at the supplier it stays feedstock-form | [Team, 2026-10-28, A1]; owner ruling 2026-10-28 (confirms PPT 7) | Switch | Spread evenly over the horizon |
+| A2 | Plan check = Total DA − Total OSPO (`planCheckBasis: 'totalOspo'`); SOH, OSPR, PR shown as SAP MRP context | [Team, 2026-10-28, A2]; owner ruling 2026-10-28 | Switch | SOH + OSPO + OSPR + PR (PPT 7 arithmetic; PPT 7 runs on it); OSPO + OSPR + PR |
+| A6 | "Call Off 86,400" not used (PCEB's call-off history, team to confirm the item) | [Team, 2026-10-28, A6]; owner ruling 2026-10-28 | — | — |
 | A8b | Carry-over limit = quantity of the last 4 weeks of sales orders | Owner, 2026-10-16, A8 | Value | Count of carry-overs |
 | A9 | Additional PO = Σ DA − OSPO; OSPO counts the new PO (`ospoIncludesNewPo` on, owner 2026-10-19) | PPT 8, 9 | Switch | OSPO without new POs |
-| A11 | Moving average over 13 weeks (3 months) | XLS ROP Fisik Non stc | Value | — |
+| A11 | Moving average over 13 weeks (3 months); LTP term = next 13 weeks' average, GI = highest of the last 13 | [Team, 2026-10-28, A11]; owner ruling 2026-10-28 | Value | — |
 | B1 | ROP Fisik safety per deck | PPT 11 | Switch | XLS formula |
-| B2 | SD of LTP over the horizon | MoM 2A, PPT 11 | Switch | SD of 12-week consumption (XLS) |
-| B3 | Z = 1.65 for every material | MoM 2A | Value | Per level or category |
+| B2 | ROP Order: SD of LTP over 13 weeks (`sdSource: 'ltp13w'`). ROP Fisik's SD (GI 261 over 13 weeks) waits on B1 | [Team, 2026-10-28, B2]; owner ruling 2026-10-28 | Switch | SD of LTP over the lead time (PPT 7 runs on it); SD of 12-week consumption (XLS) |
+| B3 | Z per material, default 1.65 (95%); the planner sets it until SAP's service-level master data feeds it | [Team, 2026-10-28, B3]; owner ruling 2026-10-28 | Value per material | — |
 | B4 | Round up to a multiple of the MPQ | PPT 7 | Switch | Koli / MOQ |
-| B5 | Demand Min includes LTP | PPT 11 | Switch | XLS (without LTP) |
-| B6 | 1 day / 2 days / 1 week is replenishment cycle f | PPT 11 | Value | — |
-| B7 | g = 1 day | PPT 11 | Value | Per level |
+| B5 | Demand Min includes LTP for levels 1–5; NPD leaves GI 261 out. Level 6 (JIT): HELD (team answers 3.6) | [Team, 2026-10-28, B5]; owner ruling 2026-10-28 (levels 1–5, NPD) | Switch | XLS (without LTP) |
+| B6 | f per supplier, editable; default by area 1 day (Jabodetabek) / 2 days (outside) / 7 days (import) | [Team, 2026-10-28, B6]; owner ruling 2026-10-28 | Value per supplier | — |
+| B7 | g per material, default 1 day; owners Logistics Operations (ROP Fisik), Supply Sustainability (ROP Order). The hub applies g in ROP Fisik only: whether ROP Order reads g is open (team answers 4, Q3) | [Team, 2026-10-28, B7]; owner ruling 2026-10-28 | Value per material | — |
 | B8 | Max per deck; koli per pallet ("Non stc") or pack size ("stc", read as sticker) | PPT 11; XLS | Switch | XLS Guidance (ROP + cycle stock) |
 | B9 | ROP Order = cycle stock + safety order | PPT 7 | — | — |
-| C1 | CV on weekly buckets over 26 weeks; threshold 0.5 | MoM 4B; XLS Logics | Value | Monthly buckets |
+| B10 | ROP Supplier = demand × the supplier's bottleneck production lead time, queueing included (per supplier × material, no default: "not available" until set). ROP FS removed. ROP to principal stays as built (unanswered) | [Team, 2026-10-28, B10]; owner ruling 2026-10-28 | Value per supplier × material | — |
+| C1 | CV on 6 monthly buckets (full calendar months, weeks spread by day), set by the FG-variant CV ("CV Comp FG Var"); threshold 0.5 final | [Team, 2026-10-28, C1]; owner ruling 2026-10-28 | Switch | Weekly buckets over 26 weeks |
 | C2 | Level is a field per material, default level 4 (warehouse replenishment) | XLS Guidance: levels 3–4 hold 6,751 of 9,210 pallets (73%) | Value | Automatic classification (DRC-19, hold) |
 | C3 | Protection buffer not built | — | Hold | — |
 | C4 | Strategic buffer = LTP − average of the 3 months before festive (no rounding stated) | PPT 12 | Value | — |
-| D1 | NPD until first order fulfilled | MoM 4C (newest) | Switch | 1 year after launch (XLS); 52 weeks (engine) |
+| D1 | NPD until first order fulfilled | MoM 4C; [Team, 2026-10-28, D1]; owner ruling 2026-10-28 | Switch | 1 year after launch (XLS); 52 weeks (engine) |
 | D2 | NPD vs CMM not built | — | Hold | — |
-| E1 | LT spare = a value per material, default 0 (feedstock = 0) | XLS Guidance | Value | — |
-| E2 | Supplier confirms weekly with the Thursday stock update; the planner approves | MR-1 cycle (built) | Value | — |
+| E1 | LT spare 0, so feedstock target = 0; the next model defines no feedstock ROP | [Team, 2026-10-28, E1]; owner ruling 2026-10-28 | Value | — |
+| E2 | A supplier on a pull agreement (flag per supplier, default no) confirms daily; any other weekly with the Thursday stock update (the DA send). What follows a missed confirmation is open (team answers 4, Q7) | [Team, 2026-10-28, E2]; owner ruling 2026-10-28 | Switch | Weekly for every supplier |
 | E3 | Production limit = supplier's allocated capacity per planning group | MR-8 (built) | Switch | SADR feed |
 | F1 | SOH combined across plants; plant stored | — | Switch | Per plant |
-| F5 | Continuous if MPQ rate ≤ 6, batching above | XLS Logics | Value | — |
+| F5 | Call-off quantity = the supplier's minimum delivery quantity (MDQ = MOQ, [Proposed]) rounded like Max; call-offs follow ROP Fisik, not DDPO. The ≤ 6 MPQ rate stays in the level suggestion only. [Proposed] when that quantity does not fit under Max it is called off anyway, flagged | [Team, 2026-10-28, F5]; owner ruling 2026-10-28 | Switch | Fill up to Max rounded to the MPQ; 'wait' (Max caps it) |
 
 Each row carries its question ID into the code comment and the "Provisional" label, so answering a question means changing one key and the golden fixtures.
+
+**2026-10-28 (team answers, owner ruling).** The rows marked [Team, 2026-10-28, Qn] are built in `RULES_VERSION` `osip-2026-10-28.1`. The "Provisional" label left A1, A2, A6, A11, B2, B3, B5 (levels 1–5, NPD), B6, B7, C1, D1, E1, E2 and F5 (call-off); it stays on A8b, A9, B1, B4, B8, B9, B10 (ROP to principal), C2, C3, C4 and level 6 (B5, F5 marker). Z, g, f, the pull agreement and the bottleneck lead time are set by the Material Planner (`t_osipparam_set`) on the Safety stock targets page. PPT 7 reproduces on the kept variants `sdSource: 'ltp'` and `planCheckBasis: 'sohOspoOsprPr'`; PPT 8 and 9 reproduce under the defaults.
 
 ---
 
@@ -347,7 +353,7 @@ Readings the builders made where the sources leave a gap. Each sits behind a rul
 | DRC-B23 | Surplus alert (DRC-4 BR-02) | `demandAnticipationUnabsorbed` now fires on a surplus the last week cannot take (replaces the CAP-11 weeks 5 to 8 alert) |
 | DRC-B24 | ROP Fisik safety inputs (DRC-7 BR-02) | Production capacity is left out of the min (no PTI figure); "highest consumption of 3 months" = highest recorded week of the last 13 ÷ 7; the LTP term = mean weekly LTP over the lead time ÷ 7 |
 | DRC-B25 | Consumption per supplier (DRC-7, DRC-18) | Split by the supplier's LTP share over the share window (CAP-D11) on every page, the Demand anticipation grid included (DRC-D21, BL-211) |
-| DRC-B26 | CV (DRC-11) | Historical weekly sell-in for the 26 weeks before now, stock-outs filled as the engine fills them; each SKU is its own variant (no variant grouping in the data) |
+| DRC-B26 | CV (DRC-11) | Historical weekly sell-in before now, stock-outs filled as the engine fills them; since 2026-10-28 summed into the last 6 full calendar months (each week spread over its 7 days) [Team C1]; each SKU is its own variant (no variant grouping in the data) |
 | DRC-B27 | Production limit (DRC-9b) | The existing "Allocated" row on PTI Capacity is the production limit, relabelled and marked Provisional |
 | DRC-B28 | Strategic buffer (DRC-9a) | Festive window = the months from the first day of Ramadan to Lebaran (event calendar); CNY is not in the calendar and is not shown; an incomplete baseline shows "—" |
 
@@ -380,6 +386,22 @@ Readings the builders made where the sources leave a gap. Each sits behind a rul
 | DRC-B46 | Saving (DRC-17) | `t_whatifscenario_save`, atom `whatifscenario:save` in the planning lane, append-only, stamped with `RULES_VERSION`; no page role gate (§65, DRC-D18) |
 | DRC-B47 | PPT 7 preset (DRC-17) | Offered as its own pair so a confirmed result can be saved; runs on the hub's Mondays; ROP Fisik, Max and the trigger read "Not available" because the slide gives no consumption or supply area |
 | DRC-B48 | Inputs that feed no figure (DRC-17) | Listed on the page with the reason: feedstock (E1), CV threshold and window (CV not shown), carry-over target and limit, the production-limit source. Since BL-210, SD can be typed (it replaces the computed SD in the safety order) and the consumption window moves ROP Fisik |
+
+## 6e. Build decisions, the team's answers (2026-10-28)
+
+Built on branch `feat/drc-material-answers` from the owner's ruling on SC-HUB-MATERIAL-TEAM-ANSWERS-2026-10 section 3. Rows marked **[Owner, 2026-10-28]** are the [Proposed] answers the owner accepted before the build; the others are build calls for the owner to overrule.
+
+| ID | Item | Decision |
+|---|---|---|
+| DRC-B49 | Where the per-material and per-supplier values live | One planner ledger, `t_osipparam_set` (entity `osipParam`, atom `osipparam:set` in the planning lane), keyed `z|<material>`, `g|<material>`, `f|<supplier>`, `pullAgreement|<supplier>`, `bottleneckLeadTimeDays|<supplier>|<material>`; null resets to the default. Edited in the Safety stock targets detail panel. The team named Logistics Operations and Supply Sustainability as owners of g and the DA; the hub has no role for either, so the Material Planner holds the verb |
+| DRC-B50 | g in ROP Order (B7) | **[Owner, 2026-10-28]** g is per material and both owners are recorded, but the hub applies it where it did before (ROP Fisik). Whether ROP Order reads g stays open (team answers 4, Q3) |
+| DRC-B51 | Bottleneck lead time (B10) | **[Owner, 2026-10-28]** A supplier × material value in days, no default; ROP Supplier reads "not available" until it is set. ROP Supplier keeps the MPQ rounding the earlier reading used. Consequence: the supplier-below-ROP alert (REQ-E08-05) stays quiet until a planner sets it |
+| DRC-B52 | Monthly CV buckets (C1) | **[Owner, 2026-10-28]** Calendar months by day (each week's demand spread over its 7 days), the last 6 FULL months; a SKU with fewer has no CV. Measured on the sample data: every material reads stable (highest CV 0.41), so no sample material is suggested level 3 any more |
+| DRC-B53 | Pull-agreement cadence (E2) | **[Owner, 2026-10-28]** Flag per supplier, default no. Daily = each hub calendar day, midnight to midnight WIB (working days are not distinguished). Others weekly with the Thursday stock update. A missed confirmation is shown as missed; nothing else follows (team answers 4, Q7) |
+| DRC-B54 | Call-off quantity (F5) | **[Owner, 2026-10-28]** MDQ = MOQ, rounded with `maxRoundingUnit` (the max-stock rule). A line with no MOQ falls back to the earlier fill-to-Max quantity, flagged `NO_MDQ`. With no line at all the PR is the room below Max, as before |
+| DRC-B55 | Minimum delivery above Max (F5 vs A7) | **[Proposed, awaits the owner]** Max = ROP Fisik rounded up to the same unit, so the room under Max at the trigger is always below one unit. Default 'callOff': the minimum delivery is called off anyway, flagged `ABOVE_MAX`. 'wait' keeps A7 literal: on the sample, RM-STEAR-7300 (MOQ 1,250, pallet 700) calls off 1,400 at SOH 1,010 under 'callOff'; under 'wait' the what-if hand material only calls off when stock is at 0 and runs short in week 2 |
+| DRC-B56 | PPT 7 golden fixture (A2, B2) | Kept on the variants `sdSource: 'ltp'` and `planCheckBasis: 'sohOspoOsprPr'`; the what-if sandbox opens the PPT 7 case on them. Under the defaults the slide gives SS 183,672 and a gap of Total DA |
+| DRC-B57 | The what-if sandbox and own values | A live pair opens on its material's own Z and g (as switches) and its supplier's own f and bottleneck lead time (as inputs) |
 
 ## 7. Build order
 

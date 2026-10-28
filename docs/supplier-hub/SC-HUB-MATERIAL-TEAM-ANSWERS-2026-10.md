@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Ruled 2026-10-28.** The owner accepted changes 3.1, 3.2, 3.3, 3.4, 3.5, 3.7, 3.8 and 3.9, each as recommended. 3.6 waits on the owner's own check. Nothing is built yet |
+| Status | **Ruled 2026-10-28.** The owner accepted changes 3.1, 3.2, 3.3, 3.4, 3.5, 3.7, 3.8 and 3.9, each as recommended. 3.6 waits on the owner's own check. **Built 2026-10-28** on branch `feat/drc-material-answers` (`RULES_VERSION` `osip-2026-10-28.1`), not yet merged; build decisions in `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` section 6e |
 | Date | 2026-10-28 |
 | Source | Workbook *Pertanyaan Terakit Forecast SC Hub.xlsx* (SharePoint, owner's OneDrive; file name `PERTANYAAN-TIM-MATERIAL-2026-10-16 (2).xlsx`), sheet *Pertanyaan*, read 2026-10-28. Cited [Team, Qn] |
 | Answered by | Septiana (Material Planning), every answered row. The sheet records no answer dates |
@@ -156,4 +156,4 @@ Each item is one rules-block key or one formula. The golden fixtures (PPT 7–9)
    - send the section 4 questions;
    - ask for the C2 Google Doc link;
    - ask them to set *Status* and *Tanggal* on answered rows.
-3. **Build, after the ruling:** one rules-block change per accepted item, each with its golden fixture re-run and the "Provisional" label dropped for confirmed questions.
+3. **Build, after the ruling:** one rules-block change per accepted item, each with its golden fixture re-run and the "Provisional" label dropped for confirmed questions. Done 2026-10-28 on `feat/drc-material-answers`. Two decisions came out of it for the owner: BL-230 (the minimum delivery does not fit under Max at the trigger, F5 vs A7) and BL-231 (PPT 7 stays on the lead-time SD variant).
