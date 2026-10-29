@@ -89,8 +89,10 @@ const RuleValuesPage = ({ section }) => {
         .changesIn(section)
         .map((c, seq) => ({ ...c, seq }))
         .reverse(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` is the store's change signal, so the memo re-reads the store
     [section, version]
   );
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` is the store's change signal, so the memo re-reads the store
   const readState = useMemo(() => hubSettingsStore.readState(), [version]);
   const changedCount = defs.filter((d) => settingValue(d.key) !== d.defaultValue).length;
 

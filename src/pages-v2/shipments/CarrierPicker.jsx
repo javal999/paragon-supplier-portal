@@ -75,6 +75,7 @@ const CarrierPicker = ({ value, onChange, idPrefix, label, labelClass, inputClas
     threePlStore.version,
     threePlStore.version
   );
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` is the store's change signal, so the memo re-reads the store
   const offered = React.useMemo(() => offeredThreePls(), [version]);
 
   return (

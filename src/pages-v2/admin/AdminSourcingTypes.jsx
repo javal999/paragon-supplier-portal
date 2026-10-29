@@ -46,11 +46,13 @@ const AdminSourcingTypes = () => {
   );
 
   const version = useSyncExternalStore(sourcingTypeStore.subscribe, sourcingTypeStore.version);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` is the store's change signal, so the memo re-reads the store
   const map = useMemo(() => sourcingTypeStore.map(), [version]);
   const lastChange = useMemo(() => {
     const m = /** @type {Map<string, string>} */ (new Map());
     for (const c of sourcingTypeStore.changes()) m.set(c.key, c.setAt);
     return m;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` is the store's change signal, so the memo re-reads the store
   }, [version]);
 
   /**

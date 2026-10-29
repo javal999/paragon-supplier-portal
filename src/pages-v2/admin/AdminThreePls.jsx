@@ -70,7 +70,9 @@ const AdminThreePls = () => {
   );
   const formRef = useRef(/** @type {HTMLElement | null} */ (null));
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` is the store's change signal, so the memo re-reads the store
   const list = useMemo(() => threePlStore.all(), [version]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` is the store's change signal, so the memo re-reads the store
   const changes = useMemo(() => [...threePlStore.changes()].reverse(), [version]);
   const offered = list.filter((r) => r.active).length;
 

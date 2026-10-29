@@ -33,6 +33,7 @@ const MyMrpControllerSelect = () => {
     mrpControllerStore.version,
     mrpControllerStore.version
   );
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` is the store's change signal, so the memo re-reads the store
   const codes = useMemo(() => knownMrpControllerCodes(), [version]);
 
   return (

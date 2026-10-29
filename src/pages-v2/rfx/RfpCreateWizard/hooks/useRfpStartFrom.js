@@ -20,6 +20,7 @@ import { patchDraft, replaceDraft } from './useRfpDraft';
  */
 export const useRfpStartFrom = (pastEvents, methods) => {
   const [storeVersion, setStoreVersion] = useState(0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `storeVersion` is bumped after a store write, so the memo re-reads the store
   const saved = useMemo(() => rfpTemplateStore.readState(), [storeVersion]);
 
   /** @type {StartOption[]} */
