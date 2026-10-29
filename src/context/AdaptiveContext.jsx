@@ -220,55 +220,58 @@ function getComplianceRequirements(country, category) {
 }
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
-/** @type {React.FC<{ children: ReactNode }>} */
-export const AdaptiveProvider = ({ children }) => {
-  /** @type {AdaptiveContextType} */
-  const value = {
-    /** @param {string} country */
-    getSupplierProfile: (country) =>
-      /** @type {CountryProfile} */ (
-        COUNTRY_PROFILES[/** @type {CountryCode} */ (country)] ?? FALLBACK_PROFILE
-      ),
+// One value for the app's lifetime: every member is a pure lookup over
+// module-level tables, so consumers never re-render because the provider did
+// (react/jsx-no-constructed-context-values).
+/** @type {AdaptiveContextType} */
+const ADAPTIVE_VALUE = {
+  /** @param {string} country */
+  getSupplierProfile: (country) =>
+    /** @type {CountryProfile} */ (
+      COUNTRY_PROFILES[/** @type {CountryCode} */ (country)] ?? FALLBACK_PROFILE
+    ),
 
-    /** @param {string} channel */
-    getChannelConfig: (channel) =>
-      /** @type {ChannelConfig} */ (
-        CHANNEL_CONFIG[/** @type {keyof typeof CHANNEL_CONFIG} */ (channel)] ?? CHANNEL_CONFIG.email
-      ),
+  /** @param {string} channel */
+  getChannelConfig: (channel) =>
+    /** @type {ChannelConfig} */ (
+      CHANNEL_CONFIG[/** @type {keyof typeof CHANNEL_CONFIG} */ (channel)] ?? CHANNEL_CONFIG.email
+    ),
 
-    getMessageTemplate: (type, language, ...args) => {
-      const templates = /** @type {Record<string, (...a: string[]) => string>} */ (
-        MESSAGE_TEMPLATES[type]
-      );
-      const fn = templates[language] ?? templates['en'];
-      return fn ? fn(...args) : '';
-    },
+  getMessageTemplate: (type, language, ...args) => {
+    const templates = /** @type {Record<string, (...a: string[]) => string>} */ (
+      MESSAGE_TEMPLATES[type]
+    );
+    const fn = templates[language] ?? templates['en'];
+    return fn ? fn(...args) : '';
+  },
 
-    formatCurrency,
-    formatDate,
+  formatCurrency,
+  formatDate,
 
-    /** @param {string} country */
-    isBusinessHours: (country) => {
-      const profile = COUNTRY_PROFILES[/** @type {CountryCode} */ (country)] ?? FALLBACK_PROFILE;
-      const { h, m } = getLocalDateObj(profile.timezone);
-      const current = h * 60 + m;
-      return (
-        current >= timeToMins(profile.businessHours.start) &&
-        current < timeToMins(profile.businessHours.end)
-      );
-    },
+  /** @param {string} country */
+  isBusinessHours: (country) => {
+    const profile = COUNTRY_PROFILES[/** @type {CountryCode} */ (country)] ?? FALLBACK_PROFILE;
+    const { h, m } = getLocalDateObj(profile.timezone);
+    const current = h * 60 + m;
+    return (
+      current >= timeToMins(profile.businessHours.start) &&
+      current < timeToMins(profile.businessHours.end)
+    );
+  },
 
-    /** @param {string} country */
-    getLocalTime: (country) => {
-      const profile = COUNTRY_PROFILES[/** @type {CountryCode} */ (country)] ?? FALLBACK_PROFILE;
-      return getLocalTimeStr(profile.timezone);
-    },
+  /** @param {string} country */
+  getLocalTime: (country) => {
+    const profile = COUNTRY_PROFILES[/** @type {CountryCode} */ (country)] ?? FALLBACK_PROFILE;
+    return getLocalTimeStr(profile.timezone);
+  },
 
-    getComplianceRequirements
-  };
-
-  return <AdaptiveContext.Provider value={value}>{children}</AdaptiveContext.Provider>;
+  getComplianceRequirements
 };
+
+/** @type {React.FC<{ children: ReactNode }>} */
+export const AdaptiveProvider = ({ children }) => (
+  <AdaptiveContext.Provider value={ADAPTIVE_VALUE}>{children}</AdaptiveContext.Provider>
+);
 
 /** @returns {AdaptiveContextType} */
 export const useAdaptive = () => {

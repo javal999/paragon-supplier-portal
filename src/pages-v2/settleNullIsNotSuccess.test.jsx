@@ -24,7 +24,7 @@
 import path from 'node:path';
 import React from 'react';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders } from '@test/test-utils';
+import { renderWithProviders, BUYER } from '@test/test-utils';
 import { readSource } from '@test/featureFolder';
 import { useToast } from '@hooks/useToast';
 import { mockDataService } from '@services/data/mock/mockDataService';
@@ -36,7 +36,6 @@ import { DataError } from '@services/data/types';
 import BuyerInvoices from './BuyerInvoices';
 import BuyerGoodsReceipt from './BuyerGoodsReceipt';
 import { useGoodsReceiptSettle } from '@services/query/commandHooks';
-import { BUYER } from '@test/test-utils';
 /** @import { QueryScope } from '@services/data/types' */
 
 /** The seat `renderWithProviders` renders under, as a command scope — the

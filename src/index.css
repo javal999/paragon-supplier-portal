@@ -195,6 +195,7 @@ body {
    at 3.51:1 and the teal-tint series at 2.07:1. The swatch beside the label
    keeps the series colour (a non-text mark); the words are set in secondary
    text (#354A5F, 9.15:1). One rule, every chart. */
+/* eslint-disable-next-line css/no-important -- overrides recharts' inline legend colour, which no selector can beat */
 .recharts-legend-item-text { color: var(--pds-color-text-secondary) !important; }
 
 /* ─── Touch targets · 44 px on coarse pointers (a11y findings 15, 31) ────────── */

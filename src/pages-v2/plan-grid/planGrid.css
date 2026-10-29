@@ -12,6 +12,7 @@
  * is already pinned to its `height`, so the loop only ever afflicted the few-rows
  * case. The height is supplied per grid via the `--plan-dsg-h` custom property. */
 .plan-dsg .dsg-container {
+  /* eslint-disable-next-line css/no-important, css/no-invalid-properties -- overrides react-datasheet-grid's inline height (see above); --plan-dsg-h is set per grid at runtime */
   height: var(--plan-dsg-h) !important;
 }
 

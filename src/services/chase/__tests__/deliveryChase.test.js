@@ -6,12 +6,11 @@ import { MATERIAL_MASTER } from '../../sdc/fixtures';
 import { generateSchedule } from '../../delivery/generator';
 import { releaseScheduleLines } from '../../delivery/release';
 import { deriveAgreementView } from '../../delivery/views';
-import { DRAWDOWN_PRESET_CASE_B } from '../../delivery/ledger';
+import { DRAWDOWN_PRESET_CASE_B, deriveDrawdownLedger } from '../../delivery/ledger';
 /** @import { ReleaseType, ScheduleLine, SchedulingAgreement, SchedulingAgreementItem } from '../../delivery/types' */
 import { SDC_SIMULATED_NOW } from '../../sdc';
 import { SCHEDULING_AGREEMENT_DEMO, DELIVERY_DEMO_SHIPMENTS } from '../../delivery/demoFixtures';
 import { SCHEDULING_AGREEMENT_CTR003 } from '../../delivery/fixtures';
-import { deriveDrawdownLedger } from '../../delivery/ledger';
 import { deriveFulfillment } from '../../delivery/fulfillment';
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -28,6 +28,7 @@ const UploadResultTable = ({ upload }) => {
           <tbody>
             {upload.refused.map((r, i) => (
               <tr
+                // eslint-disable-next-line react/no-array-index-key -- one upload's refused rows; the list is static once shown
                 key={`${r.row}-${i}`}
                 className="border-t border-border-subtle"
                 data-testid={`fc-upload-refused-row-${r.row}`}

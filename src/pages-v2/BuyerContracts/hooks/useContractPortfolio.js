@@ -3,7 +3,7 @@
 /** @import { Supplier } from '@services/data/types' */
 /** @import { ContractDisplayStatus } from '@services/data/contractExpiry' */
 /** @import { GroupTab } from '../const' */
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { obligationDisplay } from '@services/data/obligationProjection';
 import { contractDisplayStatus, inRenewalHorizon } from '@services/data/contractExpiry';
 import { formatMonth, matchesGroup } from '../utils';
@@ -55,11 +55,15 @@ export function useContractPortfolio({
       ),
     [contracts, nowIso]
   );
-  /**
-   * @param {Contract} c
-   * @returns {ContractDisplayStatus}
-   */
-  const displayOf = (c) => displayById.get(c.id) ?? c.status;
+  // Stable while `displayById` is, so the memos below can list it.
+  const displayOf = useCallback(
+    /**
+     * @param {Contract} c
+     * @returns {ContractDisplayStatus}
+     */
+    (c) => displayById.get(c.id) ?? c.status,
+    [displayById]
+  );
 
   const counts = useMemo(() => {
     /** @param {ContractDisplayStatus} s */
@@ -77,7 +81,7 @@ export function useContractPortfolio({
       draft: by('Draft'),
       terminated: by('Terminated')
     };
-  }, [contracts, displayById]);
+  }, [contracts, displayOf]);
 
   const kpis = useMemo(() => {
     const active = counts.active;
@@ -89,7 +93,7 @@ export function useContractPortfolio({
       .filter((c) => displayOf(c) === 'Active')
       .reduce((sum, c) => sum + c.value, 0);
     return { active, expiringSoon, totalValue };
-  }, [contracts, displayById, counts.active, counts.expiring]);
+  }, [contracts, displayOf, counts.active, counts.expiring]);
 
   // ⚠️ COMPUTED, not counted off the stored literal. Measured on 2026-09-08,
   // the day this changed: the tile read 5 (the authored `Overdue` count, exactly
@@ -116,7 +120,7 @@ export function useContractPortfolio({
       });
     // `supplierById` is listed so a search typed before the supplier read lands
     // re-filters once names arrive (react-hooks/exhaustive-deps, 2026-10-28).
-  }, [contracts, group, selectedTypes, search, displayById, supplierById]);
+  }, [contracts, group, selectedTypes, search, displayOf, supplierById]);
 
   const renewalPipeline = useMemo(() => {
     // The 180 arm SURVIVES and is now `CONTRACT_RENEWAL_HORIZON_DAYS`, named in

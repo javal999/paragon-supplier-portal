@@ -12,11 +12,10 @@ import { describe, expect, it } from 'vitest';
 import { join } from 'node:path';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { deriveCensus, sitesIn } from '@lib/machineClockGate/derive';
-import { MATERIAL_MASTER } from '../../sdc/fixtures';
+import { MATERIAL_MASTER, SUPPLIER_MATERIAL_RELATIONSHIPS } from '../../sdc/fixtures';
 import { isKnownMaterial, materialEntry } from '../../sdc/materialMaster';
 import { SDC_SIMULATED_NOW } from '../../sdc/clock';
 import { mockSuppliers } from '@data/mockSuppliers';
-import { SUPPLIER_MATERIAL_RELATIONSHIPS } from '../../sdc/fixtures';
 import { FORECAST_RELATIONSHIPS } from '../../data/mock/fixtures/forecastHub';
 import {
   ENGINE_DATASET_SEED,
@@ -26,7 +25,7 @@ import {
 } from '../../data/mock/fixtures/engineDataset';
 import { generateEngineDataset, DEFAULT_SIZES } from './generate';
 import { addDays, dayOf, mondayOf } from '../dates';
-import { confirmedByDeadline, lineHistories } from '../lines';
+import { confirmedByDeadline, lineHistories, latestConfirmation, requirementAt } from '../lines';
 import { cfotByDefinition } from '../cfot';
 import { stockAccuracy, warehouseUtilisation } from '../stock';
 import { integrityViolations } from '../integrity';
@@ -35,7 +34,6 @@ import { poCfot } from '../../data/performanceRules';
 /** @import { PurchaseOrder } from '../../data/types' */
 /** @import { GoodsReceipt } from '@data/mockGoodsReceipts' */
 /** @import { LineHistory } from '../lines' */
-import { latestConfirmation, requirementAt } from '../lines';
 /** @import { CfotWindow } from '../cfot' */
 
 const NOW = SDC_SIMULATED_NOW;

@@ -19,6 +19,7 @@ const CommitmentLogRow = ({ l }) => {
     >
       <td colSpan={9} className="px-4 py-2 text-xs text-text-secondary">
         {l.log.map((e, i) => (
+          // eslint-disable-next-line react/no-array-index-key -- append-only log; entries are never reordered or removed
           <div key={i}>
             <span className="font-semibold">
               {t(e.kind === 'raised' ? 'fc.log.revision' : 'fc.log.resolved')}

@@ -30,6 +30,7 @@ let latest = [];
 const Harness = ({ items }) => {
   const [value, setValue] = useState(/** @type {readonly DocumentRequest[]} */ ([]));
   const [step, setStep] = useState(0);
+  // eslint-disable-next-line react-hooks/globals -- test harness exposes the latest value to the assertions
   latest = value;
   const lines = (items ?? []).map((i) => i.lineNo);
   return (

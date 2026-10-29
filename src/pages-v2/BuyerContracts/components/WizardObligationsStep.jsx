@@ -158,7 +158,7 @@ const WizardObligationsStep = ({
                 <th className="text-left px-3 py-2 whitespace-nowrap">
                   {t('contracts.wizard.obl.col.dueDate')}
                 </th>
-                <th className="text-right px-3 py-2 w-10"></th>
+                <th className="text-right px-3 py-2 w-10" />
               </tr>
             </thead>
             <tbody>

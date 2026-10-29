@@ -28,7 +28,7 @@ import {
   weekIndex,
   zoneOf
 } from './reschedule';
-import { addDays } from './dates';
+import { addDays, instantOn } from './dates';
 import { sizedRequirement } from './orderSizing';
 import { defaultRequirementOptions, materialRequirement } from './requirement';
 import { DEFAULT_SAFETY_STOCK_OPTIONS, requirementInputs, safetyStockRun } from './safetyStock';
@@ -36,7 +36,6 @@ import { portfolioReliability, supplierReliability, trailingWindow } from './rel
 import { engineDataset } from '../data/mock/fixtures/engineDataset';
 /** @import { EngineDataset, ScheduleChange } from './types' */
 import { lineKey } from './types';
-import { instantOn } from './dates';
 
 // ── The worked example ──────────────────────────────────────────────────────
 

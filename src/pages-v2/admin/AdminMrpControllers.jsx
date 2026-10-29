@@ -62,6 +62,23 @@ const INPUT_CLASS = 'w-full mt-1 px-3 py-2 text-sm border border-border-subtle r
 /** @type {Draft} */
 const EMPTY_DRAFT = { code: '', name: '', users: '' };
 
+/**
+ * The Code column's header with its SAP liveness pill. Its own component so
+ * the page's JSX stays within six levels (react/jsx-max-depth).
+ * @type {React.FC}
+ */
+const CodeColumnHeader = () => {
+  const { t } = useTranslation();
+  return (
+    <TableHeaderCell>
+      <span className="inline-flex items-center gap-2">
+        {t('mrpc.col.code')}
+        <LivenessPill capability="materialMasterSap" />
+      </span>
+    </TableHeaderCell>
+  );
+};
+
 /** @type {React.FC} */
 const AdminMrpControllers = () => {
   const { t } = useTranslation();
@@ -245,12 +262,7 @@ const AdminMrpControllers = () => {
         <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableHeaderCell>
-                <span className="inline-flex items-center gap-2">
-                  {t('mrpc.col.code')}
-                  <LivenessPill capability="materialMasterSap" />
-                </span>
-              </TableHeaderCell>
+              <CodeColumnHeader />
               <TableHeaderCell>{t('mrpc.col.name')}</TableHeaderCell>
               <TableHeaderCell>{t('mrpc.col.users')}</TableHeaderCell>
               {held && <TableHeaderCell>{t('mrpc.col.action')}</TableHeaderCell>}

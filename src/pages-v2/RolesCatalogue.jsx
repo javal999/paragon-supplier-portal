@@ -110,6 +110,7 @@ const RolesCatalogue = () => {
   // again. `version` is that reason and nothing else: no query caches a role
   // definition, so there is no `invalidateQueries` that would do this for us.
   const [version, setVersion] = useState(0);
+  // eslint-disable-next-line react-hooks/use-memo -- `version` is bumped after a store write, so the memo re-derives the views
   const views = useMemo(deriveRoleViews, [version]);
   // ⚠️ WHAT THE STORE REFUSED, READ FROM THE STORE ITSELF. A parse failure that
   // returns an empty list is indistinguishable from an empty store, and the

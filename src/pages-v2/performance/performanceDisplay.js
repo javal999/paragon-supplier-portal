@@ -96,6 +96,7 @@ export function usePerformance(period) {
       const hit = cache.get(supplierId);
       if (hit) return hit;
       const measure = supplierMeasure(supplierId, input, period, nowIso);
+      // eslint-disable-next-line react-hooks/immutability -- the measure cache is a memoised Map filled lazily; it is reset when its inputs change
       cache.set(supplierId, measure);
       return measure;
     },

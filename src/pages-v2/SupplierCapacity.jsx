@@ -206,6 +206,7 @@ const SupplierCapacity = () => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- resets the draft when the group or its latest submission changes
     if (plan) setDraft(draftFrom(plan));
     // Reset the form when the group or its latest submission changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the plan's identity and latest submission, not the object
   }, [plan?.planningGroupId, plan?.latest?.id, plansQuery.dataUpdatedAt]);
 
   if (!identity.supplierId) return <NoSupplierIdentity />;

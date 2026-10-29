@@ -196,6 +196,7 @@ const SelectField = ({
     // eslint-disable-next-line react-hooks/set-state-in-effect -- re-syncs scroll and highlight with the visible option list
     setActiveIndex(filteredOptions.findIndex((o) => !o.disabled));
     // Deliberately keyed on `query` alone: an options refresh must not move the highlight.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on `query` alone, as above
   }, [query]);
   // Close on outside pointerdown (matches LanguageMenu's convention). The
   // panel is portaled out of the field (see below — an ancestor's `overflow-hidden`,
