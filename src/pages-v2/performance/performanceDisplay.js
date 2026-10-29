@@ -68,6 +68,7 @@ export function usePerformance(period) {
 
   const cache = React.useMemo(
     () => /** @type {Map<string, SupplierMeasure>} */ (new Map()),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- a new input, period or clock starts a fresh measure cache
     [input, period, nowIso]
   );
 

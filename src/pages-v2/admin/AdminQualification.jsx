@@ -110,7 +110,9 @@ const AdminQualification = () => {
     qualificationRuleStore.subscribe,
     qualificationRuleStore.version
   );
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` is the store's change signal, so the memo re-reads the store
   const rules = useMemo(() => qualificationRuleStore.all(), [version]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` is the store's change signal, so the memo re-reads the store
   const changes = useMemo(() => [...qualificationRuleStore.changes()].reverse(), [version]);
 
   const rows = qualifications.data?.items ?? [];

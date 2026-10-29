@@ -231,6 +231,7 @@ const RfiCreateWizard = ({ onCancel, onCreated, canPublish, pastEvents = [], edi
     : undefined;
   const template = family?.templateId ? rfiTemplate(family.templateId) : undefined;
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `storeVersion` is bumped after a store write, so the memo re-reads the store
   const saved = useMemo(() => rfiTemplateStore.readState(), [storeVersion]);
 
   /** @type {StartOption[]} */

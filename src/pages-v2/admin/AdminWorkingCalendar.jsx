@@ -167,8 +167,11 @@ const AdminWorkingCalendar = () => {
   const formRef = useRef(/** @type {HTMLElement | null} */ (null));
 
   // Re-derived whenever the calendar in force changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `calendarVersion` is the store's change signal, so the memo re-reads the store
   const days = useMemo(() => listedCalendarDays(), [calendarVersion]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `calendarVersion` is the store's change signal, so the memo re-reads the store
   const rulings = useMemo(() => [...workingCalendarStore.rulings()].reverse(), [calendarVersion]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `calendarVersion` is the store's change signal, so the memo re-reads the store
   const readState = useMemo(() => workingCalendarStore.readState(), [calendarVersion]);
   const cal = hubWorkingCalendar();
 

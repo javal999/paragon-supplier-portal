@@ -43,6 +43,7 @@ const StalePeriodsPanel = ({ held, version, record }) => {
       return { p, key, override: typeof override === 'number' ? override : null };
     });
     // `version` re-derives the rows when a value changes on this page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` is the store's change signal, so the memo re-reads the store
   }, [inventory.data, version]);
   /**
    * @param {string} key

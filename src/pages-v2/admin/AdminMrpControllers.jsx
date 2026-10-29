@@ -79,7 +79,9 @@ const AdminMrpControllers = () => {
   );
   const formRef = useRef(/** @type {HTMLElement | null} */ (null));
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` is the store's change signal, so the memo re-reads the store
   const codes = useMemo(() => knownMrpControllerCodes(), [version]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` is the store's change signal, so the memo re-reads the store
   const changes = useMemo(() => [...mrpControllerStore.changes()].reverse(), [version]);
   const mapped = codes.filter((c) => mrpControllerStore.get(c) !== undefined).length;
 

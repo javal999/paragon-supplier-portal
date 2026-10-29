@@ -147,6 +147,7 @@ const BuyerCommHub = () => {
   // successful record; `recordTick` bumps on its onRecorded so this render re-reads
   // the append-only store and the new row shows in the audit trail immediately.
   const [recordTick, setRecordTick] = useState(0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `recordTick` is bumped after a store write, so the memo re-reads the store
   const provenance = useMemo(() => channelProvenanceStore.all(), [recordTick]);
 
   const nameOf = useMemo(() => {

@@ -84,6 +84,7 @@ const AdminReasonCodes = () => {
 
   const lists = useMemo(
     () => REASON_LISTS.map((list) => ({ list, rows: reasonCodeStore.list(list) })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` is the store's change signal, so the memo re-reads the store
     [version]
   );
   // `seq` is a change's position in the log, oldest first. The log is
@@ -96,8 +97,10 @@ const AdminReasonCodes = () => {
         .changes()
         .map((c, seq) => ({ ...c, seq }))
         .reverse(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` is the store's change signal, so the memo re-reads the store
     [version]
   );
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` is the store's change signal, so the memo re-reads the store
   const readState = useMemo(() => reasonCodeStore.readState(), [version]);
   const offered = lists.reduce((n, l) => n + l.rows.filter((r) => r.active).length, 0);
   const retired = lists.reduce((n, l) => n + l.rows.filter((r) => !r.active).length, 0);

@@ -115,6 +115,7 @@ const RolesCatalogue = () => {
   // returns an empty list is indistinguishable from an empty store, and the
   // empty list is the reading that gets believed — `EMPTY-INPUT-REPORTS-CLEAN-01`
   // in a storage read's exact shape. Both facts are rendered.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` is the store's change signal, so the memo re-reads the store
   const store = useMemo(() => customRoleStore.readState(), [version]);
   const totals = useMemo(() => roleTotals(views), [views]);
   const [q, setQ] = useState('');

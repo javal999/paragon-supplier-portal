@@ -119,6 +119,7 @@ export function useSapInterface() {
     return sapMonitor({ lastSeen, messages });
     // `tick` is the retry signal: the stores are singletons, so nothing else in
     // this dependency list changes when a message clears.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `tick` is the retry signal; the stores are singletons
   }, [pos.data, receipts.data, asns.data, invoices.data, tick]);
 
   return {
