@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Accepted 2026-10-29: TL-D1 to TL-D5.** TL-D6 and TL-D7, and the labels in section 5, are [Proposed] and wait on the owner. Nothing is built yet |
+| Status | **Accepted 2026-10-29: TL-D1 to TL-D9.** The owner answered the 4 open questions the same day (section 5). Nothing is built yet |
 | Date | 2026-10-29 |
 | Source | Owner, 2026-10-29, reviewing the Demand anticipation grid: the row label differs from the team's input. Owner rules: (1) an agreed column wording is not replaced with another name; (2) every important term gets an information icon with its definition and the other names it goes by |
 | Code read | `main` at `59199b4f` |
@@ -30,12 +30,12 @@ The hub has one place that already explains terms at the point of use: `TermTip`
 - **BR-01. The label is the source's word.** A term's label is written as the source writes it. The sources, in order: (1) the MoM and the team's own material (PPT, questions and answers files); (2) the hub's accepted requirement and decision documents under `docs/supplier-hub/`. The code is never a source for a label [Owner, 2026-10-29, TL-D2].
 - **BR-02. A clash is shown, not renamed.** When the source's word already means something else in the hub, the label carries both: the full name with the source's word in brackets, e.g. "Demand anticipation (DA)". The tooltip names what it is not, e.g. "Not Delivery Agreement" [Owner, 2026-10-29, TL-D1].
 - **BR-03. A rename needs a ruling.** No build, UX evaluation or copy pass changes an agreed label. A session that thinks a label is wrong writes it as a [Proposed] question for the owner and leaves the label as it is. A ruling gets a decision ID, and the glossary entry and the label change in the same MR [Owner, 2026-10-29, TL-D3].
-- **BR-04. The team's words stay in ID too [Proposed, TL-D6].** A term the team writes in English inside Indonesian text (DA, LTP, safety order, carry-over, OSPO, ROP) is not translated in the ID locale. Today the ID locale translates DA to "Antisipasi permintaan", which the team does not say.
+- **BR-04. The team's words stay in ID too [Owner, 2026-10-29, TL-D6].** A term the team writes in English inside Indonesian text (DA, LTP, safety order, carry-over, OSPO, ROP) is not translated in the ID locale. Today the ID locale translates DA to "Antisipasi permintaan", which the team does not say.
 
 ### TL-R2. Every important term explains itself
 
 - **BR-05. Where.** An information icon (i) sits next to the label of every important term in: table column headers, grid row labels (such as the Demand anticipation weeks grid), and KPI card titles. Filters and form fields are out of scope [Owner, 2026-10-29, TL-D4].
-- **BR-06. What counts as important [Proposed, TL-D7].** A measure, quantity, state or rule the reader has to understand to act: LTP, Demand anticipation (DA), Safety order, Gap, ROP Fisik, OSPO, Share, Firm. Not: plain identifiers and dates (Week, Date, Supplier, Material, Code, Name, Actions), and units shown after a label ("· KG").
+- **BR-06. What counts as important [Owner, 2026-10-29, TL-D7].** A measure, quantity, state or rule the reader has to understand to act: LTP, Demand anticipation (DA), Safety order, Gap, ROP Fisik, OSPO, Share, Firm. Not: plain identifiers and dates (Week, Date, Supplier, Material, Code, Name, Actions), and units shown after a label ("· KG").
 - **BR-07. What the tooltip says.** In this order, each line only when it applies:
   1. **Definition:** 1 to 2 sentences, at most 40 words, in plain words.
   2. **How it is calculated:** the formula in the source's terms, for a computed figure (e.g. "LTP of the week; week 1 also carries the safety order").
@@ -54,9 +54,9 @@ The hub has one place that already explains terms at the point of use: `TermTip`
 | Demand anticipation | Antisipasi permintaan | DA | **Demand anticipation (DA)** in EN and ID (TL-D1, BR-04). Tooltip: definition, "LTP of the week; week 1 also carries the safety order; plus carry-over", "Also called: DA (Material Planning team, OSIP playbook)", "Not Delivery Agreement (also DA, on contract pages)" |
 | LTP | LTP | LTP | Unchanged; gets a tooltip |
 | Safety order | Safety order | safety order | Unchanged; gets a tooltip. Not "safety stock": the team's safety order is the ROP Order component, 1.65 × √LT × SD |
-| Carried in | Sisa dibawa masuk | carry-over, sisa DA | Open: see section 5 |
-| Would be | Jika dihitung ulang | none found | Open: see section 5 |
-| Surplus absorbed | Kelebihan diserap | none found | Open: see section 5 |
+| Carried in | Sisa dibawa masuk | carry-over, sisa DA | **Carry-over** in EN and ID (TL-D8). Tooltip: "Also called: sisa DA (Material Planning team)". Same on the history page column, its CSV header and the "Published …" sentence |
+| Would be | Jika dihitung ulang | none found | Unchanged for now; gets a tooltip. Asked of the team (TL-D9) |
+| Surplus absorbed | Kelebihan diserap | none found | Unchanged for now; gets a tooltip. Asked of the team (TL-D9) |
 | FG demand, LTP − FG demand, Consumption 13-week average, Recorded consumption, Open supply, Gap | as EN | from the hub's own documents (DRC-18, CAP-11, CAP-12) | Unchanged; each gets a tooltip |
 
 Everywhere else "Demand anticipation" appears as a label (the history page, publish button, What to order section "Below demand anticipation", alerts), it follows TL-D1. Running sentences may keep "demand anticipation" after the label has introduced "(DA)" once on the page.
@@ -75,14 +75,16 @@ Everywhere else "Demand anticipation" appears as a label (the history page, publ
 
 ---
 
-## 5. Open for the owner
+## 5. Questions the owner answered, 2026-10-29
 
-| # | Question | Recommendation [Proposed] |
+Each was asked with a recommendation; the owner took the recommendation every time.
+
+| # | Question | Answer [Owner, 2026-10-29] |
 |---|---|---|
-| Q1 | "Carried in": the team says "carry-over" and "sisa DA" [Team: questions file A8]. Rename to the team's word? | "Carry-over", tooltip "Also called: sisa DA (Material Planning team)". By BR-01 the team's word wins |
-| Q2 | "Would be" and "Surplus absorbed" have no team word. Keep the hub's labels? | Keep them, and add both to the next question list for the team so they can name them |
-| Q3 | TL-D6: keep the team's English terms untranslated in ID? | Yes |
-| Q4 | TL-D7: is the "important" list in BR-06 right? | Yes, and the first-wave inventory (section 6, step 1) lists every label it would cover, for the owner to strike out |
+| Q1 | "Carried in": the team says "carry-over" and "sisa DA" [Team: questions file A8]. Rename to the team's word? | Yes: "Carry-over", tooltip "Also called: sisa DA (Material Planning team)" (TL-D8) |
+| Q2 | "Would be" and "Surplus absorbed" have no team word. Keep the hub's labels? | Keep both labels for now and add them to the next question list for the Material Planning team, so the team names them (TL-D9). The team's names then replace these under BR-01 |
+| Q3 | TL-D6: keep the team's English terms untranslated in ID? | Yes: DA, LTP, safety order, carry-over, OSPO and ROP stay in English in the ID locale |
+| Q4 | TL-D7: is the "important" list in BR-06 right? | Yes, as written. The step 1 inventory (section 6) lists every label the rule covers, and the owner can strike any out |
 
 ---
 
@@ -93,7 +95,7 @@ Everywhere else "Demand anticipation" appears as a label (the history page, publ
    - Generalise `TermTip` from the planning vocabulary to any glossary registry, keeping BR-09.
    - Add a label field to the glossary entry so the label and its tooltip share one entry (BR-08), with optional `formula`, `alsoCalled` (name + source) and `notToConfuse` lines (BR-07).
    - Let table headers, grid row labels and `KpiCard` titles take a term.
-   - Apply TL-D1 on the Demand anticipation page, its history page, What to order's "Below demand anticipation" section and the alerts.
+   - Apply TL-D1 and TL-D8 on the Demand anticipation page, its history page, What to order's "Below demand anticipation" section and the alerts.
    - Add the guard test (AC-04).
    - Update the CAP-D10 comments in `lib/i18n/demandAnticipation.js` and `lib/i18n/consumption.js`.
 3. **Wave 2 onwards: the rest of the inventory**, one page group per wave, in the owner's priority order (Goal A, then Goal C, then the rest; RFx pages last while RFx is paused).
@@ -109,5 +111,7 @@ Everywhere else "Demand anticipation" appears as a label (the history page, publ
 | TL-D3 | Renaming an agreed label | Only by an owner ruling with a decision ID; builders raise [Proposed] questions | Accepted, owner, 2026-10-29 |
 | TL-D4 | Where the (i) goes | Table column headers, grid row labels and KPI card titles; not filters or form fields | Accepted, owner, 2026-10-29 |
 | TL-D5 | Other names in the tooltip | All of them: the team's, SAP's and the industry's, each with its source; none guessed | Accepted, owner, 2026-10-29 |
-| TL-D6 | Team terms in the ID locale | Not translated (BR-04) | [Proposed] |
-| TL-D7 | What counts as an important term | The BR-06 rule, checked against the step 1 inventory | [Proposed] |
+| TL-D6 | Team terms in the ID locale | Not translated (BR-04) | Accepted, owner, 2026-10-29 |
+| TL-D7 | What counts as an important term | The BR-06 rule, checked against the step 1 inventory | Accepted, owner, 2026-10-29 |
+| TL-D8 | Label of the carried quantity | "Carry-over" in EN and ID (was "Carried in" / "Sisa dibawa masuk"); tooltip "Also called: sisa DA (Material Planning team)" | Accepted, owner, 2026-10-29 |
+| TL-D9 | Labels with no team word ("Would be", "Surplus absorbed") | Kept for now; asked of the Material Planning team in the next question list; the team's names replace them under BR-01 | Accepted, owner, 2026-10-29 |
