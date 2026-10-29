@@ -100,8 +100,40 @@ export const RopFisikFigures = ({ callOff }) => {
         <dd>
           <Data data-testid="calloff-trigger-quantity">{figure(f.quantity)}</Data>
         </dd>
+        {typeof f.minDelivery === 'number' ? (
+          <>
+            <dt className="text-text-tertiary">{t('co.trigger.minDelivery')}</dt>
+            <dd>
+              <Data data-testid="calloff-trigger-min-delivery">{figure(f.minDelivery)}</Data>
+            </dd>
+          </>
+        ) : null}
       </dl>
       <p className="text-xs text-text-tertiary">{t('co.trigger.quantityBasis')}</p>
+      {f.flags.includes('BELOW_MIN_DELIVERY') && typeof f.minDelivery === 'number' ? (
+        <div className="space-y-1" data-testid="calloff-trigger-below-min-delivery">
+          <StatusPill variant="warning">{t('co.trigger.belowMinDelivery.pill')}</StatusPill>
+          <p className="text-xs text-text-secondary">
+            {t(
+              f.prQty > 0
+                ? 'co.trigger.belowMinDelivery.withPr'
+                : 'co.trigger.belowMinDelivery.body',
+              {
+                quantity: qty(f.quantity),
+                min: qty(f.minDelivery),
+                pr: qty(f.prQty),
+                uom: callOff.uom
+              }
+            )}
+          </p>
+        </div>
+      ) : null}
+      {f.flags.includes('ABOVE_MAX') ? (
+        <div className="space-y-1" data-testid="calloff-trigger-above-max">
+          <StatusPill variant="warning">{t('co.trigger.aboveMax.pill')}</StatusPill>
+          <p className="text-xs text-text-secondary">{t('co.trigger.aboveMax.body')}</p>
+        </div>
+      ) : null}
       <TriggerProvisional testId="calloff-trigger-provisional" />
       <TriggerRefreshNote testId="calloff-trigger-refresh" />
       <p className="text-xs text-text-tertiary" data-testid="calloff-trigger-rules-version">

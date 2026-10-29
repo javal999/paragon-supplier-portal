@@ -73,6 +73,23 @@ import { callOffTriggerStore } from './stores/callOffTriggerStore';
 /** @typedef {(payload: TriggerDraftPayload) => { entityId: string }} CreateTriggerDraft */
 
 /**
+ * One draft's own figures: its quantity and minimum delivery, and
+ * `BELOW_MIN_DELIVERY` only when this draft is the short one (BL-232).
+ * @param {TriggerFigures} figures
+ * @param {TriggerCallOff} c
+ * @returns {TriggerFigures}
+ */
+function draftFigures(figures, c) {
+  const flags = figures.flags.filter((f) => f !== 'BELOW_MIN_DELIVERY');
+  return {
+    ...figures,
+    quantity: c.qty,
+    minDelivery: c.minDelivery,
+    flags: c.belowMinDelivery ? [...flags, 'BELOW_MIN_DELIVERY'] : flags
+  };
+}
+
+/**
  * One supplier's ROP inputs for the trigger.
  * `mdq` / `roundTo` / `f`: [Team F5, B6] the call-off quantity's inputs and the cycle.
  * @typedef {SupplierRop & {
@@ -288,7 +305,7 @@ export function observeCallOffTriggers(createDraft, nowIso = sdcClock.now()) {
             needDate: addDays(today, c.f ?? 0),
             type: CALL_OFF_TRIGGER_RULES.callOffType,
             origin: 'ropFisik',
-            trigger: stamp({ ...figures, quantity: c.qty }, { ...inputs, line: lineOf(c) })
+            trigger: stamp(draftFigures(figures, c), { ...inputs, line: lineOf(c) })
           }).entityId
         );
       }

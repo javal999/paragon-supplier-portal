@@ -173,6 +173,7 @@ DRC-16 (daily FS reconcile) is merged into DRC-15a.
 - BR-04. The check runs on every SOH update. Real time follows the eWM refresh rate once the eWM feed exists [Owner, 2026-10-16, F2]. Until then, SOH comes from the hub's stock records.
 - BR-05. SOH and ROP Fisik are compared per material, all plants combined [Default F1]. Each SOH record keeps its plant (J6, J2) [DRC-D12].
 - BR-06. Quantity per call-off = the supplier's minimum delivery quantity (MDQ = MOQ until the master carries MDQ, [Proposed]), rounded up the way max stock rounds (local koli/pallet, import MOQ). Call-offs follow ROP Fisik, not DDPO [Team, 2026-10-28, F5; owner ruling 2026-10-28]. The earlier fill-to-Max quantity is kept as `quantityRule: 'fillToMax'`.
+- BR-07. [Owner, 2026-10-28, BL-232] When a PO line's balance is below the supplier's minimum delivery, the hub still drafts the call-off for the balance, flagged `BELOW_MIN_DELIVERY`; the rest goes to the next-oldest line with balance, and what no line covers is the PR recommendation (BR-02). A remainder on the next line that is below that line's supplier's minimum delivery is flagged too. The draft's panel shows the supplier's minimum delivery and the warning, so the planner checks with the supplier before releasing it. Example: balance 1,200, MDQ 2,000 → a 1,200 call-off, flagged, and a PR recommendation for 800.
 
 **DRC-15a Feedstock reconcile**
 - BR-01. Per supplier × material: PO ordered, call-offs requested, ASNs requested, and the remainder, shown daily [Owner, 2026-10-16, F4].
@@ -402,6 +403,7 @@ Built on branch `feat/drc-material-answers` from the owner's ruling on SC-HUB-MA
 | DRC-B55 | Minimum delivery above Max (F5 vs A7) | **[Owner, 2026-10-28, BL-230]** keep 'callOff'. Max = ROP Fisik rounded up to the same unit, so the room under Max at the trigger is always below one unit. Default 'callOff': the minimum delivery is called off anyway, flagged `ABOVE_MAX`. 'wait' keeps A7 literal: on the sample, RM-STEAR-7300 (MOQ 1,250, pallet 700) calls off 1,400 at SOH 1,010 under 'callOff'; under 'wait' the what-if hand material only calls off when stock is at 0 and runs short in week 2 |
 | DRC-B56 | PPT 7 golden fixture (A2, B2) | **[Owner, 2026-10-28, BL-231]** Kept on the variants `sdSource: 'ltp'` and `planCheckBasis: 'sohOspoOsprPr'`; the what-if sandbox opens the PPT 7 case on them. Under the defaults the slide gives SS 183,672 and a gap of Total DA |
 | DRC-B57 | The what-if sandbox and own values | A live pair opens on its material's own Z and g (as switches) and its supplier's own f and bottleneck lead time (as inputs) |
+| DRC-B58 | PO line balance below the minimum delivery (BL-232) | **[Owner, 2026-10-28, BL-232]** Call off the balance, flag `BELOW_MIN_DELIVERY` per draft, keep the PR for the rest. Options not taken: no flag (as first built), or no call-off and a PR for the whole minimum delivery. A cut by Max under `minimumDeliveryAboveMax: 'wait'` is A7's reading and is not flagged. The panel also shows BL-230's `ABOVE_MAX`, which was stored but not shown. Quantities and formulas are unchanged, so `RULES_VERSION` stays `osip-2026-10-28.1` |
 
 ## 7. Build order
 

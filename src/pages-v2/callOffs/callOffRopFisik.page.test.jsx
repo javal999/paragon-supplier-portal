@@ -69,6 +69,9 @@ describe('BL-199 — a draft made at ROP Fisik on the Call-offs page', () => {
     expect(p.getByTestId('calloff-trigger-max')).toHaveTextContent('1,400 KG');
     // [Team F5] the minimum delivery: MOQ 1,250 rounded to the 700 pallet.
     expect(p.getByTestId('calloff-trigger-quantity')).toHaveTextContent('1,400 KG');
+    expect(p.getByTestId('calloff-trigger-min-delivery')).toHaveTextContent('1,400 KG');
+    // Known-good for BL-232: a full minimum delivery carries no warning.
+    expect(p.queryByTestId('calloff-trigger-below-min-delivery')).toBeNull();
     expect(p.getByTestId('calloff-trigger-provisional')).toHaveTextContent(
       'Provisional: rule awaiting Material Planning (F1, B8, B9, MPQ)'
     );
