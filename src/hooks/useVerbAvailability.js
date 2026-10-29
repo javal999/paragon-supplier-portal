@@ -98,7 +98,7 @@ export function useVerbAvailabilities(atoms) {
     const out = /** @type {Record<K, VerbAvailability>} */ ({});
     for (const k of keys) out[k] = availabilityOfAtom(atoms[k], roles);
     return out;
-    // `signature` stands in for `atoms`; `keys` is derived from it. (No lint
-    // layer in this repo enforces the dep list — the note is for the reader.)
+    // `signature` stands in for `atoms`; `keys` is derived from it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `signature` stands in for `atoms` and `keys`
   }, [signature, roles]);
 }

@@ -15,7 +15,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER } from '@test/test-utils';
 import BuyerRfxRoutes, { selectEventTab } from '@test/buyerRfxRoutes';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
-import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import { SEEDED_SEAT_ROLES, PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
 import { NO_PERSON } from '@context/noPerson';
 import {
   awardCancellationStore,
@@ -29,7 +29,6 @@ import {
 import { mockDataService } from '@services/data/mock/mockDataService';
 import { rfxNow } from './rfx/rfxDisplay';
 import { MockCommandService } from '@services/data/mock/MockCommandService';
-import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
 /** @import { QueryScope } from '@services/data/types' */
 /** @import { DocumentRequest } from '@services/sourcing/types' */
 import { formatDate } from '@lib/format';

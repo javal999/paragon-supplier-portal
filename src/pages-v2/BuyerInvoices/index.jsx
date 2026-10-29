@@ -12,7 +12,7 @@ import {
   usePoDrillFilter
 } from '../orders/PoDrillFilter';
 import { invoicePoNumbers, invoicesForPo } from '../orders/orderSummaryModel';
-import { useGoodsReceipts } from '@services/query/hooks';
+import { useGoodsReceipts, useBuyerInvoices } from '@services/query/hooks';
 import SapDataAgeBanner from '@components/ui-v2/SapDataAgeBanner';
 import PageMetaLine from '@components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
@@ -26,7 +26,6 @@ import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import EmptyState from '@components/ui-v2/EmptyState';
 import { useTranslation } from 'react-i18next';
-import { useBuyerInvoices } from '@services/query/hooks';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { STATUS_FILTER_KEY } from './const';
 import { useInvoiceSeat } from './hooks/useInvoiceSeat';

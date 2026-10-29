@@ -68,6 +68,7 @@ const ShipmentsList = ({
       (statusFilter === 'All' ? asns : asns.filter((a) => a.status === statusFilter)).filter(
         (a) => pic.filter === '' || a.lineItems.some((li) => pic.matches(li.mrpController))
       ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the two members read are listed; `pic` itself is rebuilt each render
     [statusFilter, asns, pic.filter, pic.matches]
   );
 

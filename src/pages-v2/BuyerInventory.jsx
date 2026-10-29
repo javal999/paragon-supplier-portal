@@ -196,6 +196,7 @@ const BuyerInventory = () => {
       out.set(supplierId, { api: false, updated: status.updated.length, total: status.total });
     }
     return out;
+    // eslint-disable-next-line react-hooks/preserve-manual-memoization -- React Compiler notice; the app does not use the compiler
   }, [rows, nowIso]);
 
   if (inventory.isPending) return <LoadingState breadcrumb={crumb} />;

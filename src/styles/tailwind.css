@@ -1,8 +1,12 @@
+/* eslint-disable-next-line css/no-invalid-at-rules -- Tailwind directive, expanded at build time */
 @tailwind base;
+/* eslint-disable-next-line css/no-invalid-at-rules -- Tailwind directive, expanded at build time */
 @tailwind components;
+/* eslint-disable-next-line css/no-invalid-at-rules -- Tailwind directive, expanded at build time */
 @tailwind utilities;
 
 
 @layer base {
+  /* eslint-disable-next-line css/no-invalid-properties -- --font-body is defined by the Paradise tokens loaded before this file */
   html { font-family: var(--font-body); }
 }

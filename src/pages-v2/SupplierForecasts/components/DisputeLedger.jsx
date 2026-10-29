@@ -33,6 +33,7 @@ const DisputeLedger = ({ entries }) => {
     <div className="mt-3 flex flex-col gap-2" data-testid="sdcsup-dispute-ledger">
       {entries.map((e, i) => (
         <div
+          // eslint-disable-next-line react/no-array-index-key -- append-only ledger; the index only splits same-instant entries
           key={`${e.at}-${i}`}
           className={`border-l-2 pl-3 py-1 ${
             e.kind === 'raised' ? 'border-l-warning' : 'border-l-success'

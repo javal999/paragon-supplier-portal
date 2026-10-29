@@ -438,6 +438,7 @@ const BuyerChannelTriage = ({ onRecorded, initialSupplierId = '', onSupplierChan
                     <span className="inline-flex flex-wrap gap-1">
                       {parsed.diagnostics.matchedTokens.map((tok, i) => (
                         <Data
+                          // eslint-disable-next-line react/no-array-index-key -- read-only token chips; the list is rebuilt whole, never reordered
                           key={i}
                           className="rounded bg-teal-soft px-1.5 py-0.5 text-teal-hover"
                         >

@@ -23,11 +23,10 @@ import {
   zoneAt
 } from './stabilise';
 import { breachesToleranceBand, masc } from './reliability';
-import { addDays } from './dates';
+import { addDays, dayOf } from './dates';
 import { engineDataset } from '../data/mock/fixtures/engineDataset';
 import { DEFAULT_SAFETY_STOCK_OPTIONS, safetyStockRun } from './safetyStock';
 import { planHistoryInputs, stabiliseInputs, versionDays } from '../data/mock/stabiliseReadModel';
-import { dayOf } from './dates';
 import { SDC_SIMULATED_NOW } from '../sdc/clock';
 
 const P = DEFAULT_STABILISE_PARAMS;

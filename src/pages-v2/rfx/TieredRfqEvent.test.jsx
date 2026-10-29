@@ -14,7 +14,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { everyVendorQualified } from '@test/everyVendorQualified';
 /** @import { TFunction } from 'i18next' */
 import { renderWithProviders, BUYER } from '@test/test-utils';
-import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
+import { SEEDED_SEAT_ROLES, PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
 import { resetRfxStores, awardStore } from '@services/data/mock/stores/rfxStores';
 import { rfqStore } from '@services/data/mock/stores/rfqStore';
 import { quotationStore } from '@services/data/mock/stores/quotationStore';
@@ -25,7 +25,6 @@ import BuyerSourcingEvent from '../BuyerSourcingEvent';
 import BuyerSourcingPage from '../BuyerSourcing';
 import { buildComparisonCsv } from './comparisonExport';
 import { MockCommandService } from '@services/data/mock/MockCommandService';
-import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
 import { NO_PERSON } from '@context/noPerson';
 /** @import { QueryScope } from '@services/data/types' */
 /** @import { AwardLine } from '@services/sourcing/types' */

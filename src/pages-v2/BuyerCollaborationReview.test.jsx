@@ -26,11 +26,10 @@ import SupplierForecasts from './SupplierForecasts';
 import { requirementResponseStore } from '@services/data/mock/stores/requirementResponseStore';
 import { FORECAST_PUBLICATIONS } from '@services/sdc';
 import { getFlow, userVerbsFrom } from '@services/transitions';
-import { rolesHolding } from '@services/transitions/businessRoles';
+import { rolesHolding, PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
 import { mockDataService } from '@services/data/mock/mockDataService';
 import i18n from '@lib/i18n';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
-import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
 import { NO_PERSON } from '@context/noPerson';
 
 /**

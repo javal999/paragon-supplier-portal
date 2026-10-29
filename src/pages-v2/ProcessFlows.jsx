@@ -289,6 +289,99 @@ const TransitionRow = ({ tv }) => {
   );
 };
 
+/**
+ * The selected flow's header: name, purpose, counts, initial and terminal
+ * states, provenance and the diagram. Its own component so the page's JSX
+ * stays within six levels (react/jsx-max-depth).
+ * @type {React.FC<{ view: FlowView; cursor: string | null; flowPurpose: string | null | undefined }>}
+ */
+const FlowSummary = ({ view, cursor, flowPurpose }) => {
+  const { t } = useTranslation();
+  return (
+    <section className="rounded-md border border-border-subtle bg-bg-surface p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="flex items-center gap-2 text-section text-text-primary">
+            <GitBranch size={16} className="text-teal" aria-hidden="true" />
+            <Data className="text-[15px]">{view.entity}</Data>
+          </h2>
+          {/* PF-2 — WHAT THIS MACHINE IS FOR, first, above its counts. A
+              flow's purpose is not the sum of its verbs: `invoiceMatch` is
+              four system transitions and the reason it exists is "a wrong
+              bill is caught before money moves". That is the sentence a
+              reader needs before any of the rest means anything. */}
+          {flowPurpose && (
+            <p
+              data-testid={`pf-flow-purpose-${view.entity}`}
+              className="mt-1.5 max-w-prose text-meta text-text-secondary"
+            >
+              {t(flowPurpose)}
+            </p>
+          )}
+          <p className="mt-2 text-meta text-text-tertiary">
+            {t('processFlows.flow.counts', {
+              states: view.stateCount,
+              transitions: view.transitionCount,
+              forks: view.forkCount,
+              version: view.version
+            })}
+          </p>
+          <p className="mt-1 text-[length:var(--fs-label-3)] text-text-tertiary">
+            {t('processFlows.flow.initial')}{' '}
+            <Data className="text-[length:var(--fs-label-3)]">{view.initial}</Data>
+            {' · '}
+            {t('processFlows.flow.terminals')}{' '}
+            {view.terminals.length > 0 ? (
+              <Data className="text-[length:var(--fs-label-3)]">{view.terminals.join(', ')}</Data>
+            ) : (
+              <span>{t('processFlows.flow.noTerminals')}</span>
+            )}
+          </p>
+        </div>
+        <FlowProvenance view={view} />
+      </div>
+
+      <div className="mt-4">
+        <FlowDiagram view={view} cursor={cursor} idPrefix={`pf-${view.entity}`} />
+      </div>
+    </section>
+  );
+};
+
+/**
+ * Every transition of the selected flow as a table row. Its own component so
+ * the page's JSX stays within six levels (react/jsx-max-depth).
+ * @type {React.FC<{ view: FlowView }>}
+ */
+const TransitionsSection = ({ view }) => {
+  const { t } = useTranslation();
+  return (
+    <section className="rounded-md border border-border-subtle bg-bg-surface">
+      <div className="border-b border-border-subtle p-4">
+        <h3 className="text-section text-text-primary">{t('processFlows.transitions.title')}</h3>
+        <p className="mt-1 text-meta text-text-tertiary">{t('processFlows.transitions.body')}</p>
+      </div>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableHeaderCell>{t('processFlows.col.transition')}</TableHeaderCell>
+            <TableHeaderCell>{t('processFlows.col.edge')}</TableHeaderCell>
+            <TableHeaderCell>{t('processFlows.col.step')}</TableHeaderCell>
+            <TableHeaderCell>{t('processFlows.col.role')}</TableHeaderCell>
+            <TableHeaderCell>{t('processFlows.col.contract')}</TableHeaderCell>
+            <TableHeaderCell>{t('processFlows.col.links')}</TableHeaderCell>
+          </TableHeader>
+          <tbody>
+            {view.transitions.map((tv) => (
+              <TransitionRow key={tv.def.id} tv={tv} />
+            ))}
+          </tbody>
+        </Table>
+      </div>
+    </section>
+  );
+};
+
 /** @type {React.FC} */
 const ProcessFlows = () => {
   const { t } = useTranslation();
@@ -427,55 +520,7 @@ const ProcessFlows = () => {
         </nav>
 
         <div className="min-w-0 flex-1 space-y-6">
-          <section className="rounded-md border border-border-subtle bg-bg-surface p-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h2 className="flex items-center gap-2 text-section text-text-primary">
-                  <GitBranch size={16} className="text-teal" aria-hidden="true" />
-                  <Data className="text-[15px]">{view.entity}</Data>
-                </h2>
-                {/* PF-2 — WHAT THIS MACHINE IS FOR, first, above its counts. A
-                    flow's purpose is not the sum of its verbs: `invoiceMatch` is
-                    four system transitions and the reason it exists is "a wrong
-                    bill is caught before money moves". That is the sentence a
-                    reader needs before any of the rest means anything. */}
-                {flowPurpose && (
-                  <p
-                    data-testid={`pf-flow-purpose-${view.entity}`}
-                    className="mt-1.5 max-w-prose text-meta text-text-secondary"
-                  >
-                    {t(flowPurpose)}
-                  </p>
-                )}
-                <p className="mt-2 text-meta text-text-tertiary">
-                  {t('processFlows.flow.counts', {
-                    states: view.stateCount,
-                    transitions: view.transitionCount,
-                    forks: view.forkCount,
-                    version: view.version
-                  })}
-                </p>
-                <p className="mt-1 text-[length:var(--fs-label-3)] text-text-tertiary">
-                  {t('processFlows.flow.initial')}{' '}
-                  <Data className="text-[length:var(--fs-label-3)]">{view.initial}</Data>
-                  {' · '}
-                  {t('processFlows.flow.terminals')}{' '}
-                  {view.terminals.length > 0 ? (
-                    <Data className="text-[length:var(--fs-label-3)]">
-                      {view.terminals.join(', ')}
-                    </Data>
-                  ) : (
-                    <span>{t('processFlows.flow.noTerminals')}</span>
-                  )}
-                </p>
-              </div>
-              <FlowProvenance view={view} />
-            </div>
-
-            <div className="mt-4">
-              <FlowDiagram view={view} cursor={cursor} idPrefix={`pf-${view.entity}`} />
-            </div>
-          </section>
+          <FlowSummary view={view} cursor={cursor} flowPurpose={flowPurpose} />
 
           <LifecycleWalk
             view={view}
@@ -501,33 +546,7 @@ const ProcessFlows = () => {
             </section>
           )}
 
-          <section className="rounded-md border border-border-subtle bg-bg-surface">
-            <div className="border-b border-border-subtle p-4">
-              <h3 className="text-section text-text-primary">
-                {t('processFlows.transitions.title')}
-              </h3>
-              <p className="mt-1 text-meta text-text-tertiary">
-                {t('processFlows.transitions.body')}
-              </p>
-            </div>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableHeaderCell>{t('processFlows.col.transition')}</TableHeaderCell>
-                  <TableHeaderCell>{t('processFlows.col.edge')}</TableHeaderCell>
-                  <TableHeaderCell>{t('processFlows.col.step')}</TableHeaderCell>
-                  <TableHeaderCell>{t('processFlows.col.role')}</TableHeaderCell>
-                  <TableHeaderCell>{t('processFlows.col.contract')}</TableHeaderCell>
-                  <TableHeaderCell>{t('processFlows.col.links')}</TableHeaderCell>
-                </TableHeader>
-                <tbody>
-                  {view.transitions.map((tv) => (
-                    <TransitionRow key={tv.def.id} tv={tv} />
-                  ))}
-                </tbody>
-              </Table>
-            </div>
-          </section>
+          <TransitionsSection view={view} />
         </div>
       </div>
     </AppShellV2>

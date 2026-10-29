@@ -14,7 +14,7 @@ import {
 } from '../orders/PoDrillFilter';
 import { asnsForPo } from '../orders/orderSummaryModel';
 import { pendingAsns } from '../widgets/buyerDerivations';
-import { useASNs } from '@services/query/hooks';
+import { useASNs, useShipments, useSuppliers } from '@services/query/hooks';
 import { useCallOffViews } from '../callOffs/callOffDisplay';
 import { asnCallOffWarnings } from '@services/transitions/callOffRules';
 import { isActiveAsn } from '@services/transitions/fulfilmentRules';
@@ -29,7 +29,6 @@ import { useToast } from '@hooks/useToast';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import EmptyState from '@components/ui-v2/EmptyState';
-import { useShipments, useSuppliers } from '@services/query/hooks';
 /** @import { ShipmentDisplayState } from '@services/data/shipmentDisplayState' */
 import { shipmentDisplayState } from '@services/data/shipmentDisplayState';
 /** @import { GroupTab } from './const' */
@@ -150,7 +149,7 @@ const BuyerShipments = () => {
       }
       return true;
     });
-  }, [shipments, tab, selectedModes, search, drilledPo]);
+  }, [shipments, tab, selectedModes, search, drilledPo, displayOf]);
 
   // IA P-08 — Home's "Inbound shipments to receive" counts ASNs, not shipment
   // rows, so `?asns=toReceive` lists exactly those ASNs (the same predicate,

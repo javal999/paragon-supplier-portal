@@ -1,6 +1,6 @@
 /** @import { ActorAttribution } from '@lib/enforcement' */
 /** @import React from 'react' */
-import { createContext, useCallback, useContext, useState } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 /** @typedef {'buyer' | 'supplier'} PersonaType */
 
@@ -84,10 +84,12 @@ export const CurrentIdentityProvider = ({ source, children }) => {
     [source]
   );
 
+  // Memoised so readers re-render when the identity changes, not on every
+  // render of the provider's parent (react/jsx-no-constructed-context-values).
+  const value = useMemo(() => ({ identity, setIdentity }), [identity, setIdentity]);
+
   return (
-    <CurrentIdentityContext.Provider value={{ identity, setIdentity }}>
-      {children}
-    </CurrentIdentityContext.Provider>
+    <CurrentIdentityContext.Provider value={value}>{children}</CurrentIdentityContext.Provider>
   );
 };
 

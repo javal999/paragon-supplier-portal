@@ -21,7 +21,7 @@ import { NO_PERSON } from '@context/noPerson';
 /** @import { RFQ, RFQStatus, RFQCategory } from '@data/mockRfqs' */
 /** @import { Quotation, QuotationStatus } from '@data/mockQuotations' */
 /** @import { BidCurrency } from '@lib/currencyPolicy' */
-import { BASE_CURRENCY } from '@lib/currencyPolicy';
+import { BASE_CURRENCY, BID_CURRENCIES } from '@lib/currencyPolicy';
 /** @import { FxPinSource } from '@lib/fxPin' */
 // THE ONE LEGAL PARSER (CP-0 · W1). The transition re-runs the SAME function
 // the surface ran — not a second implementation that could drift from it.
@@ -267,7 +267,6 @@ import { gateRefusal } from '../../sourcing/complianceGate';
 import { complianceFlaggedAt, complianceSnapshot } from './updateComplianceReadModel';
 import { rfiTemplate } from '../../sourcing/rfxConfig';
 /** @import { AwardLine, RfqAwardRecord, RfpAwardLine, RfiAnswer, RfiEvent, RfiQuestion, RfiResponse, RfpEvent, RfpFirmOffer, RfpFirmPrice, RfpPricingAnswer, RfpPricingRequest, RfpResponse, RfpTermAnswer, RfpTermRow, RfpTermsDocument, RfxConfidentiality, RfxCustomSection, RfxEventStatus, RfpEventStatus, RfxInvitee, RfxResponseStatus } from '../../sourcing/types' */
-import { BID_CURRENCIES } from '@lib/currencyPolicy';
 import { RFQ_UOMS, deriveQuoteHeader, readRfqAuthoringFields } from '../../sourcing/rfqModel';
 // RFx spec 2026-09-21 — the supplier's side of a tiered RFQ (intent,
 // confidentiality, clarifications) and the tiered quotation rule.

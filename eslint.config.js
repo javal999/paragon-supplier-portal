@@ -156,26 +156,16 @@ const RULES_WITH_OPEN_VIOLATIONS = [
   // react/no-array-index-key: promoted in Phase 2 (2026-10-02). Every index key
   // now uses a stable id, or keeps the index with a disable comment explaining
   // why the list is static (forecast included since Phase 7).
-  // React Compiler readiness (eslint-plugin-react-hooks v7 recommended set).
-  'react-hooks/exhaustive-deps',
-  'react-hooks/set-state-in-effect',
-  'react-hooks/static-components',
-  'react-hooks/refs',
-  'react-hooks/preserve-manual-memoization',
-  'react-hooks/use-memo',
-  'react-hooks/immutability',
-  'react-hooks/globals',
-  'react/jsx-no-constructed-context-values',
-  // Style and structure.
-  'no-duplicate-imports',
-  'react/function-component-definition',
-  'react/self-closing-comp',
-  'react/jsx-max-depth',
-  // CSS (Tailwind directives such as @tailwind/@apply read as unknown at-rules).
-  'css/no-invalid-at-rules',
-  'css/no-invalid-at-rule-placement',
-  'css/no-invalid-properties',
-  'css/no-important'
+  // Emptied on 2026-10-29, when lint reached 0 warnings (MRs !56, !60–!62 and
+  // the one that emptied it). The rules that were here (every react-hooks
+  // rule, react/jsx-no-constructed-context-values, no-duplicate-imports,
+  // react/function-component-definition, react/self-closing-comp,
+  // react/jsx-max-depth and the css/ rules) now run at their TARGET severity:
+  // 'error' for most, so a new violation fails the commit. The few whose
+  // target is 'warn' (react-hooks/exhaustive-deps from the plugin's
+  // recommended set, react/no-array-index-key) are held at zero by the
+  // `lint.maxWarnings` ceiling of 0. Deliberate sites carry an
+  // `eslint-disable-next-line <rule> -- <reason>` comment. Keep this list empty.
 ];
 
 /**
@@ -270,7 +260,7 @@ export default defineConfig([
   {
     files: ['src/components/**/*.{js,jsx,tsx}', 'src/pages-v2/**/*.{js,jsx,tsx}'],
     plugins: { react: pluginReact },
-    rules: { 'react/jsx-max-depth': ['warn', { max: 6 }] }
+    rules: { 'react/jsx-max-depth': ['error', { max: 6 }] }
   },
 
   // ── 5. Test files: Vitest globals ───────────────────────────────────────────

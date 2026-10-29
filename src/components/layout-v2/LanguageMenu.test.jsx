@@ -1,7 +1,6 @@
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
-import i18n from '@lib/i18n';
-import { LANG_STORAGE_KEY } from '@lib/i18n';
+import i18n, { LANG_STORAGE_KEY } from '@lib/i18n';
 import LanguageMenu from './LanguageMenu';
 
 // The TopBar language control (SEAT2-LANG-DROPDOWN-01). The load-bearing
