@@ -99,6 +99,7 @@ const SupplierInvoices = () => {
   // AC-03 — exactly one record behind the cell arrives OPEN, not as a list of one.
   const onlyInvoice = drilledPo !== null && listed.length === 1 ? listed[0] : null;
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- AC-03: a drill-down to one record opens it
     if (onlyInvoice !== null) setSelected(onlyInvoice);
   }, [onlyInvoice]);
   const [panelMode, setPanelMode] = useState(/** @type {PanelMode} */ ('detail'));

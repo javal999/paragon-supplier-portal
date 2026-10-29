@@ -56,6 +56,7 @@ export function useDialogFocus(
   // arrows; re-running would steal focus back to the first control on every
   // parent render).
   const closeRef = useRef(onClose);
+  // eslint-disable-next-line react-hooks/refs -- latest-callback ref: the effect calls the newest onClose without re-running
   closeRef.current = onClose;
 
   useEffect(() => {

@@ -130,6 +130,7 @@ const IdentityPanel = () => {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- closing the panel also closes its roles submenu
     if (!open) setRolesOpen(false);
   }, [open]);
 

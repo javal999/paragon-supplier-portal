@@ -33,6 +33,7 @@ export function usePrefillFromSimulation(allSections, posPending, isPending, set
     if (first) {
       setForm({ quantity: '', needDate: '', type: 'forecast', reason: '', comment: '' });
       setPanel({ kind: 'new', poId: first.po.id, lineId: first.line.id });
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- applies the simulation deep link once its data has loaded
       setPrefillMissing(null);
     } else {
       setPrefillMissing({ supplier: prefillSupplier, material: prefillMaterial });

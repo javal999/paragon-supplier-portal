@@ -15,6 +15,18 @@ import { DOCUMENTS } from './DocumentsAndBankStep';
  */
 
 /**
+ * One label and value line of the review. Defined at module level so React
+ * keeps the same component between renders (react-hooks/static-components).
+ * @type {React.FC<{ label: string; value: string }>}
+ */
+const Row = ({ label, value }) => (
+  <div className="flex flex-col sm:flex-row gap-1 sm:gap-3 py-1.5 border-b border-border-subtle last:border-b-0">
+    <span className="sm:w-44 shrink-0 text-xs text-text-tertiary font-medium">{label}</span>
+    <span className="text-sm text-text-primary font-medium break-words">{value || '—'}</span>
+  </div>
+);
+
+/**
  * The last step of the External and Internal SR wizards: a read-back of every
  * earlier step for the chosen `requestType`, then the two agreement boxes.
  * Reads every value through `useFormContext()`.
@@ -28,13 +40,6 @@ const ReviewStep = ({ requestType }) => {
     formState: { errors }
   } = /** @type {RegistrationForm} */ (useFormContext());
   const form = /** @type {FormState} */ (useWatch({ control }));
-  /** @type {React.FC<{ label: string; value: string }>} */
-  const Row = ({ label, value }) => (
-    <div className="flex flex-col sm:flex-row gap-1 sm:gap-3 py-1.5 border-b border-border-subtle last:border-b-0">
-      <span className="sm:w-44 shrink-0 text-xs text-text-tertiary font-medium">{label}</span>
-      <span className="text-sm text-text-primary font-medium break-words">{value || '—'}</span>
-    </div>
-  );
   const isExternal = requestType === 'External SR';
   const isInternal = requestType === 'Internal SR';
   const categoriesValue = form.selCats.map((v) => t(catKey(v))).join(', ') || '—';

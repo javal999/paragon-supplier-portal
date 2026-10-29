@@ -227,7 +227,9 @@ const OrderSummaryView = ({ persona, foresightAnswers, invoices }) => {
 
   // BR-04 / AC-06 — the filters and the scroll offset the user left behind.
   const stored = useRef(readOrderSummaryViewState(persona));
+  // eslint-disable-next-line react-hooks/refs -- the stored view state is read once, as initial state
   const [search, setSearch] = useState(stored.current.search);
+  // eslint-disable-next-line react-hooks/refs -- the stored view state is read once, as initial state
   const [attentionOnly, setAttentionOnly] = useState(stored.current.attentionOnly);
   // IA review item 2 — My tasks "Orders whose expected completion moved later"
   // lands here with `moved=1`: only those orders, by the same rule the task

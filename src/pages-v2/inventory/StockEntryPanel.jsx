@@ -105,6 +105,7 @@ const StockEntryPanel = ({
 
   useEffect(() => {
     if (!open) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resets the form each time the panel opens
     setMaterialQuery('');
     const supplierId =
       initial?.supplierId ?? (mode === 'supplier' ? (positions[0]?.supplierId ?? '') : '');

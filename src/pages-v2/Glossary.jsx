@@ -224,6 +224,7 @@ const Glossary = () => {
     if (!deepLinked) return;
     const target = all.find((v) => v.anchor === deepLinked);
     if (!target) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- a deep-linked term clears the filters so it is visible
     setVocabulary(null);
     setQuery('');
     // `getElementById`, not a CSS selector: an anchor may contain dots

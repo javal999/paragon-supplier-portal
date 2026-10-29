@@ -95,6 +95,7 @@ const BuyerInvoicesView = ({ invoices: allInvoices }) => {
   // AC-03 — exactly one record behind the cell arrives OPEN, not as a list of one.
   const onlyInvoiceId = drilledPo !== null && invoices.length === 1 ? invoices[0].id : null;
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- AC-03: a drill-down to one record opens it
     if (onlyInvoiceId !== null) setSelectedId(onlyInvoiceId);
   }, [onlyInvoiceId]);
   const [disputeReason, setDisputeReason] = useState('');

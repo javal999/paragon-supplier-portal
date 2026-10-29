@@ -138,6 +138,7 @@ const GoodsReceiptWorkspace = ({
   // AC-03 — exactly one record behind the cell arrives OPEN, not as a list of one.
   const onlyGrId = drilledPo !== null && allGRs.length === 1 ? allGRs[0].id : null;
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- AC-03: a drill-down to one record opens it
     if (onlyGrId !== null) setSelectedId(onlyGrId);
   }, [onlyGrId]);
 

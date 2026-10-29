@@ -203,6 +203,7 @@ const SupplierCapacity = () => {
   const plan = plans.find((p) => p.planningGroupId === (group ?? drillGroup)) ?? plans[0] ?? null;
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resets the draft when the group or its latest submission changes
     if (plan) setDraft(draftFrom(plan));
     // Reset the form when the group or its latest submission changes.
   }, [plan?.planningGroupId, plan?.latest?.id, plansQuery.dataUpdatedAt]);

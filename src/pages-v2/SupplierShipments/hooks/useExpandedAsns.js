@@ -14,6 +14,7 @@ export function useExpandedAsns(drilledPo, visibleAsns) {
   const onlyAsn = drilledPo !== null && visibleAsns.length === 1 ? visibleAsns[0].asnNumber : null;
   useEffect(() => {
     if (onlyAsn === null) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- AC-03: a drill-down to one record opens it
     setExpanded((prev) => (prev.has(onlyAsn) ? prev : new Set(prev).add(onlyAsn)));
   }, [onlyAsn]);
 
