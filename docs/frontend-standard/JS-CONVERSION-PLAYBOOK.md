@@ -50,6 +50,10 @@ text of every flagged `&&`), and `lint-staged.config.js` now runs
 `eslint --fix --rule "react/jsx-no-leaked-render: off"`. **Before converting a folder, commit with
 the current hook config, and after converting, check the rule's site count did not drop.**
 
+**Update 2026-10-29:** the rule is now off in `eslint.config.js`, so `eslint --fix` cannot apply that
+rewrite, and the hook runs plain `eslint --fix`. The defect it guarded (a number before `&&`
+rendering "0") is checked by type in `src/lib/leakedRenderGate`, part of the test suite.
+
 ## Phase 7 — forecast (2026-10-06)
 
 54 files (forecast pages, `components/forecast`, `services/engine`, the forecast flows, mocks and
