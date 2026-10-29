@@ -81,7 +81,7 @@ const BuyerSuppliers = () => {
   const { t } = useTranslation();
   const cl = useCategoryLabel();
   const suppliersQuery = useSuppliers();
-  const suppliers = suppliersQuery.data?.items ?? [];
+  const suppliers = useMemo(() => suppliersQuery.data?.items ?? [], [suppliersQuery.data]);
   // BL-52 — the certificate registry the validity filter reads (REQ-E03-01 BR-05).
   const registryQuery = useComplianceRegistry();
   const [group, setGroup] = useState(/** @type {GroupTab} */ ('suppliers'));

@@ -52,7 +52,7 @@ const BUCKET_VARIANT = {
 const BuyerDeliveryAgreements = () => {
   const { t } = useTranslation();
   const query = useDeliveryAgreements();
-  const views = query.data ?? [];
+  const views = useMemo(() => query.data ?? [], [query.data]);
 
   const [tab, setTab] = useState(/** @type {Tab} */ ('all'));
   const [search, setSearch] = useState('');

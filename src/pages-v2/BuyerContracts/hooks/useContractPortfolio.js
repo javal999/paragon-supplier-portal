@@ -114,7 +114,9 @@ export function useContractPortfolio({
           (supplierById.get(c.supplierId)?.name ?? '').toLowerCase().includes(q)
         );
       });
-  }, [contracts, group, selectedTypes, search, displayById]);
+    // `supplierById` is listed so a search typed before the supplier read lands
+    // re-filters once names arrive (react-hooks/exhaustive-deps, 2026-10-28).
+  }, [contracts, group, selectedTypes, search, displayById, supplierById]);
 
   const renewalPipeline = useMemo(() => {
     // The 180 arm SURVIVES and is now `CONTRACT_RENEWAL_HORIZON_DAYS`, named in

@@ -115,7 +115,7 @@ const AdminQualification = () => {
 
   const rows = qualifications.data?.items ?? [];
   /** @type {readonly SupplierDocument[]} */
-  const docs = documents.data?.items ?? [];
+  const docs = useMemo(() => documents.data?.items ?? [], [documents.data]);
   const docsBySupplier = useMemo(() => {
     const m = /** @type {Map<string, SupplierDocument[]>} */ (new Map());
     for (const d of docs) m.set(d.supplierId, [...(m.get(d.supplierId) ?? []), d]);

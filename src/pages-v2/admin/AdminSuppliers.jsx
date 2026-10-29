@@ -80,7 +80,7 @@ const AdminSuppliers = () => {
   const [draft, setDraft] = useState(/** @type {Draft} */ (EMPTY_DRAFT));
 
   /** @type {readonly SupplierStockUpdateMode[]} */
-  const rows = modes.data?.items ?? [];
+  const rows = useMemo(() => modes.data?.items ?? [], [modes.data]);
   const history = /** @type {HistoryRow[]} */ (
     useMemo(
       () =>

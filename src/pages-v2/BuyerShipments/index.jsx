@@ -81,7 +81,7 @@ const BuyerShipments = () => {
     );
   }, [asnsQuery.data, callOffViewList]);
   const drill = usePoDrillFilter();
-  const shipments = shipmentsQuery.data?.items ?? [];
+  const shipments = useMemo(() => shipmentsQuery.data?.items ?? [], [shipmentsQuery.data]);
   const supplierById = useMemo(
     () => new Map((suppliersQuery.data?.items ?? []).map((s) => [s.id, s])),
     [suppliersQuery.data]

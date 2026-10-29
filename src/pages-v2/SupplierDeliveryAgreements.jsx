@@ -51,7 +51,7 @@ const SupplierDeliveryAgreements = () => {
   const { t } = useTranslation();
   const { identity } = useCurrentIdentity();
   const query = useDeliveryAgreements();
-  const views = query.data ?? [];
+  const views = useMemo(() => query.data ?? [], [query.data]);
 
   // The supplier's OWN obligations — a pure fold over the already-own-scoped views
   // (reuse 5a; no new read). Memoised before the guards so hook order is stable.

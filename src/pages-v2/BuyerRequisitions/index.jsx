@@ -66,7 +66,7 @@ const BuyerRequisitions = () => {
   const [form, setForm] = useState(/** @type {NewPRForm} */ (emptyForm));
 
   const reqQuery = useRequisitions();
-  const prs = reqQuery.data?.items ?? [];
+  const prs = useMemo(() => reqQuery.data?.items ?? [], [reqQuery.data]);
 
   // ⚠️ **THE SELECTED ROW IS DERIVED FROM THE LIST, NOT HELD AS A SNAPSHOT.**
   // The row captured on click is the PRE-transition record; after an approve
