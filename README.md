@@ -471,7 +471,9 @@ Performance thresholds NF2–NF7 are "TBD by IT".
 The security boundary is one shared password at the Vercel edge. Behind it
 the portal is a browser-only prototype on sample data: no backend, no
 database, no SAP connection — so every control below protects *access to the
-prototype*, not users' records.
+prototype*, not users' records. The evidence behind this section is the
+pre-release audit, [`docs/AUDIT.md`](docs/AUDIT.md): 3 Medium and 11 Low
+findings at `17c403c4`, a STRIDE table and a five-phase fix plan.
 
 | | |
 |---|---|
@@ -682,6 +684,7 @@ The full list, with sizes and owners, is in
 | [BACKLOG.md](docs/supplier-hub/BACKLOG.md) | Everything outstanding, by BL ID |
 | [user-guide/](docs/supplier-hub/user-guide/) | Use-case catalogue, screenshots and the user-guide deck |
 | [docs/contracts/](docs/contracts/) | Contracts C1–C12 the backend builds against |
+| [docs/AUDIT.md](docs/AUDIT.md) | Pre-release audit: ranked findings with file:line, STRIDE table, fix plan, open items and what was ruled out |
 | [Paragon_World_Class_Build_Plan_v1.md](Paragon_World_Class_Build_Plan_v1.md) | The forward plan, stages F, I and A |
 
 The roadmap no longer lists WhatsApp, API or EDI channels as complete, nor an
