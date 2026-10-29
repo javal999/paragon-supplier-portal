@@ -2,12 +2,12 @@
 
 | Field | Value |
 |---|---|
-| Status | **Accepted 2026-10-29: TL-D1 to TL-D9.** The owner answered the 4 open questions the same day (section 5). Nothing is built yet |
+| Status | **Accepted 2026-10-29: TL-D1 to TL-D13.** The owner answered the 4 open questions (section 5) and the 27 inventory questions (TL-D10 to TL-D13, `research/TERM-LABEL-INVENTORY-2026-10.md` section 1) the same day. Nothing is built yet |
 | Date | 2026-10-29 |
 | Source | Owner, 2026-10-29, reviewing the Demand anticipation grid: the row label differs from the team's input. Owner rules: (1) an agreed column wording is not replaced with another name; (2) every important term gets an information icon with its definition and the other names it goes by |
 | Code read | `main` at `59199b4f` |
 | Supersedes | CAP-D10 (name "Demand anticipation", never "DA") in `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md` and `SC-HUB-DEMAND-ANTICIPATION-BRIEF-2026-10.md` |
-| Does not change | Any figure, formula or rule. This is labels and definitions only |
+| Does not change | Any figure, formula or rule. This is labels and definitions only, except 3 display fixes the inventory found (TL-D12): the RFQ Awards history shows the real award date and amount, and "vs Should-Cost" is hidden while the model is parked |
 
 **Tags.** [Code] = built behaviour, cited `path:line` under `src/`. [Owner, 2026-10-29] = the owner's ruling in this review. [Team] = the Material Planning team's own words, from the 2026-10-14 MoM, the OSIP playbook PPT and `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. [Proposed] = a value written before review.
 
@@ -30,7 +30,7 @@ The hub has one place that already explains terms at the point of use: `TermTip`
 - **BR-01. The label is the source's word.** A term's label is written as the source writes it. The sources, in order: (1) the MoM and the team's own material (PPT, questions and answers files); (2) the hub's accepted requirement and decision documents under `docs/supplier-hub/`. The code is never a source for a label [Owner, 2026-10-29, TL-D2].
 - **BR-02. A clash is shown, not renamed.** When the source's word already means something else in the hub, the label carries both: the full name with the source's word in brackets, e.g. "Demand anticipation (DA)". The tooltip names what it is not, e.g. "Not Delivery Agreement" [Owner, 2026-10-29, TL-D1].
 - **BR-03. A rename needs a ruling.** No build, UX evaluation or copy pass changes an agreed label. A session that thinks a label is wrong writes it as a [Proposed] question for the owner and leaves the label as it is. A ruling gets a decision ID, and the glossary entry and the label change in the same MR [Owner, 2026-10-29, TL-D3].
-- **BR-04. The team's words stay in ID too [Owner, 2026-10-29, TL-D6].** A term the team writes in English inside Indonesian text (DA, LTP, safety order, carry-over, OSPO, ROP) is not translated in the ID locale. Today the ID locale translates DA to "Antisipasi permintaan", which the team does not say.
+- **BR-04. The team's words stay in ID too [Owner, 2026-10-29, TL-D6].** A term the team writes in English inside Indonesian text is not translated in the ID locale. TL-D6 named DA, LTP, safety order, carry-over, OSPO and ROP; TL-D11 made it an open rule, which also covers FG demand, Max, Firm, call-off, lead time, Uplift, Protection buffer and Strategic buffer. Today the ID locale translates DA to "Antisipasi permintaan", which the team does not say.
 
 ### TL-R2. Every important term explains itself
 
@@ -115,3 +115,7 @@ Each was asked with a recommendation; the owner took the recommendation every ti
 | TL-D7 | What counts as an important term | The BR-06 rule, checked against the step 1 inventory | Accepted, owner, 2026-10-29 |
 | TL-D8 | Label of the carried quantity | "Carry-over" in EN and ID (was "Carried in" / "Sisa dibawa masuk"); tooltip "Also called: sisa DA (Material Planning team)" | Accepted, owner, 2026-10-29 |
 | TL-D9 | Labels with no team word ("Would be", "Surplus absorbed") | Kept for now; asked of the Material Planning team in the next question list; the team's names replace them under BR-01 | Accepted, owner, 2026-10-29 |
+| TL-D10 | Scope answers from the inventory (Q1 to Q9) | Out: /buyer/inventory summary tiles (filters), screen-reader-only chart tables, the 57 admin rule-value rows (their hint line is enough). In: scorecard and supplier performance KPI tiles now (with i18n keys), headers over input cells, every alert rule name, the DA history facts list (its CSV headers keep the same words, no tooltip), RFx summary-card facts and RFP term-catalog rows in the last wave | Accepted, owner, 2026-10-29 |
+| TL-D11 | Reach of BR-04 | Open rule: any term the team writes in English inside Indonesian text stays English in ID (extends TL-D6) | Accepted, owner, 2026-10-29 |
+| TL-D12 | Wording and display fixes from the inventory (Q11 to Q26) | Max Stock / Max Stock Supplier; PR Generated; Incoming (Not Incoming DA); Commitment gap; Status; Accepted / Diterima; Disputed on both sides; 3-way match on both sides; Selisih vs Ketidaksesuaian; Certificate validity; Budget; Award date and Award value show the real award date and amount; vs Should-Cost hidden while parked; Sisa kuantitas; Channel. Rows listed in the inventory | Accepted, owner, 2026-10-29 |
+| TL-D13 | More labels with no team word | "After the check" and "Called off, not yet shipped" kept; added to the team's next question list with the TL-D9 pair | Accepted, owner, 2026-10-29 |

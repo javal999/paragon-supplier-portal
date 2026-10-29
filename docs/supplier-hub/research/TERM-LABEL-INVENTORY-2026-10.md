@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Inventory for review. Levi strikes out rows that should get no (i) and answers the 27 questions below. No label or code changes yet |
+| Status | Inventory for review. Levi answered the 27 questions on 2026-10-29 (section 1, TL-D10 to TL-D13); he can still strike out rows that should get no (i). No label or code changes yet |
 | Date | 2026-10-29 |
 | Spec | `SC-HUB-TERM-LABELS-REQUIREMENTS-2026-10.md` (BR-01 to BR-10, TL-D1 to TL-D9) |
 | Code read | branch `docs/term-labels-tooltips` at `de1ac950`; `src/` matches `main` `59199b4f` |
@@ -19,44 +19,43 @@ The portal has **1,179 labels** in scope: 897 column headers, 157 grid row label
 - **Clash (BR-02):** on 54 rows, the source's word means something else elsewhere in the hub.
 - **ID translates a team English term (BR-04):** 21 rows translate one of the 6 listed terms (DA, carry-over, safety order, ROP). Another 7 translate a team English word that is not on the list (Max, call-off, Uplift, Protection buffer, Strategic buffer, Replenishment cycle). Those 7 are open in question 10.
 - **Status:** 1,010 Keep; 49 Change [Proposed]; 21 Decided (TL-D1 10, TL-D8 5, TL-D6 4, TL-D9 2); 99 Ask Levi.
-- **Not looked up:** the 57 admin rule-value rows have Source wording "not looked up" until question 5 is answered.
+- **Not looked up:** the 57 admin rule-value rows have Source wording "not looked up"; question 5 ruled they get no (i), so they are not looked up.
 
-**Questions for Levi** (each covers the rows marked Ask Levi with that label):
+**Levi's answers, 2026-10-29** (TL-D10 to TL-D13 in the spec). Every row marked Ask Levi is settled by the answer to its question below, and the wave builder sets the row's Status when it builds that page. Q15, Q22, Q23 and Q24 change what a cell shows, not only its label, so they are display fixes inside BL-233, built in the wave that touches the page (RFx last).
 
-*Scope (BR-05)*
-1. /buyer/inventory, the 4 summary tiles (High risk, PTI stock below PTI ROP, Supplier figures out of date, No lead time on record) count rows and filter the table. Are they KPI cards (in) or filters (out)?
-2. /buyer/scorecard and /supplier/performance: the KPI tiles take their names from fixture data (OTDR, QNCR, Inventory DOS, POA Response Time and others) and have no i18n key or ID text. In scope now, or once real data replaces them?
-3. /buyer/scorecard, the 5 headers of the screen-reader-only chart tables are never shown. Out of scope?
-4. Headers over input cells: "Quantity" (/supplier/invoices), "Confirmed" (/supplier/orders) and "Shipped quantity" (/supplier/shipments). Column headers (in) or form fields (out)?
-5. /buyer/admin/tolerances and /buyer/admin/alert-thresholds: each of the 57 rule-value rows already shows a hint line. Do these rows get an (i)?
-6. /buyer/alerts: only the DA and ROP Supplier rule names are listed as rows. Should every alert rule name be a row?
-7. /buyer/demand-anticipation-history: are the facts list (OSPO, Safety order, Remainder, Additional PO) and the other CSV headers in scope?
-8. /buyer/rfi/:rfiId and /buyer/rfp/:rfpId Compare tab: are the summary-card facts (Deviations, Lowest price, Answered) KPI card titles?
-9. /buyer/rfp/:rfpId and /supplier/rfp: are the RFP term-catalog rows grid row labels that get an (i)?
-
-*BR-04 reach (TL-D6)*
-10. Is the TL-D6 list closed? The team also writes these in English inside Indonesian text, and the ID locale translates each: FG demand, Max, Firm, call-off, lead time, Uplift, Protection buffer, Strategic buffer.
-11. "Max" (/buyer/safety-stock, /buyer/order-plan) and "Max stock" (/buyer/fs-reconcile): rename to the team's "Max Stock" and "Max Stock Supplier"?
-
-*Wording*
-12. /buyer/what-if "PR need": the team says "PR Generated". Rename?
-13. /buyer/what-if "Arriving": the team says "incoming", but "Incoming DA" is DRC-8's term. Rename?
-14. /buyer/collaboration "Gap": rename to CR-22's "Commitment gap", since "Gap" on What to order is a different figure?
-15. /buyer/reschedule, warehouse fill: the status column header repeats "With the selection". Which header?
-16. /buyer/goods-receipt line "Acc": ID "Disetujui" merges line Accepted with receipt Approved. Which ID word?
-17. Invoices: "Disputed" (buyer) and "Returned" (supplier) use the same key. Use one word?
-18. /buyer/invoices "3-way match": align it with the supplier's "Match"?
-19. /supplier/goods-receipts: "Discrepancy" and "Difference" both read "Selisih" in ID. Give them distinct words?
-20. RFI/RFP/RFQ wizards "Certificates": rename to the source's "Certificate validity"?
-21. /buyer/rfq "Est. Value": the cell shows the buyer's budget, and no source defines it. Rename to "Budget"?
-22. /buyer/rfq Awards history "Award date" shows the award deadline. Fix the label or the value?
-23. /buyer/rfq Awards history "Award value" shows the estimated value. Fix the label or the value?
-24. /buyer/rfq/:rfqId "vs Should-Cost": the should-cost model is parked. Keep the row or hide it?
-25. Delivery Agreement card KPI "Remaining" (ID "Sisa") can read as the team's "sisa DA". Change the ID word?
-26. /buyer/suppliers "Tier" holds channel values (WhatsApp/Web/API), and "tier" is also the engine's service tier (ENG-D14). Rename it?
-
-*No source*
-27. "After the check" (DA history) and "Called off, not yet shipped" (/buyer/fs-reconcile) have no source. Add both to the team's next question list, as TL-D9 did?
+| # | Question | Answer |
+|---|---|---|
+| | *Scope (BR-05), TL-D10* | |
+| 1 | /buyer/inventory summary tiles (High risk, PTI stock below PTI ROP, Supplier figures out of date, No lead time on record): KPI cards or filters? | **Filters, out.** No (i) |
+| 2 | /buyer/scorecard and /supplier/performance KPI tiles named from sample data (OTDR, QNCR, Inventory DOS, POA Response Time) | **In now.** Add i18n keys (EN and ID) and an (i); a definition with no source comes to Levi as a question (BR-10) |
+| 3 | /buyer/scorecard screen-reader-only chart table headers | **Out.** No (i); the wording rule (TL-R1) still applies |
+| 4 | Headers over input cells: "Quantity" (/supplier/invoices), "Confirmed" (/supplier/orders), "Shipped quantity" (/supplier/shipments) | **Column headers, in** |
+| 5 | /buyer/admin/tolerances and /buyer/admin/alert-thresholds, 57 rule-value rows with a hint line | **No (i): the hint line is enough.** The rows still follow TL-R1; their source wording stays "not looked up" |
+| 6 | /buyer/alerts rule names | **Every alert rule name is a row with an (i)**, not only DA and ROP Supplier |
+| 7 | /buyer/demand-anticipation-history facts list and CSV headers | **Facts list in; CSV headers out** (no tooltip in a file), but the CSV uses the same words as the screen |
+| 8 | RFI and RFP Compare tab summary-card facts (Deviations, Lowest price, Answered) | **In, built in the last wave** while RFx is paused |
+| 9 | RFP term-catalog rows on /buyer/rfp/:rfpId and /supplier/rfp | **In, built in the last wave** |
+| | *BR-04 reach, TL-D11* | |
+| 10 | Is the TL-D6 list closed? | **Open rule:** any term the team writes in English inside Indonesian text stays English in the ID locale. Now covers FG demand, Max, Firm, call-off, lead time, Uplift, Protection buffer, Strategic buffer, plus the 6 in TL-D6 |
+| | *Wording, TL-D12* | |
+| 11 | "Max" (/buyer/safety-stock, /buyer/order-plan), "Max stock" (/buyer/fs-reconcile) | **Rename to the team's "Max Stock" and "Max Stock Supplier"** |
+| 12 | /buyer/what-if "PR need" | **Rename to "PR Generated"** |
+| 13 | /buyer/what-if "Arriving" | **Rename to "Incoming"**; tooltip "Not Incoming DA (the supplier-confirmed figure, DRC-8)" |
+| 14 | /buyer/collaboration "Gap" | **Rename to "Commitment gap"** (CR-22) |
+| 15 | /buyer/reschedule warehouse fill, status header repeats "With the selection" | **Header "Status"** (label bug fix) |
+| 16 | /buyer/goods-receipt line "Acc", ID "Disetujui" | **EN "Accepted", ID "Diterima"**; "Disetujui" stays for the receipt's Approved status |
+| 17 | Invoices: "Disputed" (buyer) and "Returned" (supplier), same key | **One word: "Disputed"** on both sides |
+| 18 | /buyer/invoices "3-way match" vs supplier "Match" | **"3-way match" on both sides** |
+| 19 | /supplier/goods-receipts "Discrepancy" and "Difference" both "Selisih" | **Distinct:** "Difference" = "Selisih", "Discrepancy" = "Ketidaksesuaian" |
+| 20 | RFI/RFP/RFQ wizards "Certificates" | **Rename to "Certificate validity"**, last wave |
+| 21 | /buyer/rfq "Est. Value" shows the buyer's budget | **Rename to "Budget"** |
+| 22 | /buyer/rfq Awards history "Award date" shows the award deadline | **Fix the value:** show the actual award date, last wave |
+| 23 | /buyer/rfq Awards history "Award value" shows the estimated value | **Fix the value:** show the awarded amount, last wave |
+| 24 | /buyer/rfq/:rfqId "vs Should-Cost", model parked | **Hide the row** until the should-cost model resumes |
+| 25 | Delivery Agreement card KPI "Remaining", ID "Sisa" | **ID "Sisa kuantitas"**, so it no longer reads as sisa DA |
+| 26 | /buyer/suppliers "Tier" holds channel values | **Rename to "Channel"** |
+| | *No source, TL-D13* | |
+| 27 | "After the check" (DA history), "Called off, not yet shipped" (/buyer/fs-reconcile) | **Keep for now; add both to the Material Planning team's next question list**, as TL-D9 did |
 
 **Calls made in this inventory:**
 - Plain record amounts and generic Status columns are Important = N; computed measures and KPI counts are Y. The alternative is Y for every quantity.
