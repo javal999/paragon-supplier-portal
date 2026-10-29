@@ -31,7 +31,7 @@ What can be reused:
 
 ## 2. Name and grain
 
-- **Name [Proposed, CAP-D10].** On screen it reads "Demand anticipation", and in code `demandAnticipation`. The screen never abbreviates it to "DA", because "DA" already labels Delivery Agreements on the contract pages.
+- **Name [Proposed, CAP-D10].** On screen it reads "Demand anticipation", and in code `demandAnticipation`. The screen never abbreviates it to "DA", because "DA" already labels Delivery Agreements on the contract pages. **Superseded by TL-D1, 2026-10-29:** the screen reads "Demand anticipation (DA)", the team's word, and the tooltip says "Not Delivery Agreement".
 - **Grain [Proposed, CAP-D11].** Supplier × material × week, with the week named by its Monday, as everywhere else in the hub.
   - **LTP:** read from the current forecast version with `groupWeekLtp`, which spreads a period evenly by day. Raw-material LTP is monthly only [Code: `transitions/forecastConfig.js:59-62`], so a raw-material week is a by-day share of its month.
   - **Stock on hand and reorder point:** both are per material in SAP [Code: `inventoryHub.js:63-66`]. They are shared across the material's suppliers by each supplier's share of the material's LTP over the 4 frozen weeks [Placeholder].
@@ -152,7 +152,7 @@ B and C run in parallel once A is merged. Each step runs its own specs; the full
 
 | ID | Question | Recommendation | Outcome |
 |---|---|---|---|
-| CAP-D10 | Name | "Demand anticipation" on screen, `demandAnticipation` in code, never "DA" (it means Delivery Agreement today) | Accepted, 2026-10-13 |
+| CAP-D10 | Name | "Demand anticipation" on screen, `demandAnticipation` in code, never "DA" (it means Delivery Agreement today) | Accepted, 2026-10-13. **Superseded by TL-D1, 2026-10-29:** "Demand anticipation (DA)", tooltip "Not Delivery Agreement" (`SC-HUB-TERM-LABELS-REQUIREMENTS-2026-10.md`) |
 | CAP-D11 | Grain and splitting | Supplier × material × week; monthly raw-material LTP spread by day; stock on hand and reorder point shared by LTP share over the frozen 4 weeks | Accepted, 2026-10-13 |
 | CAP-D12 | Formula | Stock and reorder point counted once, in week 1 (top up to the reorder point, or use the stock above it first); later weeks equal the LTP; open orders not netted. One function, checked by Ary's fixture | Accepted, 2026-10-13; superseded 2026-10-19 by DRC-2 BR-02 (DA = LTP, safety order in week 1) |
 | CAP-D13 | Freezing | An append-only publication store; a planner "Publish demand anticipation" verb on the `forecast:publish` atom; a frozen week keeps its first value; "would be" beside it; the horizon rolls on publish; one publication seeded | Accepted, 2026-10-13; freezing superseded 2026-10-19 by DRC-2 (rolling horizon with carry-over). The append-only store is kept and stamped per DRC-D16 |

@@ -283,7 +283,7 @@ Wave 3 is last because those tables carry long text (Stabilise's Rule column) or
 | CAP-D7 | Exports keep one row per week? | Yes (CAP-1 BR-10) | Accepted, 2026-10-12 |
 | CAP-D8 | Every other [Proposed] value in this file | Accept as starting values; CAP-10 to CAP-12 values are replaced by Ary's use case | Accepted, 2026-10-12 |
 | CAP-D9 | Several blanket POs for one supplier × material: each drawn by the full LTP, pooled, or one after another? | One after another, oldest first; one alert per group, on the last PO (CAP-9 BR-01a) | Accepted, 2026-10-13 |
-| CAP-D10 | Name | "Demand anticipation" on screen, `demandAnticipation` in code, never "DA" | Accepted, 2026-10-13 |
+| CAP-D10 | Name | "Demand anticipation" on screen, `demandAnticipation` in code, never "DA" | Accepted, 2026-10-13. **Superseded by TL-D1, 2026-10-29:** "Demand anticipation (DA)", tooltip "Not Delivery Agreement" (`SC-HUB-TERM-LABELS-REQUIREMENTS-2026-10.md`) |
 | CAP-D11 | Grain and splitting | Supplier × material × week; monthly raw-material LTP spread by day; stock and reorder point shared by LTP share over the frozen 4 weeks | Accepted, 2026-10-13 |
 | CAP-D12 | Formula | Stock and reorder point counted once, in week 1; later weeks equal the LTP; open orders not netted; one function checked by Ary's fixture | Accepted, 2026-10-13; superseded 2026-10-19 by DRC-2 BR-02 (DA = LTP, safety order in week 1) |
 | CAP-D13 | Freezing | Append-only publication store; "Publish demand anticipation" verb on `forecast:publish`; a frozen week keeps its first value; "would be" beside it; horizon rolls on publish | Accepted, 2026-10-13; freezing superseded 2026-10-19 by DRC-2 (rolling horizon with carry-over). The append-only store is kept and stamped per DRC-D16 |
