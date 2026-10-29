@@ -86,8 +86,11 @@ const SHARED_RULES = {
   'valid-typeof': 'error',
   'react/jsx-key': 'error',
   'react/jsx-no-duplicate-props': 'error',
-  // A bare `{count && <X/>}` renders "0" when count is 0. Use a ternary or `!!`.
-  'react/jsx-no-leaked-render': ['error', { validStrategies: ['ternary', 'coerce'] }],
+  // A bare `{count && <X/>}` renders "0" when count is 0. That is a TYPE question,
+  // so the type-aware gate `src/lib/leakedRenderGate` checks it (gate 2, the
+  // test suite). This syntax-only rule flagged 480 sites on 2026-10-29, none
+  // with a number before `&&`, and its auto-fix changes behaviour.
+  'react/jsx-no-leaked-render': 'off',
   'react/jsx-no-undef': 'error',
   'react/jsx-uses-vars': 'error',
   'react/no-children-prop': 'error',
@@ -148,7 +151,8 @@ const RULES_WITH_OPEN_VIOLATIONS = [
   // rules-of-hooks, jsx-key, no-self-compare, no-promise-executor-return,
   // no-template-curly-in-string. All 20 hits were intentional test patterns
   // or a harmless `sleep` helper, now annotated at the site.
-  'react/jsx-no-leaked-render', // `{n && <X/>}` renders "0" when n is 0
+  // react/jsx-no-leaked-render: switched off 2026-10-29, replaced by the
+  // type-aware src/lib/leakedRenderGate (see the rule's entry above).
   // react/no-array-index-key: promoted in Phase 2 (2026-10-02). Every index key
   // now uses a stable id, or keeps the index with a disable comment explaining
   // why the list is static (forecast included since Phase 7).
