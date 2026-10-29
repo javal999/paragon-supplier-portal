@@ -82,6 +82,7 @@ const BuyerOrdersList = () => {
     // flag (PR #74 D-review): its count is a strict subset of this tab's
     // [SENT, VIEWED], so the tab never hides a counted row.
     if (linkedTab && ['escalated', 'review', 'rejected', 'pending'].includes(linkedTab)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- applies the deep-linked tab
       setGroup(/** @type {GroupTab} */ (linkedTab));
     }
   }, [linkedTab]);
@@ -98,6 +99,7 @@ const BuyerOrdersList = () => {
     const po = (ordersQuery.data?.items ?? []).find((p) => p.id === linkedPoId);
     if (po) {
       appliedPoId.current = linkedPoId;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- applies the deep-linked PO once orders load
       setSelectedPO(po);
     }
   }, [linkedPoId, ordersQuery.data]);

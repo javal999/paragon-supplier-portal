@@ -176,11 +176,13 @@ const SelectField = ({
   }, [query, onSearch, open]);
   // A new query is a new list — window it from the top again.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- re-syncs scroll and highlight with the visible option list
     setScrollTop(0);
     if (listboxRef.current) listboxRef.current.scrollTop = 0;
   }, [query]);
   // Re-clamp the highlight whenever the visible option set changes.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- re-syncs scroll and highlight with the visible option list
     setActiveIndex((i) => {
       if (filteredOptions.length === 0) return -1;
       return i < 0 || i >= filteredOptions.length ? 0 : i;
@@ -191,6 +193,7 @@ const SelectField = ({
   // sit at the previous index (review G2).
   useEffect(() => {
     if (!open) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- re-syncs scroll and highlight with the visible option list
     setActiveIndex(filteredOptions.findIndex((o) => !o.disabled));
     // Deliberately keyed on `query` alone: an options refresh must not move the highlight.
   }, [query]);

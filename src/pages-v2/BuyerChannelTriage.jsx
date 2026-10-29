@@ -601,6 +601,7 @@ const BuyerChannelTriage = ({ onRecorded, initialSupplierId = '', onSupplierChan
           lockSupplier
           positions={subjectPositions}
           initial={entry}
+          // eslint-disable-next-line react-hooks/refs -- the panel opens only after a click, which re-renders with the current session
           causationId={sessionRef.current?.causationAnchor() ?? undefined}
           onSubmitted={onSubmitted}
         />
