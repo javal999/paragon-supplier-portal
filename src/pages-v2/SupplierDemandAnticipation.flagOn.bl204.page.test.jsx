@@ -21,6 +21,7 @@ import { formatNumber } from '@lib/format';
 import i18n from '@lib/i18n';
 import SupplierDemandAnticipation from './SupplierDemandAnticipation';
 import SupplierInventory from './SupplierInventory';
+import { expectNoBareDa } from '@test/noBareDa';
 
 vi.mock('@services/transitions/supplierDaView', async (importOriginal) => ({
   .../** @type {object} */ (await importOriginal()),
@@ -74,8 +75,8 @@ describe('BL-204 · flag on — the supplier page (DRC-1)', () => {
     expect(within(card).getByTestId(`supda-total-${KEY}`).textContent).toContain(
       formatNumber(published.reduce((n, w) => n + /** @type {number} */ (w.published), 0))
     );
-    // Never "DA" on screen (CAP-D10).
-    expect(within(card).queryByText(/\bDA\b/)).toBeNull();
+    // TL-D1: "DA" only as the bracket in "Demand anticipation (DA)".
+    expectNoBareDa(card);
   });
 
   it('reads in Indonesian', async () => {
@@ -83,7 +84,7 @@ describe('BL-204 · flag on — the supplier page (DRC-1)', () => {
       await i18n.changeLanguage('id');
       renderWithProviders(<SupplierDemandAnticipation />, { identity: SUPPLIER, route: ROUTE });
       const card = await screen.findByTestId(`supda-card-${KEY}`);
-      expect(within(card).getByText('Antisipasi permintaan')).toBeInTheDocument();
+      expect(within(card).getByText('Demand anticipation (DA)')).toBeInTheDocument();
       expect(screen.getByTestId('supda-provisional').textContent).toBe(
         'Sementara: aturan menunggu Material Planning (A8b, A9)'
       );

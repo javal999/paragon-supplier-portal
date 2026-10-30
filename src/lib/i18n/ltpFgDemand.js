@@ -1,14 +1,13 @@
 // LTP vs finished-goods demand i18n fragment (DRC-18, BL-203). Namespace: ltpFg.*
 //
 // The three read-only rows on the Demand anticipation grid. "FG" is the
-// planners' own abbreviation for finished goods and is kept in both languages.
+// planners' own abbreviation for finished goods and is kept in both languages;
+// so is the row label "FG demand" (TL-D11, BL-233: the team's English words
+// stay English in ID).
 // Quantities are mono data, rendered through <Data>, never keyed.
 
 /** @type {Record<string, string>} */
 export const ltpFgDemandEn = {
-  'ltpFg.row.fgDemand': 'FG demand',
-  'ltpFg.row.ltpLessFg': 'LTP − FG demand',
-  'ltpFg.row.consumptionAverage': 'Consumption, {{weeks}}-week average',
   'ltpFg.notAvailable': 'FG demand not available',
   'ltpFg.provisional': 'Provisional: rule awaiting Material Planning ({{question}})',
   'ltpFg.fgTitle':
@@ -21,9 +20,6 @@ export const ltpFgDemandEn = {
 
 /** @type {Record<string, string>} */
 export const ltpFgDemandId = {
-  'ltpFg.row.fgDemand': 'Permintaan FG',
-  'ltpFg.row.ltpLessFg': 'LTP − permintaan FG',
-  'ltpFg.row.consumptionAverage': 'Konsumsi, rata-rata {{weeks}} minggu',
   'ltpFg.notAvailable': 'Permintaan FG tidak tersedia',
   'ltpFg.provisional': 'Sementara: aturan menunggu Material Planning ({{question}})',
   'ltpFg.fgTitle':

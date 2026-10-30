@@ -25,6 +25,7 @@ import i18n from '@lib/i18n';
 import { NO_PERSON } from '@context/noPerson';
 import { formatNumber } from '@lib/format';
 import BuyerDemandAnticipation from './BuyerDemandAnticipation';
+import { expectNoBareDa } from '@test/noBareDa';
 
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 const ROUTE = '/buyer/demand-anticipation';
@@ -43,8 +44,8 @@ beforeEach(() => {
   demandAnticipationStore.all();
 });
 
-/** No figure, label or message reads "DA" — it labels Delivery Agreements (CAP-D10). */
-const expectNoAbbreviation = () => expect(document.body.textContent ?? '').not.toMatch(/\bDA\b/);
+/** TL-D1 (BL-233; supersedes CAP-D10): "DA" only as the bracket in "Demand anticipation (DA)". */
+const expectNoAbbreviation = () => expectNoBareDa();
 
 const readRows = async () =>
   (
@@ -122,8 +123,8 @@ describe('the page opens on the published planning week', () => {
       .map((h) => h.textContent ?? '');
     const at = (/** @type {string} */ name) => labels.findIndex((l) => l.startsWith(name));
     expect(at('Safety order')).toBeGreaterThan(at('LTP'));
-    expect(at('Carried in')).toBe(at('Safety order') + 1);
-    expect(at('Demand anticipation')).toBe(at('Carried in') + 1);
+    expect(at('Carry-over')).toBe(at('Safety order') + 1);
+    expect(at('Demand anticipation (DA)')).toBe(at('Carry-over') + 1);
     expect(at('Would be')).toBe(at('Demand anticipation') + 1);
     expect(at('Surplus absorbed')).toBe(at('Would be') + 1);
     expect(at('PTI stock share')).toBe(-1);
@@ -230,7 +231,7 @@ describe('"would be" and publishing', () => {
   it('with nothing changed the confirm’s commit is off; ticking an agreement turns it on', async () => {
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
     const button = await screen.findByTestId('dant-publish-button');
-    expect(button).toHaveTextContent('Publish demand anticipation · W36');
+    expect(button).toHaveTextContent('Publish demand anticipation (DA) · W36');
     fireEvent.click(button);
     const confirm = await screen.findByTestId('dant-publish-confirm');
     expect(within(confirm).getByTestId('dant-publish-commit')).toBeDisabled();
@@ -279,22 +280,22 @@ describe('"would be" and publishing', () => {
   });
 });
 
-describe('both locales (CAP-D10)', () => {
+describe('both locales (TL-D1)', () => {
   it('renders in Indonesian with the new rows, the check and the label, and no "DA"', async () => {
     try {
       await i18n.changeLanguage('id');
       renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
       await openAllWeeks();
       const card = await screen.findByTestId(`dant-card-${KEY}`);
-      expect(screen.getAllByText('Antisipasi permintaan').length).toBeGreaterThan(0);
-      for (const label of ['Sisa dibawa masuk', 'Jika dihitung ulang', 'Kelebihan diserap'])
+      expect(screen.getAllByText('Demand anticipation (DA)').length).toBeGreaterThan(0);
+      for (const label of ['Carry-over', 'Jika dihitung ulang', 'Kelebihan diserap'])
         expect(within(card).getByText(label)).toBeInTheDocument();
       expect(within(card).getByText('Rencana vs eksekusi')).toBeInTheDocument();
       expect(screen.getByTestId(`dant-check-provisional-${KEY}`)).toHaveTextContent(
         'Sementara: aturan menunggu Material Planning (A8b, A9)'
       );
       expect(screen.getByTestId('dant-publish-button')).toHaveTextContent(
-        'Publikasikan antisipasi permintaan · W36'
+        'Publikasikan demand anticipation (DA) · W36'
       );
       expectNoAbbreviation();
     } finally {
@@ -302,8 +303,13 @@ describe('both locales (CAP-D10)', () => {
     }
   });
 
-  it('control — the abbreviation check would catch a "DA"', () => {
-    expect('Contract DA-2026-01').toMatch(/\bDA\b/);
+  it('control — the abbreviation check catches a bare "DA" and passes the TL-D1 label and its tip', () => {
+    document.body.innerHTML = '<p>Contract DA-2026-01</p>';
+    expect(expectNoAbbreviation).toThrow();
+    document.body.innerHTML =
+      '<p>Demand anticipation (DA)</p><span role="tooltip">Also called: DA (Material Planning team)</span>';
+    expect(expectNoAbbreviation).not.toThrow();
+    document.body.innerHTML = '';
   });
 
   it('a supplier persona reads no rows (the read is PTI only)', async () => {

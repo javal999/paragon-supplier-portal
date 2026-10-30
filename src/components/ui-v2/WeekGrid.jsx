@@ -32,6 +32,8 @@ import { combineWeeks, groupWeeksByMonth, weekHeaderDate } from '@lib/weekMonths
 // - G-11 / G-12 inputs sit in DOM order row by row, so Tab runs along a row;
 //   Enter in an input moves to the same row's next week.
 // - G-13 a focused cell is scrolled clear of the sticky label column.
+// - BL-233 a row label's (i) tip opens over the rows below and the week cells:
+//   the hovered or focused label cell rises above its sticky siblings.
 // - G-15 / G-17 a real <table>: labels are th scope=row, weeks th scope=col;
 //   the scroll container is focusable and carries the table's name.
 //
@@ -427,7 +429,7 @@ const WeekGrid = ({
               <tr key={r.id} data-row={r.id}>
                 <th
                   scope="row"
-                  className={`${LABEL_COL} bg-bg-surface border-b border-border-subtle px-3 py-2 text-left align-top text-sm ${
+                  className={`${LABEL_COL} hover:z-20 focus-within:z-20 bg-bg-surface border-b border-border-subtle px-3 py-2 text-left align-top text-sm ${
                     r.emphasis ? 'font-semibold text-text-primary' : 'font-normal text-text-primary'
                   } ${edges.left ? 'shadow-[4px_0_6px_-4px_rgba(13,27,42,0.18)]' : ''}`}
                 >

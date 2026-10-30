@@ -81,7 +81,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Week | Minggu | `demandAnt.grid.corner` | N | n/a | n/a | N |  | Keep | Grid corner over the row labels |
 | column | Month | Bulan | `weekGrid.month.corner` | N | n/a | n/a | N |  | Keep | Shared WeekGrid corner, Monthly view only; also on /buyer/capacity, /supplier/capacity, history, what-if |
 | row | LTP | LTP | `demandAnt.row.ltp` | Y | "LTP W33" (Q-file:18, A1) | N | N |  | Keep | Gets a tooltip (spec §3) |
-| row | FG demand | Permintaan FG | `ltpFg.row.fgDemand` | Y | "LTP vs FG Demand" (Q-file:71, A11); "FG demand" (SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md:123, DRC-18) | N | N |  | Ask Levi | ID translates the team's English "FG demand"; BR-04 list may not cover it |
+| row | FG demand | Permintaan FG | `ltpFg.row.fgDemand` | Y | "LTP vs FG Demand" (Q-file:71, A11); "FG demand" (SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md:123, DRC-18) | N | N |  | Decided (TL-D11) | ID now reads "FG demand" (BL-233 wave 1) |
 | row | LTP − FG demand | LTP − permintaan FG | `ltpFg.row.ltpLessFg` | Y | "LTP vs FG Demand" (Q-file:71, A11) | N | N |  | Keep | ID "FG demand" wording follows the FG demand ruling |
 | row | Consumption, {{weeks}}-week average | Konsumsi, rata-rata {{weeks}} minggu | `ltpFg.row.consumptionAverage` | Y | "moving average consumption" (Q-file:72, A11); 13 weeks (SC-HUB-MATERIAL-TEAM-ANSWERS-2026-10.md:46) | Y | N |  | Change [Proposed] | Source says "moving average"; label drops "moving" |
 | row | Safety order | Safety order | `demandAnt.row.safety` | Y | "safety order" (Q-file:17, A1; Q-file:91, B2) | N | N |  | Keep | Not safety stock (spec §3); gets a tooltip |
@@ -112,7 +112,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | row | Safety order | Safety order | `daHist.col.safety` | Y | "safety order" (Q-file:17, A1) | N | N |  | Keep |  |
 | row | Carried in | Pindahan masuk | `daHist.col.carriedIn` | Y | "carry-over sisa DA" (Q-file:52, A8) | Y | N | sisa DA (Material Planning team, Q-file A8) | Decided (TL-D8) | Becomes "Carry-over"; ID differs from the main grid's "Sisa dibawa masuk" |
 | row | Demand anticipation | Antisipasi permintaan | `daHist.col.da` | Y | DA (Q-file:15, section A) | Y | Delivery Agreement, contract pages (`pages-v2/BuyerContractDetail.jsx:5-9`) | DA (Material Planning team, Q-file section A) | Decided (TL-D1) | Becomes "Demand anticipation (DA)" |
-| row | After the check | Setelah pemeriksaan | `daHist.col.daInForce` | Y | none found | n/a | N |  | Ask Levi | DA after the plan check absorbed surplus; no source names it |
+| row | After the check | Setelah pemeriksaan | `daHist.col.daInForce` | Y | none found | n/a | N |  | Decided (TL-D13) | Kept; asked of the team. DA after the plan check absorbed surplus |
 
 ## Page: /buyer/demand-anticipation-history — CSV export headers — `pages-v2/BuyerDemandAnticipationHistory.jsx`
 

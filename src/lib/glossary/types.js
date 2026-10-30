@@ -42,6 +42,34 @@
  * }} GlossaryEntry
  */
 
+/**
+ * BL-233 (TL-R2) — one text in both locales.
+ * @typedef {{ readonly en: string; readonly id: string }} LocaleText
+ */
+
+/**
+ * BL-233 BR-07 — another name a term goes by, with where that name is used.
+ * BR-10: a name with no source is not written; the builder asks the owner.
+ * @typedef {{ readonly name: string; readonly source: LocaleText }} AlsoCalled
+ */
+
+/**
+ * BL-233 — a term shown as a table header, grid row label or KPI card title.
+ * The label and the tooltip lines come from this one entry (BR-08); `en` and
+ * `id` are the definition. `label` may hold `{{name}}` slots, filled by the
+ * caller's values. `labelKeys` are the i18n keys that still show the same
+ * label where `TermLabel` cannot (a CSV header, an alert list line); the guard
+ * test pins them equal to `label`.
+ *
+ * @typedef {GlossaryEntry & {
+ *   readonly label: LocaleText;
+ *   readonly formula?: LocaleText;
+ *   readonly alsoCalled?: readonly AlsoCalled[];
+ *   readonly notToConfuse?: LocaleText;
+ *   readonly labelKeys?: readonly string[];
+ * }} TermEntry
+ */
+
 /** A registry of definitions keyed by the members of one source union. */
 /**
  * @template {string} Member

@@ -12,6 +12,8 @@ import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import Button from '@components/ui-v2/Button';
 import SidePanel from '@components/ui-v2/SidePanel';
 import Data from '@components/ui-v2/Data';
+import TermLabel from '@components/ui-v2/TermLabel';
+/** @import { TermLabelId } from '@lib/glossary' */
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
@@ -79,6 +81,26 @@ import { ALERT_PLAN, AlertBasis, AlertImpact, AlertNextStep } from './inventory/
 // rule list is final (P-04 waits for BL-150).
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * BL-233 TL-D10 (question 6) — every alert rule name is a glossary term with
+ * its (i). Keyed by the rule, so a new rule does not typecheck without a term.
+ * @type {Readonly<Record<InventoryAlert['rule'], TermLabelId>>}
+ */
+const ALERT_RULE_TERM = {
+  ptiBelowRop: 'alertPtiBelowRop',
+  supplierBelowRop: 'alertSupplierBelowRop',
+  projectedStockOut: 'alertProjectedStockOut',
+  capacityBelowDemand: 'alertCapacityBelowDemand',
+  staleData: 'alertStaleData',
+  coverage: 'alertCoverage',
+  commitmentBelowForecast: 'alertCommitmentBelowForecast',
+  leadTimeMissing: 'alertLeadTimeMissing',
+  callOffNotCovered: 'alertCallOffNotCovered',
+  supplyDiscontinued: 'alertSupplyDiscontinued',
+  blanketPoRunOut: 'alertBlanketPoRunOut',
+  demandAnticipationUnabsorbed: 'alertDemandAnticipationUnabsorbed'
+};
+
 /** @typedef {'open' | 'closed'} StatusTab */
 /** @typedef {'all' | RiskClass} RiskFilter */
 
@@ -114,7 +136,9 @@ const CloseReasonCounts = ({ alerts }) => {
                 className="border-t border-border-subtle"
                 data-testid={`alert-reason-count-${r.rule}-${r.reason}`}
               >
-                <td className="py-2">{t(`inv.alerts.rule.${r.rule}`)}</td>
+                <td className="py-2">
+                  <TermLabel term={ALERT_RULE_TERM[r.rule]} />
+                </td>
                 <td className="py-2">{reasonLabel('alertClose', r.reason, 'record')}</td>
                 <td className="py-2 text-right">
                   <Data>{r.count}</Data>

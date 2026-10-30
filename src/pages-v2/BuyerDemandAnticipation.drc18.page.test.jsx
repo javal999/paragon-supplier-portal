@@ -129,8 +129,8 @@ describe('DRC-18 — the three rows on the grid', () => {
       renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
       await openAllWeeks();
       const card = await screen.findByTestId(`dant-card-${KEY}`);
-      expect(within(card).getByText('Permintaan FG')).toBeInTheDocument();
-      expect(within(card).getByText('LTP − permintaan FG')).toBeInTheDocument();
+      expect(within(card).getByText('FG demand')).toBeInTheDocument();
+      expect(within(card).getByText('LTP − FG demand')).toBeInTheDocument();
       expect(within(card).getByText('Konsumsi, rata-rata 13 minggu')).toBeInTheDocument();
     } finally {
       await i18n.changeLanguage('en');

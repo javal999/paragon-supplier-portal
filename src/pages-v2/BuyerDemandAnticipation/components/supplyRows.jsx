@@ -1,5 +1,6 @@
 /** @import { TFunction } from 'i18next' */
 import Data from '@components/ui-v2/Data';
+import TermLabel from '@components/ui-v2/TermLabel';
 import { formatNumber } from '@lib/format';
 /** @import { DemandAnticipationRow } from '@services/transitions/demandAnticipationRules' */
 /** @import { SupplyWeekFields } from '@services/transitions/supplyBelowDemandRules' */
@@ -37,7 +38,7 @@ export function supplyRows(row, rowKey, t) {
   return [
     {
       id: 'openSupply',
-      label: t('supplyGap.row.openSupply'),
+      label: <TermLabel term="openSupply" />,
       unit: row.uom,
       combine: 'sum',
       value: (week) => supplyOf(week).openSupply ?? 0,
@@ -52,7 +53,7 @@ export function supplyRows(row, rowKey, t) {
     },
     {
       id: 'gap',
-      label: t('supplyGap.row.gap'),
+      label: <TermLabel term="supplyGap" />,
       unit: row.uom,
       combine: 'sum',
       value: (week) => supplyOf(week).gap ?? 0,

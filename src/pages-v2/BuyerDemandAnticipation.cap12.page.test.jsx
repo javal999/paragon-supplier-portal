@@ -18,6 +18,7 @@ import { sdcClock } from '@services/sdc';
 import i18n from '@lib/i18n';
 import { formatNumber } from '@lib/format';
 import BuyerDemandAnticipation from './BuyerDemandAnticipation';
+import { expectNoBareDa } from '@test/noBareDa';
 
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 const ROUTE = '/buyer/demand-anticipation';
@@ -87,7 +88,7 @@ describe('CAP-12 — Open supply and Gap rows', () => {
     const none = screen.getByTestId(`dant-gap-${KEY}-${cv.week}`);
     expect(none).toHaveTextContent('0');
     expect(none).not.toHaveAttribute('data-tone');
-    expect(document.body.textContent ?? '').not.toMatch(/\bDA\b/);
+    expectNoBareDa();
   });
 
   it('reads in Indonesian, never abbreviated', async () => {
@@ -98,7 +99,7 @@ describe('CAP-12 — Open supply and Gap rows', () => {
     expect(within(grid).getByText('Pasokan terbuka')).toBeInTheDocument();
     expect(within(grid).getByText('Kekurangan')).toBeInTheDocument();
     expect(within(grid).queryByText('Open supply')).toBeNull();
-    expect(document.body.textContent ?? '').not.toMatch(/\bDA\b/);
+    expectNoBareDa();
   });
 });
 

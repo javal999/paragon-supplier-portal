@@ -23,6 +23,7 @@ import i18n from '@lib/i18n';
 import { formatNumber } from '@lib/format';
 import BuyerOrderPlan from './BuyerOrderPlan';
 import { BELOW_DEMAND_FIRST_ROWS } from './BuyerOrderPlan/components/BelowDemandSection';
+import { expectNoBareDa } from '@test/noBareDa';
 
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 const ROUTE = '/buyer/order-plan';
@@ -72,7 +73,7 @@ describe('CAP-12 — "Below demand anticipation" on What to order', () => {
     const section = await screen.findByTestId('op-below-demand', {}, WAIT);
     await within(section).findByTestId(`op-gap-${keyOf(/** @type {*} */ (all[0]))}`, {}, WAIT);
     expect(
-      within(section).getByRole('heading', { name: 'Below demand anticipation' })
+      within(section).getByRole('heading', { name: 'Below demand anticipation (DA)' })
     ).toBeVisible();
     // The page's one simulated-data banner covers it (F-14); the section names its source.
     expect(within(section).getByTestId('op-below-demand-sample')).toHaveTextContent(
@@ -95,7 +96,7 @@ describe('CAP-12 — "Below demand anticipation" on What to order', () => {
     const recs = screen.getByTestId('op-recs');
     expect(recs.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(within(recs).queryAllByTestId(/^op-gap-/)).toEqual([]);
-    expect(document.body.textContent ?? '').not.toMatch(/\bDA\b/);
+    expectNoBareDa();
   });
 
   it('the engine’s recommended orders are unchanged: one row per engine recommendation', async () => {
@@ -203,9 +204,9 @@ describe('CAP-12 — "Below demand anticipation" on What to order', () => {
     renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: ROUTE });
     const section = await screen.findByTestId('op-below-demand', {}, WAIT);
     await within(section).findAllByTestId(/^op-gap-sup-/, {}, WAIT);
-    expect(within(section).getByText('Di bawah antisipasi permintaan')).toBeInTheDocument();
+    expect(within(section).getByText('Di bawah demand anticipation (DA)')).toBeInTheDocument();
     expect(within(section).getAllByText(/^Perlu PO baru: /).length).toBeGreaterThan(0);
-    expect(document.body.textContent ?? '').not.toMatch(/\bDA\b/);
+    expectNoBareDa();
   });
 });
 

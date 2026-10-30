@@ -64,6 +64,10 @@ export {
 /** @typedef {import('./planning.glossary').PlanningTerm} PlanningTerm */
 export { PLANNING_TERM_GLOSSARY } from './planning.glossary';
 
+/** @typedef {import('./termLabels.glossary').TermLabelId} TermLabelId */
+/** @typedef {import('./types').TermEntry} TermEntry */
+export { TERM_LABEL_GLOSSARY } from './termLabels.glossary';
+
 import {
   COMMAND_REFUSAL_GLOSSARY,
   DATA_ERROR_GLOSSARY,
@@ -87,6 +91,7 @@ import {
   BPOM_APPLICABILITY_GLOSSARY
 } from './governance.glossary';
 import { PLANNING_TERM_GLOSSARY } from './planning.glossary';
+import { TERM_LABEL_GLOSSARY } from './termLabels.glossary';
 /** @import { GlossaryEntry } from './types' */
 
 /** The shape of one registry row. Checked by `satisfies`, never widened onto
@@ -205,6 +210,12 @@ const REGISTRIES = /** @satisfies {readonly GlossaryRegistry[]} */ (
       sourceType: 'PlanningTerm',
       sourceFile: 'src/lib/glossary/planning.glossary.js',
       entries: PLANNING_TERM_GLOSSARY
+    },
+    // BL-233 — table headers, grid row labels and KPI card titles (TermLabel).
+    {
+      sourceType: 'TermLabelId',
+      sourceFile: 'src/lib/glossary/termLabels.glossary.js',
+      entries: TERM_LABEL_GLOSSARY
     }
   ])
 );

@@ -1,4 +1,5 @@
 import Data from '@components/ui-v2/Data';
+import TermLabel from '@components/ui-v2/TermLabel';
 import { formatDate, formatNumber } from '@lib/format';
 /** @import { TFunction } from 'i18next' */
 /** @import { DemandAnticipationRow, DemandAnticipationWeekView } from '@services/transitions/demandAnticipationRules' */
@@ -31,7 +32,7 @@ export function consumptionRows(row, rowKey, weekOf, t) {
   return [
     {
       id: 'consumption',
-      label: t('consumption.row.recorded'),
+      label: <TermLabel term="recordedConsumption" />,
       unit: row.uom,
       combine: 'sum',
       value: (week) => weekOf(week).consumption ?? 0,

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import Data from '@components/ui-v2/Data';
 import StatusPill from '@components/ui-v2/StatusPill';
 import WeekGrid from '@components/ui-v2/WeekGrid';
+import TermLabel from '@components/ui-v2/TermLabel';
 import { formatDate, formatNumber } from '@lib/format';
 /** @import { DemandAnticipationRow, DemandAnticipationWeekView } from '@services/transitions/demandAnticipationRules' */
 /** @import { WeekGridRow } from '@components/ui-v2/WeekGrid' */
@@ -14,6 +15,7 @@ import { ltpFgDemandRows } from './ltpFgDemandRows';
 // ─────────────────────────────────────────────────────────────────────────────
 // DRC-2 (BL-188) — one supplier × material's weeks as columns (CAP-1 WeekGrid).
 //
+// BL-233 — every row label is a glossary term with its (i) (TermLabel).
 // Rows: LTP; the DRC-18 rows (FG demand, LTP − FG demand, consumption
 // average); Safety order (week 1 [Default A1]); Carried in (remainders earlier
 // planning weeks moved here, with the week they came from); Demand
@@ -41,7 +43,7 @@ const AnticipationGrid = ({ row, rowKey, currentWeek }) => {
   const rows = [
     {
       id: 'ltp',
-      label: t('demandAnt.row.ltp'),
+      label: <TermLabel term="ltp" />,
       unit: row.uom,
       combine: 'sum',
       value: (week) => weekOf(week).inputs.ltp,
@@ -55,7 +57,7 @@ const AnticipationGrid = ({ row, rowKey, currentWeek }) => {
     ...ltpFgDemandRows(row, rowKey, t),
     {
       id: 'safety',
-      label: t('demandAnt.row.safety'),
+      label: <TermLabel term="safetyOrder" />,
       unit: row.uom,
       combine: 'sum',
       value: (week) => weekOf(week).inputs.safety,
@@ -70,7 +72,7 @@ const AnticipationGrid = ({ row, rowKey, currentWeek }) => {
     },
     {
       id: 'carriedIn',
-      label: t('demandAnt.row.carriedIn'),
+      label: <TermLabel term="carryOver" />,
       unit: row.uom,
       combine: 'sum',
       value: (week) => weekOf(week).inputs.carriedIn.reduce((n, c) => n + c.qty, 0),
@@ -96,7 +98,7 @@ const AnticipationGrid = ({ row, rowKey, currentWeek }) => {
     },
     {
       id: 'figure',
-      label: t('demandAnt.row.figure'),
+      label: <TermLabel term="demandAnticipation" />,
       unit: row.uom,
       emphasis: true,
       combine: 'sum',
@@ -125,7 +127,7 @@ const AnticipationGrid = ({ row, rowKey, currentWeek }) => {
     },
     {
       id: 'wouldBe',
-      label: t('demandAnt.row.wouldBe'),
+      label: <TermLabel term="wouldBe" />,
       unit: row.uom,
       cell: (week) => {
         const w = weekOf(week);
@@ -148,7 +150,7 @@ const AnticipationGrid = ({ row, rowKey, currentWeek }) => {
     },
     {
       id: 'absorbed',
-      label: t('demandAnt.row.absorbed'),
+      label: <TermLabel term="surplusAbsorbed" />,
       unit: row.uom,
       combine: 'sum',
       value: (week) => weekOf(week).absorbed,
