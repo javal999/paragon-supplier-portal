@@ -110,9 +110,9 @@ out of the shipped tree.
 | `CurrentIdentity` | `src/context/CurrentIdentityContext.jsx:10-14` | `{ personaType, supplierId, supplierName }`. **A persona, a tenant and a company. No human** |
 | The DR-10 audit actor | `actorKey(scope)`, C3 | **`'buyer:all'`** — pinned in `enforcementSetCommand.test.js:354` beside `not.toContain('usr-014')` |
 | `PERSONA_ROLES` | `src/services/transitions/roles.js:18-89` | **The persona IS the authorisation object.** A seat holds 60+ transition-roles because it is a seat |
-| `ActingPerson` | `src/lib/enforcement.js:339-345` | **The one shape in the tree that names a person** — and nothing can fill it |
-| `ActorAttribution` | `src/lib/enforcement.js:382-384` | `RESOLVED` \| `UNATTRIBUTED` + reason. The honest discriminated absence |
-| `UNATTRIBUTED_REASONS` | `src/lib/enforcement.js:359-368` | Two members. **No `SYSTEM` member, deliberately** (§6.4) |
+| `ActingPerson` | `src/lib/enforcement/attribution.js:21-29` | **The one shape in the tree that names a person** — and nothing can fill it |
+| `ActorAttribution` | `src/lib/enforcement/attribution.js:68-71` | `RESOLVED` \| `UNATTRIBUTED` + reason. The honest discriminated absence |
+| `UNATTRIBUTED_REASONS` | `src/lib/enforcement/attribution.js:43-54` | Two members. **No `SYSTEM` member, deliberately** (§6.4) |
 
 ### 2.1 `PersonaType` is a SEAT, and the platform has been reading it as a person
 
@@ -136,11 +136,11 @@ where the record says **"this person accepted this risk"**.
 
 **Measured, and it is the reason this contract is issued now rather than at F1:**
 
-- The enforcement setting ledger **ships empty by ruling** — `lib/enforcement.js:83-87`.
+- The enforcement setting ledger **ships empty by ruling** — `lib/enforcement/index.js:91-95`.
 - The E4 seed records its acts with `SEED_ACTOR = { kind: 'UNATTRIBUTED', reason:
   'NO_PERSON_IN_SESSION' }` — `enforcementSeed.js:93-96`.
 - `overrideCompletes` returns `false` for every override this tree can construct —
-  `lib/enforcement.js:778-780`.
+  `lib/enforcement/override.js:98-100`.
 - The only `personId` values in the repository (`usr-014` and siblings) live **in specs**, never
   in a fixture or a shipped record.
 
@@ -163,7 +163,7 @@ the subset this contract can anchor in code-truth — **VERIFIED**, by us, in th
 | **PR approval** | `t_pr_approve` — `flows/purchaseRequisition.flow.js:50` | Authored and dispatchable. **No `.tsx` in the tree names it.** An approval with one tenant-wide approver is a rubber stamp with a state machine attached |
 | **Invoice approval** | `t_invoice_approve` — `flows/invoice.flow.js:84` | Same shape: **dispatchable, UI-unreachable** — grep-confirmed, zero component sites |
 | **Master-data maker-checker** | — | Two roles are required and the platform has one seat. **`personaCan` cannot express "not the same person"** |
-| **Override attribution** | `overrideCompletes` — `lib/enforcement.js:778` | The override lane is **fully built and unusable by design** until identity exists |
+| **Override attribution** | `overrideCompletes` — `lib/enforcement/override.js:98` | The override lane is **fully built and unusable by design** until identity exists |
 | **A meaningful audit actor** | `actorKey(scope)` | §2.2 |
 | **Registration review** | — | Who reviews, and on which side of the tenancy line, is **D-ID-5 — OPEN** (§7.2) |
 
@@ -188,7 +188,7 @@ one of those three is demoted.
 | **`ApprovalAct`** | **NEW** | Append-only ledger | Not a state (§4.1) |
 
 **Every one of the four ledgers follows the shipped `fxPin` / `EnforcementSetting` precedent
-exactly** (`lib/enforcement.js:613-692`): a flat append-only array, **in-force derived by
+exactly** (`lib/enforcement/ledger.js:14-94`): a flat append-only array, **in-force derived by
 `settingInForce`-shaped selection**, superseded acts preserved and readable, the instant
 **store-assigned** and never payload-supplied, and the derivation **pure, taking its instant as
 an argument** (law 0.5). None of this is new machinery. It is the third application of a shape
@@ -290,7 +290,7 @@ requires is a checkable defect** rather than a plausible-looking string.
 
 **All four are append-only and none is ever edited.** Revocation is an appended act, not a
 deletion; a policy change is an appended act, not an update. The reason is the one
-`settingHistory` already carries (`lib/enforcement.js:646-661`): **overwrite the record and the
+`settingHistory` already carries (`lib/enforcement/ledger.js:48-63`): **overwrite the record and the
 thing the derivation ran against is gone, so the derivation becomes unauditable — you can see
 that it bit and never why.**
 
@@ -415,7 +415,7 @@ containing `Budi` is an **invisible** one: it renders identically to a resolved 
 survives into permanent records, and the day real identity lands there is **no way to tell the
 typed rows from the resolved rows** — they have the same shape.
 
-**This generalises the shipped E2 ruling from overrides to everything.** `lib/enforcement.js`
+**This generalises the shipped E2 ruling from overrides to everything.** `lib/enforcement/index.js`
 already refuses it for one lane (*"CAPTURING A TYPED NAME IS FORGEABLE AND WORSE THAN NOTHING
 BECAUSE IT LOOKS LIKE ATTRIBUTION"*, header). **The rule was never override-specific**, and
 leaving it scoped to one lane is how the next surface adopts a text box in good faith.
@@ -560,7 +560,7 @@ The moment identity exists, the same seam accepts one **from the payload**, and:
 
 ⚠️ **An `UNATTRIBUTED` payload value stays legal**, and must: it is a claim about a **failure to
 resolve**, which a caller is entitled to make and which the tightening rule already depends on
-(`lib/enforcement.js:109-111` — the safest act is always available to anybody).
+(`lib/enforcement/index.js:117-119` — the safest act is always available to anybody).
 
 ### 6.3 A fixture-person namespace (`sim-usr-*`), pinned by test
 
@@ -599,7 +599,7 @@ A system, cascade or creation-triggered transition **has no person to name** —
 `UNATTRIBUTED` would be a lie of a specific and expensive kind: **`UNATTRIBUTED` is a CLAIM —
 "a human acted and could not be resolved, and here is why"** — and every member of
 `UNATTRIBUTED_REASONS` names a **failure somebody can go and fix**
-(`lib/enforcement.js:355-368`). Flooding that vocabulary with cascade events makes the count
+(`lib/enforcement/attribution.js:31-54`). Flooding that vocabulary with cascade events makes the count
 meaningless and the pressure it creates disappear.
 
 > ⚠️ **`UNATTRIBUTED_REASONS` HAS NO `SYSTEM` MEMBER AND MUST NOT ACQUIRE ONE.**
@@ -611,7 +611,7 @@ meaningless and the pressure it creates disappear.
 > anybody would ever fix it.
 >
 > Its absence from the frozen array **is the mechanism**, in the same way the missing fourth
-> enforcement mode below `OBSERVE` is (`lib/enforcement.js:41-51`). Adding one turns a suite red,
+> enforcement mode below `OBSERVE` is (`lib/enforcement/index.js:49-59`). Adding one turns a suite red,
 > which is the point of writing it down.
 
 **The event actor field (`actor: 'buyer:all'`) is NOT what this replaces.** The persona actor is
@@ -665,7 +665,7 @@ favour and reads as caution.** Every row below is a negative about our own tree,
 | # | What this contract states | What we actually ship |
 |---|---|---|
 | **8.1** | A model of six objects, three survivors, four ledgers | **ZERO CODE. ZERO TYPES. ZERO FIXTURE PERSONS.** No `Person`, no `SubjectBinding`, no `BusinessRole`, no ledger, no minting rule. This issue is a model and its preconditions, and it must never read as a seam that exists |
-| **8.2** | ⚠️ **D-ID-7: a stamp carries `personId` ONLY** (§5.5) | **`ActingPerson` REQUIRES `displayName`, and its own doc-comment states the OPPOSITE ruling** — *"Captured, never resolved at read"* (`src/lib/enforcement.js:339-345`). **The shipped shape contradicts this contract.** It is **free to correct today and only today**: zero `RESOLVED` attributions exist (§2.3), so no stored record loses a name. The correction rides a code batch; **this contract is the authority in the interim** |
+| **8.2** | ⚠️ **D-ID-7: a stamp carries `personId` ONLY** (§5.5) | **`ActingPerson` REQUIRES `displayName`, and its own doc-comment states the OPPOSITE ruling** — *"Captured, never resolved at read"* (`src/lib/enforcement/attribution.js:21-29`). **The shipped shape contradicts this contract.** It is **free to correct today and only today**: zero `RESOLVED` attributions exist (§2.3), so no stored record loses a name. The correction rides a code batch; **this contract is the authority in the interim** |
 | **8.3** | Attribution comes from the SESSION and a payload-supplied `RESOLVED` actor is refused (§6.2) | **`setBy` is a payload field** — `requiredFields: ['mode', 'setBy']` (`flows/enforcement.flow.js:66`). **Attribution by assertion.** Harmless only because nothing can construct a `RESOLVED` actor; harmful the day something can |
 | **8.4** | `TransitionEvent` carries optional attribution (§6.4) | **It does not.** The event carries `actor: string` and nothing else about who acted (C3). The sink is still in-memory, which is the only reason this is still fixable |
 | **8.5** | `PersonaType` is tenancy only (§3.1) | **It is the authorisation object.** `PERSONA_ROLES` grants 60+ transition-roles to a seat and `capabilitiesFor` derives every capability from it (`roles.js:18-123`). Unchanged by this contract, which is docs-only |
