@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import { useActiveReasonCodes, useReasonLabel } from './admin/reasonCodeDisplay';
 import ReasonFilter from './inventory/ReasonFilter';
 import { reasonFilterOptions } from './inventory/reasonFilterRules';
@@ -140,7 +141,7 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks, decisionO
       rows={[
         {
           id: 'ltp',
-          label: t('inv.capacity.row.ltp'),
+          label: <TermLabel term="capacityLtp" />,
           unit: plan.uom,
           combine: 'sum',
           value: (week) => lwOf(week)?.ltp ?? 0,
@@ -158,7 +159,7 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks, decisionO
           // reserved 'sadrFeed' source it is not, and the label stays "Allocated".
           label: allocatedIsProductionLimit() ? (
             <span>
-              {t('buffers.productionLimit.row')}
+              <TermLabel term="productionLimit" />
               <span
                 className="block text-xs text-text-tertiary"
                 data-testid={`capacity-production-limit-provisional-${planKey}`}
@@ -167,7 +168,7 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks, decisionO
               </span>
             </span>
           ) : (
-            t('inv.capacity.row.allocated')
+            <TermLabel term="allocatedCapacity" />
           ),
           unit: plan.uom,
           combine: 'sum',
@@ -196,7 +197,7 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks, decisionO
         },
         {
           id: 'upside',
-          label: t('inv.capacity.row.upside'),
+          label: <TermLabel term="additionalCapacity" />,
           unit: plan.uom,
           combine: 'sum',
           value: (week) => byWeek(week).entry?.upside ?? null,
@@ -212,7 +213,7 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks, decisionO
         },
         {
           id: 'be',
-          label: t('inv.capacity.row.be'),
+          label: <TermLabel term="capacityBe" />,
           unit: plan.uom,
           combine: 'sum',
           value: (week) => lwOf(week)?.be ?? null,
@@ -228,7 +229,7 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks, decisionO
         },
         {
           id: 'ltpCheck',
-          label: t('inv.capacity.col.ltpCheck'),
+          label: <TermLabel term="ltpAgainstCapacity" />,
           align: 'start',
           // CAP-2 BR-03 — the month's worst week, with how many weeks hold it.
           combine: 'status',
@@ -250,7 +251,7 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks, decisionO
         },
         {
           id: 'gap',
-          label: t('inv.capacity.row.gap'),
+          label: <TermLabel term="capacityShortBy" />,
           unit: plan.uom,
           combine: 'sum',
           value: (week) => {
@@ -312,7 +313,7 @@ const PlanWeekGrid = ({ plan, planKey, label, nowIso, ltpWeeks, weeks, decisionO
           // INV-D8 — PTI's actions on a gap week (weekly view only: Monthly is
           // read only, CAP-D6, so the month reads "—").
           id: 'ptiDecision',
-          label: t('capDecision.row'),
+          label: <TermLabel term="ptiCapacityDecision" />,
           align: 'start',
           cell: (week) => {
             const lw = lwOf(week);

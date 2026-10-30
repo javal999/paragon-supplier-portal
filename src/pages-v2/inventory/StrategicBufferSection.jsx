@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { Fragment, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import Data from '@components/ui-v2/Data';
 import { formatDate } from '@lib/format';
 import { useForecastCommitments } from '@services/query/hooks';
@@ -105,9 +106,15 @@ const StrategicBufferSection = ({ supplierId, materialCode }) => {
                 <th className="text-left px-4 py-2">{t('buffers.strategic.col.supplier')}</th>
                 <th className="text-left px-4 py-2">{t('buffers.strategic.col.material')}</th>
                 <th className="text-left px-4 py-2">{t('buffers.strategic.col.month')}</th>
-                <th className="text-right px-4 py-2">{t('buffers.strategic.col.ltp')}</th>
-                <th className="text-right px-4 py-2">{t('buffers.strategic.col.baseline')}</th>
-                <th className="text-right px-4 py-2">{t('buffers.strategic.col.buffer')}</th>
+                <th className="text-right px-4 py-2">
+                  <TermLabel term="monthLtp" />
+                </th>
+                <th className="text-right px-4 py-2">
+                  <TermLabel term="strategicBaseline" />
+                </th>
+                <th className="text-right px-4 py-2">
+                  <TermLabel term="strategicBuffer" />
+                </th>
               </tr>
             </thead>
             <tbody>

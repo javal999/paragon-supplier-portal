@@ -222,12 +222,10 @@ export const RunningOutList = ({ groups }) => {
             <TableHeader>
               <TableHeaderCell>{t('co.runOut.col.po')}</TableHeaderCell>
               <TableHeaderCell>{t('co.runOut.col.material')}</TableHeaderCell>
-              <TableHeaderCell className="text-right">
-                {t('co.runOut.col.remaining')}
-              </TableHeaderCell>
-              <TableHeaderCell>{t('co.runOut.col.runOut')}</TableHeaderCell>
-              <TableHeaderCell>{t('co.runOut.col.newPoBy')}</TableHeaderCell>
-              <TableHeaderCell>{t('co.runOut.col.leadTime')}</TableHeaderCell>
+              <TableHeaderCell className="text-right" term="runOutRemaining" />
+              <TableHeaderCell term="runsOut" />
+              <TableHeaderCell term="newPoNeededBy" />
+              <TableHeaderCell term="poLeadTime" />
             </TableHeader>
             {groups.map((g) => (
               <tbody

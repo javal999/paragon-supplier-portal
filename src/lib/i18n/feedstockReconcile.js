@@ -17,12 +17,6 @@ export const feedstockReconcileEn = {
 
   'fsr.col.supplier': 'Supplier',
   'fsr.col.material': 'Material',
-  'fsr.col.poOrdered': 'PO ordered',
-  'fsr.col.calledOff': 'Called off',
-  'fsr.col.asnRequested': 'ASN requested',
-  'fsr.col.notYetCalledOff': 'Not yet called off',
-  'fsr.col.notYetShipped': 'Called off, not yet shipped',
-  'fsr.col.maxStock': 'Max stock',
 
   'fsr.poCount_one': 'on {{count}} PO',
   'fsr.poCount_other': 'on {{count}} POs',
@@ -85,12 +79,6 @@ export const feedstockReconcileId = {
 
   'fsr.col.supplier': 'Pemasok',
   'fsr.col.material': 'Material',
-  'fsr.col.poOrdered': 'Dipesan di PO',
-  'fsr.col.calledOff': 'Di-call-off',
-  'fsr.col.asnRequested': 'Diminta di ASN',
-  'fsr.col.notYetCalledOff': 'Belum di-call-off',
-  'fsr.col.notYetShipped': 'Di-call-off, belum dikirim',
-  'fsr.col.maxStock': 'Stok maksimum',
 
   'fsr.poCount_other': 'pada {{count}} PO',
   'fsr.valueOnly_other': '{{count}} baris PO berbasis nilai, tanpa kuantitas',

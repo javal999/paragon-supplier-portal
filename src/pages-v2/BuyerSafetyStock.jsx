@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import { useSearchParams } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
@@ -21,7 +22,6 @@ import PurposeHeader from '@components/forecast/PurposeHeader';
 import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
 import AboutThisPage from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
-import TermTip from '@components/forecast/TermTip';
 import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 import { OSIP_RULES } from '@services/transitions/osipRules';
 import { osipSafety } from '@services/transitions/osipSafetyRules';
@@ -212,7 +212,7 @@ const HistoryPanel = ({ m, children }) => {
             <TableHeaderCell>{t('sst.err.origin')}</TableHeaderCell>
             <TableHeaderCell>{t('sst.err.planned')}</TableHeaderCell>
             <TableHeaderCell>{t('sst.err.actual')}</TableHeaderCell>
-            <TableHeaderCell>{t('sst.err.error')}</TableHeaderCell>
+            <TableHeaderCell term="forecastShortfall" />
           </TableHeader>
           <tbody>
             {m.errors.map((e) => (
@@ -312,7 +312,7 @@ const BuyerSafetyStock = () => {
         data-testid="sst-kpis"
       >
         <KpiCard
-          eyebrow={t('sst.kpi.freed')}
+          term="spaceFreed"
           value={
             <span data-testid="sst-kpi-freed">
               {t('sst.pallets', { value: pallets(sapPallets - enginePallets) })}
@@ -325,7 +325,7 @@ const BuyerSafetyStock = () => {
           }
         />
         <KpiCard
-          eyebrow={t('sst.kpi.tiers')}
+          term="materialsPerTier"
           value={<span data-testid="sst-kpi-tiers">{materials.length}</span>}
           subtitle={
             <span className="text-text-tertiary">
@@ -338,7 +338,7 @@ const BuyerSafetyStock = () => {
           }
         />
         <KpiCard
-          eyebrow={t('sst.kpi.fallback')}
+          term="onSapValue"
           value={<span data-testid="sst-kpi-fallback">{fallback}</span>}
           subtitle={
             <span className="text-text-tertiary">
@@ -347,7 +347,7 @@ const BuyerSafetyStock = () => {
           }
         />
         <KpiCard
-          eyebrow={t('sst.kpi.groupDefault')}
+          term="sltGroupDefault"
           value={<span data-testid="sst-kpi-group-default">{groupDefault}</span>}
           subtitle={
             <span className="text-text-tertiary">
@@ -364,7 +364,7 @@ const BuyerSafetyStock = () => {
         <Table>
           <TableHeader>
             <TableHeaderCell>{t('sst.col.material')}</TableHeaderCell>
-            <TableHeaderCell>{t('sst.col.tier')}</TableHeaderCell>
+            <TableHeaderCell term="tierTarget" />
             <TableHeaderCell>
               <OsipColumnTitle column="safetyOrder" />
             </TableHeaderCell>
@@ -387,7 +387,7 @@ const BuyerSafetyStock = () => {
               <RopColumnTitle column="max" />
             </TableHeaderCell>
             <TableHeaderCell>
-              {t('sst.col.safetyStock')}
+              <TermLabel term="engineSafetyStock" />
               <span
                 className="block text-xs font-normal normal-case text-text-tertiary"
                 data-testid="sst-challenger"
@@ -395,11 +395,11 @@ const BuyerSafetyStock = () => {
                 {t('sst.osip.challenger')}
               </span>
             </TableHeaderCell>
-            <TableHeaderCell>{t('sst.col.sap')}</TableHeaderCell>
-            <TableHeaderCell>{t('sst.col.freed')}</TableHeaderCell>
-            <TableHeaderCell>{t('sst.col.slt')}</TableHeaderCell>
+            <TableHeaderCell term="sapSafetyStock" />
+            <TableHeaderCell term="freed" />
+            <TableHeaderCell term="safetyLeadTime" />
             <TableHeaderCell>
-              <TermTip term="Reorder point">{t('sst.col.rop')}</TermTip>
+              <TermLabel term="engineReorderPoint" />
               <span
                 className="block text-xs font-normal normal-case text-text-tertiary"
                 data-testid="sst-rop-challenger"

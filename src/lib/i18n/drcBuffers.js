@@ -8,7 +8,6 @@
 /** @type {Record<string, string>} */
 export const drcBuffersEn = {
   'buffers.provisional': 'Provisional: rule awaiting Material Planning ({{question}})',
-  'buffers.productionLimit.row': 'Production limit (allocated capacity)',
   'buffers.strategic.title': 'Strategic buffer, festive windows',
   'buffers.strategic.subtitle':
     'Strategic buffer = LTP − baseline, the baseline the average LTP of the {{months}} months before the festive window; never below 0. Read only: nothing is ordered from it.',
@@ -18,9 +17,6 @@ export const drcBuffersEn = {
   'buffers.strategic.col.supplier': 'Supplier',
   'buffers.strategic.col.material': 'Material',
   'buffers.strategic.col.month': 'Month',
-  'buffers.strategic.col.ltp': 'LTP',
-  'buffers.strategic.col.baseline': 'Baseline',
-  'buffers.strategic.col.buffer': 'Strategic buffer',
   'buffers.strategic.baselineOf': 'Average of {{months}}',
   'buffers.strategic.noLtp': 'No LTP',
   'buffers.strategic.partial': 'LTP covers {{covered}} of {{days}} days',
@@ -39,12 +35,7 @@ export const drcBuffersEn = {
   'buffers.protection.switchedOff': 'Protection buffer switched off: no figure is computed.',
   'buffers.protection.col.supplier': 'Supplier',
   'buffers.protection.col.material': 'Material',
-  'buffers.protection.col.level': 'OSIP level',
   'buffers.protection.col.month': 'Month',
-  'buffers.protection.col.ltp': 'LTP',
-  'buffers.protection.col.baseline': 'Baseline',
-  'buffers.protection.col.uplift': 'Uplift',
-  'buffers.protection.col.buffer': 'Protection buffer',
   'buffers.protection.levelDefault': 'Level {{level}} (default)',
   'buffers.protection.level': 'Level {{level}}',
   'buffers.protection.mpq': 'MPQ {{mpq}}',
@@ -62,7 +53,6 @@ export const drcBuffersEn = {
 /** @type {Record<string, string>} */
 export const drcBuffersId = {
   'buffers.provisional': 'Sementara: aturan menunggu Material Planning ({{question}})',
-  'buffers.productionLimit.row': 'Batas produksi (kapasitas dialokasikan)',
   'buffers.strategic.title': 'Buffer strategis, periode hari raya',
   'buffers.strategic.subtitle':
     'Buffer strategis = LTP − baseline, baseline adalah rata-rata LTP {{months}} bulan sebelum periode hari raya; tidak pernah di bawah 0. Hanya baca: tidak ada pesanan dari angka ini.',
@@ -72,9 +62,6 @@ export const drcBuffersId = {
   'buffers.strategic.col.supplier': 'Pemasok',
   'buffers.strategic.col.material': 'Material',
   'buffers.strategic.col.month': 'Bulan',
-  'buffers.strategic.col.ltp': 'LTP',
-  'buffers.strategic.col.baseline': 'Baseline',
-  'buffers.strategic.col.buffer': 'Buffer strategis',
   'buffers.strategic.baselineOf': 'Rata-rata {{months}}',
   'buffers.strategic.noLtp': 'Tidak ada LTP',
   'buffers.strategic.partial': 'LTP mencakup {{covered}} dari {{days}} hari',
@@ -93,12 +80,7 @@ export const drcBuffersId = {
   'buffers.protection.switchedOff': 'Buffer proteksi dimatikan: tidak ada angka yang dihitung.',
   'buffers.protection.col.supplier': 'Pemasok',
   'buffers.protection.col.material': 'Material',
-  'buffers.protection.col.level': 'Level OSIP',
   'buffers.protection.col.month': 'Bulan',
-  'buffers.protection.col.ltp': 'LTP',
-  'buffers.protection.col.baseline': 'Baseline',
-  'buffers.protection.col.uplift': 'Kenaikan',
-  'buffers.protection.col.buffer': 'Buffer proteksi',
   'buffers.protection.levelDefault': 'Level {{level}} (bawaan)',
   'buffers.protection.level': 'Level {{level}}',
   'buffers.protection.mpq': 'MPQ {{mpq}}',

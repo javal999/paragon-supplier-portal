@@ -26,12 +26,16 @@
 // /supplier/inventory and the trade-name tables. Hub sources: SHR =
 // `SUPPLIER-HUB-REQUIREMENTS.md`, MAT = `SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md`,
 // DG = `DECISION-GUIDE.md`, all under `docs/supplier-hub/`.
+// Wave 3 (Goal C, Foresight MoM 1 and 2): /buyer/capacity and /supplier/capacity
+// (with the buffers), /buyer/safety-stock, the call-off run-out list and the
+// feedstock reconcile. DRC-n = `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md`,
+// E14-04 = `FORECAST-ENGINE-REQUIREMENTS.md`, CAP-9 = `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md`.
 // ─────────────────────────────────────────────────────────────────────────────
 /** @import { GlossaryOf, TermEntry } from './types' */
 
 /**
  * The terms a page labels through `TermLabel`.
- * @typedef {'demandAnticipation' | 'ltp' | 'fgDemand' | 'ltpLessFgDemand' | 'consumptionAverage' | 'safetyOrder' | 'carryOver' | 'wouldBe' | 'surplusAbsorbed' | 'recordedConsumption' | 'openSupply' | 'supplyGap' | 'daAfterCheck' | 'ospo' | 'additionalPo' | 'callOffsThisWeek' | 'remainder' | 'notCarried' | 'supplierAgreedOutside' | 'gapProposal' | 'alertPtiBelowRop' | 'alertSupplierBelowRop' | 'alertProjectedStockOut' | 'alertCapacityBelowDemand' | 'alertStaleData' | 'alertCoverage' | 'alertCommitmentBelowForecast' | 'alertLeadTimeMissing' | 'alertCallOffNotCovered' | 'alertSupplyDiscontinued' | 'alertBlanketPoRunOut' | 'alertDemandAnticipationUnabsorbed' | 'supplierCover' | 'supplierStock' | 'ptiStockRop' | 'incoming' | 'incomingStatus' | 'supplierAvailable' | 'calledOffNotShipped' | 'freeToCallOff' | 'ptiInbound' | 'simulationBasis' | 'simulationFlags' | 'supplierOwnRop' | 'ptiStock' | 'ptiRop' | 'daysOfSupply' | 'feedstockLatest' | 'feedstockThisWeek' | 'tradeNameStatus'} TermLabelId
+ * @typedef {'demandAnticipation' | 'ltp' | 'fgDemand' | 'ltpLessFgDemand' | 'consumptionAverage' | 'safetyOrder' | 'carryOver' | 'wouldBe' | 'surplusAbsorbed' | 'recordedConsumption' | 'openSupply' | 'supplyGap' | 'daAfterCheck' | 'ospo' | 'additionalPo' | 'callOffsThisWeek' | 'remainder' | 'notCarried' | 'supplierAgreedOutside' | 'gapProposal' | 'alertPtiBelowRop' | 'alertSupplierBelowRop' | 'alertProjectedStockOut' | 'alertCapacityBelowDemand' | 'alertStaleData' | 'alertCoverage' | 'alertCommitmentBelowForecast' | 'alertLeadTimeMissing' | 'alertCallOffNotCovered' | 'alertSupplyDiscontinued' | 'alertBlanketPoRunOut' | 'alertDemandAnticipationUnabsorbed' | 'supplierCover' | 'supplierStock' | 'ptiStockRop' | 'incoming' | 'incomingStatus' | 'supplierAvailable' | 'calledOffNotShipped' | 'freeToCallOff' | 'ptiInbound' | 'simulationBasis' | 'simulationFlags' | 'supplierOwnRop' | 'ptiStock' | 'ptiRop' | 'daysOfSupply' | 'feedstockLatest' | 'feedstockThisWeek' | 'tradeNameStatus' | 'capacityLtp' | 'allocatedCapacity' | 'productionLimit' | 'additionalCapacity' | 'capacityBe' | 'ltpAgainstCapacity' | 'capacityShortBy' | 'ptiCapacityDecision' | 'runOutRemaining' | 'runsOut' | 'newPoNeededBy' | 'poLeadTime' | 'spaceFreed' | 'materialsPerTier' | 'onSapValue' | 'sltGroupDefault' | 'tierTarget' | 'safetyOrderRopOrder' | 'ropFisikSafety' | 'demandCv' | 'osipLevel' | 'ropOrder' | 'ropFisik' | 'maxStock' | 'engineSafetyStock' | 'sapSafetyStock' | 'freed' | 'safetyLeadTime' | 'engineReorderPoint' | 'forecastShortfall' | 'ropSupplier' | 'ropToPrincipal' | 'replenishmentCycle' | 'pullAgreement' | 'bottleneckLeadTime' | 'monthLtp' | 'protectionBaseline' | 'uplift' | 'protectionBuffer' | 'strategicBaseline' | 'strategicBuffer' | 'poOrdered' | 'reconcileCalledOff' | 'asnRequested' | 'notYetCalledOff' | 'calledOffNotYetShipped' | 'maxStockSupplier'} TermLabelId
  */
 
 const TEAM_OSIP = {
@@ -108,8 +112,8 @@ export const TERM_LABEL_GLOSSARY =
       // TL-D15 (owner, 2026-10-30): ROP Order is not another name for the safety
       // order; it contains it (DRC-10: LTP × lead time + safety order).
       notToConfuse: {
-        en: 'Safety stock (stock PTI keeps on hand, on the forecast pages). ROP Order (LTP × lead time + safety order, DRC-10).',
-        id: 'Safety stock (stok yang disimpan PTI, di halaman prakiraan). ROP Order (LTP × lead time + safety order, DRC-10).'
+        en: 'Safety stock (stock PTI keeps on hand, on the forecast pages). ROP Order (LTP × lead time + safety order).',
+        id: 'Safety stock (stok yang disimpan PTI, di halaman prakiraan). ROP Order (LTP × lead time + safety order).'
       },
       labelKeys: ['daHist.csv.safety']
     },
@@ -377,18 +381,18 @@ export const TERM_LABEL_GLOSSARY =
       en: 'The material’s risk class, from how many days the supplier’s stock covers, against the supplier’s lead time for it.',
       id: 'Kelas risiko material, dari berapa hari stok pemasok mencukupi, dibandingkan lead time pemasok untuk material itu.',
       formula: {
-        en: 'Days of cover = supplier stock ÷ demand. High below the lead time, Medium below 1.5 × lead time, else Low (CR-24).',
-        id: 'Hari cakupan = stok pemasok ÷ permintaan. Tinggi di bawah lead time, Sedang di bawah 1,5 × lead time, selain itu Rendah (CR-24).'
+        en: 'Days of cover = supplier stock ÷ demand. High below the lead time, Medium below 1.5 × lead time, else Low.',
+        id: 'Hari cakupan = stok pemasok ÷ permintaan. Tinggi di bawah lead time, Sedang di bawah 1,5 × lead time, selain itu Rendah.'
       },
       alsoCalled: [
         {
           name: 'days of cover',
-          source: { en: 'hub requirements, CR-24', id: 'kebutuhan hub, CR-24' }
+          source: { en: 'hub requirements', id: 'kebutuhan hub' }
         }
       ],
       notToConfuse: {
-        en: 'PTI cover (PTI stock ÷ demand, INV-D1).',
-        id: 'Cakupan PTI (stok PTI ÷ permintaan, INV-D1).'
+        en: 'PTI cover (PTI stock ÷ demand).',
+        id: 'Cakupan PTI (stok PTI ÷ permintaan).'
       }
     },
     supplierStock: {
@@ -417,8 +421,8 @@ export const TERM_LABEL_GLOSSARY =
         id: 'Dalam produksi + dalam perjalanan (pemberitahuan pengiriman dan call-off yang dikirim).'
       },
       notToConfuse: {
-        en: 'Incoming DA (the quantity the supplier confirms against the demand anticipation, DRC-8).',
-        id: 'Incoming DA (kuantitas yang dikonfirmasi pemasok terhadap demand anticipation, DRC-8).'
+        en: 'Incoming DA (the quantity the supplier confirms against the demand anticipation).',
+        id: 'Incoming DA (kuantitas yang dikonfirmasi pemasok terhadap demand anticipation).'
       }
     },
     incomingStatus: {
@@ -431,8 +435,8 @@ export const TERM_LABEL_GLOSSARY =
       en: 'The estimated stock at the supplier on the check date: its last stock update, moved forward by what it shipped, received and finished since.',
       id: 'Perkiraan stok di pemasok pada tanggal cek: pembaruan stok terakhirnya, digeser oleh yang dikirim, diterima, dan selesai diproduksi sejak itu.',
       formula: {
-        en: 'Stock at the last update − ASNs shipped since + to-distributor arrivals + production finished, capped by capacity (MR-7 BR-01).',
-        id: 'Stok pada pembaruan terakhir − ASN yang dikirim sejak itu + kedatangan ke distributor + produksi selesai, dibatasi kapasitas (MR-7 BR-01).'
+        en: 'Stock at the last update − ASNs shipped since + to-distributor arrivals + production finished, capped by capacity.',
+        id: 'Stok pada pembaruan terakhir − ASN yang dikirim sejak itu + kedatangan ke distributor + produksi selesai, dibatasi kapasitas.'
       },
       notToConfuse: {
         en: 'PTI inbound (already left the supplier; the two are never added).',
@@ -449,8 +453,8 @@ export const TERM_LABEL_GLOSSARY =
       en: 'What PTI can still call off from the supplier’s estimated stock, after the call-offs already confirmed.',
       id: 'Yang masih dapat di-call-off PTI dari perkiraan stok pemasok, setelah call-off yang sudah dikonfirmasi.',
       formula: {
-        en: 'Supplier available − already called off, not shipped (MR-7 BR-07).',
-        id: 'Tersedia di pemasok − sudah di-call-off, belum dikirim (MR-7 BR-07).'
+        en: 'Supplier available − already called off, not shipped.',
+        id: 'Tersedia di pemasok − sudah di-call-off, belum dikirim.'
       }
     },
     ptiInbound: {
@@ -458,8 +462,8 @@ export const TERM_LABEL_GLOSSARY =
       en: 'The quantity already shipped to PTI and not yet arrived on the check date.',
       id: 'Kuantitas yang sudah dikirim ke PTI dan belum tiba pada tanggal cek.',
       formula: {
-        en: 'Open shipping notices and dispatched call-offs with an ETA on or after the check date (MR-7 BR-01).',
-        id: 'Pemberitahuan pengiriman terbuka dan call-off yang dikirim dengan ETA pada atau setelah tanggal cek (MR-7 BR-01).'
+        en: 'Open shipping notices and dispatched call-offs with an ETA on or after the check date.',
+        id: 'Pemberitahuan pengiriman terbuka dan call-off yang dikirim dengan ETA pada atau setelah tanggal cek.'
       },
       notToConfuse: {
         en: 'Supplier available (stock still at the supplier; the two are never added).',
@@ -490,8 +494,8 @@ export const TERM_LABEL_GLOSSARY =
         }
       ],
       notToConfuse: {
-        en: 'ROP Supplier (the figure the hub calculates, DRC-D20).',
-        id: 'ROP Supplier (angka yang dihitung hub, DRC-D20).'
+        en: 'ROP Supplier (the figure the hub calculates).',
+        id: 'ROP Supplier (angka yang dihitung hub).'
       }
     },
     ptiStock: {
@@ -513,8 +517,8 @@ export const TERM_LABEL_GLOSSARY =
       en: 'How many days the stock lasts at the material’s average daily demand.',
       id: 'Berapa hari stok bertahan pada rata-rata permintaan harian material.',
       formula: {
-        en: 'Stock ÷ average daily demand, where average daily demand = the forecast for the next 30 days ÷ 30 (CR-01).',
-        id: 'Stok ÷ rata-rata permintaan harian, dengan rata-rata permintaan harian = prakiraan 30 hari ke depan ÷ 30 (CR-01).'
+        en: 'Stock ÷ average daily demand, where average daily demand = the forecast for the next 30 days ÷ 30.',
+        id: 'Stok ÷ rata-rata permintaan harian, dengan rata-rata permintaan harian = prakiraan 30 hari ke depan ÷ 30.'
       }
     },
     feedstockLatest: {
@@ -524,12 +528,449 @@ export const TERM_LABEL_GLOSSARY =
     },
     feedstockThisWeek: {
       label: { en: 'This week', id: 'Minggu ini' },
-      en: 'Whether this cycle’s feedstock confirmation is done: Confirmed, Due or Missed. The cycle is daily on a pull agreement, else weekly with the stock update (DRC-8).',
-      id: 'Apakah konfirmasi feedstock siklus ini sudah dilakukan: Dikonfirmasi, Jatuh tempo, atau Terlewat. Siklusnya harian untuk perjanjian pull, selain itu mingguan bersama pembaruan stok (DRC-8).'
+      en: 'Whether this cycle’s feedstock confirmation is done: Confirmed, Due or Missed. The cycle is daily on a pull agreement, else weekly with the stock update.',
+      id: 'Apakah konfirmasi feedstock siklus ini sudah dilakukan: Dikonfirmasi, Jatuh tempo, atau Terlewat. Siklusnya harian untuk perjanjian pull, selain itu mingguan bersama pembaruan stok.'
     },
     tradeNameStatus: {
       label: { en: 'Status', id: 'Status' },
       en: 'Where the supplier’s trade name for the material stands: awaiting PTI’s approval, approved, rejected, replaced, or no name yet.',
       id: 'Posisi nama dagang pemasok untuk material itu: menunggu persetujuan PTI, disetujui, ditolak, digantikan, atau belum ada nama.'
+    },
+    // ── Wave 3: Foresight, MoM 1 and 2 (Goal C): capacity, safety stock and
+    // ROPs, call-offs, feedstock reconcile ───────────────────────────────────
+    capacityLtp: {
+      label: { en: 'LTP, current forecast', id: 'LTP, prakiraan saat ini' },
+      en: 'The LTP of the week for the planning group: the current forecast the supplier commits against.',
+      id: 'LTP minggu itu untuk grup perencanaan: prakiraan terkini yang menjadi dasar komitmen pemasok.',
+      formula: {
+        en: 'The sum of the supplier’s LTP for every material of the group, each period spread evenly over its days.',
+        id: 'Jumlah LTP pemasok untuk setiap material grup, tiap periode dibagi rata ke hari-harinya.'
+      }
+    },
+    allocatedCapacity: {
+      label: { en: 'Allocated', id: 'Dialokasikan' },
+      en: 'The production capacity the supplier allocates to PTI for the planning group in the week.',
+      id: 'Kapasitas produksi yang dialokasikan pemasok untuk PTI bagi grup perencanaan pada minggu itu.',
+      notToConfuse: {
+        en: 'Additional capacity (more the supplier could give on request).',
+        id: 'Kapasitas tambahan (lebih yang dapat diberikan pemasok bila diminta).'
+      },
+      labelKeys: ['inv.capacity.row.allocated']
+    },
+    productionLimit: {
+      label: {
+        en: 'Production limit (allocated capacity)',
+        id: 'Batas produksi (kapasitas dialokasikan)'
+      },
+      en: 'The most the supplier can produce for PTI in the week. Until the team names its source, it is the supplier’s allocated capacity.',
+      id: 'Jumlah terbanyak yang dapat diproduksi pemasok untuk PTI pada minggu itu. Sampai tim menyebut sumbernya, nilainya adalah kapasitas yang dialokasikan pemasok.'
+    },
+    additionalCapacity: {
+      label: { en: 'Additional capacity', id: 'Kapasitas tambahan' },
+      en: 'Extra capacity the supplier could give PTI on request, above its allocation.',
+      id: 'Kapasitas lebih yang dapat diberikan pemasok kepada PTI bila diminta, di atas alokasinya.',
+      labelKeys: ['inv.capacity.row.upside']
+    },
+    capacityBe: {
+      label: { en: 'BE = capacity + additional', id: 'BE = kapasitas + tambahan' },
+      en: 'The supplier’s total for the week. It is worked out, never entered.',
+      id: 'Total pemasok untuk minggu itu. Dihitung, tidak pernah diisi.',
+      formula: {
+        en: 'Allocated + additional capacity.',
+        id: 'Dialokasikan + kapasitas tambahan.'
+      }
+    },
+    ltpAgainstCapacity: {
+      label: { en: 'LTP against capacity', id: 'LTP terhadap kapasitas' },
+      en: 'Whether the week’s LTP fits: Within capacity; Needs additional capacity when it is above capacity up to BE; Cannot be supplied when it is above BE.',
+      id: 'Apakah LTP minggu itu muat: Dalam kapasitas; Perlu kapasitas tambahan bila di atas kapasitas sampai BE; Tidak dapat dipasok bila di atas BE.'
+    },
+    capacityShortBy: {
+      label: { en: 'Short by', id: 'Kurang' },
+      en: 'How much the week’s LTP is above the allocated capacity, on a gap week.',
+      id: 'Seberapa besar LTP minggu itu di atas kapasitas yang dialokasikan, pada minggu yang kurang.',
+      formula: { en: 'LTP − allocated.', id: 'LTP − dialokasikan.' },
+      notToConfuse: {
+        en: 'Gap on the Demand anticipation grid (demand anticipation (DA) − open supply).',
+        id: 'Kekurangan di grid Demand anticipation (demand anticipation (DA) − pasokan terbuka).'
+      }
+    },
+    ptiCapacityDecision: {
+      label: { en: 'PTI’s decision', id: 'Keputusan PTI' },
+      en: 'What PTI recorded on a gap week: accept the additional capacity, or ask the supplier. An accepted week inside BE no longer raises the capacity alert.',
+      id: 'Yang dicatat PTI pada minggu yang kurang: menerima kapasitas tambahan, atau bertanya ke pemasok. Minggu yang diterima di dalam BE tidak lagi memunculkan peringatan kapasitas.'
+    },
+    runOutRemaining: {
+      label: { en: 'Remaining', id: 'Sisa' },
+      en: 'What is left on the blanket PO line: its quantity, or its value for a value-only line.',
+      id: 'Yang tersisa di baris PO induk: kuantitasnya, atau nilainya untuk baris yang hanya bernilai.',
+      formula: {
+        en: 'PO quantity − released call-off quantity.',
+        id: 'Kuantitas PO − kuantitas call-off yang dirilis.'
+      },
+      notToConfuse: {
+        en: 'Carry-over (also called sisa DA, on the Demand anticipation grid).',
+        id: 'Carry-over (disebut juga sisa DA, di grid Demand anticipation).'
+      }
+    },
+    runsOut: {
+      label: { en: 'Runs out', id: 'Habis' },
+      en: 'The first week the blanket PO’s projected balance goes below zero, if call-offs follow the LTP.',
+      id: 'Minggu pertama saldo proyeksi PO induk turun di bawah nol, bila call-off mengikuti LTP.',
+      formula: {
+        en: 'Remaining − the LTP of each week in turn, oldest PO line first.',
+        id: 'Sisa − LTP tiap minggu berurutan, baris PO tertua lebih dulu.'
+      }
+    },
+    newPoNeededBy: {
+      label: { en: 'New PO needed by', id: 'PO baru diperlukan paling lambat' },
+      en: 'The week by which the next PO must be raised so it arrives before the blanket PO runs out.',
+      id: 'Minggu paling lambat PO berikutnya harus dibuat agar tiba sebelum PO induk habis.',
+      formula: {
+        en: 'Run-out week − the PO lead time.',
+        id: 'Minggu habis − waktu tunggu PO.'
+      }
+    },
+    poLeadTime: {
+      label: { en: 'PO lead time', id: 'Waktu tunggu PO' },
+      en: 'The time from raising a PO to its arrival, from the material master; 2 weeks where it is missing.',
+      id: 'Waktu dari pembuatan PO sampai kedatangannya, dari data induk material; 2 minggu bila tidak ada.'
+    },
+    spaceFreed: {
+      label: {
+        en: 'Warehouse space freed against SAP',
+        id: 'Ruang gudang yang dibebaskan dibanding SAP'
+      },
+      en: 'How many fewer pallets the engine’s safety stock needs than SAP’s safety stock, over the materials shown.',
+      id: 'Berapa palet lebih sedikit yang dibutuhkan stok pengaman mesin dibanding stok pengaman SAP, pada material yang ditampilkan.',
+      formula: {
+        en: 'SAP safety stock in pallets − engine safety stock in pallets.',
+        id: 'Stok pengaman SAP dalam palet − stok pengaman mesin dalam palet.'
+      }
+    },
+    materialsPerTier: {
+      label: { en: 'Materials per tier', id: 'Material per tingkat' },
+      en: 'How many materials sit in each service tier: 95% high volume, 90% standard, 85% slow moving.',
+      id: 'Berapa material di tiap tingkat layanan: 95% volume tinggi, 90% standar, 85% lambat bergerak.'
+    },
+    onSapValue: {
+      label: { en: 'On SAP’s value', id: 'Memakai nilai SAP' },
+      en: 'Materials with too little history for the engine, which keep SAP’s safety stock until they have enough.',
+      id: 'Material dengan riwayat yang belum cukup bagi mesin, yang memakai stok pengaman SAP sampai cukup.'
+    },
+    sltGroupDefault: {
+      label: {
+        en: 'Safety lead time from the group default',
+        id: 'Waktu tunggu pengaman dari nilai bawaan grup'
+      },
+      en: 'Materials whose supplier has too few receipts, so their safety lead time is the material group’s pooled figure.',
+      id: 'Material yang pemasoknya punya terlalu sedikit penerimaan, sehingga waktu tunggu pengamannya adalah angka gabungan grup material.'
+    },
+    tierTarget: {
+      label: { en: 'Tier and target', id: 'Tingkat dan target' },
+      en: 'The material’s service tier and its fill-rate target: the share of demand to fill from stock.',
+      id: 'Tingkat layanan material dan target fill rate-nya: porsi permintaan yang dipenuhi dari stok.'
+    },
+    safetyOrderRopOrder: {
+      label: { en: 'Safety order (ROP Order)', id: 'Safety order (ROP Order)' },
+      en: 'The safety part of ROP Order: extra quantity against demand above the LTP.',
+      id: 'Bagian pengaman dari ROP Order: kuantitas tambahan untuk permintaan di atas LTP.',
+      formula: {
+        en: 'Z × √lead time × SD of the LTP over the next 13 weeks, rounded up to the MPQ.',
+        id: 'Z × √lead time × SD LTP 13 minggu ke depan, dibulatkan ke atas ke MPQ.'
+      },
+      notToConfuse: {
+        en: 'ROP Order itself (LTP × lead time + safety order). Safety stock (the engine’s figure, same table).',
+        id: 'ROP Order itu sendiri (LTP × lead time + safety order). Safety stock (angka mesin, tabel yang sama).'
+      }
+    },
+    ropFisikSafety: {
+      label: { en: 'ROP Fisik safety', id: 'ROP Fisik safety' },
+      en: 'The safety part of ROP Fisik, in days of demand.',
+      id: 'Bagian pengaman dari ROP Fisik, dalam hari permintaan.',
+      formula: {
+        en: 'Ceiling(g × min(highest recent consumption, capacity, LTP), MPQ); g is 1 day unless set per material.',
+        id: 'Ceiling(g × min(konsumsi tertinggi terakhir, kapasitas, LTP), MPQ); g 1 hari kecuali diatur per material.'
+      },
+      alsoCalled: [
+        {
+          name: 'Safety ROP Fisik',
+          source: {
+            en: 'Material Planning team deck, Q-file B1',
+            id: 'Deck tim Material Planning, Q-file B1'
+          }
+        }
+      ]
+    },
+    demandCv: {
+      label: { en: 'Demand CV', id: 'CV permintaan' },
+      en: 'How much demand varies: below 0.5 is stable, 0.5 or more is fluctuative.',
+      id: 'Seberapa besar permintaan bervariasi: di bawah 0,5 stabil, 0,5 atau lebih fluktuatif.',
+      formula: {
+        en: 'SD ÷ average of demand over the last 6 full months, per FG variant.',
+        id: 'SD ÷ rata-rata permintaan 6 bulan penuh terakhir, per varian FG.'
+      },
+      alsoCalled: [
+        {
+          name: 'CV',
+          source: {
+            en: 'Material Planning team, Q-file C1',
+            id: 'Tim Material Planning, Q-file C1'
+          }
+        }
+      ]
+    },
+    osipLevel: {
+      label: { en: 'OSIP level', id: 'Level OSIP' },
+      en: 'The material’s supply model, which sets how its ROPs are worked out: levels 3–4 modal sharing, then fixed order, then JIT. Level 4 unless the planner sets it.',
+      id: 'Model pasokan material, yang menentukan cara ROP-nya dihitung: level 3–4 modal sharing, lalu fixed order, lalu JIT. Level 4 kecuali diatur perencana.',
+      alsoCalled: [
+        {
+          name: 'Level OSIP',
+          source: {
+            en: 'Material Planning team, Q-file C2',
+            id: 'Tim Material Planning, Q-file C2'
+          }
+        }
+      ],
+      notToConfuse: {
+        en: 'Forecast level (the hierarchy level on the Demand forecast page).',
+        id: 'Level prakiraan (level hierarki di halaman Demand forecast).'
+      }
+    },
+    ropOrder: {
+      label: { en: 'ROP Order', id: 'ROP Order' },
+      en: 'The reorder point for ordering: the input to ZPE007, the SAP MRP step that works out PRs. The hub does not run ZPE007.',
+      id: 'Titik pemesanan ulang untuk pemesanan: input bagi ZPE007, langkah MRP SAP yang menghitung PR. Hub tidak menjalankan ZPE007.',
+      formula: {
+        en: 'LTP × lead time PO→ETA + safety order.',
+        id: 'LTP × lead time PO→ETA + safety order.'
+      },
+      notToConfuse: {
+        en: 'ROP Fisik (the call-off trigger). Reorder point (the engine’s figure, same table).',
+        id: 'ROP Fisik (pemicu call-off). Titik pesan ulang (angka mesin, tabel yang sama).'
+      }
+    },
+    ropFisik: {
+      label: { en: 'ROP Fisik', id: 'ROP Fisik' },
+      en: 'The physical reorder point: when stock on hand reaches it, the hub drafts a call-off.',
+      id: 'Titik pemesanan ulang fisik: bila stok on hand mencapainya, hub menyusun draf call-off.',
+      formula: {
+        en: 'Ceiling(demand × f) × MPQ + ROP Fisik safety.',
+        id: 'Ceiling(permintaan × f) × MPQ + ROP Fisik safety.'
+      },
+      notToConfuse: {
+        en: 'ROP Order (the input to SAP MRP).',
+        id: 'ROP Order (input untuk MRP SAP).'
+      }
+    },
+    maxStock: {
+      label: { en: 'Max Stock', id: 'Max Stock' },
+      en: 'The most PTI holds of the material: no call-off takes projected stock above it.',
+      id: 'Jumlah terbanyak material yang disimpan PTI: tidak ada call-off yang membawa proyeksi stok di atasnya.',
+      formula: {
+        en: 'Local: ROP Fisik rounded up to the koli. Import: rounded up to the MOQ.',
+        id: 'Lokal: ROP Fisik dibulatkan ke atas ke koli. Impor: dibulatkan ke atas ke MOQ.'
+      },
+      notToConfuse: {
+        en: 'Max Stock Supplier (what the supplier may hold, on the Feedstock reconcile page).',
+        id: 'Max Stock Supplier (yang boleh disimpan pemasok, di halaman Feedstock reconcile).'
+      }
+    },
+    engineSafetyStock: {
+      label: { en: 'Safety stock', id: 'Stok pengaman' },
+      en: 'The engine’s challenger figure: the forecast error PTI’s own history exceeds only as often as the tier’s fill rate allows.',
+      id: 'Angka penantang dari mesin: kesalahan prakiraan yang dilampaui riwayat PTI sendiri hanya sesering yang diizinkan fill rate tingkatnya.',
+      formula: {
+        en: 'The shortfalls (actual − forecast) over lead time + review at past points, taken at the fill-rate percentile.',
+        id: 'Kekurangan (aktual − prakiraan) selama lead time + tinjauan di titik-titik lampau, diambil pada persentil fill rate.'
+      },
+      notToConfuse: {
+        en: 'Safety order (the team’s rule, the default, same table).',
+        id: 'Safety order (aturan tim, nilai bawaan, tabel yang sama).'
+      }
+    },
+    sapSafetyStock: {
+      label: { en: 'SAP safety stock', id: 'Stok pengaman SAP' },
+      en: 'The safety stock set in SAP today, shown for comparison.',
+      id: 'Stok pengaman yang diatur di SAP saat ini, ditampilkan sebagai pembanding.'
+    },
+    freed: {
+      label: { en: 'Freed', id: 'Dibebaskan' },
+      en: 'How much less stock the engine’s safety stock asks for than SAP’s.',
+      id: 'Seberapa sedikit stok yang diminta stok pengaman mesin dibanding SAP.',
+      formula: { en: 'SAP safety stock − safety stock.', id: 'Stok pengaman SAP − stok pengaman.' }
+    },
+    safetyLeadTime: {
+      label: { en: 'Safety lead time', id: 'Waktu tunggu pengaman' },
+      en: 'Extra time added for a supplier that delivers late, instead of extra stock.',
+      id: 'Waktu tambahan untuk pemasok yang terlambat mengirim, sebagai pengganti stok tambahan.',
+      formula: {
+        en: 'The delay between confirmed and actual receipt date that is exceeded only as often as allowed, per supplier and material group.',
+        id: 'Keterlambatan antara tanggal konfirmasi dan tanggal terima aktual yang dilampaui hanya sesering yang diizinkan, per pemasok dan grup material.'
+      }
+    },
+    engineReorderPoint: {
+      label: { en: 'Reorder point', id: 'Titik pesan ulang' },
+      en: 'The engine’s challenger stock level at which a new order should be released.',
+      id: 'Tingkat stok penantang dari mesin saat pesanan baru sebaiknya dirilis.',
+      formula: {
+        en: 'Expected demand over the lead time and the review week + safety stock.',
+        id: 'Perkiraan permintaan selama lead time dan minggu tinjauan + stok pengaman.'
+      },
+      notToConfuse: {
+        en: 'ROP Order or ROP Fisik (the team’s ROPs, the default, same table).',
+        id: 'ROP Order atau ROP Fisik (ROP tim, nilai bawaan, tabel yang sama).'
+      }
+    },
+    forecastShortfall: {
+      label: { en: 'Shortfall', id: 'Kekurangan' },
+      en: 'At one past point, how much actual demand over the lead time and review exceeded the forecast. The safety stock is read from these.',
+      id: 'Pada satu titik lampau, seberapa besar permintaan aktual selama lead time dan tinjauan melebihi prakiraan. Stok pengaman dibaca dari angka-angka ini.',
+      formula: { en: 'Actual − forecast.', id: 'Aktual − prakiraan.' }
+    },
+    ropSupplier: {
+      label: { en: 'ROP Supplier', id: 'ROP Supplier' },
+      en: 'The supplier’s total physical maximum stock of the material, worked out by the hub.',
+      id: 'Total stok fisik maksimum pemasok untuk material itu, dihitung oleh hub.',
+      formula: {
+        en: 'Demand × the supplier’s bottleneck production lead time, queueing included.',
+        id: 'Permintaan × waktu tunggu produksi bottleneck pemasok, termasuk antrean.'
+      },
+      notToConfuse: {
+        en: 'The reorder point the supplier types in its stock template (shown only).',
+        id: 'Titik pemesanan ulang yang diketik pemasok di template stoknya (hanya ditampilkan).'
+      }
+    },
+    ropToPrincipal: {
+      label: { en: 'ROP to principal', id: 'ROP ke prinsipal' },
+      en: 'A distributor’s reorder point for ordering from its principal, as the team’s sheet works it out. The team has not answered how it is set.',
+      id: 'Titik pemesanan ulang distributor untuk memesan ke prinsipalnya, sebagaimana dihitung sheet tim. Tim belum menjawab cara penetapannya.',
+      alsoCalled: [
+        {
+          name: 'ROP order to principal',
+          source: {
+            en: 'Material Planning team’s sheet, Q-file B10',
+            id: 'Sheet tim Material Planning, Q-file B10'
+          }
+        }
+      ]
+    },
+    replenishmentCycle: {
+      label: { en: 'Replenishment cycle f', id: 'Replenishment cycle f' },
+      en: 'How often the supplier replenishes PTI, which sizes ROP Fisik. The slide values are assumptions to treat as data.',
+      id: 'Seberapa sering pemasok mengisi ulang PTI, yang menentukan besar ROP Fisik. Nilai di slide adalah asumsi yang diperlakukan sebagai data.',
+      alsoCalled: [
+        {
+          name: 'cycle replenishment',
+          source: { en: 'OSIP deck, Q-file B6', id: 'Deck OSIP, Q-file B6' }
+        },
+        { name: 'call-off lead time', source: { en: 'MoM, Q-file B6', id: 'MoM, Q-file B6' } }
+      ]
+    },
+    pullAgreement: {
+      label: { en: 'Pull agreement', id: 'Perjanjian tarik' },
+      en: 'Whether the supplier works on a pull agreement. A supplier on one updates stock and confirms feedstock daily; others weekly.',
+      id: 'Apakah pemasok bekerja dengan perjanjian pull. Pemasok dengan perjanjian ini memperbarui stok dan mengonfirmasi feedstock setiap hari; lainnya mingguan.'
+    },
+    bottleneckLeadTime: {
+      label: {
+        en: 'Bottleneck production lead time (ROP Supplier)',
+        id: 'Waktu tunggu produksi bottleneck (ROP Supplier)'
+      },
+      en: 'The time the supplier’s slowest production step takes, queueing included. It sizes ROP Supplier and has no default.',
+      id: 'Waktu yang dibutuhkan langkah produksi paling lambat pemasok, termasuk antrean. Menentukan besar ROP Supplier dan tidak punya nilai bawaan.'
+    },
+    monthLtp: {
+      label: { en: 'LTP', id: 'LTP' },
+      en: 'The material’s LTP for the month, for this supplier.',
+      id: 'LTP material untuk bulan itu, untuk pemasok ini.'
+    },
+    protectionBaseline: {
+      label: { en: 'Baseline', id: 'Baseline' },
+      en: 'The normal monthly LTP the protection buffer is measured from.',
+      id: 'LTP bulanan normal yang menjadi dasar protection buffer.',
+      formula: {
+        en: 'Average LTP of the 3 previous months.',
+        id: 'Rata-rata LTP 3 bulan sebelumnya.'
+      }
+    },
+    uplift: {
+      label: { en: 'Uplift', id: 'Uplift' },
+      en: 'How far the month’s LTP is above the baseline.',
+      id: 'Seberapa jauh LTP bulan itu di atas baseline.',
+      formula: { en: 'max(0, LTP − baseline).', id: 'max(0, LTP − baseline).' }
+    },
+    protectionBuffer: {
+      label: { en: 'Protection buffer', id: 'Protection buffer' },
+      en: 'A buffer against a jump in demand, for materials at levels 5 to 7. Proposed and shown only: nothing is ordered from it.',
+      id: 'Buffer untuk lonjakan permintaan, bagi material level 5 sampai 7. Usulan dan hanya ditampilkan: tidak ada yang dipesan darinya.',
+      formula: {
+        en: 'Ceiling(uplift, production MPQ).',
+        id: 'Ceiling(uplift, MPQ produksi).'
+      },
+      alsoCalled: [
+        {
+          name: 'risk protection',
+          source: { en: 'team sheet Guidance, Q-file C3', id: 'sheet Guidance tim, Q-file C3' }
+        }
+      ]
+    },
+    strategicBaseline: {
+      label: { en: 'Baseline', id: 'Baseline' },
+      en: 'The normal monthly LTP before a festive window, which the strategic buffer is measured from.',
+      id: 'LTP bulanan normal sebelum periode festive, yang menjadi dasar strategic buffer.',
+      formula: {
+        en: 'Average LTP of the 3 months before the festive window.',
+        id: 'Rata-rata LTP 3 bulan sebelum periode festive.'
+      }
+    },
+    strategicBuffer: {
+      label: { en: 'Strategic buffer', id: 'Strategic buffer' },
+      en: 'Stock built up for a festive window such as CNY. Shown only: nothing is ordered from it.',
+      id: 'Stok yang dibangun untuk periode festive seperti CNY. Hanya ditampilkan: tidak ada yang dipesan darinya.',
+      formula: { en: 'LTP − baseline.', id: 'LTP − baseline.' }
+    },
+    poOrdered: {
+      label: { en: 'PO ordered', id: 'Dipesan di PO' },
+      en: 'The quantity on the supplier’s PO lines for the material, rejected POs left out.',
+      id: 'Kuantitas pada baris PO pemasok untuk material itu, tanpa PO yang ditolak.'
+    },
+    reconcileCalledOff: {
+      label: { en: 'Called off', id: 'Di-call-off' },
+      en: 'The quantity requested on released call-offs.',
+      id: 'Kuantitas yang diminta pada call-off yang dirilis.'
+    },
+    asnRequested: {
+      label: { en: 'ASN requested', id: 'Diminta di ASN' },
+      en: 'The quantity on the supplier’s shipping notices: Submitted, In Transit, Delivered or Discrepancy.',
+      id: 'Kuantitas pada pemberitahuan pengiriman pemasok: Submitted, In Transit, Delivered, atau Discrepancy.'
+    },
+    notYetCalledOff: {
+      label: { en: 'Not yet called off', id: 'Belum di-call-off' },
+      en: 'What is left on the PO that no call-off has asked for yet: the remainder.',
+      id: 'Sisa di PO yang belum diminta call-off mana pun.',
+      formula: {
+        en: 'PO ordered − called off, never below 0.',
+        id: 'Dipesan di PO − di-call-off, tidak pernah di bawah 0.'
+      }
+    },
+    calledOffNotYetShipped: {
+      label: { en: 'Called off, not yet shipped', id: 'Di-call-off, belum dikirim' },
+      en: 'Called-off quantity that no shipping notice covers yet.',
+      id: 'Kuantitas yang sudah di-call-off tetapi belum ditutup pemberitahuan pengiriman.',
+      formula: {
+        en: 'Called off − ASN requested, never below 0.',
+        id: 'Di-call-off − diminta di ASN, tidak pernah di bawah 0.'
+      }
+    },
+    maxStockSupplier: {
+      label: { en: 'Max Stock Supplier', id: 'Max Stock Supplier' },
+      en: 'The most the supplier may hold for PTI of the material, set by Procurement. Shown only: it caps nothing.',
+      id: 'Jumlah terbanyak material yang boleh disimpan pemasok untuk PTI, diatur Procurement. Hanya ditampilkan: tidak membatasi apa pun.',
+      notToConfuse: {
+        en: 'Max Stock (what PTI holds, on the Safety stock page).',
+        id: 'Max Stock (yang disimpan PTI, di halaman Safety stock).'
+      }
     }
   });

@@ -70,8 +70,32 @@ const drifted = (e, en, id) =>
 /** @param {string} text */
 const words = (text) => text.trim().split(/\s+/).length;
 
+/**
+ * A requirement or decision code (DRC-10, CR-24, MR-7, E14-04, BR-05, INV-D8 …).
+ * Codes are for the builders' documents; the reader sees words (F-18).
+ */
+const CODE = /\b(?:DRC|CR|MR|CAP|INV|ENG|E14|BR|REQ|TL)-[A-Z]?\d+[a-z]?\b/;
+
+/**
+ * The lines of an entry, in both locales, that show a requirement code.
+ * @param {TermEntry} e
+ * @returns {(string | undefined)[]}
+ */
+const codedLines = (e) =>
+  [
+    e.label.en,
+    e.label.id,
+    e.en,
+    e.id,
+    e.formula?.en,
+    e.formula?.id,
+    e.notToConfuse?.en,
+    e.notToConfuse?.id,
+    ...(e.alsoCalled ?? []).flatMap((a) => [a.name, a.source.en, a.source.id])
+  ].filter((line) => typeof line === 'string' && CODE.test(line));
+
 describe('term-label glossary (BL-233)', () => {
-  it('holds the wave-1 and wave-2 population, named', () => {
+  it('holds the wave 1 to 3 population, named', () => {
     // A named member, not a count: the guards below run over these entries.
     expect(Object.keys(TERM_LABEL_GLOSSARY)).toEqual(
       expect.arrayContaining([
@@ -79,7 +103,9 @@ describe('term-label glossary (BL-233)', () => {
         'carryOver',
         'alertDemandAnticipationUnabsorbed',
         'freeToCallOff',
-        'tradeNameStatus'
+        'tradeNameStatus',
+        'ropFisik',
+        'maxStockSupplier'
       ])
     );
   });
@@ -97,6 +123,11 @@ describe('term-label glossary (BL-233)', () => {
   it('AC-06: every "Also called" name names its source', () => {
     const bad = ENTRIES.flatMap(([term, e]) => unsourcedNames(e).map((n) => `${term}: ${n}`));
     expect(bad, `name with no source:\n${bad.join('\n')}`).toEqual([]);
+  });
+
+  it('F-18: no line of any tip shows a requirement code', () => {
+    const bad = ENTRIES.flatMap(([term, e]) => codedLines(e).map((l) => `${term}: ${l}`));
+    expect(bad, `requirement code on screen:\n${bad.join('\n')}`).toEqual([]);
   });
 
   it('BR-07: a definition is at most 40 words', () => {
@@ -135,9 +166,32 @@ describe('term-label glossary (BL-233)', () => {
 
   it('TL-D15: ROP Order is under the safety order’s "Not", never its "Also called"', () => {
     const e = TERM_LABEL_GLOSSARY.safetyOrder;
-    expect(e.notToConfuse?.en).toMatch(/ROP Order \(LTP × lead time \+ safety order, DRC-10\)/);
+    expect(e.notToConfuse?.en).toMatch(/ROP Order \(LTP × lead time \+ safety order\)/);
     const names = ENTRIES.flatMap(([, x]) => (x.alsoCalled ?? []).map((a) => a.name));
     expect(names).not.toContain('ROP Order');
+  });
+
+  it('TL-D12: Max reads "Max Stock" and the supplier’s "Max Stock Supplier", in EN and ID', () => {
+    expect(TERM_LABEL_GLOSSARY.maxStock.label).toEqual({ en: 'Max Stock', id: 'Max Stock' });
+    expect(TERM_LABEL_GLOSSARY.maxStockSupplier.label).toEqual({
+      en: 'Max Stock Supplier',
+      id: 'Max Stock Supplier'
+    });
+  });
+
+  it('TL-D6 / TL-D11: the team’s English words stay English in ID', () => {
+    for (const term of /** @type {const} */ ([
+      'ropSupplier',
+      'uplift',
+      'protectionBuffer',
+      'strategicBuffer',
+      'replenishmentCycle'
+    ])) {
+      const { label } = TERM_LABEL_GLOSSARY[term];
+      expect(label.id, term).toBe(label.en);
+    }
+    expect(TERM_LABEL_GLOSSARY.safetyOrderRopOrder.label.id).toBe('Safety order (ROP Order)');
+    expect(TERM_LABEL_GLOSSARY.bottleneckLeadTime.label.id).toMatch(/\(ROP Supplier\)$/);
   });
 
   it('TL-D9 / TL-D13: the labels waiting on the team keep their wording', () => {
@@ -175,6 +229,16 @@ describe('the predicates still fire, both ways', () => {
   it('missingLocales flags a blank ID line, and passes a full entry', () => {
     expect(missingLocales(good)).toEqual([]);
     expect(missingLocales({ ...good, formula: { en: 'a − b', id: ' ' } })).toEqual(['formula']);
+  });
+
+  it('codedLines flags a code in a formula or a source, and passes plain words', () => {
+    expect(codedLines(good)).toEqual([]);
+    expect(codedLines({ ...good, formula: { en: 'LTP × lead time (DRC-10).', id: 'x' } })).toEqual([
+      'LTP × lead time (DRC-10).'
+    ]);
+    expect(
+      codedLines({ ...good, alsoCalled: [{ name: 'X', source: { en: 'hub, CR-24', id: 'hub' } }] })
+    ).toEqual(['hub, CR-24']);
   });
 
   it('unsourcedNames flags a name with no source, and passes a sourced one', () => {

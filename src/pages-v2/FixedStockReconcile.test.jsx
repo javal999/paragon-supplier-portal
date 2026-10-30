@@ -6,6 +6,7 @@ import { feedstockReconcileEn, feedstockReconcileId } from '@lib/i18n/feedstockR
 import i18n from '@lib/i18n';
 import { formatNumber } from '@lib/format';
 import { maxStockStore } from '@services/transitions/maxStock';
+import { headerNamed } from '@test/termText';
 
 /** @param {number} n */
 const pcs = (n) => `${formatNumber(n)} PCS`;
@@ -183,7 +184,7 @@ describe('Feedstock reconcile — supplier', () => {
       await screen.findByRole('heading', { name: 'Rekonsiliasi feedstock' })
     ).toBeInTheDocument();
     expect(
-      await screen.findByRole('columnheader', { name: 'Belum di-call-off' })
+      await screen.findByRole('columnheader', { name: headerNamed('Belum di-call-off') })
     ).toBeInTheDocument();
     // DRC-15b [Proposed BL-207] in Indonesian.
     expect(await screen.findByTestId(`fsr-liability-${K8801}`)).toHaveTextContent(

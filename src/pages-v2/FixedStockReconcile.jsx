@@ -220,12 +220,12 @@ const FixedStockReconcile = ({ persona }) => {
           <TableHeader>
             {isPti ? <TableHeaderCell>{t('fsr.col.supplier')}</TableHeaderCell> : null}
             <TableHeaderCell>{t('fsr.col.material')}</TableHeaderCell>
-            <TableHeaderCell>{t('fsr.col.poOrdered')}</TableHeaderCell>
-            <TableHeaderCell>{t('fsr.col.calledOff')}</TableHeaderCell>
-            <TableHeaderCell>{t('fsr.col.asnRequested')}</TableHeaderCell>
-            <TableHeaderCell>{t('fsr.col.notYetCalledOff')}</TableHeaderCell>
-            <TableHeaderCell>{t('fsr.col.notYetShipped')}</TableHeaderCell>
-            <TableHeaderCell>{t('fsr.col.maxStock')}</TableHeaderCell>
+            <TableHeaderCell term="poOrdered" />
+            <TableHeaderCell term="reconcileCalledOff" />
+            <TableHeaderCell term="asnRequested" />
+            <TableHeaderCell term="notYetCalledOff" />
+            <TableHeaderCell term="calledOffNotYetShipped" />
+            <TableHeaderCell term="maxStockSupplier" />
           </TableHeader>
           <tbody>
             {rows.map((r) => (

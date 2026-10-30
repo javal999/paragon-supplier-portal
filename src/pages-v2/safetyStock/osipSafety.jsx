@@ -3,6 +3,7 @@
 /** @import { MaterialOsipInputs, OsipSafetyFigures, OsipSupplierInput } from '@services/transitions/osipSafetyRules' */
 /** @import { Uom } from '@services/sdc/types' */
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import Data from '@components/ui-v2/Data';
 import SelectField from '@components/ui-v2/SelectField';
 import { formatNumber } from '@lib/format';
@@ -62,6 +63,13 @@ export const ProvisionalNote = ({ questions, testId }) => {
   );
 };
 
+/** BL-233 — the glossary term each OSIP safety column is labelled by. */
+const OSIP_COLUMN_TERM = /** @type {const} */ ({
+  safetyOrder: 'safetyOrderRopOrder',
+  fisikSafety: 'ropFisikSafety',
+  cv: 'demandCv'
+});
+
 /**
  * The column titles' provisional notes, by column.
  * @type {React.FC<{ column: keyof typeof OSIP_SAFETY_QUESTIONS }>}
@@ -70,7 +78,7 @@ export const OsipColumnTitle = ({ column }) => {
   const { t } = useTranslation();
   return (
     <>
-      {t(`sst.osip.col.${column}`)}
+      <TermLabel term={OSIP_COLUMN_TERM[column]} />
       <ProvisionalNote
         questions={OSIP_SAFETY_QUESTIONS[column]}
         testId={`sst-osip-prov-${column}`}

@@ -359,12 +359,8 @@ export const inventoryCapacityEn = {
     'Additional capacity is what you could give PTI on request, above the capacity you allocate. Optional. BE = capacity + additional capacity.',
   'inv.capacity.upsideHelpPti':
     'Additional capacity is what the supplier could give PTI on request, above its allocation. BE = capacity + additional capacity.',
-  'inv.capacity.row.gap': 'Short by',
   'inv.capacity.col.reason': 'Reason',
   // BL-133 (ENG-D18) — the LTP against capacity and BE.
-  'inv.capacity.row.ltp': 'LTP, current forecast',
-  'inv.capacity.row.be': 'BE = capacity + additional',
-  'inv.capacity.col.ltpCheck': 'LTP against capacity',
   'inv.capacity.ltpHelp':
     'LTP is PTI’s current forecast for the materials of this group, added up per week. It is the demand this page checks. Above your capacity it needs the additional capacity; above BE (capacity + additional capacity) it cannot be supplied. Confirm capacity here before you submit the LTP on Forecast & commitments.',
   'inv.capacity.ltpHelpPti':
@@ -981,12 +977,8 @@ export const inventoryCapacityId = {
     'Kapasitas tambahan adalah kapasitas yang dapat Anda berikan kepada PTI jika diminta, di atas kapasitas yang Anda alokasikan. Opsional. BE = kapasitas + kapasitas tambahan.',
   'inv.capacity.upsideHelpPti':
     'Kapasitas tambahan adalah kapasitas yang dapat diberikan pemasok kepada PTI jika diminta, di atas alokasinya. BE = kapasitas + kapasitas tambahan.',
-  'inv.capacity.row.gap': 'Kurang',
   'inv.capacity.col.reason': 'Alasan',
   // BL-133 (ENG-D18) — LTP terhadap kapasitas dan BE.
-  'inv.capacity.row.ltp': 'LTP, prakiraan saat ini',
-  'inv.capacity.row.be': 'BE = kapasitas + tambahan',
-  'inv.capacity.col.ltpCheck': 'LTP terhadap kapasitas',
   'inv.capacity.ltpHelp':
     'LTP adalah prakiraan PTI saat ini untuk material kelompok ini, dijumlahkan per minggu. Inilah kebutuhan yang diperiksa halaman ini. Di atas kapasitas Anda, LTP memerlukan kapasitas tambahan; di atas BE (kapasitas + kapasitas tambahan), LTP tidak dapat dipenuhi. Konfirmasikan kapasitas di sini sebelum Anda mengirim LTP di Prakiraan & komitmen.',
   'inv.capacity.ltpHelpPti':

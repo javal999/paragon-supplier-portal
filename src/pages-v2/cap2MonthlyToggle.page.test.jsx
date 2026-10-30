@@ -156,7 +156,11 @@ describe('CAP-2 supplier Capacity (Table C) — Monthly', () => {
     const grid = screen.getByTestId('capacity-grid');
     expect(grid.querySelectorAll('input, select').length).toBeGreaterThan(0);
     toMonthly('capacity-grid');
-    expect(grid.querySelectorAll('input, select, textarea, button')).toHaveLength(0);
+    // BL-233 — the row labels' (i) buttons explain; they edit nothing.
+    const controls = [...grid.querySelectorAll('input, select, textarea, button')].filter(
+      (el) => el.closest('[data-testid^="term-tip-"]') === null
+    );
+    expect(controls).toHaveLength(0);
     expect(screen.queryAllByRole('textbox')).toHaveLength(0);
     expect(screen.getByTestId('capacity-grid-readonly')).toHaveTextContent(
       'Switch to Weekly to edit.'
