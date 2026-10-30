@@ -57,7 +57,7 @@ describe('BL-233 wave 2 — /buyer/inventory', () => {
 });
 
 describe('BL-233 wave 2 — /buyer/stock-simulation', () => {
-  it('the six measures have an (i), with the formula from MR-7', async () => {
+  it('the six measures have an (i), with the formula from the stock simulation rules', async () => {
     renderWithProviders(<BuyerStockSimulation />, {
       identity: PLANNER,
       route: '/buyer/stock-simulation'
@@ -81,7 +81,7 @@ describe('BL-233 wave 2 — /buyer/stock-simulation', () => {
     expect(available?.[1]).toBe('term-tip-supplier-available');
     const free = within(screen.getByTestId('term-tip-free-to-call-off')).getByRole('tooltip');
     expect(free).toHaveTextContent(
-      'How it is calculated: Supplier available − already called off, not shipped (MR-7 BR-07).'
+      'How it is calculated: Supplier available − already called off, not shipped.'
     );
   });
 });

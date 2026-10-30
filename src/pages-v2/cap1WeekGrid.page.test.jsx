@@ -25,6 +25,7 @@ import { qty } from './inventory/inventoryDisplay';
 import BuyerDemandForecast from './BuyerDemandForecast';
 import BuyerCapacity from './BuyerCapacity';
 import SupplierCapacity from './SupplierCapacity';
+import { textWithoutTips } from '@test/termText';
 /** @import { CapacityPlan } from '@services/data/types' */
 
 beforeEach(() => {
@@ -305,16 +306,23 @@ describe('CAP-1 Table C — supplier Capacity', () => {
     // reason selects, left to right.
     const user = userEvent.setup();
     screen.getByTestId('capacity-grid-scroll').focus();
+    // BL-233 — each row label's (i) is focusable too (BR-09: it opens on focus),
+    // so the walk also passes the (i) buttons; the edit order is unchanged.
+    /** @param {string | null} label */
+    const isTip = (label) => label?.startsWith('What “') ?? false;
     /** @type {(string | null)[]} */
     const visited = [];
-    for (let i = 0; i < expected.length; i += 1) {
+    while (visited.filter((l) => !isTip(l)).length < expected.length && visited.length < 80) {
       await user.tab();
       visited.push(document.activeElement?.getAttribute('aria-label') ?? null);
     }
-    expect(visited).toEqual(expected);
+    expect(visited.filter((l) => !isTip(l))).toEqual(expected);
+    expect(visited.filter(isTip)).toEqual(
+      expect.arrayContaining(['What “Allocated” means', 'What “Additional capacity” means'])
+    );
     // Shift+Tab walks back the same way: from the first reason select to Additional W48.
     await user.tab({ shift: true });
-    expect(document.activeElement?.getAttribute('aria-label')).toBe(expected[expected.length - 2]);
+    expect(document.activeElement?.getAttribute('aria-label')).toBe(visited[visited.length - 2]);
     // C-AC1 — Enter in Allocated W36 moves to Allocated W37.
     const first = screen.getByLabelText(`Allocated capacity for the week of ${weeks[0]}`);
     first.focus();
@@ -397,14 +405,22 @@ describe('CAP-1 Table C — supplier Capacity', () => {
     const ltp = /** @type {HTMLElement} */ (
       grid.querySelector('tbody tr[data-row="ltp"] th[scope="row"]')
     );
-    expect(ltp.textContent).toBe(`LTP, current forecast · ${plan.uom}`);
-    const unit = /** @type {HTMLElement} */ (ltp.querySelector('.text-text-tertiary'));
+    expect(textWithoutTips(ltp)).toBe(`LTP, current forecast · ${plan.uom}`);
+    // BL-233 — the label's (i) is grey too; the unit is the grey part outside it.
+    /** @param {Element} th */
+    const unitOf = (th) =>
+      [...th.querySelectorAll('.text-text-tertiary')].find(
+        (el) => el.closest('[data-testid^="term-tip-"]') === null
+      );
+    const unit = /** @type {HTMLElement} */ (unitOf(ltp));
     expect(unit.textContent).toBe(` · ${plan.uom}`);
     // The label itself no longer carries the unit in its own colour.
     expect(ltp.textContent).not.toContain(`(${plan.uom})`);
     for (const id of ['allocated', 'upside', 'be'])
       expect(
-        grid.querySelector(`tbody tr[data-row="${id}"] th[scope="row"] .text-text-tertiary`)
+        unitOf(
+          /** @type {Element} */ (grid.querySelector(`tbody tr[data-row="${id}"] th[scope="row"]`))
+        )
       ).toHaveTextContent(`· ${plan.uom}`);
     // A row with no unit has no grey part.
     expect(

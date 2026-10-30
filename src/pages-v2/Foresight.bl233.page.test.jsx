@@ -55,9 +55,7 @@ describe('BL-233 wave 3 — /buyer/safety-stock', () => {
     expect(tipOf('Max Stock')).toBe('term-tip-max-stock');
     expect(tipOf('Reorder point')).toBe('term-tip-engine-reorder-point');
     const order = within(screen.getAllByTestId('term-tip-rop-order')[0]).getByRole('tooltip');
-    expect(order).toHaveTextContent(
-      'How it is calculated: LTP × lead time PO→ETA + safety order (DRC-10).'
-    );
+    expect(order).toHaveTextContent('How it is calculated: LTP × lead time PO→ETA + safety order.');
     expect(order).toHaveTextContent('Not: ROP Fisik (the call-off trigger).');
     // The four KPI cards take their titles from the glossary too.
     expect(screen.getByTestId('term-tip-space-freed')).toBeInTheDocument();
