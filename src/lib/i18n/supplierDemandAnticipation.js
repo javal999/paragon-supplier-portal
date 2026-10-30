@@ -24,13 +24,13 @@ export const supplierDemandAnticipationEn = {
 /** @type {Record<string, string>} */
 export const supplierDemandAnticipationId = {
   'supDa.subtitle':
-    'Antisipasi permintaan yang diterbitkan PTI untuk material Anda, per minggu selama lead time. Hanya baca.',
+    'Demand anticipation yang diterbitkan PTI untuk material Anda, per minggu selama lead time. Hanya baca.',
   'supDa.asOf': 'Per',
   'supDa.off.title': 'Belum tersedia',
   'supDa.off.body':
-    'Antisipasi permintaan akan ditampilkan di sini setelah Material Planning mengonfirmasi aturan perhitungannya.',
+    'Demand anticipation akan ditampilkan di sini setelah Material Planning mengonfirmasi aturan perhitungannya.',
   'supDa.card.published': 'Diterbitkan untuk minggu perencanaan {{week}} pada {{date}}',
   'supDa.card.total': 'Total',
-  'supDa.empty.title': 'Belum ada antisipasi permintaan yang diterbitkan untuk Anda',
-  'supDa.empty.body': 'PTI belum menerbitkan antisipasi permintaan untuk material Anda.'
+  'supDa.empty.title': 'Belum ada demand anticipation yang diterbitkan untuk Anda',
+  'supDa.empty.body': 'PTI belum menerbitkan demand anticipation untuk material Anda.'
 };

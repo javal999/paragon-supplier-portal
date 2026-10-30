@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // DRC-18 (BL-203) on the screen — the Demand anticipation grid's read-only
-// rows: FG demand, LTP − FG demand, and Consumption, 13-week average
+// rows: FG demand, LTP − FG demand, and Moving average consumption (TL-D14)
 // [Default A11], with fewer than 13 weeks of history said on screen, and both
 // locales. Every expected figure is derived from the read model's own inputs,
 // never restated.
@@ -68,7 +68,7 @@ describe('DRC-18 — the three rows on the grid', () => {
     const card = await screen.findByTestId(`dant-card-${KEY}`);
     expect(within(card).getByText('FG demand')).toBeInTheDocument();
     expect(within(card).getByText('LTP − FG demand')).toBeInTheDocument();
-    expect(within(card).getByText('Consumption, 13-week average')).toBeInTheDocument();
+    expect(within(card).getByText('Moving average consumption')).toBeInTheDocument();
     // A11's 13 weeks are confirmed [Team, 2026-10-28]: no Provisional label.
     expect(within(card).queryByTestId(`dant-cavg-provisional-${KEY}`)).toBeNull();
     for (const w of row.weeks) {
@@ -131,7 +131,7 @@ describe('DRC-18 — the three rows on the grid', () => {
       const card = await screen.findByTestId(`dant-card-${KEY}`);
       expect(within(card).getByText('FG demand')).toBeInTheDocument();
       expect(within(card).getByText('LTP − FG demand')).toBeInTheDocument();
-      expect(within(card).getByText('Konsumsi, rata-rata 13 minggu')).toBeInTheDocument();
+      expect(within(card).getByText('Moving average consumption')).toBeInTheDocument();
     } finally {
       await i18n.changeLanguage('en');
     }

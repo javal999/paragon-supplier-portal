@@ -255,7 +255,7 @@ export const whatIfSandboxId = {
   'whatIf.preset.note':
     'Contoh dari OSIP Playbook sendiri (slide 7): ROP Order 761.888 dan safety order 244.896 muncul kembali dengan pembacaan yang dipakai slide, yang menjadi pembuka kasus ini: SD safety order sepanjang minggu lead time (B2; default 13 minggu memberi 183.672) dan pemeriksaan rencana terhadap SOH + OSPO + OSPR + PR (A2; default memeriksa Total OSPO). Slide tidak memuat konsumsi, area pasokan, MOQ, atau ukuran palet, sehingga ROP Fisik, Max, dan pemicu call-off tertulis “tidak tersedia”.',
   'whatIf.notInPlan':
-    'Belum ada LTP untuk pasangan ini, jadi belum ada antisipasi permintaan; posisinya diambil dari catatan stok dan PO yang sama.',
+    'Belum ada LTP untuk pasangan ini, jadi belum ada demand anticipation; posisinya diambil dari catatan stok dan PO yang sama.',
   'whatIf.reset': 'Kembalikan ke nilai aktual',
   'whatIf.edited_other': '{{count}} input atau sakelar berbeda dari rencana saat ini',
 
@@ -331,8 +331,8 @@ export const whatIfSandboxId = {
   'whatIf.switch.note.capacity':
     'Kapasitas produksi tidak masuk ke permintaan ROP Fisik (tidak ada angka PTI), jadi ini tidak mengubah angka.',
   'whatIf.switch.note.levelInput': 'Hanya dipakai untuk level yang tidak punya rumus sendiri.',
-  'whatIf.switch.osip.daSafetyPlacement': 'Safety order dalam antisipasi permintaan',
-  'whatIf.switch.osip.planCheckBasis': 'Pemeriksaan rencana: total antisipasi permintaan terhadap',
+  'whatIf.switch.osip.daSafetyPlacement': 'Safety order dalam demand anticipation',
+  'whatIf.switch.osip.planCheckBasis': 'Pemeriksaan rencana: total demand anticipation terhadap',
   'whatIf.switch.osip.carryOverTarget': 'Sisa dipindahkan ke',
   'whatIf.switch.osip.carryOverLimit': 'Satuan batas carry-over',
   'whatIf.switch.osip.ospoIncludesNewPo': 'OSPO menghitung PO baru minggu lalu',
@@ -398,7 +398,7 @@ export const whatIfSandboxId = {
   'whatIf.row.ropFisik': 'ROP Fisik',
   'whatIf.row.max': 'Max',
   'whatIf.row.safetyOrder': 'Safety order',
-  'whatIf.row.totalDa': 'Antisipasi permintaan sepanjang lead time',
+  'whatIf.row.totalDa': 'Demand anticipation sepanjang lead time',
   'whatIf.row.prNeed': 'Kebutuhan PR',
   'whatIf.row.prRecommendation': 'Pemeriksaan rencana: rekomendasi PR',
   'whatIf.row.callOffs': 'Call-off yang akan dibuat pemicu',
@@ -413,7 +413,7 @@ export const whatIfSandboxId = {
   'whatIf.weekShift': '{{from}} → {{to}}',
   'whatIf.maxOverride': 'diketik',
   'whatIf.flag.LEAD_TIME_BEYOND_HORIZON':
-    'Lead time lebih panjang dari horizon: tidak ada antisipasi permintaan.',
+    'Lead time lebih panjang dari horizon: tidak ada demand anticipation.',
   'whatIf.flag.NO_TRIGGER':
     'Tidak ada ROP Fisik atau Max: pemicu call-off tidak membuat apa pun, jadi proyeksi SOH tanpa call-off.',
   'whatIf.reading':
@@ -421,8 +421,8 @@ export const whatIfSandboxId = {
 
   'whatIf.grid.week': 'Minggu',
   'whatIf.grid.ltp': 'LTP (ubah)',
-  'whatIf.grid.daPlan': 'Antisipasi permintaan, rencana saat ini',
-  'whatIf.grid.da': 'Antisipasi permintaan, skenario ini',
+  'whatIf.grid.daPlan': 'Demand anticipation, rencana saat ini',
+  'whatIf.grid.da': 'Demand anticipation, skenario ini',
   'whatIf.grid.drafted': 'Call-off dibuat',
   'whatIf.grid.incoming': 'Tiba',
   'whatIf.grid.prQty': 'PR direkomendasikan',

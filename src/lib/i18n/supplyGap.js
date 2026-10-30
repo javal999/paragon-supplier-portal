@@ -52,20 +52,20 @@ export const supplyGapEn = {
 export const supplyGapId = {
   'supplyGap.title': 'Di bawah demand anticipation (DA)',
   'supplyGap.intro':
-    'Minggu-minggu ketika call-off yang dirilis kurang dari antisipasi permintaan, per pemasok dan material. Call-off pada baris PO induk tertua yang masih bersaldo didahulukan, lalu baris berikutnya; yang tidak tertutup baris mana pun memerlukan PO baru, yang dibuat perencana di SAP. Daftar ini terpisah dari pesanan yang direkomendasikan: daftar ini membaca call-off hub sendiri, yang tidak diperhitungkan oleh mesin.',
+    'Minggu-minggu ketika call-off yang dirilis kurang dari demand anticipation, per pemasok dan material. Call-off pada baris PO induk tertua yang masih bersaldo didahulukan, lalu baris berikutnya; yang tidak tertutup baris mana pun memerlukan PO baru, yang dibuat perencana di SAP. Daftar ini terpisah dari pesanan yang direkomendasikan: daftar ini membaca call-off hub sendiri, yang tidak diperhitungkan oleh mesin.',
   'supplyGap.sample':
     'Dari data contoh hub: LTP contoh, stok SAP, serta PO dan call-off hub sendiri, bukan dataset mesin.',
   'supplyGap.basis':
-    'Pasokan terbuka adalah call-off yang menunggu konfirmasi atau sudah dikonfirmasi, pada minggu tanggal kebutuhannya. Draf, call-off yang ditolak dan yang dibatalkan bukan pasokan, dan saldo PO induk yang belum di-call-off bukan pasokan bertanggal. Pasokan di atas antisipasi permintaan suatu minggu diperhitungkan untuk kekurangan minggu-minggu berikutnya, tidak pernah untuk minggu sebelumnya.',
+    'Pasokan terbuka adalah call-off yang menunggu konfirmasi atau sudah dikonfirmasi, pada minggu tanggal kebutuhannya. Draf, call-off yang ditolak dan yang dibatalkan bukan pasokan, dan saldo PO induk yang belum di-call-off bukan pasokan bertanggal. Pasokan di atas demand anticipation suatu minggu diperhitungkan untuk kekurangan minggu-minggu berikutnya, tidak pernah untuk minggu sebelumnya.',
   'supplyGap.carried': '{{qty}} terbawa dari minggu sebelumnya',
-  'supplyGap.count_other': '{{count}} pemasok × material × minggu di bawah antisipasi permintaan',
+  'supplyGap.count_other': '{{count}} pemasok × material × minggu di bawah demand anticipation',
   'supplyGap.showAll': 'Tampilkan semua {{count}}',
   'supplyGap.showFewer': 'Tampilkan {{count}} pertama',
-  'supplyGap.empty': 'Tidak ada minggu di bawah antisipasi permintaan.',
+  'supplyGap.empty': 'Tidak ada minggu di bawah demand anticipation.',
   'supplyGap.col.supplier': 'Pemasok',
   'supplyGap.col.material': 'Material',
   'supplyGap.col.week': 'Minggu',
-  'supplyGap.open': 'Buka {{material}} untuk {{supplier}} di Antisipasi permintaan',
+  'supplyGap.open': 'Buka {{material}} untuk {{supplier}} di Demand anticipation',
   'supplyGap.proposal.callOff': 'Call-off {{qty}} pada {{po}}',
   'supplyGap.proposal.oldest': 'baris PO induk tertua yang masih bersaldo',
   'supplyGap.proposal.next': 'baris PO induk berikutnya yang masih bersaldo',

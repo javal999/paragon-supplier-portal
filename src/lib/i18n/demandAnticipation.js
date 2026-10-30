@@ -137,15 +137,15 @@ export const demandAnticipationId = {
   'demandAnt.publish.button': 'Publikasikan demand anticipation (DA) · {{week}}',
   'demandAnt.publish.confirmTitle': 'Publikasikan demand anticipation (DA)',
   'demandAnt.publish.confirmBody':
-    'Ini mencatat antisipasi permintaan minggu perencanaan {{week}} ({{dates}}) pada angka hari ini, untuk setiap pemasok × material.',
+    'Ini mencatat demand anticipation minggu perencanaan {{week}} ({{dates}}) pada angka hari ini, untuk setiap pemasok × material.',
   'demandAnt.publish.confirmChanged_other':
     '{{count}} pemasok × material berbeda dari angka yang dipublikasikan untuk minggu ini.',
   'demandAnt.publish.confirmKept':
     'Publikasi sebelumnya untuk minggu ini tetap tercatat; yang baru yang berlaku. Tidak ada yang dikirim ke SAP atau pemasok.',
   'demandAnt.publish.cancel': 'Batal',
   'demandAnt.publish.confirm': 'Publikasikan',
-  'demandAnt.publish.done': 'Antisipasi permintaan dipublikasikan untuk {{week}}',
-  'demandAnt.publish.failed': 'Antisipasi permintaan tidak dapat dipublikasikan',
+  'demandAnt.publish.done': 'Demand anticipation dipublikasikan untuk {{week}}',
+  'demandAnt.publish.failed': 'Demand anticipation tidak dapat dipublikasikan',
   'demandAnt.agree.legend': 'Pemasok setuju menerima sisa setelah horizon',
   'demandAnt.agree.help':
     'Centang hanya bila pemasok setuju. Tanpa itu sisa dipindah ke minggu terakhir horizon.',
@@ -154,7 +154,7 @@ export const demandAnticipationId = {
   'demandAnt.filter.material': 'Material',
   'demandAnt.filter.all': 'Semua',
   'demandAnt.filter.clear': 'Hapus filter',
-  'demandAnt.empty.title': 'Tidak ada antisipasi permintaan untuk ditampilkan',
+  'demandAnt.empty.title': 'Tidak ada demand anticipation untuk ditampilkan',
   'demandAnt.empty.body': 'Tidak ada pemasok dengan LTP pada versi prakiraan saat ini.',
   'demandAnt.empty.filtered': 'Tidak ada pemasok × material yang cocok dengan filter ini.',
   'demandAnt.card.share': 'Bagian {{pct}}',
@@ -163,7 +163,7 @@ export const demandAnticipationId = {
   'demandAnt.card.hideWeeks': 'Sembunyikan minggu',
   'demandAnt.grid.corner': 'Minggu',
   'demandAnt.row.carriedFrom': '{{qty}} dari {{week}}',
-  'demandAnt.row.absorbedCell': '−{{qty}} pasokan di atas antisipasi permintaan',
+  'demandAnt.row.absorbedCell': '−{{qty}} pasokan di atas demand anticipation',
   'demandAnt.published': 'Dipublikasikan',
   'demandAnt.horizon': 'Horizon',
   'demandAnt.publishedParts':
@@ -177,7 +177,7 @@ export const demandAnticipationId = {
   'demandAnt.check.sourceToday': '{{week}} · angka hari ini, belum dipublikasikan',
   'demandAnt.check.horizon': 'Horizon (waktu tunggu)',
   'demandAnt.check.horizonWeeks_other': '{{count}} minggu',
-  'demandAnt.check.totalDa': 'Total antisipasi permintaan',
+  'demandAnt.check.totalDa': 'Total demand anticipation',
   'demandAnt.check.ropOrder': 'ROP Order',
   'demandAnt.check.ropParts': '(cycle stock {{cycle}} + safety order {{safety}})',
   'demandAnt.check.supply.totalOspo': 'Total OSPO',

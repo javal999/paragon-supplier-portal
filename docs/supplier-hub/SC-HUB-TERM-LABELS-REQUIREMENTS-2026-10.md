@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Accepted 2026-10-29: TL-D1 to TL-D13.** The owner answered the 4 open questions (section 5) and the 27 inventory questions (TL-D10 to TL-D13, `research/TERM-LABEL-INVENTORY-2026-10.md` section 1) the same day. Nothing is built yet |
+| Status | **Accepted 2026-10-29: TL-D1 to TL-D13; TL-D14 to TL-D18 on 2026-10-30.** The owner answered the 4 open questions (section 5) and the 27 inventory questions (TL-D10 to TL-D13, `research/TERM-LABEL-INVENTORY-2026-10.md` section 1) the same day. Wave 1 merged 2026-10-30 (MR !65, `7f29d078`) |
 | Date | 2026-10-29 |
 | Source | Owner, 2026-10-29, reviewing the Demand anticipation grid: the row label differs from the team's input. Owner rules: (1) an agreed column wording is not replaced with another name; (2) every important term gets an information icon with its definition and the other names it goes by |
 | Code read | `main` at `59199b4f` |
@@ -119,3 +119,8 @@ Each was asked with a recommendation; the owner took the recommendation every ti
 | TL-D11 | Reach of BR-04 | Open rule: any term the team writes in English inside Indonesian text stays English in ID (extends TL-D6) | Accepted, owner, 2026-10-29 |
 | TL-D12 | Wording and display fixes from the inventory (Q11 to Q26) | Max Stock / Max Stock Supplier; PR Generated; Incoming (Not Incoming DA); Commitment gap; Status; Accepted / Diterima; Disputed on both sides; 3-way match on both sides; Selisih vs Ketidaksesuaian; Certificate validity; Budget; Award date and Award value show the real award date and amount; vs Should-Cost hidden while parked; Sisa kuantitas; Channel. Rows listed in the inventory | Accepted, owner, 2026-10-29 |
 | TL-D13 | More labels with no team word | "After the check" and "Called off, not yet shipped" kept; added to the team's next question list with the TL-D9 pair | Accepted, owner, 2026-10-29 |
+| TL-D14 | Label of the 13-week consumption average | The team's "Moving average consumption" (Q-file A11) in EN and ID; was "Consumption, 13-week average" | Accepted, owner, 2026-10-30 |
+| TL-D15 | Is ROP Order another name for the safety order? | No. ROP Order = LTP × lead time + safety order (DRC-10), so it contains the safety order. The safety order's tooltip lists ROP Order under "Not", never under "Also called". DRC-7's heading "Safety order (ROP Order)" is read as "the safety order inside ROP Order" | Accepted, owner, 2026-10-30 |
+| TL-D16 | Full name of LTP | Not shown; LTP's tooltip gives no expansion | Accepted, owner, 2026-10-30 |
+| TL-D17 | TL-D11 in Indonesian sentences | Applies to sentences too, not only labels: ID text says "demand anticipation", never "antisipasi permintaan" | Accepted, owner, 2026-10-30 |
+| TL-D18 | "(DA)" in navigation and page titles | Yes: the nav items and page titles of the Demand anticipation pages read "Demand anticipation (DA)", in EN and ID | Accepted, owner, 2026-10-30 |

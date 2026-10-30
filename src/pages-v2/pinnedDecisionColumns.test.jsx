@@ -5,6 +5,7 @@ import BuyerCommitments from './BuyerCommitments';
 import BuyerOrderSummary from './BuyerOrderSummary';
 import BuyerStockSimulation from './BuyerStockSimulation';
 import BuyerInventory from './BuyerInventory';
+import { headerNamed } from '@test/termText';
 import SupplierShipments from './SupplierShipments';
 
 // At 1440 x 900 the columns a planner reads or acts on sat past the edge of
@@ -51,7 +52,7 @@ const expectSupplierNamesClamped = (table) => {
 /** @param {string} name */
 const tableOf = async (name) =>
   /** @type {HTMLTableElement} */ (
-    (await screen.findByRole('columnheader', { name })).closest('table')
+    (await screen.findByRole('columnheader', { name: headerNamed(name) })).closest('table')
   );
 
 describe('Supplier responses (/buyer/collaboration)', () => {

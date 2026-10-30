@@ -337,8 +337,8 @@ const FeedstockConfirmPanel = ({ supplierId, positions, nowIso }) => {
       <Table>
         <TableHeader>
           <TableHeaderCell>{t('fsConfirm.col.material')}</TableHeaderCell>
-          <TableHeaderCell className="text-right">{t('fsConfirm.col.latest')}</TableHeaderCell>
-          <TableHeaderCell>{t('fsConfirm.col.status')}</TableHeaderCell>
+          <TableHeaderCell className="text-right" term="feedstockLatest" />
+          <TableHeaderCell term="feedstockThisWeek" />
           {held ? <TableHeaderCell>{t('fsConfirm.col.action')}</TableHeaderCell> : null}
         </TableHeader>
         <tbody>

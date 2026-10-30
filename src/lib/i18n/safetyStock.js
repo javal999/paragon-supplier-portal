@@ -505,7 +505,7 @@ export const safetyStockId = {
   'sst.rop.detail.npdEffect':
     'Saat tanda ini hilang, perencana mendapat tugas Beranda “Tinjau ROP setelah pesanan pertama” untuk meninjau ROP berdasarkan CO dan IR, permintaan nyata. Mengatur atau mengonfirmasi level menutupnya.',
   'sst.rop.detail.supplierReading':
-    'ROP Pemasok adalah stok fisik maksimum pemasok: permintaan ROP Fisik dikali waktu tunggu produksi bottleneck-nya, termasuk antrean, dibulatkan ke atas ke MPQ (Material Planning, 28 Okt 2026). Bahan baku pemasok tidak punya ROP: pemasok menutupnya dari antisipasi permintaan dan PO. ROP ke prinsipal masih tafsiran sampai Material Planning mendefinisikannya: permintaan ROP Fisik selama bagian pemesanan ke prinsipal dari waktu tunggu.',
+    'ROP Pemasok adalah stok fisik maksimum pemasok: permintaan ROP Fisik dikali waktu tunggu produksi bottleneck-nya, termasuk antrean, dibulatkan ke atas ke MPQ (Material Planning, 28 Okt 2026). Bahan baku pemasok tidak punya ROP: pemasok menutupnya dari demand anticipation dan PO. ROP ke prinsipal masih tafsiran sampai Material Planning mendefinisikannya: permintaan ROP Fisik selama bagian pemesanan ke prinsipal dari waktu tunggu.',
   'sst.values.title': 'Nilai OSIP untuk material ini dan pemasoknya',
   'sst.values.note':
     'Diatur oleh Perencana Material (jawaban Material Planning, 28 Okt 2026). Kolom kosong memakai nilai bawaan berwarna abu-abu. Setiap angka OSIP di halaman ini mengikuti nilai yang disimpan.',
@@ -521,7 +521,7 @@ export const safetyStockId = {
   'sst.values.days': 'Hari, termasuk antrean',
   'sst.values.notSet': 'Belum diatur',
   'sst.values.pullDaily': 'Ya: konfirmasi stok dan feedstock setiap hari',
-  'sst.values.pullWeekly': 'Tidak: konfirmasi mingguan, bersama antisipasi permintaan',
+  'sst.values.pullWeekly': 'Tidak: konfirmasi mingguan, bersama demand anticipation',
   'sst.values.save': 'Simpan',
   'sst.values.reset': 'Pakai bawaan',
   'sst.values.refused': 'Nilai tidak tersimpan',

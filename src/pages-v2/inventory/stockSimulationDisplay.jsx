@@ -18,6 +18,7 @@ import {
   simulationOverrideRefusal
 } from '@services/transitions/simulateSupplierStock';
 import { inputClass, labelClass, qty } from './inventoryDisplay';
+import TermLabel from '@components/ui-v2/TermLabel';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Material E2 · the stock simulation page's parts (MR-7 steps 3 to 5): the
@@ -257,13 +258,13 @@ const WeeklyTable = ({ sim, uom, testId }) => {
             {t('sim.detail.week')}
           </th>
           <th scope="col" className="py-1 pr-3 font-medium text-right">
-            {t('sim.col.available')}
+            <TermLabel term="supplierAvailable" />
           </th>
           <th scope="col" className="py-1 pr-3 font-medium text-right">
-            {t('sim.col.free')}
+            <TermLabel term="freeToCallOff" />
           </th>
           <th scope="col" className="py-1 pr-3 font-medium text-right">
-            {t('sim.col.ptiInbound')}
+            <TermLabel term="ptiInbound" />
           </th>
           <th scope="col" className="py-1 font-medium">
             {t('sim.detail.events')}

@@ -365,16 +365,12 @@ const SupplierInventory = () => {
                 <TableHeaderCell>
                   <PicHeader />
                 </TableHeaderCell>
-                <TableHeaderCell className="text-right">{t('inv.col.supplierSoh')}</TableHeaderCell>
-                <TableHeaderCell className="text-right">{t('inv.col.yourRop')}</TableHeaderCell>
-                {sharesPti && (
-                  <TableHeaderCell className="text-right">{t('inv.col.ptiSoh')}</TableHeaderCell>
-                )}
-                {sharesPti && (
-                  <TableHeaderCell className="text-right">{t('inv.col.ptiRop')}</TableHeaderCell>
-                )}
-                <TableHeaderCell>{t('inv.col.incoming')}</TableHeaderCell>
-                <TableHeaderCell>{t('inv.col.daysOfSupply')}</TableHeaderCell>
+                <TableHeaderCell className="text-right" term="supplierStock" />
+                <TableHeaderCell className="text-right" term="supplierOwnRop" />
+                {sharesPti && <TableHeaderCell className="text-right" term="ptiStock" />}
+                {sharesPti && <TableHeaderCell className="text-right" term="ptiRop" />}
+                <TableHeaderCell term="incoming" />
+                <TableHeaderCell term="daysOfSupply" />
                 <TableHeaderCell>{t('inv.col.lastUpdate')}</TableHeaderCell>
               </TableHeader>
               <tbody>

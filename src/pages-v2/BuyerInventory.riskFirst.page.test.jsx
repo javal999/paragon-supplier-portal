@@ -12,6 +12,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { renderWithProviders, BUYER } from '@test/test-utils';
 import i18n from '@lib/i18n';
+import { headerNamed, textWithoutTips } from '@test/termText';
 import BuyerInventory from './BuyerInventory';
 
 beforeEach(async () => {
@@ -39,7 +40,7 @@ describe('P-01 — risk first, fewer columns', () => {
   it('the table has six columns, risk second; PIC, this cycle, supplier ROP and days of supply are gone', async () => {
     render();
     await screen.findByTestId('pti-stock-row-sup-002-RM-STEAR-7300');
-    const headers = screen.getAllByRole('columnheader').map((h) => h.textContent);
+    const headers = screen.getAllByRole('columnheader').map(textWithoutTips);
     expect(headers).toEqual([
       'Material · supplier',
       'Risk · supplier cover',
@@ -101,7 +102,9 @@ describe('P-01 — risk first, fewer columns', () => {
     await i18n.changeLanguage('id');
     render();
     await screen.findByTestId('pti-stock-row-sup-002-RM-STEAR-7300');
-    expect(screen.getByRole('columnheader', { name: 'Risiko · cakupan pemasok' })).toBeTruthy();
+    expect(
+      screen.getByRole('columnheader', { name: headerNamed('Risiko · cakupan pemasok') })
+    ).toBeTruthy();
     expect(screen.getByRole('tab', { name: /Semua jenis/ })).toBeTruthy();
   });
 });

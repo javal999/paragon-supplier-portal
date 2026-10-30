@@ -22,12 +22,16 @@
 //
 // Wave 1 (spec §6 step 2): the Demand anticipation pages, What to order's
 // "Below demand anticipation" section and the alert rules.
+// Wave 2 (Goal A, Inventory): /buyer/inventory, /buyer/stock-simulation,
+// /supplier/inventory and the trade-name tables. Hub sources: SHR =
+// `SUPPLIER-HUB-REQUIREMENTS.md`, MAT = `SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md`,
+// DG = `DECISION-GUIDE.md`, all under `docs/supplier-hub/`.
 // ─────────────────────────────────────────────────────────────────────────────
 /** @import { GlossaryOf, TermEntry } from './types' */
 
 /**
  * The terms a page labels through `TermLabel`.
- * @typedef {'demandAnticipation' | 'ltp' | 'fgDemand' | 'ltpLessFgDemand' | 'consumptionAverage' | 'safetyOrder' | 'carryOver' | 'wouldBe' | 'surplusAbsorbed' | 'recordedConsumption' | 'openSupply' | 'supplyGap' | 'daAfterCheck' | 'ospo' | 'additionalPo' | 'callOffsThisWeek' | 'remainder' | 'notCarried' | 'supplierAgreedOutside' | 'gapProposal' | 'alertPtiBelowRop' | 'alertSupplierBelowRop' | 'alertProjectedStockOut' | 'alertCapacityBelowDemand' | 'alertStaleData' | 'alertCoverage' | 'alertCommitmentBelowForecast' | 'alertLeadTimeMissing' | 'alertCallOffNotCovered' | 'alertSupplyDiscontinued' | 'alertBlanketPoRunOut' | 'alertDemandAnticipationUnabsorbed'} TermLabelId
+ * @typedef {'demandAnticipation' | 'ltp' | 'fgDemand' | 'ltpLessFgDemand' | 'consumptionAverage' | 'safetyOrder' | 'carryOver' | 'wouldBe' | 'surplusAbsorbed' | 'recordedConsumption' | 'openSupply' | 'supplyGap' | 'daAfterCheck' | 'ospo' | 'additionalPo' | 'callOffsThisWeek' | 'remainder' | 'notCarried' | 'supplierAgreedOutside' | 'gapProposal' | 'alertPtiBelowRop' | 'alertSupplierBelowRop' | 'alertProjectedStockOut' | 'alertCapacityBelowDemand' | 'alertStaleData' | 'alertCoverage' | 'alertCommitmentBelowForecast' | 'alertLeadTimeMissing' | 'alertCallOffNotCovered' | 'alertSupplyDiscontinued' | 'alertBlanketPoRunOut' | 'alertDemandAnticipationUnabsorbed' | 'supplierCover' | 'supplierStock' | 'ptiStockRop' | 'incoming' | 'incomingStatus' | 'supplierAvailable' | 'calledOffNotShipped' | 'freeToCallOff' | 'ptiInbound' | 'simulationBasis' | 'simulationFlags' | 'supplierOwnRop' | 'ptiStock' | 'ptiRop' | 'daysOfSupply' | 'feedstockLatest' | 'feedstockThisWeek' | 'tradeNameStatus'} TermLabelId
  */
 
 const TEAM_OSIP = {
@@ -37,6 +41,14 @@ const TEAM_OSIP = {
 const NOT_DELIVERY_AGREEMENT = {
   en: 'Delivery Agreement (also DA, on the contract pages).',
   id: 'Delivery Agreement (juga DA, di halaman kontrak).'
+};
+const MAT_ALERTS = {
+  en: 'hub Material requirements, alert rules',
+  id: 'kebutuhan Material hub, aturan peringatan'
+};
+const NOT_TEAM_ROPS = {
+  en: 'ROP Order or ROP Fisik (the Material Planning team’s ROPs, on the Safety stock page).',
+  id: 'ROP Order atau ROP Fisik (ROP tim Material Planning, di halaman Safety stock).'
 };
 
 export const TERM_LABEL_GLOSSARY =
@@ -71,26 +83,19 @@ export const TERM_LABEL_GLOSSARY =
       id: 'Seberapa jauh LTP minggu itu di atas (positif) atau di bawah (negatif) FG demand. Hanya baca, untuk membandingkan kedua rencana.',
       formula: { en: 'LTP − FG demand.', id: 'LTP − FG demand.' }
     },
+    // TL-D14 (owner, 2026-10-30): the team's name, "moving average consumption"
+    // (Q-file A11), replaces "Consumption, 13-week average"; English in ID too (TL-D11).
     consumptionAverage: {
       label: {
-        en: 'Consumption, {{weeks}}-week average',
-        id: 'Konsumsi, rata-rata {{weeks}} minggu'
+        en: 'Moving average consumption',
+        id: 'Moving average consumption'
       },
       en: 'The material’s average weekly consumption over the recent weeks that have consumption recorded, times this supplier’s share.',
       id: 'Rata-rata konsumsi mingguan material selama minggu-minggu terakhir yang konsumsinya tercatat, dikali porsi pemasok ini.',
       formula: {
         en: 'Recorded consumption of the last 13 weeks ÷ the weeks with a record, × the supplier’s share.',
         id: 'Konsumsi tercatat 13 minggu terakhir ÷ jumlah minggu yang tercatat, × porsi pemasok.'
-      },
-      alsoCalled: [
-        {
-          name: 'moving average consumption',
-          source: {
-            en: 'Material Planning team, Q-file A11',
-            id: 'Tim Material Planning, Q-file A11'
-          }
-        }
-      ]
+      }
     },
     safetyOrder: {
       label: { en: 'Safety order', id: 'Safety order' },
@@ -100,9 +105,11 @@ export const TERM_LABEL_GLOSSARY =
         en: 'Z × √lead time × standard deviation of the LTP over the next 13 weeks, rounded up to a multiple of the MPQ. Z is 1.65 unless set per material.',
         id: 'Z × √lead time × simpangan baku LTP 13 minggu ke depan, dibulatkan ke atas ke kelipatan MPQ. Z bernilai 1,65 kecuali diatur per material.'
       },
+      // TL-D15 (owner, 2026-10-30): ROP Order is not another name for the safety
+      // order; it contains it (DRC-10: LTP × lead time + safety order).
       notToConfuse: {
-        en: 'Safety stock (stock PTI keeps on hand, on the forecast pages).',
-        id: 'Safety stock (stok yang disimpan PTI, di halaman prakiraan).'
+        en: 'Safety stock (stock PTI keeps on hand, on the forecast pages). ROP Order (LTP × lead time + safety order, DRC-10).',
+        id: 'Safety stock (stok yang disimpan PTI, di halaman prakiraan). ROP Order (LTP × lead time + safety order, DRC-10).'
       },
       labelKeys: ['daHist.csv.safety']
     },
@@ -363,5 +370,166 @@ export const TERM_LABEL_GLOSSARY =
       id: 'Muncul bila pemeriksaan rencana menemukan pasokan di atas demand anticipation (DA) lebih besar dari yang dapat diambil minggu terakhir horizon. Peringatan memuat jumlah sisanya.',
       notToConfuse: NOT_DELIVERY_AGREEMENT,
       labelKeys: ['inv.alerts.rule.demandAnticipationUnabsorbed']
+    },
+    // ── Wave 2: Inventory (Goal A) ────────────────────────────────────────────
+    supplierCover: {
+      label: { en: 'Risk · supplier cover', id: 'Risiko · cakupan pemasok' },
+      en: 'The material’s risk class, from how many days the supplier’s stock covers, against the supplier’s lead time for it.',
+      id: 'Kelas risiko material, dari berapa hari stok pemasok mencukupi, dibandingkan lead time pemasok untuk material itu.',
+      formula: {
+        en: 'Days of cover = supplier stock ÷ demand. High below the lead time, Medium below 1.5 × lead time, else Low (CR-24).',
+        id: 'Hari cakupan = stok pemasok ÷ permintaan. Tinggi di bawah lead time, Sedang di bawah 1,5 × lead time, selain itu Rendah (CR-24).'
+      },
+      alsoCalled: [
+        {
+          name: 'days of cover',
+          source: { en: 'hub requirements, CR-24', id: 'kebutuhan hub, CR-24' }
+        }
+      ],
+      notToConfuse: {
+        en: 'PTI cover (PTI stock ÷ demand, INV-D1).',
+        id: 'Cakupan PTI (stok PTI ÷ permintaan, INV-D1).'
+      }
+    },
+    supplierStock: {
+      label: { en: 'Supplier stock', id: 'Stok pemasok' },
+      en: 'The supplier’s stock on hand of the material, from its latest stock update.',
+      id: 'Stok on hand pemasok untuk material itu, dari pembaruan stok terakhirnya.',
+      alsoCalled: [{ name: 'supplier SOH', source: MAT_ALERTS }],
+      labelKeys: ['inv.col.supplierSoh']
+    },
+    ptiStockRop: {
+      label: { en: 'PTI stock / ROP', id: 'Stok PTI / ROP' },
+      en: 'PTI’s own stock on hand of the material, with PTI’s reorder point under it. Stock below the reorder point raises an alert.',
+      id: 'Stok on hand PTI sendiri untuk material itu, dengan titik pemesanan ulang PTI di bawahnya. Stok di bawah titik itu memunculkan peringatan.',
+      alsoCalled: [
+        { name: 'PTI SOH', source: MAT_ALERTS },
+        { name: 'PTI ROP', source: MAT_ALERTS }
+      ],
+      notToConfuse: NOT_TEAM_ROPS
+    },
+    incoming: {
+      label: { en: 'Incoming', id: 'Akan datang' },
+      en: 'The quantity of the material on its way from the supplier to PTI, split into in production and in transit.',
+      id: 'Kuantitas material yang sedang menuju PTI dari pemasok, dipisah menjadi dalam produksi dan dalam perjalanan.',
+      formula: {
+        en: 'In production + in transit (shipping notices and dispatched call-offs).',
+        id: 'Dalam produksi + dalam perjalanan (pemberitahuan pengiriman dan call-off yang dikirim).'
+      },
+      notToConfuse: {
+        en: 'Incoming DA (the quantity the supplier confirms against the demand anticipation, DRC-8).',
+        id: 'Incoming DA (kuantitas yang dikonfirmasi pemasok terhadap demand anticipation, DRC-8).'
+      }
+    },
+    incomingStatus: {
+      label: { en: 'Status', id: 'Status' },
+      en: 'Whether the quantity is still in production or already in transit, and for transit, on which document: a shipping notice (ASN) or a call-off dispatch.',
+      id: 'Apakah kuantitas masih dalam produksi atau sudah dalam perjalanan, dan untuk perjalanan, dengan dokumen apa: pemberitahuan pengiriman (ASN) atau pengiriman call-off.'
+    },
+    supplierAvailable: {
+      label: { en: 'Supplier available', id: 'Tersedia di pemasok' },
+      en: 'The estimated stock at the supplier on the check date: its last stock update, moved forward by what it shipped, received and finished since.',
+      id: 'Perkiraan stok di pemasok pada tanggal cek: pembaruan stok terakhirnya, digeser oleh yang dikirim, diterima, dan selesai diproduksi sejak itu.',
+      formula: {
+        en: 'Stock at the last update − ASNs shipped since + to-distributor arrivals + production finished, capped by capacity (MR-7 BR-01).',
+        id: 'Stok pada pembaruan terakhir − ASN yang dikirim sejak itu + kedatangan ke distributor + produksi selesai, dibatasi kapasitas (MR-7 BR-01).'
+      },
+      notToConfuse: {
+        en: 'PTI inbound (already left the supplier; the two are never added).',
+        id: 'Masuk ke PTI (sudah keluar dari pemasok; keduanya tidak pernah dijumlahkan).'
+      }
+    },
+    calledOffNotShipped: {
+      label: { en: 'Already called off, not shipped', id: 'Sudah di-call-off, belum dikirim' },
+      en: 'Confirmed call-offs for the material from this supplier that no shipping notice covers yet.',
+      id: 'Call-off terkonfirmasi untuk material dari pemasok ini yang belum ditutup pemberitahuan pengiriman.'
+    },
+    freeToCallOff: {
+      label: { en: 'Free to call off', id: 'Bebas untuk call-off' },
+      en: 'What PTI can still call off from the supplier’s estimated stock, after the call-offs already confirmed.',
+      id: 'Yang masih dapat di-call-off PTI dari perkiraan stok pemasok, setelah call-off yang sudah dikonfirmasi.',
+      formula: {
+        en: 'Supplier available − already called off, not shipped (MR-7 BR-07).',
+        id: 'Tersedia di pemasok − sudah di-call-off, belum dikirim (MR-7 BR-07).'
+      }
+    },
+    ptiInbound: {
+      label: { en: 'PTI inbound', id: 'Masuk ke PTI' },
+      en: 'The quantity already shipped to PTI and not yet arrived on the check date.',
+      id: 'Kuantitas yang sudah dikirim ke PTI dan belum tiba pada tanggal cek.',
+      formula: {
+        en: 'Open shipping notices and dispatched call-offs with an ETA on or after the check date (MR-7 BR-01).',
+        id: 'Pemberitahuan pengiriman terbuka dan call-off yang dikirim dengan ETA pada atau setelah tanggal cek (MR-7 BR-01).'
+      },
+      notToConfuse: {
+        en: 'Supplier available (stock still at the supplier; the two are never added).',
+        id: 'Tersedia di pemasok (stok yang masih di pemasok; keduanya tidak pernah dijumlahkan).'
+      }
+    },
+    simulationBasis: {
+      label: { en: 'Basis', id: 'Dasar' },
+      en: 'Whether the row is worked out from the supplier’s data only, or also from a figure the planner entered for this simulation.',
+      id: 'Apakah baris dihitung dari data pemasok saja, atau juga dari angka yang dimasukkan perencana untuk simulasi ini.'
+    },
+    simulationFlags: {
+      label: { en: 'Flags', id: 'Tanda' },
+      en: 'Inputs missing or adjusted in the row’s calculation, such as a missing ETA or production capped by capacity.',
+      id: 'Input yang tidak ada atau disesuaikan dalam perhitungan baris, misalnya ETA belum ada atau produksi dibatasi kapasitas.'
+    },
+    supplierOwnRop: {
+      label: { en: 'Your reorder point', id: 'Titik pemesanan ulang Anda' },
+      en: 'The reorder point you entered in the stock template. It is shown only: alerts compare your stock with the ROP Supplier the hub calculates.',
+      id: 'Titik pemesanan ulang yang Anda isi di template stok. Hanya ditampilkan: peringatan membandingkan stok Anda dengan ROP Supplier yang dihitung hub.',
+      alsoCalled: [
+        {
+          name: 'ROP PM in Supplier',
+          source: {
+            en: 'Material Planning team’s stock sheet, Q-file B10',
+            id: 'Sheet stok tim Material Planning, Q-file B10'
+          }
+        }
+      ],
+      notToConfuse: {
+        en: 'ROP Supplier (the figure the hub calculates, DRC-D20).',
+        id: 'ROP Supplier (angka yang dihitung hub, DRC-D20).'
+      }
+    },
+    ptiStock: {
+      label: { en: 'PTI stock', id: 'Stok PTI' },
+      en: 'PTI’s own stock on hand of the material, shown when PTI shares it with you.',
+      id: 'Stok on hand PTI sendiri untuk material itu, ditampilkan bila PTI membagikannya kepada Anda.',
+      alsoCalled: [{ name: 'PTI SOH', source: MAT_ALERTS }],
+      labelKeys: ['inv.col.ptiSoh']
+    },
+    ptiRop: {
+      label: { en: 'PTI reorder point', id: 'Titik pemesanan ulang PTI' },
+      en: 'The stock level at which PTI reorders the material. It comes from SAP until PTI’s forecast engine calculates it.',
+      id: 'Tingkat stok saat PTI memesan ulang material itu. Diambil dari SAP sampai mesin prakiraan PTI menghitungnya.',
+      alsoCalled: [{ name: 'PTI ROP', source: MAT_ALERTS }],
+      notToConfuse: NOT_TEAM_ROPS
+    },
+    daysOfSupply: {
+      label: { en: 'Days of supply', id: 'Hari persediaan' },
+      en: 'How many days the stock lasts at the material’s average daily demand.',
+      id: 'Berapa hari stok bertahan pada rata-rata permintaan harian material.',
+      formula: {
+        en: 'Stock ÷ average daily demand, where average daily demand = the forecast for the next 30 days ÷ 30 (CR-01).',
+        id: 'Stok ÷ rata-rata permintaan harian, dengan rata-rata permintaan harian = prakiraan 30 hari ke depan ÷ 30 (CR-01).'
+      }
+    },
+    feedstockLatest: {
+      label: { en: 'Latest confirmation', id: 'Konfirmasi terakhir' },
+      en: 'The feedstock quantity last confirmed for the material, with the date it is confirmed as of.',
+      id: 'Kuantitas feedstock yang terakhir dikonfirmasi untuk material itu, beserta tanggal konfirmasinya.'
+    },
+    feedstockThisWeek: {
+      label: { en: 'This week', id: 'Minggu ini' },
+      en: 'Whether this cycle’s feedstock confirmation is done: Confirmed, Due or Missed. The cycle is daily on a pull agreement, else weekly with the stock update (DRC-8).',
+      id: 'Apakah konfirmasi feedstock siklus ini sudah dilakukan: Dikonfirmasi, Jatuh tempo, atau Terlewat. Siklusnya harian untuk perjanjian pull, selain itu mingguan bersama pembaruan stok (DRC-8).'
+    },
+    tradeNameStatus: {
+      label: { en: 'Status', id: 'Status' },
+      en: 'Where the supplier’s trade name for the material stands: awaiting PTI’s approval, approved, rejected, replaced, or no name yet.',
+      id: 'Posisi nama dagang pemasok untuk material itu: menunggu persetujuan PTI, disetujui, ditolak, digantikan, atau belum ada nama.'
     }
   });

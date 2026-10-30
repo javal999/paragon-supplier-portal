@@ -13,8 +13,8 @@ import { sharePct } from '../display';
 //   · FG demand: the supplier's share of the material's finished-goods demand
 //     (the engine's gross requirement through the BOM);
 //   · LTP − FG demand;
-//   · Consumption, 13-week average [Default A11]: with fewer weeks recorded,
-//     the label says how many it averages.
+//   · Moving average consumption (TL-D14), over 13 weeks [Default A11]: with
+//     fewer weeks recorded, a line under the label says how many it averages.
 // Kept in their own module so the BL-188 rework of the grid keeps them with
 // one line. Every number is the read's (`withLtpFgDemand`); none is computed
 // here. A week the read carries no DRC-18 fields for reads "—".
@@ -108,7 +108,7 @@ export function ltpFgDemandRows(row, rowKey, t) {
       id: 'consumptionAverage',
       label: (
         <span>
-          <TermLabel term="consumptionAverage" values={{ weeks: weeksN }} />
+          <TermLabel term="consumptionAverage" />
           {/* A11's 13 weeks are confirmed [Team, 2026-10-28]: no Provisional label. */}
           {note ? <span className="block text-xs text-text-tertiary">{note}</span> : null}
         </span>

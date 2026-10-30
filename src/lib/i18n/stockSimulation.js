@@ -27,13 +27,7 @@ export const stockSimulationEn = {
 
   'sim.col.material': 'Material',
   'sim.col.supplier': 'Supplier',
-  'sim.col.available': 'Supplier available',
-  'sim.col.calledOff': 'Already called off, not shipped',
-  'sim.col.free': 'Free to call off',
-  'sim.col.ptiInbound': 'PTI inbound',
   'sim.col.lastUpdate': 'Last update',
-  'sim.col.basis': 'Basis',
-  'sim.col.flags': 'Flags',
   'sim.col.actions': 'Actions',
 
   'sim.sample': 'Sample: requirements worked example, not supplier data',
@@ -139,13 +133,7 @@ export const stockSimulationId = {
 
   'sim.col.material': 'Material',
   'sim.col.supplier': 'Pemasok',
-  'sim.col.available': 'Tersedia di pemasok',
-  'sim.col.calledOff': 'Sudah di-call-off, belum dikirim',
-  'sim.col.free': 'Bebas untuk call-off',
-  'sim.col.ptiInbound': 'Masuk ke PTI',
   'sim.col.lastUpdate': 'Pembaruan terakhir',
-  'sim.col.basis': 'Dasar',
-  'sim.col.flags': 'Tanda',
   'sim.col.actions': 'Tindakan',
 
   'sim.sample': 'Contoh: contoh perhitungan dari kebutuhan, bukan data pemasok',
