@@ -1109,15 +1109,6 @@ export const TERM_LABEL_GLOSSARY =
       label: { en: 'Incoming', id: 'Incoming' },
       en: 'What arrives at PTI in the week: released call-offs plus the call-offs the trigger drafts.',
       id: 'Yang tiba di PTI pada minggu itu: call-off yang dirilis ditambah call-off yang disusun pemicu.',
-      alsoCalled: [
-        {
-          name: 'incoming',
-          source: {
-            en: 'Material Planning team sheet "Simulasi SOH w/ incoming", Q-file A7',
-            id: 'Sheet tim Material Planning "Simulasi SOH w/ incoming", Q-file A7'
-          }
-        }
-      ],
       notToConfuse: {
         en: 'Incoming DA (the supplier-confirmed figure).',
         id: 'Incoming DA (angka yang dikonfirmasi pemasok).'
