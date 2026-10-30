@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import { useSearchParams } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
@@ -424,7 +425,7 @@ const SupplierCapacity = () => {
           rows={[
             {
               id: 'ltp',
-              label: t('inv.capacity.row.ltp'),
+              label: <TermLabel term="capacityLtp" />,
               unit: plan.uom,
               combine: 'sum',
               value: (_w, i) => rows[i].ltp,
@@ -435,7 +436,7 @@ const SupplierCapacity = () => {
             },
             {
               id: 'allocated',
-              label: t('inv.capacity.row.allocated'),
+              label: <TermLabel term="allocatedCapacity" />,
               unit: plan.uom,
               action: copyAction('allocated', t('inv.capacity.row.allocated')),
               // CAP-2 — the month sums what is typed, as the BE and pill do.
@@ -456,7 +457,7 @@ const SupplierCapacity = () => {
             },
             {
               id: 'upside',
-              label: t('inv.capacity.row.upside'),
+              label: <TermLabel term="additionalCapacity" />,
               unit: plan.uom,
               action: copyAction('upside', t('inv.capacity.row.upside')),
               combine: 'sum',
@@ -491,7 +492,7 @@ const SupplierCapacity = () => {
             },
             {
               id: 'be',
-              label: t('inv.capacity.row.be'),
+              label: <TermLabel term="capacityBe" />,
               unit: plan.uom,
               combine: 'sum',
               value: (_w, i) => {
@@ -514,7 +515,7 @@ const SupplierCapacity = () => {
             },
             {
               id: 'ltpCheck',
-              label: t('inv.capacity.col.ltpCheck'),
+              label: <TermLabel term="ltpAgainstCapacity" />,
               align: 'start',
               // CAP-2 BR-03 — the month shows its worst week, with the count.
               combine: 'status',
@@ -593,7 +594,7 @@ const SupplierCapacity = () => {
             {
               // INV-D8 — PTI's decision, read only; the row shows once PTI has one.
               id: 'ptiDecision',
-              label: t('capDecision.row'),
+              label: <TermLabel term="ptiCapacityDecision" />,
               align: 'start',
               hidden: accepted.size === 0,
               cell: (week) => {

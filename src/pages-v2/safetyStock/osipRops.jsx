@@ -5,6 +5,7 @@
 /** @import { Uom } from '@services/sdc/types' */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import Button from '@components/ui-v2/Button';
 import Data from '@components/ui-v2/Data';
 import SelectField from '@components/ui-v2/SelectField';
@@ -54,19 +55,28 @@ export const defaultRopSwitches = () => ({
   npdRule: OSIP_ROP_READ.npdRule
 });
 
+/** BL-233 — the glossary term each ROP column is labelled by. */
+const ROP_COLUMN_TERM = /** @type {const} */ ({
+  level: 'osipLevel',
+  ropOrder: 'ropOrder',
+  ropFisik: 'ropFisik',
+  max: 'maxStock',
+  ropSupplier: 'ropSupplier',
+  ropToPrincipal: 'ropToPrincipal'
+});
+
 /**
  * The ROP column titles with their provisional notes.
  * @type {React.FC<{ column: 'level' | 'ropOrder' | 'ropFisik' | 'max' }>}
  */
 export const RopColumnTitle = ({ column }) => {
-  const { t } = useTranslation();
   const questions =
     column === 'level'
       ? [...OSIP_ROP_QUESTIONS.level, ...OSIP_ROP_QUESTIONS.npd]
       : OSIP_ROP_QUESTIONS[column];
   return (
     <>
-      {t(`sst.rop.col.${column}`)}
+      <TermLabel term={ROP_COLUMN_TERM[column]} />
       <ProvisionalNote questions={questions} testId={`sst-rop-prov-${column}`} />
     </>
   );
@@ -332,7 +342,7 @@ export const RopDetail = ({ materialCode, uom, osip, rop, figures, npdRule }) =>
       scope="col"
       className="text-left text-xs font-medium text-text-tertiary uppercase py-1 pr-4"
     >
-      {t(`sst.rop.col.${k}`)}
+      <TermLabel term={ROP_COLUMN_TERM[k]} />
     </th>
   );
   return (
@@ -414,7 +424,7 @@ export const RopDetail = ({ materialCode, uom, osip, rop, figures, npdRule }) =>
                   scope="col"
                   className="text-left text-xs font-medium text-text-tertiary uppercase py-1 pr-4"
                 >
-                  {t(`sst.rop.col.${k}`)}
+                  <TermLabel term={ROP_COLUMN_TERM[k]} />
                 </th>
               ))}
             </tr>

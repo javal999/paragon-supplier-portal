@@ -3,6 +3,7 @@
 /** @import { OsipParam } from '@services/transitions/osipParams' */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import Button from '@components/ui-v2/Button';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
@@ -29,6 +30,13 @@ import { cycleDaysOf, osipParamRefusal } from '@services/transitions/osipParams'
 // form is gated on the MODE (§84): a seat without `osipparam:set` reads the
 // values and is told whose act it is.
 // ─────────────────────────────────────────────────────────────────────────────
+
+/** BL-233 — the glossary term each per-supplier value column is labelled by. */
+const VALUE_COLUMN_TERM = /** @type {const} */ ({
+  f: 'replenishmentCycle',
+  pull: 'pullAgreement',
+  bottleneck: 'bottleneckLeadTime'
+});
 
 const INPUT_CLASS = 'w-24 px-2 py-1 text-sm border border-border-subtle rounded-md bg-white';
 
@@ -169,15 +177,21 @@ export const OsipValues = ({ materialCode, osip }) => {
         <table className="text-sm" data-testid="sst-values-suppliers">
           <thead>
             <tr>
-              {['supplier', 'f', 'pull', 'bottleneck'].map((k) => (
-                <th
-                  key={k}
-                  scope="col"
-                  className="text-left text-xs font-medium text-text-tertiary uppercase py-1 pr-4"
-                >
-                  {t(`sst.values.col.${k}`)}
-                </th>
-              ))}
+              {
+                /** @type {const} */ (['supplier', 'f', 'pull', 'bottleneck']).map((k) => (
+                  <th
+                    key={k}
+                    scope="col"
+                    className="text-left text-xs font-medium text-text-tertiary uppercase py-1 pr-4"
+                  >
+                    {k === 'supplier' ? (
+                      t('sst.values.col.supplier')
+                    ) : (
+                      <TermLabel term={VALUE_COLUMN_TERM[k]} />
+                    )}
+                  </th>
+                ))
+              }
             </tr>
           </thead>
           <tbody>

@@ -855,13 +855,13 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 |---|---|---|---|---|---|---|---|---|---|---|
 | column | Material | Material | sst.col.material | N | n/a | n/a | N |  | Keep |  |
 | column | Tier and target | Tingkat dan target | sst.col.tier | Y | "service target is a fill rate" (FORECAST-ENGINE-REQUIREMENTS.md:338) | N | N |  | Keep |  |
-| column | Safety order (ROP Order) | Pesanan pengaman (ROP Order) | sst.osip.col.safetyOrder | Y | "Safety order (ROP Order)" (DRC-PROPOSAL-2026-10-19.md:154) | N | N |  | Decided (TL-D6) | ID should read "Safety order (ROP Order)"; text from shared OsipColumnTitle |
+| column | Safety order (ROP Order) | Pesanan pengaman (ROP Order) | sst.osip.col.safetyOrder | Y | "Safety order (ROP Order)" (DRC-PROPOSAL-2026-10-19.md:154) | N | N |  | Decided (TL-D6) | ID now "Safety order (ROP Order)" (BL-233 wave 3) |
 | column | ROP Fisik safety | Pengaman ROP Fisik | sst.osip.col.fisikSafety | Y | "Safety ROP Fisik" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:84) | Y | N |  | Change [Proposed] | Team writes "Safety ROP Fisik"; ID translates "safety"; hub doc says "ROP Fisik safety" |
 | column | Demand CV | CV permintaan | sst.osip.col.cv | Y | "CV" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:145) | N | N |  | Keep |  |
 | column | OSIP level | Level OSIP | sst.rop.col.level | Y | "Level OSIP" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:143) | N | Level = forecast hierarchy level, /buyer/demand-forecast |  | Keep | Text from shared RopColumnTitle (osipRops.jsx) |
 | column | ROP Order | ROP Order | sst.rop.col.ropOrder | Y | "ROP Order" (DRC-PROPOSAL-2026-10-19.md:45) | N | N |  | Keep | Feeds ZPE007 (questions B9) |
 | column | ROP Fisik | ROP Fisik | sst.rop.col.ropFisik | Y | "ROP Fisik" (DRC-PROPOSAL-2026-10-19.md:46) | N | N |  | Keep | Triggers call-offs |
-| column | Max | Maks | sst.rop.col.max | Y | "Max Stock" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:48); "Max" (DECISIONS-FOR-REVIEW-2026-10-19.md:20) | Y | N |  | Ask Levi | Team writes "Max Stock" in ID text; ID translates to "Maks" |
+| column | Max | Maks | sst.rop.col.max | Y | "Max Stock" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:48); "Max" (DECISIONS-FOR-REVIEW-2026-10-19.md:20) | Y | N |  | Decided (TL-D12) | Now "Max Stock" in EN and ID (BL-233 wave 3) |
 | column | Safety stock | Stok pengaman | sst.col.safetyStock | Y | "Safety stock" (FORECAST-ENGINE-REQUIREMENTS.md:313) | N | Safety order (ROP Order), same table |  | Keep | Engine challenger; tooltip should say "Not safety order" |
 | column | SAP safety stock | Stok pengaman SAP | sst.col.sap | Y | "SAP's safety stock" (FORECAST-ENGINE-REQUIREMENTS.md:346) | N | N |  | Keep |  |
 | column | Freed | Dibebaskan | sst.col.freed | Y | "frees" (FORECAST-ENGINE-REQUIREMENTS.md:334) | N | N |  | Keep |  |
@@ -886,8 +886,8 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Supplier | Pemasok | sst.rop.detail.supplier | N | n/a | n/a | N |  | Keep |  |
 | column | ROP Order | ROP Order | sst.rop.col.ropOrder | Y | "ROP Order" (DRC-PROPOSAL-2026-10-19.md:45) | N | N |  | Keep |  |
 | column | ROP Fisik | ROP Fisik | sst.rop.col.ropFisik | Y | "ROP Fisik" (DRC-PROPOSAL-2026-10-19.md:46) | N | N |  | Keep |  |
-| column | Max | Maks | sst.rop.col.max | Y | "Max Stock" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:48) | Y | N |  | Ask Levi | Same question as the main table |
-| column | ROP Supplier | ROP Pemasok | sst.rop.col.ropSupplier | Y | "ROP Supplier" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:138) | N | Your reorder point (supplier's own figure), /supplier/inventory |  | Decided (TL-D6) | ID should read "ROP Supplier" |
+| column | Max | Maks | sst.rop.col.max | Y | "Max Stock" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:48) | Y | N |  | Decided (TL-D12) | Now "Max Stock" in EN and ID (BL-233 wave 3) |
+| column | ROP Supplier | ROP Pemasok | sst.rop.col.ropSupplier | Y | "ROP Supplier" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:138) | N | Your reorder point (supplier's own figure), /supplier/inventory |  | Decided (TL-D6) | ID now "ROP Supplier" (BL-233 wave 3) |
 | column | ROP to principal | ROP ke prinsipal | sst.rop.col.ropToPrincipal | Y | "ROP order to principal" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:137) | Y | N |  | Change [Proposed] | Team sheet column reads "ROP order to principal"; ID translates "to principal" |
 
 ## Page: /buyer/safety-stock — Values per supplier (material detail) — `pages-v2/safetyStock/osipValues.jsx`
@@ -897,7 +897,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Supplier | Pemasok | sst.values.col.supplier | N | n/a | n/a | N |  | Keep |  |
 | column | Replenishment cycle f | Siklus pengisian ulang f | sst.values.col.f | Y | "Cycle replenishment (f)" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:115); "Replenishment cycle f" (SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md:119) | Y | N | call-off lead time (SC-HUB-MATERIAL-TEAM-ANSWERS-2026-10.md:55) | Change [Proposed] | Team word order is "cycle replenishment"; ID translates it |
 | column | Pull agreement | Perjanjian tarik | sst.values.col.pull | Y | "pull agreement" (SC-HUB-MATERIAL-TEAM-ANSWERS-2026-10.md:79) | N | N |  | Keep | Team answer is in English; no ID use found |
-| column | Bottleneck production lead time (ROP Supplier) | Waktu tunggu produksi bottleneck (ROP Pemasok) | sst.values.col.bottleneck | Y | "bottleneck production lead time" (SC-HUB-MATERIAL-TEAM-ANSWERS-2026-10.md:99) | N | N |  | Decided (TL-D6) | ID should keep "(ROP Supplier)" |
+| column | Bottleneck production lead time (ROP Supplier) | Waktu tunggu produksi bottleneck (ROP Pemasok) | sst.values.col.bottleneck | Y | "bottleneck production lead time" (SC-HUB-MATERIAL-TEAM-ANSWERS-2026-10.md:99) | N | N |  | Decided (TL-D6) | ID now ends "(ROP Supplier)" (BL-233 wave 3) |
 
 ## Page: /buyer/scorecard — KPI cards — `pages-v2/BuyerScorecard.jsx`
 
@@ -958,8 +958,8 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Month | Bulan | buffers.protection.col.month | N | n/a | n/a | N |  | Keep |  |
 | column | LTP | LTP | buffers.protection.col.ltp | Y | "LTP" (DRC-PROPOSAL-2026-10-19.md:133) | N | N |  | Keep |  |
 | column | Baseline | Baseline | buffers.protection.col.baseline | Y | "baseline" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:169) | N | N |  | Keep | Average LTP of the 3 previous months |
-| column | Uplift | Kenaikan | buffers.protection.col.uplift | Y | "Uplift" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:162) | N | N |  | Ask Levi | Team writes it in English in ID text, but it is not on the TL-D6 list. Keep it English? |
-| column | Protection buffer | Buffer proteksi | buffers.protection.col.buffer | Y | "protection buffer" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:160) | N | N | risk protection (XLS Guidance, PERTANYAAN-TIM-MATERIAL-2026-10-16.md:160) | Ask Levi | Team writes it in English in ID text, but it is not on the TL-D6 list. Keep it English? |
+| column | Uplift | Kenaikan | buffers.protection.col.uplift | Y | "Uplift" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:162) | N | N |  | Decided (TL-D11) | ID now "Uplift" (BL-233 wave 3) |
+| column | Protection buffer | Buffer proteksi | buffers.protection.col.buffer | Y | "protection buffer" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:160) | N | N | risk protection (XLS Guidance, PERTANYAAN-TIM-MATERIAL-2026-10-16.md:160) | Decided (TL-D11) | ID now "Protection buffer" (BL-233 wave 3) |
 
 ## Page: /buyer/capacity — Strategic buffer — `pages-v2/inventory/StrategicBufferSection.jsx`
 
@@ -970,7 +970,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Month | Bulan | buffers.strategic.col.month | N | n/a | n/a | N |  | Keep |  |
 | column | LTP | LTP | buffers.strategic.col.ltp | Y | "LTP" (DRC-PROPOSAL-2026-10-19.md:133) | N | N |  | Keep |  |
 | column | Baseline | Baseline | buffers.strategic.col.baseline | Y | "baseline = rata-rata 3 bulan sebelum festive" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:169) | N | N |  | Keep |  |
-| column | Strategic buffer | Buffer strategis | buffers.strategic.col.buffer | Y | "Strategic buffer" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:168) | N | N |  | Ask Levi | Team writes it in English in ID text, but it is not on the TL-D6 list. Keep it English? |
+| column | Strategic buffer | Buffer strategis | buffers.strategic.col.buffer | Y | "Strategic buffer" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:168) | N | N |  | Decided (TL-D11) | ID now "Strategic buffer" (BL-233 wave 3) |
 
 ## Page: /buyer/materials/trade-names — Trade names — `pages-v2/materials/BuyerTradeNames.jsx`
 
@@ -1928,8 +1928,8 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Called off | Di-call-off | fsr.col.calledOff | Y | "Called off" (SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md:338, DRC-B13) | N | N |  | Keep |  |
 | column | ASN requested | Diminta di ASN | fsr.col.asnRequested | Y | "ASN requested" (SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md:338, DRC-B13) | N | N |  | Keep |  |
 | column | Not yet called off | Belum di-call-off | fsr.col.notYetCalledOff | Y | "not yet called off" (SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md:337, DRC-B12) | N | N |  | Keep |  |
-| column | Called off, not yet shipped | Di-call-off, belum dikirim | fsr.col.notYetShipped | Y | none found (DRC-15a BR-01 names only "the remainder") | n/a | N |  | Ask Levi | No source names this figure; add to the team question list, like TL-D9? |
-| column | Max stock | Stok maksimum | fsr.col.maxStock | Y | "Max Stock Supplier" (osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md:194, :222) | Y | Max Stock PTI (ROP + cycle stock), team sheet Guidance (osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md:126) / Max on ROP pages (DRC-10) |  | Change [Proposed] | Proposed "Max Stock Supplier" per BR-01/BR-02; ID translates team term, see Ask Levi. |
+| column | Called off, not yet shipped | Di-call-off, belum dikirim | fsr.col.notYetShipped | Y | none found (DRC-15a BR-01 names only "the remainder") | n/a | N |  | Decided (TL-D13) | Kept; on the team's next question list |
+| column | Max stock | Stok maksimum | fsr.col.maxStock | Y | "Max Stock Supplier" (osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md:194, :222) | Y | Max Stock PTI (ROP + cycle stock), team sheet Guidance (osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md:126) / Max on ROP pages (DRC-10) |  | Decided (TL-D12) | Now "Max Stock Supplier" in EN and ID (BL-233 wave 3) |
 
 ## Page: /buyer/process-flows — Transitions — `pages-v2/ProcessFlows.jsx`
 

@@ -10,7 +10,6 @@
 
 /** @type {Record<string, string>} */
 export const capacityDecisionEn = {
-  'capDecision.row': 'PTI’s decision',
   'capDecision.header.label': 'PTI’s decision:',
   'capDecision.header.pending': 'pending',
   'capDecision.header.accepted': 'accepted',
@@ -43,7 +42,6 @@ export const capacityDecisionEn = {
 
 /** @type {Record<string, string>} */
 export const capacityDecisionId = {
-  'capDecision.row': 'Keputusan PTI',
   'capDecision.header.label': 'Keputusan PTI:',
   'capDecision.header.pending': 'menunggu',
   'capDecision.header.accepted': 'diterima',

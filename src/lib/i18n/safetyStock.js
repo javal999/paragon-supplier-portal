@@ -18,23 +18,13 @@ export const safetyStockEn = {
   'sst.targets':
     'Targets in force: high-volume {{high}}, other {{standard}}, slow movers {{slow}}. The administrator sets them.',
 
-  'sst.kpi.freed': 'Warehouse space freed against SAP',
   'sst.kpi.freed.sub': '{{sap}} pallets at SAP’s safety stock, {{engine}} at the engine’s',
-  'sst.kpi.tiers': 'Materials per tier',
   'sst.kpi.tiers.sub': 'High {{high}} · standard {{standard}} · slow {{slow}}',
-  'sst.kpi.fallback': 'On SAP’s value',
   'sst.kpi.fallback.sub': 'Fewer than {{min}} past plans to learn from',
-  'sst.kpi.groupDefault': 'Safety lead time from the group default',
   'sst.kpi.groupDefault.sub': 'Supplier with fewer than {{min}} deliveries in the material group',
   'sst.pallets': '{{value}} pallets',
 
   'sst.col.material': 'Material',
-  'sst.col.tier': 'Tier and target',
-  'sst.col.safetyStock': 'Safety stock',
-  'sst.col.sap': 'SAP safety stock',
-  'sst.col.freed': 'Freed',
-  'sst.col.slt': 'Safety lead time',
-  'sst.col.rop': 'Reorder point',
   'sst.col.history': 'History',
   'sst.col.change': 'Since last run',
   'sst.change.none': 'No change',
@@ -84,7 +74,6 @@ export const safetyStockEn = {
   'sst.err.origin': 'Plan made',
   'sst.err.planned': 'Planned',
   'sst.err.actual': 'Needed',
-  'sst.err.error': 'Shortfall',
 
   'sst.def.title': 'How it is calculated',
   'sst.def.errors':
@@ -103,9 +92,6 @@ export const safetyStockEn = {
   // BL-193 (DRC-7) / BL-197 (DRC-11) — the OSIP default rule beside the
   // engine's fill-rate challenger. "ROP Order", "ROP Fisik", "MPQ", "MOQ",
   // "LTP", "koli", "CV" and "FG" are the planners' own terms, kept in both languages.
-  'sst.osip.col.safetyOrder': 'Safety order (ROP Order)',
-  'sst.osip.col.fisikSafety': 'ROP Fisik safety',
-  'sst.osip.col.cv': 'Demand CV',
   'sst.osip.provisional': 'Provisional: rule awaiting Material Planning ({{questions}})',
   'sst.osip.challenger': 'Challenger: engine fill rate',
   'sst.osip.noCapacity': 'Production capacity not available: left out of the min',
@@ -156,12 +142,6 @@ export const safetyStockEn = {
   'sst.osip.def.challenger':
     'The OSIP figures are the default rule. The engine’s fill-rate safety stock stays beside them as the challenger.',
   // BL-196 (DRC-10, DRC-D11) / BL-198 (DRC-12a)
-  'sst.rop.col.level': 'OSIP level',
-  'sst.rop.col.ropOrder': 'ROP Order',
-  'sst.rop.col.ropFisik': 'ROP Fisik',
-  'sst.rop.col.max': 'Max',
-  'sst.rop.col.ropSupplier': 'ROP Supplier',
-  'sst.rop.col.ropToPrincipal': 'ROP to principal',
   'sst.rop.challenger': 'Challenger: engine reorder point',
   'sst.rop.level': 'Level {{level}}',
   'sst.rop.levelSource.default': 'Default level (C2)',
@@ -229,9 +209,6 @@ export const safetyStockEn = {
   'sst.values.owners':
     'Z should come from SAP’s service-level master data by material criticality once it is connected. g is owned by Logistics Operations for ROP Fisik and Supply Sustainability for ROP Order; the hub applies it in ROP Fisik.',
   'sst.values.col.supplier': 'Supplier',
-  'sst.values.col.f': 'Replenishment cycle f',
-  'sst.values.col.pull': 'Pull agreement',
-  'sst.values.col.bottleneck': 'Bottleneck production lead time (ROP Supplier)',
   'sst.values.fDays': 'Days',
   'sst.values.days': 'Days, queueing included',
   'sst.values.notSet': 'Not set',
@@ -303,23 +280,13 @@ export const safetyStockId = {
   'sst.targets':
     'Target berlaku: volume tinggi {{high}}, lainnya {{standard}}, bergerak lambat {{slow}}. Administrator yang menetapkannya.',
 
-  'sst.kpi.freed': 'Ruang gudang yang dibebaskan dibanding SAP',
   'sst.kpi.freed.sub': '{{sap}} palet pada stok pengaman SAP, {{engine}} pada stok pengaman mesin',
-  'sst.kpi.tiers': 'Material per tingkat',
   'sst.kpi.tiers.sub': 'Tinggi {{high}} · standar {{standard}} · lambat {{slow}}',
-  'sst.kpi.fallback': 'Memakai nilai SAP',
   'sst.kpi.fallback.sub': 'Kurang dari {{min}} rencana lampau untuk dipelajari',
-  'sst.kpi.groupDefault': 'Waktu tunggu pengaman dari nilai bawaan grup',
   'sst.kpi.groupDefault.sub': 'Pemasok dengan kurang dari {{min}} pengiriman dalam grup material',
   'sst.pallets': '{{value}} palet',
 
   'sst.col.material': 'Material',
-  'sst.col.tier': 'Tingkat dan target',
-  'sst.col.safetyStock': 'Stok pengaman',
-  'sst.col.sap': 'Stok pengaman SAP',
-  'sst.col.freed': 'Dibebaskan',
-  'sst.col.slt': 'Waktu tunggu pengaman',
-  'sst.col.rop': 'Titik pesan ulang',
   'sst.col.history': 'Riwayat',
   'sst.col.change': 'Sejak perhitungan terakhir',
   'sst.change.none': 'Tidak berubah',
@@ -370,7 +337,6 @@ export const safetyStockId = {
   'sst.err.origin': 'Rencana dibuat',
   'sst.err.planned': 'Rencana',
   'sst.err.actual': 'Kebutuhan',
-  'sst.err.error': 'Kekurangan',
 
   'sst.def.title': 'Cara menghitungnya',
   'sst.def.errors':
@@ -388,9 +354,6 @@ export const safetyStockId = {
 
   // BL-193 (DRC-7) / BL-197 (DRC-11). Istilah planner (ROP Order, ROP Fisik,
   // MPQ, MOQ, LTP, koli, CV, FG) dipertahankan.
-  'sst.osip.col.safetyOrder': 'Pesanan pengaman (ROP Order)',
-  'sst.osip.col.fisikSafety': 'Pengaman ROP Fisik',
-  'sst.osip.col.cv': 'CV permintaan',
   'sst.osip.provisional': 'Sementara: aturan menunggu Material Planning ({{questions}})',
   'sst.osip.challenger': 'Pembanding: tingkat pemenuhan mesin',
   'sst.osip.noCapacity': 'Kapasitas produksi tidak tersedia: tidak ikut dalam nilai terendah',
@@ -438,12 +401,6 @@ export const safetyStockId = {
   'sst.osip.def.challenger':
     'Angka OSIP adalah aturan bawaan. Stok pengaman tingkat pemenuhan dari mesin tetap di sampingnya sebagai pembanding.',
   // BL-196 (DRC-10, DRC-D11) / BL-198 (DRC-12a)
-  'sst.rop.col.level': 'Level OSIP',
-  'sst.rop.col.ropOrder': 'ROP Order',
-  'sst.rop.col.ropFisik': 'ROP Fisik',
-  'sst.rop.col.max': 'Maks',
-  'sst.rop.col.ropSupplier': 'ROP Pemasok',
-  'sst.rop.col.ropToPrincipal': 'ROP ke prinsipal',
   'sst.rop.challenger': 'Pembanding: titik pemesanan ulang mesin',
   'sst.rop.level': 'Level {{level}}',
   'sst.rop.levelSource.default': 'Level bawaan (C2)',
@@ -514,9 +471,6 @@ export const safetyStockId = {
   'sst.values.owners':
     'Z seharusnya berasal dari data induk tingkat layanan SAP menurut kekritisan material setelah terhubung. g dimiliki Logistics Operations untuk ROP Fisik dan Supply Sustainability untuk ROP Order; hub menerapkannya di ROP Fisik.',
   'sst.values.col.supplier': 'Pemasok',
-  'sst.values.col.f': 'Siklus pengisian ulang f',
-  'sst.values.col.pull': 'Perjanjian tarik',
-  'sst.values.col.bottleneck': 'Waktu tunggu produksi bottleneck (ROP Pemasok)',
   'sst.values.fDays': 'Hari',
   'sst.values.days': 'Hari, termasuk antrean',
   'sst.values.notSet': 'Belum diatur',

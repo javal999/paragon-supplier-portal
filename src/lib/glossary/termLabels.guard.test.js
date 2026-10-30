@@ -71,7 +71,7 @@ const drifted = (e, en, id) =>
 const words = (text) => text.trim().split(/\s+/).length;
 
 describe('term-label glossary (BL-233)', () => {
-  it('holds the wave-1 and wave-2 population, named', () => {
+  it('holds the wave 1 to 3 population, named', () => {
     // A named member, not a count: the guards below run over these entries.
     expect(Object.keys(TERM_LABEL_GLOSSARY)).toEqual(
       expect.arrayContaining([
@@ -79,7 +79,9 @@ describe('term-label glossary (BL-233)', () => {
         'carryOver',
         'alertDemandAnticipationUnabsorbed',
         'freeToCallOff',
-        'tradeNameStatus'
+        'tradeNameStatus',
+        'ropFisik',
+        'maxStockSupplier'
       ])
     );
   });
@@ -138,6 +140,29 @@ describe('term-label glossary (BL-233)', () => {
     expect(e.notToConfuse?.en).toMatch(/ROP Order \(LTP × lead time \+ safety order, DRC-10\)/);
     const names = ENTRIES.flatMap(([, x]) => (x.alsoCalled ?? []).map((a) => a.name));
     expect(names).not.toContain('ROP Order');
+  });
+
+  it('TL-D12: Max reads "Max Stock" and the supplier’s "Max Stock Supplier", in EN and ID', () => {
+    expect(TERM_LABEL_GLOSSARY.maxStock.label).toEqual({ en: 'Max Stock', id: 'Max Stock' });
+    expect(TERM_LABEL_GLOSSARY.maxStockSupplier.label).toEqual({
+      en: 'Max Stock Supplier',
+      id: 'Max Stock Supplier'
+    });
+  });
+
+  it('TL-D6 / TL-D11: the team’s English words stay English in ID', () => {
+    for (const term of /** @type {const} */ ([
+      'ropSupplier',
+      'uplift',
+      'protectionBuffer',
+      'strategicBuffer',
+      'replenishmentCycle'
+    ])) {
+      const { label } = TERM_LABEL_GLOSSARY[term];
+      expect(label.id, term).toBe(label.en);
+    }
+    expect(TERM_LABEL_GLOSSARY.safetyOrderRopOrder.label.id).toBe('Safety order (ROP Order)');
+    expect(TERM_LABEL_GLOSSARY.bottleneckLeadTime.label.id).toMatch(/\(ROP Supplier\)$/);
   });
 
   it('TL-D9 / TL-D13: the labels waiting on the team keep their wording', () => {

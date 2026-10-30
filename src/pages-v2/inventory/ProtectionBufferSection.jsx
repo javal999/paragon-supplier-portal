@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { Fragment, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import Data from '@components/ui-v2/Data';
 import { useForecastCommitments, useProtectionBufferInputs } from '@services/query/hooks';
 import {
@@ -120,12 +121,22 @@ const ProtectionBufferSection = ({ supplierId, materialCode, rules = PROTECTION_
               <tr className="text-label text-text-tertiary uppercase bg-bg-hover">
                 <th className="text-left px-4 py-2">{t('buffers.protection.col.supplier')}</th>
                 <th className="text-left px-4 py-2">{t('buffers.protection.col.material')}</th>
-                <th className="text-left px-4 py-2">{t('buffers.protection.col.level')}</th>
+                <th className="text-left px-4 py-2">
+                  <TermLabel term="osipLevel" />
+                </th>
                 <th className="text-left px-4 py-2">{t('buffers.protection.col.month')}</th>
-                <th className="text-right px-4 py-2">{t('buffers.protection.col.ltp')}</th>
-                <th className="text-right px-4 py-2">{t('buffers.protection.col.baseline')}</th>
-                <th className="text-right px-4 py-2">{t('buffers.protection.col.uplift')}</th>
-                <th className="text-right px-4 py-2">{t('buffers.protection.col.buffer')}</th>
+                <th className="text-right px-4 py-2">
+                  <TermLabel term="monthLtp" />
+                </th>
+                <th className="text-right px-4 py-2">
+                  <TermLabel term="protectionBaseline" />
+                </th>
+                <th className="text-right px-4 py-2">
+                  <TermLabel term="uplift" />
+                </th>
+                <th className="text-right px-4 py-2">
+                  <TermLabel term="protectionBuffer" />
+                </th>
               </tr>
             </thead>
             <tbody>
