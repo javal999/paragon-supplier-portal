@@ -545,7 +545,7 @@ describe('H2 — WIRED, and the prose parse is GONE', () => {
     // nothing — the call is `utils.js`, above.
     expect(typeOnly).toEqual([
       '/src/components/v2-features/GRInspectionWizard/components/QualityStep.jsx',
-      '/src/lib/enforcement.js',
+      '/src/lib/enforcement/governed.js',
       '/src/lib/glossary/refusals.glossary.js'
     ]);
 

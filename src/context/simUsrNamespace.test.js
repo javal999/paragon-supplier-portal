@@ -141,7 +141,9 @@ describe('⚠️ THE PIN — no fixture person reaches a RESOLVED attribution', 
     // forged attribution cannot exist because no attribution can. The refusal
     // half of §6.2 is NOT built, and it becomes unfixable only at the FIRST
     // RESOLVED record. This test is the tripwire on that claim.
-    const shipped = sourceFiles(SRC).filter((f) => !isTestFile(f) && !f.endsWith('enforcement.js'));
+    const shipped = sourceFiles(SRC).filter(
+      (f) => !isTestFile(f) && !f.endsWith(path.join('enforcement', 'attribution.js'))
+    );
     const constructors = shipped
       .filter((f) => constructsResolvedActor(fs.readFileSync(f, 'utf8')))
       .map((f) => path.relative(SRC, f));
