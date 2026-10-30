@@ -89,7 +89,7 @@ export const MATERIAL_SPACES = Object.freeze([
     kind: /** @type {const} */ ('identity'),
     // `.[jt]s`: these lanes name fixture modules by path, and a module converted
     // to JavaScript must stay in its lane (frontend-standard plan, Phase 4).
-    modules: /^\/src\/data\/mock[^/]*\.[jt]s$/,
+    modules: /^\/src\/data\/mock(?:[^/]*|PurchaseOrders\/[^/]+)\.[jt]s$/,
     declaredBy: 'C8-MASTER-DECL',
     note: '100% master-resolvable since 2B-3. Booked for retirement by MOCK-RETIREMENT-01.'
   }),
