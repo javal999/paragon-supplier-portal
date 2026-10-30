@@ -54,7 +54,14 @@ const rawDates = (file, key) =>
     (m) => m[1]
   );
 
-const RAW_ORDER_DATES = rawDates('src/data/mockPurchaseOrders.js', 'orderDate');
+// BL-229: the raw literals moved into four group files, read in the order
+// `mockPurchaseOrders/retimed.js` concatenates them.
+const RAW_ORDER_DATES = [
+  'src/data/mockPurchaseOrders/baseOrders1.js',
+  'src/data/mockPurchaseOrders/baseOrders2.js',
+  'src/data/mockPurchaseOrders/sup007Walkthrough.js',
+  'src/data/mockPurchaseOrders/singleCaseOrders.js'
+].flatMap((f) => rawDates(f, 'orderDate'));
 const RAW_ETAS = rawDates('src/services/data/mock/fixtures/supplierShipments.js', 'eta');
 
 const A = FAMILY_ANCHORS.purchaseOrder.anchor;
