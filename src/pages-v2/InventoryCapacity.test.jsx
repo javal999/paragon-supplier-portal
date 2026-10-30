@@ -952,7 +952,8 @@ describe('Alert close reasons (MR-9 BR-04 to BR-06)', () => {
     const counts = screen.getByTestId('alert-reason-counts');
     expect(
       within(counts).getByTestId('alert-reason-count-ptiBelowRop-risk-accepted')
-    ).toHaveTextContent('PTI stock is below the PTI reorder pointRisk accepted1');
+      // BL-233: the rule name carries its (i), whose text sits between the name and the reason.
+    ).toHaveTextContent(/^PTI stock is below the PTI reorder point.*Risk accepted1$/);
     expect(
       within(counts).getByTestId('alert-reason-count-staleData-supplier-updated')
     ).toHaveTextContent('Supplier updated its data1');
