@@ -79,7 +79,7 @@ const CODE = /\b(?:DRC|CR|MR|CAP|INV|ENG|E14|BR|REQ|TL)-[A-Z]?\d+[a-z]?\b/;
 /**
  * The lines of an entry, in both locales, that show a requirement code.
  * @param {TermEntry} e
- * @returns {string[]}
+ * @returns {(string | undefined)[]}
  */
 const codedLines = (e) =>
   [
@@ -92,7 +92,7 @@ const codedLines = (e) =>
     e.notToConfuse?.en,
     e.notToConfuse?.id,
     ...(e.alsoCalled ?? []).flatMap((a) => [a.name, a.source.en, a.source.id])
-  ].filter((line) => line !== undefined && CODE.test(line));
+  ].filter((line) => typeof line === 'string' && CODE.test(line));
 
 describe('term-label glossary (BL-233)', () => {
   it('holds the wave 1 to 3 population, named', () => {
