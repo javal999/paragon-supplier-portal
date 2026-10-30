@@ -10,8 +10,8 @@ import { TERM_LABEL_GLOSSARY } from '@lib/glossary';
 //
 // The label and the tip both come from the term's glossary entry
 // (`lib/glossary/termLabels.glossary.js`), in the active language, so the page
-// holds no copy of either (BR-08). `values` fills a label's `{{name}}` slots,
-// e.g. the week count of "Consumption, {{weeks}}-week average". The tip keeps
+// holds no copy of either (BR-08). `values` fills a label's `{{name}}` slots;
+// no wave-1 label has one since TL-D14 renamed the consumption average. The tip keeps
 // TermTip's accessibility (BR-09).
 // ─────────────────────────────────────────────────────────────────────────────
 

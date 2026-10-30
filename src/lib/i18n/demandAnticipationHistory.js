@@ -75,13 +75,13 @@ export const demandAnticipationHistoryEn = {
 /** @type {Record<string, string>} */
 export const demandAnticipationHistoryId = {
   'daHist.subtitle':
-    'Setiap publikasi antisipasi permintaan, dengan siapa yang memublikasikan, angka tiap minggu beserta komponennya, dan versi aturan yang dipakai menghitungnya. Hanya baca: Material Planning, Procurement, dan Finance mengauditnya di sini.',
+    'Setiap publikasi demand anticipation, dengan siapa yang memublikasikan, angka tiap minggu beserta komponennya, dan versi aturan yang dipakai menghitungnya. Hanya baca: Material Planning, Procurement, dan Finance mengauditnya di sini.',
   'daHist.asOf': 'Per',
-  'daHist.back': 'Kembali ke Antisipasi permintaan',
+  'daHist.back': 'Kembali ke Demand anticipation',
   'daHist.openHistory': 'Riwayat publikasi',
   'daHist.supplier.title': 'Tidak tersedia untuk pemasok',
   'daHist.supplier.body':
-    'Riwayat antisipasi permintaan adalah rencana PTI sendiri; pemasok tidak melihatnya.',
+    'Riwayat demand anticipation adalah rencana PTI sendiri; pemasok tidak melihatnya.',
   'daHist.filter.supplier': 'Pemasok',
   'daHist.filter.material': 'Material',
   'daHist.filter.from': 'Minggu perencanaan dari',
@@ -110,7 +110,7 @@ export const demandAnticipationHistoryId = {
   'daHist.adjust.row':
     '{{number}}: {{qty}} dipindahkan {{from}} → {{to}}; diusulkan {{proposedAt}}, disetujui pemasok {{approvedAt}}',
   'daHist.empty.title': 'Belum ada publikasi',
-  'daHist.empty.body': 'Belum ada antisipasi permintaan yang dipublikasikan.',
+  'daHist.empty.body': 'Belum ada demand anticipation yang dipublikasikan.',
   'daHist.empty.filtered': 'Tidak ada publikasi yang cocok dengan filter ini.',
   'daHist.csv.publicationId': 'Publikasi',
   'daHist.csv.publishedAt': 'Waktu publikasi',

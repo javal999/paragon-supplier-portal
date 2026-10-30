@@ -123,8 +123,8 @@ describe('FUX phase 2 B1 — This week and the Procurement path to the stock che
     const paths = navFor('buyer', 'ALL').flatMap((s) => s.items.map((i) => i.path));
     expect(paths).not.toContain('/buyer/what-if');
     expect(hubEn['hub.nav.pti.thisWeek']).toBe('This week');
-    expect(hubEn['hub.nav.pti.demandAnticipation']).toBe('Demand anticipation');
-    expect(hubId['hub.nav.pti.demandAnticipation']).toBe('Antisipasi permintaan');
+    expect(hubEn['hub.nav.pti.demandAnticipation']).toBe('Demand anticipation (DA)');
+    expect(hubId['hub.nav.pti.demandAnticipation']).toBe('Demand anticipation (DA)');
     expect(hubId['hub.nav.pti.thisWeek']).toBe('Minggu ini');
   });
 
@@ -287,8 +287,8 @@ describe('DRC-3 (BL-189) — the demand anticipation history: planners, Procurem
   it('names its section from the viewer’s own menu, in EN and ID', () => {
     expect(sectionForPath(PATH, 'MP')?.id).toBe('review');
     expect(sectionForPath(PATH, 'FIN')?.id).toBe('audit');
-    expect(hubEn['hub.nav.pti.demandAnticipationHistory']).toBe('Demand anticipation history');
-    expect(hubId['hub.nav.pti.demandAnticipationHistory']).toBe('Riwayat antisipasi permintaan');
+    expect(hubEn['hub.nav.pti.demandAnticipationHistory']).toBe('Demand anticipation (DA) history');
+    expect(hubId['hub.nav.pti.demandAnticipationHistory']).toBe('Riwayat demand anticipation (DA)');
     expect(hubEn['hub.nav.section.audit']).toBe('Audit');
   });
 });

@@ -71,26 +71,19 @@ export const TERM_LABEL_GLOSSARY =
       id: 'Seberapa jauh LTP minggu itu di atas (positif) atau di bawah (negatif) FG demand. Hanya baca, untuk membandingkan kedua rencana.',
       formula: { en: 'LTP − FG demand.', id: 'LTP − FG demand.' }
     },
+    // TL-D14 (owner, 2026-10-30): the team's name, "moving average consumption"
+    // (Q-file A11), replaces "Consumption, 13-week average"; English in ID too (TL-D11).
     consumptionAverage: {
       label: {
-        en: 'Consumption, {{weeks}}-week average',
-        id: 'Konsumsi, rata-rata {{weeks}} minggu'
+        en: 'Moving average consumption',
+        id: 'Moving average consumption'
       },
       en: 'The material’s average weekly consumption over the recent weeks that have consumption recorded, times this supplier’s share.',
       id: 'Rata-rata konsumsi mingguan material selama minggu-minggu terakhir yang konsumsinya tercatat, dikali porsi pemasok ini.',
       formula: {
         en: 'Recorded consumption of the last 13 weeks ÷ the weeks with a record, × the supplier’s share.',
         id: 'Konsumsi tercatat 13 minggu terakhir ÷ jumlah minggu yang tercatat, × porsi pemasok.'
-      },
-      alsoCalled: [
-        {
-          name: 'moving average consumption',
-          source: {
-            en: 'Material Planning team, Q-file A11',
-            id: 'Tim Material Planning, Q-file A11'
-          }
-        }
-      ]
+      }
     },
     safetyOrder: {
       label: { en: 'Safety order', id: 'Safety order' },
@@ -100,9 +93,11 @@ export const TERM_LABEL_GLOSSARY =
         en: 'Z × √lead time × standard deviation of the LTP over the next 13 weeks, rounded up to a multiple of the MPQ. Z is 1.65 unless set per material.',
         id: 'Z × √lead time × simpangan baku LTP 13 minggu ke depan, dibulatkan ke atas ke kelipatan MPQ. Z bernilai 1,65 kecuali diatur per material.'
       },
+      // TL-D15 (owner, 2026-10-30): ROP Order is not another name for the safety
+      // order; it contains it (DRC-10: LTP × lead time + safety order).
       notToConfuse: {
-        en: 'Safety stock (stock PTI keeps on hand, on the forecast pages).',
-        id: 'Safety stock (stok yang disimpan PTI, di halaman prakiraan).'
+        en: 'Safety stock (stock PTI keeps on hand, on the forecast pages). ROP Order (LTP × lead time + safety order, DRC-10).',
+        id: 'Safety stock (stok yang disimpan PTI, di halaman prakiraan). ROP Order (LTP × lead time + safety order, DRC-10).'
       },
       labelKeys: ['daHist.csv.safety']
     },

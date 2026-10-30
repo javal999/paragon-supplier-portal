@@ -49,7 +49,9 @@ describe('BL-204 · flag on — the supplier page (DRC-1)', () => {
     renderWithProviders(<SupplierDemandAnticipation />, { identity: SUPPLIER, route: ROUTE });
     const card = await screen.findByTestId(`supda-card-${KEY}`);
     expect(
-      within(screen.getByRole('navigation')).getByRole('button', { name: 'Demand anticipation' })
+      within(screen.getByRole('navigation')).getByRole('button', {
+        name: 'Demand anticipation (DA)'
+      })
     ).toBeInTheDocument();
     expect(screen.getByTestId('supda-provisional').textContent).toBe(
       'Provisional: rule awaiting Material Planning (A8b, A9)'

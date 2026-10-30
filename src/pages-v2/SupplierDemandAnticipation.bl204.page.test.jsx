@@ -41,7 +41,7 @@ describe('BL-204 · flag off (DRC-D10)', () => {
     // The rendered sidebar holds the Planning items but no entry for this page.
     const nav = screen.getByRole('navigation');
     expect(within(nav).getByRole('button', { name: 'Foresight commitments' })).toBeInTheDocument();
-    expect(within(nav).queryByRole('button', { name: 'Demand anticipation' })).toBeNull();
+    expect(within(nav).queryByRole('button', { name: 'Demand anticipation (DA)' })).toBeNull();
   });
 
   it('the route renders the "not available yet" notice and no figure, though figures are published', async () => {

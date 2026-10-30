@@ -1151,13 +1151,13 @@ export const processFlowPurposeId = {
   'processFlows.purpose.t_warehousedecision_record':
     'Perencana Material mencatat cara menangani minggu yang tidak muat di gudang. Menerima kelebihan memerlukan catatan. Keputusan ini catatan niat: tidak mengubah pesanan apa pun dan tidak pernah dikirim ke SAP atau pemasok.',
   'processFlows.purpose.entity.demandAnticipation':
-    'Publikasi antisipasi permintaan satu minggu perencanaan, per pemasok dan material, sepanjang waktu tunggu: LTP tiap minggu ditambah sisa yang dibawa ke minggu itu, dengan safety order di minggu pertama. Tiap angka menyimpan inputnya dan versi aturan yang menghasilkannya. Publikasi berikutnya untuk minggu yang sama menggantikannya; setiap publikasi tetap tercatat.',
+    'Publikasi demand anticipation satu minggu perencanaan, per pemasok dan material, sepanjang waktu tunggu: LTP tiap minggu ditambah sisa yang dibawa ke minggu itu, dengan safety order di minggu pertama. Tiap angka menyimpan inputnya dan versi aturan yang menghasilkannya. Publikasi berikutnya untuk minggu yang sama menggantikannya; setiap publikasi tetap tercatat.',
   'processFlows.purpose.t_demandanticipation_publish':
-    'Perencana Material mencatat antisipasi permintaan minggu perencanaan saat ini, dan persetujuan pemasok untuk menerima sisa di minggu pertama setelah horizon. Publikasi minggu berikutnya bergulir maju darinya. Tidak ada yang dikirim ke SAP atau pemasok.',
+    'Perencana Material mencatat demand anticipation minggu perencanaan saat ini, dan persetujuan pemasok untuk menerima sisa di minggu pertama setelah horizon. Publikasi minggu berikutnya bergulir maju darinya. Tidak ada yang dikirim ke SAP atau pemasok.',
   'processFlows.purpose.entity.consumption':
     'Pemakaian material yang tercatat dalam satu minggu, diketik atau diunggah oleh Perencana Material sampai umpan pengeluaran barang SAP tersedia. Catatan yang lebih baru untuk material dan minggu yang sama menggantikan yang lebih lama; keduanya tetap tercatat.',
   'processFlows.purpose.t_consumption_record':
-    'Perencana Material mencatat berapa banyak material yang dipakai dalam satu minggu. Pemakaian tampil di samping antisipasi permintaan dan masuk ke rata-rata pemakaian. Tidak ada yang dikirim ke SAP atau pemasok.',
+    'Perencana Material mencatat berapa banyak material yang dipakai dalam satu minggu. Pemakaian tampil di samping demand anticipation dan masuk ke rata-rata pemakaian. Tidak ada yang dikirim ke SAP atau pemasok.',
   'processFlows.purpose.entity.osipLevel':
     'Level OSIP suatu material, yang menentukan rumus titik pemesanan ulang fisiknya (ROP Fisik). Material yang belum diatur berada di level 4. Setiap perubahan menyimpan level sebelumnya, siapa yang mengatur, dan kapan; yang terakhir berlaku.',
   'processFlows.purpose.t_osiplevel_set':

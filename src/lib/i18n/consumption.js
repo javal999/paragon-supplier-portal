@@ -58,7 +58,7 @@ export const consumptionId = {
   'consumption.howItWorks':
     'Catat pemakaian aktual material pada suatu minggu, sampai minggu ini. Pemakaian tampil di grid dan masuk ke rata-rata pemakaian. Pemakaian material dibagi ke pemasoknya menurut bagian masing-masing atas LTP material (bagian yang tampil di tiap kartu), pembagian yang sama dengan angka pengaman. Catatan yang lebih baru untuk material dan minggu yang sama menggantikan yang lebih lama.',
   'consumption.noWeeks':
-    'Tidak ada material dengan antisipasi permintaan, jadi tidak ada pemakaian untuk dicatat.',
+    'Tidak ada material dengan demand anticipation, jadi tidak ada pemakaian untuk dicatat.',
   'consumption.field.material': 'Material',
   'consumption.field.week': 'Minggu',
   'consumption.field.qty': 'Pemakaian ({{uom}})',
@@ -91,5 +91,5 @@ export const consumptionId = {
   'consumption.row.recordedTitle':
     '{{share}} dari {{material}} material, {{source}} pada {{date}} ({{id}})',
   'consumption.alert.detail':
-    '{{qty}} {{uom}} dari pasokan di atas antisipasi permintaan selama {{from}} tidak dapat diserap pada {{by}}.'
+    '{{qty}} {{uom}} dari pasokan di atas demand anticipation selama {{from}} tidak dapat diserap pada {{by}}.'
 };

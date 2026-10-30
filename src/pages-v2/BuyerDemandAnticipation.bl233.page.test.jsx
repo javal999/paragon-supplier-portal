@@ -95,13 +95,15 @@ describe('BL-233 on the Demand anticipation grid', () => {
 });
 
 describe('BL-233 — the shared parts take a term', () => {
-  it('TermLabel fills a label slot and leaves out the lines an entry does not have', () => {
-    render(<TermLabel term="consumptionAverage" values={{ weeks: 13 }} />);
-    expect(screen.getByText('Consumption, 13-week average')).toBeInTheDocument();
+  it('TermLabel shows the entry’s label and leaves out the lines it does not have', () => {
+    render(<TermLabel term="consumptionAverage" />);
+    // TL-D14: the team's name is the label, so it has no other name to list.
+    expect(screen.getByText('Moving average consumption')).toBeInTheDocument();
     const tip = screen.getByRole('tooltip');
     expect(tip).toHaveTextContent(
-      'Also called: moving average consumption (Material Planning team, Q-file A11)'
+      'How it is calculated: Recorded consumption of the last 13 weeks'
     );
+    expect(tip).not.toHaveTextContent('Also called');
     expect(tip).not.toHaveTextContent('Not:');
   });
 

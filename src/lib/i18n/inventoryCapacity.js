@@ -1090,7 +1090,7 @@ export const inventoryCapacityId = {
   'inv.alerts.openCapacity': 'Buka kapasitas',
   'inv.alerts.openCommitments': 'Buka komitmen & selisih',
   'inv.alerts.openBlanketPo': 'Buka PO induk',
-  'inv.alerts.openDemandAnticipation': 'Buka antisipasi permintaan',
+  'inv.alerts.openDemandAnticipation': 'Buka demand anticipation',
   'inv.alerts.close': 'Tutup peringatan',
   'inv.alerts.closeFor': 'Tutup peringatan: {{rule}} untuk {{subject}}',
   'inv.alerts.closeTitle': 'Tutup peringatan',
@@ -1137,7 +1137,7 @@ export const inventoryCapacityId = {
   'inv.alerts.next.blanketPoRunOut':
     'PO induk segera habis; terbitkan PO berikutnya sebelum habis.',
   'inv.alerts.next.demandAnticipationUnabsorbed':
-    'Pasokan melebihi antisipasi permintaan melewati horizonnya; tinjau antisipasinya.',
+    'Pasokan melebihi demand anticipation melewati horizonnya; tinjau demand anticipation tersebut.',
   'inv.alerts.next.order.callOff': 'Majukan call-off.',
   'inv.alerts.next.order.po':
     'Tidak ada baris perjanjian dengan sisa kuantitas, jadi ajukan permintaan PO.',
@@ -1232,7 +1232,7 @@ export const inventoryCapacityId = {
     'Anda menandai material ini Dihentikan: PTI sedang mencari sumber lain',
   'inv.alerts.sup.rule.blanketPoRunOut': 'PO induk PTI dengan Anda akan segera habis',
   'inv.alerts.sup.rule.demandAnticipationUnabsorbed':
-    'Pasokan PTI untuk Anda melebihi yang dapat diserap minggu terakhir horizon antisipasi permintaan',
+    'Pasokan PTI untuk Anda melebihi yang dapat diserap minggu terakhir horizon demand anticipation',
 
   'inv.group.MG-01': 'Surfaktan dan bahan pembersih',
   'inv.group.MG-02': 'Emolien, minyak, dan ester',

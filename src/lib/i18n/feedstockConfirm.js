@@ -102,12 +102,12 @@ export const feedstockConfirmId = {
   'fsConfirm.refusal.NOTE_INVALID': 'Catatan harus berupa teks.',
   'fsConfirm.refusal.NOTE_TOO_LONG': 'Catatan terlalu panjang (maksimal {{max}} karakter).',
   'fsConfirm.refusal.INCOMING_DA_INVALID':
-    'Konfirmasi antisipasi permintaan masuk harus ya atau tidak.',
+    'Konfirmasi demand anticipation masuk harus ya atau tidak.',
   'fsConfirm.refusal.INCOMING_DA_NOT_AVAILABLE':
-    'Tidak ada antisipasi permintaan terbit yang dapat dikonfirmasi untuk material ini.',
-  'fsConfirm.incomingDa.label': 'Antisipasi permintaan masuk dikonfirmasi',
+    'Tidak ada demand anticipation terbit yang dapat dikonfirmasi untuk material ini.',
+  'fsConfirm.incomingDa.label': 'Demand anticipation masuk dikonfirmasi',
   'fsConfirm.incomingDa.hint': 'Terbit untuk minggu perencanaan {{week}}, total',
-  'fsConfirm.incomingDa.confirmed': 'Antisipasi permintaan masuk dikonfirmasi (terbitan {{week}})',
+  'fsConfirm.incomingDa.confirmed': 'Demand anticipation masuk dikonfirmasi (terbitan {{week}})',
   'fsConfirm.toast.done': 'Feedstock dikonfirmasi untuk {{code}}',
   'fsConfirm.toast.refused': 'Tidak dikonfirmasi: {{reason}}',
   'fsConfirm.pti.line': 'Feedstock (dikonfirmasi {{date}})',

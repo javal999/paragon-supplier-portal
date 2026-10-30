@@ -567,7 +567,7 @@ export const callOffsId = {
   'co.change.reasonCode': 'Jenis alasan',
   'co.change.reasonCodeNone': 'Tanpa kode',
   'co.change.delayHint':
-    'LTP turun: pilih tanggal kebutuhan yang lebih lambat dan pertahankan kuantitasnya. Tanggal kebutuhan baru berubah bila pemasok menyetujui; sampai itu call-off tetap pada tanggalnya sekarang dan dalam antisipasi permintaan.',
+    'LTP turun: pilih tanggal kebutuhan yang lebih lambat dan pertahankan kuantitasnya. Tanggal kebutuhan baru berubah bila pemasok menyetujui; sampai itu call-off tetap pada tanggalnya sekarang dan dalam demand anticipation.',
   'co.delay.title': 'Penundaan karena LTP turun',
   'co.delay.pending': 'Diusulkan {{from}} → {{to}}, menunggu pemasok',
   'co.delay.approved': '{{from}} → {{to}}: disetujui pemasok',
