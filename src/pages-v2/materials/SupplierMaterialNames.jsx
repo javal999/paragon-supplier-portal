@@ -218,7 +218,7 @@ const SupplierMaterialNames = ({ supplierId }) => {
             <TableHeaderCell>{t('matName.col.material')}</TableHeaderCell>
             <TableHeaderCell>{t('matName.col.tradeName')}</TableHeaderCell>
             <TableHeaderCell>{t('matName.col.supplierNo')}</TableHeaderCell>
-            <TableHeaderCell>{t('matName.col.state')}</TableHeaderCell>
+            <TableHeaderCell term="tradeNameStatus" />
             {held && <TableHeaderCell>{t('matName.col.action')}</TableHeaderCell>}
           </TableHeader>
           <tbody>

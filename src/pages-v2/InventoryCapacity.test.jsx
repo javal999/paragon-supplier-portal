@@ -35,6 +35,7 @@ import { allCapacityPlans } from '@services/data/mock/inventoryReadModel';
 import { ltpCapacityLevel, planStatus } from '@services/transitions/capacityRules';
 import BuyerHome from './BuyerHome';
 import SupplierHome from './SupplierHome';
+import { headerNamed } from '@test/termText';
 
 beforeEach(() => {
   inventoryDeclarationStore.reset();
@@ -196,7 +197,9 @@ describe('Supplier Stock (REQ-E08-01 SUP, REQ-E08-02, REQ-E08-03)', () => {
     renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
     const bottle = await screen.findByTestId('sup-stock-row-PK-PETB-8801');
     expect(bottle).toHaveTextContent('30,000 PCS'); // PTI stock
-    expect(screen.getByRole('columnheader', { name: 'PTI stock' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('columnheader', { name: headerNamed('PTI stock') })
+    ).toBeInTheDocument();
     expect(screen.getByTestId('sup-stock-row-PK-CAPF-8820')).toHaveTextContent('Not shared');
     expect(screen.getByTestId('sup-pti-access-note')).toHaveTextContent('2 of your materials');
     expect(screen.getByTestId('sup-stock-row-PK-PETB-8810')).toHaveTextContent('Out of date');
@@ -206,7 +209,7 @@ describe('Supplier Stock (REQ-E08-01 SUP, REQ-E08-02, REQ-E08-03)', () => {
   it('a supplier without access has no PTI stock column at all (AC-01)', async () => {
     renderWithProviders(<SupplierInventory />, { identity: SUP_002 });
     await screen.findByTestId('sup-stock-row-RM-STEAR-7300');
-    expect(screen.queryByRole('columnheader', { name: 'PTI stock' })).toBeNull();
+    expect(screen.queryByRole('columnheader', { name: headerNamed('PTI stock') })).toBeNull();
     expect(screen.queryByText('900 KG')).toBeNull();
   });
 

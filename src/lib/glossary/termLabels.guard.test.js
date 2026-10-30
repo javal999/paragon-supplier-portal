@@ -71,13 +71,15 @@ const drifted = (e, en, id) =>
 const words = (text) => text.trim().split(/\s+/).length;
 
 describe('term-label glossary (BL-233)', () => {
-  it('holds the wave-1 population, named', () => {
+  it('holds the wave-1 and wave-2 population, named', () => {
     // A named member, not a count: the guards below run over these entries.
     expect(Object.keys(TERM_LABEL_GLOSSARY)).toEqual(
       expect.arrayContaining([
         'demandAnticipation',
         'carryOver',
-        'alertDemandAnticipationUnabsorbed'
+        'alertDemandAnticipationUnabsorbed',
+        'freeToCallOff',
+        'tradeNameStatus'
       ])
     );
   });
@@ -122,6 +124,20 @@ describe('term-label glossary (BL-233)', () => {
     const e = TERM_LABEL_GLOSSARY.carryOver;
     expect(e.label).toEqual({ en: 'Carry-over', id: 'Carry-over' });
     expect(e.alsoCalled?.map((a) => a.name)).toEqual(['sisa DA']);
+  });
+
+  it('TL-D14: the 13-week average reads the team’s "Moving average consumption" in EN and ID', () => {
+    expect(TERM_LABEL_GLOSSARY.consumptionAverage.label).toEqual({
+      en: 'Moving average consumption',
+      id: 'Moving average consumption'
+    });
+  });
+
+  it('TL-D15: ROP Order is under the safety order’s "Not", never its "Also called"', () => {
+    const e = TERM_LABEL_GLOSSARY.safetyOrder;
+    expect(e.notToConfuse?.en).toMatch(/ROP Order \(LTP × lead time \+ safety order, DRC-10\)/);
+    const names = ENTRIES.flatMap(([, x]) => (x.alsoCalled ?? []).map((a) => a.name));
+    expect(names).not.toContain('ROP Order');
   });
 
   it('TL-D9 / TL-D13: the labels waiting on the team keep their wording', () => {

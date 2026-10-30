@@ -33,6 +33,7 @@ import { dayOf, isIsoDay } from '@services/transitions/inventoryRules';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { inventoryNow, inputClass, labelClass } from './inventory/inventoryDisplay';
 import { planningGroupLabel } from './inventory/planningGroupDisplay';
+import TermLabel from '@components/ui-v2/TermLabel';
 import AskSupplierButton from './inventory/AskSupplierButton';
 import { callOffHref, poRequestHref } from './inventory/inventoryLinks';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
@@ -274,18 +275,19 @@ const BuyerStockSimulation = () => {
             </TableHeaderCell>
             <TableHeaderCell className="text-right">
               <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                {t('sim.col.available')}
+                <TermLabel term="supplierAvailable" />
                 <LivenessPill capability="inventory" />
               </span>
             </TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('sim.col.calledOff')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('sim.col.free')}</TableHeaderCell>
-            <TableHeaderCell className="text-right border-l border-border-subtle">
-              {t('sim.col.ptiInbound')}
-            </TableHeaderCell>
+            <TableHeaderCell className="text-right" term="calledOffNotShipped" />
+            <TableHeaderCell className="text-right" term="freeToCallOff" />
+            <TableHeaderCell
+              className="text-right border-l border-border-subtle"
+              term="ptiInbound"
+            />
             <TableHeaderCell>{t('sim.col.lastUpdate')}</TableHeaderCell>
-            <TableHeaderCell>{t('sim.col.basis')}</TableHeaderCell>
-            <TableHeaderCell>{t('sim.col.flags')}</TableHeaderCell>
+            <TableHeaderCell term="simulationBasis" />
+            <TableHeaderCell term="simulationFlags" />
             <TableHeaderCell className="text-right">{t('sim.col.actions')}</TableHeaderCell>
             <TableHeaderCell pin="right">
               <span className="sr-only">{t('sim.detail.weeks')}</span>

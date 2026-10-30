@@ -343,7 +343,7 @@ const BuyerTradeNames = () => {
             <TableHeaderCell>{t('matName.col.tradeName')}</TableHeaderCell>
             <TableHeaderCell>{t('matName.col.supplierNo')}</TableHeaderCell>
             <TableHeaderCell>{t('matName.col.submitted')}</TableHeaderCell>
-            <TableHeaderCell>{t('matName.col.state')}</TableHeaderCell>
+            <TableHeaderCell term="tradeNameStatus" />
             <TableHeaderCell>{t('matName.col.action')}</TableHeaderCell>
           </TableHeader>
           <tbody>

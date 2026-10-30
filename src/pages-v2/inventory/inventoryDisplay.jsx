@@ -18,6 +18,7 @@ import { incomingTotals, positionRisk, stockFreshness } from '@services/transiti
 /** @import { CapacityConfirmationStatus, LtpCapacityLevel } from '@services/transitions/capacityRules' */
 /** @import { InventoryCommandVars } from '@services/query/commandHooks' */
 import { useInventoryCommand } from '@services/query/commandHooks';
+import TermLabel from '@components/ui-v2/TermLabel';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared inventory & capacity display (REQ-E08-01 to REQ-E08-05). Every figure
@@ -328,7 +329,9 @@ export const IncomingPanel = ({ position, base, onClose }) => {
               <thead>
                 <tr className="text-label text-text-tertiary uppercase">
                   <th className="text-left py-1">{t('inv.incoming.col.date')}</th>
-                  <th className="text-left py-1">{t('inv.incoming.col.source')}</th>
+                  <th className="text-left py-1">
+                    <TermLabel term="incomingStatus" />
+                  </th>
                   <th className="text-right py-1">{t('inv.incoming.col.quantity')}</th>
                   <th className="text-left py-1 pl-3">{t('inv.incoming.col.reference')}</th>
                 </tr>

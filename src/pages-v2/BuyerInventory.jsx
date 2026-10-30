@@ -409,10 +409,10 @@ const BuyerInventory = () => {
         <Table>
           <TableHeader>
             <TableHeaderCell pin="left">{t('inv.col.materialSupplier')}</TableHeaderCell>
-            <TableHeaderCell>{t('inv.col.riskCover')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('inv.col.supplierSoh')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('inv.col.ptiSohRop')}</TableHeaderCell>
-            <TableHeaderCell>{t('inv.col.incoming')}</TableHeaderCell>
+            <TableHeaderCell term="supplierCover" />
+            <TableHeaderCell className="text-right" term="supplierStock" />
+            <TableHeaderCell className="text-right" term="ptiStockRop" />
+            <TableHeaderCell term="incoming" />
             <TableHeaderCell>{t('inv.col.updated')}</TableHeaderCell>
           </TableHeader>
           <tbody>

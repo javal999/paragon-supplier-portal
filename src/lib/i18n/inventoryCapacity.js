@@ -25,7 +25,6 @@ export const inventoryCapacityEn = {
   'inv.col.supplier': 'Supplier',
   'inv.col.supplierSoh': 'Supplier stock',
   'inv.col.ptiSoh': 'PTI stock',
-  'inv.col.ptiRop': 'PTI reorder point',
   'inv.col.supplierRop': 'Supplier reorder point',
   // DRC-D15 (BL-196) — the supplier's figure is display only; the system's sits beside it.
   'inv.col.supplierRop.displayOnly': 'Supplier’s figure, display only · system ROP Supplier below',
@@ -33,9 +32,6 @@ export const inventoryCapacityEn = {
   'inv.systemRopSupplier.none': 'System: no figure (an input is missing)',
   'inv.systemRopSupplier.title':
     'System ROP Supplier (OSIP). Provisional: rule awaiting Material Planning (B10, MPQ)',
-  'inv.col.yourRop': 'Your reorder point',
-  'inv.col.incoming': 'Incoming',
-  'inv.col.daysOfSupply': 'Days of supply',
   'inv.col.lastUpdate': 'Last update',
 
   'inv.figure.noSubmission': 'No figures yet',
@@ -71,7 +67,6 @@ export const inventoryCapacityEn = {
   'inv.incoming.open': 'Incoming detail for {{material}} from {{supplier}}',
   'inv.incoming.panelTitle': 'Incoming for {{material}}',
   'inv.incoming.col.date': 'Date',
-  'inv.incoming.col.source': 'Status',
   'inv.incoming.col.quantity': 'Quantity',
   'inv.incoming.col.reference': 'Reference',
   'inv.incoming.noDate': 'No date given',
@@ -99,8 +94,6 @@ export const inventoryCapacityEn = {
   'inv.tile.noLeadTime.hint': 'Risk uses the day bands',
   'inv.col.materialSupplier': 'Material · supplier',
   // Inventory UX P-08 (INV-D1) — whose stock decides the class.
-  'inv.col.riskCover': 'Risk · supplier cover',
-  'inv.col.ptiSohRop': 'PTI stock / ROP',
   'inv.col.updated': 'Updated',
   'inv.ptiCover': 'PTI cover {{count}} days',
   'inv.ptiCover.none': 'PTI cover: no figure',
@@ -663,7 +656,6 @@ export const inventoryCapacityId = {
   'inv.col.supplier': 'Pemasok',
   'inv.col.supplierSoh': 'Stok pemasok',
   'inv.col.ptiSoh': 'Stok PTI',
-  'inv.col.ptiRop': 'Titik pemesanan ulang PTI',
   'inv.col.supplierRop': 'Titik pemesanan ulang pemasok',
   'inv.col.supplierRop.displayOnly':
     'Angka pemasok, hanya tampilan · ROP Pemasok sistem di bawahnya',
@@ -671,9 +663,6 @@ export const inventoryCapacityId = {
   'inv.systemRopSupplier.none': 'Sistem: tidak ada angka (input kurang)',
   'inv.systemRopSupplier.title':
     'ROP Pemasok sistem (OSIP). Sementara: aturan menunggu Material Planning (B10, MPQ)',
-  'inv.col.yourRop': 'Titik pemesanan ulang Anda',
-  'inv.col.incoming': 'Akan datang',
-  'inv.col.daysOfSupply': 'Hari persediaan',
   'inv.col.lastUpdate': 'Pembaruan terakhir',
 
   'inv.figure.noSubmission': 'Belum ada angka',
@@ -709,7 +698,6 @@ export const inventoryCapacityId = {
   'inv.incoming.open': 'Rincian kedatangan {{material}} dari {{supplier}}',
   'inv.incoming.panelTitle': 'Kedatangan {{material}}',
   'inv.incoming.col.date': 'Tanggal',
-  'inv.incoming.col.source': 'Status',
   'inv.incoming.col.quantity': 'Kuantitas',
   'inv.incoming.col.reference': 'Referensi',
   'inv.incoming.noDate': 'Tanggal tidak diberikan',
@@ -733,8 +721,6 @@ export const inventoryCapacityId = {
   'inv.tile.noLeadTime': 'Waktu tunggu belum tercatat',
   'inv.tile.noLeadTime.hint': 'Risiko memakai pita hari',
   'inv.col.materialSupplier': 'Material · pemasok',
-  'inv.col.riskCover': 'Risiko · cakupan pemasok',
-  'inv.col.ptiSohRop': 'Stok PTI / ROP',
   'inv.col.updated': 'Diperbarui',
   'inv.ptiCover': 'Cakupan stok PTI {{count}} hari',
   'inv.ptiCover.none': 'Cakupan stok PTI: tidak ada angka',
