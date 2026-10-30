@@ -50,7 +50,7 @@ const PeriodSubmitSection = ({
           <TableHeader>
             <TableHeaderCell>{t('fc.sup.week.col.period')}</TableHeaderCell>
             <TableHeaderCell>{t('fc.sup.week.col.lines')}</TableHeaderCell>
-            <TableHeaderCell>{t('fc.sup.week.col.capacity')}</TableHeaderCell>
+            <TableHeaderCell term="ltpAgainstCapacity" />
             <TableHeaderCell>{t('fc.sup.week.col.reason')}</TableHeaderCell>
             <TableHeaderCell>
               <span className="sr-only">{t('fc.col.actions')}</span>

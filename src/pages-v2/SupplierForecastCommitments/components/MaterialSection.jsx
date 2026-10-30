@@ -1,5 +1,6 @@
 /** @import React from 'react' */
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import Data from '@components/ui-v2/Data';
 import Table from '@components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
@@ -63,13 +64,17 @@ const MaterialSection = ({
         <Table>
           <TableHeader>
             <TableHeaderCell>{t('fc.col.period')}</TableHeaderCell>
-            <TableHeaderCell>{t('fc.col.zone')}</TableHeaderCell>
+            <TableHeaderCell term="forecastZone" />
             <TableHeaderCell className="text-right">
-              {t('fc.col.forecast', { uom: first.uom })}
+              <TermLabel term="publishedForecast" values={{ uom: first.uom }} />
             </TableHeaderCell>
-            <TableHeaderCell>{t('fc.col.due')}</TableHeaderCell>
-            <TableHeaderCell>{t('fc.col.commitment', { uom: first.uom })}</TableHeaderCell>
-            <TableHeaderCell>{t('fc.col.upside', { uom: first.uom })}</TableHeaderCell>
+            <TableHeaderCell term="commitmentDue" />
+            <TableHeaderCell>
+              <TermLabel term="commitment" values={{ uom: first.uom }} />
+            </TableHeaderCell>
+            <TableHeaderCell>
+              <TermLabel term="commitmentUpside" values={{ uom: first.uom }} />
+            </TableHeaderCell>
             <TableHeaderCell>{t('fc.col.reason')}</TableHeaderCell>
             <TableHeaderCell>{t('fc.col.status')}</TableHeaderCell>
             <TableHeaderCell>

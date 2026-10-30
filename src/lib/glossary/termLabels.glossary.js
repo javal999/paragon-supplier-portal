@@ -30,12 +30,14 @@
 // (with the buffers), /buyer/safety-stock, the call-off run-out list and the
 // feedstock reconcile. DRC-n = `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md`,
 // E14-04 = `FORECAST-ENGINE-REQUIREMENTS.md`, CAP-9 = `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md`.
+// Wave 4 (Goal C, Foresight): /buyer/what-if, /buyer/stabilise and
+// /supplier/forecasts. The tips name no requirement code (F-18).
 // ─────────────────────────────────────────────────────────────────────────────
 /** @import { GlossaryOf, TermEntry } from './types' */
 
 /**
  * The terms a page labels through `TermLabel`.
- * @typedef {'demandAnticipation' | 'ltp' | 'fgDemand' | 'ltpLessFgDemand' | 'consumptionAverage' | 'safetyOrder' | 'carryOver' | 'wouldBe' | 'surplusAbsorbed' | 'recordedConsumption' | 'openSupply' | 'supplyGap' | 'daAfterCheck' | 'ospo' | 'additionalPo' | 'callOffsThisWeek' | 'remainder' | 'notCarried' | 'supplierAgreedOutside' | 'gapProposal' | 'alertPtiBelowRop' | 'alertSupplierBelowRop' | 'alertProjectedStockOut' | 'alertCapacityBelowDemand' | 'alertStaleData' | 'alertCoverage' | 'alertCommitmentBelowForecast' | 'alertLeadTimeMissing' | 'alertCallOffNotCovered' | 'alertSupplyDiscontinued' | 'alertBlanketPoRunOut' | 'alertDemandAnticipationUnabsorbed' | 'supplierCover' | 'supplierStock' | 'ptiStockRop' | 'incoming' | 'incomingStatus' | 'supplierAvailable' | 'calledOffNotShipped' | 'freeToCallOff' | 'ptiInbound' | 'simulationBasis' | 'simulationFlags' | 'supplierOwnRop' | 'ptiStock' | 'ptiRop' | 'daysOfSupply' | 'feedstockLatest' | 'feedstockThisWeek' | 'tradeNameStatus' | 'capacityLtp' | 'allocatedCapacity' | 'productionLimit' | 'additionalCapacity' | 'capacityBe' | 'ltpAgainstCapacity' | 'capacityShortBy' | 'ptiCapacityDecision' | 'runOutRemaining' | 'runsOut' | 'newPoNeededBy' | 'poLeadTime' | 'spaceFreed' | 'materialsPerTier' | 'onSapValue' | 'sltGroupDefault' | 'tierTarget' | 'safetyOrderRopOrder' | 'ropFisikSafety' | 'demandCv' | 'osipLevel' | 'ropOrder' | 'ropFisik' | 'maxStock' | 'engineSafetyStock' | 'sapSafetyStock' | 'freed' | 'safetyLeadTime' | 'engineReorderPoint' | 'forecastShortfall' | 'ropSupplier' | 'ropToPrincipal' | 'replenishmentCycle' | 'pullAgreement' | 'bottleneckLeadTime' | 'monthLtp' | 'protectionBaseline' | 'uplift' | 'protectionBuffer' | 'strategicBaseline' | 'strategicBuffer' | 'poOrdered' | 'reconcileCalledOff' | 'asnRequested' | 'notYetCalledOff' | 'calledOffNotYetShipped' | 'maxStockSupplier'} TermLabelId
+ * @typedef {'demandAnticipation' | 'ltp' | 'fgDemand' | 'ltpLessFgDemand' | 'consumptionAverage' | 'safetyOrder' | 'carryOver' | 'wouldBe' | 'surplusAbsorbed' | 'recordedConsumption' | 'openSupply' | 'supplyGap' | 'daAfterCheck' | 'ospo' | 'additionalPo' | 'callOffsThisWeek' | 'remainder' | 'notCarried' | 'supplierAgreedOutside' | 'gapProposal' | 'alertPtiBelowRop' | 'alertSupplierBelowRop' | 'alertProjectedStockOut' | 'alertCapacityBelowDemand' | 'alertStaleData' | 'alertCoverage' | 'alertCommitmentBelowForecast' | 'alertLeadTimeMissing' | 'alertCallOffNotCovered' | 'alertSupplyDiscontinued' | 'alertBlanketPoRunOut' | 'alertDemandAnticipationUnabsorbed' | 'supplierCover' | 'supplierStock' | 'ptiStockRop' | 'incoming' | 'incomingStatus' | 'supplierAvailable' | 'calledOffNotShipped' | 'freeToCallOff' | 'ptiInbound' | 'simulationBasis' | 'simulationFlags' | 'supplierOwnRop' | 'ptiStock' | 'ptiRop' | 'daysOfSupply' | 'feedstockLatest' | 'feedstockThisWeek' | 'tradeNameStatus' | 'capacityLtp' | 'allocatedCapacity' | 'productionLimit' | 'additionalCapacity' | 'capacityBe' | 'ltpAgainstCapacity' | 'capacityShortBy' | 'ptiCapacityDecision' | 'runOutRemaining' | 'runsOut' | 'newPoNeededBy' | 'poLeadTime' | 'spaceFreed' | 'materialsPerTier' | 'onSapValue' | 'sltGroupDefault' | 'tierTarget' | 'safetyOrderRopOrder' | 'ropFisikSafety' | 'demandCv' | 'osipLevel' | 'ropOrder' | 'ropFisik' | 'maxStock' | 'engineSafetyStock' | 'sapSafetyStock' | 'freed' | 'safetyLeadTime' | 'engineReorderPoint' | 'forecastShortfall' | 'ropSupplier' | 'ropToPrincipal' | 'replenishmentCycle' | 'pullAgreement' | 'bottleneckLeadTime' | 'monthLtp' | 'protectionBaseline' | 'uplift' | 'protectionBuffer' | 'strategicBaseline' | 'strategicBuffer' | 'poOrdered' | 'reconcileCalledOff' | 'asnRequested' | 'notYetCalledOff' | 'calledOffNotYetShipped' | 'maxStockSupplier' | 'whatIfMax' | 'daOverLeadTime' | 'prGenerated' | 'planCheckPr' | 'triggerCallOffs' | 'triggerPr' | 'whatIfRemainder' | 'whatIfCarryOver' | 'firstShortageWeek' | 'weeksAboveMax' | 'whatIfLtp' | 'daCurrentPlan' | 'daScenario' | 'callOffsDrafted' | 'whatIfIncoming' | 'prRecommendedWeek' | 'projectedSohPlan' | 'projectedSohScenario' | 'engineValue' | 'lastPublished' | 'firstPublished' | 'dampedValue' | 'allowedRange' | 'toPublish' | 'stabiliseRule' | 'ruleNew' | 'ruleUnchanged' | 'ruleFirmFrozen' | 'ruleForecast' | 'ruleDamped' | 'ruleBandHeld' | 'ruleCumulativeHeld' | 'ruleOverride' | 'planMovement' | 'weeksChangedInLeadTime' | 'tradeOffWithinLimits' | 'weeksHeld' | 'seriesHeld' | 'seriesMasc' | 'forecastZone' | 'publishedForecast' | 'commitmentDue' | 'commitment' | 'commitmentUpside'} TermLabelId
  */
 
 const TEAM_OSIP = {
@@ -971,6 +973,366 @@ export const TERM_LABEL_GLOSSARY =
       notToConfuse: {
         en: 'Max Stock (what PTI holds, on the Safety stock page).',
         id: 'Max Stock (yang disimpan PTI, di halaman Safety stock).'
+      }
+    },
+    // ── Wave 4: Foresight (Goal C): what-if, stabilise, supplier forecasts ────
+    whatIfMax: {
+      label: { en: 'Max', id: 'Max' },
+      en: 'The most PTI should hold of the material; the call-off trigger and "weeks above Max" use it. A typed value replaces the system’s.',
+      id: 'Jumlah terbanyak material yang sebaiknya disimpan PTI; pemicu call-off dan "minggu di atas Max" memakainya. Nilai yang diketik menggantikan nilai sistem.',
+      formula: {
+        en: 'Local: ROP Fisik rounded up to the koli. Import: rounded up to the MOQ.',
+        id: 'Lokal: ROP Fisik dibulatkan ke atas ke koli. Impor: dibulatkan ke atas ke MOQ.'
+      }
+    },
+    daOverLeadTime: {
+      label: {
+        en: 'Demand anticipation (DA) over the lead time',
+        id: 'Demand anticipation (DA) sepanjang lead time'
+      },
+      en: 'The sum of the weekly demand anticipation (DA) across the lead-time horizon.',
+      id: 'Jumlah demand anticipation (DA) mingguan sepanjang horizon lead time.',
+      alsoCalled: [
+        {
+          name: 'Total DA',
+          source: {
+            en: 'Material Planning team, Q-file A2',
+            id: 'Tim Material Planning, Q-file A2'
+          }
+        }
+      ],
+      notToConfuse: NOT_DELIVERY_AGREEMENT
+    },
+    prGenerated: {
+      label: { en: 'PR Generated', id: 'PR Generated' },
+      en: 'The PR quantity SAP’s ZPE007 would raise from ROP Order. Shown as a positive quantity; the team’s slide writes the same need as a negative number.',
+      id: 'Kuantitas PR yang akan dibuat ZPE007 SAP dari ROP Order. Ditampilkan sebagai kuantitas positif; slide tim menulis kebutuhan yang sama sebagai angka negatif.',
+      formula: {
+        en: 'ROP Order − SOH − OSPO − OSPR, never below 0.',
+        id: 'ROP Order − SOH − OSPO − OSPR, tidak pernah di bawah 0.'
+      }
+    },
+    planCheckPr: {
+      label: { en: 'Plan check: PR recommendation', id: 'Pemeriksaan rencana: rekomendasi PR' },
+      en: 'What the plan check recommends raising as a PR when supply falls short of the demand anticipation (DA). A surplus is absorbed in the last week instead.',
+      id: 'Yang direkomendasikan pemeriksaan rencana untuk dibuat sebagai PR bila pasokan kurang dari demand anticipation (DA). Kelebihan diserap di minggu terakhir.',
+      formula: {
+        en: 'Total DA − Total OSPO, never below 0 (the default supply basis).',
+        id: 'Total DA − Total OSPO, tidak pernah di bawah 0 (dasar pasokan bawaan).'
+      }
+    },
+    triggerCallOffs: {
+      label: { en: 'Call-offs the trigger would draft', id: 'Call-off yang akan dibuat pemicu' },
+      en: 'The total of the call-offs the hub would draft over the horizon: one each time projected stock reaches ROP Fisik, never above Max.',
+      id: 'Total call-off yang akan disusun hub sepanjang horizon: satu setiap kali proyeksi stok mencapai ROP Fisik, tidak pernah di atas Max.'
+    },
+    triggerPr: {
+      label: { en: 'Trigger: create a PR in SAP for', id: 'Pemicu: buat PR di SAP sebesar' },
+      en: 'The quantity the trigger could not call off because no blanket PO balance is left, so it recommends a PR in SAP.',
+      id: 'Kuantitas yang tidak dapat di-call-off pemicu karena saldo PO induk sudah habis, sehingga ia merekomendasikan PR di SAP.'
+    },
+    whatIfRemainder: {
+      label: { en: 'Remainder this week', id: 'Sisa minggu ini' },
+      en: 'What this week’s demand anticipation (DA) leaves after its call-offs.',
+      id: 'Yang tersisa dari demand anticipation (DA) minggu ini setelah call-off-nya.',
+      formula: {
+        en: 'DA of the week − call-offs of the week.',
+        id: 'DA minggu itu − call-off minggu itu.'
+      },
+      alsoCalled: [
+        {
+          name: 'sisa',
+          source: {
+            en: 'Material Planning team, Q-file A8',
+            id: 'Tim Material Planning, Q-file A8'
+          }
+        }
+      ],
+      notToConfuse: {
+        en: 'Carry-over (the part of a remainder moved to a later week).',
+        id: 'Carry-over (bagian sisa yang dipindahkan ke minggu berikutnya).'
+      }
+    },
+    whatIfCarryOver: {
+      label: { en: 'Carry-over', id: 'Carry-over' },
+      en: 'The part of this week’s remainder moved to a later week: the last week of the horizon, or the first week after it when the supplier agrees.',
+      id: 'Bagian sisa minggu ini yang dipindahkan ke minggu berikutnya: minggu terakhir horizon, atau minggu pertama setelahnya bila pemasok setuju.',
+      alsoCalled: [
+        {
+          name: 'sisa DA',
+          source: {
+            en: 'Material Planning team, Q-file A8',
+            id: 'Tim Material Planning, Q-file A8'
+          }
+        }
+      ]
+    },
+    firstShortageWeek: {
+      label: { en: 'First shortage week', id: 'Minggu kekurangan pertama' },
+      en: 'The first week projected stock on hand falls below the shortage level, if any.',
+      id: 'Minggu pertama proyeksi stok on hand turun di bawah tingkat kekurangan, bila ada.'
+    },
+    weeksAboveMax: {
+      label: { en: 'Weeks above Max', id: 'Minggu di atas Max' },
+      en: 'The weeks projected stock on hand is above Max.',
+      id: 'Minggu-minggu proyeksi stok on hand di atas Max.'
+    },
+    whatIfLtp: {
+      label: { en: 'LTP (edit)', id: 'LTP (ubah)' },
+      en: 'The current forecast quantity of the material for the week, for this supplier. Type another value to try it; the plan does not change.',
+      id: 'Kuantitas prakiraan terkini material untuk minggu itu, untuk pemasok ini. Ketik nilai lain untuk mencobanya; rencana tidak berubah.'
+    },
+    daCurrentPlan: {
+      label: {
+        en: 'Demand anticipation (DA), current plan',
+        id: 'Demand anticipation (DA), rencana saat ini'
+      },
+      en: 'The weekly demand anticipation (DA) the live plan gives, for comparison.',
+      id: 'Demand anticipation (DA) mingguan dari rencana yang berjalan, sebagai pembanding.',
+      notToConfuse: NOT_DELIVERY_AGREEMENT
+    },
+    daScenario: {
+      label: {
+        en: 'Demand anticipation (DA), this scenario',
+        id: 'Demand anticipation (DA), skenario ini'
+      },
+      en: 'The weekly demand anticipation (DA) under the inputs and rules of this scenario.',
+      id: 'Demand anticipation (DA) mingguan dengan input dan aturan skenario ini.',
+      notToConfuse: NOT_DELIVERY_AGREEMENT
+    },
+    callOffsDrafted: {
+      label: { en: 'Call-offs drafted', id: 'Call-off dibuat' },
+      en: 'The call-off quantity the trigger would draft in the week.',
+      id: 'Kuantitas call-off yang akan disusun pemicu pada minggu itu.'
+    },
+    whatIfIncoming: {
+      label: { en: 'Incoming', id: 'Incoming' },
+      en: 'What arrives at PTI in the week: released call-offs plus the call-offs the trigger drafts.',
+      id: 'Yang tiba di PTI pada minggu itu: call-off yang dirilis ditambah call-off yang disusun pemicu.',
+      alsoCalled: [
+        {
+          name: 'incoming',
+          source: {
+            en: 'Material Planning team sheet "Simulasi SOH w/ incoming", Q-file A7',
+            id: 'Sheet tim Material Planning "Simulasi SOH w/ incoming", Q-file A7'
+          }
+        }
+      ],
+      notToConfuse: {
+        en: 'Incoming DA (the supplier-confirmed figure).',
+        id: 'Incoming DA (angka yang dikonfirmasi pemasok).'
+      }
+    },
+    prRecommendedWeek: {
+      label: { en: 'PR recommended', id: 'PR direkomendasikan' },
+      en: 'The PR quantity the trigger recommends in the week, where no blanket PO balance is left to call off.',
+      id: 'Kuantitas PR yang direkomendasikan pemicu pada minggu itu, bila saldo PO induk tidak tersisa untuk di-call-off.'
+    },
+    projectedSohPlan: {
+      label: { en: 'Projected SOH, current plan', id: 'Proyeksi SOH, rencana saat ini' },
+      en: 'PTI’s stock on hand projected to the end of the week under the live plan.',
+      id: 'Stok on hand PTI yang diproyeksikan sampai akhir minggu dengan rencana yang berjalan.'
+    },
+    projectedSohScenario: {
+      label: { en: 'Projected SOH, this scenario', id: 'Proyeksi SOH, skenario ini' },
+      en: 'PTI’s stock on hand projected to the end of the week under this scenario.',
+      id: 'Stok on hand PTI yang diproyeksikan sampai akhir minggu dengan skenario ini.',
+      formula: {
+        en: 'Last week’s projected SOH + incoming − LTP of the week.',
+        id: 'Proyeksi SOH minggu lalu + incoming − LTP minggu itu.'
+      }
+    },
+    engineValue: {
+      label: { en: 'Engine value', id: 'Nilai mesin' },
+      en: 'The quantity the forecast engine calculated for the week, before stabilising.',
+      id: 'Kuantitas yang dihitung mesin prakiraan untuk minggu itu, sebelum distabilkan.'
+    },
+    lastPublished: {
+      label: { en: 'Last published', id: 'Terakhir diterbitkan' },
+      en: 'The quantity the supplier saw for the week in the last published version.',
+      id: 'Kuantitas yang dilihat pemasok untuk minggu itu pada versi terakhir yang diterbitkan.'
+    },
+    firstPublished: {
+      label: { en: 'First published', id: 'Pertama diterbitkan' },
+      en: 'The first quantity the supplier saw for the week. The ±20% limit is measured from it.',
+      id: 'Kuantitas pertama yang dilihat pemasok untuk minggu itu. Batas ±20% diukur darinya.'
+    },
+    dampedValue: {
+      label: { en: 'Damped', id: 'Diredam' },
+      en: 'A Trade-off week’s new value blended with its last published value, so the plan moves less.',
+      id: 'Nilai baru minggu Trade-off yang dicampur dengan nilai terakhir yang diterbitkan, agar rencana tidak banyak bergerak.',
+      formula: {
+        en: 'Weight × last published + (1 − weight) × engine value; weight 0.5 in Trade-off, 0 in Forecast.',
+        id: 'Bobot × terakhir diterbitkan + (1 − bobot) × nilai mesin; bobot 0,5 di Trade-off, 0 di Forecast.'
+      }
+    },
+    allowedRange: {
+      label: { en: 'Allowed range', id: 'Rentang yang diizinkan' },
+      en: 'How far a Trade-off week may move without the planner’s reason: ±10% from the last published value, and ±20% from the first.',
+      id: 'Seberapa jauh minggu Trade-off boleh bergerak tanpa alasan perencana: ±10% dari nilai terakhir yang diterbitkan, dan ±20% dari nilai pertama.',
+      formula: { en: 'Last published × (1 ± band).', id: 'Terakhir diterbitkan × (1 ± batas).' }
+    },
+    toPublish: {
+      label: { en: 'To publish', id: 'Akan diterbitkan' },
+      en: 'The quantity the next version will publish for the week, after the stabilising rules.',
+      id: 'Kuantitas yang akan diterbitkan versi berikutnya untuk minggu itu, setelah aturan stabilisasi.'
+    },
+    stabiliseRule: {
+      label: { en: 'Rule', id: 'Aturan' },
+      en: 'Which stabilising rule set the week’s quantity to publish.',
+      id: 'Aturan stabilisasi mana yang menetapkan kuantitas minggu itu yang akan diterbitkan.'
+    },
+    ruleNew: {
+      label: {
+        en: 'New week — published as calculated',
+        id: 'Minggu baru — diterbitkan apa adanya'
+      },
+      en: 'A week entering the horizon has nothing published to compare with, so the engine value is published as it is.',
+      id: 'Minggu yang baru masuk horizon belum punya nilai terbit untuk dibandingkan, sehingga nilai mesin diterbitkan apa adanya.',
+      labelKeys: ['stb.rule.new']
+    },
+    ruleUnchanged: {
+      label: { en: 'No change', id: 'Tidak berubah' },
+      en: 'The engine value equals the last published value, so nothing moves.',
+      id: 'Nilai mesin sama dengan nilai terakhir yang diterbitkan, sehingga tidak ada yang bergerak.',
+      labelKeys: ['stb.rule.unchanged']
+    },
+    ruleFirmFrozen: {
+      label: { en: 'Firm — kept as published', id: 'Firm — tetap seperti yang diterbitkan' },
+      en: 'A Firm week never changes once published.',
+      id: 'Minggu Firm tidak pernah berubah setelah diterbitkan.',
+      labelKeys: ['stb.rule.firmFrozen']
+    },
+    ruleForecast: {
+      label: { en: 'Forecast — as calculated', id: 'Forecast — apa adanya' },
+      en: 'A Forecast-zone week is not damped or held: the engine value is published.',
+      id: 'Minggu zona Forecast tidak diredam atau ditahan: nilai mesin diterbitkan.',
+      labelKeys: ['stb.rule.forecast']
+    },
+    ruleDamped: {
+      label: { en: 'Trade-off — damped', id: 'Trade-off — diredam' },
+      en: 'A Trade-off week’s value is blended with its last published value, and the result is within the allowed range.',
+      id: 'Nilai minggu Trade-off dicampur dengan nilai terakhir yang diterbitkan, dan hasilnya berada dalam rentang yang diizinkan.',
+      labelKeys: ['stb.rule.damped']
+    },
+    ruleBandHeld: {
+      label: {
+        en: 'Trade-off — held at ±10% a version',
+        id: 'Trade-off — ditahan pada ±10% per versi'
+      },
+      en: 'The damped value moved more than 10% from the last published value, so it is held at that edge.',
+      id: 'Nilai yang diredam bergerak lebih dari 10% dari nilai terakhir yang diterbitkan, sehingga ditahan di batas itu.',
+      labelKeys: ['stb.rule.bandHeld']
+    },
+    ruleCumulativeHeld: {
+      label: {
+        en: 'Trade-off — held at ±20% from the first value',
+        id: 'Trade-off — ditahan pada ±20% dari nilai pertama'
+      },
+      en: 'The value moved more than 20% from the first value the supplier saw, so it is held at that edge.',
+      id: 'Nilai bergerak lebih dari 20% dari nilai pertama yang dilihat pemasok, sehingga ditahan di batas itu.',
+      labelKeys: ['stb.rule.cumulativeHeld']
+    },
+    ruleOverride: {
+      label: {
+        en: 'Trade-off — beyond the band, with the planner’s reason',
+        id: 'Trade-off — di luar batas, dengan alasan perencana'
+      },
+      en: 'The planner published a value outside the band and gave a reason. The supplier sees the reason, and the week asks for a new commitment.',
+      id: 'Perencana menerbitkan nilai di luar batas dan memberi alasan. Pemasok melihat alasannya, dan minggu itu meminta komitmen baru.',
+      labelKeys: ['stb.rule.override']
+    },
+    planMovement: {
+      label: { en: 'Plan movement (MASC)', id: 'Pergerakan rencana (MASC)' },
+      en: 'How much the plan moves between versions, scaled to the product’s normal week-to-week movement so products of different sizes compare fairly.',
+      id: 'Seberapa besar rencana bergerak antar versi, diskalakan ke pergerakan normal produk dari minggu ke minggu agar produk berbeda ukuran dapat dibandingkan.',
+      formula: {
+        en: 'Average change between two versions for the same weeks ÷ the product’s normal week-to-week movement.',
+        id: 'Rata-rata perubahan antar dua versi untuk minggu yang sama ÷ pergerakan normal produk dari minggu ke minggu.'
+      },
+      alsoCalled: [
+        {
+          name: 'Size of changes',
+          source: { en: 'forecast engine requirements', id: 'kebutuhan mesin prakiraan' }
+        }
+      ]
+    },
+    weeksChangedInLeadTime: {
+      label: {
+        en: 'Weeks changed inside the lead time',
+        id: 'Minggu yang berubah dalam waktu tunggu'
+      },
+      en: 'The share of published weeks that changed inside the supplier’s lead time.',
+      id: 'Porsi minggu terbit yang berubah di dalam lead time pemasok.',
+      formula: {
+        en: 'Weeks changed inside the lead time ÷ all weeks published.',
+        id: 'Minggu yang berubah dalam lead time ÷ semua minggu yang diterbitkan.'
+      },
+      alsoCalled: [
+        {
+          name: 'Share of schedules changed inside lead time',
+          source: { en: 'forecast engine requirements', id: 'kebutuhan mesin prakiraan' }
+        }
+      ]
+    },
+    tradeOffWithinLimits: {
+      label: { en: 'Trade-off weeks within limits', id: 'Minggu Trade-off dalam batas' },
+      en: 'The share of Trade-off weeks whose quantity to publish stays within the allowed range.',
+      id: 'Porsi minggu Trade-off yang kuantitas terbitnya tetap dalam rentang yang diizinkan.',
+      alsoCalled: [
+        {
+          name: 'tolerance band',
+          source: { en: 'forecast engine requirements', id: 'kebutuhan mesin prakiraan' }
+        }
+      ]
+    },
+    weeksHeld: {
+      label: {
+        en: 'Weeks held in the version to publish',
+        id: 'Minggu yang ditahan pada versi yang akan diterbitkan'
+      },
+      en: 'Weeks whose quantity to publish differs from the engine value: Firm weeks kept, weeks held at the band, and damped weeks.',
+      id: 'Minggu yang kuantitas terbitnya berbeda dari nilai mesin: minggu Firm yang dipertahankan, minggu yang ditahan di batas, dan minggu yang diredam.'
+    },
+    seriesHeld: {
+      label: { en: 'Held (Firm · band · damped)', id: 'Ditahan (Firm · batas · diredam)' },
+      en: 'For the series, how many weeks are held, split into Firm weeks kept, weeks held at the band, and damped weeks.',
+      id: 'Untuk seri itu, berapa minggu yang ditahan, dipisah menjadi minggu Firm yang dipertahankan, minggu yang ditahan di batas, dan minggu yang diredam.'
+    },
+    seriesMasc: {
+      label: { en: 'MASC raw → stabilised', id: 'MASC mentah → distabilkan' },
+      en: 'The series’ plan movement (MASC) before stabilising and after it. Lower means a steadier plan for the supplier.',
+      id: 'Pergerakan rencana (MASC) seri itu sebelum dan sesudah distabilkan. Makin rendah, makin stabil rencana bagi pemasok.'
+    },
+    forecastZone: {
+      label: { en: 'Zone', id: 'Zona' },
+      en: 'Firm: inside the firm lead time, quantities never change once published. Trade-off: up to the raw-material lead time, moves are limited. Forecast: beyond, for planning only.',
+      id: 'Firm: di dalam lead time firm, kuantitas tidak berubah setelah diterbitkan. Trade-off: sampai lead time bahan baku, pergerakan dibatasi. Forecast: setelahnya, hanya untuk perencanaan.',
+      labelKeys: ['fc.col.zone']
+    },
+    publishedForecast: {
+      label: { en: 'Forecast ({{uom}})', id: 'Prakiraan ({{uom}})' },
+      en: 'The quantity PTI published for the period in this forecast version.',
+      id: 'Kuantitas yang diterbitkan PTI untuk periode itu pada versi prakiraan ini.'
+    },
+    commitmentDue: {
+      label: { en: 'Commitment due', id: 'Tenggat komitmen' },
+      en: 'When the commitment for the period is due: 1 working day after publication for Firm periods, 3 working days for Trade-off and Forecast periods.',
+      id: 'Kapan komitmen untuk periode itu jatuh tempo: 1 hari kerja setelah penerbitan untuk periode Firm, 3 hari kerja untuk periode Trade-off dan Forecast.',
+      labelKeys: ['fc.col.due']
+    },
+    commitment: {
+      label: { en: 'Commitment ({{uom}})', id: 'Komitmen ({{uom}})' },
+      en: 'The quantity the supplier commits to supply for the period. It starts at the forecast; below it needs a reason.',
+      id: 'Kuantitas yang dikomitmenkan pemasok untuk periode itu. Diawali dengan prakiraan; di bawahnya perlu alasan.'
+    },
+    commitmentUpside: {
+      label: { en: 'Upside ({{uom}})', id: 'Tambahan ({{uom}})' },
+      en: 'An optional quantity above the forecast that the supplier could also supply if PTI asks.',
+      id: 'Kuantitas opsional di atas prakiraan yang juga dapat dipasok pemasok bila PTI meminta.',
+      notToConfuse: {
+        en: 'Uplift (the rise of a month’s LTP above its baseline, on the Capacity page).',
+        id: 'Uplift (kenaikan LTP bulanan di atas baseline-nya, di halaman Kapasitas).'
       }
     }
   });

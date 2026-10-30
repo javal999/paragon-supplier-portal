@@ -10,6 +10,7 @@
 /** @import { WeekGridRow } from '@components/ui-v2/WeekGrid' */
 /** @import { WhatIfInputs, WhatIfRun } from '@services/transitions/whatIfSandboxRules' */
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import Data from '@components/ui-v2/Data';
 import WeekGrid from '@components/ui-v2/WeekGrid';
 import { formatNumber } from '@lib/format';
@@ -40,7 +41,7 @@ const WeeksGrid = ({ inputs, onLtp, plan, run, uom }) => {
   const rows = [
     {
       id: 'ltp',
-      label: t('whatIf.grid.ltp'),
+      label: <TermLabel term="whatIfLtp" />,
       unit: uom,
       combine: 'sum',
       value: (_, i) => inputs.ltp[i],
@@ -61,7 +62,7 @@ const WeeksGrid = ({ inputs, onLtp, plan, run, uom }) => {
     },
     {
       id: 'daPlan',
-      label: t('whatIf.grid.daPlan'),
+      label: <TermLabel term="daCurrentPlan" />,
       unit: uom,
       combine: 'sum',
       value: (_, i) => plan.weeks[i]?.da ?? 0,
@@ -69,7 +70,7 @@ const WeeksGrid = ({ inputs, onLtp, plan, run, uom }) => {
     },
     {
       id: 'da',
-      label: t('whatIf.grid.da'),
+      label: <TermLabel term="daScenario" />,
       unit: uom,
       emphasis: true,
       combine: 'sum',
@@ -78,7 +79,7 @@ const WeeksGrid = ({ inputs, onLtp, plan, run, uom }) => {
     },
     {
       id: 'drafted',
-      label: t('whatIf.grid.drafted'),
+      label: <TermLabel term="callOffsDrafted" />,
       unit: uom,
       combine: 'sum',
       value: (_, i) => run.weeks[i].drafted,
@@ -87,7 +88,7 @@ const WeeksGrid = ({ inputs, onLtp, plan, run, uom }) => {
     },
     {
       id: 'incoming',
-      label: t('whatIf.grid.incoming'),
+      label: <TermLabel term="whatIfIncoming" />,
       unit: uom,
       combine: 'sum',
       value: (_, i) => run.weeks[i].incoming,
@@ -95,7 +96,7 @@ const WeeksGrid = ({ inputs, onLtp, plan, run, uom }) => {
     },
     {
       id: 'prQty',
-      label: t('whatIf.grid.prQty'),
+      label: <TermLabel term="prRecommendedWeek" />,
       unit: uom,
       combine: 'sum',
       value: (_, i) => run.weeks[i].prQty,
@@ -103,13 +104,13 @@ const WeeksGrid = ({ inputs, onLtp, plan, run, uom }) => {
     },
     {
       id: 'sohPlan',
-      label: t('whatIf.grid.sohPlan'),
+      label: <TermLabel term="projectedSohPlan" />,
       unit: uom,
       cell: (_, i) => num(plan.weeks[i]?.soh ?? null)
     },
     {
       id: 'soh',
-      label: t('whatIf.grid.soh'),
+      label: <TermLabel term="projectedSohScenario" />,
       unit: uom,
       emphasis: true,
       cell: (week, i) => num(run.weeks[i].soh, `wi-soh-${week}`)

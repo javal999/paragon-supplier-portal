@@ -1,5 +1,6 @@
 /** @import React from 'react' */
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import Table from '@components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
 import TableRow from '@components/ui-v2/TableRow';
@@ -8,6 +9,18 @@ import Data from '@components/ui-v2/Data';
 import { formatNumber } from '@lib/format';
 /** @import { StabiliseRunView } from '@services/data/types' */
 import { STABILISE_RULES } from '@services/engine/stabilise';
+
+/** BL-233 — the glossary term each stabilising rule is labelled by. */
+const RULE_TERM = /** @type {const} */ ({
+  new: 'ruleNew',
+  unchanged: 'ruleUnchanged',
+  firmFrozen: 'ruleFirmFrozen',
+  forecast: 'ruleForecast',
+  damped: 'ruleDamped',
+  bandHeld: 'ruleBandHeld',
+  cumulativeHeld: 'ruleCumulativeHeld',
+  override: 'ruleOverride'
+});
 
 /**
  * The "which rule set the weeks" table: per stabilise rule, how many of the
@@ -36,7 +49,9 @@ const RuleCounts = ({ counts, replayCounts }) => {
         <tbody>
           {STABILISE_RULES.map((r) => (
             <TableRow key={r} data-testid={`stb-rule-row-${r}`}>
-              <TableCell>{t(`stb.rule.${r}`)}</TableCell>
+              <TableCell>
+                <TermLabel term={RULE_TERM[r]} />
+              </TableCell>
               <TableCell>
                 <Data data-testid={`stb-count-${r}`}>{formatNumber(counts[r])}</Data>
               </TableCell>
