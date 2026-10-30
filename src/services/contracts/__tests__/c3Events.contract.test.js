@@ -276,7 +276,7 @@ describe('⚠️ the instant is INJECTED, and the shared spine holds no clock', 
 
   it('CONTROL — the spine was really read', () => {
     expect(files.length).toBeGreaterThan(10);
-    expect(files.some((f) => f.endsWith('dispatcher.js'))).toBe(true);
+    expect(files.some((f) => f.endsWith('createDispatcher.js'))).toBe(true);
   });
 
   it('⚠️ KNOWN-GOOD FIRST — the matcher FINDS clock reads where they really are', () => {
@@ -309,7 +309,7 @@ describe('⚠️ the instant is INJECTED, and the shared spine holds no clock', 
   it('the dispatcher DECLARES the instant as a dependency', () => {
     // Reads both forms (frontend-standard Phase 4): `now: () => string` (TS) or
     // `@property {() => string} now` (JSDoc). Same name, same type, either way.
-    expect(readFileSync(join(SPINE_DIR, 'dispatcher.js'), 'utf8')).toMatch(
+    expect(readFileSync(join(SPINE_DIR, 'dispatcher', 'types.js'), 'utf8')).toMatch(
       /now:\s*\(\)\s*=>\s*string|@property\s*\{\s*\(\)\s*=>\s*string\s*\}\s*now\b/
     );
   });

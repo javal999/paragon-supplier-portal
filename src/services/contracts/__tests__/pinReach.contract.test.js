@@ -415,7 +415,7 @@ describe('⚠️ EVERY SOURCE FILE A CONTRACT CITES EXISTS', () => {
 
   it('KNOWN-GOOD — both citation forms resolve', () => {
     expect(fileExists('scoping.mock.test.js'), 'a bare basename').toBe(true);
-    expect(fileExists('src/services/transitions/dispatcher.js'), 'a full path').toBe(true);
+    expect(fileExists('src/services/transitions/dispatcher/index.js'), 'a full path').toBe(true);
     expect(fileExists('src/router/AppRouter.jsx'), 'a full .jsx path').toBe(true);
   });
 

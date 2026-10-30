@@ -61,7 +61,7 @@ describe('settle faults — the vocabulary', () => {
   it('splits on the codes the DISPATCHER ITSELF throws — derived from its source', () => {
     // Project-relative: vitest runs from the repo root, and the path is the
     // module this vocabulary is a boundary for.
-    const src = readFileSync('src/services/transitions/dispatcher.js', 'utf8');
+    const src = readFileSync('src/services/transitions/dispatcher/createDispatcher.js', 'utf8');
     const thrown = new Set(
       [...src.matchAll(/throw new DataError\(\s*'([A-Z_]+)'/g)].map((m) => m[1])
     );

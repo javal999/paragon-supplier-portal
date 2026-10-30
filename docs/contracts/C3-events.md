@@ -4,7 +4,7 @@ One event shape across the whole command layer (DR-10). The dispatcher emits a `
 on **every** command outcome; the durable audit sink persists the **same** shape, so there is no
 retrofit — the sink interface *is* the contract.
 
-Source of truth: `src/services/transitions/events.js`, `src/services/transitions/dispatcher.js`.
+Source of truth: `src/services/transitions/events.js`, `src/services/transitions/dispatcher/createDispatcher.js`.
 
 ---
 
