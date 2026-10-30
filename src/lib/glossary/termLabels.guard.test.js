@@ -95,7 +95,7 @@ const codedLines = (e) =>
   ].filter((line) => typeof line === 'string' && CODE.test(line));
 
 describe('term-label glossary (BL-233)', () => {
-  it('holds the wave 1 to 3 population, named', () => {
+  it('holds the wave 1 to 4 population, named', () => {
     // A named member, not a count: the guards below run over these entries.
     expect(Object.keys(TERM_LABEL_GLOSSARY)).toEqual(
       expect.arrayContaining([
@@ -105,7 +105,9 @@ describe('term-label glossary (BL-233)', () => {
         'freeToCallOff',
         'tradeNameStatus',
         'ropFisik',
-        'maxStockSupplier'
+        'maxStockSupplier',
+        'prGenerated',
+        'ruleOverride'
       ])
     );
   });
@@ -192,6 +194,24 @@ describe('term-label glossary (BL-233)', () => {
     }
     expect(TERM_LABEL_GLOSSARY.safetyOrderRopOrder.label.id).toBe('Safety order (ROP Order)');
     expect(TERM_LABEL_GLOSSARY.bottleneckLeadTime.label.id).toMatch(/\(ROP Supplier\)$/);
+  });
+
+  it('TL-D12 / TL-D8 / TL-D1 on the what-if: PR Generated, Incoming, Carry-over, (DA)', () => {
+    expect(TERM_LABEL_GLOSSARY.prGenerated.label).toEqual({
+      en: 'PR Generated',
+      id: 'PR Generated'
+    });
+    expect(TERM_LABEL_GLOSSARY.whatIfIncoming.label.en).toBe('Incoming');
+    expect(TERM_LABEL_GLOSSARY.whatIfIncoming.notToConfuse?.en).toMatch(/^Incoming DA/);
+    expect(TERM_LABEL_GLOSSARY.whatIfCarryOver.label).toEqual({
+      en: 'Carry-over',
+      id: 'Carry-over'
+    });
+    for (const term of /** @type {const} */ (['daOverLeadTime', 'daCurrentPlan', 'daScenario'])) {
+      const { label } = TERM_LABEL_GLOSSARY[term];
+      expect(label.en, term).toMatch(/^Demand anticipation \(DA\)/);
+      expect(label.id, term).toMatch(/^Demand anticipation \(DA\)/);
+    }
   });
 
   it('TL-D9 / TL-D13: the labels waiting on the team keep their wording', () => {

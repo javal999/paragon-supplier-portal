@@ -9,6 +9,7 @@
 /** @import React from 'react' */
 /** @import { WhatIfRun } from '@services/transitions/whatIfSandboxRules' */
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import Data from '@components/ui-v2/Data';
 import { HEADLINE_KEYS, compareRuns } from '@services/transitions/whatIfSandboxRules';
 import { Provisional, Section, diffText, figureText } from '../display';
@@ -17,6 +18,23 @@ import { Provisional, Section, diffText, figureText } from '../display';
  * A compared column: a saved scenario's run.
  * @typedef {{ readonly id: string; readonly name: string; readonly run: WhatIfRun }} ComparedRun
  */
+
+/** BL-233 — the glossary term each result row is labelled by. */
+const RESULT_TERM = /** @type {const} */ ({
+  ropOrder: 'ropOrder',
+  ropFisik: 'ropFisik',
+  max: 'whatIfMax',
+  safetyOrder: 'safetyOrder',
+  totalDa: 'daOverLeadTime',
+  prNeed: 'prGenerated',
+  prRecommendation: 'planCheckPr',
+  callOffs: 'triggerCallOffs',
+  triggerPr: 'triggerPr',
+  remainder: 'whatIfRemainder',
+  carried: 'whatIfCarryOver',
+  firstShortageWeek: 'firstShortageWeek',
+  weeksAboveMax: 'weeksAboveMax'
+});
 
 const TH = 'text-left text-xs font-medium text-text-tertiary uppercase py-2 pr-4 align-bottom';
 const TD = 'py-2 pr-4 align-top text-sm';
@@ -70,7 +88,7 @@ const ResultsTable = ({ plan, scenario, compared }) => {
             {HEADLINE_KEYS.map((key, i) => (
               <tr key={key} data-testid={`wi-row-${key}`}>
                 <th scope="row" className={`${TD} text-left font-normal text-text-secondary`}>
-                  {t(`whatIf.row.${key}`)}
+                  <TermLabel term={RESULT_TERM[key]} />
                   {key === 'max' && scenario.maxSource === 'override' ? (
                     <span className="text-xs text-text-tertiary"> ({t('whatIf.maxOverride')})</span>
                   ) : null}

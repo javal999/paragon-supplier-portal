@@ -30,6 +30,7 @@ import BuyerAlerts from './BuyerAlerts';
 import BuyerHome from './BuyerHome';
 import SupplierHome from './SupplierHome';
 import BuyerOrderSummary from './BuyerOrderSummary';
+import { headerNamed } from '@test/termText';
 
 beforeEach(() => {
   requirementResponseStore.reset();
@@ -296,7 +297,9 @@ describe('Supplier — the Due rule is visible, once (a11y finding 19, supplier 
     expect(note).toHaveTextContent(/^Commitment due: Firm: /);
     expect(note).toHaveTextContent(/working days/);
     expect(screen.getAllByTestId('fc-sup-due-rule')).toHaveLength(1);
-    for (const header of screen.getAllByRole('columnheader', { name: 'Commitment due' })) {
+    for (const header of screen.getAllByRole('columnheader', {
+      name: headerNamed('Commitment due')
+    })) {
       expect(header.querySelector('[title]')).toBeNull();
     }
   });

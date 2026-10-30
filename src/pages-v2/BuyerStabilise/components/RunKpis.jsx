@@ -27,7 +27,7 @@ const RunKpis = ({ totals }) => {
       data-testid="stb-kpis"
     >
       <KpiCard
-        eyebrow={t('stb.kpi.masc')}
+        term="planMovement"
         value={
           <span>
             <span data-testid="stb-kpi-masc-raw">{ratio(raw.masc)}</span> →{' '}
@@ -44,7 +44,7 @@ const RunKpis = ({ totals }) => {
         }
       />
       <KpiCard
-        eyebrow={t('stb.kpi.share')}
+        term="weeksChangedInLeadTime"
         value={
           <span>
             <span data-testid="stb-kpi-share-raw">{pctShare(raw.insideLeadTime.share)}</span> →{' '}
@@ -60,7 +60,7 @@ const RunKpis = ({ totals }) => {
         }
       />
       <KpiCard
-        eyebrow={t('stb.kpi.band')}
+        term="tradeOffWithinLimits"
         value={
           <span data-testid="stb-kpi-band-stab">
             {t('stb.kpi.band.value', {
@@ -76,7 +76,7 @@ const RunKpis = ({ totals }) => {
         }
       />
       <KpiCard
-        eyebrow={t('stb.kpi.held')}
+        term="weeksHeld"
         value={
           <span data-testid="stb-kpi-held">
             {formatNumber(latestHeld.firm + latestHeld.band + latestHeld.damped)}

@@ -37,13 +37,13 @@ const PeriodTable = ({ s }) => {
               {t('stb.detail.col.zone')} <TermTip term="Firm" /> <TermTip term="Trade-off" />
             </span>
           </TableHeaderCell>
-          <TableHeaderCell>{t('stb.detail.col.raw')}</TableHeaderCell>
-          <TableHeaderCell>{t('stb.detail.col.previous')}</TableHeaderCell>
-          <TableHeaderCell>{t('stb.detail.col.first')}</TableHeaderCell>
-          <TableHeaderCell>{t('stb.detail.col.damped')}</TableHeaderCell>
-          <TableHeaderCell>{t('stb.detail.col.range')}</TableHeaderCell>
-          <TableHeaderCell>{t('stb.detail.col.published')}</TableHeaderCell>
-          <TableHeaderCell>{t('stb.detail.col.rule')}</TableHeaderCell>
+          <TableHeaderCell term="engineValue" />
+          <TableHeaderCell term="lastPublished" />
+          <TableHeaderCell term="firstPublished" />
+          <TableHeaderCell term="dampedValue" />
+          <TableHeaderCell term="allowedRange" />
+          <TableHeaderCell term="toPublish" />
+          <TableHeaderCell term="stabiliseRule" />
         </TableHeader>
         <tbody>
           {s.latest.map(

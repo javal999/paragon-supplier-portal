@@ -40,7 +40,7 @@ const ChangesTable = ({ previous, current, changed, added, shownMaterials, perio
           <TableHeader>
             <TableHeaderCell>{t('fc.col.material')}</TableHeaderCell>
             <TableHeaderCell>{t('fc.col.period')}</TableHeaderCell>
-            <TableHeaderCell>{t('fc.col.zone')}</TableHeaderCell>
+            <TableHeaderCell term="forecastZone" />
             <TableHeaderCell className="text-right">
               {t('fc.col.previous', { version: previous.version })}
             </TableHeaderCell>

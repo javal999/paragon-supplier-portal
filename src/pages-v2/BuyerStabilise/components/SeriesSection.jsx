@@ -60,8 +60,8 @@ const SeriesSection = ({ series }) => {
                   {t('stb.series.col.zones')} <TermTip term="Firm" /> <TermTip term="Trade-off" />
                 </span>
               </TableHeaderCell>
-              <TableHeaderCell>{t('stb.series.col.held')}</TableHeaderCell>
-              <TableHeaderCell>{t('stb.series.col.masc')}</TableHeaderCell>
+              <TableHeaderCell term="seriesHeld" />
+              <TableHeaderCell term="seriesMasc" />
               <TableHeaderCell>{t('stb.series.col.open')}</TableHeaderCell>
             </TableHeader>
             <tbody>
