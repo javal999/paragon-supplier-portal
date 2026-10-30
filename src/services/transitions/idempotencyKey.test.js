@@ -228,7 +228,7 @@ describe('⚠️ THE BOUNDARY — an ingress key, never a user-action dedupe', (
 
   it('CONTROL — the source walk is populated and finds the dispatcher itself', async () => {
     expect(files.length).toBeGreaterThan(400);
-    expect(files.some((f) => f.endsWith('dispatcher.js'))).toBe(true);
+    expect(files.some((f) => f.endsWith('createDispatcher.js'))).toBe(true);
   });
 
   it('no page, component or hook supplies an idempotencyKey', async () => {
@@ -262,7 +262,10 @@ describe('⚠️ THE BOUNDARY — an ingress key, never a user-action dedupe', (
   });
 
   it('the cascade fan-out passes no key — a cascade is not an ingress', async () => {
-    const src = readFileSync(join(ROOT, 'src/services/transitions/dispatcher.js'), 'utf8');
+    const src = readFileSync(
+      join(ROOT, 'src/services/transitions/dispatcher/createDispatcher.js'),
+      'utf8'
+    );
     // The re-dispatch inside the fan-out builds its CommandInput inline.
     const fanOut = /transitionId: c\.transitionId[\s\S]{0,200}?\}/.exec(src)?.[0] ?? '';
     expect(fanOut).not.toBe('');

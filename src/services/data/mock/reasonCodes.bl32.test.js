@@ -254,7 +254,7 @@ describe('BL32-RSN-READ · every reader reads the list in force', () => {
       'src/services/transitions/capacityRules.js',
       'src/services/transitions/forecastRules.js',
       'src/services/transitions/inventoryAlertRules.js',
-      'src/services/transitions/policies.js',
+      'src/services/transitions/policies/purchaseOrder.js',
       'src/services/transitions/reasonCodes.js'
     ]);
   });

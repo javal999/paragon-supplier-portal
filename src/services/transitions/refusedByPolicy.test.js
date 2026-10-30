@@ -187,7 +187,7 @@ describe('ROUND TRIP — the wire value a real dispatcher emits', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 describe('the POLICY_REJECTED wire format has exactly one producer', () => {
   it('dispatcher.js constructs it once, and nests the hook name ahead of the reason', () => {
-    const src = readFileSync('src/services/transitions/dispatcher.js', 'utf8');
+    const src = readFileSync('src/services/transitions/dispatcher/createDispatcher.js', 'utf8');
     const sites = src.split('\n').filter((l) => l.includes("refusal('POLICY_REJECTED'"));
     // Known-good control first: the file was really read.
     expect(src.length).toBeGreaterThan(1000);

@@ -11,7 +11,8 @@ import { join } from 'node:path';
 /** @import { CommandRefusal } from './refusals' */
 import { COMMAND_REFUSALS, refusal, refusalKindOf } from './refusals';
 
-const dispatcherSource = () => readFileSync(join(__dirname, 'dispatcher.js'), 'utf8');
+const dispatcherSource = () =>
+  readFileSync(join(__dirname, 'dispatcher', 'createDispatcher.js'), 'utf8');
 
 /**
  * Every refusal kind the dispatcher constructs, **in the order it constructs

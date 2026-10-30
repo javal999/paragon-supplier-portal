@@ -1005,7 +1005,7 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
       '/src/services/data/mock/stores/enforcementSettingStore.js', // the ledger
       '/src/services/data/types.js', //                   the seam's row type (TYPE-ONLY)
       '/src/services/query/hooks.js', //                  E4 — the scoped read hook
-      '/src/services/transitions/policies.js' //         the recording policy
+      '/src/services/transitions/policies/governance.js' // the recording policy
     ]);
     // ⚠️ `main.jsx` IS A CONSUMER OF THE SEED AND IS NOT ON THIS LIST, because it
     // names `seedEnforcementLedger` and no enforcement vocabulary at all. Stated

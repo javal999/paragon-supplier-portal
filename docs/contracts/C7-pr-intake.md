@@ -302,10 +302,10 @@ invoice creation:
 
 - A `creation`-trigger transition (`t_pr_create`, §1) dispatched through
   `ICommandService.dispatch(scope, input)` (`types.js:1080`) with the full validation chain
-  (`dispatcher.js:4-14`): QueryScope, `requiredRole` (`pr:create`), `requiredFields`
+  (`dispatcher/createDispatcher.js:13-23`): QueryScope, `requiredRole` (`pr:create`), `requiredFields`
   (`material`+`quantity`), policy hooks → `create(payload, toState)` mints the entity + returns
-  its id (`dispatcher.js:61-62, 251-254`; `creationOwner` derives scope from the payload,
-  `:60, :193-199`).
+  its id (`dispatcher/types.js:70`, `dispatcher/createDispatcher.js:536-540`; `creationOwner` derives scope from the payload,
+  `dispatcher/types.js:57-60`, `dispatcher/createDispatcher.js:323-337`).
 
 ### C7-FIND-01 — **CLOSED** (was: PR create is author-INERT)
 
@@ -552,8 +552,8 @@ Originally generated FORK-3 (machine-harvest from code-truth + thin connecting p
 In-repo seams cited `file:line`: `purchaseRequisition.flow.js` (machine :1-92),
 `types.js` (`PurchaseRequisition` :569-587, `PRStatus` :559-565, `getRequisitions` :1150),
 `MockProcurementService.js` (read :349-354), `MockCommandService.js` (TARGETS / wiring census
-:343-360, creation-mechanism examples :96-98/:252-254), `dispatcher.js` (creation +
-validation :4-14/:60-62/:251-254), `roles.js` (`pr:*` :37),
+:343-360, creation-mechanism examples :96-98/:252-254), `dispatcher/createDispatcher.js` (creation +
+validation :13-23/:536-540), `dispatcher/types.js` (creation :57-70), `roles.js` (`pr:*` :37),
 `registry.js` (`liveness`/`isLive`/`Tier` :45-184), `C5-seams.md` (INT-TMS-01 precedent :117-126),
 `C6-planning.md` (honesty matrix, PLANNED axis). External producer grain cited by doc § + field:
 `docs/IBP_SupplyPlan_to_Procurement_Seam_2026-07-14.md` (§0 liveness caveat, §1 grain, §3 RM/PM +

@@ -272,7 +272,7 @@ describe('t_enforcement_set — ⚠️ LOOSENING REQUIRES reviewBy AND A NAMED A
     // instant, and `effectiveEnforcement` (which does) is not in the hook.
     const policies = Object.entries(
       /** @type {Record<string, string>} */ (
-        import.meta.glob('/src/services/transitions/policies.js', {
+        import.meta.glob('/src/services/transitions/policies/governance.js', {
           query: '?raw',
           import: 'default',
           eager: true
