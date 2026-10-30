@@ -13,6 +13,7 @@ import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
 import { whatIfScenarioStore } from '@services/data/mock/stores/whatIfScenarioStore';
 import { sdcClock } from '@services/sdc';
 import i18n from '@lib/i18n';
+import { expectNoBareDa } from '@test/noBareDa';
 import BuyerWhatIfSandbox from './BuyerWhatIfSandbox';
 
 const ROUTE = '/buyer/what-if';
@@ -24,8 +25,12 @@ beforeEach(async () => {
   await i18n.changeLanguage('en');
 });
 
-/** No figure, label or message reads "DA" — it labels Delivery Agreements (CAP-D10). */
-const expectNoAbbreviation = () => expect(document.body.textContent ?? '').not.toMatch(/\bDA\b/);
+/**
+ * No figure, label or message reads a bare "DA" — it labels Delivery Agreements.
+ * TL-D1 (supersedes CAP-D10) allows it only as the bracket in "Demand
+ * anticipation (DA)", which the nav shows since TL-D18.
+ */
+const expectNoAbbreviation = () => expectNoBareDa();
 
 describe('BR-06 · analysis only, stated on the page', () => {
   it('says nothing here changes the plan or reaches suppliers or SAP', async () => {
