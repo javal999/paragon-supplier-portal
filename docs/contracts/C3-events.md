@@ -58,7 +58,7 @@ prose is how a contract clause gets contradicted by shipped code with every gate
 claims: **no file under `src/services/transitions/` reads a clock at all**, the dispatcher declares
 `now` as a dependency, and the one production wiring site supplies exactly the value named above.
 The matcher separates `new Date()` (a clock read) from `new Date(asOf)` (a parse of a supplied
-string, which `policies.js` really does), and it is controlled in both directions before its silence
+string, which `policies/sourcing.js` really does), and it is controlled in both directions before its silence
 over the spine is believed.
 
 ⚠️ **IT IS THE WALL CLOCK AND NOT THE DECLARED PRESENT, DELIBERATELY — WHICH IS THE
