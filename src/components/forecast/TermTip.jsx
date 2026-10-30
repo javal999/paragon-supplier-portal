@@ -1,5 +1,5 @@
 /** @import React from 'react' */
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Info } from 'lucide-react';
 /** @import { PlanningTerm, TermEntry } from '@lib/glossary' */
@@ -33,6 +33,9 @@ import { FOCUS_RING } from './focusRing';
 // `name` the button announces, as `TermLabel` does. An entry's tip shows, in
 // this order and each only when the entry has it, the definition, "How it is
 // calculated", "Also called" (each name with its source) and "Not" (BR-07).
+// A tip opens upward when the box that clips it (a grid's scroll area, or the
+// screen) has no room below and more room above, so a bottom row's tip reads
+// whole.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -61,11 +64,40 @@ const slug = (term) =>
 const HIT_AREA =
   "relative before:absolute before:-inset-1.5 before:content-[''] [@media(pointer:coarse)]:before:-inset-4";
 
+/**
+ * The nearest ancestor that clips its overflow, or null for the screen.
+ * @param {HTMLElement} el
+ * @returns {HTMLElement | null}
+ */
+const clippingBox = (el) => {
+  for (let p = el.parentElement; p; p = p.parentElement) {
+    if (/(auto|scroll|hidden)/.test(getComputedStyle(p).overflowY)) return p;
+  }
+  return null;
+};
+
 /** @type {React.FC<TermTipProps>} */
 const TermTip = ({ term, entry: termEntry, name, slugId, children, className = '' }) => {
   const { t, i18n } = useTranslation();
   const id = useId();
   const [dismissed, setDismissed] = useState(false);
+  const [above, setAbove] = useState(false);
+  const wrapRef = useRef(/** @type {HTMLSpanElement | null} */ (null));
+  const tipRef = useRef(/** @type {HTMLSpanElement | null} */ (null));
+  /** Measures once the tip shows (hover or focus), then places it. */
+  const place = () =>
+    requestAnimationFrame(() => {
+      const wrap = wrapRef.current;
+      const tip = tipRef.current;
+      if (!wrap || !tip) return;
+      const box = clippingBox(wrap);
+      const w = wrap.getBoundingClientRect();
+      const top = box ? box.getBoundingClientRect().top : 0;
+      const bottom = box ? box.getBoundingClientRect().bottom : window.innerHeight;
+      const below = bottom - w.bottom;
+      const room = w.top - top;
+      setAbove(tip.offsetHeight > below && room > below);
+    });
   const indonesian = i18n.language?.toLowerCase().startsWith('id') ?? false;
   /** @param {{ en: string; id: string }} text */
   const pick = (text) => (indonesian ? text.id : text.en);
@@ -76,6 +108,9 @@ const TermTip = ({ term, entry: termEntry, name, slugId, children, className = '
       className={`group relative inline-flex items-center gap-1 ${className}`}
       data-testid={`term-tip-${slug(slugId ?? term ?? '')}`}
       data-dismissed={dismissed ? 'true' : 'false'}
+      data-placement={above ? 'above' : 'below'}
+      ref={wrapRef}
+      onMouseEnter={place}
       onMouseLeave={() => setDismissed(false)}
     >
       {children ? (
@@ -92,14 +127,18 @@ const TermTip = ({ term, entry: termEntry, name, slugId, children, className = '
             setDismissed(true);
           }
         }}
-        onFocus={() => setDismissed(false)}
+        onFocus={() => {
+          setDismissed(false);
+          place();
+        }}
       >
         <Info size={12} aria-hidden="true" />
       </button>
       <span
         role="tooltip"
         id={id}
-        className={`pointer-events-none absolute left-0 top-full z-20 mt-1 hidden w-64 max-w-[calc(100vw-2rem)] rounded border border-border-subtle bg-bg-surface p-2 text-left text-xs font-normal normal-case tracking-normal text-text-secondary shadow-md ${
+        ref={tipRef}
+        className={`pointer-events-none absolute left-0 ${above ? 'bottom-full mb-1' : 'top-full mt-1'} z-20 hidden w-64 max-w-[calc(100vw-2rem)] rounded border border-border-subtle bg-bg-surface p-2 text-left text-xs font-normal normal-case tracking-normal text-text-secondary shadow-md ${
           dismissed ? '' : 'group-focus-within:block group-hover:block'
         }`}
       >
