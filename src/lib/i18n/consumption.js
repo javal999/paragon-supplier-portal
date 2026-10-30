@@ -1,8 +1,9 @@
 // Recorded consumption i18n fragment (CAP-11, SC-HUB-DEMAND-ANTICIPATION-BRIEF-2026-10 §5).
 // Namespace: consumption.*
 //
-// CAP-D10 — demand anticipation is always written out ("Demand anticipation" /
-// "antisipasi permintaan"), never "DA", which labels Delivery Agreements.
+// TL-D1 (BL-233, supersedes CAP-D10) — the figure's label is "Demand
+// anticipation (DA)" in EN and ID; sentences here keep "demand anticipation"
+// once the page's label has introduced "(DA)".
 
 /** @type {Record<string, string>} */
 export const consumptionEn = {
@@ -43,7 +44,6 @@ export const consumptionEn = {
   'consumption.upload.reason.unitMismatch': 'the unit is not the material’s unit',
   'consumption.upload.reason.duplicateRow': 'the file has another row for this material and week',
   // The grid rows (CAP-11 BR-05).
-  'consumption.row.recorded': 'Recorded consumption',
   'consumption.row.recordedTitle':
     '{{share}} of the material’s {{material}}, {{source}} on {{date}} ({{id}})',
   // The alert (CAP-11 BR-04).
@@ -88,7 +88,6 @@ export const consumptionId = {
     'angka terbaca berbeda dalam bahasa Inggris dan Indonesia; tulis tanpa pemisah ribuan',
   'consumption.upload.reason.unitMismatch': 'satuan bukan satuan material',
   'consumption.upload.reason.duplicateRow': 'berkas punya baris lain untuk material dan minggu ini',
-  'consumption.row.recorded': 'Pemakaian tercatat',
   'consumption.row.recordedTitle':
     '{{share}} dari {{material}} material, {{source}} pada {{date}} ({{id}})',
   'consumption.alert.detail':

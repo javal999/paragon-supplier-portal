@@ -50,6 +50,10 @@ export const forecastUxEn = {
 
   // Term tips (F-09)
   'fux.term.aria': 'What “{{term}}” means',
+  // BL-233 BR-07 — the lines of a term label's tip, after the definition.
+  'fux.term.formula': 'How it is calculated:',
+  'fux.term.alsoCalled': 'Also called:',
+  'fux.term.not': 'Not:',
 
   // Scale hints (F-21)
   'fux.scale.masc': '1.0 = usual week-to-week movement; lower is steadier.',
@@ -137,6 +141,9 @@ export const forecastUxId = {
   'fux.asOf': 'Data per',
 
   'fux.term.aria': 'Arti “{{term}}”',
+  'fux.term.formula': 'Cara menghitung:',
+  'fux.term.alsoCalled': 'Disebut juga:',
+  'fux.term.not': 'Bukan:',
 
   'fux.scale.masc': '1,0 = pergerakan biasa dari minggu ke minggu; makin rendah makin stabil.',
   'fux.scale.trackingSignal': '0 = tidak bias; di luar ±{{limit}} prakiraan ditandai bias.',

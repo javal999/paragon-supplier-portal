@@ -20,6 +20,7 @@ import i18n from '@lib/i18n';
 import { NO_PERSON } from '@context/noPerson';
 import BuyerDemandAnticipationHistory from './BuyerDemandAnticipationHistory';
 import BuyerDemandAnticipation from './BuyerDemandAnticipation';
+import { expectNoBareDa } from '@test/noBareDa';
 
 const ROUTE = '/buyer/demand-anticipation-history';
 const W36 = '2026-08-31';
@@ -38,8 +39,8 @@ beforeEach(async () => {
   await i18n.changeLanguage('en');
 });
 
-/** No figure, label or message reads "DA" — it labels Delivery Agreements (CAP-D10). */
-const expectNoAbbreviation = () => expect(document.body.textContent ?? '').not.toMatch(/\bDA\b/);
+/** TL-D1 (BL-233; supersedes CAP-D10): "DA" only as the bracket in "Demand anticipation (DA)". */
+const expectNoAbbreviation = () => expectNoBareDa();
 
 describe('the publications, with their stamp and parts', () => {
   it('lists the seeded publication per supplier × material, in force, with its rules version', async () => {

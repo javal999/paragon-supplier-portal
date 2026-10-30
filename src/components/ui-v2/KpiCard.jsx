@@ -1,9 +1,12 @@
 /** @import * as React from 'react' */
 /** @import { LucideIcon } from 'lucide-react' */
+/** @import { TermLabelId } from '@lib/glossary' */
+import TermLabel from './TermLabel';
 
 /**
  * @typedef {Object} KpiCardProps
- * @property {string} eyebrow
+ * @property {string} [eyebrow] The title. Give `term` instead for a glossary term (BL-233).
+ * @property {TermLabelId} [term] BL-233 BR-05: the title is the term's label, with its (i).
  * @property {React.ReactNode} value
  * @property {React.ReactNode} [subtitle]
  * @property {LucideIcon} [icon]
@@ -18,6 +21,7 @@
  */
 const KpiCard = ({
   eyebrow,
+  term,
   value,
   subtitle,
   icon: Icon,
@@ -32,7 +36,9 @@ const KpiCard = ({
   const content = (
     <>
       {Icon ? <Icon size={18} className="absolute top-5 right-5 text-text-tertiary" /> : null}
-      <div className="text-eyebrow text-text-tertiary uppercase">{eyebrow}</div>
+      <div className="text-eyebrow text-text-tertiary uppercase">
+        {term ? <TermLabel term={term} /> : eyebrow}
+      </div>
       <div className="text-kpi font-mono tabular-nums text-data-navy mt-3">{value}</div>
       {subtitle ? <div className="text-meta text-text-secondary mt-2">{subtitle}</div> : null}
     </>

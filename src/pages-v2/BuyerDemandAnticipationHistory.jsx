@@ -11,6 +11,7 @@ import Data from '@components/ui-v2/Data';
 import Button from '@components/ui-v2/Button';
 import StatusPill from '@components/ui-v2/StatusPill';
 import WeekGrid from '@components/ui-v2/WeekGrid';
+import TermLabel from '@components/ui-v2/TermLabel';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { useCurrentIdentity } from '@context/CurrentIdentityContext';
@@ -291,7 +292,7 @@ const HistoryCard = ({ row: r, nowIso }) => {
   const gridRows = [
     {
       id: 'ltp',
-      label: t('daHist.col.ltp'),
+      label: <TermLabel term="ltp" />,
       unit: r.uom,
       combine: 'sum',
       value: (week) => weekOf(week).ltp,
@@ -299,7 +300,7 @@ const HistoryCard = ({ row: r, nowIso }) => {
     },
     {
       id: 'safety',
-      label: t('daHist.col.safety'),
+      label: <TermLabel term="safetyOrder" />,
       unit: r.uom,
       combine: 'sum',
       value: (week) => weekOf(week).safety,
@@ -307,7 +308,7 @@ const HistoryCard = ({ row: r, nowIso }) => {
     },
     {
       id: 'carriedIn',
-      label: t('daHist.col.carriedIn'),
+      label: <TermLabel term="carryOver" />,
       unit: r.uom,
       combine: 'sum',
       value: (week) => weekOf(week).carriedIn.reduce((n, c) => n + c.qty, 0),
@@ -331,7 +332,7 @@ const HistoryCard = ({ row: r, nowIso }) => {
     },
     {
       id: 'da',
-      label: t('daHist.col.da'),
+      label: <TermLabel term="demandAnticipation" />,
       unit: r.uom,
       emphasis: true,
       combine: 'sum',
@@ -342,7 +343,7 @@ const HistoryCard = ({ row: r, nowIso }) => {
     },
     {
       id: 'daInForce',
-      label: t('daHist.col.daInForce'),
+      label: <TermLabel term="daAfterCheck" />,
       unit: r.uom,
       combine: 'sum',
       value: (week) => weekOf(week).daInForce,
@@ -383,15 +384,26 @@ const HistoryCard = ({ row: r, nowIso }) => {
         className="px-4 pb-3 grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 text-sm"
         data-testid={`dah-facts-${key}`}
       >
-        <dt className="text-text-tertiary">{t('daHist.fact.safetyOrder')}</dt>
+        {/* BL-233 TL-D10 (question 7) — the facts list carries the (i); its CSV headers keep the same words. */}
+        <dt className="text-text-tertiary">
+          <TermLabel term="safetyOrder" />
+        </dt>
         <dd>{num(r.safetyOrder)}</dd>
-        <dt className="text-text-tertiary">{t('daHist.fact.ospo')}</dt>
+        <dt className="text-text-tertiary">
+          <TermLabel term="ospo" />
+        </dt>
         <dd data-testid={`dah-ospo-${key}`}>{num(r.ospo)}</dd>
-        <dt className="text-text-tertiary">{t('daHist.fact.additionalPo')}</dt>
+        <dt className="text-text-tertiary">
+          <TermLabel term="additionalPo" />
+        </dt>
         <dd data-testid={`dah-addpo-${key}`}>{num(r.additionalPo)}</dd>
-        <dt className="text-text-tertiary">{t('daHist.fact.callOff')}</dt>
+        <dt className="text-text-tertiary">
+          <TermLabel term="callOffsThisWeek" />
+        </dt>
         <dd data-testid={`dah-calloff-${key}`}>{num(r.callOff)}</dd>
-        <dt className="text-text-tertiary">{t('daHist.fact.remainder')}</dt>
+        <dt className="text-text-tertiary">
+          <TermLabel term="remainder" />
+        </dt>
         <dd data-testid={`dah-carry-${key}`}>
           {num(r.remainder)}{' '}
           <span className="text-xs text-text-tertiary">
@@ -402,11 +414,15 @@ const HistoryCard = ({ row: r, nowIso }) => {
         </dd>
         {r.uncarried > 0 ? (
           <>
-            <dt className="text-text-tertiary">{t('daHist.fact.uncarried')}</dt>
+            <dt className="text-text-tertiary">
+              <TermLabel term="notCarried" />
+            </dt>
             <dd>{num(r.uncarried)}</dd>
           </>
         ) : null}
-        <dt className="text-text-tertiary">{t('daHist.fact.agreed')}</dt>
+        <dt className="text-text-tertiary">
+          <TermLabel term="supplierAgreedOutside" />
+        </dt>
         <dd data-testid={`dah-agreed-${key}`}>
           {r.agreedFirstOutside ? t('daHist.fact.agreed.yes') : t('daHist.fact.agreed.no')}
         </dd>

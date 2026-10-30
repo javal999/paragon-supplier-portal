@@ -27,6 +27,7 @@ import { NO_PERSON } from '@context/noPerson';
 import BuyerDemandAnticipation from './BuyerDemandAnticipation';
 import BuyerAlerts from './BuyerAlerts';
 import { readFileText } from './inventory/inventoryDisplay';
+import { expectNoBareDa } from '@test/noBareDa';
 
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 const ROUTE = '/buyer/demand-anticipation';
@@ -52,8 +53,8 @@ afterEach(() => {
  */
 const openTab = async (name) => fireEvent.click(await screen.findByRole('tab', { name }));
 
-/** No figure, label or message reads "DA" — it labels Delivery Agreements (CAP-D10). */
-const expectNoAbbreviation = () => expect(document.body.textContent ?? '').not.toMatch(/\bDA\b/);
+/** TL-D1 (BL-233; supersedes CAP-D10): "DA" only as the bracket in "Demand anticipation (DA)". */
+const expectNoAbbreviation = () => expectNoBareDa();
 
 /** @param {string} csv @param {string} [name] */
 const upload = (csv, name = 'consumption.csv') =>
@@ -259,7 +260,7 @@ describe('DRC-4 BR-02 — a surplus the last week cannot absorb, on PTI alerts',
       'alert-demandAnticipationUnabsorbed|PK-PETB-8801|sup-007'
     );
     expect(alert).toHaveTextContent(
-      'Supply above demand anticipation is more than the last week of the horizon can absorb'
+      'Supply above demand anticipation (DA) is more than the last week of the horizon can absorb'
     );
     expect(
       within(alert).getByTestId(
@@ -283,7 +284,7 @@ describe('DRC-4 BR-02 — a surplus the last week cannot absorb, on PTI alerts',
   });
 });
 
-describe('both locales (CAP-D10)', () => {
+describe('both locales (TL-D1)', () => {
   it('renders the rows and the panel in Indonesian, with no "DA"', async () => {
     try {
       await i18n.changeLanguage('id');

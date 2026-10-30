@@ -6,6 +6,7 @@ import PageMetaLine from '@components/ui-v2/PageMetaLine';
 import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
 import Data from '@components/ui-v2/Data';
 import WeekGrid from '@components/ui-v2/WeekGrid';
+import TermLabel from '@components/ui-v2/TermLabel';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 /** @import { WeekGridRow } from '@components/ui-v2/WeekGrid' */
@@ -50,7 +51,7 @@ const SupplierAnticipationGrid = ({ row, currentWeek }) => {
   const weekOf = (week) => /** @type {SupplierDaWeek} */ (row.weeks.find((w) => w.week === week));
   /**
    * @param {string} id
-   * @param {string} label
+   * @param {React.ReactNode} label
    * @param {(w: SupplierDaWeek) => number} pick
    * @param {boolean} [zeroAsDash]
    * @returns {WeekGridRow}
@@ -78,10 +79,11 @@ const SupplierAnticipationGrid = ({ row, currentWeek }) => {
       viewKey="supplierDemandAnticipation"
       weeks={row.weeks.map((w) => ({ week: w.week, testId: `supda-week-${rowKey}-${w.week}` }))}
       rows={[
-        numberRow('ltp', t('demandAnt.row.ltp'), (w) => w.ltp),
-        numberRow('safety', t('demandAnt.row.safety'), (w) => w.safety, true),
-        numberRow('carriedIn', t('demandAnt.row.carriedIn'), (w) => w.carriedIn, true),
-        numberRow('figure', t('demandAnt.row.figure'), (w) => w.qty)
+        // BL-233 — each row label is a glossary term with its (i).
+        numberRow('ltp', <TermLabel term="ltp" />, (w) => w.ltp),
+        numberRow('safety', <TermLabel term="safetyOrder" />, (w) => w.safety, true),
+        numberRow('carriedIn', <TermLabel term="carryOver" />, (w) => w.carriedIn, true),
+        numberRow('figure', <TermLabel term="demandAnticipation" />, (w) => w.qty)
       ]}
     />
   );

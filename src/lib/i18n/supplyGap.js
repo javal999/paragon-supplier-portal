@@ -2,17 +2,16 @@
 // SC-HUB-DEMAND-ANTICIPATION-BRIEF-2026-10 §6). Namespace: supplyGap.*
 //
 // Two rows on the Demand anticipation page (Open supply, Gap) and the
-// "Below demand anticipation" section on What to order. CAP-D10 — the figure is
-// always written out as "demand anticipation" / "antisipasi permintaan"; no
-// string abbreviates it, because "DA" labels Delivery Agreements.
+// "Below demand anticipation" section on What to order. TL-D1 (BL-233,
+// supersedes CAP-D10) — the figure's label is "Demand anticipation (DA)" in EN
+// and ID; running sentences keep "demand anticipation" once the label has
+// introduced "(DA)" on the page.
 
 /** @type {Record<string, string>} */
 export const supplyGapEn = {
   // The Demand anticipation grid.
-  'supplyGap.row.openSupply': 'Open supply',
-  'supplyGap.row.gap': 'Gap',
   // What to order — the section.
-  'supplyGap.title': 'Below demand anticipation',
+  'supplyGap.title': 'Below demand anticipation (DA)',
   'supplyGap.intro':
     'Weeks where released call-offs fall short of the demand anticipation, per supplier and material. A call-off on the oldest blanket PO line with balance comes first, then the next line; what no line covers needs a new PO, which the planner raises in SAP. This list is separate from the recommended orders: it reads the hub’s own call-offs, which the engine does not net.',
   'supplyGap.sample':
@@ -29,10 +28,6 @@ export const supplyGapEn = {
   'supplyGap.col.supplier': 'Supplier',
   'supplyGap.col.material': 'Material',
   'supplyGap.col.week': 'Week',
-  'supplyGap.col.demandAnticipation': 'Demand anticipation',
-  'supplyGap.col.openSupply': 'Open supply',
-  'supplyGap.col.gap': 'Gap',
-  'supplyGap.col.proposal': 'Proposal',
   'supplyGap.open': 'Open {{material}} for {{supplier}} in Demand anticipation',
   // The proposal.
   'supplyGap.proposal.callOff': 'Call off {{qty}} on {{po}}',
@@ -55,9 +50,7 @@ export const supplyGapEn = {
 
 /** @type {Record<string, string>} */
 export const supplyGapId = {
-  'supplyGap.row.openSupply': 'Pasokan terbuka',
-  'supplyGap.row.gap': 'Kekurangan',
-  'supplyGap.title': 'Di bawah antisipasi permintaan',
+  'supplyGap.title': 'Di bawah demand anticipation (DA)',
   'supplyGap.intro':
     'Minggu-minggu ketika call-off yang dirilis kurang dari antisipasi permintaan, per pemasok dan material. Call-off pada baris PO induk tertua yang masih bersaldo didahulukan, lalu baris berikutnya; yang tidak tertutup baris mana pun memerlukan PO baru, yang dibuat perencana di SAP. Daftar ini terpisah dari pesanan yang direkomendasikan: daftar ini membaca call-off hub sendiri, yang tidak diperhitungkan oleh mesin.',
   'supplyGap.sample':
@@ -72,10 +65,6 @@ export const supplyGapId = {
   'supplyGap.col.supplier': 'Pemasok',
   'supplyGap.col.material': 'Material',
   'supplyGap.col.week': 'Minggu',
-  'supplyGap.col.demandAnticipation': 'Antisipasi permintaan',
-  'supplyGap.col.openSupply': 'Pasokan terbuka',
-  'supplyGap.col.gap': 'Kekurangan',
-  'supplyGap.col.proposal': 'Usulan',
   'supplyGap.open': 'Buka {{material}} untuk {{supplier}} di Antisipasi permintaan',
   'supplyGap.proposal.callOff': 'Call-off {{qty}} pada {{po}}',
   'supplyGap.proposal.oldest': 'baris PO induk tertua yang masih bersaldo',

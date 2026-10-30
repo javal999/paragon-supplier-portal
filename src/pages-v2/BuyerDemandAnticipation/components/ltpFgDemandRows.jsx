@@ -1,5 +1,6 @@
 /** @import { TFunction } from 'i18next' */
 import Data from '@components/ui-v2/Data';
+import TermLabel from '@components/ui-v2/TermLabel';
 import { formatDate, formatNumber } from '@lib/format';
 /** @import { DemandAnticipationRow } from '@services/transitions/demandAnticipationRules' */
 /** @import { LtpFgWeekFields } from '@services/transitions/ltpFgDemandRules' */
@@ -57,7 +58,7 @@ export function ltpFgDemandRows(row, rowKey, t) {
       label:
         available === false ? (
           <span>
-            {t('ltpFg.row.fgDemand')}
+            <TermLabel term="fgDemand" />
             <span
               className="block text-xs text-text-tertiary"
               data-testid={`dant-fg-unavailable-${rowKey}`}
@@ -66,7 +67,7 @@ export function ltpFgDemandRows(row, rowKey, t) {
             </span>
           </span>
         ) : (
-          t('ltpFg.row.fgDemand')
+          <TermLabel term="fgDemand" />
         ),
       unit: row.uom,
       combine: 'sum',
@@ -89,7 +90,7 @@ export function ltpFgDemandRows(row, rowKey, t) {
     },
     {
       id: 'ltpLessFg',
-      label: t('ltpFg.row.ltpLessFg'),
+      label: <TermLabel term="ltpLessFgDemand" />,
       unit: row.uom,
       combine: 'sum',
       value: (week) => fieldsOf(week).ltpLessFgDemand ?? 0,
@@ -107,7 +108,7 @@ export function ltpFgDemandRows(row, rowKey, t) {
       id: 'consumptionAverage',
       label: (
         <span>
-          {t('ltpFg.row.consumptionAverage', { weeks: weeksN })}
+          <TermLabel term="consumptionAverage" values={{ weeks: weeksN }} />
           {/* A11's 13 weeks are confirmed [Team, 2026-10-28]: no Provisional label. */}
           {note ? <span className="block text-xs text-text-tertiary">{note}</span> : null}
         </span>

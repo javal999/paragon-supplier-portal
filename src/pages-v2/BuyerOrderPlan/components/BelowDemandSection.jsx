@@ -106,14 +106,11 @@ const BelowDemandSection = ({ today, drafts }) => {
                 {t('supplyGap.col.supplier')} · {t('supplyGap.col.material')}
               </TableHeaderCell>
               <TableHeaderCell>{t('supplyGap.col.week')}</TableHeaderCell>
-              <TableHeaderCell className="text-right">
-                {t('supplyGap.col.demandAnticipation')}
-              </TableHeaderCell>
-              <TableHeaderCell className="text-right">
-                {t('supplyGap.col.openSupply')}
-              </TableHeaderCell>
-              <TableHeaderCell className="text-right">{t('supplyGap.col.gap')}</TableHeaderCell>
-              <TableHeaderCell>{t('supplyGap.col.proposal')}</TableHeaderCell>
+              {/* BL-233 BR-05 — the measures carry their (i); Supplier, Material and Week do not (BR-06). */}
+              <TableHeaderCell className="text-right" term="demandAnticipation" />
+              <TableHeaderCell className="text-right" term="openSupply" />
+              <TableHeaderCell className="text-right" term="supplyGap" />
+              <TableHeaderCell term="gapProposal" />
             </TableHeader>
             <tbody>
               {shown.map((g) => {

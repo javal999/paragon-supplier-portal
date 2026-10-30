@@ -2,8 +2,9 @@
 // BL-191 adjustment, SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10).
 // Namespace: daHist.*
 //
-// CAP-D10 — the figure is always written out as "Demand anticipation" /
-// "Antisipasi permintaan", never "DA" (that labels Delivery Agreements).
+// TL-D1 (BL-233, supersedes CAP-D10) — the figure's label is "Demand
+// anticipation (DA)" in EN and ID; TL-D8 — the carried quantity is
+// "Carry-over". The CSV headers use the same words as the screen (TL-D10).
 
 /** @type {Record<string, string>} */
 export const demandAnticipationHistoryEn = {
@@ -34,23 +35,11 @@ export const demandAnticipationHistoryEn = {
   'daHist.sampleSeed': 'Sample publication, computed from the sample data',
   'daHist.rulesVersion': 'Rules version',
   'daHist.planningWeek': 'Planning week',
-  'daHist.fact.ospo': 'OSPO',
-  'daHist.fact.additionalPo': 'Additional PO',
-  'daHist.fact.safetyOrder': 'Safety order',
-  'daHist.fact.callOff': 'Call-offs this week',
-  'daHist.fact.remainder': 'Remainder',
   'daHist.fact.carriedTo': 'Carried to {{week}}',
   'daHist.fact.notCarried': 'Nothing carried',
-  'daHist.fact.uncarried': 'Not carried (over the limit)',
-  'daHist.fact.agreed': 'Supplier agreed to carry outside the horizon',
   'daHist.fact.agreed.yes': 'Yes',
   'daHist.fact.agreed.no': 'No',
   'daHist.col.week': 'Week',
-  'daHist.col.ltp': 'LTP',
-  'daHist.col.safety': 'Safety order',
-  'daHist.col.carriedIn': 'Carried in',
-  'daHist.col.da': 'Demand anticipation',
-  'daHist.col.daInForce': 'After the check',
   'daHist.carriedFrom': '{{qty}} from {{week}}',
   'daHist.adjust.title': 'Adjusted by delayed call-offs (LTP dropped)',
   'daHist.adjust.row':
@@ -70,10 +59,10 @@ export const demandAnticipationHistoryEn = {
   'daHist.csv.week': 'Week',
   'daHist.csv.ltp': 'LTP',
   'daHist.csv.safety': 'Safety order',
-  'daHist.csv.carriedIn': 'Carried in',
+  'daHist.csv.carriedIn': 'Carry-over',
   'daHist.csv.carriedFrom': 'Carried from',
-  'daHist.csv.demandAnticipation': 'Demand anticipation',
-  'daHist.csv.demandAnticipationInForce': 'Demand anticipation after the check',
+  'daHist.csv.demandAnticipation': 'Demand anticipation (DA)',
+  'daHist.csv.demandAnticipationInForce': 'Demand anticipation (DA) after the check',
   'daHist.csv.ospo': 'OSPO',
   'daHist.csv.additionalPo': 'Additional PO',
   'daHist.csv.callOff': 'Call-offs this week',
@@ -111,23 +100,11 @@ export const demandAnticipationHistoryId = {
   'daHist.sampleSeed': 'Publikasi contoh, dihitung dari data contoh',
   'daHist.rulesVersion': 'Versi aturan',
   'daHist.planningWeek': 'Minggu perencanaan',
-  'daHist.fact.ospo': 'OSPO',
-  'daHist.fact.additionalPo': 'PO tambahan',
-  'daHist.fact.safetyOrder': 'Safety order',
-  'daHist.fact.callOff': 'Call-off minggu ini',
-  'daHist.fact.remainder': 'Sisa',
   'daHist.fact.carriedTo': 'Dipindahkan ke {{week}}',
   'daHist.fact.notCarried': 'Tidak ada yang dipindahkan',
-  'daHist.fact.uncarried': 'Tidak dipindahkan (melebihi batas)',
-  'daHist.fact.agreed': 'Pemasok setuju memindahkan ke luar horizon',
   'daHist.fact.agreed.yes': 'Ya',
   'daHist.fact.agreed.no': 'Tidak',
   'daHist.col.week': 'Minggu',
-  'daHist.col.ltp': 'LTP',
-  'daHist.col.safety': 'Safety order',
-  'daHist.col.carriedIn': 'Pindahan masuk',
-  'daHist.col.da': 'Antisipasi permintaan',
-  'daHist.col.daInForce': 'Setelah pemeriksaan',
   'daHist.carriedFrom': '{{qty}} dari {{week}}',
   'daHist.adjust.title': 'Disesuaikan oleh call-off yang ditunda (LTP turun)',
   'daHist.adjust.row':
@@ -146,10 +123,10 @@ export const demandAnticipationHistoryId = {
   'daHist.csv.week': 'Minggu',
   'daHist.csv.ltp': 'LTP',
   'daHist.csv.safety': 'Safety order',
-  'daHist.csv.carriedIn': 'Pindahan masuk',
+  'daHist.csv.carriedIn': 'Carry-over',
   'daHist.csv.carriedFrom': 'Dipindahkan dari',
-  'daHist.csv.demandAnticipation': 'Antisipasi permintaan',
-  'daHist.csv.demandAnticipationInForce': 'Antisipasi permintaan setelah pemeriksaan',
+  'daHist.csv.demandAnticipation': 'Demand anticipation (DA)',
+  'daHist.csv.demandAnticipationInForce': 'Demand anticipation (DA) setelah pemeriksaan',
   'daHist.csv.ospo': 'OSPO',
   'daHist.csv.additionalPo': 'PO tambahan',
   'daHist.csv.callOff': 'Call-off minggu ini',

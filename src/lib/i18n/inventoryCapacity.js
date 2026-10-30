@@ -459,7 +459,7 @@ export const inventoryCapacityEn = {
   'inv.alerts.rule.blanketPoRunOut':
     'A blanket PO runs out soon: raise the next PO by its "new PO needed by" week',
   'inv.alerts.rule.demandAnticipationUnabsorbed':
-    'Supply above demand anticipation is more than the last week of the horizon can absorb',
+    'Supply above demand anticipation (DA) is more than the last week of the horizon can absorb',
   'inv.alerts.openInventory': 'Open inventory',
   'inv.alerts.openCapacity': 'Open capacity',
   'inv.alerts.openCommitments': 'Open commitments & gaps',
@@ -1068,7 +1068,7 @@ export const inventoryCapacityId = {
   'inv.alerts.count': 'Peringatan: {{count}}',
   'inv.alerts.rule.ptiBelowRop': 'Stok PTI di bawah titik pemesanan ulang PTI',
   'inv.alerts.rule.supplierBelowRop':
-    'Stok pemasok di bawah titik pemesanan ulang pemasok hasil hitung sistem (ROP Pemasok)',
+    'Stok pemasok di bawah titik pemesanan ulang pemasok hasil hitung sistem (ROP Supplier)',
   'inv.alerts.rule.projectedStockOut': 'Stok PTI habis sebelum kedatangan berikutnya',
   'inv.alerts.rule.capacityBelowDemand': 'Kapasitas yang dialokasikan di bawah LTP',
   'inv.alerts.rule.staleData': 'Angka stok pemasok kedaluwarsa',
@@ -1077,15 +1077,15 @@ export const inventoryCapacityId = {
   'inv.alerts.rule.commitmentBelowForecast':
     'Kuantitas komitmen di bawah prakiraan melebihi toleransi',
   'inv.alerts.rule.leadTimeMissing':
-    'Waktu tunggu pemasok belum tercatat: risiko memakai pita hari sampai data induk diperbaiki',
+    'Lead time pemasok belum tercatat: risiko memakai pita hari sampai data induk diperbaiki',
   'inv.alerts.rule.callOffNotCovered':
-    'Call-off terkonfirmasi yang jatuh tempo dalam waktu tunggu melebihi stok pemasok ditambah produksi yang selesai sebelum tanggal kebutuhan',
+    'Call-off terkonfirmasi yang jatuh tempo dalam lead time melebihi stok pemasok ditambah produksi yang selesai sebelum tanggal kebutuhan',
   'inv.alerts.rule.supplyDiscontinued':
     'Pemasok menandai material ini Dihentikan: perlu sumber lain',
   'inv.alerts.rule.blanketPoRunOut':
     'PO induk akan segera habis: buat PO berikutnya sebelum minggu "PO baru diperlukan paling lambat"',
   'inv.alerts.rule.demandAnticipationUnabsorbed':
-    'Pasokan di atas antisipasi permintaan melebihi yang dapat diserap minggu terakhir horizon',
+    'Pasokan di atas demand anticipation (DA) melebihi yang dapat diserap minggu terakhir horizon',
   'inv.alerts.openInventory': 'Buka stok',
   'inv.alerts.openCapacity': 'Buka kapasitas',
   'inv.alerts.openCommitments': 'Buka komitmen & selisih',

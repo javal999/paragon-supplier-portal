@@ -2,9 +2,11 @@
 // DRC-4 / BL-190, SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10).
 // Namespace: demandAnt.*
 //
-// CAP-D10 — the figure is always written out as "Demand anticipation" /
-// "Antisipasi permintaan". No string here abbreviates it: "DA" already labels
-// Delivery Agreements on the contract pages. ROP, SOH, OSPO, OSPR and PR are
+// TL-D1 (BL-233, 2026-10-29; supersedes CAP-D10) — the figure's label is
+// "Demand anticipation (DA)" in EN and ID; its (i) says "Not Delivery
+// Agreement", which "DA" also labels on the contract pages. TL-D8 — the carried
+// quantity is "Carry-over" in EN and ID. Grid row labels must equal their
+// glossary entries (`lib/glossary/termLabels.glossary.js`, BR-08). ROP, SOH, OSPO, OSPR and PR are
 // the planners' own abbreviations and are kept in both languages.
 
 /** @type {Record<string, string>} */
@@ -26,8 +28,8 @@ export const demandAnticipationEn = {
   'demandAnt.pub.published': 'Last published {{date}}',
   'demandAnt.pub.unattributed': 'not attributed to a person (no one is signed in by name)',
   // The publish act.
-  'demandAnt.publish.button': 'Publish demand anticipation · {{week}}',
-  'demandAnt.publish.confirmTitle': 'Publish demand anticipation',
+  'demandAnt.publish.button': 'Publish demand anticipation (DA) · {{week}}',
+  'demandAnt.publish.confirmTitle': 'Publish demand anticipation (DA)',
   'demandAnt.publish.confirmBody':
     'This records the demand anticipation of planning week {{week}} ({{dates}}) at today’s figures, for every supplier × material.',
   'demandAnt.publish.confirmChanged_one':
@@ -60,18 +62,12 @@ export const demandAnticipationEn = {
   'demandAnt.card.hideWeeks': 'Hide the weeks',
   'demandAnt.grid.corner': 'Week',
   // The grid rows.
-  'demandAnt.row.ltp': 'LTP',
-  'demandAnt.row.safety': 'Safety order',
-  'demandAnt.row.carriedIn': 'Carried in',
   'demandAnt.row.carriedFrom': '{{qty}} from {{week}}',
-  'demandAnt.row.figure': 'Demand anticipation',
-  'demandAnt.row.wouldBe': 'Would be',
-  'demandAnt.row.absorbed': 'Surplus absorbed',
   'demandAnt.row.absorbedCell': '−{{qty}} supply above demand anticipation',
   'demandAnt.published': 'Published',
   'demandAnt.horizon': 'Horizon',
   'demandAnt.publishedParts':
-    'Published {{date}}: LTP {{ltp}}, safety order {{safety}}, carried in {{carried}}',
+    'Published {{date}}: LTP {{ltp}}, safety order {{safety}}, carry-over {{carried}}',
   'demandAnt.noChange': 'no change',
   'demandAnt.wouldBeHelp': 'Would be: today’s figure beside a published one, for information only.',
   // The plan vs execution check (DRC-4).
@@ -138,8 +134,8 @@ export const demandAnticipationId = {
   'demandAnt.pub.published': 'Terakhir dipublikasikan {{date}}',
   'demandAnt.pub.unattributed':
     'tidak tercatat atas nama seseorang (tidak ada yang masuk dengan nama)',
-  'demandAnt.publish.button': 'Publikasikan antisipasi permintaan · {{week}}',
-  'demandAnt.publish.confirmTitle': 'Publikasikan antisipasi permintaan',
+  'demandAnt.publish.button': 'Publikasikan demand anticipation (DA) · {{week}}',
+  'demandAnt.publish.confirmTitle': 'Publikasikan demand anticipation (DA)',
   'demandAnt.publish.confirmBody':
     'Ini mencatat antisipasi permintaan minggu perencanaan {{week}} ({{dates}}) pada angka hari ini, untuk setiap pemasok × material.',
   'demandAnt.publish.confirmChanged_other':
@@ -166,18 +162,12 @@ export const demandAnticipationId = {
   'demandAnt.card.showWeeks': 'Tampilkan minggu',
   'demandAnt.card.hideWeeks': 'Sembunyikan minggu',
   'demandAnt.grid.corner': 'Minggu',
-  'demandAnt.row.ltp': 'LTP',
-  'demandAnt.row.safety': 'Safety order',
-  'demandAnt.row.carriedIn': 'Sisa dibawa masuk',
   'demandAnt.row.carriedFrom': '{{qty}} dari {{week}}',
-  'demandAnt.row.figure': 'Antisipasi permintaan',
-  'demandAnt.row.wouldBe': 'Jika dihitung ulang',
-  'demandAnt.row.absorbed': 'Kelebihan diserap',
   'demandAnt.row.absorbedCell': '−{{qty}} pasokan di atas antisipasi permintaan',
   'demandAnt.published': 'Dipublikasikan',
   'demandAnt.horizon': 'Horizon',
   'demandAnt.publishedParts':
-    'Dipublikasikan {{date}}: LTP {{ltp}}, safety order {{safety}}, sisa dibawa masuk {{carried}}',
+    'Dipublikasikan {{date}}: LTP {{ltp}}, safety order {{safety}}, carry-over {{carried}}',
   'demandAnt.noChange': 'tidak berubah',
   'demandAnt.wouldBeHelp':
     'Jika dihitung ulang: angka hari ini di samping angka yang dipublikasikan, sebagai informasi saja.',
