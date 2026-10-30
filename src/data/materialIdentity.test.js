@@ -550,7 +550,7 @@ const inModules = (re) =>
   [...new Set(REFS.filter((r) => re.test(r.module)).map((r) => r.code))].sort();
 
 /** The declared document lane (`C8-MASTER-DECL`). */
-const DOCUMENT_LANE = inModules(/^\/src\/data\/mock[^/]*\.[jt]s$/);
+const DOCUMENT_LANE = inModules(/^\/src\/data\/mock(?:[^/]*|PurchaseOrders\/[^/]+)\.[jt]s$/);
 /** The master-governed lane — the master itself and the delivery fixtures that
  *  derive every unit from it via `requireUom`. */
 const MASTER_GOVERNED = inModules(/^\/src\/services\/(sdc\/fixtures|delivery\/)/);
@@ -591,7 +591,7 @@ describe('2B-0 — the lane set DERIVES (DERIVED-OVER-A-CHOSEN-SCOPE-01)', () =>
       expect.arrayContaining([
         '/src/data/mockGoodsReceipts.js',
         '/src/data/mockInventory.js',
-        '/src/data/mockPurchaseOrders.js',
+        '/src/data/mockPurchaseOrders/index.js',
         '/src/data/mockShipments.js',
         // ── not in the B2a import list ──
         '/src/data/mockRfqs.js',
@@ -1170,7 +1170,7 @@ describe('MAT-SPACE-UNDECLARED-01 — the third space, and the real 2B input', (
     // meaning (2B-3's population). The transacting lanes are clean.
     /** @param {RegExp} re */
     const unresolvedIn = (re) => inModules(re).filter((c) => !(c in MATERIAL_MASTER));
-    expect(unresolvedIn(/^\/src\/data\/mockPurchaseOrders\.[jt]s$/)).toEqual([]);
+    expect(unresolvedIn(/^\/src\/data\/mockPurchaseOrders\/[^/]+\.[jt]s$/)).toEqual([]);
     expect(unresolvedIn(/^\/src\/data\/mockGoodsReceipts\.[jt]s$/)).toEqual([]);
     expect(unresolvedIn(/^\/src\/data\/mockInventory\.[jt]s$/)).toEqual([]);
     expect(unresolvedIn(/^\/src\/data\/mockShipments\.[jt]s$/)).toEqual([]);
@@ -1598,8 +1598,9 @@ describe('INSTANCE-DATA-IN-A-TYPE-LABEL-01 — TRIMMED at 2B-2, completely', () 
     //   `MAT-SPACE-UNDECLARED-01` taught: undeclared is not the same as worse.
     const lotFieldSites = Object.entries(sourceText).filter(
       ([file, text]) =>
-        /^\/src\/data\/mock(GoodsReceipts|Inventory|Shipments|PurchaseOrders)\.[jt]s$/.test(file) &&
-        /\b(batchNumber|lotNumber)\b/.test(text)
+        /^\/src\/data\/mock(?:(GoodsReceipts|Inventory|Shipments|PurchaseOrders)|PurchaseOrders\/[^/]+)\.[jt]s$/.test(
+          file
+        ) && /\b(batchNumber|lotNumber)\b/.test(text)
     );
     expect(lotFieldSites.map(([f]) => f)).toEqual([]);
     // And one of the two was never operationally real in the first place:
@@ -1607,8 +1608,12 @@ describe('INSTANCE-DATA-IN-A-TYPE-LABEL-01 — TRIMMED at 2B-2, completely', () 
     // and nowhere else. A PO is a forward order; the batch it will be filled
     // from does not exist when the PO is raised. That marker was a copied
     // string, not a fact — which is why trimming it discards nothing.
+    // BL-229: the PO fixture is a folder; the walk sees the row in its group
+    // file and again through `retimed.js` and `index.js` — still one fixture.
     expect(modulesOf('FR-MKOV-5520').filter((m) => /^\/src\/data\//.test(m))).toEqual([
-      '/src/data/mockPurchaseOrders.js'
+      '/src/data/mockPurchaseOrders/baseOrders2.js',
+      '/src/data/mockPurchaseOrders/index.js',
+      '/src/data/mockPurchaseOrders/retimed.js'
     ]);
   });
 });

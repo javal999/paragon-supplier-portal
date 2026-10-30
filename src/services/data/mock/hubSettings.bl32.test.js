@@ -377,13 +377,14 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       receiptQtyToleranceFor: [
         'src/pages-v2/receipts/ReceiptToleranceNote.jsx',
         'src/services/transitions/fulfilmentConfig.js',
-        'src/services/transitions/fulfilmentRules.js'
+        'src/services/transitions/fulfilmentRules/goodsReceipt.js'
       ],
       // MR-6 BR-06 (D2) — the ASN line rule reads the minimum through the master.
       shelfLifeDefaultMonths: ['src/services/transitions/fulfilmentConfig.js'],
       shelfLifeRuleFor: [
         'src/services/transitions/fulfilmentConfig.js',
-        'src/services/transitions/fulfilmentRules.js'
+        'src/services/transitions/fulfilmentRules/asn.js',
+        'src/services/transitions/fulfilmentRules/shelfLife.js'
       ],
       commitmentTolerance: [
         'src/services/transitions/forecastConfig.js',

@@ -152,32 +152,32 @@ const REGISTRIES = /** @satisfies {readonly GlossaryRegistry[]} */ (
     },
     {
       sourceType: 'EnforcementMode',
-      sourceFile: 'src/lib/enforcement.js',
+      sourceFile: 'src/lib/enforcement/ramp.js',
       entries: ENFORCEMENT_MODE_GLOSSARY
     },
     {
       sourceType: 'GovernedCheckId',
-      sourceFile: 'src/lib/enforcement.js',
+      sourceFile: 'src/lib/enforcement/governed.js',
       entries: GOVERNED_CHECK_GLOSSARY
     },
     {
       sourceType: 'GovernedVerdict',
-      sourceFile: 'src/lib/enforcement.js',
+      sourceFile: 'src/lib/enforcement/governed.js',
       entries: GOVERNED_VERDICT_GLOSSARY
     },
     {
       sourceType: 'OverrideReason',
-      sourceFile: 'src/lib/enforcement.js',
+      sourceFile: 'src/lib/enforcement/override.js',
       entries: OVERRIDE_REASON_GLOSSARY
     },
     {
       sourceType: 'UnattributedReason',
-      sourceFile: 'src/lib/enforcement.js',
+      sourceFile: 'src/lib/enforcement/attribution.js',
       entries: UNATTRIBUTED_REASON_GLOSSARY
     },
     {
       sourceType: 'EnforcementModeSource',
-      sourceFile: 'src/lib/enforcement.js',
+      sourceFile: 'src/lib/enforcement/ratchet.js',
       entries: ENFORCEMENT_MODE_SOURCE_GLOSSARY
     },
     {

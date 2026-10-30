@@ -358,10 +358,20 @@ function importsOf(text, path) {
   return out;
 }
 
+// BL-229: the module is a FOLDER (`./enforcement/index.js` and its siblings).
+// Every file in it is read, in path order, as the one module text.
+const MODULE_DIR = '/src/lib/enforcement/';
+/** @returns {[string, string][]} */
+const moduleFiles = () =>
+  Object.entries(sources())
+    .filter(([path]) => path.startsWith(MODULE_DIR))
+    .sort(([a], [b]) => a.localeCompare(b));
+
 const moduleText = () => {
-  const text = sources()['/src/lib/enforcement.js'];
-  expect(text).toBeDefined();
-  return text;
+  expect(sources()[`${MODULE_DIR}index.js`]).toBeDefined();
+  return moduleFiles()
+    .map(([, text]) => text)
+    .join('\n');
 };
 
 // ─── 1. The ramp ─────────────────────────────────────────────────────────────
@@ -838,7 +848,8 @@ describe('E1 — the stamp: an override is coherent at exactly one mode', () => 
     );
     // Read through `declaredAlias`, which renders the TypeScript alias and the
     // JSDoc `@template` + `@typedef` pair in one form (Phase 4).
-    expect(declaredAlias(moduleText(), '/src/lib/enforcement.js', 'StampPerVerdict')).toContain(
+    const stampPath = `${MODULE_DIR}stamp.js`;
+    expect(declaredAlias(sources()[stampPath], stampPath, 'StampPerVerdict')).toContain(
       'type StampPerVerdict<V extends GovernedVerdict> = V extends GovernedVerdict'
     );
   });
@@ -962,7 +973,16 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
       // typedef that names `EnforcementSetting` in the index. Two rows, one gate.
       '/src/components/v2-features/GRInspectionWizard/hooks/useInspectionDraft.js',
       '/src/components/v2-features/GRInspectionWizard/index.jsx',
-      '/src/lib/enforcement.js', //                       the vocabulary + derivation
+      // the vocabulary + derivation — a FOLDER since BL-229; every file that
+      // names a surface term is a row (`attribution.js` names none).
+      '/src/lib/enforcement/governed.js',
+      '/src/lib/enforcement/index.js',
+      '/src/lib/enforcement/ledger.js',
+      '/src/lib/enforcement/override.js',
+      '/src/lib/enforcement/ramp.js',
+      '/src/lib/enforcement/ratchet.js',
+      '/src/lib/enforcement/setting.js',
+      '/src/lib/enforcement/stamp.js',
       // ⚠️ GL-0 — the glossary. STILL TYPE-ONLY, but **NO LONGER HEADLESS**: it
       // imports the six enforcement unions to pin `Record<Member,
       // GlossaryEntry>` with `satisfies`, so an enforcement term cannot exist
@@ -1005,7 +1025,7 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
       '/src/services/data/mock/stores/enforcementSettingStore.js', // the ledger
       '/src/services/data/types.js', //                   the seam's row type (TYPE-ONLY)
       '/src/services/query/hooks.js', //                  E4 — the scoped read hook
-      '/src/services/transitions/policies.js' //         the recording policy
+      '/src/services/transitions/policies/governance.js' // the recording policy
     ]);
     // ⚠️ `main.jsx` IS A CONSUMER OF THE SEED AND IS NOT ON THIS LIST, because it
     // names `seedEnforcementLedger` and no enforcement vocabulary at all. Stated
@@ -1055,7 +1075,11 @@ describe('E1 — ⚠️ HEADLESS. NO STORE, NO CONSUMER, NO CLOCK', () => {
     }
     // Read through `importsOf`, which reads `import type` AND the JSDoc
     // `@import` tag (type-only by construction) in one form (Phase 4).
-    const imports = importsOf(moduleText(), '/src/lib/enforcement.js');
+    // BL-229: read per file; an import between two files of the folder (`./…`)
+    // is the module importing itself and is not counted.
+    const imports = moduleFiles()
+      .flatMap(([path, text]) => importsOf(text, path))
+      .filter((line) => !line.includes(" from './"));
     expect(imports).toEqual([
       "import type { BpomRefusalReason } from '@services/sdc/bpom';",
       "import type { HalalRefusalReason } from '@services/sdc/halal';"

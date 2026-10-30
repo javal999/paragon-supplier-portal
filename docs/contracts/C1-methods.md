@@ -199,7 +199,7 @@ runtime export `WIRED_COMMAND_TARGETS` (`MockCommandService.js` `TARGETS`):
 
 - **wired:** `purchaseOrder`, `advanceShipNotice`, `goodsReceipt`, `invoice`, `rfq`, `quotation`, `rfqIntent`, `rfqConfidentiality`, `rfqClarification`, `purchaseRequisition`, `supplierDocument`, `requirementResponse`, `inventoryDeclaration`, `incomingShipment`, `enforcement`, `role`, `workingCalendar`, `threePl`, `supplierOverlay`, `qualificationRule`, `sourcingType`, `planningGroup`, `supplierApplication`, `receiptDiscrepancy`, `callOff`, `stockSync`, `stockAccess`, `capacitySubmission`, `inventoryAlert`, `forecastVersion`, `forecastView`, `sapChangeMark`, `rfiEvent`, `rfiResponse`, `rfpEvent`, `rfpResponse`, `negotiationRound`, `rfpOfferRound`, `rfpFirmOffer`, `hubSetting`, `reasonCode`, `maxStock`, `mrpController`, `materialName`, `simulationOverride`, `forecastOverride`, `warehouseDecision`, `demandAnticipation`, `consumption`, `osipLevel`, `osipParam`, `whatIfScenario`, `feedstockConfirmation`, `supplierAsk`, `capacityDecision`, `rfiIntent`, `rfpIntent`
 
-The interface is **7 members** (`dispatcher.js`, `CommandTarget`):
+The interface is **7 members** (`dispatcher/types.js`, `CommandTarget`):
 
 ```ts
 interface CommandTarget {
@@ -244,7 +244,7 @@ derives it rather than reading the bullet above.
 
 ## The dispatcher pipeline (single validator/executor)
 
-One dispatcher for every command (`dispatcher.js`). It validates in order, then applies + emits:
+One dispatcher for every command (`dispatcher/createDispatcher.js`). It validates in order, then applies + emits:
 
 1. **Transition exists** in the registry, and the entity has a `CommandTarget`.
 2. **`QueryScope` on every command exactly as reads** — a supplier can only command its own
