@@ -7,7 +7,7 @@
 | Audience | Material Planning team, session led by Levi |
 | Goal | Agree that the end-to-end prototype is ready for early user testing with suppliers |
 | Generator | `sc-hub-vision/decks/planner-04-nov/build.js` (outside the repo, like the 07 Oct and 14 Oct decks) |
-| Screenshots | Placeholders. Real screenshots are taken from prod after it is redeployed from the new main |
+| Screenshots | 6 from prod (`aeabdc83`, deployment -s8irr4yx0, https://paragon-supplier-portal-dusky.vercel.app), taken 2026-11-02, sample data. Slide 14 has no screenshot: prod's sample data holds no call-off drafted at ROP Fisik |
 | Out of scope | RFx (paused), supplier registration (another team), lint, refactors, CI |
 
 Every claim below was checked in the code or a doc at `aeabdc83`, not taken from a commit title alone. Paths are under `src/` unless they start with `docs/`.
@@ -102,8 +102,9 @@ Example numbers are illustrative. Each result was computed with the code's rule,
 
 ## 4. Claims not verified
 
-- **Screens.** No screenshot was taken; every screen slide shows a placeholder. Nothing was checked in a running app.
-- **Prod state.** It is unknown which merges are live in prod. The deck describes `main` `aeabdc83`.
+- **Screens.** Six slides show prod screenshots (DA grid, (i) tip, values panel, Stock, Stock simulation, Capacity). Prod's DA grid shows the same W37 to W39 figures as slide 6 (980 DA, 2,000 open supply, carries 1,020 and 40, gap 940). The Stock simulation example (slide 20) now uses prod's RM-EMUL-9430 row: available 1,700, called off not shipped 2,500, Over-called by 800.
+- **Not shown on prod:** the call-off draft panel ("Below minimum delivery", "Above Max"). No sample material is drafted at ROP Fisik, and I did not create one, because that would change data on prod.
+- **Page text out of date on prod:** Safety stock targets → "How it is calculated" (`src/lib/i18n/safetyStock.js:137, :141`) still says the safety order SD uses the lead time and CV uses the last 26 weeks. The code uses 13 weeks of LTP and 6 full months (`osipRules.js:85-87, 105-112`). Slides 8 and 11 say so.
 - **C2 sent?** On 2026-11-02 the C2 message was a draft that Levi had not yet sent. Check before the session.
 - **"11 columns, risk at x = 1725 px"** on the old Stock page comes from `research/INVENTORY-UX-EVALUATION-2026-10.md` §1 and was not re-measured.
 - **"Every sample material reads stable"** (CV) comes from the docs; the code was not run.
@@ -121,4 +122,4 @@ Example numbers are illustrative. Each result was computed with the code's rule,
 4. **D1 "today" line** says BL-228 now carries surplus forward. The C2 message had no "today" for D1. *Alternative:* leave it blank, as C2 did.
 5. **Tolerance and KPI slide kept**, although the code did not change, because the rule was decided on 2026-11-02 and BL-234 is the gap. *Alternative:* drop it.
 6. **Generator outside the repo**, following the 07 Oct deck. *Alternative:* commit `build.js` under `docs/`.
-7. **Screenshot list (9):** DA gap carry, values panel, call-off draft panel, Stock, Stock simulation, Capacity actions, (i) tip; the Q8 image is already in. *Alternative:* more screens, fewer number boxes.
+7. **Six prod screenshots, slide 14 a text note.** Slide 14 has no screen because prod has no ROP Fisik draft to show. *Alternative:* record a PTI stock update on prod to trigger a draft, then capture it.
