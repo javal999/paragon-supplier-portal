@@ -22,7 +22,7 @@ NODE_PATH=/tmp/ugdeps/node_modules node docs/supplier-hub/user-guide/build/build
 
 ## Screenshots
 
-Every step slide names its file in `../screens/` (plan: `../SCENARIOS.md` section 5). While `screenshots` is not set on a deck's exports, the engine draws a labelled placeholder with the route, seat and demo record, even if an older file with that name exists. After the retake, add `screenshots: true` to both content files' exports and rebuild.
+Every step slide names its file in `../screens/` (plan: `../SCENARIOS.md` section 5). While `screenshots` is not set on a deck's exports, the engine draws a labelled placeholder with the route, seat and demo record, even if an older file with that name exists. Both content files now set `screenshots: true` (retaken 2026-11-02 from a local build of `aeabdc83` at 2160 × 1350 px; how and why in `../SCENARIOS.md` section 5).
 
 ## Check
 

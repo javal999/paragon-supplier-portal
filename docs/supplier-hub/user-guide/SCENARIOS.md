@@ -3,7 +3,7 @@
 **Status:** version for the material planners' session on Wed 4 Nov 2026. It replaces the 6 Oct catalog, which PTI approved with supplier onboarding removed. The supplier-only version is `SCENARIOS-SUPPLIER.md`, which doubles as the script for early supplier user testing.
 **Basis:** the code on GitLab `main` at `aeabdc83` (2026-11-02), after BL-233 term labels (MR !65 to !81) froze the labels. All paths are under `src/`. Rows rewritten on 2026-11-02 cite line numbers at `aeabdc83`. UC1 keeps its 2026-10-19 content because RFx is paused; its supplier rows were re-checked on 2026-11-02 and its PTI rows were not. If a behavior has no citation, it is in section 4 (Unverified and known limits).
 **Data:** all data is in-memory demo data. Nothing reaches SAP. The demo date is 2026-08-31 (`services/data/fixturePresent.js:184,206`).
-**What changed since 6 Oct:** UC3, UC4, UC6 and UC7 rewritten; UC8 (demand anticipation and replenishment, PTI only) added; section 1 adds the (i) term tips, search and the weekly plan card; section 3 follows the menu as built; section 4 drops 3 limits that no longer hold and adds 6.
+**What changed since 6 Oct:** UC3, UC4, UC6 and UC7 rewritten; UC8 (demand anticipation and replenishment, PTI only) added; section 1 adds the (i) term tips, search and the weekly plan card; section 3 follows the menu as built; section 4 drops 3 limits that no longer hold and adds 7.
 
 ---
 
@@ -65,7 +65,7 @@ Evidence for both tables: `services/transitions/businessRoles.js` (`SYSTEM_ROLES
 |---|---|---|
 | UC1 | Sourcing: requisition, RFI, RFQ, RFP, award | Kept (RFx paused); 1 reason label corrected |
 | UC2 | Purchase order to payment | Labels re-checked; Create ASN from the PO page now works; both receipt answers need a comment |
-| UC3 | Call-offs against agreements | Extended: hub drafts at ROP Fisik, below-minimum-delivery and above-Max flags, delay approval, blanket PO run-out |
+| UC3 | Call-offs against agreements | Extended: hub drafts at ROP Fisik with below-minimum-delivery and above-Max flags (live stock feed only, none in the demo), delay approval, blanket PO run-out |
 | UC4 | Forecast collaboration | Rewritten: no commitment date, Submit all per period, Force Majeure and Discontinued reasons, Move demand to several suppliers; Request revision is switched off |
 | UC5 | Compliance documents | Labels re-checked; pill reads "Expiring Soon" |
 | UC6 | Shared stock, feedstock, capacity and PTI questions | Rewritten: Stock leads with this week, feedstock confirmation, three capacity states, Copy to all weeks, PTI accept/undo, PTI questions and answers |
@@ -181,13 +181,13 @@ Evidence for both tables: `services/transitions/businessRoles.js` (`SYSTEM_ROLES
 
 ### UC3 Call-offs against agreements
 
-**Purpose:** PTI releases call-offs against a blanket PO (agreement) line; the supplier confirms, changes or rejects, then dispatches and creates the ASN. Since 6 Oct the hub also drafts call-offs itself when PTI stock reaches ROP Fisik, and flags quantities below the supplier's minimum delivery or above Max.
+**Purpose:** PTI releases call-offs against a blanket PO (agreement) line; the supplier confirms, changes or rejects, then dispatches and creates the ASN. Since 6 Oct the hub also drafts call-offs itself when PTI stock reaches ROP Fisik, and flags quantities below the supplier's minimum delivery or above Max. Those drafts are made only when the PTI stock feed refreshes (the eWM seam `applyPtiStockRefresh`, `services/data/mock/MockCommandService.js:1646`), which no screen calls, so the demo has none (section 4 item 27).
 
 **Positive end-to-end**
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | PTI-Plan | Order collaboration → **Call-offs**, tab **To act** | Opens a draft marked **Drafted at ROP Fisik** and reads "Why the hub drafted this" (ROP Fisik, Max Stock, released not yet received, drafted quantity); or starts one with **New call-off** on a blanket line | Draft | `lib/i18n/callOffs.js:59,178-203,337`; `pages-v2/BuyerCallOffs/components/UmbrellaSection.jsx:102`; `services/transitions/callOffTriggerRules.js:1-35` |
+| 1 | PTI-Plan | Order collaboration → **Call-offs**, tab **To act** | **New call-off** on a blanket PO line → Type, Quantity, Need date (the panel shows what remains on the line). With a live stock feed, the hub's own drafts appear here marked **Drafted at ROP Fisik**, with "Why the hub drafted this" (ROP Fisik, Max Stock, released not yet received, drafted quantity) | Draft | `lib/i18n/callOffs.js:59,178-203,337`; `pages-v2/BuyerCallOffs/components/UmbrellaSection.jsx:102`; `services/transitions/callOffTriggerRules.js:1-35` |
 | 2 | PTI-Plan | same | **Release to supplier** (or **Save as draft**, **Dismiss draft**) | Awaiting Confirmation | `lib/i18n/callOffs.js:159-160,173-175`; `pages-v2/BuyerCallOffs/components/DraftSection.jsx:88,109,127`; `services/transitions/flows/callOff.flow.js:65-126` |
 | 3 | Sup-Ful | Orders → **Call-offs** (filter **Awaiting your confirmation**) | **Respond** → **Confirm as requested** → **Send confirmation** | Confirmed | `lib/i18n/callOffs.js:22,274,286`; `pages-v2/SupplierCallOffs/components/CallOffRow.jsx:88-94`; `pages-v2/SupplierCallOffs/components/RespondForm.jsx:50-61,151` |
 | 4 | Sup-Ful | same | **Send dispatch notice** (Shipped date, Expected arrival, ASN optional) | Confirmed (dispatched) | `lib/i18n/callOffs.js:293-299`; `pages-v2/SupplierCallOffs/components/DispatchSection.jsx:94-179` |
@@ -222,7 +222,7 @@ Evidence for both tables: `services/transitions/businessRoles.js` (`SYSTEM_ROLES
 |---|---|---|---|---|
 | Drafted quantity below the supplier's minimum delivery (BL-232) | Pill **Below minimum delivery** beside "Supplier minimum delivery"; the planner is told to check with the supplier before release. PTI side only. | PTI-Plan | Call-offs | `lib/i18n/callOffs.js:190-195`; `pages-v2/BuyerCallOffs/components/ropFisikTrigger.jsx:103-131`; `services/transitions/callOffTriggerRules.js:381-399` |
 | The minimum delivery does not fit under Max (BL-230) | Pill **Above Max**: "stock will go above Max when it arrives". The call-off is still drafted. | PTI-Plan | Call-offs | `lib/i18n/callOffs.js:196-198`; `services/transitions/callOffTriggerRules.js:79-87,357-362` |
-| ROP Fisik reached, no blanket line has balance | What to order shows "Create a PR in SAP: no umbrella PO balance at ROP Fisik" | PTI-Plan raises the PR in SAP | What to order | `lib/i18n/callOffs.js:205`; `pages-v2/BuyerOrderPlan/index.jsx:207-210` |
+| ROP Fisik reached, no blanket line has balance (live stock feed only) | What to order shows "Create a PR in SAP: no umbrella PO balance at ROP Fisik" | PTI-Plan raises the PR in SAP | What to order | `lib/i18n/callOffs.js:205`; `pages-v2/BuyerOrderPlan/index.jsx:207-210` |
 | Blanket PO running out (CAP-9) | Tab **Blanket POs running out**: "Runs out", "New PO needed by", pill **Raise the next PO** within 4 weeks; lines of one supplier and material are drawn oldest first | PTI-Proc raises the next PO in SAP | Call-offs | `lib/i18n/callOffs.js:34-55,339`; `services/transitions/blanketPoRules.js:48,227,271,312` |
 | Call-off above the remaining agreement qty or value | Release is disabled, and refused (EXCEEDS_REMAINING / _VALUE) | PTI-Plan | Call-offs | `lib/i18n/callOffs.js:155-158`; `services/data/mock/MockCommandService.js:1708-1727` |
 | Supplier confirms up to +5% over the requested qty | Accepted at once ("Within tolerance: this will be accepted immediately."). Above it, or a later date, needs PTI approval. The 5% is an admin setting. | PTI-Plan | Call-offs | `lib/i18n/callOffs.js:80-82,284`; `services/transitions/hubSettings.js:89-95`; `services/transitions/callOffRules.js:381-436` |
@@ -293,8 +293,8 @@ Evidence for both tables: `services/transitions/businessRoles.js` (`SYSTEM_ROLES
 
 | Condition | What the system does | Who acts next | Menu | Evidence |
 |---|---|---|---|---|
-| Certificate expired (doc-001) | Red "Expired" pill; banner "…immediate renewal required" | Sup-BO | Profile & documents | `services/data/dayProjection.js:138,210-219`; `lib/i18n/supplierDocuments.js:34-36` |
-| Expiring within 180 days (doc-005, doc-008) | Amber "Expiring Soon" pill; filter "Expiring soon"; To do task "Certificates expired or expiring" | Sup-BO | Profile & documents; To do | `services/data/documentDisplayState.js:158,176`; `lib/statusLabel.js:43`; `lib/i18n/supplierDocuments.js:59`; `lib/i18n/hub.js:194` |
+| Certificate past its expiry date | Red "Expired" pill; banner "…immediate renewal required". No sup-007 document is expired at the demo date. | Sup-BO | Profile & documents | `services/data/dayProjection.js:138,210-219`; `lib/i18n/supplierDocuments.js:34-36` |
+| Expiring within 180 days (doc-001, Halal Certificate, expires 14 Oct 2026 after the demo date shift) | Amber "Expiring Soon" pill; filter "Expiring soon"; To do task "Certificates expired or expiring" | Sup-BO | Profile & documents; To do | `services/data/documentDisplayState.js:158,176`; `lib/statusLabel.js:43`; `lib/i18n/supplierDocuments.js:59`; `lib/i18n/hub.js:194` |
 | No expiry date (BPJPH) | Treated as no expiry | – | Profile & documents | `pages-v2/SupplierDocuments/hooks/useDeclarationPanel.js` |
 | Confirming a document | Does not update the compliance registry table (a separate fixed list) | – | Supplier documents | `pages-v2/BuyerCompliance/index.jsx` |
 
@@ -418,7 +418,7 @@ Evidence for both tables: `services/transitions/businessRoles.js` (`SYSTEM_ROLES
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | PTI-Plan | Demand anticipation (DA) | Publishes again with no change | "Could not publish demand anticipation" (NOTHING_CHANGED) | `lib/i18n/demandAnticipation.js:44`; `services/data/mock/targets/demandAnticipation.js:63-71` |
+| 1 | PTI-Plan | Demand anticipation (DA) | Opens Publish when no figure differs from the publication in force (the demo: "0 supplier × materials differ") | **Publish** stays disabled; the command itself refuses with "Could not publish demand anticipation" (NOTHING_CHANGED) | `lib/i18n/demandAnticipation.js:44`; `services/data/mock/targets/demandAnticipation.js:63-71` |
 
 **Edge cases**
 
@@ -427,7 +427,7 @@ Evidence for both tables: `services/transitions/businessRoles.js` (`SYSTEM_ROLES
 | Supply above a week's DA (BL-228) | Carries forward and reduces later weeks' Gap; the Gap cell tips "{qty} carried from earlier weeks" | – | What to order | `lib/i18n/supplyGap.js:22`; `services/transitions/supplyBelowDemandRules.js:19-104` |
 | Surplus larger than the last week can take | "Surplus: {qty} absorbed in {week}; {left} more than that week can take", and the alert "Supply above demand anticipation (DA)…" (UC7) | PTI-Plan | DA; Alerts | `lib/i18n/demandAnticipation.js:95-96` |
 | No lead time on record | Horizon falls back to 4 weeks, flagged on the card | PTI fixes master data | DA | `lib/i18n/demandAnticipation.js:107`; `services/transitions/demandAnticipationRules.js:105` |
-| PTI stock reaches ROP Fisik | The hub drafts a call-off ("Drafted at ROP Fisik", UC3); with no blanket balance, "Create a PR in SAP…" | PTI-Plan | Call-offs; What to order | `lib/i18n/callOffs.js:178-211` |
+| PTI stock reaches ROP Fisik (live stock feed only) | The hub drafts a call-off ("Drafted at ROP Fisik", UC3); with no blanket balance, "Create a PR in SAP…" | PTI-Plan | Call-offs; What to order | `lib/i18n/callOffs.js:178-211` |
 | Trying an alternative | **Try a what-if** on a Stock, What to order or Below DA row opens the What-if sandbox: "Analysis only — nothing here changes the plan or reaches suppliers or SAP" | PTI-Plan | What-if sandbox (no menu item) | `lib/i18n/whatIfSandbox.js:12,212` |
 | ROP Order, ROP Fisik, Max Stock and the OSIP level | Kept on Planning engine · Safety stock targets (avatar menu); a suggested level shows "Use suggestion", labelled Proposed | PTI-Plan | Safety stock targets | `lib/i18n/safetyStock.js:256`; `pages-v2/BuyerSafetyStock.jsx:62-73,366-397` |
 
@@ -561,11 +561,15 @@ A reader might expect these to work. The code shows they do not, or that they ar
 25. **The PTI bell in the top bar always shows "3" and does nothing when clicked.** The supplier bell lists award and withdrawal notices. (`components/layout-v2/TopBarV2.jsx:73-87`)
 26. **No email or WhatsApp alerts; closures are lost when the demo resets.** (`services/data/mock/stores/inventoryHubStores.js`)
 
+**Call-offs**
+
+27. **No "Drafted at ROP Fisik" call-off can appear in the demo.** The hub drafts one only when the PTI stock feed refreshes (`applyPtiStockRefresh`, `services/data/mock/MockCommandService.js:1646`), and no screen calls it; the seeded call-offs carry no ROP Fisik origin. So the Below minimum delivery and Above Max flags cannot be shown either. Checked in a local build of `aeabdc83` on 2026-11-02.
+
 ---
 
 ## 5. Screenshot plan
 
-**Status on 2026-11-02:** every screenshot slot in both decks is a labelled placeholder. Labels are frozen after BL-233 (MR !81, `aeabdc83`), and prod is about to be redeployed from that main. The screens are retaken once Levi or the tracker confirms prod runs `aeabdc83` or later, or from a local build of `gitlab/main` if told to.
+**Status on 2026-11-02:** retaken. Prod runs `aeabdc83` (MR !81, labels frozen), but prod sits behind the access gate and the in-app browser captures only 800 px wide, so the owner chose a local build of the same commit (`aeabdc83`, `vite build` + `vite preview`), captured headless at 1440 × 900 × 1.5 = 2160 × 1350 px. BL-236 (MR !82) is not in that commit and does not show. Not captured: INTRO-6 (used in speaker notes only) and UC2-5, UC8-4 (notes only). Older files in `screens/` stay, because README.md embeds some of them.
 
 Shared setup:
 - Build and preview the app (`npm run build`, then `npx vite preview`), or open prod after the redeploy. Open `#/login`.
@@ -588,7 +592,8 @@ Shared setup:
 | UC2-4-supplier.png | Supplier | `/supplier/invoices` | inv-brl-0055 Draft |
 | UC2-5-pti.png | PTI, Finance | `/buyer/invoices` | inv-giv-0892 Approved |
 | UC2-6-supplier.png | Supplier | `/supplier/goods-receipts` | open discrepancy on PO-2026-00125 |
-| UC3-1-pti.png | PTI, Material Planner | `/buyer/call-offs` To act | a draft marked Drafted at ROP Fisik |
+| UC2-7-supplier.png | Supplier | `/supplier/invoices?stage=Returned`, invoice open | INV-2025-BRL-0043 Returned |
+| UC3-1-pti.png | PTI, Material Planner | `/buyer/call-offs` To act → New call-off | PO-2025-00117 |
 | UC3-2-supplier.png | Supplier | `/supplier/call-offs` | CO-2026-0003 Awaiting Confirmation |
 | UC3-3-supplier.png | Supplier | `/supplier/call-offs` | a confirmed call-off, dispatch section |
 | UC3-4-pti.png | PTI | `/buyer/call-offs` | panel with Below minimum delivery pill |
@@ -596,7 +601,7 @@ Shared setup:
 | UC4-2-supplier.png | Supplier | `/supplier/forecasts` Submit by period | – |
 | UC4-3-pti.png | PTI | `/buyer/collaboration` Commitments & gaps | exception row for sup-007 |
 | UC5-1-pti.png | PTI, Buyer | `/buyer/compliance` | doc-010 Under Review |
-| UC5-2-supplier.png | Supplier | `/supplier/documents` | doc-006 Awaiting Upload; doc-001 expired |
+| UC5-2-supplier.png | Supplier | `/supplier/documents` | doc-006 Awaiting Upload; doc-001 Expiring Soon; doc-012 refused |
 | UC6-1-supplier.png | Supplier | `/supplier/inventory` | weekly update, still missing |
 | UC6-2-supplier.png | Supplier | `/supplier/inventory` Feedstock to confirm | – |
 | UC6-3-supplier.png | Supplier | `/supplier/capacity` | an amber week |
@@ -606,7 +611,7 @@ Shared setup:
 | UC7-1-pti.png | PTI | `/buyer/alerts` | open alerts, next step |
 | UC7-2-supplier.png | Supplier | `/supplier/home` | Alerts about your materials |
 | UC8-1-pti.png | PTI | `/buyer/demand-anticipation` | card with Show the weeks open |
-| UC8-2-pti.png | PTI | `/buyer/demand-anticipation` | Plan vs execution |
+| UC8-2-pti.png | PTI | `/buyer/demand-anticipation` → Publish dialog | 0 supplier × materials differ |
 | UC8-3-pti.png | PTI | `/buyer/order-plan` | Below demand anticipation (DA) |
 | UC8-4-pti.png | PTI | `/buyer/demand-anticipation-history` | – |
 

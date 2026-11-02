@@ -180,7 +180,7 @@ Each task: **Prompt** (read out), **Start**, **Expected path** (exact labels), *
 ### T10 Declare a certificate (UC5)
 
 - **Prompt:** "Paragon asked for a document, and one of your certificates is about to expire. Deal with both."
-- **Start:** To do → "Documents PTI asked for" / "Certificates expired or expiring", or Company → **Profile & documents**. Records: doc-006 (Awaiting Upload), doc-005 or doc-008 (Expiring Soon), doc-001 (Expired) (`services/data/mock/fixtures/supplierDocuments.js:33,90,104,133`).
+- **Start:** To do → "Documents PTI asked for" / "Certificates expired or expiring", or Company → **Profile & documents**. Records: doc-006 (Awaiting Upload), doc-001 (Halal Certificate, Expiring Soon, expires 14 Oct 2026). No sup-007 document is expired at the demo date (`services/data/mock/fixtures/supplierDocuments.js:33,104`).
 - **Expected path:** **Declare** → certificate details → **Record declaration** → Under Review (`lib/i18n/supplierDocuments.js:79,84`).
 - **Pass when:** doc-006 shows Under Review.
 - **Watch for:** the expectation to upload a file (no file is sent today; section 6).

@@ -33,7 +33,7 @@ add({
     { actor: 'PTI', text: 'A PTI user. The role that can act is named in the step, for example Planning or Finance.' },
     { actor: 'SUP', text: 'A supplier user. The lane that can act is named in the step: Commercial, Fulfilment or Back Office.' }
   ],
-  footnote: 'All screens use demo data. Nothing in this build reaches SAP. Screens marked SCREENSHOT PLACEHOLDER are retaken after prod is redeployed with the frozen labels.',
+  footnote: 'All screens use demo data, captured from a build of aeabdc83, the commit prod runs. Nothing in this build reaches SAP.',
   notes: 'Evidence: services/data/fixturePresent.js:184,206 (demo date 2026-08-31); SCENARIOS.md header and section 5.'
 });
 add({
@@ -46,7 +46,7 @@ add({
     ['All', '(i) term tips on agreed terms, Help & glossary, top-bar search (Ctrl K), weekly plan card on My tasks'],
     ['UC1 Sourcing', 'Kept: RFx is paused. One reason label corrected ("No capacity for this")'],
     ['UC2 PO to payment', 'Create ASN from the PO page now opens the ASN wizard; both receipt answers need a comment'],
-    ['UC3 Call-offs', 'Hub drafts at ROP Fisik; Below minimum delivery and Above Max flags; delay approval; blanket PO run-out'],
+    ['UC3 Call-offs', 'Hub drafts at ROP Fisik with flags (live stock feed only); delay approval; blanket PO run-out'],
     ['UC4 Forecast', 'No commitment date; Submit all per period; Force Majeure and Discontinued; Move demand to several suppliers; Request revision off'],
     ['UC5 Compliance', 'Labels re-checked; the amber pill reads "Expiring Soon"'],
     ['UC6 Stock & capacity', 'Stock leads with this week; feedstock confirmation; 3 capacity states; Copy to all weeks; PTI accept / Undo; PTI questions'],
@@ -336,25 +336,24 @@ add({
 const u3 = uc(3, 'Call-offs against agreements', 4);
 add({
   type: 'overview', kicker: 'Use case 3 of 8', title: 'UC3 · Call-offs against agreements',
-  purpose: 'PTI releases call-offs against a blanket PO line; the supplier confirms, changes or rejects, then dispatches. New: the hub drafts a call-off itself when PTI stock reaches ROP Fisik, and flags quantities below the supplier\'s minimum delivery or above Max.',
+  purpose: 'PTI releases call-offs against a blanket PO line; the supplier confirms, changes or rejects, then dispatches. New: with a live stock feed the hub drafts a call-off itself at ROP Fisik and flags quantities below the minimum delivery or above Max (none in the demo).',
   menus: [{ actor: 'PTI', text: 'Order collaboration → Call-offs' }, { actor: 'SUP', text: 'Orders → Call-offs · Shipments & ASN' }],
   lanes: {
-    pti: [{ n: 1, label: 'Hub drafts at ROP Fisik, or New call-off' }, { n: 2, label: 'Release to supplier' }, { n: 4, label: 'Approve if outside tolerance' }],
+    pti: [{ n: 1, label: 'New call-off on a blanket PO line' }, { n: 2, label: 'Release to supplier' }, { n: 4, label: 'Approve if outside tolerance' }],
     sup: [{ n: 3, label: 'Respond → Send confirmation' }, { n: 5, label: 'Send dispatch notice' }, { n: 6, label: 'Create the ASN' }]
   },
   caption: 'Step 4 happens only when the confirmation is outside tolerance (more than +5% or a later date).',
   notes: 'Evidence: SCENARIOS.md UC3; src/lib/i18n/callOffs.js; src/services/transitions/callOffTriggerRules.js.'
 });
 add({
-  type: 'step', kicker: u3(1), title: 'PTI checks the draft and releases it',
+  type: 'step', kicker: u3(1), title: 'PTI starts a call-off and releases it',
   menu: 'Order collaboration → Call-offs, tab To act',
-  shot: 'UC3-1-pti.png', route: '/buyer/call-offs', seat: 'PTI, Menu for Material Planner', record: 'a draft marked Drafted at ROP Fisik',
+  shot: 'UC3-1-pti.png', route: '/buyer/call-offs', seat: 'PTI, Menu for Material Planner', record: 'New call-off on PO-2025-00117',
   steps: [
-    P('Open a draft marked Drafted at ROP Fisik'),
-    P('Read "Why the hub drafted this": ROP Fisik, Max Stock, drafted quantity'),
-    P('Check the flags: Below minimum delivery, Above Max'),
-    P('Release to supplier (or Save as draft, Dismiss draft)'),
-    P('Manual route: New call-off on a blanket PO line')
+    P('New call-off on a blanket PO line: the panel shows what remains'),
+    P('Type, Quantity and Need date'),
+    P('Release to supplier (or Save as draft)'),
+    P('Live feed only: hub drafts marked Drafted at ROP Fisik, with flags')
   ],
   statusAfter: 'Call-off: Draft → Awaiting Confirmation',
   notes: 'Evidence: src/lib/i18n/callOffs.js:59,159-160,173-203,337; src/pages-v2/BuyerCallOffs/components/DraftSection.jsx:88,109,127; src/pages-v2/BuyerCallOffs/components/ropFisikTrigger.jsx:61-143; src/services/transitions/callOffTriggerRules.js:1-35,357-399; src/services/transitions/flows/callOff.flow.js:65-126.'
@@ -416,9 +415,9 @@ add({
   columns: ['Condition', 'What happens', 'Menu'],
   colW: [4.2, 5.5, 2.43],
   rows: [
-    ['Drafted qty below the supplier\'s minimum delivery', 'Pill Below minimum delivery; check with the supplier before release (PTI only)', 'Call-offs'],
-    ['Minimum delivery does not fit under Max', 'Pill Above Max; stock will go above Max on arrival', 'Call-offs'],
-    ['ROP Fisik reached, no blanket balance', '"Create a PR in SAP: no umbrella PO balance at ROP Fisik"', 'What to order'],
+    ['Drafted qty below the supplier\'s minimum delivery', 'Pill Below minimum delivery; check with the supplier (PTI only; live feed only)', 'Call-offs'],
+    ['Minimum delivery does not fit under Max', 'Pill Above Max; stock goes above Max on arrival (live feed only)', 'Call-offs'],
+    ['ROP Fisik reached, no blanket balance', '"Create a PR in SAP…" (live feed only)', 'What to order'],
     ['Blanket PO running out', 'Runs out, New PO needed by, Raise the next PO (within 4 weeks)', 'Call-offs, tab 3'],
     ['Call-off above the remaining agreement', 'Release disabled and refused', 'Call-offs'],
     ['Up to +5% over the requested qty', 'Accepted at once; the 5% is an admin setting', 'Call-offs'],
@@ -512,7 +511,7 @@ add({
 add({
   type: 'step', kicker: u5(1), title: 'PTI asks; the supplier declares',
   menu: 'Supplier documents · Profile & documents',
-  shot: 'UC5-2-supplier.png', route: '/supplier/documents', seat: 'Supplier', record: 'doc-006 Awaiting Upload; doc-001 expired',
+  shot: 'UC5-2-supplier.png', route: '/supplier/documents', seat: 'Supplier', record: 'doc-006 Awaiting Upload; doc-001 Expiring Soon',
   steps: [
     P('Compliance: Ask for a document → Check it over → Open the request'),
     S('To do: "Documents PTI asked for"'),
@@ -541,8 +540,8 @@ add({
   colW: [3.4, 4.3, 2.2, 2.23],
   rows: [
     ['Declaration refused', 'Rejected, with the reason', 'Supplier Back Office: Declare again', 'Profile & documents'],
-    ['Certificate expired (doc-001)', 'Red Expired pill; banner asks for immediate renewal', 'Supplier Back Office', 'Profile & documents'],
-    ['Expiring within 180 days', 'Amber Expiring Soon pill; To do task', 'Supplier Back Office', 'Profile & documents'],
+    ['Certificate past its expiry date', 'Red Expired pill; banner asks for immediate renewal (none in the demo)', 'Supplier Back Office', 'Profile & documents'],
+    ['Expiring within 180 days (doc-001)', 'Amber Expiring Soon pill; To do task', 'Supplier Back Office', 'Profile & documents'],
     ['No expiry date (BPJPH)', 'Treated as no expiry', '–', 'Profile & documents'],
     ['PTI confirms a document', 'The compliance registry table is not updated', '–', 'Supplier documents']
   ],
@@ -760,11 +759,11 @@ add({
 add({
   type: 'step', kicker: u8(2), title: 'Publish the DA',
   menu: 'Demand anticipation (DA)',
-  shot: 'UC8-2-pti.png', route: '/buyer/demand-anticipation', seat: 'PTI, Menu for Material Planner', record: 'Plan vs execution',
+  shot: 'UC8-2-pti.png', route: '/buyer/demand-anticipation', seat: 'PTI, Menu for Material Planner', record: 'Publish dialog',
   steps: [
     P('Publish demand anticipation (DA) · {week}'),
     P('Tick "Supplier agreed to take the remainder after the horizon" if agreed'),
-    P('Publish'),
+    P('Publish (disabled while no figure differs)'),
     P('History: Publication history, or Review → DA history; Export CSV')
   ],
   statusAfter: '"Demand anticipation published for {week}"; earlier ones Superseded',
@@ -789,7 +788,7 @@ add({
   colW: [4.0, 5.8, 2.33],
   rows: [
     ['Draft from a What to order recommendation', 'Release withheld: the plan uses simulated data (Below DA and ROP Fisik drafts are not)', 'Call-offs'],
-    ['Publishing the same week again, unchanged', '"Could not publish demand anticipation"', 'DA'],
+    ['Nothing differs from the publication in force', 'Publish stays disabled (demo: "0 … differ")', 'DA'],
     ['Supply above a week\'s DA', 'Carries forward and reduces later Gaps', 'What to order'],
     ['Surplus larger than the last week can take', '"…more than that week can take", plus an alert (UC7)', 'DA · Alerts'],
     ['No lead time on record', 'Horizon falls back to 4 weeks, flagged on the card', 'DA'],
@@ -893,18 +892,19 @@ add({
   items: [
     { lead: 'Supplier DA view:', text: 'built, switched off; the route shows "Not available yet".' },
     { lead: 'Proposed rules:', text: 'suggested OSIP level, feedstock leftover rule, feedstock confirmation rule.' },
-    { lead: 'Call-off flags:', text: 'Below minimum delivery and Above Max show to PTI only.' },
+    { lead: 'Call-off flags:', text: 'Below minimum delivery and Above Max show to PTI only; no ROP Fisik draft exists in the demo, so neither shows.' },
     { lead: 'Compliance:', text: 'registry cannot be edited; no file is sent; Export Report and Remind are simulated.' },
     { lead: 'Messages:', text: 'nothing is sent from Supplier follow-ups; PTI questions and alerts send no email or WhatsApp.' },
     { lead: 'My performance:', text: 'Export Report and Acknowledge & plan are not available.' },
     { lead: 'Access:', text: 'no sign-in guard; the supplier switch always loads sup-007; demo buttons read "i View as …".' },
     { lead: 'Alerts:', text: 'the PTI bell always shows 3 and does nothing; closures are lost on demo reset.' }
   ],
-  notes: 'Evidence: SCENARIOS.md section 4 items 13-26.'
+  notes: 'Evidence: SCENARIOS.md section 4 items 13-27.'
 });
 
 module.exports = {
   docTitle: 'Paragon Supplier Portal user guide (complete)',
   footer: 'Supplier Portal user guide · complete · 4 Nov 2026',
-  slides
+  slides,
+  screenshots: true
 };

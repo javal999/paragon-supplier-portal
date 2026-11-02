@@ -27,7 +27,7 @@ add({
     { actor: 'SUP', text: 'You, the supplier. The lane you need is named on each task: Commercial, Fulfilment or Back Office.' },
     { actor: 'PTI', text: 'Paragon (PTI). Shown only where PTI acts before or after you.' }
   ],
-  footnote: 'Demo data only: nothing reaches Paragon\'s SAP. Screens marked SCREENSHOT PLACEHOLDER are retaken after the 4 Nov redeploy.',
+  footnote: 'Demo data only: nothing reaches Paragon\'s SAP. Screens come from a build of aeabdc83, the commit prod runs.',
   notes: 'Evidence: SCENARIOS-SUPPLIER.md sections 1 and 3.'
 });
 add({
@@ -159,7 +159,7 @@ add({
 add({
   type: 'step', kicker: task('T4', 'Correct a returned invoice'), title: 'Correct and resubmit',
   menu: 'Invoices → Invoices, filter Returned',
-  shot: 'UC2-4-supplier.png', route: '/supplier/invoices', seat: 'Supplier', record: 'INV-2025-BRL-0043',
+  shot: 'UC2-7-supplier.png', route: '/supplier/invoices?stage=Returned', seat: 'Supplier', record: 'INV-2025-BRL-0043',
   steps: [
     S('Open the invoice marked Returned'),
     S('Read the banner: "Returned by Finance:" and the reason'),
@@ -263,7 +263,7 @@ add({
 add({
   type: 'step', kicker: task('T10', 'Declare a certificate'), title: 'Declare a requested or expiring certificate',
   menu: 'Company → Profile & documents',
-  shot: 'UC5-2-supplier.png', route: '/supplier/documents', seat: 'Supplier', record: 'doc-006 Awaiting Upload; doc-005 Expiring Soon',
+  shot: 'UC5-2-supplier.png', route: '/supplier/documents', seat: 'Supplier', record: 'doc-006 Awaiting Upload; doc-001 Expiring Soon',
   steps: [
     S('To do: "Documents PTI asked for" or "Certificates expired or expiring"'),
     S('Declare on the document'),
@@ -273,7 +273,7 @@ add({
   statusAfter: 'Under Review; PTI confirms (Valid) or refuses',
   testId: 'T10',
   test: '"Paragon asked for a document, and one of your certificates is about to expire. Deal with both."',
-  notes: 'Watch: expecting a file upload (none is sent today). Evidence: src/lib/i18n/hub.js:194,196; src/lib/i18n/supplierDocuments.js:79,84,119,137; src/lib/statusLabel.js:43; src/services/data/mock/fixtures/supplierDocuments.js:33,90,104,133.'
+  notes: 'Watch: expecting a file upload (none is sent today). Evidence: src/lib/i18n/hub.js:194,196; src/lib/i18n/supplierDocuments.js:79,84,119,137; src/lib/statusLabel.js:43; src/services/data/mock/fixtures/supplierDocuments.js:33,104 (doc-001 expires 14 Oct 2026 after the demo date shift; no document is expired).'
 });
 add({
   type: 'step', kicker: task('T11', 'Quote on an RFQ (optional)'), title: 'Answer an RFQ invitation',
@@ -359,5 +359,6 @@ add({
 module.exports = {
   docTitle: 'Paragon Supplier Portal user guide (supplier)',
   footer: 'Supplier Portal user guide · supplier version · 4 Nov 2026',
-  slides
+  slides,
+  screenshots: true
 };
