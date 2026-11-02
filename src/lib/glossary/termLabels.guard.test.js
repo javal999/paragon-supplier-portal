@@ -95,7 +95,7 @@ const codedLines = (e) =>
   ].filter((line) => typeof line === 'string' && CODE.test(line));
 
 describe('term-label glossary (BL-233)', () => {
-  it('holds the wave 1 to 10 population, named', () => {
+  it('holds the wave 1 to 11 population, named', () => {
     // A named member, not a count: the guards below run over these entries.
     expect(Object.keys(TERM_LABEL_GLOSSARY)).toEqual(
       expect.arrayContaining([
@@ -119,7 +119,9 @@ describe('term-label glossary (BL-233)', () => {
         'fvaValue',
         'tplOnNewAsns',
         'mbFillRate',
-        'candComb'
+        'candComb',
+        'commitmentGap',
+        'dhAffects'
       ])
     );
   });
@@ -276,6 +278,13 @@ describe('term-label glossary (BL-233)', () => {
     expect(TERM_LABEL_GLOSSARY.catalogLeadTime.label).toEqual({ en: 'Lead time', id: 'Lead time' });
     expect(TERM_LABEL_GLOSSARY.mrpLeadTime.label.id).toBe('Lead time');
     expect(TERM_LABEL_GLOSSARY.mbMaterialLead.label.id).toBe('Lead time');
+  });
+
+  it('TL-D12 Q11, Q14, Q15 and TL-D11 on the warehouse and collaboration pages', () => {
+    expect(TERM_LABEL_GLOSSARY.commitmentGap.label.en).toBe('Commitment gap');
+    expect(TERM_LABEL_GLOSSARY.fillStatus.label).toEqual({ en: 'Status', id: 'Status' });
+    expect(TERM_LABEL_GLOSSARY.firmDemand.label.id).toBe('Kebutuhan Firm');
+    expect(TERM_LABEL_GLOSSARY.maxStock.labelKeys).toContain('co.trigger.max');
   });
 
   it('TL-D9 / TL-D13: the labels waiting on the team keep their wording', () => {

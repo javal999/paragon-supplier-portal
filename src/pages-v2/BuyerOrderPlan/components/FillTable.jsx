@@ -25,12 +25,12 @@ const FillTable = ({ w }) => {
       <Table>
         <TableHeader>
           <TableHeaderCell>{t('op.fill.col.week')}</TableHeaderCell>
-          <TableHeaderCell>{t('op.fill.col.plan')}</TableHeaderCell>
+          <TableHeaderCell term="fillOrderPlan" />
           <TableHeaderCell>{t('op.fill.col.interim')}</TableHeaderCell>
-          <TableHeaderCell>{t('op.fill.col.lowest')}</TableHeaderCell>
-          <TableHeaderCell>{t('op.fill.col.status')}</TableHeaderCell>
-          <TableHeaderCell>{t('op.fill.col.rented')}</TableHeaderCell>
-          <TableHeaderCell>{t('op.fill.col.rentCost')}</TableHeaderCell>
+          <TableHeaderCell term="fillLowest" />
+          <TableHeaderCell term="fillAgainst80" />
+          <TableHeaderCell term="fillRented" />
+          <TableHeaderCell term="rentCost" />
         </TableHeader>
         <tbody>
           {w.weeks.map((wk) => {

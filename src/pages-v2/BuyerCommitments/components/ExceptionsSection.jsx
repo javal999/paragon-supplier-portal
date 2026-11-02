@@ -53,12 +53,12 @@ const ExceptionsSection = ({
             <TableHeaderCell pin="left">{t('fc.col.supplier')}</TableHeaderCell>
             <TableHeaderCell pin="left">{t('fc.col.material')}</TableHeaderCell>
             <TableHeaderCell>{t('fc.col.period')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('fc.col.forecastShort')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('fc.col.commitmentShort')}</TableHeaderCell>
-            <TableHeaderCell>{t('fc.col.gap')}</TableHeaderCell>
+            <TableHeaderCell className="text-right" term="excForecast" />
+            <TableHeaderCell className="text-right" term="excCommitment" />
+            <TableHeaderCell term="commitmentGap" />
             <TableHeaderCell>{t('fc.col.status')}</TableHeaderCell>
-            <TableHeaderCell>{t('fc.col.due')}</TableHeaderCell>
-            <TableHeaderCell>{t('fc.col.daysOfSupply')}</TableHeaderCell>
+            <TableHeaderCell term="commitmentDue" />
+            <TableHeaderCell term="excDaysOfSupply" />
             <TableHeaderCell>{t('fc.col.actions')}</TableHeaderCell>
             {/* Zone shows as a pill under each row's period; the expander adds its definitions. */}
             <TableHeaderCell pin="right">

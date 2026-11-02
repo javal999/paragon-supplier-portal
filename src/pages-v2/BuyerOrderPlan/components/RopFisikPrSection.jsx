@@ -37,9 +37,9 @@ const RopFisikPrSection = () => {
       <Table>
         <TableHeader>
           <TableHeaderCell>{t('co.trigger.pr.col.material')}</TableHeaderCell>
-          <TableHeaderCell className="text-right">{t('co.trigger.soh')}</TableHeaderCell>
-          <TableHeaderCell className="text-right">{t('co.trigger.ropFisik')}</TableHeaderCell>
-          <TableHeaderCell className="text-right">{t('co.trigger.max')}</TableHeaderCell>
+          <TableHeaderCell className="text-right" term="triggerSoh" />
+          <TableHeaderCell className="text-right" term="ropFisik" />
+          <TableHeaderCell className="text-right" term="maxStock" />
           <TableHeaderCell>{t('co.trigger.pr.col.recommendation')}</TableHeaderCell>
         </TableHeader>
         <tbody>

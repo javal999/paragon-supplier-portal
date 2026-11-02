@@ -170,8 +170,8 @@ const CheckDetail = ({ feed, tolerance }) => {
             <TableHeader>
               <TableHeaderCell>{t('dh.wh.warehouse')}</TableHeaderCell>
               <TableHeaderCell>{t('dh.wh.latest')}</TableHeaderCell>
-              <TableHeaderCell>{t('dh.col.freshness')}</TableHeaderCell>
-              <TableHeaderCell>{t('dh.wh.materials')}</TableHeaderCell>
+              <TableHeaderCell term="dhFreshness" />
+              <TableHeaderCell term="dhWhMaterials" />
             </TableHeader>
             <tbody>
               {feed.warehouses.map((w) => (
@@ -253,12 +253,12 @@ const BuyerDataHealth = () => {
           }
         />
         <KpiCard
-          eyebrow={t('dh.kpi.stale')}
+          term="dhStale"
           value={<span data-testid="dh-kpi-stale">{stale}</span>}
           subtitle={<span className="text-text-tertiary">{t('dh.kpi.stale.sub')}</span>}
         />
         <KpiCard
-          eyebrow={t('dh.kpi.checks')}
+          term="dhChecks"
           value={<span data-testid="dh-kpi-checks">{checks.filter((c) => !c.passed).length}</span>}
           subtitle={
             <span className="text-text-tertiary">
@@ -267,7 +267,7 @@ const BuyerDataHealth = () => {
           }
         />
         <KpiCard
-          eyebrow={t('dh.kpi.records')}
+          term="dhRecords"
           value={<span data-testid="dh-kpi-refused">{formatNumber(refused)}</span>}
           subtitle={
             <span className="text-text-tertiary" data-testid="dh-kpi-flagged">
@@ -316,10 +316,10 @@ const BuyerDataHealth = () => {
             <TableHeaderCell>{t('dh.col.owner')}</TableHeaderCell>
             <TableHeaderCell>{t('dh.col.refresh')}</TableHeaderCell>
             <TableHeaderCell>{t('dh.col.arrival')}</TableHeaderCell>
-            <TableHeaderCell>{t('dh.col.freshness')}</TableHeaderCell>
+            <TableHeaderCell term="dhFreshness" />
             <TableHeaderCell>{t('dh.col.records')}</TableHeaderCell>
-            <TableHeaderCell>{t('dh.col.checks')}</TableHeaderCell>
-            <TableHeaderCell>{t('dh.col.affects')}</TableHeaderCell>
+            <TableHeaderCell term="dhChecksCol" />
+            <TableHeaderCell term="dhAffects" />
           </TableHeader>
           <tbody>
             {feeds.map((f) => {

@@ -28,12 +28,12 @@ const WarehouseKpis = ({ w, peak }) => {
         }
       />
       <KpiCard
-        eyebrow={t('op.kpi.peak')}
+        term="peakFill"
         value={<span data-testid="op-kpi-peak">{pct(peak)}</span>}
         subtitle={<span className="text-text-tertiary">{t('op.kpi.peak.sub')}</span>}
       />
       <KpiCard
-        eyebrow={t('op.kpi.rented')}
+        term="rentedPalletWeeks"
         value={
           <span data-testid="op-kpi-rented">
             {formatNumber(Math.round(w.after.rentedPalletWeeks))}
@@ -48,7 +48,7 @@ const WarehouseKpis = ({ w, peak }) => {
         }
       />
       <KpiCard
-        eyebrow={t('op.kpi.rentCost')}
+        term="rentCost"
         value={
           <span data-testid="op-kpi-rent-cost">
             {formatIDR(Math.round(w.after.rentIdr), { compact: true })}

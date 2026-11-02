@@ -181,7 +181,7 @@ export const callOffsEn = {
     'PTI stock on hand reached ROP Fisik, so the hub drafted this call-off on the oldest blanket PO line with balance. It is not sent to the supplier until you release it.',
   'co.trigger.soh': 'PTI stock on hand (all plants)',
   'co.trigger.ropFisik': 'ROP Fisik',
-  'co.trigger.max': 'Max',
+  'co.trigger.max': 'Max Stock',
   'co.trigger.openSupply': 'Released, not yet received',
   'co.trigger.quantity': 'Drafted quantity',
   'co.trigger.quantityBasis':
@@ -520,7 +520,7 @@ export const callOffsId = {
     'Stok PTI mencapai ROP Fisik, sehingga hub membuat draf call-off ini pada baris PO induk tertua yang masih bersaldo. Draf tidak dikirim ke pemasok sampai Anda merilisnya.',
   'co.trigger.soh': 'Stok PTI (semua pabrik)',
   'co.trigger.ropFisik': 'ROP Fisik',
-  'co.trigger.max': 'Maks',
+  'co.trigger.max': 'Max Stock',
   'co.trigger.openSupply': 'Dirilis, belum diterima',
   'co.trigger.quantity': 'Kuantitas draf',
   'co.trigger.quantityBasis':
