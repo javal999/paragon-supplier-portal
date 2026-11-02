@@ -141,7 +141,7 @@ const DemandRangeSection = ({ range }) => {
         data-testid="df-range-kpis"
       >
         <KpiCard
-          eyebrow={t('df.range.kpi.aboveP90')}
+          term="rangeAboveP90"
           value={
             <span data-testid="df-range-kpi-p90">
               {sharePct(all.above[p90], all.checked) ?? '—'}
@@ -154,7 +154,7 @@ const DemandRangeSection = ({ range }) => {
           }
         />
         <KpiCard
-          eyebrow={t('df.range.kpi.aboveP50')}
+          term="rangeAboveP50"
           value={
             <span data-testid="df-range-kpi-p50">
               {sharePct(all.above[p50], all.checked) ?? '—'}
@@ -163,7 +163,7 @@ const DemandRangeSection = ({ range }) => {
           subtitle={<span className="text-text-tertiary">{t('df.range.kpi.aboveP50.sub')}</span>}
         />
         <KpiCard
-          eyebrow={t('df.range.kpi.uncorrected')}
+          term="rangeUncorrected"
           value={
             <span data-testid="df-range-kpi-uncorrected">
               {sharePct(all.aboveUncorrected[p90], all.checked) ?? '—'}
@@ -172,7 +172,7 @@ const DemandRangeSection = ({ range }) => {
           subtitle={<span className="text-text-tertiary">{t('df.range.kpi.uncorrected.sub')}</span>}
         />
         <KpiCard
-          eyebrow={t('df.range.kpi.width')}
+          term="rangeWidthTotal"
           value={
             <span data-testid="df-range-kpi-width">
               {totalP50 > 0
@@ -216,10 +216,10 @@ const DemandRangeSection = ({ range }) => {
         <Table>
           <TableHeader>
             <TableHeaderCell>{t('df.range.col.level')}</TableHeaderCell>
-            <TableHeaderCell>{t('df.range.col.forecast')}</TableHeaderCell>
+            <TableHeaderCell term="rangeForecast" />
             {pHeads}
-            <TableHeaderCell>{t('df.range.col.width')}</TableHeaderCell>
-            <TableHeaderCell>{t('df.range.col.above')}</TableHeaderCell>
+            <TableHeaderCell term="rangeWidth" />
+            <TableHeaderCell term="rangeAbovePast" />
           </TableHeader>
           <tbody>
             {[range.total, ...range.brands].map((l) => (
@@ -249,11 +249,11 @@ const DemandRangeSection = ({ range }) => {
         <Table>
           <TableHeader>
             <TableHeaderCell>{t('df.range.col.sku')}</TableHeaderCell>
-            <TableHeaderCell>{t('df.range.col.source')}</TableHeaderCell>
-            <TableHeaderCell>{t('df.range.col.forecast')}</TableHeaderCell>
+            <TableHeaderCell term="rangeSource" />
+            <TableHeaderCell term="rangeForecast" />
             {pHeads}
-            <TableHeaderCell>{t('df.range.col.width')}</TableHeaderCell>
-            <TableHeaderCell>{t('df.range.col.above')}</TableHeaderCell>
+            <TableHeaderCell term="rangeWidth" />
+            <TableHeaderCell term="rangeAbovePast" />
           </TableHeader>
           <tbody>
             {firstRows(range.skus, showAllSkus).map((s) => {
@@ -311,11 +311,11 @@ const DemandRangeSection = ({ range }) => {
         <Table>
           <TableHeader>
             <TableHeaderCell>{t('df.range.col.material')}</TableHeaderCell>
-            <TableHeaderCell>{t('df.range.col.source')}</TableHeaderCell>
-            <TableHeaderCell>{t('df.range.col.need')}</TableHeaderCell>
+            <TableHeaderCell term="rangeSource" />
+            <TableHeaderCell term="rangeNeed" />
             {pHeads}
-            <TableHeaderCell>{t('df.range.col.width')}</TableHeaderCell>
-            <TableHeaderCell>{t('df.range.col.above')}</TableHeaderCell>
+            <TableHeaderCell term="rangeWidth" />
+            <TableHeaderCell term="rangeAbovePast" />
           </TableHeader>
           <tbody>
             {range.materials.map((m) => {

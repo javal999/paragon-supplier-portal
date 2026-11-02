@@ -388,8 +388,8 @@ const AdminQualification = () => {
           <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableHeaderCell>{t('adminQual.history.col.level')}</TableHeaderCell>
-                <TableHeaderCell>{t('adminQual.history.col.documents')}</TableHeaderCell>
+                <TableHeaderCell term="qualLevel" />
+                <TableHeaderCell term="qualDocuments" />
                 <TableHeaderCell>{t('adminQual.history.col.by')}</TableHeaderCell>
                 <TableHeaderCell>{t('adminQual.history.col.at')}</TableHeaderCell>
               </TableHeader>

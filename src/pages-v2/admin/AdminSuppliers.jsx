@@ -278,7 +278,7 @@ const AdminSuppliers = () => {
           <Table>
             <TableHeader>
               <TableHeaderCell>{t('adminSup.col.supplier')}</TableHeaderCell>
-              <TableHeaderCell>{t('adminSup.col.mode')}</TableHeaderCell>
+              <TableHeaderCell term="stockUpdateMode" />
               <TableHeaderCell>{t('adminSup.col.source')}</TableHeaderCell>
               <TableHeaderCell>{t('adminSup.col.lastChange')}</TableHeaderCell>
               {held ? <TableHeaderCell>{t('adminSup.col.action')}</TableHeaderCell> : null}
@@ -349,7 +349,7 @@ const AdminSuppliers = () => {
             <Table>
               <TableHeader>
                 <TableHeaderCell>{t('adminSup.history.col.supplier')}</TableHeaderCell>
-                <TableHeaderCell>{t('adminSup.history.col.mode')}</TableHeaderCell>
+                <TableHeaderCell term="modeSet" />
                 <TableHeaderCell>{t('adminSup.history.col.reason')}</TableHeaderCell>
                 <TableHeaderCell>{t('adminSup.history.col.by')}</TableHeaderCell>
                 <TableHeaderCell>{t('adminSup.history.col.at')}</TableHeaderCell>

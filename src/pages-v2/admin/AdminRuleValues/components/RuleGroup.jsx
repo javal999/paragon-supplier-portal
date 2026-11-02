@@ -26,8 +26,8 @@ const RuleGroup = ({ rule, defs, held, prefill, valueText }) => {
         <Table>
           <TableHeader>
             <TableHeaderCell>{t('adminSet.col.value')}</TableHeaderCell>
-            <TableHeaderCell>{t('adminSet.col.inForce')}</TableHeaderCell>
-            <TableHeaderCell>{t('adminSet.col.default')}</TableHeaderCell>
+            <TableHeaderCell term="ruleInForce" />
+            <TableHeaderCell term="ruleDefault" />
             {held && <TableHeaderCell>{t('adminSet.col.action')}</TableHeaderCell>}
           </TableHeader>
           <tbody>

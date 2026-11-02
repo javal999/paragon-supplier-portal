@@ -162,10 +162,10 @@ const StalePeriodsPanel = ({ held, version, record }) => {
           <TableHeader>
             <TableHeaderCell>{t('adminSet.stale.col.supplier')}</TableHeaderCell>
             <TableHeaderCell>{t('adminSet.stale.col.material')}</TableHeaderCell>
-            <TableHeaderCell>{t('adminSet.stale.col.period')}</TableHeaderCell>
+            <TableHeaderCell term="staleAfter" />
             <TableHeaderCell>{t('adminSet.stale.col.source')}</TableHeaderCell>
             <TableHeaderCell>{t('adminSet.stale.col.lastUpdate')}</TableHeaderCell>
-            <TableHeaderCell>{t('adminSet.stale.col.now')}</TableHeaderCell>
+            <TableHeaderCell term="stockFigureNow" />
             {held && <TableHeaderCell>{t('adminSet.col.action')}</TableHeaderCell>}
           </TableHeader>
           <tbody>

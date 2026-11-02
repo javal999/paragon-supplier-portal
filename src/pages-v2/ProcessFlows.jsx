@@ -367,7 +367,7 @@ const TransitionsSection = ({ view }) => {
             <TableHeaderCell>{t('processFlows.col.transition')}</TableHeaderCell>
             <TableHeaderCell>{t('processFlows.col.edge')}</TableHeaderCell>
             <TableHeaderCell>{t('processFlows.col.step')}</TableHeaderCell>
-            <TableHeaderCell>{t('processFlows.col.role')}</TableHeaderCell>
+            <TableHeaderCell term="requiredRole" />
             <TableHeaderCell>{t('processFlows.col.contract')}</TableHeaderCell>
             <TableHeaderCell>{t('processFlows.col.links')}</TableHeaderCell>
           </TableHeader>
