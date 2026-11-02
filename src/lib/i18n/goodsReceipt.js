@@ -35,12 +35,8 @@ export const goodsReceiptEn = {
   'goodsReceipt.meta.count.other': '{{count}} GRs this month',
   'goodsReceipt.meta.lastPosted': 'last posted',
   // — KPI cards —
-  'goodsReceipt.kpi.pending.eyebrow': 'Pending Inspection',
   'goodsReceipt.kpi.pending.subtitle': 'Awaiting QC start',
-  'goodsReceipt.kpi.hold.eyebrow': 'On Quality Hold',
   'goodsReceipt.kpi.hold.subtitle': 'Quarantined / retest',
-  'goodsReceipt.kpi.approvedToday.eyebrow': 'Approved Today',
-  'goodsReceipt.kpi.rejectionRate.eyebrow': 'Rejection Rate (30d)',
   'goodsReceipt.kpi.rejectionRate.subtitle': 'Qty rejected / received',
   // — Group tabs —
   'goodsReceipt.tab.all': 'All',
@@ -65,7 +61,6 @@ export const goodsReceiptEn = {
   'goodsReceipt.table.col.receivedBy': 'Received By',
   'goodsReceipt.table.col.items': 'Items',
   'goodsReceipt.table.col.status': 'Status',
-  'goodsReceipt.table.col.disposition': 'Disposition',
   'goodsReceipt.table.col.sapDoc': 'SAP Doc',
   'goodsReceipt.table.empty': 'No goods receipts match the current filters.',
   // — Item count (count-dependent) —
@@ -122,11 +117,6 @@ export const goodsReceiptEn = {
   // — Side panel: line items —
   'goodsReceipt.panel.lineItems': 'Line items',
   'goodsReceipt.panel.col.material': 'Material',
-  'goodsReceipt.panel.col.exp': 'Exp',
-  'goodsReceipt.panel.col.recv': 'Recv',
-  'goodsReceipt.panel.col.acc': 'Acc',
-  'goodsReceipt.panel.col.rej': 'Rej',
-  'goodsReceipt.panel.col.checks': 'Checks',
   'goodsReceipt.panel.legend': 'V = Visual · P = Packaging · H = Halal Seal · B = BPOM Lot',
   // — Side panel: notes + workflow —
   'goodsReceipt.panel.inspectionNotes': 'Inspection notes',
@@ -333,12 +323,8 @@ export const goodsReceiptId = {
   'goodsReceipt.meta.count.other': '{{count}} GR bulan ini',
   'goodsReceipt.meta.lastPosted': 'terakhir diposting',
   // — KPI cards —
-  'goodsReceipt.kpi.pending.eyebrow': 'Menunggu Inspeksi',
   'goodsReceipt.kpi.pending.subtitle': 'Menunggu mulai QC',
-  'goodsReceipt.kpi.hold.eyebrow': 'Ditahan Kualitas',
   'goodsReceipt.kpi.hold.subtitle': 'Dikarantina / uji ulang',
-  'goodsReceipt.kpi.approvedToday.eyebrow': 'Disetujui Hari Ini',
-  'goodsReceipt.kpi.rejectionRate.eyebrow': 'Tingkat Penolakan (30h)',
   'goodsReceipt.kpi.rejectionRate.subtitle': 'Jml ditolak / diterima',
   // — Group tabs —
   'goodsReceipt.tab.all': 'Semua',
@@ -363,7 +349,6 @@ export const goodsReceiptId = {
   'goodsReceipt.table.col.receivedBy': 'Diterima Oleh',
   'goodsReceipt.table.col.items': 'Item',
   'goodsReceipt.table.col.status': 'Status',
-  'goodsReceipt.table.col.disposition': 'Disposisi',
   'goodsReceipt.table.col.sapDoc': 'Dok SAP',
   'goodsReceipt.table.empty': 'Tidak ada penerimaan barang yang cocok dengan filter saat ini.',
   // — Item count (count-dependent) —
@@ -415,11 +400,6 @@ export const goodsReceiptId = {
   // — Side panel: line items —
   'goodsReceipt.panel.lineItems': 'Item baris',
   'goodsReceipt.panel.col.material': 'Material',
-  'goodsReceipt.panel.col.exp': 'Eksp',
-  'goodsReceipt.panel.col.recv': 'Diterima',
-  'goodsReceipt.panel.col.acc': 'Disetujui',
-  'goodsReceipt.panel.col.rej': 'Ditolak',
-  'goodsReceipt.panel.col.checks': 'Pemeriksaan',
   'goodsReceipt.panel.legend': 'V = Visual · P = Kemasan · H = Segel Halal · B = Lot BPOM',
   // — Side panel: notes + workflow —
   'goodsReceipt.panel.inspectionNotes': 'Catatan inspeksi',

@@ -32,12 +32,14 @@
 // E14-04 = `FORECAST-ENGINE-REQUIREMENTS.md`, CAP-9 = `SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md`.
 // Wave 4 (Goal C, Foresight): /buyer/what-if, /buyer/stabilise and
 // /supplier/forecasts. The tips name no requirement code (F-18).
+// Wave 5 (order collaboration): /buyer/orders and /supplier/orders, the order
+// summary, /buyer/purchase-requisition and both goods-receipt pages.
 // ─────────────────────────────────────────────────────────────────────────────
 /** @import { GlossaryOf, TermEntry } from './types' */
 
 /**
  * The terms a page labels through `TermLabel`.
- * @typedef {'demandAnticipation' | 'ltp' | 'fgDemand' | 'ltpLessFgDemand' | 'consumptionAverage' | 'safetyOrder' | 'carryOver' | 'wouldBe' | 'surplusAbsorbed' | 'recordedConsumption' | 'openSupply' | 'supplyGap' | 'daAfterCheck' | 'ospo' | 'additionalPo' | 'callOffsThisWeek' | 'remainder' | 'notCarried' | 'supplierAgreedOutside' | 'gapProposal' | 'alertPtiBelowRop' | 'alertSupplierBelowRop' | 'alertProjectedStockOut' | 'alertCapacityBelowDemand' | 'alertStaleData' | 'alertCoverage' | 'alertCommitmentBelowForecast' | 'alertLeadTimeMissing' | 'alertCallOffNotCovered' | 'alertSupplyDiscontinued' | 'alertBlanketPoRunOut' | 'alertDemandAnticipationUnabsorbed' | 'supplierCover' | 'supplierStock' | 'ptiStockRop' | 'incoming' | 'incomingStatus' | 'supplierAvailable' | 'calledOffNotShipped' | 'freeToCallOff' | 'ptiInbound' | 'simulationBasis' | 'simulationFlags' | 'supplierOwnRop' | 'ptiStock' | 'ptiRop' | 'daysOfSupply' | 'feedstockLatest' | 'feedstockThisWeek' | 'tradeNameStatus' | 'capacityLtp' | 'allocatedCapacity' | 'productionLimit' | 'additionalCapacity' | 'capacityBe' | 'ltpAgainstCapacity' | 'capacityShortBy' | 'ptiCapacityDecision' | 'runOutRemaining' | 'runsOut' | 'newPoNeededBy' | 'poLeadTime' | 'spaceFreed' | 'materialsPerTier' | 'onSapValue' | 'sltGroupDefault' | 'tierTarget' | 'safetyOrderRopOrder' | 'ropFisikSafety' | 'demandCv' | 'osipLevel' | 'ropOrder' | 'ropFisik' | 'maxStock' | 'engineSafetyStock' | 'sapSafetyStock' | 'freed' | 'safetyLeadTime' | 'engineReorderPoint' | 'forecastShortfall' | 'ropSupplier' | 'ropToPrincipal' | 'replenishmentCycle' | 'pullAgreement' | 'bottleneckLeadTime' | 'monthLtp' | 'protectionBaseline' | 'uplift' | 'protectionBuffer' | 'strategicBaseline' | 'strategicBuffer' | 'poOrdered' | 'reconcileCalledOff' | 'asnRequested' | 'notYetCalledOff' | 'calledOffNotYetShipped' | 'maxStockSupplier' | 'whatIfMax' | 'daOverLeadTime' | 'prGenerated' | 'planCheckPr' | 'triggerCallOffs' | 'triggerPr' | 'whatIfRemainder' | 'whatIfCarryOver' | 'firstShortageWeek' | 'weeksAboveMax' | 'whatIfLtp' | 'daCurrentPlan' | 'daScenario' | 'callOffsDrafted' | 'whatIfIncoming' | 'prRecommendedWeek' | 'projectedSohPlan' | 'projectedSohScenario' | 'engineValue' | 'lastPublished' | 'firstPublished' | 'dampedValue' | 'allowedRange' | 'toPublish' | 'stabiliseRule' | 'ruleNew' | 'ruleUnchanged' | 'ruleFirmFrozen' | 'ruleForecast' | 'ruleDamped' | 'ruleBandHeld' | 'ruleCumulativeHeld' | 'ruleOverride' | 'planMovement' | 'weeksChangedInLeadTime' | 'tradeOffWithinLimits' | 'weeksHeld' | 'seriesHeld' | 'seriesMasc' | 'forecastZone' | 'publishedForecast' | 'commitmentDue' | 'commitment' | 'commitmentUpside'} TermLabelId
+ * @typedef {'demandAnticipation' | 'ltp' | 'fgDemand' | 'ltpLessFgDemand' | 'consumptionAverage' | 'safetyOrder' | 'carryOver' | 'wouldBe' | 'surplusAbsorbed' | 'recordedConsumption' | 'openSupply' | 'supplyGap' | 'daAfterCheck' | 'ospo' | 'additionalPo' | 'callOffsThisWeek' | 'remainder' | 'notCarried' | 'supplierAgreedOutside' | 'gapProposal' | 'alertPtiBelowRop' | 'alertSupplierBelowRop' | 'alertProjectedStockOut' | 'alertCapacityBelowDemand' | 'alertStaleData' | 'alertCoverage' | 'alertCommitmentBelowForecast' | 'alertLeadTimeMissing' | 'alertCallOffNotCovered' | 'alertSupplyDiscontinued' | 'alertBlanketPoRunOut' | 'alertDemandAnticipationUnabsorbed' | 'supplierCover' | 'supplierStock' | 'ptiStockRop' | 'incoming' | 'incomingStatus' | 'supplierAvailable' | 'calledOffNotShipped' | 'freeToCallOff' | 'ptiInbound' | 'simulationBasis' | 'simulationFlags' | 'supplierOwnRop' | 'ptiStock' | 'ptiRop' | 'daysOfSupply' | 'feedstockLatest' | 'feedstockThisWeek' | 'tradeNameStatus' | 'capacityLtp' | 'allocatedCapacity' | 'productionLimit' | 'additionalCapacity' | 'capacityBe' | 'ltpAgainstCapacity' | 'capacityShortBy' | 'ptiCapacityDecision' | 'runOutRemaining' | 'runsOut' | 'newPoNeededBy' | 'poLeadTime' | 'spaceFreed' | 'materialsPerTier' | 'onSapValue' | 'sltGroupDefault' | 'tierTarget' | 'safetyOrderRopOrder' | 'ropFisikSafety' | 'demandCv' | 'osipLevel' | 'ropOrder' | 'ropFisik' | 'maxStock' | 'engineSafetyStock' | 'sapSafetyStock' | 'freed' | 'safetyLeadTime' | 'engineReorderPoint' | 'forecastShortfall' | 'ropSupplier' | 'ropToPrincipal' | 'replenishmentCycle' | 'pullAgreement' | 'bottleneckLeadTime' | 'monthLtp' | 'protectionBaseline' | 'uplift' | 'protectionBuffer' | 'strategicBaseline' | 'strategicBuffer' | 'poOrdered' | 'reconcileCalledOff' | 'asnRequested' | 'notYetCalledOff' | 'calledOffNotYetShipped' | 'maxStockSupplier' | 'whatIfMax' | 'daOverLeadTime' | 'prGenerated' | 'planCheckPr' | 'triggerCallOffs' | 'triggerPr' | 'whatIfRemainder' | 'whatIfCarryOver' | 'firstShortageWeek' | 'weeksAboveMax' | 'whatIfLtp' | 'daCurrentPlan' | 'daScenario' | 'callOffsDrafted' | 'whatIfIncoming' | 'prRecommendedWeek' | 'projectedSohPlan' | 'projectedSohScenario' | 'engineValue' | 'lastPublished' | 'firstPublished' | 'dampedValue' | 'allowedRange' | 'toPublish' | 'stabiliseRule' | 'ruleNew' | 'ruleUnchanged' | 'ruleFirmFrozen' | 'ruleForecast' | 'ruleDamped' | 'ruleBandHeld' | 'ruleCumulativeHeld' | 'ruleOverride' | 'planMovement' | 'weeksChangedInLeadTime' | 'tradeOffWithinLimits' | 'weeksHeld' | 'seriesHeld' | 'seriesMasc' | 'forecastZone' | 'publishedForecast' | 'commitmentDue' | 'commitment' | 'commitmentUpside' | 'grPendingInspection' | 'grQualityHold' | 'grApprovedToday' | 'grRejectionRate' | 'grDisposition' | 'grExpected' | 'grReceived' | 'grAccepted' | 'grRejectedLine' | 'grChecks' | 'poOpenTotal' | 'poPendingConfirmation' | 'poInTransit' | 'poOverdue' | 'orderedQty' | 'counterQty' | 'counterDate' | 'summaryResponse' | 'summaryAsns' | 'summaryCallOffs' | 'summaryConfirmations' | 'summaryReceipts' | 'summaryInvoices' | 'prDraft' | 'prPendingApproval' | 'prApproved' | 'prSourcingEvent' | 'prPoCreated' | 'prSource' | 'supShipped' | 'supReceived' | 'supRejected' | 'supQualityResult' | 'supDiscrepancy' | 'supDifference' | 'supOpenOrders' | 'supInProgress' | 'supValuePending' | 'supDelivered' | 'supConfirmed'} TermLabelId
  */
 
 // TL-D23: an "Also called" source names only the team; where in the team's
@@ -369,7 +371,7 @@ export const TERM_LABEL_GLOSSARY =
     },
     // ── Wave 2: Inventory (Goal A) ────────────────────────────────────────────
     supplierCover: {
-      label: { en: 'Risk · supplier cover', id: 'Risiko · cakupan pemasok' },
+      label: { en: 'Risk · supplier cover', id: 'Risiko · cakupan stok pemasok' },
       en: 'The material’s risk class, from how many days the supplier’s stock covers, against the supplier’s lead time for it.',
       id: 'Kelas risiko material, dari berapa hari stok pemasok mencukupi, dibandingkan lead time pemasok untuk material itu.',
       formula: {
@@ -933,7 +935,7 @@ export const TERM_LABEL_GLOSSARY =
     },
     // ── Wave 4: Foresight (Goal C): what-if, stabilise, supplier forecasts ────
     whatIfMax: {
-      label: { en: 'Max', id: 'Max' },
+      label: { en: 'Max Stock', id: 'Max Stock' },
       en: 'The most PTI should hold of the material; the call-off trigger and "weeks above Max" use it. A typed value replaces the system’s.',
       id: 'Jumlah terbanyak material yang sebaiknya disimpan PTI; pemicu call-off dan "minggu di atas Max" memakainya. Nilai yang diketik menggantikan nilai sistem.',
       formula: {
@@ -1272,5 +1274,237 @@ export const TERM_LABEL_GLOSSARY =
         en: 'Uplift (the rise of a month’s LTP above its baseline, on the Capacity page).',
         id: 'Uplift (kenaikan LTP bulanan di atas baseline-nya, di halaman Kapasitas).'
       }
+    },
+    // ── Wave 5: order collaboration (orders, requisitions, goods receipts) ─────
+    grPendingInspection: {
+      label: { en: 'Pending Inspection', id: 'Menunggu Inspeksi' },
+      en: 'Goods receipts waiting for PTI’s quality inspection to start.',
+      id: 'Penerimaan barang yang menunggu inspeksi mutu PTI dimulai.'
+    },
+    grQualityHold: {
+      label: { en: 'On Quality Hold', id: 'Ditahan Kualitas' },
+      en: 'Goods receipts PTI’s quality inspection has put on hold: the goods may not be used until the hold is lifted.',
+      id: 'Penerimaan barang yang ditahan inspeksi mutu PTI: barang tidak boleh dipakai sampai penahanan dicabut.'
+    },
+    grApprovedToday: {
+      label: { en: 'Approved Today', id: 'Disetujui Hari Ini' },
+      en: 'Goods receipts received today whose result is Approved or Partially approved.',
+      id: 'Penerimaan barang yang diterima hari ini dengan hasil Disetujui atau Disetujui sebagian.'
+    },
+    grRejectionRate: {
+      label: { en: 'Rejection Rate (30d)', id: 'Tingkat Penolakan (30h)' },
+      en: 'The share of the quantity received in the last 30 days that inspection rejected.',
+      id: 'Porsi kuantitas yang diterima dalam 30 hari terakhir yang ditolak inspeksi.',
+      formula: {
+        en: 'Rejected quantity ÷ received quantity, over receipts of the last 30 days.',
+        id: 'Kuantitas ditolak ÷ kuantitas diterima, atas penerimaan 30 hari terakhir.'
+      }
+    },
+    grDisposition: {
+      label: { en: 'Disposition', id: 'Disposisi' },
+      en: 'What happens to the received goods: accepted into stock, rejected, kept in quarantine, returned to the supplier, or not decided yet.',
+      id: 'Apa yang terjadi pada barang yang diterima: diterima ke stok, ditolak, dikarantina, dikembalikan ke pemasok, atau belum diputuskan.'
+    },
+    grExpected: {
+      label: { en: 'Exp', id: 'Eksp' },
+      en: 'Expected: the quantity the shipping notice said would arrive on the line.',
+      id: 'Diharapkan: kuantitas yang menurut pemberitahuan pengiriman akan tiba pada baris itu.',
+      notToConfuse: { en: 'Expiry date.', id: 'Tanggal kedaluwarsa.' }
+    },
+    grReceived: {
+      label: { en: 'Recv', id: 'Diterima' },
+      en: 'Received: the quantity that physically arrived on the line.',
+      id: 'Diterima: kuantitas yang benar-benar tiba pada baris itu.'
+    },
+    grAccepted: {
+      label: { en: 'Accepted', id: 'Diterima' },
+      en: 'The received quantity that passed inspection.',
+      id: 'Kuantitas diterima yang lolos inspeksi.',
+      notToConfuse: {
+        en: 'Approved (the result of the whole receipt).',
+        id: 'Disetujui (hasil seluruh penerimaan).'
+      }
+    },
+    grRejectedLine: {
+      label: { en: 'Rej', id: 'Ditolak' },
+      en: 'Rejected: the received quantity that failed inspection.',
+      id: 'Ditolak: kuantitas diterima yang tidak lolos inspeksi.',
+      formula: { en: 'Received − accepted.', id: 'Diterima − lolos inspeksi.' }
+    },
+    grChecks: {
+      label: { en: 'Checks', id: 'Pemeriksaan' },
+      en: 'The checks on the line at receipt: visual, packaging, halal seal and BPOM lot.',
+      id: 'Pemeriksaan pada baris saat penerimaan: visual, kemasan, segel halal, dan lot BPOM.'
+    },
+    poOpenTotal: {
+      label: { en: 'Total Open POs', id: 'Total PO Terbuka' },
+      en: 'POs not yet delivered, closed or rejected. A count of POs, not a quantity.',
+      id: 'PO yang belum terkirim, ditutup, atau ditolak. Jumlah PO, bukan kuantitas.',
+      notToConfuse: {
+        en: 'OSPO (the open PO quantity not yet called off).',
+        id: 'OSPO (kuantitas PO terbuka yang belum di-call-off).'
+      }
+    },
+    poPendingConfirmation: {
+      label: { en: 'Pending Confirmation', id: 'Menunggu Konfirmasi' },
+      en: 'POs sent to the supplier that it has not answered yet: Sent or Viewed.',
+      id: 'PO yang dikirim ke pemasok dan belum dijawab: Terkirim atau Dilihat.'
+    },
+    poInTransit: {
+      label: { en: 'In Transit', id: 'Dalam Perjalanan' },
+      en: 'POs the supplier confirmed or has partly delivered.',
+      id: 'PO yang sudah dikonfirmasi pemasok atau sudah dikirim sebagian.'
+    },
+    poOverdue: {
+      label: { en: 'Overdue', id: 'Jatuh Tempo' },
+      en: 'Open POs past their requested delivery date.',
+      id: 'PO terbuka yang melewati tanggal pengiriman yang diminta.'
+    },
+    orderedQty: {
+      label: { en: 'Ordered', id: 'Dipesan' },
+      en: 'The quantity ordered on the PO line.',
+      id: 'Kuantitas yang dipesan pada baris PO.'
+    },
+    counterQty: {
+      label: { en: 'Can supply', id: 'Sanggup dipasok' },
+      en: 'The quantity the supplier offers for the line, when it cannot supply all of it: above 0 and at most the ordered quantity.',
+      id: 'Kuantitas yang ditawarkan pemasok untuk baris itu, bila tidak sanggup memasok semuanya: di atas 0 dan paling banyak kuantitas yang dipesan.'
+    },
+    counterDate: {
+      label: { en: 'Can deliver', id: 'Sanggup dikirim' },
+      en: 'The date the supplier offers instead of the requested delivery date.',
+      id: 'Tanggal yang ditawarkan pemasok sebagai ganti tanggal pengiriman yang diminta.'
+    },
+    summaryResponse: {
+      label: { en: 'Response', id: 'Tanggapan' },
+      en: 'The supplier’s answer to the PO: accepted, a counter-offer, or rejected. "Awaiting response" until it answers.',
+      id: 'Jawaban pemasok atas PO: diterima, penawaran balik, atau ditolak. "Menunggu tanggapan" sampai pemasok menjawab.',
+      labelKeys: ['oc.summary.col.response']
+    },
+    summaryAsns: {
+      label: { en: 'ASNs', id: 'ASN' },
+      en: 'The shipping notices (ASNs) the supplier sent against the PO.',
+      id: 'Pemberitahuan pengiriman (ASN) yang dikirim pemasok untuk PO itu.'
+    },
+    summaryCallOffs: {
+      label: { en: 'Call-offs', id: 'Call-off' },
+      en: 'The call-offs released against the PO, when its deliveries are managed as call-offs.',
+      id: 'Call-off yang dirilis untuk PO itu, bila pengirimannya dikelola sebagai call-off.'
+    },
+    summaryConfirmations: {
+      label: { en: 'Confirmations', id: 'Konfirmasi' },
+      en: 'The 3 confirmations the supplier gives on the PO: capacity, foresight or fixed stock, and the shipping notice.',
+      id: '3 konfirmasi yang diberikan pemasok pada PO: kapasitas, foresight atau fixed stock, dan pemberitahuan pengiriman.'
+    },
+    summaryReceipts: {
+      label: { en: 'Receipts', id: 'Penerimaan barang' },
+      en: 'The goods receipts recorded against the PO.',
+      id: 'Penerimaan barang yang tercatat untuk PO itu.'
+    },
+    summaryInvoices: {
+      label: { en: 'Invoices', id: 'Faktur' },
+      en: 'The supplier invoices against the PO.',
+      id: 'Faktur pemasok untuk PO itu.'
+    },
+    prDraft: {
+      label: { en: 'Draft', id: 'Draf' },
+      en: 'Purchase requisitions still being written, not yet submitted.',
+      id: 'Permintaan pembelian yang masih disusun, belum diajukan.'
+    },
+    prPendingApproval: {
+      label: { en: 'Pending Approval', id: 'Menunggu Persetujuan' },
+      en: 'Purchase requisitions submitted and waiting for Procurement’s decision.',
+      id: 'Permintaan pembelian yang sudah diajukan dan menunggu keputusan Procurement.'
+    },
+    prApproved: {
+      label: { en: 'Approved', id: 'Disetujui' },
+      en: 'Purchase requisitions approved and not yet turned into a PO or a sourcing event.',
+      id: 'Permintaan pembelian yang disetujui dan belum menjadi PO atau acara sourcing.'
+    },
+    prSourcingEvent: {
+      label: { en: 'Sourcing Event', id: 'Acara Sourcing' },
+      en: 'Purchase requisitions that need a sourcing event, because no purchasing info record or agreement exists for the material.',
+      id: 'Permintaan pembelian yang memerlukan acara sourcing, karena belum ada info record pembelian atau perjanjian untuk material itu.'
+    },
+    prPoCreated: {
+      label: { en: 'PO Created', id: 'PO Dibuat' },
+      en: 'Purchase requisitions that became a PO.',
+      id: 'Permintaan pembelian yang sudah menjadi PO.'
+    },
+    prSource: {
+      label: { en: 'Source', id: 'Sumber' },
+      en: 'Whether a purchasing info record (PIR) exists for the material. With one, a PO can be created directly; without, a sourcing event is needed.',
+      id: 'Apakah ada info record pembelian (PIR) untuk material itu. Bila ada, PO dapat langsung dibuat; bila tidak, perlu acara sourcing.'
+    },
+    supShipped: {
+      label: { en: 'Shipped', id: 'Dikirim' },
+      en: 'The quantity your shipping notice (ASN) said you shipped.',
+      id: 'Kuantitas yang menurut pemberitahuan pengiriman (ASN) Anda telah dikirim.'
+    },
+    supReceived: {
+      label: { en: 'Received', id: 'Diterima' },
+      en: 'The quantity PTI received.',
+      id: 'Kuantitas yang diterima PTI.'
+    },
+    supRejected: {
+      label: { en: 'Rejected', id: 'Ditolak' },
+      en: 'The received quantity PTI’s quality inspection rejected.',
+      id: 'Kuantitas diterima yang ditolak inspeksi mutu PTI.',
+      formula: { en: 'Received − accepted.', id: 'Diterima − lolos inspeksi.' },
+      labelKeys: ['fc.gr.col.rejected']
+    },
+    supQualityResult: {
+      label: { en: 'Quality result', id: 'Hasil mutu' },
+      en: 'PTI’s quality inspection result for the receipt, such as a quality hold or a retest. You see the result, not PTI’s internal checklist.',
+      id: 'Hasil inspeksi mutu PTI untuk penerimaan itu, misalnya penahanan mutu atau uji ulang. Anda melihat hasilnya, bukan daftar periksa internal PTI.'
+    },
+    supDiscrepancy: {
+      label: { en: 'Discrepancy', id: 'Ketidaksesuaian' },
+      en: 'Flagged when the receipt differs from your shipping notice beyond the tolerance, or when PTI rejected some quantity.',
+      id: 'Ditandai bila penerimaan berbeda dari pemberitahuan pengiriman Anda melewati toleransi, atau bila PTI menolak sebagian kuantitas.',
+      formula: {
+        en: 'Any quantity above the order, or a shortfall above 2%.',
+        id: 'Kuantitas apa pun di atas pesanan, atau kekurangan di atas 2%.'
+      },
+      notToConfuse: {
+        en: 'Difference (the plain quantity gap on a line).',
+        id: 'Selisih (beda kuantitas pada satu baris).'
+      }
+    },
+    supDifference: {
+      label: { en: 'Difference', id: 'Selisih' },
+      en: 'On a line, how far the received quantity is from the shipped quantity.',
+      id: 'Pada satu baris, seberapa jauh kuantitas diterima dari kuantitas dikirim.',
+      formula: { en: 'Received − shipped.', id: 'Diterima − dikirim.' },
+      notToConfuse: {
+        en: 'Discrepancy (a difference beyond the tolerance, on the receipt).',
+        id: 'Ketidaksesuaian (beda yang melewati toleransi, pada penerimaan).'
+      }
+    },
+    supOpenOrders: {
+      label: { en: 'Open Orders', id: 'Pesanan Terbuka' },
+      en: 'POs waiting for your response: sent to you, or acknowledged and not yet confirmed.',
+      id: 'PO yang menunggu tanggapan Anda: dikirim kepada Anda, atau sudah diterima dan belum dikonfirmasi.'
+    },
+    supInProgress: {
+      label: { en: 'In Progress', id: 'Sedang Berjalan' },
+      en: 'POs you confirmed or have partly delivered.',
+      id: 'PO yang sudah Anda konfirmasi atau sudah dikirim sebagian.'
+    },
+    supValuePending: {
+      label: { en: 'Total Value Pending', id: 'Total Nilai Tertunda' },
+      en: 'The total value of your POs that are not yet delivered or closed.',
+      id: 'Total nilai PO Anda yang belum terkirim atau ditutup.'
+    },
+    supDelivered: {
+      label: { en: 'Delivered', id: 'Terkirim' },
+      en: 'Your POs that are delivered or closed.',
+      id: 'PO Anda yang sudah terkirim atau ditutup.'
+    },
+    supConfirmed: {
+      label: { en: 'Confirmed', id: 'Dikonfirmasi' },
+      en: 'The quantity you confirm you will supply for the line: above 0 and at most the ordered quantity. Less than ordered is a counter-offer.',
+      id: 'Kuantitas yang Anda konfirmasi akan dipasok untuk baris itu: di atas 0 dan paling banyak kuantitas yang dipesan. Kurang dari pesanan adalah penawaran balik.',
+      labelKeys: ['supplierOrders.panel.col.confirmed']
     }
   });

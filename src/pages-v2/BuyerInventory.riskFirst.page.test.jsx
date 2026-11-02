@@ -103,7 +103,7 @@ describe('P-01 — risk first, fewer columns', () => {
     render();
     await screen.findByTestId('pti-stock-row-sup-002-RM-STEAR-7300');
     expect(
-      screen.getByRole('columnheader', { name: headerNamed('Risiko · cakupan pemasok') })
+      screen.getByRole('columnheader', { name: headerNamed('Risiko · cakupan stok pemasok') })
     ).toBeTruthy();
     expect(screen.getByRole('tab', { name: /Semua jenis/ })).toBeTruthy();
   });

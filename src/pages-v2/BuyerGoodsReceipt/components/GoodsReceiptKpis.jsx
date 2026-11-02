@@ -23,25 +23,25 @@ import { formatDate, formatNumber } from '../utils';
 const GoodsReceiptKpis = ({ counts, approvedToday, rejectionRate, t }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     <KpiCard
-      eyebrow={t('goodsReceipt.kpi.pending.eyebrow')}
+      term="grPendingInspection"
       value={formatNumber(counts.pending)}
       icon={ClipboardCheck}
       subtitle={t('goodsReceipt.kpi.pending.subtitle')}
     />
     <KpiCard
-      eyebrow={t('goodsReceipt.kpi.hold.eyebrow')}
+      term="grQualityHold"
       value={<span className="text-danger">{formatNumber(counts.hold)}</span>}
       icon={AlertTriangle}
       subtitle={t('goodsReceipt.kpi.hold.subtitle')}
     />
     <KpiCard
-      eyebrow={t('goodsReceipt.kpi.approvedToday.eyebrow')}
+      term="grApprovedToday"
       value={formatNumber(approvedToday)}
       icon={CheckCircle2}
       subtitle={formatDate(TODAY)}
     />
     <KpiCard
-      eyebrow={t('goodsReceipt.kpi.rejectionRate.eyebrow')}
+      term="grRejectionRate"
       value={`${rejectionRate.toFixed(1)}%`}
       icon={TrendingDown}
       subtitle={t('goodsReceipt.kpi.rejectionRate.subtitle')}

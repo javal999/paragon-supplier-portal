@@ -52,6 +52,7 @@ import {
 } from './orders/orderSummaryDrill';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { headerNamed } from '@test/termText';
 
 // The row every spec walks: sup-007's PO-2025-00107 — 3 active ASNs, 6 released
 // call-offs, a capacity gap, 1 goods receipt and 1 invoice, so it carries both
@@ -105,7 +106,10 @@ describe('AC-01 — the summary shows the supplier, the response, ASNs, call-off
       'Receipts',
       'Invoices'
     ]) {
-      expect(screen.getByRole('columnheader', { name: header }), header).toBeInTheDocument();
+      expect(
+        screen.getByRole('columnheader', { name: headerNamed(header) }),
+        header
+      ).toBeInTheDocument();
     }
     expect(row).toHaveTextContent(PO_NUMBER);
     expect(row).toHaveTextContent('PT Sample Packaging Indonesia');

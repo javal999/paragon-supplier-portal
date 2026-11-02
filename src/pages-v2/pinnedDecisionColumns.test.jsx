@@ -5,7 +5,7 @@ import BuyerCommitments from './BuyerCommitments';
 import BuyerOrderSummary from './BuyerOrderSummary';
 import BuyerStockSimulation from './BuyerStockSimulation';
 import BuyerInventory from './BuyerInventory';
-import { headerNamed } from '@test/termText';
+import { headerNamed, textWithoutTips } from '@test/termText';
 import SupplierShipments from './SupplierShipments';
 
 // At 1440 x 900 the columns a planner reads or acts on sat past the edge of
@@ -23,7 +23,8 @@ import SupplierShipments from './SupplierShipments';
  */
 const expectPins = (table, { left, right }) => {
   const headers = within(table).getAllByRole('columnheader');
-  const label = (/** @type {HTMLElement} */ th) => th.textContent?.trim() ?? '';
+  // BL-233 — a header with an (i) also holds its tip's text; read the label.
+  const label = (/** @type {HTMLElement} */ th) => textWithoutTips(th).trim();
   const pinned = (/** @type {string} */ side) =>
     headers.filter((th) => th.dataset.pin === side).map(label);
   expect(pinned('left')).toEqual(left);

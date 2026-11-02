@@ -38,7 +38,7 @@ const GoodsReceiptTable = ({ filtered, supplierById, onSelect, t, el }) => (
         <TableHeaderCell>{t('goodsReceipt.table.col.receivedBy')}</TableHeaderCell>
         <TableHeaderCell>{t('goodsReceipt.table.col.items')}</TableHeaderCell>
         <TableHeaderCell>{t('goodsReceipt.table.col.status')}</TableHeaderCell>
-        <TableHeaderCell>{t('goodsReceipt.table.col.disposition')}</TableHeaderCell>
+        <TableHeaderCell term="grDisposition" />
         <TableHeaderCell>{t('goodsReceipt.table.col.sapDoc')}</TableHeaderCell>
         <TableHeaderCell> </TableHeaderCell>
       </TableHeader>

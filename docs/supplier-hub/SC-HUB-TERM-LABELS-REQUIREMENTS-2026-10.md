@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Accepted 2026-10-29: TL-D1 to TL-D13; TL-D14 to TL-D18 on 2026-10-30; TL-D19 to TL-D25 on 2026-11-02.** The owner answered the 4 open questions (section 5) and the 27 inventory questions (TL-D10 to TL-D13, `research/TERM-LABEL-INVENTORY-2026-10.md` section 1) the same day. Wave 1 merged 2026-10-30 (MR !65, `7f29d078`) |
+| Status | **Accepted 2026-10-29: TL-D1 to TL-D13; TL-D14 to TL-D18 on 2026-10-30; TL-D19 to TL-D27 on 2026-11-02.** The owner answered the 4 open questions (section 5) and the 27 inventory questions (TL-D10 to TL-D13, `research/TERM-LABEL-INVENTORY-2026-10.md` section 1) the same day. Wave 1 merged 2026-10-30 (MR !65, `7f29d078`) |
 | Date | 2026-10-29 |
 | Source | Owner, 2026-10-29, reviewing the Demand anticipation grid: the row label differs from the team's input. Owner rules: (1) an agreed column wording is not replaced with another name; (2) every important term gets an information icon with its definition and the other names it goes by |
 | Code read | `main` at `59199b4f` |
@@ -132,7 +132,10 @@ Each was asked with a recommendation; the owner took the recommendation every ti
 | TL-D24 | Sign of "PR Generated" on the what-if | Positive, as built; the tip says the team's slide writes the same need as a negative number | Accepted, owner, 2026-11-02 |
 | TL-D25 | Stabilise KPI titles against the engine requirements | Kept as they are; the engine's names stay under "Also called" | Accepted, owner, 2026-11-02 |
 
-**Open, 2026-11-02.** Two owner questions are being explained before a ruling: the ID wording of "Risk · supplier cover" (INV-D1's "Cakupan stok pemasok") and whether the what-if "Max" becomes "Max Stock". One question goes to the Material Planning team: is "Max Supplier" another name for the production limit? Question E3 is headed "Max Supplier / Production Limit"; until the team answers, the production limit's tip lists no other name (BR-10).
+| TL-D26 | ID label of "Risk · supplier cover" | "Risiko · cakupan stok pemasok", per INV-D1; EN unchanged | Accepted, owner, 2026-11-02 |
+| TL-D27 | What-if "Max" | "Max Stock" in EN and ID, as TL-D12 does on Safety stock and What to order; same formula | Accepted, owner, 2026-11-02 |
+
+**Open, 2026-11-02.** One question goes to the Material Planning team in the C2 message: is "Max Supplier" another name for the production limit? Question E3 is headed "Max Supplier / Production Limit"; until the team answers, the production limit's tip lists no other name (BR-10) and no label changes.
 
 ---
 

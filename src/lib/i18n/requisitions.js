@@ -37,15 +37,10 @@ export const requisitionsEn = {
   'requisitions.meta.summary.one': '{{count}} requisition · last updated {{date}}',
   'requisitions.meta.summary.other': '{{count}} requisitions · last updated {{date}}',
   // — KPI cards —
-  'requisitions.kpi.draft.eyebrow': 'Draft',
   'requisitions.kpi.draft.subtitle': 'Not yet submitted',
-  'requisitions.kpi.pending.eyebrow': 'Pending Approval',
   'requisitions.kpi.pending.subtitle': 'Awaiting reviewer',
-  'requisitions.kpi.approved.eyebrow': 'Approved',
   'requisitions.kpi.approved.subtitle': 'Cleared for sourcing',
-  'requisitions.kpi.sourcing.eyebrow': 'Sourcing Event',
   'requisitions.kpi.sourcing.subtitle': 'RFQ in progress',
-  'requisitions.kpi.po.eyebrow': 'PO Created',
   'requisitions.kpi.po.subtitle': 'Converted to order',
   // — Group tabs —
   'requisitions.tab.all': 'All',
@@ -65,7 +60,6 @@ export const requisitionsEn = {
   'requisitions.table.col.estValue': 'Est. value',
   'requisitions.table.col.requestor': 'Requestor',
   'requisitions.table.col.status': 'Status',
-  'requisitions.table.col.source': 'Source',
   'requisitions.table.col.linkedDoc': 'Linked doc',
   'requisitions.table.col.actions': 'Actions',
   'requisitions.table.empty': 'No requisitions match the current filters.',
@@ -256,15 +250,10 @@ export const requisitionsId = {
   'requisitions.meta.summary.other':
     '{{count}} permintaan pembelian · terakhir diperbarui {{date}}',
   // — KPI cards —
-  'requisitions.kpi.draft.eyebrow': 'Draf',
   'requisitions.kpi.draft.subtitle': 'Belum diajukan',
-  'requisitions.kpi.pending.eyebrow': 'Menunggu Persetujuan',
   'requisitions.kpi.pending.subtitle': 'Menunggu peninjau',
-  'requisitions.kpi.approved.eyebrow': 'Disetujui',
   'requisitions.kpi.approved.subtitle': 'Siap untuk sourcing',
-  'requisitions.kpi.sourcing.eyebrow': 'Acara Sourcing',
   'requisitions.kpi.sourcing.subtitle': 'RFQ berlangsung',
-  'requisitions.kpi.po.eyebrow': 'PO Dibuat',
   'requisitions.kpi.po.subtitle': 'Dikonversi ke pesanan',
   // — Group tabs —
   'requisitions.tab.all': 'Semua',
@@ -285,7 +274,6 @@ export const requisitionsId = {
   'requisitions.table.col.estValue': 'Nilai est.',
   'requisitions.table.col.requestor': 'Pemohon',
   'requisitions.table.col.status': 'Status',
-  'requisitions.table.col.source': 'Sumber',
   'requisitions.table.col.linkedDoc': 'Dok. tertaut',
   'requisitions.table.col.actions': 'Tindakan',
   'requisitions.table.empty': 'Tidak ada permintaan pembelian yang cocok dengan filter saat ini.',

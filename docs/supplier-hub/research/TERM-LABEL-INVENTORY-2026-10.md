@@ -159,7 +159,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | This scenario | Skenario ini | `whatIf.col.scenario` | N | n/a | n/a | N |  | Keep |  |
 | row | ROP Order | ROP Order | `whatIf.row.ropOrder` | Y | "ROP Order" (Q-file:132, B9) | N | N |  | Keep |  |
 | row | ROP Fisik | ROP Fisik | `whatIf.row.ropFisik` | Y | "ROP Fisik" (Q-file:83, B1) | N | N |  | Keep |  |
-| row | Max | Max | `whatIf.row.max` | Y | "Batas Max" (Q-file:124, B8) | N | Supplier max stock, feedstock reconcile (`lib/i18n/feedstockReconcile.js:25`) |  | Keep | Adds "(typed)" when overridden |
+| row | Max | Max | `whatIf.row.max` | Y | "Batas Max" (Q-file:124, B8) | N | Supplier max stock, feedstock reconcile (`lib/i18n/feedstockReconcile.js:25`) |  | Decided (TL-D27) | Now "Max Stock" in EN and ID (BL-233 wave 5) |
 | row | Safety order | Safety order | `whatIf.row.safetyOrder` | Y | "safety order (ROP Order)" (Q-file:91, B2) | N | N |  | Keep | Not safety stock (spec §3) |
 | row | Demand anticipation over the lead time | Antisipasi permintaan sepanjang lead time | `whatIf.row.totalDa` | Y | "Total DA" (Q-file:23, A2); "total DA over the lead time" (SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md:34) | Y | Delivery Agreement, contract pages | Total DA (Material Planning team, Q-file A2) | Decided (TL-D1) | Now "Demand anticipation (DA) over the lead time" (BL-233 wave 4) |
 | row | PR need | Kebutuhan PR | `whatIf.row.prNeed` | Y | "PR Generated" (Q-file:241, G; MoM 1B); hub "PR need" (SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md:75) | Y | N |  | Decided (TL-D12) | Now "PR Generated" in EN and ID (BL-233 wave 4) |
@@ -661,7 +661,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | Kind | Label EN | Label ID | Key | Important | Source wording | Differs | Clash | Also called | Status | Note |
 |---|---|---|---|---|---|---|---|---|---|---|
 | column | Material · supplier | Material · pemasok | inv.col.materialSupplier | N | n/a | n/a | N |  | Keep |  |
-| column | Risk · supplier cover | Risiko · cakupan pemasok | inv.col.riskCover | Y | "Supplier cover" (ID "Cakupan stok pemasok") (DECISION-GUIDE.md:393, INV-D1) | Y | N | days of cover, CR-24 (DECISION-GUIDE.md:393) | Change [Proposed] | ID omits "stok"; INV-D1 sets "Cakupan stok pemasok" |
+| column | Risk · supplier cover | Risiko · cakupan pemasok | inv.col.riskCover | Y | "Supplier cover" (ID "Cakupan stok pemasok") (DECISION-GUIDE.md:393, INV-D1) | Y | N | days of cover, CR-24 (DECISION-GUIDE.md:393) | Decided (TL-D26) | ID now "Risiko · cakupan stok pemasok" (BL-233 wave 5) |
 | column | Supplier stock | Stok pemasok | inv.col.supplierSoh | Y | "supplier stock" (SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md:315) | N | N |  | Keep |  |
 | column | PTI stock / ROP | Stok PTI / ROP | inv.col.ptiSohRop | Y | "PTI SOH below PTI ROP" (SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md:715) | N | ROP Order / ROP Fisik (team ROPs), /buyer/safety-stock | PTI SOH, PTI ROP (SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md:715) | Keep | SAP's ROP; the tooltip should say it is not ROP Order or ROP Fisik |
 | column | Incoming | Akan datang | inv.col.incoming | Y | none found | n/a | N |  | Keep | Split into in production and in transit |
@@ -1072,7 +1072,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Material | Material | goodsReceipt.panel.col.material | N | n/a | n/a | N |  | Keep |  |
 | column | Exp | Eksp | goodsReceipt.panel.col.exp | Y | "ASN quantity" (SUPPLIER-HUB-REQUIREMENTS.md:1069); supplier GR page says "Shipped" | Y | Expiry ("Expiry", ASN pages, fc.asn.col.expiryShort) |  | Change [Proposed] | Abbreviation reads as Expiry; propose "Shipped" as on /supplier/goods-receipts |
 | column | Recv | Diterima | goodsReceipt.panel.col.recv | Y | "received" (SUPPLIER-HUB-REQUIREMENTS.md:156, CR-11) | N | N |  | Keep | Abbreviation of source word |
-| column | Acc | Disetujui | goodsReceipt.panel.col.acc | Y | "accepted" (SUPPLIER-HUB-REQUIREMENTS.md:156, CR-11) | N | Approved (receipt-level state, CR-11; "Disetujui" also on KPI Approved Today) |  | Ask Levi | ID "Disetujui" merges line Accepted with receipt Approved |
+| column | Acc | Disetujui | goodsReceipt.panel.col.acc | Y | "accepted" (SUPPLIER-HUB-REQUIREMENTS.md:156, CR-11) | N | Approved (receipt-level state, CR-11; "Disetujui" also on KPI Approved Today) |  | Decided (TL-D12) | Now "Accepted", ID "Diterima" (BL-233 wave 5) |
 | column | Rej | Ditolak | goodsReceipt.panel.col.rej | Y | "Rejected quantity = received − accepted" (SUPPLIER-HUB-REQUIREMENTS.md:156, CR-11) | N | N |  | Keep | Tooltip formula available from CR-11 |
 | column | Checks | Pemeriksaan | goodsReceipt.panel.col.checks | Y | "halal and BPOM checks" (SUPPLIER-HUB-REQUIREMENTS.md:1072) | N | N |  | Keep | Legend V/P/H/B already under table |
 
@@ -1199,7 +1199,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Supplier | Pemasok | oc.summary.col.supplier | N | n/a | n/a | N |  | Keep | PTI summary only |
 | column | Response | Tanggapan | oc.summary.col.response | Y | "Response" (SUPPLIER-HUB-REQUIREMENTS.md:884) | N | N |  | Keep |  |
 | column | ASNs | ASN | oc.summary.col.asns | Y | "ASNs" (SUPPLIER-HUB-REQUIREMENTS.md:885) | N | N |  | Keep |  |
-| column | Call-offs | Penarikan | oc.summary.col.callOffs | Y | "Call-offs" (SUPPLIER-HUB-REQUIREMENTS.md:886); team writes "call-off" in ID text (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:39, :218) | N | N |  | Ask Levi | ID translates team English "call-off"; not on TL-D6 list |
+| column | Call-offs | Penarikan | oc.summary.col.callOffs | Y | "Call-offs" (SUPPLIER-HUB-REQUIREMENTS.md:886); team writes "call-off" in ID text (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:39, :218) | N | N |  | Decided (TL-D11) | ID now "Call-off" (BL-233 wave 5) |
 | column | Confirmations | Konfirmasi | oc.summary.col.confirmations | Y | "the 3 confirmations" (SUPPLIER-HUB-REQUIREMENTS.md:865, §3.2) | N | N |  | Keep | Source lists 3 columns; code groups them with Cap/Fore/Ship cell labels |
 | column | Receipts | Penerimaan barang | oc.summary.col.receipts | Y | "Goods receipts" (SUPPLIER-HUB-REQUIREMENTS.md:890) | Y | N |  | Change [Proposed] | Propose "Goods receipts" EN; ID already matches |
 | column | Invoices | Faktur | oc.summary.col.invoices | Y | "Invoices" (SUPPLIER-HUB-REQUIREMENTS.md:891) | N | N |  | Keep |  |
@@ -1286,7 +1286,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Received | Diterima | fc.gr.col.received | Y | "received" (SUPPLIER-HUB-REQUIREMENTS.md:156, CR-11) | N | N |  | Keep |  |
 | column | Rejected | Ditolak | fc.gr.col.rejected | Y | "Rejected quantity" (SUPPLIER-HUB-REQUIREMENTS.md:156, CR-11) | N | N |  | Keep |  |
 | column | Quality result | Hasil mutu | fc.gr.col.qc | Y | "quality inspection result" (SUPPLIER-HUB-REQUIREMENTS.md:1072) | N | N |  | Keep |  |
-| column | Discrepancy | Selisih | fc.gr.col.discrepancy | Y | "discrepancy" (SUPPLIER-HUB-REQUIREMENTS.md:1069, CR-25) | N | Team "selisih" = DA planning vs execution gap, PERTANYAAN-TIM-MATERIAL-2026-10-16.md:25, :32 |  | Ask Levi | ID "Selisih" also labels Difference column in this page's panel |
+| column | Discrepancy | Selisih | fc.gr.col.discrepancy | Y | "discrepancy" (SUPPLIER-HUB-REQUIREMENTS.md:1069, CR-25) | N | Team "selisih" = DA planning vs execution gap, PERTANYAAN-TIM-MATERIAL-2026-10-16.md:25, :32 |  | Decided (TL-D12) | ID now "Ketidaksesuaian"; "Difference" stays "Selisih" (BL-233 wave 5) |
 | column | Action | Tindakan | fc.gr.col.action | N | n/a | n/a | N |  | Keep |  |
 
 ## Page: /supplier/goods-receipts — Receipt lines panel — `pages-v2/SupplierGoodsReceipts.jsx`
@@ -1356,7 +1356,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 |---|---|---|---|---|---|---|---|---|---|---|
 | column | Material | Material | supplierOrders.panel.col.material | N | n/a | n/a | N |  | Keep |  |
 | column | Ordered | Dipesan | supplierOrders.panel.col.ordered | Y | "ordered quantity" (SUPPLIER-HUB-REQUIREMENTS.md:155, CR-10) | N | N |  | Keep |  |
-| column | Confirmed | Dikonfirmasi | supplierOrders.panel.col.confirmed | Y | "counter-offer quantity" (SUPPLIER-HUB-REQUIREMENTS.md:155, CR-10) | Y | The 3 confirmations (§3.2) |  | Ask Levi | Header over confirm-quantity inputs; in scope (BR-05)? Source word differs |
+| column | Confirmed | Dikonfirmasi | supplierOrders.panel.col.confirmed | Y | "counter-offer quantity" (SUPPLIER-HUB-REQUIREMENTS.md:155, CR-10) | Y | The 3 confirmations (§3.2) |  | Decided (TL-D10) | Header over input cells, in scope (Q4); gets an (i) (BL-233 wave 5) |
 
 ## Page: /supplier/shipments — KPIs (ShipmentsKpiRow.jsx) — `pages-v2/SupplierShipments/index.jsx`
 

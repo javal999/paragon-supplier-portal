@@ -18,25 +18,25 @@ import KpiCard from '@components/ui-v2/KpiCard';
 const OrdersKpis = ({ kpis, t }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
     <KpiCard
-      eyebrow={t('buyerOrders.kpi.open.eyebrow')}
+      term="poOpenTotal"
       value={kpis.open.toString()}
       subtitle={t('buyerOrders.kpi.open.subtitle')}
       icon={ShoppingCart}
     />
     <KpiCard
-      eyebrow={t('buyerOrders.kpi.pending.eyebrow')}
+      term="poPendingConfirmation"
       value={kpis.pendingConfirmation.toString()}
       subtitle={t('buyerOrders.kpi.pending.subtitle')}
       icon={Clock}
     />
     <KpiCard
-      eyebrow={t('buyerOrders.kpi.transit.eyebrow')}
+      term="poInTransit"
       value={kpis.inTransit.toString()}
       subtitle={t('buyerOrders.kpi.transit.subtitle')}
       icon={Truck}
     />
     <KpiCard
-      eyebrow={t('buyerOrders.kpi.overdue.eyebrow')}
+      term="poOverdue"
       value={kpis.overdue.toString()}
       subtitle={
         kpis.overdue > 0

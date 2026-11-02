@@ -1,5 +1,6 @@
 /** @import React from 'react' */
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import { Link } from 'react-router-dom';
 import { useReasonLabel } from '../admin/reasonCodeDisplay';
 import { Check, Circle, CircleDot, XCircle } from 'lucide-react';
@@ -225,13 +226,13 @@ export const PoResponseDetails = ({ po }) => {
                       {t('oc.response.col.line')}
                     </th>
                     <th className="text-right px-3 py-2 font-semibold">
-                      {t('oc.response.col.ordered')}
+                      <TermLabel term="orderedQty" />
                     </th>
                     <th className="text-right px-3 py-2 font-semibold">
-                      {t('oc.response.col.counterQty')}
+                      <TermLabel term="counterQty" />
                     </th>
                     <th className="text-left px-3 py-2 font-semibold">
-                      {t('oc.response.col.counterDate')}
+                      <TermLabel term="counterDate" />
                     </th>
                     <th className="text-left px-3 py-2 font-semibold">
                       {t('oc.response.col.reason')}
