@@ -4,7 +4,7 @@
 |---|---|
 | Product | Supplier Hub (Supplier Portal, "SC Collaboration Hub") |
 | Company | PT Paragon Technology and Innovation (PTI) |
-| Version | 0.12 draft, 2026-09-29 (SC Hub Material stories US-80 to US-93) |
+| Version | 0.13 draft, 2026-11-02 (PQ-11 and PQ-08 decided by the owner; 0.12, 2026-09-29: SC Hub Material stories US-80 to US-93) |
 | Scope | MVP (Phase 1, "Foundation to Transact"). Phase 2 and 3 appear only in section 9 |
 | Steering Committee | Yogi Sapta Prakoso (VP Supply Chain), Ilauddin (CFO), Risman Adnan (CTO) [C] |
 | Technology Product Owners | Achmad Fahlevi, Vergiant Yoga Perdana (Supply Chain); Indita Ramasaphira (FATL) [C] |
@@ -399,7 +399,7 @@ US-80 to US-93 were US-MAT-01 to US-MAT-14 in `SC-HUB-MATERIAL-REQUIREMENTS-2026
 | Dock, slot, or delivery schedule management | Only a shipped heads-up is needed now | [V] PQ-10 |
 | An "available stock" figure | On-hand is enough; stock is deducted as used | [V] Q-02 |
 | SFTP or other automated file-drop channel for supplier data | Spreadsheet upload, API sync, and manual entry are enough | Owner, 2026-09-17 |
-| Sending call-offs to SAP | Call-offs are managed outside SAP today; the hub becomes their record | [V] PQ-01; [P] PQ-11 |
+| Sending call-offs to SAP | Call-offs are managed outside SAP today; the hub becomes their long-term record | [V] PQ-01; PQ-11 (owner 2026-11-02) |
 | Supplier approval of PTI stock access changes | PTI decides | [V] Q-06 |
 | Recording PR, PO, goods receipt, financial posting, or payment | SAP S/4HANA remains the system of record. The hub manages supplier interaction, visibility, acknowledgements, collaboration data, and designated sourcing processes | [C] |
 | Raw material manufacturers | Listed as out of scope in the charter. Whether this excludes manufacturers only, while raw material distributors such as the pilot suppliers stay in, is open (section 9.4) | [C] |
@@ -867,7 +867,7 @@ Row 8's mitigation text overlaps another cell in the workbook, so its wording ("
 | # | Risk | Why it matters | Proposed mitigation | Source |
 |---|---|---|---|---|
 | RA1 | PTI's own SAP API readiness | **Treated as an assumption, not a risk:** SAP APIs are assumed ready. Readiness is still under discussion, so revisit if that discussion finds gaps | Track the discussion outcome | [D] RSK-01; owner 2026-09-17 |
-| RA2 | Call-offs are managed manually outside SAP today, so the hub becomes their only record | Migration of manual records and reconciliation with SAP receipts | Decide PQ-11; link receipts to call-offs through the ASN | [V] PQ-01 |
+| RA2 | Call-offs are managed manually outside SAP today, so the hub becomes their only record | Migration of manual records and reconciliation with SAP receipts | PQ-11 decided 2026-11-02: the hub is the long-term call-off record; migration still open; link receipts to call-offs through the ASN | [V] PQ-01 |
 | RA3 | Umbrella PO holds value only | Quantity-based checks may be impossible | Resolved 2026-09-21: quantity per line (PQ-12); value only on a line with no quantity | [V] PQ-01 |
 | RA4 | PROCIO is replaced by the hub, so supplier registration and master data must be migrated from PROCIO | Incomplete or dirty migrated data blocks onboarding and SAP MM sync | Migration plan with data review and cleansing before go-live (links to R5) | Owner decision 2026-09-17 |
 | RA5 | Replenishment method and governance not yet established; **decision deferred** | Call-off recommendation and event-based analysis (REQ-E09-01, REQ-E09-02) cannot be finalised until it is decided | Consultant engagement, IDR 1 billion [C]; decide before call-off build | [C]; owner 2026-09-17 |
@@ -888,10 +888,10 @@ Decided on 2026-09-21 and no longer listed here: PQ-02, PQ-07, PQ-12, MIG, Q-18,
 
 | ID | Decision | Owner |
 |---|---|---|
-| PQ-11 | Hub as record for call-offs; migration of manual records; any sync back. Recommended: hub for the pilot, SAP scheduling agreement releases long term | Material Planner, IT |
+| PQ-11 | Migration of manual call-off records; any sync back to SAP. The hub as the long-term record was decided 2026-11-02 (owner) | Material Planner, IT |
 | REPL | Replenishment method and governance (deferred; consultant) | Material Planner |
 | DEC-03 | Final MVP list sign-off (RFx and performance dashboard in the MVP) | Project sponsors |
-| Values | Invoice rupiah cap (PQ-05), gate minimum OTIF (A-05), call-off early-delivery allowance (PQ-08). The build runs on named placeholders | Finance, Procurement, Warehouse |
+| Values | Invoice rupiah cap (PQ-05), gate minimum OTIF (A-05). The build runs on named placeholders. The call-off early-delivery allowance (PQ-08) was decided 2026-11-02: no fixed days, an early date needs the Material Planner team's confirmation | Finance, Procurement |
 | A-01 | Compliance and capability check for RFx | Procurement |
 | KPI | Definitions for S4 and S5; align the OTIF and CFOT calculation with the agreed definitions (five differences found); targets after the baseline | Steering Committee, Material Planner |
 | CAP-1 | Whether supplier capacity is usually fixed or changes week to week | Material Planner |

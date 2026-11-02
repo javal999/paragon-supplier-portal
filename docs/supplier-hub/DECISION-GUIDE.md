@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| Version | 1.15, 2026-10-26 (RFX-D32 added: the RFx deadline is checked on leaving the field; INV-D14 added 2026-10-23) |
+| Version | 1.16, 2026-11-02 (BL-12 and BL-56 decided by the owner; 1.15, 2026-10-26: RFX-D32 added: the RFx deadline is checked on leaving the field; INV-D14 added 2026-10-23) |
 | Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20) and RFX-D26 to RFX-D31 (2026-10-22) and RFX-D32 (2026-10-26); the Inventory & Capacity UX decisions INV-D1 to INV-D13 (2026-10-22) and INV-D14 (2026-10-23); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
-| Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, BL-12 call-off record, and three values (BL-54 invoice cap, BL-55 gate OTIF minimum, BL-56 early allowance). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
+| Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, and two values (BL-54 invoice cap, BL-55 gate OTIF minimum). BL-12 call-off record and BL-56 early allowance were decided on 2026-11-02 (see their entries). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
 | Evidence | Market practice is cited at the end. Where a claim is a judgement rather than a published practice, it says so |
 
 **How to read each entry:** *Market practice* is what comparable companies and supplier-collaboration products do. *Recommendation* is what we suggest for PTI and why. *What would change this* names the fact that would overturn it, so the owner can test the recommendation instead of taking it on trust.
@@ -63,6 +63,8 @@ These eight are one number or one list each. The prototype ships defensible defa
 **Recommendation.** Quantity: accept up to +5% over, treat any shortfall as partial and visible, rather than silently accepted. Date: for packaging with warehouse constraints, allow up to 2 days early and 0 late without approval; for raw material, 3 days early and 0 late. Late always needs planner approval, because that is the case that hurts. Commitment deadline: 1 working day for Firm periods, 3 working days for Trade-off — the prototype's 7 days is generous for a pilot with three suppliers.
 
 **What would change this.** Warehouse dock capacity. If receiving cannot absorb early deliveries, the early allowance drops to 0 and the tolerance becomes late-side only.
+
+**Decision (owner, 2026-11-02, BL-56).** No fixed early allowance: a call-off may be delivered on any date, early included, once the Material Planner team confirms it, and the same holds for the warehouse's part. The allowance stays 0 days, so every early date goes to the planner, as built. Still open: whether a confirmed early delivery counts as on time in OTIF and CFOT (KPI-2 keeps its 7-day window until then).
 
 ### BL-06 · PQ-04 — goods receipt discrepancy tolerance
 **Market practice.** ERP systems carry separate over- and under-delivery tolerances per material or per supplier–material combination, set in the material master or purchasing info record, and check the cumulative received quantity against the order.
@@ -139,6 +141,8 @@ These eight are one number or one list each. The prototype ships defensible defa
 **Recommendation.** Medium term, move call-offs into SAP as scheduling agreement releases, with the hub as the collaboration surface. For the pilot, the hub can hold them, since they live in spreadsheets today and anything is an improvement — but decide the target now, because it changes the integration scope in BL-11. Migrate only open call-offs at go-live; closed ones stay in the spreadsheets as history.
 
 **What would change this.** Cost and time of the SAP change. If scheduling agreements are a large configuration project, hub-owned call-offs with a clean interface may be the pragmatic answer for longer.
+
+**Decision (owner, 2026-11-02).** The hub's call-off record is the long-term system record, not SAP scheduling agreement releases. This differs from the recommendation above; the decision stands. Still open: whether today's manual call-off records are migrated, and whether call-offs are also sent to SAP (BL-11).
 
 ### BL-13 · PQ-12 — does the umbrella PO carry quantities per line?
 **Market practice.** A scheduling agreement carries a target quantity and dated schedule lines with quantities. Value-only control is weaker: it cannot answer "how much is left to call off" in units, which is the question planners actually ask.
