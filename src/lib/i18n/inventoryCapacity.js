@@ -620,6 +620,15 @@ export const inventoryCapacityEn = {
   'inv.weekly.enter': 'Enter stock',
   'inv.weekly.enterFor': 'Enter stock for {{material}}',
   'inv.weekly.allDone': 'Every material is updated for this cycle.',
+  'inv.weekly.alsoDue': 'Also due by the same cutoff',
+  'inv.weekly.capacity': 'Capacity',
+  'inv.weekly.capacityCount': '{{confirmed}} of {{total}} groups confirmed',
+  'inv.weekly.capacityLink': 'Confirm capacity',
+  'inv.weekly.feedstock': 'Feedstock',
+  'inv.weekly.feedstockCount': '{{confirmed}} of {{total}} confirmed',
+  'inv.weekly.feedstockCountDaily':
+    '{{confirmed}} of {{total}} confirmed today (daily, pull agreement)',
+  'inv.weekly.feedstockLink': 'Confirm feedstock',
   'inv.weekly.reminder':
     'Reminder: materials still needing a stock figure before the cutoff: {{count}}',
   'inv.weekly.api.title': 'Stock sync schedule',
@@ -1236,6 +1245,15 @@ export const inventoryCapacityId = {
   'inv.weekly.enter': 'Isi stok',
   'inv.weekly.enterFor': 'Isi stok untuk {{material}}',
   'inv.weekly.allDone': 'Semua material sudah diperbarui untuk siklus ini.',
+  'inv.weekly.alsoDue': 'Juga jatuh tempo pada batas waktu yang sama',
+  'inv.weekly.capacity': 'Kapasitas',
+  'inv.weekly.capacityCount': '{{confirmed}} dari {{total}} grup terkonfirmasi',
+  'inv.weekly.capacityLink': 'Konfirmasi kapasitas',
+  'inv.weekly.feedstock': 'Feedstock',
+  'inv.weekly.feedstockCount': '{{confirmed}} dari {{total}} terkonfirmasi',
+  'inv.weekly.feedstockCountDaily':
+    '{{confirmed}} dari {{total}} terkonfirmasi hari ini (harian, perjanjian pull)',
+  'inv.weekly.feedstockLink': 'Konfirmasi feedstock',
   'inv.weekly.reminder':
     'Pengingat: material yang masih perlu angka stok sebelum batas waktu: {{count}}',
   'inv.weekly.api.title': 'Jadwal sinkronisasi stok',
