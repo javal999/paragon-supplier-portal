@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.16 draft, 2026-10-19 |
+| Version | 0.17 draft, 2026-11-02 |
 | What this is | Detailed requirements for the demand and material forecast engine PTI builds itself (owner decision ENG-1), with each calculation explained |
 | Status | Every requirement is **Proposed**. The decision to build is Validated (ENG-1), and the engine decisions in section 4.1 are decided; section 4.2 lists what is still open. The rest of the detail has not yet been reviewed by the Material Planner |
 | Sources | ENG-1 (`SUPPLIER-HUB-REQUIREMENTS.md` section 9); methods and evidence in `research/FORECAST-METHOD-SPEC.md`; problem analysis in `research/FORECAST-BEST-PRACTICE-2026-09.md` |
@@ -628,6 +628,7 @@ Without space limits, one big order is cheapest.
 - BR-02. **Promotions** are inputs to the main model (E14-07 BR-01) [Spec D6].
 - BR-03. A separate, explainable promotion model gives each promotion's expected uplift. It is used as a check the planner can read, and for SKUs with fewer than 5 past promoted weeks, where it borrows from all SKUs [Spec D6].
 - BR-04. Promotions must be in the promotion calendar before the run to affect the forecast. A promotion added after publication triggers a band check (E14-06) [Proposed].
+- BR-05. A planner enters a promotion for one SKU: the expected date (its week) and the expected increase, as a percentage or as a number of units. One entry covers one SKU only, because the trend differs between SKUs. The forecast applies the entry to that week and marks the week as promoted. This entry point does not wait for ENG-D12a [Owner, 2026-11-02; BACKLOG BL-235].
 
 **Calculation.**
 
@@ -1192,3 +1193,4 @@ REQ-E14-11 built on synthetic data. Accepted as recommended (owner, 2026-09-29):
 | 0.14 | 2026-09-29 | REQ-E14-07 built on synthetic data (BL-110, PR #81); ENG-B60 to B69 accepted with two changes (a known-event index in the fallback; new SKUs on SAP's plan) and ENG-B70 to B74 accepted (sections 4.1h, 4.1i). ENG-D18 and D19 built with BL-133 (PR #80), ENG-D21 with BL-134 (PR #79, REQ-E06-04 in the main requirements) |
 | 0.15 | 2026-09-29 | REQ-E14-09 (BL-111, PR #100), REQ-E14-10 (BL-112, PR #96, merged through PR #98) and REQ-E14-11 (BL-114, PR #98) built on synthetic data; build decisions ENG-B80 to B109 accepted by the owner as recommended (sections 4.1j to 4.1l). Material planning stays on SAP's plan; ENG-D13 unset |
 | 0.16 | 2026-10-19 | REQ-E14-04 note: the OSIP safety and ROP rules are the default, the fill-rate method a challenger. ENG-D22 superseded by DRC-2 and DRC-4 (`SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md`) |
+| 0.17 | 2026-11-02 | REQ-E14-08 BR-05: a promotion entry per SKU, with an expected date and an increase as a percentage or units (owner request; BL-235) |
