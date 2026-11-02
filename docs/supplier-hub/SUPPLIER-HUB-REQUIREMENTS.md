@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.31 draft, 2026-10-19 |
+| Version | 0.33 draft, 2026-11-02 |
 | Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17); owner RFx decisions RFX-D1 to RFX-D5 (2026-09-21); owner RFx decisions RFX-D6 to RFX-D14 (2026-09-25), from `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md`; owner RFx decision RFX-D15 (2026-09-28); RFx best-practice research, `research/RFX-BEST-PRACTICE-2026-09.md` (2026-09-21); owner decision ENG-1 (2026-09-23) with the forecast research `research/FORECAST-BEST-PRACTICE-2026-09.md` and `research/FORECAST-METHOD-SPEC.md`; owner material decisions MAT-D1 to MAT-D15 (2026-09-29), from `SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md`, and the owner's rulings during the material build MAT-D16 to MAT-D21 (2026-09-29), from section 4.1 of `SC-HUB-MATERIAL-BUILD-PLAN-2026-09.md` |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
@@ -98,7 +98,7 @@ PTI = PT Paragon Technology and Innovation.
 - A **PO** is an umbrella PO with a long horizon. A **call-off** manages each delivery under it. The hub treats them as separate objects [MN-ORD-01].
 - The PO and its quantity and timing breakdown come from SAP [MN-ORD-03].
 - In SAP, the umbrella PO holds the overall ordered value. Call-offs are not in SAP: today they are managed manually outside SAP [PQ-01, owner 2026-09-17].
-- So the hub is where call-offs are created and managed, and SAP only knows the umbrella PO, goods receipts, and invoices [Proposed, follows from PQ-01; see PQ-11].
+- So the hub is where call-offs are created and managed, and SAP only knows the umbrella PO, goods receipts, and invoices [Proposed, follows from PQ-01]. The hub's call-off record is the long-term record [Owner, 2026-11-02, PQ-11].
 
 ### 3.2 The 3 confirmations
 
@@ -147,7 +147,7 @@ Every requirement that calculates something refers to a rule here by its `CR-` I
 | CR-02 | Days-of-supply bands | Fallback only, used where a supplier lead time is missing: Critical below 14 days; Warning 14 to 29; Healthy 30 to 60; Excess above 60. A missing lead time raises its own data-quality alert | REQ-E08-01, REQ-E08-05 | [Code]; fallback role [Owner, 2026-09-21] |
 | CR-03 | Supplier coverage | (supplier SOH + incoming quantity in production or in transit) ÷ firm demand. Covered at 1.0 or more; At risk from 0.8 to below 1.0; Uncovered below 0.8. No demand counts as Covered | REQ-E08-05 | [Code] |
 | CR-04 | Remaining on umbrella PO | Remaining quantity = PO quantity − released call-off quantity. Remaining value = PO value − released call-off value. Value applies until PQ-12 confirms a quantity exists | REQ-E09-01 | [Code] quantity; [PQ-01] value |
-| CR-05 | Call-off quantity and date tolerance | Quantity: up to 5% over the approved quantity is accepted; any shortfall is a partial delivery and stays visible. Date: a late confirmation always needs planner approval. Early-delivery allowance waits on the warehouse capacity check (PQ-08); until then early also needs approval | REQ-E09-03 | [Owner, 2026-09-21] |
+| CR-05 | Call-off quantity and date tolerance | Quantity: up to 5% over the approved quantity is accepted; any shortfall is a partial delivery and stays visible. Date: a late confirmation always needs planner approval. An early date also needs approval: there is no fixed early allowance, and an early delivery is allowed once the Material Planner team confirms it (PQ-08) | REQ-E09-03 | [Owner, 2026-09-21]; early date [Owner, 2026-11-02] |
 | CR-06 | Delivery match to a call-off | A receipt or dispatch counts toward a call-off when its date is within 7 days of the need date, for the same supplier and material. If several match, take the closest date, then the closest quantity | REQ-E09-03, REQ-E10-01 | [Code] |
 | CR-07 | On time and missed | On time: received on or before the approved need date. Late: received after it. Missed: nothing received 3 days after the need date. Pending: before that | REQ-E09-03, REQ-E10-01 | [Code] |
 | CR-08 | In full | Received quantity ≥ approved call-off quantity. Tolerance for "in full" stays open (PQ-08) | REQ-E10-01 | [Proposed]; the prototype has no in-full test |
@@ -1163,7 +1163,7 @@ Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
 
 **Metrics.** Leading: failed messages per day; latency distribution.
 
-**Open items.** PQ-06 (interface technology and latency target). PQ-11 (call-off record outside SAP).
+**Open items.** PQ-06 (interface technology and latency target). PQ-11 (the hub is the long-term call-off record, decided 2026-11-02; whether call-offs also go to SAP is still open).
 
 ### 5.4 Planning & Fulfillment: Inventory & Capacity Collaboration (E08)
 
@@ -1913,7 +1913,7 @@ All requirements in this section are **Proposed**, written from market practice 
   - Confirmed with Changes.
   - Partially Confirmed.
   - Rejected.
-- BR-03. Quantity and date tolerance follow CR-05: up to 5% over accepted, any shortfall a visible partial delivery, and a late date always needs planner approval. The early-delivery allowance waits on the warehouse capacity check (PQ-08) [Owner, 2026-09-21].
+- BR-03. Quantity and date tolerance follow CR-05: up to 5% over accepted, any shortfall a visible partial delivery, and a late date always needs planner approval. There is no fixed early-delivery allowance: an early date is allowed once the Material Planner team confirms it, which also stands for the warehouse's part [Owner, 2026-11-02, PQ-08].
 - BR-04. A confirmation within tolerance is accepted automatically. Outside tolerance it waits for planner approval: Awaiting Approval, Approved, Rejected [Market].
 - BR-05. Confirmation is due within 1 working day of release, matching the PO rule. No response escalates [Proposed; MN-ORD-04, MN-ORD-14].
 - BR-06. An ASN can be created only for a confirmed call-off [Market; MN-ORD-05].
@@ -1935,7 +1935,7 @@ All requirements in this section are **Proposed**, written from market practice 
 
 **Metrics.** Leading: share confirmed within 1 working day; share needing approval. Lagging: OTIF (KPI-05).
 
-**Open items.** PQ-08 (under-quantity and date tolerances). PQ-11 (migrating today's manual call-off records).
+**Open items.** PQ-11 (migrating today's manual call-off records; the hub as the long-term record was decided 2026-11-02). The PQ-08 date tolerance was decided 2026-11-02.
 
 #### REQ-E09-04  Delivery execution: need date and dispatch heads-up
 
@@ -2069,10 +2069,9 @@ Detailed in `FORECAST-ENGINE-REQUIREMENTS.md`, which uses this file's template p
 |---|---|---|
 | A-05 | Minimum OTIF for the compliance gate (CR-23), and whether "No history" passes (proposed: passes) | REQ-E03-05 |
 | A-01 | Check with Mas Ary Hidayat on compliance and capability for RFx | REQ-E03-01 to REQ-E03-04 |
-| PQ-11 | Call-offs are managed manually outside SAP today. Confirm the hub becomes the record for call-offs, whether call-offs ever need to go back to SAP or another system, and whether today's manual records (for example spreadsheets) are migrated. Recommended, not yet confirmed: the hub holds call-offs for the pilot, and SAP scheduling agreement releases become the long-term record | REQ-E07-08, REQ-E09-01, REQ-E09-03 |
+| PQ-11 | The hub is the long-term record for call-offs (decided 2026-11-02, section 9). Still open: whether call-offs ever need to go back to SAP or another system, and whether today's manual records (for example spreadsheets) are migrated | REQ-E07-08, REQ-E09-01, REQ-E09-03 |
 | PQ-05 | Finance to set the absolute rupiah cap for invoice price variance (CR-12); the 0% and 2% tolerances are decided | REQ-E07-07 |
 | PQ-06 | Interface technology and latency target | REQ-E07-08 |
-| PQ-08 | Early-delivery allowance for call-offs, pending the warehouse capacity check; quantity and late-date rules are decided (CR-05) | REQ-E09-03 |
 | Q-19 | The PQ-10 answer ends with "They". Confirm nothing is missing | REQ-E09-04 |
 | CAP-1 | Does supplier capacity usually stay the same every week or change week to week? This shapes how capacity is entered. Proposed: one number for all weeks with per-week overrides | REQ-E08-04 |
 | CO-1 | A call-off confirmation above +5%: refused, or sent and held for planner approval (built) | REQ-E09-03 |
@@ -2162,7 +2161,7 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | BL-02 / PQ-09 | Event-based strategy analysis in the MVP | No. It belongs in the planning suite |
 | BL-03 / D-03 | Supplier TMS access | No TMS integration in the MVP. The ASN names its 3PL and tracking number, and the hub links out to the 3PL's public tracking page (REQ-E07-04 BR-05) |
 | BL-04 / A-03 | Compliance in sourcing | A pass/fail gate, not a weight (CR-23): valid halal, valid BPOM where required, GMP / ISO 22716 for cosmetic raw material, not Suspended or Blacklisted, minimum OTIF. A supplier that fails can be invited but cannot be awarded. Qualified suppliers are scored on price 40%, lead time 20%, reliability 40% (CR-15) |
-| BL-05 / PQ-08 | Call-off tolerances and commitment deadline | Up to 5% over accepted; any shortfall a visible partial; late always needs approval (CR-05). Commitment deadline 1 working day for Firm, 3 for Trade-off and Forecast (CR-26). Early-delivery allowance waits on the warehouse |
+| BL-05 / PQ-08 | Call-off tolerances and commitment deadline | Up to 5% over accepted; any shortfall a visible partial; late always needs approval (CR-05). Commitment deadline 1 working day for Firm, 3 for Trade-off and Forecast (CR-26). Early-delivery allowance waits on the warehouse; decided 2026-11-02, see PQ-08 below |
 | BL-06 / PQ-04 | Goods receipt tolerance | 0% over; shortfall above 2% flagged (CR-25) |
 | BL-07 / PQ-05 | Invoice price tolerance | 0% where a contract price exists; 2% otherwise, within an absolute rupiah cap set by Finance (CR-12) |
 | BL-08 / PQ-02 | Capacity horizon | 13 weekly buckets |
@@ -2176,13 +2175,16 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | ENG-D8 | Trade-off tolerance band | ±10% per version plus a cumulative cap from first publication, starting at ±20% (owner, 2026-09-23) |
 | ENG-D9 | Plan damping weight | 0.5 in Trade-off, 0 in Forecast, tuned from the backtest (owner, 2026-09-23) |
 | KPI-1 | BL-66: align OTIF and CFOT with REQ-E10-01 and CR-08 | Yes: a counter-offer counts when the planner accepts it; a planner change counts after the supplier re-confirms; partial receipts are summed; a dispatched call-off with no receipt is missed 3 days after the need date (owner, 2026-09-23) |
-| KPI-2 | Early deliveries in OTIF and CFOT | One rule for both: on time only if received no more than 7 days before the date (the CR-06 window), until BL-56 sets the early allowance (owner, 2026-09-23) |
+| KPI-2 | Early deliveries in OTIF and CFOT | One rule for both: on time only if received no more than 7 days before the date (the CR-06 window), until BL-56 sets the early allowance (owner, 2026-09-23). Amended (owner, 2026-11-02): an early receipt on a date the Material Planner team confirmed counts as on time in OTIF and CFOT; an early receipt with no confirmation keeps the 7-day window. Build: BL-234 |
 | KPI-3 | Sharing partial receipts across deliveries | Each delivery takes its closest receipt first; leftovers top up the nearest delivery still short (owner, 2026-09-23) |
 | KPI-4 | Two CFOT averages | The reliability page averages CFOT per PO; the performance pages weight by quantity. Both are shown (owner, 2026-09-23) |
+| KPI-1 to KPI-4 | Are the four KPI rules final? | Yes, final (owner, 2026-11-02) |
 | ENG-D4 | Plants in the forecast engine | Pilot plants only; intercompany transfers in Phase 2 (owner, 2026-09-23) |
 | ENG-D6 | Cost rates for order sizing | From Finance and the 3PL invoices; placeholder admin values until then (owner, 2026-09-23) |
 | ENG-D7 | Warehouse capacity for order sizing | Separate per physical warehouse, in pallets (owner, 2026-09-23) |
 | ENG-D15 | Weeks early before a reschedule-out is proposed | 1 week, an administrator setting (owner, 2026-09-24) |
+| PQ-11 | Is the hub the long-term record for call-offs? | Yes: the hub's call-off record is the long-term system record, replacing the recommendation that SAP scheduling agreement releases take that role (owner, 2026-11-02). Migration of manual records and any send to SAP stay open (section 7) |
+| PQ-08 | Early-delivery allowance for call-offs | No fixed number of days: a call-off may be delivered on any date, early included, once the Material Planner team confirms it; the same holds for the warehouse's part (owner, 2026-11-02). CR-05 and REQ-E09-03 BR-03 updated. A confirmed early delivery counts as on time in OTIF and CFOT (KPI-2, owner 2026-11-02) |
 | ENG-D16 | Who agrees PO-line changes with suppliers in SAP | The Material Planner; the hub records only "taken to SAP" (owner, 2026-09-24) |
 | ENG-D17 | Supplier liability on a Trade-off cancellation | Flagged "liability — not priced", not priced (owner, 2026-09-24) |
 | BL-13 / PQ-12 | Umbrella PO grain | Quantity per line, so call-off release checks remaining quantity |
@@ -2191,7 +2193,7 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | BL-16 / D-07 | Catalog for the RFI | A capability list only in the MVP (the RFI's product entries); the purchasable catalog stays in Phase 2 |
 | BL-17 / DEC-06 | Web Tukar Faktur | A separate system built in parallel. The hub's invoice collaboration stays as it is, so the end-to-end flow keeps working |
 | BL-18 / DEC-09 | Performance dashboard owner | Procurement owns the dashboard; Material Planning owns the delivery measures |
-| BL-19 / KPI | KPI targets | Fix the definitions first (delivery window, whether early counts, grain, whether a date change resets the clock), measure a 3-month baseline, then set targets |
+| BL-19 / KPI | KPI targets | Fix the definitions first (delivery window, whether early counts, grain, whether a date change resets the clock), measure a 3-month baseline, then set targets. Amended (owner, 2026-11-02): the baselines are the ones written in the PRD success criteria (S1 to S5); the 3-month baseline still applies to CFOT and OTIF, which have no success-criteria row |
 | BL-19a / A-02 | Supplier filters | Add certificate validity, then performance band, then country or region |
 | BL-19b / MIG | PROCIO migration | Active suppliers from the last 24 months, plus any under contract. Suppliers confirm their own bank and tax details through the portal; a bank-detail change is confirmed through a second channel |
 | INV-FB | Inventory collaboration feedback (2026-09-21) | Supplier triggers API sync, retrieving PTI stock only where granted (REQ-E08-02 BR-03, BR-11). Manual entry and upload are identical and in one place (BR-09). In-transit comes from the ASN (BR-10). Batch, manufacturing and expiry dates stay optional (BR-06). One list on the supplier view (REQ-E08-01 BR-07). Capacity per material group, "upside" relabelled (REQ-E08-04 BR-05, BR-06). Capacity filters (BR-07). Fixed or changing weekly capacity stays open (CAP-1) |
@@ -2273,3 +2275,4 @@ Research date: 2026-09-21. The full note, with every source link, is `research/R
 | 0.30 | 2026-09-29 | Forecast engine: REQ-E14-09 demand range, REQ-E14-10 model backtest and REQ-E14-11 forecast bias and planner overrides built on synthetic data (PRs #100, #96, #98); build decisions accepted (`FORECAST-ENGINE-REQUIREMENTS.md` 0.15) |
 | 0.31 | 2026-10-19 | Weekly SC Hub 2026-10-14 (DA, ROP and call-off) accepted as `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md` (DRC-1 to DRC-19, DRC-D1 to DRC-D16, BL-187 to BL-209). REQ-E06-04 superseded by DRC-15a; notes on REQ-E08-02, REQ-E09-01 and REQ-E09-03 |
 | 0.32 | 2026-10-21 | Section 3.7 menu tables rewritten to the as-built navigation of the IA evaluation (`research/PORTAL-IA-EVALUATION-2026-10.md`, P-01 to P-12): Requisitions and Supplier documents in Sourcing; Order summary is a view of Purchase orders; Call-offs and Trade names joined their sections; Supplier follow-ups replaces Supplier replies and Chase; Foresight commitments names REQ-E06-02 everywhere; supplier Company holds My performance. The table had still shown the pre-FUX "Forecast" section |
+| 0.33 | 2026-11-02 | Owner answers of 2026-11-02 (Material Planner): PQ-11 decided, the hub is the long-term call-off record (migration and any send to SAP stay open); PQ-08 decided, no fixed early allowance, an early date needs the Material Planner team's confirmation (CR-05, REQ-E09-03 BR-03; PQ-08 removed from section 7); KPI-1 to KPI-4 confirmed final. Follow-up answers the same day: the baselines are the ones written in the PRD success criteria (S1 to S5) (BL-19 row); an early receipt on a date the Material Planner team confirmed counts as on time in OTIF and CFOT (KPI-2, PQ-08 rows; build BL-234). Header version corrected from 0.31 (0.32 was logged without a header bump) |
