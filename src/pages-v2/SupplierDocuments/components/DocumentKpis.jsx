@@ -30,13 +30,13 @@ const DocumentKpis = ({ total, validCount, expiringCount, expiredCount, awaiting
         icon={Files}
       />
       <KpiCard
-        eyebrow={t('supplierDocuments.kpi.valid.eyebrow')}
+        term="docValid"
         value={validCount.toString()}
         subtitle={t('supplierDocuments.kpi.valid.subtitle')}
         icon={CheckCircle2}
       />
       <KpiCard
-        eyebrow={t('supplierDocuments.kpi.expiring.eyebrow')}
+        term="docExpiring"
         value={expiringCount.toString()}
         subtitle={
           <span className="text-warning-hover">{t('supplierDocuments.kpi.expiring.subtitle')}</span>
@@ -44,7 +44,7 @@ const DocumentKpis = ({ total, validCount, expiringCount, expiredCount, awaiting
         icon={Clock}
       />
       <KpiCard
-        eyebrow={t('supplierDocuments.kpi.expired.eyebrow')}
+        term="docExpired"
         value={expiredCount.toString()}
         subtitle={
           <span className="text-danger">{t('supplierDocuments.kpi.expired.subtitle')}</span>
@@ -52,7 +52,7 @@ const DocumentKpis = ({ total, validCount, expiringCount, expiredCount, awaiting
         icon={AlertTriangle}
       />
       <KpiCard
-        eyebrow={t('supplierDocuments.kpi.needsAction.eyebrow')}
+        term="docNeedsAction"
         value={awaitingCount.toString()}
         subtitle={t('supplierDocuments.kpi.needsAction.subtitle')}
         icon={UploadCloud}

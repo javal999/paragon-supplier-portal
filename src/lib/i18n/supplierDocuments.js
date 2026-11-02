@@ -41,13 +41,9 @@ export const supplierDocumentsEn = {
   // — KPI cards —
   'supplierDocuments.kpi.total.eyebrow': 'Total Documents',
   'supplierDocuments.kpi.total.subtitle': 'In document vault',
-  'supplierDocuments.kpi.valid.eyebrow': 'Valid',
   'supplierDocuments.kpi.valid.subtitle': 'In good standing',
-  'supplierDocuments.kpi.expiring.eyebrow': 'Expiring ≤180d',
   'supplierDocuments.kpi.expiring.subtitle': 'Renewal window open',
-  'supplierDocuments.kpi.expired.eyebrow': 'Expired',
   'supplierDocuments.kpi.expired.subtitle': 'Blocks new POs',
-  'supplierDocuments.kpi.needsAction.eyebrow': 'Needs Action',
   'supplierDocuments.kpi.needsAction.subtitle': 'Upload required',
   // — Search —
   'supplierDocuments.search.placeholder': 'Search documents by name or issuer…',
@@ -174,13 +170,9 @@ export const supplierDocumentsId = {
   // — KPI cards —
   'supplierDocuments.kpi.total.eyebrow': 'Total Dokumen',
   'supplierDocuments.kpi.total.subtitle': 'Di brankas dokumen',
-  'supplierDocuments.kpi.valid.eyebrow': 'Berlaku',
   'supplierDocuments.kpi.valid.subtitle': 'Dalam kondisi baik',
-  'supplierDocuments.kpi.expiring.eyebrow': 'Akan Kedaluwarsa ≤180h',
   'supplierDocuments.kpi.expiring.subtitle': 'Jendela pembaruan terbuka',
-  'supplierDocuments.kpi.expired.eyebrow': 'Kedaluwarsa',
   'supplierDocuments.kpi.expired.subtitle': 'Memblokir PO baru',
-  'supplierDocuments.kpi.needsAction.eyebrow': 'Perlu Tindakan',
   'supplierDocuments.kpi.needsAction.subtitle': 'Unggahan diperlukan',
   // — Search —
   'supplierDocuments.search.placeholder': 'Cari dokumen berdasarkan nama atau penerbit…',

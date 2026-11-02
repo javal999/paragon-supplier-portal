@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { TermInfo } from '@components/ui-v2/TermLabel';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
@@ -118,7 +119,7 @@ const BuyerReliability = () => {
         data-testid="rel-portfolio"
       >
         <KpiCard
-          eyebrow={t('rel.kpi.confirmation')}
+          term="relConfirmation"
           value={pctOf(total.confirmation.rate) ?? t('rel.noData')}
           subtitle={
             <span className="text-text-tertiary">
@@ -130,12 +131,12 @@ const BuyerReliability = () => {
           }
         />
         <KpiCard
-          eyebrow={t('rel.kpi.commitment')}
+          term="relCommitment"
           value={pctOf(total.commitment.rate) ?? t('rel.noData')}
           subtitle={<span className="text-text-tertiary">{t('rel.kpi.commitment.sub')}</span>}
         />
         <KpiCard
-          eyebrow={t('rel.kpi.cfot')}
+          term="relCfot"
           value={
             <span data-testid="rel-portfolio-cfot">{pctOf(totalCfot.rate) ?? t('rel.noData')}</span>
           }
@@ -150,7 +151,7 @@ const BuyerReliability = () => {
           }
         />
         <KpiCard
-          eyebrow={t('rel.kpi.misses')}
+          term="relMisses"
           value={String(total.misses.total)}
           subtitle={
             <span className="text-text-tertiary">
@@ -163,7 +164,7 @@ const BuyerReliability = () => {
           }
         />
         <KpiCard
-          eyebrow={t('rel.kpi.planChange')}
+          term="relPlanChangeKpi"
           value={pctOf(total.planChange.share) ?? t('rel.noData')}
           subtitle={
             <span className="text-text-tertiary">
@@ -202,13 +203,14 @@ const BuyerReliability = () => {
                   <ArrowDown size={12} aria-hidden="true" />
                 )}
               </button>
+              <TermInfo term="relConfirmation" />
             </TableHeaderCell>
-            <TableHeaderCell>{t('rel.col.commitment')}</TableHeaderCell>
-            <TableHeaderCell>{t('rel.col.cfot')}</TableHeaderCell>
-            <TableHeaderCell>{t('rel.col.misses')}</TableHeaderCell>
-            <TableHeaderCell>{t('rel.col.planChange')}</TableHeaderCell>
-            <TableHeaderCell>{t('rel.col.masc')}</TableHeaderCell>
-            <TableHeaderCell>{t('rel.col.mascI')}</TableHeaderCell>
+            <TableHeaderCell term="relCommitment" />
+            <TableHeaderCell term="relCfot" />
+            <TableHeaderCell term="relMisses" />
+            <TableHeaderCell term="relPlanChangeCol" />
+            <TableHeaderCell term="relMasc" />
+            <TableHeaderCell term="relMascI" />
           </TableHeader>
           <tbody>
             {sorted.map((r) => (

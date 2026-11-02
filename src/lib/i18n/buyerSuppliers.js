@@ -49,9 +49,7 @@ export const buyerSuppliersEn = {
   // — Table columns —
   'buyerSuppliers.col.supplier': 'Supplier',
   'buyerSuppliers.col.country': 'Country',
-  'buyerSuppliers.col.tier': 'Tier',
   'buyerSuppliers.col.category': 'Category',
-  'buyerSuppliers.col.compliance': 'Compliance',
   'buyerSuppliers.col.otif': 'OTIF',
   'buyerSuppliers.col.status': 'Status',
   'buyerSuppliers.col.actions': 'Actions',
@@ -95,9 +93,7 @@ export const buyerSuppliersId = {
   // — Table columns —
   'buyerSuppliers.col.supplier': 'Pemasok',
   'buyerSuppliers.col.country': 'Negara',
-  'buyerSuppliers.col.tier': 'Tingkat',
   'buyerSuppliers.col.category': 'Kategori',
-  'buyerSuppliers.col.compliance': 'Kepatuhan',
   'buyerSuppliers.col.otif': 'OTIF',
   'buyerSuppliers.col.status': 'Status',
   'buyerSuppliers.col.actions': 'Tindakan',

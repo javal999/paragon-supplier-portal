@@ -1,5 +1,6 @@
 /** @import React from 'react' */
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import LivenessPill from '@components/ui-v2/LivenessPill';
 import Data from '@components/ui-v2/Data';
 import { formatDate } from '@lib/format';
@@ -21,7 +22,7 @@ import { MissSplitLine, Rate, mascOf, pctOf } from './reliabilityDisplay';
 // belongs beside the plan it describes.
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** @type {React.FC<{ label: string; children: React.ReactNode; testId: string }>} */
+/** @type {React.FC<{ label: React.ReactNode; children: React.ReactNode; testId: string }>} */
 const Tile = ({ label, children, testId }) => (
   <div
     className="bg-bg-hover border border-border-subtle rounded-md px-4 py-3"
@@ -63,7 +64,7 @@ const SupplierReliabilityPanel = () => {
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
-          <Tile label={t('rel.kpi.confirmation')} testId="rel-sup-confirmation">
+          <Tile label={<TermLabel term="relConfirmation" />} testId="rel-sup-confirmation">
             <div className="text-lg font-semibold">
               <Rate value={pctOf(row.confirmation.rate)} />
             </div>
@@ -74,13 +75,13 @@ const SupplierReliabilityPanel = () => {
               })}
             </div>
           </Tile>
-          <Tile label={t('rel.kpi.commitment')} testId="rel-sup-commitment">
+          <Tile label={<TermLabel term="relCommitment" />} testId="rel-sup-commitment">
             <div className="text-lg font-semibold">
               <Rate value={pctOf(row.commitment.rate)} />
             </div>
             <div className="text-xs text-text-tertiary">{t('rel.kpi.commitment.sub')}</div>
           </Tile>
-          <Tile label={t('rel.kpi.cfot')} testId="rel-sup-cfot">
+          <Tile label={<TermLabel term="relCfot" />} testId="rel-sup-cfot">
             <div className="text-lg font-semibold">
               <Rate value={pctOf(row.cfot.rate)} />
             </div>
@@ -88,13 +89,13 @@ const SupplierReliabilityPanel = () => {
               {t('rel.kpi.cfot.sub', { count: row.cfot.pos })}
             </div>
           </Tile>
-          <Tile label={t('rel.kpi.misses')} testId="rel-sup-misses">
+          <Tile label={<TermLabel term="relMisses" />} testId="rel-sup-misses">
             <div className="text-lg font-semibold">
               <Data>{row.misses.total}</Data>
             </div>
             <MissSplitLine split={row.misses} />
           </Tile>
-          <Tile label={t('rel.kpi.planChange')} testId="rel-sup-planchange">
+          <Tile label={<TermLabel term="relPlanChangeKpi" />} testId="rel-sup-planchange">
             <div className="text-lg font-semibold">
               <Rate value={pctOf(row.planChange.share)} />
             </div>

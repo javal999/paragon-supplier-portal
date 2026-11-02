@@ -134,7 +134,7 @@ const BuyerSupplierAccess = () => {
         <Table>
           <TableHeader>
             <TableHeaderCell>{t('inv.col.supplier')}</TableHeaderCell>
-            <TableHeaderCell>{t('inv.access.col.access')}</TableHeaderCell>
+            <TableHeaderCell term="stockAccess" />
             <TableHeaderCell>{t('inv.access.col.materials')}</TableHeaderCell>
             <TableHeaderCell className="text-right">{t('inv.access.col.action')}</TableHeaderCell>
           </TableHeader>

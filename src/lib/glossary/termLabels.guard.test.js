@@ -95,7 +95,7 @@ const codedLines = (e) =>
   ].filter((line) => typeof line === 'string' && CODE.test(line));
 
 describe('term-label glossary (BL-233)', () => {
-  it('holds the wave 1 to 7 population, named', () => {
+  it('holds the wave 1 to 8 population, named', () => {
     // A named member, not a count: the guards below run over these entries.
     expect(Object.keys(TERM_LABEL_GLOSSARY)).toEqual(
       expect.arrayContaining([
@@ -113,7 +113,9 @@ describe('term-label glossary (BL-233)', () => {
         'invThreeWayMatch',
         'asnShippedQuantity',
         'deliveryRemaining',
-        'certInSap'
+        'certInSap',
+        'relMascI',
+        'poAvgOverdue'
       ])
     );
   });
@@ -263,6 +265,11 @@ describe('term-label glossary (BL-233)', () => {
       id: 'Sisa kuantitas'
     });
     expect(TERM_LABEL_GLOSSARY.deliveryRemaining.notToConfuse?.en).toMatch(/sisa DA/);
+  });
+
+  it('TL-D12 Q26 and TL-D11 on the supplier pages', () => {
+    expect(TERM_LABEL_GLOSSARY.supplierChannel.label.en).toBe('Channel');
+    expect(TERM_LABEL_GLOSSARY.catalogLeadTime.label).toEqual({ en: 'Lead time', id: 'Lead time' });
   });
 
   it('TL-D9 / TL-D13: the labels waiting on the team keep their wording', () => {
