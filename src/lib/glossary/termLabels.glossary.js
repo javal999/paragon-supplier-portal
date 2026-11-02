@@ -38,12 +38,14 @@
 // /buyer/shipments (with shelf-life exceptions) and /supplier/shipments.
 // Wave 7: /buyer/contracts (KPIs, list, delivery agreements tab),
 // /buyer/delivery-agreements and /buyer/compliance.
+// Wave 8: /buyer/suppliers and the supplier profile, /buyer/supplier-access,
+// /buyer/scorecard, /supplier/performance, /buyer/reliability, /supplier/documents.
 // ─────────────────────────────────────────────────────────────────────────────
 /** @import { GlossaryOf, TermEntry } from './types' */
 
 /**
  * The terms a page labels through `TermLabel`.
- * @typedef {'demandAnticipation' | 'ltp' | 'fgDemand' | 'ltpLessFgDemand' | 'consumptionAverage' | 'safetyOrder' | 'carryOver' | 'wouldBe' | 'surplusAbsorbed' | 'recordedConsumption' | 'openSupply' | 'supplyGap' | 'daAfterCheck' | 'ospo' | 'additionalPo' | 'callOffsThisWeek' | 'remainder' | 'notCarried' | 'supplierAgreedOutside' | 'gapProposal' | 'alertPtiBelowRop' | 'alertSupplierBelowRop' | 'alertProjectedStockOut' | 'alertCapacityBelowDemand' | 'alertStaleData' | 'alertCoverage' | 'alertCommitmentBelowForecast' | 'alertLeadTimeMissing' | 'alertCallOffNotCovered' | 'alertSupplyDiscontinued' | 'alertBlanketPoRunOut' | 'alertDemandAnticipationUnabsorbed' | 'supplierCover' | 'supplierStock' | 'ptiStockRop' | 'incoming' | 'incomingStatus' | 'supplierAvailable' | 'calledOffNotShipped' | 'freeToCallOff' | 'ptiInbound' | 'simulationBasis' | 'simulationFlags' | 'supplierOwnRop' | 'ptiStock' | 'ptiRop' | 'daysOfSupply' | 'feedstockLatest' | 'feedstockThisWeek' | 'tradeNameStatus' | 'capacityLtp' | 'allocatedCapacity' | 'productionLimit' | 'additionalCapacity' | 'capacityBe' | 'ltpAgainstCapacity' | 'capacityShortBy' | 'ptiCapacityDecision' | 'runOutRemaining' | 'runsOut' | 'newPoNeededBy' | 'poLeadTime' | 'spaceFreed' | 'materialsPerTier' | 'onSapValue' | 'sltGroupDefault' | 'tierTarget' | 'safetyOrderRopOrder' | 'ropFisikSafety' | 'demandCv' | 'osipLevel' | 'ropOrder' | 'ropFisik' | 'maxStock' | 'engineSafetyStock' | 'sapSafetyStock' | 'freed' | 'safetyLeadTime' | 'engineReorderPoint' | 'forecastShortfall' | 'ropSupplier' | 'ropToPrincipal' | 'replenishmentCycle' | 'pullAgreement' | 'bottleneckLeadTime' | 'monthLtp' | 'protectionBaseline' | 'uplift' | 'protectionBuffer' | 'strategicBaseline' | 'strategicBuffer' | 'poOrdered' | 'reconcileCalledOff' | 'asnRequested' | 'notYetCalledOff' | 'calledOffNotYetShipped' | 'maxStockSupplier' | 'whatIfMax' | 'daOverLeadTime' | 'prGenerated' | 'planCheckPr' | 'triggerCallOffs' | 'triggerPr' | 'whatIfRemainder' | 'whatIfCarryOver' | 'firstShortageWeek' | 'weeksAboveMax' | 'whatIfLtp' | 'daCurrentPlan' | 'daScenario' | 'callOffsDrafted' | 'whatIfIncoming' | 'prRecommendedWeek' | 'projectedSohPlan' | 'projectedSohScenario' | 'engineValue' | 'lastPublished' | 'firstPublished' | 'dampedValue' | 'allowedRange' | 'toPublish' | 'stabiliseRule' | 'ruleNew' | 'ruleUnchanged' | 'ruleFirmFrozen' | 'ruleForecast' | 'ruleDamped' | 'ruleBandHeld' | 'ruleCumulativeHeld' | 'ruleOverride' | 'planMovement' | 'weeksChangedInLeadTime' | 'tradeOffWithinLimits' | 'weeksHeld' | 'seriesHeld' | 'seriesMasc' | 'forecastZone' | 'publishedForecast' | 'commitmentDue' | 'commitment' | 'commitmentUpside' | 'grPendingInspection' | 'grQualityHold' | 'grApprovedToday' | 'grRejectionRate' | 'grDisposition' | 'grExpected' | 'grReceived' | 'grAccepted' | 'grRejectedLine' | 'grChecks' | 'poOpenTotal' | 'poPendingConfirmation' | 'poInTransit' | 'poOverdue' | 'orderedQty' | 'counterQty' | 'counterDate' | 'summaryResponse' | 'summaryAsns' | 'summaryCallOffs' | 'summaryConfirmations' | 'summaryReceipts' | 'summaryInvoices' | 'prDraft' | 'prPendingApproval' | 'prApproved' | 'prSourcingEvent' | 'prPoCreated' | 'prSource' | 'supShipped' | 'supReceived' | 'supRejected' | 'supQualityResult' | 'supDiscrepancy' | 'supDifference' | 'supOpenOrders' | 'supInProgress' | 'supValuePending' | 'supDelivered' | 'supConfirmed' | 'invPendingApproval' | 'invReleased' | 'invDisputed' | 'invOverdue' | 'invThreeWayMatch' | 'agingBucket' | 'agingPctAp' | 'agingRisk' | 'invLineQuantity' | 'invUnitPrice' | 'invLineValue' | 'shipInTransit' | 'shipAtDock' | 'shipDelayed' | 'shipArrivingToday' | 'shelfLifeLeftAtEta' | 'supPaymentsReceived' | 'supPendingPayment' | 'supInvDisputed' | 'supThreeWayMatch' | 'asnDraft' | 'asnSubmitted' | 'asnInTransit' | 'asnDelivered' | 'asnDiscrepancy' | 'asnLineOrdered' | 'asnLineShipped' | 'asnOpenQuantity' | 'asnShippedQuantity' | 'deliveryAgreed' | 'deliveryReleased' | 'deliveryDelivered' | 'deliveryRemaining' | 'releasePlanned' | 'releaseFulfillment' | 'releaseDrawnDown' | 'certExpired' | 'certExpiring' | 'certMissing' | 'certUnderReview' | 'certValid' | 'certInSap' | 'certActionRequired' | 'contractsActive' | 'contractsExpiring' | 'obligationsOverdue' | 'contractsActiveValue' | 'contractPerformance'} TermLabelId
+ * @typedef {'demandAnticipation' | 'ltp' | 'fgDemand' | 'ltpLessFgDemand' | 'consumptionAverage' | 'safetyOrder' | 'carryOver' | 'wouldBe' | 'surplusAbsorbed' | 'recordedConsumption' | 'openSupply' | 'supplyGap' | 'daAfterCheck' | 'ospo' | 'additionalPo' | 'callOffsThisWeek' | 'remainder' | 'notCarried' | 'supplierAgreedOutside' | 'gapProposal' | 'alertPtiBelowRop' | 'alertSupplierBelowRop' | 'alertProjectedStockOut' | 'alertCapacityBelowDemand' | 'alertStaleData' | 'alertCoverage' | 'alertCommitmentBelowForecast' | 'alertLeadTimeMissing' | 'alertCallOffNotCovered' | 'alertSupplyDiscontinued' | 'alertBlanketPoRunOut' | 'alertDemandAnticipationUnabsorbed' | 'supplierCover' | 'supplierStock' | 'ptiStockRop' | 'incoming' | 'incomingStatus' | 'supplierAvailable' | 'calledOffNotShipped' | 'freeToCallOff' | 'ptiInbound' | 'simulationBasis' | 'simulationFlags' | 'supplierOwnRop' | 'ptiStock' | 'ptiRop' | 'daysOfSupply' | 'feedstockLatest' | 'feedstockThisWeek' | 'tradeNameStatus' | 'capacityLtp' | 'allocatedCapacity' | 'productionLimit' | 'additionalCapacity' | 'capacityBe' | 'ltpAgainstCapacity' | 'capacityShortBy' | 'ptiCapacityDecision' | 'runOutRemaining' | 'runsOut' | 'newPoNeededBy' | 'poLeadTime' | 'spaceFreed' | 'materialsPerTier' | 'onSapValue' | 'sltGroupDefault' | 'tierTarget' | 'safetyOrderRopOrder' | 'ropFisikSafety' | 'demandCv' | 'osipLevel' | 'ropOrder' | 'ropFisik' | 'maxStock' | 'engineSafetyStock' | 'sapSafetyStock' | 'freed' | 'safetyLeadTime' | 'engineReorderPoint' | 'forecastShortfall' | 'ropSupplier' | 'ropToPrincipal' | 'replenishmentCycle' | 'pullAgreement' | 'bottleneckLeadTime' | 'monthLtp' | 'protectionBaseline' | 'uplift' | 'protectionBuffer' | 'strategicBaseline' | 'strategicBuffer' | 'poOrdered' | 'reconcileCalledOff' | 'asnRequested' | 'notYetCalledOff' | 'calledOffNotYetShipped' | 'maxStockSupplier' | 'whatIfMax' | 'daOverLeadTime' | 'prGenerated' | 'planCheckPr' | 'triggerCallOffs' | 'triggerPr' | 'whatIfRemainder' | 'whatIfCarryOver' | 'firstShortageWeek' | 'weeksAboveMax' | 'whatIfLtp' | 'daCurrentPlan' | 'daScenario' | 'callOffsDrafted' | 'whatIfIncoming' | 'prRecommendedWeek' | 'projectedSohPlan' | 'projectedSohScenario' | 'engineValue' | 'lastPublished' | 'firstPublished' | 'dampedValue' | 'allowedRange' | 'toPublish' | 'stabiliseRule' | 'ruleNew' | 'ruleUnchanged' | 'ruleFirmFrozen' | 'ruleForecast' | 'ruleDamped' | 'ruleBandHeld' | 'ruleCumulativeHeld' | 'ruleOverride' | 'planMovement' | 'weeksChangedInLeadTime' | 'tradeOffWithinLimits' | 'weeksHeld' | 'seriesHeld' | 'seriesMasc' | 'forecastZone' | 'publishedForecast' | 'commitmentDue' | 'commitment' | 'commitmentUpside' | 'grPendingInspection' | 'grQualityHold' | 'grApprovedToday' | 'grRejectionRate' | 'grDisposition' | 'grExpected' | 'grReceived' | 'grAccepted' | 'grRejectedLine' | 'grChecks' | 'poOpenTotal' | 'poPendingConfirmation' | 'poInTransit' | 'poOverdue' | 'orderedQty' | 'counterQty' | 'counterDate' | 'summaryResponse' | 'summaryAsns' | 'summaryCallOffs' | 'summaryConfirmations' | 'summaryReceipts' | 'summaryInvoices' | 'prDraft' | 'prPendingApproval' | 'prApproved' | 'prSourcingEvent' | 'prPoCreated' | 'prSource' | 'supShipped' | 'supReceived' | 'supRejected' | 'supQualityResult' | 'supDiscrepancy' | 'supDifference' | 'supOpenOrders' | 'supInProgress' | 'supValuePending' | 'supDelivered' | 'supConfirmed' | 'invPendingApproval' | 'invReleased' | 'invDisputed' | 'invOverdue' | 'invThreeWayMatch' | 'agingBucket' | 'agingPctAp' | 'agingRisk' | 'invLineQuantity' | 'invUnitPrice' | 'invLineValue' | 'shipInTransit' | 'shipAtDock' | 'shipDelayed' | 'shipArrivingToday' | 'shelfLifeLeftAtEta' | 'supPaymentsReceived' | 'supPendingPayment' | 'supInvDisputed' | 'supThreeWayMatch' | 'asnDraft' | 'asnSubmitted' | 'asnInTransit' | 'asnDelivered' | 'asnDiscrepancy' | 'asnLineOrdered' | 'asnLineShipped' | 'asnOpenQuantity' | 'asnShippedQuantity' | 'deliveryAgreed' | 'deliveryReleased' | 'deliveryDelivered' | 'deliveryRemaining' | 'releasePlanned' | 'releaseFulfillment' | 'releaseDrawnDown' | 'certExpired' | 'certExpiring' | 'certMissing' | 'certUnderReview' | 'certValid' | 'certInSap' | 'certActionRequired' | 'contractsActive' | 'contractsExpiring' | 'obligationsOverdue' | 'contractsActiveValue' | 'contractPerformance' | 'relConfirmation' | 'relCommitment' | 'relCfot' | 'relMisses' | 'relPlanChangeKpi' | 'relPlanChangeCol' | 'relMasc' | 'relMascI' | 'perfOtif' | 'perfCfot' | 'perfRejections' | 'perfScore' | 'stockAccess' | 'otif' | 'scorecardGrade' | 'catalogMoq' | 'catalogLeadTime' | 'catalogCapacity' | 'supplierChannel' | 'supplierCompliance' | 'performanceBand' | 'docValid' | 'docExpiring' | 'docExpired' | 'docNeedsAction' | 'poOnTime' | 'poLate' | 'poAvgOverdue'} TermLabelId
  */
 
 // TL-D23: an "Also called" source names only the team; where in the team's
@@ -1788,5 +1790,193 @@ export const TERM_LABEL_GLOSSARY =
       label: { en: 'Performance', id: 'Kinerja' },
       en: 'The supplier’s performance score on the contract, out of 100.',
       id: 'Skor kinerja pemasok pada kontrak itu, dari 100.'
+    },
+    // ── Wave 8: suppliers, performance and reliability ────────────────────────
+    relConfirmation: {
+      label: { en: 'Confirmed by the deadline', id: 'Dikonfirmasi sebelum tenggat' },
+      en: 'The share of PO lines and forecast periods the supplier confirmed by their deadline.',
+      id: 'Porsi baris PO dan periode prakiraan yang dikonfirmasi pemasok sebelum tenggatnya.',
+      formula: {
+        en: 'Lines and periods confirmed by the deadline ÷ all due in the window.',
+        id: 'Baris dan periode yang dikonfirmasi sebelum tenggat ÷ semua yang jatuh tempo dalam jendela.'
+      },
+      labelKeys: ['rel.col.confirmation']
+    },
+    relCommitment: {
+      label: { en: 'Delivered as committed', id: 'Dikirim sesuai komitmen' },
+      en: 'The share of the committed quantity that arrived on or before the committed date.',
+      id: 'Porsi kuantitas yang dikomitmenkan yang tiba pada atau sebelum tanggal komitmen.',
+      formula: {
+        en: 'Quantity received on or before the committed date ÷ committed quantity.',
+        id: 'Kuantitas diterima pada atau sebelum tanggal komitmen ÷ kuantitas yang dikomitmenkan.'
+      }
+    },
+    relCfot: {
+      label: { en: 'Confirmed-date lines delivered', id: 'Baris tepat tanggal konfirmasi' },
+      en: 'The share of lines delivered in full on the date the supplier confirmed.',
+      id: 'Porsi baris yang dikirim lengkap pada tanggal yang dikonfirmasi pemasok.',
+      notToConfuse: {
+        en: 'The same measure against the requested date (shown beside it).',
+        id: 'Ukuran yang sama terhadap tanggal yang diminta (ditampilkan di sampingnya).'
+      }
+    },
+    relMisses: {
+      label: { en: 'Missed lines', id: 'Baris yang meleset' },
+      en: 'Lines that arrived short or late, each in one class: never confirmed, PTI-caused (PTI changed it inside the lead time), or supplier-caused.',
+      id: 'Baris yang tiba kurang atau terlambat, masing-masing satu kelas: tidak pernah dikonfirmasi, karena PTI (PTI mengubahnya dalam lead time), atau karena pemasok.'
+    },
+    relPlanChangeKpi: {
+      label: { en: 'PTI changes inside lead time', id: 'Perubahan PTI di dalam lead time' },
+      en: 'The share of PTI’s schedules that PTI changed inside the supplier’s lead time.',
+      id: 'Porsi jadwal PTI yang diubah PTI di dalam lead time pemasok.',
+      formula: {
+        en: 'Schedules changed inside the lead time ÷ all schedules published in the window.',
+        id: 'Jadwal yang diubah dalam lead time ÷ semua jadwal yang diterbitkan dalam jendela.'
+      }
+    },
+    relPlanChangeCol: {
+      label: { en: 'PTI changed inside lead time', id: 'Diubah PTI di dalam lead time' },
+      en: 'For the supplier, the share of PTI’s schedules that PTI changed inside its lead time.',
+      id: 'Untuk pemasok itu, porsi jadwal PTI yang diubah PTI di dalam lead time-nya.',
+      formula: {
+        en: 'Schedules changed inside the lead time ÷ all schedules published in the window.',
+        id: 'Jadwal yang diubah dalam lead time ÷ semua jadwal yang diterbitkan dalam jendela.'
+      }
+    },
+    relMasc: {
+      label: { en: 'Size of PTI’s changes', id: 'Besar perubahan PTI' },
+      en: 'How much PTI’s plan moved between versions for the supplier’s materials, scaled to their normal week-to-week movement (MASC).',
+      id: 'Seberapa besar rencana PTI bergerak antar versi untuk material pemasok, diskalakan ke pergerakan normal mingguannya (MASC).',
+      labelKeys: ['rel.col.masc']
+    },
+    relMascI: {
+      label: { en: 'Drift since first seen', id: 'Pergeseran sejak pertama dilihat' },
+      en: 'The same measure against the first version the supplier ever saw for each week: the total drift, not only the last step (MASC-I).',
+      id: 'Ukuran yang sama terhadap versi pertama yang dilihat pemasok untuk tiap minggu: total pergeseran, bukan hanya langkah terakhir (MASC-I).',
+      labelKeys: ['rel.col.mascI']
+    },
+    perfOtif: {
+      label: { en: 'On time and in full', id: 'Tepat waktu dan tepat jumlah' },
+      en: 'The share of call-offs delivered on time and in full. The target is 90%.',
+      id: 'Porsi call-off yang dikirim tepat waktu dan tepat jumlah. Targetnya 90%.',
+      labelKeys: ['perf.otif']
+    },
+    perfCfot: {
+      label: {
+        en: 'Delivered on the confirmed date',
+        id: 'Terkirim pada tanggal yang dikonfirmasi'
+      },
+      en: 'The share of POs delivered in full on the date the supplier confirmed.',
+      id: 'Porsi PO yang dikirim lengkap pada tanggal yang dikonfirmasi pemasok.',
+      labelKeys: ['perf.cfot']
+    },
+    perfRejections: {
+      label: { en: 'Rejections', id: 'Penolakan' },
+      en: 'How many PTI orders and call-offs the supplier rejected. Each costs 5 points in the overall score.',
+      id: 'Berapa banyak pesanan dan call-off PTI yang ditolak pemasok. Masing-masing mengurangi 5 poin dari skor keseluruhan.'
+    },
+    perfScore: {
+      label: { en: 'Overall score', id: 'Skor keseluruhan' },
+      en: 'The supplier’s assessment score, 0 to 100, with its grade: A at 90 or more, B at 80, C at 70, else D.',
+      id: 'Skor penilaian pemasok, 0 sampai 100, dengan grade-nya: A pada 90 atau lebih, B pada 80, C pada 70, selain itu D.',
+      formula: {
+        en: 'Average of the two delivery measures − 5 points per rejection.',
+        id: 'Rata-rata kedua ukuran pengiriman − 5 poin per penolakan.'
+      }
+    },
+    stockAccess: {
+      label: { en: 'Access to PTI stock', id: 'Akses ke stok PTI' },
+      en: 'Whether the supplier may see PTI’s own stock of the materials it supplies.',
+      id: 'Apakah pemasok boleh melihat stok PTI sendiri untuk material yang dipasoknya.',
+      labelKeys: ['inv.access.col.access']
+    },
+    otif: {
+      label: { en: 'OTIF', id: 'OTIF' },
+      en: 'On time and in full: the share of call-offs delivered on time and in full. The target is 90%.',
+      id: 'On time and in full: porsi call-off yang dikirim tepat waktu dan tepat jumlah. Targetnya 90%.',
+      labelKeys: ['buyerSupplierProfile.kpi.otif.eyebrow', 'buyerSuppliers.col.otif']
+    },
+    scorecardGrade: {
+      label: { en: 'Scorecard Grade', id: 'Grade Kartu Skor' },
+      en: 'The grade of the supplier’s overall score: A at 90 or more, B at 80, C at 70, else D.',
+      id: 'Grade dari skor keseluruhan pemasok: A pada 90 atau lebih, B pada 80, C pada 70, selain itu D.',
+      labelKeys: ['buyerSupplierProfile.kpi.scorecard.eyebrow']
+    },
+    catalogMoq: {
+      label: { en: 'MOQ', id: 'MOQ' },
+      en: 'The minimum order quantity the supplier accepts for the item.',
+      id: 'Kuantitas pesanan minimum yang diterima pemasok untuk item itu.'
+    },
+    catalogLeadTime: {
+      label: { en: 'Lead time', id: 'Lead time' },
+      en: 'The time from order to delivery the supplier quotes for the item.',
+      id: 'Waktu dari pesanan sampai pengiriman yang ditawarkan pemasok untuk item itu.'
+    },
+    catalogCapacity: {
+      label: { en: 'Capacity', id: 'Kapasitas' },
+      en: 'How much of the item the supplier can produce for PTI.',
+      id: 'Berapa banyak item itu yang dapat diproduksi pemasok untuk PTI.'
+    },
+    supplierChannel: {
+      label: { en: 'Channel', id: 'Kanal' },
+      en: 'How the supplier works with the hub: WhatsApp, the web portal, or an API.',
+      id: 'Cara pemasok bekerja dengan hub: WhatsApp, portal web, atau API.'
+    },
+    supplierCompliance: {
+      label: { en: 'Compliance', id: 'Kepatuhan' },
+      en: 'Whether the supplier passes PTI’s compliance gate: valid halal and BPOM papers where needed, GMP for cosmetic raw material, an active status, and OTIF at target.',
+      id: 'Apakah pemasok lolos gerbang kepatuhan PTI: dokumen halal dan BPOM yang berlaku bila perlu, GMP untuk bahan baku kosmetik, status aktif, dan OTIF sesuai target.'
+    },
+    performanceBand: {
+      label: { en: 'Band', id: 'Kelompok' },
+      en: 'The supplier’s performance band, from its scorecard grade.',
+      id: 'Kelompok kinerja pemasok, dari grade kartu skornya.',
+      labelKeys: ['supFilter.col.band']
+    },
+    docValid: {
+      label: { en: 'Valid', id: 'Berlaku' },
+      en: 'Your documents in force and not within 180 days of expiry.',
+      id: 'Dokumen Anda yang berlaku dan tidak dalam 180 hari menjelang kedaluwarsa.'
+    },
+    docExpiring: {
+      label: { en: 'Expiring ≤180d', id: 'Akan Kedaluwarsa ≤180h' },
+      en: 'Your documents that expire within 180 days.',
+      id: 'Dokumen Anda yang kedaluwarsa dalam 180 hari.',
+      notToConfuse: {
+        en: 'The certificate registry’s 90-day window, on PTI’s Compliance page.',
+        id: 'Jendela 90 hari di registri sertifikat, di halaman Kepatuhan PTI.'
+      }
+    },
+    docExpired: {
+      label: { en: 'Expired', id: 'Kedaluwarsa' },
+      en: 'Your documents past their expiry date.',
+      id: 'Dokumen Anda yang melewati tanggal kedaluwarsa.'
+    },
+    docNeedsAction: {
+      label: { en: 'Needs Action', id: 'Perlu Tindakan' },
+      en: 'Documents PTI asked for that you have not uploaded yet.',
+      id: 'Dokumen yang diminta PTI dan belum Anda unggah.'
+    },
+    poOnTime: {
+      label: { en: 'On Time', id: 'Tepat Waktu' },
+      en: 'Your POs that are not past their requested delivery date.',
+      id: 'PO Anda yang tidak melewati tanggal pengiriman yang diminta.',
+      labelKeys: ['supplierPerformance.poMetric.onTime']
+    },
+    poLate: {
+      label: { en: 'Late', id: 'Terlambat' },
+      en: 'Your POs past their requested delivery date.',
+      id: 'PO Anda yang melewati tanggal pengiriman yang diminta.',
+      labelKeys: ['supplierPerformance.poMetric.late']
+    },
+    poAvgOverdue: {
+      label: { en: 'Avg Overdue', id: 'Rata-rata Terlambat' },
+      en: 'How many days, on average, your late POs are past their requested delivery date.',
+      id: 'Rata-rata berapa hari PO Anda yang terlambat melewati tanggal pengiriman yang diminta.',
+      formula: {
+        en: 'Days overdue of the late POs ÷ the number of late POs.',
+        id: 'Hari terlambat PO yang terlambat ÷ jumlah PO yang terlambat.'
+      },
+      labelKeys: ['supplierPerformance.poMetric.avgOverdue']
     }
   });

@@ -90,10 +90,7 @@ export const buyerSupplierProfileEn = {
   'buyerSupplierProfile.catalog.heading': 'Catalog',
   'buyerSupplierProfile.catalog.col.material': 'Material',
   'buyerSupplierProfile.catalog.col.sapCode': 'SAP Code',
-  'buyerSupplierProfile.catalog.col.moq': 'MOQ',
-  'buyerSupplierProfile.catalog.col.leadTime': 'Lead time',
   'buyerSupplierProfile.catalog.col.unitPrice': 'Unit price',
-  'buyerSupplierProfile.catalog.col.capacity': 'Capacity',
   'buyerSupplierProfile.catalog.empty': 'No catalog items published.',
   // — Performance tab —
   'buyerSupplierProfile.performance.heading': 'Recent purchase orders',
@@ -105,7 +102,6 @@ export const buyerSupplierProfileEn = {
   'buyerSupplierProfile.performance.col.value': 'Value',
   'buyerSupplierProfile.performance.col.ordered': 'Ordered',
   'buyerSupplierProfile.performance.col.delivery': 'Delivery',
-  'buyerSupplierProfile.performance.col.otif': 'OTIF',
   'buyerSupplierProfile.performance.col.status': 'Status',
   'buyerSupplierProfile.performance.empty': 'No purchase orders for this supplier.',
   // — Message Log tab —
@@ -185,10 +181,7 @@ export const buyerSupplierProfileId = {
   'buyerSupplierProfile.catalog.heading': 'Katalog',
   'buyerSupplierProfile.catalog.col.material': 'Material',
   'buyerSupplierProfile.catalog.col.sapCode': 'Kode SAP',
-  'buyerSupplierProfile.catalog.col.moq': 'MOQ',
-  'buyerSupplierProfile.catalog.col.leadTime': 'Waktu tunggu',
   'buyerSupplierProfile.catalog.col.unitPrice': 'Harga satuan',
-  'buyerSupplierProfile.catalog.col.capacity': 'Kapasitas',
   'buyerSupplierProfile.catalog.empty': 'Tidak ada item katalog dipublikasikan.',
   // — Performance tab —
   'buyerSupplierProfile.performance.heading': 'Pesanan pembelian terbaru',
@@ -200,7 +193,6 @@ export const buyerSupplierProfileId = {
   'buyerSupplierProfile.performance.col.value': 'Nilai',
   'buyerSupplierProfile.performance.col.ordered': 'Dipesan',
   'buyerSupplierProfile.performance.col.delivery': 'Pengiriman',
-  'buyerSupplierProfile.performance.col.otif': 'OTIF',
   'buyerSupplierProfile.performance.col.status': 'Status',
   'buyerSupplierProfile.performance.empty': 'Tidak ada pesanan pembelian untuk pemasok ini.',
   // — Message Log tab —

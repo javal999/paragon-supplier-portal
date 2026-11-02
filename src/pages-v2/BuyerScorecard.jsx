@@ -348,7 +348,7 @@ const BuyerScorecard = () => {
       {/* REQ-E10-01 — the calculated half of the assessment. */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
         <KpiCard
-          eyebrow={t('perf.otif')}
+          term="perfOtif"
           value={
             measure.otif.pct === null
               ? t('rfx.noHistory')
@@ -365,7 +365,7 @@ const BuyerScorecard = () => {
           }
         />
         <KpiCard
-          eyebrow={t('perf.cfot')}
+          term="perfCfot"
           value={measure.cfot.pct === null ? t('rfx.noHistory') : `${measure.cfot.pct}%`}
           subtitle={
             <span className="text-text-tertiary">
@@ -383,7 +383,7 @@ const BuyerScorecard = () => {
           }
         />
         <KpiCard
-          eyebrow={t('perf.rejections')}
+          term="perfRejections"
           value={String(measure.rejections.total)}
           subtitle={
             <span className="text-text-tertiary" data-testid="scorecard-rejections">
@@ -395,7 +395,7 @@ const BuyerScorecard = () => {
           }
         />
         <KpiCard
-          eyebrow={t('perf.score')}
+          term="perfScore"
           value={measure.score === null ? t('rfx.noHistory') : `${measure.score}`}
           subtitle={<span className="text-text-tertiary">{t('perf.calculated')}</span>}
         />

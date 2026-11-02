@@ -53,6 +53,7 @@ import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import EmptyState from '@components/ui-v2/EmptyState';
 import { useCurrentSupplier, useKpis, usePurchaseOrders } from '@services/query/hooks';
+import TermLabel from '@components/ui-v2/TermLabel';
 /** @import { KpiPoint as Kpi, KpiTrend as Trend } from '@services/data/types' */
 
 /** @typedef {'A' | 'B' | 'C' | 'D'} Grade */
@@ -325,7 +326,7 @@ const SupplierPerformance = () => {
       {/* REQ-E10-01 — the calculated half of the assessment. */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
         <KpiCard
-          eyebrow={t('perf.otif')}
+          term="perfOtif"
           value={
             measure.otif.pct === null
               ? t('rfx.noHistory')
@@ -342,7 +343,7 @@ const SupplierPerformance = () => {
           }
         />
         <KpiCard
-          eyebrow={t('perf.cfot')}
+          term="perfCfot"
           value={measure.cfot.pct === null ? t('rfx.noHistory') : `${measure.cfot.pct}%`}
           subtitle={
             <span className="text-text-tertiary" data-testid="my-performance-cfot">
@@ -353,7 +354,7 @@ const SupplierPerformance = () => {
           }
         />
         <KpiCard
-          eyebrow={t('perf.rejections')}
+          term="perfRejections"
           value={String(measure.rejections.total)}
           subtitle={
             <span className="text-text-tertiary">
@@ -365,7 +366,7 @@ const SupplierPerformance = () => {
           }
         />
         <KpiCard
-          eyebrow={t('perf.score')}
+          term="perfScore"
           value={measure.score === null ? t('rfx.noHistory') : `${measure.score}`}
           subtitle={<span className="text-text-tertiary">{t('perf.calculated')}</span>}
         />
@@ -541,16 +542,19 @@ const SupplierPerformance = () => {
                 },
                 {
                   label: t('supplierPerformance.poMetric.onTime'),
+                  term: /** @type {const} */ ('poOnTime'),
                   value: onTimeCount,
                   color: TOKEN_SUCCESS
                 },
                 {
                   label: t('supplierPerformance.poMetric.late'),
+                  term: /** @type {const} */ ('poLate'),
                   value: lateCount,
                   color: TOKEN_DANGER
                 },
                 {
                   label: t('supplierPerformance.poMetric.avgOverdue'),
+                  term: /** @type {const} */ ('poAvgOverdue'),
                   value: avgOverdue,
                   color: TOKEN_WARNING
                 }
@@ -560,7 +564,9 @@ const SupplierPerformance = () => {
                   className="bg-bg-hover rounded-md px-4 py-3"
                   style={{ borderLeft: `3px solid ${m.color}` }}
                 >
-                  <div className="text-label text-text-tertiary uppercase mb-1">{m.label}</div>
+                  <div className="text-label text-text-tertiary uppercase mb-1">
+                    {'term' in m && m.term ? <TermLabel term={m.term} /> : m.label}
+                  </div>
                   <Data as="div" className="text-kpi" style={{ color: m.color }}>
                     {m.value}
                   </Data>

@@ -283,11 +283,11 @@ const BuyerSuppliers = () => {
           <TableHeader>
             <TableHeaderCell>{t('buyerSuppliers.col.supplier')}</TableHeaderCell>
             <TableHeaderCell>{t('buyerSuppliers.col.country')}</TableHeaderCell>
-            <TableHeaderCell>{t('buyerSuppliers.col.tier')}</TableHeaderCell>
+            <TableHeaderCell term="supplierChannel" />
             <TableHeaderCell>{t('buyerSuppliers.col.category')}</TableHeaderCell>
-            <TableHeaderCell>{t('buyerSuppliers.col.compliance')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('buyerSuppliers.col.otif')}</TableHeaderCell>
-            <TableHeaderCell>{t('supFilter.col.band')}</TableHeaderCell>
+            <TableHeaderCell term="supplierCompliance" />
+            <TableHeaderCell className="text-right" term="otif" />
+            <TableHeaderCell term="performanceBand" />
             <TableHeaderCell>{t('buyerSuppliers.col.status')}</TableHeaderCell>
             <TableHeaderCell className="text-right">
               {t('buyerSuppliers.col.actions')}

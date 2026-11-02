@@ -349,7 +349,7 @@ const BuyerSupplierProfile = () => {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
         <KpiCard
-          eyebrow={t('buyerSupplierProfile.kpi.otif.eyebrow')}
+          term="otif"
           value={supp.otif === undefined ? t('rfx.noHistory') : `${supp.otif}%`}
           subtitle={t('buyerSupplierProfile.kpi.otif.subtitle')}
           icon={Activity}
@@ -367,7 +367,7 @@ const BuyerSupplierProfile = () => {
           icon={ShieldCheck}
         />
         <KpiCard
-          eyebrow={t('buyerSupplierProfile.kpi.scorecard.eyebrow')}
+          term="scorecardGrade"
           value={supp.scorecardGrade ?? t('rfx.noHistory')}
           subtitle={t('buyerSupplierProfile.kpi.scorecard.subtitle', {
             rating: supp.rating.toFixed(1)
@@ -572,12 +572,12 @@ const BuyerSupplierProfile = () => {
             <TableHeader>
               <TableHeaderCell>{t('buyerSupplierProfile.catalog.col.material')}</TableHeaderCell>
               <TableHeaderCell>{t('buyerSupplierProfile.catalog.col.sapCode')}</TableHeaderCell>
-              <TableHeaderCell>{t('buyerSupplierProfile.catalog.col.moq')}</TableHeaderCell>
-              <TableHeaderCell>{t('buyerSupplierProfile.catalog.col.leadTime')}</TableHeaderCell>
+              <TableHeaderCell term="catalogMoq" />
+              <TableHeaderCell term="catalogLeadTime" />
               <TableHeaderCell className="text-right">
                 {t('buyerSupplierProfile.catalog.col.unitPrice')}
               </TableHeaderCell>
-              <TableHeaderCell>{t('buyerSupplierProfile.catalog.col.capacity')}</TableHeaderCell>
+              <TableHeaderCell term="catalogCapacity" />
             </TableHeader>
             <tbody>
               {catalog.map((m) => (
@@ -648,7 +648,7 @@ const BuyerSupplierProfile = () => {
               <TableHeaderCell>
                 {t('buyerSupplierProfile.performance.col.delivery')}
               </TableHeaderCell>
-              <TableHeaderCell>{t('buyerSupplierProfile.performance.col.otif')}</TableHeaderCell>
+              <TableHeaderCell term="otif" />
               <TableHeaderCell>{t('buyerSupplierProfile.performance.col.status')}</TableHeaderCell>
             </TableHeader>
             <tbody>

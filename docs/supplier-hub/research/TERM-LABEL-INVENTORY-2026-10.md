@@ -1868,7 +1868,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Material | Material | buyerSupplierProfile.catalog.col.material | N | n/a | n/a | N |  | Keep |  |
 | column | SAP Code | Kode SAP | buyerSupplierProfile.catalog.col.sapCode | N | n/a | n/a | N |  | Keep |  |
 | column | MOQ | MOQ | buyerSupplierProfile.catalog.col.moq | Y | "MOQ" (osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md:125) | N | N |  | Keep |  |
-| column | Lead time | Waktu tunggu | buyerSupplierProfile.catalog.col.leadTime | Y | "lead time" (osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md:27, A3) | N | N |  | Ask Levi | Team writes "lead time" in English in ID text; ID translates it. |
+| column | Lead time | Waktu tunggu | buyerSupplierProfile.catalog.col.leadTime | Y | "lead time" (osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md:27, A3) | N | N |  | Decided (TL-D11) | ID now "Lead time" (BL-233 wave 8) |
 | column | Unit price | Harga satuan | buyerSupplierProfile.catalog.col.unitPrice | N | n/a | n/a | N |  | Keep | Record amount |
 | column | Capacity | Kapasitas | buyerSupplierProfile.catalog.col.capacity | Y | "capacity is compared with LTP" (osip/DRC-PROPOSAL-2026-10-19.md:41) | N | N |  | Keep |  |
 
@@ -1910,7 +1910,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 |---|---|---|---|---|---|---|---|---|---|---|
 | column | Supplier | Pemasok | buyerSuppliers.col.supplier | N | n/a | n/a | N |  | Keep |  |
 | column | Country | Negara | buyerSuppliers.col.country | N | n/a | n/a | N |  | Keep |  |
-| column | Tier | Tingkat | buyerSuppliers.col.tier | Y | none found | n/a | service tier (95%/85% service level per material), forecast engine (DECISION-GUIDE.md ENG-D14) |  | Ask Levi | Values are WhatsApp/Web/API connectivity; "tier" also names ENG-D14 service tiers. |
+| column | Tier | Tingkat | buyerSuppliers.col.tier | Y | none found | n/a | service tier (95%/85% service level per material), forecast engine (DECISION-GUIDE.md ENG-D14) |  | Decided (TL-D12) | Now "Channel" (BL-233 wave 8) |
 | column | Category | Kategori | buyerSuppliers.col.category | N | n/a | n/a | N |  | Keep |  |
 | column | Compliance | Kepatuhan | buyerSuppliers.col.compliance | Y | "Compliance gate" (SUPPLIER-HUB-REQUIREMENTS.md:168, CR-23) | N | N |  | Keep |  |
 | column | OTIF | OTIF | buyerSuppliers.col.otif | Y | "OTIF, On-Time In-Full" (SUPPLIER-HUB-REQUIREMENTS.md:118) | N | N |  | Keep |  |

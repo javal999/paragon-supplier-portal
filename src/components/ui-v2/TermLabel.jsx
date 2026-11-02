@@ -57,4 +57,21 @@ const TermLabel = ({ term, values, className = '' }) => {
   );
 };
 
+/**
+ * The (i) of a term alone, for a slot whose label is already inside another
+ * control (a sort button), where a second button cannot nest.
+ * @type {React.FC<{ readonly term: TermLabelId }>}
+ */
+export const TermInfo = ({ term }) => {
+  const { i18n } = useTranslation();
+  const indonesian = i18n.language?.toLowerCase().startsWith('id') ?? false;
+  return (
+    <TermTip
+      entry={TERM_LABEL_GLOSSARY[term]}
+      name={termLabelText(term, indonesian)}
+      slugId={term}
+    />
+  );
+};
+
 export default TermLabel;
