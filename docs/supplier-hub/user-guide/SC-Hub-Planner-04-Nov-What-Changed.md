@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Deck | `SC-Hub-Planner-04-Nov-What-Changed.pptx` (this folder), 38 slides |
+| Deck | `SC-Hub-Planner-04-Nov-What-Changed.pptx` (this folder), 37 slides |
 | Read at | GitLab `main` `aeabdc83` (2026-11-02, after MR !81, TL-D35) |
 | Audience | Material Planning team, session led by Levi |
 | Goal | Agree that the end-to-end prototype is ready for early user testing with suppliers |
@@ -86,7 +86,7 @@ Example numbers are illustrative. Each result was computed with the code's rule,
 
 ## 3. Questions (slides 28 to 36)
 
-32 open points, in Indonesian and English. Verbatim from `work-tracker/C2-MATERIAL-TEAM-MESSAGE-2026-10-30.md` unless the source column says otherwise.
+29 open points, in Indonesian and English. Verbatim from `work-tracker/C2-MATERIAL-TEAM-MESSAGE-2026-10-30.md` unless the source column says otherwise.
 
 | ID | Source |
 |---|---|
@@ -96,7 +96,7 @@ Example numbers are illustrative. Each result was computed with the code's rule,
 | L5 (12 alert rules) | C2 message, owner 2026-10-30 |
 | Q8 Max Supplier, with `REF-Q8-MAX-SUPPLIER-baris-23.png` | C2 message |
 | D1, D2 | C2 message, follow-up of 26 Oct |
-| BL-67, BL-69, BL-71, BL-149, BL-140, BL-58 | **Not in C2.** `BACKLOG.md` 2.40 §1, owner Material Planner |
+| BL-71 (over-delivery reference), BL-149 (SOP link), BL-140 | **Not in C2.** `BACKLOG.md` 2.41 §1, owner Material Planner. BL-58, BL-67, BL-69 and BL-71's "kept open" half were answered by the owner on 2026-11-02 (MR !80) and are no longer asked |
 | MDQ = MOQ | **Not in C2.** `callOffTriggerRules.js:16` [Proposed] |
 | Pull agreement default "no"; no bottleneck lead time default | **Not in C2.** `osipParams.js:27-37` [Proposed] |
 
@@ -104,7 +104,8 @@ Example numbers are illustrative. Each result was computed with the code's rule,
 
 - **Screens.** Six slides show prod screenshots (DA grid, (i) tip, values panel, Stock, Stock simulation, Capacity). Prod's DA grid shows the same W37 to W39 figures as slide 6 (980 DA, 2,000 open supply, carries 1,020 and 40, gap 940). The Stock simulation example (slide 20) now uses prod's RM-EMUL-9430 row: available 1,700, called off not shipped 2,500, Over-called by 800.
 - **Not shown on prod:** the call-off draft panel ("Below minimum delivery", "Above Max"). No sample material is drafted at ROP Fisik, and I did not create one, because that would change data on prod.
-- **Page text out of date on prod:** Safety stock targets → "How it is calculated" (`src/lib/i18n/safetyStock.js:137, :141`) still says the safety order SD uses the lead time and CV uses the last 26 weeks. The code uses 13 weeks of LTP and 6 full months (`osipRules.js:85-87, 105-112`). Slides 8 and 11 say so.
+- **Safety stock page text:** it described the old SD and CV windows on prod `aeabdc83`. MR !85 fixed it (main `f79a26c1`, live 2026-11-02 14:36 WIB), so slides 8 and 11 no longer flag it. The values-panel screenshot is from before the fix and does not show that text.
+- **BL-236 weekly panel (MR !82):** live in prod. Checked as the sample supplier PT Sample Packaging Indonesia after a reload with the new bundle, the "Also due by the same cutoff" capacity and feedstock lines did not render. The deck only names BL-236 in the BL-149 question and carries no screenshot of it.
 - **C2 sent?** On 2026-11-02 the C2 message was a draft that Levi had not yet sent. Check before the session.
 - **"11 columns, risk at x = 1725 px"** on the old Stock page comes from `research/INVENTORY-UX-EVALUATION-2026-10.md` §1 and was not re-measured.
 - **"Every sample material reads stable"** (CV) comes from the docs; the code was not run.
@@ -118,7 +119,7 @@ Example numbers are illustrative. Each result was computed with the code's rule,
 
 1. **English slides, bilingual questions.** The 07 Oct and 14 Oct decks are English only, so only the question slides carry ID + EN. *Alternative:* add ID subtitles on every slide.
 2. **"8 changed rules"** counts calculation changes a planner sees in figures. Label and layout changes are counted separately. *Alternative:* count every change (about 30).
-3. **9 backlog questions added.** Six are Material Planner decisions in `BACKLOG.md` §1, and three are [Proposed] owner defaults in code. BL-01 (REPL, consultant), BL-119 (marketing) and BL-150 (Levi's own alert list) were left out. *Alternative:* add BL-150, since L5 touches alerts.
+3. **6 backlog questions added.** Three are Material Planner decisions in `BACKLOG.md` §1 (2.41), and three are [Proposed] owner defaults in code. BL-01 (REPL, consultant), BL-119 (marketing) and BL-150 (Levi's own alert list) were left out. *Alternative:* add BL-150, since L5 touches alerts.
 4. **D1 "today" line** says BL-228 now carries surplus forward. The C2 message had no "today" for D1. *Alternative:* leave it blank, as C2 did.
 5. **Tolerance and KPI slide kept**, although the code did not change, because the rule was decided on 2026-11-02 and BL-234 is the gap. *Alternative:* drop it.
 6. **Generator outside the repo**, following the 07 Oct deck. *Alternative:* commit `build.js` under `docs/`.
