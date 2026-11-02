@@ -235,6 +235,19 @@ describe('BL-197 — demand CV and its category per material', () => {
     await render();
     expect(screen.getByTestId('sst-osip-def-cv')).toHaveTextContent('each one is its own variant');
   });
+
+  it('the definitions read the default rules: LTP SD over 13 weeks (B2), monthly CV over 6 months (C1)', async () => {
+    await render();
+    expect(screen.getByTestId('sst-osip-def-safety-order')).toHaveTextContent(
+      'Safety order (ROP Order) = 1.65 × √(lead time in weeks) × the standard deviation of the supplier’s LTP over the next 13 weeks'
+    );
+    expect(screen.getByTestId('sst-osip-def-cv')).toHaveTextContent(
+      'monthly demand over the last 6 full calendar months'
+    );
+    expect(screen.getByTestId('sst-osip-def-cv')).toHaveTextContent(
+      'Stable below 0.5, fluctuative from 0.5.'
+    );
+  });
 });
 
 describe('Bahasa Indonesia', () => {
@@ -247,5 +260,19 @@ describe('Bahasa Indonesia', () => {
     );
     expect(screen.getByTestId('sst-challenger')).toHaveTextContent('Pembanding');
     expect(screen.getByText('Pengalih aturan OSIP')).toBeInTheDocument();
+  });
+
+  it('the definitions read the default rules in ID, with ID decimals', async () => {
+    await i18n.changeLanguage('id');
+    await render();
+    expect(screen.getByTestId('sst-osip-def-safety-order')).toHaveTextContent(
+      'Pesanan pengaman (ROP Order) = 1,65 × √(waktu tunggu dalam minggu) × simpangan baku LTP pemasok selama 13 minggu ke depan'
+    );
+    expect(screen.getByTestId('sst-osip-def-cv')).toHaveTextContent(
+      'permintaan bulanan setiap barang jadi selama 6 bulan kalender penuh terakhir'
+    );
+    expect(screen.getByTestId('sst-osip-def-cv')).toHaveTextContent(
+      'Stabil di bawah 0,5, fluktuatif mulai 0,5.'
+    );
   });
 });
