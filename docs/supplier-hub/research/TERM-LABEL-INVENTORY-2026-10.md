@@ -821,9 +821,9 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 
 | Kind | Label EN | Label ID | Key | Important | Source wording | Differs | Clash | Also called | Status | Note |
 |---|---|---|---|---|---|---|---|---|---|---|
-| kpi | Confirmed by the deadline | Dikonfirmasi sebelum tenggat | rel.kpi.confirmation | Y | "Confirmation rate" (FORECAST-ENGINE-REQUIREMENTS.md:190) | Y | N | confirmation rate (FORECAST-ENGINE-REQUIREMENTS.md:190) | Change [Proposed] | Source names the measure "Confirmation rate" |
-| kpi | Delivered as committed | Dikirim sesuai komitmen | rel.kpi.commitment | Y | "Commitment reliability" (FORECAST-ENGINE-REQUIREMENTS.md:191) | Y | N | commitment reliability (FORECAST-ENGINE-REQUIREMENTS.md:191) | Change [Proposed] | Source names the measure "Commitment reliability" |
-| kpi | Confirmed-date lines delivered | Baris tepat tanggal konfirmasi | rel.kpi.cfot | Y | "CFOT ... against ... the committed date" (FORECAST-ENGINE-REQUIREMENTS.md:200) | Y | N | CFOT, Casefill On-Time (SUPPLIER-HUB-REQUIREMENTS.md:117) | Change [Proposed] | Source calls it CFOT |
+| kpi | Confirmed by the deadline | Dikonfirmasi sebelum tenggat | rel.kpi.confirmation | Y | "Confirmation rate" (FORECAST-ENGINE-REQUIREMENTS.md:190) | Y | N | confirmation rate (FORECAST-ENGINE-REQUIREMENTS.md:190) | Decided (TL-D31) | Now "Confirmation rate" |
+| kpi | Delivered as committed | Dikirim sesuai komitmen | rel.kpi.commitment | Y | "Commitment reliability" (FORECAST-ENGINE-REQUIREMENTS.md:191) | Y | N | commitment reliability (FORECAST-ENGINE-REQUIREMENTS.md:191) | Decided (TL-D31) | Now "Commitment reliability" |
+| kpi | Confirmed-date lines delivered | Baris tepat tanggal konfirmasi | rel.kpi.cfot | Y | "CFOT ... against ... the committed date" (FORECAST-ENGINE-REQUIREMENTS.md:200) | Y | N | CFOT, Casefill On-Time (SUPPLIER-HUB-REQUIREMENTS.md:117) | Change [Proposed] | Owner chose "CFOT" (TL-D31); open, it conflicts with FUX-D5 |
 | kpi | Missed lines | Baris yang meleset | rel.kpi.misses | Y | "missed lines" (FORECAST-ENGINE-REQUIREMENTS.md:184) | N | N |  | Keep |  |
 | kpi | PTI changes inside lead time | Perubahan PTI di dalam lead time | rel.kpi.planChange | Y | "share of schedules changed inside the supplier lead time" (FORECAST-ENGINE-REQUIREMENTS.md:197) | N | N |  | Keep | ID keeps "lead time" |
 
@@ -832,9 +832,9 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | Kind | Label EN | Label ID | Key | Important | Source wording | Differs | Clash | Also called | Status | Note |
 |---|---|---|---|---|---|---|---|---|---|---|
 | column | Supplier | Pemasok | rel.col.supplier | N | n/a | n/a | N |  | Keep |  |
-| column | Confirmed by the deadline | Dikonfirmasi sebelum tenggat | rel.col.confirmation | Y | "Confirmation rate" (FORECAST-ENGINE-REQUIREMENTS.md:190) | Y | N | confirmation rate (FORECAST-ENGINE-REQUIREMENTS.md:190) | Change [Proposed] | Sort button holds the label |
-| column | Delivered as committed | Dikirim sesuai komitmen | rel.col.commitment | Y | "Commitment reliability" (FORECAST-ENGINE-REQUIREMENTS.md:191) | Y | N | commitment reliability (FORECAST-ENGINE-REQUIREMENTS.md:191) | Change [Proposed] |  |
-| column | Confirmed-date lines delivered | Baris tepat tanggal konfirmasi | rel.col.cfot | Y | "CFOT" (FORECAST-ENGINE-REQUIREMENTS.md:200) | Y | N | CFOT, Casefill On-Time (SUPPLIER-HUB-REQUIREMENTS.md:117) | Change [Proposed] |  |
+| column | Confirmed by the deadline | Dikonfirmasi sebelum tenggat | rel.col.confirmation | Y | "Confirmation rate" (FORECAST-ENGINE-REQUIREMENTS.md:190) | Y | N | confirmation rate (FORECAST-ENGINE-REQUIREMENTS.md:190) | Decided (TL-D31) | Now "Confirmation rate" |
+| column | Delivered as committed | Dikirim sesuai komitmen | rel.col.commitment | Y | "Commitment reliability" (FORECAST-ENGINE-REQUIREMENTS.md:191) | Y | N | commitment reliability (FORECAST-ENGINE-REQUIREMENTS.md:191) | Decided (TL-D31) | Now "Commitment reliability" |
+| column | Confirmed-date lines delivered | Baris tepat tanggal konfirmasi | rel.col.cfot | Y | "CFOT" (FORECAST-ENGINE-REQUIREMENTS.md:200) | Y | N | CFOT, Casefill On-Time (SUPPLIER-HUB-REQUIREMENTS.md:117) | Change [Proposed] | Owner chose "CFOT" (TL-D31); open, it conflicts with FUX-D5 |
 | column | Missed lines | Baris yang meleset | rel.col.misses | Y | "missed lines" (FORECAST-ENGINE-REQUIREMENTS.md:184) | N | N |  | Keep |  |
 | column | PTI changed inside lead time | Diubah PTI di dalam lead time | rel.col.planChange | Y | "share of schedules changed inside the supplier lead time" (FORECAST-ENGINE-REQUIREMENTS.md:197) | N | N |  | Keep |  |
 | column | Size of PTI's changes | Besar perubahan PTI | rel.col.masc | Y | "MASC, the size of the changes" (FORECAST-ENGINE-REQUIREMENTS.md:198) | N | N | MASC (FORECAST-ENGINE-REQUIREMENTS.md:198) | Keep | Scale hint above the table has a MASC TermTip |
@@ -904,7 +904,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | Kind | Label EN | Label ID | Key | Important | Source wording | Differs | Clash | Also called | Status | Note |
 |---|---|---|---|---|---|---|---|---|---|---|
 | kpi | On time and in full | Tepat waktu dan tepat jumlah | perf.otif | Y | "OTIF, On-Time In-Full" (SUPPLIER-HUB-REQUIREMENTS.md:118) | N | N | OTIF (SUPPLIER-HUB-REQUIREMENTS.md:118) | Keep |  |
-| kpi | Delivered on the confirmed date | Terkirim pada tanggal yang dikonfirmasi | perf.cfot | Y | "CFOT, Casefill On-Time" (SUPPLIER-HUB-REQUIREMENTS.md:117) | Y | N | CFOT (SUPPLIER-HUB-REQUIREMENTS.md:117) | Change [Proposed] | Source names it CFOT |
+| kpi | Delivered on the confirmed date | Terkirim pada tanggal yang dikonfirmasi | perf.cfot | Y | "CFOT, Casefill On-Time" (SUPPLIER-HUB-REQUIREMENTS.md:117) | Y | N | CFOT (SUPPLIER-HUB-REQUIREMENTS.md:117) | Change [Proposed] | Owner chose "CFOT" (TL-D31); open, it conflicts with FUX-D5 |
 | kpi | Rejections | Penolakan | perf.rejections | Y | none found | n/a | N |  | Keep |  |
 | kpi | Overall score | Skor keseluruhan | perf.score | Y | none found | n/a | N |  | Keep |  |
 | kpi | Fixture names: OTDR, PO Ack Rate, Ack Speed, Fill Rate, Lead Time Adherence, QNCR, GR/PO Variance, Invoice Accuracy, Inventory DOS, Responsiveness, Sustainability | same as EN (not translated) | fixture services/data/mock/fixtures/buyerScorecard.js (shown at pages-v2/BuyerScorecard.jsx:207) | Y | none found | n/a | N |  | Ask Levi | Fixture data names, no i18n key or ID text |
@@ -1034,7 +1034,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | Kind | Label EN | Label ID | Key | Important | Source wording | Differs | Clash | Also called | Status | Note |
 |---|---|---|---|---|---|---|---|---|---|---|
 | kpi | On time and in full | Tepat waktu dan tepat jumlah | perf.otif | Y | "OTIF, On-Time In-Full" (SUPPLIER-HUB-REQUIREMENTS.md:118) | N | N | OTIF (SUPPLIER-HUB-REQUIREMENTS.md:118) | Keep |  |
-| kpi | Delivered on the confirmed date | Terkirim pada tanggal yang dikonfirmasi | perf.cfot | Y | "CFOT, Casefill On-Time" (SUPPLIER-HUB-REQUIREMENTS.md:117) | Y | N | CFOT (SUPPLIER-HUB-REQUIREMENTS.md:117) | Change [Proposed] | Source names it CFOT |
+| kpi | Delivered on the confirmed date | Terkirim pada tanggal yang dikonfirmasi | perf.cfot | Y | "CFOT, Casefill On-Time" (SUPPLIER-HUB-REQUIREMENTS.md:117) | Y | N | CFOT (SUPPLIER-HUB-REQUIREMENTS.md:117) | Change [Proposed] | Owner chose "CFOT" (TL-D31); open, it conflicts with FUX-D5 |
 | kpi | Rejections | Penolakan | perf.rejections | Y | none found | n/a | N |  | Keep |  |
 | kpi | Overall score | Skor keseluruhan | perf.score | Y | none found | n/a | N |  | Keep |  |
 | kpi | Total POs | Total PO | supplierPerformance.poMetric.totalPos | N | n/a | n/a | N |  | Keep |  |
@@ -1305,7 +1305,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 |---|---|---|---|---|---|---|---|---|---|---|
 | kpi | Payments Received | Pembayaran Diterima | supplierInvoices.kpi.received.eyebrow | Y | status "Paid" (SUPPLIER-HUB-REQUIREMENTS.md:1107) | Y | N |  | Keep | KPI title, not a status word |
 | kpi | Pending Payment | Menunggu Pembayaran | supplierInvoices.kpi.pending.eyebrow | Y | "Scheduled for payment" (SUPPLIER-HUB-REQUIREMENTS.md:1107) | Y | N |  | Keep | Tooltip should name statuses counted |
-| kpi | Returned | Dikembalikan | supplierInvoices.kpi.disputed.eyebrow | Y | "return it with a reason" (SUPPLIER-HUB-REQUIREMENTS.md:1118) | N | N |  | Decided (TL-D12) | Now "Disputed", ID "Disengketakan" (BL-233 wave 6) |
+| kpi | Returned | Dikembalikan | supplierInvoices.kpi.disputed.eyebrow | Y | "return it with a reason" (SUPPLIER-HUB-REQUIREMENTS.md:1118) | N | N |  | Decided (TL-D30) | "Returned" again; Returned and Disputed are different states |
 
 ## Page: /supplier/invoices — Invoice table (InvoiceTable.jsx) — `pages-v2/SupplierInvoices/index.jsx`
 
@@ -1418,7 +1418,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Purchasing group | Grup pembelian | rfx.invite.col.group | N | n/a | n/a | N |  | Keep | Identifier |
 | column | Country | Negara | rfx.invite.col.country | N | n/a | n/a | N |  | Keep |  |
 | column | Certificates | Sertifikat | supFilter.col.certificates | Y | "certificate validity (halal and BPOM expiry)" SHR:356 | Y | N |  | Ask Levi | Column shows validity state; source says "certificate validity". Rename or keep? |
-| column | Band | Kelompok | supFilter.col.band | Y | "performance band" SHR:356; DG:110 | Y | N |  | Change [Proposed] | Source word is "performance band"; "Band" alone is unclear |
+| column | Band | Kelompok | supFilter.col.band | Y | "performance band" SHR:356; DG:110 | Y | N |  | Decided (TL-D32) | Now "Performance band", ID "Kelompok kinerja" |
 | column | On time in full | Tepat waktu dan lengkap | rfx.invite.col.otif | Y | "OTIF (On-Time In-Full)" KMN:91; "OTIF is measured per call-off" KMN:84 | Y | N | OTIF (KMN:91) | Change [Proposed] | MoM writes OTIF; RFQ wizard already shows "OTIF" |
 
 ## Page: /buyer/rfi/:rfiId — Invited suppliers — `pages-v2/BuyerRfiEvent.jsx`
@@ -1578,7 +1578,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Purchasing group | Grup pembelian | rfx.invite.col.group | N | n/a | n/a | N |  | Keep |  |
 | column | Country | Negara | sourcing.wizard.col.country | N | n/a | n/a | N |  | Keep |  |
 | column | Certificates | Sertifikat | supFilter.col.certificates | Y | "certificate validity" SHR:356 | Y | N |  | Ask Levi | Same question as RFI/RFP invitee step |
-| column | Band | Kelompok | supFilter.col.band | Y | "performance band" SHR:356 | Y | N |  | Change [Proposed] |  |
+| column | Band | Kelompok | supFilter.col.band | Y | "performance band" SHR:356 | Y | N |  | Decided (TL-D32) | Now "Performance band", ID "Kelompok kinerja" |
 | column | OTIF | OTIF | sourcing.wizard.col.otif | Y | "OTIF (On-Time In-Full)" KMN:91 | N | N | On-Time In-Full (KMN:91) | Keep |  |
 
 ## Page: /buyer/rfq/:rfqId — Quote comparison — `pages-v2/BuyerSourcingEvent/components/ComparisonTable.jsx`
@@ -1914,7 +1914,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Category | Kategori | buyerSuppliers.col.category | N | n/a | n/a | N |  | Keep |  |
 | column | Compliance | Kepatuhan | buyerSuppliers.col.compliance | Y | "Compliance gate" (SUPPLIER-HUB-REQUIREMENTS.md:168, CR-23) | N | N |  | Keep |  |
 | column | OTIF | OTIF | buyerSuppliers.col.otif | Y | "OTIF, On-Time In-Full" (SUPPLIER-HUB-REQUIREMENTS.md:118) | N | N |  | Keep |  |
-| column | Band | Kelompok | supFilter.col.band | Y | "performance band" (SUPPLIER-HUB-REQUIREMENTS.md:356, REQ-E03-01 BR-05) | Y | Days-of-supply bands (CR-02), Alert thresholds page / inventory alerts |  | Change [Proposed] | Source says "performance band"; ID "Kelompok" also = material group. |
+| column | Band | Kelompok | supFilter.col.band | Y | "performance band" (SUPPLIER-HUB-REQUIREMENTS.md:356, REQ-E03-01 BR-05) | Y | Days-of-supply bands (CR-02), Alert thresholds page / inventory alerts |  | Decided (TL-D32) | Now "Performance band", ID "Kelompok kinerja" |
 | column | Status | Status | buyerSuppliers.col.status | N | n/a | n/a | N |  | Keep |  |
 | column | Actions | Tindakan | buyerSuppliers.col.actions | N | n/a | n/a | N |  | Keep |  |
 
@@ -2075,7 +2075,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 |---|---|---|---|---|---|---|---|---|---|---|
 | column | Supplier | Pemasok | adminSet.stale.col.supplier | N | n/a | n/a | N |  | Keep |  |
 | column | Material | Material | adminSet.stale.col.material | N | n/a | n/a | N |  | Keep |  |
-| column | Stale after | Usang setelah | adminSet.stale.col.period | Y | "stale period" (SUPPLIER-HUB-REQUIREMENTS.md:1428; SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md:101) | Y | N |  | Change [Proposed] | Sources say "Stale period"; page section already says "stale periods". |
+| column | Stale after | Usang setelah | adminSet.stale.col.period | Y | "stale period" (SUPPLIER-HUB-REQUIREMENTS.md:1428; SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md:101) | Y | N |  | Decided (TL-D32) | Now "Stale period", ID "Periode usang" |
 | column | Set by | Diatur oleh | adminSet.stale.col.source | N | n/a | n/a | N |  | Keep |  |
 | column | Last stock update | Pembaruan stok terakhir | adminSet.stale.col.lastUpdate | N | n/a | n/a | N |  | Keep | Date |
 | column | Stock figure now | Angka stok sekarang | adminSet.stale.col.now | Y | none found | n/a | N |  | Keep | Current / stale / missing state |

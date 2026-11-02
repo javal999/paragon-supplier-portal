@@ -60,9 +60,9 @@ export function useOrdersWorklist({ orders, suppliersQuery, nowIso, group, range
   const kpis = useMemo(() => {
     const open = orders.filter((p) => isOpen(p.status));
     const pendingConfirmation = orders.filter((p) => PENDING_STATUSES.includes(p.status));
-    const inTransit = orders.filter(
-      (p) => p.status === POStatus.CONFIRMED || p.status === POStatus.PARTIALLY_DELIVERED
-    );
+    // TL-D28 (owner, 2026-11-02): in transit = in delivery and not yet fully
+    // delivered. A PO that is only Confirmed has not started delivery.
+    const inTransit = orders.filter((p) => TRANSIT_STATUSES.includes(p.status));
     const overdue = orders.filter(isOverdue);
     return {
       open: open.length,

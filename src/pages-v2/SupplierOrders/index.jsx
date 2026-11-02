@@ -185,6 +185,9 @@ const SupplierOrdersList = () => {
       all: MY_POS.length,
       action: MY_POS.filter((p) => ACTION_STATUSES.includes(p.status)).length,
       progress: MY_POS.filter((p) => PROGRESS_STATUSES.includes(p.status)).length,
+      // TL-D28 (owner, 2026-11-02): the In Progress tile counts POs in delivery and
+      // not yet fully delivered; the In progress tab still lists Confirmed too.
+      inDelivery: MY_POS.filter((p) => p.status === POStatus.PARTIALLY_DELIVERED).length,
       completed: MY_POS.filter((p) => COMPLETED_STATUSES.includes(p.status)).length
     }),
     [MY_POS]

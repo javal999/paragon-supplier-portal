@@ -6,7 +6,7 @@ import { fmtIDR } from '../utils';
 
 /**
  * @typedef {object} OrdersKpisProps
- * @property {{ all: number; action: number; progress: number; completed: number }} counts  POs per tab group.
+ * @property {{ all: number; action: number; progress: number; inDelivery: number; completed: number }} counts  POs per tab group, and the In Progress tile's count (TL-D28).
  * @property {number} totalValuePending  Value of every PO not yet delivered or closed.
  * @property {TFunction} t
  */
@@ -35,7 +35,7 @@ const OrdersKpis = ({ counts, totalValuePending, t }) => (
     />
     <KpiCard
       term="supInProgress"
-      value={counts.progress.toString()}
+      value={counts.inDelivery.toString()}
       subtitle={t('supplierOrders.kpi.inProgress.subtitle')}
       icon={Truck}
     />

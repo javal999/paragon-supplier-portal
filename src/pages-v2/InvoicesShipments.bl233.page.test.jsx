@@ -1,6 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // BL-233 wave 6 on the screen — invoices and shipments. The KPI cards carry
-// their (i), and the rulings hold: "Disputed" and "3-way match" on both sides
+// their (i), and the rulings hold: "Returned" on the supplier side, apart from the
+// buyer's "Disputed" (TL-D30), and "3-way match" on both sides
 // (TL-D12 Q17, Q18), "Ketidaksesuaian" for Discrepancy in ID (Q19).
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -16,10 +17,11 @@ import SupplierShipments from './SupplierShipments';
 afterEach(() => i18n.changeLanguage('en'));
 
 describe('BL-233 wave 6 — /supplier/invoices', () => {
-  it('reads "Disputed" and "3-way match", the words the buyer side uses', async () => {
+  it('reads "Returned", a state apart from Disputed, and "3-way match"', async () => {
     renderWithProviders(<SupplierInvoices />, { identity: SUPPLIER });
     const disputed = await screen.findByTestId('term-tip-sup-inv-disputed');
-    expect(textWithoutTips(disputed)).toBe('Disputed');
+    expect(textWithoutTips(disputed)).toBe('Returned');
+    expect(within(disputed).getByRole('tooltip')).toHaveTextContent('Not: Disputed');
     expect(textWithoutTips(screen.getByTestId('term-tip-sup-three-way-match'))).toBe('3-way match');
     expect(
       within(screen.getByTestId('term-tip-sup-pending-payment')).getByRole('tooltip')
