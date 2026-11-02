@@ -67,7 +67,7 @@ export const supplierShipmentsEn = {
   'supplierShipments.detail.noLineItems': 'No line items in this draft.',
   // — Expanded row: line-item sub-table columns —
   'supplierShipments.lineItems.col.material': 'Material',
-  'supplierShipments.lineItems.col.lot': 'Lot',
+  'supplierShipments.lineItems.col.lot': 'Batch',
   // — Empty state (all-empty early return) —
   'supplierShipments.empty.title': 'No shipments yet',
   'supplierShipments.empty.subtitle':
@@ -194,7 +194,7 @@ export const supplierShipmentsId = {
   'supplierShipments.detail.noLineItems': 'Tidak ada item baris dalam draf ini.',
   // — Expanded row: line-item sub-table columns —
   'supplierShipments.lineItems.col.material': 'Material',
-  'supplierShipments.lineItems.col.lot': 'Lot',
+  'supplierShipments.lineItems.col.lot': 'Batch',
   // — Empty state (all-empty early return) —
   'supplierShipments.empty.title': 'Belum ada pengiriman',
   'supplierShipments.empty.subtitle':

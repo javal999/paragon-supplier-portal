@@ -298,6 +298,13 @@ describe('term-label glossary (BL-233)', () => {
     // TL-D34: the two CFOT measures stay apart by their basis (FUX-D5).
     expect(TERM_LABEL_GLOSSARY.relCfot.label.en).toBe('CFOT, by PO line');
     expect(TERM_LABEL_GLOSSARY.perfCfot.label.en).toBe('CFOT, by PO');
+    // TL-D35: the owner accepted the proposed label changes.
+    expect(TERM_LABEL_GLOSSARY.grExpected.label.en).toBe('Shipped');
+    expect(TERM_LABEL_GLOSSARY.poOverdue.label.id).toBe('Lewat jatuh tempo');
+    expect(TERM_LABEL_GLOSSARY.invOverdue.label.id).toBe('Lewat jatuh tempo');
+    expect(TERM_LABEL_GLOSSARY.poPendingConfirmation.label.en).toBe('Awaiting response');
+    expect(TERM_LABEL_GLOSSARY.counterQty.label.en).toBe('Counter-offer quantity');
+    expect(TERM_LABEL_GLOSSARY.counterDate.label.en).toBe('Counter-offer date');
     expect(TERM_LABEL_GLOSSARY.performanceBand.label).toEqual({
       en: 'Performance band',
       id: 'Kelompok kinerja'

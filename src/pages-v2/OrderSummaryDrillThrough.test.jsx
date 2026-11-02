@@ -103,7 +103,7 @@ describe('AC-01 — the summary shows the supplier, the response, ASNs, call-off
       // The 3 confirmations share 1 header; each keeps its own marker and link
       // inside the cell, asserted by test id below and by AC-02.
       'Confirmations',
-      'Receipts',
+      'Goods receipts',
       'Invoices'
     ]) {
       expect(

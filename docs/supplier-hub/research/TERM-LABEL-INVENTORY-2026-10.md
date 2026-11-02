@@ -289,7 +289,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | Kind | Label EN | Label ID | Key | Important | Source wording | Differs | Clash | Also called | Status | Note |
 |---|---|---|---|---|---|---|---|---|---|---|
 | column | Material | Material | co.trigger.pr.col.material | N | n/a | n/a | N |  | Keep |  |
-| column | PTI stock on hand (all plants) | Stok PTI (semua pabrik) | co.trigger.soh | Y | "SOH" (DRC-PROPOSAL-2026-10-19.md:173 BR-05, all plants combined; PERTANYAAN-TIM-MATERIAL-2026-10-16.md:37-38 A5) | Y | Warehouse stock on hand, /buyer/reschedule fill table | SOH (Material Planning team, questions file A5) | Change [Proposed] | Propose "PTI stock on hand (SOH), all plants", TL-D1 pattern |
+| column | PTI stock on hand (all plants) | Stok PTI (semua pabrik) | co.trigger.soh | Y | "SOH" (DRC-PROPOSAL-2026-10-19.md:173 BR-05, all plants combined; PERTANYAAN-TIM-MATERIAL-2026-10-16.md:37-38 A5) | Y | Warehouse stock on hand, /buyer/reschedule fill table | SOH (Material Planning team, questions file A5) | Decided (TL-D35) | Now "PTI stock on hand (SOH), all plants" |
 | column | ROP Fisik | ROP Fisik | co.trigger.ropFisik | Y | "ROP Fisik" (DRC-PROPOSAL-2026-10-19.md:46, :160; PERTANYAAN-TIM-MATERIAL-2026-10-16.md:37-39) | N | N |  | Keep |  |
 | column | Max | Maks | co.trigger.max | Y | "Max" / "Max Stock" (DRC-PROPOSAL-2026-10-19.md:164; PERTANYAAN-TIM-MATERIAL-2026-10-16.md:124-125 B8) | N | N |  | Decided (TL-D12) | Now "Max Stock" in EN and ID (BL-233 wave 11) |
 | column | Recommendation | Rekomendasi | co.trigger.pr.col.recommendation | N | n/a | n/a | N |  | Keep | Action text cell |
@@ -409,9 +409,9 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 
 | Kind | Label EN | Label ID | Key | Important | Source wording | Differs | Clash | Also called | Status | Note |
 |---|---|---|---|---|---|---|---|---|---|---|
-| kpi | Plan movement (MASC) | Pergerakan rencana (MASC) | stb.kpi.masc | Y | "Size of changes (MASC)" (FORECAST-ENGINE-REQUIREMENTS.md:217) | Y | N |  | Change [Proposed] | Propose "Size of changes (MASC)"; TermTip MASC sits in subtitle |
-| kpi | Weeks changed inside the lead time | Minggu yang berubah dalam waktu tunggu | stb.kpi.share | Y | "Share of schedules changed inside lead time" (FORECAST-ENGINE-REQUIREMENTS.md:213 E14-02) | Y | N |  | Change [Proposed] | Value is a share; propose source wording |
-| kpi | Trade-off weeks within limits | Minggu Trade-off dalam batas | stb.kpi.band | Y | "Tolerance band" (FORECAST-ENGINE-REQUIREMENTS.md:483 BR-05) | Y | N |  | Change [Proposed] | Propose "Trade-off weeks within the tolerance band" |
+| kpi | Plan movement (MASC) | Pergerakan rencana (MASC) | stb.kpi.masc | Y | "Size of changes (MASC)" (FORECAST-ENGINE-REQUIREMENTS.md:217) | Y | N |  | Decided (TL-D35) | Now "Size of changes (MASC)" |
+| kpi | Weeks changed inside the lead time | Minggu yang berubah dalam waktu tunggu | stb.kpi.share | Y | "Share of schedules changed inside lead time" (FORECAST-ENGINE-REQUIREMENTS.md:213 E14-02) | Y | N |  | Decided (TL-D35) | Now "Share of schedules changed inside lead time" |
+| kpi | Trade-off weeks within limits | Minggu Trade-off dalam batas | stb.kpi.band | Y | "Tolerance band" (FORECAST-ENGINE-REQUIREMENTS.md:483 BR-05) | Y | N |  | Decided (TL-D35) | Now "Trade-off weeks within the tolerance band" |
 | kpi | Weeks held in the version to publish | Minggu yang ditahan pada versi yang akan diterbitkan | stb.kpi.held | Y | none found | n/a | N |  | Keep | Firm + band + damped weeks |
 
 ## Page: /buyer/stabilise — Series table — `pages-v2/BuyerStabilise/index.jsx`
@@ -1070,7 +1070,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | Kind | Label EN | Label ID | Key | Important | Source wording | Differs | Clash | Also called | Status | Note |
 |---|---|---|---|---|---|---|---|---|---|---|
 | column | Material | Material | goodsReceipt.panel.col.material | N | n/a | n/a | N |  | Keep |  |
-| column | Exp | Eksp | goodsReceipt.panel.col.exp | Y | "ASN quantity" (SUPPLIER-HUB-REQUIREMENTS.md:1069); supplier GR page says "Shipped" | Y | Expiry ("Expiry", ASN pages, fc.asn.col.expiryShort) |  | Change [Proposed] | Abbreviation reads as Expiry; propose "Shipped" as on /supplier/goods-receipts |
+| column | Exp | Eksp | goodsReceipt.panel.col.exp | Y | "ASN quantity" (SUPPLIER-HUB-REQUIREMENTS.md:1069); supplier GR page says "Shipped" | Y | Expiry ("Expiry", ASN pages, fc.asn.col.expiryShort) |  | Decided (TL-D35) | Now "Shipped / Dikirim" |
 | column | Recv | Diterima | goodsReceipt.panel.col.recv | Y | "received" (SUPPLIER-HUB-REQUIREMENTS.md:156, CR-11) | N | N |  | Keep | Abbreviation of source word |
 | column | Acc | Disetujui | goodsReceipt.panel.col.acc | Y | "accepted" (SUPPLIER-HUB-REQUIREMENTS.md:156, CR-11) | N | Approved (receipt-level state, CR-11; "Disetujui" also on KPI Approved Today) |  | Decided (TL-D12) | Now "Accepted", ID "Diterima" (BL-233 wave 5) |
 | column | Rej | Ditolak | goodsReceipt.panel.col.rej | Y | "Rejected quantity = received − accepted" (SUPPLIER-HUB-REQUIREMENTS.md:156, CR-11) | N | N |  | Keep | Tooltip formula available from CR-11 |
@@ -1103,7 +1103,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | kpi | Pending Approval | Menunggu Persetujuan | buyerInvoices.kpi.pendingApproval.eyebrow | Y | statuses "Submitted, Verified" (SUPPLIER-HUB-REQUIREMENTS.md:1107) | Y | N |  | Keep | KPI groups statuses; tooltip should name which |
 | kpi | Payments Released | Pembayaran Dirilis | buyerInvoices.kpi.released.eyebrow | Y | status "Paid" (SUPPLIER-HUB-REQUIREMENTS.md:1107) | Y | N |  | Keep | Supplier page says "Payments Received" for same figure |
 | kpi | Disputed | Disengketakan | buyerInvoices.kpi.disputed.eyebrow | Y | "return it with a reason" (SUPPLIER-HUB-REQUIREMENTS.md:1118); summary says "invoice returned" | Y | N |  | Decided (TL-D12) | One word on both sides: "Disputed" (BL-233 wave 6) |
-| kpi | Overdue | Jatuh Tempo | buyerInvoices.kpi.overdue.eyebrow | Y | "Overdue" (SUPPLIER-HUB-REQUIREMENTS.md:159, CR-14) | N | Due date (ID "Jatuh tempo", same page's Due date column) |  | Change [Proposed] | ID reads "due", not "overdue"; propose "Lewat jatuh tempo" |
+| kpi | Overdue | Jatuh Tempo | buyerInvoices.kpi.overdue.eyebrow | Y | "Overdue" (SUPPLIER-HUB-REQUIREMENTS.md:159, CR-14) | N | Due date (ID "Jatuh tempo", same page's Due date column) |  | Decided (TL-D35) | Now "ID Lewat jatuh tempo" |
 
 ## Page: /buyer/invoices — Invoice queue (InvoiceQueueTable.jsx) — `pages-v2/BuyerInvoices/index.jsx`
 
@@ -1147,16 +1147,16 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Material | Material | fc.inv.new.col.material | N | n/a | n/a | N |  | Keep |  |
 | column | Quantity | Kuantitas | fc.inv.new.col.quantity | Y | "invoiced quantity" (SUPPLIER-HUB-REQUIREMENTS.md:157, CR-12) | N | N |  | Decided (TL-D10) | Header over input cells, in scope (Q4) (BL-233 wave 6) |
 | column | PO unit price | Harga satuan PO | fc.inv.new.col.unitPrice | Y | "PO unit price" (SUPPLIER-HUB-REQUIREMENTS.md:157, CR-12) | N | N |  | Keep |  |
-| column | Value | Nilai | fc.inv.new.col.value | Y | "Expected value = invoiced quantity × PO unit price" (SUPPLIER-HUB-REQUIREMENTS.md:157) | Y | N |  | Change [Proposed] | Propose "Expected value"; sub-row shows "Billed" beside it |
+| column | Value | Nilai | fc.inv.new.col.value | Y | "Expected value = invoiced quantity × PO unit price" (SUPPLIER-HUB-REQUIREMENTS.md:157) | Y | N |  | Decided (TL-D35) | Now "Expected value" |
 
 ## Page: /buyer/orders — KPIs (OrdersKpis.jsx) — `pages-v2/BuyerOrders/index.jsx`
 
 | Kind | Label EN | Label ID | Key | Important | Source wording | Differs | Clash | Also called | Status | Note |
 |---|---|---|---|---|---|---|---|---|---|---|
 | kpi | Total Open POs | Total PO Terbuka | buyerOrders.kpi.open.eyebrow | Y | "open PO" (SUPPLIER-HUB-REQUIREMENTS.md:849) | N | N |  | Keep | Count of POs; not OSPO quantity (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:240) |
-| kpi | Pending Confirmation | Menunggu Konfirmasi | buyerOrders.kpi.pending.eyebrow | Y | "Awaiting response" (SUPPLIER-HUB-REQUIREMENTS.md:884) | Y | The 3 confirmations (capacity, foresight, shipping notice; §3.2) |  | Change [Proposed] | Propose "Awaiting response"; "confirmation" means the 3 confirmations in hub |
+| kpi | Pending Confirmation | Menunggu Konfirmasi | buyerOrders.kpi.pending.eyebrow | Y | "Awaiting response" (SUPPLIER-HUB-REQUIREMENTS.md:884) | Y | The 3 confirmations (capacity, foresight, shipping notice; §3.2) |  | Decided (TL-D35) | Now "Awaiting response" |
 | kpi | In Transit | Dalam Perjalanan | buyerOrders.kpi.transit.eyebrow | Y | "in transit" (SUPPLIER-HUB-REQUIREMENTS.md:969) | N | N |  | Keep |  |
-| kpi | Overdue | Jatuh Tempo | buyerOrders.kpi.overdue.eyebrow | Y | none found | n/a | Due date ("Jatuh tempo") |  | Change [Proposed] | ID reads "due", not "overdue"; propose "Lewat jatuh tempo" |
+| kpi | Overdue | Jatuh Tempo | buyerOrders.kpi.overdue.eyebrow | Y | none found | n/a | Due date ("Jatuh tempo") |  | Decided (TL-D35) | Now "ID Lewat jatuh tempo" |
 
 ## Page: /buyer/orders — Orders list (OrdersTable.jsx) — `pages-v2/BuyerOrders/index.jsx`
 
@@ -1178,7 +1178,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 |---|---|---|---|---|---|---|---|---|---|---|
 | column | Material | Material | buyerOrders.lines.col.material | N | n/a | n/a | N |  | Keep |  |
 | column | Qty | Jml | buyerOrders.lines.col.qty | N | n/a | n/a | N |  | Keep |  |
-| column | Unit | Satuan | buyerOrders.lines.col.unit | N | n/a | n/a | Unit of measure (ID "Satuan", e.g. UoM on /buyer/shipments) |  | Change [Proposed] | Column shows unit price; ID "Satuan" means UoM; propose "Harga satuan" |
+| column | Unit | Satuan | buyerOrders.lines.col.unit | N | n/a | n/a | Unit of measure (ID "Satuan", e.g. UoM on /buyer/shipments) |  | Decided (TL-D35) | Now "Unit price / Harga satuan" |
 | column | Line total | Total baris | buyerOrders.lines.col.lineTotal | N | n/a | n/a | N |  | Keep |  |
 
 ## Page: /buyer/orders — PO response details (orders/PoCollaboration.jsx, PoResponseDetails; also on /supplier/orders detail) — `pages-v2/BuyerOrders/index.jsx`
@@ -1187,8 +1187,8 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 |---|---|---|---|---|---|---|---|---|---|---|
 | column | Material | Material | oc.response.col.line | N | n/a | n/a | N |  | Keep |  |
 | column | Ordered | Dipesan | oc.response.col.ordered | Y | "ordered quantity" (SUPPLIER-HUB-REQUIREMENTS.md:155, CR-10) | N | N |  | Keep |  |
-| column | Can supply | Sanggup dipasok | oc.response.col.counterQty | Y | "counter-offer quantity" (SUPPLIER-HUB-REQUIREMENTS.md:155, CR-10; :812) | Y | N |  | Change [Proposed] | Propose "Counter-offer quantity" per BR-01 |
-| column | Can deliver | Sanggup dikirim | oc.response.col.counterDate | Y | "counter-offer of date" (SUPPLIER-HUB-REQUIREMENTS.md:812, REQ-E07-02 BR-04) | Y | N |  | Change [Proposed] | Propose "Counter-offer date" per BR-01 |
+| column | Can supply | Sanggup dipasok | oc.response.col.counterQty | Y | "counter-offer quantity" (SUPPLIER-HUB-REQUIREMENTS.md:155, CR-10; :812) | Y | N |  | Decided (TL-D35) | Now "Counter-offer quantity" |
+| column | Can deliver | Sanggup dikirim | oc.response.col.counterDate | Y | "counter-offer of date" (SUPPLIER-HUB-REQUIREMENTS.md:812, REQ-E07-02 BR-04) | Y | N |  | Decided (TL-D35) | Now "Counter-offer date" |
 | column | Reason | Alasan | oc.response.col.reason | N | "reason code" (SUPPLIER-HUB-REQUIREMENTS.md:813) | n/a | N |  | Keep | Predefined reason codes |
 
 ## Page: /buyer/orders?view=summary — Order summary (orders/OrderSummaryView.jsx via BuyerOrderSummary.jsx; also /supplier/orders?view=summary without Supplier column) — `pages-v2/BuyerOrders/index.jsx`
@@ -1201,7 +1201,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | ASNs | ASN | oc.summary.col.asns | Y | "ASNs" (SUPPLIER-HUB-REQUIREMENTS.md:885) | N | N |  | Keep |  |
 | column | Call-offs | Penarikan | oc.summary.col.callOffs | Y | "Call-offs" (SUPPLIER-HUB-REQUIREMENTS.md:886); team writes "call-off" in ID text (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:39, :218) | N | N |  | Decided (TL-D11) | ID now "Call-off" (BL-233 wave 5) |
 | column | Confirmations | Konfirmasi | oc.summary.col.confirmations | Y | "the 3 confirmations" (SUPPLIER-HUB-REQUIREMENTS.md:865, §3.2) | N | N |  | Keep | Source lists 3 columns; code groups them with Cap/Fore/Ship cell labels |
-| column | Receipts | Penerimaan barang | oc.summary.col.receipts | Y | "Goods receipts" (SUPPLIER-HUB-REQUIREMENTS.md:890) | Y | N |  | Change [Proposed] | Propose "Goods receipts" EN; ID already matches |
+| column | Receipts | Penerimaan barang | oc.summary.col.receipts | Y | "Goods receipts" (SUPPLIER-HUB-REQUIREMENTS.md:890) | Y | N |  | Decided (TL-D35) | Now "Goods receipts" |
 | column | Invoices | Faktur | oc.summary.col.invoices | Y | "Invoices" (SUPPLIER-HUB-REQUIREMENTS.md:891) | N | N |  | Keep |  |
 
 ## Page: /buyer/purchase-requisition — KPIs (RequisitionKpis.jsx) — `pages-v2/BuyerRequisitions/index.jsx`
@@ -1388,7 +1388,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | PIC | PIC | pic.col | N | "MRP controller (PIC)" (SUPPLIER-HUB-REQUIREMENTS.md:1499) | N | N | MRP controller (SUPPLIER-HUB-REQUIREMENTS.md § REQ-E08-07) | Keep | Rendered by shared PicHeader (materials/picDisplay.jsx); key in mrpController.js |
 | column | Ordered | Dipesan | supplierShipments.lineItems.col.ordered | Y | "ordered quantity" (SUPPLIER-HUB-REQUIREMENTS.md:155) | N | N |  | Keep |  |
 | column | Shipped | Dikirim | supplierShipments.lineItems.col.shipped | Y | "shipped quantity" (SUPPLIER-HUB-REQUIREMENTS.md:976) | N | N |  | Keep |  |
-| column | Lot | Lot | supplierShipments.lineItems.col.lot | N | "batch number" (SUPPLIER-HUB-REQUIREMENTS.md:976) | Y | N |  | Change [Proposed] | Same page's ASN editor says "Batch number"; propose "Batch" |
+| column | Lot | Lot | supplierShipments.lineItems.col.lot | N | "batch number" (SUPPLIER-HUB-REQUIREMENTS.md:976) | Y | N |  | Decided (TL-D35) | Now "Batch" |
 | column | Expiry | Kedaluwarsa | fc.asn.col.expiryShort | N | n/a | n/a | N |  | Keep | Date |
 
 ## Page: /supplier/shipments — ASN lines editor (AsnLinesEditor.jsx, in SubmitAsnPanel and WizardDetailsStep) — `pages-v2/SupplierShipments/index.jsx`

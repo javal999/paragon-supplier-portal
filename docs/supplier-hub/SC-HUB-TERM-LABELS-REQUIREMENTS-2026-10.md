@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Accepted 2026-10-29: TL-D1 to TL-D13; TL-D14 to TL-D18 on 2026-10-30; TL-D19 to TL-D34 on 2026-11-02.** The owner answered the 4 open questions (section 5) and the 27 inventory questions (TL-D10 to TL-D13, `research/TERM-LABEL-INVENTORY-2026-10.md` section 1) the same day. Wave 1 merged 2026-10-30 (MR !65, `7f29d078`) |
+| Status | **Accepted 2026-10-29: TL-D1 to TL-D13; TL-D14 to TL-D18 on 2026-10-30; TL-D19 to TL-D35 on 2026-11-02.** The owner answered the 4 open questions (section 5) and the 27 inventory questions (TL-D10 to TL-D13, `research/TERM-LABEL-INVENTORY-2026-10.md` section 1) the same day. Wave 1 merged 2026-10-30 (MR !65, `7f29d078`) |
 | Date | 2026-10-29 |
 | Source | Owner, 2026-10-29, reviewing the Demand anticipation grid: the row label differs from the team's input. Owner rules: (1) an agreed column wording is not replaced with another name; (2) every important term gets an information icon with its definition and the other names it goes by |
 | Code read | `main` at `59199b4f` |
@@ -141,6 +141,7 @@ Each was asked with a recommendation; the owner took the recommendation every ti
 | TL-D32 | "Band" and "Stale after" | "Performance band" (ID "Kelompok kinerja"; it also renames the RFx invite filter, which shares the key) and "Stale period" (ID "Periode usang") | Accepted, owner, 2026-11-02 |
 | TL-D33 | Confirmed as they stand | The tips for the invoice aging tab (bucket, % of AP, Risk) and contract "Performance"; "Kanal" for Channel; "Selisih komitmen" for Commitment gap; renames change labels only, not sentences or switch names. The tips for "Reach", "Required role" and "Stock figure now" are written from the code and accepted; noted to source them when a document defines them | Accepted, owner, 2026-11-02 |
 | TL-D34 | The two CFOT measures | Named by their basis, keeping FUX-D5's split: "CFOT, by PO line" (ID "CFOT, per baris PO") on Supplier reliability, "CFOT, by PO" (ID "CFOT, per PO") on the scorecard and supplier performance. Labels only (TL-D33): the sentences that name the measure keep their wording | Accepted, owner, 2026-11-02 |
+| TL-D35 | The proposed label changes outside RFx | All 14 accepted as proposed. "PTI stock on hand (SOH), all plants"; "Size of changes (MASC)"; "Share of schedules changed inside lead time"; "Trade-off weeks within the tolerance band"; GR panel "Exp" becomes "Shipped" (ID "Dikirim"), as on the supplier goods-receipt page; Overdue on Buyer orders and Buyer invoices reads "Lewat jatuh tempo" in ID; invoice line "Expected value"; "Awaiting response"; PO line "Unit price" (ID "Harga satuan"); "Counter-offer quantity" and "Counter-offer date"; "Goods receipts"; ASN line "Batch". The RFQ compare "Weighted score" waits with RFx | Accepted, owner, 2026-11-02 |
 
 **Open, 2026-11-02.** One question goes to the Material Planning team in the C2 message: is "Max Supplier" another name for the production limit? Question E3 is headed "Max Supplier / Production Limit"; until the team answers, the production limit's tip lists no other name (BR-10) and no label changes.
 
