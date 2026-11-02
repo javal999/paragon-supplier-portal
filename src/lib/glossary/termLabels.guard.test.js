@@ -295,6 +295,9 @@ describe('term-label glossary (BL-233)', () => {
   it('TL-D31, TL-D32: rates are named as rates; band and stale period', () => {
     expect(TERM_LABEL_GLOSSARY.relConfirmation.label.en).toBe('Confirmation rate');
     expect(TERM_LABEL_GLOSSARY.relCommitment.label.en).toBe('Commitment reliability');
+    // TL-D34: the two CFOT measures stay apart by their basis (FUX-D5).
+    expect(TERM_LABEL_GLOSSARY.relCfot.label.en).toBe('CFOT, by PO line');
+    expect(TERM_LABEL_GLOSSARY.perfCfot.label.en).toBe('CFOT, by PO');
     expect(TERM_LABEL_GLOSSARY.performanceBand.label).toEqual({
       en: 'Performance band',
       id: 'Kelompok kinerja'

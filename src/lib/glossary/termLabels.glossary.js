@@ -1827,9 +1827,9 @@ export const TERM_LABEL_GLOSSARY =
       }
     },
     relCfot: {
-      label: { en: 'Confirmed-date lines delivered', id: 'Baris tepat tanggal konfirmasi' },
-      en: 'The share of lines delivered in full on the date the supplier confirmed.',
-      id: 'Porsi baris yang dikirim lengkap pada tanggal yang dikonfirmasi pemasok.',
+      label: { en: 'CFOT, by PO line', id: 'CFOT, per baris PO' },
+      en: 'Casefill On-Time by PO line: the share of PO lines delivered in full on the date the supplier confirmed.',
+      id: 'Casefill On-Time per baris PO: porsi baris PO yang dikirim lengkap pada tanggal yang dikonfirmasi pemasok.',
       notToConfuse: {
         en: 'The same measure against the requested date (shown beside it).',
         id: 'Ukuran yang sama terhadap tanggal yang diminta (ditampilkan di sampingnya).'
@@ -1877,12 +1877,13 @@ export const TERM_LABEL_GLOSSARY =
       labelKeys: ['perf.otif']
     },
     perfCfot: {
-      label: {
-        en: 'Delivered on the confirmed date',
-        id: 'Terkirim pada tanggal yang dikonfirmasi'
+      label: { en: 'CFOT, by PO', id: 'CFOT, per PO' },
+      en: 'Casefill On-Time by PO: the share of POs delivered in full on the date the supplier confirmed.',
+      id: 'Casefill On-Time per PO: porsi PO yang dikirim lengkap pada tanggal yang dikonfirmasi pemasok.',
+      notToConfuse: {
+        en: 'CFOT, by PO line (the same measure per PO line, on Supplier reliability).',
+        id: 'CFOT, per baris PO (ukuran yang sama per baris PO, di Keandalan pemasok).'
       },
-      en: 'The share of POs delivered in full on the date the supplier confirmed.',
-      id: 'Porsi PO yang dikirim lengkap pada tanggal yang dikonfirmasi pemasok.',
       labelKeys: ['perf.cfot']
     },
     perfRejections: {

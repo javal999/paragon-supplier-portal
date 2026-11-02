@@ -8,7 +8,7 @@
 /** @type {Record<string, string>} */
 export const performanceEn = {
   'perf.otif': 'On time and in full',
-  'perf.cfot': 'Delivered on the confirmed date',
+  'perf.cfot': 'CFOT, by PO',
   // B6 (F-11, FUX-D5) — the basis of this measure, so it is not read as Supplier
   // reliability's "Confirmed-date lines delivered" (by PO line, 13 or 26 weeks).
   'perf.cfot.basis.30d': 'By quantity, per order, last 30 days.',
@@ -90,7 +90,7 @@ export const performanceEn = {
 /** @type {Record<string, string>} */
 export const performanceId = {
   'perf.otif': 'Tepat waktu dan tepat jumlah',
-  'perf.cfot': 'Terkirim pada tanggal yang dikonfirmasi',
+  'perf.cfot': 'CFOT, per PO',
   'perf.cfot.basis.30d': 'Menurut jumlah, per pesanan, 30 hari terakhir.',
   'perf.cfot.basis.90d': 'Menurut jumlah, per pesanan, 90 hari terakhir.',
   'perf.cfot.basis.ytd': 'Menurut jumlah, per pesanan, tahun berjalan.',
