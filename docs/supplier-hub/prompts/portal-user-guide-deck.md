@@ -1,5 +1,6 @@
 # Prompt: Paragon Supplier Portal user guide deck, by use case
 
+**Last run:** 2026-11-02, for the material planners' session on 4 Nov (update run, section "Update runs" at the end). The first run was 2026-10-06.
 **How to use:** Paste into Claude Code opened at the root of `paragon-supplier-portal`, on a fresh branch from `main`. There are no slots to fill. The run stops once after Phase 1 so PTI can review the scenarios. Reply "approved" (or send corrections) to start Phase 2.
 **Structure:** COSTAR plus Sources, Constraints and Success criteria blocks. The task family is research and synthesis because the hard part is getting each claimed behavior right from code. The deck is the delivery format, nested inside Results.
 **Assumptions made:**
@@ -7,7 +8,7 @@
 - English deck. Menu labels are copied exactly from the English locale file.
 - Core supplier-facing flows get full walkthroughs, 6 to 8 use cases. Every other menu appears only in the Menu Directory appendix.
 - Screenshots come from the local dev app in Demo Mode. No real accounts and no deployed environment.
-- Output goes to `docs/supplier-hub/user-guide/`. The run commits locally and does not push.
+- Output goes to `docs/supplier-hub/user-guide/`, in 2 versions: A complete (PTI and supplier) and B supplier only, which doubles as the early supplier user-testing script. The run commits locally and does not push.
 - Deck cap is 70 slides, with at most 8 slides per use case.
 - Thinking is on at high effort. The target is a current Claude model in Claude Code.
 
@@ -36,7 +37,9 @@ Every behavior you put in the scenario catalog or the deck must cite a `file:lin
 
 OBJECTIVE
 
-Produce 2 files: a scenario catalog (`docs/supplier-hub/user-guide/SCENARIOS.md`) and, after PTI approves it, a PowerPoint deck (`docs/supplier-hub/user-guide/Paragon-Supplier-Portal-User-Guide.pptx`) that walks through each core use case from both the PTI and the Supplier side.
+Produce 4 files in 2 versions.
+- **Version A, complete:** a scenario catalog (`docs/supplier-hub/user-guide/SCENARIOS.md`) and, after PTI approves it, a PowerPoint deck (`docs/supplier-hub/user-guide/Paragon-Supplier-Portal-User-Guide.pptx`) that walks through each core use case from both the PTI and the Supplier side.
+- **Version B, supplier only:** `docs/supplier-hub/user-guide/SCENARIOS-SUPPLIER.md` and `Paragon-Supplier-Portal-User-Guide-Supplier.pptx`. They keep only the supplier's screens and tasks, and double as the script for early supplier user testing: each task has a prompt to read out, a start point, the expected path in exact labels, a pass condition, what to watch for and questions to ask after; plus session setup, moderator rules and an observation sheet.
 
 AUDIENCE
 
@@ -51,7 +54,7 @@ CONSTRAINTS
 - Treat `src/` as read-only. Write only under `docs/supplier-hub/user-guide/`. You may also add `.claude/launch.json` if the dev-server preview needs it.
 - Run the app with `npm run dev` through the browser preview tool and sign in through Demo Mode only. Find in code how a demo session picks a PTI role (MP, BUY, FIN) and a supplier lane, and use that. If a role or lane cannot be reached in Demo Mode, use a labeled placeholder frame for those screens and give the reason in speaker notes.
 - Store screenshots as PNG files in `docs/supplier-hub/user-guide/screens/`, named `UC<n>-<step>-<role>.png`.
-- Build the deck with the pptx skill. Take colors, logo and typeface from the paragon-brand skill.
+- Build both decks with the pptx skill through the generator in `docs/supplier-hub/user-guide/build/` (`node build/build-user-guides.cjs`; content in `content-complete.cjs` and `content-supplier.cjs`). Keep the look of the 6 Oct deck: Cambria titles, Calibri body, navy PTI badge, teal SUPPLIER badge, logo from `build/assets/`.
 - Use subagents only to read code for different use cases in parallel. Check your own work yourself, in this session.
 - Work on branch `docs/portal-user-guide` from `main`, commit locally, and stop. The user pushes and opens the PR after review.
 - Be concise in chat. Progress updates are 1 to 2 lines.
@@ -111,6 +114,21 @@ FINAL REPORT (in chat, at most 12 lines)
 Slide count, use cases covered, screenshots captured versus placeholders, Unverified count, the commit hash, and the 3 things PTI most needs to decide or check during review.
 
 Start Phase 1 now.
+
+---
+
+## Update runs
+
+An update run does not start from Phase 1. It starts from the approved catalogs and the code on `main`, and it keeps the use case numbers stable.
+
+1. Find what changed: `git log --oneline <basis commit>..main --no-merges`, grouped by feature. Check each change in the code before writing it up; record the file:line.
+2. Re-check every label already in the catalogs against the English locale (a label that moved or changed is corrected, never reworded).
+3. Add a use case only for a capability that has its own end-to-end flow; extend an existing one otherwise. Keep onboarding and registration out.
+4. Rewrite `SCENARIOS.md` and `SCENARIOS-SUPPLIER.md`, then the content files, then build both decks.
+5. Screenshots: retake only after the labels are frozen and prod (or a local build of `main`) runs the new code. Until then the generator draws a labelled placeholder with the route, seat and demo record from the screenshot plan.
+6. Render both decks to images and inspect every slide (LibreOffice, or Keynote on macOS: `osascript` export to PDF, then `pdftoppm`).
+
+**2026-11-02 run:** basis `7078ea3` → `aeabdc83`. UC3, UC4, UC6, UC7 rewritten; UC8 (demand anticipation and replenishment, PTI only) added; version B and the generator added; all screenshots placeholders until prod is redeployed.
 
 ---
 
