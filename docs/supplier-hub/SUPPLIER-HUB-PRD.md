@@ -4,7 +4,7 @@
 |---|---|
 | Product | Supplier Hub (Supplier Portal, "SC Collaboration Hub") |
 | Company | PT Paragon Technology and Innovation (PTI) |
-| Version | 0.13 draft, 2026-11-02 (PQ-11 and PQ-08 decided by the owner; 0.12, 2026-09-29: SC Hub Material stories US-80 to US-93) |
+| Version | 0.13 draft, 2026-11-02 (PQ-11 and PQ-08 decided by the owner; KPI baselines are the success-criteria baselines; a confirmed early delivery counts as on time; 0.12, 2026-09-29: SC Hub Material stories US-80 to US-93) |
 | Scope | MVP (Phase 1, "Foundation to Transact"). Phase 2 and 3 appear only in section 9 |
 | Steering Committee | Yogi Sapta Prakoso (VP Supply Chain), Ilauddin (CFO), Risman Adnan (CTO) [C] |
 | Technology Product Owners | Achmad Fahlevi, Vergiant Yoga Perdana (Supply Chain); Indita Ramasaphira (FATL) [C] |
@@ -332,7 +332,7 @@ US-70 to US-79 were US-RFX-01 to US-RFX-10 in `RFX-IMPROVEMENT-REQUIREMENTS-2026
 - US-60:
   - The dashboard shows CFOT and OTIF per supplier for a chosen period.
   - OTIF is calculated per call-off (CR-06 to CR-08) and CFOT per PO.
-  - The page states each KPI's definition (delivery window, early deliveries, grain, date change). Targets read "Baseline period" until a 3-month baseline is measured (owner 2026-09-21).
+  - The page states each KPI's definition (delivery window, early deliveries, grain, date change). Targets read "Baseline period" until a 3-month baseline is measured (owner 2026-09-21). CFOT and OTIF keep this; for S1 to S5 the baseline is the one in the success criteria table (owner 2026-11-02). An early receipt on a date the Material Planner team confirmed counts as on time (owner 2026-11-02, BL-234).
 
 #### SC Hub Material (E08, E07, E03)
 
@@ -893,7 +893,7 @@ Decided on 2026-09-21 and no longer listed here: PQ-02, PQ-07, PQ-12, MIG, Q-18,
 | DEC-03 | Final MVP list sign-off (RFx and performance dashboard in the MVP) | Project sponsors |
 | Values | Invoice rupiah cap (PQ-05), gate minimum OTIF (A-05). The build runs on named placeholders. The call-off early-delivery allowance (PQ-08) was decided 2026-11-02: no fixed days, an early date needs the Material Planner team's confirmation | Finance, Procurement |
 | A-01 | Compliance and capability check for RFx | Procurement |
-| KPI | Definitions for S4 and S5; align the OTIF and CFOT calculation with the agreed definitions (five differences found); targets after the baseline | Steering Committee, Material Planner |
+| KPI | Definitions for S4 and S5; targets for CFOT and OTIF after their baseline. The baselines for S1 to S5 are the ones in the success criteria table (owner 2026-11-02), and the OTIF and CFOT definitions are final (KPI-1 to KPI-4, owner 2026-11-02) | Steering Committee, Material Planner |
 | CAP-1 | Whether supplier capacity is usually fixed or changes week to week | Material Planner |
 | IT | Tech stack, hosting, authentication, NFR thresholds (NF2 to NF7), interface technology (PQ-06) | IT |
 

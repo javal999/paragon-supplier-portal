@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.16, 2026-11-02 (BL-12 and BL-56 decided by the owner; 1.15, 2026-10-26: RFX-D32 added: the RFx deadline is checked on leaving the field; INV-D14 added 2026-10-23) |
+| Version | 1.16, 2026-11-02 (BL-12 and BL-56 decided by the owner; BL-19 baselines and early receipts in OTIF and CFOT answered; 1.15, 2026-10-26: RFX-D32 added: the RFx deadline is checked on leaving the field; INV-D14 added 2026-10-23) |
 | Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20) and RFX-D26 to RFX-D31 (2026-10-22) and RFX-D32 (2026-10-26); the Inventory & Capacity UX decisions INV-D1 to INV-D13 (2026-10-22) and INV-D14 (2026-10-23); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, and two values (BL-54 invoice cap, BL-55 gate OTIF minimum). BL-12 call-off record and BL-56 early allowance were decided on 2026-11-02 (see their entries). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
@@ -64,7 +64,7 @@ These eight are one number or one list each. The prototype ships defensible defa
 
 **What would change this.** Warehouse dock capacity. If receiving cannot absorb early deliveries, the early allowance drops to 0 and the tolerance becomes late-side only.
 
-**Decision (owner, 2026-11-02, BL-56).** No fixed early allowance: a call-off may be delivered on any date, early included, once the Material Planner team confirms it, and the same holds for the warehouse's part. The allowance stays 0 days, so every early date goes to the planner, as built. Still open: whether a confirmed early delivery counts as on time in OTIF and CFOT (KPI-2 keeps its 7-day window until then).
+**Decision (owner, 2026-11-02, BL-56).** No fixed early allowance: a call-off may be delivered on any date, early included, once the Material Planner team confirms it, and the same holds for the warehouse's part. The allowance stays 0 days, so every early date goes to the planner, as built. Follow-up answer (owner, 2026-11-02): an early receipt on a date the Material Planner team confirmed counts as on time in OTIF and CFOT (KPI-2 amended; build BL-234).
 
 ### BL-06 · PQ-04 — goods receipt discrepancy tolerance
 **Market practice.** ERP systems carry separate over- and under-delivery tolerances per material or per supplier–material combination, set in the material master or purchasing info record, and check the cumulative received quantity against the order.
@@ -182,6 +182,8 @@ These eight are one number or one list each. The prototype ships defensible defa
 **Recommendation.** Fix the definitions before the targets. Write down: the delivery window, whether early is on time, the measurement grain (per call-off, as the requirements already say), and whether a supplier-requested date change resets the clock. Then measure for three months and set targets from the baseline. Publish the definition to suppliers with the first scorecard — a metric a supplier cannot reproduce will be argued rather than acted on.
 
 **What would change this.** Nothing. This is the one item where moving fast costs the most: a target set on an undefined measure produces a year of disputes.
+
+**Decision (owner, 2026-11-02).** The baselines are the ones written in the PRD success criteria (S1 to S5), so no 3-month measurement sets them. CFOT and OTIF have no row there, so the 3-month baseline still applies to them. The KPI-1 to KPI-4 definitions are final, and an early receipt on a date the Material Planner team confirmed counts as on time in OTIF and CFOT.
 
 ---
 
