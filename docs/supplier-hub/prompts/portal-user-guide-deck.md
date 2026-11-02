@@ -128,6 +128,8 @@ An update run does not start from Phase 1. It starts from the approved catalogs 
 5. Screenshots: retake only after the labels are frozen and prod (or a local build of `main`) runs the new code. Until then the generator draws a labelled placeholder with the route, seat and demo record from the screenshot plan.
 6. Render both decks to images and inspect every slide (LibreOffice, or Keynote on macOS: `osascript` export to PDF, then `pdftoppm`).
 
+**Scope ruling, 2026-11-02 (owner):** the RFx flow (requisitions, RFI, RFQ, RFP, award) and the invoice flow are left out of the guide. PO to payment ends at the goods receipt; use cases are UC1 to UC7 and supplier tasks T1 to T9; RFx and Invoices menus stay in the Menu Directory as "Not in this guide". A later run keeps them out unless the owner rules otherwise.
+
 **2026-11-02 run:** basis `7078ea3` → `aeabdc83`. UC3, UC4, UC6, UC7 rewritten; UC8 (demand anticipation and replenishment, PTI only) added; version B and the generator added; all screenshots placeholders until prod is redeployed.
 
 ---

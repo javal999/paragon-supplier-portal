@@ -171,4 +171,4 @@ Useful to say up front so the planners do not read these as defects:
 - **Suppliers do not see the DA** (DRC-1 switched off).
 - **No email or WhatsApp** goes out for supplier questions or alerts; everything stays in the portal.
 
-The full list is section 4 of `SCENARIOS.md` (27 items).
+The full list is section 4 of `SCENARIOS.md` (22 items).

@@ -1,5 +1,5 @@
 // Version B: supplier only, doubles as the early supplier user-testing script.
-// Source: ../SCENARIOS-SUPPLIER.md (tasks T1-T11), evidence in ../SCENARIOS.md, GitLab main aeabdc83.
+// Source: ../SCENARIOS-SUPPLIER.md (tasks T1-T9; RFx and invoice tasks left out, owner 2026-11-02), evidence in ../SCENARIOS.md, GitLab main aeabdc83.
 const S = (text) => ({ actor: 'SUP', text });
 const P = (text) => ({ actor: 'PTI', text });
 
@@ -52,15 +52,13 @@ add({
     ['To do', 'Home', 'See what Paragon waits for', 'any', 'T1'],
     ['Purchase orders', 'Orders', 'Acknowledge, confirm, adjust or reject; Create ASN', 'Fulfilment', 'T2'],
     ['Goods receipts', 'Orders', 'Acknowledge or dispute a receipt discrepancy', 'Fulfilment', 'T3'],
-    ['Invoices', 'Invoices', 'Create, submit, correct and resubmit', 'Back Office', 'T4'],
-    ['Call-offs · Shipments & ASN', 'Orders', 'Confirm call-offs, answer a delay, dispatch, ASN', 'Fulfilment', 'T5'],
-    ['Foresight commitments', 'Planning', 'Commit to the forecast per period', 'Commercial', 'T6'],
-    ['Capacity', 'Planning', 'Capacity per week against PTI\'s LTP', 'Fulfilment', 'T7'],
-    ['Stock', 'Planning', 'Weekly stock update, feedstock, PTI questions', 'Fulfilment', 'T8, T9'],
-    ['Profile & documents', 'Company', 'Declare certificates; see expiry', 'Back Office', 'T10'],
-    ['RFI · RFQ · RFP invitations', 'Sourcing', 'Answer sourcing events', 'Commercial', 'T11']
+    ['Call-offs · Shipments & ASN', 'Orders', 'Confirm call-offs, answer a delay, dispatch, ASN', 'Fulfilment', 'T4'],
+    ['Foresight commitments', 'Planning', 'Commit to the forecast per period', 'Commercial', 'T5'],
+    ['Capacity', 'Planning', 'Capacity per week against PTI\'s LTP', 'Fulfilment', 'T6'],
+    ['Stock', 'Planning', 'Weekly stock update, feedstock, PTI questions', 'Fulfilment', 'T7, T8'],
+    ['Profile & documents', 'Company', 'Declare certificates; see expiry', 'Back Office', 'T9']
   ],
-  caption: 'Also in the menu: Feedstock reconcile and My performance (read only). Help & glossary sits in the avatar menu.',
+  caption: 'Also in the menu: Feedstock reconcile and My performance (read only); RFI, RFQ and RFP invitations and Invoices (not in this guide). Help & glossary sits in the avatar menu.',
   notes: 'Evidence: src/components/layout-v2/navConfig.js:232-296,364; labels src/lib/i18n/hub.js:82-103; lanes src/services/transitions/businessRoles.js:442,484.'
 });
 add({
@@ -85,14 +83,12 @@ add({
     ['T1 Find what Paragon is waiting for', 'any', 'To do', 'The right page and rows'],
     ['T2 Confirm a PO and create its ASN', 'Fulfilment', 'Purchase orders', 'PO Confirmed; ASN Submitted'],
     ['T3 Answer a receipt discrepancy', 'Fulfilment', 'Goods receipts', 'Answered'],
-    ['T4 Correct a returned invoice', 'Back Office', 'Invoices', 'Submitted; match re-runs'],
-    ['T5 Confirm a call-off, answer a delay, dispatch', 'Fulfilment', 'Call-offs', 'Confirmed; notice sent'],
-    ['T6 Commit to the forecast', 'Commercial', 'Foresight commitments', 'Submitted per period'],
-    ['T7 Submit capacity', 'Fulfilment', 'Capacity', 'Capacity submitted'],
-    ['T8 Weekly stock update and feedstock', 'Fulfilment', 'Stock', 'Declared; feedstock Confirmed'],
-    ['T9 Answer PTI\'s question, read your alerts', 'Fulfilment', 'To do', 'Answered'],
-    ['T10 Declare a certificate', 'Back Office', 'Profile & documents', 'Under Review'],
-    ['T11 Quote on an RFQ (optional, RFx paused)', 'Commercial', 'RFQ invitations', 'Quotation Submitted']
+    ['T4 Confirm a call-off, answer a delay, dispatch', 'Fulfilment', 'Call-offs', 'Confirmed; notice sent'],
+    ['T5 Commit to the forecast', 'Commercial', 'Foresight commitments', 'Submitted per period'],
+    ['T6 Submit capacity', 'Fulfilment', 'Capacity', 'Capacity submitted'],
+    ['T7 Weekly stock update and feedstock', 'Fulfilment', 'Stock', 'Declared; feedstock Confirmed'],
+    ['T8 Answer PTI\'s question, read your alerts', 'Fulfilment', 'To do', 'Answered'],
+    ['T9 Declare a certificate', 'Back Office', 'Profile & documents', 'Under Review']
   ],
   notes: 'Evidence: SCENARIOS-SUPPLIER.md section 2.'
 });
@@ -102,7 +98,7 @@ add({
   menu: 'Home → To do',
   shot: 'INTRO-4-todo-supplier.png', route: '/supplier/home', seat: 'Supplier', record: 'sup-007',
   steps: [
-    S('Scan the areas: Orders, Stock, Sourcing, Foresight commitments, Invoices and documents'),
+    S('Scan the areas: Orders, Stock, Foresight commitments, documents'),
     S('Rows such as "Purchase orders to respond to", "Call-offs to confirm"'),
     S('Open a row: it lands on the rows it counts')
   ],
@@ -157,21 +153,7 @@ add({
   notes: 'Evidence: src/lib/i18n/fulfilmentCollaboration.js:123,135,136; src/pages-v2/SupplierGoodsReceipts.jsx:346,357-379; src/lib/i18n/hub.js:198.'
 });
 add({
-  type: 'step', kicker: task('T4', 'Correct a returned invoice'), title: 'Correct and resubmit',
-  menu: 'Invoices → Invoices, filter Returned',
-  shot: 'UC2-7-supplier.png', route: '/supplier/invoices?stage=Returned', seat: 'Supplier', record: 'INV-2025-BRL-0043',
-  steps: [
-    S('Open the invoice marked Returned'),
-    S('Read the banner: "Returned by Finance:" and the reason'),
-    S('Correct and resubmit')
-  ],
-  statusAfter: 'Submitted; the 3-way match runs again',
-  testId: 'T4',
-  test: '"Paragon sent one of your invoices back. Find out why and send it again."',
-  notes: 'Evidence: src/lib/i18n/supplierInvoices.js:33,37; src/lib/i18n/fulfilmentCollaboration.js:244; src/pages-v2/SupplierInvoices/components/InvoiceRow.jsx:119; src/services/data/mock/fixtures/invoices.js:52-66 (Disputed for PTI, Returned for the supplier, src/services/transitions/fulfilmentRules/invoice.js:284-285).'
-});
-add({
-  type: 'step', kicker: task('T5', 'Call-offs'), title: 'Confirm a call-off with a new date',
+  type: 'step', kicker: task('T4', 'Call-offs'), title: 'Confirm a call-off with a new date',
   menu: 'Orders → Call-offs, filter Awaiting your confirmation',
   shot: 'UC3-2-supplier.png', route: '/supplier/call-offs', seat: 'Supplier', record: 'CO-2026-0003 Awaiting Confirmation',
   steps: [
@@ -181,12 +163,12 @@ add({
     S('Send confirmation')
   ],
   statusAfter: 'Confirmed with New Date, waiting for PTI approval',
-  testId: 'T5 part 1',
+  testId: 'T4 part 1',
   test: '"Paragon called off a delivery. Confirm it, but you can only deliver 2 days later than asked."',
   notes: 'Other answers: Confirm as requested, Confirm with a different quantity, Partially confirm in 2 deliveries, Reject. Within +5% is accepted at once. Evidence: src/lib/i18n/callOffs.js:22,269-287; src/pages-v2/SupplierCallOffs/components/RespondForm.jsx:50-61,138,151.'
 });
 add({
-  type: 'step', kicker: task('T5', 'Call-offs'), title: 'Answer a delay, then dispatch',
+  type: 'step', kicker: task('T4', 'Call-offs'), title: 'Answer a delay, then dispatch',
   menu: 'Orders → Call-offs',
   shot: 'UC3-3-supplier.png', route: '/supplier/call-offs', seat: 'Supplier', record: 'a confirmed call-off; moderator sets up the delay',
   steps: [
@@ -196,12 +178,12 @@ add({
     S('Create the ASN for this call-off')
   ],
   statusAfter: 'Delay answered; dispatch notice sent',
-  testId: 'T5 parts 2-3',
+  testId: 'T4 parts 2-3',
   test: '"Paragon asked to move one delivery later. Decide. Then tell them you shipped another one today."',
   notes: 'Setup: moderator as PTI, Call-offs → Change call-off → Reason type LTP dropped → Change and ask again. Evidence: src/lib/i18n/callOffs.js:216-238,290-299; src/pages-v2/SupplierCallOffs/components/DelayAnswerForm.jsx:41-57; DispatchSection.jsx:74-179.'
 });
 add({
-  type: 'step', kicker: task('T6', 'Commit to the forecast'), title: 'Commit per period',
+  type: 'step', kicker: task('T5', 'Commit to the forecast'), title: 'Commit per period',
   menu: 'Planning → Foresight commitments, tab Commitments',
   shot: 'UC4-1-supplier.png', route: '/supplier/forecasts', seat: 'Supplier', record: 'FC-PK-V2 lines',
   steps: [
@@ -211,12 +193,12 @@ add({
     S('Under "Submit by period": Submit all; Acknowledge Forecast rows')
   ],
   statusAfter: 'Submitted: Accepted, or Outside tolerance',
-  testId: 'T6',
+  testId: 'T5',
   test: '"Tell Paragon how much you commit to, period by period. For one period you can only supply 80%."',
   notes: 'Reasons: Capacity, Material, Logistics, Quality, Force Majeure, Discontinued, Other (last 3 need a note). Blocked by "Confirm capacity for {group} first." → Confirm capacity. Evidence: src/lib/i18n/forecastCollaboration.js:59-67,83,122-126,135,144-162; src/lib/glossary/termLabels.glossary.js:1281,1286.'
 });
 add({
-  type: 'step', kicker: task('T7', 'Submit capacity'), title: 'Submit capacity per week',
+  type: 'step', kicker: task('T6', 'Submit capacity'), title: 'Submit capacity per week',
   menu: 'Planning → Capacity (or Confirm capacity in the weekly update)',
   shot: 'UC6-3-supplier.png', route: '/supplier/capacity', seat: 'Supplier', record: 'an amber week',
   steps: [
@@ -226,12 +208,12 @@ add({
     S('Submit capacity')
   ],
   statusAfter: 'Within capacity · Needs additional capacity · Cannot be supplied',
-  testId: 'T7',
+  testId: 'T6',
   test: '"Tell Paragon how much you can produce each week. It is the same every week; one week you can add extra."',
   notes: 'Watch: are weeks as columns read right? Is the (i) on LTP, current forecast opened? After PTI accepts: "PTI accepted your additional capacity on {date}". Evidence: src/lib/i18n/inventoryCapacity.js:374-384,392,415,418; src/lib/i18n/capacityDecision.js:33; src/pages-v2/SupplierCapacity.jsx:287,323,408-641.'
 });
 add({
-  type: 'step', kicker: task('T8', 'Weekly stock update and feedstock'), title: 'Send stock, then confirm feedstock',
+  type: 'step', kicker: task('T7', 'Weekly stock update and feedstock'), title: 'Send stock, then confirm feedstock',
   menu: 'Planning → Stock',
   shot: 'UC6-1-supplier.png', route: '/supplier/inventory', seat: 'Supplier', record: 'weekly update, materials still missing',
   steps: [
@@ -241,12 +223,12 @@ add({
     S('Confirm feedstock (feedstock is not stock until produced)')
   ],
   statusAfter: 'Declared; feedstock Confirmed',
-  testId: 'T8',
+  testId: 'T7',
   test: '"It is your weekly stock update. Send stock for the materials still missing, then confirm the feedstock you hold."',
   notes: 'BL-236 (f79a26c1): the weekly panel also lists Capacity and Feedstock with Confirm capacity / Confirm feedstock; the Feedstock to confirm tab is the other way in. Evidence: src/lib/i18n/inventoryCapacity.js:154-156,201,240,269,613-631; src/pages-v2/inventory/WeeklyUpdatePanel.jsx:166-199; src/lib/i18n/feedstockConfirm.js:11-37. Feedstock screen: UC6-2-supplier.png.'
 });
 add({
-  type: 'step', kicker: task('T9', 'Answer PTI\'s question, read your alerts'), title: 'Answer PTI and read your alerts',
+  type: 'step', kicker: task('T8', 'Answer PTI\'s question, read your alerts'), title: 'Answer PTI and read your alerts',
   menu: 'Home → To do',
   shot: 'UC6-6-supplier.png', route: '/supplier/home', seat: 'Supplier', record: 'ask-0001 production date, PK-PETB-8802',
   steps: [
@@ -256,12 +238,12 @@ add({
     S('Open inventory, Open capacity or Open commitments & gaps')
   ],
   statusAfter: '"Answer sent to PTI"; alerts clear when the data is fixed',
-  testId: 'T9',
+  testId: 'T8',
   test: '"Paragon has a question about a production date. Answer it. Then tell me what Paragon is worried about."',
   notes: 'You see 5 of PTI\'s 12 alert rules: below your reorder point, figures out of date, capacity below the LTP, stock and incoming below 30 days, commitment below forecast. Evidence: src/lib/i18n/inventoryCapacity.js:452-454,571-588; src/services/data/mock/stores/supplierAskStore.js:18-60. Alerts screen: UC7-2-supplier.png.'
 });
 add({
-  type: 'step', kicker: task('T10', 'Declare a certificate'), title: 'Declare a requested or expiring certificate',
+  type: 'step', kicker: task('T9', 'Declare a certificate'), title: 'Declare a requested or expiring certificate',
   menu: 'Company → Profile & documents',
   shot: 'UC5-2-supplier.png', route: '/supplier/documents', seat: 'Supplier', record: 'doc-006 Awaiting Upload; doc-001 Expiring Soon',
   steps: [
@@ -271,26 +253,10 @@ add({
     S('Refused? Read the reason, Declare again')
   ],
   statusAfter: 'Under Review; PTI confirms (Valid) or refuses',
-  testId: 'T10',
+  testId: 'T9',
   test: '"Paragon asked for a document, and one of your certificates is about to expire. Deal with both."',
   notes: 'Watch: expecting a file upload (none is sent today). Evidence: src/lib/i18n/hub.js:194,196; src/lib/i18n/supplierDocuments.js:79,84,119,137; src/lib/statusLabel.js:43; src/services/data/mock/fixtures/supplierDocuments.js:33,104 (doc-001 expires 14 Oct 2026 after the demo date shift; no document is expired).'
 });
-add({
-  type: 'step', kicker: task('T11', 'Quote on an RFQ (optional)'), title: 'Answer an RFQ invitation',
-  menu: 'Sourcing → RFQ invitations',
-  shot: 'UC1-2-supplier.png', route: '/supplier/rfq', seat: 'Supplier', record: 'rfq-021 Open',
-  steps: [
-    S('Open the RFQ, I will respond'),
-    S('Accept confidentiality terms, if asked'),
-    S('Submit quote → Submit quotation'),
-    S('Or Decline RFQ with a reason ("No capacity for this", …)')
-  ],
-  statusAfter: 'Quotation Submitted (or Declined)',
-  testId: 'T11',
-  test: '"Paragon invited you to quote. Say you will take part and send your quote."',
-  notes: 'RFx is paused; this task is optional. Evidence: src/lib/i18n/rfqResponse.js:24,34; src/lib/i18n/rfqs.js:48,50,111.'
-});
-
 add({
   type: 'table', kicker: 'When it goes wrong', title: 'What you see, and what to do',
   columns: ['You see', 'Why', 'What to do', 'Menu'],
@@ -300,12 +266,11 @@ add({
     ['"Outside tolerance: PTI must approve this before you ship."', 'More than +5% or a later date', 'Wait for PTI\'s approval', 'Call-offs'],
     ['"Confirm capacity for {group} first."', 'Capacity not submitted', 'Confirm capacity, then Submit all', 'Foresight commitments'],
     ['"The week of {week} is below the LTP. Choose a reason."', 'A week below PTI\'s LTP', 'Pick a reason', 'Capacity'],
-    ['Invoice marked Returned', 'Finance disputed it', 'Correct and resubmit', 'Invoices'],
     ['"{count} document was refused:"', 'PTI refused a declaration', 'Declare again', 'Profile & documents'],
     ['"Awaiting Supplier Fulfilment"', 'Your seat lacks that lane', 'Ask a colleague or your administrator', 'Any'],
     ['"PTI stopped sharing its stock with you on {date}."', 'PTI turned off stock sharing', 'Nothing; PTI stock columns are gone', 'Stock']
   ],
-  notes: 'Evidence: src/lib/i18n/callOffs.js:285; src/lib/i18n/forecastCollaboration.js:158; src/lib/i18n/inventoryCapacity.js:161,415; src/lib/i18n/supplierInvoices.js:33,37; src/lib/i18n/supplierDocuments.js:137; src/lib/i18n/roles.js:49-53.'
+  notes: 'Evidence: src/lib/i18n/callOffs.js:285; src/lib/i18n/forecastCollaboration.js:158; src/lib/i18n/inventoryCapacity.js:161,415; src/lib/i18n/supplierDocuments.js:137; src/lib/i18n/roles.js:49-53.'
 });
 
 add({
@@ -317,7 +282,7 @@ add({
   type: 'cards', kicker: 'For the moderator', title: 'Setup and rules',
   cardH: 3.6,
   cards: [
-    { head: 'Before each session', body: 'Fresh browser profile; open the portal; View as Supplier. Check To do shows "PTI has 2 questions for you". For T5, as PTI change a confirmed call-off with LTP dropped, then switch back. Set the language the participant prefers.' },
+    { head: 'Before each session', body: 'Fresh browser profile; open the portal; View as Supplier. Check To do shows "PTI has 2 questions for you". For T4, as PTI change a confirmed call-off with LTP dropped, then switch back. Set the language the participant prefers.' },
     { head: 'During the task', body: 'Read the TEST TASK box as written. Do not name buttons or menus. Ask them to think aloud. "What would you try?" when they ask. Help only after 3 minutes or 2 failed tries, and mark it assisted.' },
     { head: 'Demo data', body: 'Everyone is PT Sample Packaging Indonesia. If a number looks odd, say "it is sample data" and move on. Nothing reaches SAP and no message is sent.' }
   ],
@@ -327,7 +292,7 @@ add({
   type: 'table', kicker: 'For the note-taker', title: 'Observation sheet',
   columns: ['Task', 'Pass / assisted / fail', 'Time (min)', 'First wrong turn', 'Words they used', 'Confidence 1-5'],
   colW: [1.0, 2.2, 1.4, 2.8, 2.9, 1.83],
-  rows: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11'].map((t) => [t, '', '', '', '', '']),
+  rows: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9'].map((t) => [t, '', '', '', '', '']),
   caption: 'A task failed or assisted by 2 or more participants is a finding. Log it in BACKLOG.md with the task number.',
   notes: 'From SCENARIOS-SUPPLIER.md section 5.'
 });

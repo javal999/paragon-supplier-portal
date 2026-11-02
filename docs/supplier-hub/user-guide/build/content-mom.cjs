@@ -260,7 +260,7 @@ add({
     { lead: 'Supplier DA view:', text: 'built, switched off.' },
     { lead: 'Messages:', text: 'no email or WhatsApp for supplier questions or alerts; everything stays in the portal.' }
   ],
-  notes: NOTE + ' Full list: SCENARIOS.md section 4 (27 items).'
+  notes: NOTE + ' Full list: SCENARIOS.md section 4 (22 items).'
 });
 
 // Room-sized text: tables scale with their row count; cards and the list read from the back of the room.

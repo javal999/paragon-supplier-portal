@@ -4,7 +4,7 @@
 **Two uses:**
 1. **Guide.** A supplier user reads sections 1 and 2 to learn the portal one task at a time.
 2. **Test script.** A moderator runs sections 3 to 5 with a supplier in an early user test of the end-to-end prototype. Each task has a prompt to read out, a start point, the expected path, a pass condition, what to watch, and questions to ask after.
-**Data:** demo data only. Nothing reaches SAP or PTI's real systems. The test supplier is always `sup-007`, "PT Sample Packaging Indonesia". Supplier registration and onboarding are out of scope (a colleague owns them).
+**Data:** demo data only. Nothing reaches SAP or PTI's real systems. The test supplier is always `sup-007`, "PT Sample Packaging Indonesia". Supplier registration and onboarding are out of scope (a colleague owns them). The RFx (sourcing) and invoice flows are left out of this guide (owner, 2026-11-02); their menus stay in the portal and are marked "Not in this guide" below.
 
 ---
 
@@ -26,23 +26,22 @@
 |---|---|---|---|
 | Home | **To do** | See what Paragon waits for, by area, nearest deadline first | T1 |
 | Orders | **Purchase orders** | Acknowledge, confirm, adjust or reject a PO; create the ASN | T2 |
-| Orders | **Call-offs** | Confirm, change or reject a call-off; answer a delay; send the dispatch notice | T5 |
-| Orders | **Shipments & ASN** | Create and submit ASNs | T2, T5 |
+| Orders | **Call-offs** | Confirm, change or reject a call-off; answer a delay; send the dispatch notice | T4 |
+| Orders | **Shipments & ASN** | Create and submit ASNs | T2, T4 |
 | Orders | **Goods receipts** | Acknowledge or dispute a receipt discrepancy | T3 |
-| Planning | **Foresight commitments** | Commit to PTI's forecast per period | T6 |
+| Planning | **Foresight commitments** | Commit to PTI's forecast per period | T5 |
 | Planning | **Feedstock reconcile** | Read PO ordered against called off and shipped (read only) | – |
-| Planning | **Stock** | Weekly stock update, feedstock, PTI's questions | T8, T9 |
-| Planning | **Capacity** | Capacity per week against PTI's LTP | T7 |
-| Sourcing | **RFI invitations** · **RFQ invitations** · **RFP invitations** | Answer sourcing events | T11 (optional) |
-| Invoices | **Invoices** | Create, submit, correct and resubmit invoices | T4 |
-| Company | **Profile & documents** | Declare certificates; see expiry | T10 |
+| Planning | **Stock** | Weekly stock update, feedstock, PTI's questions | T7, T8 |
+| Planning | **Capacity** | Capacity per week against PTI's LTP | T6 |
+| Sourcing | **RFI invitations** · **RFQ invitations** · **RFP invitations** | Answer sourcing events | Not in this guide |
+| Invoices | **Invoices** | Create, submit, correct and resubmit invoices | Not in this guide |
+| Company | **Profile & documents** | Declare certificates; see expiry | T9 |
 | Company | **My performance** | Your scorecard, read only | – |
 | Avatar menu | **Help & glossary** | What each term means | – |
 
 **Help on every page.**
 - An **(i)** beside a term opens its meaning, then "How it is calculated:", "Also called:" and "Not:" when they apply. Examples: **Supplier stock** and **Your reorder point** on Stock, **LTP, current forecast** and **Allocated** on Capacity (`lib/i18n/forecastUx.js:54-56`).
 - **Search... (Ctrl K)** in the top bar finds any page in your menu (`lib/i18n.js:540`).
-- The bell in the top bar lists award and withdrawal notices (`components/layout-v2/TopBarV2.jsx:73-76`).
 
 ---
 
@@ -51,16 +50,14 @@
 | Task | Use case in `SCENARIOS.md` | Lane | Menu | Ends in |
 |---|---|---|---|---|
 | T1 Find what Paragon is waiting for | All | any | To do | The right page, on the right rows |
-| T2 Confirm a PO and create its ASN | UC2 | Fulfilment | Purchase orders → Shipments & ASN | PO Confirmed; ASN Submitted |
-| T3 Answer a receipt discrepancy | UC2 | Fulfilment | Goods receipts | Answered |
-| T4 Correct a returned invoice | UC2 | Back Office | Invoices | Submitted; the match re-runs |
-| T5 Confirm a call-off, answer a delay, dispatch | UC3 | Fulfilment | Call-offs | Confirmed; dispatch notice sent |
-| T6 Commit to the forecast | UC4 | Commercial, Back Office | Foresight commitments | Submitted; forecast rows acknowledged |
-| T7 Submit capacity | UC4, UC6 | Fulfilment | Capacity | Capacity submitted |
-| T8 Weekly stock update and feedstock | UC6 | Fulfilment | Stock | Declared; feedstock Confirmed |
-| T9 Answer PTI's question and read your alerts | UC6, UC7 | Fulfilment | To do | Answered |
-| T10 Declare a certificate | UC5 | Back Office | Profile & documents | Under Review |
-| T11 Quote on an RFQ (optional, RFx paused) | UC1 | Commercial | RFQ invitations | Quotation Submitted |
+| T2 Confirm a PO and create its ASN | UC1 | Fulfilment | Purchase orders → Shipments & ASN | PO Confirmed; ASN Submitted |
+| T3 Answer a receipt discrepancy | UC1 | Fulfilment | Goods receipts | Answered |
+| T4 Confirm a call-off, answer a delay, dispatch | UC2 | Fulfilment | Call-offs | Confirmed; dispatch notice sent |
+| T5 Commit to the forecast | UC3 | Commercial, Back Office | Foresight commitments | Submitted; forecast rows acknowledged |
+| T6 Submit capacity | UC3, UC5 | Fulfilment | Capacity | Capacity submitted |
+| T7 Weekly stock update and feedstock | UC5 | Fulfilment | Stock | Declared; feedstock Confirmed |
+| T8 Answer PTI's question and read your alerts | UC5, UC6 | Fulfilment | To do | Answered |
+| T9 Declare a certificate | UC4 | Back Office | Profile & documents | Under Review |
 
 ---
 
@@ -75,7 +72,7 @@
 **Setup before each session** (moderator, about 10 minutes):
 1. Open the portal on the test laptop (prod after the 4 Nov redeploy, or the build named by Levi). Use a fresh browser profile so the demo starts clean; a page reload resets the demo data.
 2. Sign in with **View as Supplier**. Check that **To do** shows "PTI has 2 questions for you" (asks `ask-0001` and `ask-0002`, `services/data/mock/stores/supplierAskStore.js:18-60`).
-3. For T5's delay: switch **Portal view** to **PTI**, open **Call-offs**, open a confirmed call-off → **Change call-off** → Reason type **LTP dropped** → later need date → **Change and ask again**. Switch back to **Supplier**.
+3. For T4's delay: switch **Portal view** to **PTI**, open **Call-offs**, open a confirmed call-off → **Change call-off** → Reason type **LTP dropped** → later need date → **Change and ask again**. Switch back to **Supplier**.
 4. Set the language the participant prefers (English or Bahasa Indonesia, top bar). Labels in this script are the English ones.
 
 **Moderator rules:**
@@ -101,7 +98,7 @@ Each task: **Prompt** (read out), **Start**, **Expected path** (exact labels), *
 - **Watch for:** whether the area grouping makes sense; whether "PTI has … questions" is noticed above the task list.
 - **Ask after:** "What is the most urgent thing here? How do you know?"
 
-### T2 Confirm a PO and create its ASN (UC2)
+### T2 Confirm a PO and create its ASN (UC1)
 
 - **Prompt:** "Paragon sent you a new purchase order. Let them know you received it, confirm you can deliver it, then tell them what you are shipping for an order you already confirmed."
 - **Start:** To do → "Purchase orders to respond to", or Orders → **Purchase orders**. Records: PO-2026-00121 (Sent); PO-2026-00127 (Confirmed, nothing shipped) (`data/mockPurchaseOrders/sup007Walkthrough.js:21-35`).
@@ -110,7 +107,7 @@ Each task: **Prompt** (read out), **Start**, **Expected path** (exact labels), *
 - **Watch for:** whether "acknowledge" and "confirm" read as two different acts; whether **Adjust** or **Reject** is tried by mistake; whether the ASN wizard's lines are understood.
 - **Ask after:** "Today, how do you confirm a PO to Paragon? What is faster or slower here?"
 
-### T3 Answer a receipt discrepancy (UC2)
+### T3 Answer a receipt discrepancy (UC1)
 
 - **Prompt:** "Paragon received fewer goods than you shipped on one delivery. Tell them whether you agree."
 - **Start:** To do → "Receipt discrepancies to acknowledge or dispute", or Orders → **Goods receipts**. Record: the open discrepancy on PO-2026-00125.
@@ -119,16 +116,7 @@ Each task: **Prompt** (read out), **Start**, **Expected path** (exact labels), *
 - **Watch for:** whether the participant finds the shipped vs received quantities before answering.
 - **Ask after:** "What else would you need to see before you agree or dispute?"
 
-### T4 Correct a returned invoice (UC2)
-
-- **Prompt:** "Paragon sent one of your invoices back. Find out why and send it again."
-- **Start:** To do → "Returned invoices to correct and resubmit", or Invoices → **Invoices**, filter **Returned**. Record: INV-2025-BRL-0043 (`services/data/mock/fixtures/invoices.js:52-66`).
-- **Expected path:** open the invoice → read the dispute reason → **Correct and resubmit** → status Submitted (`lib/i18n/fulfilmentCollaboration.js:244`).
-- **Pass when:** the invoice shows Submitted.
-- **Watch for:** whether "Returned" is understood as "Paragon disputed it".
-- **Ask after:** "Was the reason clear enough to fix the invoice?"
-
-### T5 Confirm a call-off, answer a delay, send the dispatch notice (UC3)
+### T4 Confirm a call-off, answer a delay, send the dispatch notice (UC2)
 
 - **Prompt (part 1):** "Paragon called off a delivery from your agreement. Confirm it, but you can only deliver 2 days later than asked."
 - **Start:** To do → "Call-offs to confirm", or Orders → **Call-offs**, filter **Awaiting your confirmation**. Record: CO-2026-0003.
@@ -141,7 +129,7 @@ Each task: **Prompt** (read out), **Start**, **Expected path** (exact labels), *
 - **Watch for:** whether the tolerance hint is read before sending; whether "dispatch notice" and "ASN" read as different things.
 - **Ask after:** "When would you use Partially confirm in 2 deliveries?"
 
-### T6 Commit to the forecast (UC4)
+### T5 Commit to the forecast (UC3)
 
 - **Prompt:** "Paragon published its forecast for the next periods. Tell them how much you commit to, period by period. For one period you can only supply 80%."
 - **Start:** To do → "New forecast version to review", or Planning → **Foresight commitments**, tab **Commitments**.
@@ -150,7 +138,7 @@ Each task: **Prompt** (read out), **Start**, **Expected path** (exact labels), *
 - **Watch for:** whether the participant expects a per-row submit; whether "Draft saved (not visible to PTI)" is noticed; whether "Confirm capacity for {group} first." blocks them and they find **Confirm capacity**.
 - **Ask after:** "What does 'Upside' mean to you? What does 'Firm' vs 'Trade-off' mean?"
 
-### T7 Submit capacity (UC4, UC6)
+### T6 Submit capacity (UC3, UC5)
 
 - **Prompt:** "Tell Paragon how much you can produce each week for the next weeks. Your capacity is the same every week. In one week you can add extra capacity."
 - **Start:** Planning → **Capacity**, or To do → "Capacity confirmations due", or **Confirm capacity** under "Also due by the same cutoff" in the weekly stock update (BL-236).
@@ -159,7 +147,7 @@ Each task: **Prompt** (read out), **Start**, **Expected path** (exact labels), *
 - **Watch for:** whether weeks as columns are read correctly; whether the (i) on **LTP, current forecast** and **Allocated** is opened.
 - **Ask after:** "What is the difference between Allocated and Additional capacity?"
 
-### T8 Weekly stock update and feedstock (UC6)
+### T7 Weekly stock update and feedstock (UC5)
 
 - **Prompt:** "It is your weekly stock update. Send Paragon your stock for the materials still missing, then confirm the feedstock you hold."
 - **Start:** To do → "Weekly stock update", or Planning → **Stock**.
@@ -169,7 +157,7 @@ Each task: **Prompt** (read out), **Start**, **Expected path** (exact labels), *
 - **Watch for:** whether "feedstock is not stock" is understood; whether **Upload template** is preferred for many materials.
 - **Ask after:** "How do you send stock to Paragon today, and how often?"
 
-### T9 Answer PTI's question and read your alerts (UC6, UC7)
+### T8 Answer PTI's question and read your alerts (UC5, UC6)
 
 - **Prompt:** "Paragon has a question for you about a production date. Answer it. Then tell me what Paragon is worried about for your materials."
 - **Start:** To do → "PTI has 2 questions for you". Record: ask-0001 (production date, PK-PETB-8802).
@@ -178,7 +166,7 @@ Each task: **Prompt** (read out), **Start**, **Expected path** (exact labels), *
 - **Watch for:** whether the alerts are read as the supplier's job or as information.
 - **Ask after:** "How would you want to be told about a new question: in the portal, by email or by WhatsApp?" (none is sent today; section 6)
 
-### T10 Declare a certificate (UC5)
+### T9 Declare a certificate (UC4)
 
 - **Prompt:** "Paragon asked for a document, and one of your certificates is about to expire. Deal with both."
 - **Start:** To do → "Documents PTI asked for" / "Certificates expired or expiring", or Company → **Profile & documents**. Records: doc-006 (Awaiting Upload), doc-001 (Halal Certificate, Expiring Soon, expires 14 Oct 2026). No sup-007 document is expired at the demo date (`services/data/mock/fixtures/supplierDocuments.js:33,104`).
@@ -186,14 +174,6 @@ Each task: **Prompt** (read out), **Start**, **Expected path** (exact labels), *
 - **Pass when:** doc-006 shows Under Review.
 - **Watch for:** the expectation to upload a file (no file is sent today; section 6).
 - **Ask after:** "Which documents does Paragon ask you for most often?"
-
-### T11 Quote on an RFQ (optional; RFx is paused)
-
-- **Prompt:** "Paragon invited you to quote. Say you will take part and send your quote."
-- **Start:** Sourcing → **RFQ invitations**.
-- **Expected path:** **I will respond** → **Submit quote** → **Submit quotation** (`lib/i18n/rfqResponse.js:24`; `lib/i18n/rfqs.js:48,111`).
-- **Pass when:** the quotation shows Quotation Submitted.
-- **Ask after:** "What would make you decline an invitation?" (reasons include "No capacity for this", `lib/i18n/rfqResponse.js:34`)
 
 ---
 
@@ -210,8 +190,6 @@ Each task: **Prompt** (read out), **Start**, **Expected path** (exact labels), *
 | T7 | | | | | | |
 | T8 | | | | | | |
 | T9 | | | | | | |
-| T10 | | | | | | |
-| T11 | | | | | | |
 
 **Wrap-up questions:**
 1. Which task would you do in the portal every week, and which would you rather do by email or WhatsApp?

@@ -44,14 +44,13 @@ add({
   colW: [3.4, 8.73],
   rows: [
     ['All', '(i) term tips on agreed terms, Help & glossary, top-bar search (Ctrl K), weekly plan card on My tasks'],
-    ['UC1 Sourcing', 'Kept: RFx is paused. One reason label corrected ("No capacity for this")'],
-    ['UC2 PO to payment', 'Create ASN from the PO page now opens the ASN wizard; both receipt answers need a comment'],
-    ['UC3 Call-offs', 'Hub drafts at ROP Fisik with flags (live stock feed only); delay approval; blanket PO run-out'],
-    ['UC4 Forecast', 'No commitment date; Submit all per period; Force Majeure and Discontinued; Move demand to several suppliers; Request revision off'],
-    ['UC5 Compliance', 'Labels re-checked; the amber pill reads "Expiring Soon"'],
-    ['UC6 Stock & capacity', 'Weekly update now also counts capacity and feedstock; feedstock confirmation; 3 capacity states; Copy to all weeks; PTI accept / Undo; PTI questions'],
-    ['UC7 Alerts', 'Next step and Impact in N days; asks named for their topic; 12 rules'],
-    ['UC8 Demand anticipation', 'New, PTI only: publish DA, plan vs execution, Below DA → draft call-off, DA history']
+    ['UC1 PO to goods receipt', 'Ends at the goods receipt (RFx and invoices left out of this guide); Create ASN from the PO page opens the ASN wizard; both receipt answers need a comment'],
+    ['UC2 Call-offs', 'Hub drafts at ROP Fisik with flags (live stock feed only); delay approval; blanket PO run-out'],
+    ['UC3 Forecast', 'No commitment date; Submit all per period; Force Majeure and Discontinued; Move demand to several suppliers; Request revision off'],
+    ['UC4 Compliance', 'Labels re-checked; the amber pill reads "Expiring Soon"'],
+    ['UC5 Stock & capacity', 'Weekly update now also counts capacity and feedstock; feedstock confirmation; 3 capacity states; Copy to all weeks; PTI accept / Undo; PTI questions'],
+    ['UC6 Alerts', 'Next step and Impact in N days; asks named for their topic; 12 rules'],
+    ['UC7 Demand anticipation', 'New, PTI only: publish DA, plan vs execution, Below DA → draft call-off, DA history']
   ],
   notes: 'Evidence: SCENARIOS.md section 2 table; git log 7078ea3..aeabdc83.'
 });
@@ -68,7 +67,7 @@ add({
     S('Switch side any time with Portal view: PTI / Supplier in the sidebar')
   ],
   statusAfter: 'Signed in as the demo seat',
-  notes: 'Evidence: src/pages/auth/Login.jsx:129-130,304,326 (the buttons read "i View as Buyer" / "i View as Supplier": the i is literal text, section 4 item 24); src/data/mockSuppliers.js:227-230; src/lib/i18n/hub.js:10-13.'
+  notes: 'Evidence: src/pages/auth/Login.jsx:129-130,304,326 (the buttons read "i View as Buyer" / "i View as Supplier": the i is literal text, section 4 item 19); src/data/mockSuppliers.js:227-230; src/lib/i18n/hub.js:10-13.'
 });
 add({
   type: 'step',
@@ -144,112 +143,30 @@ add({
   colW: [2.3, 3.5, 2.2, 1.3, 2.83],
   fontSize: 12,
   rows: [
-    ['UC1 Sourcing', '–', 'Requisitions · RFI · RFQ · RFP', '–', 'RFI · RFQ · RFP invitations'],
-    ['UC2 PO to payment', 'Purchase orders · Shipments & ASN · Goods receipts', '–', 'Invoices', 'Purchase orders · Shipments & ASN · Goods receipts · Invoices'],
-    ['UC3 Call-offs', 'Call-offs · What to order', '–', '–', 'Call-offs · Shipments & ASN'],
-    ['UC4 Forecast', 'This week · Publish to suppliers · Foresight commitments', '–', '–', 'Foresight commitments · Capacity'],
-    ['UC5 Compliance', '–', 'Supplier documents', '–', 'Profile & documents'],
-    ['UC6 Stock & capacity', 'Stock · Capacity · Supplier access · Supplier follow-ups', '–', '–', 'Stock · Capacity · To do'],
-    ['UC7 Alerts', 'Alerts · My tasks', '–', '–', 'To do'],
-    ['UC8 Demand anticipation', 'Demand anticipation (DA) · What to order · Call-offs · DA history', 'DA history', 'DA history', '–']
+    ['UC1 PO to goods receipt', 'Purchase orders · Shipments & ASN · Goods receipts', '–', '–', 'Purchase orders · Shipments & ASN · Goods receipts'],
+    ['UC2 Call-offs', 'Call-offs · What to order', '–', '–', 'Call-offs · Shipments & ASN'],
+    ['UC3 Forecast', 'This week · Publish to suppliers · Foresight commitments', '–', '–', 'Foresight commitments · Capacity'],
+    ['UC4 Compliance', '–', 'Supplier documents', '–', 'Profile & documents'],
+    ['UC5 Stock & capacity', 'Stock · Capacity · Supplier access · Supplier follow-ups', '–', '–', 'Stock · Capacity · To do'],
+    ['UC6 Alerts', 'Alerts · My tasks', '–', '–', 'To do'],
+    ['UC7 Demand anticipation', 'Demand anticipation (DA) · What to order · Call-offs · DA history', 'DA history', 'DA history', '–']
   ],
-  caption: 'Columns follow the "Menu for" view. Full list in the Menu Directory at the end.',
+  caption: 'Columns follow the "Menu for" view. RFx (Sourcing) and Invoices are not in this guide. Full list in the Menu Directory at the end.',
   notes: 'Evidence: src/components/layout-v2/navConfig.js:88-296; labels src/lib/i18n/hub.js:17-99.'
 });
 
-// ── UC1 Sourcing (RFx paused: content kept from 19 Oct) ────────────────────
-const u1 = uc(1, 'Sourcing: requisition to award', 3);
+// ── UC1 PO to goods receipt (invoice steps left out, owner 2026-11-02) ───────────────────────────────────────────────────
+const u2 = uc(1, 'Purchase order to goods receipt', 3);
 add({
-  type: 'overview',
-  kicker: 'Use case 1 of 8',
-  title: 'UC1 · Sourcing: requisition to award',
-  purpose: 'Turn a purchase need into a competitive event, collect supplier answers, negotiate, and record the award. The PO or contract is then raised in SAP. RFx is paused: this section is unchanged since 19 Oct.',
-  menus: [{ actor: 'PTI', text: 'Sourcing → Requisitions · RFI · RFQ · RFP' }, { actor: 'SUP', text: 'Sourcing → RFI · RFQ · RFP invitations' }],
+  type: 'overview', kicker: 'Use case 1 of 7', title: 'UC1 · Purchase order to goods receipt',
+  purpose: 'The supplier confirms the PO and ships against an ASN; PTI receives and posts the goods receipt; the supplier answers any receipt discrepancy. Invoicing and payment are not part of this guide.',
+  menus: [{ actor: 'PTI', text: 'Order collaboration → Goods receipts' }, { actor: 'SUP', text: 'Orders → Purchase orders · Shipments & ASN · Goods receipts' }],
   lanes: {
-    pti: [{ n: 1, label: 'Requisitioner submits PR' }, { n: 2, label: 'Procurement approves, raises event' }, { n: 3, label: 'Send RFQ to suppliers' }, { n: 5, label: 'Open a round' }, { n: 7, label: 'Award the event' }],
-    sup: [{ n: 4, label: 'Submit quotation' }, { n: 6, label: 'Send the revised quote' }, { n: 8, label: 'Sees the awarded share' }]
+    pti: [{ n: 3, label: 'Create GR, post to SAP' }, { n: 5, label: 'Reconcile or resolve' }],
+    sup: [{ n: 1, label: 'Acknowledge and confirm PO' }, { n: 2, label: 'Create and submit ASN' }, { n: 4, label: 'Answer a receipt discrepancy' }]
   },
-  caption: 'Dashed arrow = handoff between PTI and Supplier. RFI and RFP follow the same send, answer, close pattern; RFP adds firm-offer rounds.',
-  notes: 'Evidence: SCENARIOS.md UC1 (src/pages-v2/BuyerRequisitions/, BuyerSourcing/, BuyerSourcingEvent/, SupplierRFQs/, SupplierNegotiations.jsx).'
-});
-add({
-  type: 'step', kicker: u1(1), title: 'Raise the requisition and send the RFQ',
-  menu: 'Sourcing → Requisitions, then RFQ',
-  shot: 'UC1-1-pti.png', route: '/buyer/purchase-requisition, /buyer/rfq', seat: 'PTI, Menu for Buyer', record: 'pr-005 Draft, pr-004 Pending, rfq-025 Draft',
-  steps: [
-    P('Requisitioner: New PR, then Submit for approval'),
-    P('Procurement: Approve, then Raise sourcing event'),
-    P('The RFQ wizard opens pre-filled; Save RFQ draft'),
-    P('Send to suppliers (or Save and send to suppliers on Review)')
-  ],
-  statusAfter: 'PR: Sourcing Event · RFQ: Draft → Open',
-  notes: 'Evidence: src/pages-v2/BuyerRequisitions/components/RequisitionPanelFooter.jsx:89-104,173-215; src/pages-v2/BuyerRequisitions/hooks/useRequisitionActions.js:281-282; src/pages-v2/BuyerSourcing/components/RfqWizardModal.jsx:216; src/pages-v2/BuyerSourcing/components/RfqLifecycleActions.jsx:83-87.'
-});
-add({
-  type: 'step', kicker: u1(2), title: 'Supplier answers the invitation',
-  menu: 'Sourcing → RFQ invitations',
-  shot: 'UC1-2-supplier.png', route: '/supplier/rfq', seat: 'Supplier', record: 'rfq-021 Open',
-  steps: [
-    S('Open the RFQ, click I will respond'),
-    S('Accept confidentiality terms, if asked'),
-    S('Submit quote, then Submit quotation'),
-    S('Or Decline RFQ with a reason, then Decline this RFQ')
-  ],
-  statusAfter: 'Quotation Submitted (or Declined)',
-  notes: 'Evidence: src/lib/i18n/rfqResponse.js:24,32-45; src/pages-v2/rfqs/RfqEngagementControls.jsx:206,213; src/lib/i18n/rfqs.js:48,50,111; src/pages-v2/SupplierRFQs/components/RFQCard.jsx:216; src/pages-v2/SupplierRFQs/components/QuotePanel.jsx:95.'
-});
-add({
-  type: 'step', kicker: u1(3), title: 'Negotiate and award',
-  menu: 'Sourcing → RFQ → event page',
-  shot: 'UC1-3-pti.png', route: '/buyer/rfq/rfq-014', seat: 'PTI, Menu for Buyer', record: 'rfq-014 with round nr-0001',
-  steps: [
-    P('Move to review on the Comparison, then Open the round'),
-    S('Send a revised quote → Send the revised quote'),
-    P('Close the round; award per item, or Split by % / by quantity'),
-    P('Award the event → check the sheet → Record the award'),
-    S('To do: "Awarded to you"; Awards & history shows the share')
-  ],
-  statusAfter: 'RFQ: Awarded (or Partly awarded); the PO follows from SAP',
-  notes: 'Evidence: src/pages-v2/BuyerSourcingEvent/components/ComparisonTable.jsx:367; NewRoundForm.jsx:121-140; NegotiationSection.jsx:104-111; AwardSection.jsx:118-221; src/lib/i18n/rfx.js:341,352; src/pages-v2/SupplierNegotiations.jsx:329; src/lib/i18n/hub.js:211-212,220; src/pages-v2/SupplierRFQs/utils.js:223.'
-});
-add({
-  type: 'table', kicker: u1(0, 'negative scenarios'), title: 'When it goes wrong',
-  columns: ['Trigger', 'What the system shows', 'Who acts next', 'Menu'],
-  colW: [3.2, 3.8, 2.9, 2.23],
-  rows: [
-    ['Supplier declines the RFQ', 'Reason ("No capacity for this", …) and note are recorded', 'Procurement reads the reason', 'RFQ invitations'],
-    ['No supplier passes the compliance gate', '"This RFQ cannot be awarded…"', 'Procurement: Cancel RFQ', 'RFQ'],
-    ['PR rejected', 'Rejected, with the reason', 'Requisitioner: Revise and return to draft', 'Requisitions']
-  ],
-  notes: 'Evidence: src/lib/i18n/rfqResponse.js:32-45; src/lib/i18n/rfx.js:278; src/pages-v2/BuyerSourcing/components/RfqLifecycleActions.jsx:110-117; src/pages-v2/BuyerRequisitions/components/DecisionCaptures.jsx:67-85.'
-});
-add({
-  type: 'table', kicker: u1(0, 'edge cases'), title: 'Edge cases',
-  columns: ['Condition', 'What happens', 'Menu'],
-  colW: [4.0, 5.5, 2.63],
-  rows: [
-    ['Quote after the deadline', 'Refused. The RFQ stays Open: nothing closes it automatically.', 'RFQ invitations'],
-    ['Split award does not total 100%', 'Refused until the split is complete', 'RFQ event page'],
-    ['Award departs from the best-scored quote', 'A reason is required', 'RFQ event page'],
-    ['Attachment over 25 MB, or over 30 files', 'Refused', 'Any RFx answer'],
-    ['Confidential RFQ', 'Masked until the supplier accepts the terms', 'RFQ invitations'],
-    ['RFI or RFP invitee list', 'A supplier sees only its own row', 'RFI / RFP invitations']
-  ],
-  notes: 'Evidence: src/pages-v2/SupplierRFQs/hooks/useQuoteSubmission.js:188-199; src/services/sourcing/awardShape.js:286-289; src/services/attachments/fileRules.js:11-63; src/services/data/mock/rfxReadModel.js:245-253.'
-});
-
-// ── UC2 PO to payment ───────────────────────────────────────────────────
-const u2 = uc(2, 'Purchase order to payment', 4);
-add({
-  type: 'overview', kicker: 'Use case 2 of 8', title: 'UC2 · Purchase order to payment',
-  purpose: 'The supplier confirms the PO, ships against an ASN, PTI receives and posts the goods receipt, and the invoice is matched and paid.',
-  menus: [{ actor: 'PTI', text: 'Order collaboration · Invoices' }, { actor: 'SUP', text: 'Orders · Invoices' }],
-  lanes: {
-    pti: [{ n: 3, label: 'Create GR, post to SAP' }, { n: 5, label: '3-way match' }, { n: 6, label: 'Release payment' }],
-    sup: [{ n: 1, label: 'Acknowledge and confirm PO' }, { n: 2, label: 'Create and submit ASN' }, { n: 4, label: 'Submit invoice' }]
-  },
-  caption: 'The PO itself comes from SAP. The match runs automatically when the invoice is submitted.',
-  notes: 'Evidence: SCENARIOS.md UC2.'
+  caption: 'The PO itself comes from SAP. Steps 4 and 5 happen only when the receipt is short or has rejected lines.',
+  notes: 'Evidence: SCENARIOS.md UC1.'
 });
 add({
   type: 'step', kicker: u2(1), title: 'Supplier acknowledges and confirms the PO',
@@ -291,28 +208,13 @@ add({
   notes: 'Evidence: src/pages-v2/BuyerGoodsReceipt/components/GoodsReceiptHeader.jsx:63; src/components/v2-features/GRInspectionWizard/index.jsx:206; src/services/transitions/grRollup.js.'
 });
 add({
-  type: 'step', kicker: u2(4), title: 'Invoice and payment',
-  menu: 'Invoices → Invoices (both sides)',
-  shot: 'UC2-4-supplier.png', route: '/supplier/invoices', seat: 'Supplier', record: 'inv-brl-0055 Draft',
-  steps: [
-    S('Back Office: New invoice → pick the PO and receipts'),
-    S('Submit invoice: the 3-way match runs on submit'),
-    P('Finance: open an Approved invoice, Release payment'),
-    P('Confirm release — {amount}')
-  ],
-  statusAfter: 'Invoice: Submitted → Matched … Approved → Payment Released',
-  notes: 'Evidence: src/pages-v2/SupplierInvoices/index.jsx:272; src/pages-v2/SupplierInvoices/components/NewInvoicePanel.jsx:160; src/lib/i18n/buyerInvoices.js:96,107; src/pages-v2/BuyerInvoices/components/InvoicePanelFooter.jsx:123-138. A Matched invoice never becomes Approved in the UI (section 4 item 6). PTI screen: UC2-5-pti.png (/buyer/invoices, Finance, inv-giv-0892).'
-});
-add({
   type: 'table', kicker: u2(0, 'negative scenarios'), title: 'When it goes wrong',
   columns: ['Trigger', 'What the system shows', 'Who acts next', 'Menu'],
   colW: [3.0, 3.6, 3.3, 2.23],
   rows: [
     ['Supplier adjusts the PO', 'PO: Adjusted', 'PTI: Reject counter-offer → Send back to supplier', 'Purchase orders'],
     ['GR has short or rejected lines', 'ASN flagged Discrepancy', 'Supplier: Respond → Acknowledge or Dispute, comment required', 'Goods receipts'],
-    ['Supplier disputes the receipt', 'Dispute open', 'PTI: Reconcile, or Resolve', 'Goods receipts'],
-    ['Invoice quantity or price off', 'Match: Qty Mismatch or Price Variance', 'Finance: Dispute → Raise dispute', 'Invoices'],
-    ['Finance disputes the invoice', 'Supplier sees "Returned"', 'Supplier: Correct and resubmit', 'Invoices']
+    ['Supplier disputes the receipt', 'Dispute open', 'PTI: Reconcile, or Resolve', 'Goods receipts']
   ],
   notes: 'Evidence: src/lib/i18n/orderCollaboration.js:51-55,80,82; src/pages-v2/BuyerOrders/components/PoCounterReview.jsx:64,96; src/lib/i18n/fulfilmentCollaboration.js:123,135,136,244; src/pages-v2/SupplierGoodsReceipts.jsx:357-379; src/lib/i18n/goodsReceipt.js:301; src/lib/i18n/buyerInvoices.js:94,97; src/services/transitions/fulfilmentRules/invoice.js:284-285.'
 });
@@ -324,18 +226,16 @@ add({
     ['Confirmed qty above ordered qty', 'Blocked', 'Purchase orders'],
     ['ASN qty above the open qty', 'Refused unless an over-ship reason is given', 'Shipments & ASN'],
     ['Shelf life too short', 'Request shelf-life exception; goes to PTI for approval', 'Shipments & ASN'],
-    ['Price outside 2% (cap Rp 500,000)', 'Invoice held as Price Variance', 'Invoices'],
-    ['Duplicate invoice number or over-invoicing', 'Refused', 'Invoices'],
     ['GR on Quality Hold', 'Request lab retest → Under Inspection', 'Goods receipts'],
     ['Supplier seat without the Fulfilment lane', '"Awaiting Supplier Fulfilment" replaces Create ASN', 'Purchase orders']
   ],
   notes: 'Evidence: src/services/transitions/policies/purchaseOrder.js:38,51-54; src/services/transitions/fulfilmentRules/asn.js:160-162; src/lib/i18n/fulfilmentCollaboration.js:64; src/services/transitions/hubSettings.js:119-147; src/services/data/mock/MockCommandService.js:1261,1282; src/lib/i18n/goodsReceipt.js:72; src/pages-v2/SupplierOrders/index.jsx:338-354.'
 });
 
-// ── UC3 Call-offs ───────────────────────────────────────────────────────
-const u3 = uc(3, 'Call-offs against agreements', 4);
+// ── UC2 Call-offs ───────────────────────────────────────────────────────
+const u3 = uc(2, 'Call-offs against agreements', 4);
 add({
-  type: 'overview', kicker: 'Use case 3 of 8', title: 'UC3 · Call-offs against agreements',
+  type: 'overview', kicker: 'Use case 2 of 7', title: 'UC2 · Call-offs against agreements',
   purpose: 'PTI releases call-offs against a blanket PO line; the supplier confirms, changes or rejects, then dispatches. New: with a live stock feed the hub drafts a call-off itself at ROP Fisik and flags quantities below the minimum delivery or above Max (none in the demo).',
   menus: [{ actor: 'PTI', text: 'Order collaboration → Call-offs' }, { actor: 'SUP', text: 'Orders → Call-offs · Shipments & ASN' }],
   lanes: {
@@ -343,7 +243,7 @@ add({
     sup: [{ n: 3, label: 'Respond → Send confirmation' }, { n: 5, label: 'Send dispatch notice' }, { n: 6, label: 'Create the ASN' }]
   },
   caption: 'Step 4 happens only when the confirmation is outside tolerance (more than +5% or a later date).',
-  notes: 'Evidence: SCENARIOS.md UC3; src/lib/i18n/callOffs.js; src/services/transitions/callOffTriggerRules.js.'
+  notes: 'Evidence: SCENARIOS.md UC2; src/lib/i18n/callOffs.js; src/services/transitions/callOffTriggerRules.js.'
 });
 add({
   type: 'step', kicker: u3(1), title: 'PTI starts a call-off and releases it',
@@ -427,10 +327,10 @@ add({
   notes: 'Evidence: src/lib/i18n/callOffs.js:34-55,80-82,155-158,190-212,284; src/services/transitions/callOffTriggerRules.js:79-87,357-399; src/services/transitions/blanketPoRules.js:48,227,271,312; src/services/transitions/hubSettings.js:89-95; src/services/data/mock/MockCommandService.js:1690-1702,1708-1727,1779.'
 });
 
-// ── UC4 Forecast ───────────────────────────────────────────────────────
-const u4 = uc(4, 'Forecast collaboration', 3);
+// ── UC3 Forecast ───────────────────────────────────────────────────────
+const u4 = uc(3, 'Forecast collaboration', 3);
 add({
-  type: 'overview', kicker: 'Use case 4 of 8', title: 'UC4 · Forecast collaboration',
+  type: 'overview', kicker: 'Use case 3 of 7', title: 'UC3 · Forecast collaboration',
   purpose: 'PTI shares its forecast; the supplier commits quantities per period; PTI accepts the shortfall or moves demand to other suppliers.',
   menus: [{ actor: 'PTI', text: 'Weekly plan → This week · Foresight commitments' }, { actor: 'SUP', text: 'Planning → Foresight commitments · Capacity' }],
   lanes: {
@@ -495,10 +395,10 @@ add({
   notes: 'Evidence: src/lib/i18n/forecastCollaboration.js:83,135,158,260-263; src/services/transitions/forecastRules.js; src/lib/i18n/inventoryCapacity.js:434-450; src/services/transitions/forecastConfig.js:351.'
 });
 
-// ── UC5 Compliance ─────────────────────────────────────────────────────
-const u5 = uc(5, 'Compliance documents', 2);
+// ── UC4 Compliance ─────────────────────────────────────────────────────
+const u5 = uc(4, 'Compliance documents', 2);
 add({
-  type: 'overview', kicker: 'Use case 5 of 8', title: 'UC5 · Compliance documents',
+  type: 'overview', kicker: 'Use case 4 of 7', title: 'UC4 · Compliance documents',
   purpose: 'PTI asks for a certificate; the supplier declares it; PTI confirms or refuses it. Expiry is tracked.',
   menus: [{ actor: 'PTI', text: 'Sourcing → Supplier documents' }, { actor: 'SUP', text: 'Company → Profile & documents' }],
   lanes: {
@@ -506,7 +406,7 @@ add({
     sup: [{ n: 2, label: 'Declare → Record declaration' }, { n: 4, label: 'Declare again if refused' }]
   },
   caption: 'No file is sent to Paragon in this build: Declare records the details only.',
-  notes: 'Evidence: SCENARIOS.md UC5.'
+  notes: 'Evidence: SCENARIOS.md UC4.'
 });
 add({
   type: 'step', kicker: u5(1), title: 'PTI asks; the supplier declares',
@@ -548,10 +448,10 @@ add({
   notes: 'Evidence: src/services/data/dayProjection.js:138,210-219; src/lib/i18n/supplierDocuments.js:34-36,59; src/services/data/documentDisplayState.js:158,176; src/lib/i18n/hub.js:194; src/pages-v2/BuyerCompliance/index.jsx.'
 });
 
-// ── UC6 Stock, feedstock, capacity ─────────────────────────────────────
-const u6 = uc(6, 'Stock, feedstock and capacity', 5);
+// ── UC5 Stock, feedstock, capacity ─────────────────────────────────────
+const u6 = uc(5, 'Stock, feedstock and capacity', 5);
 add({
-  type: 'overview', kicker: 'Use case 6 of 8', title: 'UC6 · Shared stock, feedstock, capacity and PTI questions',
+  type: 'overview', kicker: 'Use case 5 of 7', title: 'UC5 · Shared stock, feedstock, capacity and PTI questions',
   purpose: 'Suppliers share stock, feedstock and capacity every week; PTI reads them by risk, decides on capacity gaps and asks the supplier when something is missing.',
   menus: [{ actor: 'PTI', text: 'Inventory & capacity → Stock · Capacity' }, { actor: 'SUP', text: 'Planning → Stock · Capacity · Home → To do' }],
   lanes: {
@@ -559,7 +459,7 @@ add({
     sup: [{ n: 1, label: 'Weekly stock update' }, { n: 2, label: 'Confirm feedstock' }, { n: 3, label: 'Submit capacity' }, { n: 6, label: 'Answer PTI\'s question' }]
   },
   caption: 'Questions and answers stay in the portal: no email or WhatsApp is sent.',
-  notes: 'Evidence: SCENARIOS.md UC6.'
+  notes: 'Evidence: SCENARIOS.md UC5.'
 });
 add({
   type: 'step', kicker: u6(1), title: 'Supplier sends the weekly stock update',
@@ -635,7 +535,7 @@ add({
   colW: [3.2, 3.8, 2.9, 2.23],
   rows: [
     ['Week below the LTP, no reason', '"The week of {week} is below the LTP. Choose a reason."', 'Supplier Fulfilment', 'Capacity'],
-    ['Week cannot be covered (red)', '"Additional capacity cannot cover this week. Still short:"', 'Planning: ask, or move demand (UC4)', 'Capacity'],
+    ['Week cannot be covered (red)', '"Additional capacity cannot cover this week. Still short:"', 'Planning: ask, or move demand (UC3)', 'Capacity'],
     ['Reply arrives by message, cannot be parsed', '"Could not interpret this as a stock update."', 'Planning: Record stock from a supplier message', 'Supplier follow-ups · Stock']
   ],
   notes: 'Evidence: src/lib/i18n/inventoryCapacity.js:82,415; src/lib/i18n/capacityDecision.js:20; src/services/transitions/capacityDecisionRules.js:52-59; src/lib/i18n/commHubInbound.js:23,37; src/lib/i18n/buyerCommHub.js:14.'
@@ -654,10 +554,10 @@ add({
   notes: 'Evidence: src/lib/i18n/inventoryCapacity.js:161,625-626; src/pages-v2/SupplierInventory.jsx:183-188,253,295-299; src/pages-v2/SupplierCapacity.jsx:474-488; src/lib/i18n/capacityDecision.js:35-37.'
 });
 
-// ── UC7 Alerts ─────────────────────────────────────────────────────────
-const u7 = uc(7, 'Inventory and capacity alerts', 2);
+// ── UC6 Alerts ─────────────────────────────────────────────────────────
+const u7 = uc(6, 'Inventory and capacity alerts', 2);
 add({
-  type: 'overview', kicker: 'Use case 7 of 8', title: 'UC7 · Inventory and capacity alerts',
+  type: 'overview', kicker: 'Use case 6 of 7', title: 'UC6 · Inventory and capacity alerts',
   purpose: 'The portal checks stock, capacity, commitments, call-offs and demand anticipation against 12 rules and raises an alert for each risk. Planning acts on it and closes it with a reason. Alerts are computed live.',
   menus: [{ actor: 'PTI', text: 'Inventory & capacity → Alerts · My tasks' }, { actor: 'SUP', text: 'Home → To do → Alerts about your materials' }],
   lanes: {
@@ -730,17 +630,17 @@ add({
   notes: 'Evidence: src/pages-v2/BuyerAlerts.jsx; src/lib/i18n/inventoryCapacity.js:407; commit 512b7773 (INV-D12); src/pages-v2/inventory/alertNextStep.jsx:62-65; src/services/transitions/inventoryAlertRules.js; src/services/data/mock/stores/inventoryHubStores.js.'
 });
 
-// ── UC8 Demand anticipation (new, PTI only) ────────────────────────────
-const u8 = uc(8, 'Demand anticipation and replenishment', 3);
+// ── UC7 Demand anticipation (new, PTI only) ────────────────────────────
+const u8 = uc(7, 'Demand anticipation and replenishment', 3);
 add({
-  type: 'overview', kicker: 'Use case 8 of 8 · new', title: 'UC8 · Demand anticipation (DA) and replenishment',
+  type: 'overview', kicker: 'Use case 7 of 7 · new', title: 'UC7 · Demand anticipation (DA) and replenishment',
   purpose: 'Each week the planner publishes the DA per supplier × material over its lead-time horizon, checks plan against execution, and turns any gap into a draft call-off or a PR in SAP. PTI only: the supplier DA view is built but switched off.',
   menus: [{ actor: 'PTI', text: 'Weekly plan → Demand anticipation (DA) · What to order' }, { actor: 'PTI', text: 'Review → Demand anticipation (DA) history' }],
   lanes: {
-    pti: [{ n: 1, label: 'Read the DA weeks' }, { n: 2, label: 'Plan vs execution' }, { n: 3, label: 'Publish DA' }, { n: 4, label: 'Below DA → draft call-off' }, { n: 5, label: 'Release (UC3)' }],
+    pti: [{ n: 1, label: 'Read the DA weeks' }, { n: 2, label: 'Plan vs execution' }, { n: 3, label: 'Publish DA' }, { n: 4, label: 'Below DA → draft call-off' }, { n: 5, label: 'Release (UC2)' }],
     sup: []
   },
-  caption: 'The horizon is the lead time and rolls weekly (the fixed 4-week horizons were retired). Step 5 hands over to the supplier in UC3.',
+  caption: 'The horizon is the lead time and rolls weekly (the fixed 4-week horizons were retired). Step 5 hands over to the supplier in UC2.',
   notes: 'Evidence: src/services/transitions/supplierDaView.js:31 (SUPPLIER_DA_VIEW_ENABLED = false); commit 93fed066; src/lib/i18n/demandAnticipation.js:15-18.'
 });
 add({
@@ -791,7 +691,7 @@ add({
     ['Draft from a What to order recommendation', 'Release withheld: the plan uses simulated data (Below DA and ROP Fisik drafts are not)', 'Call-offs'],
     ['Nothing differs from the publication in force', 'Publish stays disabled (demo: "0 … differ")', 'DA'],
     ['Supply above a week\'s DA', 'Carries forward and reduces later Gaps', 'What to order'],
-    ['Surplus larger than the last week can take', '"…more than that week can take", plus an alert (UC7)', 'DA · Alerts'],
+    ['Surplus larger than the last week can take', '"…more than that week can take", plus an alert (UC6)', 'DA · Alerts'],
     ['No lead time on record', 'Horizon falls back to 4 weeks, flagged on the card', 'DA'],
     ['Trying an alternative', 'Try a what-if: analysis only, nothing changes the plan', 'What-if sandbox'],
     ['ROP Order, ROP Fisik, Max Stock, OSIP level', 'On Planning engine · Safety stock targets', 'Avatar menu']
@@ -802,53 +702,53 @@ add({
 // ── Menu Directory ─────────────────────────────────────────────────────
 const ptiMenu = [
   ['My tasks', 'Home', 'All', 'Counts what needs action; weekly plan card', 'All'],
-  ['Supplier follow-ups', 'Home', 'All', 'Suppliers to follow up, record a reply, request log', 'UC6'],
-  ['Purchase orders', 'Order collaboration', 'Material Planner', 'Summary and List views; steps link to stage pages', 'UC2'],
-  ['Call-offs', 'Order collaboration', 'Material Planner', 'Release and review call-offs; blanket POs running out', 'UC3'],
-  ['Shipments & ASN', 'Order collaboration', 'Material Planner', 'Tracks ASNs; approves shelf-life exceptions', 'UC2'],
-  ['Goods receipts', 'Order collaboration', 'Material Planner', 'Creates and posts GRs; reconciles discrepancies', 'UC2'],
-  ['This week', 'Weekly plan', 'Material Planner', 'Input check and the steps of the weekly cycle', 'UC4, UC8'],
-  ['What to order', 'Weekly plan', 'Material Planner', 'Order proposals; Below DA with draft call-offs', 'UC8'],
+  ['Supplier follow-ups', 'Home', 'All', 'Suppliers to follow up, record a reply, request log', 'UC5'],
+  ['Purchase orders', 'Order collaboration', 'Material Planner', 'Summary and List views; steps link to stage pages', 'UC1'],
+  ['Call-offs', 'Order collaboration', 'Material Planner', 'Release and review call-offs; blanket POs running out', 'UC2'],
+  ['Shipments & ASN', 'Order collaboration', 'Material Planner', 'Tracks ASNs; approves shelf-life exceptions', 'UC1'],
+  ['Goods receipts', 'Order collaboration', 'Material Planner', 'Creates and posts GRs; reconciles discrepancies', 'UC1'],
+  ['This week', 'Weekly plan', 'Material Planner', 'Input check and the steps of the weekly cycle', 'UC3, UC7'],
+  ['What to order', 'Weekly plan', 'Material Planner', 'Order proposals; Below DA with draft call-offs', 'UC7'],
   ['Make warehouse room', 'Weekly plan', 'Material Planner', 'Decision when the warehouse overflows', '–'],
-  ['Publish to suppliers', 'Weekly plan', 'Material Planner', 'Publishes forecast versions (withheld on sample data)', 'UC4'],
-  ['Foresight commitments', 'Weekly plan', 'Material Planner', 'Accept commitments or move demand', 'UC4'],
-  ['Demand anticipation (DA)', 'Weekly plan', 'Material Planner', 'DA over the lead time; publish; record consumption', 'UC8'],
+  ['Publish to suppliers', 'Weekly plan', 'Material Planner', 'Publishes forecast versions (withheld on sample data)', 'UC3'],
+  ['Foresight commitments', 'Weekly plan', 'Material Planner', 'Accept commitments or move demand', 'UC3'],
+  ['Demand anticipation (DA)', 'Weekly plan', 'Material Planner', 'DA over the lead time; publish; record consumption', 'UC7'],
   ['Supplier performance', 'Review', 'Material Planner', 'Supplier scorecard per period', '–'],
   ['Forecast quality', 'Review', 'Material Planner', '26-week sell-in forecast per finished good, bias', '–'],
-  ['Feedstock reconcile', 'Review', 'Material Planner', 'PO ordered vs called off vs ASN requested; max stock', 'UC8'],
-  ['Demand anticipation (DA) history', 'Review', 'Material Planner', 'Every DA publication with its rules version', 'UC8'],
-  ['Stock', 'Inventory & capacity', 'Material Planner', 'Stock by risk; material drawer with actions', 'UC6'],
+  ['Feedstock reconcile', 'Review', 'Material Planner', 'PO ordered vs called off vs ASN requested; max stock', 'UC7'],
+  ['Demand anticipation (DA) history', 'Review', 'Material Planner', 'Every DA publication with its rules version', 'UC7'],
+  ['Stock', 'Inventory & capacity', 'Material Planner', 'Stock by risk; material drawer with actions', 'UC5'],
   ['Stock simulation', 'Inventory & capacity', 'Material Planner', 'Estimated supplier stock on a check date', '–'],
-  ['Capacity', 'Inventory & capacity', 'Material Planner', 'Capacity vs LTP per week; accept or ask', 'UC6'],
-  ['Alerts', 'Inventory & capacity', 'Material Planner', '12 alert rules, closed with a reason', 'UC7'],
-  ['Supplier access', 'Inventory & capacity', 'Material Planner', 'Grants suppliers a view of PTI stock', 'UC6'],
+  ['Capacity', 'Inventory & capacity', 'Material Planner', 'Capacity vs LTP per week; accept or ask', 'UC5'],
+  ['Alerts', 'Inventory & capacity', 'Material Planner', '12 alert rules, closed with a reason', 'UC6'],
+  ['Supplier access', 'Inventory & capacity', 'Material Planner', 'Grants suppliers a view of PTI stock', 'UC5'],
   ['Trade names', 'Inventory & capacity', 'Material Planner', 'Approves suppliers\' names for PTI materials', '–'],
-  ['Requisitions', 'Sourcing', 'Buyer', 'Create, submit, approve PRs; raise a sourcing event', 'UC1'],
-  ['RFI', 'Sourcing', 'Buyer', 'Information requests to suppliers', 'UC1'],
-  ['RFQ', 'Sourcing', 'Buyer', 'Quotation requests, rounds, award', 'UC1'],
-  ['RFP', 'Sourcing', 'Buyer', 'Proposal requests, firm-offer rounds, award', 'UC1'],
+  ['Requisitions', 'Sourcing', 'Buyer', 'Create, submit, approve PRs; raise a sourcing event', 'Not in guide'],
+  ['RFI', 'Sourcing', 'Buyer', 'Information requests to suppliers', 'Not in guide'],
+  ['RFQ', 'Sourcing', 'Buyer', 'Quotation requests, rounds, award', 'Not in guide'],
+  ['RFP', 'Sourcing', 'Buyer', 'Proposal requests, firm-offer rounds, award', 'Not in guide'],
   ['Suppliers', 'Sourcing', 'Buyer', 'Supplier list and profile, read-only', '–'],
-  ['Supplier documents', 'Sourcing', 'Buyer', 'Ask for certificates; confirm or refuse', 'UC5'],
-  ['Invoices', 'Invoices', 'Finance', 'Match, dispute, payment release', 'UC2'],
-  ['Demand anticipation (DA) history', 'Audit', 'Buyer, Finance', 'Same page as under Review', 'UC8'],
+  ['Supplier documents', 'Sourcing', 'Buyer', 'Ask for certificates; confirm or refuse', 'UC4'],
+  ['Invoices', 'Invoices', 'Finance', 'Match, dispute, payment release', 'Not in guide'],
+  ['Demand anticipation (DA) history', 'Audit', 'Buyer, Finance', 'Same page as under Review', 'UC7'],
   ['Supplier performance', 'Performance', 'Buyer', 'Same scorecard page as under Review', '–'],
-  ['Feedstock reconcile', 'Performance', 'Buyer', 'Same page as under Review; Procurement sets max stock', 'UC8']
+  ['Feedstock reconcile', 'Performance', 'Buyer', 'Same page as under Review; Procurement sets max stock', 'UC7']
 ];
 const supMenu = [
   ['To do', 'Home', 'What Paragon waits for; weekly update, PTI questions, alerts', 'All'],
-  ['Purchase orders', 'Orders', 'Acknowledge, confirm, adjust or reject; Create ASN', 'UC2'],
-  ['Call-offs', 'Orders', 'Confirm, change or reject; answer a delay; dispatch notice', 'UC3'],
-  ['Shipments & ASN', 'Orders', 'Create and submit ASNs', 'UC2, UC3'],
-  ['Goods receipts', 'Orders', 'Acknowledge or dispute discrepancies', 'UC2'],
-  ['Foresight commitments', 'Planning', 'Commit per period; acknowledge forecast rows', 'UC4'],
-  ['Feedstock reconcile', 'Planning', 'Ordered vs called off vs requested, read-only', 'UC8'],
-  ['Stock', 'Planning', 'Weekly stock update, feedstock, PTI questions', 'UC6'],
-  ['Capacity', 'Planning', 'Capacity per week vs the LTP', 'UC4, UC6'],
-  ['RFI invitations', 'Sourcing', 'Answer RFIs', 'UC1'],
-  ['RFQ invitations', 'Sourcing', 'Quote, decline, revise in rounds, see awards', 'UC1'],
-  ['RFP invitations', 'Sourcing', 'Send proposals and firm offers', 'UC1'],
-  ['Invoices', 'Invoices', 'Create, submit, correct and resubmit invoices', 'UC2'],
-  ['Profile & documents', 'Company', 'Declare certificates; see expiry', 'UC5'],
+  ['Purchase orders', 'Orders', 'Acknowledge, confirm, adjust or reject; Create ASN', 'UC1'],
+  ['Call-offs', 'Orders', 'Confirm, change or reject; answer a delay; dispatch notice', 'UC2'],
+  ['Shipments & ASN', 'Orders', 'Create and submit ASNs', 'UC1, UC2'],
+  ['Goods receipts', 'Orders', 'Acknowledge or dispute discrepancies', 'UC1'],
+  ['Foresight commitments', 'Planning', 'Commit per period; acknowledge forecast rows', 'UC3'],
+  ['Feedstock reconcile', 'Planning', 'Ordered vs called off vs requested, read-only', 'UC7'],
+  ['Stock', 'Planning', 'Weekly stock update, feedstock, PTI questions', 'UC5'],
+  ['Capacity', 'Planning', 'Capacity per week vs the LTP', 'UC3, UC5'],
+  ['RFI invitations', 'Sourcing', 'Answer RFIs', 'Not in guide'],
+  ['RFQ invitations', 'Sourcing', 'Quote, decline, revise in rounds, see awards', 'Not in guide'],
+  ['RFP invitations', 'Sourcing', 'Send proposals and firm offers', 'Not in guide'],
+  ['Invoices', 'Invoices', 'Create, submit, correct and resubmit invoices', 'Not in guide'],
+  ['Profile & documents', 'Company', 'Declare certificates; see expiry', 'UC4'],
   ['My performance', 'Company', 'Own scorecard, read-only', '–'],
   ['Help & glossary', 'Avatar menu', 'What each portal term means', 'Intro']
 ];
@@ -874,18 +774,16 @@ chunks(supMenu, 8).forEach((rows, i) => add({
 // ── Known limits ───────────────────────────────────────────────────────
 add({
   type: 'list', kicker: 'Known limits · part 1 of 2', title: 'What this build does not do yet',
-  intro: 'From SCENARIOS.md section 4. Demo data only: nothing reaches SAP.',
+  intro: 'From SCENARIOS.md section 4. Demo data only: nothing reaches SAP. RFx and invoice limits are left out with those flows.',
   items: [
-    { lead: 'RFx:', text: 'an RFQ never closes at its deadline; an Open RFI or RFP cannot be cancelled.' },
-    { lead: 'Contracts:', text: 'PR to PO directly is not available; New Contract creates nothing; delivery agreement releases are simulated.' },
-    { lead: 'Invoices:', text: 'a Matched invoice never becomes Approved in the UI; only seeded Approved invoices can be paid.' },
-    { lead: 'Toast-only buttons:', text: 'Submit inspection results, Override hold, Send reminder to supplier, Track shipment, Review match, Escalate.' },
+    { lead: 'Delivery agreements:', text: 'releases are simulated, not posted to SAP.' },
+    { lead: 'Toast-only buttons:', text: 'Submit inspection results, Override hold, Send reminder to supplier, Track shipment.' },
     { lead: 'TMS/S4 states:', text: 'ASN In Transit and Delivered, PO delivered and closed: no screen produces them.' },
     { lead: 'Publish to suppliers:', text: 'withheld on sample data; versions exist as demo data or through Move demand.' },
     { lead: 'Order-plan drafts:', text: 'cannot be released until the SAP feed is live; reschedule actions are off on sample data.' },
     { lead: 'Request revision:', text: 'switched off; PTI accepts or moves demand.' }
   ],
-  notes: 'Evidence: SCENARIOS.md section 4 items 1-12.'
+  notes: 'Evidence: SCENARIOS.md section 4 items 1-7.'
 });
 add({
   type: 'list', kicker: 'Known limits · part 2 of 2', title: 'What this build does not do yet',
@@ -900,7 +798,7 @@ add({
     { lead: 'Access:', text: 'no sign-in guard; the supplier switch always loads sup-007; demo buttons read "i View as …".' },
     { lead: 'Alerts:', text: 'the PTI bell always shows 3 and does nothing; closures are lost on demo reset.' }
   ],
-  notes: 'Evidence: SCENARIOS.md section 4 items 13-27.'
+  notes: 'Evidence: SCENARIOS.md section 4 items 8-22.'
 });
 
 module.exports = {
