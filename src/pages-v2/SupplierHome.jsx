@@ -341,14 +341,18 @@ const SupplierHome = () => {
         },
         {
           // REQ-E08-04 — a material group with no current capacity confirmation.
-          // No due date is defined; the first week the plan does not cover stands in.
+          // BL-236 (MR-1 BR-07): for a manual supplier it is due with the weekly
+          // stock update, at its cutoff; otherwise no due date is defined and the
+          // first week the plan does not cover stands in.
           id: 'capacity-due',
           lane: 'stock',
           label: t('hub.home.task.sup.capacityDue'),
           count: capacityDue.length,
-          deadlines: capacityDue.map(
-            (p) => p.weeks.find((w) => w.entry === null || w.needsReEntry === true)?.week
-          ),
+          deadlines: weekly
+            ? capacityDue.map(() => weekly.status.cycle.cutoff)
+            : capacityDue.map(
+                (p) => p.weeks.find((w) => w.entry === null || w.needsReEntry === true)?.week
+              ),
           stock: coverOf(capacityDue.flatMap((p) => p.materials)),
           // D7 (PR #74 review): only narrow to a group when every due plan
           // shares one.

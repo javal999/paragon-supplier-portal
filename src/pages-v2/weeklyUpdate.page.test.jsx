@@ -127,6 +127,30 @@ describe('MAT B2 · manual supplier panel (MR-1 AC-01)', () => {
     expect(screen.queryByTestId('home-task-stale-stock')).toBeNull();
   });
 
+  it('BL-236: capacity and feedstock show beside the stock update, due at the same cutoff', async () => {
+    sdcClock.set('2026-09-08T03:00:00.000Z'); // Tuesday 10:00 WIB
+    const { service } = withRows([IN_CYCLE, IN_CYCLE, LAST_CYCLE], {
+      feedstock: /** @type {InventoryPosition['feedstock']} */ (
+        /** @type {unknown} */ ({
+          recordedAt: IN_CYCLE,
+          feedstockQty: 10,
+          confirmedOn: '2026-09-05'
+        })
+      )
+    });
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER, service });
+    const panel = await screen.findByTestId('weekly-update');
+    expect((await within(panel).findByTestId('weekly-feedstock')).textContent).toBe(
+      'Feedstock · 3 of 3 confirmed'
+    );
+    expect((await within(panel).findByTestId('weekly-capacity')).textContent).toMatch(
+      /^Capacity · \d+ of \d+ groups confirmed/
+    );
+    expect(within(panel).getByTestId('weekly-also-due').textContent).toContain(
+      'Also due by the same cutoff'
+    );
+  });
+
   it('every material updated: no reminder even on the cutoff day, and the panel says so', async () => {
     sdcClock.set('2026-09-10T05:00:00.000Z'); // Thursday 12:00 WIB
     const { service } = withRows([IN_CYCLE, IN_CYCLE, IN_CYCLE]);
