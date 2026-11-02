@@ -79,12 +79,12 @@
 
 **L-07 · Plan vs execution check, OSPO, Additional PO and PR**
 - Shown: DA card (PK-PETB-8801: Total DA 73,600, Total OSPO 122,000, gap −48,400; RM-STEAR-7300: "PR 5,197" beside "recommend a PR of 6,097").
-- Screen: "Supply above the total is absorbed in the last week; a shortfall is a PR recommendation."
+- Screen: "Supply above the total is absorbed in the last week."
 - Code: gap = Total DA − Total OSPO; a surplus cuts the last week's DA to 0 at most [Code `osipRules.js:689-717`]; OSPO starts from the whole blanket balance [Code `demandAnticipationRules.js:349-353`]; PR generated [Code `osipRules.js:273`].
 - Source: [Team, 2026-10-28, A2]; [Owner, 2026-10-16, A4]; A9 [Default].
 - Gap: sources conflict: a blanket balance exceeds a 2-week DA, so W37's DA is zeroed (C-04) while CAP-9 says it runs out in W36 (C-05); two PR figures (U-17).
 - Impact: DA 0 against a Firm 34,300.
-- Recommendation: count as OSPO only what the horizon can call off. Alternative: the full balance.
+- Recommendation: count as OSPO only what the horizon can call off.
 - Question (EN): Is OSPO the whole blanket balance or only this horizon's PO, and may a surplus cut a week's DA below its LTP? (ID): Apakah OSPO seluruh sisa PO induk atau hanya PO horizon ini, dan bolehkah kelebihan menurunkan DA di bawah LTP? (A9; team answers 4 Q1)
 
 **L-08 · Material requirement, gross to net, and which safety figure nets it**
