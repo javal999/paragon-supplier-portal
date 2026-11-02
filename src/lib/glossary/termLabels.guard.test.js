@@ -95,7 +95,7 @@ const codedLines = (e) =>
   ].filter((line) => typeof line === 'string' && CODE.test(line));
 
 describe('term-label glossary (BL-233)', () => {
-  it('holds the wave 1 to 5 population, named', () => {
+  it('holds the wave 1 to 6 population, named', () => {
     // A named member, not a count: the guards below run over these entries.
     expect(Object.keys(TERM_LABEL_GLOSSARY)).toEqual(
       expect.arrayContaining([
@@ -109,7 +109,9 @@ describe('term-label glossary (BL-233)', () => {
         'prGenerated',
         'ruleOverride',
         'grAccepted',
-        'supConfirmed'
+        'supConfirmed',
+        'invThreeWayMatch',
+        'asnShippedQuantity'
       ])
     );
   });
@@ -243,6 +245,14 @@ describe('term-label glossary (BL-233)', () => {
     expect(TERM_LABEL_GLOSSARY.supDiscrepancy.label.id).toBe('Ketidaksesuaian');
     expect(TERM_LABEL_GLOSSARY.supDifference.label.id).toBe('Selisih');
     expect(TERM_LABEL_GLOSSARY.summaryCallOffs.label.id).toBe('Call-off');
+  });
+
+  it('TL-D12 on invoices and shipments: one word on both sides', () => {
+    expect(TERM_LABEL_GLOSSARY.supInvDisputed.label).toEqual(TERM_LABEL_GLOSSARY.invDisputed.label);
+    expect(TERM_LABEL_GLOSSARY.supThreeWayMatch.label).toEqual(
+      TERM_LABEL_GLOSSARY.invThreeWayMatch.label
+    );
+    expect(TERM_LABEL_GLOSSARY.asnDiscrepancy.label.id).toBe('Ketidaksesuaian');
   });
 
   it('TL-D9 / TL-D13: the labels waiting on the team keep their wording', () => {

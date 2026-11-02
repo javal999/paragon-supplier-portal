@@ -20,7 +20,7 @@ import { fmtIDR } from '../utils';
 const InvoiceKpis = ({ sums, counts, t }) => (
   <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-6">
     <KpiCard
-      eyebrow={t('supplierInvoices.kpi.received.eyebrow')}
+      term="supPaymentsReceived"
       value={fmtIDR(sums.paid)}
       subtitle={
         <span className="text-success">
@@ -35,7 +35,7 @@ const InvoiceKpis = ({ sums, counts, t }) => (
       icon={CheckCircle2}
     />
     <KpiCard
-      eyebrow={t('supplierInvoices.kpi.pending.eyebrow')}
+      term="supPendingPayment"
       value={fmtIDR(sums.pending)}
       subtitle={
         <span className="text-warning-hover">
@@ -50,7 +50,7 @@ const InvoiceKpis = ({ sums, counts, t }) => (
       icon={Clock}
     />
     <KpiCard
-      eyebrow={t('supplierInvoices.kpi.disputed.eyebrow')}
+      term="supInvDisputed"
       value={fmtIDR(sums.returned)}
       subtitle={
         <span className="text-danger">

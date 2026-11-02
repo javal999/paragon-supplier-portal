@@ -35,7 +35,7 @@ const InvoiceTable = ({ shown, t, ...rowProps }) => (
           {t('supplierInvoices.table.amount')}
         </TableHeaderCell>
         <TableHeaderCell>{t('supplierInvoices.table.status')}</TableHeaderCell>
-        <TableHeaderCell>{t('fc.inv.col.match')}</TableHeaderCell>
+        <TableHeaderCell term="supThreeWayMatch" />
         <TableHeaderCell>{t('supplierInvoices.table.dueDate')}</TableHeaderCell>
         <TableHeaderCell>{t('supplierInvoices.table.paymentDate')}</TableHeaderCell>
         <TableHeaderCell className="text-right">

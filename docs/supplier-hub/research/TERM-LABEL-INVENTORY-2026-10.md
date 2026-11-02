@@ -1102,7 +1102,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 |---|---|---|---|---|---|---|---|---|---|---|
 | kpi | Pending Approval | Menunggu Persetujuan | buyerInvoices.kpi.pendingApproval.eyebrow | Y | statuses "Submitted, Verified" (SUPPLIER-HUB-REQUIREMENTS.md:1107) | Y | N |  | Keep | KPI groups statuses; tooltip should name which |
 | kpi | Payments Released | Pembayaran Dirilis | buyerInvoices.kpi.released.eyebrow | Y | status "Paid" (SUPPLIER-HUB-REQUIREMENTS.md:1107) | Y | N |  | Keep | Supplier page says "Payments Received" for same figure |
-| kpi | Disputed | Disengketakan | buyerInvoices.kpi.disputed.eyebrow | Y | "return it with a reason" (SUPPLIER-HUB-REQUIREMENTS.md:1118); summary says "invoice returned" | Y | N |  | Ask Levi | Supplier KPI for same key reads "Returned"; one state, two words |
+| kpi | Disputed | Disengketakan | buyerInvoices.kpi.disputed.eyebrow | Y | "return it with a reason" (SUPPLIER-HUB-REQUIREMENTS.md:1118); summary says "invoice returned" | Y | N |  | Decided (TL-D12) | One word on both sides: "Disputed" (BL-233 wave 6) |
 | kpi | Overdue | Jatuh Tempo | buyerInvoices.kpi.overdue.eyebrow | Y | "Overdue" (SUPPLIER-HUB-REQUIREMENTS.md:159, CR-14) | N | Due date (ID "Jatuh tempo", same page's Due date column) |  | Change [Proposed] | ID reads "due", not "overdue"; propose "Lewat jatuh tempo" |
 
 ## Page: /buyer/invoices — Invoice queue (InvoiceQueueTable.jsx) — `pages-v2/BuyerInvoices/index.jsx`
@@ -1113,7 +1113,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Supplier | Pemasok | buyerInvoices.table.supplier | N | n/a | n/a | N |  | Keep |  |
 | column | PO ref | Ref PO | buyerInvoices.table.poRef | N | n/a | n/a | N |  | Keep |  |
 | column | Amount | Jumlah | buyerInvoices.table.amount | N | n/a | n/a | N |  | Keep |  |
-| column | 3-way match | Pencocokan 3 arah | buyerInvoices.table.match | Y | "match status: Matched or Exception" (SUPPLIER-HUB-REQUIREMENTS.md:1106; CR-12, CR-13) | Y | N | three-way matching (industry; DECISION-GUIDE.md:762) | Ask Levi | Supplier invoices column says "Match"; align buyer label? |
+| column | 3-way match | Pencocokan 3 arah | buyerInvoices.table.match | Y | "match status: Matched or Exception" (SUPPLIER-HUB-REQUIREMENTS.md:1106; CR-12, CR-13) | Y | N | three-way matching (industry; DECISION-GUIDE.md:762) | Decided (TL-D12) | "3-way match" on both sides (BL-233 wave 6) |
 | column | Status | Status | buyerInvoices.table.status | N | n/a | n/a | N |  | Keep |  |
 | column | Due date | Jatuh tempo | buyerInvoices.table.dueDate | N | n/a | n/a | N |  | Keep | Date; CR-14 rule could feed tooltip |
 | column | SAP FI | SAP FI | buyerInvoices.table.sapFi | N | n/a | n/a | N |  | Keep | SAP document identifier |
@@ -1145,7 +1145,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 |---|---|---|---|---|---|---|---|---|---|---|
 | column | Receipt | Penerimaan | fc.inv.new.col.receipt | N | n/a | n/a | N |  | Keep |  |
 | column | Material | Material | fc.inv.new.col.material | N | n/a | n/a | N |  | Keep |  |
-| column | Quantity | Kuantitas | fc.inv.new.col.quantity | Y | "invoiced quantity" (SUPPLIER-HUB-REQUIREMENTS.md:157, CR-12) | N | N |  | Keep | Context makes "invoiced" clear |
+| column | Quantity | Kuantitas | fc.inv.new.col.quantity | Y | "invoiced quantity" (SUPPLIER-HUB-REQUIREMENTS.md:157, CR-12) | N | N |  | Decided (TL-D10) | Header over input cells, in scope (Q4) (BL-233 wave 6) |
 | column | PO unit price | Harga satuan PO | fc.inv.new.col.unitPrice | Y | "PO unit price" (SUPPLIER-HUB-REQUIREMENTS.md:157, CR-12) | N | N |  | Keep |  |
 | column | Value | Nilai | fc.inv.new.col.value | Y | "Expected value = invoiced quantity × PO unit price" (SUPPLIER-HUB-REQUIREMENTS.md:157) | Y | N |  | Change [Proposed] | Propose "Expected value"; sub-row shows "Billed" beside it |
 
@@ -1305,7 +1305,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 |---|---|---|---|---|---|---|---|---|---|---|
 | kpi | Payments Received | Pembayaran Diterima | supplierInvoices.kpi.received.eyebrow | Y | status "Paid" (SUPPLIER-HUB-REQUIREMENTS.md:1107) | Y | N |  | Keep | KPI title, not a status word |
 | kpi | Pending Payment | Menunggu Pembayaran | supplierInvoices.kpi.pending.eyebrow | Y | "Scheduled for payment" (SUPPLIER-HUB-REQUIREMENTS.md:1107) | Y | N |  | Keep | Tooltip should name statuses counted |
-| kpi | Returned | Dikembalikan | supplierInvoices.kpi.disputed.eyebrow | Y | "return it with a reason" (SUPPLIER-HUB-REQUIREMENTS.md:1118) | N | N |  | Keep | Buyer KPI calls this "Disputed"; see Ask Levi |
+| kpi | Returned | Dikembalikan | supplierInvoices.kpi.disputed.eyebrow | Y | "return it with a reason" (SUPPLIER-HUB-REQUIREMENTS.md:1118) | N | N |  | Decided (TL-D12) | Now "Disputed", ID "Disengketakan" (BL-233 wave 6) |
 
 ## Page: /supplier/invoices — Invoice table (InvoiceTable.jsx) — `pages-v2/SupplierInvoices/index.jsx`
 
@@ -1315,7 +1315,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | PO ref | Ref PO | supplierInvoices.table.poRef | N | n/a | n/a | N |  | Keep |  |
 | column | Amount | Jumlah | supplierInvoices.table.amount | N | n/a | n/a | N |  | Keep |  |
 | column | Status | Status | supplierInvoices.table.status | N | n/a | n/a | N |  | Keep |  |
-| column | Match | Pencocokan | fc.inv.col.match | Y | "match status: Matched or Exception" (SUPPLIER-HUB-REQUIREMENTS.md:1106; CR-12, CR-13) | N | N |  | Keep |  |
+| column | Match | Pencocokan | fc.inv.col.match | Y | "match status: Matched or Exception" (SUPPLIER-HUB-REQUIREMENTS.md:1106; CR-12, CR-13) | N | N |  | Decided (TL-D12) | Now "3-way match", ID "Pencocokan 3 arah" (BL-233 wave 6) |
 | column | Due date | Jatuh Tempo | supplierInvoices.table.dueDate | N | n/a | n/a | N |  | Keep |  |
 | column | Payment date | Tanggal Pembayaran | supplierInvoices.table.paymentDate | N | n/a | n/a | N |  | Keep |  |
 | column | Action | Tindakan | supplierInvoices.table.action | N | n/a | n/a | N |  | Keep |  |
@@ -1326,7 +1326,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 |---|---|---|---|---|---|---|---|---|---|---|
 | column | Receipt | Penerimaan | fc.inv.new.col.receipt | N | n/a | n/a | N |  | Keep |  |
 | column | Material | Material | fc.inv.new.col.material | N | n/a | n/a | N |  | Keep |  |
-| column | Quantity | Kuantitas | fc.inv.new.col.quantity | Y | "Invoiced quantity cannot exceed received minus already invoiced" (SUPPLIER-HUB-REQUIREMENTS.md § REQ-E07-07 BR-02) | N | N |  | Ask Levi | Header over quantity inputs; column header or form field (BR-05)? |
+| column | Quantity | Kuantitas | fc.inv.new.col.quantity | Y | "Invoiced quantity cannot exceed received minus already invoiced" (SUPPLIER-HUB-REQUIREMENTS.md § REQ-E07-07 BR-02) | N | N |  | Decided (TL-D10) | Header over input cells, in scope (Q4) (BL-233 wave 6) |
 | column | PO unit price | Harga satuan PO | fc.inv.new.col.unitPrice | Y | "PO unit price" (SUPPLIER-HUB-REQUIREMENTS.md:157, CR-12) | N | N |  | Keep |  |
 
 ## Page: /supplier/orders — KPIs (OrdersKpis.jsx) — `pages-v2/SupplierOrders/index.jsx`
@@ -1366,7 +1366,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | kpi | Submitted | Diajukan | supplierShipments.kpi.submitted.eyebrow | Y | "Submitted" (SUPPLIER-HUB-REQUIREMENTS.md:978) | N | N |  | Keep |  |
 | kpi | In Transit | Dalam Perjalanan | supplierShipments.kpi.inTransit.eyebrow | Y | "In Transit" (SUPPLIER-HUB-REQUIREMENTS.md:978) | N | N |  | Keep |  |
 | kpi | Delivered | Terkirim | supplierShipments.kpi.delivered.eyebrow | Y | "Delivered" (SUPPLIER-HUB-REQUIREMENTS.md:978) | N | N |  | Keep |  |
-| kpi | Discrepancy | Selisih | supplierShipments.kpi.discrepancy.eyebrow | Y | "discrepancy" (SUPPLIER-HUB-REQUIREMENTS.md:1069) | N | Team "selisih" = DA planning vs execution gap, PERTANYAAN-TIM-MATERIAL-2026-10-16.md:25 |  | Keep | "Awaiting exception" state (:978) has no KPI |
+| kpi | Discrepancy | Selisih | supplierShipments.kpi.discrepancy.eyebrow | Y | "discrepancy" (SUPPLIER-HUB-REQUIREMENTS.md:1069) | N | Team "selisih" = DA planning vs execution gap, PERTANYAAN-TIM-MATERIAL-2026-10-16.md:25 |  | Decided (TL-D12) | ID now "Ketidaksesuaian" (BL-233 wave 6) |
 
 ## Page: /supplier/shipments — ASN list (ShipmentsList.jsx) — `pages-v2/SupplierShipments/index.jsx`
 
@@ -1397,7 +1397,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 |---|---|---|---|---|---|---|---|---|---|---|
 | column | Material | Material | fc.asn.col.material | N | n/a | n/a | N |  | Keep |  |
 | column | Open quantity | Kuantitas terbuka | fc.asn.col.open | Y | "open quantity on the call-off" (SUPPLIER-HUB-REQUIREMENTS.md:973) | N | N |  | Keep | Read-only column |
-| column | Shipped quantity | Kuantitas dikirim | fc.asn.col.shipped | Y | "shipped quantity" (SUPPLIER-HUB-REQUIREMENTS.md:976) | N | N |  | Ask Levi | Header over quantity inputs; column header or form field (BR-05)? |
+| column | Shipped quantity | Kuantitas dikirim | fc.asn.col.shipped | Y | "shipped quantity" (SUPPLIER-HUB-REQUIREMENTS.md:976) | N | N |  | Decided (TL-D10) | Header over input cells, in scope (Q4) (BL-233 wave 6) |
 | column | Batch number | Nomor batch | fc.asn.col.batch | N | "batch number" (SUPPLIER-HUB-REQUIREMENTS.md:976) | N | N |  | Keep | Header over inputs |
 | column | Expiry date | Tanggal kedaluwarsa | fc.asn.col.expiry | N | "expiry date" (SUPPLIER-HUB-REQUIREMENTS.md:976) | N | N |  | Keep | Header over inputs |
 

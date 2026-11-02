@@ -11,6 +11,7 @@
 /** @import React from 'react' */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import Button from '@components/ui-v2/Button';
 import Data from '@components/ui-v2/Data';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
@@ -130,7 +131,9 @@ const AsnShelfLifeExceptions = ({ asns }) => {
                 <th className="text-left py-1 pr-2">{t('fc.asn.shelfLife.col.batch')}</th>
                 <th className="text-left py-1 pr-2">{t('fc.asn.shelfLife.col.expiry')}</th>
                 <th className="text-left py-1 pr-2">{t('fc.asn.shelfLife.col.eta')}</th>
-                <th className="text-left py-1 pr-2">{t('fc.asn.shelfLife.col.left')}</th>
+                <th className="text-left py-1 pr-2">
+                  <TermLabel term="shelfLifeLeftAtEta" />
+                </th>
                 <th className="text-left py-1 pr-2">{t('fc.asn.shelfLife.col.reason')}</th>
                 <th className="py-1" />
               </tr>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import Data from '@components/ui-v2/Data';
 import StatusPill from '@components/ui-v2/StatusPill';
 import { formatDate } from '@lib/format';
@@ -178,9 +179,15 @@ export const InvoiceLinesSection = ({
               <tr className="text-text-tertiary uppercase">
                 <th className="text-left py-1 pr-2">{t('fc.inv.new.col.receipt')}</th>
                 <th className="text-left py-1 pr-2">{t('fc.inv.new.col.material')}</th>
-                <th className="text-right py-1 pr-2">{t('fc.inv.new.col.quantity')}</th>
-                <th className="text-right py-1 pr-2">{t('fc.inv.new.col.unitPrice')}</th>
-                <th className="text-right py-1">{t('fc.inv.new.col.value')}</th>
+                <th className="text-right py-1 pr-2">
+                  <TermLabel term="invLineQuantity" />
+                </th>
+                <th className="text-right py-1 pr-2">
+                  <TermLabel term="invUnitPrice" />
+                </th>
+                <th className="text-right py-1">
+                  <TermLabel term="invLineValue" />
+                </th>
               </tr>
             </thead>
             <tbody>

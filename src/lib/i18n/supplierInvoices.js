@@ -27,9 +27,6 @@ export const supplierInvoicesEn = {
   'supplierInvoices.meta.summary.one': '{{count}} invoice · last submitted',
   'supplierInvoices.meta.summary.other': '{{count}} invoices · last submitted',
   // — KPI cards —
-  'supplierInvoices.kpi.received.eyebrow': 'Payments Received',
-  'supplierInvoices.kpi.pending.eyebrow': 'Pending Payment',
-  'supplierInvoices.kpi.disputed.eyebrow': 'Returned',
   'supplierInvoices.kpi.invoiceCount.one': '{{count}} invoice',
   'supplierInvoices.kpi.invoiceCount.other': '{{count}} invoices',
   // — Dispute banner (label <strong> · <Data> numbers · body) —
@@ -147,9 +144,6 @@ export const supplierInvoicesId = {
   'supplierInvoices.meta.summary.one': '{{count}} faktur · terakhir diajukan',
   'supplierInvoices.meta.summary.other': '{{count}} faktur · terakhir diajukan',
   // — KPI cards —
-  'supplierInvoices.kpi.received.eyebrow': 'Pembayaran Diterima',
-  'supplierInvoices.kpi.pending.eyebrow': 'Menunggu Pembayaran',
-  'supplierInvoices.kpi.disputed.eyebrow': 'Dikembalikan',
   'supplierInvoices.kpi.invoiceCount.one': '{{count}} faktur',
   'supplierInvoices.kpi.invoiceCount.other': '{{count}} faktur',
   // — Dispute banner —

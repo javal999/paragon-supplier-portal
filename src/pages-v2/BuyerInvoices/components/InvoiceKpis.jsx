@@ -29,25 +29,25 @@ const InvoiceKpis = ({ sums, counts, pendingApprovalCount, t }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
       <KpiCard
-        eyebrow={t('buyerInvoices.kpi.pendingApproval.eyebrow')}
+        term="invPendingApproval"
         value={fmtCompact(sums.pendingApproval)}
         subtitle={invoiceCount(pendingApprovalCount)}
         icon={Clock}
       />
       <KpiCard
-        eyebrow={t('buyerInvoices.kpi.released.eyebrow')}
+        term="invReleased"
         value={fmtCompact(sums.released)}
         subtitle={invoiceCount(counts.released)}
         icon={CheckCircle2}
       />
       <KpiCard
-        eyebrow={t('buyerInvoices.kpi.disputed.eyebrow')}
+        term="invDisputed"
         value={fmtCompact(sums.disputed)}
         subtitle={invoiceCount(counts.disputed)}
         icon={AlertTriangle}
       />
       <KpiCard
-        eyebrow={t('buyerInvoices.kpi.overdue.eyebrow')}
+        term="invOverdue"
         value={fmtCompact(sums.overdue)}
         subtitle={invoiceCount(counts.overdue)}
         icon={AlertOctagon}

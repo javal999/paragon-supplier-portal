@@ -34,12 +34,14 @@
 // /supplier/forecasts. The tips name no requirement code (F-18).
 // Wave 5 (order collaboration): /buyer/orders and /supplier/orders, the order
 // summary, /buyer/purchase-requisition and both goods-receipt pages.
+// Wave 6: /buyer/invoices and /supplier/invoices (with the invoice lines),
+// /buyer/shipments (with shelf-life exceptions) and /supplier/shipments.
 // ─────────────────────────────────────────────────────────────────────────────
 /** @import { GlossaryOf, TermEntry } from './types' */
 
 /**
  * The terms a page labels through `TermLabel`.
- * @typedef {'demandAnticipation' | 'ltp' | 'fgDemand' | 'ltpLessFgDemand' | 'consumptionAverage' | 'safetyOrder' | 'carryOver' | 'wouldBe' | 'surplusAbsorbed' | 'recordedConsumption' | 'openSupply' | 'supplyGap' | 'daAfterCheck' | 'ospo' | 'additionalPo' | 'callOffsThisWeek' | 'remainder' | 'notCarried' | 'supplierAgreedOutside' | 'gapProposal' | 'alertPtiBelowRop' | 'alertSupplierBelowRop' | 'alertProjectedStockOut' | 'alertCapacityBelowDemand' | 'alertStaleData' | 'alertCoverage' | 'alertCommitmentBelowForecast' | 'alertLeadTimeMissing' | 'alertCallOffNotCovered' | 'alertSupplyDiscontinued' | 'alertBlanketPoRunOut' | 'alertDemandAnticipationUnabsorbed' | 'supplierCover' | 'supplierStock' | 'ptiStockRop' | 'incoming' | 'incomingStatus' | 'supplierAvailable' | 'calledOffNotShipped' | 'freeToCallOff' | 'ptiInbound' | 'simulationBasis' | 'simulationFlags' | 'supplierOwnRop' | 'ptiStock' | 'ptiRop' | 'daysOfSupply' | 'feedstockLatest' | 'feedstockThisWeek' | 'tradeNameStatus' | 'capacityLtp' | 'allocatedCapacity' | 'productionLimit' | 'additionalCapacity' | 'capacityBe' | 'ltpAgainstCapacity' | 'capacityShortBy' | 'ptiCapacityDecision' | 'runOutRemaining' | 'runsOut' | 'newPoNeededBy' | 'poLeadTime' | 'spaceFreed' | 'materialsPerTier' | 'onSapValue' | 'sltGroupDefault' | 'tierTarget' | 'safetyOrderRopOrder' | 'ropFisikSafety' | 'demandCv' | 'osipLevel' | 'ropOrder' | 'ropFisik' | 'maxStock' | 'engineSafetyStock' | 'sapSafetyStock' | 'freed' | 'safetyLeadTime' | 'engineReorderPoint' | 'forecastShortfall' | 'ropSupplier' | 'ropToPrincipal' | 'replenishmentCycle' | 'pullAgreement' | 'bottleneckLeadTime' | 'monthLtp' | 'protectionBaseline' | 'uplift' | 'protectionBuffer' | 'strategicBaseline' | 'strategicBuffer' | 'poOrdered' | 'reconcileCalledOff' | 'asnRequested' | 'notYetCalledOff' | 'calledOffNotYetShipped' | 'maxStockSupplier' | 'whatIfMax' | 'daOverLeadTime' | 'prGenerated' | 'planCheckPr' | 'triggerCallOffs' | 'triggerPr' | 'whatIfRemainder' | 'whatIfCarryOver' | 'firstShortageWeek' | 'weeksAboveMax' | 'whatIfLtp' | 'daCurrentPlan' | 'daScenario' | 'callOffsDrafted' | 'whatIfIncoming' | 'prRecommendedWeek' | 'projectedSohPlan' | 'projectedSohScenario' | 'engineValue' | 'lastPublished' | 'firstPublished' | 'dampedValue' | 'allowedRange' | 'toPublish' | 'stabiliseRule' | 'ruleNew' | 'ruleUnchanged' | 'ruleFirmFrozen' | 'ruleForecast' | 'ruleDamped' | 'ruleBandHeld' | 'ruleCumulativeHeld' | 'ruleOverride' | 'planMovement' | 'weeksChangedInLeadTime' | 'tradeOffWithinLimits' | 'weeksHeld' | 'seriesHeld' | 'seriesMasc' | 'forecastZone' | 'publishedForecast' | 'commitmentDue' | 'commitment' | 'commitmentUpside' | 'grPendingInspection' | 'grQualityHold' | 'grApprovedToday' | 'grRejectionRate' | 'grDisposition' | 'grExpected' | 'grReceived' | 'grAccepted' | 'grRejectedLine' | 'grChecks' | 'poOpenTotal' | 'poPendingConfirmation' | 'poInTransit' | 'poOverdue' | 'orderedQty' | 'counterQty' | 'counterDate' | 'summaryResponse' | 'summaryAsns' | 'summaryCallOffs' | 'summaryConfirmations' | 'summaryReceipts' | 'summaryInvoices' | 'prDraft' | 'prPendingApproval' | 'prApproved' | 'prSourcingEvent' | 'prPoCreated' | 'prSource' | 'supShipped' | 'supReceived' | 'supRejected' | 'supQualityResult' | 'supDiscrepancy' | 'supDifference' | 'supOpenOrders' | 'supInProgress' | 'supValuePending' | 'supDelivered' | 'supConfirmed'} TermLabelId
+ * @typedef {'demandAnticipation' | 'ltp' | 'fgDemand' | 'ltpLessFgDemand' | 'consumptionAverage' | 'safetyOrder' | 'carryOver' | 'wouldBe' | 'surplusAbsorbed' | 'recordedConsumption' | 'openSupply' | 'supplyGap' | 'daAfterCheck' | 'ospo' | 'additionalPo' | 'callOffsThisWeek' | 'remainder' | 'notCarried' | 'supplierAgreedOutside' | 'gapProposal' | 'alertPtiBelowRop' | 'alertSupplierBelowRop' | 'alertProjectedStockOut' | 'alertCapacityBelowDemand' | 'alertStaleData' | 'alertCoverage' | 'alertCommitmentBelowForecast' | 'alertLeadTimeMissing' | 'alertCallOffNotCovered' | 'alertSupplyDiscontinued' | 'alertBlanketPoRunOut' | 'alertDemandAnticipationUnabsorbed' | 'supplierCover' | 'supplierStock' | 'ptiStockRop' | 'incoming' | 'incomingStatus' | 'supplierAvailable' | 'calledOffNotShipped' | 'freeToCallOff' | 'ptiInbound' | 'simulationBasis' | 'simulationFlags' | 'supplierOwnRop' | 'ptiStock' | 'ptiRop' | 'daysOfSupply' | 'feedstockLatest' | 'feedstockThisWeek' | 'tradeNameStatus' | 'capacityLtp' | 'allocatedCapacity' | 'productionLimit' | 'additionalCapacity' | 'capacityBe' | 'ltpAgainstCapacity' | 'capacityShortBy' | 'ptiCapacityDecision' | 'runOutRemaining' | 'runsOut' | 'newPoNeededBy' | 'poLeadTime' | 'spaceFreed' | 'materialsPerTier' | 'onSapValue' | 'sltGroupDefault' | 'tierTarget' | 'safetyOrderRopOrder' | 'ropFisikSafety' | 'demandCv' | 'osipLevel' | 'ropOrder' | 'ropFisik' | 'maxStock' | 'engineSafetyStock' | 'sapSafetyStock' | 'freed' | 'safetyLeadTime' | 'engineReorderPoint' | 'forecastShortfall' | 'ropSupplier' | 'ropToPrincipal' | 'replenishmentCycle' | 'pullAgreement' | 'bottleneckLeadTime' | 'monthLtp' | 'protectionBaseline' | 'uplift' | 'protectionBuffer' | 'strategicBaseline' | 'strategicBuffer' | 'poOrdered' | 'reconcileCalledOff' | 'asnRequested' | 'notYetCalledOff' | 'calledOffNotYetShipped' | 'maxStockSupplier' | 'whatIfMax' | 'daOverLeadTime' | 'prGenerated' | 'planCheckPr' | 'triggerCallOffs' | 'triggerPr' | 'whatIfRemainder' | 'whatIfCarryOver' | 'firstShortageWeek' | 'weeksAboveMax' | 'whatIfLtp' | 'daCurrentPlan' | 'daScenario' | 'callOffsDrafted' | 'whatIfIncoming' | 'prRecommendedWeek' | 'projectedSohPlan' | 'projectedSohScenario' | 'engineValue' | 'lastPublished' | 'firstPublished' | 'dampedValue' | 'allowedRange' | 'toPublish' | 'stabiliseRule' | 'ruleNew' | 'ruleUnchanged' | 'ruleFirmFrozen' | 'ruleForecast' | 'ruleDamped' | 'ruleBandHeld' | 'ruleCumulativeHeld' | 'ruleOverride' | 'planMovement' | 'weeksChangedInLeadTime' | 'tradeOffWithinLimits' | 'weeksHeld' | 'seriesHeld' | 'seriesMasc' | 'forecastZone' | 'publishedForecast' | 'commitmentDue' | 'commitment' | 'commitmentUpside' | 'grPendingInspection' | 'grQualityHold' | 'grApprovedToday' | 'grRejectionRate' | 'grDisposition' | 'grExpected' | 'grReceived' | 'grAccepted' | 'grRejectedLine' | 'grChecks' | 'poOpenTotal' | 'poPendingConfirmation' | 'poInTransit' | 'poOverdue' | 'orderedQty' | 'counterQty' | 'counterDate' | 'summaryResponse' | 'summaryAsns' | 'summaryCallOffs' | 'summaryConfirmations' | 'summaryReceipts' | 'summaryInvoices' | 'prDraft' | 'prPendingApproval' | 'prApproved' | 'prSourcingEvent' | 'prPoCreated' | 'prSource' | 'supShipped' | 'supReceived' | 'supRejected' | 'supQualityResult' | 'supDiscrepancy' | 'supDifference' | 'supOpenOrders' | 'supInProgress' | 'supValuePending' | 'supDelivered' | 'supConfirmed' | 'invPendingApproval' | 'invReleased' | 'invDisputed' | 'invOverdue' | 'invThreeWayMatch' | 'agingBucket' | 'agingPctAp' | 'agingRisk' | 'invLineQuantity' | 'invUnitPrice' | 'invLineValue' | 'shipInTransit' | 'shipAtDock' | 'shipDelayed' | 'shipArrivingToday' | 'shelfLifeLeftAtEta' | 'supPaymentsReceived' | 'supPendingPayment' | 'supInvDisputed' | 'supThreeWayMatch' | 'asnDraft' | 'asnSubmitted' | 'asnInTransit' | 'asnDelivered' | 'asnDiscrepancy' | 'asnLineOrdered' | 'asnLineShipped' | 'asnOpenQuantity' | 'asnShippedQuantity'} TermLabelId
  */
 
 // TL-D23: an "Also called" source names only the team; where in the team's
@@ -1506,5 +1508,175 @@ export const TERM_LABEL_GLOSSARY =
       en: 'The quantity you confirm you will supply for the line: above 0 and at most the ordered quantity. Less than ordered is a counter-offer.',
       id: 'Kuantitas yang Anda konfirmasi akan dipasok untuk baris itu: di atas 0 dan paling banyak kuantitas yang dipesan. Kurang dari pesanan adalah penawaran balik.',
       labelKeys: ['supplierOrders.panel.col.confirmed']
+    },
+    // ── Wave 6: invoices and shipments ────────────────────────────────────────
+    invPendingApproval: {
+      label: { en: 'Pending Approval', id: 'Menunggu Persetujuan' },
+      en: 'The value of invoices still to be paid: waiting for the 3-way match, or approved and not yet paid.',
+      id: 'Nilai faktur yang belum dibayar: menunggu pencocokan 3 arah, atau sudah disetujui dan belum dibayar.'
+    },
+    invReleased: {
+      label: { en: 'Payments Released', id: 'Pembayaran Dirilis' },
+      en: 'The value of invoices whose payment PTI has released.',
+      id: 'Nilai faktur yang pembayarannya sudah dirilis PTI.'
+    },
+    invDisputed: {
+      label: { en: 'Disputed', id: 'Disengketakan' },
+      en: 'The value of invoices returned to the supplier with a reason, for it to correct and resubmit.',
+      id: 'Nilai faktur yang dikembalikan ke pemasok dengan alasan, untuk diperbaiki dan diajukan ulang.'
+    },
+    invOverdue: {
+      label: { en: 'Overdue', id: 'Jatuh Tempo' },
+      en: 'The value of invoices past their due date and not yet paid.',
+      id: 'Nilai faktur yang melewati tanggal jatuh tempo dan belum dibayar.',
+      formula: {
+        en: 'Due date = submission date + 30 days, unless the PO’s payment terms say otherwise.',
+        id: 'Tanggal jatuh tempo = tanggal pengajuan + 30 hari, kecuali syarat pembayaran PO berkata lain.'
+      }
+    },
+    invThreeWayMatch: {
+      label: { en: '3-way match', id: 'Pencocokan 3 arah' },
+      en: 'Whether the invoice agrees with its PO and goods receipts: Matched, or an exception (price variance or quantity mismatch).',
+      id: 'Apakah faktur sesuai dengan PO dan penerimaan barangnya: Cocok, atau pengecualian (selisih harga atau ketidaksesuaian kuantitas).',
+      formula: {
+        en: 'Expected value = invoiced quantity × PO unit price; matched within 2% and Finance’s rupiah cap, or 0% where a contract price exists.',
+        id: 'Nilai yang diharapkan = kuantitas yang ditagih × harga satuan PO; cocok dalam 2% dan batas rupiah Finance, atau 0% bila ada harga kontrak.'
+      }
+    },
+    agingBucket: {
+      label: { en: 'Aging bucket', id: 'Rentang umur' },
+      en: 'How many days past its due date an unpaid invoice is.',
+      id: 'Berapa hari faktur yang belum dibayar melewati tanggal jatuh temponya.'
+    },
+    agingPctAp: {
+      label: { en: '% of AP', id: '% dari AP' },
+      en: 'The bucket’s share of all accounts payable (AP): what PTI owes its suppliers.',
+      id: 'Porsi rentang itu dari seluruh utang usaha (AP): yang terutang PTI kepada pemasoknya.'
+    },
+    agingRisk: {
+      label: { en: 'Risk', id: 'Risiko' },
+      en: 'The risk the bucket carries: Low when not yet due, Medium up to 30 days overdue, High beyond.',
+      id: 'Risiko rentang itu: Rendah bila belum jatuh tempo, Sedang sampai 30 hari lewat, Tinggi setelahnya.'
+    },
+    invLineQuantity: {
+      label: { en: 'Quantity', id: 'Kuantitas' },
+      en: 'The quantity invoiced on the line. It cannot exceed what was received less what is already invoiced.',
+      id: 'Kuantitas yang ditagih pada baris itu. Tidak boleh melebihi yang diterima dikurangi yang sudah ditagih.'
+    },
+    invUnitPrice: {
+      label: { en: 'PO unit price', id: 'Harga satuan PO' },
+      en: 'The unit price on the PO line, which the invoice is matched against.',
+      id: 'Harga satuan pada baris PO, yang menjadi dasar pencocokan faktur.'
+    },
+    invLineValue: {
+      label: { en: 'Value', id: 'Nilai' },
+      en: 'The value the line should have, beside what the supplier billed.',
+      id: 'Nilai yang seharusnya untuk baris itu, di samping yang ditagih pemasok.',
+      formula: {
+        en: 'Invoiced quantity × PO unit price.',
+        id: 'Kuantitas yang ditagih × harga satuan PO.'
+      }
+    },
+    shipInTransit: {
+      label: { en: 'In Transit', id: 'Dalam Perjalanan' },
+      en: 'Shipments on their way: in transit, arrived at port, or in customs clearance.',
+      id: 'Pengiriman dalam perjalanan: dalam transit, tiba di pelabuhan, atau dalam proses bea cukai.'
+    },
+    shipAtDock: {
+      label: { en: 'At Dock / Unloading', id: 'Di Dok / Bongkar Muat' },
+      en: 'Shipments at PTI’s dock or being unloaded.',
+      id: 'Pengiriman yang ada di dok PTI atau sedang dibongkar.'
+    },
+    shipDelayed: {
+      label: { en: 'Delayed', id: 'Terlambat' },
+      en: 'Shipments past their expected arrival with no arrival recorded.',
+      id: 'Pengiriman yang melewati perkiraan kedatangan tanpa kedatangan tercatat.',
+      notToConfuse: {
+        en: 'A call-off delayed by an LTP drop (a need date the supplier agreed to move).',
+        id: 'Call-off yang ditunda karena LTP turun (tanggal kebutuhan yang disetujui pemasok untuk dipindah).'
+      }
+    },
+    shipArrivingToday: {
+      label: { en: 'Arriving Today', id: 'Tiba Hari Ini' },
+      en: 'Shipments whose expected arrival is today.',
+      id: 'Pengiriman yang perkiraan kedatangannya hari ini.'
+    },
+    shelfLifeLeftAtEta: {
+      label: { en: 'Left at ETA', id: 'Sisa saat ETA' },
+      en: 'The shelf life the batch will have left when it arrives. Below the material’s minimum, the shipping notice needs an approved exception.',
+      id: 'Sisa umur simpan batch saat tiba. Di bawah batas minimum material, pemberitahuan pengiriman memerlukan pengecualian yang disetujui.',
+      formula: {
+        en: 'Months from the expected arrival to the expiry date; the minimum is 6 months unless SAP sets one for the material.',
+        id: 'Bulan dari perkiraan kedatangan sampai tanggal kedaluwarsa; minimumnya 6 bulan kecuali SAP menetapkan untuk material itu.'
+      }
+    },
+    supPaymentsReceived: {
+      label: { en: 'Payments Received', id: 'Pembayaran Diterima' },
+      en: 'The value of your invoices PTI has paid.',
+      id: 'Nilai faktur Anda yang sudah dibayar PTI.'
+    },
+    supPendingPayment: {
+      label: { en: 'Pending Payment', id: 'Menunggu Pembayaran' },
+      en: 'The value of your invoices not yet paid: submitted, verified, or scheduled for payment.',
+      id: 'Nilai faktur Anda yang belum dibayar: diajukan, diverifikasi, atau dijadwalkan untuk dibayar.'
+    },
+    supInvDisputed: {
+      label: { en: 'Disputed', id: 'Disengketakan' },
+      en: 'The value of your invoices PTI returned with a reason, for you to correct and resubmit.',
+      id: 'Nilai faktur Anda yang dikembalikan PTI dengan alasan, untuk Anda perbaiki dan ajukan ulang.'
+    },
+    supThreeWayMatch: {
+      label: { en: '3-way match', id: 'Pencocokan 3 arah' },
+      en: 'Whether your invoice agrees with its PO and goods receipts: Matched, or an exception PTI’s Finance reviews.',
+      id: 'Apakah faktur Anda sesuai dengan PO dan penerimaan barangnya: Cocok, atau pengecualian yang ditinjau Finance PTI.'
+    },
+    asnDraft: {
+      label: { en: 'Draft', id: 'Draf' },
+      en: 'Shipping notices you saved and have not submitted.',
+      id: 'Pemberitahuan pengiriman yang Anda simpan dan belum diajukan.'
+    },
+    asnSubmitted: {
+      label: { en: 'Submitted', id: 'Diajukan' },
+      en: 'Shipping notices you submitted that have not left yet.',
+      id: 'Pemberitahuan pengiriman yang sudah Anda ajukan dan belum berangkat.'
+    },
+    asnInTransit: {
+      label: { en: 'In Transit', id: 'Dalam Perjalanan' },
+      en: 'Shipping notices whose goods are on their way to PTI.',
+      id: 'Pemberitahuan pengiriman yang barangnya sedang menuju PTI.'
+    },
+    asnDelivered: {
+      label: { en: 'Delivered', id: 'Terkirim' },
+      en: 'Shipping notices whose goods PTI received.',
+      id: 'Pemberitahuan pengiriman yang barangnya sudah diterima PTI.'
+    },
+    asnDiscrepancy: {
+      label: { en: 'Discrepancy', id: 'Ketidaksesuaian' },
+      en: 'Shipping notices whose receipt differs from what you shipped beyond the tolerance.',
+      id: 'Pemberitahuan pengiriman yang penerimaannya berbeda dari yang Anda kirim melewati toleransi.',
+      formula: {
+        en: 'Any quantity above the order, or a shortfall above 2%.',
+        id: 'Kuantitas apa pun di atas pesanan, atau kekurangan di atas 2%.'
+      }
+    },
+    asnLineOrdered: {
+      label: { en: 'Ordered', id: 'Dipesan' },
+      en: 'The quantity ordered on the PO line.',
+      id: 'Kuantitas yang dipesan pada baris PO.'
+    },
+    asnLineShipped: {
+      label: { en: 'Shipped', id: 'Dikirim' },
+      en: 'The quantity this shipping notice ships on the line.',
+      id: 'Kuantitas yang dikirim pemberitahuan pengiriman ini pada baris itu.'
+    },
+    asnOpenQuantity: {
+      label: { en: 'Open quantity', id: 'Kuantitas terbuka' },
+      en: 'What is still open on the call-off or PO line: ordered less what earlier shipping notices already ship.',
+      id: 'Yang masih terbuka pada call-off atau baris PO: yang dipesan dikurangi yang sudah dikirim pemberitahuan pengiriman sebelumnya.'
+    },
+    asnShippedQuantity: {
+      label: { en: 'Shipped quantity', id: 'Kuantitas dikirim' },
+      en: 'The quantity you ship on the line. Above the open quantity needs a reason.',
+      id: 'Kuantitas yang Anda kirim pada baris itu. Di atas kuantitas terbuka perlu alasan.'
     }
   });

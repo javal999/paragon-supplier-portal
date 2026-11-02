@@ -2,6 +2,7 @@
 /** @import { InvoiceLine } from '@services/data/types' */
 import Data from '@components/ui-v2/Data';
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import { fmtIdr, readQty } from '../../invoices/InvoiceCollaboration';
 import { inputCls } from '../const';
 import { lineKey } from '../utils';
@@ -22,8 +23,12 @@ const LineQtyTable = ({ lines, entries, onChange }) => {
           <tr className="text-text-tertiary uppercase">
             <th className="text-left py-1 pr-2">{t('fc.inv.new.col.receipt')}</th>
             <th className="text-left py-1 pr-2">{t('fc.inv.new.col.material')}</th>
-            <th className="text-left py-1 pr-2">{t('fc.inv.new.col.quantity')}</th>
-            <th className="text-right py-1">{t('fc.inv.new.col.unitPrice')}</th>
+            <th className="text-left py-1 pr-2">
+              <TermLabel term="invLineQuantity" />
+            </th>
+            <th className="text-right py-1">
+              <TermLabel term="invUnitPrice" />
+            </th>
           </tr>
         </thead>
         <tbody>

@@ -85,13 +85,13 @@ const AgingTab = ({ agingBucketLabel, t }) => (
     <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-hidden">
       <Table>
         <TableHeader>
-          <TableHeaderCell>{t('buyerInvoices.aging.bucket')}</TableHeaderCell>
+          <TableHeaderCell term="agingBucket" />
           <TableHeaderCell className="text-right">{t('buyerInvoices.aging.count')}</TableHeaderCell>
           <TableHeaderCell className="text-right">
             {t('buyerInvoices.aging.amount')}
           </TableHeaderCell>
-          <TableHeaderCell className="text-right">{t('buyerInvoices.aging.pctAp')}</TableHeaderCell>
-          <TableHeaderCell>{t('buyerInvoices.aging.risk')}</TableHeaderCell>
+          <TableHeaderCell className="text-right" term="agingPctAp" />
+          <TableHeaderCell term="agingRisk" />
         </TableHeader>
         <tbody>
           {AGING_DATA.map((row) => {

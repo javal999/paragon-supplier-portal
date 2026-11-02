@@ -30,13 +30,9 @@ export const shipmentsEn = {
   'shipments.meta.summary.one': '{{count}} active shipment · last updated {{date}}',
   'shipments.meta.summary.other': '{{count}} active shipments · last updated {{date}}',
   // — KPI cards —
-  'shipments.kpi.inTransit.eyebrow': 'In Transit',
   'shipments.kpi.inTransit.subtitle': 'At sea, in air, or on road',
-  'shipments.kpi.atDock.eyebrow': 'At Dock / Unloading',
   'shipments.kpi.atDock.subtitle': 'Currently at NDC J6',
-  'shipments.kpi.delayed.eyebrow': 'Delayed',
   'shipments.kpi.delayed.subtitle': 'Past ETA',
-  'shipments.kpi.arrivingToday.eyebrow': 'Arriving Today',
   // — Sub-tabs —
   'shipments.tab.all': 'All',
   'shipments.tab.pending': 'Pending ASN',
@@ -146,13 +142,9 @@ export const shipmentsId = {
   'shipments.meta.summary.one': '{{count}} pengiriman aktif · terakhir diperbarui {{date}}',
   'shipments.meta.summary.other': '{{count}} pengiriman aktif · terakhir diperbarui {{date}}',
   // — KPI cards —
-  'shipments.kpi.inTransit.eyebrow': 'Dalam Perjalanan',
   'shipments.kpi.inTransit.subtitle': 'Di laut, udara, atau jalan',
-  'shipments.kpi.atDock.eyebrow': 'Di Dok / Bongkar Muat',
   'shipments.kpi.atDock.subtitle': 'Saat ini di NDC J6',
-  'shipments.kpi.delayed.eyebrow': 'Terlambat',
   'shipments.kpi.delayed.subtitle': 'Melewati ETA',
-  'shipments.kpi.arrivingToday.eyebrow': 'Tiba Hari Ini',
   // — Sub-tabs —
   'shipments.tab.all': 'Semua',
   'shipments.tab.pending': 'Menunggu ASN',

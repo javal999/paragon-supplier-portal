@@ -249,11 +249,12 @@ describe('a flagged ASN shows the supplier a wait, not a false commit', () => {
     }
     // The control (§39): a key that DOES exist must not report as missing by
     // this same instrument, or the assertion above proves nothing. It is a key
-    // with a REAL consumer on this page (the discrepancy KPI tile) — using the
+    // with a REAL consumer on this page (the page's breadcrumb) — using the
     // now-orphaned `action.resolve` as the control would have kept a dead
     // string alive purely to serve the test that proves another string is gone.
-    expect(i18n.getFixedT('en')('supplierShipments.kpi.discrepancy.eyebrow')).toBe('Discrepancy');
-    expect(i18n.getFixedT('id')('supplierShipments.kpi.discrepancy.eyebrow')).toBe('Selisih');
+    // (BL-233 moved the discrepancy KPI tile, the earlier control, to the glossary.)
+    expect(i18n.getFixedT('en')('supplierShipments.crumb.shipments')).toBe('SHIPMENTS & ASN');
+    expect(i18n.getFixedT('id')('supplierShipments.crumb.shipments')).toBe('PENGIRIMAN & ASN');
     // And the button's own label is gone too — the affordance and its word left
     // together, so no future reader finds a "Resolve" string looking for a home.
     for (const lng of ['en', 'id']) {
