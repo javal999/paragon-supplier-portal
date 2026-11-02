@@ -258,7 +258,12 @@ describe('term-label glossary (BL-233)', () => {
   });
 
   it('TL-D12 on invoices and shipments: one word on both sides', () => {
-    expect(TERM_LABEL_GLOSSARY.supInvDisputed.label).toEqual(TERM_LABEL_GLOSSARY.invDisputed.label);
+    // TL-D30 (supersedes Q17): Returned and Disputed are different states.
+    expect(TERM_LABEL_GLOSSARY.supInvDisputed.label).toEqual({
+      en: 'Returned',
+      id: 'Dikembalikan'
+    });
+    expect(TERM_LABEL_GLOSSARY.invDisputed.label.en).toBe('Disputed');
     expect(TERM_LABEL_GLOSSARY.supThreeWayMatch.label).toEqual(
       TERM_LABEL_GLOSSARY.invThreeWayMatch.label
     );
@@ -285,6 +290,19 @@ describe('term-label glossary (BL-233)', () => {
     expect(TERM_LABEL_GLOSSARY.fillStatus.label).toEqual({ en: 'Status', id: 'Status' });
     expect(TERM_LABEL_GLOSSARY.firmDemand.label.id).toBe('Kebutuhan Firm');
     expect(TERM_LABEL_GLOSSARY.maxStock.labelKeys).toContain('co.trigger.max');
+  });
+
+  it('TL-D31, TL-D32: rates are named as rates; band and stale period', () => {
+    expect(TERM_LABEL_GLOSSARY.relConfirmation.label.en).toBe('Confirmation rate');
+    expect(TERM_LABEL_GLOSSARY.relCommitment.label.en).toBe('Commitment reliability');
+    expect(TERM_LABEL_GLOSSARY.performanceBand.label).toEqual({
+      en: 'Performance band',
+      id: 'Kelompok kinerja'
+    });
+    expect(TERM_LABEL_GLOSSARY.staleAfter.label).toEqual({
+      en: 'Stale period',
+      id: 'Periode usang'
+    });
   });
 
   it('TL-D9 / TL-D13: the labels waiting on the team keep their wording', () => {

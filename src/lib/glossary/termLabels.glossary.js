@@ -1365,8 +1365,8 @@ export const TERM_LABEL_GLOSSARY =
     },
     poInTransit: {
       label: { en: 'In Transit', id: 'Dalam Perjalanan' },
-      en: 'POs the supplier confirmed or has partly delivered.',
-      id: 'PO yang sudah dikonfirmasi pemasok atau sudah dikirim sebagian.'
+      en: 'POs in delivery and not yet fully delivered: partly delivered. A PO that is only confirmed has not started delivery.',
+      id: 'PO yang sedang dikirim dan belum terkirim penuh: terkirim sebagian. PO yang baru dikonfirmasi belum mulai dikirim.'
     },
     poOverdue: {
       label: { en: 'Overdue', id: 'Jatuh Tempo' },
@@ -1501,8 +1501,8 @@ export const TERM_LABEL_GLOSSARY =
     },
     supInProgress: {
       label: { en: 'In Progress', id: 'Sedang Berjalan' },
-      en: 'POs you confirmed or have partly delivered.',
-      id: 'PO yang sudah Anda konfirmasi atau sudah dikirim sebagian.'
+      en: 'Your POs in delivery and not yet fully delivered: partly delivered. A PO that is only confirmed has not started delivery.',
+      id: 'PO Anda yang sedang dikirim dan belum terkirim penuh: terkirim sebagian. PO yang baru dikonfirmasi belum mulai dikirim.'
     },
     supValuePending: {
       label: { en: 'Total Value Pending', id: 'Total Nilai Tertunda' },
@@ -1533,8 +1533,12 @@ export const TERM_LABEL_GLOSSARY =
     },
     invDisputed: {
       label: { en: 'Disputed', id: 'Disengketakan' },
-      en: 'The value of invoices returned to the supplier with a reason, for it to correct and resubmit.',
-      id: 'Nilai faktur yang dikembalikan ke pemasok dengan alasan, untuk diperbaiki dan diajukan ulang.'
+      en: 'The value of invoices in dispute before payment, over a price or quantity difference or a credit note that is needed.',
+      id: 'Nilai faktur yang disengketakan sebelum pembayaran, karena selisih harga atau kuantitas atau nota kredit yang diperlukan.',
+      notToConfuse: {
+        en: 'Returned (sent back to the supplier to correct and resubmit).',
+        id: 'Dikembalikan (dikirim kembali ke pemasok untuk diperbaiki dan diajukan ulang).'
+      }
     },
     invOverdue: {
       label: { en: 'Overdue', id: 'Jatuh Tempo' },
@@ -1632,9 +1636,13 @@ export const TERM_LABEL_GLOSSARY =
       id: 'Nilai faktur Anda yang belum dibayar: diajukan, diverifikasi, atau dijadwalkan untuk dibayar.'
     },
     supInvDisputed: {
-      label: { en: 'Disputed', id: 'Disengketakan' },
+      label: { en: 'Returned', id: 'Dikembalikan' },
       en: 'The value of your invoices PTI returned with a reason, for you to correct and resubmit.',
-      id: 'Nilai faktur Anda yang dikembalikan PTI dengan alasan, untuk Anda perbaiki dan ajukan ulang.'
+      id: 'Nilai faktur Anda yang dikembalikan PTI dengan alasan, untuk Anda perbaiki dan ajukan ulang.',
+      notToConfuse: {
+        en: 'Disputed (an invoice in dispute over a price or quantity difference).',
+        id: 'Disengketakan (faktur yang disengketakan karena selisih harga atau kuantitas).'
+      }
     },
     supThreeWayMatch: {
       label: { en: '3-way match', id: 'Pencocokan 3 arah' },
@@ -1800,7 +1808,7 @@ export const TERM_LABEL_GLOSSARY =
     },
     // ── Wave 8: suppliers, performance and reliability ────────────────────────
     relConfirmation: {
-      label: { en: 'Confirmed by the deadline', id: 'Dikonfirmasi sebelum tenggat' },
+      label: { en: 'Confirmation rate', id: 'Tingkat konfirmasi' },
       en: 'The share of PO lines and forecast periods the supplier confirmed by their deadline.',
       id: 'Porsi baris PO dan periode prakiraan yang dikonfirmasi pemasok sebelum tenggatnya.',
       formula: {
@@ -1810,7 +1818,7 @@ export const TERM_LABEL_GLOSSARY =
       labelKeys: ['rel.col.confirmation']
     },
     relCommitment: {
-      label: { en: 'Delivered as committed', id: 'Dikirim sesuai komitmen' },
+      label: { en: 'Commitment reliability', id: 'Keandalan komitmen' },
       en: 'The share of the committed quantity that arrived on or before the committed date.',
       id: 'Porsi kuantitas yang dikomitmenkan yang tiba pada atau sebelum tanggal komitmen.',
       formula: {
@@ -1935,7 +1943,7 @@ export const TERM_LABEL_GLOSSARY =
       id: 'Apakah pemasok lolos gerbang kepatuhan PTI: dokumen halal dan BPOM yang berlaku bila perlu, GMP untuk bahan baku kosmetik, status aktif, dan OTIF sesuai target.'
     },
     performanceBand: {
-      label: { en: 'Band', id: 'Kelompok' },
+      label: { en: 'Performance band', id: 'Kelompok kinerja' },
       en: 'The supplier’s performance band, from its scorecard grade.',
       id: 'Kelompok kinerja pemasok, dari grade kartu skornya.',
       labelKeys: ['supFilter.col.band']
@@ -2211,7 +2219,7 @@ export const TERM_LABEL_GLOSSARY =
       id: 'Nilai yang dipakai semua kelompok material kecuali yang punya nilainya sendiri.'
     },
     staleAfter: {
-      label: { en: 'Stale after', id: 'Usang setelah' },
+      label: { en: 'Stale period', id: 'Periode usang' },
       en: 'How long after its last update a supplier’s stock figure counts as out of date.',
       id: 'Berapa lama setelah pembaruan terakhir angka stok pemasok dianggap kedaluwarsa.'
     },

@@ -29,7 +29,7 @@ export const reliabilityEn = {
   'rel.kpi.planChange.sub': '{{changed}} of {{schedules}} order lines',
 
   'rel.col.supplier': 'Supplier',
-  'rel.col.confirmation': 'Confirmed by the deadline',
+  'rel.col.confirmation': 'Confirmation rate',
   'rel.col.masc': 'Size of PTI’s changes',
   'rel.col.mascI': 'Drift since first seen',
   'rel.split.never': 'Never confirmed',
@@ -81,7 +81,7 @@ export const reliabilityId = {
   'rel.kpi.planChange.sub': '{{changed}} dari {{schedules}} baris pesanan',
 
   'rel.col.supplier': 'Pemasok',
-  'rel.col.confirmation': 'Dikonfirmasi sebelum tenggat',
+  'rel.col.confirmation': 'Tingkat konfirmasi',
   'rel.col.masc': 'Besar perubahan PTI',
   'rel.col.mascI': 'Pergeseran sejak pertama dilihat',
   'rel.split.never': 'Tidak pernah dikonfirmasi',

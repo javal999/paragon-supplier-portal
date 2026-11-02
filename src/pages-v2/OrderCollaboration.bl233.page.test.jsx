@@ -26,7 +26,7 @@ describe('BL-233 wave 5 — KPI cards', () => {
       expect(screen.getByTestId(`term-tip-${id}`)).toBeInTheDocument();
     expect(
       within(screen.getByTestId('term-tip-po-in-transit')).getByRole('tooltip')
-    ).toHaveTextContent('POs the supplier confirmed or has partly delivered.');
+    ).toHaveTextContent('POs in delivery and not yet fully delivered: partly delivered.');
   });
 
   it('/buyer/goods-receipt: the rejection rate gives its formula', async () => {

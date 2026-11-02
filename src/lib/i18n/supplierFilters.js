@@ -23,7 +23,7 @@ export const supplierFiltersEn = {
   'supFilter.country.all': 'Any country',
   'supFilter.clear': 'Clear these filters',
   'supFilter.col.certificates': 'Certificates',
-  'supFilter.col.band': 'Band',
+  'supFilter.col.band': 'Performance band',
   'supFilter.active': 'Also filtered by: {{filters}}'
 };
 
@@ -45,6 +45,6 @@ export const supplierFiltersId = {
   'supFilter.country.all': 'Semua negara',
   'supFilter.clear': 'Hapus filter ini',
   'supFilter.col.certificates': 'Sertifikat',
-  'supFilter.col.band': 'Kelompok',
+  'supFilter.col.band': 'Kelompok kinerja',
   'supFilter.active': 'Juga difilter menurut: {{filters}}'
 };
