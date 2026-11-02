@@ -36,12 +36,14 @@
 // summary, /buyer/purchase-requisition and both goods-receipt pages.
 // Wave 6: /buyer/invoices and /supplier/invoices (with the invoice lines),
 // /buyer/shipments (with shelf-life exceptions) and /supplier/shipments.
+// Wave 7: /buyer/contracts (KPIs, list, delivery agreements tab),
+// /buyer/delivery-agreements and /buyer/compliance.
 // ─────────────────────────────────────────────────────────────────────────────
 /** @import { GlossaryOf, TermEntry } from './types' */
 
 /**
  * The terms a page labels through `TermLabel`.
- * @typedef {'demandAnticipation' | 'ltp' | 'fgDemand' | 'ltpLessFgDemand' | 'consumptionAverage' | 'safetyOrder' | 'carryOver' | 'wouldBe' | 'surplusAbsorbed' | 'recordedConsumption' | 'openSupply' | 'supplyGap' | 'daAfterCheck' | 'ospo' | 'additionalPo' | 'callOffsThisWeek' | 'remainder' | 'notCarried' | 'supplierAgreedOutside' | 'gapProposal' | 'alertPtiBelowRop' | 'alertSupplierBelowRop' | 'alertProjectedStockOut' | 'alertCapacityBelowDemand' | 'alertStaleData' | 'alertCoverage' | 'alertCommitmentBelowForecast' | 'alertLeadTimeMissing' | 'alertCallOffNotCovered' | 'alertSupplyDiscontinued' | 'alertBlanketPoRunOut' | 'alertDemandAnticipationUnabsorbed' | 'supplierCover' | 'supplierStock' | 'ptiStockRop' | 'incoming' | 'incomingStatus' | 'supplierAvailable' | 'calledOffNotShipped' | 'freeToCallOff' | 'ptiInbound' | 'simulationBasis' | 'simulationFlags' | 'supplierOwnRop' | 'ptiStock' | 'ptiRop' | 'daysOfSupply' | 'feedstockLatest' | 'feedstockThisWeek' | 'tradeNameStatus' | 'capacityLtp' | 'allocatedCapacity' | 'productionLimit' | 'additionalCapacity' | 'capacityBe' | 'ltpAgainstCapacity' | 'capacityShortBy' | 'ptiCapacityDecision' | 'runOutRemaining' | 'runsOut' | 'newPoNeededBy' | 'poLeadTime' | 'spaceFreed' | 'materialsPerTier' | 'onSapValue' | 'sltGroupDefault' | 'tierTarget' | 'safetyOrderRopOrder' | 'ropFisikSafety' | 'demandCv' | 'osipLevel' | 'ropOrder' | 'ropFisik' | 'maxStock' | 'engineSafetyStock' | 'sapSafetyStock' | 'freed' | 'safetyLeadTime' | 'engineReorderPoint' | 'forecastShortfall' | 'ropSupplier' | 'ropToPrincipal' | 'replenishmentCycle' | 'pullAgreement' | 'bottleneckLeadTime' | 'monthLtp' | 'protectionBaseline' | 'uplift' | 'protectionBuffer' | 'strategicBaseline' | 'strategicBuffer' | 'poOrdered' | 'reconcileCalledOff' | 'asnRequested' | 'notYetCalledOff' | 'calledOffNotYetShipped' | 'maxStockSupplier' | 'whatIfMax' | 'daOverLeadTime' | 'prGenerated' | 'planCheckPr' | 'triggerCallOffs' | 'triggerPr' | 'whatIfRemainder' | 'whatIfCarryOver' | 'firstShortageWeek' | 'weeksAboveMax' | 'whatIfLtp' | 'daCurrentPlan' | 'daScenario' | 'callOffsDrafted' | 'whatIfIncoming' | 'prRecommendedWeek' | 'projectedSohPlan' | 'projectedSohScenario' | 'engineValue' | 'lastPublished' | 'firstPublished' | 'dampedValue' | 'allowedRange' | 'toPublish' | 'stabiliseRule' | 'ruleNew' | 'ruleUnchanged' | 'ruleFirmFrozen' | 'ruleForecast' | 'ruleDamped' | 'ruleBandHeld' | 'ruleCumulativeHeld' | 'ruleOverride' | 'planMovement' | 'weeksChangedInLeadTime' | 'tradeOffWithinLimits' | 'weeksHeld' | 'seriesHeld' | 'seriesMasc' | 'forecastZone' | 'publishedForecast' | 'commitmentDue' | 'commitment' | 'commitmentUpside' | 'grPendingInspection' | 'grQualityHold' | 'grApprovedToday' | 'grRejectionRate' | 'grDisposition' | 'grExpected' | 'grReceived' | 'grAccepted' | 'grRejectedLine' | 'grChecks' | 'poOpenTotal' | 'poPendingConfirmation' | 'poInTransit' | 'poOverdue' | 'orderedQty' | 'counterQty' | 'counterDate' | 'summaryResponse' | 'summaryAsns' | 'summaryCallOffs' | 'summaryConfirmations' | 'summaryReceipts' | 'summaryInvoices' | 'prDraft' | 'prPendingApproval' | 'prApproved' | 'prSourcingEvent' | 'prPoCreated' | 'prSource' | 'supShipped' | 'supReceived' | 'supRejected' | 'supQualityResult' | 'supDiscrepancy' | 'supDifference' | 'supOpenOrders' | 'supInProgress' | 'supValuePending' | 'supDelivered' | 'supConfirmed' | 'invPendingApproval' | 'invReleased' | 'invDisputed' | 'invOverdue' | 'invThreeWayMatch' | 'agingBucket' | 'agingPctAp' | 'agingRisk' | 'invLineQuantity' | 'invUnitPrice' | 'invLineValue' | 'shipInTransit' | 'shipAtDock' | 'shipDelayed' | 'shipArrivingToday' | 'shelfLifeLeftAtEta' | 'supPaymentsReceived' | 'supPendingPayment' | 'supInvDisputed' | 'supThreeWayMatch' | 'asnDraft' | 'asnSubmitted' | 'asnInTransit' | 'asnDelivered' | 'asnDiscrepancy' | 'asnLineOrdered' | 'asnLineShipped' | 'asnOpenQuantity' | 'asnShippedQuantity'} TermLabelId
+ * @typedef {'demandAnticipation' | 'ltp' | 'fgDemand' | 'ltpLessFgDemand' | 'consumptionAverage' | 'safetyOrder' | 'carryOver' | 'wouldBe' | 'surplusAbsorbed' | 'recordedConsumption' | 'openSupply' | 'supplyGap' | 'daAfterCheck' | 'ospo' | 'additionalPo' | 'callOffsThisWeek' | 'remainder' | 'notCarried' | 'supplierAgreedOutside' | 'gapProposal' | 'alertPtiBelowRop' | 'alertSupplierBelowRop' | 'alertProjectedStockOut' | 'alertCapacityBelowDemand' | 'alertStaleData' | 'alertCoverage' | 'alertCommitmentBelowForecast' | 'alertLeadTimeMissing' | 'alertCallOffNotCovered' | 'alertSupplyDiscontinued' | 'alertBlanketPoRunOut' | 'alertDemandAnticipationUnabsorbed' | 'supplierCover' | 'supplierStock' | 'ptiStockRop' | 'incoming' | 'incomingStatus' | 'supplierAvailable' | 'calledOffNotShipped' | 'freeToCallOff' | 'ptiInbound' | 'simulationBasis' | 'simulationFlags' | 'supplierOwnRop' | 'ptiStock' | 'ptiRop' | 'daysOfSupply' | 'feedstockLatest' | 'feedstockThisWeek' | 'tradeNameStatus' | 'capacityLtp' | 'allocatedCapacity' | 'productionLimit' | 'additionalCapacity' | 'capacityBe' | 'ltpAgainstCapacity' | 'capacityShortBy' | 'ptiCapacityDecision' | 'runOutRemaining' | 'runsOut' | 'newPoNeededBy' | 'poLeadTime' | 'spaceFreed' | 'materialsPerTier' | 'onSapValue' | 'sltGroupDefault' | 'tierTarget' | 'safetyOrderRopOrder' | 'ropFisikSafety' | 'demandCv' | 'osipLevel' | 'ropOrder' | 'ropFisik' | 'maxStock' | 'engineSafetyStock' | 'sapSafetyStock' | 'freed' | 'safetyLeadTime' | 'engineReorderPoint' | 'forecastShortfall' | 'ropSupplier' | 'ropToPrincipal' | 'replenishmentCycle' | 'pullAgreement' | 'bottleneckLeadTime' | 'monthLtp' | 'protectionBaseline' | 'uplift' | 'protectionBuffer' | 'strategicBaseline' | 'strategicBuffer' | 'poOrdered' | 'reconcileCalledOff' | 'asnRequested' | 'notYetCalledOff' | 'calledOffNotYetShipped' | 'maxStockSupplier' | 'whatIfMax' | 'daOverLeadTime' | 'prGenerated' | 'planCheckPr' | 'triggerCallOffs' | 'triggerPr' | 'whatIfRemainder' | 'whatIfCarryOver' | 'firstShortageWeek' | 'weeksAboveMax' | 'whatIfLtp' | 'daCurrentPlan' | 'daScenario' | 'callOffsDrafted' | 'whatIfIncoming' | 'prRecommendedWeek' | 'projectedSohPlan' | 'projectedSohScenario' | 'engineValue' | 'lastPublished' | 'firstPublished' | 'dampedValue' | 'allowedRange' | 'toPublish' | 'stabiliseRule' | 'ruleNew' | 'ruleUnchanged' | 'ruleFirmFrozen' | 'ruleForecast' | 'ruleDamped' | 'ruleBandHeld' | 'ruleCumulativeHeld' | 'ruleOverride' | 'planMovement' | 'weeksChangedInLeadTime' | 'tradeOffWithinLimits' | 'weeksHeld' | 'seriesHeld' | 'seriesMasc' | 'forecastZone' | 'publishedForecast' | 'commitmentDue' | 'commitment' | 'commitmentUpside' | 'grPendingInspection' | 'grQualityHold' | 'grApprovedToday' | 'grRejectionRate' | 'grDisposition' | 'grExpected' | 'grReceived' | 'grAccepted' | 'grRejectedLine' | 'grChecks' | 'poOpenTotal' | 'poPendingConfirmation' | 'poInTransit' | 'poOverdue' | 'orderedQty' | 'counterQty' | 'counterDate' | 'summaryResponse' | 'summaryAsns' | 'summaryCallOffs' | 'summaryConfirmations' | 'summaryReceipts' | 'summaryInvoices' | 'prDraft' | 'prPendingApproval' | 'prApproved' | 'prSourcingEvent' | 'prPoCreated' | 'prSource' | 'supShipped' | 'supReceived' | 'supRejected' | 'supQualityResult' | 'supDiscrepancy' | 'supDifference' | 'supOpenOrders' | 'supInProgress' | 'supValuePending' | 'supDelivered' | 'supConfirmed' | 'invPendingApproval' | 'invReleased' | 'invDisputed' | 'invOverdue' | 'invThreeWayMatch' | 'agingBucket' | 'agingPctAp' | 'agingRisk' | 'invLineQuantity' | 'invUnitPrice' | 'invLineValue' | 'shipInTransit' | 'shipAtDock' | 'shipDelayed' | 'shipArrivingToday' | 'shelfLifeLeftAtEta' | 'supPaymentsReceived' | 'supPendingPayment' | 'supInvDisputed' | 'supThreeWayMatch' | 'asnDraft' | 'asnSubmitted' | 'asnInTransit' | 'asnDelivered' | 'asnDiscrepancy' | 'asnLineOrdered' | 'asnLineShipped' | 'asnOpenQuantity' | 'asnShippedQuantity' | 'deliveryAgreed' | 'deliveryReleased' | 'deliveryDelivered' | 'deliveryRemaining' | 'releasePlanned' | 'releaseFulfillment' | 'releaseDrawnDown' | 'certExpired' | 'certExpiring' | 'certMissing' | 'certUnderReview' | 'certValid' | 'certInSap' | 'certActionRequired' | 'contractsActive' | 'contractsExpiring' | 'obligationsOverdue' | 'contractsActiveValue' | 'contractPerformance'} TermLabelId
  */
 
 // TL-D23: an "Also called" source names only the team; where in the team's
@@ -1678,5 +1680,113 @@ export const TERM_LABEL_GLOSSARY =
       label: { en: 'Shipped quantity', id: 'Kuantitas dikirim' },
       en: 'The quantity you ship on the line. Above the open quantity needs a reason.',
       id: 'Kuantitas yang Anda kirim pada baris itu. Di atas kuantitas terbuka perlu alasan.'
+    },
+    // ── Wave 7: contracts, delivery agreements, compliance ──────────────────────
+    deliveryAgreed: {
+      label: { en: 'Agreed', id: 'Disepakati' },
+      en: 'The total quantity the delivery agreement commits for the item.',
+      id: 'Total kuantitas yang dijanjikan perjanjian pengiriman untuk item itu.',
+      labelKeys: ['delivery.kpi.agreed']
+    },
+    deliveryReleased: {
+      label: { en: 'Released', id: 'Dirilis' },
+      en: 'The quantity released so far: schedule lines sent to the supplier to deliver.',
+      id: 'Kuantitas yang sudah dirilis: baris jadwal yang dikirim ke pemasok untuk dikirimkan.',
+      labelKeys: ['delivery.kpi.released', 'delivery.rollup.col.released']
+    },
+    deliveryDelivered: {
+      label: { en: 'Delivered', id: 'Terkirim' },
+      en: 'The quantity delivered against the released lines, tracked apart from what is released.',
+      id: 'Kuantitas yang sudah dikirim untuk baris yang dirilis, dicatat terpisah dari yang dirilis.',
+      labelKeys: ['delivery.kpi.delivered']
+    },
+    deliveryRemaining: {
+      label: { en: 'Remaining', id: 'Sisa kuantitas' },
+      en: 'The agreed quantity not yet released.',
+      id: 'Kuantitas yang disepakati dan belum dirilis.',
+      formula: { en: 'Agreed − released.', id: 'Disepakati − dirilis.' },
+      notToConfuse: {
+        en: 'Carry-over (also called sisa DA, on the Demand anticipation grid).',
+        id: 'Carry-over (disebut juga sisa DA, di grid Demand anticipation).'
+      },
+      labelKeys: ['delivery.kpi.remaining']
+    },
+    releasePlanned: {
+      label: { en: 'Planned', id: 'Direncanakan' },
+      en: 'The quantity planned on the release line.',
+      id: 'Kuantitas yang direncanakan pada baris rilis.',
+      labelKeys: ['delivery.calendar.planned']
+    },
+    releaseFulfillment: {
+      label: { en: 'Fulfillment', id: 'Pemenuhan' },
+      en: 'How the release line was delivered: on time, late, missed, or pending until its date.',
+      id: 'Bagaimana baris rilis dikirim: tepat waktu, terlambat, terlewat, atau menunggu sampai tanggalnya.',
+      labelKeys: ['delivery.calendar.fulfillment']
+    },
+    releaseDrawnDown: {
+      label: { en: 'Drawn down', id: 'Ditarik' },
+      en: 'The quantity delivered against the release line, with its difference from the planned quantity.',
+      id: 'Kuantitas yang dikirim untuk baris rilis, dengan selisihnya dari kuantitas yang direncanakan.',
+      labelKeys: ['delivery.calendar.drawdownCol']
+    },
+    certExpired: {
+      label: { en: 'Expired', id: 'Kedaluwarsa' },
+      en: 'Certificates past their expiry date. An expired certificate blocks new POs.',
+      id: 'Sertifikat yang melewati tanggal kedaluwarsa. Sertifikat kedaluwarsa memblokir PO baru.'
+    },
+    certExpiring: {
+      label: { en: 'Expiring ≤90d', id: 'Akan Kedaluwarsa ≤90 hari' },
+      en: 'Certificates that expire within 90 days: their renewal window is open.',
+      id: 'Sertifikat yang kedaluwarsa dalam 90 hari: jendela pembaruannya terbuka.'
+    },
+    certMissing: {
+      label: { en: 'Missing', id: 'Hilang' },
+      en: 'Required certificates whose application has not started.',
+      id: 'Sertifikat wajib yang permohonannya belum dimulai.'
+    },
+    certUnderReview: {
+      label: { en: 'Under Review', id: 'Sedang Ditinjau' },
+      en: 'Certificates the supplier submitted that wait for PTI’s verification.',
+      id: 'Sertifikat yang diajukan pemasok dan menunggu verifikasi PTI.'
+    },
+    certValid: {
+      label: { en: 'Valid', id: 'Berlaku' },
+      en: 'Certificates in force and more than 90 days from expiry.',
+      id: 'Sertifikat yang berlaku dan lebih dari 90 hari dari kedaluwarsa.'
+    },
+    certInSap: {
+      label: { en: 'In SAP', id: 'Di SAP' },
+      en: 'Whether the certificate has been handed to SAP S/4HANA. None has yet: the portal cannot transmit one.',
+      id: 'Apakah sertifikat sudah diserahkan ke SAP S/4HANA. Belum ada: portal belum dapat mengirimkannya.'
+    },
+    certActionRequired: {
+      label: { en: 'Action required', id: 'Tindakan diperlukan' },
+      en: 'What has to happen next for the certificate, such as renewing or verifying it.',
+      id: 'Apa yang harus dilakukan berikutnya untuk sertifikat itu, misalnya memperbarui atau memverifikasinya.'
+    },
+    contractsActive: {
+      label: { en: 'Active Contracts', id: 'Kontrak Aktif' },
+      en: 'Contracts currently in force.',
+      id: 'Kontrak yang sedang berlaku.'
+    },
+    contractsExpiring: {
+      label: { en: 'Expiring Soon', id: 'Segera Kedaluwarsa' },
+      en: 'Contracts in force whose renewal notice is due.',
+      id: 'Kontrak berlaku yang pemberitahuan perpanjangannya jatuh tempo.'
+    },
+    obligationsOverdue: {
+      label: { en: 'Overdue Obligations', id: 'Kewajiban Jatuh Tempo' },
+      en: 'Contract obligations past their due date and not met, across all contracts.',
+      id: 'Kewajiban kontrak yang melewati tanggal jatuh tempo dan belum dipenuhi, di semua kontrak.'
+    },
+    contractsActiveValue: {
+      label: { en: 'Total Active Value', id: 'Total Nilai Aktif' },
+      en: 'The total value of the contracts in force.',
+      id: 'Total nilai kontrak yang sedang berlaku.'
+    },
+    contractPerformance: {
+      label: { en: 'Performance', id: 'Kinerja' },
+      en: 'The supplier’s performance score on the contract, out of 100.',
+      id: 'Skor kinerja pemasok pada kontrak itu, dari 100.'
     }
   });

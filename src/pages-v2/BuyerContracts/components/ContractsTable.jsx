@@ -42,7 +42,7 @@ const ContractsTable = ({ filtered, supplierById, displayOf, nowIso, openContrac
         <TableHeaderCell>{t('contracts.table.col.period')}</TableHeaderCell>
         <TableHeaderCell>{t('contracts.table.col.expiry')}</TableHeaderCell>
         <TableHeaderCell className="text-right">{t('contracts.table.col.value')}</TableHeaderCell>
-        <TableHeaderCell>{t('contracts.table.col.performance')}</TableHeaderCell>
+        <TableHeaderCell term="contractPerformance" />
         <TableHeaderCell>{t('contracts.table.col.status')}</TableHeaderCell>
         <TableHeaderCell className="text-right">{t('contracts.table.col.actions')}</TableHeaderCell>
       </TableHeader>

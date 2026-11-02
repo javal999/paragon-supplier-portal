@@ -1726,7 +1726,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | kpi | Agreed | Disepakati | delivery.kpi.agreed | Y | none found | n/a | N |  | Keep |  |
 | kpi | Released | Dirilis | delivery.kpi.released | Y | none found (SUPPLIER-HUB-REQUIREMENTS.md:2072 "scheduling agreement releases", no label word) | n/a | N |  | Keep |  |
 | kpi | Delivered | Terkirim | delivery.kpi.delivered | Y | none found | n/a | N |  | Keep |  |
-| kpi | Remaining | Sisa | delivery.kpi.remaining | Y | none found (CR-04 "Remaining quantity", SUPPLIER-HUB-REQUIREMENTS.md:149, is the umbrella PO's) | n/a | ID "Sisa" on a DA card reads as "sisa DA" = carry-over (TL-D8), Material Planning team / Demand anticipation (DA) grid |  | Ask Levi | ID "Sisa" on a Delivery Agreement card can read as team "sisa DA" (carry-over). |
+| kpi | Remaining | Sisa | delivery.kpi.remaining | Y | none found (CR-04 "Remaining quantity", SUPPLIER-HUB-REQUIREMENTS.md:149, is the umbrella PO's) | n/a | ID "Sisa" on a DA card reads as "sisa DA" = carry-over (TL-D8), Material Planning team / Demand anticipation (DA) grid |  | Decided (TL-D12) | ID now "Sisa kuantitas" (BL-233 wave 7) |
 | column | Action | Aksi | delivery.action.col | N | n/a | n/a | N |  | Keep | Passed to ReleaseCalendar as actionsHeader |
 
 ## Page: /buyer/delivery-agreements — Release calendar — `components/delivery/ReleaseCalendar.jsx` (also on /buyer/contracts/:id and /supplier/delivery-agreements via AgreementDrawdown)
