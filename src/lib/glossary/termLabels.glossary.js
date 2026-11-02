@@ -2267,7 +2267,7 @@ export const TERM_LABEL_GLOSSARY =
       }
     },
     mrpStockOnHand: {
-      label: { en: 'Stock on hand', id: 'Stok on hand' },
+      label: { en: 'Stock on hand', id: 'Stok tersedia' },
       en: 'PTI’s stock of the material now.',
       id: 'Stok PTI untuk material itu saat ini.'
     },
@@ -2330,17 +2330,17 @@ export const TERM_LABEL_GLOSSARY =
       }
     },
     pegFgQty: {
-      label: { en: 'Finished-good quantity', id: 'Kuantitas barang jadi' },
+      label: { en: 'Finished-good quantity', id: 'Jumlah barang jadi' },
       en: 'The quantity of the finished good planned in the week.',
       id: 'Kuantitas barang jadi yang direncanakan minggu itu.'
     },
     pegScrap: {
-      label: { en: 'Scrap', id: 'Scrap' },
+      label: { en: 'Scrap', id: 'Susut' },
       en: 'The share of the component expected to be lost in making the finished good.',
       id: 'Porsi komponen yang diperkirakan hilang saat membuat barang jadi.'
     },
     pegYield: {
-      label: { en: 'Yield', id: 'Yield' },
+      label: { en: 'Yield', id: 'Hasil (yield)' },
       en: 'The share of the parent’s process output that comes out good.',
       id: 'Porsi keluaran proses induk yang hasilnya baik.'
     },
@@ -2354,7 +2354,7 @@ export const TERM_LABEL_GLOSSARY =
       }
     },
     mbBeats: {
-      label: { en: 'Engine beats SAP’s plan', id: 'Mesin mengalahkan rencana SAP' },
+      label: { en: 'Engine beats SAP’s plan', id: 'Mesin mengungguli rencana SAP' },
       en: 'SKUs where the engine’s chosen model served demand better than SAP’s plan in the backtest.',
       id: 'SKU yang model pilihan mesinnya melayani permintaan lebih baik daripada rencana SAP dalam backtest.'
     },
@@ -2369,7 +2369,7 @@ export const TERM_LABEL_GLOSSARY =
       id: 'Pergerakan rencana (MASC) terbesar yang boleh ditimbulkan model agar tetap dipilih. Belum diberlakukan sampai Material Planner menetapkannya.'
     },
     mbFillRate: {
-      label: { en: 'Fill rate', id: 'Fill rate' },
+      label: { en: 'Fill rate', id: 'Tingkat pemenuhan' },
       en: 'The share of weeks with demand that stock served in full, when PTI’s ordering is replayed on the model’s forecast.',
       id: 'Porsi minggu berpermintaan yang dilayani penuh oleh stok, saat cara pesan PTI diputar ulang pada prakiraan model.',
       formula: {
@@ -2403,12 +2403,12 @@ export const TERM_LABEL_GLOSSARY =
       id: 'Porsi unit yang diminta yang dilayani stok.'
     },
     mbPeakPackaging: {
-      label: { en: 'Packaging: peak pallets', id: 'Kemasan: palet puncak' },
+      label: { en: 'Packaging: peak pallets', id: 'Kemasan: puncak palet' },
       en: 'The most pallets of packaging the replayed plan holds in any one week.',
       id: 'Palet kemasan terbanyak yang disimpan rencana yang diputar ulang dalam satu minggu.'
     },
     mbPeakRaw: {
-      label: { en: 'Raw material: peak pallets', id: 'Bahan baku: palet puncak' },
+      label: { en: 'Raw material: peak pallets', id: 'Bahan baku: puncak palet' },
       en: 'The most pallets of raw material the replayed plan holds in any one week.',
       id: 'Palet bahan baku terbanyak yang disimpan rencana yang diputar ulang dalam satu minggu.'
     },
@@ -2428,7 +2428,7 @@ export const TERM_LABEL_GLOSSARY =
       id: 'Lead time material, yang dipakai cara pesan yang diputar ulang.'
     },
     mbChosenVsSap: {
-      label: { en: 'Chosen against SAP’s plan', id: 'Pilihan terhadap rencana SAP' },
+      label: { en: 'Chosen against SAP’s plan', id: 'Terpilih terhadap rencana SAP' },
       en: 'Whether the material is better or worse off when its SKUs use their chosen models instead of SAP’s plan.',
       id: 'Apakah material lebih baik atau lebih buruk bila SKU-nya memakai model pilihan, bukan rencana SAP.'
     },
@@ -2448,7 +2448,7 @@ export const TERM_LABEL_GLOSSARY =
       id: 'Apakah prakiraan kandidat rata-rata terlalu tinggi atau rendah. Diagnosis, tidak dipakai untuk memilih.'
     },
     mbSelection: {
-      label: { en: 'Selection', id: 'Seleksi' },
+      label: { en: 'Selection', id: 'Pemilihan' },
       en: 'Whether the candidate was chosen, failed the floor or the stability limit, or was eligible but not chosen.',
       id: 'Apakah kandidat dipilih, gagal di batas bawah atau batas stabilitas, atau layak tetapi tidak dipilih.'
     },
