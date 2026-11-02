@@ -210,7 +210,7 @@ const BuyerDeliveryAgreements = () => {
             <TableHeaderCell>{t('delivery.rollup.col.supplier')}</TableHeaderCell>
             <TableHeaderCell>{t('delivery.rollup.col.contract')}</TableHeaderCell>
             <TableHeaderCell>{t('delivery.rollup.col.material')}</TableHeaderCell>
-            <TableHeaderCell>{t('delivery.rollup.col.released')}</TableHeaderCell>
+            <TableHeaderCell term="deliveryReleased" />
             <TableHeaderCell>{t('delivery.rollup.col.nextDue')}</TableHeaderCell>
             <TableHeaderCell>{t('delivery.rollup.col.status')}</TableHeaderCell>
             <TableHeaderCell> </TableHeaderCell>

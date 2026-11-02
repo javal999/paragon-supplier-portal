@@ -18,19 +18,19 @@ import KpiCard from '@components/ui-v2/KpiCard';
 const ComplianceKpis = ({ counts, t }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-5 mb-6">
     <KpiCard
-      eyebrow={t('compliance.kpi.expired.eyebrow')}
+      term="certExpired"
       value={counts.expired.toString()}
       subtitle={<span className="text-danger">{t('compliance.kpi.expired.subtitle')}</span>}
       icon={AlertTriangle}
     />
     <KpiCard
-      eyebrow={t('compliance.kpi.expiring.eyebrow')}
+      term="certExpiring"
       value={counts.expiring.toString()}
       subtitle={<span className="text-warning-hover">{t('compliance.kpi.expiring.subtitle')}</span>}
       icon={Clock}
     />
     <KpiCard
-      eyebrow={t('compliance.kpi.missing.eyebrow')}
+      term="certMissing"
       value={counts.missing.toString()}
       subtitle={<span className="text-danger">{t('compliance.kpi.missing.subtitle')}</span>}
       icon={FileQuestion}
@@ -38,13 +38,13 @@ const ComplianceKpis = ({ counts, t }) => (
     {/* HALAL-UNDERREVIEW: Under Review now has its own visible KPI home —
         first-class, not a silent second-class state. */}
     <KpiCard
-      eyebrow={t('compliance.kpi.underReview.eyebrow')}
+      term="certUnderReview"
       value={counts.underReview.toString()}
       subtitle={t('compliance.kpi.underReview.subtitle')}
       icon={RefreshCw}
     />
     <KpiCard
-      eyebrow={t('compliance.kpi.valid.eyebrow')}
+      term="certValid"
       value={counts.valid.toString()}
       subtitle={t('compliance.kpi.valid.subtitle')}
       icon={CheckCircle2}

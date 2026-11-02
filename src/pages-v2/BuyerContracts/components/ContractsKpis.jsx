@@ -22,25 +22,25 @@ import { formatIDR } from '../utils';
 const ContractsKpis = ({ kpis, overdueObligations, t }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
     <KpiCard
-      eyebrow={t('contracts.kpi.active.eyebrow')}
+      term="contractsActive"
       value={kpis.active.toString()}
       subtitle={t('contracts.kpi.active.subtitle')}
       icon={ScrollText}
     />
     <KpiCard
-      eyebrow={t('contracts.kpi.expiring.eyebrow')}
+      term="contractsExpiring"
       value={kpis.expiringSoon.toString()}
       subtitle={t('contracts.kpi.expiring.subtitle')}
       icon={AlertTriangle}
     />
     <KpiCard
-      eyebrow={t('contracts.kpi.overdue.eyebrow')}
+      term="obligationsOverdue"
       value={overdueObligations.toString()}
       subtitle={t('contracts.kpi.overdue.subtitle')}
       icon={FileText}
     />
     <KpiCard
-      eyebrow={t('contracts.kpi.value.eyebrow')}
+      term="contractsActiveValue"
       value={formatIDR(kpis.totalValue)}
       subtitle={t('contracts.kpi.value.subtitle')}
       icon={Wallet}

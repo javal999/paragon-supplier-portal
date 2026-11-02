@@ -54,15 +54,10 @@ export const complianceEn = {
     'Indonesian cosmetics must carry BPJPH halal certification by 17 Oct 2026. Certification is handled manually by the compliance team — this portal tracks status, it does not perform or submit certification, and this date does not gate any work here.',
   'compliance.deadline.daysRemaining': 'days until the regulatory date',
   // — KPI cards —
-  'compliance.kpi.expired.eyebrow': 'Expired',
   'compliance.kpi.expired.subtitle': 'Blocks new POs',
-  'compliance.kpi.expiring.eyebrow': 'Expiring ≤90d',
   'compliance.kpi.expiring.subtitle': 'Renewal window open',
-  'compliance.kpi.missing.eyebrow': 'Missing',
   'compliance.kpi.missing.subtitle': 'Application not started',
-  'compliance.kpi.valid.eyebrow': 'Valid',
   'compliance.kpi.valid.subtitle': 'In good standing',
-  'compliance.kpi.underReview.eyebrow': 'Under Review',
   'compliance.kpi.underReview.subtitle': 'Awaiting verification',
   // — Status filter chips —
   'compliance.filter.status.all': 'All',
@@ -86,11 +81,9 @@ export const complianceEn = {
   'compliance.table.issuedBy': 'Issued by',
   'compliance.table.expiry': 'Expiry',
   'compliance.table.status': 'Status',
-  'compliance.table.actionRequired': 'Action required',
   // — SAP sync state (per ROW, outbound). Deliberately distinct from the
   //   readiness banner above, which is INBOUND and per-capability: that one says
   //   the portal has no real data yet; these say S/4HANA does not hold this row.
-  'compliance.table.sapSync': 'In SAP',
   'compliance.sapSync.AWAITING_SYNC': 'Not yet',
   'compliance.sapSync.AWAITING_SYNC.title':
     'S/4HANA has not acknowledged this certificate. The portal holds it; the sync that would hand it over does not exist yet.',
@@ -221,15 +214,10 @@ export const complianceId = {
     'Kosmetik Indonesia harus memiliki sertifikasi halal BPJPH paling lambat 17 Okt 2026. Sertifikasi ditangani secara manual oleh tim kepatuhan — portal ini melacak status, tidak melakukan atau mengajukan sertifikasi, dan tanggal ini tidak membatasi pekerjaan apa pun di sini.',
   'compliance.deadline.daysRemaining': 'hari menuju tanggal regulasi',
   // — KPI cards —
-  'compliance.kpi.expired.eyebrow': 'Kedaluwarsa',
   'compliance.kpi.expired.subtitle': 'Memblokir PO baru',
-  'compliance.kpi.expiring.eyebrow': 'Akan Kedaluwarsa ≤90 hari',
   'compliance.kpi.expiring.subtitle': 'Jendela pembaruan terbuka',
-  'compliance.kpi.missing.eyebrow': 'Hilang',
   'compliance.kpi.missing.subtitle': 'Permohonan belum dimulai',
-  'compliance.kpi.valid.eyebrow': 'Berlaku',
   'compliance.kpi.valid.subtitle': 'Dalam keadaan baik',
-  'compliance.kpi.underReview.eyebrow': 'Sedang Ditinjau',
   'compliance.kpi.underReview.subtitle': 'Menunggu verifikasi',
   // — Status filter chips —
   'compliance.filter.status.all': 'Semua',
@@ -253,9 +241,7 @@ export const complianceId = {
   'compliance.table.issuedBy': 'Diterbitkan oleh',
   'compliance.table.expiry': 'Kedaluwarsa',
   'compliance.table.status': 'Status',
-  'compliance.table.actionRequired': 'Tindakan diperlukan',
   // — Status sinkronisasi SAP (per BARIS, keluar) —
-  'compliance.table.sapSync': 'Di SAP',
   'compliance.sapSync.AWAITING_SYNC': 'Belum',
   'compliance.sapSync.AWAITING_SYNC.title':
     'S/4HANA belum menerima sertifikat ini. Portal menyimpannya; sinkronisasi yang akan menyerahkannya belum ada.',

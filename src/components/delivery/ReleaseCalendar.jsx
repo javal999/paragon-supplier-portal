@@ -81,10 +81,10 @@ const ReleaseCalendar = ({
           <TableHeader>
             <TableHeaderCell>{t('delivery.calendar.seq')}</TableHeaderCell>
             <TableHeaderCell>{t('delivery.calendar.date')}</TableHeaderCell>
-            <TableHeaderCell>{t('delivery.calendar.planned')}</TableHeaderCell>
+            <TableHeaderCell term="releasePlanned" />
             <TableHeaderCell>{t('delivery.calendar.state')}</TableHeaderCell>
-            <TableHeaderCell>{t('delivery.calendar.fulfillment')}</TableHeaderCell>
-            <TableHeaderCell>{t('delivery.calendar.drawdownCol')}</TableHeaderCell>
+            <TableHeaderCell term="releaseFulfillment" />
+            <TableHeaderCell term="releaseDrawnDown" />
             {withActions && <TableHeaderCell>{actionsHeader}</TableHeaderCell>}
           </TableHeader>
           <tbody>

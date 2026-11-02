@@ -53,8 +53,8 @@ const ComplianceRegistryTable = ({ filtered, toast, t }) => (
           <TableHeaderCell>{t('compliance.table.issuedBy')}</TableHeaderCell>
           <TableHeaderCell>{t('compliance.table.expiry')}</TableHeaderCell>
           <TableHeaderCell>{t('compliance.table.status')}</TableHeaderCell>
-          <TableHeaderCell>{t('compliance.table.sapSync')}</TableHeaderCell>
-          <TableHeaderCell>{t('compliance.table.actionRequired')}</TableHeaderCell>
+          <TableHeaderCell term="certInSap" />
+          <TableHeaderCell term="certActionRequired" />
           <TableHeaderCell className="text-right">{t('compliance.table.remind')}</TableHeaderCell>
         </TableHeader>
         <tbody>

@@ -352,22 +352,10 @@ const ItemBlock = ({
       )}
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
-        <KpiCard
-          eyebrow={t('delivery.kpi.agreed')}
-          value={`${formatNumber(ledger.agreedTotalQty)} ${uom}`}
-        />
-        <KpiCard
-          eyebrow={t('delivery.kpi.released')}
-          value={`${formatNumber(ledger.releasedQty)} ${uom}`}
-        />
-        <KpiCard
-          eyebrow={t('delivery.kpi.delivered')}
-          value={`${formatNumber(ledger.deliveredQty)} ${uom}`}
-        />
-        <KpiCard
-          eyebrow={t('delivery.kpi.remaining')}
-          value={`${formatNumber(ledger.remainingQty)} ${uom}`}
-        />
+        <KpiCard term="deliveryAgreed" value={`${formatNumber(ledger.agreedTotalQty)} ${uom}`} />
+        <KpiCard term="deliveryReleased" value={`${formatNumber(ledger.releasedQty)} ${uom}`} />
+        <KpiCard term="deliveryDelivered" value={`${formatNumber(ledger.deliveredQty)} ${uom}`} />
+        <KpiCard term="deliveryRemaining" value={`${formatNumber(ledger.remainingQty)} ${uom}`} />
       </div>
 
       <div className="mb-5">

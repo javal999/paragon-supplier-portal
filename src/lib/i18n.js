@@ -883,7 +883,7 @@ export const resources = {
       'delivery.kpi.agreed': 'Disepakati',
       'delivery.kpi.released': 'Dirilis',
       'delivery.kpi.delivered': 'Terkirim',
-      'delivery.kpi.remaining': 'Sisa',
+      'delivery.kpi.remaining': 'Sisa kuantitas',
       'delivery.drawdown.label': '{{pct}}% dirilis dari yang disepakati',
       'delivery.calendar.title': 'Kalender rilis',
       'delivery.calendar.seq': '#',

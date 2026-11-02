@@ -20,9 +20,7 @@ export const contractsEn = {
   'contracts.meta.summary.one': '{{count}} contract · last updated {{date}}',
   'contracts.meta.summary.other': '{{count}} contracts · last updated {{date}}',
   // — KPI cards —
-  'contracts.kpi.active.eyebrow': 'Active Contracts',
   'contracts.kpi.active.subtitle': 'Currently in force',
-  'contracts.kpi.expiring.eyebrow': 'Expiring Soon',
   // ⚠️ **THE NUMBER IS GONE, BY RULING.** It read 'Within next 90 days' — the
   // only expiry KPI subtitle in the tree that named a width, and therefore the
   // only one a band ruling could falsify. `supplierDocuments` and `compliance`
@@ -31,9 +29,7 @@ export const contractsEn = {
   // the contract's own `noticeRequiredDays` and differs per row, so no single
   // number could have been true here anyway.
   'contracts.kpi.expiring.subtitle': 'Renewal notice due',
-  'contracts.kpi.overdue.eyebrow': 'Overdue Obligations',
   'contracts.kpi.overdue.subtitle': 'Across all contracts',
-  'contracts.kpi.value.eyebrow': 'Total Active Value',
   'contracts.kpi.value.subtitle': 'Sum of active contracts',
   // — Group tabs —
   'contracts.tab.all': 'All',
@@ -70,7 +66,6 @@ export const contractsEn = {
   'contracts.table.col.period': 'Period',
   'contracts.table.col.expiry': 'Expiry',
   'contracts.table.col.value': 'Value',
-  'contracts.table.col.performance': 'Performance',
   'contracts.table.col.status': 'Status',
   'contracts.table.col.actions': 'Actions',
   'contracts.table.autoRenew': 'Auto-renew',
@@ -300,13 +295,9 @@ export const contractsId = {
   'contracts.meta.summary.one': '{{count}} kontrak · terakhir diperbarui {{date}}',
   'contracts.meta.summary.other': '{{count}} kontrak · terakhir diperbarui {{date}}',
   // — KPI cards —
-  'contracts.kpi.active.eyebrow': 'Kontrak Aktif',
   'contracts.kpi.active.subtitle': 'Sedang berlaku',
-  'contracts.kpi.expiring.eyebrow': 'Segera Kedaluwarsa',
   'contracts.kpi.expiring.subtitle': 'Pemberitahuan perpanjangan jatuh tempo',
-  'contracts.kpi.overdue.eyebrow': 'Kewajiban Jatuh Tempo',
   'contracts.kpi.overdue.subtitle': 'Di semua kontrak',
-  'contracts.kpi.value.eyebrow': 'Total Nilai Aktif',
   'contracts.kpi.value.subtitle': 'Jumlah kontrak aktif',
   // — Group tabs —
   'contracts.tab.all': 'Semua',
@@ -343,7 +334,6 @@ export const contractsId = {
   'contracts.table.col.period': 'Periode',
   'contracts.table.col.expiry': 'Kedaluwarsa',
   'contracts.table.col.value': 'Nilai',
-  'contracts.table.col.performance': 'Kinerja',
   'contracts.table.col.status': 'Status',
   'contracts.table.col.actions': 'Tindakan',
   'contracts.table.autoRenew': 'Perpanjang otomatis',
