@@ -141,21 +141,21 @@ describe('BuyerReliability — the planner page', () => {
       `tidak lebih dari ${EARLY_DELIVERY_WINDOW_DAYS} hari sebelumnya`
     );
     // B6 (FUX-D5) — the measure under its new name, never the scorecard's.
-    expect(screen.getAllByText('Baris tepat tanggal konfirmasi').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('CFOT, per baris PO').length).toBeGreaterThan(0);
     expect(screen.getByTestId('rel-cfot-basis')).toHaveTextContent(
       'Per baris PO, 26 minggu terakhir.'
     );
-    expect(screen.queryByText(/Terkirim pada tanggal yang dikonfirmasi/)).toBeNull();
+    expect(screen.queryByText('CFOT, per PO')).toBeNull();
   });
 
-  it('B6 (FUX-D5) — the CFOT measure reads "Confirmed-date lines delivered", with its basis, never the scorecard’s name', async () => {
+  it('B6 (FUX-D5, TL-D34) — the CFOT measure reads "CFOT, by PO line", with its basis, never the scorecard’s "CFOT, by PO"', async () => {
     renderWithProviders(<BuyerReliability />, { identity: BUYER, route: '/buyer/reliability' });
     await screen.findByTestId('rel-row-sup-007');
-    expect(screen.getAllByText('Confirmed-date lines delivered').length).toBeGreaterThanOrEqual(2); // KPI + column
+    expect(screen.getAllByText('CFOT, by PO line').length).toBeGreaterThanOrEqual(2); // KPI + column
     expect(screen.getByTestId('rel-cfot-basis')).toHaveTextContent('By PO line, last 26 weeks.');
     fireEvent.click(screen.getByText('Last 13 weeks'));
     expect(await screen.findByText('By PO line, last 13 weeks.')).toBeInTheDocument();
-    expect(screen.queryByText(/Delivered on the confirmed date/)).toBeNull();
+    expect(screen.queryByText('CFOT, by PO')).toBeNull();
     // Its purpose header points to Supplier performance, the evaluation page.
     expect(screen.getByTestId('purpose-uses')).toHaveTextContent('Supplier performance');
     expect(screen.getByTestId('purpose-uses')).toHaveAttribute('href', '/buyer/scorecard');

@@ -823,7 +823,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 |---|---|---|---|---|---|---|---|---|---|---|
 | kpi | Confirmed by the deadline | Dikonfirmasi sebelum tenggat | rel.kpi.confirmation | Y | "Confirmation rate" (FORECAST-ENGINE-REQUIREMENTS.md:190) | Y | N | confirmation rate (FORECAST-ENGINE-REQUIREMENTS.md:190) | Decided (TL-D31) | Now "Confirmation rate" |
 | kpi | Delivered as committed | Dikirim sesuai komitmen | rel.kpi.commitment | Y | "Commitment reliability" (FORECAST-ENGINE-REQUIREMENTS.md:191) | Y | N | commitment reliability (FORECAST-ENGINE-REQUIREMENTS.md:191) | Decided (TL-D31) | Now "Commitment reliability" |
-| kpi | Confirmed-date lines delivered | Baris tepat tanggal konfirmasi | rel.kpi.cfot | Y | "CFOT ... against ... the committed date" (FORECAST-ENGINE-REQUIREMENTS.md:200) | Y | N | CFOT, Casefill On-Time (SUPPLIER-HUB-REQUIREMENTS.md:117) | Change [Proposed] | Owner chose "CFOT" (TL-D31); open, it conflicts with FUX-D5 |
+| kpi | Confirmed-date lines delivered | Baris tepat tanggal konfirmasi | rel.kpi.cfot | Y | "CFOT ... against ... the committed date" (FORECAST-ENGINE-REQUIREMENTS.md:200) | Y | N | CFOT, Casefill On-Time (SUPPLIER-HUB-REQUIREMENTS.md:117) | Decided (TL-D34) | Now "CFOT, by PO line" |
 | kpi | Missed lines | Baris yang meleset | rel.kpi.misses | Y | "missed lines" (FORECAST-ENGINE-REQUIREMENTS.md:184) | N | N |  | Keep |  |
 | kpi | PTI changes inside lead time | Perubahan PTI di dalam lead time | rel.kpi.planChange | Y | "share of schedules changed inside the supplier lead time" (FORECAST-ENGINE-REQUIREMENTS.md:197) | N | N |  | Keep | ID keeps "lead time" |
 
@@ -834,7 +834,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Supplier | Pemasok | rel.col.supplier | N | n/a | n/a | N |  | Keep |  |
 | column | Confirmed by the deadline | Dikonfirmasi sebelum tenggat | rel.col.confirmation | Y | "Confirmation rate" (FORECAST-ENGINE-REQUIREMENTS.md:190) | Y | N | confirmation rate (FORECAST-ENGINE-REQUIREMENTS.md:190) | Decided (TL-D31) | Now "Confirmation rate" |
 | column | Delivered as committed | Dikirim sesuai komitmen | rel.col.commitment | Y | "Commitment reliability" (FORECAST-ENGINE-REQUIREMENTS.md:191) | Y | N | commitment reliability (FORECAST-ENGINE-REQUIREMENTS.md:191) | Decided (TL-D31) | Now "Commitment reliability" |
-| column | Confirmed-date lines delivered | Baris tepat tanggal konfirmasi | rel.col.cfot | Y | "CFOT" (FORECAST-ENGINE-REQUIREMENTS.md:200) | Y | N | CFOT, Casefill On-Time (SUPPLIER-HUB-REQUIREMENTS.md:117) | Change [Proposed] | Owner chose "CFOT" (TL-D31); open, it conflicts with FUX-D5 |
+| column | Confirmed-date lines delivered | Baris tepat tanggal konfirmasi | rel.col.cfot | Y | "CFOT" (FORECAST-ENGINE-REQUIREMENTS.md:200) | Y | N | CFOT, Casefill On-Time (SUPPLIER-HUB-REQUIREMENTS.md:117) | Decided (TL-D34) | Now "CFOT, by PO line" |
 | column | Missed lines | Baris yang meleset | rel.col.misses | Y | "missed lines" (FORECAST-ENGINE-REQUIREMENTS.md:184) | N | N |  | Keep |  |
 | column | PTI changed inside lead time | Diubah PTI di dalam lead time | rel.col.planChange | Y | "share of schedules changed inside the supplier lead time" (FORECAST-ENGINE-REQUIREMENTS.md:197) | N | N |  | Keep |  |
 | column | Size of PTI's changes | Besar perubahan PTI | rel.col.masc | Y | "MASC, the size of the changes" (FORECAST-ENGINE-REQUIREMENTS.md:198) | N | N | MASC (FORECAST-ENGINE-REQUIREMENTS.md:198) | Keep | Scale hint above the table has a MASC TermTip |
@@ -904,7 +904,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | Kind | Label EN | Label ID | Key | Important | Source wording | Differs | Clash | Also called | Status | Note |
 |---|---|---|---|---|---|---|---|---|---|---|
 | kpi | On time and in full | Tepat waktu dan tepat jumlah | perf.otif | Y | "OTIF, On-Time In-Full" (SUPPLIER-HUB-REQUIREMENTS.md:118) | N | N | OTIF (SUPPLIER-HUB-REQUIREMENTS.md:118) | Keep |  |
-| kpi | Delivered on the confirmed date | Terkirim pada tanggal yang dikonfirmasi | perf.cfot | Y | "CFOT, Casefill On-Time" (SUPPLIER-HUB-REQUIREMENTS.md:117) | Y | N | CFOT (SUPPLIER-HUB-REQUIREMENTS.md:117) | Change [Proposed] | Owner chose "CFOT" (TL-D31); open, it conflicts with FUX-D5 |
+| kpi | Delivered on the confirmed date | Terkirim pada tanggal yang dikonfirmasi | perf.cfot | Y | "CFOT, Casefill On-Time" (SUPPLIER-HUB-REQUIREMENTS.md:117) | Y | N | CFOT (SUPPLIER-HUB-REQUIREMENTS.md:117) | Decided (TL-D34) | Now "CFOT, by PO" |
 | kpi | Rejections | Penolakan | perf.rejections | Y | none found | n/a | N |  | Keep |  |
 | kpi | Overall score | Skor keseluruhan | perf.score | Y | none found | n/a | N |  | Keep |  |
 | kpi | Fixture names: OTDR, PO Ack Rate, Ack Speed, Fill Rate, Lead Time Adherence, QNCR, GR/PO Variance, Invoice Accuracy, Inventory DOS, Responsiveness, Sustainability | same as EN (not translated) | fixture services/data/mock/fixtures/buyerScorecard.js (shown at pages-v2/BuyerScorecard.jsx:207) | Y | none found | n/a | N |  | Ask Levi | Fixture data names, no i18n key or ID text |
@@ -1034,7 +1034,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | Kind | Label EN | Label ID | Key | Important | Source wording | Differs | Clash | Also called | Status | Note |
 |---|---|---|---|---|---|---|---|---|---|---|
 | kpi | On time and in full | Tepat waktu dan tepat jumlah | perf.otif | Y | "OTIF, On-Time In-Full" (SUPPLIER-HUB-REQUIREMENTS.md:118) | N | N | OTIF (SUPPLIER-HUB-REQUIREMENTS.md:118) | Keep |  |
-| kpi | Delivered on the confirmed date | Terkirim pada tanggal yang dikonfirmasi | perf.cfot | Y | "CFOT, Casefill On-Time" (SUPPLIER-HUB-REQUIREMENTS.md:117) | Y | N | CFOT (SUPPLIER-HUB-REQUIREMENTS.md:117) | Change [Proposed] | Owner chose "CFOT" (TL-D31); open, it conflicts with FUX-D5 |
+| kpi | Delivered on the confirmed date | Terkirim pada tanggal yang dikonfirmasi | perf.cfot | Y | "CFOT, Casefill On-Time" (SUPPLIER-HUB-REQUIREMENTS.md:117) | Y | N | CFOT (SUPPLIER-HUB-REQUIREMENTS.md:117) | Decided (TL-D34) | Now "CFOT, by PO" |
 | kpi | Rejections | Penolakan | perf.rejections | Y | none found | n/a | N |  | Keep |  |
 | kpi | Overall score | Skor keseluruhan | perf.score | Y | none found | n/a | N |  | Keep |  |
 | kpi | Total POs | Total PO | supplierPerformance.poMetric.totalPos | N | n/a | n/a | N |  | Keep |  |
