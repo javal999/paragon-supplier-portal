@@ -214,8 +214,8 @@ describe('supplier confirmation and tolerance (REQ-E09-03 BR-02..BR-04, AC-01, A
   // ⚠️ PREMISE CHANGED AT BL-47 (CR-05 revised 2026-09-21). These read "forecast
   // 10% over, JIT no limit" and "any date change to approval (PQ-08 open)".
   // Now: 5% over for every type; a shortfall is accepted as a visible partial;
-  // later always to approval; earlier to approval while BL-56's placeholder is
-  // 0 days. Each boundary is walked through the real verb on both sides.
+  // later always to approval; earlier to approval, the early allowance being
+  // 0 days (BL-56, decided 2026-11-02). Each boundary is walked through the real verb on both sides.
   it('forecast-based: exactly +5% is accepted automatically', async () => {
     await verb('t_calloff_confirm_changes', 'co-0003', { confirmedQty: 15750 });
     expect(callOffStore.get('co-0003')).toMatchObject({
@@ -277,7 +277,7 @@ describe('supplier confirmation and tolerance (REQ-E09-03 BR-02..BR-04, AC-01, A
     });
   });
 
-  it('an earlier date goes to approval while the early allowance is the BL-56 placeholder (0 days)', async () => {
+  it('an earlier date goes to approval: the early allowance is 0 days (BL-56)', async () => {
     const needDate = /** @type {import('../types').CallOff} */ (callOffStore.get('co-0003'))
       .needDate;
     const dayBefore = new Date(Date.parse(`${needDate}T00:00:00.000Z`) - 86_400_000)

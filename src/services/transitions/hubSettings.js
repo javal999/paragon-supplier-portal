@@ -102,8 +102,9 @@ const DEFS = /** @satisfies {readonly HubSettingDef[]} */ (
       integer: true,
       min: 0,
       max: 60,
-      defaultValue: 0,
-      placeholder: { owner: 'warehousePlanner', backlogId: 'BL-56' }
+      // BL-56 decided 2026-11-02 (owner): no fixed early allowance; an earlier
+      // date waits for the Material Planner team, so 0 days is the rule.
+      defaultValue: 0
     },
     // REQ-E09-03 BR-05 — the supplier confirms a released call-off within 1 working day.
     {

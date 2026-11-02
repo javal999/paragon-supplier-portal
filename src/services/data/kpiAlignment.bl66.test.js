@@ -363,7 +363,7 @@ describe('BL-66 (3) · OTIF in full: partial receipts add up (CR-08)', () => {
 
 // ── (4) One early rule for OTIF and CFOT ────────────────────────────────────
 
-describe('BL-66 (4) · ONE early window for OTIF and CFOT (PROPOSED until BL-56)', () => {
+describe('BL-66 (4) · ONE early window for OTIF and CFOT (KPI-2; confirmed early dates: BL-234)', () => {
   const E = EARLY_DELIVERY_WINDOW_DAYS;
 
   it('the window is one value: every definition on the pages reads it', () => {

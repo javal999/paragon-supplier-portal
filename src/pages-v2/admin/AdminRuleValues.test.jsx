@@ -38,11 +38,9 @@ describe('BL-32 · Tolerances and rule values', () => {
     expect(screen.getByTestId('admin-set-placeholder-gate.minOtifPct').textContent).toBe(
       'Placeholder until Procurement decides (BL-55)'
     );
-    expect(screen.getByTestId('admin-set-placeholder-callOff.earlyAllowanceDays').textContent).toBe(
-      'Placeholder until the Warehouse (with the Material Planner) decides (BL-56)'
-    );
-    // Known-false: a decided value carries no placeholder.
+    // Known-false: a decided value carries no placeholder (BL-56 decided 2026-11-02).
     expect(screen.queryByTestId('admin-set-placeholder-callOff.overPct')).toBeNull();
+    expect(screen.queryByTestId('admin-set-placeholder-callOff.earlyAllowanceDays')).toBeNull();
     // The alert thresholds are on their own page, not here.
     expect(screen.queryByTestId('admin-set-row-bands.criticalBelowDays')).toBeNull();
     expect(screen.getByTestId('admin-set-attribution').textContent).toMatch(/cannot name yet/);

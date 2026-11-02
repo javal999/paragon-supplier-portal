@@ -328,7 +328,7 @@ export function proposedDeliveries(callOff, kind, input) {
  *                   visible, never a reason to wait.
  * · `late`        — a delivery after the need date: always waits for the planner.
  * · `early`       — a delivery before the need date, beyond the early allowance
- *                   (placeholder 0 days, BL-56): waits for the planner.
+ *                   (0 days, decided with BL-56): waits for the planner.
  */
 /** @typedef {'asRequested' | 'overWithin' | 'overBeyond' | 'short' | 'late' | 'early'} ToleranceFindingKind */
 
