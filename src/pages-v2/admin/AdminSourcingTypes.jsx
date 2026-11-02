@@ -117,7 +117,7 @@ const AdminSourcingTypes = () => {
         <Table>
           <TableHeader>
             <TableHeaderCell>{t('adminSourcing.col.key')}</TableHeaderCell>
-            <TableHeaderCell>{t('adminSourcing.col.type')}</TableHeaderCell>
+            <TableHeaderCell term="sourcingType" />
             <TableHeaderCell>{t('adminSourcing.col.lastChange')}</TableHeaderCell>
           </TableHeader>
           <tbody>

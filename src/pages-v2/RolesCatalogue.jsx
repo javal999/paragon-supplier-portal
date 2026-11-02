@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import { useNavigate } from 'react-router-dom';
 import { Info, Lock, Users, ArrowRight, Search, AlertTriangle } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
@@ -102,6 +103,16 @@ const RoleRow = ({ role }) => {
     </tr>
   );
 };
+
+/**
+ * BL-233 — the "Reach" column header: the term's label with its (i).
+ * @type {React.FC}
+ */
+const ReachHead = () => (
+  <th className="py-2 px-4 text-label text-text-tertiary uppercase">
+    <TermLabel term="roleReach" />
+  </th>
+);
 
 /** @type {React.FC} */
 const RolesCatalogue = () => {
@@ -275,9 +286,7 @@ const RolesCatalogue = () => {
                 <th className="py-2 px-4 text-label text-text-tertiary uppercase">
                   {t('roles.page.col.kind')}
                 </th>
-                <th className="py-2 px-4 text-label text-text-tertiary uppercase">
-                  {t('roles.page.col.scope')}
-                </th>
+                <ReachHead />
                 <th className="py-2 px-4 text-label text-text-tertiary uppercase text-right">
                   {t('roles.page.col.actions')}
                 </th>

@@ -354,9 +354,9 @@ const FvaTable = ({ month }) => {
         <TableHeader>
           <TableHeaderCell>{t('fb.fva.col.group')}</TableHeaderCell>
           <TableHeaderCell>{t('fb.fva.col.cells')}</TableHeaderCell>
-          <TableHeaderCell>{t('fb.fva.col.mae')}</TableHeaderCell>
-          <TableHeaderCell>{t('fb.fva.col.improved')}</TableHeaderCell>
-          <TableHeaderCell>{t('fb.fva.col.fva')}</TableHeaderCell>
+          <TableHeaderCell term="fvaError" />
+          <TableHeaderCell term="fvaImproved" />
+          <TableHeaderCell term="fvaValue" />
         </TableHeader>
         <tbody>
           {rows.map((r) => (
@@ -447,7 +447,7 @@ const ForecastBiasTab = ({ frame }) => {
         data-testid="fb-kpis"
       >
         <KpiCard
-          eyebrow={t('fb.kpi.skus')}
+          term="fbSkusAlarm"
           value={
             <span data-testid="fb-kpi-sku-engine">{`${a.skus.engine.total} / ${view.skus.length}`}</span>
           }
@@ -462,7 +462,7 @@ const ForecastBiasTab = ({ frame }) => {
           }
         />
         <KpiCard
-          eyebrow={t('fb.kpi.materials')}
+          term="fbMaterialsAlarm"
           value={
             <span data-testid="fb-kpi-mat-engine">{`${a.materials.engine.total} / ${view.materials.length}`}</span>
           }
@@ -477,7 +477,7 @@ const ForecastBiasTab = ({ frame }) => {
           }
         />
         <KpiCard
-          eyebrow={t('fb.kpi.overrides')}
+          term="fbOverrides"
           value={<span data-testid="fb-kpi-overrides">{cellsInForce}</span>}
           subtitle={
             <span className="text-text-tertiary">
@@ -486,7 +486,7 @@ const ForecastBiasTab = ({ frame }) => {
           }
         />
         <KpiCard
-          eyebrow={t('fb.kpi.value')}
+          term="fbValue"
           value={
             <span data-testid="fb-kpi-value">
               {shownMonth ? fvaText(shownMonth.all.fvaPct) : '—'}
@@ -531,8 +531,8 @@ const ForecastBiasTab = ({ frame }) => {
               <TableHeaderCell>{t('fb.skus.col.sku')}</TableHeaderCell>
               <TableHeaderCell>{t('fb.skus.col.brand')}</TableHeaderCell>
               <TableHeaderCell>{t('fb.skus.col.weeks')}</TableHeaderCell>
-              <TableHeaderCell>{t('fb.skus.col.engine')}</TableHeaderCell>
-              <TableHeaderCell>{t('fb.skus.col.sap')}</TableHeaderCell>
+              <TableHeaderCell term="fbEngine" />
+              <TableHeaderCell term="fbSap" />
             </TableHeader>
             <tbody>
               {skus.map((s) => (
@@ -594,8 +594,8 @@ const ForecastBiasTab = ({ frame }) => {
             <TableHeader>
               <TableHeaderCell>{t('fb.materials.col.material')}</TableHeaderCell>
               <TableHeaderCell>{t('fb.materials.col.skus')}</TableHeaderCell>
-              <TableHeaderCell>{t('fb.skus.col.engine')}</TableHeaderCell>
-              <TableHeaderCell>{t('fb.skus.col.sap')}</TableHeaderCell>
+              <TableHeaderCell term="fbEngine" />
+              <TableHeaderCell term="fbSap" />
             </TableHeader>
             <tbody>
               {materials.map((m) => (
@@ -645,7 +645,7 @@ const ForecastBiasTab = ({ frame }) => {
                 <TableHeaderCell>{t('fb.ledger.col.when')}</TableHeaderCell>
                 <TableHeaderCell>{t('fb.ledger.col.sku')}</TableHeaderCell>
                 <TableHeaderCell>{t('fb.ledger.col.values')}</TableHeaderCell>
-                <TableHeaderCell>{t('fb.ledger.col.direction')}</TableHeaderCell>
+                <TableHeaderCell term="fbDirection" />
                 <TableHeaderCell>{t('fb.ledger.col.reason')}</TableHeaderCell>
               </TableHeader>
               <tbody>

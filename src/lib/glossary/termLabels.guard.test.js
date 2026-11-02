@@ -95,7 +95,7 @@ const codedLines = (e) =>
   ].filter((line) => typeof line === 'string' && CODE.test(line));
 
 describe('term-label glossary (BL-233)', () => {
-  it('holds the wave 1 to 8 population, named', () => {
+  it('holds the wave 1 to 9 population, named', () => {
     // A named member, not a count: the guards below run over these entries.
     expect(Object.keys(TERM_LABEL_GLOSSARY)).toEqual(
       expect.arrayContaining([
@@ -115,7 +115,9 @@ describe('term-label glossary (BL-233)', () => {
         'deliveryRemaining',
         'certInSap',
         'relMascI',
-        'poAvgOverdue'
+        'poAvgOverdue',
+        'fvaValue',
+        'tplOnNewAsns'
       ])
     );
   });

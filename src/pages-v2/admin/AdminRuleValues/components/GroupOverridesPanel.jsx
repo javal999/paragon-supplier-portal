@@ -231,8 +231,8 @@ const GroupOverridesPanel = ({ held, record }) => {
             <TableHeader>
               <TableHeaderCell>{t('adminSet.groups.col.group')}</TableHeaderCell>
               <TableHeaderCell>{t('adminSet.groups.col.value')}</TableHeaderCell>
-              <TableHeaderCell>{t('adminSet.groups.col.override')}</TableHeaderCell>
-              <TableHeaderCell>{t('adminSet.groups.col.global')}</TableHeaderCell>
+              <TableHeaderCell term="groupValue" />
+              <TableHeaderCell term="globalValue" />
               {held ? <TableHeaderCell>{t('adminSet.col.action')}</TableHeaderCell> : null}
             </TableHeader>
             <tbody>

@@ -32,6 +32,7 @@ import DataAsOf from '@components/forecast/DataAsOf';
 import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
 /** @import { QualityFrame } from './BuyerForecastBias' */
 import ForecastBiasTab from './BuyerForecastBias';
+import TermLabel from '@components/ui-v2/TermLabel';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DEMAND FORECAST — REQ-E14-07, the Material Planner's view (Experience: "the
@@ -138,7 +139,7 @@ const SkuDetail = ({ sku, weeks, events, range, asOf }) => {
         rows={[
           {
             id: 'base',
-            label: t('df.detail.col.base'),
+            label: <TermLabel term="dfMethodForecast" />,
             combine: 'sum',
             value: (_w, i) => sku.base[i],
             format: roundNumber,
@@ -146,7 +147,7 @@ const SkuDetail = ({ sku, weeks, events, range, asOf }) => {
           },
           {
             id: 'forecast',
-            label: t('df.detail.col.forecast'),
+            label: <TermLabel term="dfReconciled" />,
             emphasis: true,
             combine: 'sum',
             value: (_w, i) => sku.forecast[i],
@@ -211,7 +212,7 @@ const SkuDetail = ({ sku, weeks, events, range, asOf }) => {
           })),
           {
             id: 'theta',
-            label: t('df.detail.col.theta'),
+            label: <TermLabel term="dfTheta" />,
             hidden: !sku.theta,
             combine: 'sum',
             value: (_w, i) => sku.theta?.[i] ?? null,
@@ -224,7 +225,7 @@ const SkuDetail = ({ sku, weeks, events, range, asOf }) => {
           },
           {
             id: 'sap',
-            label: t('df.detail.col.sap'),
+            label: <TermLabel term="sapPlan" />,
             combine: 'sum',
             value: (_w, i) => sku.sapPlan?.[i] ?? null,
             cell: (_w, i) => <Data>{sku.sapPlan ? formatNumber(sku.sapPlan[i]) : '—'}</Data>
@@ -281,7 +282,9 @@ const EventsSection = ({ events }) => {
             <TableHeaderCell>{t('df.events.col.event')}</TableHeaderCell>
             <TableHeaderCell>{t('df.events.col.when')}</TableHeaderCell>
             {cols.map((c) => (
-              <TableHeaderCell key={c.key}>{c.label}</TableHeaderCell>
+              <TableHeaderCell key={c.key} term={c.key === 'total' ? 'dfEventsTotal' : undefined}>
+                {c.label}
+              </TableHeaderCell>
             ))}
           </TableHeader>
           <tbody>
@@ -497,7 +500,7 @@ const DemandForecastTab = ({ frame }) => {
           }
         />
         <KpiCard
-          eyebrow={t('df.kpi.fallback')}
+          term="dfFallbackShare"
           value={<span data-testid="df-kpi-comb">{c.comb}</span>}
           subtitle={
             <span className="text-text-tertiary">
@@ -506,7 +509,7 @@ const DemandForecastTab = ({ frame }) => {
           }
         />
         <KpiCard
-          eyebrow={t('df.kpi.total')}
+          term="dfTotal26"
           value={<span data-testid="df-kpi-total">{formatNumber(totalForecast)}</span>}
           subtitle={
             <span className="text-text-tertiary" data-testid="df-kpi-total-sap">
@@ -520,7 +523,7 @@ const DemandForecastTab = ({ frame }) => {
           }
         />
         <KpiCard
-          eyebrow={t('df.kpi.recon')}
+          term="dfReconciledLevels"
           value={<span data-testid="df-kpi-recon">{t('df.kpi.recon.value')}</span>}
           subtitle={
             <span className="text-text-tertiary" data-testid="df-kpi-recon-method">
@@ -549,10 +552,10 @@ const DemandForecastTab = ({ frame }) => {
             <TableHeader>
               <TableHeaderCell>{t('df.levels.col.level')}</TableHeaderCell>
               <TableHeaderCell>{t('df.levels.col.skus')}</TableHeaderCell>
-              <TableHeaderCell>{t('df.levels.col.base')}</TableHeaderCell>
-              <TableHeaderCell>{t('df.levels.col.forecast')}</TableHeaderCell>
-              <TableHeaderCell>{t('df.levels.col.sap')}</TableHeaderCell>
-              <TableHeaderCell>{t('df.levels.col.diff')}</TableHeaderCell>
+              <TableHeaderCell term="dfOwnForecast26" />
+              <TableHeaderCell term="dfReconciled26" />
+              <TableHeaderCell term="dfSapPlan26" />
+              <TableHeaderCell term="dfAgainstSap" />
             </TableHeader>
             <tbody>
               {levels.map((l) => {
@@ -620,12 +623,12 @@ const DemandForecastTab = ({ frame }) => {
             <TableHeader>
               <TableHeaderCell>{t('df.skus.col.sku')}</TableHeaderCell>
               <TableHeaderCell>{t('df.skus.col.brand')}</TableHeaderCell>
-              <TableHeaderCell>{t('df.skus.col.method')}</TableHeaderCell>
+              <TableHeaderCell term="dfMethod" />
               <TableHeaderCell>{t('df.skus.col.history')}</TableHeaderCell>
               <TableHeaderCell>{t('df.skus.col.next4')}</TableHeaderCell>
-              <TableHeaderCell>{t('df.skus.col.forecast')}</TableHeaderCell>
-              <TableHeaderCell>{t('df.skus.col.sap')}</TableHeaderCell>
-              <TableHeaderCell>{t('df.skus.col.diff')}</TableHeaderCell>
+              <TableHeaderCell term="dfForecast26" />
+              <TableHeaderCell term="sapPlan" />
+              <TableHeaderCell term="dfAgainstSap" />
             </TableHeader>
             <tbody>
               {firstRows(shown, showAllSkus, (s) => s.skuCode === current?.skuCode).map((s) => {

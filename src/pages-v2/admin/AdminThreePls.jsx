@@ -243,7 +243,7 @@ const AdminThreePls = () => {
             <TableHeader>
               <TableHeaderCell>{t('tpl.col.name')}</TableHeaderCell>
               <TableHeaderCell>{t('tpl.col.pattern')}</TableHeaderCell>
-              <TableHeaderCell>{t('tpl.col.offered')}</TableHeaderCell>
+              <TableHeaderCell term="tplOnNewAsns" />
               <TableHeaderCell>{t('tpl.col.try')}</TableHeaderCell>
               {held && <TableHeaderCell>{t('tpl.col.action')}</TableHeaderCell>}
             </TableHeader>

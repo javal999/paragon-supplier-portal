@@ -41,7 +41,6 @@ export const adminSuppliersEn = {
   'adminSup.list.sample':
     'A supplier nobody has set yet follows the sample connection list: pulled from its system if it is on that list, entered by the supplier otherwise.',
   'adminSup.col.supplier': 'Supplier',
-  'adminSup.col.mode': 'Stock update mode',
   'adminSup.col.source': 'Set by',
   'adminSup.col.lastChange': 'Last change',
   'adminSup.col.action': 'Action',
@@ -53,7 +52,6 @@ export const adminSuppliersEn = {
   'adminSup.history.title': 'Changes on record',
   'adminSup.history.empty': 'No supplier’s mode has been changed yet.',
   'adminSup.history.col.supplier': 'Supplier',
-  'adminSup.history.col.mode': 'Mode set',
   'adminSup.history.col.reason': 'Reason',
   'adminSup.history.col.by': 'Changed by',
   'adminSup.history.col.at': 'When',
@@ -99,7 +97,6 @@ export const adminSuppliersId = {
   'adminSup.list.sample':
     'Pemasok yang belum pernah diatur mengikuti daftar koneksi contoh: ditarik dari sistemnya bila ada di daftar itu, diisi pemasok bila tidak.',
   'adminSup.col.supplier': 'Pemasok',
-  'adminSup.col.mode': 'Cara pembaruan stok',
   'adminSup.col.source': 'Ditetapkan oleh',
   'adminSup.col.lastChange': 'Perubahan terakhir',
   'adminSup.col.action': 'Tindakan',
@@ -111,7 +108,6 @@ export const adminSuppliersId = {
   'adminSup.history.title': 'Perubahan tercatat',
   'adminSup.history.empty': 'Belum ada cara pemasok yang diubah.',
   'adminSup.history.col.supplier': 'Pemasok',
-  'adminSup.history.col.mode': 'Cara yang ditetapkan',
   'adminSup.history.col.reason': 'Alasan',
   'adminSup.history.col.by': 'Diubah oleh',
   'adminSup.history.col.at': 'Kapan',

@@ -40,12 +40,14 @@
 // /buyer/delivery-agreements and /buyer/compliance.
 // Wave 8: /buyer/suppliers and the supplier profile, /buyer/supplier-access,
 // /buyer/scorecard, /supplier/performance, /buyer/reliability, /supplier/documents.
+// Wave 9: the admin pages (not the rule-value rows, TL-D10), /buyer/process-flows,
+// /buyer/roles, /buyer/demand-forecast and its bias tab.
 // ─────────────────────────────────────────────────────────────────────────────
 /** @import { GlossaryOf, TermEntry } from './types' */
 
 /**
  * The terms a page labels through `TermLabel`.
- * @typedef {'demandAnticipation' | 'ltp' | 'fgDemand' | 'ltpLessFgDemand' | 'consumptionAverage' | 'safetyOrder' | 'carryOver' | 'wouldBe' | 'surplusAbsorbed' | 'recordedConsumption' | 'openSupply' | 'supplyGap' | 'daAfterCheck' | 'ospo' | 'additionalPo' | 'callOffsThisWeek' | 'remainder' | 'notCarried' | 'supplierAgreedOutside' | 'gapProposal' | 'alertPtiBelowRop' | 'alertSupplierBelowRop' | 'alertProjectedStockOut' | 'alertCapacityBelowDemand' | 'alertStaleData' | 'alertCoverage' | 'alertCommitmentBelowForecast' | 'alertLeadTimeMissing' | 'alertCallOffNotCovered' | 'alertSupplyDiscontinued' | 'alertBlanketPoRunOut' | 'alertDemandAnticipationUnabsorbed' | 'supplierCover' | 'supplierStock' | 'ptiStockRop' | 'incoming' | 'incomingStatus' | 'supplierAvailable' | 'calledOffNotShipped' | 'freeToCallOff' | 'ptiInbound' | 'simulationBasis' | 'simulationFlags' | 'supplierOwnRop' | 'ptiStock' | 'ptiRop' | 'daysOfSupply' | 'feedstockLatest' | 'feedstockThisWeek' | 'tradeNameStatus' | 'capacityLtp' | 'allocatedCapacity' | 'productionLimit' | 'additionalCapacity' | 'capacityBe' | 'ltpAgainstCapacity' | 'capacityShortBy' | 'ptiCapacityDecision' | 'runOutRemaining' | 'runsOut' | 'newPoNeededBy' | 'poLeadTime' | 'spaceFreed' | 'materialsPerTier' | 'onSapValue' | 'sltGroupDefault' | 'tierTarget' | 'safetyOrderRopOrder' | 'ropFisikSafety' | 'demandCv' | 'osipLevel' | 'ropOrder' | 'ropFisik' | 'maxStock' | 'engineSafetyStock' | 'sapSafetyStock' | 'freed' | 'safetyLeadTime' | 'engineReorderPoint' | 'forecastShortfall' | 'ropSupplier' | 'ropToPrincipal' | 'replenishmentCycle' | 'pullAgreement' | 'bottleneckLeadTime' | 'monthLtp' | 'protectionBaseline' | 'uplift' | 'protectionBuffer' | 'strategicBaseline' | 'strategicBuffer' | 'poOrdered' | 'reconcileCalledOff' | 'asnRequested' | 'notYetCalledOff' | 'calledOffNotYetShipped' | 'maxStockSupplier' | 'whatIfMax' | 'daOverLeadTime' | 'prGenerated' | 'planCheckPr' | 'triggerCallOffs' | 'triggerPr' | 'whatIfRemainder' | 'whatIfCarryOver' | 'firstShortageWeek' | 'weeksAboveMax' | 'whatIfLtp' | 'daCurrentPlan' | 'daScenario' | 'callOffsDrafted' | 'whatIfIncoming' | 'prRecommendedWeek' | 'projectedSohPlan' | 'projectedSohScenario' | 'engineValue' | 'lastPublished' | 'firstPublished' | 'dampedValue' | 'allowedRange' | 'toPublish' | 'stabiliseRule' | 'ruleNew' | 'ruleUnchanged' | 'ruleFirmFrozen' | 'ruleForecast' | 'ruleDamped' | 'ruleBandHeld' | 'ruleCumulativeHeld' | 'ruleOverride' | 'planMovement' | 'weeksChangedInLeadTime' | 'tradeOffWithinLimits' | 'weeksHeld' | 'seriesHeld' | 'seriesMasc' | 'forecastZone' | 'publishedForecast' | 'commitmentDue' | 'commitment' | 'commitmentUpside' | 'grPendingInspection' | 'grQualityHold' | 'grApprovedToday' | 'grRejectionRate' | 'grDisposition' | 'grExpected' | 'grReceived' | 'grAccepted' | 'grRejectedLine' | 'grChecks' | 'poOpenTotal' | 'poPendingConfirmation' | 'poInTransit' | 'poOverdue' | 'orderedQty' | 'counterQty' | 'counterDate' | 'summaryResponse' | 'summaryAsns' | 'summaryCallOffs' | 'summaryConfirmations' | 'summaryReceipts' | 'summaryInvoices' | 'prDraft' | 'prPendingApproval' | 'prApproved' | 'prSourcingEvent' | 'prPoCreated' | 'prSource' | 'supShipped' | 'supReceived' | 'supRejected' | 'supQualityResult' | 'supDiscrepancy' | 'supDifference' | 'supOpenOrders' | 'supInProgress' | 'supValuePending' | 'supDelivered' | 'supConfirmed' | 'invPendingApproval' | 'invReleased' | 'invDisputed' | 'invOverdue' | 'invThreeWayMatch' | 'agingBucket' | 'agingPctAp' | 'agingRisk' | 'invLineQuantity' | 'invUnitPrice' | 'invLineValue' | 'shipInTransit' | 'shipAtDock' | 'shipDelayed' | 'shipArrivingToday' | 'shelfLifeLeftAtEta' | 'supPaymentsReceived' | 'supPendingPayment' | 'supInvDisputed' | 'supThreeWayMatch' | 'asnDraft' | 'asnSubmitted' | 'asnInTransit' | 'asnDelivered' | 'asnDiscrepancy' | 'asnLineOrdered' | 'asnLineShipped' | 'asnOpenQuantity' | 'asnShippedQuantity' | 'deliveryAgreed' | 'deliveryReleased' | 'deliveryDelivered' | 'deliveryRemaining' | 'releasePlanned' | 'releaseFulfillment' | 'releaseDrawnDown' | 'certExpired' | 'certExpiring' | 'certMissing' | 'certUnderReview' | 'certValid' | 'certInSap' | 'certActionRequired' | 'contractsActive' | 'contractsExpiring' | 'obligationsOverdue' | 'contractsActiveValue' | 'contractPerformance' | 'relConfirmation' | 'relCommitment' | 'relCfot' | 'relMisses' | 'relPlanChangeKpi' | 'relPlanChangeCol' | 'relMasc' | 'relMascI' | 'perfOtif' | 'perfCfot' | 'perfRejections' | 'perfScore' | 'stockAccess' | 'otif' | 'scorecardGrade' | 'catalogMoq' | 'catalogLeadTime' | 'catalogCapacity' | 'supplierChannel' | 'supplierCompliance' | 'performanceBand' | 'docValid' | 'docExpiring' | 'docExpired' | 'docNeedsAction' | 'poOnTime' | 'poLate' | 'poAvgOverdue'} TermLabelId
+ * @typedef {'demandAnticipation' | 'ltp' | 'fgDemand' | 'ltpLessFgDemand' | 'consumptionAverage' | 'safetyOrder' | 'carryOver' | 'wouldBe' | 'surplusAbsorbed' | 'recordedConsumption' | 'openSupply' | 'supplyGap' | 'daAfterCheck' | 'ospo' | 'additionalPo' | 'callOffsThisWeek' | 'remainder' | 'notCarried' | 'supplierAgreedOutside' | 'gapProposal' | 'alertPtiBelowRop' | 'alertSupplierBelowRop' | 'alertProjectedStockOut' | 'alertCapacityBelowDemand' | 'alertStaleData' | 'alertCoverage' | 'alertCommitmentBelowForecast' | 'alertLeadTimeMissing' | 'alertCallOffNotCovered' | 'alertSupplyDiscontinued' | 'alertBlanketPoRunOut' | 'alertDemandAnticipationUnabsorbed' | 'supplierCover' | 'supplierStock' | 'ptiStockRop' | 'incoming' | 'incomingStatus' | 'supplierAvailable' | 'calledOffNotShipped' | 'freeToCallOff' | 'ptiInbound' | 'simulationBasis' | 'simulationFlags' | 'supplierOwnRop' | 'ptiStock' | 'ptiRop' | 'daysOfSupply' | 'feedstockLatest' | 'feedstockThisWeek' | 'tradeNameStatus' | 'capacityLtp' | 'allocatedCapacity' | 'productionLimit' | 'additionalCapacity' | 'capacityBe' | 'ltpAgainstCapacity' | 'capacityShortBy' | 'ptiCapacityDecision' | 'runOutRemaining' | 'runsOut' | 'newPoNeededBy' | 'poLeadTime' | 'spaceFreed' | 'materialsPerTier' | 'onSapValue' | 'sltGroupDefault' | 'tierTarget' | 'safetyOrderRopOrder' | 'ropFisikSafety' | 'demandCv' | 'osipLevel' | 'ropOrder' | 'ropFisik' | 'maxStock' | 'engineSafetyStock' | 'sapSafetyStock' | 'freed' | 'safetyLeadTime' | 'engineReorderPoint' | 'forecastShortfall' | 'ropSupplier' | 'ropToPrincipal' | 'replenishmentCycle' | 'pullAgreement' | 'bottleneckLeadTime' | 'monthLtp' | 'protectionBaseline' | 'uplift' | 'protectionBuffer' | 'strategicBaseline' | 'strategicBuffer' | 'poOrdered' | 'reconcileCalledOff' | 'asnRequested' | 'notYetCalledOff' | 'calledOffNotYetShipped' | 'maxStockSupplier' | 'whatIfMax' | 'daOverLeadTime' | 'prGenerated' | 'planCheckPr' | 'triggerCallOffs' | 'triggerPr' | 'whatIfRemainder' | 'whatIfCarryOver' | 'firstShortageWeek' | 'weeksAboveMax' | 'whatIfLtp' | 'daCurrentPlan' | 'daScenario' | 'callOffsDrafted' | 'whatIfIncoming' | 'prRecommendedWeek' | 'projectedSohPlan' | 'projectedSohScenario' | 'engineValue' | 'lastPublished' | 'firstPublished' | 'dampedValue' | 'allowedRange' | 'toPublish' | 'stabiliseRule' | 'ruleNew' | 'ruleUnchanged' | 'ruleFirmFrozen' | 'ruleForecast' | 'ruleDamped' | 'ruleBandHeld' | 'ruleCumulativeHeld' | 'ruleOverride' | 'planMovement' | 'weeksChangedInLeadTime' | 'tradeOffWithinLimits' | 'weeksHeld' | 'seriesHeld' | 'seriesMasc' | 'forecastZone' | 'publishedForecast' | 'commitmentDue' | 'commitment' | 'commitmentUpside' | 'grPendingInspection' | 'grQualityHold' | 'grApprovedToday' | 'grRejectionRate' | 'grDisposition' | 'grExpected' | 'grReceived' | 'grAccepted' | 'grRejectedLine' | 'grChecks' | 'poOpenTotal' | 'poPendingConfirmation' | 'poInTransit' | 'poOverdue' | 'orderedQty' | 'counterQty' | 'counterDate' | 'summaryResponse' | 'summaryAsns' | 'summaryCallOffs' | 'summaryConfirmations' | 'summaryReceipts' | 'summaryInvoices' | 'prDraft' | 'prPendingApproval' | 'prApproved' | 'prSourcingEvent' | 'prPoCreated' | 'prSource' | 'supShipped' | 'supReceived' | 'supRejected' | 'supQualityResult' | 'supDiscrepancy' | 'supDifference' | 'supOpenOrders' | 'supInProgress' | 'supValuePending' | 'supDelivered' | 'supConfirmed' | 'invPendingApproval' | 'invReleased' | 'invDisputed' | 'invOverdue' | 'invThreeWayMatch' | 'agingBucket' | 'agingPctAp' | 'agingRisk' | 'invLineQuantity' | 'invUnitPrice' | 'invLineValue' | 'shipInTransit' | 'shipAtDock' | 'shipDelayed' | 'shipArrivingToday' | 'shelfLifeLeftAtEta' | 'supPaymentsReceived' | 'supPendingPayment' | 'supInvDisputed' | 'supThreeWayMatch' | 'asnDraft' | 'asnSubmitted' | 'asnInTransit' | 'asnDelivered' | 'asnDiscrepancy' | 'asnLineOrdered' | 'asnLineShipped' | 'asnOpenQuantity' | 'asnShippedQuantity' | 'deliveryAgreed' | 'deliveryReleased' | 'deliveryDelivered' | 'deliveryRemaining' | 'releasePlanned' | 'releaseFulfillment' | 'releaseDrawnDown' | 'certExpired' | 'certExpiring' | 'certMissing' | 'certUnderReview' | 'certValid' | 'certInSap' | 'certActionRequired' | 'contractsActive' | 'contractsExpiring' | 'obligationsOverdue' | 'contractsActiveValue' | 'contractPerformance' | 'relConfirmation' | 'relCommitment' | 'relCfot' | 'relMisses' | 'relPlanChangeKpi' | 'relPlanChangeCol' | 'relMasc' | 'relMascI' | 'perfOtif' | 'perfCfot' | 'perfRejections' | 'perfScore' | 'stockAccess' | 'otif' | 'scorecardGrade' | 'catalogMoq' | 'catalogLeadTime' | 'catalogCapacity' | 'supplierChannel' | 'supplierCompliance' | 'performanceBand' | 'docValid' | 'docExpiring' | 'docExpired' | 'docNeedsAction' | 'poOnTime' | 'poLate' | 'poAvgOverdue' | 'dfFallbackShare' | 'dfTotal26' | 'dfReconciledLevels' | 'dfOwnForecast26' | 'dfReconciled26' | 'dfSapPlan26' | 'dfAgainstSap' | 'dfMethod' | 'dfForecast26' | 'sapPlan' | 'dfMethodForecast' | 'dfReconciled' | 'dfTheta' | 'dfEventsTotal' | 'rangeAboveP90' | 'rangeAboveP50' | 'rangeUncorrected' | 'rangeWidthTotal' | 'rangeForecast' | 'rangeWidth' | 'rangeAbovePast' | 'rangeSource' | 'rangeNeed' | 'fbSkusAlarm' | 'fbMaterialsAlarm' | 'fbOverrides' | 'fbValue' | 'fbEngine' | 'fbSap' | 'fbDirection' | 'fvaError' | 'fvaImproved' | 'fvaValue' | 'sourcingType' | 'requiredRole' | 'roleReach' | 'qualLevel' | 'qualDocuments' | 'ruleInForce' | 'ruleDefault' | 'groupValue' | 'globalValue' | 'staleAfter' | 'stockFigureNow' | 'stockUpdateMode' | 'modeSet' | 'tplOnNewAsns'} TermLabelId
  */
 
 // TL-D23: an "Also called" source names only the team; where in the team's
@@ -1978,5 +1980,254 @@ export const TERM_LABEL_GLOSSARY =
         id: 'Hari terlambat PO yang terlambat ÷ jumlah PO yang terlambat.'
       },
       labelKeys: ['supplierPerformance.poMetric.avgOverdue']
+    },
+    // ── Wave 9: admin, demand forecast and forecast bias ──────────────────────
+    dfFallbackShare: {
+      label: { en: 'Forecast by the fallback (Comb)', id: 'Diprakirakan metode cadangan (Comb)' },
+      en: 'SKUs forecast by the fallback method, an average of three smoothing methods (the "Comb" benchmark), because the main model does not cover them.',
+      id: 'SKU yang diprakirakan dengan metode cadangan, rata-rata tiga metode pemulusan (tolok ukur "Comb"), karena model utama tidak mencakupnya.'
+    },
+    dfTotal26: {
+      label: { en: 'Next 26 weeks, all SKUs', id: '26 minggu ke depan, semua SKU' },
+      en: 'The engine’s forecast of weekly sell-in for all SKUs over the next 26 weeks, beside SAP’s plan.',
+      id: 'Prakiraan mesin untuk sell-in mingguan semua SKU selama 26 minggu ke depan, di samping rencana SAP.'
+    },
+    dfReconciledLevels: {
+      label: { en: 'SKU, brand and total', id: 'SKU, merek, dan total' },
+      en: 'Whether the SKU, brand and total forecasts add up. They are reconciled so they do, and never go negative.',
+      id: 'Apakah prakiraan SKU, merek, dan total saling menjumlah. Prakiraan direkonsiliasi agar sesuai, dan tidak pernah negatif.'
+    },
+    dfOwnForecast26: {
+      label: { en: 'Own forecast, 26 weeks', id: 'Prakiraan sendiri, 26 minggu' },
+      en: 'The level’s own forecast over 26 weeks, before the levels are reconciled.',
+      id: 'Prakiraan level itu sendiri selama 26 minggu, sebelum level-level direkonsiliasi.'
+    },
+    dfReconciled26: {
+      label: { en: 'Reconciled, 26 weeks', id: 'Hasil rekonsiliasi, 26 minggu' },
+      en: 'The level’s forecast over 26 weeks after reconciling, so SKUs add up to brands and brands to the total.',
+      id: 'Prakiraan level itu selama 26 minggu setelah rekonsiliasi, agar SKU menjumlah ke merek dan merek ke total.'
+    },
+    dfSapPlan26: {
+      label: { en: 'SAP’s plan, 26 weeks', id: 'Rencana SAP, 26 minggu' },
+      en: 'The demand plan in SAP over the same 26 weeks, which material planning still runs on.',
+      id: 'Rencana permintaan di SAP selama 26 minggu yang sama, yang masih menjadi dasar perencanaan material.'
+    },
+    dfAgainstSap: {
+      label: { en: 'Against SAP', id: 'Terhadap SAP' },
+      en: 'How far the reconciled forecast is from SAP’s plan.',
+      id: 'Seberapa jauh prakiraan hasil rekonsiliasi dari rencana SAP.',
+      formula: {
+        en: 'Reconciled forecast − SAP’s plan, as a share of SAP’s plan.',
+        id: 'Prakiraan hasil rekonsiliasi − rencana SAP, sebagai porsi dari rencana SAP.'
+      }
+    },
+    dfMethod: {
+      label: { en: 'Method', id: 'Metode' },
+      en: 'The forecast method used for the SKU: the fallback (Comb), SAP’s plan for a new SKU, or none for a discontinued one.',
+      id: 'Metode prakiraan yang dipakai untuk SKU itu: metode cadangan (Comb), rencana SAP untuk SKU baru, atau tidak ada untuk SKU yang dihentikan.'
+    },
+    dfForecast26: {
+      label: { en: '26 weeks', id: '26 minggu' },
+      en: 'The SKU’s reconciled forecast over the next 26 weeks.',
+      id: 'Prakiraan SKU hasil rekonsiliasi selama 26 minggu ke depan.'
+    },
+    sapPlan: {
+      label: { en: 'SAP’s plan', id: 'Rencana SAP' },
+      en: 'The demand plan in SAP for the same weeks, which material planning still runs on.',
+      id: 'Rencana permintaan di SAP untuk minggu yang sama, yang masih menjadi dasar perencanaan material.'
+    },
+    dfMethodForecast: {
+      label: { en: 'Method’s forecast', id: 'Prakiraan metode' },
+      en: 'The week’s forecast from the SKU’s method, before reconciling.',
+      id: 'Prakiraan minggu itu dari metode SKU, sebelum rekonsiliasi.'
+    },
+    dfReconciled: {
+      label: { en: 'Reconciled', id: 'Hasil rekonsiliasi' },
+      en: 'The week’s forecast after reconciling with the brand and total.',
+      id: 'Prakiraan minggu itu setelah direkonsiliasi dengan merek dan total.'
+    },
+    dfTheta: {
+      label: { en: 'Theta (alternative)', id: 'Theta (alternatif)' },
+      en: 'The forecast of the Theta method, shown beside the fallback for comparison.',
+      id: 'Prakiraan metode Theta, ditampilkan di samping metode cadangan sebagai pembanding.'
+    },
+    dfEventsTotal: {
+      label: { en: 'Total', id: 'Total' },
+      en: 'How much the demand event lifts or lowers the total forecast, as a factor.',
+      id: 'Seberapa besar acara permintaan menaikkan atau menurunkan prakiraan total, sebagai faktor.',
+      labelKeys: ['df.events.col.level']
+    },
+    rangeAboveP90: {
+      label: { en: 'Sold above P90', id: 'Terjual di atas P90' },
+      en: 'The share of past weeks in which sales went above the P90 the range gave them. About 10% is expected.',
+      id: 'Porsi minggu lampau saat penjualan melebihi P90 dari rentangnya. Sekitar 10% adalah wajar.'
+    },
+    rangeAboveP50: {
+      label: { en: 'Sold above P50', id: 'Terjual di atas P50' },
+      en: 'The share of past weeks in which sales went above the P50. About half is expected.',
+      id: 'Porsi minggu lampau saat penjualan melebihi P50. Sekitar separuh adalah wajar.'
+    },
+    rangeUncorrected: {
+      label: {
+        en: 'Above P90 without the weekly correction',
+        id: 'Di atas P90 tanpa koreksi mingguan'
+      },
+      en: 'The same check without the weekly adjustment of P90, to show what the correction adds.',
+      id: 'Pemeriksaan yang sama tanpa penyesuaian mingguan P90, untuk menunjukkan apa yang ditambahkan koreksi.'
+    },
+    rangeWidthTotal: {
+      label: { en: 'P90 above P50, total', id: 'P90 di atas P50, total' },
+      en: 'How much P90 sits above P50, added over the weeks shown: the extra stock the upper figure asks for.',
+      id: 'Seberapa jauh P90 di atas P50, dijumlahkan selama minggu yang ditampilkan: stok tambahan yang diminta angka atas.'
+    },
+    rangeForecast: {
+      label: { en: 'Forecast', id: 'Prakiraan' },
+      en: 'The forecast the range is built around.',
+      id: 'Prakiraan yang menjadi pusat rentang.'
+    },
+    rangeWidth: {
+      label: { en: 'P90 above P50', id: 'P90 di atas P50' },
+      en: 'How much P90 sits above P50 over the weeks shown.',
+      id: 'Seberapa jauh P90 di atas P50 selama minggu yang ditampilkan.'
+    },
+    rangeAbovePast: {
+      label: { en: 'Sold above P90 (past)', id: 'Terjual di atas P90 (lalu)' },
+      en: 'The share of past weeks in which sales went above P90.',
+      id: 'Porsi minggu lampau saat penjualan melebihi P90.'
+    },
+    rangeSource: {
+      label: { en: 'Range from', id: 'Rentang dari' },
+      en: 'Whose past errors the range is built from: the engine’s forecast, or SAP’s plan for a new SKU.',
+      id: 'Galat lampau siapa yang menjadi dasar rentang: prakiraan mesin, atau rencana SAP untuk SKU baru.'
+    },
+    rangeNeed: {
+      label: { en: 'Forecast need', id: 'Kebutuhan prakiraan' },
+      en: 'The material’s need from the SKU forecasts through the bill of materials.',
+      id: 'Kebutuhan material dari prakiraan SKU melalui daftar bahan.'
+    },
+    fbSkusAlarm: {
+      label: { en: 'SKUs in bias alarm · engine', id: 'SKU dengan alarm bias · mesin' },
+      en: 'SKUs whose engine forecast keeps missing in one direction: the tracking signal is past 0.51 either way.',
+      id: 'SKU yang prakiraan mesinnya terus meleset ke satu arah: tracking signal melewati 0,51 ke salah satu arah.'
+    },
+    fbMaterialsAlarm: {
+      label: { en: 'Materials in bias alarm · engine', id: 'Material dengan alarm bias · mesin' },
+      en: 'Materials whose engine forecast keeps missing in one direction: the tracking signal is past 0.51 either way.',
+      id: 'Material yang prakiraan mesinnya terus meleset ke satu arah: tracking signal melewati 0,51 ke salah satu arah.'
+    },
+    fbOverrides: {
+      label: { en: 'Override weeks in force', id: 'Minggu dengan penyesuaian berlaku' },
+      en: 'Forecast weeks where a planner’s override replaces the engine’s figure.',
+      id: 'Minggu prakiraan saat penyesuaian perencana menggantikan angka mesin.'
+    },
+    fbValue: {
+      label: { en: 'Override value (FVA)', id: 'Nilai penyesuaian (FVA)' },
+      en: 'Whether overrides made the forecast better: the error after overrides compared with the engine’s error before them.',
+      id: 'Apakah penyesuaian membuat prakiraan lebih baik: galat setelah penyesuaian dibanding galat mesin sebelumnya.'
+    },
+    fbEngine: {
+      label: { en: 'Engine forecast', id: 'Prakiraan mesin' },
+      en: 'The tracking signal of the engine’s forecast: how steadily it missed in one direction.',
+      id: 'Tracking signal prakiraan mesin: seberapa konsisten ia meleset ke satu arah.'
+    },
+    fbSap: {
+      label: { en: 'SAP’s plan', id: 'Rencana SAP' },
+      en: 'The tracking signal of SAP’s plan, for comparison with the engine’s.',
+      id: 'Tracking signal rencana SAP, sebagai pembanding dengan milik mesin.'
+    },
+    fbDirection: {
+      label: { en: 'Against the engine', id: 'Terhadap mesin' },
+      en: 'Whether the override raised or lowered the engine’s forecast, and by how much.',
+      id: 'Apakah penyesuaian menaikkan atau menurunkan prakiraan mesin, dan seberapa banyak.'
+    },
+    fvaError: {
+      label: { en: 'Error: engine → after', id: 'Galat: mesin → sesudah' },
+      en: 'The forecast error before overrides, then after them.',
+      id: 'Galat prakiraan sebelum penyesuaian, lalu sesudahnya.'
+    },
+    fvaImproved: {
+      label: { en: 'Weeks improved', id: 'Minggu membaik' },
+      en: 'The overridden weeks whose error went down.',
+      id: 'Minggu yang disesuaikan dan galatnya turun.'
+    },
+    fvaValue: {
+      label: { en: 'Value (FVA)', id: 'Nilai (FVA)' },
+      en: 'How much the overrides reduced the error. Below zero, they made the forecast worse.',
+      id: 'Seberapa besar penyesuaian mengurangi galat. Di bawah nol, penyesuaian memperburuk prakiraan.',
+      formula: {
+        en: 'Error before overrides − error after.',
+        id: 'Galat sebelum penyesuaian − galat sesudahnya.'
+      }
+    },
+    sourcingType: {
+      label: { en: 'Sourcing type', id: 'Jenis sourcing' },
+      en: 'Whether the category or purchasing group is Direct or Indirect. An event inherits it from its category, which sets who may be invited.',
+      id: 'Apakah kategori atau grup pembelian itu Direct atau Indirect. Acara mewarisinya dari kategorinya, yang menentukan siapa yang boleh diundang.',
+      labelKeys: ['adminSourcing.col.type']
+    },
+    requiredRole: {
+      label: { en: 'Required role', id: 'Peran wajib' },
+      en: 'The role a person must hold to make this step happen.',
+      id: 'Peran yang harus dimiliki seseorang untuk menjalankan langkah ini.'
+    },
+    roleReach: {
+      label: { en: 'Reach', id: 'Jangkauan' },
+      en: 'Which side and which records the role can act on.',
+      id: 'Sisi dan catatan mana yang dapat ditindaklanjuti peran itu.'
+    },
+    qualLevel: {
+      label: { en: 'Level', id: 'Level' },
+      en: 'The qualification level the rule sets: Registered, Approved or Preferred.',
+      id: 'Level kualifikasi yang diatur aturan itu: Terdaftar, Disetujui, atau Diutamakan.'
+    },
+    qualDocuments: {
+      label: { en: 'Documents required', id: 'Dokumen yang diwajibkan' },
+      en: 'The document types a supplier must hold, valid, to reach the level.',
+      id: 'Jenis dokumen yang harus dimiliki pemasok, dalam keadaan berlaku, untuk mencapai level itu.'
+    },
+    ruleInForce: {
+      label: { en: 'In force', id: 'Berlaku' },
+      en: 'The value the hub uses now.',
+      id: 'Nilai yang dipakai hub saat ini.'
+    },
+    ruleDefault: {
+      label: { en: 'Default', id: 'Bawaan' },
+      en: 'The value the hub would use if nobody had changed it.',
+      id: 'Nilai yang akan dipakai hub bila tidak ada yang mengubahnya.'
+    },
+    groupValue: {
+      label: { en: 'Group value', id: 'Nilai kelompok' },
+      en: 'The value set for this material group, which replaces the global value for it.',
+      id: 'Nilai yang diatur untuk kelompok material ini, menggantikan nilai global untuknya.'
+    },
+    globalValue: {
+      label: { en: 'Global value', id: 'Nilai global' },
+      en: 'The value every material group uses unless it has its own.',
+      id: 'Nilai yang dipakai semua kelompok material kecuali yang punya nilainya sendiri.'
+    },
+    staleAfter: {
+      label: { en: 'Stale after', id: 'Usang setelah' },
+      en: 'How long after its last update a supplier’s stock figure counts as out of date.',
+      id: 'Berapa lama setelah pembaruan terakhir angka stok pemasok dianggap kedaluwarsa.'
+    },
+    stockFigureNow: {
+      label: { en: 'Stock figure now', id: 'Angka stok sekarang' },
+      en: 'Whether the supplier’s stock figure is current, out of date or missing today.',
+      id: 'Apakah angka stok pemasok terkini, kedaluwarsa, atau tidak ada hari ini.'
+    },
+    stockUpdateMode: {
+      label: { en: 'Stock update mode', id: 'Cara pembaruan stok' },
+      en: 'How the supplier sends its stock: the weekly template upload or an API, which sets when its figures count as out of date.',
+      id: 'Cara pemasok mengirim stoknya: unggah templat mingguan atau API, yang menentukan kapan angkanya dianggap kedaluwarsa.'
+    },
+    modeSet: {
+      label: { en: 'Mode set', id: 'Cara yang ditetapkan' },
+      en: 'The stock update mode chosen in this change.',
+      id: 'Cara pembaruan stok yang dipilih pada perubahan ini.'
+    },
+    tplOnNewAsns: {
+      label: { en: 'On new ASNs', id: 'Pada ASN baru' },
+      en: 'Whether suppliers can pick this 3PL when they create a shipping notice.',
+      id: 'Apakah pemasok dapat memilih 3PL ini saat membuat pemberitahuan pengiriman.'
     }
   });
