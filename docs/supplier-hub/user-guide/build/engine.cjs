@@ -145,7 +145,7 @@ function cardsSlide(pres, s, deck, n) {
     slide.addShape('ellipse', { x: x + 0.25, y: 2.3, w: 0.42, h: 0.42, fill: { color: c.actor ? ACTOR[c.actor].fill : COL.navy }, line: { color: COL.white } });
     text(slide, c.mark || String(i + 1), { x: x + 0.25, y: 2.3, w: 0.42, h: 0.42, fontSize: 13, bold: true, color: COL.white, align: 'center', valign: 'middle' });
     text(slide, c.head, { x: x + 0.25, y: 2.85, w: cw - 0.5, h: 0.45, fontSize: 16, fontFace: HEAD, bold: true });
-    text(slide, c.body, { x: x + 0.25, y: 3.32, w: cw - 0.5, h: ch - 1.35, fontSize: 12, color: COL.mid });
+    text(slide, c.body, { x: x + 0.25, y: 3.32, w: cw - 0.5, h: ch - 1.35, fontSize: s.bodySize || 12, color: COL.mid });
   });
   let y = 2.05 + ch + 0.35;
   (s.legend || []).forEach((l) => {

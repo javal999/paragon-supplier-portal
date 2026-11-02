@@ -1,11 +1,12 @@
 # User-guide deck generator
 
-Builds both user-guide decks from data, so a label fix or a retaken screenshot is a rebuild, not a hand edit.
+Builds the user-guide decks and the meetings briefing from data, so a label fix or a retaken screenshot is a rebuild, not a hand edit.
 
 | File | What it holds |
 |---|---|
 | `content-complete.cjs` | Version A, complete (PTI and supplier): `../Paragon-Supplier-Portal-User-Guide.pptx` |
 | `content-supplier.cjs` | Version B, supplier only and test script: `../Paragon-Supplier-Portal-User-Guide-Supplier.pptx` |
+| `content-mom.cjs` | Briefing on the 07, 14 and 28 Oct meetings: `../SC-Hub-MoM-Updates-07-14-28-Oct.pptx` (text in `../SC-Hub-MoM-Updates-07-14-28-Oct.md`) |
 | `engine.cjs` | Slide layouts: title, cards, step (screenshot + numbered steps + status, optional test task), table, swimlane overview, list, section |
 | `assets/` | Paragon logos (dark for the footer, white for navy slides) |
 
