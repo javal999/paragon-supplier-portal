@@ -6,7 +6,10 @@ import { BellRing } from 'lucide-react';
 import Data from '@components/ui-v2/Data';
 import LivenessPill from '@components/ui-v2/LivenessPill';
 import { formatDateTime } from '@lib/format';
-/** @import { InventoryPosition } from '@services/data/types' */
+/** @import { CapacityPlan, InventoryPosition } from '@services/data/types' */
+import { useCapacityPlans } from '@services/query/hooks';
+import { planStatus } from '@services/transitions/capacityRules';
+import { feedstockCycleStatus } from '@services/transitions/feedstockRules';
 import { stockSyncIntervalHours, updateCycleSettings } from '@services/transitions/inventoryConfig';
 import { stockFreshness } from '@services/transitions/inventoryRules';
 /** @import { WeeklyUpdateStatus } from '@services/transitions/updateCycle' */
@@ -26,7 +29,13 @@ import { hubWorkingCalendar } from '@services/transitions/workingCalendarStore';
 //     stock-update cutoff, the same two lines the To do Stock row shows
 //     (`useWeeklyStatusText`): "Weekly stock update · 2 of 4 sent · due Thu 3
 //     Sept 23:59 WIB", then "2 out of date since 13 Aug" when any figure is
-//     past its update SLA. No second deadline, no SOP line, no "Missed" strip.
+//     past its update SLA. No SOP line (BL-149), no "Missed" strip.
+//     BL-236 (MR-1 BR-07, owner 2026-11-02): the weekly confirmation is the
+//     supplier's stock, capacity and feedstock in one visit, so two more lines
+//     follow, due at the same cutoff: capacity groups confirmed (a group with
+//     no submission, or one not covering the horizon, is still to confirm, as
+//     the To do counts it) and feedstock confirmed this cycle (daily for a
+//     supplier on a pull agreement, BR-b of `feedstockRules.js`).
 //     Below them, the materials still to send this cycle — each opening the
 //     stock entry form on that material. From 09:00 WIB on the working day
 //     before the cutoff, and again on the cutoff day, an in-hub reminder lists
@@ -136,8 +145,102 @@ export function useWeeklyStatusText() {
   );
 }
 
-/** @type {React.FC<{ positions: readonly InventoryPosition[]; view: WeeklyUpdateView; nowIso: string }>} */
-const ManualPanel = ({ positions, view, nowIso }) => {
+/**
+ * BL-236 — the two confirmations due with the stock update: capacity groups and
+ * feedstock materials, each as confirmed of total. `null` when there is nothing
+ * of that kind to confirm.
+ * @typedef {{
+ *     readonly capacity: { readonly confirmed: number; readonly total: number } | null;
+ *     readonly feedstock: { readonly confirmed: number; readonly total: number; readonly daily: boolean } | null;
+ *   }} AlsoDue
+ */
+
+/**
+ * BL-236 — what else the supplier confirms in the weekly visit.
+ * @param {string} supplierId
+ * @param {readonly CapacityPlan[]} plans
+ * @param {readonly InventoryPosition[]} positions  The supplier's own rows.
+ * @param {string} nowIso
+ * @returns {AlsoDue}
+ */
+export function alsoDue(supplierId, plans, positions, nowIso) {
+  const own = plans.filter((p) => p.supplierId === supplierId);
+  const toConfirm = own.filter(
+    (p) => planStatus(p) === 'notStarted' || planStatus(p) === 'outdated'
+  );
+  const daily = positions.some((p) => p.pullAgreement === true);
+  const fs = feedstockCycleStatus(
+    supplierId,
+    positions.map((p) => ({
+      supplierId: p.supplierId,
+      materialCode: p.materialCode,
+      feedstockRecordedAt: p.feedstock?.recordedAt ?? null
+    })),
+    nowIso,
+    hubWorkingCalendar(),
+    updateCycleSettings(),
+    daily
+  );
+  return {
+    capacity:
+      own.length === 0 ? null : { confirmed: own.length - toConfirm.length, total: own.length },
+    feedstock: fs.total === 0 ? null : { confirmed: fs.updated.length, total: fs.total, daily }
+  };
+}
+
+/** @type {React.FC<{ supplierId: string; positions: readonly InventoryPosition[]; nowIso: string }>} */
+const AlsoDueLines = ({ supplierId, positions, nowIso }) => {
+  const { t } = useTranslation();
+  const plans = useCapacityPlans();
+  const due = alsoDue(supplierId, plans.data?.items ?? [], positions, nowIso);
+  if (due.capacity === null && due.feedstock === null) return null;
+  return (
+    <div data-testid="weekly-also-due">
+      <h3 className="text-label text-text-tertiary uppercase mb-1">{t('inv.weekly.alsoDue')}</h3>
+      <ul className="space-y-1 text-sm text-text-primary">
+        {due.capacity !== null && (
+          <li
+            className="flex flex-wrap items-center justify-between gap-3"
+            data-testid="weekly-capacity"
+          >
+            <span>
+              {t('inv.weekly.capacity')} · {t('inv.weekly.capacityCount', due.capacity)}
+            </span>
+            {due.capacity.confirmed < due.capacity.total && (
+              <Link to="/supplier/capacity" className="text-sm text-action-hover hover:underline">
+                {t('inv.weekly.capacityLink')}
+              </Link>
+            )}
+          </li>
+        )}
+        {due.feedstock !== null && (
+          <li
+            className="flex flex-wrap items-center justify-between gap-3"
+            data-testid="weekly-feedstock"
+          >
+            <span>
+              {t('inv.weekly.feedstock')} ·{' '}
+              {t(
+                due.feedstock.daily
+                  ? 'inv.weekly.feedstockCountDaily'
+                  : 'inv.weekly.feedstockCount',
+                due.feedstock
+              )}
+            </span>
+            {due.feedstock.confirmed < due.feedstock.total && (
+              <Link to="/supplier/inventory" className="text-sm text-action-hover hover:underline">
+                {t('inv.weekly.feedstockLink')}
+              </Link>
+            )}
+          </li>
+        )}
+      </ul>
+    </div>
+  );
+};
+
+/** @type {React.FC<{ supplierId: string; positions: readonly InventoryPosition[]; view: WeeklyUpdateView; nowIso: string }>} */
+const ManualPanel = ({ supplierId, positions, view, nowIso }) => {
   const { t } = useTranslation();
   const statusText = useWeeklyStatusText();
   const { status, reminder } = view;
@@ -162,6 +265,7 @@ const ManualPanel = ({ positions, view, nowIso }) => {
           </p>
         )}
       </div>
+      <AlsoDueLines supplierId={supplierId} positions={positions} nowIso={nowIso} />
       {reminder !== null && (
         <div
           role="status"
@@ -252,7 +356,12 @@ const WeeklyUpdatePanel = ({ supplierId, positions, nowIso }) => {
   if (own.length === 0) return null;
   if (own.some((p) => p.apiConnected)) return <ApiPanel positions={own} />;
   return (
-    <ManualPanel positions={own} view={weeklyUpdateView(supplierId, own, nowIso)} nowIso={nowIso} />
+    <ManualPanel
+      supplierId={supplierId}
+      positions={own}
+      view={weeklyUpdateView(supplierId, own, nowIso)}
+      nowIso={nowIso}
+    />
   );
 };
 

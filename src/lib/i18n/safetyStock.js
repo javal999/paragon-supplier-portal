@@ -134,11 +134,11 @@ export const safetyStockEn = {
   'sst.osip.rules.fisikDemandIncludesLtp.on': 'Lowest includes LTP (default)',
   'sst.osip.rules.fisikDemandIncludesLtp.off': 'Lowest without LTP (sheet)',
   'sst.osip.def.safetyOrder':
-    'Safety order (ROP Order) = 1.65 × √(lead time in weeks) × the standard deviation of the supplier’s LTP over the lead time, rounded up to a multiple of the MPQ. Until the master data carries an MPQ, the order multiple is used.',
+    'Safety order (ROP Order) = {{z}} × √(lead time in weeks) × the standard deviation of the supplier’s LTP over the next {{weeks}} weeks, rounded up to a multiple of the MPQ. Until the master data carries an MPQ, the order multiple is used.',
   'sst.osip.def.fisik':
     'ROP Fisik safety = 1 day × the lowest of the highest daily consumption of the last 3 months and the daily LTP, rounded up to the MPQ. Consumption is the material’s recorded consumption times the supplier’s share. Production capacity also belongs in the lowest; the hub has no figure for it, so it is left out.',
   'sst.osip.def.cv':
-    'CV = standard deviation ÷ average of each finished good’s weekly demand over the last 26 weeks. A component takes its finished goods’ CVs weighted by their average demand. Stable below 0.5, fluctuative from 0.5. Finished goods carry no variant grouping yet, so each one is its own variant.',
+    'CV = standard deviation ÷ average of each finished good’s monthly demand over the last {{months}} full calendar months. A component takes its finished goods’ CVs weighted by their average demand. Stable below {{threshold}}, fluctuative from {{threshold}}. Finished goods carry no variant grouping yet, so each one is its own variant.',
   'sst.osip.def.challenger':
     'The OSIP figures are the default rule. The engine’s fill-rate safety stock stays beside them as the challenger.',
   // BL-196 (DRC-10, DRC-D11) / BL-198 (DRC-12a)
@@ -393,11 +393,11 @@ export const safetyStockId = {
   'sst.osip.rules.fisikDemandIncludesLtp.on': 'Nilai terendah termasuk LTP (bawaan)',
   'sst.osip.rules.fisikDemandIncludesLtp.off': 'Nilai terendah tanpa LTP (sheet)',
   'sst.osip.def.safetyOrder':
-    'Pesanan pengaman (ROP Order) = 1,65 × √(waktu tunggu dalam minggu) × simpangan baku LTP pemasok selama waktu tunggu, dibulatkan ke atas ke kelipatan MPQ. Sampai data master memuat MPQ, kelipatan pesanan yang dipakai.',
+    'Pesanan pengaman (ROP Order) = {{z}} × √(waktu tunggu dalam minggu) × simpangan baku LTP pemasok selama {{weeks}} minggu ke depan, dibulatkan ke atas ke kelipatan MPQ. Sampai data master memuat MPQ, kelipatan pesanan yang dipakai.',
   'sst.osip.def.fisik':
     'Pengaman ROP Fisik = 1 hari × nilai terendah dari konsumsi harian tertinggi 3 bulan terakhir dan LTP harian, dibulatkan ke atas ke MPQ. Konsumsi adalah konsumsi material yang tercatat dikali porsi pemasok. Kapasitas produksi juga termasuk dalam nilai terendah; hub tidak punya angkanya, jadi tidak diikutkan.',
   'sst.osip.def.cv':
-    'CV = simpangan baku ÷ rata-rata permintaan mingguan setiap barang jadi selama 26 minggu terakhir. Komponen memakai CV barang jadinya, dibobot permintaan rata-ratanya. Stabil di bawah 0,5, fluktuatif mulai 0,5. Barang jadi belum punya pengelompokan varian, jadi setiap barang jadi adalah varian tersendiri.',
+    'CV = simpangan baku ÷ rata-rata permintaan bulanan setiap barang jadi selama {{months}} bulan kalender penuh terakhir. Komponen memakai CV barang jadinya, dibobot permintaan rata-ratanya. Stabil di bawah {{threshold}}, fluktuatif mulai {{threshold}}. Barang jadi belum punya pengelompokan varian, jadi setiap barang jadi adalah varian tersendiri.',
   'sst.osip.def.challenger':
     'Angka OSIP adalah aturan bawaan. Stok pengaman tingkat pemenuhan dari mesin tetap di sampingnya sebagai pembanding.',
   // BL-196 (DRC-10, DRC-D11) / BL-198 (DRC-12a)

@@ -586,9 +586,19 @@ const BuyerSafetyStock = () => {
         data-testid="sst-definitions"
       >
         <h2 className="text-section text-text-primary">{t('sst.def.title')}</h2>
-        <p data-testid="sst-osip-def-safety-order">{t('sst.osip.def.safetyOrder')}</p>
+        <p data-testid="sst-osip-def-safety-order">
+          {t('sst.osip.def.safetyOrder', {
+            z: formatNumber(OSIP_RULES.z),
+            weeks: OSIP_RULES.ltpSdWeeks
+          })}
+        </p>
         <p data-testid="sst-osip-def-fisik">{t('sst.osip.def.fisik')}</p>
-        <p data-testid="sst-osip-def-cv">{t('sst.osip.def.cv')}</p>
+        <p data-testid="sst-osip-def-cv">
+          {t('sst.osip.def.cv', {
+            months: OSIP_RULES.cvWindowMonths,
+            threshold: formatNumber(OSIP_RULES.cvThreshold)
+          })}
+        </p>
         <p data-testid="sst-osip-def-challenger">{t('sst.osip.def.challenger')}</p>
         <p data-testid="sst-rop-def-level">{t('sst.rop.def.level')}</p>
         <p data-testid="sst-rop-def-rops">{t('sst.rop.def.rops')}</p>
