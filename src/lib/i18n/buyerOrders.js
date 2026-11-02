@@ -78,7 +78,7 @@ export const buyerOrdersEn = {
   // — Line-items table —
   'buyerOrders.lines.col.material': 'Material',
   'buyerOrders.lines.col.qty': 'Qty',
-  'buyerOrders.lines.col.unit': 'Unit',
+  'buyerOrders.lines.col.unit': 'Unit price',
   'buyerOrders.lines.col.lineTotal': 'Line total',
   'buyerOrders.lines.total': 'Total',
   // — Side-panel footer actions —
@@ -175,7 +175,7 @@ export const buyerOrdersId = {
   // — Line-items table —
   'buyerOrders.lines.col.material': 'Material',
   'buyerOrders.lines.col.qty': 'Jml',
-  'buyerOrders.lines.col.unit': 'Satuan',
+  'buyerOrders.lines.col.unit': 'Harga satuan',
   'buyerOrders.lines.col.lineTotal': 'Total baris',
   'buyerOrders.lines.total': 'Total',
   // — Side-panel footer actions —

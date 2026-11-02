@@ -1196,7 +1196,7 @@ export const TERM_LABEL_GLOSSARY =
       labelKeys: ['stb.rule.override']
     },
     planMovement: {
-      label: { en: 'Plan movement (MASC)', id: 'Pergerakan rencana (MASC)' },
+      label: { en: 'Size of changes (MASC)', id: 'Besar perubahan (MASC)' },
       en: 'How much the plan moves between versions, scaled to the product’s normal week-to-week movement so products of different sizes compare fairly.',
       id: 'Seberapa besar rencana bergerak antar versi, diskalakan ke pergerakan normal produk dari minggu ke minggu agar produk berbeda ukuran dapat dibandingkan.',
       formula: {
@@ -1212,8 +1212,8 @@ export const TERM_LABEL_GLOSSARY =
     },
     weeksChangedInLeadTime: {
       label: {
-        en: 'Weeks changed inside the lead time',
-        id: 'Minggu yang berubah dalam waktu tunggu'
+        en: 'Share of schedules changed inside lead time',
+        id: 'Porsi jadwal yang berubah dalam waktu tunggu'
       },
       en: 'The share of published weeks that changed inside the supplier’s lead time.',
       id: 'Porsi minggu terbit yang berubah di dalam lead time pemasok.',
@@ -1229,7 +1229,10 @@ export const TERM_LABEL_GLOSSARY =
       ]
     },
     tradeOffWithinLimits: {
-      label: { en: 'Trade-off weeks within limits', id: 'Minggu Trade-off dalam batas' },
+      label: {
+        en: 'Trade-off weeks within the tolerance band',
+        id: 'Minggu Trade-off dalam rentang toleransi'
+      },
       en: 'The share of Trade-off weeks whose quantity to publish stays within the allowed range.',
       id: 'Porsi minggu Trade-off yang kuantitas terbitnya tetap dalam rentang yang diizinkan.',
       alsoCalled: [
@@ -1319,9 +1322,9 @@ export const TERM_LABEL_GLOSSARY =
       id: 'Apa yang terjadi pada barang yang diterima: diterima ke stok, ditolak, dikarantina, dikembalikan ke pemasok, atau belum diputuskan.'
     },
     grExpected: {
-      label: { en: 'Exp', id: 'Eksp' },
-      en: 'Expected: the quantity the shipping notice said would arrive on the line.',
-      id: 'Diharapkan: kuantitas yang menurut pemberitahuan pengiriman akan tiba pada baris itu.',
+      label: { en: 'Shipped', id: 'Dikirim' },
+      en: 'The quantity the shipping notice said would arrive on the line.',
+      id: 'Kuantitas yang menurut pemberitahuan pengiriman akan tiba pada baris itu.',
       notToConfuse: { en: 'Expiry date.', id: 'Tanggal kedaluwarsa.' }
     },
     grReceived: {
@@ -1359,7 +1362,7 @@ export const TERM_LABEL_GLOSSARY =
       }
     },
     poPendingConfirmation: {
-      label: { en: 'Pending Confirmation', id: 'Menunggu Konfirmasi' },
+      label: { en: 'Awaiting response', id: 'Menunggu tanggapan' },
       en: 'POs sent to the supplier that it has not answered yet: Sent or Viewed.',
       id: 'PO yang dikirim ke pemasok dan belum dijawab: Terkirim atau Dilihat.'
     },
@@ -1369,7 +1372,7 @@ export const TERM_LABEL_GLOSSARY =
       id: 'PO yang sedang dikirim dan belum terkirim penuh: terkirim sebagian. PO yang baru dikonfirmasi belum mulai dikirim.'
     },
     poOverdue: {
-      label: { en: 'Overdue', id: 'Jatuh Tempo' },
+      label: { en: 'Overdue', id: 'Lewat jatuh tempo' },
       en: 'Open POs past their requested delivery date.',
       id: 'PO terbuka yang melewati tanggal pengiriman yang diminta.'
     },
@@ -1379,12 +1382,12 @@ export const TERM_LABEL_GLOSSARY =
       id: 'Kuantitas yang dipesan pada baris PO.'
     },
     counterQty: {
-      label: { en: 'Can supply', id: 'Sanggup dipasok' },
+      label: { en: 'Counter-offer quantity', id: 'Kuantitas penawaran balik' },
       en: 'The quantity the supplier offers for the line, when it cannot supply all of it: above 0 and at most the ordered quantity.',
       id: 'Kuantitas yang ditawarkan pemasok untuk baris itu, bila tidak sanggup memasok semuanya: di atas 0 dan paling banyak kuantitas yang dipesan.'
     },
     counterDate: {
-      label: { en: 'Can deliver', id: 'Sanggup dikirim' },
+      label: { en: 'Counter-offer date', id: 'Tanggal penawaran balik' },
       en: 'The date the supplier offers instead of the requested delivery date.',
       id: 'Tanggal yang ditawarkan pemasok sebagai ganti tanggal pengiriman yang diminta.'
     },
@@ -1410,7 +1413,7 @@ export const TERM_LABEL_GLOSSARY =
       id: '3 konfirmasi yang diberikan pemasok pada PO: kapasitas, foresight atau fixed stock, dan pemberitahuan pengiriman.'
     },
     summaryReceipts: {
-      label: { en: 'Receipts', id: 'Penerimaan barang' },
+      label: { en: 'Goods receipts', id: 'Penerimaan barang' },
       en: 'The goods receipts recorded against the PO.',
       id: 'Penerimaan barang yang tercatat untuk PO itu.'
     },
@@ -1541,7 +1544,7 @@ export const TERM_LABEL_GLOSSARY =
       }
     },
     invOverdue: {
-      label: { en: 'Overdue', id: 'Jatuh Tempo' },
+      label: { en: 'Overdue', id: 'Lewat jatuh tempo' },
       en: 'The value of invoices past their due date and not yet paid.',
       id: 'Nilai faktur yang melewati tanggal jatuh tempo dan belum dibayar.',
       formula: {
@@ -1584,7 +1587,7 @@ export const TERM_LABEL_GLOSSARY =
       id: 'Harga satuan pada baris PO, yang menjadi dasar pencocokan faktur.'
     },
     invLineValue: {
-      label: { en: 'Value', id: 'Nilai' },
+      label: { en: 'Expected value', id: 'Nilai yang diharapkan' },
       en: 'The value the line should have, beside what the supplier billed.',
       id: 'Nilai yang seharusnya untuk baris itu, di samping yang ditagih pemasok.',
       formula: {
@@ -2573,7 +2576,7 @@ export const TERM_LABEL_GLOSSARY =
       id: 'Untuk distributor, waktu yang dibutuhkan prinsipalnya untuk memasok.'
     },
     triggerSoh: {
-      label: { en: 'PTI stock on hand (all plants)', id: 'Stok PTI (semua pabrik)' },
+      label: { en: 'PTI stock on hand (SOH), all plants', id: 'Stok PTI (SOH), semua pabrik' },
       en: 'PTI’s stock of the material across all plants. When it reaches ROP Fisik, the hub drafts a call-off.',
       id: 'Stok PTI untuk material itu di semua plant. Bila mencapai ROP Fisik, hub menyusun draf call-off.',
       labelKeys: ['co.trigger.soh']

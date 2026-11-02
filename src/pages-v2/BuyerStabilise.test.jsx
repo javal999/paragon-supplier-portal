@@ -144,7 +144,7 @@ describe('BuyerStabilise — the planner page (REQ-E14-06)', () => {
     expect(screen.getByTestId('stb-kpi-band-raw')).toHaveTextContent(
       `after stabilising (before: ${h.raw.tradeOff.withinBand} of ${h.raw.tradeOff.revisions})`
     );
-    expect(screen.getByText('Trade-off weeks within limits')).toBeInTheDocument();
+    expect(screen.getByText('Trade-off weeks within the tolerance band')).toBeInTheDocument();
     expect(screen.queryByText('Trade-off revisions inside the band')).toBeNull();
     // Stabilising the plan suppliers saw lowers the movement.
     expect(/** @type {NonNullable<typeof h.stabilised.masc>} */ (h.stabilised.masc)).toBeLessThan(
@@ -192,7 +192,7 @@ describe('BuyerStabilise — the planner page (REQ-E14-06)', () => {
     );
     await screen.findByTestId('stb-run-engine');
     const p = (await plan()).engine.totals;
-    expect(screen.getByText('Minggu Trade-off dalam batas')).toBeInTheDocument();
+    expect(screen.getByText('Minggu Trade-off dalam rentang toleransi')).toBeInTheDocument();
     expect(screen.getByTestId('stb-kpi-band-stab')).toHaveTextContent(
       `${p.stabilised.tradeOff.withinBand} dari ${p.stabilised.tradeOff.revisions}`
     );
