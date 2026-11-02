@@ -95,10 +95,10 @@ const PegsPanel = ({ week, plan, names, onClose }) => {
         <TableHeader>
           <TableHeaderCell>{t('mrq.pegs.sku')}</TableHeaderCell>
           <TableHeaderCell>{t('mrq.pegs.week')}</TableHeaderCell>
-          <TableHeaderCell>{t('mrq.pegs.fgQty')}</TableHeaderCell>
-          <TableHeaderCell>{t('mrq.pegs.scrap')}</TableHeaderCell>
-          <TableHeaderCell>{t('mrq.pegs.yield')}</TableHeaderCell>
-          <TableHeaderCell>{t('mrq.pegs.part')}</TableHeaderCell>
+          <TableHeaderCell term="pegFgQty" />
+          <TableHeaderCell term="pegScrap" />
+          <TableHeaderCell term="pegYield" />
+          <TableHeaderCell term="pegRequirement" />
         </TableHeader>
         <tbody>
           {/* Peg has no id: the same SKU + FG week appears twice when the
@@ -174,14 +174,14 @@ const WeekGrid = ({ plan, names }) => {
         <Table>
           <TableHeader>
             <TableHeaderCell>{t('mrq.wk.week')}</TableHeaderCell>
-            <TableHeaderCell>{t('mrq.wk.gross')}</TableHeaderCell>
-            <TableHeaderCell>{t('mrq.wk.start')}</TableHeaderCell>
-            <TableHeaderCell>{t('mrq.wk.receipts')}</TableHeaderCell>
-            <TableHeaderCell>{t('mrq.wk.safety')}</TableHeaderCell>
-            <TableHeaderCell>{t('mrq.wk.net')}</TableHeaderCell>
-            <TableHeaderCell>{t('mrq.wk.planned')}</TableHeaderCell>
-            <TableHeaderCell>{t('mrq.wk.release')}</TableHeaderCell>
-            <TableHeaderCell>{t('mrq.wk.end')}</TableHeaderCell>
+            <TableHeaderCell term="mrpGross" />
+            <TableHeaderCell term="mrpStockStart" />
+            <TableHeaderCell term="mrpReceipts" />
+            <TableHeaderCell term="mrpSafetyStock" />
+            <TableHeaderCell term="mrpNet" />
+            <TableHeaderCell term="mrpPlannedOrder" />
+            <TableHeaderCell term="mrpRelease" />
+            <TableHeaderCell term="mrpStockEnd" />
           </TableHeader>
           <tbody>
             {plan.weeks.map((w) => (
@@ -362,7 +362,7 @@ const BuyerMaterialRequirement = () => {
         data-testid="mrq-kpis"
       >
         <KpiCard
-          eyebrow={t('mrq.kpi.net')}
+          term="mrqNetMaterials"
           value={<span data-testid="mrq-kpi-net">{withNet}</span>}
           subtitle={
             <span className="text-text-tertiary">
@@ -371,17 +371,17 @@ const BuyerMaterialRequirement = () => {
           }
         />
         <KpiCard
-          eyebrow={t('mrq.kpi.orders')}
+          term="mrqPlannedOrdersKpi"
           value={<span data-testid="mrq-kpi-orders">{orders}</span>}
           subtitle={<span className="text-text-tertiary">{t('mrq.kpi.orders.sub')}</span>}
         />
         <KpiCard
-          eyebrow={t('mrq.kpi.late')}
+          term="mrqLateKpi"
           value={<span data-testid="mrq-kpi-late">{late}</span>}
           subtitle={<span className="text-text-tertiary">{t('mrq.kpi.late.sub')}</span>}
         />
         <KpiCard
-          eyebrow={t('mrq.kpi.review')}
+          term="mrqReview"
           value={<span data-testid="mrq-kpi-review">{review}</span>}
           subtitle={<span className="text-text-tertiary">{t('mrq.kpi.review.sub')}</span>}
         />
@@ -392,12 +392,12 @@ const BuyerMaterialRequirement = () => {
           <TableHeader>
             <TableHeaderCell>{t('mrq.col.material')}</TableHeaderCell>
             <TableHeaderCell>{t('mrq.col.supplier')}</TableHeaderCell>
-            <TableHeaderCell>{t('mrq.col.leadTime')}</TableHeaderCell>
-            <TableHeaderCell>{t('mrq.col.safetyStock')}</TableHeaderCell>
-            <TableHeaderCell>{t('mrq.col.stock')}</TableHeaderCell>
-            <TableHeaderCell>{t('mrq.col.net')}</TableHeaderCell>
-            <TableHeaderCell>{t('mrq.col.orders')}</TableHeaderCell>
-            <TableHeaderCell>{t('mrq.col.late')}</TableHeaderCell>
+            <TableHeaderCell term="mrpLeadTime" />
+            <TableHeaderCell term="mrpSafetyStock" />
+            <TableHeaderCell term="mrpStockOnHand" />
+            <TableHeaderCell term="mrpNet" />
+            <TableHeaderCell term="mrpPlannedOrders" />
+            <TableHeaderCell term="mrpLate" />
           </TableHeader>
           <tbody>
             {rows.map((m) => (

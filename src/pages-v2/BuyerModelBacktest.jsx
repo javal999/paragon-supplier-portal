@@ -25,6 +25,23 @@ import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages
 /** @import { BacktestCandidate, CandidateScore, SkuBacktest, VersusSap } from '@services/engine/modelBacktest' */
 import { BACKTEST_CANDIDATES, PORTFOLIO_SCENARIOS } from '@services/engine/modelBacktest';
 
+/**
+ * BL-233 — the glossary term each method and scenario column is labelled by.
+ * A scenario with no entry (the chosen model) keeps its plain label.
+ * @type {Record<string, import('@lib/glossary').TermLabelId>}
+ */
+const CANDIDATE_TERM = {
+  main: 'candMain',
+  comb: 'candComb',
+  theta: 'candTheta',
+  sba: 'candSba',
+  croston: 'candCroston',
+  tsb: 'candTsb',
+  sapPlan: 'candSapPlan'
+};
+/** @type {Record<string, import('@lib/glossary').TermLabelId | undefined>} */
+const SCENARIO_TERM = { sapPlan: 'scenarioSapPlan', floor: 'scenarioFloor' };
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MODEL BACKTEST — REQ-E14-10, the Material Planner's view (Experience: "per SKU
 // group, the candidate models with their simulated fill rate, order-complete
@@ -111,14 +128,14 @@ const SkuDetail = ({ sku }) => {
       <Table>
         <TableHeader>
           <TableHeaderCell>{t('mb.detail.col.candidate')}</TableHeaderCell>
-          <TableHeaderCell>{t('mb.detail.col.fill')}</TableHeaderCell>
-          <TableHeaderCell>{t('mb.detail.col.complete')}</TableHeaderCell>
-          <TableHeaderCell>{t('mb.detail.col.unitFill')}</TableHeaderCell>
-          <TableHeaderCell>{t('mb.detail.col.pallets')}</TableHeaderCell>
-          <TableHeaderCell>{t('mb.detail.col.masc')}</TableHeaderCell>
-          <TableHeaderCell>{t('mb.detail.col.wape')}</TableHeaderCell>
-          <TableHeaderCell>{t('mb.detail.col.bias')}</TableHeaderCell>
-          <TableHeaderCell>{t('mb.detail.col.status')}</TableHeaderCell>
+          <TableHeaderCell term="mbFillRate" />
+          <TableHeaderCell term="mbOrderComplete" />
+          <TableHeaderCell term="mbUnitsServed" />
+          <TableHeaderCell term="mbPalletWeeks" />
+          <TableHeaderCell term="mbMasc" />
+          <TableHeaderCell term="mbWape" />
+          <TableHeaderCell term="mbBias" />
+          <TableHeaderCell term="mbSelection" />
         </TableHeader>
         <tbody>
           {sku.scores.map((s) => (
@@ -225,7 +242,7 @@ const BuyerModelBacktest = () => {
           subtitle={<span className="text-text-tertiary">{t('mb.kpi.skus.sub', { newSkus })}</span>}
         />
         <KpiCard
-          eyebrow={t('mb.kpi.beats')}
+          term="mbBeats"
           value={
             <span data-testid="mb-kpi-beats">
               {t('mb.kpi.beats.value', { n: sum.chosenBeatsSap, m: sum.skusCompared })}
@@ -242,7 +259,7 @@ const BuyerModelBacktest = () => {
           }
         />
         <KpiCard
-          eyebrow={t('mb.kpi.materials')}
+          term="mbMaterials"
           value={
             <span data-testid="mb-kpi-materials">
               {t('mb.kpi.beats.value', {
@@ -254,7 +271,7 @@ const BuyerModelBacktest = () => {
           subtitle={<span className="text-text-tertiary">{t('mb.kpi.materials.sub')}</span>}
         />
         <KpiCard
-          eyebrow={t('mb.kpi.limit')}
+          term="mbLimit"
           value={
             <span data-testid="mb-kpi-limit">
               {run.mascLimit === null ? t('mb.kpi.limit.notSet') : two(run.mascLimit)}
@@ -299,11 +316,11 @@ const BuyerModelBacktest = () => {
           <TableHeader>
             <TableHeaderCell>{t('mb.methods.col.method')}</TableHeaderCell>
             <TableHeaderCell>{t('mb.methods.col.skus')}</TableHeaderCell>
-            <TableHeaderCell>{t('mb.methods.col.fill')}</TableHeaderCell>
-            <TableHeaderCell>{t('mb.methods.col.complete')}</TableHeaderCell>
-            <TableHeaderCell>{t('mb.methods.col.pallets')}</TableHeaderCell>
-            <TableHeaderCell>{t('mb.methods.col.masc')}</TableHeaderCell>
-            <TableHeaderCell>{t('mb.methods.col.wape')}</TableHeaderCell>
+            <TableHeaderCell term="mbFillRate" />
+            <TableHeaderCell term="mbOrderComplete" />
+            <TableHeaderCell term="mbPalletWeeks" />
+            <TableHeaderCell term="mbMascMedian" />
+            <TableHeaderCell term="mbWapeMedian" />
             <TableHeaderCell>{t('mb.methods.col.chosen')}</TableHeaderCell>
           </TableHeader>
           <tbody>
@@ -351,11 +368,11 @@ const BuyerModelBacktest = () => {
         <Table>
           <TableHeader>
             <TableHeaderCell>{t('mb.portfolio.col.scenario')}</TableHeaderCell>
-            <TableHeaderCell>{t('mb.portfolio.col.fill')}</TableHeaderCell>
-            <TableHeaderCell>{t('mb.portfolio.col.unitFill')}</TableHeaderCell>
-            <TableHeaderCell>{t('mb.portfolio.col.pallets')}</TableHeaderCell>
-            <TableHeaderCell>{t('mb.portfolio.col.packaging')}</TableHeaderCell>
-            <TableHeaderCell>{t('mb.portfolio.col.rawMaterial')}</TableHeaderCell>
+            <TableHeaderCell term="mbFillRate" />
+            <TableHeaderCell term="mbUnitsServed" />
+            <TableHeaderCell term="mbPalletWeeks" />
+            <TableHeaderCell term="mbPeakPackaging" />
+            <TableHeaderCell term="mbPeakRaw" />
           </TableHeader>
           <tbody>
             {PORTFOLIO_SCENARIOS.map((sc) => {
@@ -397,10 +414,12 @@ const BuyerModelBacktest = () => {
       <Section testId="mb-origins" title={t('mb.origins.title')} intro={t('mb.origins.intro')}>
         <Table>
           <TableHeader>
-            <TableHeaderCell>{t('mb.origins.col.origin')}</TableHeaderCell>
+            <TableHeaderCell term="mbOrigin" />
             <TableHeaderCell>{t('mb.origins.col.events')}</TableHeaderCell>
             {PORTFOLIO_SCENARIOS.map((sc) => (
-              <TableHeaderCell key={sc}>{t(`mb.scenario.${sc}`)}</TableHeaderCell>
+              <TableHeaderCell key={sc} term={SCENARIO_TERM[sc]}>
+                {t(`mb.scenario.${sc}`)}
+              </TableHeaderCell>
             ))}
           </TableHeader>
           <tbody>
@@ -445,9 +464,9 @@ const BuyerModelBacktest = () => {
           <TableHeader>
             <TableHeaderCell>{t('mb.skus.col.sku')}</TableHeaderCell>
             <TableHeaderCell>{t('mb.skus.col.chosen')}</TableHeaderCell>
-            <TableHeaderCell>{t('mb.skus.col.vsSap')}</TableHeaderCell>
+            <TableHeaderCell term="mbVsSap" />
             {columns.map((c) => (
-              <TableHeaderCell key={c}>{t(`mb.candidate.${c}`)}</TableHeaderCell>
+              <TableHeaderCell key={c} term={CANDIDATE_TERM[c]} />
             ))}
           </TableHeader>
           <tbody>
@@ -525,10 +544,10 @@ const BuyerModelBacktest = () => {
         <Table>
           <TableHeader>
             <TableHeaderCell>{t('mb.materials.col.material')}</TableHeaderCell>
-            <TableHeaderCell>{t('mb.materials.col.lead')}</TableHeaderCell>
-            <TableHeaderCell>{t('mb.materials.col.fill')}</TableHeaderCell>
-            <TableHeaderCell>{t('mb.materials.col.pallets')}</TableHeaderCell>
-            <TableHeaderCell>{t('mb.materials.col.vsSap')}</TableHeaderCell>
+            <TableHeaderCell term="mbMaterialLead" />
+            <TableHeaderCell term="mbFillRate" />
+            <TableHeaderCell term="mbPalletWeeks" />
+            <TableHeaderCell term="mbChosenVsSap" />
           </TableHeader>
           <tbody>
             {materials.map((m) => (
