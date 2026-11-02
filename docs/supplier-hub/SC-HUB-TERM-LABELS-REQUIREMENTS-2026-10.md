@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Accepted 2026-10-29: TL-D1 to TL-D13; TL-D14 to TL-D18 on 2026-10-30.** The owner answered the 4 open questions (section 5) and the 27 inventory questions (TL-D10 to TL-D13, `research/TERM-LABEL-INVENTORY-2026-10.md` section 1) the same day. Wave 1 merged 2026-10-30 (MR !65, `7f29d078`) |
+| Status | **Accepted 2026-10-29: TL-D1 to TL-D13; TL-D14 to TL-D18 on 2026-10-30; TL-D19 to TL-D25 on 2026-11-02.** The owner answered the 4 open questions (section 5) and the 27 inventory questions (TL-D10 to TL-D13, `research/TERM-LABEL-INVENTORY-2026-10.md` section 1) the same day. Wave 1 merged 2026-10-30 (MR !65, `7f29d078`) |
 | Date | 2026-10-29 |
 | Source | Owner, 2026-10-29, reviewing the Demand anticipation grid: the row label differs from the team's input. Owner rules: (1) an agreed column wording is not replaced with another name; (2) every important term gets an information icon with its definition and the other names it goes by |
 | Code read | `main` at `59199b4f` |
@@ -124,3 +124,34 @@ Each was asked with a recommendation; the owner took the recommendation every ti
 | TL-D16 | Full name of LTP | Not shown; LTP's tooltip gives no expansion | Accepted, owner, 2026-10-30 |
 | TL-D17 | TL-D11 in Indonesian sentences | Applies to sentences too, not only labels: ID text says "demand anticipation", never "antisipasi permintaan" | Accepted, owner, 2026-10-30 |
 | TL-D18 | "(DA)" in navigation and page titles | Yes: the nav items and page titles of the Demand anticipation pages read "Demand anticipation (DA)", in EN and ID | Accepted, owner, 2026-10-30 |
+| TL-D19 | Inventory labels against their source | "Supplier available" becomes the source's "Supplier available stock" (MAT MR-7; ID unchanged, the source gives none). "PTI reorder point" becomes "PTI ROP", ID "ROP PTI" (SC-HUB-CAPACITY-REQUIREMENTS) | Accepted, owner, 2026-11-02 |
+| TL-D20 | "Safety order (ROP Order)" on the Safety stock page | "Safety order", in EN and ID: the column is the safety part of ROP Order, not ROP Order (TL-D15) | Accepted, owner, 2026-11-02 |
+| TL-D21 | "ROP Fisik safety" | The team's "Safety ROP Fisik", in EN and ID. Replaces the builder's TL-D11 reading that kept the hub's word order | Accepted, owner, 2026-11-02 |
+| TL-D22 | "ROP to principal" and "Replenishment cycle f" | The team's "ROP order to principal" and "Cycle replenishment (f)", in EN and ID | Accepted, owner, 2026-11-02 |
+| TL-D23 | Where an "Also called" source points | A tip names only the team ("Material Planning team"), never a question ID, deck or sheet. The trail stays in this document (section 8). Sources that are hub documents keep the document's plain name | Accepted, owner, 2026-11-02 |
+| TL-D24 | Sign of "PR Generated" on the what-if | Positive, as built; the tip says the team's slide writes the same need as a negative number | Accepted, owner, 2026-11-02 |
+| TL-D25 | Stabilise KPI titles against the engine requirements | Kept as they are; the engine's names stay under "Also called" | Accepted, owner, 2026-11-02 |
+
+**Open, 2026-11-02.** Two owner questions are being explained before a ruling: the ID wording of "Risk · supplier cover" (INV-D1's "Cakupan stok pemasok") and whether the what-if "Max" becomes "Max Stock". One question goes to the Material Planning team: is "Max Supplier" another name for the production limit? Question E3 is headed "Max Supplier / Production Limit"; until the team answers, the production limit's tip lists no other name (BR-10).
+
+---
+
+## 8. Where each "Also called" name was found (TL-D23)
+
+The tips name only the team. This is the trail. Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`.
+
+| Term (glossary key) | Other name | Where the team uses it |
+|---|---|---|
+| demandAnticipation | DA | OSIP playbook; Q-file section A |
+| carryOver, whatIfCarryOver | sisa DA | Q-file A8 |
+| remainder, whatIfRemainder | sisa | Q-file A8 |
+| additionalPo | PO tambahan | Q-file A9 |
+| daOverLeadTime | Total DA | Q-file A2 |
+| supplierOwnRop | ROP PM in Supplier | the team's stock sheet, Q-file B10 |
+| demandCv | CV | Q-file C1 |
+| osipLevel | Level OSIP | Q-file C2 |
+| replenishmentCycle | call-off lead time | MoM, Q-file B6 |
+| protectionBuffer | risk protection | the team's sheet "Guidance", Q-file C3 |
+
+Names from hub documents: "days of cover" (`SUPPLIER-HUB-REQUIREMENTS.md`, CR-24); "supplier SOH", "PTI SOH", "PTI ROP" (`SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md`, alert rules); "Size of changes", "Share of schedules changed inside lead time", "tolerance band" (`FORECAST-ENGINE-REQUIREMENTS.md`, E14-02 and E14-06).
+

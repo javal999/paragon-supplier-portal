@@ -40,10 +40,9 @@
  * @typedef {'demandAnticipation' | 'ltp' | 'fgDemand' | 'ltpLessFgDemand' | 'consumptionAverage' | 'safetyOrder' | 'carryOver' | 'wouldBe' | 'surplusAbsorbed' | 'recordedConsumption' | 'openSupply' | 'supplyGap' | 'daAfterCheck' | 'ospo' | 'additionalPo' | 'callOffsThisWeek' | 'remainder' | 'notCarried' | 'supplierAgreedOutside' | 'gapProposal' | 'alertPtiBelowRop' | 'alertSupplierBelowRop' | 'alertProjectedStockOut' | 'alertCapacityBelowDemand' | 'alertStaleData' | 'alertCoverage' | 'alertCommitmentBelowForecast' | 'alertLeadTimeMissing' | 'alertCallOffNotCovered' | 'alertSupplyDiscontinued' | 'alertBlanketPoRunOut' | 'alertDemandAnticipationUnabsorbed' | 'supplierCover' | 'supplierStock' | 'ptiStockRop' | 'incoming' | 'incomingStatus' | 'supplierAvailable' | 'calledOffNotShipped' | 'freeToCallOff' | 'ptiInbound' | 'simulationBasis' | 'simulationFlags' | 'supplierOwnRop' | 'ptiStock' | 'ptiRop' | 'daysOfSupply' | 'feedstockLatest' | 'feedstockThisWeek' | 'tradeNameStatus' | 'capacityLtp' | 'allocatedCapacity' | 'productionLimit' | 'additionalCapacity' | 'capacityBe' | 'ltpAgainstCapacity' | 'capacityShortBy' | 'ptiCapacityDecision' | 'runOutRemaining' | 'runsOut' | 'newPoNeededBy' | 'poLeadTime' | 'spaceFreed' | 'materialsPerTier' | 'onSapValue' | 'sltGroupDefault' | 'tierTarget' | 'safetyOrderRopOrder' | 'ropFisikSafety' | 'demandCv' | 'osipLevel' | 'ropOrder' | 'ropFisik' | 'maxStock' | 'engineSafetyStock' | 'sapSafetyStock' | 'freed' | 'safetyLeadTime' | 'engineReorderPoint' | 'forecastShortfall' | 'ropSupplier' | 'ropToPrincipal' | 'replenishmentCycle' | 'pullAgreement' | 'bottleneckLeadTime' | 'monthLtp' | 'protectionBaseline' | 'uplift' | 'protectionBuffer' | 'strategicBaseline' | 'strategicBuffer' | 'poOrdered' | 'reconcileCalledOff' | 'asnRequested' | 'notYetCalledOff' | 'calledOffNotYetShipped' | 'maxStockSupplier' | 'whatIfMax' | 'daOverLeadTime' | 'prGenerated' | 'planCheckPr' | 'triggerCallOffs' | 'triggerPr' | 'whatIfRemainder' | 'whatIfCarryOver' | 'firstShortageWeek' | 'weeksAboveMax' | 'whatIfLtp' | 'daCurrentPlan' | 'daScenario' | 'callOffsDrafted' | 'whatIfIncoming' | 'prRecommendedWeek' | 'projectedSohPlan' | 'projectedSohScenario' | 'engineValue' | 'lastPublished' | 'firstPublished' | 'dampedValue' | 'allowedRange' | 'toPublish' | 'stabiliseRule' | 'ruleNew' | 'ruleUnchanged' | 'ruleFirmFrozen' | 'ruleForecast' | 'ruleDamped' | 'ruleBandHeld' | 'ruleCumulativeHeld' | 'ruleOverride' | 'planMovement' | 'weeksChangedInLeadTime' | 'tradeOffWithinLimits' | 'weeksHeld' | 'seriesHeld' | 'seriesMasc' | 'forecastZone' | 'publishedForecast' | 'commitmentDue' | 'commitment' | 'commitmentUpside'} TermLabelId
  */
 
-const TEAM_OSIP = {
-  en: 'Material Planning team, OSIP playbook',
-  id: 'Tim Material Planning, OSIP playbook'
-};
+// TL-D23: an "Also called" source names only the team; where in the team's
+// material each name was found is the spec's trace table (§8), not the tip.
+const TEAM = { en: 'Material Planning team', id: 'Tim Material Planning' };
 const NOT_DELIVERY_AGREEMENT = {
   en: 'Delivery Agreement (also DA, on the contract pages).',
   id: 'Delivery Agreement (juga DA, di halaman kontrak).'
@@ -68,7 +67,7 @@ export const TERM_LABEL_GLOSSARY =
         en: 'LTP of the week; week 1 also carries the safety order; plus carry-over moved into the week.',
         id: 'LTP minggu itu; minggu 1 juga memuat safety order; ditambah carry-over yang dipindahkan ke minggu itu.'
       },
-      alsoCalled: [{ name: 'DA', source: TEAM_OSIP }],
+      alsoCalled: [{ name: 'DA', source: TEAM }],
       notToConfuse: NOT_DELIVERY_AGREEMENT,
       labelKeys: ['daHist.csv.demandAnticipation']
     },
@@ -130,10 +129,7 @@ export const TERM_LABEL_GLOSSARY =
       alsoCalled: [
         {
           name: 'sisa DA',
-          source: {
-            en: 'Material Planning team, Q-file A8',
-            id: 'Tim Material Planning, Q-file A8'
-          }
+          source: TEAM
         }
       ],
       labelKeys: ['daHist.csv.carriedIn']
@@ -209,10 +205,7 @@ export const TERM_LABEL_GLOSSARY =
       alsoCalled: [
         {
           name: 'PO tambahan',
-          source: {
-            en: 'Material Planning team, Q-file A9',
-            id: 'Tim Material Planning, Q-file A9'
-          }
+          source: TEAM
         }
       ],
       labelKeys: ['daHist.csv.additionalPo']
@@ -231,10 +224,7 @@ export const TERM_LABEL_GLOSSARY =
       alsoCalled: [
         {
           name: 'sisa',
-          source: {
-            en: 'Material Planning team, Q-file A8',
-            id: 'Tim Material Planning, Q-file A8'
-          }
+          source: TEAM
         }
       ],
       labelKeys: ['daHist.csv.remainder']
@@ -433,7 +423,7 @@ export const TERM_LABEL_GLOSSARY =
       id: 'Apakah kuantitas masih dalam produksi atau sudah dalam perjalanan, dan untuk perjalanan, dengan dokumen apa: pemberitahuan pengiriman (ASN) atau pengiriman call-off.'
     },
     supplierAvailable: {
-      label: { en: 'Supplier available', id: 'Tersedia di pemasok' },
+      label: { en: 'Supplier available stock', id: 'Tersedia di pemasok' },
       en: 'The estimated stock at the supplier on the check date: its last stock update, moved forward by what it shipped, received and finished since.',
       id: 'Perkiraan stok di pemasok pada tanggal cek: pembaruan stok terakhirnya, digeser oleh yang dikirim, diterima, dan selesai diproduksi sejak itu.',
       formula: {
@@ -489,10 +479,7 @@ export const TERM_LABEL_GLOSSARY =
       alsoCalled: [
         {
           name: 'ROP PM in Supplier',
-          source: {
-            en: 'Material Planning team’s stock sheet, Q-file B10',
-            id: 'Sheet stok tim Material Planning, Q-file B10'
-          }
+          source: TEAM
         }
       ],
       notToConfuse: {
@@ -508,10 +495,9 @@ export const TERM_LABEL_GLOSSARY =
       labelKeys: ['inv.col.ptiSoh']
     },
     ptiRop: {
-      label: { en: 'PTI reorder point', id: 'Titik pemesanan ulang PTI' },
+      label: { en: 'PTI ROP', id: 'ROP PTI' },
       en: 'The stock level at which PTI reorders the material. It comes from SAP until PTI’s forecast engine calculates it.',
       id: 'Tingkat stok saat PTI memesan ulang material itu. Diambil dari SAP sampai mesin prakiraan PTI menghitungnya.',
-      alsoCalled: [{ name: 'PTI ROP', source: MAT_ALERTS }],
       notToConfuse: NOT_TEAM_ROPS
     },
     daysOfSupply: {
@@ -674,7 +660,7 @@ export const TERM_LABEL_GLOSSARY =
       id: 'Tingkat layanan material dan target fill rate-nya: porsi permintaan yang dipenuhi dari stok.'
     },
     safetyOrderRopOrder: {
-      label: { en: 'Safety order (ROP Order)', id: 'Safety order (ROP Order)' },
+      label: { en: 'Safety order', id: 'Safety order' },
       en: 'The safety part of ROP Order: extra quantity against demand above the LTP.',
       id: 'Bagian pengaman dari ROP Order: kuantitas tambahan untuk permintaan di atas LTP.',
       formula: {
@@ -687,22 +673,13 @@ export const TERM_LABEL_GLOSSARY =
       }
     },
     ropFisikSafety: {
-      label: { en: 'ROP Fisik safety', id: 'ROP Fisik safety' },
+      label: { en: 'Safety ROP Fisik', id: 'Safety ROP Fisik' },
       en: 'The safety part of ROP Fisik, in days of demand.',
       id: 'Bagian pengaman dari ROP Fisik, dalam hari permintaan.',
       formula: {
         en: 'Ceiling(g × min(highest recent consumption, capacity, LTP), MPQ); g is 1 day unless set per material.',
         id: 'Ceiling(g × min(konsumsi tertinggi terakhir, kapasitas, LTP), MPQ); g 1 hari kecuali diatur per material.'
-      },
-      alsoCalled: [
-        {
-          name: 'Safety ROP Fisik',
-          source: {
-            en: 'Material Planning team deck, Q-file B1',
-            id: 'Deck tim Material Planning, Q-file B1'
-          }
-        }
-      ]
+      }
     },
     demandCv: {
       label: { en: 'Demand CV', id: 'CV permintaan' },
@@ -715,10 +692,7 @@ export const TERM_LABEL_GLOSSARY =
       alsoCalled: [
         {
           name: 'CV',
-          source: {
-            en: 'Material Planning team, Q-file C1',
-            id: 'Tim Material Planning, Q-file C1'
-          }
+          source: TEAM
         }
       ]
     },
@@ -729,10 +703,7 @@ export const TERM_LABEL_GLOSSARY =
       alsoCalled: [
         {
           name: 'Level OSIP',
-          source: {
-            en: 'Material Planning team, Q-file C2',
-            id: 'Tim Material Planning, Q-file C2'
-          }
+          source: TEAM
         }
       ],
       notToConfuse: {
@@ -845,30 +816,15 @@ export const TERM_LABEL_GLOSSARY =
       }
     },
     ropToPrincipal: {
-      label: { en: 'ROP to principal', id: 'ROP ke prinsipal' },
+      label: { en: 'ROP order to principal', id: 'ROP order to principal' },
       en: 'A distributor’s reorder point for ordering from its principal, as the team’s sheet works it out. The team has not answered how it is set.',
-      id: 'Titik pemesanan ulang distributor untuk memesan ke prinsipalnya, sebagaimana dihitung sheet tim. Tim belum menjawab cara penetapannya.',
-      alsoCalled: [
-        {
-          name: 'ROP order to principal',
-          source: {
-            en: 'Material Planning team’s sheet, Q-file B10',
-            id: 'Sheet tim Material Planning, Q-file B10'
-          }
-        }
-      ]
+      id: 'Titik pemesanan ulang distributor untuk memesan ke prinsipalnya, sebagaimana dihitung sheet tim. Tim belum menjawab cara penetapannya.'
     },
     replenishmentCycle: {
-      label: { en: 'Replenishment cycle f', id: 'Replenishment cycle f' },
+      label: { en: 'Cycle replenishment (f)', id: 'Cycle replenishment (f)' },
       en: 'How often the supplier replenishes PTI, which sizes ROP Fisik. The slide values are assumptions to treat as data.',
       id: 'Seberapa sering pemasok mengisi ulang PTI, yang menentukan besar ROP Fisik. Nilai di slide adalah asumsi yang diperlakukan sebagai data.',
-      alsoCalled: [
-        {
-          name: 'cycle replenishment',
-          source: { en: 'OSIP deck, Q-file B6', id: 'Deck OSIP, Q-file B6' }
-        },
-        { name: 'call-off lead time', source: { en: 'MoM, Q-file B6', id: 'MoM, Q-file B6' } }
-      ]
+      alsoCalled: [{ name: 'call-off lead time', source: TEAM }]
     },
     pullAgreement: {
       label: { en: 'Pull agreement', id: 'Perjanjian tarik' },
@@ -914,7 +870,7 @@ export const TERM_LABEL_GLOSSARY =
       alsoCalled: [
         {
           name: 'risk protection',
-          source: { en: 'team sheet Guidance, Q-file C3', id: 'sheet Guidance tim, Q-file C3' }
+          source: TEAM
         }
       ]
     },
@@ -995,10 +951,7 @@ export const TERM_LABEL_GLOSSARY =
       alsoCalled: [
         {
           name: 'Total DA',
-          source: {
-            en: 'Material Planning team, Q-file A2',
-            id: 'Tim Material Planning, Q-file A2'
-          }
+          source: TEAM
         }
       ],
       notToConfuse: NOT_DELIVERY_AGREEMENT
@@ -1042,10 +995,7 @@ export const TERM_LABEL_GLOSSARY =
       alsoCalled: [
         {
           name: 'sisa',
-          source: {
-            en: 'Material Planning team, Q-file A8',
-            id: 'Tim Material Planning, Q-file A8'
-          }
+          source: TEAM
         }
       ],
       notToConfuse: {
@@ -1060,10 +1010,7 @@ export const TERM_LABEL_GLOSSARY =
       alsoCalled: [
         {
           name: 'sisa DA',
-          source: {
-            en: 'Material Planning team, Q-file A8',
-            id: 'Tim Material Planning, Q-file A8'
-          }
+          source: TEAM
         }
       ]
     },

@@ -45,8 +45,9 @@ describe('BL-233 wave 3 — /buyer/safety-stock', () => {
     /** @param {string} start */
     const tipOf = (start) => tips.find(([label]) => label.startsWith(start))?.[1];
     expect(tipOf('Material')).toBe('');
-    expect(tipOf('Safety order (ROP Order)')).toBe('term-tip-safety-order-rop-order');
-    expect(tipOf('ROP Fisik safety')).toBe('term-tip-rop-fisik-safety');
+    // TL-D19: the team's own words.
+    expect(tipOf('Safety order')).toBe('term-tip-safety-order-rop-order');
+    expect(tipOf('Safety ROP Fisik')).toBe('term-tip-rop-fisik-safety');
     expect(tipOf('OSIP level')).toBe('term-tip-osip-level');
     // "ROP Order" and "ROP Fisik" also start other labels, so they are found by tip.
     expect(tips.map(([, id]) => id)).toEqual(
@@ -67,8 +68,8 @@ describe('BL-233 wave 3 — /buyer/safety-stock', () => {
     renderWithProviders(<BuyerSafetyStock />, { identity: BUYER, route: '/buyer/safety-stock' });
     const table = await tableOf('sst-row-RM-STEAR-7300');
     const labels = Object.keys(tipsOf(table)).join(' | ');
-    expect(labels).toContain('Safety order (ROP Order)');
-    expect(labels).toContain('ROP Fisik safety');
+    expect(labels).toContain('Safety order');
+    expect(labels).toContain('Safety ROP Fisik');
     expect(labels).toContain('Max Stock');
     expect(labels).not.toContain('Pesanan pengaman');
     expect(labels).not.toContain('Maks');

@@ -855,8 +855,8 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 |---|---|---|---|---|---|---|---|---|---|---|
 | column | Material | Material | sst.col.material | N | n/a | n/a | N |  | Keep |  |
 | column | Tier and target | Tingkat dan target | sst.col.tier | Y | "service target is a fill rate" (FORECAST-ENGINE-REQUIREMENTS.md:338) | N | N |  | Keep |  |
-| column | Safety order (ROP Order) | Pesanan pengaman (ROP Order) | sst.osip.col.safetyOrder | Y | "Safety order (ROP Order)" (DRC-PROPOSAL-2026-10-19.md:154) | N | N |  | Decided (TL-D6) | ID now "Safety order (ROP Order)" (BL-233 wave 3) |
-| column | ROP Fisik safety | Pengaman ROP Fisik | sst.osip.col.fisikSafety | Y | "Safety ROP Fisik" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:84) | Y | N |  | Change [Proposed] | Team writes "Safety ROP Fisik"; ID translates "safety"; hub doc says "ROP Fisik safety" |
+| column | Safety order (ROP Order) | Pesanan pengaman (ROP Order) | sst.osip.col.safetyOrder | Y | "Safety order (ROP Order)" (DRC-PROPOSAL-2026-10-19.md:154) | N | N |  | Decided (TL-D20) | Now "Safety order" in EN and ID (BL-233 wave 5) |
+| column | ROP Fisik safety | Pengaman ROP Fisik | sst.osip.col.fisikSafety | Y | "Safety ROP Fisik" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:84) | Y | N |  | Decided (TL-D21) | Now "Safety ROP Fisik" in EN and ID (BL-233 wave 5) |
 | column | Demand CV | CV permintaan | sst.osip.col.cv | Y | "CV" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:145) | N | N |  | Keep |  |
 | column | OSIP level | Level OSIP | sst.rop.col.level | Y | "Level OSIP" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:143) | N | Level = forecast hierarchy level, /buyer/demand-forecast |  | Keep | Text from shared RopColumnTitle (osipRops.jsx) |
 | column | ROP Order | ROP Order | sst.rop.col.ropOrder | Y | "ROP Order" (DRC-PROPOSAL-2026-10-19.md:45) | N | N |  | Keep | Feeds ZPE007 (questions B9) |
@@ -888,14 +888,14 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | ROP Fisik | ROP Fisik | sst.rop.col.ropFisik | Y | "ROP Fisik" (DRC-PROPOSAL-2026-10-19.md:46) | N | N |  | Keep |  |
 | column | Max | Maks | sst.rop.col.max | Y | "Max Stock" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:48) | Y | N |  | Decided (TL-D12) | Now "Max Stock" in EN and ID (BL-233 wave 3) |
 | column | ROP Supplier | ROP Pemasok | sst.rop.col.ropSupplier | Y | "ROP Supplier" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:138) | N | Your reorder point (supplier's own figure), /supplier/inventory |  | Decided (TL-D6) | ID now "ROP Supplier" (BL-233 wave 3) |
-| column | ROP to principal | ROP ke prinsipal | sst.rop.col.ropToPrincipal | Y | "ROP order to principal" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:137) | Y | N |  | Change [Proposed] | Team sheet column reads "ROP order to principal"; ID translates "to principal" |
+| column | ROP to principal | ROP ke prinsipal | sst.rop.col.ropToPrincipal | Y | "ROP order to principal" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:137) | Y | N |  | Decided (TL-D22) | Now "ROP order to principal" in EN and ID (BL-233 wave 5) |
 
 ## Page: /buyer/safety-stock — Values per supplier (material detail) — `pages-v2/safetyStock/osipValues.jsx`
 
 | Kind | Label EN | Label ID | Key | Important | Source wording | Differs | Clash | Also called | Status | Note |
 |---|---|---|---|---|---|---|---|---|---|---|
 | column | Supplier | Pemasok | sst.values.col.supplier | N | n/a | n/a | N |  | Keep |  |
-| column | Replenishment cycle f | Siklus pengisian ulang f | sst.values.col.f | Y | "Cycle replenishment (f)" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:115); "Replenishment cycle f" (SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md:119) | Y | N | call-off lead time (SC-HUB-MATERIAL-TEAM-ANSWERS-2026-10.md:55) | Change [Proposed] | Team word order is "cycle replenishment"; ID translates it |
+| column | Replenishment cycle f | Siklus pengisian ulang f | sst.values.col.f | Y | "Cycle replenishment (f)" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:115); "Replenishment cycle f" (SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md:119) | Y | N | call-off lead time (SC-HUB-MATERIAL-TEAM-ANSWERS-2026-10.md:55) | Decided (TL-D22) | Now "Cycle replenishment (f)" in EN and ID (BL-233 wave 5) |
 | column | Pull agreement | Perjanjian tarik | sst.values.col.pull | Y | "pull agreement" (SC-HUB-MATERIAL-TEAM-ANSWERS-2026-10.md:79) | N | N |  | Keep | Team answer is in English; no ID use found |
 | column | Bottleneck production lead time (ROP Supplier) | Waktu tunggu produksi bottleneck (ROP Pemasok) | sst.values.col.bottleneck | Y | "bottleneck production lead time" (SC-HUB-MATERIAL-TEAM-ANSWERS-2026-10.md:99) | N | N |  | Decided (TL-D6) | ID now ends "(ROP Supplier)" (BL-233 wave 3) |
 
@@ -928,7 +928,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Material | Material | sim.col.material | N | n/a | n/a | N |  | Keep |  |
 | column | Supplier | Pemasok | sim.col.supplier | N | n/a | n/a | N |  | Keep |  |
 | column | PIC | PIC | pic.col | N | n/a | n/a | N |  | Keep | Text from shared PicHeader (materials/picDisplay.jsx) |
-| column | Supplier available | Tersedia di pemasok | sim.col.available | Y | "Supplier available stock" (SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md:452) | Y | N |  | Change [Proposed] | Source adds "stock" |
+| column | Supplier available | Tersedia di pemasok | sim.col.available | Y | "Supplier available stock" (SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md:452) | Y | N |  | Decided (TL-D19) | Now "Supplier available stock" (BL-233 wave 5) |
 | column | Already called off, not shipped | Sudah di-call-off, belum dikirim | sim.col.calledOff | Y | "Already called off, not shipped" (SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md:473) | N | N |  | Keep |  |
 | column | Free to call off | Bebas untuk call-off | sim.col.free | Y | "Free to call off" (SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md:473) | N | N |  | Keep |  |
 | column | PTI inbound | Masuk ke PTI | sim.col.ptiInbound | Y | "PTI inbound" (SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md:453) | N | N |  | Keep |  |
@@ -943,7 +943,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | Kind | Label EN | Label ID | Key | Important | Source wording | Differs | Clash | Also called | Status | Note |
 |---|---|---|---|---|---|---|---|---|---|---|
 | column | Week | Minggu | sim.detail.week | N | n/a | n/a | N |  | Keep |  |
-| column | Supplier available | Tersedia di pemasok | sim.col.available | Y | "Supplier available stock" (SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md:452) | Y | N |  | Change [Proposed] | Same as main table |
+| column | Supplier available | Tersedia di pemasok | sim.col.available | Y | "Supplier available stock" (SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md:452) | Y | N |  | Decided (TL-D19) | Now "Supplier available stock" (BL-233 wave 5) |
 | column | Free to call off | Bebas untuk call-off | sim.col.free | Y | "Free to call off" (SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md:473) | N | N |  | Keep |  |
 | column | PTI inbound | Masuk ke PTI | sim.col.ptiInbound | Y | "PTI inbound" (SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md:453) | N | N |  | Keep |  |
 | column | In the week | Dalam minggu ini | sim.detail.events | N | n/a | n/a | N |  | Keep |  |
@@ -993,7 +993,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Supplier stock | Stok pemasok | inv.col.supplierSoh | Y | "supplier stock" (SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md:315) | N | N |  | Keep |  |
 | column | Your reorder point | Titik pemesanan ulang Anda | inv.col.yourRop | Y | "ROP supplier diisi oleh supplier di template stok" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:137) | N | ROP Supplier = system figure, /buyer/safety-stock |  | Keep | Supplier's own figure, display only |
 | column | PTI stock | Stok PTI | inv.col.ptiSoh | Y | "PTI SOH" (SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md:715) | N | N | PTI SOH (SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md:715) | Keep | Shown only when PTI shares its stock |
-| column | PTI reorder point | Titik pemesanan ulang PTI | inv.col.ptiRop | Y | "PTI ROP" (SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md:715) | Y | Reorder point = engine challenger, /buyer/safety-stock | ROP PTI (SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md:233) | Change [Proposed] | Source says "PTI ROP"; buyer page tile already says "PTI ROP" |
+| column | PTI reorder point | Titik pemesanan ulang PTI | inv.col.ptiRop | Y | "PTI ROP" (SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md:715) | Y | Reorder point = engine challenger, /buyer/safety-stock | ROP PTI (SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md:233) | Decided (TL-D19) | Now "PTI ROP", ID "ROP PTI" (BL-233 wave 5) |
 | column | Incoming | Akan datang | inv.col.incoming | Y | none found | n/a | N |  | Keep |  |
 | column | Days of supply | Hari persediaan | inv.col.daysOfSupply | Y | "Days of supply" (SUPPLIER-HUB-REQUIREMENTS.md:146, CR-01) | N | N |  | Keep |  |
 | column | Last update | Pembaruan terakhir | inv.col.lastUpdate | N | n/a | n/a | N |  | Keep |  |

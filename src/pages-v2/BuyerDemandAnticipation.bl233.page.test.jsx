@@ -53,7 +53,7 @@ describe('BL-233 on the Demand anticipation grid', () => {
     expect(text).toHaveTextContent(
       'How it is calculated: LTP of the week; week 1 also carries the safety order; plus carry-over'
     );
-    expect(text).toHaveTextContent('Also called: DA (Material Planning team, OSIP playbook)');
+    expect(text).toHaveTextContent('Also called: DA (Material Planning team)');
     expect(text).toHaveTextContent('Not: Delivery Agreement (also DA, on the contract pages).');
     fireEvent.focus(button);
     expect(tip).toHaveAttribute('data-dismissed', 'false');
