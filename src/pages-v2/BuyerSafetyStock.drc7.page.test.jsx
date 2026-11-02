@@ -241,7 +241,7 @@ describe('Bahasa Indonesia', () => {
   it('the OSIP columns, label and switches read from the ID fragment', async () => {
     await i18n.changeLanguage('id');
     await render();
-    expect(screen.getByText('Safety order (ROP Order)')).toBeInTheDocument();
+    expect(screen.getByTestId('term-tip-safety-order-rop-order')).toHaveTextContent('Safety order');
     expect(screen.getByTestId('sst-osip-prov-safetyOrder')).toHaveTextContent(
       'Sementara: aturan menunggu Material Planning (B4, MPQ)'
     );

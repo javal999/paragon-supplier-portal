@@ -20,7 +20,7 @@ import { fmtIDR } from '../utils';
 const OrdersKpis = ({ counts, totalValuePending, t }) => (
   <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
     <KpiCard
-      eyebrow={t('supplierOrders.kpi.openOrders.eyebrow')}
+      term="supOpenOrders"
       value={counts.action.toString()}
       subtitle={
         counts.action > 0 ? (
@@ -34,19 +34,19 @@ const OrdersKpis = ({ counts, totalValuePending, t }) => (
       icon={Clock}
     />
     <KpiCard
-      eyebrow={t('supplierOrders.kpi.inProgress.eyebrow')}
+      term="supInProgress"
       value={counts.progress.toString()}
       subtitle={t('supplierOrders.kpi.inProgress.subtitle')}
       icon={Truck}
     />
     <KpiCard
-      eyebrow={t('supplierOrders.kpi.totalValue.eyebrow')}
+      term="supValuePending"
       value={fmtIDR(totalValuePending)}
       subtitle={t('supplierOrders.kpi.totalValue.subtitle')}
       icon={Wallet}
     />
     <KpiCard
-      eyebrow={t('supplierOrders.kpi.delivered.eyebrow')}
+      term="supDelivered"
       value={counts.completed.toString()}
       subtitle={<span className="text-success">{t('supplierOrders.kpi.delivered.subtitle')}</span>}
       icon={CheckCircle2}

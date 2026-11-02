@@ -37,19 +37,11 @@ const GrLineItems = ({ selected, selectedChecks, t }) => (
       <Table>
         <TableHeader>
           <TableHeaderCell>{t('goodsReceipt.panel.col.material')}</TableHeaderCell>
-          <TableHeaderCell className="text-right">
-            {t('goodsReceipt.panel.col.exp')}
-          </TableHeaderCell>
-          <TableHeaderCell className="text-right">
-            {t('goodsReceipt.panel.col.recv')}
-          </TableHeaderCell>
-          <TableHeaderCell className="text-right">
-            {t('goodsReceipt.panel.col.acc')}
-          </TableHeaderCell>
-          <TableHeaderCell className="text-right">
-            {t('goodsReceipt.panel.col.rej')}
-          </TableHeaderCell>
-          <TableHeaderCell>{t('goodsReceipt.panel.col.checks')}</TableHeaderCell>
+          <TableHeaderCell className="text-right" term="grExpected" />
+          <TableHeaderCell className="text-right" term="grReceived" />
+          <TableHeaderCell className="text-right" term="grAccepted" />
+          <TableHeaderCell className="text-right" term="grRejectedLine" />
+          <TableHeaderCell term="grChecks" />
         </TableHeader>
         <tbody>
           {/* Key: materialCode — a receipt inspects one line per

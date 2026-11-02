@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import { AlertTriangle } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
@@ -78,6 +79,16 @@ const qcResult = (gr) =>
         return d === 'Pending' ? null : d;
       })()
     : null;
+
+/**
+ * BL-233 — a receipt-line column header: the term's label with its (i).
+ * @type {React.FC<{ term: import('@lib/glossary').TermLabelId }>}
+ */
+const LineHead = ({ term }) => (
+  <th className="text-right py-1">
+    <TermLabel term={term} />
+  </th>
+);
 
 /** @type {React.FC} */
 const SupplierGoodsReceipts = () => {
@@ -244,11 +255,11 @@ const SupplierGoodsReceipts = () => {
             <TableHeaderCell>{t('fc.gr.col.asn')}</TableHeaderCell>
             <TableHeaderCell>{t('fc.gr.col.po')}</TableHeaderCell>
             <TableHeaderCell>{t('fc.gr.col.receivedOn')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('fc.gr.col.shipped')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('fc.gr.col.received')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('fc.gr.col.rejected')}</TableHeaderCell>
-            <TableHeaderCell>{t('fc.gr.col.qc')}</TableHeaderCell>
-            <TableHeaderCell>{t('fc.gr.col.discrepancy')}</TableHeaderCell>
+            <TableHeaderCell className="text-right" term="supShipped" />
+            <TableHeaderCell className="text-right" term="supReceived" />
+            <TableHeaderCell className="text-right" term="supRejected" />
+            <TableHeaderCell term="supQualityResult" />
+            <TableHeaderCell term="supDiscrepancy" />
             <TableHeaderCell className="text-right">{t('fc.gr.col.action')}</TableHeaderCell>
           </TableHeader>
           <tbody>
@@ -379,10 +390,10 @@ const SupplierGoodsReceipts = () => {
                   <thead>
                     <tr className="text-text-tertiary uppercase">
                       <th className="text-left py-1">{t('fc.asn.col.material')}</th>
-                      <th className="text-right py-1">{t('fc.gr.col.shipped')}</th>
-                      <th className="text-right py-1">{t('fc.gr.col.received')}</th>
-                      <th className="text-right py-1">{t('fc.gr.col.difference')}</th>
-                      <th className="text-right py-1">{t('fc.gr.col.rejected')}</th>
+                      <LineHead term="supShipped" />
+                      <LineHead term="supReceived" />
+                      <LineHead term="supDifference" />
+                      <LineHead term="supRejected" />
                     </tr>
                   </thead>
                   <tbody>

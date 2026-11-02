@@ -442,15 +442,15 @@ const OrderSummaryView = ({ persona, foresightAnswers, invoices }) => {
             {persona === 'buyer' && (
               <TableHeaderCell pin="left">{t('oc.summary.col.supplier')}</TableHeaderCell>
             )}
-            <TableHeaderCell pin="left">{t('oc.summary.col.response')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('oc.summary.col.asns')}</TableHeaderCell>
-            <TableHeaderCell>{t('oc.summary.col.callOffs')}</TableHeaderCell>
+            <TableHeaderCell pin="left" term="summaryResponse" />
+            <TableHeaderCell className="text-right" term="summaryAsns" />
+            <TableHeaderCell term="summaryCallOffs" />
             {/* The 3 confirmations share 1 column: separately they pushed the
                 receipt and invoice columns off a 1280px screen. Each marker is
                 still its own link or its own empty statement. */}
-            <TableHeaderCell>{t('oc.summary.col.confirmations')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('oc.summary.col.receipts')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('oc.summary.col.invoices')}</TableHeaderCell>
+            <TableHeaderCell term="summaryConfirmations" />
+            <TableHeaderCell className="text-right" term="summaryReceipts" />
+            <TableHeaderCell className="text-right" term="summaryInvoices" />
           </TableHeader>
           <tbody>
             {shown.map((row) => {

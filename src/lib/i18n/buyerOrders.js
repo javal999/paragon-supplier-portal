@@ -24,13 +24,9 @@ export const buyerOrdersEn = {
   'buyerOrders.meta.summary.one': '{{count}} record · last updated {{date}}',
   'buyerOrders.meta.summary.other': '{{count}} records · last updated {{date}}',
   // — KPI cards —
-  'buyerOrders.kpi.open.eyebrow': 'Total Open POs',
   'buyerOrders.kpi.open.subtitle': 'Across all suppliers',
-  'buyerOrders.kpi.pending.eyebrow': 'Pending Confirmation',
   'buyerOrders.kpi.pending.subtitle': 'Awaiting supplier ack',
-  'buyerOrders.kpi.transit.eyebrow': 'In Transit',
   'buyerOrders.kpi.transit.subtitle': 'Confirmed + shipping',
-  'buyerOrders.kpi.overdue.eyebrow': 'Overdue',
   'buyerOrders.kpi.overdue.subtitle.past': 'Past requested delivery',
   'buyerOrders.kpi.overdue.subtitle.onSchedule': 'On schedule',
   // — Group tabs —
@@ -124,13 +120,9 @@ export const buyerOrdersId = {
   'buyerOrders.meta.summary.one': '{{count}} catatan · terakhir diperbarui {{date}}',
   'buyerOrders.meta.summary.other': '{{count}} catatan · terakhir diperbarui {{date}}',
   // — KPI cards —
-  'buyerOrders.kpi.open.eyebrow': 'Total PO Terbuka',
   'buyerOrders.kpi.open.subtitle': 'Di semua pemasok',
-  'buyerOrders.kpi.pending.eyebrow': 'Menunggu Konfirmasi',
   'buyerOrders.kpi.pending.subtitle': 'Menunggu pengakuan pemasok',
-  'buyerOrders.kpi.transit.eyebrow': 'Dalam Perjalanan',
   'buyerOrders.kpi.transit.subtitle': 'Dikonfirmasi + pengiriman',
-  'buyerOrders.kpi.overdue.eyebrow': 'Jatuh Tempo',
   'buyerOrders.kpi.overdue.subtitle.past': 'Melewati pengiriman yang diminta',
   'buyerOrders.kpi.overdue.subtitle.onSchedule': 'Sesuai jadwal',
   // — Group tabs —

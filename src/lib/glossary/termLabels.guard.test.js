@@ -95,7 +95,7 @@ const codedLines = (e) =>
   ].filter((line) => typeof line === 'string' && CODE.test(line));
 
 describe('term-label glossary (BL-233)', () => {
-  it('holds the wave 1 to 4 population, named', () => {
+  it('holds the wave 1 to 5 population, named', () => {
     // A named member, not a count: the guards below run over these entries.
     expect(Object.keys(TERM_LABEL_GLOSSARY)).toEqual(
       expect.arrayContaining([
@@ -107,7 +107,9 @@ describe('term-label glossary (BL-233)', () => {
         'ropFisik',
         'maxStockSupplier',
         'prGenerated',
-        'ruleOverride'
+        'ruleOverride',
+        'grAccepted',
+        'supConfirmed'
       ])
     );
   });
@@ -187,13 +189,35 @@ describe('term-label glossary (BL-233)', () => {
       'uplift',
       'protectionBuffer',
       'strategicBuffer',
-      'replenishmentCycle'
+      'replenishmentCycle',
+      'ropFisikSafety',
+      'ropToPrincipal'
     ])) {
       const { label } = TERM_LABEL_GLOSSARY[term];
       expect(label.id, term).toBe(label.en);
     }
-    expect(TERM_LABEL_GLOSSARY.safetyOrderRopOrder.label.id).toBe('Safety order (ROP Order)');
+    expect(TERM_LABEL_GLOSSARY.safetyOrderRopOrder.label.id).toBe('Safety order');
     expect(TERM_LABEL_GLOSSARY.bottleneckLeadTime.label.id).toMatch(/\(ROP Supplier\)$/);
+  });
+
+  it('TL-D19 to TL-D22, TL-D26, TL-D27: the owner’s renames to the source wording', () => {
+    expect(TERM_LABEL_GLOSSARY.supplierAvailable.label.en).toBe('Supplier available stock');
+    expect(TERM_LABEL_GLOSSARY.ptiRop.label).toEqual({ en: 'PTI ROP', id: 'ROP PTI' });
+    expect(TERM_LABEL_GLOSSARY.safetyOrderRopOrder.label.en).toBe('Safety order');
+    expect(TERM_LABEL_GLOSSARY.ropFisikSafety.label.en).toBe('Safety ROP Fisik');
+    expect(TERM_LABEL_GLOSSARY.ropToPrincipal.label.en).toBe('ROP order to principal');
+    expect(TERM_LABEL_GLOSSARY.replenishmentCycle.label.en).toBe('Cycle replenishment (f)');
+    // TL-D26, TL-D27.
+    expect(TERM_LABEL_GLOSSARY.supplierCover.label.id).toBe('Risiko · cakupan stok pemasok');
+    expect(TERM_LABEL_GLOSSARY.whatIfMax.label).toEqual({ en: 'Max Stock', id: 'Max Stock' });
+  });
+
+  it('TL-D23: a source from the team names only the team, never a question ID', () => {
+    const sources = ENTRIES.flatMap(([term, e]) =>
+      (e.alsoCalled ?? []).flatMap((a) => [`${term}: ${a.source.en}`, `${term}: ${a.source.id}`])
+    );
+    expect(sources.filter((s) => /Q-file|playbook|deck|MoM|sheet/i.test(s))).toEqual([]);
+    expect(sources).toContain('demandAnticipation: Material Planning team');
   });
 
   it('TL-D12 / TL-D8 / TL-D1 on the what-if: PR Generated, Incoming, Carry-over, (DA)', () => {
@@ -212,6 +236,13 @@ describe('term-label glossary (BL-233)', () => {
       expect(label.en, term).toMatch(/^Demand anticipation \(DA\)/);
       expect(label.id, term).toMatch(/^Demand anticipation \(DA\)/);
     }
+  });
+
+  it('TL-D12 on the goods receipts and TL-D11 on the order summary', () => {
+    expect(TERM_LABEL_GLOSSARY.grAccepted.label).toEqual({ en: 'Accepted', id: 'Diterima' });
+    expect(TERM_LABEL_GLOSSARY.supDiscrepancy.label.id).toBe('Ketidaksesuaian');
+    expect(TERM_LABEL_GLOSSARY.supDifference.label.id).toBe('Selisih');
+    expect(TERM_LABEL_GLOSSARY.summaryCallOffs.label.id).toBe('Call-off');
   });
 
   it('TL-D9 / TL-D13: the labels waiting on the team keep their wording', () => {

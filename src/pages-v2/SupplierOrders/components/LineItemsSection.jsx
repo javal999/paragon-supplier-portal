@@ -9,6 +9,7 @@ import Data from '@components/ui-v2/Data';
 import GlossaryTermChip from '@components/ui-v2/GlossaryTermChip';
 import { poLineQuantityText } from '../../orders/poLineQuantity';
 import { inputClass } from '../const';
+import TermLabel from '@components/ui-v2/TermLabel';
 
 // CP-0 · W1 · 2f-c — each refusal names what to type instead (the arc-wide
 // copy discipline: "invalid input" teaches nothing to a buyer whose number
@@ -61,11 +62,11 @@ const LineItemsSection = ({
               {t('supplierOrders.panel.col.material')}
             </th>
             <th className="text-right px-3 py-2 font-semibold">
-              {t('supplierOrders.panel.col.ordered')}
+              <TermLabel term="orderedQty" />
             </th>
             {effectivePanelMode === 'editing' && (
               <th className="text-right px-3 py-2 font-semibold">
-                {t('supplierOrders.panel.col.confirmed')}
+                <TermLabel term="supConfirmed" />
               </th>
             )}
           </tr>

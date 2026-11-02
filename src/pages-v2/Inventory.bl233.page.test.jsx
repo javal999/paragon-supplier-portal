@@ -95,16 +95,14 @@ describe('BL-233 wave 2 — /supplier/inventory', () => {
       'Supplier stock': 'term-tip-supplier-stock',
       'Your reorder point': 'term-tip-supplier-own-rop',
       'PTI stock': 'term-tip-pti-stock',
-      'PTI reorder point': 'term-tip-pti-rop',
+      'PTI ROP': 'term-tip-pti-rop',
       Incoming: 'term-tip-incoming',
       'Days of supply': 'term-tip-days-of-supply',
       'Last update': ''
     });
     expect(
       within(screen.getByTestId('term-tip-supplier-own-rop')).getByRole('tooltip')
-    ).toHaveTextContent(
-      'Also called: ROP PM in Supplier (Material Planning team’s stock sheet, Q-file B10)'
-    );
+    ).toHaveTextContent('Also called: ROP PM in Supplier (Material Planning team)');
   });
 
   it('reads in Indonesian from the same entries', async () => {

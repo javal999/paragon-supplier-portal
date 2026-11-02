@@ -39,7 +39,7 @@ const RequisitionTable = ({ filtered, onSelect, t }) => (
         </TableHeaderCell>
         <TableHeaderCell>{t('requisitions.table.col.requestor')}</TableHeaderCell>
         <TableHeaderCell>{t('requisitions.table.col.status')}</TableHeaderCell>
-        <TableHeaderCell>{t('requisitions.table.col.source')}</TableHeaderCell>
+        <TableHeaderCell term="prSource" />
         <TableHeaderCell>{t('requisitions.table.col.linkedDoc')}</TableHeaderCell>
         <TableHeaderCell className="text-right">
           {t('requisitions.table.col.actions')}

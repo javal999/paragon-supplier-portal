@@ -24,14 +24,10 @@ export const supplierOrdersEn = {
   'supplierOrders.meta.orders.other': '{{count}} orders',
   'supplierOrders.meta.lastUpdated': 'last updated',
   // — KPI cards —
-  'supplierOrders.kpi.openOrders.eyebrow': 'Open Orders',
   'supplierOrders.kpi.openOrders.needsAction': 'Needs your action',
   'supplierOrders.kpi.openOrders.cleared': 'All actions cleared',
-  'supplierOrders.kpi.inProgress.eyebrow': 'In Progress',
   'supplierOrders.kpi.inProgress.subtitle': 'Confirmed · awaiting delivery',
-  'supplierOrders.kpi.totalValue.eyebrow': 'Total Value Pending',
   'supplierOrders.kpi.totalValue.subtitle': 'Not yet delivered',
-  'supplierOrders.kpi.delivered.eyebrow': 'Delivered',
   'supplierOrders.kpi.delivered.subtitle': 'Completed POs',
   // — Sub-tabs —
   'supplierOrders.tab.all': 'All orders',
@@ -83,7 +79,6 @@ export const supplierOrdersEn = {
   'supplierOrders.panel.channel': 'Channel',
   // — Side panel: line-items table —
   'supplierOrders.panel.col.material': 'Material',
-  'supplierOrders.panel.col.ordered': 'Ordered',
   'supplierOrders.panel.col.confirmed': 'Confirmed',
   // — Side panel: the confirm-quantity refusals (CP-0 · W1 · 2f-c) —
   'supplierOrders.confirm.qty.refused.empty':
@@ -140,14 +135,10 @@ export const supplierOrdersId = {
   'supplierOrders.meta.orders.other': '{{count}} pesanan',
   'supplierOrders.meta.lastUpdated': 'terakhir diperbarui',
   // — KPI cards —
-  'supplierOrders.kpi.openOrders.eyebrow': 'Pesanan Terbuka',
   'supplierOrders.kpi.openOrders.needsAction': 'Perlu tindakan Anda',
   'supplierOrders.kpi.openOrders.cleared': 'Semua tindakan selesai',
-  'supplierOrders.kpi.inProgress.eyebrow': 'Sedang Berjalan',
   'supplierOrders.kpi.inProgress.subtitle': 'Dikonfirmasi · menunggu pengiriman',
-  'supplierOrders.kpi.totalValue.eyebrow': 'Total Nilai Tertunda',
   'supplierOrders.kpi.totalValue.subtitle': 'Belum terkirim',
-  'supplierOrders.kpi.delivered.eyebrow': 'Terkirim',
   'supplierOrders.kpi.delivered.subtitle': 'PO Selesai',
   // — Sub-tabs —
   'supplierOrders.tab.all': 'Semua pesanan',
@@ -195,7 +186,6 @@ export const supplierOrdersId = {
   'supplierOrders.panel.channel': 'Kanal',
   // — Side panel: line-items table —
   'supplierOrders.panel.col.material': 'Material',
-  'supplierOrders.panel.col.ordered': 'Dipesan',
   'supplierOrders.panel.col.confirmed': 'Dikonfirmasi',
   // — Panel samping: penolakan kuantitas konfirmasi (CP-0 · W1 · 2f-c) —
   'supplierOrders.confirm.qty.refused.empty':

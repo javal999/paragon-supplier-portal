@@ -19,31 +19,31 @@ import KpiCard from '@components/ui-v2/KpiCard';
 const RequisitionKpis = ({ counts, t }) => (
   <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-5 mb-8">
     <KpiCard
-      eyebrow={t('requisitions.kpi.draft.eyebrow')}
+      term="prDraft"
       value={counts.draft.toString()}
       subtitle={t('requisitions.kpi.draft.subtitle')}
       icon={FileText}
     />
     <KpiCard
-      eyebrow={t('requisitions.kpi.pending.eyebrow')}
+      term="prPendingApproval"
       value={counts.pending.toString()}
       subtitle={t('requisitions.kpi.pending.subtitle')}
       icon={Clock}
     />
     <KpiCard
-      eyebrow={t('requisitions.kpi.approved.eyebrow')}
+      term="prApproved"
       value={counts.approved.toString()}
       subtitle={t('requisitions.kpi.approved.subtitle')}
       icon={CheckCircle2}
     />
     <KpiCard
-      eyebrow={t('requisitions.kpi.sourcing.eyebrow')}
+      term="prSourcingEvent"
       value={counts.sourcing.toString()}
       subtitle={t('requisitions.kpi.sourcing.subtitle')}
       icon={AlertTriangle}
     />
     <KpiCard
-      eyebrow={t('requisitions.kpi.po.eyebrow')}
+      term="prPoCreated"
       value={counts.po.toString()}
       subtitle={t('requisitions.kpi.po.subtitle')}
       icon={ShoppingCart}
