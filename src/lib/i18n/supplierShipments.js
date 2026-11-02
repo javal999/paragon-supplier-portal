@@ -31,11 +31,6 @@ export const supplierShipmentsEn = {
   // — Meta line —
   'supplierShipments.meta.summary': '{{shipments}} shipments · {{pos}} confirmed POs ready to ship',
   // — KPI tiles (ASN status counts) —
-  'supplierShipments.kpi.draft.eyebrow': 'Draft',
-  'supplierShipments.kpi.submitted.eyebrow': 'Submitted',
-  'supplierShipments.kpi.inTransit.eyebrow': 'In Transit',
-  'supplierShipments.kpi.delivered.eyebrow': 'Delivered',
-  'supplierShipments.kpi.discrepancy.eyebrow': 'Discrepancy',
   // — Sub-tabs —
   'supplierShipments.tab.myShipments': 'My Shipments',
   'supplierShipments.tab.createAsn': 'Create ASN',
@@ -72,8 +67,6 @@ export const supplierShipmentsEn = {
   'supplierShipments.detail.noLineItems': 'No line items in this draft.',
   // — Expanded row: line-item sub-table columns —
   'supplierShipments.lineItems.col.material': 'Material',
-  'supplierShipments.lineItems.col.ordered': 'Ordered',
-  'supplierShipments.lineItems.col.shipped': 'Shipped',
   'supplierShipments.lineItems.col.lot': 'Lot',
   // — Empty state (all-empty early return) —
   'supplierShipments.empty.title': 'No shipments yet',
@@ -163,11 +156,6 @@ export const supplierShipmentsId = {
   'supplierShipments.meta.summary':
     '{{shipments}} pengiriman · {{pos}} PO terkonfirmasi siap dikirim',
   // — KPI tiles (ASN status counts) —
-  'supplierShipments.kpi.draft.eyebrow': 'Draf',
-  'supplierShipments.kpi.submitted.eyebrow': 'Diajukan',
-  'supplierShipments.kpi.inTransit.eyebrow': 'Dalam Perjalanan',
-  'supplierShipments.kpi.delivered.eyebrow': 'Terkirim',
-  'supplierShipments.kpi.discrepancy.eyebrow': 'Selisih',
   // — Sub-tabs —
   'supplierShipments.tab.myShipments': 'Pengiriman Saya',
   'supplierShipments.tab.createAsn': 'Buat ASN',
@@ -206,8 +194,6 @@ export const supplierShipmentsId = {
   'supplierShipments.detail.noLineItems': 'Tidak ada item baris dalam draf ini.',
   // — Expanded row: line-item sub-table columns —
   'supplierShipments.lineItems.col.material': 'Material',
-  'supplierShipments.lineItems.col.ordered': 'Dipesan',
-  'supplierShipments.lineItems.col.shipped': 'Dikirim',
   'supplierShipments.lineItems.col.lot': 'Lot',
   // — Empty state (all-empty early return) —
   'supplierShipments.empty.title': 'Belum ada pengiriman',

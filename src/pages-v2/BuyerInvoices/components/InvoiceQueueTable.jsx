@@ -27,7 +27,7 @@ const InvoiceQueueTable = ({ filtered, onOpen, t }) => (
         <TableHeaderCell>{t('buyerInvoices.table.supplier')}</TableHeaderCell>
         <TableHeaderCell>{t('buyerInvoices.table.poRef')}</TableHeaderCell>
         <TableHeaderCell className="text-right">{t('buyerInvoices.table.amount')}</TableHeaderCell>
-        <TableHeaderCell>{t('buyerInvoices.table.match')}</TableHeaderCell>
+        <TableHeaderCell term="invThreeWayMatch" />
         <TableHeaderCell>{t('buyerInvoices.table.status')}</TableHeaderCell>
         <TableHeaderCell>{t('buyerInvoices.table.dueDate')}</TableHeaderCell>
         <TableHeaderCell>{t('buyerInvoices.table.sapFi')}</TableHeaderCell>

@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import Data from '@components/ui-v2/Data';
 import MaterialSearch, {
   MaterialMatchReason,
@@ -55,8 +56,12 @@ const AsnLinesEditor = ({
           <thead>
             <tr className="text-text-tertiary uppercase">
               <th className="text-left py-1 pr-2">{t('fc.asn.col.material')}</th>
-              <th className="text-right py-1 pr-2">{t('fc.asn.col.open')}</th>
-              <th className="text-left py-1 pr-2">{t('fc.asn.col.shipped')}</th>
+              <th className="text-right py-1 pr-2">
+                <TermLabel term="asnOpenQuantity" />
+              </th>
+              <th className="text-left py-1 pr-2">
+                <TermLabel term="asnShippedQuantity" />
+              </th>
               <th className="text-left py-1 pr-2">{t('fc.asn.col.batch')}</th>
               <th className="text-left py-1">{t('fc.asn.col.expiry')}</th>
             </tr>

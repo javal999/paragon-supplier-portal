@@ -1,5 +1,6 @@
 /** @import React from 'react' */
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import Data from '@components/ui-v2/Data';
 /** @import { ASN } from '@services/data/types' */
 import { PicCell, PicHeader } from '../../materials/picDisplay';
@@ -34,8 +35,12 @@ const AsnDetailLines = ({ asn }) => {
               <th className="text-left py-1">
                 <PicHeader />
               </th>
-              <th className="text-right py-1">{t('supplierShipments.lineItems.col.ordered')}</th>
-              <th className="text-right py-1">{t('supplierShipments.lineItems.col.shipped')}</th>
+              <th className="text-right py-1">
+                <TermLabel term="asnLineOrdered" />
+              </th>
+              <th className="text-right py-1">
+                <TermLabel term="asnLineShipped" />
+              </th>
               <th className="text-right py-1">{t('supplierShipments.lineItems.col.lot')}</th>
               <th className="text-right py-1">{t('fc.asn.col.expiryShort')}</th>
             </tr>

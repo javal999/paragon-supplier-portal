@@ -36,10 +36,6 @@ export const buyerInvoicesEn = {
   'buyerInvoices.meta.summary.one': '{{count}} invoice · last updated',
   'buyerInvoices.meta.summary.other': '{{count}} invoices · last updated',
   // — KPI cards —
-  'buyerInvoices.kpi.pendingApproval.eyebrow': 'Pending Approval',
-  'buyerInvoices.kpi.released.eyebrow': 'Payments Released',
-  'buyerInvoices.kpi.disputed.eyebrow': 'Disputed',
-  'buyerInvoices.kpi.overdue.eyebrow': 'Overdue',
   'buyerInvoices.kpi.invoiceCount.one': '{{count}} invoice',
   'buyerInvoices.kpi.invoiceCount.other': '{{count}} invoices',
   // — Overdue banner (count sibling label · data list built in-component) —
@@ -66,7 +62,6 @@ export const buyerInvoicesEn = {
   'buyerInvoices.table.supplier': 'Supplier',
   'buyerInvoices.table.poRef': 'PO ref',
   'buyerInvoices.table.amount': 'Amount',
-  'buyerInvoices.table.match': '3-way match',
   'buyerInvoices.table.status': 'Status',
   'buyerInvoices.table.dueDate': 'Due date',
   'buyerInvoices.table.sapFi': 'SAP FI',
@@ -87,11 +82,8 @@ export const buyerInvoicesEn = {
   'buyerInvoices.matchTile.priceVariance': 'Price Variance',
   // — Aging tab —
   'buyerInvoices.aging.reportTitle': 'Invoice Aging Report (Rp jT)',
-  'buyerInvoices.aging.bucket': 'Aging bucket',
   'buyerInvoices.aging.count': 'Count',
   'buyerInvoices.aging.amount': 'Amount',
-  'buyerInvoices.aging.pctAp': '% of AP',
-  'buyerInvoices.aging.risk': 'Risk',
   'buyerInvoices.aging.current': 'Current',
   'buyerInvoices.aging.phase2.label': 'Phase 2 — SAP FI Integration:',
   'buyerInvoices.aging.phase2.body':
@@ -200,10 +192,6 @@ export const buyerInvoicesId = {
   'buyerInvoices.meta.summary.one': '{{count}} faktur · terakhir diperbarui',
   'buyerInvoices.meta.summary.other': '{{count}} faktur · terakhir diperbarui',
   // — KPI cards —
-  'buyerInvoices.kpi.pendingApproval.eyebrow': 'Menunggu Persetujuan',
-  'buyerInvoices.kpi.released.eyebrow': 'Pembayaran Dirilis',
-  'buyerInvoices.kpi.disputed.eyebrow': 'Disengketakan',
-  'buyerInvoices.kpi.overdue.eyebrow': 'Jatuh Tempo',
   'buyerInvoices.kpi.invoiceCount.one': '{{count}} faktur',
   'buyerInvoices.kpi.invoiceCount.other': '{{count}} faktur',
   // — Overdue banner —
@@ -230,7 +218,6 @@ export const buyerInvoicesId = {
   'buyerInvoices.table.supplier': 'Pemasok',
   'buyerInvoices.table.poRef': 'Ref PO',
   'buyerInvoices.table.amount': 'Jumlah',
-  'buyerInvoices.table.match': 'Pencocokan 3 arah',
   'buyerInvoices.table.status': 'Status',
   'buyerInvoices.table.dueDate': 'Jatuh tempo',
   'buyerInvoices.table.sapFi': 'SAP FI',
@@ -251,11 +238,8 @@ export const buyerInvoicesId = {
   'buyerInvoices.matchTile.priceVariance': 'Varians Harga',
   // — Aging tab —
   'buyerInvoices.aging.reportTitle': 'Laporan Umur Faktur (Rp jT)',
-  'buyerInvoices.aging.bucket': 'Rentang umur',
   'buyerInvoices.aging.count': 'Jumlah',
   'buyerInvoices.aging.amount': 'Nilai',
-  'buyerInvoices.aging.pctAp': '% dari AP',
-  'buyerInvoices.aging.risk': 'Risiko',
   'buyerInvoices.aging.current': 'Lancar',
   'buyerInvoices.aging.phase2.label': 'Fase 2 — Integrasi SAP FI:',
   'buyerInvoices.aging.phase2.body':
