@@ -153,7 +153,7 @@ Each task: **Prompt** (read out), **Start**, **Expected path** (exact labels), *
 ### T7 Submit capacity (UC4, UC6)
 
 - **Prompt:** "Tell Paragon how much you can produce each week for the next weeks. Your capacity is the same every week. In one week you can add extra capacity."
-- **Start:** Planning → **Capacity**, or To do → "Capacity confirmations due".
+- **Start:** Planning → **Capacity**, or To do → "Capacity confirmations due", or **Confirm capacity** under "Also due by the same cutoff" in the weekly stock update (BL-236).
 - **Expected path:** **Allocated** in the first week → **Copy {week} to all weeks** → **Additional capacity** in one week → tick **Confirm additional capacity** on an amber week → a reason on any week below the LTP → **Submit capacity** (`lib/i18n/inventoryCapacity.js:381,384,392,418`).
 - **Pass when:** "Capacity submitted" and every week has a state: Within capacity, Needs additional capacity or Cannot be supplied.
 - **Watch for:** whether weeks as columns are read correctly; whether the (i) on **LTP, current forecast** and **Allocated** is opened.
@@ -163,7 +163,8 @@ Each task: **Prompt** (read out), **Start**, **Expected path** (exact labels), *
 
 - **Prompt:** "It is your weekly stock update. Send Paragon your stock for the materials still missing, then confirm the feedstock you hold."
 - **Start:** To do → "Weekly stock update", or Planning → **Stock**.
-- **Expected path:** "Weekly stock update · {sent} of {total} sent · due …" → "Still missing this cycle" → **Enter stock** → **Save stock**. Then tab **Feedstock to confirm** → **Confirm** → Feedstock quantity, Confirmed as of → **Confirm feedstock** (`lib/i18n/inventoryCapacity.js:156,240,269,613-624`; `lib/i18n/feedstockConfirm.js:11-37`).
+- **Expected path:** "Weekly stock update · {sent} of {total} sent · due …" → "Still missing this cycle" → **Enter stock** → **Save stock**. Then **Confirm feedstock** under "Also due by the same cutoff" (or tab **Feedstock to confirm**) → **Confirm** → Feedstock quantity, Confirmed as of → **Confirm feedstock** (`lib/i18n/inventoryCapacity.js:156,240,269,613-631` at `f79a26c1`; `lib/i18n/feedstockConfirm.js:11-37`).
+- **Watch for (BL-236):** whether the participant sees that capacity and feedstock are due at the same cutoff as stock.
 - **Pass when:** the sent count rises and the material shows feedstock Confirmed.
 - **Watch for:** whether "feedstock is not stock" is understood; whether **Upload template** is preferred for many materials.
 - **Ask after:** "How do you send stock to Paragon today, and how often?"

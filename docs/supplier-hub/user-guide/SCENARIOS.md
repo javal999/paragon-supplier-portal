@@ -1,7 +1,7 @@
 # Paragon Supplier Portal: use-case scenario catalog (complete: PTI and supplier)
 
 **Status:** version for the material planners' session on Wed 4 Nov 2026. It replaces the 6 Oct catalog, which PTI approved with supplier onboarding removed. The supplier-only version is `SCENARIOS-SUPPLIER.md`, which doubles as the script for early supplier user testing.
-**Basis:** the code on GitLab `main` at `aeabdc83` (2026-11-02), after BL-233 term labels (MR !65 to !81) froze the labels. All paths are under `src/`. Rows rewritten on 2026-11-02 cite line numbers at `aeabdc83`. UC1 keeps its 2026-10-19 content because RFx is paused; its supplier rows were re-checked on 2026-11-02 and its PTI rows were not. If a behavior has no citation, it is in section 4 (Unverified and known limits).
+**Basis:** the code on GitLab `main` at `aeabdc83` (2026-11-02), after BL-233 term labels (MR !65 to !81) froze the labels. The weekly-panel rows (BL-236) and their 5 screenshots follow `f79a26c1`, the main prod runs from 2026-11-02 14:38 WIB. All paths are under `src/`. Rows rewritten on 2026-11-02 cite line numbers at `aeabdc83`. UC1 keeps its 2026-10-19 content because RFx is paused; its supplier rows were re-checked on 2026-11-02 and its PTI rows were not. If a behavior has no citation, it is in section 4 (Unverified and known limits).
 **Data:** all data is in-memory demo data. Nothing reaches SAP. The demo date is 2026-08-31 (`services/data/fixturePresent.js:184,206`).
 **What changed since 6 Oct:** UC3, UC4, UC6 and UC7 rewritten; UC8 (demand anticipation and replenishment, PTI only) added; section 1 adds the (i) term tips, search and the weekly plan card; section 3 follows the menu as built; section 4 drops 3 limits that no longer hold and adds 7.
 
@@ -68,7 +68,7 @@ Evidence for both tables: `services/transitions/businessRoles.js` (`SYSTEM_ROLES
 | UC3 | Call-offs against agreements | Extended: hub drafts at ROP Fisik with below-minimum-delivery and above-Max flags (live stock feed only, none in the demo), delay approval, blanket PO run-out |
 | UC4 | Forecast collaboration | Rewritten: no commitment date, Submit all per period, Force Majeure and Discontinued reasons, Move demand to several suppliers; Request revision is switched off |
 | UC5 | Compliance documents | Labels re-checked; pill reads "Expiring Soon" |
-| UC6 | Shared stock, feedstock, capacity and PTI questions | Rewritten: Stock leads with this week, feedstock confirmation, three capacity states, Copy to all weeks, PTI accept/undo, PTI questions and answers |
+| UC6 | Shared stock, feedstock, capacity and PTI questions | Rewritten: Stock leads with this week; capacity and feedstock are due with the weekly stock update (BL-236); feedstock confirmation, three capacity states, Copy to all weeks, PTI accept/undo, PTI questions and answers |
 | UC7 | Inventory and capacity alerts | Next step and Impact in N days; asks named for their topic |
 | UC8 | Demand anticipation (DA) and replenishment | New, PTI only |
 
@@ -306,7 +306,7 @@ Evidence for both tables: `services/transitions/businessRoles.js` (`SYSTEM_ROLES
 
 | Step | Actor | Menu | Action | Status after | Evidence |
 |---|---|---|---|---|---|
-| 1 | Sup-Ful | Planning → **Stock** (or To do → "Weekly stock update") | The page leads with "Weekly stock update · {sent} of {total} sent · due …" and "Still missing this cycle" → **Enter stock** (or **Enter stock on screen** / **Upload template**) → **Save stock** | Declared | `lib/i18n/inventoryCapacity.js:154,201,240,269,613-624`; `pages-v2/SupplierInventory.jsx:233-271`; `pages-v2/inventory/WeeklyUpdatePanel.jsx:156-200` |
+| 1 | Sup-Ful | Planning → **Stock** (or To do → "Weekly stock update") | The page leads with "Weekly stock update · {sent} of {total} sent · due …" and "Still missing this cycle" → **Enter stock** (or **Enter stock on screen** / **Upload template**) → **Save stock**. Under "Also due by the same cutoff" the panel also counts Capacity ("{confirmed} of {total} groups confirmed", **Confirm capacity**) and Feedstock ("{confirmed} of {total} confirmed", **Confirm feedstock**) (BL-236) | Declared | `lib/i18n/inventoryCapacity.js:154,201,240,269,613-631` (at `f79a26c1`); `pages-v2/inventory/WeeklyUpdatePanel.jsx:166-199` (at `f79a26c1`); `pages-v2/SupplierInventory.jsx:233-271`; `pages-v2/inventory/WeeklyUpdatePanel.jsx:156-200` |
 | 2 | Sup-Ful | Stock, tab **Feedstock to confirm** | "Current feedstock" → **Confirm** → Feedstock quantity, Confirmed as of → **Confirm feedstock** (feedstock does not count as stock) | Confirmed | `lib/i18n/inventoryCapacity.js:156`; `lib/i18n/feedstockConfirm.js:11-37`; `pages-v2/SupplierInventory.jsx:273-275` |
 | 3 | Sup-Ful | Planning → **Capacity** | Weeks as columns: **Allocated**, **Additional capacity** per week; **Copy {week} to all weeks**; a reason on any week below the LTP; on an amber week tick **Confirm additional capacity** → **Submit capacity** | Capacity submitted; each week Within capacity, Needs additional capacity or Cannot be supplied | `lib/i18n/inventoryCapacity.js:374-384,392,415,418-419`; `pages-v2/SupplierCapacity.jsx:287,323,408-641` |
 | 4 | PTI (MP menu) | Inventory & capacity → **Stock** | Risk-first table and tiles (High risk, PTI stock below PTI ROP, Supplier figures out of date, No lead time on record); a row opens the material drawer: **Open stock simulation**, **Create call-off** or **Create PO request**, an ask button, "Feedstock (confirmed {date})" | – | `lib/i18n/inventoryCapacity.js:87-94,119`; `lib/i18n/feedstockConfirm.js:57-58`; `pages-v2/inventory/MaterialDrawer.jsx:231,300-370` |
@@ -569,7 +569,7 @@ A reader might expect these to work. The code shows they do not, or that they ar
 
 ## 5. Screenshot plan
 
-**Status on 2026-11-02:** retaken. Prod runs `aeabdc83` (MR !81, labels frozen), but prod sits behind the access gate and the in-app browser captures only 800 px wide, so the owner chose a local build of the same commit (`aeabdc83`, `vite build` + `vite preview`), captured headless at 1440 × 900 × 1.5 = 2160 × 1350 px. BL-236 (MR !82) is not in that commit and does not show. Not captured: INTRO-6 (used in speaker notes only) and UC2-5, UC8-4 (notes only). Older files in `screens/` stay, because README.md embeds some of them.
+**Status on 2026-11-02:** retaken. Prod runs `aeabdc83` (MR !81, labels frozen), but prod sits behind the access gate and the in-app browser captures only 800 px wide, so the owner chose a local build of the same commit (`aeabdc83`, `vite build` + `vite preview`), captured headless at 1440 × 900 × 1.5 = 2160 × 1350 px. BL-236 (MR !82) is not in that commit and does not show. Not captured: INTRO-6 (used in speaker notes only) and UC2-5, UC8-4 (notes only). After BL-236 reached prod (`f79a26c1`, 14:38 WIB), INTRO-4, UC6-1, UC6-2, UC6-6 and UC7-2 were retaken from a local build of `f79a26c1` the same way. Older files in `screens/` stay, because README.md embeds some of them.
 
 Shared setup:
 - Build and preview the app (`npm run build`, then `npx vite preview`), or open prod after the redeploy. Open `#/login`.

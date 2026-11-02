@@ -49,7 +49,7 @@ add({
     ['UC3 Call-offs', 'Hub drafts at ROP Fisik with flags (live stock feed only); delay approval; blanket PO run-out'],
     ['UC4 Forecast', 'No commitment date; Submit all per period; Force Majeure and Discontinued; Move demand to several suppliers; Request revision off'],
     ['UC5 Compliance', 'Labels re-checked; the amber pill reads "Expiring Soon"'],
-    ['UC6 Stock & capacity', 'Stock leads with this week; feedstock confirmation; 3 capacity states; Copy to all weeks; PTI accept / Undo; PTI questions'],
+    ['UC6 Stock & capacity', 'Weekly update now also counts capacity and feedstock; feedstock confirmation; 3 capacity states; Copy to all weeks; PTI accept / Undo; PTI questions'],
     ['UC7 Alerts', 'Next step and Impact in N days; asks named for their topic; 12 rules'],
     ['UC8 Demand anticipation', 'New, PTI only: publish DA, plan vs execution, Below DA → draft call-off, DA history']
   ],
@@ -569,10 +569,11 @@ add({
     S('Read "Weekly stock update · N of M sent" and the due date'),
     S('Under "Still missing this cycle": Enter stock'),
     S('Or Enter stock on screen / Upload template for many materials'),
-    S('Save stock')
+    S('Save stock'),
+    S('"Also due by the same cutoff": Confirm capacity, Confirm feedstock')
   ],
   statusAfter: 'Declared; the sent count rises',
-  notes: 'Evidence: src/lib/i18n/inventoryCapacity.js:154,201,240,269,613-624; src/pages-v2/SupplierInventory.jsx:233-271; src/pages-v2/inventory/WeeklyUpdatePanel.jsx:156-200. API suppliers see "Stock sync schedule" instead (:625).'
+  notes: 'Evidence: src/lib/i18n/inventoryCapacity.js:154,201,240,269,613-624; src/pages-v2/SupplierInventory.jsx:233-271; src/pages-v2/inventory/WeeklyUpdatePanel.jsx:156-200. API suppliers see "Stock sync schedule" instead. BL-236 (at f79a26c1): "Also due by the same cutoff" with Capacity and Feedstock counts and links, src/lib/i18n/inventoryCapacity.js:623-631, src/pages-v2/inventory/WeeklyUpdatePanel.jsx:166-199.'
 });
 add({
   type: 'step', kicker: u6(2), title: 'Supplier confirms feedstock',

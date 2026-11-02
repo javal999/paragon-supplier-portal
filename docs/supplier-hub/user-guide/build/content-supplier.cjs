@@ -217,7 +217,7 @@ add({
 });
 add({
   type: 'step', kicker: task('T7', 'Submit capacity'), title: 'Submit capacity per week',
-  menu: 'Planning → Capacity',
+  menu: 'Planning → Capacity (or Confirm capacity in the weekly update)',
   shot: 'UC6-3-supplier.png', route: '/supplier/capacity', seat: 'Supplier', record: 'an amber week',
   steps: [
     S('Weeks are columns: Allocated, then Copy {week} to all weeks'),
@@ -237,13 +237,13 @@ add({
   steps: [
     S('"Weekly stock update · N of M sent": under Still missing, Enter stock'),
     S('Save stock (or Upload template for many materials)'),
-    S('Tab Feedstock to confirm: Confirm, quantity, Confirmed as of'),
+    S('"Also due by the same cutoff": Confirm feedstock, quantity, Confirmed as of'),
     S('Confirm feedstock (feedstock is not stock until produced)')
   ],
   statusAfter: 'Declared; feedstock Confirmed',
   testId: 'T8',
   test: '"It is your weekly stock update. Send stock for the materials still missing, then confirm the feedstock you hold."',
-  notes: 'Evidence: src/lib/i18n/inventoryCapacity.js:154-156,201,240,269,613-624; src/lib/i18n/feedstockConfirm.js:11-37. Feedstock screen: UC6-2-supplier.png.'
+  notes: 'BL-236 (f79a26c1): the weekly panel also lists Capacity and Feedstock with Confirm capacity / Confirm feedstock; the Feedstock to confirm tab is the other way in. Evidence: src/lib/i18n/inventoryCapacity.js:154-156,201,240,269,613-631; src/pages-v2/inventory/WeeklyUpdatePanel.jsx:166-199; src/lib/i18n/feedstockConfirm.js:11-37. Feedstock screen: UC6-2-supplier.png.'
 });
 add({
   type: 'step', kicker: task('T9', 'Answer PTI\'s question, read your alerts'), title: 'Answer PTI and read your alerts',
