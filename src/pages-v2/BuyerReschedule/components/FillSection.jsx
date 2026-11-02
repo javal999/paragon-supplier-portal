@@ -38,11 +38,11 @@ const FillSection = ({ w, effect }) => {
         <Table>
           <TableHeader>
             <TableHeaderCell>{t('rs.fill.col.week')}</TableHeaderCell>
-            <TableHeaderCell>{t('rs.fill.col.now')}</TableHeaderCell>
-            <TableHeaderCell>{t('rs.fill.col.selected')}</TableHeaderCell>
-            <TableHeaderCell>{t('rs.fill.col.allRelief')}</TableHeaderCell>
-            <TableHeaderCell>{t('rs.fill.col.onHand')}</TableHeaderCell>
-            <TableHeaderCell>{t('rs.fill.col.status')}</TableHeaderCell>
+            <TableHeaderCell term="fillNow" />
+            <TableHeaderCell term="fillWithSelection" />
+            <TableHeaderCell term="fillWithAll" />
+            <TableHeaderCell term="fillOnHand" />
+            <TableHeaderCell term="fillStatus" />
           </TableHeader>
           <tbody>
             {w.weeks.map((wk, i) => (

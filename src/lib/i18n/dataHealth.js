@@ -27,11 +27,8 @@ export const dataHealthEn = {
 
   'dh.kpi.feeds': 'Feeds checked',
   'dh.kpi.feeds.sub': '{{mdm}} from the Master Data Management team, {{hub}} from the Hub',
-  'dh.kpi.stale': 'Stale or missing feeds',
   'dh.kpi.stale.sub': 'Older than their freshness limit, or never arrived',
-  'dh.kpi.checks': 'Checks failing',
   'dh.kpi.checks.sub': 'Of {{total}} quality checks',
-  'dh.kpi.records': 'Records refused',
   'dh.kpi.records.sub': '{{flagged}} flagged for the planner (stock accuracy)',
 
   'dh.steps.title': 'Engine steps',
@@ -53,10 +50,7 @@ export const dataHealthEn = {
   'dh.col.owner': 'Owner',
   'dh.col.refresh': 'Refresh',
   'dh.col.arrival': 'Last arrival',
-  'dh.col.freshness': 'Freshness',
   'dh.col.records': 'Records',
-  'dh.col.checks': 'Checks',
-  'dh.col.affects': 'Affects',
 
   'dh.owner.mdm': 'Master Data Management team',
   'dh.owner.hub': 'Supplier Hub',
@@ -99,7 +93,6 @@ export const dataHealthEn = {
     'Stock is also judged per warehouse on its newest snapshot, so one warehouse’s stale stock is not hidden by another’s fresh stock.',
   'dh.wh.warehouse': 'Warehouse',
   'dh.wh.latest': 'Newest snapshot',
-  'dh.wh.materials': 'Materials affected if stale',
 
   'dh.feed.poLines': 'Purchase order lines',
   'dh.feed.scheduleChanges': 'Schedule changes',
@@ -182,11 +175,8 @@ export const dataHealthId = {
 
   'dh.kpi.feeds': 'Umpan diperiksa',
   'dh.kpi.feeds.sub': '{{mdm}} dari tim Master Data Management, {{hub}} dari Hub',
-  'dh.kpi.stale': 'Umpan usang atau hilang',
   'dh.kpi.stale.sub': 'Lebih lama dari batas kesegarannya, atau tidak pernah tiba',
-  'dh.kpi.checks': 'Pemeriksaan gagal',
   'dh.kpi.checks.sub': 'Dari {{total}} pemeriksaan mutu',
-  'dh.kpi.records': 'Catatan ditolak',
   'dh.kpi.records.sub': '{{flagged}} ditandai untuk perencana (akurasi stok)',
 
   'dh.steps.title': 'Langkah mesin',
@@ -208,10 +198,7 @@ export const dataHealthId = {
   'dh.col.owner': 'Pemilik',
   'dh.col.refresh': 'Pembaruan',
   'dh.col.arrival': 'Terakhir tiba',
-  'dh.col.freshness': 'Kesegaran',
   'dh.col.records': 'Catatan',
-  'dh.col.checks': 'Pemeriksaan',
-  'dh.col.affects': 'Berdampak ke',
 
   'dh.owner.mdm': 'Tim Master Data Management',
   'dh.owner.hub': 'Supplier Hub',
@@ -253,7 +240,6 @@ export const dataHealthId = {
     'Stok juga dinilai per gudang menurut snapshot terbarunya, sehingga stok usang di satu gudang tidak tertutup oleh stok segar di gudang lain.',
   'dh.wh.warehouse': 'Gudang',
   'dh.wh.latest': 'Snapshot terbaru',
-  'dh.wh.materials': 'Material terdampak bila usang',
 
   'dh.feed.poLines': 'Baris pesanan pembelian',
   'dh.feed.scheduleChanges': 'Perubahan jadwal',

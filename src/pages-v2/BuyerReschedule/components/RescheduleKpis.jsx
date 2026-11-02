@@ -20,12 +20,12 @@ const RescheduleKpis = ({ w, freeCount }) => {
       data-testid="rs-kpis"
     >
       <KpiCard
-        eyebrow={t('rs.kpi.over')}
+        term="rsOver"
         value={<span data-testid="rs-kpi-over">{pw(w.totals.overPalletWeeks)}</span>}
         subtitle={<span className="text-text-tertiary">{t('rs.kpi.over.sub')}</span>}
       />
       <KpiCard
-        eyebrow={t('rs.kpi.relief')}
+        term="rsRelief"
         value={<span data-testid="rs-kpi-relief">{pw(w.totals.reliefPalletWeeks)}</span>}
         subtitle={
           <span className="text-text-tertiary">
@@ -34,7 +34,7 @@ const RescheduleKpis = ({ w, freeCount }) => {
         }
       />
       <KpiCard
-        eyebrow={t('rs.kpi.saving')}
+        term="rsSaving"
         value={
           <span data-testid="rs-kpi-saving">
             {formatIDR(Math.round(w.totals.rentSavedIdr), { compact: true })}
@@ -49,7 +49,7 @@ const RescheduleKpis = ({ w, freeCount }) => {
         }
       />
       <KpiCard
-        eyebrow={t('rs.kpi.onHand')}
+        term="rsOnHandLoad"
         value={<span data-testid="rs-kpi-onhand">{pw(w.totals.onHandOverPalletWeeks)}</span>}
         subtitle={
           <span className="text-text-tertiary">

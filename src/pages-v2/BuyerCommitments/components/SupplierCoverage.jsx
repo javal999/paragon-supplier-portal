@@ -44,9 +44,9 @@ const SupplierCoverage = ({ coverage }) => {
           <TableHeader>
             <TableHeaderCell>{t('fc.col.material')}</TableHeaderCell>
             <TableHeaderCell>{t('fc.col.supplier')}</TableHeaderCell>
-            <TableHeaderCell className="text-right">{t('fc.col.firmDemand')}</TableHeaderCell>
-            <TableHeaderCell>{t('fc.col.coverage')}</TableHeaderCell>
-            <TableHeaderCell>{t('fc.col.principalLeadTime')}</TableHeaderCell>
+            <TableHeaderCell className="text-right" term="firmDemand" />
+            <TableHeaderCell term="supplierCoverage" />
+            <TableHeaderCell term="principalLeadTime" />
           </TableHeader>
           <tbody>
             {coverage.map((c) => (

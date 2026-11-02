@@ -59,11 +59,11 @@ const ProposalTable = ({ rows, selectable, testPrefix, selected, onToggle, actio
           <TableHeaderCell>{t('rs.col.material')}</TableHeaderCell>
           <TableHeaderCell>{t('rs.col.order')}</TableHeaderCell>
           <TableHeaderCell>{t('rs.col.now')}</TableHeaderCell>
-          <TableHeaderCell>{t('rs.col.proposed')}</TableHeaderCell>
-          <TableHeaderCell>{t('rs.col.freed')}</TableHeaderCell>
-          <TableHeaderCell>{t('rs.col.saving')}</TableHeaderCell>
-          <TableHeaderCell>{t('rs.col.cost')}</TableHeaderCell>
-          <TableHeaderCell>{t('rs.col.position')}</TableHeaderCell>
+          <TableHeaderCell term="rsProposed" />
+          <TableHeaderCell term="rsFreed" />
+          <TableHeaderCell term="rsSaving" />
+          <TableHeaderCell term="rsChangeCost" />
+          <TableHeaderCell term="rsPosition" />
           <TableHeaderCell>{t('rs.col.action')}</TableHeaderCell>
         </TableHeader>
         <tbody>

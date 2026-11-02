@@ -9,6 +9,7 @@ import BuyerOrderPlan from '@pages-v2/BuyerOrderPlan';
 import BuyerReschedule from '@pages-v2/BuyerReschedule';
 import BuyerDataHealth from '@pages-v2/BuyerDataHealth';
 import { FORECAST_PAGES } from './forecastPages';
+import { headerNamed } from '@test/termText';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Accessibility findings 19 and 33 (docs/supplier-hub/research/
@@ -172,7 +173,9 @@ describe('finding 19 — the Due rule is visible text, not a header tooltip', ()
     expect(note.closest('table')).toBeNull();
     const section = screen.getByTestId('fc-exceptions');
     expect(section).toContainElement(note);
-    const header = within(section).getByRole('columnheader', { name: 'Commitment due' });
+    const header = within(section).getByRole('columnheader', {
+      name: headerNamed('Commitment due')
+    });
     expect(header).not.toHaveAttribute('title');
     expect(header.querySelector('[title]')).toBeNull();
     expect(section.textContent?.match(/Counted from publication/g)).toHaveLength(1);
@@ -183,7 +186,7 @@ describe('finding 19 — the Due rule is visible text, not a header tooltip', ()
     expect(note).toHaveTextContent('Tenggat komitmen: Pasti:');
     expect(note).toHaveTextContent('Dihitung sejak penerbitan pada kalender kerja hub.');
     const header = within(screen.getByTestId('fc-exceptions')).getByRole('columnheader', {
-      name: 'Tenggat komitmen'
+      name: headerNamed('Tenggat komitmen')
     });
     expect(header.querySelector('[title]')).toBeNull();
     expect(header).not.toHaveAttribute('title');

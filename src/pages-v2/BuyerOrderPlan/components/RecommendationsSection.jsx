@@ -94,9 +94,9 @@ const RecommendationsSection = ({
               <TableHeaderCell>{t('op.col.week')}</TableHeaderCell>
               <TableHeaderCell>{t('op.col.release')}</TableHeaderCell>
               <TableHeaderCell>{t('op.col.quantity')}</TableHeaderCell>
-              <TableHeaderCell>{t('op.col.reason')}</TableHeaderCell>
+              <TableHeaderCell term="orderReason" />
               <TableHeaderCell>{t('op.col.previous')}</TableHeaderCell>
-              <TableHeaderCell>{t('op.col.method')}</TableHeaderCell>
+              <TableHeaderCell term="orderSizedBy" />
               <TableHeaderCell>{t('op.col.action')}</TableHeaderCell>
             </TableHeader>
             <tbody>

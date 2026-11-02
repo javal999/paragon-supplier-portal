@@ -256,7 +256,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Period | Periode | fc.col.period | N | n/a | n/a | N |  | Keep |  |
 | column | Forecast | Prakiraan | fc.col.forecastShort | Y | "forecast" (SUPPLIER-HUB-REQUIREMENTS.md:167 CR-22) | N | N |  | Keep |  |
 | column | Commitment | Komitmen | fc.col.commitmentShort | Y | "Commitment" (SUPPLIER-HUB-REQUIREMENTS.md:167 CR-22) | N | N |  | Keep |  |
-| column | Gap | Selisih | fc.col.gap | Y | "Commitment gap colour" = commitment ÷ forecast (SUPPLIER-HUB-REQUIREMENTS.md:167 CR-22) | Y | Gap = DA − open supply, What to order "Below demand anticipation" (ID "Kekurangan"); plan-check gap Total DA − Total OSPO (SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md:142) |  | Ask Levi | Source name is "Commitment gap"; same word, different figure on What to order |
+| column | Gap | Selisih | fc.col.gap | Y | "Commitment gap colour" = commitment ÷ forecast (SUPPLIER-HUB-REQUIREMENTS.md:167 CR-22) | Y | Gap = DA − open supply, What to order "Below demand anticipation" (ID "Kekurangan"); plan-check gap Total DA − Total OSPO (SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md:142) |  | Decided (TL-D12) | Now "Commitment gap" (BL-233 wave 11) |
 | column | Status | Status | fc.col.status | N | n/a | n/a | N |  | Keep | Plain status |
 | column | Commitment due | Tenggat komitmen | fc.col.due | Y | "Commitments are due per CR-26" (SUPPLIER-HUB-REQUIREMENTS.md:1662 BR-07) | N | N |  | Keep | Rule: 1 working day Firm, 3 Trade-off/Forecast |
 | column | Days of supply | Hari persediaan | fc.col.daysOfSupply | Y | "Days of supply: SOH ÷ average daily demand" (SUPPLIER-HUB-REQUIREMENTS.md:146 CR-01) | N | N |  | Keep |  |
@@ -269,7 +269,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 |---|---|---|---|---|---|---|---|---|---|---|
 | column | Material | Material | fc.col.material | N | n/a | n/a | N |  | Keep |  |
 | column | Supplier | Pemasok | fc.col.supplier | N | n/a | n/a | N |  | Keep |  |
-| column | Firm demand | Kebutuhan pasti | fc.col.firmDemand | Y | "firm demand" (SUPPLIER-HUB-REQUIREMENTS.md:148 CR-03) | N | N |  | Ask Levi | ID translates "Firm"; stabilise ID keeps "Firm" in English |
+| column | Firm demand | Kebutuhan pasti | fc.col.firmDemand | Y | "firm demand" (SUPPLIER-HUB-REQUIREMENTS.md:148 CR-03) | N | N |  | Decided (TL-D11) | ID now "Kebutuhan Firm" (BL-233 wave 11) |
 | column | Coverage | Cakupan | fc.col.coverage | Y | "Supplier coverage" = (supplier SOH + incoming) ÷ firm demand (SUPPLIER-HUB-REQUIREMENTS.md:148 CR-03) | N | N |  | Keep | Bands: Covered ≥1.0, At risk 0.8–1.0, Uncovered <0.8 |
 | column | Principal lead time | Waktu tunggu prinsipal | fc.col.principalLeadTime | Y | "principal lead time" (SUPPLIER-HUB-REQUIREMENTS.md:1555 BR-05) | N | N |  | Keep |  |
 
@@ -291,7 +291,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Material | Material | co.trigger.pr.col.material | N | n/a | n/a | N |  | Keep |  |
 | column | PTI stock on hand (all plants) | Stok PTI (semua pabrik) | co.trigger.soh | Y | "SOH" (DRC-PROPOSAL-2026-10-19.md:173 BR-05, all plants combined; PERTANYAAN-TIM-MATERIAL-2026-10-16.md:37-38 A5) | Y | Warehouse stock on hand, /buyer/reschedule fill table | SOH (Material Planning team, questions file A5) | Change [Proposed] | Propose "PTI stock on hand (SOH), all plants", TL-D1 pattern |
 | column | ROP Fisik | ROP Fisik | co.trigger.ropFisik | Y | "ROP Fisik" (DRC-PROPOSAL-2026-10-19.md:46, :160; PERTANYAAN-TIM-MATERIAL-2026-10-16.md:37-39) | N | N |  | Keep |  |
-| column | Max | Maks | co.trigger.max | Y | "Max" / "Max Stock" (DRC-PROPOSAL-2026-10-19.md:164; PERTANYAAN-TIM-MATERIAL-2026-10-16.md:124-125 B8) | N | N |  | Ask Levi | Team writes "Max" in ID text; ID shows "Maks" |
+| column | Max | Maks | co.trigger.max | Y | "Max" / "Max Stock" (DRC-PROPOSAL-2026-10-19.md:164; PERTANYAAN-TIM-MATERIAL-2026-10-16.md:124-125 B8) | N | N |  | Decided (TL-D12) | Now "Max Stock" in EN and ID (BL-233 wave 11) |
 | column | Recommendation | Rekomendasi | co.trigger.pr.col.recommendation | N | n/a | n/a | N |  | Keep | Action text cell |
 
 ## Page: /buyer/order-plan — Recommended orders — `pages-v2/BuyerOrderPlan/index.jsx`
@@ -338,7 +338,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | With the selection | Dengan pilihan | rs.fill.col.selected | Y | "projected fill ... after the proposals" (FORECAST-ENGINE-REQUIREMENTS.md:858) | N | N |  | Keep |  |
 | column | With every proposal | Dengan semua usulan | rs.fill.col.allRelief | Y | "projected fill ... after the proposals" (FORECAST-ENGINE-REQUIREMENTS.md:858) | N | N |  | Keep |  |
 | column | Stock on hand | Stok di tangan | rs.fill.col.onHand | Y | "Stock on hand alone is above capacity" (FORECAST-ENGINE-REQUIREMENTS.md:929) | N | PTI SOH all plants (ROP Fisik trigger), /buyer/order-plan |  | Keep | Fill % from stock on hand |
-| column | With the selection | Dengan pilihan | rs.fill.col.status | Y | none found | n/a | N |  | Ask Levi | Status column repeats the "With the selection" header |
+| column | With the selection | Dengan pilihan | rs.fill.col.status | Y | none found | n/a | N |  | Decided (TL-D12) | Header now "Status" (BL-233 wave 11) |
 
 ## Page: /buyer/reschedule — Later deliveries (push-out detail, via DecisionControl) — `pages-v2/BuyerReschedule/index.jsx`
 

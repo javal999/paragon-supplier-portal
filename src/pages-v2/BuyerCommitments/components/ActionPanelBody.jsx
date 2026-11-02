@@ -1,5 +1,6 @@
 /** @import React from 'react' */
 import { useTranslation } from 'react-i18next';
+import TermLabel from '@components/ui-v2/TermLabel';
 import Data from '@components/ui-v2/Data';
 import { formatDateTime } from '@lib/format';
 import { labelClass } from '../../inventory/inventoryDisplay';
@@ -126,7 +127,7 @@ const ActionPanelBody = ({
                   {t('fc.pti.gaps.move.qty')}
                 </th>
                 <th scope="col" className="py-1 font-medium text-right">
-                  {t('fc.pti.gaps.move.headroom')}
+                  <TermLabel term="moveHeadroom" />
                 </th>
               </tr>
             </thead>

@@ -43,12 +43,14 @@
 // Wave 9: the admin pages (not the rule-value rows, TL-D10), /buyer/process-flows,
 // /buyer/roles, /buyer/demand-forecast and its bias tab.
 // Wave 10: /buyer/material-requirement and /buyer/model-backtest.
+// Wave 11: /buyer/order-plan, /buyer/reschedule, /buyer/collaboration and
+// /buyer/data-health.
 // ─────────────────────────────────────────────────────────────────────────────
 /** @import { GlossaryOf, TermEntry } from './types' */
 
 /**
  * The terms a page labels through `TermLabel`.
- * @typedef {'demandAnticipation' | 'ltp' | 'fgDemand' | 'ltpLessFgDemand' | 'consumptionAverage' | 'safetyOrder' | 'carryOver' | 'wouldBe' | 'surplusAbsorbed' | 'recordedConsumption' | 'openSupply' | 'supplyGap' | 'daAfterCheck' | 'ospo' | 'additionalPo' | 'callOffsThisWeek' | 'remainder' | 'notCarried' | 'supplierAgreedOutside' | 'gapProposal' | 'alertPtiBelowRop' | 'alertSupplierBelowRop' | 'alertProjectedStockOut' | 'alertCapacityBelowDemand' | 'alertStaleData' | 'alertCoverage' | 'alertCommitmentBelowForecast' | 'alertLeadTimeMissing' | 'alertCallOffNotCovered' | 'alertSupplyDiscontinued' | 'alertBlanketPoRunOut' | 'alertDemandAnticipationUnabsorbed' | 'supplierCover' | 'supplierStock' | 'ptiStockRop' | 'incoming' | 'incomingStatus' | 'supplierAvailable' | 'calledOffNotShipped' | 'freeToCallOff' | 'ptiInbound' | 'simulationBasis' | 'simulationFlags' | 'supplierOwnRop' | 'ptiStock' | 'ptiRop' | 'daysOfSupply' | 'feedstockLatest' | 'feedstockThisWeek' | 'tradeNameStatus' | 'capacityLtp' | 'allocatedCapacity' | 'productionLimit' | 'additionalCapacity' | 'capacityBe' | 'ltpAgainstCapacity' | 'capacityShortBy' | 'ptiCapacityDecision' | 'runOutRemaining' | 'runsOut' | 'newPoNeededBy' | 'poLeadTime' | 'spaceFreed' | 'materialsPerTier' | 'onSapValue' | 'sltGroupDefault' | 'tierTarget' | 'safetyOrderRopOrder' | 'ropFisikSafety' | 'demandCv' | 'osipLevel' | 'ropOrder' | 'ropFisik' | 'maxStock' | 'engineSafetyStock' | 'sapSafetyStock' | 'freed' | 'safetyLeadTime' | 'engineReorderPoint' | 'forecastShortfall' | 'ropSupplier' | 'ropToPrincipal' | 'replenishmentCycle' | 'pullAgreement' | 'bottleneckLeadTime' | 'monthLtp' | 'protectionBaseline' | 'uplift' | 'protectionBuffer' | 'strategicBaseline' | 'strategicBuffer' | 'poOrdered' | 'reconcileCalledOff' | 'asnRequested' | 'notYetCalledOff' | 'calledOffNotYetShipped' | 'maxStockSupplier' | 'whatIfMax' | 'daOverLeadTime' | 'prGenerated' | 'planCheckPr' | 'triggerCallOffs' | 'triggerPr' | 'whatIfRemainder' | 'whatIfCarryOver' | 'firstShortageWeek' | 'weeksAboveMax' | 'whatIfLtp' | 'daCurrentPlan' | 'daScenario' | 'callOffsDrafted' | 'whatIfIncoming' | 'prRecommendedWeek' | 'projectedSohPlan' | 'projectedSohScenario' | 'engineValue' | 'lastPublished' | 'firstPublished' | 'dampedValue' | 'allowedRange' | 'toPublish' | 'stabiliseRule' | 'ruleNew' | 'ruleUnchanged' | 'ruleFirmFrozen' | 'ruleForecast' | 'ruleDamped' | 'ruleBandHeld' | 'ruleCumulativeHeld' | 'ruleOverride' | 'planMovement' | 'weeksChangedInLeadTime' | 'tradeOffWithinLimits' | 'weeksHeld' | 'seriesHeld' | 'seriesMasc' | 'forecastZone' | 'publishedForecast' | 'commitmentDue' | 'commitment' | 'commitmentUpside' | 'grPendingInspection' | 'grQualityHold' | 'grApprovedToday' | 'grRejectionRate' | 'grDisposition' | 'grExpected' | 'grReceived' | 'grAccepted' | 'grRejectedLine' | 'grChecks' | 'poOpenTotal' | 'poPendingConfirmation' | 'poInTransit' | 'poOverdue' | 'orderedQty' | 'counterQty' | 'counterDate' | 'summaryResponse' | 'summaryAsns' | 'summaryCallOffs' | 'summaryConfirmations' | 'summaryReceipts' | 'summaryInvoices' | 'prDraft' | 'prPendingApproval' | 'prApproved' | 'prSourcingEvent' | 'prPoCreated' | 'prSource' | 'supShipped' | 'supReceived' | 'supRejected' | 'supQualityResult' | 'supDiscrepancy' | 'supDifference' | 'supOpenOrders' | 'supInProgress' | 'supValuePending' | 'supDelivered' | 'supConfirmed' | 'invPendingApproval' | 'invReleased' | 'invDisputed' | 'invOverdue' | 'invThreeWayMatch' | 'agingBucket' | 'agingPctAp' | 'agingRisk' | 'invLineQuantity' | 'invUnitPrice' | 'invLineValue' | 'shipInTransit' | 'shipAtDock' | 'shipDelayed' | 'shipArrivingToday' | 'shelfLifeLeftAtEta' | 'supPaymentsReceived' | 'supPendingPayment' | 'supInvDisputed' | 'supThreeWayMatch' | 'asnDraft' | 'asnSubmitted' | 'asnInTransit' | 'asnDelivered' | 'asnDiscrepancy' | 'asnLineOrdered' | 'asnLineShipped' | 'asnOpenQuantity' | 'asnShippedQuantity' | 'deliveryAgreed' | 'deliveryReleased' | 'deliveryDelivered' | 'deliveryRemaining' | 'releasePlanned' | 'releaseFulfillment' | 'releaseDrawnDown' | 'certExpired' | 'certExpiring' | 'certMissing' | 'certUnderReview' | 'certValid' | 'certInSap' | 'certActionRequired' | 'contractsActive' | 'contractsExpiring' | 'obligationsOverdue' | 'contractsActiveValue' | 'contractPerformance' | 'relConfirmation' | 'relCommitment' | 'relCfot' | 'relMisses' | 'relPlanChangeKpi' | 'relPlanChangeCol' | 'relMasc' | 'relMascI' | 'perfOtif' | 'perfCfot' | 'perfRejections' | 'perfScore' | 'stockAccess' | 'otif' | 'scorecardGrade' | 'catalogMoq' | 'catalogLeadTime' | 'catalogCapacity' | 'supplierChannel' | 'supplierCompliance' | 'performanceBand' | 'docValid' | 'docExpiring' | 'docExpired' | 'docNeedsAction' | 'poOnTime' | 'poLate' | 'poAvgOverdue' | 'dfFallbackShare' | 'dfTotal26' | 'dfReconciledLevels' | 'dfOwnForecast26' | 'dfReconciled26' | 'dfSapPlan26' | 'dfAgainstSap' | 'dfMethod' | 'dfForecast26' | 'sapPlan' | 'dfMethodForecast' | 'dfReconciled' | 'dfTheta' | 'dfEventsTotal' | 'rangeAboveP90' | 'rangeAboveP50' | 'rangeUncorrected' | 'rangeWidthTotal' | 'rangeForecast' | 'rangeWidth' | 'rangeAbovePast' | 'rangeSource' | 'rangeNeed' | 'fbSkusAlarm' | 'fbMaterialsAlarm' | 'fbOverrides' | 'fbValue' | 'fbEngine' | 'fbSap' | 'fbDirection' | 'fvaError' | 'fvaImproved' | 'fvaValue' | 'sourcingType' | 'requiredRole' | 'roleReach' | 'qualLevel' | 'qualDocuments' | 'ruleInForce' | 'ruleDefault' | 'groupValue' | 'globalValue' | 'staleAfter' | 'stockFigureNow' | 'stockUpdateMode' | 'modeSet' | 'tplOnNewAsns' | 'mrqNetMaterials' | 'mrqPlannedOrdersKpi' | 'mrqLateKpi' | 'mrqReview' | 'mrpLeadTime' | 'mrpSafetyStock' | 'mrpStockOnHand' | 'mrpNet' | 'mrpPlannedOrders' | 'mrpLate' | 'mrpGross' | 'mrpStockStart' | 'mrpReceipts' | 'mrpPlannedOrder' | 'mrpRelease' | 'mrpStockEnd' | 'pegFgQty' | 'pegScrap' | 'pegYield' | 'pegRequirement' | 'mbBeats' | 'mbMaterials' | 'mbLimit' | 'mbFillRate' | 'mbOrderComplete' | 'mbPalletWeeks' | 'mbMascMedian' | 'mbWapeMedian' | 'mbUnitsServed' | 'mbPeakPackaging' | 'mbPeakRaw' | 'mbOrigin' | 'mbVsSap' | 'mbMaterialLead' | 'mbChosenVsSap' | 'mbMasc' | 'mbWape' | 'mbBias' | 'mbSelection' | 'candMain' | 'candComb' | 'candTheta' | 'candSba' | 'candCroston' | 'candTsb' | 'candSapPlan' | 'scenarioSapPlan' | 'scenarioFloor'} TermLabelId
+ * @typedef {'demandAnticipation' | 'ltp' | 'fgDemand' | 'ltpLessFgDemand' | 'consumptionAverage' | 'safetyOrder' | 'carryOver' | 'wouldBe' | 'surplusAbsorbed' | 'recordedConsumption' | 'openSupply' | 'supplyGap' | 'daAfterCheck' | 'ospo' | 'additionalPo' | 'callOffsThisWeek' | 'remainder' | 'notCarried' | 'supplierAgreedOutside' | 'gapProposal' | 'alertPtiBelowRop' | 'alertSupplierBelowRop' | 'alertProjectedStockOut' | 'alertCapacityBelowDemand' | 'alertStaleData' | 'alertCoverage' | 'alertCommitmentBelowForecast' | 'alertLeadTimeMissing' | 'alertCallOffNotCovered' | 'alertSupplyDiscontinued' | 'alertBlanketPoRunOut' | 'alertDemandAnticipationUnabsorbed' | 'supplierCover' | 'supplierStock' | 'ptiStockRop' | 'incoming' | 'incomingStatus' | 'supplierAvailable' | 'calledOffNotShipped' | 'freeToCallOff' | 'ptiInbound' | 'simulationBasis' | 'simulationFlags' | 'supplierOwnRop' | 'ptiStock' | 'ptiRop' | 'daysOfSupply' | 'feedstockLatest' | 'feedstockThisWeek' | 'tradeNameStatus' | 'capacityLtp' | 'allocatedCapacity' | 'productionLimit' | 'additionalCapacity' | 'capacityBe' | 'ltpAgainstCapacity' | 'capacityShortBy' | 'ptiCapacityDecision' | 'runOutRemaining' | 'runsOut' | 'newPoNeededBy' | 'poLeadTime' | 'spaceFreed' | 'materialsPerTier' | 'onSapValue' | 'sltGroupDefault' | 'tierTarget' | 'safetyOrderRopOrder' | 'ropFisikSafety' | 'demandCv' | 'osipLevel' | 'ropOrder' | 'ropFisik' | 'maxStock' | 'engineSafetyStock' | 'sapSafetyStock' | 'freed' | 'safetyLeadTime' | 'engineReorderPoint' | 'forecastShortfall' | 'ropSupplier' | 'ropToPrincipal' | 'replenishmentCycle' | 'pullAgreement' | 'bottleneckLeadTime' | 'monthLtp' | 'protectionBaseline' | 'uplift' | 'protectionBuffer' | 'strategicBaseline' | 'strategicBuffer' | 'poOrdered' | 'reconcileCalledOff' | 'asnRequested' | 'notYetCalledOff' | 'calledOffNotYetShipped' | 'maxStockSupplier' | 'whatIfMax' | 'daOverLeadTime' | 'prGenerated' | 'planCheckPr' | 'triggerCallOffs' | 'triggerPr' | 'whatIfRemainder' | 'whatIfCarryOver' | 'firstShortageWeek' | 'weeksAboveMax' | 'whatIfLtp' | 'daCurrentPlan' | 'daScenario' | 'callOffsDrafted' | 'whatIfIncoming' | 'prRecommendedWeek' | 'projectedSohPlan' | 'projectedSohScenario' | 'engineValue' | 'lastPublished' | 'firstPublished' | 'dampedValue' | 'allowedRange' | 'toPublish' | 'stabiliseRule' | 'ruleNew' | 'ruleUnchanged' | 'ruleFirmFrozen' | 'ruleForecast' | 'ruleDamped' | 'ruleBandHeld' | 'ruleCumulativeHeld' | 'ruleOverride' | 'planMovement' | 'weeksChangedInLeadTime' | 'tradeOffWithinLimits' | 'weeksHeld' | 'seriesHeld' | 'seriesMasc' | 'forecastZone' | 'publishedForecast' | 'commitmentDue' | 'commitment' | 'commitmentUpside' | 'grPendingInspection' | 'grQualityHold' | 'grApprovedToday' | 'grRejectionRate' | 'grDisposition' | 'grExpected' | 'grReceived' | 'grAccepted' | 'grRejectedLine' | 'grChecks' | 'poOpenTotal' | 'poPendingConfirmation' | 'poInTransit' | 'poOverdue' | 'orderedQty' | 'counterQty' | 'counterDate' | 'summaryResponse' | 'summaryAsns' | 'summaryCallOffs' | 'summaryConfirmations' | 'summaryReceipts' | 'summaryInvoices' | 'prDraft' | 'prPendingApproval' | 'prApproved' | 'prSourcingEvent' | 'prPoCreated' | 'prSource' | 'supShipped' | 'supReceived' | 'supRejected' | 'supQualityResult' | 'supDiscrepancy' | 'supDifference' | 'supOpenOrders' | 'supInProgress' | 'supValuePending' | 'supDelivered' | 'supConfirmed' | 'invPendingApproval' | 'invReleased' | 'invDisputed' | 'invOverdue' | 'invThreeWayMatch' | 'agingBucket' | 'agingPctAp' | 'agingRisk' | 'invLineQuantity' | 'invUnitPrice' | 'invLineValue' | 'shipInTransit' | 'shipAtDock' | 'shipDelayed' | 'shipArrivingToday' | 'shelfLifeLeftAtEta' | 'supPaymentsReceived' | 'supPendingPayment' | 'supInvDisputed' | 'supThreeWayMatch' | 'asnDraft' | 'asnSubmitted' | 'asnInTransit' | 'asnDelivered' | 'asnDiscrepancy' | 'asnLineOrdered' | 'asnLineShipped' | 'asnOpenQuantity' | 'asnShippedQuantity' | 'deliveryAgreed' | 'deliveryReleased' | 'deliveryDelivered' | 'deliveryRemaining' | 'releasePlanned' | 'releaseFulfillment' | 'releaseDrawnDown' | 'certExpired' | 'certExpiring' | 'certMissing' | 'certUnderReview' | 'certValid' | 'certInSap' | 'certActionRequired' | 'contractsActive' | 'contractsExpiring' | 'obligationsOverdue' | 'contractsActiveValue' | 'contractPerformance' | 'relConfirmation' | 'relCommitment' | 'relCfot' | 'relMisses' | 'relPlanChangeKpi' | 'relPlanChangeCol' | 'relMasc' | 'relMascI' | 'perfOtif' | 'perfCfot' | 'perfRejections' | 'perfScore' | 'stockAccess' | 'otif' | 'scorecardGrade' | 'catalogMoq' | 'catalogLeadTime' | 'catalogCapacity' | 'supplierChannel' | 'supplierCompliance' | 'performanceBand' | 'docValid' | 'docExpiring' | 'docExpired' | 'docNeedsAction' | 'poOnTime' | 'poLate' | 'poAvgOverdue' | 'dfFallbackShare' | 'dfTotal26' | 'dfReconciledLevels' | 'dfOwnForecast26' | 'dfReconciled26' | 'dfSapPlan26' | 'dfAgainstSap' | 'dfMethod' | 'dfForecast26' | 'sapPlan' | 'dfMethodForecast' | 'dfReconciled' | 'dfTheta' | 'dfEventsTotal' | 'rangeAboveP90' | 'rangeAboveP50' | 'rangeUncorrected' | 'rangeWidthTotal' | 'rangeForecast' | 'rangeWidth' | 'rangeAbovePast' | 'rangeSource' | 'rangeNeed' | 'fbSkusAlarm' | 'fbMaterialsAlarm' | 'fbOverrides' | 'fbValue' | 'fbEngine' | 'fbSap' | 'fbDirection' | 'fvaError' | 'fvaImproved' | 'fvaValue' | 'sourcingType' | 'requiredRole' | 'roleReach' | 'qualLevel' | 'qualDocuments' | 'ruleInForce' | 'ruleDefault' | 'groupValue' | 'globalValue' | 'staleAfter' | 'stockFigureNow' | 'stockUpdateMode' | 'modeSet' | 'tplOnNewAsns' | 'mrqNetMaterials' | 'mrqPlannedOrdersKpi' | 'mrqLateKpi' | 'mrqReview' | 'mrpLeadTime' | 'mrpSafetyStock' | 'mrpStockOnHand' | 'mrpNet' | 'mrpPlannedOrders' | 'mrpLate' | 'mrpGross' | 'mrpStockStart' | 'mrpReceipts' | 'mrpPlannedOrder' | 'mrpRelease' | 'mrpStockEnd' | 'pegFgQty' | 'pegScrap' | 'pegYield' | 'pegRequirement' | 'mbBeats' | 'mbMaterials' | 'mbLimit' | 'mbFillRate' | 'mbOrderComplete' | 'mbPalletWeeks' | 'mbMascMedian' | 'mbWapeMedian' | 'mbUnitsServed' | 'mbPeakPackaging' | 'mbPeakRaw' | 'mbOrigin' | 'mbVsSap' | 'mbMaterialLead' | 'mbChosenVsSap' | 'mbMasc' | 'mbWape' | 'mbBias' | 'mbSelection' | 'candMain' | 'candComb' | 'candTheta' | 'candSba' | 'candCroston' | 'candTsb' | 'candSapPlan' | 'scenarioSapPlan' | 'scenarioFloor' | 'moveHeadroom' | 'excForecast' | 'excCommitment' | 'commitmentGap' | 'excDaysOfSupply' | 'firmDemand' | 'supplierCoverage' | 'principalLeadTime' | 'triggerSoh' | 'orderReason' | 'orderSizedBy' | 'fillOrderPlan' | 'fillLowest' | 'fillAgainst80' | 'fillRented' | 'rentCost' | 'peakFill' | 'rentedPalletWeeks' | 'fillNow' | 'fillWithSelection' | 'fillWithAll' | 'fillOnHand' | 'fillStatus' | 'rsProposed' | 'rsFreed' | 'rsSaving' | 'rsChangeCost' | 'rsPosition' | 'rsOver' | 'rsRelief' | 'rsOnHandLoad' | 'dhStale' | 'dhChecks' | 'dhRecords' | 'dhFreshness' | 'dhChecksCol' | 'dhAffects' | 'dhWhMaterials'} TermLabelId
  */
 
 // TL-D23: an "Also called" source names only the team; where in the team's
@@ -746,7 +748,8 @@ export const TERM_LABEL_GLOSSARY =
       notToConfuse: {
         en: 'ROP Order (the input to SAP MRP).',
         id: 'ROP Order (input untuk MRP SAP).'
-      }
+      },
+      labelKeys: ['co.trigger.ropFisik']
     },
     maxStock: {
       label: { en: 'Max Stock', id: 'Max Stock' },
@@ -759,7 +762,8 @@ export const TERM_LABEL_GLOSSARY =
       notToConfuse: {
         en: 'Max Stock Supplier (what the supplier may hold, on the Feedstock reconcile page).',
         id: 'Max Stock Supplier (yang boleh disimpan pemasok, di halaman Feedstock reconcile).'
-      }
+      },
+      labelKeys: ['co.trigger.max']
     },
     engineSafetyStock: {
       label: { en: 'Safety stock', id: 'Stok pengaman' },
@@ -2505,5 +2509,217 @@ export const TERM_LABEL_GLOSSARY =
       en: 'PTI’s ordering replayed on the fallback model from this origin.',
       id: 'Cara pesan PTI diputar ulang pada model fallback dari titik awal ini.',
       labelKeys: ['mb.scenario.floor']
+    },
+    // ── Wave 11: order plan, reschedule, collaboration, data health ─────────
+    moveHeadroom: {
+      label: { en: 'Headroom this period', id: 'Sisa kapasitas periode ini' },
+      en: 'How much more the target supplier can make in the period before it runs out of capacity. A quantity above it warns but is allowed.',
+      id: 'Berapa banyak lagi yang dapat dibuat pemasok tujuan pada periode itu sebelum kapasitasnya habis. Kuantitas di atasnya memberi peringatan tetapi diizinkan.',
+      formula: { en: 'BE − LTP.', id: 'BE − LTP.' }
+    },
+    excForecast: {
+      label: { en: 'Forecast', id: 'Prakiraan' },
+      en: 'The quantity PTI published for the period.',
+      id: 'Kuantitas yang diterbitkan PTI untuk periode itu.',
+      labelKeys: ['fc.col.forecastShort']
+    },
+    excCommitment: {
+      label: { en: 'Commitment', id: 'Komitmen' },
+      en: 'The quantity the supplier committed for the period.',
+      id: 'Kuantitas yang dikomitmenkan pemasok untuk periode itu.',
+      labelKeys: ['fc.col.commitmentShort']
+    },
+    commitmentGap: {
+      label: { en: 'Commitment gap', id: 'Selisih komitmen' },
+      en: 'How the commitment compares with the forecast: green at 100% or more, amber from 80%, red below 80%.',
+      id: 'Perbandingan komitmen dengan prakiraan: hijau pada 100% atau lebih, kuning dari 80%, merah di bawah 80%.',
+      formula: { en: 'Commitment ÷ forecast.', id: 'Komitmen ÷ prakiraan.' }
+    },
+    excDaysOfSupply: {
+      label: { en: 'Days of supply', id: 'Hari persediaan' },
+      en: 'How many days the supplier’s stock lasts at the material’s average daily demand.',
+      id: 'Berapa hari stok pemasok bertahan pada rata-rata permintaan harian material.',
+      formula: {
+        en: 'Stock ÷ the forecast for the next 30 days ÷ 30.',
+        id: 'Stok ÷ prakiraan 30 hari ke depan ÷ 30.'
+      }
+    },
+    firmDemand: {
+      label: { en: 'Firm demand', id: 'Kebutuhan Firm' },
+      en: 'The demand in the Firm zone, which the supplier’s stock and incoming are measured against.',
+      id: 'Permintaan dalam zona Firm, yang menjadi pembanding stok dan kedatangan pemasok.'
+    },
+    supplierCoverage: {
+      label: { en: 'Coverage', id: 'Cakupan' },
+      en: 'Whether the supplier’s stock and incoming cover the firm demand: Covered at 1.0 or more, At risk from 0.8, Uncovered below.',
+      id: 'Apakah stok dan kedatangan pemasok menutup permintaan Firm: Tertutup pada 1,0 atau lebih, Berisiko dari 0,8, Tidak tertutup di bawahnya.',
+      formula: {
+        en: '(Supplier stock + incoming) ÷ firm demand.',
+        id: '(Stok pemasok + kedatangan) ÷ permintaan Firm.'
+      }
+    },
+    principalLeadTime: {
+      label: { en: 'Principal lead time', id: 'Lead time prinsipal' },
+      en: 'For a distributor, the time its principal takes to supply it.',
+      id: 'Untuk distributor, waktu yang dibutuhkan prinsipalnya untuk memasok.'
+    },
+    triggerSoh: {
+      label: { en: 'PTI stock on hand (all plants)', id: 'Stok PTI (semua pabrik)' },
+      en: 'PTI’s stock of the material across all plants. When it reaches ROP Fisik, the hub drafts a call-off.',
+      id: 'Stok PTI untuk material itu di semua plant. Bila mencapai ROP Fisik, hub menyusun draf call-off.',
+      labelKeys: ['co.trigger.soh']
+    },
+    orderReason: {
+      label: { en: 'Why this size', id: 'Alasan ukuran ini' },
+      en: 'Why the order was sized as it is: the cost it saved and the constraint that set it.',
+      id: 'Alasan pesanan berukuran seperti itu: biaya yang dihemat dan batasan yang menentukannya.'
+    },
+    orderSizedBy: {
+      label: { en: 'Sized by', id: 'Dihitung dengan' },
+      en: 'How the order was sized: jointly across materials, or the single-material fallback (round up to the MOQ and multiple) when the joint sizing cannot run.',
+      id: 'Cara pesanan diukur: bersama lintas material, atau fallback satu material (dibulatkan ke MOQ dan kelipatannya) bila pengukuran bersama tidak dapat dijalankan.'
+    },
+    fillOrderPlan: {
+      label: { en: 'Order plan', id: 'Rencana pesanan' },
+      en: 'The warehouse fill and pallets in the week under this order plan.',
+      id: 'Isi gudang dan palet pada minggu itu dengan rencana pesanan ini.'
+    },
+    fillLowest: {
+      label: { en: 'Lowest possible', id: 'Terendah yang mungkin' },
+      en: 'The lowest stock the week could hold and still serve demand.',
+      id: 'Stok terendah yang dapat dimiliki minggu itu dan tetap melayani permintaan.'
+    },
+    fillAgainst80: {
+      label: { en: 'Against 80%', id: 'Terhadap 80%' },
+      en: 'Whether the projected warehouse fill stays under the 80% target.',
+      id: 'Apakah proyeksi isi gudang tetap di bawah target 80%.'
+    },
+    fillRented: {
+      label: { en: 'Rented pallets', id: 'Palet sewa' },
+      en: 'Pallets above the warehouse’s capacity, which need rented space.',
+      id: 'Palet di atas kapasitas gudang, yang memerlukan ruang sewa.'
+    },
+    rentCost: {
+      label: { en: 'Rented space cost', id: 'Biaya ruang sewa' },
+      en: 'What PTI pays for the space it rents above the warehouse’s capacity.',
+      id: 'Yang dibayar PTI untuk ruang yang disewa di atas kapasitas gudang.',
+      formula: {
+        en: 'Rented pallet-weeks × the rented-space rate.',
+        id: 'Palet-minggu sewa × tarif ruang sewa.'
+      }
+    },
+    peakFill: {
+      label: { en: 'Highest projected fill', id: 'Isi tertinggi yang diproyeksikan' },
+      en: 'The fullest the warehouse is projected to be in any week of the plan.',
+      id: 'Isi gudang terpenuh yang diproyeksikan pada minggu mana pun dalam rencana.'
+    },
+    rentedPalletWeeks: {
+      label: { en: 'Rented pallet-weeks', id: 'Palet-minggu sewa' },
+      en: 'The pallets above capacity, added over the weeks they stay.',
+      id: 'Palet di atas kapasitas, dijumlahkan selama minggu-minggu keberadaannya.'
+    },
+    fillNow: {
+      label: { en: 'Now', id: 'Sekarang' },
+      en: 'The projected warehouse fill before any proposal.',
+      id: 'Proyeksi isi gudang sebelum usulan apa pun.'
+    },
+    fillWithSelection: {
+      label: { en: 'With the selection', id: 'Dengan pilihan' },
+      en: 'The projected warehouse fill after the proposals you selected.',
+      id: 'Proyeksi isi gudang setelah usulan yang Anda pilih.'
+    },
+    fillWithAll: {
+      label: { en: 'With every proposal', id: 'Dengan semua usulan' },
+      en: 'The projected warehouse fill if every relief proposal were accepted.',
+      id: 'Proyeksi isi gudang bila semua usulan pelonggaran diterima.'
+    },
+    fillOnHand: {
+      label: { en: 'Stock on hand', id: 'Stok di tangan' },
+      en: 'The warehouse fill from stock already on hand, which no rescheduling can move.',
+      id: 'Isi gudang dari stok yang sudah ada, yang tidak dapat digeser penjadwalan ulang.'
+    },
+    fillStatus: {
+      label: { en: 'Status', id: 'Status' },
+      en: 'Whether the week is within capacity with the selection.',
+      id: 'Apakah minggu itu dalam kapasitas dengan pilihan.'
+    },
+    rsProposed: {
+      label: { en: 'Proposed', id: 'Usulan' },
+      en: 'The proposal’s type and its proposed date and quantity.',
+      id: 'Jenis usulan serta tanggal dan kuantitas yang diusulkan.'
+    },
+    rsFreed: {
+      label: { en: 'Freed above capacity', id: 'Dibebaskan di atas kapasitas' },
+      en: 'The pallet-weeks the move frees in weeks that are over capacity.',
+      id: 'Palet-minggu yang dibebaskan pemindahan pada minggu yang melebihi kapasitas.'
+    },
+    rsSaving: {
+      label: { en: 'Rented space saved', id: 'Ruang sewa yang dihemat' },
+      en: 'The rented-space cost the move saves.',
+      id: 'Biaya ruang sewa yang dihemat pemindahan.',
+      formula: {
+        en: 'Pallet-weeks freed over capacity × the rented-space rate.',
+        id: 'Palet-minggu dibebaskan di atas kapasitas × tarif ruang sewa.'
+      }
+    },
+    rsChangeCost: {
+      label: { en: 'Change cost', id: 'Biaya perubahan' },
+      en: 'What the move costs: the penalty for changing inside the supplier’s lead time, plus any liability.',
+      id: 'Biaya pemindahan: penalti perubahan di dalam lead time pemasok, ditambah kewajiban apa pun.'
+    },
+    rsPosition: {
+      label: { en: 'Zone and lead time', id: 'Zona dan lead time' },
+      en: 'Where the delivery sits: its forecast zone, and whether it is inside the supplier’s lead time.',
+      id: 'Posisi pengiriman: zona prakiraannya, dan apakah berada di dalam lead time pemasok.'
+    },
+    rsOver: {
+      label: { en: 'Pallet-weeks over capacity', id: 'Palet-minggu di atas kapasitas' },
+      en: 'The pallets above warehouse capacity, added over the weeks.',
+      id: 'Palet di atas kapasitas gudang, dijumlahkan selama minggu-minggu itu.'
+    },
+    rsRelief: {
+      label: { en: 'Pallet-weeks the proposals free', id: 'Palet-minggu yang dibebaskan usulan' },
+      en: 'How many pallet-weeks over capacity the proposals would free.',
+      id: 'Berapa palet-minggu di atas kapasitas yang akan dibebaskan usulan.'
+    },
+    rsOnHandLoad: {
+      label: { en: 'Overload that is stock on hand', id: 'Kelebihan yang berupa stok di tangan' },
+      en: 'The part of the overload that is stock already on hand, which no rescheduling can move.',
+      id: 'Bagian kelebihan yang berupa stok yang sudah ada, yang tidak dapat digeser penjadwalan ulang.'
+    },
+    dhStale: {
+      label: { en: 'Stale or missing feeds', id: 'Umpan usang atau hilang' },
+      en: 'Inputs that are older than their freshness limit, or have not arrived.',
+      id: 'Input yang lebih tua dari batas kesegarannya, atau belum tiba.'
+    },
+    dhChecks: {
+      label: { en: 'Checks failing', id: 'Pemeriksaan gagal' },
+      en: 'Quality checks on the inputs that fail now.',
+      id: 'Pemeriksaan mutu pada input yang gagal saat ini.'
+    },
+    dhRecords: {
+      label: { en: 'Records refused', id: 'Catatan ditolak' },
+      en: 'Input records a quality check refused on arrival.',
+      id: 'Catatan input yang ditolak pemeriksaan mutu saat tiba.'
+    },
+    dhFreshness: {
+      label: { en: 'Freshness', id: 'Kesegaran' },
+      en: 'How old the input’s latest data is, against its freshness limit.',
+      id: 'Seberapa tua data terbaru input, dibanding batas kesegarannya.'
+    },
+    dhChecksCol: {
+      label: { en: 'Checks', id: 'Pemeriksaan' },
+      en: 'The input’s quality checks and how many pass.',
+      id: 'Pemeriksaan mutu input dan berapa yang lolos.'
+    },
+    dhAffects: {
+      label: { en: 'Affects', id: 'Berdampak ke' },
+      en: 'The calculations that need this input, which a failed check blocks.',
+      id: 'Perhitungan yang membutuhkan input ini, yang diblokir pemeriksaan yang gagal.'
+    },
+    dhWhMaterials: {
+      label: { en: 'Materials affected if stale', id: 'Material terdampak bila usang' },
+      en: 'The materials whose plan uses the warehouse’s stock, so a stale figure affects them.',
+      id: 'Material yang rencananya memakai stok gudang itu, sehingga angka usang memengaruhinya.'
     }
   });
