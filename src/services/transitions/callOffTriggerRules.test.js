@@ -426,7 +426,7 @@ describe("BR-02 'fillToMax' — what no blanket line covers is a PR recommendati
   });
 });
 
-describe('BR-01 — one open draft per material; a dismissed draft waits for a recovery', () => {
+describe('BR-01 — one open draft per material; the re-arm rule (BL-261)', () => {
   const drafting = {
     ropAvailable: true,
     atOrBelow: true,
@@ -453,10 +453,43 @@ describe('BR-01 — one open draft per material; a dismissed draft waits for a r
     }
   };
 
-  it('a first drop drafts and disarms; a drop while a draft is pending does not draft again', () => {
+  // [Owner FSR-D6, 2026-11-03] BL-261 — the default re-arms on every check;
+  // DRC-B37 is kept as the switch's other variant.
+  const B37 = { ...CALL_OFF_TRIGGER_RULES, reArm: /** @type {const} */ ('aboveRopFisik') };
+
+  it("'everyCheck' (default): a first drop drafts and stays armed; a drop while a draft is pending does not draft again", () => {
+    expect(CALL_OFF_TRIGGER_RULES.reArm).toBe('everyCheck');
     const first = triggerStep(undefined, drafting);
+    expect(first).toEqual({ state: 'drafted', armed: true, draft: true, prQty: 0 });
+    // DRC-13 BR-01, one open draft: unchanged under both variants.
+    expect(triggerStep(first, { ...drafting, pendingDraft: true })).toEqual({
+      state: 'pending',
+      armed: true,
+      draft: false,
+      prQty: 0
+    });
+  });
+
+  it("'everyCheck': after the draft is dismissed or released, a still-low SOH drafts again at once; 'waiting' is never produced", () => {
+    expect(triggerStep({ armed: true }, drafting)).toMatchObject({ state: 'drafted', draft: true });
+    // Even a row disarmed under the other variant drafts on the next check.
+    expect(triggerStep({ armed: false }, drafting)).toMatchObject({
+      state: 'drafted',
+      armed: true,
+      draft: true
+    });
+    expect(
+      triggerStep(undefined, {
+        ...drafting,
+        allocation: { room: 8000, callOffs: [], prQty: 8000, flags: [] }
+      })
+    ).toEqual({ state: 'prRecommended', armed: true, draft: false, prQty: 8000 });
+  });
+
+  it("'aboveRopFisik' (DRC-B37): a first drop drafts and disarms; a drop while a draft is pending does not draft again", () => {
+    const first = triggerStep(undefined, drafting, B37);
     expect(first).toEqual({ state: 'drafted', armed: false, draft: true, prQty: 0 });
-    expect(triggerStep({ armed: false }, { ...drafting, pendingDraft: true })).toEqual({
+    expect(triggerStep({ armed: false }, { ...drafting, pendingDraft: true }, B37)).toEqual({
       state: 'pending',
       armed: false,
       draft: false,
@@ -464,14 +497,14 @@ describe('BR-01 — one open draft per material; a dismissed draft waits for a r
     });
   });
 
-  it('after the draft is dismissed, a still-low SOH waits; above ROP re-arms; the next drop drafts', () => {
-    expect(triggerStep({ armed: false }, drafting)).toMatchObject({
+  it("'aboveRopFisik': after the draft is dismissed, a still-low SOH waits; above ROP re-arms; the next drop drafts", () => {
+    expect(triggerStep({ armed: false }, drafting, B37)).toMatchObject({
       state: 'waiting',
       draft: false
     });
-    const above = triggerStep({ armed: false }, { ...drafting, atOrBelow: false });
+    const above = triggerStep({ armed: false }, { ...drafting, atOrBelow: false }, B37);
     expect(above).toEqual({ state: 'above', armed: true, draft: false, prQty: 0 });
-    expect(triggerStep(above, drafting)).toMatchObject({ state: 'drafted', draft: true });
+    expect(triggerStep(above, drafting, B37)).toMatchObject({ state: 'drafted', draft: true });
   });
 
   it('no ROP Fisik is not checked; a full pipeline is covered; room under an MPQ waits armed', () => {
@@ -490,12 +523,16 @@ describe('BR-01 — one open draft per material; a dismissed draft waits for a r
     ).toEqual({ state: 'belowMpq', armed: true, draft: false, prQty: 0 });
   });
 
-  it('no balance recommends a PR once, and disarms', () => {
+  it("'aboveRopFisik': no balance recommends a PR once, and disarms", () => {
     expect(
-      triggerStep(undefined, {
-        ...drafting,
-        allocation: { room: 8000, callOffs: [], prQty: 8000, flags: [] }
-      })
+      triggerStep(
+        undefined,
+        {
+          ...drafting,
+          allocation: { room: 8000, callOffs: [], prQty: 8000, flags: [] }
+        },
+        B37
+      )
     ).toEqual({ state: 'prRecommended', armed: false, draft: false, prQty: 8000 });
   });
 });
@@ -547,7 +584,8 @@ describe('BR-02 — the open PR recommendations', () => {
   });
 
   it('carries the question IDs behind every figure (design rule 5)', () => {
-    // B5, B6, B7 answered or confirmed [Team, 2026-10-28].
-    expect(CALL_OFF_TRIGGER_QUESTIONS).toEqual(['F1', 'B8', 'B9', 'MPQ']);
+    // B5, B6, B7 answered or confirmed [Team, 2026-10-28]; F2 = the re-arm
+    // rule the team confirms through L-15 (BL-261).
+    expect(CALL_OFF_TRIGGER_QUESTIONS).toEqual(['F1', 'B8', 'B9', 'MPQ', 'F2']);
   });
 });

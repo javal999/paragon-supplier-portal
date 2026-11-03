@@ -142,6 +142,28 @@ describe('BR-03 · the current plan in the sandbox is the live plan', () => {
       systemRopSuppliers().get(`${PM.supplierId}|${PM.materialCode}`)
     );
   });
+
+  // [Owner FSR-D6, 2026-11-03] BL-261 (U-01) — PK-PETB-8801 × sup-007, the pair
+  // the Foresight review walked: on DRC-B37 one draft of 22,800 and "PR 0"
+  // beside 22 weeks of negative stock; on the default a chain of call-offs
+  // until the OSPO balance (122,000) is used up, then a PR for what no open PO
+  // covers.
+  it('PK-PETB-8801 × sup-007: a chain of call-offs plus a PR on the default; the review’s figures on DRC-B37', () => {
+    const inputs = live({ supplierId: 'sup-007', materialCode: 'PK-PETB-8801' });
+    expect(inputs.ospoStart).toBe(122_000);
+    const chain = runWhatIf(inputs);
+    expect(chain.rops.ropFisik.value).toBe(12_000);
+    expect(chain.callOffs.map((c) => c.qty)).toEqual([22_800, 38_000, 30_400, 30_400, 400]);
+    expect(chain.totalDrafted).toBe(122_000);
+    expect(chain.triggerPr).toBe(657_193);
+    expect(chain.firstShortageWeek).toBe('2026-10-05');
+    expect(chain.weeks.filter((w) => w.soh < 0)).toHaveLength(19);
+    const b37 = runWhatIf(inputs, withSwitch(DEFAULT_SWITCHES, 'reArm', 'aboveRopFisik'));
+    expect(b37.callOffs.map((c) => c.qty)).toEqual([22_800]);
+    expect(b37.triggerPr).toBe(0);
+    expect(b37.firstShortageWeek).toBe('2026-09-14');
+    expect(b37.weeks.filter((w) => w.soh < 0)).toHaveLength(22);
+  });
 });
 
 describe('BR-05 · saving a scenario (t_whatifscenario_save)', () => {

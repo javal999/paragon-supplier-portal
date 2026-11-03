@@ -118,6 +118,23 @@ describe('BuyerStabilise — the planner page (REQ-E14-06)', () => {
     );
   });
 
+  it('FSR-D5 (BL-238): under "Per supplier and material" a basis line names the replay and the sample Version 2, linking to the versions tab', async () => {
+    renderWithProviders(<BuyerStabilise />, { identity: PLANNER, route: '/buyer/stabilise' });
+    await screen.findByTestId('stb-run-engine');
+    const basis = screen.getByTestId('stb-series-basis');
+    expect(basis).toHaveTextContent(
+      'Engine value, Last published and First published are the engine’s versions replayed 12 weeks back. Suppliers hold the sample Version 2: see Published versions.'
+    );
+    expect(screen.getByTestId('stb-series-basis-link')).toHaveAttribute(
+      'href',
+      '/buyer/stabilise?tab=versions'
+    );
+    // Inside the series section, under its table.
+    expect(screen.getByTestId('stb-series')).toContainElement(basis);
+    // FUX-D4 keeps the Source column: no column is renamed by the line.
+    expect(screen.getByRole('radio', { name: /SAP’s published plan/ })).toBeInTheDocument();
+  });
+
   it('the effect on plan change, raw against stabilised — the service’s own figures, on both sources', async () => {
     const p = await plan();
     renderWithProviders(<BuyerStabilise />, { identity: PLANNER, route: '/buyer/stabilise' });

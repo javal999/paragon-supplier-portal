@@ -76,6 +76,11 @@ export const stabiliseEn = {
   'stb.series.onlyMoving': 'Only rows where a rule held a week',
   'stb.series.all': 'All rows',
   'stb.series.empty': 'No row had a week held by a rule.',
+  // FSR-D5 (BL-238, C-03) — the basis line under the table; the replay depth is
+  // `REPLAY_WEEKS`, passed in.
+  'stb.series.basis':
+    'Engine value, Last published and First published are the engine’s versions replayed {{weeks}} weeks back. Suppliers hold the sample Version 2: see',
+  'stb.series.basis.link': 'Published versions',
 
   'stb.detail.title': 'Weeks of the version to publish · {{material}} · {{supplier}}',
   'stb.detail.col.week': 'Week',
@@ -197,6 +202,9 @@ export const stabiliseId = {
   'stb.series.onlyMoving': 'Hanya baris yang minggunya ditahan aturan',
   'stb.series.all': 'Semua baris',
   'stb.series.empty': 'Tidak ada baris yang minggunya ditahan aturan.',
+  'stb.series.basis':
+    'Nilai mesin, Terakhir diterbitkan, dan Pertama diterbitkan adalah versi mesin yang diputar ulang {{weeks}} minggu ke belakang. Pemasok memegang Versi 2 contoh: lihat',
+  'stb.series.basis.link': 'Versi terbit',
 
   'stb.detail.title': 'Minggu dari versi yang akan diterbitkan · {{material}} · {{supplier}}',
   'stb.detail.col.week': 'Minggu',

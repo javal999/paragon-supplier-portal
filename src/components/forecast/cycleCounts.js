@@ -2,6 +2,7 @@
 import { selectionEffect } from '@services/engine/reschedule';
 /** @import { ForecastCommitmentLine, ForecastVersionView, OrderPlanView, RescheduleView } from '@services/data/types' */
 /** @import { ForecastStream } from '@services/sdc/types' */
+/** @import { DemandAnticipationRow } from '@services/transitions/demandAnticipationRules' */
 import { isException } from '@services/transitions/forecastRules';
 import { isLive } from '@services/liveness';
 
@@ -106,13 +107,40 @@ export function openExceptions(lines, nowIso) {
   return lines.filter((l) => isException(l, nowIso)).length;
 }
 
-/** The weekly cycle's 5 steps, in order (evaluation §4–§5). Each is a page in `FORECAST_PAGES`. */
+/**
+ * Demand anticipation (DA), FSR-D3 (BL-251): is the planning week published for
+ * every supplier × material? The page's headline rule (`publishPreview` on the
+ * DA page, DRC-2 BL-188), kept here so the step and the page cannot disagree.
+ * @param {readonly DemandAnticipationRow[]} rows
+ * @returns {boolean}
+ */
+export function daPublished(rows) {
+  return rows.length > 0 && rows.every((r) => r.planSource === 'published');
+}
+
+/**
+ * Demand anticipation (DA): supplier × material pairs whose planning-week
+ * figure today differs from the published one, or is not published — the
+ * page's headline count ("published; N supplier × material differs from
+ * today's figures", DRC-2 BL-188). The read sets `changed`; this only counts.
+ * @param {readonly DemandAnticipationRow[]} rows
+ * @returns {number}
+ */
+export function daPairsChanged(rows) {
+  return rows.filter((r) => r.changed).length;
+}
+
+/**
+ * The weekly cycle's 6 steps, in order (evaluation §4–§5; FSR-D3 added
+ * Demand anticipation (DA) as step 6, BL-251). Each is a page in `FORECAST_PAGES`.
+ */
 export const CYCLE_STEPS = /** @type {const} */ ([
   'thisWeek',
   'whatToOrder',
   'makeRoom',
   'publish',
-  'responses'
+  'responses',
+  'demandAnticipation'
 ]);
 /** @typedef {(typeof CYCLE_STEPS)[number]} CycleStepId */
 
@@ -121,10 +149,14 @@ export const CYCLE_STEPS = /** @type {const} */ ([
  * own `DataHealthChip step=…`). Supplier responses carries no chip; This week
  * counts every check (its input check card). Read by the publish checklist
  * (`BuyerStabilise`, B2); restored after #140 removed it while that reader stood.
+ * Demand anticipation (DA) reads the LTP and SAP stock; the engine feeds those
+ * match (`fgPlan`, `stock`) are both read by E14-03, so its chip names that step
+ * (BL-251, [Proposed]).
  * @type {Readonly<Partial<Record<CycleStepId, EngineStep>>>}
  */
 export const STEP_HEALTH = Object.freeze({
   whatToOrder: 'E14-05',
   makeRoom: 'E14-13',
-  publish: 'E14-03'
+  publish: 'E14-03',
+  demandAnticipation: 'E14-03'
 });

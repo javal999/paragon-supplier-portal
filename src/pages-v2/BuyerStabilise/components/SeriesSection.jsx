@@ -1,12 +1,15 @@
 /** @import React from 'react' */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import FilterChipsBar from '@components/ui-v2/FilterChipsBar';
 import Table from '@components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
 import TermTip from '@components/forecast/TermTip';
 /** @import { StabiliseRunView } from '@services/data/types' */
+import { REPLAY_WEEKS } from '@services/data/mock/stabiliseReadModel';
 import { anyHeld } from '../utils';
+import { TAB_PARAM } from '../const';
 import SeriesRow from './SeriesRow';
 
 /**
@@ -14,6 +17,12 @@ import SeriesRow from './SeriesRow';
  * (or all of them), each row opening its weeks. It owns the filter and which
  * row is open; both reset when the source changes, because the run section is
  * keyed by source. `series` is the run's series (`run.series`).
+ *
+ * FSR-D5 (BL-238, C-03): the basis line under the table says that Engine
+ * value, Last published and First published are the engine's versions
+ * replayed `REPLAY_WEEKS` back (ENG-B30), while suppliers hold the sample
+ * Version 2, which the Published versions tab lists (FUX2-R1). No column is
+ * renamed: the Source column still waits for the engine (F-13, FUX-D4).
  * @type {React.FC<{ series: StabiliseRunView['series'] }>}
  */
 const SeriesSection = ({ series }) => {
@@ -77,6 +86,17 @@ const SeriesSection = ({ series }) => {
           </Table>
         </div>
       )}
+      <p className="text-xs text-text-secondary mt-3" data-testid="stb-series-basis">
+        {t('stb.series.basis', { weeks: REPLAY_WEEKS })}{' '}
+        <Link
+          to={`/buyer/stabilise?${TAB_PARAM}=versions`}
+          className="text-action-hover hover:underline"
+          data-testid="stb-series-basis-link"
+        >
+          {t('stb.series.basis.link')}
+        </Link>
+        .
+      </p>
     </section>
   );
 };

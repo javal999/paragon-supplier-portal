@@ -73,7 +73,7 @@ describe('BL-199 — a draft made at ROP Fisik on the Call-offs page', () => {
     // Known-good for BL-232: a full minimum delivery carries no warning.
     expect(p.queryByTestId('calloff-trigger-below-min-delivery')).toBeNull();
     expect(p.getByTestId('calloff-trigger-provisional')).toHaveTextContent(
-      'Provisional: rule awaiting Material Planning (F1, B8, B9, MPQ)'
+      'Provisional: rule awaiting Material Planning (F1, B8, B9, MPQ, F2)'
     );
     expect(p.getByTestId('calloff-trigger-refresh')).toHaveTextContent(
       'Checks follow the eWM refresh; eWM feed not connected, SOH from the hub’s stock records.'

@@ -34,7 +34,9 @@ const noBalanceAtRopFisik = () => {
   if (!po) throw new Error('PO-2025-00116 missing from the seed');
   purchaseOrderStore.update(po.id, (p) => ({ ...p, status: POStatus.CLOSED }));
   applyPtiStockRefresh([{ materialCode: 'RM-STEAR-7300', plant: 'J6', ptiSoh: 1010 }]);
-  // A second update while still low: still one recommendation, one task.
+  // A second update while still low: still one recommendation, one task. The
+  // trigger recommends again on every check [Owner FSR-D6, BL-261], so the
+  // open recommendation is the latest check's room: 1,400 − 990 = 410 KG.
   applyPtiStockRefresh([{ materialCode: 'RM-STEAR-7300', plant: 'J6', ptiSoh: 990 }]);
 };
 
@@ -63,13 +65,18 @@ describe('BL-199 — the "Create a PR in SAP" Home task and What to order', () =
     expect(detail).toHaveTextContent('49 days');
     fireEvent.click(task);
     const section = await screen.findByTestId('op-rop-fisik-pr', {}, { timeout: 8000 });
+    // FSR-D1 (BL-237): the trigger's figures are the hub sample, the plan of record.
+    expect(within(section).getByTestId('basis-line')).toHaveAttribute(
+      'data-standing',
+      'planOfRecord'
+    );
     const row = within(section).getByTestId('op-rop-fisik-pr-RM-STEAR-7300');
-    expect(row).toHaveTextContent('Create a PR in SAP for 390 KG');
-    expect(row).toHaveTextContent('1,010');
+    expect(row).toHaveTextContent('Create a PR in SAP for 410 KG');
+    expect(row).toHaveTextContent('990');
     expect(row).toHaveTextContent('1,275');
     expect(row).toHaveTextContent('1,400');
     expect(within(section).getByTestId('op-rop-fisik-pr-provisional')).toHaveTextContent(
-      'Provisional: rule awaiting Material Planning (F1, B8, B9, MPQ)'
+      'Provisional: rule awaiting Material Planning (F1, B8, B9, MPQ, F2)'
     );
     expect(within(section).getByTestId('op-rop-fisik-pr-refresh')).toHaveTextContent(
       'eWM feed not connected'

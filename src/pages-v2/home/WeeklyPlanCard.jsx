@@ -11,7 +11,7 @@ import { useDataHealth } from '@services/query/hooks';
 // view). It replaced a 14 px text link that gave the weekly routine the lowest weight on the page,
 // so planners worked the task cards before This week.
 //
-// One 64 px row: the step ("step 1 of 5", from `CYCLE_STEPS`), the Data health
+// One 64 px row: the step ("step 1 of N", N from `CYCLE_STEPS`), the Data health
 // verdict counted by the same function This week's input check uses
 // (`failingChecks`), and an outline button to This week. Read-only; nothing
 // is stored.

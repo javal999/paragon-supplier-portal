@@ -16,6 +16,12 @@ export const supplyGapEn = {
     'Weeks where released call-offs fall short of the demand anticipation, per supplier and material. A call-off on the oldest blanket PO line with balance comes first, then the next line; what no line covers needs a new PO, which the planner raises in SAP. This list is separate from the recommended orders: it reads the hub’s own call-offs, which the engine does not net.',
   'supplyGap.sample':
     'From the hub’s sample data: the sample LTP, SAP stock and the hub’s own POs and call-offs, not the engine’s dataset.',
+  // FSR-D1 (BL-237) — the basis line under a figure group: its dataset and its
+  // standing. Rendered by `components/forecast/BasisLine`.
+  'supplyGap.standing.planOfRecord':
+    'Plan of record: hub sample data (LTP, SAP stock, call-offs, OSIP columns). The engine dataset is the challenger.',
+  'supplyGap.standing.challenger':
+    'Challenger: engine dataset (SAP plan, synthetic). The hub sample data (LTP, demand anticipation, call-offs, OSIP) is the plan of record.',
   'supplyGap.basis':
     'Open supply is call-offs awaiting confirmation or confirmed, in the week of their need date. Drafts, rejected and dismissed call-offs are not supply, and a blanket balance not yet called off is not dated supply. Supply above a week’s demand anticipation counts against the next weeks’ gaps, never an earlier week’s.',
   // BL-228 — the tooltip on a gap that supply from earlier weeks reduced.
@@ -55,6 +61,10 @@ export const supplyGapId = {
     'Minggu-minggu ketika call-off yang dirilis kurang dari demand anticipation, per pemasok dan material. Call-off pada baris PO induk tertua yang masih bersaldo didahulukan, lalu baris berikutnya; yang tidak tertutup baris mana pun memerlukan PO baru, yang dibuat perencana di SAP. Daftar ini terpisah dari pesanan yang direkomendasikan: daftar ini membaca call-off hub sendiri, yang tidak diperhitungkan oleh mesin.',
   'supplyGap.sample':
     'Dari data contoh hub: LTP contoh, stok SAP, serta PO dan call-off hub sendiri, bukan dataset mesin.',
+  'supplyGap.standing.planOfRecord':
+    'Rencana acuan: data contoh hub (LTP, stok SAP, call-off, kolom OSIP). Dataset mesin adalah pembanding.',
+  'supplyGap.standing.challenger':
+    'Pembanding: dataset mesin (rencana SAP, sintetis). Data contoh hub (LTP, demand anticipation, call-off, OSIP) adalah rencana acuan.',
   'supplyGap.basis':
     'Pasokan terbuka adalah call-off yang menunggu konfirmasi atau sudah dikonfirmasi, pada minggu tanggal kebutuhannya. Draf, call-off yang ditolak dan yang dibatalkan bukan pasokan, dan saldo PO induk yang belum di-call-off bukan pasokan bertanggal. Pasokan di atas demand anticipation suatu minggu diperhitungkan untuk kekurangan minggu-minggu berikutnya, tidak pernah untuk minggu sebelumnya.',
   'supplyGap.carried': '{{qty}} terbawa dari minggu sebelumnya',

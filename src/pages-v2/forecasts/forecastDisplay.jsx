@@ -4,7 +4,7 @@ import StatusPill from '@components/ui-v2/StatusPill';
 import Data from '@components/ui-v2/Data';
 import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
-import { formatDate, formatDateTime } from '@lib/format';
+import { formatDate, formatDateTime, formatNumber } from '@lib/format';
 /** @import { StatusTone } from '@lib/statusTone' */
 import { sdcClock } from '@services/sdc';
 /** @import { ForecastCommitmentLine, ForecastZone } from '@services/data/types' */
@@ -30,8 +30,13 @@ import { useForecastCommand } from '@services/query/commandHooks';
  */
 export const forecastNow = () => sdcClock.now();
 
-/** @param {number} n */
-export const qtyText = (n) => n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+/**
+ * A forecast quantity in the reader's language: "34,300" in English, "34.300"
+ * in Indonesian, 2 decimals at most (X-01 of the inventory UX evaluation,
+ * through the BL-223 helper) [Owner FSR-D4, 2026-11-03, BL-260].
+ * @param {number} n
+ */
+export const qtyText = (n) => formatNumber(n, { maximumFractionDigits: 2 });
 
 /** @param {number} n */
 export const pctText = (n) => `${n > 0 ? '+' : ''}${(n * 100).toFixed(1)}%`;

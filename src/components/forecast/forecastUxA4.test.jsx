@@ -22,6 +22,7 @@ import BuyerOrderPlan from '@pages-v2/BuyerOrderPlan';
 import BuyerReschedule from '@pages-v2/BuyerReschedule';
 import BuyerStabilise from '@pages-v2/BuyerStabilise';
 import BuyerThisWeek from '@pages-v2/BuyerThisWeek';
+import BuyerDemandAnticipation from '@pages-v2/BuyerDemandAnticipation';
 import { BuyerFixedStockReconcile } from '@pages-v2/FixedStockReconcile';
 import Glossary from '@pages-v2/Glossary';
 
@@ -47,6 +48,8 @@ const PAGES = {
   makeRoom: BuyerReschedule,
   publish: BuyerStabilise,
   responses: BuyerCommitments,
+  // FSR-D3 (BL-251) — step 6 of the weekly strip.
+  demandAnticipation: BuyerDemandAnticipation,
   forecastQuality: BuyerDemandForecast,
   stockCheck: BuyerFixedStockReconcile,
   materialRequirement: BuyerMaterialRequirement,
@@ -56,6 +59,16 @@ const PAGES = {
   reliability: BuyerReliability
 };
 const IDS = /** @type {ForecastPageId[]} */ (Object.keys(PAGES));
+
+/**
+ * FSR-D3 (BL-251) — Demand anticipation (DA) joins the strip with the purpose
+ * header and the chip, but keeps its own body: its figures are the hub sample
+ * (FSR-D1) and what it publishes DOES reach suppliers inside the hub, so the
+ * F-14 banner ("Nothing here reaches suppliers or SAP") would be false on it.
+ * It keeps the Sample data badge, its own as-of line and no About section.
+ * @type {ReadonlySet<ForecastPageId>}
+ */
+const HUB_SAMPLE_PAGES = new Set(/** @type {ForecastPageId[]} */ (['demandAnticipation']));
 
 /**
  * P-12 — the pages split into tabs, and the tab that holds "About this page".
@@ -172,9 +185,15 @@ describe('the purpose-header map', () => {
     expect(FORECAST_PAGES.whatToOrder.next).toBe('makeRoom');
     expect(FORECAST_PAGES.makeRoom.next).toBe('publish');
     expect(FORECAST_PAGES.publish.next).toBe('responses');
-    // IA P-07 (IA-B10) — the weekly cycle ends back at This week.
-    expect(FORECAST_PAGES.responses.next).toBe('thisWeek');
+    // FSR-D3 (BL-251) — Demand anticipation (DA) is step 6, after Foresight
+    // commitments (supersedes D-19); IA P-07 (IA-B10) — the cycle then ends
+    // back at This week.
+    expect(FORECAST_PAGES.responses.next).toBe('demandAnticipation');
+    expect(FORECAST_PAGES.demandAnticipation.uses).toBe('publish');
+    expect(FORECAST_PAGES.demandAnticipation.next).toBe('thisWeek');
+    expect(FORECAST_PAGES.demandAnticipation.path).toBe('/buyer/demand-anticipation');
     expect(FORECAST_PAGES.thisWeek.sectionKey).toBe(FORECAST_PAGES.responses.sectionKey);
+    expect(FORECAST_PAGES.demandAnticipation.sectionKey).toBe(FORECAST_PAGES.thisWeek.sectionKey);
     expect(FORECAST_PAGES.forecastQuality.uses).toBe('performance');
     expect(FORECAST_PAGES.forecastQuality.next).toBe('stockCheck');
   });
@@ -206,6 +225,21 @@ describe.each(IDS)('%s', (page) => {
       )
     ).toBe(true);
 
+    // Title and crumb (F-19): the menu label, under its new section.
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(i18n.t(p.titleKey));
+    expect(document.body.textContent).toContain(i18n.t(p.sectionKey));
+
+    if (HUB_SAMPLE_PAGES.has(page)) {
+      // FSR-D3 / FSR-D1 — the hub-sample step keeps its Sample data badge and
+      // no engine banner: what it publishes does reach suppliers in the hub.
+      expect(screen.queryByTestId('simulated-data-banner')).toBeNull();
+      expect(screen.getByTestId('sample-data-badge')).toBeInTheDocument();
+      expect(
+        await screen.findByTestId('data-health-chip', {}, { timeout: 15000 })
+      ).toBeInTheDocument();
+      return;
+    }
+
     // F-14 — one banner, one wording; neither old label.
     expect(screen.getByTestId('simulated-data-banner')).toHaveTextContent(
       'Sample data. Nothing here reaches suppliers or SAP.'
@@ -218,10 +252,6 @@ describe.each(IDS)('%s', (page) => {
       labels.includes((el.textContent ?? '').trim().toLowerCase())
     );
     expect(asLabel.map((el) => el.outerHTML)).toEqual([]);
-
-    // Title and crumb (F-19): the menu label, under its new section.
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(i18n.t(p.titleKey));
-    expect(document.body.textContent).toContain(i18n.t(p.sectionKey));
 
     // F-26 — one "Data as of" line; F-08 — the explanations sit in About.
     expect(screen.getByTestId('data-as-of')).toHaveTextContent('Data as of');
@@ -241,6 +271,10 @@ describe.each(IDS)('%s', (page) => {
     await i18n.changeLanguage('id');
     await renderPage(page);
     expect(document.body.textContent).not.toMatch(/Prakiraan · Prakiraan/i);
+    if (HUB_SAMPLE_PAGES.has(page)) {
+      expect(screen.getByTestId('sample-data-badge')).toHaveTextContent('Data contoh');
+      return;
+    }
     expect(screen.getByTestId('simulated-data-banner')).toHaveTextContent(
       'Data contoh. Tidak ada yang sampai ke pemasok atau SAP.'
     );
