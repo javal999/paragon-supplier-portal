@@ -40,7 +40,7 @@
 //       confirmation arrives.
 //   (3) partial receipts add up — HOLDS: `receivedBy` sums every receipt.
 //   (4) one early rule — `agreedCfot` counts a receipt only inside the shared
-//       early window (PROPOSED until BL-56).
+//       early window (KPI-2; confirmed early dates: BL-234, not built).
 //   (5) dispatched but not received — NOT APPLICABLE: the engine carries no
 //       dispatch notices, and a line with nothing received by its date
 //       already counts 0 on time once the date is in the window.

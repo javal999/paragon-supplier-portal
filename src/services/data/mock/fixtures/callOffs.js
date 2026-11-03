@@ -426,8 +426,8 @@ export const CALL_OFF_SEED = [
     notes: []
   },
   {
-    // 4 days EARLIER than the need date: goes to PTI while the early
-    // allowance is the BL-56 placeholder of 0 days.
+    // 4 days EARLIER than the need date: goes to PTI, because the early
+    // allowance is 0 days (decided with BL-56).
     ...PET_024,
     id: 'co-0016',
     callOffNumber: 'CO-2026-0016',
