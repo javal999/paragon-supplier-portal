@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import Button from '@components/ui-v2/Button';
 import Data from '@components/ui-v2/Data';
 import TermTip from '@components/forecast/TermTip';
+import BasisLine from '@components/forecast/BasisLine';
 import { formatDate, formatNumber } from '@lib/format';
 import { useMaterialRequirement, useSafetyStock } from '@services/query/hooks';
 /** @import { MaterialOrderPlanView } from '@services/data/types' */
@@ -158,6 +159,7 @@ const WhyQuantityPanel = ({ id, rec, material, onClose }) => {
           {t('op.wq.close')}
         </Button>
       </div>
+      <BasisLine standing="challenger" className="mb-3" />
       <div className={`grid ${gridCols} gap-3`} data-testid="op-wq-blocks">
         <Block
           title={t('op.wq.req.title')}

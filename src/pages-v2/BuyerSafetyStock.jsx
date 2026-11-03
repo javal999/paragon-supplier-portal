@@ -20,6 +20,7 @@ import { useSafetyStock } from '@services/query/hooks';
 import { qtyOf } from './materialPlan/planDisplay';
 import PurposeHeader from '@components/forecast/PurposeHeader';
 import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
+import BasisLine from '@components/forecast/BasisLine';
 import AboutThisPage from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
 import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
@@ -359,6 +360,15 @@ const BuyerSafetyStock = () => {
 
       <OsipRuleSwitches value={switches} onChange={setSwitches} />
       <RopRuleSwitches value={ropSwitches} onChange={setRopSwitches} />
+
+      {/* FSR-D1 (BL-237): the OSIP columns (safety order, Fisik safety, CV, level,
+          ROP Order, ROP Fisik, Max) are the hub sample, the plan of record; the
+          engine safety stock and engine reorder point columns, and the KPIs
+          above, are the engine's challenger. */}
+      <div className="mb-3 space-y-0.5" data-testid="sst-basis">
+        <BasisLine standing="planOfRecord" />
+        <BasisLine standing="challenger" />
+      </div>
 
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto mb-6">
         <Table>

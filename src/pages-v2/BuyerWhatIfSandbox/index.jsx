@@ -13,6 +13,7 @@ import Button from '@components/ui-v2/Button';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { useCurrentIdentity } from '@context/CurrentIdentityContext';
+import BasisLine from '@components/forecast/BasisLine';
 import { formatDate } from '@lib/format';
 import { useWhatIfPairs, useWhatIfSandbox } from '@services/query/hooks';
 import {
@@ -52,6 +53,9 @@ import ScenariosPanel from './components/ScenariosPanel';
 // P-07 (IA-B10) — rows on What to order and Inventory open it on their
 // supplier × material ("Try a what-if", `TryWhatIfLink`); "New blank scenario"
 // clears the pair, so the sandbox starts blank with or without a link.
+//
+// FSR-D1 (BL-237, C-01) — the inputs are the hub sample (LTP, SOH, open POs,
+// ROP Fisik), the PLAN OF RECORD; the basis line above the results says so.
 //
 // BR-07 — PTI planners open it from a material row (P-07), not the menu. No role gate (CLAUDE.md
 // §65, DRC-D18): the save verb shows its HandoffNotice to a seat without the
@@ -141,6 +145,7 @@ const Editor = ({ box }) => {
           {t('whatIf.reset')}
         </Button>
       </div>
+      <BasisLine standing="planOfRecord" />
       <ResultsTable plan={plan} scenario={run} compared={compared} />
       <InputsPanel
         inputs={inputs}

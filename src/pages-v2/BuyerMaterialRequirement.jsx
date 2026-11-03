@@ -18,6 +18,7 @@ import { formatDate, formatNumber } from '@lib/format';
 import DataHealthChip from '@components/forecast/DataHealthChip';
 import PurposeHeader from '@components/forecast/PurposeHeader';
 import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
+import BasisLine from '@components/forecast/BasisLine';
 import AboutThisPage from '@components/forecast/AboutThisPage';
 import DataAsOf from '@components/forecast/DataAsOf';
 import { forecastCrumb, forecastTitle } from '@components/forecast/forecastPages';
@@ -336,6 +337,9 @@ const BuyerMaterialRequirement = () => {
         }
       />
       <DataHealthChip step="E14-03" className="mb-3" />
+      {/* FSR-D1 (BL-237, C-01): the netting and its stock on hand are the engine's
+          synthetic dataset, the challenger; the hub sample is the plan of record. */}
+      <BasisLine standing="challenger" className="mb-3" />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <FilterChipsBar options={modeOptions} value={mode} onChange={setMode} />

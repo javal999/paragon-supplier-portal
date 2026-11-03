@@ -16,6 +16,7 @@ import { usePageTab } from '@hooks/usePageTab';
 import CycleSteps from '@components/forecast/CycleSteps';
 import DataHealthChip from '@components/forecast/DataHealthChip';
 import PurposeHeader from '@components/forecast/PurposeHeader';
+import BasisLine from '@components/forecast/BasisLine';
 import { forecastCrumb } from '@components/forecast/forecastPages';
 import { STEP_HEALTH } from '@components/forecast/cycleCounts';
 import { useDemandAnticipation } from '@services/query/hooks';
@@ -284,6 +285,9 @@ const BuyerDemandAnticipation = () => {
               ) : null}
             </div>
 
+            {/* FSR-D1 (BL-237, C-01): every card's figures (LTP, SOH share, call-offs,
+                OSIP ROP Order) are the hub sample, the plan of record. */}
+            <BasisLine standing="planOfRecord" className="mb-1" />
             <p className="text-xs text-text-tertiary mb-3">{t('demandAnt.wouldBeHelp')}</p>
 
             <div className="space-y-3">
