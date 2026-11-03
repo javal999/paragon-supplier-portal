@@ -25,7 +25,8 @@ const expectDefinitions = async () => {
   expect(within(otif).getByTestId('kpi-otif-early')).toHaveTextContent(
     `up to ${EARLY_DELIVERY_WINDOW_DAYS} days early`
   );
-  expect(within(otif).getByTestId('kpi-otif-early')).toHaveTextContent('a proposal');
+  // KPI-2 is decided for an unconfirmed early receipt (owner, 2026-11-02): no "proposal" left.
+  expect(within(otif).getByTestId('kpi-otif-early')).not.toHaveTextContent('proposal');
   expect(within(otif).getByTestId('kpi-otif-grain')).toHaveTextContent('Per call-off');
   expect(within(otif).getByTestId('kpi-otif-dateChange')).toHaveTextContent(
     'A planner’s change to the need date applies only once the supplier confirms it'

@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Accepted 2026-10-27.** The owner accepted every recommendation in section 6 (CAP-D18 to CAP-D21). Nothing is built yet |
+| Status | **Accepted 2026-10-27.** The owner accepted every recommendation in section 6 (CAP-D18 to CAP-D21). **Built:** MR !43 (`9522cd71`), merged 2026-10-27 as `829f0681`; carry in `src/services/transitions/supplyBelowDemandRules.js` (`carryForward`) |
 | Date | 2026-10-27 |
 | Source | Owner, 2026-10-27, reviewing the Demand anticipation grid ("yes, log it"). Backlog row BL-228 |
 | Code read | `main` at `3d91b887` |

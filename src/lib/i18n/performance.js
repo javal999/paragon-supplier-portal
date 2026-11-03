@@ -69,7 +69,7 @@ export const performanceEn = {
   'perf.kpi.otif.window':
     'On time: received on or before the agreed date. A goods receipt counts only if it arrives no more than {{early}} days before that date and no more than {{match}} days after it. Nothing received {{grace}} days after the date: missed, even if the supplier sent a notice of dispatch. Before then: no result yet, and not counted.',
   'perf.kpi.otif.early':
-    'Counts as on time, up to {{early}} days early. A receipt earlier than that does not count. Delivered on the confirmed date uses the same rule. The {{early}} days are a proposal until the warehouse sets how early a delivery may arrive.',
+    'Counts as on time, up to {{early}} days early. A receipt earlier than that does not count. Delivered on the confirmed date uses the same rule.',
   'perf.kpi.otif.grain':
     'Per call-off: every delivery of the call-off must be on time and in full. The percentage is of the call-offs due in the period that have a result. A notice of dispatch alone is not a result, and it does not stop a delivery counting as missed.',
   'perf.kpi.otif.dateChange':
@@ -143,7 +143,7 @@ export const performanceId = {
   'perf.kpi.otif.window':
     'Tepat waktu: diterima pada atau sebelum tanggal yang disepakati. Penerimaan barang dihitung hanya bila tiba tidak lebih dari {{early}} hari sebelum tanggal itu dan tidak lebih dari {{match}} hari setelahnya. Tidak ada yang diterima {{grace}} hari setelah tanggal itu: terlewat, meskipun pemasok sudah mengirim pemberitahuan pengiriman. Sebelum itu: belum ada hasil, dan tidak dihitung.',
   'perf.kpi.otif.early':
-    'Dihitung tepat waktu, hingga {{early}} hari lebih awal. Penerimaan yang lebih awal dari itu tidak dihitung. Terkirim pada tanggal yang dikonfirmasi memakai aturan yang sama. {{early}} hari ini adalah usulan sampai gudang menetapkan seberapa awal pengiriman boleh tiba.',
+    'Dihitung tepat waktu, hingga {{early}} hari lebih awal. Penerimaan yang lebih awal dari itu tidak dihitung. Terkirim pada tanggal yang dikonfirmasi memakai aturan yang sama.',
   'perf.kpi.otif.grain':
     'Per call-off: setiap pengiriman call-off harus tepat waktu dan tepat jumlah. Persentasenya dari call-off yang jatuh tempo pada periode ini dan sudah ada hasilnya. Pemberitahuan pengiriman saja bukan hasil, dan tidak mencegah pengiriman dihitung terlewat.',
   'perf.kpi.otif.dateChange':

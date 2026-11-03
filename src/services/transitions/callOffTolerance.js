@@ -13,9 +13,10 @@
 //   number for it, so there is no setting for it here.
 // · Later than the need date: ALWAYS goes to the planner. There is no late
 //   allowance to set, so there is no setting for it here either.
-// · Earlier than the need date: goes to the planner until the warehouse decides
-//   how many days early it can take (PQ-08, backlog BL-56). The allowance is a
-//   PLACEHOLDER of 0 days until then.
+// · Earlier than the need date: goes to the planner. The owner decided on
+//   2026-11-02 (PQ-08, BL-56) that there is no fixed number of days: any date,
+//   early included, once the Material Planner team confirms it. So the
+//   allowance is 0 days, and every earlier date is the planner's call.
 //
 // ⚠️ **NO NUMBER IS WRITTEN HERE ANY MORE (BL-32).** The defaults live in the
 // registry `hubSettings.js`; the values in force are the administrator's, set
@@ -39,7 +40,7 @@ import { hubSetting } from './hubSettingsStore';
 
 /**
  * CR-05 — the call-off tolerance IN FORCE: `callOff.overPct` (default 5%) and
- * `callOff.earlyAllowanceDays` (placeholder 0 days until BL-56).
+ * `callOff.earlyAllowanceDays` (0 days, decided with BL-56).
  * @returns {CallOffTolerance}
  */
 export function callOffTolerance() {

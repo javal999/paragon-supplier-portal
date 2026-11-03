@@ -308,7 +308,6 @@ describe('BL32-POP · the population of rule values is derived from the config m
       ])
     );
     expect(ph).toEqual({
-      'callOff.earlyAllowanceDays': 'BL-56',
       'invoice.standardCapIdr': 'BL-54',
       'gate.minOtifPct': 'BL-55',
       'gate.noHistoryPasses': 'BL-55',
