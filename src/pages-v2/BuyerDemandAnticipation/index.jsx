@@ -13,8 +13,15 @@ import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { formatDate } from '@lib/format';
 import { usePageTab } from '@hooks/usePageTab';
+import CycleSteps from '@components/forecast/CycleSteps';
+import DataHealthChip from '@components/forecast/DataHealthChip';
+import PurposeHeader from '@components/forecast/PurposeHeader';
+import BasisLine from '@components/forecast/BasisLine';
+import { forecastCrumb } from '@components/forecast/forecastPages';
+import { STEP_HEALTH } from '@components/forecast/cycleCounts';
 import { useDemandAnticipation } from '@services/query/hooks';
 /** @import { DemandAnticipationRow } from '@services/transitions/demandAnticipationRules' */
+/** @import { EngineStep } from '@services/engine/dataHealth' */
 import { inputClass, inventoryNow, labelClass } from '../inventory/inventoryDisplay';
 import AnticipationGrid from './components/AnticipationGrid';
 import PublishPanel from './components/PublishPanel';
@@ -46,10 +53,20 @@ import { latestPublication, publishPreview, sharePct, weekDates, weekLabel } fro
 // The publication history stays its own page, linked beside the tabs and
 // from the publication. The tab is `?tab=thisWeek|consumption`; the
 // `supplier=` / `material=` filters live on This week, which is the default.
+//
+// FSR-D3 (BL-251, U-11) — step 6 of the weekly step strip: the "Decision here
+// / Uses / Next" purpose header and the Data health chip, as on the other
+// steps, placed where Publish to suppliers puts them. The chip names the
+// engine step whose feeds match this page's inputs (`STEP_HEALTH`). The
+// Sample data marker stays: unlike the engine pages, what is published here
+// does reach suppliers inside the hub.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @param {DemandAnticipationRow} r */
 const keyOf = (r) => `${r.supplierId}-${r.materialCode}`;
+
+/** FSR-D3 (BL-251) — the engine step this page's Data health chip names, from the one registry. */
+const DA_HEALTH_STEP = /** @type {EngineStep} */ (STEP_HEALTH.demandAnticipation);
 
 /** P-12 — the page's tabs, in order; the first opens by default. */
 // i18n-defer: tab identifiers, not copy — each renders through t(`demandAnt.tab.${id}`)
@@ -89,7 +106,7 @@ const BuyerDemandAnticipation = () => {
   const query = useDemandAnticipation();
   const [params, setParams] = useSearchParams();
   const nowIso = inventoryNow();
-  const crumb = [t('hub.nav.section.weeklyPlan'), t('hub.nav.pti.demandAnticipation')];
+  const crumb = forecastCrumb(t, 'demandAnticipation');
   const rows = useMemo(() => query.data?.items ?? [], [query.data]);
   const supplier = params.get('supplier');
   const material = params.get('material');
@@ -138,10 +155,14 @@ const BuyerDemandAnticipation = () => {
         title={t('hub.nav.pti.demandAnticipation')}
         subtitle={t('demandAnt.subtitle')}
       />
-      <PageMetaLine className="-mt-6 mb-4">
+      <PurposeHeader page="demandAnticipation" />
+      <CycleSteps current="demandAnticipation" />
+      <PageMetaLine className="mb-2">
         {t('demandAnt.asOf')} <Data>{formatDate(nowIso)}</Data>
         <SampleDataBadge className="ml-3 align-middle" />
       </PageMetaLine>
+      {/* FSR-D3 (BL-251) — the chip the other steps carry; E14-03 reads the plan and stock feeds. */}
+      <DataHealthChip step={DA_HEALTH_STEP} className="mb-4" />
 
       <div className="flex flex-wrap items-end justify-between gap-x-6 mb-4">
         <Tabs
@@ -264,6 +285,9 @@ const BuyerDemandAnticipation = () => {
               ) : null}
             </div>
 
+            {/* FSR-D1 (BL-237, C-01): every card's figures (LTP, SOH share, call-offs,
+                OSIP ROP Order) are the hub sample, the plan of record. */}
+            <BasisLine standing="planOfRecord" className="mb-1" />
             <p className="text-xs text-text-tertiary mb-3">{t('demandAnt.wouldBeHelp')}</p>
 
             <div className="space-y-3">

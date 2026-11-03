@@ -6,6 +6,7 @@ import { formatDate } from '@lib/format';
 import { sdcClock } from '@services/sdc/clock';
 import {
   useDataHealth,
+  useDemandAnticipation,
   useForecastCommitments,
   useForecastVersions,
   useOrderPlan,
@@ -17,6 +18,8 @@ import { FOCUS_RING } from './focusRing';
 import {
   CYCLE_STEPS,
   currentVersions,
+  daPairsChanged,
+  daPublished,
   failingChecks,
   recommendedOrders,
   openExceptions,
@@ -27,9 +30,11 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 // CYCLE STEPS — Forecast UX phase 2, task B1 (F-03, F-05; evaluation §5).
 //
-// A 5-step bar under the title of This week and the 4 Weekly plan pages. It
+// A 6-step bar under the title of This week and the 5 Weekly plan pages. It
 // answers "where am I in the cycle": the current page is marked, and every
-// step links to its page and shows one number.
+// step links to its page and shows one number. FSR-D3 (BL-251): Demand
+// anticipation (DA) is step 6, after Foresight commitments; its number is the
+// DA page's own headline (`daPublished`, `daPairsChanged`).
 //
 // FUX2-R3 — no invented state. A step reads "Blocked" only when the data says
 // so (Publish, while publishing is withheld), and a step whose page carries a
@@ -62,6 +67,7 @@ const CycleSteps = ({ current }) => {
   const reschedule = useReschedule();
   const versions = useForecastVersions();
   const lines = useForecastCommitments();
+  const anticipation = useDemandAnticipation();
   const report = health.data ?? null;
   const withheld = publishWithheld();
 
@@ -106,6 +112,15 @@ const CycleSteps = ({ current }) => {
         return lines.data
           ? t('fux.count.exceptions', { count: openExceptions(lines.data.items, sdcClock.now()) })
           : null;
+      case 'demandAnticipation': {
+        // FSR-D3 (BL-251) — the DA page's headline: not published yet, or how
+        // many supplier × material figures differ from the publication.
+        if (!anticipation.data) return null;
+        const rows = anticipation.data.items;
+        return daPublished(rows)
+          ? t('fux.count.daChanged', { count: daPairsChanged(rows) })
+          : t('fux.steps.noneYet');
+      }
     }
   };
 
@@ -126,10 +141,12 @@ const CycleSteps = ({ current }) => {
       data-testid="cycle-steps"
       data-current={current}
     >
-      {/* C2 (WCAG 1.4.10): 5 columns only from xl. At 768 px the menu leaves
-          about 460 px, and 5 columns of 84 px pushed the step names out of
-          their boxes; 2 then 3 columns let them wrap inside. */}
-      <ol className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      {/* C2 (WCAG 1.4.10): 6 columns only from xl (FSR-D3 added the 6th step).
+          At 768 px the menu leaves about 460 px, and 5 columns of 84 px pushed
+          the step names out of their boxes; 2 then 3 columns let them wrap
+          inside. At 1280 px the content column is about 1000 px, so each of the
+          6 boxes keeps about 160 px and a two-word name wraps inside it. */}
+      <ol className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {CYCLE_STEPS.map((id, i) => {
           const page = FORECAST_PAGES[id];
           const f = figures[id];

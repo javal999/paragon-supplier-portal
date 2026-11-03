@@ -8,6 +8,7 @@ import Data from '@components/ui-v2/Data';
 import StatusPill from '@components/ui-v2/StatusPill';
 import { formatDate, formatNumber } from '@lib/format';
 import { useRopFisikPrRecommendations } from '@services/query/hooks';
+import BasisLine from '@components/forecast/BasisLine';
 import { TriggerProvisional, TriggerRefreshNote } from '../../callOffs/ropFisikTrigger';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -17,6 +18,8 @@ import { TriggerProvisional, TriggerRefreshNote } from '../../callOffs/ropFisikT
 // creates it in SAP, and the hub posts nothing (Owner F2). Every figure is the
 // trigger's, stored with its rules version (DRC-D16); none is computed here.
 // The section shows only while a recommendation is open.
+// FSR-D1 (BL-237): the trigger reads the hub sample (SAP stock, ROP Fisik,
+// the hub's POs), the PLAN OF RECORD; the basis line says so.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @type {React.FC} */
@@ -32,6 +35,7 @@ const RopFisikPrSection = () => {
     >
       <h2 className="text-section text-text-primary mb-1">{t('co.trigger.pr.title')}</h2>
       <p className="text-xs text-text-tertiary mb-1">{t('co.trigger.pr.intro')}</p>
+      <BasisLine standing="planOfRecord" className="mb-1" />
       <TriggerRefreshNote testId="op-rop-fisik-pr-refresh" />
       <TriggerProvisional testId="op-rop-fisik-pr-provisional" />
       <Table>

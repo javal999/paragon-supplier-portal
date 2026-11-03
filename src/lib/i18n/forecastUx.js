@@ -20,6 +20,9 @@ export const forecastUxEn = {
   'fux.purpose.publish':
     'Whether the stabilised plan is ready for suppliers, and which held weeks need a reason.',
   'fux.purpose.responses': 'Which supplier commitments to accept or move to another supplier.',
+  // FSR-D3 (BL-251) — step 6, Demand anticipation (DA).
+  'fux.purpose.demandAnticipation':
+    'Whether this week’s demand anticipation is ready to publish to suppliers.',
   'fux.purpose.forecastQuality':
     'Whether the engine’s demand forecast is good enough to trust, compared with SAP’s plan.',
   'fux.purpose.stockCheck':
@@ -80,6 +83,9 @@ export const forecastUxEn = {
   'fux.count.overCapacity_other': '{{count}} weeks over capacity',
   'fux.count.exceptions_one': '{{count}} open exception',
   'fux.count.exceptions_other': '{{count}} open exceptions',
+  // FSR-D3 (BL-251) — the Demand anticipation (DA) step's figure.
+  'fux.count.daChanged_one': '{{count}} supplier × material differs from the publication',
+  'fux.count.daChanged_other': '{{count}} supplier × materials differ from the publication',
   'fux.thisWeek.input.title': 'Input check',
   'fux.thisWeek.input.intro':
     'The finished-goods plan and the feeds the plan is built on. If a check fails, decide whether to go ahead or hold and alert the MDM team.',
@@ -116,6 +122,8 @@ export const forecastUxId = {
   'fux.purpose.publish':
     'Apakah rencana yang sudah distabilkan siap untuk pemasok, dan minggu tertahan mana yang perlu alasan.',
   'fux.purpose.responses': 'Komitmen pemasok mana yang diterima atau dipindahkan ke pemasok lain.',
+  'fux.purpose.demandAnticipation':
+    'Apakah demand anticipation minggu ini siap dipublikasikan ke pemasok.',
   'fux.purpose.forecastQuality':
     'Apakah prakiraan permintaan mesin cukup baik untuk dipercaya, dibandingkan rencana SAP.',
   'fux.purpose.stockCheck':
@@ -161,6 +169,7 @@ export const forecastUxId = {
   'fux.count.firstRelease': 'Rilis pertama {{week}} · {{date}}',
   'fux.count.overCapacity_other': '{{count}} minggu di atas kapasitas',
   'fux.count.exceptions_other': '{{count}} pengecualian terbuka',
+  'fux.count.daChanged_other': '{{count}} pemasok × material berbeda dari publikasi',
   'fux.thisWeek.input.title': 'Cek masukan',
   'fux.thisWeek.input.intro':
     'Rencana barang jadi dan umpan data yang menjadi dasar rencana. Jika ada pemeriksaan yang gagal, putuskan apakah lanjut atau tahan dan beri tahu tim MDM.',

@@ -26,6 +26,13 @@ import { ltpFgDemandRows } from './ltpFgDemandRows';
 // figure). Weeks in the horizon carry a marker in their header: "Published"
 // when the planning week's publication holds them, "Horizon" otherwise.
 // No figure is computed here; every number is the read's.
+//
+// BL-245 (U-03): the planning week's remainder the read carried (`plan.carry`,
+// DRC-B22) is PENDING: it enters the figures from the next planning week, so
+// it is not in `carriedIn` and not in any sum yet. Its target cell in the
+// Carried in row says so ("4,300 pending (counts from next planning week)"),
+// so the grid agrees with the card sentence. The row's value and sum are
+// unchanged.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const dash = <span className="text-text-tertiary">—</span>;
@@ -78,21 +85,34 @@ const AnticipationGrid = ({ row, rowKey, currentWeek }) => {
       value: (week) => weekOf(week).inputs.carriedIn.reduce((n, c) => n + c.qty, 0),
       cell: (week) => {
         const parts = weekOf(week).inputs.carriedIn;
-        if (parts.length === 0) return dash;
+        // BL-245 — the pending carry of the planning week, in its target week.
+        const pending =
+          row.plan.carry !== null && row.plan.carry.week === week ? (
+            <span
+              className="block text-xs text-text-tertiary whitespace-nowrap"
+              data-testid={`dant-carry-pending-${rowKey}-${week}`}
+            >
+              {t('demandAnt.row.carryPending', { qty: formatNumber(row.plan.carry.qty) })}
+            </span>
+          ) : null;
+        if (parts.length === 0) return pending ?? dash;
         return (
-          <Data
-            data-testid={`dant-carried-${rowKey}-${week}`}
-            title={parts
-              .map((c) =>
-                t('demandAnt.row.carriedFrom', {
-                  qty: formatNumber(c.qty),
-                  week: weekLabel(c.fromWeek)
-                })
-              )
-              .join(' · ')}
-          >
-            {formatNumber(parts.reduce((n, c) => n + c.qty, 0))}
-          </Data>
+          <>
+            <Data
+              data-testid={`dant-carried-${rowKey}-${week}`}
+              title={parts
+                .map((c) =>
+                  t('demandAnt.row.carriedFrom', {
+                    qty: formatNumber(c.qty),
+                    week: weekLabel(c.fromWeek)
+                  })
+                )
+                .join(' · ')}
+            >
+              {formatNumber(parts.reduce((n, c) => n + c.qty, 0))}
+            </Data>
+            {pending}
+          </>
         );
       }
     },

@@ -20,6 +20,7 @@ import BuyerOrderPlan from './BuyerOrderPlan';
 import BuyerReschedule from './BuyerReschedule';
 import BuyerStabilise from './BuyerStabilise';
 import BuyerCommitments from './BuyerCommitments';
+import BuyerDemandAnticipation from './BuyerDemandAnticipation';
 import BuyerHome from './BuyerHome';
 import { BuyerFixedStockReconcile } from './FixedStockReconcile';
 
@@ -46,7 +47,9 @@ const WEEKLY = {
   whatToOrder: BuyerOrderPlan,
   makeRoom: BuyerReschedule,
   publish: BuyerStabilise,
-  responses: BuyerCommitments
+  responses: BuyerCommitments,
+  // FSR-D3 (BL-251) — step 6.
+  demandAnticipation: BuyerDemandAnticipation
 };
 
 /**
@@ -252,13 +255,18 @@ describe('the cycle step bar (F-03, F-05)', () => {
         if (id === page) expect(step).toHaveAttribute('aria-current', 'step');
         else expect(step).not.toHaveAttribute('aria-current');
       }
-      expect(within(bar).getAllByRole('link')).toHaveLength(5);
+      expect(within(bar).getAllByRole('link')).toHaveLength(CYCLE_STEPS.length);
       expect(within(bar).getByTestId('cycle-step-publish')).toHaveAttribute('data-blocked', 'true');
       expect(
         await within(bar).findByTestId('cycle-step-publish-figure', {}, SLOW)
       ).toHaveTextContent('Blocked');
       // Only Publish can be blocked (FUX2-R3); the others show a number.
-      for (const id of /** @type {const} */ (['whatToOrder', 'makeRoom', 'responses'])) {
+      for (const id of /** @type {const} */ ([
+        'whatToOrder',
+        'makeRoom',
+        'responses',
+        'demandAnticipation'
+      ])) {
         expect(within(bar).getByTestId(`cycle-step-${id}`)).toHaveAttribute(
           'data-blocked',
           'false'
@@ -335,7 +343,7 @@ describe('My tasks leads the planner into This week (F-03)', () => {
       );
       expect(card).toHaveClass('h-16');
       expect(within(card).getByRole('heading', { level: 2 })).toHaveTextContent(
-        'Weekly plan, step 1 of 5: This week'
+        `Weekly plan, step 1 of ${CYCLE_STEPS.length}: This week`
       );
       expect(screen.queryByTestId('home-this-week')).toBeNull();
       expect(screen.queryByText('Start the weekly plan: This week')).toBeNull();

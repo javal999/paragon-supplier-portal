@@ -9,10 +9,13 @@
 // before) and "Next" (the step after).
 //
 // The links follow the menu order: This week (phase 2, B1) → What to order → Make warehouse room
-// → Publish to suppliers → Foresight commitments, and back to This week for the
-// next cycle (IA P-07). The Review pages run Supplier performance → Forecast
-// quality → Feedstock reconcile, and back to What to order. An engine page links to the page whose input it is, or that reaches
-// it (`fux-build-00-brief.md`, "Reached from").
+// → Publish to suppliers → Foresight commitments → Demand anticipation (DA), and
+// back to This week for the next cycle. FSR-D3 (BL-251, U-11): DA is step 6,
+// after Foresight commitments; this supersedes IA-BUILD-DECISIONS D-19, where
+// the cycle returned to This week after Foresight commitments (IA P-07). The
+// Review pages run Supplier performance → Forecast quality → Feedstock
+// reconcile, and back to What to order. An engine page links to the page whose
+// input it is, or that reaches it (`fux-build-00-brief.md`, "Reached from").
 //
 // FUX phase 2 B2 (F-01): Published versions is no longer a page. It is the
 // `?tab=versions` tab of Publish to suppliers, so it has no row here; its old
@@ -28,6 +31,7 @@
  *   | 'makeRoom'
  *   | 'publish'
  *   | 'responses'
+ *   | 'demandAnticipation'
  *   | 'forecastQuality'
  *   | 'stockCheck'
  *   | 'materialRequirement'
@@ -101,8 +105,19 @@ export const FORECAST_PAGES = Object.freeze({
     titleKey: 'hub.nav.pti.supplierResponses',
     sectionKey: WEEKLY,
     uses: 'publish',
-    // IA P-07 (IA-B10) — the weekly cycle ends back at This week, inside its
-    // own section, instead of jumping to Supplier performance.
+    // FSR-D3 (BL-251) — step 6, Demand anticipation (DA), follows; the cycle
+    // then ends back at This week, inside its own section (IA P-07, IA-B10).
+    next: 'demandAnticipation'
+  },
+  // FSR-D3 (BL-251, U-11) — Demand anticipation (DA) is step 6 of the weekly
+  // strip: after Foresight commitments, and back to This week for the next
+  // cycle. Supersedes IA-BUILD-DECISIONS D-19. The page reads the hub sample
+  // (LTP, SAP stock, call-offs), not the engine dataset (FSR-D1).
+  demandAnticipation: {
+    path: '/buyer/demand-anticipation',
+    titleKey: 'hub.nav.pti.demandAnticipation',
+    sectionKey: WEEKLY,
+    uses: 'responses',
     next: 'thisWeek'
   },
   forecastQuality: {

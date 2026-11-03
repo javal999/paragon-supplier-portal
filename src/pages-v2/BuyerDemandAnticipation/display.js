@@ -8,6 +8,7 @@
 
 import { addDays, isoWeek } from '@services/engine/dates';
 import { formatDate, formatNumber } from '@lib/format';
+import { daPairsChanged, daPublished } from '@components/forecast/cycleCounts';
 /** @import { DemandAnticipationRow, DemandAnticipationWeekView } from '@services/transitions/demandAnticipationRules' */
 
 /** `W42` for a week's Monday. @param {string} week */
@@ -39,6 +40,8 @@ export const weekDates = (weeks) =>
  * DRC-2 — the planning week (the current hub week, as the read names it on
  * every row), whether a publication records it for every pair, and how many
  * pairs' figures today differ from the published ones (or are unpublished).
+ * The two rules live in `cycleCounts.js` (FSR-D3, BL-251), so the weekly
+ * step strip's figure for this page is the page's own headline.
  * @param {readonly DemandAnticipationRow[]} rows
  * @param {string} nowIso
  * @returns {{ planningWeek: string; published: boolean; changed: number }}
@@ -47,8 +50,8 @@ export function publishPreview(rows, nowIso) {
   const planningWeek = rows[0]?.planningWeek ?? nowIso.slice(0, 10);
   return {
     planningWeek,
-    published: rows.length > 0 && rows.every((r) => r.planSource === 'published'),
-    changed: rows.filter((r) => r.changed).length
+    published: daPublished(rows),
+    changed: daPairsChanged(rows)
   };
 }
 
