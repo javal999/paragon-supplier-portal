@@ -302,14 +302,19 @@ const FixedStockReconcile = ({ persona }) => {
           </tbody>
         </Table>
       </div>
-      {/* DRC-15b [Proposed BL-207] — names the proposed leftover rule and its switch. */}
-      <p
-        className="text-sm text-text-secondary mb-6"
-        data-testid="fsr-remainder-note"
-        data-leftover-rule={leftoverRule}
-      >
-        {t(`fsr.leftover.note.${leftoverRule}`)} {t('fsr.proposed')}
-      </p>
+      {/* DRC-15b [Proposed BL-207] — names the proposed leftover rule and its switch.
+          [Owner FSR-D2, 2026-11-03] BL-259 — PTI only until BL-207 is ruled; the
+          owner ruled in chat the same day that the supplier sees this paragraph
+          no more than the row notes. */}
+      {isPti ? (
+        <p
+          className="text-sm text-text-secondary mb-6"
+          data-testid="fsr-remainder-note"
+          data-leftover-rule={leftoverRule}
+        >
+          {t(`fsr.leftover.note.${leftoverRule}`)} {t('fsr.proposed')}
+        </p>
+      ) : null}
 
       <section
         className="bg-bg-surface border border-border-subtle rounded-lg p-4 text-sm text-text-secondary space-y-2"

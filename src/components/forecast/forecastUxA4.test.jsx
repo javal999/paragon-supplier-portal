@@ -189,7 +189,7 @@ describe('the purpose-header map', () => {
     // commitments (supersedes D-19); IA P-07 (IA-B10) — the cycle then ends
     // back at This week.
     expect(FORECAST_PAGES.responses.next).toBe('demandAnticipation');
-    expect(FORECAST_PAGES.demandAnticipation.uses).toBe('responses');
+    expect(FORECAST_PAGES.demandAnticipation.uses).toBe('publish');
     expect(FORECAST_PAGES.demandAnticipation.next).toBe('thisWeek');
     expect(FORECAST_PAGES.demandAnticipation.path).toBe('/buyer/demand-anticipation');
     expect(FORECAST_PAGES.thisWeek.sectionKey).toBe(FORECAST_PAGES.responses.sectionKey);

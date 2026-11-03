@@ -203,7 +203,7 @@ export const stabiliseId = {
   'stb.series.all': 'Semua baris',
   'stb.series.empty': 'Tidak ada baris yang minggunya ditahan aturan.',
   'stb.series.basis':
-    'Nilai mesin, Terakhir terbit, dan Pertama terbit adalah versi mesin yang diputar ulang {{weeks}} minggu ke belakang. Pemasok memegang Versi 2 contoh: lihat',
+    'Nilai mesin, Terakhir diterbitkan, dan Pertama diterbitkan adalah versi mesin yang diputar ulang {{weeks}} minggu ke belakang. Pemasok memegang Versi 2 contoh: lihat',
   'stb.series.basis.link': 'Versi terbit',
 
   'stb.detail.title': 'Minggu dari versi yang akan diterbitkan · {{material}} · {{supplier}}',

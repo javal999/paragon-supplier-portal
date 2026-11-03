@@ -177,6 +177,7 @@ describe('DRC-15b [Proposed BL-207] — the leftover switch on the page', () => 
     expect(screen.queryByTestId(`fsr-liability-nomax-${KEY}`)).toBeNull();
     expect(screen.queryByTestId(`fsr-carried-${KEY}`)).toBeNull();
     expect(screen.queryByTestId(`fsr-proposed-${KEY}`)).toBeNull();
+    expect(screen.queryByTestId('fsr-remainder-note')).toBeNull();
   });
 
   it('carryToNextPo reads in Indonesian', async () => {

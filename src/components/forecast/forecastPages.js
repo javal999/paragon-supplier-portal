@@ -12,7 +12,9 @@
 // → Publish to suppliers → Foresight commitments → Demand anticipation (DA), and
 // back to This week for the next cycle. FSR-D3 (BL-251, U-11): DA is step 6,
 // after Foresight commitments; this supersedes IA-BUILD-DECISIONS D-19, where
-// the cycle returned to This week after Foresight commitments (IA P-07). The
+// the cycle returned to This week after Foresight commitments (IA P-07). DA's
+// "Uses" is Publish to suppliers, the version its figures are checked against,
+// as BL-251 names it; its strip neighbour stays Foresight commitments. The
 // Review pages run Supplier performance → Forecast quality → Feedstock
 // reconcile, and back to What to order. An engine page links to the page whose
 // input it is, or that reaches it (`fux-build-00-brief.md`, "Reached from").
@@ -117,7 +119,7 @@ export const FORECAST_PAGES = Object.freeze({
     path: '/buyer/demand-anticipation',
     titleKey: 'hub.nav.pti.demandAnticipation',
     sectionKey: WEEKLY,
-    uses: 'responses',
+    uses: 'publish',
     next: 'thisWeek'
   },
   forecastQuality: {
