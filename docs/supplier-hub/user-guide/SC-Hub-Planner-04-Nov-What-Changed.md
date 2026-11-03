@@ -7,7 +7,7 @@
 | Audience | Material Planning team, session led by Levi |
 | Goal | Agree that the end-to-end prototype is ready for early user testing with suppliers |
 | Generator | `sc-hub-vision/decks/planner-04-nov/build.js` (outside the repo, like the 07 Oct and 14 Oct decks) |
-| Screenshots | 6 from prod (`aeabdc83`, deployment -s8irr4yx0, https://paragon-supplier-portal-dusky.vercel.app), taken 2026-11-02, sample data. Slide 14 has no screenshot: prod's sample data holds no call-off drafted at ROP Fisik |
+| Screenshots | 7 from prod, sample data: 6 from `aeabdc83` (deployment -s8irr4yx0, https://paragon-supplier-portal-dusky.vercel.app, taken 2026-11-02); slide 13 from `7a8089ac` (deployment -fxbxufwss, taken 2026-11-03). Slide 14 has no screenshot: no sample PO line is short enough for a "Below minimum delivery" draft |
 | Out of scope | RFx (paused), supplier registration (another team), lint, refactors, CI |
 
 Every claim below was checked in the code or a doc at `aeabdc83`, not taken from a commit title alone. Paths are under `src/` unless they start with `docs/`.
@@ -103,7 +103,8 @@ Example numbers are illustrative. Each result was computed with the code's rule,
 ## 4. Claims not verified
 
 - **Screens.** Six slides show prod screenshots (DA grid, (i) tip, values panel, Stock, Stock simulation, Capacity). Prod's DA grid shows the same W37 to W39 figures as slide 6 (980 DA, 2,000 open supply, carries 1,020 and 40, gap 940). The Stock simulation example (slide 20) now uses prod's RM-EMUL-9430 row: available 1,700, called off not shipped 2,500, Over-called by 800.
-- **Not shown on prod:** the call-off draft panel ("Below minimum delivery", "Above Max"). No sample material is drafted at ROP Fisik, and I did not create one, because that would change data on prod.
+- **Call-off drafted at ROP Fisik (slide 13):** since MR !88 (`7a8089ac`), the app grows one draft at startup through the real trigger, on a sample PTI stock update for RM-STEAR-7300 that re-records its 900 KG unchanged (`src/services/data/mock/ropFisikDraftSeed.js`). On prod it is CO-2026-0047: SOH 900 KG, ROP Fisik 1,275 KG, Max Stock 1,400 KG, drafted 1,400 KG, minimum delivery 1,400 KG, Above Max. Slide 13's example now uses these figures, so room under Max is 500 (it was 390 with SOH 1,010 from the code comment). MOQ 1,250 and the pallet of 700 still come from the code comment; the panel shows only the rounded 1,400.
+- **Not shown on prod:** a "Below minimum delivery" draft (slide 14). It needs a PO line whose balance is under the minimum delivery, and no sample line is that short; slide 14 keeps its worked example and a note.
 - **Safety stock page text:** it described the old SD and CV windows on prod `aeabdc83`. MR !85 fixed it (main `f79a26c1`, live 2026-11-02 14:36 WIB), so slides 8 and 11 no longer flag it. The values-panel screenshot is from before the fix and does not show that text.
 - **BL-236 weekly panel (MR !82):** live in prod. As the sample supplier PT Sample Packaging Indonesia, the Stock page shows "Also due by the same cutoff" with "Capacity · 1 of 2 groups confirmed" and "Feedstock · 0 of 4 confirmed" (bundle `index-Czcj1RGk.js`, checked 2026-11-02). An earlier check said the lines were missing; it was wrong, because it searched the page text for "Also due" while the heading renders in capitals. The deck names BL-236 only in the BL-149 question.
 - **C2 sent?** On 2026-11-02 the C2 message was a draft that Levi had not yet sent. Check before the session.
@@ -123,4 +124,4 @@ Example numbers are illustrative. Each result was computed with the code's rule,
 4. **D1 "today" line** says BL-228 now carries surplus forward. The C2 message had no "today" for D1. *Alternative:* leave it blank, as C2 did.
 5. **Tolerance and KPI slide kept**, although the code did not change, because the rule was decided on 2026-11-02 and BL-234 is the gap. *Alternative:* drop it.
 6. **Generator outside the repo**, following the 07 Oct deck. *Alternative:* commit `build.js` under `docs/`.
-7. **Six prod screenshots, slide 14 a text note.** Slide 14 has no screen because prod has no ROP Fisik draft to show. *Alternative:* record a PTI stock update on prod to trigger a draft, then capture it.
+7. **Seven prod screenshots, slide 14 a text note.** The startup seed grows a real Above Max draft (slide 13). Slide 14 has no screen, because a Below minimum delivery draft would need a short sample PO line. *Alternative:* add such a line to the sample data (changes OSPO, DA and What to order figures).
