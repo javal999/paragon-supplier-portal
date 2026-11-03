@@ -75,14 +75,14 @@ describe('the step bar (WCAG 1.3.1, 4.1.2)', () => {
     expect(marked).toEqual([screen.getByTestId(`cycle-step-${current}`)]);
   });
 
-  it('wraps: one column on a phone, five only on a wide screen', async () => {
+  it('wraps: one column on a phone, six only on a wide screen (FSR-D3 added step 6)', async () => {
     renderWithProviders(<CycleSteps current="publish" />, { identity: PLANNER });
     const list = /** @type {HTMLOListElement} */ (
       (await screen.findByTestId('cycle-steps')).querySelector('ol')
     );
     expect(list.className).toMatch(/(^| )grid-cols-1( |$)/);
-    expect(list.className).toContain('xl:grid-cols-5');
-    expect(list.className).not.toMatch(/(^| )(sm|md):grid-cols-5/);
+    expect(list.className).toContain(`xl:grid-cols-${CYCLE_STEPS.length}`);
+    expect(list.className).not.toMatch(/(^| )(sm|md):grid-cols-[56]/);
   });
 });
 
