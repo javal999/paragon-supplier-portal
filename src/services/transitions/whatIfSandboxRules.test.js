@@ -188,6 +188,7 @@ describe('BR-02 · each switch moves the figure it should and nothing else (samp
       ['npdRule', 'D1'],
       ['plantComparison', 'F1'],
       ['maxCap', 'A7'],
+      ['reArm', 'F2'],
       ['productionLimitSource', 'E3']
     ])
       expect(SWITCH_CATALOG.find((s) => s.path === path)?.question).toBe(q);
@@ -244,17 +245,52 @@ describe('BR-03 · the difference against the current plan, worked by hand', () 
     expect(run.prNeed).toBe(0);
   });
 
-  it("'fillToMax': the hand material with Max 20 typed: one call-off of 10, then the trigger waits to re-arm", () => {
+  it("'fillToMax', Max 20 typed, 'everyCheck' [Owner FSR-D6]: a call-off of 10 every day keeps the stock between 0 and 10 until the PO runs out", () => {
     const plan = runWhatIf(hand(), FILL);
     const capped = runWhatIf(hand({ maxOverride: 20 }), FILL);
     expect(capped.maxSource).toBe('override');
     const diff = Object.fromEntries(compareRuns(plan, capped).map((d) => [d.key, d]));
     expect(diff.max).toMatchObject({ plan: 50, scenario: 20, delta: -30 });
     // Day 8 starts at 20: room 20 − 20 = 0, nothing. Day 9 at 10: room 10, one
-    // call-off of 10 arriving day 10. The trigger then waits for SOH above ROP
-    // Fisik (DRC-B37) — it never rises, so the stock runs out on day 11 (week 2).
+    // call-off of 10 arriving day 10. Day 10 starts at 10 again (0 + 10): the
+    // trigger is still armed (BL-261), so another 10 goes out — a chain of 10
+    // a day (days 9 to 13: 50 in week 2), the stock never below 0, until the
+    // 1,000 is used up in week 15.
+    expect(capped.weeks[1].drafted).toBe(50);
+    expect(capped.totalDrafted).toBe(1000);
+    expect(diff.firstShortageWeek).toMatchObject({ plan: MONDAYS[15], scenario: MONDAYS[15] });
+  });
+
+  it("'fillToMax', Max 20 typed, 'aboveRopFisik' (DRC-B37): one call-off of 10, then the trigger waits to re-arm", () => {
+    const B37 = withSwitch(FILL, 'reArm', 'aboveRopFisik');
+    const plan = runWhatIf(hand(), B37);
+    const capped = runWhatIf(hand({ maxOverride: 20 }), B37);
+    const diff = Object.fromEntries(compareRuns(plan, capped).map((d) => [d.key, d]));
+    // The trigger waits for SOH above ROP Fisik — it never rises, so the stock
+    // runs out on day 11 (week 2).
     expect(capped.totalDrafted).toBe(10);
     expect(diff.firstShortageWeek).toMatchObject({ plan: MONDAYS[15], scenario: MONDAYS[1] });
+  });
+
+  it("the PR recommendation reading (BL-261): 'openLatest' is the open recommendation as the ledger reads it; 'arrivesAfterLeadTime' lands it as supply", () => {
+    expect(WHAT_IF_RULES.prRecommendation).toBe('openLatest');
+    const run = runWhatIf(hand());
+    // The PO (1,000) runs out in week 16; from then on every daily check
+    // recommends a PR for the room, and the latest replaces the earlier one
+    // (DRC-13 BR-02): the weeks carry the growth, and sum to the headline.
+    expect(run.weeks.slice(0, 15).map((w) => w.prQty)).toEqual(Array(15).fill(0));
+    expect(run.weeks[23].prQty).toBe(70);
+    expect(run.triggerPr).toBe(run.weeks.reduce((n, w) => n + w.prQty, 0));
+    const last = run.weeks[23];
+    // Max 50 less the end-of-horizon stock, before the last day's demand.
+    expect(run.triggerPr).toBe(50 - last.soh - 10);
+    // The alternative: each PR raised lands 14 days later as open supply.
+    const lands = runWhatIf(hand(), DEFAULT_SWITCHES, {
+      ...WHAT_IF_RULES,
+      prRecommendation: 'arrivesAfterLeadTime'
+    });
+    expect(lands.weeks.slice(18).some((w) => w.incoming > 0)).toBe(true);
+    expect(lands.weeks[23].soh).toBeGreaterThan(run.weeks[23].soh);
   });
 
   it('[Team F5] the hand material on the default: the call-off is the MOQ 10 rounded to the pallet 50, called off above Max [Owner BL-230]', () => {

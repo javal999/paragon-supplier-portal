@@ -90,6 +90,19 @@ export const WHAT_IF_RULES = Object.freeze({
    * week's released call-offs arrive on its first day.
    */
   callOffArrival: /** @type {'needDate'} */ ('needDate'),
+  /**
+   * Reading (BR-03, BL-261) — what a PR recommendation is in the projection.
+   * 'openLatest' (default): a recommendation made while an earlier one is
+   * still open replaces it, as the ledger is read (DRC-13 BR-02,
+   * `openPrRecommendations`: the latest row per material until SOH is seen
+   * above ROP Fisik or a draft goes out); a week's `prQty` is what the open
+   * recommendation grew by, so the weeks sum to `triggerPr`, the PR SAP is
+   * asked for over the horizon. 'arrivesAfterLeadTime' [Proposed]: the planner
+   * raises each PR in SAP the day it is recommended and it lands after the
+   * material's lead time, counted as open supply until then; the weeks sum
+   * the PRs raised. With no lead time on record it reads as 'openLatest'.
+   */
+  prRecommendation: /** @type {'openLatest' | 'arrivesAfterLeadTime'} */ ('openLatest'),
   /** DRC-B4 — the trigger is checked once a day; a week's LTP is used evenly over its 7 days. */
   daysPerWeek: 7,
   /**
@@ -173,6 +186,7 @@ export const WHAT_IF_RULES = Object.freeze({
  *   readonly maxCap: 'mpqMultiple' | 'exact';
  *   readonly quantityRule: 'minimumDelivery' | 'fillToMax';
  *   readonly minimumDeliveryAboveMax: 'callOff' | 'wait';
+ *   readonly reArm: 'everyCheck' | 'aboveRopFisik';
  *   readonly productionLimitSource: 'allocatedCapacity' | 'sadrFeed';
  * }} WhatIfSwitches
  */
@@ -185,6 +199,7 @@ export const DEFAULT_SWITCHES = Object.freeze({
   maxCap: CALL_OFF_TRIGGER_RULES.maxCap,
   quantityRule: CALL_OFF_TRIGGER_RULES.quantityRule,
   minimumDeliveryAboveMax: CALL_OFF_TRIGGER_RULES.minimumDeliveryAboveMax,
+  reArm: CALL_OFF_TRIGGER_RULES.reArm,
   productionLimitSource: BUFFER_RULES.productionLimitSource
 });
 
@@ -326,6 +341,14 @@ export const SWITCH_CATALOG = Object.freeze([
     question: 'F5',
     kind: 'choice',
     options: ['callOff', 'wait'],
+    feeds: true
+  },
+  // [Owner FSR-D6, 2026-11-03] BL-261 — the re-arm rule; the team confirms it through L-15 (F2).
+  {
+    path: 'reArm',
+    question: 'F2',
+    kind: 'choice',
+    options: ['everyCheck', 'aboveRopFisik'],
     feeds: true
   }
 ]);
@@ -537,16 +560,20 @@ export const sohOf = (inputs) => PTI_PLANTS.reduce((n, p) => n + (inputs.soh[p] 
  * The day loop (the sandbox's reading, `WHAT_IF_RULES`): each day of the
  * horizon, after that day's arrivals and before its demand (the week's LTP
  * spread over 7 days in whole units, `dailyShare`), the trigger compares SOH with ROP Fisik (`sohCheck`, per
- * `plantComparison` [Default F1]); at or below, it fills up to Max less what is
- * on its way, from the OSPO balance (`allocateCallOffs`, rounded per `maxCap`),
- * armed as `triggerStep` says; what no balance covers is a PR recommendation.
- * A call-off arrives f days later (`callOffArrival`). The end-of-week SOH is
- * `projectedSoh` over the weekly incoming and LTP.
+ * `plantComparison` [Default F1]); at or below, it calls off the minimum
+ * delivery (or fills up to Max, `quantityRule`) less what is on its way, from
+ * the OSPO balance (`allocateCallOffs`, rounded per `maxCap`), armed as
+ * `triggerStep` says under `reArm` (BL-261: on the default every check at or
+ * below ROP Fisik drafts again, so the run shows a chain of call-offs; under
+ * DRC-B37 the trigger waits for SOH above ROP Fisik); what no balance covers
+ * is a PR recommendation. A call-off arrives f days later (`callOffArrival`).
+ * The end-of-week SOH is `projectedSoh` over the weekly incoming and LTP.
  * @param {WhatIfInputs} inputs
  * @param {WhatIfSwitches} [switches]
+ * @param {typeof WHAT_IF_RULES} [reading]  The sandbox's own readings (`prRecommendation`).
  * @returns {WhatIfRun}
  */
-export function runWhatIf(inputs, switches = DEFAULT_SWITCHES) {
+export function runWhatIf(inputs, switches = DEFAULT_SWITCHES, reading = WHAT_IF_RULES) {
   /** @type {WhatIfFlag[]} */
   const flags = [];
   const area = inputs.supplyArea;
@@ -641,7 +668,8 @@ export function runWhatIf(inputs, switches = DEFAULT_SWITCHES) {
     plantComparison: switches.plantComparison,
     maxCap: switches.maxCap,
     quantityRule: switches.quantityRule,
-    minimumDeliveryAboveMax: switches.minimumDeliveryAboveMax
+    minimumDeliveryAboveMax: switches.minimumDeliveryAboveMax,
+    reArm: switches.reArm
   };
   const plantShare = PTI_PLANTS.map((p) =>
     soh > 0 ? (inputs.soh[p] ?? 0) / soh : p === 'J6' ? 1 : 0
@@ -660,6 +688,14 @@ export function runWhatIf(inputs, switches = DEFAULT_SWITCHES) {
   const drafted = inputs.weeks.map(() => 0);
   const prQtys = inputs.weeks.map(() => 0);
   const shortage = inputs.weeks.map(() => false);
+  // `prRecommendation` — the PR lands after the lead time, or stays an open
+  // recommendation whose growth each week is the week's figure.
+  const prLeadDays =
+    reading.prRecommendation === 'arrivesAfterLeadTime' && inputs.leadTime
+      ? inputs.leadTime.days
+      : null;
+  let openPr = 0;
+  let openPrAtWeekEnd = 0;
   for (let d = 0; d < horizonDays; d += 1) {
     const i = Math.floor(d / days);
     // A call-off arrives on its need date (`callOffArrival`).
@@ -698,15 +734,19 @@ export function runWhatIf(inputs, switches = DEFAULT_SWITCHES) {
             ]
           : [];
       const allocation = allocateCallOffs({ max, soh: level, openSupply, lines }, trigRules);
-      const step = triggerStep(prev, {
-        ropAvailable: true,
-        atOrBelow: check.atOrBelow,
-        // Reading (`callOffArrival`): the planner approves each draft the
-        // trigger makes, so it is open supply until it arrives, never a draft
-        // still waiting.
-        pendingDraft: false,
-        allocation
-      });
+      const step = triggerStep(
+        prev,
+        {
+          ropAvailable: true,
+          atOrBelow: check.atOrBelow,
+          // Reading (`callOffArrival`): the planner approves each draft the
+          // trigger makes, so it is open supply until it arrives, never a draft
+          // still waiting.
+          pendingDraft: false,
+          allocation
+        },
+        trigRules
+      );
       prev = { armed: step.armed };
       if (step.draft) {
         const qty = allocation.callOffs.reduce((n, c) => n + c.qty, 0);
@@ -719,7 +759,21 @@ export function runWhatIf(inputs, switches = DEFAULT_SWITCHES) {
           incoming[i] += qty;
         } else pending.set(at, (pending.get(at) ?? 0) + qty);
       }
-      prQtys[i] += step.prQty;
+      if (prLeadDays !== null) {
+        prQtys[i] += step.prQty;
+        if (step.prQty > 0) {
+          const at = d + prLeadDays;
+          if (at === d) {
+            level += step.prQty;
+            incoming[i] += step.prQty;
+          } else pending.set(at, (pending.get(at) ?? 0) + step.prQty);
+        }
+      } else if (step.prQty > 0) openPr = step.prQty;
+      else if (step.state === 'above' || step.state === 'drafted') openPr = 0;
+    }
+    if (prLeadDays === null && d % days === days - 1) {
+      prQtys[i] = Math.max(0, openPr - openPrAtWeekEnd);
+      openPrAtWeekEnd = openPr;
     }
     level -= dailyShare(ltp[i], d % days);
     if (level < WHAT_IF_RULES.shortageBelow - 1e-9) shortage[i] = true;

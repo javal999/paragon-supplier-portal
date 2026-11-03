@@ -27,7 +27,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import { CallOffType } from '../types' */
-/** @import { PrRecommendationView, SupplierRop, TriggerCallOff, TriggerFigures, TriggerLine, TriggerRow } from '../../transitions/callOffTriggerRules' */
+/** @import { CallOffTriggerRules, PrRecommendationView, SupplierRop, TriggerCallOff, TriggerFigures, TriggerLine, TriggerRow } from '../../transitions/callOffTriggerRules' */
 /** @import { Stamped } from '../../transitions/osipRules' */
 import { mockSuppliers } from '@data/mockSuppliers';
 import { MATERIAL_MASTER, sdcClock } from '../../sdc';
@@ -209,11 +209,18 @@ const lineOf = (c) => ({
  * changed since the last check. A draft is created through `createDraft` (the
  * call-off target's creation, status Draft); a row is appended to the trigger
  * ledger when the outcome changed or the update drafted or recommended a PR.
+ * `rules` (BL-261): the trigger's switches in force, stamped into every row's
+ * inputs; the live seam passes the module's own, a spec may pass a variant.
  * @param {CreateTriggerDraft} createDraft
  * @param {string} [nowIso]
+ * @param {CallOffTriggerRules} [rules]
  * @returns {void}
  */
-export function observeCallOffTriggers(createDraft, nowIso = sdcClock.now()) {
+export function observeCallOffTriggers(
+  createDraft,
+  nowIso = sdcClock.now(),
+  rules = CALL_OFF_TRIGGER_RULES
+) {
   const seen = callOffTriggerStore.seenSeq();
   const latest = ptiStockStore.latestSeq();
   if (latest <= seen) return;
@@ -244,22 +251,31 @@ export function observeCallOffTriggers(createDraft, nowIso = sdcClock.now()) {
     const sohSeq = Math.max(...records.map((r) => r.seq));
     const rops = ropsByMaterial.get(code) ?? [];
     const rop = materialRop(rops);
-    const check = sohCheck(records, rop?.ropFisik ?? 0);
+    const check = sohCheck(records, rop?.ropFisik ?? 0, rules);
     const openSupply = releasedNotReceived(callOffStore.all(), results, code);
     const lines = triggerLines(code, rops);
-    const allocation = allocateCallOffs({
-      max: rop?.max ?? 0,
-      soh: check.soh,
-      openSupply,
-      lines
-    });
+    const allocation = allocateCallOffs(
+      {
+        max: rop?.max ?? 0,
+        soh: check.soh,
+        openSupply,
+        lines
+      },
+      rules
+    );
     const prev = callOffTriggerStore.lastFor(code);
-    const step = triggerStep(prev, {
-      ropAvailable: rop !== null,
-      atOrBelow: check.atOrBelow,
-      pendingDraft: callOffStore.all().some((c) => c.materialCode === code && c.status === 'Draft'),
-      allocation
-    });
+    const step = triggerStep(
+      prev,
+      {
+        ropAvailable: rop !== null,
+        atOrBelow: check.atOrBelow,
+        pendingDraft: callOffStore
+          .all()
+          .some((c) => c.materialCode === code && c.status === 'Draft'),
+        allocation
+      },
+      rules
+    );
     const demands = rops.map((r) => r.demandPerDay).filter((d) => d !== null);
     /** @type {TriggerFigures} */
     const figures = {
@@ -291,7 +307,7 @@ export function observeCallOffTriggers(createDraft, nowIso = sdcClock.now()) {
         mdq: l.mdq ?? null,
         roundTo: l.roundTo ?? 0
       })),
-      rules: CALL_OFF_TRIGGER_RULES
+      rules
     };
     /** @type {string[]} */
     const callOffIds = [];
@@ -303,7 +319,7 @@ export function observeCallOffTriggers(createDraft, nowIso = sdcClock.now()) {
             poLineId: c.lineId,
             quantity: c.qty,
             needDate: addDays(today, c.f ?? 0),
-            type: CALL_OFF_TRIGGER_RULES.callOffType,
+            type: rules.callOffType,
             origin: 'ropFisik',
             trigger: stamp(draftFigures(figures, c), { ...inputs, line: lineOf(c) })
           }).entityId

@@ -1626,13 +1626,17 @@ const callOffTarget = {
 // through `t_calloff_release_draft` [Owner F2]. The call-off's creation reads
 // no scope (its owner is the umbrella PO's supplier); the PTI tenancy is named
 // with no business role and no person, because none acted.
-const observeTriggers = () =>
-  observeCallOffTriggers((payload) =>
-    /** @type {NonNullable<CommandTarget['create']>} */ (callOffTarget.create)(
-      /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (payload)),
-      'Draft',
-      { personaType: 'buyer', supplierId: null }
-    )
+/** @param {import('../../transitions/callOffTriggerRules').CallOffTriggerRules} [rules] */
+const observeTriggers = (rules) =>
+  observeCallOffTriggers(
+    (payload) =>
+      /** @type {NonNullable<CommandTarget['create']>} */ (callOffTarget.create)(
+        /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (payload)),
+        'Draft',
+        { personaType: 'buyer', supplierId: null }
+      ),
+    undefined,
+    rules
   );
 
 /**
@@ -1640,12 +1644,15 @@ const observeTriggers = () =>
  * hub's stock records and runs the call-off trigger on it at once ("the check
  * runs on every PTI SOH update"). The eWM feed is not connected; until it is,
  * this is how an update reaches the hub's stock records. No timer runs it.
+ * `rules` (BL-261): TEST SEAM — the trigger's switches for this update, so a
+ * spec can walk the DRC-B37 variant through the real seam; the app passes none.
  * @param {readonly import('./stores/ptiStockStore').PtiSohUpdate[]} updates
+ * @param {import('../../transitions/callOffTriggerRules').CallOffTriggerRules} [rules]
  * @returns {number} The update's sequence number.
  */
-export function applyPtiStockRefresh(updates) {
+export function applyPtiStockRefresh(updates, rules = undefined) {
   const seq = ptiStockStore.record(updates, sdcClock.now());
-  observeTriggers();
+  observeTriggers(rules);
   return seq;
 }
 

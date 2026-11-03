@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { screen } from '@testing-library/react';
-import { renderWithProviders, BUYER } from '@test/test-utils';
+import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
 import i18n from '@lib/i18n';
 import { formatNumber } from '@lib/format';
 import { useFixedStockReconcile } from '@services/query/hooks';
 /** @import { FsLeftoverRule } from '@services/transitions/feedstockReconcile' */
 import { buildFeedstockReconcile } from '@services/transitions/feedstockReconcile';
-import { BuyerFixedStockReconcile } from './FixedStockReconcile';
+import { BuyerFixedStockReconcile, SupplierFixedStockReconcile } from './FixedStockReconcile';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DRC-15b (BL-207) [Proposed] — every variant of the leftover switch on the
@@ -100,6 +100,12 @@ const render = () =>
     route: '/buyer/fs-reconcile'
   });
 
+const renderSupplier = () =>
+  renderWithProviders(<SupplierFixedStockReconcile />, {
+    identity: SUPPLIER,
+    route: '/supplier/fs-reconcile'
+  });
+
 beforeEach(() => {
   vi.mocked(useFixedStockReconcile).mockReset();
 });
@@ -154,6 +160,23 @@ describe('DRC-15b [Proposed BL-207] — the leftover switch on the page', () => 
     expect(screen.queryByTestId(`fsr-liability-${KEY}`)).toBeNull();
     expect(screen.getByTestId(`fsr-proposed-${KEY}`)).toBeInTheDocument();
     expect(screen.getByTestId('fsr-remainder-note')).toHaveTextContent('switch “carry to next PO”');
+  });
+
+  // [Owner FSR-D2, 2026-11-03] BL-259 — the leftover notes are PTI only until
+  // BL-207 is ruled: the same rows, rendered for the supplier, carry none of
+  // them under any variant, while the PTI view above still shows them.
+  it.each([
+    ['flagLiability', 25],
+    ['flagLiability', null],
+    ['carryToNextPo', 25]
+  ])('BL-259: the supplier sees no leftover note under %s (max %s)', async (rule, max) => {
+    stub(/** @type {FsLeftoverRule} */ (rule), max);
+    renderSupplier();
+    expect(await screen.findByTestId(`fsr-uncalled-${KEY}`)).toHaveTextContent(pcs(40));
+    expect(screen.queryByTestId(`fsr-liability-${KEY}`)).toBeNull();
+    expect(screen.queryByTestId(`fsr-liability-nomax-${KEY}`)).toBeNull();
+    expect(screen.queryByTestId(`fsr-carried-${KEY}`)).toBeNull();
+    expect(screen.queryByTestId(`fsr-proposed-${KEY}`)).toBeNull();
   });
 
   it('carryToNextPo reads in Indonesian', async () => {
