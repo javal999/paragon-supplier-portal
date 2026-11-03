@@ -166,11 +166,10 @@ describe('Feedstock reconcile — supplier', () => {
     expect(screen.getByTestId('sample-data-badge')).toBeInTheDocument();
     expect(screen.queryByTestId('purpose-header')).toBeNull();
     expect(screen.getByTestId('fsr-remainder-note')).toBeInTheDocument();
-    // DRC-15b [Proposed BL-207] — the supplier sees the flag on its own rows too.
-    expect(screen.getByTestId(`fsr-liability-${K8801}`)).toHaveTextContent(
-      `Liability, not priced: ${pcs(262_000)}`
-    );
-    expect(screen.getByTestId(`fsr-proposed-${K8801}`)).toBeInTheDocument();
+    // [Owner FSR-D2] BL-259 — the [Proposed BL-207] flag is PTI only: the
+    // supplier's own rows carry no liability and no "Proposed" label.
+    expect(screen.queryByTestId(`fsr-liability-${K8801}`)).toBeNull();
+    expect(screen.queryByTestId(`fsr-proposed-${K8801}`)).toBeNull();
     expect(screen.queryByTestId(`fsr-liability-${KUNASSIGNED}`)).toBeNull();
   });
 
@@ -186,16 +185,12 @@ describe('Feedstock reconcile — supplier', () => {
     expect(
       await screen.findByRole('columnheader', { name: headerNamed('Belum di-call-off') })
     ).toBeInTheDocument();
-    // DRC-15b [Proposed BL-207] in Indonesian.
-    expect(await screen.findByTestId(`fsr-liability-${K8801}`)).toHaveTextContent(
-      'Liabilitas, tanpa harga:'
-    );
-    expect(screen.getByTestId(`fsr-liability-nomax-${K8801}`)).toHaveTextContent(
-      'Belum ada stok maksimum yang disepakati'
-    );
-    expect(screen.getByTestId(`fsr-proposed-${K8801}`)).toHaveTextContent(
-      'Usulan: menunggu tinjauan pemilik (BL-207)'
-    );
+    // [Owner FSR-D2] BL-259 — no [Proposed BL-207] flag on the supplier's rows
+    // in Indonesian either; the rule note stays.
+    await screen.findByTestId(`fsr-row-${K8801}`);
+    expect(screen.queryByTestId(`fsr-liability-${K8801}`)).toBeNull();
+    expect(screen.queryByTestId(`fsr-liability-nomax-${K8801}`)).toBeNull();
+    expect(screen.queryByTestId(`fsr-proposed-${K8801}`)).toBeNull();
     expect(screen.getByTestId('fsr-remainder-note')).toHaveTextContent(
       'Usulan aturan sisa (DRC-15b), pilihan “tandai liabilitas”'
     );

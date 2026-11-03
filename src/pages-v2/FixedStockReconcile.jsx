@@ -129,9 +129,14 @@ const FixedStockReconcile = ({ persona }) => {
 
   /**
    * DRC-15b [Proposed BL-207] — the leftover outcome under "Not yet called off".
+   * [Owner FSR-D2, 2026-11-03] BL-259 — PTI only until BL-207 is ruled: the
+   * supplier's page shows none of it (the liability, the "no max" note, the
+   * carried remainder and the "Proposed" label are one [Proposed] computation).
+   * The computation and the PTI view are unchanged.
    * @param {FixedStockReconcileRow} r
    */
   const leftoverNotes = (r) => {
+    if (!isPti) return null;
     const { liabilityQty, noMaxAgreed, carriedQty } = r.leftover;
     if (liabilityQty === null && carriedQty === null) return null;
     return (
