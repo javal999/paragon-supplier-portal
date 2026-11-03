@@ -10,6 +10,7 @@ import { mockDataService } from '@services/data/mock/mockDataService';
 import { seedEnforcementLedger } from '@services/data/mock/enforcementSeed';
 import { seedSourceableRequisition } from '@services/data/mock/requisitionSeed';
 import { seedSupplierApplications } from '@services/data/mock/applicationSeed';
+import { seedRopFisikDraft } from '@services/data/mock/ropFisikDraftSeed';
 import { withChaos, chaosConfigFromEnv } from '@services/data/mock/withChaos';
 import { queryClient } from '@services/query/queryClient';
 /** @import { IDataService } from '@services/data/types' */
@@ -96,5 +97,17 @@ seedEnforcementLedger()
   })
   .catch((err) => {
     console.error('[B2] the supplier-application seed threw:', err);
+  })
+  // BL-199 — one call-off drafted at ROP Fisik, grown through the trigger on a
+  // sample eWM refresh (no stock figure moves). Same contract: idempotent, a
+  // refusal is reported, and the app renders either way.
+  .then(() => {
+    const outcome = seedRopFisikDraft();
+    if (outcome.status === 'refused') {
+      console.error('[BL-199] the ROP Fisik draft seed drafted nothing:', outcome);
+    }
+  })
+  .catch((err) => {
+    console.error('[BL-199] the ROP Fisik draft seed threw:', err);
   })
   .then(renderApp);

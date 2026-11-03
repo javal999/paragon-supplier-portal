@@ -227,8 +227,14 @@ const AlsoDueLines = ({ supplierId, positions, nowIso }) => {
                 due.feedstock
               )}
             </span>
+            {/* The feedstock list is the Stock page's "Feedstock to confirm" tab
+                (`?tab=feedstock`), not its default "My stock" tab. */}
             {due.feedstock.confirmed < due.feedstock.total && (
-              <Link to="/supplier/inventory" className="text-sm text-action-hover hover:underline">
+              <Link
+                to="/supplier/inventory?tab=feedstock"
+                className="text-sm text-action-hover hover:underline"
+                data-testid="weekly-feedstock-link"
+              >
                 {t('inv.weekly.feedstockLink')}
               </Link>
             )}

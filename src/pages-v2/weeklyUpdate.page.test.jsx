@@ -151,6 +151,23 @@ describe('MAT B2 · manual supplier panel (MR-1 AC-01)', () => {
     );
   });
 
+  it('BL-236: "Confirm feedstock" opens the Feedstock to confirm tab, not My stock', async () => {
+    sdcClock.set('2026-09-08T03:00:00.000Z'); // Tuesday 10:00 WIB
+    const { service } = withRows([IN_CYCLE, IN_CYCLE, LAST_CYCLE], { feedstock: undefined });
+    renderWithProviders(<SupplierInventory />, { identity: SUPPLIER, service });
+    const link = await screen.findByTestId('weekly-feedstock-link');
+    expect(link.getAttribute('href')).toMatch(/\/supplier\/inventory\?tab=feedstock$/);
+    expect(screen.getByRole('tab', { name: 'My stock' }).getAttribute('aria-selected')).toBe(
+      'true'
+    );
+    fireEvent.click(link);
+    await waitFor(() =>
+      expect(
+        screen.getByRole('tab', { name: 'Feedstock to confirm' }).getAttribute('aria-selected')
+      ).toBe('true')
+    );
+  });
+
   it('every material updated: no reminder even on the cutoff day, and the panel says so', async () => {
     sdcClock.set('2026-09-10T05:00:00.000Z'); // Thursday 12:00 WIB
     const { service } = withRows([IN_CYCLE, IN_CYCLE, IN_CYCLE]);
