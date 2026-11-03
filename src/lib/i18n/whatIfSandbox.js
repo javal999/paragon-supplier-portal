@@ -158,6 +158,9 @@ export const whatIfSandboxEn = {
   'whatIf.opt.fillToMax': 'Fill up to Max, rounded to the MPQ',
   'whatIf.switch.quantityRule': 'Call-off quantity',
   'whatIf.switch.minimumDeliveryAboveMax': 'Minimum delivery above Max',
+  'whatIf.switch.reArm': 'Trigger re-arms',
+  'whatIf.opt.everyCheck': 'Every check while SOH stays at or below ROP Fisik',
+  'whatIf.opt.aboveRopFisik': 'Only once SOH is seen above ROP Fisik (DRC-B37)',
   'whatIf.opt.callOff': 'Call it off anyway',
   'whatIf.opt.wait': 'Max caps it',
   'whatIf.opt.exact': 'Exactly up to Max',
@@ -176,7 +179,7 @@ export const whatIfSandboxEn = {
   'whatIf.flag.NO_TRIGGER':
     'No ROP Fisik or Max: the call-off trigger drafts nothing, so projected SOH has no call-offs.',
   'whatIf.reading':
-    'How the weeks are run: the trigger checks SOH against ROP Fisik every day before that day’s demand (the week’s LTP spread over 7 days); a call-off fills up to Max from the open PO and arrives f days later, approved; what no open PO covers is a PR recommendation. A shortage week is one where stock runs out on any day.',
+    'How the weeks are run: the trigger checks SOH against ROP Fisik every day before that day’s demand (the week’s LTP spread over 7 days); at or below, it calls off the minimum delivery from the open PO, which arrives f days later, approved, and it drafts again on every check while SOH stays at or below ROP Fisik (switch F2); what no open PO covers is a PR recommendation. A shortage week is one where stock runs out on any day.',
 
   'whatIf.grid.week': 'Week',
   'whatIf.grid.ltpCell': 'LTP {{week}}',
@@ -365,6 +368,9 @@ export const whatIfSandboxId = {
   'whatIf.opt.fillToMax': 'Isi sampai Max, dibulatkan ke MPQ',
   'whatIf.switch.quantityRule': 'Kuantitas call-off',
   'whatIf.switch.minimumDeliveryAboveMax': 'Kirim minimum di atas Max',
+  'whatIf.switch.reArm': 'Pemicu aktif kembali',
+  'whatIf.opt.everyCheck': 'Setiap pemeriksaan selama SOH tetap di atau di bawah ROP Fisik',
+  'whatIf.opt.aboveRopFisik': 'Hanya setelah SOH terlihat di atas ROP Fisik (DRC-B37)',
   'whatIf.opt.callOff': 'Tetap di-call-off',
   'whatIf.opt.wait': 'Max membatasinya',
   'whatIf.opt.exact': 'Tepat sampai Max',
@@ -383,7 +389,7 @@ export const whatIfSandboxId = {
   'whatIf.flag.NO_TRIGGER':
     'Tidak ada ROP Fisik atau Max: pemicu call-off tidak membuat apa pun, jadi proyeksi SOH tanpa call-off.',
   'whatIf.reading':
-    'Cara minggu dihitung: pemicu membandingkan SOH dengan ROP Fisik setiap hari sebelum permintaan hari itu (LTP minggu itu dibagi ke 7 hari); call-off mengisi sampai Max dari PO terbuka dan tiba f hari kemudian, disetujui; yang tidak tertutup PO terbuka menjadi rekomendasi PR. Minggu kekurangan adalah minggu ketika stok habis pada hari mana pun.',
+    'Cara minggu dihitung: pemicu membandingkan SOH dengan ROP Fisik setiap hari sebelum permintaan hari itu (LTP minggu itu dibagi ke 7 hari); di atau di bawahnya, pemicu meng-call-off kuantitas kirim minimum dari PO terbuka, yang tiba f hari kemudian, disetujui, dan membuat draf lagi pada setiap pemeriksaan selama SOH tetap di atau di bawah ROP Fisik (pilihan F2); yang tidak tertutup PO terbuka menjadi rekomendasi PR. Minggu kekurangan adalah minggu ketika stok habis pada hari mana pun.',
 
   'whatIf.grid.week': 'Minggu',
   'whatIf.grid.ltpCell': 'LTP {{week}}',

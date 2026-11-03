@@ -6,8 +6,11 @@
 // ROP Fisik and, at or below it, drafts a call-off on the umbrella PO for the
 // planner to approve [Owner F2]:
 //   · BR-01   at or below ROP Fisik → a draft, through the existing draft act;
-//             one open draft per material; a dismissed (or released) draft does
-//             not come back until SOH rises above ROP Fisik and falls again.
+//             one open draft per material (any draft of the material blocks a
+//             new one). [Owner FSR-D6, 2026-11-03, BL-261] while SOH stays at
+//             or below ROP Fisik the trigger drafts again on every check
+//             (`reArm: 'everyCheck'`); DRC-B37, the variant kept, re-arms only
+//             once SOH is seen above ROP Fisik (`reArm: 'aboveRopFisik'`).
 //   · BR-01a  the oldest blanket line with balance first (CAP-9's
 //             `oldestFirst`), across every supplier holding balance; need date
 //             = today + the replenishment cycle f of that supplier's area
@@ -87,6 +90,14 @@ export const CALL_OFF_TRIGGER_RULES = Object.freeze({
    * cut per `maxCap`, and nothing is called off while not even one unit fits.
    */
   minimumDeliveryAboveMax: /** @type {'callOff' | 'wait'} */ ('callOff'),
+  /**
+   * [Owner FSR-D6, 2026-11-03] BL-261 — 'everyCheck' (default): while SOH
+   * stays at or below ROP Fisik the trigger drafts again on every check;
+   * 'aboveRopFisik' (DRC-B37, the variant kept): after a draft or PR the
+   * trigger re-arms only once SOH is seen above ROP Fisik. The team confirms
+   * through L-15 (PERTANYAAN F2).
+   */
+  reArm: /** @type {'everyCheck' | 'aboveRopFisik'} */ ('everyCheck'),
   /** [Default] MPQ = orderMultiple until the master data feed carries MPQ (wave 2 default). */
   mpqSource: /** @type {'orderMultiple'} */ ('orderMultiple'),
   /** DRC-13 — a call-off at ROP Fisik replenishes stock already needed: JIT (REQ-E09-01 BR-09). */
@@ -97,10 +108,11 @@ export const CALL_OFF_TRIGGER_RULES = Object.freeze({
 
 /**
  * Design rule 5 — the question IDs behind every trigger figure: the plant rule
- * and the ROP questions still open (Max B8, B9), and the MPQ default. B5, B6,
- * B7 and F5 left on 2026-10-28 [Team; owner ruling].
+ * and the ROP questions still open (Max B8, B9), the MPQ default, and the
+ * re-arm rule the team confirms through L-15 (F2, BL-261). B5, B6, B7 and F5
+ * left on 2026-10-28 [Team; owner ruling].
  */
-export const CALL_OFF_TRIGGER_QUESTIONS = Object.freeze(['F1', 'B8', 'B9', 'MPQ']);
+export const CALL_OFF_TRIGGER_QUESTIONS = Object.freeze(['F1', 'B8', 'B9', 'MPQ', 'F2']);
 
 // ─── BR-05 — SOH against ROP Fisik ───────────────────────────────────────────
 
@@ -496,8 +508,9 @@ function fillToMax({ max, soh, openSupply, lines }, rules) {
 
 /**
  * One row of the trigger ledger: what one SOH update did for one material.
- * `armed`: whether the next drop may draft (false after a draft or a PR
- * recommendation, until SOH is seen above ROP Fisik again).
+ * `armed`: whether the next drop may draft. Under `reArm: 'everyCheck'`
+ * (FSR-D6) it is true after a draft or a PR recommendation too; under
+ * 'aboveRopFisik' (DRC-B37) it is false until SOH is seen above ROP Fisik.
  * @typedef {{
  *   readonly materialCode: string;
  *   readonly observedAt: string;
@@ -526,22 +539,33 @@ function fillToMax({ max, soh, openSupply, lines }, rules) {
  * DRC-13 BR-01 / BR-02 — what an SOH update does, given the material's last
  * ledger row: the state, whether the trigger stays armed, and whether it
  * drafts (`draft`) or recommends a PR (`prQty`).
- * A material with no earlier row is armed: its first update may draft.
+ * A material with no earlier row is armed: its first update may draft. A
+ * pending draft of the material blocks a new one under both re-arm variants
+ * (BR-01, one open draft). `reArm` (BL-261): 'everyCheck' [Owner FSR-D6]
+ * keeps the trigger armed after a draft or a PR recommendation, so a still-low
+ * SOH drafts again on the next check and `waiting` is never produced;
+ * 'aboveRopFisik' (DRC-B37) disarms it until an `above` row.
  * @param {Pick<TriggerRow, 'armed'> | undefined} prev
  * @param {TriggerStepInput} input
+ * @param {CallOffTriggerRules} [rules]
  * @returns {{ readonly state: TriggerState; readonly armed: boolean; readonly draft: boolean; readonly prQty: number }}
  */
-export function triggerStep(prev, { ropAvailable, atOrBelow, pendingDraft, allocation }) {
-  const armed = prev?.armed ?? true;
+export function triggerStep(
+  prev,
+  { ropAvailable, atOrBelow, pendingDraft, allocation },
+  rules = CALL_OFF_TRIGGER_RULES
+) {
+  const everyCheck = rules.reArm === 'everyCheck';
+  const armed = everyCheck || (prev?.armed ?? true);
   if (!ropAvailable) return { state: 'noRop', armed, draft: false, prQty: 0 };
   if (!atOrBelow) return { state: 'above', armed: true, draft: false, prQty: 0 };
   if (pendingDraft) return { state: 'pending', armed, draft: false, prQty: 0 };
   if (!armed) return { state: 'waiting', armed, draft: false, prQty: 0 };
   if (allocation.room <= 0) return { state: 'covered', armed, draft: false, prQty: 0 };
   if (allocation.callOffs.length > 0)
-    return { state: 'drafted', armed: false, draft: true, prQty: allocation.prQty };
+    return { state: 'drafted', armed: everyCheck, draft: true, prQty: allocation.prQty };
   if (allocation.prQty > 0)
-    return { state: 'prRecommended', armed: false, draft: false, prQty: allocation.prQty };
+    return { state: 'prRecommended', armed: everyCheck, draft: false, prQty: allocation.prQty };
   return { state: 'belowMpq', armed, draft: false, prQty: 0 };
 }
 

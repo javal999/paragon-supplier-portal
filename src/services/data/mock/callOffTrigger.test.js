@@ -21,7 +21,8 @@ import { callOffStore } from './stores/callOffStore';
 import { purchaseOrderStore } from './stores/purchaseOrderStore';
 import { ptiStockStore } from './stores/ptiStockStore';
 import { callOffTriggerStore } from './stores/callOffTriggerStore';
-import { PTI_PLANTS } from '../../transitions/callOffTriggerRules';
+import { goodsReceiptStore } from './stores/goodsReceiptStore';
+import { CALL_OFF_TRIGGER_RULES, PTI_PLANTS } from '../../transitions/callOffTriggerRules';
 import { RULES_VERSION, replenishmentCycleDays } from '../../transitions/osipRules';
 import { addDays, dayOf } from '../../engine/dates';
 import { sdcClock } from '../../sdc';
@@ -54,10 +55,18 @@ afterEach(() => {
   purchaseOrderStore.reset();
   ptiStockStore.reset();
   callOffTriggerStore.reset();
+  goodsReceiptStore.reset();
 });
 
 /** @param {number} soh */
 const setSoh = (soh) => applyPtiStockRefresh([{ materialCode: MAT, plant: 'J6', ptiSoh: soh }]);
+
+// [Owner FSR-D6, 2026-11-03] BL-261 — DRC-B37, the switch's other variant,
+// walked through the same seam.
+const B37 = { ...CALL_OFF_TRIGGER_RULES, reArm: /** @type {const} */ ('aboveRopFisik') };
+/** @param {number} soh */
+const setSohB37 = (soh) =>
+  applyPtiStockRefresh([{ materialCode: MAT, plant: 'J6', ptiSoh: soh }], B37);
 
 /** @returns {CallOff[]} */
 const triggered = () =>
@@ -130,33 +139,72 @@ describe('BR-01 — one open draft per material', () => {
     expect(callOffTriggerStore.lastFor(MAT)).toMatchObject({ state: 'pending' });
   });
 
-  it('a dismissed draft returns only after SOH rises above ROP Fisik and falls again', async () => {
+  it("[Owner FSR-D6] 'everyCheck' (default): a dismissed draft comes back on the next check while SOH is still at or below ROP Fisik", async () => {
+    expect(CALL_OFF_TRIGGER_RULES.reArm).toBe('everyCheck');
     setSoh(1010);
     const first = /** @type {CallOff} */ (triggered()[0]);
+    expect(callOffTriggerStore.lastFor(MAT)).toMatchObject({ state: 'drafted', armed: true });
     expect(
       (await verb('t_calloff_dismiss', first.id, { reason: 'Covered by a spot buy' })).status
     ).toBe('done');
     setSoh(900);
+    const again = triggered().filter((c) => c.status === 'Draft');
+    expect(again).toHaveLength(1);
+    // The minimum delivery again: 1,400; no 'waiting' row anywhere in the ledger.
+    expect(again[0]?.quantity).toBe(1400);
+    expect(callOffTriggerStore.all().map((r) => r.state)).toEqual(['drafted', 'drafted']);
+    // Still one open draft per material: the next drop does not stack a third.
+    setSoh(800);
+    expect(triggered().filter((c) => c.status === 'Draft')).toHaveLength(1);
+    expect(callOffTriggerStore.lastFor(MAT)).toMatchObject({ state: 'pending' });
+  });
+
+  it("'aboveRopFisik' (DRC-B37): a dismissed draft returns only after SOH rises above ROP Fisik and falls again", async () => {
+    setSohB37(1010);
+    const first = /** @type {CallOff} */ (triggered()[0]);
+    expect(callOffTriggerStore.lastFor(MAT)).toMatchObject({ state: 'drafted', armed: false });
+    expect(
+      (await verb('t_calloff_dismiss', first.id, { reason: 'Covered by a spot buy' })).status
+    ).toBe('done');
+    setSohB37(900);
     expect(triggered().filter((c) => c.status === 'Draft')).toEqual([]);
     expect(callOffTriggerStore.lastFor(MAT)).toMatchObject({ state: 'waiting', armed: false });
-    setSoh(1300);
+    setSohB37(1300);
     expect(triggered().filter((c) => c.status === 'Draft')).toEqual([]);
-    setSoh(1000);
+    setSohB37(1000);
     const again = triggered().filter((c) => c.status === 'Draft');
     expect(again).toHaveLength(1);
     // The minimum delivery again: 1,400.
     expect(again[0]?.quantity).toBe(1400);
+    expect(callOffTriggerStore.lastFor(MAT)?.figures.inputs).toMatchObject({
+      rules: { reArm: 'aboveRopFisik' }
+    });
   });
 
-  it('the planner approves by releasing the draft through the existing verb', async () => {
+  it('the planner approves by releasing the draft through the existing verb; released and not received, it covers the next drop', async () => {
+    // The seeded receipt GR-2026-014 (10,000 KG of RM-STEAR-7300 from sup-002)
+    // sits inside the delivery match window of any new call-off of the pair
+    // (CR-06 matches by supplier, material and date), so on the plain sample
+    // the trigger would read the released call-off as received. Its stearic
+    // line is taken out of this walk so the rule, not the sample, is probed.
+    goodsReceiptStore.update('gr-014', (g) => ({
+      ...g,
+      inspectionResults: g.inspectionResults.filter((r) => r.materialCode !== MAT)
+    }));
     setSoh(1010);
     const d = /** @type {CallOff} */ (triggered()[0]);
     expect((await verb('t_calloff_release_draft', d.id)).status).toBe('done');
     expect(callOffStore.get(d.id)?.status).toBe('Awaiting Confirmation');
-    // Released and not received: it is supply now, so the next drop is covered
-    // by it and waits for a recovery.
+    // Released and not received: it is supply now (1,400 on its way), so the
+    // next drop has no room below Max and is covered — under 'everyCheck' the
+    // trigger is still armed, and this is what keeps the chain at Max (BR-03).
     setSoh(1000);
     expect(triggered()).toHaveLength(1);
+    expect(callOffTriggerStore.lastFor(MAT)).toMatchObject({ state: 'covered', armed: true });
+    expect(callOffTriggerStore.lastFor(MAT)?.figures.value).toMatchObject({
+      openSupply: 1400,
+      room: 0
+    });
   });
 });
 
