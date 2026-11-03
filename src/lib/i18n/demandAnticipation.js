@@ -63,6 +63,8 @@ export const demandAnticipationEn = {
   'demandAnt.grid.corner': 'Week',
   // The grid rows.
   'demandAnt.row.carriedFrom': '{{qty}} from {{week}}',
+  // BL-245 (U-03) — the planning week's remainder, pending in its target cell.
+  'demandAnt.row.carryPending': '{{qty}} pending (counts from next planning week)',
   'demandAnt.row.absorbedCell': '−{{qty}} supply above demand anticipation',
   'demandAnt.published': 'Published',
   'demandAnt.horizon': 'Horizon',
@@ -163,6 +165,7 @@ export const demandAnticipationId = {
   'demandAnt.card.hideWeeks': 'Sembunyikan minggu',
   'demandAnt.grid.corner': 'Minggu',
   'demandAnt.row.carriedFrom': '{{qty}} dari {{week}}',
+  'demandAnt.row.carryPending': '{{qty}} tertunda (dihitung mulai minggu perencanaan berikutnya)',
   'demandAnt.row.absorbedCell': '−{{qty}} pasokan di atas demand anticipation',
   'demandAnt.published': 'Dipublikasikan',
   'demandAnt.horizon': 'Horizon',
