@@ -5,7 +5,7 @@
 | Reviewed | GitLab `main` at `eaf82ab0` (2026-11-02), built on Node 22, served with `vite preview` on port 5380, viewport 1440×900, hub clock Monday 31 Aug 2026 19:00 WIB |
 | Personas | PTI as the Material Planner (demo seat "All roles"); supplier sup-007 "PT Sample Packaging Indonesia" |
 | Materials followed | PK-PETB-8801 PET Bottle 200ml Frosted (packaging; sup-007 share 70%, Sample PET Bottle Manufacturer GmbH 30%) and RM-STEAR-7300 Stearic Acid (raw material; PT Sample Specialty Fats 100%). sup-007 does not supply RM-STEAR-7300, so its supplier-side figures are read on PTI pages only |
-| Companion files | `BACKLOG.md` section 4d (BL-237 to BL-258); `FORESIGHT-LOGIC-REVIEW-2026-11.md` (L-01 to L-26, W-01 to W-07) |
+| Companion files | `BACKLOG.md` section 4d (BL-237 to BL-261); `FORESIGHT-LOGIC-REVIEW-2026-11.md` (L-01 to L-26, W-01 to W-07) |
 | Evidence | `file:line` paths are relative to `src/`. "Screen" is the route as rendered in the preview. Sources are tagged [Team, date, Qn], [Owner, date, decision], [Code `path:line`], [Proposed] |
 
 ## 1. VERDICT
@@ -241,9 +241,17 @@ Count: Major 9 · Minor 18 · Polish 2 (29 findings: C-01 to C-07, U-01 to U-22)
 
 ## 7. OPEN QUESTIONS FOR LEVI
 
+Levi ruled on all six in chat on 2026-11-03. The rulings are FSR-D1 to FSR-D6 in `DECISION-GUIDE.md`; the backlog rows they add or change are in section 4d of `BACKLOG.md` (BL-259 to BL-261 added; BL-237, BL-238, BL-251 and BL-138 reworded).
+
 1. Until the SAP feeds land, which world is the plan of record per figure: the engine dataset (What to order, Material requirement, Safety stock challenger columns) or the hub sample (LTP, DA, call-offs, OSIP columns)? C-01 proposes labelling both; the choice is yours.
+   Ruled 2026-11-03 (FSR-D1): "Hub sample wins." The hub sample (LTP, DA, call-offs, OSIP columns) is the plan of record; the engine figures (What to order netting, Material requirement, Safety stock challenger columns) are the challenger. BL-237's basis lines say "plan of record" or "challenger" per figure, not only the dataset; L-08's recommendation becomes "the OSIP safety order nets What to order", still a team confirmation.
 2. BL-207: may the leftover liability stay visible to suppliers before you rule, or should it be PTI-only until then (U-18)?
+   Ruled 2026-11-03 (FSR-D2): "PTI only." The leftover liability stays PTI-only until BL-207 is ruled; the supplier's Feedstock reconcile page does not show it. Hidden behind the existing BL-207 switch, computation and PTI view unchanged: BL-259.
 3. Should Demand anticipation (DA) become the sixth step of the weekly strip, or stay a side page with its own header (U-11, D-19)?
+   Ruled 2026-11-03 (FSR-D3): "Step 6." Demand anticipation (DA) becomes step 6 of the weekly step strip, with the purpose header and Data health chip like the other steps; BL-251 widened. This supersedes the strip order in `IA-BUILD-DECISIONS-2026-10.md` D-19: the strip now returns to This week after DA.
 4. BL-138 is parked for RFx; the two forecast sites on the weekly cycle (C-07) could be moved alone. Un-park those two?
+   Ruled 2026-11-03 (FSR-D4): "Un-park them." The forecast number-format site (`qtyText` in `pages-v2/forecasts/forecastDisplay.jsx:34`, one helper serving Foresight commitments for both personas) leaves BL-138 and is fixed now per X-01 of `research/INVENTORY-UX-EVALUATION-2026-10.md` (quantities follow the reader's language) with the BL-223 helper `formatNumber`: BL-260. The RFx sites stay parked under the 26 Oct no-new-RFx-code rule; BL-138 reworded.
 5. F-13 / FUX-D4 waits for the engine for the Source column; C-03 shows the "Last published" column misleads today. Add the basis line now (BL-238) or wait?
+   Ruled 2026-11-03 (FSR-D5): "Add it now." The basis line under the Publish to suppliers table is built now (BL-238, the "or wait" condition removed); the Source column still waits for the engine (F-13, FUX-D4); no column rename.
 6. The trigger re-arm rule (DRC-B37) is a build decision: ask the team (L-15) or rule it yourself?
+   Ruled 2026-11-03 (FSR-D6): "Re-arm every check." The call-off trigger re-arms on every check while stock stays at or below ROP Fisik; this replaces DRC-B37. The sandbox then shows a chain of call-offs plus a PR for what no open PO covers. L-15 stays on the team's list as a confirmation; if the team reads it differently the switch flips back to DRC-B37: BL-261.

@@ -89,12 +89,12 @@
 
 **L-08 · Material requirement, gross to net, and which safety figure nets it**
 - Shown: What to order "Why this quantity" (PK-PETB-8801 W51: gross 9,897 + safety stock 16,404 − stock 20,545 = net 5,756); Material requirement.
-- Screen: "Safety stock 16,404 · Reorder point 56,935"; Safety stock targets: "The OSIP figures are the default rule. The engine's fill-rate safety stock stays beside them as the challenger."
+- Screen: "Safety stock 16,404 · Reorder point 56,935"; Safety stock targets: "The OSIP figures are the default rule … the challenger."
 - Code: NR = max(0, GR + SS − (POH + SR)), SS the engine's fill-rate safety stock [Code `services/engine/requirement.js:453-525`, `safetyStock.js:192-219`, `services/data/mock/MockProcurementService.js:385`].
 - Source: REQ-E14-03 BR-04; REQ-E14-04 amendment [Owner, 2026-10-19]: OSIP default, fill-rate challenger.
-- Gap: sources conflict: the netting adds the challenger; no source says what nets the requirement.
+- Gap: sources conflict: the netting adds the challenger; none says what nets the requirement.
 - Impact: every recommended order is sized on the challenger (C-02).
-- Recommendation: net against Safety ROP Fisik (6,000). Alternative: keep the engine figure, label it.
+- Recommendation: the OSIP safety order nets What to order [Owner, 2026-11-03, FSR-D1]; the team confirms. Alternative: the engine figure, labelled "challenger".
 - Question (EN): Which safety figure does PTI's net requirement add: the engine's (16,404), Safety ROP Fisik (6,000), the safety order (5,000), or none? (ID): Angka pengaman mana yang ditambahkan ke kebutuhan bersih PTI: mesin (16.404), Safety ROP Fisik (6.000), safety order (5.000), atau tidak ada?
 
 **L-09 · Safety order**
@@ -159,12 +159,12 @@
 
 **L-15 · Call-off trigger: quantity, re-arm and call-offs per drop**
 - Shown: what-if "Call-offs the trigger would draft 22,800", "Trigger: create a PR in SAP for 0", projected SOH −24,095 … −746,093.
-- Screen: "a call-off … arrives f days later, approved; what no open PO covers is a PR recommendation."
-- Code: at SOH ≤ ROP Fisik one draft = the minimum delivery rounded like Max [Code `callOffTriggerRules.js:342-401`]; it re-arms only once SOH is above ROP Fisik [Code `:534-546`, DRC-B37; `whatIfSandboxRules.js:701-725`]. With LTP 34,300 a week no second call-off or PR follows.
+- Screen: "what no open PO covers is a PR recommendation."
+- Code: at SOH ≤ ROP Fisik one draft = the minimum delivery rounded like Max [Code `callOffTriggerRules.js:342-401`]; re-arms only once SOH is above ROP Fisik [Code `:534-546`, DRC-B37; `whatIfSandboxRules.js:701-725`]. No second call-off or PR follows.
 - Source: DRC-13 BR-01/04 [Owner, 2026-10-16, F2]; [Team, 2026-10-28, F5].
 - Gap: source silent on the re-arm and on call-offs per drop.
 - Impact: a 22-week shortage, "PR 0" (U-01).
-- Recommendation: re-arm on every check while at or below ROP Fisik. Alternative: keep DRC-B37.
+- Recommendation: re-arm on every check while at or below ROP Fisik [Owner, 2026-11-03, FSR-D6, supersedes DRC-B37; BL-261]; the team confirms. Alternative: DRC-B37.
 - Question (EN): Does the next call-off fire only once stock rises above ROP Fisik again, or on every check while it stays at or below? (ID): Apakah call-off berikutnya dibuat hanya setelah stok naik lagi di atas ROP Fisik, atau pada setiap pemeriksaan selama stok tetap di/di bawahnya? (continues PERTANYAAN F2)
 
 **L-16 · Order sizing (MOQ, multiple, warehouse space)**
@@ -290,6 +290,8 @@
 | W-07 | Incoming | Sandbox grid row "Incoming" (call-offs arriving); Inventory "Incoming" (stock in transit, TL-D12 "Not Incoming DA") | `/buyer/what-if` row "Incoming · PCS 35,000 15,200 7,600"; `/buyer/inventory` column "Incoming" | TL-D12 kept "Incoming" for stock; the Q-file uses "incoming DA" for the DA figure | One word, three PTI meanings (arriving call-offs, in-transit stock, incoming DA) | Name the sandbox row "Call-offs arriving" | Which word do you use for call-offs that arrive in a week: "incoming", or something else? / Kata apa yang Anda pakai untuk call-off yang tiba dalam satu minggu: "incoming", atau yang lain? |
 
 ## 4. QUESTION LIST
+
+Rows 8 (L-08) and 15 (L-15) were ruled by the owner on 2026-11-03 (FSR-D1, FSR-D6 in `DECISION-GUIDE.md`) and stay here as confirmations: the team's answer either confirms the ruling or flips it.
 
 | # | ID | Question (EN) | Pertanyaan (ID) | If yes | If no | Continues |
 |---|---|---|---|---|---|---|

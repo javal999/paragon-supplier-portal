@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Version | 1.16, 2026-11-02 (BL-12 and BL-56 decided by the owner; BL-19 baselines and early receipts in OTIF and CFOT answered; INV-D4 superseded by the BL-149 answer; 1.15, 2026-10-26: RFX-D32 added: the RFx deadline is checked on leaving the field; INV-D14 added 2026-10-23) |
-| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20) and RFX-D26 to RFX-D31 (2026-10-22) and RFX-D32 (2026-10-26); the Inventory & Capacity UX decisions INV-D1 to INV-D13 (2026-10-22) and INV-D14 (2026-10-23); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23) |
+| Version | 1.17, 2026-11-03 (FSR-D1 to FSR-D6 added: the owner's rulings on the six open questions of the Foresight end-to-end review; 1.16, 2026-11-02: BL-12 and BL-56 decided by the owner; BL-19 baselines and early receipts in OTIF and CFOT answered; INV-D4 superseded by the BL-149 answer; 1.15, 2026-10-26: RFX-D32 added: the RFx deadline is checked on leaving the field; INV-D14 added 2026-10-23) |
+| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20) and RFX-D26 to RFX-D31 (2026-10-22) and RFX-D32 (2026-10-26); the Inventory & Capacity UX decisions INV-D1 to INV-D13 (2026-10-22) and INV-D14 (2026-10-23); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23); and the Foresight review rulings FSR-D1 to FSR-D6 (2026-11-03) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, and two values (BL-54 invoice cap, BL-55 gate OTIF minimum). BL-12 call-off record and BL-56 early allowance were decided on 2026-11-02 (see their entries). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
 | Evidence | Market practice is cited at the end. Where a claim is a judgement rather than a published practice, it says so |
@@ -450,6 +450,52 @@ The owner accepted every recommendation on the open questions of the Inventory &
 **INV-D11 built (2026-10-23).** The supplier's Stock page says "PTI stopped sharing its stock with you on <date>" after a full removal; narrowing to fewer materials shows nothing.
 
 ---
+
+## Foresight review rulings (decided 2026-11-03)
+
+Levi ruled in chat on 2026-11-03 on the six open questions in section 7 of the Foresight end-to-end review (`research/FORESIGHT-E2E-REVIEW-2026-11.md`). The rulings are recorded here as FSR-D1 to FSR-D6, each with the finding it closes and the alternative not taken. They add BL-259 to BL-261 and reword BL-237, BL-238, BL-251 and BL-138 in section 4d of `BACKLOG.md`; FSR-D6 supersedes build decision DRC-B37 in `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md`. Two stay on the Material Planning team's list as confirmations (L-08, L-15 in `research/FORESIGHT-LOGIC-REVIEW-2026-11.md`).
+
+### FSR-D1 · The hub sample is the plan of record; the engine is the challenger (C-01, C-02, BL-237, L-08)
+**Decision.** "Hub sample wins." Until the SAP feeds land, the hub sample data (LTP, demand anticipation, call-offs and the OSIP columns) is the plan of record for every Foresight figure; the engine dataset (the What to order netting, Material requirement and the Safety stock challenger columns) is the challenger. The basis line BL-237 adds under each figure group says which of the two it is, "plan of record" or "challenger", and not only the dataset name. L-08's recommendation becomes "the OSIP safety order nets What to order"; it stays on the team's list as a confirmation.
+
+**Alternative not taken.** Labelling both datasets without ranking them (C-01's proposal), which would have left the planner to decide per page which stock figure to act on.
+
+**What would change this.** The SAP stock and plan feeds landing: the engine then reads the same stock as the hub and the two worlds become one.
+
+### FSR-D2 · The leftover liability stays PTI-only until BL-207 is ruled (U-18, BL-259)
+**Decision.** "PTI only." The "Liability, not priced" flag the feedstock reconcile builds under the [Proposed] BL-207 rule is shown to PTI only. The supplier's Feedstock reconcile page does not show it until the owner rules on BL-207. The flag stays behind the existing switch (`FEEDSTOCK_LEFTOVER_RULES.leftoverRule`); the computation and the PTI view are unchanged.
+
+**Alternative not taken.** Leaving the proposal visible to suppliers as their liability before the rule is agreed, against DRC design rule 5.
+
+**What would change this.** The BL-207 ruling itself: once the leftover rule is agreed, the flag is shown to both sides under that rule.
+
+### FSR-D3 · Demand anticipation (DA) is step 6 of the weekly step strip (U-11, BL-251)
+**Decision.** "Step 6." The Demand anticipation (DA) page joins the weekly step strip as step 6, after Foresight commitments, with the "Decision here / Uses / Next" purpose header and the Data health chip the other steps carry. The strip returns to This week after DA. This supersedes the strip order recorded in `research/IA-BUILD-DECISIONS-2026-10.md` D-19, where the strip returned to This week after Foresight commitments.
+
+**Alternative not taken.** Keeping DA as a side page in the Weekly plan menu with its own header and no step.
+
+**What would change this.** Planners publishing DA at a fixed point earlier in the week than step 6: the step then moves, the strip stays.
+
+### FSR-D4 · The forecast number-format site leaves BL-138 (C-07, BL-260, BL-138)
+**Decision.** "Un-park them." The number-format site on the weekly cycle, `qtyText` in `pages-v2/forecasts/forecastDisplay.jsx`, one helper serving Foresight commitments for both personas, leaves BL-138 and is fixed now: quantities follow the reader's language (X-01 of `research/INVENTORY-UX-EVALUATION-2026-10.md`) through `formatNumber`, the helper BL-223 introduced. The RFx pages define their own local `qtyText`, so the change does not reach them. The RFx sites stay parked under the 26 Oct rule of no new RFx code until the RFx requirement is confirmed.
+
+**Alternative not taken.** Keeping the forecast site parked with the RFx ones, leaving "34,300" beside "34.300" on one Indonesian cycle.
+
+**What would change this.** Nothing on the forecast side; the RFx requirement being confirmed releases the rest of BL-138.
+
+### FSR-D5 · The Publish to suppliers basis line is built now (C-03, BL-238)
+**Decision.** "Add it now." The basis line under the "Per supplier and material" table on Publish to suppliers is built now, saying that Engine value, Last published and First published are the engine's versions replayed 12 weeks back and that suppliers hold the sample Version 2. The Source column still waits for the engine (F-13, FUX-D4); no column is renamed. BL-238 stands as written with its "or wait" condition removed.
+
+**Alternative not taken.** Waiting for the engine's Source column (FUX-D4) to make the replay visible, leaving "Last published 0 PCS" unexplained until then.
+
+**What would change this.** The engine replacing the replay: the basis line then names the engine's version instead of the replay.
+
+### FSR-D6 · The call-off trigger re-arms on every check (U-01, L-15, BL-261; supersedes DRC-B37)
+**Decision.** "Re-arm every check." While stock on hand stays at or below ROP Fisik, the call-off trigger drafts again on every check instead of waiting for SOH to be seen above ROP Fisik first. This replaces build decision DRC-B37. The what-if sandbox then shows a chain of call-offs plus a PR recommendation for what no open PO covers, instead of 22 weeks of negative stock beside "PR 0". The change is built behind a switch whose default is re-arm-every-check and whose other variant is DRC-B37. L-15 stays on the team's list as a confirmation; if the Material Planning team reads the rule differently, the switch flips back.
+
+**Alternative not taken.** Keeping DRC-B37 (one open draft, re-arm only after SOH is above ROP Fisik) until the team answers L-15.
+
+**What would change this.** The team's answer to L-15 (PERTANYAAN F2) naming DRC-B37 as the rule, or a call-offs-per-drop rule that makes repeated drafts unnecessary.
 
 ## SC Hub Material decisions (decided 2026-09-29)
 
