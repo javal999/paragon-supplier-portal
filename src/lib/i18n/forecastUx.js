@@ -50,6 +50,8 @@ export const forecastUxEn = {
 
   // One date line (F-26)
   'fux.asOf': 'Data as of',
+  // U-12 (BL-255) — This week names its planning week.
+  'fux.thisWeek.planningWeek': 'Planning week {{week}} · {{dates}}',
 
   // Term tips (F-09)
   'fux.term.aria': 'What “{{term}}” means',
@@ -81,8 +83,9 @@ export const forecastUxEn = {
   'fux.count.firstRelease': 'First release {{week}} · {{date}}',
   'fux.count.overCapacity_one': '{{count}} week over capacity',
   'fux.count.overCapacity_other': '{{count}} weeks over capacity',
-  'fux.count.exceptions_one': '{{count}} open exception',
-  'fux.count.exceptions_other': '{{count}} open exceptions',
+  // C-06 (BL-239): the count covers both streams; the page lists one at a time.
+  'fux.count.exceptions_one': '{{count}} open exception (packaging and raw material)',
+  'fux.count.exceptions_other': '{{count}} open exceptions (packaging and raw material)',
   // FSR-D3 (BL-251) — the Demand anticipation (DA) step's figure.
   'fux.count.daChanged_one': '{{count}} supplier × material differs from the publication',
   'fux.count.daChanged_other': '{{count}} supplier × materials differ from the publication',
@@ -147,6 +150,7 @@ export const forecastUxId = {
   'fux.collapse.hide': 'Sembunyikan rincian',
 
   'fux.asOf': 'Data per',
+  'fux.thisWeek.planningWeek': 'Minggu perencanaan {{week}} · {{dates}}',
 
   'fux.term.aria': 'Arti “{{term}}”',
   'fux.term.formula': 'Cara menghitung:',
@@ -168,7 +172,7 @@ export const forecastUxId = {
   'fux.count.toOrder_other': '{{count}} pesanan yang disarankan',
   'fux.count.firstRelease': 'Rilis pertama {{week}} · {{date}}',
   'fux.count.overCapacity_other': '{{count}} minggu di atas kapasitas',
-  'fux.count.exceptions_other': '{{count}} pengecualian terbuka',
+  'fux.count.exceptions_other': '{{count}} pengecualian terbuka (kemasan dan bahan baku)',
   'fux.count.daChanged_other': '{{count}} pemasok × material berbeda dari publikasi',
   'fux.thisWeek.input.title': 'Cek masukan',
   'fux.thisWeek.input.intro':

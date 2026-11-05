@@ -204,6 +204,13 @@ describe('This week — the page (F-03)', () => {
   it('Supplier responses: equals the exceptions the responses page lists, both streams', async () => {
     await renderThisWeek();
     const shown = leadingNumber(screen.getByTestId('tw-count-responses'));
+    // C-06 (BL-239): the figure says it covers both streams, as the page lists one at a time.
+    expect(screen.getByTestId('tw-count-responses')).toHaveTextContent(
+      /open exceptions? \(packaging and raw material\)/
+    );
+    expect(
+      within(screen.getByTestId('cycle-steps')).getByTestId('cycle-step-responses-figure')
+    ).toHaveTextContent(/\(packaging and raw material\)/);
     cleanup();
 
     renderWithProviders(<BuyerCommitments />, { identity: PLANNER, route: '/buyer/collaboration' });
@@ -218,6 +225,22 @@ describe('This week — the page (F-03)', () => {
       );
     }
     expect(shown).toBe(listed);
+  });
+
+  it("names its planning week beside Data as of, with the DA page's week and dates (U-12, BL-255)", async () => {
+    await renderThisWeek();
+    const line = screen.getByTestId('tw-planning-week');
+    expect(line).toHaveTextContent('Planning week W36 · 31 Aug 2026 – 06 Sept 2026');
+    expect(within(screen.getByTestId('data-as-of')).getByTestId('tw-planning-week')).toBe(line);
+    cleanup();
+
+    renderWithProviders(<BuyerDemandAnticipation />, {
+      identity: PLANNER,
+      route: '/buyer/demand-anticipation'
+    });
+    expect(await screen.findByTestId('dant-planning-week', {}, SLOW)).toHaveTextContent(
+      'W36 (31 Aug 2026 – 06 Sept 2026)'
+    );
   });
 
   it('states the failing input check once, in the input check card, and no step card repeats it', async () => {
@@ -237,6 +260,10 @@ describe('This week — the page (F-03)', () => {
     expect(screen.getByTestId('tw-publish-state')).toHaveTextContent(
       'Penerbitan ditahan sampai data nyata masuk.'
     );
+    expect(screen.getByTestId('tw-count-responses')).toHaveTextContent(
+      /pengecualian terbuka \(kemasan dan bahan baku\)/
+    );
+    expect(screen.getByTestId('tw-planning-week')).toHaveTextContent(/^Minggu perencanaan W36 · /);
   });
 });
 

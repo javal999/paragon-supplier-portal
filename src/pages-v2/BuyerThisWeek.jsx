@@ -24,6 +24,8 @@ import {
 import { formatDate } from '@lib/format';
 import { isoWeek } from '@services/engine/dates';
 import { sdcClock } from '@services/sdc/clock';
+import { hubWeeks } from '@services/transitions/demandAnticipationRules';
+import { weekDates, weekLabel } from './BuyerDemandAnticipation/display';
 import {
   useDataHealth,
   useForecastCommitments,
@@ -99,6 +101,8 @@ const BuyerThisWeek = () => {
   const current = versions.data ? currentVersions(versions.data.items) : null;
   // The page's "Release in" column labels a week `W<iso week>` (BuyerOrderPlan's weekLabel).
   const firstRelease = orderPlan.data ? firstReleaseWeek(orderPlan.data) : null;
+  // The current hub week's Monday, the DA page's planning week (`hubWeeks`).
+  const planningWeek = hubWeeks(sdcClock.now(), 1)[0];
 
   return (
     <AppShellV2>
@@ -106,7 +110,19 @@ const BuyerThisWeek = () => {
       <PurposeHeader page="thisWeek" />
       <CycleSteps current="thisWeek" />
       <SimulatedDataBanner capability="engineDataset" />
-      <DataAsOf date={report?.asOf ?? null} withTime />
+      <DataAsOf
+        date={report?.asOf ?? null}
+        withTime
+        detail={
+          // U-12 (BL-255): the page names its planning week, as the DA page does.
+          <span data-testid="tw-planning-week">
+            {t('fux.thisWeek.planningWeek', {
+              week: weekLabel(planningWeek),
+              dates: weekDates([planningWeek])
+            })}
+          </span>
+        }
+      />
 
       <section
         className="mb-6 rounded-lg border border-border-subtle bg-bg-surface p-4"
