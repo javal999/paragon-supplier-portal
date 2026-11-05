@@ -42,6 +42,8 @@ export const forecastCollaborationEn = {
   'fc.timing.lateBy': 'Late by {{time}}',
   'fc.timing.submittedLate': 'Submitted late by {{time}}',
   'fc.timing.submittedOnTime': 'Submitted on time',
+  // BL-244 (U-16) — the deadline a carried-forward commitment answered belongs to an earlier version.
+  'fc.due.answeredVersion': '(version {{version}})',
   'fc.duration.daysHours': '{{days}} d {{hours}} h',
   'fc.duration.hours': '{{hours}} h',
   'fc.duration.underHour': 'under 1 h',
@@ -332,6 +334,7 @@ export const forecastCollaborationId = {
   'fc.timing.lateBy': 'Terlambat {{time}}',
   'fc.timing.submittedLate': 'Dikirim terlambat {{time}}',
   'fc.timing.submittedOnTime': 'Dikirim tepat waktu',
+  'fc.due.answeredVersion': '(versi {{version}})',
   'fc.duration.daysHours': '{{days}} hari {{hours}} jam',
   'fc.duration.hours': '{{hours}} jam',
   'fc.duration.underHour': 'kurang dari 1 jam',

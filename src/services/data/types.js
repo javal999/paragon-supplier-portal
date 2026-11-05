@@ -910,6 +910,7 @@ export class DataError extends Error {
  * `reminderAt`:  REQ-E06-03 BR-06 — the first reminder, at half the deadline.
  * `response`:  The submitted commitment that stands for the current quantity.
  * `responseDueAt`: CR-26 — the deadline the standing response ANSWERED (its own version's publication and zone), so a carried-forward commitment keeps the verdict it earned. Derived from publications, never from a clock; null with no response.
+ * `responseVersion`:  BL-244 — the version number the standing response ANSWERED (the version `responseDueAt` belongs to); null with no response. Optional for hand-built lines.
  * `carriedForward`:  True when that commitment answered an earlier version with the same quantity.
  * `draft`:  The supplier's own unsubmitted draft (never in PTI's read — BR-10).
  * `log`:  REQ-E06-03 BR-05 — every revision request and note on this period, oldest first.
@@ -940,6 +941,7 @@ export class DataError extends Error {
  *   readonly state: CommitmentState;
  *   readonly response: RequirementResponse | null;
  *   readonly responseDueAt: string | null;
+ *   readonly responseVersion?: number | null;
  *   readonly carriedForward: boolean;
  *   readonly draft: RequirementResponse | null;
  *   readonly committedQty: number | null;
