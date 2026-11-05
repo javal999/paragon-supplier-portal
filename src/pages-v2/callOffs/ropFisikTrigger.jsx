@@ -47,13 +47,18 @@ export const TriggerRefreshNote = ({ testId }) => {
 /**
  * U-04 (BL-252) — the empty state where hub-made drafts or PR recommendations
  * would show: nothing drafted at ROP Fisik yet, why, and when the trigger last
- * checked a material (the trigger ledger's latest row), when it has.
+ * checked a material (the trigger ledger's latest row), when it has. Nothing
+ * renders once a check has drafted a call-off that is still there.
  * @type {React.FC<{ testId: string; className?: string }>}
  */
 export const RopFisikNotYet = ({ testId, className = '' }) => {
   const { t } = useTranslation();
   const query = useRopFisikPrRecommendations();
   if (!query.data) return null;
+  // A material whose latest check drafted, or still holds a pending draft, has
+  // a call-off at ROP Fisik: "not yet" would be false (the startup seed, BL-199).
+  if (query.data.lastChecks.some((c) => c.state === 'drafted' || c.state === 'pending'))
+    return null;
   const last = query.data.lastChecks.reduce(
     (latest, c) => (latest === null || c.observedAt > latest ? c.observedAt : latest),
     /** @type {string | null} */ (null)

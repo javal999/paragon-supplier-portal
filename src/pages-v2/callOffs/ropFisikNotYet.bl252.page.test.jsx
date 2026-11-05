@@ -105,4 +105,17 @@ describe('What to order, "Create a PR in SAP"', () => {
     expect(await screen.findByTestId('op-rop-fisik-pr-empty', {}, SLOW)).toHaveTextContent(NOT_YET);
     expect(screen.queryByTestId('op-rop-fisik-pr')).toBeNull();
   });
+
+  it('known-good: once the trigger drafted a call-off (the startup seed, BL-199), no "not yet" line', async () => {
+    applyPtiStockRefresh([{ materialCode: 'RM-STEAR-7300', plant: 'J6', ptiSoh: 1010 }]);
+    expect(callOffStore.all().some((c) => c.origin === 'ropFisik')).toBe(true);
+    renderWithProviders(<BuyerOrderPlan />, { identity: PLANNER, route: '/buyer/order-plan' });
+    expect(callOffTriggerStore.lastFor('RM-STEAR-7300')?.state).toBe('drafted');
+    // The read resolves within the page's first render cycle (the test above
+    // finds its note in ~300 ms); wait past it before asserting absence.
+    await new Promise((r) => {
+      setTimeout(r, 1500);
+    });
+    expect(screen.queryByTestId('op-rop-fisik-pr-empty')).toBeNull();
+  }, 20000);
 });
