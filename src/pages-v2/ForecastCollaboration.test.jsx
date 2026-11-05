@@ -30,7 +30,6 @@ import BuyerAlerts from './BuyerAlerts';
 import BuyerHome from './BuyerHome';
 import SupplierHome from './SupplierHome';
 import BuyerOrderSummary from './BuyerOrderSummary';
-import { headerNamed } from '@test/termText';
 
 beforeEach(() => {
   requirementResponseStore.reset();
@@ -97,7 +96,7 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
     });
     const section = await screen.findByTestId('fc-sup-material-PK-PETB-8801');
     const firmShort = within(section).getByTestId(`fc-sup-row-PK-PETB-8801-${W[1]}`);
-    expect(firmShort).toHaveTextContent('Firm');
+    expect(firmShort).toHaveTextContent('Zone Liability');
     expect(firmShort).toHaveTextContent('Outside tolerance');
     expect(within(section).getByTestId(`fc-sup-row-PK-PETB-8801-${W[8]}`)).toHaveTextContent(
       'Acknowledged'
@@ -131,10 +130,10 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
     // CAP-6 (BL-175) AC-01 — a quantity per period: no date input, no Date column.
     expect(within(row).queryByLabelText(/Commitment date/)).toBeNull();
     expect(within(row).queryByDisplayValue(W[6])).toBeNull();
-    expect(
-      within(section).getAllByRole('columnheader', { name: /Commitment/ }).length
-    ).toBeGreaterThan(0);
-    expect(within(section).queryByRole('columnheader', { name: /date/i })).toBeNull();
+    // PEX-2 (BL-265) — the periods are columns; the measures are the grid's row labels.
+    const labels = [...section.querySelectorAll('[data-grid-label]')].map((h) => h.textContent);
+    expect(labels.some((l) => /Commitment/.test(l ?? ''))).toBe(true);
+    expect(labels.some((l) => /date/i.test(l ?? ''))).toBe(false);
     fireEvent.change(qty, { target: { value: '30000' } });
     // BL-133 (ENG-D19) — the period is submitted with its one Submit all.
     const submit = screen.getByTestId(`fc-week-submit-${W[6]}`);
@@ -296,14 +295,15 @@ describe('Supplier — the Due rule is visible, once (a11y finding 19, supplier 
     });
     await screen.findByTestId('fc-sup-material-PK-PETB-8801');
     const note = screen.getByTestId('fc-sup-due-rule');
-    expect(note).toHaveTextContent(/^Commitment due: Firm: /);
+    expect(note).toHaveTextContent(/^Commitment due: Zone Liability: /);
     expect(note).toHaveTextContent(/working days/);
     expect(screen.getAllByTestId('fc-sup-due-rule')).toHaveLength(1);
-    for (const header of screen.getAllByRole('columnheader', {
-      name: headerNamed('Commitment due')
-    })) {
-      expect(header.querySelector('[title]')).toBeNull();
-    }
+    // PEX-2 (BL-265) — "Commitment due" is a row label of the grid now.
+    const dueLabels = [...document.querySelectorAll('[data-grid-label]')].filter((h) =>
+      /Commitment due/.test(h.textContent ?? '')
+    );
+    expect(dueLabels.length).toBeGreaterThan(0);
+    for (const header of dueLabels) expect(header.querySelector('[title]')).toBeNull();
   });
 });
 

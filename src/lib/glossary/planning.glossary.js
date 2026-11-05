@@ -3,7 +3,8 @@
 //
 // Forecast UX phase 1, task A4 (F-09). These are the words the forecast pages
 // put in front of a Material Planner without explaining them: the zones of a
-// published plan (Firm, Trade-off), the plan-movement measure (MASC), the bias
+// published plan (Zone Liability, Zone Capacity; PEX-1 renamed Firm, Trade-off
+// and Forecast), the plan-movement measure (MASC), the bias
 // alarm (tracking signal), the reorder point and the demand range (P50/P90).
 // Phase 2 task B3 adds safety stock, tipped in What to order's
 // "Why this quantity" panel.
@@ -19,16 +20,16 @@
 /** @import { GlossaryOf } from './types' */
 
 /** The planning terms a forecast page shows with a tip. */
-/** @typedef {'Firm' | 'Trade-off' | 'MASC' | 'Tracking signal' | 'Reorder point' | 'P50/P90' | 'Safety stock'} PlanningTerm */
+/** @typedef {'Zone Liability' | 'Zone Capacity' | 'MASC' | 'Tracking signal' | 'Reorder point' | 'P50/P90' | 'Safety stock'} PlanningTerm */
 
 export const PLANNING_TERM_GLOSSARY = /** @satisfies {GlossaryOf<PlanningTerm>} */ ({
-  Firm: {
-    en: 'The nearest weeks of a published plan, at least the supplier’s lead time long. Once published, a Firm week’s quantity does not change, because the supplier is already producing to it.',
-    id: 'Minggu-minggu terdekat dari rencana yang diterbitkan, paling sedikit sepanjang waktu tunggu pemasok. Setelah diterbitkan, kuantitas minggu Firm tidak berubah, karena pemasok sudah berproduksi untuknya.'
+  'Zone Liability': {
+    en: 'The weeks from this week to the end of the material’s lead time. The quantity is PTI’s demand in those weeks; the supplier commits to it, and once published it does not change.',
+    id: 'Minggu-minggu dari minggu ini sampai akhir waktu tunggu material. Kuantitasnya adalah kebutuhan PTI pada minggu-minggu itu; pemasok berkomitmen padanya, dan setelah diterbitkan kuantitas itu tidak berubah.'
   },
-  'Trade-off': {
-    en: 'The weeks after the Firm weeks. Quantities may still change, but each change is damped and kept inside an agreed band so the supplier can plan materials.',
-    id: 'Minggu-minggu setelah minggu Firm. Kuantitas masih boleh berubah, tetapi setiap perubahan diredam dan dijaga di dalam rentang yang disepakati agar pemasok dapat merencanakan bahan.'
+  'Zone Capacity': {
+    en: 'The weeks after the lead time. In its first weeks the supplier commits, and each change is damped and kept inside an agreed band; later weeks need only an acknowledgement.',
+    id: 'Minggu-minggu setelah waktu tunggu. Pada minggu-minggu pertamanya pemasok berkomitmen, dan setiap perubahan diredam dan dijaga di dalam rentang yang disepakati; minggu berikutnya cukup ditandai diterima.'
   },
   MASC: {
     en: 'How much the plan moves from one version to the next, compared with the usual week-to-week movement of demand. 1.0 means the plan moves as much as demand usually does; lower is steadier for suppliers.',

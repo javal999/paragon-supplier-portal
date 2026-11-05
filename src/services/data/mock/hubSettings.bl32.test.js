@@ -1208,7 +1208,7 @@ describe('BL32-POL · nonsense is refused and the refusal names it', () => {
       'min above max (firm > trade-off)',
       'commitment.firmShortfallPct',
       20,
-      /Firm periods may not accept a larger shortfall/
+      /Zone Liability periods may not accept a larger shortfall/
     ],
     [
       'contract looser than other lines',
@@ -1220,7 +1220,7 @@ describe('BL32-POL · nonsense is refused and the refusal names it', () => {
       'Firm deadline after the others',
       'commitment.firmDeadlineWorkingDays',
       5,
-      /Firm deadline may not be later/
+      /Zone Liability deadline may not be later/
     ],
     ['a multiple of 1 or less', 'risk.mediumBelowMultiple', 1, /must be more than 1/]
   ])('BL32-POL · %s', async (_label, key, value, why) => {

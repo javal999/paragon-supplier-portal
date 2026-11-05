@@ -511,8 +511,8 @@ export const inventoryCapacityEn = {
   'inv.alerts.basis.short': 'Short by {{qty}} {{uom}} · {{week}}',
   'inv.alerts.basis.supplierCover': 'Supplier cover {{cover}} days · lead time {{lead}} days',
   'inv.alerts.basis.supplierCoverBands': 'Supplier cover {{cover}} days · day bands: {{band}}',
-  'inv.alerts.basis.firm': 'Firm period short',
-  'inv.alerts.basis.tradeOff': 'Trade-off period short',
+  'inv.alerts.basis.firm': 'Zone Liability period short',
+  'inv.alerts.basis.tradeOff': 'Zone Capacity damped period short',
   // INV-D9 — "Ask supplier": PTI's hub ask, and the supplier's "PTI is asking"
   // block (S-04).
   // BL-227 — the button names what it asks for (P-02 / P-05 wording).
@@ -1164,8 +1164,8 @@ export const inventoryCapacityId = {
     'Cakupan stok pemasok {{cover}} hari · waktu tunggu {{lead}} hari',
   'inv.alerts.basis.supplierCoverBands':
     'Cakupan stok pemasok {{cover}} hari · pita hari: {{band}}',
-  'inv.alerts.basis.firm': 'Periode Firm kurang',
-  'inv.alerts.basis.tradeOff': 'Periode Trade-off kurang',
+  'inv.alerts.basis.firm': 'Periode Zone Liability kurang',
+  'inv.alerts.basis.tradeOff': 'Periode diredam Zone Capacity kurang',
   // INV-D9 — "Tanyakan ke pemasok" dan blok "PTI bertanya" (S-04).
   'supplierAsk.buttonFor.productionDate': 'Minta tanggal produksi',
   'supplierAsk.buttonFor.stockFigures': 'Minta angka stok',

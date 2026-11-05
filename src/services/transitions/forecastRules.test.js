@@ -56,24 +56,46 @@ const DAY = 86_400_000;
 /** @param {string} d */
 const nextDay = (d) => new Date(Date.parse(`${d}T00:00:00.000Z`) + DAY).toISOString().slice(0, 10);
 
-describe('REQ-E06-01 BR-03 — the period grid', () => {
-  it('packaging: 13 weekly periods from the Monday on or after publication, then monthly up to 6 months', () => {
-    expect(FORECAST_HORIZON.packaging).toEqual({ weeklyPeriods: 13, horizonMonths: 6 });
-    const periods = generatePeriods('packaging', '2026-08-28T02:00:00.000Z');
+describe('PEX-2 (BL-265) — the period grid: 17 weeks, then months to month 12', () => {
+  it('AC-01 — planning week W45 2026 shows W45 2026 to W8 2027 by week, then March to October 2027 by month', () => {
+    expect(FORECAST_HORIZON.packaging).toEqual({ weeklyPeriods: 17, horizonMonths: 12 });
+    // Monday 2 November 2026, 09:00 WIB — the Monday of ISO week 45.
+    const periods = generatePeriods('packaging', '2026-11-02T02:00:00.000Z');
     const weeks = periods.filter((p) => p.kind === 'week');
-    expect(weeks).toHaveLength(13);
+    expect(weeks).toHaveLength(17);
     expect(weeks[0]).toEqual({
-      id: '2026-08-31',
+      id: '2026-11-02',
       kind: 'week',
-      start: '2026-08-31',
-      end: '2026-09-06'
+      start: '2026-11-02',
+      end: '2026-11-08'
     });
-    expect(weeks[12].id).toBe('2026-11-23');
-    // The 1-day stub (30 Nov) joins December; the horizon ends 6 months after the first period.
-    expect(periods.filter((p) => p.kind === 'month')).toEqual([
-      { id: '2026-12', kind: 'month', start: '2026-11-30', end: '2026-12-31' },
-      { id: '2027-01', kind: 'month', start: '2027-01-01', end: '2027-01-31' },
-      { id: '2027-02', kind: 'month', start: '2027-02-01', end: '2027-02-28' }
+    // 2026 has 53 ISO weeks, so the 17th week is W8 2027 (22–28 February).
+    expect(weeks[16]).toEqual({
+      id: '2027-02-22',
+      kind: 'week',
+      start: '2027-02-22',
+      end: '2027-02-28'
+    });
+    expect(periods.filter((p) => p.kind === 'month').map((p) => [p.id, p.start, p.end])).toEqual([
+      ['2027-03', '2027-03-01', '2027-03-31'],
+      ['2027-04', '2027-04-01', '2027-04-30'],
+      ['2027-05', '2027-05-01', '2027-05-31'],
+      ['2027-06', '2027-06-01', '2027-06-30'],
+      ['2027-07', '2027-07-01', '2027-07-31'],
+      ['2027-08', '2027-08-01', '2027-08-31'],
+      ['2027-09', '2027-09-01', '2027-09-30'],
+      ['2027-10', '2027-10-01', '2027-10-31']
+    ]);
+  });
+
+  it('raw material: months to month 12; BR-04 [Proposed] weekly raw material is held', () => {
+    expect(FORECAST_HORIZON.rawMaterial).toEqual({ weeklyPeriods: 0, horizonMonths: 12 });
+    const periods = generatePeriods('rawMaterial', '2026-11-02T02:00:00.000Z');
+    expect(periods.every((p) => p.kind === 'month')).toBe(true);
+    expect([periods[0].id, periods[periods.length - 1]?.id, periods.length]).toEqual([
+      '2026-12',
+      '2027-11',
+      12
     ]);
   });
 
@@ -81,7 +103,8 @@ describe('REQ-E06-01 BR-03 — the period grid', () => {
     for (const [stream, at] of /** @type {const} */ ([
       ['packaging', '2026-08-21T02:00:00.000Z'],
       ['packaging', '2026-08-28T02:00:00.000Z'],
-      ['rawMaterial', '2026-08-03T02:00:00.000Z']
+      ['rawMaterial', '2026-08-03T02:00:00.000Z'],
+      ['rawMaterial', '2026-11-02T02:00:00.000Z']
     ])) {
       const periods = generatePeriods(stream, at);
       for (let i = 1; i < periods.length; i++)
@@ -89,24 +112,40 @@ describe('REQ-E06-01 BR-03 — the period grid', () => {
     }
   });
 
-  it('a stub of 7 days or more stays its own month', () => {
-    const nov = generatePeriods('packaging', '2026-08-21T02:00:00.000Z').find(
-      (p) => p.kind === 'month'
-    );
-    expect(nov).toEqual({ id: '2026-11', kind: 'month', start: '2026-11-23', end: '2026-11-30' });
+  it('BR-03 [Proposed] — the days after week 17 join the first full month', () => {
+    // Published Friday 28 August 2026: week 1 is 31 August, week 17 ends 27 December.
+    const periods = generatePeriods('packaging', '2026-08-28T02:00:00.000Z');
+    expect(periods.filter((p) => p.kind === 'week').slice(-1)[0]?.end).toBe('2026-12-27');
+    const months = periods.filter((p) => p.kind === 'month');
+    expect(months[0]).toEqual({
+      id: '2027-01',
+      kind: 'month',
+      start: '2026-12-28',
+      end: '2027-01-31'
+    });
+    // Month 12 from the planning week's month (August 2026) is July 2027.
+    expect(months[months.length - 1]).toEqual({
+      id: '2027-07',
+      kind: 'month',
+      start: '2027-07-01',
+      end: '2027-07-31'
+    });
   });
 
-  it('raw material: 6 monthly periods from the first of the month on or after publication', () => {
-    expect(generatePeriods('rawMaterial', '2026-08-27T02:00:00.000Z').map((p) => p.id)).toEqual([
-      '2026-09',
-      '2026-10',
-      '2026-11',
-      '2026-12',
-      '2027-01',
-      '2027-02'
-    ]);
+  it('with no weekly periods the grid is months from the first of the month on or after publication', () => {
+    expect(
+      generatePeriods('rawMaterial', '2026-08-27T02:00:00.000Z', {
+        weeklyPeriods: 0,
+        horizonMonths: 6
+      }).map((p) => p.id)
+    ).toEqual(['2026-09', '2026-10', '2026-11', '2026-12', '2027-01', '2027-02']);
     // Published on the 1st: that month is the first period.
-    expect(generatePeriods('rawMaterial', '2026-09-01T02:00:00.000Z')[0].id).toBe('2026-09');
+    expect(
+      generatePeriods('rawMaterial', '2026-09-01T02:00:00.000Z', {
+        weeklyPeriods: 0,
+        horizonMonths: 6
+      })[0].id
+    ).toBe('2026-09');
   });
 
   it('the publication day is read in WIB, not UTC (Monday 17:30 UTC is Tuesday 00:30 in Jakarta)', () => {
@@ -118,7 +157,7 @@ describe('REQ-E06-01 BR-03 — the period grid', () => {
     expect(
       generatePeriods('packaging', '2026-08-28T02:00:00.000Z', {
         weeklyPeriods: 2,
-        horizonMonths: 1
+        horizonMonths: 2
       }).map((p) => p.id)
     ).toEqual(['2026-08-31', '2026-09-07', '2026-09']);
   });
@@ -887,16 +926,40 @@ describe('REQ-E06-01 BR-06 — the changes between versions', () => {
       previousQty: 34300,
       currentQty: 30900
     });
-    expect(find('PK-PETB-8801', SEEDED_PACKAGING_WEEKS[12])).toMatchObject({
+    // PEX-2 — week 17 of version 2 is new (version 1 was published a week earlier).
+    expect(find('PK-PETB-8801', SEEDED_PACKAGING_WEEKS[16])).toMatchObject({
       kind: 'added',
       previousQty: null
     });
-    expect(find('PK-PETB-8801', '2026-11')).toMatchObject({ kind: 'removed', currentQty: null });
+    // PEX-2 — both versions end at month 12 (July 2027), so no period is dropped;
+    // under the 6-month horizon the November stub of version 1 was.
+    expect(changes.filter((c) => c.kind === 'removed')).toEqual([]);
     expect(find('PK-PETB-8801', '2026-08-24')).toBeUndefined(); // rolled off the start
     // An unchanged period is not listed; another supplier's periods are not listed.
     expect(find('PK-PETB-8801', SEEDED_PACKAGING_WEEKS[1])).toBeUndefined();
     expect(changes.every((c) => c.supplierId === 'sup-007')).toBe(true);
     expect(versionChanges(pk1, null)).toEqual([]);
+  });
+
+  it('a period the new version no longer has is listed as dropped', () => {
+    const last = pk1.lines.find(
+      (l) =>
+        l.supplierId === 'sup-007' &&
+        l.materialCode === 'PK-PETB-8801' &&
+        l.periodBucket === '2027-07'
+    );
+    if (!last) throw new Error('fixture premise: version 1 runs to July 2027');
+    const prev = { ...pk1, lines: [...pk1.lines, { ...last, periodBucket: '2027-08' }] };
+    expect(versionChanges(pk2, prev, 'sup-007').filter((c) => c.kind === 'removed')).toEqual([
+      {
+        supplierId: 'sup-007',
+        materialCode: 'PK-PETB-8801',
+        periodBucket: '2027-08',
+        kind: 'removed',
+        previousQty: last.forecastQty,
+        currentQty: null
+      }
+    ]);
   });
 });
 

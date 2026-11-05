@@ -62,7 +62,7 @@ describe('Supplier responses (/buyer/collaboration)', () => {
     const section = await screen.findByTestId('fc-exceptions');
     const table = /** @type {HTMLTableElement} */ (section.querySelector('table'));
     expectPins(table, { left: ['#', 'Supplier', 'Material'], right: ['Details'] });
-    expect(within(table).queryByRole('columnheader', { name: /zone/i })).toBeNull();
+    expect(within(table).queryByRole('columnheader', { name: /^zone\b/i })).toBeNull();
     expectSupplierNamesClamped(table);
 
     const row = within(table).getAllByTestId(/^fc-exception-/)[0];
@@ -70,7 +70,7 @@ describe('Supplier responses (/buyer/collaboration)', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
     // Zone is readable without opening the row (Levi, 2026-10-26, on !17).
     const pill = within(row).getByTestId(/^fc-zone-pill-/);
-    expect(within(pill).getByText(/^(Firm|Trade-off|Forecast)$/)).toBeInTheDocument();
+    expect(within(pill).getByText(/^Zone (Liability|Capacity)$/)).toBeInTheDocument();
     expect(pill.closest('td')?.dataset.pin).toBeUndefined();
 
     fireEvent.click(toggle);
@@ -81,7 +81,7 @@ describe('Supplier responses (/buyer/collaboration)', () => {
     );
     expect(details.previousElementSibling).toBe(row);
     expect(within(details).getByText('Zone')).toBeInTheDocument();
-    expect(within(details).getByText(/^(Firm|Trade-off|Forecast)$/)).toBeInTheDocument();
+    expect(within(details).getByText(/^Zone (Liability|Capacity)$/)).toBeInTheDocument();
 
     fireEvent.click(open);
     expect(document.getElementById(details.id)).toBeNull();

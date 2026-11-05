@@ -168,7 +168,11 @@ describe('BR-03 · the current plan in the sandbox is the live plan', () => {
     expect(chain.rops.ropFisik.value).toBe(12_000);
     expect(chain.callOffs.map((c) => c.qty)).toEqual([22_800, 38_000, 30_400, 30_400, 400]);
     expect(chain.totalDrafted).toBe(122_000);
-    expect(chain.triggerPr).toBe(657_193);
+    // PEX-2 — 657,193 under the 13-week grid. Weeks 14 to 17 are weekly lines
+    // now and January 2027 starts on 28 December (BR-03); the LTP read spreads
+    // a month line over its calendar month, so the weekly LTP from 28 December
+    // shifts and the PR moves by 3.
+    expect(chain.triggerPr).toBe(657_196);
     expect(chain.firstShortageWeek).toBe('2026-10-05');
     expect(chain.weeks.filter((w) => w.soh < 0)).toHaveLength(19);
     const b37 = runWhatIf(inputs, withSwitch(DEFAULT_SWITCHES, 'reArm', 'aboveRopFisik'));

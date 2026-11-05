@@ -26,8 +26,8 @@ export const adminCalendarEn = {
   'adminCal.deadlines.intro':
     'The commitment deadlines of the current forecast versions. Rule a day below and they move at once.',
   'adminCal.deadlines.published': 'Published {{date}}',
-  'adminCal.deadlines.firm': 'Firm periods due',
-  'adminCal.deadlines.other': 'Trade-off and Forecast periods due',
+  'adminCal.deadlines.firm': 'Zone Liability periods due',
+  'adminCal.deadlines.other': 'Zone Capacity periods due',
   'adminCal.deadlines.none': 'No forecast version is published.',
 
   'adminCal.list.title': 'Non-working days',
@@ -106,8 +106,8 @@ export const adminCalendarId = {
   'adminCal.deadlines.intro':
     'Tenggat komitmen dari versi prakiraan yang berlaku. Tetapkan satu hari di bawah dan tenggat ini langsung bergeser.',
   'adminCal.deadlines.published': 'Diterbitkan {{date}}',
-  'adminCal.deadlines.firm': 'Tenggat periode Pasti',
-  'adminCal.deadlines.other': 'Tenggat periode Kompromi dan Prakiraan',
+  'adminCal.deadlines.firm': 'Tenggat periode Zone Liability',
+  'adminCal.deadlines.other': 'Tenggat periode Zone Capacity',
   'adminCal.deadlines.none': 'Belum ada versi prakiraan yang diterbitkan.',
 
   'adminCal.list.title': 'Hari libur',

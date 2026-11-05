@@ -30,9 +30,9 @@ export const sdcConsolidationEn = {
 
   // — Period filter bar (the PERIOD owns the commitment class; lines echo) —
   'sdc.period.all': 'All periods',
-  'sdc.period.locked': '{{period}} · FIRM — period locked',
-  'sdc.class.firm': 'Firm',
-  'sdc.class.semiFirm': 'Semi-firm',
+  'sdc.period.locked': '{{period}} · Zone Liability — period locked',
+  'sdc.class.firm': 'Zone Liability',
+  'sdc.class.semiFirm': 'Zone Capacity',
   'sdc.class.visibilityOnly': 'Visibility only',
   'sdc.class.mixed': 'Mixed',
 
@@ -187,9 +187,9 @@ export const sdcConsolidationId = {
 
   // — Bilah saring periode —
   'sdc.period.all': 'Semua periode',
-  'sdc.period.locked': '{{period}} · FIRM — periode terkunci',
-  'sdc.class.firm': 'Firm',
-  'sdc.class.semiFirm': 'Semi-firm',
+  'sdc.period.locked': '{{period}} · Zone Liability — periode terkunci',
+  'sdc.class.firm': 'Zone Liability',
+  'sdc.class.semiFirm': 'Zone Capacity',
   'sdc.class.visibilityOnly': 'Visibilitas saja',
   'sdc.class.mixed': 'Campuran',
 

@@ -1,22 +1,17 @@
 /** @import React from 'react' */
 import { useTranslation } from 'react-i18next';
 import Button from '@components/ui-v2/Button';
-import Data from '@components/ui-v2/Data';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
-import TableCell from '@components/ui-v2/TableCell';
-import TableRow from '@components/ui-v2/TableRow';
 /** @import { ForecastCommitmentLine } from '@services/data/types' */
 /** @import { VerbAvailability } from '@services/transitions/handoff' */
-import {
-  CommitmentDeadline,
-  CommitmentStatePill,
-  ZonePill,
-  qtyText
-} from '../../forecasts/forecastDisplay';
+import { CommitmentDeadline, CommitmentStatePill, ZonePill } from '../../forecasts/forecastDisplay';
+import { CELL, DemandCell, HEAD } from './gridCells';
 
 /**
- * A Forecast-zone line's row (BR-08): the period, zone, forecast quantity and
- * due date, "acknowledge only" across the commitment columns, the state, and
+ * PEX-2 (BL-265) — one acknowledge-only period (the later weeks of Zone
+ * Capacity, BR-08) as a COLUMN of the grid: the period, zone, ordered quantity
+ * and due date; no fulfilment window (an acknowledgement commits to nothing);
+ * "acknowledge only" across the three commitment rows; the state, and
  * Acknowledge while it is awaiting — or the handoff notice when the seat may
  * not acknowledge.
  * @type {React.FC<{
@@ -29,31 +24,35 @@ import {
  *   onAcknowledge: (l: ForecastCommitmentLine) => void;
  * }>}
  */
-const ForecastZoneRow = ({ l, label, nowIso, canAck, pending, ackAvail, onAcknowledge }) => {
+const AcknowledgeColumn = ({ l, label, nowIso, canAck, pending, ackAvail, onAcknowledge }) => {
   const { t } = useTranslation();
   return (
-    <TableRow data-testid={`fc-sup-row-${l.materialCode}-${l.periodBucket}`}>
-      <TableCell className="whitespace-nowrap">{label}</TableCell>
-      <TableCell>
+    <div
+      role="group"
+      aria-label={label}
+      className="contents"
+      data-testid={`fc-sup-row-${l.materialCode}-${l.periodBucket}`}
+    >
+      <div className={HEAD}>{label}</div>
+      <div className={CELL}>
         <ZonePill zone={l.zone} />
-      </TableCell>
-      <TableCell className="text-right">
-        <Data>{qtyText(l.forecastQty)}</Data>
-      </TableCell>
-      <TableCell>
+      </div>
+      <DemandCell l={l} label={label} />
+      <div className={CELL}>
         <CommitmentDeadline
           line={l}
           nowIso={nowIso}
           testId={`fc-due-${l.materialCode}-${l.periodBucket}`}
         />
-      </TableCell>
-      <TableCell colSpan={3}>
+      </div>
+      <div className={`${CELL} text-xs text-text-tertiary`}>—</div>
+      <div className={`${CELL} row-span-3 max-w-[14rem]`}>
         <span className="text-xs text-text-tertiary">{t('fc.sup.ackOnly')}</span>
-      </TableCell>
-      <TableCell>
+      </div>
+      <div className={CELL}>
         <CommitmentStatePill line={l} nowIso={nowIso} />
-      </TableCell>
-      <TableCell>
+      </div>
+      <div className={CELL}>
         {l.state === 'awaiting' &&
           (canAck ? (
             <Button
@@ -67,9 +66,9 @@ const ForecastZoneRow = ({ l, label, nowIso, canAck, pending, ackAvail, onAcknow
           ) : (
             <HandoffNotice availability={ackAvail} testId="handoff-forecast-acknowledge" />
           ))}
-      </TableCell>
-    </TableRow>
+      </div>
+    </div>
   );
 };
 
-export default ForecastZoneRow;
+export default AcknowledgeColumn;

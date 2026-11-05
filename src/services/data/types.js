@@ -923,6 +923,7 @@ export class DataError extends Error {
  * `log`:  REQ-E06-03 BR-05 — every revision request and note on this period, oldest first.
  * `moves`:  CAP-8 BR-05 — the planner's moves of this line's demand to other suppliers, one entry per allocation, oldest first.
  * `otherQualifiedSuppliers`:  REQ-E06-03 BR-05 — the other suppliers qualified for the material (where demand can move).
+ * `leadTimeDays`:  PEX-10 (BL-273) — the pair's lead time in days (DRC-6, `leadTimeBreakdown(...).totalDays`); null with no lead time on record. Optional for hand-built lines.
  *
  * @typedef {{
  *   readonly key: string;
@@ -955,6 +956,7 @@ export class DataError extends Error {
  *   readonly log: readonly DisputeEntry[];
  *   readonly moves: readonly { readonly toSupplierId: string; readonly toSupplierName: string; readonly qty: number; readonly at: string; readonly note: string }[];
  *   readonly otherQualifiedSuppliers: readonly { readonly supplierId: string; readonly supplierName: string }[];
+ *   readonly leadTimeDays?: number | null;
  * }} ForecastCommitmentLine
  */
 

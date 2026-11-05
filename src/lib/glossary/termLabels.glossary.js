@@ -336,8 +336,8 @@ export const TERM_LABEL_GLOSSARY =
         en: 'Committed quantity below forecast beyond tolerance',
         id: 'Kuantitas komitmen di bawah prakiraan melebihi toleransi'
       },
-      en: 'Raised when the supplier committed less than the forecast by more than the tolerance. High risk in the Firm zone, Medium in the Trade-off zone.',
-      id: 'Muncul bila pemasok berkomitmen lebih sedikit dari prakiraan melebihi toleransi. Risiko Tinggi di zona Firm, Sedang di zona Trade-off.',
+      en: 'Raised when the supplier committed less than the forecast by more than the tolerance. High risk in Zone Liability, Medium in the damped weeks of Zone Capacity.',
+      id: 'Muncul bila pemasok berkomitmen lebih sedikit dari prakiraan melebihi toleransi. Risiko Tinggi di Zone Liability, Sedang di minggu diredam Zone Capacity.',
       labelKeys: ['inv.alerts.rule.commitmentBelowForecast']
     },
     alertLeadTimeMissing: {
@@ -1113,17 +1113,17 @@ export const TERM_LABEL_GLOSSARY =
     },
     dampedValue: {
       label: { en: 'Damped', id: 'Diredam' },
-      en: 'A Trade-off week’s new value blended with its last published value, so the plan moves less.',
-      id: 'Nilai baru minggu Trade-off yang dicampur dengan nilai terakhir yang diterbitkan, agar rencana tidak banyak bergerak.',
+      en: 'A damped Zone Capacity week’s new value blended with its last published value, so the plan moves less.',
+      id: 'Nilai baru minggu diredam Zone Capacity yang dicampur dengan nilai terakhir yang diterbitkan, agar rencana tidak banyak bergerak.',
       formula: {
-        en: 'Weight × last published + (1 − weight) × engine value; weight 0.5 in Trade-off, 0 in Forecast.',
-        id: 'Bobot × terakhir diterbitkan + (1 − bobot) × nilai mesin; bobot 0,5 di Trade-off, 0 di Forecast.'
+        en: 'Weight × last published + (1 − weight) × engine value; weight 0.5 in the damped weeks of Zone Capacity, 0 in its later weeks.',
+        id: 'Bobot × terakhir diterbitkan + (1 − bobot) × nilai mesin; bobot 0,5 di minggu diredam Zone Capacity, 0 di minggu berikutnya.'
       }
     },
     allowedRange: {
       label: { en: 'Allowed range', id: 'Rentang yang diizinkan' },
-      en: 'How far a Trade-off week may move without the planner’s reason: ±10% from the last published value, and ±20% from the first.',
-      id: 'Seberapa jauh minggu Trade-off boleh bergerak tanpa alasan perencana: ±10% dari nilai terakhir yang diterbitkan, dan ±20% dari nilai pertama.',
+      en: 'How far a damped Zone Capacity week may move without the planner’s reason: ±10% from the last published value, and ±20% from the first.',
+      id: 'Seberapa jauh minggu diredam Zone Capacity boleh bergerak tanpa alasan perencana: ±10% dari nilai terakhir yang diterbitkan, dan ±20% dari nilai pertama.',
       formula: { en: 'Last published × (1 ± band).', id: 'Terakhir diterbitkan × (1 ± batas).' }
     },
     toPublish: {
@@ -1152,27 +1152,33 @@ export const TERM_LABEL_GLOSSARY =
       labelKeys: ['stb.rule.unchanged']
     },
     ruleFirmFrozen: {
-      label: { en: 'Firm — kept as published', id: 'Firm — tetap seperti yang diterbitkan' },
-      en: 'A Firm week never changes once published.',
-      id: 'Minggu Firm tidak pernah berubah setelah diterbitkan.',
+      label: {
+        en: 'Zone Liability — kept as published',
+        id: 'Zone Liability — tetap seperti yang diterbitkan'
+      },
+      en: 'A Zone Liability week never changes once published.',
+      id: 'Minggu Zone Liability tidak pernah berubah setelah diterbitkan.',
       labelKeys: ['stb.rule.firmFrozen']
     },
     ruleForecast: {
-      label: { en: 'Forecast — as calculated', id: 'Forecast — apa adanya' },
-      en: 'A Forecast-zone week is not damped or held: the engine value is published.',
-      id: 'Minggu zona Forecast tidak diredam atau ditahan: nilai mesin diterbitkan.',
+      label: {
+        en: 'Zone Capacity, later weeks — as calculated',
+        id: 'Zone Capacity, minggu berikutnya — apa adanya'
+      },
+      en: 'A later Zone Capacity week is not damped or held: the engine value is published.',
+      id: 'Minggu Zone Capacity berikutnya tidak diredam atau ditahan: nilai mesin diterbitkan.',
       labelKeys: ['stb.rule.forecast']
     },
     ruleDamped: {
-      label: { en: 'Trade-off — damped', id: 'Trade-off — diredam' },
-      en: 'A Trade-off week’s value is blended with its last published value, and the result is within the allowed range.',
-      id: 'Nilai minggu Trade-off dicampur dengan nilai terakhir yang diterbitkan, dan hasilnya berada dalam rentang yang diizinkan.',
+      label: { en: 'Zone Capacity — damped', id: 'Zone Capacity — diredam' },
+      en: 'A damped Zone Capacity week’s value is blended with its last published value, and the result is within the allowed range.',
+      id: 'Nilai minggu diredam Zone Capacity dicampur dengan nilai terakhir yang diterbitkan, dan hasilnya berada dalam rentang yang diizinkan.',
       labelKeys: ['stb.rule.damped']
     },
     ruleBandHeld: {
       label: {
-        en: 'Trade-off — held at ±10% a version',
-        id: 'Trade-off — ditahan pada ±10% per versi'
+        en: 'Zone Capacity — held at ±10% a version',
+        id: 'Zone Capacity — ditahan pada ±10% per versi'
       },
       en: 'The damped value moved more than 10% from the last published value, so it is held at that edge.',
       id: 'Nilai yang diredam bergerak lebih dari 10% dari nilai terakhir yang diterbitkan, sehingga ditahan di batas itu.',
@@ -1180,8 +1186,8 @@ export const TERM_LABEL_GLOSSARY =
     },
     ruleCumulativeHeld: {
       label: {
-        en: 'Trade-off — held at ±20% from the first value',
-        id: 'Trade-off — ditahan pada ±20% dari nilai pertama'
+        en: 'Zone Capacity — held at ±20% from the first value',
+        id: 'Zone Capacity — ditahan pada ±20% dari nilai pertama'
       },
       en: 'The value moved more than 20% from the first value the supplier saw, so it is held at that edge.',
       id: 'Nilai bergerak lebih dari 20% dari nilai pertama yang dilihat pemasok, sehingga ditahan di batas itu.',
@@ -1189,8 +1195,8 @@ export const TERM_LABEL_GLOSSARY =
     },
     ruleOverride: {
       label: {
-        en: 'Trade-off — beyond the band, with the planner’s reason',
-        id: 'Trade-off — di luar batas, dengan alasan perencana'
+        en: 'Zone Capacity — beyond the band, with the planner’s reason',
+        id: 'Zone Capacity — di luar batas, dengan alasan perencana'
       },
       en: 'The planner published a value outside the band and gave a reason. The supplier sees the reason, and the week asks for a new commitment.',
       id: 'Perencana menerbitkan nilai di luar batas dan memberi alasan. Pemasok melihat alasannya, dan minggu itu meminta komitmen baru.',
@@ -1231,11 +1237,11 @@ export const TERM_LABEL_GLOSSARY =
     },
     tradeOffWithinLimits: {
       label: {
-        en: 'Trade-off weeks within the tolerance band',
-        id: 'Minggu Trade-off dalam rentang toleransi'
+        en: 'Zone Capacity damped weeks within the tolerance band',
+        id: 'Minggu diredam Zone Capacity dalam rentang toleransi'
       },
-      en: 'The share of Trade-off weeks whose quantity to publish stays within the allowed range.',
-      id: 'Porsi minggu Trade-off yang kuantitas terbitnya tetap dalam rentang yang diizinkan.',
+      en: 'The share of damped Zone Capacity weeks whose quantity to publish stays within the allowed range.',
+      id: 'Porsi minggu diredam Zone Capacity yang kuantitas terbitnya tetap dalam rentang yang diizinkan.',
       alsoCalled: [
         {
           name: 'tolerance band',
@@ -1248,13 +1254,16 @@ export const TERM_LABEL_GLOSSARY =
         en: 'Weeks held in the version to publish',
         id: 'Minggu yang ditahan pada versi yang akan diterbitkan'
       },
-      en: 'Weeks whose quantity to publish differs from the engine value: Firm weeks kept, weeks held at the band, and damped weeks.',
-      id: 'Minggu yang kuantitas terbitnya berbeda dari nilai mesin: minggu Firm yang dipertahankan, minggu yang ditahan di batas, dan minggu yang diredam.'
+      en: 'Weeks whose quantity to publish differs from the engine value: Zone Liability weeks kept, weeks held at the band, and damped weeks.',
+      id: 'Minggu yang kuantitas terbitnya berbeda dari nilai mesin: minggu Zone Liability yang dipertahankan, minggu yang ditahan di batas, dan minggu yang diredam.'
     },
     seriesHeld: {
-      label: { en: 'Held (Firm · band · damped)', id: 'Ditahan (Firm · batas · diredam)' },
-      en: 'For the series, how many weeks are held, split into Firm weeks kept, weeks held at the band, and damped weeks.',
-      id: 'Untuk seri itu, berapa minggu yang ditahan, dipisah menjadi minggu Firm yang dipertahankan, minggu yang ditahan di batas, dan minggu yang diredam.'
+      label: {
+        en: 'Held (Zone Liability · band · damped)',
+        id: 'Ditahan (Zone Liability · batas · diredam)'
+      },
+      en: 'For the series, how many weeks are held, split into Zone Liability weeks kept, weeks held at the band, and damped weeks.',
+      id: 'Untuk seri itu, berapa minggu yang ditahan, dipisah menjadi minggu Zone Liability yang dipertahankan, minggu yang ditahan di batas, dan minggu yang diredam.'
     },
     seriesMasc: {
       label: { en: 'MASC raw → stabilised', id: 'MASC mentah → distabilkan' },
@@ -1263,8 +1272,8 @@ export const TERM_LABEL_GLOSSARY =
     },
     forecastZone: {
       label: { en: 'Zone', id: 'Zona' },
-      en: 'Firm: inside the firm lead time, quantities never change once published. Trade-off: up to the raw-material lead time, moves are limited. Forecast: beyond, for planning only.',
-      id: 'Firm: di dalam lead time firm, kuantitas tidak berubah setelah diterbitkan. Trade-off: sampai lead time bahan baku, pergerakan dibatasi. Forecast: setelahnya, hanya untuk perencanaan.',
+      en: 'Zone Liability: the weeks inside the supplier’s lead time; the supplier commits to PTI’s demand, which never changes once published. Zone Capacity: the weeks after; the first need a commitment and are damped, later ones only an acknowledgement.',
+      id: 'Zone Liability: minggu di dalam lead time pemasok; pemasok berkomitmen pada kebutuhan PTI dan tidak berubah setelah diterbitkan. Zone Capacity: minggu sesudahnya; minggu pertama diredam dan perlu komitmen, minggu berikutnya cukup ditandai diterima.',
       labelKeys: ['fc.col.zone']
     },
     publishedForecast: {
@@ -1274,8 +1283,8 @@ export const TERM_LABEL_GLOSSARY =
     },
     commitmentDue: {
       label: { en: 'Commitment due', id: 'Tenggat komitmen' },
-      en: 'When the commitment for the period is due: 1 working day after publication for Firm periods, 3 working days for Trade-off and Forecast periods.',
-      id: 'Kapan komitmen untuk periode itu jatuh tempo: 1 hari kerja setelah penerbitan untuk periode Firm, 3 hari kerja untuk periode Trade-off dan Forecast.',
+      en: 'When the commitment for the period is due: 1 working day after publication for Zone Liability periods, 3 working days for Zone Capacity periods.',
+      id: 'Kapan komitmen untuk periode itu jatuh tempo: 1 hari kerja setelah penerbitan untuk periode Zone Liability, 3 hari kerja untuk periode Zone Capacity.',
       labelKeys: ['fc.col.due']
     },
     commitment: {
@@ -2558,17 +2567,17 @@ export const TERM_LABEL_GLOSSARY =
       }
     },
     firmDemand: {
-      label: { en: 'Firm demand', id: 'Kebutuhan Firm' },
-      en: 'The demand in the Firm zone, which the supplier’s stock and incoming are measured against.',
-      id: 'Permintaan dalam zona Firm, yang menjadi pembanding stok dan kedatangan pemasok.'
+      label: { en: 'Zone Liability demand', id: 'Kebutuhan Zone Liability' },
+      en: 'The demand in Zone Liability, which the supplier’s stock and incoming are measured against.',
+      id: 'Permintaan dalam Zone Liability, yang menjadi pembanding stok dan kedatangan pemasok.'
     },
     supplierCoverage: {
       label: { en: 'Coverage', id: 'Cakupan' },
-      en: 'Whether the supplier’s stock and incoming cover the firm demand: Covered at 1.0 or more, At risk from 0.8, Uncovered below.',
-      id: 'Apakah stok dan kedatangan pemasok menutup permintaan Firm: Tertutup pada 1,0 atau lebih, Berisiko dari 0,8, Tidak tertutup di bawahnya.',
+      en: 'Whether the supplier’s stock and incoming cover the Zone Liability demand: Covered at 1.0 or more, At risk from 0.8, Uncovered below.',
+      id: 'Apakah stok dan kedatangan pemasok menutup permintaan Zone Liability: Tertutup pada 1,0 atau lebih, Berisiko dari 0,8, Tidak tertutup di bawahnya.',
       formula: {
-        en: '(Supplier stock + incoming) ÷ firm demand.',
-        id: '(Stok pemasok + kedatangan) ÷ permintaan Firm.'
+        en: '(Supplier stock + incoming) ÷ Zone Liability demand.',
+        id: '(Stok pemasok + kedatangan) ÷ permintaan Zone Liability.'
       }
     },
     principalLeadTime: {
@@ -2682,8 +2691,8 @@ export const TERM_LABEL_GLOSSARY =
     },
     rsPosition: {
       label: { en: 'Zone and lead time', id: 'Zona dan lead time' },
-      en: 'Where the delivery sits: its forecast zone, and whether it is inside the supplier’s lead time.',
-      id: 'Posisi pengiriman: zona prakiraannya, dan apakah berada di dalam lead time pemasok.'
+      en: 'Where the delivery sits: its zone (Zone Liability or Zone Capacity), and whether it is inside the supplier’s lead time.',
+      id: 'Posisi pengiriman: zonanya (Zone Liability atau Zone Capacity), dan apakah berada di dalam lead time pemasok.'
     },
     rsOver: {
       label: { en: 'Pallet-weeks over capacity', id: 'Palet-minggu di atas kapasitas' },

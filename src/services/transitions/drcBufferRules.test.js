@@ -164,10 +164,12 @@ describe('DRC-9a strategic buffer [Default C4]', () => {
       ['2027-01', 14300]
     ]);
     expect(w?.baseline).toBe(12666.666666666666);
-    // Feb 11,800 is below the baseline: 0. March has no LTP yet.
+    // Feb 11,800 is below the baseline: 0. PEX-2 — the horizon now runs to
+    // month 12, so March has an LTP (420 kg a day × 31, to the 100): 13,000,
+    // 333.33 above the baseline. Under the 6-month horizon it had none.
     expect(w?.months.map((m) => [m.month, m.qty, m.buffer])).toEqual([
       ['2027-02', 11800, 0],
-      ['2027-03', null, null]
+      ['2027-03', 13000, 13000 - 12666.666666666666]
     ]);
   });
 });

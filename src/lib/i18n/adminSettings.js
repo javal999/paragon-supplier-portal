@@ -157,15 +157,17 @@ export const adminSettingsEn = {
   'adminSet.key.receipt.shortPct.hint':
     'A larger shortfall is flagged and the receipt is shown as kept open.',
   'adminSet.key.commitment.firmShortfallPct.label':
-    'Shortfall below forecast accepted in Firm periods',
+    'Shortfall below forecast accepted in Zone Liability periods',
   'adminSet.key.commitment.firmShortfallPct.hint': 'Anything more is an exception for the planner.',
   'adminSet.key.commitment.tradeOffShortfallPct.label':
-    'Shortfall below forecast accepted in Trade-off periods',
-  'adminSet.key.commitment.tradeOffShortfallPct.hint': 'Forecast periods are acknowledgement only.',
-  'adminSet.key.commitment.firmDeadlineWorkingDays.label': 'Firm periods due after publication',
+    'Shortfall below forecast accepted in Zone Capacity damped periods',
+  'adminSet.key.commitment.tradeOffShortfallPct.hint':
+    'Later Zone Capacity periods are acknowledgement only.',
+  'adminSet.key.commitment.firmDeadlineWorkingDays.label':
+    'Zone Liability periods due after publication',
   'adminSet.key.commitment.firmDeadlineWorkingDays.hint': 'Counted on the hub working calendar.',
   'adminSet.key.commitment.otherDeadlineWorkingDays.label':
-    'Trade-off and Forecast periods due after publication',
+    'Zone Capacity periods due after publication',
   'adminSet.key.commitment.otherDeadlineWorkingDays.hint': 'Counted on the hub working calendar.',
   'adminSet.key.gap.greenFromPct.label': 'Green from (commitment ÷ forecast)',
   'adminSet.key.gap.greenFromPct.hint': 'At or above this the period is green.',
@@ -186,7 +188,7 @@ export const adminSettingsEn = {
   'adminSet.key.bands.healthyUpToDays.hint': 'Above this is Excess. Must not be below Warning.',
   'adminSet.key.coverage.coveredFromPct.label': 'Covered from',
   'adminSet.key.coverage.coveredFromPct.hint':
-    'Supplier stock plus incoming, as a share of firm demand.',
+    'Supplier stock plus incoming, as a share of Zone Liability demand.',
   'adminSet.key.coverage.atRiskFromPct.label': 'At risk from',
   'adminSet.key.coverage.atRiskFromPct.hint': 'Below this is Uncovered. Must be below Covered.',
   'adminSet.key.stale.defaultDays.label': 'Default stale period',
@@ -253,9 +255,9 @@ export const adminSettingsEn = {
   'adminSet.key.engine.rescheduleOutWeeks.label': 'Weeks early before a later date is proposed',
   'adminSet.key.engine.rescheduleOutWeeks.hint':
     'An open order line that arrives at least this many weeks before the week it is needed is proposed to come later, to free warehouse space. The change is priced with the rented-space rate and the change penalty above.',
-  'adminSet.key.engine.dampingWeightPct.label': 'Damping weight in the Trade-off zone',
+  'adminSet.key.engine.dampingWeightPct.label': 'Damping weight in the Zone Capacity damped weeks',
   'adminSet.key.engine.dampingWeightPct.hint':
-    'Before a new plan is published, each Trade-off week is blended with the value the supplier saw last time: this share of the old value, the rest from the new one. Higher keeps the plan steadier; 0 publishes the new value as calculated. Forecast weeks are not damped.',
+    'Before a new plan is published, each damped week of Zone Capacity is blended with the value the supplier saw last time: this share of the old value, the rest from the new one. Higher keeps the plan steadier; 0 publishes the new value as calculated. Later Zone Capacity weeks are not damped.',
   'adminSet.key.engine.backtestMascLimitPct.label':
     'Most plan change a model may have and still be chosen (MASC)',
   'adminSet.key.engine.backtestMascLimitPct.hint':
@@ -507,17 +509,18 @@ export const adminSettingsId = {
   'adminSet.key.receipt.shortPct.hint':
     'Kekurangan yang lebih besar ditandai dan penerimaan ditampilkan tetap terbuka.',
   'adminSet.key.commitment.firmShortfallPct.label':
-    'Kekurangan dari prakiraan yang diterima pada periode Pasti',
+    'Kekurangan dari prakiraan yang diterima pada periode Zone Liability',
   'adminSet.key.commitment.firmShortfallPct.hint':
     'Lebih dari itu menjadi pengecualian bagi perencana.',
   'adminSet.key.commitment.tradeOffShortfallPct.label':
-    'Kekurangan dari prakiraan yang diterima pada periode Kompromi',
-  'adminSet.key.commitment.tradeOffShortfallPct.hint': 'Periode Prakiraan hanya perlu diakui.',
+    'Kekurangan dari prakiraan yang diterima pada periode diredam Zone Capacity',
+  'adminSet.key.commitment.tradeOffShortfallPct.hint':
+    'Periode Zone Capacity berikutnya hanya perlu diakui.',
   'adminSet.key.commitment.firmDeadlineWorkingDays.label':
-    'Periode Pasti jatuh tempo setelah penerbitan',
+    'Periode Zone Liability jatuh tempo setelah penerbitan',
   'adminSet.key.commitment.firmDeadlineWorkingDays.hint': 'Dihitung pada kalender kerja hub.',
   'adminSet.key.commitment.otherDeadlineWorkingDays.label':
-    'Periode Kompromi dan Prakiraan jatuh tempo setelah penerbitan',
+    'Periode Zone Capacity jatuh tempo setelah penerbitan',
   'adminSet.key.commitment.otherDeadlineWorkingDays.hint': 'Dihitung pada kalender kerja hub.',
   'adminSet.key.gap.greenFromPct.label': 'Hijau mulai (komitmen ÷ prakiraan)',
   'adminSet.key.gap.greenFromPct.hint': 'Pada atau di atas ini periode berwarna hijau.',
@@ -540,7 +543,7 @@ export const adminSettingsId = {
   'adminSet.key.bands.healthyUpToDays.hint': 'Di atas ini Berlebih. Tidak boleh di bawah Waspada.',
   'adminSet.key.coverage.coveredFromPct.label': 'Tercakup mulai',
   'adminSet.key.coverage.coveredFromPct.hint':
-    'Stok pemasok ditambah kedatangan, sebagai bagian dari kebutuhan pasti.',
+    'Stok pemasok ditambah kedatangan, sebagai bagian dari kebutuhan Zone Liability.',
   'adminSet.key.coverage.atRiskFromPct.label': 'Berisiko mulai',
   'adminSet.key.coverage.atRiskFromPct.hint':
     'Di bawah ini Tidak tercakup. Harus di bawah Tercakup.',
@@ -610,9 +613,9 @@ export const adminSettingsId = {
     'Minggu lebih awal sebelum tanggal yang lebih lambat diusulkan',
   'adminSet.key.engine.rescheduleOutWeeks.hint':
     'Baris pesanan terbuka yang tiba sedikitnya sekian minggu sebelum minggu dibutuhkan diusulkan untuk datang lebih lambat, agar ruang gudang lega. Perubahan dihitung dengan tarif ruang sewa dan penalti perubahan di atas.',
-  'adminSet.key.engine.dampingWeightPct.label': 'Bobot peredaman di zona Trade-off',
+  'adminSet.key.engine.dampingWeightPct.label': 'Bobot peredaman di minggu diredam Zone Capacity',
   'adminSet.key.engine.dampingWeightPct.hint':
-    'Sebelum rencana baru dipublikasikan, setiap minggu Trade-off dicampur dengan nilai yang terakhir dilihat pemasok: sebesar bagian ini dari nilai lama, sisanya dari nilai baru. Makin tinggi, rencana makin stabil; 0 memublikasikan nilai baru apa adanya. Minggu Forecast tidak diredam.',
+    'Sebelum rencana baru dipublikasikan, setiap minggu diredam Zone Capacity dicampur dengan nilai yang terakhir dilihat pemasok: sebesar bagian ini dari nilai lama, sisanya dari nilai baru. Makin tinggi, rencana makin stabil; 0 memublikasikan nilai baru apa adanya. Minggu Zone Capacity berikutnya tidak diredam.',
   'adminSet.key.engine.backtestMascLimitPct.label':
     'Perubahan rencana terbesar agar model masih dapat dipilih (MASC)',
   'adminSet.key.engine.backtestMascLimitPct.hint':
