@@ -296,6 +296,7 @@ The supplier usability test is on Monday 9 or Tuesday 10 November 2026 [M04 6]. 
 | PEX-D19 | Tracking-link test data | Run the step as sup-005 on its seeded principal shipment `ish-0002`; nothing new is seeded |
 | PEX-D20 | Other MR !97 build decisions | Accepted as built; BR-02/BR-03 (BL-283), BR-04 (BL-282) and the LTP and SOH hover (BL-284) stay deferred |
 | PEX-D21 | Stabilise and Reschedule labels | Keep the zone renames; their rules are unchanged |
+| PEX-D22 | Who commits where | Zone Capacity periods are acknowledge-only; commitments are typed in Zone Liability only. The capacity-left quantity stays in BL-283 |
 
 **My calls, for the owner to overrule**
 
