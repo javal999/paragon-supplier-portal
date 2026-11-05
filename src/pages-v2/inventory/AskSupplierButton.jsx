@@ -23,7 +23,13 @@ import {
   supplierAskSubjectKey
 } from '@services/transitions/supplierAskRules';
 import { inputClass, labelClass } from './inventoryDisplay';
-import { AskStatePill, AskSubject, askRefusalText, latestAnswer } from './supplierAskDisplay';
+import {
+  AskStatePill,
+  AskSubject,
+  askQuestionText,
+  askRefusalText,
+  latestAnswer
+} from './supplierAskDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INV-D9 — PTI's "Ask supplier" control, built once for every PTI surface
@@ -324,7 +330,7 @@ const AskViewDialog = ({ ask, onClose, testId }) => {
           <span>{t(`supplierAsk.topic.${ask.topic}`)}</span>·<AskSubject subject={ask} />
         </p>
         <p className="text-sm text-text-primary" data-testid={`${testId}-view-question`}>
-          {ask.question}
+          {askQuestionText(t, ask)}
         </p>
         <p className="text-xs text-text-tertiary">
           {t('supplierAsk.askedLabel')} <Data>{formatDate(asked?.at)}</Data>

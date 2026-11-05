@@ -677,6 +677,9 @@ export class DataError extends Error {
  * `riskClass`:  Optional — the class of the alert the ask came from, so the
  *   supplier sees High first.
  * `dueDate`:  Optional `YYYY-MM-DD` by which PTI needs the answer.
+ * `questionKey` / `questionVars`:  BL-258 — when the question is a hub sentence
+ *   (the sample rows), its i18n key and variables, so each reader sees it in
+ *   their own language; `question` keeps the English text as the fallback.
  * `sample`:  True on the demo rows the store opens with (honesty marker).
  *
  * @typedef {{
@@ -688,6 +691,8 @@ export class DataError extends Error {
  *   readonly topic: import('../transitions/supplierAskRules').SupplierAskTopic;
  *   readonly riskClass?: RiskClass;
  *   readonly question: string;
+ *   readonly questionKey?: string;
+ *   readonly questionVars?: Readonly<Record<string, string | number>>;
  *   readonly dueDate?: string;
  *   readonly state: 'Open' | 'Answered' | 'Closed' | 'Withdrawn';
  *   readonly history: readonly SupplierAskEvent[];

@@ -539,6 +539,9 @@ export const inventoryCapacityEn = {
   'supplierAsk.default.capacityGap':
     'Your capacity for this week is below PTI demand. Can you add capacity, and how much?',
   'supplierAsk.default.other': 'Please tell PTI about this.',
+  // BL-258 (U-19) — the sample ask's question, stored as this key.
+  'supplierAsk.sample.coverageProductionDate':
+    'Your stock and incoming do not cover the next 30 days of PTI demand. When does production of this material start?',
   'supplierAsk.submit': 'Send ask',
   'supplierAsk.cancel': 'Cancel',
   'supplierAsk.closeDialog': 'Close',
@@ -1165,6 +1168,8 @@ export const inventoryCapacityId = {
   'supplierAsk.default.capacityGap':
     'Kapasitas Anda untuk minggu ini di bawah kebutuhan PTI. Dapatkah Anda menambah kapasitas, dan berapa banyak?',
   'supplierAsk.default.other': 'Mohon beri tahu PTI tentang hal ini.',
+  'supplierAsk.sample.coverageProductionDate':
+    'Stok dan kedatangan Anda tidak menutup kebutuhan PTI 30 hari ke depan. Kapan produksi material ini dimulai?',
   'supplierAsk.submit': 'Kirim pertanyaan',
   'supplierAsk.cancel': 'Batal',
   'supplierAsk.closeDialog': 'Tutup',
