@@ -220,7 +220,9 @@ function confirmedLine(po, lineId, orderedQty) {
  *
  * BL-66 (4) — "on time" is the SAME rule OTIF uses: on or before the confirmed
  * date and no more than EARLY_DELIVERY_WINDOW_DAYS before it. A receipt earlier
- * than that does not count (KPI-2; a confirmed early date is BL-234, not built).
+ * than that does not count — unless the planner accepted that earlier date as a
+ * counter-offer, which makes it the confirmed date measured (KPI-2 amended,
+ * BL-234; see `kpiWindow.js`).
  * @param {PurchaseOrder} po
  * @param {readonly GoodsReceipt[]} receipts
  * @returns {PoCfot | null}

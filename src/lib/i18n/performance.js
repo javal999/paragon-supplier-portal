@@ -69,7 +69,7 @@ export const performanceEn = {
   'perf.kpi.otif.window':
     'On time: received on or before the agreed date. A goods receipt counts only if it arrives no more than {{early}} days before that date and no more than {{match}} days after it. Nothing received {{grace}} days after the date: missed, even if the supplier sent a notice of dispatch. Before then: no result yet, and not counted.',
   'perf.kpi.otif.early':
-    'Counts as on time, up to {{early}} days early. A receipt earlier than that does not count. Delivered on the confirmed date uses the same rule.',
+    'A receipt on an earlier date the Material Planner team confirmed counts as on time. Without that confirmation, a receipt counts as on time up to {{early}} days early; earlier than that does not count.',
   'perf.kpi.otif.grain':
     'Per call-off: every delivery of the call-off must be on time and in full. The percentage is of the call-offs due in the period that have a result. A notice of dispatch alone is not a result, and it does not stop a delivery counting as missed.',
   'perf.kpi.otif.dateChange':
@@ -79,7 +79,7 @@ export const performanceEn = {
   'perf.kpi.cfot.window':
     'On time: received on or before the confirmed date, and no more than {{early}} days before it.',
   'perf.kpi.cfot.early':
-    'Counts as on time, up to {{early}} days early — the same rule as on time and in full. A receipt earlier than that does not count.',
+    'A receipt on an earlier date the Material Planner team confirmed counts as on time. Without that confirmation, a receipt counts as on time up to {{early}} days early — the same rule as on time and in full; earlier than that does not count.',
   'perf.kpi.cfot.grain':
     'Per purchase order, by quantity: the quantity confirmed and received by the confirmed date, divided by the quantity ordered. A period takes the orders whose confirmed date falls in it.',
   'perf.kpi.cfot.dateChange':
@@ -143,7 +143,7 @@ export const performanceId = {
   'perf.kpi.otif.window':
     'Tepat waktu: diterima pada atau sebelum tanggal yang disepakati. Penerimaan barang dihitung hanya bila tiba tidak lebih dari {{early}} hari sebelum tanggal itu dan tidak lebih dari {{match}} hari setelahnya. Tidak ada yang diterima {{grace}} hari setelah tanggal itu: terlewat, meskipun pemasok sudah mengirim pemberitahuan pengiriman. Sebelum itu: belum ada hasil, dan tidak dihitung.',
   'perf.kpi.otif.early':
-    'Dihitung tepat waktu, hingga {{early}} hari lebih awal. Penerimaan yang lebih awal dari itu tidak dihitung. Terkirim pada tanggal yang dikonfirmasi memakai aturan yang sama.',
+    'Penerimaan pada tanggal lebih awal yang dikonfirmasi tim Material Planner dihitung tepat waktu. Tanpa konfirmasi itu, penerimaan dihitung tepat waktu hingga {{early}} hari lebih awal; yang lebih awal dari itu tidak dihitung.',
   'perf.kpi.otif.grain':
     'Per call-off: setiap pengiriman call-off harus tepat waktu dan tepat jumlah. Persentasenya dari call-off yang jatuh tempo pada periode ini dan sudah ada hasilnya. Pemberitahuan pengiriman saja bukan hasil, dan tidak mencegah pengiriman dihitung terlewat.',
   'perf.kpi.otif.dateChange':
@@ -153,7 +153,7 @@ export const performanceId = {
   'perf.kpi.cfot.window':
     'Tepat waktu: diterima pada atau sebelum tanggal yang dikonfirmasi, dan tidak lebih dari {{early}} hari sebelumnya.',
   'perf.kpi.cfot.early':
-    'Dihitung tepat waktu, hingga {{early}} hari lebih awal — aturan yang sama dengan tepat waktu dan tepat jumlah. Penerimaan yang lebih awal dari itu tidak dihitung.',
+    'Penerimaan pada tanggal lebih awal yang dikonfirmasi tim Material Planner dihitung tepat waktu. Tanpa konfirmasi itu, penerimaan dihitung tepat waktu hingga {{early}} hari lebih awal — aturan yang sama dengan tepat waktu dan tepat jumlah; yang lebih awal dari itu tidak dihitung.',
   'perf.kpi.cfot.grain':
     'Per pesanan pembelian, menurut jumlah: jumlah yang dikonfirmasi dan diterima sampai tanggal yang dikonfirmasi, dibagi jumlah yang dipesan. Suatu periode mencakup pesanan yang tanggal konfirmasinya jatuh di dalamnya.',
   'perf.kpi.cfot.dateChange':
