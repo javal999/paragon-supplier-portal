@@ -123,10 +123,10 @@ export const demandAnticipationEn = {
 /** @type {Record<string, string>} */
 export const demandAnticipationId = {
   'demandAnt.subtitle':
-    'Jumlah yang PTI perkirakan akan dipanggil dari tiap pemasok, per material dan minggu, sepanjang waktu tunggu. Horizon bergulir setiap minggu: tiap minggu perencanaan dipublikasikan tersendiri, dan minggu berikutnya bergulir maju.',
+    'Jumlah yang PTI perkirakan akan di-call-off dari tiap pemasok, per material dan minggu, sepanjang waktu tunggu. Horizon bergulir setiap minggu: tiap minggu perencanaan dipublikasikan tersendiri, dan minggu berikutnya bergulir maju.',
   'demandAnt.asOf': 'Per',
   'demandAnt.howItWorks':
-    'Tiap minggu dalam horizon adalah LTP ditambah sisa yang dibawa ke minggu itu; minggu pertama juga memuat safety order. Sisa setelah panggilan minggu pertama dipindah ke minggu terakhir horizon, atau ke minggu pertama setelah horizon bila pemasok setuju. Pasokan di atas total diserap di minggu terakhir; kekurangan menjadi rekomendasi PR untuk dibuat di SAP. Tidak ada yang dikirim ke SAP atau pemasok.',
+    'Tiap minggu dalam horizon adalah LTP ditambah sisa yang dibawa ke minggu itu; minggu pertama juga memuat safety order. Sisa setelah call-off minggu pertama dipindah ke minggu terakhir horizon, atau ke minggu pertama setelah horizon bila pemasok setuju. Pasokan di atas total diserap di minggu terakhir; kekurangan menjadi rekomendasi PR untuk dibuat di SAP. Tidak ada yang dikirim ke SAP atau pemasok.',
   'demandAnt.pub.label': 'Minggu perencanaan',
   'demandAnt.pub.none': 'belum dipublikasikan',
   'demandAnt.pub.publishedSame': 'dipublikasikan; angka hari ini sama',
@@ -198,8 +198,8 @@ export const demandAnticipationId = {
     'Kelebihan: {{qty}} diserap di {{week}}; {{left}} melebihi yang dapat ditampung minggu itu',
   'demandAnt.check.shortfall': 'Kekurangan: rekomendasikan PR sebesar {{qty}} (buat di SAP)',
   'demandAnt.check.additionalPo': 'PO tambahan',
-  'demandAnt.carry.label': 'Panggilan {{week}}',
-  'demandAnt.carry.parts': '{{callOff}} dipanggil, sisa {{remainder}}',
+  'demandAnt.carry.label': 'Call-off {{week}}',
+  'demandAnt.carry.parts': '{{callOff}} di-call-off, sisa {{remainder}}',
   'demandAnt.carry.none': 'tidak ada sisa untuk dipindah',
   'demandAnt.carry.lastWeek': '{{qty}} dipindah ke {{week}} (minggu terakhir horizon)',
   'demandAnt.carry.firstOutside':
@@ -208,7 +208,7 @@ export const demandAnticipationId = {
     'Tidak ada waktu tunggu tercatat untuk pemasok × material ini: horizon {{weeks}} minggu sampai ada.',
   'demandAnt.flag.NO_STOCK_RECORD': 'Tidak ada catatan stok PTI: SOH dihitung 0.',
   'demandAnt.flag.OSPO_FROM_STORE':
-    'Minggu sebelumnya belum dipublikasikan: OSPO dimulai dari kuantitas PO terbuka yang belum dipanggil.',
+    'Minggu sebelumnya belum dipublikasikan: OSPO dimulai dari kuantitas PO terbuka yang belum di-call-off.',
   'demandAnt.flag.OSPR_NOT_AVAILABLE':
     'OSPR dihitung 0: permintaan pembelian di hub tidak memuat kode material.',
   'demandAnt.flag.CARRY_LIMIT_NO_SALES_ORDERS':

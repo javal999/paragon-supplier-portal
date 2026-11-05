@@ -666,11 +666,11 @@ export const inventoryCapacityId = {
   'inv.col.ptiSoh': 'Stok PTI',
   'inv.col.supplierRop': 'Titik pemesanan ulang pemasok',
   'inv.col.supplierRop.displayOnly':
-    'Angka pemasok, hanya tampilan · ROP Pemasok sistem di bawahnya',
+    'Angka pemasok, hanya tampilan · ROP Supplier sistem di bawahnya',
   'inv.systemRopSupplier': 'Sistem: {{value}}',
   'inv.systemRopSupplier.none': 'Sistem: tidak ada angka (input kurang)',
   'inv.systemRopSupplier.title':
-    'ROP Pemasok sistem (OSIP). Sementara: aturan menunggu Material Planning (B10, MPQ)',
+    'ROP Supplier sistem (OSIP). Sementara: aturan menunggu Material Planning (B10, MPQ)',
   'inv.col.lastUpdate': 'Pembaruan terakhir',
 
   'inv.figure.noSubmission': 'Belum ada angka',
@@ -1208,7 +1208,7 @@ export const inventoryCapacityId = {
   'supplierAsk.reply.submit': 'Kirim jawaban',
   'inv.alerts.sup.title': 'Peringatan tentang material Anda',
   'inv.alerts.sup.rule.supplierBelowRop':
-    'Stok Anda di bawah titik pemesanan ulang yang dihitung sistem PTI untuk Anda (ROP Pemasok)',
+    'Stok Anda di bawah titik pemesanan ulang yang dihitung sistem PTI untuk Anda (ROP Supplier)',
   'inv.alerts.sup.rule.staleData': 'Angka stok Anda kedaluwarsa',
   'inv.alerts.sup.rule.capacityBelowDemand': 'Kapasitas yang Anda alokasikan di bawah LTP PTI',
   'inv.alerts.sup.rule.coverage':
