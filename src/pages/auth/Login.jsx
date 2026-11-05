@@ -301,7 +301,7 @@ const Login = () => {
               (e.currentTarget.style.borderColor = 'var(--pds-color-border-strong)')
             }
           >
-            i View as Buyer
+            View as Buyer
           </button>
           <button
             onClick={handleViewAsSupplier}
@@ -323,7 +323,7 @@ const Login = () => {
               (e.currentTarget.style.borderColor = 'var(--pds-color-border-strong)')
             }
           >
-            i View as Supplier
+            View as Supplier
           </button>
         </div>
       </div>
