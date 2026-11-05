@@ -9,6 +9,7 @@ import { formatDate, formatDateTime } from '@lib/format';
 /** @import { CallOffView } from '@services/transitions/callOffRules' */
 import { ConfirmationPill, DeliveryPill, ToleranceTags, qty } from '../../callOffs/callOffDisplay';
 import { PicCell } from '../../materials/picDisplay';
+import FulfilBy from './FulfilBy';
 
 /**
  * One call-off row of the supplier's table (BL-38's 7 columns): call-off and
@@ -70,6 +71,8 @@ const CallOffRow = ({ v, match, onOpen }) => {
             <Data className="whitespace-nowrap">{formatDateTime(v.deadline.toISOString())}</Data>
           </div>
         )}
+        {/* PEX-10 (BL-273) — the fulfilment window the confirmation commits to. */}
+        <FulfilBy callOff={c} testId={`supplier-calloff-fulfil-by-${c.id}`} />
         {/* CR-05 — the rule that decided this confirmation, on the row
             the supplier is reading, not only inside the panel. */}
         {v.tolerance && c.confirmation && (

@@ -490,6 +490,7 @@ export class DataError extends Error {
  * `trigger`: BL-199 (DRC-13) — on a `'ropFisik'` draft only: the figures behind it (SOH, ROP Fisik, Max, quantity), stamped with their inputs and rules version (DRC-D16). PTI only: a supplier's read never carries it.
  * `mrpController`:  Material C4 — the material's MRP controller, projected at read (never stored).
  * `delays`:  DRC-5 (BL-191) — every delay proposed for an LTP drop, oldest first; the last may be awaiting the supplier's answer. Absent when none was proposed.
+ * `leadTimeDays`:  PEX-10 (BL-273) — the supplier × material lead time (DRC-6), projected at read (never stored); the fulfil-by date counts from the confirmation with it. Absent when none is on record.
  *
  * @typedef {{
  *   readonly id: string;
@@ -518,6 +519,7 @@ export class DataError extends Error {
  *   readonly notes: readonly CallOffNote[];
  *   readonly delays?: readonly CallOffDelay[];
  *   readonly mrpController?: MrpControllerRef;
+ *   readonly leadTimeDays?: number;
  * }} CallOff
  */
 
