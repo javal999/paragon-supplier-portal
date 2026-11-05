@@ -195,6 +195,14 @@ describe('term-label glossary (BL-233)', () => {
     });
   });
 
+  it('U-08 (BL-246): the LTP tip says how a monthly LTP lands in a week, in EN and ID', () => {
+    const { formula } = TERM_LABEL_GLOSSARY.ltp;
+    expect(formula?.en).toBe(
+      'A monthly LTP (raw material) is spread evenly over the month’s days; a week that straddles two months takes each month’s share.'
+    );
+    expect(formula?.id).toMatch(/^LTP bulanan \(bahan baku\) dibagi rata/);
+  });
+
   it('TL-D6 / TL-D11: the team’s English words stay English in ID', () => {
     for (const term of /** @type {const} */ ([
       'ropSupplier',
