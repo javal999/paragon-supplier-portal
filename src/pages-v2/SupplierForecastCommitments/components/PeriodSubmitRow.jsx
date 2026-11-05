@@ -26,7 +26,7 @@ import { shortfallReasonNeedsNote } from '@services/transitions/reasonCodes';
  *   reasonLabel: ReasonLabel;
  *   groupLabel: (id: string) => string;
  *   setWr: (patch: Partial<WeekReason>) => void;
- *   onSubmitAll: (row: PeriodRow) => Promise<void>;
+ *   onSubmitAll: (row: PeriodRow) => void;
  * }>}
  */
 const PeriodSubmitRow = ({
@@ -121,7 +121,7 @@ const PeriodSubmitRow = ({
             <Button
               variant="outline"
               disabled={pending || row.refusal !== null}
-              onClick={() => void onSubmitAll(row)}
+              onClick={() => onSubmitAll(row)}
               aria-label={t('fc.sup.week.submitAllFor', { period: label })}
               data-testid={`fc-week-submit-${row.bucket}`}
             >

@@ -155,6 +155,14 @@ export const forecastCollaborationEn = {
   'fc.sup.week.noteFor': 'Note for {{period}}',
   'fc.sup.week.submitAll': 'Submit all',
   'fc.sup.week.submitAllFor': 'Submit all for {{period}}',
+  // BL-240 (U-02) — the confirmation summary before Submit all.
+  'fc.sup.week.confirm.title': 'Submit {{period}} to PTI?',
+  'fc.sup.week.confirm.body':
+    'PTI sees these commitments as soon as you submit. Materials: {{count}}.',
+  'fc.sup.week.confirm.prefilled': 'Pre-filled with the forecast, not changed',
+  'fc.sup.week.confirm.prefilledNote':
+    'A pre-filled quantity is PTI’s forecast, not a figure you typed. Change it on the material row if you cannot supply it.',
+  'fc.sup.week.confirm.cancel': 'Cancel',
   'fc.sup.week.refusal.capacityNotConfirmed': 'Confirm capacity for {{group}} first.',
   'fc.sup.week.refusal.aboveBeNeedsReason': 'Above BE: choose a reason.',
   'fc.sup.week.refusal.aboveBeNoteRequired': 'Force Majeure, Discontinued and Other need a note.',
@@ -436,6 +444,14 @@ export const forecastCollaborationId = {
   'fc.sup.week.noteFor': 'Catatan untuk {{period}}',
   'fc.sup.week.submitAll': 'Kirim semua',
   'fc.sup.week.submitAllFor': 'Kirim semua untuk {{period}}',
+  // BL-240 (U-02) — ringkasan konfirmasi sebelum Kirim semua.
+  'fc.sup.week.confirm.title': 'Kirim {{period}} ke PTI?',
+  'fc.sup.week.confirm.body':
+    'PTI melihat komitmen ini begitu Anda mengirimnya. Material: {{count}}.',
+  'fc.sup.week.confirm.prefilled': 'Terisi dari prakiraan, belum diubah',
+  'fc.sup.week.confirm.prefilledNote':
+    'Kuantitas yang terisi adalah prakiraan PTI, bukan angka yang Anda ketik. Ubah di baris material bila Anda tidak dapat memasoknya.',
+  'fc.sup.week.confirm.cancel': 'Batal',
   'fc.sup.week.refusal.capacityNotConfirmed':
     'Konfirmasikan kapasitas untuk {{group}} terlebih dahulu.',
   'fc.sup.week.refusal.aboveBeNeedsReason': 'Di atas BE: pilih alasan.',
