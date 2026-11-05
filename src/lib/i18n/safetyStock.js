@@ -308,7 +308,7 @@ export const safetyStockId = {
   'sst.cause.errors':
     'Kesalahan prakiraan diperbarui: {{added}} rencana lampau ditambahkan, {{dropped}} dikeluarkan',
   'sst.cause.orderLot': 'Perkiraan pesanan per siklus berubah: {{from}} → {{to}}',
-  'sst.cause.window': 'Jendela waktu tunggu berubah: {{from}} → {{to}} minggu',
+  'sst.cause.window': 'Jendela lead time berubah: {{from}} → {{to}} minggu',
   'sst.cause.sapValue': 'Stok pengaman SAP berubah',
   'sst.cause.plan': 'Rencana baru: perkiraan permintaan selama jendela berubah (titik pesan ulang)',
   'sst.cause.new': 'Tidak ada pada perhitungan terakhir',
@@ -332,7 +332,7 @@ export const safetyStockId = {
   'sst.detail.title': 'Riwayat di baliknya',
   'sst.detail.select': 'Pilih material untuk melihat kesalahan di balik stok pengamannya.',
   'sst.detail.window':
-    'Setiap kesalahan adalah kebutuhan dikurangi rencana, dijumlahkan selama {{weeks}} minggu (waktu tunggu ditambah minggu tinjauan).',
+    'Setiap kesalahan adalah kebutuhan dikurangi rencana, dijumlahkan selama {{weeks}} minggu (lead time ditambah minggu tinjauan).',
   'sst.detail.q': 'Perkiraan pesanan per siklus',
   'sst.detail.fillRate': 'Stok pengaman tingkat pemenuhan',
   'sst.detail.quantile': 'Tingkat kesalahan yang hanya terlampaui {{share}} dari waktu',
@@ -343,7 +343,7 @@ export const safetyStockId = {
 
   'sst.def.title': 'Cara menghitungnya',
   'sst.def.errors':
-    'Pada setiap minggu lampau saat rencana dibuat, rencana diubah menjadi jumlah material melalui daftar bahan dan dibandingkan dengan kebutuhan sebenarnya selama waktu tunggu ditambah satu minggu tinjauan.',
+    'Pada setiap minggu lampau saat rencana dibuat, rencana diubah menjadi jumlah material melalui daftar bahan dan dibandingkan dengan kebutuhan sebenarnya selama lead time ditambah satu minggu tinjauan.',
   'sst.def.fillRate':
     'Stok pengaman adalah stok terkecil yang membuat perkiraan unit kurang per siklus pesanan tidak lebih dari (1 − target tingkat pemenuhan) dari perkiraan pesanan. Pesanan minimum yang besar sudah memenuhi sebagian besar permintaan, sehingga butuh stok pengaman lebih sedikit.',
   'sst.def.fallback':
@@ -351,9 +351,9 @@ export const safetyStockId = {
   'sst.def.slt':
     'Waktu tunggu pengaman: dari pengiriman pemasok dalam 26 minggu terakhir, keterlambatan setelah tanggal terkonfirmasi yang dicapai porsi yang ditetapkan. Kurang dari 5 pengiriman: nilai grup material, ditandai.',
   'sst.def.rop':
-    'Titik pesan ulang: perkiraan permintaan selama waktu tunggu ditambah minggu tinjauan, ditambah stok pengaman.',
+    'Titik pesan ulang: perkiraan permintaan selama lead time ditambah minggu tinjauan, ditambah stok pengaman.',
   'sst.def.change':
-    'Sejak perhitungan terakhir: setiap perhitungan dibandingkan dengan perhitungan terakhir alirannya — kemasan seminggu sebelumnya, bahan baku empat minggu sebelumnya — dan penyebabnya dibaca dari masukan yang berubah: tingkat atau target, kesalahan prakiraan, perkiraan pesanan per siklus, jendela waktu tunggu, atau, untuk titik pesan ulang, rencananya.',
+    'Sejak perhitungan terakhir: setiap perhitungan dibandingkan dengan perhitungan terakhir alirannya — kemasan seminggu sebelumnya, bahan baku empat minggu sebelumnya — dan penyebabnya dibaca dari masukan yang berubah: tingkat atau target, kesalahan prakiraan, perkiraan pesanan per siklus, jendela lead time, atau, untuk titik pesan ulang, rencananya.',
 
   // BL-193 (DRC-7) / BL-197 (DRC-11). Istilah planner (ROP Order, ROP Fisik,
   // MPQ, MOQ, LTP, koli, CV, FG) dipertahankan.
@@ -362,13 +362,12 @@ export const safetyStockId = {
   'sst.osip.default.MDQ': 'MDQ = MOQ sampai data master',
   'sst.osip.challenger': 'Pembanding: tingkat pemenuhan mesin',
   'sst.osip.noCapacity': 'Kapasitas produksi tidak tersedia: tidak ikut dalam nilai terendah',
-  'sst.osip.unavailable.NO_LTP': 'Tidak ada LTP selama waktu tunggu',
+  'sst.osip.unavailable.NO_LTP': 'Tidak ada LTP selama lead time',
   'sst.osip.unavailable.NO_CONSUMPTION': 'Tidak ada konsumsi tercatat',
   'sst.osip.unavailable.NO_SUPPLY_AREA': 'Tidak ada area pasokan untuk f',
   'sst.osip.flag.LTP_NOT_AVAILABLE': 'Tidak ada LTP: tidak ikut dalam nilai terendah',
   'sst.osip.flag.NO_ROUNDING_SIZE': 'Tidak ada ukuran pembulatan: dibulatkan ke satuan',
-  'sst.osip.soTitle':
-    'SD {{sd}} · waktu tunggu {{weeks}} minggu · dibulatkan ke atas ke {{roundTo}}',
+  'sst.osip.soTitle': 'SD {{sd}} · lead time {{weeks}} minggu · dibulatkan ke atas ke {{roundTo}}',
   'sst.osip.fisikTitle': 'Permintaan {{demand}} per hari · f {{f}} hari',
   'sst.osip.cv.stable': 'Stabil',
   'sst.osip.cv.fluctuative': 'Fluktuatif',
@@ -385,7 +384,7 @@ export const safetyStockId = {
   'sst.osip.rules.changed': 'Bukan aturan bawaan: angka OSIP di bawah adalah simulasi.',
   'sst.osip.rules.sdSource': 'SD untuk pesanan pengaman (B2)',
   'sst.osip.rules.sdSource.ltp13w': 'LTP, 13 minggu ke depan (bawaan)',
-  'sst.osip.rules.sdSource.ltp': 'LTP selama waktu tunggu (bawaan sebelumnya; PPT 7)',
+  'sst.osip.rules.sdSource.ltp': 'LTP selama lead time (bawaan sebelumnya; PPT 7)',
   'sst.osip.rules.sdSource.consumption12w': 'Konsumsi, 12 minggu terakhir (sheet)',
   'sst.osip.rules.safetyRounding': 'Pesanan pengaman dibulatkan ke atas ke (B4)',
   'sst.osip.rules.safetyRounding.mpq': 'MPQ (bawaan)',
@@ -398,7 +397,7 @@ export const safetyStockId = {
   'sst.osip.rules.fisikDemandIncludesLtp.on': 'Nilai terendah termasuk LTP (bawaan)',
   'sst.osip.rules.fisikDemandIncludesLtp.off': 'Nilai terendah tanpa LTP (sheet)',
   'sst.osip.def.safetyOrder':
-    'Safety order (ROP Order) = {{z}} × √(waktu tunggu dalam minggu) × simpangan baku LTP pemasok selama {{weeks}} minggu ke depan, dibulatkan ke atas ke kelipatan MPQ. Sampai data master memuat MPQ, kelipatan pesanan yang dipakai.',
+    'Safety order (ROP Order) = {{z}} × √(lead time dalam minggu) × simpangan baku LTP pemasok selama {{weeks}} minggu ke depan, dibulatkan ke atas ke kelipatan MPQ. Sampai data master memuat MPQ, kelipatan pesanan yang dipakai.',
   'sst.osip.def.fisik':
     'Safety ROP Fisik = 1 hari × nilai terendah dari konsumsi harian tertinggi 3 bulan terakhir dan LTP harian, dibulatkan ke atas ke MPQ. Konsumsi adalah konsumsi material yang tercatat dikali porsi pemasok. Kapasitas produksi juga termasuk dalam nilai terendah; hub tidak punya angkanya, jadi tidak diikutkan.',
   'sst.osip.def.cv':
@@ -428,11 +427,10 @@ export const safetyStockId = {
   'sst.rop.unavailable.NO_SUPPLY_AREA': 'Tidak tersedia: tidak ada area pasokan untuk f',
   'sst.rop.unavailable.NO_LTP': 'Tidak tersedia: tidak ada LTP',
   'sst.rop.unavailable.NO_DEMAND': 'Tidak tersedia: tidak ada permintaan ROP Fisik',
-  'sst.rop.unavailable.NO_LEAD_TIME_STEPS': 'Tidak tersedia: tidak ada waktu tunggu per tahap',
+  'sst.rop.unavailable.NO_LEAD_TIME_STEPS': 'Tidak tersedia: tidak ada lead time per tahap',
   'sst.rop.unavailable.NO_BOTTLENECK_LEAD_TIME':
-    'Tidak tersedia: waktu tunggu produksi bottleneck belum diatur',
-  'sst.rop.unavailable.NOT_ON_ROUTE':
-    'Tidak tersedia: tidak ada waktu tunggu {{steps}} di rute ini',
+    'Tidak tersedia: lead time produksi bottleneck belum diatur',
+  'sst.rop.unavailable.NOT_ON_ROUTE': 'Tidak tersedia: tidak ada lead time {{steps}} di rute ini',
   'sst.rop.step.orderToPrincipal': 'pemesanan ke prinsipal',
   'sst.rop.step.orderingMaterial': 'pemesanan bahan',
   'sst.rop.step.machineQueue': 'antrean mesin',
@@ -445,7 +443,7 @@ export const safetyStockId = {
   'sst.rop.flag.NO_MAX_ROUNDING': 'Tidak ada koli atau MOQ: dibulatkan ke satuan',
   'sst.rop.ropOrderTitle': 'Stok siklus {{cycle}} + pesanan pengaman',
   'sst.rop.ropFisikTitle': 'Level {{level}} · siklus {{cycle}} + pengaman',
-  'sst.rop.legTitle': '{{days}} hari dari waktu tunggu',
+  'sst.rop.legTitle': '{{days}} hari dari lead time',
   'sst.rop.rules.title': 'Pengalih aturan ROP',
   'sst.rop.rules.note':
     'Hanya baca: pengalih menghitung ulang angka ROP di halaman ini untuk perbandingan. Tidak ada yang disimpan.',
@@ -467,7 +465,7 @@ export const safetyStockId = {
   'sst.rop.detail.npdEffect':
     'Saat tanda ini hilang, perencana mendapat tugas Beranda “Tinjau ROP setelah pesanan pertama” untuk meninjau ROP berdasarkan CO dan IR, permintaan nyata. Mengatur atau mengonfirmasi level menutupnya.',
   'sst.rop.detail.supplierReading':
-    'ROP Supplier adalah stok fisik maksimum pemasok: permintaan ROP Fisik dikali waktu tunggu produksi bottleneck-nya, termasuk antrean, dibulatkan ke atas ke MPQ (Material Planning, 28 Okt 2026). Bahan baku pemasok tidak punya ROP: pemasok menutupnya dari demand anticipation dan PO. ROP order to principal masih tafsiran sampai Material Planning mendefinisikannya: permintaan ROP Fisik selama bagian pemesanan ke prinsipal dari waktu tunggu.',
+    'ROP Supplier adalah stok fisik maksimum pemasok: permintaan ROP Fisik dikali lead time produksi bottleneck-nya, termasuk antrean, dibulatkan ke atas ke MPQ (Material Planning, 28 Okt 2026). Bahan baku pemasok tidak punya ROP: pemasok menutupnya dari demand anticipation dan PO. ROP order to principal masih tafsiran sampai Material Planning mendefinisikannya: permintaan ROP Fisik selama bagian pemesanan ke prinsipal dari lead time.',
   'sst.values.title': 'Nilai OSIP untuk material ini dan pemasoknya',
   'sst.values.note':
     'Diatur oleh Perencana Material (jawaban Material Planning, 28 Okt 2026). Kolom kosong memakai nilai bawaan berwarna abu-abu. Setiap angka OSIP di halaman ini mengikuti nilai yang disimpan.',
@@ -488,7 +486,7 @@ export const safetyStockId = {
   'sst.values.saved.g': 'g tersimpan',
   'sst.values.saved.f': 'Siklus pengisian ulang tersimpan',
   'sst.values.saved.pullAgreement': 'Perjanjian tarik tersimpan',
-  'sst.values.saved.bottleneckLeadTimeDays': 'Waktu tunggu bottleneck tersimpan',
+  'sst.values.saved.bottleneckLeadTimeDays': 'Lead time bottleneck tersimpan',
   'sst.rop.levelForm.label': 'Level OSIP',
   'sst.rop.levelForm.save': 'Simpan level',
   'sst.rop.levelForm.confirm': 'Konfirmasi level',
@@ -528,7 +526,7 @@ export const safetyStockId = {
   'sst.rop.def.level':
     'Level OSIP: diatur per material oleh Perencana Material; material yang belum diatur berada di level 4 (pengisian ulang gudang). Level menentukan rumus ROP Fisik.',
   'sst.rop.def.rops':
-    'ROP Order = cycle stock (LTP selama waktu tunggu) + safety order: input ZPE007, yang tidak dijalankan hub. ROP Fisik, level 3 dan 4 = permintaan harian × f dibulatkan ke atas ke MPQ, + pengaman; level 5 dibulatkan ke atas ke MDQ (MOQ sampai data master memuat MDQ); level 6 (JIT) = LTP 1 hari dibulatkan ke atas ke palet, tanpa pengaman.',
+    'ROP Order = cycle stock (LTP selama lead time) + safety order: input ZPE007, yang tidak dijalankan hub. ROP Fisik, level 3 dan 4 = permintaan harian × f dibulatkan ke atas ke MPQ, + pengaman; level 5 dibulatkan ke atas ke MDQ (MOQ sampai data master memuat MDQ); level 6 (JIT) = LTP 1 hari dibulatkan ke atas ke palet, tanpa pengaman.',
   'sst.rop.def.max':
     'Max = ROP Fisik dibulatkan ke atas ke koli (unit per palet) untuk pemasok lokal, atau ke MOQ untuk impor. Hanya membatasi call-off.',
   'sst.rop.def.supplier':

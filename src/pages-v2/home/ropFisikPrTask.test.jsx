@@ -76,7 +76,7 @@ describe('BL-199 — the "Create a PR in SAP" Home task and What to order', () =
     expect(row).toHaveTextContent('1,275');
     expect(row).toHaveTextContent('1,400');
     expect(within(section).getByTestId('op-rop-fisik-pr-provisional')).toHaveTextContent(
-      'Provisional: rule awaiting Material Planning (F1, B8, B9, MPQ, F2)'
+      'Provisional: rule awaiting Material Planning (F1, B8, B9, F2; MPQ = order multiple until master data)'
     );
     expect(within(section).getByTestId('op-rop-fisik-pr-refresh')).toHaveTextContent(
       'eWM feed not connected'

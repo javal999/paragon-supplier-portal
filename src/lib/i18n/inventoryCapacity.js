@@ -31,7 +31,7 @@ export const inventoryCapacityEn = {
   'inv.systemRopSupplier': 'System: {{value}}',
   'inv.systemRopSupplier.none': 'System: no figure (an input is missing)',
   'inv.systemRopSupplier.title':
-    'System ROP Supplier (OSIP). Provisional: rule awaiting Material Planning (B10, MPQ)',
+    'System ROP Supplier (OSIP). Provisional: rule awaiting Material Planning (B10; MPQ = order multiple until master data)',
   'inv.col.lastUpdate': 'Last update',
 
   'inv.figure.noSubmission': 'No figures yet',
@@ -670,7 +670,7 @@ export const inventoryCapacityId = {
   'inv.systemRopSupplier': 'Sistem: {{value}}',
   'inv.systemRopSupplier.none': 'Sistem: tidak ada angka (input kurang)',
   'inv.systemRopSupplier.title':
-    'ROP Supplier sistem (OSIP). Sementara: aturan menunggu Material Planning (B10, MPQ)',
+    'ROP Supplier sistem (OSIP). Sementara: aturan menunggu Material Planning (B10; MPQ = kelipatan pesanan sampai data master)',
   'inv.col.lastUpdate': 'Pembaruan terakhir',
 
   'inv.figure.noSubmission': 'Belum ada angka',
@@ -685,8 +685,8 @@ export const inventoryCapacityId = {
   'inv.band.excess': 'Berlebih',
   'inv.band.noDemand': 'Tidak ada kebutuhan dalam 30 hari ke depan',
   'inv.band.noFigures': 'Belum ada angka stok',
-  'inv.basis.leadTime': 'Waktu tunggu {{count}} hari',
-  'inv.basis.fallback': 'Tanpa waktu tunggu · pita hari: {{band}}',
+  'inv.basis.leadTime': 'Lead time {{count}} hari',
+  'inv.basis.fallback': 'Tanpa lead time · pita hari: {{band}}',
   'inv.basis.cover': 'Cakupan {{count}} hari',
 
   'inv.freshness.stale': 'Kedaluwarsa',
@@ -721,12 +721,12 @@ export const inventoryCapacityId = {
   'inv.type.all': 'Semua jenis',
   'inv.tiles.label': 'Filter ringkasan',
   'inv.tile.high': 'Risiko tinggi',
-  'inv.tile.high.hint': 'Cakupan pemasok di bawah waktu tunggu pemasok',
+  'inv.tile.high.hint': 'Cakupan pemasok di bawah lead time pemasok',
   'inv.tile.belowRop': 'Stok PTI di bawah ROP PTI',
   'inv.tile.belowRop.hint': 'Stok PTI di bawah titik pemesanan ulangnya',
   'inv.tile.stale': 'Angka pemasok kedaluwarsa',
   'inv.tile.stale.hint': 'Melewati batas pembaruan',
-  'inv.tile.noLeadTime': 'Waktu tunggu belum tercatat',
+  'inv.tile.noLeadTime': 'Lead time belum tercatat',
   'inv.tile.noLeadTime.hint': 'Risiko memakai pita hari',
   'inv.col.materialSupplier': 'Material · pemasok',
   'inv.col.updated': 'Diperbarui',
@@ -734,9 +734,9 @@ export const inventoryCapacityId = {
   'inv.ptiCover.none': 'Cakupan stok PTI: tidak ada angka',
   'inv.supplierCover': 'Cakupan stok pemasok {{count}} hari',
   'inv.drawer.why.leadTime':
-    '{{risk}}: stok pemasok mencakup {{cover}} hari kebutuhan; waktu tunggu pemasok {{lead}} hari.',
+    '{{risk}}: stok pemasok mencakup {{cover}} hari kebutuhan; lead time pemasok {{lead}} hari.',
   'inv.drawer.why.fallback':
-    '{{risk}}: stok pemasok mencakup {{cover}} hari kebutuhan. Waktu tunggu belum tercatat, jadi pita hari yang menentukan: {{band}}.',
+    '{{risk}}: stok pemasok mencakup {{cover}} hari kebutuhan. Lead time belum tercatat, jadi pita hari yang menentukan: {{band}}.',
   'inv.drawer.why.noFigures':
     'Belum ada angka stok dari pemasok, jadi risiko belum bisa dinilai. Catat stok saat pemasok mengirimkannya.',
   'inv.drawer.why.noDemand':
@@ -1117,7 +1117,7 @@ export const inventoryCapacityId = {
     'Stok pemasok tidak mencukupi call-off yang sudah dikonfirmasi; minta tanggal produksi.',
   'inv.alerts.next.staleData': 'Angka pemasok kedaluwarsa; minta angka stok terbaru.',
   'inv.alerts.next.leadTimeMissing':
-    'Tanyakan waktu tunggu ke pemasok lalu catat; sampai itu, kelas memakai pita hari.',
+    'Tanyakan lead time ke pemasok lalu catat; sampai itu, kelas memakai pita hari.',
   'inv.alerts.next.capacityBelowDemand':
     'Kapasitas yang dialokasikan kurang mulai {{week}}; minta pemasok menambah kapasitas, atau tinjau minggu itu di Kapasitas.',
   'inv.alerts.next.commitmentBelowForecast':
@@ -1133,13 +1133,12 @@ export const inventoryCapacityId = {
     'Tidak ada baris perjanjian dengan sisa kuantitas, jadi ajukan permintaan PO.',
   'inv.alerts.next.order.overCalled':
     'Pasangan ini sudah melebihi call-off, jadi ajukan permintaan PO.',
-  'inv.alerts.ask.leadTime': 'Berapa hari waktu tunggu Anda untuk material ini?',
+  'inv.alerts.ask.leadTime': 'Berapa hari lead time Anda untuk material ini?',
   // Inventory UX P-08 (INV-D1) — dasar tiap aturan.
   'inv.alerts.basis.pti': 'PTI {{pti}} / ROP {{rop}} {{uom}}',
   'inv.alerts.basis.ptiNone': 'Tidak ada angka stok PTI',
   'inv.alerts.basis.short': 'Kurang {{qty}} {{uom}} · {{week}}',
-  'inv.alerts.basis.supplierCover':
-    'Cakupan stok pemasok {{cover}} hari · waktu tunggu {{lead}} hari',
+  'inv.alerts.basis.supplierCover': 'Cakupan stok pemasok {{cover}} hari · lead time {{lead}} hari',
   'inv.alerts.basis.supplierCoverBands':
     'Cakupan stok pemasok {{cover}} hari · pita hari: {{band}}',
   'inv.alerts.basis.firm': 'Periode Firm kurang',
@@ -1217,7 +1216,7 @@ export const inventoryCapacityId = {
     'Komitmen Anda di bawah prakiraan PTI melebihi toleransi',
   'inv.alerts.sup.rule.ptiBelowRop': 'Stok PTI di bawah titik pemesanan ulang PTI',
   'inv.alerts.sup.rule.projectedStockOut': 'Stok PTI habis sebelum kedatangan berikutnya',
-  'inv.alerts.sup.rule.leadTimeMissing': 'PTI belum mencatat waktu tunggu untuk material ini',
+  'inv.alerts.sup.rule.leadTimeMissing': 'PTI belum mencatat lead time untuk material ini',
   'inv.alerts.sup.rule.callOffNotCovered':
     'Call-off terkonfirmasi melebihi stok dan produksi yang Anda laporkan',
   'inv.alerts.sup.rule.supplyDiscontinued':

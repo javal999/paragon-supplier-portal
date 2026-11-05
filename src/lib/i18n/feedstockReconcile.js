@@ -99,7 +99,7 @@ export const feedstockReconcileId = {
     'Usulan aturan sisa (DRC-15b), pilihan “bawa ke PO berikutnya”: yang belum di-call-off ditampilkan sebagai dibawa ke PO berikutnya untuk pemasok dan material tersebut. Tidak ada yang dibuat.',
 
   'fsr.noMax': 'Belum ada stok maksimum yang disepakati',
-  'fsr.max': 'Maks:',
+  'fsr.max': 'Max:',
   'fsr.max.notAssigned':
     'Bukan material yang ditugaskan, jadi stok maksimum tidak dapat ditetapkan',
   'fsr.max.set': 'Tetapkan stok maksimum',

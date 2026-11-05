@@ -10,6 +10,7 @@ import {
   PROTECTION_BUFFER_RULES,
   protectionBufferRows
 } from '@services/transitions/drcBufferRules';
+import { provisionalBasis } from '@components/forecast/provisionalBasis';
 /** @import { ProtectionBufferRow, ProtectionBufferRules, ProtectionMonth } from '@services/transitions/drcBufferRules' */
 import { qty } from './inventoryDisplay';
 
@@ -20,8 +21,9 @@ import { qty } from './inventoryDisplay';
 // include it. Every figure is `protectionBufferRows`' (computed at read, so not
 // stamped); none is computed here. The rule awaits owner review (C3), so the
 // section says "Proposed"; it also rests on [Default C2] (level) and the MPQ
-// default, so it says "Provisional" too (design rule 5). The page's supplier
-// and material filters narrow it.
+// default, so it says "Provisional" too (design rule 5), the MPQ default as
+// words, not as a question ID (U-15, BL-262). The page's supplier and material
+// filters narrow it.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const dash = <span className="text-text-tertiary">—</span>;
@@ -90,7 +92,7 @@ const ProtectionBufferSection = ({ supplierId, materialCode, rules = PROTECTION_
         </p>
         {/* Design rule 5 — the level and MPQ it reads are [Default]s. */}
         <p className="text-xs text-text-tertiary" data-testid="protection-buffer-provisional">
-          {t('buffers.provisional', { question: PROTECTION_BUFFER_DEFAULTS.join(', ') })}
+          {t('buffers.provisional', { question: provisionalBasis(PROTECTION_BUFFER_DEFAULTS, t) })}
         </p>
         <p className="text-xs text-text-tertiary mt-1">
           {t('buffers.protection.subtitle', { months: rules.baselineMonths })}
