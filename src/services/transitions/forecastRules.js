@@ -788,6 +788,8 @@ export function buildCommitmentLines(input) {
       let response = null;
       /** @type {string | null} */
       let responseDueAt = null;
+      /** @type {number | null} */
+      let responseVersion = null;
       let carriedForward = false;
       const submitted = mine.find((r) => r.status !== 'Draft');
       if (submitted) {
@@ -808,6 +810,8 @@ export function buildCommitmentLines(input) {
             zoneOfClass(answeredLine.commitmentClass),
             answered.publishedAt
           );
+          // BL-244 — which version that deadline belongs to, for the screen to name.
+          responseVersion = answered.version ?? null;
         }
       }
       const draft =
@@ -844,6 +848,7 @@ export function buildCommitmentLines(input) {
         state: commitmentState(zone, line.forecastQty, response),
         response,
         responseDueAt,
+        responseVersion,
         carriedForward,
         draft,
         committedQty: response?.forecastConfirmation?.confirmedQty ?? null,

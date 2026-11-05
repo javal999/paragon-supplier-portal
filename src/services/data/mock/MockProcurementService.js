@@ -21,8 +21,8 @@ import { whatIfPairs, whatIfSandbox } from './whatIfSandboxReadModel';
 import { protectionBufferInputs } from './protectionBufferReadModel';
 /** @import { ProtectionBufferInput } from '../../transitions/drcBufferRules' */
 /** @import { WhatIfPair, WhatIfSandbox } from './whatIfSandboxReadModel' */
-import { ropFisikPrRecommendations } from './callOffTriggerReadModel';
-/** @import { PrRecommendationView } from '../../transitions/callOffTriggerRules' */
+import { ropFisikLastChecks, ropFisikPrRecommendations } from './callOffTriggerReadModel';
+/** @import { RopFisikPrPage } from '../../transitions/callOffTriggerRules' */
 /** @import { DemandAnticipationSupplyRow } from '../../transitions/supplyBelowDemandRules' */
 /** @import { DaHistoryRow } from '../../transitions/demandAnticipationHistory' */
 import { allDemandAnticipationHistory } from './demandAnticipationHistoryReadModel';
@@ -1134,14 +1134,15 @@ export class MockProcurementService {
 
   /**
    * @param {QueryScope} scope
-   * @returns {Promise<Page<PrRecommendationView>>}
+   * @returns {Promise<RopFisikPrPage>}
    */
   async getRopFisikPrRecommendations(scope) {
     // BL-199 (DRC-13 BR-02) — "Create a PR in SAP" when no umbrella PO balance
     // is left at ROP Fisik. A recommendation only: the hub posts nothing to
-    // SAP. PTI only (X-03).
-    if (scope.personaType !== 'buyer') return { items: [] };
-    return { items: ropFisikPrRecommendations() };
+    // SAP. PTI only (X-03). U-04 (BL-252): with the trigger's last check per
+    // material, so an empty list can say whether the trigger has run.
+    if (scope.personaType !== 'buyer') return { items: [], lastChecks: [] };
+    return { items: ropFisikPrRecommendations(), lastChecks: ropFisikLastChecks() };
   }
 
   /**

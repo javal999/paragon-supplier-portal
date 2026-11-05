@@ -145,6 +145,7 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
     });
     expect(submit).not.toBeDisabled();
     fireEvent.click(submit);
+    fireEvent.click(screen.getByTestId('fc-week-confirm-submit'));
     // CAP-6 BR-02 — no date was sent; the record carries the period start.
     await waitFor(() =>
       expect(
@@ -268,6 +269,7 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
     const submit = screen.getByTestId(`fc-week-submit-${W[3]}`);
     expect(submit).not.toBeDisabled();
     fireEvent.click(submit);
+    fireEvent.click(screen.getByTestId('fc-week-confirm-submit'));
     await waitFor(() =>
       expect(
         responsesFor('sup-007', 'PK-PETB-8802', W[3])
@@ -517,7 +519,7 @@ describe('Alert, Home tasks and the Order summary', () => {
     const alert = await screen.findByTestId('alert-commitmentBelowForecast|RM-STEAR-7300|sup-002');
     expect(alert).toHaveTextContent('Committed quantity below forecast beyond tolerance');
     expect(within(alert).getByText('High')).toBeInTheDocument();
-    expect(within(alert).getByRole('link', { name: 'Open commitments & gaps' })).toHaveAttribute(
+    expect(within(alert).getByRole('link', { name: 'Open Foresight commitments' })).toHaveAttribute(
       'href',
       '/buyer/collaboration?material=RM-STEAR-7300&supplier=sup-002'
     );

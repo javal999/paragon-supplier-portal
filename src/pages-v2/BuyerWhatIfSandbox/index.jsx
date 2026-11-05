@@ -51,8 +51,10 @@ import ScenariosPanel from './components/ScenariosPanel';
 // scenario store.
 //
 // P-07 (IA-B10) — rows on What to order and Inventory open it on their
-// supplier × material ("Try a what-if", `TryWhatIfLink`); "New blank scenario"
-// clears the pair, so the sandbox starts blank with or without a link.
+// supplier × material ("Try a what-if", `TryWhatIfLink`). U-09 (BL-247):
+// `?material=` alone opens the material on its primary supplier (the pair the
+// read marks `primary`, `primarySource`); "New blank scenario" starts a fresh
+// editor on the same pair, and keeps `material` and `supplier` in the address.
 //
 // FSR-D1 (BL-237, C-01) — the inputs are the hub sample (LTP, SOH, open POs,
 // ROP Fisik), the PLAN OF RECORD; the basis line above the results says so.
@@ -64,6 +66,18 @@ import ScenariosPanel from './components/ScenariosPanel';
 
 /** @param {{ supplierId: string; materialCode: string }} p */
 const keyOf = (p) => `${p.supplierId}|${p.materialCode}`;
+
+/**
+ * U-09 (BL-247) — the pair `?material=` alone opens: the material's primary
+ * supplier, else its first pair.
+ * @param {readonly WhatIfPair[]} list
+ * @param {string} materialCode
+ * @returns {WhatIfPair | undefined}
+ */
+const primaryPair = (list, materialCode) => {
+  const mine = list.filter((p) => p.materialCode === materialCode);
+  return mine.find((p) => p.primary) ?? mine[0];
+};
 
 /**
  * How many inputs and switches differ from the current plan.
@@ -195,10 +209,17 @@ const BuyerWhatIfSandbox = () => {
   const { t } = useTranslation();
   const { identity } = useCurrentIdentity();
   const [params, setParams] = useSearchParams();
-  const supplierId = params.get('supplier');
   const materialCode = params.get('material');
   const pairs = useWhatIfPairs();
+  // U-09 (BL-247) — no supplier in the address: the material's primary supplier.
+  const supplierId =
+    params.get('supplier') ??
+    (materialCode === null
+      ? null
+      : (primaryPair(pairs.data?.items ?? [], materialCode)?.supplierId ?? null));
   const box = useWhatIfSandbox(supplierId, materialCode);
+  // "New blank scenario": a fresh editor on the same pair.
+  const [blank, setBlank] = useState(0);
   const nowIso = inventoryNow();
   const crumb = [t('hub.nav.section.weeklyPlan'), t('hub.nav.pti.whatIfSandbox')];
   /** @param {{ supplierId: string; materialCode: string }} p */
@@ -271,11 +292,17 @@ const BuyerWhatIfSandbox = () => {
             {t('whatIf.pick.loadPpt7')}
           </Button>
         ) : null}
-        {/* P-07 — opened from a material row, the sandbox still starts blank on request. */}
+        {/* P-07 / BL-247 — a fresh editor on the same pair, on request. */}
         {selected ? (
           <Button
             variant="secondary"
-            onClick={() => setParams(new URLSearchParams())}
+            onClick={() => {
+              if (supplierId && materialCode)
+                setParams(new URLSearchParams({ material: materialCode, supplier: supplierId }), {
+                  replace: true
+                });
+              setBlank((n) => n + 1);
+            }}
             data-testid="wi-new-blank"
           >
             {t('whatIf.newBlank')}
@@ -298,7 +325,7 @@ const BuyerWhatIfSandbox = () => {
           </Button>
         </div>
       ) : box.data ? (
-        <Editor key={selected} box={box.data} />
+        <Editor key={`${selected}#${blank}`} box={box.data} />
       ) : (
         <p className="text-sm text-text-tertiary" data-testid="wi-unknown">
           {t('whatIf.save.refused.UNKNOWN_PAIR')}

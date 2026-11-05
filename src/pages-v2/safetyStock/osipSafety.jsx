@@ -9,6 +9,7 @@ import SelectField from '@components/ui-v2/SelectField';
 import { formatNumber } from '@lib/format';
 import { OSIP_RULES } from '@services/transitions/osipRules';
 import { OSIP_SAFETY_QUESTIONS } from '@services/transitions/osipSafetyRules';
+import { provisionalBasis } from '@components/forecast/provisionalBasis';
 import { qtyOf } from '../materialPlan/planDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -58,7 +59,7 @@ export const ProvisionalNote = ({ questions, testId }) => {
   if (questions.length === 0) return null;
   return (
     <span className="block text-xs font-normal normal-case text-text-tertiary" data-testid={testId}>
-      {t('sst.osip.provisional', { questions: questions.join(', ') })}
+      {t('sst.osip.provisional', { questions: provisionalBasis(questions, t) })}
     </span>
   );
 };

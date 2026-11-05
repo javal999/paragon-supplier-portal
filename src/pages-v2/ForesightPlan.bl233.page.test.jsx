@@ -12,15 +12,17 @@ import { textWithoutTips } from '@test/termText';
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { whatIfScenarioStore } from '@services/data/mock/stores/whatIfScenarioStore';
 import { sdcClock } from '@services/sdc';
+import i18n from '@lib/i18n';
 import BuyerWhatIfSandbox from './BuyerWhatIfSandbox';
 import BuyerStabilise from './BuyerStabilise';
 import SupplierForecastCommitments from './SupplierForecastCommitments';
 
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 
-beforeEach(() => {
+beforeEach(async () => {
   sdcClock.reset();
   whatIfScenarioStore.reset();
+  await i18n.changeLanguage('en');
 });
 
 /**
@@ -47,7 +49,7 @@ describe('BL-233 wave 4 — /buyer/what-if', () => {
     expect(rows.length).toBe(13);
     expect(rows.filter((r) => !r.tip)).toEqual([]);
     const text = rows.map((r) => r.label).join(' | ');
-    expect(text).toContain('Demand anticipation (DA) over the lead time');
+    expect(text).toContain('Demand anticipation (DA) over the lead time, before the check');
     expect(text).toContain('PR Generated');
     expect(text).toContain('Carry-over');
     expect(text).not.toContain('PR need');
@@ -64,7 +66,47 @@ describe('BL-233 wave 4 — /buyer/what-if', () => {
       'Not: Incoming DA (the supplier-confirmed figure).'
     );
     expect(screen.getByTestId('term-tip-da-scenario')).toHaveTextContent(
-      'Demand anticipation (DA), this scenario'
+      'Demand anticipation (DA) after the check, this scenario'
+    );
+  });
+
+  // BL-249 (U-10): the headline total is before the plan check, the grid's
+  // weekly rows after it (TL-D13's "After the check", as on the history page).
+  it('names the DA headline "before the check" and the grid rows "after the check"', async () => {
+    renderWithProviders(<BuyerWhatIfSandbox />, {
+      route: '/buyer/what-if?supplier=sup-007&material=PK-PETB-8802'
+    });
+    const head = await screen.findByTestId('term-tip-da-over-lead-time', {}, { timeout: 15000 });
+    expect(textWithoutTips(head).trim()).toBe(
+      'Demand anticipation (DA) over the lead time, before the check'
+    );
+    expect(within(head).getByRole('tooltip')).toHaveTextContent(
+      'before the plan check absorbs any surplus'
+    );
+    const plan = screen.getByTestId('term-tip-da-current-plan');
+    expect(textWithoutTips(plan).trim()).toBe(
+      'Demand anticipation (DA) after the check, current plan'
+    );
+    expect(within(plan).getByRole('tooltip')).toHaveTextContent('after the plan check absorbed');
+    expect(textWithoutTips(screen.getByTestId('term-tip-da-scenario')).trim()).toBe(
+      'Demand anticipation (DA) after the check, this scenario'
+    );
+  });
+
+  it('reads the same in Indonesian', async () => {
+    await i18n.changeLanguage('id');
+    renderWithProviders(<BuyerWhatIfSandbox />, {
+      route: '/buyer/what-if?supplier=sup-007&material=PK-PETB-8802'
+    });
+    const head = await screen.findByTestId('term-tip-da-over-lead-time', {}, { timeout: 15000 });
+    expect(textWithoutTips(head).trim()).toBe(
+      'Demand anticipation (DA) sepanjang lead time, sebelum pemeriksaan'
+    );
+    expect(textWithoutTips(screen.getByTestId('term-tip-da-current-plan')).trim()).toBe(
+      'Demand anticipation (DA) setelah pemeriksaan, rencana saat ini'
+    );
+    expect(textWithoutTips(screen.getByTestId('term-tip-da-scenario')).trim()).toBe(
+      'Demand anticipation (DA) setelah pemeriksaan, skenario ini'
     );
   });
 });

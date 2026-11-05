@@ -86,6 +86,18 @@ export const PAGE_TABS = ['commitments', 'responses'];
  * @property {WeekReason} wr
  * @property {(l: ForecastCommitmentLine) => RootCause | undefined} rootFor
  * @property {PeriodRefusal | null} refusal
+ * @property {SubmitSummaryLine[]} summary
+ */
+
+/**
+ * BL-240 (U-02) — one line of the Submit all confirmation: the line, the
+ * quantity Submit all sends for it, and whether that quantity is the
+ * forecast pre-fill nobody changed (no edit on this page, no saved draft, no
+ * earlier response).
+ * @typedef {object} SubmitSummaryLine
+ * @property {ForecastCommitmentLine} line
+ * @property {number | null} qty
+ * @property {boolean} prefilled
  */
 
 export {};

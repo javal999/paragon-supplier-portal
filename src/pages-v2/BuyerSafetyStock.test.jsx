@@ -9,6 +9,14 @@ import { DEFAULT_SETTING_STATE, settingRefusal } from '@services/transitions/hub
 import i18n from '@lib/i18n';
 /** @import { QueryScope } from '@services/data/types' */
 import { qtyOf } from './materialPlan/planDisplay';
+import { formatNumber } from '@lib/format';
+
+/**
+ * U-13 (BL-254) — the Safety stock and Reorder point columns, rounded to the unit.
+ * @param {number} x
+ * @param {string} uom
+ */
+const whole = (x, uom) => `${formatNumber(Math.round(x))} ${uom}`;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REQ-E14-04 — the planner's Safety stock page. Figures are read back from the
@@ -61,13 +69,13 @@ describe('BuyerSafetyStock — the planner page', () => {
       const row = within(screen.getByTestId(`sst-row-${m.materialCode}`));
       expect(row.getByText(m.materialCode)).toBeInTheDocument();
       expect(row.getByTestId(`sst-ss-${m.materialCode}`)).toHaveTextContent(
-        qtyOf(m.safetyStock, m.uom)
+        whole(m.safetyStock, m.uom)
       );
       expect(row.getByTestId(`sst-sap-${m.materialCode}`)).toHaveTextContent(
         qtyOf(m.sapSafetyStock, m.uom)
       );
       expect(row.getByTestId(`sst-rop-${m.materialCode}`)).toHaveTextContent(
-        qtyOf(m.reorderPoint, m.uom)
+        whole(m.reorderPoint, m.uom)
       );
       expect(row.getByTestId(`sst-target-${m.materialCode}`)).toHaveTextContent(
         `${Math.round(m.target * 1000) / 10}%`
@@ -77,6 +85,25 @@ describe('BuyerSafetyStock — the planner page', () => {
     expect(screen.getByTestId('sst-kpi-fallback')).toHaveTextContent(
       String(run.materials.filter((m) => m.source === 'sap').length)
     );
+  });
+
+  it('U-13 (BL-254): the KG reorder points and safety stocks read in whole units, as the PCS ones do; the read keeps its decimals', async () => {
+    const run = /** @type {import('@services/data/types').SafetyStockView} */ (
+      await mockDataService.procurement.getSafetyStock(buyerScope)
+    );
+    const kg = run.materials.filter((m) => m.uom === 'KG');
+    for (const code of ['RM-STEAR-7300', 'AI-CENT-6900', 'RM-EMUL-3310']) {
+      expect(kg.map((m) => m.materialCode)).toContain(code);
+    }
+    // The engine figure itself is not rounded (display only).
+    expect(kg.some((m) => !Number.isInteger(m.reorderPoint))).toBe(true);
+    renderWithProviders(<BuyerSafetyStock />, { identity: BUYER, route: '/buyer/safety-stock' });
+    await screen.findByTestId(`sst-row-${kg[0].materialCode}`);
+    for (const m of kg) {
+      const row = within(screen.getByTestId(`sst-row-${m.materialCode}`));
+      expect(row.getByTestId(`sst-ss-${m.materialCode}`).textContent).toMatch(/^[\d,]+ KG$/);
+      expect(row.getByTestId(`sst-rop-${m.materialCode}`).textContent).toMatch(/^[\d,]+ KG$/);
+    }
   });
 
   it('AC-03: selecting a material shows the stored errors its figure was read from', async () => {

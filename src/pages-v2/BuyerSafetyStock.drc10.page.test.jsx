@@ -105,8 +105,12 @@ describe('BL-196 — the ROP columns', () => {
     expect(screen.getByTestId('sst-rop-prov-level')).toHaveTextContent(
       'Provisional: rule awaiting Material Planning (C2)'
     );
-    expect(screen.getByTestId('sst-rop-prov-ropOrder')).toHaveTextContent('(B4, B9, MPQ)');
-    expect(screen.getByTestId('sst-rop-prov-ropFisik')).toHaveTextContent('(B1, C2, MPQ, MDQ)');
+    expect(screen.getByTestId('sst-rop-prov-ropOrder')).toHaveTextContent(
+      '(B4, B9; MPQ = order multiple until master data)'
+    );
+    expect(screen.getByTestId('sst-rop-prov-ropFisik')).toHaveTextContent(
+      '(B1, C2; MPQ = order multiple until master data; MDQ = MOQ until master data)'
+    );
     expect(screen.getByTestId('sst-rop-prov-max')).toHaveTextContent('(B8)');
     expect(screen.getByTestId('sst-rop-challenger')).toHaveTextContent(
       'Challenger: engine reorder point'
@@ -214,7 +218,7 @@ describe('BL-196 — the detail panel: supplier-side ROPs and the level control'
       'Not available: no order-to-principal lead time on this route'
     );
     expect(within(panel).getByTestId('sst-rop-detail-prov-supplierRops')).toHaveTextContent(
-      '(B10, MPQ)'
+      '(B10; MPQ = order multiple until master data)'
     );
   });
 

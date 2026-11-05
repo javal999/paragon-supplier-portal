@@ -677,6 +677,9 @@ export class DataError extends Error {
  * `riskClass`:  Optional — the class of the alert the ask came from, so the
  *   supplier sees High first.
  * `dueDate`:  Optional `YYYY-MM-DD` by which PTI needs the answer.
+ * `questionKey` / `questionVars`:  BL-258 — when the question is a hub sentence
+ *   (the sample rows), its i18n key and variables, so each reader sees it in
+ *   their own language; `question` keeps the English text as the fallback.
  * `sample`:  True on the demo rows the store opens with (honesty marker).
  *
  * @typedef {{
@@ -688,6 +691,8 @@ export class DataError extends Error {
  *   readonly topic: import('../transitions/supplierAskRules').SupplierAskTopic;
  *   readonly riskClass?: RiskClass;
  *   readonly question: string;
+ *   readonly questionKey?: string;
+ *   readonly questionVars?: Readonly<Record<string, string | number>>;
  *   readonly dueDate?: string;
  *   readonly state: 'Open' | 'Answered' | 'Closed' | 'Withdrawn';
  *   readonly history: readonly SupplierAskEvent[];
@@ -910,6 +915,7 @@ export class DataError extends Error {
  * `reminderAt`:  REQ-E06-03 BR-06 — the first reminder, at half the deadline.
  * `response`:  The submitted commitment that stands for the current quantity.
  * `responseDueAt`: CR-26 — the deadline the standing response ANSWERED (its own version's publication and zone), so a carried-forward commitment keeps the verdict it earned. Derived from publications, never from a clock; null with no response.
+ * `responseVersion`:  BL-244 — the version number the standing response ANSWERED (the version `responseDueAt` belongs to); null with no response. Optional for hand-built lines.
  * `carriedForward`:  True when that commitment answered an earlier version with the same quantity.
  * `draft`:  The supplier's own unsubmitted draft (never in PTI's read — BR-10).
  * `log`:  REQ-E06-03 BR-05 — every revision request and note on this period, oldest first.
@@ -940,6 +946,7 @@ export class DataError extends Error {
  *   readonly state: CommitmentState;
  *   readonly response: RequirementResponse | null;
  *   readonly responseDueAt: string | null;
+ *   readonly responseVersion?: number | null;
  *   readonly carriedForward: boolean;
  *   readonly draft: RequirementResponse | null;
  *   readonly committedQty: number | null;
@@ -3201,9 +3208,10 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *   its own assigned materials only. PTI: every supplier × material with a name.
  * @property {(scope: QueryScope) => Promise<Page<StockAccessGrant>>} getStockAccess -  Supplier access to PTI stock. PTI: every supplier with its log. Supplier: its own.
  * @property {(scope: QueryScope) => Promise<Page<CapacityPlan>>} getCapacityPlans -  Capacity against demand per supplier × planning group, 13 weeks.
- * @property {(scope: QueryScope) => Promise<Page<import('../transitions/callOffTriggerRules').PrRecommendationView>>} getRopFisikPrRecommendations BL-199 (DRC-13 BR-02) — the open "Create a PR in SAP" recommendations:
+ * @property {(scope: QueryScope) => Promise<import('../transitions/callOffTriggerRules').RopFisikPrPage>} getRopFisikPrRecommendations BL-199 (DRC-13 BR-02) — the open "Create a PR in SAP" recommendations:
  *   a material whose PTI SOH reached ROP Fisik with no umbrella PO balance left for what it needs. A
- *   recommendation only; the hub posts nothing to SAP. PTI only: a supplier scope reads an empty page.
+ *   recommendation only; the hub posts nothing to SAP. U-04 (BL-252): with `lastChecks`, the
+ *   trigger ledger's last row per material. PTI only: a supplier scope reads an empty page.
  * @property {(scope: QueryScope) => Promise<Page<import('./mock/whatIfSandboxReadModel').WhatIfPair>>} getWhatIfPairs DRC-17 (BL-202) — the supplier × material pairs the what-if sandbox
  *   offers, with RM or PM and its horizon (52 / 24 weeks), the PPT 7 golden case first. PTI only:
  *   a supplier scope reads an empty page.

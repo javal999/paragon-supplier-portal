@@ -84,6 +84,8 @@ describe('Supplier — Submit all per period (ENG-D19)', () => {
     // A row no longer has its own Submit, only Save draft.
     expect(screen.queryByRole('button', { name: /^Submit commitment for/ })).toBeNull();
     fireEvent.click(screen.getByTestId(`fc-week-submit-${W[6]}`));
+    // BL-240 — Submit all opens the summary; its confirm sends the period.
+    fireEvent.click(screen.getByTestId('fc-week-confirm-submit'));
     await waitFor(() =>
       expect(
         responsesFor('sup-007', W[6])
@@ -122,6 +124,7 @@ describe('Supplier — Submit all per period (ENG-D19)', () => {
     });
     expect(submit).not.toBeDisabled();
     fireEvent.click(submit);
+    fireEvent.click(screen.getByTestId('fc-week-confirm-submit'));
     await waitFor(() =>
       expect(
         responsesFor('sup-007', W[2]).find(

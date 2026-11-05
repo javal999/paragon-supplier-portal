@@ -88,6 +88,12 @@ export const TERM_LABEL_GLOSSARY =
       label: { en: 'LTP', id: 'LTP' },
       en: 'The current forecast quantity of the material for the week, for this supplier. Each week’s demand anticipation (DA) starts from it.',
       id: 'Kuantitas prakiraan terkini material untuk minggu itu, untuk pemasok ini. Demand anticipation (DA) tiap minggu berangkat darinya.',
+      // U-08 (BL-246): the spreading is `groupWeekLtp` (capacityRules.js, CAP-D11). On
+      // the formula line, as the definition is held to 40 words (BR-07).
+      formula: {
+        en: 'A monthly LTP (raw material) is spread evenly over the month’s days; a week that straddles two months takes each month’s share.',
+        id: 'LTP bulanan (bahan baku) dibagi rata ke hari-hari dalam bulan itu; minggu yang melintasi dua bulan mengambil bagian dari masing-masing bulan.'
+      },
       labelKeys: ['daHist.csv.ltp']
     },
     fgDemand: {
@@ -956,13 +962,16 @@ export const TERM_LABEL_GLOSSARY =
         id: 'Lokal: ROP Fisik dibulatkan ke atas ke koli. Impor: dibulatkan ke atas ke MOQ.'
       }
     },
+    // BL-249 (U-10): the headline is the total before the plan check, the weeks
+    // grid the DA after it, so both labels name their side of the check. TL-D1's
+    // "Demand anticipation (DA) over the lead time" stays; the qualifier is added.
     daOverLeadTime: {
       label: {
-        en: 'Demand anticipation (DA) over the lead time',
-        id: 'Demand anticipation (DA) sepanjang lead time'
+        en: 'Demand anticipation (DA) over the lead time, before the check',
+        id: 'Demand anticipation (DA) sepanjang lead time, sebelum pemeriksaan'
       },
-      en: 'The sum of the weekly demand anticipation (DA) across the lead-time horizon.',
-      id: 'Jumlah demand anticipation (DA) mingguan sepanjang horizon lead time.',
+      en: 'The sum of the weekly demand anticipation (DA) across the lead-time horizon, before the plan check absorbs any surplus in the last week. The weekly rows below are after the check and can add up to less.',
+      id: 'Jumlah demand anticipation (DA) mingguan sepanjang horizon lead time, sebelum pemeriksaan rencana menyerap kelebihan di minggu terakhir. Baris mingguan di bawah adalah setelah pemeriksaan dan jumlahnya bisa lebih kecil.',
       alsoCalled: [
         {
           name: 'Total DA',
@@ -1044,22 +1053,23 @@ export const TERM_LABEL_GLOSSARY =
       en: 'The current forecast quantity of the material for the week, for this supplier. Type another value to try it; the plan does not change.',
       id: 'Kuantitas prakiraan terkini material untuk minggu itu, untuk pemasok ini. Ketik nilai lain untuk mencobanya; rencana tidak berubah.'
     },
+    // BL-249 (U-10): "after the check" as on the history page (TL-D13).
     daCurrentPlan: {
       label: {
-        en: 'Demand anticipation (DA), current plan',
-        id: 'Demand anticipation (DA), rencana saat ini'
+        en: 'Demand anticipation (DA) after the check, current plan',
+        id: 'Demand anticipation (DA) setelah pemeriksaan, rencana saat ini'
       },
-      en: 'The weekly demand anticipation (DA) the live plan gives, for comparison.',
-      id: 'Demand anticipation (DA) mingguan dari rencana yang berjalan, sebagai pembanding.',
+      en: 'The weekly demand anticipation (DA) the live plan gives after the plan check absorbed any surplus in the horizon’s last week, for comparison. The total before the check is in the results above.',
+      id: 'Demand anticipation (DA) mingguan dari rencana yang berjalan setelah pemeriksaan rencana menyerap kelebihan di minggu terakhir horizon, sebagai pembanding. Total sebelum pemeriksaan ada di hasil di atas.',
       notToConfuse: NOT_DELIVERY_AGREEMENT
     },
     daScenario: {
       label: {
-        en: 'Demand anticipation (DA), this scenario',
-        id: 'Demand anticipation (DA), skenario ini'
+        en: 'Demand anticipation (DA) after the check, this scenario',
+        id: 'Demand anticipation (DA) setelah pemeriksaan, skenario ini'
       },
-      en: 'The weekly demand anticipation (DA) under the inputs and rules of this scenario.',
-      id: 'Demand anticipation (DA) mingguan dengan input dan aturan skenario ini.',
+      en: 'The weekly demand anticipation (DA) under the inputs and rules of this scenario, after the plan check absorbed any surplus in the horizon’s last week. The total before the check is in the results above.',
+      id: 'Demand anticipation (DA) mingguan dengan input dan aturan skenario ini, setelah pemeriksaan rencana menyerap kelebihan di minggu terakhir horizon. Total sebelum pemeriksaan ada di hasil di atas.',
       notToConfuse: NOT_DELIVERY_AGREEMENT
     },
     callOffsDrafted: {

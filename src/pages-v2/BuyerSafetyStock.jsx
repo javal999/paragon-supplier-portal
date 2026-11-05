@@ -85,6 +85,13 @@ const pallets = (x) => formatNumber(Math.round(x));
  */
 const qtyIn = (x, uom) => `${qtyOf(x, uom)} ${uom}`;
 /**
+ * U-13 (BL-254) — the engine's safety stock and reorder point columns, rounded to
+ * the unit in KG as in PCS (F-21). Display only; the computed value is unchanged.
+ * @param {number} x
+ * @param {MaterialSafetyStockView['uom']} uom
+ */
+const wholeIn = (x, uom) => `${formatNumber(Math.round(x), { maximumFractionDigits: 0 })} ${uom}`;
+/**
  * A change with its sign: +417, −295, 0.
  * @param {number} x
  * @param {MaterialSafetyStockView['uom']} uom
@@ -490,7 +497,7 @@ const BuyerSafetyStock = () => {
                 }
                 <TableCell className="align-top">
                   <Data data-testid={`sst-ss-${m.materialCode}`}>
-                    {qtyIn(m.safetyStock, m.uom)}
+                    {wholeIn(m.safetyStock, m.uom)}
                   </Data>
                   <div className="text-xs" data-testid={`sst-source-${m.materialCode}`}>
                     {m.source === 'sap' ? (
@@ -548,7 +555,7 @@ const BuyerSafetyStock = () => {
                 </TableCell>
                 <TableCell className="align-top">
                   <Data data-testid={`sst-rop-${m.materialCode}`}>
-                    {qtyIn(m.reorderPoint, m.uom)}
+                    {wholeIn(m.reorderPoint, m.uom)}
                   </Data>
                 </TableCell>
                 <TableCell className="align-top min-w-[12rem]">

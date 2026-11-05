@@ -172,7 +172,7 @@ describe('SupplierReliabilityPanel — the supplier sees only its own figures (A
     actor: NO_PERSON
   };
 
-  it('shows the supplier’s own confirmation rate and PTI’s plan-change figure, with the SIMULATED pill', async () => {
+  it('shows the supplier’s own confirmation rate and PTI’s plan-change figure, with no strip of its own (BL-253)', async () => {
     const all = (await mockDataService.procurement.getSupplierReliability(buyerScope)).items;
     const mine = /** @type {import('@services/data/types').SupplierReliabilityView} */ (
       all.find((r) => r.supplierId === 'sup-007')
@@ -182,9 +182,9 @@ describe('SupplierReliabilityPanel — the supplier sees only its own figures (A
       route: '/supplier/forecasts'
     });
     const panel = await screen.findByTestId('rel-sup-panel');
-    expect(
-      within(panel).getByText('Synthetic data · awaiting the MDM SAP feed')
-    ).toBeInTheDocument();
+    // BL-253 (U-20) — the panel carries no data strip of its own; the host page's
+    // "Sample data" badge is the one marker (see the BL-253 page test).
+    expect(within(panel).queryByText('Synthetic data · awaiting the MDM SAP feed')).toBeNull();
     expect(
       within(screen.getByTestId('rel-sup-confirmation')).getByText(
         /** @type {NonNullable<ReturnType<typeof pct>>} */ (pct(mine.confirmation.rate))

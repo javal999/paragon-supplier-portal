@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.17, 2026-11-03 (FSR-D1 to FSR-D6 added: the owner's rulings on the six open questions of the Foresight end-to-end review; 1.16, 2026-11-02: BL-12 and BL-56 decided by the owner; BL-19 baselines and early receipts in OTIF and CFOT answered; INV-D4 superseded by the BL-149 answer; 1.15, 2026-10-26: RFX-D32 added: the RFx deadline is checked on leaving the field; INV-D14 added 2026-10-23) |
+| Version | 1.18, 2026-11-05 (FSR-D7 added: BL-243 and BL-249 built, applying IA R-2 and the TL-D13 qualifier; 1.17, 2026-11-03: FSR-D1 to FSR-D6 added: the owner's rulings on the six open questions of the Foresight end-to-end review; 1.16, 2026-11-02: BL-12 and BL-56 decided by the owner; BL-19 baselines and early receipts in OTIF and CFOT answered; INV-D4 superseded by the BL-149 answer; 1.15, 2026-10-26: RFX-D32 added: the RFx deadline is checked on leaving the field; INV-D14 added 2026-10-23) |
 | Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20) and RFX-D26 to RFX-D31 (2026-10-22) and RFX-D32 (2026-10-26); the Inventory & Capacity UX decisions INV-D1 to INV-D13 (2026-10-22) and INV-D14 (2026-10-23); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23); and the Foresight review rulings FSR-D1 to FSR-D6 (2026-11-03) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, and two values (BL-54 invoice cap, BL-55 gate OTIF minimum). BL-12 call-off record and BL-56 early allowance were decided on 2026-11-02 (see their entries). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
@@ -496,6 +496,13 @@ Levi ruled in chat on 2026-11-03 on the six open questions in section 7 of the F
 **Alternative not taken.** Keeping DRC-B37 (one open draft, re-arm only after SOH is above ROP Fisik) until the team answers L-15.
 
 **What would change this.** The team's answer to L-15 (PERTANYAAN F2) naming DRC-B37 as the rule, or a call-offs-per-drop rule that makes repeated drafts unnecessary.
+
+### FSR-D7 · BL-243 and BL-249 are built: the page name applies IA R-2, the DA labels gain the check qualifier (U-07, U-10; decided 2026-11-05)
+**Decision.** "Follow-up MR." Levi ruled in chat on 2026-11-05, in the Foresight review session, after both readings were laid out. BL-243 is not a rename: it applies the name IA R-2 already gave the page ("Foresight commitments", ID "Komitmen foresight") to the strings that still carried "Commitments & gaps", "Forecast & commitments" and their Indonesian forms. BL-249 keeps TL-D1's "Demand anticipation (DA)" and adds the qualifier, as TL-D13 did on the history page: the What-if headline reads "Demand anticipation (DA) over the lead time, before the check", and the grid rows read "Demand anticipation (DA) after the check, current plan / this scenario". No figure changes. Both are built in a follow-up MR stacked on MR !94.
+
+**Alternative not taken.** Keeping both rows held as label renames until a wider label review.
+
+**What would change this.** The Material Planning team naming their own word for "after the check" (TL-D13 keeps it on their question list): the qualifier then changes on both pages together.
 
 ## SC Hub Material decisions (decided 2026-09-29)
 

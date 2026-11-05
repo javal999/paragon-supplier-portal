@@ -42,6 +42,8 @@ export const forecastCollaborationEn = {
   'fc.timing.lateBy': 'Late by {{time}}',
   'fc.timing.submittedLate': 'Submitted late by {{time}}',
   'fc.timing.submittedOnTime': 'Submitted on time',
+  // BL-244 (U-16) — the deadline a carried-forward commitment answered belongs to an earlier version.
+  'fc.due.answeredVersion': '(version {{version}})',
   'fc.duration.daysHours': '{{days}} d {{hours}} h',
   'fc.duration.hours': '{{hours}} h',
   'fc.duration.underHour': 'under 1 h',
@@ -108,7 +110,7 @@ export const forecastCollaborationEn = {
   'fc.refusal.aboveShortfall':
     'More than the shortfall. The commitment may have changed; reload the page.',
 
-  // Supplier — Forecast & commitments
+  // Supplier — Foresight commitments
   // IA P-11 — owner ruling 2026-10-21: the page title is the menu label.
   'fc.sup.title': 'Foresight commitments',
   'fc.sup.subtitle':
@@ -155,6 +157,14 @@ export const forecastCollaborationEn = {
   'fc.sup.week.noteFor': 'Note for {{period}}',
   'fc.sup.week.submitAll': 'Submit all',
   'fc.sup.week.submitAllFor': 'Submit all for {{period}}',
+  // BL-240 (U-02) — the confirmation summary before Submit all.
+  'fc.sup.week.confirm.title': 'Submit {{period}} to PTI?',
+  'fc.sup.week.confirm.body':
+    'PTI sees these commitments as soon as you submit. Materials: {{count}}.',
+  'fc.sup.week.confirm.prefilled': 'Pre-filled with the forecast, not changed',
+  'fc.sup.week.confirm.prefilledNote':
+    'A pre-filled quantity is PTI’s forecast, not a figure you typed. Change it on the material row if you cannot supply it.',
+  'fc.sup.week.confirm.cancel': 'Cancel',
   'fc.sup.week.refusal.capacityNotConfirmed': 'Confirm capacity for {{group}} first.',
   'fc.sup.week.refusal.aboveBeNeedsReason': 'Above BE: choose a reason.',
   'fc.sup.week.refusal.aboveBeNoteRequired': 'Force Majeure, Discontinued and Other need a note.',
@@ -203,7 +213,7 @@ export const forecastCollaborationEn = {
   'fc.pti.versions.changed': 'Periods changed: {{count}}',
   'fc.pti.versions.empty': 'No version published for this stream.',
 
-  // PTI — Commitments & gaps
+  // PTI — Foresight commitments
   'fc.pti.gaps.subtitle':
     'Supplier commitments against the forecast, exceptions to act on, and coverage',
   'fc.pti.gaps.banner':
@@ -277,10 +287,11 @@ export const forecastCollaborationEn = {
 
   // P-04 (IA-B05, IA-S03) — one commitments page per persona; the
   // consolidation view is its second tab and says which plan it reads.
-  'fc.pti.pageTab.gaps': 'Commitments & gaps',
+  // BL-243 (U-07, IA R-2): one name for the page, its first tab included.
+  'fc.pti.pageTab.gaps': 'Foresight commitments',
   'fc.pti.pageTab.consolidation': 'Consolidation (sample plan)',
   'fc.pti.pageTab.consolidationNote':
-    'This tab reads the published sample plan, not the commitments on the first tab, so its figures differ from Commitments & gaps.',
+    'This tab reads the published sample plan, not the commitments on the first tab, so its figures differ from the Foresight commitments tab.',
   'fc.sup.pageTab.commitments': 'Commitments',
   'fc.sup.pageTab.responses': 'Responses & shipments (sample plan)',
   'fc.sup.pageTab.responsesNote':
@@ -324,6 +335,7 @@ export const forecastCollaborationId = {
   'fc.timing.lateBy': 'Terlambat {{time}}',
   'fc.timing.submittedLate': 'Dikirim terlambat {{time}}',
   'fc.timing.submittedOnTime': 'Dikirim tepat waktu',
+  'fc.due.answeredVersion': '(versi {{version}})',
   'fc.duration.daysHours': '{{days}} hari {{hours}} jam',
   'fc.duration.hours': '{{hours}} jam',
   'fc.duration.underHour': 'kurang dari 1 jam',
@@ -436,6 +448,14 @@ export const forecastCollaborationId = {
   'fc.sup.week.noteFor': 'Catatan untuk {{period}}',
   'fc.sup.week.submitAll': 'Kirim semua',
   'fc.sup.week.submitAllFor': 'Kirim semua untuk {{period}}',
+  // BL-240 (U-02) — ringkasan konfirmasi sebelum Kirim semua.
+  'fc.sup.week.confirm.title': 'Kirim {{period}} ke PTI?',
+  'fc.sup.week.confirm.body':
+    'PTI melihat komitmen ini begitu Anda mengirimnya. Material: {{count}}.',
+  'fc.sup.week.confirm.prefilled': 'Terisi dari prakiraan, belum diubah',
+  'fc.sup.week.confirm.prefilledNote':
+    'Kuantitas yang terisi adalah prakiraan PTI, bukan angka yang Anda ketik. Ubah di baris material bila Anda tidak dapat memasoknya.',
+  'fc.sup.week.confirm.cancel': 'Batal',
   'fc.sup.week.refusal.capacityNotConfirmed':
     'Konfirmasikan kapasitas untuk {{group}} terlebih dahulu.',
   'fc.sup.week.refusal.aboveBeNeedsReason': 'Di atas BE: pilih alasan.',
@@ -559,10 +579,10 @@ export const forecastCollaborationId = {
   'fc.coverage.manufacturer': 'Produsen',
   'fc.coverage.unbridgeable': 'Prinsipal tidak dapat mengirim tepat waktu',
 
-  'fc.pti.pageTab.gaps': 'Komitmen & selisih',
+  'fc.pti.pageTab.gaps': 'Komitmen foresight',
   'fc.pti.pageTab.consolidation': 'Konsolidasi (rencana sampel)',
   'fc.pti.pageTab.consolidationNote':
-    'Tab ini membaca rencana sampel yang diterbitkan, bukan komitmen di tab pertama, sehingga angkanya berbeda dari Komitmen & selisih.',
+    'Tab ini membaca rencana sampel yang diterbitkan, bukan komitmen di tab pertama, sehingga angkanya berbeda dari tab Komitmen foresight.',
   'fc.sup.pageTab.commitments': 'Komitmen',
   'fc.sup.pageTab.responses': 'Tanggapan & pengiriman (rencana sampel)',
   'fc.sup.pageTab.responsesNote':

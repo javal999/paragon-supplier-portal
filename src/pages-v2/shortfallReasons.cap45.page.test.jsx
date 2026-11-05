@@ -297,7 +297,7 @@ describe('CAP-4 BR-03 (CAP-D2) — Discontinued puts "find another source" on th
     );
     expect(alert).toHaveTextContent('High');
     expect(
-      within(alert).getByRole('link', { name: 'Open commitments & gaps' }).getAttribute('href')
+      within(alert).getByRole('link', { name: 'Open Foresight commitments' }).getAttribute('href')
     ).toMatch(/\/buyer\/collaboration\?material=PK-PETB-8801$/);
     // Known-false: the other material of the group carries no such answer.
     expect(screen.queryByTestId('alert-supplyDiscontinued|PK-PETB-8802|sup-007')).toBeNull();

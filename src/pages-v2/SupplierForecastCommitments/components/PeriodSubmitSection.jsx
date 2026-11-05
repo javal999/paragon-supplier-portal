@@ -1,15 +1,18 @@
 /** @import React from 'react' */
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Table from '@components/ui-v2/Table';
 import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
 /** @import { VerbAvailability } from '@services/transitions/handoff' */
 /** @import { PeriodRow, ReasonLabel, WeekReason } from '../const' */
 import PeriodSubmitRow from './PeriodSubmitRow';
+import SubmitAllConfirm from './SubmitAllConfirm';
 
 /**
  * BL-133 (ENG-D19) — capacity before the LTP: the table of periods, one
  * Submit all per period. Each row's period reason is patched into
- * `weekReasons` under the row's bucket.
+ * `weekReasons` under the row's bucket. BL-240 (U-02): a row's Submit all
+ * opens the confirmation summary first; only its confirm sends the period.
  * @type {React.FC<{
  *   periodRows: PeriodRow[];
  *   periodLabel: (bucket: string) => string;
@@ -36,6 +39,10 @@ const PeriodSubmitSection = ({
   onSubmitAll
 }) => {
   const { t } = useTranslation();
+  // BL-240 — the period whose confirmation is open, by bucket, so the summary
+  // reads the row as it stands now (a refusal that appears meanwhile disables confirm).
+  const [confirming, setConfirming] = useState(/** @type {string | null} */ (null));
+  const confirmRow = periodRows.find((r) => r.bucket === confirming) ?? null;
   return (
     <section
       className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm mb-4"
@@ -74,13 +81,25 @@ const PeriodSubmitSection = ({
                   reasonLabel={reasonLabel}
                   groupLabel={groupLabel}
                   setWr={setWr}
-                  onSubmitAll={onSubmitAll}
+                  onSubmitAll={(r) => setConfirming(r.bucket)}
                 />
               );
             })}
           </tbody>
         </Table>
       </div>
+      {confirmRow && (
+        <SubmitAllConfirm
+          row={confirmRow}
+          label={periodLabel(confirmRow.bucket)}
+          pending={pending}
+          onCancel={() => setConfirming(null)}
+          onConfirm={() => {
+            setConfirming(null);
+            void onSubmitAll(confirmRow);
+          }}
+        />
+      )}
     </section>
   );
 };

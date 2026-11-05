@@ -123,6 +123,17 @@ export const CommitmentDeadline = ({ line, nowIso, testId, compact = false }) =>
     line.response && line.state !== 'awaiting' && line.responseDueAt
       ? line.responseDueAt
       : line.dueAt;
+  // BL-244 (U-16) — a carried-forward commitment is judged against the deadline
+  // of the version it answered; when that is not this version's deadline, say
+  // which version it was. Display only: the verdict above is unchanged.
+  const answeredVersion =
+    due === line.responseDueAt && line.responseDueAt !== line.dueAt
+      ? (line.responseVersion ?? null)
+      : null;
+  const dueText =
+    answeredVersion === null
+      ? formatDateTime(due)
+      : `${formatDateTime(due)} ${t('fc.due.answeredVersion', { version: answeredVersion })}`;
   /** @type {string} */
   let text;
   let tone = 'text-text-tertiary';
@@ -148,7 +159,7 @@ export const CommitmentDeadline = ({ line, nowIso, testId, compact = false }) =>
         data-testid={testId}
         data-timing={timing.kind}
         className={`text-[length:var(--fs-label-3)] ${tone}`}
-        title={formatDateTime(due)}
+        title={dueText}
       >
         {text}
       </div>
@@ -157,6 +168,12 @@ export const CommitmentDeadline = ({ line, nowIso, testId, compact = false }) =>
   return (
     <div data-testid={testId} data-timing={timing.kind}>
       <Data className="text-xs">{formatDateTime(due)}</Data>
+      {answeredVersion !== null && (
+        <span className="text-xs text-text-tertiary">
+          {' '}
+          {t('fc.due.answeredVersion', { version: answeredVersion })}
+        </span>
+      )}
       <div className={`text-[length:var(--fs-label-3)] ${tone}`}>{text}</div>
     </div>
   );

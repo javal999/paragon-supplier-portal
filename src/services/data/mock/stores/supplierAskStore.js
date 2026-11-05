@@ -8,7 +8,8 @@
 // SAMPLE DATA: the store opens with two asks to sup-007 (a production date on
 // PK-PETB-8802 and a capacity week on pg-MG-20), marked `sample: true`, so the
 // supplier's "PTI is asking" block is not empty in the demo. The pages that
-// show them carry the "Sample data" badge.
+// show them carry the "Sample data" badge. BL-258: the sample rows carry their
+// question's i18n key, so the question reads in the reader's language.
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import { SupplierAsk, SupplierAskEvent } from '../../types' */
@@ -22,6 +23,8 @@ const seed = () => [
     materialCode: 'PK-PETB-8802',
     topic: 'productionDate',
     riskClass: 'high',
+    // BL-258 (U-19) — the reader's language renders the key; `question` is the fallback.
+    questionKey: 'supplierAsk.sample.coverageProductionDate',
     question:
       'Your stock and incoming do not cover the next 30 days of PTI demand. When does production of this material start?',
     dueDate: '2026-09-03',
@@ -42,6 +45,7 @@ const seed = () => [
     planningGroupId: 'pg-MG-20',
     week: '2026-09-14',
     topic: 'capacityGap',
+    questionKey: 'supplierAsk.default.capacityGap',
     question:
       'Your capacity for this week is below PTI demand. Can you add capacity, and how much?',
     state: 'Open',
