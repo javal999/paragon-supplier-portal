@@ -123,7 +123,7 @@ export const demandAnticipationEn = {
 /** @type {Record<string, string>} */
 export const demandAnticipationId = {
   'demandAnt.subtitle':
-    'Jumlah yang PTI perkirakan akan di-call-off dari tiap pemasok, per material dan minggu, sepanjang waktu tunggu. Horizon bergulir setiap minggu: tiap minggu perencanaan dipublikasikan tersendiri, dan minggu berikutnya bergulir maju.',
+    'Jumlah yang PTI perkirakan akan di-call-off dari tiap pemasok, per material dan minggu, sepanjang lead time. Horizon bergulir setiap minggu: tiap minggu perencanaan dipublikasikan tersendiri, dan minggu berikutnya bergulir maju.',
   'demandAnt.asOf': 'Per',
   'demandAnt.howItWorks':
     'Tiap minggu dalam horizon adalah LTP ditambah sisa yang dibawa ke minggu itu; minggu pertama juga memuat safety order. Sisa setelah call-off minggu pertama dipindah ke minggu terakhir horizon, atau ke minggu pertama setelah horizon bila pemasok setuju. Pasokan di atas total diserap di minggu terakhir; kekurangan menjadi rekomendasi PR untuk dibuat di SAP. Tidak ada yang dikirim ke SAP atau pemasok.',
@@ -178,7 +178,7 @@ export const demandAnticipationId = {
   'demandAnt.check.sourceSample': '{{week}} · publikasi contoh {{date}}',
   'demandAnt.check.sourcePublished': '{{week}} · dipublikasikan {{date}}',
   'demandAnt.check.sourceToday': '{{week}} · angka hari ini, belum dipublikasikan',
-  'demandAnt.check.horizon': 'Horizon (waktu tunggu)',
+  'demandAnt.check.horizon': 'Horizon (lead time)',
   'demandAnt.check.horizonWeeks_other': '{{count}} minggu',
   'demandAnt.check.totalDa': 'Total demand anticipation',
   'demandAnt.check.ropOrder': 'ROP Order',
@@ -205,7 +205,7 @@ export const demandAnticipationId = {
   'demandAnt.carry.firstOutside':
     '{{qty}} dipindah ke {{week}} (minggu pertama setelah horizon, pemasok setuju)',
   'demandAnt.flag.LEAD_TIME_MISSING':
-    'Tidak ada waktu tunggu tercatat untuk pemasok × material ini: horizon {{weeks}} minggu sampai ada.',
+    'Tidak ada lead time tercatat untuk pemasok × material ini: horizon {{weeks}} minggu sampai ada.',
   'demandAnt.flag.NO_STOCK_RECORD': 'Tidak ada catatan stok PTI: SOH dihitung 0.',
   'demandAnt.flag.OSPO_FROM_STORE':
     'Minggu sebelumnya belum dipublikasikan: OSPO dimulai dari kuantitas PO terbuka yang belum di-call-off.',

@@ -355,7 +355,7 @@ export const whatIfSandboxId = {
   'whatIf.opt.mpq': 'MPQ',
   'whatIf.opt.koli': 'Koli',
   'whatIf.opt.moq': 'MOQ',
-  'whatIf.opt.sheetGuidance': 'Panduan sheet (ROP + stok siklus)',
+  'whatIf.opt.sheetGuidance': 'Panduan sheet (ROP + cycle stock)',
   'whatIf.opt.firstOrderFulfilled': 'Sampai pesanan pertama terpenuhi',
   'whatIf.opt.oneYearAfterLaunch': 'Satu tahun setelah peluncuran',
   'whatIf.opt.52WeeksHistory': '52 minggu riwayat penjualan',

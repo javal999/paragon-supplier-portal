@@ -1129,7 +1129,7 @@ REQ-E14-09 built on synthetic data, around the forecast BL-110 builds (E14-07). 
 
 ### 4.1k Build decisions accepted (owner, 2026-09-29, PR #96, BL-112)
 
-REQ-E14-10 built on synthetic data (`src/services/engine/modelBacktest.ts`; page Forecast → Model backtest). Accepted as recommended (owner, 2026-09-29): material planning is not switched to the engine's forecast on this evidence, and ENG-D13 stays unset until the backtest runs on real data; showing each SKU's chosen model on the Demand forecast page is a follow-up (BL-280). **Material planning is not switched to the engine's forecast** (ENG-B66): ENG-B89 gives the evidence and leaves the switch to the owner.
+REQ-E14-10 built on synthetic data (`src/services/engine/modelBacktest.ts`; page Forecast → Model backtest). Accepted as recommended (owner, 2026-09-29): material planning is not switched to the engine's forecast on this evidence, and ENG-D13 stays unset until the backtest runs on real data; showing each SKU's chosen model on the Demand forecast page is a follow-up (BL-286). **Material planning is not switched to the engine's forecast** (ENG-B66): ENG-B89 gives the evidence and leaves the switch to the owner.
 
 | ID | Decision | Applied in |
 |---|---|---|
