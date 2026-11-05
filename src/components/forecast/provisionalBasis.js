@@ -21,7 +21,7 @@ const MASTER_DATA_DEFAULTS = Object.freeze({
  */
 export function provisionalBasis(items, t) {
   /** @param {string} q @returns {q is keyof typeof MASTER_DATA_DEFAULTS} */
-  const isDefault = (q) => Object.hasOwn(MASTER_DATA_DEFAULTS, q);
+  const isDefault = (q) => Object.prototype.hasOwnProperty.call(MASTER_DATA_DEFAULTS, q);
   const questions = items.filter((q) => !isDefault(q));
   const defaults = items.filter(isDefault).map((d) => t(MASTER_DATA_DEFAULTS[d]));
   return [...(questions.length > 0 ? [questions.join(', ')] : []), ...defaults].join('; ');
