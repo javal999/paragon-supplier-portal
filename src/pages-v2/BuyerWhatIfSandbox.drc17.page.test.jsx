@@ -53,7 +53,7 @@ describe('BR-08 · the PPT 7 golden case', () => {
     expect(screen.getByTestId('wi-plan-prNeed')).toHaveTextContent('645,559');
     // Design rule 5 — each figure built on a [Default] names its questions.
     expect(screen.getByTestId('wi-prov-ropOrder')).toHaveTextContent(
-      'Provisional: rule awaiting Material Planning (B4, B9, MPQ)'
+      'Provisional: rule awaiting Material Planning (B4, B9; MPQ = order multiple until master data)'
     );
     expect(screen.getByTestId('wi-prov-totalDa')).toHaveTextContent('A8b, A9');
     // It opens on the two readings the slide used, so nothing reads as edited.
