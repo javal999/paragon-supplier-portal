@@ -120,6 +120,7 @@ import { purchaseRequisitionStore } from './stores/purchaseRequisitionStore';
 import { requirementResponseStore } from './stores/requirementResponseStore';
 import { inventoryDeclarationStore } from './stores/inventoryDeclarationStore';
 import { incomingShipmentStore } from './stores/incomingShipmentStore';
+import { trackingUrlProblem } from '../../transitions/trackingUrl';
 import { enforcementSettingStore } from './stores/enforcementSettingStore';
 import { calendarCovers, workingCalendarStore } from '../../transitions/workingCalendarStore';
 import {
@@ -5446,10 +5447,14 @@ const incomingShipmentTarget = {
   readState: (id) => incomingShipmentStore.get(id)?.lifecycle ?? null,
   readScopeOwner: (id) => incomingShipmentStore.get(id)?.supplierId ?? null,
   readEntity: (id) => incomingShipmentStore.get(id) ?? null,
-  applyTransition: (id, toState) => {
+  applyTransition: (id, toState, payload, _scope, transitionId) => {
     incomingShipmentStore.update(id, (s) => ({
       ...s,
-      lifecycle: /** @type {ShipmentLifecycle} */ (toState)
+      lifecycle: /** @type {ShipmentLifecycle} */ (toState),
+      // PEX-16 (BL-279) — state-preserving: the link is the only thing it writes.
+      ...(transitionId === 't_incomingshipment_track' && typeof payload.trackingUrl === 'string'
+        ? { trackingUrl: payload.trackingUrl.trim() }
+        : {})
     }));
   },
   // Membership = a collaborated material. The to-paragon ASN-ownership check is
@@ -5536,6 +5541,22 @@ bindPolicyHook(POLICY_HOOKS.ISH_P2D_DISTRIBUTOR_ONLY, ({ payload }) => {
         reason:
           'principal-to-distributor requires a distributor relationship — a manufacturer has no principal leg'
       };
+});
+
+// PEX-16 (BL-279) — a tracking link goes on a principal-to-distributor leg only
+// (an ASN leg converges on the ASN machine), and only as an https:// URL.
+bindPolicyHook(POLICY_HOOKS.ISH_TRACKING_URL_VALID, ({ payload, target, entityId }) => {
+  const leg = /** @type {IncomingShipment | null} */ (target.readEntity(entityId));
+  if (leg?.direction !== 'principal-to-distributor') {
+    return {
+      ok: false,
+      reason: 'a tracking link goes on a shipment from the principal only — not an ASN leg'
+    };
+  }
+  const problem = trackingUrlProblem(payload.trackingUrl);
+  return problem === null
+    ? { ok: true }
+    : { ok: false, reason: `TRACKING_URL_${problem.toUpperCase()}: only https:// links` };
 });
 
 // — Enforcement target (CP-3 · E2) — the governed check, and its ledger. ————————

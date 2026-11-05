@@ -411,3 +411,40 @@ export function useIncomingShipmentArrive() {
 export function useIncomingShipmentCancel() {
   return useIncomingShipmentAdvance('t_incomingshipment_cancel');
 }
+
+/**
+ * @typedef {object} IncomingShipmentTrackVars
+ * @property {string} shipmentId -  `IncomingShipment.id` (`ish-…`).
+ * @property {string} trackingUrl -  The link the supplier typed (`https://` only; the policy decides).
+ */
+
+/** PEX-16 (BL-279) — record the tracking link of a principal-to-supplier leg
+ *  (`incomingshipment:track`, state-preserving). Like the advance verbs it acts
+ *  on a leg already in the store and does not ride the SubmissionSession. */
+export function useIncomingShipmentTrack() {
+  const svc = useDataService();
+  const { identity } = useCurrentIdentity();
+  /** @type {QueryScope} */
+  const scope = {
+    personaType: identity.personaType,
+    supplierId: identity.supplierId,
+    businessRoles: identity.businessRoles,
+    actor: identity.actor
+  };
+  const invalidate = useInvalidateSdc();
+
+  return /** @type {typeof useMutation<CommandResult, Error, IncomingShipmentTrackVars>} */ (
+    useMutation
+  )({
+    mutationFn: ({ shipmentId, trackingUrl }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_incomingshipment_track',
+        entity: 'incomingShipment',
+        entityId: shipmentId,
+        payload: { trackingUrl }
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    }
+  });
+}

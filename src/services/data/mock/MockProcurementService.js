@@ -131,6 +131,8 @@ import { addDays, dayOf } from '../../engine/dates';
 import { labelOf, materialEntry } from '../../sdc/materialMaster';
 // Material C4 — each material's MRP controller, narrowed per reader (MR-5 BR-04).
 import { withMrpController } from './mrpControllerReadModel';
+// PEX-10 (BL-273) — each call-off carries its pair's DRC-6 lead time.
+import { withLeadTime } from './leadTimeReadModel';
 // Material C2 — supplier trade names, narrowed per reader (MR-3 BR-03).
 import { materialNameRowsFor, withTradeName } from './materialNameReadModel';
 // BL-194 — the supplier's feedstock confirmation in force (DRC-8).
@@ -1453,8 +1455,11 @@ export class MockProcurementService {
             .filter((c) => c.status !== 'Draft' && c.status !== 'Dismissed')
             .map(({ trigger: _ptiOnly, ...c }) => c)
         : rows;
-    // Material C4 — each call-off names its material's MRP controller (MR-5 BR-03).
-    return { items: visible.map((c) => withMrpController(c, c.materialCode, scope)) };
+    // Material C4 — each call-off names its material's MRP controller (MR-5 BR-03);
+    // PEX-10 (BL-273) — and carries its lead time, for the fulfil-by date.
+    return {
+      items: visible.map((c) => withLeadTime(withMrpController(c, c.materialCode, scope)))
+    };
   }
 
   /**

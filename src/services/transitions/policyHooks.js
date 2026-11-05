@@ -407,6 +407,9 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    *  whose relationship for the material is distributor — a manufacturer has
    *  no principal leg (design §7). */
   ISH_P2D_DISTRIBUTOR_ONLY: 'ish_p2d_distributor_only',
+  /** PEX-16 (BL-279) — a tracking link goes on a principal-to-distributor leg
+   *  only (never an ASN leg), and only as an `https://` URL (`trackingUrl.js`). */
+  ISH_TRACKING_URL_VALID: 'ish_tracking_url_valid',
   // ── CP-2 · B1 — the MASTER-MISS refusals (operator ruling D-OPS-MASTERMISS) ──
   /** Any SDC write verb: `payload.materialCode` must be a code the MATERIAL
    *  MASTER names. Creation scope already proves the supplier COLLABORATES on

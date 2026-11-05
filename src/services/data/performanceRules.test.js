@@ -16,14 +16,12 @@ import { callOffViews } from '../transitions/callOffRules';
 /** @import { PerformanceInput } from './performanceRules' */
 import {
   GRADE_BANDS,
-  OTIF_TARGET_PCT,
   REJECTION_PENALTY_POINTS,
   assessmentScore,
   cfotAggregate,
   gradeFor,
   inPeriod,
   otifAggregate,
-  performanceStatus,
   periodStart,
   poCfot,
   rejectionCounts,
@@ -166,19 +164,10 @@ describe('REQ-E10-01 BR-08 · the period is a real window', () => {
   });
 });
 
-describe('CR-17 · target status and the grade bands', () => {
-  it('the target is 90 and the near band reaches down to 80', () => {
-    expect(OTIF_TARGET_PCT).toBe(90);
-    expect(performanceStatus(90)).toBe('meeting'); // ON the target
-    expect(performanceStatus(89)).toBe('near');
-    expect(performanceStatus(80)).toBe('near'); // ON the near edge
-    expect(performanceStatus(79)).toBe('missing');
-  });
-
-  it('nothing measured has NO status — never "missing"', () => {
-    expect(performanceStatus(null)).toBeNull();
-  });
-
+// BL-78 retired the CR-17 target (90%) and its status: BL-19 measures a
+// baseline before any target, so the two tests that pinned 90 / near / missing
+// lost their premise and are removed, not rewritten. The grade bands stay.
+describe('the grade bands', () => {
   it('the band table is A 90 · B 80 · C 70 · D, and the letters land ON each edge', () => {
     expect(GRADE_BANDS.map((b) => `${b.grade}${b.min}`)).toEqual(['A90', 'B80', 'C70', 'D0']);
     expect(gradeFor(90)).toBe('A');

@@ -528,6 +528,7 @@
  * `eta`:  A FIELD, not a state — revisions are audited field updates (addendum §2).
  * `awb`:  AWB is a TMS reference — link, don't track.
  * `asnRef`:  For direction='to-paragon': the ASN this leg converges on (asnNumber).
+ * `trackingUrl`:  PEX-16 (BL-279) — for direction='principal-to-distributor' only: a tracking link the supplier typed (`https://` only). Not an ASN, not the 3PL pattern.
  * `provenance`:  source = SUPPLIER.
  *
  * @typedef {{
@@ -542,6 +543,7 @@
  *   readonly eta?: string;
  *   readonly awb?: string;
  *   readonly asnRef?: string;
+ *   readonly trackingUrl?: string;
  *   readonly provenance: Provenance;
  * }} IncomingShipment
  */

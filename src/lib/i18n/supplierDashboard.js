@@ -27,7 +27,6 @@ export const supplierDashboardEn = {
   'supplierDashboard.identity.grade': 'Paragon Grade',
   'supplierDashboard.identity.otif': 'OTIF: {{value}}%',
   'supplierDashboard.identity.score': '{{score}} / 100',
-  'supplierDashboard.identity.target': 'Target: ≥ 90%',
   // — Preferred-channel labels —
   'supplierDashboard.channel.whatsapp': 'WhatsApp',
   'supplierDashboard.channel.web': 'Web Portal',
@@ -121,7 +120,6 @@ export const supplierDashboardId = {
   'supplierDashboard.identity.grade': 'Grade Paragon',
   'supplierDashboard.identity.otif': 'OTIF: {{value}}%',
   'supplierDashboard.identity.score': '{{score}} / 100',
-  'supplierDashboard.identity.target': 'Target: ≥ 90%',
   // — Preferred-channel labels —
   'supplierDashboard.channel.whatsapp': 'WhatsApp',
   'supplierDashboard.channel.web': 'Portal Web',

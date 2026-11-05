@@ -29,14 +29,7 @@ import {
   Send
 } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
-import {
-  CHART_SERIES,
-  CHART_SEMANTIC,
-  CHART_MID,
-  CHART_GRID,
-  targetStatus,
-  TARGET_STATUS
-} from '@lib/chartPalette';
+import { CHART_SERIES, CHART_SEMANTIC, CHART_MID, CHART_GRID } from '@lib/chartPalette';
 import PageHeader from '@components/ui-v2/PageHeader';
 import Data from '@components/ui-v2/Data';
 import TargetBar from '@components/ui-v2/TargetBar';
@@ -64,7 +57,7 @@ import { useCategoryLabel } from '@hooks/useCategoryLabel';
 import { useChannelLabel } from '@hooks/useChannelLabel';
 import { useSupplierScorecards } from '@services/query/hooks';
 import { isLive } from '@services/liveness';
-/** @import { ScorecardKpi, ScorecardRadarAxis, ScorecardGradeLetter, CommLogEntry, KpiTrend } from '@services/data/types' */
+/** @import { ScorecardKpi, ScorecardGradeLetter, CommLogEntry, KpiTrend } from '@services/data/types' */
 
 /** @typedef {ScorecardGradeLetter} Grade */
 /** @typedef {KpiTrend} Trend */
@@ -78,15 +71,6 @@ const COUNTRY_FLAGS = {
   MY: '🇲🇾',
   SG: '🇸🇬'
 };
-
-/** @type {ScorecardRadarAxis[]} */
-const TARGET_RADAR = [
-  { axis: 'Delivery', value: 90 },
-  { axis: 'Quality', value: 90 },
-  { axis: 'Commercial', value: 90 },
-  { axis: 'Responsiveness', value: 90 },
-  { axis: 'Sustainability', value: 90 }
-];
 
 const OTIF_MONTHS = [
   'Jan',
@@ -197,9 +181,10 @@ const TrendIcon = ({ trend }) => {
 };
 
 /** @type {React.FC<{ k: ScorecardKpi }>} */
+// BL-78 (BL-19: baseline first, no targets yet) — the figure is shown
+// neutrally: no target line, no target colour, a neutral bar with no tick.
 const KpiProgressTile = ({ k }) => {
   const { t } = useTranslation();
-  const status = targetStatus(k.pct, k.targetPct);
   return (
     <div className="bg-bg-hover border border-border-subtle rounded-md px-4 py-3">
       <div className="flex items-start justify-between gap-2 mb-1">
@@ -207,13 +192,13 @@ const KpiProgressTile = ({ k }) => {
         <div className="text-label text-text-tertiary uppercase">{k.name}</div>
         <TrendIcon trend={k.trend} />
       </div>
-      <Data as="div" className="text-kpi" style={{ color: TARGET_STATUS[status].text }}>
+      <Data as="div" className="text-kpi">
         {k.value}
       </Data>
-      <div className="text-label text-text-tertiary mb-2">
-        {t('buyerScorecard.kpi.target')}: {k.target}
+      <div className="text-label text-text-tertiary mb-2" data-testid="kpi-tile-no-target">
+        {t('perf.kpi.target.baseline')}
       </div>
-      <TargetBar pct={k.pct} target={k.targetPct} trackClass="bg-bg-surface" />
+      <TargetBar pct={k.pct} neutral trackClass="bg-bg-surface" />
     </div>
   );
 };
@@ -292,10 +277,9 @@ const BuyerScorecard = () => {
     defect: supp.defectTrend[i]
   }));
 
-  const radarData = supp.radar.map((r, i) => ({
-    ...r,
-    target: TARGET_RADAR[i]?.value ?? 90
-  }));
+  // BL-78 — the radar shows the supplier's figures only: the authored 90
+  // "benchmark" is gone (BL-19: baseline first, no targets yet).
+  const radarData = supp.radar;
 
   const latestCommDate = supp.commLog[0]?.date ?? '—';
   const improvementActions = supp.improvementActions ?? [];
@@ -546,13 +530,6 @@ const BuyerScorecard = () => {
                 tickCount={6}
               />
               <Radar
-                name={t('buyerScorecard.radar.benchmark')}
-                dataKey="target"
-                stroke={TOKEN_MID}
-                fill="transparent"
-                strokeDasharray="4 2"
-              />
-              <Radar
                 name={supp.name.split(' ')[0]}
                 dataKey="value"
                 stroke={TOKEN_TEAL}
@@ -572,7 +549,6 @@ const BuyerScorecard = () => {
               <tr>
                 <th scope="col">{t('buyerScorecard.chart.area')}</th>
                 <th scope="col">{supp.name}</th>
-                <th scope="col">{t('buyerScorecard.radar.benchmark')}</th>
               </tr>
             </thead>
             <tbody>
@@ -580,11 +556,13 @@ const BuyerScorecard = () => {
                 <tr key={r.axis}>
                   <th scope="row">{r.axis}</th>
                   <td>{r.value}</td>
-                  <td>{r.target}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+          <p className="mt-2 text-xs text-text-tertiary" data-testid="radar-no-target">
+            {t('perf.kpi.target.baseline')}
+          </p>
         </section>
 
         <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6 relative overflow-hidden">

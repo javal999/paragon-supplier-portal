@@ -10,13 +10,11 @@
 
 export const SUP_007_SUPPLIER_ID = 'sup-007';
 
-// KPI bar colour is derived centrally now (DP2-TARGET-01): the tile reads
-// targetStatus(pct, targetPct) — no more hand-assigned per-row hex.
+// BL-78 (BL-19: baseline first, no targets yet) — the authored targets
+// (`target`, `targetPct`) are gone: the tiles show each figure neutrally, with
+// "Baseline period — no target yet" where the target used to be.
 
-// pct = attainment on a 0–100 axis; targetPct = the target tick on the same axis
-// (DP2-TARGET-01). For ≥-metrics targetPct is the raw target; for the attainment-
-// encoded ones (Lead Time Variance / POA) it's the pass line that reproduces the
-// intended meeting/near/missing read via targetStatus(pct, targetPct, 10).
+// pct = the figure on a 0–100 axis, drawn as a neutral bar.
 // ⚠️ REQ-E10-01 — THE OTIF ROW IS GONE FROM HERE. It is calculated from the
 // call-offs, heads-ups and receipts the hub holds, for the period the page is
 // showing. What stays below is genuinely SAMPLE — nothing in this prototype
@@ -25,41 +23,35 @@ export const SUP_007_SUPPLIER_ID = 'sup-007';
 // derived.
 /** @type {KpiPoint[]} */
 export const KPIS = [
-  { name: 'ASN Accuracy', value: '97.8%', target: '≥ 95%', pct: 98, targetPct: 95, trend: '→' },
+  { name: 'ASN Accuracy', value: '97.8%', pct: 98, trend: '→' },
   {
     name: 'Lead Time Variance',
     value: '1.4 days',
-    target: '≤ 0.5 days',
     pct: 35,
-    targetPct: 42,
     trend: '↓'
   },
   {
     name: 'POA Response Time',
     value: '42 hrs',
-    target: '≤ 24 hrs',
     pct: 40,
-    targetPct: 52,
     trend: '↓'
   },
   {
     name: 'Defect / Reject Rate',
     value: '0.8%',
-    target: '≤ 2%',
     pct: 90,
-    targetPct: 80,
     trend: '↑'
   },
-  { name: 'Invoice Accuracy', value: '91%', target: '≥ 98%', pct: 91, targetPct: 98, trend: '↓' }
+  { name: 'Invoice Accuracy', value: '91%', pct: 91, trend: '↓' }
 ];
 
 /** @type {RadarPoint[]} */
 export const RADAR_DATA = [
-  { axis: 'ASN Acc.', value: 98, target: 95 },
-  { axis: 'POA Speed', value: 72, target: 85 },
-  { axis: 'Invoice Acc.', value: 91, target: 98 },
-  { axis: 'Quality', value: 92, target: 98 },
-  { axis: 'Lead Time', value: 80, target: 90 }
+  { axis: 'ASN Acc.', value: 98 },
+  { axis: 'POA Speed', value: 72 },
+  { axis: 'Invoice Acc.', value: 91 },
+  { axis: 'Quality', value: 92 },
+  { axis: 'Lead Time', value: 80 }
 ];
 
 /** @type {PerformancePoint[]} */
@@ -78,15 +70,13 @@ export const WEEKLY_TREND = [
   { week: 'W4 Mar', otif: 87, asnAcc: 98, defect: 0.8, ackHrs: 42 }
 ];
 
-// Below-target KPIs with recommended corrective actions. Surfaced through
+// KPIs to improve, with recommended corrective actions (no target or gap: BL-78). Surfaced through
 // getKpis (KpiSnapshot.improvementActions) so the page reads them via useKpis.
 /** @type {ImprovementAction[]} */
 export const IMPROVEMENT_ACTIONS = [
   {
     kpi: 'POA Response Time',
     current: '42 hrs avg',
-    target: '≤ 24 hrs',
-    gap: '+18 hrs',
     action:
       'Enable WhatsApp PO notification alerts for faster acknowledgement. Assign dedicated PO coordinator for Paragon account.',
     priority: 'Medium'
@@ -94,8 +84,6 @@ export const IMPROVEMENT_ACTIONS = [
   {
     kpi: 'Invoice Accuracy',
     current: '91%',
-    target: '≥ 98%',
-    gap: '−7pp',
     action:
       'Quantity discrepancies detected on PO-2025-00108. Implement pre-shipment count verification before invoice submission.',
     priority: 'Medium'

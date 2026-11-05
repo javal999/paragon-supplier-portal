@@ -335,6 +335,8 @@ export const processFlowPurposeEn = {
     'The leg has departed. The date it will land stops being a plan and becomes a travel estimate.',
   'processFlows.purpose.t_incomingshipment_arrive':
     'The leg has landed. For a supply-assurance leg, this is where Paragon’s exposure eases.',
+  'processFlows.purpose.t_incomingshipment_track':
+    'The supplier adds the carrier’s tracking link to a shipment from its principal, so the leg can be followed without asking.',
   'processFlows.purpose.t_incomingshipment_cancel':
     'The leg is called off while under way. Better recorded than left in a plan as stock that is never coming.',
 
@@ -969,6 +971,8 @@ export const processFlowPurposeId = {
     'Rute ini sudah berangkat. Tanggal tibanya berhenti menjadi rencana dan berubah menjadi perkiraan perjalanan.',
   'processFlows.purpose.t_incomingshipment_arrive':
     'Rute ini sudah mendarat. Untuk rute penjaminan pasokan, di sinilah risiko Paragon mengendur.',
+  'processFlows.purpose.t_incomingshipment_track':
+    'Pemasok menambahkan tautan pelacakan kurir pada kiriman dari prinsipalnya, agar rute ini bisa diikuti tanpa perlu bertanya.',
   'processFlows.purpose.t_incomingshipment_cancel':
     'Rute ini dibatalkan di tengah jalan. Lebih baik dicatat daripada dibiarkan dalam rencana sebagai stok yang tak akan pernah datang.',
 

@@ -15,8 +15,9 @@
 // requirements, the page shows what the code does (and the difference is
 // reported, not silently fixed). Since BL-82 the five BL-66 differences are
 // closed and the text describes the aligned calculation; the early window is
-// decided for an unconfirmed receipt (KPI-2, `kpiWindow.js`); a confirmed
-// early date counting as on time is BL-234, not built.
+// decided for an unconfirmed receipt (KPI-2, `kpiWindow.js`); a receipt on an
+// earlier date the planner confirmed counts as on time (KPI-2 amended, BL-234),
+// because the confirmed date is the date measured.
 //
 // ⚠️ **NO TARGET IS SHOWN.** BL-19 decided to measure a baseline before any
 // target is set, so both measures read "Baseline period" and the CR-17 90%
@@ -71,7 +72,8 @@ export const KPI_DEFINITIONS = Object.freeze(
           }
         },
         // BL-66 (4): early counts as on time only inside the ONE shared window —
-        // the same value CFOT reads (KPI-2; confirmed early dates: BL-234).
+        // the same value CFOT reads (KPI-2); a planner-confirmed earlier date is
+        // the approved date itself (KPI-2 amended, BL-234).
         early: { key: 'perf.kpi.otif.early', values: { early: EARLY_DELIVERY_WINDOW_DAYS } },
         // BR-02 / BR-06: per call-off; % of the call-offs due in the period whose
         // result is decided; one still pending is left out.

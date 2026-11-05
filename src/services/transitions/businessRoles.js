@@ -503,6 +503,9 @@ const LANE_BUNDLES = Object.freeze({
     'incomingshipment:ship',
     'incomingshipment:arrive',
     'incomingshipment:cancel',
+    // PEX-16 (BL-279) — the tracking link of a principal leg: the same people
+    // who report and advance the leg.
+    'incomingshipment:track',
     'inventorydeclaration:declare',
     // REQ-E08-02 BR-03 (BL-59) — an API-connected supplier pulls its own ERP
     // stock with the Sync button: the same people who declare the stock.

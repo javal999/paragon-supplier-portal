@@ -48,6 +48,7 @@ import SupplierSyncPanel from './inventory/SupplierSyncPanel';
 import WeeklyUpdatePanel from './inventory/WeeklyUpdatePanel';
 import FeedstockConfirmPanel from './inventory/FeedstockConfirmPanel';
 import PtiAsksBlock from './inventory/PtiAsksBlock';
+import PrincipalShipmentsSection from './inventory/PrincipalShipmentsSection';
 import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
 import SupplierMaterialNames from './materials/SupplierMaterialNames';
 import { TradeNameBeside } from './materials/tradeNameDisplay';
@@ -463,6 +464,9 @@ const SupplierInventory = () => {
               </tbody>
             </Table>
           </div>
+
+          {/* PEX-16 (BL-279) — shipments from the principal, with a tracking link. */}
+          <PrincipalShipmentsSection />
         </>
       ) : null}
 
