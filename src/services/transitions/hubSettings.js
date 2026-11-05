@@ -1038,7 +1038,7 @@ const ORDER_RULES = [
     holds: (s) =>
       num(s, 'commitment.firmShortfallPct') <= num(s, 'commitment.tradeOffShortfallPct'),
     says: (s) =>
-      `Zone Liability periods may not accept a larger shortfall than Zone Capacity damped periods (Zone Liability ${num(s, 'commitment.firmShortfallPct')}% > Zone Capacity ${num(s, 'commitment.tradeOffShortfallPct')}%)`
+      `Zone Liability periods may not accept a larger shortfall than Zone Capacity periods (Zone Liability ${num(s, 'commitment.firmShortfallPct')}% > Zone Capacity ${num(s, 'commitment.tradeOffShortfallPct')}%)`
   },
   {
     keys: ['commitment.firmDeadlineWorkingDays', 'commitment.otherDeadlineWorkingDays'],

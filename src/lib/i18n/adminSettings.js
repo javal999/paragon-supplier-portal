@@ -160,7 +160,7 @@ export const adminSettingsEn = {
     'Shortfall below forecast accepted in Zone Liability periods',
   'adminSet.key.commitment.firmShortfallPct.hint': 'Anything more is an exception for the planner.',
   'adminSet.key.commitment.tradeOffShortfallPct.label':
-    'Shortfall below forecast accepted in Zone Capacity damped periods',
+    'Shortfall below forecast accepted in Zone Capacity periods',
   'adminSet.key.commitment.tradeOffShortfallPct.hint':
     'Later Zone Capacity periods are acknowledgement only.',
   'adminSet.key.commitment.firmDeadlineWorkingDays.label':
@@ -255,7 +255,7 @@ export const adminSettingsEn = {
   'adminSet.key.engine.rescheduleOutWeeks.label': 'Weeks early before a later date is proposed',
   'adminSet.key.engine.rescheduleOutWeeks.hint':
     'An open order line that arrives at least this many weeks before the week it is needed is proposed to come later, to free warehouse space. The change is priced with the rented-space rate and the change penalty above.',
-  'adminSet.key.engine.dampingWeightPct.label': 'Damping weight in the Zone Capacity damped weeks',
+  'adminSet.key.engine.dampingWeightPct.label': 'Damping weight in Zone Capacity',
   'adminSet.key.engine.dampingWeightPct.hint':
     'Before a new plan is published, each damped week of Zone Capacity is blended with the value the supplier saw last time: this share of the old value, the rest from the new one. Higher keeps the plan steadier; 0 publishes the new value as calculated. Later Zone Capacity weeks are not damped.',
   'adminSet.key.engine.backtestMascLimitPct.label':
@@ -513,7 +513,7 @@ export const adminSettingsId = {
   'adminSet.key.commitment.firmShortfallPct.hint':
     'Lebih dari itu menjadi pengecualian bagi perencana.',
   'adminSet.key.commitment.tradeOffShortfallPct.label':
-    'Kekurangan dari prakiraan yang diterima pada periode diredam Zone Capacity',
+    'Kekurangan dari prakiraan yang diterima pada periode Zone Capacity',
   'adminSet.key.commitment.tradeOffShortfallPct.hint':
     'Periode Zone Capacity berikutnya hanya perlu diakui.',
   'adminSet.key.commitment.firmDeadlineWorkingDays.label':
@@ -613,7 +613,7 @@ export const adminSettingsId = {
     'Minggu lebih awal sebelum tanggal yang lebih lambat diusulkan',
   'adminSet.key.engine.rescheduleOutWeeks.hint':
     'Baris pesanan terbuka yang tiba sedikitnya sekian minggu sebelum minggu dibutuhkan diusulkan untuk datang lebih lambat, agar ruang gudang lega. Perubahan dihitung dengan tarif ruang sewa dan penalti perubahan di atas.',
-  'adminSet.key.engine.dampingWeightPct.label': 'Bobot peredaman di minggu diredam Zone Capacity',
+  'adminSet.key.engine.dampingWeightPct.label': 'Bobot peredaman di Zone Capacity',
   'adminSet.key.engine.dampingWeightPct.hint':
     'Sebelum rencana baru dipublikasikan, setiap minggu diredam Zone Capacity dicampur dengan nilai yang terakhir dilihat pemasok: sebesar bagian ini dari nilai lama, sisanya dari nilai baru. Makin tinggi, rencana makin stabil; 0 memublikasikan nilai baru apa adanya. Minggu Zone Capacity berikutnya tidak diredam.',
   'adminSet.key.engine.backtestMascLimitPct.label':

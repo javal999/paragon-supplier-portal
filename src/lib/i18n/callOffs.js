@@ -75,6 +75,8 @@ export const callOffsEn = {
   'co.sla.ifConfirmedToday': 'If confirmed today, fulfil by',
   'co.sla.leadTime_one': '(lead time {{count}} day)',
   'co.sla.leadTime_other': '(lead time {{count}} days)',
+  'co.sla.leadTimeDefault_one': '(default lead time {{count}} day for this material type)',
+  'co.sla.leadTimeDefault_other': '(default lead time {{count}} days for this material type)',
   'co.sla.noLeadTime': 'No lead time on record for this material, so no fulfil-by date',
   'co.col.confirmation': 'Confirmation',
   'co.col.delivery': 'Delivery',
@@ -424,6 +426,7 @@ export const callOffsId = {
   'co.sla.fulfilBy': 'Penuhi paling lambat',
   'co.sla.ifConfirmedToday': 'Bila dikonfirmasi hari ini, penuhi paling lambat',
   'co.sla.leadTime_other': '(waktu tunggu {{count}} hari)',
+  'co.sla.leadTimeDefault_other': '(waktu tunggu bawaan {{count}} hari untuk jenis material ini)',
   'co.sla.noLeadTime':
     'Waktu tunggu material ini belum tercatat, jadi belum ada tanggal penuhi paling lambat',
   'co.col.confirmation': 'Konfirmasi',

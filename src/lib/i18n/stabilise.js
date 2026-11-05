@@ -23,12 +23,12 @@ export const stabiliseEn = {
     'No engine plan has been published yet, so the versions a supplier would have seen are replayed: the engine is run as of each past publication day on today’s record, and each version is stabilised against what the one before it published.',
 
   'stb.settings.title': 'Values in use',
-  'stb.settings.weight': 'Damping weight, Zone Capacity damped weeks',
+  'stb.settings.weight': 'Damping weight, Zone Capacity',
   'stb.settings.weightNote':
     'Share of the value the supplier saw last time. Set on Administration → Tolerances.',
   'stb.settings.forecastWeight': 'Damping weight, Zone Capacity later weeks',
   'stb.settings.forecastWeightNote': 'Not damped',
-  'stb.settings.band': 'Tolerance band, Zone Capacity damped weeks',
+  'stb.settings.band': 'Tolerance band, Zone Capacity',
   'stb.settings.bandValue': '±{{perVersion}}% a version · ±{{cumulative}}% from the first value',
   'stb.settings.bandNote':
     'The cumulative cap is still to be agreed with the pilot suppliers; it runs on ±20% meanwhile.',
@@ -58,7 +58,7 @@ export const stabiliseEn = {
   'stb.rule.new': 'New week — published as calculated',
   'stb.rule.unchanged': 'No change',
   'stb.rule.firmFrozen': 'Zone Liability — kept as published',
-  'stb.rule.forecast': 'Zone Capacity, later weeks — as calculated',
+  'stb.rule.forecast': 'Zone Capacity — as calculated',
   'stb.rule.damped': 'Zone Capacity — damped',
   'stb.rule.bandHeld': 'Zone Capacity — held at ±10% a version',
   'stb.rule.cumulativeHeld': 'Zone Capacity — held at ±20% from the first value',
@@ -68,7 +68,7 @@ export const stabiliseEn = {
   'stb.series.intro': 'Choose a row to see each week of the version to publish.',
   'stb.series.col.material': 'Material',
   'stb.series.col.supplier': 'Supplier',
-  'stb.series.col.zones': 'Zone Liability · Zone Capacity damped weeks',
+  'stb.series.col.zones': 'Zone Liability · Zone Capacity',
   'stb.series.col.open': 'Weeks',
   'stb.series.days': '{{firm}} d · {{tradeOff}} d',
   'stb.series.show': 'Show weeks',
@@ -88,8 +88,8 @@ export const stabiliseEn = {
   'stb.detail.reasonNeeded': 'Beyond the band: needs a reason to publish the damped value',
   'stb.detail.recommit': 'Asks the supplier for a new commitment',
   'stb.zone.firm': 'Zone Liability',
-  'stb.zone.tradeOff': 'Zone Capacity, damped weeks',
-  'stb.zone.forecast': 'Zone Capacity, later weeks',
+  'stb.zone.tradeOff': 'Zone Capacity',
+  'stb.zone.forecast': 'Zone Capacity',
 
   'stb.publish.title': 'Publish this version',
   'stb.publish.intro':
@@ -150,12 +150,12 @@ export const stabiliseId = {
     'Belum ada rencana mesin yang pernah diterbitkan, jadi versi yang akan dilihat pemasok diputar ulang: mesin dijalankan per setiap hari penerbitan yang lalu pada catatan hari ini, dan setiap versi distabilkan terhadap apa yang diterbitkan versi sebelumnya.',
 
   'stb.settings.title': 'Nilai yang dipakai',
-  'stb.settings.weight': 'Bobot peredaman, Zone Capacity minggu diredam',
+  'stb.settings.weight': 'Bobot peredaman, Zone Capacity',
   'stb.settings.weightNote':
     'Bagian dari nilai yang terakhir dilihat pemasok. Diatur di Administrasi → Toleransi.',
   'stb.settings.forecastWeight': 'Bobot peredaman, Zone Capacity minggu berikutnya',
   'stb.settings.forecastWeightNote': 'Tidak diredam',
-  'stb.settings.band': 'Batas toleransi, Zone Capacity minggu diredam',
+  'stb.settings.band': 'Batas toleransi, Zone Capacity',
   'stb.settings.bandValue': '±{{perVersion}}% per versi · ±{{cumulative}}% dari nilai pertama',
   'stb.settings.bandNote':
     'Batas kumulatif masih harus disepakati dengan pemasok pilot; sementara ini berjalan pada ±20%.',
@@ -183,7 +183,7 @@ export const stabiliseId = {
   'stb.rule.new': 'Minggu baru — diterbitkan apa adanya',
   'stb.rule.unchanged': 'Tidak berubah',
   'stb.rule.firmFrozen': 'Zone Liability — tetap seperti yang diterbitkan',
-  'stb.rule.forecast': 'Zone Capacity, minggu berikutnya — apa adanya',
+  'stb.rule.forecast': 'Zone Capacity — apa adanya',
   'stb.rule.damped': 'Zone Capacity — diredam',
   'stb.rule.bandHeld': 'Zone Capacity — ditahan pada ±10% per versi',
   'stb.rule.cumulativeHeld': 'Zone Capacity — ditahan pada ±20% dari nilai pertama',
@@ -194,7 +194,7 @@ export const stabiliseId = {
     'Pilih satu baris untuk melihat setiap minggu dari versi yang akan diterbitkan.',
   'stb.series.col.material': 'Material',
   'stb.series.col.supplier': 'Pemasok',
-  'stb.series.col.zones': 'Zone Liability · Zone Capacity minggu diredam',
+  'stb.series.col.zones': 'Zone Liability · Zone Capacity',
   'stb.series.col.open': 'Minggu',
   'stb.series.days': '{{firm}} hr · {{tradeOff}} hr',
   'stb.series.show': 'Tampilkan minggu',
@@ -212,8 +212,8 @@ export const stabiliseId = {
   'stb.detail.reasonNeeded': 'Di luar batas: perlu alasan untuk menerbitkan nilai yang diredam',
   'stb.detail.recommit': 'Meminta komitmen baru dari pemasok',
   'stb.zone.firm': 'Zone Liability',
-  'stb.zone.tradeOff': 'Zone Capacity, minggu diredam',
-  'stb.zone.forecast': 'Zone Capacity, minggu berikutnya',
+  'stb.zone.tradeOff': 'Zone Capacity',
+  'stb.zone.forecast': 'Zone Capacity',
 
   'stb.publish.title': 'Terbitkan versi ini',
   'stb.publish.intro':

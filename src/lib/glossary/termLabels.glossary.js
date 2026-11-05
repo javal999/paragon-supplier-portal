@@ -1162,8 +1162,8 @@ export const TERM_LABEL_GLOSSARY =
     },
     ruleForecast: {
       label: {
-        en: 'Zone Capacity, later weeks — as calculated',
-        id: 'Zone Capacity, minggu berikutnya — apa adanya'
+        en: 'Zone Capacity — as calculated',
+        id: 'Zone Capacity — apa adanya'
       },
       en: 'A later Zone Capacity week is not damped or held: the engine value is published.',
       id: 'Minggu Zone Capacity berikutnya tidak diredam atau ditahan: nilai mesin diterbitkan.',
@@ -1237,8 +1237,8 @@ export const TERM_LABEL_GLOSSARY =
     },
     tradeOffWithinLimits: {
       label: {
-        en: 'Zone Capacity damped weeks within the tolerance band',
-        id: 'Minggu diredam Zone Capacity dalam rentang toleransi'
+        en: 'Zone Capacity within the tolerance band',
+        id: 'Zone Capacity dalam rentang toleransi'
       },
       en: 'The share of damped Zone Capacity weeks whose quantity to publish stays within the allowed range.',
       id: 'Porsi minggu diredam Zone Capacity yang kuantitas terbitnya tetap dalam rentang yang diizinkan.',

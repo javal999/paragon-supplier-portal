@@ -8,7 +8,11 @@ import { screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 import { callOffStore } from '@services/data/mock/stores/callOffStore';
-import { leadTimeDaysOf } from '@services/data/mock/leadTimeReadModel';
+import {
+  defaultLeadTimeDaysOf,
+  leadTimeDaysOf,
+  withLeadTime
+} from '@services/data/mock/leadTimeReadModel';
 import { fulfilmentWindow } from '@services/transitions/fulfilmentWindow';
 import { sdcClock } from '@services/sdc';
 import { formatDate } from '@lib/format';
@@ -53,6 +57,29 @@ describe('BL-273 — fulfil-by on the supplier call-offs', () => {
     for (const c of mine().filter((x) => x.status === 'Rejected')) {
       expect(screen.queryByTestId(`supplier-calloff-fulfil-by-${c.id}`)).toBeNull();
     }
+  });
+
+  it('PEX-D16: with no DRC-6 lead time on record, every call-off uses the material-type default, labelled', () => {
+    // Over every call-off in the store, not one supplier: a pair with no
+    // source must still get a lead time, and only those pairs are flagged.
+    const all = callOffStore.all();
+    const missing = all.filter((c) => leadTimeDaysOf(c.supplierId, c.materialCode) === null);
+    expect(missing.length).toBeGreaterThan(0);
+    for (const c of all) {
+      const row = withLeadTime(c);
+      expect(typeof row.leadTimeDays).toBe('number');
+      expect(row.leadTimeIsDefault === true).toBe(missing.includes(c));
+    }
+    for (const c of missing) {
+      expect(withLeadTime(c).leadTimeDays).toBe(defaultLeadTimeDaysOf(c.materialCode));
+    }
+    expect([14, 30]).toContain(defaultLeadTimeDaysOf(missing[0].materialCode));
+    expect(i18n.t('co.sla.leadTimeDefault', { lng: 'en', count: 30 })).toBe(
+      '(default lead time 30 days for this material type)'
+    );
+    expect(i18n.t('co.sla.leadTimeDefault', { lng: 'id', count: 14 })).toBe(
+      '(waktu tunggu bawaan 14 hari untuk jenis material ini)'
+    );
   });
 
   it('the Indonesian wording', () => {

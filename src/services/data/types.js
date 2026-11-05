@@ -490,7 +490,8 @@ export class DataError extends Error {
  * `trigger`: BL-199 (DRC-13) — on a `'ropFisik'` draft only: the figures behind it (SOH, ROP Fisik, Max, quantity), stamped with their inputs and rules version (DRC-D16). PTI only: a supplier's read never carries it.
  * `mrpController`:  Material C4 — the material's MRP controller, projected at read (never stored).
  * `delays`:  DRC-5 (BL-191) — every delay proposed for an LTP drop, oldest first; the last may be awaiting the supplier's answer. Absent when none was proposed.
- * `leadTimeDays`:  PEX-10 (BL-273) — the supplier × material lead time (DRC-6), projected at read (never stored); the fulfil-by date counts from the confirmation with it. Absent when none is on record.
+ * `leadTimeDays`:  PEX-10 (BL-273) — the supplier × material lead time (DRC-6), projected at read (never stored); the fulfil-by date counts from the confirmation with it. With no DRC-6 source on record, the material-type default (packaging 14, raw material 30; owner, 2026-11-05, PEX-D16), flagged by `leadTimeIsDefault`. Absent only when the material type is unknown.
+ * `leadTimeIsDefault`:  PEX-D16 — true when `leadTimeDays` is the material-type default, not the pair's own lead time.
  *
  * @typedef {{
  *   readonly id: string;
@@ -520,6 +521,7 @@ export class DataError extends Error {
  *   readonly delays?: readonly CallOffDelay[];
  *   readonly mrpController?: MrpControllerRef;
  *   readonly leadTimeDays?: number;
+ *   readonly leadTimeIsDefault?: boolean;
  * }} CallOff
  */
 

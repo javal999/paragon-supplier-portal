@@ -121,8 +121,7 @@ export const forecastCollaborationEn = {
   'fc.sup.tab.forecast': 'Forecast',
   'fc.sup.tab.changes': 'Changes',
   'fc.sup.downloadForecast': 'Download forecast',
-  'fc.sup.ackOnly':
-    'Zone Capacity, later period: acknowledge that you have seen it. No commitment is needed.',
+  'fc.sup.ackOnly': 'Zone Capacity: acknowledge that you have seen it. No commitment is needed.',
   // PEX-2 (BL-265) — the commitments grid: periods as columns, row labels pinned left.
   'fc.sup.grid.label': '{{material}}: commitments per period',
   'fc.sup.grid.scrollHint':
@@ -251,9 +250,10 @@ export const forecastCollaborationEn = {
     'Each cell reads commitment / forecast. Green: {{green}}% or more. Amber: {{amber}}% to below {{green}}%. Red: below {{amber}}%.',
   'fc.pti.gaps.cumulative': 'Cumulative commitment against forecast',
   'fc.pti.gaps.cumulativeHint':
-    'Zone Liability and Zone Capacity damped periods, over the horizon, all suppliers of the material.',
+    'Zone Liability and Zone Capacity periods that need a commitment, over the horizon, all suppliers of the material.',
   'fc.pti.gaps.cumulativeSummary': 'Committed {{commit}} of {{forecast}} ({{pct}}) by {{period}}',
-  'fc.pti.gaps.cumulativeNone': 'No Zone Liability or Zone Capacity damped periods.',
+  'fc.pti.gaps.cumulativeNone':
+    'No Zone Liability or Zone Capacity periods that need a commitment.',
   'fc.pti.gaps.cumForecast': 'Cumulative forecast',
   'fc.pti.gaps.cumCommitment': 'Cumulative commitment',
   'fc.pti.gaps.coverage': 'Supplier coverage per material',
@@ -426,8 +426,7 @@ export const forecastCollaborationId = {
   'fc.sup.tab.forecast': 'Prakiraan',
   'fc.sup.tab.changes': 'Perubahan',
   'fc.sup.downloadForecast': 'Unduh prakiraan',
-  'fc.sup.ackOnly':
-    'Zone Capacity, periode berikutnya: tandai bahwa Anda sudah melihatnya. Tidak perlu komitmen.',
+  'fc.sup.ackOnly': 'Zone Capacity: tandai bahwa Anda sudah melihatnya. Tidak perlu komitmen.',
   // PEX-2 (BL-265) — grid komitmen: periode sebagai kolom, label baris tetap di kiri.
   'fc.sup.grid.label': '{{material}}: komitmen per periode',
   'fc.sup.grid.scrollHint':
@@ -559,11 +558,11 @@ export const forecastCollaborationId = {
     'Setiap sel berisi komitmen / prakiraan. Hijau: {{green}}% atau lebih. Kuning: {{amber}}% hingga di bawah {{green}}%. Merah: di bawah {{amber}}%.',
   'fc.pti.gaps.cumulative': 'Komitmen kumulatif terhadap prakiraan',
   'fc.pti.gaps.cumulativeHint':
-    'Periode Zone Liability dan periode diredam Zone Capacity, sepanjang horizon, semua pemasok material.',
+    'Periode Zone Liability dan Zone Capacity yang perlu komitmen, sepanjang horizon, semua pemasok material.',
   'fc.pti.gaps.cumulativeSummary':
     'Komitmen {{commit}} dari {{forecast}} ({{pct}}) hingga {{period}}',
   'fc.pti.gaps.cumulativeNone':
-    'Tidak ada periode Zone Liability atau periode diredam Zone Capacity.',
+    'Tidak ada periode Zone Liability atau Zone Capacity yang perlu komitmen.',
   'fc.pti.gaps.cumForecast': 'Prakiraan kumulatif',
   'fc.pti.gaps.cumCommitment': 'Komitmen kumulatif',
   'fc.pti.gaps.coverage': 'Cakupan pemasok per material',

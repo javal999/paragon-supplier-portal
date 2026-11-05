@@ -112,7 +112,7 @@ Read on GitLab `main` `3da82ae5`. Paths are under `src/`.
 
 | ID | Requirement | Build | Waits on |
 |---|---|---|---|
-| PEX-1 | Foresight zones: Zone Liability and Zone Capacity replace Firm, Trade-off and Forecast | Labels built (BL-264); BR-02, BR-03 open (BL-283) | — |
+| PEX-1 | Foresight zones: Zone Liability and Zone Capacity replace Firm, Trade-off and Forecast | Labels built (BL-264), plain "Zone Capacity" per PEX-D16; BR-02, BR-03 open (BL-283) | — |
 | PEX-2 | Foresight horizon: 17 weeks by week, then by month to month 12, weeks as columns | Built for packaging (BL-265); BR-04 raw material open (BL-282) | — |
 | PEX-3 | LTP vs SOH heads-up on Foresight | BR-01 built (BL-266); BR-02 open (BL-284) | — |
 | PEX-4 | Capacity heads-up: 12 months, utilisation %, per material and brand, colour bands, treemap | Build now | — |
@@ -121,7 +121,7 @@ Read on GitLab `main` `3da82ae5`. Paths are under `src/`.
 | PEX-7 | PO On Hold: the remainder DA did not absorb, with a grace period per supplier × material | Build now | Thresholds for auto handling (PEX-12) |
 | PEX-8 | PO On Hold decision: planner suggests FS only, FS + spread or FG; supplier chooses | After PEX-7 | — |
 | PEX-9 | Feedstock reconcile: drop "Called off, not yet shipped"; "Not yet called off" feeds PO On Hold | BR-01 built (BL-274); after PEX-7 (BR-02) | — |
-| PEX-10 | SLA on supplier confirmations: fulfilment window from the lead time | Built for call-offs and Foresight commitments (BL-273); PO On Hold with PEX-8 | — |
+| PEX-10 | SLA on supplier confirmations: fulfilment window from the lead time | Built for call-offs and Foresight commitments (BL-273), lead time per PEX-D17 and PEX-D18; PO On Hold with PEX-8 | — |
 | PEX-11 | Plan vs execution trace: DA → PO → call-off → ASN, with exceptions | Build now (trace and flags); Hold (PO back into DA) | Mba Septi: SAP identifiers |
 | PEX-12 | Remaining PO thresholds: auto absorb, auto carry-over, manual; PO cancellation | Hold | Mba Septi: thresholds; cancellation flow |
 | PEX-13 | Safety stock and protection buffer switch per material, reason required | Build now (switch); Hold (rules) | Mba Septi: rules and thresholds |
@@ -290,6 +290,10 @@ The supplier usability test is on Monday 9 or Tuesday 10 November 2026 [M04 6]. 
 | PEX-D6 | FG formula | A cap; the rest stays on hold |
 | PEX-D7 | Grace and no-movement periods | 14 days each, per supplier × material |
 | PEX-D8 | ROP engine | One calculation module, ROP and DA as separate entry points |
+| PEX-D16 | Zone names after the lead time | Plain "Zone Capacity" for the old Trade-off and Forecast weeks, EN and ID (BL-264); detail in `DECISION-GUIDE.md` |
+| PEX-D17 | Fulfil-by lead time | DRC-6 `leadTimeBreakdown`; the Stock page mismatch is BL-285 |
+| PEX-D18 | No lead time on record | Call-offs use the material-type default (packaging 14, raw material 30 days), labelled as a default |
+| PEX-D19 | Tracking-link test data | A principal shipment is seeded for the distributor test supplier (sup-005, `ish-0002`) |
 
 **My calls, for the owner to overrule**
 

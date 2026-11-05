@@ -14,7 +14,8 @@ import { fulfilmentWindow } from '@services/transitions/fulfilmentWindow';
  * Before the supplier confirms (Awaiting Confirmation), the same window counted
  * from today, labelled as such, so the supplier sees what confirming commits it
  * to. A call-off with no confirmation and no answer due (rejected) shows
- * nothing. A material with no lead time on record says so instead of a date.
+ * nothing. A material with no lead time on record uses the material-type
+ * default and says so (PEX-D16); with no type either, it says there is no date.
  * @type {React.FC<{ callOff: CallOff; testId?: string }>}
  */
 const FulfilBy = ({ callOff, testId }) => {
@@ -34,7 +35,9 @@ const FulfilBy = ({ callOff, testId }) => {
   return (
     <div className={className} data-testid={testId} data-sla={confirmedAt ? 'confirmed' : 'today'}>
       {t(confirmedAt ? 'co.sla.fulfilBy' : 'co.sla.ifConfirmedToday')} {date}{' '}
-      {t('co.sla.leadTime', { count: window.leadTimeDays })}
+      {t(callOff.leadTimeIsDefault ? 'co.sla.leadTimeDefault' : 'co.sla.leadTime', {
+        count: window.leadTimeDays
+      })}
     </div>
   );
 };

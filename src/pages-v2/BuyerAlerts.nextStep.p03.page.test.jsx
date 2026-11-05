@@ -310,7 +310,7 @@ describe('P-08 · each rule shows its own basis (INV-D1)', () => {
       'Zone Liability period short'
     );
     expect(screen.getByTestId(`alert-basis-${COMMITMENT_TRADE}`)).toHaveTextContent(
-      'Zone Capacity damped period short'
+      'Zone Capacity period short'
     );
     expect(screen.queryByText(/^Cover \d+ days/)).toBeNull();
   });
