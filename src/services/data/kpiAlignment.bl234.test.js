@@ -88,29 +88,33 @@ const otif = (c, date) => {
  * @returns {PurchaseOrder}
  */
 const po = (decision) =>
-  /** @type {PurchaseOrder} */ ({
-    id: 'po-bl234',
-    poNumber: 'PO-BL234',
-    supplierId: 'sup-bl234',
-    confirmedDeliveryDate: NEED,
-    lineItems: [
-      {
-        id: 'li-1',
-        materialCode: 'MAT-BL234',
-        description: 'x',
-        quantity: 100,
-        uom: 'PCS',
-        unitPrice: 1,
-        confirmedQty: 100
+  /** @type {PurchaseOrder} */ (
+    /** @type {unknown} */ ({
+      id: 'po-bl234',
+      poNumber: 'PO-BL234',
+      supplierId: 'sup-bl234',
+      confirmedDeliveryDate: NEED,
+      lineItems: [
+        {
+          id: 'li-1',
+          materialCode: 'MAT-BL234',
+          description: 'x',
+          quantity: 100,
+          uom: 'PCS',
+          unitPrice: 1,
+          confirmedQty: 100
+        }
+      ],
+      response: {
+        option: 'adjust',
+        respondedAt: `${shift(NEED, -40)}T03:00:00.000Z`,
+        lines: [{ lineId: 'li-1', reasonCode: 'capacity', counterQty: 100, counterDate: EARLY }],
+        ...(decision
+          ? { review: { decision, reviewedAt: `${shift(NEED, -39)}T03:00:00.000Z` } }
+          : {})
       }
-    ],
-    response: {
-      option: 'adjust',
-      respondedAt: `${shift(NEED, -40)}T03:00:00.000Z`,
-      lines: [{ lineId: 'li-1', reasonCode: 'capacity', counterQty: 100, counterDate: EARLY }],
-      ...(decision ? { review: { decision, reviewedAt: `${shift(NEED, -39)}T03:00:00.000Z` } } : {})
-    }
-  });
+    })
+  );
 /**
  * @param {string} date
  * @returns {GoodsReceipt[]}
