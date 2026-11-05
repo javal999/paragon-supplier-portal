@@ -233,7 +233,7 @@ describe('P-03 · next step and the action that fits each rule', () => {
   it('commitment below forecast keeps its link and offers no ask; "Close alert" stays on every open alert', async () => {
     await renderAlerts();
     const r = row(COMMITMENT_FIRM);
-    expect(within(r).getByRole('link', { name: 'Open commitments & gaps' })).toBeInTheDocument();
+    expect(within(r).getByRole('link', { name: 'Open Foresight commitments' })).toBeInTheDocument();
     expect(within(r).queryByTestId(`alert-ask-${COMMITMENT_FIRM}`)).toBeNull();
     for (const key of [STOCK_OUT, CAPACITY, STALE, COMMITMENT_FIRM]) {
       expect(within(row(key)).getByRole('button', { name: /Close alert/ })).toBeInTheDocument();

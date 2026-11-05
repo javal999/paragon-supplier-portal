@@ -362,7 +362,7 @@ export const inventoryCapacityEn = {
   'inv.capacity.col.reason': 'Reason',
   // BL-133 (ENG-D18) — the LTP against capacity and BE.
   'inv.capacity.ltpHelp':
-    'LTP is PTI’s current forecast for the materials of this group, added up per week. It is the demand this page checks. Above your capacity it needs the additional capacity; above BE (capacity + additional capacity) it cannot be supplied. Confirm capacity here before you submit the LTP on Forecast & commitments.',
+    'LTP is PTI’s current forecast for the materials of this group, added up per week. It is the demand this page checks. Above your capacity it needs the additional capacity; above BE (capacity + additional capacity) it cannot be supplied. Confirm capacity here before you submit the LTP on Foresight commitments.',
   'inv.capacity.ltpHelpPti':
     'LTP is the current forecast for the group’s materials, added up per week, against the supplier’s capacity and BE (capacity + additional capacity).',
   'inv.capacity.pti.bannerRed':
@@ -451,7 +451,7 @@ export const inventoryCapacityEn = {
     'Supply above demand anticipation (DA) is more than the last week of the horizon can absorb',
   'inv.alerts.openInventory': 'Open inventory',
   'inv.alerts.openCapacity': 'Open capacity',
-  'inv.alerts.openCommitments': 'Open commitments & gaps',
+  'inv.alerts.openCommitments': 'Open Foresight commitments',
   'inv.alerts.openBlanketPo': 'Open blanket PO',
   'inv.alerts.openDemandAnticipation': 'Open demand anticipation',
   'inv.alerts.close': 'Close alert',
@@ -494,7 +494,7 @@ export const inventoryCapacityEn = {
   'inv.alerts.next.capacityBelowDemand':
     'Allocated capacity falls short from {{week}}; ask the supplier to add capacity, or review the week on Capacity.',
   'inv.alerts.next.commitmentBelowForecast':
-    'The supplier committed less than the forecast; review the gap on Commitments & gaps.',
+    'The supplier committed less than the forecast; review the gap on Foresight commitments.',
   'inv.alerts.next.supplyDiscontinued':
     'The supplier will not supply this material any more; move demand to another source.',
   'inv.alerts.next.blanketPoRunOut':
@@ -992,7 +992,7 @@ export const inventoryCapacityId = {
   'inv.capacity.col.reason': 'Alasan',
   // BL-133 (ENG-D18) — LTP terhadap kapasitas dan BE.
   'inv.capacity.ltpHelp':
-    'LTP adalah prakiraan PTI saat ini untuk material kelompok ini, dijumlahkan per minggu. Inilah kebutuhan yang diperiksa halaman ini. Di atas kapasitas Anda, LTP memerlukan kapasitas tambahan; di atas BE (kapasitas + kapasitas tambahan), LTP tidak dapat dipenuhi. Konfirmasikan kapasitas di sini sebelum Anda mengirim LTP di Prakiraan & komitmen.',
+    'LTP adalah prakiraan PTI saat ini untuk material kelompok ini, dijumlahkan per minggu. Inilah kebutuhan yang diperiksa halaman ini. Di atas kapasitas Anda, LTP memerlukan kapasitas tambahan; di atas BE (kapasitas + kapasitas tambahan), LTP tidak dapat dipenuhi. Konfirmasikan kapasitas di sini sebelum Anda mengirim LTP di Komitmen foresight.',
   'inv.capacity.ltpHelpPti':
     'LTP adalah prakiraan saat ini untuk material kelompok, dijumlahkan per minggu, dibandingkan kapasitas pemasok dan BE (kapasitas + kapasitas tambahan).',
   'inv.capacity.pti.bannerRed':
@@ -1078,7 +1078,7 @@ export const inventoryCapacityId = {
     'Pasokan di atas demand anticipation (DA) melebihi yang dapat diserap minggu terakhir horizon',
   'inv.alerts.openInventory': 'Buka stok',
   'inv.alerts.openCapacity': 'Buka kapasitas',
-  'inv.alerts.openCommitments': 'Buka komitmen & selisih',
+  'inv.alerts.openCommitments': 'Buka Komitmen foresight',
   'inv.alerts.openBlanketPo': 'Buka PO induk',
   'inv.alerts.openDemandAnticipation': 'Buka demand anticipation',
   'inv.alerts.close': 'Tutup peringatan',
@@ -1121,7 +1121,7 @@ export const inventoryCapacityId = {
   'inv.alerts.next.capacityBelowDemand':
     'Kapasitas yang dialokasikan kurang mulai {{week}}; minta pemasok menambah kapasitas, atau tinjau minggu itu di Kapasitas.',
   'inv.alerts.next.commitmentBelowForecast':
-    'Pemasok berkomitmen di bawah forecast; tinjau selisihnya di Komitmen & selisih.',
+    'Pemasok berkomitmen di bawah forecast; tinjau selisihnya di Komitmen foresight.',
   'inv.alerts.next.supplyDiscontinued':
     'Pemasok tidak lagi memasok material ini; pindahkan permintaan ke sumber lain.',
   'inv.alerts.next.blanketPoRunOut':

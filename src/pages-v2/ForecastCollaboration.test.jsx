@@ -519,7 +519,7 @@ describe('Alert, Home tasks and the Order summary', () => {
     const alert = await screen.findByTestId('alert-commitmentBelowForecast|RM-STEAR-7300|sup-002');
     expect(alert).toHaveTextContent('Committed quantity below forecast beyond tolerance');
     expect(within(alert).getByText('High')).toBeInTheDocument();
-    expect(within(alert).getByRole('link', { name: 'Open commitments & gaps' })).toHaveAttribute(
+    expect(within(alert).getByRole('link', { name: 'Open Foresight commitments' })).toHaveAttribute(
       'href',
       '/buyer/collaboration?material=RM-STEAR-7300&supplier=sup-002'
     );
