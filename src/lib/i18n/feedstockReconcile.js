@@ -63,7 +63,7 @@ export const feedstockReconcileEn = {
   'fsr.rules.figures':
     'PO ordered is the quantity on the supplier’s PO lines for the material, except POs the supplier rejected; a value-only line carries no quantity. Called off is the quantity on the call-offs PTI released, from Awaiting Confirmation onward; drafts, dismissed and rejected call-offs count nothing. ASN requested is the quantity shipped on ASNs against those call-offs that are submitted, in transit, delivered or under discrepancy.',
   'fsr.rules.remainders':
-    'Not yet called off = PO ordered − called off. Called off, not yet shipped = called off − ASN requested. Neither goes below zero; an excess shows as a note. What a remainder means follows the proposed leftover rule under the table. Procurement maintains the max stock.'
+    'Not yet called off = PO ordered − called off. It never goes below zero; an excess shows as a note. What a remainder means follows the proposed leftover rule under the table. Procurement maintains the max stock.'
 };
 
 /** @type {Record<string, string>} */
@@ -122,5 +122,5 @@ export const feedstockReconcileId = {
   'fsr.rules.figures':
     'Dipesan di PO adalah kuantitas pada baris PO pemasok untuk material tersebut, kecuali PO yang ditolak pemasok; baris berbasis nilai tidak membawa kuantitas. Di-call-off adalah kuantitas pada call-off yang dirilis PTI, mulai dari Menunggu Konfirmasi; draf, call-off yang dibatalkan, dan yang ditolak tidak dihitung. Diminta di ASN adalah kuantitas yang dikirim pada ASN atas call-off tersebut yang sudah dikirim, dalam perjalanan, diterima, atau dalam selisih.',
   'fsr.rules.remainders':
-    'Belum di-call-off = dipesan di PO − di-call-off. Di-call-off, belum dikirim = di-call-off − diminta di ASN. Keduanya tidak pernah di bawah nol; kelebihan ditampilkan sebagai catatan. Arti sisa mengikuti usulan aturan sisa di bawah tabel. Procurement mengelola stok maksimum.'
+    'Belum di-call-off = dipesan di PO − di-call-off. Nilainya tidak pernah di bawah nol; kelebihan ditampilkan sebagai catatan. Arti sisa mengikuti usulan aturan sisa di bawah tabel. Procurement mengelola stok maksimum.'
 };
