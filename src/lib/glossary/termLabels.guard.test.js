@@ -220,6 +220,31 @@ describe('term-label glossary (BL-233)', () => {
     expect(TERM_LABEL_GLOSSARY.bottleneckLeadTime.label.id).toMatch(/\(ROP Supplier\)$/);
   });
 
+  it('PEX-1 (BL-264): no zone label reads Firm, Trade-off or Forecast; the two zone names stay English in ID', () => {
+    const zoneTerms = /** @type {const} */ ([
+      'forecastZone',
+      'ruleFirmFrozen',
+      'ruleForecast',
+      'ruleDamped',
+      'ruleBandHeld',
+      'ruleCumulativeHeld',
+      'ruleOverride',
+      'tradeOffWithinLimits',
+      'seriesHeld',
+      'firmDemand',
+      'commitmentDue'
+    ]);
+    for (const term of zoneTerms) {
+      const e = TERM_LABEL_GLOSSARY[term];
+      for (const text of [e.label.en, e.label.id, e.en, e.id])
+        expect(text, term).not.toMatch(
+          /\bFirm\b|Trade-off|Forecast —|zona Forecast|Kompromi|\bPasti\b/
+        );
+    }
+    expect(TERM_LABEL_GLOSSARY.forecastZone.en).toMatch(/^Zone Liability: .* Zone Capacity: /);
+    expect(TERM_LABEL_GLOSSARY.forecastZone.id).toMatch(/^Zone Liability: .* Zone Capacity: /);
+  });
+
   it('TL-D19 to TL-D22, TL-D26, TL-D27: the owner’s renames to the source wording', () => {
     expect(TERM_LABEL_GLOSSARY.supplierAvailable.label.en).toBe('Supplier available stock');
     expect(TERM_LABEL_GLOSSARY.ptiRop.label).toEqual({ en: 'PTI ROP', id: 'ROP PTI' });
@@ -296,7 +321,11 @@ describe('term-label glossary (BL-233)', () => {
   it('TL-D12 Q11, Q14, Q15 and TL-D11 on the warehouse and collaboration pages', () => {
     expect(TERM_LABEL_GLOSSARY.commitmentGap.label.en).toBe('Commitment gap');
     expect(TERM_LABEL_GLOSSARY.fillStatus.label).toEqual({ en: 'Status', id: 'Status' });
-    expect(TERM_LABEL_GLOSSARY.firmDemand.label.id).toBe('Kebutuhan Firm');
+    // PEX-1 (BL-264) — the zone is renamed; TL-D11 still keeps the zone name English in ID.
+    expect(TERM_LABEL_GLOSSARY.firmDemand.label).toEqual({
+      en: 'Zone Liability demand',
+      id: 'Kebutuhan Zone Liability'
+    });
     expect(TERM_LABEL_GLOSSARY.maxStock.labelKeys).toContain('co.trigger.max');
   });
 

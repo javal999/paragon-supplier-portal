@@ -97,7 +97,7 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
     });
     const section = await screen.findByTestId('fc-sup-material-PK-PETB-8801');
     const firmShort = within(section).getByTestId(`fc-sup-row-PK-PETB-8801-${W[1]}`);
-    expect(firmShort).toHaveTextContent('Firm');
+    expect(firmShort).toHaveTextContent('Zone Liability');
     expect(firmShort).toHaveTextContent('Outside tolerance');
     expect(within(section).getByTestId(`fc-sup-row-PK-PETB-8801-${W[8]}`)).toHaveTextContent(
       'Acknowledged'
@@ -296,7 +296,7 @@ describe('Supplier — the Due rule is visible, once (a11y finding 19, supplier 
     });
     await screen.findByTestId('fc-sup-material-PK-PETB-8801');
     const note = screen.getByTestId('fc-sup-due-rule');
-    expect(note).toHaveTextContent(/^Commitment due: Firm: /);
+    expect(note).toHaveTextContent(/^Commitment due: Zone Liability: /);
     expect(note).toHaveTextContent(/working days/);
     expect(screen.getAllByTestId('fc-sup-due-rule')).toHaveLength(1);
     for (const header of screen.getAllByRole('columnheader', {

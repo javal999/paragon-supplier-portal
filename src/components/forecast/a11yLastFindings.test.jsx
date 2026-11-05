@@ -167,7 +167,7 @@ describe('finding 19 — the Due rule is visible text, not a header tooltip', ()
   it('English: one line under the exceptions heading, outside the table; no title on the header', async () => {
     const note = await renderResponses('en');
     expect(note).toHaveTextContent(
-      `Commitment due: Firm: ${days.firm} working day${days.firm === 1 ? '' : 's'}.`
+      `Commitment due: Zone Liability: ${days.firm} working day${days.firm === 1 ? '' : 's'}.`
     );
     expect(note).toHaveTextContent('Counted from publication on the hub working calendar.');
     expect(note.closest('table')).toBeNull();
@@ -183,7 +183,7 @@ describe('finding 19 — the Due rule is visible text, not a header tooltip', ()
 
   it('Indonesian: the same line in Indonesian; no title on the header', async () => {
     const note = await renderResponses('id');
-    expect(note).toHaveTextContent('Tenggat komitmen: Pasti:');
+    expect(note).toHaveTextContent('Tenggat komitmen: Zone Liability:');
     expect(note).toHaveTextContent('Dihitung sejak penerbitan pada kalender kerja hub.');
     const header = within(screen.getByTestId('fc-exceptions')).getByRole('columnheader', {
       name: headerNamed('Tenggat komitmen')

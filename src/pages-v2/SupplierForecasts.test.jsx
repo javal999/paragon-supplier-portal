@@ -126,8 +126,8 @@ describe('SupplierForecasts — FLAG-2 honest render', () => {
   it('speaks commitmentClass ONLY — the P2 provenance grammar never renders', async () => {
     renderPage();
     const lines = await screen.findByTestId('sdcsup-lines');
-    expect(within(lines).getByText('Firm')).toBeInTheDocument();
-    expect(within(lines).getByText('Semi-firm')).toBeInTheDocument();
+    expect(within(lines).getByText('Zone Liability')).toBeInTheDocument();
+    expect(within(lines).getByText('Zone Capacity')).toBeInTheDocument();
     expect(within(lines).getByText('Visibility only')).toBeInTheDocument();
     // No PlanCellMarker / internal liveness-axis vocabulary on this surface.
     expect(screen.queryByText(/SIMULATED/)).not.toBeInTheDocument();

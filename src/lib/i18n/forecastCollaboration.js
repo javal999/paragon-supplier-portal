@@ -24,9 +24,9 @@ export const forecastCollaborationEn = {
     'Published weekly: weekly periods for 13 weeks, then monthly up to 6 months.',
   'fc.cadence.rawMaterial': 'Published monthly: monthly periods for 6 months.',
 
-  'fc.zone.firm': 'Firm',
-  'fc.zone.tradeOff': 'Trade-off',
-  'fc.zone.forecast': 'Forecast',
+  'fc.zone.firm': 'Zone Liability',
+  'fc.zone.tradeOff': 'Zone Capacity',
+  'fc.zone.forecast': 'Zone Capacity',
 
   'fc.state.awaiting': 'Awaiting commitment',
   'fc.state.awaitingAck': 'Awaiting acknowledgement',
@@ -48,7 +48,7 @@ export const forecastCollaborationEn = {
   'fc.duration.hours': '{{hours}} h',
   'fc.duration.underHour': 'under 1 h',
   'fc.col.dueRule':
-    'Firm: {{firm}}. Trade-off and Forecast: {{other}}. Counted from publication on the hub working calendar.',
+    'Zone Liability: {{firm}}. Zone Capacity: {{other}}. Counted from publication on the hub working calendar.',
   'fc.pti.gaps.dueRuleNote': '{{due}}: {{rule}}',
 
   'fc.gap.colour.green': 'Green',
@@ -121,7 +121,8 @@ export const forecastCollaborationEn = {
   'fc.sup.tab.forecast': 'Forecast',
   'fc.sup.tab.changes': 'Changes',
   'fc.sup.downloadForecast': 'Download forecast',
-  'fc.sup.ackOnly': 'Forecast period: acknowledge that you have seen it. No commitment is needed.',
+  'fc.sup.ackOnly':
+    'Zone Capacity, later period: acknowledge that you have seen it. No commitment is needed.',
   'fc.sup.acknowledge': 'Acknowledge',
   'fc.sup.acknowledgeFor': 'Acknowledge {{period}}',
   'fc.sup.saveDraft': 'Save draft',
@@ -221,7 +222,7 @@ export const forecastCollaborationEn = {
   'fc.pti.gaps.followUp': 'Supplier follow-up list',
   'fc.pti.gaps.exceptions': 'Exceptions ({{count}})',
   'fc.pti.gaps.exceptionsHint':
-    'Overdue first, then Firm periods, then the lowest days of supply. Commitments within tolerance need no action.',
+    'Overdue first, then Zone Liability periods, then the lowest days of supply. Commitments within tolerance need no action.',
   'fc.pti.gaps.noExceptions': 'No exceptions. Every commitment is within tolerance or not yet due.',
   'fc.pti.gaps.accept': 'Accept',
   'fc.pti.gaps.revise': 'Request revision',
@@ -236,9 +237,9 @@ export const forecastCollaborationEn = {
     'Each cell reads commitment / forecast. Green: {{green}}% or more. Amber: {{amber}}% to below {{green}}%. Red: below {{amber}}%.',
   'fc.pti.gaps.cumulative': 'Cumulative commitment against forecast',
   'fc.pti.gaps.cumulativeHint':
-    'Firm and Trade-off periods, over the horizon, all suppliers of the material.',
+    'Zone Liability and Zone Capacity damped periods, over the horizon, all suppliers of the material.',
   'fc.pti.gaps.cumulativeSummary': 'Committed {{commit}} of {{forecast}} ({{pct}}) by {{period}}',
-  'fc.pti.gaps.cumulativeNone': 'No Firm or Trade-off periods.',
+  'fc.pti.gaps.cumulativeNone': 'No Zone Liability or Zone Capacity damped periods.',
   'fc.pti.gaps.cumForecast': 'Cumulative forecast',
   'fc.pti.gaps.cumCommitment': 'Cumulative commitment',
   'fc.pti.gaps.coverage': 'Supplier coverage per material',
@@ -247,8 +248,8 @@ export const forecastCollaborationEn = {
     'Commitment against forecast per week, and cumulative commitment per material.',
   'fc.pti.gaps.estimate': 'Estimate',
   'fc.pti.gaps.coverageHint':
-    'Supplier stock plus incoming, divided by Firm demand. Covered at {{covered}} or more; At risk from {{atRisk}}; Uncovered below {{atRisk}}.',
-  'fc.pti.gaps.coverageNone': 'No Firm demand to cover.',
+    'Supplier stock plus incoming, divided by Zone Liability demand. Covered at {{covered}} or more; At risk from {{atRisk}}; Uncovered below {{atRisk}}.',
+  'fc.pti.gaps.coverageNone': 'No Zone Liability demand to cover.',
   'fc.pti.gaps.toast.accepted': 'Commitment accepted',
   'fc.pti.gaps.toast.revision': 'Revision requested. The supplier can read your note.',
   'fc.pti.gaps.toast.reassigned': 'Demand moved. A new forecast version is published.',
@@ -318,9 +319,9 @@ export const forecastCollaborationId = {
     'Terbit mingguan: periode mingguan selama 13 minggu, lalu bulanan hingga 6 bulan.',
   'fc.cadence.rawMaterial': 'Terbit bulanan: periode bulanan selama 6 bulan.',
 
-  'fc.zone.firm': 'Pasti',
-  'fc.zone.tradeOff': 'Kompromi',
-  'fc.zone.forecast': 'Prakiraan',
+  'fc.zone.firm': 'Zone Liability',
+  'fc.zone.tradeOff': 'Zone Capacity',
+  'fc.zone.forecast': 'Zone Capacity',
 
   'fc.state.awaiting': 'Menunggu komitmen',
   'fc.state.awaitingAck': 'Menunggu tanda terima',
@@ -340,7 +341,7 @@ export const forecastCollaborationId = {
   'fc.duration.hours': '{{hours}} jam',
   'fc.duration.underHour': 'kurang dari 1 jam',
   'fc.col.dueRule':
-    'Pasti: {{firm}}. Kompromi dan Prakiraan: {{other}}. Dihitung sejak penerbitan pada kalender kerja hub.',
+    'Zone Liability: {{firm}}. Zone Capacity: {{other}}. Dihitung sejak penerbitan pada kalender kerja hub.',
   'fc.pti.gaps.dueRuleNote': '{{due}}: {{rule}}',
 
   'fc.gap.colour.green': 'Hijau',
@@ -411,7 +412,8 @@ export const forecastCollaborationId = {
   'fc.sup.tab.forecast': 'Prakiraan',
   'fc.sup.tab.changes': 'Perubahan',
   'fc.sup.downloadForecast': 'Unduh prakiraan',
-  'fc.sup.ackOnly': 'Periode prakiraan: tandai bahwa Anda sudah melihatnya. Tidak perlu komitmen.',
+  'fc.sup.ackOnly':
+    'Zone Capacity, periode berikutnya: tandai bahwa Anda sudah melihatnya. Tidak perlu komitmen.',
   'fc.sup.acknowledge': 'Tandai diterima',
   'fc.sup.acknowledgeFor': 'Tandai diterima {{period}}',
   'fc.sup.saveDraft': 'Simpan draf',
@@ -513,7 +515,7 @@ export const forecastCollaborationId = {
   'fc.pti.gaps.followUp': 'Daftar tindak lanjut pemasok',
   'fc.pti.gaps.exceptions': 'Pengecualian ({{count}})',
   'fc.pti.gaps.exceptionsHint':
-    'Lewat tenggat lebih dulu, lalu periode Pasti, lalu hari persediaan terendah. Komitmen dalam toleransi tidak perlu tindakan.',
+    'Lewat tenggat lebih dulu, lalu periode Zone Liability, lalu hari persediaan terendah. Komitmen dalam toleransi tidak perlu tindakan.',
   'fc.pti.gaps.noExceptions':
     'Tidak ada pengecualian. Semua komitmen dalam toleransi atau belum jatuh tempo.',
   'fc.pti.gaps.accept': 'Terima',
@@ -529,10 +531,11 @@ export const forecastCollaborationId = {
     'Setiap sel berisi komitmen / prakiraan. Hijau: {{green}}% atau lebih. Kuning: {{amber}}% hingga di bawah {{green}}%. Merah: di bawah {{amber}}%.',
   'fc.pti.gaps.cumulative': 'Komitmen kumulatif terhadap prakiraan',
   'fc.pti.gaps.cumulativeHint':
-    'Periode Pasti dan Kompromi, sepanjang horizon, semua pemasok material.',
+    'Periode Zone Liability dan periode diredam Zone Capacity, sepanjang horizon, semua pemasok material.',
   'fc.pti.gaps.cumulativeSummary':
     'Komitmen {{commit}} dari {{forecast}} ({{pct}}) hingga {{period}}',
-  'fc.pti.gaps.cumulativeNone': 'Tidak ada periode Pasti atau Kompromi.',
+  'fc.pti.gaps.cumulativeNone':
+    'Tidak ada periode Zone Liability atau periode diredam Zone Capacity.',
   'fc.pti.gaps.cumForecast': 'Prakiraan kumulatif',
   'fc.pti.gaps.cumCommitment': 'Komitmen kumulatif',
   'fc.pti.gaps.coverage': 'Cakupan pemasok per material',
@@ -541,8 +544,8 @@ export const forecastCollaborationId = {
     'Komitmen terhadap prakiraan per minggu, dan komitmen kumulatif per material.',
   'fc.pti.gaps.estimate': 'Perkiraan',
   'fc.pti.gaps.coverageHint':
-    'Stok pemasok ditambah kedatangan, dibagi kebutuhan Pasti. Tercakup pada {{covered}} atau lebih; Berisiko mulai {{atRisk}}; Tidak tercakup di bawah {{atRisk}}.',
-  'fc.pti.gaps.coverageNone': 'Tidak ada kebutuhan Pasti yang perlu dicakup.',
+    'Stok pemasok ditambah kedatangan, dibagi kebutuhan Zone Liability. Tercakup pada {{covered}} atau lebih; Berisiko mulai {{atRisk}}; Tidak tercakup di bawah {{atRisk}}.',
+  'fc.pti.gaps.coverageNone': 'Tidak ada kebutuhan Zone Liability yang perlu dicakup.',
   'fc.pti.gaps.toast.accepted': 'Komitmen diterima',
   'fc.pti.gaps.toast.revision': 'Revisi diminta. Pemasok dapat membaca catatan Anda.',
   'fc.pti.gaps.toast.reassigned': 'Kebutuhan dipindahkan. Versi prakiraan baru diterbitkan.',

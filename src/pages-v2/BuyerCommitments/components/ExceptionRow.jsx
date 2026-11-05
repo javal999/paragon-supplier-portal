@@ -173,7 +173,8 @@ const ExceptionRow = ({
               key: 'zone',
               label: (
                 <>
-                  {t('fc.col.zone')} <TermTip term="Firm" /> <TermTip term="Trade-off" />
+                  {t('fc.col.zone')} <TermTip term="Zone Liability" />{' '}
+                  <TermTip term="Zone Capacity" />
                 </>
               ),
               value: <ZonePill zone={l.zone} />

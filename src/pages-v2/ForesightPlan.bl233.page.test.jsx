@@ -118,7 +118,7 @@ describe('BL-233 wave 4 — /buyer/stabilise', () => {
     const tips = within(rules).getAllByTestId(/^term-tip-rule-/);
     expect(tips.length).toBeGreaterThan(0);
     expect(within(rules).getByTestId('term-tip-rule-firm-frozen')).toHaveTextContent(
-      'Firm — kept as published'
+      'Zone Liability — kept as published'
     );
     for (const id of [
       'plan-movement',

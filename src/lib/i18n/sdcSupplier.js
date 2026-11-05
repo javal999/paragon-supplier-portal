@@ -26,8 +26,8 @@ export const sdcSupplierEn = {
   'sdcSup.tab.responses': 'My responses',
 
   // — Commitment classes (the ONLY supplier-facing class vocabulary) —
-  'sdcSup.class.firm': 'Firm',
-  'sdcSup.class.semiFirm': 'Semi-firm',
+  'sdcSup.class.firm': 'Zone Liability',
+  'sdcSup.class.semiFirm': 'Zone Capacity',
   'sdcSup.class.visibilityOnly': 'Visibility only',
 
   // — Published lines —
@@ -260,8 +260,8 @@ export const sdcSupplierId = {
   'sdcSup.tab.responses': 'Respons Saya',
 
   // — Kelas komitmen —
-  'sdcSup.class.firm': 'Firm',
-  'sdcSup.class.semiFirm': 'Semi-firm',
+  'sdcSup.class.firm': 'Zone Liability',
+  'sdcSup.class.semiFirm': 'Zone Capacity',
   'sdcSup.class.visibilityOnly': 'Visibilitas saja',
 
   // — Baris terbit —

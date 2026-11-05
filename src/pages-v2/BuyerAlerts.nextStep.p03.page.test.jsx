@@ -307,10 +307,10 @@ describe('P-08 · each rule shows its own basis (INV-D1)', () => {
   it('commitment: the zone that is short; the old uniform "Cover N days" line is gone', async () => {
     await renderAlerts();
     expect(screen.getByTestId(`alert-basis-${COMMITMENT_FIRM}`)).toHaveTextContent(
-      'Firm period short'
+      'Zone Liability period short'
     );
     expect(screen.getByTestId(`alert-basis-${COMMITMENT_TRADE}`)).toHaveTextContent(
-      'Trade-off period short'
+      'Zone Capacity damped period short'
     );
     expect(screen.queryByText(/^Cover \d+ days/)).toBeNull();
   });
