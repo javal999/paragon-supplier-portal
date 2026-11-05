@@ -640,7 +640,29 @@ export const inventoryCapacityEn = {
   'inv.weekly.api.notActive': 'Scheduled sync: not active in the prototype',
   'inv.col.thisCycle': 'This cycle',
   'inv.thisCycle.count': '{{updated}} of {{total}}',
-  'inv.thisCycle.api': 'API'
+  'inv.thisCycle.api': 'API',
+  // PEX-16 (BL-279) — tracking link on a shipment from the supplier's principal.
+  'inv.principal.title': 'Incoming from your principal',
+  'inv.principal.intro':
+    'Shipments from your principal to you, as you reported them. They are not ASNs. You can add the carrier’s tracking link.',
+  'inv.principal.empty': 'No shipment from your principal is on its way.',
+  'inv.principal.col.material': 'Material',
+  'inv.principal.col.quantity': 'Quantity',
+  'inv.principal.col.eta': 'ETA',
+  'inv.principal.col.status': 'Status',
+  'inv.principal.col.tracking': 'Tracking link',
+  'inv.principal.noLink': 'No tracking link',
+  'inv.principal.opensNewTab': '(opens in a new tab)',
+  'inv.principal.add': 'Add tracking link',
+  'inv.principal.change': 'Change link',
+  'inv.principal.field': 'Tracking link for {{material}}',
+  'inv.principal.placeholder': 'https://',
+  'inv.principal.save': 'Save link',
+  'inv.principal.cancel': 'Cancel',
+  'inv.principal.saved': 'Tracking link saved',
+  'inv.principal.error.empty': 'Type the tracking link.',
+  'inv.principal.error.notHttps': 'Only https:// links are accepted.',
+  'inv.principal.error.invalid': 'This is not a valid https:// link.'
 };
 
 /** @type {Record<string, string>} */
@@ -1267,5 +1289,27 @@ export const inventoryCapacityId = {
   'inv.weekly.api.notActive': 'Sinkronisasi terjadwal: belum aktif di prototipe',
   'inv.col.thisCycle': 'Siklus ini',
   'inv.thisCycle.count': '{{updated}} dari {{total}}',
-  'inv.thisCycle.api': 'API'
+  'inv.thisCycle.api': 'API',
+  // PEX-16 (BL-279) — tautan pelacakan pada kiriman dari prinsipal pemasok.
+  'inv.principal.title': 'Kiriman masuk dari prinsipal Anda',
+  'inv.principal.intro':
+    'Kiriman dari prinsipal kepada Anda, seperti yang Anda laporkan. Ini bukan ASN. Anda dapat menambahkan tautan pelacakan kurir.',
+  'inv.principal.empty': 'Tidak ada kiriman dari prinsipal Anda yang sedang dalam perjalanan.',
+  'inv.principal.col.material': 'Material',
+  'inv.principal.col.quantity': 'Kuantitas',
+  'inv.principal.col.eta': 'ETA',
+  'inv.principal.col.status': 'Status',
+  'inv.principal.col.tracking': 'Tautan pelacakan',
+  'inv.principal.noLink': 'Belum ada tautan pelacakan',
+  'inv.principal.opensNewTab': '(terbuka di tab baru)',
+  'inv.principal.add': 'Tambah tautan pelacakan',
+  'inv.principal.change': 'Ubah tautan',
+  'inv.principal.field': 'Tautan pelacakan untuk {{material}}',
+  'inv.principal.placeholder': 'https://',
+  'inv.principal.save': 'Simpan tautan',
+  'inv.principal.cancel': 'Batal',
+  'inv.principal.saved': 'Tautan pelacakan tersimpan',
+  'inv.principal.error.empty': 'Ketik tautan pelacakannya.',
+  'inv.principal.error.notHttps': 'Hanya tautan https:// yang diterima.',
+  'inv.principal.error.invalid': 'Ini bukan tautan https:// yang sah.'
 };

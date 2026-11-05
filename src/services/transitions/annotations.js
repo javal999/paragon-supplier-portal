@@ -275,6 +275,9 @@ export const TRANSITION_PURPOSE = Object.freeze({
   t_incomingshipment_arrive: {
     purposeKey: 'processFlows.purpose.t_incomingshipment_arrive'
   },
+  t_incomingshipment_track: {
+    purposeKey: 'processFlows.purpose.t_incomingshipment_track'
+  },
   t_incomingshipment_cancel: {
     purposeKey: 'processFlows.purpose.t_incomingshipment_cancel'
   },
