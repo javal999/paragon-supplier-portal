@@ -137,7 +137,11 @@ describe('BL-233 wave 4 — /supplier/forecasts', () => {
       route: '/supplier/forecasts'
     });
     const section = await screen.findByTestId('fc-sup-material-PK-PETB-8801');
-    const headers = labelled(section, 'columnheader');
+    // PEX-2 (BL-265) — the periods are columns, so the measures are the grid's row labels.
+    const headers = [...section.querySelectorAll('[data-grid-label]')].map((h) => ({
+      label: textWithoutTips(/** @type {HTMLElement} */ (h)).trim(),
+      tip: h.querySelector('[data-testid^="term-tip-"]') !== null
+    }));
     const tipped = headers.filter((h) => h.tip).map((h) => h.label);
     expect(tipped).toEqual(
       expect.arrayContaining([

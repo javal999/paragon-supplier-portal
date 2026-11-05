@@ -123,6 +123,20 @@ export const forecastCollaborationEn = {
   'fc.sup.downloadForecast': 'Download forecast',
   'fc.sup.ackOnly':
     'Zone Capacity, later period: acknowledge that you have seen it. No commitment is needed.',
+  // PEX-2 (BL-265) — the commitments grid: periods as columns, row labels pinned left.
+  'fc.sup.grid.label': '{{material}}: commitments per period',
+  'fc.sup.grid.scrollHint':
+    'Periods run left to right; scroll sideways for later weeks and months.',
+  // PEX-3 (BL-266) — where the ordered quantity comes from (an explanation, not a figure).
+  'fc.sup.demandNote': 'Ordered quantity = LTP (planned use) − PTI stock on hand.',
+  'fc.sup.demandHover':
+    'Ordered quantity for {{period}}: {{qty}} {{uom}}. LTP and PTI stock on hand per week are not in the Foresight data yet, so the gap is not shown.',
+  'fc.sup.demandHoverName': 'Ordered quantity for {{period}}',
+  // PEX-10 (BL-273) — the fulfilment window of a commitment.
+  'fc.sup.row.fulfilBy': 'Fulfil by',
+  'fc.sup.fulfilBy': 'Fulfil by {{date}} (lead time {{days}} days)',
+  'fc.sup.fulfilPending': 'Lead time {{days}} days; the date is set when you submit',
+  'fc.sup.fulfilNoLeadTime': 'No lead time on record',
   'fc.sup.acknowledge': 'Acknowledge',
   'fc.sup.acknowledgeFor': 'Acknowledge {{period}}',
   'fc.sup.saveDraft': 'Save draft',
@@ -414,6 +428,20 @@ export const forecastCollaborationId = {
   'fc.sup.downloadForecast': 'Unduh prakiraan',
   'fc.sup.ackOnly':
     'Zone Capacity, periode berikutnya: tandai bahwa Anda sudah melihatnya. Tidak perlu komitmen.',
+  // PEX-2 (BL-265) — grid komitmen: periode sebagai kolom, label baris tetap di kiri.
+  'fc.sup.grid.label': '{{material}}: komitmen per periode',
+  'fc.sup.grid.scrollHint':
+    'Periode berjalan dari kiri ke kanan; geser ke samping untuk minggu dan bulan berikutnya.',
+  // PEX-3 (BL-266) — asal kuantitas pesanan (penjelasan, bukan angka baru).
+  'fc.sup.demandNote': 'Kuantitas pesanan = LTP (rencana pemakaian) − stok PTI yang ada.',
+  'fc.sup.demandHover':
+    'Kuantitas pesanan untuk {{period}}: {{qty}} {{uom}}. LTP dan stok PTI per minggu belum ada di data Foresight, sehingga selisihnya belum ditampilkan.',
+  'fc.sup.demandHoverName': 'Kuantitas pesanan untuk {{period}}',
+  // PEX-10 (BL-273) — jangka pemenuhan komitmen.
+  'fc.sup.row.fulfilBy': 'Penuhi paling lambat',
+  'fc.sup.fulfilBy': 'Penuhi paling lambat {{date}} (lead time {{days}} hari)',
+  'fc.sup.fulfilPending': 'Lead time {{days}} hari; tanggal ditetapkan saat Anda mengirim',
+  'fc.sup.fulfilNoLeadTime': 'Belum ada lead time tercatat',
   'fc.sup.acknowledge': 'Tandai diterima',
   'fc.sup.acknowledgeFor': 'Tandai diterima {{period}}',
   'fc.sup.saveDraft': 'Simpan draf',

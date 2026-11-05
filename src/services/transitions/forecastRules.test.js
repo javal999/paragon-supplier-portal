@@ -92,7 +92,11 @@ describe('PEX-2 (BL-265) — the period grid: 17 weeks, then months to month 12'
     expect(FORECAST_HORIZON.rawMaterial).toEqual({ weeklyPeriods: 0, horizonMonths: 12 });
     const periods = generatePeriods('rawMaterial', '2026-11-02T02:00:00.000Z');
     expect(periods.every((p) => p.kind === 'month')).toBe(true);
-    expect([periods[0].id, periods.at(-1)?.id, periods.length]).toEqual(['2026-12', '2027-11', 12]);
+    expect([periods[0].id, periods[periods.length - 1]?.id, periods.length]).toEqual([
+      '2026-12',
+      '2027-11',
+      12
+    ]);
   });
 
   it('every day of the horizon belongs to exactly one period (no gap, no overlap)', () => {
@@ -111,7 +115,7 @@ describe('PEX-2 (BL-265) — the period grid: 17 weeks, then months to month 12'
   it('BR-03 [Proposed] — the days after week 17 join the first full month', () => {
     // Published Friday 28 August 2026: week 1 is 31 August, week 17 ends 27 December.
     const periods = generatePeriods('packaging', '2026-08-28T02:00:00.000Z');
-    expect(periods.filter((p) => p.kind === 'week').at(-1)?.end).toBe('2026-12-27');
+    expect(periods.filter((p) => p.kind === 'week').slice(-1)[0]?.end).toBe('2026-12-27');
     const months = periods.filter((p) => p.kind === 'month');
     expect(months[0]).toEqual({
       id: '2027-01',
@@ -120,7 +124,7 @@ describe('PEX-2 (BL-265) — the period grid: 17 weeks, then months to month 12'
       end: '2027-01-31'
     });
     // Month 12 from the planning week's month (August 2026) is July 2027.
-    expect(months.at(-1)).toEqual({
+    expect(months[months.length - 1]).toEqual({
       id: '2027-07',
       kind: 'month',
       start: '2027-07-01',

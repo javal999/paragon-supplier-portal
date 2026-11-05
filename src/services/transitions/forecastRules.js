@@ -186,6 +186,19 @@ export function generatePeriods(stream, publishedAt, horizon = FORECAST_HORIZON[
   return periods;
 }
 
+/**
+ * PEX-10 (BL-273) BR-01 — the last day of a supplier confirmation's fulfilment
+ * window: the confirmation day (in WIB) + the material's lead time in days
+ * (DRC-6). Null when the confirmation or the lead time is missing.
+ * @param {string | null | undefined} confirmedAt
+ * @param {number | null | undefined} leadTimeDays
+ * @returns {string | null}
+ */
+export function fulfilByDay(confirmedAt, leadTimeDays) {
+  if (!confirmedAt || leadTimeDays === null || leadTimeDays === undefined) return null;
+  return addDay(publicationDay(confirmedAt), leadTimeDays);
+}
+
 // ── Zones (REQ-E06-01 BR-04, BR-05) ──────────────────────────────────────────
 
 /**
