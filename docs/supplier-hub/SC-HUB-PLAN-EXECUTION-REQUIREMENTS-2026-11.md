@@ -293,7 +293,9 @@ The supplier usability test is on Monday 9 or Tuesday 10 November 2026 [M04 6]. 
 | PEX-D16 | Zone names after the lead time | Plain "Zone Capacity" for the old Trade-off and Forecast weeks, EN and ID (BL-264); detail in `DECISION-GUIDE.md` |
 | PEX-D17 | Fulfil-by lead time | DRC-6 `leadTimeBreakdown`; the Stock page mismatch is BL-285 |
 | PEX-D18 | No lead time on record | Call-offs use the material-type default (packaging 14, raw material 30 days), labelled as a default |
-| PEX-D19 | Tracking-link test data | A principal shipment is seeded for the distributor test supplier (sup-005, `ish-0002`) |
+| PEX-D19 | Tracking-link test data | Run the step as sup-005 on its seeded principal shipment `ish-0002`; nothing new is seeded |
+| PEX-D20 | Other MR !97 build decisions | Accepted as built; BR-02/BR-03 (BL-283), BR-04 (BL-282) and the LTP and SOH hover (BL-284) stay deferred |
+| PEX-D21 | Stabilise and Reschedule labels | Keep the zone renames; their rules are unchanged |
 
 **My calls, for the owner to overrule**
 

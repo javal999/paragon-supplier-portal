@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Version | 1.19, 2026-11-05 (PEX-D16 to PEX-D19 added: the owner's rulings on four PEX wave 1 build decisions in MR !97; 1.18, 2026-11-05: FSR-D7 added: BL-243 and BL-249 built, applying IA R-2 and the TL-D13 qualifier; 1.17, 2026-11-03: FSR-D1 to FSR-D6 added: the owner's rulings on the six open questions of the Foresight end-to-end review; 1.16, 2026-11-02: BL-12 and BL-56 decided by the owner; BL-19 baselines and early receipts in OTIF and CFOT answered; INV-D4 superseded by the BL-149 answer; 1.15, 2026-10-26: RFX-D32 added: the RFx deadline is checked on leaving the field; INV-D14 added 2026-10-23) |
-| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20) and RFX-D26 to RFX-D31 (2026-10-22) and RFX-D32 (2026-10-26); the Inventory & Capacity UX decisions INV-D1 to INV-D13 (2026-10-22) and INV-D14 (2026-10-23); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23); and the Foresight review rulings FSR-D1 to FSR-D6 (2026-11-03) and FSR-D7 (2026-11-05); and the PEX wave 1 build rulings PEX-D16 to PEX-D19 (2026-11-05) |
+| Version | 1.19, 2026-11-05 (PEX-D16 to PEX-D21 added: the owner's rulings on the PEX wave 1 build decisions in MR !97; 1.18, 2026-11-05: FSR-D7 added: BL-243 and BL-249 built, applying IA R-2 and the TL-D13 qualifier; 1.17, 2026-11-03: FSR-D1 to FSR-D6 added: the owner's rulings on the six open questions of the Foresight end-to-end review; 1.16, 2026-11-02: BL-12 and BL-56 decided by the owner; BL-19 baselines and early receipts in OTIF and CFOT answered; INV-D4 superseded by the BL-149 answer; 1.15, 2026-10-26: RFX-D32 added: the RFx deadline is checked on leaving the field; INV-D14 added 2026-10-23) |
+| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20) and RFX-D26 to RFX-D31 (2026-10-22) and RFX-D32 (2026-10-26); the Inventory & Capacity UX decisions INV-D1 to INV-D13 (2026-10-22) and INV-D14 (2026-10-23); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23); and the Foresight review rulings FSR-D1 to FSR-D6 (2026-11-03) and FSR-D7 (2026-11-05); and the PEX wave 1 build rulings PEX-D16 to PEX-D21 (2026-11-05) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, and two values (BL-54 invoice cap, BL-55 gate OTIF minimum). BL-12 call-off record and BL-56 early allowance were decided on 2026-11-02 (see their entries). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
 | Evidence | Market practice is cited at the end. Where a claim is a judgement rather than a published practice, it says so |
@@ -506,7 +506,7 @@ Levi ruled in chat on 2026-11-03 on the six open questions in section 7 of the F
 
 ## PEX wave 1 build rulings (decided 2026-11-05)
 
-Levi ruled in the tracker on 2026-11-05 on four of the 17 build decisions in MR !97 (PEX wave 1 and P0 fixes, `SC-HUB-PLAN-EXECUTION-REQUIREMENTS-2026-11.md`). They continue that file's numbering (PEX-D1 to PEX-D15). The other 13 build decisions stay as built until the owner says otherwise.
+Levi ruled in the tracker on 2026-11-05 on the 17 build decisions in MR !97 (PEX wave 1 and P0 fixes, `SC-HUB-PLAN-EXECUTION-REQUIREMENTS-2026-11.md`) and on the Stabilise and Reschedule labels. They continue that file's numbering (PEX-D1 to PEX-D15).
 
 ### PEX-D16 · Old Trade-off and Forecast weeks both read plain "Zone Capacity" (BL-264, PEX-1)
 **Decision.** "Plain Zone Capacity." Every zone name for the weeks after the lead time reads "Zone Capacity", in EN and ID, with no "damped weeks" or "later weeks" suffix: zone pills, Stabilise and Reschedule zone labels and rule names, the Stabilise damping weight and tolerance band settings, the admin settings, the alert basis and the supplier acknowledgement line. The engine keeps its internal keys and rules, so no figure moved. Tips and formula sentences that explain how damping works still say which weeks are damped, because they describe a rule, not a zone name. Two labels keep a qualifier because dropping it makes them wrong or ambiguous: the Stabilise setting "Damping weight, Zone Capacity later weeks" sits beside "Damping weight, Zone Capacity", and the Foresight gap note counts "Zone Liability and Zone Capacity periods that need a commitment".
@@ -529,12 +529,38 @@ Levi ruled in the tracker on 2026-11-05 on four of the 17 build decisions in MR 
 
 **What would change this.** PEX-14 master data landing, which gives each pair its own lead time.
 
-### PEX-D19 · A principal shipment is seeded for the tracking-link step (BL-279, PEX-16)
-**Decision.** "Seed a shipment." The test supplier that has a principal, sup-005 (a distributor for RM-EMUL-3310), already has a seeded principal shipment on its way (`ish-0002`, Booked, ETA 8 Oct 2026), so the step works with no setup when testing as sup-005. sup-002 and sup-007 are manufacturers: the hub allows a principal shipment only for a distributor, so none is seeded for them. Whether to make sup-007 a distributor for one material is an open question to the owner.
+### PEX-D19 · The tracking-link step runs as sup-005 on its seeded shipment (BL-279, PEX-16)
+**Decision.** "Seed a shipment", then "(a) Use sup-005" once the seed was measured. sup-005 is the only test supplier with a principal (a distributor for RM-EMUL-3310), and it already has a seeded principal shipment on its way (`ish-0002`, Booked, ETA 8 Oct 2026). The usability test runs the tracking-link step as sup-005 on `ish-0002`; nothing new is seeded. sup-002 and sup-007 are manufacturers, and the hub allows a principal shipment only for a distributor.
 
-**Alternative not taken.** No seed; the tester reports a principal shipment first.
+**Alternative not taken.** Make sup-007 a distributor for one packaging material and seed a principal shipment for it.
 
-**What would change this.** The usability test running as sup-007 only.
+**What would change this.** The usability test needing the step as sup-007.
+
+### PEX-D20 · The other MR !97 build decisions are accepted as built (BL-264 to BL-266, BL-273, BL-274, BL-234, BL-78)
+**Decision.** "Accept as built." Levi accepted the remaining build decisions of MR !97 as built, on 2026-11-05:
+- Supplier class "Semi-firm" reads Zone Capacity; "Visibility only" is unchanged (BL-264).
+- A month that starts inside week 17: its days join that month's column, labelled with the full month (PEX-2 BR-03).
+- PEX-2 AC-01 reads W45 2026 to W8 2027: 2026 has 53 ISO weeks.
+- Months to 12 are counted from the planning week's month; raw material from its first month.
+- Fulfil-by counts calendar days from the confirmation day in WIB.
+- Before the supplier answers: call-offs read "If confirmed today, fulfil by …"; Foresight reads "Lead time n days; the date is set when you submit"; acknowledge-only periods show no date.
+- Indonesian keeps two wordings for now: call-offs "waktu tunggu", Foresight "lead time" (BL-263 is the open question on translating team terms).
+- The feedstock reconcile flag "Shipped beyond the call-offs" moved under "ASN requested" (BL-274).
+- OTIF and CFOT: a call-off date the planner changed and the supplier has not re-confirmed is measured against the previously agreed date (BL-234, BL-66 (2)).
+- BL-78 reuses "Baseline period — no target yet"; the radar is titled "Performance radar"; grade and late or on-time colours stay because they show state.
+
+Three items stay deferred, not built: the Zone Capacity quantity (PEX-1 BR-02/BR-03, BL-283), weekly raw material (PEX-2 BR-04, BL-282) and the per-week LTP, SOH and gap hover (PEX-3 BR-02, BL-284).
+
+**Alternative not taken.** The alternatives listed with each decision in the MR !97 report.
+
+**What would change this.** The usability test on 9 or 10 November 2026.
+
+### PEX-D21 · Stabilise and Reschedule keep the zone renames, with their rules unchanged (BL-264, Q-W2)
+**Decision.** "Keep renames." The planner pages Stabilise and Reschedule show "Zone Liability" and plain "Zone Capacity" (PEX-D16). Their rules do not change: Stabilise still damps and band-holds the first weeks after the lead time and publishes the later weeks as calculated, and Reschedule keeps its penalties and ranking. The engine's internal zone keys stay firm, tradeOff and forecast.
+
+**Alternative not taken.** Keep the old Firm, Trade-off and Forecast names on the two planner pages, where the rules still differ by week.
+
+**What would change this.** Planners misreading which Zone Capacity weeks are damped.
 
 ## SC Hub Material decisions (decided 2026-09-29)
 
