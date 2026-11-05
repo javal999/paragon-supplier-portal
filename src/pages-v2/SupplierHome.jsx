@@ -365,6 +365,8 @@ const SupplierHome = () => {
           // view-by date exists; the version's earliest commitment deadline stands in.
           id: 'new-forecast',
           lane: 'forecast',
+          // BL-242 (U-06) — a commitment task's line names its due date, not the cover.
+          preferDue: true,
           label: t('hub.home.task.sup.newForecast'),
           count: unviewed.length,
           deadlines: unviewedLines.map((l) => l.dueAt),
@@ -377,6 +379,8 @@ const SupplierHome = () => {
           // REQ-E06-03 BR-06 — the reminder at the deadline.
           id: 'commitments-overdue',
           lane: 'forecast',
+          // BL-242 (U-06) — a commitment task's line names its due date, not the cover.
+          preferDue: true,
           label: t('hub.home.task.sup.commitmentsOverdue'),
           count: overdueLines.length,
           deadlines: overdueLines.map((l) => l.dueAt),
@@ -389,6 +393,8 @@ const SupplierHome = () => {
           // REQ-E06-03 BR-06 — the reminder at half the deadline.
           id: 'commitments-due-soon',
           lane: 'forecast',
+          // BL-242 (U-06) — a commitment task's line names its due date, not the cover.
+          preferDue: true,
           label: t('hub.home.task.sup.commitmentsDueSoon'),
           count: dueSoonLines.length,
           deadlines: dueSoonLines.map((l) => l.dueAt),
@@ -401,6 +407,8 @@ const SupplierHome = () => {
           // REQ-E06-03 BR-05 — the planner asked for a revision, with a note.
           id: 'commitments-revision',
           lane: 'forecast',
+          // BL-242 (U-06) — a commitment task's line names its due date, not the cover.
+          preferDue: true,
           label: t('hub.home.task.sup.revisionRequested'),
           count: revisionLines.length,
           deadlines: [],

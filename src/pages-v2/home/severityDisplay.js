@@ -17,7 +17,10 @@ const FLAG = { urgent: 'critical', dueSoonAmber: 'warning', dueSoonGrey: 'info' 
 
 /**
  * A task before its severity is known: what it counts, and the dates that decide it.
- * @typedef {Omit<HomeTask, 'severity'> & SeverityInput} UnratedTask
+ * `preferDue`:  BL-242 (U-06) — the detail line names the due date, not the cover,
+ *   whenever the task has a deadline (a commitment task: the supplier expects its
+ *   deadline). The cover still counts toward the severity; only the line changes.
+ * @typedef {Omit<HomeTask, 'severity'> & SeverityInput & { readonly preferDue?: boolean }} UnratedTask
  */
 
 /**
@@ -36,7 +39,7 @@ export function withSeverity(tasks, nowIso, t) {
     const detail =
       s.reason === 'deadline'
         ? `${due} · ${t('hub.home.overdueBy', { count: s.overdueDays })}`
-        : s.reason === 'stockOut' && s.cover
+        : s.reason === 'stockOut' && s.cover && !(task.preferDue && due !== null)
           ? `${t('inv.basis.cover', { count: Math.floor(s.cover.daysOfCover) })} · ${t('inv.basis.leadTime', { count: s.cover.leadTimeDays })}`
           : (due ?? t('hub.home.noDeadline'));
     return {

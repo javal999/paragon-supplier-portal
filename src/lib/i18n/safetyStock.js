@@ -398,9 +398,9 @@ export const safetyStockId = {
   'sst.osip.rules.fisikDemandIncludesLtp.on': 'Nilai terendah termasuk LTP (bawaan)',
   'sst.osip.rules.fisikDemandIncludesLtp.off': 'Nilai terendah tanpa LTP (sheet)',
   'sst.osip.def.safetyOrder':
-    'Pesanan pengaman (ROP Order) = {{z}} × √(waktu tunggu dalam minggu) × simpangan baku LTP pemasok selama {{weeks}} minggu ke depan, dibulatkan ke atas ke kelipatan MPQ. Sampai data master memuat MPQ, kelipatan pesanan yang dipakai.',
+    'Safety order (ROP Order) = {{z}} × √(waktu tunggu dalam minggu) × simpangan baku LTP pemasok selama {{weeks}} minggu ke depan, dibulatkan ke atas ke kelipatan MPQ. Sampai data master memuat MPQ, kelipatan pesanan yang dipakai.',
   'sst.osip.def.fisik':
-    'Pengaman ROP Fisik = 1 hari × nilai terendah dari konsumsi harian tertinggi 3 bulan terakhir dan LTP harian, dibulatkan ke atas ke MPQ. Konsumsi adalah konsumsi material yang tercatat dikali porsi pemasok. Kapasitas produksi juga termasuk dalam nilai terendah; hub tidak punya angkanya, jadi tidak diikutkan.',
+    'Safety ROP Fisik = 1 hari × nilai terendah dari konsumsi harian tertinggi 3 bulan terakhir dan LTP harian, dibulatkan ke atas ke MPQ. Konsumsi adalah konsumsi material yang tercatat dikali porsi pemasok. Kapasitas produksi juga termasuk dalam nilai terendah; hub tidak punya angkanya, jadi tidak diikutkan.',
   'sst.osip.def.cv':
     'CV = simpangan baku ÷ rata-rata permintaan bulanan setiap barang jadi selama {{months}} bulan kalender penuh terakhir. Komponen memakai CV barang jadinya, dibobot permintaan rata-ratanya. Stabil di bawah {{threshold}}, fluktuatif mulai {{threshold}}. Barang jadi belum punya pengelompokan varian, jadi setiap barang jadi adalah varian tersendiri.',
   'sst.osip.def.challenger':
@@ -423,8 +423,8 @@ export const safetyStockId = {
   'sst.rop.npdBasis.NO_HISTORY': 'Tidak ada riwayat penjualan',
   'sst.rop.npdBasis.FULL_HISTORY': 'Riwayat penjualan 52 minggu atau lebih',
   'sst.rop.npdBasis.NO_BOM': 'Tidak ada baris BOM: tidak ada peluncuran atau riwayat untuk dibaca',
-  'sst.rop.unavailable.NO_SAFETY_ORDER': 'Tidak tersedia: tidak ada pesanan pengaman',
-  'sst.rop.unavailable.NO_FISIK_SAFETY': 'Tidak tersedia: tidak ada pengaman ROP Fisik',
+  'sst.rop.unavailable.NO_SAFETY_ORDER': 'Tidak tersedia: tidak ada safety order',
+  'sst.rop.unavailable.NO_FISIK_SAFETY': 'Tidak tersedia: tidak ada Safety ROP Fisik',
   'sst.rop.unavailable.NO_SUPPLY_AREA': 'Tidak tersedia: tidak ada area pasokan untuk f',
   'sst.rop.unavailable.NO_LTP': 'Tidak tersedia: tidak ada LTP',
   'sst.rop.unavailable.NO_DEMAND': 'Tidak tersedia: tidak ada permintaan ROP Fisik',
@@ -467,7 +467,7 @@ export const safetyStockId = {
   'sst.rop.detail.npdEffect':
     'Saat tanda ini hilang, perencana mendapat tugas Beranda “Tinjau ROP setelah pesanan pertama” untuk meninjau ROP berdasarkan CO dan IR, permintaan nyata. Mengatur atau mengonfirmasi level menutupnya.',
   'sst.rop.detail.supplierReading':
-    'ROP Pemasok adalah stok fisik maksimum pemasok: permintaan ROP Fisik dikali waktu tunggu produksi bottleneck-nya, termasuk antrean, dibulatkan ke atas ke MPQ (Material Planning, 28 Okt 2026). Bahan baku pemasok tidak punya ROP: pemasok menutupnya dari demand anticipation dan PO. ROP ke prinsipal masih tafsiran sampai Material Planning mendefinisikannya: permintaan ROP Fisik selama bagian pemesanan ke prinsipal dari waktu tunggu.',
+    'ROP Supplier adalah stok fisik maksimum pemasok: permintaan ROP Fisik dikali waktu tunggu produksi bottleneck-nya, termasuk antrean, dibulatkan ke atas ke MPQ (Material Planning, 28 Okt 2026). Bahan baku pemasok tidak punya ROP: pemasok menutupnya dari demand anticipation dan PO. ROP order to principal masih tafsiran sampai Material Planning mendefinisikannya: permintaan ROP Fisik selama bagian pemesanan ke prinsipal dari waktu tunggu.',
   'sst.values.title': 'Nilai OSIP untuk material ini dan pemasoknya',
   'sst.values.note':
     'Diatur oleh Perencana Material (jawaban Material Planning, 28 Okt 2026). Kolom kosong memakai nilai bawaan berwarna abu-abu. Setiap angka OSIP di halaman ini mengikuti nilai yang disimpan.',
@@ -528,11 +528,11 @@ export const safetyStockId = {
   'sst.rop.def.level':
     'Level OSIP: diatur per material oleh Perencana Material; material yang belum diatur berada di level 4 (pengisian ulang gudang). Level menentukan rumus ROP Fisik.',
   'sst.rop.def.rops':
-    'ROP Order = stok siklus (LTP selama waktu tunggu) + pesanan pengaman: input ZPE007, yang tidak dijalankan hub. ROP Fisik, level 3 dan 4 = permintaan harian × f dibulatkan ke atas ke MPQ, + pengaman; level 5 dibulatkan ke atas ke MDQ (MOQ sampai data master memuat MDQ); level 6 (JIT) = LTP 1 hari dibulatkan ke atas ke palet, tanpa pengaman.',
+    'ROP Order = cycle stock (LTP selama waktu tunggu) + safety order: input ZPE007, yang tidak dijalankan hub. ROP Fisik, level 3 dan 4 = permintaan harian × f dibulatkan ke atas ke MPQ, + pengaman; level 5 dibulatkan ke atas ke MDQ (MOQ sampai data master memuat MDQ); level 6 (JIT) = LTP 1 hari dibulatkan ke atas ke palet, tanpa pengaman.',
   'sst.rop.def.max':
-    'Maks = ROP Fisik dibulatkan ke atas ke koli (unit per palet) untuk pemasok lokal, atau ke MOQ untuk impor. Hanya membatasi call-off.',
+    'Max = ROP Fisik dibulatkan ke atas ke koli (unit per palet) untuk pemasok lokal, atau ke MOQ untuk impor. Hanya membatasi call-off.',
   'sst.rop.def.supplier':
-    'ROP Pemasok dan ROP ke prinsipal adalah titik pemesanan ulang di sisi pemasok. Titik pemesanan ulang pemasok sendiri di templat stok hanya ditampilkan sebagai acuan; tidak ada perhitungan yang membacanya.',
+    'ROP Supplier dan ROP order to principal adalah titik pemesanan ulang di sisi pemasok. Titik pemesanan ulang pemasok sendiri di templat stok hanya ditampilkan sebagai acuan; tidak ada perhitungan yang membacanya.',
   'sst.rop.def.npd':
     'NPD: material dianggap baru sampai pesanan pertamanya diterima penuh (penerimaan barang). Selama itu, permintaan ROP Fisik-nya adalah LTP tertinggi 3 bulan ke depan. Produk transisi tidak dibedakan: data tidak memuat penandanya.'
 };

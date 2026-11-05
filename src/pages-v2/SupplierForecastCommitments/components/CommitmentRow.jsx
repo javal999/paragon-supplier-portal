@@ -24,7 +24,7 @@ import { shortfallReasonNeedsNote } from '@services/transitions/reasonCodes';
  * it changed) and due date; the commitment quantity and upside inputs
  * (pre-filled, BR-09; no date since CAP-6, the record carries the period
  * start); the starter reason when the quantity is below forecast
- * (BR-04); the state, draft marker and gap; and Save draft with the row's
+ * (BR-04); the state, the draft marker (only while awaited, BL-241) and gap; and Save draft with the row's
  * refusal — or the handoff notice when the seat may not commit. Followed by
  * the line's revision log, when it has one.
  * @type {React.FC<{
@@ -141,7 +141,12 @@ const CommitmentRow = ({
         <TableCell>
           <div className="space-y-1">
             <CommitmentStatePill line={l} nowIso={nowIso} />
-            {l.draft && <div className="text-xs text-text-tertiary">{t('fc.sup.draftSaved')}</div>}
+            {/* BL-241 (U-05) — the draft marker only while the period is still awaited: once it is submitted PTI sees it, so "not visible to PTI" would be false. */}
+            {l.state === 'awaiting' && l.draft && (
+              <div className="text-xs text-text-tertiary" data-testid={`fc-draft-${l.key}`}>
+                {t('fc.sup.draftSaved')}
+              </div>
+            )}
             <GapCell line={l} />
           </div>
         </TableCell>

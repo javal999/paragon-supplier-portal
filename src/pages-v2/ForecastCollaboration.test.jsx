@@ -145,6 +145,7 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
     });
     expect(submit).not.toBeDisabled();
     fireEvent.click(submit);
+    fireEvent.click(screen.getByTestId('fc-week-confirm-submit'));
     // CAP-6 BR-02 — no date was sent; the record carries the period start.
     await waitFor(() =>
       expect(
@@ -268,6 +269,7 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
     const submit = screen.getByTestId(`fc-week-submit-${W[3]}`);
     expect(submit).not.toBeDisabled();
     fireEvent.click(submit);
+    fireEvent.click(screen.getByTestId('fc-week-confirm-submit'));
     await waitFor(() =>
       expect(
         responsesFor('sup-007', 'PK-PETB-8802', W[3])

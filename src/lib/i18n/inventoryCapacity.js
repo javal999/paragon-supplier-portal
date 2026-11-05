@@ -539,6 +539,9 @@ export const inventoryCapacityEn = {
   'supplierAsk.default.capacityGap':
     'Your capacity for this week is below PTI demand. Can you add capacity, and how much?',
   'supplierAsk.default.other': 'Please tell PTI about this.',
+  // BL-258 (U-19) — the sample ask's question, stored as this key.
+  'supplierAsk.sample.coverageProductionDate':
+    'Your stock and incoming do not cover the next 30 days of PTI demand. When does production of this material start?',
   'supplierAsk.submit': 'Send ask',
   'supplierAsk.cancel': 'Cancel',
   'supplierAsk.closeDialog': 'Close',
@@ -663,11 +666,11 @@ export const inventoryCapacityId = {
   'inv.col.ptiSoh': 'Stok PTI',
   'inv.col.supplierRop': 'Titik pemesanan ulang pemasok',
   'inv.col.supplierRop.displayOnly':
-    'Angka pemasok, hanya tampilan · ROP Pemasok sistem di bawahnya',
+    'Angka pemasok, hanya tampilan · ROP Supplier sistem di bawahnya',
   'inv.systemRopSupplier': 'Sistem: {{value}}',
   'inv.systemRopSupplier.none': 'Sistem: tidak ada angka (input kurang)',
   'inv.systemRopSupplier.title':
-    'ROP Pemasok sistem (OSIP). Sementara: aturan menunggu Material Planning (B10, MPQ)',
+    'ROP Supplier sistem (OSIP). Sementara: aturan menunggu Material Planning (B10, MPQ)',
   'inv.col.lastUpdate': 'Pembaruan terakhir',
 
   'inv.figure.noSubmission': 'Belum ada angka',
@@ -1165,6 +1168,8 @@ export const inventoryCapacityId = {
   'supplierAsk.default.capacityGap':
     'Kapasitas Anda untuk minggu ini di bawah kebutuhan PTI. Dapatkah Anda menambah kapasitas, dan berapa banyak?',
   'supplierAsk.default.other': 'Mohon beri tahu PTI tentang hal ini.',
+  'supplierAsk.sample.coverageProductionDate':
+    'Stok dan kedatangan Anda tidak menutup kebutuhan PTI 30 hari ke depan. Kapan produksi material ini dimulai?',
   'supplierAsk.submit': 'Kirim pertanyaan',
   'supplierAsk.cancel': 'Batal',
   'supplierAsk.closeDialog': 'Tutup',
@@ -1203,7 +1208,7 @@ export const inventoryCapacityId = {
   'supplierAsk.reply.submit': 'Kirim jawaban',
   'inv.alerts.sup.title': 'Peringatan tentang material Anda',
   'inv.alerts.sup.rule.supplierBelowRop':
-    'Stok Anda di bawah titik pemesanan ulang yang dihitung sistem PTI untuk Anda (ROP Pemasok)',
+    'Stok Anda di bawah titik pemesanan ulang yang dihitung sistem PTI untuk Anda (ROP Supplier)',
   'inv.alerts.sup.rule.staleData': 'Angka stok Anda kedaluwarsa',
   'inv.alerts.sup.rule.capacityBelowDemand': 'Kapasitas yang Anda alokasikan di bawah LTP PTI',
   'inv.alerts.sup.rule.coverage':

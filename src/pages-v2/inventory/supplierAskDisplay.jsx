@@ -51,6 +51,18 @@ export const askRefusalText = (t, code) =>
   t(`supplierAsk.refusal.${code}`, { max: SUPPLIER_ASK_RULES.textMaxLength });
 
 /**
+ * BL-258 (U-19) — an ask's question in the reader's language: its i18n key when
+ * it carries one (a hub sentence), else the text as stored (what PTI typed).
+ * @param {TFunction} t
+ * @param {Pick<SupplierAsk, 'question' | 'questionKey' | 'questionVars'>} ask
+ * @returns {string}
+ */
+export const askQuestionText = (t, ask) =>
+  ask.questionKey
+    ? t(ask.questionKey, { ...ask.questionVars, defaultValue: ask.question })
+    : ask.question;
+
+/**
  * The latest `answered` step of an ask, if any.
  * @param {SupplierAsk} ask
  * @returns {SupplierAsk['history'][number] | undefined}
