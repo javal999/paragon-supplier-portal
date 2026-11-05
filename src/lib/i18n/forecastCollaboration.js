@@ -21,8 +21,8 @@ export const forecastCollaborationEn = {
   'fc.stream.packaging': 'Packaging',
   'fc.stream.rawMaterial': 'Raw material',
   'fc.cadence.packaging':
-    'Published weekly: weekly periods for 13 weeks, then monthly up to 6 months.',
-  'fc.cadence.rawMaterial': 'Published monthly: monthly periods for 6 months.',
+    'Published weekly: weekly periods for 17 weeks, then monthly up to month 12.',
+  'fc.cadence.rawMaterial': 'Published monthly: monthly periods up to month 12.',
 
   'fc.zone.firm': 'Zone Liability',
   'fc.zone.tradeOff': 'Zone Capacity',
@@ -330,8 +330,8 @@ export const forecastCollaborationId = {
   'fc.stream.packaging': 'Kemasan',
   'fc.stream.rawMaterial': 'Bahan baku',
   'fc.cadence.packaging':
-    'Terbit mingguan: periode mingguan selama 13 minggu, lalu bulanan hingga 6 bulan.',
-  'fc.cadence.rawMaterial': 'Terbit bulanan: periode bulanan selama 6 bulan.',
+    'Terbit mingguan: periode mingguan selama 17 minggu, lalu bulanan hingga bulan ke-12.',
+  'fc.cadence.rawMaterial': 'Terbit bulanan: periode bulanan hingga bulan ke-12.',
 
   'fc.zone.firm': 'Zone Liability',
   'fc.zone.tradeOff': 'Zone Capacity',
