@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Proposed 2026-11-05.** The owner answered the clarifying questions on 2026-11-05 (section 2). Requirements, defaults, decisions and backlog rows wait for the owner's approval. Rows tagged [Proposed] are my calls for the owner to overrule |
+| Status | **Approved 2026-11-05 (MR !95, `c03e64e6`). Wave 1 partly built 2026-11-05 on branch `feat/pex-wave1-p0`, not yet merged: see the Build status column in section 3 and the wave 1 note in section 5.** Earlier: proposed 2026-11-05. The owner answered the clarifying questions on 2026-11-05 (section 2). Requirements, defaults, decisions and backlog rows wait for the owner's approval. Rows tagged [Proposed] are my calls for the owner to overrule |
 | Date | 2026-11-05 |
 | Source meetings | Weekly SC Hub, 2026-10-21, cited [M21 n]. Weekly SC Hub, 2026-11-04, cited [M04 n]. The PO On Hold decision table shared with the 2026-11-04 notes, cited [Table] |
 | Owner review | Answers in chat, 2026-11-05, cited [Owner, 2026-11-05] |
@@ -112,22 +112,22 @@ Read on GitLab `main` `3da82ae5`. Paths are under `src/`.
 
 | ID | Requirement | Build | Waits on |
 |---|---|---|---|
-| PEX-1 | Foresight zones: Zone Liability and Zone Capacity replace Firm, Trade-off and Forecast | Build now | — |
-| PEX-2 | Foresight horizon: 17 weeks by week, then by month to month 12, weeks as columns | Build now | — |
-| PEX-3 | LTP vs SOH heads-up on Foresight | Build now | — |
+| PEX-1 | Foresight zones: Zone Liability and Zone Capacity replace Firm, Trade-off and Forecast | Labels built (BL-264); BR-02, BR-03 open (BL-283) | — |
+| PEX-2 | Foresight horizon: 17 weeks by week, then by month to month 12, weeks as columns | Built for packaging (BL-265); BR-04 raw material open (BL-282) | — |
+| PEX-3 | LTP vs SOH heads-up on Foresight | BR-01 built (BL-266); BR-02 open (BL-284) | — |
 | PEX-4 | Capacity heads-up: 12 months, utilisation %, per material and brand, colour bands, treemap | Build now | — |
 | PEX-5 | LTP inputs: LTP A, LTP Festive, LTP B and the LTP choice per material; two new DA columns | Build now | — |
 | PEX-6 | DA versions: every input change that moves DA is a version with its cause | After PEX-5 | — |
 | PEX-7 | PO On Hold: the remainder DA did not absorb, with a grace period per supplier × material | Build now | Thresholds for auto handling (PEX-12) |
 | PEX-8 | PO On Hold decision: planner suggests FS only, FS + spread or FG; supplier chooses | After PEX-7 | — |
-| PEX-9 | Feedstock reconcile: drop "Called off, not yet shipped"; "Not yet called off" feeds PO On Hold | Build now (BR-01); after PEX-7 (BR-02) | — |
-| PEX-10 | SLA on supplier confirmations: fulfilment window from the lead time | Build now | — |
+| PEX-9 | Feedstock reconcile: drop "Called off, not yet shipped"; "Not yet called off" feeds PO On Hold | BR-01 built (BL-274); after PEX-7 (BR-02) | — |
+| PEX-10 | SLA on supplier confirmations: fulfilment window from the lead time | Built for call-offs and Foresight commitments (BL-273); PO On Hold with PEX-8 | — |
 | PEX-11 | Plan vs execution trace: DA → PO → call-off → ASN, with exceptions | Build now (trace and flags); Hold (PO back into DA) | Mba Septi: SAP identifiers |
 | PEX-12 | Remaining PO thresholds: auto absorb, auto carry-over, manual; PO cancellation | Hold | Mba Septi: thresholds; cancellation flow |
 | PEX-13 | Safety stock and protection buffer switch per material, reason required | Build now (switch); Hold (rules) | Mba Septi: rules and thresholds |
 | PEX-14 | Master data from OSIP and RFI, mandatory fields marked | Hold | Mba Septi: MDM template review |
 | PEX-15 | What-if sandbox by level, with LTP scenarios and a BOM constraint | Build now (design and scenarios) | — |
-| PEX-16 | ASN: principal-to-supplier tracking link under Stock | Build now | — |
+| PEX-16 | ASN: principal-to-supplier tracking link under Stock | Built (BL-279) | — |
 
 ### Requirement detail
 
@@ -146,7 +146,7 @@ Read on GitLab `main` `3da82ae5`. Paths are under `src/`.
 - BR-03. A month that starts inside week 17 begins at the first full month after it [Proposed].
 - BR-04. The same horizon applies to packaging and raw material. Today raw material has no weekly periods [Proposed].
 - BR-05. The supplier Foresight commitments page turns from a row per period to a column per period, as the buyer grid already is.
-- AC-01. On planning week W45 2026 the grid shows W45 to W9 2027 by week, then March 2027 to October 2027 by month.
+- AC-01. On planning week W45 2026 the grid shows W45 2026 to W8 2027 by week, then March 2027 to October 2027 by month. (Corrected 2026-11-05: 2026 has 53 ISO weeks, so 17 weeks from W45 end at W8, 22–28 Feb 2027; the text read W9.)
 
 **PEX-3 LTP vs SOH heads-up [Owner, 2026-11-05, Q8]**
 - BR-01. A one-line note on the Foresight demand row says where the ordered quantity comes from: "Ordered quantity = LTP (planned use) − PTI stock on hand." It is an explanation, not a new figure.
@@ -271,7 +271,7 @@ The supplier usability test is on Monday 9 or Tuesday 10 November 2026 [M04 6]. 
 | 4 | Trace and sandbox | BL-276 trace, BL-277 sandbox levels | Week of 23 Nov |
 | Held | Wait on Mba Septi | BL-278 master data; PEX-11 BR-04; PEX-12 | When she answers |
 
-Wave 1 has no dependency inside it, so its rows can run in parallel lanes. Wave 2 depends on BL-267 first: BL-268 and BL-269 read the LTP inputs. Wave 3's BL-271 needs BL-270. After each merge, a docs pass updates this file's status and the backlog.
+**Wave 1 status, 2026-11-05:** built on branch `feat/pex-wave1-p0` with the P0 fixes BL-182, BL-78 and BL-234. BL-274 and BL-279 are done; BL-264, BL-265, BL-266 and BL-273 are partly built, and what is left is BL-282 (weekly raw material), BL-283 (Zone Capacity quantity) and BL-284 (per-week LTP and SOH hover). Wave 1 has no dependency inside it, so its rows can run in parallel lanes. Wave 2 depends on BL-267 first: BL-268 and BL-269 read the LTP inputs. Wave 3's BL-271 needs BL-270. After each merge, a docs pass updates this file's status and the backlog.
 
 **Not in this file:** the Excel simulation and the 9-scenario supplier test [M04 6] are owner deliverables, not hub builds. The ZPEE discussion has no requirement yet.
 
