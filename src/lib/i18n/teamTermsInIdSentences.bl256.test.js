@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import { safetyStockEn, safetyStockId } from './safetyStock';
 import { inventoryCapacityEn, inventoryCapacityId } from './inventoryCapacity';
 import { demandAnticipationEn, demandAnticipationId } from './demandAnticipation';
+import { drcBuffersId } from './drcBuffers';
 
 /** @type {[Record<string, string>, string, string, RegExp][]} */
 const ROWS = [
@@ -39,7 +40,24 @@ const ROWS = [
   [demandAnticipationId, 'demandAnt.howItWorks', 'call-off minggu pertama', /panggilan/i],
   [demandAnticipationId, 'demandAnt.carry.label', 'Call-off {{week}}', /panggilan/i],
   [demandAnticipationId, 'demandAnt.carry.parts', '{{callOff}} di-call-off', /dipanggil/],
-  [demandAnticipationId, 'demandAnt.flag.OSPO_FROM_STORE', 'belum di-call-off', /dipanggil/]
+  [demandAnticipationId, 'demandAnt.flag.OSPO_FROM_STORE', 'belum di-call-off', /dipanggil/],
+  [safetyStockId, 'sst.rop.suggest.method.exceptionBased', 'strategic buffer', /buffer strategis/i],
+  // Capacity's buffer sections (DRC-9b, DRC-9c).
+  [drcBuffersId, 'buffers.strategic.title', 'Strategic buffer', /buffer strategis/i],
+  [drcBuffersId, 'buffers.strategic.subtitle', 'Strategic buffer =', /buffer strategis/i],
+  [drcBuffersId, 'buffers.protection.title', 'Protection buffer', /buffer proteksi/i],
+  [
+    drcBuffersId,
+    'buffers.protection.subtitle',
+    'Protection buffer =',
+    /buffer (proteksi|strategis)/i
+  ],
+  [
+    drcBuffersId,
+    'buffers.protection.reason.strategicLevel',
+    'strategic buffer',
+    /buffer strategis/i
+  ]
 ];
 
 describe('BL-256 — TL-D17 in the Indonesian sentences', () => {

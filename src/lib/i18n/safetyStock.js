@@ -504,7 +504,7 @@ export const safetyStockId = {
   'sst.rop.suggest.method.continuousReview': 'Continuous Review',
   'sst.rop.suggest.method.periodicReview': 'Periodic Review',
   'sst.rop.suggest.method.fixedOrder': 'Fixed Order',
-  'sst.rop.suggest.method.exceptionBased': 'Exception Based, buffer strategis, tanpa level OSIP',
+  'sst.rop.suggest.method.exceptionBased': 'Exception Based, strategic buffer, tanpa level OSIP',
   'sst.rop.suggest.reason.tag': 'material ditandai {{tag}}',
   'sst.rop.suggest.reason.cvFluctuative':
     'CV {{cv}} sama dengan atau di atas {{threshold}} (fluktuatif)',

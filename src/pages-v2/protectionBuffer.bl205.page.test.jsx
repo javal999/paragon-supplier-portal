@@ -150,7 +150,7 @@ describe('DRC-9c — protection buffer section [Proposed BL-205]', () => {
       const { supplierId, materialCode } = pickPair();
       expect(
         screen.getByTestId(`protection-buffer-none-${supplierId}-${materialCode}`)
-      ).toHaveTextContent('Level 4: tanpa buffer proteksi');
+      ).toHaveTextContent('Level 4: tanpa protection buffer');
     } finally {
       view.unmount();
       await i18n.changeLanguage('en');
