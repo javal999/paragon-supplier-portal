@@ -386,8 +386,8 @@ export const callOffsId = {
   'co.runOut.thisWeek': 'minggu ini',
   'co.runOut.weeksAway': '{{count}} mgg lagi',
   'co.runOut.passed': 'lewat {{count}} mgg lalu',
-  'co.runOut.leadTime': 'Waktu tunggu PO {{weeks}} mgg',
-  'co.runOut.leadTimeFallback': 'Waktu tunggu PO {{weeks}} mgg (belum tercatat: nilai bawaan)',
+  'co.runOut.leadTime': 'Lead time PO {{weeks}} mgg',
+  'co.runOut.leadTimeFallback': 'Lead time PO {{weeks}} mgg (belum tercatat: nilai bawaan)',
   'co.runOut.weeks': '{{weeks}} mgg',
   'co.runOut.weeksFallback': '{{weeks}} mgg (bawaan)',
   'co.runOut.due': 'Buat PO berikutnya',
@@ -528,16 +528,16 @@ export const callOffsId = {
   'co.trigger.openSupply': 'Dirilis, belum diterima',
   'co.trigger.quantity': 'Kuantitas draf',
   'co.trigger.quantityBasis':
-    'Pengiriman minimum pemasok (MDQ), dibulatkan ke atas seperti Maks, diambil dari baris PO induk tertua yang masih bersaldo lalu baris berikutnya bila saldonya habis. Sisa yang tidak tertutup baris mana pun menjadi rekomendasi PR.',
+    'Pengiriman minimum pemasok (MDQ), dibulatkan ke atas seperti Max, diambil dari baris PO induk tertua yang masih bersaldo lalu baris berikutnya bila saldonya habis. Sisa yang tidak tertutup baris mana pun menjadi rekomendasi PR.',
   'co.trigger.minDelivery': 'Pengiriman minimum pemasok',
   'co.trigger.belowMinDelivery.pill': 'Di bawah pengiriman minimum',
   'co.trigger.belowMinDelivery.body':
     'Draf ini {{quantity}} {{uom}}, di bawah pengiriman minimum pemasok {{min}} {{uom}}, karena saldo baris PO habis. Konfirmasi ke pemasok sebelum Anda merilisnya.',
   'co.trigger.belowMinDelivery.withPr':
     'Draf ini {{quantity}} {{uom}}, di bawah pengiriman minimum pemasok {{min}} {{uom}}, karena saldo baris PO habis. Sisa {{pr}} {{uom}} menjadi rekomendasi PR. Konfirmasi ke pemasok sebelum Anda merilisnya.',
-  'co.trigger.aboveMax.pill': 'Di atas Maks',
+  'co.trigger.aboveMax.pill': 'Di atas Max',
   'co.trigger.aboveMax.body':
-    'Pengiriman minimum tidak muat di bawah Maks, sehingga stok akan melebihi Maks saat barang tiba.',
+    'Pengiriman minimum tidak muat di bawah Max, sehingga stok akan melebihi Max saat barang tiba.',
   'co.trigger.plants': 'Per pabrik: {{plants}}',
   'co.trigger.refresh':
     'Pemeriksaan mengikuti pembaruan eWM; data eWM belum terhubung, stok diambil dari catatan stok hub.',

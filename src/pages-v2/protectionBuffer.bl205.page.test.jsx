@@ -59,14 +59,14 @@ const setLevel = (materialCode, level) =>
   });
 
 describe('DRC-9c — protection buffer section [Proposed BL-205]', () => {
-  it('is Proposed (C3), Provisional (C2, MPQ), and says the stock is planned to be absorbed', async () => {
+  it('is Proposed (C3), Provisional (C2; MPQ as words, BL-262), and says the stock is planned to be absorbed', async () => {
     renderWithProviders(<BuyerCapacity />, { identity: PLANNER, route: '/buyer/capacity' });
     await screen.findByTestId('protection-buffer-table');
     expect(screen.getByTestId('protection-buffer-proposed')).toHaveTextContent(
       'Proposed: awaiting owner review (BL-205, C3)'
     );
     expect(screen.getByTestId('protection-buffer-provisional')).toHaveTextContent(
-      'Provisional: rule awaiting Material Planning (C2, MPQ)'
+      'Provisional: rule awaiting Material Planning (C2; MPQ = order multiple until master data)'
     );
     expect(screen.getByTestId('protection-buffer-absorbed')).toHaveTextContent(
       'Planned stock: PTI absorbs it even if demand does not rise'
@@ -142,7 +142,7 @@ describe('DRC-9c — protection buffer section [Proposed BL-205]', () => {
         'Usulan: menunggu tinjauan pemilik (BL-205, C3)'
       );
       expect(screen.getByTestId('protection-buffer-provisional')).toHaveTextContent(
-        'Sementara: aturan menunggu Material Planning (C2, MPQ)'
+        'Sementara: aturan menunggu Material Planning (C2; MPQ = kelipatan pesanan sampai data master)'
       );
       expect(screen.getByTestId('protection-buffer-absorbed')).toHaveTextContent(
         'Stok terencana: PTI menyerapnya walaupun permintaan tidak naik'

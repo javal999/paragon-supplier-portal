@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import StatusPill from '@components/ui-v2/StatusPill';
 import Data from '@components/ui-v2/Data';
 import { CALL_OFF_TRIGGER_QUESTIONS } from '@services/transitions/callOffTriggerRules';
+import { provisionalBasis } from '@components/forecast/provisionalBasis';
 import { formatDateTime } from '@lib/format';
 import { useRopFisikPrRecommendations } from '@services/query/hooks';
 import { qty } from './callOffDisplay';
@@ -14,8 +15,10 @@ import { qty } from './callOffDisplay';
 // figures behind it (SOH, ROP Fisik, Max, quantity) as the trigger stored them
 // (DRC-D16). Every figure rests on [Default] rules, so it carries
 // "Provisional: rule awaiting Material Planning" with F1 and the ROP questions
-// (design rule 5). Nothing here computes a figure. U-04 (BL-252): where no
-// draft or PR shows, `RopFisikNotYet` says the trigger has not drafted yet.
+// (design rule 5); U-15 (BL-262): the MPQ default in that list reads as words,
+// not as a question ID (`provisionalBasis`). Nothing here computes a figure.
+// U-04 (BL-252): where no draft or PR shows, `RopFisikNotYet` says the trigger
+// has not drafted yet.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -26,7 +29,7 @@ export const TriggerProvisional = ({ testId }) => {
   const { t } = useTranslation();
   return (
     <p className="text-xs text-text-tertiary" data-testid={testId}>
-      {t('co.trigger.provisional', { questions: CALL_OFF_TRIGGER_QUESTIONS.join(', ') })}
+      {t('co.trigger.provisional', { questions: provisionalBasis(CALL_OFF_TRIGGER_QUESTIONS, t) })}
     </p>
   );
 };

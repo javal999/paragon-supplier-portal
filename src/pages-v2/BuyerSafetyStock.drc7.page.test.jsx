@@ -266,7 +266,7 @@ describe('Bahasa Indonesia', () => {
     await i18n.changeLanguage('id');
     await render();
     expect(screen.getByTestId('sst-osip-def-safety-order')).toHaveTextContent(
-      'Safety order (ROP Order) = 1,65 × √(waktu tunggu dalam minggu) × simpangan baku LTP pemasok selama 13 minggu ke depan'
+      'Safety order (ROP Order) = 1,65 × √(lead time dalam minggu) × simpangan baku LTP pemasok selama 13 minggu ke depan'
     );
     expect(screen.getByTestId('sst-osip-def-cv')).toHaveTextContent(
       'permintaan bulanan setiap barang jadi selama 6 bulan kalender penuh terakhir'

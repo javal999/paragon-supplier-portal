@@ -635,7 +635,7 @@ export const TERM_LABEL_GLOSSARY =
       id: 'Minggu paling lambat PO berikutnya harus dibuat agar tiba sebelum PO induk habis.',
       formula: {
         en: 'Run-out week − the PO lead time.',
-        id: 'Minggu habis − waktu tunggu PO.'
+        id: 'Minggu habis − lead time PO.'
       }
     },
     poLeadTime: {
@@ -829,7 +829,7 @@ export const TERM_LABEL_GLOSSARY =
       id: 'Total stok fisik maksimum pemasok untuk material itu, dihitung oleh hub.',
       formula: {
         en: 'Demand × the supplier’s bottleneck production lead time, queueing included.',
-        id: 'Permintaan × waktu tunggu produksi bottleneck pemasok, termasuk antrean.'
+        id: 'Permintaan × lead time produksi bottleneck pemasok, termasuk antrean.'
       },
       notToConfuse: {
         en: 'The reorder point the supplier types in its stock template (shown only).',
