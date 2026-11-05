@@ -78,13 +78,13 @@ describe('BL-273 — fulfil-by on the supplier call-offs', () => {
       '(default lead time 30 days for this material type)'
     );
     expect(i18n.t('co.sla.leadTimeDefault', { lng: 'id', count: 14 })).toBe(
-      '(waktu tunggu bawaan 14 hari untuk jenis material ini)'
+      '(lead time bawaan 14 hari untuk jenis material ini)'
     );
   });
 
   it('the Indonesian wording', () => {
     expect(i18n.t('co.sla.fulfilBy', { lng: 'id' })).toBe('Penuhi paling lambat');
-    expect(i18n.t('co.sla.leadTime', { lng: 'id', count: 28 })).toBe('(waktu tunggu 28 hari)');
+    expect(i18n.t('co.sla.leadTime', { lng: 'id', count: 28 })).toBe('(lead time 28 hari)');
     expect(i18n.t('co.sla.leadTime', { lng: 'en', count: 1 })).toBe('(lead time 1 day)');
   });
 });

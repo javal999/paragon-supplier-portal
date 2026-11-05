@@ -551,7 +551,7 @@ Levi ruled in the tracker on 2026-11-05 on the 17 build decisions in MR !97 (PEX
 - Months to 12 are counted from the planning week's month; raw material from its first month.
 - Fulfil-by counts calendar days from the confirmation day in WIB.
 - Before the supplier answers: call-offs read "If confirmed today, fulfil by …"; Foresight reads "Lead time n days; the date is set when you submit"; acknowledge-only periods show no date.
-- Indonesian keeps two wordings for now: call-offs "waktu tunggu", Foresight "lead time" (BL-263 is the open question on translating team terms).
+- Indonesian wording of the lead time on fulfil-by: accepted as two wordings, then made one by FSR-D8 (MR !98, merged first): call-offs and Foresight both read "lead time" ("Penuhi paling lambat … (lead time n hari)"), the team's English term (TL-D17).
 - The feedstock reconcile flag "Shipped beyond the call-offs" moved under "ASN requested" (BL-274).
 - OTIF and CFOT: a call-off date the planner changed and the supplier has not re-confirmed is measured against the previously agreed date (BL-234, BL-66 (2)).
 - BL-78 reuses "Baseline period — no target yet"; the radar is titled "Performance radar"; grade and late or on-time colours stay because they show state.

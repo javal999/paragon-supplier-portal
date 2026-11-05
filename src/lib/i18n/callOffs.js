@@ -422,13 +422,13 @@ export const callOffsId = {
   'co.col.quantity': 'Kuantitas',
   'co.col.needDate': 'Tanggal kebutuhan',
   'co.col.confirmBy': 'Konfirmasi paling lambat',
-  // PEX-10 (BL-273) — jendela pemenuhan pada konfirmasi (waktu tunggu DRC-6).
+  // PEX-10 (BL-273) — jendela pemenuhan pada konfirmasi (lead time DRC-6; TL-D17 / FSR-D8: istilah tim tetap bahasa Inggris).
   'co.sla.fulfilBy': 'Penuhi paling lambat',
   'co.sla.ifConfirmedToday': 'Bila dikonfirmasi hari ini, penuhi paling lambat',
-  'co.sla.leadTime_other': '(waktu tunggu {{count}} hari)',
-  'co.sla.leadTimeDefault_other': '(waktu tunggu bawaan {{count}} hari untuk jenis material ini)',
+  'co.sla.leadTime_other': '(lead time {{count}} hari)',
+  'co.sla.leadTimeDefault_other': '(lead time bawaan {{count}} hari untuk jenis material ini)',
   'co.sla.noLeadTime':
-    'Waktu tunggu material ini belum tercatat, jadi belum ada tanggal penuhi paling lambat',
+    'Lead time material ini belum tercatat, jadi belum ada tanggal penuhi paling lambat',
   'co.col.confirmation': 'Konfirmasi',
   'co.col.delivery': 'Pengiriman',
   'co.col.otif': 'Tepat waktu dan lengkap',
