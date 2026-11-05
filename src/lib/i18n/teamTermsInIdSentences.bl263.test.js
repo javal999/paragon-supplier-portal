@@ -5,8 +5,9 @@
 // ("Maks", "Waktu tunggu PO"), Feedstock reconcile (`fsr.max`), the What-if
 // option "stok siklus", and "waktu tunggu" on Safety stock targets, Capacity
 // and the DA card, with the two glossary tips those pages render. The agreed
-// Indonesian LABELS the row also names are held for the owner (TL-R1 BR-03):
-// they are pinned unchanged here so the hold is visible.
+// Indonesian LABELS the row also names follow the owner's ruling FSR-D8
+// (2026-11-05): the team's English term stays English inside the label, the
+// (B2)/(B4)/(B8) suffixes and the English labels unchanged.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, expect, it } from 'vitest';
@@ -89,15 +90,17 @@ describe('BL-263 — TL-D17 in the remaining Indonesian sentences', () => {
     expect(safetyStockEn['sst.rop.legTitle']).toBe('{{days}} days of the lead time');
   });
 
-  it('the agreed Indonesian labels are held for the owner, unchanged (BL-263, TL-R1 BR-03)', () => {
-    expect(safetyStockId['sst.rop.rules.maxRule']).toBe('Maks (B8)');
+  it('the Indonesian labels keep the team term too, with their ID suffixes (FSR-D8)', () => {
+    expect(safetyStockId['sst.rop.rules.maxRule']).toBe('Max (B8)');
     expect(safetyStockId['sst.rop.rules.maxRule.sheetGuidance']).toBe(
-      'Panduan sheet: ROP + stok siklus'
+      'Panduan sheet: ROP + cycle stock'
     );
-    // Rendered upper-case by the column header: "SD UNTUK PESANAN PENGAMAN (B2)".
-    expect(safetyStockId['sst.osip.rules.sdSource']).toBe('SD untuk pesanan pengaman (B2)');
+    // Rendered upper-case by the column header: "SD UNTUK SAFETY ORDER (B2)".
+    expect(safetyStockId['sst.osip.rules.sdSource']).toBe('SD untuk safety order (B2)');
     expect(safetyStockId['sst.osip.rules.safetyRounding']).toBe(
-      'Pesanan pengaman dibulatkan ke atas ke (B4)'
+      'Safety order dibulatkan ke atas ke (B4)'
     );
+    expect(safetyStockEn['sst.rop.rules.maxRule']).toBe('Max (B8)');
+    expect(safetyStockEn['sst.osip.rules.sdSource']).toBe('SD behind the safety order (B2)');
   });
 });

@@ -382,11 +382,11 @@ export const safetyStockId = {
   'sst.osip.rules.note':
     'Hanya baca: angka OSIP dihitung ulang dengan aturan yang dipilih di sini. Tidak ada yang disimpan, dan rencana tetap memakai aturan bawaan.',
   'sst.osip.rules.changed': 'Bukan aturan bawaan: angka OSIP di bawah adalah simulasi.',
-  'sst.osip.rules.sdSource': 'SD untuk pesanan pengaman (B2)',
+  'sst.osip.rules.sdSource': 'SD untuk safety order (B2)',
   'sst.osip.rules.sdSource.ltp13w': 'LTP, 13 minggu ke depan (bawaan)',
   'sst.osip.rules.sdSource.ltp': 'LTP selama lead time (bawaan sebelumnya; PPT 7)',
   'sst.osip.rules.sdSource.consumption12w': 'Konsumsi, 12 minggu terakhir (sheet)',
-  'sst.osip.rules.safetyRounding': 'Pesanan pengaman dibulatkan ke atas ke (B4)',
+  'sst.osip.rules.safetyRounding': 'Safety order dibulatkan ke atas ke (B4)',
   'sst.osip.rules.safetyRounding.mpq': 'MPQ (bawaan)',
   'sst.osip.rules.safetyRounding.koli': 'Koli (unit per palet)',
   'sst.osip.rules.safetyRounding.moq': 'MOQ',
@@ -447,10 +447,10 @@ export const safetyStockId = {
   'sst.rop.rules.title': 'Pengalih aturan ROP',
   'sst.rop.rules.note':
     'Hanya baca: pengalih menghitung ulang angka ROP di halaman ini untuk perbandingan. Tidak ada yang disimpan.',
-  'sst.rop.rules.maxRule': 'Maks (B8)',
+  'sst.rop.rules.maxRule': 'Max (B8)',
   'sst.rop.rules.maxRule.deck':
     'Deck: ROP dibulatkan ke atas ke koli (lokal) atau MOQ (impor) (bawaan)',
-  'sst.rop.rules.maxRule.sheetGuidance': 'Panduan sheet: ROP + stok siklus',
+  'sst.rop.rules.maxRule.sheetGuidance': 'Panduan sheet: ROP + cycle stock',
   'sst.rop.rules.npdRule': 'NPD sampai (D1)',
   'sst.rop.rules.npdRule.firstOrderFulfilled': 'Pesanan pertama diterima penuh (bawaan)',
   'sst.rop.rules.npdRule.oneYearAfterLaunch': 'Satu tahun setelah peluncuran (sheet)',
