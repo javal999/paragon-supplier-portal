@@ -13,6 +13,7 @@ import {
   commitmentGap,
   commitmentTiming,
   deadlineState,
+  isAcknowledgeOnly,
   periodKindOf
 } from '@services/transitions/forecastRules';
 /** @import { ForecastCommandVars, ForecastLineRef } from '@services/query/commandHooks' */
@@ -72,7 +73,7 @@ export const CommitmentStatePill = ({ line, nowIso }) => {
   const { t } = useTranslation();
   const deadline = deadlineState(line, nowIso);
   if (line.state === 'awaiting') {
-    const key = line.zone === 'forecast' ? 'fc.state.awaitingAck' : 'fc.state.awaiting';
+    const key = isAcknowledgeOnly(line.zone) ? 'fc.state.awaitingAck' : 'fc.state.awaiting';
     if (deadline === 'overdue')
       return <StatusPill variant="danger">{t('fc.deadline.overdue')}</StatusPill>;
     if (deadline === 'dueSoon')
@@ -188,7 +189,7 @@ const GAP_TONE = { green: 'success', amber: 'warning', red: 'danger' };
  */
 export const GapCell = ({ line }) => {
   const { t } = useTranslation();
-  if (line.zone === 'forecast')
+  if (isAcknowledgeOnly(line.zone))
     return <span className="text-xs text-text-tertiary">{t('fc.gap.ackOnly')}</span>;
   if (line.committedQty === null || line.state === 'awaiting') {
     return <span className="text-xs text-text-tertiary">{t('fc.gap.none')}</span>;

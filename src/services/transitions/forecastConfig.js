@@ -179,15 +179,14 @@ export function cycleOfDay(stream, day, cfg) {
 // value in force each time a rule runs, never a copy taken at load.
 
 /**
- * CR-21 — the share below forecast accepted without planner action, per zone,
- * as a fraction. Firm: none. Trade-off: 10% (mirrors CR-05). Forecast:
- * acknowledgement only. In force now.
- * @returns {{ readonly firmShortfall: number; readonly tradeOffShortfall: number }}
+ * CR-21 — the share below forecast accepted without planner action in a Zone
+ * Liability (firm) period, as a fraction (default none). Zone Capacity periods
+ * are acknowledgement only (PEX-D22), so they have no tolerance. In force now.
+ * @returns {{ readonly firmShortfall: number }}
  */
 export function commitmentTolerance() {
   return {
-    firmShortfall: hubSetting('commitment.firmShortfallPct') / 100,
-    tradeOffShortfall: hubSetting('commitment.tradeOffShortfallPct') / 100
+    firmShortfall: hubSetting('commitment.firmShortfallPct') / 100
   };
 }
 

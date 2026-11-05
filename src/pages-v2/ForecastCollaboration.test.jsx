@@ -118,28 +118,37 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
     expect(within(changes).queryByTestId(`fc-change-PK-PETB-8802-${W[1]}`)).toBeNull();
   });
 
+  // PEX-D22 (owner, 2026-11-05) — commitments are typed in Zone Liability
+  // periods only, so the supplier walks below run on sup-007's firm weeks
+  // (W[0], W[1]); they used Trade-off weeks, which are acknowledgements now.
   it('below forecast cannot be submitted without a reason; with one it is submitted to PTI', async () => {
     renderWithProviders(<SupplierForecastCommitments />, { identity: SUPPLIER });
     const section = await screen.findByTestId('fc-sup-material-PK-PETB-8802');
-    const row = within(section).getByTestId(`fc-sup-row-PK-PETB-8802-${W[6]}`);
+    const row = within(section).getByTestId(`fc-sup-row-PK-PETB-8802-${W[0]}`);
     // BR-09 — pre-filled with the forecast quantity.
     const qty = /** @type {HTMLInputElement} */ (
-      within(row).getByLabelText(`Commitment quantity for ${week(W[6])}`)
+      within(row).getByLabelText(`Commitment quantity for ${week(W[0])}`)
     );
-    expect(qty.value).toBe('38500');
+    expect(qty.value).toBe('42400');
+    // PEX-D22 — a Trade-off week of the same material takes no quantity.
+    expect(
+      within(within(section).getByTestId(`fc-sup-row-PK-PETB-8802-${W[6]}`)).queryByLabelText(
+        /Commitment quantity/
+      )
+    ).toBeNull();
     // CAP-6 (BL-175) AC-01 — a quantity per period: no date input, no Date column.
     expect(within(row).queryByLabelText(/Commitment date/)).toBeNull();
-    expect(within(row).queryByDisplayValue(W[6])).toBeNull();
+    expect(within(row).queryByDisplayValue(W[0])).toBeNull();
     // PEX-2 (BL-265) — the periods are columns; the measures are the grid's row labels.
     const labels = [...section.querySelectorAll('[data-grid-label]')].map((h) => h.textContent);
     expect(labels.some((l) => /Commitment/.test(l ?? ''))).toBe(true);
     expect(labels.some((l) => /date/i.test(l ?? ''))).toBe(false);
     fireEvent.change(qty, { target: { value: '30000' } });
     // BL-133 (ENG-D19) — the period is submitted with its one Submit all.
-    const submit = screen.getByTestId(`fc-week-submit-${W[6]}`);
+    const submit = screen.getByTestId(`fc-week-submit-${W[0]}`);
     expect(submit).toBeDisabled();
     expect(row).toHaveTextContent('Below forecast: choose a reason.');
-    fireEvent.change(within(row).getByLabelText(`Reason below forecast for ${week(W[6])}`), {
+    fireEvent.change(within(row).getByLabelText(`Reason below forecast for ${week(W[0])}`), {
       target: { value: 'material' }
     });
     expect(submit).not.toBeDisabled();
@@ -148,9 +157,11 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
     // CAP-6 BR-02 — no date was sent; the record carries the period start.
     await waitFor(() =>
       expect(
-        responsesFor('sup-007', 'PK-PETB-8802', W[6]).find((r) => r.status === 'Submitted')
+        responsesFor('sup-007', 'PK-PETB-8802', W[0]).find(
+          (r) => r.status === 'Submitted' && r.publicationId === 'FC-PK-V2'
+        )
       ).toMatchObject({
-        forecastConfirmation: { confirmedQty: 30000, committedDate: W[6] },
+        forecastConfirmation: { confirmedQty: 30000, committedDate: W[0] },
         rootCause: { level1: 'material' }
       })
     );
@@ -159,10 +170,17 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
   it('BR-10 — Save draft keeps it from PTI', async () => {
     renderWithProviders(<SupplierForecastCommitments />, { identity: SUPPLIER });
     const section = await screen.findByTestId('fc-sup-material-PK-PETB-8802');
-    const row = within(section).getByTestId(`fc-sup-row-PK-PETB-8802-${W[7]}`);
-    fireEvent.click(within(row).getByRole('button', { name: `Save draft for ${week(W[7])}` }));
+    const row = within(section).getByTestId(`fc-sup-row-PK-PETB-8802-${W[0]}`);
+    // W[0] holds version 1's answer (Submitted, no longer standing); the draft is new.
+    const before = responsesFor('sup-007', 'PK-PETB-8802', W[0]).map((r) => r.status);
+    expect(before).toEqual(['Submitted']);
+    fireEvent.click(within(row).getByRole('button', { name: `Save draft for ${week(W[0])}` }));
     await waitFor(() =>
-      expect(responsesFor('sup-007', 'PK-PETB-8802', W[7]).map((r) => r.status)).toEqual(['Draft'])
+      expect(
+        responsesFor('sup-007', 'PK-PETB-8802', W[0])
+          .map((r) => r.status)
+          .sort()
+      ).toEqual(['Draft', 'Submitted'])
     );
   });
 
@@ -186,16 +204,18 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
     const csv = [
       'Material code,Period,Zone,Forecast quantity,Unit,Committed quantity,Commitment date (YYYY-MM-DD),Upside quantity,Reason (capacity; material; logistics; quality; other),Note',
       // CAP-6 AC-02 — an old file's date column, here malformed, is ignored.
-      `PK-PETB-8802,${W[6]},tradeOff,38500,PCS,38500,not-a-date,,,`,
-      `PK-PETB-8802,${W[7]},tradeOff,38500,PCS,20000,${W[7]},,,`,
-      `PK-PETB-8802,${W[5]},tradeOff,38500,PCS,1.500,${W[5]},,,`,
-      `RM-STEAR-7300,2026-09,firm,12600,KG,12600,2026-09-01,,,`
+      `PK-PETB-8802,${W[0]},firm,42400,PCS,42400,not-a-date,,,`,
+      `PK-PETB-8802,${W[1]},firm,38500,PCS,20000,${W[1]},,,`,
+      `PK-PETB-8801,${W[0]},firm,34300,PCS,1.500,${W[0]},,,`,
+      `RM-STEAR-7300,2026-09,firm,12600,KG,12600,2026-09-01,,,`,
+      // PEX-D22 — a Trade-off row is saved as an acknowledgement, its quantity unread.
+      `PK-PETB-8802,${W[6]},tradeOff,38500,PCS,20000,,,,`
     ].join('\n');
     fireEvent.change(screen.getByTestId('fc-upload-file'), {
       target: { files: [new File([csv], 'commitments.csv', { type: 'text/csv' })] }
     });
     const result = await screen.findByTestId('fc-upload-result');
-    expect(within(result).getByTestId('fc-upload-saved')).toHaveTextContent('Periods saved: 1');
+    expect(within(result).getByTestId('fc-upload-saved')).toHaveTextContent('Periods saved: 2');
     expect(within(result).getByTestId('fc-upload-refused-row-3')).toHaveTextContent('a reason');
     expect(within(result).getByTestId('fc-upload-refused-row-4')).toHaveTextContent(
       'reads differently in Indonesian and English'
@@ -203,13 +223,22 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
     expect(within(result).getByTestId('fc-upload-refused-row-5')).toHaveTextContent(
       'not in your current forecast'
     );
+    expect(within(result).queryByTestId('fc-upload-refused-row-6')).toBeNull();
     await waitFor(() =>
-      expect(responsesFor('sup-007', 'PK-PETB-8802', W[6]).map((r) => r.status)).toEqual([
-        'Submitted'
-      ])
+      expect(
+        responsesFor('sup-007', 'PK-PETB-8802', W[0])
+          .filter((r) => r.publicationId === 'FC-PK-V2')
+          .map((r) => [r.status, r.forecastConfirmation?.confirmedQty])
+      ).toEqual([['Submitted', 42400]])
     );
+    const ack = responsesFor('sup-007', 'PK-PETB-8802', W[6]);
+    expect(ack).toHaveLength(1);
+    expect(ack[0]).toMatchObject({ status: 'Submitted', acknowledgment: {} });
+    expect(ack[0].forecastConfirmation).toBeUndefined();
   });
 
+  // PEX-D22 — on sup-007's Zone Liability exception (8801, W[1]); it used the
+  // Trade-off week 8802 W[3], whose answer is an acknowledgement now.
   it('PTI’s revision request is visible to the supplier, with its note', async () => {
     const line = /** @type {import('@services/sdc/types').RequirementResponse} */ (
       requirementResponseStore
@@ -217,8 +246,8 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
         .find(
           (r) =>
             r.supplierId === 'sup-007' &&
-            r.materialCode === 'PK-PETB-8802' &&
-            r.periodBucket === W[3]
+            r.materialCode === 'PK-PETB-8801' &&
+            r.periodBucket === W[1]
         )
     );
     requirementResponseStore.update(line.id, (r) => ({
@@ -229,10 +258,10 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
       ]
     }));
     renderWithProviders(<SupplierForecastCommitments />, { identity: SUPPLIER });
-    const log = await screen.findByTestId(`fc-sup-log-PK-PETB-8802-${W[3]}`);
+    const log = await screen.findByTestId(`fc-sup-log-PK-PETB-8801-${W[1]}`);
     expect(log).toHaveTextContent('PTI asked for a revision');
     expect(log).toHaveTextContent('Launch week, please find more');
-    expect(screen.getByTestId(`fc-sup-row-PK-PETB-8802-${W[3]}`)).toHaveTextContent(
+    expect(screen.getByTestId(`fc-sup-row-PK-PETB-8801-${W[1]}`)).toHaveTextContent(
       'Revision requested'
     );
   });
@@ -244,8 +273,8 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
         .find(
           (r) =>
             r.supplierId === 'sup-007' &&
-            r.materialCode === 'PK-PETB-8802' &&
-            r.periodBucket === W[3]
+            r.materialCode === 'PK-PETB-8801' &&
+            r.periodBucket === W[1]
         )
     );
     requirementResponseStore.update(line.id, (r) => ({
@@ -259,25 +288,25 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
     expect(await screen.findByTestId('home-task-commitments-revision')).toBeInTheDocument();
     home.unmount();
     renderWithProviders(<SupplierForecastCommitments />, { identity: SUPPLIER });
-    const row = await screen.findByTestId(`fc-sup-row-PK-PETB-8802-${W[3]}`);
+    const row = await screen.findByTestId(`fc-sup-row-PK-PETB-8801-${W[1]}`);
     expect(row).toHaveTextContent('Revision requested');
     const qty = /** @type {HTMLInputElement} */ (
-      within(row).getByLabelText(`Commitment quantity for ${week(W[3])}`)
+      within(row).getByLabelText(`Commitment quantity for ${week(W[1])}`)
     );
-    fireEvent.change(qty, { target: { value: qty.value === '' ? '38500' : qty.value } });
-    const submit = screen.getByTestId(`fc-week-submit-${W[3]}`);
+    fireEvent.change(qty, { target: { value: qty.value === '' ? '34300' : qty.value } });
+    const submit = screen.getByTestId(`fc-week-submit-${W[1]}`);
     expect(submit).not.toBeDisabled();
     fireEvent.click(submit);
     fireEvent.click(screen.getByTestId('fc-week-confirm-submit'));
     await waitFor(() =>
       expect(
-        responsesFor('sup-007', 'PK-PETB-8802', W[3])
+        responsesFor('sup-007', 'PK-PETB-8801', W[1])
           .filter((r) => r.id !== line.id)
           .map((r) => r.status)
       ).toContain('Submitted')
     );
     await waitFor(() =>
-      expect(screen.getByTestId(`fc-sup-row-PK-PETB-8802-${W[3]}`)).not.toHaveTextContent(
+      expect(screen.getByTestId(`fc-sup-row-PK-PETB-8801-${W[1]}`)).not.toHaveTextContent(
         'Revision requested'
       )
     );
@@ -383,7 +412,9 @@ describe('PTI — Commitments & gaps (REQ-E06-03)', () => {
         `sup-012-PK-PETB-8801-${W[2]}`
       ].sort()
     );
-    expect(ids.slice(4)).toEqual([`sup-007-PK-PETB-8801-${W[1]}`, `sup-007-PK-PETB-8802-${W[3]}`]);
+    // PEX-D22 removed `sup-007-PK-PETB-8802-${W[3]}` from the tail: a Trade-off
+    // answer below forecast is an acknowledgement, not an exception.
+    expect(ids.slice(4)).toEqual([`sup-007-PK-PETB-8801-${W[1]}`]);
   });
 
   it('F-23 — the exceptions table comes first; the grid and the cumulative chart sit in a collapsed Coverage section below it', async () => {
@@ -407,15 +438,15 @@ describe('PTI — Commitments & gaps (REQ-E06-03)', () => {
   it('the grid colours each period per CR-22, and over-commit reads as information', async () => {
     renderWithProviders(<BuyerCommitments />, { identity: PLANNER });
     await screen.findByTestId('fc-grid');
-    expect(screen.getByTestId(`fc-cell-sup-007-PK-PETB-8802-${W[3]}`)).toHaveAttribute(
-      'data-colour',
-      'red'
-    );
-    expect(screen.getByTestId(`fc-cell-sup-007-PK-PETB-8802-${W[2]}`)).toHaveAttribute(
+    // PEX-D22 — colours are Zone Liability answers: 8801 W[1] 31,000 of 34,300
+    // is amber, 8802 W[1] in full is green, 8802 W[0] awaits (none). The
+    // Trade-off answers this case coloured (8802 W[2] to W[4]) read
+    // Acknowledged now, with no colour.
+    expect(screen.getByTestId(`fc-cell-sup-007-PK-PETB-8801-${W[1]}`)).toHaveAttribute(
       'data-colour',
       'amber'
     );
-    expect(screen.getByTestId(`fc-cell-sup-007-PK-PETB-8802-${W[4]}`)).toHaveAttribute(
+    expect(screen.getByTestId(`fc-cell-sup-007-PK-PETB-8802-${W[1]}`)).toHaveAttribute(
       'data-colour',
       'green'
     );
@@ -423,11 +454,19 @@ describe('PTI — Commitments & gaps (REQ-E06-03)', () => {
       'data-colour',
       'none'
     );
+    const ackCell = screen.getByTestId(`fc-cell-sup-007-PK-PETB-8802-${W[3]}`);
+    expect(ackCell).toHaveAttribute('data-colour', 'none');
+    expect(ackCell).toHaveTextContent('Acknowledged');
     expect(screen.getByTestId('fc-cumulative-PK-PETB-8802')).toBeInTheDocument();
     // Raw material: the Firm over-commit is information, and coverage is labelled an estimate.
     fireEvent.click(screen.getByRole('tab', { name: 'Raw material' }));
     expect(await screen.findByTestId('fc-cell-sup-002-RM-STEAR-7300-2026-10')).toHaveTextContent(
       'Above forecast'
+    );
+    // Red: the Firm September month, 10,000 of 12,600.
+    expect(screen.getByTestId('fc-cell-sup-002-RM-STEAR-7300-2026-09')).toHaveAttribute(
+      'data-colour',
+      'red'
     );
     const coverage = screen.getByTestId('fc-coverage');
     expect(coverage).toHaveTextContent('Estimate');
@@ -459,7 +498,8 @@ describe('PTI — Commitments & gaps (REQ-E06-03)', () => {
   // BuyerCommitments.requestRevisionFlag.test.jsx, so the path stays tested.
   it('CAP-7 AC-01 — no exception shows Request revision; Accept and Move demand stay, with no handoff for the withdrawn verb', async () => {
     renderWithProviders(<BuyerCommitments />, { identity: PLANNER });
-    const what = `PT Sample Packaging Indonesia PK-PETB-8802 ${week(W[3])}`;
+    // PEX-D22 — a Zone Liability exception (8801, W[1]); 8802 W[3] is Trade-off.
+    const what = `PT Sample Packaging Indonesia PK-PETB-8801 ${week(W[1])}`;
     const exceptions = await screen.findByTestId('fc-exceptions');
     // Control: the exception with a response renders its other two actions.
     expect(await screen.findByRole('button', { name: `Accept ${what}` })).toBeInTheDocument();
@@ -472,9 +512,11 @@ describe('PTI — Commitments & gaps (REQ-E06-03)', () => {
     expect(screen.queryByTestId('handoff-commitment-review')).toBeNull();
   });
 
+  // PEX-D22 — on sup-007's Zone Liability exception (8801, W[1]: 3,300 short);
+  // it used the Trade-off week 8802 W[3], which holds no commitment now.
   it('move demand: only qualified suppliers are offered; a note is required; a new version is published', async () => {
     renderWithProviders(<BuyerCommitments />, { identity: PLANNER });
-    const what = `PT Sample Packaging Indonesia PK-PETB-8802 ${week(W[3])}`;
+    const what = `PT Sample Packaging Indonesia PK-PETB-8801 ${week(W[1])}`;
     fireEvent.click(await screen.findByRole('button', { name: `Move demand for ${what}` }));
     // CAP-8 BR-01 — one row per other qualified supplier.
     expect(
@@ -482,7 +524,7 @@ describe('PTI — Commitments & gaps (REQ-E06-03)', () => {
         .getAllByTestId(/^fc-move-row-/)
         .map((r) => r.getAttribute('data-testid'))
     ).toEqual(['fc-move-row-sup-012']);
-    fireEvent.change(panel().getByTestId('fc-move-qty-sup-012'), { target: { value: '8500' } });
+    fireEvent.change(panel().getByTestId('fc-move-qty-sup-012'), { target: { value: '3000' } });
     expect(panel().getByTestId('fc-action-submit')).toBeDisabled();
     fireEvent.change(panel().getByLabelText('Note'), {
       target: { value: 'Moulding line down that week' }
@@ -495,11 +537,11 @@ describe('PTI — Commitments & gaps (REQ-E06-03)', () => {
       /** @type {import('@services/sdc/types').ForecastPublication} */ (
         forecastVersionStore.get('FC-PK-V3')
       ).lines
-        .filter((l) => l.materialCode === 'PK-PETB-8802' && l.periodBucket === W[3])
+        .filter((l) => l.materialCode === 'PK-PETB-8801' && l.periodBucket === W[1])
         .map((l) => [l.supplierId, l.forecastQty])
     ).toEqual([
-      ['sup-007', 30000],
-      ['sup-012', 8500]
+      ['sup-007', 31300],
+      ['sup-012', 17700]
     ]);
   });
 
@@ -617,6 +659,11 @@ describe('Alert, Home tasks and the Order summary', () => {
       'href',
       '/buyer/collaboration?po=po-016&supplier=sup-002&material=RM-STEAR-7300&from=order-summary'
     );
-    expect(screen.getByTestId('order-summary-foresight-po-002')).toHaveTextContent('Awaiting');
+    // PEX-D22 flipped po-002: it read Awaiting from sup-002's October
+    // emulsifier month, a Trade-off month that asks for no commitment now; its
+    // Zone Liability September month is confirmed.
+    expect(screen.getByTestId('order-summary-foresight-po-002')).toHaveTextContent('Confirmed');
+    // Awaiting still shows, from sup-007's unanswered Zone Liability week (8802, W[0]).
+    expect(screen.getByTestId('order-summary-foresight-po-008')).toHaveTextContent('Awaiting');
   });
 });

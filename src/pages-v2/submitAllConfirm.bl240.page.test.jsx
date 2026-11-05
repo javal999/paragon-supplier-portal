@@ -38,29 +38,34 @@ const submittedFor = (period) =>
     .map((r) => r.materialCode)
     .sort();
 
+// PEX-D22 (owner, 2026-11-05) — Submit all covers Zone Liability periods only,
+// so these walks run on sup-007's firm week W[0] (8802 awaits its commitment,
+// pre-filled with the forecast; 8801's version-1 commitment stands). They used
+// the Trade-off week W[6], which now takes an acknowledgement only.
 describe('BL-240 — Submit all asks first (U-02)', () => {
   it('lists each material, period and quantity, marks the pre-filled ones, and sends nothing on Cancel', async () => {
     renderWithProviders(<SupplierForecastCommitments />, {
       identity: SUPPLIER,
       route: '/supplier/forecasts'
     });
-    await screen.findByTestId(`fc-week-${W[6]}`);
-    const before = submittedFor(W[6]);
-    fireEvent.click(screen.getByTestId(`fc-week-submit-${W[6]}`));
+    await screen.findByTestId(`fc-week-${W[0]}`);
+    expect(screen.queryByTestId(`fc-week-submit-${W[6]}`)).toBeNull();
+    const before = submittedFor(W[0]);
+    fireEvent.click(screen.getByTestId(`fc-week-submit-${W[0]}`));
     const dialog = screen.getByRole('dialog', {
-      name: `Submit Week of ${formatDate(W[6])} to PTI?`
+      name: `Submit Week of ${formatDate(W[0])} to PTI?`
     });
-    expect(dialog).toHaveTextContent('Materials: 2.');
+    expect(dialog).toHaveTextContent('Materials: 1.');
     const line = within(dialog).getByTestId('fc-week-confirm-line-PK-PETB-8802');
-    expect(line).toHaveTextContent(`PK-PETB-8802 · Week of ${formatDate(W[6])} · 38,500`);
+    expect(line).toHaveTextContent(`PK-PETB-8802 · Week of ${formatDate(W[0])} · 42,400`);
     expect(line).toHaveAttribute('data-prefilled', 'true');
     expect(line).toHaveTextContent('Pre-filled with the forecast, not changed');
     expect(dialog).toHaveTextContent('A pre-filled quantity is PTI’s forecast');
     // Nothing is sent before the confirm.
-    expect(submittedFor(W[6])).toEqual(before);
+    expect(submittedFor(W[0])).toEqual(before);
     fireEvent.click(within(dialog).getByTestId('fc-week-confirm-cancel'));
     expect(screen.queryByRole('dialog')).toBeNull();
-    expect(submittedFor(W[6])).toEqual(before);
+    expect(submittedFor(W[0])).toEqual(before);
   });
 
   it('a typed quantity is not marked pre-filled, and confirm submits the period', async () => {
@@ -68,23 +73,24 @@ describe('BL-240 — Submit all asks first (U-02)', () => {
       identity: SUPPLIER,
       route: '/supplier/forecasts'
     });
-    const section = await screen.findByTestId('fc-sup-material-PK-PETB-8802');
-    const row = within(section).getByTestId(`fc-sup-row-PK-PETB-8802-${W[6]}`);
+    // 8801 is typed (above its forecast of 34,300, so no reason is needed); 8802 stays pre-filled.
+    const section = await screen.findByTestId('fc-sup-material-PK-PETB-8801');
+    const row = within(section).getByTestId(`fc-sup-row-PK-PETB-8801-${W[0]}`);
     fireEvent.change(within(row).getByLabelText(/^Commitment quantity for/), {
       target: { value: '40000' }
     });
-    fireEvent.click(screen.getByTestId(`fc-week-submit-${W[6]}`));
+    fireEvent.click(screen.getByTestId(`fc-week-submit-${W[0]}`));
     const dialog = screen.getByRole('dialog');
-    const typed = within(dialog).getByTestId('fc-week-confirm-line-PK-PETB-8802');
+    const typed = within(dialog).getByTestId('fc-week-confirm-line-PK-PETB-8801');
     expect(typed).toHaveAttribute('data-prefilled', 'false');
     expect(typed).toHaveTextContent('40,000');
     expect(typed).not.toHaveTextContent('Pre-filled');
-    expect(within(dialog).getByTestId('fc-week-confirm-line-PK-PETB-8801')).toHaveAttribute(
+    expect(within(dialog).getByTestId('fc-week-confirm-line-PK-PETB-8802')).toHaveAttribute(
       'data-prefilled',
       'true'
     );
     fireEvent.click(within(dialog).getByTestId('fc-week-confirm-submit'));
-    await waitFor(() => expect(submittedFor(W[6])).toEqual(['PK-PETB-8801', 'PK-PETB-8802']));
+    await waitFor(() => expect(submittedFor(W[0])).toEqual(['PK-PETB-8801', 'PK-PETB-8802']));
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
@@ -95,10 +101,10 @@ describe('BL-240 — Submit all asks first (U-02)', () => {
         identity: SUPPLIER,
         route: '/supplier/forecasts'
       });
-      await screen.findByTestId(`fc-week-${W[6]}`);
-      fireEvent.click(screen.getByTestId(`fc-week-submit-${W[6]}`));
+      await screen.findByTestId(`fc-week-${W[0]}`);
+      fireEvent.click(screen.getByTestId(`fc-week-submit-${W[0]}`));
       const dialog = screen.getByRole('dialog', { name: /^Kirim .* ke PTI\?$/ });
-      expect(dialog).toHaveTextContent('Material: 2.');
+      expect(dialog).toHaveTextContent('Material: 1.');
       expect(dialog).toHaveTextContent('Terisi dari prakiraan, belum diubah');
       expect(within(dialog).getByTestId('fc-week-confirm-cancel')).toHaveTextContent('Batal');
       expect(within(dialog).getByTestId('fc-week-confirm-submit')).toHaveTextContent('Kirim semua');

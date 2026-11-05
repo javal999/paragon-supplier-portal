@@ -41,12 +41,13 @@ beforeEach(() => {
   }
 });
 
+// PEX-D22 moved the sample's red week (sup-007 pg-MG-20) from 14 Sep to 7 Sep.
 describe('population control', () => {
   it('the weeks this file rests on are amber, red and within', () => {
     expect(capacityWeekLevel('sup-005', 'pg-MG-02', '2026-10-12')).toBe('needsAdditional');
     expect(capacityWeekLevel('sup-005', 'pg-MG-02', '2026-10-19')).toBe('needsAdditional');
     expect(capacityWeekLevel('sup-005', 'pg-MG-02', '2026-08-31')).toBe('within');
-    expect(capacityWeekLevel('sup-007', 'pg-MG-20', '2026-09-14')).toBe('cannotSupply');
+    expect(capacityWeekLevel('sup-007', 'pg-MG-20', '2026-09-07')).toBe('cannotSupply');
   });
 });
 
@@ -67,14 +68,14 @@ describe('INV-D8 · PTI Capacity — actions on gap weeks only', () => {
 
   it('red: no Accept; it says what the additional capacity cannot cover; Ask supplier is there', async () => {
     renderWithProviders(<BuyerCapacity />, { route: '/buyer/capacity' });
-    const red = await screen.findByTestId(`capacity-cannot-cover-${key(SUP7, '2026-09-14')}`);
+    const red = await screen.findByTestId(`capacity-cannot-cover-${key(SUP7, '2026-09-07')}`);
     expect(red).toHaveTextContent(
       `Additional capacity cannot cover this week. Still short: ${qty(12800)} PCS`
     );
-    expect(screen.queryByTestId(`capacity-accept-${key(SUP7, '2026-09-14')}`)).toBeNull();
+    expect(screen.queryByTestId(`capacity-accept-${key(SUP7, '2026-09-07')}`)).toBeNull();
     // The sample capacity ask on this week is live, so the control shows it.
     expect(
-      await screen.findByTestId(`capacity-ask-${key(SUP7, '2026-09-14')}-existing`)
+      await screen.findByTestId(`capacity-ask-${key(SUP7, '2026-09-07')}-existing`)
     ).toBeTruthy();
   });
 
@@ -198,16 +199,16 @@ describe('BL-227 · Undo, and an accepted week that has turned red', () => {
     capacityDecisionStore.insert({
       supplierId: 'sup-007',
       planningGroupId: 'pg-MG-20',
-      week: '2026-09-14',
+      week: '2026-09-07',
       decision: 'accepted',
       decidedAt: '2026-08-20T03:00:00.000Z',
       decidedBy: NO_PERSON
     });
     renderWithProviders(<BuyerCapacity />, { route: '/buyer/capacity' });
     expect(
-      await screen.findByTestId(`capacity-accepted-now-red-${key(SUP7, '2026-09-14')}`)
+      await screen.findByTestId(`capacity-accepted-now-red-${key(SUP7, '2026-09-07')}`)
     ).toHaveTextContent('counts toward the alert again');
-    expect(screen.getByTestId(`capacity-undo-${key(SUP7, '2026-09-14')}`)).toBeInTheDocument();
+    expect(screen.getByTestId(`capacity-undo-${key(SUP7, '2026-09-07')}`)).toBeInTheDocument();
     expect(screen.getByTestId(`capacity-decision-header-${SUP7}`)).toHaveTextContent(
       'PTI’s decision: pending'
     );

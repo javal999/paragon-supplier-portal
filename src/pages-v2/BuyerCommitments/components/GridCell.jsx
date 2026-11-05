@@ -1,7 +1,7 @@
 /** @import React from 'react' */
 import { useTranslation } from 'react-i18next';
 import Data from '@components/ui-v2/Data';
-import { commitmentGap } from '@services/transitions/forecastRules';
+import { commitmentGap, isAcknowledgeOnly } from '@services/transitions/forecastRules';
 import { CommitmentDeadline, pctText, qtyText } from '../../forecasts/forecastDisplay';
 /** @import { ForecastCommitmentLine } from '@services/data/types' */
 
@@ -15,7 +15,7 @@ import { CommitmentDeadline, pctText, qtyText } from '../../forecasts/forecastDi
 const GridCell = ({ line: l, nowIso }) => {
   const { t } = useTranslation();
   if (!l) return <td className="px-3 py-2 text-text-tertiary">—</td>;
-  const committed = l.committedQty !== null && l.state !== 'awaiting' && l.zone !== 'forecast';
+  const committed = l.committedQty !== null && l.state !== 'awaiting' && !isAcknowledgeOnly(l.zone);
   const gap = committed
     ? commitmentGap(
         l.zone,
@@ -54,8 +54,10 @@ const GridCell = ({ line: l, nowIso }) => {
             {gap.overCommit ? ` · ${t('fc.gap.overCommit')}` : ''}
           </>
         )}
-        {!gap && l.zone !== 'forecast' && ` · ${t('fc.state.awaiting')}`}
-        {l.zone === 'forecast' && l.state === 'acknowledged' && ` · ${t('fc.state.acknowledged')}`}
+        {!gap && !isAcknowledgeOnly(l.zone) && ` · ${t('fc.state.awaiting')}`}
+        {isAcknowledgeOnly(l.zone) &&
+          l.state === 'acknowledged' &&
+          ` · ${t('fc.state.acknowledged')}`}
       </div>
       {/* CR-26 · BL-48 — time left or how late, per cell. */}
       <CommitmentDeadline

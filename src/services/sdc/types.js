@@ -406,9 +406,10 @@
  *
  * TWO response kinds, discriminated by WHICH payload field exists (SDC-2b-EXT,
  * integrity invariant #11: EXACTLY ONE present — XOR):
- *  · `forecastConfirmation` — a COMMITMENT against a firm/semi-firm line
+ *  · `forecastConfirmation` — a COMMITMENT against a firm line
  *    (t_requirementresponse_submit).
- *  · `acknowledgment` — a VISIBILITY response against a visibility-only line
+ *  · `acknowledgment` — a VISIBILITY response against a semi-firm or
+ *    visibility-only line (Zone Capacity, PEX-D22)
  *    (t_requirementresponse_acknowledge): seen + optional signal, NO qty.
  * The kind is derived at read (never stored); P2/SOMO can never mistake an
  * acknowledgment for a commitment because it carries no confirmedQty at all.
@@ -416,8 +417,8 @@
 /**
  * `publicationId`:  Binds to the exact C8 publication + plan version answered.
  * `submittedAt`:  Absent while Draft; set on submit.
- * `forecastConfirmation`:  The commitment (firm/semi-firm lines). XOR with `acknowledgment`.
- * `acknowledgment`:  The visibility response (visibility-only lines). XOR with `forecastConfirmation`.
+ * `forecastConfirmation`:  The commitment (firm lines, PEX-D22). XOR with `acknowledgment`.
+ * `acknowledgment`:  The visibility response (semi-firm and visibility-only lines, PEX-D22). XOR with `forecastConfirmation`.
  * `disputeResponse`: THE BUYER'S ANSWER — append-only, absent until the first dispute is raised. The LAST entry is the current standing; the whole array is its history.  ⚠️ **THIS IS THE ANSWER, NOT WHAT THE ACTOR TYPED TO PRODUCE IT** (operator ruling, and it is why the field is named for the RESPONSE rather than for the input). The draft field a planner fills lives in `submitModel.js` (`DisputeRaiseDraft` / `DisputeResolutionDraft`) and is transient, per-act, and theirs; this is the stored record and belongs to the store. The lane already keeps the same separation one row up — `rootCause` is what the SUPPLIER wrote, `forecastConfirmation` is what got stored from it.  Collapsing the two is how a stored record starts being edited like a form field. Read it, never rewrite it.
  * `provenance`:  source = SUPPLIER; LIVE × committed once submitted (SIMULATED in seed).
  *

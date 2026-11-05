@@ -349,7 +349,9 @@ describe('t_requirementresponse_acknowledge — the visibility response (SDC-2b-
     ).toEqual({});
   });
 
-  it('⭐ symmetric guard: SUBMIT against a visibility-only line is rejected (no fabricated commitment)', async () => {
+  // PEX-D22 (owner, 2026-11-05) widened this guard from visibility-only lines
+  // to every Zone Capacity line: a semi-firm line takes no commitment either.
+  it('⭐ symmetric guard: SUBMIT against a Zone Capacity line (visibility-only or semi-firm) is rejected (no fabricated commitment)', async () => {
     const before = requirementResponseStore.all().length;
     const res = await svc.dispatch(
       sup007,
@@ -363,7 +365,21 @@ describe('t_requirementresponse_acknowledge — the visibility response (SDC-2b-
     );
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/rr_submit_commitment_class/);
-    expect(res.reason).toMatch(/visibility-only/);
+    expect(res.reason).toMatch(/line is Zone Capacity/);
+    // PK-PETB-8810 × 2026-09 is semi-firm for sup-005: refused the same way.
+    const semiFirm = await svc.dispatch(
+      sup005,
+      submit({
+        supplierId: 'sup-005',
+        materialCode: 'PK-PETB-8810',
+        periodBucket: '2026-09',
+        confirmedQty: 150000,
+        confirmedQtyRaw: '150000'
+      })
+    );
+    expect(semiFirm.status).toBe('failed');
+    expect(semiFirm.reason).toMatch(/rr_submit_commitment_class/);
+    expect(semiFirm.reason).toMatch(/line is Zone Capacity/);
     expect(requirementResponseStore.all().length).toBe(before); // nothing minted
   });
 
@@ -380,6 +396,12 @@ describe('t_requirementresponse_acknowledge — the visibility response (SDC-2b-
     expect(res.status).toBe('failed');
     expect(res.reason).toMatch(/rr_acknowledge_visibility_class/);
     expect(requirementResponseStore.all().length).toBe(before);
+    // Known-good (PEX-D22): a semi-firm (Zone Capacity) line takes the acknowledgement.
+    const semiFirm = await svc.dispatch(
+      sup005,
+      acknowledge({ supplierId: 'sup-005', materialCode: 'PK-PETB-8810', periodBucket: '2026-09' })
+    );
+    expect(semiFirm.status).toBe('done');
   });
 
   it('line-grain scope holds on the new verb: acknowledging ANOTHER supplier’s line is SCOPE_DENIED', async () => {
@@ -405,14 +427,16 @@ describe('t_requirementresponse_acknowledge — the visibility response (SDC-2b-
 describe('t_requirementresponse_submit — honest-by-construction facts', () => {
   it('uom comes from the MATERIAL MASTER, never the caller (invariant #2)', async () => {
     // PK-PETB-8810 is PCS in the master; a caller-supplied uom is IGNORED.
+    // PEX-D22 — on sup-007's firm 2026-08 line (sup-005's 2026-09 line is
+    // semi-firm, which now takes an acknowledgement only).
     const res = await svc.dispatch(
-      sup005,
+      sup007,
       submit({
-        supplierId: 'sup-005',
+        supplierId: 'sup-007',
         materialCode: 'PK-PETB-8810',
-        periodBucket: '2026-09',
-        confirmedQty: 150000,
-        confirmedQtyRaw: '150000',
+        periodBucket: '2026-08',
+        confirmedQty: 40000,
+        confirmedQtyRaw: '40000',
         uom: 'KG' // spoofed unit — must not persist
       })
     );

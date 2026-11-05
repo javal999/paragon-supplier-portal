@@ -67,11 +67,11 @@ export const readDraft = (l, d) => {
 
 /**
  * BL-133 — the "Submit all" periods: one row per period bucket of the
- * Firm and Trade-off lines, in date order, with each capacity group's check,
+ * Firm (Zone Liability) lines, in date order, with each capacity group's check,
  * the root cause each line is sent with, and why the period's Submit all is
  * refused (null when it is not).
  * @param {object} args
- * @param {ForecastCommitmentLine[]} args.commitLines  The stream's Firm and Trade-off lines.
+ * @param {ForecastCommitmentLine[]} args.commitLines  The stream's Firm lines (PEX-D22: Zone Capacity periods are acknowledged).
  * @param {ForecastCommitmentLine[]} args.lines  Every line, for the LTP sum across streams.
  * @param {readonly CapacityPlan[]} args.plans  The supplier's capacity plans.
  * @param {string} args.supplierId

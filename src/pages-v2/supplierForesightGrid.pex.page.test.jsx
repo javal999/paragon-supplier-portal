@@ -139,9 +139,13 @@ describe('PEX-10 (BL-273) — the fulfilment window', () => {
     expect(within(col).getByTestId(/^fc-fulfil-/)).toHaveTextContent(
       `Fulfil by ${formatDate(by)} (lead time 14 days)`
     );
-    const open6 = screen.getByTestId(`fc-sup-row-PK-PETB-8802-${W[6]}`);
-    expect(within(open6).getByTestId(/^fc-fulfil-/)).toHaveTextContent(
+    // PEX-D22 — the open line is sup-007's awaiting Zone Liability week W[0];
+    // a Trade-off week (W[6]) is an acknowledgement and has no fulfilment window.
+    const open0 = screen.getByTestId(`fc-sup-row-PK-PETB-8802-${W[0]}`);
+    expect(within(open0).getByTestId(/^fc-fulfil-/)).toHaveTextContent(
       'Lead time 14 days; the date is set when you submit'
     );
+    const ack6 = screen.getByTestId(`fc-sup-row-PK-PETB-8802-${W[6]}`);
+    expect(within(ack6).queryByTestId(/^fc-fulfil-/)).toBeNull();
   });
 });

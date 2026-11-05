@@ -48,7 +48,9 @@ describe('CAP-7 — REQUEST_REVISION_ENABLED = true brings Request revision back
 
   it('request revision needs a note, which is kept for the supplier', async () => {
     renderWithProviders(<BuyerCommitments />, { identity: PLANNER });
-    const what = `PT Sample Packaging Indonesia PK-PETB-8802 ${week(W[3])}`;
+    // PEX-D22 — sup-007's Zone Liability exception (8801, W[1]); it used the
+    // Trade-off week 8802 W[3], whose answer is an acknowledgement now.
+    const what = `PT Sample Packaging Indonesia PK-PETB-8801 ${week(W[1])}`;
     // Accept and Move demand are unaffected by the flag.
     expect(await screen.findByRole('button', { name: `Accept ${what}` })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: `Move demand for ${what}` })).toBeInTheDocument();
@@ -62,7 +64,7 @@ describe('CAP-7 — REQUEST_REVISION_ENABLED = true brings Request revision back
       .all()
       .filter(
         (r) =>
-          r.supplierId === 'sup-007' && r.materialCode === 'PK-PETB-8802' && r.periodBucket === W[3]
+          r.supplierId === 'sup-007' && r.materialCode === 'PK-PETB-8801' && r.periodBucket === W[1]
       )[0].id;
     await waitFor(() => expect(requirementResponseStore.get(id)?.status).toBe('Disputed'));
     expect((requirementResponseStore.get(id)?.disputeResponse ?? []).map((e) => e.text)).toEqual([

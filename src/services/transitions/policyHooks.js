@@ -257,8 +257,9 @@ export const POLICY_HOOKS = /** @type {const} */ ({
   // make commitmentClass ⟺ verb exactly 1:1, so the shared create can branch on
   // the PUBLISHED class (authoritative our-side data) and never silently
   // transmute a commitment into an acknowledgment or vice versa.
-  /** RR submit: the fanned line must NOT be visibility-only (a "confirmed
-   *  commitment" against a no-commitment class would be a fabricated claim). */
+  /** RR submit: the fanned line MUST be firm — semi-firm and visibility-only
+   *  are Zone Capacity, acknowledgement only (PEX-D22); a "confirmed
+   *  commitment" against a no-commitment class would be a fabricated claim. */
   RR_SUBMIT_COMMITMENT_CLASS: 'rr_submit_commitment_class',
   /**
    * RR submit: `confirmedQty` must be a FINITE number and NOT NEGATIVE.
@@ -388,8 +389,9 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    * cannot tell 2400 from 2.4. That limit is stated, not papered over.
    */
   RR_DISPUTE_TEXT_AUTHORED: 'rr_dispute_text_authored',
-  /** RR acknowledge: the fanned line MUST be visibility-only (an acknowledge
-   *  can never dodge the commitment floor on a firm/semi-firm line). */
+  /** RR acknowledge: the fanned line MUST NOT be firm — semi-firm and
+   *  visibility-only are Zone Capacity, acknowledgement only (PEX-D22); an
+   *  acknowledge can never dodge the commitment floor on a firm line. */
   RR_ACKNOWLEDGE_VISIBILITY_CLASS: 'rr_acknowledge_visibility_class',
   /** Inventory declare (SDC-3a, total-first): when batch detail is present,
    *  Σ batch qty must equal totalQty — a total that disagrees with its own

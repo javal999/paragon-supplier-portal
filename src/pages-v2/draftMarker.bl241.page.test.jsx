@@ -28,9 +28,12 @@ beforeEach(() => {
   sdcClock.reset();
 });
 
+// PEX-D22 (owner, 2026-11-05) — a draft and Submit all exist on Zone
+// Liability periods only, so the row is sup-007's awaiting firm week W[0]
+// (it was the Trade-off week W[6], now acknowledgement only).
 const rowOf = () =>
   within(screen.getByTestId('fc-sup-material-PK-PETB-8802')).getByTestId(
-    `fc-sup-row-PK-PETB-8802-${W[6]}`
+    `fc-sup-row-PK-PETB-8802-${W[0]}`
   );
 
 describe('BL-241 — the draft marker leaves once the period is submitted (U-05)', () => {
@@ -42,19 +45,20 @@ describe('BL-241 — the draft marker leaves once the period is submitted (U-05)
     await screen.findByTestId('fc-sup-material-PK-PETB-8802');
     expect(rowOf()).not.toHaveTextContent('Draft saved (not visible to PTI)');
     fireEvent.click(
-      within(rowOf()).getByRole('button', { name: `Save draft for Week of ${formatDate(W[6])}` })
+      within(rowOf()).getByRole('button', { name: `Save draft for Week of ${formatDate(W[0])}` })
     );
     await waitFor(() => expect(rowOf()).toHaveTextContent('Draft saved (not visible to PTI)'));
-    fireEvent.click(screen.getByTestId(`fc-week-submit-${W[6]}`));
+    fireEvent.click(screen.getByTestId(`fc-week-submit-${W[0]}`));
     fireEvent.click(screen.getByTestId('fc-week-confirm-submit'));
-    await waitFor(() => expect(rowOf()).toHaveTextContent('Submitted on time'));
+    // W[0] is past its Zone Liability deadline (the BL-48 demo), so it lands late.
+    await waitFor(() => expect(rowOf()).toHaveTextContent('Submitted late'));
     // The draft record is still in the store; the screen no longer calls it invisible.
     expect(
       requirementResponseStore
         .all()
         .some(
           (r) =>
-            r.materialCode === 'PK-PETB-8802' && r.periodBucket === W[6] && r.status === 'Draft'
+            r.materialCode === 'PK-PETB-8802' && r.periodBucket === W[0] && r.status === 'Draft'
         )
     ).toBe(true);
     expect(rowOf()).not.toHaveTextContent('Draft saved (not visible to PTI)');

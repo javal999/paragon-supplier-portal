@@ -10,6 +10,7 @@ import AcknowledgeColumn from './AcknowledgeColumn';
 import CommitmentColumn from './CommitmentColumn';
 import CommitmentLog from './CommitmentLog';
 import { CELL, HEAD } from './gridCells';
+import { isAcknowledgeOnly } from '@services/transitions/forecastRules';
 
 const LABEL = `${CELL} sticky left-0 z-10 bg-bg-surface font-medium text-text-secondary whitespace-nowrap`;
 
@@ -58,7 +59,7 @@ const MaterialSection = ({
 }) => {
   const { t } = useTranslation();
   const first = mine[0];
-  const logged = mine.filter((l) => l.zone !== 'forecast' && l.log.length > 0);
+  const logged = mine.filter((l) => !isAcknowledgeOnly(l.zone) && l.log.length > 0);
   return (
     <section
       className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm"
@@ -112,7 +113,7 @@ const MaterialSection = ({
           </div>
           {mine.map((l) => {
             const label = periodLabel(l.periodBucket);
-            return l.zone === 'forecast' ? (
+            return isAcknowledgeOnly(l.zone) ? (
               <AcknowledgeColumn
                 key={l.key}
                 l={l}

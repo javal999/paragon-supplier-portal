@@ -285,7 +285,6 @@ describe('BL32-POP · the population of rule values is derived from the config m
       'receipt.overPct',
       'receipt.shortPct',
       'commitment.firmShortfallPct',
-      'commitment.tradeOffShortfallPct',
       'commitment.firmDeadlineWorkingDays',
       'commitment.otherDeadlineWorkingDays',
       'gate.minOtifPct',
@@ -802,12 +801,6 @@ const FLIPS = {
     atDefault: 'outside',
     afterChange: 'within'
   },
-  'commitment.tradeOffShortfallPct': {
-    to: 15,
-    read: () => toleranceOutcome('tradeOff', 1000, 850),
-    atDefault: 'outside',
-    afterChange: 'within'
-  },
   'commitment.firmDeadlineWorkingDays': {
     to: 2,
     read: () => commitmentDueAt('firm', PUBLISHED),
@@ -1205,12 +1198,6 @@ describe('BL32-POL · nonsense is refused and the refusal names it', () => {
       /At risk must start below Covered/
     ],
     [
-      'min above max (firm > trade-off)',
-      'commitment.firmShortfallPct',
-      20,
-      /Zone Liability periods may not accept a larger shortfall/
-    ],
-    [
       'contract looser than other lines',
       'invoice.contractPricePct',
       5,
@@ -1249,6 +1236,11 @@ describe('BL32-POL · nonsense is refused and the refusal names it', () => {
 
   it('BL32-POL-KEY · an unknown key, or an override for a pair nobody supplies, is NOT_FOUND', async () => {
     expect(await outcomeOf(seat('compliance'), setCmd('callOff.underPct', 5))).toBe(
+      'throw/NOT_FOUND'
+    );
+    // PEX-D22 retired the Zone Capacity shortfall tolerance (it decided no
+    // outcome once Zone Capacity periods became acknowledgement only).
+    expect(await outcomeOf(seat('compliance'), setCmd('commitment.tradeOffShortfallPct', 10))).toBe(
       'throw/NOT_FOUND'
     );
     expect(

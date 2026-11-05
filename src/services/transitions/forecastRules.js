@@ -230,6 +230,16 @@ export const zoneOfClass = (cls) =>
 export const classOfZone = (zone) =>
   zone === 'firm' ? 'firm' : zone === 'tradeOff' ? 'semi-firm' : 'visibility-only';
 
+/**
+ * PEX-D22 (owner, 2026-11-05) — a Zone Capacity period (the engine's tradeOff
+ * and forecast zones) is acknowledgement only: the supplier types a commitment
+ * in Zone Liability (firm) periods alone. The engine's zone keys, damping and
+ * reschedule rules are unchanged (PEX-D21); only who commits changes.
+ * @param {ForecastZone} zone
+ * @returns {boolean}
+ */
+export const isAcknowledgeOnly = (zone) => zone !== 'firm';
+
 // ── Building a version (REQ-E06-01) ──────────────────────────────────────────
 
 /** One supplier's share of a material's demand. */
@@ -629,18 +639,17 @@ export function shortfallRefusal(forecastQty, committedQty, rootCause) {
 /** @typedef {'within' | 'outside' | 'acknowledgementOnly'} ToleranceOutcome */
 
 /**
- * CR-21 — Firm: any shortfall is an exception. Trade-off: up to 10% below
- * forecast is accepted automatically (exactly 10% is within). Forecast:
- * acknowledgement only.
+ * CR-21 — Firm: any shortfall beyond the administrator's tolerance (default
+ * none) is an exception. Trade-off and Forecast (Zone Capacity): acknowledgement
+ * only (PEX-D22).
  * @param {ForecastZone} zone
  * @param {number} forecastQty
  * @param {number} committedQty
  * @returns {ToleranceOutcome}
  */
 export function toleranceOutcome(zone, forecastQty, committedQty) {
-  if (zone === 'forecast') return 'acknowledgementOnly';
-  const tol = commitmentTolerance();
-  const allowed = zone === 'firm' ? tol.firmShortfall : tol.tradeOffShortfall;
+  if (isAcknowledgeOnly(zone)) return 'acknowledgementOnly';
+  const allowed = commitmentTolerance().firmShortfall;
   const shortfall = forecastQty - committedQty;
   return shortfall <= forecastQty * allowed + 1e-9 ? 'within' : 'outside';
 }
@@ -732,7 +741,7 @@ export function commitmentTiming(line, nowIso) {
  */
 export function commitmentState(zone, forecastQty, response) {
   if (!response) return 'awaiting';
-  if (zone === 'forecast') return 'acknowledged';
+  if (isAcknowledgeOnly(zone)) return 'acknowledged';
   if (response.acknowledgment || !response.forecastConfirmation) return 'awaiting';
   if (response.status === 'Accepted') return 'acceptedByPlanner';
   if (response.status === 'Disputed') return 'revisionRequested';
@@ -953,7 +962,7 @@ export function cumulativeCommitment(lines) {
     new Map()
   );
   for (const l of lines) {
-    if (l.zone === 'forecast') continue;
+    if (isAcknowledgeOnly(l.zone)) continue;
     const p = byPeriod.get(l.periodBucket) ?? { start: l.periodStart, forecast: 0, commit: 0 };
     p.forecast += l.forecastQty;
     p.commit += l.state === 'awaiting' ? 0 : (l.committedQty ?? 0);
@@ -1034,7 +1043,7 @@ export function commitmentAlertSubjects(lines) {
  * @returns {'awaiting' | 'confirmed' | 'gap' | 'notRequired'}
  */
 export function foresightAnswerOf(line) {
-  if (line.zone === 'forecast') return 'notRequired';
+  if (isAcknowledgeOnly(line.zone)) return 'notRequired';
   if (line.state === 'exception' || line.state === 'revisionRequested') return 'gap';
   if (line.state === 'accepted' || line.state === 'acceptedByPlanner') return 'confirmed';
   return 'awaiting';
@@ -1153,7 +1162,7 @@ export function commitmentTemplateCsv(lines, language) {
       l.zone,
       String(l.forecastQty),
       l.uom,
-      l.zone === 'forecast' ? '' : String(l.forecastQty),
+      isAcknowledgeOnly(l.zone) ? '' : String(l.forecastQty),
       '',
       '',
       ''
@@ -1275,7 +1284,7 @@ export function validateCommitmentRows(rows, lines) {
     )
       return refuse('unitMismatch', 'unit');
     const note = (rec.note ?? '').trim();
-    if (line.zone === 'forecast') {
+    if (isAcknowledgeOnly(line.zone)) {
       seen.add(`${code}|${period}`);
       accepted.push({ kind: 'acknowledge', row, line, ...(note ? { note } : {}) });
       return;

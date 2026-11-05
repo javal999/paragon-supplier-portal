@@ -248,12 +248,17 @@ describe('CR-21 — tolerance per zone', () => {
     expect(toleranceOutcome('firm', 1000, 999)).toBe('outside');
   });
 
-  it('Trade-off: up to 10% below is accepted — exactly 10% is within, a unit more is outside', () => {
-    expect(commitmentTolerance().tradeOffShortfall).toBe(0.1);
-    expect(toleranceOutcome('tradeOff', 1000, 900)).toBe('within');
-    expect(toleranceOutcome('tradeOff', 38500, 34650)).toBe('within');
-    expect(toleranceOutcome('tradeOff', 1000, 899)).toBe('outside');
-    expect(toleranceOutcome('tradeOff', 1000, 899.9)).toBe('outside');
+  // PEX-D22 (owner, 2026-11-05) flipped this case: it pinned "up to 10% below
+  // is accepted" in Trade-off. A Trade-off period is Zone Capacity, which is
+  // acknowledgement only, so no quantity is checked and the 10% setting is gone.
+  it('Trade-off (Zone Capacity, PEX-D22): acknowledgement only, at any quantity; no Zone Capacity tolerance is held', () => {
+    expect(Object.keys(commitmentTolerance())).toEqual(['firmShortfall']);
+    expect(toleranceOutcome('tradeOff', 1000, 1000)).toBe('acknowledgementOnly');
+    expect(toleranceOutcome('tradeOff', 1000, 900)).toBe('acknowledgementOnly');
+    expect(toleranceOutcome('tradeOff', 1000, 0)).toBe('acknowledgementOnly');
+    // Known-good beside it: the same quantities in a Zone Liability period are checked.
+    expect(toleranceOutcome('firm', 1000, 1000)).toBe('within');
+    expect(toleranceOutcome('firm', 1000, 900)).toBe('outside');
   });
 
   it('Forecast: acknowledgement only', () => {
@@ -278,13 +283,17 @@ describe('CR-21 — tolerance per zone', () => {
       forecastConfirmation: { confirmedQty: qty, uom: 'PCS' },
       provenance: { source: 'SUPPLIER', liveness: 'SIMULATED', planState: 'committed' }
     });
-    expect(commitmentState('tradeOff', 1000, null)).toBe('awaiting');
-    expect(commitmentState('tradeOff', 1000, r(900))).toBe('accepted');
+    expect(commitmentState('firm', 1000, null)).toBe('awaiting');
+    expect(commitmentState('firm', 1000, r(1000))).toBe('accepted');
     expect(commitmentState('firm', 1000, r(900))).toBe('exception');
     expect(commitmentState('firm', 1000, r(900, 'UnderReview'))).toBe('exception');
     expect(commitmentState('firm', 1000, r(900, 'Accepted'))).toBe('acceptedByPlanner');
     expect(commitmentState('firm', 1000, r(900, 'Disputed'))).toBe('revisionRequested');
     expect(commitmentState('forecast', 1000, r(0))).toBe('acknowledged');
+    // PEX-D22 — a Trade-off (Zone Capacity) period too: any answer is an acknowledgement.
+    expect(commitmentState('tradeOff', 1000, null)).toBe('awaiting');
+    expect(commitmentState('tradeOff', 1000, r(900))).toBe('acknowledged');
+    expect(commitmentState('tradeOff', 1000, r(900, 'Disputed'))).toBe('acknowledged');
   });
 });
 
@@ -425,7 +434,9 @@ describe('re-publication — unchanged periods keep their commitment, changed on
   });
 
   it('the newest submission wins; a revision request is kept in the log the supplier sees', () => {
-    const disputed = answer(v2, '2026-09-14', 30000, {
+    // PEX-D22 — on a Zone Liability week (7 Sep, firm for sup-007's 14-day
+    // lead time); a Trade-off week takes no commitment to revise.
+    const disputed = answer(v2, '2026-09-07', 30000, {
       id: 'old',
       status: 'Disputed',
       submittedAt: '2026-08-28T05:00:00.000Z',
@@ -433,12 +444,12 @@ describe('re-publication — unchanged periods keep their commitment, changed on
         { kind: 'raised', text: 'Please cover the launch week', at: '2026-08-28T06:00:00.000Z' }
       ]
     });
-    expect(at(lines([disputed]), '2026-09-14').state).toBe('revisionRequested');
-    const revised = answer(v2, '2026-09-14', 49000, {
+    expect(at(lines([disputed]), '2026-09-07').state).toBe('revisionRequested');
+    const revised = answer(v2, '2026-09-07', 60000, {
       id: 'new',
       submittedAt: '2026-08-29T01:00:00.000Z'
     });
-    const l = at(lines([disputed, revised]), '2026-09-14');
+    const l = at(lines([disputed, revised]), '2026-09-07');
     expect(l.state).toBe('accepted');
     expect(l.log.map((e) => e.text)).toEqual(['Please cover the launch week']);
   });
@@ -476,9 +487,11 @@ describe('re-publication — unchanged periods keep their commitment, changed on
   });
 
   it('CAP-8 BR-03 — after part of the shortfall moves, the commitment still stands and the rest is an open exception; a re-publication keeps the moves', () => {
-    const committed = answer(v2, '2026-09-14', 30000);
-    // Control: before the move, 30 000 against 49 000 is an exception.
-    expect(at(lines([committed]), '2026-09-14')).toMatchObject({
+    // PEX-D22 — on a Zone Liability week (7 Sep): only a firm period holds a
+    // commitment, so only there is a shortfall left to move.
+    const committed = answer(v2, '2026-09-07', 30000);
+    // Control: before the move, 30 000 against 60 000 is an exception.
+    expect(at(lines([committed]), '2026-09-07')).toMatchObject({
       state: 'exception',
       committedQty: 30000,
       moves: []
@@ -488,7 +501,7 @@ describe('re-publication — unchanged periods keep their commitment, changed on
         v2,
         {
           materialCode: 'PK-PETB-8801',
-          periodBucket: '2026-09-14',
+          periodBucket: '2026-09-07',
           fromSupplierId: 'sup-007',
           allocations: [{ supplierId: 'sup-012', qty: 10000 }],
           note: 'Second mould shop'
@@ -506,11 +519,11 @@ describe('re-publication — unchanged periods keep their commitment, changed on
       });
     const source = /** @type {ForecastCommitmentLine} */ (
       after([moved, v2, v1]).find(
-        (l) => l.supplierId === 'sup-007' && l.periodBucket === '2026-09-14'
+        (l) => l.supplierId === 'sup-007' && l.periodBucket === '2026-09-07'
       )
     );
     expect(source).toMatchObject({
-      forecastQty: 39000,
+      forecastQty: 50000,
       committedQty: 30000,
       carriedForward: true,
       state: 'exception',
@@ -530,7 +543,7 @@ describe('re-publication — unchanged periods keep their commitment, changed on
       baseDemand: () => 49000
     });
     expect(
-      next.lines.find((l) => l.supplierId === 'sup-007' && l.periodBucket === '2026-09-14')
+      next.lines.find((l) => l.supplierId === 'sup-007' && l.periodBucket === '2026-09-07')
         ?.movedOut
     ).toHaveLength(1);
   });
@@ -645,12 +658,15 @@ describe('REQ-E06-03 BR-04 — exceptions ranked: overdue, then Firm, then lowes
 });
 
 describe('REQ-E06-03 BR-03 — cumulative commitment against cumulative forecast', () => {
-  it('sums Firm and Trade-off periods in period order; an unanswered period adds no commitment', () => {
+  // PEX-D22 — Zone Capacity (Trade-off and Forecast) periods take no
+  // commitment, so the series sums Zone Liability (firm) periods only.
+  it('sums Firm periods in period order; Trade-off and Forecast periods are left out; an unanswered period adds no commitment', () => {
     const series = cumulativeCommitment([
       mk({
         key: '2',
         periodBucket: '2026-09-14',
         periodStart: '2026-09-14',
+        zone: 'firm',
         state: 'accepted',
         committedQty: 950
       }),
@@ -662,7 +678,14 @@ describe('REQ-E06-03 BR-03 — cumulative commitment against cumulative forecast
         state: 'exception',
         committedQty: 800
       }),
-      mk({ key: '3', periodBucket: '2026-09-21', periodStart: '2026-09-21' }),
+      mk({ key: '3', periodBucket: '2026-09-21', periodStart: '2026-09-21', zone: 'firm' }),
+      mk({
+        key: '5',
+        periodBucket: '2026-09-28',
+        periodStart: '2026-09-28',
+        state: 'acknowledged',
+        committedQty: 700
+      }),
       mk({
         key: '4',
         periodBucket: '2026-12',
@@ -972,7 +995,13 @@ describe('REQ-E06-02 BR-06 — spreadsheet: download, template and row-by-row up
       zone: 'firm',
       forecastQty: 34300
     }),
-    mk({ key: 'b', periodBucket: '2026-09-14', periodStart: '2026-09-14', forecastQty: 34300 }),
+    mk({
+      key: 'b',
+      periodBucket: '2026-09-14',
+      periodStart: '2026-09-14',
+      zone: 'firm',
+      forecastQty: 34300
+    }),
     mk({
       key: 'c',
       periodBucket: '2026-10-26',
@@ -985,6 +1014,7 @@ describe('REQ-E06-02 BR-06 — spreadsheet: download, template and row-by-row up
       materialCode: 'PK-PETB-8802',
       periodBucket: '2026-09-14',
       periodStart: '2026-09-14',
+      zone: 'firm',
       forecastQty: 1500
     })
   ];
@@ -1013,6 +1043,25 @@ describe('REQ-E06-02 BR-06 — spreadsheet: download, template and row-by-row up
       expect(accepted.map((a) => a.kind)).toEqual(['commit', 'commit', 'acknowledge', 'commit']);
       expect(accepted[0]).toMatchObject({ committedQty: 34300 });
     }
+  });
+
+  // PEX-D22 — a Trade-off (Zone Capacity) row is an acknowledgement: the
+  // template leaves its committed quantity blank, and a typed quantity on it
+  // is read as an acknowledgement, never a commitment.
+  it('PEX-D22 — a Trade-off row is acknowledged, never committed, even with a quantity typed in', () => {
+    const tradeOff = [
+      mk({ key: 't', periodBucket: '2026-09-21', periodStart: '2026-09-21', forecastQty: 34300 })
+    ];
+    const tpl = parseCsv(commitmentTemplateCsv(tradeOff, 'en'));
+    expect(tpl.rows[0]['Committed quantity']).toBe('');
+    const { accepted, refused } = validateCommitmentRows(
+      [row('PK-PETB-8801', '2026-09-21', '', '', 'PCS', '30000', '', '', '', 'Seen')],
+      tradeOff
+    );
+    expect(refused).toEqual([]);
+    expect(accepted).toHaveLength(1);
+    expect(accepted[0]).toMatchObject({ kind: 'acknowledge', note: 'Seen' });
+    expect(accepted[0]).not.toHaveProperty('committedQty');
   });
 
   it('CAP-6 BR-03 — the template has no commitment date column, in EN or ID', () => {
@@ -1146,15 +1195,21 @@ describe('REQ-E08-05 BR-01 — committed below forecast beyond tolerance raises 
 });
 
 describe('REQ-E07-03 — the foresight answer a line gives the Order summary', () => {
-  it('Confirmed, Gap, Awaiting, or Not required for a Forecast-zone period', () => {
-    expect(foresightAnswerOf(mk({ key: '1', state: 'accepted' }))).toBe('confirmed');
-    expect(foresightAnswerOf(mk({ key: '2', state: 'acceptedByPlanner' }))).toBe('confirmed');
-    expect(foresightAnswerOf(mk({ key: '3', state: 'exception' }))).toBe('gap');
-    expect(foresightAnswerOf(mk({ key: '4', state: 'revisionRequested' }))).toBe('gap');
-    expect(foresightAnswerOf(mk({ key: '5', state: 'awaiting' }))).toBe('awaiting');
+  it('Confirmed, Gap, Awaiting, or Not required for a Zone Capacity (Trade-off or Forecast) period', () => {
+    const firm = /** @type {const} */ ('firm');
+    expect(foresightAnswerOf(mk({ key: '1', zone: firm, state: 'accepted' }))).toBe('confirmed');
+    expect(foresightAnswerOf(mk({ key: '2', zone: firm, state: 'acceptedByPlanner' }))).toBe(
+      'confirmed'
+    );
+    expect(foresightAnswerOf(mk({ key: '3', zone: firm, state: 'exception' }))).toBe('gap');
+    expect(foresightAnswerOf(mk({ key: '4', zone: firm, state: 'revisionRequested' }))).toBe('gap');
+    expect(foresightAnswerOf(mk({ key: '5', zone: firm, state: 'awaiting' }))).toBe('awaiting');
     expect(foresightAnswerOf(mk({ key: '6', zone: 'forecast', state: 'awaiting' }))).toBe(
       'notRequired'
     );
+    // PEX-D22 — a Trade-off (Zone Capacity) period needs no commitment either.
+    expect(foresightAnswerOf(mk({ key: '7', state: 'acknowledged' }))).toBe('notRequired');
+    expect(foresightAnswerOf(mk({ key: '8', state: 'awaiting' }))).toBe('notRequired');
   });
 });
 

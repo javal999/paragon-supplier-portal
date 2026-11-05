@@ -168,7 +168,9 @@ const DEFS = /** @satisfies {readonly HubSettingDef[]} */ (
       defaultValue: 2
     },
     // CR-21 — forecast commitment tolerance: the share below forecast accepted
-    // without the planner, per zone.
+    // without the planner. Zone Liability only: PEX-D22 (owner, 2026-11-05)
+    // made Zone Capacity periods acknowledgement only, so the Zone Capacity
+    // value changed no outcome and was retired with its order rule.
     {
       key: 'commitment.firmShortfallPct',
       section: 'tolerances',
@@ -177,15 +179,6 @@ const DEFS = /** @satisfies {readonly HubSettingDef[]} */ (
       min: 0,
       max: 100,
       defaultValue: 0
-    },
-    {
-      key: 'commitment.tradeOffShortfallPct',
-      section: 'tolerances',
-      rule: 'CR-21',
-      unit: 'pct',
-      min: 0,
-      max: 100,
-      defaultValue: 10
     },
     // CR-26 — forecast commitment deadlines, in working days after publication.
     {
@@ -1032,13 +1025,6 @@ const ORDER_RULES = [
     holds: (s) => num(s, 'invoice.contractPricePct') <= num(s, 'invoice.standardPct'),
     says: (s) =>
       `a contract-price line may not be allowed more than a line without one (contract ${num(s, 'invoice.contractPricePct')}% > other lines ${num(s, 'invoice.standardPct')}%)`
-  },
-  {
-    keys: ['commitment.firmShortfallPct', 'commitment.tradeOffShortfallPct'],
-    holds: (s) =>
-      num(s, 'commitment.firmShortfallPct') <= num(s, 'commitment.tradeOffShortfallPct'),
-    says: (s) =>
-      `Zone Liability periods may not accept a larger shortfall than Zone Capacity periods (Zone Liability ${num(s, 'commitment.firmShortfallPct')}% > Zone Capacity ${num(s, 'commitment.tradeOffShortfallPct')}%)`
   },
   {
     keys: ['commitment.firmDeadlineWorkingDays', 'commitment.otherDeadlineWorkingDays'],

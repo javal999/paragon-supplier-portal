@@ -51,7 +51,10 @@ const NEVER_SENT = 'staleData|PK-CAPF-8820|sup-007';
 const LEAD_MISSING = 'leadTimeMissing|RM-EMUL-9430|sup-010';
 const COVERAGE_FALLBACK = 'coverage|RM-EMUL-9430|sup-010';
 const COMMITMENT_FIRM = 'commitmentBelowForecast|RM-STEAR-7300|sup-002';
+// PEX-D22 — sup-007's 8802 answers below forecast are in Trade-off weeks, now
+// acknowledgements, so this key raises no alert; its 8801 shortfall is Zone Liability.
 const COMMITMENT_TRADE = 'commitmentBelowForecast|PK-PETB-8802|sup-007';
+const COMMITMENT_FIRM_007 = 'commitmentBelowForecast|PK-PETB-8801|sup-007';
 
 let path = '';
 /** @type {React.FC} */
@@ -309,9 +312,13 @@ describe('P-08 · each rule shows its own basis (INV-D1)', () => {
     expect(screen.getByTestId(`alert-basis-${COMMITMENT_FIRM}`)).toHaveTextContent(
       'Zone Liability period short'
     );
-    expect(screen.getByTestId(`alert-basis-${COMMITMENT_TRADE}`)).toHaveTextContent(
-      'Zone Capacity period short'
+    expect(screen.getByTestId(`alert-basis-${COMMITMENT_FIRM_007}`)).toHaveTextContent(
+      'Zone Liability period short'
     );
+    // PEX-D22 flipped this half: it pinned "Zone Capacity period short" on a
+    // Trade-off shortfall. A Zone Capacity period takes no commitment, so none alerts.
+    expect(screen.queryByTestId(`alert-basis-${COMMITMENT_TRADE}`)).toBeNull();
+    expect(screen.queryByText('Zone Capacity period short')).toBeNull();
     expect(screen.queryByText(/^Cover \d+ days/)).toBeNull();
   });
 });

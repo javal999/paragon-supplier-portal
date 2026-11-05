@@ -159,10 +159,6 @@ export const adminSettingsEn = {
   'adminSet.key.commitment.firmShortfallPct.label':
     'Shortfall below forecast accepted in Zone Liability periods',
   'adminSet.key.commitment.firmShortfallPct.hint': 'Anything more is an exception for the planner.',
-  'adminSet.key.commitment.tradeOffShortfallPct.label':
-    'Shortfall below forecast accepted in Zone Capacity periods',
-  'adminSet.key.commitment.tradeOffShortfallPct.hint':
-    'Later Zone Capacity periods are acknowledgement only.',
   'adminSet.key.commitment.firmDeadlineWorkingDays.label':
     'Zone Liability periods due after publication',
   'adminSet.key.commitment.firmDeadlineWorkingDays.hint': 'Counted on the hub working calendar.',
@@ -512,10 +508,6 @@ export const adminSettingsId = {
     'Kekurangan dari prakiraan yang diterima pada periode Zone Liability',
   'adminSet.key.commitment.firmShortfallPct.hint':
     'Lebih dari itu menjadi pengecualian bagi perencana.',
-  'adminSet.key.commitment.tradeOffShortfallPct.label':
-    'Kekurangan dari prakiraan yang diterima pada periode Zone Capacity',
-  'adminSet.key.commitment.tradeOffShortfallPct.hint':
-    'Periode Zone Capacity berikutnya hanya perlu diakui.',
   'adminSet.key.commitment.firmDeadlineWorkingDays.label':
     'Periode Zone Liability jatuh tempo setelah penerbitan',
   'adminSet.key.commitment.firmDeadlineWorkingDays.hint': 'Dihitung pada kalender kerja hub.',
