@@ -88,6 +88,12 @@ export const TERM_LABEL_GLOSSARY =
       label: { en: 'LTP', id: 'LTP' },
       en: 'The current forecast quantity of the material for the week, for this supplier. Each week’s demand anticipation (DA) starts from it.',
       id: 'Kuantitas prakiraan terkini material untuk minggu itu, untuk pemasok ini. Demand anticipation (DA) tiap minggu berangkat darinya.',
+      // U-08 (BL-246): the spreading is `groupWeekLtp` (capacityRules.js, CAP-D11). On
+      // the formula line, as the definition is held to 40 words (BR-07).
+      formula: {
+        en: 'A monthly LTP (raw material) is spread evenly over the month’s days; a week that straddles two months takes each month’s share.',
+        id: 'LTP bulanan (bahan baku) dibagi rata ke hari-hari dalam bulan itu; minggu yang melintasi dua bulan mengambil bagian dari masing-masing bulan.'
+      },
       labelKeys: ['daHist.csv.ltp']
     },
     fgDemand: {

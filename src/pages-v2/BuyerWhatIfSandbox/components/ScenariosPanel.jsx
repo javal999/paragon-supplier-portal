@@ -162,6 +162,13 @@ const SavedList = ({ scenarios, rulesVersion, compare, onCompare, onLoad }) => {
                       )
                     }
                   />
+                  {/* U-22 (BL-248) — the checkbox says what it does. */}
+                  <span
+                    className="text-xs font-normal text-text-secondary"
+                    data-testid={`wi-compare-label-${s.id}`}
+                  >
+                    {t('whatIf.saved.compare')}
+                  </span>
                   {s.name}
                 </label>
                 {s.rulesChanged ? (

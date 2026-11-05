@@ -87,7 +87,7 @@ describe('BL-208 — the suggested level', () => {
       'Proposed: awaiting owner review (BL-208, C2, F5)'
     );
     expect(screen.getByTestId('sst-level-suggestion-prov')).toHaveTextContent(
-      'Provisional: rule awaiting Material Planning (C2, F5, MPQ)'
+      'Provisional: rule awaiting Material Planning (C2, F5; MPQ = order multiple until master data)'
     );
     expect(screen.getByTestId('sst-level-suggestion-matches')).toBeInTheDocument();
     expect(screen.queryByTestId('sst-level-use-suggestion')).toBeNull();

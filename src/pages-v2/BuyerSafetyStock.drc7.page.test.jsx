@@ -106,10 +106,10 @@ describe('BL-193 — OSIP safety beside the engine challenger', () => {
     await render();
     // [Team, 2026-10-28] B2, B3, B5, B6, B7 and C1 answered: only the open questions remain.
     expect(screen.getByTestId('sst-osip-prov-safetyOrder')).toHaveTextContent(
-      'Provisional: rule awaiting Material Planning (B4, MPQ)'
+      'Provisional: rule awaiting Material Planning (B4; MPQ = order multiple until master data)'
     );
     expect(screen.getByTestId('sst-osip-prov-fisikSafety')).toHaveTextContent(
-      'Provisional: rule awaiting Material Planning (B1, MPQ)'
+      'Provisional: rule awaiting Material Planning (B1; MPQ = order multiple until master data)'
     );
     expect(screen.queryByTestId('sst-osip-prov-cv')).toBeNull();
     expect(screen.getByTestId('sst-osip-no-capacity')).toHaveTextContent(
@@ -256,7 +256,7 @@ describe('Bahasa Indonesia', () => {
     await render();
     expect(screen.getByTestId('term-tip-safety-order-rop-order')).toHaveTextContent('Safety order');
     expect(screen.getByTestId('sst-osip-prov-safetyOrder')).toHaveTextContent(
-      'Sementara: aturan menunggu Material Planning (B4, MPQ)'
+      'Sementara: aturan menunggu Material Planning (B4; MPQ = kelipatan pesanan sampai data master)'
     );
     expect(screen.getByTestId('sst-challenger')).toHaveTextContent('Pembanding');
     expect(screen.getByText('Pengalih aturan OSIP')).toBeInTheDocument();

@@ -3201,9 +3201,10 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *   its own assigned materials only. PTI: every supplier × material with a name.
  * @property {(scope: QueryScope) => Promise<Page<StockAccessGrant>>} getStockAccess -  Supplier access to PTI stock. PTI: every supplier with its log. Supplier: its own.
  * @property {(scope: QueryScope) => Promise<Page<CapacityPlan>>} getCapacityPlans -  Capacity against demand per supplier × planning group, 13 weeks.
- * @property {(scope: QueryScope) => Promise<Page<import('../transitions/callOffTriggerRules').PrRecommendationView>>} getRopFisikPrRecommendations BL-199 (DRC-13 BR-02) — the open "Create a PR in SAP" recommendations:
+ * @property {(scope: QueryScope) => Promise<import('../transitions/callOffTriggerRules').RopFisikPrPage>} getRopFisikPrRecommendations BL-199 (DRC-13 BR-02) — the open "Create a PR in SAP" recommendations:
  *   a material whose PTI SOH reached ROP Fisik with no umbrella PO balance left for what it needs. A
- *   recommendation only; the hub posts nothing to SAP. PTI only: a supplier scope reads an empty page.
+ *   recommendation only; the hub posts nothing to SAP. U-04 (BL-252): with `lastChecks`, the
+ *   trigger ledger's last row per material. PTI only: a supplier scope reads an empty page.
  * @property {(scope: QueryScope) => Promise<Page<import('./mock/whatIfSandboxReadModel').WhatIfPair>>} getWhatIfPairs DRC-17 (BL-202) — the supplier × material pairs the what-if sandbox
  *   offers, with RM or PM and its horizon (52 / 24 weeks), the PPT 7 golden case first. PTI only:
  *   a supplier scope reads an empty page.

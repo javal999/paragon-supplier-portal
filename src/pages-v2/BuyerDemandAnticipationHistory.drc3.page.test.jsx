@@ -123,6 +123,22 @@ describe('the filters', () => {
     expect(screen.getByLabelText('Planning week to')).toHaveValue(W36);
     expect(screen.getByTestId('dah-range')).toHaveTextContent('52 weeks back');
   });
+
+  it('U-21 (BL-250): one published week in range reads as such; more keeps the range sentence', async () => {
+    renderWithProviders(<BuyerDemandAnticipationHistory />, { route: ROUTE });
+    await screen.findByTestId(`dah-card-${EMUL}`);
+    expect(screen.getByTestId('dah-range')).toHaveTextContent(
+      'Showing W36, the only published week. The default range is 52 weeks back.'
+    );
+    expect(screen.getByTestId('dah-range')).not.toHaveTextContent('W36 to W36');
+    // An empty range: the range sentence, with its two ends.
+    fireEvent.change(screen.getByLabelText('Planning week to'), {
+      target: { value: '2026-08-23' }
+    });
+    expect(screen.getByTestId('dah-range')).toHaveTextContent(
+      'Showing planning weeks W36 to W34 (52 weeks back by default).'
+    );
+  });
 });
 
 describe('who sees it [Owner A10] — no business-role gate (CLAUDE.md §65)', () => {
@@ -157,6 +173,9 @@ describe('the way in and the locales', () => {
     renderWithProviders(<BuyerDemandAnticipationHistory />, { route: ROUTE });
     expect(await screen.findByTestId(`dah-status-${EMUL}`)).toHaveTextContent('Berlaku');
     expect(screen.getByTestId('dah-provisional')).toHaveTextContent('Sementara');
+    expect(screen.getByTestId('dah-range')).toHaveTextContent(
+      'Menampilkan W36, satu-satunya minggu yang dipublikasikan. Rentang bawaan 52 minggu ke belakang.'
+    );
     expectNoAbbreviation();
     await i18n.changeLanguage('en');
   });

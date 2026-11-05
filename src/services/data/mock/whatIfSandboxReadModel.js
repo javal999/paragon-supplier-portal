@@ -42,6 +42,7 @@ import { festiveWindows } from '../../transitions/drcBufferRules';
 import { NPD_RULES } from '../../transitions/osipRopRules';
 import { OSIP_RULES, RULES_VERSION } from '../../transitions/osipRules';
 import { cycleDaysOf } from '../../transitions/osipParams';
+import { primarySource } from '../../engine/requirement';
 import {
   PPT7_SUPPLIER_ID,
   horizonOf,
@@ -65,6 +66,8 @@ import { whatIfScenarioStore } from './stores/whatIfScenarioStore';
  * One supplier × material the sandbox offers (BR-01).
  * `preset`:  The PPT 7 golden case (BR-08), not a live pair.
  * `inPlan`:  The LTP names the pair, so the rolling DA holds its position.
+ * `primary`:  The material's primary supplier (`primarySource`, the largest
+ *   share), the pair `?material=` alone opens (U-09, BL-247).
  * @typedef {{
  *   readonly supplierId: string;
  *   readonly supplierName: string;
@@ -75,6 +78,7 @@ import { whatIfScenarioStore } from './stores/whatIfScenarioStore';
  *   readonly horizonWeeks: number;
  *   readonly preset: boolean;
  *   readonly inPlan: boolean;
+ *   readonly primary: boolean;
  * }} WhatIfPair
  */
 
@@ -130,7 +134,8 @@ const ppt7Pair = () => ({
   materialClass: 'PM',
   horizonWeeks: horizonOf('PM'),
   preset: true,
-  inPlan: false
+  inPlan: false,
+  primary: false
 });
 
 /**
@@ -141,6 +146,7 @@ const ppt7Pair = () => ({
  */
 export function whatIfPairs(nowIso = sdcClock.now()) {
   const osip = osipSafetyInputs(nowIso);
+  const { sources } = engineDataset();
   const inPlan = new Set(
     demandAnticipationToPublish([], nowIso).figures.map((f) => `${f.supplierId}|${f.materialCode}`)
   );
@@ -159,7 +165,8 @@ export function whatIfPairs(nowIso = sdcClock.now()) {
         materialClass,
         horizonWeeks: horizonOf(materialClass),
         preset: false,
-        inPlan: inPlan.has(`${s.supplierId}|${code}`)
+        inPlan: inPlan.has(`${s.supplierId}|${code}`),
+        primary: primarySource(sources, code)?.supplierId === s.supplierId
       });
   }
   live.sort(
@@ -346,7 +353,8 @@ export function whatIfSandbox(supplierId, materialCode, nowIso = sdcClock.now())
           preset: false,
           inPlan: demandAnticipationToPublish([], nowIso).figures.some(
             (f) => f.supplierId === supplierId && f.materialCode === materialCode
-          )
+          ),
+          primary: primarySource(engineDataset().sources, materialCode)?.supplierId === supplierId
         };
   // [Team B3, B7] the material's own Z and g: the switches the pair opens on.
   const s = osipSafetyInputs(nowIso)

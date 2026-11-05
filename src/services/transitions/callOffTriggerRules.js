@@ -580,6 +580,26 @@ export function triggerStep(
  */
 
 /**
+ * U-04 (BL-252) — a material's last trigger check: the ledger's last row for it.
+ * @typedef {{
+ *   readonly materialCode: string;
+ *   readonly observedAt: string;
+ *   readonly state: TriggerState;
+ * }} TriggerLastCheck
+ */
+
+/**
+ * The open PR recommendations, with the trigger's last check per material
+ * (U-04, BL-252), so an empty list can say whether the trigger has run.
+ * @typedef {{
+ *   readonly items: PrRecommendationView[];
+ *   readonly lastChecks: readonly TriggerLastCheck[];
+ *   readonly cursor?: string | null;
+ *   readonly total?: number;
+ * }} RopFisikPrPage
+ */
+
+/**
  * An open PR recommendation as PTI reads it, with the material's label and unit.
  * @typedef {PrRecommendation & { readonly materialLabel: string; readonly uom: string }} PrRecommendationView
  */

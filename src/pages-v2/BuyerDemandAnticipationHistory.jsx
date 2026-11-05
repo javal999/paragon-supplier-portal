@@ -111,6 +111,9 @@ const BuyerDemandAnticipationHistory = () => {
   ].sort();
   const shown = filterDaHistory(rows, { supplierId: supplier, materialCode: material, from, to });
   const filtered = [...params.keys()].length > 0;
+  // U-21 (BL-250) — the planning weeks the cards show: one week reads as such,
+  // not as "W36 to W36" (the default range's two ends are a year apart).
+  const shownWeeks = [...new Set(shown.map((r) => r.planningWeek))];
 
   /**
    * @param {'supplier' | 'material' | 'from' | 'to'} name
@@ -247,11 +250,16 @@ const BuyerDemandAnticipationHistory = () => {
         </Button>
       </div>
       <p className="text-xs text-text-tertiary mb-4" data-testid="dah-range">
-        {t('daHist.filter.range', {
-          from: weekLabel(from),
-          to: weekLabel(to),
-          weeks: DA_HISTORY_RULES.historyWeeksBack
-        })}{' '}
+        {shownWeeks.length === 1
+          ? t('daHist.filter.rangeOnly', {
+              week: weekLabel(shownWeeks[0]),
+              weeks: DA_HISTORY_RULES.historyWeeksBack
+            })
+          : t('daHist.filter.range', {
+              from: weekLabel(from),
+              to: weekLabel(to),
+              weeks: DA_HISTORY_RULES.historyWeeksBack
+            })}{' '}
         <span data-testid="dah-count">{t('daHist.count', { count: shown.length })}</span>
       </p>
 

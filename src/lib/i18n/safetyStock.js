@@ -93,6 +93,9 @@ export const safetyStockEn = {
   // engine's fill-rate challenger. "ROP Order", "ROP Fisik", "MPQ", "MOQ",
   // "LTP", "koli", "CV" and "FG" are the planners' own terms, kept in both languages.
   'sst.osip.provisional': 'Provisional: rule awaiting Material Planning ({{questions}})',
+  // U-15 (BL-257) — the master-data defaults in a Provisional label, as words.
+  'sst.osip.default.MPQ': 'MPQ = order multiple until master data',
+  'sst.osip.default.MDQ': 'MDQ = MOQ until master data',
   'sst.osip.challenger': 'Challenger: engine fill rate',
   'sst.osip.noCapacity': 'Production capacity not available: left out of the min',
   'sst.osip.unavailable.NO_LTP': 'No LTP over the lead time',
@@ -355,6 +358,8 @@ export const safetyStockId = {
   // BL-193 (DRC-7) / BL-197 (DRC-11). Istilah planner (ROP Order, ROP Fisik,
   // MPQ, MOQ, LTP, koli, CV, FG) dipertahankan.
   'sst.osip.provisional': 'Sementara: aturan menunggu Material Planning ({{questions}})',
+  'sst.osip.default.MPQ': 'MPQ = kelipatan pesanan sampai data master',
+  'sst.osip.default.MDQ': 'MDQ = MOQ sampai data master',
   'sst.osip.challenger': 'Pembanding: tingkat pemenuhan mesin',
   'sst.osip.noCapacity': 'Kapasitas produksi tidak tersedia: tidak ikut dalam nilai terendah',
   'sst.osip.unavailable.NO_LTP': 'Tidak ada LTP selama waktu tunggu',
