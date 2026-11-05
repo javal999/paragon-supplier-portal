@@ -77,7 +77,8 @@ describe('BL-233 wave 3 — /buyer/safety-stock', () => {
 });
 
 describe('BL-233 wave 3 — /buyer/fs-reconcile', () => {
-  it('the six quantities carry an (i); Max reads "Max Stock Supplier" (TL-D12)', async () => {
+  // BL-274 (PEX-9 BR-01) removed "Called off, not yet shipped": five remain.
+  it('the five quantities carry an (i); Max reads "Max Stock Supplier" (TL-D12)', async () => {
     renderWithProviders(<BuyerFixedStockReconcile />, {
       identity: BUYER,
       route: '/buyer/fs-reconcile'
@@ -90,7 +91,6 @@ describe('BL-233 wave 3 — /buyer/fs-reconcile', () => {
       'Called off': 'term-tip-reconcile-called-off',
       'ASN requested': 'term-tip-asn-requested',
       'Not yet called off': 'term-tip-not-yet-called-off',
-      'Called off, not yet shipped': 'term-tip-called-off-not-yet-shipped',
       'Max Stock Supplier': 'term-tip-max-stock-supplier'
     });
   });

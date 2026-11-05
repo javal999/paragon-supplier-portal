@@ -44,7 +44,7 @@ describe('Feedstock reconcile — planner', () => {
     expect(screen.getByRole('columnheader', { name: 'Supplier' })).toBeInTheDocument();
   });
 
-  it('BR-01: PO ordered, called off, ASN requested and the two remainders', async () => {
+  it('BR-01: PO ordered, called off, ASN requested and what is not yet called off', async () => {
     renderWithProviders(<BuyerFixedStockReconcile />, {
       identity: BUYER,
       route: '/buyer/fs-reconcile'
@@ -57,7 +57,9 @@ describe('Feedstock reconcile — planner', () => {
     expect(row).toHaveTextContent('on 10 call-offs');
     expect(screen.getByTestId(`fsr-asn-${K8801}`)).toHaveTextContent(pcs(0));
     expect(screen.getByTestId(`fsr-uncalled-${K8801}`)).toHaveTextContent(pcs(262_000));
-    expect(screen.getByTestId(`fsr-unshipped-${K8801}`)).toHaveTextContent(pcs(208_000));
+    // BL-274 (PEX-9 BR-01) — "Called off, not yet shipped" is no longer shown.
+    expect(screen.queryByTestId(`fsr-unshipped-${K8801}`)).toBeNull();
+    expect(screen.queryByRole('columnheader', { name: /Called off, not yet shipped/ })).toBeNull();
     expect(screen.queryByTestId(`fsr-beyond-${K8801}`)).toBeNull();
     expect(screen.getByTestId(`fsr-max-${K8801}`)).toHaveTextContent('No max stock agreed');
   });
@@ -158,6 +160,9 @@ describe('Feedstock reconcile — supplier', () => {
     expect(screen.getByTestId(`fsr-row-${K8802}`)).toBeInTheDocument();
     expect(screen.queryByTestId(`fsr-row-${KUNASSIGNED}`)).toBeNull();
     expect(screen.queryByRole('columnheader', { name: 'Supplier' })).toBeNull();
+    // BL-274 (PEX-9 BR-01) — gone on the supplier's view too.
+    expect(screen.queryByTestId(`fsr-unshipped-${K8801}`)).toBeNull();
+    expect(screen.queryByRole('columnheader', { name: /Called off, not yet shipped/ })).toBeNull();
     expect(screen.getByTestId(`fsr-po-${K8802}`)).toHaveTextContent(pcs(320_000));
     // Read-only: no edit and no handoff notice on the supplier's own view.
     expect(screen.queryByTestId(`fsr-max-edit-${K8801}`)).toBeNull();

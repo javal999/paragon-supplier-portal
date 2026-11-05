@@ -85,7 +85,7 @@ const FixedStockReconcile = ({ persona }) => {
     return <ErrorState breadcrumb={crumb} error={query.error} onRetry={() => query.refetch()} />;
 
   const rows = query.data?.items ?? [];
-  const cols = isPti ? 8 : 7;
+  const cols = isPti ? 7 : 6;
   // DRC-15b [Proposed BL-207] — the variant the rows were built with.
   const leftoverRule = rows[0]?.leftover.rule ?? FEEDSTOCK_LEFTOVER_RULES.leftoverRule;
   const draftQty = draft.trim() === '' ? null : Number(draft.trim());
@@ -229,7 +229,8 @@ const FixedStockReconcile = ({ persona }) => {
             <TableHeaderCell term="reconcileCalledOff" />
             <TableHeaderCell term="asnRequested" />
             <TableHeaderCell term="notYetCalledOff" />
-            <TableHeaderCell term="calledOffNotYetShipped" />
+            {/* PEX-9 BR-01 (BL-274) — "Called off, not yet shipped" is gone on
+                both views (owner, 2026-11-05). */}
             <TableHeaderCell term="maxStockSupplier" />
           </TableHeader>
           <tbody>
@@ -263,6 +264,13 @@ const FixedStockReconcile = ({ persona }) => {
                 <TableCell className="align-top">
                   <Qty value={r.asnRequested} uom={r.uom} testId={`fsr-asn-${r.key}`} />
                   <span className={note}>{t('fsr.asnCount', { count: r.asnNumbers.length })}</span>
+                  {/* BL-274 — the flag rode in the removed column; it reads the
+                      ASN figure against the call-offs, so it stays, here. */}
+                  {r.shippedBeyondCalledOff > 0 && (
+                    <span className={note} data-testid={`fsr-shipped-beyond-${r.key}`}>
+                      {t('fsr.shippedBeyond')} <Qty value={r.shippedBeyondCalledOff} uom={r.uom} />
+                    </span>
+                  )}
                 </TableCell>
                 <TableCell className="align-top">
                   <Qty value={r.notYetCalledOff} uom={r.uom} testId={`fsr-uncalled-${r.key}`} />
@@ -272,18 +280,6 @@ const FixedStockReconcile = ({ persona }) => {
                     </span>
                   )}
                   {leftoverNotes(r)}
-                </TableCell>
-                <TableCell className="align-top">
-                  <Qty
-                    value={r.calledOffNotShipped}
-                    uom={r.uom}
-                    testId={`fsr-unshipped-${r.key}`}
-                  />
-                  {r.shippedBeyondCalledOff > 0 && (
-                    <span className={note} data-testid={`fsr-shipped-beyond-${r.key}`}>
-                      {t('fsr.shippedBeyond')} <Qty value={r.shippedBeyondCalledOff} uom={r.uom} />
-                    </span>
-                  )}
                 </TableCell>
                 <TableCell className="align-top">{maxCell(r)}</TableCell>
               </TableRow>
