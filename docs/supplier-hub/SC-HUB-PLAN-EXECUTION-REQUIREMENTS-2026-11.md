@@ -7,7 +7,7 @@
 | Source meetings | Weekly SC Hub, 2026-10-21, cited [M21 n]. Weekly SC Hub, 2026-11-04, cited [M04 n]. The PO On Hold decision table shared with the 2026-11-04 notes, cited [Table] |
 | Owner review | Answers in chat, 2026-11-05, cited [Owner, 2026-11-05] |
 | Code read | GitLab `main` at `3da82ae5` |
-| Covers | PEX-1 to PEX-16 (section 3). Backlog BL-262 to BL-277 |
+| Covers | PEX-1 to PEX-16 (section 3). Backlog BL-264 to BL-279 |
 | Amends | DRC-3 (DA history), DRC-9a (strategic buffer source), DRC-9c (protection buffer, was Hold), DRC-15a (feedstock reconcile columns), DRC-17 (what-if sandbox) in `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md`; the Firm, Trade-off and Forecast labels in `SC-HUB-TERM-LABELS-REQUIREMENTS-2026-10.md` |
 | Waits on | Mba Septi (Material Planning): SAP identifiers for DA, PO, call-off, ASN and LTP; absorption and carry-over thresholds; OSIP MDM template review; ROP, safety stock, lead time and MOQ rules [M21 6] |
 
@@ -265,13 +265,13 @@ The supplier usability test is on Monday 9 or Tuesday 10 November 2026 [M04 6]. 
 
 | Wave | Goal | Backlog | Ready by |
 |---|---|---|---|
-| 1 | Supplier UI for the usability test | BL-262 zones, BL-263 horizon, BL-264 heads-up, BL-271 SLA, BL-272 FS reconcile column, BL-277 tracking link | Fri 6 Nov 2026 merge, so the build is up by Mon 9 Nov |
-| 2 | LTP inputs and DA versions | BL-265 LTP inputs, BL-266 DA versions, BL-267 capacity heads-up and treemap | Week of 9 Nov |
-| 3 | PO On Hold end to end | BL-268 PO On Hold, BL-269 decision, BL-270 grace settings, BL-273 SS/PB switch | Week of 16 Nov |
-| 4 | Trace and sandbox | BL-274 trace, BL-275 sandbox levels | Week of 23 Nov |
-| Held | Wait on Mba Septi | BL-276 master data; PEX-11 BR-04; PEX-12 | When she answers |
+| 1 | Supplier UI for the usability test | BL-264 zones, BL-265 horizon, BL-266 heads-up, BL-273 SLA, BL-274 FS reconcile column, BL-279 tracking link | Fri 6 Nov 2026 merge, so the build is up by Mon 9 Nov |
+| 2 | LTP inputs and DA versions | BL-267 LTP inputs, BL-268 DA versions, BL-269 capacity heads-up and treemap | Week of 9 Nov |
+| 3 | PO On Hold end to end | BL-270 PO On Hold, BL-271 decision, BL-272 grace settings, BL-275 SS/PB switch | Week of 16 Nov |
+| 4 | Trace and sandbox | BL-276 trace, BL-277 sandbox levels | Week of 23 Nov |
+| Held | Wait on Mba Septi | BL-278 master data; PEX-11 BR-04; PEX-12 | When she answers |
 
-Wave 1 has no dependency inside it, so its rows can run in parallel lanes. Wave 2 depends on BL-265 first: BL-266 and BL-267 read the LTP inputs. Wave 3's BL-269 needs BL-268. After each merge, a docs pass updates this file's status and the backlog.
+Wave 1 has no dependency inside it, so its rows can run in parallel lanes. Wave 2 depends on BL-267 first: BL-268 and BL-269 read the LTP inputs. Wave 3's BL-271 needs BL-270. After each merge, a docs pass updates this file's status and the backlog.
 
 **Not in this file:** the Excel simulation and the 9-scenario supplier test [M04 6] are owner deliverables, not hub builds. The ZPEE discussion has no requirement yet.
 
