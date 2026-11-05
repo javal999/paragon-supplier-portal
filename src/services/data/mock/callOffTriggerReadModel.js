@@ -29,6 +29,7 @@
 /** @import { CallOffType } from '../types' */
 /** @import { CallOffTriggerRules, PrRecommendationView, SupplierRop, TriggerCallOff, TriggerFigures, TriggerLine, TriggerRow } from '../../transitions/callOffTriggerRules' */
 /** @import { Stamped } from '../../transitions/osipRules' */
+/** @import { TriggerLastCheck } from '../../transitions/callOffTriggerRules' */
 import { mockSuppliers } from '@data/mockSuppliers';
 import { MATERIAL_MASTER, sdcClock } from '../../sdc';
 import { addDays, dayOf } from '../../engine/dates';
@@ -345,6 +346,24 @@ export function observeCallOffTriggers(
       });
   }
   if (rows.length > 0) callOffTriggerStore.append(rows);
+}
+
+/**
+ * U-04 (BL-252) — the trigger ledger's last row per material: when the
+ * trigger last checked it and what it found. Materials it never checked are
+ * absent. By material code.
+ * @returns {TriggerLastCheck[]}
+ */
+export function ropFisikLastChecks() {
+  /** @type {Map<string, TriggerLastCheck>} */
+  const last = new Map();
+  for (const r of callOffTriggerStore.all())
+    last.set(r.materialCode, {
+      materialCode: r.materialCode,
+      observedAt: r.observedAt,
+      state: r.state
+    });
+  return [...last.values()].sort((a, b) => a.materialCode.localeCompare(b.materialCode));
 }
 
 /**

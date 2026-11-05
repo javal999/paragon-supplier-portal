@@ -15,7 +15,7 @@ import {
   supplierAskRefusalOf
 } from '@services/transitions/supplierAskRules';
 import { RiskPill, inputClass, labelClass } from './inventoryDisplay';
-import { AskSubject, askOrder, askRefusalText } from './supplierAskDisplay';
+import { AskSubject, askOrder, askQuestionText, askRefusalText } from './supplierAskDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Inventory UX S-04 (INV-D9) — "PTI has N questions for you" (BL-227).
@@ -117,7 +117,7 @@ const AskLine = ({ ask, held, replying, onReply, onDone }) => {
           </Button>
         ) : null}
       </div>
-      <p className="text-sm text-text-primary">{ask.question}</p>
+      <p className="text-sm text-text-primary">{askQuestionText(t, ask)}</p>
       {held && replying ? <ReplyForm ask={ask} onDone={onDone} /> : null}
     </li>
   );

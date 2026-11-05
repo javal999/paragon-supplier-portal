@@ -53,7 +53,7 @@ describe('BR-08 · the PPT 7 golden case', () => {
     expect(screen.getByTestId('wi-plan-prNeed')).toHaveTextContent('645,559');
     // Design rule 5 — each figure built on a [Default] names its questions.
     expect(screen.getByTestId('wi-prov-ropOrder')).toHaveTextContent(
-      'Provisional: rule awaiting Material Planning (B4, B9, MPQ)'
+      'Provisional: rule awaiting Material Planning (B4, B9; MPQ = order multiple until master data)'
     );
     expect(screen.getByTestId('wi-prov-totalDa')).toHaveTextContent('A8b, A9');
     // It opens on the two readings the slide used, so nothing reads as edited.
@@ -143,6 +143,11 @@ describe('BR-05 · saving and comparing up to 3 scenarios', () => {
     }
     await waitFor(() => expect(screen.getByTestId('wi-saved-wis-0004')).toBeInTheDocument());
     expect(whatIfScenarioStore.all()).toHaveLength(4);
+    // U-22 (BL-248): the word "Compare" beside each checkbox, in its label.
+    expect(screen.getByTestId('wi-compare-label-wis-0001')).toHaveTextContent('Compare');
+    expect(screen.getByRole('checkbox', { name: 'Compare One' })).toBe(
+      screen.getByTestId('wi-compare-wis-0001')
+    );
     for (const id of ['wis-0001', 'wis-0002', 'wis-0003'])
       fireEvent.click(screen.getByTestId(`wi-compare-${id}`));
     expect(screen.getByTestId('wi-col-wis-0003')).toHaveTextContent('Three');
@@ -205,10 +210,18 @@ describe('Bahasa Indonesia', () => {
       'Hanya analisis — tidak ada yang di sini mengubah rencana atau sampai ke pemasok atau SAP'
     );
     expect(await screen.findByTestId('wi-prov-ropOrder')).toHaveTextContent(
-      'Sementara: aturan menunggu Material Planning'
+      'Sementara: aturan menunggu Material Planning (B4, B9; MPQ = kelipatan pesanan sampai data master)'
     );
     expect(screen.getByText('Rencana saat ini')).toBeInTheDocument();
     expect(screen.getByText('Sandbox what-if', { selector: 'h1' })).toBeInTheDocument();
     expectNoAbbreviation();
+  });
+
+  it('U-22 (BL-248): a saved scenario\'s checkbox reads "Bandingkan"', async () => {
+    await i18n.changeLanguage('id');
+    renderWithProviders(<BuyerWhatIfSandbox />, { route: PAIR });
+    fireEvent.change(await screen.findByLabelText('Nama skenario'), { target: { value: 'Satu' } });
+    fireEvent.click(screen.getByTestId('wi-save'));
+    expect(await screen.findByTestId('wi-compare-label-wis-0001')).toHaveTextContent('Bandingkan');
   });
 });

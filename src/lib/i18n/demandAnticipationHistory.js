@@ -24,6 +24,9 @@ export const demandAnticipationHistoryEn = {
   'daHist.filter.clear': 'Clear filters',
   'daHist.filter.range':
     'Showing planning weeks {{from}} to {{to}} ({{weeks}} weeks back by default).',
+  // U-21 (BL-250) — the range holds one published planning week.
+  'daHist.filter.rangeOnly':
+    'Showing {{week}}, the only published week. The default range is {{weeks}} weeks back.',
   'daHist.export': 'Export CSV',
   'daHist.count_one': '{{count}} published figure',
   'daHist.count_other': '{{count}} published figures',
@@ -90,6 +93,8 @@ export const demandAnticipationHistoryId = {
   'daHist.filter.clear': 'Hapus filter',
   'daHist.filter.range':
     'Menampilkan minggu perencanaan {{from}} sampai {{to}} (bawaan {{weeks}} minggu ke belakang).',
+  'daHist.filter.rangeOnly':
+    'Menampilkan {{week}}, satu-satunya minggu yang dipublikasikan. Rentang bawaan {{weeks}} minggu ke belakang.',
   'daHist.export': 'Ekspor CSV',
   'daHist.count_other': '{{count}} angka terpublikasi',
   'daHist.status.inForce': 'Berlaku',

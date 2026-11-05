@@ -11,6 +11,7 @@
 import { useTranslation } from 'react-i18next';
 import { formatNumber } from '@lib/format';
 import { HEADLINE_QUESTIONS } from '@services/transitions/whatIfSandboxRules';
+import { provisionalBasis } from '@components/forecast/provisionalBasis';
 import { inputClass, labelClass } from '../inventory/inventoryDisplay';
 import { signedDelta, weekLabel } from '../BuyerDemandAnticipation/display';
 
@@ -58,7 +59,7 @@ export const Provisional = ({ figure, testId }) => {
   if (HEADLINE_QUESTIONS[figure].length === 0) return null;
   return (
     <span className="block text-xs text-warning-hover" data-testid={testId}>
-      {t('ltpFg.provisional', { question: HEADLINE_QUESTIONS[figure].join(', ') })}
+      {t('ltpFg.provisional', { question: provisionalBasis(HEADLINE_QUESTIONS[figure], t) })}
     </span>
   );
 };

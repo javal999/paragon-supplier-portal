@@ -1,7 +1,6 @@
 /** @import React from 'react' */
 import { useTranslation } from 'react-i18next';
 import TermLabel from '@components/ui-v2/TermLabel';
-import LivenessPill from '@components/ui-v2/LivenessPill';
 import Data from '@components/ui-v2/Data';
 import { formatDate } from '@lib/format';
 import { useSupplierReliability } from '@services/query/hooks';
@@ -20,6 +19,11 @@ import { MissSplitLine, Rate, mascOf, pctOf } from './reliabilityDisplay';
 // forecast lines reaches (the performance page shows an empty state for any
 // supplier without authored scorecard figures), and PTI's plan-change figure
 // belongs beside the plan it describes.
+//
+// BL-253 (U-20) — no data strip of its own: the one host page
+// (SupplierForecastCommitments) carries "Sample data" once, at the top, and a
+// second wording on the same page was the defect. A new host without its own
+// banner must add one.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @type {React.FC<{ label: React.ReactNode; children: React.ReactNode; testId: string }>} */
@@ -56,7 +60,6 @@ const SupplierReliabilityPanel = () => {
             </p>
           )}
         </div>
-        <LivenessPill capability="engineDataset" />
       </div>
       {!row ? (
         <p className="text-sm text-text-tertiary" data-testid="rel-sup-empty">

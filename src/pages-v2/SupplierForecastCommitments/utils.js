@@ -3,7 +3,7 @@
 
 /** @import { CapacityPlan, CapacityReason, ForecastCommitmentLine } from '@services/data/types' */
 /** @import { PeriodCapacityCheck } from '@services/transitions/capacityRules' */
-/** @import { PeriodRefusal, PeriodRow, ReadRow, RowDraft, WeekReason } from './const' */
+/** @import { PeriodRefusal, PeriodRow, ReadRow, RowDraft, SubmitSummaryLine, WeekReason } from './const' */
 import {
   capacityGroupOfMaterial,
   commitmentCapacityRefusal,
@@ -29,6 +29,17 @@ export const draftOf = (l) => {
     note: src?.rootCause?.note ?? ''
   };
 };
+
+/**
+ * BL-240 (U-02) — the row still shows the forecast pre-fill (BR-09): nobody
+ * edited it on this page, and it has no saved draft and no earlier response
+ * for `draftOf` to start from.
+ * @param {ForecastCommitmentLine} l
+ * @param {Record<string, RowDraft>} drafts  The row drafts edited on this page.
+ * @returns {boolean}
+ */
+export const isPrefilled = (l, drafts) =>
+  drafts[l.key] === undefined && l.draft === null && l.response === null;
 
 /**
  * Read a row's draft: the parsed quantity and upside, and the first refusal
@@ -155,6 +166,12 @@ export const buildPeriodRows = ({
       }
       if (!refusal && pending.some(rowBlocked)) refusal = { kind: 'row' };
     }
-    return { first, bucket, pending, checks, red, wr, rootFor, refusal };
+    /** @type {SubmitSummaryLine[]} */
+    const summary = pending.map((l) => ({
+      line: l,
+      qty: readRow(l).qtyValue,
+      prefilled: isPrefilled(l, drafts)
+    }));
+    return { first, bucket, pending, checks, red, wr, rootFor, refusal, summary };
   });
 };

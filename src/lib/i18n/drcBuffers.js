@@ -53,9 +53,9 @@ export const drcBuffersEn = {
 /** @type {Record<string, string>} */
 export const drcBuffersId = {
   'buffers.provisional': 'Sementara: aturan menunggu Material Planning ({{question}})',
-  'buffers.strategic.title': 'Buffer strategis, periode hari raya',
+  'buffers.strategic.title': 'Strategic buffer, periode hari raya',
   'buffers.strategic.subtitle':
-    'Buffer strategis = LTP − baseline, baseline adalah rata-rata LTP {{months}} bulan sebelum periode hari raya; tidak pernah di bawah 0. Hanya baca: tidak ada pesanan dari angka ini.',
+    'Strategic buffer = LTP − baseline, baseline adalah rata-rata LTP {{months}} bulan sebelum periode hari raya; tidak pernah di bawah 0. Hanya baca: tidak ada pesanan dari angka ini.',
   'buffers.strategic.calendarNote':
     'Periode hari raya diambil dari kalender event permintaan PTI: Ramadan sampai Lebaran, per bulan. Kalender belum memuat Imlek, jadi Imlek tidak ditampilkan.',
   'buffers.strategic.window': 'Ramadan {{year}} H: {{start}} sampai Lebaran {{eid}}',
@@ -73,11 +73,11 @@ export const drcBuffersId = {
   'buffers.strategic.empty': 'Tidak ada pemasok × material dengan LTP yang sesuai filter.',
   // DRC-9c (BL-205) — protection buffer, [Proposed].
   'buffers.proposed': 'Usulan: menunggu tinjauan pemilik (BL-205, {{question}})',
-  'buffers.protection.title': 'Buffer proteksi, level OSIP 5 sampai 7',
+  'buffers.protection.title': 'Protection buffer, level OSIP 5 sampai 7',
   'buffers.protection.subtitle':
-    'Buffer proteksi = CEILING(kenaikan, MPQ produksi), kenaikan = LTP − rata-rata LTP {{months}} bulan sebelumnya; tidak pernah di bawah 0. Hanya level 5, 6 dan 7: level 4 tanpa buffer proteksi, level 1 sampai 3 memakai buffer strategis. Hanya baca: ROP Fisik dan Max tidak memasukkannya.',
+    'Protection buffer = CEILING(kenaikan, MPQ produksi), kenaikan = LTP − rata-rata LTP {{months}} bulan sebelumnya; tidak pernah di bawah 0. Hanya level 5, 6 dan 7: level 4 tanpa protection buffer, level 1 sampai 3 memakai strategic buffer. Hanya baca: ROP Fisik dan Max tidak memasukkannya.',
   'buffers.protection.absorbed': 'Stok terencana: PTI menyerapnya walaupun permintaan tidak naik',
-  'buffers.protection.switchedOff': 'Buffer proteksi dimatikan: tidak ada angka yang dihitung.',
+  'buffers.protection.switchedOff': 'Protection buffer dimatikan: tidak ada angka yang dihitung.',
   'buffers.protection.col.supplier': 'Pemasok',
   'buffers.protection.col.material': 'Material',
   'buffers.protection.col.month': 'Bulan',
@@ -85,12 +85,12 @@ export const drcBuffersId = {
   'buffers.protection.level': 'Level {{level}}',
   'buffers.protection.mpq': 'MPQ {{mpq}}',
   'buffers.protection.noMpq': 'Tidak ada MPQ',
-  'buffers.protection.reason.level4': 'Level 4: tanpa buffer proteksi',
-  'buffers.protection.reason.strategicLevel': 'Level {{level}}: memakai buffer strategis',
-  'buffers.protection.reason.otherLevel': 'Level {{level}}: tanpa buffer proteksi',
+  'buffers.protection.reason.level4': 'Level 4: tanpa protection buffer',
+  'buffers.protection.reason.strategicLevel': 'Level {{level}}: memakai strategic buffer',
+  'buffers.protection.reason.otherLevel': 'Level {{level}}: tanpa protection buffer',
   'buffers.protection.reason.switchedOff': 'Dimatikan',
   'buffers.protection.baselineIncomplete': 'Baseline tidak lengkap',
-  'buffers.protection.loading': 'Memuat buffer proteksi…',
-  'buffers.protection.error': 'Buffer proteksi tidak dapat dimuat.',
+  'buffers.protection.loading': 'Memuat protection buffer…',
+  'buffers.protection.error': 'Protection buffer tidak dapat dimuat.',
   'buffers.protection.empty': 'Tidak ada pemasok × material dengan LTP yang sesuai filter.'
 };

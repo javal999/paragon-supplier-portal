@@ -28,6 +28,8 @@ import { callOffTriggerStore } from './stores/callOffTriggerStore';
 import { npdTagStore } from './stores/npdTagStore';
 import { consumptionStore } from './stores/consumptionStore';
 import { feedstockConfirmationStore } from './stores/feedstockConfirmationStore';
+import { engineDataset } from './fixtures/engineDataset';
+import { primarySource } from '../../engine/requirement';
 import { simulationOverrideStore } from './stores/simulationOverrideStore';
 import { purchaseRequisitionStore } from './stores/purchaseRequisitionStore';
 import { materialOverlayStore } from './stores/materialOverlayStore';
@@ -115,6 +117,17 @@ describe('the fixture pairs this file rests on (population control)', () => {
     expect(rm).toMatchObject({ materialClass: 'RM', horizonWeeks: 52, inPlan: true });
     expect(pairs[0]).toMatchObject({ supplierId: PPT7_SUPPLIER_ID, preset: true });
     expect(whatIfScenarioStore.all()).toEqual([]);
+  });
+
+  it('U-09 (BL-247): each material marks one pair primary, its primarySource supplier; the sandbox read agrees', () => {
+    const pairs = whatIfPairs().filter((p) => !p.preset);
+    const { sources } = engineDataset();
+    for (const code of new Set(pairs.map((p) => p.materialCode))) {
+      const primary = pairs.filter((p) => p.materialCode === code && p.primary);
+      expect(primary).toHaveLength(1);
+      expect(primary[0].supplierId).toBe(primarySource(sources, code)?.supplierId);
+      expect(whatIfSandbox(primary[0].supplierId, code)?.pair.primary).toBe(true);
+    }
   });
 });
 
