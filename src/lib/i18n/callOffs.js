@@ -201,6 +201,10 @@ export const callOffsEn = {
     'Checks follow the eWM refresh; eWM feed not connected, SOH from the hub’s stock records.',
   'co.trigger.provisional': 'Provisional: rule awaiting Material Planning ({{questions}})',
   'co.trigger.rulesVersion': 'Rules version {{version}}',
+  // U-04 (BL-252) — where no hub-made draft or PR recommendation shows yet.
+  'co.trigger.notYet':
+    'No call-off drafted at ROP Fisik yet. The trigger runs on PTI stock updates; the eWM feed is not connected.',
+  'co.trigger.lastChecked': 'Last checked {{date}}.',
   // BL-199 (DRC-13 BR-02) — What to order: no umbrella PO balance left.
   'co.trigger.pr.title': 'Create a PR in SAP: no umbrella PO balance at ROP Fisik',
   'co.trigger.pr.intro':
@@ -539,6 +543,9 @@ export const callOffsId = {
     'Pemeriksaan mengikuti pembaruan eWM; data eWM belum terhubung, stok diambil dari catatan stok hub.',
   'co.trigger.provisional': 'Sementara: aturan menunggu Material Planning ({{questions}})',
   'co.trigger.rulesVersion': 'Versi aturan {{version}}',
+  'co.trigger.notYet':
+    'Belum ada call-off yang didraf pada ROP Fisik. Trigger berjalan setiap stok PTI diperbarui; data eWM belum terhubung.',
+  'co.trigger.lastChecked': 'Terakhir diperiksa {{date}}.',
   'co.trigger.pr.title': 'Buat PR di SAP: saldo PO induk habis pada ROP Fisik',
   'co.trigger.pr.intro':
     'Stok PTI mencapai ROP Fisik dan tidak ada baris PO induk yang masih bersaldo untuk kebutuhannya. Hub merekomendasikan PR; Anda membuatnya di SAP. Hub tidak mengirim apa pun ke SAP.',

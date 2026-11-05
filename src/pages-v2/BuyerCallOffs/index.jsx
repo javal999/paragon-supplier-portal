@@ -34,6 +34,7 @@ import { POStatus } from '@services/data/types';
 import { deliveryDrift, releaseCheck } from '@services/transitions/callOffRules';
 /** @import { ReleaseCadence } from '@services/delivery/types' */
 import { numberOf, useCallOffViews } from '../callOffs/callOffDisplay';
+import { RopFisikNotYet } from '../callOffs/ropFisikTrigger';
 import { ptiPicOf, usePicFilter } from '../materials/picDisplay';
 import { useMaterialMatcher } from '@components/ui-v2/MaterialSearch';
 import { searchMaterials } from '@services/transitions/matchMaterial';
@@ -326,6 +327,10 @@ const BuyerCallOffs = () => {
           <RunningOutList groups={runOutGroups} />
         ) : (
           <>
+            {/* U-04 (BL-252) — To act says when the ROP Fisik trigger has drafted nothing yet. */}
+            {onToAct && !views.some((v) => v.callOff.origin === 'ropFisik') ? (
+              <RopFisikNotYet testId="calloff-rop-fisik-empty" className="mb-4" />
+            ) : null}
             <CallOffFilters
               search={search}
               setSearch={setSearch}

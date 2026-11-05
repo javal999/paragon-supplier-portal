@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import StatusPill from '@components/ui-v2/StatusPill';
 import Data from '@components/ui-v2/Data';
 import { CALL_OFF_TRIGGER_QUESTIONS } from '@services/transitions/callOffTriggerRules';
+import { formatDateTime } from '@lib/format';
+import { useRopFisikPrRecommendations } from '@services/query/hooks';
 import { qty } from './callOffDisplay';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -12,7 +14,8 @@ import { qty } from './callOffDisplay';
 // figures behind it (SOH, ROP Fisik, Max, quantity) as the trigger stored them
 // (DRC-D16). Every figure rests on [Default] rules, so it carries
 // "Provisional: rule awaiting Material Planning" with F1 and the ROP questions
-// (design rule 5). Nothing here computes a figure.
+// (design rule 5). Nothing here computes a figure. U-04 (BL-252): where no
+// draft or PR shows, `RopFisikNotYet` says the trigger has not drafted yet.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -37,6 +40,35 @@ export const TriggerRefreshNote = ({ testId }) => {
   return (
     <p className="text-xs text-text-tertiary" data-testid={testId}>
       {t('co.trigger.refresh')}
+    </p>
+  );
+};
+
+/**
+ * U-04 (BL-252) — the empty state where hub-made drafts or PR recommendations
+ * would show: nothing drafted at ROP Fisik yet, why, and when the trigger last
+ * checked a material (the trigger ledger's latest row), when it has.
+ * @type {React.FC<{ testId: string; className?: string }>}
+ */
+export const RopFisikNotYet = ({ testId, className = '' }) => {
+  const { t } = useTranslation();
+  const query = useRopFisikPrRecommendations();
+  if (!query.data) return null;
+  const last = query.data.lastChecks.reduce(
+    (latest, c) => (latest === null || c.observedAt > latest ? c.observedAt : latest),
+    /** @type {string | null} */ (null)
+  );
+  return (
+    <p className={`text-sm text-text-tertiary ${className}`} data-testid={testId}>
+      {t('co.trigger.notYet')}
+      {last === null ? null : (
+        <>
+          {' '}
+          <span data-testid={`${testId}-last`}>
+            {t('co.trigger.lastChecked', { date: formatDateTime(last) })}
+          </span>
+        </>
+      )}
     </p>
   );
 };

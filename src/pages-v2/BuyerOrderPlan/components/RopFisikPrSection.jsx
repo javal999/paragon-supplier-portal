@@ -9,7 +9,11 @@ import StatusPill from '@components/ui-v2/StatusPill';
 import { formatDate, formatNumber } from '@lib/format';
 import { useRopFisikPrRecommendations } from '@services/query/hooks';
 import BasisLine from '@components/forecast/BasisLine';
-import { TriggerProvisional, TriggerRefreshNote } from '../../callOffs/ropFisikTrigger';
+import {
+  RopFisikNotYet,
+  TriggerProvisional,
+  TriggerRefreshNote
+} from '../../callOffs/ropFisikTrigger';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BL-199 (DRC-13 BR-02) — on What to order, beside CAP-12's "New PO needed":
@@ -17,7 +21,8 @@ import { TriggerProvisional, TriggerRefreshNote } from '../../callOffs/ropFisikT
 // for what it needs. The hub recommends "Create a PR in SAP for N"; the planner
 // creates it in SAP, and the hub posts nothing (Owner F2). Every figure is the
 // trigger's, stored with its rules version (DRC-D16); none is computed here.
-// The section shows only while a recommendation is open.
+// The section shows while a recommendation is open; otherwise a line says no
+// call-off was drafted at ROP Fisik yet and when the trigger last checked (U-04, BL-252).
 // FSR-D1 (BL-237): the trigger reads the hub sample (SAP stock, ROP Fisik,
 // the hub's POs), the PLAN OF RECORD; the basis line says so.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -27,7 +32,8 @@ const RopFisikPrSection = () => {
   const { t } = useTranslation();
   const query = useRopFisikPrRecommendations();
   const items = query.data?.items ?? [];
-  if (items.length === 0) return null;
+  // U-04 (BL-252): no recommendation open — say whether the trigger has run.
+  if (items.length === 0) return <RopFisikNotYet testId="op-rop-fisik-pr-empty" className="mb-6" />;
   return (
     <section
       className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6"
