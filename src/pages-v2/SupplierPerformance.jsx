@@ -19,14 +19,7 @@ import {
 } from 'recharts';
 import { TrendingUp, TrendingDown, Minus, Download, Info, CheckCircle2 } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
-import {
-  CHART_SERIES,
-  CHART_SEMANTIC,
-  CHART_MID,
-  CHART_GRID,
-  targetStatus,
-  TARGET_STATUS
-} from '@lib/chartPalette';
+import { CHART_SERIES, CHART_SEMANTIC, CHART_MID, CHART_GRID } from '@lib/chartPalette';
 import PageHeader from '@components/ui-v2/PageHeader';
 import PageMetaLine from '@components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
@@ -153,22 +146,23 @@ const TrendIcon = ({ trend }) => {
 };
 
 /** @type {React.FC<{ k: Kpi }>} */
+// BL-78 (BL-19: baseline first, no targets yet) — the figure is shown
+// neutrally: no target line, no target colour, a neutral bar with no tick.
 const KpiProgressTile = ({ k }) => {
   const { t } = useTranslation();
-  const status = targetStatus(k.pct, k.targetPct);
   return (
     <div className="bg-bg-hover border border-border-subtle rounded-md px-4 py-3">
       <div className="flex items-start justify-between gap-2 mb-1">
         <div className="text-label text-text-tertiary uppercase">{k.name}</div>
         <TrendIcon trend={k.trend} />
       </div>
-      <Data as="div" className="text-kpi" style={{ color: TARGET_STATUS[status].text }}>
+      <Data as="div" className="text-kpi">
         {k.value}
       </Data>
-      <div className="text-label text-text-tertiary mb-2">
-        {t('supplierPerformance.kpi.targetLabel')}: {k.target}
+      <div className="text-label text-text-tertiary mb-2" data-testid="kpi-tile-no-target">
+        {t('perf.kpi.target.baseline')}
       </div>
-      <TargetBar pct={k.pct} target={k.targetPct} trackClass="bg-bg-surface" />
+      <TargetBar pct={k.pct} neutral trackClass="bg-bg-surface" />
     </div>
   );
 };
@@ -457,13 +451,6 @@ const SupplierPerformance = () => {
                     tickCount={6}
                   />
                   <Radar
-                    name={t('supplierPerformance.chart.benchmark')}
-                    dataKey="target"
-                    stroke={TOKEN_MID}
-                    fill="transparent"
-                    strokeDasharray="4 2"
-                  />
-                  <Radar
                     name={t('supplierPerformance.chart.yourScore')}
                     dataKey="value"
                     stroke={TOKEN_TEAL}
@@ -475,6 +462,10 @@ const SupplierPerformance = () => {
                   <Tooltip content={<ChartTooltip />} />
                 </RadarChart>
               </ResponsiveContainer>
+              {/* BL-78 — the authored "benchmark" series is gone; no target yet. */}
+              <p className="mt-2 text-xs text-text-tertiary" data-testid="radar-no-target">
+                {t('perf.kpi.target.baseline')}
+              </p>
             </section>
 
             <section className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm p-6">
@@ -666,12 +657,13 @@ const SupplierPerformance = () => {
                       <StatusPill variant="neutral">
                         {t('supplierPerformance.actions.currentLabel')}: {item.current}
                       </StatusPill>
-                      <StatusPill variant="success">
-                        {t('supplierPerformance.actions.targetLabel')}: {item.target}
-                      </StatusPill>
-                      <StatusPill variant="danger">
-                        {t('supplierPerformance.actions.gapLabel')}: {item.gap}
-                      </StatusPill>
+                      {/* BL-78 — no authored target, so no target and no gap. */}
+                      <span
+                        className="text-xs text-text-tertiary self-center"
+                        data-testid="action-no-target"
+                      >
+                        {t('perf.kpi.target.baseline')}
+                      </span>
                     </div>
                   </div>
                   <StatusPill variant={isHigh ? 'danger' : 'warning'}>

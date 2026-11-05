@@ -2106,10 +2106,7 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * @typedef {object} KpiPoint
  * @property {string} name
  * @property {string} value
- * @property {string} target
- * @property {number} pct
- * @property {number} targetPct -  Target position on the same 0–100 axis as `pct` (DP2-TARGET-01 tick +
- *    derived meeting/near/missing colour). Replaces the hand-assigned hex.
+ * @property {number} pct -  The figure on a 0–100 axis, drawn as a neutral bar. No target is authored (BL-78, BL-19: baseline first).
  * @property {KpiTrend} trend
  */
 
@@ -2117,7 +2114,6 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * @typedef {object} RadarPoint
  * @property {string} axis
  * @property {number} value
- * @property {number} target
  */
 
 /**
@@ -2132,8 +2128,6 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * @typedef {object} ImprovementAction
  * @property {string} kpi
  * @property {string} current
- * @property {string} target
- * @property {string} gap
  * @property {string} action
  * @property {'High' | 'Medium' | 'Low'} priority
  */
@@ -2161,9 +2155,7 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * @typedef {object} ScorecardKpi
  * @property {string} name
  * @property {string} value
- * @property {string} target
- * @property {number} pct
- * @property {number} targetPct -  Target position on the same 0–100 axis as `pct` (DP2-TARGET-01).
+ * @property {number} pct -  The figure on a 0–100 axis, drawn as a neutral bar. No target is authored (BL-78, BL-19: baseline first).
  * @property {KpiTrend} trend
  */
 

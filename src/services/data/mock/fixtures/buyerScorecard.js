@@ -21,8 +21,9 @@
 
 /** @import { SupplierScorecard, ScorecardKpi, ScorecardRadarAxis, ScorecardImprovementAction } from '../../types' */
 
-// KPI bar colour is derived centrally now (DP2-TARGET-01): the tile reads
-// targetStatus(pct, targetPct) — no more hand-assigned per-row hex.
+// BL-78 (BL-19: baseline first, no targets yet) — the authored targets
+// (`target`, `targetPct`) are gone: the tiles show each figure neutrally, with
+// "Baseline period — no target yet" where the target used to be.
 
 // Sample Personal Care improvement-plan actions — folded off the page's shared IMPROVEMENT_ACTIONS
 // const onto the single supplier that renders them (impPlan === true).
@@ -59,45 +60,37 @@ const CORE_SCORECARDS = [
     sapBp: 'BP-20045',
     channel: 'API',
     kpis: [
-      { name: 'OTDR', value: '96%', target: '95%', pct: 96, targetPct: 95, trend: '↑' },
-      { name: 'PO Ack Rate', value: '100%', target: '95%', pct: 100, targetPct: 95, trend: '→' },
-      { name: 'Ack Speed', value: '6h', target: '<24h', pct: 90, targetPct: 75, trend: '↑' },
+      { name: 'OTDR', value: '96%', pct: 96, trend: '↑' },
+      { name: 'PO Ack Rate', value: '100%', pct: 100, trend: '→' },
+      { name: 'Ack Speed', value: '6h', pct: 90, trend: '↑' },
       {
         name: 'Lead Time Adherence',
         value: '92%',
-        target: '90%',
         pct: 92,
-        targetPct: 90,
         trend: '↑'
       },
-      { name: 'GR/PO Variance', value: '−4%', target: '±2%', pct: 50, targetPct: 55, trend: '↓' },
-      { name: 'Fill Rate', value: '96%', target: '98%', pct: 96, targetPct: 98, trend: '↑' },
+      { name: 'GR/PO Variance', value: '−4%', pct: 50, trend: '↓' },
+      { name: 'Fill Rate', value: '96%', pct: 96, trend: '↑' },
       {
         name: 'Invoice Accuracy',
         value: '100%',
-        target: '98%',
         pct: 100,
-        targetPct: 98,
         trend: '→'
       },
-      { name: 'QNCR', value: '0.2%', target: '<0.5%', pct: 90, targetPct: 78, trend: '↑' },
+      { name: 'QNCR', value: '0.2%', pct: 90, trend: '↑' },
       {
         name: 'Inventory DOS',
         value: '24 days',
-        target: '14-30d',
         pct: 80,
-        targetPct: 72,
         trend: '→'
       },
       {
         name: 'Responsiveness',
         value: '88/100',
-        target: '≥80',
         pct: 88,
-        targetPct: 80,
         trend: '↑'
       },
-      { name: 'Sustainability', value: '82/100', target: '≥75', pct: 82, targetPct: 75, trend: '↑' }
+      { name: 'Sustainability', value: '82/100', pct: 82, trend: '↑' }
     ],
     radar: [
       { axis: 'Delivery', value: 94 },
@@ -157,38 +150,32 @@ const CORE_SCORECARDS = [
     channel: 'WhatsApp',
     complianceIssue: { level: 'missing', label: 'BPJPH Halal cert not certified' },
     kpis: [
-      { name: 'OTDR', value: '91%', target: '95%', pct: 91, targetPct: 95, trend: '↑' },
-      { name: 'PO Ack Rate', value: '92%', target: '95%', pct: 92, targetPct: 95, trend: '↑' },
-      { name: 'Ack Speed', value: '18h', target: '<24h', pct: 75, targetPct: 75, trend: '→' },
+      { name: 'OTDR', value: '91%', pct: 91, trend: '↑' },
+      { name: 'PO Ack Rate', value: '92%', pct: 92, trend: '↑' },
+      { name: 'Ack Speed', value: '18h', pct: 75, trend: '→' },
       {
         name: 'Lead Time Adherence',
         value: '85%',
-        target: '90%',
         pct: 85,
-        targetPct: 90,
         trend: '↑'
       },
-      { name: 'GR/PO Variance', value: '0%', target: '±2%', pct: 100, targetPct: 55, trend: '→' },
-      { name: 'Fill Rate', value: '95%', target: '98%', pct: 95, targetPct: 98, trend: '↑' },
-      { name: 'Invoice Accuracy', value: '98%', target: '98%', pct: 98, targetPct: 98, trend: '→' },
-      { name: 'QNCR', value: '0.4%', target: '<0.5%', pct: 70, targetPct: 78, trend: '↑' },
+      { name: 'GR/PO Variance', value: '0%', pct: 100, trend: '→' },
+      { name: 'Fill Rate', value: '95%', pct: 95, trend: '↑' },
+      { name: 'Invoice Accuracy', value: '98%', pct: 98, trend: '→' },
+      { name: 'QNCR', value: '0.4%', pct: 70, trend: '↑' },
       {
         name: 'Inventory DOS',
         value: '18 days',
-        target: '14-30d',
         pct: 80,
-        targetPct: 72,
         trend: '→'
       },
       {
         name: 'Responsiveness',
         value: '80/100',
-        target: '≥80',
         pct: 80,
-        targetPct: 80,
         trend: '↑'
       },
-      { name: 'Sustainability', value: '68/100', target: '≥75', pct: 68, targetPct: 75, trend: '↑' }
+      { name: 'Sustainability', value: '68/100', pct: 68, trend: '↑' }
     ],
     radar: [
       { axis: 'Delivery', value: 88 },
@@ -250,38 +237,32 @@ const CORE_SCORECARDS = [
     complianceIssue: { level: 'expiring', label: 'ISO 9001 expiring in 83d' },
     improvementActions: SAMPLE_PC_IMPROVEMENT_ACTIONS,
     kpis: [
-      { name: 'OTDR', value: '82%', target: '95%', pct: 82, targetPct: 95, trend: '↓' },
-      { name: 'PO Ack Rate', value: '88%', target: '95%', pct: 88, targetPct: 95, trend: '↑' },
-      { name: 'Ack Speed', value: '42h', target: '<24h', pct: 40, targetPct: 75, trend: '↓' },
+      { name: 'OTDR', value: '82%', pct: 82, trend: '↓' },
+      { name: 'PO Ack Rate', value: '88%', pct: 88, trend: '↑' },
+      { name: 'Ack Speed', value: '42h', pct: 40, trend: '↓' },
       {
         name: 'Lead Time Adherence',
         value: '74%',
-        target: '90%',
         pct: 74,
-        targetPct: 90,
         trend: '↓'
       },
-      { name: 'GR/PO Variance', value: '+1%', target: '±2%', pct: 80, targetPct: 55, trend: '→' },
-      { name: 'Fill Rate', value: '90%', target: '98%', pct: 90, targetPct: 98, trend: '↑' },
-      { name: 'Invoice Accuracy', value: '85%', target: '98%', pct: 85, targetPct: 98, trend: '↓' },
-      { name: 'QNCR', value: '1.2%', target: '<0.5%', pct: 30, targetPct: 78, trend: '↓' },
+      { name: 'GR/PO Variance', value: '+1%', pct: 80, trend: '→' },
+      { name: 'Fill Rate', value: '90%', pct: 90, trend: '↑' },
+      { name: 'Invoice Accuracy', value: '85%', pct: 85, trend: '↓' },
+      { name: 'QNCR', value: '1.2%', pct: 30, trend: '↓' },
       {
         name: 'Inventory DOS',
         value: '8 days',
-        target: '14-30d',
         pct: 40,
-        targetPct: 72,
         trend: '↓'
       },
       {
         name: 'Responsiveness',
         value: '62/100',
-        target: '≥80',
         pct: 62,
-        targetPct: 80,
         trend: '↓'
       },
-      { name: 'Sustainability', value: '70/100', target: '≥75', pct: 70, targetPct: 75, trend: '↑' }
+      { name: 'Sustainability', value: '70/100', pct: 70, trend: '↑' }
     ],
     radar: [
       { axis: 'Delivery', value: 78 },
