@@ -362,6 +362,9 @@ export const TRANSITION_PURPOSE = Object.freeze({
   t_supplierask_withdraw: { purposeKey: 'processFlows.purpose.t_supplierask_withdraw' },
   // INV-D8 — PTI accepts additional capacity on a gap week.
   t_capacitydecision_accept: { purposeKey: 'processFlows.purpose.t_capacitydecision_accept' },
+  // PEX-8 — PO On Hold: the planner suggests, the supplier chooses.
+  t_poonhold_suggest: { purposeKey: 'processFlows.purpose.t_poonhold_suggest' },
+  t_poonhold_choose: { purposeKey: 'processFlows.purpose.t_poonhold_choose' },
   // BL-227 — PTI undoes an acceptance.
   t_capacitydecision_withdraw: { purposeKey: 'processFlows.purpose.t_capacitydecision_withdraw' },
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — RFx management.
@@ -469,6 +472,7 @@ export const ENTITY_PURPOSE = Object.freeze({
   feedstockConfirmation: { purposeKey: 'processFlows.purpose.entity.feedstockConfirmation' },
   supplierAsk: { purposeKey: 'processFlows.purpose.entity.supplierAsk' },
   capacityDecision: { purposeKey: 'processFlows.purpose.entity.capacityDecision' },
+  poOnHoldDecision: { purposeKey: 'processFlows.purpose.entity.poOnHoldDecision' },
   rfiEvent: { purposeKey: 'processFlows.purpose.entity.rfiEvent' },
   rfiResponse: { purposeKey: 'processFlows.purpose.entity.rfiResponse' },
   rfpEvent: { purposeKey: 'processFlows.purpose.entity.rfpEvent' },

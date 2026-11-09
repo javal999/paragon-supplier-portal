@@ -41,7 +41,9 @@ describe('Feedstock reconcile — planner', () => {
       'Sample data. Nothing here reaches suppliers or SAP.'
     );
     await screen.findByTestId(`fsr-row-${K8801}`);
-    expect(screen.getByRole('columnheader', { name: 'Supplier' })).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId('fsr-table')).getByRole('columnheader', { name: 'Supplier' })
+    ).toBeInTheDocument();
   });
 
   it('BR-01: PO ordered, called off, ASN requested and what is not yet called off', async () => {

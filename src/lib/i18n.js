@@ -114,6 +114,8 @@ import { forecastCollaborationEn, forecastCollaborationId } from './i18n/forecas
 import { reliabilityEn, reliabilityId } from './i18n/reliability';
 // — DRC-15a feedstock reconcile (BL-201; replaced REQ-E06-04's fixed stock reconcile) —
 import { feedstockReconcileEn, feedstockReconcileId } from './i18n/feedstockReconcile';
+// — PEX-7 / PEX-8 PO On Hold —
+import { poOnHoldEn, poOnHoldId } from './i18n/poOnHold';
 // — REQ-E14-03 material requirement —
 import { materialRequirementEn, materialRequirementId } from './i18n/materialRequirement';
 // — REQ-E14-04 safety stock, safety lead time and reorder point —
@@ -258,6 +260,7 @@ export const resources = {
       ...forecastCollaborationEn,
       ...reliabilityEn,
       ...feedstockReconcileEn,
+      ...poOnHoldEn,
       ...materialRequirementEn,
       ...safetyStockEn,
       ...orderPlanEn,
@@ -774,6 +777,7 @@ export const resources = {
       ...forecastCollaborationId,
       ...reliabilityId,
       ...feedstockReconcileId,
+      ...poOnHoldId,
       ...materialRequirementId,
       ...safetyStockId,
       ...orderPlanId,

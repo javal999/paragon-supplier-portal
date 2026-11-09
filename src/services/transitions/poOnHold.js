@@ -1,0 +1,246 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// PO ON HOLD — PEX-7 (BL-270, BL-272) and PEX-8 (BL-271), [M04 2], [Table],
+// owner 2026-11-05 (SC-HUB-PLAN-EXECUTION-REQUIREMENTS-2026-11).
+//
+// PO On Hold is the part of a supplier × material's open PO quantity that DA
+// does not absorb over the horizon:
+//
+//   PO On Hold = max(0, OSPO − Σ DA not yet called off over the horizon)
+//                                                    [Proposed, PEX-D9]
+//
+// "DA not yet called off" of one horizon week = max(0, DA − call-offs released
+// for that week). OSPO is the open PO quantity not yet called off, the figure
+// the DA page uses.
+//
+// The grace period starts on the day a quantity first appears [Proposed] and
+// lasts 14 days by default, per supplier × material [Owner, Q7, PEX-D7]. The
+// decision (PEX-8) takes effect at its end.
+//
+// PURE. No store, no clock: the read model hands in the figures and the day.
+// Nothing is decided for a planner here except the pre-selected suggestion
+// (PEX-8 BR-02), which the planner can change.
+//
+// Not built here (PEX-12, Hold — waits on Mba Septi): auto absorb, auto
+// carry-over, the thresholds that choose between them, PO cancellation.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { addDays, daysBetween } from './inventoryRules';
+
+/**
+ * PEX-D7 — 14 days each, per supplier × material, editable (`t_osipparam_set`,
+ * keys `grace|<supplier>|<material>` and `noMove|<supplier>|<material>`).
+ */
+export const PO_ON_HOLD_RULES = Object.freeze({
+  graceDays: 14,
+  noMoveDays: 14
+});
+
+/**
+ * PEX-8 BR-02 — the three ways out.
+ * @typedef {'fsOnly' | 'fsSpread' | 'fg'} PoOnHoldOption
+ */
+
+/** @type {readonly PoOnHoldOption[]} */
+export const PO_ON_HOLD_OPTIONS = Object.freeze(
+  /** @type {PoOnHoldOption[]} */ (['fsOnly', 'fsSpread', 'fg'])
+);
+
+/**
+ * PEX-7 BR-01 — Σ over the horizon of max(0, DA − called off that week).
+ * @param {readonly { readonly da: number; readonly calledOff: number }[]} weeks
+ * @returns {number}
+ */
+export function daNotCalledOff(weeks) {
+  return weeks.reduce((n, w) => n + Math.max(0, w.da - w.calledOff), 0);
+}
+
+/**
+ * PEX-7 BR-01 [Proposed, PEX-D9] — the quantity DA did not absorb.
+ * @param {{ readonly ospo: number; readonly daNotCalledOff: number }} f
+ * @returns {number}
+ */
+export const poOnHoldQty = (f) => Math.max(0, f.ospo - f.daNotCalledOff);
+
+/**
+ * PEX-7 BR-02 / BR-05 — where a line stands against its grace period.
+ * `dueDay`:  The first day after the grace period; the decision takes effect on it.
+ * `daysLeft`:  Whole days from `asOf` to `dueDay`, never below 0.
+ * `ended`:  The grace period is over on `asOf`.
+ *
+ * @typedef {{
+ *   readonly firstDay: string;
+ *   readonly graceDays: number;
+ *   readonly dueDay: string;
+ *   readonly daysLeft: number;
+ *   readonly ended: boolean;
+ * }} GraceState
+ */
+
+/**
+ * @param {string} asOf  `YYYY-MM-DD`
+ * @param {string} firstDay  The day the quantity first appeared.
+ * @param {number} graceDays
+ * @returns {GraceState}
+ */
+export function graceState(asOf, firstDay, graceDays) {
+  const dueDay = addDays(firstDay, graceDays);
+  const left = daysBetween(asOf, dueDay);
+  return { firstDay, graceDays, dueDay, daysLeft: Math.max(0, left), ended: left <= 0 };
+}
+
+/**
+ * PEX-8 BR-03 — FG cap = (Max PTI + min(Max Supplier, SOH Supplier)) − SOH PTI,
+ * floored at 0. Null when any of the four is not on record: nothing is guessed.
+ * @param {{
+ *   readonly maxPti: number | null;
+ *   readonly maxSupplier: number | null;
+ *   readonly sohSupplier: number | null;
+ *   readonly sohPti: number | null;
+ * }} f
+ * @returns {number | null}
+ */
+export function fgCap(f) {
+  if (f.maxPti === null || f.maxSupplier === null || f.sohSupplier === null || f.sohPti === null)
+    return null;
+  return Math.max(0, f.maxPti + Math.min(f.maxSupplier, f.sohSupplier) - f.sohPti);
+}
+
+/**
+ * What the hub knows of one line, for the conditions of PEX-8 BR-02.
+ * `pipo`:  True/false when the hub holds the flag; null when it does not.
+ * `demand`:  Σ DA over the horizon.
+ * `daysSinceMovement`:  Whole days since the last stock movement; null when none is on record.
+ *
+ * @typedef {{
+ *   readonly pipo: boolean | null;
+ *   readonly demand: number;
+ *   readonly daysSinceMovement: number | null;
+ *   readonly noMoveDays: number;
+ * }} OptionFacts
+ */
+
+/**
+ * PEX-8 BR-02 — which options' conditions hold. Every condition must hold.
+ *   · FS only:    PIPO material, OR no demand at all.
+ *   · FS + spread: demand dropped and is still above 0 [Proposed: "dropped"
+ *                  is read as: the line is on hold, so DA no longer absorbs
+ *                  the OSPO; "still above 0" is demand > 0].
+ *   · FG:         NOT PIPO, AND no demand at all, AND no stock movement for the
+ *                 set period. With the PIPO flag or the movement unknown, the
+ *                 condition cannot be shown to hold, so FG does not.
+ * @param {OptionFacts} f
+ * @returns {Readonly<Record<PoOnHoldOption, boolean>>}
+ */
+export function optionConditions(f) {
+  const noDemand = f.demand <= 0;
+  const noMovement = f.daysSinceMovement !== null && f.daysSinceMovement >= f.noMoveDays;
+  return {
+    fsOnly: f.pipo === true || noDemand,
+    fsSpread: f.demand > 0,
+    fg: f.pipo === false && noDemand && noMovement
+  };
+}
+
+/**
+ * PEX-8 BR-02 — the option the hub pre-selects, or null when no condition
+ * holds. PEX-D5: PIPO with zero demand → FS only (FG needs not PIPO). Where FS
+ * only and FG both hold (not PIPO, no demand, no movement) FG is the one the
+ * decision table's AC-02 shows; where movement is recent only FS only holds
+ * (AC-03).
+ * @param {OptionFacts} f
+ * @returns {PoOnHoldOption | null}
+ */
+export function suggestOption(f) {
+  const c = optionConditions(f);
+  if (c.fg) return 'fg';
+  if (c.fsOnly) return 'fsOnly';
+  if (c.fsSpread) return 'fsSpread';
+  return null;
+}
+
+/**
+ * PEX-8 — what the end of the grace period does with the quantity.
+ *   · fsOnly:   the whole remainder in one call-off [Proposed, PEX-D3].
+ *   · fsSpread: the whole remainder spread over the next weeks' call-offs, following DA.
+ *   · fg:       absorbed up to the cap (BR-03); the rest stays on hold (BR-04).
+ *               A cap that cannot be computed absorbs nothing: all stays on hold.
+ *
+ * @typedef {{
+ *   readonly option: PoOnHoldOption;
+ *   readonly feedstockQty: number;
+ *   readonly spreadQty: number;
+ *   readonly fgQty: number;
+ *   readonly stayOnHoldQty: number;
+ *   readonly cap: number | null;
+ * }} Outcome
+ */
+
+/**
+ * @param {PoOnHoldOption} option
+ * @param {number} qty  The PO On Hold quantity.
+ * @param {number | null} cap  `fgCap`, for the FG option.
+ * @returns {Outcome}
+ */
+export function outcomeOf(option, qty, cap) {
+  const none = { option, feedstockQty: 0, spreadQty: 0, fgQty: 0, stayOnHoldQty: 0, cap };
+  if (option === 'fsOnly') return { ...none, feedstockQty: qty };
+  if (option === 'fsSpread') return { ...none, spreadQty: qty };
+  const fg = cap === null ? 0 : Math.min(qty, cap);
+  return { ...none, fgQty: fg, stayOnHoldQty: qty - fg };
+}
+
+/**
+ * PEX-8 BR-05 — one step of a decision's history; append-only.
+ * @typedef {{
+ *   readonly kind: 'suggested' | 'chosen';
+ *   readonly option: PoOnHoldOption;
+ *   readonly at: string;
+ *   readonly actor: import('@lib/enforcement').ActorAttribution;
+ * }} DecisionEvent
+ */
+
+/**
+ * PEX-8 BR-01, BR-06 — which option stands for a line, and why.
+ * The supplier's choice is final. A supplier who has not chosen by the end of
+ * the grace period: the planner's suggestion applies, marked "no supplier
+ * response" [Proposed, PEX-D14]. With no suggestion either, nothing applies and
+ * the line goes back to the planner.
+ *
+ * `status`:
+ *   · `'noSuggestion'`      — the planner has not suggested yet.
+ *   · `'awaitingSupplier'`  — suggested; the supplier may still choose.
+ *   · `'chosen'`            — the supplier chose (before or after the end).
+ *   · `'noSupplierResponse'`— the grace period ended, no choice: the suggestion applies.
+ *   · `'backToPlanner'`     — the grace period ended with no suggestion and no choice.
+ *
+ * @typedef {'noSuggestion' | 'awaitingSupplier' | 'chosen' | 'noSupplierResponse' | 'backToPlanner'} DecisionStatus
+ */
+
+/**
+ * @param {{
+ *   readonly suggested: PoOnHoldOption | null;
+ *   readonly chosen: PoOnHoldOption | null;
+ *   readonly graceEnded: boolean;
+ * }} d
+ * @returns {{ readonly status: DecisionStatus; readonly effective: PoOnHoldOption | null }}
+ */
+export function decisionStanding(d) {
+  if (d.chosen !== null) return { status: 'chosen', effective: d.chosen };
+  if (d.suggested === null)
+    return { status: d.graceEnded ? 'backToPlanner' : 'noSuggestion', effective: null };
+  return d.graceEnded
+    ? { status: 'noSupplierResponse', effective: d.suggested }
+    : { status: 'awaitingSupplier', effective: null };
+}
+
+/**
+ * Why a suggestion or a choice would be refused, or null when acceptable. The
+ * policy hook and the page's form call this one rule.
+ * @param {unknown} option
+ * @returns {string | null}
+ */
+export function poOnHoldOptionRefusal(option) {
+  return typeof option === 'string' && PO_ON_HOLD_OPTIONS.includes(/** @type {any} */ (option))
+    ? null
+    : 'PO_ON_HOLD_OPTION_INVALID: FS only, FS + spread or FG is expected';
+}

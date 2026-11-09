@@ -46,7 +46,7 @@
 /** @import { OsipRules, SupplyArea } from './osipRules' */
 import { OSIP_RULES } from './osipRules';
 
-/** @typedef {'z' | 'g' | 'f' | 'pullAgreement' | 'bottleneckLeadTimeDays'} OsipParam */
+/** @typedef {'z' | 'g' | 'f' | 'pullAgreement' | 'bottleneckLeadTimeDays' | 'grace' | 'noMove'} OsipParam */
 
 /** @typedef {'material' | 'supplier' | 'supplierMaterial'} OsipParamScope */
 
@@ -57,6 +57,7 @@ import { OSIP_RULES } from './osipRules';
  *   readonly scope: OsipParamScope;
  *   readonly question: string;
  *   readonly boolean?: boolean;
+ *   readonly integer?: boolean;
  *   readonly above?: number;
  *   readonly min?: number;
  *   readonly max?: number;
@@ -73,6 +74,23 @@ export const OSIP_PARAMS = Object.freeze({
     scope: 'supplierMaterial',
     question: 'B10',
     above: 0,
+    max: 365
+  }),
+  // PEX-7 BR-02..BR-04 [PEX-D7]: days, per supplier × material; default 14
+  // (`PO_ON_HOLD_RULES`). Set on the PO On Hold panel, not on the OSIP values
+  // page, so they are not in `OSIP_PARAM_KINDS`.
+  grace: Object.freeze({
+    scope: 'supplierMaterial',
+    question: 'PEX-7',
+    integer: true,
+    min: 0,
+    max: 365
+  }),
+  noMove: Object.freeze({
+    scope: 'supplierMaterial',
+    question: 'PEX-7',
+    integer: true,
+    min: 0,
     max: 365
   })
 });
@@ -129,6 +147,8 @@ export function osipParamRefusal(param, value) {
     return typeof value === 'boolean' ? null : 'OSIP_PARAM_INVALID: a yes or no is expected';
   if (typeof value !== 'number' || !Number.isFinite(value))
     return 'OSIP_PARAM_INVALID: a number is expected';
+  if (def.integer && !Number.isInteger(value))
+    return 'OSIP_PARAM_INVALID: a whole number is expected';
   if (def.above !== undefined && !(value > def.above))
     return `OSIP_PARAM_INVALID: must be above ${def.above}`;
   if (def.min !== undefined && value < def.min) return `OSIP_PARAM_INVALID: at least ${def.min}`;

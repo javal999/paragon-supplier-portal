@@ -4160,3 +4160,77 @@ export function useRfxCommand() {
     }
   });
 }
+
+/**
+ * PEX-8 (BL-271) — the planner suggests an option for a PO On Hold line
+ * (fires `t_poonhold_suggest`).
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly option: import('@services/transitions/poOnHold').PoOnHoldOption;
+ * }} PoOnHoldSuggestVars
+ */
+
+/** Suggest an option for a PO On Hold line (fires `t_poonhold_suggest`). */
+export function usePoOnHoldSuggestCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, PoOnHoldSuggestVars>} */ (useMutation)(
+    {
+      mutationFn: (vars) =>
+        svc.commands.dispatch(scope, {
+          transitionId: 't_poonhold_suggest',
+          entity: 'poOnHoldDecision',
+          payload: {
+            supplierId: vars.supplierId,
+            materialCode: vars.materialCode,
+            option: vars.option
+          }
+        }),
+      onSuccess: (result) => {
+        if (result.status === 'failed') return;
+        void qc.invalidateQueries({
+          predicate: (q) =>
+            (q.queryKey[0] === 'procurement' || q.queryKey[0] === 'supplier') &&
+            q.queryKey[1] === 'poOnHold'
+        });
+      }
+    }
+  );
+}
+
+/**
+ * PEX-8 (BL-271) — the supplier chooses the final option (fires
+ * `t_poonhold_choose`). `decisionId` is the id of the planner's suggestion.
+ * @typedef {{
+ *   readonly decisionId: string;
+ *   readonly option: import('@services/transitions/poOnHold').PoOnHoldOption;
+ * }} PoOnHoldChooseVars
+ */
+
+/** Choose the final option for a PO On Hold line (fires `t_poonhold_choose`). */
+export function usePoOnHoldChooseCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, PoOnHoldChooseVars>} */ (useMutation)({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_poonhold_choose',
+        entity: 'poOnHoldDecision',
+        entityId: vars.decisionId,
+        payload: { option: vars.option }
+      }),
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      void qc.invalidateQueries({
+        predicate: (q) =>
+          (q.queryKey[0] === 'procurement' || q.queryKey[0] === 'supplier') &&
+          q.queryKey[1] === 'poOnHold'
+      });
+    }
+  });
+}

@@ -32,6 +32,7 @@ import { maxStockRefusal } from '@services/transitions/maxStock';
 import { FEEDSTOCK_LEFTOVER_RULES } from '@services/transitions/feedstockReconcile';
 import { forecastNow } from './forecasts/forecastDisplay';
 import { inputClass, labelClass } from './inventory/inventoryDisplay';
+import PoOnHoldPanel from './poOnHold/PoOnHoldPanel';
 
 // C2 (WCAG 2.4.7): the shared field class shows focus only as a 1 px border
 // tint; the forecast fields add a ring.
@@ -311,6 +312,8 @@ const FixedStockReconcile = ({ persona }) => {
           {t(`fsr.leftover.note.${leftoverRule}`)} {t('fsr.proposed')}
         </p>
       ) : null}
+
+      <PoOnHoldPanel persona={persona} />
 
       <section
         className="bg-bg-surface border border-border-subtle rounded-lg p-4 text-sm text-text-secondary space-y-2"
