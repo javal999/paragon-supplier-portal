@@ -168,7 +168,7 @@ export const stabiliseId = {
     'Versi rencana yang sudah diterbitkan SAP ke pemasok (riwayat yang dibaca ukuran keandalan). Ini menunjukkan apa yang akan terjadi pada rencana yang benar-benar dilihat pemasok bila distabilkan.',
 
   'stb.kpi.masc.sub': 'Mentah → distabilkan, rata-rata atas {{count}} pasangan versi',
-  'stb.kpi.share.sub_other': 'Mentah → distabilkan, dari {{count}} minggu dalam waktu tunggu',
+  'stb.kpi.share.sub_other': 'Mentah → distabilkan, dari {{count}} minggu dalam lead time',
   'stb.kpi.band.value': '{{n}} dari {{m}}',
   'stb.kpi.band.sub': 'setelah distabilkan (sebelum: {{n}} dari {{m}})',
   'stb.kpi.held.sub': 'Zone Liability {{firm}} · batas {{band}} · diredam {{damped}}',
@@ -248,9 +248,9 @@ export const stabiliseId = {
   'stb.def.quantity':
     'Kuantitasnya adalah kebutuhan bersih material minggu demi minggu — kebutuhan kotor ditambah stok pengaman, dikurangi stok dan pesanan terbuka yang sudah dikonfirmasi — dibagi menurut porsi setiap pemasok. Lot pesanan dari Apa yang dipesan tidak diterbitkan di sini: lot itu menjadi call-off.',
   'stb.def.zones':
-    'Zone Liability berlangsung sedikitnya sepanjang waktu tunggu pemasok dan tidak pernah berubah setelah diterbitkan. Zone Capacity menyusul; minggu-minggu pertamanya, sepanjang durasi peredaman, diredam: setiap minggu diredam (bobot × nilai terakhir + sisanya × nilai baru) dan boleh bergerak paling banyak ±10% dari nilai terakhir yang diterbitkan dan ±20% dari nilai pertama. Perubahan di luar itu ditahan di tepi batas kecuali perencana memberi alasan. Minggu berikutnya diterbitkan apa adanya.',
+    'Zone Liability berlangsung sedikitnya sepanjang lead time pemasok dan tidak pernah berubah setelah diterbitkan. Zone Capacity menyusul; minggu-minggu pertamanya, sepanjang durasi peredaman, diredam: setiap minggu diredam (bobot × nilai terakhir + sisanya × nilai baru) dan boleh bergerak paling banyak ±10% dari nilai terakhir yang diterbitkan dan ±20% dari nilai pertama. Perubahan di luar itu ditahan di tepi batas kecuali perencana memberi alasan. Minggu berikutnya diterbitkan apa adanya.',
   'stb.def.masc':
     'MASC adalah rata-rata perubahan absolut antara dua versi pada minggu yang dimuat keduanya, dibagi pergerakan mingguan material yang biasa (ukuran yang sama dengan Keandalan pemasok). Makin rendah makin stabil.',
   'stb.def.share':
-    'Minggu yang berubah dalam waktu tunggu: dari minggu yang berada dalam waktu tunggu pemasok pada versi berikutnya, bagian yang kuantitasnya berubah di sana.'
+    'Minggu yang berubah dalam lead time: dari minggu yang berada dalam lead time pemasok pada versi berikutnya, bagian yang kuantitasnya berubah di sana.'
 };

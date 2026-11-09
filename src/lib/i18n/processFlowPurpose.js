@@ -1161,7 +1161,7 @@ export const processFlowPurposeId = {
   'processFlows.purpose.t_warehousedecision_record':
     'Perencana Material mencatat cara menangani minggu yang tidak muat di gudang. Menerima kelebihan memerlukan catatan. Keputusan ini catatan niat: tidak mengubah pesanan apa pun dan tidak pernah dikirim ke SAP atau pemasok.',
   'processFlows.purpose.entity.demandAnticipation':
-    'Publikasi demand anticipation satu minggu perencanaan, per pemasok dan material, sepanjang waktu tunggu: LTP tiap minggu ditambah sisa yang dibawa ke minggu itu, dengan safety order di minggu pertama. Tiap angka menyimpan inputnya dan versi aturan yang menghasilkannya. Publikasi berikutnya untuk minggu yang sama menggantikannya; setiap publikasi tetap tercatat.',
+    'Publikasi demand anticipation satu minggu perencanaan, per pemasok dan material, sepanjang lead time: LTP tiap minggu ditambah sisa yang dibawa ke minggu itu, dengan safety order di minggu pertama. Tiap angka menyimpan inputnya dan versi aturan yang menghasilkannya. Publikasi berikutnya untuk minggu yang sama menggantikannya; setiap publikasi tetap tercatat.',
   'processFlows.purpose.t_demandanticipation_publish':
     'Perencana Material mencatat demand anticipation minggu perencanaan saat ini, dan persetujuan pemasok untuk menerima sisa di minggu pertama setelah horizon. Publikasi minggu berikutnya bergulir maju darinya. Tidak ada yang dikirim ke SAP atau pemasok.',
   'processFlows.purpose.entity.consumption':
@@ -1173,7 +1173,7 @@ export const processFlowPurposeId = {
   'processFlows.purpose.t_osiplevel_set':
     'Perencana Material mengatur atau mengonfirmasi level OSIP suatu material, dari 1 sampai 6. Mengonfirmasinya menutup tugas “Tinjau ROP setelah pesanan pertama”. Tidak ada yang dikirim ke SAP atau pemasok.',
   'processFlows.purpose.entity.osipParam':
-    'Nilai OSIP yang diatur Perencana Material untuk satu material (faktor tingkat layanan Z, hari pengaman tetap g), satu pemasok (siklus pengisian ulang f, perjanjian tarik) atau satu pemasok dan material (waktu tunggu produksi bottleneck). Bila belum diatur, nilai bawaan berlaku. Setiap perubahan menyimpan nilai sebelumnya, siapa yang mengatur, dan kapan; yang terakhir berlaku.',
+    'Nilai OSIP yang diatur Perencana Material untuk satu material (faktor tingkat layanan Z, hari pengaman tetap g), satu pemasok (siklus pengisian ulang f, perjanjian tarik) atau satu pemasok dan material (lead time produksi bottleneck). Bila belum diatur, nilai bawaan berlaku. Setiap perubahan menyimpan nilai sebelumnya, siapa yang mengatur, dan kapan; yang terakhir berlaku.',
   'processFlows.purpose.t_osipparam_set':
     'Perencana Material mengatur atau mengembalikan satu nilai OSIP. Titik pemesanan ulang, tanggal kebutuhan call-off, dan irama konfirmasi mengikutinya. Tidak ada yang dikirim ke SAP atau pemasok.',
   'processFlows.purpose.entity.whatIfScenario':

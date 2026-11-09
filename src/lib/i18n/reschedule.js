@@ -260,7 +260,7 @@ export const rescheduleId = {
   'rs.settings.weeks_other': '{{count}} minggu',
   'rs.settings.thresholdNote': 'Diputuskan oleh pemilik',
   'rs.settings.rent': 'Ruang sewa, per palet per minggu',
-  'rs.settings.penalty': 'Penalti perubahan dalam waktu tunggu, per palet',
+  'rs.settings.penalty': 'Penalti perubahan dalam lead time, per palet',
   'rs.settings.placeholderFinance': 'Sementara — menunggu konfirmasi Keuangan',
   'rs.settings.placeholderPlanner': 'Sementara — menunggu konfirmasi Perencana Material',
   'rs.settings.where':
@@ -280,14 +280,14 @@ export const rescheduleId = {
 
   'rs.guard.title': 'Stabilitas pemasok',
   'rs.guard.intro':
-    'Setiap perubahan PTI di dalam waktu tunggu pemasok dihitung sebagai kesalahan PTI dalam ukuran pemasok dan membuat rencana kurang stabil. Bagian ini menunjukkan bagaimana porsi jadwal PTI yang diubah di dalam waktu tunggu ({{weeks}} minggu terakhir) akan bergerak bila usulan terpilih dikirim.',
+    'Setiap perubahan PTI di dalam lead time pemasok dihitung sebagai kesalahan PTI dalam ukuran pemasok dan membuat rencana kurang stabil. Bagian ini menunjukkan bagaimana porsi jadwal PTI yang diubah di dalam lead time ({{weeks}} minggu terakhir) akan bergerak bila usulan terpilih dikirim.',
   'rs.guard.selected': 'Usulan terpilih',
-  'rs.guard.inside_other': '{{count}} di dalam waktu tunggu',
-  'rs.guard.share': 'Jadwal yang diubah di dalam waktu tunggu',
+  'rs.guard.inside_other': '{{count}} di dalam lead time',
+  'rs.guard.share': 'Jadwal yang diubah di dalam lead time',
   'rs.guard.effect': 'Ruang di atas kapasitas yang dibebaskan pilihan',
   'rs.guard.penalty': 'Penalti perubahan',
   'rs.guard.callOffs':
-    'Ukuran ini menghitung baris PO. Perubahan call-off belum masuk di dalamnya; ia dihitung dalam usulan terpilih di dalam waktu tunggu.',
+    'Ukuran ini menghitung baris PO. Perubahan call-off belum masuk di dalamnya; ia dihitung dalam usulan terpilih di dalam lead time.',
 
   'rs.fill.title': 'Proyeksi isi gudang per minggu',
   'rs.fill.intro':
@@ -305,7 +305,7 @@ export const rescheduleId = {
 
   'rs.relief.title': 'Keringanan gudang, berperingkat',
   'rs.relief.intro':
-    'Diurutkan menurut penghematan bersih: ruang sewa yang dihemat di minggu di atas kapasitas, dikurangi penalti perubahan. Setiap usulan dinilai setelah usulan di atasnya, sehingga tidak ada dua yang mengklaim ruang yang sama. Usulan di dalam waktu tunggu pemasok atau Zone Liability-nya berada paling akhir dan memerlukan persetujuan pemasok. Tidak ada yang dikirim tanpa tindakan Anda.',
+    'Diurutkan menurut penghematan bersih: ruang sewa yang dihemat di minggu di atas kapasitas, dikurangi penalti perubahan. Setiap usulan dinilai setelah usulan di atasnya, sehingga tidak ada dua yang mengklaim ruang yang sama. Usulan di dalam lead time pemasok atau Zone Liability-nya berada paling akhir dan memerlukan persetujuan pemasok. Tidak ada yang dikirim tanpa tindakan Anda.',
   'rs.relief.empty':
     'Tidak ada pesanan terbuka di gudang ini yang dapat membebaskan ruang di minggu di atas kapasitas.',
   'rs.relief.selectFree_other': 'Pilih {{count}} usulan tanpa persetujuan pemasok',
@@ -334,7 +334,7 @@ export const rescheduleId = {
   'rs.info.reason.multipleDeliveries':
     'dikonfirmasi sebagai dua pengiriman; perubahan akan menetapkan satu',
   'rs.info.reason.noSource':
-    'tidak ada sumber pemasok dalam data mesin: tidak ada waktu tunggu atau MOQ untuk menilai perubahan',
+    'tidak ada sumber pemasok dalam data mesin: tidak ada lead time atau MOQ untuk menilai perubahan',
   'rs.info.reason.noVolume': 'tidak ada konversi palet: ruangnya tidak dapat dinilai',
 
   'rs.col.select': 'Pilih',
@@ -360,13 +360,13 @@ export const rescheduleId = {
   'rs.zone.firm': 'Zone Liability',
   'rs.zone.tradeOff': 'Zone Capacity',
   'rs.zone.forecast': 'Zone Capacity',
-  'rs.lt.inside': '{{days}} hari lagi, di dalam waktu tunggu {{lead}} hari',
-  'rs.lt.outside': '{{days}} hari lagi, di luar waktu tunggu {{lead}} hari',
+  'rs.lt.inside': '{{days}} hari lagi, di dalam lead time {{lead}} hari',
+  'rs.lt.outside': '{{days}} hari lagi, di luar lead time {{lead}} hari',
   'rs.flag.agreement': 'Perlu persetujuan pemasok',
   'rs.flag.liability': 'Kewajiban pemasok',
   'rs.flag.band': 'Dibatasi pita ±10% / ±20%',
   'rs.flag.lastLine': 'Baris terbuka terakhir pada PO — pembeli memeriksa kontrak',
-  'rs.flag.planChange': 'Akan dihitung sebagai perubahan PTI di dalam waktu tunggu',
+  'rs.flag.planChange': 'Akan dihitung sebagai perubahan PTI di dalam lead time',
 
   'rs.action.send': 'Kirim perubahan ke pemasok',
   'rs.action.awaitingConfirmation': 'Terkirim — menunggu konfirmasi pemasok',
@@ -392,7 +392,7 @@ export const rescheduleId = {
   'rs.def.types':
     'Baris yang jatuh tempo sedikitnya sekian minggu terlalu awal diusulkan lebih lambat, ke minggu kebutuhannya. Baris yang hanya sebagian dibutuhkan dalam horizon dikurangi, dibulatkan ke atas ke MOQ dan kelipatan pesanan; yang sama sekali tidak dibutuhkan dibatalkan. Baris yang jatuh tempo setelah minggu kebutuhannya dimajukan.',
   'rs.def.zones':
-    'Di dalam waktu tunggu pemasok atau Zone Liability-nya, perubahan memerlukan persetujuan pemasok, dikenai penalti perubahan, dan berada paling akhir. Di minggu diredam Zone Capacity pengurangan dibatasi ±10% dari kuantitas yang berlaku dan ±20% dari kuantitas pertama; pembatalan di sana membawa kewajiban pemasok atas material yang sudah dibeli, ditandai tetapi belum dihargai. Minggu berikutnya Zone Capacity bebas.',
+    'Di dalam lead time pemasok atau Zone Liability-nya, perubahan memerlukan persetujuan pemasok, dikenai penalti perubahan, dan berada paling akhir. Di minggu diredam Zone Capacity pengurangan dibatasi ±10% dari kuantitas yang berlaku dan ±20% dari kuantitas pertama; pembatalan di sana membawa kewajiban pemasok atas material yang sudah dibeli, ditandai tetapi belum dihargai. Minggu berikutnya Zone Capacity bebas.',
   'rs.def.value':
     'Nilai: palet-minggu yang dibebaskan sebuah perubahan di minggu di atas kapasitas, dikali tarif ruang sewa, dikurangi penalti perubahan. Daftar dinilai bersama, satu usulan setelah yang lain.',
   'rs.def.onHand':
