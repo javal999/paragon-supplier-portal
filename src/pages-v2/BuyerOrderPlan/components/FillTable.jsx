@@ -26,7 +26,7 @@ const FillTable = ({ w }) => {
         <TableHeader>
           <TableHeaderCell>{t('op.fill.col.week')}</TableHeaderCell>
           <TableHeaderCell term="fillOrderPlan" />
-          <TableHeaderCell>{t('op.fill.col.interim')}</TableHeaderCell>
+          <TableHeaderCell term="fillInterim" />
           <TableHeaderCell term="fillLowest" />
           <TableHeaderCell term="fillAgainst80" />
           <TableHeaderCell term="fillRented" />
