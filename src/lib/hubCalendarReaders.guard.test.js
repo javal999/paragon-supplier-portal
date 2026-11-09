@@ -260,6 +260,8 @@ const D = derive();
 // why that is right. A row may only leave by its site leaving.
 /** @type {Readonly<Record<string, string>>} */
 const CALENDAR_DAY_ALLOWLIST = {
+  'services/transitions/poOnHold.js#graceState':
+    'PEX-7 BR-02 — the PO On Hold grace period is set in days (14 by default, owner 2026-11-05, Q7) and counted in calendar days from the day the quantity first appeared [my call: the doc says "days", not working days]; the supplier answers within it, so working-day counting is the alternative.',
   'services/delivery/fulfillment.js#statusForUnmatched':
     'CR-07 — "Missed: nothing received 3 days after the need date": a physical delivery window in calendar days, not a response deadline.',
   'services/transitions/callOffRules.js#deliveryResults':
