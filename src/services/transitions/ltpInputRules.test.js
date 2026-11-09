@@ -15,7 +15,11 @@ import {
 import { ropOrder } from './osipRules';
 
 const W = ['2026-11-09', '2026-11-16', '2026-11-23'];
-/** @param {any} p */
+/**
+ * @param {'A' | 'Festive' | 'B'} series
+ * @param {number} qty
+ * @param {string} [at]
+ */
 const upload = (series, qty, at = '2026-11-09T01:00:00.000Z') => ({
   key: ltpUploadKey('M-X', series),
   kind: 'upload',

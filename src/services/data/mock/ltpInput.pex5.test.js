@@ -78,20 +78,20 @@ describe('t_ltpinput_set', () => {
     ).toBe('done');
     expect((await choose(planning, 'Festive')).status).toBe('done');
     const after = await rows();
-    const total = after.reduce((n, r) => n + r.share, 0);
+    const total = after.reduce((n, r) => n + (r.share ?? 0), 0);
     expect(total).toBeCloseTo(1, 5);
     for (const r of after) {
       const li = r.ltpInputs;
       expect(li?.choice).toBe('Festive');
       expect(li?.hasUpload).toBe(true);
       // The uploaded quantity is the material's; a supplier reads its share.
-      expect(li?.byWeek[w[0]].a).toBe(Math.round(100 * r.share));
-      expect(li?.byWeek[w[0]].used).toBe(Math.round(130 * r.share));
+      expect(li?.byWeek[w[0]].a).toBe(Math.round(100 * (r.share ?? 0)));
+      expect(li?.byWeek[w[0]].used).toBe(Math.round(130 * (r.share ?? 0)));
       // What a publication would store today (the page's published figure stays as published).
       const today = demandAnticipationToPublish([]).figures.find(
         (f) => f.supplierId === r.supplierId && f.materialCode === MAT
       );
-      expect(today?.figure.weeks[0].ltp).toBe(Math.round(130 * r.share));
+      expect(today?.figure.weeks[0].ltp).toBe(Math.round(130 * (r.share ?? 0)));
       expect(li?.strategicFromFestive).toBe(true);
       expect(li?.protectionFromB).toBe(true);
     }

@@ -567,7 +567,7 @@ export class MockProcurementService {
 
   /**
    * @param {QueryScope} scope
-   * @returns {Promise<Page<DemandAnticipationSupplyRow>>}
+   * @returns {Promise<Page<DemandAnticipationSupplyRow & { readonly ltpInputs?: import('./demandAnticipationReadModel').RowLtpInputs }>>}
    */
   async getDemandAnticipation(scope) {
     // CAP-10 — PTI's own plan, frozen per horizon; a supplier reads none.
