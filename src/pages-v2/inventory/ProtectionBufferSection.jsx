@@ -74,7 +74,6 @@ const ProtectionBufferSection = ({ supplierId, materialCode, rules = PROTECTION_
   );
   /** @param {ProtectionBufferRow} r */
   const keyOf = (r) => `${r.supplierId}-${r.materialCode}`;
-  const off = rules.protectionUplift === 'off';
 
   return (
     <section
@@ -102,11 +101,7 @@ const ProtectionBufferSection = ({ supplierId, materialCode, rules = PROTECTION_
           {t('buffers.protection.absorbed')}
         </p>
       </div>
-      {off ? (
-        <p className="px-4 pb-4 text-sm text-text-tertiary" data-testid="protection-buffer-off">
-          {t('buffers.protection.switchedOff')}
-        </p>
-      ) : linesQuery.isPending || inputsQuery.isPending ? (
+      {linesQuery.isPending || inputsQuery.isPending ? (
         <p className="px-4 pb-4 text-sm text-text-tertiary">{t('buffers.protection.loading')}</p>
       ) : linesQuery.isError || inputsQuery.isError ? (
         <p className="px-4 pb-4 text-sm text-danger" role="alert">

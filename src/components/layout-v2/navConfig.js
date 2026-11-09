@@ -20,6 +20,7 @@ import {
   Factory,
   FlaskConical,
   History,
+  Route,
   FileCheck,
   FileQuestion,
   FileSearch,
@@ -149,7 +150,9 @@ export const PTI_NAV = [
         labelKey: 'hub.nav.pti.demandAnticipationHistory',
         icon: History,
         path: '/buyer/demand-anticipation-history'
-      }
+      },
+      // PEX-11 (BL-276) — DA → PO → call-off → ASN per supplier × material, with flags.
+      { labelKey: 'hub.nav.pti.planTrace', icon: Route, path: '/buyer/plan-trace' }
     ]
   },
   {

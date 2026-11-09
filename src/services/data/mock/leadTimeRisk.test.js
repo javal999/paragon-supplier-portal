@@ -132,11 +132,11 @@ const pos = (all, supplierId, materialCode) => {
 };
 
 describe('BL-46 demo data — each case visible, pinned by supplier × material', () => {
-  it('High: sup-002 RM-STEAR-7300, 10 days of cover against a 21-day lead time', async () => {
+  it('High: sup-002 RM-STEAR-7300, 10 days of cover against a 45-day lead time', async () => {
     const p = pos(await positions(), 'sup-002', 'RM-STEAR-7300');
     expect(positionRisk(p)).toEqual({
       riskClass: 'high',
-      basis: { kind: 'leadTime', leadTimeDays: 21, daysOfCover: 10 }
+      basis: { kind: 'leadTime', leadTimeDays: 45, daysOfCover: 10 }
     });
   });
 
@@ -218,7 +218,7 @@ describe('BL-46 alerts — the class, its basis, and the lead-time-missing alert
     const alerts = (await reads.getInventoryAlerts(buyer)).items;
     expect(alerts.find((a) => a.key === 'ptiBelowRop|RM-STEAR-7300|sup-002')).toMatchObject({
       riskClass: 'high',
-      riskBasis: { kind: 'leadTime', leadTimeDays: 21, daysOfCover: 10 }
+      riskBasis: { kind: 'leadTime', leadTimeDays: 45, daysOfCover: 10 }
     });
     // PREMISE CHANGED: sup-006 AI-VITC-6720's coverage alert was High (Critical
     // band, Uncovered). At exactly 1.5 × its lead time it is Low now.

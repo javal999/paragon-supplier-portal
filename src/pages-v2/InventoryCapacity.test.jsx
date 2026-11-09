@@ -110,7 +110,7 @@ describe('PTI Inventory (REQ-E08-01)', () => {
     // Critical"). It now shows the risk class against the supplier lead time and
     // says which basis decided it.
     expect(within(stear).getByText(/10 days · High/)).toBeInTheDocument();
-    expect(within(stear).getByText('Lead time 21 days')).toBeInTheDocument();
+    expect(within(stear).getByText('Lead time 45 days')).toBeInTheDocument();
     expect(stear).toHaveTextContent(/In production\s*6,000/);
     const glycerin = screen.getByTestId('pti-stock-row-sup-002-RM-EMUL-3310');
     expect(within(glycerin).getByText('Out of date')).toBeInTheDocument();
@@ -876,7 +876,7 @@ describe('Alerts (REQ-E08-05)', () => {
     ).toHaveTextContent('PTI 900 / ROP 2,500 KG');
     // …while a supplier rule keeps BL-46's basis, named "Supplier cover".
     expect(screen.getByTestId('alert-basis-coverage|RM-STEAR-7300|sup-002')).toHaveTextContent(
-      'Supplier cover 10 days · lead time 21 days'
+      'Supplier cover 10 days · lead time 45 days'
     );
     // …and the one material with no lead time raises its own alert, on the fallback.
     const missing = screen.getByTestId('alert-leadTimeMissing|RM-EMUL-9430|sup-010');

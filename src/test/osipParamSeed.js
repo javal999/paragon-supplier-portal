@@ -22,6 +22,7 @@ export function seedOsipParam(param, at, value) {
     param,
     value,
     previous: osipParamStore.valueOf(key),
+    reason: null,
     setAt: '2026-08-31T03:00:00.000Z',
     setBy: NO_PERSON
   });

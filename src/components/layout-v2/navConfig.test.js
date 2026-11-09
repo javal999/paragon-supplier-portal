@@ -68,10 +68,11 @@ describe('Material Planner menu — Weekly plan and Review (F-03, F-04)', () => 
     expect(
       /** @type {import('./navConfig').NavSection} */ (mp.find((s) => s.id === 'weeklyPlan')).items
     ).toHaveLength(6);
-    // DRC-3 (BL-189) — Demand anticipation history joins Review as its last item.
+    // DRC-3 (BL-189) — Demand anticipation history joins Review; PEX-11 (BL-276) —
+    // Plan vs execution joins it as the last item.
     expect(
       /** @type {import('./navConfig').NavSection} */ (mp.find((s) => s.id === 'review')).items
-    ).toHaveLength(4);
+    ).toHaveLength(5);
     expect(mp.map((s) => s.id)).not.toContain('forecast');
   });
 
@@ -265,9 +266,14 @@ describe('DRC-3 (BL-189) — the demand anticipation history: planners, Procurem
     const review = /** @type {import('./navConfig').NavSection} */ (
       navFor('buyer', 'MP').find((s) => s.id === 'review')
     );
-    expect(review.items.slice(-1)[0]).toMatchObject({
+    expect(review.items.slice(-2)[0]).toMatchObject({
       labelKey: 'hub.nav.pti.demandAnticipationHistory',
       path: PATH
+    });
+    // PEX-11 (BL-276) — the plan vs execution trace follows it.
+    expect(review.items.slice(-1)[0]).toMatchObject({
+      labelKey: 'hub.nav.pti.planTrace',
+      path: '/buyer/plan-trace'
     });
   });
 

@@ -64,6 +64,7 @@ describe('supplierBelowRop reads the system ROP Supplier', () => {
         param: 'bottleneckLeadTimeDays',
         value: 60,
         previous: null,
+        reason: null,
         setAt: '2026-08-31T03:00:00.000Z',
         setBy: NO_PERSON
       });

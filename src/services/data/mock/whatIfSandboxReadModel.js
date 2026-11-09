@@ -29,6 +29,7 @@
 import golden from '../../transitions/__fixtures__/osipGolden.json';
 import { materialEntry, sdcClock } from '../../sdc';
 import { leadTimeBreakdown } from '../../engine/leadTimeSteps';
+import { whatIfLtpSeries } from './whatIfLtpSeries';
 import { groupWeekLtp } from '../../transitions/capacityRules';
 import {
   DEMAND_ANTICIPATION_RULES,
@@ -96,6 +97,7 @@ import { whatIfScenarioStore } from './stores/whatIfScenarioStore';
  *   readonly scenarios: readonly WhatIfScenarioView[];
  *   readonly rulesVersion: string;
  *   readonly own: { readonly z: number | null; readonly g: number | null };
+ *   readonly ltpSeries: import('../../transitions/whatIfLevels').LtpSeriesSet;
  * }} WhatIfSandbox
  */
 
@@ -365,6 +367,8 @@ export function whatIfSandbox(supplierId, materialCode, nowIso = sdcClock.now())
     live,
     scenarios: whatIfScenarios(supplierId, materialCode),
     rulesVersion: RULES_VERSION,
-    own: { z: s?.z ?? null, g: s?.g ?? null }
+    own: { z: s?.z ?? null, g: s?.g ?? null },
+    // PEX-15 (BL-277) — the LTP series the scenario presets read.
+    ltpSeries: whatIfLtpSeries(materialCode, live.ltp)
   };
 }

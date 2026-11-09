@@ -17,11 +17,13 @@ import { osipParamInForce } from '../../../transitions/osipParams';
 /**
  * `key`: `osipParamKey(param, …)`. `value` null: back to the default.
  * `previous`: the value in force before this row (null: the default).
+ * `reason`: PEX-13 — the free-text reason a switch change carries, else null.
  * @typedef {{
  *   readonly key: string;
  *   readonly param: OsipParam;
  *   readonly value: number | boolean | null;
  *   readonly previous: number | boolean | null;
+ *   readonly reason: string | null;
  *   readonly setAt: string;
  *   readonly setBy: ActorAttribution;
  * }} OsipParamRow
