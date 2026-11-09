@@ -55,6 +55,7 @@ import {
   SUPPLY_ASSIGNMENTS
 } from './fixtures/inventoryHub';
 import { stockUpdateModeOf } from './supplierMaster';
+import { leadTimeDaysOf } from './leadTimeReadModel';
 // BL-199 (DRC-13 BR-04) — PTI SOH from the hub's stock records, all plants combined.
 import { ptiStockStore } from './stores/ptiStockStore';
 import { hubWorkingCalendar } from '../../transitions/workingCalendarStore';
@@ -170,13 +171,20 @@ const planningEstimate = (supplierId, materialCode) =>
   PLANNING_DAILY_DEMAND[`${supplierId}|${materialCode}`] ?? null;
 
 /**
- * CR-24 — the supplier lead time on record, or null (sample master data).
+ * CR-24 / BL-285 — the pair's lead time in days, or null. One figure per
+ * supplier × material (PEX-D17): for a pair the sample master data lists,
+ * DRC-6 `leadTimeBreakdown` (the figure fulfil-by reads); the sample figure
+ * stays only where DRC-6 has no source. A pair the master data does not list
+ * stays null, so the BL-46 "lead time missing" case (sup-010 RM-EMUL-9430)
+ * remains visible.
  * @param {string} supplierId
  * @param {string} materialCode
  * @returns {number | null}
  */
-export const leadTimeOf = (supplierId, materialCode) =>
-  SUPPLIER_LEAD_TIME_DAYS[`${supplierId}|${materialCode}`] ?? null;
+export const leadTimeOf = (supplierId, materialCode) => {
+  const onRecord = SUPPLIER_LEAD_TIME_DAYS[`${supplierId}|${materialCode}`];
+  return onRecord === undefined ? null : (leadTimeDaysOf(supplierId, materialCode) ?? onRecord);
+};
 
 const forecastLines = () => currentPublication(FORECAST_PUBLICATIONS)?.lines ?? [];
 
