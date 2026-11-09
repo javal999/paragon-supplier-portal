@@ -177,7 +177,7 @@ export const stockSimulationId = {
   'sim.event.dispatchShipped': 'Dikirim sesuai pemberitahuan kirim',
   'sim.event.dispatchOnly': 'Sudah dikirim, belum ada ASN',
   'sim.event.uncapped': 'dari {{qty}}, dibatasi',
-  'sim.eta.etdPlusLeadTime': 'ETA = ETD + waktu tunggu prinsipal',
+  'sim.eta.etdPlusLeadTime': 'ETA = ETD + lead time prinsipal',
   'sim.eta.plannerInput': 'ETA diisi perencana',
 
   'sim.input.title': 'Input perencana',

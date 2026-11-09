@@ -664,7 +664,7 @@ export const TERM_LABEL_GLOSSARY =
       }
     },
     poLeadTime: {
-      label: { en: 'PO lead time', id: 'Waktu tunggu PO' },
+      label: { en: 'PO lead time', id: 'Lead time PO' },
       en: 'The time from raising a PO to its arrival, from the material master; 2 weeks where it is missing.',
       id: 'Waktu dari pembuatan PO sampai kedatangannya, dari data induk material; 2 minggu bila tidak ada.'
     },
@@ -693,10 +693,10 @@ export const TERM_LABEL_GLOSSARY =
     sltGroupDefault: {
       label: {
         en: 'Safety lead time from the group default',
-        id: 'Waktu tunggu pengaman dari nilai bawaan grup'
+        id: 'Safety lead time dari nilai bawaan grup'
       },
       en: 'Materials whose supplier has too few receipts, so their safety lead time is the material group’s pooled figure.',
-      id: 'Material yang pemasoknya punya terlalu sedikit penerimaan, sehingga waktu tunggu pengamannya adalah angka gabungan grup material.'
+      id: 'Material yang pemasoknya punya terlalu sedikit penerimaan, sehingga safety lead time-nya adalah angka gabungan grup material.'
     },
     tierTarget: {
       label: { en: 'Tier and target', id: 'Tingkat dan target' },
@@ -821,7 +821,7 @@ export const TERM_LABEL_GLOSSARY =
       formula: { en: 'SAP safety stock − safety stock.', id: 'Stok pengaman SAP − stok pengaman.' }
     },
     safetyLeadTime: {
-      label: { en: 'Safety lead time', id: 'Waktu tunggu pengaman' },
+      label: { en: 'Safety lead time', id: 'Safety lead time' },
       en: 'Extra time added for a supplier that delivers late, instead of extra stock.',
       id: 'Waktu tambahan untuk pemasok yang terlambat mengirim, sebagai pengganti stok tambahan.',
       formula: {
@@ -880,7 +880,7 @@ export const TERM_LABEL_GLOSSARY =
     bottleneckLeadTime: {
       label: {
         en: 'Bottleneck production lead time (ROP Supplier)',
-        id: 'Waktu tunggu produksi bottleneck (ROP Supplier)'
+        id: 'Lead time produksi bottleneck (ROP Supplier)'
       },
       en: 'The time the supplier’s slowest production step takes, queueing included. It sizes ROP Supplier and has no default.',
       id: 'Waktu yang dibutuhkan langkah produksi paling lambat pemasok, termasuk antrean. Menentukan besar ROP Supplier dan tidak punya nilai bawaan.'

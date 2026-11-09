@@ -139,7 +139,7 @@ export const planGridId = {
   // — Award criteria —
   'planGrid.criterion.compliance': 'Kepatuhan',
   'planGrid.criterion.price': 'Harga',
-  'planGrid.criterion.leadTime': 'Waktu tunggu',
+  'planGrid.criterion.leadTime': 'Lead time',
   'planGrid.criterion.reliability': 'Keandalan',
 
   // — Intake grid —

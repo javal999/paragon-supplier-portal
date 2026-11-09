@@ -25,11 +25,11 @@
 export const PLANNING_TERM_GLOSSARY = /** @satisfies {GlossaryOf<PlanningTerm>} */ ({
   'Zone Liability': {
     en: 'The weeks from this week to the end of the material’s lead time. The quantity is PTI’s demand in those weeks; the supplier commits to it, and once published it does not change.',
-    id: 'Minggu-minggu dari minggu ini sampai akhir waktu tunggu material. Kuantitasnya adalah kebutuhan PTI pada minggu-minggu itu; pemasok berkomitmen padanya, dan setelah diterbitkan kuantitas itu tidak berubah.'
+    id: 'Minggu-minggu dari minggu ini sampai akhir lead time material. Kuantitasnya adalah kebutuhan PTI pada minggu-minggu itu; pemasok berkomitmen padanya, dan setelah diterbitkan kuantitas itu tidak berubah.'
   },
   'Zone Capacity': {
     en: 'The weeks after the lead time. In its first weeks the supplier commits, and each change is damped and kept inside an agreed band; later weeks need only an acknowledgement.',
-    id: 'Minggu-minggu setelah waktu tunggu. Pada minggu-minggu pertamanya pemasok berkomitmen, dan setiap perubahan diredam dan dijaga di dalam rentang yang disepakati; minggu berikutnya cukup ditandai diterima.'
+    id: 'Minggu-minggu setelah lead time. Pada minggu-minggu pertamanya pemasok berkomitmen, dan setiap perubahan diredam dan dijaga di dalam rentang yang disepakati; minggu berikutnya cukup ditandai diterima.'
   },
   MASC: {
     en: 'How much the plan moves from one version to the next, compared with the usual week-to-week movement of demand. 1.0 means the plan moves as much as demand usually does; lower is steadier for suppliers.',
@@ -41,7 +41,7 @@ export const PLANNING_TERM_GLOSSARY = /** @satisfies {GlossaryOf<PlanningTerm>} 
   },
   'Reorder point': {
     en: 'The stock level at which a new order should be released: expected demand over the lead time and the review week, plus the safety stock.',
-    id: 'Tingkat stok saat pesanan baru sebaiknya dirilis: perkiraan permintaan selama waktu tunggu dan minggu tinjauan, ditambah stok pengaman.'
+    id: 'Tingkat stok saat pesanan baru sebaiknya dirilis: perkiraan permintaan selama lead time dan minggu tinjauan, ditambah stok pengaman.'
   },
   'P50/P90': {
     en: 'The demand range. P50 is the middle estimate, with half the outcomes above it; P90 is the level demand stays under nine weeks in ten.',
