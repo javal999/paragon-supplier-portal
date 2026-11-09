@@ -77,6 +77,16 @@ export function ltpInputRefusal(key, payload) {
       ? null
       : 'LTP_CHOICE_INVALID: the choice is A, Festive or B';
   }
+  return ltpUploadRefusal(payload);
+}
+
+/**
+ * Why an upload's file name and weeks are refused, or null. The part of
+ * `ltpInputRefusal` that does not depend on which material or series it is for.
+ * @param {{ readonly weeks?: unknown; readonly sourceFile?: unknown }} payload
+ * @returns {string | null}
+ */
+export function ltpUploadRefusal(payload) {
   if (typeof payload.sourceFile !== 'string' || payload.sourceFile.trim() === '')
     return 'LTP_SOURCE_FILE_REQUIRED: name the file the quantities come from';
   const weeks = payload.weeks;
@@ -284,9 +294,6 @@ export function parseLtpCsv(text) {
     if (i === 0 && !/^\d/.test(week)) return; // a header
     weeks[week] = rest.length > 0 || qty === undefined || qty === '' ? Number.NaN : Number(qty);
   });
-  const refusal = ltpInputRefusal(
-    { kind: 'upload', materialCode: '-', series: 'A' },
-    { weeks, sourceFile: 'x' }
-  );
+  const refusal = ltpUploadRefusal({ weeks, sourceFile: 'x' });
   return refusal ? { refusal } : { weeks };
 }

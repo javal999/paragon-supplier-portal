@@ -102,9 +102,25 @@ export function leadTimeWeeksOf(supplierId, materialCode) {
  * @param {readonly import('../../transitions/capacityRules').LtpLine[]} lines
  */
 export function ltpWeeksOf(p, weeks, lines) {
-  const source = weeks.map((w) => groupWeekLtp(lines, p.supplierId, [p.materialCode], w));
   const inputs = materialLtpInputs(ltpInputStore.all(), p.materialCode);
-  return { ...ltpWeeks(weeks, source, inputs, p.share), hasUpload: inputs.hasUpload, inputs };
+  // Nothing uploaded: the forecast source stands and nothing here needs the
+  // weekly spread, which is the costly part (a day loop per line and week).
+  if (!inputs.hasUpload)
+    return {
+      choice: inputs.choice,
+      aFromUpload: false,
+      a: /** @type {readonly number[]} */ ([]),
+      festive: /** @type {readonly (number | null)[]} */ ([]),
+      b: /** @type {readonly (number | null)[]} */ ([]),
+      used: /** @type {readonly number[]} */ ([]),
+      strategicBuffer: /** @type {readonly (number | null)[]} */ ([]),
+      protectionBuffer: /** @type {readonly (number | null)[]} */ ([]),
+      flags: /** @type {readonly import('../../transitions/ltpInputRules').LtpInputFlag[]} */ ([]),
+      inputs,
+      hasUpload: false
+    };
+  const source = weeks.map((w) => groupWeekLtp(lines, p.supplierId, [p.materialCode], w));
+  return { ...ltpWeeks(weeks, source, inputs, p.share), hasUpload: true, inputs };
 }
 
 /**
@@ -407,8 +423,9 @@ export function withLtpInputsRead(rows) {
         protectionFromB: lw.inputs.uploads.B !== null,
         flags: lw.flags,
         uploads: { A: meta('A'), Festive: meta('Festive'), B: meta('B') },
+        // Without an upload the grid shows no LTP rows, so there is no weekly figure to carry.
         byWeek: Object.fromEntries(
-          weeks.map((w, i) => [
+          (lw.hasUpload ? weeks : []).map((w, i) => [
             w,
             {
               a: lw.a[i],
