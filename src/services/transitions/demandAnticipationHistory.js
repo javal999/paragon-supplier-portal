@@ -36,6 +36,7 @@
 /** @import { ActorAttribution } from '@lib/enforcement' */
 /** @import { CallOff } from '../data/types' */
 /** @import { Carry } from './osipRules' */
+/** @import { DaCause } from './daCauseRules' */
 /** @import { DemandAnticipationPublication, RollingDaFlag } from './demandAnticipationRules' */
 import { addDays, dayOf, mondayOf } from './inventoryRules';
 
@@ -61,6 +62,7 @@ export const DA_HISTORY_RULES = Object.freeze({
  *   readonly carriedIn: readonly { readonly qty: number; readonly fromWeek: string }[];
  *   readonly da: number;
  *   readonly daInForce: number;
+ *   readonly daBefore: number | null;
  * }} DaHistoryWeek
  */
 
@@ -88,6 +90,9 @@ export const DA_HISTORY_RULES = Object.freeze({
  * `supersededBy`:  The publication that superseded it, or null when in force.
  * `agreedFirstOutside`:  The supplier agreed to take the remainder in the first week outside the horizon [Owner A8].
  * `rulesVersion` / `inputs`:  The stamp (DRC-D16).
+ * `version`:  BL-268 (PEX-6 BR-02) — the count of publications of this pair and planning week, up to this one.
+ * `causes`:  BL-268 — what changed since the previous publication and moved DA (none stored: none known).
+ * `daBefore` (per week): the previous publication's DA for the week, same planning week only; null when there is none.
  *
  * @typedef {{
  *   readonly id: string;
@@ -98,6 +103,8 @@ export const DA_HISTORY_RULES = Object.freeze({
  *   readonly planningWeek: string;
  *   readonly inForce: boolean;
  *   readonly supersededBy: string | null;
+ *   readonly version: number;
+ *   readonly causes: readonly DaCause[];
  *   readonly supplierId: string;
  *   readonly materialCode: string;
  *   readonly weeks: readonly DaHistoryWeek[];
@@ -191,6 +198,22 @@ export function daHistoryRows(publications, callOffs) {
     );
     for (const e of entries) {
       const f = e.figure.value;
+      // BL-268 — the earlier publications of this pair and planning week give the version number and the "before".
+      const sameWeekEarlier = publications
+        .slice(0, i)
+        .filter(
+          (p) =>
+            p.planningWeek === pub.planningWeek &&
+            p.entries.some(
+              (x) => x.supplierId === e.supplierId && x.materialCode === e.materialCode
+            )
+        );
+      const before =
+        sameWeekEarlier.length > 0
+          ? (sameWeekEarlier[sameWeekEarlier.length - 1].entries.find(
+              (x) => x.supplierId === e.supplierId && x.materialCode === e.materialCode
+            )?.figure.value.weeks ?? null)
+          : null;
       const previous =
         [...publications.slice(0, i)]
           .reverse()
@@ -208,6 +231,8 @@ export function daHistoryRows(publications, callOffs) {
         planningWeek: pub.planningWeek,
         inForce: superseding === null,
         supersededBy: superseding ? superseding.id : null,
+        version: sameWeekEarlier.length + 1,
+        causes: e.causes ?? [],
         supplierId: e.supplierId,
         materialCode: e.materialCode,
         weeks: f.weeks.map((w, k) => ({
@@ -216,7 +241,8 @@ export function daHistoryRows(publications, callOffs) {
           safety: w.safety,
           carriedIn: w.carriedIn,
           da: w.da,
-          daInForce: f.daInForce[k] ?? w.da
+          daInForce: f.daInForce[k] ?? w.da,
+          daBefore: before?.find((b) => b.week === w.week)?.da ?? null
         })),
         totalDa: f.totalDa,
         safetyOrder: f.safetyOrder,

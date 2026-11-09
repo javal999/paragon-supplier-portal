@@ -26,6 +26,7 @@ import { inputClass, inventoryNow, labelClass } from '../inventory/inventoryDisp
 import AnticipationGrid from './components/AnticipationGrid';
 import PublishPanel from './components/PublishPanel';
 import LtpInputsPanel from './components/LtpInputsPanel';
+import { OutOfDateNote } from './components/DaCauses';
 import ConsumptionPanel from './components/ConsumptionPanel';
 import PlanCheck from './components/PlanCheck';
 import { latestPublication, publishPreview, sharePct, weekDates, weekLabel } from './display';
@@ -334,6 +335,21 @@ const BuyerDemandAnticipation = () => {
                       {t('demandAnt.card.noStock')}
                     </p>
                   ) : null}
+                  {/* BL-268 (PEX-6 BR-01) — the published DA an input change moved, with the cause. */}
+                  {
+                    /** @type {{ outOfDate?: { causes: readonly import('@services/transitions/daCauseRules').DaCause[] } | null }} */ (
+                      r
+                    ).outOfDate ? (
+                      <OutOfDateNote
+                        causes={
+                          /** @type {{ outOfDate: { causes: readonly import('@services/transitions/daCauseRules').DaCause[] } }} */ (
+                            r
+                          ).outOfDate.causes
+                        }
+                        testId={`dant-outofdate-${keyOf(r)}`}
+                      />
+                    ) : null
+                  }
                   <PlanCheck row={r} rowKey={keyOf(r)} />
                   <CardWeeks
                     row={r}

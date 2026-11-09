@@ -11,6 +11,14 @@
 
 /** @type {Record<string, string>} */
 export const demandAnticipationEn = {
+  // BL-268 (PEX-6) — DA versions: the cause of a change.
+  'daCause.outOfDate': 'Out of date',
+  'daCause.because': 'Because:',
+  'daCause.kind.ltpA': 'LTP A',
+  'daCause.kind.ltpFestive': 'LTP Festive',
+  'daCause.kind.ltpB': 'LTP B',
+  'daCause.kind.ltpChoice': 'LTP choice',
+  'daCause.kind.safetyStock': 'Safety stock',
   // BL-267 (PEX-5) — LTP inputs.
   'ltpIn.title': 'LTP inputs',
   'ltpIn.intro':
@@ -144,6 +152,14 @@ export const demandAnticipationEn = {
 
 /** @type {Record<string, string>} */
 export const demandAnticipationId = {
+  // BL-268 (PEX-6) — DA versions: the cause of a change.
+  'daCause.outOfDate': 'Kedaluwarsa',
+  'daCause.because': 'Karena:',
+  'daCause.kind.ltpA': 'LTP A',
+  'daCause.kind.ltpFestive': 'LTP Festive',
+  'daCause.kind.ltpB': 'LTP B',
+  'daCause.kind.ltpChoice': 'Pilihan LTP',
+  'daCause.kind.safetyStock': 'Safety stock',
   // BL-267 (PEX-5) — LTP inputs.
   'ltpIn.title': 'Input LTP',
   'ltpIn.intro':

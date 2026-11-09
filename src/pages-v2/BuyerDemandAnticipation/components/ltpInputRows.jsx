@@ -30,9 +30,9 @@ export function ltpInputRows(row, rowKey, t) {
   /** @param {'A' | 'Festive' | 'B'} s */
   const marker = (s) =>
     li.choice === s ? (
-      <StatusPill variant="neutral" data-testid={`dant-ltp-inuse-${rowKey}-${s}`}>
-        {t('ltpIn.inUse')}
-      </StatusPill>
+      <span data-testid={`dant-ltp-inuse-${rowKey}-${s}`}>
+        <StatusPill variant="neutral">{t('ltpIn.inUse')}</StatusPill>
+      </span>
     ) : null;
   /**
    * @param {string} id

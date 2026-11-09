@@ -53,11 +53,14 @@ import { addDays } from '../../transitions/inventoryRules';
 import { groupWeekLtp } from '../../transitions/capacityRules';
 import { horizonWeeksOf } from '../../transitions/osipRules';
 import {
+  choiceInForce,
   ltpWeeks,
   materialLtpInputs,
   protectionForRopOrder
 } from '../../transitions/ltpInputRules';
 import { ltpInputStore } from './stores/ltpInputStore';
+import { osipParamStore } from './stores/osipParamStore';
+import { daCauses, daMoved } from '../../transitions/daCauseRules';
 import { consumptionStore } from './stores/consumptionStore';
 import { callOffStore } from './stores/callOffStore';
 import { purchaseOrderStore } from './stores/purchaseOrderStore';
@@ -220,13 +223,41 @@ export function demandAnticipationToPublish(agreed, nowIso = sdcClock.now()) {
   const publications = demandAnticipationStore.all();
   const planningWeek = hubWeeks(nowIso, 1)[0];
   const today = figuresAt(publications, nowIso);
+  const ltpRows = ltpInputStore.all();
+  const osipRows = osipParamStore.all();
   return {
+    // BL-268 (PEX-6 BR-02) — what a publication made now would record of the ledgers.
+    ledgerMark: { ltp: ltpRows.length, osip: osipRows.length },
     planningWeek,
     remainders: new Map(
       today.map((f) => [pairKey(f.supplierId, f.materialCode), f.figure.remainder])
     ),
     inForce: publicationOf(publications, planningWeek),
-    figures: figuresAt(publications, nowIso, new Set(agreed))
+    // BL-268 (PEX-6 BR-02) — each figure carries the causes since the previous
+    // publication of the pair (the one in force for the week, else the latest).
+    figures: figuresAt(publications, nowIso, new Set(agreed)).map((f) => {
+      const holds = (/** @type {DemandAnticipationPublication} */ p) =>
+        p.entries.some((e) => e.supplierId === f.supplierId && e.materialCode === f.materialCode);
+      const prevPub =
+        publicationOf(publications, planningWeek) ??
+        [...publications].reverse().find(holds) ??
+        null;
+      const prev = prevPub?.entries.find(
+        (e) => e.supplierId === f.supplierId && e.materialCode === f.materialCode
+      );
+      if (!prevPub || !prev) return { ...f, causes: [] };
+      return {
+        ...f,
+        causes: daCauses({
+          materialCode: f.materialCode,
+          since: prevPub.ledgerMark ?? { ltp: 0, osip: 0 },
+          moved: daMoved(prev.figure.value.weeks, f.figure.weeks),
+          choice: choiceInForce(ltpRows, f.materialCode),
+          ltpRows,
+          osipRows
+        })
+      };
+    })
   };
 }
 
@@ -244,7 +275,8 @@ demandAnticipationStore.useSeeder(() => {
         source: 'sampleSeed',
         planningWeek: hubWeeks(now, 1)[0],
         agreedFirstOutside: [],
-        entries: entriesOf(figures)
+        entries: entriesOf(figures),
+        ledgerMark: { ltp: ltpInputStore.all().length, osip: osipParamStore.all().length }
       };
 });
 
@@ -389,6 +421,46 @@ export function withLtpInputsRead(rows) {
           ])
         )
       }
+    };
+  });
+}
+
+/**
+ * BL-268 (PEX-6 BR-01) — a published DA that an input change moved is out of
+ * date, with the causes since that publication.
+ * @typedef {{
+ *   readonly publicationId: string;
+ *   readonly causes: readonly import('../../transitions/daCauseRules').DaCause[];
+ * }} DaOutOfDate
+ */
+
+/**
+ * Adds `outOfDate` to each DA row: null unless the week is published, a DA week
+ * moved and at least one ledger change since the publication can explain it.
+ * A move no ledger change explains (a new forecast version, a call-off) stays
+ * the "Would be" delta it already is. Read only.
+ * @template {Pick<DemandAnticipationRow, 'materialCode' | 'planSource' | 'weeks' | 'publishedBy'>} R
+ * @param {readonly R[]} rows
+ * @returns {(R & { readonly outOfDate: DaOutOfDate | null })[]}
+ */
+export function withOutOfDateRead(rows) {
+  const ltpRows = ltpInputStore.all();
+  const osipRows = osipParamStore.all();
+  return rows.map((r) => {
+    const pub = r.publishedBy ? demandAnticipationStore.get(r.publishedBy.publicationId) : null;
+    if (!pub || r.planSource !== 'published') return { ...r, outOfDate: null };
+    const moved = r.weeks.some((w) => w.delta !== null && w.delta !== 0);
+    const causes = daCauses({
+      materialCode: r.materialCode,
+      since: pub.ledgerMark ?? { ltp: 0, osip: 0 },
+      moved,
+      choice: choiceInForce(ltpRows, r.materialCode),
+      ltpRows,
+      osipRows
+    });
+    return {
+      ...r,
+      outOfDate: causes.length > 0 ? { publicationId: pub.id, causes } : null
     };
   });
 }

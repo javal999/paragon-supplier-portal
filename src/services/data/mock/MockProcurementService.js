@@ -27,7 +27,11 @@ import { ropFisikLastChecks, ropFisikPrRecommendations } from './callOffTriggerR
 /** @import { DaHistoryRow } from '../../transitions/demandAnticipationHistory' */
 import { allDemandAnticipationHistory } from './demandAnticipationHistoryReadModel';
 /** @import { SupplierDaRow } from './demandAnticipationReadModel' */
-import { supplierDemandAnticipation, withLtpInputsRead } from './demandAnticipationReadModel';
+import {
+  supplierDemandAnticipation,
+  withLtpInputsRead,
+  withOutOfDateRead
+} from './demandAnticipationReadModel';
 import { SUPPLIER_DA_VIEW_ENABLED } from '../../transitions/supplierDaView';
 import { stockSimulationRows } from './stockSimulationReadModel';
 import {
@@ -567,7 +571,7 @@ export class MockProcurementService {
 
   /**
    * @param {QueryScope} scope
-   * @returns {Promise<Page<DemandAnticipationSupplyRow & { readonly ltpInputs?: import('./demandAnticipationReadModel').RowLtpInputs }>>}
+   * @returns {Promise<Page<DemandAnticipationSupplyRow & { readonly ltpInputs?: import('./demandAnticipationReadModel').RowLtpInputs; readonly outOfDate?: import('./demandAnticipationReadModel').DaOutOfDate | null }>>}
    */
   async getDemandAnticipation(scope) {
     // CAP-10 — PTI's own plan, frozen per horizon; a supplier reads none.
@@ -575,7 +579,11 @@ export class MockProcurementService {
     // CAP-12 — with open supply, the gap and its proposal per week.
     // DRC-18 (BL-203) — with FG demand, LTP − FG demand and the consumption
     // moving average per week, read only.
-    return { items: withLtpInputsRead(withLtpFgDemandRead(allDemandAnticipationWithSupply())) };
+    return {
+      items: withOutOfDateRead(
+        withLtpInputsRead(withLtpFgDemandRead(allDemandAnticipationWithSupply()))
+      )
+    };
   }
 
   /**

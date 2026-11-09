@@ -50,6 +50,7 @@
 /** @import { PtiStockRecord } from './inventoryRules' */
 /** @import { ActorAttribution } from '@lib/enforcement' */
 /** @import { Carry, DaWeek, OsipRules, Stamped } from './osipRules' */
+/** @import { DaCause, LedgerMark } from './daCauseRules' */
 import { groupWeekLtp } from './capacityRules';
 import { addDays, dayOf, mondayOf } from './inventoryRules';
 import {
@@ -422,6 +423,7 @@ export function rollingDaFigure(input, rules = OSIP_RULES) {
  *   readonly supplierId: string;
  *   readonly materialCode: string;
  *   readonly figure: Stamped<RollingDaFigure>;
+ *   readonly causes?: readonly DaCause[];
  * }} DemandAnticipationEntry
  */
 
@@ -433,7 +435,8 @@ export function rollingDaFigure(input, rules = OSIP_RULES) {
  * `planningWeek`:  The Monday of the planning week it records (DRC-2 BR-01).
  * `agreedFirstOutside`:  The pairs (`supplierId|materialCode`) whose supplier
  *   agreed to take the remainder in the first week outside the horizon [Owner A8].
- * `entries`:  Every pair's figure for that planning week.
+ * `entries`:  Every pair's figure for that planning week; with BL-268 (PEX-6 BR-02), the causes since the previous publication.
+ * `ledgerMark`:  BL-268 — how many rows the LTP input and OSIP value ledgers held when it was made.
  *
  * @typedef {{
  *   readonly id: string;
@@ -443,6 +446,7 @@ export function rollingDaFigure(input, rules = OSIP_RULES) {
  *   readonly planningWeek: string;
  *   readonly agreedFirstOutside: readonly string[];
  *   readonly entries: readonly DemandAnticipationEntry[];
+ *   readonly ledgerMark?: LedgerMark;
  * }} DemandAnticipationPublication
  */
 
@@ -528,6 +532,7 @@ export const sameFigure = (a, b) => JSON.stringify(a) === JSON.stringify(b);
  *   readonly materialCode: string;
  *   readonly inputs: RollingDaInputs;
  *   readonly figure: RollingDaFigure;
+ *   readonly causes?: readonly DaCause[];
  * }} PairFigure
  */
 
@@ -540,7 +545,8 @@ export function entriesOf(figures) {
   return figures.map((f) => ({
     supplierId: f.supplierId,
     materialCode: f.materialCode,
-    figure: stamp(f.figure, f.inputs)
+    figure: stamp(f.figure, f.inputs),
+    ...(f.causes ? { causes: f.causes } : {})
   }));
 }
 
