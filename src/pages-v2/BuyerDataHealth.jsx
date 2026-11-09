@@ -77,7 +77,7 @@ const CheckDetail = ({ feed, tolerance }) => {
         <Table>
           <TableHeader>
             <TableHeaderCell>{t('dh.detail.check')}</TableHeaderCell>
-            <TableHeaderCell>{t('dh.detail.severity')}</TableHeaderCell>
+            <TableHeaderCell term="dhSeverity" />
             <TableHeaderCell>{t('dh.detail.checked')}</TableHeaderCell>
             <TableHeaderCell>{t('dh.detail.failing')}</TableHeaderCell>
             <TableHeaderCell>{t('dh.detail.result')}</TableHeaderCell>
