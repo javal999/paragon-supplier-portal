@@ -32,6 +32,11 @@ import SwitchesPanel from './components/SwitchesPanel';
 import ResultsTable from './components/ResultsTable';
 import WeeksGrid from './components/WeeksGrid';
 import ScenariosPanel from './components/ScenariosPanel';
+import ScenarioPresets from './components/ScenarioPresets';
+import FgBomLevel from './components/FgBomLevel';
+import SupplierLevel from './components/SupplierLevel';
+import Tabs from '@components/ui-v2/Tabs';
+import { WHAT_IF_LEVELS } from '@services/transitions/whatIfLevels';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WHAT-IF SANDBOX — DRC-17 (BL-202), SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10,
@@ -160,6 +165,11 @@ const Editor = ({ box }) => {
         </Button>
       </div>
       <BasisLine standing="planOfRecord" />
+      {/* PEX-15 BR-02 (BL-277) — Baseline, Festive and Protection buffer load their LTP series. */}
+      <ScenarioPresets
+        series={box.ltpSeries}
+        onLoad={(_scenario, ltp) => onInputs({ ltp: [...ltp] })}
+      />
       <ResultsTable plan={plan} scenario={run} compared={compared} />
       <InputsPanel
         inputs={inputs}
@@ -210,6 +220,9 @@ const BuyerWhatIfSandbox = () => {
   const { identity } = useCurrentIdentity();
   const [params, setParams] = useSearchParams();
   const materialCode = params.get('material');
+  // PEX-15 (BL-277) — the level tab; the sandbox built today is the Material tab.
+  const levelParam = params.get('level');
+  const level = WHAT_IF_LEVELS.find((l) => l === levelParam) ?? 'material';
   const pairs = useWhatIfPairs();
   // U-09 (BL-247) — no supplier in the address: the material's primary supplier.
   const supplierId =
@@ -265,71 +278,91 @@ const BuyerWhatIfSandbox = () => {
       >
         {t('whatIf.analysisOnly')}
       </p>
-      <div className="flex flex-wrap items-end gap-3 mb-4" data-testid="wi-picker">
-        <div className="min-w-[20rem]">
-          <label htmlFor="wi-pair" className={labelClass}>
-            {t('whatIf.pick.label')}
-          </label>
-          <select
-            id="wi-pair"
-            className={inputClass}
-            value={selected}
-            onChange={(e) => {
-              const p = list.find((x) => keyOf(x) === e.target.value);
-              if (p) pick(p);
-            }}
-          >
-            <option value="">{t('whatIf.pick.placeholder')}</option>
-            {list.map((p) => (
-              <option key={keyOf(p)} value={keyOf(p)}>
-                {pairText(p, t)}
-              </option>
-            ))}
-          </select>
-        </div>
-        {ppt7 ? (
-          <Button variant="secondary" onClick={() => pick(ppt7)} data-testid="wi-load-ppt7">
-            {t('whatIf.pick.loadPpt7')}
-          </Button>
-        ) : null}
-        {/* P-07 / BL-247 — a fresh editor on the same pair, on request. */}
-        {selected ? (
-          <Button
-            variant="secondary"
-            onClick={() => {
-              if (supplierId && materialCode)
-                setParams(new URLSearchParams({ material: materialCode, supplier: supplierId }), {
-                  replace: true
-                });
-              setBlank((n) => n + 1);
-            }}
-            data-testid="wi-new-blank"
-          >
-            {t('whatIf.newBlank')}
-          </Button>
-        ) : null}
-      </div>
-      {!selected ? (
-        <p className="text-sm text-text-tertiary" data-testid="wi-empty">
-          {t('whatIf.pick.empty')}
-        </p>
-      ) : box.isPending ? (
-        <p className="text-sm text-text-tertiary" data-testid="wi-loading">
-          {t('whatIf.loading')}
-        </p>
-      ) : box.isError ? (
-        <div className="flex items-center gap-3" data-testid="wi-error">
-          <p className="text-sm text-danger">{t('whatIf.error')}</p>
-          <Button variant="secondary" onClick={() => void box.refetch()}>
-            {t('whatIf.retry')}
-          </Button>
-        </div>
-      ) : box.data ? (
-        <Editor key={`${selected}#${blank}`} box={box.data} />
-      ) : (
-        <p className="text-sm text-text-tertiary" data-testid="wi-unknown">
-          {t('whatIf.save.refused.UNKNOWN_PAIR')}
-        </p>
+      <Tabs
+        tabs={WHAT_IF_LEVELS.map((id) => ({ id, label: t(`pex.sandbox.level.${id}`) }))}
+        active={level}
+        onChange={(id) => {
+          const next = new URLSearchParams(params);
+          if (id === 'material') next.delete('level');
+          else next.set('level', id);
+          setParams(next, { replace: true });
+        }}
+        className="mb-4"
+      />
+      {level === 'fg' ? <FgBomLevel /> : null}
+      {level === 'supplier' ? <SupplierLevel /> : null}
+      {level !== 'material' ? null : (
+        <>
+          <div className="flex flex-wrap items-end gap-3 mb-4" data-testid="wi-picker">
+            <div className="min-w-[20rem]">
+              <label htmlFor="wi-pair" className={labelClass}>
+                {t('whatIf.pick.label')}
+              </label>
+              <select
+                id="wi-pair"
+                className={inputClass}
+                value={selected}
+                onChange={(e) => {
+                  const p = list.find((x) => keyOf(x) === e.target.value);
+                  if (p) pick(p);
+                }}
+              >
+                <option value="">{t('whatIf.pick.placeholder')}</option>
+                {list.map((p) => (
+                  <option key={keyOf(p)} value={keyOf(p)}>
+                    {pairText(p, t)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {ppt7 ? (
+              <Button variant="secondary" onClick={() => pick(ppt7)} data-testid="wi-load-ppt7">
+                {t('whatIf.pick.loadPpt7')}
+              </Button>
+            ) : null}
+            {/* P-07 / BL-247 — a fresh editor on the same pair, on request. */}
+            {selected ? (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  if (supplierId && materialCode)
+                    setParams(
+                      new URLSearchParams({ material: materialCode, supplier: supplierId }),
+                      {
+                        replace: true
+                      }
+                    );
+                  setBlank((n) => n + 1);
+                }}
+                data-testid="wi-new-blank"
+              >
+                {t('whatIf.newBlank')}
+              </Button>
+            ) : null}
+          </div>
+          {!selected ? (
+            <p className="text-sm text-text-tertiary" data-testid="wi-empty">
+              {t('whatIf.pick.empty')}
+            </p>
+          ) : box.isPending ? (
+            <p className="text-sm text-text-tertiary" data-testid="wi-loading">
+              {t('whatIf.loading')}
+            </p>
+          ) : box.isError ? (
+            <div className="flex items-center gap-3" data-testid="wi-error">
+              <p className="text-sm text-danger">{t('whatIf.error')}</p>
+              <Button variant="secondary" onClick={() => void box.refetch()}>
+                {t('whatIf.retry')}
+              </Button>
+            </div>
+          ) : box.data ? (
+            <Editor key={`${selected}#${blank}`} box={box.data} />
+          ) : (
+            <p className="text-sm text-text-tertiary" data-testid="wi-unknown">
+              {t('whatIf.save.refused.UNKNOWN_PAIR')}
+            </p>
+          )}
+        </>
       )}
     </AppShellV2>
   );

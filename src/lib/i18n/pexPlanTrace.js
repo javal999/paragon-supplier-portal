@@ -5,6 +5,51 @@
 
 /** @type {Record<string, string>} */
 export const pexPlanTraceEn = {
+  'pex.sandbox.level.material': 'Material',
+  'pex.sandbox.level.fg': 'FG and BOM',
+  'pex.sandbox.level.supplier': 'Supplier',
+  'pex.sandbox.scenario.baseline': 'Baseline',
+  'pex.sandbox.scenario.festive': 'Festive',
+  'pex.sandbox.scenario.protection': 'Protection buffer',
+  'pex.sandbox.presets.title': 'LTP scenario',
+  'pex.sandbox.presets.note':
+    'Load the weekly LTP of a scenario into the editor: Baseline is LTP A, Festive is LTP Festive, Protection buffer is LTP B.',
+  'pex.sandbox.presets.unavailable':
+    'Festive and Protection buffer load once LTP Festive and LTP B are in the hub (PEX-5, BL-267). Nothing is estimated in their place.',
+  'pex.sandbox.fg.note':
+    'One finished good: the effect on every material in its BOM, from the forecast engine’s requirement. Analysis only.',
+  'pex.sandbox.fg.pick': 'Finished good',
+  'pex.sandbox.fg.limiting': 'Limiting material',
+  'pex.sandbox.fg.noLimiting': 'None named',
+  'pex.sandbox.fg.units': 'Units the limiting material supports',
+  'pex.sandbox.fg.unitsPlaceholder': 'No constraint',
+  'pex.sandbox.fg.unitsInvalid': 'Enter a whole number of units, 0 or more.',
+  'pex.sandbox.fg.empty': 'No finished-good demand in the plan to show.',
+  'pex.sandbox.fg.constrained':
+    'BOM constraint: FG production drops from {{demand}} to {{produced}} units; every material is recalculated from it.',
+  'pex.sandbox.fg.unconstrained': 'FG demand {{demand}} units; no BOM constraint applied.',
+  'pex.sandbox.fg.col.item': 'Item',
+  'pex.sandbox.fg.col.total': 'Total',
+  'pex.sandbox.fg.row.demand': 'FG demand (units)',
+  'pex.sandbox.fg.row.produced': 'FG production (units)',
+  'pex.sandbox.fg.limitingTag': 'limiting',
+  'pex.sandbox.fg.was': 'was {{qty}}',
+  'pex.sandbox.fg.notAvailable': 'Not available',
+  'pex.sandbox.fg.scenarioNote':
+    'An LTP scenario does not scale a finished good: LTP is per material, and how a scenario applies to an FG is not defined yet.',
+  'pex.sandbox.supplier.note':
+    'One supplier: PTI demand (LTP A) against the capacity the supplier confirmed, per month. Utilisation is demand divided by confirmed capacity, over the weeks that have a confirmation.',
+  'pex.sandbox.supplier.pick': 'Supplier',
+  'pex.sandbox.supplier.empty': 'No capacity plan for this supplier.',
+  'pex.sandbox.supplier.col.month': 'Month',
+  'pex.sandbox.supplier.col.demand': 'Demand ({{uom}})',
+  'pex.sandbox.supplier.col.capacity': 'Confirmed capacity ({{uom}})',
+  'pex.sandbox.supplier.col.utilisation': 'Utilisation',
+  'pex.sandbox.supplier.col.weeks': 'Weeks',
+  'pex.sandbox.supplier.noCapacity': 'No capacity confirmed',
+  'pex.sandbox.supplier.weeksConfirmed': '{{confirmed}} of {{weeks}} weeks confirmed',
+  'pex.sandbox.supplier.scenarioNote':
+    'Festive and Protection buffer load here once LTP Festive and LTP B are in the hub (PEX-5).',
   'hub.nav.pti.planTrace': 'Plan vs execution',
   'pex.trace.subtitle':
     'One supplier and material: DA per week, then its POs, the call-offs on each PO and the ASNs on each call-off.',
@@ -61,6 +106,51 @@ export const pexPlanTraceEn = {
 
 /** @type {Record<string, string>} */
 export const pexPlanTraceId = {
+  'pex.sandbox.level.material': 'Material',
+  'pex.sandbox.level.fg': 'FG dan BOM',
+  'pex.sandbox.level.supplier': 'Pemasok',
+  'pex.sandbox.scenario.baseline': 'Baseline',
+  'pex.sandbox.scenario.festive': 'Festive',
+  'pex.sandbox.scenario.protection': 'Protection buffer',
+  'pex.sandbox.presets.title': 'Skenario LTP',
+  'pex.sandbox.presets.note':
+    'Muat LTP mingguan sebuah skenario ke editor: Baseline adalah LTP A, Festive adalah LTP Festive, Protection buffer adalah LTP B.',
+  'pex.sandbox.presets.unavailable':
+    'Festive dan Protection buffer dapat dimuat setelah LTP Festive dan LTP B ada di hub (PEX-5, BL-267). Tidak ada angka perkiraan sebagai penggantinya.',
+  'pex.sandbox.fg.note':
+    'Satu barang jadi: dampaknya pada setiap material dalam BOM-nya, dari kebutuhan mesin forecast. Hanya analisis.',
+  'pex.sandbox.fg.pick': 'Barang jadi',
+  'pex.sandbox.fg.limiting': 'Material pembatas',
+  'pex.sandbox.fg.noLimiting': 'Tidak disebut',
+  'pex.sandbox.fg.units': 'Unit yang didukung material pembatas',
+  'pex.sandbox.fg.unitsPlaceholder': 'Tanpa batasan',
+  'pex.sandbox.fg.unitsInvalid': 'Masukkan bilangan bulat unit, 0 atau lebih.',
+  'pex.sandbox.fg.empty': 'Tidak ada permintaan barang jadi dalam rencana untuk ditampilkan.',
+  'pex.sandbox.fg.constrained':
+    'Batasan BOM: produksi FG turun dari {{demand}} menjadi {{produced}} unit; setiap material dihitung ulang darinya.',
+  'pex.sandbox.fg.unconstrained': 'Permintaan FG {{demand}} unit; tanpa batasan BOM.',
+  'pex.sandbox.fg.col.item': 'Item',
+  'pex.sandbox.fg.col.total': 'Total',
+  'pex.sandbox.fg.row.demand': 'Permintaan FG (unit)',
+  'pex.sandbox.fg.row.produced': 'Produksi FG (unit)',
+  'pex.sandbox.fg.limitingTag': 'pembatas',
+  'pex.sandbox.fg.was': 'sebelumnya {{qty}}',
+  'pex.sandbox.fg.notAvailable': 'Tidak tersedia',
+  'pex.sandbox.fg.scenarioNote':
+    'Skenario LTP tidak menskalakan barang jadi: LTP per material, dan cara skenario berlaku pada FG belum ditetapkan.',
+  'pex.sandbox.supplier.note':
+    'Satu pemasok: permintaan PTI (LTP A) terhadap kapasitas yang dikonfirmasi pemasok, per bulan. Utilisasi adalah permintaan dibagi kapasitas terkonfirmasi, pada minggu yang memiliki konfirmasi.',
+  'pex.sandbox.supplier.pick': 'Pemasok',
+  'pex.sandbox.supplier.empty': 'Tidak ada rencana kapasitas untuk pemasok ini.',
+  'pex.sandbox.supplier.col.month': 'Bulan',
+  'pex.sandbox.supplier.col.demand': 'Permintaan ({{uom}})',
+  'pex.sandbox.supplier.col.capacity': 'Kapasitas terkonfirmasi ({{uom}})',
+  'pex.sandbox.supplier.col.utilisation': 'Utilisasi',
+  'pex.sandbox.supplier.col.weeks': 'Minggu',
+  'pex.sandbox.supplier.noCapacity': 'Belum ada kapasitas terkonfirmasi',
+  'pex.sandbox.supplier.weeksConfirmed': '{{confirmed}} dari {{weeks}} minggu terkonfirmasi',
+  'pex.sandbox.supplier.scenarioNote':
+    'Festive dan Protection buffer dimuat di sini setelah LTP Festive dan LTP B ada di hub (PEX-5).',
   'hub.nav.pti.planTrace': 'Rencana vs eksekusi',
   'pex.trace.subtitle':
     'Satu pemasok dan material: DA per minggu, lalu PO-nya, call-off pada setiap PO dan ASN pada setiap call-off.',
