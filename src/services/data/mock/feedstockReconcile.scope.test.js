@@ -65,19 +65,4 @@ describe('getFixedStockReconcile (the feedstock reconcile) — scoping and sampl
     expect(other.every((r) => r.supplierId === 'sup-002')).toBe(true);
     expect((await reads.getFixedStockReconcile(sup('sup-999'))).items).toEqual([]);
   });
-
-  it('DRC-15b [Proposed BL-207]: a supplier sees the liability flag on its own rows only', async () => {
-    const own = (await reads.getFixedStockReconcile(sup('sup-007'))).items;
-    expect(own.find((r) => r.key === 'sup-007|PK-PETB-8801')?.leftover).toEqual({
-      rule: 'flagLiability',
-      liabilityQty: 262_000,
-      noMaxAgreed: true,
-      carriedQty: null
-    });
-    expect(own.every((r) => r.supplierId === 'sup-007')).toBe(true);
-    const all = (await reads.getFixedStockReconcile(buyer)).items;
-    const othersFlagged = all.filter((r) => r.supplierId !== 'sup-007' && r.leftover.liabilityQty);
-    expect(othersFlagged.length).toBeGreaterThan(0);
-    for (const r of othersFlagged) expect(own.map((o) => o.key)).not.toContain(r.key);
-  });
 });

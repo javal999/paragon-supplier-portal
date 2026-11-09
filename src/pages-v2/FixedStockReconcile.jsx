@@ -25,11 +25,10 @@ import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { useToast } from '@hooks/useToast';
 import { formatDate, formatNumber } from '@lib/format';
-import { useFixedStockReconcile } from '@services/query/hooks';
+import { useFixedStockReconcile, usePoOnHold } from '@services/query/hooks';
 import { useMaxStockSet } from '@services/query/commandHooks';
 /** @import { FixedStockReconcileRow } from '@services/data/types' */
 import { maxStockRefusal } from '@services/transitions/maxStock';
-import { FEEDSTOCK_LEFTOVER_RULES } from '@services/transitions/feedstockReconcile';
 import { forecastNow } from './forecasts/forecastDisplay';
 import { inputClass, labelClass } from './inventory/inventoryDisplay';
 import PoOnHoldPanel from './poOnHold/PoOnHoldPanel';
@@ -47,9 +46,9 @@ const fieldClass = `${inputClass} ${FIELD_FOCUS_RING}`;
 // Per supplier × material, read on the hub's current day (BR-01): what PTI
 // ordered on POs, what it called off, what the supplier shipped on ASNs against
 // those call-offs, and the two remainders, with no outcome or settlement (BR-02).
-// What "not yet called off" means is DRC-15b (BL-207), built as a recommendation
-// behind `FEEDSTOCK_LEFTOVER_RULES.leftoverRule` and labelled [Proposed]: the
-// row shows the liability flag or the carry the rows were built with.
+// PEX-9 BR-02/BR-03 (BL-271): "Not yet called off" links to the PO On Hold line
+// of the same supplier × material and shows its option and status; PO On Hold
+// replaces the [Proposed] leftover rule of BL-207.
 // The max stock stays on the row and Procurement sets it with `maxstock:set`
 // (BR-03); any other PTI seat sees whose act it is; a supplier reads it only.
 // The planner sees every supplier; the supplier sees its own rows, scoped by
@@ -67,6 +66,7 @@ const note = 'block text-xs text-text-tertiary';
 const FixedStockReconcile = ({ persona }) => {
   const { t } = useTranslation();
   const query = useFixedStockReconcile();
+  const onHold = usePoOnHold();
   const [editing, setEditing] = useState(/** @type {FixedStockReconcileRow | null} */ (null));
   const [draft, setDraft] = useState('');
   const setMax = useMaxStockSet();
@@ -87,8 +87,7 @@ const FixedStockReconcile = ({ persona }) => {
 
   const rows = query.data?.items ?? [];
   const cols = isPti ? 7 : 6;
-  // DRC-15b [Proposed BL-207] — the variant the rows were built with.
-  const leftoverRule = rows[0]?.leftover.rule ?? FEEDSTOCK_LEFTOVER_RULES.leftoverRule;
+  const holdByKey = new Map((onHold.data?.items ?? []).map((h) => [h.key, h]));
   const draftQty = draft.trim() === '' ? null : Number(draft.trim());
   const draftInvalid =
     draft.trim() !== '' && (Number.isNaN(draftQty) || maxStockRefusal(draftQty) !== null);
@@ -129,38 +128,36 @@ const FixedStockReconcile = ({ persona }) => {
   };
 
   /**
-   * DRC-15b [Proposed BL-207] — the leftover outcome under "Not yet called off".
-   * [Owner FSR-D2, 2026-11-03] BL-259 — PTI only until BL-207 is ruled: the
-   * supplier's page shows none of it (the liability, the "no max" note, the
-   * carried remainder and the "Proposed" label are one [Proposed] computation).
-   * The computation and the PTI view are unchanged.
+   * PEX-9 BR-02 — the link from "Not yet called off" to the PO On Hold line of
+   * the same supplier × material, with its option and status.
    * @param {FixedStockReconcileRow} r
    */
-  const leftoverNotes = (r) => {
-    if (!isPti) return null;
-    const { liabilityQty, noMaxAgreed, carriedQty } = r.leftover;
-    if (liabilityQty === null && carriedQty === null) return null;
+  const holdLink = (r) => {
+    const h = holdByKey.get(r.key);
+    if (!h) return null;
+    const option = h.effective ?? h.decision?.suggested ?? null;
     return (
-      <>
-        {liabilityQty !== null && (
-          <span className={note} data-testid={`fsr-liability-${r.key}`}>
-            {t('fsr.leftover.liability')} <Qty value={liabilityQty} uom={r.uom} />
-          </span>
-        )}
-        {liabilityQty !== null && noMaxAgreed ? (
-          <span className={note} data-testid={`fsr-liability-nomax-${r.key}`}>
-            {t('fsr.leftover.noMax')}
-          </span>
-        ) : null}
-        {carriedQty !== null && (
-          <span className={note} data-testid={`fsr-carried-${r.key}`}>
-            {t('fsr.leftover.carried')} <Qty value={carriedQty} uom={r.uom} />
-          </span>
-        )}
-        <span className={note} data-testid={`fsr-proposed-${r.key}`}>
-          {t('fsr.proposed')}
+      <span className={note} data-testid={`fsr-hold-${r.key}`}>
+        <button
+          type="button"
+          className={`text-action-hover hover:underline ${TOUCH_TARGET}`}
+          onClick={() => {
+            const el = document.getElementById(`poh-row-${r.key}`);
+            el?.scrollIntoView({ block: 'center' });
+            el?.focus();
+          }}
+          aria-label={`${t('poh.link.go')}: ${r.materialCode}`}
+          data-testid={`fsr-hold-go-${r.key}`}
+        >
+          {t('poh.link')} <Qty value={h.qty} uom={r.uom} />
+        </button>
+        <span data-testid={`fsr-hold-status-${r.key}`}>
+          {' · '}
+          {t(`poh.status.${h.status}`, {
+            option: t(`poh.opt.${option ?? 'fsOnly'}`)
+          })}
         </span>
-      </>
+      </span>
     );
   };
 
@@ -280,7 +277,7 @@ const FixedStockReconcile = ({ persona }) => {
                       {t('fsr.calledBeyond')} <Qty value={r.calledBeyondPo} uom={r.uom} />
                     </span>
                   )}
-                  {leftoverNotes(r)}
+                  {holdLink(r)}
                 </TableCell>
                 <TableCell className="align-top">{maxCell(r)}</TableCell>
               </TableRow>
@@ -299,20 +296,6 @@ const FixedStockReconcile = ({ persona }) => {
           </tbody>
         </Table>
       </div>
-      {/* DRC-15b [Proposed BL-207] — names the proposed leftover rule and its switch.
-          [Owner FSR-D2, 2026-11-03] BL-259 — PTI only until BL-207 is ruled; the
-          owner ruled in chat the same day that the supplier sees this paragraph
-          no more than the row notes. */}
-      {isPti ? (
-        <p
-          className="text-sm text-text-secondary mb-6"
-          data-testid="fsr-remainder-note"
-          data-leftover-rule={leftoverRule}
-        >
-          {t(`fsr.leftover.note.${leftoverRule}`)} {t('fsr.proposed')}
-        </p>
-      ) : null}
-
       <PoOnHoldPanel persona={persona} />
 
       <section

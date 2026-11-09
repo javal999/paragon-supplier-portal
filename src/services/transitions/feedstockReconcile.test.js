@@ -2,11 +2,8 @@ import { describe, expect, it } from 'vitest';
 /** @import { FsAsnInput, FsCallOffInput, FsInputs, FsPoInput } from './feedstockReconcile' */
 /** @import { CallOffStatus, POStatus } from '../data/types' */
 import {
-  FEEDSTOCK_LEFTOVER_RULES,
   FEEDSTOCK_PO_EXCLUDED_STATES,
-  FS_LEFTOVER_RULE_VARIANTS,
   buildFeedstockReconcile,
-  feedstockLeftover,
   feedstockRemainders
 } from './feedstockReconcile';
 import { cycleOfDay } from './forecastConfig';
@@ -239,18 +236,13 @@ describe('DRC-15a BR-01 / BR-02 — never below zero; an excess is a note, not a
     });
   });
 
-  it('a row carries no outcome; under showOnly, no liability either (BR-02)', () => {
+  it('a row carries no outcome, liability or leftover (BR-02; PEX-9 BR-03 retired BL-207)', () => {
     const [row] = buildFeedstockReconcile(
-      inputs({ purchaseOrders: [po('PO-1', 'Confirmed', 100)], leftoverRule: 'showOnly' })
+      inputs({ purchaseOrders: [po('PO-1', 'Confirmed', 100)] })
     );
     expect(Object.keys(row)).not.toContain('outcome');
     expect(Object.keys(row)).not.toContain('liabilityQty');
-    expect(row.leftover).toEqual({
-      rule: 'showOnly',
-      liabilityQty: null,
-      noMaxAgreed: false,
-      carriedQty: null
-    });
+    expect(Object.keys(row)).not.toContain('leftover');
   });
 });
 
@@ -267,118 +259,56 @@ describe('DRC-15a BR-03 — max stock stays on the row', () => {
   });
 });
 
-// DRC-15b (BL-207) [Proposed] — the leftover rule, built as a recommendation
-// behind the switch for the owner's review. Worked example: PO 100, called off
-// 60, ASN 40 → 40 not yet called off.
-describe('DRC-15b [Proposed BL-207] — leftover rule', () => {
-  const example = () =>
-    inputs({
-      purchaseOrders: [po('PO-1', 'Confirmed', 100)],
-      callOffs: [co('c1', 'Confirmed', 35), co('c2', 'Awaiting Confirmation', 25)],
-      asns: [asn('ASN-1', 'In Transit', 'c1', 30), asn('ASN-2', 'Delivered', 'c1', 10)]
+describe('rows per supplier × material, sorted by supplier then material', () => {
+  it('two suppliers and two materials give four rows in order', () => {
+    /**
+     * @param {string} supplierId
+     * @param {string} supplierName
+     * @param {string} materialCode
+     * @returns {FsPoInput}
+     */
+    const line = (supplierId, supplierName, materialCode) => ({
+      ...po(`PO-${supplierId}-${materialCode}`, 'Confirmed', 1, { materialCode }),
+      supplierId,
+      supplierName
     });
-  /** @param {number} q */
-  const max = (q) => () => q;
-
-  it('the rules block is frozen, flagLiability is the default, and three variants exist', () => {
-    expect(Object.isFrozen(FEEDSTOCK_LEFTOVER_RULES)).toBe(true);
-    expect(FEEDSTOCK_LEFTOVER_RULES.leftoverRule).toBe('flagLiability');
-    expect(FS_LEFTOVER_RULE_VARIANTS).toEqual(['showOnly', 'flagLiability', 'carryToNextPo']);
-    const [row] = buildFeedstockReconcile(example());
-    expect(row.leftover.rule).toBe('flagLiability');
-  });
-
-  it('showOnly: remainder 40, nothing flagged or carried, max stock or not', () => {
-    for (const maxStock of [max(25), () => null]) {
-      const [row] = buildFeedstockReconcile({ ...example(), maxStock, leftoverRule: 'showOnly' });
-      expect(row.notYetCalledOff).toBe(40);
-      expect(row.leftover).toEqual({
-        rule: 'showOnly',
-        liabilityQty: null,
-        noMaxAgreed: false,
-        carriedQty: null
-      });
-    }
-  });
-
-  it('flagLiability, max stock 25: remainder 40, liability 25 (capped at max stock)', () => {
-    const [row] = buildFeedstockReconcile({
-      ...example(),
-      maxStock: max(25),
-      leftoverRule: 'flagLiability'
-    });
-    expect(row.notYetCalledOff).toBe(40);
-    expect(row.leftover).toEqual({
-      rule: 'flagLiability',
-      liabilityQty: 25,
-      noMaxAgreed: false,
-      carriedQty: null
-    });
-  });
-
-  it('flagLiability, max stock above the remainder: liability is the remainder', () => {
-    const [row] = buildFeedstockReconcile({ ...example(), maxStock: max(90) });
-    expect(row.leftover.liabilityQty).toBe(40);
-    expect(row.leftover.noMaxAgreed).toBe(false);
-  });
-
-  it('flagLiability, no max stock: remainder 40, liability 40, "no max stock agreed"', () => {
-    const [row] = buildFeedstockReconcile({ ...example(), leftoverRule: 'flagLiability' });
-    expect(row.notYetCalledOff).toBe(40);
-    expect(row.leftover).toEqual({
-      rule: 'flagLiability',
-      liabilityQty: 40,
-      noMaxAgreed: true,
-      carriedQty: null
-    });
-  });
-
-  it('carryToNextPo: remainder 40 carried into the next PO, max stock or not', () => {
-    for (const maxStock of [max(25), () => null]) {
-      const [row] = buildFeedstockReconcile({
-        ...example(),
-        maxStock,
-        leftoverRule: 'carryToNextPo'
-      });
-      expect(row.notYetCalledOff).toBe(40);
-      expect(row.leftover).toEqual({
-        rule: 'carryToNextPo',
-        liabilityQty: null,
-        noMaxAgreed: false,
-        carriedQty: 40
-      });
-    }
-  });
-
-  it('a remainder of 0 carries no flag under any variant', () => {
-    for (const rule of FS_LEFTOVER_RULE_VARIANTS) {
-      for (const maxStock of [null, 25]) {
-        expect(feedstockLeftover({ notYetCalledOff: 0, maxStock }, rule)).toEqual({
-          rule,
-          liabilityQty: null,
-          noMaxAgreed: false,
-          carriedQty: null
-        });
-      }
-    }
-    // Built from records: called off beyond the PO leaves no remainder.
-    const [row] = buildFeedstockReconcile(
+    const rows = buildFeedstockReconcile(
       inputs({
-        purchaseOrders: [po('PO-1', 'Confirmed', 50)],
-        callOffs: [co('c1', 'Confirmed', 80)]
+        purchaseOrders: [
+          line('s2', 'Beta', 'M2'),
+          line('s1', 'Alpha', 'M2'),
+          line('s2', 'Beta', 'M1'),
+          line('s1', 'Alpha', 'M1')
+        ]
       })
     );
-    expect(row.notYetCalledOff).toBe(0);
-    expect(row.leftover.liabilityQty).toBeNull();
-  });
-
-  it('an unknown variant is refused, never silently shown', () => {
-    expect(() =>
-      feedstockLeftover({ notYetCalledOff: 1, maxStock: null }, /** @type {any} */ ('settle'))
-    ).toThrow(/Unknown feedstock leftover rule/);
+    expect(rows.map((r) => r.key)).toEqual(['s1|M1', 's1|M2', 's2|M1', 's2|M2']);
   });
 });
 
+// The old 3-week cycle rule is dormant since DRC-15a (the view is daily); its
+// setting stays until the owner rules, so the rule it still decides stays tested.
+describe('REQ-E06-04 cycle (dormant) — cycleOfDay', () => {
+  const CFG = { anchor: '2026-08-31', cycleWeeks: 3 };
+
+  it('packaging runs in blocks of the cycle length from the anchor Monday', () => {
+    expect(cycleOfDay('packaging', '2026-08-31', CFG)).toEqual({
+      stream: 'packaging',
+      start: '2026-08-31',
+      end: '2026-09-20'
+    });
+    expect(cycleOfDay('packaging', '2026-09-21', CFG).start).toBe('2026-09-21');
+    expect(cycleOfDay('packaging', '2026-08-27', CFG).start).toBe('2026-08-10');
+  });
+
+  it('raw material runs per calendar month', () => {
+    expect(cycleOfDay('rawMaterial', '2027-02-01', CFG)).toEqual({
+      stream: 'rawMaterial',
+      start: '2027-02-01',
+      end: '2027-02-28'
+    });
+  });
+});
 describe('rows per supplier × material, sorted by supplier then material', () => {
   it('two suppliers and two materials give four rows in order', () => {
     /**

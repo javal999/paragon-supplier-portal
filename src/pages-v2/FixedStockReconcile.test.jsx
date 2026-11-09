@@ -66,7 +66,7 @@ describe('Feedstock reconcile — planner', () => {
     expect(screen.getByTestId(`fsr-max-${K8801}`)).toHaveTextContent('No max stock agreed');
   });
 
-  it('BR-02: no outcome or summary; DRC-15b [Proposed BL-207] flags the liability by default', async () => {
+  it('BR-02: no outcome, summary or liability; PEX-9 BR-02 links "Not yet called off" to its PO On Hold line', async () => {
     renderWithProviders(<BuyerFixedStockReconcile />, {
       identity: BUYER,
       route: '/buyer/fs-reconcile'
@@ -74,37 +74,27 @@ describe('Feedstock reconcile — planner', () => {
     await screen.findByTestId(`fsr-row-${K8801}`);
     expect(screen.queryByText(/under-called|Supplier short|Balanced/)).toBeNull();
     expect(screen.queryByTestId('fsr-summary')).toBeNull();
-    // No max stock on the pair: the liability is the full remainder (262,000).
-    expect(screen.getByTestId(`fsr-liability-${K8801}`)).toHaveTextContent(
-      `Liability, not priced: ${pcs(262_000)}`
-    );
-    expect(screen.getByTestId(`fsr-liability-nomax-${K8801}`)).toHaveTextContent(
-      'No max stock agreed'
-    );
-    expect(screen.getByTestId(`fsr-proposed-${K8801}`)).toHaveTextContent(
-      'Proposed: awaiting owner review (BL-207)'
-    );
-    expect(screen.queryByTestId(`fsr-carried-${K8801}`)).toBeNull();
-    const noteEl = screen.getByTestId('fsr-remainder-note');
-    expect(noteEl).toHaveAttribute('data-leftover-rule', 'flagLiability');
-    expect(noteEl).toHaveTextContent('Proposed leftover rule (DRC-15b), switch “flag liability”');
-    expect(noteEl).toHaveTextContent('Proposed: awaiting owner review (BL-207)');
+    // PEX-9 BR-03 — the [Proposed] leftover rule of BL-207 is gone.
+    expect(screen.queryByTestId(`fsr-liability-${K8801}`)).toBeNull();
+    expect(screen.queryByTestId(`fsr-proposed-${K8801}`)).toBeNull();
+    expect(screen.queryByTestId('fsr-remainder-note')).toBeNull();
+    const link = await screen.findByTestId(`fsr-hold-${K8801}`);
+    expect(link).toHaveTextContent(`PO On Hold: ${pcs(117_700)}`);
+    expect(screen.getByTestId(`fsr-hold-status-${K8801}`)).toHaveTextContent('No suggestion yet');
   });
 
-  it('DRC-15b [Proposed BL-207]: a max stock below the remainder caps the liability', async () => {
+  it('PEX-9 BR-02: the link shows the option and status once the planner has suggested', async () => {
     renderWithProviders(<BuyerFixedStockReconcile />, {
       identity: BUYER,
       route: '/buyer/fs-reconcile'
     });
-    fireEvent.click(await screen.findByTestId(`fsr-max-edit-${K8801}`));
-    fireEvent.change(screen.getByTestId('fsr-max-input'), { target: { value: '50000' } });
-    fireEvent.click(screen.getByTestId('fsr-max-save'));
+    await screen.findByTestId(`fsr-hold-${K8801}`);
+    fireEvent.click(screen.getByTestId(`poh-suggest-send-${K8801}`));
     await waitFor(() =>
-      expect(screen.getByTestId(`fsr-liability-${K8801}`)).toHaveTextContent(
-        `Liability, not priced: ${pcs(50_000)}`
+      expect(screen.getByTestId(`fsr-hold-status-${K8801}`)).toHaveTextContent(
+        'Suggested: FS + spread. Waiting for the supplier.'
       )
     );
-    expect(screen.queryByTestId(`fsr-liability-nomax-${K8801}`)).toBeNull();
   });
 
   it('BR-03: a seat holding maxstock:set sets the max stock from the row, and the row reads it', async () => {
@@ -172,9 +162,8 @@ describe('Feedstock reconcile — supplier', () => {
     expect(screen.getByRole('heading', { name: 'Feedstock reconcile' })).toBeInTheDocument();
     expect(screen.getByTestId('sample-data-badge')).toBeInTheDocument();
     expect(screen.queryByTestId('purpose-header')).toBeNull();
-    // [Owner FSR-D2] BL-259 — the [Proposed BL-207] flag is PTI only: the
-    // supplier's own rows carry no liability and no "Proposed" label, and the
-    // page has no DRC-15b rule paragraph (owner, in chat, 2026-11-03).
+    // PEX-9 BR-03 — the [Proposed BL-207] flag is gone for good: no liability,
+    // no "Proposed" label, no rule paragraph.
     expect(screen.queryByTestId('fsr-remainder-note')).toBeNull();
     expect(screen.queryByTestId(`fsr-liability-${K8801}`)).toBeNull();
     expect(screen.queryByTestId(`fsr-proposed-${K8801}`)).toBeNull();
@@ -193,8 +182,7 @@ describe('Feedstock reconcile — supplier', () => {
     expect(
       await screen.findByRole('columnheader', { name: headerNamed('Belum di-call-off') })
     ).toBeInTheDocument();
-    // [Owner FSR-D2] BL-259 — no [Proposed BL-207] flag on the supplier's rows
-    // in Indonesian either, and no DRC-15b rule paragraph.
+    // PEX-9 BR-03 — no [Proposed BL-207] flag on the supplier's rows in Indonesian either.
     await screen.findByTestId(`fsr-row-${K8801}`);
     expect(screen.queryByTestId(`fsr-liability-${K8801}`)).toBeNull();
     expect(screen.queryByTestId(`fsr-liability-nomax-${K8801}`)).toBeNull();

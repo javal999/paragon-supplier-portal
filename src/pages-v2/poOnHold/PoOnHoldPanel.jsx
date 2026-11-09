@@ -423,7 +423,12 @@ const PoOnHoldPanel = ({ persona }) => {
           </TableHeader>
           <tbody>
             {rows.map((r) => (
-              <TableRow key={r.key} data-testid={`poh-row-${r.key}`}>
+              <TableRow
+                key={r.key}
+                id={`poh-row-${r.key}`}
+                tabIndex={-1}
+                data-testid={`poh-row-${r.key}`}
+              >
                 {isPti ? (
                   <TableCell className="align-top max-w-[11rem]">
                     <span className="block text-sm text-text-primary">{r.supplierName}</span>
