@@ -71,8 +71,8 @@ describe('BL-263 — TL-D17 in the remaining Indonesian sentences', () => {
       const left = Object.entries(dict)
         .filter(([, v]) => /waktu tunggu/i.test(v))
         .map(([k]) => k);
-      // Held: "safety lead time" is the engine's term, not one TL-D11 lists (BL-263 decision).
-      expect(left, name).toEqual(name === 'safetyStock' ? ['sst.subtitle', 'sst.def.slt'] : []);
+      // The two "safety lead time" sentences held here were released by BL-280.
+      expect(left, name).toEqual([]);
     }
   });
 

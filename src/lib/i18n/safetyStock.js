@@ -274,7 +274,7 @@ export const safetyStockEn = {
 export const safetyStockId = {
   'sst.title': 'Target stok pengaman',
   'sst.subtitle':
-    'Stok pengaman yang diukur dari kesalahan prakiraan rencana sendiri terhadap target tingkat pemenuhan, waktu tunggu pengaman dari keterlambatan setiap pemasok, dan titik pesan ulang — dibandingkan dengan stok pengaman SAP.',
+    'Stok pengaman yang diukur dari kesalahan prakiraan rencana sendiri terhadap target tingkat pemenuhan, safety lead time dari keterlambatan setiap pemasok, dan titik pesan ulang — dibandingkan dengan stok pengaman SAP.',
   'sst.meta.method': 'Target tingkat pemenuhan atas kesalahan yang benar-benar terjadi',
   'sst.synthetic':
     'Dihitung dengan data sintetis yang dibuat untuk meniru ukuran PTI saat ini. Ini membuktikan perhitungannya, bukan jawaban bisnisnya.',
@@ -349,7 +349,7 @@ export const safetyStockId = {
   'sst.def.fallback':
     'Dengan kurang dari 30 rencana lampau untuk dipelajari, stok pengaman SAP yang dipakai, dan ditandai.',
   'sst.def.slt':
-    'Waktu tunggu pengaman: dari pengiriman pemasok dalam 26 minggu terakhir, keterlambatan setelah tanggal terkonfirmasi yang dicapai porsi yang ditetapkan. Kurang dari 5 pengiriman: nilai grup material, ditandai.',
+    'Safety lead time: dari pengiriman pemasok dalam 26 minggu terakhir, keterlambatan setelah tanggal terkonfirmasi yang dicapai porsi yang ditetapkan. Kurang dari 5 pengiriman: nilai grup material, ditandai.',
   'sst.def.rop':
     'Titik pesan ulang: perkiraan permintaan selama lead time ditambah minggu tinjauan, ditambah stok pengaman.',
   'sst.def.change':

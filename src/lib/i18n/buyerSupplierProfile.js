@@ -133,7 +133,7 @@ export const buyerSupplierProfileId = {
   // — KPI strip —
   'buyerSupplierProfile.kpi.otif.eyebrow': 'OTIF',
   'buyerSupplierProfile.kpi.otif.subtitle': 'Tepat waktu, jumlah penuh',
-  'buyerSupplierProfile.kpi.leadTime.eyebrow': 'Kepatuhan Waktu Tunggu',
+  'buyerSupplierProfile.kpi.leadTime.eyebrow': 'Kepatuhan Lead Time',
   'buyerSupplierProfile.kpi.leadTime.subtitle': '12 bulan terakhir',
   'buyerSupplierProfile.kpi.invoiceAccuracy.eyebrow': 'Akurasi Faktur',
   'buyerSupplierProfile.kpi.invoiceAccuracy.subtitle': 'Tingkat kecocokan',
