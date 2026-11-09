@@ -16,7 +16,11 @@
 /** @import { CommandTarget } from '../../../transitions' */
 import { mockSuppliers } from '@data/mockSuppliers';
 import { bindPolicyHook, POLICY_HOOKS } from '../../../transitions';
-import { osipParamRefusal, parseOsipParamKey } from '../../../transitions/osipParams';
+import {
+  osipParamRefusal,
+  osipReasonRefusal,
+  parseOsipParamKey
+} from '../../../transitions/osipParams';
 import { isKnownMaterial, sdcClock } from '../../../sdc';
 import { NO_PERSON } from '@context/noPerson';
 import { osipParamStore } from '../stores/osipParamStore';
@@ -47,18 +51,22 @@ export const osipParamTarget = {
       param: k.param,
       value: /** @type {number | boolean | null} */ (payload.osipParamValue),
       previous: osipParamStore.valueOf(id),
+      reason:
+        typeof payload.osipParamReason === 'string' ? payload.osipParamReason.trim() || null : null,
       setAt: sdcClock.now(),
       setBy: scope.actor ?? NO_PERSON
     });
   }
 };
 
-// The same predicate the page's form calls (`osipParamRefusal`).
+// The same predicates the page's form calls (`osipParamRefusal`, `osipReasonRefusal`).
 bindPolicyHook(POLICY_HOOKS.OSIP_PARAM_VALID, ({ entityId, payload }) => {
   const k = parseOsipParamKey(entityId);
   if (!k) return { ok: false, reason: 'OSIP_PARAM_UNKNOWN' };
   if (payload.osipParamValue === undefined)
     return { ok: false, reason: 'OSIP_PARAM_INVALID: a value (or null to reset) is expected' };
-  const refusal = osipParamRefusal(k.param, payload.osipParamValue);
+  const refusal =
+    osipParamRefusal(k.param, payload.osipParamValue) ??
+    osipReasonRefusal(k.param, payload.osipParamReason);
   return refusal ? { ok: false, reason: refusal } : { ok: true };
 });

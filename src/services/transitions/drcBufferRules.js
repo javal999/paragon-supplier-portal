@@ -374,11 +374,8 @@ export function strategicBufferRows(lines, options = {}) {
 // scope for BL-205; a decision for the owner). Computed at read, stored
 // nowhere, so not stamped (DRC-D16).
 
-/** @typedef {'rollingBaseline' | 'off'} ProtectionUplift */
-
 /**
  * @typedef {{
- *   readonly protectionUplift: ProtectionUplift;
  *   readonly baselineMonths: number;
  *   readonly levels: readonly number[];
  *   readonly mpqSource: 'orderMultiple';
@@ -390,8 +387,6 @@ export function strategicBufferRows(lines, options = {}) {
  * @type {ProtectionBufferRules}
  */
 export const PROTECTION_BUFFER_RULES = Object.freeze({
-  /** [Proposed BL-205, C3] DRC-9c — the uplift: 'rollingBaseline' (LTP − average of the previous months) or 'off' (no protection buffer). */
-  protectionUplift: /** @type {ProtectionUplift} */ ('rollingBaseline'),
   /** [Proposed BL-205, C3] months of LTP the rolling baseline averages (PPT 12's 3). */
   baselineMonths: 3,
   /** [Proposed BL-205, C3] the OSIP levels that carry one: XLS Guidance levels 4–7, less level 4 by its revision note. */
@@ -399,11 +394,6 @@ export const PROTECTION_BUFFER_RULES = Object.freeze({
   /** [Default, wave 2] MPQ = orderMultiple until the master data feed carries MPQ (wave 2 default). */
   mpqSource: /** @type {'orderMultiple'} */ ('orderMultiple')
 });
-
-/** The variants of `protectionUplift`, the proposed one first. @type {readonly ProtectionUplift[]} */
-export const PROTECTION_UPLIFTS = Object.freeze(
-  /** @type {ProtectionUplift[]} */ (['rollingBaseline', 'off'])
-);
 
 /** The question the [Proposed] label names. */
 export const PROTECTION_BUFFER_QUESTION = 'C3';
@@ -419,6 +409,7 @@ export const PROTECTION_BUFFER_DEFAULTS = Object.freeze(['C2', 'MPQ']);
  *   readonly level: number;
  *   readonly levelSource: 'planner' | 'classification' | 'default';
  *   readonly mpq: number | null;
+ *   readonly protectionOn?: boolean;
  * }} ProtectionBufferInput
  */
 
@@ -497,10 +488,12 @@ export function protectionMonth(
  * buffer, or null when it does.
  * @param {number} level
  * @param {ProtectionBufferRules} [rules]
+ * @param {boolean} [on]  PEX-13: the material's protection buffer switch (default on).
  * @returns {ProtectionExclusion | null}
  */
-export function protectionExclusion(level, rules = PROTECTION_BUFFER_RULES) {
-  if (rules.protectionUplift === 'off') return 'switchedOff';
+export function protectionExclusion(level, rules = PROTECTION_BUFFER_RULES, on = true) {
+  // PEX-13 (BL-275) — the per-material switch, replacing the code constant `protectionUplift`.
+  if (!on) return 'switchedOff';
   if (rules.levels.includes(level)) return null;
   // XLS Guidance revision: "level 4 tanpa protection buffer".
   if (level === 4) return 'level4';
@@ -533,7 +526,7 @@ export function protectionBufferRows(lines, inputs, options = {}) {
       // [Default C2] a pair with no input is at the default level, with no MPQ.
       const level = input?.level ?? OSIP_RULES.defaultLevel;
       const mpq = input?.mpq ?? null;
-      const reason = protectionExclusion(level, rules);
+      const reason = protectionExclusion(level, rules, input?.protectionOn !== false);
       /** @type {Set<string>} */
       const months = new Set();
       for (const l of mine)

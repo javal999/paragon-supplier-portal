@@ -100,6 +100,8 @@ export const OSIP_SAFETY_QUESTIONS = Object.freeze({
  *   variant keeps the SD of daily consumption.
  * `z` / `g`:  [Team B3, B7] the material's own service-level factor and fixed
  *   safety days (`osipParams`); absent or null, the rules' values apply.
+ * `safetyOn`:  PEX-13 (BL-275) — the material's safety stock switch; absent or true, on. Off, the
+ *   safety order and the ROP Fisik safety are 0 and the figures say `safetyOn: false`.
  * `fDays`:  [Team B6] the supplier's own replenishment cycle f; absent or
  *   null, its supply area's default.
  * `bottleneckLeadTimeDays`:  [Team B10] the supplier's bottleneck production
@@ -121,6 +123,7 @@ export const OSIP_SAFETY_QUESTIONS = Object.freeze({
  *   readonly sd?: number | null;
  *   readonly z?: number | null;
  *   readonly g?: number | null;
+ *   readonly safetyOn?: boolean;
  *   readonly fDays?: number | null;
  *   readonly bottleneckLeadTimeDays?: number | null;
  * }} OsipSafetyInput
@@ -129,7 +132,14 @@ export const OSIP_SAFETY_QUESTIONS = Object.freeze({
 /**
  * One supplier × material's inputs, with the supplier's name for the page and
  * [Team E2] whether the supplier is on a pull agreement.
- * @typedef {OsipSafetyInput & { readonly supplierName: string; readonly pullAgreement?: boolean }} OsipSupplierInput
+ * PEX-13: `protectionOn` is the material's protection buffer switch and `switchNotes` the latest
+ * ledger row of each switch, for the page.
+ * @typedef {OsipSafetyInput & {
+ *   readonly supplierName: string;
+ *   readonly pullAgreement?: boolean;
+ *   readonly protectionOn?: boolean;
+ *   readonly switchNotes?: Partial<Record<'safetyStockOn' | 'protectionBufferOn', { readonly reason: string | null; readonly setAt: string; readonly on: boolean }>>;
+ * }} OsipSupplierInput
  */
 
 /**
@@ -148,6 +158,7 @@ export const OSIP_SAFETY_QUESTIONS = Object.freeze({
  *   exist (production capacity never does in the hub, flagged).
  *
  * @typedef {{
+ *   readonly safetyOn: boolean;
  *   readonly safetyOrder: {
  *     readonly value: number | null;
  *     readonly sd: number | null;
@@ -196,6 +207,22 @@ export const OSIP_SAFETY_QUESTIONS = Object.freeze({
  * @returns {OsipSafetyFigures}
  */
 export function osipSafety(input, ruleBlock = OSIP_RULES) {
+  // PEX-13 BR-01 — switched off for the material: no safety stock, whatever the inputs.
+  if (input.safetyOn === false) {
+    return {
+      safetyOn: false,
+      safetyOrder: { value: 0, sd: null, roundTo: 0, unavailable: null },
+      fisik: {
+        value: 0,
+        demandPerDay: null,
+        consumptionPerDay: null,
+        ltpPerDay: null,
+        f: null,
+        unavailable: null
+      },
+      flags: []
+    };
+  }
   // [Team B3, B7] the material's own Z and g, when set, over the block's.
   const rules = rulesForMaterial(ruleBlock, input);
   /** @type {OsipSafetyFlag[]} */
@@ -302,6 +329,7 @@ export function osipSafety(input, ruleBlock = OSIP_RULES) {
         );
 
   return {
+    safetyOn: true,
     safetyOrder: {
       value: orderGap === null ? so.value : null,
       sd: orderGap === null ? so.sd : null,
