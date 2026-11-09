@@ -148,12 +148,15 @@ export function periodBounds(bucket) {
 }
 
 /**
- * The period grid for a publication. Packaging: 13 weekly periods from the
- * Monday on or after publication, then monthly periods up to 6 months from the
- * first period. Raw material: 6 monthly periods from the first of the month on
- * or after publication. A leftover of fewer than 7 days between the last week
- * and the next month joins that month, so every day of the horizon belongs to
- * exactly one period.
+ * The period grid for a publication (PEX-2). Weekly periods from the Monday on
+ * or after publication (the planning week), then monthly periods up to the end
+ * of month `horizonMonths`, counted from the planning week's month as month 1
+ * (BR-02: planning week W45 2026 runs to October 2027). With no weekly
+ * periods, the grid starts on the first of the month on or after publication.
+ * BR-03 [Proposed]: the monthly periods begin at the first full month after
+ * the last week; the days between the last week and that month join it, so
+ * every day of the horizon belongs to exactly one period. Where that month is
+ * past the horizon, the leftover days stay their own (partial) month.
  * @param {ForecastStream} stream
  * @param {string} publishedAt
  * @param {{ readonly weeklyPeriods: number; readonly horizonMonths: number }} [horizon]
@@ -164,7 +167,9 @@ export function generatePeriods(stream, publishedAt, horizon = FORECAST_HORIZON[
   /** @type {ForecastPeriod[]} */
   const periods = [];
   const first = horizon.weeklyPeriods > 0 ? mondayOnOrAfter(day) : firstOfMonthOnOrAfter(day);
-  const horizonEnd = addDay(addMonths(first, horizon.horizonMonths), -1);
+  const horizonEnd = lastDayOfMonth(
+    addMonths(`${first.slice(0, 7)}-01`, horizon.horizonMonths - 1)
+  );
   for (let i = 0; i < horizon.weeklyPeriods; i++) {
     const start = addDay(first, i * 7);
     periods.push({ id: start, kind: 'week', start, end: addDay(start, 6) });
@@ -172,13 +177,26 @@ export function generatePeriods(stream, publishedAt, horizon = FORECAST_HORIZON[
   let cursor = horizon.weeklyPeriods > 0 ? addDay(first, horizon.weeklyPeriods * 7) : first;
   while (cursor <= horizonEnd) {
     let monthEnd = lastDayOfMonth(cursor);
-    // A stub shorter than a week joins the following month.
-    if (daysFrom(cursor, monthEnd) + 1 < 7 && addDay(monthEnd, 1) <= horizonEnd)
+    // BR-03 — a month already begun inside the weeks joins the first full month.
+    if (!cursor.endsWith('-01') && addDay(monthEnd, 1) <= horizonEnd)
       monthEnd = lastDayOfMonth(addDay(monthEnd, 1));
     periods.push({ id: monthEnd.slice(0, 7), kind: 'month', start: cursor, end: monthEnd });
     cursor = addDay(monthEnd, 1);
   }
   return periods;
+}
+
+/**
+ * PEX-10 (BL-273) BR-01 — the last day of a supplier confirmation's fulfilment
+ * window: the confirmation day (in WIB) + the material's lead time in days
+ * (DRC-6). Null when the confirmation or the lead time is missing.
+ * @param {string | null | undefined} confirmedAt
+ * @param {number | null | undefined} leadTimeDays
+ * @returns {string | null}
+ */
+export function fulfilByDay(confirmedAt, leadTimeDays) {
+  if (!confirmedAt || leadTimeDays === null || leadTimeDays === undefined) return null;
+  return addDay(publicationDay(confirmedAt), leadTimeDays);
 }
 
 // ── Zones (REQ-E06-01 BR-04, BR-05) ──────────────────────────────────────────
@@ -211,6 +229,16 @@ export const zoneOfClass = (cls) =>
  */
 export const classOfZone = (zone) =>
   zone === 'firm' ? 'firm' : zone === 'tradeOff' ? 'semi-firm' : 'visibility-only';
+
+/**
+ * PEX-D22 (owner, 2026-11-05) — a Zone Capacity period (the engine's tradeOff
+ * and forecast zones) is acknowledgement only: the supplier types a commitment
+ * in Zone Liability (firm) periods alone. The engine's zone keys, damping and
+ * reschedule rules are unchanged (PEX-D21); only who commits changes.
+ * @param {ForecastZone} zone
+ * @returns {boolean}
+ */
+export const isAcknowledgeOnly = (zone) => zone !== 'firm';
 
 // ── Building a version (REQ-E06-01) ──────────────────────────────────────────
 
@@ -611,18 +639,17 @@ export function shortfallRefusal(forecastQty, committedQty, rootCause) {
 /** @typedef {'within' | 'outside' | 'acknowledgementOnly'} ToleranceOutcome */
 
 /**
- * CR-21 — Firm: any shortfall is an exception. Trade-off: up to 10% below
- * forecast is accepted automatically (exactly 10% is within). Forecast:
- * acknowledgement only.
+ * CR-21 — Firm: any shortfall beyond the administrator's tolerance (default
+ * none) is an exception. Trade-off and Forecast (Zone Capacity): acknowledgement
+ * only (PEX-D22).
  * @param {ForecastZone} zone
  * @param {number} forecastQty
  * @param {number} committedQty
  * @returns {ToleranceOutcome}
  */
 export function toleranceOutcome(zone, forecastQty, committedQty) {
-  if (zone === 'forecast') return 'acknowledgementOnly';
-  const tol = commitmentTolerance();
-  const allowed = zone === 'firm' ? tol.firmShortfall : tol.tradeOffShortfall;
+  if (isAcknowledgeOnly(zone)) return 'acknowledgementOnly';
+  const allowed = commitmentTolerance().firmShortfall;
   const shortfall = forecastQty - committedQty;
   return shortfall <= forecastQty * allowed + 1e-9 ? 'within' : 'outside';
 }
@@ -714,7 +741,7 @@ export function commitmentTiming(line, nowIso) {
  */
 export function commitmentState(zone, forecastQty, response) {
   if (!response) return 'awaiting';
-  if (zone === 'forecast') return 'acknowledged';
+  if (isAcknowledgeOnly(zone)) return 'acknowledged';
   if (response.acknowledgment || !response.forecastConfirmation) return 'awaiting';
   if (response.status === 'Accepted') return 'acceptedByPlanner';
   if (response.status === 'Disputed') return 'revisionRequested';
@@ -935,7 +962,7 @@ export function cumulativeCommitment(lines) {
     new Map()
   );
   for (const l of lines) {
-    if (l.zone === 'forecast') continue;
+    if (isAcknowledgeOnly(l.zone)) continue;
     const p = byPeriod.get(l.periodBucket) ?? { start: l.periodStart, forecast: 0, commit: 0 };
     p.forecast += l.forecastQty;
     p.commit += l.state === 'awaiting' ? 0 : (l.committedQty ?? 0);
@@ -1016,7 +1043,7 @@ export function commitmentAlertSubjects(lines) {
  * @returns {'awaiting' | 'confirmed' | 'gap' | 'notRequired'}
  */
 export function foresightAnswerOf(line) {
-  if (line.zone === 'forecast') return 'notRequired';
+  if (isAcknowledgeOnly(line.zone)) return 'notRequired';
   if (line.state === 'exception' || line.state === 'revisionRequested') return 'gap';
   if (line.state === 'accepted' || line.state === 'acceptedByPlanner') return 'confirmed';
   return 'awaiting';
@@ -1135,7 +1162,7 @@ export function commitmentTemplateCsv(lines, language) {
       l.zone,
       String(l.forecastQty),
       l.uom,
-      l.zone === 'forecast' ? '' : String(l.forecastQty),
+      isAcknowledgeOnly(l.zone) ? '' : String(l.forecastQty),
       '',
       '',
       ''
@@ -1257,7 +1284,7 @@ export function validateCommitmentRows(rows, lines) {
     )
       return refuse('unitMismatch', 'unit');
     const note = (rec.note ?? '').trim();
-    if (line.zone === 'forecast') {
+    if (isAcknowledgeOnly(line.zone)) {
       seen.add(`${code}|${period}`);
       accepted.push({ kind: 'acknowledge', row, line, ...(note ? { note } : {}) });
       return;

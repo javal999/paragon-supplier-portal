@@ -1,19 +1,16 @@
 /** @import React from 'react' */
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Download } from 'lucide-react';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
 import PageMetaLine from '@components/ui-v2/PageMetaLine';
 import ProvenanceMarker from '@components/ui-v2/ProvenanceMarker';
-import BulkActionsBar from '@components/ui-v2/BulkActionsBar';
 import SubTabs from '@components/ui-v2/SubTabs';
 /** @import { WizardStep } from '@components/ui-v2/Wizard' */
 import Wizard from '@components/ui-v2/Wizard';
 import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { useTranslation } from 'react-i18next';
-import { useToast } from '@hooks/useToast';
 import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import {
   useAdvanceShipNoticeCancel,
@@ -58,7 +55,6 @@ const SupplierShipments = () => {
     t('supplierShipments.crumb.transact'),
     t('supplierShipments.crumb.shipments')
   ];
-  const { toast } = useToast();
   const { identity } = useCurrentIdentity();
   const { supplierId } = identity;
   const createAsnMutation = useAdvanceShipNoticeCreate();
@@ -250,22 +246,6 @@ const SupplierShipments = () => {
         breadcrumb={SHIPMENTS_CRUMB}
         title={t('supplierShipments.header.title')}
         subtitle={t('supplierShipments.header.subtitle', { name: mySupplier.name })}
-        actions={
-          <BulkActionsBar
-            actions={[
-              {
-                label: t('supplierShipments.action.exportEdi'),
-                icon: Download,
-                onClick: () =>
-                  toast({
-                    variant: 'info',
-                    title: t('supplierShipments.toast.export.title'),
-                    description: t('supplierShipments.toast.export.desc')
-                  })
-              }
-            ]}
-          />
-        }
       />
 
       <PageMetaLine className="-mt-6 mb-6">

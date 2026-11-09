@@ -56,24 +56,46 @@ const DAY = 86_400_000;
 /** @param {string} d */
 const nextDay = (d) => new Date(Date.parse(`${d}T00:00:00.000Z`) + DAY).toISOString().slice(0, 10);
 
-describe('REQ-E06-01 BR-03 — the period grid', () => {
-  it('packaging: 13 weekly periods from the Monday on or after publication, then monthly up to 6 months', () => {
-    expect(FORECAST_HORIZON.packaging).toEqual({ weeklyPeriods: 13, horizonMonths: 6 });
-    const periods = generatePeriods('packaging', '2026-08-28T02:00:00.000Z');
+describe('PEX-2 (BL-265) — the period grid: 17 weeks, then months to month 12', () => {
+  it('AC-01 — planning week W45 2026 shows W45 2026 to W8 2027 by week, then March to October 2027 by month', () => {
+    expect(FORECAST_HORIZON.packaging).toEqual({ weeklyPeriods: 17, horizonMonths: 12 });
+    // Monday 2 November 2026, 09:00 WIB — the Monday of ISO week 45.
+    const periods = generatePeriods('packaging', '2026-11-02T02:00:00.000Z');
     const weeks = periods.filter((p) => p.kind === 'week');
-    expect(weeks).toHaveLength(13);
+    expect(weeks).toHaveLength(17);
     expect(weeks[0]).toEqual({
-      id: '2026-08-31',
+      id: '2026-11-02',
       kind: 'week',
-      start: '2026-08-31',
-      end: '2026-09-06'
+      start: '2026-11-02',
+      end: '2026-11-08'
     });
-    expect(weeks[12].id).toBe('2026-11-23');
-    // The 1-day stub (30 Nov) joins December; the horizon ends 6 months after the first period.
-    expect(periods.filter((p) => p.kind === 'month')).toEqual([
-      { id: '2026-12', kind: 'month', start: '2026-11-30', end: '2026-12-31' },
-      { id: '2027-01', kind: 'month', start: '2027-01-01', end: '2027-01-31' },
-      { id: '2027-02', kind: 'month', start: '2027-02-01', end: '2027-02-28' }
+    // 2026 has 53 ISO weeks, so the 17th week is W8 2027 (22–28 February).
+    expect(weeks[16]).toEqual({
+      id: '2027-02-22',
+      kind: 'week',
+      start: '2027-02-22',
+      end: '2027-02-28'
+    });
+    expect(periods.filter((p) => p.kind === 'month').map((p) => [p.id, p.start, p.end])).toEqual([
+      ['2027-03', '2027-03-01', '2027-03-31'],
+      ['2027-04', '2027-04-01', '2027-04-30'],
+      ['2027-05', '2027-05-01', '2027-05-31'],
+      ['2027-06', '2027-06-01', '2027-06-30'],
+      ['2027-07', '2027-07-01', '2027-07-31'],
+      ['2027-08', '2027-08-01', '2027-08-31'],
+      ['2027-09', '2027-09-01', '2027-09-30'],
+      ['2027-10', '2027-10-01', '2027-10-31']
+    ]);
+  });
+
+  it('raw material: months to month 12; BR-04 [Proposed] weekly raw material is held', () => {
+    expect(FORECAST_HORIZON.rawMaterial).toEqual({ weeklyPeriods: 0, horizonMonths: 12 });
+    const periods = generatePeriods('rawMaterial', '2026-11-02T02:00:00.000Z');
+    expect(periods.every((p) => p.kind === 'month')).toBe(true);
+    expect([periods[0].id, periods[periods.length - 1]?.id, periods.length]).toEqual([
+      '2026-12',
+      '2027-11',
+      12
     ]);
   });
 
@@ -81,7 +103,8 @@ describe('REQ-E06-01 BR-03 — the period grid', () => {
     for (const [stream, at] of /** @type {const} */ ([
       ['packaging', '2026-08-21T02:00:00.000Z'],
       ['packaging', '2026-08-28T02:00:00.000Z'],
-      ['rawMaterial', '2026-08-03T02:00:00.000Z']
+      ['rawMaterial', '2026-08-03T02:00:00.000Z'],
+      ['rawMaterial', '2026-11-02T02:00:00.000Z']
     ])) {
       const periods = generatePeriods(stream, at);
       for (let i = 1; i < periods.length; i++)
@@ -89,24 +112,40 @@ describe('REQ-E06-01 BR-03 — the period grid', () => {
     }
   });
 
-  it('a stub of 7 days or more stays its own month', () => {
-    const nov = generatePeriods('packaging', '2026-08-21T02:00:00.000Z').find(
-      (p) => p.kind === 'month'
-    );
-    expect(nov).toEqual({ id: '2026-11', kind: 'month', start: '2026-11-23', end: '2026-11-30' });
+  it('BR-03 [Proposed] — the days after week 17 join the first full month', () => {
+    // Published Friday 28 August 2026: week 1 is 31 August, week 17 ends 27 December.
+    const periods = generatePeriods('packaging', '2026-08-28T02:00:00.000Z');
+    expect(periods.filter((p) => p.kind === 'week').slice(-1)[0]?.end).toBe('2026-12-27');
+    const months = periods.filter((p) => p.kind === 'month');
+    expect(months[0]).toEqual({
+      id: '2027-01',
+      kind: 'month',
+      start: '2026-12-28',
+      end: '2027-01-31'
+    });
+    // Month 12 from the planning week's month (August 2026) is July 2027.
+    expect(months[months.length - 1]).toEqual({
+      id: '2027-07',
+      kind: 'month',
+      start: '2027-07-01',
+      end: '2027-07-31'
+    });
   });
 
-  it('raw material: 6 monthly periods from the first of the month on or after publication', () => {
-    expect(generatePeriods('rawMaterial', '2026-08-27T02:00:00.000Z').map((p) => p.id)).toEqual([
-      '2026-09',
-      '2026-10',
-      '2026-11',
-      '2026-12',
-      '2027-01',
-      '2027-02'
-    ]);
+  it('with no weekly periods the grid is months from the first of the month on or after publication', () => {
+    expect(
+      generatePeriods('rawMaterial', '2026-08-27T02:00:00.000Z', {
+        weeklyPeriods: 0,
+        horizonMonths: 6
+      }).map((p) => p.id)
+    ).toEqual(['2026-09', '2026-10', '2026-11', '2026-12', '2027-01', '2027-02']);
     // Published on the 1st: that month is the first period.
-    expect(generatePeriods('rawMaterial', '2026-09-01T02:00:00.000Z')[0].id).toBe('2026-09');
+    expect(
+      generatePeriods('rawMaterial', '2026-09-01T02:00:00.000Z', {
+        weeklyPeriods: 0,
+        horizonMonths: 6
+      })[0].id
+    ).toBe('2026-09');
   });
 
   it('the publication day is read in WIB, not UTC (Monday 17:30 UTC is Tuesday 00:30 in Jakarta)', () => {
@@ -118,7 +157,7 @@ describe('REQ-E06-01 BR-03 — the period grid', () => {
     expect(
       generatePeriods('packaging', '2026-08-28T02:00:00.000Z', {
         weeklyPeriods: 2,
-        horizonMonths: 1
+        horizonMonths: 2
       }).map((p) => p.id)
     ).toEqual(['2026-08-31', '2026-09-07', '2026-09']);
   });
@@ -209,12 +248,17 @@ describe('CR-21 — tolerance per zone', () => {
     expect(toleranceOutcome('firm', 1000, 999)).toBe('outside');
   });
 
-  it('Trade-off: up to 10% below is accepted — exactly 10% is within, a unit more is outside', () => {
-    expect(commitmentTolerance().tradeOffShortfall).toBe(0.1);
-    expect(toleranceOutcome('tradeOff', 1000, 900)).toBe('within');
-    expect(toleranceOutcome('tradeOff', 38500, 34650)).toBe('within');
-    expect(toleranceOutcome('tradeOff', 1000, 899)).toBe('outside');
-    expect(toleranceOutcome('tradeOff', 1000, 899.9)).toBe('outside');
+  // PEX-D22 (owner, 2026-11-05) flipped this case: it pinned "up to 10% below
+  // is accepted" in Trade-off. A Trade-off period is Zone Capacity, which is
+  // acknowledgement only, so no quantity is checked and the 10% setting is gone.
+  it('Trade-off (Zone Capacity, PEX-D22): acknowledgement only, at any quantity; no Zone Capacity tolerance is held', () => {
+    expect(Object.keys(commitmentTolerance())).toEqual(['firmShortfall']);
+    expect(toleranceOutcome('tradeOff', 1000, 1000)).toBe('acknowledgementOnly');
+    expect(toleranceOutcome('tradeOff', 1000, 900)).toBe('acknowledgementOnly');
+    expect(toleranceOutcome('tradeOff', 1000, 0)).toBe('acknowledgementOnly');
+    // Known-good beside it: the same quantities in a Zone Liability period are checked.
+    expect(toleranceOutcome('firm', 1000, 1000)).toBe('within');
+    expect(toleranceOutcome('firm', 1000, 900)).toBe('outside');
   });
 
   it('Forecast: acknowledgement only', () => {
@@ -239,13 +283,17 @@ describe('CR-21 — tolerance per zone', () => {
       forecastConfirmation: { confirmedQty: qty, uom: 'PCS' },
       provenance: { source: 'SUPPLIER', liveness: 'SIMULATED', planState: 'committed' }
     });
-    expect(commitmentState('tradeOff', 1000, null)).toBe('awaiting');
-    expect(commitmentState('tradeOff', 1000, r(900))).toBe('accepted');
+    expect(commitmentState('firm', 1000, null)).toBe('awaiting');
+    expect(commitmentState('firm', 1000, r(1000))).toBe('accepted');
     expect(commitmentState('firm', 1000, r(900))).toBe('exception');
     expect(commitmentState('firm', 1000, r(900, 'UnderReview'))).toBe('exception');
     expect(commitmentState('firm', 1000, r(900, 'Accepted'))).toBe('acceptedByPlanner');
     expect(commitmentState('firm', 1000, r(900, 'Disputed'))).toBe('revisionRequested');
     expect(commitmentState('forecast', 1000, r(0))).toBe('acknowledged');
+    // PEX-D22 — a Trade-off (Zone Capacity) period too: any answer is an acknowledgement.
+    expect(commitmentState('tradeOff', 1000, null)).toBe('awaiting');
+    expect(commitmentState('tradeOff', 1000, r(900))).toBe('acknowledged');
+    expect(commitmentState('tradeOff', 1000, r(900, 'Disputed'))).toBe('acknowledged');
   });
 });
 
@@ -386,7 +434,9 @@ describe('re-publication — unchanged periods keep their commitment, changed on
   });
 
   it('the newest submission wins; a revision request is kept in the log the supplier sees', () => {
-    const disputed = answer(v2, '2026-09-14', 30000, {
+    // PEX-D22 — on a Zone Liability week (7 Sep, firm for sup-007's 14-day
+    // lead time); a Trade-off week takes no commitment to revise.
+    const disputed = answer(v2, '2026-09-07', 30000, {
       id: 'old',
       status: 'Disputed',
       submittedAt: '2026-08-28T05:00:00.000Z',
@@ -394,12 +444,12 @@ describe('re-publication — unchanged periods keep their commitment, changed on
         { kind: 'raised', text: 'Please cover the launch week', at: '2026-08-28T06:00:00.000Z' }
       ]
     });
-    expect(at(lines([disputed]), '2026-09-14').state).toBe('revisionRequested');
-    const revised = answer(v2, '2026-09-14', 49000, {
+    expect(at(lines([disputed]), '2026-09-07').state).toBe('revisionRequested');
+    const revised = answer(v2, '2026-09-07', 60000, {
       id: 'new',
       submittedAt: '2026-08-29T01:00:00.000Z'
     });
-    const l = at(lines([disputed, revised]), '2026-09-14');
+    const l = at(lines([disputed, revised]), '2026-09-07');
     expect(l.state).toBe('accepted');
     expect(l.log.map((e) => e.text)).toEqual(['Please cover the launch week']);
   });
@@ -437,9 +487,11 @@ describe('re-publication — unchanged periods keep their commitment, changed on
   });
 
   it('CAP-8 BR-03 — after part of the shortfall moves, the commitment still stands and the rest is an open exception; a re-publication keeps the moves', () => {
-    const committed = answer(v2, '2026-09-14', 30000);
-    // Control: before the move, 30 000 against 49 000 is an exception.
-    expect(at(lines([committed]), '2026-09-14')).toMatchObject({
+    // PEX-D22 — on a Zone Liability week (7 Sep): only a firm period holds a
+    // commitment, so only there is a shortfall left to move.
+    const committed = answer(v2, '2026-09-07', 30000);
+    // Control: before the move, 30 000 against 60 000 is an exception.
+    expect(at(lines([committed]), '2026-09-07')).toMatchObject({
       state: 'exception',
       committedQty: 30000,
       moves: []
@@ -449,7 +501,7 @@ describe('re-publication — unchanged periods keep their commitment, changed on
         v2,
         {
           materialCode: 'PK-PETB-8801',
-          periodBucket: '2026-09-14',
+          periodBucket: '2026-09-07',
           fromSupplierId: 'sup-007',
           allocations: [{ supplierId: 'sup-012', qty: 10000 }],
           note: 'Second mould shop'
@@ -467,11 +519,11 @@ describe('re-publication — unchanged periods keep their commitment, changed on
       });
     const source = /** @type {ForecastCommitmentLine} */ (
       after([moved, v2, v1]).find(
-        (l) => l.supplierId === 'sup-007' && l.periodBucket === '2026-09-14'
+        (l) => l.supplierId === 'sup-007' && l.periodBucket === '2026-09-07'
       )
     );
     expect(source).toMatchObject({
-      forecastQty: 39000,
+      forecastQty: 50000,
       committedQty: 30000,
       carriedForward: true,
       state: 'exception',
@@ -491,7 +543,7 @@ describe('re-publication — unchanged periods keep their commitment, changed on
       baseDemand: () => 49000
     });
     expect(
-      next.lines.find((l) => l.supplierId === 'sup-007' && l.periodBucket === '2026-09-14')
+      next.lines.find((l) => l.supplierId === 'sup-007' && l.periodBucket === '2026-09-07')
         ?.movedOut
     ).toHaveLength(1);
   });
@@ -606,12 +658,15 @@ describe('REQ-E06-03 BR-04 — exceptions ranked: overdue, then Firm, then lowes
 });
 
 describe('REQ-E06-03 BR-03 — cumulative commitment against cumulative forecast', () => {
-  it('sums Firm and Trade-off periods in period order; an unanswered period adds no commitment', () => {
+  // PEX-D22 — Zone Capacity (Trade-off and Forecast) periods take no
+  // commitment, so the series sums Zone Liability (firm) periods only.
+  it('sums Firm periods in period order; Trade-off and Forecast periods are left out; an unanswered period adds no commitment', () => {
     const series = cumulativeCommitment([
       mk({
         key: '2',
         periodBucket: '2026-09-14',
         periodStart: '2026-09-14',
+        zone: 'firm',
         state: 'accepted',
         committedQty: 950
       }),
@@ -623,7 +678,14 @@ describe('REQ-E06-03 BR-03 — cumulative commitment against cumulative forecast
         state: 'exception',
         committedQty: 800
       }),
-      mk({ key: '3', periodBucket: '2026-09-21', periodStart: '2026-09-21' }),
+      mk({ key: '3', periodBucket: '2026-09-21', periodStart: '2026-09-21', zone: 'firm' }),
+      mk({
+        key: '5',
+        periodBucket: '2026-09-28',
+        periodStart: '2026-09-28',
+        state: 'acknowledged',
+        committedQty: 700
+      }),
       mk({
         key: '4',
         periodBucket: '2026-12',
@@ -887,16 +949,40 @@ describe('REQ-E06-01 BR-06 — the changes between versions', () => {
       previousQty: 34300,
       currentQty: 30900
     });
-    expect(find('PK-PETB-8801', SEEDED_PACKAGING_WEEKS[12])).toMatchObject({
+    // PEX-2 — week 17 of version 2 is new (version 1 was published a week earlier).
+    expect(find('PK-PETB-8801', SEEDED_PACKAGING_WEEKS[16])).toMatchObject({
       kind: 'added',
       previousQty: null
     });
-    expect(find('PK-PETB-8801', '2026-11')).toMatchObject({ kind: 'removed', currentQty: null });
+    // PEX-2 — both versions end at month 12 (July 2027), so no period is dropped;
+    // under the 6-month horizon the November stub of version 1 was.
+    expect(changes.filter((c) => c.kind === 'removed')).toEqual([]);
     expect(find('PK-PETB-8801', '2026-08-24')).toBeUndefined(); // rolled off the start
     // An unchanged period is not listed; another supplier's periods are not listed.
     expect(find('PK-PETB-8801', SEEDED_PACKAGING_WEEKS[1])).toBeUndefined();
     expect(changes.every((c) => c.supplierId === 'sup-007')).toBe(true);
     expect(versionChanges(pk1, null)).toEqual([]);
+  });
+
+  it('a period the new version no longer has is listed as dropped', () => {
+    const last = pk1.lines.find(
+      (l) =>
+        l.supplierId === 'sup-007' &&
+        l.materialCode === 'PK-PETB-8801' &&
+        l.periodBucket === '2027-07'
+    );
+    if (!last) throw new Error('fixture premise: version 1 runs to July 2027');
+    const prev = { ...pk1, lines: [...pk1.lines, { ...last, periodBucket: '2027-08' }] };
+    expect(versionChanges(pk2, prev, 'sup-007').filter((c) => c.kind === 'removed')).toEqual([
+      {
+        supplierId: 'sup-007',
+        materialCode: 'PK-PETB-8801',
+        periodBucket: '2027-08',
+        kind: 'removed',
+        previousQty: last.forecastQty,
+        currentQty: null
+      }
+    ]);
   });
 });
 
@@ -909,7 +995,13 @@ describe('REQ-E06-02 BR-06 — spreadsheet: download, template and row-by-row up
       zone: 'firm',
       forecastQty: 34300
     }),
-    mk({ key: 'b', periodBucket: '2026-09-14', periodStart: '2026-09-14', forecastQty: 34300 }),
+    mk({
+      key: 'b',
+      periodBucket: '2026-09-14',
+      periodStart: '2026-09-14',
+      zone: 'firm',
+      forecastQty: 34300
+    }),
     mk({
       key: 'c',
       periodBucket: '2026-10-26',
@@ -922,6 +1014,7 @@ describe('REQ-E06-02 BR-06 — spreadsheet: download, template and row-by-row up
       materialCode: 'PK-PETB-8802',
       periodBucket: '2026-09-14',
       periodStart: '2026-09-14',
+      zone: 'firm',
       forecastQty: 1500
     })
   ];
@@ -950,6 +1043,25 @@ describe('REQ-E06-02 BR-06 — spreadsheet: download, template and row-by-row up
       expect(accepted.map((a) => a.kind)).toEqual(['commit', 'commit', 'acknowledge', 'commit']);
       expect(accepted[0]).toMatchObject({ committedQty: 34300 });
     }
+  });
+
+  // PEX-D22 — a Trade-off (Zone Capacity) row is an acknowledgement: the
+  // template leaves its committed quantity blank, and a typed quantity on it
+  // is read as an acknowledgement, never a commitment.
+  it('PEX-D22 — a Trade-off row is acknowledged, never committed, even with a quantity typed in', () => {
+    const tradeOff = [
+      mk({ key: 't', periodBucket: '2026-09-21', periodStart: '2026-09-21', forecastQty: 34300 })
+    ];
+    const tpl = parseCsv(commitmentTemplateCsv(tradeOff, 'en'));
+    expect(tpl.rows[0]['Committed quantity']).toBe('');
+    const { accepted, refused } = validateCommitmentRows(
+      [row('PK-PETB-8801', '2026-09-21', '', '', 'PCS', '30000', '', '', '', 'Seen')],
+      tradeOff
+    );
+    expect(refused).toEqual([]);
+    expect(accepted).toHaveLength(1);
+    expect(accepted[0]).toMatchObject({ kind: 'acknowledge', note: 'Seen' });
+    expect(accepted[0]).not.toHaveProperty('committedQty');
   });
 
   it('CAP-6 BR-03 — the template has no commitment date column, in EN or ID', () => {
@@ -1083,15 +1195,21 @@ describe('REQ-E08-05 BR-01 — committed below forecast beyond tolerance raises 
 });
 
 describe('REQ-E07-03 — the foresight answer a line gives the Order summary', () => {
-  it('Confirmed, Gap, Awaiting, or Not required for a Forecast-zone period', () => {
-    expect(foresightAnswerOf(mk({ key: '1', state: 'accepted' }))).toBe('confirmed');
-    expect(foresightAnswerOf(mk({ key: '2', state: 'acceptedByPlanner' }))).toBe('confirmed');
-    expect(foresightAnswerOf(mk({ key: '3', state: 'exception' }))).toBe('gap');
-    expect(foresightAnswerOf(mk({ key: '4', state: 'revisionRequested' }))).toBe('gap');
-    expect(foresightAnswerOf(mk({ key: '5', state: 'awaiting' }))).toBe('awaiting');
+  it('Confirmed, Gap, Awaiting, or Not required for a Zone Capacity (Trade-off or Forecast) period', () => {
+    const firm = /** @type {const} */ ('firm');
+    expect(foresightAnswerOf(mk({ key: '1', zone: firm, state: 'accepted' }))).toBe('confirmed');
+    expect(foresightAnswerOf(mk({ key: '2', zone: firm, state: 'acceptedByPlanner' }))).toBe(
+      'confirmed'
+    );
+    expect(foresightAnswerOf(mk({ key: '3', zone: firm, state: 'exception' }))).toBe('gap');
+    expect(foresightAnswerOf(mk({ key: '4', zone: firm, state: 'revisionRequested' }))).toBe('gap');
+    expect(foresightAnswerOf(mk({ key: '5', zone: firm, state: 'awaiting' }))).toBe('awaiting');
     expect(foresightAnswerOf(mk({ key: '6', zone: 'forecast', state: 'awaiting' }))).toBe(
       'notRequired'
     );
+    // PEX-D22 — a Trade-off (Zone Capacity) period needs no commitment either.
+    expect(foresightAnswerOf(mk({ key: '7', state: 'acknowledged' }))).toBe('notRequired');
+    expect(foresightAnswerOf(mk({ key: '8', state: 'awaiting' }))).toBe('notRequired');
   });
 });
 

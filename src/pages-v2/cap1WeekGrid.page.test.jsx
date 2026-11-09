@@ -183,13 +183,15 @@ describe('CAP-1 Table B — PTI Capacity', () => {
     expect(grid.querySelector('tr[data-row="ptiDecision"]')).not.toBeNull();
   });
 
-  it('B-AC1 — PT Sample Packaging Indonesia, W38 (14 Sep): the gap week reads as specified', async () => {
+  // PEX-D22 moved the sample's short week from W38 (14 Sep) to W37 (7 Sep),
+  // inside sup-007's Zone Liability, so these cases name W37.
+  it('B-AC1 — PT Sample Packaging Indonesia, W37 (7 Sep): the gap week reads as specified', async () => {
     renderWithProviders(<BuyerCapacity />, { identity: PLANNER, route: '/buyer/capacity' });
     const grid = await screen.findByTestId('capacity-grid-sup-007-pg-MG-20');
-    const week = '2026-09-14';
+    const week = '2026-09-07';
     const head = screen.getByTestId(`capacity-gap-sup-007-pg-MG-20-${week}`);
-    expect(head).toHaveTextContent('W38');
-    expect(head).toHaveTextContent('14 Sep');
+    expect(head).toHaveTextContent('W37');
+    expect(head).toHaveTextContent('07 Sep');
     expect(cellAt(grid, 'ltp', week)).toHaveTextContent('72,800');
     expect(cellAt(grid, 'allocated', week)).toHaveTextContent('60,000');
     expect(cellAt(grid, 'upside', week)).toHaveTextContent('—');
@@ -215,12 +217,13 @@ describe('CAP-1 Table B — PTI Capacity', () => {
       expect(grid.querySelectorAll('tbody tr')).toHaveLength(8);
     }
     expect(weekColumns(screen.getByTestId('capacity-grid-sup-007-pg-MG-20'))).toEqual([
-      '2026-09-14'
+      '2026-09-07'
     ]);
   });
 
   it('a PO drill-down shows only the drilled weeks’ columns; a filter that leaves none says so', async () => {
-    const drilled = ['2026-09-07', '2026-09-21'];
+    // 14 Sep and 21 Sep: no gap since PEX-D22 moved the short week to 7 Sep.
+    const drilled = ['2026-09-14', '2026-09-21'];
     const r = renderWithProviders(<BuyerCapacity />, {
       identity: PLANNER,
       route: `/buyer/capacity?po=po-007&supplier=sup-007&weeks=${drilled.join(',')}&from=order-summary`
@@ -332,33 +335,35 @@ describe('CAP-1 Table C — supplier Capacity', () => {
     );
   });
 
-  it('C-AC2 — 60000 in W38 shows the reason select and tints W38 only; 90000 removes both', async () => {
+  // PEX-D22 moved the sample's short week from W38 (14 Sep) to W37 (7 Sep),
+  // inside sup-007's Zone Liability, so these cases name W37.
+  it('C-AC2 — 60000 in W37 shows the reason select and tints W37 only; 90000 removes both', async () => {
     const grid = await openGroup();
-    const w38 = '2026-09-14';
-    const input = screen.getByLabelText(`Allocated capacity for the week of ${formatDate(w38)}`);
+    const wShort = '2026-09-07';
+    const input = screen.getByLabelText(`Allocated capacity for the week of ${formatDate(wShort)}`);
     fireEvent.change(input, { target: { value: '90000' } });
-    expect(screen.getByTestId(`capacity-week-${w38}`)).not.toHaveAttribute('data-gap');
-    expect(cellAt(grid, 'reason', w38).querySelector('select')).toBeNull();
+    expect(screen.getByTestId(`capacity-week-${wShort}`)).not.toHaveAttribute('data-gap');
+    expect(cellAt(grid, 'reason', wShort).querySelector('select')).toBeNull();
     fireEvent.change(input, { target: { value: '60000' } });
-    expect(screen.getByTestId(`capacity-week-${w38}`)).toHaveAttribute('data-gap', 'true');
-    expect(cellAt(grid, 'reason', w38).querySelector('select')).not.toBeNull();
+    expect(screen.getByTestId(`capacity-week-${wShort}`)).toHaveAttribute('data-gap', 'true');
+    expect(cellAt(grid, 'reason', wShort).querySelector('select')).not.toBeNull();
     const tinted = [...grid.querySelectorAll('thead th[data-gap="true"]')].map((h) =>
       h.getAttribute('data-week')
     );
-    expect(tinted).toEqual([w38]);
+    expect(tinted).toEqual([wShort]);
   });
 
   it('C-AC3 — the week named by the refusal is a link that focuses that week’s reason select', async () => {
     await openGroup();
-    const w38 = '2026-09-14';
-    const select = screen.getByLabelText(`Reason for the week of ${formatDate(w38)}`);
+    const wShort = '2026-09-07';
+    const select = screen.getByLabelText(`Reason for the week of ${formatDate(wShort)}`);
     fireEvent.change(select, { target: { value: '' } });
     expect(screen.getByTestId('capacity-submit')).toBeDisabled();
     const refusal = screen.getByTestId('capacity-refusal');
-    expect(refusal).toHaveTextContent(`The week of ${formatDate(w38)} is below the LTP`);
+    expect(refusal).toHaveTextContent(`The week of ${formatDate(wShort)} is below the LTP`);
     const link = screen.getByTestId('capacity-refusal-week');
     expect(link.tagName).toBe('BUTTON');
-    expect(link).toHaveTextContent(formatDate(w38));
+    expect(link).toHaveTextContent(formatDate(wShort));
     expect(document.activeElement).not.toBe(select);
     fireEvent.click(link);
     await waitFor(() => expect(document.activeElement).toBe(select));
@@ -366,10 +371,10 @@ describe('CAP-1 Table C — supplier Capacity', () => {
 
   it('BL-186 — the chosen reason is readable: a reason week’s cell is wider, the select is compact and its title is the full label', async () => {
     const grid = await openGroup();
-    const w38 = '2026-09-14';
-    const w37 = '2026-09-07';
+    const wShort = '2026-09-07';
+    const wOther = '2026-09-14';
     const select = /** @type {HTMLSelectElement} */ (
-      screen.getByLabelText(`Reason for the week of ${formatDate(w38)}`)
+      screen.getByLabelText(`Reason for the week of ${formatDate(wShort)}`)
     );
     fireEvent.change(select, { target: { value: 'force-majeure' } });
     expect(select).toHaveValue('force-majeure');
@@ -378,8 +383,8 @@ describe('CAP-1 Table C — supplier Capacity', () => {
     // Its cell holds at least 128 px, so only this week grows to 144 px; a week
     // with no select keeps the 112 px column (W1-Q1).
     expect(/** @type {HTMLElement} */ (select.parentElement).className).toContain('min-w-[128px]');
-    expect(cellAt(grid, 'reason', w37).querySelector('select')).toBeNull();
-    expect(cellAt(grid, 'reason', w37).querySelector('.min-w-\\[128px\\]')).toBeNull();
+    expect(cellAt(grid, 'reason', wOther).querySelector('select')).toBeNull();
+    expect(cellAt(grid, 'reason', wOther).querySelector('.min-w-\\[128px\\]')).toBeNull();
     fireEvent.change(select, { target: { value: '' } });
     expect(select).toHaveAttribute('title', 'Select a reason…');
     // ID: the full Indonesian label. The switch redraws the page, so the
@@ -387,7 +392,7 @@ describe('CAP-1 Table C — supplier Capacity', () => {
     await i18n.changeLanguage('id');
     try {
       const idSelect = await waitFor(() => {
-        const el = document.getElementById(`capacity-reason-input-${w38}`);
+        const el = document.getElementById(`capacity-reason-input-${wShort}`);
         expect(el).not.toBeNull();
         return /** @type {HTMLSelectElement} */ (el);
       });

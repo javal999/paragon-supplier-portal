@@ -253,13 +253,16 @@ describe('REQ-E06-01 — versions, scoping and views', () => {
 });
 
 describe('REQ-E06-02 — commitment through the verb', () => {
+  // PEX-D22 — the commitment tests below run on sup-007's awaiting Zone
+  // Liability week (8802, W[0]); they used the Trade-off week W[6], which now
+  // takes an acknowledgement only (probed in BR-08 below).
   it('BR-09 / BR-10 — a submitted commitment lands as a draft (hidden from PTI) and counts once promoted', async () => {
-    const l = await lineOf(sup007, 'sup-007', 'PK-PETB-8802', W[6]);
-    expect(l).toMatchObject({ zone: 'tradeOff', state: 'awaiting' });
+    const l = await lineOf(sup007, 'sup-007', 'PK-PETB-8802', W[0]);
+    expect(l).toMatchObject({ zone: 'firm', state: 'awaiting' });
     const created = await submit(sup007, commitPayload(l, l.forecastQty));
     expect(created.status).toBe('done');
-    expect((await lineOf(buyer, 'sup-007', 'PK-PETB-8802', W[6])).state).toBe('awaiting');
-    expect((await lineOf(sup007, 'sup-007', 'PK-PETB-8802', W[6])).draft?.id).toBe(
+    expect((await lineOf(buyer, 'sup-007', 'PK-PETB-8802', W[0])).state).toBe('awaiting');
+    expect((await lineOf(sup007, 'sup-007', 'PK-PETB-8802', W[0])).draft?.id).toBe(
       created.entityId
     );
     expect(
@@ -270,7 +273,7 @@ describe('REQ-E06-02 — commitment through the verb', () => {
         )
       ).status
     ).toBe('done');
-    expect(await lineOf(buyer, 'sup-007', 'PK-PETB-8802', W[6])).toMatchObject({
+    expect(await lineOf(buyer, 'sup-007', 'PK-PETB-8802', W[0])).toMatchObject({
       state: 'accepted',
       committedQty: l.forecastQty,
       draft: null
@@ -278,7 +281,7 @@ describe('REQ-E06-02 — commitment through the verb', () => {
   });
 
   it('known-bad: below forecast without a reason is refused BY THE VERB; "other" needs a note', async () => {
-    const l = await lineOf(sup007, 'sup-007', 'PK-PETB-8802', W[6]);
+    const l = await lineOf(sup007, 'sup-007', 'PK-PETB-8802', W[0]);
     const before = requirementResponseStore.all().length;
     const none = await submit(sup007, commitPayload(l, l.forecastQty - 1));
     expect(none.status).toBe('failed');
@@ -293,37 +296,38 @@ describe('REQ-E06-02 — commitment through the verb', () => {
     expect(requirementResponseStore.all()).toHaveLength(before);
   });
 
+  // PEX-D22 changed this case: it pinned "exactly 10% below in Trade-off is
+  // accepted". Zone Capacity periods take no commitment now, and Zone
+  // Liability's tolerance is none (CR-21), so the boundary is the forecast itself.
   it('known-good: below forecast with a starter reason, date and upside is stored; tolerance decides the state', async () => {
-    const l = await lineOf(sup007, 'sup-007', 'PK-PETB-8802', W[6]);
-    // Exactly 10% below in Trade-off: accepted without planner action.
-    const within = await submit(
+    const l = await lineOf(sup007, 'sup-007', 'PK-PETB-8802', W[0]);
+    expect(l.forecastQty).toBe(42400);
+    // One unit short in Zone Liability, with a reason: stored, and an exception for the planner.
+    const outside = await submit(
       sup007,
-      commitPayload(l, l.forecastQty * 0.9, { rootCause: { level1: 'capacity' }, upsideQty: 2000 })
+      commitPayload(l, l.forecastQty - 1, { rootCause: { level1: 'capacity' }, upsideQty: 2000 })
     );
-    await promote(sup007, /** @type {NonNullable<typeof within.entityId>} */ (within.entityId));
+    await promote(sup007, /** @type {NonNullable<typeof outside.entityId>} */ (outside.entityId));
     const stored = /** @type {import('../../sdc/types').RequirementResponse} */ (
       requirementResponseStore.get(
-        /** @type {NonNullable<typeof within.entityId>} */ (within.entityId)
+        /** @type {NonNullable<typeof outside.entityId>} */ (outside.entityId)
       )
     );
     expect(stored.forecastConfirmation).toMatchObject({
-      confirmedQty: 34650,
+      confirmedQty: 42399,
       upsideQty: 2000,
       committedDate: l.periodStart
     });
     expect(stored.rootCause).toEqual({ level1: 'capacity' });
-    expect((await lineOf(buyer, 'sup-007', 'PK-PETB-8802', W[6])).state).toBe('accepted');
-    // One unit more short: an exception for the planner.
-    const outside = await submit(
-      sup007,
-      commitPayload(l, 34649, { rootCause: { level1: 'other', note: 'Resin allocation' } })
-    );
-    await promote(sup007, /** @type {NonNullable<typeof outside.entityId>} */ (outside.entityId));
-    expect((await lineOf(buyer, 'sup-007', 'PK-PETB-8802', W[6])).state).toBe('exception');
+    expect((await lineOf(buyer, 'sup-007', 'PK-PETB-8802', W[0])).state).toBe('exception');
+    // Exactly the forecast: accepted without planner action.
+    const within = await submit(sup007, commitPayload(l, l.forecastQty));
+    await promote(sup007, /** @type {NonNullable<typeof within.entityId>} */ (within.entityId));
+    expect((await lineOf(buyer, 'sup-007', 'PK-PETB-8802', W[0])).state).toBe('accepted');
   });
 
   it('CAP-6 AC-01 / BR-02 — a forecast-version commitment with a quantity only is stored with the period start as its date', async () => {
-    const l = await lineOf(sup007, 'sup-007', 'PK-PETB-8802', W[6]);
+    const l = await lineOf(sup007, 'sup-007', 'PK-PETB-8802', W[0]);
     const noDate = await submit(sup007, {
       ...commitPayload(l, l.forecastQty),
       committedDate: undefined
@@ -336,11 +340,11 @@ describe('REQ-E06-02 — commitment through the verb', () => {
       confirmedQty: l.forecastQty,
       committedDate: l.periodStart
     });
-    expect(l.periodStart).toBe(W[6]);
+    expect(l.periodStart).toBe(W[0]);
   });
 
   it('known-bad: a date, when one is sent, must be a calendar day; upside must be zero or more', async () => {
-    const l = await lineOf(sup007, 'sup-007', 'PK-PETB-8802', W[6]);
+    const l = await lineOf(sup007, 'sup-007', 'PK-PETB-8802', W[0]);
     const badDate = await submit(sup007, {
       ...commitPayload(l, l.forecastQty),
       committedDate: '14/09/2026'
@@ -350,24 +354,54 @@ describe('REQ-E06-02 — commitment through the verb', () => {
     expect(badUpside.reason).toMatch(/upsideQty/);
   });
 
-  it('BR-08 — a Forecast period takes an acknowledgement, never a commitment', async () => {
-    const l = await lineOf(sup007, 'sup-007', 'PK-PETB-8802', W[9]);
-    expect(l.zone).toBe('forecast');
-    const commit = await submit(sup007, commitPayload(l, l.forecastQty));
-    expect(commit.reason).toMatch(/visibility-only/);
-    const ack = await svc.dispatch(sup007, {
+  // PEX-D22 (owner, 2026-11-05) widened BR-08 to every Zone Capacity period:
+  // a Trade-off week (W[6]) now behaves as a Forecast week (W[9]) does.
+  it('BR-08 / PEX-D22 — a Zone Capacity period (Forecast or Trade-off) takes an acknowledgement, never a commitment', async () => {
+    for (const [week, zone] of /** @type {const} */ ([
+      [W[9], 'forecast'],
+      [W[6], 'tradeOff']
+    ])) {
+      const l = await lineOf(sup007, 'sup-007', 'PK-PETB-8802', week);
+      expect(l.zone).toBe(zone);
+      const commit = await submit(sup007, commitPayload(l, l.forecastQty));
+      expect(commit.status).toBe('failed');
+      expect(commit.reason).toMatch(/line is Zone Capacity/);
+      const ack = await svc.dispatch(sup007, {
+        transitionId: 't_requirementresponse_acknowledge',
+        entity: 'requirementResponse',
+        payload: {
+          publicationId: l.publicationId,
+          planVersion: l.planVersion,
+          supplierId: 'sup-007',
+          materialCode: l.materialCode,
+          periodBucket: l.periodBucket
+        }
+      });
+      expect(ack.status).toBe('done');
+      expect((await lineOf(buyer, 'sup-007', 'PK-PETB-8802', week)).state).toBe('acknowledged');
+      // Stored as an acknowledgement, never a confirmation (invariant #11).
+      const stored = /** @type {import('../../sdc/types').RequirementResponse} */ (
+        requirementResponseStore.get(/** @type {string} */ (ack.entityId))
+      );
+      expect(stored.acknowledgment).toEqual({});
+      expect(stored.forecastConfirmation).toBeUndefined();
+    }
+    // Known-good beside it: a Zone Liability week takes the commitment, not an acknowledgement.
+    const firm = await lineOf(sup007, 'sup-007', 'PK-PETB-8802', W[0]);
+    expect((await submit(sup007, commitPayload(firm, firm.forecastQty))).status).toBe('done');
+    const ackFirm = await svc.dispatch(sup007, {
       transitionId: 't_requirementresponse_acknowledge',
       entity: 'requirementResponse',
       payload: {
-        publicationId: l.publicationId,
-        planVersion: l.planVersion,
+        publicationId: firm.publicationId,
+        planVersion: firm.planVersion,
         supplierId: 'sup-007',
-        materialCode: l.materialCode,
-        periodBucket: l.periodBucket
+        materialCode: firm.materialCode,
+        periodBucket: firm.periodBucket
       }
     });
-    expect(ack.status).toBe('done');
-    expect((await lineOf(buyer, 'sup-007', 'PK-PETB-8802', W[9])).state).toBe('acknowledged');
+    expect(ackFirm.status).toBe('failed');
+    expect(ackFirm.reason).toMatch(/line is Zone Liability/);
   });
 
   it('a supplier cannot commit against another supplier’s line', async () => {
@@ -416,9 +450,11 @@ describe('REQ-E06-03 — planner actions on exceptions', () => {
     );
   });
 
+  // PEX-D22 — on sup-007's Zone Liability exception (8801, W[1]: 31 000
+  // against 34 300); it used the Trade-off week 8802 W[3], now acknowledged.
   it('request revision: the note is required, kept in the log, and the supplier reads it', async () => {
-    const l = await lineOf(buyer, 'sup-007', 'PK-PETB-8802', W[3]);
-    expect(l.state).toBe('exception');
+    const l = await lineOf(buyer, 'sup-007', 'PK-PETB-8801', W[1]);
+    expect(l).toMatchObject({ zone: 'firm', state: 'exception' });
     await review(/** @type {import('../../sdc/types').RequirementResponse} */ (l.response).id);
     const blank = await svc.dispatch(buyer, {
       transitionId: 't_requirementresponse_dispute',
@@ -433,13 +469,25 @@ describe('REQ-E06-03 — planner actions on exceptions', () => {
       entityId: /** @type {import('../../sdc/types').RequirementResponse} */ (l.response).id,
       payload: { disputeReason: 'Launch week: please find 5 000 more' }
     });
-    const seen = await lineOf(sup007, 'sup-007', 'PK-PETB-8802', W[3]);
+    const seen = await lineOf(sup007, 'sup-007', 'PK-PETB-8801', W[1]);
     expect(seen.state).toBe('revisionRequested');
     expect(seen.log.map((e) => e.text)).toEqual(['Launch week: please find 5 000 more']);
     // The supplier revises: a new submission replaces the standing one, and the log stays.
-    const revised = await submit(sup007, commitPayload(seen, seen.forecastQty));
-    await promote(sup007, /** @type {NonNullable<typeof revised.entityId>} */ (revised.entityId));
-    const after = await lineOf(buyer, 'sup-007', 'PK-PETB-8802', W[3]);
+    // W[1] is the week rigid plastics' LTP is above BE (ENG-D19), so the
+    // submission carries a reason even at the full forecast.
+    const revised = await submit(
+      sup007,
+      commitPayload(seen, seen.forecastQty, { rootCause: { level1: 'capacity' } })
+    );
+    expect(
+      (
+        await promote(
+          sup007,
+          /** @type {NonNullable<typeof revised.entityId>} */ (revised.entityId)
+        )
+      ).status
+    ).toBe('done');
+    const after = await lineOf(buyer, 'sup-007', 'PK-PETB-8801', W[1]);
     expect(after.state).toBe('accepted');
     expect(after.log).toHaveLength(1);
   });
@@ -564,14 +612,27 @@ describe('REQ-E06-03 BR-06 and REQ-E08-05 — reminders, escalation and the aler
     expect(await tradeOffDueSoon(reminder)).toBeGreaterThan(0);
   });
 
-  it('the alert engine raises "committed below forecast beyond tolerance": High for Firm, Medium for Trade-off', async () => {
+  // PEX-D22 removed this case's Medium half: sup-007's 8802 answers below
+  // forecast sit in Trade-off weeks (W[2], W[3]), which are acknowledgements
+  // now, so they raise nothing. Only Zone Liability shortfalls alert, High.
+  it('the alert engine raises "committed below forecast beyond tolerance": High for Firm; a Zone Capacity answer raises none', async () => {
     const alerts = (await reads.getInventoryAlerts(buyer)).items.filter(
       (a) => a.rule === 'commitmentBelowForecast'
     );
     expect(alerts.map((a) => [a.key, a.riskClass]).sort()).toEqual([
       ['commitmentBelowForecast|PK-PETB-8801|sup-007', 'high'],
-      ['commitmentBelowForecast|PK-PETB-8802|sup-007', 'medium'],
       ['commitmentBelowForecast|RM-STEAR-7300|sup-002', 'high']
+    ]);
+    // The control: the Trade-off answers below forecast are on the sample data, acknowledged.
+    const short8802 = (await linesFor(buyer)).filter(
+      (l) =>
+        l.materialCode === 'PK-PETB-8802' &&
+        l.response?.forecastConfirmation &&
+        l.response.forecastConfirmation.confirmedQty < l.forecastQty
+    );
+    expect(short8802.map((l) => [l.periodBucket, l.zone, l.state])).toEqual([
+      [W[2], 'tradeOff', 'acknowledged'],
+      [W[3], 'tradeOff', 'acknowledged']
     ]);
     // A supplier sees its own.
     const mine = (await reads.getInventoryAlerts(sup002)).items.filter(

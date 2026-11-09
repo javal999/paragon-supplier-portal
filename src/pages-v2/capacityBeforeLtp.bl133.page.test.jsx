@@ -69,26 +69,41 @@ describe('copy', () => {
   });
 });
 
+// PEX-D22 (owner, 2026-11-05) — only Zone Liability (firm) periods take a
+// commitment, so Submit all lists sup-007's firm weeks W[0] and W[1] alone
+// (its 14-day lead time); these walks used the Trade-off weeks W[2] and W[6].
 describe('Supplier — Submit all per period (ENG-D19)', () => {
   it('one Submit all submits every material of the period at once', async () => {
     renderWithProviders(<SupplierForecastCommitments />, {
       identity: SUPPLIER,
       route: '/supplier/forecasts'
     });
-    const weekRow = await screen.findByTestId(`fc-week-${W[6]}`);
-    expect(weekRow).toHaveTextContent('Materials: 2');
-    expect(within(weekRow).getByTestId(`fc-week-check-${W[6]}-pg-MG-20`)).toHaveAttribute(
+    const weekRow = await screen.findByTestId(`fc-week-${W[0]}`);
+    // Only 8802 awaits its commitment; 8801's stands from version 1.
+    expect(weekRow).toHaveTextContent('Materials: 1');
+    expect(within(weekRow).getByTestId(`fc-week-check-${W[0]}-pg-MG-20`)).toHaveAttribute(
       'data-level',
       'within'
     );
+    // Zone Capacity weeks have no Submit all (acknowledgement only).
+    expect(screen.queryByTestId(`fc-week-${W[2]}`)).toBeNull();
+    expect(screen.queryByTestId(`fc-week-${W[6]}`)).toBeNull();
     // A row no longer has its own Submit, only Save draft.
     expect(screen.queryByRole('button', { name: /^Submit commitment for/ })).toBeNull();
-    fireEvent.click(screen.getByTestId(`fc-week-submit-${W[6]}`));
+    // Editing 8801 puts it back into the period's Submit all beside 8802.
+    const row8801 = within(screen.getByTestId('fc-sup-material-PK-PETB-8801')).getByTestId(
+      `fc-sup-row-PK-PETB-8801-${W[0]}`
+    );
+    fireEvent.change(within(row8801).getByLabelText(/^Commitment quantity for/), {
+      target: { value: '35000' }
+    });
+    expect(weekRow).toHaveTextContent('Materials: 2');
+    fireEvent.click(screen.getByTestId(`fc-week-submit-${W[0]}`));
     // BL-240 — Submit all opens the summary; its confirm sends the period.
     fireEvent.click(screen.getByTestId('fc-week-confirm-submit'));
     await waitFor(() =>
       expect(
-        responsesFor('sup-007', W[6])
+        responsesFor('sup-007', W[0])
           .filter((r) => r.status === 'Submitted')
           .map((r) => r.materialCode)
           .sort()
@@ -101,22 +116,23 @@ describe('Supplier — Submit all per period (ENG-D19)', () => {
       identity: SUPPLIER,
       route: '/supplier/forecasts'
     });
-    const weekRow = await screen.findByTestId(`fc-week-${W[2]}`);
-    expect(within(weekRow).getByTestId(`fc-week-check-${W[2]}-pg-MG-20`)).toHaveAttribute(
+    const weekRow = await screen.findByTestId(`fc-week-${W[1]}`);
+    expect(within(weekRow).getByTestId(`fc-week-check-${W[1]}-pg-MG-20`)).toHaveAttribute(
       'data-level',
       'cannotSupply'
     );
     expect(weekRow).toHaveTextContent('Cannot be supplied');
     // Both lines were already committed; editing one puts the period back to
     // submit. Below forecast, the period's reason also covers the row.
-    const section = screen.getByTestId('fc-sup-material-PK-PETB-8801');
-    const row = within(section).getByTestId(`fc-sup-row-PK-PETB-8801-${W[2]}`);
+    // (8802: 8801's standing answer already carries a reason of its own.)
+    const section = screen.getByTestId('fc-sup-material-PK-PETB-8802');
+    const row = within(section).getByTestId(`fc-sup-row-PK-PETB-8802-${W[1]}`);
     fireEvent.change(within(row).getByLabelText(/^Commitment quantity for/), {
       target: { value: '34000' }
     });
-    const submit = screen.getByTestId(`fc-week-submit-${W[2]}`);
+    const submit = screen.getByTestId(`fc-week-submit-${W[1]}`);
     expect(submit).toBeDisabled();
-    expect(screen.getByTestId(`fc-week-refusal-${W[2]}`)).toHaveTextContent(
+    expect(screen.getByTestId(`fc-week-refusal-${W[1]}`)).toHaveTextContent(
       'Above BE: choose a reason.'
     );
     fireEvent.change(within(weekRow).getByLabelText(/^Reason for .*: LTP above capacity/), {
@@ -127,11 +143,11 @@ describe('Supplier — Submit all per period (ENG-D19)', () => {
     fireEvent.click(screen.getByTestId('fc-week-confirm-submit'));
     await waitFor(() =>
       expect(
-        responsesFor('sup-007', W[2]).find(
+        responsesFor('sup-007', W[1]).find(
           (r) => r.status === 'Submitted' && r.rootCause?.level1 === 'capacity'
         )
       ).toMatchObject({
-        materialCode: 'PK-PETB-8801',
+        materialCode: 'PK-PETB-8802',
         forecastConfirmation: { confirmedQty: 34000 }
       })
     );
@@ -142,8 +158,11 @@ describe('Supplier — Submit all per period (ENG-D19)', () => {
       identity: SUP_002,
       route: '/supplier/forecasts'
     });
-    const weekRow = await screen.findByTestId(`fc-week-${M[2]}`);
-    expect(within(weekRow).getByTestId(`fc-week-check-${M[2]}-pg-MG-10`)).toHaveAttribute(
+    // PEX-D22 — stearic acid's Zone Liability month October (M[1], inside its
+    // 45-day lead time); it used November, now a Trade-off month. October's
+    // commitment stands, so a changed quantity puts it back to submit.
+    const weekRow = await screen.findByTestId(`fc-week-${M[1]}`);
+    expect(within(weekRow).getByTestId(`fc-week-check-${M[1]}-pg-MG-10`)).toHaveAttribute(
       'data-level',
       'unconfirmed'
     );
@@ -151,8 +170,14 @@ describe('Supplier — Submit all per period (ENG-D19)', () => {
       'href',
       expect.stringContaining('/supplier/capacity')
     );
-    expect(screen.getByTestId(`fc-week-submit-${M[2]}`)).toBeDisabled();
-    expect(screen.getByTestId(`fc-week-refusal-${M[2]}`)).toHaveTextContent('Confirm capacity for');
+    const row = within(screen.getByTestId('fc-sup-material-RM-STEAR-7300')).getByTestId(
+      `fc-sup-row-RM-STEAR-7300-${M[1]}`
+    );
+    fireEvent.change(within(row).getByLabelText(/^Commitment quantity for/), {
+      target: { value: '13500' }
+    });
+    expect(screen.getByTestId(`fc-week-submit-${M[1]}`)).toBeDisabled();
+    expect(screen.getByTestId(`fc-week-refusal-${M[1]}`)).toHaveTextContent('Confirm capacity for');
     // Scoping: no other supplier's group or period on this page.
     expect(screen.queryByTestId(`fc-week-${W[6]}`)).toBeNull();
     expect(screen.queryByText('PK-PETB-8801')).toBeNull();
@@ -160,30 +185,32 @@ describe('Supplier — Submit all per period (ENG-D19)', () => {
 });
 
 describe('Capacity pages show the LTP against capacity and BE (ENG-D18)', () => {
+  // The sample's red week is 7 Sep (W[1]) since PEX-D22 moved it into Zone Liability.
   it('supplier capacity: each week carries its LTP and flag; typing additional capacity moves red to amber', async () => {
     renderWithProviders(<SupplierCapacity />, { identity: SUPPLIER, route: '/supplier/capacity' });
-    const red = await screen.findByTestId(`capacity-ltp-${W[2]}`);
+    const red = await screen.findByTestId(`capacity-ltp-${W[1]}`);
     await waitFor(() => expect(red).toHaveAttribute('data-level', 'cannotSupply'));
     expect(screen.getByTestId(`capacity-ltp-${W[6]}`)).toHaveAttribute('data-level', 'within');
     // CAP-1 — the week is a column now: its header carries the row's old id,
     // and the week's cells are found by their own ids and labels.
-    expect(screen.getByTestId(`capacity-week-${W[2]}`).tagName).toBe('TH');
-    expect(screen.getByTestId(`capacity-ltp-qty-${W[2]}`)).toHaveTextContent('72,800');
+    expect(screen.getByTestId(`capacity-week-${W[1]}`).tagName).toBe('TH');
+    expect(screen.getByTestId(`capacity-ltp-qty-${W[1]}`)).toHaveTextContent('72,800');
+    expect(screen.getByTestId(`capacity-ltp-${W[2]}`)).toHaveAttribute('data-level', 'within');
     const additional = screen.getByLabelText(
-      `Additional capacity for the week of ${formatDate(W[2])}`
+      `Additional capacity for the week of ${formatDate(W[1])}`
     );
     // 60,000 + 12,800 = 72,800: exactly at BE is amber.
     fireEvent.change(additional, {
       target: { value: '12800' }
     });
-    expect(screen.getByTestId(`capacity-ltp-${W[2]}`)).toHaveAttribute(
+    expect(screen.getByTestId(`capacity-ltp-${W[1]}`)).toHaveAttribute(
       'data-level',
       'needsAdditional'
     );
     fireEvent.change(additional, {
       target: { value: '12799' }
     });
-    expect(screen.getByTestId(`capacity-ltp-${W[2]}`)).toHaveAttribute(
+    expect(screen.getByTestId(`capacity-ltp-${W[1]}`)).toHaveAttribute(
       'data-level',
       'cannotSupply'
     );
@@ -193,7 +220,7 @@ describe('Capacity pages show the LTP against capacity and BE (ENG-D18)', () => 
     renderWithProviders(<BuyerCapacity />, { identity: PLANNER, route: '/buyer/capacity' });
     expect(await screen.findByTestId('pti-capacity-banner-red')).toHaveTextContent(': 1');
     await waitFor(() =>
-      expect(screen.getByTestId(`capacity-ltp-sup-007-pg-MG-20-${W[2]}`)).toHaveAttribute(
+      expect(screen.getByTestId(`capacity-ltp-sup-007-pg-MG-20-${W[1]}`)).toHaveAttribute(
         'data-level',
         'cannotSupply'
       )

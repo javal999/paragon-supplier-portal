@@ -55,7 +55,6 @@ export const supplierShipmentsEn = {
   'supplierShipments.aria.collapse': 'Collapse',
   // — Actions / CTAs —
   'supplierShipments.action.cancel': 'Cancel',
-  'supplierShipments.action.exportEdi': 'Export EDI 856',
   // — Expanded row: shipment details —
   'supplierShipments.detail.heading': 'Shipment details',
   'supplierShipments.detail.origin': 'Origin',
@@ -113,7 +112,7 @@ export const supplierShipmentsEn = {
   // — Wizard: step 3 (confirm & submit) —
   'supplierShipments.wizard.review.title': 'Confirm & submit',
   'supplierShipments.wizard.review.short': 'Review',
-  'supplierShipments.wizard.review.desc': 'Verify before transmitting EDI 856.',
+  'supplierShipments.wizard.review.desc': 'Verify before submitting.',
   'supplierShipments.wizard.review.summary.eyebrow': 'Review',
   'supplierShipments.wizard.review.summary.title': 'ASN summary',
   'supplierShipments.wizard.review.summary.desc':
@@ -136,11 +135,7 @@ export const supplierShipmentsEn = {
   'supplierShipments.placeholder.lot': 'e.g. LOT-2026-001',
   'supplierShipments.placeholder.notes': 'Temperature controlled, fragile, hazmat info…',
   // — Submit side-panel —
-  'supplierShipments.submitPanel.title': 'Submit {{asnNumber}}',
-  // — Export toast —
-  'supplierShipments.toast.export.title': 'EDI 856 export not available yet',
-  'supplierShipments.toast.export.desc':
-    'No file was generated — EDI export is not wired to a real system.'
+  'supplierShipments.submitPanel.title': 'Submit {{asnNumber}}'
   // BL-51 — the carrier <select>'s "Other" is retired; see `tpl.form.other`.
 };
 
@@ -182,7 +177,6 @@ export const supplierShipmentsId = {
   'supplierShipments.aria.collapse': 'Ciutkan',
   // — Actions / CTAs —
   'supplierShipments.action.cancel': 'Batal',
-  'supplierShipments.action.exportEdi': 'Ekspor EDI 856',
   // — Expanded row: shipment details —
   'supplierShipments.detail.heading': 'Detail pengiriman',
   'supplierShipments.detail.origin': 'Asal',
@@ -242,7 +236,7 @@ export const supplierShipmentsId = {
   // — Wizard: step 3 (confirm & submit) —
   'supplierShipments.wizard.review.title': 'Konfirmasi & ajukan',
   'supplierShipments.wizard.review.short': 'Tinjau',
-  'supplierShipments.wizard.review.desc': 'Verifikasi sebelum mengirim EDI 856.',
+  'supplierShipments.wizard.review.desc': 'Verifikasi sebelum mengajukan.',
   'supplierShipments.wizard.review.summary.eyebrow': 'Tinjau',
   'supplierShipments.wizard.review.summary.title': 'Ringkasan ASN',
   'supplierShipments.wizard.review.summary.desc':
@@ -265,10 +259,6 @@ export const supplierShipmentsId = {
   'supplierShipments.placeholder.lot': 'mis. LOT-2026-001',
   'supplierShipments.placeholder.notes': 'Suhu terkontrol, mudah pecah, info hazmat…',
   // — Submit side-panel —
-  'supplierShipments.submitPanel.title': 'Kirim {{asnNumber}}',
-  // — Export toast —
-  'supplierShipments.toast.export.title': 'Ekspor EDI 856 belum tersedia',
-  'supplierShipments.toast.export.desc':
-    'Tidak ada berkas yang dibuat — ekspor EDI belum tersambung ke sistem nyata.'
+  'supplierShipments.submitPanel.title': 'Kirim {{asnNumber}}'
   // BL-51 — the carrier <select>'s "Other" is retired; see `tpl.form.other`.
 };

@@ -70,6 +70,14 @@ export const callOffsEn = {
   'co.col.quantity': 'Quantity',
   'co.col.needDate': 'Need date',
   'co.col.confirmBy': 'Confirm by',
+  // PEX-10 (BL-273) — the fulfilment window on a confirmation (DRC-6 lead time).
+  'co.sla.fulfilBy': 'Fulfil by',
+  'co.sla.ifConfirmedToday': 'If confirmed today, fulfil by',
+  'co.sla.leadTime_one': '(lead time {{count}} day)',
+  'co.sla.leadTime_other': '(lead time {{count}} days)',
+  'co.sla.leadTimeDefault_one': '(default lead time {{count}} day for this material type)',
+  'co.sla.leadTimeDefault_other': '(default lead time {{count}} days for this material type)',
+  'co.sla.noLeadTime': 'No lead time on record for this material, so no fulfil-by date',
   'co.col.confirmation': 'Confirmation',
   'co.col.delivery': 'Delivery',
   'co.col.otif': 'On time in full',
@@ -414,6 +422,13 @@ export const callOffsId = {
   'co.col.quantity': 'Kuantitas',
   'co.col.needDate': 'Tanggal kebutuhan',
   'co.col.confirmBy': 'Konfirmasi paling lambat',
+  // PEX-10 (BL-273) — jendela pemenuhan pada konfirmasi (lead time DRC-6; TL-D17 / FSR-D8: istilah tim tetap bahasa Inggris).
+  'co.sla.fulfilBy': 'Penuhi paling lambat',
+  'co.sla.ifConfirmedToday': 'Bila dikonfirmasi hari ini, penuhi paling lambat',
+  'co.sla.leadTime_other': '(lead time {{count}} hari)',
+  'co.sla.leadTimeDefault_other': '(lead time bawaan {{count}} hari untuk jenis material ini)',
+  'co.sla.noLeadTime':
+    'Lead time material ini belum tercatat, jadi belum ada tanggal penuhi paling lambat',
   'co.col.confirmation': 'Konfirmasi',
   'co.col.delivery': 'Pengiriman',
   'co.col.otif': 'Tepat waktu dan lengkap',

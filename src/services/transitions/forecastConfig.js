@@ -53,13 +53,19 @@ export const STREAM_MATERIAL_TYPE = Object.freeze({
 export const streamOfMaterialType = (type) => (type === 'VERP' ? 'packaging' : 'rawMaterial');
 
 /**
- * REQ-E06-01 BR-03 — the period grid. Packaging: weekly periods for 13 weeks,
- * then monthly up to 6 months. Raw material: monthly periods for 6 months.
+ * PEX-2 (BL-265) — the period grid. Packaging: 17 weekly periods from the
+ * planning week, then monthly periods up to month 12, counted from the
+ * planning week's month (BR-02). Raw material: monthly periods up to month 12.
+ * BR-04 [Proposed] (raw material by week too) is held: the demand
+ * anticipation, safety stock, call-off and alert reads take their LTP from
+ * these lines, so weekly raw-material periods move their figures; it waits on
+ * the owner. Replaces REQ-E06-01 BR-03 (13 weeks then months to 6; raw
+ * material 6 months).
  * @type {Readonly<Record<ForecastStream, { readonly weeklyPeriods: number; readonly horizonMonths: number }>>}
  */
 export const FORECAST_HORIZON = Object.freeze({
-  packaging: { weeklyPeriods: 13, horizonMonths: 6 },
-  rawMaterial: { weeklyPeriods: 0, horizonMonths: 6 }
+  packaging: { weeklyPeriods: 17, horizonMonths: 12 },
+  rawMaterial: { weeklyPeriods: 0, horizonMonths: 12 }
 });
 
 /** Zone lengths in days from publication: Firm, then Trade-off; Forecast after. */
@@ -173,15 +179,14 @@ export function cycleOfDay(stream, day, cfg) {
 // value in force each time a rule runs, never a copy taken at load.
 
 /**
- * CR-21 — the share below forecast accepted without planner action, per zone,
- * as a fraction. Firm: none. Trade-off: 10% (mirrors CR-05). Forecast:
- * acknowledgement only. In force now.
- * @returns {{ readonly firmShortfall: number; readonly tradeOffShortfall: number }}
+ * CR-21 — the share below forecast accepted without planner action in a Zone
+ * Liability (firm) period, as a fraction (default none). Zone Capacity periods
+ * are acknowledgement only (PEX-D22), so they have no tolerance. In force now.
+ * @returns {{ readonly firmShortfall: number }}
  */
 export function commitmentTolerance() {
   return {
-    firmShortfall: hubSetting('commitment.firmShortfallPct') / 100,
-    tradeOffShortfall: hubSetting('commitment.tradeOffShortfallPct') / 100
+    firmShortfall: hubSetting('commitment.firmShortfallPct') / 100
   };
 }
 

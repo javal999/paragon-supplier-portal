@@ -90,6 +90,7 @@ import {
 /** @import { IProcurementService, Page, QueryScope, PurchaseOrder, POFilter, InventoryPosition, MaterialNameRow, StockAccessGrant, CapacityPlan, PlanningGroupView, StockSimulationFilter, StockSimulationRow, InventoryAlert, SupplierAsk, CapacityDecision, ForecastVersionView, ForecastCommitmentLine, ForecastCoverageRow, FixedStockReconcileRow, InventoryFilter, Shipment, ShipmentFilter, ASN, ASNFilter, GoodsReceipt, GRFilter, Contract, ContractFilter, ContractObligation, ObligationFilter, RFQ, RFQFilter, Quotation, QuotationFilter, BuyerInvoice, SupplierInvoice, InvoiceFilter, SupplierDocument, CatalogItem, ProfileCert, StorefrontProduct, KpiSnapshot, PerformancePoint, TrendRange, ProductionLineRow, SupplierHealthRow, SupplierScorecard, PurchaseRequisition, PRFilter, PrIntakeLine, SupplierApplication, ReliabilityWindowWeeks, SupplierReliabilityView, MaterialRequirementView, SafetyStockView, OrderPlanView, RescheduleView, StabiliseRunView, StabilisedPlanView, DataHealthView, DemandForecastView, ForecastBiasView, ModelBacktestView } from '../types' */
 import { PR_INTAKE_LINES } from './fixtures/prIntake';
 import { engineDataset } from './fixtures/engineDataset';
+import { leadTimeBreakdown } from '../../engine/leadTimeSteps';
 import { supplierReliability, trailingWindow } from '../../engine/reliability';
 import {
   DEFAULT_RECEIPT_OPTIONS,
@@ -131,6 +132,8 @@ import { addDays, dayOf } from '../../engine/dates';
 import { labelOf, materialEntry } from '../../sdc/materialMaster';
 // Material C4 — each material's MRP controller, narrowed per reader (MR-5 BR-04).
 import { withMrpController } from './mrpControllerReadModel';
+// PEX-10 (BL-273) — each call-off carries its pair's DRC-6 lead time.
+import { withLeadTime } from './leadTimeReadModel';
 // Material C2 — supplier trade names, narrowed per reader (MR-3 BR-03).
 import { materialNameRowsFor, withTradeName } from './materialNameReadModel';
 // BL-194 — the supplier's feedstock confirmation in force (DRC-8).
@@ -698,8 +701,19 @@ export class MockProcurementService {
    */
   async getForecastCommitments(scope) {
     // BR-10 — PTI never reads a draft; a supplier reads its own lines with its drafts.
-    if (scope.personaType === 'buyer') return { items: allCommitmentLines(null) };
-    return { items: applySupplierScope(scope, allCommitmentLines(scope.supplierId)) };
+    // PEX-10 (BL-273) — each line carries its pair's lead time (DRC-6), for "Fulfil by".
+    const sources = engineDataset().sources;
+    /** @param {ForecastCommitmentLine} l */
+    const withLeadTime = (l) => {
+      const src = sources.find(
+        (x) => x.supplierId === l.supplierId && x.materialCode === l.materialCode
+      );
+      return { ...l, leadTimeDays: src ? leadTimeBreakdown(src).totalDays : null };
+    };
+    if (scope.personaType === 'buyer') return { items: allCommitmentLines(null).map(withLeadTime) };
+    return {
+      items: applySupplierScope(scope, allCommitmentLines(scope.supplierId)).map(withLeadTime)
+    };
   }
 
   /**
@@ -1453,8 +1467,11 @@ export class MockProcurementService {
             .filter((c) => c.status !== 'Draft' && c.status !== 'Dismissed')
             .map(({ trigger: _ptiOnly, ...c }) => c)
         : rows;
-    // Material C4 — each call-off names its material's MRP controller (MR-5 BR-03).
-    return { items: visible.map((c) => withMrpController(c, c.materialCode, scope)) };
+    // Material C4 — each call-off names its material's MRP controller (MR-5 BR-03);
+    // PEX-10 (BL-273) — and carries its lead time, for the fulfil-by date.
+    return {
+      items: visible.map((c) => withLeadTime(withMrpController(c, c.materialCode, scope)))
+    };
   }
 
   /**

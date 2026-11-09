@@ -58,7 +58,8 @@ describe('S-04 · the block on the supplier To do', () => {
     expect(first).toHaveTextContent(/Due\s*03/);
     const second = /** @type {HTMLElement} */ (lines[1]);
     expect(second).toHaveTextContent('Capacity gap');
-    expect(second).toHaveTextContent('W38');
+    // PEX-D22 — the sample ask follows the red week, W37 (7 Sep) since it left W38.
+    expect(second).toHaveTextContent('W37');
   });
 
   it('"Answer" opens the reply form; sending it records the answer and the line leaves the block', async () => {

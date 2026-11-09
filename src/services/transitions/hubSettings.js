@@ -168,7 +168,9 @@ const DEFS = /** @satisfies {readonly HubSettingDef[]} */ (
       defaultValue: 2
     },
     // CR-21 — forecast commitment tolerance: the share below forecast accepted
-    // without the planner, per zone.
+    // without the planner. Zone Liability only: PEX-D22 (owner, 2026-11-05)
+    // made Zone Capacity periods acknowledgement only, so the Zone Capacity
+    // value changed no outcome and was retired with its order rule.
     {
       key: 'commitment.firmShortfallPct',
       section: 'tolerances',
@@ -177,15 +179,6 @@ const DEFS = /** @satisfies {readonly HubSettingDef[]} */ (
       min: 0,
       max: 100,
       defaultValue: 0
-    },
-    {
-      key: 'commitment.tradeOffShortfallPct',
-      section: 'tolerances',
-      rule: 'CR-21',
-      unit: 'pct',
-      min: 0,
-      max: 100,
-      defaultValue: 10
     },
     // CR-26 — forecast commitment deadlines, in working days after publication.
     {
@@ -1034,18 +1027,11 @@ const ORDER_RULES = [
       `a contract-price line may not be allowed more than a line without one (contract ${num(s, 'invoice.contractPricePct')}% > other lines ${num(s, 'invoice.standardPct')}%)`
   },
   {
-    keys: ['commitment.firmShortfallPct', 'commitment.tradeOffShortfallPct'],
-    holds: (s) =>
-      num(s, 'commitment.firmShortfallPct') <= num(s, 'commitment.tradeOffShortfallPct'),
-    says: (s) =>
-      `Firm periods may not accept a larger shortfall than Trade-off periods (Firm ${num(s, 'commitment.firmShortfallPct')}% > Trade-off ${num(s, 'commitment.tradeOffShortfallPct')}%)`
-  },
-  {
     keys: ['commitment.firmDeadlineWorkingDays', 'commitment.otherDeadlineWorkingDays'],
     holds: (s) =>
       num(s, 'commitment.firmDeadlineWorkingDays') <= num(s, 'commitment.otherDeadlineWorkingDays'),
     says: (s) =>
-      `the Firm deadline may not be later than the Trade-off and Forecast deadline (${num(s, 'commitment.firmDeadlineWorkingDays')} > ${num(s, 'commitment.otherDeadlineWorkingDays')} working days)`
+      `the Zone Liability deadline may not be later than the Zone Capacity deadline (${num(s, 'commitment.firmDeadlineWorkingDays')} > ${num(s, 'commitment.otherDeadlineWorkingDays')} working days)`
   },
   {
     keys: ['gap.amberFromPct', 'gap.greenFromPct'],

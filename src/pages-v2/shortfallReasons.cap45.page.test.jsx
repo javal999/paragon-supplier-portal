@@ -148,8 +148,9 @@ describe('CAP-4 AC-01 — Force Majeure without a note refuses Submit', () => {
   it('supplier Capacity: the note appears for Force Majeure, Submit is refused until it is filled', async () => {
     renderWithProviders(<SupplierCapacity />, { identity: SUPPLIER, route: '/supplier/capacity' });
     fireEvent.click(await screen.findByRole('tab', { name: 'Rigid plastic packaging' }));
-    const w38 = formatDate('2026-09-14');
-    const select = screen.getByLabelText(`Reason for the week of ${w38}`);
+    // The sample's short week is 7 Sep (W[1]) since PEX-D22 moved it into Zone Liability.
+    const wShort = formatDate(W[1]);
+    const select = screen.getByLabelText(`Reason for the week of ${wShort}`);
     // BR-04 — the option reads the reason's name, never the code.
     expect(within(select).getByRole('option', { name: 'Force Majeure' })).toHaveValue(
       'force-majeure'
@@ -158,24 +159,26 @@ describe('CAP-4 AC-01 — Force Majeure without a note refuses Submit', () => {
       'discontinued'
     );
     // Known-good control: the seeded reason (Material) needs no note, and Submit is ready.
-    expect(screen.queryByLabelText(`Note for the week of ${w38}`)).toBeNull();
+    expect(screen.queryByLabelText(`Note for the week of ${wShort}`)).toBeNull();
     expect(screen.getByTestId('capacity-submit')).not.toBeDisabled();
     fireEvent.change(select, { target: { value: 'force-majeure' } });
-    const note = screen.getByLabelText(`Note for the week of ${w38}`);
+    const note = screen.getByLabelText(`Note for the week of ${wShort}`);
     expect(screen.getByTestId('capacity-submit')).toBeDisabled();
     expect(screen.getByTestId('capacity-refusal')).toHaveTextContent(
-      `Add a note for the reason in the week of ${w38}`
+      `Add a note for the reason in the week of ${wShort}`
     );
     fireEvent.change(note, { target: { value: 'Flood closed the plant' } });
     expect(screen.queryByTestId('capacity-refusal')).toBeNull();
     expect(screen.getByTestId('capacity-submit')).not.toBeDisabled();
   });
 
+  // PEX-D22 — on sup-007's awaiting Zone Liability week (8802, W[0]); it used
+  // the Trade-off week W[7], which now takes an acknowledgement only.
   it('the commitment page: Force Majeure below forecast shows the note and refuses until it is filled', async () => {
     renderWithProviders(<SupplierForecastCommitments />, { identity: SUPPLIER });
     const section = await screen.findByTestId('fc-sup-material-PK-PETB-8802');
-    const row = within(section).getByTestId(`fc-sup-row-PK-PETB-8802-${W[7]}`);
-    const period = `Week of ${formatDate(W[7])}`;
+    const row = within(section).getByTestId(`fc-sup-row-PK-PETB-8802-${W[0]}`);
+    const period = `Week of ${formatDate(W[0])}`;
     fireEvent.change(within(row).getByLabelText(`Commitment quantity for ${period}`), {
       target: { value: '20000' }
     });
@@ -200,9 +203,10 @@ describe('CAP-4 AC-01 — Force Majeure without a note refuses Submit', () => {
   it('the commitment verb refuses Discontinued without a note, whatever the channel', async () => {
     const l = /** @type {ForecastCommitmentLine} */ (
       (await reads.getForecastCommitments(sup007)).items.find(
-        (x) => x.materialCode === 'PK-PETB-8802' && x.periodBucket === W[7]
+        (x) => x.materialCode === 'PK-PETB-8802' && x.periodBucket === W[0]
       )
     );
+    expect(l.zone).toBe('firm');
     const draft = await svc.dispatch(sup007, {
       transitionId: 't_requirementresponse_submit',
       entity: 'requirementResponse',
@@ -278,7 +282,7 @@ describe('CAP-4 AC-02 — the administrator lists both codes and can rename or r
     r.unmount();
     renderWithProviders(<SupplierCapacity />, { identity: SUPPLIER, route: '/supplier/capacity' });
     fireEvent.click(await screen.findByRole('tab', { name: 'Rigid plastic packaging' }));
-    const select = screen.getByLabelText(`Reason for the week of ${formatDate('2026-09-14')}`);
+    const select = screen.getByLabelText(`Reason for the week of ${formatDate(W[1])}`);
     expect(within(select).getByRole('option', { name: 'Act of God' })).toHaveValue('force-majeure');
     expect(within(select).queryByRole('option', { name: /Discontinued/ })).toBeNull();
     // The renamed code keeps its rule: it still needs a note.
@@ -288,8 +292,9 @@ describe('CAP-4 AC-02 — the administrator lists both codes and can rename or r
 });
 
 describe('CAP-4 BR-03 (CAP-D2) — Discontinued puts "find another source" on the planner’s alerts', () => {
+  // PEX-D22 — on a Zone Liability week (W[0]); it used the Trade-off week W[6].
   it('a Discontinued commitment: one High alert for that supplier × material, linked to the commitments page', async () => {
-    await commitShort('PK-PETB-8801', W[6], 'discontinued');
+    await commitShort('PK-PETB-8801', W[0], 'discontinued');
     renderWithProviders(<BuyerAlerts />, { identity: PLANNER, route: '/buyer/alerts' });
     const alert = await screen.findByTestId('alert-supplyDiscontinued|PK-PETB-8801|sup-007');
     expect(alert).toHaveTextContent(
@@ -330,8 +335,9 @@ const exceptionIds = () =>
 
 describe('CAP-5 — the Reason filter on the exception list', () => {
   it('AC-01 / BR-03 — Discontinued shows only its exceptions, each option counts; clearing restores the list', async () => {
-    await commitShort('PK-PETB-8801', W[6], 'discontinued');
-    await commitShort('PK-PETB-8802', W[6], 'force-majeure');
+    // PEX-D22 — on a Zone Liability week (W[0]); it used the Trade-off week W[6].
+    await commitShort('PK-PETB-8801', W[0], 'discontinued');
+    await commitShort('PK-PETB-8802', W[0], 'force-majeure');
     const lines = (await reads.getForecastCommitments(buyer)).items;
     renderWithProviders(<BuyerCommitments />, { identity: PLANNER });
     await screen.findByTestId('fc-exceptions');
@@ -341,7 +347,7 @@ describe('CAP-5 — the Reason filter on the exception list', () => {
       lines.find((l) => `fc-exception-${l.supplierId}-${l.materialCode}-${l.periodBucket}` === id)
         ?.response?.rootCause?.level1;
     const discontinued = all.filter((id) => reasonOf(id) === 'discontinued');
-    expect(discontinued).toEqual([`fc-exception-sup-007-PK-PETB-8801-${W[6]}`]);
+    expect(discontinued).toEqual([`fc-exception-sup-007-PK-PETB-8801-${W[0]}`]);
     const unreasoned = all.filter((id) => !reasonOf(id)).length;
 
     fireEvent.click(screen.getByTestId('fc-reason-filter-toggle'));

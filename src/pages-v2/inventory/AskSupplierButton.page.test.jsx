@@ -89,6 +89,7 @@ describe('INV-D9 · Ask supplier — an ask already on the subject', () => {
     await waitFor(() => expect(supplierAskStore.get('ask-0001')?.state).toBe('Withdrawn'));
   });
 
+  // PEX-D22 — the sample ask (ask-0002) follows the red week to 7 Sep.
   it('a capacity week with an answered ask shows the answer and Close', async () => {
     supplierAskStore.append('ask-0002', 'Answered', {
       kind: 'answered',
@@ -100,7 +101,7 @@ describe('INV-D9 · Ask supplier — an ask already on the subject', () => {
       <AskSupplierButton
         supplierId="sup-007"
         planningGroupId="pg-MG-20"
-        week="2026-09-14"
+        week="2026-09-07"
         topic="capacityGap"
       />
     );

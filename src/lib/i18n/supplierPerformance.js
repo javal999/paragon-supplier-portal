@@ -60,16 +60,14 @@ export const supplierPerformanceEn = {
   'supplierPerformance.tab.trends': 'Trends',
   'supplierPerformance.tab.actions': 'Improvement Actions',
   // — KPI progress tile —
-  'supplierPerformance.kpi.targetLabel': 'Target',
   // — Overview section —
   'supplierPerformance.overview.scorecardTitle.one': 'KPI Scorecard — {{count}} metric',
   'supplierPerformance.overview.scorecardTitle.other': 'KPI Scorecard — {{count}} metrics',
-  'supplierPerformance.overview.radarTitle': 'Performance radar — vs Paragon targets',
+  'supplierPerformance.overview.radarTitle': 'Performance radar',
   'supplierPerformance.overview.gradeHistoryTitle': 'Grade history — monthly score',
   'supplierPerformance.overview.poPerfTitle': 'Purchase order performance — {{name}}',
   'supplierPerformance.sampleData': 'Sample data',
   // — Chart series / legend names —
-  'supplierPerformance.chart.benchmark': 'Benchmark',
   'supplierPerformance.chart.yourScore': 'Your score',
   'supplierPerformance.chart.score': 'Score',
   'supplierPerformance.chart.otifPct': 'OTIF %',
@@ -86,10 +84,8 @@ export const supplierPerformanceEn = {
   'supplierPerformance.trends.poaTitle': 'POA response time (hours)',
   // — Improvement actions —
   'supplierPerformance.actions.intro':
-    'Below-target KPIs and recommended corrective actions to improve your Paragon supplier grade.',
+    'KPIs to improve and recommended corrective actions for your Paragon supplier grade.',
   'supplierPerformance.actions.currentLabel': 'Current',
-  'supplierPerformance.actions.targetLabel': 'Target',
-  'supplierPerformance.actions.gapLabel': 'Gap',
   'supplierPerformance.actions.priorityChip': '{{priority}} priority',
   'supplierPerformance.actions.acknowledge': 'Acknowledge & plan',
   'supplierPerformance.actions.tierSystem.label': 'Paragon Supplier Tier System:',
@@ -132,16 +128,14 @@ export const supplierPerformanceId = {
   'supplierPerformance.tab.trends': 'Tren',
   'supplierPerformance.tab.actions': 'Tindakan Peningkatan',
   // — KPI progress tile —
-  'supplierPerformance.kpi.targetLabel': 'Target',
   // — Overview section —
   'supplierPerformance.overview.scorecardTitle.one': 'Kartu Skor KPI — {{count}} metrik',
   'supplierPerformance.overview.scorecardTitle.other': 'Kartu Skor KPI — {{count}} metrik',
-  'supplierPerformance.overview.radarTitle': 'Radar kinerja — vs target Paragon',
+  'supplierPerformance.overview.radarTitle': 'Radar kinerja',
   'supplierPerformance.overview.gradeHistoryTitle': 'Riwayat grade — skor bulanan',
   'supplierPerformance.overview.poPerfTitle': 'Kinerja pesanan pembelian — {{name}}',
   'supplierPerformance.sampleData': 'Data sampel',
   // — Chart series / legend names —
-  'supplierPerformance.chart.benchmark': 'Tolok ukur',
   'supplierPerformance.chart.yourScore': 'Skor Anda',
   'supplierPerformance.chart.score': 'Skor',
   'supplierPerformance.chart.otifPct': 'OTIF %',
@@ -158,10 +152,8 @@ export const supplierPerformanceId = {
   'supplierPerformance.trends.poaTitle': 'Waktu respons POA (jam)',
   // — Improvement actions —
   'supplierPerformance.actions.intro':
-    'KPI di bawah target dan tindakan korektif yang direkomendasikan untuk meningkatkan grade pemasok Paragon Anda.',
+    'KPI yang perlu ditingkatkan dan tindakan korektif yang direkomendasikan untuk grade pemasok Paragon Anda.',
   'supplierPerformance.actions.currentLabel': 'Saat ini',
-  'supplierPerformance.actions.targetLabel': 'Target',
-  'supplierPerformance.actions.gapLabel': 'Selisih',
   'supplierPerformance.actions.priorityChip': 'prioritas {{priority}}',
   'supplierPerformance.actions.acknowledge': 'Akui & rencanakan',
   'supplierPerformance.actions.tierSystem.label': 'Sistem Tingkat Pemasok Paragon:',

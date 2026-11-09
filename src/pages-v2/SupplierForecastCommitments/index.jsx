@@ -27,7 +27,7 @@ import { horizonWeeks } from '@services/transitions/capacityRules';
 import { usePlanningGroupLabel } from '../inventory/planningGroupDisplay';
 /** @import { ForecastStream } from '@services/sdc/types' */
 import { useActiveReasonCodes, useReasonLabel } from '../admin/reasonCodeDisplay';
-import { deadlineState } from '@services/transitions/forecastRules';
+import { deadlineState, isAcknowledgeOnly } from '@services/transitions/forecastRules';
 import { forecastNow, useForecastRunner, usePeriodLabel } from '../forecasts/forecastDisplay';
 /** @import { PageTab, ViewMode, WeekReason } from './const' */
 import { PAGE_TABS } from './const';
@@ -52,8 +52,8 @@ import SampleResponsesTab from './components/SampleResponsesTab';
 // The supplier's own materials only (BR-07), per forecast stream: the current
 // version with each period's zone, what changed since the previous version
 // (BR-06), a spreadsheet download (AC-03), and the commitment per period —
-// quantity and date for Firm and Trade-off, acknowledgement for Forecast
-// (BR-08), pre-filled with the forecast quantity (BR-09), a starter reason
+// a quantity for Firm (Zone Liability), acknowledgement for Trade-off and
+// Forecast (Zone Capacity — BR-08, PEX-D22), pre-filled with the forecast quantity (BR-09), a starter reason
 // below forecast (BR-04), and an optional upside. Commitments can also come
 // from the spreadsheet template, checked row by row (BR-06). Opening a version
 // records the view PTI sees. The verbs' policies decide; the form mirrors them.
@@ -204,7 +204,7 @@ const SupplierForecastCommitments = () => {
   // ── BL-133 — Submit all, one period at a time ────────────────────────────
   const plans = plansQuery.data?.items ?? [];
   const horizon = horizonWeeks(nowIso);
-  const commitLines = streamLines.filter((l) => l.zone !== 'forecast');
+  const commitLines = streamLines.filter((l) => !isAcknowledgeOnly(l.zone));
   const periodRows = buildPeriodRows({
     commitLines,
     lines,

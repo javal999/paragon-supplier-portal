@@ -118,8 +118,9 @@ describe('CAP-2 supplier Capacity (Table C) — Monthly', () => {
     /** @param {readonly string[]} ws */
     const reds = (ws) =>
       levels.filter((l) => ws.includes(l.week) && l.level === 'cannotSupply').map((l) => l.week);
-    // Precondition from the fixture: September's one red week is W38; October has none.
-    expect(reds(SEP)).toEqual(['2026-09-14']);
+    // Precondition from the fixture: September's one red week is W37 (PEX-D22
+    // moved it from W38); October has none.
+    expect(reds(SEP)).toEqual(['2026-09-07']);
     expect(reds(OCT)).toEqual([]);
     await openSupplierGroup();
     // In Weekly, make one October week red: 1,000 against its LTP, no additional.
@@ -148,8 +149,8 @@ describe('CAP-2 supplier Capacity (Table C) — Monthly', () => {
 
   it('AC-04 — Monthly renders no input or select, says "Switch to Weekly to edit." and the refusal names its week without a link', async () => {
     await openSupplierGroup();
-    // Leave W38 without a reason so the refusal line is up.
-    fireEvent.change(screen.getByLabelText(`Reason for the week of ${formatDate('2026-09-14')}`), {
+    // Leave W37 (the red week since PEX-D22) without a reason so the refusal line is up.
+    fireEvent.change(screen.getByLabelText(`Reason for the week of ${formatDate('2026-09-07')}`), {
       target: { value: '' }
     });
     expect(screen.getByTestId('capacity-refusal-week').tagName).toBe('BUTTON');
@@ -167,7 +168,7 @@ describe('CAP-2 supplier Capacity (Table C) — Monthly', () => {
     );
     expect(screen.queryByTestId('capacity-refusal-week')).toBeNull();
     expect(screen.getByTestId('capacity-refusal')).toHaveTextContent(
-      `The week of ${formatDate('2026-09-14')} is below the LTP`
+      `The week of ${formatDate('2026-09-07')} is below the LTP`
     );
     // The month's reason row lists the distinct reasons as text.
     expect(screen.getByTestId('capacity-grid-reason-2026-10')).toHaveTextContent('—');
@@ -176,7 +177,7 @@ describe('CAP-2 supplier Capacity (Table C) — Monthly', () => {
       within(screen.getByTestId('capacity-grid-view')).getByRole('button', { name: /Weekly/ })
     );
     expect(screen.queryByTestId('capacity-grid-readonly')).toBeNull();
-    expect(screen.getByLabelText(`Reason for the week of ${formatDate('2026-09-14')}`)).toHaveValue(
+    expect(screen.getByLabelText(`Reason for the week of ${formatDate('2026-09-07')}`)).toHaveValue(
       ''
     );
   });

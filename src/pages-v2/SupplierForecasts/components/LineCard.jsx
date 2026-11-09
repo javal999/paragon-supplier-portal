@@ -10,12 +10,13 @@ import { formatNumber } from '@lib/format';
 import { statusLabelKey } from '@lib/statusLabel';
 import { CHIP, CLASS_LABEL_KEY } from '../const';
 import { materialLabel } from '../utils';
+import { isAcknowledgeOnly, zoneOfClass } from '@services/transitions/forecastRules';
 
 /**
  * One published forecast line on the Lines tab: material, commitment class,
  * demand and period, the supplier's latest own response, and the line's one
- * entry point — Confirm on a commitment line, Acknowledge on a visibility-only
- * line, each behind its own verb availability.
+ * entry point — Confirm on a firm (Zone Liability) line, Acknowledge on a
+ * Zone Capacity line (PEX-D22), each behind its own verb availability.
  *
  * `latest` is the latest own response to this exact line (`latestResponseFor`);
  * `onConfirm` / `onAcknowledge` open the workspace's confirm or acknowledge panel.
@@ -36,7 +37,10 @@ const LineCard = ({ line, latest, onConfirm, onAcknowledge }) => {
     })
   );
   const { t } = useTranslation();
-  const confirmable = line.commitmentClass !== 'visibility-only';
+  // PEX-D22 (owner, 2026-11-05) — only a firm line (Zone Liability) asks for a
+  // commitment; a semi-firm or visibility-only line (Zone Capacity) is
+  // acknowledged. The submit policy hook refuses a commitment on any other line.
+  const confirmable = !isAcknowledgeOnly(zoneOfClass(line.commitmentClass));
   return (
     <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm border-l-2 border-l-teal p-5">
       <div className="flex items-start justify-between gap-3 flex-wrap">
