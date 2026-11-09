@@ -28,6 +28,7 @@ export const inventoryCapacityEn = {
     'Capacity is confirmed per planning group, so the materials of a group add up to the group’s figure.',
   'capHeadsUp.month': 'Month',
   'capHeadsUp.treemapEmpty': 'No planning group has capacity confirmed in this month.',
+  'capHeadsUp.treemapSuppliersNone': 'No capacity confirmed this month: {{suppliers}}',
   'capHeadsUp.treemapNone': 'No capacity confirmed: {{groups}}',
   // The supplier states capacity by month.
   'capHeadsUp.entry.title': 'Capacity by month',
@@ -724,6 +725,7 @@ export const inventoryCapacityId = {
   'capHeadsUp.month': 'Bulan',
   'capHeadsUp.treemapEmpty':
     'Tidak ada grup perencanaan dengan kapasitas terkonfirmasi di bulan ini.',
+  'capHeadsUp.treemapSuppliersNone': 'Tidak ada kapasitas terkonfirmasi bulan ini: {{suppliers}}',
   'capHeadsUp.treemapNone': 'Kapasitas belum dikonfirmasi: {{groups}}',
   'capHeadsUp.entry.title': 'Kapasitas per bulan',
   'capHeadsUp.entry.intro':

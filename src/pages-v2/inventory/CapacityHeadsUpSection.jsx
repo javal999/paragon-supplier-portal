@@ -292,6 +292,12 @@ const CapacityHeadsUpSection = ({ supplierId = null }) => {
   /** @type {Map<string, HeadsUpRow[]>} */
   const bySupplier = new Map();
   for (const r of rows) bySupplier.set(r.supplierId, [...(bySupplier.get(r.supplierId) ?? []), r]);
+  // A supplier with no confirmed capacity in the month has nothing to draw: one line names them.
+  const entries = [...bySupplier.entries()];
+  const hasCapacity = (/** @type {HeadsUpRow[]} */ list) =>
+    list.some((r) => (r.months.find((m) => m.month === chosen)?.capacity ?? 0) > 0);
+  const drawn = entries.filter(([, list]) => hasCapacity(list));
+  const undrawn = entries.filter(([, list]) => !hasCapacity(list));
   return (
     <section className="mt-8" data-testid="capacity-heads-up">
       <h2 className="text-lg font-semibold text-text-primary mb-1">{t('capHeadsUp.title')}</h2>
@@ -332,7 +338,7 @@ const CapacityHeadsUpSection = ({ supplierId = null }) => {
             </select>
           </div>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3" data-testid="caphu-treemap">
-            {[...bySupplier.entries()].map(([id, list]) => (
+            {drawn.map(([id, list]) => (
               <SupplierTreemap
                 key={id}
                 supplierName={list[0].supplierName}
@@ -341,6 +347,13 @@ const CapacityHeadsUpSection = ({ supplierId = null }) => {
               />
             ))}
           </div>
+          {undrawn.length > 0 ? (
+            <p className="text-xs text-text-tertiary mt-3" data-testid="caphu-tree-undrawn">
+              {t('capHeadsUp.treemapSuppliersNone', {
+                suppliers: undrawn.map(([, list]) => list[0].supplierName).join(', ')
+              })}
+            </p>
+          ) : null}
         </>
       )}
     </section>
