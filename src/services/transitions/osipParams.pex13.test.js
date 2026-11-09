@@ -49,7 +49,7 @@ describe('PEX-13 switch kinds', () => {
 });
 
 describe('PEX-13 safety stock off in the safety rules', () => {
-  const input = {
+  const input = /** @type {any} */ ({
     supplierId: 's',
     materialCode: 'm',
     ltp: [100, 160, 90, 150, 100, 170, 80, 140, 100, 160, 90, 150, 100, 170],
@@ -59,7 +59,7 @@ describe('PEX-13 safety stock off in the safety rules', () => {
     koli: null,
     consumption: [90, 110, 95, 105, 100, 120],
     supplyArea: 'jabodetabek'
-  };
+  });
   it('on (or unset) computes; off gives 0 for both and says so', () => {
     const on = osipSafety(input);
     expect(on.safetyOn).toBe(true);

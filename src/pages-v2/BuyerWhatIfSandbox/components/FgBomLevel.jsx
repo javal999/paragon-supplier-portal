@@ -48,7 +48,7 @@ const FgBomLevel = () => {
   return (
     <div className="space-y-4" data-testid="wi-fg-level">
       <p className="text-sm text-text-secondary">{t('pex.sandbox.fg.note')}</p>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
           <label htmlFor="wi-fg-sku" className={labelClass}>
             {t('pex.sandbox.fg.pick')}

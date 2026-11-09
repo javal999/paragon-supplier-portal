@@ -38,7 +38,7 @@ const SupplierLevel = () => {
   return (
     <div className="space-y-4" data-testid="wi-supplier-level">
       <p className="text-sm text-text-secondary">{t('pex.sandbox.supplier.note')}</p>
-      <div className="max-w-sm">
+      <div className="">
         <label htmlFor="wi-supplier-pick" className={labelClass}>
           {t('pex.sandbox.supplier.pick')}
         </label>

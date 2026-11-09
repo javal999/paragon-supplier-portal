@@ -30,16 +30,18 @@ describe('PEX-11 plan vs execution trace page', () => {
   });
 
   it('a call-off that names no PO of the pair is listed apart and flagged', async () => {
-    callOffStore.add({
-      ...callOffStore
-        .all()
-        .find((c) => c.supplierId === 'sup-007' && c.materialCode === 'PK-PETB-8801'),
-      id: 'co-pex11',
-      callOffNumber: 'CO-PEX11',
-      poId: 'po-ghost',
-      poNumber: 'PO-GHOST',
-      status: 'Confirmed'
-    });
+    callOffStore.add(
+      /** @type {any} */ ({
+        ...callOffStore
+          .all()
+          .find((c) => c.supplierId === 'sup-007' && c.materialCode === 'PK-PETB-8801'),
+        id: 'co-pex11',
+        callOffNumber: 'CO-PEX11',
+        poId: 'po-ghost',
+        poNumber: 'PO-GHOST',
+        status: 'Confirmed'
+      })
+    );
     render();
     const apart = await screen.findByTestId('trace-no-po-calloffs');
     expect(within(apart).getByTestId('trace-calloff-CO-PEX11')).toBeInTheDocument();
@@ -49,16 +51,18 @@ describe('PEX-11 plan vs execution trace page', () => {
   });
 
   it('a rejected call-off shows as an event on its need-date week', async () => {
-    callOffStore.add({
-      ...callOffStore
-        .all()
-        .find((c) => c.supplierId === 'sup-007' && c.materialCode === 'PK-PETB-8801'),
-      id: 'co-pex11r',
-      callOffNumber: 'CO-PEX11R',
-      status: 'Rejected',
-      needDate: '2026-12-02',
-      rejectionReason: 'No capacity'
-    });
+    callOffStore.add(
+      /** @type {any} */ ({
+        ...callOffStore
+          .all()
+          .find((c) => c.supplierId === 'sup-007' && c.materialCode === 'PK-PETB-8801'),
+        id: 'co-pex11r',
+        callOffNumber: 'CO-PEX11R',
+        status: 'Rejected',
+        needDate: '2026-12-02',
+        rejectionReason: 'No capacity'
+      })
+    );
     render();
     const cell = await screen.findByTestId('trace-event-2026-11-30-callOffRejected');
     expect(cell).toHaveTextContent('Supplier rejected call-off CO-PEX11R. No capacity');

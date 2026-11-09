@@ -31,6 +31,7 @@ describe('PEX-15 BR-02 scenarios', () => {
 
 /** @param {string} skuCode @param {string} fgWeek @param {number} fgQuantity @param {number} quantity */
 const peg = (skuCode, fgWeek, fgQuantity, quantity) => ({ skuCode, fgWeek, fgQuantity, quantity });
+/** @param {any} materialCode @param {any} pegs @returns {any} */
 const mat = (materialCode, pegs) => ({
   materialCode,
   materialLabel: materialCode,
@@ -91,6 +92,7 @@ describe('PEX-15 BR-03 FG and BOM, AC-01', () => {
 });
 
 describe('PEX-15 supplier level, PEX-4 BR-02 and BR-06', () => {
+  /** @param {any} w @param {any} demand @param {any} allocated */
   const week = (w, demand, allocated) => ({
     week: w,
     demand,

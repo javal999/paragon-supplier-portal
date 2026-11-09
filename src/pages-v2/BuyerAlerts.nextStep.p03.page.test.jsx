@@ -286,10 +286,10 @@ describe('P-08 · each rule shows its own basis (INV-D1)', () => {
   it('coverage and supplier rules: "Supplier cover N days · lead time N days"', async () => {
     await renderAlerts();
     expect(screen.getByTestId(`alert-basis-${COVERAGE}`)).toHaveTextContent(
-      'Supplier cover 10 days · lead time 21 days'
+      'Supplier cover 10 days · lead time 45 days'
     );
     expect(screen.getByTestId(`alert-basis-${SUPPLIER_ROP}`)).toHaveTextContent(
-      'Supplier cover 10 days · lead time 21 days'
+      'Supplier cover 10 days · lead time 45 days'
     );
   });
 

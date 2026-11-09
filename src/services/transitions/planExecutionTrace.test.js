@@ -5,7 +5,7 @@ import { buildPlanExecutionTrace, overlappingPos } from './planExecutionTrace';
 const S = 'sup-A';
 const M = 'RM-X';
 
-/** @param {Partial<import('../data/types').PurchaseOrder> & { id: string }} p */
+/** @param {any} p @returns {any} */
 const po = (p) => ({
   poNumber: `PO-${p.id}`,
   supplierId: S,
@@ -16,7 +16,7 @@ const po = (p) => ({
   lineItems: [{ id: `${p.id}-1`, materialCode: M, quantity: 100 }],
   ...p
 });
-/** @param {Partial<import('../data/types').CallOff> & { id: string }} c */
+/** @param {any} c @returns {any} */
 const co = (c) => ({
   callOffNumber: `CO-${c.id}`,
   poId: 'p1',
@@ -60,6 +60,7 @@ describe('PEX-11 structure: DA → PO → call-off → ASN', () => {
   });
 
   it('reads DA from the publication in force, per week, with its publication id', () => {
+    /** @param {any} publicationId @param {any} planningWeek @param {any} inForce @param {any} da */
     const row = (publicationId, planningWeek, inForce, da) => ({
       supplierId: S,
       materialCode: M,
@@ -158,8 +159,8 @@ describe('PEX-11 BR-02 flags', () => {
     ]);
     const t = trace({ purchaseOrders: [a, b, c, closed] });
     expect(t.flags).toEqual([{ kind: 'overlapping', poNumber: 'PO-a', otherPoNumber: 'PO-b' }]);
-    expect(t.pos.find((p) => p.po.id === 'a').flags).toHaveLength(1);
-    expect(t.pos.find((p) => p.po.id === 'c').flags).toHaveLength(0);
+    expect(/** @type {any} */ (t.pos.find((p) => p.po.id === 'a')).flags).toHaveLength(1);
+    expect(/** @type {any} */ (t.pos.find((p) => p.po.id === 'c')).flags).toHaveLength(0);
   });
 });
 
