@@ -176,7 +176,7 @@ export const orderPlanId = {
   'op.meta.horizon': 'Cakupan',
   'op.meta.weeks': '{{count}} minggu',
   'op.meta.noPlan': 'Tidak ada rencana barang jadi',
-  'op.meta.previous': 'Perubahan dalam waktu tunggu ditimbang terhadap rencana minggu lalu, per',
+  'op.meta.previous': 'Perubahan dalam lead time ditimbang terhadap rencana minggu lalu, per',
   'op.synthetic':
     'Dihitung dengan data sintetis yang dibuat untuk meniru ukuran PTI saat ini. Ini membuktikan perhitungannya, bukan jawaban bisnisnya.',
   'op.method':
@@ -189,7 +189,7 @@ export const orderPlanId = {
   'op.costs.holdingValue': '{{value}}% dari nilai per tahun',
   'op.costs.order': 'Biaya per pesanan',
   'op.costs.rent': 'Ruang sewa, per palet per minggu',
-  'op.costs.penalty': 'Penalti perubahan dalam waktu tunggu, per palet',
+  'op.costs.penalty': 'Penalti perubahan dalam lead time, per palet',
   'op.costs.where':
     'Diatur di Administrasi → Toleransi dan nilai aturan. Setiap angka rupiah di halaman ini memakainya.',
 
@@ -247,7 +247,7 @@ export const orderPlanId = {
   'op.wq.req.link': 'Buka Kebutuhan material',
   'op.wq.ss.title': 'Target stok pengaman',
   'op.wq.ss.safetyStock': 'Stok pengaman',
-  'op.wq.ss.slt': 'Waktu tunggu pengaman',
+  'op.wq.ss.slt': 'Safety lead time',
   'op.wq.ss.days_other': '{{count}} hari',
   'op.wq.ss.rop': 'Titik pesan ulang',
   'op.wq.ss.link': 'Buka Target stok pengaman',
@@ -276,7 +276,7 @@ export const orderPlanId = {
   'op.binding.moq': 'Jumlah pesanan minimum',
   'op.binding.orderMultiple': 'Kelipatan pesanan',
   'op.binding.warehouse': 'Ruang gudang',
-  'op.binding.changePenalty': 'Dipertahankan sesuai rencana (dalam waktu tunggu)',
+  'op.binding.changePenalty': 'Dipertahankan sesuai rencana (dalam lead time)',
   'op.binding.costBalance': 'Biaya pesanan terhadap biaya simpan',
   'op.binding.demand': 'Kebutuhan minggu ini',
   'op.saved': '{{value}} lebih murah daripada {{quantity}}',
@@ -304,7 +304,7 @@ export const orderPlanId = {
 
   'op.def.title': 'Cara rencana dihitung',
   'op.def.cost':
-    'Total biaya: biaya setiap pesanan, ditambah biaya simpan (stok × nilai × tarif simpan ÷ 52 setiap minggu), ditambah ruang sewa (palet di atas kapasitas sendiri × tarif ruang sewa setiap minggu), ditambah penalti perubahan bila mengubah pesanan yang sudah masuk waktu tunggu pemasok.',
+    'Total biaya: biaya setiap pesanan, ditambah biaya simpan (stok × nilai × tarif simpan ÷ 52 setiap minggu), ditambah ruang sewa (palet di atas kapasitas sendiri × tarif ruang sewa setiap minggu), ditambah penalti perubahan bila mengubah pesanan yang sudah masuk lead time pemasok.',
   'op.def.constraints':
     'Kebutuhan setiap minggu terpenuhi dan stok pengaman terjaga; setiap pesanan minimal MOQ dan kelipatan pesanan yang utuh.',
   'op.def.fill':

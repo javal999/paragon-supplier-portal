@@ -105,7 +105,7 @@ export const materialRequirementId = {
   'mrq.filter.needsOrder': 'Perlu dipesan',
   'mrq.filter.empty': 'Tidak ada material dengan kebutuhan bersih dalam cakupan.',
   'mrq.days': '{{count}} hari',
-  'mrq.plusSafetyLead': '+ {{count}} hari waktu tunggu pengaman',
+  'mrq.plusSafetyLead': '+ {{count}} hari safety lead time',
   'mrq.review': 'Tinjau',
   'mrq.review.hint': 'Pemeriksaan akurasi stok gagal: rekomendasi menunggu perencana.',
   'mrq.noSource': 'Tidak ada pemasok',
@@ -137,6 +137,6 @@ export const materialRequirementId = {
   'mrq.def.net':
     'Kebutuhan bersih: kebutuhan kotor + stok pengaman − (stok awal minggu + penerimaan terkonfirmasi pada minggu itu), dan tidak pernah di bawah nol. Penerimaan dihitung pada tanggal dan jumlah yang dikonfirmasi pemasok.',
   'mrq.def.planned':
-    'Pesanan terencana: ditentukan di Apa yang dipesan — minimal kebutuhan bersih dan jumlah pesanan minimum, kelipatan pesanan yang utuh, dan dapat mencakup minggu berikutnya bila satu pesanan lebih murah daripada beberapa. Dirilis sebesar waktu tunggu (ditambah waktu tunggu pengaman, bila ada) sebelum minggu kebutuhannya.',
+    'Pesanan terencana: ditentukan di Apa yang dipesan — minimal kebutuhan bersih dan jumlah pesanan minimum, kelipatan pesanan yang utuh, dan dapat mencakup minggu berikutnya bila satu pesanan lebih murah daripada beberapa. Dirilis sebesar lead time (ditambah safety lead time, bila ada) sebelum minggu kebutuhannya.',
   'mrq.def.end': 'Stok akhir: stok awal + penerimaan + pesanan terencana − kebutuhan kotor.'
 };
