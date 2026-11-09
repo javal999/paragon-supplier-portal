@@ -27,7 +27,7 @@ import { ropFisikLastChecks, ropFisikPrRecommendations } from './callOffTriggerR
 /** @import { DaHistoryRow } from '../../transitions/demandAnticipationHistory' */
 import { allDemandAnticipationHistory } from './demandAnticipationHistoryReadModel';
 /** @import { SupplierDaRow } from './demandAnticipationReadModel' */
-import { supplierDemandAnticipation } from './demandAnticipationReadModel';
+import { supplierDemandAnticipation, withLtpInputsRead } from './demandAnticipationReadModel';
 import { SUPPLIER_DA_VIEW_ENABLED } from '../../transitions/supplierDaView';
 import { stockSimulationRows } from './stockSimulationReadModel';
 import {
@@ -575,7 +575,7 @@ export class MockProcurementService {
     // CAP-12 — with open supply, the gap and its proposal per week.
     // DRC-18 (BL-203) — with FG demand, LTP − FG demand and the consumption
     // moving average per week, read only.
-    return { items: withLtpFgDemandRead(allDemandAnticipationWithSupply()) };
+    return { items: withLtpInputsRead(withLtpFgDemandRead(allDemandAnticipationWithSupply())) };
   }
 
   /**

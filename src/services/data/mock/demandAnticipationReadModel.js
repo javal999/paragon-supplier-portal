@@ -50,6 +50,14 @@ import {
 import { withConsumption } from '../../transitions/consumptionRules';
 import { blanketBalances, openSupplyIndex } from '../../transitions/supplyBelowDemandRules';
 import { addDays } from '../../transitions/inventoryRules';
+import { groupWeekLtp } from '../../transitions/capacityRules';
+import { horizonWeeksOf } from '../../transitions/osipRules';
+import {
+  ltpWeeks,
+  materialLtpInputs,
+  protectionForRopOrder
+} from '../../transitions/ltpInputRules';
+import { ltpInputStore } from './stores/ltpInputStore';
 import { consumptionStore } from './stores/consumptionStore';
 import { callOffStore } from './stores/callOffStore';
 import { purchaseOrderStore } from './stores/purchaseOrderStore';
@@ -84,13 +92,35 @@ export function leadTimeWeeksOf(supplierId, materialCode) {
 }
 
 /**
+ * BL-267 (PEX-5) — the pair's LTP weeks: the three series, the chosen one (DA
+ * reads it, BR-04) and the buffers. `source` is the forecast spread by week.
+ * @param {{ supplierId: string; materialCode: string; share: number }} p
+ * @param {readonly string[]} weeks
+ * @param {readonly import('../../transitions/capacityRules').LtpLine[]} lines
+ */
+export function ltpWeeksOf(p, weeks, lines) {
+  const source = weeks.map((w) => groupWeekLtp(lines, p.supplierId, [p.materialCode], w));
+  const inputs = materialLtpInputs(ltpInputStore.all(), p.materialCode);
+  return { ...ltpWeeks(weeks, source, inputs, p.share), hasUpload: inputs.hasUpload, inputs };
+}
+
+/**
  * Every pair the LTP names, over enough weeks for its horizon plus one.
  * @param {string} nowIso
  * @returns {DemandAnticipationPair[]}
  */
 function pairsAt(nowIso) {
   const input = { ltpLines: allCommitmentLines(null), ptiStock: ptiStockStore.combined() };
-  const first = demandAnticipationPairs(input, nowIso, DEMAND_ANTICIPATION_RULES.shownWeeks);
+  // BL-267 — a material with uploaded LTP inputs reads the chosen series (BR-04).
+  /** @param {DemandAnticipationPair[]} pairs */
+  const withChosen = (pairs) =>
+    pairs.map((p) => {
+      const lw = ltpWeeksOf(p, p.weeks, input.ltpLines);
+      return lw.hasUpload ? { ...p, ltp: [...lw.used] } : p;
+    });
+  const first = withChosen(
+    demandAnticipationPairs(input, nowIso, DEMAND_ANTICIPATION_RULES.shownWeeks)
+  );
   const longest = Math.max(
     0,
     ...first.map(
@@ -101,7 +131,7 @@ function pairsAt(nowIso) {
   );
   return longest + 1 <= DEMAND_ANTICIPATION_RULES.shownWeeks
     ? first
-    : demandAnticipationPairs(input, nowIso, longest + 1);
+    : withChosen(demandAnticipationPairs(input, nowIso, longest + 1));
 }
 
 /**
@@ -118,6 +148,7 @@ function pairInputs(publications, nowIso, agreed) {
   const callOffs = callOffStore.all();
   const supply = openSupplyIndex(callOffs);
   const sizes = osipSafetySizes(nowIso);
+  const lines = allCommitmentLines(null);
   return pairsAt(nowIso).map((p) => {
     const chain = chainFor(publications, p.supplierId, p.materialCode, planningWeek);
     /** @param {string} week */
@@ -125,6 +156,13 @@ function pairInputs(publications, nowIso, agreed) {
     const src = sourceOf(p.supplierId, p.materialCode);
     // BL-210 — ROP Order's own consumption, MOQ and koli; none for a pair with no source.
     const size = sizes.get(pairKey(p.supplierId, p.materialCode));
+    // BL-267 (PEX-5 BR-06) — LTP B − LTP A, added to ROP Order only, when B is given.
+    const lw = ltpWeeksOf(p, p.weeks, lines);
+    const horizon = horizonWeeksOf(
+      (src ? leadTimeBreakdown(src).totalWeeks : null) ??
+        DEMAND_ANTICIPATION_RULES.fallbackHorizonWeeks
+    );
+    const protection = lw.inputs.uploads.B ? protectionForRopOrder(lw, horizon) : 0;
     return {
       ...p,
       inputs: {
@@ -148,6 +186,7 @@ function pairInputs(publications, nowIso, agreed) {
         salesOrderQty4w: null,
         // The hub's PRs carry no material code: no open PR quantity per pair.
         ospr: null,
+        ...(protection > 0 ? { protectionBuffer: protection } : {}),
         ...(size
           ? { consumption: size.consumption, moq: size.moq, koli: size.koli, z: size.z }
           : {})
@@ -285,4 +324,71 @@ export function incomingDaFor(supplierId, materialCode) {
   return supplierDaRows(demandAnticipationStore.all()).find(
     (r) => r.supplierId === supplierId && r.materialCode === materialCode
   );
+}
+
+/**
+ * BL-267 (PEX-5 BR-03) — what the DA grid adds to a row: the three LTP series
+ * per week, the chosen one, the buffers and where each came from.
+ * `byWeek` is keyed by the row's week Monday.
+ * @typedef {{
+ *   readonly choice: import('../../transitions/ltpInputRules').LtpSeries;
+ *   readonly hasUpload: boolean;
+ *   readonly aFromUpload: boolean;
+ *   readonly strategicFromFestive: boolean;
+ *   readonly protectionFromB: boolean;
+ *   readonly flags: readonly string[];
+ *   readonly uploads: Readonly<Record<'A' | 'Festive' | 'B', { readonly sourceFile: string; readonly setAt: string } | null>>;
+ *   readonly byWeek: Readonly<Record<string, {
+ *     readonly a: number;
+ *     readonly festive: number | null;
+ *     readonly b: number | null;
+ *     readonly used: number;
+ *     readonly strategicBuffer: number | null;
+ *     readonly protectionBuffer: number | null;
+ *   }>>;
+ * }} RowLtpInputs
+ */
+
+/**
+ * Adds `ltpInputs` to each DA row (BL-267). Read only.
+ * @template {{ supplierId: string; materialCode: string; share: number | null; weeks: readonly { week: string }[] }} R
+ * @param {readonly R[]} rows
+ * @returns {(R & { readonly ltpInputs: RowLtpInputs })[]}
+ */
+export function withLtpInputsRead(rows) {
+  const lines = allCommitmentLines(null);
+  return rows.map((r) => {
+    const weeks = r.weeks.map((w) => w.week);
+    const lw = ltpWeeksOf({ ...r, share: r.share ?? 0 }, weeks, lines);
+    /** @param {'A' | 'Festive' | 'B'} s */
+    const meta = (s) => {
+      const u = lw.inputs.uploads[s];
+      return u && u.sourceFile !== null ? { sourceFile: u.sourceFile, setAt: u.setAt } : null;
+    };
+    return {
+      ...r,
+      ltpInputs: {
+        choice: lw.choice,
+        hasUpload: lw.hasUpload,
+        aFromUpload: lw.aFromUpload,
+        strategicFromFestive: lw.inputs.uploads.Festive !== null,
+        protectionFromB: lw.inputs.uploads.B !== null,
+        flags: lw.flags,
+        uploads: { A: meta('A'), Festive: meta('Festive'), B: meta('B') },
+        byWeek: Object.fromEntries(
+          weeks.map((w, i) => [
+            w,
+            {
+              a: lw.a[i],
+              festive: lw.festive[i],
+              b: lw.b[i],
+              used: lw.used[i],
+              strategicBuffer: lw.strategicBuffer[i],
+              protectionBuffer: lw.protectionBuffer[i]
+            }
+          ])
+        )
+      }
+    };
+  });
 }

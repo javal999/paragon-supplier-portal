@@ -237,6 +237,7 @@ export function demandAnticipationPairs({ ltpLines, ptiStock }, nowIso, count) {
  *   `safetyRounding: 'koli' | 'moq'`; absent, those variants read none.
  * `sd`:  BL-210 — a typed SD (the sandbox's); absent or null, it is computed.
  * `z`:  [Team B3] the material's own Z (`osipParams`); absent or null, the rules'.
+ * `protectionBuffer`:  BL-267 (PEX-5 BR-06) — LTP B − LTP A summed over the horizon, added to ROP Order only; absent, 0.
  *
  * @typedef {{
  *   readonly weeks: readonly string[];
@@ -257,6 +258,7 @@ export function demandAnticipationPairs({ ltpLines, ptiStock }, nowIso, count) {
  *   readonly koli?: number | null;
  *   readonly sd?: number | null;
  *   readonly z?: number | null;
+ *   readonly protectionBuffer?: number;
  * }} RollingDaInputs
  */
 
@@ -277,6 +279,7 @@ export function demandAnticipationPairs({ ltpLines, ptiStock }, nowIso, count) {
  *   readonly safetyOrder: number;
  *   readonly cycleStock: number;
  *   readonly ropOrder: number;
+ *   readonly protectionBuffer: number;
  *   readonly soh: number;
  *   readonly ospo: number;
  *   readonly ospr: number;
@@ -363,7 +366,8 @@ export function rollingDaFigure(input, rules = OSIP_RULES) {
 
   // DRC-10 / [Default B9] — ROP Order; DRC-4 AC-01 — PR generated.
   const cycle = cycleStock(ltp, n);
-  const rop = ropOrder({ cycleStock: cycle, safetyOrder: safety });
+  const protection = input.protectionBuffer ?? 0;
+  const rop = ropOrder({ cycleStock: cycle, safetyOrder: safety, protectionBuffer: protection });
   const pr = Math.max(0, -prGenerated({ ropOrder: rop, soh, ospo: da.ospo, ospr }));
   // DRC-4 BR-01 / BR-02 [Default A2; DRC-B7].
   const check = planCheck(
@@ -385,6 +389,7 @@ export function rollingDaFigure(input, rules = OSIP_RULES) {
     safetyOrder: safety,
     cycleStock: cycle,
     ropOrder: rop,
+    protectionBuffer: protection,
     soh,
     ospo: da.ospo,
     ospr,

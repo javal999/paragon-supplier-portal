@@ -29,6 +29,7 @@ import { reasonCodeEntityId } from '../transitions/reasonCodes';
 /** @import { WarehouseDecisionChoice } from '../transitions/warehouseDecisionRules' */
 import { warehouseDecisionEntityId } from '../transitions/warehouseDecisionRules';
 import { osipParamKey } from '../transitions/osipParams';
+import { ltpChoiceKey, ltpUploadKey } from '../transitions/ltpInputRules';
 /** @import { ForecastStream } from '../sdc/types' */
 
 /**
@@ -2996,6 +2997,44 @@ export function useOsipParamCommand() {
       if (result.status === 'failed') return;
       // The ROPs, the DA's safety order, the call-off trigger and the
       // feedstock cadence all read these values.
+      qc.invalidateQueries({ predicate: (q) => q.queryKey[0] === 'procurement' });
+      qc.invalidateQueries({ predicate: (q) => q.queryKey[0] === 'supplier' });
+    }
+  });
+}
+
+/**
+ * BL-267 (PEX-5) — upload LTP A, LTP Festive or LTP B for a material, or record
+ * the LTP choice (fires `t_ltpinput_set`). Every DA read re-reads.
+ * @typedef {{
+ *   readonly materialCode: string;
+ *   readonly series?: import('@services/transitions/ltpInputRules').LtpSeries;
+ *   readonly weeks?: Record<string, number>;
+ *   readonly sourceFile?: string;
+ *   readonly choice?: import('@services/transitions/ltpInputRules').LtpSeries;
+ * }} LtpInputVars
+ */
+
+/** Upload an LTP series, or record the LTP choice (fires `t_ltpinput_set`). */
+export function useLtpInputCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, LtpInputVars>} */ (useMutation)({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_ltpinput_set',
+        entity: 'ltpInput',
+        entityId: vars.choice
+          ? ltpChoiceKey(vars.materialCode)
+          : ltpUploadKey(vars.materialCode, /** @type {any} */ (vars.series)),
+        payload: vars.choice
+          ? { ltpChoice: vars.choice }
+          : { weeks: vars.weeks, sourceFile: vars.sourceFile }
+      }),
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
       qc.invalidateQueries({ predicate: (q) => q.queryKey[0] === 'procurement' });
       qc.invalidateQueries({ predicate: (q) => q.queryKey[0] === 'supplier' });
     }

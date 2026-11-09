@@ -205,6 +205,12 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    */
   OSIP_PARAM_VALID: 'osipparam_valid',
   /**
+   * LTP input (BL-267, PEX-5): an upload names its source file and holds a
+   * quantity of 0 or more for each Monday; a choice is A, Festive or B. The
+   * rule is `ltpInputRefusal`.
+   */
+  LTP_INPUT_VALID: 'ltpinput_valid',
+  /**
    * What-if scenario save (DRC-17 BR-05, BL-202): a name (NAME_REQUIRED,
    * NAME_TOO_LONG), a pair the sandbox offers (UNKNOWN_PAIR), well-formed
    * inputs (INPUTS_INVALID:<field>) and switches each catalogue entry allows

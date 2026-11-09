@@ -80,6 +80,7 @@ export { demandAnticipationFlow } from './flows/demandAnticipation.flow';
 export { consumptionFlow } from './flows/consumption.flow';
 export { osipLevelFlow } from './flows/osipLevel.flow';
 export { osipParamFlow } from './flows/osipParam.flow';
+export { ltpInputFlow } from './flows/ltpInput.flow';
 export { whatIfScenarioFlow } from './flows/whatIfScenario.flow';
 export { feedstockConfirmationFlow } from './flows/feedstockConfirmation.flow';
 export { supplierAskFlow } from './flows/supplierAsk.flow';
@@ -149,6 +150,7 @@ import { demandAnticipationFlow } from './flows/demandAnticipation.flow';
 import { consumptionFlow } from './flows/consumption.flow';
 import { osipLevelFlow } from './flows/osipLevel.flow';
 import { osipParamFlow } from './flows/osipParam.flow';
+import { ltpInputFlow } from './flows/ltpInput.flow';
 import { whatIfScenarioFlow } from './flows/whatIfScenario.flow';
 import { feedstockConfirmationFlow } from './flows/feedstockConfirmation.flow';
 import { supplierAskFlow } from './flows/supplierAsk.flow';
@@ -267,6 +269,7 @@ flowRegistry.register(warehouseDecisionFlow); // FUX-D3 — a planner's decision
 flowRegistry.register(demandAnticipationFlow); // CAP-10 — the planner freezes the demand anticipation of the current horizon
 flowRegistry.register(consumptionFlow); // CAP-11 — the planner records a material's weekly consumption
 flowRegistry.register(osipLevelFlow); // DRC-D11 — the planner sets a material's OSIP level
+flowRegistry.register(ltpInputFlow); // BL-267 — the planner uploads LTP A, Festive, B and the choice
 flowRegistry.register(osipParamFlow); // team answers 2026-10-28 — Z, g, f, pull agreement, bottleneck LT
 flowRegistry.register(whatIfScenarioFlow); // DRC-17 — the planner saves a what-if scenario
 // BL-194 / DRC-8 — the supplier confirms its current feedstock with a date: the

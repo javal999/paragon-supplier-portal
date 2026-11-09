@@ -386,6 +386,9 @@ const LANE_BUNDLES = Object.freeze({
     // Z and g per material, f and the pull agreement per supplier, and the
     // bottleneck production lead time per supplier × material.
     'osipparam:set',
+    // BL-267 (PEX-5) — the Material Planner uploads LTP A, Festive and B and
+    // records the LTP choice per material (PEX-D12, proposed).
+    'ltpinput:set',
     // DRC-17 (BL-202) — the Material Planner saves what-if scenarios. Analysis
     // only: the verb changes no plan, PO, call-off, level or setting (BR-06).
     'whatifscenario:save',
