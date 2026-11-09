@@ -96,7 +96,9 @@ import { supplierApplicationStore } from '../data/mock/stores/supplierApplicatio
 import { receiptDiscrepancyStore } from '../data/mock/stores/receiptDiscrepancyStore';
 import { callOffStore } from '../data/mock/stores/callOffStore';
 import { capacityStore, stockSyncStore } from '../data/mock/stores/inventoryHubStores';
-import { activeAlertConditions } from '../data/mock/inventoryReadModel';
+import { headsUpMonths, isMonthlyEntryMonth } from './capacityHeadsUpRules';
+import { sdcClock } from '../sdc';
+import { activeAlertConditions, allCapacityPlans } from '../data/mock/inventoryReadModel';
 import { forecastVersionStore, forecastViewStore } from '../data/mock/stores/forecastHubStores';
 import {
   negotiationRoundStore,
@@ -128,6 +130,7 @@ import { warehouseDecisionStore } from '../data/mock/stores/warehouseDecisionSto
 import { osipLevelStore } from '../data/mock/stores/osipLevelStore';
 import { osipParamStore } from '../data/mock/stores/osipParamStore';
 import { ltpInputStore } from '../data/mock/stores/ltpInputStore';
+import { capacityMonthStore } from '../data/mock/stores/capacityMonthStore';
 import { demandAnticipationStore } from '../data/mock/stores/demandAnticipationStore';
 import { materialNameStore } from '../data/mock/stores/materialNameStore';
 import { feedstockConfirmationStore } from '../data/mock/stores/feedstockConfirmationStore';
@@ -244,6 +247,26 @@ async function realIds() {
         }
       })
     : null;
+  // BL-269 — the monthly capacity store starts empty (an entry is something a
+  // supplier gives), so the probe has the supplier of the first weekly
+  // submission state a month the weekly entry does not cover.
+  const weekly = capacityStore.all()[0];
+  const plan = allCapacityPlans().find(
+    (p) => p.supplierId === weekly.supplierId && p.planningGroupId === weekly.planningGroupId
+  );
+  const monthly = headsUpMonths(sdcClock.now()).find((m) =>
+    isMonthlyEntryMonth(m, plan?.weeks.map((w) => w.week) ?? [])
+  );
+  if (capacityMonthStore.all().length === 0 && monthly)
+    await svc.dispatch(supplierSeatOf(weekly.supplierId, ...PERSONA_SYSTEM_ROLES.supplier), {
+      transitionId: 't_capacitymonth_submit',
+      entity: 'capacityMonth',
+      payload: {
+        supplierId: weekly.supplierId,
+        planningGroupId: weekly.planningGroupId,
+        months: [{ month: monthly, allocated: 1000 }]
+      }
+    });
   return {
     purchaseOrder: purchaseOrderStore.all()[0]?.id ?? null,
     advanceShipNotice: asnStore.all()[0]?.asnNumber ?? null,
@@ -302,6 +325,8 @@ async function realIds() {
     stockSync: stockSyncStore.all()[0]?.id ?? null,
     stockAccess: 'sup-007',
     capacitySubmission: capacityStore.all()[0]?.id ?? null,
+    // BL-269 — raised by the probe above (the store opens empty); it names its supplier.
+    capacityMonth: capacityMonthStore.all()[0]?.id ?? null,
     inventoryAlert: activeAlertConditions()[0]?.key ?? null,
     // REQ-E06-01 — the version and view stores are seeded.
     forecastVersion: forecastVersionStore.all()[0]?.publicationId ?? null,
@@ -511,6 +536,7 @@ const resetAll = () => {
   osipLevelStore.reset();
   osipParamStore.reset();
   ltpInputStore.reset();
+  capacityMonthStore.reset();
   materialNameStore.reset();
   feedstockConfirmationStore.reset();
   supplierAskStore.reset();
@@ -624,6 +650,7 @@ describe('POPULATION — nothing below means anything without this', () => {
     // So is a demand anticipation publication (CAP-10): it is followed, never changed.
     // And a consumption record (CAP-11): a later record supersedes it at read.
     // And a feedstock confirmation (BL-194): append-only, the latest in force.
+    // And a monthly capacity entry (BL-269): a newer one supersedes it at read.
     // And a what-if scenario (BL-202): saved once, never changed.
     expect(unprobeable).toEqual([
       'rfqConfidentiality',
@@ -637,6 +664,7 @@ describe('POPULATION — nothing below means anything without this', () => {
       'forecastOverride',
       'demandAnticipation',
       'consumption',
+      'capacityMonth',
       'whatIfScenario',
       'feedstockConfirmation'
     ]);

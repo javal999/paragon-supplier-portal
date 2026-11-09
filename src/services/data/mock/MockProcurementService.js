@@ -27,6 +27,7 @@ import { ropFisikLastChecks, ropFisikPrRecommendations } from './callOffTriggerR
 /** @import { DaHistoryRow } from '../../transitions/demandAnticipationHistory' */
 import { allDemandAnticipationHistory } from './demandAnticipationHistoryReadModel';
 /** @import { SupplierDaRow } from './demandAnticipationReadModel' */
+import { allCapacityHeadsUp } from './capacityHeadsUpReadModel';
 import {
   supplierDemandAnticipation,
   withLtpInputsRead,
@@ -556,6 +557,16 @@ export class MockProcurementService {
   async getCapacityPlans(scope) {
     // REQ-E08-04 — capacity against demand per supplier × material group.
     return { items: applySupplierScope(scope, allCapacityPlans()) };
+  }
+
+  /**
+   * BL-269 (PEX-4) — the 12-month capacity heads-up per supplier × planning group.
+   * A supplier reads its own groups' capacity and demand, as the weekly plans do.
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<import('./capacityHeadsUpReadModel').HeadsUpRow>>}
+   */
+  async getCapacityHeadsUp(scope) {
+    return { items: applySupplierScope(scope, allCapacityHeadsUp()) };
   }
 
   /**

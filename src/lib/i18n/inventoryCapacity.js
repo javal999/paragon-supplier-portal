@@ -6,6 +6,40 @@
 
 /** @type {Record<string, string>} */
 export const inventoryCapacityEn = {
+  // BL-269 (PEX-4) — the capacity heads-up.
+  'capHeadsUp.title': 'Capacity heads-up, next 12 months',
+  'capHeadsUp.intro':
+    'Utilisation = PTI’s demand in the month ÷ the supplier’s confirmed capacity. Weeks 1–13 read the weekly entry; later months read the supplier’s monthly entry. A month under 70% is under-used and needs attention.',
+  'capHeadsUp.tab.table': 'Table',
+  'capHeadsUp.tab.treemap': 'Treemap',
+  'capHeadsUp.utilisation': 'Utilisation',
+  'capHeadsUp.demand': 'Demand',
+  'capHeadsUp.capacity': 'Capacity',
+  'capHeadsUp.byWeek': '(weekly entry)',
+  'capHeadsUp.byMonth': '(monthly entry)',
+  'capHeadsUp.noCapacity': 'No capacity confirmed',
+  'capHeadsUp.band.underUsed': 'Under-used, needs attention',
+  'capHeadsUp.showBreakdown': 'Show per material and brand',
+  'capHeadsUp.hideBreakdown': 'Hide per material and brand',
+  'capHeadsUp.byMaterial': 'Per material (demand ÷ the group’s capacity)',
+  'capHeadsUp.byBrand':
+    'Per brand (the material’s demand split by each brand’s share of its BOM demand)',
+  'capHeadsUp.breakdownNote':
+    'Capacity is confirmed per planning group, so the materials of a group add up to the group’s figure.',
+  'capHeadsUp.month': 'Month',
+  'capHeadsUp.treemapEmpty': 'No planning group has capacity confirmed in this month.',
+  'capHeadsUp.treemapNone': 'No capacity confirmed: {{groups}}',
+  // The supplier states capacity by month.
+  'capHeadsUp.entry.title': 'Capacity by month',
+  'capHeadsUp.entry.intro':
+    'The weekly entry above covers weeks 1–13. State your capacity per month for the months after it; PTI’s planners read it in the 12-month heads-up.',
+  'capHeadsUp.entry.group': 'Planning group',
+  'capHeadsUp.entry.capacity': 'Capacity',
+  'capHeadsUp.entry.upside': 'Additional capacity',
+  'capHeadsUp.entry.save': 'Save monthly capacity',
+  'capHeadsUp.entry.done': 'Monthly capacity saved',
+  'capHeadsUp.entry.failed': 'Could not save monthly capacity',
+  'capHeadsUp.entry.none': 'Every month is covered by the weekly entry.',
   'inv.asOf': 'As of',
   'inv.search': 'Search code, description, trade name or supplier',
   'inv.consignment': 'Consignment',
@@ -667,6 +701,40 @@ export const inventoryCapacityEn = {
 
 /** @type {Record<string, string>} */
 export const inventoryCapacityId = {
+  // BL-269 (PEX-4) — the capacity heads-up.
+  'capHeadsUp.title': 'Capacity heads-up, 12 bulan ke depan',
+  'capHeadsUp.intro':
+    'Utilisasi = demand PTI pada bulan itu ÷ kapasitas terkonfirmasi pemasok. Minggu 1–13 membaca entri mingguan; bulan setelahnya membaca entri bulanan pemasok. Bulan di bawah 70% kurang terpakai dan perlu perhatian.',
+  'capHeadsUp.tab.table': 'Tabel',
+  'capHeadsUp.tab.treemap': 'Treemap',
+  'capHeadsUp.utilisation': 'Utilisasi',
+  'capHeadsUp.demand': 'Demand',
+  'capHeadsUp.capacity': 'Kapasitas',
+  'capHeadsUp.byWeek': '(entri mingguan)',
+  'capHeadsUp.byMonth': '(entri bulanan)',
+  'capHeadsUp.noCapacity': 'Kapasitas belum dikonfirmasi',
+  'capHeadsUp.band.underUsed': 'Kurang terpakai, perlu perhatian',
+  'capHeadsUp.showBreakdown': 'Tampilkan per material dan brand',
+  'capHeadsUp.hideBreakdown': 'Sembunyikan per material dan brand',
+  'capHeadsUp.byMaterial': 'Per material (demand ÷ kapasitas grup)',
+  'capHeadsUp.byBrand':
+    'Per brand (demand material dibagi menurut porsi tiap brand dalam demand BOM-nya)',
+  'capHeadsUp.breakdownNote':
+    'Kapasitas dikonfirmasi per grup perencanaan, jadi material dalam satu grup berjumlah sama dengan angka grup.',
+  'capHeadsUp.month': 'Bulan',
+  'capHeadsUp.treemapEmpty':
+    'Tidak ada grup perencanaan dengan kapasitas terkonfirmasi di bulan ini.',
+  'capHeadsUp.treemapNone': 'Kapasitas belum dikonfirmasi: {{groups}}',
+  'capHeadsUp.entry.title': 'Kapasitas per bulan',
+  'capHeadsUp.entry.intro':
+    'Entri mingguan di atas mencakup minggu 1–13. Nyatakan kapasitas Anda per bulan untuk bulan setelahnya; perencana PTI membacanya di heads-up 12 bulan.',
+  'capHeadsUp.entry.group': 'Grup perencanaan',
+  'capHeadsUp.entry.capacity': 'Kapasitas',
+  'capHeadsUp.entry.upside': 'Kapasitas tambahan',
+  'capHeadsUp.entry.save': 'Simpan kapasitas bulanan',
+  'capHeadsUp.entry.done': 'Kapasitas bulanan tersimpan',
+  'capHeadsUp.entry.failed': 'Kapasitas bulanan tidak dapat disimpan',
+  'capHeadsUp.entry.none': 'Semua bulan sudah dicakup entri mingguan.',
   'inv.asOf': 'Per',
   'inv.search': 'Cari kode, deskripsi, nama dagang, atau pemasok',
   'inv.consignment': 'Konsinyasi',
