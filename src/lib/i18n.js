@@ -110,10 +110,14 @@ import { inventoryCapacityEn, inventoryCapacityId } from './i18n/inventoryCapaci
 // — DRC-9a strategic buffer, DRC-9b production limit (BL-195) —
 import { drcBuffersEn, drcBuffersId } from './i18n/drcBuffers';
 import { forecastCollaborationEn, forecastCollaborationId } from './i18n/forecastCollaboration';
+// — PEX wave 2 lane C: switches, trace, sandbox levels (BL-275, BL-276, BL-277) —
+import { pexPlanTraceEn, pexPlanTraceId } from './i18n/pexPlanTrace';
 // — REQ-E14-02 supplier reliability and PTI plan-change measures (BL-99) —
 import { reliabilityEn, reliabilityId } from './i18n/reliability';
 // — DRC-15a feedstock reconcile (BL-201; replaced REQ-E06-04's fixed stock reconcile) —
 import { feedstockReconcileEn, feedstockReconcileId } from './i18n/feedstockReconcile';
+// — PEX-7 / PEX-8 PO On Hold —
+import { poOnHoldEn, poOnHoldId } from './i18n/poOnHold';
 // — REQ-E14-03 material requirement —
 import { materialRequirementEn, materialRequirementId } from './i18n/materialRequirement';
 // — REQ-E14-04 safety stock, safety lead time and reorder point —
@@ -255,9 +259,11 @@ export const resources = {
       ...performanceEn,
       ...inventoryCapacityEn,
       ...drcBuffersEn,
+      ...pexPlanTraceEn,
       ...forecastCollaborationEn,
       ...reliabilityEn,
       ...feedstockReconcileEn,
+      ...poOnHoldEn,
       ...materialRequirementEn,
       ...safetyStockEn,
       ...orderPlanEn,
@@ -771,9 +777,11 @@ export const resources = {
       ...performanceId,
       ...inventoryCapacityId,
       ...drcBuffersId,
+      ...pexPlanTraceId,
       ...forecastCollaborationId,
       ...reliabilityId,
       ...feedstockReconcileId,
+      ...poOnHoldId,
       ...materialRequirementId,
       ...safetyStockId,
       ...orderPlanId,

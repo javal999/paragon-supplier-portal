@@ -164,6 +164,7 @@ import { sdcClock } from '../../sdc/clock';
 import { supplierAskStore } from './stores/supplierAskStore';
 // INV-D8 — PTI's capacity gap decisions.
 import { capacityDecisionStore } from './stores/capacityDecisionStore';
+import { allPoOnHold } from './poOnHoldReadModel';
 import { withOwnQualificationWarnings } from '../../sourcing/sourcingType';
 
 /** REQ-E14-10 — the backtest's heavy half per engine dataset, keyed by hub date and the values it reads. */
@@ -755,6 +756,16 @@ export class MockProcurementService {
     // planner reads every supplier; a supplier reads only its own rows, scoped
     // HERE so another supplier's figures never reach the page.
     return { items: applySupplierScope(scope, allFeedstockRows()) };
+  }
+
+  /**
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<import('../types').PoOnHoldRow>>}
+   */
+  async getPoOnHold(scope) {
+    // PEX-7 / PEX-8 — the planner reads every supplier; a supplier reads only
+    // its own lines, scoped HERE so another supplier's figures never reach the page.
+    return { items: applySupplierScope(scope, allPoOnHold()) };
   }
 
   /**

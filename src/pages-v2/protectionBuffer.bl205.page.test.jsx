@@ -11,12 +11,10 @@ import { renderWithProviders, BUYER } from '@test/test-utils';
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { capacityStore, inventoryAlertLedger } from '@services/data/mock/stores/inventoryHubStores';
 import { osipLevelStore } from '@services/data/mock/stores/osipLevelStore';
+import { osipParamStore } from '@services/data/mock/stores/osipParamStore';
 import { allCommitmentLines } from '@services/data/mock/forecastReadModel';
 import { protectionBufferInputs } from '@services/data/mock/protectionBufferReadModel';
-import {
-  PROTECTION_BUFFER_RULES,
-  protectionBufferRows
-} from '@services/transitions/drcBufferRules';
+import { protectionBufferRows } from '@services/transitions/drcBufferRules';
 import { sdcClock } from '@services/sdc';
 import { NO_PERSON } from '@context/noPerson';
 import i18n from '@lib/i18n';
@@ -28,9 +26,13 @@ beforeEach(() => {
   capacityStore.reset();
   inventoryAlertLedger.reset();
   osipLevelStore.reset();
+  osipParamStore.reset();
   sdcClock.reset();
 });
-afterEach(() => osipLevelStore.reset());
+afterEach(() => {
+  osipLevelStore.reset();
+  osipParamStore.reset();
+});
 
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 
@@ -113,21 +115,26 @@ describe('DRC-9c — protection buffer section [Proposed BL-205]', () => {
     expect(compared).toBeGreaterThan(0);
   });
 
-  it("'off' shows no figure", async () => {
-    const { materialCode } = pickPair();
+  it("a material's switch off shows 'Switched off' and no figure (PEX-13)", async () => {
+    const { supplierId, materialCode } = pickPair();
     setLevel(materialCode, 5);
+    osipParamStore.append({
+      key: `protectionBufferOn|${materialCode}`,
+      param: 'protectionBufferOn',
+      value: false,
+      previous: null,
+      reason: 'Planner reviewed the festive plan',
+      setAt: sdcClock.now(),
+      setBy: NO_PERSON
+    });
     renderWithProviders(
-      <ProtectionBufferSection
-        supplierId={null}
-        materialCode={null}
-        rules={{ ...PROTECTION_BUFFER_RULES, protectionUplift: 'off' }}
-      />,
+      <ProtectionBufferSection supplierId={supplierId} materialCode={materialCode} />,
       { identity: PLANNER }
     );
-    expect(await screen.findByTestId('protection-buffer-off')).toHaveTextContent(
-      'Protection buffer switched off'
-    );
-    expect(screen.queryByTestId('protection-buffer-table')).toBeNull();
+    expect(
+      await screen.findByTestId(`protection-buffer-none-${supplierId}-${materialCode}`)
+    ).toHaveTextContent('Switched off');
+    expect(screen.queryByTestId('protection-buffer-table')).not.toBeNull();
   });
 
   it('reads in Indonesian', async () => {

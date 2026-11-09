@@ -969,6 +969,7 @@ export class DataError extends Error {
  * name (FS now reads "feedstock", DRC-D14).
  */
 /** @typedef {FsRow} FixedStockReconcileRow */
+/** @typedef {import('../data/mock/poOnHoldReadModel').PoOnHoldRow} PoOnHoldRow */
 
 /** REQ-E06-03 BR-07 — supplier coverage per material, with distributor lead times (an estimate). */
 /** REQ-E14-02 — the trailing windows the reliability read offers. */
@@ -3257,6 +3258,8 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * @property {(scope: QueryScope) => Promise<Page<FixedStockReconcileRow>>} getFixedStockReconcile DRC-15a — the feedstock reconcile per supplier × material, daily
  *   (DRC-D14 replaced the fixed stock reconcile; the method keeps its name). The
  *   planner reads every supplier; a supplier reads only its own rows (scoped in the service).
+ * @property {(scope: QueryScope) => Promise<Page<PoOnHoldRow>>} getPoOnHold PEX-7 / PEX-8 — the PO On Hold lines: open PO quantity DA does not absorb, per supplier × material,
+ *   with the grace period and the decision. The planner reads every supplier; a supplier reads only its own (scoped in the service).
  * @property {(scope: QueryScope, windowWeeks?: ReliabilityWindowWeeks) => Promise<Page<SupplierReliabilityView>>} getSupplierReliability REQ-E14-02 — supplier reliability and PTI's plan-change measures over a
  *   trailing window, computed by the forecast engine on its (SIMULATED)
  *   dataset. The planner sees every supplier; a supplier sees ONLY its own row,

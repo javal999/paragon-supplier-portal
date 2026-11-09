@@ -85,6 +85,7 @@ import BuyerThisWeek from '@pages-v2/BuyerThisWeek';
 import BuyerReschedule from '@pages-v2/BuyerReschedule';
 import BuyerDemandAnticipation from '@pages-v2/BuyerDemandAnticipation';
 import BuyerDemandAnticipationHistory from '@pages-v2/BuyerDemandAnticipationHistory';
+import BuyerPlanTrace from '@pages-v2/BuyerPlanTrace';
 import BuyerWhatIfSandbox from '@pages-v2/BuyerWhatIfSandbox';
 import BuyerStabilise from '@pages-v2/BuyerStabilise';
 import BuyerDataHealth from '@pages-v2/BuyerDataHealth';
@@ -273,6 +274,13 @@ const ROUTES = [
     pattern: '/buyer/demand-anticipation-history',
     at: '/buyer/demand-anticipation-history',
     element: <BuyerDemandAnticipationHistory />,
+    identity: BUYER
+  },
+  {
+    name: 'buyer/plan-trace',
+    pattern: '/buyer/plan-trace',
+    at: '/buyer/plan-trace',
+    element: <BuyerPlanTrace />,
     identity: BUYER
   },
   {

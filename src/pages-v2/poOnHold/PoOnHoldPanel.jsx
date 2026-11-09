@@ -1,0 +1,473 @@
+/** @import React from 'react' */
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import Table from '@components/ui-v2/Table';
+import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TableRow from '@components/ui-v2/TableRow';
+import TableCell from '@components/ui-v2/TableCell';
+import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { FIELD_FOCUS_RING, TOUCH_TARGET } from '@components/forecast/focusRing';
+import { useVerbAvailability } from '@hooks/useVerbAvailability';
+import { useRefusalText } from '@hooks/useRefusalText';
+import { useToast } from '@hooks/useToast';
+import { formatDate, formatNumber } from '@lib/format';
+import { usePoOnHold } from '@services/query/hooks';
+import {
+  useOsipParamCommand,
+  usePoOnHoldChooseCommand,
+  usePoOnHoldSuggestCommand
+} from '@services/query/commandHooks';
+import { PO_ON_HOLD_OPTIONS } from '@services/transitions/poOnHold';
+import { osipParamRefusal } from '@services/transitions/osipParams';
+import { fulfilmentWindow } from '@services/transitions/fulfilmentWindow';
+/** @import { PoOnHoldRow } from '@services/data/types' */
+/** @import { PoOnHoldOption } from '@services/transitions/poOnHold' */
+import { inputClass, labelClass } from '../inventory/inventoryDisplay';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PO ON HOLD — PEX-7 (BL-270, BL-272), PEX-8 (BL-271), PEX-10 BR-01 for the
+// decision (BL-273). One panel on the feedstock reconcile page, for both seats:
+//   · the planner sees every line, sets the grace and no-movement periods
+//     (`t_osipparam_set`, keys grace|<supplier>|<material> and noMove|…) and
+//     suggests an option (`t_poonhold_suggest`);
+//   · the supplier sees its own lines and chooses the final option
+//     (`t_poonhold_choose`); the service narrows the rows to the reader.
+// What the hub does not hold (PIPO flag, Max PTI, a stock movement) is said on
+// the line, never guessed.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const fieldClass = `${inputClass} ${FIELD_FOCUS_RING}`;
+const note = 'block text-xs text-text-tertiary';
+
+/** @type {React.FC<{ value: number; uom: string; testId?: string }>} */
+const Qty = ({ value, uom, testId }) => (
+  <Data className="whitespace-nowrap" data-testid={testId}>{`${formatNumber(value)} ${uom}`}</Data>
+);
+
+/** @type {React.FC<{ persona: 'buyer' | 'supplier' }>} */
+const PoOnHoldPanel = ({ persona }) => {
+  const { t } = useTranslation();
+  const query = usePoOnHold();
+  const isPti = persona === 'buyer';
+  const refusalText = useRefusalText();
+  const { toast } = useToast();
+  const suggest = usePoOnHoldSuggestCommand();
+  const choose = usePoOnHoldChooseCommand();
+  const setParam = useOsipParamCommand();
+  const suggestAvail = useVerbAvailability('poonhold:suggest');
+  const chooseAvail = useVerbAvailability('poonhold:choose');
+  const paramAvail = useVerbAvailability('osipparam:set');
+  const [picked, setPicked] = useState(/** @type {Record<string, PoOnHoldOption>} */ ({}));
+  const [editing, setEditing] = useState(/** @type {string | null} */ (null));
+  const [graceDraft, setGraceDraft] = useState('');
+  const [noMoveDraft, setNoMoveDraft] = useState('');
+
+  const rows = query.data?.items ?? [];
+  /** @param {PoOnHoldOption} o */
+  const optionName = (o) => t(`poh.opt.${o}`);
+
+  /** @param {{ status: string; reason?: string }} result */
+  const refused = (result) => {
+    toast({
+      variant: 'error',
+      title: refusalText(result.reason) ?? t('poh.refused', { reason: result.reason ?? '' })
+    });
+  };
+
+  /** @param {PoOnHoldRow} r */
+  const send = async (r) => {
+    const option = picked[r.key] ?? r.suggestion;
+    if (!option) return;
+    const result = await suggest.mutateAsync({
+      supplierId: r.supplierId,
+      materialCode: r.materialCode,
+      option
+    });
+    if (result.status === 'failed') return refused(result);
+    toast({ variant: 'success', title: t('poh.suggest.sent', { material: r.materialCode }) });
+  };
+
+  /** @param {PoOnHoldRow} r */
+  const confirmChoice = async (r) => {
+    const option = picked[r.key] ?? r.decision?.suggested;
+    if (!r.decision || !option) return;
+    const result = await choose.mutateAsync({ decisionId: r.decision.id, option });
+    if (result.status === 'failed') return refused(result);
+    toast({ variant: 'success', title: t('poh.choose.sent', { material: r.materialCode }) });
+  };
+
+  /** @param {PoOnHoldRow} r */
+  const openSettings = (r) => {
+    setGraceDraft(String(r.grace.graceDays));
+    setNoMoveDraft(String(r.noMoveDays));
+    setEditing(r.key);
+  };
+
+  const parsed = (/** @type {string} */ v) => (v.trim() === '' ? NaN : Number(v.trim()));
+  const settingsInvalid =
+    osipParamRefusal('grace', parsed(graceDraft)) !== null ||
+    osipParamRefusal('noMove', parsed(noMoveDraft)) !== null;
+
+  /** @param {PoOnHoldRow} r */
+  const saveSettings = async (r) => {
+    for (const [param, draft] of /** @type {const} */ ([
+      ['grace', graceDraft],
+      ['noMove', noMoveDraft]
+    ])) {
+      const value = parsed(draft);
+      const current = param === 'grace' ? r.grace.graceDays : r.noMoveDays;
+      if (value === current) continue;
+      const result = await setParam.mutateAsync({
+        param,
+        supplierId: r.supplierId,
+        materialCode: r.materialCode,
+        value
+      });
+      if (result.status === 'failed') return refused(result);
+    }
+    toast({ variant: 'success', title: t('poh.settings.saved', { material: r.materialCode }) });
+    setEditing(null);
+  };
+
+  /** @param {PoOnHoldRow} r */
+  const graceCell = (r) => (
+    <>
+      <span className="block text-sm" data-testid={`poh-due-${r.key}`}>
+        {r.grace.ended ? (
+          t('poh.graceEnded')
+        ) : (
+          <>
+            {t('poh.dueBy')} <Data className="whitespace-nowrap">{formatDate(r.grace.dueDay)}</Data>
+          </>
+        )}
+      </span>
+      {!r.grace.ended && (
+        <span className={note} data-testid={`poh-left-${r.key}`}>
+          {t('poh.daysLeft', { count: r.grace.daysLeft })}
+        </span>
+      )}
+      <span className={note}>
+        {t('poh.graceStarted')} <Data>{formatDate(r.grace.firstDay)}</Data> ·{' '}
+        {t('poh.settings.grace')}: <Data>{r.grace.graceDays}</Data>
+        {r.graceIsDefault ? ` (${t('poh.settings.default')})` : ''}
+      </span>
+      {isPti && (
+        <span className={note}>
+          {t('poh.settings.noMove')}: <Data>{r.noMoveDays}</Data>
+          {r.noMoveIsDefault ? ` (${t('poh.settings.default')})` : ''}
+        </span>
+      )}
+      {isPti &&
+        (paramAvail.kind === 'held' ? (
+          editing === r.key ? (
+            <div className="mt-2 space-y-2" data-testid={`poh-settings-${r.key}`}>
+              <label className="block">
+                <span className={labelClass}>{t('poh.settings.grace')}</span>
+                <input
+                  className={fieldClass}
+                  inputMode="numeric"
+                  value={graceDraft}
+                  onChange={(e) => setGraceDraft(e.target.value)}
+                  data-testid={`poh-grace-input-${r.key}`}
+                />
+              </label>
+              <label className="block">
+                <span className={labelClass}>{t('poh.settings.noMove')}</span>
+                <input
+                  className={fieldClass}
+                  inputMode="numeric"
+                  value={noMoveDraft}
+                  onChange={(e) => setNoMoveDraft(e.target.value)}
+                  data-testid={`poh-nomove-input-${r.key}`}
+                />
+              </label>
+              {settingsInvalid && (
+                <p className="text-sm text-danger" role="alert">
+                  {t('poh.settings.invalid')}
+                </p>
+              )}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  disabled={settingsInvalid || setParam.isPending}
+                  onClick={() => void saveSettings(r)}
+                  data-testid={`poh-settings-save-${r.key}`}
+                >
+                  {t('poh.settings.save')}
+                </Button>
+                <Button variant="secondary" onClick={() => setEditing(null)}>
+                  {t('poh.settings.cancel')}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className={`text-xs text-action-hover hover:underline ${TOUCH_TARGET}`}
+              onClick={() => openSettings(r)}
+              data-testid={`poh-settings-edit-${r.key}`}
+            >
+              {t('poh.settings.edit')}
+            </button>
+          )
+        ) : (
+          <HandoffNotice availability={paramAvail} testId={`handoff-poh-param-${r.key}`} />
+        ))}
+    </>
+  );
+
+  /** What the hub does not hold, said on the line (PTI view). @param {PoOnHoldRow} r */
+  const missingFacts = (r) =>
+    isPti ? (
+      <>
+        {r.pipo === null && (
+          <span className={note} data-testid={`poh-fact-pipo-${r.key}`}>
+            {t('poh.fact.pipo')}
+          </span>
+        )}
+        {r.daysSinceMovement === null && (
+          <span className={note} data-testid={`poh-fact-movement-${r.key}`}>
+            {t('poh.fact.movement')}
+          </span>
+        )}
+        {r.maxPti === null && (
+          <span className={note} data-testid={`poh-fact-maxpti-${r.key}`}>
+            {t('poh.fact.maxPti')}
+          </span>
+        )}
+      </>
+    ) : null;
+
+  /** @type {React.FC<{ r: PoOnHoldRow; value: PoOnHoldOption | null; onPick: (o: PoOnHoldOption) => void; legend: string }>} */
+  const OptionPicker = ({ r, value, onPick, legend }) => (
+    <fieldset className="space-y-1" data-testid={`poh-options-${r.key}`}>
+      <legend className={labelClass}>{legend}</legend>
+      {PO_ON_HOLD_OPTIONS.map((o) => (
+        <label key={o} className={`flex items-start gap-2 text-sm ${TOUCH_TARGET}`}>
+          <input
+            type="radio"
+            name={`poh-${r.key}`}
+            checked={value === o}
+            onChange={() => onPick(o)}
+            data-testid={`poh-option-${o}-${r.key}`}
+          />
+          <span>
+            {optionName(o)}
+            <span className={note}>{t(`poh.opt.${o}.does`)}</span>
+          </span>
+        </label>
+      ))}
+    </fieldset>
+  );
+
+  /** @param {PoOnHoldRow} r */
+  const outcomeLines = (r) =>
+    r.outcome ? (
+      <div data-testid={`poh-outcome-${r.key}`}>
+        {r.outcome.feedstockQty > 0 && (
+          <span className={note}>
+            {t('poh.outcome.fs')} <Qty value={r.outcome.feedstockQty} uom={r.uom} />
+          </span>
+        )}
+        {r.outcome.spreadQty > 0 && (
+          <span className={note}>
+            {t('poh.outcome.spread')} <Qty value={r.outcome.spreadQty} uom={r.uom} />
+          </span>
+        )}
+        {r.effective === 'fg' && (
+          <>
+            <span className={note}>
+              {t('poh.outcome.fg')} <Qty value={r.outcome.fgQty} uom={r.uom} />
+            </span>
+            <span className={note}>
+              {t('poh.outcome.stay')} <Qty value={r.outcome.stayOnHoldQty} uom={r.uom} />
+            </span>
+          </>
+        )}
+      </div>
+    ) : null;
+
+  /** The fulfil-by line on the decision (PEX-10 BR-01): from the supplier's choice. @param {PoOnHoldRow} r */
+  const fulfilBy = (r) => {
+    const chosen = r.decision?.history.find((h) => h.kind === 'chosen');
+    if (!chosen) return null;
+    const w = fulfilmentWindow(chosen.at, r.leadTimeDays);
+    return (
+      <span className={note} data-testid={`poh-fulfil-${r.key}`}>
+        {w ? (
+          <>
+            {t('co.sla.fulfilBy')} <Data className="whitespace-nowrap">{formatDate(w.by)}</Data>{' '}
+            {t(r.leadTimeIsDefault ? 'co.sla.leadTimeDefault' : 'co.sla.leadTime', {
+              count: w.leadTimeDays
+            })}
+          </>
+        ) : (
+          t('co.sla.noLeadTime')
+        )}
+      </span>
+    );
+  };
+
+  /** @param {PoOnHoldRow} r */
+  const decisionCell = (r) => {
+    const status = (
+      <span className="block text-sm" data-testid={`poh-status-${r.key}`} data-status={r.status}>
+        {t(`poh.status.${r.status}`, {
+          option: optionName(r.effective ?? r.decision?.suggested ?? 'fsOnly')
+        })}
+      </span>
+    );
+    if (isPti) {
+      if (r.decision) {
+        return (
+          <>
+            {status}
+            {outcomeLines(r)}
+            {fulfilBy(r)}
+          </>
+        );
+      }
+      const value = picked[r.key] ?? r.suggestion;
+      return (
+        <>
+          {status}
+          {suggestAvail.kind === 'held' ? (
+            <div className="mt-2 space-y-2">
+              <OptionPicker
+                r={r}
+                value={value}
+                onPick={(o) => setPicked((p) => ({ ...p, [r.key]: o }))}
+                legend={t('poh.suggest.label')}
+              />
+              <span className={note} data-testid={`poh-preselect-${r.key}`}>
+                {t(r.suggestion ? 'poh.suggest.preselected' : 'poh.suggest.none')}
+              </span>
+              <Button
+                variant="outline"
+                disabled={!value || suggest.isPending}
+                onClick={() => void send(r)}
+                data-testid={`poh-suggest-send-${r.key}`}
+              >
+                {t('poh.suggest.send')}
+              </Button>
+            </div>
+          ) : (
+            <HandoffNotice availability={suggestAvail} testId={`handoff-poh-suggest-${r.key}`} />
+          )}
+          {missingFacts(r)}
+        </>
+      );
+    }
+    // Supplier view.
+    if (!r.decision) {
+      return <span className="block text-sm">{t('poh.choose.waiting')}</span>;
+    }
+    if (r.status !== 'awaitingSupplier') {
+      return (
+        <>
+          {status}
+          {outcomeLines(r)}
+          {fulfilBy(r)}
+        </>
+      );
+    }
+    const value = picked[r.key] ?? r.decision.suggested;
+    return (
+      <>
+        {status}
+        {chooseAvail.kind === 'held' ? (
+          <div className="mt-2 space-y-2">
+            <OptionPicker
+              r={r}
+              value={value}
+              onPick={(o) => setPicked((p) => ({ ...p, [r.key]: o }))}
+              legend={t('poh.choose.label')}
+            />
+            <span className={note}>{t('poh.choose.final')}</span>
+            <Button
+              variant="outline"
+              disabled={choose.isPending}
+              onClick={() => void confirmChoice(r)}
+              data-testid={`poh-choose-send-${r.key}`}
+            >
+              {t('poh.choose.send')}
+            </Button>
+          </div>
+        ) : (
+          <HandoffNotice availability={chooseAvail} testId={`handoff-poh-choose-${r.key}`} />
+        )}
+      </>
+    );
+  };
+
+  if (query.isPending || query.isError) return null;
+
+  return (
+    <section className="mb-6" data-testid="poh-panel">
+      <h2 className="text-section text-text-primary mb-1">{t('poh.title')}</h2>
+      <p className="text-sm text-text-secondary mb-3">
+        {t(isPti ? 'poh.intro.pti' : 'poh.intro.sup')}
+      </p>
+      <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
+        <Table>
+          <TableHeader>
+            {isPti ? <TableHeaderCell>{t('poh.col.supplier')}</TableHeaderCell> : null}
+            <TableHeaderCell>{t('poh.col.material')}</TableHeaderCell>
+            <TableHeaderCell>{t('poh.col.ospo')}</TableHeaderCell>
+            <TableHeaderCell>{t('poh.col.da')}</TableHeaderCell>
+            <TableHeaderCell>{t('poh.col.qty')}</TableHeaderCell>
+            <TableHeaderCell>{t('poh.col.grace')}</TableHeaderCell>
+            <TableHeaderCell>{t('poh.col.decision')}</TableHeaderCell>
+          </TableHeader>
+          <tbody>
+            {rows.map((r) => (
+              <TableRow
+                key={r.key}
+                id={`poh-row-${r.key}`}
+                tabIndex={-1}
+                data-testid={`poh-row-${r.key}`}
+              >
+                {isPti ? (
+                  <TableCell className="align-top max-w-[11rem]">
+                    <span className="block text-sm text-text-primary">{r.supplierName}</span>
+                    <Data className="text-xs text-text-tertiary">{r.supplierId}</Data>
+                  </TableCell>
+                ) : null}
+                <TableCell className="align-top max-w-[10rem]">
+                  <Data className="whitespace-nowrap">{r.materialCode}</Data>
+                  <span className={note}>{r.materialLabel}</span>
+                </TableCell>
+                <TableCell className="align-top">
+                  <Qty value={r.ospo} uom={r.uom} testId={`poh-ospo-${r.key}`} />
+                </TableCell>
+                <TableCell className="align-top">
+                  <Qty value={r.daNotCalledOff} uom={r.uom} testId={`poh-da-${r.key}`} />
+                </TableCell>
+                <TableCell className="align-top">
+                  <Qty value={r.qty} uom={r.uom} testId={`poh-qty-${r.key}`} />
+                </TableCell>
+                <TableCell className="align-top max-w-[16rem]">{graceCell(r)}</TableCell>
+                <TableCell className="align-top max-w-[22rem]">{decisionCell(r)}</TableCell>
+              </TableRow>
+            ))}
+            {rows.length === 0 && (
+              <tr>
+                <td
+                  colSpan={isPti ? 7 : 6}
+                  className="text-center text-sm text-text-tertiary py-8"
+                  data-testid="poh-empty"
+                >
+                  {t('poh.empty')}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </Table>
+      </div>
+    </section>
+  );
+};
+
+export default PoOnHoldPanel;

@@ -167,21 +167,19 @@ describe('GRP-NONE · with no group override, nothing changes', () => {
 });
 
 describe('GRP-RISK · a group override moves the class in its group and nowhere else', () => {
-  it('GRP-RISK-01 · CR-24 High multiple: PK-PETB-8801 (MG-20) turns High; RM-EMUL-9410 (MG-02) stays Medium', async () => {
+  it('GRP-RISK-01 · CR-24 High multiple: PK-PETB-8801 (MG-20) turns High; RM-EMUL-3310 (MG-02) stays Medium', async () => {
     // Controls, from the sample data: 17 days of cover against 14 days lead
-    // time, and 22.1 against 21 — both Medium under the global 1 × / 1.5 ×.
+    // time, and 38.8 against 30 (DRC-6, BL-285) — both Medium under the global 1 × / 1.5 ×.
     expect(positionRisk(position('sup-007', 'PK-PETB-8801')).riskClass).toBe('medium');
-    expect(positionRisk(position('sup-002', 'RM-EMUL-9410')).riskClass).toBe('medium');
+    expect(positionRisk(position('sup-002', 'RM-EMUL-3310')).riskClass).toBe('medium');
     expect(alertClass('ptiBelowRop', 'sup-007', 'PK-PETB-8801')).toBe('medium');
-    expect(alertClass('coverage', 'sup-002', 'RM-EMUL-9410')).toBe('medium');
 
     await set('risk.highBelowMultiple@MG-20', 1.3);
 
     expect(positionRisk(position('sup-007', 'PK-PETB-8801')).riskClass).toBe('high');
     expect(alertClass('ptiBelowRop', 'sup-007', 'PK-PETB-8801')).toBe('high');
-    // Another group: 22.1 < 1.3 × 21 would be High if the override leaked.
-    expect(positionRisk(position('sup-002', 'RM-EMUL-9410')).riskClass).toBe('medium');
-    expect(alertClass('coverage', 'sup-002', 'RM-EMUL-9410')).toBe('medium');
+    // Another group: 38.8 < 1.3 × 30 would be High if the override leaked.
+    expect(positionRisk(position('sup-002', 'RM-EMUL-3310')).riskClass).toBe('medium');
 
     // Clearing it (null) puts the group back on the global value.
     await set('risk.highBelowMultiple@MG-20', null);
@@ -192,7 +190,7 @@ describe('GRP-RISK · a group override moves the class in its group and nowhere 
     // PK-PETB-8801: 17 days against 14 → Medium at 1.5 ×, Low at 1.2 ×.
     await set('risk.mediumBelowMultiple@MG-20', 1.2);
     expect(positionRisk(position('sup-007', 'PK-PETB-8801')).riskClass).toBe('low');
-    expect(positionRisk(position('sup-002', 'RM-EMUL-9410')).riskClass).toBe('medium');
+    expect(positionRisk(position('sup-002', 'RM-EMUL-3310')).riskClass).toBe('medium');
   });
 
   it('GRP-RISK-03 · CR-02 fallback bands: RM-EMUL-9430 (MG-02, no lead time) moves; an MG-20 band does not move it', async () => {

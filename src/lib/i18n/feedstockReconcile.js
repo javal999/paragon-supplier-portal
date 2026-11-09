@@ -28,18 +28,6 @@ export const feedstockReconcileEn = {
   'fsr.asnCount_other': 'on {{count}} ASNs',
   'fsr.calledBeyond': 'Called off beyond the PO:',
   'fsr.shippedBeyond': 'Shipped beyond the call-offs:',
-  // DRC-15b (BL-207) [Proposed] — the leftover rule, built for the owner's review.
-  'fsr.proposed': 'Proposed: awaiting owner review (BL-207)',
-  'fsr.leftover.liability': 'Liability, not priced:',
-  'fsr.leftover.noMax': 'No max stock agreed',
-  'fsr.leftover.carried': 'Carried into the next PO:',
-  'fsr.leftover.note.showOnly':
-    'Proposed leftover rule (DRC-15b), switch “show only”: the remainders are shown only, with no liability and nothing carried.',
-  'fsr.leftover.note.flagLiability':
-    'Proposed leftover rule (DRC-15b), switch “flag liability”: of what is not yet called off, the part up to the max stock is flagged as a liability, not priced and agreed outside the Hub, as for the old fixed stock reconcile. With no max stock agreed, the whole remainder is flagged.',
-  'fsr.leftover.note.carryToNextPo':
-    'Proposed leftover rule (DRC-15b), switch “carry to next PO”: what is not yet called off is shown as carried into the next PO for the supplier and material. Nothing is created.',
-
   'fsr.noMax': 'No max stock agreed',
   'fsr.max': 'Max:',
   'fsr.max.notAssigned': 'Not an assigned material, so no max stock can be set',
@@ -63,7 +51,7 @@ export const feedstockReconcileEn = {
   'fsr.rules.figures':
     'PO ordered is the quantity on the supplier’s PO lines for the material, except POs the supplier rejected; a value-only line carries no quantity. Called off is the quantity on the call-offs PTI released, from Awaiting Confirmation onward; drafts, dismissed and rejected call-offs count nothing. ASN requested is the quantity shipped on ASNs against those call-offs that are submitted, in transit, delivered or under discrepancy.',
   'fsr.rules.remainders':
-    'Not yet called off = PO ordered − called off. It never goes below zero; an excess shows as a note. What a remainder means follows the proposed leftover rule under the table. Procurement maintains the max stock.'
+    'Not yet called off = PO ordered − called off. It never goes below zero; an excess shows as a note. What happens to a remainder is decided on its PO On Hold line, linked from the figure. Procurement maintains the max stock.'
 };
 
 /** @type {Record<string, string>} */
@@ -86,18 +74,6 @@ export const feedstockReconcileId = {
   'fsr.asnCount_other': 'pada {{count}} ASN',
   'fsr.calledBeyond': 'Call-off melebihi PO:',
   'fsr.shippedBeyond': 'Dikirim melebihi call-off:',
-  // DRC-15b (BL-207) [Proposed] — aturan sisa, dibangun untuk ditinjau pemilik.
-  'fsr.proposed': 'Usulan: menunggu tinjauan pemilik (BL-207)',
-  'fsr.leftover.liability': 'Liabilitas, tanpa harga:',
-  'fsr.leftover.noMax': 'Belum ada stok maksimum yang disepakati',
-  'fsr.leftover.carried': 'Dibawa ke PO berikutnya:',
-  'fsr.leftover.note.showOnly':
-    'Usulan aturan sisa (DRC-15b), pilihan “hanya tampilkan”: sisa hanya ditampilkan, tanpa liabilitas dan tanpa dibawa ke PO berikutnya.',
-  'fsr.leftover.note.flagLiability':
-    'Usulan aturan sisa (DRC-15b), pilihan “tandai liabilitas”: dari yang belum di-call-off, bagian hingga stok maksimum ditandai sebagai liabilitas, tanpa harga dan disepakati di luar Hub, seperti pada rekonsiliasi stok tetap sebelumnya. Jika belum ada stok maksimum yang disepakati, seluruh sisa ditandai.',
-  'fsr.leftover.note.carryToNextPo':
-    'Usulan aturan sisa (DRC-15b), pilihan “bawa ke PO berikutnya”: yang belum di-call-off ditampilkan sebagai dibawa ke PO berikutnya untuk pemasok dan material tersebut. Tidak ada yang dibuat.',
-
   'fsr.noMax': 'Belum ada stok maksimum yang disepakati',
   'fsr.max': 'Max:',
   'fsr.max.notAssigned':
@@ -122,5 +98,5 @@ export const feedstockReconcileId = {
   'fsr.rules.figures':
     'Dipesan di PO adalah kuantitas pada baris PO pemasok untuk material tersebut, kecuali PO yang ditolak pemasok; baris berbasis nilai tidak membawa kuantitas. Di-call-off adalah kuantitas pada call-off yang dirilis PTI, mulai dari Menunggu Konfirmasi; draf, call-off yang dibatalkan, dan yang ditolak tidak dihitung. Diminta di ASN adalah kuantitas yang dikirim pada ASN atas call-off tersebut yang sudah dikirim, dalam perjalanan, diterima, atau dalam selisih.',
   'fsr.rules.remainders':
-    'Belum di-call-off = dipesan di PO − di-call-off. Nilainya tidak pernah di bawah nol; kelebihan ditampilkan sebagai catatan. Arti sisa mengikuti usulan aturan sisa di bawah tabel. Procurement mengelola stok maksimum.'
+    'Belum di-call-off = dipesan di PO − di-call-off. Nilainya tidak pernah di bawah nol; kelebihan ditampilkan sebagai catatan. Apa yang terjadi pada sisa diputuskan pada baris PO On Hold-nya, yang ditautkan dari angka itu. Procurement mengelola stok maksimum.'
 };

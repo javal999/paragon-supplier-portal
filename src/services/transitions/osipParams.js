@@ -46,7 +46,7 @@
 /** @import { OsipRules, SupplyArea } from './osipRules' */
 import { OSIP_RULES } from './osipRules';
 
-/** @typedef {'z' | 'g' | 'f' | 'pullAgreement' | 'bottleneckLeadTimeDays'} OsipParam */
+/** @typedef {'z' | 'g' | 'f' | 'pullAgreement' | 'bottleneckLeadTimeDays' | 'safetyStockOn' | 'protectionBufferOn' | 'grace' | 'noMove'} OsipParam */
 
 /** @typedef {'material' | 'supplier' | 'supplierMaterial'} OsipParamScope */
 
@@ -57,6 +57,8 @@ import { OSIP_RULES } from './osipRules';
  *   readonly scope: OsipParamScope;
  *   readonly question: string;
  *   readonly boolean?: boolean;
+ *   readonly integer?: boolean;
+ *   readonly reasonRequired?: boolean;
  *   readonly above?: number;
  *   readonly min?: number;
  *   readonly max?: number;
@@ -74,12 +76,76 @@ export const OSIP_PARAMS = Object.freeze({
     question: 'B10',
     above: 0,
     max: 365
+  }),
+  // PEX-13 (BL-275) — per material, default on. Every change needs a reason.
+  safetyStockOn: Object.freeze({
+    scope: 'material',
+    question: 'PEX-13',
+    boolean: true,
+    reasonRequired: true
+  }),
+  protectionBufferOn: Object.freeze({
+    scope: 'material',
+    question: 'PEX-13',
+    boolean: true,
+    reasonRequired: true
+  }),
+  // PEX-7 BR-02..BR-04 [PEX-D7]: days, per supplier × material; default 14
+  // (`PO_ON_HOLD_RULES`). Set on the PO On Hold panel, not on the OSIP values
+  // page, so they are not in `OSIP_PARAM_KINDS`.
+  grace: Object.freeze({
+    scope: 'supplierMaterial',
+    question: 'PEX-7',
+    integer: true,
+    min: 0,
+    max: 365
+  }),
+  noMove: Object.freeze({
+    scope: 'supplierMaterial',
+    question: 'PEX-7',
+    integer: true,
+    min: 0,
+    max: 365
   })
 });
 
+/** PEX-13 BR-02 — the shortest reason a switch change accepts, in characters. */
+export const SWITCH_REASON_MIN_LENGTH = 10;
+
+/**
+ * PEX-13 BR-02 — why a reason would be refused for a kind, or null when it is
+ * acceptable (or the kind needs none). A switch change, on or off, needs a
+ * free-text reason of at least `SWITCH_REASON_MIN_LENGTH` characters.
+ * @param {OsipParam} param
+ * @param {unknown} reason
+ * @returns {string | null}
+ */
+export function osipReasonRefusal(param, reason) {
+  if (!OSIP_PARAMS[param]?.reasonRequired) return null;
+  const text = typeof reason === 'string' ? reason.trim() : '';
+  return text.length >= SWITCH_REASON_MIN_LENGTH
+    ? null
+    : `OSIP_REASON_REQUIRED: at least ${SWITCH_REASON_MIN_LENGTH} characters`;
+}
+
+/**
+ * PEX-13 BR-01 — a switch is on unless its latest row says off.
+ * @param {number | boolean | null | undefined} value  The value in force (null: the default, on).
+ * @returns {boolean}
+ */
+export const switchIsOn = (value) => value !== false;
+
 /** The kinds, in page order. @type {readonly OsipParam[]} */
 export const OSIP_PARAM_KINDS = Object.freeze(
-  /** @type {OsipParam[]} */ (['z', 'g', 'f', 'pullAgreement', 'bottleneckLeadTimeDays'])
+  /** @type {OsipParam[]} */ ([
+    'z',
+    'g',
+    'f',
+    'pullAgreement',
+    'bottleneckLeadTimeDays',
+    'safetyStockOn',
+    'protectionBufferOn'
+  ])
 );
 
 /**
@@ -129,6 +195,8 @@ export function osipParamRefusal(param, value) {
     return typeof value === 'boolean' ? null : 'OSIP_PARAM_INVALID: a yes or no is expected';
   if (typeof value !== 'number' || !Number.isFinite(value))
     return 'OSIP_PARAM_INVALID: a number is expected';
+  if (def.integer && !Number.isInteger(value))
+    return 'OSIP_PARAM_INVALID: a whole number is expected';
   if (def.above !== undefined && !(value > def.above))
     return `OSIP_PARAM_INVALID: must be above ${def.above}`;
   if (def.min !== undefined && value < def.min) return `OSIP_PARAM_INVALID: at least ${def.min}`;

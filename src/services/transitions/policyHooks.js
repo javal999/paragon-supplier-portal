@@ -553,6 +553,17 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    */
   CAPACITY_DECISION_ACCEPTABLE: 'capacity_decision_acceptable',
   /**
+   * PO On Hold suggestion (PEX-8, BL-271): one of the three options
+   * (PO_ON_HOLD_OPTION_INVALID), on a line that is on hold (PO_ON_HOLD_NO_LINE)
+   * with no suggestion yet (PO_ON_HOLD_ALREADY_SUGGESTED).
+   */
+  PO_ON_HOLD_SUGGESTABLE: 'po_on_hold_suggestable',
+  /**
+   * PO On Hold choice (PEX-8): a valid option, on a line still on hold
+   * (PO_ON_HOLD_NO_LINE), before the grace period ends (PO_ON_HOLD_GRACE_ENDED).
+   */
+  PO_ON_HOLD_CHOOSABLE: 'po_on_hold_choosable',
+  /**
    * Material E1 (MR-7 BR-06, BR-08) — a planner input to the stock simulation:
    * a known supplier (UNKNOWN_SUPPLIER) and material (UNKNOWN_MATERIAL), one of
    * soh / inProduction / toDistributor (UNKNOWN_FIELD), a quantity of 0 or more
