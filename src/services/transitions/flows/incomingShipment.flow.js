@@ -93,6 +93,22 @@ export const incomingShipmentFlow = {
       version: 1
     },
     {
+      // PEX-16 (BL-279) — the supplier records (or changes) the tracking link of
+      // a principal-to-supplier leg still in flight, on the Stock page. A FACT
+      // on the leg, not a move: legal while Booked or Shipped, it leaves the
+      // lifecycle where it is. Not an ASN; not the 3PL tracking pattern.
+      id: 't_incomingshipment_track',
+      from: ['Booked', 'Shipped'],
+      to: 'Booked',
+      statePreserving: true,
+      trigger: 'user',
+      requiredRole: 'incomingshipment:track',
+      requiredFields: ['trackingUrl'],
+      policyHooks: [POLICY_HOOKS.ISH_TRACKING_URL_VALID],
+      surfaceable: { surfaced: true },
+      version: 1
+    },
+    {
       // AUTHORED-UNWIRED — an in-flight leg is called off.
       id: 't_incomingshipment_cancel',
       from: ['Booked', 'Shipped'],

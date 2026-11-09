@@ -296,9 +296,12 @@ describe('BL-133 — the pokayoke on the submit verb (ENG-D19)', () => {
     ).not.toContain('rr_promote_capacity_confirmed');
   });
 
+  // PEX-D22 — the commitment probes run on sup-002's Zone Liability month
+  // (stearic acid, October: inside its 45-day lead time). They used November,
+  // a Trade-off month that now takes an acknowledgement only.
   it('refused without capacity, by name — the draft stays a draft — and accepted once capacity is confirmed', async () => {
-    const l = await lineOf(sup002, 'RM-STEAR-7300', M[2]);
-    expect(l.zone).toBe('tradeOff');
+    const l = await lineOf(sup002, 'RM-STEAR-7300', M[1]);
+    expect(l.zone).toBe('firm');
     expect((await plan(sup002, 'MG-10')).latest).toBeNull();
     const id = await draft(sup002, l, l.forecastQty);
     const refused = await promote(sup002, id);
@@ -322,13 +325,13 @@ describe('BL-133 — the pokayoke on the submit verb (ENG-D19)', () => {
   });
 
   it('exactly at BE (amber) needs no reason; one above BE (red) is refused without one and accepted with one', async () => {
-    const l = await lineOf(sup002, 'RM-STEAR-7300', M[2]);
+    const l = await lineOf(sup002, 'RM-STEAR-7300', M[1]);
     // Allocation 1 below the LTP, additional capacity 1: LTP exactly at BE.
     await stearCapacity(-1, 1);
     const amber = await plan(sup002, 'MG-10');
     expect(
       /** @type {import('../../transitions/capacityRules').LtpCapacityWeek} */ (
-        ltpCapacityWeeks(amber).find((w) => w.week === '2026-11-02')
+        ltpCapacityWeeks(amber).find((w) => w.week === '2026-10-05')
       ).level
     ).toBe('needsAdditional');
     expect((await promote(sup002, await draft(sup002, l, l.forecastQty))).status).toBe('done');
@@ -350,12 +353,14 @@ describe('BL-133 — the pokayoke on the submit verb (ENG-D19)', () => {
     expect(withReason.status).toBe('done');
   });
 
-  it('on the sample data: sup-007 rigid plastics is red in the week of 14 Sep (LTP 72,800 against BE 60,000)', async () => {
+  // PEX-D22 moved the sample's red week from 14 Sep (W[2], now Trade-off) to
+  // 7 Sep (W[1], Zone Liability for sup-007's 14-day lead time).
+  it('on the sample data: sup-007 rigid plastics is red in the week of 7 Sep (LTP 72,800 against BE 60,000), a Zone Liability week', async () => {
     const mg20 = await plan(sup007, 'MG-20');
     const red = ltpCapacityWeeks(mg20).filter((w) => w.level === 'cannotSupply');
     expect(red).toEqual([
       {
-        week: W[2],
+        week: W[1],
         ltp: 72800,
         capacity: 60000,
         be: 60000,
@@ -363,12 +368,14 @@ describe('BL-133 — the pokayoke on the submit verb (ENG-D19)', () => {
         upsideConfirmed: false
       }
     ]);
-    const l = await lineOf(sup007, 'PK-PETB-8801', W[2]);
+    const l = await lineOf(sup007, 'PK-PETB-8801', W[1]);
+    expect(l.zone).toBe('firm');
     expect((await promote(sup007, await draft(sup007, l, l.forecastQty))).reason).toMatch(
       /ABOVE_BE_NEEDS_REASON/
     );
-    // A within week of the same group goes through with nothing added.
-    const ok = await lineOf(sup007, 'PK-PETB-8801', W[6]);
+    // A within Zone Liability week of the same group goes through with nothing added.
+    const ok = await lineOf(sup007, 'PK-PETB-8801', W[0]);
+    expect(ok.zone).toBe('firm');
     expect((await promote(sup007, await draft(sup007, ok, ok.forecastQty))).status).toBe('done');
   });
 
@@ -407,7 +414,7 @@ describe('BL-133 — supplier scoping', () => {
   });
 
   it('another supplier cannot submit (or confirm capacity for) a supplier’s commitment', async () => {
-    const l = await lineOf(sup002, 'RM-STEAR-7300', M[2]);
+    const l = await lineOf(sup002, 'RM-STEAR-7300', M[1]);
     const id = await draft(sup002, l, l.forecastQty);
     await expect(promote(sup007, id)).rejects.toMatchObject({ code: 'SCOPE_DENIED' });
     const mg10 = await plan(sup002, 'MG-10');

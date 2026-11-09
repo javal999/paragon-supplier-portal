@@ -844,13 +844,16 @@ describe('unbacked-toast honesty guard (R1)', () => {
     expect(SITES.length).toBeGreaterThan(10);
   });
 
-  // A page split into a folder keeps its sites (PAGE-SPLIT-GUIDE): the Export
-  // EDI toast stood in `SupplierShipments.jsx` and now stands in its index.
-  // Before `pageFiles`, the top-level scan dropped it with nothing going red.
+  // A page split into a folder keeps its sites (PAGE-SPLIT-GUIDE): the export
+  // toast stood in `BuyerGoodsReceipt.jsx` and now stands in its index.
+  // Before `pageFiles`, the top-level scan dropped such a site with nothing
+  // going red. (BL-182 removed the Export EDI 856 toast this test first named,
+  // in `SupplierShipments/index.jsx`; the premise is unchanged, so the test now
+  // names another split page's unbacked site.)
   it('a page split into a folder is still in the population', () => {
-    const shipments = SITES.filter((s) => s.file.startsWith('SupplierShipments/'));
-    expect(shipments.map((s) => s.file)).toContain('SupplierShipments/index.jsx');
-    expect(shipments.flatMap((s) => s.keys)).toContain('supplierShipments.toast.export.title');
+    const receipts = SITES.filter((s) => s.file.startsWith('BuyerGoodsReceipt/'));
+    expect(receipts.map((s) => s.file)).toContain('BuyerGoodsReceipt/index.jsx');
+    expect(receipts.flatMap((s) => s.keys)).toContain('goodsReceipt.toast.export.title');
   });
 
   // ── Page folders are DERIVED from the tree (PAGE-SPLIT-GUIDE). A split adds

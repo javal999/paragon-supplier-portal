@@ -8,7 +8,7 @@
 /** @type {Record<string, string>} */
 export const stabiliseEn = {
   'stb.subtitle':
-    'The plan suppliers would see, before and after it is stabilised: Firm weeks kept as published, Trade-off weeks damped and held to the tolerance band, and what that does to how much the plan moves.',
+    'The plan suppliers would see, before and after it is stabilised: Zone Liability weeks kept as published, Zone Capacity damped weeks damped and held to the tolerance band, and what that does to how much the plan moves.',
   'stb.meta.noPlan': 'No finished-goods plan',
   'stb.meta.versions':
     'Versions replayed: packaging {{packaging}} (weekly), raw material {{raw}} (monthly), from {{from}}',
@@ -23,12 +23,12 @@ export const stabiliseEn = {
     'No engine plan has been published yet, so the versions a supplier would have seen are replayed: the engine is run as of each past publication day on today’s record, and each version is stabilised against what the one before it published.',
 
   'stb.settings.title': 'Values in use',
-  'stb.settings.weight': 'Damping weight, Trade-off zone',
+  'stb.settings.weight': 'Damping weight, Zone Capacity',
   'stb.settings.weightNote':
     'Share of the value the supplier saw last time. Set on Administration → Tolerances.',
-  'stb.settings.forecastWeight': 'Damping weight, Forecast zone',
+  'stb.settings.forecastWeight': 'Damping weight, Zone Capacity later weeks',
   'stb.settings.forecastWeightNote': 'Not damped',
-  'stb.settings.band': 'Tolerance band, Trade-off zone',
+  'stb.settings.band': 'Tolerance band, Zone Capacity',
   'stb.settings.bandValue': '±{{perVersion}}% a version · ±{{cumulative}}% from the first value',
   'stb.settings.bandNote':
     'The cumulative cap is still to be agreed with the pilot suppliers; it runs on ±20% meanwhile.',
@@ -45,7 +45,7 @@ export const stabiliseEn = {
   'stb.kpi.share.sub_other': 'Raw → stabilised, of {{count}} weeks inside the lead time',
   'stb.kpi.band.value': '{{n}} of {{m}}',
   'stb.kpi.band.sub': 'after stabilising (before: {{n}} of {{m}})',
-  'stb.kpi.held.sub': 'Firm {{firm}} · band {{band}} · damped {{damped}}',
+  'stb.kpi.held.sub': 'Zone Liability {{firm}} · band {{band}} · damped {{damped}}',
   'stb.kpi.reason_one': '{{count}} week needs a reason to publish beyond the band',
   'stb.kpi.reason_other': '{{count}} weeks need a reason to publish beyond the band',
 
@@ -57,18 +57,18 @@ export const stabiliseEn = {
   'stb.rules.col.replay': 'All replayed versions',
   'stb.rule.new': 'New week — published as calculated',
   'stb.rule.unchanged': 'No change',
-  'stb.rule.firmFrozen': 'Firm — kept as published',
-  'stb.rule.forecast': 'Forecast — as calculated',
-  'stb.rule.damped': 'Trade-off — damped',
-  'stb.rule.bandHeld': 'Trade-off — held at ±10% a version',
-  'stb.rule.cumulativeHeld': 'Trade-off — held at ±20% from the first value',
-  'stb.rule.override': 'Trade-off — beyond the band, with the planner’s reason',
+  'stb.rule.firmFrozen': 'Zone Liability — kept as published',
+  'stb.rule.forecast': 'Zone Capacity — as calculated',
+  'stb.rule.damped': 'Zone Capacity — damped',
+  'stb.rule.bandHeld': 'Zone Capacity — held at ±10% a version',
+  'stb.rule.cumulativeHeld': 'Zone Capacity — held at ±20% from the first value',
+  'stb.rule.override': 'Zone Capacity — beyond the band, with the planner’s reason',
 
   'stb.series.title': 'Per supplier and material',
   'stb.series.intro': 'Choose a row to see each week of the version to publish.',
   'stb.series.col.material': 'Material',
   'stb.series.col.supplier': 'Supplier',
-  'stb.series.col.zones': 'Firm · Trade-off',
+  'stb.series.col.zones': 'Zone Liability · Zone Capacity',
   'stb.series.col.open': 'Weeks',
   'stb.series.days': '{{firm}} d · {{tradeOff}} d',
   'stb.series.show': 'Show weeks',
@@ -87,9 +87,9 @@ export const stabiliseEn = {
   'stb.detail.col.zone': 'Zone',
   'stb.detail.reasonNeeded': 'Beyond the band: needs a reason to publish the damped value',
   'stb.detail.recommit': 'Asks the supplier for a new commitment',
-  'stb.zone.firm': 'Firm',
-  'stb.zone.tradeOff': 'Trade-off',
-  'stb.zone.forecast': 'Forecast',
+  'stb.zone.firm': 'Zone Liability',
+  'stb.zone.tradeOff': 'Zone Capacity',
+  'stb.zone.forecast': 'Zone Capacity',
 
   'stb.publish.title': 'Publish this version',
   'stb.publish.intro':
@@ -125,7 +125,7 @@ export const stabiliseEn = {
   'stb.def.quantity':
     'The quantity is the material’s net requirement week by week — gross requirement plus safety stock, less stock and confirmed open orders — split by each supplier’s share. Order lots from What to order are not published here: they become call-offs.',
   'stb.def.zones':
-    'Firm runs for at least the supplier’s lead time and never changes once published. Trade-off runs from there for the Trade-off length; each week is damped (weight × last value + the rest × new value) and may move at most ±10% from the last published value and ±20% from the first. A move beyond that is held at the edge unless the planner gives a reason. Forecast weeks are published as calculated.',
+    'Zone Liability runs for at least the supplier’s lead time and never changes once published. Zone Capacity follows; its first weeks, for the damped length, are damped: each week is damped (weight × last value + the rest × new value) and may move at most ±10% from the last published value and ±20% from the first. A move beyond that is held at the edge unless the planner gives a reason. Its later weeks are published as calculated.',
   'stb.def.masc':
     'MASC is the mean absolute change between two versions over the weeks both carry, divided by the material’s usual week-to-week movement (the same measure as Supplier reliability). Lower is steadier.',
   'stb.def.share':
@@ -135,7 +135,7 @@ export const stabiliseEn = {
 /** @type {Record<string, string>} */
 export const stabiliseId = {
   'stb.subtitle':
-    'Rencana yang akan dilihat pemasok, sebelum dan sesudah distabilkan: minggu Firm tetap seperti yang diterbitkan, minggu Trade-off diredam dan ditahan dalam batas toleransi, dan dampaknya pada seberapa besar rencana bergerak.',
+    'Rencana yang akan dilihat pemasok, sebelum dan sesudah distabilkan: minggu Zone Liability tetap seperti yang diterbitkan, minggu diredam Zone Capacity diredam dan ditahan dalam batas toleransi, dan dampaknya pada seberapa besar rencana bergerak.',
   'stb.meta.noPlan': 'Tidak ada rencana barang jadi',
   'stb.meta.versions':
     'Versi yang diputar ulang: kemasan {{packaging}} (mingguan), bahan baku {{raw}} (bulanan), sejak {{from}}',
@@ -150,12 +150,12 @@ export const stabiliseId = {
     'Belum ada rencana mesin yang pernah diterbitkan, jadi versi yang akan dilihat pemasok diputar ulang: mesin dijalankan per setiap hari penerbitan yang lalu pada catatan hari ini, dan setiap versi distabilkan terhadap apa yang diterbitkan versi sebelumnya.',
 
   'stb.settings.title': 'Nilai yang dipakai',
-  'stb.settings.weight': 'Bobot peredaman, zona Trade-off',
+  'stb.settings.weight': 'Bobot peredaman, Zone Capacity',
   'stb.settings.weightNote':
     'Bagian dari nilai yang terakhir dilihat pemasok. Diatur di Administrasi → Toleransi.',
-  'stb.settings.forecastWeight': 'Bobot peredaman, zona Forecast',
+  'stb.settings.forecastWeight': 'Bobot peredaman, Zone Capacity minggu berikutnya',
   'stb.settings.forecastWeightNote': 'Tidak diredam',
-  'stb.settings.band': 'Batas toleransi, zona Trade-off',
+  'stb.settings.band': 'Batas toleransi, Zone Capacity',
   'stb.settings.bandValue': '±{{perVersion}}% per versi · ±{{cumulative}}% dari nilai pertama',
   'stb.settings.bandNote':
     'Batas kumulatif masih harus disepakati dengan pemasok pilot; sementara ini berjalan pada ±20%.',
@@ -171,7 +171,7 @@ export const stabiliseId = {
   'stb.kpi.share.sub_other': 'Mentah → distabilkan, dari {{count}} minggu dalam lead time',
   'stb.kpi.band.value': '{{n}} dari {{m}}',
   'stb.kpi.band.sub': 'setelah distabilkan (sebelum: {{n}} dari {{m}})',
-  'stb.kpi.held.sub': 'Firm {{firm}} · batas {{band}} · diredam {{damped}}',
+  'stb.kpi.held.sub': 'Zone Liability {{firm}} · batas {{band}} · diredam {{damped}}',
   'stb.kpi.reason_other': '{{count}} minggu memerlukan alasan untuk diterbitkan di luar batas',
 
   'stb.rules.title': 'Aturan yang menentukan setiap minggu',
@@ -182,19 +182,19 @@ export const stabiliseId = {
   'stb.rules.col.replay': 'Semua versi yang diputar ulang',
   'stb.rule.new': 'Minggu baru — diterbitkan apa adanya',
   'stb.rule.unchanged': 'Tidak berubah',
-  'stb.rule.firmFrozen': 'Firm — tetap seperti yang diterbitkan',
-  'stb.rule.forecast': 'Forecast — apa adanya',
-  'stb.rule.damped': 'Trade-off — diredam',
-  'stb.rule.bandHeld': 'Trade-off — ditahan pada ±10% per versi',
-  'stb.rule.cumulativeHeld': 'Trade-off — ditahan pada ±20% dari nilai pertama',
-  'stb.rule.override': 'Trade-off — di luar batas, dengan alasan perencana',
+  'stb.rule.firmFrozen': 'Zone Liability — tetap seperti yang diterbitkan',
+  'stb.rule.forecast': 'Zone Capacity — apa adanya',
+  'stb.rule.damped': 'Zone Capacity — diredam',
+  'stb.rule.bandHeld': 'Zone Capacity — ditahan pada ±10% per versi',
+  'stb.rule.cumulativeHeld': 'Zone Capacity — ditahan pada ±20% dari nilai pertama',
+  'stb.rule.override': 'Zone Capacity — di luar batas, dengan alasan perencana',
 
   'stb.series.title': 'Per pemasok dan material',
   'stb.series.intro':
     'Pilih satu baris untuk melihat setiap minggu dari versi yang akan diterbitkan.',
   'stb.series.col.material': 'Material',
   'stb.series.col.supplier': 'Pemasok',
-  'stb.series.col.zones': 'Firm · Trade-off',
+  'stb.series.col.zones': 'Zone Liability · Zone Capacity',
   'stb.series.col.open': 'Minggu',
   'stb.series.days': '{{firm}} hr · {{tradeOff}} hr',
   'stb.series.show': 'Tampilkan minggu',
@@ -211,9 +211,9 @@ export const stabiliseId = {
   'stb.detail.col.zone': 'Zona',
   'stb.detail.reasonNeeded': 'Di luar batas: perlu alasan untuk menerbitkan nilai yang diredam',
   'stb.detail.recommit': 'Meminta komitmen baru dari pemasok',
-  'stb.zone.firm': 'Firm',
-  'stb.zone.tradeOff': 'Trade-off',
-  'stb.zone.forecast': 'Forecast',
+  'stb.zone.firm': 'Zone Liability',
+  'stb.zone.tradeOff': 'Zone Capacity',
+  'stb.zone.forecast': 'Zone Capacity',
 
   'stb.publish.title': 'Terbitkan versi ini',
   'stb.publish.intro':
@@ -248,7 +248,7 @@ export const stabiliseId = {
   'stb.def.quantity':
     'Kuantitasnya adalah kebutuhan bersih material minggu demi minggu — kebutuhan kotor ditambah stok pengaman, dikurangi stok dan pesanan terbuka yang sudah dikonfirmasi — dibagi menurut porsi setiap pemasok. Lot pesanan dari Apa yang dipesan tidak diterbitkan di sini: lot itu menjadi call-off.',
   'stb.def.zones':
-    'Firm berlangsung sedikitnya sepanjang lead time pemasok dan tidak pernah berubah setelah diterbitkan. Trade-off berlanjut dari sana sepanjang durasi Trade-off; setiap minggu diredam (bobot × nilai terakhir + sisanya × nilai baru) dan boleh bergerak paling banyak ±10% dari nilai terakhir yang diterbitkan dan ±20% dari nilai pertama. Perubahan di luar itu ditahan di tepi batas kecuali perencana memberi alasan. Minggu Forecast diterbitkan apa adanya.',
+    'Zone Liability berlangsung sedikitnya sepanjang lead time pemasok dan tidak pernah berubah setelah diterbitkan. Zone Capacity menyusul; minggu-minggu pertamanya, sepanjang durasi peredaman, diredam: setiap minggu diredam (bobot × nilai terakhir + sisanya × nilai baru) dan boleh bergerak paling banyak ±10% dari nilai terakhir yang diterbitkan dan ±20% dari nilai pertama. Perubahan di luar itu ditahan di tepi batas kecuali perencana memberi alasan. Minggu berikutnya diterbitkan apa adanya.',
   'stb.def.masc':
     'MASC adalah rata-rata perubahan absolut antara dua versi pada minggu yang dimuat keduanya, dibagi pergerakan mingguan material yang biasa (ukuran yang sama dengan Keandalan pemasok). Makin rendah makin stabil.',
   'stb.def.share':

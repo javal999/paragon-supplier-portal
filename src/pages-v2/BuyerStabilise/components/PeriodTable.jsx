@@ -34,7 +34,8 @@ const PeriodTable = ({ s }) => {
           <TableHeaderCell>{t('stb.detail.col.week')}</TableHeaderCell>
           <TableHeaderCell>
             <span className="inline-flex items-center gap-1">
-              {t('stb.detail.col.zone')} <TermTip term="Firm" /> <TermTip term="Trade-off" />
+              {t('stb.detail.col.zone')} <TermTip term="Zone Liability" />{' '}
+              <TermTip term="Zone Capacity" />
             </span>
           </TableHeaderCell>
           <TableHeaderCell term="engineValue" />

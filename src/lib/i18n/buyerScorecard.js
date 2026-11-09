@@ -52,10 +52,8 @@ export const buyerScorecardEn = {
   'buyerScorecard.hero.seeComplianceTracker': 'See Compliance Tracker →',
   // — KPI scorecard section —
   'buyerScorecard.kpi.title': 'KPI Scorecard — 12 metrics',
-  'buyerScorecard.kpi.target': 'Target',
   // — Radar section —
   'buyerScorecard.radar.title': 'Score breakdown — radar',
-  'buyerScorecard.radar.benchmark': 'Benchmark',
   'buyerScorecard.chart.area': 'Area',
   'buyerScorecard.chart.month': 'Month',
   // — Performance trends section —
@@ -102,10 +100,8 @@ export const buyerScorecardId = {
   'buyerScorecard.hero.seeComplianceTracker': 'Lihat Pelacak Kepatuhan →',
   // — KPI scorecard section —
   'buyerScorecard.kpi.title': 'Kartu Skor KPI — 12 metrik',
-  'buyerScorecard.kpi.target': 'Target',
   // — Radar section —
   'buyerScorecard.radar.title': 'Rincian skor — radar',
-  'buyerScorecard.radar.benchmark': 'Tolok Ukur',
   'buyerScorecard.chart.area': 'Area',
   'buyerScorecard.chart.month': 'Bulan',
   // — Performance trends section —

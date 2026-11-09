@@ -490,6 +490,8 @@ export class DataError extends Error {
  * `trigger`: BL-199 (DRC-13) — on a `'ropFisik'` draft only: the figures behind it (SOH, ROP Fisik, Max, quantity), stamped with their inputs and rules version (DRC-D16). PTI only: a supplier's read never carries it.
  * `mrpController`:  Material C4 — the material's MRP controller, projected at read (never stored).
  * `delays`:  DRC-5 (BL-191) — every delay proposed for an LTP drop, oldest first; the last may be awaiting the supplier's answer. Absent when none was proposed.
+ * `leadTimeDays`:  PEX-10 (BL-273) — the supplier × material lead time (DRC-6), projected at read (never stored); the fulfil-by date counts from the confirmation with it. With no DRC-6 source on record, the material-type default (packaging 14, raw material 30; owner, 2026-11-05, PEX-D16), flagged by `leadTimeIsDefault`. Absent only when the material type is unknown.
+ * `leadTimeIsDefault`:  PEX-D16 — true when `leadTimeDays` is the material-type default, not the pair's own lead time.
  *
  * @typedef {{
  *   readonly id: string;
@@ -518,6 +520,8 @@ export class DataError extends Error {
  *   readonly notes: readonly CallOffNote[];
  *   readonly delays?: readonly CallOffDelay[];
  *   readonly mrpController?: MrpControllerRef;
+ *   readonly leadTimeDays?: number;
+ *   readonly leadTimeIsDefault?: boolean;
  * }} CallOff
  */
 
@@ -921,6 +925,7 @@ export class DataError extends Error {
  * `log`:  REQ-E06-03 BR-05 — every revision request and note on this period, oldest first.
  * `moves`:  CAP-8 BR-05 — the planner's moves of this line's demand to other suppliers, one entry per allocation, oldest first.
  * `otherQualifiedSuppliers`:  REQ-E06-03 BR-05 — the other suppliers qualified for the material (where demand can move).
+ * `leadTimeDays`:  PEX-10 (BL-273) — the pair's lead time in days (DRC-6, `leadTimeBreakdown(...).totalDays`); null with no lead time on record. Optional for hand-built lines.
  *
  * @typedef {{
  *   readonly key: string;
@@ -953,6 +958,7 @@ export class DataError extends Error {
  *   readonly log: readonly DisputeEntry[];
  *   readonly moves: readonly { readonly toSupplierId: string; readonly toSupplierName: string; readonly qty: number; readonly at: string; readonly note: string }[];
  *   readonly otherQualifiedSuppliers: readonly { readonly supplierId: string; readonly supplierName: string }[];
+ *   readonly leadTimeDays?: number | null;
  * }} ForecastCommitmentLine
  */
 
@@ -2104,10 +2110,7 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * @typedef {object} KpiPoint
  * @property {string} name
  * @property {string} value
- * @property {string} target
- * @property {number} pct
- * @property {number} targetPct -  Target position on the same 0–100 axis as `pct` (DP2-TARGET-01 tick +
- *    derived meeting/near/missing colour). Replaces the hand-assigned hex.
+ * @property {number} pct -  The figure on a 0–100 axis, drawn as a neutral bar. No target is authored (BL-78, BL-19: baseline first).
  * @property {KpiTrend} trend
  */
 
@@ -2115,7 +2118,6 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * @typedef {object} RadarPoint
  * @property {string} axis
  * @property {number} value
- * @property {number} target
  */
 
 /**
@@ -2130,8 +2132,6 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * @typedef {object} ImprovementAction
  * @property {string} kpi
  * @property {string} current
- * @property {string} target
- * @property {string} gap
  * @property {string} action
  * @property {'High' | 'Medium' | 'Low'} priority
  */
@@ -2159,9 +2159,7 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * @typedef {object} ScorecardKpi
  * @property {string} name
  * @property {string} value
- * @property {string} target
- * @property {number} pct
- * @property {number} targetPct -  Target position on the same 0–100 axis as `pct` (DP2-TARGET-01).
+ * @property {number} pct -  The figure on a 0–100 axis, drawn as a neutral bar. No target is authored (BL-78, BL-19: baseline first).
  * @property {KpiTrend} trend
  */
 

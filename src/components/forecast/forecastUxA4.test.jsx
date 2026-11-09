@@ -339,8 +339,8 @@ describe('planning terms (F-09)', () => {
   it('registers the seven terms as a glossary vocabulary', () => {
     // FUX2 B3 adds Safety stock, tipped in the "Why this quantity" panel.
     expect(TERMS).toEqual([
-      'Firm',
-      'Trade-off',
+      'Zone Liability',
+      'Zone Capacity',
       'MASC',
       'Tracking signal',
       'Reorder point',

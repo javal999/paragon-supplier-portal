@@ -262,15 +262,19 @@ const weeks = (allocated, extra = () => ({})) =>
  */
 export const CAPACITY_SEED = [
   {
-    // Rigid plastic packaging: week 3 falls short of demand for a material reason.
+    // Rigid plastic packaging: week 2 falls short of demand for a material reason.
+    // PEX-D22 (2026-11-05) moved the short week from week 3 (14 Sep) to week 2
+    // (7 Sep): only Zone Liability periods take a commitment, and 7 Sep is
+    // inside sup-007's 14-day lead time, so the ENG-D19 capacity check still
+    // has a red period to show.
     id: 'cap-0001',
     supplierId: 'sup-007',
     planningGroupId: defaultPlanningGroupId('MG-20'),
     submittedAt: at(-2, 4),
     weeks: weeks(
-      (i) => (i === 2 ? 60000 : 90000),
+      (i) => (i === 1 ? 60000 : 90000),
       (i) =>
-        i === 2 ? { reason: /** @type {const} */ ('material') } : i === 5 ? { upside: 10000 } : {}
+        i === 1 ? { reason: /** @type {const} */ ('material') } : i === 5 ? { upside: 10000 } : {}
     )
   },
   {

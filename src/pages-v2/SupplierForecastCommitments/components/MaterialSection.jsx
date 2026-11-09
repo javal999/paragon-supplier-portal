@@ -1,19 +1,27 @@
 /** @import React from 'react' */
 import { useTranslation } from 'react-i18next';
 import TermLabel from '@components/ui-v2/TermLabel';
+import TermTip from '@components/forecast/TermTip';
 import Data from '@components/ui-v2/Data';
-import Table from '@components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
 /** @import { ForecastCommitmentLine } from '@services/data/types' */
 /** @import { VerbAvailability } from '@services/transitions/handoff' */
 /** @import { ReadRow, ReasonLabel, RowDraft } from '../const' */
-import CommitmentRow from './CommitmentRow';
-import ForecastZoneRow from './ForecastZoneRow';
+import AcknowledgeColumn from './AcknowledgeColumn';
+import CommitmentColumn from './CommitmentColumn';
+import CommitmentLog from './CommitmentLog';
+import { CELL, HEAD } from './gridCells';
+import { isAcknowledgeOnly } from '@services/transitions/forecastRules';
+
+const LABEL = `${CELL} sticky left-0 z-10 bg-bg-surface font-medium text-text-secondary whitespace-nowrap`;
 
 /**
- * One material's commitment table: its code and name, the column headers in
- * its unit, and a row per period — acknowledge-only for the Forecast zone,
- * the commitment inputs for Firm and Trade-off.
+ * One material's commitments (PEX-2, BL-265 BR-01 / BR-05): a grid with one
+ * COLUMN per period, oldest first, that scrolls sideways, and the row labels
+ * pinned on the left — as the buyer grid already reads. An acknowledge-only
+ * column for the later weeks of Zone Capacity; a commitment column for Zone
+ * Liability and the damped weeks of Zone Capacity. Above the grid, PEX-3's
+ * one-line note on where the ordered quantity comes from; under it, the
+ * revision log of any period that has one.
  * @type {React.FC<{
  *   code: string;
  *   mine: ForecastCommitmentLine[];
@@ -51,6 +59,7 @@ const MaterialSection = ({
 }) => {
   const { t } = useTranslation();
   const first = mine[0];
+  const logged = mine.filter((l) => !isAcknowledgeOnly(l.zone) && l.log.length > 0);
   return (
     <section
       className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm"
@@ -59,65 +68,84 @@ const MaterialSection = ({
       <div className="px-4 py-3 border-b border-border-subtle">
         <Data className="font-semibold">{code}</Data>{' '}
         <span className="text-sm text-text-primary">· {first.materialLabel}</span>
+        <p className="text-xs text-text-secondary mt-1" data-testid={`fc-sup-demand-note-${code}`}>
+          {t('fc.sup.demandNote')}
+        </p>
+        <p className="text-xs text-text-tertiary">{t('fc.sup.grid.scrollHint')}</p>
       </div>
       <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableHeaderCell>{t('fc.col.period')}</TableHeaderCell>
-            <TableHeaderCell term="forecastZone" />
-            <TableHeaderCell className="text-right">
-              <TermLabel term="publishedForecast" values={{ uom: first.uom }} />
-            </TableHeaderCell>
-            <TableHeaderCell term="commitmentDue" />
-            <TableHeaderCell>
-              <TermLabel term="commitment" values={{ uom: first.uom }} />
-            </TableHeaderCell>
-            <TableHeaderCell>
-              <TermLabel term="commitmentUpside" values={{ uom: first.uom }} />
-            </TableHeaderCell>
-            <TableHeaderCell>{t('fc.col.reason')}</TableHeaderCell>
-            <TableHeaderCell>{t('fc.col.status')}</TableHeaderCell>
-            <TableHeaderCell>
-              <span className="sr-only">{t('fc.col.actions')}</span>
-            </TableHeaderCell>
-          </TableHeader>
-          <tbody>
-            {mine.map((l) => {
-              const label = periodLabel(l.periodBucket);
-              if (l.zone === 'forecast') {
-                return (
-                  <ForecastZoneRow
-                    key={l.key}
-                    l={l}
-                    label={label}
-                    nowIso={nowIso}
-                    canAck={canAck}
-                    pending={pending}
-                    ackAvail={ackAvail}
-                    onAcknowledge={onAcknowledge}
-                  />
-                );
-              }
-              return (
-                <CommitmentRow
-                  key={l.key}
-                  l={l}
-                  label={label}
-                  nowIso={nowIso}
-                  canCommit={canCommit}
-                  pending={pending}
-                  submitAvail={submitAvail}
-                  commitmentReasons={commitmentReasons}
-                  reasonLabel={reasonLabel}
-                  readRow={readRow}
-                  setRow={setRow}
-                  onCommitRow={onCommitRow}
-                />
-              );
-            })}
-          </tbody>
-        </Table>
+        <div
+          role="group"
+          aria-label={t('fc.sup.grid.label', { material: code })}
+          className="grid grid-flow-col grid-rows-[repeat(10,auto)] auto-cols-[minmax(9rem,max-content)] w-max min-w-full"
+          data-testid={`fc-sup-grid-${code}`}
+        >
+          <div className={`${HEAD} sticky left-0 z-10`} data-grid-label>
+            {t('fc.col.period')}
+          </div>
+          <div className={LABEL} data-grid-label>
+            <TermLabel term="forecastZone" /> <TermTip term="Zone Liability" />{' '}
+            <TermTip term="Zone Capacity" />
+          </div>
+          <div className={LABEL} data-grid-label>
+            <TermLabel term="publishedForecast" values={{ uom: first.uom }} />
+          </div>
+          <div className={LABEL} data-grid-label>
+            <TermLabel term="commitmentDue" />
+          </div>
+          <div className={LABEL} data-grid-label>
+            {t('fc.sup.row.fulfilBy')}
+          </div>
+          <div className={LABEL} data-grid-label>
+            <TermLabel term="commitment" values={{ uom: first.uom }} />
+          </div>
+          <div className={LABEL} data-grid-label>
+            <TermLabel term="commitmentUpside" values={{ uom: first.uom }} />
+          </div>
+          <div className={LABEL} data-grid-label>
+            {t('fc.col.reason')}
+          </div>
+          <div className={LABEL} data-grid-label>
+            {t('fc.col.status')}
+          </div>
+          <div className={LABEL} data-grid-label>
+            {t('fc.col.actions')}
+          </div>
+          {mine.map((l) => {
+            const label = periodLabel(l.periodBucket);
+            return isAcknowledgeOnly(l.zone) ? (
+              <AcknowledgeColumn
+                key={l.key}
+                l={l}
+                label={label}
+                nowIso={nowIso}
+                canAck={canAck}
+                pending={pending}
+                ackAvail={ackAvail}
+                onAcknowledge={onAcknowledge}
+              />
+            ) : (
+              <CommitmentColumn
+                key={l.key}
+                l={l}
+                label={label}
+                nowIso={nowIso}
+                canCommit={canCommit}
+                pending={pending}
+                submitAvail={submitAvail}
+                commitmentReasons={commitmentReasons}
+                reasonLabel={reasonLabel}
+                readRow={readRow}
+                setRow={setRow}
+                onCommitRow={onCommitRow}
+              />
+            );
+          })}
+        </div>
       </div>
+      {logged.map((l) => (
+        <CommitmentLog key={l.key} l={l} label={periodLabel(l.periodBucket)} />
+      ))}
     </section>
   );
 };

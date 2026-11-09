@@ -23,8 +23,6 @@
 /** @import { GoodsReceipt } from '@data/mockGoodsReceipts' */
 /** @import { CallOffView } from '../transitions/callOffRules' */
 import { callOffViews } from '../transitions/callOffRules';
-/** @import { TargetStatus } from '@lib/chartPalette' */
-import { targetStatus } from '@lib/chartPalette';
 import { receivedOnTimeFor } from './kpiWindow';
 import { complianceScoreWeight } from '../transitions/inventoryConfig';
 /** @import { UpdateCompliance } from '../transitions/updateCompliance' */
@@ -73,20 +71,10 @@ export function inPeriod(date, period, nowIso) {
   return day >= periodStart(period, nowIso) && day <= nowIso.slice(0, 10);
 }
 
-// ── CR-17 · the target and its status ───────────────────────────────────────
-
-/** CR-17 — target 90%, "near" from 80% up to the target. */
-export const OTIF_TARGET_PCT = 90;
-export const OTIF_NEAR_BAND = 10;
-
-/**
- * The target status of a measured percentage, or null when nothing is measured.
- * @param {number | null} pct
- * @returns {TargetStatus | null}
- */
-export function performanceStatus(pct) {
-  return pct === null ? null : targetStatus(pct, OTIF_TARGET_PCT, OTIF_NEAR_BAND);
-}
+// ── CR-17 · no target yet ───────────────────────────────────────────────────
+// BL-78 (BL-19: baseline first, no targets yet) — the CR-17 90% target and its
+// status (`OTIF_TARGET_PCT`, `performanceStatus`) are retired; no page read
+// them since BL-53. A target returns from the baseline, not from this file.
 
 // ── The grade bands (derived from the score, never stored) ──────────────────
 
@@ -220,7 +208,9 @@ function confirmedLine(po, lineId, orderedQty) {
  *
  * BL-66 (4) — "on time" is the SAME rule OTIF uses: on or before the confirmed
  * date and no more than EARLY_DELIVERY_WINDOW_DAYS before it. A receipt earlier
- * than that does not count (KPI-2; a confirmed early date is BL-234, not built).
+ * than that does not count — unless the planner accepted that earlier date as a
+ * counter-offer, which makes it the confirmed date measured (KPI-2 amended,
+ * BL-234; see `kpiWindow.js`).
  * @param {PurchaseOrder} po
  * @param {readonly GoodsReceipt[]} receipts
  * @returns {PoCfot | null}

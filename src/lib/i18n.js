@@ -532,8 +532,8 @@ export const resources = {
       'chase.mode.anticipatory-nudge': 'Upcoming',
       'chase.mode.non-compliance-alert': 'Missed / late',
       'chase.mode.drift': 'Drift',
-      'chase.type.firm': 'Firm',
-      'chase.type.semi-firm': 'Semi-firm',
+      'chase.type.firm': 'Zone Liability',
+      'chase.type.semi-firm': 'Zone Capacity',
       'chase.due': 'due {{date}}',
       'chase.pushWhatsApp': 'Push via WhatsApp',
       // — Shared chrome: top bar —
@@ -1040,8 +1040,8 @@ export const resources = {
       'chase.mode.anticipatory-nudge': 'Akan datang',
       'chase.mode.non-compliance-alert': 'Terlewat / terlambat',
       'chase.mode.drift': 'Penyimpangan',
-      'chase.type.firm': 'Pasti',
-      'chase.type.semi-firm': 'Semi-pasti',
+      'chase.type.firm': 'Zone Liability',
+      'chase.type.semi-firm': 'Zone Capacity',
       'chase.due': 'jatuh tempo {{date}}',
       'chase.pushWhatsApp': 'Dorong via WhatsApp',
       // — Shared chrome: top bar —

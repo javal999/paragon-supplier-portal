@@ -74,11 +74,12 @@ beforeEach(() => {
   sdcClock.reset();
 });
 
+// PEX-D22 moved the sample's red week (sup-007 pg-MG-20) from 14 Sep to 7 Sep.
 describe('the fixture cases this file rests on (population control)', () => {
   it('names the amber, red, within and unstated weeks the specs below use', () => {
     expect(capacityWeekLevel('sup-005', 'pg-MG-02', '2026-10-12')).toBe('needsAdditional');
     expect(capacityWeekLevel('sup-005', 'pg-MG-02', '2026-10-19')).toBe('needsAdditional');
-    expect(capacityWeekLevel('sup-007', 'pg-MG-20', '2026-09-14')).toBe('cannotSupply');
+    expect(capacityWeekLevel('sup-007', 'pg-MG-20', '2026-09-07')).toBe('cannotSupply');
     expect(capacityWeekLevel('sup-005', 'pg-MG-02', '2026-08-31')).toBe('within');
     expect(capacityWeekLevel('sup-005', 'pg-MG-03', '2026-08-31')).toBe('unconfirmed');
     expect(capacityWeekLevel('sup-005', 'pg-MG-02', '2030-01-07')).toBeNull();
@@ -120,7 +121,7 @@ describe('refusals — each code fires once and passes once (CODE: sentence)', (
     ['NOT_A_GAP_WEEK', { ...AMBER, week: '2026-08-31' }],
     [
       'ABOVE_ADDITIONAL_CAPACITY',
-      { supplierId: 'sup-007', planningGroupId: 'pg-MG-20', week: '2026-09-14' }
+      { supplierId: 'sup-007', planningGroupId: 'pg-MG-20', week: '2026-09-07' }
     ],
     ['ALREADY_ACCEPTED', { ...AMBER, week: '2026-10-12' }]
   ];
@@ -152,7 +153,7 @@ describe('refusals — each code fires once and passes once (CODE: sentence)', (
       (p) => p.supplierId === 'sup-007' && p.planningGroupId === 'pg-MG-20'
     );
     const red = ltpCapacityWeeks(/** @type {NonNullable<typeof plan>} */ (plan)).find(
-      (w) => w.week === '2026-09-14'
+      (w) => w.week === '2026-09-07'
     );
     expect(red && uncoveredByAdditional(red)).toBe(12800);
     const amber = { level: /** @type {const} */ ('needsAdditional'), ltp: 497, be: 550 };

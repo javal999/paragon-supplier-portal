@@ -43,7 +43,9 @@ const seed = () => [
     id: 'ask-0002',
     supplierId: 'sup-007',
     planningGroupId: 'pg-MG-20',
-    week: '2026-09-14',
+    // PEX-D22 — the sample's short week moved from 14 Sep to 7 Sep (inside
+    // Zone Liability); the ask follows it, so it still names a gap week.
+    week: '2026-09-07',
     topic: 'capacityGap',
     questionKey: 'supplierAsk.default.capacityGap',
     question:

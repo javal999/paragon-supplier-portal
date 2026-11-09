@@ -56,7 +56,6 @@ export const buyerAnalyticsEn = {
   'buyerAnalytics.spend.topSuppliers': 'Top 5 suppliers by spend (Rp jT)',
   // — OTIF / OTDR trend section —
   'buyerAnalytics.otif.title': 'Monthly OTIF & OTDR trend (%)',
-  'buyerAnalytics.otif.target': 'Target 90%',
   // — PO volume section —
   'buyerAnalytics.poVolume.title': 'PO volume & avg cycle time',
   'buyerAnalytics.poVolume.axisPos': 'POs',
@@ -120,7 +119,6 @@ export const buyerAnalyticsId = {
   'buyerAnalytics.spend.topSuppliers': '5 pemasok teratas menurut belanja (Rp jT)',
   // — OTIF / OTDR trend section —
   'buyerAnalytics.otif.title': 'Tren OTIF & OTDR bulanan (%)',
-  'buyerAnalytics.otif.target': 'Target 90%',
   // — PO volume section —
   'buyerAnalytics.poVolume.title': 'Volume PO & rata-rata waktu siklus',
   'buyerAnalytics.poVolume.axisPos': 'PO',

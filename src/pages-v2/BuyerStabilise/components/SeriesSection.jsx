@@ -66,7 +66,8 @@ const SeriesSection = ({ series }) => {
               <TableHeaderCell>{t('stb.series.col.supplier')}</TableHeaderCell>
               <TableHeaderCell>
                 <span className="inline-flex items-center gap-1">
-                  {t('stb.series.col.zones')} <TermTip term="Firm" /> <TermTip term="Trade-off" />
+                  {t('stb.series.col.zones')} <TermTip term="Zone Liability" />{' '}
+                  <TermTip term="Zone Capacity" />
                 </span>
               </TableHeaderCell>
               <TableHeaderCell term="seriesHeld" />

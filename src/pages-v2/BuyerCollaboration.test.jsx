@@ -98,8 +98,8 @@ describe('BuyerCollaboration — period filter bar (the PERIOD owns the class)',
     renderWithProviders(<BuyerCollaboration />, { route: '/buyer/collaboration' });
     const bar = screen.getByTestId('sdc-period-bar');
     // The locked badge is period-scoped text, never per-material.
-    expect(bar).toHaveTextContent('2026-08 · FIRM — period locked');
-    expect(bar).toHaveTextContent('2026-09 · Semi-firm');
+    expect(bar).toHaveTextContent('2026-08 · Zone Liability — period locked');
+    expect(bar).toHaveTextContent('2026-09 · Zone Capacity');
     expect(bar).toHaveTextContent('2026-10 · Visibility only');
   });
 

@@ -9,6 +9,7 @@ import {
   ToleranceFindings,
   qty
 } from '../../callOffs/callOffDisplay';
+import FulfilBy from './FulfilBy';
 
 /**
  * The read-only top of the call-off panel: the key facts, the confirmation
@@ -45,6 +46,8 @@ const CallOffDetails = ({ selected }) => {
         <dt className="text-text-tertiary">{t('co.col.confirmation')}</dt>
         <dd>
           <ConfirmationPill status={selected.confirmation} />
+          {/* PEX-10 (BL-273) — the fulfilment window, in the panel too. */}
+          <FulfilBy callOff={selected.callOff} testId="supplier-calloff-panel-fulfil-by" />
         </dd>
         <dt className="text-text-tertiary">{t('co.col.delivery')}</dt>
         <dd>

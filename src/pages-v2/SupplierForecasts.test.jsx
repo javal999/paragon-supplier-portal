@@ -55,6 +55,12 @@ async function openConfirmFor(materialCode) {
   await screen.findByLabelText(/Confirmed quantity/);
 }
 
+/** sup-007 has drafted or submitted a response to its firm PK-PETB-8810 line. */
+const mine8810 = () =>
+  requirementResponseStore
+    .all()
+    .some((r) => r.materialCode === 'PK-PETB-8810' && r.supplierId === 'sup-007');
+
 /** @param {string} value */
 const setQty = (value) =>
   fireEvent.change(screen.getByLabelText(/Confirmed quantity/), { target: { value } });
@@ -126,22 +132,33 @@ describe('SupplierForecasts — FLAG-2 honest render', () => {
   it('speaks commitmentClass ONLY — the P2 provenance grammar never renders', async () => {
     renderPage();
     const lines = await screen.findByTestId('sdcsup-lines');
-    expect(within(lines).getByText('Firm')).toBeInTheDocument();
-    expect(within(lines).getByText('Semi-firm')).toBeInTheDocument();
+    expect(within(lines).getByText('Zone Liability')).toBeInTheDocument();
+    expect(within(lines).getByText('Zone Capacity')).toBeInTheDocument();
     expect(within(lines).getByText('Visibility only')).toBeInTheDocument();
     // No PlanCellMarker / internal liveness-axis vocabulary on this surface.
     expect(screen.queryByText(/SIMULATED/)).not.toBeInTheDocument();
     expect(screen.queryByText(/PLANNED/)).not.toBeInTheDocument();
   });
 
-  it('a visibility-only line offers ACKNOWLEDGE, never Confirm (nothing to commit)', async () => {
+  // PEX-D22 (owner, 2026-11-05) flipped the semi-firm line: it pinned 2
+  // Confirm buttons (firm + semi-firm). A semi-firm line is Zone Capacity,
+  // acknowledgement only, so only the firm line offers Confirm.
+  it('a Zone Capacity line (visibility-only or semi-firm) offers ACKNOWLEDGE, never Confirm (nothing to commit)', async () => {
     renderPage();
     const lines = await screen.findByTestId('sdcsup-lines');
-    // 3 fanned lines: 2 Confirm buttons (firm + semi-firm) and 1 Acknowledge
-    // (the visibility-only line — SDC-2b-EXT response affordance + the hint).
-    expect(within(lines).getAllByRole('button', { name: /^Confirm$/ })).toHaveLength(2);
-    expect(within(lines).getAllByRole('button', { name: /^Acknowledge$/ })).toHaveLength(1);
-    expect(within(lines).getByText(/no commitment requested/i)).toBeInTheDocument();
+    // 3 fanned lines: 1 Confirm button (firm) and 2 Acknowledge (semi-firm and
+    // visibility-only — SDC-2b-EXT response affordance + the hint).
+    expect(within(lines).getAllByRole('button', { name: /^Confirm$/ })).toHaveLength(1);
+    expect(within(lines).getAllByRole('button', { name: /^Acknowledge$/ })).toHaveLength(2);
+    expect(within(lines).getAllByText(/no commitment requested/i)).toHaveLength(2);
+    /** @param {string} code */
+    const cardOf = (code) =>
+      /** @type {HTMLElement} */ (within(lines).getByText(code).closest('div.bg-bg-surface'));
+    expect(within(cardOf('PK-PETB-8810')).getByRole('button', { name: /^Confirm$/ })).toBeTruthy();
+    expect(
+      within(cardOf('PK-CAPF-8820')).getByRole('button', { name: /^Acknowledge$/ })
+    ).toBeTruthy();
+    expect(within(cardOf('PK-CAPF-8820')).queryByRole('button', { name: /^Confirm$/ })).toBeNull();
   });
 });
 
@@ -149,7 +166,10 @@ describe('SupplierForecasts — the visibility response (SDC-2b-EXT)', () => {
   it('acknowledges the visibility line with a note → records honestly, never as a confirmation', async () => {
     renderPage();
     const lines = await screen.findByTestId('sdcsup-lines');
-    fireEvent.click(within(lines).getByRole('button', { name: /^Acknowledge$/ }));
+    const niac = /** @type {HTMLElement} */ (
+      within(lines).getByText('AI-NIAC-6601').closest('div.bg-bg-surface')
+    );
+    fireEvent.click(within(niac).getByRole('button', { name: /^Acknowledge$/ }));
     fireEvent.change(await screen.findByLabelText(/Note \(optional signal\)/), {
       target: { value: 'Current stock covers this horizon.' }
     });
@@ -236,32 +256,30 @@ describe('SupplierForecasts — the governed submit (t_requirementresponse_submi
     ).toBeInTheDocument();
   });
 
+  // PEX-D22 — on the firm line PK-PETB-8810 (40 000 PCS); it used the
+  // semi-firm PK-CAPF-8820, which now takes an acknowledgement only.
   it('a SHORT confirm without a root cause is blocked at the form; with one it submits', async () => {
     renderPage();
-    await openConfirmFor('PK-CAPF-8820');
-    setQty('50000'); // < the requested 60 000
+    await openConfirmFor('PK-PETB-8810');
+    setQty('30000'); // < the requested 40 000
     submitPanel();
     // Blocked at the form (root-cause toast): nothing minted, the panel stays open.
-    expect(requirementResponseStore.all().some((r) => r.materialCode === 'PK-CAPF-8820')).toBe(
-      false
-    );
+    expect(mine8810()).toBe(false);
     expect(screen.getByRole('button', { name: /Save draft/ })).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText(/Category/), { target: { value: 'capacity' } });
     submitPanel();
-    await waitFor(() =>
-      expect(requirementResponseStore.all().some((r) => r.materialCode === 'PK-CAPF-8820')).toBe(
-        true
-      )
-    );
+    await waitFor(() => expect(mine8810()).toBe(true));
     const minted = /** @type {import('@services/sdc/types').RequirementResponse} */ (
-      requirementResponseStore.all().find((r) => r.materialCode === 'PK-CAPF-8820')
+      requirementResponseStore
+        .all()
+        .find((r) => r.materialCode === 'PK-PETB-8810' && r.supplierId === 'sup-007')
     );
     expect(minted.rootCause?.level1).toBe('capacity');
     expect(
       /** @type {import('@services/sdc/types').ForecastConfirmation} */ (
         minted.forecastConfirmation
       ).confirmedQty
-    ).toBe(50000);
+    ).toBe(30000);
   });
 
   it('F-2: zero-qty + root cause is a LEGAL "cannot supply at all" short', async () => {
@@ -461,35 +479,30 @@ describe('SupplierForecasts — the false-deficit chain (CP-0 · 2c)', () => {
 
   it('CONTROL — a GENUINELY short quantity still trips every guard (the fix did not disable detection)', async () => {
     renderPage();
-    await openConfirmFor('PK-CAPF-8820'); // semi-firm, 60 000 PCS
-    setQty('50000'); // really short by 10 000
+    // PEX-D22 — the firm line (the semi-firm PK-CAPF-8820 is acknowledgement only now).
+    await openConfirmFor('PK-PETB-8810'); // firm, 40 000 PCS
+    setQty('30000'); // really short by 10 000
 
     // The accusation is CORRECT here and must still be made.
     expect(categoryIsRequired()).toBe(true);
 
     // Blocked without a root cause, exactly as before.
     submitPanel();
-    expect(requirementResponseStore.all().some((r) => r.materialCode === 'PK-CAPF-8820')).toBe(
-      false
-    );
+    expect(mine8810()).toBe(false);
     fireEvent.change(screen.getByLabelText(/Category/), { target: { value: 'capacity' } });
     submitPanel();
-    await waitFor(() =>
-      expect(requirementResponseStore.all().some((r) => r.materialCode === 'PK-CAPF-8820')).toBe(
-        true
-      )
-    );
+    await waitFor(() => expect(mine8810()).toBe(true));
 
     // And the REAL deficit still reaches the planner — once it is SUBMITTED.
     const draft = /** @type {import('@services/sdc/types').RequirementResponse} */ (
       requirementResponseStore
         .all()
-        .find((r) => r.materialCode === 'PK-CAPF-8820' && r.supplierId === 'sup-007')
+        .find((r) => r.materialCode === 'PK-PETB-8810' && r.supplierId === 'sup-007')
     );
     await submitDraftFor(draft.id);
     const rows = consolidationRows(FORECAST_PUBLICATIONS, requirementResponseStore.all());
     const row = /** @type {import('@services/sdc/consolidation').ConsolidationRow} */ (
-      rows.find((r) => r.line.supplierId === 'sup-007' && r.line.materialCode === 'PK-CAPF-8820')
+      rows.find((r) => r.line.supplierId === 'sup-007' && r.line.materialCode === 'PK-PETB-8810')
     );
     expect(row.state.kind).toBe('short');
     expect(row.state).toMatchObject({ deficitQty: 10000 });

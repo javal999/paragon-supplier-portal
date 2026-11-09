@@ -47,6 +47,11 @@ beforeEach(() => {
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 const PLAN_KEY = 'sup-007-pg-MG-20';
 const AMBER = W[6];
+// PEX-D22 — Submit per period lists Zone Liability periods only; sup-007's
+// firm weeks are W[0] and W[1] (W[1] is the sample's red week).
+const AMBER_FIRM = W[0];
+// The sample's red week (PEX-D22 moved it from W[2] into Zone Liability).
+const RED = W[1];
 
 /** sup-007's rigid-plastic plan, as the read model derives it today. */
 const petPlan = () => {
@@ -58,19 +63,20 @@ const petPlan = () => {
 };
 
 /**
- * Submit sup-007's plan again THROUGH THE VERB, with week `AMBER` amber: 5,000
+ * Submit sup-007's plan again THROUGH THE VERB, with week `amber` amber: 5,000
  * under the LTP, 10,000 additional (AC-01's shape: LTP above allocated, within
  * BE). `confirmed` adds the BR-03 confirmation.
  * @param {boolean} confirmed
+ * @param {string} [amber]
  */
-const submitAmber = async (confirmed) => {
+const submitAmber = async (confirmed, amber = AMBER) => {
   const plan = petPlan();
-  const demand = plan.weeks.find((w) => w.week === AMBER)?.demand ?? 0;
+  const demand = plan.weeks.find((w) => w.week === amber)?.demand ?? 0;
   // Population control: the week carries an LTP large enough to sit under.
   expect(demand).toBeGreaterThan(5000);
   const weeks = plan.weeks.map((w) => {
     const e = /** @type {NonNullable<typeof w.entry>} */ (w.entry);
-    if (w.week !== AMBER) return { ...e };
+    if (w.week !== amber) return { ...e };
     return {
       week: w.week,
       allocated: demand - 5000,
@@ -161,7 +167,7 @@ describe('PTI Capacity', () => {
     expectSharedPill(pill, 'warning');
     expect(pill).toHaveAttribute('data-confirmed', 'false');
     expect(pill).toHaveTextContent('Needs confirmation');
-    expectSharedPill(screen.getByTestId(`capacity-ltp-${PLAN_KEY}-${W[2]}`), 'danger');
+    expectSharedPill(screen.getByTestId(`capacity-ltp-${PLAN_KEY}-${RED}`), 'danger');
     expect(screen.getByTestId(`capacity-state-counts-${PLAN_KEY}`)).toHaveTextContent(
       'Needs additional: 1 wk · Cannot be supplied: 1 wk'
     );
@@ -172,23 +178,23 @@ describe('PTI Capacity', () => {
 
 describe('Submit per period', () => {
   it('AC-01: the amber period draws the shared amber pill, and reads Confirmed additional once confirmed', async () => {
-    await submitAmber(false);
+    await submitAmber(false, AMBER_FIRM);
     const first = renderWithProviders(<SupplierForecastCommitments />, {
       identity: SUPPLIER,
       route: '/supplier/forecasts'
     });
-    const row = await screen.findByTestId(`fc-week-${AMBER}`);
-    const pill = within(row).getByTestId(`fc-week-check-${AMBER}-pg-MG-20`);
+    const row = await screen.findByTestId(`fc-week-${AMBER_FIRM}`);
+    const pill = within(row).getByTestId(`fc-week-check-${AMBER_FIRM}-pg-MG-20`);
     expectSharedPill(pill, 'warning');
     expect(pill).toHaveTextContent('Needs confirmation');
     first.unmount();
 
-    await submitAmber(true);
+    await submitAmber(true, AMBER_FIRM);
     renderWithProviders(<SupplierForecastCommitments />, {
       identity: SUPPLIER,
       route: '/supplier/forecasts'
     });
-    const again = await screen.findByTestId(`fc-week-check-${AMBER}-pg-MG-20`);
+    const again = await screen.findByTestId(`fc-week-check-${AMBER_FIRM}-pg-MG-20`);
     expectSharedPill(again, 'warning');
     expect(again).toHaveAttribute('data-confirmed', 'true');
     expect(again).toHaveTextContent('Confirmed additional');
@@ -207,7 +213,7 @@ describe('Supplier Capacity — BR-03 confirm additional capacity', () => {
     expectSharedPill(pill, 'warning');
     expect(pill).toHaveTextContent('Needs confirmation');
     // Only the amber week offers it.
-    expect(screen.queryByTestId(`capacity-confirm-upside-${W[2]}`)).toBeNull();
+    expect(screen.queryByTestId(`capacity-confirm-upside-${RED}`)).toBeNull();
     const box = screen.getByLabelText(
       `Confirm additional capacity for the week of ${formatDate(AMBER)}`
     );

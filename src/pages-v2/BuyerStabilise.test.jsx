@@ -161,7 +161,7 @@ describe('BuyerStabilise — the planner page (REQ-E14-06)', () => {
     expect(screen.getByTestId('stb-kpi-band-raw')).toHaveTextContent(
       `after stabilising (before: ${h.raw.tradeOff.withinBand} of ${h.raw.tradeOff.revisions})`
     );
-    expect(screen.getByText('Trade-off weeks within the tolerance band')).toBeInTheDocument();
+    expect(screen.getByText('Zone Capacity within the tolerance band')).toBeInTheDocument();
     expect(screen.queryByText('Trade-off revisions inside the band')).toBeNull();
     // Stabilising the plan suppliers saw lowers the movement.
     expect(/** @type {NonNullable<typeof h.stabilised.masc>} */ (h.stabilised.masc)).toBeLessThan(
@@ -186,12 +186,12 @@ describe('BuyerStabilise — the planner page (REQ-E14-06)', () => {
     fireEvent.click(await screen.findByTestId(`stb-open-${key}`));
     const row = await screen.findByTestId(`stb-week-${key}-${w.period}`);
     expect(within(row).getByTestId(`stb-rule-${key}-${w.period}`)).toHaveTextContent(
-      'Trade-off — held at ±10% a version'
+      'Zone Capacity — held at ±10% a version'
     );
     expect(within(row).getByTestId(`stb-reason-needed-${key}-${w.period}`)).toHaveTextContent(
       'needs a reason'
     );
-    expect(within(row).getByText('Trade-off')).toBeInTheDocument();
+    expect(within(row).getByText('Zone Capacity')).toBeInTheDocument();
     expect(w.published).not.toBe(w.damped);
   });
 
@@ -209,7 +209,7 @@ describe('BuyerStabilise — the planner page (REQ-E14-06)', () => {
     );
     await screen.findByTestId('stb-run-engine');
     const p = (await plan()).engine.totals;
-    expect(screen.getByText('Minggu Trade-off dalam rentang toleransi')).toBeInTheDocument();
+    expect(screen.getByText('Zone Capacity dalam rentang toleransi')).toBeInTheDocument();
     expect(screen.getByTestId('stb-kpi-band-stab')).toHaveTextContent(
       `${p.stabilised.tradeOff.withinBand} dari ${p.stabilised.tradeOff.revisions}`
     );

@@ -106,14 +106,21 @@ describe('WAVE D premises — derived from the tree, not inherited', () => {
   });
 
   it('exits are Booked→Shipped, Shipped→Arrived, and cancel from BOTH in-flight states', () => {
-    expect(userVerbsFrom('incomingShipment', 'Booked').map((v) => v.id)).toEqual([
-      't_incomingshipment_ship',
-      't_incomingshipment_cancel'
-    ]);
-    expect(userVerbsFrom('incomingShipment', 'Shipped').map((v) => v.id)).toEqual([
-      't_incomingshipment_arrive',
-      't_incomingshipment_cancel'
-    ]);
+    // BL-279 added `t_incomingshipment_track`, a state-PRESERVING fact (the
+    // tracking link, recorded on the Stock page): legal in both in-flight
+    // states, it is not an exit, so the exits are read without it.
+    /** @param {string} state */
+    const exits = (state) =>
+      userVerbsFrom('incomingShipment', state)
+        .filter((v) => !v.statePreserving)
+        .map((v) => v.id);
+    expect(exits('Booked')).toEqual(['t_incomingshipment_ship', 't_incomingshipment_cancel']);
+    expect(exits('Shipped')).toEqual(['t_incomingshipment_arrive', 't_incomingshipment_cancel']);
+    for (const state of ['Booked', 'Shipped']) {
+      expect(userVerbsFrom('incomingShipment', state).map((v) => v.id)).toContain(
+        't_incomingshipment_track'
+      );
+    }
     // Terminal both ways — nothing leaves, which is what the surface's
     // "no further updates" line rests on.
     expect(userVerbsFrom('incomingShipment', 'Arrived')).toEqual([]);
@@ -578,7 +585,7 @@ describe('a to-paragon leg — ship and arrive defer to the ASN, cancel does not
       getKnownFlows().find((f) => f.entity === 'incomingShipment')
     );
     const advanceVerbs = flow.transitions
-      .filter((t) => t.trigger === 'user')
+      .filter((t) => t.trigger === 'user' && !t.statePreserving)
       .map((t) => t.id)
       .sort();
     expect(advanceVerbs).toEqual([
@@ -586,6 +593,12 @@ describe('a to-paragon leg — ship and arrive defer to the ASN, cancel does not
       't_incomingshipment_cancel',
       't_incomingshipment_ship'
     ]);
+    // BL-279 — the one user verb that is NOT an advance is classified too: the
+    // tracking-link fact, refused on a to-paragon leg by its policy hook (an ASN
+    // leg converges on the ASN), so it never duplicates the ASN tracker.
+    expect(
+      flow.transitions.filter((t) => t.trigger === 'user' && t.statePreserving).map((t) => t.id)
+    ).toEqual(['t_incomingshipment_track']);
 
     // The surface's own set, read back through the rendered outcome rather than
     // imported: on a to-paragon leg, an ASN-tracked verb renders a reason and a

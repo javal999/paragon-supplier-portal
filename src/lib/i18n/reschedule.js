@@ -74,7 +74,7 @@ export const rescheduleEn = {
 
   'rs.relief.title': 'Warehouse relief, ranked',
   'rs.relief.intro':
-    'Ranked by net saving: the rented space it saves in weeks over capacity, less the change penalty. Each is valued after the ones above it, so no two claim the same space. Proposals inside the supplier’s lead time or its Firm zone come last and need the supplier’s agreement. Nothing is sent without your act.',
+    'Ranked by net saving: the rented space it saves in weeks over capacity, less the change penalty. Each is valued after the ones above it, so no two claim the same space. Proposals inside the supplier’s lead time or its Zone Liability come last and need the supplier’s agreement. Nothing is sent without your act.',
   'rs.relief.empty': 'No open order in this warehouse can free space in a week over capacity.',
   'rs.relief.selectFree_one': 'Select the {{count}} proposal without supplier agreement',
   'rs.relief.selectFree_other': 'Select the {{count}} proposals without supplier agreement',
@@ -126,9 +126,9 @@ export const rescheduleEn = {
   'rs.freedAll': '{{value}} pallet-weeks in all',
   'rs.net': 'Net',
   'rs.liabilityNotPriced': 'Liability — not priced',
-  'rs.zone.firm': 'Firm zone',
-  'rs.zone.tradeOff': 'Trade-off zone',
-  'rs.zone.forecast': 'Forecast zone',
+  'rs.zone.firm': 'Zone Liability',
+  'rs.zone.tradeOff': 'Zone Capacity',
+  'rs.zone.forecast': 'Zone Capacity',
   'rs.lt.inside': '{{days}} days ahead, inside the {{lead}}-day lead time',
   'rs.lt.outside': '{{days}} days ahead, outside the {{lead}}-day lead time',
   'rs.flag.agreement': 'Needs supplier agreement',
@@ -161,7 +161,7 @@ export const rescheduleEn = {
   'rs.def.types':
     'A line due at least the set number of weeks early is proposed later, to its need week. A line only partly needed within the horizon is reduced, rounded up to the MOQ and order multiple; one not needed at all is cancelled. A line due after its need week is brought in.',
   'rs.def.zones':
-    'Inside the supplier’s lead time or its Firm zone a change needs the supplier’s agreement, carries the change penalty and ranks last. In the Trade-off zone a reduction is held to ±10% of the quantity in force and ±20% of the first quantity; a cancellation there carries the supplier’s liability for material already bought, flagged but not priced. The Forecast zone is free.',
+    'Inside the supplier’s lead time or its Zone Liability a change needs the supplier’s agreement, carries the change penalty and ranks last. In the damped weeks of Zone Capacity a reduction is held to ±10% of the quantity in force and ±20% of the first quantity; a cancellation there carries the supplier’s liability for material already bought, flagged but not priced. The later weeks of Zone Capacity are free.',
   'rs.def.value':
     'Value: the pallet-weeks a change frees in weeks over capacity, times the rented-space rate, less the change penalty. The list is valued together, one proposal after another.',
   'rs.def.onHand':
@@ -305,7 +305,7 @@ export const rescheduleId = {
 
   'rs.relief.title': 'Keringanan gudang, berperingkat',
   'rs.relief.intro':
-    'Diurutkan menurut penghematan bersih: ruang sewa yang dihemat di minggu di atas kapasitas, dikurangi penalti perubahan. Setiap usulan dinilai setelah usulan di atasnya, sehingga tidak ada dua yang mengklaim ruang yang sama. Usulan di dalam lead time pemasok atau zona Firm-nya berada paling akhir dan memerlukan persetujuan pemasok. Tidak ada yang dikirim tanpa tindakan Anda.',
+    'Diurutkan menurut penghematan bersih: ruang sewa yang dihemat di minggu di atas kapasitas, dikurangi penalti perubahan. Setiap usulan dinilai setelah usulan di atasnya, sehingga tidak ada dua yang mengklaim ruang yang sama. Usulan di dalam lead time pemasok atau Zone Liability-nya berada paling akhir dan memerlukan persetujuan pemasok. Tidak ada yang dikirim tanpa tindakan Anda.',
   'rs.relief.empty':
     'Tidak ada pesanan terbuka di gudang ini yang dapat membebaskan ruang di minggu di atas kapasitas.',
   'rs.relief.selectFree_other': 'Pilih {{count}} usulan tanpa persetujuan pemasok',
@@ -357,9 +357,9 @@ export const rescheduleId = {
   'rs.freedAll': '{{value}} palet-minggu seluruhnya',
   'rs.net': 'Bersih',
   'rs.liabilityNotPriced': 'Kewajiban — belum dihargai',
-  'rs.zone.firm': 'Zona Firm',
-  'rs.zone.tradeOff': 'Zona Trade-off',
-  'rs.zone.forecast': 'Zona Forecast',
+  'rs.zone.firm': 'Zone Liability',
+  'rs.zone.tradeOff': 'Zone Capacity',
+  'rs.zone.forecast': 'Zone Capacity',
   'rs.lt.inside': '{{days}} hari lagi, di dalam lead time {{lead}} hari',
   'rs.lt.outside': '{{days}} hari lagi, di luar lead time {{lead}} hari',
   'rs.flag.agreement': 'Perlu persetujuan pemasok',
@@ -392,7 +392,7 @@ export const rescheduleId = {
   'rs.def.types':
     'Baris yang jatuh tempo sedikitnya sekian minggu terlalu awal diusulkan lebih lambat, ke minggu kebutuhannya. Baris yang hanya sebagian dibutuhkan dalam horizon dikurangi, dibulatkan ke atas ke MOQ dan kelipatan pesanan; yang sama sekali tidak dibutuhkan dibatalkan. Baris yang jatuh tempo setelah minggu kebutuhannya dimajukan.',
   'rs.def.zones':
-    'Di dalam lead time pemasok atau zona Firm-nya, perubahan memerlukan persetujuan pemasok, dikenai penalti perubahan, dan berada paling akhir. Di zona Trade-off pengurangan dibatasi ±10% dari kuantitas yang berlaku dan ±20% dari kuantitas pertama; pembatalan di sana membawa kewajiban pemasok atas material yang sudah dibeli, ditandai tetapi belum dihargai. Zona Forecast bebas.',
+    'Di dalam lead time pemasok atau Zone Liability-nya, perubahan memerlukan persetujuan pemasok, dikenai penalti perubahan, dan berada paling akhir. Di minggu diredam Zone Capacity pengurangan dibatasi ±10% dari kuantitas yang berlaku dan ±20% dari kuantitas pertama; pembatalan di sana membawa kewajiban pemasok atas material yang sudah dibeli, ditandai tetapi belum dihargai. Minggu berikutnya Zone Capacity bebas.',
   'rs.def.value':
     'Nilai: palet-minggu yang dibebaskan sebuah perubahan di minggu di atas kapasitas, dikali tarif ruang sewa, dikurangi penalti perubahan. Daftar dinilai bersama, satu usulan setelah yang lain.',
   'rs.def.onHand':

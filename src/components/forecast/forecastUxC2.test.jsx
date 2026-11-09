@@ -196,7 +196,9 @@ describe('a switched-off act says why (WCAG 4.1.2)', () => {
 
   it('Supplier responses: the confirm waits for a note, and for a quantity when moving demand', async () => {
     renderWithProviders(<BuyerCommitments />, { identity: PLANNER });
-    const what = `PT Sample Packaging Indonesia PK-PETB-8802 Week of ${formatDate(W[3])}`;
+    // PEX-D22 — sup-007's Zone Liability exception (8801, W[1], 3,300 short);
+    // the Trade-off week 8802 W[3] it used is an acknowledgement now.
+    const what = `PT Sample Packaging Indonesia PK-PETB-8801 Week of ${formatDate(W[1])}`;
     fireEvent.click(await screen.findByRole('button', { name: `Move demand for ${what}` }, LOAD));
     const panel = within(
       /** @type {HTMLElement} */ (document.querySelector('aside[role="dialog"]'))
@@ -208,7 +210,7 @@ describe('a switched-off act says why (WCAG 4.1.2)', () => {
     );
     fireEvent.change(
       panel.getByLabelText('Quantity to move to Sample PET Bottle Manufacturer GmbH'),
-      { target: { value: '8500' } }
+      { target: { value: '3000' } }
     );
     expect(confirm).toHaveAccessibleDescription('Required. The supplier can read it.');
   });

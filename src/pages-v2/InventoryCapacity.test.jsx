@@ -638,7 +638,9 @@ describe('Capacity (REQ-E08-04)', () => {
     // 80,000 covers every week's LTP for rigid plastics (the highest is 77,900).
     inputs.forEach((input) => fireEvent.change(input, { target: { value: '80000' } }));
     expect(screen.queryByTestId('capacity-refusal')).toBeNull();
-    fireEvent.change(inputs[1], { target: { value: '10000' } });
+    // Week 3 (14 Sep): week 2 carries the seeded Material reason since PEX-D22
+    // moved the sample's short week there, so it would need no new reason.
+    fireEvent.change(inputs[2], { target: { value: '10000' } });
     expect(screen.getByTestId('capacity-refusal')).toHaveTextContent('below the LTP');
     expect(screen.getByTestId('capacity-submit')).toBeDisabled();
     fireEvent.change(screen.getByLabelText(/Reason for the week of/), {
@@ -654,7 +656,7 @@ describe('Capacity (REQ-E08-04)', () => {
             (c) =>
               c.supplierId === 'sup-007' &&
               c.planningGroupId === 'pg-MG-20' &&
-              c.weeks[1].reason === 'capacity'
+              c.weeks[2].reason === 'capacity'
           )
       ).toBe(true)
     );

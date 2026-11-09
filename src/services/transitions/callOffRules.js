@@ -980,7 +980,10 @@ export const isMeasured = (c) => isReleased(c);
  *
  * CR-06: a receipt counts toward a delivery of the same supplier and material
  * when it arrives no more than EARLY_DELIVERY_WINDOW_DAYS before the approved
- * date and no more than MATCH_WINDOW_DAYS after it. Deliveries take receipts in
+ * date and no more than MATCH_WINDOW_DAYS after it. KPI-2 amended (BL-234): an
+ * earlier date the planner approved IS the approved date, so a receipt on it
+ * is on time however early it is against the need date; only an unconfirmed
+ * early receipt meets the window. Deliveries take receipts in
  * date order, each the closest date then the closest quantity, and a receipt is
  * used once.
  *
