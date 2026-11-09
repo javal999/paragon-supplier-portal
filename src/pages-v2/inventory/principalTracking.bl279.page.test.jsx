@@ -65,11 +65,21 @@ describe('BL-279 — tracking link on the Stock page', () => {
 
   it('a supplier with no principal leg sees the empty line', async () => {
     renderWithProviders(<SupplierInventory />, {
-      identity: { ...SUP_005, supplierId: 'sup-007' },
+      identity: { ...SUP_005, supplierId: 'sup-002' },
       route: '/supplier/inventory'
     });
     expect(await screen.findByTestId('principal-empty')).toHaveTextContent(
       'No shipment from your principal is on its way.'
+    );
+  });
+
+  it('the seeded supplier seat (sup-007) starts with one principal leg to try the link on', async () => {
+    renderWithProviders(<SupplierInventory />, {
+      identity: { ...SUP_005, supplierId: 'sup-007' },
+      route: '/supplier/inventory'
+    });
+    expect(await screen.findByTestId('principal-row-ish-0003')).toHaveTextContent(
+      'No tracking link'
     );
   });
 });
