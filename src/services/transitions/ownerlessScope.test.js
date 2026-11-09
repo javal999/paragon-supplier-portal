@@ -741,6 +741,8 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
       'enforcement',
       // BL-32 — the rule values are PTI's; no supplier is their owner.
       'hubSetting',
+      // BL-267 — the LTP inputs are PTI's.
+      'ltpInput',
       // REQ-E06-04 — the maximum stock is a term PTI keeps; no supplier is its owner.
       'maxStock',
       // Material C4 — the MRP controller list is PTI's; no supplier is its owner.
@@ -752,8 +754,6 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
       'osipLevel',
       // Team answers 2026-10-28 — the OSIP values are the Material Planning team's.
       'osipParam',
-      // BL-267 — the LTP inputs are PTI's.
-      'ltpInput',
       // Material C5 — planning groups are PTI master data (MR-8, MAT-D12).
       'planningGroup',
       'purchaseRequisition',
