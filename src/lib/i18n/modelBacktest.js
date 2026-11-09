@@ -271,9 +271,9 @@ export const modelBacktestId = {
 
   'mb.def.title': 'Cara kerja backtest',
   'mb.def.replay':
-    'Di setiap titik awal, setiap kandidat membuat prakiraan seolah-olah hari itu. Setiap minggu kebijakan PTI diputar ulang: stok pengaman dari galat rencana itu sendiri di masa lalu pada target tingkat pemenuhan material (stok pengaman SAP sampai ada 8 jendela galat), kebutuhan diurai melalui BOM dan dinetokan, pesanan disesuaikan dengan MOQ dan kelipatannya, dirilis dan diterima setelah waktu tunggu, dan kebutuhan aktual dilayani dari stok; yang tidak dapat dilayani hilang.',
+    'Di setiap titik awal, setiap kandidat membuat prakiraan seolah-olah hari itu. Setiap minggu kebijakan PTI diputar ulang: stok pengaman dari galat rencana itu sendiri di masa lalu pada target tingkat pemenuhan material (stok pengaman SAP sampai ada 8 jendela galat), kebutuhan diurai melalui BOM dan dinetokan, pesanan disesuaikan dengan MOQ dan kelipatannya, dirilis dan diterima setelah lead time, dan kebutuhan aktual dilayani dari stok; yang tidak dapat dilayani hilang.',
   'mb.def.part':
-    'Sebuah SKU dinilai pada bagiannya sendiri dari setiap materialnya: kebutuhannya sendiri, waktu tunggu dan target material, serta MOQ, kelipatan dan stok pengaman SAP yang disesuaikan dengan porsinya pada material itu.',
+    'Sebuah SKU dinilai pada bagiannya sendiri dari setiap materialnya: kebutuhannya sendiri, lead time dan target material, serta MOQ, kelipatan dan stok pengaman SAP yang disesuaikan dengan porsinya pada material itu.',
   'mb.def.measures':
     'Tingkat pemenuhan: minggu yang terlayani penuh ÷ minggu yang ada permintaannya. Pesanan lengkap: minggu ketika setiap material SKU terlayani penuh. Palet-minggu: stok pada akhir setiap minggu ÷ unit per palet, dijumlahkan.',
   'mb.def.select':

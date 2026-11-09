@@ -24,7 +24,7 @@
 export const PLANNING_TERM_GLOSSARY = /** @satisfies {GlossaryOf<PlanningTerm>} */ ({
   Firm: {
     en: 'The nearest weeks of a published plan, at least the supplier’s lead time long. Once published, a Firm week’s quantity does not change, because the supplier is already producing to it.',
-    id: 'Minggu-minggu terdekat dari rencana yang diterbitkan, paling sedikit sepanjang waktu tunggu pemasok. Setelah diterbitkan, kuantitas minggu Firm tidak berubah, karena pemasok sudah berproduksi untuknya.'
+    id: 'Minggu-minggu terdekat dari rencana yang diterbitkan, paling sedikit sepanjang lead time pemasok. Setelah diterbitkan, kuantitas minggu Firm tidak berubah, karena pemasok sudah berproduksi untuknya.'
   },
   'Trade-off': {
     en: 'The weeks after the Firm weeks. Quantities may still change, but each change is damped and kept inside an agreed band so the supplier can plan materials.',
@@ -40,7 +40,7 @@ export const PLANNING_TERM_GLOSSARY = /** @satisfies {GlossaryOf<PlanningTerm>} 
   },
   'Reorder point': {
     en: 'The stock level at which a new order should be released: expected demand over the lead time and the review week, plus the safety stock.',
-    id: 'Tingkat stok saat pesanan baru sebaiknya dirilis: perkiraan permintaan selama waktu tunggu dan minggu tinjauan, ditambah stok pengaman.'
+    id: 'Tingkat stok saat pesanan baru sebaiknya dirilis: perkiraan permintaan selama lead time dan minggu tinjauan, ditambah stok pengaman.'
   },
   'P50/P90': {
     en: 'The demand range. P50 is the middle estimate, with half the outcomes above it; P90 is the level demand stays under nine weeks in ten.',
