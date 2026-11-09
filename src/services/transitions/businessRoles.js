@@ -406,7 +406,9 @@ const LANE_BUNDLES = Object.freeze({
     // INV-D8 (P-07) — the planner who reads the capacity gap accepts the
     // supplier's additional capacity on an amber week. Not a supplier lane:
     // the supplier offers the capacity, PTI accepts it.
-    'capacitydecision:accept'
+    'capacitydecision:accept',
+    // PEX-8 — the planner suggests what happens to a PO On Hold line.
+    'poonhold:suggest'
   ]),
   // Raising and revising a requisition — split from approving one, which is
   // the segregation `pr:approve` living in `procurement` expresses.
@@ -522,7 +524,9 @@ const LANE_BUNDLES = Object.freeze({
     // INV-D9 — answering PTI's ask about a material's stock, production date
     // or a capacity week: the people who declare the stock and confirm the
     // capacity it asks about.
-    'supplierask:answer'
+    'supplierask:answer',
+    // PEX-8 — the supplier chooses the final option for a PO On Hold line.
+    'poonhold:choose'
   ]),
   // ── BACK OFFICE — the paperwork ─────────────────────────────────────────
   // *"The admin people are the ones who upload the certificates"* (operator).

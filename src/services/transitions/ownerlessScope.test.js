@@ -132,6 +132,7 @@ import { materialNameStore } from '../data/mock/stores/materialNameStore';
 import { feedstockConfirmationStore } from '../data/mock/stores/feedstockConfirmationStore';
 import { supplierAskStore } from '../data/mock/stores/supplierAskStore';
 import { capacityDecisionStore } from '../data/mock/stores/capacityDecisionStore';
+import { poOnHoldStore } from '../data/mock/stores/poOnHoldStore';
 import { simulationOverrideStore } from '../data/mock/stores/simulationOverrideStore';
 import { whatIfScenarioStore } from '../data/mock/stores/whatIfScenarioStore';
 import { hubSettingsStore, settingValue } from './hubSettingsStore';
@@ -318,6 +319,9 @@ async function realIds() {
     // INV-D8 — a capacity decision is creation-only (unprobeable); the store
     // opens with one sample acceptance for sup-005, so the id is real.
     capacityDecision: capacityDecisionStore.all()[0]?.id ?? null,
+    // PEX-8 — a PO On Hold decision is creation-only (unprobeable) and its store
+    // starts empty; a well-formed id so the coverage control can see the target.
+    poOnHoldDecision: 'poh-0001',
     // REQ-E14-13 — a "taken to SAP" mark is creation-only (unprobeable) and its
     // store starts empty (nothing is marked while the engine data is simulated);
     // the id is a well-formed one so the coverage control can see the target.
@@ -510,6 +514,7 @@ const resetAll = () => {
   feedstockConfirmationStore.reset();
   supplierAskStore.reset();
   capacityDecisionStore.reset();
+  poOnHoldStore.reset();
   simulationOverrideStore.reset();
   whatIfScenarioStore.reset();
   hubSettingsStore.reset();
@@ -620,6 +625,7 @@ describe('POPULATION — nothing below means anything without this', () => {
     // And a consumption record (CAP-11): a later record supersedes it at read.
     // And a feedstock confirmation (BL-194): append-only, the latest in force.
     // And a what-if scenario (BL-202): saved once, never changed.
+    // And a PO On Hold decision (PEX-8): its store opens empty, so no row exists to walk.
     expect(unprobeable).toEqual([
       'rfqConfidentiality',
       'inventoryDeclaration',
@@ -633,7 +639,9 @@ describe('POPULATION — nothing below means anything without this', () => {
       'demandAnticipation',
       'consumption',
       'whatIfScenario',
-      'feedstockConfirmation'
+      'feedstockConfirmation',
+      // PEX-8: its store opens empty, so no id can be walked to a state.
+      'poOnHoldDecision'
     ]);
     // PTI's capacity gap decision left this list at BL-227: its withdraw verb
     // is a non-creation transition, and the target names the supplier.

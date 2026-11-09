@@ -185,6 +185,13 @@ export const useFixedStockReconcile = () =>
   );
 
 /**
+ * PEX-7 / PEX-8 — the PO On Hold lines. The planner reads every supplier; a
+ * supplier reads only its own (scoped in the service).
+ */
+export const usePoOnHold = () =>
+  useServiceQuery(['procurement', 'poOnHold'], (svc, scope) => svc.procurement.getPoOnHold(scope));
+
+/**
  * REQ-E14-02 — supplier reliability and PTI's plan-change measures. The planner
  * reads every supplier; a supplier reads only its own row (scoped in the service).
  * @param {ReliabilityWindowWeeks} [windowWeeks]

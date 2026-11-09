@@ -84,6 +84,7 @@ export { whatIfScenarioFlow } from './flows/whatIfScenario.flow';
 export { feedstockConfirmationFlow } from './flows/feedstockConfirmation.flow';
 export { supplierAskFlow } from './flows/supplierAsk.flow';
 export { capacityDecisionFlow } from './flows/capacityDecision.flow';
+export { poOnHoldDecisionFlow } from './flows/poOnHoldDecision.flow';
 export { rfiEventFlow } from './flows/rfiEvent.flow';
 export { rfiResponseFlow } from './flows/rfiResponse.flow';
 export { rfpEventFlow } from './flows/rfpEvent.flow';
@@ -153,6 +154,7 @@ import { whatIfScenarioFlow } from './flows/whatIfScenario.flow';
 import { feedstockConfirmationFlow } from './flows/feedstockConfirmation.flow';
 import { supplierAskFlow } from './flows/supplierAsk.flow';
 import { capacityDecisionFlow } from './flows/capacityDecision.flow';
+import { poOnHoldDecisionFlow } from './flows/poOnHoldDecision.flow';
 import { rfiEventFlow } from './flows/rfiEvent.flow';
 import { rfiResponseFlow } from './flows/rfiResponse.flow';
 import { rfpEventFlow } from './flows/rfpEvent.flow';
@@ -276,6 +278,7 @@ flowRegistry.register(feedstockConfirmationFlow); // BL-194 — supplier feedsto
 flowRegistry.register(supplierAskFlow); // INV-D9 — a hub ask to one supplier
 // INV-D8 — PTI accepts a supplier's additional capacity on one gap week.
 flowRegistry.register(capacityDecisionFlow); // INV-D8 — PTI's capacity gap decision
+flowRegistry.register(poOnHoldDecisionFlow); // PEX-8 — the PO On Hold decision
 // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx event types and the
 // negotiation window. RFQ keeps its own machine (`rfqFlow`); these are the two
 // event types it did not cover plus the round the award is negotiated in.

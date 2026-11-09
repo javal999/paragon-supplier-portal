@@ -1,0 +1,145 @@
+// PO On Hold i18n fragment (PEX-7, PEX-8; BL-270, BL-271, BL-272). Namespace: poh.*
+// Business language only (SC-04). The team term "lead time" is kept in Indonesian
+// (TL-D17); the fulfil-by line reuses the `co.sla.*` keys, unchanged.
+// Mono data (quantities, dates) is rendered through <Data> and never keyed.
+
+/** @type {Record<string, string>} */
+export const poOnHoldEn = {
+  'poh.title': 'PO On Hold',
+  'poh.intro.pti':
+    'Open PO quantity that demand anticipation (DA) does not absorb over the horizon: open PO quantity (OSPO) minus the DA not yet called off. Each line has a grace period. Suggest what to do with it; the supplier chooses the final option, and it takes effect when the grace period ends.',
+  'poh.intro.sup':
+    'Open PO quantity from PTI that its demand anticipation (DA) does not absorb. PTI suggests what to do with it. You choose the final option before the grace period ends; if you do not, PTI’s suggestion applies.',
+  'poh.empty': 'Nothing is on hold: demand anticipation absorbs the open PO quantity.',
+  'poh.col.supplier': 'Supplier',
+  'poh.col.material': 'Material',
+  'poh.col.ospo': 'Open PO (OSPO)',
+  'poh.col.da': 'DA not yet called off',
+  'poh.col.qty': 'PO On Hold',
+  'poh.col.grace': 'Grace period',
+  'poh.col.decision': 'Decision',
+  'poh.dueBy': 'Decision due',
+  'poh.daysLeft_one': '({{count}} working day left)',
+  'poh.daysLeft_other': '({{count}} working days left)',
+  'poh.graceEnded': 'Grace period ended',
+  'poh.graceStarted': 'Started',
+  'poh.settings.grace': 'Grace period (working days)',
+  'poh.settings.noMove': 'No stock movement period (working days)',
+  'poh.settings.default': 'default',
+  'poh.settings.edit': 'Edit periods',
+  'poh.settings.save': 'Save periods',
+  'poh.settings.cancel': 'Cancel',
+  'poh.settings.invalid': 'Enter whole working days, from 0 to 365.',
+  'poh.settings.saved': 'Periods saved for {{material}}.',
+  'poh.opt.fsOnly': 'Feedstock (FS) only',
+  'poh.opt.fsSpread': 'FS + spread',
+  'poh.opt.fg': 'Absorb as finished goods (FG)',
+  'poh.opt.fsOnly.does':
+    'At the end of the grace period the whole remainder is taken as feedstock in one call-off.',
+  'poh.opt.fsSpread.does':
+    'At the end of the grace period the remainder is spread over the next weeks’ call-offs, following DA.',
+  'poh.opt.fg.does':
+    'At the end of the grace period the remainder is absorbed as FG up to the FG cap; the rest stays on hold and goes back to the planner.',
+  'poh.status.noSuggestion': 'No suggestion yet',
+  'poh.status.awaitingSupplier': 'Suggested: {{option}}. Waiting for the supplier.',
+  'poh.status.chosen': 'The supplier chose: {{option}}',
+  'poh.status.noSupplierResponse':
+    'No supplier response: the planner’s suggestion applies: {{option}}',
+  'poh.status.backToPlanner': 'Grace period ended with no decision: back to the planner',
+  'poh.suggest.label': 'Suggest an option',
+  'poh.suggest.send': 'Send suggestion',
+  'poh.suggest.preselected': 'Pre-selected from the conditions. You can change it before sending.',
+  'poh.suggest.none': 'No option fits the conditions yet. Choose one to send.',
+  'poh.suggest.sent': 'Suggestion sent for {{material}}.',
+  'poh.choose.label': 'Your choice',
+  'poh.choose.send': 'Confirm choice',
+  'poh.choose.final': 'Your choice is final.',
+  'poh.choose.sent': 'Your choice is recorded for {{material}}.',
+  'poh.choose.waiting': 'Waiting for PTI’s suggestion.',
+  'poh.refused': 'Not saved: {{reason}}',
+  'poh.fact.pipo': 'PIPO flag not on record',
+  'poh.fact.movement': 'No stock movement on record',
+  'poh.fact.maxPti':
+    'Max PTI not on record: the FG cap cannot be calculated, so FG absorbs nothing and the whole quantity stays on hold',
+  'poh.cap': 'FG cap',
+  'poh.outcome.fs': 'Taken as feedstock:',
+  'poh.outcome.spread': 'Spread over the next weeks:',
+  'poh.outcome.fg': 'Absorbed as FG:',
+  'poh.outcome.stay': 'Stays on hold:',
+  'poh.history.suggested': 'Suggested',
+  'poh.history.chosen': 'Chosen',
+  'poh.link': 'PO On Hold:',
+  'poh.link.none': 'No PO On Hold line',
+  'poh.link.status': 'Status:',
+  'poh.link.go': 'See the PO On Hold line'
+};
+
+/** @type {Record<string, string>} */
+export const poOnHoldId = {
+  'poh.title': 'PO On Hold',
+  'poh.intro.pti':
+    'Kuantitas PO terbuka yang tidak diserap antisipasi permintaan (DA) selama horizon: kuantitas PO terbuka (OSPO) dikurangi DA yang belum di-call-off. Setiap baris punya masa tenggang. Usulkan apa yang dilakukan; pemasok memilih opsi akhir, yang berlaku saat masa tenggang berakhir.',
+  'poh.intro.sup':
+    'Kuantitas PO terbuka dari PTI yang tidak diserap antisipasi permintaan (DA). PTI mengusulkan apa yang dilakukan. Anda memilih opsi akhir sebelum masa tenggang berakhir; jika tidak, usulan PTI berlaku.',
+  'poh.empty': 'Tidak ada yang ditahan: antisipasi permintaan menyerap kuantitas PO terbuka.',
+  'poh.col.supplier': 'Pemasok',
+  'poh.col.material': 'Material',
+  'poh.col.ospo': 'PO terbuka (OSPO)',
+  'poh.col.da': 'DA yang belum di-call-off',
+  'poh.col.qty': 'PO On Hold',
+  'poh.col.grace': 'Masa tenggang',
+  'poh.col.decision': 'Keputusan',
+  'poh.dueBy': 'Keputusan jatuh tempo',
+  'poh.daysLeft_other': '(sisa {{count}} hari kerja)',
+  'poh.graceEnded': 'Masa tenggang berakhir',
+  'poh.graceStarted': 'Dimulai',
+  'poh.settings.grace': 'Masa tenggang (hari kerja)',
+  'poh.settings.noMove': 'Periode tanpa pergerakan stok (hari kerja)',
+  'poh.settings.default': 'bawaan',
+  'poh.settings.edit': 'Ubah periode',
+  'poh.settings.save': 'Simpan periode',
+  'poh.settings.cancel': 'Batal',
+  'poh.settings.invalid': 'Masukkan hari kerja bulat, dari 0 sampai 365.',
+  'poh.settings.saved': 'Periode disimpan untuk {{material}}.',
+  'poh.opt.fsOnly': 'Hanya feedstock (FS)',
+  'poh.opt.fsSpread': 'FS + sebaran',
+  'poh.opt.fg': 'Serap sebagai barang jadi (FG)',
+  'poh.opt.fsOnly.does':
+    'Di akhir masa tenggang seluruh sisa diambil sebagai feedstock dalam satu call-off.',
+  'poh.opt.fsSpread.does':
+    'Di akhir masa tenggang sisa disebar ke call-off minggu-minggu berikutnya, mengikuti DA.',
+  'poh.opt.fg.does':
+    'Di akhir masa tenggang sisa diserap sebagai FG sampai batas FG; sisanya tetap ditahan dan kembali ke perencana.',
+  'poh.status.noSuggestion': 'Belum ada usulan',
+  'poh.status.awaitingSupplier': 'Diusulkan: {{option}}. Menunggu pemasok.',
+  'poh.status.chosen': 'Pemasok memilih: {{option}}',
+  'poh.status.noSupplierResponse': 'Pemasok tidak menanggapi: usulan perencana berlaku: {{option}}',
+  'poh.status.backToPlanner': 'Masa tenggang berakhir tanpa keputusan: kembali ke perencana',
+  'poh.suggest.label': 'Usulkan satu opsi',
+  'poh.suggest.send': 'Kirim usulan',
+  'poh.suggest.preselected':
+    'Dipilih otomatis dari kondisinya. Anda dapat mengubahnya sebelum mengirim.',
+  'poh.suggest.none': 'Belum ada opsi yang sesuai dengan kondisinya. Pilih satu untuk dikirim.',
+  'poh.suggest.sent': 'Usulan terkirim untuk {{material}}.',
+  'poh.choose.label': 'Pilihan Anda',
+  'poh.choose.send': 'Konfirmasi pilihan',
+  'poh.choose.final': 'Pilihan Anda bersifat final.',
+  'poh.choose.sent': 'Pilihan Anda tercatat untuk {{material}}.',
+  'poh.choose.waiting': 'Menunggu usulan PTI.',
+  'poh.refused': 'Tidak disimpan: {{reason}}',
+  'poh.fact.pipo': 'Tanda PIPO belum tercatat',
+  'poh.fact.movement': 'Belum ada pergerakan stok tercatat',
+  'poh.fact.maxPti':
+    'Max PTI belum tercatat: batas FG tidak dapat dihitung, sehingga FG tidak menyerap apa pun dan seluruh kuantitas tetap ditahan',
+  'poh.cap': 'Batas FG',
+  'poh.outcome.fs': 'Diambil sebagai feedstock:',
+  'poh.outcome.spread': 'Disebar ke minggu-minggu berikutnya:',
+  'poh.outcome.fg': 'Diserap sebagai FG:',
+  'poh.outcome.stay': 'Tetap ditahan:',
+  'poh.history.suggested': 'Diusulkan',
+  'poh.history.chosen': 'Dipilih',
+  'poh.link': 'PO On Hold:',
+  'poh.link.none': 'Tidak ada baris PO On Hold',
+  'poh.link.status': 'Status:',
+  'poh.link.go': 'Lihat baris PO On Hold'
+};

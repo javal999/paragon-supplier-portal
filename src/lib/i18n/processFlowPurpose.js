@@ -566,6 +566,12 @@ export const processFlowPurposeEn = {
     'The planner has read the supplier’s reply and ends the ask. The ask and the reply stay on record.',
   'processFlows.purpose.t_supplierask_withdraw':
     'The planner takes back an ask the supplier has not replied to yet, because PTI no longer needs it.',
+  'processFlows.purpose.entity.poOnHoldDecision':
+    'What happens to a PO On Hold line, the open PO quantity the demand anticipation does not absorb. The planner suggests feedstock only, feedstock and spread, or finished goods; the supplier makes the final choice. Both steps stay on record.',
+  'processFlows.purpose.t_poonhold_suggest':
+    'The planner suggests what to do with a PO On Hold line. The supplier sees the suggestion and can choose differently until the grace period ends.',
+  'processFlows.purpose.t_poonhold_choose':
+    'The supplier makes the final choice for its PO On Hold line. The choice cannot be changed. If the supplier does not choose, the planner’s suggestion applies at the end of the grace period.',
   'processFlows.purpose.entity.capacityDecision':
     'PTI’s decision on a capacity gap: the planner agrees to use the additional capacity a supplier offered for one planning group in one period of the capacity plan. The supplier sees PTI’s answer on its Capacity page. The planner can undo an acceptance; it stays on record.',
   'processFlows.purpose.t_capacitydecision_accept':
@@ -1188,6 +1194,12 @@ export const processFlowPurposeId = {
     'Perencana sudah membaca jawaban pemasok dan menutup pertanyaan. Pertanyaan dan jawaban tetap tercatat.',
   'processFlows.purpose.t_supplierask_withdraw':
     'Perencana menarik pertanyaan yang belum dijawab pemasok, karena PTI tidak lagi memerlukan jawabannya.',
+  'processFlows.purpose.entity.poOnHoldDecision':
+    'Apa yang terjadi pada baris PO On Hold, yaitu kuantitas PO terbuka yang tidak diserap antisipasi permintaan. Perencana mengusulkan hanya feedstock, feedstock dan sebaran, atau barang jadi; pemasok membuat pilihan akhir. Kedua langkah tetap tercatat.',
+  'processFlows.purpose.t_poonhold_suggest':
+    'Perencana mengusulkan apa yang dilakukan pada baris PO On Hold. Pemasok melihat usulan itu dan dapat memilih lain sampai masa tenggang berakhir.',
+  'processFlows.purpose.t_poonhold_choose':
+    'Pemasok membuat pilihan akhir untuk baris PO On Hold miliknya. Pilihan tidak dapat diubah. Jika pemasok tidak memilih, usulan perencana berlaku di akhir masa tenggang.',
   'processFlows.purpose.entity.capacityDecision':
     'Keputusan PTI atas kekurangan kapasitas: perencana setuju memakai kapasitas tambahan yang ditawarkan pemasok untuk satu grup perencanaan pada satu periode rencana kapasitas. Pemasok melihat jawaban PTI di halaman Kapasitas. Perencana dapat membatalkan penerimaan; penerimaan tetap tercatat.',
   'processFlows.purpose.t_capacitydecision_accept':
