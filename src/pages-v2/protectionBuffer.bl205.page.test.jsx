@@ -14,10 +14,7 @@ import { osipLevelStore } from '@services/data/mock/stores/osipLevelStore';
 import { osipParamStore } from '@services/data/mock/stores/osipParamStore';
 import { allCommitmentLines } from '@services/data/mock/forecastReadModel';
 import { protectionBufferInputs } from '@services/data/mock/protectionBufferReadModel';
-import {
-  PROTECTION_BUFFER_RULES,
-  protectionBufferRows
-} from '@services/transitions/drcBufferRules';
+import { protectionBufferRows } from '@services/transitions/drcBufferRules';
 import { sdcClock } from '@services/sdc';
 import { NO_PERSON } from '@context/noPerson';
 import i18n from '@lib/i18n';
