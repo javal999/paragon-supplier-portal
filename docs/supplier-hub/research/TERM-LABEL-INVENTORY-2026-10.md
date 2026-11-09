@@ -214,7 +214,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Remaining | Sisa | co.runOut.col.remaining | Y | "Remaining on umbrella PO" (SUPPLIER-HUB-REQUIREMENTS.md:149 CR-04); "remaining" (SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md:220) | N | N |  | Keep | Quantity or value per line basis (CR-04) |
 | column | Runs out | Habis | co.runOut.col.runOut | Y | "run-out week" (SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md:223 CAP-9 BR-03) | N | N |  | Keep |  |
 | column | New PO needed by | PO baru diperlukan paling lambat | co.runOut.col.newPoBy | Y | "new PO needed by" week (SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md:223) | N | N |  | Keep | Run-out week minus PO lead time |
-| column | PO lead time | Waktu tunggu PO | co.runOut.col.leadTime | Y | "PO lead time" (SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md:223) | N | N |  | Keep |  |
+| column | PO lead time | Waktu tunggu PO | co.runOut.col.leadTime | Y | "PO lead time" (SC-HUB-CAPACITY-REQUIREMENTS-2026-10.md:223) | N | N |  | Keep | ID now "Lead time PO" (BL-280, FSR-D9) |
 
 ## Page: /supplier/call-offs — Call-off table — `pages-v2/SupplierCallOffs/index.jsx`
 
@@ -847,7 +847,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | kpi | Warehouse space freed against SAP | Ruang gudang yang dibebaskan dibanding SAP | sst.kpi.freed | Y | "how much space the new calculation frees" (FORECAST-ENGINE-REQUIREMENTS.md:334) | N | N |  | Keep |  |
 | kpi | Materials per tier | Material per tingkat | sst.kpi.tiers | Y | "tier" (FORECAST-ENGINE-REQUIREMENTS.md:343) | N | N |  | Keep |  |
 | kpi | On SAP's value | Memakai nilai SAP | sst.kpi.fallback | Y | "uses SAP's safety stock" (FORECAST-ENGINE-REQUIREMENTS.md:346) | N | N |  | Keep |  |
-| kpi | Safety lead time from the group default | Waktu tunggu pengaman dari nilai bawaan grup | sst.kpi.groupDefault | Y | "safety-lead-time group default" (FORECAST-ENGINE-REQUIREMENTS.md:1006, ENG-B12) | N | N |  | Keep |  |
+| kpi | Safety lead time from the group default | Waktu tunggu pengaman dari nilai bawaan grup | sst.kpi.groupDefault | Y | "safety-lead-time group default" (FORECAST-ENGINE-REQUIREMENTS.md:1006, ENG-B12) | N | N |  | Keep | ID now "Safety lead time dari nilai bawaan grup" (BL-280, FSR-D9) |
 
 ## Page: /buyer/safety-stock — Safety stock table — `pages-v2/BuyerSafetyStock.jsx`
 
@@ -865,7 +865,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Safety stock | Stok pengaman | sst.col.safetyStock | Y | "Safety stock" (FORECAST-ENGINE-REQUIREMENTS.md:313) | N | Safety order (ROP Order), same table |  | Keep | Engine challenger; tooltip should say "Not safety order" |
 | column | SAP safety stock | Stok pengaman SAP | sst.col.sap | Y | "SAP's safety stock" (FORECAST-ENGINE-REQUIREMENTS.md:346) | N | N |  | Keep |  |
 | column | Freed | Dibebaskan | sst.col.freed | Y | "frees" (FORECAST-ENGINE-REQUIREMENTS.md:334) | N | N |  | Keep |  |
-| column | Safety lead time | Waktu tunggu pengaman | sst.col.slt | Y | "safety lead time" (FORECAST-ENGINE-REQUIREMENTS.md:313) | N | N |  | Keep |  |
+| column | Safety lead time | Waktu tunggu pengaman | sst.col.slt | Y | "safety lead time" (FORECAST-ENGINE-REQUIREMENTS.md:313) | N | N |  | Keep | ID now "Safety lead time" (BL-280, FSR-D9) |
 | column | Reorder point | Titik pesan ulang | sst.col.rop | Y | "reorder point" (FORECAST-ENGINE-REQUIREMENTS.md:313) | N | ROP Order / ROP Fisik (team ROPs), same table |  | Keep | TermTip "Reorder point" already present; engine challenger |
 | column | Since last run | Sejak perhitungan terakhir | sst.col.change | N | n/a | n/a | N |  | Keep |  |
 | column | History | Riwayat | sst.col.history | N | n/a | n/a | N |  | Keep |  |
@@ -897,7 +897,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | Supplier | Pemasok | sst.values.col.supplier | N | n/a | n/a | N |  | Keep |  |
 | column | Replenishment cycle f | Siklus pengisian ulang f | sst.values.col.f | Y | "Cycle replenishment (f)" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:115); "Replenishment cycle f" (SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md:119) | Y | N | call-off lead time (SC-HUB-MATERIAL-TEAM-ANSWERS-2026-10.md:55) | Decided (TL-D22) | Now "Cycle replenishment (f)" in EN and ID (BL-233 wave 5) |
 | column | Pull agreement | Perjanjian tarik | sst.values.col.pull | Y | "pull agreement" (SC-HUB-MATERIAL-TEAM-ANSWERS-2026-10.md:79) | N | N |  | Keep | Team answer is in English; no ID use found |
-| column | Bottleneck production lead time (ROP Supplier) | Waktu tunggu produksi bottleneck (ROP Pemasok) | sst.values.col.bottleneck | Y | "bottleneck production lead time" (SC-HUB-MATERIAL-TEAM-ANSWERS-2026-10.md:99) | N | N |  | Decided (TL-D6) | ID now ends "(ROP Supplier)" (BL-233 wave 3) |
+| column | Bottleneck production lead time (ROP Supplier) | Waktu tunggu produksi bottleneck (ROP Pemasok) | sst.values.col.bottleneck | Y | "bottleneck production lead time" (SC-HUB-MATERIAL-TEAM-ANSWERS-2026-10.md:99) | N | N |  | Decided (TL-D6) | ID now ends "(ROP Supplier)" (BL-233 wave 3); ID now "Lead time produksi bottleneck (ROP Supplier)" (BL-280, FSR-D9) |
 
 ## Page: /buyer/scorecard — KPI cards — `pages-v2/BuyerScorecard.jsx`
 
@@ -1848,7 +1848,7 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | Kind | Label EN | Label ID | Key | Important | Source wording | Differs | Clash | Also called | Status | Note |
 |---|---|---|---|---|---|---|---|---|---|---|
 | kpi | OTIF | OTIF | buyerSupplierProfile.kpi.otif.eyebrow | Y | "OTIF, On-Time In-Full" (SUPPLIER-HUB-REQUIREMENTS.md:118, §3.3) | N | N |  | Keep |  |
-| kpi | Lead Time Adherence | Kepatuhan Waktu Tunggu | buyerSupplierProfile.kpi.leadTime.eyebrow | Y | none found | n/a | N |  | Keep | ID translates "lead time"; see Ask Levi |
+| kpi | Lead Time Adherence | Kepatuhan Waktu Tunggu | buyerSupplierProfile.kpi.leadTime.eyebrow | Y | none found | n/a | N |  | Keep | ID translates "lead time"; see Ask Levi; ID now "Kepatuhan Lead Time" (BL-280, FSR-D9) |
 | kpi | Invoice Accuracy | Akurasi Faktur | buyerSupplierProfile.kpi.invoiceAccuracy.eyebrow | Y | none found | n/a | N |  | Keep |  |
 | kpi | Scorecard Grade | Grade Kartu Skor | buyerSupplierProfile.kpi.scorecard.eyebrow | Y | "grades A ≥ 90, B ≥ 80, C ≥ 70, D" (SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md:88) | N | N |  | Keep |  |
 
