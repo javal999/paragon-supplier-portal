@@ -80,6 +80,7 @@ import BuyerThisWeek from '@pages-v2/BuyerThisWeek';
 import BuyerReschedule from '@pages-v2/BuyerReschedule';
 import BuyerDemandAnticipation from '@pages-v2/BuyerDemandAnticipation';
 import BuyerDemandAnticipationHistory from '@pages-v2/BuyerDemandAnticipationHistory';
+import BuyerPlanTrace from '@pages-v2/BuyerPlanTrace';
 import BuyerWhatIfSandbox from '@pages-v2/BuyerWhatIfSandbox';
 import BuyerStabilise from '@pages-v2/BuyerStabilise';
 import BuyerDataHealth from '@pages-v2/BuyerDataHealth';
@@ -167,6 +168,8 @@ const AppRouter = () => {
               path="/buyer/demand-anticipation-history"
               element={<BuyerDemandAnticipationHistory />}
             />
+            {/* PEX-11 (BL-276) — plan vs execution trace: DA → PO → call-off → ASN, with flags. */}
+            <Route path="/buyer/plan-trace" element={<BuyerPlanTrace />} />
             {/* DRC-17 (BL-202) — the what-if sandbox: analysis only, never pushed to the plan. */}
             <Route path="/buyer/what-if" element={<BuyerWhatIfSandbox />} />
             {/* REQ-E14-06 — stabilise and publish the plan to suppliers (SIMULATED; never shown to a supplier). */}
