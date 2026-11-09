@@ -6,6 +6,7 @@
 /** @import React from 'react' */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import Data from '@components/ui-v2/Data';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
@@ -18,7 +19,9 @@ import { inputClass, labelClass } from '../../inventory/inventoryDisplay';
 const SupplierLevel = () => {
   const { t } = useTranslation();
   const query = useCapacityPlans();
-  const [supplier, setSupplier] = useState('');
+  // The tab opens on the supplier already in the address (the Material tab's pair).
+  const [params] = useSearchParams();
+  const [supplier, setSupplier] = useState(params.get('supplier') ?? '');
   const plans = useMemo(() => query.data?.items ?? [], [query.data]);
   const suppliers = useMemo(
     () => [...new Map(plans.map((p) => [p.supplierId, p.supplierName])).entries()],
