@@ -9,7 +9,8 @@ import {
   outcomeOf,
   poOnHoldOptionRefusal,
   poOnHoldQty,
-  suggestOption
+  suggestOption,
+  workingDaysBetween
 } from './poOnHold';
 import { osipParamKey, osipParamRefusal, parseOsipParamKey } from './osipParams';
 
@@ -37,15 +38,23 @@ describe('PEX-7 BR-02..BR-05 — the grace period', () => {
     expect(PO_ON_HOLD_RULES.graceDays).toBe(14);
     expect(PO_ON_HOLD_RULES.noMoveDays).toBe(14);
   });
-  it('counts from the first day: due on first day + grace', () => {
+  it('counts WORKING days from the first day: 14 working days after Tue 3 Nov is Mon 23 Nov (owner, 2026-11-09)', () => {
     const g = graceState('2026-11-10', '2026-11-03', 14);
-    expect(g.dueDay).toBe('2026-11-17');
-    expect(g.daysLeft).toBe(7);
+    expect(g.dueDay).toBe('2026-11-23');
+    expect(g.daysLeft).toBe(9);
     expect(g.ended).toBe(false);
   });
-  it('ends on the due day itself', () => {
-    expect(graceState('2026-11-17', '2026-11-03', 14).ended).toBe(true);
-    expect(graceState('2026-11-16', '2026-11-03', 14).ended).toBe(false);
+  it('ends on the due day itself, not before', () => {
+    expect(graceState('2026-11-23', '2026-11-03', 14).ended).toBe(true);
+    expect(graceState('2026-11-20', '2026-11-03', 14).ended).toBe(false);
+  });
+  it('weekends do not count: a Saturday first day counts from the next working day', () => {
+    expect(graceState('2026-11-07', '2026-11-07', 1).dueDay).toBe('2026-11-10');
+  });
+  it('working days between two dates skip the weekend', () => {
+    expect(workingDaysBetween('2026-11-06', '2026-11-10')).toBe(2);
+    expect(workingDaysBetween('2026-11-10', '2026-11-10')).toBe(0);
+    expect(workingDaysBetween('2026-11-10', '2026-11-06')).toBe(0);
   });
   it('a grace period of 0 days is over at once', () => {
     expect(graceState('2026-11-03', '2026-11-03', 0).ended).toBe(true);

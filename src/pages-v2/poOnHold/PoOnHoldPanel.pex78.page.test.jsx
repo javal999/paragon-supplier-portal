@@ -23,7 +23,7 @@ describe('PO On Hold — planner', () => {
     await screen.findByTestId(`poh-row-${K}`);
     expect(screen.getByTestId(`poh-qty-${K}`)).toHaveTextContent('117,700');
     expect(screen.getByTestId(`poh-due-${K}`)).toHaveTextContent(/Decision due/);
-    expect(screen.getByTestId(`poh-left-${K}`)).toHaveTextContent('14 days left');
+    expect(screen.getByTestId(`poh-left-${K}`)).toHaveTextContent('14 working days left');
     // The hub's pre-selection follows the conditions: demand above 0 → FS + spread.
     expect(screen.getByTestId(`poh-option-fsSpread-${K}`)).toBeChecked();
     // What the hub does not hold is said, not guessed.
@@ -60,7 +60,7 @@ describe('PO On Hold — planner', () => {
     fireEvent.change(screen.getByTestId(`poh-grace-input-${K}`), { target: { value: '21' } });
     fireEvent.click(screen.getByTestId(`poh-settings-save-${K}`));
     await waitFor(() =>
-      expect(screen.getByTestId(`poh-left-${K}`)).toHaveTextContent('21 days left')
+      expect(screen.getByTestId(`poh-left-${K}`)).toHaveTextContent('21 working days left')
     );
     expect(osipParamStore.valueOf(`grace|${K}`)).toBe(21);
   });

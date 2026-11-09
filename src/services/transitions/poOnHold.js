@@ -14,7 +14,8 @@
 //
 // The grace period starts on the day a quantity first appears [Proposed] and
 // lasts 14 days by default, per supplier × material [Owner, Q7, PEX-D7]. The
-// decision (PEX-8) takes effect at its end.
+// decision (PEX-8) takes effect at its end. Owner ruled 2026-11-09: the grace
+// and no-movement days are WORKING days on the hub calendar (BL-50).
 //
 // PURE. No store, no clock: the read model hands in the figures and the day.
 // Nothing is decided for a planner here except the pre-selected suggestion
@@ -24,10 +25,12 @@
 // carry-over, the thresholds that choose between them, PO cancellation.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { addDays, daysBetween } from './inventoryRules';
+/** @import { WorkingCalendar } from '@lib/workingCalendar' */
+import { addWorkingDays, documentInstant, isWorkingDay } from '@lib/workingCalendar';
+import { hubWorkingCalendar } from './workingCalendarStore';
 
 /**
- * PEX-D7 — 14 days each, per supplier × material, editable (`t_osipparam_set`,
+ * PEX-D7 — 14 working days each, per supplier × material, editable (`t_osipparam_set`,
  * keys `grace|<supplier>|<material>` and `noMove|<supplier>|<material>`).
  */
 export const PO_ON_HOLD_RULES = Object.freeze({
@@ -77,15 +80,45 @@ export const poOnHoldQty = (f) => Math.max(0, f.ospo - f.daNotCalledOff);
  */
 
 /**
+ * Working days after `from` up to and including `to` (both `YYYY-MM-DD`) on the
+ * calendar: 0 when `to` is not after `from`.
+ * @param {string} from
+ * @param {string} to
+ * @param {WorkingCalendar} [cal]
+ * @returns {number}
+ */
+export function workingDaysBetween(from, to, cal = hubWorkingCalendar()) {
+  let n = 0;
+  let d = from;
+  while (d < to) {
+    d = new Date(Date.parse(`${d}T00:00:00.000Z`) + 86_400_000).toISOString().slice(0, 10);
+    if (isWorkingDay(d, cal)) n += 1;
+  }
+  return n;
+}
+
+/**
+ * The grace period is `graceDays` WORKING days on the hub calendar (owner,
+ * 2026-11-09). A first day that is not a working day counts from the next one,
+ * as every other deadline does (REQ-E07-02). `daysLeft` is working days.
  * @param {string} asOf  `YYYY-MM-DD`
  * @param {string} firstDay  The day the quantity first appeared.
- * @param {number} graceDays
+ * @param {number} graceDays  Working days.
+ * @param {WorkingCalendar} [cal]
  * @returns {GraceState}
  */
-export function graceState(asOf, firstDay, graceDays) {
-  const dueDay = addDays(firstDay, graceDays);
-  const left = daysBetween(asOf, dueDay);
-  return { firstDay, graceDays, dueDay, daysLeft: Math.max(0, left), ended: left <= 0 };
+export function graceState(asOf, firstDay, graceDays, cal = hubWorkingCalendar()) {
+  const due = addWorkingDays(documentInstant(firstDay, cal), graceDays, cal);
+  const dueDay = new Date(due.getTime() + cal.utcOffsetHours * 3_600_000)
+    .toISOString()
+    .slice(0, 10);
+  return {
+    firstDay,
+    graceDays,
+    dueDay,
+    daysLeft: workingDaysBetween(asOf, dueDay, cal),
+    ended: asOf >= dueDay
+  };
 }
 
 /**
@@ -109,7 +142,7 @@ export function fgCap(f) {
  * What the hub knows of one line, for the conditions of PEX-8 BR-02.
  * `pipo`:  True/false when the hub holds the flag; null when it does not.
  * `demand`:  Σ DA over the horizon.
- * `daysSinceMovement`:  Whole days since the last stock movement; null when none is on record.
+ * `daysSinceMovement`:  Whole WORKING days since the last stock movement; null when none is on record.
  *
  * @typedef {{
  *   readonly pipo: boolean | null;

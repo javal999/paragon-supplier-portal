@@ -93,7 +93,9 @@ describe('the read (PEX-7)', () => {
     sdcClock.set('2026-09-03T12:00:00.000Z');
     const later = (await lines(planner)).find((x) => x.key === keyOf(NO_DEMAND));
     expect(later?.grace.firstDay).toBe(first?.grace.firstDay);
-    expect(later?.grace.daysLeft).toBe(11);
+    // Working days: 4 Sep and 2 Sep are hub holidays in the sample calendar, due 22 Sep.
+    expect(later?.grace.dueDay).toBe(first?.grace.dueDay);
+    expect(later?.grace.daysLeft).toBe(12);
   });
 
   it('BR-03/BR-04: grace and no-movement days are set with t_osipparam_set and read back', async () => {

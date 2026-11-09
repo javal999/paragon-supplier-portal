@@ -260,8 +260,6 @@ const D = derive();
 // why that is right. A row may only leave by its site leaving.
 /** @type {Readonly<Record<string, string>>} */
 const CALENDAR_DAY_ALLOWLIST = {
-  'services/transitions/poOnHold.js#graceState':
-    'PEX-7 BR-02 — the PO On Hold grace period is set in days (14 by default, owner 2026-11-05, Q7) and counted in calendar days from the day the quantity first appeared [my call: the doc says "days", not working days]; the supplier answers within it, so working-day counting is the alternative.',
   'services/delivery/fulfillment.js#statusForUnmatched':
     'CR-07 — "Missed: nothing received 3 days after the need date": a physical delivery window in calendar days, not a response deadline.',
   'services/transitions/callOffRules.js#deliveryResults':
@@ -344,6 +342,8 @@ describe('BL-50 · the deadline population reads the hub calendar', () => {
       'services/data/poResponseProjection.js',
       'services/transitions/callOffRules.js',
       'services/transitions/forecastRules.js',
+      // PEX-7 — the PO On Hold grace period counts working days (owner, 2026-11-09).
+      'services/transitions/poOnHold.js',
       // Material B1 — the weekly stock update cutoff moves off a non-working day (MR-1 BR-03).
       // Material B3 — an API week is judged on the cycle's working days (MR-2 BR-02).
       'services/transitions/updateCompliance.js',

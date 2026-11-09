@@ -30,13 +30,13 @@ import { withLeadTime } from './leadTimeReadModel';
 import { maxStockFor } from '../../transitions/maxStock';
 import { osipParamKey } from '../../transitions/osipParams';
 import { blanketBalances, openSupplyIndex } from '../../transitions/supplyBelowDemandRules';
-import { daysBetween } from '../../transitions/inventoryRules';
 import {
   PO_ON_HOLD_RULES,
   daNotCalledOff,
   decisionStanding,
   fgCap,
   graceState,
+  workingDaysBetween,
   optionConditions,
   outcomeOf,
   poOnHoldQty,
@@ -160,7 +160,7 @@ export function allPoOnHold(nowIso = sdcClock.now()) {
         .filter((s) => typeof s === 'string')
         .sort();
       const lastMove = stamps.length > 0 ? String(stamps[stamps.length - 1]).slice(0, 10) : null;
-      const daysSinceMovement = lastMove === null ? null : Math.max(0, daysBetween(lastMove, day));
+      const daysSinceMovement = lastMove === null ? null : workingDaysBetween(lastMove, day);
       const sohPti = pti.find((r) => r.materialCode === f.materialCode)?.ptiSoh ?? null;
       const sohSupplier =
         positions.find((p) => p.supplierId === f.supplierId && p.materialCode === f.materialCode)
