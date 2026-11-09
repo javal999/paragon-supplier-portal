@@ -2975,6 +2975,7 @@ export function useOsipLevelCommand() {
  *   readonly supplierId?: string;
  *   readonly materialCode?: string;
  *   readonly value: number | boolean | null;
+ *   readonly reason?: string;
  * }} OsipParamVars
  */
 
@@ -2990,7 +2991,10 @@ export function useOsipParamCommand() {
         transitionId: 't_osipparam_set',
         entity: 'osipParam',
         entityId: osipParamKey(vars.param, vars),
-        payload: { osipParamValue: vars.value }
+        payload: {
+          osipParamValue: vars.value,
+          ...(vars.reason === undefined ? {} : { osipParamReason: vars.reason })
+        }
       }),
     onSuccess: (result) => {
       if (result.status === 'failed') return;

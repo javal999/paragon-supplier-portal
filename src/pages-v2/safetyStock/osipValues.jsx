@@ -12,7 +12,12 @@ import { useRefusalText } from '@hooks/useRefusalText';
 import { formatNumber } from '@lib/format';
 import { useOsipParamCommand } from '@services/query/commandHooks';
 import { OSIP_RULES } from '@services/transitions/osipRules';
-import { cycleDaysOf, osipParamRefusal } from '@services/transitions/osipParams';
+import {
+  SWITCH_REASON_MIN_LENGTH,
+  cycleDaysOf,
+  osipParamRefusal,
+  osipReasonRefusal
+} from '@services/transitions/osipParams';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Team answers 2026-10-28 (B3, B6, B7, B10, E2), owner ruling 2026-10-28 — the
@@ -59,7 +64,7 @@ const textOf = (v) => (typeof v === 'number' ? String(v) : '');
  *   current: number | null;
  *   placeholder: string;
  *   held: boolean;
- *   onSave: (value: number | null) => Promise<void>;
+ *   onSave: (value: number | null) => Promise<boolean>;
  *   busy: boolean;
  * }>}
  */
@@ -103,6 +108,89 @@ const NumberValue = ({ id, label, param, current, placeholder, held, onSave, bus
 };
 
 /**
+ * PEX-13 (BL-275) — one per-material switch with its required reason.
+ * @type {React.FC<{
+ *   id: string;
+ *   param: 'safetyStockOn' | 'protectionBufferOn';
+ *   on: boolean;
+ *   note?: { reason: string | null; setAt: string; on: boolean };
+ *   held: boolean;
+ *   busy: boolean;
+ *   onSave: (on: boolean, reason: string) => Promise<boolean>;
+ * }>}
+ */
+const SwitchValue = ({ id, param, on, note, held, busy, onSave }) => {
+  const { t } = useTranslation();
+  const [next, setNext] = useState(on);
+  const [reason, setReason] = useState('');
+  const changed = next !== on;
+  const refusal = osipReasonRefusal(param, reason);
+  return (
+    <fieldset className="border border-border-subtle rounded-md p-3 min-w-64">
+      <legend className="px-1 text-sm font-medium text-text-primary">
+        {t(`pex.switch.${param}`)}
+      </legend>
+      <label className="inline-flex items-center gap-2">
+        <input
+          type="checkbox"
+          data-testid={`${id}-toggle`}
+          checked={next}
+          disabled={!held || busy}
+          onChange={(e) => setNext(e.target.checked)}
+        />
+        <span className="text-sm" data-testid={`${id}-state`}>
+          {t(on ? 'pex.switch.on' : 'pex.switch.off')}
+        </span>
+      </label>
+      {held && changed ? (
+        <div className="mt-2">
+          <label
+            htmlFor={`${id}-reason`}
+            className="block text-label text-text-tertiary uppercase mb-1"
+          >
+            {t('pex.switch.reason')}
+          </label>
+          <textarea
+            id={`${id}-reason`}
+            data-testid={`${id}-reason`}
+            className="w-full px-2 py-1 text-sm border border-border-subtle rounded-md bg-white"
+            rows={2}
+            value={reason}
+            aria-describedby={`${id}-hint`}
+            onChange={(e) => setReason(e.target.value)}
+          />
+          <p id={`${id}-hint`} className="text-xs text-text-tertiary mt-1">
+            {t('pex.switch.reasonHint', { min: SWITCH_REASON_MIN_LENGTH })}
+          </p>
+          <Button
+            variant="outline"
+            className="mt-2"
+            data-testid={`${id}-save`}
+            disabled={refusal !== null || busy}
+            onClick={() =>
+              void onSave(next, reason.trim()).then((ok) => {
+                if (ok) setReason('');
+              })
+            }
+          >
+            {t('pex.switch.save')}
+          </Button>
+        </div>
+      ) : null}
+      {note ? (
+        <p className="text-xs text-text-tertiary mt-2" data-testid={`${id}-last`}>
+          {t('pex.switch.last', {
+            state: t(note.on ? 'pex.switch.on' : 'pex.switch.off'),
+            when: note.setAt.slice(0, 10),
+            reason: note.reason ?? ''
+          })}
+        </p>
+      ) : null}
+    </fieldset>
+  );
+};
+
+/**
  * Team answers 2026-10-28 — the material's and its suppliers' OSIP values.
  * @type {React.FC<{ materialCode: string; osip: MaterialOsipInputs }>}
  */
@@ -120,21 +208,32 @@ export const OsipValues = ({ materialCode, osip }) => {
    * @param {OsipParam} param
    * @param {{ supplierId?: string; materialCode?: string }} at
    * @param {number | boolean | null} value
+   * @param {string} [reason]  PEX-13: the switch change's reason.
+   * @returns {Promise<boolean>}  Whether it was saved.
    */
-  const save = async (param, at, value) => {
+  const save = async (param, at, value, reason) => {
     try {
-      const res = await command.mutateAsync({ param, ...at, value });
+      const res = await command.mutateAsync({ param, ...at, value, ...(reason ? { reason } : {}) });
       if (res.status === 'failed') {
         toast({
           variant: 'warning',
           title: t('sst.values.refused'),
           description: refusalText(res.reason) ?? res.reason ?? ''
         });
-        return;
+        return false;
       }
-      toast({ variant: 'success', title: t(`sst.values.saved.${param}`) });
+      toast({
+        variant: 'success',
+        title: t(
+          param === 'safetyStockOn' || param === 'protectionBufferOn'
+            ? `pex.switch.saved.${param}`
+            : `sst.values.saved.${param}`
+        )
+      });
+      return true;
     } catch {
       toast({ variant: 'error', title: t('sst.values.refused') });
+      return false;
     }
   };
 
@@ -173,6 +272,33 @@ export const OsipValues = ({ materialCode, osip }) => {
       <p className="text-xs text-text-tertiary mb-3" data-testid="sst-values-owners">
         {t('sst.values.owners')}
       </p>
+      <div className="mb-4" data-testid="pex-switches">
+        <h4 className="text-sm font-semibold text-text-primary mb-1">{t('pex.switch.title')}</h4>
+        <p className="text-xs text-text-tertiary mb-2">
+          {t('pex.switch.note', { min: SWITCH_REASON_MIN_LENGTH })}
+        </p>
+        <div className="flex flex-wrap gap-4">
+          {
+            /** @type {const} */ (['safetyStockOn', 'protectionBufferOn']).map((param) => {
+              const on =
+                (param === 'safetyStockOn' ? first.safetyOn : first.protectionOn) !== false;
+              return (
+                <SwitchValue
+                  key={`${param}-${on}`}
+                  id={`pex-switch-${param}`}
+                  param={param}
+                  on={on}
+                  note={first.switchNotes?.[param]}
+                  held={held}
+                  busy={command.isPending}
+                  onSave={(next, reason) => save(param, { materialCode }, next, reason)}
+                />
+              );
+            })
+          }
+        </div>
+        <p className="text-xs text-text-tertiary mt-2">{t('pex.switch.rulesHold')}</p>
+      </div>
       <div className="overflow-x-auto">
         <table className="text-sm" data-testid="sst-values-suppliers">
           <thead>

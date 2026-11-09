@@ -15,6 +15,8 @@
 import { osipLevelInForce } from '../../transitions/osipRopRules';
 import { engineDataset } from './fixtures/engineDataset';
 import { osipLevelStore } from './stores/osipLevelStore';
+import { osipParamStore } from './stores/osipParamStore';
+import { osipParamKey, switchIsOn } from '../../transitions/osipParams';
 
 /**
  * BL-205 — every sourced supplier × material's level and production MPQ.
@@ -29,7 +31,11 @@ export function protectionBufferInputs() {
       level: level.level,
       levelSource: level.source,
       // [Default, wave 2] MPQ = orderMultiple until the master data feed carries MPQ (wave 2 default).
-      mpq: s.orderMultiple > 0 ? s.orderMultiple : null
+      mpq: s.orderMultiple > 0 ? s.orderMultiple : null,
+      // PEX-13 (BL-275) — the material's switch, on by default.
+      protectionOn: switchIsOn(
+        osipParamStore.valueOf(osipParamKey('protectionBufferOn', { materialCode: s.materialCode }))
+      )
     };
   });
 }

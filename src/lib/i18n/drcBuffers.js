@@ -32,7 +32,6 @@ export const drcBuffersEn = {
   'buffers.protection.subtitle':
     'Protection buffer = CEILING(uplift, production MPQ), uplift = LTP − average LTP of the {{months}} months before; never below 0. Levels 5, 6 and 7 only: level 4 has none, levels 1 to 3 take the strategic buffer. Read only: ROP Fisik and Max do not include it.',
   'buffers.protection.absorbed': 'Planned stock: PTI absorbs it even if demand does not rise',
-  'buffers.protection.switchedOff': 'Protection buffer switched off: no figure is computed.',
   'buffers.protection.col.supplier': 'Supplier',
   'buffers.protection.col.material': 'Material',
   'buffers.protection.col.month': 'Month',
@@ -77,7 +76,6 @@ export const drcBuffersId = {
   'buffers.protection.subtitle':
     'Protection buffer = CEILING(kenaikan, MPQ produksi), kenaikan = LTP − rata-rata LTP {{months}} bulan sebelumnya; tidak pernah di bawah 0. Hanya level 5, 6 dan 7: level 4 tanpa protection buffer, level 1 sampai 3 memakai strategic buffer. Hanya baca: ROP Fisik dan Max tidak memasukkannya.',
   'buffers.protection.absorbed': 'Stok terencana: PTI menyerapnya walaupun permintaan tidak naik',
-  'buffers.protection.switchedOff': 'Protection buffer dimatikan: tidak ada angka yang dihitung.',
   'buffers.protection.col.supplier': 'Pemasok',
   'buffers.protection.col.material': 'Material',
   'buffers.protection.col.month': 'Bulan',

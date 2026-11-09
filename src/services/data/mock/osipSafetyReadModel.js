@@ -47,7 +47,7 @@ import { engineDataset } from './fixtures/engineDataset';
 import { allCommitmentLines, forecastSupplierName } from './forecastReadModel';
 import { consumptionStore } from './stores/consumptionStore';
 import { osipParamStore } from './stores/osipParamStore';
-import { osipParamKey } from '../../transitions/osipParams';
+import { osipParamKey, switchIsOn } from '../../transitions/osipParams';
 
 /**
  * The planner's value for one key, or null (the default applies).
@@ -58,6 +58,22 @@ import { osipParamKey } from '../../transitions/osipParams';
 const ownNumber = (param, at) => {
   const v = osipParamStore.valueOf(osipParamKey(param, at));
   return typeof v === 'number' ? v : null;
+};
+
+/**
+ * PEX-13 — the latest ledger row of each switch of a material (reason, when, who), or absent.
+ * @param {string} code
+ * @returns {Partial<Record<'safetyStockOn' | 'protectionBufferOn', { reason: string | null; setAt: string; on: boolean }>>}
+ */
+const switchNotes = (code) => {
+  /** @type {Partial<Record<'safetyStockOn' | 'protectionBufferOn', { reason: string | null; setAt: string; on: boolean }>>} */
+  const out = {};
+  for (const param of /** @type {const} */ (['safetyStockOn', 'protectionBufferOn'])) {
+    const rows = osipParamStore.forKey(osipParamKey(param, { materialCode: code }));
+    const last = rows[rows.length - 1];
+    if (last) out[param] = { reason: last.reason, setAt: last.setAt, on: switchIsOn(last.value) };
+  }
+  return out;
 };
 
 /**
@@ -193,6 +209,14 @@ export function osipSafetyInputs(nowIso = sdcClock.now()) {
         // Team answers 2026-10-28 — the planner's own values, null when not set.
         z: ownNumber('z', { materialCode: code }),
         g: ownNumber('g', { materialCode: code }),
+        // PEX-13 (BL-275) — the material's switches, on by default, each with its latest reason.
+        safetyOn: switchIsOn(
+          osipParamStore.valueOf(osipParamKey('safetyStockOn', { materialCode: code }))
+        ),
+        protectionOn: switchIsOn(
+          osipParamStore.valueOf(osipParamKey('protectionBufferOn', { materialCode: code }))
+        ),
+        switchNotes: switchNotes(code),
         fDays: ownNumber('f', { supplierId: s.supplierId }),
         bottleneckLeadTimeDays: ownNumber('bottleneckLeadTimeDays', {
           supplierId: s.supplierId,

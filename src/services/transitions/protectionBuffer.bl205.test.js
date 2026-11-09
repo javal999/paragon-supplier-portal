@@ -1,11 +1,10 @@
 // BL-205 — protection buffer (DRC-9c), [Proposed] awaiting owner review (C3).
 // CEILING(uplift, MPQ), uplift = max(0, LTP − average LTP of the 3 months
-// before), levels 5–7 only, switch `protectionUplift` ('rollingBaseline' | 'off').
+// before), levels 5–7 only, switch per material (PEX-13, BL-275).
 
 import { describe, expect, it } from 'vitest';
 import {
   PROTECTION_BUFFER_RULES,
-  PROTECTION_UPLIFTS,
   protectionBufferRows,
   protectionExclusion,
   protectionMonth
@@ -57,9 +56,8 @@ const inputAt = (level, mpq = 25) => [
 ];
 
 describe('DRC-9c protection buffer [Proposed BL-205, C3]', () => {
-  it('the proposed variant is the default and both variants are listed', () => {
-    expect(PROTECTION_BUFFER_RULES.protectionUplift).toBe('rollingBaseline');
-    expect(PROTECTION_UPLIFTS).toEqual(['rollingBaseline', 'off']);
+  it('the rules block no longer carries a switch: it is per material (PEX-13)', () => {
+    expect('protectionUplift' in PROTECTION_BUFFER_RULES).toBe(false);
     expect(PROTECTION_BUFFER_RULES.levels).toEqual([5, 6, 7]);
     expect(PROTECTION_BUFFER_RULES.baselineMonths).toBe(3);
   });
@@ -97,14 +95,19 @@ describe('DRC-9c protection buffer [Proposed BL-205, C3]', () => {
     for (const l of [1, 2, 3]) expect(protectionExclusion(l)).toBe('strategicLevel');
   });
 
-  it("'off' gives none, at any level", () => {
-    const off = { ...PROTECTION_BUFFER_RULES, protectionUplift: /** @type {const} */ ('off') };
+  it("a material's switch off gives none, at any level; on (or unset) changes nothing", () => {
     for (const level of [4, 5, 6, 7]) {
-      const [row] = protectionBufferRows(HAND, inputAt(level), { rules: off });
+      const [row] = protectionBufferRows(
+        HAND,
+        inputAt(level).map((i) => ({ ...i, protectionOn: false }))
+      );
       expect(row.applies).toBe(false);
       expect(row.reason).toBe('switchedOff');
       expect(row.months).toEqual([]);
     }
+    expect(protectionExclusion(5, PROTECTION_BUFFER_RULES, true)).toBeNull();
+    expect(protectionExclusion(5, PROTECTION_BUFFER_RULES, false)).toBe('switchedOff');
+    expect(protectionBufferRows(HAND, inputAt(5))[0].applies).toBe(true);
   });
 
   it('the first months have an incomplete baseline; no MPQ gives the uplift but no figure', () => {
