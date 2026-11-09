@@ -14,6 +14,9 @@ import { materialRequirementId } from './materialRequirement';
 import { modelBacktestId } from './modelBacktest';
 import { stockSimulationId } from './stockSimulation';
 import { safetyStockId } from './safetyStock';
+import { buyerSupplierProfileId } from './buyerSupplierProfile';
+import { sdcConsolidationId } from './sdcConsolidation';
+import { processFlowPurposeId } from './processFlowPurpose';
 import { TERM_LABEL_GLOSSARY } from '@lib/glossary/termLabels.glossary';
 import { PLANNING_TERM_GLOSSARY } from '@lib/glossary/planning.glossary';
 
@@ -26,7 +29,11 @@ const DICTS = /** @type {const} */ ([
   ['materialRequirement', materialRequirementId],
   ['modelBacktest', modelBacktestId],
   ['stockSimulation', stockSimulationId],
-  ['safetyStock', safetyStockId]
+  ['safetyStock', safetyStockId],
+  // Planner-read, added on the owner's follow-up of 2026-11-09.
+  ['buyerSupplierProfile', buyerSupplierProfileId],
+  ['sdcConsolidation', sdcConsolidationId],
+  ['processFlowPurpose', processFlowPurposeId]
 ]);
 
 describe('BL-280 — lead time stays English in the planning dictionaries', () => {

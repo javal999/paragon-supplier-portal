@@ -226,7 +226,7 @@ export const sdcConsolidationId = {
   'sdc.coverage.atRisk': 'Berisiko',
   'sdc.coverage.uncovered': 'Tak tercakup',
   'sdc.coverage.noDeclaration': 'Tanpa deklarasi',
-  'sdc.coverage.unbridgeable': 'waktu tunggu tak terjembatani',
+  'sdc.coverage.unbridgeable': 'lead time tak terjembatani',
   'sdc.coverage.model': 'Model',
   'sdc.coverage.expiryBlind': 'buta-kedaluwarsa',
   'sdc.coverage.expiryBlindTitle':
