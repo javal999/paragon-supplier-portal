@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 import TermLabel from '@components/ui-v2/TermLabel';
 import Data from '@components/ui-v2/Data';
 import { formatDate } from '@lib/format';
-import { useForecastCommitments } from '@services/query/hooks';
+import { useForecastCommitments, useStrategicBufferInputs } from '@services/query/hooks';
+import { withFestiveBuffer } from '@services/transitions/strategicBufferInputs';
 import {
   BUFFER_RULES,
   STRATEGIC_BUFFER_QUESTION,
@@ -57,7 +58,14 @@ const LtpCell = ({ m, testId }) => {
 const StrategicBufferSection = ({ supplierId, materialCode }) => {
   const { t } = useTranslation();
   const linesQuery = useForecastCommitments();
-  const rows = useMemo(() => strategicBufferRows(linesQuery.data?.items ?? []), [linesQuery.data]);
+  const inputsQuery = useStrategicBufferInputs();
+  // PEX-D10 — LTP Festive − LTP A where a month has it; LTP − baseline (DRC-9a) elsewhere.
+  const rows = useMemo(() => {
+    const festive = new Map(
+      (inputsQuery.data?.items ?? []).map((i) => [`${i.supplierId}|${i.materialCode}`, i.months])
+    );
+    return withFestiveBuffer(strategicBufferRows(linesQuery.data?.items ?? []), festive);
+  }, [linesQuery.data, inputsQuery.data]);
   const shown = rows.filter(
     (r) =>
       (supplierId === null || r.supplierId === supplierId) &&
@@ -83,6 +91,9 @@ const StrategicBufferSection = ({ supplierId, materialCode }) => {
         </p>
         <p className="text-xs text-text-tertiary mt-1">
           {t('buffers.strategic.subtitle', { months })}
+        </p>
+        <p className="text-xs text-text-tertiary mt-1" data-testid="strategic-buffer-festive-note">
+          {t('buffers.strategic.festiveNote')}
         </p>
         <p className="text-xs text-text-tertiary mt-1" data-testid="strategic-buffer-calendar">
           {t('buffers.strategic.calendarNote')}
@@ -199,9 +210,20 @@ const StrategicBufferSection = ({ supplierId, materialCode }) => {
                               </span>
                             </td>
                             <td className="px-4 py-1 text-right font-semibold">
-                              <span data-testid={`strategic-buffer-value-${cellKey}`}>
+                              <span
+                                data-testid={`strategic-buffer-value-${cellKey}`}
+                                data-source={m.source}
+                              >
                                 {m.buffer === null ? dash : <Data>{qty(m.buffer)}</Data>}
                               </span>
+                              {m.source === 'festive' ? (
+                                <span
+                                  className="block text-xs font-normal text-text-tertiary"
+                                  data-testid={`strategic-buffer-source-${cellKey}`}
+                                >
+                                  {t('buffers.strategic.fromFestive')}
+                                </span>
+                              ) : null}
                             </td>
                           </tr>
                         );

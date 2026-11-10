@@ -1,6 +1,6 @@
 # C1 — Method Surface
 
-Three distinct axes. **116** (service surface) · **225** (transition catalog) · **60** (wired
+Three distinct axes. **117** (service surface) · **225** (transition catalog) · **60** (wired
 targets). They measure different things; this file keeps them separate.
 
 > ⚠️ **THIS DOCUMENT IS PINNED TO THE TREE, AND THE PIN IS WHY THE NUMBERS ABOVE ARE ALLOWED TO
@@ -32,7 +32,7 @@ Source of truth: `src/services/data/types.js` (service + command types),
 
 ---
 
-## Axis 1 — the 116-method service surface (`IDataService`)
+## Axis 1 — the 117-method service surface (`IDataService`)
 
 The single interface the Phase-F1 real adapter implements; pages call it through
 `useDataService()` and do not change when the mock is swapped for `httpDataService`. Every method
@@ -76,7 +76,7 @@ interface IDataService {
 | Sub-service | Count | Methods |
 |---|---|---|
 | `ISupplierService` | 6 | `list`, `getById`, `getCurrent`, `getStockUpdateModes`, `getUpdateCompliance`, `getVendorQualifications` |
-| `IProcurementService` | 68 | `getPurchaseOrders`, `getPurchaseOrder`, `getInventory`, `getMaterialNames`, `getStockAccess`, `getCapacityPlans`, `getCapacityHeadsUp`, `getRopFisikPrRecommendations`, `getWhatIfPairs`, `getWhatIfSandbox`, `getNpdReviews`, `getProtectionBufferInputs`, `getBlanketPoRunOuts`, `getDemandAnticipation`, `getDemandAnticipationHistory`, `getPlanningGroups`, `getStockSimulation`, `getInventoryAlerts`, `getSupplierAsks`, `getCapacityDecisions`, `getForecastVersions`, `getForecastCommitments`, `getForecastCoverage`, `getFixedStockReconcile`, `getPoOnHold`, `getSupplierReliability`, `getMaterialRequirement`, `getSafetyStock`, `getOrderPlan`, `getReschedule`, `getDataHealth`, `getStabilisedPlan`, `getRFQs`, `getQuotations`, `getInviteeCandidates`, `getRfiEvents`, `getRfpEvents`, `getNegotiationRounds`, `getRfpOfferRounds`, `getAwards`, `getRfpAwards`, `getRfqEngagement`, `getRfqClarifications`, `getRfqComplianceGate`, `getShipments`, `getASNs`, `getGoodsReceipts`, `getCallOffs`, `getBuyerInvoices`, `getSupplierInvoices`, `getContracts`, `getObligations`, `getDocuments`, `getStorefrontCatalog`, `getStorefrontCerts`, `getStorefrontProducts`, `getKpis`, `getPerformanceTrend`, `getSupplierScorecards`, `getRequisitions`, `getPrIntake`, `getSupplierApplications`, `getProductionLines`, `getSupplierHealth`, `getDemandForecast`, `getModelBacktest`, `getForecastBias`, `getSupplierDemandAnticipation` |
+| `IProcurementService` | 69 | `getPurchaseOrders`, `getPurchaseOrder`, `getInventory`, `getMaterialNames`, `getStockAccess`, `getCapacityPlans`, `getCapacityHeadsUp`, `getStrategicBufferInputs`, `getRopFisikPrRecommendations`, `getWhatIfPairs`, `getWhatIfSandbox`, `getNpdReviews`, `getProtectionBufferInputs`, `getBlanketPoRunOuts`, `getDemandAnticipation`, `getDemandAnticipationHistory`, `getPlanningGroups`, `getStockSimulation`, `getInventoryAlerts`, `getSupplierAsks`, `getCapacityDecisions`, `getForecastVersions`, `getForecastCommitments`, `getForecastCoverage`, `getFixedStockReconcile`, `getPoOnHold`, `getSupplierReliability`, `getMaterialRequirement`, `getSafetyStock`, `getOrderPlan`, `getReschedule`, `getDataHealth`, `getStabilisedPlan`, `getRFQs`, `getQuotations`, `getInviteeCandidates`, `getRfiEvents`, `getRfpEvents`, `getNegotiationRounds`, `getRfpOfferRounds`, `getAwards`, `getRfpAwards`, `getRfqEngagement`, `getRfqClarifications`, `getRfqComplianceGate`, `getShipments`, `getASNs`, `getGoodsReceipts`, `getCallOffs`, `getBuyerInvoices`, `getSupplierInvoices`, `getContracts`, `getObligations`, `getDocuments`, `getStorefrontCatalog`, `getStorefrontCerts`, `getStorefrontProducts`, `getKpis`, `getPerformanceTrend`, `getSupplierScorecards`, `getRequisitions`, `getPrIntake`, `getSupplierApplications`, `getProductionLines`, `getSupplierHealth`, `getDemandForecast`, `getModelBacktest`, `getForecastBias`, `getSupplierDemandAnticipation` |
 | `IRiskService` | 7 | `getRiskAlerts`, `getGeoRisks`, `getExposure`, `getScenarios`, `getCompliance`, `getComplianceRegistry`, `getCommodities` |
 | `IDiscoveryService` | 4 | `getRecommended`, `getQualifications`, `getMarketIntel`, `getSingleSourceItems` |
 | `IAnalyticsService` | 7 | `getSummary`, `getSpendByCategory`, `getTopSuppliers`, `getOtifTrend`, `getPoVolumeTrend`, `getChannelMix`, `getSupplierPerformance` |
@@ -85,10 +85,10 @@ interface IDataService {
 | `IChaseService` | 1 | `getUnifiedChase` |
 | `IEnforcementService` | 1 | `getEnforcementSettings` |
 | `IFileService` | 6 | `put`, `urlFor`, `release`, `isHeld`, `recordAccess`, `accessLog` |
-| **read subtotal** | **112** | |
+| **read subtotal** | **113** | |
 | `ICommandService` | 3 | `dispatch`, `getCommandStatus`, `settle` |
 | top-level | 1 | `getCapabilities` |
-| **TOTAL** | **116** | |
+| **TOTAL** | **117** | |
 
 **Return contract:** list reads return `Page<T>` (DR-5 — see C2); single reads return `T | null`;
 `getSummary` returns a summary object or `null` (buyer-populated, supplier-null). Failure is
