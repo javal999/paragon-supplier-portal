@@ -7,7 +7,7 @@ import { MemoryRouter } from 'react-router-dom';
 import PeriodSubmitSection from './SupplierForecastCommitments/components/PeriodSubmitSection';
 
 /** @type {any} */
-const mk = (bucket, red) => ({
+const mk = (/** @type {string} */ bucket, /** @type {boolean} */ red) => ({
   bucket,
   red,
   pending: [{ key: bucket }],
