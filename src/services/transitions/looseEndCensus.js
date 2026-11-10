@@ -368,6 +368,18 @@ export const LOOSE_END_CENSUS = Object.freeze([
       'adds it — so there is no separate creation verb to be an entry. A change is a new row; nothing is ' +
       'edited or deleted. The verb is statePreserving, so the state is correctly declared terminal.'
   },
+  // ── ltpInput (BL-267) ─────────────────────────────────────────────────────
+  {
+    entity: 'ltpInput',
+    kind: 'initial-integrity',
+    subject: 'Maintained',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE OSIP VALUE: the entity IS one key (an upload ' +
+      'of one series of a material, or the choice of a material), and its first row adds it — so there is ' +
+      'no separate creation verb to be an entry. A change is a new row; nothing is edited or deleted. The ' +
+      'verb is statePreserving, so the state is correctly declared terminal.'
+  },
   // ── hubSetting (BL-32)─────────────────────────────────────────────────────
   {
     entity: 'hubSetting',

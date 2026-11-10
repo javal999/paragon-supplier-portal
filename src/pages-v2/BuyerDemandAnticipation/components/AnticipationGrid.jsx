@@ -11,6 +11,7 @@ import { signedDelta, weekLabel } from '../display';
 import { supplyRows } from './supplyRows';
 import { consumptionRows } from '../consumptionRows';
 import { ltpFgDemandRows } from './ltpFgDemandRows';
+import { ltpInputRows } from './ltpInputRows';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DRC-2 (BL-188) — one supplier × material's weeks as columns (CAP-1 WeekGrid).
@@ -46,6 +47,8 @@ const AnticipationGrid = ({ row, rowKey, currentWeek }) => {
   const weekOf = (week) =>
     /** @type {DemandAnticipationWeekView} */ (row.weeks.find((w) => w.week === week));
 
+  // BL-267 — a material with an uploaded LTP shows LTP A, Festive and B (DA reads the one in use).
+  const ltpIn = ltpInputRows(row, rowKey, t);
   /** @type {WeekGridRow[]} */
   const rows = [
     {
@@ -58,8 +61,10 @@ const AnticipationGrid = ({ row, rowKey, currentWeek }) => {
         <Data data-testid={`dant-ltp-${rowKey}-${week}`}>
           {formatNumber(weekOf(week).inputs.ltp)}
         </Data>
-      )
+      ),
+      ...ltpIn.aRow
     },
+    ...ltpIn.extra,
     // DRC-18 (BL-203) — FG demand, LTP − FG demand, consumption 13-week average (read only).
     ...ltpFgDemandRows(row, rowKey, t),
     {

@@ -548,6 +548,14 @@ export const processFlowPurposeEn = {
     'An OSIP value the Material Planner set for one material (service-level factor Z, fixed safety days g), one supplier (replenishment cycle f, pull agreement) or one supplier and material (bottleneck production lead time). With none set, the default applies. Every change keeps the value before it, who set it and when; the latest is in force.',
   'processFlows.purpose.t_osipparam_set':
     'The Material Planner sets or resets one OSIP value. The reorder points, the call-off need date and the confirmation cadence follow it. Nothing is sent to SAP or a supplier.',
+  'processFlows.purpose.entity.capacityMonth':
+    'A supplier’s capacity stated month by month beyond the 13 weekly buckets, for one planning group. A changed entry is a new submission; the latest that states a month is in force.',
+  'processFlows.purpose.t_capacitymonth_submit':
+    'The supplier states its capacity for a planning group month by month, where the weekly entry does not reach. The capacity heads-up reads it. Nothing is sent to SAP.',
+  'processFlows.purpose.entity.ltpInput':
+    'An LTP quantity the Material Planner uploaded for one material (LTP A, LTP Festive or LTP B, a quantity per week, with the file it came from) or the LTP choice for that material. Nothing is edited or deleted; the latest of each is in force.',
+  'processFlows.purpose.t_ltpinput_set':
+    'The Material Planner uploads LTP A, LTP Festive or LTP B for a material, or records which of them the demand anticipation uses. The hub never picks the LTP. Nothing is sent to SAP or a supplier.',
   'processFlows.purpose.entity.whatIfScenario':
     'A what-if scenario the Material Planner kept for one supplier and material: the figures it was run on, its rule choices and the rules version in force at the time. Nothing is edited or deleted; keeping other numbers makes a new scenario.',
   'processFlows.purpose.t_whatifscenario_save':
@@ -1176,6 +1184,14 @@ export const processFlowPurposeId = {
     'Nilai OSIP yang diatur Perencana Material untuk satu material (faktor tingkat layanan Z, hari pengaman tetap g), satu pemasok (siklus pengisian ulang f, perjanjian tarik) atau satu pemasok dan material (lead time produksi bottleneck). Bila belum diatur, nilai bawaan berlaku. Setiap perubahan menyimpan nilai sebelumnya, siapa yang mengatur, dan kapan; yang terakhir berlaku.',
   'processFlows.purpose.t_osipparam_set':
     'Perencana Material mengatur atau mengembalikan satu nilai OSIP. Titik pemesanan ulang, tanggal kebutuhan call-off, dan irama konfirmasi mengikutinya. Tidak ada yang dikirim ke SAP atau pemasok.',
+  'processFlows.purpose.entity.capacityMonth':
+    'Kapasitas pemasok per bulan untuk bulan di luar 13 bucket mingguan, untuk satu grup perencanaan. Perubahan menjadi pengajuan baru; yang terbaru untuk suatu bulan berlaku.',
+  'processFlows.purpose.t_capacitymonth_submit':
+    'Pemasok menyatakan kapasitas satu grup perencanaan per bulan, untuk bulan yang tidak dicakup entri mingguan. Capacity heads-up membacanya. Tidak ada yang dikirim ke SAP.',
+  'processFlows.purpose.entity.ltpInput':
+    'Kuantitas LTP yang diunggah Perencana Material untuk satu material (LTP A, LTP Festive atau LTP B, kuantitas per minggu, beserta berkasnya) atau pilihan LTP untuk material itu. Tidak ada yang diubah atau dihapus; yang terakhir berlaku.',
+  'processFlows.purpose.t_ltpinput_set':
+    'Perencana Material mengunggah LTP A, LTP Festive atau LTP B untuk satu material, atau mencatat mana yang dipakai demand anticipation. Hub tidak pernah memilih LTP. Tidak ada yang dikirim ke SAP atau pemasok.',
   'processFlows.purpose.entity.whatIfScenario':
     'Skenario what-if yang disimpan Perencana Material untuk satu pemasok dan material: angka yang dipakai, pilihan aturannya, dan versi aturan yang berlaku saat itu. Tidak ada yang diubah atau dihapus; angka lain menjadi skenario baru.',
   'processFlows.purpose.t_whatifscenario_save':

@@ -175,6 +175,8 @@ import { demandAnticipationTarget } from './targets/demandAnticipation';
 import { consumptionTarget } from './targets/consumption';
 import { osipLevelTarget } from './targets/osipLevel';
 import { osipParamTarget } from './targets/osipParam';
+import { ltpInputTarget } from './targets/ltpInput';
+import { capacityMonthTarget } from './targets/capacityMonth';
 // BL-202 — the what-if sandbox's saved scenarios (its own module, DRC-17).
 import { whatIfScenarioTarget } from './targets/whatIfScenario';
 import { observeNpdTags } from './osipRopReadModel';
@@ -6290,6 +6292,10 @@ const TARGETS = {
   // DRC-D11 (BL-196) — the OSIP level per material. Ships in the same commit as its flow.
   osipLevel: osipLevelTarget,
   osipParam: osipParamTarget,
+  // BL-267 (PEX-5) — LTP A, Festive, B uploads and the LTP choice, append-only.
+  ltpInput: ltpInputTarget,
+  // BL-269 (PEX-4) — the supplier's monthly capacity beyond the weekly buckets.
+  capacityMonth: capacityMonthTarget,
   // DRC-17 BR-05 (BL-202) — a saved what-if scenario, append-only, analysis
   // only. Ships in the same commit as its flow.
   whatIfScenario: whatIfScenarioTarget,

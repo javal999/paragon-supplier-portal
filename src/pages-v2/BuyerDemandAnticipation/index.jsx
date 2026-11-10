@@ -25,6 +25,8 @@ import { useDemandAnticipation } from '@services/query/hooks';
 import { inputClass, inventoryNow, labelClass } from '../inventory/inventoryDisplay';
 import AnticipationGrid from './components/AnticipationGrid';
 import PublishPanel from './components/PublishPanel';
+import LtpInputsPanel from './components/LtpInputsPanel';
+import { OutOfDateNote } from './components/DaCauses';
 import ConsumptionPanel from './components/ConsumptionPanel';
 import PlanCheck from './components/PlanCheck';
 import { latestPublication, publishPreview, sharePct, weekDates, weekLabel } from './display';
@@ -108,6 +110,19 @@ const BuyerDemandAnticipation = () => {
   const nowIso = inventoryNow();
   const crumb = forecastCrumb(t, 'demandAnticipation');
   const rows = useMemo(() => query.data?.items ?? [], [query.data]);
+  // BL-267 — one entry per material (the inputs are per material, not per supplier).
+  const ltpMaterials = useMemo(
+    () =>
+      [...new Map(rows.map((r) => [r.materialCode, r])).values()].map((r) => ({
+        materialCode: r.materialCode,
+        materialLabel: r.materialLabel,
+        ltpInputs:
+          /** @type {{ ltpInputs?: import('@services/data/mock/demandAnticipationReadModel').RowLtpInputs }} */ (
+            r
+          ).ltpInputs
+      })),
+    [rows]
+  );
   const supplier = params.get('supplier');
   const material = params.get('material');
   const { tab, select } = usePageTab(DEMAND_ANTICIPATION_TABS);
@@ -229,6 +244,9 @@ const BuyerDemandAnticipation = () => {
               <PublishPanel rows={rows} planningWeek={planningWeek} changed={changed} />
             </section>
 
+            {/* BL-267 (PEX-5) — the LTP inputs: upload LTP A, Festive, B and the choice per material. */}
+            <LtpInputsPanel materials={ltpMaterials} />
+
             <div
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(2,minmax(0,16rem))_auto] items-end gap-3 mb-4"
               data-testid="dant-filters"
@@ -317,6 +335,21 @@ const BuyerDemandAnticipation = () => {
                       {t('demandAnt.card.noStock')}
                     </p>
                   ) : null}
+                  {/* BL-268 (PEX-6 BR-01) — the published DA an input change moved, with the cause. */}
+                  {
+                    /** @type {{ outOfDate?: { causes: readonly import('@services/transitions/daCauseRules').DaCause[] } | null }} */ (
+                      r
+                    ).outOfDate ? (
+                      <OutOfDateNote
+                        causes={
+                          /** @type {{ outOfDate: { causes: readonly import('@services/transitions/daCauseRules').DaCause[] } }} */ (
+                            r
+                          ).outOfDate.causes
+                        }
+                        testId={`dant-outofdate-${keyOf(r)}`}
+                      />
+                    ) : null
+                  }
                   <PlanCheck row={r} rowKey={keyOf(r)} />
                   <CardWeeks
                     row={r}

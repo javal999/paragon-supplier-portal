@@ -11,6 +11,36 @@
 
 /** @type {Record<string, string>} */
 export const demandAnticipationEn = {
+  // BL-268 (PEX-6) — DA versions: the cause of a change.
+  'daCause.outOfDate': 'Out of date',
+  'daCause.because': 'Because:',
+  'daCause.kind.ltpA': 'LTP A',
+  'daCause.kind.ltpFestive': 'LTP Festive',
+  'daCause.kind.ltpB': 'LTP B',
+  'daCause.kind.ltpChoice': 'LTP choice',
+  'daCause.kind.safetyStock': 'Safety stock',
+  // BL-267 (PEX-5) — LTP inputs.
+  'ltpIn.title': 'LTP inputs',
+  'ltpIn.intro':
+    'Upload LTP A, LTP Festive and LTP B per material, and record which one the demand anticipation uses. The hub never picks it: a material with no choice uses LTP A. Until LTP A is uploaded, the forecast quantity stands in for it.',
+  'ltpIn.material': 'Material',
+  'ltpIn.pick': 'Pick a material',
+  'ltpIn.choice': 'LTP in use',
+  'ltpIn.uploadSeries': 'Upload for',
+  'ltpIn.file': 'LTP file',
+  'ltpIn.fileFormat':
+    'File: one line per week, Monday date and quantity, for example 2026-11-16,1200',
+  'ltpIn.series.A': 'LTP A',
+  'ltpIn.series.Festive': 'LTP Festive',
+  'ltpIn.series.B': 'LTP B',
+  'ltpIn.notUploaded': 'not uploaded',
+  'ltpIn.done': 'LTP input recorded',
+  'ltpIn.failed': 'Could not record the LTP input',
+  'ltpIn.inUse': 'in use',
+  'ltpIn.fromInputs': 'from LTP inputs',
+  'ltpIn.fallbackSb': 'DRC-9a calculation (no LTP Festive)',
+  'ltpIn.choiceWeekEmpty': 'LTP in use has no quantity for some weeks: those weeks read LTP A.',
+  'ltpIn.choiceNotUploaded': 'The LTP in use is not uploaded: DA reads LTP A.',
   'demandAnt.subtitle':
     'What PTI expects to call off from each supplier, per material and week, over the lead time. The horizon rolls weekly: each planning week is published on its own, and the next one rolls forward.',
   'demandAnt.asOf': 'As of',
@@ -122,6 +152,37 @@ export const demandAnticipationEn = {
 
 /** @type {Record<string, string>} */
 export const demandAnticipationId = {
+  // BL-268 (PEX-6) — DA versions: the cause of a change.
+  'daCause.outOfDate': 'Kedaluwarsa',
+  'daCause.because': 'Karena:',
+  'daCause.kind.ltpA': 'LTP A',
+  'daCause.kind.ltpFestive': 'LTP Festive',
+  'daCause.kind.ltpB': 'LTP B',
+  'daCause.kind.ltpChoice': 'Pilihan LTP',
+  'daCause.kind.safetyStock': 'Safety stock',
+  // BL-267 (PEX-5) — LTP inputs.
+  'ltpIn.title': 'Input LTP',
+  'ltpIn.intro':
+    'Unggah LTP A, LTP Festive dan LTP B per material, dan catat mana yang dipakai demand anticipation. Hub tidak pernah memilihnya: material tanpa pilihan memakai LTP A. Sebelum LTP A diunggah, kuantitas prakiraan menggantikannya.',
+  'ltpIn.material': 'Material',
+  'ltpIn.pick': 'Pilih material',
+  'ltpIn.choice': 'LTP yang dipakai',
+  'ltpIn.uploadSeries': 'Unggah untuk',
+  'ltpIn.file': 'Berkas LTP',
+  'ltpIn.fileFormat':
+    'Berkas: satu baris per minggu, tanggal Senin dan kuantitas, misalnya 2026-11-16,1200',
+  'ltpIn.series.A': 'LTP A',
+  'ltpIn.series.Festive': 'LTP Festive',
+  'ltpIn.series.B': 'LTP B',
+  'ltpIn.notUploaded': 'belum diunggah',
+  'ltpIn.done': 'Input LTP tercatat',
+  'ltpIn.failed': 'Input LTP tidak dapat dicatat',
+  'ltpIn.inUse': 'dipakai',
+  'ltpIn.fromInputs': 'dari input LTP',
+  'ltpIn.fallbackSb': 'Perhitungan DRC-9a (tanpa LTP Festive)',
+  'ltpIn.choiceWeekEmpty':
+    'LTP yang dipakai tidak punya kuantitas untuk beberapa minggu: minggu itu memakai LTP A.',
+  'ltpIn.choiceNotUploaded': 'LTP yang dipakai belum diunggah: DA memakai LTP A.',
   'demandAnt.subtitle':
     'Jumlah yang PTI perkirakan akan di-call-off dari tiap pemasok, per material dan minggu, sepanjang lead time. Horizon bergulir setiap minggu: tiap minggu perencanaan dipublikasikan tersendiri, dan minggu berikutnya bergulir maju.',
   'demandAnt.asOf': 'Per',

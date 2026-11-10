@@ -257,11 +257,13 @@ export function safetyOrder(input, rules = OSIP_RULES) {
 /**
  * [Default B9] — ROP Order = cycle stock + safety order. Shown as the input to
  * ZPE007; the hub does not run ZPE007 (DRC-10).
- * @param {{ readonly cycleStock: number; readonly safetyOrder: number }} input
+ * BL-267 (PEX-5 BR-06) — with LTP B given, the protection buffer (LTP B − LTP A) is
+ * added here and nowhere else; 0 when it is not given.
+ * @param {{ readonly cycleStock: number; readonly safetyOrder: number; readonly protectionBuffer?: number }} input
  * @returns {number}
  */
-export function ropOrder({ cycleStock: c, safetyOrder: s }) {
-  return c + s;
+export function ropOrder({ cycleStock: c, safetyOrder: s, protectionBuffer: p = 0 }) {
+  return c + s + p;
 }
 
 /**

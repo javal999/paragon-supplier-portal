@@ -29,6 +29,7 @@ import {
 } from '@services/transitions/drcBufferRules';
 import StrategicBufferSection from './inventory/StrategicBufferSection';
 import ProtectionBufferSection from './inventory/ProtectionBufferSection';
+import CapacityHeadsUpSection from './inventory/CapacityHeadsUpSection';
 import {
   CapacityStatusPill,
   LtpCheckPill,
@@ -745,6 +746,10 @@ const BuyerCapacity = () => {
         )}
       </div>
 
+      {/* PEX-4 (BL-269) — the 12-month heads-up: utilisation per month, per material and brand, treemap. */}
+      <CapacityHeadsUpSection
+        supplierId={filters.supplierId ?? (drill.kind === 'filtered' ? drill.po.supplierId : null)}
+      />
       {/* DRC-9a (BL-195) — the strategic buffer, read only, under the plans. */}
       <StrategicBufferSection
         supplierId={filters.supplierId ?? (drill.kind === 'filtered' ? drill.po.supplierId : null)}

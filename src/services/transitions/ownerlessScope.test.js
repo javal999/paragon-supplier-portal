@@ -96,7 +96,9 @@ import { supplierApplicationStore } from '../data/mock/stores/supplierApplicatio
 import { receiptDiscrepancyStore } from '../data/mock/stores/receiptDiscrepancyStore';
 import { callOffStore } from '../data/mock/stores/callOffStore';
 import { capacityStore, stockSyncStore } from '../data/mock/stores/inventoryHubStores';
-import { activeAlertConditions } from '../data/mock/inventoryReadModel';
+import { headsUpMonths, isMonthlyEntryMonth } from './capacityHeadsUpRules';
+import { sdcClock } from '../sdc';
+import { activeAlertConditions, allCapacityPlans } from '../data/mock/inventoryReadModel';
 import { forecastVersionStore, forecastViewStore } from '../data/mock/stores/forecastHubStores';
 import {
   negotiationRoundStore,
@@ -127,6 +129,8 @@ import { mrpControllerStore } from './mrpControllerStore';
 import { warehouseDecisionStore } from '../data/mock/stores/warehouseDecisionStore';
 import { osipLevelStore } from '../data/mock/stores/osipLevelStore';
 import { osipParamStore } from '../data/mock/stores/osipParamStore';
+import { ltpInputStore } from '../data/mock/stores/ltpInputStore';
+import { capacityMonthStore } from '../data/mock/stores/capacityMonthStore';
 import { demandAnticipationStore } from '../data/mock/stores/demandAnticipationStore';
 import { materialNameStore } from '../data/mock/stores/materialNameStore';
 import { feedstockConfirmationStore } from '../data/mock/stores/feedstockConfirmationStore';
@@ -244,6 +248,26 @@ async function realIds() {
         }
       })
     : null;
+  // BL-269 — the monthly capacity store starts empty (an entry is something a
+  // supplier gives), so the probe has the supplier of the first weekly
+  // submission state a month the weekly entry does not cover.
+  const weekly = capacityStore.all()[0];
+  const plan = allCapacityPlans().find(
+    (p) => p.supplierId === weekly.supplierId && p.planningGroupId === weekly.planningGroupId
+  );
+  const monthly = headsUpMonths(sdcClock.now()).find((m) =>
+    isMonthlyEntryMonth(m, plan?.weeks.map((w) => w.week) ?? [])
+  );
+  if (capacityMonthStore.all().length === 0 && monthly)
+    await svc.dispatch(supplierSeatOf(weekly.supplierId, ...PERSONA_SYSTEM_ROLES.supplier), {
+      transitionId: 't_capacitymonth_submit',
+      entity: 'capacityMonth',
+      payload: {
+        supplierId: weekly.supplierId,
+        planningGroupId: weekly.planningGroupId,
+        months: [{ month: monthly, allocated: 1000 }]
+      }
+    });
   return {
     purchaseOrder: purchaseOrderStore.all()[0]?.id ?? null,
     advanceShipNotice: asnStore.all()[0]?.asnNumber ?? null,
@@ -289,6 +313,8 @@ async function realIds() {
     osipLevel: 'PK-PETB-8801',
     // Team answers 2026-10-28 — `entityId` IS the value key; any resolvable key exists.
     osipParam: 'z|PK-PETB-8801',
+    // BL-267 — `entityId` IS the key; any resolvable key exists.
+    ltpInput: 'choice|PK-PETB-8801',
     supplierDocument: supplierDocumentStore.all()[0]?.id ?? null,
     supplierApplication: raised.entityId ?? null,
     receiptDiscrepancy: receiptDiscrepancyStore.all()[0]?.receiptId ?? null,
@@ -300,6 +326,8 @@ async function realIds() {
     stockSync: stockSyncStore.all()[0]?.id ?? null,
     stockAccess: 'sup-007',
     capacitySubmission: capacityStore.all()[0]?.id ?? null,
+    // BL-269 — raised by the probe above (the store opens empty); it names its supplier.
+    capacityMonth: capacityMonthStore.all()[0]?.id ?? null,
     inventoryAlert: activeAlertConditions()[0]?.key ?? null,
     // REQ-E06-01 — the version and view stores are seeded.
     forecastVersion: forecastVersionStore.all()[0]?.publicationId ?? null,
@@ -453,6 +481,7 @@ async function walk(entity, t) {
   if (entity === 'warehouseDecision') return at('packaging|2026-10-12', 'Maintained');
   if (entity === 'osipLevel') return at('PK-PETB-8801', 'Maintained');
   if (entity === 'osipParam') return at('z|PK-PETB-8801', 'Maintained');
+  if (entity === 'ltpInput') return at('choice|PK-PETB-8801', 'Maintained');
   if (entity === 'supplierApplication') {
     const raised = await svc.dispatch(buyerSeat('procurement'), {
       transitionId: 't_application_submit',
@@ -510,6 +539,8 @@ const resetAll = () => {
   warehouseDecisionStore.reset();
   osipLevelStore.reset();
   osipParamStore.reset();
+  ltpInputStore.reset();
+  capacityMonthStore.reset();
   materialNameStore.reset();
   feedstockConfirmationStore.reset();
   supplierAskStore.reset();
@@ -624,6 +655,7 @@ describe('POPULATION — nothing below means anything without this', () => {
     // So is a demand anticipation publication (CAP-10): it is followed, never changed.
     // And a consumption record (CAP-11): a later record supersedes it at read.
     // And a feedstock confirmation (BL-194): append-only, the latest in force.
+    // And a monthly capacity entry (BL-269): a newer one supersedes it at read.
     // And a what-if scenario (BL-202): saved once, never changed.
     // And a PO On Hold decision (PEX-8): its store opens empty, so no row exists to walk.
     expect(unprobeable).toEqual([
@@ -638,6 +670,7 @@ describe('POPULATION — nothing below means anything without this', () => {
       'forecastOverride',
       'demandAnticipation',
       'consumption',
+      'capacityMonth',
       'whatIfScenario',
       'feedstockConfirmation',
       // PEX-8: its store opens empty, so no id can be walked to a state.
@@ -744,6 +777,8 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
       'enforcement',
       // BL-32 — the rule values are PTI's; no supplier is their owner.
       'hubSetting',
+      // BL-267 — the LTP inputs are PTI's.
+      'ltpInput',
       // REQ-E06-04 — the maximum stock is a term PTI keeps; no supplier is its owner.
       'maxStock',
       // Material C4 — the MRP controller list is PTI's; no supplier is its owner.
@@ -935,6 +970,16 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
     });
     expect(zRes.status, zRes.reason).toBe('done');
     expect(osipParamStore.all().map((r) => r.value)).toEqual([2.05]);
+
+    // BL-267 — the planning lane records the LTP choice of a material.
+    const ltpRes = await svc.dispatch(buyerSeat('planning'), {
+      transitionId: 't_ltpinput_set',
+      entity: 'ltpInput',
+      entityId: 'choice|PK-PETB-8801',
+      payload: { ltpChoice: 'Festive' }
+    });
+    expect(ltpRes.status, ltpRes.reason).toBe('done');
+    expect(ltpInputStore.all().map((r) => r.choice)).toEqual(['Festive']);
 
     const qualRes = await svc.dispatch(buyerSeat('compliance'), {
       transitionId: 't_qualification_rule_set',

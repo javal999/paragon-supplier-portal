@@ -1,6 +1,6 @@
 /** @import React from 'react' */
 /** @import { TFunction } from 'i18next' */
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
@@ -31,6 +31,8 @@ import {
 import { inputClass, inventoryNow, labelClass } from './inventory/inventoryDisplay';
 import { downloadText } from './forecasts/forecastDisplay';
 import { weekDates, weekLabel } from './BuyerDemandAnticipation/display';
+import { causeLines } from './BuyerDemandAnticipation/components/DaCauses';
+import { compareVersions } from '@services/transitions/daCauseRules';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DEMAND ANTICIPATION HISTORY — DRC-3 (BL-189), SC-HUB-DA-ROP-CALLOFF-
@@ -73,6 +75,8 @@ const BuyerDemandAnticipationHistory = () => {
   const { identity } = useCurrentIdentity();
   const query = useDemandAnticipationHistory();
   const [params, setParams] = useSearchParams();
+  // BL-268 (PEX-6 BR-04) — up to two versions of one supplier × material, to compare side by side.
+  const [picked, setPicked] = useState(/** @type {string[]} */ ([]));
   const nowIso = inventoryNow();
   const crumb = [t('hub.nav.section.review'), t('hub.nav.pti.demandAnticipationHistory')];
   const rows = useMemo(() => query.data?.items ?? [], [query.data]);
@@ -263,9 +267,28 @@ const BuyerDemandAnticipationHistory = () => {
         <span data-testid="dah-count">{t('daHist.count', { count: shown.length })}</span>
       </p>
 
+      <ComparePanel rows={rows} picked={picked} onClear={() => setPicked([])} />
+
       <div className="space-y-3">
         {shown.map((r) => (
-          <HistoryCard key={keyOf(r)} row={r} nowIso={nowIso} />
+          <HistoryCard
+            key={keyOf(r)}
+            row={r}
+            nowIso={nowIso}
+            picked={picked.includes(keyOf(r))}
+            canPick={picked.length < 2 || picked.includes(keyOf(r))}
+            onPick={() =>
+              setPicked((p) => {
+                if (p.includes(keyOf(r))) return p.filter((k) => k !== keyOf(r));
+                // Two versions compare only within one supplier × material.
+                const same = p.filter((k) => {
+                  const o = rows.find((x) => keyOf(x) === k);
+                  return o && o.supplierId === r.supplierId && o.materialCode === r.materialCode;
+                });
+                return [...same, keyOf(r)].slice(-2);
+              })
+            }
+          />
         ))}
         {shown.length === 0 ? (
           <div
@@ -285,8 +308,106 @@ const BuyerDemandAnticipationHistory = () => {
   );
 };
 
-/** @type {React.FC<{ row: DaHistoryRow; nowIso: string }>} */
-const HistoryCard = ({ row: r, nowIso }) => {
+/**
+ * BL-268 (PEX-6 BR-04) — two versions of one supplier × material side by side:
+ * the DA of each per week and the difference, and the causes of the later one.
+ * @type {React.FC<{ rows: readonly DaHistoryRow[]; picked: readonly string[]; onClear: () => void }>}
+ */
+const ComparePanel = ({ rows, picked, onClear }) => {
+  const { t } = useTranslation();
+  const chosen = picked.map((k) => rows.find((r) => keyOf(r) === k)).filter((r) => r !== undefined);
+  if (chosen.length === 0) return null;
+  if (chosen.length === 1)
+    return (
+      <p className="text-xs text-text-tertiary mb-3" data-testid="dah-compare-hint">
+        {t('daHist.compare.pickSecond', { version: chosen[0].version })}
+      </p>
+    );
+  // Oldest first: the first column is the earlier version.
+  const [a, b] = [...chosen].sort(
+    (x, y) =>
+      x.publishedAt.localeCompare(y.publishedAt) || x.publicationId.localeCompare(y.publicationId)
+  );
+  const lines = compareVersions(a.weeks, b.weeks);
+  return (
+    <section
+      className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-4"
+      data-testid="dah-compare"
+    >
+      <div className="flex flex-wrap items-baseline gap-3 mb-2">
+        <h2 className="text-base font-semibold text-text-primary">{t('daHist.compare.title')}</h2>
+        <span className="text-sm text-text-secondary">
+          {a.supplierName} · <Data>{a.materialCode}</Data>
+        </span>
+        <Button variant="secondary" onClick={onClear} data-testid="dah-compare-clear">
+          {t('daHist.compare.clear')}
+        </Button>
+      </div>
+      <table className="w-full text-sm" data-testid="dah-compare-table">
+        <thead>
+          <tr className="text-left text-text-tertiary">
+            <th scope="col" className="py-1 pr-3">
+              {t('daHist.col.week')}
+            </th>
+            <th scope="col" className="py-1 pr-3" data-testid="dah-compare-head-a">
+              {t('daHist.compare.version', { version: a.version, week: weekLabel(a.planningWeek) })}
+            </th>
+            <th scope="col" className="py-1 pr-3" data-testid="dah-compare-head-b">
+              {t('daHist.compare.version', { version: b.version, week: weekLabel(b.planningWeek) })}
+            </th>
+            <th scope="col" className="py-1">
+              {t('daHist.compare.difference')}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {lines.map((l) => (
+            <tr
+              key={l.week}
+              className="border-t border-border-subtle"
+              data-testid={`dah-compare-row-${l.week}`}
+            >
+              <td className="py-1 pr-3">
+                <Data>{weekLabel(l.week)}</Data>
+              </td>
+              <td className="py-1 pr-3">
+                {l.a ? (
+                  <Data>{formatNumber(l.a.da)}</Data>
+                ) : (
+                  <span className="text-text-tertiary">—</span>
+                )}
+              </td>
+              <td className="py-1 pr-3">
+                {l.b ? (
+                  <Data>{formatNumber(l.b.da)}</Data>
+                ) : (
+                  <span className="text-text-tertiary">—</span>
+                )}
+              </td>
+              <td className="py-1" data-testid={`dah-compare-delta-${l.week}`}>
+                {l.delta === null ? (
+                  <span className="text-text-tertiary">—</span>
+                ) : l.delta === 0 ? (
+                  t('daHist.compare.same')
+                ) : (
+                  <Data>{`${l.delta > 0 ? '+' : ''}${formatNumber(l.delta)}`}</Data>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="text-xs text-text-secondary mt-2" data-testid="dah-compare-causes">
+        {b.causes.length > 0
+          ? `${t('daHist.compare.causesOf', { version: b.version })} ${causeLines(b.causes, t).join(' · ')}`
+          : t('daHist.compare.noCause', { version: b.version })}
+      </p>
+    </section>
+  );
+};
+
+/** @type {React.FC<{ row: DaHistoryRow; nowIso: string; picked: boolean; canPick: boolean; onPick: () => void }>} */
+const HistoryCard = ({ row: r, nowIso, picked, canPick, onPick }) => {
   const { t } = useTranslation();
   const key = keyOf(r);
   /** @param {string} week */
@@ -349,6 +470,26 @@ const HistoryCard = ({ row: r, nowIso }) => {
         <Data data-testid={`dah-da-${key}-${week}`}>{formatNumber(weekOf(week).da)}</Data>
       )
     },
+    // BL-268 (PEX-6 BR-04) — the previous version's DA of the same planning week, when there is one.
+    ...(r.weeks.some((w) => w.daBefore !== null)
+      ? [
+          {
+            id: 'daBefore',
+            label: <span>{t('daHist.row.before')}</span>,
+            unit: r.uom,
+            combine: /** @type {const} */ ('sum'),
+            value: (/** @type {string} */ week) => weekOf(week).daBefore ?? 0,
+            cell: (/** @type {string} */ week) =>
+              weekOf(week).daBefore === null ? (
+                dash
+              ) : (
+                <Data data-testid={`dah-before-${key}-${week}`}>
+                  {formatNumber(weekOf(week).daBefore ?? 0)}
+                </Data>
+              )
+          }
+        ]
+      : []),
     {
       id: 'daInForce',
       label: <TermLabel term="daAfterCheck" />,
@@ -371,6 +512,9 @@ const HistoryCard = ({ row: r, nowIso }) => {
         <span className="text-sm font-semibold text-text-primary">{r.supplierName}</span>
         <Data className="text-sm">{r.materialCode}</Data>
         <span className="text-sm text-text-secondary">{r.materialLabel}</span>
+        <span className="text-xs text-text-secondary" data-testid={`dah-version-${key}`}>
+          {t('daHist.version', { version: r.version })}
+        </span>
         <span className="ml-auto" data-testid={`dah-status-${key}`}>
           {r.inForce ? (
             <StatusPill variant="info">{t('daHist.status.inForce')}</StatusPill>
@@ -381,6 +525,22 @@ const HistoryCard = ({ row: r, nowIso }) => {
           )}
         </span>
       </header>
+      {/* BL-268 (PEX-6 BR-02) — what changed since the previous publication and moved DA. */}
+      {r.causes.length > 0 ? (
+        <p className="px-4 pb-2 text-xs text-text-secondary" data-testid={`dah-causes-${key}`}>
+          {t('daHist.causes')} {causeLines(r.causes, t).join(' · ')}
+        </p>
+      ) : null}
+      <label className="px-4 pb-2 flex items-center gap-2 text-xs text-text-secondary">
+        <input
+          type="checkbox"
+          checked={picked}
+          disabled={!canPick}
+          onChange={onPick}
+          data-testid={`dah-pick-${key}`}
+        />
+        {t('daHist.compare.pick')}
+      </label>
       <p className="px-4 pb-2 text-xs text-text-tertiary" data-testid={`dah-published-${key}`}>
         <Data>{r.publicationId}</Data> ·{' '}
         {t('daHist.publishedAt', { date: formatDateTime(r.publishedAt) })} {t('daHist.by')}{' '}

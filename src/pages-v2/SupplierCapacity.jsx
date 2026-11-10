@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import TermLabel from '@components/ui-v2/TermLabel';
 import { useSearchParams } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
+import MonthlyCapacityEntry from './inventory/MonthlyCapacityEntry';
 import PageHeader from '@components/ui-v2/PageHeader';
 import { OrderNotFound, PoFilterBanner, usePoDrillFilter } from './orders/PoDrillFilter';
 import PageMetaLine from '@components/ui-v2/PageMetaLine';
@@ -644,6 +645,8 @@ const SupplierCapacity = () => {
           <HandoffNotice availability={confirm} testId="handoff-capacity-confirm" />
         )}
       </div>
+      {/* PEX-4 (BL-269) — capacity by month for the months after the weekly entry. */}
+      <MonthlyCapacityEntry plan={plan} />
     </AppShellV2>
   );
 };

@@ -3223,10 +3223,12 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * @property {(scope: QueryScope) => Promise<Page<import('../transitions/drcBufferRules').ProtectionBufferInput>>} getProtectionBufferInputs DRC-9c (BL-205, [Proposed]) — per supplier × material, the OSIP level in
  *   force and the production MPQ (orderMultiple) the protection buffer reads beside the LTP. PTI
  *   only: a supplier scope reads an empty page.
+ * @property {(scope: QueryScope) => Promise<Page<import('./mock/capacityHeadsUpReadModel').HeadsUpRow>>} getCapacityHeadsUp BL-269 (PEX-4) — the 12-month capacity heads-up per supplier × planning group:
+ *   monthly capacity (weekly entry, then monthly entry), demand, utilisation %, band, and the split per material and brand. A supplier scope reads its own groups.
  * @property {(scope: QueryScope) => Promise<Page<BlanketPoRunOut>>} getBlanketPoRunOuts CAP-9 — every open blanket PO line projected against the LTP: its
  *   run-out and "new PO needed by" weeks, derived at read. PTI only: a supplier
  *   scope reads an empty page.
- * @property {(scope: QueryScope) => Promise<Page<DemandAnticipationSupplyRow>>} getDemandAnticipation CAP-10 — demand anticipation per supplier × material × week: the
+ * @property {(scope: QueryScope) => Promise<Page<DemandAnticipationSupplyRow & { readonly ltpInputs?: import('./mock/demandAnticipationReadModel').RowLtpInputs; readonly outOfDate?: import('./mock/demandAnticipationReadModel').DaOutOfDate | null }>>} getDemandAnticipation CAP-10 — demand anticipation per supplier × material × week: the
  *   frozen figure of each frozen week, today's recomputation ("would be") and its
  *   inputs, and (CAP-12) each week's open supply, gap and proposal. PTI only: a supplier scope reads an empty page.
  * @property {(scope: QueryScope) => Promise<Page<import('./mock/demandAnticipationReadModel').SupplierDaRow>>} getSupplierDemandAnticipation BL-204 (DRC-1) — the supplier view of demand anticipation: per

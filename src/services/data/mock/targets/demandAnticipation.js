@@ -46,14 +46,15 @@ export const demandAnticipationTarget = {
   create: (payload, _toState, scope) => {
     const now = sdcClock.now();
     const agreed = agreedOf(payload.agreedFirstOutside);
-    const { planningWeek, figures } = demandAnticipationToPublish(agreed, now);
+    const { planningWeek, figures, ledgerMark } = demandAnticipationToPublish(agreed, now);
     const made = demandAnticipationStore.add({
       publishedAt: now,
       actor: scope.actor ?? NO_PERSON,
       source: 'publish',
       planningWeek,
       agreedFirstOutside: agreed,
-      entries: entriesOf(figures)
+      entries: entriesOf(figures),
+      ledgerMark
     });
     return { entityId: made.id };
   }

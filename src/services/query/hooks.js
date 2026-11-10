@@ -82,6 +82,12 @@ export const useCapacityPlans = () =>
     svc.procurement.getCapacityPlans(scope)
   );
 
+/** BL-269 (PEX-4) — the 12-month capacity heads-up per supplier × planning group. */
+export const useCapacityHeadsUp = () =>
+  useServiceQuery(['procurement', 'capacityHeadsUp'], (svc, scope) =>
+    svc.procurement.getCapacityHeadsUp(scope)
+  );
+
 /** CAP-9 — open blanket PO lines projected against the LTP (PTI only). */
 export const useBlanketPoRunOuts = () =>
   useServiceQuery(['procurement', 'blanketPoRunOuts'], (svc, scope) =>

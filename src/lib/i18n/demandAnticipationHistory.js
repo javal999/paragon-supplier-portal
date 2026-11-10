@@ -8,6 +8,21 @@
 
 /** @type {Record<string, string>} */
 export const demandAnticipationHistoryEn = {
+  // BL-268 (PEX-6) — versions, causes and compare.
+  'daHist.version': 'Version {{version}}',
+  'daHist.causes': 'Changed since the previous version:',
+  'daHist.row.before': 'Before (previous version)',
+  'daHist.compare.pick': 'Compare this version',
+  'daHist.compare.pickSecond':
+    'Version {{version}} picked. Pick a second version of the same supplier and material to compare.',
+  'daHist.compare.title': 'Compare versions',
+  'daHist.compare.clear': 'Clear comparison',
+  'daHist.compare.version': 'Version {{version}} ({{week}})',
+  'daHist.compare.difference': 'Difference',
+  'daHist.compare.same': 'same',
+  'daHist.compare.causesOf': 'Cause of version {{version}}:',
+  'daHist.compare.noCause':
+    'Version {{version}} stores no cause: no input change that moved DA was recorded.',
   'daHist.subtitle':
     'Every demand anticipation publication, with who published it, each week’s figure and its parts, and the rules version it was calculated with. Read only: Material Planning, Procurement and Finance audit it here.',
   'daHist.asOf': 'As of',
@@ -77,6 +92,21 @@ export const demandAnticipationHistoryEn = {
 
 /** @type {Record<string, string>} */
 export const demandAnticipationHistoryId = {
+  // BL-268 (PEX-6) — versions, causes and compare.
+  'daHist.version': 'Versi {{version}}',
+  'daHist.causes': 'Berubah sejak versi sebelumnya:',
+  'daHist.row.before': 'Sebelum (versi sebelumnya)',
+  'daHist.compare.pick': 'Bandingkan versi ini',
+  'daHist.compare.pickSecond':
+    'Versi {{version}} dipilih. Pilih versi kedua dari pemasok dan material yang sama untuk dibandingkan.',
+  'daHist.compare.title': 'Bandingkan versi',
+  'daHist.compare.clear': 'Hapus perbandingan',
+  'daHist.compare.version': 'Versi {{version}} ({{week}})',
+  'daHist.compare.difference': 'Selisih',
+  'daHist.compare.same': 'sama',
+  'daHist.compare.causesOf': 'Penyebab versi {{version}}:',
+  'daHist.compare.noCause':
+    'Versi {{version}} tidak menyimpan penyebab: tidak ada perubahan input yang menggeser DA tercatat.',
   'daHist.subtitle':
     'Setiap publikasi demand anticipation, dengan siapa yang memublikasikan, angka tiap minggu beserta komponennya, dan versi aturan yang dipakai menghitungnya. Hanya baca: Material Planning, Procurement, dan Finance mengauditnya di sini.',
   'daHist.asOf': 'Per',
