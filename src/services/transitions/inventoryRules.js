@@ -638,16 +638,20 @@ export function maskForSupplier(p, grant) {
  *   | 'batchNumber'
  *   | 'batchQty'
  *   | 'manufacturingDate'
- *   | 'expiryDate'} StockTemplateField
+ *   | 'expiryDate'
+ *   | 'feedstockQty'
+ *   | 'feedstockConfirmedOn'} StockTemplateField
  */
 
 /**
  * Whether a template column must be filled (MR-4, MAT-D4 owner ruling 2026-09-29):
  * - `required`: always.
  * - `requiredWhenInProduction`: only when the in-production quantity (E) is above 0.
+ * - `requiredForRawMaterial`: [Proposed, user feedback 2026-11-10] required on a raw
+ *   material (ROH) with stock above 0 (`rawMaterialBatchProblem`), optional on packaging.
  * - `optional`: may be left blank; its header carries " (optional)" / " (opsional)".
  */
-/** @typedef {'required' | 'requiredWhenInProduction' | 'optional'} StockFieldPresence */
+/** @typedef {'required' | 'requiredWhenInProduction' | 'requiredForRawMaterial' | 'optional'} StockFieldPresence */
 
 /**
  * The fixed template, in column order (BR-06). Headers are matched in EN or ID.
@@ -677,8 +681,18 @@ export const STOCK_TEMPLATE_FIELDS = [
     id: 'Perkiraan tanggal selesai produksi (YYYY-MM-DD)',
     presence: 'requiredWhenInProduction'
   },
-  { field: 'batchNumber', en: 'Batch number', id: 'Nomor batch', presence: 'optional' },
-  { field: 'batchQty', en: 'Batch quantity', id: 'Kuantitas batch', presence: 'optional' },
+  {
+    field: 'batchNumber',
+    en: 'Batch number',
+    id: 'Nomor batch',
+    presence: 'requiredForRawMaterial'
+  },
+  {
+    field: 'batchQty',
+    en: 'Batch quantity',
+    id: 'Kuantitas batch',
+    presence: 'requiredForRawMaterial'
+  },
   {
     field: 'manufacturingDate',
     en: 'Manufacturing date (YYYY-MM-DD)',
@@ -689,9 +703,30 @@ export const STOCK_TEMPLATE_FIELDS = [
     field: 'expiryDate',
     en: 'Expiry date (YYYY-MM-DD)',
     id: 'Tanggal kedaluwarsa (YYYY-MM-DD)',
+    presence: 'requiredForRawMaterial'
+  },
+  // [Proposed, user feedback 2026-11-10] the weekly feedstock confirmation
+  // (BL-194, DRC-8) rides the same file. It is NOT stock (MoM 2B): the upload
+  // sends it through its own verb, `t_feedstock_confirm`, never inside the SOH.
+  {
+    field: 'feedstockQty',
+    en: 'Feedstock quantity',
+    id: 'Kuantitas feedstock',
+    presence: 'optional'
+  },
+  {
+    field: 'feedstockConfirmedOn',
+    en: 'Feedstock as of (YYYY-MM-DD)',
+    id: 'Feedstock per tanggal (YYYY-MM-DD)',
     presence: 'optional'
   }
 ];
+
+/** The template columns that belong to the feedstock confirmation, not to the stock submission. */
+export const FEEDSTOCK_TEMPLATE_FIELDS = /** @type {const} */ ([
+  'feedstockQty',
+  'feedstockConfirmedOn'
+]);
 
 /**
  * MR-4 BR-01 — the suffix every optional header ends with, per language.
@@ -766,6 +801,34 @@ export function batchDatesProblem(batch, today) {
   if (exp !== '' && mfg > exp)
     return { problem: 'manufacturedAfterExpiry', field: 'manufacturingDate' };
   if (mfg > today) return { problem: 'manufacturedInFuture', field: 'manufacturingDate' };
+  return null;
+}
+
+// ── Raw-material batches (user feedback 2026-11-10, [Proposed]) ─────────────
+
+/** @typedef {'rawMaterialBatchRequired' | 'rawMaterialExpiryRequired'} RawMaterialBatchProblem */
+
+/**
+ * [Proposed, user feedback 2026-11-10 — awaiting the owner's ruling; it narrows
+ * BR-06 "batch detail stays optional"] A RAW MATERIAL (ROH) with stock on hand
+ * above 0 must come with its batches, and every batch must carry its expiry
+ * date, because the warehouse controls near-expiry stock by batch. Packaging
+ * (VERP) keeps batches optional. The `api` channel is exempt, as for MAT-D4: a
+ * supplier ERP may not send batches. The ONE check, read by the manual form,
+ * the template validator and the declare/record verbs. Null when fine.
+ * @param {{
+ *   readonly materialType: string | null | undefined;
+ *   readonly soh: number | null;
+ *   readonly batches: readonly { readonly expiryDate?: string }[];
+ *   readonly channel: StockChannel;
+ * }} input
+ * @returns {{ readonly reason: RawMaterialBatchProblem; readonly field: 'batchNumber' | 'expiryDate' } | null}
+ */
+export function rawMaterialBatchProblem({ materialType, soh, batches, channel }) {
+  if (channel === 'api' || materialType !== 'ROH' || soh === null || soh <= 0) return null;
+  if (batches.length === 0) return { reason: 'rawMaterialBatchRequired', field: 'batchNumber' };
+  if (batches.some((b) => (b.expiryDate ?? '') === ''))
+    return { reason: 'rawMaterialExpiryRequired', field: 'expiryDate' };
   return null;
 }
 
@@ -873,7 +936,9 @@ export function parseCsv(text) {
  *   | 'manufacturedInFuture'
  *   | 'batchTotal'
  *   | 'conflictingRows'
- *   | 'productionDateMissing'} StockRowRefusal
+ *   | 'productionDateMissing'
+ *   | 'rawMaterialBatchRequired'
+ *   | 'rawMaterialExpiryRequired'} StockRowRefusal
  */
 
 /**
@@ -904,11 +969,12 @@ export function parseCsv(text) {
  */
 
 /**
- * `assigned`:  The supplier's assigned materials with their canonical unit.
+ * `assigned`:  The supplier's assigned materials with their canonical unit, and their
+ *   material type when known (ROH raw material → batches with expiry required).
  * `today`:  Today on the app's clock (`YYYY-MM-DD`) — a manufacturing date may not be after it.
  *
  * @typedef {{
- *   readonly assigned: readonly { readonly materialCode: string; readonly uom: string }[];
+ *   readonly assigned: readonly { readonly materialCode: string; readonly uom: string; readonly materialType?: string }[];
  *   readonly today: string;
  * }} StockRowContext
  */
@@ -933,14 +999,20 @@ export function readStockNumber(raw) {
  * cell is empty except the material code and the unit, which the downloaded
  * template fills in. A value under ANY other column, a column the template
  * does not know included, makes the row filled, so a renamed column is still
- * refused by name rather than passed over as blank.
+ * refused by name rather than passed over as blank. The feedstock columns do
+ * not count: feedstock is a separate confirmation (`readFeedstockRows`).
  * @param {Readonly<Record<string, string>>} row  One file row keyed by its header.
  * @returns {boolean}
  */
 export function isBlankStockRow(row) {
   return Object.entries(row).every(([header, value]) => {
     const f = templateFieldFor(header);
-    return f === 'materialCode' || f === 'unit' || (value ?? '').trim() === '';
+    return (
+      f === 'materialCode' ||
+      f === 'unit' ||
+      (f !== null && /** @type {readonly string[]} */ (FEEDSTOCK_TEMPLATE_FIELDS).includes(f)) ||
+      (value ?? '').trim() === ''
+    );
   });
 }
 
@@ -1125,6 +1197,17 @@ export function validateStockRows(rows, ctx) {
       refuseAll('batchTotal', 'batchQty');
       continue;
     }
+    // [Proposed] raw material: batches with an expiry date are required.
+    const rawBatch = rawMaterialBatchProblem({
+      materialType: assigned.materialType,
+      soh,
+      batches,
+      channel: 'template'
+    });
+    if (rawBatch) {
+      refuseAll(rawBatch.reason, rawBatch.field);
+      continue;
+    }
     accepted.push({
       materialCode: code,
       totalQty: soh,
@@ -1142,6 +1225,56 @@ export function validateStockRows(rows, ctx) {
   refused.sort((a, b) => a.row - b.row);
   blank.sort((a, b) => a.row - b.row);
   return { accepted, refused, blank };
+}
+
+/**
+ * [Proposed, user feedback 2026-11-10] The feedstock half of an uploaded
+ * template: per material, the first row that fills the feedstock quantity.
+ * A blank date means `today` (the upload day) — my call, so the supplier can
+ * fill one column. The verb (`t_feedstock_confirm`) still runs its own rule.
+ * @param {readonly Record<string, string>[]} rows
+ * @param {{ readonly assigned: readonly { readonly materialCode: string }[]; readonly today: string }} ctx
+ * @returns {{
+ *   accepted: { readonly materialCode: string; readonly feedstockQty: number; readonly confirmedOn: string; readonly row: number }[];
+ *   refused: { readonly row: number; readonly materialCode: string; readonly reason: 'feedstockQtyInvalid' | 'feedstockDateInvalid' | 'notAssigned' }[];
+ * }}
+ */
+export function readFeedstockRows(rows, ctx) {
+  /** @type {ReturnType<typeof readFeedstockRows>['accepted']} */
+  const accepted = [];
+  /** @type {ReturnType<typeof readFeedstockRows>['refused']} */
+  const refused = [];
+  const seen = new Set();
+  rows.forEach((r, index) => {
+    /** @type {Partial<Record<StockTemplateField, string>>} */
+    const rec = {};
+    for (const [header, value] of Object.entries(r)) {
+      const f = templateFieldFor(header);
+      if (f) rec[f] = (value ?? '').trim();
+    }
+    const code = rec.materialCode ?? '';
+    const rawQty = rec.feedstockQty ?? '';
+    if (code === '' || rawQty === '' || seen.has(code)) return;
+    seen.add(code);
+    const row = index + 2;
+    if (!ctx.assigned.some((a) => a.materialCode === code)) {
+      refused.push({ row, materialCode: code, reason: 'notAssigned' });
+      return;
+    }
+    const read = readStockNumber(rawQty);
+    if (!read.ok || read.value === null || read.value < 0) {
+      refused.push({ row, materialCode: code, reason: 'feedstockQtyInvalid' });
+      return;
+    }
+    const date =
+      (rec.feedstockConfirmedOn ?? '') === '' ? ctx.today : (rec.feedstockConfirmedOn ?? '');
+    if (!isIsoDay(date) || date > ctx.today) {
+      refused.push({ row, materialCode: code, reason: 'feedstockDateInvalid' });
+      return;
+    }
+    accepted.push({ materialCode: code, feedstockQty: read.value, confirmedOn: date, row });
+  });
+  return { accepted, refused };
 }
 
 /**

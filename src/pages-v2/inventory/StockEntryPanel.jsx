@@ -10,6 +10,7 @@ import {
   batchDatesProblem,
   dayOf,
   productionProblem,
+  rawMaterialBatchProblem,
   readStockNumber
 } from '@services/transitions/inventoryRules';
 import {
@@ -155,6 +156,14 @@ const StockEntryPanel = ({
   const today = dayOf(inventoryNow());
   const batchDates = batches.map((b) => batchDatesProblem(b, today));
   const batchDateInvalid = batchDates.some((d) => d !== null);
+  // [Proposed, user feedback 2026-11-10] raw material: batches with expiry required.
+  const isRaw = selected?.materialType === 'ROH';
+  const rawBatch = rawMaterialBatchProblem({
+    materialType: selected?.materialType,
+    soh: soh.ok ? soh.value : null,
+    batches,
+    channel: mode === 'supplier' ? 'manual' : 'pti'
+  });
 
   const canSubmit =
     selected !== null &&
@@ -166,6 +175,7 @@ const StockEntryPanel = ({
     !batchMismatch &&
     !batchIncomplete &&
     !batchDateInvalid &&
+    rawBatch === null &&
     !pending;
 
   const submit = async () => {
@@ -339,7 +349,9 @@ const StockEntryPanel = ({
 
         <section>
           <div className="flex items-center justify-between mb-2">
-            <span className={labelClass}>{t('inv.entry.batches')}</span>
+            <span className={labelClass} data-testid="stock-entry-batches-label">
+              {t(isRaw ? 'inv.entry.batchesRaw' : 'inv.entry.batches')}
+            </span>
             <Button
               variant="secondary"
               icon={Plus}
@@ -348,6 +360,11 @@ const StockEntryPanel = ({
               {t('inv.entry.addBatch')}
             </Button>
           </div>
+          {isRaw ? (
+            <p className="text-xs text-text-secondary mb-2" data-testid="stock-entry-raw-hint">
+              {t('inv.entry.rawHint')}
+            </p>
+          ) : null}
           {batches.length === 0 ? (
             <p className="text-xs text-text-tertiary">{t('inv.entry.noBatches')}</p>
           ) : (
@@ -412,6 +429,7 @@ const StockEntryPanel = ({
                     <div>
                       <label htmlFor={`batch-expiry-${i}`} className={labelClass}>
                         {t('inv.entry.expiry')}
+                        {isRaw ? <span aria-hidden="true"> *</span> : null}
                       </label>
                       <input
                         id={`batch-expiry-${i}`}
@@ -451,6 +469,15 @@ const StockEntryPanel = ({
               ))}
             </div>
           )}
+          {rawBatch && soh.ok && soh.value !== null ? (
+            <p
+              role="alert"
+              className="mt-2 text-xs text-danger"
+              data-testid="stock-entry-raw-batch"
+            >
+              {t(`inv.entry.error.${rawBatch.reason}`)}
+            </p>
+          ) : null}
           {batchMismatch && (
             <p
               role="alert"
