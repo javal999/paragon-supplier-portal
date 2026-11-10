@@ -2056,7 +2056,7 @@ Detailed in `FORECAST-ENGINE-REQUIREMENTS.md`, which uses this file's template p
 |---|---|---|---|
 | E04 Contract Management | E04.01 to E04.03 | Phase 2 | Stub |
 | E05 Catalog Management | E05.01 to E05.03. Note D-07: RFI needs a product catalog in MVP | Phase 2 | Stub |
-| E10 Supplier Performance Dashboard (other) | E10.02 non-conformance and complaint tracking | MVP | Stub |
+| E10 Supplier Performance Dashboard (other) | E10.02 non-conformance and complaint tracking | Phase 2, with Supplier Quality (SQ-D1, 2026-11-10) | Stub |
 | E11 Reporting & Analytic Dashboard | E11.01, E11.02 | Phase 2 | Stub |
 | E12 API ERP | E12.01, E12.02. Partly covered by REQ-E08-02 and REQ-E07-08 | MVP | Stub |
 | E13 API Shipment Aggregator (other) | E13.02 ETA visibility | Phase 2 | Stub |

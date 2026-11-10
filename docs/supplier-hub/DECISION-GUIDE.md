@@ -162,6 +162,20 @@ These eight are one number or one list each. The prototype ships defensible defa
 
 **What would change this.** If SAP QM is not in scope for the pilot materials, the hub's display is the only record of an inspection result and deserves more care.
 
+### SQ-D1 · E10.02 non-conformance and complaint tracking is Phase 2, with Supplier Quality (decided 2026-11-10)
+**Decision.** Levi ruled on 2026-11-10: E10.02 moves from MVP to Phase 2 and joins Supplier Quality (EX2). This keeps BL-15 / Q-20 (`BACKLOG.md:340`, `SUPPLIER-HUB-REQUIREMENTS.md:2194`) and resolves the conflict with the stub table (`SUPPLIER-HUB-REQUIREMENTS.md:2059`) and the baseline (`SUPPLIER-HUB-BASELINE.md:213`), which both said MVP. The hub keeps what is built: PTI records the inspection result against the receipt, and the supplier sees the result and the rejected quantity (REQ-E07-06 BR-05, BR-06 and AC-04, `SUPPLIER-HUB-REQUIREMENTS.md:1071-1082`). Nothing new is built.
+
+**Alternative not taken.** (A) A minimal NCR log in the MVP: PTI quality logs a non-conformance report (NCR) against a supplier and a receipt, with a status and the supplier's response. Size M, rules [Proposed], reverses BL-15 / Q-20. (C) Show an NCR status read from SAP QM. Size unknown, and SAP QM scope for the pilot is unconfirmed (`DECISION-GUIDE.md:163`).
+
+**What would change this.** The pilot sponsor needing E10.02 at go-live (then A is the smallest start), or IT confirming that SAP QM is not in scope for the pilot materials. In that case the hub's display is the only inspection record and deserves more care (`DECISION-GUIDE.md:163`).
+
+### SQ-D2 · BL-39 stays open as the Phase 2 placeholder (decided 2026-11-10)
+**Decision.** Levi ruled on 2026-11-10: BL-39 (`BACKLOG.md:107`) stays in the open backlog. Its Why now reads "Phase 2 with Supplier Quality (BL-15, SQ-D1); waits on DEC-07 for scope and an owner". The row keeps the open questions for the PTI quality owner, Procurement, the pilot sponsor and IT until Supplier Quality is scoped. BL-15 already names BL-39 as the place non-conformance waits.
+
+**Alternative not taken.** Closing BL-39 and moving it to the decided table, as was done for BL-15. Then no open row would carry the Phase 2 work, and BL-15's reference would point at a closed item.
+
+**What would change this.** DEC-07 (`SUPPLIER-HUB-BASELINE.md:426`) being decided. The Supplier Quality scope then replaces BL-39 with detailed rows.
+
 ### BL-17 · DEC-06 — is Web Tukar Faktur this capability or a separate application?
 **Market practice.** Invoice submission through a portal, matched against receipts, with tax compliance handled by the national e-invoicing system. In Indonesia that means e-Faktur and the DJP's Coretax platform; the portal carries the commercial document and the reference, not the tax authority's role.
 
