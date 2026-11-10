@@ -122,7 +122,7 @@ function materialConsumption(code, { lines, inForce, nowIso }) {
  * one entry per engine source. The rolling demand anticipation passes them to
  * `rollingDaFigure`, so its week-1 safety order is ROP Order's under every switch.
  * @param {string} [nowIso]
- * @returns {Map<string, { consumption: number[]; moq: number; koli: number | null; z: number | null }>}
+ * @returns {Map<string, { consumption: number[]; moq: number; koli: number | null; z: number | null; safetyOn: boolean }>}
  */
 export function osipSafetySizes(nowIso = sdcClock.now()) {
   const data = engineDataset();
@@ -132,7 +132,7 @@ export function osipSafetySizes(nowIso = sdcClock.now()) {
     nowIso
   };
   const perPallet = new Map(data.volumes.map((v) => [v.materialCode, v.unitsPerPallet]));
-  /** @type {Map<string, { consumption: number[]; moq: number; koli: number | null; z: number | null }>} */
+  /** @type {Map<string, { consumption: number[]; moq: number; koli: number | null; z: number | null; safetyOn: boolean }>} */
   const out = new Map();
   for (const code of new Set(data.sources.map((s) => s.materialCode))) {
     const { sources, consumptionOf } = materialConsumption(code, ctx);
@@ -142,7 +142,11 @@ export function osipSafetySizes(nowIso = sdcClock.now()) {
         moq: s.moq,
         koli: perPallet.get(code) ?? null,
         // [Team B3] the material's own Z, so DA's safety order is ROP Order's.
-        z: ownNumber('z', { materialCode: code })
+        z: ownNumber('z', { materialCode: code }),
+        // PEX-13 (BR-03) — the switch moves DA's safety order, so DA reads it too.
+        safetyOn: switchIsOn(
+          osipParamStore.valueOf(osipParamKey('safetyStockOn', { materialCode: code }))
+        )
       });
   }
   return out;

@@ -89,6 +89,71 @@ describe('daCauses', () => {
   });
 });
 
+describe('daCauses: the safety stock switch (PEX-13 BR-03)', () => {
+  /** @param {string} key @param {string} param @param {boolean | null} value @param {boolean | null} previous */
+  const sw = (key, param, value, previous) => ({
+    key,
+    param,
+    value,
+    previous,
+    reason: 'Supplier audit pending',
+    setAt: 't',
+    setBy: by
+  });
+  const args = { ...base, choice: /** @type {'A'} */ ('A'), ltpRows: [] };
+
+  it('switching it off is a cause, with the reason, when DA moved', () => {
+    const causes = daCauses({
+      ...args,
+      osipRows: [sw('safetyStockOn|M', 'safetyStockOn', false, null)]
+    });
+    expect(causes).toHaveLength(1);
+    expect(causes[0]).toMatchObject({
+      kind: 'safetySwitch',
+      before: 'on',
+      after: 'off',
+      reason: 'Supplier audit pending'
+    });
+    expect(daCauseText(causes[0], () => 'Safety stock switch')).toBe(
+      'Safety stock switch on → off'
+    );
+  });
+
+  it('switching it back on reads off → on; a reset to the default reads on', () => {
+    const [c] = daCauses({
+      ...args,
+      osipRows: [sw('safetyStockOn|M', 'safetyStockOn', true, false)]
+    });
+    expect(c).toMatchObject({ before: 'off', after: 'on' });
+    const [d] = daCauses({
+      ...args,
+      osipRows: [sw('safetyStockOn|M', 'safetyStockOn', null, false)]
+    });
+    expect(d).toMatchObject({ before: 'off', after: 'on' });
+  });
+
+  it('is no cause when no DA week moved (PEX-6 BR-03), for another material, or before the mark', () => {
+    const row = sw('safetyStockOn|M', 'safetyStockOn', false, null);
+    expect(daCauses({ ...args, moved: false, osipRows: [row] })).toEqual([]);
+    expect(
+      daCauses({
+        ...args,
+        osipRows: [sw('safetyStockOn|OTHER', 'safetyStockOn', false, null)]
+      })
+    ).toEqual([]);
+    expect(daCauses({ ...args, since: { ltp: 0, osip: 1 }, osipRows: [row] })).toEqual([]);
+  });
+
+  it('the protection buffer switch is not a cause: it moves ROP Order only, no DA week', () => {
+    expect(
+      daCauses({
+        ...args,
+        osipRows: [sw('protectionBufferOn|M', 'protectionBufferOn', false, null)]
+      })
+    ).toEqual([]);
+  });
+});
+
 describe('compareVersions', () => {
   it('lines the weeks up and gives second − first; a week one lacks has no difference', () => {
     const w = (/** @type {string} */ week, /** @type {number} */ da) => ({

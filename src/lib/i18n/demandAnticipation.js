@@ -19,6 +19,7 @@ export const demandAnticipationEn = {
   'daCause.kind.ltpB': 'LTP B',
   'daCause.kind.ltpChoice': 'LTP choice',
   'daCause.kind.safetyStock': 'Safety stock',
+  'daCause.kind.safetySwitch': 'Safety stock switch',
   // BL-267 (PEX-5) — LTP inputs.
   'ltpIn.title': 'LTP inputs',
   'ltpIn.intro':
@@ -160,6 +161,7 @@ export const demandAnticipationId = {
   'daCause.kind.ltpB': 'LTP B',
   'daCause.kind.ltpChoice': 'Pilihan LTP',
   'daCause.kind.safetyStock': 'Safety stock',
+  'daCause.kind.safetySwitch': 'Saklar Safety stock',
   // BL-267 (PEX-5) — LTP inputs.
   'ltpIn.title': 'Input LTP',
   'ltpIn.intro':

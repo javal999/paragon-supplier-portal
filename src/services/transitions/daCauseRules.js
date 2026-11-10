@@ -11,8 +11,13 @@
 // choice (`ltpInputRules`) and the safety stock values Z and g (`osipParams`).
 // The strategic and protection buffers follow LTP Festive and LTP B and, built
 // as PEX-5 says, move no DA week (the protection buffer adds to ROP Order
-// only), so they never appear as a cause on their own. The protection buffer
-// switch (PEX-13) is not built: it is not a cause yet.
+// only), so they never appear as a cause on their own.
+//
+// PEX-13 BR-03: the safety stock switch (`safetyStockOn`) is a cause; turning it
+// off zeroes DA's safety order, so it moves DA. The protection buffer switch
+// (`protectionBufferOn`) is NOT one: it acts on ROP Order only and moves no DA
+// week, and PEX-6 BR-03 keeps an input that moves no DA figure out of the
+// versions. If a rule later lets it reach DA, add its kind here.
 //
 // "Moves a DA figure" = a DA week of the figure differs from the figure it is
 // set against (the published one for an out-of-date mark, the previous one for
@@ -32,18 +37,26 @@
 /** @import { LtpInputRow, LtpSeries } from './ltpInputRules' */
 
 /**
- * @typedef {'ltpA' | 'ltpFestive' | 'ltpB' | 'ltpChoice' | 'safetyStock'} DaCauseKind
+ * @typedef {'ltpA' | 'ltpFestive' | 'ltpB' | 'ltpChoice' | 'safetyStock' | 'safetySwitch'} DaCauseKind
  */
 
 /** The kinds, in the order a list shows them. @type {readonly DaCauseKind[]} */
 export const DA_CAUSE_KINDS = Object.freeze(
-  /** @type {DaCauseKind[]} */ (['ltpA', 'ltpFestive', 'ltpB', 'ltpChoice', 'safetyStock'])
+  /** @type {DaCauseKind[]} */ ([
+    'ltpA',
+    'ltpFestive',
+    'ltpB',
+    'ltpChoice',
+    'safetyStock',
+    'safetySwitch'
+  ])
 );
 
 /**
  * `before` / `after`: a series' total quantity over its uploaded weeks, a choice
  * ('A', 'Festive', 'B') or a safety stock value (Z or g); null: none before.
  * `detail`: for safety stock, which value ('z' or 'g').
+ * `safetySwitch` (PEX-13 BR-03): `before` / `after` are 'on' or 'off'; `reason` is the free text the switch change carried.
  * @typedef {{
  *   readonly kind: DaCauseKind;
  *   readonly detail: string | null;
@@ -51,6 +64,7 @@ export const DA_CAUSE_KINDS = Object.freeze(
  *   readonly after: number | string | null;
  *   readonly at: string;
  *   readonly by: ActorAttribution;
+ *   readonly reason?: string | null;
  * }} DaCause
  */
 
@@ -89,7 +103,7 @@ export function daMoved(before, after) {
  *   readonly moved: boolean;
  *   readonly choice: LtpSeries;
  *   readonly ltpRows: readonly LtpInputRow[];
- *   readonly osipRows: readonly { readonly key: string; readonly param: string; readonly value: number | boolean | null; readonly previous: number | boolean | null; readonly setAt: string; readonly setBy: ActorAttribution }[];
+ *   readonly osipRows: readonly { readonly key: string; readonly param: string; readonly value: number | boolean | null; readonly previous: number | boolean | null; readonly reason?: string | null; readonly setAt: string; readonly setBy: ActorAttribution }[];
  * }} input
  * @returns {DaCause[]}
  */
@@ -128,8 +142,21 @@ export function daCauses({ materialCode, since, moved, choice, ltpRows, osipRows
     }
   });
   osipRows.forEach((r, i) => {
-    if ((r.param !== 'z' && r.param !== 'g') || r.key.split('|')[1] !== materialCode) return;
-    if (i < since.osip) return;
+    if (r.key.split('|')[1] !== materialCode || i < since.osip) return;
+    if (r.param === 'safetyStockOn') {
+      // PEX-13 BR-01: on unless the row says off (null: back to the default, on).
+      out.push({
+        kind: 'safetySwitch',
+        detail: null,
+        before: r.previous === false ? 'off' : 'on',
+        after: r.value === false ? 'off' : 'on',
+        at: r.setAt,
+        by: r.setBy,
+        reason: r.reason ?? null
+      });
+      return;
+    }
+    if (r.param !== 'z' && r.param !== 'g') return;
     out.push({
       kind: 'safetyStock',
       detail: r.param,
