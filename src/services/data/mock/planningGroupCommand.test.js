@@ -8,7 +8,9 @@
 // same clock and seed; re-captured at 2e42fe4, pre-C5 code carrying BL-77's
 // two capacity samples, which changed only sup-005 MG-02 and sup-012 MG-20;
 // and edited for PEX-D22, which moved sup-007 MG-20's short week from 14 Sep
-// to 7 Sep, its two entries and nothing else):
+// to 7 Sep, its two entries and nothing else; and edited for BL-282, which
+// made raw material weekly: the LTP weeks of sup-002 MG-02 and MG-10 and
+// sup-005 MG-02, and sup-005's two short weeks, 400 → 350 KG):
 // with no split, the plans are today's, the SAP group key renamed to its
 // default planning group and nothing else.
 // ────────────────────────────────────────────────────────────────────────────

@@ -127,9 +127,9 @@ describe('BL-193 — OSIP safety beside the engine challenger', () => {
     );
   });
 
-  it('safety order per supplier: RM-STEAR-7300 × sup-002 = 950 (SD 217.40 over 13 LTP weeks [Team B2], MPQ 25); no LTP reads so', async () => {
+  it('safety order per supplier: RM-STEAR-7300 × sup-002 = 650 (SD 144.12 over 13 LTP weeks [Team B2], MPQ 25); no LTP reads so', async () => {
     const row = await render();
-    expect(within(row).getByTestId('sst-osip-so-RM-STEAR-7300-sup-002')).toHaveTextContent('950');
+    expect(within(row).getByTestId('sst-osip-so-RM-STEAR-7300-sup-002')).toHaveTextContent('650');
     expect(screen.getByTestId('sst-osip-so-AI-PANTO-6640-sup-009')).toHaveTextContent(
       'No LTP over the lead time'
     );
@@ -143,14 +143,14 @@ describe('BL-193 — OSIP safety beside the engine challenger', () => {
     ]);
   });
 
-  it('ROP Fisik safety needs recorded consumption; with it, CEILING(1 day × min(2,000, 411.3), 25) = 425', async () => {
+  it('ROP Fisik safety needs recorded consumption; with it, CEILING(1 day × min(2,000, 412.2), 25) = 425', async () => {
     await render();
     expect(screen.getByTestId('sst-osip-fisik-RM-STEAR-7300-sup-002')).toHaveTextContent(
       'No consumption recorded'
     );
   });
 
-  it('…recorded: highest week 14,000 → 2,000 a day; LTP 20,152 over 7 weeks → 411.3 a day; the min rounds up to 425', async () => {
+  it('…recorded: highest week 14,000 → 2,000 a day; LTP 20,200 over 7 weeks → 412.2 a day; the min rounds up to 425', async () => {
     record('RM-STEAR-7300', [
       ['2026-08-17', 14000],
       ['2026-08-24', 7000]
@@ -191,15 +191,15 @@ describe('BL-193 — the rule switches recompute the view and store nothing', ()
     await render();
     const before = consumptionStore.all().length;
     pick('safetyRounding', 'moq');
-    // RM-STEAR-7300 × sup-002: MOQ 1,250 → 949.05 rounds up to 1,250.
+    // RM-STEAR-7300 × sup-002: MOQ 1,250 → 629.14 rounds up to 1,250.
     expect(screen.getByTestId('sst-osip-so-RM-STEAR-7300-sup-002')).toHaveTextContent('1,250');
     pick('fisikSafety', 'sheet');
     pick('safetyRounding', 'mpq');
     pick('fisikSafety', 'deck');
-    expect(screen.getByTestId('sst-osip-so-RM-STEAR-7300-sup-002')).toHaveTextContent('950');
-    // The lead-time SD (the earlier default): SD 157.94 × 1.65 × √7 = 689.50 → 700.
+    expect(screen.getByTestId('sst-osip-so-RM-STEAR-7300-sup-002')).toHaveTextContent('650');
+    // The lead-time SD (the earlier default): SD 203.54 × 1.65 × √7 = 888.55 → 900.
     pick('sdSource', 'ltp');
-    expect(screen.getByTestId('sst-osip-so-RM-STEAR-7300-sup-002')).toHaveTextContent('700');
+    expect(screen.getByTestId('sst-osip-so-RM-STEAR-7300-sup-002')).toHaveTextContent('900');
     pick('sdSource', 'ltp13w');
     expect(screen.queryByTestId('sst-osip-variant')).toBeNull();
     expect(consumptionStore.all().length).toBe(before);

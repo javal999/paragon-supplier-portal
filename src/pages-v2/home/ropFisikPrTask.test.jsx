@@ -17,7 +17,7 @@ import { setHubRole } from '@components/layout-v2/hubRole';
 // balance is left, the planner's Home shows ONE "Create a PR in SAP" task,
 // rated by `withSeverity`, and it opens What to order, where the
 // recommendation sits beside CAP-12's "New PO needed". RM-STEAR-7300 on the
-// sample data: ROP Fisik 1,275, Max 1,400; with its only blanket PO
+// sample data: ROP Fisik 1,400, Max 1,400; with its only blanket PO
 // (PO-2025-00116) closed, an SOH of 1,010 needs a PR for 390 KG.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -59,7 +59,7 @@ describe('BL-199 — the "Create a PR in SAP" Home task and What to order', () =
     expect(task).toHaveTextContent('Create a PR in SAP');
     expect(task).toHaveTextContent(/^1/);
     // Rated from its cover against the lead time, not assigned by type: 990 KG
-    // at 420 KG a day of ROP Fisik demand is 2 days, inside a 49-day lead time.
+    // at 457 KG a day of ROP Fisik demand is 2 days, inside a 49-day lead time.
     const detail = within(task).getByTestId('home-task-detail-rop-fisik-pr');
     expect(detail).toHaveTextContent('2 days');
     expect(detail).toHaveTextContent('49 days');
@@ -73,7 +73,7 @@ describe('BL-199 — the "Create a PR in SAP" Home task and What to order', () =
     const row = within(section).getByTestId('op-rop-fisik-pr-RM-STEAR-7300');
     expect(row).toHaveTextContent('Create a PR in SAP for 410 KG');
     expect(row).toHaveTextContent('990');
-    expect(row).toHaveTextContent('1,275');
+    expect(row).toHaveTextContent('1,400');
     expect(row).toHaveTextContent('1,400');
     expect(within(section).getByTestId('op-rop-fisik-pr-provisional')).toHaveTextContent(
       'Provisional: rule awaiting Material Planning (F1, B8, B9, F2; MPQ = order multiple until master data)'

@@ -17,8 +17,8 @@ import { seedOsipParam } from '@test/osipParamSeed';
 //
 // RM-STEAR-7300 × sup-002: NPD on the sample data (first order 8,000 of 15,000
 // KG received), so its ROP Fisik demand is the highest LTP of the next 3
-// months, 2,940 a week = 420 a day; ROP Supplier = CEILING(420 × bottleneck
-// production lead time 34 days [Team B10, set here], MPQ 25) = 14,300 KG.
+// months, 3,200 a week (BL-282: weekly periods) = 457.14 a day; ROP Supplier = CEILING(457.14 × bottleneck
+// production lead time 34 days [Team B10, set here], MPQ 25) = 15,550 KG.
 // ─────────────────────────────────────────────────────────────────────────────
 
 beforeEach(() =>
@@ -45,7 +45,7 @@ describe('DRC-D15 — the supplier ROP figure is display only', () => {
       'Supplier’s figure, display only'
     );
     expect(within(drawer).getByTestId('inv-system-rop-sup-002-RM-STEAR-7300')).toHaveTextContent(
-      'System: 14,300 KG'
+      'System: 15,550 KG'
     );
   });
 
@@ -72,6 +72,6 @@ describe('DRC-D15 — the supplier ROP figure is display only', () => {
     expect(
       ptiRows.find((r) => r.supplierId === 'sup-002' && r.materialCode === 'RM-STEAR-7300')
         ?.systemRopSupplier
-    ).toMatchObject({ value: 14300, unavailable: null });
+    ).toMatchObject({ value: 15550, unavailable: null });
   });
 });

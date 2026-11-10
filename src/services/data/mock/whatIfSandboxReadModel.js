@@ -369,6 +369,21 @@ export function whatIfSandbox(supplierId, materialCode, nowIso = sdcClock.now())
     rulesVersion: RULES_VERSION,
     own: { z: s?.z ?? null, g: s?.g ?? null },
     // PEX-15 (BL-277) — the LTP series the scenario presets read.
-    ltpSeries: whatIfLtpSeries(materialCode, live.ltp)
+    ltpSeries: whatIfLtpSeries({
+      materialCode,
+      weeks: live.weeks,
+      liveLtp: live.ltp,
+      // CAP-D11 — asked only for a material with uploads.
+      share: () =>
+        materialShares(
+          allCommitmentLines(null),
+          materialCode,
+          engineDataset()
+            .sources.filter((x) => x.materialCode === materialCode)
+            .map((x) => x.supplierId),
+          hubWeeks(nowIso, DEMAND_ANTICIPATION_RULES.shareWindowWeeks)
+        ).get(supplierId) ?? 0,
+      preset: pair.preset
+    })
   };
 }

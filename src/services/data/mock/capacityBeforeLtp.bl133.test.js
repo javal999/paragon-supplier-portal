@@ -17,7 +17,7 @@ import { forecastVersionStore, forecastViewStore } from './stores/forecastHubSto
 import { capacityStore, inventoryAlertLedger } from './stores/inventoryHubStores';
 import {
   SEEDED_PACKAGING_WEEKS as W,
-  SEEDED_RAW_MATERIAL_MONTHS as M
+  SEEDED_RAW_MATERIAL_PERIODS as M
 } from './fixtures/forecastHub';
 /** @import { ForecastCommitmentLine, QueryScope } from '../types' */
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
@@ -380,7 +380,7 @@ describe('BL-133 — the pokayoke on the submit verb (ENG-D19)', () => {
   });
 
   it('an acknowledgement (Forecast zone) is not a commitment and is not gated', async () => {
-    const l = await lineOf(sup002, 'RM-STEAR-7300', M[4]);
+    const l = await lineOf(sup002, 'RM-STEAR-7300', M[16]);
     expect(l.zone).toBe('forecast');
     const res = await svc.dispatch(sup002, {
       transitionId: 't_requirementresponse_acknowledge',

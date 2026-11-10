@@ -159,17 +159,17 @@ describe('DRC-9a strategic buffer [Default C4]', () => {
     );
     const w = row?.windows.find((x) => x.window.id === 'H1448');
     expect(w?.baselineMonths.map((m) => [m.month, m.qty])).toEqual([
-      ['2026-11', 10700],
-      ['2026-12', 13000],
-      ['2027-01', 14300]
+      ['2026-11', 12429],
+      ['2026-12', 11186],
+      ['2027-01', 14700]
     ]);
-    expect(w?.baseline).toBe(12666.666666666666);
+    expect(w?.baseline).toBe(12771.666666666666);
     // Feb 11,800 is below the baseline: 0. PEX-2 — the horizon now runs to
     // month 12, so March has an LTP (420 kg a day × 31, to the 100): 13,000,
     // 333.33 above the baseline. Under the 6-month horizon it had none.
     expect(w?.months.map((m) => [m.month, m.qty, m.buffer])).toEqual([
       ['2027-02', 11800, 0],
-      ['2027-03', 13000, 13000 - 12666.666666666666]
+      ['2027-03', 13000, 13000 - 12771.666666666666]
     ]);
   });
 });

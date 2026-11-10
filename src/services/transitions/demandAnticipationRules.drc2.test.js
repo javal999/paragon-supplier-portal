@@ -562,3 +562,26 @@ describe('the pairs: LTP per week and the SOH share (CAP-D11, kept)', () => {
     ]);
   });
 });
+
+describe('PEX-13 BR-01 — the safety stock switch in the figure', () => {
+  const g = golden.ppt7;
+  const input = /** @type {RollingDaInputs} */ ({
+    ...BASE,
+    weeks: g.weeks,
+    ltp: g.ltp,
+    leadTimeWeeks: g.leadTimeWeeks,
+    mpq: g.mpq,
+    soh: g.soh,
+    ospoOpen: g.ospo,
+    ospr: g.ospr
+  });
+
+  it('off: the safety order is 0 and the first DA week loses it; on or absent changes nothing', () => {
+    const on = rollingDaFigure(input, PPT7_RULES);
+    const off = rollingDaFigure({ ...input, safetyOn: false }, PPT7_RULES);
+    expect(rollingDaFigure({ ...input, safetyOn: true }, PPT7_RULES)).toEqual(on);
+    expect(on.weeks[0].safety).toBeGreaterThan(0);
+    expect(off.weeks.every((w) => w.safety === 0)).toBe(true);
+    expect(off.weeks[0].da).toBeLessThan(on.weeks[0].da);
+  });
+});

@@ -155,12 +155,14 @@ describe('the seeded publication (the page opens published)', () => {
       expect(/** @type {{ weeks: string[] }} */ (e.figure.inputs).weeks[0]).toBe(W[0]);
     }
     // Named member, reached through a value: RM-EMUL-9410 is shared 70/30 by
-    // sup-002 and sup-005 at PTI SOH 1,800, so sup-002's SOH share is 1,260.
+    // sup-002 and sup-005 at PTI SOH 1,800. The share is read from the lines'
+    // own quantities, which BL-282 made weekly (each line rounds to its order
+    // multiple), so sup-002's SOH share is 1,281 (1,260 on the monthly lines).
     const emul = seed.entries.find(
       (e) => e.supplierId === 'sup-002' && e.materialCode === 'RM-EMUL-9410'
     );
-    expect(emul?.figure.inputs.soh).toBe(1260);
-    expect(emul?.figure.value.soh).toBe(1260);
+    expect(emul?.figure.inputs.soh).toBe(1281);
+    expect(emul?.figure.value.soh).toBe(1281);
   });
 
   it('DRC-2 BR-01 — the horizon is each pair’s lead time in weeks (DRC-6)', async () => {

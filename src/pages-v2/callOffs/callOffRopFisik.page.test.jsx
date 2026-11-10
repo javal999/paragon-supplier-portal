@@ -4,7 +4,7 @@
 // provisional label (F1 and the ROP questions) and where the SOH comes from.
 // The planner approves it by releasing it, which ends in the store.
 //
-// RM-STEAR-7300 on the sample data: ROP Fisik 1,275, Max 1,400, MPQ 25; an SOH
+// RM-STEAR-7300 on the sample data: ROP Fisik 1,400, Max 1,400, MPQ 25; an SOH
 // update of 1,010 drafts 375 KG on PO-2025-00116 (see callOffTrigger.test.js).
 import { afterEach, describe, expect, it } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
@@ -65,7 +65,7 @@ describe('BL-199 — a draft made at ROP Fisik on the Call-offs page', () => {
       'Drafted at ROP Fisik'
     );
     expect(p.getByTestId('calloff-trigger-soh')).toHaveTextContent('1,010 KG');
-    expect(p.getByTestId('calloff-trigger-rop-fisik')).toHaveTextContent('1,275 KG');
+    expect(p.getByTestId('calloff-trigger-rop-fisik')).toHaveTextContent('1,400 KG');
     expect(p.getByTestId('calloff-trigger-max')).toHaveTextContent('1,400 KG');
     // [Team F5] the minimum delivery: MOQ 1,250 rounded to the 700 pallet.
     expect(p.getByTestId('calloff-trigger-quantity')).toHaveTextContent('1,400 KG');

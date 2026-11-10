@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Version | 1.21, 2026-11-09 (FSR-D9 added: BL-280, lead time stays English on the planning pages, the four held glossary labels renamed; 1.20, 2026-11-05 (PEX-D16 to PEX-D22 added: the owner's rulings on the PEX wave 1 build decisions in MR !97 (branch `feat/pex-wave1-p0`, merged with GitLab main 8f96aa84); 1.19, 2026-11-05: FSR-D8 added: BL-263's Indonesian labels renamed, the team's English terms kept per TL-D11 and TL-D17; 1.18, 2026-11-05: FSR-D7 added: BL-243 and BL-249 built, applying IA R-2 and the TL-D13 qualifier; 1.17, 2026-11-03: FSR-D1 to FSR-D6 added: the owner's rulings on the six open questions of the Foresight end-to-end review; 1.16, 2026-11-02: BL-12 and BL-56 decided by the owner; BL-19 baselines and early receipts in OTIF and CFOT answered; INV-D4 superseded by the BL-149 answer; 1.15, 2026-10-26: RFX-D32 added: the RFx deadline is checked on leaving the field; INV-D14 added 2026-10-23) |
-| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20) and RFX-D26 to RFX-D31 (2026-10-22) and RFX-D32 (2026-10-26); the Inventory & Capacity UX decisions INV-D1 to INV-D13 (2026-10-22) and INV-D14 (2026-10-23); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23); and the Foresight review rulings FSR-D1 to FSR-D6 (2026-11-03) and FSR-D7 and FSR-D8 (2026-11-05); and the PEX wave 1 build rulings PEX-D16 to PEX-D22 (2026-11-05) |
+| Version | 1.22, 2026-11-10 (PEX-D23 and PEX-D24 added: the owner's working-day ruling for PO On Hold and the accepted wave 1 answers Q-W3 to Q-W5; the PEX wave 2 build calls listed as proposed, not ruled; the PEX-D16 to PEX-D22 section says MR !97 is merged (`b1bc58e8`); 1.21, 2026-11-09 (FSR-D9 added: BL-280, lead time stays English on the planning pages, the four held glossary labels renamed; 1.20, 2026-11-05 (PEX-D16 to PEX-D22 added: the owner's rulings on the PEX wave 1 build decisions in MR !97 (branch `feat/pex-wave1-p0`, merged with GitLab main 8f96aa84); 1.19, 2026-11-05: FSR-D8 added: BL-263's Indonesian labels renamed, the team's English terms kept per TL-D11 and TL-D17; 1.18, 2026-11-05: FSR-D7 added: BL-243 and BL-249 built, applying IA R-2 and the TL-D13 qualifier; 1.17, 2026-11-03: FSR-D1 to FSR-D6 added: the owner's rulings on the six open questions of the Foresight end-to-end review; 1.16, 2026-11-02: BL-12 and BL-56 decided by the owner; BL-19 baselines and early receipts in OTIF and CFOT answered; INV-D4 superseded by the BL-149 answer; 1.15, 2026-10-26: RFX-D32 added: the RFx deadline is checked on leaving the field; INV-D14 added 2026-10-23)) |
+| Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20) and RFX-D26 to RFX-D31 (2026-10-22) and RFX-D32 (2026-10-26); the Inventory & Capacity UX decisions INV-D1 to INV-D13 (2026-10-22) and INV-D14 (2026-10-23); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23); and the Foresight review rulings FSR-D1 to FSR-D6 (2026-11-03) and FSR-D7 and FSR-D8 (2026-11-05); and the PEX wave 1 build rulings PEX-D16 to PEX-D22 (2026-11-05) and PEX-D23 and PEX-D24 (2026-11-09 and 2026-11-05) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, and two values (BL-54 invoice cap, BL-55 gate OTIF minimum). BL-12 call-off record and BL-56 early allowance were decided on 2026-11-02 (see their entries). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
 | Evidence | Market practice is cited at the end. Where a claim is a judgement rather than a published practice, it says so |
@@ -161,6 +161,20 @@ These eight are one number or one list each. The prototype ships defensible defa
 **Recommendation.** Keep what is built — the hub shows the result and the rejected quantity — and do not extend it. Put the supplier-facing half (non-conformance and corrective action) in Phase 2 with Supplier Quality, where it joins the non-conformance stub already in the backlog (BL-39).
 
 **What would change this.** If SAP QM is not in scope for the pilot materials, the hub's display is the only record of an inspection result and deserves more care.
+
+### SQ-D1 · E10.02 non-conformance and complaint tracking is Phase 2, with Supplier Quality (decided 2026-11-10)
+**Decision.** Levi ruled on 2026-11-10: E10.02 moves from MVP to Phase 2 and joins Supplier Quality (EX2). This keeps BL-15 / Q-20 (`BACKLOG.md:340`, `SUPPLIER-HUB-REQUIREMENTS.md:2194`) and resolves the conflict with the stub table (`SUPPLIER-HUB-REQUIREMENTS.md:2059`) and the baseline (`SUPPLIER-HUB-BASELINE.md:213`), which both said MVP. The hub keeps what is built: PTI records the inspection result against the receipt, and the supplier sees the result and the rejected quantity (REQ-E07-06 BR-05, BR-06 and AC-04, `SUPPLIER-HUB-REQUIREMENTS.md:1071-1082`). Nothing new is built.
+
+**Alternative not taken.** (A) A minimal NCR log in the MVP: PTI quality logs a non-conformance report (NCR) against a supplier and a receipt, with a status and the supplier's response. Size M, rules [Proposed], reverses BL-15 / Q-20. (C) Show an NCR status read from SAP QM. Size unknown, and SAP QM scope for the pilot is unconfirmed (`DECISION-GUIDE.md:163`).
+
+**What would change this.** The pilot sponsor needing E10.02 at go-live (then A is the smallest start), or IT confirming that SAP QM is not in scope for the pilot materials. In that case the hub's display is the only inspection record and deserves more care (`DECISION-GUIDE.md:163`).
+
+### SQ-D2 · BL-39 stays open as the Phase 2 placeholder (decided 2026-11-10)
+**Decision.** Levi ruled on 2026-11-10: BL-39 (`BACKLOG.md:107`) stays in the open backlog. Its Why now reads "Phase 2 with Supplier Quality (BL-15, SQ-D1); waits on DEC-07 for scope and an owner". The row keeps the open questions for the PTI quality owner, Procurement, the pilot sponsor and IT until Supplier Quality is scoped. BL-15 already names BL-39 as the place non-conformance waits.
+
+**Alternative not taken.** Closing BL-39 and moving it to the decided table, as was done for BL-15. Then no open row would carry the Phase 2 work, and BL-15's reference would point at a closed item.
+
+**What would change this.** DEC-07 (`SUPPLIER-HUB-BASELINE.md:426`) being decided. The Supplier Quality scope then replaces BL-39 with detailed rows.
 
 ### BL-17 · DEC-06 — is Web Tukar Faktur this capability or a separate application?
 **Market practice.** Invoice submission through a portal, matched against receipts, with tax compliance handled by the national e-invoicing system. In Indonesia that means e-Faktur and the DJP's Coretax platform; the portal carries the commercial document and the reference, not the tax authority's role.
@@ -520,7 +534,7 @@ Levi ruled in chat on 2026-11-03 on the six open questions in section 7 of the F
 
 ## PEX wave 1 build rulings (decided 2026-11-05)
 
-Levi ruled in the tracker on 2026-11-05 on the 17 build decisions in MR !97 (PEX wave 1 and P0 fixes, `SC-HUB-PLAN-EXECUTION-REQUIREMENTS-2026-11.md`) and on the Stabilise and Reschedule labels. They continue that file's numbering (PEX-D1 to PEX-D15).
+Levi ruled in the tracker on 2026-11-05 on the 17 build decisions in MR !97 (PEX wave 1 and P0 fixes, merged as `b1bc58e8` on 2026-11-09, `SC-HUB-PLAN-EXECUTION-REQUIREMENTS-2026-11.md`) and on the Stabilise and Reschedule labels. They continue that file's numbering (PEX-D1 to PEX-D15).
 
 ### PEX-D16 · Old Trade-off and Forecast weeks both read plain "Zone Capacity" (BL-264, PEX-1)
 **Decision.** "Plain Zone Capacity." Every zone name for the weeks after the lead time reads "Zone Capacity", in EN and ID, with no "damped weeks" or "later weeks" suffix: zone pills, Stabilise and Reschedule zone labels and rule names, the Stabilise damping weight and tolerance band settings, the admin settings, the alert basis and the supplier acknowledgement line. The engine keeps its internal keys and rules, so no figure moved. Tips and formula sentences that explain how damping works still say which weeks are damped, because they describe a rule, not a zone name. Two labels keep a qualifier because dropping it makes them wrong or ambiguous: the Stabilise setting "Damping weight, Zone Capacity later weeks" sits beside "Damping weight, Zone Capacity", and the Foresight gap note counts "Zone Liability and Zone Capacity periods that need a commitment".
@@ -591,6 +605,27 @@ Three items stay deferred, not built: the Zone Capacity quantity (PEX-1 BR-02/BR
 **Alternative not taken.** (b) the supplier page only, with the buyer rules unchanged; (c) defer to BL-283.
 
 **What would change this.** Suppliers in the usability test expecting to commit beyond the lead time, or the capacity confirmation feeding Zone Capacity (BL-283).
+
+### PEX-D23 · PO On Hold grace and no-movement days count working days (BL-270, BL-272, PEX-7)
+**Decision.** "Working days." Levi ruled on 2026-11-09 that the PO On Hold grace period and the no-movement days count working days on the hub calendar, not calendar days. The defaults stay 14 each (PEX-D7), per supplier × material. "Decision due" and the days left are working days. Built in MR !100 (`55b63846`, commit `63946249`).
+
+**Alternative not taken.** Calendar days, which is how the first build counted them.
+
+**What would change this.** Material Planning wanting the grace period tied to the supplier's own working calendar.
+
+### PEX-D24 · Wave 1 questions Q-W3, Q-W4 and Q-W5 (BL-284, BL-279)
+**Decision.** Levi accepted the recommended answer to each of Q-W1 to Q-W5 on 2026-11-05 (source: the superseded note at the head of `prompts/plan-execution-wave1-build.md`). Q-W1 and Q-W2 were then ruled as PEX-D22 and PEX-D21. The other three:
+- **Q-W3.** Suppliers see the heads-up sentence only. The per-week LTP, SOH and gap show on the buyer Commitments grid, and on the supplier page only for materials with granted PTI-stock access. Not built: BL-284 stays open.
+- **Q-W4.** The principal tracking link is held by a governed, append-only ledger verb in the supplier lane. Built as `t_incomingshipment_track` (MR !97), not under the name `t_incomingtracking_set` the question used.
+- **Q-W5.** The supplier test build is a Vercel preview deploy from the CLI of merged GitLab `main`, with the owner's OK, while the GitHub sync is paused.
+
+**Alternative not taken.** Q-W3 per-week figures to every supplier; Q-W4 a display-only field held in the page session; Q-W5 resuming the GitHub sync for the one merge.
+
+**What would change this.** BL-284's own condition: an owner ruling on showing PTI stock to suppliers.
+
+### PEX wave 2 build calls, proposed and not ruled
+
+The wave 2 lanes built the "My calls" rows of `SC-HUB-PLAN-EXECUTION-REQUIREMENTS-2026-11.md` section 6 as written: PEX-D3, PEX-D9 and PEX-D14 (MR !100), PEX-D10 to PEX-D13 (MR !102) and PEX-D15 (MR !101). They are **proposed**; the owner has not ruled on them, so this guide does not record them as decisions. A change after merge is a small follow-up MR.
 
 ## SC Hub Material decisions (decided 2026-09-29)
 

@@ -11,7 +11,7 @@ import i18n from '@lib/i18n';
 // PEX-13 (BL-275) — the per-material switches on the Safety stock detail panel: both on by
 // default; a change needs a reason of at least 10 characters; off, the safety stock is 0.
 // RM-STEAR-7300 × sup-002 with 14,000 and 7,000 KG consumption (as in BL-196's page test):
-// ROP Order 21,097 = cycle stock 20,147 + safety order 950.
+// ROP Order 20,850 = cycle stock 20,200 + safety order 650.
 
 afterEach(() => {
   consumptionStore.reset();
@@ -58,7 +58,7 @@ describe('PEX-13 safety stock and protection buffer switches', () => {
   it('turning safety stock off needs a reason of 10+ characters; saved off, the safety order is 0 and the change is on the ledger', async () => {
     recordConsumption();
     const panel = await openPanel();
-    expect(screen.getByTestId(`sst-rop-ropOrder-${ID}`)).toHaveTextContent('21,097 KG');
+    expect(screen.getByTestId(`sst-rop-ropOrder-${ID}`)).toHaveTextContent('20,850 KG');
     fireEvent.click(within(panel).getByTestId('pex-switch-safetyStockOn-toggle'));
     const save = within(panel).getByTestId('pex-switch-safetyStockOn-save');
     expect(save).toBeDisabled();
@@ -72,7 +72,7 @@ describe('PEX-13 safety stock and protection buffer switches', () => {
     expect(save).toBeEnabled();
     fireEvent.click(save);
     await waitFor(() =>
-      expect(screen.getByTestId(`sst-rop-ropOrder-${ID}`)).toHaveTextContent('20,147 KG')
+      expect(screen.getByTestId(`sst-rop-ropOrder-${ID}`)).toHaveTextContent('20,200 KG')
     );
     expect(osipParamStore.all().map((r) => [r.key, r.value, r.reason])).toEqual([
       ['safetyStockOn|RM-STEAR-7300', false, 'Discontinued, sell down stock']
@@ -101,7 +101,7 @@ describe('PEX-13 safety stock and protection buffer switches', () => {
     });
     fireEvent.click(within(panel).getByTestId('pex-switch-safetyStockOn-save'));
     await waitFor(() =>
-      expect(screen.getByTestId(`sst-rop-ropOrder-${ID}`)).toHaveTextContent('21,097 KG')
+      expect(screen.getByTestId(`sst-rop-ropOrder-${ID}`)).toHaveTextContent('20,850 KG')
     );
     expect(osipParamStore.all().map((r) => [r.value, r.previous])).toEqual([
       [false, null],
