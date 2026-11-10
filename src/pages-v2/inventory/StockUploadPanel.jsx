@@ -413,13 +413,9 @@ const RefusedRows = ({ refused }) => {
  * User feedback 2026-11-10 — "Download template" sits in the page header beside
  * "Upload template" (it was only inside the Template guide tab, which users
  * missed). Builds the CSV in the browser (a Blob link, nothing sent).
- * @type {React.FC<{ supplierId: string; positions: readonly InventoryPosition[]; testId?: string }>}
+ * @type {React.FC<{ supplierId: string; positions: readonly InventoryPosition[]; testId: string }>}
  */
-export const StockTemplateDownloadButton = ({
-  supplierId,
-  positions,
-  testId = 'stock-template-download'
-}) => {
+export const StockTemplateDownloadButton = ({ supplierId, positions, testId }) => {
   const { t, i18n } = useTranslation();
   const assigned = positions.map((p) => ({ materialCode: p.materialCode, uom: p.uom }));
   const download = () => {
@@ -460,7 +456,11 @@ const StockUploadPanel = ({ supplierId, positions }) => {
           <p className="text-sm text-text-secondary">{t('inv.upload.subtitle')}</p>
         </div>
         <div className="flex gap-2">
-          <StockTemplateDownloadButton supplierId={supplierId} positions={positions} />
+          <StockTemplateDownloadButton
+            supplierId={supplierId}
+            positions={positions}
+            testId="stock-template-download"
+          />
         </div>
       </div>
       <StockTemplateColumns />
