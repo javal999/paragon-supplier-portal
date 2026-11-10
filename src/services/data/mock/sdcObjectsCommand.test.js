@@ -142,7 +142,12 @@ const declare = (overrides = {}) => ({
 
 describe('t_inventorydeclaration_declare — total-first, own-facts (SDC-3a)', () => {
   it('a total-ONLY declaration is legal (the honest minimal channel form)', async () => {
-    const res = await svc.dispatch(sup002, declare());
+    // BL-289 (owner 2026-11-10) — total-only stays legal for PACKAGING; a raw
+    // material now needs its batches (the next spec).
+    const res = await svc.dispatch(
+      sup007,
+      declare({ materialCode: 'PK-PETB-8810', supplierId: 'sup-007', totalQty: 4000 })
+    );
     expect(res.status).toBe('done');
     expect(res.entityId).toMatch(/^inv-9\d+$/);
     const d = /** @type {import('../../sdc/types').InventoryDeclaration} */ (
@@ -159,6 +164,18 @@ describe('t_inventorydeclaration_declare — total-first, own-facts (SDC-3a)', (
     });
   });
 
+  it('BL-289 — a raw material with stock and no batch, or a batch without expiry, is refused', async () => {
+    const none = await svc.dispatch(sup002, declare());
+    expect(none.status).toBe('failed');
+    expect(none.reason).toContain('rawMaterialBatchRequired');
+    const noExpiry = await svc.dispatch(
+      sup002,
+      declare({ batches: [{ batchNumber: 'GLY-X', qty: 4000 }] })
+    );
+    expect(noExpiry.status).toBe('failed');
+    expect(noExpiry.reason).toContain('rawMaterialExpiryRequired');
+  });
+
   it('a BATCH-GRAIN declaration persists detail when Σ batch qty === totalQty', async () => {
     const res = await svc.dispatch(
       sup002,
@@ -166,7 +183,7 @@ describe('t_inventorydeclaration_declare — total-first, own-facts (SDC-3a)', (
         totalQty: 5000,
         batches: [
           { batchNumber: 'GLY-25A', qty: 3000, expiryDate: '2027-12-31' },
-          { batchNumber: 'GLY-25B', qty: 2000 }
+          { batchNumber: 'GLY-25B', qty: 2000, expiryDate: '2027-11-30' }
         ]
       })
     );

@@ -206,6 +206,7 @@ export const inventoryCapacityEn = {
   'inv.upload.columns.presence.required': 'Required',
   'inv.upload.columns.presence.requiredWhenInProduction': 'Required when E is above 0',
   'inv.upload.columns.presence.optional': 'Optional',
+  'inv.upload.columns.presence.requiredForRawMaterial': 'Required for raw materials',
   'inv.upload.columns.meaning.materialCode':
     'PTI material code, already filled in for your materials.',
   'inv.upload.columns.meaning.soh': 'Finished stock you hold for PTI now.',
@@ -220,8 +221,12 @@ export const inventoryCapacityEn = {
     'Quantity in this batch. All batches of a material add up to its stock on hand.',
   'inv.upload.columns.meaning.manufacturingDate': 'The day this batch was made.',
   'inv.upload.columns.meaning.expiryDate': 'The day this batch expires.',
+  'inv.upload.columns.meaning.feedstockQty':
+    'Your current feedstock for this material, in its unit. Leave blank when there is nothing to confirm.',
+  'inv.upload.columns.meaning.feedstockConfirmedOn':
+    'The day the feedstock figure is as of. Blank means the upload day.',
   'inv.upload.columns.batchNote':
-    'Fill G to J only when your batches expire at different times. For each batch row, batch number and quantity are required; add the expiry date so your ASN can fill it in.',
+    'Raw materials: fill G, H and J for every batch; the warehouse controls near-expiry stock by batch. Packaging: fill G to J only when batches expire at different times. One row per batch, each with the material code in A. K and L confirm your feedstock; they never change the stock on hand.',
   'inv.upload.download': 'Download template',
   'inv.upload.choose': 'Upload filled template',
   'inv.upload.checking': 'Checking the file…',
@@ -235,6 +240,7 @@ export const inventoryCapacityEn = {
   // Inventory UX S-03 (INV-D10) — a blank row is not an error; name what was sent.
   'inv.upload.uploadTemplate': 'Upload template',
   'inv.upload.sentTo': 'Sent to PTI:',
+  'inv.upload.feedstockSent': 'Feedstock confirmed:',
   // BL-224 — each material sent, with its quantity and batch count.
   'inv.upload.sentQty': '{{qty}} {{uom}}',
   'inv.upload.sentBatches_one': '{{count}} batch, {{amount}}',
@@ -256,6 +262,13 @@ export const inventoryCapacityEn = {
   'inv.upload.reason.manufacturedAfterExpiry': 'The manufacturing date is after the expiry date',
   'inv.upload.reason.manufacturedInFuture': 'The manufacturing date is in the future',
   'inv.upload.reason.batchTotal': 'Batch quantities do not add up to the stock on hand',
+  'inv.upload.reason.rawMaterialBatchRequired':
+    'This is a raw material, so its batches are required: batch number, quantity and expiry date',
+  'inv.upload.reason.rawMaterialExpiryRequired':
+    'This is a raw material, so every batch needs its expiry date',
+  'inv.upload.reason.feedstockQtyInvalid': 'The feedstock quantity must be a number of 0 or more',
+  'inv.upload.reason.feedstockDateInvalid':
+    'The feedstock date must be a date written as YYYY-MM-DD, not in the future',
   'inv.upload.reason.conflictingRows':
     'Another row of this material has a problem, or its rows disagree',
   'inv.upload.reason.productionDateMissing':
@@ -271,6 +284,8 @@ export const inventoryCapacityEn = {
   'inv.template.batchQty': 'Batch quantity',
   'inv.template.manufacturingDate': 'Manufacturing date',
   'inv.template.expiryDate': 'Expiry date',
+  'inv.template.feedstockQty': 'Feedstock quantity',
+  'inv.template.feedstockConfirmedOn': 'Feedstock as of',
 
   'inv.entry.title': 'Enter stock',
   'inv.entry.ptiTitle': 'Record stock from a supplier message',
@@ -309,6 +324,13 @@ export const inventoryCapacityEn = {
   'inv.entry.error.productionDateMissing':
     'Enter the expected completion date for the quantity in production.',
   'inv.entry.inProductionHint': 'In production is required. Write 0 when nothing is in production.',
+  'inv.entry.batchesRaw': 'Batches (required for raw material)',
+  'inv.entry.rawHint':
+    'Raw material: add every batch with its expiry date. The warehouse uses it to control near-expiry stock.',
+  'inv.entry.error.rawMaterialBatchRequired':
+    'This is a raw material: add its batches, with quantities that add up to the stock on hand.',
+  'inv.entry.error.rawMaterialExpiryRequired':
+    'This is a raw material: every batch needs its expiry date.',
   'inv.entry.toast.saved': 'Stock saved',
   'inv.entry.toast.recorded': 'Stock recorded for the supplier',
 
@@ -896,6 +918,7 @@ export const inventoryCapacityId = {
   'inv.upload.columns.presence.required': 'Wajib',
   'inv.upload.columns.presence.requiredWhenInProduction': 'Wajib bila E lebih dari 0',
   'inv.upload.columns.presence.optional': 'Opsional',
+  'inv.upload.columns.presence.requiredForRawMaterial': 'Wajib untuk bahan baku',
   'inv.upload.columns.meaning.materialCode': 'Kode material PTI, sudah terisi untuk material Anda.',
   'inv.upload.columns.meaning.soh': 'Stok jadi yang Anda simpan untuk PTI saat ini.',
   'inv.upload.columns.meaning.unit': 'Satuan material, sudah terisi. Jangan diubah.',
@@ -909,8 +932,12 @@ export const inventoryCapacityId = {
     'Kuantitas dalam batch ini. Semua batch satu material berjumlah sama dengan stok tersedia.',
   'inv.upload.columns.meaning.manufacturingDate': 'Tanggal batch ini diproduksi.',
   'inv.upload.columns.meaning.expiryDate': 'Tanggal batch ini kedaluwarsa.',
+  'inv.upload.columns.meaning.feedstockQty':
+    'Feedstock Anda saat ini untuk material ini, dalam satuannya. Kosongkan bila tidak ada yang dikonfirmasi.',
+  'inv.upload.columns.meaning.feedstockConfirmedOn':
+    'Tanggal angka feedstock berlaku. Kosong berarti tanggal unggah.',
   'inv.upload.columns.batchNote':
-    'Isi G sampai J hanya bila batch Anda kedaluwarsa pada waktu berbeda. Untuk setiap baris batch, nomor batch dan kuantitas wajib diisi; tambahkan tanggal kedaluwarsa agar ASN Anda dapat mengisinya.',
+    'Bahan baku: isi G, H dan J untuk setiap batch; gudang mengontrol stok mendekati ED per batch. Kemasan: isi G sampai J hanya bila batch kedaluwarsa pada waktu berbeda. Satu baris per batch, masing-masing dengan kode material di A. K dan L mengonfirmasi feedstock Anda; keduanya tidak mengubah stok tersedia.',
   'inv.upload.download': 'Unduh templat',
   'inv.upload.choose': 'Unggah templat yang sudah diisi',
   'inv.upload.checking': 'Memeriksa berkas…',
@@ -923,6 +950,7 @@ export const inventoryCapacityId = {
   'inv.upload.error.empty': 'Berkas tidak memiliki baris untuk diperiksa.',
   'inv.upload.uploadTemplate': 'Unggah templat',
   'inv.upload.sentTo': 'Terkirim ke PTI:',
+  'inv.upload.feedstockSent': 'Feedstock terkonfirmasi:',
   // BL-224 — each material sent, with its quantity and batch count.
   'inv.upload.sentQty': '{{qty}} {{uom}}',
   'inv.upload.sentBatches_other': '{{count}} batch, {{amount}}',
@@ -942,6 +970,13 @@ export const inventoryCapacityId = {
   'inv.upload.reason.manufacturedAfterExpiry': 'Tanggal produksi setelah tanggal kedaluwarsa',
   'inv.upload.reason.manufacturedInFuture': 'Tanggal produksi berada di masa depan',
   'inv.upload.reason.batchTotal': 'Jumlah kuantitas batch tidak sama dengan stok tersedia',
+  'inv.upload.reason.rawMaterialBatchRequired':
+    'Ini bahan baku, jadi batch wajib diisi: nomor batch, kuantitas dan tanggal kedaluwarsa',
+  'inv.upload.reason.rawMaterialExpiryRequired':
+    'Ini bahan baku, jadi setiap batch wajib punya tanggal kedaluwarsa',
+  'inv.upload.reason.feedstockQtyInvalid': 'Kuantitas feedstock harus berupa angka 0 atau lebih',
+  'inv.upload.reason.feedstockDateInvalid':
+    'Tanggal feedstock harus berformat YYYY-MM-DD dan tidak di masa depan',
   'inv.upload.reason.conflictingRows':
     'Baris lain untuk material ini bermasalah, atau baris-barisnya tidak sama',
   'inv.upload.reason.productionDateMissing':
@@ -957,6 +992,8 @@ export const inventoryCapacityId = {
   'inv.template.batchQty': 'Kuantitas batch',
   'inv.template.manufacturingDate': 'Tanggal produksi',
   'inv.template.expiryDate': 'Tanggal kedaluwarsa',
+  'inv.template.feedstockQty': 'Kuantitas feedstock',
+  'inv.template.feedstockConfirmedOn': 'Feedstock per tanggal',
 
   'inv.entry.title': 'Isi stok',
   'inv.entry.ptiTitle': 'Catat stok dari pesan pemasok',
@@ -996,6 +1033,13 @@ export const inventoryCapacityId = {
     'Isi perkiraan tanggal selesai untuk kuantitas dalam produksi.',
   'inv.entry.inProductionHint':
     'Dalam produksi wajib diisi. Tulis 0 bila tidak ada yang diproduksi.',
+  'inv.entry.batchesRaw': 'Batch (wajib untuk bahan baku)',
+  'inv.entry.rawHint':
+    'Bahan baku: tambahkan setiap batch dengan tanggal kedaluwarsanya. Gudang memakainya untuk mengontrol stok yang mendekati ED.',
+  'inv.entry.error.rawMaterialBatchRequired':
+    'Ini bahan baku: tambahkan batch-nya, dengan kuantitas yang totalnya sama dengan stok tersedia.',
+  'inv.entry.error.rawMaterialExpiryRequired':
+    'Ini bahan baku: setiap batch wajib punya tanggal kedaluwarsa.',
   'inv.entry.toast.saved': 'Stok tersimpan',
   'inv.entry.toast.recorded': 'Stok dicatat untuk pemasok',
 
