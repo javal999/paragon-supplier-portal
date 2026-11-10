@@ -6673,6 +6673,9 @@ const dispatcher = createDispatcher({
  */
 export const settleCommand = dispatcher.settle;
 
+/** Is any PO On Hold decision not yet executed? */
+const poOnHoldPending = () => poOnHoldStore.all().some((d) => d.state !== 'Executed');
+
 /**
  * PEX-8 BR-02/BR-05 — the end of a PO On Hold grace period. The hub follows
  * the same pattern as the ROP Fisik trigger and the alert observers: no timer,
@@ -6682,8 +6685,6 @@ export const settleCommand = dispatcher.settle;
  * pending: it looks at the decisions first, and reads nothing else.
  * @returns {Promise<number>} How many lines it executed.
  */
-const poOnHoldPending = () => poOnHoldStore.all().some((d) => d.state !== 'Executed');
-
 export async function runDuePoOnHoldExecutions() {
   if (!poOnHoldPending()) return 0;
   let n = 0;
