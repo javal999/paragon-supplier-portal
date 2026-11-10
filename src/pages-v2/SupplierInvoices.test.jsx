@@ -214,7 +214,6 @@ describe('SupplierInvoices — the new-invoice line amounts are text, so the par
   });
 });
 
-
 // The resubmit amount had the `> 0` rule with no voice: a typed zero parses, so
 // no refusal showed, and `fixReady` kept the resubmit shut with no reason given.
 // The new-invoice field already says so (`invoice-amount-zero`); the fix field

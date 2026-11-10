@@ -114,6 +114,19 @@ export const applyEntries = (lines, entries) => {
 export const defaultLineAmount = (l) => Math.round(l.quantity * l.unitPrice * 100) / 100;
 
 /**
+ * One line's billed amount: the typed text through `readInvoiceAmount`, or the
+ * default (quantity × PO unit price) while nothing is typed.
+ * @param {string | undefined} typed
+ * @param {Pick<InvoiceLine, 'quantity' | 'unitPrice'>} l
+ * @returns {ReturnType<typeof readInvoiceAmount>}
+ */
+export const readLineAmount = (typed, l) => {
+  if (typed !== undefined) return readInvoiceAmount(typed);
+  const d = defaultLineAmount(l);
+  return Number.isFinite(d) ? { ok: true, value: d } : { ok: false, reason: 'EMPTY_QTY' };
+};
+
+/**
  * BL-75 [Proposed] — the amount the supplier bills PER LINE. A line the
  * supplier has not typed an amount for is billed at quantity × PO unit price,
  * so the amounts follow the quantity until they are overtyped. The invoice
@@ -124,14 +137,7 @@ export const defaultLineAmount = (l) => Math.round(l.quantity * l.unitPrice * 10
  * @param {Record<string, string>} entries  Typed amount text per `lineKey`.
  */
 export const applyAmounts = (lines, entries) => {
-  const reads = lines.map((l) => {
-    const raw = entries[lineKey(l)];
-    if (raw !== undefined) return readInvoiceAmount(raw);
-    const d = defaultLineAmount(l);
-    return Number.isFinite(d)
-      ? /** @type {const} */ ({ ok: true, value: d })
-      : /** @type {const} */ ({ ok: false, reason: 'EMPTY_QTY' });
-  });
+  const reads = lines.map((l) => readLineAmount(entries[lineKey(l)], l));
   const valid = reads.length > 0 && reads.every((r) => r.ok && r.value > 0);
   const total = Math.round(reads.reduce((a, r) => a + (r.ok ? r.value : 0), 0) * 100) / 100;
   const billed = lines.map((l, i) => {

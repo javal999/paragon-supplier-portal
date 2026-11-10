@@ -5,8 +5,7 @@ import { useTranslation } from 'react-i18next';
 import TermLabel from '@components/ui-v2/TermLabel';
 import { fmtIdr, readQty } from '../../invoices/InvoiceCollaboration';
 import { inputCls } from '../const';
-import { defaultLineAmount, lineKey } from '../utils';
-import { readInvoiceAmount } from '../../invoices/invoiceAmountModel';
+import { lineKey, readLineAmount } from '../utils';
 import { LineAmountCell } from './AmountFields';
 
 /**
@@ -93,17 +92,9 @@ const LineQtyTable = ({ lines, entries, onChange, amounts, onAmountChange }) => 
                 {onAmountChange && (
                   <td className="py-1.5 pl-2">
                     {(() => {
-                      const d = defaultLineAmount({ quantity: q, unitPrice: l.unitPrice });
                       const typed = amounts?.[key];
-                      const value = typed ?? (Number.isFinite(d) ? String(d) : '');
-                      const read =
-                        typed !== undefined
-                          ? readInvoiceAmount(typed)
-                          : /** @type {const} */ (
-                              Number.isFinite(d)
-                                ? { ok: true, value: d }
-                                : { ok: false, reason: 'EMPTY_QTY' }
-                            );
+                      const read = readLineAmount(typed, { quantity: q, unitPrice: l.unitPrice });
+                      const value = typed ?? (read.ok ? String(read.value) : '');
                       return (
                         <LineAmountCell
                           id={`new-amount-${key}`}
