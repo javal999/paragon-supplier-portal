@@ -7,7 +7,7 @@
 | Source meetings | Weekly SC Hub, 2026-10-21, cited [M21 n]. Weekly SC Hub, 2026-11-04, cited [M04 n]. The PO On Hold decision table shared with the 2026-11-04 notes, cited [Table] |
 | Owner review | Answers in chat, 2026-11-05, cited [Owner, 2026-11-05] |
 | Code read | GitLab `main` at `3da82ae5` for section 2a (the behaviour before the waves); the Build status column and section 5 were read on `c904d7da` (2026-11-10) |
-| Covers | PEX-1 to PEX-16 (section 3). Backlog BL-264 to BL-279 and BL-282 to BL-285; rules still to define BL-293 to BL-295 (2026-11-10) |
+| Covers | PEX-1 to PEX-16 (section 3). Backlog BL-264 to BL-279 and BL-282 to BL-285; rules still to define BL-293 to BL-298 (2026-11-10, 2026-11-11) |
 | Amends | DRC-3 (DA history), DRC-9a (strategic buffer source), DRC-9c (protection buffer, was Hold), DRC-15a (feedstock reconcile columns), DRC-17 (what-if sandbox) in `SC-HUB-DA-ROP-CALLOFF-REQUIREMENTS-2026-10.md`; the Firm, Trade-off and Forecast labels in `SC-HUB-TERM-LABELS-REQUIREMENTS-2026-10.md` |
 | Waits on | Mba Septi (Material Planning): SAP identifiers for DA, PO, call-off, ASN and LTP; absorption and carry-over thresholds; OSIP MDM template review; ROP, safety stock, lead time and MOQ rules [M21 6] |
 
@@ -191,6 +191,7 @@ Read on GitLab `main` `3da82ae5`. Paths are under `src/`.
 **PEX-8 PO On Hold decision [M04 2; Table; Owner, 2026-11-05, Q3–Q6]**
 - BR-01. The planner suggests one option per PO On Hold line. The supplier sees the suggestion and chooses the final option. The supplier's choice is final [Owner, 2026-11-05, Q6].
 - BR-02. The hub pre-selects the suggestion from the conditions below; the planner can change it before sending.
+- **Open, 2026-11-11:** what executes at the end of the grace period (which PO line the call-off draws, which need date it takes) is PEX-D27 (BL-296); the FG option's data (PIPO flag, Max PTI, "no stock movement") waits on Mba Septi (BL-297).
 
   | Option | Condition (all must hold) | At the end of the grace period |
   |---|---|---|
@@ -236,7 +237,7 @@ Read on GitLab `main` `3da82ae5`. Paths are under `src/`.
   1. **Material:** one supplier × material. The sandbox built today, plus the LTP choice.
   2. **FG and BOM:** one FG. LTP scenario applied to the FG; the effect on every material in its BOM.
   3. **Supplier:** one supplier. Total demand vs capacity per month (PEX-4 figures).
-- BR-02. Scenarios: Baseline (LTP A), Festive (LTP Festive), Protection buffer (LTP B), and BOM constraint. No LTP C.
+- BR-02. Scenarios: Baseline (LTP A), Festive (LTP Festive), Protection buffer (LTP B), and BOM constraint. No LTP C. **Open, 2026-11-11:** LTP is per material, so what a scenario does on the FG tab is PEX-D28 (BL-298).
 - BR-03. **BOM constraint:** the planner enters the units a limiting material supports. The FG production quantity drops to that number, and every other material in the BOM is recalculated from it.
 - BR-04. Fixed vs editable inputs are listed on each tab. Presets load a known case.
 - AC-01. FG demand 110; material X supports 80. Materials Y and Z are recalculated for 80 FG units.
@@ -269,7 +270,7 @@ The supplier usability test is on Monday 9 or Tuesday 10 November 2026 [M04 6]. 
 |---|---|---|---|
 | 1 | Supplier UI for the usability test | BL-264 zones, BL-265 horizon, BL-266 heads-up, BL-273 SLA, BL-274 FS reconcile column, BL-279 tracking link | Fri 6 Nov 2026 merge, so the build is up by Mon 9 Nov |
 | 2 | LTP inputs and DA versions | BL-267 LTP inputs, BL-268 DA versions, BL-269 capacity heads-up and treemap | Week of 9 Nov |
-| 2a | Rules wave 2 left undefined, in priority order | BL-293 supplier split, BL-294 Protection buffer tip, BL-295 brand split | After the owner rules PEX-D25, TL-D40 and PEX-D26 |
+| 2a | Rules wave 2 left undefined, in priority order | BL-293 supplier split, BL-294 Protection buffer tip, BL-295 brand split, BL-296 end-of-grace execution, BL-297 FG data, BL-298 FG scenarios | After the owner rules PEX-D25, TL-D40, PEX-D26, PEX-D27 and PEX-D28, and Mba Septi answers BL-297 |
 | 3 | PO On Hold end to end | BL-270 PO On Hold, BL-271 decision, BL-272 grace settings, BL-275 SS/PB switch | Week of 16 Nov |
 | 4 | Trace and sandbox | BL-276 trace, BL-277 sandbox levels | Week of 23 Nov |
 | Held | Wait on Mba Septi | BL-278 master data; PEX-11 BR-04; PEX-12 | When she answers |
@@ -323,3 +324,5 @@ The supplier usability test is on Monday 9 or Tuesday 10 November 2026 [M04 6]. 
 | PEX-D15 | Sandbox levels | Material, FG and BOM, Supplier | Levels by material class (OSIP levels 1–6) |
 | PEX-D25 | Split of a material-level LTP to suppliers (PEX-5 BR-08) | Keep the MR !102 rule until ruled: share of the Foresight commitment LTP over the first 4 hub weeks, even split when none | `MaterialSource.share` from the engine dataset; a supplier-level upload; a supplier-level feed from Mas Ghifari's system |
 | PEX-D26 | Brand split of the capacity heads-up (PEX-4 BR-03) | Keep the MR !102 rule until ruled: gross requirement pegs per brand from a 56-week engine run, one share for 12 months | A share recomputed per month from the pegs; a brand-level plan, if one exists; a planner-entered share |
+| PEX-D27 | End-of-grace execution on PO On Hold (PEX-8, BL-296) | Call off against the pair's oldest open PO line, as CAP-9 draws POs oldest first; need date = end of the grace period + the DRC-6 lead time, the date the fulfil-by SLA already uses (PEX-10, PEX-D17) | The planner picks the PO line and the need date for each line |
+| PEX-D28 | LTP scenarios on the sandbox FG tab (PEX-15 BR-02, BL-298) | The FG tab stays unscaled by scenario and says so; scenarios run per material on the Material tab | Scale the FG by the Festive / A ratio of its limiting material |
