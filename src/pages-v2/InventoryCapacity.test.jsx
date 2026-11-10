@@ -283,7 +283,11 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
     batchNumber: /^Batch number$/,
     batchQty: /^Quantity$/,
     manufacturingDate: /^Manufacturing date$/,
-    expiryDate: /^Expiry date$/
+    expiryDate: /^Expiry date$/,
+    // [Proposed 2026-11-10] the template's feedstock columns K and L are the
+    // Feedstock tab's confirmation, not part of the stock entry form.
+    feedstockQty: null,
+    feedstockConfirmedOn: null
   };
 
   const openManual = async (material = 'PK-PETB-8801') => {
@@ -376,7 +380,7 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
     );
   });
 
-  it('MR-4 AC-03: the upload panel lists every column A to J as Required or Optional, with the batch note', async () => {
+  it('MR-4 AC-03: the upload panel lists every column A to L as Required or Optional, with the batch note', async () => {
     renderWithProviders(<SupplierInventory />, {
       identity: SUPPLIER,
       route: '/supplier/inventory?tab=template'
@@ -390,10 +394,12 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
       supplierRop: 'Optional',
       inProductionQty: 'Required',
       productionCompletionDate: 'Required when E is above 0',
-      batchNumber: 'Optional',
-      batchQty: 'Optional',
+      batchNumber: 'Required for raw materials',
+      batchQty: 'Required for raw materials',
       manufacturingDate: 'Optional',
-      expiryDate: 'Optional'
+      expiryDate: 'Required for raw materials',
+      feedstockQty: 'Optional',
+      feedstockConfirmedOn: 'Optional'
     };
     STOCK_TEMPLATE_FIELDS.forEach((f, i) => {
       const row = within(table).getByTestId(`stock-template-column-${f.field}`);
@@ -404,7 +410,7 @@ describe('One stock entry (BL-60, REQ-E08-02 BR-06, BR-09, BR-10, AC-04, AC-05)'
     });
     expect(table.querySelectorAll('tbody tr')).toHaveLength(STOCK_TEMPLATE_FIELDS.length);
     expect(within(table).getByTestId('stock-template-batch-note')).toHaveTextContent(
-      'Fill G to J only when your batches expire at different times. For each batch row, batch number and quantity are required; add the expiry date so your ASN can fill it in.'
+      'Raw materials: fill G, H and J for every batch; the warehouse controls near-expiry stock by batch.'
     );
   });
 

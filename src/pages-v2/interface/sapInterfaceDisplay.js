@@ -114,7 +114,7 @@ export function useSapInterface() {
     };
     const messages = [
       ...sapMessageStore.open(),
-      ...failuresFromEvents(commandAuditSink.all(), entityOfTransition)
+      ...failuresFromEvents(commandAuditSink.all(), entityOfTransition, nowIso)
     ];
     return sapMonitor({ lastSeen, messages });
     // `tick` is the retry signal: the stores are singletons, so nothing else in

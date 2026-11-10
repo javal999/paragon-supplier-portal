@@ -265,8 +265,10 @@ const BuyerStockSimulation = () => {
         {t('sim.separate')}
       </p>
 
-      <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-x-auto">
-        <Table>
+      {/* User feedback 2026-11-10 — frozen header + pinned Material/Supplier, so the
+          table can be scrolled both ways without losing what a row and a column are. */}
+      <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-hidden">
+        <Table frozenHeader scrollLabel={t('sim.title')}>
           <TableHeader>
             <TableHeaderCell pin="left">{t('sim.col.material')}</TableHeaderCell>
             <TableHeaderCell pin="left">{t('sim.col.supplier')}</TableHeaderCell>

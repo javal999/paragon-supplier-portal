@@ -40,6 +40,7 @@ import {
 } from './inventory/inventoryDisplay';
 import StockEntryPanel from './inventory/StockEntryPanel';
 import StockUploadPanel, {
+  StockTemplateDownloadButton,
   StockUploadButton,
   StockUploadResult,
   useStockUpload
@@ -248,6 +249,11 @@ const SupplierInventory = () => {
               >
                 {t('inv.sup.enterOnScreen')}
               </Button>
+              <StockTemplateDownloadButton
+                supplierId={supplierId}
+                positions={rows}
+                testId="stock-template-download-header"
+              />
               <StockUploadButton upload={upload} />
             </div>
           ) : (

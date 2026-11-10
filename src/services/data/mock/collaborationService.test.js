@@ -159,7 +159,14 @@ describe('collaboration — reads reflect a live write through the shared store'
     const res = await svc.commands.dispatch(bScope, {
       transitionId: 't_inventorydeclaration_declare',
       entity: 'inventoryDeclaration',
-      payload: { supplierId: B, materialCode: 'RM-EMUL-3310', totalQty: 99999, inProductionQty: 0 }
+      payload: {
+        supplierId: B,
+        materialCode: 'RM-EMUL-3310',
+        totalQty: 99999,
+        inProductionQty: 0,
+        // BL-289 (owner 2026-11-10) — a raw material comes with its batches and expiry.
+        batches: [{ batchNumber: 'GLY-COL-1', qty: 99999, expiryDate: '2027-12-31' }]
+      }
     });
     expect(res.status).not.toBe('failed');
     const own = await col.getOwnInventoryDeclarations(bScope);
