@@ -128,7 +128,9 @@ describe('the fixture pairs this file rests on (population control)', () => {
       expect(primary[0].supplierId).toBe(primarySource(sources, code)?.supplierId);
       expect(whatIfSandbox(primary[0].supplierId, code)?.pair.primary).toBe(true);
     }
-  });
+    // Runs the sandbox once per material (about 2 s alone); the full suite's parallel load
+    // took it past the 5 s default in two gates runs, so this one test is given room.
+  }, 30_000);
 });
 
 describe('BR-04 · the horizon: RM 52 weeks, PM 24', () => {
