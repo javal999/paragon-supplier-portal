@@ -19,13 +19,18 @@ import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
 import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import { formatDate } from '@lib/format';
 import {
+  useCapacityHeadsUp,
   useCapacityPlans,
   useForecastCommitments,
   useForecastVersions
 } from '@services/query/hooks';
 import { horizonWeeks } from '@services/transitions/capacityRules';
+import { capacityLeftOf } from '@services/transitions/zoneCapacityLeftRules';
+import { hubWorkingCalendar } from '@services/transitions/workingCalendarStore';
+import { materialEntry } from '@services/sdc';
 import { usePlanningGroupLabel } from '../inventory/planningGroupDisplay';
 /** @import { ForecastStream } from '@services/sdc/types' */
+/** @import { ForecastCommitmentLine } from '@services/data/types' */
 import { useActiveReasonCodes, useReasonLabel } from '../admin/reasonCodeDisplay';
 import { deadlineState, isAcknowledgeOnly } from '@services/transitions/forecastRules';
 import { forecastNow, useForecastRunner, usePeriodLabel } from '../forecasts/forecastDisplay';
@@ -94,6 +99,7 @@ const SupplierForecastCommitments = () => {
   useUrlEnumParam('tab', PAGE_TABS, setTab);
   const linesQuery = useForecastCommitments();
   const plansQuery = useCapacityPlans();
+  const headsUpQuery = useCapacityHeadsUp();
   const [weekReasons, setWeekReasons] = useState(/** @type {Record<string, WeekReason>} */ ({}));
   const versionsQuery = useForecastVersions();
   const submitAvail = useVerbAvailability('requirementresponse:submit');
@@ -217,6 +223,15 @@ const SupplierForecastCommitments = () => {
     readRow
   });
 
+  // BL-283 (PEX-1 BR-02) — the read-only capacity left of a Zone Capacity
+  // period; undefined until the monthly capacity read has landed.
+  const headsUp = headsUpQuery.data?.items;
+  const cal = hubWorkingCalendar();
+  const capacityLeft = headsUp
+    ? (/** @type {ForecastCommitmentLine} */ l) =>
+        capacityLeftOf(l, { lines, plans, headsUp, supplierId, master: materialEntry, cal })
+    : undefined;
+
   return (
     <AppShellV2>
       <PageHeader breadcrumb={crumb} title={t('fc.sup.title')} subtitle={t('fc.sup.subtitle')} />
@@ -323,6 +338,7 @@ const SupplierForecastCommitments = () => {
                 pending={pending}
                 submitAvail={submitAvail}
                 ackAvail={ackAvail}
+                capacityLeft={capacityLeft}
                 commitmentReasons={commitmentReasons}
                 reasonLabel={reasonLabel}
                 readRow={readRow}

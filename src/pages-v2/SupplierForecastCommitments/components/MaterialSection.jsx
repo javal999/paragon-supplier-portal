@@ -5,6 +5,7 @@ import TermTip from '@components/forecast/TermTip';
 import Data from '@components/ui-v2/Data';
 /** @import { ForecastCommitmentLine } from '@services/data/types' */
 /** @import { VerbAvailability } from '@services/transitions/handoff' */
+/** @import { CapacityLeft } from '@services/transitions/zoneCapacityLeftRules' */
 /** @import { ReadRow, ReasonLabel, RowDraft } from '../const' */
 import AcknowledgeColumn from './AcknowledgeColumn';
 import CommitmentColumn from './CommitmentColumn';
@@ -32,6 +33,7 @@ const LABEL = `${CELL} sticky left-0 z-10 bg-bg-surface font-medium text-text-se
  *   pending: boolean;
  *   submitAvail: VerbAvailability;
  *   ackAvail: VerbAvailability;
+ *   capacityLeft?: (l: ForecastCommitmentLine) => CapacityLeft;
  *   commitmentReasons: string[];
  *   reasonLabel: ReasonLabel;
  *   readRow: (l: ForecastCommitmentLine) => ReadRow;
@@ -50,6 +52,7 @@ const MaterialSection = ({
   pending,
   submitAvail,
   ackAvail,
+  capacityLeft,
   commitmentReasons,
   reasonLabel,
   readRow,
@@ -122,6 +125,7 @@ const MaterialSection = ({
                 canAck={canAck}
                 pending={pending}
                 ackAvail={ackAvail}
+                capacityLeft={capacityLeft?.(l)}
                 onAcknowledge={onAcknowledge}
               />
             ) : (
