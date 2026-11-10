@@ -320,7 +320,7 @@ const PoOnHoldPanel = ({ persona }) => {
             {t('poh.outcome.fs')} <Qty value={r.outcome.feedstockQty} uom={r.uom} />
           </span>
         )}
-        {r.outcome.spreadQty > 0 && (
+        {r.outcome.spreadQty > 0 && !r.execution.plan?.callOffs.length && !r.execution.record && (
           <span className={note}>
             {t('poh.outcome.spread')} <Qty value={r.outcome.spreadQty} uom={r.uom} />
           </span>
@@ -513,6 +513,7 @@ const PoOnHoldPanel = ({ persona }) => {
     return (
       <>
         {status}
+        {execView(r)}
         {chooseAvail.kind === 'held' ? (
           <div className="mt-2 space-y-2">
             <OptionPicker
