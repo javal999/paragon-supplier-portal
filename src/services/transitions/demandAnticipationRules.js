@@ -238,6 +238,7 @@ export function demandAnticipationPairs({ ltpLines, ptiStock }, nowIso, count) {
  *   `safetyRounding: 'koli' | 'moq'`; absent, those variants read none.
  * `sd`:  BL-210 — a typed SD (the sandbox's); absent or null, it is computed.
  * `z`:  [Team B3] the material's own Z (`osipParams`); absent or null, the rules'.
+ * `safetyOn`:  PEX-13 BR-01 — the material's safety stock switch; absent or true, on. Off, the safety order is 0.
  * `protectionBuffer`:  BL-267 (PEX-5 BR-06) — LTP B − LTP A summed over the horizon, added to ROP Order only; absent, 0.
  *
  * @typedef {{
@@ -259,6 +260,7 @@ export function demandAnticipationPairs({ ltpLines, ptiStock }, nowIso, count) {
  *   readonly koli?: number | null;
  *   readonly sd?: number | null;
  *   readonly z?: number | null;
+ *   readonly safetyOn?: boolean;
  *   readonly protectionBuffer?: number;
  * }} RollingDaInputs
  */
@@ -322,19 +324,24 @@ export function rollingDaFigure(input, rules = OSIP_RULES) {
   // BL-210 — with ROP Order's consumption, MOQ and koli (and a typed SD), so
   // every `sdSource` and `safetyRounding` variant gives ROP Order's figure.
   // [Team B2] the 13-week SD reads past the horizon, so the whole LTP goes in.
-  const safety = safetyOrder(
-    {
-      ltp: input.ltp,
-      leadTimeWeeks: n,
-      mpq: input.mpq,
-      ...(input.moq !== undefined ? { moq: input.moq } : {}),
-      ...(input.koli !== undefined && input.koli !== null ? { koli: input.koli } : {}),
-      ...(input.consumption !== undefined ? { consumption: input.consumption } : {}),
-      ...(typeof input.sd === 'number' ? { sd: input.sd } : {})
-    },
-    // [Team B3] the material's own Z, when set.
-    rulesForMaterial(rules, { z: input.z })
-  ).value;
+  // PEX-13 BR-01 — the safety stock switched off for the material: no safety order,
+  // the same 0 `osipSafety` reports, so DA and the safety stock page agree.
+  const safety =
+    input.safetyOn === false
+      ? 0
+      : safetyOrder(
+          {
+            ltp: input.ltp,
+            leadTimeWeeks: n,
+            mpq: input.mpq,
+            ...(input.moq !== undefined ? { moq: input.moq } : {}),
+            ...(input.koli !== undefined && input.koli !== null ? { koli: input.koli } : {}),
+            ...(input.consumption !== undefined ? { consumption: input.consumption } : {}),
+            ...(typeof input.sd === 'number' ? { sd: input.sd } : {})
+          },
+          // [Team B3] the material's own Z, when set.
+          rulesForMaterial(rules, { z: input.z })
+        ).value;
   if (input.soh === null) flags.push('NO_STOCK_RECORD');
   const soh = input.soh ?? 0;
   if (input.previous === null) flags.push('OSPO_FROM_STORE');

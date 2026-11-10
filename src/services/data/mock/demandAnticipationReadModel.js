@@ -207,7 +207,13 @@ function pairInputs(publications, nowIso, agreed) {
         ospr: null,
         ...(protection > 0 ? { protectionBuffer: protection } : {}),
         ...(size
-          ? { consumption: size.consumption, moq: size.moq, koli: size.koli, z: size.z }
+          ? {
+              consumption: size.consumption,
+              moq: size.moq,
+              koli: size.koli,
+              z: size.z,
+              safetyOn: size.safetyOn
+            }
           : {})
       }
     };
