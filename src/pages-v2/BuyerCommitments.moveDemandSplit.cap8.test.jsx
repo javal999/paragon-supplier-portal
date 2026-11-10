@@ -5,9 +5,11 @@
 //
 // The fixture has no exception on a material with two other qualified
 // suppliers, so each walk first makes one with the supplier's own verb:
-// sup-005 commits 500 of its 1 800 kg Firm September of RM-EMUL-9410 — a
-// shortfall of 1 300 kg that sup-002 (headroom 942 kg) and sup-010 (no stated
-// capacity, "—") can take. AC-01's 12 800 pcs becomes 1 300 kg here.
+// sup-005 commits 100 of its 400 kg Firm week of 31 Aug of RM-EMUL-9410 — a
+// shortfall of 300 kg that sup-002 (headroom 200 kg) and sup-010 (no stated
+// capacity, "—") can take. AC-01's 12 800 pcs becomes 300 kg here.
+// BL-282: raw material is weekly like packaging, so the period is the week of
+// 31 Aug (it was September: 1 800 kg, shortfall 1 300, headroom 942).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
@@ -29,7 +31,7 @@ import SupplierForecastCommitments from './SupplierForecastCommitments';
 
 const LOAD = { timeout: 15000 };
 const MAT = 'RM-EMUL-9410';
-const SEP = '2026-09';
+const SEP = '2026-08-31';
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 const SUP005_NAME = 'Sample Personal Care Emulsifiers GmbH';
 const SUP002_NAME = 'PT Sample Specialty Fats';
@@ -57,7 +59,7 @@ const supplierSeat = (supplierId, supplierName) => ({
   actor: NO_PERSON
 });
 
-/** sup-005 commits 500 of 1 800 kg (reason capacity): a 1 300 kg Firm exception. */
+/** sup-005 commits 100 of 400 kg (reason capacity): a 300 kg Firm exception. */
 async function makeShortfall() {
   const svc = new MockCommandService();
   const scope = {
@@ -78,9 +80,9 @@ async function makeShortfall() {
       supplierId: 'sup-005',
       materialCode: MAT,
       periodBucket: SEP,
-      confirmedQty: 500,
-      confirmedQtyRaw: '500',
-      committedDate: '2026-09-01',
+      confirmedQty: 100,
+      confirmedQtyRaw: '100',
+      committedDate: SEP,
       rootCause: { level1: 'capacity' }
     }
   });
@@ -99,7 +101,7 @@ const panel = () =>
 /** @type {ReturnType<typeof renderWithProviders> | null} */
 let page = null;
 
-/** Open Move demand on sup-005's September line, on the Raw material tab. */
+/** Open Move demand on sup-005's week-of-31-Aug line, on the Raw material tab. */
 async function openMove() {
   page = renderWithProviders(<BuyerCommitments />, { identity: PLANNER });
   fireEvent.click(await screen.findByRole('tab', { name: 'Raw material' }, LOAD));
@@ -133,7 +135,7 @@ describe('CAP-8 BR-01 / BR-02 — the Move demand rows', () => {
   it('one row per other qualified supplier: name, quantity, the material’s unit on every row, and the headroom or “—”', async () => {
     await makeShortfall();
     const p = await openMove();
-    expect(p.getByTestId('fc-move-shortfall')).toHaveTextContent('Shortfall 1,300 KG');
+    expect(p.getByTestId('fc-move-shortfall')).toHaveTextContent('Shortfall 300 KG');
     expect(p.getAllByTestId(/^fc-move-row-/).map((r) => r.getAttribute('data-testid'))).toEqual([
       'fc-move-row-sup-002',
       'fc-move-row-sup-010'
@@ -144,20 +146,20 @@ describe('CAP-8 BR-01 / BR-02 — the Move demand rows', () => {
     expect(p.getByTestId('fc-move-unit-sup-002')).toHaveTextContent('KG');
     expect(p.getByTestId('fc-move-unit-sup-010')).toHaveTextContent('KG');
     expect(p.queryByRole('combobox')).toBeNull();
-    expect(p.getByTestId('fc-move-headroom-sup-002')).toHaveTextContent('942 KG');
+    expect(p.getByTestId('fc-move-headroom-sup-002')).toHaveTextContent('200 KG');
     expect(p.getByTestId('fc-move-headroom-sup-010')).toHaveTextContent('—');
     expect(p.getByLabelText(`Quantity to move to ${SUP002_NAME}`)).toBeInTheDocument();
   });
 });
 
 describe('CAP-8 AC-01 — a shortfall split across two suppliers', () => {
-  it('800 kg to sup-002 and 500 kg to sup-010: one version, each target’s line gains its quantity, the source records two allocations', async () => {
+  it('200 kg to sup-002 and 100 kg to sup-010: one version, each target’s line gains its quantity, the source records two allocations', async () => {
     await makeShortfall();
     const p = await openMove();
-    type(p, 'sup-002', '800');
-    type(p, 'sup-010', '500');
+    type(p, 'sup-002', '200');
+    type(p, 'sup-010', '100');
     expect(p.getByTestId('fc-move-total')).toHaveTextContent(
-      'Moving 1,300 KG · Left as an exception 0 KG'
+      'Moving 300 KG · Left as an exception 0 KG'
     );
     fireEvent.change(p.getByLabelText('Note'), { target: { value: 'Principal shipment late' } });
     fireEvent.click(p.getByTestId('fc-action-submit'));
@@ -171,13 +173,13 @@ describe('CAP-8 AC-01 — a shortfall split across two suppliers', () => {
         .map((l) => [l.supplierId, l.forecastQty])
         .sort()
     ).toEqual([
-      ['sup-002', 5000],
-      ['sup-005', 500],
-      ['sup-010', 500]
+      ['sup-002', 1200],
+      ['sup-005', 100],
+      ['sup-010', 100]
     ]);
     expect(sourceLine()?.movedOut?.map((m) => [m.toSupplierId, m.qty])).toEqual([
-      ['sup-002', 800],
-      ['sup-010', 500]
+      ['sup-002', 200],
+      ['sup-010', 100]
     ]);
     expect(forecastVersionStore.get('FC-RM-V4')).toBeUndefined();
   });
@@ -185,8 +187,8 @@ describe('CAP-8 AC-01 — a shortfall split across two suppliers', () => {
   it('the target suppliers’ commitment pages show the new demand to confirm', async () => {
     await makeShortfall();
     const p = await openMove();
-    type(p, 'sup-002', '800');
-    type(p, 'sup-010', '500');
+    type(p, 'sup-002', '200');
+    type(p, 'sup-010', '100');
     fireEvent.change(p.getByLabelText('Note'), { target: { value: 'Principal shipment late' } });
     fireEvent.click(p.getByTestId('fc-action-submit'));
     await waitFor(() => expect(forecastVersionStore.get('FC-RM-V3')).toBeDefined());
@@ -197,7 +199,7 @@ describe('CAP-8 AC-01 — a shortfall split across two suppliers', () => {
       route: '/supplier/forecasts'
     });
     const row002 = await screen.findByTestId(`fc-sup-row-${MAT}-${SEP}`, {}, LOAD);
-    expect(row002).toHaveTextContent('5,000');
+    expect(row002).toHaveTextContent('1,200');
     first.unmount();
 
     renderWithProviders(<SupplierForecastCommitments />, {
@@ -205,21 +207,21 @@ describe('CAP-8 AC-01 — a shortfall split across two suppliers', () => {
       route: '/supplier/forecasts'
     });
     const row010 = await screen.findByTestId(`fc-sup-row-${MAT}-${SEP}`, {}, LOAD);
-    expect(row010).toHaveTextContent('500');
+    expect(row010).toHaveTextContent('100');
   });
 
   it('a partial split leaves the rest as an exception, and its panel lists both allocations', async () => {
     await makeShortfall();
     const p = await openMove();
-    type(p, 'sup-002', '600');
-    type(p, 'sup-010', '400');
+    type(p, 'sup-002', '120');
+    type(p, 'sup-010', '80');
     expect(p.getByTestId('fc-move-total')).toHaveTextContent(
-      'Moving 1,000 KG · Left as an exception 300 KG'
+      'Moving 200 KG · Left as an exception 100 KG'
     );
     fireEvent.change(p.getByLabelText('Note'), { target: { value: 'Half from each' } });
     fireEvent.click(p.getByTestId('fc-action-submit'));
-    await waitFor(() => expect(sourceLine()?.forecastQty).toBe(800));
-    // Still an exception: Move demand is offered again on the remaining 300 kg.
+    await waitFor(() => expect(sourceLine()?.forecastQty).toBe(200));
+    // Still an exception: Move demand is offered again on the remaining 100 kg.
     fireEvent.click(
       await screen.findByRole(
         'button',
@@ -228,10 +230,10 @@ describe('CAP-8 AC-01 — a shortfall split across two suppliers', () => {
       )
     );
     const again = panel();
-    expect(again.getByTestId('fc-move-shortfall')).toHaveTextContent('Shortfall 300 KG');
+    expect(again.getByTestId('fc-move-shortfall')).toHaveTextContent('Shortfall 100 KG');
     expect(again.getAllByTestId('fc-move-log').map((li) => li.textContent)).toEqual([
-      expect.stringContaining(`Moved 600 KG to ${SUP002_NAME}: Half from each`),
-      expect.stringContaining(`Moved 400 KG to ${SUP010_NAME}: Half from each`)
+      expect.stringContaining(`Moved 120 KG to ${SUP002_NAME}: Half from each`),
+      expect.stringContaining(`Moved 80 KG to ${SUP010_NAME}: Half from each`)
     ]);
   });
 });
@@ -241,18 +243,16 @@ describe('CAP-8 AC-02 / BR-03 / BR-04 / BR-06 — refusal, warning and note', ()
     await makeShortfall();
     const p = await openMove();
     fireEvent.change(p.getByLabelText('Note'), { target: { value: 'x' } });
-    type(p, 'sup-002', '800');
+    type(p, 'sup-002', '200');
     // Control: within the shortfall, nothing is refused and the confirm is on.
     expect(p.queryByTestId('fc-move-refusal')).toBeNull();
     expect(p.getByTestId('fc-action-submit')).toBeEnabled();
-    type(p, 'sup-010', '501');
-    expect(p.getByTestId('fc-move-refusal')).toHaveTextContent(
-      'More than the shortfall of 1,300 KG'
-    );
+    type(p, 'sup-010', '101');
+    expect(p.getByTestId('fc-move-refusal')).toHaveTextContent('More than the shortfall of 300 KG');
     expect(p.getByTestId('fc-move-refusal')).not.toHaveClass('sr-only');
     const confirm = p.getByTestId('fc-action-submit');
     expect(confirm).toBeDisabled();
-    expect(confirm).toHaveAccessibleDescription('More than the shortfall of 1,300 KG');
+    expect(confirm).toHaveAccessibleDescription('More than the shortfall of 300 KG');
     fireEvent.click(confirm);
     expect(forecastVersionStore.get('FC-RM-V3')).toBeUndefined();
   });
@@ -260,29 +260,29 @@ describe('CAP-8 AC-02 / BR-03 / BR-04 / BR-06 — refusal, warning and note', ()
   it('BR-04 — above a target’s headroom warns on that row and does not block', async () => {
     await makeShortfall();
     const p = await openMove();
-    type(p, 'sup-002', '942');
+    type(p, 'sup-002', '200');
     // Control: at the headroom, no warning.
     expect(p.queryByTestId('fc-move-warn-sup-002')).toBeNull();
-    type(p, 'sup-002', '1000');
+    type(p, 'sup-002', '250');
     expect(p.getByTestId('fc-move-warn-sup-002')).toHaveTextContent(
-      'Above this supplier’s headroom of 942 KG. You can still move it.'
+      'Above this supplier’s headroom of 200 KG. You can still move it.'
     );
     expect(p.getByTestId('fc-move-qty-sup-002')).toHaveAccessibleDescription(
-      'Above this supplier’s headroom of 942 KG. You can still move it.'
+      'Above this supplier’s headroom of 200 KG. You can still move it.'
     );
     // Unknown headroom never warns.
-    type(p, 'sup-010', '300');
+    type(p, 'sup-010', '50');
     expect(p.queryByTestId('fc-move-warn-sup-010')).toBeNull();
     fireEvent.change(p.getByLabelText('Note'), { target: { value: 'Over capacity on purpose' } });
     expect(p.getByTestId('fc-action-submit')).toBeEnabled();
     fireEvent.click(p.getByTestId('fc-action-submit'));
-    await waitFor(() => expect(sourceLine()?.forecastQty).toBe(500));
+    await waitFor(() => expect(sourceLine()?.forecastQty).toBe(100));
   });
 
   it('BR-06 — the note stays required: a valid split waits for it', async () => {
     await makeShortfall();
     const p = await openMove();
-    type(p, 'sup-002', '800');
+    type(p, 'sup-002', '200');
     const confirm = p.getByTestId('fc-action-submit');
     expect(confirm).toBeDisabled();
     expect(confirm).toHaveAccessibleDescription('Required. The supplier can read it.');

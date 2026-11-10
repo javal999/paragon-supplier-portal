@@ -7,7 +7,7 @@
 //   · Packaging (weekly, then monthly) — version 1 ten days ago, version 2
 //     three days ago. sup-007 PT Sample Packaging supplies both bottles and
 //     shares PK-PETB-8801 with sup-012.
-//   · Raw material (monthly) — version 1 four weeks ago, version 2 an
+//   · Raw material (weekly, then monthly, as packaging: PEX-2 BR-04, BL-282) — version 1 four weeks ago, version 2 an
 //     emergency re-publication THIS MORNING (Monday 10:00 WIB — moved from four
 //     days ago for the BL-48 demo, below). sup-002 PT Sample Specialty Fats
 //     supplies both materials and shares RM-EMUL-9410 with sup-005, a
@@ -165,7 +165,9 @@ const RM_V2 = version(
 export const FORECAST_VERSION_SEED = [PK_V1, PK_V2, RM_V1, RM_V2];
 
 const PK_WEEKS = generatePeriods('packaging', PK_V2_AT).map((p) => p.id);
-const RM_MONTHS = generatePeriods('rawMaterial', RM_V2_AT).map((p) => p.id);
+const RM_PERIODS = generatePeriods('rawMaterial', RM_V2_AT).map((p) => p.id);
+/** The raw-material period the later answers sit on: a week past the lead time (the old third month began 61 days out). */
+const RM_LATER = 9;
 
 /** @type {Provenance} */
 const PROV_SUBMITTED = { source: 'SUPPLIER', liveness: 'SIMULATED', planState: 'committed' };
@@ -179,7 +181,7 @@ let seq = 0;
  * @param {string} supplierId
  * @param {string} materialCode
  * @param {string} periodBucket
- * @param {{ qty?: number; reason?: string; upside?: number; draft?: boolean; ack?: string }} answer
+ * @param {{ qty?: number; ratio?: number; reason?: string; upside?: number; draft?: boolean; ack?: string }} answer
  * @param {string} submittedAt
  * @returns {RequirementResponse}
  */
@@ -218,7 +220,11 @@ function commit(pub, supplierId, materialCode, periodBucket, answer, submittedAt
     ...(answer.draft ? {} : { submittedAt }),
     status: answer.draft ? 'Draft' : 'Submitted',
     forecastConfirmation: {
-      confirmedQty: answer.qty ?? line.forecastQty,
+      confirmedQty:
+        answer.qty ??
+        (answer.ratio === undefined
+          ? line.forecastQty
+          : Math.round(line.forecastQty * answer.ratio)),
       uom: line.uom,
       committedDate: periodBounds(periodBucket).start,
       ...(answer.upside !== undefined ? { upsideQty: answer.upside } : {})
@@ -293,8 +299,8 @@ export const FORECAST_COMMITMENT_SEED = [
     V2_PK_ANSWERED
   ),
   // — Raw material, answered on version 1 —
-  commit(RM_V1, 'sup-002', 'RM-EMUL-9410', RM_MONTHS[0], {}, V1_RM_ANSWERED),
-  commit(RM_V1, 'sup-002', 'RM-EMUL-9410', RM_MONTHS[1], {}, V1_RM_ANSWERED),
+  commit(RM_V1, 'sup-002', 'RM-EMUL-9410', RM_PERIODS[0], {}, V1_RM_ANSWERED),
+  commit(RM_V1, 'sup-002', 'RM-EMUL-9410', RM_PERIODS[1], {}, V1_RM_ANSWERED),
   // BL-48 demo: sup-005 has NOT answered its Firm month, so on this morning's
   // version it is due tomorrow (Tuesday 1 September 10:00 WIB). It used to
   // carry a version-1 commitment here.
@@ -303,25 +309,27 @@ export const FORECAST_COMMITMENT_SEED = [
     RM_V2,
     'sup-002',
     'RM-STEAR-7300',
-    RM_MONTHS[0],
-    { qty: 10000, reason: 'capacity' },
+    RM_PERIODS[0],
+    // BL-282 — the periods are weeks now: 2,300 of the week's 2,900 (21% short;
+    // 10,000 of a month's 12,600 before).
+    { qty: 2300, reason: 'capacity' },
     V2_RM_ANSWERED
   ),
-  commit(RM_V2, 'sup-002', 'RM-STEAR-7300', RM_MONTHS[1], { qty: 14000 }, V2_RM_ANSWERED),
+  commit(RM_V2, 'sup-002', 'RM-STEAR-7300', RM_PERIODS[1], { qty: 3100 }, V2_RM_ANSWERED),
   commit(
     RM_V2,
     'sup-002',
     'RM-EMUL-9410',
-    RM_MONTHS[2],
-    { qty: 3800, reason: 'quality' },
+    RM_PERIODS[RM_LATER],
+    { ratio: 0.63, reason: 'quality' },
     V2_RM_ANSWERED
   ),
   commit(
     RM_V2,
     'sup-002',
     'RM-STEAR-7300',
-    RM_MONTHS[2],
-    { draft: true, qty: 9000, reason: 'capacity' },
+    RM_PERIODS[RM_LATER],
+    { draft: true, ratio: 0.84, reason: 'capacity' },
     V2_RM_ANSWERED
   )
 ];
@@ -372,4 +380,4 @@ export const FORECAST_RELATIONSHIPS = [
 
 /** Exported for tests: the period ids of the seeded current versions. */
 export const SEEDED_PACKAGING_WEEKS = PK_WEEKS;
-export const SEEDED_RAW_MATERIAL_MONTHS = RM_MONTHS;
+export const SEEDED_RAW_MATERIAL_PERIODS = RM_PERIODS;

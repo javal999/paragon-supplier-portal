@@ -104,7 +104,9 @@ describe('CAP-12 — Open supply and Gap rows', () => {
 });
 
 // BL-228 — sup-002 × RM-EMUL-9410 carries W37's call-off above its figure into
-// the next weeks: the owner's example, in the sample data.
+// the next week: the owner's example, in the sample data. (BL-282: weekly raw
+// material — W37's 2,000 against 1,200 carries 800 into W38, whose gap is 200;
+// it was 40 carried into W39, gap 940, on the monthly figures.)
 describe('BL-228 — a gap the carry reduced says so', () => {
   const CARRY_KEY = 'sup-002-RM-EMUL-9410';
 
@@ -118,9 +120,9 @@ describe('BL-228 — a gap the carry reduced says so', () => {
     const carried = row?.weeks.filter((w) => w.gap !== null && w.carriedIn > 0) ?? [];
     const plain = row?.weeks.find((w) => w.gap !== null && w.carriedIn === 0);
     expect(carried.map((w) => [w.week, w.carriedIn, w.gap])).toContainEqual([
-      '2026-09-21',
-      40,
-      940
+      '2026-09-14',
+      800,
+      200
     ]);
     expect(plain).toBeDefined();
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
@@ -140,9 +142,9 @@ describe('BL-228 — a gap the carry reduced says so', () => {
     await i18n.changeLanguage('id');
     renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route: ROUTE });
     await openAllWeeks();
-    expect(screen.getByTestId(`dant-gap-${CARRY_KEY}-2026-09-21`)).toHaveAttribute(
+    expect(screen.getByTestId(`dant-gap-${CARRY_KEY}-2026-09-14`)).toHaveAttribute(
       'title',
-      '40 terbawa dari minggu sebelumnya'
+      '800 terbawa dari minggu sebelumnya'
     );
   });
 });

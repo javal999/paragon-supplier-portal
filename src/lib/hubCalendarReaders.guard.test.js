@@ -348,7 +348,9 @@ describe('BL-50 · the deadline population reads the hub calendar', () => {
       // Material B3 — an API week is judged on the cycle's working days (MR-2 BR-02).
       'services/transitions/updateCompliance.js',
       'services/transitions/updateCycle.js',
-      'services/transitions/workingCalendarStore.js'
+      'services/transitions/workingCalendarStore.js',
+      // BL-283 — a month's capacity is spread to its weeks by working days (PEX-1 BR-02).
+      'services/transitions/zoneCapacityLeftRules.js'
     ]);
   });
 

@@ -22,7 +22,8 @@ export const forecastCollaborationEn = {
   'fc.stream.rawMaterial': 'Raw material',
   'fc.cadence.packaging':
     'Published weekly: weekly periods for 17 weeks, then monthly up to month 12.',
-  'fc.cadence.rawMaterial': 'Published monthly: monthly periods up to month 12.',
+  'fc.cadence.rawMaterial':
+    'Published weekly: weekly periods for 17 weeks, then monthly up to month 12.',
 
   'fc.zone.firm': 'Zone Liability',
   'fc.zone.tradeOff': 'Zone Capacity',
@@ -122,6 +123,7 @@ export const forecastCollaborationEn = {
   'fc.sup.tab.changes': 'Changes',
   'fc.sup.downloadForecast': 'Download forecast',
   'fc.sup.ackOnly': 'Zone Capacity: acknowledge that you have seen it. No commitment is needed.',
+  'fc.sup.capacityLeft': 'Capacity left (confirmed capacity − liabilities and open commitments):',
   // PEX-2 (BL-265) — the commitments grid: periods as columns, row labels pinned left.
   'fc.sup.grid.label': '{{material}}: commitments per period',
   'fc.sup.grid.scrollHint':
@@ -330,7 +332,8 @@ export const forecastCollaborationId = {
   'fc.stream.rawMaterial': 'Bahan baku',
   'fc.cadence.packaging':
     'Terbit mingguan: periode mingguan selama 17 minggu, lalu bulanan hingga bulan ke-12.',
-  'fc.cadence.rawMaterial': 'Terbit bulanan: periode bulanan hingga bulan ke-12.',
+  'fc.cadence.rawMaterial':
+    'Terbit mingguan: periode mingguan selama 17 minggu, lalu bulanan hingga bulan ke-12.',
 
   'fc.zone.firm': 'Zone Liability',
   'fc.zone.tradeOff': 'Zone Capacity',
@@ -426,6 +429,8 @@ export const forecastCollaborationId = {
   'fc.sup.tab.changes': 'Perubahan',
   'fc.sup.downloadForecast': 'Unduh prakiraan',
   'fc.sup.ackOnly': 'Zone Capacity: tandai bahwa Anda sudah melihatnya. Tidak perlu komitmen.',
+  'fc.sup.capacityLeft':
+    'Sisa kapasitas (kapasitas terkonfirmasi − kewajiban dan komitmen terbuka):',
   // PEX-2 (BL-265) — grid komitmen: periode sebagai kolom, label baris tetap di kiri.
   'fc.sup.grid.label': '{{material}}: komitmen per periode',
   'fc.sup.grid.scrollHint':

@@ -31,7 +31,7 @@ import { expectNoBareDa } from '@test/noBareDa';
 
 const PLANNER = { ...BUYER, businessRoles: SEEDED_SEAT_ROLES.buyer };
 const ROUTE = '/buyer/demand-anticipation';
-// sup-002 × RM-STEAR-7300 — one supplier; W36 is published at 3,220 KG by the seed.
+// sup-002 × RM-STEAR-7300 — one supplier; W36 is published at 3,550 KG by the seed (BL-282; 3,220 on monthly lines).
 const KEY = 'sup-002-RM-STEAR-7300';
 const W36 = '2026-08-31';
 
@@ -108,8 +108,9 @@ describe('recording consumption (typed)', () => {
     );
     expect(within(card).getByText('Recorded consumption')).toBeInTheDocument();
     // DRC-4 BR-02 replaced absorbing an excess: the published figure stays.
-    // LTP 2,520 + safety order 950 (13-week SD, Team B2) in week 1.
-    expect(within(card).getByTestId(`dant-figure-${KEY}-${W36}`)).toHaveTextContent('3,470');
+    // LTP 2,900 + safety order 650 (13-week SD, Team B2) in week 1 (BL-282: weekly
+    // lines; it was 2,520 + 950 on the monthly lines spread by day).
+    expect(within(card).getByTestId(`dant-figure-${KEY}-${W36}`)).toHaveTextContent('3,550');
     expect(within(card).queryByTestId(/^dant-absorbed-/)).toBeNull();
     expectNoAbbreviation();
   });

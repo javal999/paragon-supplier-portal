@@ -1,8 +1,11 @@
 /** @import React from 'react' */
 import { useTranslation } from 'react-i18next';
 import Button from '@components/ui-v2/Button';
+import Data from '@components/ui-v2/Data';
+import { formatNumber } from '@lib/format';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 /** @import { ForecastCommitmentLine } from '@services/data/types' */
+/** @import { CapacityLeft } from '@services/transitions/zoneCapacityLeftRules' */
 /** @import { VerbAvailability } from '@services/transitions/handoff' */
 import { CommitmentDeadline, CommitmentStatePill, ZonePill } from '../../forecasts/forecastDisplay';
 import { CELL, DemandCell, HEAD } from './gridCells';
@@ -21,10 +24,20 @@ import { CELL, DemandCell, HEAD } from './gridCells';
  *   canAck: boolean;
  *   pending: boolean;
  *   ackAvail: VerbAvailability;
+ *   capacityLeft?: CapacityLeft;
  *   onAcknowledge: (l: ForecastCommitmentLine) => void;
  * }>}
  */
-const AcknowledgeColumn = ({ l, label, nowIso, canAck, pending, ackAvail, onAcknowledge }) => {
+const AcknowledgeColumn = ({
+  l,
+  label,
+  nowIso,
+  canAck,
+  pending,
+  ackAvail,
+  capacityLeft,
+  onAcknowledge
+}) => {
   const { t } = useTranslation();
   return (
     <div
@@ -48,6 +61,23 @@ const AcknowledgeColumn = ({ l, label, nowIso, canAck, pending, ackAvail, onAckn
       <div className={`${CELL} text-xs text-text-tertiary`}>—</div>
       <div className={`${CELL} row-span-3 max-w-[14rem]`}>
         <span className="text-xs text-text-tertiary">{t('fc.sup.ackOnly')}</span>
+        {capacityLeft && (
+          <p
+            className="mt-2 text-xs text-text-secondary"
+            data-testid={`fc-cap-left-${l.materialCode}-${l.periodBucket}`}
+          >
+            {capacityLeft.left === null ? (
+              t('capHeadsUp.noCapacity')
+            ) : (
+              <>
+                {t('fc.sup.capacityLeft')}{' '}
+                <Data>
+                  {formatNumber(capacityLeft.left)} {l.uom}
+                </Data>
+              </>
+            )}
+          </p>
+        )}
       </div>
       <div className={CELL}>
         <CommitmentStatePill line={l} nowIso={nowIso} />

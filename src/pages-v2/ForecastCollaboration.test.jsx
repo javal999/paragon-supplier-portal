@@ -19,7 +19,10 @@ import {
   forecastViewStore
 } from '@services/data/mock/stores/forecastHubStores';
 import { inventoryAlertLedger } from '@services/data/mock/stores/inventoryHubStores';
-import { SEEDED_PACKAGING_WEEKS as W } from '@services/data/mock/fixtures/forecastHub';
+import {
+  SEEDED_PACKAGING_WEEKS as W,
+  SEEDED_RAW_MATERIAL_PERIODS as M
+} from '@services/data/mock/fixtures/forecastHub';
 import { sdcClock } from '@services/sdc';
 import { formatDate } from '@lib/format';
 import i18n from '@lib/i18n';
@@ -207,7 +210,7 @@ describe('Supplier — Forecast & commitments (REQ-E06-01 SUP, REQ-E06-02)', () 
       `PK-PETB-8802,${W[0]},firm,42400,PCS,42400,not-a-date,,,`,
       `PK-PETB-8802,${W[1]},firm,38500,PCS,20000,${W[1]},,,`,
       `PK-PETB-8801,${W[0]},firm,34300,PCS,1.500,${W[0]},,,`,
-      `RM-STEAR-7300,2026-09,firm,12600,KG,12600,2026-09-01,,,`,
+      `RM-STEAR-7300,${M[0]},firm,2900,KG,2900,${M[0]},,,`,
       // PEX-D22 — a Trade-off row is saved as an acknowledgement, its quantity unread.
       `PK-PETB-8802,${W[6]},tradeOff,38500,PCS,20000,,,,`
     ].join('\n');
@@ -460,11 +463,12 @@ describe('PTI — Commitments & gaps (REQ-E06-03)', () => {
     expect(screen.getByTestId('fc-cumulative-PK-PETB-8802')).toBeInTheDocument();
     // Raw material: the Firm over-commit is information, and coverage is labelled an estimate.
     fireEvent.click(screen.getByRole('tab', { name: 'Raw material' }));
-    expect(await screen.findByTestId('fc-cell-sup-002-RM-STEAR-7300-2026-10')).toHaveTextContent(
+    // BL-282 — raw-material periods are weeks: 3,100 of 2,900 in the second week.
+    expect(await screen.findByTestId(`fc-cell-sup-002-RM-STEAR-7300-${M[1]}`)).toHaveTextContent(
       'Above forecast'
     );
-    // Red: the Firm September month, 10,000 of 12,600.
-    expect(screen.getByTestId('fc-cell-sup-002-RM-STEAR-7300-2026-09')).toHaveAttribute(
+    // Red: the first Firm week, 2,300 of 2,900.
+    expect(screen.getByTestId(`fc-cell-sup-002-RM-STEAR-7300-${M[0]}`)).toHaveAttribute(
       'data-colour',
       'red'
     );
@@ -627,7 +631,7 @@ describe('Alert, Home tasks and the Order summary', () => {
       identity: SUP_002,
       route: '/supplier/forecasts'
     });
-    const due = await screen.findByTestId('fc-due-RM-EMUL-9410-2026-10');
+    const due = await screen.findByTestId(`fc-due-RM-EMUL-9410-${M[5]}`);
     expect(due).toHaveAttribute('data-timing', 'open');
     expect(due.textContent).toMatch(/07 Sept? 2026, 10:00 WIB/);
     unmount();
@@ -659,10 +663,10 @@ describe('Alert, Home tasks and the Order summary', () => {
       'href',
       '/buyer/collaboration?po=po-016&supplier=sup-002&material=RM-STEAR-7300&from=order-summary'
     );
-    // PEX-D22 flipped po-002: it read Awaiting from sup-002's October
-    // emulsifier month, a Trade-off month that asks for no commitment now; its
-    // Zone Liability September month is confirmed.
-    expect(screen.getByTestId('order-summary-foresight-po-002')).toHaveTextContent('Confirmed');
+    // PEX-D22 flipped po-002 to Confirmed (its Trade-off month asks for no
+    // commitment). BL-282: sup-002's emulsifier now has five Zone Liability
+    // weeks and answered only the first (v1), so the other four read Awaiting.
+    expect(screen.getByTestId('order-summary-foresight-po-002')).toHaveTextContent('Awaiting');
     // Awaiting still shows, from sup-007's unanswered Zone Liability week (8802, W[0]).
     expect(screen.getByTestId('order-summary-foresight-po-008')).toHaveTextContent('Awaiting');
   });

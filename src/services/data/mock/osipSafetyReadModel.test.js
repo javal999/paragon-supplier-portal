@@ -51,23 +51,26 @@ describe('osipSafetyInputs — what the rules read', () => {
   it('RM-STEAR-7300 × sup-002: 7 lead-time weeks, 13 weeks of LTP [Team B2], MPQ = order multiple 25, outside Jabodetabek (Medan)', () => {
     const s = pair(all, 'RM-STEAR-7300', 'sup-002');
     expect(s.leadTimeWeeks).toBe(7);
+    // BL-282: the weeks are the weekly lines themselves (a week of 420 kg a day,
+    // to the 100 kg multiple, with the sample's changed weeks 3 and 5), not the
+    // monthly lines spread by day (2520, 2940, 2940, … before).
     expect(s.ltp).toEqual([
-      2520, 2940, 2940, 2940, 2937, 2935, 2935, 2935, 2873, 2497, 2497, 2497, 2497
+      2900, 2900, 2500, 2900, 3200, 2900, 2900, 2900, 2900, 2900, 2900, 2900, 2900
     ]);
     expect(s.mpq).toBe(25);
     expect(s.supplyArea).toBe('outsideJabodetabek');
     expect(s.supplierName).not.toBe('');
   });
 
-  it('…and its safety order by hand: [Team B2] SD of 13 weeks 217.40 × 1.65 × √7 = 949.05, up to the MPQ 25 → 950', () => {
+  it('…and its safety order by hand: [Team B2] SD of 13 weeks 144.12 × 1.65 × √7 = 629.14, up to the MPQ 25 → 650', () => {
     const s = pair(all, 'RM-STEAR-7300', 'sup-002');
     const r = osipSafety(s);
-    expect(r.safetyOrder.sd).toBeCloseTo(217.3982, 4);
-    expect(r.safetyOrder.value).toBe(950);
-    // The lead-time variant: SD of the 7 lead-time weeks 157.94 × 1.65 × √7 = 689.50 → 700.
+    expect(r.safetyOrder.sd).toBeCloseTo(144.1153, 4);
+    expect(r.safetyOrder.value).toBe(650);
+    // The lead-time variant: SD of the 7 lead-time weeks 203.54 × 1.65 × √7 = 888.55 → 900.
     const lt = osipSafety(s, { ...OSIP_RULES, sdSource: 'ltp' });
-    expect(lt.safetyOrder.sd).toBeCloseTo(157.9424, 4);
-    expect(lt.safetyOrder.value).toBe(700);
+    expect(lt.safetyOrder.sd).toBeCloseTo(203.5401, 4);
+    expect(lt.safetyOrder.value).toBe(900);
   });
 
   it('the supply area follows the supplier master: Tangerang = Jabodetabek, Germany = import', () => {
@@ -146,9 +149,12 @@ describe('osipSafetyInputs — recorded consumption, times the supplier share', 
     rec('2026-08-17', 1000);
     rec('2026-08-24', 2000);
     const all = osipSafetyInputs();
-    expect(pair(all, 'RM-EMUL-9410', 'sup-002').consumption).toEqual([700, 1400]);
+    // BL-282: the share is read from the lines, which are weekly now and round
+    // to the order multiple, so 0.7 reads 0.7119 (and 0.3 reads 0.2881).
+    const sup002 = pair(all, 'RM-EMUL-9410', 'sup-002').consumption;
+    expect(sup002.map((q) => Math.round(q))).toEqual([712, 1424]);
     expect(pair(all, 'RM-EMUL-9410', 'sup-005').consumption.map((q) => Math.round(q))).toEqual([
-      300, 600
+      288, 576
     ]);
   });
 });
