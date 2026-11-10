@@ -65,6 +65,7 @@ import AdminMrpControllers from '@pages-v2/admin/AdminMrpControllers';
 import BuyerTradeNames from '@pages-v2/materials/BuyerTradeNames';
 import { AdminAlertThresholds, AdminTolerances } from '@pages-v2/admin/AdminRuleValues';
 import AdminReasonCodes from '@pages-v2/admin/AdminReasonCodes';
+import AdminMasterDataFields from '@pages-v2/admin/AdminMasterDataFields';
 import RolesCatalogue from '@pages-v2/RolesCatalogue';
 import RoleDetail from '@pages-v2/RoleDetail';
 import Glossary from '@pages-v2/Glossary';
@@ -526,6 +527,13 @@ const ROUTES = [
     pattern: '/buyer/admin/reason-codes',
     at: '/buyer/admin/reason-codes',
     element: <AdminReasonCodes />,
+    identity: BUYER
+  },
+  {
+    name: 'buyer/admin/master-data-fields',
+    pattern: '/buyer/admin/master-data-fields',
+    at: '/buyer/admin/master-data-fields',
+    element: <AdminMasterDataFields />,
     identity: BUYER
   },
   {
