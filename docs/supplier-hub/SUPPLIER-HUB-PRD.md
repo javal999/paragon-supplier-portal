@@ -157,7 +157,7 @@ Acceptance criteria: TBD by the Foundation team. The hub **replaces PROCIO** for
   - Raw material and packaging can be viewed separately on the PTI view; the supplier view is one list unless the supplier supplies both.
   - Each supplier figure shows its last update time.
 - US-21:
-  - Template upload and manual entry work for suppliers, on one page, with the same fields; batch, manufacturing and expiry dates are optional.
+  - Template upload and manual entry work for suppliers, on one page, with the same fields; batch number, quantity and expiry date are required for raw materials and optional for packaging; the manufacturing date is optional (BL-289, owner 2026-11-10).
   - In-transit is taken from ASNs and dispatched call-offs and cannot be typed.
   - An API-connected supplier triggers a sync with a Sync button, and so can a PTI user on its behalf. A supplier retrieves PTI stock only for materials it has been granted.
   - Invalid template rows are listed with a reason, and valid rows are saved.

@@ -376,7 +376,7 @@ describe('the stock template and row-by-row validation (REQ-E08-02 BR-05 to BR-0
     expect(headers[0]).toBe('Material code');
     // BL-60 — ten stock columns; [Proposed 2026-11-10] plus K and L for feedstock.
     expect(headers).toHaveLength(12);
-    // [Proposed 2026-11-10] batch number, quantity and expiry are required for a
+    // [Owner, 2026-11-10] batch number, quantity and expiry are required for a
     // raw material, so only the manufacturing date still says "(optional)".
     expect(headers.slice(6)).toEqual([
       'Batch number',
@@ -750,7 +750,7 @@ describe('weeks', () => {
   });
 });
 
-describe('[Proposed 2026-11-10] raw material needs batches with expiry; feedstock rides the template', () => {
+describe('[Owner 2026-11-10] raw material needs batches with expiry; [Proposed] feedstock rides the template', () => {
   const rawCtx = {
     assigned: [
       { materialCode: 'RM-GLYC-0001', uom: 'KG', materialType: 'ROH' },

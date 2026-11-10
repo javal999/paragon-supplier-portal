@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// User feedback 2026-11-10 [Proposed, awaiting the owner's ruling]:
+// User feedback 2026-11-10 (item 1 Owner-ruled 2026-11-10, raw only):
 // 1. a raw material's stock entry needs its batches, each with an expiry date
 //    (the warehouse controls near-expiry stock by batch); packaging is unchanged;
 // 2. "Download template" sits in the Stock page header beside "Upload template".

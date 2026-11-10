@@ -3254,7 +3254,7 @@ bindPolicyHook(POLICY_HOOKS.INV_DECLARE_DETAIL_VALID, ({ payload, scope }) => {
       }`
     };
   }
-  // [Proposed, user feedback 2026-11-10] a raw material with stock above 0
+  // [Owner, 2026-11-10, raw only] a raw material with stock above 0
   // comes with its batches, each with an expiry date: the SAME
   // `rawMaterialBatchProblem` the form and the template validator run.
   const rawBatch = rawMaterialBatchProblem({

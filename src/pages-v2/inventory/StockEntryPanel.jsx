@@ -156,7 +156,7 @@ const StockEntryPanel = ({
   const today = dayOf(inventoryNow());
   const batchDates = batches.map((b) => batchDatesProblem(b, today));
   const batchDateInvalid = batchDates.some((d) => d !== null);
-  // [Proposed, user feedback 2026-11-10] raw material: batches with expiry required.
+  // [Owner, 2026-11-10, raw only] raw material: batches with expiry required.
   const isRaw = selected?.materialType === 'ROH';
   const rawBatch = rawMaterialBatchProblem({
     materialType: selected?.materialType,

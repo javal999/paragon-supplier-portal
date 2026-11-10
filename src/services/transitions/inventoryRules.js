@@ -647,7 +647,7 @@ export function maskForSupplier(p, grant) {
  * Whether a template column must be filled (MR-4, MAT-D4 owner ruling 2026-09-29):
  * - `required`: always.
  * - `requiredWhenInProduction`: only when the in-production quantity (E) is above 0.
- * - `requiredForRawMaterial`: [Proposed, user feedback 2026-11-10] required on a raw
+ * - `requiredForRawMaterial`: [Owner, 2026-11-10, raw only] required on a raw
  *   material (ROH) with stock above 0 (`rawMaterialBatchProblem`), optional on packaging.
  * - `optional`: may be left blank; its header carries " (optional)" / " (opsional)".
  */
@@ -804,12 +804,12 @@ export function batchDatesProblem(batch, today) {
   return null;
 }
 
-// ── Raw-material batches (user feedback 2026-11-10, [Proposed]) ─────────────
+// ── Raw-material batches (user feedback, Owner ruling 2026-11-10) ──────────
 
 /** @typedef {'rawMaterialBatchRequired' | 'rawMaterialExpiryRequired'} RawMaterialBatchProblem */
 
 /**
- * [Proposed, user feedback 2026-11-10 — awaiting the owner's ruling; it narrows
+ * [Owner, 2026-11-10, raw only — user feedback from the warehouse; it narrows
  * BR-06 "batch detail stays optional"] A RAW MATERIAL (ROH) with stock on hand
  * above 0 must come with its batches, and every batch must carry its expiry
  * date, because the warehouse controls near-expiry stock by batch. Packaging
