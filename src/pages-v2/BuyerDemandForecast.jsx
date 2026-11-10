@@ -23,7 +23,9 @@ import { useDemandForecast } from '@services/query/hooks';
 /** @import { EventFactor } from '@services/engine/eventCalendar' */
 /** @import { DemandForecastSkuView } from '@services/data/types' */
 /** @import { SeriesRange } from '@services/engine/demandRange' */
+/** @import { PromotionRow } from '@services/engine/promotions' */
 import DemandRangeSection from './demandForecast/DemandRangeSection';
+import PromotionPanel, { increaseText } from './demandForecast/PromotionPanel';
 import { FQ_FIRST_ROWS, firstRows } from './demandForecast/firstRows';
 import PurposeHeader from '@components/forecast/PurposeHeader';
 import SimulatedDataBanner from '@components/forecast/SimulatedDataBanner';
@@ -87,8 +89,8 @@ const roundNumber = (n) => formatNumber(Math.round(n));
 // read "+n", with the full list on hover.
 const EVENTS_SHOWN = 3;
 
-/** @type {React.FC<{ sku: DemandForecastSkuView; weeks: readonly string[]; events: DemandForecastRun['events']['horizon']; range: SeriesRange | null; asOf: string; }>} */
-const SkuDetail = ({ sku, weeks, events, range, asOf }) => {
+/** @type {React.FC<{ sku: DemandForecastSkuView; weeks: readonly string[]; events: DemandForecastRun['events']['horizon']; range: SeriesRange | null; asOf: string; history: readonly PromotionRow[]; }>} */
+const SkuDetail = ({ sku, weeks, events, range, asOf, history }) => {
   const { t } = useTranslation();
   const d = sku.detail;
   return (
@@ -231,6 +233,34 @@ const SkuDetail = ({ sku, weeks, events, range, asOf }) => {
             cell: (_w, i) => <Data>{sku.sapPlan ? formatNumber(sku.sapPlan[i]) : '—'}</Data>
           },
           {
+            // BL-235 — the weeks a planner marked as promoted, with the increase.
+            id: 'promotion',
+            label: t('df.detail.col.promotion'),
+            align: 'start',
+            combine: 'distinct',
+            hidden: sku.promotions.length === 0,
+            value: (_w, i) =>
+              sku.promotions.filter((p) => p.index === i).map(() => t('df.promo.mark')),
+            cell: (w, i) => {
+              const p = sku.promotions.find((x) => x.index === i);
+              if (!p) return null;
+              const increase = increaseText({ t, kind: p.kind, value: p.value });
+              return (
+                <span
+                  title={t('df.promo.mark.tip', {
+                    increase,
+                    before: formatNumber(p.forecast),
+                    after: formatNumber(p.forecast + p.lift)
+                  })}
+                  data-testid={`df-week-promotion-${w}`}
+                >
+                  <StatusPill variant="info">{t('df.promo.mark')}</StatusPill>
+                  <div className="text-xs text-text-secondary">{increase}</div>
+                </span>
+              );
+            }
+          },
+          {
             id: 'events',
             label: t('df.detail.col.events'),
             align: 'start',
@@ -253,6 +283,7 @@ const SkuDetail = ({ sku, weeks, events, range, asOf }) => {
           }
         ]}
       />
+      <PromotionPanel sku={sku} weeks={weeks} history={history} />
     </section>
   );
 };
@@ -706,6 +737,7 @@ const DemandForecastTab = ({ frame }) => {
           weeks={run.weeks}
           asOf={run.asOf}
           events={run.events.horizon}
+          history={run.promotionHistory}
           range={run.range.skus.find((r) => r.key === current.skuCode) ?? null}
         />
       )}

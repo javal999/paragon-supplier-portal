@@ -389,6 +389,9 @@ const LANE_BUNDLES = Object.freeze({
     // BL-267 (PEX-5) — the Material Planner uploads LTP A, Festive and B and
     // records the LTP choice per material (PEX-D12, proposed).
     'ltpinput:set',
+    // BL-235 (REQ-E14-08 BR-05) — the Material Planner enters, changes and
+    // withdraws a promotion for one SKU and week [Proposed].
+    'promotion:set',
     // DRC-17 (BL-202) — the Material Planner saves what-if scenarios. Analysis
     // only: the verb changes no plan, PO, call-off, level or setting (BR-06).
     'whatifscenario:save',

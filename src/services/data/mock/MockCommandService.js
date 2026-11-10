@@ -176,6 +176,7 @@ import { consumptionTarget } from './targets/consumption';
 import { osipLevelTarget } from './targets/osipLevel';
 import { osipParamTarget } from './targets/osipParam';
 import { ltpInputTarget } from './targets/ltpInput';
+import { promotionTarget } from './targets/promotion';
 import { capacityMonthTarget } from './targets/capacityMonth';
 // BL-202 — the what-if sandbox's saved scenarios (its own module, DRC-17).
 import { whatIfScenarioTarget } from './targets/whatIfScenario';
@@ -6294,6 +6295,7 @@ const TARGETS = {
   osipParam: osipParamTarget,
   // BL-267 (PEX-5) — LTP A, Festive, B uploads and the LTP choice, append-only.
   ltpInput: ltpInputTarget,
+  promotion: promotionTarget,
   // BL-269 (PEX-4) — the supplier's monthly capacity beyond the weekly buckets.
   capacityMonth: capacityMonthTarget,
   // DRC-17 BR-05 (BL-202) — a saved what-if scenario, append-only, analysis
