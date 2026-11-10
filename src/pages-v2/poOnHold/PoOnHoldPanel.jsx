@@ -63,6 +63,8 @@ const PoOnHoldPanel = ({ persona }) => {
   const [editing, setEditing] = useState(/** @type {string | null} */ (null));
   const [graceDraft, setGraceDraft] = useState('');
   const [noMoveDraft, setNoMoveDraft] = useState('');
+  const [pipoDraft, setPipoDraft] = useState('unset');
+  const [maxPtiDraft, setMaxPtiDraft] = useState('');
 
   const rows = query.data?.items ?? [];
   /** @param {PoOnHoldOption} o */
@@ -102,13 +104,16 @@ const PoOnHoldPanel = ({ persona }) => {
   const openSettings = (r) => {
     setGraceDraft(String(r.grace.graceDays));
     setNoMoveDraft(String(r.noMoveDays));
+    setPipoDraft(r.pipoIsDefault ? 'unset' : r.pipo ? 'yes' : 'no');
+    setMaxPtiDraft(r.maxPti === null ? '' : String(r.maxPti));
     setEditing(r.key);
   };
 
   const parsed = (/** @type {string} */ v) => (v.trim() === '' ? NaN : Number(v.trim()));
   const settingsInvalid =
     osipParamRefusal('grace', parsed(graceDraft)) !== null ||
-    osipParamRefusal('noMove', parsed(noMoveDraft)) !== null;
+    osipParamRefusal('noMove', parsed(noMoveDraft)) !== null ||
+    (maxPtiDraft.trim() !== '' && osipParamRefusal('maxPti', parsed(maxPtiDraft)) !== null);
 
   /** @param {PoOnHoldRow} r */
   const saveSettings = async (r) => {
@@ -124,6 +129,27 @@ const PoOnHoldPanel = ({ persona }) => {
         supplierId: r.supplierId,
         materialCode: r.materialCode,
         value
+      });
+      if (result.status === 'failed') return refused(result);
+    }
+    // PEX-8 FG data [Proposed]: PIPO per material, Max PTI per supplier × material.
+    const pipo = pipoDraft === 'yes' ? true : pipoDraft === 'no' ? false : null;
+    if (!(pipo === null ? r.pipoIsDefault : !r.pipoIsDefault && pipo === r.pipo)) {
+      const result = await setParam.mutateAsync({
+        param: 'pipo',
+        supplierId: r.supplierId,
+        materialCode: r.materialCode,
+        value: pipo
+      });
+      if (result.status === 'failed') return refused(result);
+    }
+    const maxPti = maxPtiDraft.trim() === '' ? null : parsed(maxPtiDraft);
+    if (maxPti !== r.maxPti) {
+      const result = await setParam.mutateAsync({
+        param: 'maxPti',
+        supplierId: r.supplierId,
+        materialCode: r.materialCode,
+        value: maxPti
       });
       if (result.status === 'failed') return refused(result);
     }
@@ -183,6 +209,29 @@ const PoOnHoldPanel = ({ persona }) => {
                   data-testid={`poh-nomove-input-${r.key}`}
                 />
               </label>
+              <label className="block">
+                <span className={labelClass}>{t('poh.settings.pipo')}</span>
+                <select
+                  className={fieldClass}
+                  value={pipoDraft}
+                  onChange={(e) => setPipoDraft(e.target.value)}
+                  data-testid={`poh-pipo-input-${r.key}`}
+                >
+                  <option value="unset">{t('poh.settings.pipo.unset')}</option>
+                  <option value="yes">{t('poh.settings.pipo.yes')}</option>
+                  <option value="no">{t('poh.settings.pipo.no')}</option>
+                </select>
+              </label>
+              <label className="block">
+                <span className={labelClass}>{t('poh.settings.maxPti')}</span>
+                <input
+                  className={fieldClass}
+                  inputMode="numeric"
+                  value={maxPtiDraft}
+                  onChange={(e) => setMaxPtiDraft(e.target.value)}
+                  data-testid={`poh-maxpti-input-${r.key}`}
+                />
+              </label>
               {settingsInvalid && (
                 <p className="text-sm text-danger" role="alert">
                   {t('poh.settings.invalid')}
@@ -222,9 +271,9 @@ const PoOnHoldPanel = ({ persona }) => {
   const missingFacts = (r) =>
     isPti ? (
       <>
-        {r.pipo === null && (
+        {(r.pipo === null || r.pipoIsDefault) && (
           <span className={note} data-testid={`poh-fact-pipo-${r.key}`}>
-            {t('poh.fact.pipo')}
+            {t(r.pipo === null ? 'poh.fact.pipo' : 'poh.fact.pipoDefault')}
           </span>
         )}
         {r.daysSinceMovement === null && (
@@ -310,6 +359,91 @@ const PoOnHoldPanel = ({ persona }) => {
     );
   };
 
+  /**
+   * PEX-8 BR-02/BR-05 — the end of the grace period: "scheduled for <date>"
+   * before it, "executed" with what was created after it. The planner also
+   * reads what it would do now (read only).
+   * @param {PoOnHoldRow} r
+   */
+  const execView = (r) => {
+    const ex = r.execution;
+    if (!r.decision) return null;
+    const plan = ex.plan;
+    const planLines = plan ? (
+      <>
+        {plan.callOffs.map((c) => (
+          <span
+            key={`${c.lineId}-${c.week ?? 'fs'}`}
+            className={note}
+            data-testid={`poh-exec-calloff-${r.key}`}
+          >
+            {t('poh.exec.callOff')} <Qty value={c.qty} uom={r.uom} /> · {t('poh.exec.needBy')}{' '}
+            <Data className="whitespace-nowrap">{formatDate(c.needDate)}</Data>
+            {c.week ? (
+              <>
+                {' '}
+                · {t('poh.exec.weekOf')} <Data>{formatDate(c.week)}</Data>
+              </>
+            ) : null}
+          </span>
+        ))}
+        {plan.absorbed.map((a) => (
+          <span key={a.lineId} className={note} data-testid={`poh-exec-absorbed-${r.key}`}>
+            {t('poh.exec.absorbed')} <Data>{a.poNumber}</Data>: <Qty value={a.qty} uom={r.uom} />
+          </span>
+        ))}
+        {plan.callOffs.length === 0 && plan.absorbed.length === 0 && (
+          <span className={note}>{t('poh.exec.nothing')}</span>
+        )}
+        {plan.stayOnHoldQty > 0 && (
+          <span className={note} data-testid={`poh-exec-stays-${r.key}`}>
+            {t('poh.exec.stays')} <Qty value={plan.stayOnHoldQty} uom={r.uom} />
+          </span>
+        )}
+      </>
+    ) : null;
+    if (ex.status === 'executed' && ex.record) {
+      return (
+        <div className="mt-1" data-testid={`poh-exec-${r.key}`} data-exec="executed">
+          <span className="block text-sm">
+            {t('poh.exec.executed')}{' '}
+            <Data className="whitespace-nowrap">{formatDate(ex.record.at)}</Data>{' '}
+            {t('poh.exec.bySystem')}
+            {ex.record.standing === 'noSupplierResponse'
+              ? ` (${t('poh.exec.noSupplierResponse')})`
+              : ''}
+            {ex.record.callOffIds.length > 0 ? (
+              <>
+                {' · '}
+                {t('poh.exec.created')} <Data>{ex.record.callOffIds.length}</Data>{' '}
+                {t('poh.exec.callOffs')}
+              </>
+            ) : null}
+          </span>
+          {planLines}
+        </div>
+      );
+    }
+    return (
+      <div className="mt-1" data-testid={`poh-exec-${r.key}`} data-exec={ex.status}>
+        {ex.status === 'blocked' && plan?.blocked ? (
+          <span className="block text-sm">{t(`poh.exec.blocked.${plan.blocked}`)}</span>
+        ) : (
+          <span className="block text-sm">
+            {t('poh.exec.scheduled')}{' '}
+            <Data className="whitespace-nowrap">{formatDate(ex.runsOn)}</Data>
+          </span>
+        )}
+        {isPti && plan && (
+          <div data-testid={`poh-exec-preview-${r.key}`}>
+            <span className={`${note} font-medium`}>{t('poh.exec.preview')}</span>
+            {planLines}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   /** @param {PoOnHoldRow} r */
   const decisionCell = (r) => {
     const status = (
@@ -324,6 +458,7 @@ const PoOnHoldPanel = ({ persona }) => {
         return (
           <>
             {status}
+            {execView(r)}
             {outcomeLines(r)}
             {fulfilBy(r)}
           </>
@@ -368,6 +503,7 @@ const PoOnHoldPanel = ({ persona }) => {
       return (
         <>
           {status}
+          {execView(r)}
           {outcomeLines(r)}
           {fulfilBy(r)}
         </>

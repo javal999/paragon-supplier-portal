@@ -149,6 +149,7 @@ export function fgCap(f) {
  *   readonly demand: number;
  *   readonly daysSinceMovement: number | null;
  *   readonly noMoveDays: number;
+ *   readonly capKnown?: boolean;
  * }} OptionFacts
  */
 
@@ -170,7 +171,8 @@ export function optionConditions(f) {
   return {
     fsOnly: f.pipo === true || noDemand,
     fsSpread: f.demand > 0,
-    fg: f.pipo === false && noDemand && noMovement
+    // `capKnown` false (Max PTI not on record): FG would absorb nothing, so it is not offered.
+    fg: f.pipo === false && noDemand && noMovement && f.capKnown !== false
   };
 }
 
@@ -223,12 +225,19 @@ export function outcomeOf(option, qty, cap) {
 }
 
 /**
- * PEX-8 BR-05 — one step of a decision's history; append-only.
+ * PEX-8 BR-05 — one step of a decision's history; append-only. The first two
+ * are a person's; `executed` is the system's own act at the end of the grace
+ * period (a machine act: no person named, never dressed as unattributed).
  * @typedef {{
  *   readonly kind: 'suggested' | 'chosen';
  *   readonly option: PoOnHoldOption;
  *   readonly at: string;
  *   readonly actor: import('@lib/enforcement').ActorAttribution;
+ * } | {
+ *   readonly kind: 'executed';
+ *   readonly option: PoOnHoldOption;
+ *   readonly at: string;
+ *   readonly actor: 'system';
  * }} DecisionEvent
  */
 

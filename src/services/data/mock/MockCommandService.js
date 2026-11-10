@@ -37,6 +37,7 @@ import {
   createDispatcher,
   InMemoryAuditSink,
   atomsForSeat,
+  AUTOMATION_ROLE,
   customRoleStore,
   isSystemRole,
   SYSTEM_ROLES,
@@ -189,6 +190,8 @@ import { supplierAskTarget } from './targets/supplierAsk';
 // INV-D8 — PTI's capacity gap decision (its own module).
 import { capacityDecisionTarget } from './targets/capacityDecision';
 import { poOnHoldDecisionTarget } from './targets/poOnHoldDecision';
+import { poOnHoldStore } from './stores/poOnHoldStore';
+import { allPoOnHold } from './poOnHoldReadModel';
 // Material G1 — the qualification lists (its own module, MAT-R13).
 import { qualificationRuleTarget } from './targets/qualificationRule';
 // Material G2 — the sourcing type map (its own module, MAT-R13) and bidding
@@ -6670,6 +6673,34 @@ const dispatcher = createDispatcher({
  */
 export const settleCommand = dispatcher.settle;
 
+/**
+ * PEX-8 BR-02/BR-05 — the end of a PO On Hold grace period. The hub follows
+ * the same pattern as the ROP Fisik trigger and the alert observers: no timer,
+ * the check runs around every command (and `runDuePoOnHoldExecutions` is the
+ * seam a job would call). A line that is due is executed ONCE by the system
+ * through its own verb, under the automation grant. Cheap when nothing is
+ * pending: it looks at the decisions first, and reads nothing else.
+ * @returns {Promise<number>} How many lines it executed.
+ */
+export async function runDuePoOnHoldExecutions() {
+  if (!poOnHoldStore.all().some((d) => d.state !== 'Executed')) return 0;
+  let n = 0;
+  for (const row of allPoOnHold()) {
+    if (row.closed || !row.decision || row.execution.status !== 'due') continue;
+    const result = await dispatcher.dispatch(
+      { personaType: 'buyer', supplierId: null, businessRoles: [AUTOMATION_ROLE] },
+      {
+        transitionId: 't_poonhold_execute',
+        entity: 'poOnHoldDecision',
+        entityId: row.decision.id,
+        payload: {}
+      }
+    );
+    if (result.status !== 'failed') n += 1;
+  }
+  return n;
+}
+
 /** @implements {ICommandService} */
 export class MockCommandService {
   /**
@@ -6691,6 +6722,8 @@ export class MockCommandService {
     // BL-199 (DRC-13 BR-04) — and any PTI SOH update not yet checked, before
     // the command reads the call-off store.
     observeTriggers();
+    // PEX-8 — and any PO On Hold line whose grace period has ended.
+    await runDuePoOnHoldExecutions();
     const result = await dispatcher.dispatch(scope, input, causationId);
     // REQ-E08-05 BR-05 — only a command changes the figures an alert reads, so
     // after one lands, record which closed alerts' conditions have cleared.
@@ -6698,6 +6731,7 @@ export class MockCommandService {
       observeAlertConditions();
       observeNpdTags();
       observeTriggers();
+      await runDuePoOnHoldExecutions();
     }
     return result;
   }

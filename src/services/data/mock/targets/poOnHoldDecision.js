@@ -17,6 +17,7 @@ import { sdcClock } from '../../../sdc';
 import { NO_PERSON } from '@context/noPerson';
 import { poOnHoldStore } from '../stores/poOnHoldStore';
 import { poOnHoldFor } from '../poOnHoldReadModel';
+import { executePoOnHold } from '../poOnHoldExecutor';
 import { isKnownSupplier } from '../supplierMaster';
 
 /**
@@ -30,7 +31,12 @@ export const poOnHoldDecisionTarget = {
   readState: (id) => poOnHoldStore.get(id)?.state ?? null,
   readScopeOwner: (id) => poOnHoldStore.get(id)?.supplierId ?? null,
   readEntity: (id) => poOnHoldStore.get(id) ?? null,
-  applyTransition: (id, _toState, payload, scope) => {
+  applyTransition: (id, toState, payload, scope) => {
+    // PEX-8 — the end of the grace period: the system runs the option that stands.
+    if (toState === 'Executed') {
+      executePoOnHold(id);
+      return;
+    }
     // The policy hook has already refused every payload this could not store.
     const option = /** @type {import('../../../transitions/poOnHold').PoOnHoldOption} */ (
       str(payload.option)
@@ -98,6 +104,28 @@ bindPolicyHook(POLICY_HOOKS.PO_ON_HOLD_CHOOSABLE, ({ entityId, payload }) => {
     return {
       ok: false,
       reason: 'PO_ON_HOLD_GRACE_ENDED: the grace period is over; the planner’s suggestion applies'
+    };
+  return { ok: true };
+});
+
+// PEX-8 BR-02/BR-05 — the execution runs when the line is still on hold, the
+// grace period has ended, an option stands and the facts it needs are on record.
+bindPolicyHook(POLICY_HOOKS.PO_ON_HOLD_EXECUTABLE, ({ entityId }) => {
+  const d = poOnHoldStore.get(entityId);
+  const line = d ? poOnHoldFor(d.supplierId, d.materialCode) : undefined;
+  if (!line || line.decision?.id !== entityId)
+    return { ok: false, reason: 'PO_ON_HOLD_NO_LINE: this line is no longer on hold' };
+  if (!line.grace.ended)
+    return { ok: false, reason: 'PO_ON_HOLD_GRACE_RUNNING: the grace period has not ended' };
+  if (line.effective === null)
+    return {
+      ok: false,
+      reason: 'PO_ON_HOLD_NO_OPTION: no option stands; the line is with the planner'
+    };
+  if (line.execution.plan?.blocked)
+    return {
+      ok: false,
+      reason: `PO_ON_HOLD_BLOCKED: ${line.execution.plan.blocked === 'noCap' ? 'the FG cap cannot be computed' : 'no lead time on record'}`
     };
   return { ok: true };
 });

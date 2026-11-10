@@ -367,6 +367,7 @@ export const TRANSITION_PURPOSE = Object.freeze({
   // PEX-8 — PO On Hold: the planner suggests, the supplier chooses.
   t_poonhold_suggest: { purposeKey: 'processFlows.purpose.t_poonhold_suggest' },
   t_poonhold_choose: { purposeKey: 'processFlows.purpose.t_poonhold_choose' },
+  t_poonhold_execute: { purposeKey: 'processFlows.purpose.t_poonhold_execute' },
   // BL-227 — PTI undoes an acceptance.
   t_capacitydecision_withdraw: { purposeKey: 'processFlows.purpose.t_capacitydecision_withdraw' },
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — RFx management.

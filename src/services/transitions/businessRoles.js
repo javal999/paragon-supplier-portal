@@ -737,7 +737,9 @@ export const AUTOMATION_ATOMS = Object.freeze([
   // from describing a machine that no longer exists. Their `compliance:*` twins
   // STAY — that flow is untouched and its verbs are still `system`.
   'compliance:verify',
-  'compliance:reject'
+  'compliance:reject',
+  // PEX-8 — the end of a PO On Hold grace period runs by itself. A machine act only: no bundle holds it.
+  'poonhold:execute'
 ]);
 
 /**

@@ -46,7 +46,7 @@
 /** @import { OsipRules, SupplyArea } from './osipRules' */
 import { OSIP_RULES } from './osipRules';
 
-/** @typedef {'z' | 'g' | 'f' | 'pullAgreement' | 'bottleneckLeadTimeDays' | 'safetyStockOn' | 'protectionBufferOn' | 'grace' | 'noMove'} OsipParam */
+/** @typedef {'z' | 'g' | 'f' | 'pullAgreement' | 'bottleneckLeadTimeDays' | 'safetyStockOn' | 'protectionBufferOn' | 'grace' | 'noMove' | 'pipo' | 'maxPti'} OsipParam */
 
 /** @typedef {'material' | 'supplier' | 'supplierMaterial'} OsipParamScope */
 
@@ -106,6 +106,17 @@ export const OSIP_PARAMS = Object.freeze({
     integer: true,
     min: 0,
     max: 365
+  }),
+  // PEX-8 BR-02/BR-03 FG data [Proposed, owner away 2026-11-10]: the PIPO flag
+  // per material (default no) and Max PTI per supplier × material (no default:
+  // with none, the FG cap cannot be computed). Set on the PO On Hold panel.
+  pipo: Object.freeze({ scope: 'material', question: 'PEX-8', boolean: true }),
+  maxPti: Object.freeze({
+    scope: 'supplierMaterial',
+    question: 'PEX-8',
+    integer: true,
+    min: 0,
+    max: 1_000_000_000
   })
 });
 

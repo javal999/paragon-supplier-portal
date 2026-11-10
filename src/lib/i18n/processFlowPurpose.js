@@ -580,6 +580,8 @@ export const processFlowPurposeEn = {
     'The planner suggests what to do with a PO On Hold line. The supplier sees the suggestion and can choose differently until the grace period ends.',
   'processFlows.purpose.t_poonhold_choose':
     'The supplier makes the final choice for its PO On Hold line. The choice cannot be changed. If the supplier does not choose, the planner’s suggestion applies at the end of the grace period.',
+  'processFlows.purpose.t_poonhold_execute':
+    'At the end of the grace period the hub carries out what was decided, once: one call-off of the remainder, a spread over the next weeks’ call-offs, or an absorption as finished goods up to the cap. The rest stays on hold and goes back to the planner. It is a machine act on the record.',
   'processFlows.purpose.entity.capacityDecision':
     'PTI’s decision on a capacity gap: the planner agrees to use the additional capacity a supplier offered for one planning group in one period of the capacity plan. The supplier sees PTI’s answer on its Capacity page. The planner can undo an acceptance; it stays on record.',
   'processFlows.purpose.t_capacitydecision_accept':
@@ -1216,6 +1218,8 @@ export const processFlowPurposeId = {
     'Perencana mengusulkan apa yang dilakukan pada baris PO On Hold. Pemasok melihat usulan itu dan dapat memilih lain sampai masa tenggang berakhir.',
   'processFlows.purpose.t_poonhold_choose':
     'Pemasok membuat pilihan akhir untuk baris PO On Hold miliknya. Pilihan tidak dapat diubah. Jika pemasok tidak memilih, usulan perencana berlaku di akhir masa tenggang.',
+  'processFlows.purpose.t_poonhold_execute':
+    'Di akhir masa tenggang, hub menjalankan keputusan yang berlaku, satu kali: satu call-off untuk sisa, sebaran ke call-off minggu-minggu berikutnya, atau penyerapan sebagai barang jadi sampai batas. Sisanya tetap on hold dan kembali ke perencana. Ini tindakan mesin yang tercatat.',
   'processFlows.purpose.entity.capacityDecision':
     'Keputusan PTI atas kekurangan kapasitas: perencana setuju memakai kapasitas tambahan yang ditawarkan pemasok untuk satu grup perencanaan pada satu periode rencana kapasitas. Pemasok melihat jawaban PTI di halaman Kapasitas. Perencana dapat membatalkan penerimaan; penerimaan tetap tercatat.',
   'processFlows.purpose.t_capacitydecision_accept':
