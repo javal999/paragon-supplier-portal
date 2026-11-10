@@ -101,7 +101,16 @@ export const pexPlanTraceEn = {
   'pex.switch.saved.safetyStockOn': 'Safety stock switch saved',
   'pex.switch.saved.protectionBufferOn': 'Protection buffer switch saved',
   'pex.switch.rulesHold':
-    'Rules that switch these automatically are not built: they wait for Material Planning.'
+    'Suggestions are advice only and the rules behind them are proposed: nothing switches by itself, and you give the reason when you change a switch.',
+  'pex.advice.suggestOff': 'Suggested: switch off, because {{because}}',
+  'pex.advice.suggestOn': 'Suggested: switch on, because {{because}}',
+  'pex.advice.apply': 'Use suggestion',
+  'pex.advice.reason.noDemand.safetyStockOn':
+    'there is no LTP and no recorded consumption for this material.',
+  'pex.advice.reason.noDemand.protectionBufferOn': 'there is no LTP for this material.',
+  'pex.advice.reason.demandBack.safetyStockOn':
+    'LTP or recorded consumption is back for this material.',
+  'pex.advice.reason.demandBack.protectionBufferOn': 'LTP is back for this material.'
 };
 
 /** @type {Record<string, string>} */
@@ -202,5 +211,14 @@ export const pexPlanTraceId = {
   'pex.switch.saved.safetyStockOn': 'Saklar Safety stock disimpan',
   'pex.switch.saved.protectionBufferOn': 'Saklar Protection buffer disimpan',
   'pex.switch.rulesHold':
-    'Aturan yang mengubah saklar ini secara otomatis belum dibangun: menunggu Material Planning.'
+    'Saran hanya anjuran dan aturan di baliknya bersifat usulan: tidak ada saklar yang berubah sendiri, dan Anda memberi alasan saat mengubah saklar.',
+  'pex.advice.suggestOff': 'Disarankan: nonaktifkan, karena {{because}}',
+  'pex.advice.suggestOn': 'Disarankan: aktifkan, karena {{because}}',
+  'pex.advice.apply': 'Pakai saran',
+  'pex.advice.reason.noDemand.safetyStockOn':
+    'tidak ada LTP dan tidak ada konsumsi tercatat untuk material ini.',
+  'pex.advice.reason.noDemand.protectionBufferOn': 'tidak ada LTP untuk material ini.',
+  'pex.advice.reason.demandBack.safetyStockOn':
+    'LTP atau konsumsi tercatat muncul kembali untuk material ini.',
+  'pex.advice.reason.demandBack.protectionBufferOn': 'LTP muncul kembali untuk material ini.'
 };
