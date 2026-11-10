@@ -2636,8 +2636,7 @@ export const TERM_LABEL_GLOSSARY =
       en: 'The warehouse fill and pallets in the week under the interim round-up, which rounds each order up to the minimum order quantity and its multiple. This order plan replaces it.',
       id: 'Isi gudang dan palet pada minggu itu dengan pembulatan sementara, yang membulatkan tiap pesanan ke atas ke kuantitas pesanan minimum dan kelipatannya. Rencana pesanan ini menggantikannya.',
       // Market practice, not the team's word: SAP keeps this rule as the
-      // rounding value in the material master. Accepted by the owner in chat
-      // 2026-11-09; its decision ID is still to be assigned in the spec.
+      // rounding value in the material master (TL-D39).
       alsoCalled: [
         {
           name: 'rounding value',

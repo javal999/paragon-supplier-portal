@@ -191,7 +191,7 @@ Each rule is one pure function shared by the page (to explain) and the verb (to 
 | PTI stock below PTI ROP | `inventoryRules.js:414` | PTI SOH below PTI ROP |
 | Supplier stock below ROP | `inventoryRules.js:425` | Supplier SOH below the system ROP Supplier; no system figure, no alert (DRC-D20). The supplier-typed ROP is display only |
 | Projected stock-out | `inventoryRules.js:440` | PTI SOH ÷ the material's daily demand (all suppliers) is fewer days than until the next incoming date; no incoming date, no alert |
-| Template | `inventoryRules.js:649` | 10 columns: material code, stock on hand, unit, in-production quantity required; completion date required when in production is above 0; supplier ROP and the 4 batch columns optional (header ends " (optional)" / " (opsional)") |
+| Template | `inventoryRules.js` `STOCK_TEMPLATE_FIELDS` | 12 columns: material code, stock on hand, unit, in-production quantity required; completion date required when in production is above 0; batch number, batch quantity and expiry date required for a raw material (`rawMaterialBatchProblem`, BL-289); supplier ROP, manufacturing date and feedstock quantity and date (K, L, BL-290) optional (header ends " (optional)" / " (opsional)") |
 | In production, MAT-D4 | `inventoryRules.js:719` | Required (0 allowed) on manual, template and PTI records; completion date required above 0; the `api` channel is exempt |
 | Batch dates | `inventoryRules.js:751` | Each date a `YYYY-MM-DD` day; manufacturing not after expiry and not in the future |
 | Number reading, CR-18 | `inventoryRules.js:914` | A number that reads differently in Indonesian and English (`1.500`) is refused, not guessed |

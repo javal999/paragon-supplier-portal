@@ -182,7 +182,9 @@ describe('SDC write verbs — the LAYERED defence against a bogus material', () 
         supplierId: 'sup-002',
         materialCode: 'RM-EMUL-3310',
         totalQty: 250,
-        inProductionQty: 0
+        inProductionQty: 0,
+        // BL-289 (owner 2026-11-10) — a raw material comes with its batches and expiry.
+        batches: [{ batchNumber: 'GLY-MM-1', qty: 250, expiryDate: '2027-12-31' }]
       }
     });
     expect(res.status).not.toBe('failed');
