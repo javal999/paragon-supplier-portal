@@ -112,7 +112,8 @@ export const supplierInvoicesEn = {
   'supplierInvoices.new.poPlaceholder': 'Select a purchase order…',
   'supplierInvoices.new.noPos': 'No purchase orders with received goods to invoice.',
   'supplierInvoices.new.amountLabel': 'Amount (IDR)',
-  'supplierInvoices.new.amountPlaceholder': 'e.g. 250000000',
+  'supplierInvoices.new.totalNote':
+    'The sum of the line amounts above. Change a line amount if you billed it differently from quantity × PO unit price.',
   // — New invoice: the amount refusals (CP-0 · W1 · 2f-d). These replace a
   // hard-coded English literal that covered three causes in one sentence.
   'supplierInvoices.new.po.required': 'Select the purchase order this invoice is raised against.',
@@ -230,7 +231,8 @@ export const supplierInvoicesId = {
   'supplierInvoices.new.poPlaceholder': 'Pilih pesanan pembelian…',
   'supplierInvoices.new.noPos': 'Tidak ada pesanan pembelian dengan barang diterima untuk ditagih.',
   'supplierInvoices.new.amountLabel': 'Jumlah (IDR)',
-  'supplierInvoices.new.amountPlaceholder': 'mis. 250000000',
+  'supplierInvoices.new.totalNote':
+    'Jumlah dari seluruh baris di atas. Ubah jumlah baris bila Anda menagihnya berbeda dari kuantitas × harga satuan PO.',
   // — Faktur baru: penolakan jumlah (CP-0 · W1 · 2f-d) —
   'supplierInvoices.new.po.required': 'Pilih pesanan pembelian yang menjadi dasar faktur ini.',
   'supplierInvoices.new.amount.refused.empty':

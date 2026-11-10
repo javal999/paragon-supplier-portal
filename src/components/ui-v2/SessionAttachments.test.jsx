@@ -108,4 +108,44 @@ describe('SessionAttachments — reads files through the data service', () => {
     expect(files.release).toHaveBeenCalledWith('stub-a.pdf');
     expect(screen.queryByTestId('att-row')).not.toBeInTheDocument();
   });
+
+  // BL-142 [Proposed] — a file that arrived on the list from a saved record may
+  // still be listed by an earlier version of it, so removing it from the revision
+  // must not free it for the session.
+  it('removing a file that arrived on the record does NOT release it (an earlier version may list it)', () => {
+    const { files, service } = stubFiles();
+    /** @type {AttachmentMeta} */
+    const carried = {
+      id: 'stub-carried.pdf',
+      name: 'carried.pdf',
+      size: 10,
+      type: 'application/pdf',
+      addedAt: '2026-09-24T00:00:00Z'
+    };
+    renderWithProviders(<Harness initial={[carried]} />, { service });
+    fireEvent.click(screen.getByRole('button', { name: 'Remove carried.pdf' }));
+    expect(files.release).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('att-row')).not.toBeInTheDocument();
+  });
+
+  it('a file picked in this edit is still freed when removed, and a carried one beside it is kept', async () => {
+    const { files, service } = stubFiles();
+    /** @type {AttachmentMeta} */
+    const carried = {
+      id: 'stub-carried.pdf',
+      name: 'carried.pdf',
+      size: 10,
+      type: 'application/pdf',
+      addedAt: '2026-09-24T00:00:00Z'
+    };
+    renderWithProviders(<Harness initial={[carried]} />, { service });
+    fireEvent.change(screen.getByTestId('att-input'), {
+      target: { files: [new File(['x'], 'new.pdf', { type: 'application/pdf' })] }
+    });
+    await screen.findByText('new.pdf');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove new.pdf' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove carried.pdf' }));
+    expect(files.release).toHaveBeenCalledTimes(1);
+    expect(files.release).toHaveBeenCalledWith('stub-new.pdf');
+  });
 });

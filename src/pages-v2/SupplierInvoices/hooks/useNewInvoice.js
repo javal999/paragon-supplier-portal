@@ -8,8 +8,7 @@ import {
   prefillInvoiceLines,
   remainingInvoiceableQty
 } from '@services/transitions/fulfilmentRules';
-import { readInvoiceAmount } from '../../invoices/invoiceAmountModel';
-import { applyEntries } from '../utils';
+import { applyAmounts, applyEntries } from '../utils';
 
 /**
  * The new-invoice form (REQ-E07-07): PO → received receipts → pre-filled lines.
@@ -33,7 +32,8 @@ export function useNewInvoice(INVOICES, RECEIPTS, poItems, supplierId) {
   const [newInvoiceNumber, setNewInvoiceNumber] = useState('');
   const [newInvoiceDate, setNewInvoiceDate] = useState('');
   const [newTaxFile, setNewTaxFile] = useState('');
-  const [newAmount, setNewAmount] = useState('');
+  // BL-75 [Proposed]: typed billed amount per line; an untouched line bills quantity × price.
+  const [newLineAmount, setNewLineAmount] = useState(/** @type {Record<string, string>} */ ({}));
 
   // POs an invoice may bill against (confirmed, partly or fully delivered).
   const invoiceablePos = (poItems ?? []).filter((po) => INVOICEABLE_PO_STATES.includes(po.status));
@@ -72,11 +72,11 @@ export function useNewInvoice(INVOICES, RECEIPTS, poItems, supplierId) {
     newInvoiceNumber.trim() !== '' &&
     isDuplicateInvoiceNumber(newInvoiceNumber, supplierId, INVOICES);
 
-  // ── CP-0 · W1 · 2f-d — THE ONE READ of the new-invoice amount ──────────────
-  // The gate, the inline message and the dispatched payload all read this, so
-  // none of them can disagree about the amount being invoiced.
-  const amountRead = readInvoiceAmount(newAmount);
-  const amountPositive = amountRead.ok && amountRead.value > 0;
+  // ── CP-0 · W1 · 2f-d, BL-75 — THE ONE READ of the billed amounts ───────────
+  // The gate, the inline messages and the dispatched payload all read this, so
+  // none of them can disagree about what is being invoiced. The invoice total
+  // is the sum of the lines, never a second typed number.
+  const newAmounts = applyAmounts(newRead.lines, newLineAmount);
   const newReady =
     !!newPo &&
     newRead.lines.length > 0 &&
@@ -85,7 +85,7 @@ export function useNewInvoice(INVOICES, RECEIPTS, poItems, supplierId) {
     !newDuplicate &&
     newInvoiceDate !== '' &&
     newTaxFile !== '' &&
-    amountPositive;
+    newAmounts.valid;
 
   const resetNew = () => {
     setNewPoRef('');
@@ -94,7 +94,7 @@ export function useNewInvoice(INVOICES, RECEIPTS, poItems, supplierId) {
     setNewInvoiceNumber('');
     setNewInvoiceDate('');
     setNewTaxFile('');
-    setNewAmount('');
+    setNewLineAmount({});
   };
 
   return {
@@ -112,8 +112,8 @@ export function useNewInvoice(INVOICES, RECEIPTS, poItems, supplierId) {
     setNewInvoiceDate,
     newTaxFile,
     setNewTaxFile,
-    newAmount,
-    setNewAmount,
+    newLineAmount,
+    setNewLineAmount,
     invoiceablePos,
     newPo,
     receiptOptions,
@@ -121,7 +121,7 @@ export function useNewInvoice(INVOICES, RECEIPTS, poItems, supplierId) {
     newRead,
     newExpected,
     newDuplicate,
-    amountRead,
+    newAmounts,
     newReady,
     resetNew
   };

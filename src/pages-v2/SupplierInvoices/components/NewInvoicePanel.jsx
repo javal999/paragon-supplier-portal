@@ -11,7 +11,7 @@ import { fmtIdr } from '../../invoices/InvoiceCollaboration';
 import { inputCls, labelCls } from '../const';
 import { fmtDate } from '../utils';
 import LineQtyTable from './LineQtyTable';
-import { NewAmountField, amountRefusalKey } from './AmountFields';
+import { NewTotalField, amountRefusalKey } from './AmountFields';
 
 /**
  * @typedef {object} NewInvoicePanelProps
@@ -26,7 +26,7 @@ import { NewAmountField, amountRefusalKey } from './AmountFields';
 
 /**
  * The new-invoice side panel (REQ-E07-07): PO, receipts, pre-filled line
- * quantities, invoice number, date, tax invoice and amount, with "create draft"
+ * quantities and billed amounts, invoice number, date, tax invoice and the computed total, with "create draft"
  * and "create and submit" in the footer. `createNewInvoice` lives here because
  * only this panel's footer calls it. Moved out of `SupplierInvoices.jsx` by the
  * Phase 5 page split (no behaviour change).
@@ -48,8 +48,8 @@ const NewInvoicePanel = ({ nw, createMutation, submitMutation, toast, failToast,
     setNewInvoiceDate,
     newTaxFile,
     setNewTaxFile,
-    newAmount,
-    setNewAmount,
+    newLineAmount,
+    setNewLineAmount,
     invoiceablePos,
     newPo,
     receiptOptions,
@@ -57,7 +57,7 @@ const NewInvoicePanel = ({ nw, createMutation, submitMutation, toast, failToast,
     newRead,
     newExpected,
     newDuplicate,
-    amountRead,
+    newAmounts,
     newReady,
     resetNew
   } = nw;
@@ -73,16 +73,19 @@ const NewInvoicePanel = ({ nw, createMutation, submitMutation, toast, failToast,
       });
       return;
     }
-    if (!amountRead.ok) {
+    // Each cause gets its own message: the first unreadable line amount, then
+    // the first one not above zero.
+    const unreadable = newAmounts.reads.find((r) => !r.ok);
+    if (unreadable && !unreadable.ok) {
       toast({
         variant: 'warning',
         title: t('invoice.create.failed.title'),
-        description: t(amountRefusalKey(amountRead.reason))
+        description: t(amountRefusalKey(unreadable.reason))
       });
       return;
     }
-    // The pre-existing `> 0` rule, PRESERVED VERBATIM.
-    if (amountRead.value <= 0) {
+    // The pre-existing `> 0` rule, now per line.
+    if (newAmounts.reads.some((r) => r.ok && r.value <= 0)) {
       toast({
         variant: 'warning',
         title: t('invoice.create.failed.title'),
@@ -90,13 +93,14 @@ const NewInvoicePanel = ({ nw, createMutation, submitMutation, toast, failToast,
       });
       return;
     }
-    const amount = amountRead.value;
+    // The total is the sum of the lines (BL-75), so it cannot differ from them.
+    const amount = newAmounts.total;
     const invoiceNumber = newInvoiceNumber.trim();
     try {
       const res = await createMutation.mutateAsync({
         poReference: newPoRef,
         amount,
-        lines: newRead.lines,
+        lines: newAmounts.lines,
         invoiceNumber,
         invoiceDate: newInvoiceDate,
         taxInvoiceFile: newTaxFile
@@ -227,6 +231,8 @@ const NewInvoicePanel = ({ nw, createMutation, submitMutation, toast, failToast,
               lines={prefilled}
               entries={newLineQty}
               onChange={(k, v) => setNewLineQty((m) => ({ ...m, [k]: v }))}
+              amounts={newLineAmount}
+              onAmountChange={(k, v) => setNewLineAmount((m) => ({ ...m, [k]: v }))}
             />
             <div className="mt-2 text-xs text-text-secondary">
               {t('fc.inv.new.expected')}: <Data>{fmtIdr(newExpected)}</Data>
@@ -286,12 +292,7 @@ const NewInvoicePanel = ({ nw, createMutation, submitMutation, toast, failToast,
           </div>
         </div>
 
-        <NewAmountField
-          newAmount={newAmount}
-          setNewAmount={setNewAmount}
-          amountRead={amountRead}
-          t={t}
-        />
+        <NewTotalField total={newAmounts.total} t={t} />
       </div>
     </SidePanel>
   );

@@ -73,28 +73,57 @@ describe('SupplierInvoices — Submit dispatches the real verb', () => {
   });
 });
 
-// ── CP-0 · W1 · 2f-d — the new-invoice amount, the OTHER operand of 2f-c's
-// verdict ────────────────────────────────────────────────────────────────────
+// ── CP-0 · W1 · 2f-d, BL-75 — the new-invoice amounts, the OTHER operand of
+// 2f-c's verdict ──────────────────────────────────────────────────────────────
 //
 // `deriveMatchVerdict(expectedValue, inv.amount, …)`: 2f-c stopped a misread
 // confirmed quantity poisoning the first operand; this stops a misread amount
 // poisoning the second. Either produces the same false accusation against a
 // supplier — an honest invoice booked 'Price Variance'.
 //
-// 2f-FIND-04's guard was REAL (`!Number.isFinite(amount) || amount <= 0`) and
-// survived its body-read, so these specs guard only what a finiteness check
-// structurally cannot see. The durable lock is still the INPUT CONTRACT
-// (`type="text"` + `inputMode`), because the locale failure reproduces in
-// neither jsdom nor en-US (4b-FIND-01).
-describe('SupplierInvoices — the new-invoice amount is text, so the parser is load-bearing', () => {
+// BL-75 [Proposed]: the supplier now types an amount PER LINE (default
+// quantity × PO unit price) and the invoice total is their sum, so the locks
+// below sit on the line amount input. The durable lock is still the INPUT
+// CONTRACT (`type="text"` + `inputMode`), because the locale failure reproduces
+// in neither jsdom nor en-US (4b-FIND-01).
+describe('SupplierInvoices — the new-invoice line amounts are text, so the parser is load-bearing', () => {
+  // sup-007's receipt GR-2026-003 sits on PO-2025-00108, which is confirmed first
+  // so it can be invoiced.
   const openNewInvoice = async () => {
+    purchaseOrderStore.reset();
+    goodsReceiptStore.reset();
+    invoiceStore.reset();
+    await mockDataService.commands.dispatch(
+      {
+        personaType: 'supplier',
+        supplierId: 'sup-007',
+        businessRoles: PERSONA_SYSTEM_ROLES.supplier
+      },
+      {
+        transitionId: 't_po_confirm',
+        entity: 'purchaseOrder',
+        entityId: 'po-008',
+        payload: { confirmedQuantities: [150000] }
+      }
+    );
     renderWithProviders(<SupplierInvoices />, { identity: SUPPLIER });
     await screen.findByRole('heading', { name: 'Invoices' });
     fireEvent.click(screen.getByRole('button', { name: 'New invoice' }));
-    return screen.findByLabelText('Amount (IDR)');
+    fireEvent.change(await screen.findByLabelText('Purchase order'), {
+      target: { value: 'PO-2025-00108' }
+    });
+    fireEvent.click(await screen.findByLabelText(/GR-2026-003, received/));
+    return screen.findByLabelText(/Billed amount for .* on GR-2026-003/);
+  };
+  const fillRest = () => {
+    fireEvent.change(screen.getByLabelText('Invoice number'), { target: { value: 'SUP-INV-777' } });
+    fireEvent.change(screen.getByLabelText('Invoice date'), { target: { value: '2026-09-10' } });
+    fireEvent.change(screen.getByLabelText('Tax invoice (e-Faktur)'), {
+      target: { files: [new File(['x'], 'efaktur-777.pdf', { type: 'application/pdf' })] }
+    });
   };
 
-  it('THE LOCK — the amount input is not type="number" (Ruling 6.2)', async () => {
+  it('THE LOCK — the line amount input is not type="number" (Ruling 6.2)', async () => {
     const amount = await openNewInvoice();
     expect(amount).toHaveAttribute('type', 'text');
     expect(amount).toHaveAttribute('inputmode', 'decimal');
@@ -102,12 +131,27 @@ describe('SupplierInvoices — the new-invoice amount is text, so the parser is 
     expect(amount).not.toHaveAttribute('min');
   });
 
-  it('an untouched blank does NOT nag — the field is UNSEEDED, so the 2e-a rule applies', async () => {
-    // Contrast the seeded 2f-a/2f-c cells, where every blank is
-    // operator-cleared and therefore always speaks.
+  it('BL-75 — the total is computed, not typed: it is an output, and it starts at quantity × price', async () => {
     const amount = await openNewInvoice();
-    expect(amount).toHaveValue('');
+    const total = screen.getByTestId('invoice-total');
+    expect(total.tagName).toBe('OUTPUT');
+    expect(Number(/** @type {HTMLInputElement} */ (amount).value)).toBeGreaterThan(0);
+    expect(total.textContent).toMatch(/\d/);
     expect(screen.queryByTestId('invoice-amount-refusal')).not.toBeInTheDocument();
+  });
+
+  it('BL-75 — retyping a line amount moves the total with it', async () => {
+    const amount = await openNewInvoice();
+    fireEvent.change(amount, { target: { value: '1000000' } });
+    expect(screen.getByTestId('invoice-total').textContent).toMatch(/1[.,]000[.,]000/);
+  });
+
+  it('a blank line amount REFUSES — a blank is not an amount of zero', async () => {
+    const amount = await openNewInvoice();
+    fillRest();
+    expect(screen.getByRole('button', { name: 'Create draft' })).not.toBeDisabled();
+    fireEvent.change(amount, { target: { value: '' } });
+    expect(amount).toHaveAttribute('aria-invalid', 'true');
     expect(screen.getByRole('button', { name: 'Create draft' })).toBeDisabled();
   });
 
@@ -140,46 +184,36 @@ describe('SupplierInvoices — the new-invoice amount is text, so the parser is 
     expect(screen.getByRole('button', { name: 'Create draft' })).toBeDisabled();
   });
 
-  it('POSITIVE TWIN — a readable amount on a complete receipt-based invoice ENABLES the create', async () => {
+  it('POSITIVE TWIN — a complete receipt-based invoice ENABLES the create with the default amounts', async () => {
     // ⚠️ REQ-E07-07 CHANGED THIS TEST'S PREMISE. A PO and an amount no longer make
     // an invoice: it is drawn from a RECEIVED goods receipt of the supplier's own
-    // PO and carries the invoice number, date and tax invoice. sup-007's receipt
-    // GR-2026-003 sits on PO-2025-00108, which is confirmed first so it can be
-    // invoiced. A negative assertion alone proves nothing, so the gate is walked
-    // shut → open.
-    purchaseOrderStore.reset();
-    goodsReceiptStore.reset();
-    invoiceStore.reset();
-    await mockDataService.commands.dispatch(
-      {
-        personaType: 'supplier',
-        supplierId: 'sup-007',
-        businessRoles: PERSONA_SYSTEM_ROLES.supplier
-      },
-      {
-        transitionId: 't_po_confirm',
-        entity: 'purchaseOrder',
-        entityId: 'po-008',
-        payload: { confirmedQuantities: [150000] }
-      }
-    );
+    // PO and carries the invoice number, date and tax invoice. A negative
+    // assertion alone proves nothing, so the gate is walked shut → open. BL-75:
+    // no amount is typed at all, the lines bill quantity × PO unit price.
     const amount = await openNewInvoice();
-    fireEvent.change(screen.getByLabelText('Purchase order'), {
-      target: { value: 'PO-2025-00108' }
-    });
-    fireEvent.click(await screen.findByLabelText(/GR-2026-003, received/));
-    fireEvent.change(screen.getByLabelText('Invoice number'), { target: { value: 'SUP-INV-777' } });
-    fireEvent.change(screen.getByLabelText('Invoice date'), { target: { value: '2026-09-10' } });
-    fireEvent.change(screen.getByLabelText('Tax invoice (e-Faktur)'), {
-      target: { files: [new File(['x'], 'efaktur-777.pdf', { type: 'application/pdf' })] }
-    });
     expect(screen.getByRole('button', { name: 'Create draft' })).toBeDisabled();
-    fireEvent.change(amount, { target: { value: '185000000' } });
+    fillRest();
     expect(screen.queryByTestId('invoice-amount-refusal')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create draft' })).not.toBeDisabled();
     expect(screen.getByRole('button', { name: 'Submit invoice' })).not.toBeDisabled();
+    fireEvent.change(amount, { target: { value: '185000000' } });
+    expect(screen.getByRole('button', { name: 'Create draft' })).not.toBeDisabled();
+  });
+
+  it('BL-75 — the dispatched invoice carries the line amount and a total equal to the lines', async () => {
+    const amount = await openNewInvoice();
+    fillRest();
+    fireEvent.change(amount, { target: { value: '185000000' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+    await waitFor(() => {
+      const inv = invoiceStore.all().find((i) => i.invoiceNumber === 'SUP-INV-777');
+      expect(inv).toBeDefined();
+      expect(inv?.amount).toBe(185000000);
+      expect(inv?.lines?.map((l) => l.billedAmount)).toEqual([185000000]);
+    });
   });
 });
+
 
 // The resubmit amount had the `> 0` rule with no voice: a typed zero parses, so
 // no refusal showed, and `fixReady` kept the resubmit shut with no reason given.

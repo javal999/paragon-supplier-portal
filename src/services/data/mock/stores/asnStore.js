@@ -9,6 +9,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { MOCK_ASNS } from '../fixtures/supplierShipments';
+import { RECEIVED_ASNS } from '../fixtures/receivedAsns';
 /** @import { ASN } from '../../types' */
 
 /**
@@ -20,7 +21,8 @@ function clone(a) {
 }
 
 /** @type {ASN[]} */
-let rows = MOCK_ASNS.map(clone);
+const SEED = [...MOCK_ASNS, ...RECEIVED_ASNS];
+let rows = SEED.map(clone);
 let seq = 0;
 
 export const asnStore = {
@@ -62,7 +64,7 @@ export const asnStore = {
   },
   /** @returns {void} */
   reset() {
-    rows = MOCK_ASNS.map(clone);
+    rows = SEED.map(clone);
     seq = 0;
   }
 };
