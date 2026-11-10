@@ -117,7 +117,7 @@ Read on GitLab `main` `3da82ae5`. Paths are under `src/`.
 | PEX-2 | Foresight horizon: 17 weeks by week, then by month to month 12, weeks as columns | Partly built: packaging (BL-265, MR !97 `b1bc58e8`); BR-04 raw material open (BL-282) | — |
 | PEX-3 | LTP vs SOH heads-up on Foresight | Partly built: BR-01 (BL-266, MR !97 `b1bc58e8`); BR-02 open (BL-284) | — |
 | PEX-4 | Capacity heads-up: 12 months, utilisation %, per material and brand, colour bands, treemap | Built (BL-269, MR !102 `c904d7da`); BR-03 brand split rule open (BL-295, PEX-D26) | — |
-| PEX-5 | LTP inputs: LTP A, LTP Festive, LTP B and the LTP choice per material; two new DA columns | Mostly built (BL-267, MR !102 `c904d7da`); BR-05 on the Capacity page's strategic buffer section open; BR-08 supplier split rule open (BL-293, PEX-D25); Protection buffer tip (BL-294, TL-D36) | — |
+| PEX-5 | LTP inputs: LTP A, LTP Festive, LTP B and the LTP choice per material; two new DA columns | Mostly built (BL-267, MR !102 `c904d7da`); BR-05 on the Capacity page's strategic buffer section open; BR-08 supplier split rule open (BL-293, PEX-D25); Protection buffer tip (BL-294, TL-D40) | — |
 | PEX-6 | DA versions: every input change that moves DA is a version with its cause | Built (BL-268, MR !102 `c904d7da`); the safety stock and protection buffer switch is not yet a cause (BR-01; PEX-13 BR-03) | — |
 | PEX-7 | PO On Hold: the remainder DA did not absorb, with a grace period per supplier × material | Built (BL-270, BL-272, MR !100 `55b63846`); working days per PEX-D23 | Thresholds for auto handling (PEX-12) |
 | PEX-8 | PO On Hold decision: planner suggests FS only, FS + spread or FG; supplier chooses | Partly built (BL-271, MR !100 `55b63846`): suggestion, choice, pre-selection and silence rule; the end-of-grace execution and the FG data (PIPO flag, Max PTI, stock movement) are open | — |
@@ -169,7 +169,7 @@ Read on GitLab `main` `3da82ae5`. Paths are under `src/`.
 - BR-03. The DA grid shows LTP A as today and adds two rows, LTP Festive and LTP B. The row that DA uses is marked.
 - BR-04. DA(w) = the chosen LTP(w) (DRC-2 BR-02 reads the chosen LTP instead of the single LTP).
 - BR-05. Strategic buffer = LTP Festive − LTP A when LTP Festive is given. The DRC-9a calculation (LTP − baseline) stays as the fallback when it is not [Proposed].
-- BR-06. Protection buffer = LTP B − LTP A, used for orders (ROP Order) only. It replaces the built uplift (`protectionUplift: 'rollingBaseline'`) when LTP B is given [Proposed]. Tip wording: TL-D36 (BL-294).
+- BR-06. Protection buffer = LTP B − LTP A, used for orders (ROP Order) only. It replaces the built uplift (`protectionUplift: 'rollingBaseline'`) when LTP B is given [Proposed]. Tip wording: TL-D40 (BL-294).
 - BR-07. The hub never picks the LTP. A material with no choice uses LTP A.
 - BR-08. Supplier split. LTP A, LTP Festive and LTP B are per material; DA, safety order and the capacity heads-up are per supplier × material. The split rule needs an owner answer (PEX-D25, BL-293). As built in MR !102: each supplier's share of the Foresight commitment LTP over the first 4 hub weeks, an even split when there is none, one share for every week.
 - AC-01. Material X: LTP A 100, LTP Festive 130, LTP B 115, choice Festive. DA = 130, strategic buffer = 30, protection buffer = 15.
@@ -269,7 +269,7 @@ The supplier usability test is on Monday 9 or Tuesday 10 November 2026 [M04 6]. 
 |---|---|---|---|
 | 1 | Supplier UI for the usability test | BL-264 zones, BL-265 horizon, BL-266 heads-up, BL-273 SLA, BL-274 FS reconcile column, BL-279 tracking link | Fri 6 Nov 2026 merge, so the build is up by Mon 9 Nov |
 | 2 | LTP inputs and DA versions | BL-267 LTP inputs, BL-268 DA versions, BL-269 capacity heads-up and treemap | Week of 9 Nov |
-| 2a | Rules wave 2 left undefined, in priority order | BL-293 supplier split, BL-294 Protection buffer tip, BL-295 brand split | After the owner rules PEX-D25, TL-D36 and PEX-D26 |
+| 2a | Rules wave 2 left undefined, in priority order | BL-293 supplier split, BL-294 Protection buffer tip, BL-295 brand split | After the owner rules PEX-D25, TL-D40 and PEX-D26 |
 | 3 | PO On Hold end to end | BL-270 PO On Hold, BL-271 decision, BL-272 grace settings, BL-275 SS/PB switch | Week of 16 Nov |
 | 4 | Trace and sandbox | BL-276 trace, BL-277 sandbox levels | Week of 23 Nov |
 | Held | Wait on Mba Septi | BL-278 master data; PEX-11 BR-04; PEX-12 | When she answers |

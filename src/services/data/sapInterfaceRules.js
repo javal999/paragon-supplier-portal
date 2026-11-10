@@ -137,15 +137,22 @@ export function objectForEntity(entity) {
  * successful settle emits `done` under the SAME correlationId, which is what
  * clears the failure here — so a retry that works updates the monitor without
  * anything being deleted.
+ *
+ * BL-141 — the row's time is `stampedAt`, the hub clock, never the event's `ts`.
+ * `ts` is the audit event's wall-clock time (pinned by contract C3) and is left
+ * alone; showing it would put a second "now" on a page whose message ages read
+ * the hub clock (the class BL-34 closed). Rows are returned newest event first,
+ * so the monitor's newest-first sort keeps that order when stamps are equal.
  * @param {readonly TransitionEvent[]} events
  * @param {(transitionId: string) => string | null} entityOf
+ * @param {string} stampedAt  The hub clock instant (`sdcClock.now()`).
  * @returns {readonly SapFailedMessage[]}
  */
-export function failuresFromEvents(events, entityOf) {
+export function failuresFromEvents(events, entityOf, stampedAt) {
   const settled = new Set(events.filter((e) => e.outcome === 'done').map((e) => e.correlationId));
   /** @type {SapFailedMessage[]} */
   const out = [];
-  for (const e of events) {
+  for (const e of events.slice().reverse()) {
     if (e.outcome !== 'failed') continue;
     const fault = settleFaultKindOf(e.reason);
     if (!fault) continue;
@@ -159,7 +166,7 @@ export function failuresFromEvents(events, entityOf) {
       fault,
       errorText: e.reason ?? fault,
       correlationId: e.correlationId,
-      timestamp: e.ts,
+      timestamp: stampedAt,
       settleCorrelationId: e.correlationId
     });
   }
