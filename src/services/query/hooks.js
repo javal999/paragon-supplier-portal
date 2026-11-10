@@ -82,6 +82,12 @@ export const useCapacityPlans = () =>
     svc.procurement.getCapacityPlans(scope)
   );
 
+/** PEX-D10 — the strategic buffer from LTP Festive − LTP A (PTI only). */
+export const useStrategicBufferInputs = () =>
+  useServiceQuery(['procurement', 'strategicBufferInputs'], (svc, scope) =>
+    svc.procurement.getStrategicBufferInputs(scope)
+  );
+
 /** BL-269 (PEX-4) — the 12-month capacity heads-up per supplier × planning group. */
 export const useCapacityHeadsUp = () =>
   useServiceQuery(['procurement', 'capacityHeadsUp'], (svc, scope) =>
