@@ -170,7 +170,7 @@ These eight are one number or one list each. The prototype ships defensible defa
 **What would change this.** The pilot sponsor needing E10.02 at go-live (then A is the smallest start), or IT confirming that SAP QM is not in scope for the pilot materials. In that case the hub's display is the only inspection record and deserves more care (`DECISION-GUIDE.md:163`).
 
 ### SQ-D2 · BL-39 stays open as the Phase 2 placeholder (decided 2026-11-10)
-**Decision.** Levi ruled on 2026-11-10: BL-39 (`BACKLOG.md:107`) stays in the open backlog. Its Why changes from "Named in the deck as MVP, still a stub" to a Phase 2 note that cites BL-15 and SQ-D1 and says it waits on DEC-07. Proposed wording: "Phase 2 with Supplier Quality (BL-15, SQ-D1); waits on DEC-07 for scope and an owner" [Proposed]. The row keeps the open questions (part 3) until Supplier Quality is scoped. BL-15 already names BL-39 as the place non-conformance waits.
+**Decision.** Levi ruled on 2026-11-10: BL-39 (`BACKLOG.md:107`) stays in the open backlog. Its Why now reads "Phase 2 with Supplier Quality (BL-15, SQ-D1); waits on DEC-07 for scope and an owner". The row keeps the open questions for the PTI quality owner, Procurement, the pilot sponsor and IT until Supplier Quality is scoped. BL-15 already names BL-39 as the place non-conformance waits.
 
 **Alternative not taken.** Closing BL-39 and moving it to the decided table, as was done for BL-15. Then no open row would carry the Phase 2 work, and BL-15's reference would point at a closed item.
 
