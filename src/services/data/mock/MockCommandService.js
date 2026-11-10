@@ -6682,8 +6682,10 @@ export const settleCommand = dispatcher.settle;
  * pending: it looks at the decisions first, and reads nothing else.
  * @returns {Promise<number>} How many lines it executed.
  */
+const poOnHoldPending = () => poOnHoldStore.all().some((d) => d.state !== 'Executed');
+
 export async function runDuePoOnHoldExecutions() {
-  if (!poOnHoldStore.all().some((d) => d.state !== 'Executed')) return 0;
+  if (!poOnHoldPending()) return 0;
   let n = 0;
   for (const row of allPoOnHold()) {
     if (row.closed || !row.decision || row.execution.status !== 'due') continue;
@@ -6723,7 +6725,7 @@ export class MockCommandService {
     // the command reads the call-off store.
     observeTriggers();
     // PEX-8 — and any PO On Hold line whose grace period has ended.
-    await runDuePoOnHoldExecutions();
+    if (poOnHoldPending()) await runDuePoOnHoldExecutions();
     const result = await dispatcher.dispatch(scope, input, causationId);
     // REQ-E08-05 BR-05 — only a command changes the figures an alert reads, so
     // after one lands, record which closed alerts' conditions have cleared.
@@ -6731,7 +6733,7 @@ export class MockCommandService {
       observeAlertConditions();
       observeNpdTags();
       observeTriggers();
-      await runDuePoOnHoldExecutions();
+      if (poOnHoldPending()) await runDuePoOnHoldExecutions();
     }
     return result;
   }
