@@ -1,6 +1,6 @@
 /** @import React from 'react' */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
@@ -18,11 +18,12 @@ import WeekGrid from '@components/ui-v2/WeekGrid';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { formatDate, formatNumber } from '@lib/format';
-import { useDemandForecast } from '@services/query/hooks';
+import { useDemandForecast, useModelBacktest } from '@services/query/hooks';
 /** @import { DemandForecastRun, ForecastMethod } from '@services/engine/demandForecast' */
 /** @import { EventFactor } from '@services/engine/eventCalendar' */
 /** @import { DemandForecastSkuView } from '@services/data/types' */
 /** @import { SeriesRange } from '@services/engine/demandRange' */
+/** @import { BacktestCandidate } from '@services/engine/modelBacktest' */
 import DemandRangeSection from './demandForecast/DemandRangeSection';
 import { FQ_FIRST_ROWS, firstRows } from './demandForecast/firstRows';
 import PurposeHeader from '@components/forecast/PurposeHeader';
@@ -87,6 +88,51 @@ const roundNumber = (n) => formatNumber(Math.round(n));
 // read "+n", with the full list on hover.
 const EVENTS_SHOWN = 3;
 
+/** @type {ReadonlySet<ForecastMethod>} */
+const FORECAST_MODELS = new Set(['main', 'comb', 'sba', 'croston', 'tsb']);
+
+// BL-286 (ENG-D23 to ENG-D25) — the backtest's chosen model for this SKU, shown
+// beside the method and never applied: the numbers below stay the method's.
+// A SKU the backtest does not compare (new, OEM, discontinued) gets no line,
+// and while the backtest loads the line is absent; the panel does not wait.
+/** @type {React.FC<{ sku: DemandForecastSkuView }>} */
+const BacktestChoice = ({ sku }) => {
+  const { t } = useTranslation();
+  const backtest = useModelBacktest();
+  const row = backtest.data?.skus.find((s) => s.skuCode === sku.skuCode);
+  // A SKU on SAP's plan or discontinued on this page is not forecast by a
+  // model, so a backtest row for it (a SKU discontinued after the replay)
+  // has nothing to compare with.
+  if (!row || !FORECAST_MODELS.has(sku.method)) return null;
+  /** @type {BacktestCandidate} */
+  const chosen = row.selection.chosen;
+  const tail =
+    chosen === sku.method
+      ? t('df.detail.backtest.same')
+      : sku.method === 'comb'
+        ? t('df.detail.backtest.stillComb')
+        : t('df.detail.backtest.stillMethod', {
+            method: t(`df.detail.backtest.model.${sku.method}`)
+          });
+  return (
+    <p data-testid="df-detail-backtest">
+      <Trans
+        i18nKey="df.detail.backtest.chosen"
+        values={{ model: t(`df.detail.backtest.model.${chosen}`) }}
+        components={{ model: <strong className="text-text-primary" /> }}
+      />{' '}
+      {tail}{' '}
+      <Link
+        to="/buyer/model-backtest"
+        className="text-action-hover hover:underline"
+        data-testid="df-detail-backtest-link"
+      >
+        {t('df.detail.backtest.link')}
+      </Link>
+    </p>
+  );
+};
+
 /** @type {React.FC<{ sku: DemandForecastSkuView; weeks: readonly string[]; events: DemandForecastRun['events']['horizon']; range: SeriesRange | null; asOf: string; }>} */
 const SkuDetail = ({ sku, weeks, events, range, asOf }) => {
   const { t } = useTranslation();
@@ -126,6 +172,7 @@ const SkuDetail = ({ sku, weeks, events, range, asOf }) => {
         {sku.method === 'discontinued' && <p>{t('df.detail.discontinued')}</p>}
         {sku.method === 'main' && <p>{t('df.detail.main')}</p>}
         {sku.endsOn && <p>{t('df.detail.endsOn', { date: formatDate(sku.endsOn) })}</p>}
+        <BacktestChoice sku={sku} />
       </div>
       {/* CAP-1 wave 1 (Table A) — metrics per row, weeks per column; no inner
           vertical scroll box (A-01). Method's above Reconciled (W1-Q3). */}

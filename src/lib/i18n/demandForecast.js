@@ -89,6 +89,18 @@ export const demandForecastEn = {
     'Discontinued before this forecast starts: zero, and left out of the reconciliation.',
   'df.detail.main': 'The main model beat the fallback for this SKU in the latest backtest.',
   'df.detail.endsOn': 'Discontinued from the week of {{date}}: zero from then.',
+  // BL-286 (ENG-D25) — "chosen model" is Model backtest's agreed label.
+  'df.detail.backtest.chosen': 'Backtest’s chosen model: <model>{{model}}</model> (simulated).',
+  'df.detail.backtest.stillComb': 'This forecast still uses the Comb.',
+  'df.detail.backtest.stillMethod': 'This forecast still uses {{method}}.',
+  'df.detail.backtest.same': 'This forecast uses the same model.',
+  'df.detail.backtest.link': 'Open Model backtest',
+  'df.detail.backtest.model.main': 'Main model',
+  'df.detail.backtest.model.comb': 'Comb',
+  'df.detail.backtest.model.theta': 'Theta',
+  'df.detail.backtest.model.sba': 'SBA',
+  'df.detail.backtest.model.croston': 'Croston',
+  'df.detail.backtest.model.tsb': 'TSB',
 
   'df.events.title': 'Demand events',
   'df.events.intro':
@@ -257,6 +269,17 @@ export const demandForecastId = {
     'Dihentikan sebelum prakiraan ini dimulai: nol, dan dikeluarkan dari rekonsiliasi.',
   'df.detail.main': 'Model utama mengalahkan metode cadangan untuk SKU ini pada backtest terakhir.',
   'df.detail.endsOn': 'Dihentikan mulai minggu {{date}}: nol sejak saat itu.',
+  'df.detail.backtest.chosen': 'Model terpilih backtest: <model>{{model}}</model> (simulasi).',
+  'df.detail.backtest.stillComb': 'Prakiraan ini tetap memakai Comb.',
+  'df.detail.backtest.stillMethod': 'Prakiraan ini tetap memakai {{method}}.',
+  'df.detail.backtest.same': 'Prakiraan ini memakai model yang sama.',
+  'df.detail.backtest.link': 'Buka Backtest model',
+  'df.detail.backtest.model.main': 'Model utama',
+  'df.detail.backtest.model.comb': 'Comb',
+  'df.detail.backtest.model.theta': 'Theta',
+  'df.detail.backtest.model.sba': 'SBA',
+  'df.detail.backtest.model.croston': 'Croston',
+  'df.detail.backtest.model.tsb': 'TSB',
 
   'df.events.title': 'Peristiwa permintaan',
   'df.events.intro':
