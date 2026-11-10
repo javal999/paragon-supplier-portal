@@ -28,6 +28,7 @@ import { ropFisikLastChecks, ropFisikPrRecommendations } from './callOffTriggerR
 import { allDemandAnticipationHistory } from './demandAnticipationHistoryReadModel';
 /** @import { SupplierDaRow } from './demandAnticipationReadModel' */
 import { allCapacityHeadsUp } from './capacityHeadsUpReadModel';
+import { allStrategicBufferInputs } from './strategicBufferInputsReadModel';
 import {
   supplierDemandAnticipation,
   withLtpInputsRead,
@@ -558,6 +559,16 @@ export class MockProcurementService {
   async getCapacityPlans(scope) {
     // REQ-E08-04 — capacity against demand per supplier × material group.
     return { items: applySupplierScope(scope, allCapacityPlans()) };
+  }
+
+  /**
+   * PEX-D10 — the strategic buffer from LTP Festive − LTP A per supplier × material
+   * and month, for the Capacity page's DRC-9a section. PTI only: a supplier scope reads none.
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<import('./strategicBufferInputsReadModel').StrategicBufferInput>>}
+   */
+  async getStrategicBufferInputs(scope) {
+    return { items: scope.personaType === 'supplier' ? [] : allStrategicBufferInputs() };
   }
 
   /**

@@ -13,6 +13,9 @@ export const drcBuffersEn = {
     'Strategic buffer = LTP − baseline, the baseline the average LTP of the {{months}} months before the festive window; never below 0. Read only: nothing is ordered from it.',
   'buffers.strategic.calendarNote':
     'Festive windows come from PTI’s demand-event calendar: Ramadan to Lebaran, by month. The calendar has no Chinese New Year yet, so CNY is not shown.',
+  'buffers.strategic.festiveNote':
+    'Where LTP Festive is uploaded for a material, a month’s buffer is LTP Festive − LTP A summed over the weeks it covers. Every other month and material uses LTP − baseline.',
+  'buffers.strategic.fromFestive': 'LTP Festive − LTP A',
   'buffers.strategic.window': 'Ramadan {{year}} H: {{start}} to Lebaran {{eid}}',
   'buffers.strategic.col.supplier': 'Supplier',
   'buffers.strategic.col.material': 'Material',
@@ -57,6 +60,9 @@ export const drcBuffersId = {
     'Strategic buffer = LTP − baseline, baseline adalah rata-rata LTP {{months}} bulan sebelum periode hari raya; tidak pernah di bawah 0. Hanya baca: tidak ada pesanan dari angka ini.',
   'buffers.strategic.calendarNote':
     'Periode hari raya diambil dari kalender event permintaan PTI: Ramadan sampai Lebaran, per bulan. Kalender belum memuat Imlek, jadi Imlek tidak ditampilkan.',
+  'buffers.strategic.festiveNote':
+    'Bila LTP Festive diunggah untuk suatu material, buffer satu bulan adalah LTP Festive − LTP A yang dijumlahkan selama minggu yang dicakupnya. Bulan dan material lain memakai LTP − baseline.',
+  'buffers.strategic.fromFestive': 'LTP Festive − LTP A',
   'buffers.strategic.window': 'Ramadan {{year}} H: {{start}} sampai Lebaran {{eid}}',
   'buffers.strategic.col.supplier': 'Pemasok',
   'buffers.strategic.col.material': 'Material',
