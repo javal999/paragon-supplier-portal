@@ -10,7 +10,10 @@ import {
   forecastViewStore
 } from '@services/data/mock/stores/forecastHubStores';
 import { inventoryAlertLedger } from '@services/data/mock/stores/inventoryHubStores';
-import { SEEDED_PACKAGING_WEEKS as W } from '@services/data/mock/fixtures/forecastHub';
+import {
+  SEEDED_PACKAGING_WEEKS as W,
+  SEEDED_RAW_MATERIAL_PERIODS as M
+} from '@services/data/mock/fixtures/forecastHub';
 import { workingCalendarStore } from '@services/transitions/workingCalendarStore';
 import { sdcClock } from '@services/sdc';
 import SupplierForecastCommitments from './SupplierForecastCommitments';
@@ -91,7 +94,7 @@ describe('BL-48 · the demo states on the supplier screen', () => {
     });
     // Raw-material v2 was published this morning, Monday 10:00 WIB → due Tuesday
     // 10:00 WIB (03:00Z); the present is Monday 12:00Z → 15 hours left.
-    const due = await screen.findByTestId('fc-due-RM-EMUL-9410-2026-09');
+    const due = await screen.findByTestId(`fc-due-RM-EMUL-9410-${M[0]}`);
     expect(due).toHaveAttribute('data-timing', 'open');
     expect(due.textContent).toMatch(/^01 Sept? 2026, 10:00 WIB15 h left$/);
   });
@@ -103,7 +106,7 @@ describe('BL-48 · the demo states on the supplier screen', () => {
     });
     // Answered on raw-material v1 (published Monday 3 August 09:00 WIB, Firm due
     // Tuesday 4 August 09:00) at 10:00 — carried forward, it keeps that verdict.
-    const due = await screen.findByTestId('fc-due-RM-EMUL-9410-2026-09');
+    const due = await screen.findByTestId(`fc-due-RM-EMUL-9410-${M[0]}`);
     expect(due).toHaveAttribute('data-timing', 'submittedLate');
     expect(due).toHaveTextContent('04 Aug 2026, 09:00 WIB');
     expect(due).toHaveTextContent('Submitted late by 1 h');

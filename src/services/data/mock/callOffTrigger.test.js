@@ -4,13 +4,13 @@
 // eWM refresh seam (`applyPtiStockRefresh`); every walk ends in the stores.
 //
 // RM-STEAR-7300 on the sample data: one supplier (sup-002, outside
-// Jabodetabek, f = 2 days, MPQ = orderMultiple 25), ROP Fisik 1,275, Max
+// Jabodetabek, f = 2 days, MPQ = orderMultiple 25), ROP Fisik 1,400 (1,275 before BL-282: the safety stock reads the LTP weeks, now weekly), Max
 // 1,400, one blanket line PO-2025-00116 with 15,000 KG of balance, and no
 // released call-off on the way. Its seed SOH is 900 (J6).
 //
 // [Team F5, 2026-10-28] the call-off quantity is the supplier's minimum
 // delivery: MDQ = MOQ 1,250, rounded like Max to the pallet (700) → 1,400.
-// That never fits under Max at the trigger (Max 1,400 − SOH ≥ 1,275 < 1,400),
+// That never fits under Max at the trigger (Max 1,400 − SOH ≥ 0 < 1,400),
 // so it is called off anyway, flagged ABOVE_MAX [Owner, 2026-10-28, BL-230].
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -107,7 +107,7 @@ describe('BR-01 — SOH dropping to ROP Fisik drafts a call-off, once', () => {
     });
     expect(d.trigger?.value).toMatchObject({
       soh: 1010,
-      ropFisik: 1275,
+      ropFisik: 1400,
       max: 1400,
       openSupply: 0,
       room: 390,
@@ -119,13 +119,16 @@ describe('BR-01 — SOH dropping to ROP Fisik drafts a call-off, once', () => {
   });
 
   it('an update above ROP Fisik drafts nothing', () => {
-    setSoh(1276);
+    setSoh(1401);
     expect(triggered()).toEqual([]);
     expect(callOffTriggerStore.lastFor(MAT)).toMatchObject({ state: 'above', armed: true });
   });
 
-  it('exactly at ROP Fisik drafts (at or below)', () => {
-    setSoh(1275);
+  // BL-282: ROP Fisik is now 1,400 = Max, so SOH exactly at ROP leaves no room
+  // below Max (nothing to call) and the at-the-boundary case cannot be walked
+  // here; `sohCheck`'s at-or-below is pinned in callOffTriggerRules.test.js.
+  it('one below ROP Fisik drafts (at or below)', () => {
+    setSoh(1399);
     expect(triggered().map((c) => c.quantity)).toEqual([1400]);
   });
 });
@@ -169,7 +172,7 @@ describe('BR-01 — one open draft per material', () => {
     setSohB37(900);
     expect(triggered().filter((c) => c.status === 'Draft')).toEqual([]);
     expect(callOffTriggerStore.lastFor(MAT)).toMatchObject({ state: 'waiting', armed: false });
-    setSohB37(1300);
+    setSohB37(1450);
     expect(triggered().filter((c) => c.status === 'Draft')).toEqual([]);
     setSohB37(1000);
     const again = triggered().filter((c) => c.status === 'Draft');
@@ -227,7 +230,7 @@ describe('BR-02 — no umbrella PO balance: a PR recommendation, no draft', () =
     setSoh(950);
     expect((await reads.getRopFisikPrRecommendations(buyer)).items).toHaveLength(1);
     // Recovered: it closes.
-    setSoh(1300);
+    setSoh(1450);
     expect((await reads.getRopFisikPrRecommendations(buyer)).items).toEqual([]);
   });
 });
@@ -280,7 +283,7 @@ describe('the figures behind a draft are PTI’s', () => {
     expect(mine).toBeDefined();
     expect(mine && 'trigger' in mine).toBe(false);
     const pti = (await reads.getCallOffs(buyer)).items.find((c) => c.id === d.id);
-    expect(pti?.trigger?.value.ropFisik).toBe(1275);
+    expect(pti?.trigger?.value.ropFisik).toBe(1400);
   });
 
   it('a dispatched draft cannot claim the ROP Fisik origin', async () => {

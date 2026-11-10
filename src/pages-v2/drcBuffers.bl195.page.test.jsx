@@ -143,18 +143,18 @@ describe('DRC-9a — strategic buffer section', () => {
 
   // PEX-2 — the horizon runs to month 12, so March 2027 has an LTP; under the
   // 6-month horizon it read "No LTP".
-  it('sup-002 RM-STEAR-7300, Ramadan 1448: Feb LTP 11,800 under the baseline reads 0; March 13,000 reads 333.33', async () => {
+  it('sup-002 RM-STEAR-7300, Ramadan 1448: Feb LTP 11,800 under the baseline reads 0; March 13,000 reads 228.33', async () => {
     renderWithProviders(<BuyerCapacity />, { identity: PLANNER, route: '/buyer/capacity' });
     await screen.findByTestId('strategic-buffer-table');
     const k = 'sup-002-RM-STEAR-7300-H1448';
     expect(screen.getByTestId(`strategic-buffer-window-${k}`)).toHaveTextContent('Ramadan 1448 H');
     expect(screen.getByTestId(`strategic-buffer-ltp-${k}-2027-02`)).toHaveTextContent('11,800');
     expect(screen.getByTestId(`strategic-buffer-baseline-${k}-2027-02`)).toHaveTextContent(
-      '12,666.67'
+      '12,771.67'
     );
     expect(screen.getByTestId(`strategic-buffer-value-${k}-2027-02`)).toHaveTextContent('0');
     expect(screen.getByTestId(`strategic-buffer-ltp-${k}-2027-03`)).toHaveTextContent('13,000');
-    expect(screen.getByTestId(`strategic-buffer-value-${k}-2027-03`)).toHaveTextContent('333.33');
+    expect(screen.getByTestId(`strategic-buffer-value-${k}-2027-03`)).toHaveTextContent('228.33');
   });
 
   it('the supplier filter narrows the section to that supplier', async () => {

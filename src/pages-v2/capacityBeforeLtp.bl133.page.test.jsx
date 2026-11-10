@@ -19,7 +19,7 @@ import {
 import { capacityStore, inventoryAlertLedger } from '@services/data/mock/stores/inventoryHubStores';
 import {
   SEEDED_PACKAGING_WEEKS as W,
-  SEEDED_RAW_MATERIAL_MONTHS as M
+  SEEDED_RAW_MATERIAL_PERIODS as M
 } from '@services/data/mock/fixtures/forecastHub';
 import { inventoryCapacityEn, inventoryCapacityId } from '@lib/i18n/inventoryCapacity';
 import { sdcClock } from '@services/sdc';
@@ -158,8 +158,9 @@ describe('Supplier — Submit all per period (ENG-D19)', () => {
       identity: SUP_002,
       route: '/supplier/forecasts'
     });
-    // PEX-D22 — stearic acid's Zone Liability month October (M[1], inside its
-    // 45-day lead time); it used November, now a Trade-off month. October's
+    // PEX-D22 — a Zone Liability week of stearic acid inside its 45-day lead
+    // time. BL-282: raw-material periods are weeks, so it is the second week
+    // (M[1], 3,100 committed of 2,900; it was the October month). Its
     // commitment stands, so a changed quantity puts it back to submit.
     const weekRow = await screen.findByTestId(`fc-week-${M[1]}`);
     expect(within(weekRow).getByTestId(`fc-week-check-${M[1]}-pg-MG-10`)).toHaveAttribute(
@@ -174,12 +175,14 @@ describe('Supplier — Submit all per period (ENG-D19)', () => {
       `fc-sup-row-RM-STEAR-7300-${M[1]}`
     );
     fireEvent.change(within(row).getByLabelText(/^Commitment quantity for/), {
-      target: { value: '13500' }
+      target: { value: '3000' }
     });
     expect(screen.getByTestId(`fc-week-submit-${M[1]}`)).toBeDisabled();
     expect(screen.getByTestId(`fc-week-refusal-${M[1]}`)).toHaveTextContent('Confirm capacity for');
     // Scoping: no other supplier's group or period on this page.
-    expect(screen.queryByTestId(`fc-week-${W[6]}`)).toBeNull();
+    // (BL-282: raw-material periods are weeks too, so a week id can be shared;
+    // the other supplier's packaging group is what must be absent.)
+    expect(screen.queryByTestId('fc-sup-material-PK-PETB-8801')).toBeNull();
     expect(screen.queryByText('PK-PETB-8801')).toBeNull();
   });
 });

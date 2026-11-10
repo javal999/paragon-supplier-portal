@@ -88,15 +88,17 @@ describe('PEX-2 (BL-265) — the period grid: 17 weeks, then months to month 12'
     ]);
   });
 
-  it('raw material: months to month 12; BR-04 [Proposed] weekly raw material is held', () => {
-    expect(FORECAST_HORIZON.rawMaterial).toEqual({ weeklyPeriods: 0, horizonMonths: 12 });
+  it('raw material takes the packaging grid: 17 weeks, then months to month 12 (BL-282, PEX-2 BR-04)', () => {
+    expect(FORECAST_HORIZON.rawMaterial).toEqual({ weeklyPeriods: 17, horizonMonths: 12 });
     const periods = generatePeriods('rawMaterial', '2026-11-02T02:00:00.000Z');
-    expect(periods.every((p) => p.kind === 'month')).toBe(true);
-    expect([periods[0].id, periods[periods.length - 1]?.id, periods.length]).toEqual([
-      '2026-12',
-      '2027-11',
-      12
-    ]);
+    expect(periods.filter((p) => p.kind === 'week')).toHaveLength(17);
+    expect([
+      periods[0].id,
+      periods[16].id,
+      periods[17].id,
+      periods[periods.length - 1]?.id
+    ]).toEqual(['2026-11-02', '2027-02-22', '2027-03', '2027-10']);
+    expect(periods).toEqual(generatePeriods('packaging', '2026-11-02T02:00:00.000Z'));
   });
 
   it('every day of the horizon belongs to exactly one period (no gap, no overlap)', () => {
@@ -761,15 +763,16 @@ describe('REQ-E06-03 BR-05 / CAP-8 — moving demand to one or more suppliers', 
   });
 
   it('CAP-8 AC-01 (rules) — a split to two suppliers in ONE version: each target gains its quantity, the source keeps the rest and records one entry per allocation', () => {
-    const M0 = '2026-09';
+    // BL-282: the first raw-material period is the week of 31 Aug (it was September).
+    const M0 = '2026-08-31';
     const src = /** @type {import('../sdc/types').ForecastLine} */ (
       lineOf(rm, 'sup-005', 'RM-EMUL-9410', M0)
     );
     const sup002 = /** @type {import('../sdc/types').ForecastLine} */ (
       lineOf(rm, 'sup-002', 'RM-EMUL-9410', M0)
     );
-    // Control: the fixture premise — sup-005 carries 1 800 kg, sup-002 4 200, sup-010 none.
-    expect([src.forecastQty, sup002.forecastQty, src.uom]).toEqual([1800, 4200, 'KG']);
+    // Control: the fixture premise — a week of 1 400 kg, rounded to the 100 kg multiple: sup-005 carries 400, sup-002 1 000, sup-010 none.
+    expect([src.forecastQty, sup002.forecastQty, src.uom]).toEqual([400, 1000, 'KG']);
     expect(lineOf(rm, 'sup-010', 'RM-EMUL-9410', M0)).toBeUndefined();
     const next = /** @type {import('../sdc/types').ForecastPublication} */ (
       reassignVersion(
@@ -779,8 +782,8 @@ describe('REQ-E06-03 BR-05 / CAP-8 — moving demand to one or more suppliers', 
           periodBucket: M0,
           fromSupplierId: 'sup-005',
           allocations: [
-            { supplierId: 'sup-002', qty: 800 },
-            { supplierId: 'sup-010', qty: 500 }
+            { supplierId: 'sup-002', qty: 200 },
+            { supplierId: 'sup-010', qty: 120 }
           ],
           note: 'Principal late'
         },
@@ -788,24 +791,24 @@ describe('REQ-E06-03 BR-05 / CAP-8 — moving demand to one or more suppliers', 
       )
     );
     expect(next.publicationId).toBe('FC-RM-V3');
-    expect(lineOf(next, 'sup-002', 'RM-EMUL-9410', M0)?.forecastQty).toBe(5000);
+    expect(lineOf(next, 'sup-002', 'RM-EMUL-9410', M0)?.forecastQty).toBe(1200);
     expect(lineOf(next, 'sup-010', 'RM-EMUL-9410', M0)).toMatchObject({
-      forecastQty: 500,
+      forecastQty: 120,
       uom: 'KG',
       commitmentClass: src.commitmentClass
     });
     expect(lineOf(next, 'sup-005', 'RM-EMUL-9410', M0)).toMatchObject({
-      forecastQty: 500,
+      forecastQty: 80,
       movedOut: [
         {
           toSupplierId: 'sup-002',
-          qty: 800,
+          qty: 200,
           at: '2026-08-31T12:00:00.000Z',
           note: 'Principal late'
         },
         {
           toSupplierId: 'sup-010',
-          qty: 500,
+          qty: 120,
           at: '2026-08-31T12:00:00.000Z',
           note: 'Principal late'
         }

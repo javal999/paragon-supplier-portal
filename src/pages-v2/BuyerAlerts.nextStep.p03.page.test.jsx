@@ -280,7 +280,7 @@ describe('P-08 · each rule shows its own basis (INV-D1)', () => {
 
   it('capacity: short by and the first gap week', async () => {
     await renderAlerts();
-    expect(screen.getByTestId(`alert-basis-${CAPACITY}`)).toHaveTextContent('Short by 97 KG · W42');
+    expect(screen.getByTestId(`alert-basis-${CAPACITY}`)).toHaveTextContent('Short by 50 KG · W42');
   });
 
   it('coverage and supplier rules: "Supplier cover N days · lead time N days"', async () => {

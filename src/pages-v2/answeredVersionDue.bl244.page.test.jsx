@@ -16,7 +16,10 @@ import {
   forecastViewStore
 } from '@services/data/mock/stores/forecastHubStores';
 import { inventoryAlertLedger } from '@services/data/mock/stores/inventoryHubStores';
-import { SEEDED_PACKAGING_WEEKS as W } from '@services/data/mock/fixtures/forecastHub';
+import {
+  SEEDED_PACKAGING_WEEKS as W,
+  SEEDED_RAW_MATERIAL_PERIODS as M
+} from '@services/data/mock/fixtures/forecastHub';
 import { workingCalendarStore } from '@services/transitions/workingCalendarStore';
 import { sdcClock } from '@services/sdc';
 import i18n from '@lib/i18n';
@@ -46,7 +49,7 @@ describe('BL-244 — the earlier version is named beside its deadline (U-16)', (
       identity: SUP_002,
       route: '/supplier/forecasts'
     });
-    const due = await screen.findByTestId('fc-due-RM-EMUL-9410-2026-09');
+    const due = await screen.findByTestId(`fc-due-RM-EMUL-9410-${M[0]}`);
     expect(due).toHaveAttribute('data-timing', 'submittedLate');
     expect(due).toHaveTextContent('04 Aug 2026, 09:00 WIB (version 1)');
     expect(due).toHaveTextContent('Submitted late by 1 h');
@@ -71,7 +74,7 @@ describe('BL-244 — the earlier version is named beside its deadline (U-16)', (
         identity: SUP_002,
         route: '/supplier/forecasts'
       });
-      const due = await screen.findByTestId('fc-due-RM-EMUL-9410-2026-09');
+      const due = await screen.findByTestId(`fc-due-RM-EMUL-9410-${M[0]}`);
       expect(due).toHaveTextContent('(versi 1)');
     } finally {
       await i18n.changeLanguage('en');

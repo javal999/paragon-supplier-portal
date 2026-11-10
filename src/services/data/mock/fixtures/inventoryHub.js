@@ -288,7 +288,8 @@ export const CAPACITY_SEED = [
   // BL-77 — a second supplier in each group that carries demand, so the
   // filters have something to separate. Since BL-133 the LTP is the one
   // capacity demand, so only MG-02, MG-10 and MG-20 have any. MG-02: sup-005
-  // short in weeks 7 and 8 for a capacity reason (400 KG against ~497), with
+  // short in weeks 7 and 8 for a capacity reason (350 KG against 400 — BL-282 moved the
+  // raw material to weekly periods, so the demand is the week's own 400, not ~497), with
   // 150 KG of additional capacity, so those weeks are amber ("needs the
   // additional capacity") rather than a second red group, beside sup-002
   // confirmed and sup-010 not submitted yet. MG-20: sup-012 covering
@@ -299,7 +300,7 @@ export const CAPACITY_SEED = [
     planningGroupId: defaultPlanningGroupId('MG-02'),
     submittedAt: at(-3, 2),
     weeks: weeks(
-      (i) => (i === 6 || i === 7 ? 400 : 520),
+      (i) => (i === 6 || i === 7 ? 350 : 520),
       (i) => (i === 6 || i === 7 ? { reason: /** @type {const} */ ('capacity'), upside: 150 } : {})
     )
   },

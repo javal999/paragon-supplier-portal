@@ -19,10 +19,10 @@ import i18n from '@lib/i18n';
 //
 // RM-STEAR-7300 × sup-002 (outside Jabodetabek, f = 2; lead time 7 weeks; MPQ
 // 25; MOQ 1,250; koli 700), with 14,000 and 7,000 KG of consumption recorded:
-//   ROP Order  = cycle stock 20,147 + safety order 950 (13-week SD, Team B2) = 21,097
-//   ROP Fisik  = CEILING(411.16 a day × 2, 25) 825 + safety 425 = 1,250 (level 4)
+//   ROP Order  = cycle stock 20,200 + safety order 650 (13-week SD, Team B2) = 20,850
+//   ROP Fisik  = CEILING(412.24 a day × 2, 25) 825 + safety 425 = 1,250 (level 4)
 //   Max        = CEILING(1,250, koli 700) = 1,400
-//   ROP Supplier = CEILING(411.16 × bottleneck 34 days, 25) = 14,000, once the
+//   ROP Supplier = CEILING(412.24 × bottleneck 34 days, 25) = 14,025, once the
 //                planner sets the bottleneck lead time (Team B10)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -117,7 +117,7 @@ describe('BL-196 — the ROP columns', () => {
     );
   });
 
-  it('RM-STEAR-7300 × sup-002 at level 4 (default): ROP Order 21,097 · ROP Fisik 1,250 · Max 1,400', async () => {
+  it('RM-STEAR-7300 × sup-002 at level 4 (default): ROP Order 20,850 · ROP Fisik 1,250 · Max 1,400', async () => {
     recordConsumption();
     fulfilFirstOrder();
     await render();
@@ -125,7 +125,7 @@ describe('BL-196 — the ROP columns', () => {
     expect(screen.getByTestId('sst-level-source-RM-STEAR-7300')).toHaveTextContent(
       'Default level (C2)'
     );
-    expect(screen.getByTestId(`sst-rop-ropOrder-${ID}`)).toHaveTextContent('21,097 KG');
+    expect(screen.getByTestId(`sst-rop-ropOrder-${ID}`)).toHaveTextContent('20,850 KG');
     expect(screen.getByTestId(`sst-rop-ropFisik-${ID}`)).toHaveTextContent('1,250 KG');
     expect(screen.getByTestId(`sst-rop-max-${ID}`)).toHaveTextContent('1,400 KG');
   });
@@ -152,7 +152,7 @@ describe('BL-196 — the ROP columns', () => {
 });
 
 describe('[Team B3, B6] the planner’s own values recompute the figures', () => {
-  it('Z 2 for the material: safety order CEILING(2 × √7 × 217.40, 25) = 1,175, ROP Order 21,322; f 3 days for sup-002: ROP Fisik CEILING(411.16 × 3, 25) 1,250 + 425 = 1,675', async () => {
+  it('Z 2 for the material: safety order CEILING(2 × √7 × 144.12, 25) = 775, ROP Order 20,975; f 3 days for sup-002: ROP Fisik CEILING(412.24 × 3, 25) 1,250 + 425 = 1,675', async () => {
     recordConsumption();
     fulfilFirstOrder();
     await render();
@@ -161,7 +161,7 @@ describe('[Team B3, B6] the planner’s own values recompute the figures', () =>
     fireEvent.change(within(panel).getByTestId('sst-values-z'), { target: { value: '2' } });
     fireEvent.click(within(panel).getByTestId('sst-values-z-save'));
     await waitFor(() =>
-      expect(screen.getByTestId(`sst-rop-ropOrder-${ID}`)).toHaveTextContent('21,322 KG')
+      expect(screen.getByTestId(`sst-rop-ropOrder-${ID}`)).toHaveTextContent('20,975 KG')
     );
     fireEvent.change(
       within(screen.getByTestId('sst-rop-detail')).getByTestId('sst-values-sup-002-f'),
@@ -190,7 +190,7 @@ describe('[Team B3, B6] the planner’s own values recompute the figures', () =>
 });
 
 describe('BL-196 — the detail panel: supplier-side ROPs and the level control', () => {
-  it('[Team B10] ROP Supplier waits for the bottleneck lead time; set to 34 days it reads 14,000; ROP FS is gone; ROP to principal names the step a local route lacks', async () => {
+  it('[Team B10] ROP Supplier waits for the bottleneck lead time; set to 34 days it reads 14,025; ROP FS is gone; ROP to principal names the step a local route lacks', async () => {
     recordConsumption();
     fulfilFirstOrder();
     await render();
@@ -209,7 +209,7 @@ describe('BL-196 — the detail panel: supplier-side ROPs and the level control'
         within(screen.getByTestId('sst-rop-detail')).getByTestId(
           'sst-rop-detail-sup-002-ropSupplier'
         )
-      ).toHaveTextContent('14,000 KG')
+      ).toHaveTextContent('14,025 KG')
     );
     expect(osipParamStore.all().map((r) => [r.key, r.value])).toEqual([
       ['bottleneckLeadTimeDays|sup-002|RM-STEAR-7300', 34]
@@ -222,7 +222,7 @@ describe('BL-196 — the detail panel: supplier-side ROPs and the level control'
     );
   });
 
-  it('the planner sets level 5: ROP Fisik becomes CEILING(822.3, MDQ = MOQ 1,250) + 425 = 1,675 and Max 2,100', async () => {
+  it('the planner sets level 5: ROP Fisik becomes CEILING(824.5, MDQ = MOQ 1,250) + 425 = 1,675 and Max 2,100', async () => {
     recordConsumption();
     fulfilFirstOrder();
     await render();
@@ -264,11 +264,11 @@ describe('BL-196 — the detail panel: supplier-side ROPs and the level control'
 });
 
 describe('BL-198 — the NPD tag beside the level', () => {
-  it('first order open → NPD, and ROP Fisik takes the NPD demand: highest LTP of the next 3 months 2,940 → 420 a day; CEILING(840, 25) + 425 = 1,275', async () => {
+  it('first order open → NPD, and ROP Fisik takes the NPD demand: highest LTP of the next 3 months 3,200 → 457.14 a day; CEILING(914.29, 25) 925 + safety CEILING(457.14, 25) 475 = 1,400', async () => {
     recordConsumption();
     await render();
     expect(screen.getByTestId('sst-npd-RM-STEAR-7300')).toHaveTextContent('NPD');
-    expect(screen.getByTestId(`sst-rop-ropFisik-${ID}`)).toHaveTextContent('1,275 KG');
+    expect(screen.getByTestId(`sst-rop-ropFisik-${ID}`)).toHaveTextContent('1,400 KG');
   });
 
   it('a note says most sample materials read as NPD because the sample PO history is partial (owner, 2026-10-19)', async () => {

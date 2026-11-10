@@ -11,7 +11,7 @@ import { MockCollaborationService } from './MockCollaborationService';
 import { requirementResponseStore } from './stores/requirementResponseStore';
 import { forecastVersionStore, forecastViewStore } from './stores/forecastHubStores';
 import { inventoryAlertLedger } from './stores/inventoryHubStores';
-import { SEEDED_PACKAGING_WEEKS, SEEDED_RAW_MATERIAL_MONTHS } from './fixtures/forecastHub';
+import { SEEDED_PACKAGING_WEEKS, SEEDED_RAW_MATERIAL_PERIODS } from './fixtures/forecastHub';
 /** @import { ForecastCommitmentLine, QueryScope } from '../types' */
 import { PERSONA_SYSTEM_ROLES, rolesHolding } from '../../transitions/businessRoles';
 import { getTransition } from '../../transitions';
@@ -53,7 +53,7 @@ beforeEach(() => {
 });
 
 const W = SEEDED_PACKAGING_WEEKS;
-const M = SEEDED_RAW_MATERIAL_MONTHS;
+const M = SEEDED_RAW_MATERIAL_PERIODS;
 
 /** @param {QueryScope} scope */
 const linesFor = async (scope) => (await reads.getForecastCommitments(scope)).items;
@@ -436,7 +436,7 @@ describe('REQ-E06-03 — planner actions on exceptions', () => {
 
   it('accept: the exception becomes accepted by PTI and leaves the exception list', async () => {
     const l = await lineOf(buyer, 'sup-002', 'RM-STEAR-7300', M[0]);
-    expect(l).toMatchObject({ zone: 'firm', state: 'exception', committedQty: 10000 });
+    expect(l).toMatchObject({ zone: 'firm', state: 'exception', committedQty: 2300 });
     await review(/** @type {import('../../sdc/types').RequirementResponse} */ (l.response).id);
     const res = await svc.dispatch(buyer, {
       transitionId: 't_requirementresponse_accept',
@@ -494,8 +494,8 @@ describe('REQ-E06-03 — planner actions on exceptions', () => {
 
   it('reassign: moves the shortfall to a qualified supplier in a new version, with the note; the commitment left behind now covers the line', async () => {
     const l = await lineOf(buyer, 'sup-002', 'RM-STEAR-7300', M[0]);
-    // Control: the fixture premise — 12 600 kg forecast, 10 000 committed, an exception.
-    expect([l.forecastQty, l.committedQty, l.state]).toEqual([12600, 10000, 'exception']);
+    // Control: the fixture premise — 2 900 kg forecast for the week, 2 300 committed, an exception (BL-282: the periods are weeks).
+    expect([l.forecastQty, l.committedQty, l.state]).toEqual([2900, 2300, 'exception']);
     const res = await svc.dispatch(buyer, {
       transitionId: 't_forecastversion_reassign',
       entity: 'forecastVersion',
@@ -504,8 +504,8 @@ describe('REQ-E06-03 — planner actions on exceptions', () => {
         materialCode: l.materialCode,
         periodBucket: l.periodBucket,
         fromSupplierId: 'sup-002',
-        allocations: [{ supplierId: 'sup-001', qty: 2600 }],
-        note: 'Second source covers September'
+        allocations: [{ supplierId: 'sup-001', qty: 600 }],
+        note: 'Second source covers the week of 31 Aug'
       }
     });
     expect(res).toMatchObject({ status: 'done', entityId: 'FC-RM-V3' });
@@ -513,15 +513,15 @@ describe('REQ-E06-03 — planner actions on exceptions', () => {
       .filter((x) => x.materialCode === 'RM-STEAR-7300' && x.periodBucket === M[0])
       .sort((a, b) => a.supplierId.localeCompare(b.supplierId));
     expect(moved.map((x) => [x.supplierId, x.forecastQty, x.version, x.state])).toEqual([
-      ['sup-001', 2600, 3, 'awaiting'],
-      ['sup-002', 10000, 3, 'accepted']
+      ['sup-001', 600, 3, 'awaiting'],
+      ['sup-002', 2300, 3, 'accepted']
     ]);
     expect((await linesFor(supplier('sup-001'))).map((x) => x.periodBucket)).toEqual([M[0]]);
     expect(
       /** @type {import('../types').ForecastVersionView} */ (
         (await reads.getForecastVersions(buyer)).items.find((v) => v.publicationId === 'FC-RM-V3')
       ).changeNote
-    ).toBe('Second source covers September');
+    ).toBe('Second source covers the week of 31 Aug');
   });
 
   it('known-bad reassign: no note, an unqualified supplier, the same supplier, an old version, or the retired single-target payload', async () => {
@@ -590,7 +590,7 @@ describe('REQ-E06-03 BR-06 and REQ-E08-05 — reminders, escalation and the aler
     const lines002 = await linesFor(sup002);
     expect(lines002.filter((l) => deadlineState(l, now) === 'dueSoon')).toEqual([]);
     const emul = /** @type {ForecastCommitmentLine} */ (
-      lines002.find((l) => l.materialCode === 'RM-EMUL-9410' && l.periodBucket === M[1])
+      lines002.find((l) => l.materialCode === 'RM-EMUL-9410' && l.periodBucket === M[5])
     );
     expect(emul).toMatchObject({
       zone: 'tradeOff',
