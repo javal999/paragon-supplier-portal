@@ -30,6 +30,8 @@ describe('PEX-13 BR-04 switch advice [Proposed]', () => {
     expect(switchAdvice('safetyStockOn', true, usedOnly)).toBeNull();
   });
   it('ignores non-finite figures', () => {
-    expect(switchAdvice('safetyStockOn', true, [{ ltp: [NaN], consumption: [] }])?.suggested).toBe(false);
+    expect(switchAdvice('safetyStockOn', true, [{ ltp: [NaN], consumption: [] }])?.suggested).toBe(
+      false
+    );
   });
 });

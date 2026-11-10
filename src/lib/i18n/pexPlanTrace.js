@@ -56,7 +56,8 @@ export const pexPlanTraceEn = {
   'pex.trace.asOf': 'As of',
   'pex.trace.daHistory': 'DA history',
   'pex.trace.hold':
-    'A PO flowing back into DA is not built: it waits for the SAP identifiers from Material Planning.',
+    'POs are shown against the DA week they land in, read only: nothing is written back to DA. The join key uses the hub’s PO number, item and a schedule line of 0001 until the SAP identifiers are confirmed by Material Planning.',
+  'pex.trace.col.poLines': 'PO lines landing (PO / item / schedule line)',
   'pex.trace.pair': 'Supplier and material',
   'pex.trace.empty': 'No PO or call-off to trace yet.',
   'pex.trace.supplierOnly': 'The plan vs execution trace is PTI’s own view.',
@@ -166,7 +167,8 @@ export const pexPlanTraceId = {
   'pex.trace.asOf': 'Per tanggal',
   'pex.trace.daHistory': 'Riwayat DA',
   'pex.trace.hold':
-    'PO yang mengalir kembali ke DA belum dibangun: menunggu pengenal SAP dari Material Planning.',
+    'PO ditampilkan terhadap minggu DA tempat PO tiba, hanya baca: tidak ada yang ditulis kembali ke DA. Kunci gabungan memakai nomor PO, item hub, dan baris jadwal 0001 sampai pengenal SAP dikonfirmasi Material Planning.',
+  'pex.trace.col.poLines': 'Baris PO yang tiba (PO / item / baris jadwal)',
   'pex.trace.pair': 'Pemasok dan material',
   'pex.trace.empty': 'Belum ada PO atau call-off untuk ditelusuri.',
   'pex.trace.supplierOnly': 'Penelusuran rencana vs eksekusi adalah tampilan internal PTI.',
