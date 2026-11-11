@@ -346,6 +346,12 @@ export const UTILITY_NAV = {
       path: '/buyer/admin/alert-thresholds'
     },
     { labelKey: 'hub.nav.util.reasonCodes', icon: ListChecks, path: '/buyer/admin/reason-codes' },
+    // PEX-14 (BL-278) — the master data field catalogue, read only [Proposed].
+    {
+      labelKey: 'hub.nav.util.masterDataFields',
+      icon: ListChecks,
+      path: '/buyer/admin/master-data-fields'
+    },
     // FUX phase 1 (F-04) — the planning engine pages, out of the main menu but
     // never orphaned. Each label carries the "Planning engine" prefix.
     {

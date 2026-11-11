@@ -312,6 +312,7 @@ const BuyerPlanTrace = () => {
                     <th className="text-right px-4 py-2">{t('pex.trace.col.da')}</th>
                     <th className="text-left px-4 py-2">{t('pex.trace.col.version')}</th>
                     <th className="text-left px-4 py-2">{t('pex.trace.col.events')}</th>
+                    <th className="text-left px-4 py-2">{t('pex.trace.col.poLines')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -345,6 +346,20 @@ const BuyerPlanTrace = () => {
                                   ref: e.ref,
                                   detail: e.detail ?? ''
                                 })}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </td>
+                      <td className="px-4 py-2" data-testid={`trace-polines-${w.week}`}>
+                        {w.poLines.length === 0 ? (
+                          <span className="text-text-tertiary">—</span>
+                        ) : (
+                          <ul className="space-y-1">
+                            {w.poLines.map((l) => (
+                              <li key={l.key} data-testid={`trace-poline-${l.key}`}>
+                                <Data>{l.key}</Data> · <Data>{formatNumber(l.quantity)}</Data>{' '}
+                                {l.uom}
                               </li>
                             ))}
                           </ul>
