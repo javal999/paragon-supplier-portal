@@ -27,6 +27,10 @@ describe('PEX-11 plan vs execution trace page', () => {
     expect(cards).toHaveLength(5);
     expect(screen.getAllByTestId(/^trace-calloff-CO-/)).toHaveLength(13);
     expect(screen.getByTestId('trace-hold')).toHaveTextContent('SAP identifiers');
+    // BR-04 [Proposed]: each PO line is joined to its week on PO number / item / schedule line.
+    const joined = screen.getAllByTestId(/^trace-poline-/);
+    expect(joined).toHaveLength(5);
+    for (const el of joined) expect(el.textContent).toMatch(/^PO-.+\/.+\/0001 · /);
   });
 
   it('a call-off that names no PO of the pair is listed apart and flagged', async () => {

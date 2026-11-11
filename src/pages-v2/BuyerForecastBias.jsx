@@ -46,9 +46,10 @@ import { FIELD_FOCUS_RING } from '@components/forecast/focusRing';
 // (`t_forecastoverride_record`, the `planning` lane) and the override ledger.
 // BR-02 / BR-03: the monthly override value and the 13-week review flag — empty
 // until overrides are entered and their weeks have sold; no history is
-// invented. BR-04 (judging by service) needs E14-10's replay (BL-112) and says
-// so. Every number is the service's own, computed on the engine's SYNTHETIC
-// dataset (the `engineDataset` pill, X-03).
+// invented. BR-04 (judging by service) is deferred by ENG-D26 until overrides
+// persist and 13 weeks of them have sold, and the page says so. Every number
+// is the service's own, computed on the engine's SYNTHETIC dataset (the
+// `engineDataset` pill, X-03).
 // ─────────────────────────────────────────────────────────────────────────────
 
 // C2 (WCAG 2.4.7): the shared field class shows focus only as a 1 px border

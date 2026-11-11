@@ -1,11 +1,20 @@
 /** @import * as React from 'react' */
 import { useLayoutEffect, useRef } from 'react';
 import { placePinnedColumns } from './pinnedColumn';
+// User feedback 2026-11-10 (stock simulation) — `frozenHeader`: the header row
+// stays on screen while the rows scroll. A sticky header needs its scroll
+// container to be the table's own wrapper (an `overflow-x` wrapper is already
+// one, so it would never follow the page), so the wrapper gets a viewport-high
+// cap and scrolls both ways. The header cells paint the header band, and a
+// pinned header cell (the frozen corner) sits above both scrolling directions.
+const FROZEN_SCROLLER = 'max-h-[calc(100vh-14rem)] overflow-y-auto';
+const FROZEN_TABLE =
+  '[&_thead_th]:sticky [&_thead_th]:top-0 [&_thead_th]:z-[2] [&_thead_th]:bg-bg-hover [&_thead_th[data-pin]]:z-[3]';
 /**
  * @param {TableProps} props
  * @returns {React.ReactNode}
  */
-const Table = ({ children, className = '', scrollLabel, ...rest }) => {
+const Table = ({ children, className = '', scrollLabel, frozenHeader = false, ...rest }) => {
   // Shared scroll container: a table's own columns may need more room than
   // the screen provides. The table fills the width and wraps text as before;
   // only when its narrowest layout still does not fit does this wrapper
@@ -40,11 +49,11 @@ const Table = ({ children, className = '', scrollLabel, ...rest }) => {
       role="region"
       aria-label={scrollLabel}
       tabIndex={0}
-      className="group/scroll relative w-full min-w-0 overflow-x-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-inset"
+      className={`group/scroll relative w-full min-w-0 overflow-x-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-inset ${frozenHeader ? FROZEN_SCROLLER : ''}`}
     >
       <table
         ref={tableRef}
-        className={`w-full text-sm text-text-primary border-collapse ${className}`}
+        className={`w-full text-sm text-text-primary border-collapse ${frozenHeader ? FROZEN_TABLE : ''} ${className}`}
         {...rest}
       >
         {children}
@@ -58,5 +67,5 @@ export default Table;
  * region for assistive tech (review R2). The wrapper is `tabIndex={0}` + `role="region"` unconditionally:
  * Chrome and Firefox make an overflow container keyboard-focusable on their own, but Safari doesn't, so a
  * read-only table with no focusable cells otherwise leaves off-screen columns unreachable by keyboard there.
- * @typedef {React.HTMLAttributes<HTMLTableElement> & { children: React.ReactNode, scrollLabel?: string }} TableProps
+ * @typedef {React.HTMLAttributes<HTMLTableElement> & { children: React.ReactNode, scrollLabel?: string, frozenHeader?: boolean }} TableProps
  */

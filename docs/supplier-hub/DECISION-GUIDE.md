@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.22, 2026-11-10 (PEX-D23 and PEX-D24 added: the owner's working-day ruling for PO On Hold and the accepted wave 1 answers Q-W3 to Q-W5; the PEX wave 2 build calls listed as proposed, not ruled; the PEX-D16 to PEX-D22 section says MR !97 is merged (`b1bc58e8`); 1.21, 2026-11-09 (FSR-D9 added: BL-280, lead time stays English on the planning pages, the four held glossary labels renamed; 1.20, 2026-11-05 (PEX-D16 to PEX-D22 added: the owner's rulings on the PEX wave 1 build decisions in MR !97 (branch `feat/pex-wave1-p0`, merged with GitLab main 8f96aa84); 1.19, 2026-11-05: FSR-D8 added: BL-263's Indonesian labels renamed, the team's English terms kept per TL-D11 and TL-D17; 1.18, 2026-11-05: FSR-D7 added: BL-243 and BL-249 built, applying IA R-2 and the TL-D13 qualifier; 1.17, 2026-11-03: FSR-D1 to FSR-D6 added: the owner's rulings on the six open questions of the Foresight end-to-end review; 1.16, 2026-11-02: BL-12 and BL-56 decided by the owner; BL-19 baselines and early receipts in OTIF and CFOT answered; INV-D4 superseded by the BL-149 answer; 1.15, 2026-10-26: RFX-D32 added: the RFx deadline is checked on leaving the field; INV-D14 added 2026-10-23)) |
+| Version | 1.24, 2026-11-11 (ENG-D23 to ENG-D25 added: the owner's BL-286 ruling, the backtest's chosen model shown on the Demand forecast page and not applied). Previous: 1.23, 2026-11-11 (ENG-D26 to ENG-D28 added: the owner's BL-287 ruling, judging overrides by service deferred, the override ledger as backend work (BL-299), the Forecast bias service note reworded; 1.22, 2026-11-10 (PEX-D23 and PEX-D24 added: the owner's working-day ruling for PO On Hold and the accepted wave 1 answers Q-W3 to Q-W5; the PEX wave 2 build calls listed as proposed, not ruled; the PEX-D16 to PEX-D22 section says MR !97 is merged (`b1bc58e8`); 1.21, 2026-11-09 (FSR-D9 added: BL-280, lead time stays English on the planning pages, the four held glossary labels renamed; 1.20, 2026-11-05 (PEX-D16 to PEX-D22 added: the owner's rulings on the PEX wave 1 build decisions in MR !97 (branch `feat/pex-wave1-p0`, merged with GitLab main 8f96aa84); 1.19, 2026-11-05: FSR-D8 added: BL-263's Indonesian labels renamed, the team's English terms kept per TL-D11 and TL-D17; 1.18, 2026-11-05: FSR-D7 added: BL-243 and BL-249 built, applying IA R-2 and the TL-D13 qualifier; 1.17, 2026-11-03: FSR-D1 to FSR-D6 added: the owner's rulings on the six open questions of the Foresight end-to-end review; 1.16, 2026-11-02: BL-12 and BL-56 decided by the owner; BL-19 baselines and early receipts in OTIF and CFOT answered; INV-D4 superseded by the BL-149 answer; 1.15, 2026-10-26: RFX-D32 added: the RFx deadline is checked on leaving the field; INV-D14 added 2026-10-23)) |
 | Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20) and RFX-D26 to RFX-D31 (2026-10-22) and RFX-D32 (2026-10-26); the Inventory & Capacity UX decisions INV-D1 to INV-D13 (2026-10-22) and INV-D14 (2026-10-23); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23); and the Foresight review rulings FSR-D1 to FSR-D6 (2026-11-03) and FSR-D7 and FSR-D8 (2026-11-05); and the PEX wave 1 build rulings PEX-D16 to PEX-D22 (2026-11-05) and PEX-D23 and PEX-D24 (2026-11-09 and 2026-11-05) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, and two values (BL-54 invoice cap, BL-55 gate OTIF minimum). BL-12 call-off record and BL-56 early allowance were decided on 2026-11-02 (see their entries). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
@@ -938,6 +938,48 @@ Until Finance does, the three rates are admin settings with placeholder values, 
 **Recommendation.** The Material Planner names the production-critical packaging for the 95% tier. Until then the engine uses the top 20% of materials by volume, marked as a default.
 
 **What would change this.** Volume rank and criticality diverging. A low-volume component on a bottleneck line belongs in the top tier.
+
+### ENG-D23 · BL-286 is display only: the forecast keeps the Comb (decided 2026-11-10)
+**Decision.** Levi ruled on 2026-11-10 that BL-286 shows each SKU's chosen model and does not apply it. The Demand forecast page keeps its numbers on the Comb and names the model the backtest (Forecast → Model backtest) chose for the SKU, marked simulated. This confirms the 2026-09-29 acceptance that material planning is not switched on synthetic evidence (ENG-B66) and ENG-B89 (the engine beats SAP's plan on fill rate and space for 0 of 16 SKUs). `ForecastMethod`, the reconciliation and the override baseline are unchanged. Built on branch `feat/bl286-chosen-model`.
+
+**Alternative not taken.** Switching the page's numbers to the chosen model per SKU (Theta for 11, Comb for 5 on the synthetic data), which needs a Theta value in `ForecastMethod` and moves the reconciliation and the override baseline; or parking BL-286 until real data (BL-100).
+
+**What would change this.** A backtest on real sales and SAP plans (BL-100) showing the chosen models beat SAP's plan, and the owner ruling the switch (ENG-B66, ENG-B89).
+
+### ENG-D24 · The chosen model shows in the SKU detail panel only (decided 2026-11-10)
+**Decision.** Levi ruled on 2026-11-10 that the line sits in the SKU detail panel, under the method text, with a link to Forecast → Model backtest (`/buyer/model-backtest`). The SKU list and its agreed "Method" column (glossary `dfMethod`) do not change. Four accepted build rules go with it: a SKU the backtest does not compare (new SKU, OEM, discontinued; ENG-B81) shows no line; a slow SKU (SBA, Croston, TSB) gets the same line with its chosen model's name; a planner override does not change the line; and the panel reads the backtest through `useModelBacktest`, so while it loads the line is absent and the rest of the page does not wait.
+
+**Alternative not taken.** A second pill under the Method pill in the list, or a new "Backtest pick" column. Both show every mismatch at a glance; both change an agreed column or add one.
+
+**What would change this.** The Material Planner saying the mismatch must be visible without opening each SKU.
+
+### ENG-D25 · The line names the chosen model and says the forecast still uses the Comb (decided 2026-11-10)
+**Decision.** Levi ruled on 2026-11-10 for English "Backtest’s chosen model: **Theta** (simulated). This forecast still uses the Comb." and Indonesian "Model terpilih backtest: **Theta** (simulasi). Prakiraan ini tetap memakai Comb." When the chosen model is the method in use (the Comb for 5 SKUs on the synthetic data), the second sentence reads "This forecast uses the same model." / "Prakiraan ini memakai model yang sama." (accepted with the ruling). "Chosen model" / "Model terpilih" is Model backtest's agreed label; no agreed label is renamed. Keys `df.detail.backtest.*` in `src/lib/i18n/demandForecast.js`.
+
+**Alternative not taken.** "Backtest picks: Theta (simulated)" (a new phrase that does not say the numbers stayed) and "Chosen model: Theta" (reads as if the forecast used Theta).
+
+**What would change this.** The Material Planner choosing other wording, or ENG-D23 being reversed.
+
+### ENG-D26 · BL-287: judging overrides by service is deferred (decided 2026-11-10, approved 2026-11-11)
+**Decision.** Levi ruled to defer BR-04 (`FORECAST-ENGINE-REQUIREMENTS.md`, REQ-E14-11). The replay of PTI's ordering exists (BL-112). Two facts block it instead. The override ledger is held for the session and a reload clears it (ENG-B106). The synthetic data has no override history. BL-287 is built once overrides persist (BL-299, ENG-D27) and 13 weeks of them have sold, the window of the review flag (ENG-B108). The 2026-09-29 acceptance of BR-04 as a follow-up stands; only its timing changes.
+
+**Alternative not taken.** Build now, testable only with injected overrides. Or drop BR-04 and judge by accuracy only, which would reverse the 2026-09-29 acceptance.
+
+**What would change this.** The Material Planning team entering overrides in the pilot on a saved ledger, or the owner wanting the replay proven on injected overrides before the backend exists.
+
+### ENG-D27 · Saving the override ledger is backend work (decided 2026-11-10, approved 2026-11-11)
+**Decision.** A row in `BACKLOG.md` section 3, work waiting on the backend: BL-299, persist the forecast override ledger. Size M, proposed; IT (TEAM-03) sizes it. No row covered it before.
+
+**Alternative not taken.** Browser storage now (size S). It would reverse ENG-B106, and history in one planner's browser is not team history, so BR-04 still could not run on it.
+
+**What would change this.** IT specifying the backend with the ledger included, or sizing it differently.
+
+### ENG-D28 · The Forecast bias service note gives the true reason (decided 2026-11-10, approved 2026-11-11)
+**Decision.** The note under "Override value by month" said the replay "is built separately", which stopped being true when BL-112 was built. It now reads: "Judging overrides by service, not accuracy alone, starts once overrides are saved and 13 weeks of them have sold. Until then they are judged by accuracy only." The Indonesian text says the same. Built in GitLab MR !120 (`372a074b`). The key `fb.fva.service`, the test id and every agreed label stay.
+
+**Alternative not taken.** Keep the note, which leaves a false reason on the page. Remove it, which hides the deferral from planners.
+
+**What would change this.** BL-287 being built; the note is then replaced by the service result.
 
 ## Sources
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, beforeAll, vi } from 'vitest';
 import { screen, within, fireEvent } from '@testing-library/react';
 import { renderWithProviders, BUYER } from '@test/test-utils';
 import BuyerDemandForecast from './BuyerDemandForecast';
@@ -33,6 +33,13 @@ const view = async () =>
   /** @type {import('@services/data/types').DemandForecastView} */ (
     await mockDataService.procurement.getDemandForecast(buyerScope)
   );
+
+// BL-286 — the SKU detail reads the model backtest, whose heavy half runs once
+// per hub date and is memoised by the service; warm it here so no single page
+// test carries its cost (as BuyerModelBacktest.test does).
+beforeAll(async () => {
+  await mockDataService.procurement.getModelBacktest(buyerScope);
+}, 60_000);
 
 afterEach(() => {
   void i18n.changeLanguage('en');
@@ -364,5 +371,169 @@ describe('BuyerDemandForecast — the demand range (REQ-E14-09)', () => {
         )
       )
     );
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BL-286 (ENG-D23 to ENG-D25) — the SKU detail names the backtest's chosen
+// model and keeps the method's numbers. The chosen model is read back from the
+// backtest service for the same scope, never restated.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('BuyerDemandForecast — the backtest’s chosen model (BL-286)', () => {
+  const backtest = async () =>
+    /** @type {import('@services/data/types').ModelBacktestView} */ (
+      await mockDataService.procurement.getModelBacktest(buyerScope)
+    );
+  /** @param {string} code */
+  const openSku = async (code) => {
+    await screen.findByTestId('df-skus');
+    const toggle = screen.queryByTestId('df-skus-toggle');
+    if (toggle && !screen.queryByTestId(`df-sku-${code}`)) fireEvent.click(toggle);
+    fireEvent.click(screen.getByTestId(`df-sku-${code}`));
+    return screen.getByTestId('df-detail');
+  };
+  const render = () =>
+    renderWithProviders(<BuyerDemandForecast />, {
+      identity: BUYER,
+      route: '/buyer/demand-forecast'
+    });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it('a Comb SKU the backtest gave to Theta says so, links to Model backtest, and keeps the Comb’s numbers', async () => {
+    const v = await view();
+    const b = await backtest();
+    const pick = v.skus.find(
+      (s) =>
+        s.method === 'comb' &&
+        b.skus.find((x) => x.skuCode === s.skuCode)?.selection.chosen === 'theta'
+    );
+    expect(pick).toBeDefined();
+    const sku = /** @type {NonNullable<typeof pick>} */ (pick);
+    render();
+    const detail = await openSku(sku.skuCode);
+    expect(await within(detail).findByTestId('df-detail-backtest')).toHaveTextContent(
+      'Backtest’s chosen model: Theta (simulated). This forecast still uses the Comb.'
+    );
+    expect(within(detail).getByTestId('df-detail-backtest-link')).toHaveAttribute(
+      'href',
+      expect.stringContaining('/buyer/model-backtest')
+    );
+    // The numbers stay the Comb's: the service still names the Comb, and every
+    // week shows the reconciled forecast, not Theta's.
+    expect((await view()).skus.find((s) => s.skuCode === sku.skuCode)?.method).toBe('comb');
+    v.weeks.forEach((w, i) =>
+      expect(within(detail).getByTestId(`df-week-forecast-${w}`)).toHaveTextContent(
+        formatNumber(sku.forecast[i])
+      )
+    );
+    expect(sku.theta).not.toBeNull();
+    expect(sku.base.map(Math.round)).not.toEqual(
+      /** @type {NonNullable<typeof sku.theta>} */ (sku.theta).map(Math.round)
+    );
+  });
+
+  it('a Comb SKU the backtest kept on the Comb says it uses the same model, in English and Indonesian', async () => {
+    const v = await view();
+    const b = await backtest();
+    const pick = v.skus.find(
+      (s) =>
+        s.method === 'comb' &&
+        b.skus.find((x) => x.skuCode === s.skuCode)?.selection.chosen === 'comb'
+    );
+    expect(pick).toBeDefined();
+    const code = /** @type {NonNullable<typeof pick>} */ (pick).skuCode;
+    const first = render();
+    expect(await within(await openSku(code)).findByTestId('df-detail-backtest')).toHaveTextContent(
+      'Backtest’s chosen model: Comb (simulated). This forecast uses the same model.'
+    );
+    first.unmount();
+    await i18n.changeLanguage('id');
+    render();
+    expect(await within(await openSku(code)).findByTestId('df-detail-backtest')).toHaveTextContent(
+      'Model terpilih backtest: Comb (simulasi). Prakiraan ini memakai model yang sama.'
+    );
+  });
+
+  it('a slow SKU names its own method, not the Comb', async () => {
+    // The synthetic data has no slow SKU the backtest compares, so one Comb SKU
+    // is served as SBA; the backtest's own pick for it is read back unchanged.
+    const v = await view();
+    const b = await backtest();
+    const pick = /** @type {NonNullable<(typeof v.skus)[number]>} */ (
+      v.skus.find(
+        (s) =>
+          s.method === 'comb' &&
+          b.skus.find((x) => x.skuCode === s.skuCode)?.selection.chosen === 'theta'
+      )
+    );
+    vi.spyOn(mockDataService.procurement, 'getDemandForecast').mockResolvedValue({
+      ...v,
+      skus: v.skus.map((s) => (s.skuCode === pick.skuCode ? { ...s, method: 'sba' } : s))
+    });
+    render();
+    expect(
+      await within(await openSku(pick.skuCode)).findByTestId('df-detail-backtest')
+    ).toHaveTextContent(
+      'Backtest’s chosen model: Theta (simulated). This forecast still uses SBA.'
+    );
+  });
+
+  it('a discontinued SKU shows no line, even when the backtest compared it', async () => {
+    const v = await view();
+    const b = await backtest();
+    const gone = v.skus.find(
+      (s) => s.method === 'discontinued' && b.skus.some((x) => x.skuCode === s.skuCode)
+    );
+    expect(gone).toBeDefined();
+    const other = /** @type {NonNullable<(typeof v.skus)[number]>} */ (
+      v.skus.find((s) => s.method === 'comb')
+    );
+    render();
+    expect(
+      await within(await openSku(other.skuCode)).findByTestId('df-detail-backtest')
+    ).toBeInTheDocument();
+    const goneCode = /** @type {NonNullable<typeof gone>} */ (gone).skuCode;
+    const detail = await openSku(goneCode);
+    expect(within(detail).getByRole('heading', { level: 2 })).toHaveTextContent(goneCode);
+    expect(within(detail).queryByTestId('df-detail-backtest')).toBeNull();
+  });
+
+  it('a new SKU, which the backtest does not compare, shows no line', async () => {
+    const v = await view();
+    const b = await backtest();
+    const fresh = v.skus.find((s) => s.method === 'newSkuSap');
+    const other = v.skus.find(
+      (s) => s.method === 'comb' && b.skus.some((x) => x.skuCode === s.skuCode)
+    );
+    expect(fresh).toBeDefined();
+    expect(other).toBeDefined();
+    const freshCode = /** @type {NonNullable<typeof fresh>} */ (fresh).skuCode;
+    expect(b.skus.some((x) => x.skuCode === freshCode)).toBe(false);
+    render();
+    // The backtest has loaded: a compared SKU shows its line first.
+    const loaded = await openSku(/** @type {NonNullable<typeof other>} */ (other).skuCode);
+    expect(await within(loaded).findByTestId('df-detail-backtest')).toBeInTheDocument();
+    const detail = await openSku(freshCode);
+    expect(within(detail).getByRole('heading', { level: 2 })).toHaveTextContent(freshCode);
+    expect(within(detail).queryByTestId('df-detail-backtest')).toBeNull();
+  });
+
+  it('the panel renders while the backtest is still loading, without the line', async () => {
+    vi.spyOn(mockDataService.procurement, 'getModelBacktest').mockReturnValue(
+      new Promise(() => {})
+    );
+    const v = await view();
+    const pick = /** @type {NonNullable<(typeof v.skus)[number]>} */ (
+      v.skus.find((s) => s.method === 'comb')
+    );
+    render();
+    const detail = await openSku(pick.skuCode);
+    expect(within(detail).getByTestId(`df-week-forecast-${v.weeks[0]}`)).toHaveTextContent(
+      formatNumber(pick.forecast[0])
+    );
+    expect(within(detail).getByTestId('df-detail-method')).toHaveTextContent('Comb: the average');
+    expect(within(detail).queryByTestId('df-detail-backtest')).toBeNull();
   });
 });

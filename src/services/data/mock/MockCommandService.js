@@ -85,6 +85,7 @@ import {
   dayOf,
   isIsoDay,
   batchDatesProblem,
+  rawMaterialBatchProblem,
   productionProblem,
   submissionChannel,
   alertCloseRefusal,
@@ -3252,6 +3253,32 @@ bindPolicyHook(POLICY_HOOKS.INV_DECLARE_DETAIL_VALID, ({ payload, scope }) => {
             ? 'a production completion date is required when in-production quantity is above 0'
             : 'production completion date must be a date (YYYY-MM-DD)'
       }`
+    };
+  }
+  // [Owner, 2026-11-10, raw only] a raw material with stock above 0
+  // comes with its batches, each with an expiry date: the SAME
+  // `rawMaterialBatchProblem` the form and the template validator run.
+  const rawBatch = rawMaterialBatchProblem({
+    materialType:
+      typeof payload.materialCode === 'string'
+        ? (materialEntry(payload.materialCode)?.materialType ?? null)
+        : null,
+    soh: isNonNegative(payload.totalQty) ? payload.totalQty : null,
+    batches: Array.isArray(payload.batches)
+      ? payload.batches.map((b) => ({
+          expiryDate:
+            b && typeof b === 'object' && typeof b.expiryDate === 'string' ? b.expiryDate : ''
+        }))
+      : [],
+    channel: submissionChannel(scope.personaType === 'buyer', payload.channel)
+  });
+  if (rawBatch) {
+    return {
+      ok: false,
+      reason:
+        rawBatch.reason === 'rawMaterialBatchRequired'
+          ? 'rawMaterialBatchRequired: a raw material needs its batches (batch number, quantity, expiry date)'
+          : 'rawMaterialExpiryRequired: every batch of a raw material needs its expiry date'
     };
   }
   return { ok: true };

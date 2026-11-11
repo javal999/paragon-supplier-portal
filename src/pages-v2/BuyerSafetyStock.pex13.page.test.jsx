@@ -109,6 +109,27 @@ describe('PEX-13 safety stock and protection buffer switches', () => {
     ]);
   });
 
+  it('BR-04 [Proposed]: advice only — a suggestion to switch back on loads the toggle and writes nothing', async () => {
+    recordConsumption();
+    let panel = await openPanel();
+    // Consumption is recorded, so safety stock on needs no advice.
+    expect(within(panel).queryByTestId('pex-switch-safetyStockOn-advice')).toBeNull();
+    fireEvent.click(within(panel).getByTestId('pex-switch-safetyStockOn-toggle'));
+    fireEvent.change(within(panel).getByTestId('pex-switch-safetyStockOn-reason'), {
+      target: { value: 'Switch off for the test' }
+    });
+    fireEvent.click(within(panel).getByTestId('pex-switch-safetyStockOn-save'));
+    const advice = await screen.findByTestId('pex-switch-safetyStockOn-advice');
+    expect(advice).toHaveTextContent('Suggested: switch on, because');
+    panel = screen.getByTestId('sst-rop-detail');
+    expect(within(panel).getByTestId('pex-switch-safetyStockOn-toggle')).not.toBeChecked();
+    fireEvent.click(within(panel).getByTestId('pex-switch-safetyStockOn-advice-apply'));
+    expect(within(panel).getByTestId('pex-switch-safetyStockOn-toggle')).toBeChecked();
+    // Still needs a reason and a save: the ledger holds the one planner row only.
+    expect(within(panel).getByTestId('pex-switch-safetyStockOn-save')).toBeDisabled();
+    expect(osipParamStore.all()).toHaveLength(1);
+  });
+
   it('a seat without osipparam:set cannot change a switch', async () => {
     renderWithProviders(<BuyerSafetyStock />, {
       identity: { ...BUYER, businessRoles: ['procurement'] },
