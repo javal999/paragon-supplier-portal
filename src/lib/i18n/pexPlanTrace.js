@@ -50,13 +50,45 @@ export const pexPlanTraceEn = {
   'pex.sandbox.supplier.weeksConfirmed': '{{confirmed}} of {{weeks}} weeks confirmed',
   'pex.sandbox.supplier.scenarioNote':
     'Festive and Protection buffer load here once LTP Festive and LTP B are in the hub (PEX-5).',
+  'hub.nav.util.masterDataFields': 'Master data fields',
+  'pex.md.subtitle':
+    'Each master data field with its definition, its group and whether it is mandatory.',
+  'pex.md.modeMark':
+    'Warning period: mandatory fields carry a marker, and a record with one empty can still be saved.',
+  'pex.md.modeBlock': 'A record with a mandatory field empty cannot be saved.',
+  'pex.md.proposed':
+    'Proposed catalogue: seeded from the RFI fields in the hub and the planning parameters, until Material Planning has reviewed the OSIP master data template. Saving is blocked later, after the warning period.',
+  'pex.md.col.field': 'Field',
+  'pex.md.col.definition': 'Definition',
+  'pex.md.col.mark': 'Mandatory',
+  'pex.md.col.source': 'Seeded from',
+  'pex.md.mandatory': 'Mandatory',
+  'pex.md.optional': 'Optional',
+  'pex.md.source.rfi': 'RFI field',
+  'pex.md.source.engine': 'Planning parameter',
+  'pex.md.group.planning': 'Planning parameters',
+  'pex.md.group.capability': 'Capability',
+  'pex.md.group.experience': 'Experience',
+  'pex.md.group.facilities': 'Facilities',
+  'pex.md.group.products': 'Products',
+  'pex.md.group.compliance': 'Compliance',
+  'pex.md.group.event': 'Event',
+  'pex.md.field.leadTimeDays': 'Lead time (days)',
+  'pex.md.field.moq': 'MOQ',
+  'pex.md.field.orderMultiple': 'Order multiple (MPQ)',
+  'pex.md.def.leadTimeDays':
+    'Days from the order to the delivery of a material from one supplier, summed over the supply route steps.',
+  'pex.md.def.moq': 'The smallest quantity the supplier accepts in one order.',
+  'pex.md.def.orderMultiple':
+    'The quantity an order must be a multiple of; it stands in for MPQ until the master data feed carries MPQ.',
   'hub.nav.pti.planTrace': 'Plan vs execution',
   'pex.trace.subtitle':
     'One supplier and material: DA per week, then its POs, the call-offs on each PO and the ASNs on each call-off.',
   'pex.trace.asOf': 'As of',
   'pex.trace.daHistory': 'DA history',
   'pex.trace.hold':
-    'A PO flowing back into DA is not built: it waits for the SAP identifiers from Material Planning.',
+    'POs are shown against the DA week they land in, read only: nothing is written back to DA. The join key uses the hub’s PO number, item and a schedule line of 0001 until the SAP identifiers are confirmed by Material Planning.',
+  'pex.trace.col.poLines': 'PO lines landing (PO / item / schedule line)',
   'pex.trace.pair': 'Supplier and material',
   'pex.trace.empty': 'No PO or call-off to trace yet.',
   'pex.trace.supplierOnly': 'The plan vs execution trace is PTI’s own view.',
@@ -101,7 +133,16 @@ export const pexPlanTraceEn = {
   'pex.switch.saved.safetyStockOn': 'Safety stock switch saved',
   'pex.switch.saved.protectionBufferOn': 'Protection buffer switch saved',
   'pex.switch.rulesHold':
-    'Rules that switch these automatically are not built: they wait for Material Planning.'
+    'Suggestions are advice only and the rules behind them are proposed: nothing switches by itself, and you give the reason when you change a switch.',
+  'pex.advice.suggestOff': 'Suggested: switch off, because {{because}}',
+  'pex.advice.suggestOn': 'Suggested: switch on, because {{because}}',
+  'pex.advice.apply': 'Use suggestion',
+  'pex.advice.reason.noDemand.safetyStockOn':
+    'there is no LTP and no recorded consumption for this material.',
+  'pex.advice.reason.noDemand.protectionBufferOn': 'there is no LTP for this material.',
+  'pex.advice.reason.demandBack.safetyStockOn':
+    'LTP or recorded consumption is back for this material.',
+  'pex.advice.reason.demandBack.protectionBufferOn': 'LTP is back for this material.'
 };
 
 /** @type {Record<string, string>} */
@@ -151,13 +192,44 @@ export const pexPlanTraceId = {
   'pex.sandbox.supplier.weeksConfirmed': '{{confirmed}} dari {{weeks}} minggu terkonfirmasi',
   'pex.sandbox.supplier.scenarioNote':
     'Festive dan Protection buffer dimuat di sini setelah LTP Festive dan LTP B ada di hub (PEX-5).',
+  'hub.nav.util.masterDataFields': 'Field master data',
+  'pex.md.subtitle': 'Setiap field master data dengan definisi, kelompok, dan apakah wajib diisi.',
+  'pex.md.modeMark':
+    'Masa peringatan: field wajib diberi tanda, dan data dengan field wajib kosong masih dapat disimpan.',
+  'pex.md.modeBlock': 'Data dengan field wajib kosong tidak dapat disimpan.',
+  'pex.md.proposed':
+    'Katalog usulan: dibuat dari field RFI di hub dan parameter perencanaan, sampai Material Planning meninjau templat master data OSIP. Penyimpanan diblokir nanti, setelah masa peringatan.',
+  'pex.md.col.field': 'Field',
+  'pex.md.col.definition': 'Definisi',
+  'pex.md.col.mark': 'Wajib',
+  'pex.md.col.source': 'Berasal dari',
+  'pex.md.mandatory': 'Wajib',
+  'pex.md.optional': 'Opsional',
+  'pex.md.source.rfi': 'Field RFI',
+  'pex.md.source.engine': 'Parameter perencanaan',
+  'pex.md.group.planning': 'Parameter perencanaan',
+  'pex.md.group.capability': 'Kemampuan',
+  'pex.md.group.experience': 'Pengalaman',
+  'pex.md.group.facilities': 'Fasilitas',
+  'pex.md.group.products': 'Produk',
+  'pex.md.group.compliance': 'Kepatuhan',
+  'pex.md.group.event': 'Event',
+  'pex.md.field.leadTimeDays': 'Lead time (hari)',
+  'pex.md.field.moq': 'MOQ',
+  'pex.md.field.orderMultiple': 'Kelipatan order (MPQ)',
+  'pex.md.def.leadTimeDays':
+    'Jumlah hari dari order sampai pengiriman material dari satu pemasok, dijumlahkan dari langkah rute pasokan.',
+  'pex.md.def.moq': 'Kuantitas terkecil yang diterima pemasok dalam satu order.',
+  'pex.md.def.orderMultiple':
+    'Kuantitas yang menjadi kelipatan order; menggantikan MPQ sampai feed master data membawa MPQ.',
   'hub.nav.pti.planTrace': 'Rencana vs eksekusi',
   'pex.trace.subtitle':
     'Satu pemasok dan material: DA per minggu, lalu PO-nya, call-off pada setiap PO dan ASN pada setiap call-off.',
   'pex.trace.asOf': 'Per tanggal',
   'pex.trace.daHistory': 'Riwayat DA',
   'pex.trace.hold':
-    'PO yang mengalir kembali ke DA belum dibangun: menunggu pengenal SAP dari Material Planning.',
+    'PO ditampilkan terhadap minggu DA tempat PO tiba, hanya baca: tidak ada yang ditulis kembali ke DA. Kunci gabungan memakai nomor PO, item hub, dan baris jadwal 0001 sampai pengenal SAP dikonfirmasi Material Planning.',
+  'pex.trace.col.poLines': 'Baris PO yang tiba (PO / item / baris jadwal)',
   'pex.trace.pair': 'Pemasok dan material',
   'pex.trace.empty': 'Belum ada PO atau call-off untuk ditelusuri.',
   'pex.trace.supplierOnly': 'Penelusuran rencana vs eksekusi adalah tampilan internal PTI.',
@@ -202,5 +274,14 @@ export const pexPlanTraceId = {
   'pex.switch.saved.safetyStockOn': 'Saklar Safety stock disimpan',
   'pex.switch.saved.protectionBufferOn': 'Saklar Protection buffer disimpan',
   'pex.switch.rulesHold':
-    'Aturan yang mengubah saklar ini secara otomatis belum dibangun: menunggu Material Planning.'
+    'Saran hanya anjuran dan aturan di baliknya bersifat usulan: tidak ada saklar yang berubah sendiri, dan Anda memberi alasan saat mengubah saklar.',
+  'pex.advice.suggestOff': 'Disarankan: nonaktifkan, karena {{because}}',
+  'pex.advice.suggestOn': 'Disarankan: aktifkan, karena {{because}}',
+  'pex.advice.apply': 'Pakai saran',
+  'pex.advice.reason.noDemand.safetyStockOn':
+    'tidak ada LTP dan tidak ada konsumsi tercatat untuk material ini.',
+  'pex.advice.reason.noDemand.protectionBufferOn': 'tidak ada LTP untuk material ini.',
+  'pex.advice.reason.demandBack.safetyStockOn':
+    'LTP atau konsumsi tercatat muncul kembali untuk material ini.',
+  'pex.advice.reason.demandBack.protectionBufferOn': 'LTP muncul kembali untuk material ini.'
 };

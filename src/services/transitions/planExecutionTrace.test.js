@@ -72,7 +72,13 @@ describe('PEX-11 structure: DA → PO → call-off → ASN', () => {
     const t = trace({
       daRows: [row('pub-1', '2026-11-02', false, 10), row('pub-2', '2026-11-09', true, 25)]
     });
-    expect(t.weeks).toEqual([{ week: '2026-11-09', da: 25, publicationId: 'pub-2', events: [] }]);
+    expect(t.weeks.find((w) => w.week === '2026-11-09')).toEqual({
+      week: '2026-11-09',
+      da: 25,
+      publicationId: 'pub-2',
+      events: [],
+      poLines: []
+    });
   });
 
   it('leaves out other suppliers, materials and POs without a line for the material', () => {
@@ -216,5 +222,56 @@ describe('PEX-11 BR-03 events on the week they hit', () => {
     expect(by['2026-11-16']).not.toContainEqual(['capacityDecision', 'capd-2', 'accepted']);
     expect(by['2026-11-16']).toHaveLength(2);
     expect(by['2026-11-23']).toEqual([['demandMoved', 'Sup B', '30']]);
+  });
+});
+
+describe('PEX-11 BR-04 [Proposed]: a PO back into DA, read only', () => {
+  const da = (/** @type {string} */ week) => ({
+    supplierId: S,
+    materialCode: M,
+    publicationId: 'pub-1',
+    planningWeek: '2026-11-02',
+    inForce: true,
+    weeks: [{ week, daInForce: 25 }]
+  });
+
+  it('joins a PO line to the DA week of its delivery date on PO number + item + schedule line', () => {
+    const t = trace({ daRows: [da('2026-11-30')] });
+    const w = t.weeks.find((x) => x.week === '2026-11-30');
+    expect(w?.da).toBe(25);
+    expect(w?.poLines).toEqual([
+      {
+        key: 'PO-p1/p1-1/0001',
+        poNumber: 'PO-p1',
+        item: 'p1-1',
+        scheduleLine: '0001',
+        quantity: 100,
+        uom: undefined,
+        status: 'Confirmed'
+      }
+    ]);
+  });
+
+  it('shows a PO week that has no DA, with da null', () => {
+    const t = trace({ daRows: [da('2026-11-09')] });
+    expect(t.weeks.map((w) => [w.week, w.da, w.poLines.length])).toEqual([
+      ['2026-11-09', 25, 0],
+      ['2026-11-30', null, 1]
+    ]);
+  });
+
+  it('does not land a rejected PO, uses the requested date without a confirmed one, and does not mutate its input', () => {
+    const pos = [
+      po({ id: 'p2', status: 'Rejected' }),
+      po({ id: 'p3', confirmedDeliveryDate: '', requestedDeliveryDate: '2026-12-08' })
+    ];
+    const frozen = JSON.stringify(pos);
+    const t = trace({ purchaseOrders: pos });
+    expect(t.weeks.map((w) => [w.week, w.poLines.map((l) => l.poNumber)])).toContainEqual([
+      '2026-12-07',
+      ['PO-p3']
+    ]);
+    expect(t.weeks.flatMap((w) => w.poLines.map((l) => l.poNumber))).not.toContain('PO-p2');
+    expect(JSON.stringify(pos)).toBe(frozen);
   });
 });
