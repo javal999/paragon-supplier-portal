@@ -103,7 +103,9 @@ describe('Forecast quality · Bias and overrides tab', () => {
     expect(screen.getByTestId('fb-fva-empty')).toHaveTextContent('none is invented');
     expect(screen.getByTestId('fb-review-empty')).toBeInTheDocument();
     expect(screen.getByTestId('fb-kpi-overrides')).toHaveTextContent('0');
-    expect(screen.getByTestId('fb-service-note')).toHaveTextContent('built separately');
+    expect(screen.getByTestId('fb-service-note')).toHaveTextContent(
+      'starts once overrides are saved and 13 weeks of them have sold'
+    );
   });
 
   it('X-06: a planner records an override through the form; it lands in the ledger with old → new, and on the Demand forecast', async () => {
