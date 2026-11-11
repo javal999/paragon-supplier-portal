@@ -9,9 +9,10 @@
 // the end of the grace period is not a state: the read applies the planner's
 // suggestion and marks it "no supplier response" [Proposed, PEX-D14].
 //
-// Both steps are appended with time and actor (PEX-8 BR-05). Not here: the
-// end-of-grace execution itself (the call-off, the spread, the FG absorption)
-// and the automatic handling (PEX-12, Hold).
+// Both steps are appended with time and actor (PEX-8 BR-05). The third state,
+// `Executed`, is the end of the grace period: the system calls off, spreads or
+// absorbs per the option that stands (`t_poonhold_execute`, a machine act, run
+// once per decision). Not here: the automatic handling (PEX-12, Hold).
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import { FlowDefinition } from '../schema' */
@@ -21,10 +22,10 @@ import { POLICY_HOOKS } from '../policyHooks';
 export const poOnHoldDecisionFlow = {
   entity: 'poOnHoldDecision',
   version: 1,
-  states: ['Suggested', 'Chosen'],
+  states: ['Suggested', 'Chosen', 'Executed'],
   initial: 'Suggested',
-  /** The supplier's choice is final (PEX-8 BR-01). */
-  terminals: ['Chosen'],
+  /** The supplier's choice is final (PEX-8 BR-01); the execution ends the line's episode. */
+  terminals: ['Executed'],
   transitions: [
     {
       // The planner suggests an option for one PO On Hold line.
@@ -48,6 +49,26 @@ export const poOnHoldDecisionFlow = {
       requiredFields: ['option'],
       policyHooks: [POLICY_HOOKS.PO_ON_HOLD_CHOOSABLE],
       surfaceable: { surfaced: true },
+      version: 1
+    },
+    {
+      // PEX-8 BR-02/BR-05 — the end of the grace period: the system executes
+      // the option that stands (the supplier's choice, else the planner's
+      // suggestion, BR-06). Once per decision; recorded on the ledger.
+      id: 't_poonhold_execute',
+      from: ['Suggested', 'Chosen'],
+      to: 'Executed',
+      trigger: 'system',
+      requiredRole: 'poonhold:execute',
+      requiredFields: [],
+      policyHooks: [POLICY_HOOKS.PO_ON_HOLD_EXECUTABLE],
+      surfaceable: {
+        surfaced: false,
+        because: 'computed',
+        why:
+          'The end of the grace period is a date, not a decision: the hub runs ' +
+          'the option that stands, once. The planner sees a read-only preview.'
+      },
       version: 1
     }
   ]

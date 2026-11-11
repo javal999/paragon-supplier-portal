@@ -344,6 +344,7 @@ describe('BL-50 · the deadline population reads the hub calendar', () => {
       'services/transitions/forecastRules.js',
       // PEX-7 — the PO On Hold grace period counts working days (owner, 2026-11-09).
       'services/transitions/poOnHold.js',
+      'services/transitions/stockMovement.js',
       // Material B1 — the weekly stock update cutoff moves off a non-working day (MR-1 BR-03).
       // Material B3 — an API week is judged on the cycle's working days (MR-2 BR-02).
       'services/transitions/updateCompliance.js',

@@ -1,6 +1,6 @@
 # C1 — Method Surface
 
-Three distinct axes. **117** (service surface) · **226** (transition catalog) · **61** (wired
+Three distinct axes. **117** (service surface) · **227** (transition catalog) · **61** (wired
 targets). They measure different things; this file keeps them separate.
 
 > ⚠️ **THIS DOCUMENT IS PINNED TO THE TREE, AND THE PIN IS WHY THE NUMBERS ABOVE ARE ALLOWED TO
@@ -104,7 +104,7 @@ the string, because those are different claims and only the first is the contrac
 
 ---
 
-## Axis 2 — the 226-transition catalog (67 flows)
+## Axis 2 — the 227-transition catalog (67 flows)
 
 Every authored state-machine edge across the registered flows (`id: 't_<entity>_<verb>'`). Derived
 from `getKnownFlows()` — the seeded registry — never from a grep over the flow files, because a
@@ -169,7 +169,7 @@ transition id can be assembled at a call site rather than written as a literal (
 | `feedstockConfirmation.flow.js` | `feedstockConfirmation` | 1 | `t_feedstock_confirm` | **wired** |
 | `supplierAsk.flow.js` | `supplierAsk` | 4 | `t_supplierask_raise`, `t_supplierask_answer`, `t_supplierask_close`, `t_supplierask_withdraw` | **wired** |
 | `capacityDecision.flow.js` | `capacityDecision` | 2 | `t_capacitydecision_accept`, `t_capacitydecision_withdraw` | **wired** |
-| `poOnHoldDecision.flow.js` | `poOnHoldDecision` | 2 | `t_poonhold_suggest`, `t_poonhold_choose` | **wired** |
+| `poOnHoldDecision.flow.js` | `poOnHoldDecision` | 3 | `t_poonhold_suggest`, `t_poonhold_choose`, `t_poonhold_execute` | **wired** |
 | `simulationOverride.flow.js` | `simulationOverride` | 1 | `t_simulation_override_set` | **wired** |
 | `rfiEvent.flow.js` | `rfiEvent` | 6 | `t_rfi_create`, `t_rfi_revise_draft`, `t_rfi_publish`, `t_rfi_extend`, `t_rfi_close`, `t_rfi_cancel` | **wired** |
 | `rfiResponse.flow.js` | `rfiResponse` | 3 | `t_rfiresponse_save`, `t_rfiresponse_submit`, `t_rfiresponse_revise` | **wired** |
@@ -180,7 +180,7 @@ transition id can be assembled at a call site rather than written as a literal (
 | `rfpFirmOffer.flow.js` | `rfpFirmOffer` | 2 | `t_rfpfirmoffer_submit`, `t_rfpfirmoffer_revise` | **wired** |
 | `rfiIntent.flow.js` | `rfiIntent` | 3 | `t_rfiintent_respond`, `t_rfiintent_decline`, `t_rfiintent_withdraw` | **wired** |
 | `rfpIntent.flow.js` | `rfpIntent` | 3 | `t_rfpintent_respond`, `t_rfpintent_decline`, `t_rfpintent_withdraw` | **wired** |
-| **TOTAL** | | **226** | | |
+| **TOTAL** | | **227** | | |
 
 **Flow shape** (`schema.js`, `FlowDefinition` / `TransitionDef`): each transition declares
 `from[]` / `to` / `trigger` / `requiredRole` / `requiredFields[]` / `policyHooks[]` /

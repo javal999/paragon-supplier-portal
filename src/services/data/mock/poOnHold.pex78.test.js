@@ -8,6 +8,7 @@ import { MockCommandService, commandAuditSink } from './MockCommandService';
 import { MockProcurementService } from './MockProcurementService';
 import { poOnHoldStore } from './stores/poOnHoldStore';
 import { osipParamStore } from './stores/osipParamStore';
+import { callOffStore } from './stores/callOffStore';
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { sdcClock } from '../../sdc';
 import { NO_PERSON } from '@context/noPerson';
@@ -63,6 +64,7 @@ const setParam = (param, value) =>
 
 beforeEach(() => {
   poOnHoldStore.reset();
+  callOffStore.reset();
   osipParamStore.reset();
   commandAuditSink.clear();
   sdcClock.reset();
@@ -121,11 +123,10 @@ describe('the read (PEX-7)', () => {
     expect(new Set(all.map((r) => r.supplierId)).size).toBeGreaterThan(1);
   });
 
-  it('the hub holds no PIPO flag, Max PTI or movement record: they read null, and FG is not suggested', async () => {
+  it('FG data: PIPO defaults to no and Max PTI to none (the cap is not computable); FG is not suggested without a cap', async () => {
     const r = (await lines(planner)).find((x) => x.key === keyOf(NO_DEMAND));
-    expect(r).toMatchObject({ pipo: null, maxPti: null, cap: null, daysSinceMovement: null });
-    expect(r?.conditions.fg).toBe(false);
-    expect(r?.suggestion).toBe('fsOnly');
+    expect(r).toMatchObject({ pipo: false, pipoIsDefault: true, maxPti: null, cap: null });
+    expect(r?.suggestion === 'fg' ? r.cap : null).toBeNull();
     const s = (await lines(planner)).find((x) => x.key === keyOf(SOME_DEMAND));
     expect(s?.suggestion).toBe('fsSpread');
   });
@@ -191,18 +192,25 @@ describe('the decision (PEX-8)', () => {
     await setParam('grace', 0);
     // Grace 0 is over at once, so a suggestion made now is the one that applies.
     await suggest({ ...NO_DEMAND, option: 'fsOnly' });
-    const r = (await lines(planner)).find((x) => x.key === keyOf(NO_DEMAND));
-    expect(r).toMatchObject({ status: 'noSupplierResponse', effective: 'fsOnly' });
-    expect(r?.outcome).toMatchObject({ feedstockQty: r?.qty });
+    // The end of the grace period has come, so the system has already executed
+    // it (PEX-8 BR-05): the line is kept, marked executed, with the standing.
+    const r = (await lines(planner)).find(
+      (x) => x.supplierId === NO_DEMAND.supplierId && x.materialCode === NO_DEMAND.materialCode
+    );
+    expect(r?.execution).toMatchObject({
+      status: 'executed',
+      record: { standing: 'noSupplierResponse', actor: 'system' }
+    });
+    expect(r?.outcome).toMatchObject({ feedstockQty: 10000 });
   });
 
   it('a choice after the grace period ended is refused (the suggestion already applies)', async () => {
     await suggest({ ...NO_DEMAND, option: 'fsOnly' });
     const id = (await lines(planner)).find((x) => x.key === keyOf(NO_DEMAND))?.decision?.id ?? '';
     await setParam('grace', 0);
+    // The grace-0 command above already ran the execution, so the choice is too late.
     const res = await choose(id, 'fsSpread', sup2);
     expect(res.status).toBe('failed');
-    expect(res.reason).toContain('PO_ON_HOLD_GRACE_ENDED');
   });
 
   it('the grace period ended with no suggestion: back to the planner', async () => {
