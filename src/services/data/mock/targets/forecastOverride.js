@@ -5,7 +5,7 @@
 // is the Material Planning team's (ENG-D11), so every supplier is denied at
 // SCOPE (§86), and a buyer seat without the `planning` lane is refused at the
 // ROLE gate. The SKU, the week, the engine's value and the old value are read
-// from the demand forecast run the page shows (`currentDemandForecast`) and
+// from the demand forecast run the page shows (`currentPromotedForecast`) and
 // the ledger — the form supplies only the new value, the reason and the note.
 // `recordedAt` is the hub clock and `recordedBy` the session's actor; neither
 // is read from the payload.
@@ -19,12 +19,12 @@ import { NO_PERSON } from '@context/noPerson';
 /** @import { OverridePayload } from '../../../engine/forecastOverrides' */
 import { OVERRIDE_REASON_LIST, overrideRefusal } from '../../../engine/forecastOverrides';
 import { forecastOverrideStore } from '../stores/forecastOverrideStore';
-import { currentDemandForecast } from '../demandForecastRun';
+import { currentPromotedForecast } from '../demandForecastRun';
 
 /** @param {Record<string, unknown>} payload */
 const check = (payload) =>
   overrideRefusal(
-    currentDemandForecast(),
+    currentPromotedForecast(),
     forecastOverrideStore.all(),
     /** @type {OverridePayload} */ (/** @type {unknown} */ (payload)),
     (code) => isActiveReasonCode(OVERRIDE_REASON_LIST, code),
@@ -50,7 +50,7 @@ export const forecastOverrideTarget = {
     // The policy hook has already refused every payload this could reject.
     const res = check(payload);
     if ('refusal' in res) throw new Error(res.refusal);
-    const run = currentDemandForecast();
+    const run = currentPromotedForecast();
     const made = forecastOverrideStore.add({
       skuCode: res.cell.skuCode,
       weekStart: res.cell.weekStart,
