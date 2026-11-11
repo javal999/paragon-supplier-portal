@@ -116,32 +116,49 @@ describe('CR-20 · only a transport failure is retryable', () => {
 
 describe('failures recovered from the command trail', () => {
   it('a failed settle becomes a message; a SUCCEEDED command does not', () => {
-    expect(failuresFromEvents([event()], entityOf)).toHaveLength(1);
+    expect(failuresFromEvents([event()], entityOf, NOW)).toHaveLength(1);
     expect(
-      failuresFromEvents([event({ outcome: 'done', reason: undefined })], entityOf)
+      failuresFromEvents([event({ outcome: 'done', reason: undefined })], entityOf, NOW)
     ).toHaveLength(0);
   });
 
   it('A RETRY THAT SUCCEEDS CLEARS THE MESSAGE — the `done` under the same reference wins', () => {
     const failed = event();
     const settled = event({ outcome: 'done', reason: undefined, ts: '2026-09-30T11:45:00.000Z' });
-    expect(failuresFromEvents([failed], entityOf)).toHaveLength(1);
-    expect(failuresFromEvents([failed, settled], entityOf)).toHaveLength(0);
+    expect(failuresFromEvents([failed], entityOf, NOW)).toHaveLength(1);
+    expect(failuresFromEvents([failed, settled], entityOf, NOW)).toHaveLength(0);
   });
 
   it('a refusal that is not a settle fault is not a SAP message at all', () => {
-    expect(failuresFromEvents([event({ reason: 'NOT_LEGAL' })], entityOf)).toHaveLength(0);
+    expect(failuresFromEvents([event({ reason: 'NOT_LEGAL' })], entityOf, NOW)).toHaveLength(0);
   });
 
   it('a failure on a verb that never crosses the SAP boundary is not filed', () => {
-    expect(failuresFromEvents([event({ event: 't_po_confirm' })], entityOf)).toHaveLength(0);
+    expect(failuresFromEvents([event({ event: 't_po_confirm' })], entityOf, NOW)).toHaveLength(0);
   });
 
   it('the recovered message carries the reference a retry needs', () => {
-    const [m] = failuresFromEvents([event()], entityOf);
+    const [m] = failuresFromEvents([event()], entityOf, NOW);
     expect(m.settleCorrelationId).toBe('cmd-1');
     expect(m.fault).toBe('TRANSPORT');
     expect(isRetryable(m)).toBe(true);
+  });
+
+  it("BL-141 — the row is stamped from the hub clock; the event's wall-clock ts is not shown", () => {
+    const wall = '2031-01-01T00:00:00.000Z';
+    const [m] = failuresFromEvents([event({ ts: wall })], entityOf, NOW);
+    expect(m.timestamp).toBe(NOW);
+    expect(m.timestamp).not.toBe(wall);
+  });
+
+  it('BL-141 — rows stay newest event first when every stamp is the same hub instant', () => {
+    const older = event({ correlationId: 'cmd-old', ts: '2031-01-01T00:00:00.000Z' });
+    const newer = event({ correlationId: 'cmd-new', ts: '2031-01-02T00:00:00.000Z' });
+    const rows = sapMonitor({
+      lastSeen: {},
+      messages: failuresFromEvents([older, newer], entityOf, NOW)
+    }).find((o) => o.object === 'goodsReceipt');
+    expect(rows?.failures.map((f) => f.correlationId)).toEqual(['cmd-new', 'cmd-old']);
   });
 });
 

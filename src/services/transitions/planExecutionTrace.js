@@ -17,6 +17,14 @@
 //                open on a PO that is Delivered or Closed.
 //   overlapping  two open POs (not Delivered, Closed or Rejected) of the pair
 //                whose order-to-delivery date ranges overlap.
+// PEX-11 BR-04 [Proposed] — A PO BACK INTO DA: a read-only join of each PO line to
+// the DA week it lands in, keyed on PO number + item + schedule line. No write-back:
+// nothing in DA or on the PO changes. The SAP identifiers are not confirmed by Mba
+// Septi, so the key is built from the hub's own ids: the PO number, the PO line's id
+// as the item, and the schedule line, which the hub does not carry: each PO line has
+// one delivery date, so it is schedule line 1 ('0001'). When SAP schedule lines are
+// confirmed, only `scheduleLineOf` and the key change. The week is the confirmed
+// delivery date's, else the requested one; a Rejected PO does not land.
 // EVENTS (BR-03): a rejected call-off on its need-date week, a rejected PO on its
 // order-date week, a capacity decision on its week, and demand the planner moved
 // to another supplier (CAP-8) on the line's week.
@@ -76,6 +84,20 @@ const PO_USED_UP = new Set(['Delivered', 'Closed']);
  */
 
 /**
+ * PEX-11 BR-04 [Proposed] — one PO line joined to its DA week; `key` is PO number / item / schedule line.
+ * @typedef {{
+ *   readonly key: string;
+ *   readonly poNumber: string;
+ *   readonly item: string;
+ *   readonly scheduleLine: string;
+ *   readonly quantity: number;
+ *   readonly uom: string;
+ *   readonly status: string;
+ * }} TracePoLine
+ */
+
+/**
+ * `poLines`: the PO lines landing that week (BR-04, read only).
  * `da`: the DA in force for the week (the publication's `daInForce`), null when no publication covers it.
  * `publicationId`: the DA publication it comes from (the version link, BR-03).
  * @typedef {{
@@ -83,6 +105,7 @@ const PO_USED_UP = new Set(['Delivered', 'Closed']);
  *   readonly da: number | null;
  *   readonly publicationId: string | null;
  *   readonly events: readonly TraceEvent[];
+ *   readonly poLines: readonly TracePoLine[];
  * }} TraceWeek
  */
 
@@ -100,6 +123,13 @@ const PO_USED_UP = new Set(['Delivered', 'Closed']);
  * @param {string} materialCode
  */
 const lineOf = (po, materialCode) => po.lineItems.find((l) => l.materialCode === materialCode);
+
+/**
+ * BR-04 [Proposed] — the schedule line of a PO line. The hub holds one delivery date per PO line,
+ * so it is always the first. Change here when SAP schedule lines are confirmed.
+ * @returns {string}
+ */
+const scheduleLineOf = () => '0001';
 
 /**
  * The end of a PO's period: confirmed delivery, else requested.
@@ -257,13 +287,41 @@ export function buildPlanExecutionTrace(input) {
         detail: String(m.qty)
       });
 
-  const weekKeys = [...new Set([...daByWeek.keys(), ...events.map((e) => e.week)])].sort();
+  // ── BR-04 [Proposed]: each live PO line joined to the DA week it lands in (read only).
+  /** @type {Map<string, TracePoLine[]>} */
+  const poLinesByWeek = new Map();
+  for (const po of pairPos) {
+    if (po.status === 'Rejected') continue;
+    const line = lineOf(po, materialCode);
+    if (!line) continue;
+    const week = mondayOf(
+      dayOf(po.confirmedDeliveryDate || po.requestedDeliveryDate || po.orderDate)
+    );
+    const scheduleLine = scheduleLineOf();
+    poLinesByWeek.set(week, [
+      ...(poLinesByWeek.get(week) ?? []),
+      {
+        key: `${po.poNumber}/${line.id}/${scheduleLine}`,
+        poNumber: po.poNumber,
+        item: line.id,
+        scheduleLine,
+        quantity: line.quantity,
+        uom: line.uom,
+        status: po.status
+      }
+    ]);
+  }
+
+  const weekKeys = [
+    ...new Set([...daByWeek.keys(), ...events.map((e) => e.week), ...poLinesByWeek.keys()])
+  ].sort();
   /** @type {TraceWeek[]} */
   const weeks = weekKeys.map((week) => ({
     week,
     da: daByWeek.get(week)?.da ?? null,
     publicationId: daByWeek.get(week)?.publicationId ?? null,
-    events: events.filter((e) => e.week === week)
+    events: events.filter((e) => e.week === week),
+    poLines: poLinesByWeek.get(week) ?? []
   }));
 
   return { weeks, pos, noPoCallOffs, flags };

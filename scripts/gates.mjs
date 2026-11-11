@@ -34,23 +34,46 @@ const OUT = join(ROOT, OUT_REL);
 const FLOOR = JSON.parse(readFileSync(join(ROOT, 'scripts', 'floor.json'), 'utf8'));
 const PKG = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
 
-const CI = Boolean(process.env.GITHUB_ACTIONS);
+// Which runner, if any. Until 2026-11-10 only GITHUB_ACTIONS was read, so on
+// GitLab (the merge gate since 2026-10-14) the script ran in local mode: no
+// log sections and a verbose vitest reporter. GitLab sets CI and GITLAB_CI.
+const GH = Boolean(process.env.GITHUB_ACTIONS);
+const GL = Boolean(process.env.GITLAB_CI);
+const CI = GH || GL || Boolean(process.env.CI);
 const failures = [];
 // What was actually observed, so the closing line reports the run and not the
 // floor. A summary that prints the recorded number back at you is a summary
 // that would read identically if nothing had run.
 const observed = { tests: null, files: null, gate: null, lintWarnings: null };
 
-const group = (title) => console.log(CI ? `::group::${title}` : `\n──────── ${title} ────────`);
-const endGroup = () => console.log(CI ? '::endgroup::' : '');
+// GitLab collapsible log sections: https://docs.gitlab.com/ci/jobs/job_logs/#custom-collapsible-sections
+let section = null;
+const now = () => Math.floor(Date.now() / 1000);
+function group(title) {
+  if (GH) return console.log(`::group::${title}`);
+  if (GL) {
+    section = `gate_${now()}_${title.replace(/[^a-zA-Z0-9_.-]+/g, '_').slice(0, 40)}`;
+    return console.log(`\x1b[0Ksection_start:${now()}:${section}\r\x1b[0K${title}`);
+  }
+  console.log(`\n──────── ${title} ────────`);
+}
+function endGroup() {
+  if (GH) return console.log('::endgroup::');
+  if (GL && section) {
+    console.log(`\x1b[0Ksection_end:${now()}:${section}\r\x1b[0K`);
+    section = null;
+    return;
+  }
+  console.log('');
+}
 const ok = (msg) => console.log(`  ok   ${msg}`);
-const note = (msg) => console.log(CI ? `::notice::${msg}` : `  note ${msg}`);
+const note = (msg) => console.log(GH ? `::notice::${msg}` : `  note ${msg}`);
 
 function fail(gate, msg) {
   failures.push(`${gate} — ${msg}`);
   // A GitHub error annotation surfaces on the run summary and in the PR diff,
   // not only in the collapsed log.
-  console.log(CI ? `::error title=${gate}::${msg}` : `  FAIL ${gate} — ${msg}`);
+  console.log(GH ? `::error title=${gate}::${msg}` : `  FAIL ${gate} — ${msg}`);
 }
 
 /** Run a child process, streaming its output. Returns an exit code; never throws. */
@@ -175,10 +198,17 @@ group('gate 3/5 · npx vitest run  (the floor)');
   const report = join(ROOT, reportRel);
   rmSync(report, { force: true });
 
+  // In CI the human-readable reporter is `dot` and console output is kept for
+  // FAILING tests only (`--silent=passed-only`). Passing specs print ~78,700
+  // React act() warnings (30 MB); GitLab truncates a job log at 4 MB, so the
+  // failure that mattered was cut off, and streaming the noise cost about 25%
+  // of the run (A/B, 2026-11-10). The JSON report and every assertion below are
+  // identical in both modes. Locally the verbose reporter stays.
+  const human = CI ? ['--reporter=dot', '--silent=passed-only'] : ['--reporter=default'];
   const status = run('vitest', process.execPath, [
     'node_modules/vitest/vitest.mjs',
     'run',
-    '--reporter=default',
+    ...human,
     '--reporter=json',
     `--outputFile.json=${reportRel}`,
   ]);

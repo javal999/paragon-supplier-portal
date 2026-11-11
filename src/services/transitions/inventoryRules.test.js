@@ -24,6 +24,8 @@ import {
   parseCsv,
   positionBand,
   productionProblem,
+  rawMaterialBatchProblem,
+  readFeedstockRows,
   submissionChannel,
   STOCK_TEMPLATE_FIELDS,
   stockFreshness,
@@ -372,14 +374,17 @@ describe('the stock template and row-by-row validation (REQ-E08-02 BR-05 to BR-0
     const csv = stockTemplateCsv(assigned, 'en');
     const { headers, rows } = parseCsv(csv);
     expect(headers[0]).toBe('Material code');
-    // BL-60 — ten columns: the manufacturing date joined the batch fields.
-    expect(headers).toHaveLength(10);
-    // MR-4 BR-01 — the batch columns are optional and say so.
+    // BL-60 — ten stock columns; [Proposed 2026-11-10] plus K and L for feedstock.
+    expect(headers).toHaveLength(12);
+    // [Owner, 2026-11-10] batch number, quantity and expiry are required for a
+    // raw material, so only the manufacturing date still says "(optional)".
     expect(headers.slice(6)).toEqual([
-      'Batch number (optional)',
-      'Batch quantity (optional)',
+      'Batch number',
+      'Batch quantity',
       'Manufacturing date (YYYY-MM-DD) (optional)',
-      'Expiry date (YYYY-MM-DD) (optional)'
+      'Expiry date (YYYY-MM-DD)',
+      'Feedstock quantity (optional)',
+      'Feedstock as of (YYYY-MM-DD) (optional)'
     ]);
     expect(rows.map((r) => r['Material code'])).toEqual([
       'PK-PETB-8801',
@@ -525,7 +530,7 @@ describe('MR-4 — the template marks optional columns; MAT-D4 — in production
   const assigned = [{ materialCode: 'PK-PETB-8801', uom: 'PCS' }];
   const ctx = { assigned, today: '2026-09-15' };
 
-  it('AC-01: a freshly built template marks D and G to J optional, in EN and ID, and nothing else', () => {
+  it('AC-01: a freshly built template marks D, I, K and L optional, in EN and ID, and nothing else', () => {
     const en = parseCsv(stockTemplateCsv(assigned, 'en')).headers;
     const id = parseCsv(stockTemplateCsv(assigned, 'id')).headers;
     /**
@@ -534,10 +539,10 @@ describe('MR-4 — the template marks optional columns; MAT-D4 — in production
      */
     const marked = (hs, suffix) =>
       hs.flatMap((h, i) => (h.endsWith(suffix) ? [String.fromCharCode(65 + i)] : []));
-    expect(marked(en, ' (optional)')).toEqual(['D', 'G', 'H', 'I', 'J']);
-    expect(marked(id, ' (opsional)')).toEqual(['D', 'G', 'H', 'I', 'J']);
-    expect(en[6]).toBe('Batch number (optional)');
-    expect(id[6]).toBe('Nomor batch (opsional)');
+    expect(marked(en, ' (optional)')).toEqual(['D', 'I', 'K', 'L']);
+    expect(marked(id, ' (opsional)')).toEqual(['D', 'I', 'K', 'L']);
+    expect(en[6]).toBe('Batch number');
+    expect(id[6]).toBe('Nomor batch');
     // E is required; F is required when E > 0 — neither carries the suffix.
     expect(en[4]).toBe('In-production quantity');
     expect(en[5]).toBe('Expected production completion date (YYYY-MM-DD)');
@@ -548,8 +553,10 @@ describe('MR-4 — the template marks optional columns; MAT-D4 — in production
       'optional',
       'required',
       'requiredWhenInProduction',
+      'requiredForRawMaterial',
+      'requiredForRawMaterial',
       'optional',
-      'optional',
+      'requiredForRawMaterial',
       'optional',
       'optional'
     ]);
@@ -740,5 +747,82 @@ describe('weeks', () => {
     expect(mondayOf('2026-08-31')).toBe('2026-08-31');
     expect(mondayOf('2026-09-06')).toBe('2026-08-31');
     expect(mondayOf('2026-09-07')).toBe('2026-09-07');
+  });
+});
+
+describe('[Owner 2026-11-10] raw material needs batches with expiry; [Proposed] feedstock rides the template', () => {
+  const rawCtx = {
+    assigned: [
+      { materialCode: 'RM-GLYC-0001', uom: 'KG', materialType: 'ROH' },
+      { materialCode: 'PK-PETB-8801', uom: 'PCS', materialType: 'VERP' }
+    ],
+    today: '2026-09-01'
+  };
+  const HEAD =
+    'Material code,Stock on hand,Unit,In-production quantity,Batch number,Batch quantity,Expiry date (YYYY-MM-DD),Feedstock quantity,Feedstock as of (YYYY-MM-DD)';
+
+  it('the rule: ROH with stock needs batches, each with an expiry; packaging, zero stock and API are exempt', () => {
+    const base = { materialType: 'ROH', soh: 100, channel: /** @type {const} */ ('manual') };
+    expect(rawMaterialBatchProblem({ ...base, batches: [] })?.reason).toBe(
+      'rawMaterialBatchRequired'
+    );
+    expect(rawMaterialBatchProblem({ ...base, batches: [{ expiryDate: '' }] })?.reason).toBe(
+      'rawMaterialExpiryRequired'
+    );
+    // Known-good: a batch with its expiry passes.
+    expect(rawMaterialBatchProblem({ ...base, batches: [{ expiryDate: '2027-01-31' }] })).toBe(
+      null
+    );
+    expect(rawMaterialBatchProblem({ ...base, materialType: 'VERP', batches: [] })).toBe(null);
+    expect(rawMaterialBatchProblem({ ...base, soh: 0, batches: [] })).toBe(null);
+    expect(rawMaterialBatchProblem({ ...base, channel: 'api', batches: [] })).toBe(null);
+  });
+
+  it('the template refuses a raw material without batches or expiry, and still accepts packaging without', () => {
+    const csv = [HEAD, 'RM-GLYC-0001,100,KG,0,,,,,', 'PK-PETB-8801,700,PCS,0,,,,,'].join('\n');
+    const { accepted, refused } = validateStockRows(parseCsv(csv).rows, rawCtx);
+    expect(refused).toEqual([
+      {
+        row: 2,
+        materialCode: 'RM-GLYC-0001',
+        reason: 'rawMaterialBatchRequired',
+        field: 'batchNumber'
+      }
+    ]);
+    expect(accepted.map((a) => a.materialCode)).toEqual(['PK-PETB-8801']);
+    const noExpiry = [HEAD, 'RM-GLYC-0001,100,KG,0,B1,100,,,'].join('\n');
+    expect(validateStockRows(parseCsv(noExpiry).rows, rawCtx).refused[0].reason).toBe(
+      'rawMaterialExpiryRequired'
+    );
+    const good = [HEAD, 'RM-GLYC-0001,100,KG,0,B1,100,2027-01-31,,'].join('\n');
+    expect(validateStockRows(parseCsv(good).rows, rawCtx).accepted[0].batches).toEqual([
+      { batchNumber: 'B1', qty: 100, expiryDate: '2027-01-31' }
+    ]);
+  });
+
+  it('feedstock columns: read on their own, a feedstock-only row is not stock, a blank date is today', () => {
+    const csv = [
+      HEAD,
+      'PK-PETB-8801,,PCS,,,,,250,',
+      'RM-GLYC-0001,,KG,,,,,abc,',
+      'XX-NOT-0001,,PCS,,,,,10,2026-08-30'
+    ].join('\n');
+    const rows = parseCsv(csv).rows;
+    // The stock half sees the feedstock-only rows as blank, never as refused stock.
+    const stock = validateStockRows(rows, rawCtx);
+    expect(stock.refused.map((r) => r.materialCode)).toEqual([]);
+    expect(stock.blank.map((b) => b.materialCode)).toEqual([
+      'PK-PETB-8801',
+      'RM-GLYC-0001',
+      'XX-NOT-0001'
+    ]);
+    const feed = readFeedstockRows(rows, rawCtx);
+    expect(feed.accepted).toEqual([
+      { materialCode: 'PK-PETB-8801', feedstockQty: 250, confirmedOn: '2026-09-01', row: 2 }
+    ]);
+    expect(feed.refused).toEqual([
+      { row: 3, materialCode: 'RM-GLYC-0001', reason: 'feedstockQtyInvalid' },
+      { row: 4, materialCode: 'XX-NOT-0001', reason: 'notAssigned' }
+    ]);
   });
 });

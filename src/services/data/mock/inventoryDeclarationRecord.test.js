@@ -56,6 +56,8 @@ const record = (overrides = {}) => ({
     totalQty: 4000,
     // MAT-D4 / C1b — the verb requires in production (0 allowed).
     inProductionQty: 0,
+    // BL-289 (owner 2026-11-10) — a raw material comes with its batches and expiry.
+    batches: [{ batchNumber: 'GLY-REC-1', qty: 4000, expiryDate: '2027-12-31' }],
     ...overrides
   }
 });
@@ -69,6 +71,7 @@ const declare = (overrides = {}) => ({
     supplierId: 'sup-002',
     totalQty: 4000,
     inProductionQty: 0,
+    batches: [{ batchNumber: 'GLY-REC-1', qty: 4000, expiryDate: '2027-12-31' }],
     ...overrides
   }
 });
