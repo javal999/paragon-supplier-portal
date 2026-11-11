@@ -9,13 +9,19 @@
 // material overlay, which the move verb writes beside its row here.
 //
 // Written by the `planningGroup` target and nothing else. Read through the
-// planning group read model, never directly by a page. Empty at start.
+// planning group read model, never directly by a page. Empty at start but for
+// one seeded group: the E2E walkthrough's own planning group (2026-11-12),
+// which the walkthrough material names in the master fixture.
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import { PlanningGroupEvent } from '../../types' */
+import { SSTP_PLANNING_GROUP_EVENT } from '../fixtures/walkthroughSstp';
+
+/** @type {readonly PlanningGroupEvent[]} */
+const SEED = [SSTP_PLANNING_GROUP_EVENT];
 
 /** @type {PlanningGroupEvent[]} */
-let rows = [];
+let rows = [...SEED];
 let seq = 0;
 
 export const planningGroupStore = {
@@ -47,7 +53,7 @@ export const planningGroupStore = {
    * @returns {void}
    */
   reset() {
-    rows = [];
+    rows = [...SEED];
     seq = 0;
   }
 };

@@ -585,7 +585,9 @@ describe('CP-3 · H2 — THE DELTA, LINE BY LINE, over every receivable line', (
     // `RECEIVABLE_ASN_STATUSES`. The arc's headline was pinned in a spec and
     // unreachable in the product. This count moving is that fix, and it is
     // stated here rather than adjusted quietly.
-    expect(rows).toHaveLength(10);
+    // ⚠️ TWELVE with the E2E walkthrough (2026-11-12): its two ASNs of
+    // 2000028400 (one Delivered, one In Transit), packaging, so both REFUSE.
+    expect(rows).toHaveLength(12);
 
     const gained = rows
       .filter(({ li }) => {
@@ -622,12 +624,20 @@ describe('CP-3 · H2 — THE DELTA, LINE BY LINE, over every receivable line', (
     // which the halal class rule marks `REQUIRED` — they refuse under BPOM,
     // which is a different regime and a state they were already in. Recorded
     // because a dispatch expectation that is quietly not met is a finding.
-    expect(refused).toEqual(['PK-ALCP-2450', 'PK-PETB-8801', 'PK-PETB-8802', 'PK-PETB-8804']);
+    // + the E2E walkthrough's two packaging lines of 2000028400 (same reason).
+    expect(refused).toEqual([
+      '2000028400',
+      '2000028400',
+      'PK-ALCP-2450',
+      'PK-PETB-8801',
+      'PK-PETB-8802',
+      'PK-PETB-8804'
+    ]);
 
     // EVERY LINE IS NOW ANSWERED OR REFUSED — no third outcome, nothing silent.
     // ⚠️ THE REFUSED SET IS UNCHANGED AT FOUR, which is the half that matters:
     // the H4 line ADDED a question and moved no line out of a refusal.
-    expect(gained.length + refused.length).toBe(10);
+    expect(gained.length + refused.length).toBe(12);
 
     // ⚠️ AND NOTHING MOVED FROM CHECKED TO UNCHECKED. The prose parse said
     // `false` on ALL NINE, so the delta is one-directional by measurement, not
@@ -927,8 +937,9 @@ describe('CP-3 · E4 — ⚠️ THE PER-CHECK DELTA, AND IT IS ZERO', () => {
     asnStore.reset();
     const ledger = await seededLedger();
     const rows = receivableLines();
-    // TEN at H4 — see the H2 census above for why the population grew.
-    expect(rows).toHaveLength(10);
+    // TEN at H4 — see the H2 census above for why the population grew; TWELVE
+    // with the E2E walkthrough's two lines.
+    expect(rows).toHaveLength(12);
 
     /** @type {string[]} */
     const moved = [];
@@ -947,9 +958,9 @@ describe('CP-3 · E4 — ⚠️ THE PER-CHECK DELTA, AND IT IS ZERO', () => {
         }
       }
     }
-    // 10 lines × 4 answer states × 3 instants. Asserted so the census cannot
+    // 12 lines × 4 answer states × 3 instants. Asserted so the census cannot
     // pass by measuring nothing (`EMPTY-INPUT-REPORTS-CLEAN-01`).
-    expect(compared).toBe(120);
+    expect(compared).toBe(144);
     expect(moved).toEqual([]);
   });
 
@@ -1302,6 +1313,8 @@ describe('CP-3 · H4 — the certificate notice TELLS, and does not STOP', () =>
 
     const refusing = receivableLines().filter(({ li }) => !halalOf(li.materialCode).ok);
     expect(refusing.map(({ li }) => li.materialCode).sort()).toEqual([
+      '2000028400', // the E2E walkthrough's two ASN lines
+      '2000028400',
       'PK-ALCP-2450',
       'PK-PETB-8801',
       'PK-PETB-8802',

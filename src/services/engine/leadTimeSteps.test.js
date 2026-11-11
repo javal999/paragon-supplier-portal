@@ -12,6 +12,7 @@ import {
   sampleLeadTimeRoute
 } from '../data/mock/fixtures/engineDataset';
 import { SDC_SIMULATED_NOW } from '../sdc/clock';
+import { SSTP } from '../data/mock/fixtures/walkthroughSstp';
 import { generateEngineDataset } from './synthetic/generate';
 import {
   LEAD_TIME_ROUTES,
@@ -160,7 +161,11 @@ describe('the sample dataset (DRC-6 fixture values)', () => {
   });
 
   it('no existing lead time changed: the totals equal the generator’s without steps', () => {
-    expect(data.sources.map((s) => [s.supplierId, s.materialCode, s.leadTimeDays])).toEqual(
+    // The E2E walkthrough pair is added after generation (`withWalkthroughPair`),
+    // with the planners' own 35 days, so it has no generated total to compare.
+    const generated = data.sources.filter((s) => s.materialCode !== SSTP.materialCode);
+    expect(generated.length).toBe(data.sources.length - 1);
+    expect(generated.map((s) => [s.supplierId, s.materialCode, s.leadTimeDays])).toEqual(
       before.sources.map((s) => [s.supplierId, s.materialCode, s.leadTimeDays])
     );
     expect(before.sources.every((s) => s.leadTimeSteps === undefined)).toBe(true);

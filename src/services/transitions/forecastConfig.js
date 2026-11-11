@@ -108,18 +108,35 @@ export const DEFAULT_TRADE_OFF_DAYS = Object.freeze({ VERP: 42, ROH: 60 });
 export const ZONE_LENGTH_OVERRIDES = Object.freeze({});
 
 /**
- * BR-05 — zone lengths for one supplier × material group.
+ * Lead time in days for one supplier × MATERIAL, where it differs from the
+ * supplier's lead time for the material group (sample values). E2E
+ * walkthrough 2026-11-12: the planners' sheet gives 5 weeks for 2000028400.
+ * @type {Readonly<Record<string, number>>}
+ */
+export const PAIR_LEAD_TIME_DAYS = Object.freeze({
+  'sup-007|2000028400': 35
+});
+
+/**
+ * BR-05 — zone lengths for one supplier × material group; a pair lead time
+ * (`PAIR_LEAD_TIME_DAYS`) wins over the group's when `materialCode` is given.
  * @param {string} supplierId
  * @param {string} materialGroup
  * @param {MaterialType} materialType
+ * @param {string} [materialCode]
  * @returns {ZoneLengths}
  */
-export function zoneLengthsFor(supplierId, materialGroup, materialType) {
+export function zoneLengthsFor(supplierId, materialGroup, materialType, materialCode) {
   const key = `${supplierId}|${materialGroup}`;
   const override = ZONE_LENGTH_OVERRIDES[key] ?? {};
+  const pair =
+    materialCode === undefined ? undefined : PAIR_LEAD_TIME_DAYS[`${supplierId}|${materialCode}`];
   return {
     firmDays:
-      override.firmDays ?? SUPPLIER_LEAD_TIME_DAYS[key] ?? DEFAULT_LEAD_TIME_DAYS[materialType],
+      override.firmDays ??
+      pair ??
+      SUPPLIER_LEAD_TIME_DAYS[key] ??
+      DEFAULT_LEAD_TIME_DAYS[materialType],
     tradeOffDays: override.tradeOffDays ?? DEFAULT_TRADE_OFF_DAYS[materialType]
   };
 }

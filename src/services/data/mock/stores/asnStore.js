@@ -9,6 +9,8 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 import { MOCK_ASNS } from '../fixtures/supplierShipments';
+// E2E walkthrough 2026-11-12 — the ASNs of the pair's two call-offs.
+import { SSTP_ASNS } from '../fixtures/walkthroughSstp';
 /** @import { ASN } from '../../types' */
 
 /**
@@ -20,7 +22,7 @@ function clone(a) {
 }
 
 /** @type {ASN[]} */
-let rows = MOCK_ASNS.map(clone);
+let rows = [...MOCK_ASNS, ...SSTP_ASNS].map(clone);
 let seq = 0;
 
 export const asnStore = {
@@ -62,7 +64,7 @@ export const asnStore = {
   },
   /** @returns {void} */
   reset() {
-    rows = MOCK_ASNS.map(clone);
+    rows = [...MOCK_ASNS, ...SSTP_ASNS].map(clone);
     seq = 0;
   }
 };

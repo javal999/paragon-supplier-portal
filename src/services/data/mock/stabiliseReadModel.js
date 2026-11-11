@@ -107,7 +107,8 @@ export function stabiliseInputs(data, asOf, safetyStockAt) {
       const zones = zoneLengthsFor(
         src.supplierId,
         master?.materialGroup ?? m.materialCode,
-        STREAM_MATERIAL_TYPE[m.kind]
+        STREAM_MATERIAL_TYPE[m.kind],
+        m.materialCode
       );
       /** @type {VersionInput[]} */
       const versions = versionDays(asOf, m.kind).map((d) => {

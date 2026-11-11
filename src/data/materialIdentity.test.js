@@ -814,7 +814,9 @@ describe('2B-0 — codes the lane names but gives NO meaning (2B-3 input)', () =
 
 describe('MAT-SPACE-UNDECLARED-01 — the third space, and the real 2B input', () => {
   it('the master names FORTY-TWO — 5 seeded · 25 adopted 2B-2 · 5 authored 2B-3 · 7 authored 2B-5b-ii', () => {
-    expect(Object.keys(MATERIAL_MASTER)).toHaveLength(42);
+    // +1 at the E2E walkthrough (2026-11-12): 2000028400, a real SAP packaging code
+    // authored from the planners' sheet (`fixtures/walkthroughSstp.js`), a fifth route.
+    expect(Object.keys(MATERIAL_MASTER)).toHaveLength(43);
     // The five it was seeded with, still all present and still the only ones
     // this batch did not touch.
     for (const seed of [
@@ -1146,7 +1148,8 @@ describe('MAT-SPACE-UNDECLARED-01 — the third space, and the real 2B input', (
     // derived scope that produced the rise. **A NUMBER IS ONLY COMPARABLE TO
     // ITS PREDECESSOR WHEN THE SCOPE BEHIND IT DID NOT MOVE**, which is why the
     // series is written out rather than reported as a delta.
-    expect(CODES.length).toBe(44);
+    // 45 with the E2E walkthrough's 2000028400 (in the master, so not absent).
+    expect(CODES.length).toBe(45);
     const absent = CODES.filter((c) => !(c in MATERIAL_MASTER));
     expect(absent).toEqual(['MAT-10046', 'MAT-10089']);
     // ⚠️ THE TWO SETS ARE NO LONGER RELATED AT ALL. "master-absent" and "third
@@ -1156,8 +1159,9 @@ describe('MAT-SPACE-UNDECLARED-01 — the third space, and the real 2B input', (
     expect(UNDECLARED_SPACE).toEqual([]);
     expect(absent.filter((c) => UNDECLARED_SPACE.includes(c))).toEqual([]);
     // The population itself did NOT shrink — 44 codes before and after. Nothing
-    // was deleted to reach two; seven became resolvable.
-    expect(CODES.length).toBe(44);
+    // was deleted to reach two; seven became resolvable. (45 with the E2E
+    // walkthrough's 2000028400, which arrived IN the master.)
+    expect(CODES.length).toBe(45);
     // What held across every widening and every fall: none of them is in the
     // document lane.
     expect(absent.filter((c) => DOCUMENT_LANE.includes(c))).toEqual([]);

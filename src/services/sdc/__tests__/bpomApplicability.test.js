@@ -91,7 +91,9 @@ describe('2B-4a — the seed is a CLASS RULE, and the rule DERIVES', () => {
     // rather than a claim in a header. ⚠️ WHEN A ROW IS RATIFIED INDIVIDUALLY,
     // THIS NARROWS AND THE RATIFICATION IS RECORDED — it must not be loosened
     // to let a per-row override slip in unannounced.
-    expect(ENTRIES).toHaveLength(42);
+    // +1 at the E2E walkthrough (2026-11-12): 2000028400, a real SAP packaging code
+    // authored from the planners' sheet (`fixtures/walkthroughSstp.js`), a fifth route.
+    expect(ENTRIES).toHaveLength(43);
     const drifted = ENTRIES.filter(
       (e) => e.bpomApplicable !== provisionalBpomForGroup(e.materialGroup)
     ).map((e) => `${e.materialCode} (${e.materialGroup}) = ${e.bpomApplicable}`);
@@ -124,7 +126,8 @@ describe('2B-4a — the seed is a CLASS RULE, and the rule DERIVES', () => {
     // `RM-EMUL-9440`), +2 NOT_APPLICABLE (both packaging), +1 UNDETERMINED
     // (`RM-PSTN-7150`, MG-10 — a group nobody has ruled on).
     expect(count('APPLICABLE')).toBe(20);
-    expect(count('NOT_APPLICABLE')).toBe(11);
+    // +1 NOT_APPLICABLE: the E2E walkthrough's packaging row 2000028400.
+    expect(count('NOT_APPLICABLE')).toBe(12);
     expect(count('UNDETERMINED')).toBe(11);
     // A CROSS-CHECK, not a second rule. Every packaging-material row also
     // carries `materialType: 'VERP'`, so the class rule and the SAP taxonomy
@@ -226,8 +229,10 @@ describe('PREFIX-RULE-ASSERTS-A-NEGATIVE-01 — the two mechanisms, MEASURED', (
     // the two mechanisms had never actually disagreed on an ANSWERABLE row —
     // the fail-open was always visible as silence (`UNDETERMINED`) or as a
     // vocabulary the master could not resolve at all.
-    expect(answerable).toHaveLength(31);
-    expect(agree).toHaveLength(30);
+    // 32 / 31 with the E2E walkthrough's packaging row 2000028400: master
+    // NOT_APPLICABLE, prefix `false` — they agree on it.
+    expect(answerable).toHaveLength(32);
+    expect(agree).toHaveLength(31);
     const contradicted = answerable.filter((c) => {
       const o = bpomOf(c);
       return o.ok && o.applicable !== prefixRuleSays(c);

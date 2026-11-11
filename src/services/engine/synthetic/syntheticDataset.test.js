@@ -21,7 +21,8 @@ import {
   ENGINE_DATASET_SEED,
   ENGINE_SUPPLIER_IDS,
   engineDataset,
-  engineGeneratorInput
+  engineGeneratorInput,
+  withWalkthroughPair
 } from '../../data/mock/fixtures/engineDataset';
 import { generateEngineDataset, DEFAULT_SIZES } from './generate';
 import { addDays, dayOf, mondayOf } from '../dates';
@@ -227,7 +228,9 @@ describe('BL-102 — deterministic', () => {
     const a = generateEngineDataset(engineGeneratorInput(NOW, ENGINE_DATASET_SEED));
     const b = generateEngineDataset(engineGeneratorInput(NOW, ENGINE_DATASET_SEED));
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
-    expect(JSON.stringify(a)).toBe(JSON.stringify(data));
+    // The hub's dataset is the generator's, byte for byte, plus the E2E
+    // walkthrough pair appended after generation.
+    expect(JSON.stringify(withWalkthroughPair(a))).toBe(JSON.stringify(data));
   });
 
   it('a different seed yields a different dataset (the equality above is not vacuous)', () => {

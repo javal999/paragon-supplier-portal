@@ -894,7 +894,8 @@ export class MockProcurementService {
             ? zoneLengthsFor(
                 s.supplierId,
                 m.materialGroup ?? m.materialCode,
-                STREAM_MATERIAL_TYPE[m.kind]
+                STREAM_MATERIAL_TYPE[m.kind],
+                s.materialCode
               )
             : null;
           return [

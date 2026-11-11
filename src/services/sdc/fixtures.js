@@ -914,6 +914,26 @@ export const MATERIAL_MASTER = Object.freeze({
     bpomApplicable: 'NOT_APPLICABLE',
     halalApplicable: 'UNDETERMINED',
     mrpController: 'P12'
+  },
+
+  // ── E2E walkthrough 2026-11-12 · the planners' own material ────────────────
+  // A REAL SAP code, from the planners' sheet "Simulasi SSTP - stable (2)": the
+  // one material the walkthrough follows end to end with test supplier sup-007
+  // (`data/mock/fixtures/walkthroughSstp.js`). PS powder container → MG-20.
+  2000028400: {
+    materialCode: '2000028400',
+    label: 'CONTAINER SSTP REVAMP MO',
+    materialType: 'VERP',
+    materialGroup: 'MG-20',
+    canonicalUom: 'PCS',
+    bpomApplicable: 'NOT_APPLICABLE',
+    halalApplicable: 'UNDETERMINED',
+    mrpController: 'P12',
+    // Its own planning group (seeded in `planningGroupStore`), so the
+    // walkthrough's capacity is stated for this container alone and its LTP
+    // does not land on sup-007's sample rigid-plastic capacity weeks. The id
+    // sorts after `pg-MG-2x`, so sup-007's first capacity plan stays MG-20.
+    planningGroupId: 'pg-walkthrough-sstp'
   }
 });
 

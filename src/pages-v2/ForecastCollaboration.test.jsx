@@ -417,7 +417,12 @@ describe('PTI — Commitments & gaps (REQ-E06-03)', () => {
     );
     // PEX-D22 removed `sup-007-PK-PETB-8802-${W[3]}` from the tail: a Trade-off
     // answer below forecast is an acknowledgement, not an exception.
-    expect(ids.slice(4)).toEqual([`sup-007-PK-PETB-8801-${W[1]}`]);
+    // Then the E2E walkthrough's five unanswered Firm weeks of 2000028400
+    // (overdue, ranked after the four above), then 8801's Firm week.
+    expect(ids.slice(4)).toEqual([
+      ...[0, 1, 2, 3, 4].map((i) => `sup-007-2000028400-${W[i]}`),
+      `sup-007-PK-PETB-8801-${W[1]}`
+    ]);
   });
 
   it('F-23 — the exceptions table comes first; the grid and the cumulative chart sit in a collapsed Coverage section below it', async () => {
