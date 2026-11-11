@@ -146,6 +146,7 @@ Each was asked with a recommendation; the owner took the recommendation every ti
 | TL-D37 | Labels kept until the team names them | "Would be", "Surplus absorbed", "After the check" and "Called off, not yet shipped" stay as they are. Confirms TL-D9 and TL-D13 | Accepted, owner, 2026-11-09 |
 | TL-D38 | TL-D33 stands | The tips for "Reach", "Required role" and "Stock figure now" stay as written from the code until a document defines them | Accepted, owner, 2026-11-09 |
 | TL-D39 | Tips for labels the team's material does not define | The tip follows market practice and says so. "Interim round-up" (Order plan, warehouse fill table): each order rounded up to the minimum order quantity and its multiple; also called "rounding value" in SAP's material master. "On failure" (Data health, check detail): a failing record is kept out of the calculation or flagged for the planner. Labels unchanged. "Moved after the week" and the scorecard KPI names have no accepted tip yet; they wait for the team's wording | Accepted, owner, 2026-11-09 |
+| TL-D40 | Protection buffer tip after PEX-5 | Label "Protection buffer" kept (TL-R1). The tip is to be rewritten: since MR !102 the hub has two protection buffers, the BL-205 uplift (Capacity page, shown only) and LTP B − LTP A (DA grid, added to ROP Order in the DA figure), while the tip says nothing is ordered from it. Wording to be proposed under BL-294 | Open, 2026-11-10 |
 
 ---
 
