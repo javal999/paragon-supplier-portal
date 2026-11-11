@@ -12,6 +12,7 @@ import { useRefusalText } from '@hooks/useRefusalText';
 import { formatNumber } from '@lib/format';
 import { useOsipParamCommand } from '@services/query/commandHooks';
 import { OSIP_RULES } from '@services/transitions/osipRules';
+import { switchAdvice } from '@services/transitions/osipSwitchAdvice';
 import {
   SWITCH_REASON_MIN_LENGTH,
   cycleDaysOf,
@@ -114,12 +115,13 @@ const NumberValue = ({ id, label, param, current, placeholder, held, onSave, bus
  *   param: 'safetyStockOn' | 'protectionBufferOn';
  *   on: boolean;
  *   note?: { reason: string | null; setAt: string; on: boolean };
+ *   advice?: import('@services/transitions/osipSwitchAdvice').SwitchAdvice | null;
  *   held: boolean;
  *   busy: boolean;
  *   onSave: (on: boolean, reason: string) => Promise<boolean>;
  * }>}
  */
-const SwitchValue = ({ id, param, on, note, held, busy, onSave }) => {
+const SwitchValue = ({ id, param, on, note, advice, held, busy, onSave }) => {
   const { t } = useTranslation();
   const [next, setNext] = useState(on);
   const [reason, setReason] = useState('');
@@ -142,6 +144,25 @@ const SwitchValue = ({ id, param, on, note, held, busy, onSave }) => {
           {t(on ? 'pex.switch.on' : 'pex.switch.off')}
         </span>
       </label>
+      {advice ? (
+        <div className="mt-2" data-testid={`${id}-advice`}>
+          <p className="text-xs text-text-secondary">
+            {t(advice.suggested ? 'pex.advice.suggestOn' : 'pex.advice.suggestOff', {
+              because: t(`pex.advice.reason.${advice.reason}.${param}`)
+            })}
+          </p>
+          {held && next !== advice.suggested ? (
+            <Button
+              variant="secondary"
+              className="mt-1"
+              data-testid={`${id}-advice-apply`}
+              onClick={() => setNext(advice.suggested)}
+            >
+              {t('pex.advice.apply')}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
       {held && changed ? (
         <div className="mt-2">
           <label
@@ -289,6 +310,7 @@ export const OsipValues = ({ materialCode, osip }) => {
                   param={param}
                   on={on}
                   note={first.switchNotes?.[param]}
+                  advice={switchAdvice(param, on, osip.suppliers)}
                   held={held}
                   busy={command.isPending}
                   onSave={(next, reason) => save(param, { materialCode }, next, reason)}

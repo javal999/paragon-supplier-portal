@@ -86,6 +86,7 @@ import {
   dayOf,
   isIsoDay,
   batchDatesProblem,
+  rawMaterialBatchProblem,
   productionProblem,
   submissionChannel,
   alertCloseRefusal,
@@ -177,6 +178,7 @@ import { consumptionTarget } from './targets/consumption';
 import { osipLevelTarget } from './targets/osipLevel';
 import { osipParamTarget } from './targets/osipParam';
 import { ltpInputTarget } from './targets/ltpInput';
+import { promotionTarget } from './targets/promotion';
 import { capacityMonthTarget } from './targets/capacityMonth';
 // BL-202 — the what-if sandbox's saved scenarios (its own module, DRC-17).
 import { whatIfScenarioTarget } from './targets/whatIfScenario';
@@ -3256,6 +3258,32 @@ bindPolicyHook(POLICY_HOOKS.INV_DECLARE_DETAIL_VALID, ({ payload, scope }) => {
       }`
     };
   }
+  // [Owner, 2026-11-10, raw only] a raw material with stock above 0
+  // comes with its batches, each with an expiry date: the SAME
+  // `rawMaterialBatchProblem` the form and the template validator run.
+  const rawBatch = rawMaterialBatchProblem({
+    materialType:
+      typeof payload.materialCode === 'string'
+        ? (materialEntry(payload.materialCode)?.materialType ?? null)
+        : null,
+    soh: isNonNegative(payload.totalQty) ? payload.totalQty : null,
+    batches: Array.isArray(payload.batches)
+      ? payload.batches.map((b) => ({
+          expiryDate:
+            b && typeof b === 'object' && typeof b.expiryDate === 'string' ? b.expiryDate : ''
+        }))
+      : [],
+    channel: submissionChannel(scope.personaType === 'buyer', payload.channel)
+  });
+  if (rawBatch) {
+    return {
+      ok: false,
+      reason:
+        rawBatch.reason === 'rawMaterialBatchRequired'
+          ? 'rawMaterialBatchRequired: a raw material needs its batches (batch number, quantity, expiry date)'
+          : 'rawMaterialExpiryRequired: every batch of a raw material needs its expiry date'
+    };
+  }
   return { ok: true };
 });
 
@@ -6297,6 +6325,7 @@ const TARGETS = {
   osipParam: osipParamTarget,
   // BL-267 (PEX-5) — LTP A, Festive, B uploads and the LTP choice, append-only.
   ltpInput: ltpInputTarget,
+  promotion: promotionTarget,
   // BL-269 (PEX-4) — the supplier's monthly capacity beyond the weekly buckets.
   capacityMonth: capacityMonthTarget,
   // DRC-17 BR-05 (BL-202) — a saved what-if scenario, append-only, analysis

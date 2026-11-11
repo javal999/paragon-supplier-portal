@@ -81,6 +81,7 @@ export { consumptionFlow } from './flows/consumption.flow';
 export { osipLevelFlow } from './flows/osipLevel.flow';
 export { osipParamFlow } from './flows/osipParam.flow';
 export { ltpInputFlow } from './flows/ltpInput.flow';
+export { promotionFlow } from './flows/promotion.flow';
 export { capacityMonthFlow } from './flows/capacityMonth.flow';
 export { whatIfScenarioFlow } from './flows/whatIfScenario.flow';
 export { feedstockConfirmationFlow } from './flows/feedstockConfirmation.flow';
@@ -153,6 +154,7 @@ import { consumptionFlow } from './flows/consumption.flow';
 import { osipLevelFlow } from './flows/osipLevel.flow';
 import { osipParamFlow } from './flows/osipParam.flow';
 import { ltpInputFlow } from './flows/ltpInput.flow';
+import { promotionFlow } from './flows/promotion.flow';
 import { capacityMonthFlow } from './flows/capacityMonth.flow';
 import { whatIfScenarioFlow } from './flows/whatIfScenario.flow';
 import { feedstockConfirmationFlow } from './flows/feedstockConfirmation.flow';
@@ -275,6 +277,7 @@ flowRegistry.register(consumptionFlow); // CAP-11 — the planner records a mate
 flowRegistry.register(osipLevelFlow); // DRC-D11 — the planner sets a material's OSIP level
 flowRegistry.register(capacityMonthFlow); // BL-269 — the supplier states capacity by month beyond the weekly buckets
 flowRegistry.register(ltpInputFlow); // BL-267 — the planner uploads LTP A, Festive, B and the choice
+flowRegistry.register(promotionFlow); // BL-235 — the planner enters a promotion for one SKU
 flowRegistry.register(osipParamFlow); // team answers 2026-10-28 — Z, g, f, pull agreement, bottleneck LT
 flowRegistry.register(whatIfScenarioFlow); // DRC-17 — the planner saves a what-if scenario
 // BL-194 / DRC-8 — the supplier confirms its current feedstock with a date: the

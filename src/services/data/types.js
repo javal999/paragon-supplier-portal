@@ -55,6 +55,7 @@
 /** @import { DemandForecastRun, LevelForecast, SkuForecast } from '../engine/demandForecast' */
 /** @import { ForecastBiasRun } from '../engine/forecastBias' */
 /** @import { OverrideRecord, OverrideValueReport } from '../engine/forecastOverrides' */
+/** @import { AppliedPromotion, PromotionRow } from '../engine/promotions' */
 /** @import { ModelBacktestResult } from '../engine/modelBacktest' */
 /** @import { DemandRangeRun } from '../engine/demandRange' */
 /** @import { DatasetProvenance } from '../engine/types' */
@@ -1290,6 +1291,9 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * `materialPlanningSource`:  The source E14-03 to E14-06 and E14-13 plan on today.
  * `skus`: REQ-E14-11 X-06 — `forecast` is the forecast SHOWN: the engine's with the planner overrides in force applied (ENG-B103); `engineForecast` is the engine's own. Without overrides the two are the same.
  * `overrideCells`:  Override cells of this run in force.
+ * `promotionCells`: REQ-E14-08 BR-05 — SKU × week cells carrying a promotion; the forecast shown includes them (before any override).
+ * `promotionHistory`: every promotion entry, change and withdrawal, newest first.
+ * `promotionsInForce`: promotions in force, across SKUs and weeks.
  *
  * @typedef {Omit<DemandForecastRun, 'skus' | 'brands' | 'total'> & {
  *     readonly range: DemandRangeRun;
@@ -1299,16 +1303,21 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *     readonly brands: readonly DemandForecastLevelView[];
  *     readonly total: DemandForecastLevelView;
  *     readonly overrideCells: number;
+ *     readonly promotionCells: number;
+ *     readonly promotionHistory: readonly PromotionRow[];
+ *     readonly promotionsInForce: number;
  *   }} DemandForecastView
  */
 
 /**
  * `engineForecast`:  The engine's reconciled forecast, before overrides.
  * `overridden`:  Week indexes carrying a planner override.
+ * `promotions`:  The promotions applied to this SKU's weeks (REQ-E14-08 BR-05).
  *
  * @typedef {SkuForecast & {
  *     readonly engineForecast: readonly number[];
  *     readonly overridden: readonly number[];
+ *     readonly promotions: readonly AppliedPromotion[];
  *   }} DemandForecastSkuView
  */
 

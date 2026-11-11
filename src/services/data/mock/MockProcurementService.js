@@ -145,7 +145,14 @@ import { materialNameRowsFor, withTradeName } from './materialNameReadModel';
 // BL-194 — the supplier's feedstock confirmation in force (DRC-8).
 import { withFeedstock } from './feedstockConfirmationReadModel';
 import { FEEDS, dataHealth } from '../../engine/dataHealth';
-import { currentDemandForecast, currentForecastBias, withOverrides } from './demandForecastRun';
+import {
+  currentDemandForecast,
+  currentForecastBias,
+  currentPromotedForecast,
+  withOverrides
+} from './demandForecastRun';
+import { promotionStore } from './stores/promotionStore';
+import { promotionsInForce } from '../../engine/promotions';
 import { forecastOverrideStore } from './stores/forecastOverrideStore';
 import { overrideValue } from '../../engine/forecastOverrides';
 /** @import { PreparedBacktest } from '../../engine/modelBacktest' */
@@ -1051,6 +1058,8 @@ export class MockProcurementService {
     if (scope.personaType === 'supplier') return null;
     const data = engineDataset();
     const run = currentDemandForecast();
+    // REQ-E14-08 BR-05 — the promotions in force applied to their SKU × week.
+    const promoted = currentPromotedForecast();
     const asOf = run.asOf;
     // REQ-E14-09 — the range around the engine's forecast, with the administrator's
     // levels in force (X-05). The replay depends on the date only; the range also on the levels.
@@ -1068,8 +1077,10 @@ export class MockProcurementService {
       demandRangeMemo.set(data, memo);
     }
     return {
-      ...run,
-      ...withOverrides(run, forecastOverrideStore.all()),
+      ...promoted,
+      ...withOverrides(promoted, forecastOverrideStore.all()),
+      promotionHistory: [...promotionStore.all()].reverse(),
+      promotionsInForce: promotionsInForce(promotionStore.all()).size,
       range: memo.range,
       provenance: data.provenance,
       materialPlanningSource: 'sapPlan'
@@ -1086,7 +1097,7 @@ export class MockProcurementService {
     // override ledger starts empty — no override history is invented.
     if (scope.personaType === 'supplier') return null;
     const data = engineDataset();
-    const run = currentDemandForecast();
+    const run = currentPromotedForecast();
     const bias = currentForecastBias();
     const records = forecastOverrideStore.all();
     const shown = withOverrides(run, records);

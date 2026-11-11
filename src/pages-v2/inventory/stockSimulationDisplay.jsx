@@ -254,7 +254,7 @@ const WeeklyTable = ({ sim, uom, testId }) => {
     <table className="w-full text-xs" data-testid={testId}>
       <thead>
         <tr className="text-left text-text-tertiary">
-          <th scope="col" className="py-1 pr-3 font-medium">
+          <th scope="col" className="py-1 pr-3 font-medium sticky left-0 z-[1] bg-bg-surface">
             {t('sim.detail.week')}
           </th>
           <th scope="col" className="py-1 pr-3 font-medium text-right">
@@ -274,7 +274,7 @@ const WeeklyTable = ({ sim, uom, testId }) => {
       <tbody>
         {sim.weekly.map((w) => (
           <tr key={w.weekStart} className="border-t border-border-subtle align-top">
-            <td className="py-1 pr-3 whitespace-nowrap">
+            <td className="py-1 pr-3 whitespace-nowrap sticky left-0 z-[1] bg-bg-surface">
               <Data>{`${formatDate(w.weekStart)} – ${formatDate(w.weekEnd)}`}</Data>
             </td>
             <td className="py-1 pr-3 text-right">

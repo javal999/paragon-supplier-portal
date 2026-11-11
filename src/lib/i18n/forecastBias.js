@@ -85,7 +85,7 @@ export const forecastBiasEn = {
   'fb.fva.intro':
     'For weeks that have sold: the engine’s error against the error after the override, per SKU, combined as a geometric mean (FVA). Positive means the overrides made the forecast better. By direction, reason and size.',
   'fb.fva.service':
-    'Judging overrides by service, not accuracy alone, needs the backtest’s replay of PTI’s ordering, which is built separately. It is added here when that lands.',
+    'Judging overrides by service, not accuracy alone, starts once overrides are saved and 13 weeks of them have sold. Until then they are judged by accuracy only.',
   'fb.fva.empty':
     'Nothing measured yet. The synthetic data carries no override history and none is invented: this report fills as overrides are entered and their weeks sell. Waiting for their week: {{waiting}}. Past weeks with no usable sales figure: {{unmeasurable}}.',
   'fb.fva.all': 'All overrides',
@@ -219,7 +219,7 @@ export const forecastBiasId = {
   'fb.fva.intro':
     'Untuk minggu yang sudah terjual: galat mesin dibandingkan galat setelah penyesuaian, per SKU, digabung sebagai rata-rata geometris (FVA). Positif berarti penyesuaian membuat prakiraan lebih baik. Menurut arah, alasan, dan besarnya.',
   'fb.fva.service':
-    'Menilai penyesuaian berdasarkan layanan, bukan hanya akurasi, memerlukan simulasi ulang pemesanan PTI dari backtest, yang dibangun terpisah. Penilaian itu ditambahkan di sini begitu tersedia.',
+    'Penilaian penyesuaian berdasarkan layanan, bukan hanya akurasi, dimulai setelah penyesuaian disimpan dan 13 minggunya terjual. Sampai saat itu penyesuaian dinilai dari akurasi saja.',
   'fb.fva.empty':
     'Belum ada yang diukur. Data sintetis tidak membawa riwayat penyesuaian dan tidak ada yang dikarang: laporan ini terisi saat penyesuaian dimasukkan dan minggunya terjual. Menunggu minggunya: {{waiting}}. Minggu lalu tanpa angka penjualan yang dapat dipakai: {{unmeasurable}}.',
   'fb.fva.all': 'Semua penyesuaian',

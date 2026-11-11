@@ -14,6 +14,9 @@ import { demandForecast } from '../../engine/demandForecast';
 import { forecastBias } from '../../engine/forecastBias';
 /** @import { OverrideRecord } from '../../engine/forecastOverrides' */
 import { applyOverrides } from '../../engine/forecastOverrides';
+/** @import { AppliedPromotion } from '../../engine/promotions' */
+import { applyPromotions } from '../../engine/promotions';
+import { promotionStore } from './stores/promotionStore';
 /** @import { EngineDataset } from '../../engine/types' */
 /** @import { DemandForecastView } from '../types' */
 
@@ -38,6 +41,56 @@ export function currentDemandForecast() {
     runMemo.set(data, run);
   }
   return run;
+}
+
+/**
+ * REQ-E14-08 BR-05 (BL-235) — the engine's run with the promotions in force
+ * applied to their SKU × week (the brand and total re-summed from their SKUs),
+ * each SKU carrying the promotions applied. Memoised on the run and the ledger
+ * (the ledger array is new on every write), so a promotion write does not re-run
+ * the engine.
+ */
+/** @type {{ run: DemandForecastRun; rows: unknown; out: PromotedRun } | null} */
+let promotedMemo = null;
+
+/**
+ * @typedef {Omit<DemandForecastRun, 'skus'> & {
+ *     readonly skus: readonly (DemandForecastRun['skus'][number] & {
+ *       readonly promotions: readonly AppliedPromotion[];
+ *     })[];
+ *     readonly promotionCells: number;
+ *   }} PromotedRun
+ */
+
+/**
+ * @returns {PromotedRun}
+ */
+export function currentPromotedForecast() {
+  const run = currentDemandForecast();
+  const rows = promotionStore.all();
+  if (promotedMemo && promotedMemo.run === run && promotedMemo.rows === rows)
+    return promotedMemo.out;
+  const applied = applyPromotions(run, rows);
+  const bySku = new Map(applied.skus.map((s) => /** @type {const} */ ([s.skuCode, s])));
+  const brandFinal = new Map(applied.brands.map((b) => /** @type {const} */ ([b.key, b.forecast])));
+  /** @type {PromotedRun} */
+  const out = {
+    ...run,
+    skus: run.skus.map((s) => {
+      const a = /** @type {NonNullable<ReturnType<typeof bySku.get>>} */ (bySku.get(s.skuCode));
+      return { ...s, forecast: a.forecast, promotions: a.promotions };
+    }),
+    brands: run.brands.map((b) => ({
+      ...b,
+      forecast: /** @type {NonNullable<ReturnType<typeof brandFinal.get>>} */ (
+        brandFinal.get(b.key)
+      )
+    })),
+    total: { ...run.total, forecast: applied.total },
+    promotionCells: applied.cells
+  };
+  promotedMemo = { run, rows, out };
+  return out;
 }
 
 /**
@@ -66,7 +119,7 @@ export function currentForecastBias() {
  * REQ-E14-11 X-06 — the run as SHOWN: the overrides in force applied to their
  * SKU × week, brand and total the sums of their SKUs (ENG-B103), the engine's
  * own values kept beside.
- * @param {DemandForecastRun} run
+ * @param {PromotedRun} run
  * @param {readonly OverrideRecord[]} records
  * @returns {Pick<DemandForecastView, 'skus' | 'brands' | 'total' | 'overrideCells'>}
  */

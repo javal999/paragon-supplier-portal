@@ -556,6 +556,10 @@ export const processFlowPurposeEn = {
     'An LTP quantity the Material Planner uploaded for one material (LTP A, LTP Festive or LTP B, a quantity per week, with the file it came from) or the LTP choice for that material. Nothing is edited or deleted; the latest of each is in force.',
   'processFlows.purpose.t_ltpinput_set':
     'The Material Planner uploads LTP A, LTP Festive or LTP B for a material, or records which of them the demand anticipation uses. The hub never picks the LTP. Nothing is sent to SAP or a supplier.',
+  'processFlows.purpose.entity.promotion':
+    'The expected increase the Material Planner entered for one SKU in one week of a campaign, as a percentage or a number of units. A change or a withdrawal is a new entry; nothing is edited or deleted, so the history stays.',
+  'processFlows.purpose.t_promotion_set':
+    'The Material Planner enters, changes or withdraws the expected increase for one SKU and week of a campaign. The demand forecast adds it to that week for that SKU only and marks the week. Nothing is sent to SAP or a supplier.',
   'processFlows.purpose.entity.whatIfScenario':
     'A what-if scenario the Material Planner kept for one supplier and material: the figures it was run on, its rule choices and the rules version in force at the time. Nothing is edited or deleted; keeping other numbers makes a new scenario.',
   'processFlows.purpose.t_whatifscenario_save':
@@ -1194,6 +1198,10 @@ export const processFlowPurposeId = {
     'Kuantitas LTP yang diunggah Perencana Material untuk satu material (LTP A, LTP Festive atau LTP B, kuantitas per minggu, beserta berkasnya) atau pilihan LTP untuk material itu. Tidak ada yang diubah atau dihapus; yang terakhir berlaku.',
   'processFlows.purpose.t_ltpinput_set':
     'Perencana Material mengunggah LTP A, LTP Festive atau LTP B untuk satu material, atau mencatat mana yang dipakai demand anticipation. Hub tidak pernah memilih LTP. Tidak ada yang dikirim ke SAP atau pemasok.',
+  'processFlows.purpose.entity.promotion':
+    'Promosi yang dimasukkan Perencana Material untuk satu SKU pada satu minggu: kenaikan yang diharapkan dalam persen atau jumlah unit. Perubahan atau penarikan menjadi entri baru; tidak ada yang diubah atau dihapus, sehingga riwayat tetap ada.',
+  'processFlows.purpose.t_promotion_set':
+    'Perencana Material memasukkan, mengubah, atau menarik promosi untuk satu SKU dan minggu. Prakiraan permintaan menambahkan kenaikan itu ke minggu tersebut hanya untuk SKU itu dan menandai minggunya. Tidak ada yang dikirim ke SAP atau pemasok.',
   'processFlows.purpose.entity.whatIfScenario':
     'Skenario what-if yang disimpan Perencana Material untuk satu pemasok dan material: angka yang dipakai, pilihan aturannya, dan versi aturan yang berlaku saat itu. Tidak ada yang diubah atau dihapus; angka lain menjadi skenario baru.',
   'processFlows.purpose.t_whatifscenario_save':

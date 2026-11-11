@@ -130,6 +130,8 @@ import { warehouseDecisionStore } from '../data/mock/stores/warehouseDecisionSto
 import { osipLevelStore } from '../data/mock/stores/osipLevelStore';
 import { osipParamStore } from '../data/mock/stores/osipParamStore';
 import { ltpInputStore } from '../data/mock/stores/ltpInputStore';
+import { promotionStore } from '../data/mock/stores/promotionStore';
+import { currentDemandForecast } from '../data/mock/demandForecastRun';
 import { capacityMonthStore } from '../data/mock/stores/capacityMonthStore';
 import { demandAnticipationStore } from '../data/mock/stores/demandAnticipationStore';
 import { materialNameStore } from '../data/mock/stores/materialNameStore';
@@ -315,6 +317,7 @@ async function realIds() {
     osipParam: 'z|PK-PETB-8801',
     // BL-267 — `entityId` IS the key; any resolvable key exists.
     ltpInput: 'choice|PK-PETB-8801',
+    promotion: `promo|SYN-FG-001|${currentDemandForecast().weeks[2]}`,
     supplierDocument: supplierDocumentStore.all()[0]?.id ?? null,
     supplierApplication: raised.entityId ?? null,
     receiptDiscrepancy: receiptDiscrepancyStore.all()[0]?.receiptId ?? null,
@@ -482,6 +485,8 @@ async function walk(entity, t) {
   if (entity === 'osipLevel') return at('PK-PETB-8801', 'Maintained');
   if (entity === 'osipParam') return at('z|PK-PETB-8801', 'Maintained');
   if (entity === 'ltpInput') return at('choice|PK-PETB-8801', 'Maintained');
+  if (entity === 'promotion')
+    return at(`promo|SYN-FG-001|${currentDemandForecast().weeks[2]}`, 'Maintained');
   if (entity === 'supplierApplication') {
     const raised = await svc.dispatch(buyerSeat('procurement'), {
       transitionId: 't_application_submit',
@@ -540,6 +545,7 @@ const resetAll = () => {
   osipLevelStore.reset();
   osipParamStore.reset();
   ltpInputStore.reset();
+  promotionStore.reset();
   capacityMonthStore.reset();
   materialNameStore.reset();
   feedstockConfirmationStore.reset();
@@ -792,6 +798,8 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
       'osipParam',
       // Material C5 — planning groups are PTI master data (MR-8, MAT-D12).
       'planningGroup',
+      // BL-235 — a promotion for a SKU is PTI's planning input.
+      'promotion',
       'purchaseRequisition',
       // Material G1 — the qualification lists are PTI's; no supplier is their owner.
       'qualificationRule',
@@ -980,6 +988,17 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
     });
     expect(ltpRes.status, ltpRes.reason).toBe('done');
     expect(ltpInputStore.all().map((r) => r.choice)).toEqual(['Festive']);
+
+    // BL-235 — the planning lane enters a promotion for one SKU and week.
+    const promoWeek = currentDemandForecast().weeks[2];
+    const promoRes = await svc.dispatch(buyerSeat('planning'), {
+      transitionId: 't_promotion_set',
+      entity: 'promotion',
+      entityId: `promo|SYN-FG-001|${promoWeek}`,
+      payload: { kind: 'units', value: 100 }
+    });
+    expect(promoRes.status, promoRes.reason).toBe('done');
+    expect(promotionStore.all().map((r) => r.value)).toEqual([100]);
 
     const qualRes = await svc.dispatch(buyerSeat('compliance'), {
       transitionId: 't_qualification_rule_set',
