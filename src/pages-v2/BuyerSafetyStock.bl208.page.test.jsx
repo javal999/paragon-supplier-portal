@@ -157,3 +157,71 @@ describe('BL-208 — the suggested level', () => {
     expect(screen.getByTestId('sst-level-use-suggestion')).toHaveTextContent('Pakai saran');
   });
 });
+
+// The rules behind the suggestion, folded under "How the level is suggested":
+// every tag rule, both CV rules and the JIT rule, in `suggestOsipLevel`'s
+// order, each saying whether the hub can apply it with the data it holds.
+describe('BL-208 — how the level is suggested', () => {
+  it('lists the seven rules in order, with the figures in force and what the hub can apply today', async () => {
+    await open('RM-STEAR-7300');
+    const guide = screen.getByTestId('sst-level-guide');
+    expect(guide.tagName).toBe('DETAILS');
+    expect(guide).not.toHaveAttribute('open');
+    fireEvent.click(screen.getByText('How the level is suggested'));
+
+    const rows = screen.getByTestId('sst-level-guide-table').querySelectorAll('tbody tr');
+    expect([...rows].map((r) => r.getAttribute('data-testid'))).toEqual([
+      'sst-level-guide-row-tag-pipo',
+      'sst-level-guide-row-tag-oneShot',
+      'sst-level-guide-row-tag-festive',
+      'sst-level-guide-row-tag-commodity',
+      'sst-level-guide-row-cv-fluctuative',
+      'sst-level-guide-row-cv-stable',
+      'sst-level-guide-row-jit'
+    ]);
+    expect(screen.getByTestId('sst-level-guide-row-tag-pipo')).toHaveTextContent(
+      '1The material is tagged PIPOLevel 1, Manual OrderNot used: the material master has no order-method tag yet.'
+    );
+    expect(screen.getByTestId('sst-level-guide-row-tag-festive')).toHaveTextContent(
+      'Exception Based, strategic buffer, no OSIP level'
+    );
+    expect(screen.getByTestId('sst-level-guide-row-tag-commodity')).toHaveTextContent(
+      'Level 5, Fixed Order'
+    );
+    expect(screen.getByTestId('sst-level-guide-row-cv-fluctuative')).toHaveTextContent(
+      'No tag, and demand CV is 0.5 or above (fluctuative)Level 3, Continuous ReviewUsed.'
+    );
+    expect(screen.getByTestId('sst-level-guide-row-cv-stable')).toHaveTextContent(
+      'No tag, and demand CV is below 0.5 (stable)Level 4, Periodic ReviewUsed.'
+    );
+    expect(screen.getByTestId('sst-level-guide-row-jit')).toHaveTextContent(
+      'MPQ ÷ daily consumption is 6 days or less'
+    );
+    expect(screen.getByTestId('sst-level-guide-row-jit')).toHaveTextContent(
+      'Level 6, JITNever suggested: the hub has no pallet-mix data.'
+    );
+    expect(screen.getByTestId('sst-level-guide-cv')).toHaveTextContent(
+      'over the last 6 full calendar months'
+    );
+    expect(screen.getByTestId('sst-level-guide-cv')).toHaveTextContent(
+      'No CV, no level is suggested.'
+    );
+    expect(screen.getByTestId('sst-level-guide-fallback')).toHaveTextContent(
+      'Levels 1 and 2 have no ROP Fisik formula of their own: the hub calculates them with the level 4 formula and flags it. A material nobody has set is at level 4.'
+    );
+  });
+
+  it('shows to a seat without osiplevel:set too, and reads in Indonesian', async () => {
+    await open('FR-ROUD-4470', { ...BUYER, businessRoles: ['procurement'] });
+    expect(screen.queryByTestId('sst-level-use-suggestion')).toBeNull();
+    expect(screen.getByTestId('sst-level-guide')).toBeInTheDocument();
+    await i18n.changeLanguage('id');
+    expect(await screen.findByText('Cara level disarankan')).toBeInTheDocument();
+    expect(screen.getByTestId('sst-level-guide-row-cv-stable')).toHaveTextContent(
+      'Tanpa tag, dan CV permintaan di bawah 0,5 (stabil)Level 4, Periodic ReviewDipakai.'
+    );
+    expect(screen.getByTestId('sst-level-guide-row-tag-commodity')).toHaveTextContent(
+      'Material ditandai komoditas'
+    );
+  });
+});

@@ -258,6 +258,30 @@ export const safetyStockEn = {
   'sst.rop.suggest.proposed': 'Proposed: awaiting owner review ({{refs}})',
   'sst.rop.suggest.use': 'Use suggestion',
   'sst.rop.suggest.matches': 'The level in force matches the suggestion.',
+  // The rules behind the suggested level, shown on demand under the suggestion.
+  'sst.rop.guide.summary': 'How the level is suggested',
+  'sst.rop.guide.intro':
+    'The hub checks these rules from top to bottom and stops at the first one that applies. It only suggests a level; the Material Planner sets it.',
+  'sst.rop.guide.col.step': 'Step',
+  'sst.rop.guide.col.when': 'When',
+  'sst.rop.guide.col.suggests': 'Suggests',
+  'sst.rop.guide.col.today': 'In the hub today',
+  'sst.rop.guide.when.tag': 'The material is tagged {{tag}}',
+  'sst.rop.guide.when.cvFluctuative':
+    'No tag, and demand CV is {{threshold}} or above (fluctuative)',
+  'sst.rop.guide.when.cvStable': 'No tag, and demand CV is below {{threshold}} (stable)',
+  'sst.rop.guide.when.jit':
+    'Periodic Review, MPQ ÷ daily consumption is {{max}} days or less (continuous production), and 1 pallet mix HU = Yes',
+  'sst.rop.guide.suggests.level': 'Level {{level}}, {{method}}',
+  'sst.rop.guide.suggests.noLevel': '{{method}}',
+  'sst.rop.guide.suggests.jit': 'Level 6, JIT',
+  'sst.rop.guide.today.noTag': 'Not used: the material master has no order-method tag yet.',
+  'sst.rop.guide.today.used': 'Used.',
+  'sst.rop.guide.today.noPalletMix':
+    'Never suggested: the hub has no pallet-mix data. Shown as a gap instead.',
+  'sst.rop.guide.noCv': 'No CV, no level is suggested.',
+  'sst.rop.guide.fallbackNote':
+    'Levels 1 and 2 have no ROP Fisik formula of their own: the hub calculates them with the level 4 formula and flags it. A material nobody has set is at level {{defaultLevel}}.',
   'sst.rop.def.level':
     'OSIP level: set per material by the Material Planner; a material nobody set is at level 4 (warehouse replenishment). The level picks the ROP Fisik formula.',
   'sst.rop.def.rops':
@@ -523,6 +547,29 @@ export const safetyStockId = {
   'sst.rop.suggest.proposed': 'Usulan: menunggu tinjauan pemilik ({{refs}})',
   'sst.rop.suggest.use': 'Pakai saran',
   'sst.rop.suggest.matches': 'Level yang berlaku sama dengan saran.',
+  'sst.rop.guide.summary': 'Cara level disarankan',
+  'sst.rop.guide.intro':
+    'Hub memeriksa aturan ini dari atas ke bawah dan berhenti di aturan pertama yang berlaku. Hub hanya menyarankan level; Perencana Material yang mengaturnya.',
+  'sst.rop.guide.col.step': 'Langkah',
+  'sst.rop.guide.col.when': 'Jika',
+  'sst.rop.guide.col.suggests': 'Saran',
+  'sst.rop.guide.col.today': 'Di hub saat ini',
+  'sst.rop.guide.when.tag': 'Material ditandai {{tag}}',
+  'sst.rop.guide.when.cvFluctuative':
+    'Tanpa tag, dan CV permintaan sama dengan atau di atas {{threshold}} (fluktuatif)',
+  'sst.rop.guide.when.cvStable': 'Tanpa tag, dan CV permintaan di bawah {{threshold}} (stabil)',
+  'sst.rop.guide.when.jit':
+    'Periodic Review, MPQ ÷ konsumsi harian {{max}} hari atau kurang (produksi kontinu), dan 1 pallet mix HU = Ya',
+  'sst.rop.guide.suggests.level': 'Level {{level}}, {{method}}',
+  'sst.rop.guide.suggests.noLevel': '{{method}}',
+  'sst.rop.guide.suggests.jit': 'Level 6, JIT',
+  'sst.rop.guide.today.noTag': 'Belum dipakai: master material belum punya tag metode order.',
+  'sst.rop.guide.today.used': 'Dipakai.',
+  'sst.rop.guide.today.noPalletMix':
+    'Tidak pernah disarankan: hub tidak punya data pallet mix. Ditampilkan sebagai kekurangan data.',
+  'sst.rop.guide.noCv': 'Tanpa CV, tidak ada level yang disarankan.',
+  'sst.rop.guide.fallbackNote':
+    'Level 1 dan 2 tidak punya rumus ROP Fisik sendiri: hub menghitungnya dengan rumus level 4 dan menandainya. Material yang belum diatur berada di level {{defaultLevel}}.',
   'sst.rop.def.level':
     'Level OSIP: diatur per material oleh Perencana Material; material yang belum diatur berada di level 4 (pengisian ulang gudang). Level menentukan rumus ROP Fisik.',
   'sst.rop.def.rops':
