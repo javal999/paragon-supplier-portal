@@ -176,6 +176,11 @@ export const whatIfSandboxEn = {
   'whatIf.notAvailable': 'Not available',
   'whatIf.none': 'None',
   'whatIf.unchanged': 'no change',
+  'whatIf.bar.label': 'Changed results',
+  'whatIf.bar.changed_one': '{{count}} figure moved from the current plan',
+  'whatIf.bar.changed_other': '{{count}} figures moved from the current plan',
+  'whatIf.bar.none': 'No figure moved from the current plan',
+  'whatIf.bar.see': 'See all results',
   'whatIf.weekShift': '{{from}} → {{to}}',
   'whatIf.maxOverride': 'typed',
   'whatIf.flag.LEAD_TIME_BEYOND_HORIZON':
@@ -390,6 +395,10 @@ export const whatIfSandboxId = {
   'whatIf.notAvailable': 'Tidak tersedia',
   'whatIf.none': 'Tidak ada',
   'whatIf.unchanged': 'tidak berubah',
+  'whatIf.bar.label': 'Hasil yang berubah',
+  'whatIf.bar.changed_other': '{{count}} angka berubah dari rencana saat ini',
+  'whatIf.bar.none': 'Tidak ada angka yang berubah dari rencana saat ini',
+  'whatIf.bar.see': 'Lihat semua hasil',
   'whatIf.weekShift': '{{from}} → {{to}}',
   'whatIf.maxOverride': 'diketik',
   'whatIf.flag.LEAD_TIME_BEYOND_HORIZON':

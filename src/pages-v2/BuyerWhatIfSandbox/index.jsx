@@ -31,6 +31,7 @@ import { inputClass, inventoryNow, labelClass } from '../inventory/inventoryDisp
 import InputsPanel from './components/InputsPanel';
 import SwitchesPanel from './components/SwitchesPanel';
 import ResultsTable from './components/ResultsTable';
+import ChangedResultsBar, { RESULTS_ANCHOR_ID } from './components/ChangedResultsBar';
 import WeeksGrid from './components/WeeksGrid';
 import ScenariosPanel from './components/ScenariosPanel';
 import ScenarioPresets from './components/ScenarioPresets';
@@ -178,7 +179,9 @@ const Editor = ({ box }) => {
         series={box.ltpSeries}
         onLoad={(_scenario, ltp) => onInputs({ ltp: [...ltp] })}
       />
-      <ResultsTable plan={plan} scenario={run} compared={compared} />
+      <div id={RESULTS_ANCHOR_ID} className="scroll-mt-4">
+        <ResultsTable plan={plan} scenario={run} compared={compared} />
+      </div>
       <InputsPanel
         inputs={inputs}
         onInputs={onInputs}
@@ -203,6 +206,8 @@ const Editor = ({ box }) => {
         onCompare={setCompare}
         onLoad={onLoad}
       />
+      {/* B11 — the moved figures, pinned in view while the inputs below are edited. */}
+      <ChangedResultsBar plan={plan} scenario={run} edited={edited} />
     </div>
   );
 };
