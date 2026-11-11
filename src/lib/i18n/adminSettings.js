@@ -390,7 +390,7 @@ export const adminSettingsId = {
   'adminSet.unit.days_other': '{{count}} hari',
   'adminSet.unit.workingDays_other': '{{count}} hari kerja',
   'adminSet.unit.idr': 'Rp {{value}}',
-  'adminSet.unit.multiple': '{{value}} × waktu tunggu',
+  'adminSet.unit.multiple': '{{value}} × lead time',
   'adminSet.unit.weeks_other': '{{count}} minggu',
   'adminSet.unit.months_other': '{{count}} bulan',
   'adminSet.unit.hours_other': '{{count}} jam',
@@ -409,7 +409,7 @@ export const adminSettingsId = {
   'adminSet.unit.input.days': 'hari',
   'adminSet.unit.input.workingDays': 'hari kerja',
   'adminSet.unit.input.idr': 'rupiah',
-  'adminSet.unit.input.multiple': '× waktu tunggu',
+  'adminSet.unit.input.multiple': '× lead time',
   'adminSet.unit.input.weeks': 'minggu',
   'adminSet.unit.input.months': 'bulan',
   'adminSet.unit.input.hours': 'jam',
@@ -460,12 +460,12 @@ export const adminSettingsId = {
   'adminSet.rule.CR-26': 'CR-26 · Tenggat komitmen prakiraan',
   'adminSet.rule.CR-22': 'CR-22 · Warna selisih komitmen',
   'adminSet.rule.CR-23': 'CR-23 · Gerbang kepatuhan saat penetapan pemenang',
-  'adminSet.rule.CR-24': 'CR-24 · Kelas risiko terhadap waktu tunggu pemasok',
-  'adminSet.rule.CR-02': 'CR-02 · Rentang hari, hanya jika waktu tunggu tidak tercatat',
+  'adminSet.rule.CR-24': 'CR-24 · Kelas risiko terhadap lead time pemasok',
+  'adminSet.rule.CR-02': 'CR-02 · Rentang hari, hanya jika lead time tidak tercatat',
   'adminSet.rule.CR-03': 'CR-03 · Cakupan pemasok',
   'adminSet.rule.REQ-E08-01': 'REQ-E08-01 · Periode data usang',
   'adminSet.rule.ENG-D5': 'ENG-D5 · Target tingkat pemenuhan mesin prakiraan',
-  'adminSet.rule.REQ-E14-04': 'REQ-E14-04 · Waktu tunggu pengaman mesin prakiraan',
+  'adminSet.rule.REQ-E14-04': 'REQ-E14-04 · Safety lead time mesin prakiraan',
   'adminSet.rule.ENG-D6': 'ENG-D6 · Tarif biaya penentuan ukuran pesanan mesin prakiraan',
   'adminSet.rule.REQ-E14-05': 'REQ-E14-05 · Penalti perubahan mesin prakiraan',
   'adminSet.rule.ENG-D15': 'ENG-D15 · Menjadwalkan ulang pesanan terbuka ke belakang',
@@ -523,10 +523,9 @@ export const adminSettingsId = {
     'Pemasok di bawahnya dapat mengajukan penawaran tetapi tidak dapat dimenangkan.',
   'adminSet.key.gate.noHistoryPasses.label': 'Pemasok tanpa riwayat OTIF lolos gerbang',
   'adminSet.key.gate.noHistoryPasses.hint': 'Usulan: ya.',
-  'adminSet.key.risk.mediumBelowMultiple.label':
-    'Risiko sedang di bawah kelipatan waktu tunggu ini',
+  'adminSet.key.risk.mediumBelowMultiple.label': 'Risiko sedang di bawah kelipatan lead time ini',
   'adminSet.key.risk.mediumBelowMultiple.hint':
-    'Tinggi di bawah 1 × waktu tunggu; Rendah pada atau di atas kelipatan ini. Harus lebih dari 1.',
+    'Tinggi di bawah 1 × lead time; Rendah pada atau di atas kelipatan ini. Harus lebih dari 1.',
   'adminSet.key.bands.criticalBelowDays.label': 'Kritis di bawah',
   'adminSet.key.bands.criticalBelowDays.hint': 'Hari persediaan.',
   'adminSet.key.bands.warningBelowDays.label': 'Waspada di bawah',
@@ -577,7 +576,7 @@ export const adminSettingsId = {
   'adminSet.key.engine.fillRateSlowPct.hint':
     'Material yang dibutuhkan kurang dari tiga dari setiap empat minggu. Tidak lebih tinggi dari target material lain.',
   'adminSet.key.engine.safetyLeadTimePercentile.label':
-    'Porsi pengiriman terlambat yang ditutup waktu tunggu pengaman',
+    'Porsi pengiriman terlambat yang ditutup safety lead time',
   'adminSet.key.engine.safetyLeadTimePercentile.hint':
     'Pesanan dirilis lebih awal sebesar keterlambatan yang dicapai porsi pengiriman pemasok ini, setelah tanggal terkonfirmasi.',
   'adminSet.key.engine.holdingCostPctPerYear.label': 'Biaya penyimpanan, porsi nilai per tahun',
@@ -590,9 +589,9 @@ export const adminSettingsId = {
   'adminSet.key.engine.rentedSpaceIdrPerPalletWeek.hint':
     'Biaya satu palet di atas kapasitas gudang sendiri selama seminggu, dari tagihan 3PL.',
   'adminSet.key.engine.changePenaltyIdrPerPallet.label':
-    'Penalti perubahan dalam waktu tunggu, per palet',
+    'Penalti perubahan dalam lead time, per palet',
   'adminSet.key.engine.changePenaltyIdrPerPallet.hint':
-    'Biaya yang dihitung penentuan ukuran pesanan bila mengubah pesanan yang sudah direncanakan, setelah pesanan itu masuk waktu tunggu pemasok. Nilai lebih tinggi membuat rencana lebih stabil menjelang pengiriman.',
+    'Biaya yang dihitung penentuan ukuran pesanan bila mengubah pesanan yang sudah direncanakan, setelah pesanan itu masuk lead time pemasok. Nilai lebih tinggi membuat rencana lebih stabil menjelang pengiriman.',
   'adminSet.key.engine.maxRentedSpacePct.label':
     'Ruang sewa terbanyak, sebagai bagian dari kapasitas sendiri',
   'adminSet.key.engine.maxRentedSpacePct.hint':
@@ -627,7 +626,7 @@ export const adminSettingsId = {
   'adminSet.key.engine.freshnessDays.receipts.hint':
     'Bila kiriman terakhir umpan ini lebih lama dari batas ini, halaman Kesehatan data menampilkannya sebagai usang dan menyebutkan langkah mesin prakiraan yang membacanya.',
   'adminSet.key.engine.freshnessDays.sources.label':
-    'Batas kesegaran: Sumber (waktu tunggu, MOQ, porsi)',
+    'Batas kesegaran: Sumber (lead time, MOQ, porsi)',
   'adminSet.key.engine.freshnessDays.sources.hint':
     'Bila kiriman terakhir umpan ini lebih lama dari batas ini, halaman Kesehatan data menampilkannya sebagai usang dan menyebutkan langkah mesin prakiraan yang membacanya.',
   'adminSet.key.engine.freshnessDays.bom.label': 'Batas kesegaran: Daftar bahan (BOM)',
@@ -703,14 +702,11 @@ export const adminSettingsId = {
   'adminSet.groups.action.clear': 'Hapus',
   'adminSet.groups.toast.set': '{{group}}: {{label}} kini {{value}}.',
   'adminSet.groups.toast.cleared': '{{group}}: {{label}} kini mengikuti nilai global.',
-  'adminSet.groups.key.risk.highBelowMultiple': 'Risiko tinggi di bawah kelipatan waktu tunggu ini',
-  'adminSet.groups.key.risk.mediumBelowMultiple':
-    'Risiko sedang di bawah kelipatan waktu tunggu ini',
-  'adminSet.groups.key.bands.criticalBelowDays':
-    'Kritis di bawah (hari, tanpa waktu tunggu tercatat)',
-  'adminSet.groups.key.bands.warningBelowDays':
-    'Waspada di bawah (hari, tanpa waktu tunggu tercatat)',
-  'adminSet.groups.key.bands.healthyUpToDays': 'Sehat sampai (hari, tanpa waktu tunggu tercatat)',
+  'adminSet.groups.key.risk.highBelowMultiple': 'Risiko tinggi di bawah kelipatan lead time ini',
+  'adminSet.groups.key.risk.mediumBelowMultiple': 'Risiko sedang di bawah kelipatan lead time ini',
+  'adminSet.groups.key.bands.criticalBelowDays': 'Kritis di bawah (hari, tanpa lead time tercatat)',
+  'adminSet.groups.key.bands.warningBelowDays': 'Waspada di bawah (hari, tanpa lead time tercatat)',
+  'adminSet.groups.key.bands.healthyUpToDays': 'Sehat sampai (hari, tanpa lead time tercatat)',
   'adminSet.groups.key.stale.defaultDays': 'Periode data usang untuk pemasok manual',
   'adminSet.groups.key.stale.apiHours': 'Periode data usang untuk pemasok yang terhubung sistem'
 };
