@@ -276,7 +276,7 @@ export const protectionFromInputs = (inputs) => inputs?.uploads.B != null;
 export const strategicFromInputs = (inputs) => inputs?.uploads.Festive != null;
 
 /** Characters a pasted figure can carry that no one can see (see parseLtpCsv). */
-const INVISIBLE_CHARS = /[​-‍⁠﻿]/g;
+const INVISIBLE_CHARS = /[\u200B-\u200D\u2060\uFEFF]/g;
 
 /**
  * PEX-5 BR-02 — the planner's upload file: one line per week, `week,quantity`
@@ -286,7 +286,7 @@ const INVISIBLE_CHARS = /[​-‍⁠﻿]/g;
  * Invisible characters are removed first (zero-width space U+200B, joiners
  * U+200C/U+200D, word joiner U+2060, byte-order mark U+FEFF): they come in when
  * figures are pasted from a web page or a chat, `trim()` keeps U+200B to U+2060,
- * and `Number('20067​')` is NaN. Found on a planner's LTP A file for
+ * and `Number('20067\u200B')` is NaN. Found on a planner's LTP A file for
  * 2000028400 (2026-11-12), where every quantity ended in U+200B.
  * @param {string} text
  * @returns {{ readonly weeks: Record<string, number> } | { readonly refusal: string }}
