@@ -143,6 +143,39 @@ export function materialShares(ltpLines, materialCode, suppliers, windowWeeks) {
 }
 
 /**
+ * PEX-D25 (BL-293, owner ruling 2026-11-12) — how a material's uploaded LTP A,
+ * Festive and B are split to its suppliers: by the sourcing share on record
+ * (`MaterialSource.share`, the SAP purchasing info record). Only a material with
+ * no share on record falls back to the MR !102 rule: each supplier's share of
+ * the Foresight commitment LTP over the share window (`materialShares`), even
+ * when the window holds none. A supplier with no share on record for a material
+ * that has one reads 0 [my call].
+ * Not the SOH share or the consumption split: those stay on `materialShares`.
+ * @param {readonly { readonly supplierId: string; readonly materialCode: string; readonly share?: number }[]} sources
+ * @param {readonly LtpLine[]} ltpLines
+ * @param {string} materialCode
+ * @param {readonly string[]} suppliers
+ * @param {readonly string[]} windowWeeks
+ * @returns {{ readonly shares: Map<string, number>; readonly from: 'sourcing' | 'ltp' }}
+ */
+export function ltpSplitShares(sources, ltpLines, materialCode, suppliers, windowWeeks) {
+  const recorded = sources.filter(
+    (s) => s.materialCode === materialCode && typeof s.share === 'number' && s.share > 0
+  );
+  if (recorded.length === 0)
+    return {
+      shares: materialShares(ltpLines, materialCode, suppliers, windowWeeks),
+      from: 'ltp'
+    };
+  return {
+    shares: new Map(
+      suppliers.map((sup) => [sup, recorded.find((s) => s.supplierId === sup)?.share ?? 0])
+    ),
+    from: 'sourcing'
+  };
+}
+
+/**
  * One supplier × material the LTP names, with its weekly LTP from the current
  * hub week and its share of PTI's stock on hand.
  * `soh`:  share × PTI stock on hand (SAP), whole units; null with no stock record.

@@ -6,10 +6,14 @@
 //     monthly entries (`capacityMonthStore`);
 //   · demand — the LTP the demand anticipation reads (PEX-5): the chosen LTP
 //     series per material when LTP inputs are uploaded (split to suppliers by
-//     the CAP-D11 share), else the forecast lines, spread by day per week;
+//     the sourcing share on record, PEX-D25 / BL-293; the LTP share over the
+//     first 4 hub weeks only when the material has none), else the forecast
+//     lines, spread by day per week;
 //   · brands — each material's demand by finished good through the BOM (the
-//     engine's pegs over a 52-week run), grouped by the finished good's brand
-//     [Proposed]. One share per material for all months.
+//     engine's gross requirement pegs over a 56-week run), grouped by the
+//     finished good's brand, recomputed per month (PEX-D26 / BL-295, owner
+//     ruling 2026-11-12). A month whose weeks carry no peg reads the material's
+//     share over the whole run [my call].
 // Computed at read, never stored (law 0.5).
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -19,7 +23,7 @@ import { dayOf } from '../../engine/dates';
 import { defaultRequirementOptions, materialRequirement } from '../../engine/requirement';
 import { groupWeekLtp } from '../../transitions/capacityRules';
 import { mondayOf, addDays } from '../../transitions/inventoryRules';
-import { hubWeeks, materialShares } from '../../transitions/demandAnticipationRules';
+import { hubWeeks, ltpSplitShares } from '../../transitions/demandAnticipationRules';
 import { ltpWeeks, materialLtpInputs } from '../../transitions/ltpInputRules';
 import { buildHeadsUp } from '../../transitions/capacityHeadsUpRules';
 import { allCapacityPlans } from './inventoryReadModel';
@@ -32,9 +36,12 @@ import { ltpInputStore } from './stores/ltpInputStore';
 const HEADS_UP_WEEKS = 56;
 
 /**
- * Each material's share of BOM demand by brand over the engine's run.
+ * PEX-D26 (BL-295) — each material's share of BOM demand by brand, per month:
+ * the engine's gross requirement pegs of the weeks whose Monday falls in the
+ * month. A month with no peg reads the share over the whole run; a material
+ * with no peg at all reads none ("No brand on record").
  * @param {string} nowIso
- * @returns {(materialCode: string) => Map<string, number>}
+ * @returns {(materialCode: string, month: string) => Map<string, number>}
  */
 export function brandSharesAt(nowIso) {
   const data = engineDataset();
@@ -43,23 +50,40 @@ export function brandSharesAt(nowIso) {
     ...defaultRequirementOptions(dayOf(nowIso)),
     horizonWeeks: HEADS_UP_WEEKS
   });
-  /** @type {Map<string, Map<string, number>>} */
+  /** @param {Map<string, number>} brands @returns {Map<string, number>} */
+  const toShares = (brands) => {
+    const total = [...brands.values()].reduce((n, v) => n + v, 0);
+    return new Map(total > 0 ? [...brands.entries()].map(([b, q]) => [b, q / total]) : []);
+  };
+  /** @type {Map<string, { whole: Map<string, number>; byMonth: Map<string, Map<string, number>> }>} */
   const byMaterial = new Map();
   for (const m of run.materials) {
     /** @type {Map<string, number>} */
-    const brands = new Map();
-    for (const w of m.weeks)
+    const whole = new Map();
+    /** @type {Map<string, Map<string, number>>} */
+    const months = new Map();
+    for (const w of m.weeks) {
+      const month = w.weekStart.slice(0, 7);
+      const inMonth = months.get(month) ?? new Map();
       for (const p of w.pegs) {
         const brand = brandOf.get(p.skuCode);
-        if (brand) brands.set(brand, (brands.get(brand) ?? 0) + p.quantity);
+        if (!brand) continue;
+        whole.set(brand, (whole.get(brand) ?? 0) + p.quantity);
+        inMonth.set(brand, (inMonth.get(brand) ?? 0) + p.quantity);
       }
-    const total = [...brands.values()].reduce((n, v) => n + v, 0);
-    byMaterial.set(
-      m.materialCode,
-      new Map(total > 0 ? [...brands.entries()].map(([b, q]) => [b, q / total]) : [])
-    );
+      months.set(month, inMonth);
+    }
+    byMaterial.set(m.materialCode, {
+      whole: toShares(whole),
+      byMonth: new Map([...months.entries()].map(([k, v]) => [k, toShares(v)]))
+    });
   }
-  return (materialCode) => byMaterial.get(materialCode) ?? new Map();
+  return (materialCode, month) => {
+    const entry = byMaterial.get(materialCode);
+    if (!entry) return new Map();
+    const inMonth = entry.byMonth.get(month);
+    return inMonth && inMonth.size > 0 ? inMonth : entry.whole;
+  };
 }
 
 /**
@@ -78,6 +102,7 @@ export function allCapacityHeadsUp(nowIso = sdcClock.now()) {
   const weeks = Array.from({ length: HEADS_UP_WEEKS }, (_, i) => addDays(first, i * 7));
   const window = hubWeeks(nowIso, 4);
   const ltpRows = ltpInputStore.all();
+  const { sources } = engineDataset();
   /** @type {Map<string, Map<string, number>>} */
   const demand = new Map();
   /** @type {Map<string, string[]>} */
@@ -94,13 +119,15 @@ export function allCapacityHeadsUp(nowIso = sdcClock.now()) {
       const source = weeks.map((w) => groupWeekLtp(lines, supplierId, [materialCode], w));
       const inputs = materialLtpInputs(ltpRows, materialCode);
       const suppliers = [...(suppliersOf.get(materialCode) ?? [])].sort();
+      // PEX-D25 (BL-293) — the sourcing share on record; the LTP share only without one.
       const share = inputs.hasUpload
-        ? (materialShares(
+        ? (ltpSplitShares(
+            sources,
             lines,
             materialCode,
             suppliers.length ? suppliers : [supplierId],
             window
-          ).get(supplierId) ?? 0)
+          ).shares.get(supplierId) ?? 0)
         : 0;
       const used = inputs.hasUpload ? ltpWeeks(weeks, source, inputs, share).used : source;
       series = new Map(weeks.map((w, i) => [w, used[i]]));

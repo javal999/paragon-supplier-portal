@@ -907,8 +907,9 @@ export const TERM_LABEL_GLOSSARY =
     },
     protectionBuffer: {
       label: { en: 'Protection buffer', id: 'Protection buffer' },
-      en: 'A buffer against a jump in demand, for materials at levels 5 to 7. Proposed and shown only: nothing is ordered from it.',
-      id: 'Buffer untuk lonjakan permintaan, bagi material level 5 sampai 7. Usulan dan hanya ditampilkan: tidak ada yang dipesan darinya.',
+      // TL-D40 (BL-294), approved 2026-11-12.
+      en: 'A buffer against a jump in demand. On the Capacity page (materials at levels 5 to 7) it is shown only. On the DA grid it is LTP B − LTP A and is added to ROP Order.',
+      id: 'Buffer untuk lonjakan permintaan. Di halaman Capacity (material level 5 sampai 7) hanya ditampilkan. Di grid DA nilainya LTP B − LTP A dan ditambahkan ke ROP Order.',
       formula: {
         en: 'Ceiling(uplift, production MPQ).',
         id: 'Ceiling(uplift, MPQ produksi).'

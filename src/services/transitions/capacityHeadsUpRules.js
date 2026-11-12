@@ -27,8 +27,9 @@
 // Breakdown (BR-03, BR-07): capacity is confirmed per planning group, so a
 // material's utilisation = the material's demand ÷ the GROUP's capacity and the
 // materials of a group add up to the group figure. A material's demand splits to
-// brands by each brand's share of the material's BOM demand [Proposed]; the
-// shares are passed in (`brandShares`).
+// brands by each brand's share of the material's BOM demand in THAT month
+// (PEX-D26, BL-295, owner ruling 2026-11-12); the shares are passed in
+// (`brandShares(materialCode, month)`). Only the per-brand rows read them.
 //
 // Pure: plans, monthly entries and demand in, rows out. The 70% is the doc's;
 // it lives once, here.
@@ -239,7 +240,7 @@ export const NO_BRAND = 'No brand on record';
  *   readonly plans: readonly CapacityPlan[];
  *   readonly submissions: readonly CapacityMonthSubmission[];
  *   readonly weeklyDemand: (supplierId: string, materialCode: string, week: string) => number;
- *   readonly brandShares: (materialCode: string) => ReadonlyMap<string, number>;
+ *   readonly brandShares: (materialCode: string, month: string) => ReadonlyMap<string, number>;
  *   readonly nowIso: string;
  * }} input
  * @returns {HeadsUpPlan[]}
@@ -303,15 +304,17 @@ export function buildHeadsUp({ plans, submissions, weeklyDemand, brandShares, no
     /** @type {Map<string, number[]>} */
     const brandDemand = new Map();
     for (const materialCode of plan.materials) {
-      const shares = brandShares(materialCode);
-      const split = shares.size > 0 ? [...shares.entries()] : [[NO_BRAND, 1]];
-      for (const [brand, part] of /** @type {[string, number][]} */ (split)) {
-        const series = brandDemand.get(brand) ?? /** @type {number[]} */ (months.map(() => 0));
-        months.forEach((month, i) => {
-          series[i] += materialDemand(materialCode, month) * part;
-        });
-        brandDemand.set(brand, series);
-      }
+      months.forEach((month, i) => {
+        // PEX-D26 — the brand share of this month, not one share for all 12.
+        const shares = brandShares(materialCode, month);
+        const split = shares.size > 0 ? [...shares.entries()] : [[NO_BRAND, 1]];
+        const demand = materialDemand(materialCode, month);
+        for (const [brand, part] of /** @type {[string, number][]} */ (split)) {
+          const series = brandDemand.get(brand) ?? /** @type {number[]} */ (months.map(() => 0));
+          series[i] += demand * part;
+          brandDemand.set(brand, series);
+        }
+      });
     }
     const byBrand = [...brandDemand.entries()]
       .sort(([a], [b]) => a.localeCompare(b))
