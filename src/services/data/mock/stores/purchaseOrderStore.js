@@ -13,9 +13,11 @@ import { mockPurchaseOrders } from '@data/mockPurchaseOrders';
 /** @import { PurchaseOrder } from '../../types' */
 // BL-64 — the umbrella orders behind the compliance gate's OTIF boundary.
 import { GATE_DEMO_PURCHASE_ORDERS } from '../fixtures/gateDemo';
+// E2E walkthrough 2026-11-12 — the pair's umbrella order.
+import { SSTP_PURCHASE_ORDER } from '../fixtures/walkthroughSstp';
 
 /** @type {readonly PurchaseOrder[]} */
-const SEED = [...mockPurchaseOrders, ...GATE_DEMO_PURCHASE_ORDERS];
+const SEED = [...mockPurchaseOrders, ...GATE_DEMO_PURCHASE_ORDERS, SSTP_PURCHASE_ORDER];
 
 /**
  * @param {PurchaseOrder} po

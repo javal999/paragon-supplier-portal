@@ -55,7 +55,8 @@ describe('BL-240 — Submit all asks first (U-02)', () => {
     const dialog = screen.getByRole('dialog', {
       name: `Submit Week of ${formatDate(W[0])} to PTI?`
     });
-    expect(dialog).toHaveTextContent('Materials: 1.');
+    // 2: 8802 and the E2E walkthrough's 2000028400.
+    expect(dialog).toHaveTextContent('Materials: 2.');
     const line = within(dialog).getByTestId('fc-week-confirm-line-PK-PETB-8802');
     expect(line).toHaveTextContent(`PK-PETB-8802 · Week of ${formatDate(W[0])} · 42,400`);
     expect(line).toHaveAttribute('data-prefilled', 'true');
@@ -104,7 +105,7 @@ describe('BL-240 — Submit all asks first (U-02)', () => {
       await screen.findByTestId(`fc-week-${W[0]}`);
       fireEvent.click(screen.getByTestId(`fc-week-submit-${W[0]}`));
       const dialog = screen.getByRole('dialog', { name: /^Kirim .* ke PTI\?$/ });
-      expect(dialog).toHaveTextContent('Material: 1.');
+      expect(dialog).toHaveTextContent('Material: 2.');
       expect(dialog).toHaveTextContent('Terisi dari prakiraan, belum diubah');
       expect(within(dialog).getByTestId('fc-week-confirm-cancel')).toHaveTextContent('Batal');
       expect(within(dialog).getByTestId('fc-week-confirm-submit')).toHaveTextContent('Kirim semua');

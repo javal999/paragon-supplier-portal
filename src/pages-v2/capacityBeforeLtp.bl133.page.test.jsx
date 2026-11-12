@@ -79,14 +79,17 @@ describe('Supplier — Submit all per period (ENG-D19)', () => {
       route: '/supplier/forecasts'
     });
     const weekRow = await screen.findByTestId(`fc-week-${W[0]}`);
-    // Only 8802 awaits its commitment; 8801's stands from version 1.
-    expect(weekRow).toHaveTextContent('Materials: 1');
+    // 8802 awaits its commitment, and so does the E2E walkthrough's 2000028400
+    // (its own planning group, capacity within); 8801's stands from version 1.
+    expect(weekRow).toHaveTextContent('Materials: 2');
     expect(within(weekRow).getByTestId(`fc-week-check-${W[0]}-pg-MG-20`)).toHaveAttribute(
       'data-level',
       'within'
     );
-    // Zone Capacity weeks have no Submit all (acknowledgement only).
-    expect(screen.queryByTestId(`fc-week-${W[2]}`)).toBeNull();
+    // Zone Capacity weeks have no Submit all (acknowledgement only). W[2] is
+    // still Zone Liability for the E2E walkthrough's 2000028400 (35-day lead
+    // time), so its period keeps a Submit all holding that material alone.
+    expect(screen.getByTestId(`fc-week-${W[2]}`)).toHaveTextContent('Materials: 1');
     expect(screen.queryByTestId(`fc-week-${W[6]}`)).toBeNull();
     // A row no longer has its own Submit, only Save draft.
     expect(screen.queryByRole('button', { name: /^Submit commitment for/ })).toBeNull();
@@ -97,17 +100,19 @@ describe('Supplier — Submit all per period (ENG-D19)', () => {
     fireEvent.change(within(row8801).getByLabelText(/^Commitment quantity for/), {
       target: { value: '35000' }
     });
-    expect(weekRow).toHaveTextContent('Materials: 2');
+    expect(weekRow).toHaveTextContent('Materials: 3');
     fireEvent.click(screen.getByTestId(`fc-week-submit-${W[0]}`));
     // BL-240 — Submit all opens the summary; its confirm sends the period.
     fireEvent.click(screen.getByTestId('fc-week-confirm-submit'));
     await waitFor(() =>
       expect(
+        // On the current version only: version 1's seeded answers for 8801 and
+        // 8802 are Submitted too, and would satisfy the list before the click.
         responsesFor('sup-007', W[0])
-          .filter((r) => r.status === 'Submitted')
+          .filter((r) => r.status === 'Submitted' && r.publicationId === 'FC-PK-V2')
           .map((r) => r.materialCode)
           .sort()
-      ).toEqual(['PK-PETB-8801', 'PK-PETB-8802'])
+      ).toEqual(['2000028400', 'PK-PETB-8801', 'PK-PETB-8802'])
     );
   });
 

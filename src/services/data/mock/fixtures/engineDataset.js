@@ -30,6 +30,7 @@ import { generateEngineDataset } from '../../../engine/synthetic/generate';
 import { DEFAULT_PROFILE, SUPPLIER_PROFILES } from '../../../engine/synthetic/profiles';
 /** @import { EngineDataset, IsoInstant, LeadTimeRoute, LeadTimeStepId } from '../../../engine/types' */
 import { splitLeadTime } from '../../../engine/leadTimeSteps';
+import { SSTP, SSTP_FIGURES, SSTP_UNIT_PRICE_IDR } from './walkthroughSstp';
 
 /**
  * DRC-6 (BL-192) — SAMPLE DATA. The route of a sample source: an Indonesian
@@ -96,12 +97,17 @@ export function engineGeneratorInput(now, seed = ENGINE_DATASET_SEED) {
   return {
     seed,
     now,
-    materials: Object.values(MATERIAL_MASTER).map((m) => ({
-      materialCode: m.materialCode,
-      materialType: m.materialType,
-      materialGroup: m.materialGroup,
-      canonicalUom: m.canonicalUom
-    })),
+    // E2E walkthrough — the walkthrough pair is ADDED after generation
+    // (`withWalkthroughPair`), never generated: one more material in the
+    // generator would move every seeded draw and every other pair's rows.
+    materials: Object.values(MATERIAL_MASTER)
+      .filter((m) => m.materialCode !== SSTP.materialCode)
+      .map((m) => ({
+        materialCode: m.materialCode,
+        materialType: m.materialType,
+        materialGroup: m.materialGroup,
+        canonicalUom: m.canonicalUom
+      })),
     suppliers: ENGINE_SUPPLIER_IDS.map((id) => {
       const s = mockSuppliers.find((x) => x.id === id);
       if (!s) throw new Error(`engine dataset: supplier '${id}' is not in the supplier master`);
@@ -135,6 +141,58 @@ export function engineGeneratorInput(now, seed = ENGINE_DATASET_SEED) {
   };
 }
 
+/**
+ * E2E walkthrough 2026-11-12 — the pair sup-007 × 2000028400 with the
+ * planners' purchasing figures (`SSTP_FIGURES`): lead time 35 days on the
+ * local route, MOQ, MPQ (read as `orderMultiple`) and koli (read as units per
+ * pallet). Appended to the generated dataset, so every generated row stays
+ * byte-identical. It has no sales, BOM, stock or PO history: the engine's
+ * history-based figures (CV, the MRP run) hold nothing for it.
+ * @param {EngineDataset} data
+ * @returns {EngineDataset}
+ */
+export function withWalkthroughPair(data) {
+  const route = sampleLeadTimeRoute(SSTP.supplierId, { materialType: 'VERP' });
+  /** @type {EngineDataset['materials'][number]} */
+  const material = {
+    materialCode: SSTP.materialCode,
+    kind: 'packaging',
+    uom: 'PCS',
+    materialGroup: 'MG-20'
+  };
+  return {
+    ...data,
+    materials: [...data.materials, material],
+    sources: [
+      ...data.sources,
+      {
+        materialCode: SSTP.materialCode,
+        supplierId: SSTP.supplierId,
+        leadTimeDays: SSTP_FIGURES.leadTimeDays,
+        moq: SSTP_FIGURES.moq,
+        orderMultiple: SSTP_FIGURES.mpq,
+        share: 1,
+        leadTimeRoute: route,
+        leadTimeSteps: splitLeadTime(
+          route,
+          SSTP_FIGURES.leadTimeDays,
+          SAMPLE_LEAD_TIME_WEIGHTS[route]
+        )
+      }
+    ],
+    volumes: [
+      ...data.volumes,
+      { materialCode: SSTP.materialCode, unitsPerPallet: SSTP_FIGURES.koli }
+    ],
+    // The PO line's unit price; no SAP safety stock is on record for the pair.
+    materialValues: [
+      ...data.materialValues,
+      { materialCode: SSTP.materialCode, unitValueIdr: SSTP_UNIT_PRICE_IDR }
+    ],
+    sapSafetyStock: [...data.sapSafetyStock, { materialCode: SSTP.materialCode, quantity: 0 }]
+  };
+}
+
 /** @type {{ now: string; data: EngineDataset } | null} */
 let memo = null;
 
@@ -144,6 +202,7 @@ let memo = null;
  */
 export function engineDataset() {
   const now = sdcClock.now();
-  if (memo?.now !== now) memo = { now, data: generateEngineDataset(engineGeneratorInput(now)) };
+  if (memo?.now !== now)
+    memo = { now, data: withWalkthroughPair(generateEngineDataset(engineGeneratorInput(now))) };
   return memo.data;
 }

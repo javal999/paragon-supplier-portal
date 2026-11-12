@@ -11,6 +11,7 @@ import { seedEnforcementLedger } from '@services/data/mock/enforcementSeed';
 import { seedSourceableRequisition } from '@services/data/mock/requisitionSeed';
 import { seedSupplierApplications } from '@services/data/mock/applicationSeed';
 import { seedRopFisikDraft } from '@services/data/mock/ropFisikDraftSeed';
+import { seedWalkthroughSstp } from '@services/data/mock/walkthroughSstpSeed';
 import { withChaos, chaosConfigFromEnv } from '@services/data/mock/withChaos';
 import { queryClient } from '@services/query/queryClient';
 /** @import { IDataService } from '@services/data/types' */
@@ -97,6 +98,19 @@ seedEnforcementLedger()
   })
   .catch((err) => {
     console.error('[B2] the supplier-application seed threw:', err);
+  })
+  // E2E walkthrough 2026-11-12 — the SSTP pair's LTP A, Max PTI, supplier
+  // stock and feedstock, through their verbs. Before the ROP Fisik seed and
+  // the first render, so the DA publication seeded on first read reads LTP A.
+  // Same contract: idempotent, a refusal is reported, the app renders either way.
+  .then(() => seedWalkthroughSstp())
+  .then((outcome) => {
+    if (outcome.refused.length > 0) {
+      console.error('[E2E walkthrough] some SSTP inputs were refused:', outcome.refused);
+    }
+  })
+  .catch((err) => {
+    console.error('[E2E walkthrough] the SSTP seed threw:', err);
   })
   // BL-199 — one call-off drafted at ROP Fisik, grown through the trigger on a
   // sample eWM refresh (no stock figure moves). Same contract: idempotent, a

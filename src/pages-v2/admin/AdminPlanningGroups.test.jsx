@@ -27,7 +27,9 @@ describe('Material C5 · AdminPlanningGroups', () => {
     expect(within(mg03).getByText('Humectants and glycols')).toBeTruthy();
     expect(within(mg03).getByText('Default')).toBeTruthy();
     expect(within(mg03).getByText('RM-EMUL-3310, RM-HUMEC-3405')).toBeTruthy();
-    expect(screen.getByTestId('adminpg-history-empty')).toBeTruthy();
+    // The log is not empty: it holds the E2E walkthrough's seeded group.
+    expect(screen.queryByTestId('adminpg-history-empty')).toBeNull();
+    expect(await screen.findByTestId('adminpg-row-pg-walkthrough-sstp')).toBeTruthy();
     expect(screen.getByTestId('admin-section-planning-groups')).toBeTruthy();
   });
 

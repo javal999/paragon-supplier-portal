@@ -15,6 +15,8 @@
 import { INVENTORY_DECLARATIONS, declarationRecency, requireUom } from '../../../sdc';
 /** @import { InventoryDeclaration } from '../../../sdc' */
 import { mockInventory } from '@data/mockInventory';
+// E2E walkthrough 2026-11-12 — sup-007's stock submission of 2000028400 today.
+import { SSTP_INVENTORY_DECLARATION } from '../fixtures/walkthroughSstp';
 
 /**
  * @param {InventoryDeclaration} d
@@ -46,7 +48,7 @@ const HUB_SEED = mockInventory.map((r) => ({
 }));
 
 /** @type {readonly InventoryDeclaration[]} */
-const SEED = [...INVENTORY_DECLARATIONS, ...HUB_SEED];
+const SEED = [...INVENTORY_DECLARATIONS, ...HUB_SEED, SSTP_INVENTORY_DECLARATION];
 
 /** @type {InventoryDeclaration[]} */
 let rows = SEED.map(clone);

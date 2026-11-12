@@ -745,8 +745,15 @@ describe('Planner capacity filters (BL-63, REQ-E08-04 BR-07, AC-04)', () => {
     await screen.findByTestId('capacity-plan-sup-007-pg-MG-20');
     // BL-133 — a supplier with an LTP in a group has a capacity plan for it, so
     // sup-012 (MG-20) and sup-005 (MG-02) join from the current forecast.
-    expect(planIds()).toHaveLength(15);
-    expect(planIds()).toEqual(expect.arrayContaining(['sup-012-pg-MG-20', 'sup-005-pg-MG-02']));
+    // 16 with the E2E walkthrough's own plan (sup-007 × pg-walkthrough-sstp).
+    expect(planIds()).toHaveLength(16);
+    expect(planIds()).toEqual(
+      expect.arrayContaining([
+        'sup-012-pg-MG-20',
+        'sup-005-pg-MG-02',
+        'sup-007-pg-walkthrough-sstp'
+      ])
+    );
     fireEvent.change(screen.getByLabelText('Supplier'), { target: { value: 'sup-002' } });
     expect(planIds().sort()).toEqual(['sup-002-pg-MG-02', 'sup-002-pg-MG-03', 'sup-002-pg-MG-10']);
     expect(new URLSearchParams(search).get('supplier')).toBe('sup-002');
@@ -845,7 +852,7 @@ describe('Planner capacity filters (BL-63, REQ-E08-04 BR-07, AC-04)', () => {
     expect(empty).toHaveTextContent('No supplier material group matches these filters.');
     expect(planIds()).toEqual([]);
     fireEvent.click(within(empty).getByTestId('capacity-filters-empty-clear'));
-    await waitFor(() => expect(planIds()).toHaveLength(15));
+    await waitFor(() => expect(planIds()).toHaveLength(16));
     expect(search).toBe('');
   });
 });

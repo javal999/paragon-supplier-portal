@@ -304,7 +304,12 @@ export function buildVersion(input) {
       const zone = zoneFor(
         period.start,
         day,
-        zoneLengthsFor(source.supplierId, entry.materialGroup, entry.materialType)
+        zoneLengthsFor(
+          source.supplierId,
+          entry.materialGroup,
+          entry.materialType,
+          source.materialCode
+        )
       );
       lines.push({
         materialCode: source.materialCode,

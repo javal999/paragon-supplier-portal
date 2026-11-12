@@ -182,7 +182,9 @@ describe('2B-3 — the population DERIVES, and it is five', () => {
   });
 
   it('the master is now 42 — 5 seeded, 25 adopted, 5 authored 2B-3, 7 authored 2B-5b-ii', () => {
-    expect(Object.keys(MATERIAL_MASTER)).toHaveLength(42);
+    // +1 at the E2E walkthrough (2026-11-12): 2000028400, a real SAP packaging code
+    // authored from the planners' sheet (`fixtures/walkthroughSstp.js`), a fifth route.
+    expect(Object.keys(MATERIAL_MASTER)).toHaveLength(43);
     // ⚠️ AND THE FIVE OF *THIS* BATCH ARE STILL FIVE. The derived population
     // above is RFQ-only codes, and 2B-5b-ii's seven come from the ASN lane, so
     // they cannot leak into it — asserted rather than assumed, because "the
@@ -460,7 +462,9 @@ describe('2B-4 GATE — the mechanism landed at 2B-4a; the BEHAVIOUR still has n
       )
       .map((m) => m.materialCode);
     expect(missing).toEqual([]);
-    expect(Object.keys(MATERIAL_MASTER)).toHaveLength(42);
+    // +1 at the E2E walkthrough (2026-11-12): 2000028400, a real SAP packaging code
+    // authored from the planners' sheet (`fixtures/walkthroughSstp.js`), a fifth route.
+    expect(Object.keys(MATERIAL_MASTER)).toHaveLength(43);
     // ⚠️ THE GATE THIS PIN GUARDS IS DISCHARGED AT 2B-5b-ii — and the pin below
     // still holds, which is the whole point of separating them. The GR wizard is
     // fed `asnStore`; that space is retired and every code it can hand the

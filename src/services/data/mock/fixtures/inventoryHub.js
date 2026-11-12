@@ -31,6 +31,7 @@ import { DECLARED_PRESENT } from '../../fixturePresent';
 /** @import { CapacitySubmission, StockAccessGrant, StockSyncAttempt } from '../../types' */
 /** @import { PtiStockRecord } from '../../../transitions/inventoryRules' */
 import { defaultPlanningGroupId } from '../../../sdc/materialMaster';
+import { SSTP, SSTP_FIGURES, SSTP_PLANNING_GROUP_EVENT } from './walkthroughSstp';
 
 const DAY_MS = 86_400_000;
 const P = Date.parse(`${DECLARED_PRESENT}T00:00:00.000Z`);
@@ -82,7 +83,15 @@ export const PTI_STOCK = [
   { materialCode: 'PK-PETB-8802', ptiSoh: 55000, ptiRop: 50000, consignment: true, plant: 'J2' },
   { materialCode: 'PK-PETB-8810', ptiSoh: 20000, ptiRop: 15000, consignment: false, plant: 'J2' },
   { materialCode: 'PK-CAPF-8820', ptiSoh: 80000, ptiRop: 60000, consignment: true, plant: 'J2' },
-  { materialCode: 'PK-CART-9901', ptiSoh: 300000, ptiRop: 150000, consignment: false, plant: 'J2' }
+  { materialCode: 'PK-CART-9901', ptiSoh: 300000, ptiRop: 150000, consignment: false, plant: 'J2' },
+  // E2E walkthrough 2026-11-12 — the sheet's SOH (B13) and ROP Fisik PTI (B12).
+  {
+    materialCode: SSTP.materialCode,
+    ptiSoh: SSTP_FIGURES.ptiSoh,
+    ptiRop: SSTP_FIGURES.ropFisikPti,
+    consignment: false,
+    plant: 'J6'
+  }
 ];
 
 /**
@@ -108,7 +117,8 @@ export const SUPPLY_ASSIGNMENTS = [
   { supplierId: 'sup-008', materialCode: 'PK-CART-9901' },
   { supplierId: 'sup-009', materialCode: 'AI-VITC-6730' },
   { supplierId: 'sup-009', materialCode: 'AI-PANTO-6640' },
-  { supplierId: 'sup-010', materialCode: 'RM-EMUL-9430' }
+  { supplierId: 'sup-010', materialCode: 'RM-EMUL-9430' },
+  { supplierId: SSTP.supplierId, materialCode: SSTP.materialCode }
 ];
 
 /**
@@ -174,7 +184,9 @@ export const SUPPLIER_LEAD_TIME_DAYS = {
   'sup-007|PK-CAPF-8820': 14,
   'sup-008|PK-CART-9901': 14,
   'sup-009|AI-VITC-6730': 25,
-  'sup-009|AI-PANTO-6640': 20
+  'sup-009|AI-PANTO-6640': 20,
+  // E2E walkthrough 2026-11-12 — Excel B29, 5 weeks.
+  [`${SSTP.supplierId}|${SSTP.materialCode}`]: SSTP_FIGURES.leadTimeDays
   // sup-010 RM-EMUL-9430 deliberately absent — the lead-time-missing case.
 };
 
@@ -310,6 +322,16 @@ export const CAPACITY_SEED = [
     planningGroupId: defaultPlanningGroupId('MG-20'),
     submittedAt: at(-1, 5),
     weeks: weeks(() => 17000)
+  },
+  {
+    // E2E walkthrough 2026-11-12 — [Scenario] sup-007's capacity for the
+    // walkthrough container's own planning group, above every week's LTP, so
+    // a period holding it can be submitted without a capacity reason.
+    id: 'cap-0005',
+    supplierId: SSTP.supplierId,
+    planningGroupId: SSTP_PLANNING_GROUP_EVENT.groupId,
+    submittedAt: at(-1, 6),
+    weeks: weeks(() => SSTP_FIGURES.weeklyCapacity)
   }
 ];
 
