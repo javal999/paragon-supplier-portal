@@ -1,7 +1,6 @@
 /** @import React from 'react' */
 import { useTranslation } from 'react-i18next';
 import TermLabel from '@components/ui-v2/TermLabel';
-import TermTip from '@components/forecast/TermTip';
 import Data from '@components/ui-v2/Data';
 /** @import { ForecastCommitmentLine } from '@services/data/types' */
 /** @import { VerbAvailability } from '@services/transitions/handoff' */
@@ -13,7 +12,11 @@ import CommitmentLog from './CommitmentLog';
 import { CELL, HEAD } from './gridCells';
 import { isAcknowledgeOnly } from '@services/transitions/forecastRules';
 
-const LABEL = `${CELL} sticky left-0 z-10 bg-bg-surface font-medium text-text-secondary whitespace-nowrap`;
+// BL-304 (UL-06) — below `md` the pinned label column is 7rem and its labels
+// wrap, and the scroll area pads by it plus a cell's 0.75rem padding (measured
+// at 390 px: 7rem alone left 12 px of the field under the labels), so a
+// focused field lands clear of them; from `md` up the column is as wide as its longest label.
+const LABEL = `${CELL} sticky left-0 z-10 bg-bg-surface font-medium text-text-secondary whitespace-normal md:whitespace-nowrap`;
 
 /**
  * One material's commitments (PEX-2, BL-265 BR-01 / BR-05): a grid with one
@@ -76,19 +79,19 @@ const MaterialSection = ({
         </p>
         <p className="text-xs text-text-tertiary">{t('fc.sup.grid.scrollHint')}</p>
       </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto scroll-ps-[7.75rem] md:scroll-ps-0">
         <div
           role="group"
           aria-label={t('fc.sup.grid.label', { material: code })}
-          className="grid grid-flow-col grid-rows-[repeat(10,auto)] auto-cols-[minmax(9rem,max-content)] w-max min-w-full"
+          className="grid grid-flow-col grid-rows-[repeat(10,auto)] grid-cols-[7rem] md:grid-cols-[max-content] auto-cols-[minmax(9rem,max-content)] w-max min-w-full"
           data-testid={`fc-sup-grid-${code}`}
         >
           <div className={`${HEAD} sticky left-0 z-10`} data-grid-label>
             {t('fc.col.period')}
           </div>
+          {/* BL-306 (UL-08) — Zone Liability and Zone Capacity explain themselves on each period's chip. */}
           <div className={LABEL} data-grid-label>
-            <TermLabel term="forecastZone" /> <TermTip term="Zone Liability" />{' '}
-            <TermTip term="Zone Capacity" />
+            <TermLabel term="forecastZone" />
           </div>
           <div className={LABEL} data-grid-label>
             <TermLabel term="publishedForecast" values={{ uom: first.uom }} />

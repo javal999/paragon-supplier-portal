@@ -108,6 +108,8 @@ export const supplierShipmentsEn = {
   'supplierShipments.wizard.details.field.packingList': 'Packing list',
   'supplierShipments.wizard.details.chooseFile': 'Choose file',
   'supplierShipments.wizard.details.noFile': 'No file chosen',
+  'supplierShipments.wizard.details.missing': 'To continue, fill in: {{fields}}.',
+  'supplierShipments.wizard.details.etaBeforeShip': 'Estimated arrival is before the ship date.',
   'supplierShipments.wizard.details.field.notes': 'Special handling notes',
   // — Wizard: step 3 (confirm & submit) —
   'supplierShipments.wizard.review.title': 'Confirm & submit',
@@ -232,6 +234,8 @@ export const supplierShipmentsId = {
   'supplierShipments.wizard.details.field.packingList': 'Daftar kemasan',
   'supplierShipments.wizard.details.chooseFile': 'Pilih berkas',
   'supplierShipments.wizard.details.noFile': 'Tidak ada berkas dipilih',
+  'supplierShipments.wizard.details.missing': 'Untuk lanjut, isi: {{fields}}.',
+  'supplierShipments.wizard.details.etaBeforeShip': 'Perkiraan tiba lebih awal dari tanggal kirim.',
   'supplierShipments.wizard.details.field.notes': 'Catatan penanganan khusus',
   // — Wizard: step 3 (confirm & submit) —
   'supplierShipments.wizard.review.title': 'Konfirmasi & ajukan',

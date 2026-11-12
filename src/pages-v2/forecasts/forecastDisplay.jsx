@@ -2,6 +2,7 @@
 import { useTranslation } from 'react-i18next';
 import StatusPill from '@components/ui-v2/StatusPill';
 import Data from '@components/ui-v2/Data';
+import TermTip from '@components/forecast/TermTip';
 import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { formatDate, formatDateTime, formatNumber } from '@lib/format';
@@ -59,10 +60,28 @@ export function usePeriodLabel() {
 /** @type {Record<ForecastZone, StatusTone>} */
 const ZONE_TONE = { firm: 'info', tradeOff: 'neutral', forecast: 'neutral' };
 
-/** @type {React.FC<{ zone: ForecastZone }>} */
-export const ZonePill = ({ zone }) => {
+/**
+ * The term tip that explains each zone (PEX-1: two zones, three stored keys).
+ * @type {Record<ForecastZone, 'Zone Liability' | 'Zone Capacity'>}
+ */
+const ZONE_TERM = { firm: 'Zone Liability', tradeOff: 'Zone Capacity', forecast: 'Zone Capacity' };
+
+/**
+ * `withTip`: BL-306 (UL-08) — the zone's ⓘ sits on the chip it explains, in
+ * each period, instead of three identical icons on the row label.
+ * @type {React.FC<{ zone: ForecastZone; withTip?: boolean }>}
+ */
+export const ZonePill = ({ zone, withTip = false }) => {
   const { t } = useTranslation();
-  return <StatusPill variant={ZONE_TONE[zone]}>{t(`fc.zone.${zone}`)}</StatusPill>;
+  const pill = <StatusPill variant={ZONE_TONE[zone]}>{t(`fc.zone.${zone}`)}</StatusPill>;
+  return withTip ? (
+    <span className="inline-flex items-center gap-1">
+      {pill}
+      <TermTip term={ZONE_TERM[zone]} />
+    </span>
+  ) : (
+    pill
+  );
 };
 
 /**

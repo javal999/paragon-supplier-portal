@@ -37,7 +37,9 @@ export const DemandCell = ({ l, label, className = '' }) => {
   const id = i18n.getFixedT('id');
   const name = t('fc.sup.demandHoverName', { period: label });
   return (
-    <div className={`${CELL} text-right ${className}`} data-testid={`fc-demand-${l.key}`}>
+    // BL-307 (UL-09) — left-aligned like every other row and its week header,
+    // so the figure no longer sits against the next week's column.
+    <div className={`${CELL} ${className}`} data-testid={`fc-demand-${l.key}`}>
       <TermTip
         entry={{
           label: { en: name, id: name },

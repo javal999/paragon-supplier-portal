@@ -65,7 +65,7 @@ const CommitmentColumn = ({
     >
       <div className={HEAD}>{label}</div>
       <div className={`${CELL} ${tint}`}>
-        <ZonePill zone={l.zone} />
+        <ZonePill zone={l.zone} withTip />
       </div>
       <DemandCell l={l} label={label} className={tint} />
       <div className={`${CELL} ${tint}`}>

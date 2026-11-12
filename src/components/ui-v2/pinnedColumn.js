@@ -32,6 +32,9 @@
 
 const BASE = 'sticky z-[1]';
 
+/** BL-304 — pinned columns wider than this share of the scroll area scroll with the table. */
+export const PIN_SHARE_MAX = 0.5;
+
 const EDGE_DIVIDER =
   "data-[pin-edge=true]:after:absolute data-[pin-edge=true]:after:inset-y-0 data-[pin-edge=true]:after:w-px data-[pin-edge=true]:after:bg-border-subtle data-[pin-edge=true]:after:content-['']";
 
@@ -87,16 +90,39 @@ export const placePinnedColumns = (table) => {
       offsets.set(c.cellIndex, { side: name, px, edge: i === side.length - 1 });
       px += c.getBoundingClientRect().width;
     });
+    return px;
   };
-  stack(left, 'left');
-  stack(right, 'right');
+  const leftWidth = stack(left, 'left');
+  const rightWidth = stack(right, 'right');
+  // BL-304 (UL-06) — the browser scrolls a focused cell into view against the
+  // scroll area's padding, so the padding is the pinned width: a field or
+  // button reached by Tab lands clear of the pinned columns instead of under
+  // them (at 390 px a commitment field was 45 % hidden). WeekGrid sets the
+  // same padding as a class; here the widths are measured, so it is set here.
+  // On a narrow screen the pinned columns can take most of the scroll area
+  // (PTI Foresight commitments at 390 px: # and Supplier were 299 of 358 px),
+  // and no padding leaves room for the cell a user tabs to. Past half the
+  // area they stop pinning and scroll with the table; they pin again when the
+  // area is wide enough.
+  const unpin = !!scroller && leftWidth + rightWidth > scroller.clientWidth * PIN_SHARE_MAX;
+  if (scroller && scroller.dataset.pinsOff !== String(unpin))
+    scroller.dataset.pinsOff = String(unpin);
+  if (scroller) {
+    const start = unpin ? '0px' : `${Math.round(leftWidth)}px`;
+    const end = unpin ? '0px' : `${Math.round(rightWidth)}px`;
+    if (scroller.style.scrollPaddingInlineStart !== start)
+      scroller.style.scrollPaddingInlineStart = start;
+    if (scroller.style.scrollPaddingInlineEnd !== end) scroller.style.scrollPaddingInlineEnd = end;
+  }
   for (const row of table.rows) {
     for (const cell of row.cells) {
       const o = cell.dataset.pin ? offsets.get(cell.cellIndex) : undefined;
       if (!o) continue;
-      const value = `${o.px}px`;
+      const position = unpin ? 'static' : '';
+      if (cell.style.position !== position) cell.style.position = position;
+      const value = unpin ? '' : `${o.px}px`;
       if (cell.style[o.side] !== value) cell.style[o.side] = value;
-      const edge = o.edge ? 'true' : 'false';
+      const edge = o.edge && !unpin ? 'true' : 'false';
       if (cell.dataset.pinEdge !== edge) cell.dataset.pinEdge = edge;
     }
   }

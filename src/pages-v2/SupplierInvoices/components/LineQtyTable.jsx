@@ -5,16 +5,19 @@ import { useTranslation } from 'react-i18next';
 import TermLabel from '@components/ui-v2/TermLabel';
 import { fmtIdr, readQty } from '../../invoices/InvoiceCollaboration';
 import { inputCls } from '../const';
-import { lineKey } from '../utils';
+import { lineKey, readLineAmount } from '../utils';
+import { LineAmountCell } from './AmountFields';
 
 /**
  * Editable quantities over a set of invoice lines, each bounded by what is left.
  * Used by both the new-invoice and the correct-and-resubmit panels; `entries`
  * holds the typed text per line (`lineKey`), and `onChange` writes one entry.
  * Moved out of `SupplierInvoices.jsx` by the Phase 5 page split (no behaviour change).
- * @type {React.FC<{ lines: readonly (InvoiceLine & { remaining: number | null })[]; entries: Record<string, string>; onChange: (key: string, v: string) => void; }>}
+ * With `amounts` and `onAmountChange` (BL-75, the new-invoice form) each line also
+ * takes the amount billed for it, defaulting to quantity × PO unit price.
+ * @type {React.FC<{ lines: readonly (InvoiceLine & { remaining: number | null })[]; entries: Record<string, string>; onChange: (key: string, v: string) => void; amounts?: Record<string, string>; onAmountChange?: (key: string, v: string) => void; }>}
  */
-const LineQtyTable = ({ lines, entries, onChange }) => {
+const LineQtyTable = ({ lines, entries, onChange, amounts, onAmountChange }) => {
   const { t } = useTranslation();
   return (
     <div className="overflow-x-auto">
@@ -29,6 +32,9 @@ const LineQtyTable = ({ lines, entries, onChange }) => {
             <th className="text-right py-1">
               <TermLabel term="invUnitPrice" />
             </th>
+            {onAmountChange && (
+              <th className="text-left py-1 pl-2">{t('fc.inv.new.col.amount')}</th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -83,6 +89,28 @@ const LineQtyTable = ({ lines, entries, onChange }) => {
                 <td className="py-1.5 text-right whitespace-nowrap">
                   <Data>{fmtIdr(l.unitPrice)}</Data>
                 </td>
+                {onAmountChange && (
+                  <td className="py-1.5 pl-2">
+                    {(() => {
+                      const typed = amounts?.[key];
+                      const read = readLineAmount(typed, { quantity: q, unitPrice: l.unitPrice });
+                      const value = typed ?? (read.ok ? String(read.value) : '');
+                      return (
+                        <LineAmountCell
+                          id={`new-amount-${key}`}
+                          label={t('fc.inv.new.amountFor', {
+                            material: l.materialCode,
+                            grNumber: l.grNumber
+                          })}
+                          value={value}
+                          read={read}
+                          onChange={(v) => onAmountChange(key, v)}
+                          t={t}
+                        />
+                      );
+                    })()}
+                  </td>
+                )}
               </tr>
             );
           })}
