@@ -63,6 +63,17 @@ describe('BR-08 · the PPT 7 golden case', () => {
     expectNoAbbreviation();
   });
 
+  it('the SSTP planner Excel (4 Nov 2026) loads beside it, on the sheet inputs and the PPT 7 readings', async () => {
+    renderWithProviders(<BuyerWhatIfSandbox />, { route: ROUTE });
+    fireEvent.click(await screen.findByTestId('wi-load-sstp'));
+    expect(await screen.findByTestId('wi-preset-note')).toHaveTextContent('Simulasi SSTP');
+    expect(screen.getByTestId('wi-plan-safetyOrder')).toHaveTextContent('27,311');
+    expect(screen.getByTestId('wi-plan-ropOrder')).toHaveTextContent('146,891');
+    expect(screen.getByTestId('wi-plan-ropFisik')).toHaveTextContent('54,622');
+    expect(screen.getByTestId('wi-plan-max')).toHaveTextContent('25,488');
+    expect(screen.getByTestId('wi-edited')).toHaveTextContent('0');
+  });
+
   it('flipping Z [B3] moves the safety order against the current plan; reset brings it back', async () => {
     renderWithProviders(<BuyerWhatIfSandbox />, {
       route: `${ROUTE}?supplier=ppt7-golden&material=2000041501`

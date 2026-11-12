@@ -21,6 +21,8 @@
 //
 // BR-08 — the PPT 7 golden case (`__fixtures__/osipGolden.json`) is offered as
 // one more pair, `PPT7_SUPPLIER_ID`, so its scenarios save and compare too.
+// The SSTP planner Excel (4 Nov 2026, `whatIfSstpPreset`) is offered the same
+// way, as `SSTP_SUPPLIER_ID`, second in the list.
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import { MaterialClass, WhatIfInputs } from '../../transitions/whatIfSandboxRules' */
@@ -51,6 +53,7 @@ import {
   ppt7Inputs,
   rulesChangedSince
 } from '../../transitions/whatIfSandboxRules';
+import { SSTP_EXCEL, SSTP_SUPPLIER_ID, sstpInputs } from '../../transitions/whatIfSstpPreset';
 import { osipSafetyInputs } from './osipSafetyReadModel';
 import { osipRopInputs } from './osipRopReadModel';
 import { demandAnticipationToPublish } from './demandAnticipationReadModel';
@@ -65,7 +68,7 @@ import { whatIfScenarioStore } from './stores/whatIfScenarioStore';
 
 /**
  * One supplier × material the sandbox offers (BR-01).
- * `preset`:  The PPT 7 golden case (BR-08), not a live pair.
+ * `preset`:  The PPT 7 golden case (BR-08) or the SSTP planner Excel, not a live pair.
  * `inPlan`:  The LTP names the pair, so the rolling DA holds its position.
  * `primary`:  The material's primary supplier (`primarySource`, the largest
  *   share), the pair `?material=` alone opens (U-09, BL-247).
@@ -119,6 +122,7 @@ function classOf(materialCode) {
  */
 export function isWhatIfPair(supplierId, materialCode) {
   if (supplierId === PPT7_SUPPLIER_ID) return materialCode === golden.ppt7.material;
+  if (supplierId === SSTP_SUPPLIER_ID) return materialCode === SSTP_EXCEL.material;
   const data = engineDataset();
   return (
     data.materials.some((m) => m.materialCode === materialCode) &&
@@ -140,8 +144,23 @@ const ppt7Pair = () => ({
   primary: false
 });
 
+/** @returns {WhatIfPair} */
+const sstpPair = () => ({
+  supplierId: SSTP_SUPPLIER_ID,
+  supplierName: '',
+  materialCode: SSTP_EXCEL.material,
+  materialLabel: SSTP_EXCEL.label,
+  uom: 'PCS',
+  materialClass: 'PM',
+  horizonWeeks: horizonOf('PM'),
+  preset: true,
+  inPlan: false,
+  primary: false
+});
+
 /**
- * BR-01 — every pair the sandbox offers: the PPT 7 case first, then every
+ * BR-01 — every pair the sandbox offers: the PPT 7 case first, the SSTP
+ * planner Excel second, then every
  * supplier × material the Safety stock read holds, by material then supplier.
  * @param {string} [nowIso]
  * @returns {WhatIfPair[]}
@@ -175,7 +194,7 @@ export function whatIfPairs(nowIso = sdcClock.now()) {
     (a, b) =>
       a.materialCode.localeCompare(b.materialCode) || a.supplierName.localeCompare(b.supplierName)
   );
-  return [ppt7Pair(), ...live];
+  return [ppt7Pair(), sstpPair(), ...live];
 }
 
 /**
@@ -215,6 +234,10 @@ export function whatIfLiveInputs(supplierId, materialCode, nowIso = sdcClock.now
   if (supplierId === PPT7_SUPPLIER_ID) {
     if (materialCode !== golden.ppt7.material) return null;
     return ppt7Inputs(golden.ppt7, hubWeeks(nowIso, horizonOf('PM')));
+  }
+  if (supplierId === SSTP_SUPPLIER_ID) {
+    if (materialCode !== SSTP_EXCEL.material) return null;
+    return sstpInputs(hubWeeks(nowIso, horizonOf('PM')));
   }
   const s = osipSafetyInputs(nowIso)
     .get(materialCode)
@@ -344,20 +367,22 @@ export function whatIfSandbox(supplierId, materialCode, nowIso = sdcClock.now())
   const pair =
     supplierId === PPT7_SUPPLIER_ID
       ? ppt7Pair()
-      : {
-          supplierId,
-          supplierName: forecastSupplierName(supplierId),
-          materialCode,
-          materialLabel: entry?.label ?? materialCode,
-          uom: entry?.canonicalUom ?? '',
-          materialClass: live.materialClass,
-          horizonWeeks: live.weeks.length,
-          preset: false,
-          inPlan: demandAnticipationToPublish([], nowIso).figures.some(
-            (f) => f.supplierId === supplierId && f.materialCode === materialCode
-          ),
-          primary: primarySource(engineDataset().sources, materialCode)?.supplierId === supplierId
-        };
+      : supplierId === SSTP_SUPPLIER_ID
+        ? sstpPair()
+        : {
+            supplierId,
+            supplierName: forecastSupplierName(supplierId),
+            materialCode,
+            materialLabel: entry?.label ?? materialCode,
+            uom: entry?.canonicalUom ?? '',
+            materialClass: live.materialClass,
+            horizonWeeks: live.weeks.length,
+            preset: false,
+            inPlan: demandAnticipationToPublish([], nowIso).figures.some(
+              (f) => f.supplierId === supplierId && f.materialCode === materialCode
+            ),
+            primary: primarySource(engineDataset().sources, materialCode)?.supplierId === supplierId
+          };
   // [Team B3, B7] the material's own Z and g: the switches the pair opens on.
   const s = osipSafetyInputs(nowIso)
     .get(materialCode)

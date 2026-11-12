@@ -30,6 +30,7 @@ import { lineHistories } from './lines';
 /** @import { BomLine, EngineDataset, FgPlanSnapshot } from './types' */
 import { engineDataset } from '../data/mock/fixtures/engineDataset';
 import { isKnownMaterial } from '../sdc/materialMaster';
+import { SSTP } from '../data/mock/fixtures/walkthroughSstp';
 
 // ── The worked example as a dataset ─────────────────────────────────────────
 
@@ -328,7 +329,11 @@ describe('REQ-E14-03 AC-01 — every material × week reconciles by the formula'
       ...defaultRequirementOptions(data.provenance.present),
       stockAccuracyTolerance: 1
     });
-    expect(loose.materials.filter((m) => m.reviewRequired)).toEqual([]);
+    // The E2E walkthrough material has no engine stock record at all (it is
+    // added after generation), so it stays flagged whatever the tolerance.
+    expect(loose.materials.filter((m) => m.reviewRequired).map((m) => m.materialCode)).toEqual([
+      SSTP.materialCode
+    ]);
   });
 });
 

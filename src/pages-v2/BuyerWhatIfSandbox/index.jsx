@@ -26,6 +26,7 @@ import {
   switchesForMaterial,
   withSwitch
 } from '@services/transitions/whatIfSandboxRules';
+import { SSTP_SUPPLIER_ID, SSTP_SWITCHES } from '@services/transitions/whatIfSstpPreset';
 import { inputClass, inventoryNow, labelClass } from '../inventory/inventoryDisplay';
 import InputsPanel from './components/InputsPanel';
 import SwitchesPanel from './components/SwitchesPanel';
@@ -48,7 +49,8 @@ import { WHAT_IF_LEVELS } from '@services/transitions/whatIfLevels';
 // packaging (BR-04). Named scenarios save through `t_whatifscenario_save` and up
 // to 3 compare side by side (BR-05). BR-08: the PPT 7 golden case loads as a
 // preset, so Material Planning can see 244,896 / 761,888 reproduce and flip
-// switches. Every figure is `runWhatIf`'s, which calls the live plan's own
+// switches. The SSTP planner Excel (4 Nov 2026) loads the same way, so the
+// planners can set the sheet's inputs beside the app's results. Every figure is `runWhatIf`'s, which calls the live plan's own
 // functions; this page computes nothing.
 //
 // BR-06 — ANALYSIS ONLY, and the page says so. Nothing here changes demand
@@ -106,11 +108,17 @@ const editedCount = (live, inputs, switches, base) =>
 const Editor = ({ box }) => {
   const { t } = useTranslation();
   const [inputs, setInputs] = useState(box.live);
-  // BR-08 — the PPT 7 case opens on the readings its figures come from; a live
-  // pair on its material's own Z and g, when the planner set them [Team B3, B7].
+  // BR-08 — the PPT 7 case opens on the readings its figures come from (the
+  // SSTP case on the same ones); a live pair on its material's own Z and g,
+  // when the planner set them [Team B3, B7].
+  const isSstp = box.pair.supplierId === SSTP_SUPPLIER_ID;
   const base = useMemo(
-    () => switchesForMaterial(box.pair.preset ? PPT7_SWITCHES : DEFAULT_SWITCHES, box.own ?? {}),
-    [box.pair.preset, box.own]
+    () =>
+      switchesForMaterial(
+        isSstp ? SSTP_SWITCHES : box.pair.preset ? PPT7_SWITCHES : DEFAULT_SWITCHES,
+        box.own ?? {}
+      ),
+    [isSstp, box.pair.preset, box.own]
   );
   const [switches, setSwitches] = useState(/** @type {WhatIfSwitches} */ (base));
   const [compare, setCompare] = useState(/** @type {string[]} */ ([]));
@@ -141,7 +149,7 @@ const Editor = ({ box }) => {
     <div className="space-y-4">
       {box.pair.preset ? (
         <p className="text-sm text-text-secondary" data-testid="wi-preset-note">
-          {t('whatIf.preset.note')}
+          {t(isSstp ? 'whatIf.preset.noteSstp' : 'whatIf.preset.note')}
         </p>
       ) : !box.pair.inPlan ? (
         <p className="text-sm text-text-secondary" data-testid="wi-not-in-plan">
@@ -205,14 +213,16 @@ const Editor = ({ box }) => {
  * @param {import('i18next').TFunction} t
  */
 const pairText = (p, t) =>
-  p.preset
-    ? t('whatIf.pick.preset', { material: p.materialCode })
-    : t('whatIf.pick.option', {
-        material: p.materialCode,
-        label: p.materialLabel,
-        supplier: p.supplierName,
-        cls: t(`whatIf.class.${p.materialClass}`)
-      });
+  p.supplierId === SSTP_SUPPLIER_ID
+    ? t('whatIf.pick.presetSstp', { material: p.materialCode })
+    : p.preset
+      ? t('whatIf.pick.preset', { material: p.materialCode })
+      : t('whatIf.pick.option', {
+          material: p.materialCode,
+          label: p.materialLabel,
+          supplier: p.supplierName,
+          cls: t(`whatIf.class.${p.materialClass}`)
+        });
 
 /** @type {React.FC} */
 const BuyerWhatIfSandbox = () => {
@@ -262,6 +272,7 @@ const BuyerWhatIfSandbox = () => {
   const list = pairs.data?.items ?? [];
   const selected = supplierId && materialCode ? `${supplierId}|${materialCode}` : '';
   const ppt7 = list.find((p) => p.supplierId === PPT7_SUPPLIER_ID);
+  const sstp = list.find((p) => p.supplierId === SSTP_SUPPLIER_ID);
 
   return (
     <AppShellV2>
@@ -318,6 +329,11 @@ const BuyerWhatIfSandbox = () => {
             {ppt7 ? (
               <Button variant="secondary" onClick={() => pick(ppt7)} data-testid="wi-load-ppt7">
                 {t('whatIf.pick.loadPpt7')}
+              </Button>
+            ) : null}
+            {sstp ? (
+              <Button variant="secondary" onClick={() => pick(sstp)} data-testid="wi-load-sstp">
+                {t('whatIf.pick.loadSstp')}
               </Button>
             ) : null}
             {/* P-07 / BL-247 — a fresh editor on the same pair, on request. */}

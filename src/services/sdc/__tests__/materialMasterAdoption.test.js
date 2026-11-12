@@ -31,6 +31,7 @@ import { GR_WIZARD_DIR, globFolderSource } from '@test/featureFolder';
 
 import { MATERIAL_GROUPS, groupLabel } from '../materialGroups';
 import { MATERIAL_MASTER } from '../fixtures';
+import { SSTP as WALKTHROUGH_SSTP } from '../../data/mock/fixtures/walkthroughSstp';
 
 /** The five SDC-0 seed entries. Named because "everything else" is the set this
  *  batch is about, and because seed data is what 2B-2 was told not to author. */
@@ -190,6 +191,17 @@ const AUTHORED = Object.keys(MATERIAL_MASTER)
  * its job three batches later: a batch that authored rows from an UNDECLARED
  * lane could not accidentally be counted as ratifying the declared one.
  */
+/**
+ * The E2E walkthrough's row (2026-11-12): a REAL SAP code the planners' sheet
+ * names, authored with its fixture (`fixtures/walkthroughSstp.js`), not adopted
+ * from a lane. Named by the fixture that declares it, so a second walkthrough
+ * code cannot arrive in this bucket unannounced.
+ */
+/** @type {readonly string[]} */
+const AUTHORED_WALKTHROUGH = Object.keys(MATERIAL_MASTER).filter(
+  (c) => c === WALKTHROUGH_SSTP.materialCode
+);
+
 const AUTHORED_ASN = Object.keys(MATERIAL_MASTER)
   .filter((c) => {
     const src = [...new Set(REFS.filter((r) => r.code === c).map((r) => r.module))];
@@ -213,10 +225,17 @@ describe('2B-2 — the adoption is exactly 25 codes, and they are the ones that 
     // SIX, not seven — `AI-NIAC-6612` gained a second lane at H4. See the note
     // above `ADOPTED`; the sum is what stayed still.
     expect(AUTHORED_ASN).toHaveLength(6);
-    expect(Object.keys(MATERIAL_MASTER)).toHaveLength(42);
-    // 5 + 25 + 5 + 7 = 42, stated as arithmetic so a row cannot go missing
+    expect(AUTHORED_WALKTHROUGH).toEqual(['2000028400']);
+    expect(Object.keys(MATERIAL_MASTER)).toHaveLength(43);
+    // 5 + 26 + 5 + 6 + 1 = 43, stated as arithmetic so a row cannot go missing
     // between two counts that each look right.
-    expect(SEED.length + ADOPTED.length + AUTHORED.length + AUTHORED_ASN.length).toBe(42);
+    expect(
+      SEED.length +
+        ADOPTED.length +
+        AUTHORED.length +
+        AUTHORED_ASN.length +
+        AUTHORED_WALKTHROUGH.length
+    ).toBe(43);
   });
 
   it('⚠️ NO master code arrived from a fourth route', () => {
@@ -239,7 +258,8 @@ describe('2B-2 — the adoption is exactly 25 codes, and they are the ones that 
         !(/** @type {readonly string[]} */ (SEED).includes(c)) &&
         !ADOPTED.includes(c) &&
         !AUTHORED.includes(c) &&
-        !AUTHORED_ASN.includes(c)
+        !AUTHORED_ASN.includes(c) &&
+        !AUTHORED_WALKTHROUGH.includes(c)
     );
     expect(unaccounted).toEqual([]);
     // …and the buckets do not overlap: a row cannot both ratify and author.
