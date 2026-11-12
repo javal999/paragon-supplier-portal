@@ -7,6 +7,7 @@ import FormSection from '@components/ui-v2/FormSection';
 /** @import { AsnForm } from '../const' */
 import CarrierPicker from '../../shipments/CarrierPicker';
 import { inputClass, labelClass } from '../const';
+import { missingLogistics } from '../utils';
 import AsnLinesEditor from './AsnLinesEditor';
 
 /**
@@ -23,6 +24,14 @@ const WizardDetailsStep = ({
   declaredBatches
 }) => {
   const { t } = useTranslation();
+  const missing = missingLogistics(form);
+  /** A field's own label, without the required marker. @type {Record<string, () => string>} */
+  const FIELD_LABEL = {
+    carrier: () => t('supplierShipments.wizard.details.field.carrier').replace(/\s*\*$/, ''),
+    tracking: () => t('fc.asn.trackingOrVehicle'),
+    shipDate: () => t('supplierShipments.wizard.details.field.shipDate').replace(/\s*\*$/, ''),
+    eta: () => t('supplierShipments.wizard.details.field.eta').replace(/\s*\*$/, '')
+  };
   return (
     <div className="flex flex-col gap-5">
       <FormSection
@@ -41,11 +50,13 @@ const WizardDetailsStep = ({
             onChange={(v) => updateForm(v)}
           />
           <div>
-            <label className={labelClass} htmlFor="asn-wizard-tracking">
+            {/* BL-303 (UL-05) — required by the step rule, so marked like Carrier. */}
+            <label className={`${labelClass} after:content-['_*']`} htmlFor="asn-wizard-tracking">
               {t('fc.asn.trackingOrVehicle')}
             </label>
             <input
               id="asn-wizard-tracking"
+              aria-required="true"
               type="text"
               placeholder={t('supplierShipments.placeholder.tracking')}
               value={form.trackingNumber}
@@ -78,6 +89,19 @@ const WizardDetailsStep = ({
             </label>
           </div>
         </div>
+        {/* BL-303 (UL-05) — **Next** stays disabled until these are filled; say which. */}
+        {missing.length > 0 ? (
+          <p className="text-xs text-text-secondary" role="status" data-testid="asn-wizard-missing">
+            {missing.includes('etaBeforeShip') && missing.length === 1
+              ? t('supplierShipments.wizard.details.etaBeforeShip')
+              : t('supplierShipments.wizard.details.missing', {
+                  fields: missing
+                    .filter((m) => m !== 'etaBeforeShip')
+                    .map((m) => FIELD_LABEL[m]())
+                    .join(', ')
+                })}
+          </p>
+        ) : null}
       </FormSection>
 
       <FormSection

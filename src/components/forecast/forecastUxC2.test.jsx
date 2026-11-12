@@ -138,14 +138,17 @@ describe('the term tip (WCAG 1.4.13, 2.4.7)', () => {
       /** @type {NonNullable<typeof tip.textContent>} */ (tip.textContent)
     );
     expect(button.className).toContain('focus-visible:outline-action');
-    button.focus();
-    expect(tip.className).toContain('group-focus-within:block');
+    // BL-300 to BL-302 — the visible box is drawn in a portal while open.
+    const popup = () => document.body.querySelector('[data-tip-popup="term-tip-masc"]');
+    expect(popup()).toBeNull();
+    fireEvent.focus(button);
+    expect(popup()).not.toBeNull();
     fireEvent.keyDown(button, { key: 'Escape' });
-    expect(tip.className).not.toContain('group-focus-within:block');
-    expect(document.activeElement).toBe(button);
+    expect(popup()).toBeNull();
+    expect(screen.getByTestId('term-tip-masc')).toHaveAttribute('data-dismissed', 'true');
     fireEvent.blur(button);
     fireEvent.focus(button);
-    expect(tip.className).toContain('group-focus-within:block');
+    expect(popup()).not.toBeNull();
   });
 });
 
@@ -291,11 +294,14 @@ describe('at 390 px, no page scrolls sideways (WCAG 1.4.10)', () => {
         .some((c) => (fixedWidth(c) ?? 0) > SCREEN - 32);
     });
     expect(wide.map((el) => el.className)).toEqual([]);
+    // BL-300 to BL-302: a term tip's description is `display: none` in place
+    // (no room taken), and its visible box exists only while open, in a portal
+    // outside `main`, capped to the screen (termTipLayering.test.jsx).
     for (const tip of main.querySelectorAll('[role="tooltip"]')) {
       expect(tip.className).toMatch(/(^| )hidden( |$)/);
       expect(tip.className).not.toMatch(/(^| )invisible( |$)/);
-      expect(tip.className).toContain('max-w-[calc(100vw-2rem)]');
     }
+    expect(main.querySelectorAll('[data-tip-popup]')).toHaveLength(0);
   };
   const original = window.innerWidth;
   afterEach(() => {

@@ -13,7 +13,15 @@ import { describe, expect, it } from 'vitest';
 import { getKnownFlows } from '@services/transitions';
 import { buildCatalogView, buildFlowView } from '@services/transitions/catalogView';
 /** @import { FlowDefinition } from '@services/transitions/schema' */
-import { layoutFlow, rankStates, verbOf, entityVerbOf, NODE_W, NODE_H } from './flowLayout';
+import {
+  layoutFlow,
+  labelBox,
+  rankStates,
+  verbOf,
+  entityVerbOf,
+  NODE_W,
+  NODE_H
+} from './flowLayout';
 
 const views = () => buildCatalogView(getKnownFlows()).flows;
 
@@ -370,5 +378,61 @@ describe('C.2 — entityVerbOf qualifies a cascade source with its entity', () =
       'quotation.t_quotation_award',
       'quotation.t_quotation_reject'
     ]);
+  });
+});
+
+describe('BL-305 (UL-07) — verb labels never sit on top of each other', () => {
+  /** The route's own label spots, before the separation pass. @param {any} view */
+  const layoutFlowUnseparated = (view) => layoutFlow(view, { separate: false }).edges;
+  /**
+   * @param {ReturnType<typeof labelBox>} a
+   * @param {ReturnType<typeof labelBox>} b
+   */
+  const overlap = (a, b) =>
+    a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+
+  it('purchase order: `adjust` and `partial_deliver`, the pair the review found stacked, are apart', () => {
+    const po = /** @type {import('@services/transitions/catalogView').FlowView} */ (
+      views().find((v) => v.entity === 'purchaseOrder')
+    );
+    const edges = layoutFlow(po).edges;
+    const adjust = edges.filter((e) => verbOf(e.edge.transitionId) === 'adjust');
+    const partial = edges.filter((e) => verbOf(e.edge.transitionId) === 'partial_deliver');
+    expect(adjust.length).toBeGreaterThan(0);
+    expect(partial.length).toBeGreaterThan(0);
+    for (const a of adjust)
+      for (const p of partial) expect(overlap(labelBox(a), labelBox(p))).toBe(false);
+  });
+
+  it.each(views().map((v) => [v.entity, v]))('%s: no two label boxes overlap', (_, view) => {
+    const boxes = layoutFlow(view)
+      .edges.filter((e) => e.path !== '')
+      .map((e) => ({ id: e.edge.id, box: labelBox(e) }));
+    /** @type {string[]} */
+    const clashes = [];
+    boxes.forEach((a, i) =>
+      boxes.slice(i + 1).forEach((b) => {
+        if (overlap(a.box, b.box)) clashes.push(`${a.id} × ${b.id}`);
+      })
+    );
+    expect(clashes).toEqual([]);
+  });
+
+  it.each(views().map((v) => [v.entity, v]))('%s: no label moved onto a state box', (_, view) => {
+    const layout = layoutFlow(view);
+    const unmoved = layoutFlowUnseparated(view);
+    /** @type {string[]} */
+    const onNode = [];
+    layout.edges.forEach((e, i) => {
+      if (e.path === '') return;
+      const before = unmoved[i];
+      if (before.labelX === e.labelX && before.labelY === e.labelY) return;
+      const b = labelBox(e);
+      for (const n of layout.nodes) {
+        const box = { left: n.x, right: n.x + NODE_W, top: n.y, bottom: n.y + NODE_H };
+        if (overlap(b, box)) onNode.push(`${e.edge.id} on ${n.name}`);
+      }
+    });
+    expect(onNode).toEqual([]);
   });
 });
