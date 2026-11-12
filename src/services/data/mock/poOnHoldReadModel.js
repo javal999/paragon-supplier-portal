@@ -28,6 +28,7 @@ import { osipParamStore } from './stores/osipParamStore';
 import { goodsReceiptStore } from './stores/goodsReceiptStore';
 import { consumptionStore } from './stores/consumptionStore';
 import { poOnHoldStore } from './stores/poOnHoldStore';
+import { poCancellationStore } from './stores/poCancellationStore';
 import { withLeadTime } from './leadTimeReadModel';
 import { maxStockFor } from '../../transitions/maxStock';
 import { osipParamKey } from '../../transitions/osipParams';
@@ -36,6 +37,7 @@ import { isReleased } from '../../transitions/callOffRules';
 import { mondayOf, dayOf } from '../../transitions/inventoryRules';
 import { lastMovementDay, POSTED_RECEIPT_STATUSES } from '../../transitions/stockMovement';
 import { executionStanding, planExecution } from '../../transitions/poOnHoldExecution';
+import { recommendAction } from '../../transitions/poOnHoldRecommendation';
 import {
   PO_ON_HOLD_RULES,
   daNotCalledOff,
@@ -82,6 +84,14 @@ import {
  *   readonly cap: number | null;
  *   readonly conditions: Readonly<Record<PoOnHoldOption, boolean>>;
  *   readonly suggestion: PoOnHoldOption | null;
+ *   readonly materialClass: string | null;
+ *   readonly thresholds: { readonly absorbMaxPct: number | null; readonly carryMaxPct: number | null };
+ *   readonly cancellations: readonly {
+ *     readonly poId: string;
+ *     readonly poNumber: string;
+ *     readonly request: import('./stores/poCancellationStore').PoCancellationRow | null;
+ *   }[];
+ *   readonly recommendation: import('../../transitions/poOnHoldRecommendation').Recommendation;
  *   readonly decision: {
  *     readonly id: string;
  *     readonly suggested: PoOnHoldOption;
@@ -241,6 +251,14 @@ export function allPoOnHold(nowIso = sdcClock.now()) {
       );
       const maxPti = typeof maxPtiSet === 'number' ? maxPtiSet : null;
       const cap = fgCap({ maxPti, maxSupplier, sohSupplier, sohPti });
+      // PEX-12 [Proposed] — read-only recommended action from the class thresholds.
+      const materialClass = entry?.materialGroup ?? null;
+      const thresholdOf = (/** @type {'autoAbsorbMaxPct' | 'autoCarryMaxPct'} */ param) => {
+        const v = materialClass
+          ? osipParamStore.valueOf(osipParamKey(param, { materialClass }))
+          : null;
+        return typeof v === 'number' ? v : null;
+      };
       const facts = {
         pipo,
         demand,
@@ -329,6 +347,27 @@ export function allPoOnHold(nowIso = sdcClock.now()) {
         cap,
         conditions: optionConditions(facts),
         suggestion: suggestOption(facts),
+        materialClass,
+        thresholds: {
+          absorbMaxPct: thresholdOf('autoAbsorbMaxPct'),
+          carryMaxPct: thresholdOf('autoCarryMaxPct')
+        },
+        // PEX-12 [Proposed] — the POs behind the line, each with its cancellation request, if any.
+        cancellations: [...new Map(f.lines.map((l) => [l.poId, l.poNumber]))].map(
+          ([poId, poNumber]) => ({
+            poId,
+            poNumber,
+            request: poCancellationStore.forPo(poId) ?? null
+          })
+        ),
+        recommendation: recommendAction({
+          qty: f.qty,
+          ospo: f.ospo,
+          conditions: optionConditions(facts),
+          cap,
+          absorbMaxPct: thresholdOf('autoAbsorbMaxPct'),
+          carryMaxPct: thresholdOf('autoCarryMaxPct')
+        }),
         decision: stored
           ? {
               id: stored.id,

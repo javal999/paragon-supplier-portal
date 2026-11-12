@@ -584,6 +584,12 @@ export const processFlowPurposeEn = {
     'The planner suggests what to do with a PO On Hold line. The supplier sees the suggestion and can choose differently until the grace period ends.',
   'processFlows.purpose.t_poonhold_choose':
     'The supplier makes the final choice for its PO On Hold line. The choice cannot be changed. If the supplier does not choose, the planner’s suggestion applies at the end of the grace period.',
+  'processFlows.purpose.entity.poCancellation':
+    'A request to cancel a purchase order. The planner asks and gives a reason; the supplier acknowledges. Both steps stay on record. It is a request only: it is not sent to SAP and the PO keeps its status.',
+  'processFlows.purpose.t_pocancel_request':
+    'The planner asks to cancel a purchase order and gives the reason. This is a request only, not sent to SAP.',
+  'processFlows.purpose.t_pocancel_acknowledge':
+    'The supplier confirms it has seen the cancellation request for its purchase order. The PO is not changed and nothing is sent to SAP.',
   'processFlows.purpose.t_poonhold_execute':
     'At the end of the grace period the hub carries out what was decided, once: one call-off of the remainder, a spread over the next weeks’ call-offs, or an absorption as finished goods up to the cap. The rest stays on hold and goes back to the planner. It is a machine act on the record.',
   'processFlows.purpose.entity.capacityDecision':
@@ -1226,6 +1232,12 @@ export const processFlowPurposeId = {
     'Perencana mengusulkan apa yang dilakukan pada baris PO On Hold. Pemasok melihat usulan itu dan dapat memilih lain sampai masa tenggang berakhir.',
   'processFlows.purpose.t_poonhold_choose':
     'Pemasok membuat pilihan akhir untuk baris PO On Hold miliknya. Pilihan tidak dapat diubah. Jika pemasok tidak memilih, usulan perencana berlaku di akhir masa tenggang.',
+  'processFlows.purpose.entity.poCancellation':
+    'Permintaan untuk membatalkan purchase order. Perencana meminta dan memberi alasan; pemasok mengakui. Kedua langkah tetap tercatat. Ini hanya permintaan: tidak dikirim ke SAP dan status PO tidak berubah.',
+  'processFlows.purpose.t_pocancel_request':
+    'Perencana meminta pembatalan purchase order dan memberi alasan. Ini hanya permintaan, tidak dikirim ke SAP.',
+  'processFlows.purpose.t_pocancel_acknowledge':
+    'Pemasok menyatakan sudah melihat permintaan pembatalan untuk purchase order miliknya. PO tidak diubah dan tidak ada yang dikirim ke SAP.',
   'processFlows.purpose.t_poonhold_execute':
     'Di akhir masa tenggang, hub menjalankan keputusan yang berlaku, satu kali: satu call-off untuk sisa, sebaran ke call-off minggu-minggu berikutnya, atau penyerapan sebagai barang jadi sampai batas. Sisanya tetap on hold dan kembali ke perencana. Ini tindakan mesin yang tercatat.',
   'processFlows.purpose.entity.capacityDecision':

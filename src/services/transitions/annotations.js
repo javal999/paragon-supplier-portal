@@ -369,6 +369,9 @@ export const TRANSITION_PURPOSE = Object.freeze({
   t_poonhold_suggest: { purposeKey: 'processFlows.purpose.t_poonhold_suggest' },
   t_poonhold_choose: { purposeKey: 'processFlows.purpose.t_poonhold_choose' },
   t_poonhold_execute: { purposeKey: 'processFlows.purpose.t_poonhold_execute' },
+  // PEX-12 [Proposed] — a PO cancellation request: the planner asks, the supplier acknowledges.
+  t_pocancel_request: { purposeKey: 'processFlows.purpose.t_pocancel_request' },
+  t_pocancel_acknowledge: { purposeKey: 'processFlows.purpose.t_pocancel_acknowledge' },
   // BL-227 — PTI undoes an acceptance.
   t_capacitydecision_withdraw: { purposeKey: 'processFlows.purpose.t_capacitydecision_withdraw' },
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — RFx management.
@@ -480,6 +483,7 @@ export const ENTITY_PURPOSE = Object.freeze({
   supplierAsk: { purposeKey: 'processFlows.purpose.entity.supplierAsk' },
   capacityDecision: { purposeKey: 'processFlows.purpose.entity.capacityDecision' },
   poOnHoldDecision: { purposeKey: 'processFlows.purpose.entity.poOnHoldDecision' },
+  poCancellation: { purposeKey: 'processFlows.purpose.entity.poCancellation' },
   rfiEvent: { purposeKey: 'processFlows.purpose.entity.rfiEvent' },
   rfiResponse: { purposeKey: 'processFlows.purpose.entity.rfiResponse' },
   rfpEvent: { purposeKey: 'processFlows.purpose.entity.rfpEvent' },

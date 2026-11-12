@@ -2976,6 +2976,7 @@ export function useOsipLevelCommand() {
  *   readonly param: import('@services/transitions/osipParams').OsipParam;
  *   readonly supplierId?: string;
  *   readonly materialCode?: string;
+ *   readonly materialClass?: string;
  *   readonly value: number | boolean | null;
  *   readonly reason?: string;
  * }} OsipParamVars
@@ -4331,6 +4332,69 @@ export function usePoOnHoldChooseCommand() {
         entity: 'poOnHoldDecision',
         entityId: vars.decisionId,
         payload: { option: vars.option }
+      }),
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      void qc.invalidateQueries({
+        predicate: (q) =>
+          (q.queryKey[0] === 'procurement' || q.queryKey[0] === 'supplier') &&
+          q.queryKey[1] === 'poOnHold'
+      });
+    }
+  });
+}
+
+/**
+ * PEX-12 [Proposed] — the planner asks to cancel a PO (fires `t_pocancel_request`).
+ * A request only: nothing is sent to SAP and the PO keeps its status.
+ * @typedef {{
+ *   readonly supplierId: string;
+ *   readonly poId: string;
+ *   readonly reason: string;
+ * }} PoCancelRequestVars
+ */
+
+/** Request a PO cancellation (fires `t_pocancel_request`). */
+export function usePoCancelRequestCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, PoCancelRequestVars>} */ (useMutation)(
+    {
+      mutationFn: (vars) =>
+        svc.commands.dispatch(scope, {
+          transitionId: 't_pocancel_request',
+          entity: 'poCancellation',
+          payload: { supplierId: vars.supplierId, poId: vars.poId, reason: vars.reason }
+        }),
+      onSuccess: (result) => {
+        if (result.status === 'failed') return;
+        void qc.invalidateQueries({
+          predicate: (q) =>
+            (q.queryKey[0] === 'procurement' || q.queryKey[0] === 'supplier') &&
+            q.queryKey[1] === 'poOnHold'
+        });
+      }
+    }
+  );
+}
+
+/** Acknowledge a PO cancellation request (fires `t_pocancel_acknowledge`). */
+export function usePoCancelAcknowledgeCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, { readonly requestId: string }>} */ (
+    useMutation
+  )({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_pocancel_acknowledge',
+        entity: 'poCancellation',
+        entityId: vars.requestId,
+        payload: {}
       }),
     onSuccess: (result) => {
       if (result.status === 'failed') return;

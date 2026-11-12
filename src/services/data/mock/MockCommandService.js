@@ -193,6 +193,7 @@ import { supplierAskTarget } from './targets/supplierAsk';
 import { capacityDecisionTarget } from './targets/capacityDecision';
 import { poOnHoldDecisionTarget } from './targets/poOnHoldDecision';
 import { poOnHoldStore } from './stores/poOnHoldStore';
+import { poCancellationTarget } from './targets/poCancellation';
 import { allPoOnHold } from './poOnHoldReadModel';
 // Material G1 — the qualification lists (its own module, MAT-R13).
 import { qualificationRuleTarget } from './targets/qualificationRule';
@@ -6343,6 +6344,8 @@ const TARGETS = {
   // PEX-8 — the PO On Hold decision: the planner suggests, the supplier chooses.
   // Ships in the same commit as its flow.
   poOnHoldDecision: poOnHoldDecisionTarget,
+  // PEX-12 [Proposed] — a PO cancellation request; never sent to SAP.
+  poCancellation: poCancellationTarget,
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — the RFx event types, the answers to
   // them, and the negotiation window. Each ships in the same commit as its flow,
   // so no entity joins the target-less set even for one merge.

@@ -22,6 +22,7 @@ import {
   parseOsipParamKey
 } from '../../../transitions/osipParams';
 import { isKnownMaterial, sdcClock } from '../../../sdc';
+import { declaredGroups } from '../../../sdc/materialGroups';
 import { NO_PERSON } from '@context/noPerson';
 import { osipParamStore } from '../stores/osipParamStore';
 
@@ -32,6 +33,8 @@ import { osipParamStore } from '../stores/osipParamStore';
 function resolved(id) {
   const k = parseOsipParamKey(id);
   if (!k) return null;
+  // PEX-12 [Proposed]: a material class is the SAP material group; only a declared one resolves.
+  if (k.materialClass !== undefined && !declaredGroups().includes(k.materialClass)) return null;
   if (k.materialCode !== null && !isKnownMaterial(k.materialCode)) return null;
   if (k.supplierId !== null && !mockSuppliers.some((s) => s.id === k.supplierId)) return null;
   return k;

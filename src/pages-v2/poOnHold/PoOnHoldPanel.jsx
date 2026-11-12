@@ -16,6 +16,8 @@ import { formatDate, formatNumber } from '@lib/format';
 import { usePoOnHold } from '@services/query/hooks';
 import {
   useOsipParamCommand,
+  usePoCancelAcknowledgeCommand,
+  usePoCancelRequestCommand,
   usePoOnHoldChooseCommand,
   usePoOnHoldSuggestCommand
 } from '@services/query/commandHooks';
@@ -34,6 +36,11 @@ import { inputClass, labelClass } from '../inventory/inventoryDisplay';
 //     suggests an option (`t_poonhold_suggest`);
 //   · the supplier sees its own lines and chooses the final option
 //     (`t_poonhold_choose`); the service narrows the rows to the reader.
+// PEX-12 [Proposed, owner review pending]: every line also shows a read-only
+// "Recommended action" (auto absorb, auto carry-over or manual) from per
+// material class thresholds that are EMPTY until a planner sets them; nothing
+// runs by itself. The planner can ask to cancel a PO and the supplier
+// acknowledges: a request only, never sent to SAP.
 // What the hub does not hold (PIPO flag, Max PTI, a stock movement) is said on
 // the line, never guessed.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -65,6 +72,14 @@ const PoOnHoldPanel = ({ persona }) => {
   const [noMoveDraft, setNoMoveDraft] = useState('');
   const [pipoDraft, setPipoDraft] = useState('unset');
   const [maxPtiDraft, setMaxPtiDraft] = useState('');
+  const [absorbDraft, setAbsorbDraft] = useState('');
+  const [carryDraft, setCarryDraft] = useState('');
+  const cancelRequest = usePoCancelRequestCommand();
+  const cancelAck = usePoCancelAcknowledgeCommand();
+  const cancelAvail = useVerbAvailability('pocancel:request');
+  const ackAvail = useVerbAvailability('pocancel:acknowledge');
+  const [cancelOpen, setCancelOpen] = useState(/** @type {string | null} */ (null));
+  const [cancelReason, setCancelReason] = useState('');
 
   const rows = query.data?.items ?? [];
   /** @param {PoOnHoldOption} o */
@@ -106,6 +121,8 @@ const PoOnHoldPanel = ({ persona }) => {
     setNoMoveDraft(String(r.noMoveDays));
     setPipoDraft(r.pipoIsDefault ? 'unset' : r.pipo ? 'yes' : 'no');
     setMaxPtiDraft(r.maxPti === null ? '' : String(r.maxPti));
+    setAbsorbDraft(r.thresholds.absorbMaxPct === null ? '' : String(r.thresholds.absorbMaxPct));
+    setCarryDraft(r.thresholds.carryMaxPct === null ? '' : String(r.thresholds.carryMaxPct));
     setEditing(r.key);
   };
 
@@ -114,6 +131,10 @@ const PoOnHoldPanel = ({ persona }) => {
     osipParamRefusal('grace', parsed(graceDraft)) !== null ||
     osipParamRefusal('noMove', parsed(noMoveDraft)) !== null ||
     (maxPtiDraft.trim() !== '' && osipParamRefusal('maxPti', parsed(maxPtiDraft)) !== null);
+  const thresholdsInvalid =
+    (absorbDraft.trim() !== '' &&
+      osipParamRefusal('autoAbsorbMaxPct', parsed(absorbDraft)) !== null) ||
+    (carryDraft.trim() !== '' && osipParamRefusal('autoCarryMaxPct', parsed(carryDraft)) !== null);
 
   /** @param {PoOnHoldRow} r */
   const saveSettings = async (r) => {
@@ -152,6 +173,22 @@ const PoOnHoldPanel = ({ persona }) => {
         value: maxPti
       });
       if (result.status === 'failed') return refused(result);
+    }
+    // PEX-12 [Proposed]: thresholds are per material class; empty = not set.
+    if (r.materialClass) {
+      for (const [param, draft, current] of /** @type {const} */ ([
+        ['autoAbsorbMaxPct', absorbDraft, r.thresholds.absorbMaxPct],
+        ['autoCarryMaxPct', carryDraft, r.thresholds.carryMaxPct]
+      ])) {
+        const value = draft.trim() === '' ? null : parsed(draft);
+        if (value === current) continue;
+        const result = await setParam.mutateAsync({
+          param,
+          materialClass: r.materialClass,
+          value
+        });
+        if (result.status === 'failed') return refused(result);
+      }
     }
     toast({ variant: 'success', title: t('poh.settings.saved', { material: r.materialCode }) });
     setEditing(null);
@@ -232,15 +269,49 @@ const PoOnHoldPanel = ({ persona }) => {
                   data-testid={`poh-maxpti-input-${r.key}`}
                 />
               </label>
+              {r.materialClass && (
+                <fieldset className="space-y-2" data-testid={`poh-thresholds-${r.key}`}>
+                  <legend className={labelClass}>
+                    {t('poh.rec.thresholds', { class: r.materialClass })}
+                  </legend>
+                  <label className="block">
+                    <span className={labelClass}>{t('poh.rec.absorbMax')}</span>
+                    <input
+                      className={fieldClass}
+                      inputMode="numeric"
+                      value={absorbDraft}
+                      placeholder={t('poh.rec.thresholdsEmpty')}
+                      onChange={(e) => setAbsorbDraft(e.target.value)}
+                      data-testid={`poh-absorbmax-input-${r.key}`}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className={labelClass}>{t('poh.rec.carryMax')}</span>
+                    <input
+                      className={fieldClass}
+                      inputMode="numeric"
+                      value={carryDraft}
+                      placeholder={t('poh.rec.thresholdsEmpty')}
+                      onChange={(e) => setCarryDraft(e.target.value)}
+                      data-testid={`poh-carrymax-input-${r.key}`}
+                    />
+                  </label>
+                </fieldset>
+              )}
               {settingsInvalid && (
                 <p className="text-sm text-danger" role="alert">
                   {t('poh.settings.invalid')}
                 </p>
               )}
+              {thresholdsInvalid && (
+                <p className="text-sm text-danger" role="alert">
+                  {t('poh.rec.invalid')}
+                </p>
+              )}
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  disabled={settingsInvalid || setParam.isPending}
+                  disabled={settingsInvalid || thresholdsInvalid || setParam.isPending}
                   onClick={() => void saveSettings(r)}
                   data-testid={`poh-settings-save-${r.key}`}
                 >
@@ -444,6 +515,146 @@ const PoOnHoldPanel = ({ persona }) => {
     );
   };
 
+  /**
+   * PEX-12 [Proposed] — the read-only recommended action with its reason.
+   * @param {PoOnHoldRow} r
+   */
+  const recView = (r) => {
+    if (r.closed) return null;
+    const rec = r.recommendation;
+    const limit =
+      rec.action === 'autoCarryOver' ? r.thresholds.carryMaxPct : r.thresholds.absorbMaxPct;
+    return (
+      <div className="mt-1" data-testid={`poh-rec-${r.key}`} data-action={rec.action}>
+        <span className="block text-sm">
+          <span className="font-medium">{t('poh.rec.title')}:</span>{' '}
+          {t(`poh.rec.action.${rec.action}`)}
+          {': '}
+          {t(`poh.rec.reason.${rec.reason}`, {
+            pct: rec.sharePct === null ? '' : Math.round(rec.sharePct * 10) / 10,
+            limit: limit ?? ''
+          })}
+        </span>
+        <span className={note}>{t('poh.rec.proposed')}</span>
+      </div>
+    );
+  };
+
+  /**
+   * PEX-12 [Proposed] — PO cancellation: the planner requests, the supplier
+   * acknowledges. A request only, not sent to SAP.
+   * @param {PoOnHoldRow} r
+   */
+  const cancelView = (r) => {
+    if (r.closed || r.cancellations.length === 0) return null;
+    const items = r.cancellations.filter((c) => isPti || c.request);
+    if (items.length === 0) return null;
+    return (
+      <div className="mt-2" data-testid={`poh-cancel-${r.key}`}>
+        <span className={`${note} font-medium`}>{t('poh.cancel.title')}</span>
+        <span className={note}>{t('poh.cancel.proposed')}</span>
+        {items.map((c) => {
+          const rq = c.request;
+          const requestedAt = rq?.history[0]?.at;
+          const ackAt = rq?.history.find((h) => h.kind === 'acknowledged')?.at;
+          return (
+            <div key={c.poId} className="mt-1" data-testid={`poh-cancel-po-${c.poId}`}>
+              <Data className="text-sm">{c.poNumber}</Data>
+              {rq && rq.state === 'Requested' && (
+                <>
+                  <span className="block text-sm">
+                    {t('poh.cancel.requested', { date: formatDate(requestedAt ?? '') })}
+                  </span>
+                  <span className={note}>{rq.history[0]?.reason}</span>
+                  {!isPti &&
+                    (ackAvail.kind === 'held' ? (
+                      <Button
+                        variant="outline"
+                        disabled={cancelAck.isPending}
+                        onClick={async () => {
+                          const result = await cancelAck.mutateAsync({ requestId: rq.id });
+                          if (result.status === 'failed') return refused(result);
+                          toast({
+                            variant: 'success',
+                            title: t('poh.cancel.acked', { po: c.poNumber })
+                          });
+                        }}
+                        data-testid={`poh-cancel-ack-${c.poId}`}
+                      >
+                        {t('poh.cancel.ack')}
+                      </Button>
+                    ) : (
+                      <HandoffNotice availability={ackAvail} testId={`handoff-poh-ack-${c.poId}`} />
+                    ))}
+                </>
+              )}
+              {rq && rq.state === 'Acknowledged' && (
+                <span className="block text-sm" data-testid={`poh-cancel-acked-${c.poId}`}>
+                  {t('poh.cancel.acknowledged', { date: formatDate(ackAt ?? '') })}
+                </span>
+              )}
+              {isPti &&
+                (!rq || rq.state === 'Acknowledged') &&
+                (cancelAvail.kind === 'held' ? (
+                  cancelOpen === c.poId ? (
+                    <div className="mt-1 space-y-2">
+                      <label className="block">
+                        <span className={labelClass}>{t('poh.cancel.reason')}</span>
+                        <input
+                          className={fieldClass}
+                          value={cancelReason}
+                          onChange={(e) => setCancelReason(e.target.value)}
+                          data-testid={`poh-cancel-reason-${c.poId}`}
+                        />
+                      </label>
+                      <Button
+                        variant="outline"
+                        disabled={cancelRequest.isPending}
+                        onClick={async () => {
+                          const result = await cancelRequest.mutateAsync({
+                            supplierId: r.supplierId,
+                            poId: c.poId,
+                            reason: cancelReason
+                          });
+                          if (result.status === 'failed') return refused(result);
+                          toast({
+                            variant: 'success',
+                            title: t('poh.cancel.sent', { po: c.poNumber })
+                          });
+                          setCancelOpen(null);
+                          setCancelReason('');
+                        }}
+                        data-testid={`poh-cancel-send-${c.poId}`}
+                      >
+                        {t('poh.cancel.send')}
+                      </Button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className={`block text-xs text-action-hover hover:underline ${TOUCH_TARGET}`}
+                      onClick={() => {
+                        setCancelOpen(c.poId);
+                        setCancelReason('');
+                      }}
+                      data-testid={`poh-cancel-open-${c.poId}`}
+                    >
+                      {t('poh.cancel.request')}
+                    </button>
+                  )
+                ) : (
+                  <HandoffNotice
+                    availability={cancelAvail}
+                    testId={`handoff-poh-cancel-${c.poId}`}
+                  />
+                ))}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   /** @param {PoOnHoldRow} r */
   const decisionCell = (r) => {
     const status = (
@@ -586,7 +797,11 @@ const PoOnHoldPanel = ({ persona }) => {
                   <Qty value={r.qty} uom={r.uom} testId={`poh-qty-${r.key}`} />
                 </TableCell>
                 <TableCell className="align-top max-w-[16rem]">{graceCell(r)}</TableCell>
-                <TableCell className="align-top max-w-[22rem]">{decisionCell(r)}</TableCell>
+                <TableCell className="align-top max-w-[22rem]">
+                  {decisionCell(r)}
+                  {recView(r)}
+                  {cancelView(r)}
+                </TableCell>
               </TableRow>
             ))}
             {rows.length === 0 && (

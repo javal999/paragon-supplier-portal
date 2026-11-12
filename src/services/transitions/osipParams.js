@@ -46,9 +46,9 @@
 /** @import { OsipRules, SupplyArea } from './osipRules' */
 import { OSIP_RULES } from './osipRules';
 
-/** @typedef {'z' | 'g' | 'f' | 'pullAgreement' | 'bottleneckLeadTimeDays' | 'safetyStockOn' | 'protectionBufferOn' | 'grace' | 'noMove' | 'pipo' | 'maxPti'} OsipParam */
+/** @typedef {'z' | 'g' | 'f' | 'pullAgreement' | 'bottleneckLeadTimeDays' | 'safetyStockOn' | 'protectionBufferOn' | 'grace' | 'noMove' | 'pipo' | 'maxPti' | 'autoAbsorbMaxPct' | 'autoCarryMaxPct'} OsipParam */
 
-/** @typedef {'material' | 'supplier' | 'supplierMaterial'} OsipParamScope */
+/** @typedef {'material' | 'supplier' | 'supplierMaterial' | 'materialClass'} OsipParamScope */
 
 /**
  * One value kind: what it is set per, and its bounds. `above`: a strict lower
@@ -117,6 +117,25 @@ export const OSIP_PARAMS = Object.freeze({
     integer: true,
     min: 0,
     max: 1_000_000_000
+  }),
+  // PEX-12 [Proposed, owner away 2026-11-12; Mba Septi has not given values]:
+  // the share of a line's open PO quantity (OSPO) that PO On Hold may be for
+  // the hub to RECOMMEND auto absorb (as FG) or auto carry-over (spread). Per
+  // material class (the SAP material group, `MG-xx`). NO DEFAULT: with none
+  // set the recommendation is "manual: no threshold set". Never executes.
+  autoAbsorbMaxPct: Object.freeze({
+    scope: 'materialClass',
+    question: 'PEX-12',
+    integer: true,
+    min: 0,
+    max: 100
+  }),
+  autoCarryMaxPct: Object.freeze({
+    scope: 'materialClass',
+    question: 'PEX-12',
+    integer: true,
+    min: 0,
+    max: 100
   })
 });
 
@@ -163,11 +182,12 @@ export const OSIP_PARAM_KINDS = Object.freeze(
  * The ledger key a value is kept under: `<param>|<materialCode>`,
  * `<param>|<supplierId>` or `<param>|<supplierId>|<materialCode>`.
  * @param {OsipParam} param
- * @param {{ readonly supplierId?: string; readonly materialCode?: string }} at
+ * @param {{ readonly supplierId?: string; readonly materialCode?: string; readonly materialClass?: string }} at
  * @returns {string}
  */
-export function osipParamKey(param, { supplierId, materialCode }) {
+export function osipParamKey(param, { supplierId, materialCode, materialClass }) {
   const scope = OSIP_PARAMS[param].scope;
+  if (scope === 'materialClass') return `${param}|${materialClass}`;
   if (scope === 'material') return `${param}|${materialCode}`;
   if (scope === 'supplier') return `${param}|${supplierId}`;
   return `${param}|${supplierId}|${materialCode}`;
@@ -176,7 +196,7 @@ export function osipParamKey(param, { supplierId, materialCode }) {
 /**
  * What a ledger key names, or null when it is not one.
  * @param {unknown} key
- * @returns {{ param: OsipParam; supplierId: string | null; materialCode: string | null } | null}
+ * @returns {{ param: OsipParam; supplierId: string | null; materialCode: string | null; materialClass?: string } | null}
  */
 export function parseOsipParamKey(key) {
   if (typeof key !== 'string') return null;
@@ -184,6 +204,10 @@ export function parseOsipParamKey(key) {
   if (rest.length > 0 || !Object.prototype.hasOwnProperty.call(OSIP_PARAMS, param)) return null;
   const scope = OSIP_PARAMS[/** @type {OsipParam} */ (param)].scope;
   const p = /** @type {OsipParam} */ (param);
+  if (scope === 'materialClass')
+    return a && b === undefined
+      ? { param: p, supplierId: null, materialCode: null, materialClass: a }
+      : null;
   if (scope === 'material')
     return a && b === undefined ? { param: p, supplierId: null, materialCode: a } : null;
   if (scope === 'supplier')
