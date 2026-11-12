@@ -20,7 +20,7 @@ import { Provisional, Section, diffText, figureText } from '../display';
  */
 
 /** BL-233 — the glossary term each result row is labelled by. */
-const RESULT_TERM = /** @type {const} */ ({
+export const RESULT_TERM = /** @type {const} */ ({
   ropOrder: 'ropOrder',
   ropFisik: 'ropFisik',
   max: 'whatIfMax',
