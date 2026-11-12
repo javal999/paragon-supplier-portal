@@ -267,7 +267,7 @@ Each row carries its question ID into the code comment and the "Provisional" lab
 | BL-205 | Merged 2026-10-20 (MR !12), awaiting owner review: protection buffer | ? | C3 | DRC-9c |
 | BL-206 | On hold: NPD vs CMM rules | ? | MDM: D2 | DRC-12b |
 | BL-207 | Merged 2026-10-20 (MR !11), awaiting owner review: feedstock reconcile leftover rule | ? | Owner | DRC-15b |
-| BL-208 | Merged 2026-10-20 (MR !10), awaiting owner review: automatic OSIP level classification | L | C2, F5 | DRC-19 |
+| BL-208 | Merged 2026-10-20 (MR !10), awaiting owner review: automatic OSIP level classification; the rules it applies are explained on the page under "How the level is suggested" (MR !124, merged 2026-11-12 as `48663371`) | L | C2, F5 | DRC-19 |
 | BL-209 | Golden fixture from Ary's spike case (moves from CAP-D16) | S | Ary | CAP-D16 |
 
 **Changes to existing rows and docs**
