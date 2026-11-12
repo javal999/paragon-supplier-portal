@@ -39,9 +39,14 @@ const Table = ({ children, className = '', scrollLabel, frozenHeader = false, ..
     // The scroll container too: below the table's narrowest layout the table
     // stops shrinking, so only the container's size says it now overflows.
     if (table.parentElement) size?.observe(table.parentElement);
+    // BL-304 — pins let go below half the scroll area and come back above it,
+    // so a window resize or a phone rotation re-measures even where a resize
+    // observer is late or absent.
+    window.addEventListener('resize', place);
     return () => {
       rows.disconnect();
       size?.disconnect();
+      window.removeEventListener('resize', place);
     };
   });
   return (

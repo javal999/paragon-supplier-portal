@@ -72,6 +72,13 @@ const EDGE_PAD = 12;
 /**
  * `path`:  SVG path data. Consumed verbatim by the component.
  * `labelX`:  Where the verb label sits (its own centre).
+ * `labelTrack`:  Where else on its own edge the label may sit (BL-305): the
+ *   curve of a direct edge, the vertical run of a sibling bracket, or the
+ *   horizontal lane of a back edge.
+ *
+ * @typedef {{ readonly kind: 'cubic'; readonly p: readonly number[] }
+ *   | { readonly kind: 'segment'; readonly x: number; readonly y1: number; readonly y2: number }
+ *   | { readonly kind: 'lane'; readonly x1: number; readonly x2: number; readonly y: number }} LabelTrack
  *
  * @typedef {{
  *     readonly edge: FlowEdge;
@@ -79,6 +86,7 @@ const EDGE_PAD = 12;
  *     readonly path: string;
  *     readonly labelX: number;
  *     readonly labelY: number;
+ *     readonly labelTrack?: LabelTrack;
  *   }} LaidOutEdge
  */
 
@@ -237,12 +245,172 @@ function orthogonal(points, radius = 9) {
  */
 const fanOffset = (twin, total, pitch) => (total <= 1 ? 0 : (twin - (total - 1) / 2) * pitch);
 
+/** A verb label's estimated size: mono caption, about 6.6 px a character, 4 px padding a side. */
+const LABEL_CHAR_W = 6.6;
+const LABEL_PAD_X = 8;
+export const LABEL_H = 16;
+
+/**
+ * The box a verb label covers, centred on its anchor as the diagram draws it.
+ * @param {LaidOutEdge} laid
+ * @returns {{ left: number; right: number; top: number; bottom: number }}
+ */
+export const labelBox = (laid) => {
+  const w = verbOf(laid.edge.transitionId).length * LABEL_CHAR_W + LABEL_PAD_X;
+  return {
+    left: laid.labelX - w / 2,
+    right: laid.labelX + w / 2,
+    top: laid.labelY - LABEL_H / 2,
+    bottom: laid.labelY + LABEL_H / 2
+  };
+};
+
+/** Points tried along a label's own edge, first the route's own choice. */
+const CUBIC_T = [0.5, 0.42, 0.58, 0.35, 0.65, 0.28, 0.72, 0.2, 0.8, 0.12, 0.88];
+const SEGMENT_F = [0.32, 0.5, 0.2, 0.42, 0.65, 0.12, 0.8, 0.9];
+
+/**
+ * The places a label may take on its own edge, the route's own first.
+ * @returns {{ x: number; y: number }[]}
+ */
+const onTrack = (/** @type {LaidOutEdge} */ laid) => {
+  const here = { x: laid.labelX, y: laid.labelY };
+  const track = laid.labelTrack;
+  if (!track) return [here];
+  if (track.kind === 'segment')
+    return SEGMENT_F.map((f) => ({ x: track.x, y: track.y1 + (track.y2 - track.y1) * f }));
+  if (track.kind === 'lane')
+    return [
+      here,
+      ...SEGMENT_F.map((f) => ({ x: track.x1 + (track.x2 - track.x1) * f, y: track.y }))
+    ];
+  const [x0, y0, x1, y1, x2, y2, x3, y3] = track.p;
+  /** @param {number} t @param {number} a @param {number} b @param {number} c @param {number} d */
+  const at = (t, a, b, c, d) =>
+    (1 - t) ** 3 * a + 3 * (1 - t) ** 2 * t * b + 3 * (1 - t) * t ** 2 * c + t ** 3 * d;
+  return CUBIC_T.map((t) => ({ x: at(t, x0, x1, x2, x3), y: at(t, y0, y1, y2, y3) }));
+};
+
+/** Last resort: the same spots, stepped just off the line (the label background keeps it legible). */
+const OFF_LINE = [
+  -(LABEL_H / 2 + 2),
+  LABEL_H / 2 + 2,
+  -(LABEL_H + 2),
+  LABEL_H + 2,
+  -(1.5 * LABEL_H + 2),
+  1.5 * LABEL_H + 2
+];
+
+/**
+ * The places a label may take, on its own edge first, then just beside it.
+ * @param {LaidOutEdge} laid
+ * @returns {{ x: number; y: number }[]}
+ */
+const labelSpots = (laid) => {
+  const spots = onTrack(laid);
+  return [...spots, ...OFF_LINE.flatMap((dy) => spots.map((p) => ({ x: p.x, y: p.y + dy })))];
+};
+
+/**
+ * BL-305 (UL-07) — no two verb labels drawn on top of each other. The routes
+ * place each label on its own edge, but in a busy column gap a bracket's label
+ * and a curve's midpoint can land in the same spot (`adjust` over
+ * `partial_deliver` on the purchase order). Labels whose route spot is free
+ * keep it; each clashing label then takes the first spot ON ITS OWN EDGE that
+ * clears every placed label: a curve's label slides along the curve, a
+ * bracket's along its vertical run, so a label never leaves the line it
+ * names. One with no free spot stays where its route put it.
+ * @param {LaidOutEdge[]} edges
+ * @param {readonly LaidOutNode[]} nodes
+ * @returns {LaidOutEdge[]}
+ */
+const separateLabels = (edges, nodes) => {
+  // State boxes are obstacles too: a label slid off a clash must not land on a
+  // state name (it did, "reject" over "Delivered", before this).
+  // A route's own spot may touch a state box (a self-loop's label does, by
+  // design); only a MOVED label must clear them.
+  const states = nodes.map((n) => ({
+    left: n.x,
+    right: n.x + NODE_W,
+    top: n.y,
+    bottom: n.y + NODE_H
+  }));
+  /** @type {ReturnType<typeof labelBox>[]} */
+  const placed = [];
+  /**
+   * @param {ReturnType<typeof labelBox>} b
+   * @param {readonly ReturnType<typeof labelBox>[]} boxes
+   */
+  const meets = (b, boxes) =>
+    boxes.some((p) => b.left < p.right && b.right > p.left && b.top < p.bottom && b.bottom > p.top);
+  const hits = (/** @type {ReturnType<typeof labelBox>} */ b) => meets(b, placed);
+  const out = [...edges];
+  /** Which edge each placed box belongs to, parallel to `placed`. @type {number[]} */
+  const owner = [];
+  /** @param {number} i @param {LaidOutEdge} laid */
+  const put = (i, laid) => {
+    out[i] = laid;
+    placed.push(labelBox(laid));
+    owner.push(i);
+  };
+  /** @param {number} i  The first free spot on edge `i`'s own edge, if any. */
+  const freeSpot = (i) => {
+    for (const spot of labelSpots(edges[i])) {
+      const moved = { ...edges[i], labelX: spot.x, labelY: spot.y };
+      const box = labelBox(moved);
+      if (!hits(box) && !meets(box, states)) return moved;
+    }
+    return null;
+  };
+  // Pass 1: every label whose route spot is free keeps it; earlier labels win.
+  /** @type {number[]} */
+  const clashing = [];
+  edges.forEach((laid, i) => {
+    if (laid.path === '') return;
+    if (hits(labelBox(laid))) clashing.push(i);
+    else put(i, laid);
+  });
+  // Pass 2: each clashing label takes the first free spot on its own edge.
+  // When it has none, the label it lands on moves instead, if THAT label has
+  // a free spot on its own edge once the clashing one is in place.
+  for (const i of clashing) {
+    const moved = freeSpot(i);
+    if (moved) {
+      put(i, moved);
+      continue;
+    }
+    const mine = labelBox(edges[i]);
+    const k = placed.findIndex((b) => meets(mine, [b]));
+    if (k >= 0) {
+      const j = owner[k];
+      const [blocker] = placed.splice(k, 1);
+      owner.splice(k, 1);
+      placed.push(mine);
+      owner.push(i);
+      const relocated = freeSpot(j);
+      if (relocated && !meets(labelBox(relocated), [mine])) {
+        out[i] = edges[i];
+        put(j, relocated);
+        continue;
+      }
+      placed.pop();
+      owner.pop();
+      placed.splice(k, 0, blocker);
+      owner.splice(k, 0, j);
+    }
+    put(i, edges[i]);
+  }
+  return out;
+};
+
 /**
  * Lay one flow out. Pure; the component performs no arithmetic of its own.
  * @param {FlowView} view
+ * @param {{ separate?: boolean }} [opts]  `separate: false` returns the routes'
+ *   own label spots, before BL-305's separation pass (for its tests).
  * @returns {DiagramLayout}
  */
-export function layoutFlow(view) {
+export function layoutFlow(view, { separate = true } = {}) {
   const rank = rankStates(view);
   const rowOf = /** @type {Map<string, number>} */ (new Map());
   const perRank = /** @type {Map<number, number>} */ (new Map());
@@ -349,7 +517,15 @@ export function layoutFlow(view) {
         route,
         path: `M ${x} ${top} C ${x + 46} ${top - 14}, ${x + 46} ${bottom + 14}, ${x} ${bottom}`,
         labelX: x + 36,
-        labelY: midY(from)
+        // Two self-loops on one state (rfq: award_partial and
+        // award_cancel_partial on Partly awarded) fan their labels apart.
+        labelY: midY(from) + fanOffset(twin, twins, LABEL_H + 2),
+        labelTrack: {
+          kind: 'segment',
+          x: x + 36,
+          y1: from.y - LABEL_H,
+          y2: from.y + NODE_H + LABEL_H
+        }
       };
     }
     if (route === 'direct') {
@@ -367,7 +543,8 @@ export function layoutFlow(view) {
         path: `M ${x1} ${y1} C ${x1 + dx} ${c1y}, ${x2 - dx} ${c2y}, ${x2} ${y2}`,
         // The cubic's midpoint, exactly: (P0 + 3·P1 + 3·P2 + P3) / 8.
         labelX: (x1 + 3 * (x1 + dx) + 3 * (x2 - dx) + x2) / 8,
-        labelY: (y1 + 3 * c1y + 3 * c2y + y2) / 8
+        labelY: (y1 + 3 * c1y + 3 * c2y + y2) / 8,
+        labelTrack: { kind: 'cubic', p: [x1, y1, x1 + dx, c1y, x2 - dx, c2y, x2, y2] }
       };
     }
     if (route === 'sibling') {
@@ -400,7 +577,8 @@ export function layoutFlow(view) {
         // overlapped into "deli close" on the purchase order before this.
         // Sitting a third of the way down separates them without moving the
         // label off its own line.
-        labelY: y1 + (y2 - y1) * 0.32
+        labelY: y1 + (y2 - y1) * 0.32,
+        labelTrack: { kind: 'segment', x: gutterX + 4, y1, y2 }
       };
     }
     // BACK — a real cycle, in its own lane below the rows. When the two states
@@ -421,9 +599,17 @@ export function layoutFlow(view) {
         [tx, target.y + NODE_H]
       ]),
       labelX: (sx + tx) / 2,
-      labelY: laneY
+      labelY: laneY,
+      labelTrack: { kind: 'lane', x1: sx, x2: tx, y: laneY }
     };
   });
 
-  return { nodes, edges, width: rightMost + EDGE_PAD, height, rankCount, maxRows };
+  return {
+    nodes,
+    edges: separate ? separateLabels(edges, nodes) : edges,
+    width: rightMost + EDGE_PAD,
+    height,
+    rankCount,
+    maxRows
+  };
 }

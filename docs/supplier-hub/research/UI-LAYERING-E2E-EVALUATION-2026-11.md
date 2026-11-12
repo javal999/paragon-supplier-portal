@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.2, 2026-11-12 (RC-1 to RC-3 fixed on branch `feat/bl300-termtip-portal`: BL-300 to BL-302 closed; UL-04 left as BL-309). 1.1, 2026-11-12 (open question 1 answered: portal rebuild). 1.0, 2026-11-12 |
+| Version | 1.3, 2026-11-12 (wave 2 on branch `feat/ui-layering-wave2`: BL-303 to BL-309 closed, UL-04 reduced from 33 to 11 tips (BL-309, BL-311), BL-310 added; decisions in `UI-LAYERING-WAVE2-DECISIONS-2026-11.md`). 1.2, 2026-11-12 (RC-1 to RC-3 fixed on branch `feat/bl300-termtip-portal`: BL-300 to BL-302 closed; UL-04 left as BL-309). 1.1, 2026-11-12 (open question 1 answered: portal rebuild). 1.0, 2026-11-12 |
 | Commit under test | GitLab `main` at `a8eecbc7`, the commit live in prod. Built with `vite build`, served with `vite preview` |
 | Personas | PTI (Material Planner menu) and supplier sup-007, PT Sample Packaging Indonesia. Hub clock pinned to 31 Aug 2026 |
 | Method | Task-based end-to-end walk; geometry scan after the ReDeCheck layout failure classes (element collision, element protrusion, viewport protrusion; Walsh, Kapfhammer and McMinn, ISSTA 2017); WCAG 2.2 checks 1.4.13, 2.4.11, 1.4.10 |
@@ -31,7 +31,7 @@ Reasons:
 | RC-4 | Pinned first columns sized for desktop: `MaterialSection.jsx:79` (grid without `scroll-ps`), `BuyerCommitments/components/ExceptionsSection.jsx:52-53` (2 `pin="left"` columns) | At 390 px the pinned columns take about 46 % of the scroll area, and the scroll area sets no `scroll-padding-inline-start`, so the browser scrolls a focused control under them | UL-06 | 2: `/supplier/forecasts`, `/buyer/collaboration` | Copy the pattern `WeekGrid.jsx:325` already uses (`scroll-ps-[140px] md:scroll-ps-[220px]`) and narrow the pinned column below `md` (alternative: unpin below `md`) |
 | RC-5 | `SupplierShipments/utils.js:138-140`, `components/WizardDetailsStep.jsx:44-45`, `const.js:78` | The step rule requires a tracking number that the form does not mark, and the ship date defaults to a fixed date | UL-05 | 1: `/supplier/shipments?tab=create` | Mark the field required and say on the disabled **Next** what is missing; default the ship date to the hub's today |
 
-**Status after the fix (2026-11-12).** `TermTip` was rebuilt on branch `feat/bl300-termtip-portal`. Re-scan at 1440 px of the 26 pages that failed (272 tips): 0 tips overflow their box (9 before, UL-01), 0 are cut by a grid or the screen (72 before, UL-02), and every tip stays open with the pointer on it and closes on Escape after a hover (UL-03). UL-04 is unchanged: 33 open tips on 15 pages still sit over a control of the next row (BL-309). Evidence `ui-layering-shots/BL-300-after-1440.png`, `BL-301-after-1440.png`.
+**Status after the fix (2026-11-12).** `TermTip` was rebuilt on branch `feat/bl300-termtip-portal`. Re-scan at 1440 px of the 26 pages that failed (272 tips): 0 tips overflow their box (9 before, UL-01), 0 are cut by a grid or the screen (72 before, UL-02), and every tip stays open with the pointer on it and closes on Escape after a hover (UL-03). UL-04 was then reduced by wave 2 (BL-309, BL-311): 11 tips on 5 pages, from 33 on 15, all inside rows of clickable stat cards. Wave 2 also closed UL-05 to UL-10 (BL-303 to BL-308). Evidence `ui-layering-shots/BL-300-after-1440.png`, `BL-301-after-1440.png`.
 
 ## 3. Findings
 

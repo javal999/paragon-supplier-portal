@@ -48,7 +48,7 @@ const AcknowledgeColumn = ({
     >
       <div className={HEAD}>{label}</div>
       <div className={CELL}>
-        <ZonePill zone={l.zone} />
+        <ZonePill zone={l.zone} withTip />
       </div>
       <DemandCell l={l} label={label} />
       <div className={CELL}>

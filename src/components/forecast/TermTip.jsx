@@ -41,9 +41,9 @@ import { FOCUS_RING } from './focusRing';
 //     KPI card button). Screen-reader-only text did not: it put the whole
 //     definition into those cards' names.
 //   · The VISIBLE box is drawn only while open, in a portal on
-//     `document.body`, `position: fixed`, measured against the screen: below
-//     the label, above it when the room below is short and the room above is
-//     larger, and shifted left to stay on screen (WCAG 1.4.10: never wider
+//     `document.body`, `position: fixed`, measured against the screen: on the
+//     side of the label that covers fewer controls (BL-309), below on a tie,
+//     and shifted left to stay on screen (WCAG 1.4.10: never wider
 //     than the screen, never widening the page). It is `aria-hidden`, because
 //     the description already carries the words.
 //   · WCAG 1.4.13: hoverable (the pointer can move onto the box; a short close
@@ -88,21 +88,69 @@ const CLOSE_DELAY = 120;
 /**
  * Where the open box goes: below the label, or above it when the room below
  * is short and the room above is larger; its left edge at the label's, moved
- * left as far as needed to stay on screen.
+ * left as far as needed to stay on screen. `side` forces a side when both fit.
  * @param {DOMRect} anchor  The label's box on screen.
  * @param {{ width: number; height: number }} box  The tip box's size.
  * @param {{ width: number; height: number }} screen  The viewport size.
+ * @param {'above' | 'below'} [side]  The side to use when the box fits there.
  * @returns {{ top: number; left: number; above: boolean }}
  */
-export const placeTip = (anchor, box, screen) => {
+export const placeTip = (anchor, box, screen, side) => {
   const below = screen.height - anchor.bottom - GAP - MARGIN;
   const room = anchor.top - GAP - MARGIN;
-  const above = box.height > below && room > below;
+  const fallback = box.height > below && room > below;
+  const above =
+    side === 'above' && room >= box.height
+      ? true
+      : side === 'below' && below >= box.height
+        ? false
+        : fallback;
   const top = above
     ? Math.max(MARGIN, anchor.top - GAP - box.height)
     : Math.max(MARGIN, Math.min(anchor.bottom + GAP, screen.height - MARGIN - box.height));
   const left = Math.max(MARGIN, Math.min(anchor.left, screen.width - MARGIN - box.width));
   return { top, left, above };
+};
+
+/**
+ * BL-311 — the box beside the label, to its right or left, top-aligned with
+ * it and kept on screen vertically; null when it does not fit on that side.
+ * @param {DOMRect} anchor
+ * @param {{ width: number; height: number }} box
+ * @param {{ width: number; height: number }} screen
+ * @param {'right' | 'left'} side
+ * @returns {{ top: number; left: number; above: boolean; side: 'right' | 'left' } | null}
+ */
+export const placeBeside = (anchor, box, screen, side) => {
+  const left = side === 'right' ? anchor.right + GAP : anchor.left - GAP - box.width;
+  if (left < MARGIN || left + box.width > screen.width - MARGIN) return null;
+  const top = Math.max(MARGIN, Math.min(anchor.top, screen.height - MARGIN - box.height));
+  return { top, left, above: false, side };
+};
+
+const CONTROLS = 'input, select, textarea, button, a[href], [role="button"]';
+
+/**
+ * BL-309 (UL-04) — how many visible controls outside `own` a box placed at
+ * `p` would cover. A fixed side does not work: measured on the 26 pages with
+ * tips, "below first" covered a control in 33 tips and "above first" in 39
+ * (header and card tips sit under filters and cards), so each opening counts.
+ * @param {{ top: number; left: number }} p
+ * @param {{ width: number; height: number }} box
+ * @param {Element} own
+ * @returns {number}
+ */
+const coveredControls = (p, box, own) => {
+  const right = p.left + box.width;
+  const bottom = p.top + box.height;
+  let n = 0;
+  for (const el of document.querySelectorAll(CONTROLS)) {
+    if (own.contains(el)) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) continue;
+    if (r.left < right && r.right > p.left && r.top < bottom && r.bottom > p.top) n += 1;
+  }
+  return n;
 };
 
 /** @type {React.FC<TermTipProps>} */
@@ -113,7 +161,9 @@ const TermTip = ({ term, entry: termEntry, name, slugId, children, className = '
   const [focused, setFocused] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [place, setPlace] = useState(
-    /** @type {{ top: number; left: number; above: boolean } | null} */ (null)
+    /** @type {{ top: number; left: number; above: boolean; side?: "right" | "left" } | null} */ (
+      null
+    )
   );
   const wrapRef = useRef(/** @type {HTMLSpanElement | null} */ (null));
   const boxRef = useRef(/** @type {HTMLSpanElement | null} */ (null));
@@ -143,13 +193,21 @@ const TermTip = ({ term, entry: termEntry, name, slugId, children, className = '
       const wrap = wrapRef.current;
       const box = boxRef.current;
       if (!wrap || !box) return;
-      setPlace(
-        placeTip(
-          wrap.getBoundingClientRect(),
-          { width: box.offsetWidth, height: box.offsetHeight },
-          { width: window.innerWidth, height: window.innerHeight }
-        )
-      );
+      const anchor = wrap.getBoundingClientRect();
+      const size = { width: box.offsetWidth, height: box.offsetHeight };
+      const screen = { width: window.innerWidth, height: window.innerHeight };
+      // The side that covers fewest controls (BL-309: below or above;
+      // BL-311: right or left of the label too). Ties keep this order, the
+      // default rule first, so a tip with nothing near it opens as before.
+      const options = [
+        placeTip(anchor, size, screen),
+        placeTip(anchor, size, screen, 'below'),
+        placeTip(anchor, size, screen, 'above'),
+        placeBeside(anchor, size, screen, 'right'),
+        placeBeside(anchor, size, screen, 'left')
+      ].flatMap((p) => (p ? [{ p, n: coveredControls(p, size, wrap) }] : []));
+      const best = options.reduce((a, b) => (b.n < a.n ? b : a));
+      setPlace(best.p);
     };
     measure();
     window.addEventListener('scroll', measure, true);
@@ -210,7 +268,7 @@ const TermTip = ({ term, entry: termEntry, name, slugId, children, className = '
       data-testid={testId}
       data-open={open ? 'true' : 'false'}
       data-dismissed={dismissed ? 'true' : 'false'}
-      data-placement={place?.above ? 'above' : 'below'}
+      data-placement={place?.side ?? (place?.above ? 'above' : 'below')}
       ref={wrapRef}
       onMouseEnter={enter}
       onMouseLeave={leave}
@@ -240,7 +298,7 @@ const TermTip = ({ term, entry: termEntry, name, slugId, children, className = '
               ref={boxRef}
               aria-hidden="true"
               data-tip-popup={testId}
-              data-placement={place?.above ? 'above' : 'below'}
+              data-placement={place?.side ?? (place?.above ? 'above' : 'below')}
               onMouseEnter={enter}
               onMouseLeave={leave}
               style={{

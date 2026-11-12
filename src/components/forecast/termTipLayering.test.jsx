@@ -1,7 +1,7 @@
-import { describe, it, expect, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import '@lib/i18n';
-import TermTip, { placeTip } from './TermTip';
+import TermTip, { placeBeside, placeTip } from './TermTip';
 
 // BL-300 to BL-302 — UI layering review 2026-11 (UL-01 to UL-03), portal ruled
 // by the owner (UL-Q1). Each spec fires at the defect the review measured on
@@ -20,6 +20,15 @@ afterEach(() => vi.useRealTimers());
 describe('placeTip: the box stays on screen (UL-02)', () => {
   it('opens below the label when there is room', () => {
     expect(placeTip(rect(300, 200), BOX, SCREEN)).toEqual({ top: 224, left: 300, above: false });
+  });
+
+  it('opens on a forced side when the box fits there (BL-309), else by the default rule', () => {
+    expect(placeTip(rect(300, 200), BOX, SCREEN, 'above')).toEqual({
+      top: 116,
+      left: 300,
+      above: true
+    });
+    expect(placeTip(rect(300, 40), BOX, SCREEN, 'above').above).toBe(false);
   });
 
   it('opens above when the room below is short and the room above is larger', () => {
@@ -123,5 +132,98 @@ describe('WCAG 1.4.13 with a pointer (UL-03)', () => {
     // With the tip closed, Escape reaches the dialog again.
     fireEvent.keyDown(button, { key: 'Escape' });
     expect(onDialogKey).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('BL-309 (UL-04): the box opens on the side that covers fewer controls', () => {
+  /**
+   * The label at y 300, one input either just below it or just above it.
+   * @param {'below' | 'above'} where
+   */
+  const renderWithField = (where) => {
+    render(
+      <div>
+        <TermTip term="MASC">MASC</TermTip>
+        <input aria-label="next field" />
+      </div>
+    );
+    const wrap = screen.getByTestId('term-tip-masc');
+    wrap.getBoundingClientRect = () => rect(300, 300);
+    const field = screen.getByLabelText('next field');
+    field.getBoundingClientRect = () =>
+      where === 'below' ? rect(300, 330, 200, 30) : rect(300, 240, 200, 30);
+  };
+  const size = { configurable: true, get: () => 80 };
+  const width = { configurable: true, get: () => 256 };
+  /** @type {PropertyDescriptor | undefined} */
+  let h;
+  /** @type {PropertyDescriptor | undefined} */
+  let w;
+  beforeEach(() => {
+    h = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
+    w = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth');
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', size);
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', width);
+  });
+  afterEach(() => {
+    if (h) Object.defineProperty(HTMLElement.prototype, 'offsetHeight', h);
+    if (w) Object.defineProperty(HTMLElement.prototype, 'offsetWidth', w);
+  });
+
+  it('a field right below the label: the box opens above it', () => {
+    renderWithField('below');
+    fireEvent.focus(screen.getByRole('button', { name: /MASC/ }));
+    expect(popup()).toHaveAttribute('data-placement', 'above');
+  });
+
+  it('a field above the label: the box stays below', () => {
+    renderWithField('above');
+    fireEvent.focus(screen.getByRole('button', { name: /MASC/ }));
+    expect(popup()).toHaveAttribute('data-placement', 'below');
+  });
+});
+
+describe('BL-311: a label with controls above and below opens beside them', () => {
+  const size = { configurable: true, get: () => 80 };
+  const width = { configurable: true, get: () => 256 };
+  /** @type {PropertyDescriptor | undefined} */
+  let h;
+  /** @type {PropertyDescriptor | undefined} */
+  let w;
+  beforeEach(() => {
+    h = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
+    w = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth');
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', size);
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', width);
+  });
+  afterEach(() => {
+    if (h) Object.defineProperty(HTMLElement.prototype, 'offsetHeight', h);
+    if (w) Object.defineProperty(HTMLElement.prototype, 'offsetWidth', w);
+  });
+
+  it('a field above and a field below: the box opens to the right', () => {
+    render(
+      <div>
+        <input aria-label="field above" />
+        <TermTip term="MASC">MASC</TermTip>
+        <input aria-label="field below" />
+      </div>
+    );
+    screen.getByTestId('term-tip-masc').getBoundingClientRect = () => rect(300, 300);
+    screen.getByLabelText('field above').getBoundingClientRect = () => rect(300, 240, 100, 30);
+    screen.getByLabelText('field below').getBoundingClientRect = () => rect(300, 330, 100, 30);
+    fireEvent.focus(screen.getByRole('button', { name: /MASC/ }));
+    expect(popup()).toHaveAttribute('data-placement', 'right');
+  });
+
+  it('placeBeside: null when the side does not fit on screen', () => {
+    expect(placeBeside(rect(1300, 300), BOX, SCREEN, 'right')).toBeNull();
+    expect(placeBeside(rect(100, 300), BOX, SCREEN, 'left')).toBeNull();
+    expect(placeBeside(rect(300, 300), BOX, SCREEN, 'right')).toEqual({
+      top: 300,
+      left: 424,
+      above: false,
+      side: 'right'
+    });
   });
 });

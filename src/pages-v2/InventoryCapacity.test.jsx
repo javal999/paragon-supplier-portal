@@ -1023,3 +1023,16 @@ describe('Home tasks', () => {
     expect(alerts).not.toHaveTextContent('PTI stock is below');
   });
 });
+
+describe('BL-308 (UL-10) — no empty unit brackets before a material is chosen', () => {
+  it('the quantity labels read without "()" until a material gives them a unit', async () => {
+    renderWithProviders(<BuyerInventory />, { identity: PLANNER });
+    fireEvent.click(await screen.findByTestId('stock-record-open'));
+    expect(panel().getByLabelText('Stock on hand')).toBeInTheDocument();
+    expect(panel().getByLabelText('In production')).toBeInTheDocument();
+    expect(panel().queryByText(/\(\s*\)/)).toBeNull();
+    fireEvent.change(panel().getByLabelText('Supplier'), { target: { value: 'sup-007' } });
+    fireEvent.change(panel().getByLabelText('Material'), { target: { value: 'PK-CAPF-8820' } });
+    expect(panel().getByLabelText('Stock on hand (PCS)')).toBeInTheDocument();
+  });
+});

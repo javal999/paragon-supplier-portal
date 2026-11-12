@@ -4,6 +4,7 @@
 /** @import { AsnStatus } from '@services/data/types' */
 /** @import { LineEntry } from '../shipments/asnLines' */
 /** @import { VerbAvailability } from '@services/transitions/handoff' */
+import { DECLARED_PRESENT } from '@services/data/fixturePresent';
 
 /** @typedef {'shipments' | 'create'} TabKey */
 /** @typedef {AsnStatus | 'All'} StatusFilter */
@@ -75,7 +76,8 @@ export const EMPTY_FORM = {
   threePlId: '',
   carrier: '',
   trackingNumber: '',
-  shipDate: '2026-04-07',
+  // BL-303 (UL-05) — the hub's today, not a fixed date five months back.
+  shipDate: DECLARED_PRESENT,
   eta: '',
   packages: '',
   weightKg: '',
