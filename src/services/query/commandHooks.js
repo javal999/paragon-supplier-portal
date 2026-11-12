@@ -30,6 +30,7 @@ import { reasonCodeEntityId } from '../transitions/reasonCodes';
 import { warehouseDecisionEntityId } from '../transitions/warehouseDecisionRules';
 import { osipParamKey } from '../transitions/osipParams';
 import { ltpChoiceKey, ltpUploadKey } from '../transitions/ltpInputRules';
+import { promotionKey } from '../engine/promotions';
 /** @import { ForecastStream } from '../sdc/types' */
 
 /**
@@ -3072,6 +3073,39 @@ export function useLtpInputCommand() {
       if (result.status === 'failed') return;
       qc.invalidateQueries({ predicate: (q) => q.queryKey[0] === 'procurement' });
       qc.invalidateQueries({ predicate: (q) => q.queryKey[0] === 'supplier' });
+    }
+  });
+}
+
+/**
+ * REQ-E14-08 BR-05 (BL-235) — enter, change or withdraw a promotion for one SKU
+ * and week (fires `t_promotion_set`). The demand forecast re-reads.
+ * @typedef {{
+ *   readonly skuCode: string;
+ *   readonly weekStart: string;
+ *   readonly withdraw?: boolean;
+ *   readonly kind?: import('@services/engine/promotions').PromotionKind;
+ *   readonly value?: number;
+ * }} PromotionVars
+ */
+
+/** Enter, change or withdraw a promotion (fires `t_promotion_set`). */
+export function usePromotionCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, PromotionVars>} */ (useMutation)({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_promotion_set',
+        entity: 'promotion',
+        entityId: promotionKey(vars.skuCode, vars.weekStart),
+        payload: vars.withdraw ? { withdraw: true } : { kind: vars.kind, value: vars.value }
+      }),
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      qc.invalidateQueries({ predicate: (q) => q.queryKey[0] === 'procurement' });
     }
   });
 }

@@ -16,9 +16,11 @@ import { mockGoodsReceipts } from '@data/mockGoodsReceipts';
 /** @import { GoodsReceipt } from '@data/mockGoodsReceipts' */
 // BL-64 — the delivery history behind the compliance gate's OTIF boundary.
 import { GATE_DEMO_GOODS_RECEIPTS } from '../fixtures/gateDemo';
+// E2E walkthrough 2026-11-12 — the receipt of the pair's past call-off.
+import { SSTP_GOODS_RECEIPTS } from '../fixtures/walkthroughSstp';
 
 /** @type {readonly GoodsReceipt[]} */
-const SEED = [...mockGoodsReceipts, ...GATE_DEMO_GOODS_RECEIPTS];
+const SEED = [...mockGoodsReceipts, ...GATE_DEMO_GOODS_RECEIPTS, ...SSTP_GOODS_RECEIPTS];
 
 /**
  * @param {GoodsReceipt} g

@@ -143,4 +143,20 @@ describe('keys, refusals and the file', () => {
     expect('refusal' in parseLtpCsv('2026-11-10,5')).toBe(true);
     expect('refusal' in parseLtpCsv('')).toBe(true);
   });
+  it('reads a file whose figures carry invisible characters (planner file, 2026-11-12)', () => {
+    // The bytes of the planner's "LTP A - 2000028400 - Sheet1.csv": CRLF lines,
+    // and a zero-width space (U+200B) after every quantity.
+    const planner = 'week,qty\r\n2026-11-16,20067\u200B\r\n2026-11-23,25348\u200B\r\n';
+    expect(parseLtpCsv(planner)).toEqual({
+      weeks: { '2026-11-16': 20067, '2026-11-23': 25348 }
+    });
+    // A byte-order mark before the header, joiners and a word joiner in a figure.
+    expect(parseLtpCsv('\uFEFFweek,qty\n2026-11-16,1\u200C2\u200D0\u20600\n')).toEqual({
+      weeks: { '2026-11-16': 1200 }
+    });
+    // Only invisible characters go: a visible stray character still refuses the line.
+    expect(parseLtpCsv('2026-11-16,20067x')).toEqual({
+      refusal: 'LTP_WEEKS_INVALID: the quantity of 2026-11-16 is not a number from 0'
+    });
+  });
 });

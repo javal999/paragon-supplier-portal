@@ -355,6 +355,7 @@ export const TRANSITION_PURPOSE = Object.freeze({
   t_osipparam_set: { purposeKey: 'processFlows.purpose.t_osipparam_set' },
   t_capacitymonth_submit: { purposeKey: 'processFlows.purpose.t_capacitymonth_submit' },
   t_ltpinput_set: { purposeKey: 'processFlows.purpose.t_ltpinput_set' },
+  t_promotion_set: { purposeKey: 'processFlows.purpose.t_promotion_set' },
   t_whatifscenario_save: { purposeKey: 'processFlows.purpose.t_whatifscenario_save' },
   t_feedstock_confirm: { purposeKey: 'processFlows.purpose.t_feedstock_confirm' },
   // INV-D9 — "Ask supplier", the hub ask.
@@ -367,6 +368,7 @@ export const TRANSITION_PURPOSE = Object.freeze({
   // PEX-8 — PO On Hold: the planner suggests, the supplier chooses.
   t_poonhold_suggest: { purposeKey: 'processFlows.purpose.t_poonhold_suggest' },
   t_poonhold_choose: { purposeKey: 'processFlows.purpose.t_poonhold_choose' },
+  t_poonhold_execute: { purposeKey: 'processFlows.purpose.t_poonhold_execute' },
   // BL-227 — PTI undoes an acceptance.
   t_capacitydecision_withdraw: { purposeKey: 'processFlows.purpose.t_capacitydecision_withdraw' },
   // REQ-E03-02 / REQ-E03-04 / REQ-E03-05 — RFx management.
@@ -472,6 +474,7 @@ export const ENTITY_PURPOSE = Object.freeze({
   osipParam: { purposeKey: 'processFlows.purpose.entity.osipParam' },
   capacityMonth: { purposeKey: 'processFlows.purpose.entity.capacityMonth' },
   ltpInput: { purposeKey: 'processFlows.purpose.entity.ltpInput' },
+  promotion: { purposeKey: 'processFlows.purpose.entity.promotion' },
   whatIfScenario: { purposeKey: 'processFlows.purpose.entity.whatIfScenario' },
   feedstockConfirmation: { purposeKey: 'processFlows.purpose.entity.feedstockConfirmation' },
   supplierAsk: { purposeKey: 'processFlows.purpose.entity.supplierAsk' },

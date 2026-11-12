@@ -157,7 +157,9 @@ describe('H1 — the seed is a CLASS RULE, and the rule DERIVES FROM THE AXIS', 
     // rather than a claim in a header. ⚠️ WHEN A ROW OR A GROUP IS RATIFIED,
     // THIS NARROWS AND THE RATIFICATION IS RECORDED — it must not be loosened
     // to let a per-row override slip in unannounced.
-    expect(ENTRIES).toHaveLength(42);
+    // +1 at the E2E walkthrough (2026-11-12): 2000028400, a real SAP packaging code
+    // authored from the planners' sheet (`fixtures/walkthroughSstp.js`), a fifth route.
+    expect(ENTRIES).toHaveLength(43);
     const drifted = ENTRIES.filter(
       (e) => e.halalApplicable !== provisionalHalalForGroup(e.materialGroup)
     ).map((e) => `${e.materialCode} (${e.materialGroup}) = ${e.halalApplicable}`);
@@ -175,7 +177,8 @@ describe('H1 — the seed is a CLASS RULE, and the rule DERIVES FROM THE AXIS', 
     /** @param {HalalApplicability} v */
     const count = (v) => ENTRIES.filter((e) => e.halalApplicable === v).length;
     expect(count('REQUIRED')).toBe(31);
-    expect(count('UNDETERMINED')).toBe(11);
+    // +1 UNDETERMINED: the E2E walkthrough's packaging row 2000028400.
+    expect(count('UNDETERMINED')).toBe(12);
     // ⚠️ **ZERO `'NOT_REQUIRED'`, DELIBERATELY.** No row in this master has a
     // basis for saying a halal determination is unnecessary. The one group where
     // that could have been argued by analogy — packaging, which BPOM excludes —
@@ -254,7 +257,8 @@ describe('H1 — UNDETERMINED REFUSES IDENTICALLY TO AN UNKNOWN CODE', () => {
     // `'UNDETERMINED'` STORES AN EXPLICIT ABSENCE OF DETERMINATION AND REFUSES.
     // Stated as a property over the WHOLE master rather than one example.
     const undetermined = CODES.filter((c) => MATERIAL_MASTER[c].halalApplicable === 'UNDETERMINED');
-    expect(undetermined).toHaveLength(11);
+    // 12 with the E2E walkthrough's packaging row 2000028400.
+    expect(undetermined).toHaveLength(12);
     expect(undetermined.filter((c) => halalOf(c).ok)).toEqual([]);
     // And they are exactly the packaging rows — the eleven `D-COMP-HALAL-1` is
     // about, and 4 of the 9 receivable lines live in this set.
@@ -311,7 +315,7 @@ describe('HALAL-PROSE-READS-AN-ANSWER-01 — the two mechanisms, MEASURED', () =
     // converts every non-match into a determination it has no basis for. Here it
     // does so on the exact eleven rows `doc-001` gives us reason to doubt.
     const refused = CODES.filter((c) => !halalOf(c).ok);
-    expect(refused).toHaveLength(11);
+    expect(refused).toHaveLength(12); // with the walkthrough's 2000028400
     expect(refused.filter((c) => proseRuleSays(MATERIAL_MASTER[c].label))).toEqual([]);
   });
 

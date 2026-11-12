@@ -58,7 +58,9 @@ describe('2B-5b-ii — the seven are authored, and the space is empty', () => {
   it('the population is real (guards a vacuous pass)', () => {
     expect(AUTHORED).toHaveLength(7);
     expect(asnLines).toHaveLength(7);
-    expect(Object.keys(MATERIAL_MASTER)).toHaveLength(42);
+    // +1 at the E2E walkthrough (2026-11-12): 2000028400, a real SAP packaging code
+    // authored from the planners' sheet (`fixtures/walkthroughSstp.js`), a fifth route.
+    expect(Object.keys(MATERIAL_MASTER)).toHaveLength(43);
     expect(SUPPLIER_DOCUMENTS.length).toBeGreaterThan(5);
     expect(INITIAL_CATALOG).toHaveLength(5);
   });

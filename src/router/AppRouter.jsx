@@ -49,6 +49,7 @@ import AdminMrpControllers from '@pages-v2/admin/AdminMrpControllers';
 import BuyerTradeNames from '@pages-v2/materials/BuyerTradeNames';
 import { AdminAlertThresholds, AdminTolerances } from '@pages-v2/admin/AdminRuleValues';
 import AdminReasonCodes from '@pages-v2/admin/AdminReasonCodes';
+import AdminMasterDataFields from '@pages-v2/admin/AdminMasterDataFields';
 import RolesCatalogue from '@pages-v2/RolesCatalogue';
 import RoleDetail from '@pages-v2/RoleDetail';
 // GL-1 — the glossary surface. PERSONA-NEUTRAL by route, deliberately: the term
@@ -246,6 +247,8 @@ const AppRouter = () => {
             <Route path="/buyer/admin/tolerances" element={<AdminTolerances />} />
             <Route path="/buyer/admin/alert-thresholds" element={<AdminAlertThresholds />} />
             <Route path="/buyer/admin/reason-codes" element={<AdminReasonCodes />} />
+            {/* PEX-14 (BL-278) — master data field catalogue, read only [Proposed]. */}
+            <Route path="/buyer/admin/master-data-fields" element={<AdminMasterDataFields />} />
             <Route path="/buyer/roles" element={<RolesCatalogue />} />
             <Route path="/buyer/roles/:roleId" element={<RoleDetail />} />
             <Route path="/glossary" element={<Glossary />} />

@@ -566,6 +566,12 @@ describe('REQ-E06-03 BR-06 and REQ-E08-05 — reminders, escalation and the aler
       .filter((l) => deadlineState(l, now) === 'overdue')
       .map((l) => `${l.supplierId}|${l.materialCode}|${l.periodBucket}`);
     expect(overdue.sort()).toEqual([
+      // The E2E walkthrough pair's five Firm weeks (lead time 35 days), unanswered.
+      `sup-007|2000028400|${W[0]}`,
+      `sup-007|2000028400|${W[1]}`,
+      `sup-007|2000028400|${W[2]}`,
+      `sup-007|2000028400|${W[3]}`,
+      `sup-007|2000028400|${W[4]}`,
       `sup-007|PK-PETB-8802|${W[0]}`,
       `sup-012|PK-PETB-8801|${W[0]}`,
       `sup-012|PK-PETB-8801|${W[1]}`,

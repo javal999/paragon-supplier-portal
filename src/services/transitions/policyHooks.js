@@ -211,6 +211,13 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    */
   LTP_INPUT_VALID: 'ltpinput_valid',
   /**
+   * Promotion for one SKU (BL-235, REQ-E14-08 BR-05): a SKU and a week the demand
+   * forecast covers, an increase of a percentage above 0 up to the cap or a whole
+   * number of units, a change that differs from the one in force, a withdrawal
+   * only of a promotion in force. The rule is `promotionRefusal`.
+   */
+  PROMOTION_VALID: 'promotion_valid',
+  /**
    * What-if scenario save (DRC-17 BR-05, BL-202): a name (NAME_REQUIRED,
    * NAME_TOO_LONG), a pair the sandbox offers (UNKNOWN_PAIR), well-formed
    * inputs (INPUTS_INVALID:<field>) and switches each catalogue entry allows
@@ -563,6 +570,13 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    * (PO_ON_HOLD_NO_LINE), before the grace period ends (PO_ON_HOLD_GRACE_ENDED).
    */
   PO_ON_HOLD_CHOOSABLE: 'po_on_hold_choosable',
+  /**
+   * PO On Hold execution (PEX-8 BR-02): the line is still on hold
+   * (PO_ON_HOLD_NO_LINE), the grace period has ended (PO_ON_HOLD_GRACE_RUNNING),
+   * an option stands (PO_ON_HOLD_NO_OPTION) and the facts it needs are on record
+   * (PO_ON_HOLD_BLOCKED).
+   */
+  PO_ON_HOLD_EXECUTABLE: 'po_on_hold_executable',
   /**
    * Material E1 (MR-7 BR-06, BR-08) — a planner input to the stock simulation:
    * a known supplier (UNKNOWN_SUPPLIER) and material (UNKNOWN_MATERIAL), one of

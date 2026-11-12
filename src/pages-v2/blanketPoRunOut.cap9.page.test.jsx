@@ -164,7 +164,10 @@ describe('CAP-9 BR-04 — "Blanket POs running out", per group, sorted by "new P
     expect(groups.map((g) => [g.last.lineId, g.earlier.map((r) => r.lineId)])).toEqual([
       ['li-016a', []],
       ['li-002a', []],
-      ['li-027a', ['li-007a', 'li-024a']]
+      ['li-027a', ['li-007a', 'li-024a']],
+      // The E2E walkthrough's umbrella line (PO-2026-01910): its OSPO runs out
+      // inside the horizon on the planners' LTP.
+      ['li-1910a', []]
     ]);
     renderWithProviders(<BuyerCallOffs />, { identity: PLANNER });
     await openTab('Blanket POs running out');
@@ -177,7 +180,8 @@ describe('CAP-9 BR-04 — "Blanket POs running out", per group, sorted by "new P
     expect(blocks).toEqual([
       'calloff-runout-group-li-016a',
       'calloff-runout-group-li-002a',
-      'calloff-runout-group-li-027a'
+      'calloff-runout-group-li-027a',
+      'calloff-runout-group-li-1910a'
     ]);
     const pet = within(list).getByTestId('calloff-runout-group-li-027a');
     expect(

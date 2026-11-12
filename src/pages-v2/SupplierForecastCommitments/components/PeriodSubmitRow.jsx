@@ -3,19 +3,20 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import Button from '@components/ui-v2/Button';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
-import TableCell from '@components/ui-v2/TableCell';
-import TableRow from '@components/ui-v2/TableRow';
 /** @import { CapacityReason } from '@services/data/types' */
 /** @import { VerbAvailability } from '@services/transitions/handoff' */
 /** @import { PeriodRow, ReasonLabel, WeekReason } from '../const' */
 import { LtpCheckPill, inputClass } from '../../inventory/inventoryDisplay';
 import { shortfallReasonNeedsNote } from '@services/transitions/reasonCodes';
+import { CELL, HEAD } from './gridCells';
 
 /**
- * One period of the BL-133 Submit all table: the period, how many lines Submit
- * all sends, each capacity group's LTP check (with the way to confirm
+ * One period of the BL-133 Submit all grid, as a COLUMN (PEX-2 BR-05; it was a
+ * row): the period, how many lines Submit all sends, each capacity group's LTP check (with the way to confirm
  * capacity), the period's reason when it is above BE, and Submit all with the
  * reason it is refused — or the handoff notice when the seat may not submit.
+ * The wrapper is `display: contents`, so its five cells sit in the grid's rows
+ * and the column stays one element (its test id is unchanged).
  * @type {React.FC<{
  *   row: PeriodRow;
  *   label: string;
@@ -42,10 +43,11 @@ const PeriodSubmitRow = ({
   onSubmitAll
 }) => {
   const { t } = useTranslation();
+  const tint = row.red ? 'bg-danger-soft' : '';
   return (
-    <TableRow data-testid={`fc-week-${row.bucket}`} className={row.red ? 'bg-danger-soft' : ''}>
-      <TableCell className="whitespace-nowrap">{label}</TableCell>
-      <TableCell>
+    <div role="group" aria-label={label} className="contents" data-testid={`fc-week-${row.bucket}`}>
+      <div className={HEAD}>{label}</div>
+      <div className={`${CELL} ${tint}`}>
         {row.pending.length > 0 ? (
           <span className="text-sm text-text-secondary">
             {t('fc.sup.week.lines', { count: row.pending.length })}
@@ -53,8 +55,8 @@ const PeriodSubmitRow = ({
         ) : (
           <span className="text-xs text-text-tertiary">{t('fc.sup.week.nothing')}</span>
         )}
-      </TableCell>
-      <TableCell>
+      </div>
+      <div className={`${CELL} ${tint}`}>
         <div className="space-y-1">
           {row.checks.map(({ group, check }) => (
             <div key={group} className="flex flex-wrap items-center gap-2 text-xs">
@@ -78,8 +80,8 @@ const PeriodSubmitRow = ({
             </div>
           ))}
         </div>
-      </TableCell>
-      <TableCell>
+      </div>
+      <div className={`${CELL} ${tint}`}>
         {row.red ? (
           <div className="space-y-1 min-w-[160px]">
             <select
@@ -114,8 +116,8 @@ const PeriodSubmitRow = ({
         ) : (
           <span className="text-xs text-text-tertiary">—</span>
         )}
-      </TableCell>
-      <TableCell>
+      </div>
+      <div className={`${CELL} ${tint}`}>
         {canCommit ? (
           <div className="flex flex-col gap-1 min-w-[140px]">
             <Button
@@ -144,8 +146,8 @@ const PeriodSubmitRow = ({
         ) : (
           <HandoffNotice availability={submitAvail} testId="handoff-forecast-commit-week" />
         )}
-      </TableCell>
-    </TableRow>
+      </div>
+    </div>
   );
 };
 

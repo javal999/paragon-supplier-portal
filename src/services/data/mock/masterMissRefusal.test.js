@@ -61,7 +61,9 @@ describe('the straddle these gates sit on (MASTER-STRADDLE-01)', () => {
     // every code the declared document lane names, the master resolves.
     // ⚠️ 42 AT 2B-5b-ii — seven ASN codes authored. The straddle stays ZERO;
     // what changed is that the UNDECLARED lane stopped straddling too.
-    expect(Object.keys(MATERIAL_MASTER)).toHaveLength(42);
+    // +1 at the E2E walkthrough (2026-11-12): 2000028400, a real SAP packaging code
+    // authored from the planners' sheet (`fixtures/walkthroughSstp.js`), a fifth route.
+    expect(Object.keys(MATERIAL_MASTER)).toHaveLength(43);
     expect(isKnownMaterial('PK-PETB-8801')).toBe(true); // ← was false until 2B-2
     expect(isKnownMaterial('RM-EMUL-3310')).toBe(true); // the original overlap
     expect(isKnownMaterial('PK-PETB-8803')).toBe(true); // ← was false until 2B-3

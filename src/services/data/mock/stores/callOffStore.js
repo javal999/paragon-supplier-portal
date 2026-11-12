@@ -9,6 +9,8 @@
 import { CALL_OFF_SEED } from '../fixtures/callOffs';
 // BL-64 — the delivery history behind the compliance gate's OTIF boundary.
 import { GATE_DEMO_CALL_OFFS } from '../fixtures/gateDemo';
+// E2E walkthrough 2026-11-12 — the pair's two call-offs, numbered after the gate demo.
+import { SSTP_CALL_OFFS } from '../fixtures/walkthroughSstp';
 /** @import { CallOff } from '../../types' */
 
 /**
@@ -30,7 +32,7 @@ const clone = (c) => ({
 });
 
 /** @type {readonly CallOff[]} */
-const SEED = [...CALL_OFF_SEED, ...GATE_DEMO_CALL_OFFS];
+const SEED = [...CALL_OFF_SEED, ...GATE_DEMO_CALL_OFFS, ...SSTP_CALL_OFFS];
 
 /** @type {CallOff[]} */
 let rows = SEED.map(clone);

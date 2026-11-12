@@ -48,6 +48,8 @@ import {
   withSwitch
 } from '../../transitions/whatIfSandboxRules';
 import { sdcClock } from '../../sdc';
+import { SSTP_SUPPLIER_ID, sstpInputs } from '../../transitions/whatIfSstpPreset';
+import { hubWeeks } from '../../transitions/demandAnticipationRules';
 import { NO_PERSON } from '@context/noPerson';
 /** @import { QueryScope } from '../types' */
 /** @import { WhatIfInputs, WhatIfSwitches } from '../../transitions/whatIfSandboxRules' */
@@ -264,6 +266,22 @@ describe('BR-05 · saving a scenario (t_whatifscenario_save)', () => {
     );
     expect(r.status, r.reason).toBe('done');
     expect(whatIfSandbox(PPT7_SUPPLIER_ID, '2000041501')?.scenarios).toHaveLength(1);
+  });
+
+  it('the SSTP planner Excel is offered second, opens on the sheet inputs and saves like any pair', async () => {
+    const pairs = whatIfPairs();
+    expect(pairs[1]).toMatchObject({
+      supplierId: SSTP_SUPPLIER_ID,
+      materialCode: '2000028400',
+      preset: true,
+      materialClass: 'PM'
+    });
+    const sstp = /** @type {WhatIfInputs} */ (whatIfLiveInputs(SSTP_SUPPLIER_ID, '2000028400'));
+    expect(sstp).toEqual(sstpInputs(hubWeeks(sdcClock.now(), 24)));
+    expect(whatIfLiveInputs(SSTP_SUPPLIER_ID, '2000041501')).toBeNull();
+    const r = await save('SSTP as the sheet', DEFAULT_SWITCHES, buyer, sstp);
+    expect(r.status, r.reason).toBe('done');
+    expect(whatIfSandbox(SSTP_SUPPLIER_ID, '2000028400')?.scenarios).toHaveLength(1);
   });
 });
 

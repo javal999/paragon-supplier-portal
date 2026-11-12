@@ -59,7 +59,12 @@ describe('getFixedStockReconcile (the feedstock reconcile) — scoping and sampl
 
   it('a supplier reads only its own rows', async () => {
     const own = (await reads.getFixedStockReconcile(sup('sup-007'))).items;
-    expect(own.map((r) => r.key)).toEqual(['sup-007|PK-PETB-8801', 'sup-007|PK-PETB-8802']);
+    // 2000028400 is the E2E walkthrough pair (fixtures/walkthroughSstp.js).
+    expect(own.map((r) => r.key)).toEqual([
+      'sup-007|2000028400',
+      'sup-007|PK-PETB-8801',
+      'sup-007|PK-PETB-8802'
+    ]);
     const other = (await reads.getFixedStockReconcile(sup('sup-002'))).items;
     expect(other.length).toBeGreaterThan(0);
     expect(other.every((r) => r.supplierId === 'sup-002')).toBe(true);

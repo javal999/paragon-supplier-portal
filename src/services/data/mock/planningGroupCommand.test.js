@@ -31,6 +31,11 @@ import { planStatus, reEntryWeeks } from '../../transitions/capacityRules';
 import { materialEntry, sdcClock } from '../../sdc';
 import { NO_PERSON } from '@context/noPerson';
 import BEFORE from '../../transitions/__fixtures__/capacityPlansBeforeC5.json';
+import { SSTP, SSTP_PLANNING_GROUP_EVENT } from './fixtures/walkthroughSstp';
+
+// The E2E walkthrough (2026-11-12) seeds ONE planning group of its own, holding
+// its one material; every assertion below about the sample groups reads past it.
+const WALKTHROUGH_GROUP = SSTP_PLANNING_GROUP_EVENT.groupId;
 
 const svc = new MockCommandService();
 const reads = new MockProcurementService();
@@ -155,11 +160,22 @@ describe('MR-8 AC-01 — with no split made, the capacity plans are today’s', 
         'sup-005-pg-MG-03'
       ])
     );
-    expect(allCapacityPlans()).toEqual(expected);
+    const plans = allCapacityPlans();
+    expect(plans.filter((p) => p.planningGroupId !== WALKTHROUGH_GROUP)).toEqual(expected);
+    // The walkthrough's own plan: sup-007, its one material, its seeded capacity.
+    expect(
+      plans
+        .filter((p) => p.planningGroupId === WALKTHROUGH_GROUP)
+        .map((p) => [p.supplierId, p.materials, p.latest?.id])
+    ).toEqual([[SSTP.supplierId, [SSTP.materialCode], 'cap-0005']]);
   });
 
   it('every SAP group with materials has exactly its default group, and every material resolves to it', () => {
-    const groups = allPlanningGroups();
+    const all = allPlanningGroups();
+    expect(
+      all.filter((g) => g.id === WALKTHROUGH_GROUP).map((g) => [g.isDefault, g.materials])
+    ).toEqual([[false, [SSTP.materialCode]]]);
+    const groups = all.filter((g) => g.id !== WALKTHROUGH_GROUP);
     expect(groups.every((g) => g.isDefault && g.id === `pg-${g.sapMaterialGroup}`)).toBe(true);
     expect(
       /** @type {import('../types').PlanningGroupView} */ (groups.find((g) => g.id === 'pg-MG-03'))
@@ -196,6 +212,7 @@ describe('the four verbs (MR-8 BR-03), governed and logged', () => {
       ).state
     ).toBe('retired');
     expect(planningGroupStore.all().map((e) => e.kind)).toEqual([
+      'created', // the walkthrough's seeded group
       'created',
       'renamed',
       'moved',
@@ -254,7 +271,7 @@ describe('the four verbs (MR-8 BR-03), governed and logged', () => {
     expect((await create('   ', 'MG-03')).reason).toContain('NAME_REQUIRED');
     expect((await create('Line', 'MG-99')).reason).toContain('UNKNOWN_SAP_GROUP');
     expect((await rename('pg-MG-03', '')).status).toBe('failed');
-    expect(planningGroupStore.all()).toEqual([]);
+    expect(planningGroupStore.all()).toEqual([SSTP_PLANNING_GROUP_EVENT]);
   });
 
   it('only the planning lane holds `planninggroup:manage`; a supplier seat is refused', async () => {
@@ -267,7 +284,7 @@ describe('the four verbs (MR-8 BR-03), governed and logged', () => {
         payload: { name: 'x' }
       })
     ).rejects.toMatchObject({ code: 'SCOPE_DENIED' });
-    expect(planningGroupStore.all()).toEqual([]);
+    expect(planningGroupStore.all()).toEqual([SSTP_PLANNING_GROUP_EVENT]);
   });
 });
 
@@ -343,7 +360,9 @@ describe('the planning group read (MAT-R4)', () => {
         .length
     ).toBe(2);
     const mine = (await reads.getPlanningGroups(sup007)).items;
-    expect(mine.map((g) => g.id).sort()).toEqual([id, 'pg-MG-20', 'pg-MG-21'].sort());
+    expect(mine.map((g) => g.id).sort()).toEqual(
+      [id, 'pg-MG-20', 'pg-MG-21', WALKTHROUGH_GROUP].sort()
+    );
     expect(mine.every((g) => g.history.length === 0)).toBe(true);
     expect(mine.flatMap((g) => g.materials)).not.toContain('RM-EMUL-3310');
   });

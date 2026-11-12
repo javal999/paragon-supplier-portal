@@ -1,15 +1,18 @@
 /** @import React from 'react' */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Table from '@components/ui-v2/Table';
-import TableHeader, { TableHeaderCell } from '@components/ui-v2/TableHeader';
+import TermLabel from '@components/ui-v2/TermLabel';
 /** @import { VerbAvailability } from '@services/transitions/handoff' */
 /** @import { PeriodRow, ReasonLabel, WeekReason } from '../const' */
+import { CELL, HEAD } from './gridCells';
 import PeriodSubmitRow from './PeriodSubmitRow';
 import SubmitAllConfirm from './SubmitAllConfirm';
 
+const LABEL = `${CELL} sticky left-0 z-10 bg-bg-surface font-medium text-text-secondary whitespace-nowrap`;
+
 /**
- * BL-133 (ENG-D19) — capacity before the LTP: the table of periods, one
+ * BL-133 (ENG-D19) — capacity before the LTP: the grid of periods, one COLUMN
+ * per period (PEX-2 BR-05) with the row labels pinned on the left, one
  * Submit all per period. Each row's period reason is patched into
  * `weekReasons` under the row's bucket. BL-240 (U-02): a row's Submit all
  * opens the confirmation summary first; only its confirm sends the period.
@@ -51,42 +54,52 @@ const PeriodSubmitSection = ({
       <div className="px-4 py-3 border-b border-border-subtle">
         <h2 className="text-section text-text-primary">{t('fc.sup.week.title')}</h2>
         <p className="text-xs text-text-tertiary mt-1">{t('fc.sup.week.help')}</p>
+        <p className="text-xs text-text-tertiary">{t('fc.sup.grid.scrollHint')}</p>
       </div>
       <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableHeaderCell>{t('fc.sup.week.col.period')}</TableHeaderCell>
-            <TableHeaderCell>{t('fc.sup.week.col.lines')}</TableHeaderCell>
-            <TableHeaderCell term="ltpAgainstCapacity" />
-            <TableHeaderCell>{t('fc.sup.week.col.reason')}</TableHeaderCell>
-            <TableHeaderCell>
-              <span className="sr-only">{t('fc.col.actions')}</span>
-            </TableHeaderCell>
-          </TableHeader>
-          <tbody>
-            {periodRows.map((row) => {
-              const label = periodLabel(row.bucket);
-              /** @param {Partial<WeekReason>} patch */
-              const setWr = (patch) =>
-                setWeekReasons((prev) => ({ ...prev, [row.bucket]: { ...row.wr, ...patch } }));
-              return (
-                <PeriodSubmitRow
-                  key={row.bucket}
-                  row={row}
-                  label={label}
-                  canCommit={canCommit}
-                  pending={pending}
-                  submitAvail={submitAvail}
-                  commitmentReasons={commitmentReasons}
-                  reasonLabel={reasonLabel}
-                  groupLabel={groupLabel}
-                  setWr={setWr}
-                  onSubmitAll={(r) => setConfirming(r.bucket)}
-                />
-              );
-            })}
-          </tbody>
-        </Table>
+        <div
+          role="group"
+          aria-label={t('fc.sup.week.title')}
+          className="grid grid-flow-col grid-rows-[repeat(5,auto)] auto-cols-[minmax(9rem,max-content)] w-max min-w-full"
+          data-testid="fc-sup-weeks-grid"
+        >
+          <div className={`${HEAD} sticky left-0 z-10`} data-grid-label>
+            {t('fc.sup.week.col.period')}
+          </div>
+          <div className={LABEL} data-grid-label>
+            {t('fc.sup.week.col.lines')}
+          </div>
+          <div className={LABEL} data-grid-label>
+            <TermLabel term="ltpAgainstCapacity" />
+          </div>
+          <div className={LABEL} data-grid-label>
+            {t('fc.sup.week.col.reason')}
+          </div>
+          <div className={LABEL} data-grid-label>
+            <span className="sr-only">{t('fc.col.actions')}</span>
+          </div>
+          {periodRows.map((row) => {
+            const label = periodLabel(row.bucket);
+            /** @param {Partial<WeekReason>} patch */
+            const setWr = (patch) =>
+              setWeekReasons((prev) => ({ ...prev, [row.bucket]: { ...row.wr, ...patch } }));
+            return (
+              <PeriodSubmitRow
+                key={row.bucket}
+                row={row}
+                label={label}
+                canCommit={canCommit}
+                pending={pending}
+                submitAvail={submitAvail}
+                commitmentReasons={commitmentReasons}
+                reasonLabel={reasonLabel}
+                groupLabel={groupLabel}
+                setWr={setWr}
+                onSubmitAll={(r) => setConfirming(r.bucket)}
+              />
+            );
+          })}
+        </div>
       </div>
       {confirmRow && (
         <SubmitAllConfirm

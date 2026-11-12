@@ -55,6 +55,7 @@
 /** @import { DemandForecastRun, LevelForecast, SkuForecast } from '../engine/demandForecast' */
 /** @import { ForecastBiasRun } from '../engine/forecastBias' */
 /** @import { OverrideRecord, OverrideValueReport } from '../engine/forecastOverrides' */
+/** @import { AppliedPromotion, PromotionRow } from '../engine/promotions' */
 /** @import { ModelBacktestResult } from '../engine/modelBacktest' */
 /** @import { DemandRangeRun } from '../engine/demandRange' */
 /** @import { DatasetProvenance } from '../engine/types' */
@@ -460,7 +461,7 @@ export class DataError extends Error {
  */
 
 /** The origin a call-off can carry (see `CallOff.origin`). */
-/** @typedef {'engine' | 'ropFisik'} CallOffOrigin */
+/** @typedef {'engine' | 'ropFisik' | 'poOnHold'} CallOffOrigin */
 
 /**
  * Material C4 (MR-5 BR-01 to BR-04) — a material's MRP controller (PIC) as the
@@ -486,7 +487,7 @@ export class DataError extends Error {
  * `releasedAt`:  When the supplier was last asked to confirm; the 1-working-day deadline counts from here.
  * `agreedDeliveries`: The deliveries last agreed by BOTH sides (BL-66 (2); REQ-E10-01 edge case "measure against the latest date agreed by both sides"). Kept when the planner changes a call-off the supplier had confirmed and that confirmation was accepted; OTIF measures against these until the supplier confirms the change and it is accepted. Absent when nothing was ever agreed.
  * `rejectionReason`:  The supplier's reason when it rejected the call-off.
- * `origin`: Where the call-off came from, when not typed by the planner. `'engine'`: a draft the Order plan created from a forecast-engine recommendation (REQ-E14-05 BR-05). While the engine dataset is not live, such a draft is refused on release (X-03, owner decision 2026-09-23). `'ropFisik'`: BL-199 (DRC-13) — a draft the hub created when PTI SOH reached ROP Fisik, for the planner to approve. Absent for every call-off created on the Call-offs page.
+ * `origin`: Where the call-off came from, when not typed by the planner. `'poOnHold'`: PEX-8 — created by the end-of-grace execution of a PO On Hold line (confirmed by the supplier's choice; the execution ledger names it). `'engine'`: a draft the Order plan created from a forecast-engine recommendation (REQ-E14-05 BR-05). While the engine dataset is not live, such a draft is refused on release (X-03, owner decision 2026-09-23). `'ropFisik'`: BL-199 (DRC-13) — a draft the hub created when PTI SOH reached ROP Fisik, for the planner to approve. Absent for every call-off created on the Call-offs page.
  * `trigger`: BL-199 (DRC-13) — on a `'ropFisik'` draft only: the figures behind it (SOH, ROP Fisik, Max, quantity), stamped with their inputs and rules version (DRC-D16). PTI only: a supplier's read never carries it.
  * `mrpController`:  Material C4 — the material's MRP controller, projected at read (never stored).
  * `delays`:  DRC-5 (BL-191) — every delay proposed for an LTP drop, oldest first; the last may be awaiting the supplier's answer. Absent when none was proposed.
@@ -1290,6 +1291,9 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * `materialPlanningSource`:  The source E14-03 to E14-06 and E14-13 plan on today.
  * `skus`: REQ-E14-11 X-06 — `forecast` is the forecast SHOWN: the engine's with the planner overrides in force applied (ENG-B103); `engineForecast` is the engine's own. Without overrides the two are the same.
  * `overrideCells`:  Override cells of this run in force.
+ * `promotionCells`: REQ-E14-08 BR-05 — SKU × week cells carrying a promotion; the forecast shown includes them (before any override).
+ * `promotionHistory`: every promotion entry, change and withdrawal, newest first.
+ * `promotionsInForce`: promotions in force, across SKUs and weeks.
  *
  * @typedef {Omit<DemandForecastRun, 'skus' | 'brands' | 'total'> & {
  *     readonly range: DemandRangeRun;
@@ -1299,16 +1303,21 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  *     readonly brands: readonly DemandForecastLevelView[];
  *     readonly total: DemandForecastLevelView;
  *     readonly overrideCells: number;
+ *     readonly promotionCells: number;
+ *     readonly promotionHistory: readonly PromotionRow[];
+ *     readonly promotionsInForce: number;
  *   }} DemandForecastView
  */
 
 /**
  * `engineForecast`:  The engine's reconciled forecast, before overrides.
  * `overridden`:  Week indexes carrying a planner override.
+ * `promotions`:  The promotions applied to this SKU's weeks (REQ-E14-08 BR-05).
  *
  * @typedef {SkuForecast & {
  *     readonly engineForecast: readonly number[];
  *     readonly overridden: readonly number[];
+ *     readonly promotions: readonly AppliedPromotion[];
  *   }} DemandForecastSkuView
  */
 

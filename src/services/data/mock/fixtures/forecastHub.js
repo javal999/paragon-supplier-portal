@@ -50,6 +50,7 @@ import { DECLARED_PRESENT } from '../../fixturePresent';
 import { materialEntry } from '../../../sdc/materialMaster';
 /** @import { ForecastPeriod, ForecastSource } from '../../../transitions/forecastRules' */
 import { buildVersion, generatePeriods, periodBounds } from '../../../transitions/forecastRules';
+import { SSTP, sstpDemand } from './walkthroughSstp';
 /** @import { ForecastStream } from '../../../sdc/types' */
 
 const DAY_MS = 86_400_000;
@@ -72,7 +73,9 @@ export const FORECAST_SOURCES = [
   { supplierId: 'sup-007', materialCode: 'PK-PETB-8802', share: 1 },
   { supplierId: 'sup-002', materialCode: 'RM-EMUL-9410', share: 0.7 },
   { supplierId: 'sup-005', materialCode: 'RM-EMUL-9410', share: 0.3 },
-  { supplierId: 'sup-002', materialCode: 'RM-STEAR-7300', share: 1 }
+  { supplierId: 'sup-002', materialCode: 'RM-STEAR-7300', share: 1 },
+  // E2E walkthrough 2026-11-12 — the test supplier carries all of it.
+  { supplierId: SSTP.supplierId, materialCode: SSTP.materialCode, share: 1 }
 ];
 
 /**
@@ -85,7 +88,8 @@ export const QUALIFIED_SUPPLIERS = {
   'PK-PETB-8801': ['sup-007', 'sup-012'],
   'PK-PETB-8802': ['sup-007', 'sup-012'],
   'RM-EMUL-9410': ['sup-002', 'sup-005', 'sup-010'],
-  'RM-STEAR-7300': ['sup-002', 'sup-001']
+  'RM-STEAR-7300': ['sup-002', 'sup-001'],
+  [SSTP.materialCode]: [SSTP.supplierId]
 };
 
 /**
@@ -112,7 +116,10 @@ const periodDays = (p) =>
  * @returns {number}
  */
 export const baseDemand = (materialCode, period) =>
-  (PLANNED_DAILY_DEMAND[materialCode] ?? 0) * periodDays(period);
+  // E2E walkthrough — the planners' LTP week by week, not a daily rate.
+  materialCode === SSTP.materialCode
+    ? sstpDemand(period)
+    : (PLANNED_DAILY_DEMAND[materialCode] ?? 0) * periodDays(period);
 
 /** @param {ForecastStream} stream */
 const sourcesOf = (stream) =>
@@ -375,7 +382,8 @@ export const FORECAST_RELATIONSHIPS = [
     supplierType: 'distributor',
     principals: [{ principalId: 'PRIN-EMUL-02', principalLeadTimeDays: 60 }]
   },
-  { supplierId: 'sup-002', materialCode: 'RM-STEAR-7300', supplierType: 'manufacturer' }
+  { supplierId: 'sup-002', materialCode: 'RM-STEAR-7300', supplierType: 'manufacturer' },
+  { supplierId: SSTP.supplierId, materialCode: SSTP.materialCode, supplierType: 'manufacturer' }
 ];
 
 /** Exported for tests: the period ids of the seeded current versions. */

@@ -145,7 +145,14 @@ import { materialNameRowsFor, withTradeName } from './materialNameReadModel';
 // BL-194 — the supplier's feedstock confirmation in force (DRC-8).
 import { withFeedstock } from './feedstockConfirmationReadModel';
 import { FEEDS, dataHealth } from '../../engine/dataHealth';
-import { currentDemandForecast, currentForecastBias, withOverrides } from './demandForecastRun';
+import {
+  currentDemandForecast,
+  currentForecastBias,
+  currentPromotedForecast,
+  withOverrides
+} from './demandForecastRun';
+import { promotionStore } from './stores/promotionStore';
+import { promotionsInForce } from '../../engine/promotions';
 import { forecastOverrideStore } from './stores/forecastOverrideStore';
 import { overrideValue } from '../../engine/forecastOverrides';
 /** @import { PreparedBacktest } from '../../engine/modelBacktest' */
@@ -165,6 +172,7 @@ import { sdcClock } from '../../sdc/clock';
 import { supplierAskStore } from './stores/supplierAskStore';
 // INV-D8 — PTI's capacity gap decisions.
 import { capacityDecisionStore } from './stores/capacityDecisionStore';
+import { runDuePoOnHoldExecutions } from './MockCommandService';
 import { allPoOnHold } from './poOnHoldReadModel';
 import { withOwnQualificationWarnings } from '../../sourcing/sourcingType';
 
@@ -776,6 +784,9 @@ export class MockProcurementService {
   async getPoOnHold(scope) {
     // PEX-7 / PEX-8 — the planner reads every supplier; a supplier reads only
     // its own lines, scoped HERE so another supplier's figures never reach the page.
+    // A line whose grace period has ended is executed once, by the system, the
+    // first time anyone looks (no timer; the same pattern as the command layer).
+    await runDuePoOnHoldExecutions();
     return { items: applySupplierScope(scope, allPoOnHold()) };
   }
 
@@ -883,7 +894,8 @@ export class MockProcurementService {
             ? zoneLengthsFor(
                 s.supplierId,
                 m.materialGroup ?? m.materialCode,
-                STREAM_MATERIAL_TYPE[m.kind]
+                STREAM_MATERIAL_TYPE[m.kind],
+                s.materialCode
               )
             : null;
           return [
@@ -1047,6 +1059,8 @@ export class MockProcurementService {
     if (scope.personaType === 'supplier') return null;
     const data = engineDataset();
     const run = currentDemandForecast();
+    // REQ-E14-08 BR-05 — the promotions in force applied to their SKU × week.
+    const promoted = currentPromotedForecast();
     const asOf = run.asOf;
     // REQ-E14-09 — the range around the engine's forecast, with the administrator's
     // levels in force (X-05). The replay depends on the date only; the range also on the levels.
@@ -1064,8 +1078,10 @@ export class MockProcurementService {
       demandRangeMemo.set(data, memo);
     }
     return {
-      ...run,
-      ...withOverrides(run, forecastOverrideStore.all()),
+      ...promoted,
+      ...withOverrides(promoted, forecastOverrideStore.all()),
+      promotionHistory: [...promotionStore.all()].reverse(),
+      promotionsInForce: promotionsInForce(promotionStore.all()).size,
       range: memo.range,
       provenance: data.provenance,
       materialPlanningSource: 'sapPlan'
@@ -1082,7 +1098,7 @@ export class MockProcurementService {
     // override ledger starts empty — no override history is invented.
     if (scope.personaType === 'supplier') return null;
     const data = engineDataset();
-    const run = currentDemandForecast();
+    const run = currentPromotedForecast();
     const bias = currentForecastBias();
     const records = forecastOverrideStore.all();
     const shown = withOverrides(run, records);
