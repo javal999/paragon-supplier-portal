@@ -172,6 +172,7 @@ import { sdcClock } from '../../sdc/clock';
 import { supplierAskStore } from './stores/supplierAskStore';
 // INV-D8 — PTI's capacity gap decisions.
 import { capacityDecisionStore } from './stores/capacityDecisionStore';
+import { runDuePoOnHoldExecutions } from './MockCommandService';
 import { allPoOnHold } from './poOnHoldReadModel';
 import { withOwnQualificationWarnings } from '../../sourcing/sourcingType';
 
@@ -783,6 +784,9 @@ export class MockProcurementService {
   async getPoOnHold(scope) {
     // PEX-7 / PEX-8 — the planner reads every supplier; a supplier reads only
     // its own lines, scoped HERE so another supplier's figures never reach the page.
+    // A line whose grace period has ended is executed once, by the system, the
+    // first time anyone looks (no timer; the same pattern as the command layer).
+    await runDuePoOnHoldExecutions();
     return { items: applySupplierScope(scope, allPoOnHold()) };
   }
 

@@ -15,6 +15,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import { DecisionEvent, PoOnHoldOption } from '../../../transitions/poOnHold' */
+/** @import { ExecutionPlan } from '../../../transitions/poOnHoldExecution' */
 
 /**
  * `firstDay`:  The grace-period start of the episode the decision belongs to.
@@ -26,12 +27,38 @@
  *   readonly materialCode: string;
  *   readonly firstDay: string;
  *   readonly qty: number;
- *   readonly state: 'Suggested' | 'Chosen';
+ *   readonly state: 'Suggested' | 'Chosen' | 'Executed';
  *   readonly suggested: PoOnHoldOption;
  *   readonly chosen: PoOnHoldOption | null;
  *   readonly history: readonly DecisionEvent[];
  * }} PoOnHoldDecisionRow
  */
+
+/**
+ * PEX-8 BR-02/BR-05 — what the end-of-grace execution did, one row per decision
+ * (append-only, never edited). `lineKeys` are the idempotency keys, one per PO
+ * line touched (`executionKey`). `callOffIds`: the call-offs it created.
+ * `snapshot`: the line as it stood when it ran, so the panel can still show it
+ * after the quantity left hold. `actor` is always the system: a machine act.
+ *
+ * @typedef {{
+ *   readonly decisionId: string;
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly firstDay: string;
+ *   readonly option: PoOnHoldOption;
+ *   readonly standing: 'chosen' | 'noSupplierResponse';
+ *   readonly at: string;
+ *   readonly actor: 'system';
+ *   readonly plan: ExecutionPlan;
+ *   readonly lineKeys: readonly string[];
+ *   readonly callOffIds: readonly string[];
+ *   readonly snapshot: Readonly<Record<string, unknown>>;
+ * }} PoOnHoldExecutionRow
+ */
+
+/** @type {PoOnHoldExecutionRow[]} */
+let executions = [];
 
 /** @type {Map<string, string>} */
 let firstDays = new Map();
@@ -86,8 +113,43 @@ export const poOnHoldStore = {
       d.id === id ? { ...d, state, chosen, history: [...d.history, event] } : d
     );
   },
+  /** @returns {readonly PoOnHoldExecutionRow[]} */
+  executions() {
+    return executions;
+  },
+  /**
+   * @param {string} decisionId
+   * @returns {PoOnHoldExecutionRow | undefined}
+   */
+  executionOf(decisionId) {
+    return executions.find((e) => e.decisionId === decisionId);
+  },
+  /**
+   * Has this PO line's execution already run (the idempotency key)?
+   * @param {string} key
+   * @returns {boolean}
+   */
+  hasKey(key) {
+    return executions.some((e) => e.lineKeys.includes(key));
+  },
+  /**
+   * PEX-8 — record an execution and close its decision. Refused (returns
+   * null) when the decision already has one: a second run does nothing.
+   * @param {PoOnHoldExecutionRow} row
+   * @param {DecisionEvent} event
+   * @returns {PoOnHoldExecutionRow | null}
+   */
+  recordExecution(row, event) {
+    if (executions.some((e) => e.decisionId === row.decisionId)) return null;
+    executions = [...executions, row];
+    decisions = decisions.map((d) =>
+      d.id === row.decisionId ? { ...d, state: 'Executed', history: [...d.history, event] } : d
+    );
+    return row;
+  },
   /** TEST SEAM — back to nothing. */
   reset() {
+    executions = [];
     firstDays = new Map();
     decisions = [];
     counter = 0;
