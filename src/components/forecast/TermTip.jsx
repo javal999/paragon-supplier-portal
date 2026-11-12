@@ -112,6 +112,22 @@ export const placeTip = (anchor, box, screen, side) => {
   return { top, left, above };
 };
 
+/**
+ * BL-311 — the box beside the label, to its right or left, top-aligned with
+ * it and kept on screen vertically; null when it does not fit on that side.
+ * @param {DOMRect} anchor
+ * @param {{ width: number; height: number }} box
+ * @param {{ width: number; height: number }} screen
+ * @param {'right' | 'left'} side
+ * @returns {{ top: number; left: number; above: boolean; side: 'right' | 'left' } | null}
+ */
+export const placeBeside = (anchor, box, screen, side) => {
+  const left = side === 'right' ? anchor.right + GAP : anchor.left - GAP - box.width;
+  if (left < MARGIN || left + box.width > screen.width - MARGIN) return null;
+  const top = Math.max(MARGIN, Math.min(anchor.top, screen.height - MARGIN - box.height));
+  return { top, left, above: false, side };
+};
+
 const CONTROLS = 'input, select, textarea, button, a[href], [role="button"]';
 
 /**
@@ -145,7 +161,9 @@ const TermTip = ({ term, entry: termEntry, name, slugId, children, className = '
   const [focused, setFocused] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [place, setPlace] = useState(
-    /** @type {{ top: number; left: number; above: boolean } | null} */ (null)
+    /** @type {{ top: number; left: number; above: boolean; side?: "right" | "left" } | null} */ (
+      null
+    )
   );
   const wrapRef = useRef(/** @type {HTMLSpanElement | null} */ (null));
   const boxRef = useRef(/** @type {HTMLSpanElement | null} */ (null));
@@ -178,12 +196,18 @@ const TermTip = ({ term, entry: termEntry, name, slugId, children, className = '
       const anchor = wrap.getBoundingClientRect();
       const size = { width: box.offsetWidth, height: box.offsetHeight };
       const screen = { width: window.innerWidth, height: window.innerHeight };
-      const below = placeTip(anchor, size, screen, 'below');
-      const above = placeTip(anchor, size, screen, 'above');
-      // The side that covers fewer controls; a tie keeps the default rule.
-      const nBelow = coveredControls(below, size, wrap);
-      const nAbove = coveredControls(above, size, wrap);
-      setPlace(nAbove < nBelow ? above : nBelow < nAbove ? below : placeTip(anchor, size, screen));
+      // The side that covers fewest controls (BL-309: below or above;
+      // BL-311: right or left of the label too). Ties keep this order, the
+      // default rule first, so a tip with nothing near it opens as before.
+      const options = [
+        placeTip(anchor, size, screen),
+        placeTip(anchor, size, screen, 'below'),
+        placeTip(anchor, size, screen, 'above'),
+        placeBeside(anchor, size, screen, 'right'),
+        placeBeside(anchor, size, screen, 'left')
+      ].flatMap((p) => (p ? [{ p, n: coveredControls(p, size, wrap) }] : []));
+      const best = options.reduce((a, b) => (b.n < a.n ? b : a));
+      setPlace(best.p);
     };
     measure();
     window.addEventListener('scroll', measure, true);
@@ -244,7 +268,7 @@ const TermTip = ({ term, entry: termEntry, name, slugId, children, className = '
       data-testid={testId}
       data-open={open ? 'true' : 'false'}
       data-dismissed={dismissed ? 'true' : 'false'}
-      data-placement={place?.above ? 'above' : 'below'}
+      data-placement={place?.side ?? (place?.above ? 'above' : 'below')}
       ref={wrapRef}
       onMouseEnter={enter}
       onMouseLeave={leave}
@@ -274,7 +298,7 @@ const TermTip = ({ term, entry: termEntry, name, slugId, children, className = '
               ref={boxRef}
               aria-hidden="true"
               data-tip-popup={testId}
-              data-placement={place?.above ? 'above' : 'below'}
+              data-placement={place?.side ?? (place?.above ? 'above' : 'below')}
               onMouseEnter={enter}
               onMouseLeave={leave}
               style={{
