@@ -70,6 +70,8 @@
   const related = (a, b) => a === b || a.contains(b) || b.contains(a);
 
   const kindOf = (el) => {
+    // BL-301: the visible term tip box is a portal element marked data-tip-popup.
+    if (el.hasAttribute('data-tip-popup')) return 'tooltip';
     const role = el.getAttribute('role');
     if (['tooltip', 'dialog', 'menu', 'listbox', 'alertdialog'].includes(role)) return role;
     const s = getComputedStyle(el);
@@ -335,15 +337,23 @@
     for (const b of buttons.slice(0, max)) {
       b.scrollIntoView({ block: 'center', inline: 'nearest' });
       b.focus();
+      // A background or unfocused window sets focus without firing focus events,
+      // and a tip opened from JavaScript state (BL-301) listens for them.
+      b.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
       await new Promise((r) => setTimeout(r, 120));
-      const tip = document.getElementById(b.getAttribute('aria-describedby'));
+      // The visible box: the portal box (BL-301, data-tip-popup) when there is one,
+      // else the in-place role=tooltip box of the earlier TermTip.
+      const tip =
+        document.querySelector('[data-tip-popup]') ||
+        document.getElementById(b.getAttribute('aria-describedby'));
       const res = window.uiOverlapScan({ maxItems: 8 });
       const layer = res.floating.find((f) => f.kind === 'tooltip');
-      const shown = tip && getComputedStyle(tip).display !== 'none';
+      const shown = tip && getComputedStyle(tip).display !== 'none' && tip.getBoundingClientRect().width > 8;
       if (!shown) out.push({ trigger: b.getAttribute('aria-label'), problem: 'did not open on focus' });
       else if (layer && (layer.coversCount || layer.clipped || layer.offScreen || layer.textOverflow))
         out.push({ trigger: b.getAttribute('aria-label'), covers: layer.covers.map((c) => c.el), clipped: layer.clipped, offScreen: layer.offScreen, textOverflow: layer.textOverflow });
       b.blur();
+      b.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
     }
     window.scrollTo(0, 0);
     return { url: location.href, viewport: `${innerWidth}x${innerHeight}`, tipsTested: Math.min(buttons.length, max), tipsOnPage: buttons.length, flagged: out };
