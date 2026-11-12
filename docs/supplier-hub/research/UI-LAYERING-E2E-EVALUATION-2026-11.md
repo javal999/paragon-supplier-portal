@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.0, 2026-11-12 |
+| Version | 1.1, 2026-11-12 (open question 1 answered: portal rebuild). 1.0, 2026-11-12 |
 | Commit under test | GitLab `main` at `a8eecbc7`, the commit live in prod. Built with `vite build`, served with `vite preview` |
 | Personas | PTI (Material Planner menu) and supplier sup-007, PT Sample Packaging Indonesia. Hub clock pinned to 31 Aug 2026 |
 | Method | Task-based end-to-end walk; geometry scan after the ReDeCheck layout failure classes (element collision, element protrusion, viewport protrusion; Walsh, Kapfhammer and McMinn, ISSTA 2017); WCAG 2.2 checks 1.4.13, 2.4.11, 1.4.10 |
@@ -26,7 +26,7 @@ Reasons:
 | # | Component and line | Property at fault | Findings | Pages affected | Recommended fix (alternative) |
 |---|---|---|---|---|---|
 | RC-1 | `components/forecast/TermTip.jsx:141`, inside label cells set `whitespace-nowrap` (`SupplierForecastCommitments/components/MaterialSection.jsx:16`, `PeriodSubmitSection.jsx:11`, `gridCells.jsx:24`) | The tip box sets a width (`w-64`) but not `white-space`, so it inherits `nowrap` from the cell it sits in | UL-01 | 2: `/supplier/forecasts`, `/buyer/stock-simulation` | Add `whitespace-normal break-words` to the tip span (or remove `nowrap` from every label cell, which is 3+ files and easy to reintroduce) |
-| RC-2 | `TermTip.jsx:141` (`absolute left-0`), `TermTip.jsx:99` (`setAbove` only) | The tip is absolutely positioned inside the nearest scroll area, always anchored to the trigger's left edge, and its placement only flips up or down | UL-02, UL-04 | 25 for UL-02, 19 for UL-04 (section 4) | Render the tip in a portal with `position: fixed`, measured against the screen, flipping and shifting on both axes (alternative: keep it in place and align it right when the room on the right is short, which does not fix clipping by the scroll area) |
+| RC-2 | `TermTip.jsx:141` (`absolute left-0`), `TermTip.jsx:99` (`setAbove` only) | The tip is absolutely positioned inside the nearest scroll area, always anchored to the trigger's left edge, and its placement only flips up or down | UL-02, UL-04 | 25 for UL-02, 19 for UL-04 (section 4) | Render the tip in a portal with `position: fixed`, measured against the screen, flipping and shifting on both axes. Chosen by the owner, UL-Q1 (alternative not built: align right in place, which does not fix clipping by the scroll area) |
 | RC-3 | `TermTip.jsx:141` (`pointer-events-none`), `:142` (`group-hover`), `:124` (Escape on the button only) | The tip closes as soon as the pointer leaves the trigger, and Escape works only when the button has keyboard focus | UL-03 | All 42 pages with tips | Drop `pointer-events-none` so the hover covers the tip, and listen for Escape on `document` while a tip is open |
 | RC-4 | Pinned first columns sized for desktop: `MaterialSection.jsx:79` (grid without `scroll-ps`), `BuyerCommitments/components/ExceptionsSection.jsx:52-53` (2 `pin="left"` columns) | At 390 px the pinned columns take about 46 % of the scroll area, and the scroll area sets no `scroll-padding-inline-start`, so the browser scrolls a focused control under them | UL-06 | 2: `/supplier/forecasts`, `/buyer/collaboration` | Copy the pattern `WeekGrid.jsx:325` already uses (`scroll-ps-[140px] md:scroll-ps-[220px]`) and narrow the pinned column below `md` (alternative: unpin below `md`) |
 | RC-5 | `SupplierShipments/utils.js:138-140`, `components/WizardDetailsStep.jsx:44-45`, `const.js:78` | The step rule requires a tracking number that the form does not mark, and the ship date defaults to a fixed date | UL-05 | 1: `/supplier/shipments?tab=create` | Mark the field required and say on the disabled **Next** what is missing; default the ship date to the hub's today |
@@ -187,7 +187,7 @@ Removed in the adversarial pass, with the reason:
 
 ## 6. Open questions for Levi
 
-1. Tooltip fix: rebuild `TermTip` on a portal with fixed positioning (fixes UL-02 and UL-04 on 25 pages, M), or patch it in place (aligns right at the edge, still cut by scroll areas, S)? This review recommends the portal.
+1. **Answered [Owner, 2026-11-12, UL-Q1]: portal rebuild.** `TermTip` is rebuilt on a portal with fixed positioning (fixes UL-02 and UL-04 on 25 pages, M); the in-place patch (align right at the edge, still cut by scroll areas, S) is not built. BL-301 carries the ruling.
 2. Is a phone in scope for suppliers? If not, UL-06 drops to Polish and BL-304 can wait.
 3. ASN tracking number: should it be required when the ASN is created, before the carrier has picked up? BL-303 marks it as required, matching today's code. Making it optional is a rule change.
 4. The "cmd_000i recorded… pending live channel" toast shows an internal command id to users. Reword or hide it? It is a wording question, outside this review.
