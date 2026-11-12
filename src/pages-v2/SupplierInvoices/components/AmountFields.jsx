@@ -8,7 +8,7 @@ import { fmtIdr } from '../../invoices/InvoiceCollaboration';
 import GlossaryTermChip from '@components/ui-v2/GlossaryTermChip';
 import { inputCls, labelCls } from '../const';
 
-// The amount field of each invoice form, and the refusal map both read. The map
+// The amount fields of each invoice form, and the refusal map they read. The map
 // and every use of it sit in this one file because GL-1's chip-coverage guard
 // pairs a map's uses with its declaration in one file (the pattern
 // `BuyerContracts/components/WizardTermsStep.jsx` set). Moved out of
@@ -35,27 +35,65 @@ export const amountRefusalKey = (reason) => INVOICE_AMOUNT_REFUSAL_KEY[reason];
 /** @typedef {ReturnType<typeof readInvoiceAmount>} AmountRead */
 
 /**
- * The new invoice's amount: the text input, the price-tolerance hint, and the
- * two inline refusals (unreadable, and not above zero).
- * @type {React.FC<{ newAmount: string; setNewAmount: (v: string) => void; amountRead: AmountRead; t: TFunction }>}
+ * BL-75 [Proposed] — one invoice line's billed amount: the text input and its
+ * two inline refusals (unreadable, and not above zero). Text + inputMode, so
+ * the parser stays the one read of what was typed (Ruling 6.2).
+ * @type {React.FC<{ id: string; label: string; value: string; read: AmountRead; onChange: (v: string) => void; t: TFunction }>}
  */
-export const NewAmountField = ({ newAmount, setNewAmount, amountRead, t }) => (
-  <div>
-    <label htmlFor="new-amount" className={labelCls}>
-      {t('supplierInvoices.new.amountLabel')}
-    </label>
-    {/* Ruling 6.2: text + inputMode. A negative is refused by
-        `normalizeQty` as NOT_NUMERIC, where it is actually enforced. */}
+export const LineAmountCell = ({ id, label, value, read, onChange, t }) => (
+  <>
     <input
-      id="new-amount"
+      id={id}
       type="text"
       inputMode="decimal"
-      className={inputCls}
-      placeholder={t('supplierInvoices.new.amountPlaceholder')}
-      value={newAmount}
-      aria-invalid={newAmount.trim() !== '' && !amountRead.ok}
-      onChange={(e) => setNewAmount(e.target.value)}
+      className={`${inputCls} min-w-[120px]`}
+      aria-label={label}
+      aria-invalid={!read.ok || read.value <= 0}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
     />
+    {!read.ok && value.trim() !== '' && (
+      <div
+        role="alert"
+        data-testid="invoice-amount-refusal"
+        className="text-[length:var(--fs-label-3)] text-danger"
+      >
+        {t(INVOICE_AMOUNT_REFUSAL_KEY[read.reason])}{' '}
+        <GlossaryTermChip refTo={{ sourceType: 'QtyRefusalReason', term: read.reason }} />
+      </div>
+    )}
+    {read.ok && read.value <= 0 && (
+      <div
+        role="alert"
+        data-testid="invoice-amount-zero"
+        className="text-[length:var(--fs-label-3)] text-danger"
+      >
+        {t('supplierInvoices.new.amount.mustExceedZero')}
+      </div>
+    )}
+  </>
+);
+
+/**
+ * BL-75 [Proposed] — the new invoice's total: the sum of the line amounts,
+ * read-only, with the price-tolerance hint. It is not typed, so it cannot
+ * differ from its lines.
+ * @type {React.FC<{ total: number; t: TFunction }>}
+ */
+export const NewTotalField = ({ total, t }) => (
+  <div>
+    <div id="new-amount-label" className={labelCls}>
+      {t('supplierInvoices.new.amountLabel')}
+    </div>
+    <output
+      id="new-amount"
+      aria-labelledby="new-amount-label"
+      data-testid="invoice-total"
+      className="block text-sm font-medium text-text-primary"
+    >
+      {fmtIdr(total)}
+    </output>
+    <div className="mt-1 text-xs text-text-tertiary">{t('supplierInvoices.new.totalNote')}</div>
     <div className="mt-1 text-xs text-text-tertiary">
       {t('fc.inv.new.tolerance', {
         contractPct: invoicePriceTolerance().contractPricePct,
@@ -63,27 +101,6 @@ export const NewAmountField = ({ newAmount, setNewAmount, amountRead, t }) => (
         cap: fmtIdr(invoicePriceTolerance().standardCapIdr)
       })}
     </div>
-    {/* UNSEEDED field, so the 2e-a rule applies: an untouched blank does
-        not nag on sight. */}
-    {newAmount.trim() !== '' && !amountRead.ok && (
-      <div
-        role="alert"
-        data-testid="invoice-amount-refusal"
-        className="mt-1 text-[length:var(--fs-label-3)] text-danger"
-      >
-        {t(INVOICE_AMOUNT_REFUSAL_KEY[amountRead.reason])}{' '}
-        <GlossaryTermChip refTo={{ sourceType: 'QtyRefusalReason', term: amountRead.reason }} />
-      </div>
-    )}
-    {amountRead.ok && amountRead.value <= 0 && (
-      <div
-        role="alert"
-        data-testid="invoice-amount-zero"
-        className="mt-1 text-[length:var(--fs-label-3)] text-danger"
-      >
-        {t('supplierInvoices.new.amount.mustExceedZero')}
-      </div>
-    )}
   </div>
 );
 

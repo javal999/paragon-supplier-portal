@@ -57,6 +57,18 @@ const SessionAttachments = ({
   // no add and no remove — the same as an explicit `readOnly`.
   const readOnly = readOnlyProp || !onChange;
   const [refusals, setRefusals] = useState(/** @type {readonly string[]} */ ([]));
+  // BL-142 [Proposed] — the files picked through THIS control. Only these may be
+  // freed on removal: a file that arrived on the list came from a saved record,
+  // and an earlier version of that record may still list it, so freeing it would
+  // leave that version pointing at a file it can no longer open. The registry
+  // errs toward keeping a file (an object URL is cheap and ends with the
+  // session), never toward losing one.
+  const pickedHere = useRef(/** @type {Set<string>} */ (new Set()));
+  /** @param {string} id */
+  const freeIfPickedHere = (id) => {
+    if (!pickedHere.current.delete(id)) return;
+    fileService.release(id);
+  };
 
   /** @param {FileList | null} files */
   const onFiles = async (files) => {
@@ -77,8 +89,9 @@ const SessionAttachments = ({
     setRefusals(refused);
     if (accepted.length === 0) return;
     const added = await Promise.all(accepted.map((f) => fileService.put(f)));
+    added.forEach((a) => pickedHere.current.add(a.id));
     if (single) {
-      value.forEach((a) => fileService.release(a.id));
+      value.forEach((a) => freeIfPickedHere(a.id));
       onChange(added.slice(0, 1));
     } else {
       onChange([...value, ...added]);
@@ -88,7 +101,7 @@ const SessionAttachments = ({
   /** @param {string} id */
   const remove = (id) => {
     if (!onChange) return;
-    fileService.release(id);
+    freeIfPickedHere(id);
     onChange(value.filter((a) => a.id !== id));
   };
 
