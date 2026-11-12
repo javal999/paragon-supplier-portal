@@ -40,6 +40,26 @@ export const asnForCheck = (base, read, eta, shipDate) => ({
 });
 
 /**
+ * BL-303 (UL-05) — the logistics fields step 2 still needs, in the order the
+ * form shows them; empty when the step may advance on its logistics. The same
+ * list drives the step rule and the hint under the form, so the screen never
+ * blocks **Next** without naming why.
+ * @param {Pick<AsnForm, 'carrier' | 'trackingNumber' | 'shipDate' | 'eta'>} form
+ * @returns {readonly ('carrier' | 'tracking' | 'shipDate' | 'eta' | 'etaBeforeShip')[]}
+ */
+export const missingLogistics = (form) => {
+  /** @type {('carrier' | 'tracking' | 'shipDate' | 'eta' | 'etaBeforeShip')[]} */
+  const out = [];
+  if (form.carrier === '') out.push('carrier');
+  if (form.trackingNumber === '') out.push('tracking');
+  if (form.shipDate === '') out.push('shipDate');
+  if (form.eta === '') out.push('eta');
+  if (form.shipDate !== '' && form.eta !== '' && form.eta < form.shipDate)
+    out.push('etaBeforeShip');
+  return out;
+};
+
+/**
  * A fresh ASN form, its carrier defaulted from the 3PL list in force.
  * @returns {AsnForm}
  */
@@ -136,11 +156,7 @@ export function readWizard({ form, shippablePos, asns, declaredBatches, callOffV
   // BR-04 required fields; `complete` carries each line's refusal, including
   // BR-02's reason when a line ships above open.
   const step2Valid =
-    form.carrier !== '' &&
-    form.trackingNumber !== '' &&
-    form.shipDate !== '' &&
-    form.eta !== '' &&
-    form.eta >= form.shipDate &&
+    missingLogistics(form).length === 0 &&
     // MR-6 BR-08 — a line short on shelf life does not stop the wizard: step 3
     // asks Quality for an exception instead of submitting.
     (wizardRead.complete || wizardRead.onlyShelfLife);

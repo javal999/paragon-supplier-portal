@@ -74,8 +74,13 @@ describe('PEX-1 (BL-264) — zone names', () => {
     expect(within(section).getAllByText('Zone Liability').length).toBeGreaterThan(0);
     expect(within(section).getAllByText('Zone Capacity').length).toBeGreaterThan(0);
     expect(within(section).queryByText(/^(Firm|Trade-off|Forecast)$/)).toBeNull();
-    expect(within(section).getByTestId('term-tip-zone-liability')).toBeInTheDocument();
-    expect(within(section).getByTestId('term-tip-zone-capacity')).toBeInTheDocument();
+    // BL-306 (UL-08): the zone tips sit on each period's chip, not three on the label.
+    expect(within(section).getAllByTestId('term-tip-zone-liability').length).toBeGreaterThan(0);
+    expect(within(section).getAllByTestId('term-tip-zone-capacity').length).toBeGreaterThan(0);
+    const zoneLabel = within(section)
+      .getAllByText((_, el) => el?.hasAttribute('data-grid-label') ?? false)
+      .find((el) => el.querySelector('[data-testid="term-tip-zone-liability"]'));
+    expect(zoneLabel).toBeUndefined();
   });
 
   it('BR-04 — the two names stay English in Indonesian', async () => {
@@ -147,5 +152,38 @@ describe('PEX-10 (BL-273) — the fulfilment window', () => {
     );
     const ack6 = screen.getByTestId(`fc-sup-row-PK-PETB-8802-${W[6]}`);
     expect(within(ack6).queryByTestId(/^fc-fulfil-/)).toBeNull();
+  });
+});
+
+describe('UI layering review 2026-11 — the commitments grid', () => {
+  it('BL-307 (UL-09): the forecast figure is left-aligned like every other row', async () => {
+    const section = await open();
+    const cells = section.querySelectorAll('[data-testid^="fc-demand-"]');
+    expect(cells.length).toBeGreaterThan(0);
+    for (const c of cells) expect(c.className).not.toMatch(/\btext-right\b/);
+  });
+
+  it('BL-306 (UL-08): one ⓘ on the Zone label, and one on each period chip', async () => {
+    const section = await open();
+    const labels = [...section.querySelectorAll('[data-grid-label]')];
+    const zoneLabel = labels.find((l) => l.querySelector('[data-testid="term-tip-forecast-zone"]'));
+    expect(zoneLabel?.querySelectorAll('button[aria-describedby]')).toHaveLength(1);
+    const periods = section.querySelectorAll('[data-testid^="fc-sup-row-"]');
+    const chipTips = section.querySelectorAll(
+      '[data-testid="term-tip-zone-liability"], [data-testid="term-tip-zone-capacity"]'
+    );
+    expect(chipTips).toHaveLength(periods.length);
+  });
+
+  it('BL-304 (UL-06): below md the pinned label column is 7rem and the scroll area pads by it plus the cell padding', async () => {
+    const section = await open();
+    const grid = /** @type {HTMLElement} */ (
+      section.querySelector('[data-testid^="fc-sup-grid-"]')
+    );
+    expect(grid.className).toContain('grid-cols-[7rem]');
+    expect(grid.className).toContain('md:grid-cols-[max-content]');
+    expect(/** @type {HTMLElement} */ (grid.parentElement).className).toContain(
+      'scroll-ps-[7.75rem]'
+    );
   });
 });

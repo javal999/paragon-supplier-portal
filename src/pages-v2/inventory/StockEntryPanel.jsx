@@ -219,6 +219,12 @@ const StockEntryPanel = ({
   };
 
   const uom = selected?.uom ?? '';
+  /**
+   * BL-308 (UL-10) — a quantity label without the empty brackets its unit
+   * leaves before a material (and so a unit) is chosen.
+   * @param {string} text  The label, already translated with its `uom`.
+   */
+  const noEmptyUnit = (text) => (uom ? text : text.replace(/\s*\(\s*\)\s*$/, ''));
 
   return (
     <SidePanel
@@ -292,21 +298,21 @@ const StockEntryPanel = ({
         <div className="grid grid-cols-2 gap-3">
           <NumberField
             id="stock-entry-soh"
-            label={t('inv.entry.soh', { uom })}
+            label={noEmptyUnit(t('inv.entry.soh', { uom }))}
             value={form.soh}
             onChange={(v) => setForm({ ...form, soh: v })}
             error={numberError(soh)}
           />
           <NumberField
             id="stock-entry-rop"
-            label={t('inv.entry.rop', { uom })}
+            label={noEmptyUnit(t('inv.entry.rop', { uom }))}
             value={form.rop}
             onChange={(v) => setForm({ ...form, rop: v })}
             error={numberError(rop)}
           />
           <NumberField
             id="stock-entry-production"
-            label={t('inv.entry.inProduction', { uom })}
+            label={noEmptyUnit(t('inv.entry.inProduction', { uom }))}
             value={form.inProduction}
             onChange={(v) => setForm({ ...form, inProduction: v })}
             error={numberError(inProduction)}
