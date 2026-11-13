@@ -9,6 +9,10 @@
 // the end of the grace period is not a state: the read applies the planner's
 // suggestion and marks it "no supplier response" [Proposed, PEX-D14].
 //
+// [Proposed] "Suggest again": a remainder left on hold after `Executed` gets a
+// NEW decision (round 2, 3, …) through the same `t_poonhold_suggest`: one
+// execution per decision stays true, and the old rows are never changed.
+//
 // Both steps are appended with time and actor (PEX-8 BR-05). The third state,
 // `Executed`, is the end of the grace period: the system calls off, spreads or
 // absorbs per the option that stands (`t_poonhold_execute`, a machine act, run

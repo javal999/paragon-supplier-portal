@@ -182,6 +182,9 @@ export const callOffsEn = {
   'co.draft.dismiss': 'Dismiss draft',
   'co.draft.release': 'Release to supplier',
   'co.origin.engine': 'From the order plan — simulated data',
+  'co.origin.poOnHold': 'From PO On Hold',
+  'co.origin.poOnHold.tip':
+    'The system created this call-off at the end of the grace period of a PO On Hold line. Nobody typed it on the Call-offs page. The line is under PO On Hold on the {{page}} page.',
   // BL-199 (DRC-13) — a draft the hub made when PTI SOH reached ROP Fisik.
   'co.trigger.marker': 'Drafted at ROP Fisik',
   'co.trigger.title': 'Why the hub drafted this',
@@ -533,6 +536,9 @@ export const callOffsId = {
   'co.draft.dismiss': 'Batalkan draf',
   'co.draft.release': 'Rilis ke pemasok',
   'co.origin.engine': 'Dari rencana pesanan — data simulasi',
+  'co.origin.poOnHold': 'Dari PO On Hold',
+  'co.origin.poOnHold.tip':
+    'Sistem membuat call-off ini di akhir masa tenggang sebuah baris PO On Hold. Tidak ada yang mengetiknya di halaman Call-off. Barisnya ada di bawah PO On Hold pada halaman {{page}}.',
   'co.trigger.marker': 'Didraf pada ROP Fisik',
   'co.trigger.title': 'Mengapa hub membuat draf ini',
   'co.trigger.intro':

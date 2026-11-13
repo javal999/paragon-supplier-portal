@@ -11,6 +11,7 @@ import TableRow from '@components/ui-v2/TableRow';
 import { HIGHLIGHTED_ROW_CLASS } from '@hooks/useRowHighlight';
 import { formatDate } from '@lib/format';
 import { ConfirmationPill, DeliveryPill, ToleranceTags, qty } from '../../callOffs/callOffDisplay';
+import { PoOnHoldOriginMarker } from '../../callOffs/poOnHoldOrigin';
 import { RopFisikMarker } from '../../callOffs/ropFisikTrigger';
 import { actionKey, releaseWithheld } from '../utils';
 import EngineOriginMarker from './EngineOriginMarker';
@@ -52,6 +53,15 @@ const CallOffRow = ({ v, highlight, linkedAsns, open }) => {
         {v.callOff.origin === 'ropFisik' && (
           <div className="mt-1">
             <RopFisikMarker testId={`calloff-origin-rop-fisik-${v.callOff.id}`} />
+          </div>
+        )}
+        {/* PEX-8 — a call-off the end of a PO On Hold grace period created. */}
+        {v.callOff.origin === 'poOnHold' && (
+          <div className="mt-1">
+            <PoOnHoldOriginMarker
+              persona="buyer"
+              testId={`calloff-origin-po-on-hold-${v.callOff.id}`}
+            />
           </div>
         )}
       </TableCell>

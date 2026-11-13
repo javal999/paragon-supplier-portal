@@ -662,10 +662,14 @@ const PoOnHoldPanel = ({ persona }) => {
         {t(`poh.status.${r.status}`, {
           option: optionName(r.effective ?? r.decision?.suggested ?? 'fsOnly')
         })}
+        {r.round > 1 ? ` · ${t('poh.round', { round: r.round })}` : ''}
       </span>
     );
     if (isPti) {
-      if (r.decision) {
+      // [Proposed] "Suggest again": an executed decision that left a remainder
+      // on hold shows the picker again, with the hub's fresh suggestion.
+      const again = r.decision !== null && r.execution.status === 'executed' && !r.closed;
+      if (r.decision && !again) {
         return (
           <>
             {status}
@@ -678,7 +682,12 @@ const PoOnHoldPanel = ({ persona }) => {
       const value = picked[r.key] ?? r.suggestion;
       return (
         <>
-          {status}
+          {again ? execView(r) : status}
+          {again ? (
+            <span className={note} data-testid={`poh-again-${r.key}`}>
+              {t('poh.again.note', { round: r.round + 1 })}
+            </span>
+          ) : null}
           {suggestAvail.kind === 'held' ? (
             <div className="mt-2 space-y-2">
               <OptionPicker
@@ -696,7 +705,7 @@ const PoOnHoldPanel = ({ persona }) => {
                 onClick={() => void send(r)}
                 data-testid={`poh-suggest-send-${r.key}`}
               >
-                {t('poh.suggest.send')}
+                {t(again ? 'poh.again.send' : 'poh.suggest.send')}
               </Button>
             </div>
           ) : (

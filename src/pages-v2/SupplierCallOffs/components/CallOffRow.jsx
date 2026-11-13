@@ -9,6 +9,7 @@ import { formatDate, formatDateTime } from '@lib/format';
 /** @import { CallOffView } from '@services/transitions/callOffRules' */
 import { ConfirmationPill, DeliveryPill, ToleranceTags, qty } from '../../callOffs/callOffDisplay';
 import { PicCell } from '../../materials/picDisplay';
+import { PoOnHoldOriginMarker } from '../../callOffs/poOnHoldOrigin';
 import FulfilBy from './FulfilBy';
 
 /**
@@ -35,6 +36,15 @@ const CallOffRow = ({ v, match, onOpen }) => {
         >
           {c.poNumber}
         </Data>
+        {/* PEX-8 — a call-off the end of a PO On Hold grace period created. */}
+        {c.origin === 'poOnHold' && (
+          <div className="mt-1">
+            <PoOnHoldOriginMarker
+              persona="supplier"
+              testId={`supplier-calloff-origin-po-on-hold-${c.id}`}
+            />
+          </div>
+        )}
       </TableCell>
       <TableCell>
         <Data

@@ -562,7 +562,8 @@ export const POLICY_HOOKS = /** @type {const} */ ({
   /**
    * PO On Hold suggestion (PEX-8, BL-271): one of the three options
    * (PO_ON_HOLD_OPTION_INVALID), on a line that is on hold (PO_ON_HOLD_NO_LINE)
-   * with no suggestion yet (PO_ON_HOLD_ALREADY_SUGGESTED).
+   * with no suggestion yet (PO_ON_HOLD_ALREADY_SUGGESTED). [Proposed] A line whose
+   * decision already executed and left a remainder takes a new one ("Suggest again").
    */
   PO_ON_HOLD_SUGGESTABLE: 'po_on_hold_suggestable',
   /**
