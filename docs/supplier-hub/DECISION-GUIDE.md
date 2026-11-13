@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.24, 2026-11-11 (ENG-D23 to ENG-D25 added: the owner's BL-286 ruling, the backtest's chosen model shown on the Demand forecast page and not applied). Previous: 1.23, 2026-11-11 (ENG-D26 to ENG-D28 added: the owner's BL-287 ruling, judging overrides by service deferred, the override ledger as backend work (BL-299), the Forecast bias service note reworded; 1.22, 2026-11-10 (PEX-D23 and PEX-D24 added: the owner's working-day ruling for PO On Hold and the accepted wave 1 answers Q-W3 to Q-W5; the PEX wave 2 build calls listed as proposed, not ruled; the PEX-D16 to PEX-D22 section says MR !97 is merged (`b1bc58e8`); 1.21, 2026-11-09 (FSR-D9 added: BL-280, lead time stays English on the planning pages, the four held glossary labels renamed; 1.20, 2026-11-05 (PEX-D16 to PEX-D22 added: the owner's rulings on the PEX wave 1 build decisions in MR !97 (branch `feat/pex-wave1-p0`, merged with GitLab main 8f96aa84); 1.19, 2026-11-05: FSR-D8 added: BL-263's Indonesian labels renamed, the team's English terms kept per TL-D11 and TL-D17; 1.18, 2026-11-05: FSR-D7 added: BL-243 and BL-249 built, applying IA R-2 and the TL-D13 qualifier; 1.17, 2026-11-03: FSR-D1 to FSR-D6 added: the owner's rulings on the six open questions of the Foresight end-to-end review; 1.16, 2026-11-02: BL-12 and BL-56 decided by the owner; BL-19 baselines and early receipts in OTIF and CFOT answered; INV-D4 superseded by the BL-149 answer; 1.15, 2026-10-26: RFX-D32 added: the RFx deadline is checked on leaving the field; INV-D14 added 2026-10-23)) |
+| Version | 1.25, 2026-11-13 (builder calls of MR !117, !127, !130 and !131 listed as [Proposed], not ruled; the !117 "Accept all" claim marked unverified). Previous: 1.24, 2026-11-11 (ENG-D23 to ENG-D25 added: the owner's BL-286 ruling, the backtest's chosen model shown on the Demand forecast page and not applied). Previous: 1.23, 2026-11-11 (ENG-D26 to ENG-D28 added: the owner's BL-287 ruling, judging overrides by service deferred, the override ledger as backend work (BL-299), the Forecast bias service note reworded; 1.22, 2026-11-10 (PEX-D23 and PEX-D24 added: the owner's working-day ruling for PO On Hold and the accepted wave 1 answers Q-W3 to Q-W5; the PEX wave 2 build calls listed as proposed, not ruled; the PEX-D16 to PEX-D22 section says MR !97 is merged (`b1bc58e8`); 1.21, 2026-11-09 (FSR-D9 added: BL-280, lead time stays English on the planning pages, the four held glossary labels renamed; 1.20, 2026-11-05 (PEX-D16 to PEX-D22 added: the owner's rulings on the PEX wave 1 build decisions in MR !97 (branch `feat/pex-wave1-p0`, merged with GitLab main 8f96aa84); 1.19, 2026-11-05: FSR-D8 added: BL-263's Indonesian labels renamed, the team's English terms kept per TL-D11 and TL-D17; 1.18, 2026-11-05: FSR-D7 added: BL-243 and BL-249 built, applying IA R-2 and the TL-D13 qualifier; 1.17, 2026-11-03: FSR-D1 to FSR-D6 added: the owner's rulings on the six open questions of the Foresight end-to-end review; 1.16, 2026-11-02: BL-12 and BL-56 decided by the owner; BL-19 baselines and early receipts in OTIF and CFOT answered; INV-D4 superseded by the BL-149 answer; 1.15, 2026-10-26: RFX-D32 added: the RFx deadline is checked on leaving the field; INV-D14 added 2026-10-23)) |
 | Covers | BL-01 to BL-19b in `BACKLOG.md` — the 21 decisions that block or confirm work; the RFx decisions RFX-D1 to RFX-D5 (2026-09-21) and RFX-D6 to RFX-D14 (2026-09-25) and RFX-D15 (2026-09-28) and the RFx UX decisions RFX-D16 to RFX-D24 (2026-10-19) and RFX-D25 (2026-10-20) and RFX-D26 to RFX-D31 (2026-10-22) and RFX-D32 (2026-10-26); the Inventory & Capacity UX decisions INV-D1 to INV-D13 (2026-10-22) and INV-D14 (2026-10-23); the SC Hub Material decisions MAT-D1 to MAT-D15 and the build rulings MAT-D16 to MAT-D21 (2026-09-29); and the 15 forecast engine decisions ENG-D1 to ENG-D14 with ENG-D8a (2026-09-23); and the Foresight review rulings FSR-D1 to FSR-D6 (2026-11-03) and FSR-D7 and FSR-D8 (2026-11-05); and the PEX wave 1 build rulings PEX-D16 to PEX-D22 (2026-11-05) and PEX-D23 and PEX-D24 (2026-11-09 and 2026-11-05) |
 | Purpose | Give the project owner a defensible recommendation to take to each owner: what the market does, what we suggest for PTI, and what would change our mind |
 | Status | **18 of the 21 were decided on 2026-09-21**, mostly as recommended; the outcomes are in section 9 of the requirements and in the Closed section of `BACKLOG.md`. Still open: BL-01 REPL, BL-11 interface technology, and two values (BL-54 invoice cap, BL-55 gate OTIF minimum). BL-12 call-off record and BL-56 early allowance were decided on 2026-11-02 (see their entries). Where the owner decided differently from this guide — the hub keeps its own calendar (BL-14), capacity stays at 13 weekly buckets (BL-08), Web Tukar Faktur stays separate (BL-17), and TMS access becomes a 3PL tracking link (BL-03) — the decision stands and this guide is kept as the reasoning behind the others. All decided items are built and in production as of 2026-09-21 (BL-43 to BL-53). The builds raised six new questions, BL-66 to BL-71 in the backlog, which this guide does not yet cover |
@@ -626,6 +626,57 @@ Three items stay deferred, not built: the Zone Capacity quantity (PEX-1 BR-02/BR
 ### PEX wave 2 build calls, proposed and not ruled
 
 The wave 2 lanes built the "My calls" rows of `SC-HUB-PLAN-EXECUTION-REQUIREMENTS-2026-11.md` section 6 as written: PEX-D3, PEX-D9 and PEX-D14 (MR !100), PEX-D10 to PEX-D13 (MR !102) and PEX-D15 (MR !101). They are **proposed**; the owner has not ruled on them, so this guide does not record them as decisions. A change after merge is a small follow-up MR.
+
+### Builder calls from MR !117, !127, !130 and !131, proposed and not ruled (2026-11-11 to 2026-11-12)
+
+The owner was away, so four builds went ahead on the builders' own calls. Each call below is **[Proposed]**: no source settles it and the owner has not ruled on it. The lists come from each builder's own report of its "Decisions for the user"; the MR descriptions themselves are on private GitLab and were not read in this pass. A change after merge is a small follow-up MR. PEX-D25 to PEX-D28 were ruled by the owner on 2026-11-12 and are recorded in section 6 of `SC-HUB-PLAN-EXECUTION-REQUIREMENTS-2026-11.md`; the calls under MR !127 are the builder's calls inside that ruling.
+
+**MR !117: end-of-grace execution of the PO On Hold decision (`5dbcf76c`, PEX-8, PEX-10).** The MR description says the owner accepted all seven calls on 2026-11-11 ("Accept all"). **Unverified:** no record of that answer was found in the repository or the documents; it rests on the MR description and a hand-over note. The owner separately accepted the execution as built on 2026-11-12 (PEX-D27), which does not say whether these seven calls were accepted. Treat the seven as open until the owner confirms.
+
+| Ref | Call | Alternative |
+|---|---|---|
+| !117-1 | FG with no computable cap waits, it does not absorb 0 | Absorb 0 and spend the one run |
+| !117-2 | FG is not offered as a suggestion while the cap is not computable | Offer it anyway |
+| !117-3 | A spread week with no existing call-off takes nothing | Use the week's Monday as the need date |
+| !117-4 | Execution call-offs are left out of the DA week supply, so their quantity leaves hold | Count them as DA supply; the line then never clears, because a spread inside the DA cap does not change PO On Hold under PEX-7 BR-01 |
+| !117-5 | A consumption week counts as stock movement on the week's last working day, capped at today | None stated |
+| !117-6 | A line left on hold after FG or a capped spread has no "suggest again" path: one suggestion per episode | None stated |
+| !117-7 | The existing line "FG absorbs nothing and the whole quantity stays on hold" is kept, though it reads slightly off now that the execution waits | None stated |
+
+**MR !127: sourcing-share split and brand share per month (`15f9712f`, PEX-D25, PEX-D26).**
+
+| Ref | Call | Alternative |
+|---|---|---|
+| !127-1 | `materialShares` is unchanged, so the stock-on-hand share, the consumption split (BL-211), OSIP safety and the sandbox still use the LTP share | Move all of them to the sourcing share |
+| !127-2 | A supplier with no share on record, for a material that has shares, reads 0; recorded shares are used as they are, not scaled to add up to 1 | None stated |
+| !127-3 | A recorded share of 0 counts as no share, so the material falls back to the MR !102 rule | None stated |
+| !127-4 | A month with no BOM demand for the material (from 2027-03 in the sample data) uses the share over the whole run | Show that demand under "No brand on record" |
+| !127-5 | A week counts in the month its Monday falls in, the same way the heads-up already counts demand | None stated |
+
+**MR !130: per-line invoice amounts and files kept by an earlier version (`73fe2b7a`, BL-75, BL-142).**
+
+| Ref | Call | Alternative |
+|---|---|---|
+| !130-1 | The Correct-and-resubmit (Fix) panel still takes one total | Per-line amounts there too |
+| !130-2 | The invoice total is computed from the lines, so no mismatch can occur | A typed header total checked under the strictest line rule |
+| !130-3 | A file is freed on removal only if it was picked in the current edit, from a per-control record of picked files; a file picked and saved while the form stays mounted can still be freed by a later removal | A version-aware record fed by the RFx version-saving code, which edits held RFx pages |
+| !130-4 | With no lines selected the total shows "Rp 0" and the note "The sum of the line amounts above." | None stated |
+
+**MR !131: PEX-12 recommended action and PO cancellation request (`b3067dbf`, BL-312).** Every rule has no source: Mba Septi has given neither the thresholds nor the cancellation flow.
+
+| Ref | Call | Alternative |
+|---|---|---|
+| !131-a | Material class means the SAP material group (`MG-xx`) | Material type (ROH, VERP), which is coarser |
+| !131-b | Thresholds are whole percents (0 to 100) of the line's open PO quantity, two keys: `autoAbsorbMaxPct` and `autoCarryMaxPct`; no defaults | A quantity per threshold; not chosen because quantities differ by unit of measure |
+| !131-c | Auto absorb needs the FG conditions, a known cap that covers the whole quantity, and the share within the threshold | None stated |
+| !131-d | Auto carry-over needs the FS + spread conditions and the share within the threshold; carry-over means spread over the next weeks | None stated |
+| !131-e | FS only never recommends auto | None stated |
+| !131-f | Cancellation is per PO, not per line; a reason of at least 10 characters is required; a second request is refused while one is waiting and allowed again after the supplier acknowledges; a Closed or Delivered PO is refused | Per PO line |
+| !131-g | Only the planner can request (`pocancel:request`) and only the owning supplier can acknowledge (`pocancel:acknowledge`); both verbs are new | None stated |
+| !131-h | The request and acknowledge controls sit in the PO On Hold decision cell, one per PO | None stated |
+| !131-i | Thresholds are edited in the existing "Edit periods" editor | None stated |
+| !131-j | The shared registry files and `docs/contracts/C1-methods.md` were edited (counts: 68 flows, 229 transitions, 62 wired) because the contract test pins them; the files mention RFx but the edits are not RFx logic | None stated |
+| !131-k | `scripts/floor.json` was bumped on the gates' note | None stated |
 
 ## SC Hub Material decisions (decided 2026-09-29)
 

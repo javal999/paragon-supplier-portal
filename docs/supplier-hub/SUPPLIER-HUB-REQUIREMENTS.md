@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 0.34 draft, 2026-11-02 |
+| Version | 0.35 draft, 2026-11-13 (REQ-E07-07 BR-06 added [Proposed]: amount per invoice line, BL-75). Previous: 0.34 draft, 2026-11-02 |
 | Sources | `SUPPLIER-HUB-BASELINE.md` (kick-off deck, Aug 2026); `KICKOFF-MEETING-NOTES.md` (business user feedback, reviewed 2026-09-17); owner review of the prototype gap review (2026-09-17); owner RFx decisions RFX-D1 to RFX-D5 (2026-09-21); owner RFx decisions RFX-D6 to RFX-D14 (2026-09-25), from `RFX-IMPROVEMENT-REQUIREMENTS-2026-09.md`; owner RFx decision RFX-D15 (2026-09-28); RFx best-practice research, `research/RFX-BEST-PRACTICE-2026-09.md` (2026-09-21); owner decision ENG-1 (2026-09-23) with the forecast research `research/FORECAST-BEST-PRACTICE-2026-09.md` and `research/FORECAST-METHOD-SPEC.md`; owner material decisions MAT-D1 to MAT-D15 (2026-09-29), from `SC-HUB-MATERIAL-REQUIREMENTS-2026-09.md`, and the owner's rulings during the material build MAT-D16 to MAT-D21 (2026-09-29), from section 4.1 of `SC-HUB-MATERIAL-BUILD-PLAN-2026-09.md` |
 | Scope of this version | Detailed: Order Collaboration, Inventory & Capacity Collaboration, RFx (validated); Forecast Collaboration, Call-off Management, and the undiscussed parts of Order and Inventory Collaboration (proposed). Hub navigation and screen conventions (validated). Foundation is reserved for the Foundation team. The remaining epics are stubs |
 | Not in scope | The codebase. This file states what the Supplier Hub must do, not what is built. What the prototype does today, and where, is tracked only in `BUILD-GAP.md` |
@@ -1112,6 +1112,7 @@ Added on 2026-09-28 from the RFx improvement analysis of 2026-09-25:
 - BR-03. Price differences beyond tolerance make the invoice an exception for FIN. The tolerance is per line: 0% where a contract price exists, otherwise 2% within an absolute rupiah cap (CR-12) [Owner, 2026-09-21]. An exception is either Price variance (CR-12) or Quantity mismatch (CR-13) [Code].
 - BR-04. Invoice status comes back from SAP [Proposed].
 - BR-05. Due date and overdue follow CR-14 [Code]. Payment terms on the PO replace the 30-day default when present [Proposed].
+- BR-06. The supplier sees an amount per invoice line, defaulting to quantity × PO unit price, and the invoice total is the sum of the lines, so BR-03's per-line tolerance applies to each line [Proposed; BL-75, built in MR !130]. Open for Finance: whether the supplier types a line amount, whether the lines must add up to a header total, and what happens when they do not.
 
 **Edge cases.**
 - Supplier submits the same invoice number twice: block as a duplicate [Proposed].
