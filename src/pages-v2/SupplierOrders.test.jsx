@@ -159,10 +159,38 @@ describe('SupplierOrders — PO-confirm end-to-end proof (Step 3.10)', () => {
     expect(within(/** @type {HTMLElement} */ (drawer)).queryByText('Sent')).not.toBeInTheDocument();
   });
 
-  it('confirm toast is honest (F2-24): correlationId surfaced, no false delivery claim', () => {
-    const desc = i18n.t('po.confirm.success.desc', { correlationId: 'cmd_0001' });
-    expect(desc).toBe('cmd_0001 recorded. Procurement notification pending live channel.');
-    expect(desc).not.toMatch(/notified/i);
+  // F2-24 surfaced the command id here; BL-310 (owner ruling 2026-11-13) drops it:
+  // the id is a support reference that stays on the audit event, and a supplier
+  // cannot act on it. The toast still makes no delivery claim.
+  it('confirm toast is honest (F2-24, BL-310): no command id, no false delivery claim', () => {
+    for (const lng of ['en', 'id']) {
+      expect(i18n.exists('po.confirm.success.desc', { lng })).toBe(false);
+      const title = i18n.t('po.confirm.success.title', { lng, poNumber: 'PO-2026-00121' });
+      expect(title).toContain('PO-2026-00121');
+      expect(title).not.toMatch(/cmd_|notified|diberitahu/i);
+    }
+  });
+
+  it('no success toast shows the command id (BL-310); the failure reference keeps it', () => {
+    const keys = [
+      'asn.create.success.desc',
+      'gr.create.success.desc',
+      'gr.dispose.success.desc',
+      'invoice.create.success.desc',
+      'invoice.submit.success.desc',
+      'invoice.dispute.success.desc',
+      'invoice.resolve.success.desc'
+    ];
+    for (const lng of ['en', 'id']) {
+      expect(i18n.exists('asn.submit.success.desc', { lng })).toBe(false);
+      for (const key of keys) {
+        expect(i18n.exists(key, { lng })).toBe(true);
+        const text = i18n.t(key, { lng, poNumber: 'PO-1', correlationId: 'cmd_0001' });
+        expect(text).not.toContain('cmd_0001');
+      }
+      // Known-good half: the failure reference still carries the id.
+      expect(i18n.t('settle.failed.ref', { lng, correlationId: 'cmd_0001' })).toContain('cmd_0001');
+    }
   });
 });
 

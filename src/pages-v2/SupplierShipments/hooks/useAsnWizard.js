@@ -129,8 +129,7 @@ export function useAsnWizard({
       } else {
         toast({
           variant: 'success',
-          title: t('asn.submit.success.title', { asnNumber: createRes.entityId }),
-          description: t('asn.submit.success.desc', { correlationId: submitRes.correlationId })
+          title: t('asn.submit.success.title', { asnNumber: createRes.entityId })
         });
       }
     } catch {

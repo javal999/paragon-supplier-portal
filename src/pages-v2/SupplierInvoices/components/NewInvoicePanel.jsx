@@ -119,10 +119,7 @@ const NewInvoicePanel = ({ nw, createMutation, submitMutation, toast, failToast,
         toast({
           variant: 'success',
           title: t('invoice.create.success.title', { invoiceNumber }),
-          description: t('invoice.create.success.desc', {
-            poNumber: newPoRef,
-            correlationId: res.correlationId
-          })
+          description: t('invoice.create.success.desc', { poNumber: newPoRef })
         });
       }
       setNewOpen(false);

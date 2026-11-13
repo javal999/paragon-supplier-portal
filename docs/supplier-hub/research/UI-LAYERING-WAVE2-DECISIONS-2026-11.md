@@ -37,5 +37,5 @@
 |---|---|
 | Ruled | 2026-11-13, by Levi, in the build session: "go for WD-1 to WD-10" |
 | Result | WD-1 to WD-9 accepted as built; no change to the code in `36655c4f` |
-| WD-10 | Accepted as a decision: the toast is not changed in this wave. The wording itself stays open as BL-310 and still needs the owner |
+| WD-10 | Accepted. BL-310 then ruled the same day: drop the id line (option A); built in the same MR, BL-310 closed |
 | Section 2 | Kept for reference only; no reversal is planned |

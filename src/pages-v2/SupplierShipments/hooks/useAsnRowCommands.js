@@ -82,10 +82,7 @@ export function useAsnRowCommands({
           toast({
             variant: 'success',
             title: t('asn.create.success.title', { asnNumber: res.entityId ?? '' }),
-            description: t('asn.create.success.desc', {
-              poNumber: po.poNumber,
-              correlationId: res.correlationId
-            })
+            description: t('asn.create.success.desc', { poNumber: po.poNumber })
           });
           setStatusFilter('All');
           setTab('shipments');
