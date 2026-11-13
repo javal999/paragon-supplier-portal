@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Accepted 2026-10-29: TL-D1 to TL-D13; TL-D14 to TL-D18 on 2026-10-30; TL-D19 to TL-D35 on 2026-11-02; TL-D36 to TL-D39 on 2026-11-09.** The owner answered the 4 open questions (section 5) and the 27 inventory questions (TL-D10 to TL-D13, `research/TERM-LABEL-INVENTORY-2026-10.md` section 1) the same day. Wave 1 merged 2026-10-30 (MR !65, `7f29d078`) |
+| Status | **Accepted 2026-10-29: TL-D1 to TL-D13; TL-D14 to TL-D18 on 2026-10-30; TL-D19 to TL-D35 on 2026-11-02; TL-D36 to TL-D39 on 2026-11-09; TL-D40 on 2026-11-12.** The owner answered the 4 open questions (section 5) and the 27 inventory questions (TL-D10 to TL-D13, `research/TERM-LABEL-INVENTORY-2026-10.md` section 1) the same day. Wave 1 merged 2026-10-30 (MR !65, `7f29d078`) |
 | Date | 2026-10-29 |
 | Source | Owner, 2026-10-29, reviewing the Demand anticipation grid: the row label differs from the team's input. Owner rules: (1) an agreed column wording is not replaced with another name; (2) every important term gets an information icon with its definition and the other names it goes by |
 | Code read | `main` at `59199b4f` |
@@ -146,7 +146,7 @@ Each was asked with a recommendation; the owner took the recommendation every ti
 | TL-D37 | Labels kept until the team names them | "Would be", "Surplus absorbed", "After the check" and "Called off, not yet shipped" stay as they are. Confirms TL-D9 and TL-D13 | Accepted, owner, 2026-11-09 |
 | TL-D38 | TL-D33 stands | The tips for "Reach", "Required role" and "Stock figure now" stay as written from the code until a document defines them | Accepted, owner, 2026-11-09 |
 | TL-D39 | Tips for labels the team's material does not define | The tip follows market practice and says so. "Interim round-up" (Order plan, warehouse fill table): each order rounded up to the minimum order quantity and its multiple; also called "rounding value" in SAP's material master. "On failure" (Data health, check detail): a failing record is kept out of the calculation or flagged for the planner. Labels unchanged. "Moved after the week" and the scorecard KPI names have no accepted tip yet; they wait for the team's wording | Accepted, owner, 2026-11-09 |
-| TL-D40 | Protection buffer tip after PEX-5 | Label "Protection buffer" kept (TL-R1). The tip is to be rewritten: since MR !102 the hub has two protection buffers, the BL-205 uplift (Capacity page, shown only) and LTP B − LTP A (DA grid, added to ROP Order in the DA figure), while the tip says nothing is ordered from it. Wording to be proposed under BL-294 | Open, 2026-11-10 |
+| TL-D40 | Protection buffer tip after PEX-5 | Label "Protection buffer" kept (TL-R1). The tip is rewritten because since MR !102 the hub has two protection buffers, the BL-205 uplift (Capacity page, shown only) and LTP B − LTP A (DA grid, added to ROP Order), while the old tip said nothing is ordered from it. New tip (BL-294, `src/lib/glossary/termLabels.glossary.js`). EN: "A buffer against a jump in demand. On the Capacity page (materials at levels 5 to 7) it is shown only. On the DA grid it is LTP B − LTP A and is added to ROP Order." ID: "Buffer untuk lonjakan permintaan. Di halaman Capacity (material level 5 sampai 7) hanya ditampilkan. Di grid DA nilainya LTP B − LTP A dan ditambahkan ke ROP Order." | Approved, owner, 2026-11-12 |
 
 ---
 

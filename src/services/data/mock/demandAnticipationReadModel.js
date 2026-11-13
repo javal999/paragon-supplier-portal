@@ -42,6 +42,7 @@ import {
   demandAnticipationRows,
   entriesOf,
   hubWeeks,
+  ltpSplitShares,
   pairKey,
   publicationOf,
   rollingDaFigure,
@@ -97,8 +98,11 @@ export function leadTimeWeeksOf(supplierId, materialCode) {
 /**
  * BL-267 (PEX-5) — the pair's LTP weeks: the three series, the chosen one (DA
  * reads it, BR-04) and the buffers. `source` is the forecast spread by week.
- * @param {{ supplierId: string; materialCode: string; share: number }} p
- * @param {readonly string[]} weeks
+ * PEX-D25 (BL-293) — an uploaded series is split to the supplier by the
+ * sourcing share on record (`ltpSplitShares`); the LTP share over the first
+ * share-window weeks only when the material has none. `split` says which.
+ * @param {{ supplierId: string; materialCode: string }} p
+ * @param {readonly string[]} weeks hub Mondays from the current week
  * @param {readonly import('../../transitions/capacityRules').LtpLine[]} lines
  */
 export function ltpWeeksOf(p, weeks, lines) {
@@ -117,11 +121,30 @@ export function ltpWeeksOf(p, weeks, lines) {
       protectionBuffer: /** @type {readonly (number | null)[]} */ ([]),
       flags: /** @type {readonly import('../../transitions/ltpInputRules').LtpInputFlag[]} */ ([]),
       inputs,
-      hasUpload: false
+      hasUpload: false,
+      split: /** @type {LtpSplit | null} */ (null)
     };
   const source = weeks.map((w) => groupWeekLtp(lines, p.supplierId, [p.materialCode], w));
-  return { ...ltpWeeks(weeks, source, inputs, p.share), hasUpload: true, inputs };
+  const suppliers = [
+    ...new Set(lines.filter((l) => l.materialCode === p.materialCode).map((l) => l.supplierId))
+  ].sort();
+  const { shares, from } = ltpSplitShares(
+    engineDataset().sources,
+    lines,
+    p.materialCode,
+    suppliers.length ? suppliers : [p.supplierId],
+    weeks.slice(0, DEMAND_ANTICIPATION_RULES.shareWindowWeeks)
+  );
+  const share = shares.get(p.supplierId) ?? 0;
+  return {
+    ...ltpWeeks(weeks, source, inputs, share),
+    hasUpload: true,
+    inputs,
+    split: /** @type {LtpSplit | null} */ ({ share, from })
+  };
 }
+
+/** @typedef {{ readonly share: number; readonly from: 'sourcing' | 'ltp' }} LtpSplit */
 
 /**
  * Every pair the LTP names, over enough weeks for its horizon plus one.
@@ -413,7 +436,7 @@ export function withLtpInputsRead(rows) {
   const lines = allCommitmentLines(null);
   return rows.map((r) => {
     const weeks = r.weeks.map((w) => w.week);
-    const lw = ltpWeeksOf({ ...r, share: r.share ?? 0 }, weeks, lines);
+    const lw = ltpWeeksOf(r, weeks, lines);
     /** @param {'A' | 'Festive' | 'B'} s */
     const meta = (s) => {
       const u = lw.inputs.uploads[s];

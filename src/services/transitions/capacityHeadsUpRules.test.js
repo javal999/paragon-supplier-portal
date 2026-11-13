@@ -192,6 +192,50 @@ describe('buildHeadsUp', () => {
   });
 });
 
+describe('PEX-D26 — brand share per month (BL-295)', () => {
+  /** @type {any} */
+  const plan = {
+    supplierId: 's',
+    supplierName: 'S',
+    planningGroupId: 'g',
+    materials: ['M1'],
+    uom: 'PCS',
+    weeks: HORIZON.map((week) => ({ week, demand: 0, entry: { week, allocated: 100 } }))
+  };
+  const base = {
+    plans: [plan],
+    submissions: [],
+    weeklyDemand: () => 80,
+    nowIso: NOW
+  };
+  const oneShare = buildHeadsUp({
+    ...base,
+    brandShares: () => new Map([['Wardah', 1]])
+  });
+  const perMonth = buildHeadsUp({
+    ...base,
+    brandShares: (/** @type {string} */ _m, /** @type {string} */ month) =>
+      month === '2026-09'
+        ? new Map([
+            ['Wardah', 0.25],
+            ['Emina', 0.75]
+          ])
+        : new Map([['Wardah', 1]])
+  });
+  it('each month reads its own share: September splits 25/75, October stays all Wardah', () => {
+    const brand = (/** @type {string} */ b) => perMonth[0].byBrand.find((x) => x.brand === b);
+    // September: 4 Mondays × 80 = 320.
+    expect(brand('Wardah')?.months[1].demand).toBe(80);
+    expect(brand('Emina')?.months[1].demand).toBe(240);
+    expect(brand('Emina')?.months[2].demand).toBe(0);
+    expect(brand('Wardah')?.months[2].demand).toBe(perMonth[0].months[2].demand);
+  });
+  it('group and per-material rows do not move', () => {
+    expect(perMonth[0].months).toEqual(oneShare[0].months);
+    expect(perMonth[0].byMaterial).toEqual(oneShare[0].byMaterial);
+  });
+});
+
 describe('treemapLayout (BR-05)', () => {
   it('areas are proportional to size and tile the box; sizeless items are left out', () => {
     const tiles = treemapLayout(
