@@ -1,6 +1,6 @@
 # C1 — Method Surface
 
-Three distinct axes. **117** (service surface) · **227** (transition catalog) · **61** (wired
+Three distinct axes. **117** (service surface) · **229** (transition catalog) · **62** (wired
 targets). They measure different things; this file keeps them separate.
 
 > ⚠️ **THIS DOCUMENT IS PINNED TO THE TREE, AND THE PIN IS WHY THE NUMBERS ABOVE ARE ALLOWED TO
@@ -104,7 +104,7 @@ the string, because those are different claims and only the first is the contrac
 
 ---
 
-## Axis 2 — the 227-transition catalog (67 flows)
+## Axis 2 — the 229-transition catalog (68 flows)
 
 Every authored state-machine edge across the registered flows (`id: 't_<entity>_<verb>'`). Derived
 from `getKnownFlows()` — the seeded registry — never from a grep over the flow files, because a
@@ -170,6 +170,7 @@ transition id can be assembled at a call site rather than written as a literal (
 | `supplierAsk.flow.js` | `supplierAsk` | 4 | `t_supplierask_raise`, `t_supplierask_answer`, `t_supplierask_close`, `t_supplierask_withdraw` | **wired** |
 | `capacityDecision.flow.js` | `capacityDecision` | 2 | `t_capacitydecision_accept`, `t_capacitydecision_withdraw` | **wired** |
 | `poOnHoldDecision.flow.js` | `poOnHoldDecision` | 3 | `t_poonhold_suggest`, `t_poonhold_choose`, `t_poonhold_execute` | **wired** |
+| `poCancellation.flow.js` | `poCancellation` | 2 | `t_pocancel_request`, `t_pocancel_acknowledge` | **wired** |
 | `simulationOverride.flow.js` | `simulationOverride` | 1 | `t_simulation_override_set` | **wired** |
 | `rfiEvent.flow.js` | `rfiEvent` | 6 | `t_rfi_create`, `t_rfi_revise_draft`, `t_rfi_publish`, `t_rfi_extend`, `t_rfi_close`, `t_rfi_cancel` | **wired** |
 | `rfiResponse.flow.js` | `rfiResponse` | 3 | `t_rfiresponse_save`, `t_rfiresponse_submit`, `t_rfiresponse_revise` | **wired** |
@@ -180,7 +181,7 @@ transition id can be assembled at a call site rather than written as a literal (
 | `rfpFirmOffer.flow.js` | `rfpFirmOffer` | 2 | `t_rfpfirmoffer_submit`, `t_rfpfirmoffer_revise` | **wired** |
 | `rfiIntent.flow.js` | `rfiIntent` | 3 | `t_rfiintent_respond`, `t_rfiintent_decline`, `t_rfiintent_withdraw` | **wired** |
 | `rfpIntent.flow.js` | `rfpIntent` | 3 | `t_rfpintent_respond`, `t_rfpintent_decline`, `t_rfpintent_withdraw` | **wired** |
-| **TOTAL** | | **227** | | |
+| **TOTAL** | | **229** | | |
 
 **Flow shape** (`schema.js`, `FlowDefinition` / `TransitionDef`): each transition declares
 `from[]` / `to` / `trigger` / `requiredRole` / `requiredFields[]` / `policyHooks[]` /
@@ -196,12 +197,12 @@ system reference is minted only on `settle` (see C5, SAP boundary).
 
 ---
 
-## Axis 3 — the 61 wired CommandTargets
+## Axis 3 — the 62 wired CommandTargets
 
-A `CommandTarget` is the per-entity adapter the dispatcher reads/writes through. **61 exist**, the
+A `CommandTarget` is the per-entity adapter the dispatcher reads/writes through. **62 exist**, the
 runtime export `WIRED_COMMAND_TARGETS` (`MockCommandService.js` `TARGETS`):
 
-- **wired:** `poOnHoldDecision`, `purchaseOrder`, `advanceShipNotice`, `goodsReceipt`, `invoice`, `rfq`, `quotation`, `rfqIntent`, `rfqConfidentiality`, `rfqClarification`, `purchaseRequisition`, `supplierDocument`, `requirementResponse`, `inventoryDeclaration`, `incomingShipment`, `enforcement`, `role`, `workingCalendar`, `threePl`, `supplierOverlay`, `qualificationRule`, `sourcingType`, `planningGroup`, `supplierApplication`, `receiptDiscrepancy`, `callOff`, `stockSync`, `stockAccess`, `capacitySubmission`, `inventoryAlert`, `forecastVersion`, `forecastView`, `sapChangeMark`, `rfiEvent`, `rfiResponse`, `rfpEvent`, `rfpResponse`, `negotiationRound`, `rfpOfferRound`, `rfpFirmOffer`, `hubSetting`, `reasonCode`, `maxStock`, `mrpController`, `materialName`, `simulationOverride`, `forecastOverride`, `warehouseDecision`, `demandAnticipation`, `consumption`, `osipLevel`, `osipParam`, `ltpInput`, `promotion`, `capacityMonth`, `whatIfScenario`, `feedstockConfirmation`, `supplierAsk`, `capacityDecision`, `rfiIntent`, `rfpIntent`
+- **wired:** `poCancellation`, `poOnHoldDecision`, `purchaseOrder`, `advanceShipNotice`, `goodsReceipt`, `invoice`, `rfq`, `quotation`, `rfqIntent`, `rfqConfidentiality`, `rfqClarification`, `purchaseRequisition`, `supplierDocument`, `requirementResponse`, `inventoryDeclaration`, `incomingShipment`, `enforcement`, `role`, `workingCalendar`, `threePl`, `supplierOverlay`, `qualificationRule`, `sourcingType`, `planningGroup`, `supplierApplication`, `receiptDiscrepancy`, `callOff`, `stockSync`, `stockAccess`, `capacitySubmission`, `inventoryAlert`, `forecastVersion`, `forecastView`, `sapChangeMark`, `rfiEvent`, `rfiResponse`, `rfpEvent`, `rfpResponse`, `negotiationRound`, `rfpOfferRound`, `rfpFirmOffer`, `hubSetting`, `reasonCode`, `maxStock`, `mrpController`, `materialName`, `simulationOverride`, `forecastOverride`, `warehouseDecision`, `demandAnticipation`, `consumption`, `osipLevel`, `osipParam`, `ltpInput`, `promotion`, `capacityMonth`, `whatIfScenario`, `feedstockConfirmation`, `supplierAsk`, `capacityDecision`, `rfiIntent`, `rfpIntent`
 
 The interface is **7 members** (`dispatcher/types.js`, `CommandTarget`):
 
@@ -226,9 +227,9 @@ transitions — scope is derived from the payload's **parent** (`creationOwner`,
 compare"** (§86). The dispatcher's supplier arm compares `owner !== scope.supplierId`
 unconditionally; a target that wants a supplier to reach a verb must NAME that supplier.
 
-### Wiring census (67 flows → 3 states)
+### Wiring census (68 flows → 3 states)
 
-- **61 behavior-wired** — have a `CommandTarget`, dispatch runs against in-memory stores. Named
+- **62 behavior-wired** — have a `CommandTarget`, dispatch runs against in-memory stores. Named
   above.
 - **2 rolled-up sub-flows** — authored, participate via terminal rollup (`grRollup.js` /
   `invoiceRollup.js`), **no standalone target**: `goodsReceiptLine`, `invoiceMatch`.

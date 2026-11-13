@@ -139,6 +139,7 @@ import { feedstockConfirmationStore } from '../data/mock/stores/feedstockConfirm
 import { supplierAskStore } from '../data/mock/stores/supplierAskStore';
 import { capacityDecisionStore } from '../data/mock/stores/capacityDecisionStore';
 import { poOnHoldStore } from '../data/mock/stores/poOnHoldStore';
+import { poCancellationStore } from '../data/mock/stores/poCancellationStore';
 import { simulationOverrideStore } from '../data/mock/stores/simulationOverrideStore';
 import { whatIfScenarioStore } from '../data/mock/stores/whatIfScenarioStore';
 import { hubSettingsStore, settingValue } from './hubSettingsStore';
@@ -353,6 +354,8 @@ async function realIds() {
     // PEX-8 — a PO On Hold decision is creation-only (unprobeable) and its store
     // starts empty; a well-formed id so the coverage control can see the target.
     poOnHoldDecision: 'poh-0001',
+    // PEX-12 — a PO cancellation request: same shape, store starts empty.
+    poCancellation: 'poc-0001',
     // REQ-E14-13 — a "taken to SAP" mark is creation-only (unprobeable) and its
     // store starts empty (nothing is marked while the engine data is simulated);
     // the id is a well-formed one so the coverage control can see the target.
@@ -552,6 +555,7 @@ const resetAll = () => {
   supplierAskStore.reset();
   capacityDecisionStore.reset();
   poOnHoldStore.reset();
+  poCancellationStore.reset();
   simulationOverrideStore.reset();
   whatIfScenarioStore.reset();
   hubSettingsStore.reset();
@@ -680,7 +684,8 @@ describe('POPULATION — nothing below means anything without this', () => {
       'whatIfScenario',
       'feedstockConfirmation',
       // PEX-8: its store opens empty, so no id can be walked to a state.
-      'poOnHoldDecision'
+      'poOnHoldDecision',
+      'poCancellation'
     ]);
     // PTI's capacity gap decision left this list at BL-227: its withdraw verb
     // is a non-creation transition, and the target names the supplier.

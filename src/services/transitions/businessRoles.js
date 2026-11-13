@@ -414,7 +414,9 @@ const LANE_BUNDLES = Object.freeze({
     // the supplier offers the capacity, PTI accepts it.
     'capacitydecision:accept',
     // PEX-8 — the planner suggests what happens to a PO On Hold line.
-    'poonhold:suggest'
+    'poonhold:suggest',
+    // PEX-12 [Proposed] — the planner asks to cancel a PO (a request only, not sent to SAP).
+    'pocancel:request'
   ]),
   // Raising and revising a requisition — split from approving one, which is
   // the segregation `pr:approve` living in `procurement` expresses.
@@ -532,7 +534,9 @@ const LANE_BUNDLES = Object.freeze({
     // capacity it asks about.
     'supplierask:answer',
     // PEX-8 — the supplier chooses the final option for a PO On Hold line.
-    'poonhold:choose'
+    'poonhold:choose',
+    // PEX-12 [Proposed] — the supplier acknowledges a PO cancellation request.
+    'pocancel:acknowledge'
   ]),
   // ── BACK OFFICE — the paperwork ─────────────────────────────────────────
   // *"The admin people are the ones who upload the certificates"* (operator).

@@ -93,7 +93,43 @@ export const poOnHoldEn = {
   'poh.link': 'PO On Hold:',
   'poh.link.none': 'No PO On Hold line',
   'poh.link.status': 'Status:',
-  'poh.link.go': 'See the PO On Hold line'
+  'poh.link.go': 'See the PO On Hold line',
+  // PEX-12 [Proposed] — the recommended action (read only) and PO cancellation requests.
+  'poh.rec.title': 'Recommended action',
+  'poh.rec.proposed':
+    'Proposed: awaiting owner review (PEX-12). Read only: nothing runs by itself.',
+  'poh.rec.action.autoAbsorb': 'Auto absorb',
+  'poh.rec.action.autoCarryOver': 'Auto carry-over',
+  'poh.rec.action.manual': 'Manual',
+  'poh.rec.reason.withinAbsorb':
+    'PO On Hold is {{pct}}% of the open PO quantity, within the {{limit}}% set for this material class.',
+  'poh.rec.reason.withinCarry':
+    'PO On Hold is {{pct}}% of the open PO quantity, within the {{limit}}% set for this material class.',
+  'poh.rec.reason.noThreshold': 'no threshold set',
+  'poh.rec.reason.noOspo': 'there is no open PO quantity to take a share of',
+  'poh.rec.reason.aboveThreshold':
+    'PO On Hold is {{pct}}% of the open PO quantity, above the threshold set for this material class',
+  'poh.rec.reason.conditionsNotMet':
+    'the conditions of the options that have a threshold do not hold for this line',
+  'poh.rec.reason.noCap': 'the FG cap cannot be computed (Max PTI not on record)',
+  'poh.rec.reason.overCap': 'the quantity is above the FG cap',
+  'poh.rec.thresholds': 'Thresholds for material class {{class}}',
+  'poh.rec.absorbMax': 'Auto absorb up to (% of open PO)',
+  'poh.rec.carryMax': 'Auto carry-over up to (% of open PO)',
+  'poh.rec.thresholdsEmpty': 'Leave empty if not set',
+  'poh.rec.invalid': 'Enter a whole number from 0 to 100, or leave empty.',
+  'poh.cancel.title': 'PO cancellation',
+  'poh.cancel.proposed':
+    'Proposed: awaiting owner review (PEX-12). Request only, not sent to SAP: the PO keeps its status.',
+  'poh.cancel.request': 'Request cancellation',
+  'poh.cancel.reason': 'Reason (at least 10 characters)',
+  'poh.cancel.send': 'Send request',
+  'poh.cancel.sent': 'Cancellation requested for {{po}}. Request only, not sent to SAP.',
+  'poh.cancel.requested': 'Cancellation requested on {{date}}. Waiting for the supplier.',
+  'poh.cancel.acknowledged': 'Supplier acknowledged on {{date}}.',
+  'poh.cancel.ack': 'Acknowledge',
+  'poh.cancel.acked': 'Acknowledged the cancellation request for {{po}}.',
+  'poh.cancel.noteSup': 'PTI asks to cancel this PO. Request only, not sent to SAP.'
 };
 
 /** @type {Record<string, string>} */
@@ -187,5 +223,40 @@ export const poOnHoldId = {
   'poh.link': 'PO On Hold:',
   'poh.link.none': 'Tidak ada baris PO On Hold',
   'poh.link.status': 'Status:',
-  'poh.link.go': 'Lihat baris PO On Hold'
+  'poh.link.go': 'Lihat baris PO On Hold',
+  // PEX-12 [Usulan] — tindakan yang disarankan (hanya baca) dan permintaan pembatalan PO.
+  'poh.rec.title': 'Tindakan yang disarankan',
+  'poh.rec.proposed':
+    'Usulan: menunggu tinjauan pemilik (PEX-12). Hanya baca: tidak ada yang berjalan sendiri.',
+  'poh.rec.action.autoAbsorb': 'Serap otomatis',
+  'poh.rec.action.autoCarryOver': 'Geser otomatis',
+  'poh.rec.action.manual': 'Manual',
+  'poh.rec.reason.withinAbsorb':
+    'PO On Hold {{pct}}% dari kuantitas PO terbuka, dalam batas {{limit}}% yang diatur untuk kelas material ini.',
+  'poh.rec.reason.withinCarry':
+    'PO On Hold {{pct}}% dari kuantitas PO terbuka, dalam batas {{limit}}% yang diatur untuk kelas material ini.',
+  'poh.rec.reason.noThreshold': 'batas belum diatur',
+  'poh.rec.reason.noOspo': 'tidak ada kuantitas PO terbuka untuk dihitung persentasenya',
+  'poh.rec.reason.aboveThreshold':
+    'PO On Hold {{pct}}% dari kuantitas PO terbuka, di atas batas yang diatur untuk kelas material ini',
+  'poh.rec.reason.conditionsNotMet': 'syarat opsi yang punya batas tidak terpenuhi untuk baris ini',
+  'poh.rec.reason.noCap': 'batas FG tidak dapat dihitung (Max PTI belum tercatat)',
+  'poh.rec.reason.overCap': 'kuantitas di atas batas FG',
+  'poh.rec.thresholds': 'Batas untuk kelas material {{class}}',
+  'poh.rec.absorbMax': 'Serap otomatis sampai (% dari PO terbuka)',
+  'poh.rec.carryMax': 'Geser otomatis sampai (% dari PO terbuka)',
+  'poh.rec.thresholdsEmpty': 'Kosongkan bila belum diatur',
+  'poh.rec.invalid': 'Isi bilangan bulat 0 sampai 100, atau kosongkan.',
+  'poh.cancel.title': 'Pembatalan PO',
+  'poh.cancel.proposed':
+    'Usulan: menunggu tinjauan pemilik (PEX-12). Hanya permintaan, tidak dikirim ke SAP: status PO tidak berubah.',
+  'poh.cancel.request': 'Minta pembatalan',
+  'poh.cancel.reason': 'Alasan (minimal 10 karakter)',
+  'poh.cancel.send': 'Kirim permintaan',
+  'poh.cancel.sent': 'Pembatalan {{po}} diminta. Hanya permintaan, tidak dikirim ke SAP.',
+  'poh.cancel.requested': 'Pembatalan diminta pada {{date}}. Menunggu pemasok.',
+  'poh.cancel.acknowledged': 'Pemasok mengakui pada {{date}}.',
+  'poh.cancel.ack': 'Akui',
+  'poh.cancel.acked': 'Permintaan pembatalan {{po}} diakui.',
+  'poh.cancel.noteSup': 'PTI meminta pembatalan PO ini. Hanya permintaan, tidak dikirim ke SAP.'
 };

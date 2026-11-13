@@ -578,6 +578,13 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    */
   PO_ON_HOLD_EXECUTABLE: 'po_on_hold_executable',
   /**
+   * PO cancellation request (PEX-12 [Proposed]): the PO is the supplier's
+   * (PO_CANCEL_NO_PO), not complete (PO_CANCEL_PO_CLOSED), has no request
+   * waiting (PO_CANCEL_ALREADY_REQUESTED) and a reason is given
+   * (PO_CANCEL_REASON_REQUIRED).
+   */
+  PO_CANCEL_REQUESTABLE: 'po_cancel_requestable',
+  /**
    * Material E1 (MR-7 BR-06, BR-08) — a planner input to the stock simulation:
    * a known supplier (UNKNOWN_SUPPLIER) and material (UNKNOWN_MATERIAL), one of
    * soh / inProduction / toDistributor (UNKNOWN_FIELD), a quantity of 0 or more
