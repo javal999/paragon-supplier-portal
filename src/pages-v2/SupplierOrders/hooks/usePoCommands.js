@@ -107,8 +107,7 @@ export function usePoCommands(panel) {
           setPanelMode('confirmed');
           toast({
             variant: 'success',
-            title: t('po.confirm.success.title', { poNumber: po.poNumber }),
-            description: t('po.confirm.success.desc', { correlationId: result.correlationId })
+            title: t('po.confirm.success.title', { poNumber: po.poNumber })
           });
         },
         onError: () => {

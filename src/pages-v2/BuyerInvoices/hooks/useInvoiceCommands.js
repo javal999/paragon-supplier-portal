@@ -251,7 +251,7 @@ export function useInvoiceCommands({
           toast({
             variant: 'success',
             title: t('invoice.dispute.success.title', { invoiceNumber: inv.invoiceNumber }),
-            description: t('invoice.dispute.success.desc', { correlationId: res.correlationId })
+            description: t('invoice.dispute.success.desc')
           });
         },
         onError: () =>
@@ -284,7 +284,7 @@ export function useInvoiceCommands({
           toast({
             variant: 'success',
             title: t('invoice.resolve.success.title', { invoiceNumber: inv.invoiceNumber }),
-            description: t('invoice.resolve.success.desc', { correlationId: res.correlationId })
+            description: t('invoice.resolve.success.desc')
           });
         },
         onError: () =>

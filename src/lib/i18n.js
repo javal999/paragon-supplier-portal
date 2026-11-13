@@ -584,8 +584,6 @@ export const resources = {
       'po.confirm.action': 'Confirm order',
       'po.confirm.submitting': 'Confirming…',
       'po.confirm.success.title': '{{poNumber}} confirmed',
-      'po.confirm.success.desc':
-        '{{correlationId}} recorded. Procurement notification pending live channel.',
       'po.confirm.failed.title': 'Could not confirm {{poNumber}}',
       'po.confirm.failed.desc': 'The order could not be confirmed ({{reason}}).',
       'po.confirm.denied.title': 'Not authorized',
@@ -594,12 +592,10 @@ export const resources = {
       'asn.create.action': 'Create ASN',
       'asn.submit.action': 'Submit',
       'asn.create.success.title': '{{asnNumber}} drafted',
-      'asn.create.success.desc': 'Draft created from {{poNumber}}. {{correlationId}} recorded.',
+      'asn.create.success.desc': 'Draft created from {{poNumber}}.',
       'asn.create.failed.title': 'Could not create ASN',
       'asn.create.failed.desc': 'The ASN could not be drafted ({{reason}}).',
       'asn.submit.success.title': '{{asnNumber}} submitted',
-      'asn.submit.success.desc':
-        '{{correlationId}} recorded. WMS transmission pending live channel.',
       'asn.submit.failed.title': 'Could not submit {{asnNumber}}',
       'asn.submit.failed.desc': 'Submission was rejected ({{reason}}).',
       'asn.submit.missingFields': 'Carrier, tracking number and ETA are required. ({{code}})',
@@ -613,7 +609,7 @@ export const resources = {
       // — Goods receipt verbs (Step 4 batch ii) —
       'gr.create.action': 'New GR',
       'gr.create.success.title': '{{grNumber}} received',
-      'gr.create.success.desc': '{{correlationId}} recorded. Inspection recorded at receipt.',
+      'gr.create.success.desc': 'Inspection recorded at receipt.',
       'gr.create.failed.title': 'Could not create goods receipt',
       'gr.create.failed.desc': 'The goods receipt could not be created ({{reason}}).',
       // CP-2 · B1 — the named refusal, in the operator's own language. A receipt
@@ -622,8 +618,7 @@ export const resources = {
       'gr.create.failed.undeclared':
         'The goods receipt could not be created: it inspects a material the shipment or ASN never declared ({{reason}}). Check the line against the shipping document.',
       'gr.dispose.success.title': '{{grNumber}} — {{disposition}}',
-      'gr.dispose.success.desc':
-        '{{correlationId}} recorded. Header disposition derived from the inspected lines.',
+      'gr.dispose.success.desc': 'Header disposition derived from the inspected lines.',
       'gr.dispose.failed.title': 'Could not finalize {{grNumber}}',
       'gr.dispose.failed.desc': 'Disposition was rejected ({{reason}}).',
       'gr.dispose.missingReason': 'A rejection reason is required to reject this receipt.',
@@ -659,24 +654,21 @@ export const resources = {
       // — Invoice verbs (Step 4 batch iii, DR-7) —
       'invoice.create.action': 'New invoice',
       'invoice.create.success.title': '{{invoiceNumber}} drafted',
-      'invoice.create.success.desc':
-        'Draft created against {{poNumber}}. {{correlationId}} recorded.',
+      'invoice.create.success.desc': 'Draft created against {{poNumber}}.',
       'invoice.create.failed.title': 'Could not create invoice',
       'invoice.create.failed.desc': 'The invoice could not be drafted ({{reason}}).',
       'invoice.submit.action': 'Submit',
       'invoice.submit.success.title': '{{invoiceNumber}} submitted for approval',
-      'invoice.submit.success.desc':
-        '{{correlationId}} recorded. Awaiting 3-way match and approval.',
+      'invoice.submit.success.desc': 'Awaiting 3-way match and approval.',
       'invoice.submit.failed.title': 'Could not submit {{invoiceNumber}}',
       'invoice.submit.failed.desc': 'Submission was rejected ({{reason}}).',
       'invoice.dispute.success.title': '{{invoiceNumber}} disputed',
-      'invoice.dispute.success.desc':
-        '{{correlationId}} recorded. Credit note required before payment.',
+      'invoice.dispute.success.desc': 'Credit note required before payment.',
       'invoice.dispute.failed.title': 'Could not dispute {{invoiceNumber}}',
       'invoice.dispute.failed.desc': 'The dispute was rejected ({{reason}}).',
       'invoice.dispute.missingReason': 'A dispute reason is required.',
       'invoice.resolve.success.title': '{{invoiceNumber}} dispute resolved',
-      'invoice.resolve.success.desc': '{{correlationId}} recorded. Returned for re-match.',
+      'invoice.resolve.success.desc': 'Returned for re-match.',
       'invoice.resolve.failed.title': 'Could not resolve {{invoiceNumber}}',
       'invoice.resolve.failed.desc': 'Resolution was rejected ({{reason}}).',
       'invoice.pay.action': 'Release payment',
@@ -1086,8 +1078,6 @@ export const resources = {
       'po.confirm.action': 'Konfirmasi pesanan',
       'po.confirm.submitting': 'Mengonfirmasi…',
       'po.confirm.success.title': '{{poNumber}} dikonfirmasi',
-      'po.confirm.success.desc':
-        '{{correlationId}} tercatat. Notifikasi pengadaan menunggu kanal langsung.',
       'po.confirm.failed.title': 'Tidak dapat mengonfirmasi {{poNumber}}',
       'po.confirm.failed.desc': 'Pesanan tidak dapat dikonfirmasi ({{reason}}).',
       'po.confirm.denied.title': 'Tidak berwenang',
@@ -1096,12 +1086,10 @@ export const resources = {
       'asn.create.action': 'Buat ASN',
       'asn.submit.action': 'Kirim',
       'asn.create.success.title': '{{asnNumber}} dibuat',
-      'asn.create.success.desc': 'Draf dibuat dari {{poNumber}}. {{correlationId}} tercatat.',
+      'asn.create.success.desc': 'Draf dibuat dari {{poNumber}}.',
       'asn.create.failed.title': 'Tidak dapat membuat ASN',
       'asn.create.failed.desc': 'ASN tidak dapat dibuat ({{reason}}).',
       'asn.submit.success.title': '{{asnNumber}} dikirim',
-      'asn.submit.success.desc':
-        '{{correlationId}} tercatat. Transmisi WMS menunggu kanal langsung.',
       'asn.submit.failed.title': 'Tidak dapat mengirim {{asnNumber}}',
       'asn.submit.failed.desc': 'Pengiriman ditolak ({{reason}}).',
       'asn.submit.missingFields': 'Kurir, nomor pelacakan, dan ETA wajib diisi. ({{code}})',
@@ -1115,14 +1103,13 @@ export const resources = {
       // — Goods receipt verbs (ID stub — refined in the Phase 3′ ID-first sweep) —
       'gr.create.action': 'GR Baru',
       'gr.create.success.title': '{{grNumber}} diterima',
-      'gr.create.success.desc': '{{correlationId}} tercatat. Inspeksi dicatat saat penerimaan.',
+      'gr.create.success.desc': 'Inspeksi dicatat saat penerimaan.',
       'gr.create.failed.title': 'Tidak dapat membuat penerimaan barang',
       'gr.create.failed.desc': 'Penerimaan barang tidak dapat dibuat ({{reason}}).',
       'gr.create.failed.undeclared':
         'Penerimaan barang tidak dapat dibuat: memeriksa material yang tidak pernah dinyatakan oleh pengiriman atau ASN ({{reason}}). Periksa baris tersebut terhadap dokumen pengiriman.',
       'gr.dispose.success.title': '{{grNumber}} — {{disposition}}',
-      'gr.dispose.success.desc':
-        '{{correlationId}} tercatat. Disposisi header diturunkan dari baris yang diinspeksi.',
+      'gr.dispose.success.desc': 'Disposisi header diturunkan dari baris yang diinspeksi.',
       'gr.dispose.failed.title': 'Tidak dapat menyelesaikan {{grNumber}}',
       'gr.dispose.failed.desc': 'Disposisi ditolak ({{reason}}).',
       'gr.dispose.missingReason': 'Alasan penolakan wajib diisi untuk menolak penerimaan ini.',
@@ -1151,24 +1138,21 @@ export const resources = {
       // — Invoice verbs (ID stub — refined in the Phase 3′ ID-first sweep) —
       'invoice.create.action': 'Faktur baru',
       'invoice.create.success.title': '{{invoiceNumber}} dibuat',
-      'invoice.create.success.desc': 'Draf dibuat untuk {{poNumber}}. {{correlationId}} tercatat.',
+      'invoice.create.success.desc': 'Draf dibuat untuk {{poNumber}}.',
       'invoice.create.failed.title': 'Tidak dapat membuat faktur',
       'invoice.create.failed.desc': 'Faktur tidak dapat dibuat ({{reason}}).',
       'invoice.submit.action': 'Kirim',
       'invoice.submit.success.title': '{{invoiceNumber}} dikirim untuk persetujuan',
-      'invoice.submit.success.desc':
-        '{{correlationId}} tercatat. Menunggu pencocokan 3 arah dan persetujuan.',
+      'invoice.submit.success.desc': 'Menunggu pencocokan 3 arah dan persetujuan.',
       'invoice.submit.failed.title': 'Tidak dapat mengirim {{invoiceNumber}}',
       'invoice.submit.failed.desc': 'Pengiriman ditolak ({{reason}}).',
       'invoice.dispute.success.title': '{{invoiceNumber}} disengketakan',
-      'invoice.dispute.success.desc':
-        '{{correlationId}} tercatat. Nota kredit diperlukan sebelum pembayaran.',
+      'invoice.dispute.success.desc': 'Nota kredit diperlukan sebelum pembayaran.',
       'invoice.dispute.failed.title': 'Tidak dapat menyengketakan {{invoiceNumber}}',
       'invoice.dispute.failed.desc': 'Sengketa ditolak ({{reason}}).',
       'invoice.dispute.missingReason': 'Alasan sengketa wajib diisi.',
       'invoice.resolve.success.title': 'Sengketa {{invoiceNumber}} diselesaikan',
-      'invoice.resolve.success.desc':
-        '{{correlationId}} tercatat. Dikembalikan untuk pencocokan ulang.',
+      'invoice.resolve.success.desc': 'Dikembalikan untuk pencocokan ulang.',
       'invoice.resolve.failed.title': 'Tidak dapat menyelesaikan {{invoiceNumber}}',
       'invoice.resolve.failed.desc': 'Penyelesaian ditolak ({{reason}}).',
       'invoice.pay.action': 'Rilis pembayaran',
