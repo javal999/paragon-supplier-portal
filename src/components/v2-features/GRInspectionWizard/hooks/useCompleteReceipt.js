@@ -214,7 +214,7 @@ const useCompleteReceipt = ({
         toast({
           variant: 'success',
           title: t('gr.dispose.success.title', { grNumber, disposition: dispositionLabel(dispo) }),
-          description: t('gr.dispose.success.desc', { correlationId: createRes.correlationId })
+          description: t('gr.dispose.success.desc')
         });
       }
       onComplete();

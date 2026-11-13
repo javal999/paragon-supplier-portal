@@ -155,9 +155,7 @@ const SupplierInvoices = () => {
               : {
                   variant: 'success',
                   title: t('invoice.submit.success.title', { invoiceNumber: inv.invoiceNumber }),
-                  description: t('invoice.submit.success.desc', {
-                    correlationId: res.correlationId
-                  })
+                  description: t('invoice.submit.success.desc')
                 }
           );
         },

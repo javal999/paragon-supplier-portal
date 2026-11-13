@@ -795,7 +795,9 @@ describe('GR wizard states — submit dispatches the drafted values, awaits the 
     expect(settle).not.toHaveBeenCalled();
     const grId = calls[1].entityId;
     expect(toasts()).toMatch(new RegExp(`${grId} — Approved`));
-    expect(toasts()).toMatch(/recorded\. Header disposition derived from the inspected lines\./);
+    expect(toasts()).toMatch(/Header disposition derived from the inspected lines\./);
+    // BL-310: the command id stays on the audit event, not in the toast.
+    expect(toasts()).not.toMatch(/cmd_|recorded\./);
     expect(onComplete).toHaveBeenCalledWith();
   });
 

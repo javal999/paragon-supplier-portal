@@ -183,8 +183,7 @@ export function useAsnSubmitDrawer({
           setSubmitTarget(null);
           toast({
             variant: 'success',
-            title: t('asn.submit.success.title', { asnNumber }),
-            description: t('asn.submit.success.desc', { correlationId: res.correlationId })
+            title: t('asn.submit.success.title', { asnNumber })
           });
         },
         onError: () =>
