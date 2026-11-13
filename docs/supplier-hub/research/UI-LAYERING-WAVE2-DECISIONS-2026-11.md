@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| Version | 1.0, 2026-11-12 |
-| Branch | `feat/ui-layering-wave2` (GitLab MR !132, not merged), branched from MR !129's head; !129 merged to `main` at 22:24 WIB (`36ae2939`) and `main` is merged into this branch |
-| Why this file exists | Levi was away and asked for the remaining review work to be built, with an educated guess wherever a confirmation was needed, and each guess logged. Every row below is reversible in the MR before it merges |
+| Version | 1.1, 2026-11-13 (owner accepted WD-1 to WD-10, section 3). Previous: 1.0, 2026-11-12 |
+| Branch | `feat/ui-layering-wave2` (GitLab MR !132, merged 2026-11-13 as `36655c4f`, live in prod as Vercel deployment `-8nhxib2fu`), branched from MR !129's head; !129 merged to `main` at 22:24 WIB (`36ae2939`) and `main` is merged into this branch |
+| Why this file exists | Levi was away and asked for the remaining review work to be built, with an educated guess wherever a confirmation was needed, and each guess logged. Every row below was reversible before the merge; section 3 records the owner's ruling |
 | Source of the work | `UI-LAYERING-E2E-EVALUATION-2026-11.md` findings UL-04 to UL-10, backlog BL-303 to BL-311 |
 
 ## 1. Decisions
@@ -30,3 +30,12 @@
 | WD-2: tracking optional at creation | Drop `tracking` from `missingLogistics` and the * from the label; the hint keeps working for the other fields |
 | WD-6: numbers right-aligned | Restore `text-right` on the forecast cell and add it to the commitment and upside inputs, so the whole column aligns |
 | WD-7: icons back on the label | Remove `withTip` from the two columns and restore the two `TermTip`s on the label |
+
+## 3. Owner ruling
+
+| | |
+|---|---|
+| Ruled | 2026-11-13, by Levi, in the build session: "go for WD-1 to WD-10" |
+| Result | WD-1 to WD-9 accepted as built; no change to the code in `36655c4f` |
+| WD-10 | Accepted as a decision: the toast is not changed in this wave. The wording itself stays open as BL-310 and still needs the owner |
+| Section 2 | Kept for reference only; no reversal is planned |
