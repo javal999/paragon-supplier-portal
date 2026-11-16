@@ -33,6 +33,9 @@
  *                                                 overflow their box. Focus is its only action.
  * Static collisions compare line boxes (getClientRects), so a label that wraps onto a second
  * line is not reported as overlapping what sits on that line.
+ * BL-319 (2026-11-16): uiOverlapScan({ trigger }) does not count, as covered, a control that
+ * holds the trigger (the clickable card a tip's ⓘ sits in): the tip explains that card. The
+ * tip scan passes each ⓘ as the trigger. Earlier runs counted the card and are not comparable.
  * Known limits: covering is judged by paint order at the centre of the overlap; a sticky
  * header covering scrolled content is reported only when the covered element has focus.
  */
@@ -126,6 +129,7 @@
   window.uiOverlapScan = (opts = {}) => {
     const minArea = opts.minArea ?? 16;
     const maxItems = opts.maxItems ?? 40;
+    const trigger = opts.trigger ?? null;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
 
@@ -164,6 +168,7 @@
       const paintedOverBy = [];
       for (const t of targets) {
         if (related(el, t.el)) continue;
+        if (trigger && t.control && t.el !== trigger && t.el.contains(trigger)) continue;
         const o = overlap(fr, t.r);
         if (!o || o.area < minArea) continue;
         const stack = stackAt(o.x, o.y);
@@ -346,7 +351,7 @@
       const tip =
         document.querySelector('[data-tip-popup]') ||
         document.getElementById(b.getAttribute('aria-describedby'));
-      const res = window.uiOverlapScan({ maxItems: 8 });
+      const res = window.uiOverlapScan({ maxItems: 8, trigger: b });
       const layer = res.floating.find((f) => f.kind === 'tooltip');
       const shown = tip && getComputedStyle(tip).display !== 'none' && tip.getBoundingClientRect().width > 8;
       if (!shown) out.push({ trigger: b.getAttribute('aria-label'), problem: 'did not open on focus' });
