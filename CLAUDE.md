@@ -179,16 +179,16 @@ aggregate cannot distinguish "everything passed" from "nothing was asked."
   if it moved, what ran was not what you meant.
 
 ## Session startup — run these commands every time
-git checkout main && git pull origin main
+git checkout main && git pull gitlab main
 
 ## Workflow for every task
 1. git checkout main
-2. git pull origin main
+2. git pull gitlab main
 3. git checkout -b <type>/<short-description>
 4. Make changes
 5. git add .
 6. git commit -m "description"
-7. git push -u origin <branch>
+7. git push -u gitlab <branch>
 8. Open a PR to main; the operator directs and approves, then the CLI merges
    with `gh pr merge <n> --merge` (never squash, never `--delete-branch`,
    identity-clean merge commit)
