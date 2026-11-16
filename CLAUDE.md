@@ -510,7 +510,9 @@ and the Stage G planning canon + World-Class Build Plan are now on main.
 
 ### THE RECALIBRATED PATH (ruled 2026-08-20; supersedes the Stage-G "next" pointer)
 
-Three arcs, in order. Nothing else is queued.
+Three arcs ruled on 2026-08-20, kept as the record of that ruling. They are not
+the work queue: the queue is `docs/supplier-hub/BACKLOG.md`, and the work merged
+since (RFx, forecast, capacity, inventory) is named by none of them.
 
 - **ARC 1 · TRACK R — the halal lane made operable.** Three deliverables, and
   every one of them is a SURFACE or a WRITE PATH, never a register entry:
