@@ -536,22 +536,12 @@ Three arcs, in order. Nothing else is queued.
      safe to wire** — that is the whole reason the arc is ordered this way, and
      H4 / `D-COMP-HALAL-4` is the gate it opens.
 
-- **ARC 2 · THE REQUISITION LANE.** ⚠️ **The dispatched premise inverted twice,
-  and the lane is in WORSE shape than "unreachable", not better.** Derived:
-  `purchaseRequisition` **IS** a wired `CommandTarget`
-  (`MockCommandService.js:1292`), so `t_pr_submit` / `t_pr_approve` /
-  `t_pr_reject` are dispatch**able**; and procurement's entry point **DOES** have
-  a page — `/buyer/purchase-requisition` → `BuyerRequisitions`
-  (`AppRouter.jsx:111`), alongside `IntakeReview` and
-  `plan-grid/IntakeAdjustDrawer`. What is true is sharper: **only `t_pr_create`
-  has a hook and a caller.** The panel ships a `Draft` → **"Submit for approval"**
-  button that fires a **`variant: 'success'` toast and closes the drawer** — no
-  dispatch, no state change (`BuyerRequisitions.jsx:520-532`); the `Approved` →
-  "Create PO directly" / "Create sourcing event" button does the same
-  (`:501-519`); and `Pending Approval` carries **no approve or reject affordance
-  at all**. An unreachable verb is silent. **This one tells the buyer it
-  succeeded.** Arc 2 is the approval half of the lane, and the two false
-  affordances are its first fix.
+- **ARC 2 · THE REQUISITION LANE — built.** `BuyerRequisitions` now dispatches
+  `pr:create`, `pr:submit`, `pr:approve`, `pr:reject` and `pr:revise`
+  (`src/pages-v2/BuyerRequisitions/hooks/useRequisitionActions.js`). The plan
+  grid and intake review this arc named were retired by IA P-10, and the
+  "Draft → Submit for approval" toast with no dispatch no longer exists as
+  described here.
 
 - **ARC 3 · SUPPLIER ONBOARDING.** ⚠️ **AMENDED 2026-09-01 — THE MECHANISM
   SURVIVES MEASUREMENT, THE CONCLUSION DOES NOT.** Re-derived today, and the
