@@ -87,6 +87,68 @@ describe('PEX-D25 ltpSplitShares', () => {
   });
 });
 
+// BL-313, PEX-D29 [Proposed]: each recorded share is divided by the total of the
+// material's recorded shares, so no part of a material's LTP is left unassigned
+// when SAP shares do not add up to 1 (the SAP quota-arrangement rule: a source's
+// share is its quota over the sum of the quotas in force).
+describe('BL-313 sourcing shares that do not add up to 1', () => {
+  const lines = [line('a', 7), line('b', 7)];
+  const window = ['2026-09-07'];
+  /** @param {Map<string, number>} m */
+  const total = (m) => [...m.values()].reduce((n, v) => n + v, 0);
+
+  it('0.6 and 0.2 on record read 0.75 and 0.25: the whole LTP is assigned', () => {
+    const r = ltpSplitShares(
+      [
+        { supplierId: 'a', materialCode: 'M', share: 0.6 },
+        { supplierId: 'b', materialCode: 'M', share: 0.2 }
+      ],
+      lines,
+      'M',
+      ['a', 'b'],
+      window
+    );
+    expect(r.from).toBe('sourcing');
+    expect(r.shares.get('a')).toBeCloseTo(0.75, 12);
+    expect(r.shares.get('b')).toBeCloseTo(0.25, 12);
+    expect(total(r.shares)).toBeCloseTo(1, 12);
+  });
+
+  it('0.7 and 0.7 on record read 0.5 and 0.5: shares over 1 are scaled down', () => {
+    const r = ltpSplitShares(
+      [
+        { supplierId: 'a', materialCode: 'M', share: 0.7 },
+        { supplierId: 'b', materialCode: 'M', share: 0.7 }
+      ],
+      lines,
+      'M',
+      ['a', 'b'],
+      window
+    );
+    expect(r.shares.get('a')).toBeCloseTo(0.5, 12);
+    expect(r.shares.get('b')).toBeCloseTo(0.5, 12);
+    expect(total(r.shares)).toBeCloseTo(1, 12);
+  });
+
+  it('a sourced supplier the LTP does not name keeps its part: the others are not scaled up', () => {
+    const r = ltpSplitShares(
+      [
+        { supplierId: 'a', materialCode: 'M', share: 0.5 },
+        { supplierId: 'b', materialCode: 'M', share: 0.3 },
+        { supplierId: 'c', materialCode: 'M', share: 0.2 }
+      ],
+      lines,
+      'M',
+      ['a', 'b'],
+      window
+    );
+    expect(r.from).toBe('sourcing');
+    expect(r.shares.get('a')).toBeCloseTo(0.5, 12);
+    expect(r.shares.get('b')).toBeCloseTo(0.3, 12);
+    expect(r.shares.has('c')).toBe(false);
+  });
+});
+
 describe('PEX-D25 through the DA read model', () => {
   it('PK-PETB-8801: sup-007 reads 70% and sup-012 30% of the uploaded LTP A', async () => {
     const MAT = 'PK-PETB-8801';
