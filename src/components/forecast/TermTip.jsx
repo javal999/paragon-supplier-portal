@@ -52,15 +52,15 @@ import { FOCUS_RING } from './focusRing';
 //     it), persistent (it stays until hover and focus both leave, or Escape).
 //     After Escape it shows again on the next hover or focus.
 //
-// BL-317 and BL-318 (UL-04, re-measured 2026-11-16). A label inside a clickable
+// BL-319 and BL-320 (UL-04, re-measured 2026-11-16). A label inside a clickable
 // card (Shipments & ASN status cards, KPI cards):
 //   · The card the label sits in is not counted as a covered control: the user
 //     is already on it and the tip explains it. The box is fitted inside that
-//     card (BL-317), so it no longer lies over the next card in the row.
+//     card (BL-319), so it no longer lies over the next card in the row.
 //   · On a tie in covered controls, the side that hides the smallest area of
-//     them wins (BL-317), before the default order.
+//     them wins (BL-319), before the default order.
 //   · A click on the (i), or Enter or Space on it, explains the card and does
-//     not also apply it (BL-318): on Shipments & ASN it set the "Draft" filter.
+//     not also apply it (BL-320): on Shipments & ASN it set the "Draft" filter.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -144,7 +144,7 @@ export const placeBeside = (anchor, box, screen, side) => {
 const CONTROLS = 'input, select, textarea, button, a[href], [role="button"]';
 
 /**
- * BL-317 — the control the label sits in (a clickable status or KPI card), or
+ * BL-319 — the control the label sits in (a clickable status or KPI card), or
  * null when it sits in none.
  * @param {Element} wrap
  * @returns {Element | null}
@@ -152,7 +152,7 @@ const CONTROLS = 'input, select, textarea, button, a[href], [role="button"]';
 const hostControl = (wrap) => wrap.parentElement?.closest(CONTROLS) ?? null;
 
 /**
- * BL-317 (UL-04) — the box's width and left edge inside the card its label sits
+ * BL-319 (UL-04) — the box's width and left edge inside the card its label sits
  * in, so it does not lie over the next card in the row: as wide as the card
  * allows (at most its own width), its left edge at the label's, moved left as
  * far as needed to stay inside the card and on screen. Null when the card is
@@ -175,7 +175,7 @@ export const fitInHost = (anchor, host, screen) => {
  * 26 pages with tips, "below first" covered a control in 33 tips and "above
  * first" in 39 (header and card tips sit under filters and cards), so each
  * opening counts. Not counted: the tip's own button, and the card the label
- * sits in (BL-317).
+ * sits in (BL-319).
  * @param {{ top: number; left: number }} p
  * @param {{ width: number; height: number }} box
  * @param {Element} own
@@ -242,7 +242,7 @@ const TermTip = ({ term, entry: termEntry, name, slugId, children, className = '
       if (!wrap || !box) return;
       const anchor = wrap.getBoundingClientRect();
       const screen = { width: window.innerWidth, height: window.innerHeight };
-      // BL-317: inside a clickable card the box is fitted to the card. The
+      // BL-319: inside a clickable card the box is fitted to the card. The
       // width is set before the height is read, because a narrower box is taller.
       const host = hostControl(wrap);
       const fit = host ? fitInHost(anchor, host.getBoundingClientRect(), screen) : null;
@@ -250,7 +250,7 @@ const TermTip = ({ term, entry: termEntry, name, slugId, children, className = '
       const size = { width: fit ? fit.width : box.offsetWidth, height: box.offsetHeight };
       // The side that covers fewest controls (BL-309: below or above;
       // BL-311: right or left of the label too); on a tie, the side that hides
-      // the least of them (BL-317); then this order, the default rule first, so
+      // the least of them (BL-319); then this order, the default rule first, so
       // a tip with nothing near it opens as before.
       const options = [
         placeTip(anchor, size, screen),
@@ -346,7 +346,7 @@ const TermTip = ({ term, entry: termEntry, name, slugId, children, className = '
         }}
         onBlur={() => setFocused(false)}
         onClick={(e) => {
-          // BL-318: inside a clickable card the (i) explains the card; it does
+          // BL-320: inside a clickable card the (i) explains the card; it does
           // not also apply it (the click reached the card's own handler).
           const wrap = e.currentTarget.parentElement;
           if (wrap && hostControl(wrap)) e.stopPropagation();

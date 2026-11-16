@@ -33,7 +33,7 @@
  *                                                 overflow their box. Focus is its only action.
  * Static collisions compare line boxes (getClientRects), so a label that wraps onto a second
  * line is not reported as overlapping what sits on that line.
- * BL-317 (2026-11-16): uiOverlapScan({ trigger }) does not count, as covered, a control that
+ * BL-319 (2026-11-16): uiOverlapScan({ trigger }) does not count, as covered, a control that
  * holds the trigger (the clickable card a tip's ⓘ sits in): the tip explains that card. The
  * tip scan passes each ⓘ as the trigger. Earlier runs counted the card and are not comparable.
  * Known limits: covering is judged by paint order at the centre of the overlap; a sticky

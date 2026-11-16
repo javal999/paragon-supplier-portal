@@ -229,11 +229,11 @@ describe('BL-311: a label with controls above and below opens beside them', () =
   });
 });
 
-// BL-317 and BL-318 (UL-04, re-measured 2026-11-16 on GitLab main 48030abe at
+// BL-319 and BL-320 (UL-04, re-measured 2026-11-16 on GitLab main 48030abe at
 // 1440 x 900). Shipments & ASN: the status cards are 213 px wide, at x 272
 // (Draft) and x 501 (Submitted); the "Draft" label starts at x 297. The 256 px
 // box lay 52 px over the next card, and a click on the (i) set the Draft filter.
-describe('BL-317 (UL-04): a tip in a clickable card stays inside that card', () => {
+describe('BL-319 (UL-04): a tip in a clickable card stays inside that card', () => {
   const size = { configurable: true, get: () => 80 };
   const width = { configurable: true, get: () => 256 };
   /** @type {PropertyDescriptor | undefined} */
@@ -321,7 +321,7 @@ describe('BL-317 (UL-04): a tip in a clickable card stays inside that card', () 
   });
 });
 
-describe('BL-318: the (i) inside a clickable card explains it and does not apply it', () => {
+describe('BL-320: the (i) inside a clickable card explains it and does not apply it', () => {
   it('a click on the (i) does not reach the card; a click on the card still does', () => {
     const onDraft = vi.fn();
     render(<KpiCard term="asnDraft" value="1" onClick={onDraft} />);
