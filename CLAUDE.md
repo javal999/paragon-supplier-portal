@@ -2,14 +2,18 @@
 
 ## Branch policy
 - Branch off `main` for every task (e.g. `chore/...`, `qa/...`, `feat/...`)
-- Open a pull request to `main`; never push directly to `main`
-- The CLI merges with `gh pr merge <n> --merge` — **never squash, never
-  `--delete-branch`** — with an identity-clean merge commit (explicit subject,
-  empty body); the operator directs and approves. The branch is deleted BY HAND
-  afterwards, and only after asserting AT THE SITE that its tip is an ancestor
-  of `main`. **`--merge` is the standing form, not a mode chosen per PR** — the
-  reason is in the merge doctrine below, and it is worth reading before merging
-  anything, because a rule without its reason gets re-derived wrongly
+- Open a merge request to `main` on GitLab (`git push -o merge_request.create
+  -o merge_request.target=main gitlab <branch>`); never push directly to `main`
+- The CLI merges the MR at the head SHA the operator approved, once its pipeline
+  is green: **never squash, never delete the source branch at merge** (Squash
+  and Delete source branch both unticked), with an identity-clean merge commit
+  (explicit subject, empty body); the operator directs and approves. The branch
+  is deleted BY HAND afterwards, and only after asserting AT THE SITE that its
+  tip is an ancestor of `main`. **A merge commit is the standing form, not a
+  mode chosen per MR** (the doctrine below calls it `--merge`, the name it had
+  on GitHub) — the reason is in the merge doctrine below, and it is worth
+  reading before merging anything, because a rule without its reason gets
+  re-derived wrongly
 
 ### ⚠️ MERGE DOCTRINE — BOTH DIRECTIONS. RECOVERED AND EXTENDED (§59c, 2026-08-26)
 
@@ -44,7 +48,7 @@ THE DISCIPLINE RUNS ON THE CODE SIDE AND THE DISPATCH SIDE HAD NO GATE.** Every
 code-side inverted premise costs a report, which is recoverable by measuring
 again. A merge is not. So before ANY outward or irreversible step — merge, push,
 publish, delete — assert the object exists **at the site the action names**
-(`gh pr view <n>`, `git branch`, the file itself), never from the conversation
+(the MR page or API, `git branch`, the file itself), never from the conversation
 that described it. See `docs/findings.md` §43a.
 
 **HALF TWO — A REPORTED SHA IS A CLAIM, NOT A FACT (ratified 2026-08-26).**
@@ -162,17 +166,19 @@ aggregate cannot distinguish "everything passed" from "nothing was asked."
 - ⚠️ **NEVER `--delete-branch`. ON ANY PR.** It closed **#264** two seconds
   after **#263** merged — `base_ref_deleted` and `closed` at `06:03:12Z`
   against a merge at `06:03:10Z` — and its success signal said *merged · branch
-  deleted* throughout. Delete BY HAND afterwards, and **assert at the site of
-  the action first**: read the remote's own refs (`git ls-remote origin
+  deleted* throughout. (On GitLab the same flag is the *Delete source branch*
+  box: leave it unticked.) Delete BY HAND afterwards, and **assert at the site of
+  the action first**: read the remote's own refs (`git ls-remote gitlab
   refs/heads/<branch>` and `refs/heads/main`), assert by EXIT CODE that the
   remote branch tip IS an ancestor of remote `main` and that `main` is NOT an
-  ancestor of the branch, then `git push origin --delete <branch>`. Reading the
+  ancestor of the branch, then `git push gitlab --delete <branch>`. Reading the
   local cache is not reading the site. Same unconditional shape and the same
   reason: a flag that fires automatically cannot be told to wait for a check.
-- **A retarget requires a gate run.** Retargeting emits `edited`, which is why
-  `types:` is now spelled out in `.github/workflows/gates.yml`. If a retargeted
-  PR still shows no gate, run the four locally on the merged base **and say that
-  the local run is the only gate record there is.**
+- **A retarget requires a gate run.** On GitHub, retargeting emitted `edited`,
+  which is why `types:` was spelled out in `.github/workflows/gates.yml` (now
+  manual-dispatch only). If a retargeted MR still shows no gate for the new base,
+  run the four locally on the merged base **and say that the local run is the
+  only gate record there is.**
 - **Repair a severed chain with `git merge -s ours main` on the branch** — never
   `-X ours` / `-X theirs`, which are a different operation and DO discard
   content. Assert the branch's tree SHA is the **same object** before and after;
@@ -189,16 +195,17 @@ git checkout main && git pull gitlab main
 5. git add .
 6. git commit -m "description"
 7. git push -u gitlab <branch>
-8. Open a PR to main; the operator directs and approves, then the CLI merges
-   with `gh pr merge <n> --merge` (never squash, never `--delete-branch`,
-   identity-clean merge commit)
+8. Open an MR to main (`git push -o merge_request.create -o merge_request.target=main
+   gitlab <branch>`); the operator directs and approves, then the CLI merges the
+   MR at the approved head SHA once its pipeline is green (never squash, never
+   delete the source branch at merge, identity-clean merge commit)
 9. Delete the branch by hand, after asserting at the site that its tip is an
    ancestor of `main`
 
 ## Why
-This project uses a branch + PR + CLI-merge workflow (the ratified four-actor
-model). Changes reach `main` only through a reviewed PR: the operator directs
-and approves, and the CLI merges with `gh pr merge <n> --merge`. Direct pushes
+This project uses a branch + MR + CLI-merge workflow (the ratified four-actor
+model). Changes reach `main` only through a reviewed MR: the operator directs
+and approves, and the CLI merges it as a merge commit. Direct pushes
 to `main` are not used.
 
 ⚠️ **THE MERGE MODE IS PART OF THE WHY, NOT A DETAIL OF THE HOW.** A squash
@@ -546,11 +553,14 @@ since (RFx, forecast, capacity, inventory) is named by none of them.
 
 - **ARC 3 · SUPPLIER ONBOARDING.** ⚠️ **AMENDED 2026-09-01 — THE MECHANISM
   SURVIVES MEASUREMENT, THE CONCLUSION DOES NOT.** Re-derived today, and the
-  hard half still holds exactly: `src/pages-v2/SupplierRegistration.jsx` behind
+  hard half still holds exactly: `src/pages-v2/SupplierRegistration/` behind
   `/register` contains **zero** service calls — `grep -c 'useDataService'` and
   `grep -c 'dispatch'` both return 0 — the whole form lives in `useState`, and
   submitting still sets a `const [submitted, setSubmitted] = useState(false)`
   boolean. **The supplier-side WRITE PATH is unbuilt, and that is arc 3.**
+
+  Registration and onboarding are built by another workstream; do not start
+  `/register` changes unless the owner asks.
 
   ⚠️ **THE LINE COUNT IS DELETED RATHER THAN CORRECTED.** It read *"1,551
   lines"* and measured 1,554 today — `FLOOR-IN-PROSE-01` again, in the
@@ -929,14 +939,13 @@ pointer at the file that holds them.
 `npm run gates` adds no notion of green beyond the gates listed above; it is
 those gates plus the assertion that they ran. **CI runs this exact command** and nothing
 else. **Since 2026-10-14 the merge gate is GitLab** (`.gitlab-ci.yml`, owner ruling: GitHub
-Actions minutes are budget-limited): on every merge request, on a manual pipeline, and
-**daily at 00:17 UTC on `main` with no commit involved** (a GitLab pipeline schedule), which is the half that catches a clock-decay
-break like 2026-08-01 (see `docs/findings.md`, CP-3a). GitLab emails the schedule owner when a scheduled
-pipeline fails. `.github/workflows/gates.yml` is now manual-dispatch only. **It no longer runs on a push to `main`**
+Actions minutes are budget-limited): on every merge request and on a manual pipeline.
+**No scheduled run exists.** `.gitlab-ci.yml` describes a daily 00:17 UTC pipeline schedule on `main`, but it was not created, and its `npm run drift` step runs only on a schedule, so a clock-decay
+break like 2026-08-01 (see `docs/findings.md`, CP-3a) is caught only when a session runs `npm run drift`
+and `npm run gates` on `main` under Node 24 after each merge to it. `.github/workflows/gates.yml` is now manual-dispatch only. **It no longer runs on a push to `main`**
 (removed 2026-09-29, `d053d2e`, to save Actions minutes): a merge commit's tree is
-the tree its PR run already gated, so a push to `main` is covered by that PR's run,
-and by the next daily run. Run `npm run gates` locally on `main` when you need a
-record for the merge commit itself.
+the tree its MR run already gated, so a push to `main` is covered by that MR's run.
+Run `npm run gates` locally on `main` when you need a record for the merge commit itself.
 
 ## Deploy
 Vite root is app/ — never edit app/index.html directly.

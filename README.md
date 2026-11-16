@@ -572,8 +572,10 @@ something:
 | 5 | `npm run lint` + `npm run format:check` | an ESLint error, warnings above the ceiling, or unformatted code |
 
 It also fails if this README stops naming `src/services/transitions/schema.js`
-and `/buyer/process-flows`. CI runs the same command on every GitLab merge request and
-daily at 00:17 UTC (`.gitlab-ci.yml`); the GitHub workflow is manual-only.
+and `/buyer/process-flows`. CI runs the same command on every GitLab merge request.
+There is no scheduled run (`.gitlab-ci.yml` describes a daily 00:17 UTC schedule that was
+not created), so run `npm run drift` and `npm run gates` on `main` after each merge to it;
+the GitHub workflow is manual-only.
 
 ### 4. Try the gate locally (optional)
 
@@ -649,8 +651,8 @@ The full list, with sizes and owners, is in
 
 1. Branch off `main` (`feat/…`, `fix/…`, `docs/…`); never push to `main`.
 2. Run `npm run gates` on Node 24 before pushing.
-3. Open a pull request. It merges with `gh pr merge <n> --merge` — never
-   squash, never `--delete-branch` — because a merge commit keeps the branch
+3. Open a merge request. It merges as a merge commit — never squash, never
+   delete the source branch at merge — because a merge commit keeps the branch
    SHA reachable after the branch is deleted, and the project cites branch SHAs.
 
 **House rules,** each enforced somewhere:
