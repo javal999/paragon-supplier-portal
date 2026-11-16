@@ -51,6 +51,16 @@ import { FOCUS_RING } from './focusRing';
 //     without moving focus or the pointer, and does not reach a dialog behind
 //     it), persistent (it stays until hover and focus both leave, or Escape).
 //     After Escape it shows again on the next hover or focus.
+//
+// BL-319 and BL-320 (UL-04, re-measured 2026-11-16). A label inside a clickable
+// card (Shipments & ASN status cards, KPI cards):
+//   · The card the label sits in is not counted as a covered control: the user
+//     is already on it and the tip explains it. The box is fitted inside that
+//     card (BL-319), so it no longer lies over the next card in the row.
+//   · On a tie in covered controls, the side that hides the smallest area of
+//     them wins (BL-319), before the default order.
+//   · A click on the (i), or Enter or Space on it, explains the card and does
+//     not also apply it (BL-320): on Shipments & ASN it set the "Draft" filter.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -84,6 +94,9 @@ const GAP = 4;
 const MARGIN = 8;
 /** How long the box stays after the pointer leaves, so it can cross the gap (ms). */
 const CLOSE_DELAY = 120;
+/** The box's own width (Tailwind `w-64`), and the narrowest it is fitted to inside a card (px). */
+const BOX_WIDTH = 256;
+const MIN_FIT = 160;
 
 /**
  * Where the open box goes: below the label, or above it when the room below
@@ -131,26 +144,60 @@ export const placeBeside = (anchor, box, screen, side) => {
 const CONTROLS = 'input, select, textarea, button, a[href], [role="button"]';
 
 /**
- * BL-309 (UL-04) — how many visible controls outside `own` a box placed at
- * `p` would cover. A fixed side does not work: measured on the 26 pages with
- * tips, "below first" covered a control in 33 tips and "above first" in 39
- * (header and card tips sit under filters and cards), so each opening counts.
+ * BL-319 — the control the label sits in (a clickable status or KPI card), or
+ * null when it sits in none.
+ * @param {Element} wrap
+ * @returns {Element | null}
+ */
+const hostControl = (wrap) => wrap.parentElement?.closest(CONTROLS) ?? null;
+
+/**
+ * BL-319 (UL-04) — the box's width and left edge inside the card its label sits
+ * in, so it does not lie over the next card in the row: as wide as the card
+ * allows (at most its own width), its left edge at the label's, moved left as
+ * far as needed to stay inside the card and on screen. Null when the card is
+ * too narrow for a readable box; the box then keeps its own width.
+ * @param {DOMRect} anchor  The label's box on screen.
+ * @param {DOMRect} host  The card's box on screen.
+ * @param {{ width: number; height: number }} screen  The viewport size.
+ * @returns {{ width: number; left: number } | null}
+ */
+export const fitInHost = (anchor, host, screen) => {
+  const width = Math.min(BOX_WIDTH, Math.floor(host.width) - 2 * GAP);
+  if (width < MIN_FIT) return null;
+  const inside = Math.max(host.left + GAP, Math.min(anchor.left, host.right - GAP - width));
+  return { width, left: Math.max(MARGIN, Math.min(inside, screen.width - MARGIN - width)) };
+};
+
+/**
+ * BL-309 (UL-04) — how many visible controls a box placed at `p` would cover,
+ * and the area of them it hides. A fixed side does not work: measured on the
+ * 26 pages with tips, "below first" covered a control in 33 tips and "above
+ * first" in 39 (header and card tips sit under filters and cards), so each
+ * opening counts. Not counted: the tip's own button, and the card the label
+ * sits in (BL-319).
  * @param {{ top: number; left: number }} p
  * @param {{ width: number; height: number }} box
  * @param {Element} own
- * @returns {number}
+ * @returns {{ n: number; area: number }}
  */
 const coveredControls = (p, box, own) => {
   const right = p.left + box.width;
   const bottom = p.top + box.height;
   let n = 0;
+  let area = 0;
   for (const el of document.querySelectorAll(CONTROLS)) {
-    if (own.contains(el)) continue;
+    if (own.contains(el) || el.contains(own)) continue;
     const r = el.getBoundingClientRect();
     if (r.width === 0 || r.height === 0) continue;
-    if (r.left < right && r.right > p.left && r.top < bottom && r.bottom > p.top) n += 1;
+    const w = Math.min(r.right, right) - Math.max(r.left, p.left);
+    const h = Math.min(r.bottom, bottom) - Math.max(r.top, p.top);
+    if (w > 0 && h > 0) {
+      n += 1;
+      area += w * h;
+    }
   }
-  return n;
+  return { n, area };
 };
 
 /** @type {React.FC<TermTipProps>} */
@@ -161,7 +208,7 @@ const TermTip = ({ term, entry: termEntry, name, slugId, children, className = '
   const [focused, setFocused] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [place, setPlace] = useState(
-    /** @type {{ top: number; left: number; above: boolean; side?: "right" | "left" } | null} */ (
+    /** @type {{ top: number; left: number; above: boolean; side?: "right" | "left"; width?: number } | null} */ (
       null
     )
   );
@@ -194,20 +241,32 @@ const TermTip = ({ term, entry: termEntry, name, slugId, children, className = '
       const box = boxRef.current;
       if (!wrap || !box) return;
       const anchor = wrap.getBoundingClientRect();
-      const size = { width: box.offsetWidth, height: box.offsetHeight };
       const screen = { width: window.innerWidth, height: window.innerHeight };
+      // BL-319: inside a clickable card the box is fitted to the card. The
+      // width is set before the height is read, because a narrower box is taller.
+      const host = hostControl(wrap);
+      const fit = host ? fitInHost(anchor, host.getBoundingClientRect(), screen) : null;
+      box.style.width = fit ? `${fit.width}px` : '';
+      const size = { width: fit ? fit.width : box.offsetWidth, height: box.offsetHeight };
       // The side that covers fewest controls (BL-309: below or above;
-      // BL-311: right or left of the label too). Ties keep this order, the
-      // default rule first, so a tip with nothing near it opens as before.
+      // BL-311: right or left of the label too); on a tie, the side that hides
+      // the least of them (BL-319); then this order, the default rule first, so
+      // a tip with nothing near it opens as before.
       const options = [
         placeTip(anchor, size, screen),
         placeTip(anchor, size, screen, 'below'),
         placeTip(anchor, size, screen, 'above'),
         placeBeside(anchor, size, screen, 'right'),
         placeBeside(anchor, size, screen, 'left')
-      ].flatMap((p) => (p ? [{ p, n: coveredControls(p, size, wrap) }] : []));
-      const best = options.reduce((a, b) => (b.n < a.n ? b : a));
-      setPlace(best.p);
+      ].flatMap((p) => {
+        if (!p) return [];
+        const at = fit && !('side' in p) ? { ...p, left: fit.left } : p;
+        return [{ p: at, ...coveredControls(at, size, wrap) }];
+      });
+      const best = options.reduce((a, b) =>
+        b.n < a.n || (b.n === a.n && b.area < a.area) ? b : a
+      );
+      setPlace({ ...best.p, width: fit?.width });
     };
     measure();
     window.addEventListener('scroll', measure, true);
@@ -286,6 +345,12 @@ const TermTip = ({ term, entry: termEntry, name, slugId, children, className = '
           setFocused(true);
         }}
         onBlur={() => setFocused(false)}
+        onClick={(e) => {
+          // BL-320: inside a clickable card the (i) explains the card; it does
+          // not also apply it (the click reached the card's own handler).
+          const wrap = e.currentTarget.parentElement;
+          if (wrap && hostControl(wrap)) e.stopPropagation();
+        }}
       >
         <Info size={12} aria-hidden="true" />
       </button>
@@ -304,6 +369,7 @@ const TermTip = ({ term, entry: termEntry, name, slugId, children, className = '
               style={{
                 top: place?.top ?? 0,
                 left: place?.left ?? 0,
+                width: place?.width,
                 visibility: place ? 'visible' : 'hidden'
               }}
               className="fixed z-[70] block w-64 max-w-[calc(100vw-1rem)] whitespace-normal break-words rounded border border-border-subtle bg-bg-surface p-2 text-left text-xs font-normal normal-case tracking-normal text-text-secondary shadow-md"

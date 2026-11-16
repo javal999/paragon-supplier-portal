@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Version | 1.1, 2026-11-13 (owner accepted WD-1 to WD-10, section 3). Previous: 1.0, 2026-11-12 |
+| Version | 1.2, 2026-11-17 (section 4: WD-11 to WD-16, UL-04 in clickable cards, taken while the owner was away). Previous: 1.1, 2026-11-13 (owner accepted WD-1 to WD-10, section 3); 1.0, 2026-11-12 |
 | Branch | `feat/ui-layering-wave2` (GitLab MR !132, merged 2026-11-13 as `36655c4f`, live in prod as Vercel deployment `-8nhxib2fu`), branched from MR !129's head; !129 merged to `main` at 22:24 WIB (`36ae2939`) and `main` is merged into this branch |
 | Why this file exists | Levi was away and asked for the remaining review work to be built, with an educated guess wherever a confirmation was needed, and each guess logged. Every row below was reversible before the merge; section 3 records the owner's ruling |
 | Source of the work | `UI-LAYERING-E2E-EVALUATION-2026-11.md` findings UL-04 to UL-10, backlog BL-303 to BL-311 |
@@ -39,3 +39,22 @@
 | Result | WD-1 to WD-9 accepted as built; no change to the code in `36655c4f` |
 | WD-10 | Accepted. BL-310 then ruled the same day: drop the id line (option A); built in the same MR, BL-310 closed |
 | Section 2 | Kept for reference only; no reversal is planned |
+
+## 4. UL-04 in clickable cards, 2026-11-17
+
+Levi was away on 2026-11-16 and asked for the open work to be built, with an educated guess wherever a confirmation was needed, anything without a clear best practice put in the backlog, and the result merged and deployed without waiting for his ruling. Branch `fix/stat-card-tips-ul04`. Measured on GitLab `main` `48030abe` at 1440 x 900 on the 20 UL-04 pages (178 tips), before and after, with the same scan.
+
+| # | Decision | Taken | Alternative kept | Why this way | Where |
+|---|---|---|---|---|---|
+| WD-11 | The card a tip's ⓘ sits in is not counted as a control the tip covers | In `TermTip` and in the scan | Count it, as before | The user is already on that card and the tip explains it. Counted, it made every side of a card tip "cover a control", so the side rule fell back to an arbitrary side; on Shipments & ASN that was below, over the next card | `TermTip.jsx` `coveredControls`; `ui-overlap-scan.js` `trigger` |
+| WD-12 | Inside a clickable card the box is fitted to the card: as wide as the card allows (at most 256 px, at least 160 px), inside its edges | Per opening, measured | A narrower box everywhere | The status cards are 213 px wide, so a 205 px box covers no neighbour (4 tips to 0). A narrower box everywhere would make every other tip taller and cover more rows below | `TermTip.jsx` `fitInHost` |
+| WD-13 | On a tie in covered controls, the side that hides the smallest area of them wins, before the default order | Per opening | The default order (below first) | It hides less of what a tie leaves covered: supplier Stock "PTI ROP" now hides 12 % of the PIC filter instead of all of a row's "Incoming detail" button | `TermTip.jsx` `measure` |
+| WD-14 | A click on the ⓘ is stopped at the ⓘ when it sits inside a control | Only inside a control | Stop it everywhere | On Shipments & ASN the click set the "Draft" filter. Outside a control (a clickable row, a menu) a click keeps its current effect, so nothing else changes | `TermTip.jsx` the ⓘ `onClick` |
+| WD-15 | The 18 tips left over a control are not changed; logged as BL-321 | Logged | Tips that open on a click (a toggletip) in dense grids, or a definitions panel per grid | Every side of these labels holds a control (a neighbouring ⓘ or a field), WCAG 1.4.13 is met, and switching hover tips to click tips changes how every tip in those grids opens: a product call, not a best-practice fix | `BACKLOG.md` BL-321 |
+| WD-16 | The ⓘ button inside a card's button is logged as BL-322, not rebuilt | Logged | Rebuild `KpiCard` with one stretched button and the ⓘ outside it | The rebuild changes the accessible name of every clickable KPI card with a term, so it needs its own change and test pass; WD-14 already removes the user-facing effect | `BACKLOG.md` BL-322 |
+
+| If the owner rules | Change |
+|---|---|
+| WD-11: count the card | Drop `el.contains(own)` from `coveredControls` and the `trigger` check from the scan; WD-12 then has no effect on the side chosen |
+| WD-12: no fitting | Return `null` from `fitInHost`; the box keeps 256 px |
+| WD-15: toggletips in dense grids | A `mode="click"` on `TermTip` for the grid label columns; the hover tips elsewhere stay |
