@@ -1,7 +1,8 @@
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import '@lib/i18n';
-import TermTip, { placeBeside, placeTip } from './TermTip';
+import KpiCard from '@components/ui-v2/KpiCard';
+import TermTip, { fitInHost, placeBeside, placeTip } from './TermTip';
 
 // BL-300 to BL-302 — UI layering review 2026-11 (UL-01 to UL-03), portal ruled
 // by the owner (UL-Q1). Each spec fires at the defect the review measured on
@@ -225,5 +226,120 @@ describe('BL-311: a label with controls above and below opens beside them', () =
       above: false,
       side: 'right'
     });
+  });
+});
+
+// BL-317 and BL-318 (UL-04, re-measured 2026-11-16 on GitLab main 48030abe at
+// 1440 x 900). Shipments & ASN: the status cards are 213 px wide, at x 272
+// (Draft) and x 501 (Submitted); the "Draft" label starts at x 297. The 256 px
+// box lay 52 px over the next card, and a click on the (i) set the Draft filter.
+describe('BL-317 (UL-04): a tip in a clickable card stays inside that card', () => {
+  const size = { configurable: true, get: () => 80 };
+  const width = { configurable: true, get: () => 256 };
+  /** @type {PropertyDescriptor | undefined} */
+  let h;
+  /** @type {PropertyDescriptor | undefined} */
+  let w;
+  beforeEach(() => {
+    h = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
+    w = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth');
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', size);
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', width);
+  });
+  afterEach(() => {
+    if (h) Object.defineProperty(HTMLElement.prototype, 'offsetHeight', h);
+    if (w) Object.defineProperty(HTMLElement.prototype, 'offsetWidth', w);
+  });
+
+  it('fitInHost: as wide as the card allows, inside it and on screen', () => {
+    const draftCard = rect(272, 227, 213, 118);
+    expect(fitInHost(rect(297, 250, 60, 16), draftCard, SCREEN)).toEqual({ width: 205, left: 276 });
+    // The last card of the row (Discrepancy, x 1189).
+    expect(fitInHost(rect(1310, 250, 60, 16), rect(1189, 227, 213, 118), SCREEN)).toEqual({
+      width: 205,
+      left: 1193
+    });
+    // A wide card keeps the box's own width, under its label.
+    expect(fitInHost(rect(140, 250, 60, 16), rect(100, 227, 400, 118), SCREEN)).toEqual({
+      width: 256,
+      left: 140
+    });
+    // Too narrow for a readable box: not fitted, the side rule decides.
+    expect(fitInHost(rect(110, 250, 60, 16), rect(100, 227, 150, 118), SCREEN)).toBeNull();
+  });
+
+  /**
+   * The Draft and Submitted status cards as measured, each a real KpiCard.
+   * @param {() => void} onDraft
+   */
+  const renderCards = (onDraft) => {
+    render(
+      <div>
+        <KpiCard term="asnDraft" value="1" onClick={onDraft} />
+        <KpiCard term="asnSubmitted" value="0" onClick={() => {}} />
+      </div>
+    );
+    const [draft, submitted] = screen.getAllByRole('button', { pressed: false });
+    draft.getBoundingClientRect = () => rect(272, 227, 213, 118);
+    submitted.getBoundingClientRect = () => rect(501, 227, 213, 118);
+    screen.getByTestId('term-tip-asn-draft').getBoundingClientRect = () => rect(297, 250, 60, 16);
+    return { draft, info: screen.getByRole('button', { name: /What “Draft” means/ }) };
+  };
+  const draftPopup = () =>
+    /** @type {HTMLElement} */ (
+      document.body.querySelector('[data-tip-popup="term-tip-asn-draft"]')
+    );
+
+  it('opens below its label, fitted inside its own card, clear of the next card', () => {
+    const { info } = renderCards(() => {});
+    fireEvent.focus(info);
+    const box = draftPopup();
+    // Before: the box opened to the left (the card it sits in counted as covered on
+    // every side), and below it lay over "Submitted" from x 501 to 553.
+    expect(box).toHaveAttribute('data-placement', 'below');
+    expect(box.style.left).toBe('276px');
+    expect(box.style.width).toBe('205px');
+    expect(276 + 205).toBeLessThan(501);
+  });
+
+  it('on a tie in covered controls, the side that hides the least of them wins', () => {
+    render(
+      <div>
+        <input aria-label="small field above" />
+        <TermTip term="MASC">MASC</TermTip>
+        <input aria-label="large field below" />
+      </div>
+    );
+    screen.getByTestId('term-tip-masc').getBoundingClientRect = () => rect(100, 300);
+    screen.getByLabelText('small field above').getBoundingClientRect = () => rect(100, 280, 30, 10);
+    screen.getByLabelText('large field below').getBoundingClientRect = () =>
+      rect(100, 330, 200, 60);
+    fireEvent.focus(screen.getByRole('button', { name: /MASC/ }));
+    // Above, below and right each cover one field; above hides 300 px² of it,
+    // right 3,800 and below 12,000. Before, the tie kept the default side, below.
+    expect(popup()).toHaveAttribute('data-placement', 'above');
+  });
+});
+
+describe('BL-318: the (i) inside a clickable card explains it and does not apply it', () => {
+  it('a click on the (i) does not reach the card; a click on the card still does', () => {
+    const onDraft = vi.fn();
+    render(<KpiCard term="asnDraft" value="1" onClick={onDraft} />);
+    fireEvent.click(screen.getByRole('button', { name: /What “Draft” means/ }));
+    // Before: this set the "Draft" filter on Shipments & ASN.
+    expect(onDraft).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { pressed: false }));
+    expect(onDraft).toHaveBeenCalledTimes(1);
+  });
+
+  it('outside a control the click is left alone', () => {
+    const onRow = vi.fn();
+    render(
+      <div onClick={onRow}>
+        <TermTip term="MASC">MASC</TermTip>
+      </div>
+    );
+    fireEvent.click(screen.getByRole('button', { name: /MASC/ }));
+    expect(onRow).toHaveBeenCalledTimes(1);
   });
 });
