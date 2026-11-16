@@ -20,6 +20,7 @@
 /**
  * `firstDay`:  The grace-period start of the episode the decision belongs to.
  * `qty`:  The PO On Hold quantity when the planner suggested.
+ * `round`, `previousId`:  [Proposed] "Suggest again": a remainder an execution left on hold gets a NEW decision (round 2, 3, …) that names the decision it follows. Absent = round 1. The old decision and its execution row are never changed.
  *
  * @typedef {{
  *   readonly id: string;
@@ -31,6 +32,8 @@
  *   readonly suggested: PoOnHoldOption;
  *   readonly chosen: PoOnHoldOption | null;
  *   readonly history: readonly DecisionEvent[];
+ *   readonly round?: number;
+ *   readonly previousId?: string;
  * }} PoOnHoldDecisionRow
  */
 
@@ -79,6 +82,16 @@ export const poOnHoldStore = {
     for (const k of [...firstDays.keys()]) if (!live.has(k)) firstDays.delete(k);
     for (const k of live) if (!firstDays.has(k)) firstDays.set(k, day);
     return firstDays;
+  },
+  /**
+   * [Proposed] A new round on a line an execution left on hold: its grace
+   * period starts again on `day`. Only the start day moves; every decision and
+   * execution row stays as written.
+   * @param {string} key  `supplierId|materialCode`.
+   * @param {string} day  The hub day the new round starts.
+   */
+  restart(key, day) {
+    firstDays.set(key, day);
   },
   /** @returns {readonly PoOnHoldDecisionRow[]} */
   all() {

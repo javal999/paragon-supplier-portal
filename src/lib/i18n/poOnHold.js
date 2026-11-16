@@ -51,6 +51,10 @@ export const poOnHoldEn = {
   'poh.suggest.preselected': 'Pre-selected from the conditions. You can change it before sending.',
   'poh.suggest.none': 'No option fits the conditions yet. Choose one to send.',
   'poh.suggest.sent': 'Suggestion sent for {{material}}.',
+  'poh.again.note':
+    'Part of this line is still on hold after the execution. Suggest again to start round {{round}}: the supplier chooses again and a new grace period starts today.',
+  'poh.again.send': 'Suggest again',
+  'poh.round': 'Round {{round}}',
   'poh.choose.label': 'Your choice',
   'poh.choose.send': 'Confirm choice',
   'poh.choose.final': 'Your choice is final.',
@@ -179,6 +183,10 @@ export const poOnHoldId = {
     'Dipilih otomatis dari kondisinya. Anda dapat mengubahnya sebelum mengirim.',
   'poh.suggest.none': 'Belum ada opsi yang sesuai dengan kondisinya. Pilih satu untuk dikirim.',
   'poh.suggest.sent': 'Usulan terkirim untuk {{material}}.',
+  'poh.again.note':
+    'Sebagian baris ini masih ditahan setelah eksekusi. Usulkan lagi untuk memulai putaran {{round}}: pemasok memilih lagi dan masa tenggang baru dimulai hari ini.',
+  'poh.again.send': 'Usulkan lagi',
+  'poh.round': 'Putaran {{round}}',
   'poh.choose.label': 'Pilihan Anda',
   'poh.choose.send': 'Konfirmasi pilihan',
   'poh.choose.final': 'Pilihan Anda bersifat final.',

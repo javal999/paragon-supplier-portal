@@ -92,6 +92,7 @@ import {
  *     readonly request: import('./stores/poCancellationStore').PoCancellationRow | null;
  *   }[];
  *   readonly recommendation: import('../../transitions/poOnHoldRecommendation').Recommendation;
+ *   readonly round: number;
  *   readonly decision: {
  *     readonly id: string;
  *     readonly suggested: PoOnHoldOption;
@@ -376,6 +377,7 @@ export function allPoOnHold(nowIso = sdcClock.now()) {
               history: stored.history
             }
           : null,
+        round: stored?.round ?? 1,
         status: standing.status,
         effective: standing.effective,
         outcome: standing.effective ? outcomeOf(standing.effective, f.qty, cap) : null
@@ -389,15 +391,10 @@ export function allPoOnHold(nowIso = sdcClock.now()) {
   // is kept, so the panel still says what the execution created.
   const closed = poOnHoldStore
     .executions()
-    .filter(
-      (e) =>
-        !live.some(
-          (r) =>
-            r.supplierId === e.supplierId &&
-            r.materialCode === e.materialCode &&
-            r.grace.firstDay === e.firstDay
-        )
-    )
+    // The live row of an execution is the one carrying its decision; a later
+    // round on the same line (same start day when the grace period is 0) must
+    // not hide the earlier one.
+    .filter((e) => !live.some((r) => r.decision?.id === e.decisionId))
     .map((e) => {
       const snap = /** @type {PoOnHoldRow} */ (/** @type {unknown} */ (e.snapshot));
       return {

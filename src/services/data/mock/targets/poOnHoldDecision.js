@@ -58,10 +58,19 @@ export const poOnHoldDecisionTarget = {
     const option = /** @type {import('../../../transitions/poOnHold').PoOnHoldOption} */ (
       str(payload.option)
     );
+    // [Proposed] "Suggest again": the line's decision already ran and left a
+    // remainder on hold, so this is a new round — a new decision, never a
+    // second row on the old one. Its grace period starts today (hub day).
+    const previous = line?.decision ? poOnHoldStore.get(line.decision.id) : undefined;
+    const supplierId = str(payload.supplierId);
+    const materialCode = str(payload.materialCode);
+    const today = sdcClock.now().slice(0, 10);
+    if (previous) poOnHoldStore.restart(`${supplierId}|${materialCode}`, today);
     const row = poOnHoldStore.insert({
-      supplierId: str(payload.supplierId),
-      materialCode: str(payload.materialCode),
-      firstDay: line?.grace.firstDay ?? sdcClock.now().slice(0, 10),
+      supplierId,
+      materialCode,
+      firstDay: previous ? today : (line?.grace.firstDay ?? today),
+      ...(previous ? { round: (previous.round ?? 1) + 1, previousId: previous.id } : {}),
       qty: line?.qty ?? 0,
       state: 'Suggested',
       suggested: option,
@@ -72,7 +81,9 @@ export const poOnHoldDecisionTarget = {
   }
 };
 
-// PEX-8 BR-01 — the planner suggests on a line that is on hold, once per episode.
+// PEX-8 BR-01 — the planner suggests on a line that is on hold, once per round:
+// a line whose decision already executed and left a remainder takes a new one
+// ("Suggest again", [Proposed]); any other line with a decision is refused.
 bindPolicyHook(POLICY_HOOKS.PO_ON_HOLD_SUGGESTABLE, ({ payload }) => {
   const refusal = poOnHoldOptionRefusal(payload.option);
   if (refusal) return { ok: false, reason: refusal };
@@ -82,7 +93,7 @@ bindPolicyHook(POLICY_HOOKS.PO_ON_HOLD_SUGGESTABLE, ({ payload }) => {
       ok: false,
       reason: 'PO_ON_HOLD_NO_LINE: nothing is on hold for this supplier and material'
     };
-  if (line.decision)
+  if (line.decision && line.execution.status !== 'executed')
     return {
       ok: false,
       reason: 'PO_ON_HOLD_ALREADY_SUGGESTED: this line already has a suggestion'
