@@ -338,7 +338,7 @@ mechanisms whose success signals said nothing about the damage they did.
 > IT HAS ALREADY STOPPED ONE BATCH.** `PolicyHookFn` takes ONE ctx
 > (`{ entityId, currentState, toState, payload, target, scope }`), `CommandTarget.
 > readEntity` is *"Full entity for policy hooks to inspect"*, and FOUR shipped hooks
-> read a document through it (`policies.js:64/87/104/263`) — none by importing a
+> read a document through it (`src/services/transitions/policies/`) — none by importing a
 > store. What a threshold lacks is the RIGHT-HAND SIDE of the comparison, not the
 > left. A role-gated VALUE policy (value from `readEntity` × lane from
 > `scope.businessRoles`) is buildable today and is **not** the ladder: it
