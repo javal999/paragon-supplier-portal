@@ -1319,21 +1319,16 @@ over everything else combined, and it grew that way in six weeks.
   if the recalibrated path above produces another six weeks of prose, this
   paragraph is evidence for the diagnosis and not a remedy for it.
 
-## Language — TypeScript → JavaScript, folder by folder (from 2026-10-02)
-The owner ruled the portal moves to JavaScript + JSDoc to match the company React
-boilerplate. Converted so far: `src/components/ui-v2` (pilot) and the app shell
-(`src/` root files, `hooks`, `context`, `router`, `test`, `data`, `components/*`;
-Phase 4 B1), `src/lib` (B2), `src/services/transitions` (B3; forecast flows excluded), `src/services/data` (B4,
-including `types.js`) the rest of `src/services` (B5; forecast engine, flows and mock
-files excluded) the `src/pages-v2` subfolders (B6) and the `src/pages-v2` root pages plus
-`pages/auth/Login` and `types/supplier.types` (B7), and the forecast module (Phase 7,
-2026-10-06). The conversion is complete: every file in `src/` is JavaScript except
-`vite-env.d.ts`, a type-declaration file with no JS form. Interfaces with `readonly` members are type-literal typedefs, so readonly is kept.
-Before converting a
-folder, follow `docs/frontend-standard/JS-CONVERSION-PLAYBOOK.md`: the draft tool
-deletes comments and loosens types, and `scripts/codemods/check-comments-kept.mjs`
-must report 0 lost. Any spec or gate that scans files uses `src/test/sourceFiles.js`
-(or a pattern naming all of `.ts/.tsx/.js/.jsx`); `languageNeutralScanners.guard`
+## Language — JavaScript + JSDoc
+The owner ruled on 2026-10-02 that the portal is JavaScript + JSDoc, to match the
+company React boilerplate. Every file in `src/` is JavaScript except
+`vite-env.d.ts`, a type-declaration file with no JS form. Interfaces with
+`readonly` members are type-literal typedefs, so readonly is kept.
+When a TypeScript file is converted, follow
+`docs/frontend-standard/JS-CONVERSION-PLAYBOOK.md`: the draft tool deletes comments
+and loosens types, and `scripts/codemods/check-comments-kept.mjs` must report 0
+lost. Any spec or gate that scans files uses `src/test/sourceFiles.js` (or a
+pattern naming all of `.ts/.tsx/.js/.jsx`); `languageNeutralScanners.guard`
 fails on a TypeScript-only filter.
 
 ## Gates
