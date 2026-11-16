@@ -1336,18 +1336,12 @@ must report 0 lost. Any spec or gate that scans files uses `src/test/sourceFiles
 (or a pattern naming all of `.ts/.tsx/.js/.jsx`); `languageNeutralScanners.guard`
 fails on a TypeScript-only filter.
 
-## Gates — LINT ADDED 2026-10-02 (the "no lint script" rule is lifted)
-Until 2026-10-02 this section said the project has no lint script. The owner
-lifted that rule to align the portal with the company React boilerplate
-(frontend-standard plan, Phase 1). ESLint (`eslint.config.js`), Prettier
-(`.prettierrc.json`) and a Husky pre-commit hook (`lint-staged.config.js`) are
-now part of the repo; each file's header explains its rules and why. Rules that
-still have violations run as warnings (listed in `RULES_WITH_OPEN_VIOLATIONS`
-in `eslint.config.js`) and their total may not rise above the ceiling in
-`scripts/floor.json`. Since Phase 7 (2026-10-06) the forecast module is linted
-like every other file; it no longer has its rules downgraded to warnings.
-The gates are exactly five (three until `TSC-SKIPS-TESTS-01` closed, four until
-lint was added):
+## Gates
+ESLint (`eslint.config.js`), Prettier (`.prettierrc.json`) and a Husky pre-commit
+hook (`lint-staged.config.js`) are part of the repo; each file's header explains
+its rules and why. `lint.maxWarnings` in `scripts/floor.json` is a ceiling: lint
+may not report more warnings than it records there. The forecast module is
+linted like every other file. The gates are exactly five:
 - `npm run build`  → `tsc && vite build` (typecheck + bundle)
 - `tsc -p tsconfig.vitest.json --noEmit` → **typechecks the SPEC surface**, which
   `tsconfig.json` excludes. Added when `TSC-SKIPS-TESTS-01` was closed: for the
