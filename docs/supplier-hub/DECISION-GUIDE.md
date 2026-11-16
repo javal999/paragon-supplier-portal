@@ -640,7 +640,7 @@ The owner was away, so four builds went ahead on the builders' own calls. Each c
 | !117-3 | A spread week with no existing call-off takes nothing | Use the week's Monday as the need date |
 | !117-4 | Execution call-offs are left out of the DA week supply, so their quantity leaves hold | Count them as DA supply; the line then never clears, because a spread inside the DA cap does not change PO On Hold under PEX-7 BR-01 |
 | !117-5 | A consumption week counts as stock movement on the week's last working day, capped at today | None stated |
-| !117-6 | A line left on hold after FG or a capped spread has no "suggest again" path: one suggestion per episode. **Since MR !135** (merged to `main` on 2026-11-16, not yet in production) **the path exists, as a new round [Proposed]**: calls !135-1 to !135-3 | None stated |
+| !117-6 | A line left on hold after FG or a capped spread has no "suggest again" path: one suggestion per episode. **Since MR !135** (merged to `main` on 2026-11-16, not in production at the 2026-11-16 check) **the path exists, as a new round [Proposed]**: calls !135-1 to !135-3 | None stated |
 | !117-7 | The existing line "FG absorbs nothing and the whole quantity stays on hold" is kept, though it reads slightly off now that the execution waits | None stated |
 
 **MR !127: sourcing-share split and brand share per month (`15f9712f`, PEX-D25, PEX-D26).**
@@ -680,7 +680,7 @@ The owner was away, so four builds went ahead on the builders' own calls. Each c
 
 ### Builder calls from MR !135, proposed and not ruled (2026-11-13)
 
-**MR !135: PO On Hold marker on system-made call-offs and "Suggest again" for a remainder (`3890c224`, merged to `main` as `18f75ebc` on 2026-11-16, not yet in production; PEX-8, BL-314, BL-315).** The MR was merged under the owner's GitLab account without a ruling on its four calls: it has no notes, and no ruling is recorded in the documents. Each call below is **[Proposed]**, owner Levi. The list comes from the MR description, which was read in the 2026-11-16 pass; each call was checked against the code on `18f75ebc`. A change after merge is a small follow-up MR. The MR description says the supplier-seat marker and the button were checked in jsdom tests only; the browser checks still open are in BL-316.
+**MR !135: PO On Hold marker on system-made call-offs and "Suggest again" for a remainder (`3890c224`, merged to `main` as `18f75ebc` on 2026-11-16, not in production at the 2026-11-16 check; PEX-8, BL-314, BL-315).** The MR was merged under the owner's GitLab account without a ruling on its four calls: it has no notes, and no ruling is recorded in the documents. Each call below is **[Proposed]**, owner Levi. The list comes from the MR description, which was read in the 2026-11-16 pass; each call was checked against the code on `18f75ebc`. A change after merge is a small follow-up MR. The MR description says the supplier-seat marker and the button were checked in jsdom tests only; the browser checks still open are in BL-316.
 
 | Ref | Call | Alternative |
 |---|---|---|
