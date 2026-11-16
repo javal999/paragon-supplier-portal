@@ -208,7 +208,7 @@ unreachable by construction. **The mode is unconditional so that no seat has to
 decide it** — see the merge doctrine for the full argument and for the four
 mechanisms whose success signals said nothing about the damage they did.
 
-## Current state (as-built: main @ #65 — F0 + I3 complete; Stage G planning canon on main)
+## Current state
 
 > ⚠️ **AUTHORISATION NOW EXISTS (Batch A, §64).** `resolveRoles` no longer widens
 > a persona to its whole atom set: it resolves the SEAT's business roles
