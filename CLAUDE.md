@@ -179,16 +179,16 @@ aggregate cannot distinguish "everything passed" from "nothing was asked."
   if it moved, what ran was not what you meant.
 
 ## Session startup — run these commands every time
-git checkout main && git pull origin main
+git checkout main && git pull gitlab main
 
 ## Workflow for every task
 1. git checkout main
-2. git pull origin main
+2. git pull gitlab main
 3. git checkout -b <type>/<short-description>
 4. Make changes
 5. git add .
 6. git commit -m "description"
-7. git push -u origin <branch>
+7. git push -u gitlab <branch>
 8. Open a PR to main; the operator directs and approves, then the CLI merges
    with `gh pr merge <n> --merge` (never squash, never `--delete-branch`,
    identity-clean merge commit)
@@ -208,7 +208,7 @@ unreachable by construction. **The mode is unconditional so that no seat has to
 decide it** — see the merge doctrine for the full argument and for the four
 mechanisms whose success signals said nothing about the damage they did.
 
-## Current state (as-built: main @ #65 — F0 + I3 complete; Stage G planning canon on main)
+## Current state
 
 > ⚠️ **AUTHORISATION NOW EXISTS (Batch A, §64).** `resolveRoles` no longer widens
 > a persona to its whole atom set: it resolves the SEAT's business roles
@@ -338,7 +338,7 @@ mechanisms whose success signals said nothing about the damage they did.
 > IT HAS ALREADY STOPPED ONE BATCH.** `PolicyHookFn` takes ONE ctx
 > (`{ entityId, currentState, toState, payload, target, scope }`), `CommandTarget.
 > readEntity` is *"Full entity for policy hooks to inspect"*, and FOUR shipped hooks
-> read a document through it (`policies.js:64/87/104/263`) — none by importing a
+> read a document through it (`src/services/transitions/policies/`) — none by importing a
 > store. What a threshold lacks is the RIGHT-HAND SIDE of the comparison, not the
 > left. A role-gated VALUE policy (value from `readEntity` × lane from
 > `scope.businessRoles`) is buildable today and is **not** the ladder: it
@@ -389,8 +389,7 @@ and the Stage G planning canon + World-Class Build Plan are now on main.
   (Shipment/Contract/Obligation/SupplierDocument): no CommandTarget, no cascade
   link, roles mapped for catalog-coverage only (DNA-SEED-01 contract surface, no
   UI consumer). **PR is NO LONGER among them** — corrected 2026-08-03: it was
-  wired at G1.1 and dispatches (`MockCommandService.js:547-593`, registered
-  `:983`).
+  wired at G1.1 and dispatches (see `TARGETS` in `MockCommandService.js`).
 
   ⚠️ **THE TARGET-LESS FLOWS ARE A SET DIFFERENCE, NOT A LIST — RUN
   `getKnownFlows()` ∖ `WIRED_COMMAND_TARGETS`.** This line has been written out
@@ -510,7 +509,9 @@ and the Stage G planning canon + World-Class Build Plan are now on main.
 
 ### THE RECALIBRATED PATH (ruled 2026-08-20; supersedes the Stage-G "next" pointer)
 
-Three arcs, in order. Nothing else is queued.
+Three arcs ruled on 2026-08-20, kept as the record of that ruling. They are not
+the work queue: the queue is `docs/supplier-hub/BACKLOG.md`, and the work merged
+since (RFx, forecast, capacity, inventory) is named by none of them.
 
 - **ARC 1 · TRACK R — the halal lane made operable.** Three deliverables, and
   every one of them is a SURFACE or a WRITE PATH, never a register entry:
@@ -536,22 +537,12 @@ Three arcs, in order. Nothing else is queued.
      safe to wire** — that is the whole reason the arc is ordered this way, and
      H4 / `D-COMP-HALAL-4` is the gate it opens.
 
-- **ARC 2 · THE REQUISITION LANE.** ⚠️ **The dispatched premise inverted twice,
-  and the lane is in WORSE shape than "unreachable", not better.** Derived:
-  `purchaseRequisition` **IS** a wired `CommandTarget`
-  (`MockCommandService.js:1292`), so `t_pr_submit` / `t_pr_approve` /
-  `t_pr_reject` are dispatch**able**; and procurement's entry point **DOES** have
-  a page — `/buyer/purchase-requisition` → `BuyerRequisitions`
-  (`AppRouter.jsx:111`), alongside `IntakeReview` and
-  `plan-grid/IntakeAdjustDrawer`. What is true is sharper: **only `t_pr_create`
-  has a hook and a caller.** The panel ships a `Draft` → **"Submit for approval"**
-  button that fires a **`variant: 'success'` toast and closes the drawer** — no
-  dispatch, no state change (`BuyerRequisitions.jsx:520-532`); the `Approved` →
-  "Create PO directly" / "Create sourcing event" button does the same
-  (`:501-519`); and `Pending Approval` carries **no approve or reject affordance
-  at all**. An unreachable verb is silent. **This one tells the buyer it
-  succeeded.** Arc 2 is the approval half of the lane, and the two false
-  affordances are its first fix.
+- **ARC 2 · THE REQUISITION LANE — built.** `BuyerRequisitions` now dispatches
+  `pr:create`, `pr:submit`, `pr:approve`, `pr:reject` and `pr:revise`
+  (`src/pages-v2/BuyerRequisitions/hooks/useRequisitionActions.js`). The plan
+  grid and intake review this arc named were retired by IA P-10, and the
+  "Draft → Submit for approval" toast with no dispatch no longer exists as
+  described here.
 
 - **ARC 3 · SUPPLIER ONBOARDING.** ⚠️ **AMENDED 2026-09-01 — THE MECHANISM
   SURVIVES MEASUREMENT, THE CONCLUSION DOES NOT.** Re-derived today, and the
@@ -610,14 +601,17 @@ never as a standalone batch:
 
 ## Routing
 Routing is HashRouter (`src/router/AppRouter.jsx`) — not BrowserRouter. The `/`
-home redirect points to `/buyer/dashboard`; unknown routes render a real 404
-(`src/pages-v2/NotFound.jsx`).
+home redirect points to `/buyer/home`; unknown routes render a real 404
+(`src/pages-v2/NotFound.jsx`), and so do the paths of the pages the IA P-10
+batch retired (the two dashboards, analytics, risk, discovery, the marketplace
+and storefronts, the plan grid and its intake review, the supplier channel
+pages).
 
-Most routes are persona-prefixed (`/buyer/…`, `/supplier/…`). Two are
-deliberately NOT: `/marketplace` and `/glossary` (GL-1). The glossary is reached
+Most routes are persona-prefixed (`/buyer/…`, `/supplier/…`). One is
+deliberately NOT: `/glossary` (GL-1). The glossary is reached
 by term chips that sit on BOTH personas' refusal sites, so a persona prefix
 would have sent half its readers out of their own shell; it is listed in both
-nav groups under one neutral key, `nav.glossary`.
+nav groups under one neutral key, `hub.nav.util.glossary`.
 
 ## Design principles
 
@@ -1324,35 +1318,24 @@ over everything else combined, and it grew that way in six weeks.
   if the recalibrated path above produces another six weeks of prose, this
   paragraph is evidence for the diagnosis and not a remedy for it.
 
-## Language — TypeScript → JavaScript, folder by folder (from 2026-10-02)
-The owner ruled the portal moves to JavaScript + JSDoc to match the company React
-boilerplate. Converted so far: `src/components/ui-v2` (pilot) and the app shell
-(`src/` root files, `hooks`, `context`, `router`, `test`, `data`, `components/*`;
-Phase 4 B1), `src/lib` (B2), `src/services/transitions` (B3; forecast flows excluded), `src/services/data` (B4,
-including `types.js`) the rest of `src/services` (B5; forecast engine, flows and mock
-files excluded) the `src/pages-v2` subfolders (B6) and the `src/pages-v2` root pages plus
-`pages/auth/Login` and `types/supplier.types` (B7), and the forecast module (Phase 7,
-2026-10-06). The conversion is complete: every file in `src/` is JavaScript except
-`vite-env.d.ts`, a type-declaration file with no JS form. Interfaces with `readonly` members are type-literal typedefs, so readonly is kept.
-Before converting a
-folder, follow `docs/frontend-standard/JS-CONVERSION-PLAYBOOK.md`: the draft tool
-deletes comments and loosens types, and `scripts/codemods/check-comments-kept.mjs`
-must report 0 lost. Any spec or gate that scans files uses `src/test/sourceFiles.js`
-(or a pattern naming all of `.ts/.tsx/.js/.jsx`); `languageNeutralScanners.guard`
+## Language — JavaScript + JSDoc
+The owner ruled on 2026-10-02 that the portal is JavaScript + JSDoc, to match the
+company React boilerplate. Every file in `src/` is JavaScript except
+`vite-env.d.ts`, a type-declaration file with no JS form. Interfaces with
+`readonly` members are type-literal typedefs, so readonly is kept.
+When a TypeScript file is converted, follow
+`docs/frontend-standard/JS-CONVERSION-PLAYBOOK.md`: the draft tool deletes comments
+and loosens types, and `scripts/codemods/check-comments-kept.mjs` must report 0
+lost. Any spec or gate that scans files uses `src/test/sourceFiles.js` (or a
+pattern naming all of `.ts/.tsx/.js/.jsx`); `languageNeutralScanners.guard`
 fails on a TypeScript-only filter.
 
-## Gates — LINT ADDED 2026-10-02 (the "no lint script" rule is lifted)
-Until 2026-10-02 this section said the project has no lint script. The owner
-lifted that rule to align the portal with the company React boilerplate
-(frontend-standard plan, Phase 1). ESLint (`eslint.config.js`), Prettier
-(`.prettierrc.json`) and a Husky pre-commit hook (`lint-staged.config.js`) are
-now part of the repo; each file's header explains its rules and why. Rules that
-still have violations run as warnings (listed in `RULES_WITH_OPEN_VIOLATIONS`
-in `eslint.config.js`) and their total may not rise above the ceiling in
-`scripts/floor.json`. Since Phase 7 (2026-10-06) the forecast module is linted
-like every other file; it no longer has its rules downgraded to warnings.
-The gates are exactly five (three until `TSC-SKIPS-TESTS-01` closed, four until
-lint was added):
+## Gates
+ESLint (`eslint.config.js`), Prettier (`.prettierrc.json`) and a Husky pre-commit
+hook (`lint-staged.config.js`) are part of the repo; each file's header explains
+its rules and why. `lint.maxWarnings` in `scripts/floor.json` is a ceiling: lint
+may not report more warnings than it records there. The forecast module is
+linted like every other file. The gates are exactly five:
 - `npm run build`  → `tsc && vite build` (typecheck + bundle)
 - `tsc -p tsconfig.vitest.json --noEmit` → **typechecks the SPEC surface**, which
   `tsconfig.json` excludes. Added when `TSC-SKIPS-TESTS-01` was closed: for the
