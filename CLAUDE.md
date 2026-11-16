@@ -389,8 +389,7 @@ and the Stage G planning canon + World-Class Build Plan are now on main.
   (Shipment/Contract/Obligation/SupplierDocument): no CommandTarget, no cascade
   link, roles mapped for catalog-coverage only (DNA-SEED-01 contract surface, no
   UI consumer). **PR is NO LONGER among them** — corrected 2026-08-03: it was
-  wired at G1.1 and dispatches (`MockCommandService.js:547-593`, registered
-  `:983`).
+  wired at G1.1 and dispatches (see `TARGETS` in `MockCommandService.js`).
 
   ⚠️ **THE TARGET-LESS FLOWS ARE A SET DIFFERENCE, NOT A LIST — RUN
   `getKnownFlows()` ∖ `WIRED_COMMAND_TARGETS`.** This line has been written out
