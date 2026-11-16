@@ -610,14 +610,17 @@ never as a standalone batch:
 
 ## Routing
 Routing is HashRouter (`src/router/AppRouter.jsx`) — not BrowserRouter. The `/`
-home redirect points to `/buyer/dashboard`; unknown routes render a real 404
-(`src/pages-v2/NotFound.jsx`).
+home redirect points to `/buyer/home`; unknown routes render a real 404
+(`src/pages-v2/NotFound.jsx`), and so do the paths of the pages the IA P-10
+batch retired (the two dashboards, analytics, risk, discovery, the marketplace
+and storefronts, the plan grid and its intake review, the supplier channel
+pages).
 
-Most routes are persona-prefixed (`/buyer/…`, `/supplier/…`). Two are
-deliberately NOT: `/marketplace` and `/glossary` (GL-1). The glossary is reached
+Most routes are persona-prefixed (`/buyer/…`, `/supplier/…`). One is
+deliberately NOT: `/glossary` (GL-1). The glossary is reached
 by term chips that sit on BOTH personas' refusal sites, so a persona prefix
 would have sent half its readers out of their own shell; it is listed in both
-nav groups under one neutral key, `nav.glossary`.
+nav groups under one neutral key, `hub.nav.util.glossary`.
 
 ## Design principles
 
