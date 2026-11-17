@@ -266,12 +266,15 @@ const WizardScopeStep = ({
           placeholder={t('sourcing.wizard.placeholder.budget')}
           aria-label={t('sourcing.wizard.field.budget')}
           aria-invalid={!budgetRead.ok}
+          // BL-84 — the refusal under the field is tied to it.
+          aria-describedby={!budgetRead.ok ? 'rfq-budget-refusal' : undefined}
           className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
         />
         {/* An untouched blank does not nag — it is this field's answer,
             so `readRfqBudget` never refuses one. */}
         {!budgetRead.ok && (
           <div
+            id="rfq-budget-refusal"
             role="alert"
             data-testid="rfq-budget-refusal"
             className="mt-1 text-[length:var(--fs-label-3)] text-danger"
@@ -336,6 +339,10 @@ const WizardScopeStep = ({
           placeholder={t('sourcing.wizard.placeholder.qty')}
           aria-label={t('sourcing.wizard.field.totalQty')}
           aria-invalid={draft.totalQty.trim() !== '' && !qtyRead.ok}
+          // BL-84 — the quantity refusal is tied to the quantity field.
+          aria-describedby={
+            draft.totalQty.trim() !== '' && !qtyRead.ok ? 'rfq-qty-refusal' : undefined
+          }
           className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
         />
         {/* An untouched blank does not nag on sight — it refuses at the
@@ -343,6 +350,7 @@ const WizardScopeStep = ({
             buyer has typed something (the 2e-a price precedent). */}
         {draft.totalQty.trim() !== '' && !qtyRead.ok && (
           <div
+            id="rfq-qty-refusal"
             role="alert"
             data-testid="rfq-qty-refusal"
             className="mt-1 text-[length:var(--fs-label-3)] text-danger"

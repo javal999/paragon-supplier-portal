@@ -50,6 +50,12 @@ describe('BL-31 a11y gate · POPULATION — nothing below means anything without
     expect(sites).toContain('pages-v2/RolesCatalogue.jsx <tr onClick>');
     // A known selection row acquitted by its own checkbox.
     expect(sites).toContain('pages-v2/rfx/RfxInviteeStep.jsx <tr onClick>');
+    // BL-84 — a known invalid field that now names its error.
+    expect(sites).toContain(
+      'pages-v2/SupplierRFQs/components/QuotePriceSection.jsx <input aria-invalid>'
+    );
+    // …and a known non-member: a field with no error state at all.
+    expect(sites).not.toContain('pages/auth/Login.jsx <input aria-invalid>');
   });
 });
 
@@ -121,6 +127,23 @@ describe('BL-31 a11y gate · PROBE — fires on the defect, accepts the fix', ()
     expect(scanSource('m.tsx', mirrors)).toEqual([]);
     expect(scanSource('n.tsx', notMirror)).toHaveLength(1);
   });
+
+  it('✅ BL-84: an invalid field with no aria-describedby is a finding; the wired twin is not', () => {
+    const bad = `const F = () => <input aria-invalid={!ok} value={v} onChange={f} />;`;
+    const good = `const F = () => <input aria-invalid={!ok} aria-describedby={errorId} value={v} onChange={f} />;`;
+    expect(scanSource('bad.tsx', bad).map((f) => f.what)).toEqual([
+      '<input aria-invalid> does not describe its error'
+    ]);
+    expect(scanSource('good.tsx', good)).toEqual([]);
+    // A spread may carry the association, so it acquits — the same rule button
+    // naming uses, and said out loud rather than discovered later.
+    expect(scanSource('spread.tsx', `const F = () => <input aria-invalid {...rest} />;`)).toEqual(
+      []
+    );
+    // A select and a textarea are the same rule, not only inputs.
+    expect(scanSource('s.tsx', `const F = () => <select aria-invalid={!ok} />;`)).toHaveLength(1);
+    expect(scanSource('t.tsx', `const F = () => <textarea aria-invalid={!ok} />;`)).toHaveLength(1);
+  });
 });
 
 describe('BL-31 a11y gate · THE TREE', () => {
@@ -131,6 +154,11 @@ describe('BL-31 a11y gate · THE TREE', () => {
 
   it('every raw clickable <tr> in src/ is keyboard-operable', () => {
     const f = findings.filter((x) => x.what.startsWith('<tr'));
+    expect(f, f.map((x) => `${x.file}:${x.line} ${x.what}`).join('\n')).toEqual([]);
+  });
+
+  it('every field marked aria-invalid in src/ describes its error (BL-84)', () => {
+    const f = findings.filter((x) => x.what.includes('does not describe its error'));
     expect(f, f.map((x) => `${x.file}:${x.line} ${x.what}`).join('\n')).toEqual([]);
   });
 });

@@ -148,4 +148,28 @@ describe('SessionAttachments — reads files through the data service', () => {
     expect(files.release).toHaveBeenCalledTimes(1);
     expect(files.release).toHaveBeenCalledWith('stub-new.pdf');
   });
+
+  // BL-84 (WCAG 3.3.1) — a refused file is announced with the control that
+  // refused it, not only listed under it.
+  it('a refused file is tied to the file control', async () => {
+    const { service } = stubFiles();
+    renderWithProviders(
+      <SessionAttachments
+        value={[]}
+        onChange={() => {}}
+        label="Files"
+        testId="att"
+        refuse={() => 'Too large'}
+      />,
+      { service }
+    );
+    fireEvent.change(screen.getByTestId('att-input'), {
+      target: { files: [new File(['x'], 'a.pdf', { type: 'application/pdf' })] }
+    });
+    const refusal = await screen.findByTestId('att-refusal');
+    expect(refusal).toHaveAttribute('id', 'att-refusal');
+    expect(refusal).toHaveTextContent('Too large');
+    expect(screen.getByTestId('att-input')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByTestId('att-input')).toHaveAttribute('aria-describedby', 'att-refusal');
+  });
 });

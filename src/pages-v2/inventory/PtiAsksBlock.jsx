@@ -171,6 +171,9 @@ const ReplyForm = ({ ask, onDone }) => {
           rows={3}
           value={answer}
           data-testid={`pti-ask-reply-${ask.id}`}
+          // BL-84 — the reply refusal is announced with the reply fields.
+          aria-invalid={shown ? true : undefined}
+          aria-describedby={shown ? `pti-ask-refusal-${ask.id}` : undefined}
           onChange={(e) => setAnswer(e.target.value)}
         />
       </label>
@@ -181,11 +184,13 @@ const ReplyForm = ({ ask, onDone }) => {
           className={`${inputClass} font-mono`}
           value={answerDate}
           data-testid={`pti-ask-reply-date-${ask.id}`}
+          aria-invalid={shown ? true : undefined}
+          aria-describedby={shown ? `pti-ask-refusal-${ask.id}` : undefined}
           onChange={(e) => setAnswerDate(e.target.value)}
         />
       </label>
       {shown ? (
-        <p className="text-xs text-danger" role="alert">
+        <p id={`pti-ask-refusal-${ask.id}`} className="text-xs text-danger" role="alert">
           {askRefusalText(t, shown)}
         </p>
       ) : null}

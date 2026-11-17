@@ -145,6 +145,8 @@ const PolicyEditor = ({
               value={unlimited ? '' : pct}
               disabled={unlimited || pending}
               aria-invalid={pctInvalid}
+              // BL-84 — the refusal under the field is what the reader hears.
+              aria-describedby={pctInvalid && !pctRead.ok ? 'policy-pct-refusal' : undefined}
               onChange={(e) => setPct(e.target.value)}
               className="w-24 rounded-md border border-border-input bg-bg-surface px-2 py-1.5 text-sm text-text-primary disabled:opacity-50"
             />
@@ -165,6 +167,7 @@ const PolicyEditor = ({
               without anyone being told. */}
           {pctInvalid && !pctRead.ok && (
             <div
+              id="policy-pct-refusal"
               role="alert"
               data-testid="policy-pct-refusal"
               className="mt-1 text-[length:var(--fs-label-3)] text-danger"

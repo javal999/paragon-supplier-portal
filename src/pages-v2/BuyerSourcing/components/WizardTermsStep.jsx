@@ -51,13 +51,31 @@ const WizardTermsStep = ({ draft, updateDraft, t }) => (
             type="date"
             value={draft.awardDeadline}
             onChange={(e) => updateDraft('awardDeadline', e.target.value)}
+            aria-label={t('sourcing.wizard.field.awardDeadline')}
+            // BL-84 — the "award after response" refusal is tied to this date.
+            aria-invalid={
+              !!(
+                draft.responseDeadline &&
+                draft.awardDeadline &&
+                new Date(draft.awardDeadline) <= new Date(draft.responseDeadline)
+              )
+            }
+            aria-describedby={
+              draft.responseDeadline &&
+              draft.awardDeadline &&
+              new Date(draft.awardDeadline) <= new Date(draft.responseDeadline)
+                ? 'rfq-award-deadline-refusal'
+                : undefined
+            }
             className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
           />
         </label>
         {draft.responseDeadline &&
           draft.awardDeadline &&
           new Date(draft.awardDeadline) <= new Date(draft.responseDeadline) && (
-            <p className="text-xs text-danger mt-1">{t('sourcing.wizard.awardAfterResponse')}</p>
+            <p id="rfq-award-deadline-refusal" className="text-xs text-danger mt-1">
+              {t('sourcing.wizard.awardAfterResponse')}
+            </p>
           )}
       </div>
       <div>

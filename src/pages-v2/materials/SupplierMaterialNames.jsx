@@ -171,6 +171,9 @@ const SupplierMaterialNames = ({ supplierId }) => {
               data-testid="my-materials-trade-name"
               aria-label={t('matName.form.tradeName')}
               maxLength={TRADE_NAME_MAX + 20}
+              // BL-84 — the form's refusal names both fields it judges.
+              aria-invalid={refusalKey ? true : undefined}
+              aria-describedby={refusalKey ? 'my-materials-refusal' : undefined}
               value={draft.tradeName}
               onChange={(e) => setDraft((d) => (d ? { ...d, tradeName: e.target.value } : d))}
             />
@@ -184,6 +187,8 @@ const SupplierMaterialNames = ({ supplierId }) => {
               data-testid="my-materials-supplier-no"
               aria-label={t('matName.form.supplierNo')}
               maxLength={SUPPLIER_MATERIAL_NO_MAX + 20}
+              aria-invalid={refusalKey ? true : undefined}
+              aria-describedby={refusalKey ? 'my-materials-refusal' : undefined}
               value={draft.supplierMaterialNo}
               onChange={(e) =>
                 setDraft((d) => (d ? { ...d, supplierMaterialNo: e.target.value } : d))
@@ -191,7 +196,11 @@ const SupplierMaterialNames = ({ supplierId }) => {
             />
           </label>
           {!!refusalKey && (
-            <p className="text-xs text-danger" data-testid="my-materials-refusal">
+            <p
+              id="my-materials-refusal"
+              className="text-xs text-danger"
+              data-testid="my-materials-refusal"
+            >
               {t(refusalKey)}
             </p>
           )}

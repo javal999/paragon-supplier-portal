@@ -33,7 +33,7 @@ import { termUnit } from './rfxAuthoringDisplay';
 
 /**
  * One term value, typed in the row's kind.
- * @type {React.FC<{ row: RfpTermRow; value: string; onChange: (value: string) => void; ariaLabel: string; disabled?: boolean; invalid?: boolean; testId?: string; }>}
+ * @type {React.FC<{ row: RfpTermRow; value: string; onChange: (value: string) => void; ariaLabel: string; disabled?: boolean; invalid?: boolean; testId?: string; describedBy?: string; }>}
  */
 export const TermValueInput = ({
   row,
@@ -42,7 +42,8 @@ export const TermValueInput = ({
   ariaLabel,
   disabled = false,
   invalid = false,
-  testId
+  testId,
+  describedBy
 }) => {
   const { t } = useTranslation();
   const kind = rfpTermKindOf(row);
@@ -55,6 +56,8 @@ export const TermValueInput = ({
       <select
         aria-label={ariaLabel}
         data-testid={testId}
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
         disabled={disabled}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -77,6 +80,8 @@ export const TermValueInput = ({
         inputMode={kind === 'numberWithUnit' ? 'decimal' : undefined}
         aria-label={ariaLabel}
         data-testid={testId}
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
         disabled={disabled}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -336,11 +341,18 @@ export const CustomTermEditor = ({ terms, onChange }) => {
           onChange={(v) => setDraft((d) => ({ ...d, requestedValue: v }))}
           ariaLabel={`${t('rfxa.term.custom')} — ${t('rfx.rfp.term.requested')}`}
           testId="rfp-new-custom-requested"
+          // BL-84 — the custom-term refusal is tied to the value it is about.
+          invalid={!!refusal}
+          describedBy={refusal ? 'rfp-new-custom-refusal' : undefined}
         />
       </div>
 
       {refusal && (
-        <p className="text-sm text-danger" data-testid="rfp-new-custom-refusal">
+        <p
+          id="rfp-new-custom-refusal"
+          className="text-sm text-danger"
+          data-testid="rfp-new-custom-refusal"
+        >
           {t(`rfxa.refusal.${refusalCode(refusal)}`, { defaultValue: refusal })}
         </p>
       )}

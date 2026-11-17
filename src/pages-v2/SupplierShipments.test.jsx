@@ -72,6 +72,26 @@ describe('SupplierShipments — four honest states', () => {
     });
     expect(await screen.findByText('No shipments yet')).toBeInTheDocument();
   });
+
+  // BL-84 (WCAG 1.3.1) — the page went h1 → h3: the list's "Advance Ship
+  // Notices" heading skipped a level under the page title.
+  it('BL-84: one h1, and no heading level is skipped', async () => {
+    const { container } = renderWithProviders(<SupplierShipments />, { identity: SUPPLIER });
+    await screen.findByText('ASN-2025-00211');
+    const headings = [...container.querySelectorAll('h1,h2,h3,h4,h5,h6')];
+    expect(headings.filter((h) => h.tagName === 'H1')).toHaveLength(1);
+    const levels = headings.map((h) => Number(h.tagName.slice(1)));
+    for (let i = 1; i < levels.length; i += 1) {
+      expect(
+        levels[i] - levels[i - 1],
+        `heading order skipped at ${headings[i]?.textContent}`
+      ).toBeLessThanOrEqual(1);
+    }
+    // The list section is an h2 beneath the page title.
+    expect(
+      screen.getByRole('heading', { level: 2, name: /Advance Ship Notices/ })
+    ).toBeInTheDocument();
+  });
 });
 
 describe('SupplierShipments — ASN verbs (Step 4 batch i)', () => {

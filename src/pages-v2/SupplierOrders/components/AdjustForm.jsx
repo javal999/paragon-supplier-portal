@@ -120,6 +120,9 @@ const AdjustForm = ({
                     inputMode="decimal"
                     className={inputClass}
                     value={d.qty}
+                    // BL-84 — the line's refusal is announced with its fields.
+                    aria-invalid={refusal ? true : undefined}
+                    aria-describedby={refusal ? `po-adjust-refusal-${li.id}` : undefined}
                     onChange={(e) => updateDraft(li.id, { qty: e.target.value })}
                   />
                 </div>
@@ -132,11 +135,14 @@ const AdjustForm = ({
                     type="date"
                     className={inputClass}
                     value={d.date}
+                    aria-invalid={refusal ? true : undefined}
+                    aria-describedby={refusal ? `po-adjust-refusal-${li.id}` : undefined}
                     onChange={(e) => updateDraft(li.id, { date: e.target.value })}
                   />
                 </div>
                 {refusal && (
                   <div
+                    id={`po-adjust-refusal-${li.id}`}
                     role="alert"
                     data-testid={`po-adjust-refusal-${li.id}`}
                     className="sm:col-span-2 text-[length:var(--fs-label-3)] text-danger"

@@ -304,6 +304,9 @@ const ConsumptionPanel = ({ rows, nowIso }) => {
               className="hidden"
               data-testid="consumption-upload-file"
               aria-label={t('consumption.upload.choose')}
+              // BL-84 — the upload's refusal is announced with the file control.
+              aria-invalid={fileError ? true : undefined}
+              aria-describedby={fileError ? 'consumption-upload-error' : undefined}
               onChange={(e) => void handleFile(e.target.files?.[0])}
             />
             <Button
@@ -328,6 +331,7 @@ const ConsumptionPanel = ({ rows, nowIso }) => {
           ) : null}
           {fileError ? (
             <p
+              id="consumption-upload-error"
               role="alert"
               className="mt-3 text-sm text-danger"
               data-testid="consumption-upload-error"

@@ -93,12 +93,19 @@ const AsnLinesEditor = ({
                       inputMode="decimal"
                       aria-label={t('fc.asn.shippedFor', { material: l.materialCode })}
                       aria-invalid={bad || over}
+                      // BL-84 — the line's own refusal, named by its material.
+                      aria-describedby={
+                        bad || over ? `asn-qty-${l.materialCode}-invalid` : undefined
+                      }
                       value={e.qty}
                       onChange={(ev) => onChange(l.materialCode, { qty: ev.target.value })}
                       className={`${inputClass} min-w-[96px]`}
                     />
                     {bad && (
-                      <div className="mt-1 text-[length:var(--fs-label-3)] text-danger">
+                      <div
+                        id={`asn-qty-${l.materialCode}-invalid`}
+                        className="mt-1 text-[length:var(--fs-label-3)] text-danger"
+                      >
                         {t('fc.asn.qty.invalid')}
                       </div>
                     )}
@@ -115,6 +122,19 @@ const AsnLinesEditor = ({
                     <input
                       type="date"
                       aria-label={t('fc.asn.expiryFor', { material: l.materialCode })}
+                      // BL-84 — an expiry the rule refuses says which note.
+                      aria-invalid={
+                        r?.refusal === 'expiry' ||
+                        r?.refusal === 'expiryRequired' ||
+                        r?.refusal === 'shelfLife' ||
+                        (r?.shelfLife ? !r.shelfLife.ok : false)
+                      }
+                      aria-describedby={
+                        r?.refusal === 'expiryRequired' ||
+                        (r?.shelfLife?.monthsLeft ?? null) !== null
+                          ? `asn-expiry-${l.materialCode}-note`
+                          : undefined
+                      }
                       value={e.expiry}
                       onChange={(ev) => onChange(l.materialCode, { expiry: ev.target.value })}
                       className={inputClass}

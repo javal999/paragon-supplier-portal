@@ -144,7 +144,10 @@ export const SupplierNoticeBell = () => {
     <div className="relative" ref={boxRef}>
       <button
         type="button"
-        aria-label={t('topbar.notifications')}
+        // BL-84 (WCAG 4.1.2): the count is in the visible badge, so it is in
+        // the name too — including 0, because "how many" has an answer when
+        // there are none, and a name that omits it only says "some".
+        aria-label={t('topbar.notificationsCount', { n: notices.length })}
         aria-expanded={open}
         onClick={() => setOpen(!open)}
         className="relative p-2 rounded-md text-text-secondary hover:bg-bg-hover"

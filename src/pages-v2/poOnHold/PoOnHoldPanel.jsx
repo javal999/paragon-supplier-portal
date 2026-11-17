@@ -284,6 +284,9 @@ const PoOnHoldPanel = ({ persona }) => {
                       placeholder={t('poh.rec.thresholdsEmpty')}
                       onChange={(e) => setAbsorbDraft(e.target.value)}
                       data-testid={`poh-absorbmax-input-${r.key}`}
+                      // BL-84 — the thresholds refusal is tied to both inputs.
+                      aria-invalid={thresholdsInvalid || undefined}
+                      aria-describedby={thresholdsInvalid ? 'poh-rec-invalid' : undefined}
                     />
                   </label>
                   <label className="block">
@@ -295,6 +298,8 @@ const PoOnHoldPanel = ({ persona }) => {
                       placeholder={t('poh.rec.thresholdsEmpty')}
                       onChange={(e) => setCarryDraft(e.target.value)}
                       data-testid={`poh-carrymax-input-${r.key}`}
+                      aria-invalid={thresholdsInvalid || undefined}
+                      aria-describedby={thresholdsInvalid ? 'poh-rec-invalid' : undefined}
                     />
                   </label>
                 </fieldset>
@@ -305,7 +310,7 @@ const PoOnHoldPanel = ({ persona }) => {
                 </p>
               )}
               {thresholdsInvalid && (
-                <p className="text-sm text-danger" role="alert">
+                <p id="poh-rec-invalid" className="text-sm text-danger" role="alert">
                   {t('poh.rec.invalid')}
                 </p>
               )}

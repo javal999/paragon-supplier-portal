@@ -69,9 +69,9 @@ const EMPTY_CERT = { number: '', issuer: '', expiresOn: '' };
 
 /**
  * A Certificate slot's number, issuer and expiry date (NR-1 BR-04).
- * @type {React.FC<{ value: CertificateFields; onChange?: (next: CertificateFields) => void; testId: string; }>}
+ * @type {React.FC<{ value: CertificateFields; onChange?: (next: CertificateFields) => void; testId: string; describedBy?: string; }>}
  */
-const CertificateInputs = ({ value, onChange, testId }) => {
+const CertificateInputs = ({ value, onChange, testId, describedBy }) => {
   const { t } = useTranslation();
   if (!onChange) {
     return (
@@ -109,6 +109,9 @@ const CertificateInputs = ({ value, onChange, testId }) => {
         type={type}
         aria-label={t(`rfx.docs.cert.${key}`)}
         data-testid={`${testId}-cert-${key}`}
+        // BL-84 — the slot's refusal is announced with its certificate fields.
+        aria-invalid={describedBy ? true : undefined}
+        aria-describedby={describedBy}
         value={value[key]}
         onChange={(e) => onChange({ ...value, [key]: e.target.value })}
         className={inputClass}
@@ -157,10 +160,23 @@ const DocumentSlot = ({ request, documents, cert, onFiles, onCert, refuse, testI
         refuse={refuse}
         label={request.name}
         testId={`${testId}-files`}
+        describedBy={refusal ? `${testId}-refusal` : undefined}
       />
-      {isCertificate && <CertificateInputs value={cert} onChange={onCert} testId={testId} />}
+      {isCertificate && (
+        <CertificateInputs
+          value={cert}
+          onChange={onCert}
+          testId={testId}
+          describedBy={refusal ? `${testId}-refusal` : undefined}
+        />
+      )}
       {!!refusal && (
-        <p role="alert" className="text-xs text-danger" data-testid={`${testId}-refusal`}>
+        <p
+          id={`${testId}-refusal`}
+          role="alert"
+          className="text-xs text-danger"
+          data-testid={`${testId}-refusal`}
+        >
           {documentRefusalText(t, refusal) ?? refusal}
         </p>
       )}

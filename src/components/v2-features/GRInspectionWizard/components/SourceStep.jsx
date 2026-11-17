@@ -94,11 +94,16 @@ const SourceStep = ({ sources, manualNotFound, manualAsnMatch }) => {
               type="text"
               {...register('manualASN')}
               placeholder="ASN-2026-XXX"
+              // BL-84 — "not found" is announced with the field it is about.
+              aria-invalid={manualNotFound || undefined}
+              aria-describedby={manualNotFound ? 'gr-manual-asn-not-found' : undefined}
               className={inputCls}
             />
           </label>
           {manualNotFound && (
-            <p className="text-xs text-danger">{t('goodsReceipt.wizard.source.notFound')}</p>
+            <p id="gr-manual-asn-not-found" className="text-xs text-danger">
+              {t('goodsReceipt.wizard.source.notFound')}
+            </p>
           )}
           {manualAsnMatch && (
             <p className="text-xs text-success">

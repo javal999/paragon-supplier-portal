@@ -95,6 +95,16 @@ export const QuestionField = ({
   const prompt = authored(t, question.promptKey);
   const invalid = answerRefusal(question, answer);
   const marked = !!invalid || missing;
+  // BL-84 — the note the field shows is the note it names, derived from the
+  // same two halves that decide which note renders.
+  const noteProps = marked
+    ? {
+        'aria-invalid': true,
+        'aria-describedby': invalid
+          ? `rfi-field-invalid-${question.id}`
+          : `rfi-field-missing-${question.id}`
+      }
+    : {};
   const inputClass = `w-full bg-white border rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action disabled:bg-bg-hover ${
     marked ? 'border-danger' : 'border-border-input'
   }`;
@@ -135,6 +145,7 @@ export const QuestionField = ({
         <select
           id={id}
           disabled={disabled}
+          {...noteProps}
           value={typeof value === 'string' ? value : ''}
           onChange={(e) => onChange({ value: e.target.value })}
           className={inputClass}
@@ -149,7 +160,7 @@ export const QuestionField = ({
       )}
 
       {question.type === 'multipleChoice' && (
-        <div className="flex flex-wrap gap-3" role="group" aria-label={prompt}>
+        <div className="flex flex-wrap gap-3" role="group" aria-label={prompt} {...noteProps}>
           {options.map((o) => {
             const chosen = Array.isArray(value) && value.includes(o);
             return (
@@ -185,6 +196,7 @@ export const QuestionField = ({
             id={id}
             type="number"
             disabled={disabled}
+            {...noteProps}
             value={value === undefined ? '' : String(value)}
             onChange={(e) => onChange({ value: numberValue(e.target.value) })}
             className={inputClass}
@@ -198,6 +210,7 @@ export const QuestionField = ({
           id={id}
           type="date"
           disabled={disabled}
+          {...noteProps}
           value={typeof value === 'string' ? value : ''}
           onChange={(e) => onChange({ value: e.target.value })}
           className={inputClass}
@@ -212,6 +225,7 @@ export const QuestionField = ({
             type="number"
             disabled={disabled}
             aria-label={`${prompt} — ${t('rfxa.answer.rangeMin')}`}
+            {...noteProps}
             value={answer?.range ? String(answer.range.min) : ''}
             onChange={(e) =>
               onChange({
@@ -225,6 +239,7 @@ export const QuestionField = ({
             type="number"
             disabled={disabled}
             aria-label={`${prompt} — ${t('rfxa.answer.rangeMax')}`}
+            {...noteProps}
             value={
               answer?.range && Number.isFinite(answer.range.max) ? String(answer.range.max) : ''
             }
@@ -244,6 +259,7 @@ export const QuestionField = ({
           id={id}
           type="text"
           disabled={disabled}
+          {...noteProps}
           value={typeof value === 'string' ? value : ''}
           onChange={(e) => onChange({ value: e.target.value })}
           className={inputClass}
@@ -255,6 +271,7 @@ export const QuestionField = ({
           id={id}
           rows={4}
           disabled={disabled}
+          {...noteProps}
           value={typeof value === 'string' ? value : ''}
           onChange={(e) => onChange({ value: e.target.value })}
           className={`w-full bg-white border rounded-md px-3 py-2 text-sm focus:outline-none focus:border-action disabled:bg-bg-hover ${
@@ -275,7 +292,11 @@ export const QuestionField = ({
       {bounds && <p className="text-xs text-text-tertiary mt-1">{bounds}</p>}
       {!!missing && !invalid && <StillMissing testId={`rfi-field-missing-${question.id}`} />}
       {invalid && (
-        <p className="text-xs text-danger mt-1" data-testid={`rfi-field-invalid-${question.id}`}>
+        <p
+          id={`rfi-field-invalid-${question.id}`}
+          className="text-xs text-danger mt-1"
+          data-testid={`rfi-field-invalid-${question.id}`}
+        >
           {t(`rfxa.answer.invalid.${invalid}`)}
         </p>
       )}

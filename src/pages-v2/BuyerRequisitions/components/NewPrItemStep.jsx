@@ -79,6 +79,10 @@ const NewPrItemStep = ({ form, setForm, parsedQty, t }) => (
           placeholder={t('requisitions.new.placeholder.quantity')}
           aria-label={t('requisitions.new.field.quantity')}
           aria-invalid={form.qty.trim() !== '' && !parsedQty.ok}
+          // BL-84 — the quantity refusal is tied to the quantity field.
+          aria-describedby={
+            form.qty.trim() !== '' && !parsedQty.ok ? 'new-pr-qty-refusal' : undefined
+          }
           value={form.qty}
           onChange={(e) => setForm({ ...form, qty: e.target.value })}
         />
@@ -86,6 +90,7 @@ const NewPrItemStep = ({ form, setForm, parsedQty, t }) => (
             read says so, and says what to type instead. */}
         {form.qty.trim() !== '' && !parsedQty.ok && (
           <div
+            id="new-pr-qty-refusal"
             role="alert"
             data-testid="new-pr-qty-refusal"
             className="mt-1 text-[length:var(--fs-label-3)] text-danger"
