@@ -63,6 +63,7 @@ export {
   RECEIPT_INSPECTED_STATES,
   compareReceipt,
   receiptKeptOpen,
+  reopenedQtyByMaterial,
   hasReceiptDiscrepancy,
   awaitsSupplierAnswer,
   isOpenDispute

@@ -336,7 +336,10 @@ describe('REQ-E06-02 BR-07 — split deadlines, reminders and overdue (derived, 
     expect(deadlineState(line, '2026-08-31T13:59:59.000Z')).toBe('open');
     expect(deadlineState(line, '2026-08-31T14:00:00.000Z')).toBe('dueSoon');
     expect(deadlineState(line, '2026-09-04T01:59:59.000Z')).toBe('dueSoon');
-    expect(deadlineState(line, '2026-09-04T02:00:00.000Z')).toBe('overdue');
+    // BL-81 / DL-1 — the deadline instant itself is still open (dueSoon here,
+    // because its reminder has passed); overdue starts strictly after it.
+    expect(deadlineState(line, '2026-09-04T02:00:00.000Z')).toBe('dueSoon');
+    expect(deadlineState(line, '2026-09-04T02:00:00.001Z')).toBe('overdue');
     expect(deadlineState({ ...line, state: 'accepted' }, '2026-09-10T00:00:00.000Z')).toBeNull();
   });
 });
