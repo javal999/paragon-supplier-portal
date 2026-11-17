@@ -177,7 +177,7 @@ aggregate cannot distinguish "everything passed" from "nothing was asked."
 - **A retarget requires a gate run.** On GitHub, retargeting emitted `edited`,
   which is why `types:` was spelled out in `.github/workflows/gates.yml` (now
   manual-dispatch only). If a retargeted MR still shows no gate for the new base,
-  run the four locally on the merged base **and say that the local run is the
+  run `npm run gates` locally on the merged base **and say that the local run is the
   only gate record there is.**
 - **Repair a severed chain with `git merge -s ours main` on the branch** — never
   `-X ours` / `-X theirs`, which are a different operation and DO discard
@@ -350,17 +350,9 @@ mechanisms whose success signals said nothing about the damage they did.
 > left. A role-gated VALUE policy (value from `readEntity` × lane from
 > `scope.businessRoles`) is buildable today and is **not** the ladder: it
 > discriminates lanes, and the rungs are altitudes.
-Re-baselined by the **Canon True-Up** (2026-07-14). The prior "main @ #53" pointer
-was stale by ~12 commits; F0 (contract-freeze) and the I3 compliance phase are DONE,
-and the Stage G planning canon + World-Class Build Plan are now on main.
 
-- **Phases 0 → 2′ (historical, all merged).** Phase 0 (PRs #11–#17); Phase 1′
-  page/read migrations + gates + DP-1/2/3 theme (PRs #18–#31); v2.2 Step 1 Canon
-  True-Up (#32) + Step 2 Batch 1.4 canonical `PurchaseOrder` + Phase 1′ exit audit
-  (#33–#34). **Phase 2.1′ transition schema + dispatcher + PO-confirm proof
-  (3.1–3.11) BUILT** (PR #35). **Phase 2.2′ verb batches BUILT** — ASN (#36),
-  GR (#37), Invoice/DR-7 (#38), RFQ-award cascade (#41). Design polish (#39–#43)
-  + full EN/ID i18n Batches 0–6 + coverage sweep (#44–#53).
+- **Phases 0 → 2′ (historical, all merged)** are recorded in
+  `docs/Supplier_Portal_Revised_Build_Plan_v2_2.md`.
 - ⚠️ **THE COMMAND SPINE NOW STATES A CONCURRENCY PRECONDITION, AND STATES WHAT
   IT DOES NOT COVER (1c, §87).** `CommandInput.expectedState?: string` is an
   OPTIONAL compare-and-set: supplied, the dispatcher refuses `STALE_STATE`
@@ -554,8 +546,8 @@ since (RFx, forecast, capacity, inventory) is named by none of them.
 - **ARC 3 · SUPPLIER ONBOARDING.** ⚠️ **AMENDED 2026-09-01 — THE MECHANISM
   SURVIVES MEASUREMENT, THE CONCLUSION DOES NOT.** Re-derived today, and the
   hard half still holds exactly: `src/pages-v2/SupplierRegistration/` behind
-  `/register` contains **zero** service calls — `grep -c 'useDataService'` and
-  `grep -c 'dispatch'` both return 0 — the whole form lives in `useState`, and
+  `/register` contains **zero** service calls — `grep -r 'useDataService'` and
+  `grep -r 'dispatch'` over the folder both print nothing — the whole form lives in `useState`, and
   submitting still sets a `const [submitted, setSubmitted] = useState(false)`
   boolean. **The supplier-side WRITE PATH is unbuilt, and that is arc 3.**
 
@@ -943,9 +935,10 @@ Actions minutes are budget-limited): on every merge request and on a manual pipe
 **No scheduled run exists.** `.gitlab-ci.yml` describes a daily 00:17 UTC pipeline schedule on `main`, but it was not created, and its `npm run drift` step runs only on a schedule, so a clock-decay
 break like 2026-08-01 (see `docs/findings.md`, CP-3a) is caught only when a session runs `npm run drift`
 and `npm run gates` on `main` under Node 24 after each merge to it. `.github/workflows/gates.yml` is now manual-dispatch only. **It no longer runs on a push to `main`**
-(removed 2026-09-29, `d053d2e`, to save Actions minutes): a merge commit's tree is
-the tree its MR run already gated, so a push to `main` is covered by that MR's run.
-Run `npm run gates` locally on `main` when you need a record for the merge commit itself.
+(removed 2026-09-29, `d053d2e`, to save Actions minutes): an MR pipeline gates the
+branch head, not the merge result, so a push to `main` is covered by that MR's run only
+while `main` has not moved since the branch's base. Run `npm run gates` locally on `main`
+when you need a record for the merge commit itself.
 
 ## Deploy
 Vite root is app/ — never edit app/index.html directly.
