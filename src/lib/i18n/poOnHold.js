@@ -77,6 +77,10 @@ export const poOnHoldEn = {
   'poh.exec.callOffs': 'call-offs',
   'poh.exec.stays': 'Stays on hold, back to the planner:',
   'poh.exec.nothing': 'Nothing would be created.',
+  'poh.exec.noRoom.fsSpread':
+    'No room left: no week can take another call-off. A week takes at most its DA, and call-offs from earlier rounds count.',
+  'poh.exec.noRoom.fg':
+    'No room left: the FG cap is used up. What earlier rounds absorbed counts against it.',
   'poh.settings.pipo': 'PIPO material',
   'poh.settings.pipo.unset': 'Not set (counts as no)',
   'poh.settings.pipo.yes': 'Yes',
@@ -211,6 +215,10 @@ export const poOnHoldId = {
   'poh.exec.callOffs': 'call-off',
   'poh.exec.stays': 'Tetap ditahan, kembali ke perencana:',
   'poh.exec.nothing': 'Tidak ada yang akan dibuat.',
+  'poh.exec.noRoom.fsSpread':
+    'Tidak ada ruang tersisa: tidak ada minggu yang bisa menerima call-off lagi. Satu minggu menerima paling banyak DA-nya, dan call-off dari putaran sebelumnya ikut dihitung.',
+  'poh.exec.noRoom.fg':
+    'Tidak ada ruang tersisa: batas FG sudah terpakai. Yang diserap putaran sebelumnya ikut dihitung terhadap batas itu.',
   'poh.settings.pipo': 'Material PIPO',
   'poh.settings.pipo.unset': 'Belum diatur (dihitung tidak)',
   'poh.settings.pipo.yes': 'Ya',

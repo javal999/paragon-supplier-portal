@@ -93,6 +93,10 @@ describe('PO On Hold — Suggest again', () => {
     await waitFor(() => expect(screen.getByTestId(`poh-status-${K}`)).toHaveTextContent('Round 2'));
     // Round 1 stays as a closed row; the live row no longer offers the picker.
     expect(screen.queryByTestId(`poh-again-${K}`)).toBeNull();
+    // BL-318: the closed row shows what stayed on hold after round 1, not 0.
+    const closedKey = `${K}|done|${r1?.decision?.id}`;
+    const closedRow = await screen.findByTestId(`poh-row-${closedKey}`);
+    expect(within(closedRow).getByTestId(`poh-qty-${closedKey}`)).toHaveTextContent('180');
   });
 
   it('a line with no remainder (never executed) shows "Send suggestion", not "Suggest again"', async () => {

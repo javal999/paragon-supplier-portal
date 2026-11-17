@@ -124,6 +124,18 @@ describe('Suggest again (PO On Hold remainder)', () => {
     expect(all.some((x) => x.closed && x.decision?.id === oldId)).toBe(true);
   });
 
+  it('a closed round row keeps the quantity that stayed on hold after it (BL-318)', async () => {
+    const first = await roundOne();
+    const oldId = first?.decision?.id ?? '';
+    await setParam('grace', 5);
+    await suggest({ ...SMALL, option: 'fg' });
+
+    const all = (await reads.getPoOnHold(planner)).items;
+    const closed = all.find((x) => x.closed && x.decision?.id === oldId);
+    expect(closed?.execution.plan?.stayOnHoldQty).toBe(180);
+    expect(closed?.qty).toBe(180);
+  });
+
   it('execution is still blocked early and never repeats: old decision refused, new one waits for its grace', async () => {
     const first = await roundOne();
     const oldId = first?.decision?.id ?? '';
@@ -143,12 +155,20 @@ describe('Suggest again (PO On Hold remainder)', () => {
   it('one execution per decision: round 2 runs once, under its own key, and leaves round 1 alone', async () => {
     const first = await roundOne();
     const oldId = first?.decision?.id ?? '';
+    // Round 1 used all of the FG cap (120), and what an earlier round absorbed counts
+    // against it (owner ruling 2026-11-17), so a round 2 on the same cap would absorb 0
+    // and write no key. Raise Max PTI by 80 so round 2 has room and its own key to test.
+    await setParam(
+      'maxPti',
+      Number(osipParamStore.valueOf(`maxPti|${SMALL.supplierId}|${SMALL.materialCode}`)) + 80
+    );
     // grace stays 0: round 2 is due the day it starts.
     await suggest({ ...SMALL, option: 'fg' });
     const newId = poOnHoldStore.all()[1]?.id ?? '';
     const r = await live(SMALL);
     expect(r?.execution.status).toBe('executed');
     expect(poOnHoldStore.executions().map((e) => e.decisionId)).toEqual([oldId, newId]);
+    expect(poOnHoldStore.executions()[1]?.lineKeys.length).toBeGreaterThan(0);
     const keys = poOnHoldStore.executions().flatMap((e) => e.lineKeys);
     expect(new Set(keys).size).toBe(keys.length);
     expect(keys.every((k) => k.startsWith(`${oldId}|`) || k.startsWith(`${newId}|`))).toBe(true);
