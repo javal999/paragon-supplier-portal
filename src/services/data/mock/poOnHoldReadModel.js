@@ -57,7 +57,7 @@ import {
  * `outcome`:  What the end of the grace period does with the quantity under `effective`.
  * `pipo`, `maxPti`, `daysSinceMovement`:  Null where the hub holds no such fact.
  * `execution`:  PEX-8 BR-02/BR-05 — the end of the grace period: `scheduled` (grace running), `due`, `blocked` (a fact is missing, see `plan.blocked`) or `executed`. `plan` is the read-only preview (what it would do now, or what it did); `record` is the ledger row once it ran.
- * `closed`:  True for a line that left hold after its execution: kept so the panel still says what was created.
+ * `closed`:  True for a line that left hold after its execution: kept so the panel still says what was created. On a closed row `qty` is the quantity that stayed on hold after that round (BL-318), not the current hold.
  *
  * @typedef {{
  *   readonly key: string;
@@ -401,7 +401,10 @@ export function allPoOnHold(nowIso = sdcClock.now()) {
         ...snap,
         key: `${snap.key}|done|${e.decisionId}`,
         closed: true,
-        qty: 0,
+        // BL-318 — the quantity that stayed on hold after THIS round, from the
+        // run's own plan, so the row agrees with its "Stays on hold" sentence.
+        // Never 0 unless nothing stayed (FS only took it all).
+        qty: e.plan.stayOnHoldQty,
         decision: snap.decision
           ? {
               ...snap.decision,
