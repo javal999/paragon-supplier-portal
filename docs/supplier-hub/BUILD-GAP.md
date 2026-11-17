@@ -461,18 +461,20 @@ Target: SC-06 and SC-07, WCAG 2.1 AA. Pass done on 2026-09-21 against the built 
 | Toasts could go unannounced (the live region appeared with the first toast) | 4.1.3 | Medium | The region is always present; error toasts interrupt |
 | Menu, persona switch and period switch did not state their name or selected state; tabs had no arrow keys; "New call-off" repeated with no context | 1.3.1, 2.4.6, 4.1.2 | Low | Named navigation and groups, pressed state, arrow keys on tabs, each call-off button described by its PO and supplier |
 | A page title squeezed to zero width on a narrow window | 1.4.10 | Low | The page header wraps |
+| **BL-84, 2026-11-17.** Field errors were tied to their field on only a few forms | 1.3.1, 3.3.1 | Medium | Every form that marks a field invalid names the message that explains it (`aria-invalid` with `aria-describedby`), and a tree-wide invariant checks the pattern in source, which is weaker than it reads (BL-326) |
+| **BL-84.** Pages went from the page title straight to a level-3 heading | 1.3.1 | Low | Supplier shipments now goes h1 then h2; the five other pages this row named (marketplace, discovery, storefront, WhatsApp demo, supplier comm hub) were retired by IA P-10 and render the 404 |
+| **BL-84.** Controls inside table grids had no name of their own | 4.1.2 | Low | The contract wizard's obligation owner and due date are named from their row |
+| **BL-84.** The top-bar menu button did nothing; the notification button did not state how many notifications there are | 4.1.2 | Low | The menu button opens the drawer; both bells state their count in the accessible name (PTI 3; the supplier seat states 0 when empty) |
+| **BL-84.** The sign-in page had no page heading and failed contrast | 1.3.1, 1.4.3 | Low (not part of the hub) | Page heading added; contrast now 6.7 : 1 and 8.0 : 1; all sign-in chrome localized in English and Indonesian |
+| **BL-84.** The 404 page title was English in both languages | 3.1.2 | Low | Localized title in both languages |
+
+**Not fully closed by BL-84.** The review of this build (BL-326) found that the gate's invariant 3 checks only that `aria-describedby` appears in source, not that a description renders, and that several controls' invalid flag, description or described element does not match what is on screen (`StockEntryPanel`, `ResponseDocumentsSection`, `AsnLinesEditor`, `TermsStep`, `TieredQuoteForm`, `RfqQuestionField`, `RfpTermControls`, `QuoteTermsSection`, `ConfirmPanel`). The rows above state the intended behaviour; BL-326 is the defect list.
 
 **What remains.**
 
 | Issue | WCAG | Severity |
 |---|---|---|
-| Field errors are announced but tied to their field only on the registration, forecast response and intake adjustment forms | 1.3.1, 3.3.1 | Medium |
 | Action blue as text still passes only on white (4.57 : 1); any new use on a grey or tinted background fails. The sites are the `text-action` classes in `src/` (derive them; the in-browser check found none failing after this pass) | 1.4.3 | Low |
-| Some pages go from the page title straight to a level-3 heading (marketplace, discovery, storefront, WhatsApp demo, supplier comm hub, supplier shipments) | 1.3.1 | Low |
-| Controls inside a few table grids have no name of their own (contract wizard obligation owner and due date, WhatsApp demo input) | 4.1.2 | Low |
-| The menu button in the top bar does nothing; the notification button does not say how many notifications there are | 4.1.2 | Low |
-| The sign-in page (outside the hub shell) keeps its own dark design: low-contrast text, no page heading, English-only notice | 1.3.1, 1.4.3 | Low (not part of the hub) |
-| The 404 page title is English in both languages | 3.1.2 | Low |
 | No test with a real screen reader (see H-03 in section 5) | — | — |
 
 The checks that guard the fixes are in `src/lib/a11yGate/` (every icon-only button is named; every clickable table row is keyboard-operable) and `src/components/ui-v2/bl31Keyboard.test.tsx` (the modal keyboard behaviour, row activation and the accessible names of the shared building blocks).
