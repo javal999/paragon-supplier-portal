@@ -150,6 +150,12 @@ export function materialShares(ltpLines, materialCode, suppliers, windowWeeks) {
  * the Foresight commitment LTP over the share window (`materialShares`), even
  * when the window holds none. A supplier with no share on record for a material
  * that has one reads 0 [my call].
+ * BL-313, PEX-D29 [Proposed]: each recorded share is divided by the total of the
+ * material's recorded shares, so the shares on record always add up to 1, even
+ * when SAP's do not (the SAP quota-arrangement rule: a source's share is its
+ * quota over the sum of the quotas in force). The total covers every supplier
+ * with a share on record, named by the LTP or not, so a sourced supplier's part
+ * is never moved to another supplier.
  * Not the SOH share or the consumption split: those stay on `materialShares`.
  * @param {readonly { readonly supplierId: string; readonly materialCode: string; readonly share?: number }[]} sources
  * @param {readonly LtpLine[]} ltpLines
@@ -167,9 +173,13 @@ export function ltpSplitShares(sources, ltpLines, materialCode, suppliers, windo
       shares: materialShares(ltpLines, materialCode, suppliers, windowWeeks),
       from: 'ltp'
     };
+  const total = recorded.reduce((n, s) => n + /** @type {number} */ (s.share), 0);
   return {
     shares: new Map(
-      suppliers.map((sup) => [sup, recorded.find((s) => s.supplierId === sup)?.share ?? 0])
+      suppliers.map((sup) => [
+        sup,
+        (recorded.find((s) => s.supplierId === sup)?.share ?? 0) / total
+      ])
     ),
     from: 'sourcing'
   };
