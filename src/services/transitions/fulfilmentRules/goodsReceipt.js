@@ -77,6 +77,11 @@ export const RECEIPT_INSPECTED_STATES = [
 
 /**
  * Compare every receipt line with what was shipped. Derived at read time.
+ *
+ * BL-325 — a missing or non-numeric quantity is read as 0 rather than carried
+ * through as NaN: `received − shipped` with a NaN disabled the over-ship
+ * refusal downstream (`q > NaN` is false) and made the opened quantity NaN.
+ * A valid number passes through untouched; only a non-finite one is rewritten.
  * @param {Pick<GoodsReceipt, 'inspectionResults' | 'status'>} gr
  * @param {Pick<ASN, 'lineItems'> | null} [asn]
  * @returns {ReceiptLineComparison[]}
@@ -85,17 +90,20 @@ export function compareReceipt(gr, asn) {
   const inspected = RECEIPT_INSPECTED_STATES.includes(gr.status);
   return gr.inspectionResults.map((r) => {
     const asnLine = asn?.lineItems.find((l) => l.materialCode === r.materialCode);
-    const shipped = asnLine ? asnLine.shippedQty : r.qtyExpected;
-    const difference = r.qtyReceived - shipped;
+    // BL-325 — coerce at the boundary so no downstream sum can be NaN.
+    const shippedRaw = asnLine ? asnLine.shippedQty : r.qtyExpected;
+    const shipped = Number.isFinite(shippedRaw) ? shippedRaw : 0;
+    const received = Number.isFinite(r.qtyReceived) ? r.qtyReceived : 0;
+    const difference = received - shipped;
     // CR-11 — rejected quantity counts only once the inspection is final.
     const rejected = inspected ? r.qtyRejected : 0;
     // CR-25 — the quantity check, per material.
-    const qtyOutcome = receiptQtyOutcome(r.materialCode, shipped, r.qtyReceived);
+    const qtyOutcome = receiptQtyOutcome(r.materialCode, shipped, received);
     return {
       materialCode: r.materialCode,
       description: r.description,
       shipped,
-      received: r.qtyReceived,
+      received,
       accepted: inspected ? r.qtyAccepted : 0,
       rejected,
       difference,
@@ -139,6 +147,18 @@ export const hasReceiptDiscrepancy = (gr, asn) => compareReceipt(gr, asn).some((
  *   · the amount reopened is the WHOLE missing quantity, `shipped − received`,
  *     not only the part beyond the 2% tolerance — the tolerance decides
  *     whether the receipt is kept open, not how much is still owed;
+ *   · ⚠️ BL-325 (fix) — the amount is computed ONCE PER ASN, never summed per
+ *     receipt. Only an ASN that is active and counted in `shipped` may reopen,
+ *     only when it has a kept-open receipt line for the material (with no
+ *     receipt nothing was received, so there is nothing to put back), and what
+ *     it reopens is
+ *       max(0, its shipped quantity for the material − Σ received of its
+ *              kept-open receipt lines for the material).
+ *     So two receipts against one ASN cannot reopen the same debt twice, and a
+ *     receipt whose ASN is not on record reopens NOTHING — that shipment was
+ *     never subtracted from `shipped`, so its quantity is already open. This
+ *     function reports one receipt's own missing quantity; the per-ASN
+ *     aggregation lives in `openQtyForLine`, its only consumer;
  *   · no second receipt is required: the quantity reopens as soon as the
  *     receipt is kept open, and it returns to the SAME PO line and material it
  *     was received against (no document is edited; the open quantity is a read);
@@ -155,7 +175,11 @@ export function reopenedQtyByMaterial(gr, asn) {
   const out = {};
   for (const line of compareReceipt(gr, asn)) {
     if (line.qtyOutcome !== 'shortOver') continue;
-    out[line.materialCode] = (out[line.materialCode] ?? 0) + (line.shipped - line.received);
+    // BL-325 — the comparison already coerces a non-finite quantity to 0; the
+    // guard here keeps this read finite on its own terms too.
+    const missing = line.shipped - line.received;
+    if (!Number.isFinite(missing)) continue;
+    out[line.materialCode] = (out[line.materialCode] ?? 0) + missing;
   }
   return out;
 }
