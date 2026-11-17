@@ -87,10 +87,10 @@ describe('PEX-D25 ltpSplitShares', () => {
   });
 });
 
-// BL-313, PEX-D29 [Proposed]: each recorded share is divided by the total of the
-// material's recorded shares, so no part of a material's LTP is left unassigned
-// when SAP shares do not add up to 1 (the SAP quota-arrangement rule: a source's
-// share is its quota over the sum of the quotas in force).
+// BL-313, PEX-D29 (owner ruling 2026-11-17): each recorded share is divided by
+// the total of the material's recorded shares, so no part of a material's LTP is
+// left unassigned when SAP shares do not add up to 1 (the SAP quota-arrangement
+// rule: a source's share is its quota over the sum of the quotas in force).
 describe('BL-313 sourcing shares that do not add up to 1', () => {
   const lines = [line('a', 7), line('b', 7)];
   const window = ['2026-09-07'];
