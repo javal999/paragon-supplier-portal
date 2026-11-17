@@ -2,6 +2,7 @@
 import { useTranslation } from 'react-i18next';
 import Data from '@components/ui-v2/Data';
 /** @import { ASN, PurchaseOrder } from '@services/data/types' */
+/** @import { GoodsReceipt } from '@data/mockGoodsReceipts' */
 /** @import { AsnForm } from '../const' */
 import { openLinesFor } from '../../shipments/asnLines';
 import { poLineQuantityText } from '../../orders/poLineQuantity';
@@ -12,16 +13,17 @@ import { qty } from '../../callOffs/callOffDisplay';
  * One shippable PO as a pressable card at wizard step 1. Picking it seeds the
  * form's lines from the PO's open lines and clears the over-ship reason and
  * call-off; the picked card also shows supplier, delivery and channel.
- * @type {React.FC<{ po: PurchaseOrder; asns: readonly ASN[]; selected: boolean; updateForm: (patch: Partial<AsnForm>) => void }>}
+ * `receipts`:  GR-1 / BL-71 — kept-open receipts reopen their missing quantity.
+ * @type {React.FC<{ po: PurchaseOrder; asns: readonly ASN[]; receipts?: readonly Pick<GoodsReceipt, 'poNumber' | 'asnNumber' | 'inspectionResults' | 'status'>[]; selected: boolean; updateForm: (patch: Partial<AsnForm>) => void }>}
  */
-const WizardPoCard = ({ po, asns, selected, updateForm }) => {
+const WizardPoCard = ({ po, asns, receipts = [], selected, updateForm }) => {
   const { t } = useTranslation();
   const mat = po.lineItems[0];
-  const openTotal = openLinesFor(po, asns).reduce((a, l) => a + l.open, 0);
+  const openTotal = openLinesFor(po, asns, undefined, receipts).reduce((a, l) => a + l.open, 0);
   return (
     <button
       type="button"
-      onClick={() => updateForm(poSelection(po, asns))}
+      onClick={() => updateForm(poSelection(po, asns, receipts))}
       aria-pressed={selected}
       className={`text-left rounded-md p-4 border transition-colors ${
         selected

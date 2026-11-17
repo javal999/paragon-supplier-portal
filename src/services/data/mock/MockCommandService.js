@@ -695,7 +695,8 @@ const advanceShipNoticeTarget = {
       ? callOffStore.get(String(payload.callOffId))
       : undefined;
     // BR-02 — without entered lines, the draft proposes each PO line's OPEN
-    // quantity (committed minus what other live ASNs already carry), never the
+    // quantity (committed minus what other live ASNs already carry, plus the
+    // missing quantity of any kept-open receipt — GR-1 / BL-71), never the
     // full ordered quantity: a second, partial ASN must not double-count.
     /** @type {AsnLineItem[]} */
     const lineItems = !po
@@ -708,7 +709,13 @@ const advanceShipNoticeTarget = {
               materialCode: li.materialCode,
               description: li.description,
               orderedQty: li.quantity,
-              shippedQty: openQtyForLine(po, li, asnStore.all()),
+              shippedQty: openQtyForLine(
+                po,
+                li,
+                asnStore.all(),
+                undefined,
+                goodsReceiptStore.all()
+              ),
               lotNumber: '',
               uom: li.uom
             }))
@@ -818,7 +825,9 @@ bindPolicyHook(POLICY_HOOKS.ASN_LINES_WITHIN_OPEN, ({ entityId, payload }) => {
     const refusal = asnLineRefusal(line, po, asnStore.all(), {
       excludeAsn: asn?.asnNumber,
       overShipReason,
-      requireBatch: false
+      requireBatch: false,
+      // GR-1 / BL-71 — a kept-open receipt's missing quantity is open again.
+      receipts: goodsReceiptStore.all()
     });
     if (refusal === 'overOpen') {
       return {
@@ -863,7 +872,9 @@ const asnSubmissionRead = (asn, payload, waive) => {
       excludeAsn: asn.asnNumber,
       overShipReason: payload.overShipReason ?? asn.overShipReason,
       requireBatch: true,
-      waiveShelfLife: waive && shelfLifeWaivedFor(asn, check)
+      waiveShelfLife: waive && shelfLifeWaivedFor(asn, check),
+      // GR-1 / BL-71 — a kept-open receipt's missing quantity is open again.
+      receipts: goodsReceiptStore.all()
     });
   });
   return { lines, eta, incomplete, refusals };

@@ -9,6 +9,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { MockCommandService } from './MockCommandService';
 import { purchaseOrderStore } from './stores/purchaseOrderStore';
 import { asnStore } from './stores/asnStore';
+import { goodsReceiptStore } from './stores/goodsReceiptStore';
 import { inventoryDeclarationStore } from './stores/inventoryDeclarationStore';
 /** @import { QueryScope } from '../types' */
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
@@ -16,6 +17,7 @@ import { availableBatches } from '../../transitions/fulfilmentRules';
 import { NO_PERSON } from '@context/noPerson';
 /** @import { LineEntry } from '@pages-v2/shipments/asnLines' */
 import { openLinesFor, readLines } from '@pages-v2/shipments/asnLines';
+import { poSelection, readWizard } from '@pages-v2/SupplierShipments/utils';
 
 const svc = new MockCommandService();
 
@@ -92,6 +94,7 @@ const formRead = (entry, overShipReason = '') =>
 beforeEach(() => {
   purchaseOrderStore.reset();
   asnStore.reset();
+  goodsReceiptStore.reset();
   inventoryDeclarationStore.reset();
 });
 
@@ -293,5 +296,59 @@ describe('batch from declared stock (MR-6 BR-01 to BR-04)', () => {
     expect(
       formRead({ qty: '1000', batch: 'PET-A', batchSource: 'declared' }).aboveAvailable
     ).toEqual([]);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GR-1 / BL-71 / BL-81 (owner, 2026-11-02) — a receipt kept open reopens its
+// missing quantity, and the WIZARD seeds it. Same helpers the page calls, so a
+// page that stops passing the receipts read fails here as well as in the UI.
+// ─────────────────────────────────────────────────────────────────────────────
+describe('GR-1 / BL-71 — the wizard seeds the reopened quantity', () => {
+  it('the form proposes the reopened quantity and the line passes the one line rule', async () => {
+    const first = await createAsn({ lines: [{ materialCode: MAT, shippedQty: 200_000 }] });
+    // 190,000 of 200,000 arrived (5% short) → the receipt is kept open.
+    goodsReceiptStore.add({
+      id: 'gr-9902',
+      grNumber: 'GR-2026-902',
+      asnId: 'shp-9902',
+      asnNumber: /** @type {string} */ (first.entityId),
+      poNumber: PO,
+      supplierId: 'sup-007',
+      supplierName: 'PT Sample Packaging Indonesia',
+      receivedDate: '2026-09-30',
+      receivedBy: 'Warehouse Supervisor',
+      status: /** @type {const} */ ('Approved'),
+      disposition: /** @type {const} */ ('Accept'),
+      inspectionResults: [
+        {
+          materialCode: MAT,
+          description: 'PET Bottle 200ml Frosted',
+          qtyExpected: 200_000,
+          qtyReceived: 190_000,
+          qtyAccepted: 190_000,
+          qtyRejected: 0,
+          visualCheck: /** @type {const} */ ('Pass'),
+          packagingCheck: /** @type {const} */ ('Pass')
+        }
+      ]
+    });
+
+    const selection = poSelection(po(), asnStore.all(), goodsReceiptStore.all());
+    expect(selection.lines?.[MAT]?.qty).toBe('10000');
+
+    const read = readWizard({
+      form: /** @type {any} */ ({ ...selection, poId: po().id }),
+      shippablePos: [po()],
+      asns: asnStore.all(),
+      declaredBatches: {},
+      callOffViewList: [],
+      receipts: goodsReceiptStore.all()
+    });
+    // The seeded line is read, and it is not "over open" — only its batch is
+    // still missing, which is the normal state of a fresh draft.
+    expect(read.wizardRead.lines).toHaveLength(1);
+    expect(read.wizardRead.lines[0].over).toBe(false);
+    expect(read.wizardRead.lines[0].refusal).toBe('batch');
   });
 });

@@ -18,6 +18,7 @@ import {
   shelfLifeLineView
 } from '@services/transitions/fulfilmentRules';
 /** @import { ASN, InventoryPosition, PurchaseOrder } from '@services/data/types' */
+/** @import { GoodsReceipt } from '@data/mockGoodsReceipts' */
 
 /** One line as the supplier types it (REQ-E07-04 BR-04): text, parsed once. */
 /**
@@ -51,17 +52,19 @@ export const readQty = (raw) => {
 
 /**
  * The PO's lines with their open quantity (BR-02), leaving one ASN out.
+ * `receipts`:  GR-1 / BL-71 — a kept-open receipt reopens its missing quantity.
  * @param {PurchaseOrder} po
  * @param {readonly ASN[]} asns
  * @param {string} [excludeAsn]
+ * @param {readonly Pick<GoodsReceipt, 'poNumber' | 'asnNumber' | 'inspectionResults' | 'status'>[]} [receipts]
  * @returns {OpenLine[]}
  */
-export const openLinesFor = (po, asns, excludeAsn) =>
+export const openLinesFor = (po, asns, excludeAsn, receipts = []) =>
   po.lineItems.map((li) => ({
     materialCode: li.materialCode,
     description: li.description,
     uom: li.uom,
-    open: openQtyForLine(po, li, asns, excludeAsn)
+    open: openQtyForLine(po, li, asns, excludeAsn, receipts)
   }));
 
 /**
@@ -119,6 +122,7 @@ export const batchModeOf = (entry, options) =>
  * @property {Pick<PurchaseOrder, 'poNumber' | 'lineItems'> | undefined} po
  * @property {readonly ASN[]} asns
  * @property {string} [excludeAsn] -  The draft being submitted, left out of its own open quantity.
+ * @property {readonly Pick<GoodsReceipt, 'poNumber' | 'asnNumber' | 'inspectionResults' | 'status'>[]} [receipts] -  GR-1 / BL-71 — kept-open receipts reopen their missing quantity.
  * @property {string} eta
  * @property {string} overShipReason
  * @property {Readonly<Record<string, readonly AvailableBatch[]>>} batches -  Declared batches on offer, per material.
@@ -151,12 +155,14 @@ export const readLines = (entries, open, ctx) => {
       // As drafted (is it above open?) and as submitted (is it complete?).
       const drafted = asnLineRefusal(check, po, ctx.asns, {
         excludeAsn: ctx.excludeAsn,
-        requireBatch: false
+        requireBatch: false,
+        receipts: ctx.receipts
       });
       const submitted = asnLineRefusal(check, po, ctx.asns, {
         excludeAsn: ctx.excludeAsn,
         overShipReason: ctx.overShipReason,
-        requireBatch: true
+        requireBatch: true,
+        receipts: ctx.receipts
       });
       const picked =
         batchSource === 'declared' ? options.find((o) => o.batchNumber === batch) : undefined;

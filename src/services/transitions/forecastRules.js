@@ -690,6 +690,13 @@ export function commitmentReminderAt(publishedAt, dueAt) {
 /**
  * Where a line stands against its deadline now. Only a line still awaiting the
  * supplier has one; overdue is the escalation to the planner. Never stored.
+ *
+ * BL-81 / DL-1 (owner, 2026-11-02) — late ONLY AFTER the deadline: at the
+ * deadline instant itself the line is still open, and the first overdue
+ * millisecond is `dueAt + 1`. This is the same off-by-one the other two
+ * response families already use — `poResponseProjection.isEscalated` and
+ * `callOffRules.isCallOffEscalated` both ask `deadline < now`, so a response
+ * AT the deadline is on time in all three. One convention, three readers.
  * @param {Pick<ForecastCommitmentLine, 'state' | 'dueAt' | 'reminderAt'>} line
  * @param {string} nowIso
  * @returns {DeadlineState | null}
@@ -697,7 +704,7 @@ export function commitmentReminderAt(publishedAt, dueAt) {
 export function deadlineState(line, nowIso) {
   if (line.state !== 'awaiting') return null;
   const now = Date.parse(nowIso);
-  if (now >= Date.parse(line.dueAt)) return 'overdue';
+  if (now > Date.parse(line.dueAt)) return 'overdue';
   if (now >= Date.parse(line.reminderAt)) return 'dueSoon';
   return 'open';
 }
@@ -707,8 +714,12 @@ export function deadlineState(line, nowIso) {
  * it: time left, late by, or whether the standing commitment arrived in time.
  * DERIVED AT READ from the instant passed in; nothing here is stored (law 0.5).
  *
- * The window closes AT the deadline instant, as `deadlineState` has it: the
- * last on-time moment is one millisecond before `dueAt`. A submitted
+ * BL-81 / DL-1 (owner, 2026-11-02) — late ONLY AFTER the deadline, the PO and
+ * call-off convention (`poResponseProjection.isEscalated`,
+ * `callOffRules.isCallOffEscalated`: `deadline < now`). The deadline instant is
+ * the last on-time moment: an awaiting line reads `open` with zero left at
+ * exactly `dueAt`, and `late` from `dueAt + 1`; a commitment submitted AT
+ * `dueAt` is `submittedOnTime`, `submittedLate` strictly after it. A submitted
  * commitment is judged against the deadline of the version it ANSWERED
  * (`responseDueAt`), so a commitment carried forward from an earlier version
  * keeps the verdict it earned there.
@@ -730,11 +741,13 @@ export function commitmentTiming(line, nowIso) {
   if (line.state !== 'awaiting' && submittedAt) {
     const due = Date.parse(line.responseDueAt ?? line.dueAt);
     const at = Date.parse(submittedAt);
-    return at >= due ? { kind: 'submittedLate', msLate: at - due } : { kind: 'submittedOnTime' };
+    // BL-81 — strictly after, matching `poResponseProjection.respondedLate`.
+    return at > due ? { kind: 'submittedLate', msLate: at - due } : { kind: 'submittedOnTime' };
   }
   const diff = Date.parse(line.dueAt) - Date.parse(nowIso);
-  // `Math.abs`, not `-diff`: at the deadline instant `-0` would leak out.
-  return diff > 0 ? { kind: 'open', msLeft: diff } : { kind: 'late', msLate: Math.abs(diff) };
+  // BL-81 — `>= 0`, not `> 0`: at the deadline instant the line is still open,
+  // and `msLeft` is a plain `0` (never `-0`, which `-diff` would leak).
+  return diff >= 0 ? { kind: 'open', msLeft: diff } : { kind: 'late', msLate: Math.abs(diff) };
 }
 
 /**

@@ -126,6 +126,41 @@ export const receiptKeptOpen = (gr, asn) =>
 export const hasReceiptDiscrepancy = (gr, asn) => compareReceipt(gr, asn).some((l) => l.flagged);
 
 /**
+ * GR-1 / BL-71 / BL-81 (owner, 2026-11-02) — the quantity a KEPT-OPEN receipt
+ * puts back on the PO line, by material: "a receipt kept open reopens the
+ * missing quantity for another shipment". Derived at read from the same
+ * comparison the CR-25 "kept open" label reads, never stored.
+ *
+ * [Proposed] — the decision names the rule, not its arithmetic. The narrowest
+ * reading is taken, stated here so it can be overruled:
+ *   · only a line whose outcome is `shortOver` reopens anything — that is
+ *     exactly "kept open". A shortfall at or below 2% closes the receipt and
+ *     reopens nothing; an over-delivery reopens nothing;
+ *   · the amount reopened is the WHOLE missing quantity, `shipped − received`,
+ *     not only the part beyond the 2% tolerance — the tolerance decides
+ *     whether the receipt is kept open, not how much is still owed;
+ *   · no second receipt is required: the quantity reopens as soon as the
+ *     receipt is kept open, and it returns to the SAME PO line and material it
+ *     was received against (no document is edited; the open quantity is a read);
+ *   · a receipt still under inspection reopens on the same terms its label
+ *     already shows (the label is a quantity read, not a status one);
+ *   · the supplier's acknowledgement or dispute of the discrepancy changes
+ *     nothing here: the goods have not arrived until they arrive.
+ * @param {Pick<GoodsReceipt, 'inspectionResults' | 'status'>} gr
+ * @param {Pick<ASN, 'lineItems'> | null} [asn]
+ * @returns {Readonly<Record<string, number>>} Missing quantity by material code.
+ */
+export function reopenedQtyByMaterial(gr, asn) {
+  /** @type {Record<string, number>} */
+  const out = {};
+  for (const line of compareReceipt(gr, asn)) {
+    if (line.qtyOutcome !== 'shortOver') continue;
+    out[line.materialCode] = (out[line.materialCode] ?? 0) + (line.shipped - line.received);
+  }
+  return out;
+}
+
+/**
  * A discrepancy still waiting for the supplier's answer.
  * @param {Pick<GoodsReceipt, 'inspectionResults' | 'status' | 'discrepancyResponse'>} gr
  * @param {Pick<ASN, 'lineItems'> | null} [asn]

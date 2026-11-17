@@ -93,8 +93,10 @@ const SupplierShipments = () => {
     callOffsQuery,
     callOffViewList,
     posQuery,
+    receiptsQuery,
     mySupplier,
     asns,
+    receipts,
     declaredBatches,
     drill,
     drilledPo,
@@ -125,14 +127,26 @@ const SupplierShipments = () => {
     const callOff = (callOffsQuery.data?.items ?? []).find(
       (c) => c.id === startCallOffId && c.poId === po.id && isConfirmedAndAccepted(c)
     );
-    wizard.updateForm({ ...poSelection(po, asns), ...(callOff ? { callOffId: callOff.id } : {}) });
+    wizard.updateForm({
+      ...poSelection(po, asns, receipts),
+      ...(callOff ? { callOffId: callOff.id } : {})
+    });
     // `wizard.updateForm` is a fresh closure each render over a state setter.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startPoId, startCallOffId, SHIPPABLE_POS, asns, callOffsQuery.isPending, callOffsQuery.data]);
+  }, [
+    startPoId,
+    startCallOffId,
+    SHIPPABLE_POS,
+    asns,
+    receipts,
+    callOffsQuery.isPending,
+    callOffsQuery.data
+  ]);
   const drawer = useAsnSubmitDrawer({
     asns,
     shippablePos: SHIPPABLE_POS,
     declaredBatches,
+    receipts,
     submitAsnMutation,
     requestExceptionMutation
   });
@@ -151,17 +165,23 @@ const SupplierShipments = () => {
   };
 
   if (!supplierId) return <NoSupplierIdentity />;
-  if (supplierQuery.isPending || asnsQuery.isPending || posQuery.isPending)
+  if (
+    supplierQuery.isPending ||
+    asnsQuery.isPending ||
+    posQuery.isPending ||
+    receiptsQuery.isPending
+  )
     return <LoadingState breadcrumb={SHIPMENTS_CRUMB} />;
-  if (supplierQuery.isError || asnsQuery.isError || posQuery.isError)
+  if (supplierQuery.isError || asnsQuery.isError || posQuery.isError || receiptsQuery.isError)
     return (
       <ErrorState
         breadcrumb={SHIPMENTS_CRUMB}
-        error={supplierQuery.error ?? asnsQuery.error ?? posQuery.error}
+        error={supplierQuery.error ?? asnsQuery.error ?? posQuery.error ?? receiptsQuery.error}
         onRetry={() => {
           supplierQuery.refetch();
           asnsQuery.refetch();
           posQuery.refetch();
+          receiptsQuery.refetch();
         }}
       />
     );
@@ -186,7 +206,8 @@ const SupplierShipments = () => {
     shippablePos: SHIPPABLE_POS,
     asns,
     declaredBatches,
-    callOffViewList
+    callOffViewList,
+    receipts
   });
 
   /** @type {WizardStep[]} */
@@ -200,6 +221,7 @@ const SupplierShipments = () => {
         <WizardSelectStep
           shippablePos={SHIPPABLE_POS}
           asns={asns}
+          receipts={receipts}
           form={form}
           updateForm={updateForm}
           selectedPO={selectedPO}

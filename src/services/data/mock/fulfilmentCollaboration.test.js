@@ -20,6 +20,7 @@ import { POStatus } from '../types';
 /** @import { GoodsReceipt } from '@data/mockGoodsReceipts' */
 import { PERSONA_SYSTEM_ROLES, rolesHolding } from '../../transitions/businessRoles';
 import {
+  asnLineRefusal,
   compareReceipt,
   deriveInvoiceVerdict,
   hasReceiptDiscrepancy,
@@ -187,6 +188,112 @@ describe('ASN — shipped quantity within open quantity (BR-02)', () => {
     purchaseOrderStore.update('po-007', (p) => ({ ...p, status: POStatus.SENT }));
     const refused = await createAsn({});
     expect(refused.reason).toMatch(/POLICY_REJECTED:asn_create_po_approved/);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GR-1 / BL-71 / BL-81 (owner, 2026-11-02) — "a receipt kept open reopens the
+// missing quantity for another shipment". Dispatched through the REAL service:
+// the policy hook, the draft's proposed lines and the pure rule all read the
+// same store rows, so the form and the verb cannot disagree.
+// ─────────────────────────────────────────────────────────────────────────────
+describe('GR-1 / BL-71 — a kept-open receipt reopens the missing quantity', () => {
+  const poNow = () =>
+    /** @type {import('../types').PurchaseOrder} */ (purchaseOrderStore.get('po-007'));
+
+  /**
+   * A posted receipt against `asnNumber`, short by `expected − received`.
+   * @param {string} asnNumber
+   * @param {number} expected
+   * @param {number} received
+   */
+  const addReceipt = (asnNumber, expected, received) =>
+    goodsReceiptStore.add({
+      id: 'gr-9901',
+      grNumber: 'GR-2026-901',
+      asnId: 'shp-9901',
+      asnNumber,
+      poNumber: PO,
+      supplierId: 'sup-007',
+      supplierName: 'PT Sample Packaging Indonesia',
+      receivedDate: '2026-09-30',
+      receivedBy: 'Warehouse Supervisor',
+      status: /** @type {const} */ ('Approved'),
+      disposition: /** @type {const} */ ('Accept'),
+      inspectionResults: [
+        {
+          materialCode: MAT,
+          description: 'PET Bottle 200ml Frosted',
+          qtyExpected: expected,
+          qtyReceived: received,
+          qtyAccepted: received,
+          qtyRejected: 0,
+          visualCheck: /** @type {const} */ ('Pass'),
+          packagingCheck: /** @type {const} */ ('Pass')
+        }
+      ]
+    });
+
+  /** @param {number} shippedQty */
+  const refusalFor = (shippedQty) =>
+    asnLineRefusal({ materialCode: MAT, shippedQty }, poNow(), asnStore.all(), {
+      requireBatch: false,
+      receipts: goodsReceiptStore.all()
+    });
+
+  const openWithReceipts = () =>
+    openQtyForLine(
+      poNow(),
+      poNow().lineItems[0],
+      asnStore.all(),
+      undefined,
+      goodsReceiptStore.all()
+    );
+
+  it('the missing quantity is open again for another ASN, and only that quantity', async () => {
+    const first = await createAsn({ lines: [{ materialCode: MAT, shippedQty: 200_000 }] });
+    expect(first.status).toBe('done');
+    expect(openWithReceipts()).toBe(0);
+
+    // 5% short: 190,000 of 200,000 arrived → the receipt is kept open (CR-25)
+    // and the 10,000 owed is open again.
+    addReceipt(/** @type {string} */ (first.entityId), 200_000, 190_000);
+    expect(openWithReceipts()).toBe(10_000);
+    expect(refusalFor(10_000)).toBeNull();
+    expect(refusalFor(10_001)).toBe('overOpen');
+
+    // The verb accepts exactly the reopened quantity, and one unit more is
+    // still refused — so the reopening is not a hole in BR-02.
+    expect((await createAsn({ lines: [{ materialCode: MAT, shippedQty: 10_000 }] })).status).toBe(
+      'done'
+    );
+    const over = await createAsn({ lines: [{ materialCode: MAT, shippedQty: 1 }] });
+    expect(over.status).toBe('failed');
+    expect(over.reason).toMatch(/OVER_OPEN_QUANTITY/);
+  });
+
+  it('a draft with no lines proposes the reopened quantity', async () => {
+    const first = await createAsn({ lines: [{ materialCode: MAT, shippedQty: 200_000 }] });
+    addReceipt(/** @type {string} */ (first.entityId), 200_000, 190_000);
+    const draft = await createAsn({});
+    expect(draft.status).toBe('done');
+    const asn = /** @type {ASN} */ (
+      asnStore.get(/** @type {NonNullable<typeof draft.entityId>} */ (draft.entityId))
+    );
+    expect(asn.lineItems).toEqual([
+      expect.objectContaining({ materialCode: MAT, shippedQty: 10_000 })
+    ]);
+  });
+
+  it('CONTROL — a shortfall within CR-25 closes the receipt and reopens nothing', async () => {
+    const first = await createAsn({ lines: [{ materialCode: MAT, shippedQty: 200_000 }] });
+    // Exactly 2% short: within tolerance, so the receipt closes (BL-45/CR-25).
+    addReceipt(/** @type {string} */ (first.entityId), 200_000, 196_000);
+    expect(openWithReceipts()).toBe(0);
+    expect(refusalFor(1)).toBe('overOpen');
+    expect((await createAsn({ lines: [{ materialCode: MAT, shippedQty: 1 }] })).status).toBe(
+      'failed'
+    );
   });
 });
 

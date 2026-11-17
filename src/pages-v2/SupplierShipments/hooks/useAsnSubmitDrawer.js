@@ -4,6 +4,7 @@ import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { refusalDetailOf } from '@services/transitions/refusalMessage';
 /** @import { ASN, PurchaseOrder } from '@services/data/types' */
+/** @import { GoodsReceipt } from '@data/mockGoodsReceipts' */
 /** @import { AvailableBatch } from '@services/transitions/fulfilmentRules' */
 /** @import { useAdvanceShipNoticeRequestException, useAdvanceShipNoticeSubmit } from '@services/query/commandHooks' */
 /** @import { LineEntry } from '../../shipments/asnLines' */
@@ -22,6 +23,7 @@ import { submitLinesFor } from '../utils';
  * @param {readonly ASN[]} args.asns  Every ASN the supplier holds.
  * @param {readonly PurchaseOrder[]} args.shippablePos  The POs an ASN may ship against.
  * @param {Readonly<Record<string, readonly AvailableBatch[]>>} args.declaredBatches  Batch picker options by material.
+ * @param {readonly Pick<GoodsReceipt, 'poNumber' | 'asnNumber' | 'inspectionResults' | 'status'>[]} [args.receipts]  GR-1 / BL-71 — kept-open receipts.
  * @param {ReturnType<typeof useAdvanceShipNoticeSubmit>} args.submitAsnMutation
  * @param {ReturnType<typeof useAdvanceShipNoticeRequestException>} args.requestExceptionMutation
  */
@@ -29,6 +31,7 @@ export function useAsnSubmitDrawer({
   asns,
   shippablePos,
   declaredBatches,
+  receipts = [],
   submitAsnMutation,
   requestExceptionMutation
 }) {
@@ -55,7 +58,7 @@ export function useAsnSubmitDrawer({
   // The lines a draft is submitted with: its PO's lines (open quantity leaving
   // this draft out), plus any stored line whose material the PO does not carry.
   /** @param {ASN} asn */
-  const submitLinesForAsn = (asn) => submitLinesFor(asn, shippablePos, asns);
+  const submitLinesForAsn = (asn) => submitLinesFor(asn, shippablePos, asns, receipts);
 
   // Open the submit drawer for a Draft ASN — the required fields (carrier,
   // tracking, ETA) are collected here before dispatch. Fixture drafts store '—'
@@ -107,7 +110,8 @@ export function useAsnSubmitDrawer({
       excludeAsn: asn.asnNumber,
       eta: submitForm.eta,
       overShipReason: submitForm.overShipReason,
-      batches: declaredBatches
+      batches: declaredBatches,
+      receipts
     });
 
   // t_asn_submit (Draft → Submitted) with the collected fields. The dispatcher
