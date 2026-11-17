@@ -142,6 +142,19 @@ describe('the quote grid — refused out loud, accepted whole', () => {
     expect(screen.getByRole('button', { name: 'Submit quotation' })).toBeDisabled();
   });
 
+  it('BL-326: an added cost’s name and amount each own a unique DOM id', async () => {
+    await openOsloGrid();
+    fireEvent.click(screen.getByTestId('grid-item-1-add-cost'));
+    const name = screen.getByLabelText('Other cost 1, name');
+    const amount = screen.getByLabelText('Other cost 1, amount');
+    expect(name.id).not.toBe('');
+    expect(amount.id).not.toBe('');
+    expect(name.id).not.toBe(amount.id);
+    // No duplicate in the document — the defect was one id on two controls.
+    expect(document.querySelectorAll(`[id="${name.id}"]`)).toHaveLength(1);
+    expect(document.querySelectorAll(`[id="${amount.id}"]`)).toHaveLength(1);
+  });
+
   it('KNOWN-GOOD: the full grid is sent and stored, with the sample offer and an added cost', async () => {
     await openOsloGrid();
     fillOslo();

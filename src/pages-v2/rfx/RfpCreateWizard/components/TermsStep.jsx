@@ -40,6 +40,10 @@ export const TermsStep = ({ draft, picked, missingValues, onTogglePick, onSetVal
             <ul className="space-y-2">
               {rows.map((term) => {
                 const chosen = term.id in draft.terms;
+                // BL-326 — the mark and its description come from the SAME
+                // reading, so the field never names a message that is not up.
+                const invalid =
+                  missingValues.includes(term.id) && draft.terms[term.id].trim().length > 0;
                 /** @type {RfpTermRow} */
                 const row = { termId: term.id, requestedValue: '' };
                 return (
@@ -65,10 +69,8 @@ export const TermsStep = ({ draft, picked, missingValues, onTogglePick, onSetVal
                           value={draft.terms[term.id]}
                           onChange={(v) => onSetValue(term.id, v)}
                           ariaLabel={`${t(term.labelKey)} — ${t('rfx.rfp.term.requested')}`}
-                          invalid={
-                            missingValues.includes(term.id) &&
-                            draft.terms[term.id].trim().length > 0
-                          }
+                          invalid={invalid}
+                          describedBy={invalid ? 'rfp-new-missing-values' : undefined}
                         />
                       </div>
                     )}
@@ -91,7 +93,11 @@ export const TermsStep = ({ draft, picked, missingValues, onTogglePick, onSetVal
         </p>
       )}
       {missingValues.length > 0 && (
-        <p className="text-sm text-danger" data-testid="rfp-new-missing-values">
+        <p
+          id="rfp-new-missing-values"
+          className="text-sm text-danger"
+          data-testid="rfp-new-missing-values"
+        >
           {t('rfx.rfp.term.requestedMissing')}{' '}
           {missingValues
             .map((id) =>
