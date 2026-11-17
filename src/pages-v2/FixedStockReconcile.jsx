@@ -24,11 +24,12 @@ import { FIELD_FOCUS_RING, TOUCH_TARGET } from '@components/forecast/focusRing';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { useRefusalText } from '@hooks/useRefusalText';
 import { useToast } from '@hooks/useToast';
-import { formatDate, formatNumber } from '@lib/format';
+import { formatDate, formatDateTime, formatNumber } from '@lib/format';
 import { useFixedStockReconcile, usePoOnHold } from '@services/query/hooks';
 import { useMaxStockSet } from '@services/query/commandHooks';
 /** @import { FixedStockReconcileRow } from '@services/data/types' */
-import { maxStockRefusal } from '@services/transitions/maxStock';
+/** @import { ActorAttribution } from '@lib/enforcement' */
+import { maxStockRefusal, maxStockStore } from '@services/transitions/maxStock';
 import { forecastNow } from './forecasts/forecastDisplay';
 import { inputClass, labelClass } from './inventory/inventoryDisplay';
 import PoOnHoldPanel from './poOnHold/PoOnHoldPanel';
@@ -97,6 +98,20 @@ const FixedStockReconcile = ({ persona }) => {
     setDraft(r.maxStock === null ? '' : String(r.maxStock));
     setEditing(r);
   };
+
+  // BL-136 — the pair's append-only record, newest first. Read straight from
+  // the store the verb writes: the panel closes on every save, so opening it
+  // again is what refreshes the list, alongside the query invalidation.
+  const history = editing
+    ? [...maxStockStore.history(editing.supplierId, editing.materialCode)].reverse()
+    : [];
+
+  /**
+   * The portal's fixed label for an act no person can be named for (C10 §6.2).
+   * @param {ActorAttribution} a
+   */
+  const byLabel = (a) =>
+    a.kind === 'RESOLVED' ? a.person.displayName : t('fsr.max.history.unattributed');
 
   /** @param {number | null} quantity */
   const save = async (quantity) => {
@@ -377,6 +392,55 @@ const FixedStockReconcile = ({ persona }) => {
                 {t('fsr.max.invalid')}
               </span>
             ) : null}
+            {/* BL-136 — every change on record for this pair, newest first:
+                the value before, the value after, who set it and when. */}
+            <section
+              className="border-t border-border-subtle pt-4 space-y-2"
+              data-testid="fsr-max-history"
+            >
+              <h3 className="text-label uppercase text-text-tertiary">
+                {t('fsr.max.history.title')}
+              </h3>
+              {history.length === 0 ? (
+                <p className="text-sm text-text-tertiary" data-testid="fsr-max-history-empty">
+                  {t('fsr.max.history.empty')}
+                </p>
+              ) : (
+                <ul className="space-y-3">
+                  {history.map((c, i) => (
+                    // The record is append-only, so an entry's position never
+                    // shifts; two changes can share an instant, so the fixed
+                    // position is the stable key.
+                    <li
+                      // eslint-disable-next-line react/no-array-index-key -- append-only record: index i is the entry's fixed position
+                      key={`${c.setAt}-${i}`}
+                      data-testid="fsr-max-history-row"
+                      className="text-sm"
+                    >
+                      <div className="text-text-secondary">
+                        <span className="text-text-tertiary">{t('fsr.max.history.before')} </span>
+                        {c.previous === null ? (
+                          <span className="text-text-tertiary">{t('fsr.max.history.none')}</span>
+                        ) : (
+                          <Qty value={c.previous} uom={editing.uom} />
+                        )}
+                        {' · '}
+                        <span className="text-text-tertiary">{t('fsr.max.history.after')} </span>
+                        {c.quantity === null ? (
+                          <span className="text-text-tertiary">{t('fsr.max.history.cleared')}</span>
+                        ) : (
+                          <Qty value={c.quantity} uom={editing.uom} />
+                        )}
+                      </div>
+                      <div className="flex items-baseline justify-between gap-2 text-xs text-text-tertiary">
+                        <span>{t('fsr.max.history.by', { by: byLabel(c.setBy) })}</span>
+                        <Data className="whitespace-nowrap">{formatDateTime(c.setAt)}</Data>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
           </div>
         ) : null}
       </SidePanel>

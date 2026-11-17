@@ -4,7 +4,7 @@ import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
 import { BuyerFixedStockReconcile, SupplierFixedStockReconcile } from './FixedStockReconcile';
 import { feedstockReconcileEn, feedstockReconcileId } from '@lib/i18n/feedstockReconcile';
 import i18n from '@lib/i18n';
-import { formatNumber } from '@lib/format';
+import { formatDateTime, formatNumber } from '@lib/format';
 import { maxStockStore } from '@services/transitions/maxStock';
 import { headerNamed } from '@test/termText';
 
@@ -189,6 +189,84 @@ describe('Feedstock reconcile — supplier', () => {
     expect(screen.queryByTestId(`fsr-proposed-${K8801}`)).toBeNull();
     expect(screen.queryByTestId('fsr-remainder-note')).toBeNull();
     expect(screen.queryByText(/Usulan aturan sisa \(DRC-15b\)/)).toBeNull();
+  });
+});
+
+describe('BL-136 — the max-stock change record', () => {
+  /**
+   * Open the editor, type a value and save it; wait for the row to read it back.
+   * @param {string} key
+   * @param {string} value
+   * @param {string} expected
+   */
+  const setMaxVia = async (key, value, expected) => {
+    fireEvent.click(screen.getByTestId(`fsr-max-edit-${key}`));
+    fireEvent.change(screen.getByTestId('fsr-max-input'), { target: { value } });
+    fireEvent.click(screen.getByTestId('fsr-max-save'));
+    await waitFor(() => expect(screen.getByTestId(`fsr-max-${key}`)).toHaveTextContent(expected));
+  };
+
+  const renderPlanner = () =>
+    renderWithProviders(<BuyerFixedStockReconcile />, {
+      identity: BUYER,
+      route: '/buyer/fs-reconcile'
+    });
+
+  it('says "no changes recorded" when the pair has no history, not a blank block', async () => {
+    renderPlanner();
+    fireEvent.click(await screen.findByTestId(`fsr-max-edit-${K8801}`));
+    expect(screen.getByTestId('fsr-max-history')).toBeInTheDocument();
+    expect(screen.getByTestId('fsr-max-history-empty')).toHaveTextContent('No changes recorded.');
+    expect(screen.queryAllByTestId('fsr-max-history-row')).toHaveLength(0);
+  });
+
+  it('lists each change newest first: before, after (a clear reads "cleared"), who and when', async () => {
+    renderPlanner();
+    await screen.findByTestId(`fsr-max-edit-${K8801}`);
+    await setMaxVia(K8801, '1000', `Max: ${pcs(1_000)}`);
+    await setMaxVia(K8801, '1200', `Max: ${pcs(1_200)}`);
+    fireEvent.click(screen.getByTestId(`fsr-max-edit-${K8801}`));
+    fireEvent.click(screen.getByTestId('fsr-max-clear'));
+    await waitFor(() =>
+      expect(screen.getByTestId(`fsr-max-${K8801}`)).toHaveTextContent('No max stock agreed')
+    );
+
+    // The store's own rows, newest first — the order the panel must render.
+    const newestFirst = [...maxStockStore.history('sup-007', 'PK-PETB-8801')].reverse();
+    expect(newestFirst.map((c) => [c.previous, c.quantity])).toEqual([
+      [1_200, null],
+      [1_000, 1_200],
+      [null, 1_000]
+    ]);
+
+    fireEvent.click(screen.getByTestId(`fsr-max-edit-${K8801}`));
+    const rows = await screen.findAllByTestId('fsr-max-history-row');
+    expect(rows).toHaveLength(3);
+    newestFirst.forEach((change, i) => {
+      const row = within(rows[i]);
+      expect(row.getByText('Before:')).toBeInTheDocument();
+      expect(row.getByText('After:')).toBeInTheDocument();
+      // The actor and the moment, on every row.
+      expect(rows[i]).toHaveTextContent('By Not attributed (no named person in session)');
+      expect(rows[i]).toHaveTextContent(formatDateTime(change.setAt));
+    });
+    expect(rows[0]).toHaveTextContent(`Before: ${pcs(1_200)}`);
+    expect(rows[0]).toHaveTextContent('After: cleared');
+    expect(rows[1]).toHaveTextContent(`Before: ${pcs(1_000)}`);
+    expect(rows[1]).toHaveTextContent(`After: ${pcs(1_200)}`);
+    expect(rows[2]).toHaveTextContent('Before: none');
+    expect(rows[2]).toHaveTextContent(`After: ${pcs(1_000)}`);
+  });
+
+  it("shows one pair's record only: a pair with no history reads empty", async () => {
+    renderPlanner();
+    await screen.findByTestId(`fsr-max-edit-${K8801}`);
+    await setMaxVia(K8801, '1000', `Max: ${pcs(1_000)}`);
+
+    fireEvent.click(screen.getByTestId(`fsr-max-edit-${K8802}`));
+    expect(await screen.findByTestId('fsr-max-history-empty')).toBeInTheDocument();
+    expect(screen.queryAllByTestId('fsr-max-history-row')).toHaveLength(0);
+    expect(screen.getByTestId('fsr-max-history')).not.toHaveTextContent(pcs(1_000));
   });
 });
 
