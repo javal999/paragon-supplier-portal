@@ -56,6 +56,7 @@ import {
  * `effective`:  The option that stands (PEX-8 BR-01, BR-06); null while the supplier may still choose.
  * `outcome`:  What the end of the grace period does with the quantity under `effective`.
  * `pipo`, `maxPti`, `daysSinceMovement`:  Null where the hub holds no such fact.
+ * `cap`:  [Proposed] The FG cap (PEX-8 BR-03) an FG round has left: the formula's figure less what earlier rounds of this supplier × material absorbed, never below 0. Null when the formula cannot be computed.
  * `execution`:  PEX-8 BR-02/BR-05 — the end of the grace period: `scheduled` (grace running), `due`, `blocked` (a fact is missing, see `plan.blocked`) or `executed`. `plan` is the read-only preview (what it would do now, or what it did); `record` is the ledger row once it ran.
  * `closed`:  True for a line that left hold after its execution: kept so the panel still says what was created.
  *
@@ -143,16 +144,31 @@ export function allPoOnHold(nowIso = sdcClock.now()) {
   const day = nowIso.slice(0, 10);
   const pos = purchaseOrderStore.all();
   const callOffs = callOffStore.all();
-  // Call-offs an execution made (`origin: 'poOnHold'`) are the remainder itself,
-  // not supply DA already counts: left out of the DA week figures, so the
-  // quantity they took leaves hold (OSPO falls, DA not yet called off does not).
+  // TWO READINGS OF A WEEK'S CALL-OFFS, ON PURPOSE.
+  //   · `supply` is the figure the screen shows ("DA not yet called off") and
+  //     PO On Hold is made of. Call-offs an execution made (`origin: 'poOnHold'`)
+  //     are the remainder itself, not supply DA already counts: left out, so the
+  //     quantity they took leaves hold (OSPO falls, DA not yet called off does
+  //     not). Counting them here would leave PO On Hold where it was, and a line
+  //     would never clear (accepted MR !117 decision 4, PEX-7 BR-01).
+  //   · `released` is the room a spread has: EVERY released call-off, the ones
+  //     earlier "Suggest again" rounds made too, so a week's call-offs never go
+  //     above its DA across rounds (owner ruling 2026-11-17, "Count them: yes,
+  //     count earlier rounds"; finding D1 of the MR !135 browser check).
   const supply = openSupplyIndex(callOffs.filter((c) => c.origin !== 'poOnHold'));
-  // FG absorbed on a PO line (PEX-8 BR-03) is no longer open PO quantity.
+  const released = openSupplyIndex(callOffs);
+  // FG absorbed on a PO line (PEX-8 BR-03) is no longer open PO quantity; and what
+  // earlier rounds absorbed for a supplier × material counts against its FG cap.
   /** @type {Map<string, number>} */
   const absorbedOnLine = new Map();
+  /** @type {Map<string, number>} */
+  const absorbedOnPair = new Map();
   for (const e of poOnHoldStore.executions())
-    for (const a of e.plan.absorbed)
+    for (const a of e.plan.absorbed) {
       absorbedOnLine.set(a.lineId, (absorbedOnLine.get(a.lineId) ?? 0) + a.qty);
+      const pair = pk(e.supplierId, e.materialCode);
+      absorbedOnPair.set(pair, (absorbedOnPair.get(pair) ?? 0) + a.qty);
+    }
   const das = new Map(
     allDemandAnticipation(nowIso).map((r) => [pk(r.supplierId, r.materialCode), r])
   );
@@ -199,8 +215,23 @@ export function allPoOnHold(nowIso = sdcClock.now()) {
       : [];
     const notCalled = daNotCalledOff(weeks);
     const qty = poOnHoldQty({ ospo, daNotCalledOff: notCalled });
+    // What a spread has room for: each week's DA less every call-off released for it.
+    const roomWeeks = weeks.map((w) => ({
+      ...w,
+      calledOff: released.get(`${supplierId}|${materialCode}|${w.week}`) ?? 0
+    }));
     if (qty > 0)
-      figures.push({ key, supplierId, materialCode, ospo, notCalled, qty, weeks, lines });
+      figures.push({
+        key,
+        supplierId,
+        materialCode,
+        ospo,
+        notCalled,
+        qty,
+        weeks,
+        roomWeeks,
+        lines
+      });
   }
   const firstDays = poOnHoldStore.observe(
     figures.map((f) => f.key),
@@ -251,7 +282,13 @@ export function allPoOnHold(nowIso = sdcClock.now()) {
         osipParamKey('maxPti', { supplierId: f.supplierId, materialCode: f.materialCode })
       );
       const maxPti = typeof maxPtiSet === 'number' ? maxPtiSet : null;
-      const cap = fgCap({ maxPti, maxSupplier, sohSupplier, sohPti });
+      // [Proposed] the cap an FG round has LEFT: what earlier rounds absorbed for
+      // this supplier × material counts against it, the way their call-offs count
+      // against a week's room. The hub posts no stock for an absorption, so the
+      // SOH figures above do not show it. Null stays null: nothing is guessed.
+      const capByFormula = fgCap({ maxPti, maxSupplier, sohSupplier, sohPti });
+      const cap =
+        capByFormula === null ? null : Math.max(0, capByFormula - (absorbedOnPair.get(f.key) ?? 0));
       // PEX-12 [Proposed] — read-only recommended action from the class thresholds.
       const materialClass = entry?.materialGroup ?? null;
       const thresholdOf = (/** @type {'autoAbsorbMaxPct' | 'autoCarryMaxPct'} */ param) => {
@@ -301,7 +338,7 @@ export function allPoOnHold(nowIso = sdcClock.now()) {
               graceEndDay: gs.dueDay,
               leadTimeDays,
               lines: f.lines,
-              weeks: f.weeks
+              weeks: f.roomWeeks
             })
           : null);
       const execution = {
