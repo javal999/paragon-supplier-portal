@@ -4,6 +4,7 @@
 /** @import { AsnForCallOffCheck, CallOffView } from '@services/transitions/callOffRules' */
 /** @import { AvailableBatch } from '@services/transitions/fulfilmentRules' */
 /** @import { ASN, CallOffWarning, PurchaseOrder } from '@services/data/types' */
+/** @import { GoodsReceipt } from '@data/mockGoodsReceipts' */
 /** @import { AsnLinesRead, OpenLine } from '../shipments/asnLines' */
 /** @import { AsnForm } from './const' */
 import { formatDate } from '@lib/format';
@@ -68,13 +69,15 @@ export const newAsnForm = () => ({ ...EMPTY_FORM, ...defaultCarrier() });
 /**
  * The form patch for picking a PO at step 1: its open lines seeded, and no
  * call-off chosen yet. The PO card and an address naming the PO both use it.
+ * `receipts`:  GR-1 / BL-71 — kept-open receipts reopen their missing quantity.
  * @param {PurchaseOrder} po
  * @param {readonly ASN[]} asns  Every ASN the supplier holds.
+ * @param {readonly Pick<GoodsReceipt, 'poNumber' | 'asnNumber' | 'inspectionResults' | 'status'>[]} [receipts]
  * @returns {Partial<AsnForm>}
  */
-export const poSelection = (po, asns) => ({
+export const poSelection = (po, asns, receipts = []) => ({
   poId: po.id,
-  lines: seedLines(openLinesFor(po, asns)),
+  lines: seedLines(openLinesFor(po, asns, undefined, receipts)),
   overShipReason: '',
   callOffId: '',
   callOffFinal: false
@@ -86,11 +89,12 @@ export const poSelection = (po, asns) => ({
  * @param {ASN} asn
  * @param {readonly PurchaseOrder[]} shippablePos  The POs an ASN may ship against.
  * @param {readonly ASN[]} asns  Every ASN the supplier holds.
+ * @param {readonly Pick<GoodsReceipt, 'poNumber' | 'asnNumber' | 'inspectionResults' | 'status'>[]} [receipts]
  * @returns {OpenLine[]}
  */
-export function submitLinesFor(asn, shippablePos, asns) {
+export function submitLinesFor(asn, shippablePos, asns, receipts = []) {
   const po = shippablePos.find((p) => p.poNumber === asn.poReference);
-  const fromPo = po ? openLinesFor(po, asns, asn.asnNumber) : [];
+  const fromPo = po ? openLinesFor(po, asns, asn.asnNumber, receipts) : [];
   const extra = asn.lineItems
     .filter((li) => !fromPo.some((l) => l.materialCode === li.materialCode))
     .map((li) => ({
@@ -120,18 +124,27 @@ export function submitLinesFor(asn, shippablePos, asns) {
  * @param {readonly ASN[]} args.asns  Every ASN the supplier holds.
  * @param {Readonly<Record<string, readonly AvailableBatch[]>>} args.declaredBatches  Batch picker options by material.
  * @param {readonly Pick<CallOffView, 'callOff' | 'delivery'>[]} args.callOffViewList  The call-off projection.
+ * @param {readonly Pick<GoodsReceipt, 'poNumber' | 'asnNumber' | 'inspectionResults' | 'status'>[]} [args.receipts]  GR-1 / BL-71 — kept-open receipts.
  * @returns {WizardRead}
  */
-export function readWizard({ form, shippablePos, asns, declaredBatches, callOffViewList }) {
+export function readWizard({
+  form,
+  shippablePos,
+  asns,
+  declaredBatches,
+  callOffViewList,
+  receipts = []
+}) {
   const selectedPO = shippablePos.find((p) => p.id === form.poId);
-  const wizardOpenLines = selectedPO ? openLinesFor(selectedPO, asns) : [];
+  const wizardOpenLines = selectedPO ? openLinesFor(selectedPO, asns, undefined, receipts) : [];
   // AR-11 — every line through the one line rule the verbs call.
   const wizardRead = readLines(form.lines, wizardOpenLines, {
     po: selectedPO,
     asns,
     eta: form.eta,
     overShipReason: form.overShipReason,
-    batches: declaredBatches
+    batches: declaredBatches,
+    receipts
   });
   // MR-6 BR-10 / BR-11 — what the confirm step warns about; never a block.
   const wizardWarnings = selectedPO

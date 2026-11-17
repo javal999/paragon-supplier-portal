@@ -5,6 +5,7 @@ import {
   usePurchaseOrders,
   useASNs,
   useCallOffs,
+  useGoodsReceipts,
   useInventory
 } from '@services/query/hooks';
 /** @import { AsnStatus } from '@services/data/types' */
@@ -31,6 +32,9 @@ export function useShipmentsData(supplierId) {
   const posQuery = usePurchaseOrders({
     status: [POStatus.CONFIRMED, POStatus.PARTIALLY_DELIVERED]
   });
+  // GR-1 / BL-71 — a receipt kept open reopens its missing quantity for another
+  // shipment, so the open quantity the wizard shows is read from the receipts too.
+  const receiptsQuery = useGoodsReceipts();
 
   // MR-6 BR-01 — the supplier's own stock positions, for the batch picker. Not
   // a gate on the page: without them the batch is typed, as BR-04 allows.
@@ -59,6 +63,7 @@ export function useShipmentsData(supplierId) {
     () => SHIPPABLE_POS.filter((po) => po.status === POStatus.CONFIRMED),
     [SHIPPABLE_POS]
   );
+  const receipts = useMemo(() => receiptsQuery.data?.items ?? [], [receiptsQuery.data]);
 
   const counts = useMemo(() => {
     /** @type {Record<AsnStatus, number>} */
@@ -81,8 +86,10 @@ export function useShipmentsData(supplierId) {
     callOffsQuery,
     callOffViewList,
     posQuery,
+    receiptsQuery,
     mySupplier,
     asns,
+    receipts,
     declaredBatches,
     drill,
     drilledPo,

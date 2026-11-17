@@ -7,8 +7,12 @@ import {
   buildCommitmentLines,
   buildVersion,
   commitmentDueAt,
-  commitmentTiming
+  commitmentTiming,
+  deadlineState
 } from './forecastRules';
+import { POStatus } from '../data/types';
+import { isEscalated, responseDeadline } from '../data/poResponseProjection';
+import { confirmationDeadline, isCallOffEscalated } from './callOffRules';
 import { workingCalendarStore } from './workingCalendarStore';
 import { FORECAST_VERSION_SEED } from '../data/mock/fixtures/forecastHub';
 import { sdcClock } from '../sdc';
@@ -156,9 +160,12 @@ describe('BL-48 · time left and late — derived at read, never stored', () => 
    */
   const ms = (iso, delta) => new Date(Date.parse(iso) + delta).toISOString();
 
-  it('BL48-BOUND-01 · awaiting: the last on-time moment is open; the deadline instant and after are late', () => {
+  it('BL81-LATE-01 · awaiting: the deadline instant is still open; late strictly after it', () => {
+    // BL-81 / DL-1 (owner, 2026-11-02) — late ONLY after the deadline, the PO
+    // and call-off convention. BL48-BOUND-01 pinned the retired reading (at the
+    // deadline instant → late, msLate 0); the instant before is unchanged.
     expect(commitmentTiming(awaiting, ms(DUE, -1))).toEqual({ kind: 'open', msLeft: 1 });
-    expect(commitmentTiming(awaiting, DUE)).toEqual({ kind: 'late', msLate: 0 });
+    expect(commitmentTiming(awaiting, DUE)).toEqual({ kind: 'open', msLeft: 0 });
     expect(commitmentTiming(awaiting, ms(DUE, 1))).toEqual({ kind: 'late', msLate: 1 });
   });
 
@@ -180,19 +187,73 @@ describe('BL-48 · time left and late — derived at read, never stored', () => 
     response: /** @type {RequirementResponse} */ ({ submittedAt: at })
   });
 
-  it('BL48-BOUND-02 · submitted one millisecond before the deadline is on time; at it, late', () => {
+  it('BL81-LATE-02 · submitted AT the deadline is on time; one millisecond after is late', () => {
+    // BL-81 / DL-1 — the retired reading pinned `at due → submittedLate, 0`
+    // (BL48-BOUND-02). The instant before is unchanged.
     expect(commitmentTiming(submittedAt(ms(DUE, -1)), '2026-09-10T00:00:00.000Z')).toEqual({
       kind: 'submittedOnTime'
     });
     expect(commitmentTiming(submittedAt(DUE), '2026-09-10T00:00:00.000Z')).toEqual({
+      kind: 'submittedOnTime'
+    });
+    expect(commitmentTiming(submittedAt(ms(DUE, 1)), '2026-09-10T00:00:00.000Z')).toEqual({
       kind: 'submittedLate',
-      msLate: 0
+      msLate: 1
     });
   });
 
   it('BL48-LATE-01 · a submitted commitment is judged by when it arrived, not by the clock now', () => {
     const onTime = submittedAt(ms(DUE, -3_600_000));
     expect(commitmentTiming(onTime, ms(DUE, 99 * 86_400_000))).toEqual({ kind: 'submittedOnTime' });
+  });
+});
+
+describe('BL-81 · DL-1 — one late convention across the three response families', () => {
+  // The owner ruling of 2026-11-02 (DL-1, BL-69): late only AFTER the deadline,
+  // for forecast commitments, PO responses and call-off responses. The PO and
+  // call-off readers already asked `deadline < now`; the forecast reader used
+  // `now >= deadline` and is the member this batch changes. This case fires
+  // every FORECAST reader at the same instant the other two are read at, so the
+  // three cannot drift apart without a red test.
+  const RELEASED = '2026-09-07T02:00:00.000Z'; // Monday 09:00 WIB
+  const DEADLINE = '2026-09-08T02:00:00.000Z'; // 1 working day later, Tuesday 09:00 WIB
+  /** @param {number} delta */
+  const at = (delta) => new Date(Date.parse(DEADLINE) + delta).toISOString();
+  /** @type {import('../data/types').PurchaseOrder} */
+  const po = /** @type {import('../data/types').PurchaseOrder} */ ({
+    status: POStatus.SENT,
+    orderDate: RELEASED,
+    responseRequestedAt: RELEASED
+  });
+  /** @type {import('../data/types').CallOff} */
+  const callOff = /** @type {import('../data/types').CallOff} */ ({
+    status: 'Awaiting Confirmation',
+    releasedAt: RELEASED
+  });
+  const awaiting = {
+    state: /** @type {const} */ ('awaiting'),
+    dueAt: DEADLINE,
+    reminderAt: '2026-09-07T12:00:00.000Z',
+    response: null,
+    responseDueAt: null
+  };
+
+  it('all three deadlines are the same instant, and all three are on time AT it', () => {
+    expect(commitmentDueAt('firm', RELEASED)).toBe(DEADLINE);
+    expect(responseDeadline(po).toISOString()).toBe(DEADLINE);
+    expect(confirmationDeadline(callOff)?.toISOString()).toBe(DEADLINE);
+    // AT the deadline: no family is late yet.
+    expect(commitmentTiming(awaiting, DEADLINE)).toEqual({ kind: 'open', msLeft: 0 });
+    expect(deadlineState(awaiting, DEADLINE)).not.toBe('overdue');
+    expect(isEscalated(po, DEADLINE)).toBe(false);
+    expect(isCallOffEscalated(callOff, DEADLINE)).toBe(false);
+  });
+
+  it('one millisecond later, all three are late', () => {
+    expect(commitmentTiming(awaiting, at(1))).toEqual({ kind: 'late', msLate: 1 });
+    expect(deadlineState(awaiting, at(1))).toBe('overdue');
+    expect(isEscalated(po, at(1))).toBe(true);
+    expect(isCallOffEscalated(callOff, at(1))).toBe(true);
   });
 });
 

@@ -2,6 +2,7 @@
 import { useTranslation } from 'react-i18next';
 import { isConfirmedAndAccepted } from '@services/transitions/callOffRules';
 /** @import { ASN, CallOff, PurchaseOrder } from '@services/data/types' */
+/** @import { GoodsReceipt } from '@data/mockGoodsReceipts' */
 /** @import { AsnForm } from '../const' */
 import { fmtDate } from '../utils';
 import { qty } from '../../callOffs/callOffDisplay';
@@ -11,9 +12,18 @@ import WizardPoCard from './WizardPoCard';
 /**
  * Wizard step 1 — pick the PO to ship against, then (REQ-E09-03 BR-06)
  * optionally the confirmed call-off on it this ASN ships.
- * @type {React.FC<{ shippablePos: readonly PurchaseOrder[]; asns: readonly ASN[]; form: AsnForm; updateForm: (patch: Partial<AsnForm>) => void; selectedPO: PurchaseOrder | undefined; callOffs: readonly CallOff[] }>}
+ * `receipts`:  GR-1 / BL-71 — kept-open receipts reopen their missing quantity.
+ * @type {React.FC<{ shippablePos: readonly PurchaseOrder[]; asns: readonly ASN[]; receipts?: readonly Pick<GoodsReceipt, 'poNumber' | 'asnNumber' | 'inspectionResults' | 'status'>[]; form: AsnForm; updateForm: (patch: Partial<AsnForm>) => void; selectedPO: PurchaseOrder | undefined; callOffs: readonly CallOff[] }>}
  */
-const WizardSelectStep = ({ shippablePos, asns, form, updateForm, selectedPO, callOffs }) => {
+const WizardSelectStep = ({
+  shippablePos,
+  asns,
+  receipts = [],
+  form,
+  updateForm,
+  selectedPO,
+  callOffs
+}) => {
   const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-3">
@@ -27,6 +37,7 @@ const WizardSelectStep = ({ shippablePos, asns, form, updateForm, selectedPO, ca
             key={po.id}
             po={po}
             asns={asns}
+            receipts={receipts}
             selected={form.poId === po.id}
             updateForm={updateForm}
           />

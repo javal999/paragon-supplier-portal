@@ -7,7 +7,9 @@
 
 import { POStatus } from '../../data/types';
 /** @import { ASN, AsnLineItem, AsnStatus, PurchaseOrder, POLineItem } from '../../data/types' */
+/** @import { GoodsReceipt } from '@data/mockGoodsReceipts' */
 import { shelfLifeRuleFor } from '../fulfilmentConfig';
+import { reopenedQtyByMaterial } from './goodsReceipt';
 import { isCalendarDate, isNonBlank } from './shared';
 import { shelfLifeMet } from './shelfLife';
 
@@ -48,21 +50,37 @@ export const committedQty = (li) => (li.confirmedQty > 0 ? li.confirmedQty : li.
 
 /**
  * BR-02 — open quantity on a PO line = committed quantity minus the quantity on
- * the PO's non-cancelled ASNs for that material. `excludeAsn` leaves one ASN out
- * (the one being edited). Never below zero.
+ * the PO's non-cancelled ASNs for that material, PLUS the missing quantity of
+ * any KEPT-OPEN goods receipt on that PO line (GR-1 / BL-71 / BL-81: a receipt
+ * kept open reopens the missing quantity for another shipment). `excludeAsn`
+ * leaves one ASN out (the one being edited). Never below zero.
+ *
+ * `receipts` is optional so a caller with no receipt read keeps BR-02's plain
+ * answer; every ASN-lane caller (the policy hooks and the wizard) passes the
+ * store's rows, so the form and the verb stay one rule (AR-11). A receipt
+ * against a CANCELLED ASN reopens nothing: that shipment's quantity was never
+ * consumed, so there is nothing to put back without double-counting.
  * @param {Pick<PurchaseOrder, 'poNumber'>} po
  * @param {Pick<POLineItem, 'materialCode' | 'quantity' | 'confirmedQty'>} line
  * @param {readonly ASN[]} asns
  * @param {string} [excludeAsn]
+ * @param {readonly Pick<GoodsReceipt, 'poNumber' | 'asnNumber' | 'inspectionResults' | 'status'>[]} [receipts]
  * @returns {number}
  */
-export function openQtyForLine(po, line, asns, excludeAsn) {
+export function openQtyForLine(po, line, asns, excludeAsn, receipts = []) {
   const shipped = asns
     .filter((a) => a.poReference === po.poNumber && isActiveAsn(a) && a.asnNumber !== excludeAsn)
     .flatMap((a) => a.lineItems)
     .filter((l) => l.materialCode === line.materialCode)
     .reduce((sum, l) => sum + (Number.isFinite(l.shippedQty) ? l.shippedQty : 0), 0);
-  return Math.max(0, committedQty(line) - shipped);
+  const reopened = receipts
+    .filter((gr) => gr.poNumber === po.poNumber && gr.asnNumber !== excludeAsn)
+    .reduce((sum, gr) => {
+      const asn = asns.find((a) => a.asnNumber === gr.asnNumber);
+      if (asn && !isActiveAsn(asn)) return sum;
+      return sum + (reopenedQtyByMaterial(gr, asn ?? null)[line.materialCode] ?? 0);
+    }, 0);
+  return Math.max(0, committedQty(line) - shipped + reopened);
 }
 
 /**
@@ -138,10 +156,13 @@ export const asnLineCheckOf = (line, eta) => ({
  * checks, so a submission names a missing batch first, as it always has, and
  * the batch is required on every line the ASN carries.
  * `waiveShelfLife`:  MR-6 BR-08 — Quality approved an exception covering this line.
+ * `receipts`:  GR-1 / BL-71 — the goods receipts read, so a kept-open receipt's
+ *   missing quantity is open again for this line (never read by this module
+ *   itself; the caller holds the store).
  * @param {Partial<AsnLineCheck> | null | undefined} line
  * @param {Pick<PurchaseOrder, 'poNumber' | 'lineItems'>} po
  * @param {readonly ASN[]} asns
- * @param {{ excludeAsn?: string; overShipReason?: unknown; requireBatch: boolean; waiveShelfLife?: boolean; }} opts
+ * @param {{ excludeAsn?: string; overShipReason?: unknown; requireBatch: boolean; waiveShelfLife?: boolean; receipts?: readonly Pick<GoodsReceipt, 'poNumber' | 'asnNumber' | 'inspectionResults' | 'status'>[]; }} opts
  * @returns {AsnLineRefusal | null}
  */
 export function asnLineRefusal(line, po, asns, opts) {
@@ -157,7 +178,10 @@ export function asnLineRefusal(line, po, asns, opts) {
   if (rule?.relevant && !isNonBlank(line.expiryDate)) return 'expiryRequired';
   const item = po.lineItems.find((li) => li.materialCode === line.materialCode);
   if (!item) return 'unknownMaterial';
-  if (q > openQtyForLine(po, item, asns, opts.excludeAsn) && !isNonBlank(opts.overShipReason)) {
+  if (
+    q > openQtyForLine(po, item, asns, opts.excludeAsn, opts.receipts) &&
+    !isNonBlank(opts.overShipReason)
+  ) {
     return 'overOpen';
   }
   if (line.expiryDate !== undefined && line.expiryDate !== '' && !isCalendarDate(line.expiryDate)) {
