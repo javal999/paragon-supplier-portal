@@ -124,6 +124,18 @@ describe('Suggest again (PO On Hold remainder)', () => {
     expect(all.some((x) => x.closed && x.decision?.id === oldId)).toBe(true);
   });
 
+  it('a closed round row keeps the quantity that stayed on hold after it (BL-318)', async () => {
+    const first = await roundOne();
+    const oldId = first?.decision?.id ?? '';
+    await setParam('grace', 5);
+    await suggest({ ...SMALL, option: 'fg' });
+
+    const all = (await reads.getPoOnHold(planner)).items;
+    const closed = all.find((x) => x.closed && x.decision?.id === oldId);
+    expect(closed?.execution.plan?.stayOnHoldQty).toBe(180);
+    expect(closed?.qty).toBe(180);
+  });
+
   it('execution is still blocked early and never repeats: old decision refused, new one waits for its grace', async () => {
     const first = await roundOne();
     const oldId = first?.decision?.id ?? '';
