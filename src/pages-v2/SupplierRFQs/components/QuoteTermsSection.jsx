@@ -48,6 +48,11 @@ const QuoteTermsSection = ({ form, setForm, leadTime, moq, showMissing = false }
             id="quote-lead-time"
             aria-label={t('rfqs.field.leadTime')}
             aria-invalid={!leadTime.ok}
+            // BL-84 — the refusal is tied to the lead-time field, and only
+            // when it is the one on screen.
+            aria-describedby={
+              !leadTime.ok && form.unitPrice.trim() !== '' ? 'quote-leadtime-refusal' : undefined
+            }
             value={form.leadTimeNum}
             onChange={(e) =>
               setForm({
@@ -89,6 +94,7 @@ const QuoteTermsSection = ({ form, setForm, leadTime, moq, showMissing = false }
         with the form (the price precedent, 2e-a). */}
         {!leadTime.ok && form.unitPrice.trim() !== '' && (
           <div
+            id="quote-leadtime-refusal"
             role="alert"
             data-testid="quote-leadtime-refusal"
             className="mt-1 text-[length:var(--fs-label-3)] text-danger"
@@ -149,6 +155,8 @@ const QuoteTermsSection = ({ form, setForm, leadTime, moq, showMissing = false }
           id="quote-moq"
           aria-label={t('rfqs.field.moq')}
           aria-invalid={!moq.ok}
+          // BL-84 — the MOQ refusal is tied to the MOQ field.
+          aria-describedby={!moq.ok ? 'quote-moq-refusal' : undefined}
           value={form.moq}
           onChange={(e) => setForm({ ...form, moq: e.target.value })}
           className={inputClass}
@@ -162,6 +170,7 @@ const QuoteTermsSection = ({ form, setForm, leadTime, moq, showMissing = false }
         </div>
         {!moq.ok && (
           <div
+            id="quote-moq-refusal"
             role="alert"
             data-testid="quote-moq-refusal"
             className="mt-1 text-[length:var(--fs-label-3)] text-danger"

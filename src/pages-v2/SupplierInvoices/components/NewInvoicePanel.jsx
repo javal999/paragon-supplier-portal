@@ -247,10 +247,13 @@ const NewInvoicePanel = ({ nw, createMutation, submitMutation, toast, failToast,
               className={inputCls}
               value={newInvoiceNumber}
               aria-invalid={newDuplicate}
+              // BL-84 — the duplicate refusal is tied to the number field.
+              aria-describedby={newDuplicate ? 'invoice-number-duplicate' : undefined}
               onChange={(e) => setNewInvoiceNumber(e.target.value)}
             />
             {newDuplicate && (
               <div
+                id="invoice-number-duplicate"
                 role="alert"
                 data-testid="invoice-number-duplicate"
                 className="mt-1 text-[length:var(--fs-label-3)] text-danger"

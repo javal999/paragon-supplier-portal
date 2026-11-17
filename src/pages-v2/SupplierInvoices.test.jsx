@@ -162,6 +162,10 @@ describe('SupplierInvoices — the new-invoice line amounts are text, so the par
     expect(refusal).toHaveAttribute('role', 'alert');
     expect(refusal.textContent).toMatch(/can be read two ways/i);
     expect(amount).toHaveAttribute('aria-invalid', 'true');
+    // BL-84 — the amount field names the refusal it is refused by.
+    const describedBy = amount.getAttribute('aria-describedby');
+    expect(describedBy).toBeTruthy();
+    expect(document.getElementById(/** @type {string} */ (describedBy))).toBe(refusal);
     expect(screen.getByRole('button', { name: 'Create draft' })).toBeDisabled();
   });
 

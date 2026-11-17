@@ -19,6 +19,7 @@ import SearchBar from './SearchBar';
 import FormSection from './FormSection';
 import Toaster from './Toaster';
 import AppShellV2 from '../layout-v2/AppShellV2';
+import Field from '../../pages-v2/SupplierRegistration/components/Field';
 afterEach(async () => {
   cleanup();
   await i18n.changeLanguage('en');
@@ -339,5 +340,38 @@ describe('BL-31 · accessible names in the shared primitives', () => {
   it('the toast region exists before any toast, so the first one is announced', () => {
     const { container } = renderWithProviders(<Toaster />);
     expect(container.querySelector('[aria-live="polite"]')).not.toBeNull();
+  });
+});
+
+// BL-84 (WCAG 1.3.1 / 3.3.1) — the rendered half of the source guard in
+// `src/lib/a11yGate/`: a field marked invalid must NAME the message under it.
+// The registration form is the pattern the rest of the tree was brought onto,
+// so it is the one rendered here.
+describe('BL-84 · a field marked invalid names the message the reader sees', () => {
+  it('the registration Field wires aria-invalid and aria-describedby to its error', () => {
+    renderWithProviders(
+      <Field label="Email" required error="Enter an email address">
+        <input type="email" />
+      </Field>
+    );
+    const input = screen.getByLabelText(/Email/);
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+    const id = input.getAttribute('aria-describedby');
+    expect(id).toBeTruthy();
+    // The id really resolves to the visible text, not to nothing.
+    expect(document.getElementById(/** @type {string} */ (id))).toHaveTextContent(
+      'Enter an email address'
+    );
+  });
+
+  it('a field with no error carries neither attribute', () => {
+    renderWithProviders(
+      <Field label="Email">
+        <input type="email" />
+      </Field>
+    );
+    const input = screen.getByLabelText('Email');
+    expect(input).not.toHaveAttribute('aria-invalid');
+    expect(input).not.toHaveAttribute('aria-describedby');
   });
 });

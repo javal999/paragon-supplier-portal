@@ -148,10 +148,19 @@ export const ScopeStep = ({
             id="rfp-new-deadline"
             type="date"
             {...register('responseDeadline')}
+            // BL-84 — the deadline refusal is tied to the deadline field.
+            aria-invalid={!!deadlineTouched && !deadlineInFuture}
+            aria-describedby={
+              !!deadlineTouched && !deadlineInFuture ? 'rfp-new-deadline-refusal' : undefined
+            }
             className="bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
           />
           {!!deadlineTouched && !deadlineInFuture && (
-            <p className="text-xs text-danger mt-1" data-testid="rfp-new-deadline-refusal">
+            <p
+              id="rfp-new-deadline-refusal"
+              className="text-xs text-danger mt-1"
+              data-testid="rfp-new-deadline-refusal"
+            >
               {t(
                 draft.responseDeadline === ''
                   ? 'rfx.create.field.deadline.required'

@@ -326,11 +326,17 @@ const StockEntryPanel = ({
               type="date"
               className={inputClass}
               value={form.completion}
+              // BL-84 — the production-date refusal is tied to the date field.
+              aria-invalid={!!production?.reason}
+              aria-describedby={
+                production?.reason ? 'stock-entry-production-date-error' : undefined
+              }
               onChange={(e) => setForm({ ...form, completion: e.target.value })}
             />
           </div>
           {production?.reason === 'productionDateMissing' ? (
             <p
+              id="stock-entry-production-date-error"
               role="alert"
               className="col-span-2 text-xs text-danger"
               data-testid="stock-entry-production-date-missing"
@@ -338,7 +344,11 @@ const StockEntryPanel = ({
               {t('inv.entry.error.productionDateMissing')}
             </p>
           ) : production?.reason === 'invalidDate' ? (
-            <p role="alert" className="col-span-2 text-xs text-danger">
+            <p
+              id="stock-entry-production-date-error"
+              role="alert"
+              className="col-span-2 text-xs text-danger"
+            >
               {t('inv.entry.error.invalidDate')}
             </p>
           ) : null}
@@ -442,6 +452,9 @@ const StockEntryPanel = ({
                         type="date"
                         className={inputClass}
                         value={b.expiryDate}
+                        // BL-84 — the expiry refusal is tied to the expiry field.
+                        aria-invalid={!!batchDates[i]}
+                        aria-describedby={batchDates[i] ? `stock-entry-batch-date-${i}` : undefined}
                         onChange={(e) =>
                           setBatches(
                             batches.map((x, j) =>
@@ -462,6 +475,7 @@ const StockEntryPanel = ({
                   </div>
                   {batchDates[i] && (
                     <p
+                      id={`stock-entry-batch-date-${i}`}
                       role="alert"
                       className="mt-1 text-xs text-danger"
                       data-testid={`stock-entry-batch-date-${i}`}
@@ -511,9 +525,12 @@ const NumberField = ({ id, label, value, onChange, error }) => (
       className={inputClass}
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      // BL-84 — the refusal under the field is announced with the field.
+      aria-invalid={error ? true : undefined}
+      aria-describedby={error ? `${id}-error` : undefined}
     />
     {error && (
-      <p role="alert" className="mt-1 text-xs text-danger">
+      <p id={`${id}-error`} role="alert" className="mt-1 text-xs text-danger">
         {error}
       </p>
     )}

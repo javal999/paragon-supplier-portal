@@ -119,6 +119,8 @@ describe('GRInspectionWizard — the quantity inputs are text, so the parser is 
     // The whole finding: this used to become 0 and satisfy every guard.
     expect(refusal.textContent).toMatch(/enter 0/i);
     expect(received).toHaveAttribute('aria-invalid', 'true');
+    // BL-84 — the refusal is announced with the half it is about.
+    expect(received).toHaveAttribute('aria-describedby', 'gr-received-refusal-0');
   });
 
   it('a cross-convention quantity refuses, naming the ambiguity', async () => {
@@ -133,6 +135,7 @@ describe('GRInspectionWizard — the quantity inputs are text, so the parser is 
     const { accepted } = await openLines();
     fireEvent.change(accepted, { target: { value: 'abc' } });
     expect(screen.getByTestId('gr-accepted-refusal-0').textContent).toMatch(/not a quantity/i);
+    expect(accepted).toHaveAttribute('aria-describedby', 'gr-accepted-refusal-0');
     // The received half is untouched and must not be blamed for it.
     expect(screen.queryByTestId('gr-received-refusal-0')).not.toBeInTheDocument();
   });

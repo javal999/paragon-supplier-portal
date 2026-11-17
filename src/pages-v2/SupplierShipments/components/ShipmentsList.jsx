@@ -89,7 +89,9 @@ const ShipmentsList = ({
 
       <div className="bg-bg-surface border border-border-subtle rounded-lg shadow-sm overflow-hidden">
         <div className="px-5 py-3 border-b border-border-subtle flex items-center justify-between flex-wrap gap-2">
-          <h3 className="text-section text-text-primary">
+          {/* BL-84 (WCAG 1.3.1): this page's h1 is the PageHeader title, so a
+              section heading must be an h2 — the h3 here skipped a level. */}
+          <h2 className="text-section text-text-primary">
             {t('supplierShipments.list.heading')}
             {statusFilter !== 'All' && (
               <span className="text-text-tertiary font-normal ml-2 text-xs">
@@ -99,7 +101,7 @@ const ShipmentsList = ({
                 })}
               </span>
             )}
-          </h3>
+          </h2>
           <PicFilter
             refs={asns.flatMap((a) => a.lineItems.map((li) => li.mrpController))}
             persona="supplier"

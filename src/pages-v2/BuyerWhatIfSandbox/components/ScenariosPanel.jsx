@@ -90,6 +90,11 @@ const SaveForm = ({ inputs, switches }) => {
             className={inputClass}
             value={name}
             maxLength={WHAT_IF_RULES.nameMaxLength + 10}
+            // BL-84 — the save refusal is tied to the name it is about.
+            aria-invalid={refusal !== null && name.trim() !== '' ? true : undefined}
+            aria-describedby={
+              refusal !== null && name.trim() !== '' ? 'wi-save-refusal' : undefined
+            }
             onChange={(e) => {
               setName(e.target.value);
               setOutcome(null);
@@ -106,7 +111,7 @@ const SaveForm = ({ inputs, switches }) => {
         </Button>
       </div>
       {refusal !== null && name.trim() !== '' ? (
-        <p className="text-xs text-danger mt-1" data-testid="wi-save-refusal">
+        <p id="wi-save-refusal" className="text-xs text-danger mt-1" data-testid="wi-save-refusal">
           {refusalText(refusal, t)}
         </p>
       ) : null}

@@ -92,7 +92,8 @@ export const SendBlockedReason = ({ count, testId }) => {
 export const StillMissing = ({ testId }) => {
   const { t } = useTranslation();
   return (
-    <div className="text-xs text-danger mt-1" data-testid={testId}>
+    // BL-84 — the field names this note with aria-describedby.
+    <div id={testId} className="text-xs text-danger mt-1" data-testid={testId}>
       {t('rfx.form.stillMissing')}
     </div>
   );

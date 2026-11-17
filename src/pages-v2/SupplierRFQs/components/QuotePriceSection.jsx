@@ -47,6 +47,10 @@ const QuotePriceSection = ({ form, setForm, bidPrice, totalPrice }) => {
             id="quote-unit-price"
             aria-label={t('rfqs.field.unitPrice')}
             aria-invalid={form.unitPrice.trim() !== '' && !bidPrice.ok}
+            // BL-84 — the price refusal is tied to the price field.
+            aria-describedby={
+              form.unitPrice.trim() !== '' && !bidPrice.ok ? 'quote-price-refusal' : undefined
+            }
             value={form.unitPrice}
             onChange={(e) => setForm({ ...form, unitPrice: e.target.value })}
             className={inputClass}
@@ -85,6 +89,7 @@ const QuotePriceSection = ({ form, setForm, bidPrice, totalPrice }) => {
         read — or a zero, which can — says so, and says what to do. */}
         {form.unitPrice.trim() !== '' && !bidPrice.ok && (
           <div
+            id="quote-price-refusal"
             role="alert"
             data-testid="quote-price-refusal"
             className="mt-1 text-[length:var(--fs-label-3)] text-danger"

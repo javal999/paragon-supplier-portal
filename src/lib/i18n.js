@@ -166,6 +166,9 @@ import { supplierFiltersEn, supplierFiltersId } from './i18n/supplierFilters';
 // — The read path's failure surface, shared by 31 pages —
 import { errorStateEn, errorStateId } from './i18n/errorState';
 import { loadingStateEn, loadingStateId } from './i18n/loadingState';
+// — BL-84 the sign-in page and the 404 surface, in both locales —
+import { loginEn, loginId } from './i18n/login';
+import { notFoundEn, notFoundId } from './i18n/notFound';
 import { emptyStateEn, emptyStateId } from './i18n/emptyState';
 import { wizardEn, wizardId } from './i18n/wizard';
 
@@ -294,6 +297,8 @@ export const resources = {
       ...supplierFiltersEn,
       ...errorStateEn,
       ...loadingStateEn,
+      ...loginEn,
+      ...notFoundEn,
       ...emptyStateEn,
       ...wizardEn,
       // — I3.4 halal-renewal walkthrough (FORK-1=(c)) —
@@ -804,6 +809,8 @@ export const resources = {
       ...supplierFiltersId,
       ...errorStateId,
       ...loadingStateId,
+      ...loginId,
+      ...notFoundId,
       ...emptyStateId,
       ...wizardId,
       // — I3.4 halal-renewal walkthrough (FORK-1=(c)) —

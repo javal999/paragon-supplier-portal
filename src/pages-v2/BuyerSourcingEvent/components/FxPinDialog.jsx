@@ -67,6 +67,8 @@ const fxVintageRefusalKey = (raw) => {
 const FieldRefusal = ({ messageKey, testId, t }) =>
   messageKey === null ? null : (
     <div
+      // BL-84 — the field points at this id with aria-describedby.
+      id={testId}
       role="alert"
       data-testid={testId}
       className="mt-1 text-[length:var(--fs-label-3)] text-danger"
@@ -110,6 +112,11 @@ const FxPinFields = ({ pinDraft, setPinDraft, t }) => (
         // field would refuse as ambiguous.
         placeholder="17250"
         aria-invalid={pinDraft.rate.trim() !== '' && !readFxRate(pinDraft.rate).ok}
+        aria-describedby={
+          pinDraft.rate.trim() !== '' && !readFxRate(pinDraft.rate).ok
+            ? 'fx-rate-refusal'
+            : undefined
+        }
         value={pinDraft.rate}
         onChange={(e) => setPinDraft({ ...pinDraft, rate: e.target.value })}
         className={inputClass}
@@ -130,6 +137,10 @@ const FxPinFields = ({ pinDraft, setPinDraft, t }) => (
         id="fx-asof"
         type="date"
         value={pinDraft.asOf}
+        aria-invalid={fxVintageRefusalKey(pinDraft.asOf) !== null}
+        aria-describedby={
+          fxVintageRefusalKey(pinDraft.asOf) !== null ? 'fx-asof-refusal' : undefined
+        }
         onChange={(e) => setPinDraft({ ...pinDraft, asOf: e.target.value })}
         className={inputClass}
       />

@@ -219,6 +219,8 @@ export const hubEn = {
   'topbar.notices.empty': 'No award news yet',
   'topbar.notices.awarded': 'Awarded to you · {{event}} · {{share}}',
   'topbar.notices.withdrawn': 'Award withdrawn · {{event}} · {{date}}',
+  // BL-84 — the bell's accessible name states the count its badge shows.
+  'topbar.notificationsCount': 'Notifications: {{n}}',
 
   // Sample data marker (SC-04)
   'hub.sample.label': 'Sample data',
@@ -407,6 +409,7 @@ export const hubId = {
   'topbar.notices.empty': 'Belum ada kabar pemenangan',
   'topbar.notices.awarded': 'Dimenangkan oleh Anda · {{event}} · {{share}}',
   'topbar.notices.withdrawn': 'Pemenangan ditarik · {{event}} · {{date}}',
+  'topbar.notificationsCount': 'Notifikasi: {{n}}',
 
   'hub.sample.label': 'Data contoh',
   'hub.sample.hint':

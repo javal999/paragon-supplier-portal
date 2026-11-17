@@ -260,6 +260,10 @@ describe('SupplierOrders — the confirm cells are text, so the parser is load-b
     expect(refusal).toHaveAttribute('role', 'alert');
     expect(refusal.textContent).toMatch(/can be read two ways/i);
     expect(cell).toHaveAttribute('aria-invalid', 'true');
+    // BL-84 — the cell names the refusal it is refused by.
+    const describedBy = cell.getAttribute('aria-describedby');
+    expect(describedBy).toBe('po-confirm-refusal-0');
+    expect(document.getElementById('po-confirm-refusal-0')).toBe(refusal);
     expect(screen.getByRole('button', { name: 'Confirm order' })).toBeDisabled();
     expect(purchaseOrderStore.get('po-008')?.status).toBe('Sent');
   });

@@ -62,3 +62,12 @@ describe('TopBarV2 — ☰ opens the side-menu drawer', () => {
     expect(button).toHaveClass('lg:hidden');
   });
 });
+
+describe('TopBarV2 — the notification bell states how many (BL-84)', () => {
+  it('the PTI bell carries its badge count in its accessible name', () => {
+    renderWithProviders(<TopBarV2 />);
+    // The badge renders 3; the name must say 3 too, not only "Notifications".
+    expect(screen.getByRole('button', { name: 'Notifications: 3' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Notifications' })).not.toBeInTheDocument();
+  });
+});

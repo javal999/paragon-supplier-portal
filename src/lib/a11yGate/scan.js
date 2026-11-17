@@ -14,6 +14,12 @@
 //      construction and is not a finding. Neither is a selection row whose
 //      click mirrors a checkbox/radio inside it (that control is the keyboard
 //      path).
+//   3. A FIELD MARKED INVALID NAMES ITS ERROR (BL-84, WCAG 1.3.1 / 3.3.1).
+//      An `<input>` / `<select>` / `<textarea>` carrying `aria-invalid` must
+//      also carry `aria-describedby`, so the message the reader sees is the
+//      message assistive technology announces with the field. The registration
+//      form is the pattern: `aria-describedby` points at the error element's
+//      `id`. A SPREAD acquits it, exactly as it does for buttons.
 //
 // ⚠️ WHAT IT DELIBERATELY CANNOT SEE, SAID RATHER THAN LEFT TO BE DISCOVERED:
 //   · A child written as an EXPRESSION (`{label}`, `{t('x')}`, `{icon}`) is
@@ -140,6 +146,20 @@ export function scanSource(fileName, text, seen) {
           viaHelper || mirrorsControl || (hasAttr(open, 'tabIndex') && hasAttr(open, 'onKeyDown'));
         if (!operable)
           out.push({ file: fileName, line: at(n), what: '<tr onClick> is not keyboard-operable' });
+      }
+      // Invariant 3: an invalid field names the message that explains it.
+      if (
+        ['input', 'select', 'textarea'].includes(tag) &&
+        hasAttr(open, 'aria-invalid') &&
+        !hasSpread(open)
+      ) {
+        seen?.push({ file: fileName, line: at(n), what: `<${tag} aria-invalid>` });
+        if (!hasAttr(open, 'aria-describedby'))
+          out.push({
+            file: fileName,
+            line: at(n),
+            what: `<${tag} aria-invalid> does not describe its error`
+          });
       }
     }
     ts.forEachChild(n, visit);

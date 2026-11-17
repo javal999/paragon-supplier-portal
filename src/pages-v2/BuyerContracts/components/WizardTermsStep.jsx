@@ -122,10 +122,13 @@ const WizardTermsStep = ({ draft, updateDraft, noticeRead, valueRead, t }) => (
             placeholder={t('contracts.wizard.placeholder.noticeDays')}
             aria-label={t('contracts.wizard.field.noticeDays')}
             aria-invalid={!noticeRead.ok}
+            // BL-84 — tie the refusal to the field it is about.
+            aria-describedby={!noticeRead.ok ? 'contract-notice-refusal' : undefined}
             className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
           />
           {!noticeRead.ok && (
             <div
+              id="contract-notice-refusal"
               role="alert"
               data-testid="contract-notice-refusal"
               className="mt-1 text-[length:var(--fs-label-3)] text-danger"
@@ -150,7 +153,18 @@ const WizardTermsStep = ({ draft, updateDraft, noticeRead, valueRead, t }) => (
         onChange={(e) => updateDraft('value', e.target.value)}
         placeholder={t('contracts.wizard.placeholder.value')}
         aria-label={t('contracts.wizard.field.value')}
-        aria-invalid={draft.value.trim() !== '' && !valueRead.ok}
+        aria-invalid={
+          (draft.value.trim() !== '' && !valueRead.ok) || (valueRead.ok && valueRead.value === 0)
+        }
+        // BL-84 — one field, two refusal messages: the association follows
+        // whichever one is on screen.
+        aria-describedby={
+          draft.value.trim() !== '' && !valueRead.ok
+            ? 'contract-value-refusal'
+            : valueRead.ok && valueRead.value === 0
+              ? 'contract-value-zero'
+              : undefined
+        }
         className="w-full bg-white border border-border-input rounded-md px-3 h-10 text-sm focus:outline-none focus:border-action"
       />
       {/* An untouched blank does not nag on sight — it refuses at the gate
@@ -158,6 +172,7 @@ const WizardTermsStep = ({ draft, updateDraft, noticeRead, valueRead, t }) => (
           typed something (the 2e-a price precedent). */}
       {draft.value.trim() !== '' && !valueRead.ok && (
         <div
+          id="contract-value-refusal"
           role="alert"
           data-testid="contract-value-refusal"
           className="mt-1 text-[length:var(--fs-label-3)] text-danger"
@@ -171,6 +186,7 @@ const WizardTermsStep = ({ draft, updateDraft, noticeRead, valueRead, t }) => (
           same family of defect as a misread number. No rule changes. */}
       {valueRead.ok && valueRead.value === 0 && (
         <div
+          id="contract-value-zero"
           role="alert"
           data-testid="contract-value-zero"
           className="mt-1 text-[length:var(--fs-label-3)] text-danger"
