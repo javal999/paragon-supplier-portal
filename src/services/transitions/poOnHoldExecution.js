@@ -14,15 +14,23 @@
 //     the DRC-6 lead time). A remainder that spans two PO lines is two
 //     call-offs, one per line (a call-off names exactly one line).
 //   · FS + spread: the remainder is added to the next weeks' call-offs in
-//     proportion to DA, never above "DA not yet called off" in a week
-//     (max(0, DA − call-offs released for it)), so a week's call-offs never
-//     exceed its DA. A week takes the need date of a call-off it ALREADY has;
-//     a week with none takes nothing (no date is invented). What does not fit
-//     stays on hold and returns to the planner, like the FG remainder (BR-04).
+//     proportion to DA, never above the room a week has: max(0, DA − EVERY
+//     call-off released for it), the ones an earlier "Suggest again" round made
+//     too (owner ruling 2026-11-17, "Count them: yes, count earlier rounds"), so
+//     a week's call-offs never exceed its DA, across rounds as well. The caller
+//     hands in that figure as `calledOff`; the screen's "DA not yet called off"
+//     is another reading and leaves the execution call-offs out (see the read
+//     model). A week takes the need date of a call-off it ALREADY has; a week
+//     with none takes nothing (no date is invented). What does not fit stays on
+//     hold and returns to the planner, like the FG remainder (BR-04). A round
+//     with no room left places 0 and the remainder stays on hold: rounds are
+//     not limited, nothing is refused.
 //   · Absorb as FG: absorbed up to the cap (BR-03), recorded on the PO line; no
-//     call-off. The rest stays on hold (BR-04). With the cap not computable
-//     (Max PTI not on record) the execution WAITS rather than absorb 0 for
-//     good: it is one-shot, so it must not be spent on missing data.
+//     call-off. The rest stays on hold (BR-04). The caller hands in the cap an
+//     earlier round has not already used [Proposed, the same reading as the
+//     spread room]. With the cap not computable (Max PTI not on record) the
+//     execution WAITS rather than absorb 0 for good: it is one-shot, so it must
+//     not be spent on missing data.
 //
 // PURE. No store, no clock: the read model hands in the figures. The calendar
 // arithmetic of the grace end is `graceState`'s (working days, BL-50); the only
@@ -44,6 +52,7 @@ import { fulfilmentWindow } from './fulfilmentWindow';
 /**
  * One horizon week: DA, the call-offs released for it, and the need date of a
  * call-off it already has (the earliest), or null.
+ * `calledOff`:  EVERY call-off released for the week, the ones an earlier PO On Hold round made too: the room is DA less this.
  * @typedef {{
  *   readonly week: string;
  *   readonly da: number;
@@ -227,6 +236,25 @@ export function planExecution(f) {
       qty: d.qty
     }))
   });
+}
+
+/**
+ * A round with no room left: an FS + spread or FG plan that places nothing
+ * though a remainder is on hold, and is not waiting for a missing fact. No week
+ * can take another call-off (each is at its DA, earlier rounds counted, or none
+ * has a call-off to take a need date from), or the FG cap is used up. The round
+ * still runs: it places 0 and the remainder stays on hold. FS only has no room
+ * to run out of: it places the whole remainder, or waits for a lead time.
+ * @param {Pick<ExecutionPlan, 'option' | 'blocked' | 'placedQty' | 'stayOnHoldQty'>} plan
+ * @returns {boolean}
+ */
+export function planHasNoRoom(plan) {
+  return (
+    plan.blocked === null &&
+    plan.option !== 'fsOnly' &&
+    plan.placedQty === 0 &&
+    plan.stayOnHoldQty > 0
+  );
 }
 
 /**

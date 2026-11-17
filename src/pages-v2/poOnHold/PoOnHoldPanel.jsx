@@ -22,6 +22,7 @@ import {
   usePoOnHoldSuggestCommand
 } from '@services/query/commandHooks';
 import { PO_ON_HOLD_OPTIONS } from '@services/transitions/poOnHold';
+import { planHasNoRoom } from '@services/transitions/poOnHoldExecution';
 import { osipParamRefusal } from '@services/transitions/osipParams';
 import { fulfilmentWindow } from '@services/transitions/fulfilmentWindow';
 /** @import { PoOnHoldRow } from '@services/data/types' */
@@ -391,7 +392,10 @@ const PoOnHoldPanel = ({ persona }) => {
             {t('poh.outcome.fs')} <Qty value={r.outcome.feedstockQty} uom={r.uom} />
           </span>
         )}
-        {r.outcome.spreadQty > 0 && !r.execution.plan?.callOffs.length && !r.execution.record && (
+        {/* The whole remainder "spread over the next weeks" is the rule, not what the
+            plan places (a week takes at most the room it has left, earlier rounds
+            counted): it shows only when there is no plan to contradict. */}
+        {r.outcome.spreadQty > 0 && !r.execution.plan && !r.execution.record && (
           <span className={note}>
             {t('poh.outcome.spread')} <Qty value={r.outcome.spreadQty} uom={r.uom} />
           </span>
@@ -463,9 +467,17 @@ const PoOnHoldPanel = ({ persona }) => {
             {t('poh.exec.absorbed')} <Data>{a.poNumber}</Data>: <Qty value={a.qty} uom={r.uom} />
           </span>
         ))}
-        {plan.callOffs.length === 0 && plan.absorbed.length === 0 && (
-          <span className={note}>{t('poh.exec.nothing')}</span>
-        )}
+        {plan.callOffs.length === 0 &&
+          plan.absorbed.length === 0 &&
+          (planHasNoRoom(plan) ? (
+            // A round with no room left says so: earlier rounds already filled the
+            // weeks (FS + spread) or the FG cap. It still runs and places 0.
+            <span className={note} data-testid={`poh-exec-noroom-${r.key}`}>
+              {t(`poh.exec.noRoom.${plan.option}`)}
+            </span>
+          ) : (
+            <span className={note}>{t('poh.exec.nothing')}</span>
+          ))}
         {plan.stayOnHoldQty > 0 && (
           <span className={note} data-testid={`poh-exec-stays-${r.key}`}>
             {t('poh.exec.stays')} <Qty value={plan.stayOnHoldQty} uom={r.uom} />
