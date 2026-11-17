@@ -109,6 +109,8 @@ describe('SupplierRFQs — the bid price is read once, and refused out loud', ()
 
     expect(screen.getByTestId('quote-price-refusal')).toHaveTextContent(/can be read two ways/i);
     expect(price).toHaveAttribute('aria-invalid', 'true');
+    // BL-84 — the refusal is announced with the field it is about.
+    expect(price).toHaveAttribute('aria-describedby', 'quote-price-refusal');
     // The total never renders a product of a price nobody can read.
     expect(screen.queryByText(/180,000/)).not.toBeInTheDocument();
 
@@ -144,6 +146,7 @@ describe('SupplierRFQs — the bid price is read once, and refused out loud', ()
     fireEvent.change(price, { target: { value: '1500' } });
     expect(screen.queryByTestId('quote-price-refusal')).not.toBeInTheDocument();
     expect(price).toHaveAttribute('aria-invalid', 'false');
+    expect(price).not.toHaveAttribute('aria-describedby');
     // 1500 × 120,000 (rfq-010 totalQty) — the honest product, not 1.5 × qty.
     // GROUPING CORRECTED in 2e-b-3 (COS-01): was /180,000,000/ (comma), which
     // was the RUNTIME locale's grouping leaking through `toLocaleString()`. The
@@ -265,6 +268,8 @@ describe('SupplierRFQs — the lead time is read once, in four honest states', (
 
     expect(screen.getByTestId('quote-leadtime-refusal')).toHaveTextContent(/not a lead time/i);
     expect(lead).toHaveAttribute('aria-invalid', 'true');
+    // BL-84 — the lead-time refusal is tied to the lead-time field.
+    expect(lead).toHaveAttribute('aria-describedby', 'quote-leadtime-refusal');
     expect(submitBtn()).toBeDisabled();
 
     fireEvent.click(submitBtn());
@@ -438,6 +443,8 @@ describe('SupplierRFQs — the minimum order quantity stops being dropped', () =
 
     expect(screen.getByTestId('quote-moq-refusal')).toHaveTextContent(/not a quantity/i);
     expect(moq).toHaveAttribute('aria-invalid', 'true');
+    // BL-84 — the MOQ refusal is tied to the MOQ field.
+    expect(moq).toHaveAttribute('aria-describedby', 'quote-moq-refusal');
     expect(submitBtn()).toBeDisabled();
 
     fireEvent.click(submitBtn());

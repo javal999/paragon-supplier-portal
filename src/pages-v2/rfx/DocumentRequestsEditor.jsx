@@ -279,7 +279,12 @@ const DocumentRequestsEditor = ({
       )}
 
       {refusal ? (
-        <p className="text-sm text-danger" role="alert" data-testid={`${p}-docs-refusal`}>
+        <p
+          id={`${p}-docs-refusal`}
+          className="text-sm text-danger"
+          role="alert"
+          data-testid={`${p}-docs-refusal`}
+        >
           {refusal.message}
         </p>
       ) : null}
@@ -324,6 +329,9 @@ const DocumentRequestRow = ({
             data-testid={`${id}-name`}
             value={r.name}
             aria-invalid={refused}
+            // BL-84 — the form-level refusal names this row; the row's name
+            // field points at it.
+            aria-describedby={refused ? `${p}-docs-refusal` : undefined}
             placeholder={t('rfxa.doc.name.ph')}
             onChange={(e) => onPatch({ name: e.target.value })}
             className={inputClass}

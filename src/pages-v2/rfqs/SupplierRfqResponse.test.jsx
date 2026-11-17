@@ -103,6 +103,10 @@ describe('the quote grid — refused out loud, accepted whole', () => {
     fillOslo({ item: 1, qty: 50000 });
     const before = quotationStore.forRfq('rfq-021').length;
     expect(screen.getByTestId('grid-item-1-price-50000-note')).toHaveTextContent('Still missing');
+    // BL-84 — the break's price field names the note under it.
+    const price = screen.getByTestId('grid-item-1-price-50000');
+    expect(price).toHaveAttribute('aria-invalid', 'true');
+    expect(price).toHaveAttribute('aria-describedby', 'grid-item-1-price-50000-note');
     expect(screen.getByTestId('quote-problems')).toHaveTextContent(/Item 1: price at 50/);
     expect(screen.getByTestId('quote-send-reason')).toHaveTextContent(/1 answer is given or fixed/);
     const submit = screen.getByRole('button', { name: 'Submit quotation' });
@@ -117,6 +121,11 @@ describe('the quote grid — refused out loud, accepted whole', () => {
     type('grid-item-2-spec-dieCutType', '');
     expect(screen.getByTestId('grid-item-2-spec-dieCutType-note')).toHaveTextContent(
       'Still missing'
+    );
+    // BL-84 — the spec field names its own note.
+    expect(screen.getByTestId('grid-item-2-spec-dieCutType')).toHaveAttribute(
+      'aria-describedby',
+      'grid-item-2-spec-dieCutType-note'
     );
     expect(screen.getByRole('button', { name: 'Submit quotation' })).toBeDisabled();
   });

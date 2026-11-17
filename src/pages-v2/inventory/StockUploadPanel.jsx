@@ -266,6 +266,9 @@ export const StockUploadButton = ({ upload }) => {
         className="hidden"
         data-testid="stock-upload-file"
         aria-label={t('inv.upload.choose')}
+        // BL-84 — the upload's refusal is announced with the file control.
+        aria-invalid={upload.fileError !== null ? true : undefined}
+        aria-describedby={upload.fileError !== null ? 'stock-upload-file-error' : undefined}
         onChange={(e) => {
           const input = e.target;
           // Cleared once read, so choosing the same file again re-runs the check.
@@ -312,7 +315,7 @@ export const StockUploadResult = ({ upload }) => {
     <div className="mb-4 space-y-2" data-testid="stock-upload-status">
       {busy ? <p className="text-sm text-text-tertiary">{t('inv.upload.checking')}</p> : null}
       {fileError !== null ? (
-        <p role="alert" className="text-sm text-danger">
+        <p id="stock-upload-file-error" role="alert" className="text-sm text-danger">
           {fileError}
         </p>
       ) : null}

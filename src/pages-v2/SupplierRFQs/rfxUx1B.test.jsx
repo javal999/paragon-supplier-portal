@@ -175,8 +175,10 @@ describe('S-04 — the award reaches the supplier: the strip on the event card, 
   it('the bell lists the award with the PO note; a not-awarded supplier gets no award notice', async () => {
     renderWithProviders(<TopBarV2 />, { identity: SUP_015 });
     const bell = await screen.findByTestId('supplier-notice-bell');
-    // sup-015 also holds a share of rfq-024 (seeded): the badge counts both.
+    // sup-015 also holds a share of rfq-024 (seeded): the badge counts both,
+    // and BL-84 puts that count in the bell's accessible name as well.
     await waitFor(() => expect(bell).toHaveTextContent('2'));
+    expect(bell).toHaveAccessibleName('Notifications: 2');
     fireEvent.click(bell);
     const notice = screen.getByTestId('supplier-notice-rfq:rfq-015:awarded');
     expect(notice).toHaveTextContent('Awarded to you · RFQ-2026-015 · 70% of item 1');
@@ -185,7 +187,10 @@ describe('S-04 — the award reaches the supplier: the strip on the event card, 
 
   it('KNOWN-BAD twin — sup-007 lost rfq-015, so its bell carries no award notice', async () => {
     renderWithProviders(<TopBarV2 />, { identity: SUP_007 });
-    fireEvent.click(await screen.findByTestId('supplier-notice-bell'));
+    const bell = await screen.findByTestId('supplier-notice-bell');
+    // BL-84 — "how many" has an answer when there are none.
+    expect(bell).toHaveAccessibleName('Notifications: 0');
+    fireEvent.click(bell);
     expect(await screen.findByText('No award news yet')).toBeInTheDocument();
   });
 
@@ -204,7 +209,8 @@ describe('S-04 — the award reaches the supplier: the strip on the event card, 
   it('the PTI bell is unchanged', () => {
     renderWithProviders(<TopBarV2 />);
     expect(screen.queryByTestId('supplier-notice-bell')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Notifications' })).toBeInTheDocument();
+    // BL-84 — its name states the count its badge shows.
+    expect(screen.getByRole('button', { name: 'Notifications: 3' })).toBeInTheDocument();
   });
 });
 

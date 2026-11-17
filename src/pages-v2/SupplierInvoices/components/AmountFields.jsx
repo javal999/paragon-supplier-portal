@@ -49,11 +49,21 @@ export const LineAmountCell = ({ id, label, value, read, onChange, t }) => (
       className={`${inputCls} min-w-[120px]`}
       aria-label={label}
       aria-invalid={!read.ok || read.value <= 0}
+      // BL-84 — each line names its own refusal; the error ids derive from
+      // the field's id so two lines cannot collide.
+      aria-describedby={
+        !read.ok && value.trim() !== ''
+          ? `${id}-amount-refusal`
+          : read.ok && read.value <= 0
+            ? `${id}-amount-zero`
+            : undefined
+      }
       value={value}
       onChange={(e) => onChange(e.target.value)}
     />
     {!read.ok && value.trim() !== '' && (
       <div
+        id={`${id}-amount-refusal`}
         role="alert"
         data-testid="invoice-amount-refusal"
         className="text-[length:var(--fs-label-3)] text-danger"
@@ -64,6 +74,7 @@ export const LineAmountCell = ({ id, label, value, read, onChange, t }) => (
     )}
     {read.ok && read.value <= 0 && (
       <div
+        id={`${id}-amount-zero`}
         role="alert"
         data-testid="invoice-amount-zero"
         className="text-[length:var(--fs-label-3)] text-danger"
@@ -120,17 +131,33 @@ export const FixAmountField = ({ fixAmount, setFixAmount, fixAmountRead, t }) =>
       inputMode="decimal"
       className={inputCls}
       value={fixAmount}
-      aria-invalid={fixAmount.trim() !== '' && !fixAmountRead.ok}
+      aria-invalid={
+        (fixAmount.trim() !== '' && !fixAmountRead.ok) ||
+        (fixAmountRead.ok && fixAmountRead.value <= 0)
+      }
+      // BL-84 — the fix field names whichever refusal is on screen.
+      aria-describedby={
+        fixAmount.trim() !== '' && !fixAmountRead.ok
+          ? 'fix-amount-refusal'
+          : fixAmountRead.ok && fixAmountRead.value <= 0
+            ? 'fix-amount-zero'
+            : undefined
+      }
       onChange={(e) => setFixAmount(e.target.value)}
     />
     {fixAmount.trim() !== '' && !fixAmountRead.ok && (
-      <div role="alert" className="mt-1 text-[length:var(--fs-label-3)] text-danger">
+      <div
+        id="fix-amount-refusal"
+        role="alert"
+        className="mt-1 text-[length:var(--fs-label-3)] text-danger"
+      >
         {t(INVOICE_AMOUNT_REFUSAL_KEY[fixAmountRead.reason])}{' '}
         <GlossaryTermChip refTo={{ sourceType: 'QtyRefusalReason', term: fixAmountRead.reason }} />
       </div>
     )}
     {fixAmountRead.ok && fixAmountRead.value <= 0 ? (
       <div
+        id="fix-amount-zero"
         role="alert"
         data-testid="invoice-fix-amount-zero"
         className="mt-1 text-[length:var(--fs-label-3)] text-danger"

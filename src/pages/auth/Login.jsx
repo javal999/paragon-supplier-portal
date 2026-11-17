@@ -1,6 +1,7 @@
 /** @import React from 'react' */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import { mockSuppliers } from '@data/mockSuppliers';
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
@@ -8,6 +9,14 @@ import { NO_PERSON } from '@context/noPerson';
 
 const NAVY = 'var(--pds-color-text-primary)';
 const TEAL = 'var(--pds-color-accent)';
+// BL-84 (WCAG 1.4.3): the page shipped #94A3B8 for four text runs — 2.6:1 on
+// white, below the 4.5:1 AA floor. The light-theme secondary token is #5c5c5c
+// (6.7:1 on white) and is the same "muted" role the grey was doing.
+const MUTED = 'var(--pds-color-text-secondary)';
+// The footer sits on the dark navy page background, where the light-theme
+// secondary token is unreadable (#5c5c5c on rgb(42,61,74) is 1.6:1). The
+// dark-theme secondary value is 8:1 on that background.
+const FOOTER_TEXT = '#d3dae1';
 
 const SEED_SUPPLIER_ID = 'sup-007';
 const SEED_SUPPLIER_NAME = mockSuppliers.find((s) => s.id === SEED_SUPPLIER_ID)?.name ?? null;
@@ -28,6 +37,7 @@ const INPUT_STYLE = {
 
 /** @type {React.FC} */
 const Login = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { setIdentity } = useCurrentIdentity();
   const [activeTab, setActiveTab] = useState(/** @type {'buyer' | 'supplier'} */ ('buyer'));
@@ -87,7 +97,8 @@ const Login = () => {
           boxShadow: 'var(--shadow-strong)'
         }}
       >
-        {/* Logo + brand */}
+        {/* Logo + brand — BL-84 (WCAG 1.3.1): the page had no heading at all.
+            Its one h1 is the product name, styled where the brand line sat. */}
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
           <div
             style={{
@@ -106,13 +117,19 @@ const Login = () => {
           <div style={{ fontWeight: 700, fontSize: '16px', color: NAVY, letterSpacing: '0.05em' }}>
             PARAGON CORP
           </div>
-          <div style={{ color: TEAL, fontSize: '13px', fontWeight: 600, marginTop: '2px' }}>
-            Supplier Portal
-          </div>
-          <div
-            style={{ color: '#94A3B8', fontSize: '12px', fontStyle: 'italic', marginTop: '6px' }}
+          <h1
+            style={{
+              fontWeight: 600,
+              fontSize: '13px',
+              color: TEAL,
+              margin: '2px 0 0',
+              lineHeight: 1.4
+            }}
           >
-            Portal Kolaborasi Pemasok
+            {t('login.title')}
+          </h1>
+          <div style={{ color: MUTED, fontSize: '12px', fontStyle: 'italic', marginTop: '6px' }}>
+            {t('login.brandLine2')}
           </div>
         </div>
 
@@ -126,9 +143,9 @@ const Login = () => {
         >
           {
             /** @type {const} */ ([
-              ['buyer', 'Paragon Team'],
-              ['supplier', 'Supplier Login']
-            ]).map(([tab, label]) => (
+              ['buyer', 'login.tab.buyer'],
+              ['supplier', 'login.tab.supplier']
+            ]).map(([tab, labelKey]) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -140,7 +157,7 @@ const Login = () => {
                   cursor: 'pointer',
                   fontSize: '13px',
                   fontWeight: activeTab === tab ? 700 : 500,
-                  color: activeTab === tab ? (tab === 'buyer' ? NAVY : TEAL) : '#94A3B8',
+                  color: activeTab === tab ? (tab === 'buyer' ? NAVY : TEAL) : MUTED,
                   borderBottom:
                     activeTab === tab
                       ? `2px solid ${tab === 'buyer' ? NAVY : TEAL}`
@@ -150,7 +167,7 @@ const Login = () => {
                   transition: 'all 0.15s'
                 }}
               >
-                {label}
+                {t(labelKey)}
               </button>
             ))
           }
@@ -171,7 +188,7 @@ const Login = () => {
                   marginBottom: '5px'
                 }}
               >
-                Email
+                {t('login.email')}
               </span>
               <input
                 type="email"
@@ -194,7 +211,7 @@ const Login = () => {
                   marginBottom: '5px'
                 }}
               >
-                Password
+                {t('login.password')}
               </span>
               <input
                 type="password"
@@ -224,7 +241,7 @@ const Login = () => {
               letterSpacing: '0.02em'
             }}
           >
-            Sign In
+            {t('login.signIn')}
           </button>
 
           <div
@@ -248,7 +265,7 @@ const Login = () => {
                   padding: 0
                 }}
               >
-                New supplier? Register here →
+                {t('login.register')}
               </button>
             )}
             <button
@@ -256,25 +273,24 @@ const Login = () => {
                 border: 'none',
                 background: 'none',
                 cursor: 'pointer',
-                color: '#94A3B8',
+                color: MUTED,
                 fontSize: '12px',
                 fontFamily: 'inherit',
                 padding: 0
               }}
               onClick={() => {}}
             >
-              Forgot password?
+              {t('login.forgot')}
             </button>
           </div>
         </div>
 
-        {/* Divider */}
+        {/* Divider — the demo notice. BL-84: it was an English literal in both
+            locales; it now reads from the active locale. */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '20px 0' }}>
           <div style={{ flex: 1, height: '1px', background: 'var(--pds-color-border-default)' }} />
-          <span
-            style={{ fontSize: '11px', color: '#94A3B8', whiteSpace: 'nowrap', fontWeight: 500 }}
-          >
-            Demo Mode
+          <span style={{ fontSize: '11px', color: MUTED, whiteSpace: 'nowrap', fontWeight: 500 }}>
+            {t('login.demoMode')}
           </span>
           <div style={{ flex: 1, height: '1px', background: 'var(--pds-color-border-default)' }} />
         </div>
@@ -301,7 +317,7 @@ const Login = () => {
               (e.currentTarget.style.borderColor = 'var(--pds-color-border-strong)')
             }
           >
-            View as Buyer
+            {t('login.viewAsBuyer')}
           </button>
           <button
             onClick={handleViewAsSupplier}
@@ -323,21 +339,21 @@ const Login = () => {
               (e.currentTarget.style.borderColor = 'var(--pds-color-border-strong)')
             }
           >
-            View as Supplier
+            {t('login.viewAsSupplier')}
           </button>
         </div>
       </div>
 
-      {/* Footer */}
+      {/* Footer — on the navy page background, so it uses a light ink. */}
       <div
         style={{
           marginTop: '24px',
           fontSize: '11px',
-          color: 'var(--pds-color-text-secondary)',
+          color: FOOTER_TEXT,
           textAlign: 'center'
         }}
       >
-        © 2026 PT Paragon Technology and Innovation. All rights reserved.
+        {t('login.footer')}
       </div>
     </div>
   );

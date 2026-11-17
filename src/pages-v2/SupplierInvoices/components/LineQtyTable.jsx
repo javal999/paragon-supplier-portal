@@ -65,6 +65,14 @@ const LineQtyTable = ({ lines, entries, onChange, amounts, onAmountChange }) => 
                       grNumber: l.grNumber
                     })}
                     aria-invalid={bad || over}
+                    // BL-84 — the line's own refusal, named by its row key.
+                    aria-describedby={
+                      bad
+                        ? `invoice-qty-${key}-invalid`
+                        : over
+                          ? `invoice-qty-${key}-over`
+                          : undefined
+                    }
                     value={raw}
                     onChange={(e) => onChange(key, e.target.value)}
                   />
@@ -76,12 +84,19 @@ const LineQtyTable = ({ lines, entries, onChange, amounts, onAmountChange }) => 
                     </div>
                   )}
                   {bad && (
-                    <div className="text-[length:var(--fs-label-3)] text-danger">
+                    <div
+                      id={`invoice-qty-${key}-invalid`}
+                      className="text-[length:var(--fs-label-3)] text-danger"
+                    >
                       {t('fc.inv.new.qtyInvalid')}
                     </div>
                   )}
                   {over && (
-                    <div role="alert" className="text-[length:var(--fs-label-3)] text-danger">
+                    <div
+                      id={`invoice-qty-${key}-over`}
+                      role="alert"
+                      className="text-[length:var(--fs-label-3)] text-danger"
+                    >
                       {t('fc.inv.new.overInvoiced')}
                     </div>
                   )}

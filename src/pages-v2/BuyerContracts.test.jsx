@@ -191,4 +191,54 @@ describe('BuyerContracts — the create wizard numerics are text, so the parser 
     await screen.findByLabelText('Notice required (days)');
     expect(screen.queryByTestId('contract-notice-refusal')).not.toBeInTheDocument();
   });
+
+  // BL-84 (WCAG 1.3.1 / 3.3.1) — the refusal under a field is announced WITH
+  // the field, not only painted in red under it.
+  it('BL-84: the value refusal is tied to the value field', async () => {
+    const { value } = await openTermsStep();
+    fireEvent.change(value, { target: { value: '1.500' } });
+    expect(value).toHaveAttribute('aria-invalid', 'true');
+    expect(value).toHaveAttribute('aria-describedby', 'contract-value-refusal');
+    expect(screen.getByTestId('contract-value-refusal')).toHaveAttribute(
+      'id',
+      'contract-value-refusal'
+    );
+  });
+
+  it('BL-84: the typed-zero refusal is tied to the same field', async () => {
+    const { value } = await openTermsStep();
+    fireEvent.change(value, { target: { value: '0' } });
+    expect(value).toHaveAttribute('aria-invalid', 'true');
+    expect(value).toHaveAttribute('aria-describedby', 'contract-value-zero');
+  });
+
+  it('BL-84: the notice-period refusal is tied to the notice field', async () => {
+    const { autoRenewal } = await openTermsStep();
+    fireEvent.click(autoRenewal);
+    const notice = await screen.findByLabelText('Notice required (days)');
+    fireEvent.change(notice, { target: { value: '' } });
+    expect(notice).toHaveAttribute('aria-invalid', 'true');
+    expect(notice).toHaveAttribute('aria-describedby', 'contract-notice-refusal');
+  });
+
+  // BL-84 (WCAG 4.1.2) — each obligation row's owner and due-date controls are
+  // named from the row's own title.
+  it('BL-84: the obligation grid names each row’s owner and due-date controls', async () => {
+    const { value } = await openTermsStep();
+    fireEvent.change(screen.getByLabelText('Start date'), { target: { value: '2027-01-01' } });
+    fireEvent.change(screen.getByLabelText('End date'), { target: { value: '2027-12-31' } });
+    fireEvent.change(value, { target: { value: '4500000000' } });
+    fireEvent.click(screen.getByText('Next'));
+
+    // Add one suggested obligation, so the grid has a row.
+    fireEvent.click(
+      await screen.findByRole('checkbox', { name: /Quarterly delivery performance report/ })
+    );
+    const owner = screen.getByRole('combobox', {
+      name: 'Owner for "Quarterly delivery performance report"'
+    });
+    const due = screen.getByLabelText('Due date for "Quarterly delivery performance report"');
+    expect(owner).toBeInTheDocument();
+    expect(due).toHaveAttribute('type', 'date');
+  });
 });

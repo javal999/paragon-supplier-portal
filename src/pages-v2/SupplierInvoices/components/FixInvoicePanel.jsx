@@ -139,10 +139,16 @@ const FixInvoicePanel = ({ fx, resubmitMutation, toast, failToast, setSelected, 
                 className={inputCls}
                 value={fixNumber}
                 aria-invalid={fixDuplicate}
+                // BL-84 — the duplicate refusal is tied to the number field.
+                aria-describedby={fixDuplicate ? 'fix-invoice-number-duplicate' : undefined}
                 onChange={(e) => setFixNumber(e.target.value)}
               />
               {fixDuplicate && (
-                <div role="alert" className="mt-1 text-[length:var(--fs-label-3)] text-danger">
+                <div
+                  id="fix-invoice-number-duplicate"
+                  role="alert"
+                  className="mt-1 text-[length:var(--fs-label-3)] text-danger"
+                >
                   {t('fc.inv.new.duplicate')}
                 </div>
               )}
