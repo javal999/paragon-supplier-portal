@@ -150,6 +150,11 @@ const StockEntryPanel = ({
   const production = inProduction.ok
     ? productionProblem(inProduction.value, form.completion, mode === 'supplier' ? 'manual' : 'pti')
     : null;
+  // BL-326 — a refusal names ONE field, so each control takes only its own
+  // problem: the quantity's absence is the quantity field's, the date's is the
+  // date field's.
+  const productionOnQty = production?.field === 'inProductionQty' ? production : null;
+  const productionOnDate = production?.field === 'productionCompletionDate' ? production : null;
   const batchIncomplete = batches.some(
     (b, i) => b.batchNumber.trim() === '' || !batchReads[i].ok || batchReads[i].value === null
   );
@@ -315,7 +320,12 @@ const StockEntryPanel = ({
             label={noEmptyUnit(t('inv.entry.inProduction', { uom }))}
             value={form.inProduction}
             onChange={(v) => setForm({ ...form, inProduction: v })}
-            error={numberError(inProduction)}
+            // BL-326 — the required-quantity refusal is THIS field's, not the
+            // date's; an unreadable number keeps its own message.
+            error={
+              numberError(inProduction) ??
+              (productionOnQty ? t('inv.entry.error.inProductionRequired') : null)
+            }
           />
           <div>
             <label htmlFor="stock-entry-completion" className={labelClass}>
@@ -326,15 +336,14 @@ const StockEntryPanel = ({
               type="date"
               className={inputClass}
               value={form.completion}
-              // BL-84 — the production-date refusal is tied to the date field.
-              aria-invalid={!!production?.reason}
-              aria-describedby={
-                production?.reason ? 'stock-entry-production-date-error' : undefined
-              }
+              // BL-326 — the production-date refusal is tied to the date field,
+              // and only when the refusal the form holds is about the date.
+              aria-invalid={productionOnDate ? true : undefined}
+              aria-describedby={productionOnDate ? 'stock-entry-production-date-error' : undefined}
               onChange={(e) => setForm({ ...form, completion: e.target.value })}
             />
           </div>
-          {production?.reason === 'productionDateMissing' ? (
+          {productionOnDate?.reason === 'productionDateMissing' ? (
             <p
               id="stock-entry-production-date-error"
               role="alert"
@@ -343,7 +352,7 @@ const StockEntryPanel = ({
             >
               {t('inv.entry.error.productionDateMissing')}
             </p>
-          ) : production?.reason === 'invalidDate' ? (
+          ) : productionOnDate?.reason === 'invalidDate' ? (
             <p
               id="stock-entry-production-date-error"
               role="alert"
@@ -385,108 +394,119 @@ const StockEntryPanel = ({
             <p className="text-xs text-text-tertiary">{t('inv.entry.noBatches')}</p>
           ) : (
             <div className="space-y-2">
-              {batches.map((b, i) => (
-                <div
-                  key={b.id}
-                  className="relative border border-border-subtle rounded-md p-3 pr-10"
-                >
-                  <div className="grid grid-cols-2 gap-2 items-end">
-                    <div>
-                      <label htmlFor={`batch-number-${i}`} className={labelClass}>
-                        {t('inv.entry.batchNumber')}
-                      </label>
-                      <input
-                        id={`batch-number-${i}`}
-                        className={inputClass}
-                        value={b.batchNumber}
-                        onChange={(e) =>
-                          setBatches(
-                            batches.map((x, j) =>
-                              j === i ? { ...x, batchNumber: e.target.value } : x
+              {batches.map((b, i) => {
+                // BL-326 — a batch-date problem names ONE date, so each date
+                // input takes the refusal only when the refusal is about it.
+                const batchDate = batchDates[i];
+                const mfgInvalid = batchDate?.field === 'manufacturingDate';
+                const expiryInvalid = batchDate?.field === 'expiryDate';
+                return (
+                  <div
+                    key={b.id}
+                    className="relative border border-border-subtle rounded-md p-3 pr-10"
+                  >
+                    <div className="grid grid-cols-2 gap-2 items-end">
+                      <div>
+                        <label htmlFor={`batch-number-${i}`} className={labelClass}>
+                          {t('inv.entry.batchNumber')}
+                        </label>
+                        <input
+                          id={`batch-number-${i}`}
+                          className={inputClass}
+                          value={b.batchNumber}
+                          onChange={(e) =>
+                            setBatches(
+                              batches.map((x, j) =>
+                                j === i ? { ...x, batchNumber: e.target.value } : x
+                              )
                             )
-                          )
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor={`batch-qty-${i}`} className={labelClass}>
-                        {t('inv.entry.batchQty')}
-                      </label>
-                      <input
-                        id={`batch-qty-${i}`}
-                        inputMode="decimal"
-                        className={inputClass}
-                        value={b.qty}
-                        onChange={(e) =>
-                          setBatches(
-                            batches.map((x, j) => (j === i ? { ...x, qty: e.target.value } : x))
-                          )
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor={`batch-mfg-${i}`} className={labelClass}>
-                        {t('inv.entry.manufacturing')}
-                      </label>
-                      <input
-                        id={`batch-mfg-${i}`}
-                        type="date"
-                        className={inputClass}
-                        value={b.manufacturingDate}
-                        onChange={(e) =>
-                          setBatches(
-                            batches.map((x, j) =>
-                              j === i ? { ...x, manufacturingDate: e.target.value } : x
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor={`batch-qty-${i}`} className={labelClass}>
+                          {t('inv.entry.batchQty')}
+                        </label>
+                        <input
+                          id={`batch-qty-${i}`}
+                          inputMode="decimal"
+                          className={inputClass}
+                          value={b.qty}
+                          onChange={(e) =>
+                            setBatches(
+                              batches.map((x, j) => (j === i ? { ...x, qty: e.target.value } : x))
                             )
-                          )
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor={`batch-expiry-${i}`} className={labelClass}>
-                        {t('inv.entry.expiry')}
-                        {isRaw ? <span aria-hidden="true"> *</span> : null}
-                      </label>
-                      <input
-                        id={`batch-expiry-${i}`}
-                        type="date"
-                        className={inputClass}
-                        value={b.expiryDate}
-                        // BL-84 — the expiry refusal is tied to the expiry field.
-                        aria-invalid={!!batchDates[i]}
-                        aria-describedby={batchDates[i] ? `stock-entry-batch-date-${i}` : undefined}
-                        onChange={(e) =>
-                          setBatches(
-                            batches.map((x, j) =>
-                              j === i ? { ...x, expiryDate: e.target.value } : x
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor={`batch-mfg-${i}`} className={labelClass}>
+                          {t('inv.entry.manufacturing')}
+                        </label>
+                        <input
+                          id={`batch-mfg-${i}`}
+                          type="date"
+                          className={inputClass}
+                          value={b.manufacturingDate}
+                          // BL-326 — the manufacturing date names ITS refusal.
+                          aria-invalid={mfgInvalid ? true : undefined}
+                          aria-describedby={mfgInvalid ? `stock-entry-batch-date-${i}` : undefined}
+                          onChange={(e) =>
+                            setBatches(
+                              batches.map((x, j) =>
+                                j === i ? { ...x, manufacturingDate: e.target.value } : x
+                              )
                             )
-                          )
-                        }
-                      />
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor={`batch-expiry-${i}`} className={labelClass}>
+                          {t('inv.entry.expiry')}
+                          {isRaw ? <span aria-hidden="true"> *</span> : null}
+                        </label>
+                        <input
+                          id={`batch-expiry-${i}`}
+                          type="date"
+                          className={inputClass}
+                          value={b.expiryDate}
+                          // BL-326 — the expiry takes only an expiry refusal; a
+                          // manufacturing-date refusal is the other input's.
+                          aria-invalid={expiryInvalid ? true : undefined}
+                          aria-describedby={
+                            expiryInvalid ? `stock-entry-batch-date-${i}` : undefined
+                          }
+                          onChange={(e) =>
+                            setBatches(
+                              batches.map((x, j) =>
+                                j === i ? { ...x, expiryDate: e.target.value } : x
+                              )
+                            )
+                          }
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        className="absolute top-1 right-1 p-2 text-text-tertiary hover:text-text-primary"
+                        aria-label={t('inv.entry.removeBatch')}
+                        onClick={() => setBatches(batches.filter((_, j) => j !== i))}
+                      >
+                        <X size={16} />
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      className="absolute top-1 right-1 p-2 text-text-tertiary hover:text-text-primary"
-                      aria-label={t('inv.entry.removeBatch')}
-                      onClick={() => setBatches(batches.filter((_, j) => j !== i))}
-                    >
-                      <X size={16} />
-                    </button>
+                    {batchDate && (
+                      <p
+                        id={`stock-entry-batch-date-${i}`}
+                        role="alert"
+                        className="mt-1 text-xs text-danger"
+                        data-testid={`stock-entry-batch-date-${i}`}
+                      >
+                        {t(`inv.entry.error.${batchDate.problem}`)}
+                      </p>
+                    )}
                   </div>
-                  {batchDates[i] && (
-                    <p
-                      id={`stock-entry-batch-date-${i}`}
-                      role="alert"
-                      className="mt-1 text-xs text-danger"
-                      data-testid={`stock-entry-batch-date-${i}`}
-                    >
-                      {t(
-                        `inv.entry.error.${/** @type {NonNullable<(typeof batchDates)[number]>} */ (batchDates[i]).problem}`
-                      )}
-                    </p>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
           {rawBatch && soh.ok && soh.value !== null ? (

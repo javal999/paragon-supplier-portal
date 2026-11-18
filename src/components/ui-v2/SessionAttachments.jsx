@@ -36,6 +36,9 @@ import { useDataService } from '@services/data/DataServiceContext';
  * @property {string} [describedBy] BL-84 — the id of a slot-level message the
  * file control should carry alongside its own refusals (a document slot's
  * certificate/missing-file note).
+ * @property {boolean} [invalid] BL-326 — the caller's own invalid state, for a
+ * surface whose refusal is rendered by the caller (an RFQ question answer).
+ * Paired with `describedBy`, which names that refusal.
  */
 
 /**
@@ -51,7 +54,8 @@ const SessionAttachments = ({
   single = false,
   refuse,
   notHeldText,
-  describedBy
+  describedBy,
+  invalid = false
 }) => {
   const { t } = useTranslation();
   const { files: fileService } = useDataService();
@@ -126,7 +130,7 @@ const SessionAttachments = ({
               aria-label={label}
               // BL-84 — a refused file is announced with the file control; a
               // caller's slot-level refusal joins its own.
-              aria-invalid={refusals.length > 0 || !!describedBy || undefined}
+              aria-invalid={invalid || refusals.length > 0 || !!describedBy || undefined}
               aria-describedby={
                 [refusals.length > 0 ? `${testId}-refusal` : null, describedBy]
                   .filter(Boolean)

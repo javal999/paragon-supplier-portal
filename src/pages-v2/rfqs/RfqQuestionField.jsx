@@ -124,6 +124,10 @@ const RfqQuestionField = ({
         <SessionAttachments
           label={t('rfqResponse.question.attachment')}
           testId={`rfq-q-att-${question.id}`}
+          // BL-326 — an attachment answer is the control the caller's note is
+          // about, so it forwards both halves of that wiring.
+          invalid={!!ariaInvalid}
+          describedBy={ariaDescribedBy}
           value={files}
           onChange={(next) => {
             setFiles(next);

@@ -159,6 +159,17 @@ export const CustomTermEditor = ({ terms, onChange }) => {
 
   const started = draft.label.trim().length > 0;
   const refusal = started ? rfpTermsRefusal([candidate()]) : null;
+  // BL-326 — the refusal names a CONTROL (a term value, its option rows, its
+  // label or group), so only that control is marked invalid. Marking the value
+  // for "two distinct options" blamed the wrong box.
+  // (DUPLICATE_TERM / UNKNOWN_VALUE_KIND cannot fire from this editor —
+  // `freshId` never repeats a custom id and the kind select is constrained —
+  // and a duplicate id has no control to mark in any case.)
+  const code = refusal === null ? null : refusalCode(refusal);
+  const valueRefused = code === 'TERM_VALUE_REQUIRED' || code === 'TERM_VALUE_INVALID';
+  const optionsRefused = code === 'CHOICE_TERM_NEEDS_OPTIONS';
+  const labelRefused = code === 'CUSTOM_TERM_LABEL_REQUIRED';
+  const groupRefused = code === 'UNKNOWN_TERM_GROUP';
 
   const add = () => {
     if (!started || refusal) return;
@@ -222,6 +233,8 @@ export const CustomTermEditor = ({ terms, onChange }) => {
             id="rfp-new-custom-label"
             value={draft.label}
             placeholder={t('rfxa.term.label.ph')}
+            aria-invalid={labelRefused || undefined}
+            aria-describedby={labelRefused ? 'rfp-new-custom-refusal' : undefined}
             onChange={(e) => setDraft((d) => ({ ...d, label: e.target.value }))}
             className={inputClass}
           />
@@ -233,6 +246,8 @@ export const CustomTermEditor = ({ terms, onChange }) => {
           <select
             id="rfp-new-custom-group"
             value={draft.group}
+            aria-invalid={groupRefused || undefined}
+            aria-describedby={groupRefused ? 'rfp-new-custom-refusal' : undefined}
             onChange={(e) =>
               setDraft((d) => ({ ...d, group: /** @type {RfpTermGroup} */ (e.target.value) }))
             }
@@ -294,6 +309,9 @@ export const CustomTermEditor = ({ terms, onChange }) => {
                 value={label}
                 aria-label={t('rfxa.q.option', { n: i + 1 })}
                 data-testid={`rfp-new-custom-option-${i}`}
+                // BL-326 — a "two distinct options" refusal is about THESE rows.
+                aria-invalid={optionsRefused || undefined}
+                aria-describedby={optionsRefused ? 'rfp-new-custom-refusal' : undefined}
                 onChange={(e) =>
                   setDraft((d) => ({
                     ...d,
@@ -341,9 +359,10 @@ export const CustomTermEditor = ({ terms, onChange }) => {
           onChange={(v) => setDraft((d) => ({ ...d, requestedValue: v }))}
           ariaLabel={`${t('rfxa.term.custom')} — ${t('rfx.rfp.term.requested')}`}
           testId="rfp-new-custom-requested"
-          // BL-84 — the custom-term refusal is tied to the value it is about.
-          invalid={!!refusal}
-          describedBy={refusal ? 'rfp-new-custom-refusal' : undefined}
+          // BL-326 — the custom-term value refusal is tied to the value it is
+          // about; the option-row refusal marks the rows instead.
+          invalid={valueRefused}
+          describedBy={valueRefused ? 'rfp-new-custom-refusal' : undefined}
         />
       </div>
 
