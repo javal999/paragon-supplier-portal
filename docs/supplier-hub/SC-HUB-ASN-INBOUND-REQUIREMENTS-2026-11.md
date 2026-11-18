@@ -18,7 +18,7 @@
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
-| M1-A8 to M1-A10; Slide 11 Nov p.19; REQ-E07-04; REQ-E07-08 BR-01, BR-02 | MVP | P0 | Material Planner | SUP, MP, ADM | Validated (owner, 2026-11-18); Proposed (the SAP identifier mapping) |
+| M1-A8 to M1-A10; Slide 11 Nov p.19; REQ-E07-04; REQ-E07-08 BR-01, BR-02 | MVP | P0 | Material Planner | SUP, MP, ADM | Validated (owner, 2026-11-18); the SAP field names are IT's task |
 
 **Business value.** The 4 checks that stop a bad inbound in SAP run before the supplier submits, so the supplier corrects it in the hub instead of in an SAP error queue. KPI link: ASN coverage and first-time validation.
 
@@ -36,7 +36,7 @@
 - BR-01. The ASN carries material, quantity, expected arrival date and the Surat Jalan (SJ) number, beside the existing fields (batch, ship date, carrier, tracking). [M1-A9; REQ-E07-04 BR-04]
 - BR-02. The flow is: supplier submits the ASN, the hub validates it, the inbound data is retrieved from the ASN, and the inbound is created in SAP. [M1-A8]
 - BR-03. Within 1 sequence, all lines have the same PO, the same delivery date and the same External ID. A sequence cannot be blank. [Slide 11 Nov p.19, rules 1 to 4]
-- BR-04. One sequence = one ASN. The External ID is the SJ number. The supplier enters the sequence. [Q-18]
+- BR-04. One sequence = one ASN. The External ID is the SJ number. The supplier enters the sequence. [Q-18] The SAP field names are IT's mapping task; the hub rule is fixed. [Owner, 2026-11-18, BL-334]
 - BR-05. A failed validation blocks the submit; the supplier revises the ASN; each failed line shows its error. [M1-A9; the error per line is Proposed]
 - BR-06. The ZWME021 validation and the error monitoring run in the hub. The existing ASN rules (batch, shelf life, call-off checks) still apply. [M1-A10; REQ-E07-04 BR-06 to BR-18]
 - BR-07. The validated ASN is sent to SAP as an inbound delivery; the hub does not create the inbound directly. [M1-A8; REQ-E07-08 BR-01, BR-02]
@@ -62,13 +62,13 @@
 
 **Metrics.** Leading: share of ASNs that pass validation first time; failed inbound messages per week. Lagging: ASN coverage.
 
-**Open items.** Whether the SAP inbound number or another identifier is the External ID in SAP's terms; whether the sequence is the ASN number or a separate counter.
+**Open items.** The SAP field names are IT's mapping task (BL-349); the hub rule is fixed.
 
 ### AIB-2 Expeditor review and acknowledgment
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
-| M1-A11, M1-A12; REQ-E07-06 BR-01, BR-06; section 2 | MVP | P1 | Material Planner | MP, SUP, EXP | Validated (owner, 2026-11-18); Proposed (the acknowledgment deadline and the seat's atom) |
+| M1-A11, M1-A12; REQ-E07-06 BR-01, BR-06; section 2 | MVP | P1 | Material Planner | MP, SUP, EXP | Validated (owner, 2026-11-18); Proposed (the acknowledgment deadline) |
 
 **Business value.** One planning-side seat acknowledges the inbound information, so an inbound is visible as received in the hub before SAP posts the goods receipt, without moving the GR out of SAP. KPI link: inbound acknowledgment coverage.
 
@@ -83,7 +83,7 @@
 4. The GR still posts in SAP; the hub shows it when it arrives.
 
 **Business rules.**
-- BR-01. The Expeditor is a new PTI persona/seat in the planning area. [Q-19]
+- BR-01. The Expeditor is a new PTI persona/seat in the planning area. The atom is `inbound:acknowledge`, held by the EXP seat. [Q-19; Owner, 2026-11-18, BL-333]
 - BR-02. The Expeditor reviews and acknowledges the inbound information; the acknowledgment records who and when. [M1-A11; who/when Proposed]
 - BR-03. GR inspection, retrieval and quality status stay in SAP. SAP posts the GR and holds the quality status; the hub displays the result and the rejected quantity and does not post or re-record the inspection (REQ-E07-06 BR-01, BR-06 as amended). [M1-A12; REQ-E07-06 BR-06]
 - BR-04. The supplier's GR acknowledge or dispute (REQ-E07-06 AC-03) is unchanged; the Expeditor's inbound acknowledgment is a separate act. [Q-19; REQ-E07-06]
@@ -105,13 +105,13 @@
 
 **Metrics.** Leading: share of inbounds acknowledged within 1 working day. Lagging: none.
 
-**Open items.** The Expeditor atom and seat details; the inbound list's filters.
+**Open items.** The inbound list's filters are the builder's call.
 
 ### AIB-3 Missing-ASN follow-up
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
-| M1-A13; CR-09; REQ-E09-03 BR-08; REQ-E07-04 | MVP | P1 | Material Planner | MP, SUP | Validated (owner, 2026-11-18); Proposed (the chase timing and close reason) |
+| M1-A13; CR-09; REQ-E09-03 BR-08; REQ-E07-04 | MVP | P1 | Material Planner | MP, SUP | Validated (owner, 2026-11-18); email waits on BL-26 |
 
 **Business value.** The planner chases the supplier that has not sent an ASN for a call-off already sent, instead of chasing every supplier on every open call-off. KPI link: ASN coverage before the need date.
 
@@ -125,7 +125,7 @@
 3. The supplier submits the ASN; the line leaves the chase list.
 
 **Business rules.**
-- BR-01. The missing-ASN chase fires when a call-off is sent and no ASN is submitted. It does not fire for a PO with no call-off. [M1-A13]
+- BR-01. The missing-ASN chase fires when a call-off is sent and no ASN is submitted. It does not fire for a PO with no call-off. [M1-A13] The chase fires on the next working day after the call-off is sent, once; the planner can close it with a reason. [Owner, 2026-11-18, BL-335]
 - BR-02. CR-09 stays: the reminder 7 days before the need date when no ASN or dispatch heads-up exists. [CR-09; REQ-E09-03 BR-08]
 - BR-03. The missing-ASN chase is an additional rule after dispatch; it does not replace CR-09. [Q-20]
 - BR-04. A call-off with an ASN raises no chase. [M1-A13]
@@ -146,7 +146,7 @@
 
 **Metrics.** Leading: share of sent call-offs with an ASN before the need date. Lagging: KPI-05.
 
-**Open items.** The chase timing (same day or after N days); the channel; whether the planner can close a chase with a reason.
+**Open items.** The channel: the hub chase is first; email waits on BL-26.
 
 ## 2. Decisions
 
@@ -155,3 +155,6 @@
 | AIB-D1 | Sequence and External ID | One sequence = one ASN; External ID = the SJ number; the supplier enters the sequence; the 4 rules stay | Owner, 2026-11-18 |
 | AIB-D2 | Expeditor | A new PTI persona/seat in the planning area | Owner, 2026-11-18 |
 | AIB-D3 | Follow-up | CR-09 stays; the missing-ASN chase is added after dispatch | Owner, 2026-11-18 |
+| AIB-D4 | SAP field mapping | The hub rule is fixed (External ID = SJ, one sequence = ASN); IT maps the SAP field names | Owner, 2026-11-18 (BL-334) |
+| AIB-D5 | Expeditor atom | `inbound:acknowledge`, held by the EXP seat | Owner, 2026-11-18 (BL-333) |
+| AIB-D6 | Chase timing | Next working day, 1 chase, close with a reason | Owner, 2026-11-18 (BL-335) |

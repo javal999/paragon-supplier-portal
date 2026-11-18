@@ -18,7 +18,7 @@
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
-| M1-A3 to M1-A7; M2-A1; REQ-E06-01 BR-02; REQ-E06-02 BR-07, BR-09, BR-13; REQ-E07-02; REQ-E08-02 BR-09, BR-14, BR-18; REQ-E08-04 BR-11; DRC-2; PEX-1 | MVP | P0 | Material Planner | SUP, MP, ADM | Validated (owner, 2026-11-18); Proposed (the Firm sub-deadline, open item 1) |
+| M1-A3 to M1-A7; M2-A1; REQ-E06-01 BR-02; REQ-E06-02 BR-07, BR-09, BR-13; REQ-E07-02; REQ-E08-02 BR-09, BR-14, BR-18; REQ-E08-04 BR-11; DRC-2; PEX-1 | MVP | P0 | Material Planner | SUP, MP, ADM | Validated (owner, 2026-11-18) |
 
 **Business value.** The supplier confirms the week's plan and stock in one place, on the DA page, and updates only what changed. It moves confirmation reliability (deck p.5, below 50%) and cuts the chase for missing updates. KPI link: confirmation reliability (REQ-E10-01 measures the delivery side; this is the plan side).
 
@@ -38,7 +38,7 @@
 - BR-02. The confirmation is due by 23:59 WIB on the Wednesday after the Friday publication, on the hub working calendar. [Owner, 2026-11-18, Q-3, Q-4]
 - BR-03. New stock data uses the Thursday 23:59 cutoff (REQ-E08-02 BR-14, BR-18); the DA page shows both deadlines. [Owner, 2026-11-18, Q-3]
 - BR-04. The DA page is the one-time confirmation surface. The first cycle is confirmed explicitly; later weeks carry the last confirmation forward; the supplier submits only a change. A week with no submit counts as unchanged and is recorded as "carried forward". [Owner, 2026-11-18, Q-5; amends REQ-E06-02 BR-09, BR-13 and REQ-E08-04 BR-11]
-- BR-05. The capacity (REQ-E08-04), PO response (REQ-E07-02) and Foresight (REQ-E06-02) records and their verbs stay underneath. A changed week writes the record; a carried-forward week writes no new record and keeps the last confirmed values in force. An approved, unchanged PO needs no new response; a changed PO reopens it (REQ-E07-02 BR-01). [Owner, 2026-11-18, Q-5]
+- BR-05. The capacity (REQ-E08-04), PO response (REQ-E07-02) and Foresight (REQ-E06-02) records and their verbs stay underneath. A changed week writes the record; a carried-forward week writes no new record and keeps the last confirmed values in force. An approved, unchanged PO needs no new response; a changed PO reopens it (REQ-E07-02 BR-01). [Owner, 2026-11-18, Q-5] The shipping notice is included read-only from the first ASN. [Owner, 2026-11-18, BL-356]
 - BR-06. SOH is 1 figure. The DA confirmation pre-fills the stock page; the supplier confirms or edits it on the stock page; the stock record is the single source, written through the stock verb with its batch rules (REQ-E08-02 BR-06 as amended 2026-11-10; MAT-D21). There is no second stock entry point (REQ-E08-02 BR-09). The DA page's current week reads the stock record. [Owner, 2026-11-18, Q-6; REQ-E08-02 BR-06, BR-09]
 - BR-07. Feedstock is entered directly in the stock table (PSC-2); the DA confirmation does not auto-update the stock page. [Owner, 2026-11-18, Q-6]
 - BR-08. An API supplier's figures pre-fill the confirmation; the supplier confirms only the differences, and the changed fields are recorded as supplier changes. [Owner, 2026-11-18, Q-7]
@@ -67,13 +67,13 @@
 
 **Metrics.** Leading: confirmation coverage and the share of weeks carried forward. Lagging: confirmation reliability (the plan side; REQ-E10-01 measures delivery).
 
-**Open items.** 1. Whether the Firm 1-working-day sub-deadline survives inside the weekly cycle (CR-26). 2. The exact layout of the 2 deadlines.
+**Open items.** The exact layout of the 2 deadlines is the builder's call.
 
 ### PSC-2 Supplier stock table
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
-| M2-A1 to M2-A8; REQ-E08-01 BR-06; REQ-E08-02 BR-06, BR-09, BR-10; REQ-E08-06 BR-04; REQ-E08-07 BR-03, BR-04; DRC-8; MAT-D3, MAT-D4, MAT-D21 | MVP | P0 | Material Planner | SUP, MP | Validated (owner, 2026-11-18); Proposed (the Packaging Category/Format field) |
+| M2-A1 to M2-A8; REQ-E08-01 BR-06; REQ-E08-02 BR-06, BR-09, BR-10; REQ-E08-06 BR-04; REQ-E08-07 BR-03, BR-04; DRC-8; MAT-D3, MAT-D4, MAT-D21 | MVP | P0 | Material Planner | SUP, MP | Validated (owner, 2026-11-18) |
 
 **Business value.** The supplier's stock table shows the runs in production and the shipments in transit as separate, dated entries, and the download matches the screen. It cuts the WhatsApp clarification and the stale SOH. KPI link: KPI-04, optimize stock.
 
@@ -95,7 +95,7 @@
 - BR-05. The PIC column is removed from the supplier Stock table. The PIC stays on the inventory list and detail, alerts, call-offs and the ASN line (REQ-E08-07 BR-03), and the supplier still sees the name there (BR-04). [M2-A2; Q-22]
 - BR-06. Feedstock to Confirm is typed directly in the table before the supplier confirms. The column is shown for packaging and hidden for raw material suppliers. The template carries columns K and L for packaging and drops them for raw material. [M2-A6, M2-A7; Q-6; REQ-E08-02 BR-06 [Proposed, BL-290]]
 - BR-07. The feedstock entry is the DRC-8 confirmation and is never added to SOH. [DRC-8]
-- BR-08. Filters: Supplier, MRP Controller (REQ-E08-07 BR-03) and Packaging Category/Format, read as the SAP material group until a field is named. [M2-A8; Q-25; Proposed]
+- BR-08. Filters: Supplier, MRP Controller (REQ-E08-07 BR-03) and Packaging Category/Format, read as the SAP material group until a field is named. [M2-A8; Q-25; Proposed] The SAP material group is the field; a packaging format field is a later swap. [Owner, 2026-11-18, BL-329]
 - BR-09. Open To-Dos on the supplier Home list are ordered by due date, then risk class where one exists, then type. [M2-A1; Q-26; REQ-E08-02 BR-18]
 - BR-10. Every stock row follows CR-18 (number format) and CR-19 (batch total); every In Production row follows MAT-D4 and MAT-D21 (quantity required, completion date required when above 0). [Code; MAT-D4, MAT-D21]
 - BR-11. The download flattens every In Transit and In Production entry of the listed materials. [M2-A5]
@@ -120,13 +120,13 @@
 
 **Metrics.** Leading: share of materials with a current SOH and an In Production ETA. Lagging: KPI-04.
 
-**Open items.** The Packaging Category/Format field; whether the supplier's other stock views also lose the PIC.
+**Open items.** The supplier's other stock views keep the PIC; only the Stock table loses it (builder's call).
 
 ### PSC-3 LTP inputs
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
-| M2-A9 to M2-A11; PEX-5 BR-01 to BR-03; PEX-6; DRC-18; REQ-E14-03 | MVP | P1 | Material Planner | MP | Validated (owner, 2026-11-18); Proposed (the batch file format) |
+| M2-A9 to M2-A11; PEX-5 BR-01 to BR-03; PEX-6; DRC-18; REQ-E14-03 | MVP | P1 | Material Planner | MP | Validated (owner, 2026-11-18) |
 
 **Business value.** The planner uploads the plan for many materials in 1 action, and a raw material used by several finished goods carries its total requirement in 1 row. It removes the manual summing and the per-material CSV. KPI link: none; leading measure only.
 
@@ -141,8 +141,8 @@
 4. The planner confirms; the upload is stamped with who, when and the file name.
 
 **Business rules.**
-- BR-01. Batch upload for many materials, on 3 separate screens: LTP A, LTP B and Festive. The screens replace the per-material CSV (BL-267). [M2-A9, M2-A11; Q-27]
-- BR-02. The hub computes a material's total requirement from the FG plan and the BOM; the uploaded row is the override. One row covers every FG that uses the material. [M2-A10; Q-28]
+- BR-01. Batch upload for many materials, on 3 separate screens: LTP A, LTP B and Festive. The screens replace the per-material CSV (BL-267). [M2-A9, M2-A11; Q-27] The file is one CSV per type, one row per material × week. [Owner, 2026-11-18, BL-330]
+- BR-02. The hub computes a material's total requirement from the FG plan and the BOM; the uploaded row is the override. One row covers every FG that uses the material. [M2-A10; Q-28] The computed total reads the current FG plan version. [Owner, 2026-11-18, BL-330]
 - BR-03. Each upload is stamped with uploader, date and file name, as PEX-5 BR-02 requires. [PEX-5 BR-02 [Proposed]]
 - BR-04. A material with no upload reads the computed total; a material with no FG plan and no upload reads "Not available". [Proposed]
 - BR-05. The 3 series are separate; the buffers read LTP A, LTP B and LTP Festive (PSC-4). [PSC-4; PEX-5 BR-01]
@@ -164,13 +164,13 @@
 
 **Metrics.** Leading: share of materials with an upload in the cycle. Lagging: none.
 
-**Open items.** The batch file format; the FG plan version used for the computed total.
+**Open items.** The treatment of a material with no BOM line.
 
 ### PSC-4 Buffers, model A
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
-| M2-A12 to M2-A17; PEX-5 BR-01, BR-03 to BR-07, AC-01; PEX-6; PEX-13 BR-04; DRC-2 BR-02; DRC-9a, DRC-9c, C4; DRC-10, B9; DRC-B28 | MVP | P1 | Material Planner | MP, SUP | Validated (owner, 2026-11-18); Proposed (the Typhoon window, the ROP-only audit field) |
+| M2-A12 to M2-A17; PEX-5 BR-01, BR-03 to BR-07, AC-01; PEX-6; PEX-13 BR-04; DRC-2 BR-02; DRC-9a, DRC-9c, C4; DRC-10, B9; DRC-B28 | MVP | P1 | Material Planner | MP, SUP | Validated (owner, 2026-11-18); Proposed (the ROP-only audit field) |
 
 **Business value.** The 3 buffers get 1 definition each, on a baseline the planner and the supplier share, so the same uplift is not paid twice and every buffer figure traces to its formula. KPI link: KPI-04 (stock) and KPI-05 (OTIF through availability).
 
@@ -191,7 +191,7 @@
 - BR-04. Strategic Buffer, festive component = the sum over the lead-time weeks of max(0, LTP Festive(w) − LTP A(w)). [M2-A14; Q-14]
 - BR-05. Material Buffer = the coverage weeks × the average weekly LTP A over the coverage window. It is the event-driven component of the Strategic Buffer. [M2-A15, M2-A16; Q-15]
 - BR-06. Strategic Buffer total = BR-04 + BR-05. ROP Order = LTP A × the lead time + safety order + Protection Buffer + Strategic Buffer total. Each component is added once; there is no per-week LTP B − LTP A adder. [Q-13; QF-1]
-- BR-07. The event calendar carries CNY and Typhoon; ADM maintains it. The Material Buffer switches on in the window and off after it; the planner can override the switch with a reason (PEX-13 BR-02). [M2-A17; Q-16; PEX-13 BR-04 lifted]
+- BR-07. The event calendar carries CNY and Typhoon; ADM maintains it. The Material Buffer switches on in the window and off after it; the planner can override the switch with a reason (PEX-13 BR-02). [M2-A17; Q-16; PEX-13 BR-04 lifted] The default Typhoon window is 2 weeks before landfall. [Owner, 2026-11-18, BL-332]
 - BR-08. When LTP B or Festive is missing, the buffer reads "Not available" and is not added; DRC-9a and DRC-9c stay as fallback displays on the Capacity page, labelled fallback, and are not the buffer definition. [Q-13; QF-39]
 - BR-09. The DA grid shows LTP A, LTP B and Festive as inputs and DA; the chosen-LTP marker is removed. [model A; PEX-5 BR-03 amended]
 - BR-10. A change that moves DA writes a DA version with its cause: LTP A, LTP B, LTP Festive, the safety stock or protection buffer switch (PEX-13). A change that moves only ROP Order (the cover setting, the event window, the Material Buffer switch) is recorded with the ROP Order figure's stored inputs and rules version (DRC-D16) and does not write a DA version. [PEX-6; Q-13; QF-5]
@@ -215,13 +215,13 @@
 
 **Metrics.** Leading: share of materials with all 3 LTP inputs. Lagging: KPI-04 and KPI-05.
 
-**Open items.** The Typhoon window definition; the audit field for a ROP-only cause (DRC-D16).
+**Open items.** The ROP-only audit field uses DRC-D16; the field name is the builder's call.
 
 ### PSC-5 Planning aids
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
-| M1-A1, M1-A2; M2-A18, M2-A19; CAP-1 BR-02; REQ-E08-05 BR-01; CR-24; DRC-10, DRC-11; PEX-15 | MVP | P2 | Material Planner | MP | Validated (owner, 2026-11-18); Proposed (the filter list, the preset definitions) |
+| M1-A1, M1-A2; M2-A18, M2-A19; CAP-1 BR-02; REQ-E08-05 BR-01; CR-24; DRC-10, DRC-11; PEX-15 | MVP | P2 | Material Planner | MP | Validated (owner, 2026-11-18); Proposed (the 4 preset shapes) |
 
 **Business value.** The planner reads a week and a date on every grid, sees a below-ROP or max-stock warning, and finds the CV rule explained. KPI link: KPI-04 through earlier warning.
 
@@ -238,8 +238,8 @@
 - BR-01. Every WeekGrid table shows the week label and Monday date as each CAP-1 wave lands; CAP-1 BR-02 is unchanged. [M1-A1; Q-8]
 - BR-02. A ROP-level view groups materials by their OSIP level, shows the PTI ROP, and warns when SOH is below the ROP. A new max-stock alert fires when PTI SOH reaches the DRC-10 Max; its class is Low, its basis is "at or above Max", and it has no days-to-impact. REQ-E08-05 BR-01 gains the rule. [M1-A2; Q-9; DRC-10; REQ-E08-05 BR-01]
 - BR-03. CV is explained on the page like BL-208's "How the level is suggested"; the calculation is DRC-11 unchanged. [M2-A18; Q-11]
-- BR-04. Safety stock targets keeps its existing filters; the planner's list adds to them later. [M2-A19; Q-12]
-- BR-05. The sandbox offers 4 demand presets: SKU revamp (FG level), SKU off/retired, one-shot material uplift and material level transition. Each loads a demand shape on the Material tab; the FG tab stays unscaled (PEX-D28). [M1-D4; Q-10; PEX-15 BR-05]
+- BR-04. Safety stock targets keeps its existing supplier, planning group, MRP controller and level filters; a new filter is added only when the planner names it. [M2-A19; Q-12; Owner, 2026-11-18, BL-328]
+- BR-05. The sandbox offers 4 demand presets: SKU revamp (FG level), SKU off/retired, one-shot material uplift and material level transition. Each loads a demand shape on the Material tab; the FG tab stays unscaled (PEX-D28). [M1-D4; Q-10; PEX-15 BR-05] The shapes are: SKU revamp = a ramp over 6 weeks; SKU off/retired = a decline to 0 over 4 weeks; one-shot uplift = a single-week spike; material level transition = a step change at a week. [Owner, 2026-11-18, BL-353; Proposed]
 - BR-06. The Excel scenario template remains the owner's deliverable and is not a hub requirement. [M1-A18]
 
 **Edge cases.**
@@ -258,13 +258,13 @@
 
 **Metrics.** None.
 
-**Open items.** The planner's Safety Stock Engine filter list; the preset definitions (demand shape per scenario); the Typhoon window.
+**Open items.** The 4 preset shapes are [Proposed] and can be adjusted by the planner.
 
 ### PSC-6 Feedstock reconcile and grace
 
 | Maps to | Phase | Priority | Business owner | Users | Status |
 |---|---|---|---|---|---|
-| M1-A14 to M1-A17; PEX-7 BR-01, BR-02, BR-05; PEX-8 PEX-D27; PEX-9; DRC-15a | MVP | P1 | Material Planner | MP, SUP | Validated (owner, 2026-11-18); Proposed (the feedstock grace trigger) |
+| M1-A14 to M1-A17; PEX-7 BR-01, BR-02, BR-05; PEX-8 PEX-D27; PEX-9; DRC-15a | MVP | P1 | Material Planner | MP, SUP | Validated (owner, 2026-11-18) |
 
 **Business value.** The page separates a quantity still in grace from a quantity on hold, so the planner acts on the right bucket and the supplier sees why a quantity waits. KPI link: KPI-04.
 
@@ -278,14 +278,15 @@
 3. The planner follows "Not yet called off" to the PO On Hold line.
 
 **Business rules.**
-- BR-01. The feedstock grace is 14 calendar days. The PO On Hold grace is 14 calendar days; it starts when the PO On Hold quantity first appears [Proposed]. The no-movement period stays 14 working days. [M1-A14; Q-21; PEX-7 BR-02; PEX-7 BR-03]
-- BR-02. The feedstock grace starts when a paid feedstock quantity is recorded as not yet absorbed [Proposed]. During it the quantity shows In grace; at the end it moves to PO On Hold or leaves the row by the decision. [M1-A14; Q-21; Proposed]
+- BR-01. The feedstock grace is the PO On Hold grace: 1 14-calendar-day clock that starts when the PO On Hold quantity first appears [Proposed]. The no-movement period stays 14 working days. [M1-A14; Q-21; Owner, 2026-11-18, BL-331; PEX-7 BR-02; PEX-7 BR-03]
+- BR-02. During the grace the feedstock quantity shows In grace; at the end it moves to PO On Hold or leaves the row by the decision. [M1-A14; Q-21; Owner, 2026-11-18, BL-331]
 - BR-03. The page shows PO ordered, DA, called off, DA not yet called off, ASNs requested, the 2 remainders, In grace, PO On Hold and Total OSPO, per supplier × material. [M1-A15; DRC-15a BR-01]
 - BR-04. Total OSPO = min(OSPO, DA not yet called off) + PO On Hold. [M1-A16; PEX-7 BR-01]
 - BR-05. In grace and PO On Hold are 2 columns, each with its date. "Not yet called off" links to the PO On Hold line and shows its option and status (PEX-9 BR-02). [M1-A17; Q-17; PEX-9 BR-02]
 - BR-06. Grace days are counted as days 1 to 14 inclusive; the quantity moves to PO On Hold on day 15. [Q-21; Proposed]
 - BR-07. A decision recorded before the grace ends takes effect at the end; the quantity stays in PO On Hold until then (PEX-8 BR-05). [PEX-8 BR-05]
 - BR-08. The end-of-grace need date = the end of the grace + the DRC-6 lead time, counted in calendar days (PEX-D27 paragraph). [PEX-D27; Q-21]
+- BR-09. A rejected call-off does not restart the grace; the quantity returns to the open PO and PEX-8 decides. [Owner, 2026-11-18, BL-354]
 
 **Edge cases.**
 - The grace ends on a non-working day: the quantity moves on that calendar day; the planner's decision is due on the hub working day. [Proposed]
@@ -303,7 +304,7 @@
 
 **Metrics.** Leading: share of PO On Hold quantities decided inside the grace. Lagging: KPI-04.
 
-**Open items.** The feedstock grace trigger; whether a rejected call-off restarts the grace.
+**Open items.** None.
 
 ## 2. Decisions
 
@@ -313,3 +314,12 @@
 | PSC-D2 | Grace unit | 14 calendar days for the feedstock and PO On Hold graces; the no-movement period stays working days | Owner, 2026-11-18 |
 | PSC-D3 | Weekly cycle | Both Zone Liability and DA published Friday; confirmation by Wednesday 23:59; new stock data uses the Thursday cutoff | Owner, 2026-11-18 |
 | PSC-D4 | Confirmation and stock entry | One-time confirmation on the DA page, change-only after the first week; the DA confirmation pre-fills the stock page; the stock page remains the single entry point | Owner, 2026-11-18 |
+| PSC-D5 | Firm deadline | 1 Wednesday deadline for the weekly Foresight/DA confirmation; CR-26 stays outside the weekly cycle | Owner, 2026-11-18 (BL-327) |
+| PSC-D6 | Shipping notice | Included read-only in the one-time confirmation, from the first ASN | Owner, 2026-11-18 (BL-356) |
+| PSC-D7 | LTP file and source | One CSV per type, one row per material × week; the computed total reads the current FG plan + BOM | Owner, 2026-11-18 (BL-330) |
+| PSC-D8 | Typhoon window | ADM sets the window; default 2 weeks before landfall | Owner, 2026-11-18 (BL-332) |
+| PSC-D9 | Safety Stock filters | The existing 4 filters stay; a new filter is added only when named | Owner, 2026-11-18 (BL-328) |
+| PSC-D10 | Packaging field | SAP material group now; a packaging format field is a later swap | Owner, 2026-11-18 (BL-329) |
+| PSC-D11 | Preset shapes | Ramp, decline to 0, one-week spike, step change; [Proposed] | Owner, 2026-11-18 (BL-353) |
+| PSC-D12 | Grace merge | The feedstock grace is the PO On Hold grace: 1 14-calendar-day clock | Owner, 2026-11-18 (BL-331) |
+| PSC-D13 | Rejected call-off | Does not restart the grace; PEX-8 decides | Owner, 2026-11-18 (BL-354) |
