@@ -130,8 +130,12 @@ export const forecastCollaborationEn = {
     'Periods run left to right; scroll sideways for later weeks and months.',
   // PEX-3 (BL-266) — where the ordered quantity comes from (an explanation, not a figure).
   'fc.sup.demandNote': 'Ordered quantity = LTP (planned use) − PTI stock on hand.',
+  // PEX-3 (BL-284) — the note's own terms per period, only on a material the
+  // supplier's granted PTI-stock access covers (Q-W3, PEX-D24).
   'fc.sup.demandHover':
-    'Ordered quantity for {{period}}: {{qty}} {{uom}}. LTP and PTI stock on hand per week are not in the Foresight data yet, so the gap is not shown.',
+    'Ordered quantity for {{period}}: {{qty}} {{uom}}. LTP (planned use) {{ltp}} {{uom}} · PTI stock on hand {{soh}} {{uom}} · Gap (LTP − PTI stock on hand) {{gap}} {{uom}}.',
+  'fc.sup.demandHoverNoAccess':
+    'Ordered quantity for {{period}}: {{qty}} {{uom}}. LTP, PTI stock on hand and the gap are shown only for materials PTI has granted you stock access to.',
   'fc.sup.demandHoverName': 'Ordered quantity for {{period}}',
   // PEX-10 (BL-273) — the fulfilment window of a commitment.
   'fc.sup.row.fulfilBy': 'Fulfil by',
@@ -250,6 +254,10 @@ export const forecastCollaborationEn = {
   'fc.pti.gaps.grid': 'Commitment against forecast',
   'fc.pti.gaps.gridHint':
     'Each cell reads commitment / forecast. Green: {{green}}% or more. Amber: {{amber}}% to below {{green}}%. Red: below {{amber}}%.',
+  // PEX-3 BR-02 (BL-284) — the week's hover: LTP, PTI stock on hand and the gap.
+  'fc.pti.cellHover':
+    'LTP (planned use) {{ltp}} {{uom}} · PTI stock on hand {{soh}} {{uom}} · Gap (LTP − PTI stock on hand) {{gap}} {{uom}}.',
+  'fc.pti.cellHoverName': 'LTP, PTI stock on hand and gap for {{period}}',
   'fc.pti.gaps.cumulative': 'Cumulative commitment against forecast',
   'fc.pti.gaps.cumulativeHint':
     'Zone Liability periods, over the horizon, all suppliers of the material. Zone Capacity periods need only an acknowledgement.',
@@ -437,8 +445,12 @@ export const forecastCollaborationId = {
     'Periode berjalan dari kiri ke kanan; geser ke samping untuk minggu dan bulan berikutnya.',
   // PEX-3 (BL-266) — asal kuantitas pesanan (penjelasan, bukan angka baru).
   'fc.sup.demandNote': 'Kuantitas pesanan = LTP (rencana pemakaian) − stok PTI yang ada.',
+  // PEX-3 (BL-284) — suku-suku catatan per periode, hanya untuk material yang
+  // akses stok PTI-nya diberikan kepada pemasok (Q-W3, PEX-D24).
   'fc.sup.demandHover':
-    'Kuantitas pesanan untuk {{period}}: {{qty}} {{uom}}. LTP dan stok PTI per minggu belum ada di data Foresight, sehingga selisihnya belum ditampilkan.',
+    'Kuantitas pesanan untuk {{period}}: {{qty}} {{uom}}. LTP (rencana pemakaian) {{ltp}} {{uom}} · stok PTI yang ada {{soh}} {{uom}} · selisih (LTP − stok PTI yang ada) {{gap}} {{uom}}.',
+  'fc.sup.demandHoverNoAccess':
+    'Kuantitas pesanan untuk {{period}}: {{qty}} {{uom}}. LTP, stok PTI yang ada, dan selisihnya hanya ditampilkan untuk material yang akses stoknya diberikan PTI kepada Anda.',
   'fc.sup.demandHoverName': 'Kuantitas pesanan untuk {{period}}',
   // PEX-10 (BL-273) — jangka pemenuhan komitmen.
   'fc.sup.row.fulfilBy': 'Penuhi paling lambat',
@@ -560,6 +572,10 @@ export const forecastCollaborationId = {
   'fc.pti.gaps.grid': 'Komitmen terhadap prakiraan',
   'fc.pti.gaps.gridHint':
     'Setiap sel berisi komitmen / prakiraan. Hijau: {{green}}% atau lebih. Kuning: {{amber}}% hingga di bawah {{green}}%. Merah: di bawah {{amber}}%.',
+  // PEX-3 BR-02 (BL-284) — hover minggu: LTP, stok PTI yang ada, dan selisihnya.
+  'fc.pti.cellHover':
+    'LTP (rencana pemakaian) {{ltp}} {{uom}} · stok PTI yang ada {{soh}} {{uom}} · selisih (LTP − stok PTI yang ada) {{gap}} {{uom}}.',
+  'fc.pti.cellHoverName': 'LTP, stok PTI yang ada, dan selisih untuk {{period}}',
   'fc.pti.gaps.cumulative': 'Komitmen kumulatif terhadap prakiraan',
   'fc.pti.gaps.cumulativeHint':
     'Periode Zone Liability, sepanjang horizon, semua pemasok material. Periode Zone Capacity cukup diakui.',

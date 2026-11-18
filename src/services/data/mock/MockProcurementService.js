@@ -44,7 +44,7 @@ import {
   forecastSupplierName
 } from './forecastReadModel';
 import { allFeedstockRows } from './feedstockReadModel';
-import { maskForSupplier } from '../../transitions/inventoryRules';
+import { canSeePtiStock, maskForSupplier } from '../../transitions/inventoryRules';
 import { PTI_ONLY_RULES } from '../../transitions/inventoryAlertRules';
 import { mockShipments } from '@data/mockShipments';
 import { mockContracts } from '@data/mockContracts';
@@ -741,6 +741,10 @@ export class MockProcurementService {
   async getForecastCommitments(scope) {
     // BR-10 — PTI never reads a draft; a supplier reads its own lines with its drafts.
     // PEX-10 (BL-273) — each line carries its pair's lead time (DRC-6), for "Fulfil by".
+    // PEX-3 BR-02 / Q-W3 (BL-284) — the per-week LTP, PTI stock on hand and gap
+    // show to a supplier only for a material its granted PTI-stock access covers
+    // (REQ-E08-03, `canSeePtiStock`). Masked HERE, in the service, so the figures
+    // never reach a page for a material without the grant.
     const sources = engineDataset().sources;
     /** @param {ForecastCommitmentLine} l */
     const withLeadTime = (l) => {
@@ -750,8 +754,14 @@ export class MockProcurementService {
       return { ...l, leadTimeDays: src ? leadTimeBreakdown(src).totalDays : null };
     };
     if (scope.personaType === 'buyer') return { items: allCommitmentLines(null).map(withLeadTime) };
+    const supplierId = scope.supplierId;
+    const grant = supplierId ? stockAccessStore.get(supplierId) : undefined;
     return {
-      items: applySupplierScope(scope, allCommitmentLines(scope.supplierId)).map(withLeadTime)
+      items: applySupplierScope(scope, allCommitmentLines(supplierId))
+        .map(withLeadTime)
+        .map((l) =>
+          canSeePtiStock(grant, l.materialCode) ? l : { ...l, ptiSoh: null, ptiStockShared: false }
+        )
     };
   }
 

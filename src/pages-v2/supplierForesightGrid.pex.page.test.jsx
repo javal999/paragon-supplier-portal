@@ -18,7 +18,11 @@ import {
   forecastVersionStore,
   forecastViewStore
 } from '@services/data/mock/stores/forecastHubStores';
-import { capacityStore, inventoryAlertLedger } from '@services/data/mock/stores/inventoryHubStores';
+import {
+  capacityStore,
+  inventoryAlertLedger,
+  stockAccessStore
+} from '@services/data/mock/stores/inventoryHubStores';
 import { SEEDED_PACKAGING_WEEKS as W } from '@services/data/mock/fixtures/forecastHub';
 import { fulfilByDay } from '@services/transitions/forecastRules';
 import { sdcClock } from '@services/sdc';
@@ -32,6 +36,7 @@ beforeEach(() => {
   forecastViewStore.reset();
   inventoryAlertLedger.reset();
   capacityStore.reset();
+  stockAccessStore.reset();
   sdcClock.reset();
 });
 afterEach(async () => {
@@ -108,12 +113,44 @@ describe('PEX-3 (BL-266) — where the ordered quantity comes from', () => {
     );
   });
 
-  it('a week’s hover names its ordered quantity and says LTP and SOH per week are not in the data', async () => {
+  it('PEX-3 BR-02 (BL-284) — a granted material’s hover shows the LTP, PTI stock on hand and the gap', async () => {
+    // sup-007's seeded grant covers the two consignment bottles (PK-PETB-8801,
+    // PK-PETB-8802). W[0] of 8802: LTP 42,400 (5,500/day × 7 days × 1.1);
+    // PTI stock 55,000 (SAP, all plants); gap = LTP − SOH = −12,600.
     await open();
     const tip = screen.getByTestId(`term-tip-demand-pk-petb-8802-${W[0]}`);
-    expect(within(tip).getByRole('tooltip')).toHaveTextContent(/^Ordered quantity for Week of /);
+    const body = within(tip).getByRole('tooltip');
+    expect(body).toHaveTextContent(/^Ordered quantity for Week of /);
+    expect(body).toHaveTextContent('LTP (planned use) 42,400 PCS');
+    expect(body).toHaveTextContent('PTI stock on hand 55,000 PCS');
+    expect(body).toHaveTextContent('Gap (LTP − PTI stock on hand) -12,600 PCS');
+  });
+
+  it('PEX-3 BR-02 (BL-284) — without the PTI-stock grant the hover keeps the ordered quantity only', async () => {
+    // Q-W3 (PEX-D24): the per-week figures show only for a material the
+    // supplier's granted PTI-stock access covers. Same material, grant off.
+    const grant = stockAccessStore.get('sup-007');
+    expect(grant?.active).toBe(true);
+    stockAccessStore.put({ .../** @type {NonNullable<typeof grant>} */ (grant), active: false });
+    await open();
+    const tip = screen.getByTestId(`term-tip-demand-pk-petb-8802-${W[0]}`);
+    const body = within(tip).getByRole('tooltip');
+    expect(body).toHaveTextContent(/^Ordered quantity for Week of /);
+    expect(body).toHaveTextContent(
+      'LTP, PTI stock on hand and the gap are shown only for materials PTI has granted you stock access to.'
+    );
+    expect(body).not.toHaveTextContent('LTP (planned use)');
+    expect(body).not.toHaveTextContent('PTI stock on hand 55,000');
+  });
+
+  it('PEX-3 BR-02 (BL-284) — a material outside the grant keeps the same read (RM belongs to sup-002)', async () => {
+    // The head grant names the two bottles only; the walkthrough container
+    // (2000028400) is sup-007's too but is not in the grant, so its hover shows
+    // no figures either.
+    await open();
+    const tip = screen.getByTestId(`term-tip-demand-2000028400-${W[0]}`);
     expect(within(tip).getByRole('tooltip')).toHaveTextContent(
-      'LTP and PTI stock on hand per week are not in the Foresight data yet, so the gap is not shown.'
+      'LTP, PTI stock on hand and the gap are shown only for materials PTI has granted you stock access to.'
     );
   });
 });

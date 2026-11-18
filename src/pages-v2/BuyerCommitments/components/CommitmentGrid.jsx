@@ -67,7 +67,12 @@ const CommitmentGrid = ({ shown, rows, periods, periodLabel, nowIso }) => {
                   <Data className="text-xs">{r.materialCode}</Data>
                 </th>
                 {periods.map(([p]) => (
-                  <GridCell key={p} line={cell(r.supplierId, r.materialCode, p)} nowIso={nowIso} />
+                  <GridCell
+                    key={p}
+                    label={periodLabel(p)}
+                    line={cell(r.supplierId, r.materialCode, p)}
+                    nowIso={nowIso}
+                  />
                 ))}
               </tr>
             ))}

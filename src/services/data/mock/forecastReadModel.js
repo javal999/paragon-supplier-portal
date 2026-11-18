@@ -23,6 +23,7 @@ import { requirementResponseStore } from './stores/requirementResponseStore';
 import { inventoryDeclarationStore } from './stores/inventoryDeclarationStore';
 import { incomingShipmentStore } from './stores/incomingShipmentStore';
 import { forecastVersionStore, forecastViewStore } from './stores/forecastHubStores';
+import { ptiStockStore } from './stores/ptiStockStore';
 import { FORECAST_RELATIONSHIPS, QUALIFIED_SUPPLIERS } from './fixtures/forecastHub';
 
 /**
@@ -88,13 +89,17 @@ export const qualifiedSuppliers = (materialCode) => QUALIFIED_SUPPLIERS[material
  * @returns {ForecastCommitmentLine[]}
  */
 export function allCommitmentLines(draftsFor = null) {
+  // PEX-3 BR-02 (BL-284) — PTI stock on hand per material, the SOH term of the
+  // heads-up note's gap: the hub's SAP stock records (BL-199), all plants summed.
+  const stock = ptiStockStore.combined();
   return buildCommitmentLines({
     publications: forecastVersionStore.all(),
     responses: requirementResponseStore.all(),
     master: materialEntry,
     supplierName: forecastSupplierName,
     draftsFor,
-    qualifiedSuppliers
+    qualifiedSuppliers,
+    ptiStock: (materialCode) => stock.find((r) => r.materialCode === materialCode)?.ptiSoh ?? null
   });
 }
 
