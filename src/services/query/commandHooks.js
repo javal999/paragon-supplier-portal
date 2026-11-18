@@ -2087,6 +2087,40 @@ export function useFeedstockConfirm() {
   });
 }
 
+// ── BL-336 · THE ONE-TIME WEEKLY DA CONFIRMATION (PSC-1) ─────────────────────
+//
+// The supplier confirms the week's published demand anticipation once, on the
+// DA page. The figure per material PRE-FILLS the stock page; this verb writes
+// no stock record (PSC-1 BR-06, REQ-E08-02 BR-09). The record's time and actor
+// are stamped by the target; the changed fields are derived there (BR-08). The
+// DA read carries the confirmation state, so that read is refreshed.
+/**
+ * @typedef {object} DaConfirmationVars
+ * @property {string} supplierId
+ * @property {string} week -  The publication's planning week (`YYYY-MM-DD`).
+ * @property {string} publicationId
+ * @property {{ materialCode: string; soh: number }[]} soh
+ */
+
+/** A supplier confirms one week's DA (`t_daconfirmation_confirm`). */
+export function useDaConfirmation() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, DaConfirmationVars>} */ (useMutation)({
+    mutationFn: ({ supplierId, week, publicationId, soh }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_daconfirmation_confirm',
+        entity: 'daConfirmation',
+        payload: { supplierId, week, publicationId, soh }
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    }
+  });
+}
+
 // ── BL-50 · A RULING ON ONE DAY OF THE HUB'S WORKING CALENDAR ────────────────
 //
 // ⚠️ **`entityId` IS THE DATE, AND THERE IS NO `date` PAYLOAD FIELD** — the

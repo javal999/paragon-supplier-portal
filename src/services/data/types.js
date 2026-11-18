@@ -654,6 +654,33 @@ export class DataError extends Error {
  * }} FeedstockConfirmation
  */
 
+// ─── DA weekly confirmation (PSC-1 · BL-336) ────────────────────────────────
+
+/**
+ * One supplier's confirmation of a week's published demand anticipation,
+ * append-only; the latest recorded per supplier × week is in force. It is the
+ * ONE-TIME confirmation of PSC-1: the first cycle is explicit, later weeks
+ * carry the last confirmation forward and write no record.
+ *
+ * `week`:  The planning week of the publication it confirms (`YYYY-MM-DD`, the Monday).
+ * `soh`:  The figure per material the supplier confirmed; it is what PRE-FILLS
+ *   the stock page (PSC-1 BR-06) and is never itself a stock record.
+ * `changedFields`:  BR-08 — the fields that differ from the figure in force
+ *   before the submission (`soh:<materialCode>`), computed by the target, so
+ *   an API supplier's unchanged pre-filled figures are not recorded as changes.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly supplierId: string;
+ *   readonly week: string;
+ *   readonly publicationId: string;
+ *   readonly soh: readonly { readonly materialCode: string; readonly soh: number }[];
+ *   readonly changedFields: readonly string[];
+ *   readonly recordedAt: string;
+ *   readonly recordedBy: ActorAttribution;
+ * }} DaConfirmation
+ */
+
 // ─── "Ask supplier" — PTI's hub ask (INV-D9; Inventory UX S-04) ─────────────
 
 /**

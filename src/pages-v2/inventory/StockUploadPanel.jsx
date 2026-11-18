@@ -421,8 +421,12 @@ const RefusedRows = ({ refused }) => {
 export const StockTemplateDownloadButton = ({ supplierId, positions, testId }) => {
   const { t, i18n } = useTranslation();
   const assigned = positions.map((p) => ({ materialCode: p.materialCode, uom: p.uom }));
+  // PSC-2 BR-06 — a raw material supplier's template drops columns K and L.
+  const feedstock = positions.some((p) => p.materialType === 'VERP');
   const download = () => {
-    const csv = stockTemplateCsv(assigned, i18n.language.startsWith('id') ? 'id' : 'en');
+    const csv = stockTemplateCsv(assigned, i18n.language.startsWith('id') ? 'id' : 'en', {
+      feedstock
+    });
     if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') return;
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
     const a = document.createElement('a');

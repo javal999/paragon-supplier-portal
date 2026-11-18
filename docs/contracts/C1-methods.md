@@ -1,6 +1,6 @@
 # C1 — Method Surface
 
-Three distinct axes. **118** (service surface) · **231** (transition catalog) · **63** (wired
+Three distinct axes. **118** (service surface) · **232** (transition catalog) · **64** (wired
 targets). They measure different things; this file keeps them separate.
 
 > ⚠️ **THIS DOCUMENT IS PINNED TO THE TREE, AND THE PIN IS WHY THE NUMBERS ABOVE ARE ALLOWED TO
@@ -104,7 +104,7 @@ the string, because those are different claims and only the first is the contrac
 
 ---
 
-## Axis 2 — the 231-transition catalog (69 flows)
+## Axis 2 — the 232-transition catalog (70 flows)
 
 Every authored state-machine edge across the registered flows (`id: 't_<entity>_<verb>'`). Derived
 from `getKnownFlows()` — the seeded registry — never from a grep over the flow files, because a
@@ -168,6 +168,7 @@ transition id can be assembled at a call site rather than written as a literal (
 | `capacityMonth.flow.js` | `capacityMonth` | 1 | `t_capacitymonth_submit` | **wired** |
 | `whatIfScenario.flow.js` | `whatIfScenario` | 1 | `t_whatifscenario_save` | **wired** |
 | `feedstockConfirmation.flow.js` | `feedstockConfirmation` | 1 | `t_feedstock_confirm` | **wired** |
+| `daConfirmation.flow.js` | `daConfirmation` | 1 | `t_daconfirmation_confirm` | **wired** |
 | `supplierAsk.flow.js` | `supplierAsk` | 4 | `t_supplierask_raise`, `t_supplierask_answer`, `t_supplierask_close`, `t_supplierask_withdraw` | **wired** |
 | `capacityDecision.flow.js` | `capacityDecision` | 2 | `t_capacitydecision_accept`, `t_capacitydecision_withdraw` | **wired** |
 | `poOnHoldDecision.flow.js` | `poOnHoldDecision` | 3 | `t_poonhold_suggest`, `t_poonhold_choose`, `t_poonhold_execute` | **wired** |
@@ -200,7 +201,7 @@ system reference is minted only on `settle` (see C5, SAP boundary).
 
 ## Axis 3 — the 63 wired CommandTargets
 
-A `CommandTarget` is the per-entity adapter the dispatcher reads/writes through. **63 exist**, the
+A `CommandTarget` is the per-entity adapter the dispatcher reads/writes through. **64 exist**, the
 runtime export `WIRED_COMMAND_TARGETS` (`MockCommandService.js` `TARGETS`):
 
 - **wired:** `poCancellation`, `poOnHoldDecision`, `purchaseOrder`, `advanceShipNotice`, `goodsReceipt`, `invoice`, `rfq`, `quotation`, `rfqIntent`, `rfqConfidentiality`, `rfqClarification`, `purchaseRequisition`, `supplierDocument`, `requirementResponse`, `inventoryDeclaration`, `incomingShipment`, `enforcement`, `role`, `workingCalendar`, `threePl`, `supplierOverlay`, `qualificationRule`, `sourcingType`, `planningGroup`, `supplierApplication`, `receiptDiscrepancy`, `callOff`, `callOffChase`, `stockSync`, `stockAccess`, `capacitySubmission`, `inventoryAlert`, `forecastVersion`, `forecastView`, `sapChangeMark`, `rfiEvent`, `rfiResponse`, `rfpEvent`, `rfpResponse`, `negotiationRound`, `rfpOfferRound`, `rfpFirmOffer`, `hubSetting`, `reasonCode`, `maxStock`, `mrpController`, `materialName`, `simulationOverride`, `forecastOverride`, `warehouseDecision`, `demandAnticipation`, `consumption`, `osipLevel`, `osipParam`, `ltpInput`, `promotion`, `capacityMonth`, `whatIfScenario`, `feedstockConfirmation`, `supplierAsk`, `capacityDecision`, `rfiIntent`, `rfpIntent`

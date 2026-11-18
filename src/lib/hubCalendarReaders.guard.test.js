@@ -346,6 +346,8 @@ describe('BL-50 · the deadline population reads the hub calendar', () => {
       // call-off is sent (AIB-D6), on the administrator's calendar.
       'services/transitions/callOffChase.js',
       'services/transitions/callOffRules.js',
+      // PSC-1 (BL-336) — the Wednesday confirmation deadline reads the hub calendar.
+      'services/transitions/daConfirmationRules.js',
       'services/transitions/forecastRules.js',
       // AIB-2 BR-05 (BL-350) — the Expeditor's acknowledgment is due within
       // one working day of the inbound.

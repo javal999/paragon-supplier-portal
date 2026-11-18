@@ -26,18 +26,25 @@ import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
 import { HIGHLIGHTED_ROW_CLASS, useRowHighlight } from '@hooks/useRowHighlight';
 import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import { formatDate } from '@lib/format';
-import { useInventory, useStockAccess } from '@services/query/hooks';
+import { useInventory, useStockAccess, useSupplierDemandAnticipation } from '@services/query/hooks';
 /** @import { InventoryPosition } from '@services/data/types' */
 /** @import { MaterialType } from '@services/sdc/types' */
 import { stockFreshness } from '@services/transitions/inventoryRules';
+import { SUPPLIER_DA_VIEW_ENABLED } from '@services/transitions/supplierDaView';
 import {
   Figure,
-  IncomingButton,
-  IncomingPanel,
   LastUpdateCell,
   SupplyPill,
-  inventoryNow
+  inventoryNow,
+  qty
 } from './inventory/inventoryDisplay';
+import {
+  InProductionCell,
+  InTransitCell,
+  StockEntriesDownloadButton,
+  SupplierStockDrawer
+} from './inventory/SupplierStockDrawer';
+import FeedstockTableEntry from './inventory/FeedstockTableEntry';
 import StockEntryPanel from './inventory/StockEntryPanel';
 import StockUploadPanel, {
   StockTemplateDownloadButton,
@@ -50,7 +57,7 @@ import WeeklyUpdatePanel from './inventory/WeeklyUpdatePanel';
 import FeedstockConfirmPanel from './inventory/FeedstockConfirmPanel';
 import PtiAsksBlock from './inventory/PtiAsksBlock';
 import PrincipalShipmentsSection from './inventory/PrincipalShipmentsSection';
-import { PicCell, PicFilter, PicHeader, usePicFilter } from './materials/picDisplay';
+import { PicFilter, usePicFilter } from './materials/picDisplay';
 import SupplierMaterialNames from './materials/SupplierMaterialNames';
 import { TradeNameBeside } from './materials/tradeNameDisplay';
 import MaterialSearch, {
@@ -95,7 +102,8 @@ const SupplierInventory = () => {
   const [type, setType] = useState(/** @type {MaterialType} */ ('VERP'));
   const [typeChosen, setTypeChosen] = useState(false);
   const [entryOpen, setEntryOpen] = useState(false);
-  const [incoming, setIncoming] = useState(/** @type {InventoryPosition | null} */ (null));
+  // PSC-2 (BL-337) — the material's drawer: its In Production runs and its shipments.
+  const [drawer, setDrawer] = useState(/** @type {InventoryPosition | null} */ (null));
   const [search, setSearch] = useState('');
   const [staleFilter, setStaleFilter] = useState(/** @type {'all' | 'stale'} */ ('all'));
   // Deep-link read: `?stale=stale` narrows "stock figures to update" to the
@@ -115,12 +123,51 @@ const SupplierInventory = () => {
     else next.set('tab', v);
     setParams(next, { replace: true });
   };
+  // PSC-2 BR-08 / AC-06 — the Supplier, MRP Controller (the `pic` filter) and
+  // Packaging Category filters, each kept in the page address. The packaging
+  // value reads the SAP material group until a format field is named (BL-329).
+  const supplierFilter = params.get('sup') ?? '';
+  const packagingFilter = params.get('pkg') ?? '';
+  /**
+   * Set or clear one address parameter, leaving the others alone.
+   * @param {string} key
+   * @param {string} value
+   */
+  const setParam = (key, value) => {
+    const next = new URLSearchParams(params);
+    if (value === '') next.delete(key);
+    else next.set(key, value);
+    setParams(next, { replace: true });
+  };
   // Material B2 — a missing material's link opens the entry form on it (`?enter=`).
   const enterCode = params.get('enter');
-  const entryInitial = useMemo(
-    () => (enterCode && supplierId ? { supplierId, materialCode: enterCode } : null),
-    [enterCode, supplierId]
-  );
+  // PSC-1 (BL-336) — the DA confirmation PRE-FILLS the stock page and writes no
+  // stock record: the figure shows here (and in the entry form) until the
+  // supplier confirms it through the stock verb, which stays the single entry
+  // point. Read through the DA read, only while the supplier DA view is on.
+  const daQuery = useSupplierDemandAnticipation(SUPPLIER_DA_VIEW_ENABLED);
+  const daPrefill = useMemo(() => {
+    /** @type {Record<string, number>} */
+    const out = {};
+    if (!SUPPLIER_DA_VIEW_ENABLED) return out;
+    for (const r of daQuery.data?.items ?? []) {
+      if (r.supplierId !== supplierId) continue;
+      const v = r.confirmation.soh[r.materialCode];
+      if (typeof v === 'number') out[r.materialCode] = v;
+    }
+    return out;
+  }, [daQuery.data, supplierId]);
+  const entryInitial = useMemo(() => {
+    if (!enterCode || !supplierId) return null;
+    // BR-06 — this week's confirmed figure is what the form starts from; the
+    // stock record stays the single source the pages read.
+    const prefill = daPrefill[enterCode];
+    return {
+      supplierId,
+      materialCode: enterCode,
+      ...(typeof prefill === 'number' ? { soh: String(prefill) } : {})
+    };
+  }, [enterCode, supplierId, daPrefill]);
   const closeEntry = () => {
     setEntryOpen(false);
     if (enterCode !== null) {
@@ -169,10 +216,28 @@ const SupplierInventory = () => {
   // appears only for a supplier that supplies both. The PTI view keeps it.
   const splitByType = counts.ROH > 0 && counts.VERP > 0;
   const ofType = splitByType ? rows.filter((r) => r.materialType === activeType) : rows;
+  // PSC-2 BR-08 — the Supplier and Packaging Category filters narrow the table.
+  const ofFilters = ofType.filter(
+    (r) =>
+      (supplierFilter === '' || r.supplierName === supplierFilter) &&
+      (packagingFilter === '' || r.materialGroup === packagingFilter)
+  );
+  // BR-08 — the filter options come from the rows, never a fixed list. A value
+  // carried in the address that no row has stays selectable, so a stale link
+  // never silently widens the table (the PIC filter's own rule).
+  const supplierNames = [
+    ...new Set([...rows.map((r) => r.supplierName), ...(supplierFilter ? [supplierFilter] : [])])
+  ].sort();
+  const packagingGroups = [
+    ...new Set([...rows.map((r) => r.materialGroup), ...(packagingFilter ? [packagingFilter] : [])])
+  ].sort();
+  // BR-06 — the feedstock column is shown for a packaging supplier and hidden
+  // for a raw material one; a supplier of both sees it on the packaging rows.
+  const showsFeedstock = rows.some((r) => r.materialType === 'VERP');
   const ofStaleFilter =
     staleFilter === 'stale'
-      ? ofType.filter((r) => stockFreshness(r, nowIso) !== 'current')
-      : ofType;
+      ? ofFilters.filter((r) => stockFreshness(r, nowIso) !== 'current')
+      : ofFilters;
   // Material C3 — the one material search (MR-3 BR-04); the names searched are
   // this supplier's own (narrowed in the read model, MAT-R4).
   const shown = useMaterialSearch(
@@ -231,6 +296,8 @@ const SupplierInventory = () => {
     );
 
   const held = declare.kind === 'held';
+  // The empty row spans every rendered column.
+  const columnCount = 7 + (sharesPti ? 2 : 0) + (showsFeedstock ? 1 : 0);
 
   return (
     <AppShellV2>
@@ -253,6 +320,11 @@ const SupplierInventory = () => {
                 supplierId={supplierId}
                 positions={rows}
                 testId="stock-template-download-header"
+              />
+              <StockEntriesDownloadButton
+                supplierId={supplierId}
+                positions={rows}
+                testId="stock-entries-download"
               />
               <StockUploadButton upload={upload} />
             </div>
@@ -356,6 +428,39 @@ const SupplierInventory = () => {
               value={staleFilter}
               onChange={setStaleFilter}
             />
+            {/* PSC-2 BR-08 / AC-06 — Supplier and Packaging Category, both in the address. */}
+            <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
+              <span>{t('inv.sup.filter.supplier')}</span>
+              <select
+                data-testid="sup-filter-supplier"
+                value={supplierFilter}
+                onChange={(e) => setParam('sup', e.target.value)}
+                className="h-8 rounded-md border border-border-input bg-white px-2 text-sm text-text-primary max-w-[220px]"
+              >
+                <option value="">{t('inv.filter.all')}</option>
+                {supplierNames.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
+              <span>{t('inv.sup.filter.packaging')}</span>
+              <select
+                data-testid="sup-filter-packaging"
+                value={packagingFilter}
+                onChange={(e) => setParam('pkg', e.target.value)}
+                className="h-8 rounded-md border border-border-input bg-white px-2 text-sm text-text-primary max-w-[220px]"
+              >
+                <option value="">{t('inv.filter.all')}</option>
+                {packagingGroups.map((group) => (
+                  <option key={group} value={group}>
+                    {group}
+                  </option>
+                ))}
+              </select>
+            </label>
             <PicFilter
               refs={ofType.map((r) => r.mrpController)}
               persona="supplier"
@@ -369,14 +474,14 @@ const SupplierInventory = () => {
             <Table>
               <TableHeader>
                 <TableHeaderCell>{t('inv.col.material')}</TableHeaderCell>
-                <TableHeaderCell>
-                  <PicHeader />
-                </TableHeaderCell>
+                {/* PSC-2 BR-02 / BR-03 / TL-D43 — the two figures, never one "Incoming" label. */}
+                <TableHeaderCell className="text-right" term="inTransit" />
+                <TableHeaderCell className="text-right" term="inProduction" />
                 <TableHeaderCell className="text-right" term="supplierStock" />
                 <TableHeaderCell className="text-right" term="supplierOwnRop" />
                 {sharesPti && <TableHeaderCell className="text-right" term="ptiStock" />}
                 {sharesPti && <TableHeaderCell className="text-right" term="ptiRop" />}
-                <TableHeaderCell term="incoming" />
+                {showsFeedstock && <TableHeaderCell>{t('inv.sup.feedstock.col')}</TableHeaderCell>}
                 <TableHeaderCell term="daysOfSupply" />
                 <TableHeaderCell>{t('inv.col.lastUpdate')}</TableHeaderCell>
               </TableHeader>
@@ -405,19 +510,40 @@ const SupplierInventory = () => {
                           match={match}
                           testId={`sup-stock-match-${p.materialCode}`}
                         />
+                        {/* BR-01 — the row carries its batches. */}
+                        {p.batches.length > 0 && (
+                          <span
+                            className="block text-xs text-text-tertiary"
+                            data-testid={`sup-stock-batches-${p.materialCode}`}
+                          >
+                            {t('inv.sup.batches', { count: p.batches.length })}
+                          </span>
+                        )}
                       </TableCell>
-                      <TableCell>
-                        <PicCell
-                          value={p.mrpController}
-                          testId={`sup-stock-pic-${p.materialCode}`}
-                        />
+                      <TableCell className="align-top">
+                        <InTransitCell position={p} onOpen={() => setDrawer(p)} />
                       </TableCell>
-                      <TableCell className="text-right whitespace-nowrap">
-                        <Figure
-                          value={p.supplierSoh}
-                          uom={p.uom}
-                          absentKey="inv.figure.noSubmission"
-                        />
+                      <TableCell className="align-top">
+                        <InProductionCell position={p} onOpen={() => setDrawer(p)} />
+                      </TableCell>
+                      <TableCell
+                        className="text-right whitespace-nowrap"
+                        data-testid={`sup-stock-soh-${p.materialCode}`}
+                      >
+                        {p.supplierSoh === null && typeof daPrefill[p.materialCode] === 'number' ? (
+                          <span data-testid={`sup-stock-soh-prefill-${p.materialCode}`}>
+                            <Data>{`${qty(daPrefill[p.materialCode])} ${p.uom}`}</Data>
+                            <span className="block text-xs text-text-tertiary">
+                              {t('inv.sup.sohPrefill')}
+                            </span>
+                          </span>
+                        ) : (
+                          <Figure
+                            value={p.supplierSoh}
+                            uom={p.uom}
+                            absentKey="inv.figure.noSubmission"
+                          />
+                        )}
                       </TableCell>
                       <TableCell className="text-right whitespace-nowrap">
                         <Figure
@@ -448,9 +574,16 @@ const SupplierInventory = () => {
                           )}
                         </TableCell>
                       )}
-                      <TableCell>
-                        <IncomingButton position={p} onOpen={() => setIncoming(p)} />
-                      </TableCell>
+                      {showsFeedstock && (
+                        <TableCell>
+                          <FeedstockTableEntry
+                            supplierId={supplierId}
+                            position={p}
+                            nowIso={nowIso}
+                            editable={held && p.materialType === 'VERP'}
+                          />
+                        </TableCell>
+                      )}
                       <TableCell>
                         <SupplyPill position={p} />
                       </TableCell>
@@ -462,7 +595,10 @@ const SupplierInventory = () => {
                 })}
                 {shown.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="py-10 text-center text-sm text-text-tertiary">
+                    <td
+                      colSpan={columnCount}
+                      className="py-10 text-center text-sm text-text-tertiary"
+                    >
                       {t('inv.table.empty')}
                     </td>
                   </tr>
@@ -476,7 +612,7 @@ const SupplierInventory = () => {
         </>
       ) : null}
 
-      <IncomingPanel position={incoming} base="/supplier" onClose={() => setIncoming(null)} />
+      <SupplierStockDrawer position={drawer} onClose={() => setDrawer(null)} />
       {held && (
         <StockEntryPanel
           open={entryOpen || entryInitial !== null}
