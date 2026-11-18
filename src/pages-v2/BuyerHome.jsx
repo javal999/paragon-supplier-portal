@@ -8,6 +8,7 @@ import { deepLink, sharedValue } from '@lib/deepLink';
 import {
   useASNs,
   useBuyerInvoices,
+  useCallOffChase,
   useCapacityPlans,
   useForecastCommitments,
   useInventoryAlerts,
@@ -73,6 +74,8 @@ const BuyerHome = () => {
   const chase = useUnifiedChase();
   // REQ-E09-03 / REQ-E09-04 — call-off reminders, derived at read time (CR-09).
   const callOffs = useCallOffViews();
+  // AIB-3 (BL-351) — call-offs sent with no ASN, chased from the next working day.
+  const missingAsn = useCallOffChase();
   // REQ-E08-04 / REQ-E08-05 — open High alerts and capacity gaps, derived at read.
   const alerts = useInventoryAlerts();
   const capacity = useCapacityPlans();
@@ -112,6 +115,8 @@ const BuyerHome = () => {
       const awaitingCallOffs = callOffs.views.filter((v) => v.confirmation === 'Awaiting Approval');
       const escalatedCallOffs = callOffs.views.filter((v) => v.confirmation === 'Escalated');
       const atRiskCallOffs = callOffs.views.filter((v) => v.delivery === 'atRisk');
+      // AIB-3 (BL-351) — the open missing-ASN chases; a closed or covered one is absent.
+      const missingAsnChases = (missingAsn.data?.items ?? []).filter((r) => r.state === 'open');
       const drift = deliveryDrift(callOffs.views);
       const driftKeys = new Set(drift.map((g) => `${g.supplierId}|${g.materialCode}`));
       const highAlerts = (alerts.data?.items ?? []).filter(
@@ -237,6 +242,16 @@ const BuyerHome = () => {
             .filter((v) => driftKeys.has(`${v.callOff.supplierId}|${v.callOff.materialCode}`))
             .flatMap((v) => v.results.filter(isDriftResult).map((r) => r.approvedDate)),
           to: deepLink('/buyer/call-offs', { status: 'drift' })
+        },
+        {
+          // AIB-3 (BL-351) — a call-off the planner sent with no ASN, chased
+          // from the next working day. CR-09's 7-day reminder is separate (BR-02).
+          id: 'calloffs-missing-asn',
+          roles: ['MP'],
+          label: t('hub.home.task.callOffsMissingAsn'),
+          count: missingAsnChases.length,
+          deadlines: missingAsnChases.map((r) => r.dueAt),
+          to: deepLink('/buyer/call-offs', { tab: 'chase' })
         },
         {
           id: 'inventory-high-alerts',
@@ -457,6 +472,7 @@ const BuyerHome = () => {
       asns.data,
       chase.data,
       callOffs.views,
+      missingAsn.data,
       alerts.data,
       capacity.data,
       forecastLines.data,

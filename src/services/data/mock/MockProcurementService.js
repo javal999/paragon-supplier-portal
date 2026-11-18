@@ -1,4 +1,7 @@
 import { callOffStore } from './stores/callOffStore';
+// AIB-3 (BL-351) — the missing-ASN chase: derived at read, closures from the ledger.
+import { callOffChaseRows } from '../../transitions/callOffChase';
+import { callOffChaseStore } from './stores/callOffChaseStore';
 /** @import { CallOff } from '../types' */
 /** @import { BlanketPoRunOut } from '../../transitions/blanketPoRules' */
 /** @import { NpdReview } from '../../transitions/osipRopRules' */
@@ -1539,6 +1542,25 @@ export class MockProcurementService {
     return {
       items: visible.map((c) => withLeadTime(withMrpController(c, c.materialCode, scope)))
     };
+  }
+
+  /**
+   * AIB-3 (BL-351) — the missing-ASN chase. Derived at read on the hub clock:
+   * a call-off the planner sent, one working day past sending, with no ASN
+   * covering what was agreed, and not closed. The planner reads every chase;
+   * a supplier reads only its own rows (scoped here, as every per-supplier read is).
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<import('../../transitions/callOffChase').CallOffChaseRow>>}
+   */
+  async getCallOffChase(scope) {
+    const rows = callOffChaseRows(
+      callOffStore.all(),
+      asnStore.all(),
+      goodsReceiptStore.all(),
+      callOffChaseStore.all(),
+      sdcClock.now()
+    );
+    return { items: applySupplierScope(scope, [...rows]) };
   }
 
   /**

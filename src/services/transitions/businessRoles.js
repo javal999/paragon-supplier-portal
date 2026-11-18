@@ -361,6 +361,10 @@ const LANE_BUNDLES = Object.freeze({
     // under an umbrella PO, and decides confirmations outside tolerance.
     'calloff:plan',
     'calloff:review',
+    // AIB-3 BR-01 (BL-351) — the planner closes a missing-ASN chase with a
+    // reason. Not a supplier atom: the chase is PTI's follow-up, and a supplier
+    // closing its own chase would erase the record the planner acts on.
+    'calloffchase:close',
     // REQ-E08-02 / 03 / 05 — the planner pulls a connected supplier's stock,
     // decides which suppliers see PTI stock, and closes alerts with a note.
     'stocksync:run',

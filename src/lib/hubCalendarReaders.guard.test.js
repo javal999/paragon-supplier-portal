@@ -340,6 +340,9 @@ describe('BL-50 · the deadline population reads the hub calendar', () => {
     const readers = [...new Set(D.workingDayCalls.map((c) => c.key.split('#')[0]))].sort();
     expect(readers).toEqual([
       'services/data/poResponseProjection.js',
+      // AIB-3 (BL-351) — the missing-ASN chase fires one WORKING day after the
+      // call-off is sent (AIB-D6), on the administrator's calendar.
+      'services/transitions/callOffChase.js',
       'services/transitions/callOffRules.js',
       'services/transitions/forecastRules.js',
       // PEX-7 — the PO On Hold grace period counts working days (owner, 2026-11-09).

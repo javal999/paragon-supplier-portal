@@ -2750,6 +2750,38 @@ export function useCallOffCommand() {
   });
 }
 
+/**
+ * AIB-3 (BL-351) — close one missing-ASN chase with a reason (fires
+ * `t_calloffchase_close`). The chase is derived at read; the verb stores only
+ * the closure, so the list re-reads and the row leaves it.
+ * @typedef {{ readonly callOffId: string; readonly reason: string }} CallOffChaseCloseVars
+ */
+
+/** Close a missing-ASN chase with a reason (fires `t_calloffchase_close`). */
+export function useCallOffChaseCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, CallOffChaseCloseVars>} */ (
+    useMutation
+  )({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_calloffchase_close',
+        entity: 'callOffChase',
+        entityId: vars.callOffId,
+        payload: { closeReason: vars.reason }
+      }),
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      qc.invalidateQueries({
+        predicate: (q) => q.queryKey[0] === 'procurement' && q.queryKey[1] === 'callOffChase'
+      });
+    }
+  });
+}
+
 // ─── Reschedule proposals taken to SAP (REQ-E14-13 BR-07, ENG-D16) ──────────
 //
 // The Hub does not edit a PO; the Material Planner records that a PO-line

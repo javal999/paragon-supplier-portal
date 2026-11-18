@@ -3,7 +3,9 @@
 
 /** P-12 — the page's tabs, in order; the first opens by default. */
 // i18n-defer: tab identifiers, not copy — each renders through t(`co.tab.${id}`)
-export const CALL_OFF_TABS = /** @type {const} */ (['toAct', 'all', 'runOut']);
+// AIB-3 (BL-351) — the missing-ASN chase is an action list, so it sits beside
+// To act, before the record-keeping tabs.
+export const CALL_OFF_TABS = /** @type {const} */ (['toAct', 'chase', 'all', 'runOut']);
 /** @typedef {(typeof CALL_OFF_TABS)[number]} CallOffTab */
 
 /** The `?status=` values that name something on the To act tab. */

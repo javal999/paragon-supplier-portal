@@ -67,6 +67,7 @@ export { maxStockFlow } from './flows/maxStock.flow';
 export { supplierApplicationFlow } from './flows/supplierApplication.flow';
 export { receiptDiscrepancyFlow } from './flows/receiptDiscrepancy.flow';
 export { callOffFlow } from './flows/callOff.flow';
+export { callOffChaseFlow } from './flows/callOffChase.flow';
 export { stockAccessFlow } from './flows/stockAccess.flow';
 export { stockSyncFlow } from './flows/stockSync.flow';
 export { capacitySubmissionFlow } from './flows/capacitySubmission.flow';
@@ -141,6 +142,7 @@ import { maxStockFlow } from './flows/maxStock.flow';
 import { supplierApplicationFlow } from './flows/supplierApplication.flow';
 import { receiptDiscrepancyFlow } from './flows/receiptDiscrepancy.flow';
 import { callOffFlow } from './flows/callOff.flow';
+import { callOffChaseFlow } from './flows/callOffChase.flow';
 import { stockAccessFlow } from './flows/stockAccess.flow';
 import { stockSyncFlow } from './flows/stockSync.flow';
 import { capacitySubmissionFlow } from './flows/capacitySubmission.flow';
@@ -265,6 +267,9 @@ flowRegistry.register(maxStockFlow); // REQ-E06-04 — maximum stock
 flowRegistry.register(supplierApplicationFlow); // B1 — Supplier onboarding
 flowRegistry.register(receiptDiscrepancyFlow); // REQ-E07-06 — receipt discrepancy response
 flowRegistry.register(callOffFlow); // REQ-E09-01 / 03 / 04 — call-offs under an umbrella PO
+// AIB-3 (BL-351) — the planner closes a missing-ASN chase; the chase itself is
+// derived at read, one working day after a call-off is sent with no ASN.
+flowRegistry.register(callOffChaseFlow); // AIB-3 — missing-ASN chase
 flowRegistry.register(stockAccessFlow); // REQ-E08-03 — supplier access to PTI stock
 flowRegistry.register(stockSyncFlow); // REQ-E08-02 — API stock sync
 flowRegistry.register(capacitySubmissionFlow); // REQ-E08-04 — capacity confirmation

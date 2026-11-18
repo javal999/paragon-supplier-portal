@@ -176,6 +176,8 @@ import { warehouseDecisionTarget } from './targets/warehouseDecision';
 import { demandAnticipationTarget } from './targets/demandAnticipation';
 import { consumptionTarget } from './targets/consumption';
 import { osipLevelTarget } from './targets/osipLevel';
+// AIB-3 (BL-351) — the missing-ASN chase: the planner closes one with a reason.
+import { callOffChaseTarget } from './targets/callOffChase';
 import { osipParamTarget } from './targets/osipParam';
 import { ltpInputTarget } from './targets/ltpInput';
 import { promotionTarget } from './targets/promotion';
@@ -6315,6 +6317,9 @@ const TARGETS = {
   receiptDiscrepancy: receiptDiscrepancyTarget,
   // REQ-E09-03 — call-offs under an umbrella PO; the hub is their record.
   callOff: callOffTarget,
+  // AIB-3 (BL-351) — the missing-ASN chase. One chase per call-off, derived at
+  // read; the target stores only the planner's closure.
+  callOffChase: callOffChaseTarget,
   // REQ-E08-02 to REQ-E08-05 — inventory & capacity collaboration.
   stockSync: stockSyncTarget,
   stockAccess: stockAccessTarget,
