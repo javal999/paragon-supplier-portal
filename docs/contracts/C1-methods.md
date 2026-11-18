@@ -183,7 +183,7 @@ transition id can be assembled at a call site rather than written as a literal (
 | `rfpFirmOffer.flow.js` | `rfpFirmOffer` | 2 | `t_rfpfirmoffer_submit`, `t_rfpfirmoffer_revise` | **wired** |
 | `rfiIntent.flow.js` | `rfiIntent` | 3 | `t_rfiintent_respond`, `t_rfiintent_decline`, `t_rfiintent_withdraw` | **wired** |
 | `rfpIntent.flow.js` | `rfpIntent` | 3 | `t_rfpintent_respond`, `t_rfpintent_decline`, `t_rfpintent_withdraw` | **wired** |
-| **TOTAL** | | **230** | | |
+| **TOTAL** | | **232** | | |
 
 **Flow shape** (`schema.js`, `FlowDefinition` / `TransitionDef`): each transition declares
 `from[]` / `to` / `trigger` / `requiredRole` / `requiredFields[]` / `policyHooks[]` /
@@ -204,7 +204,7 @@ system reference is minted only on `settle` (see C5, SAP boundary).
 A `CommandTarget` is the per-entity adapter the dispatcher reads/writes through. **64 exist**, the
 runtime export `WIRED_COMMAND_TARGETS` (`MockCommandService.js` `TARGETS`):
 
-- **wired:** `poCancellation`, `poOnHoldDecision`, `purchaseOrder`, `advanceShipNotice`, `goodsReceipt`, `invoice`, `rfq`, `quotation`, `rfqIntent`, `rfqConfidentiality`, `rfqClarification`, `purchaseRequisition`, `supplierDocument`, `requirementResponse`, `inventoryDeclaration`, `incomingShipment`, `enforcement`, `role`, `workingCalendar`, `threePl`, `supplierOverlay`, `qualificationRule`, `sourcingType`, `planningGroup`, `supplierApplication`, `receiptDiscrepancy`, `callOff`, `callOffChase`, `stockSync`, `stockAccess`, `capacitySubmission`, `inventoryAlert`, `forecastVersion`, `forecastView`, `sapChangeMark`, `rfiEvent`, `rfiResponse`, `rfpEvent`, `rfpResponse`, `negotiationRound`, `rfpOfferRound`, `rfpFirmOffer`, `hubSetting`, `reasonCode`, `maxStock`, `mrpController`, `materialName`, `simulationOverride`, `forecastOverride`, `warehouseDecision`, `demandAnticipation`, `consumption`, `osipLevel`, `osipParam`, `ltpInput`, `promotion`, `capacityMonth`, `whatIfScenario`, `feedstockConfirmation`, `supplierAsk`, `capacityDecision`, `rfiIntent`, `rfpIntent`
+- **wired:** `poCancellation`, `poOnHoldDecision`, `purchaseOrder`, `advanceShipNotice`, `goodsReceipt`, `invoice`, `rfq`, `quotation`, `rfqIntent`, `rfqConfidentiality`, `rfqClarification`, `purchaseRequisition`, `supplierDocument`, `requirementResponse`, `inventoryDeclaration`, `incomingShipment`, `enforcement`, `role`, `workingCalendar`, `threePl`, `supplierOverlay`, `qualificationRule`, `sourcingType`, `planningGroup`, `supplierApplication`, `receiptDiscrepancy`, `callOff`, `callOffChase`, `stockSync`, `stockAccess`, `capacitySubmission`, `inventoryAlert`, `forecastVersion`, `forecastView`, `sapChangeMark`, `rfiEvent`, `rfiResponse`, `rfpEvent`, `rfpResponse`, `negotiationRound`, `rfpOfferRound`, `rfpFirmOffer`, `hubSetting`, `reasonCode`, `maxStock`, `mrpController`, `materialName`, `simulationOverride`, `forecastOverride`, `warehouseDecision`, `demandAnticipation`, `consumption`, `osipLevel`, `osipParam`, `ltpInput`, `promotion`, `capacityMonth`, `whatIfScenario`, `feedstockConfirmation`, `daConfirmation`, `supplierAsk`, `capacityDecision`, `rfiIntent`, `rfpIntent`
 
 The interface is **7 members** (`dispatcher/types.js`, `CommandTarget`):
 
