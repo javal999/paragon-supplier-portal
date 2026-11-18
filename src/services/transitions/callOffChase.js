@@ -161,9 +161,13 @@ export function callOffChaseRows(
   nowIso,
   cal = hubWorkingCalendar()
 ) {
-  const views = new Map(
-    callOffViews(callOffs, asns, receipts, nowIso).map((v) => [v.callOff.id, v])
-  );
+  // FIRST view per id wins — the same tie-break the row loop and
+  // `callOffStore.get(id)` use, so a duplicated fixture id cannot join one
+  // call-off's row to another call-off's delivery state.
+  /** @type {Map<string, ReturnType<typeof callOffViews>[number]>} */
+  const views = new Map();
+  for (const v of callOffViews(callOffs, asns, receipts, nowIso))
+    if (!views.has(v.callOff.id)) views.set(v.callOff.id, v);
   const closedBy = new Map(closures.map((c) => [c.callOffId, c]));
   const now = Date.parse(nowIso);
   /** @type {CallOffChaseRow[]} */
