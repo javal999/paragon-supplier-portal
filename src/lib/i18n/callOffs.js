@@ -355,7 +355,7 @@ export const callOffsEn = {
   'co.tab.runOut': 'Blanket POs running out',
   // AIB-3 (BL-351) — the missing-ASN chase.
   'co.chase.note':
-    'A call-off sent with no ASN appears here the next working day after it was sent, once. The chase clears when the supplier’s ASNs cover the call-off, or the planner closes it with a reason. The 7-day reminder before the need date (CR-09) still runs separately, and no email is sent from here: email waits on the notification service.',
+    'A call-off sent with no ASN appears here the next working day after it was sent, once. The chase clears when the supplier’s ASNs cover the call-off or the goods are already received; the planner can also close it with a reason. The 7-day reminder before the need date (CR-09) still runs separately, and no email is sent from here: email waits on the notification service.',
   'co.chase.empty': 'No call-off is waiting for an ASN.',
   'co.chase.col.callOff': 'Call-off',
   'co.chase.col.supplier': 'Supplier',
@@ -721,7 +721,7 @@ export const callOffsId = {
   'co.tab.runOut': 'PO induk yang akan habis',
   // AIB-3 (BL-351) — tindak lanjut ASN yang hilang.
   'co.chase.note':
-    'Call-off yang dikirim tanpa ASN muncul di sini pada hari kerja berikutnya setelah dikirim, satu kali. Tindak lanjut berhenti saat ASN pemasok menutup call-off, atau perencana menutupnya dengan alasan. Pengingat 7 hari sebelum tanggal kebutuhan (CR-09) tetap berjalan terpisah, dan tidak ada email yang dikirim dari sini: email menunggu layanan notifikasi.',
+    'Call-off yang dikirim tanpa ASN muncul di sini pada hari kerja berikutnya setelah dikirim, satu kali. Tindak lanjut berhenti saat ASN pemasok menutup call-off atau barangnya sudah diterima; perencana juga dapat menutupnya dengan alasan. Pengingat 7 hari sebelum tanggal kebutuhan (CR-09) tetap berjalan terpisah, dan tidak ada email yang dikirim dari sini: email menunggu layanan notifikasi.',
   'co.chase.empty': 'Tidak ada call-off yang menunggu ASN.',
   'co.chase.col.callOff': 'Call-off',
   'co.chase.col.supplier': 'Pemasok',

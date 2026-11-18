@@ -1560,7 +1560,14 @@ export class MockProcurementService {
       callOffChaseStore.all(),
       sdcClock.now()
     );
-    return { items: applySupplierScope(scope, [...rows]) };
+    // The closure is PTI's record — who closed the chase and why — so a supplier
+    // reads its chases without it, the narrowing `getCallOffs` applies to
+    // `trigger`. The row's state still says the chase is closed.
+    const visible =
+      scope.personaType === 'supplier'
+        ? rows.map(({ closed: _ptiOnly, ...r }) => ({ ...r, closed: null }))
+        : [...rows];
+    return { items: applySupplierScope(scope, visible) };
   }
 
   /**

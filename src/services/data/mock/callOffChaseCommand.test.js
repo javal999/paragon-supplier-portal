@@ -243,6 +243,10 @@ describe('AIB-3 — closing the chase', () => {
     const rows = await readChase(seat(['planning']));
     expect(rows.find((r) => r.callOffId === ID)?.state).toBe('closed');
     expect(rows.filter((r) => r.state === 'open').some((r) => r.callOffId === ID)).toBe(false);
+    // The closure is PTI's record: a supplier reads the state, never the reason.
+    const supplierRow = (await readChase(supplier)).find((r) => r.callOffId === ID);
+    expect(supplierRow?.state).toBe('closed');
+    expect(supplierRow?.closed).toBeNull();
     expect(
       commandAuditSink.byEvent('t_calloffchase_close').filter((e) => e.outcome === 'done')
     ).toHaveLength(1);

@@ -21,8 +21,8 @@
 // to chase (the goods arrived; the GR pages already read "Received without
 // ASN"), and a delivery the hub reads as MISSED is past the point where a
 // shipping notice helps. Without the receipt condition the GATE demo's
-// received-without-ASN call-offs (20 rows, received up to 84 days ago) would sit
-// on the chase list beside today's — a list that contradicts a posted receipt.
+// received-without-ASN call-offs — received weeks before today — would sit on
+// the chase list beside today's, a list that contradicts a posted receipt.
 // What is NOT added: no end date, no cap on how long an open chase stays open.
 //
 // Every figure is derived at read from the call-off, ASN and goods-receipt

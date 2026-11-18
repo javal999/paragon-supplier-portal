@@ -19,13 +19,6 @@ export const callOffChaseStore = {
     return rows;
   },
   /**
-   * @param {string} callOffId
-   * @returns {ChaseClosure | undefined}
-   */
-  forCallOff(callOffId) {
-    return rows.find((c) => c.callOffId === callOffId);
-  },
-  /**
    * @param {ChaseClosure} closure
    * @returns {void}
    */

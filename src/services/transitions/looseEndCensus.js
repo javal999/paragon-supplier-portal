@@ -427,5 +427,17 @@ export const LOOSE_END_CENSUS = Object.freeze([
       'NO creation verb BY DESIGN: an alert exists because its condition is derived from the ' +
       'inventory figures and capacity at read time, so `Open` is its born-state. Only the planner ' +
       'closure is recorded; a recurrence after the condition cleared is a fresh open alert.'
+  },
+
+  // ── callOffChase (AIB-3, BL-351) ───────────────────────────────────────────
+  {
+    entity: 'callOffChase',
+    kind: 'initial-integrity',
+    subject: 'Open',
+    reason: 'born-state',
+    note:
+      'NO creation verb BY DESIGN: a chase exists because the derivation says a sent call-off has no ' +
+      'covering ASN and the next working day has come, so `Open` is its born-state. Only the ' +
+      'planner’s closure is recorded; the chase fires once and a closed one never re-opens.'
   }
 ]);
