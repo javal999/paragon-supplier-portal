@@ -11,6 +11,7 @@ import BuyerGoodsReceipt from '../BuyerGoodsReceipt';
 import BuyerShipments from '../BuyerShipments';
 import BuyerRequisitions from '../BuyerRequisitions';
 import BuyerCompliance from '../BuyerCompliance';
+import BuyerCallOffs from '../BuyerCallOffs';
 import SupplierDocuments from '../SupplierDocuments';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -230,5 +231,22 @@ describe('P-03 (IA-S02) — the supplier To do names the documents PTI asked for
     const expiring = await shownOf('/supplier/documents?expiry=expiring');
     expect(due).toBe(expired + expiring);
     expect(due).toBeGreaterThan(0);
+  });
+});
+
+describe('AIB-3 (BL-351) — the missing-ASN chase', () => {
+  it('the planner task opens the Missing ASN tab, which lists exactly the count', async () => {
+    const { count, to } = await follow('buyer', 'calloffs-missing-asn');
+    expect(count).toBeGreaterThan(0);
+    expect(to).toBe('/buyer/call-offs?tab=chase');
+    land(<BuyerCallOffs />, '/buyer/call-offs', to);
+    await screen.findByTestId('calloff-chase', {}, { timeout: 8000 });
+    expect(screen.getAllByTestId(/^calloff-chase-row-/)).toHaveLength(count);
+  });
+
+  it("the supplier's task opens its call-offs and carries the same chase", async () => {
+    const { count, to } = await follow('supplier', 'calloffs-missing-asn');
+    expect(count).toBeGreaterThan(0);
+    expect(to).toBe('/supplier/call-offs');
   });
 });
