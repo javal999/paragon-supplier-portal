@@ -738,7 +738,7 @@ The owner accepted every recommendation in section 13.2 of `SC-HUB-MATERIAL-REQU
 ### MAT-D3 · Name for the manufacturer → distributor leg
 **Market practice.** "In transit" means ASNs without goods receipt in SAP SCC and stock that left the issuing plant in S/4 (A); Oracle lists in-transits as a supply type (A). No standard term for the manufacturer → distributor leg was found.
 
-**Decision.** "To distributor". "Incoming" keeps its hub meaning (in production plus in transit, REQ-E08-01 BR-06). REQ-E08-08 BR-10.
+**Decision.** "To distributor". "Incoming" keeps its hub meaning (in production plus in transit, REQ-E08-01 BR-06). REQ-E08-08 BR-10. **Superseded on the supplier view, 2026-11-18 (TL-D43, Q-24):** Incoming becomes In Production; the combined Incoming group label is retired on the supplier stock view. The PTI inventory view keeps its Incoming group.
 
 **What would change this.** Users reading "To distributor" as stock at the distributor rather than on its way there.
 

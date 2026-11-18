@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Accepted 2026-10-19.** The owner approved every requirement, default, backlog row and decision in this file ("approve all", 2026-10-19). Wave 1 (BL-187, BL-192, BL-200, BL-201, BL-203) is built in GitLab MR !4 and wave 2 (BL-188, BL-190, BL-193, BL-195, BL-197) in MR !5 and wave 3 (BL-189, BL-191, BL-194 feedstock part, BL-196, BL-198, BL-199) in MR !6, and the what-if sandbox (BL-202) in MR !7, 2026-10-19; build decisions in sections 6a to 6d. Values tagged [Default] are starting values until the Material Planning team confirms them (section 4) |
+| Status | **Accepted 2026-10-19.** The owner approved every requirement, default, backlog row and decision in this file ("approve all", 2026-10-19). Wave 1 (BL-187, BL-192, BL-200, BL-201, BL-203) is built in GitLab MR !4 and wave 2 (BL-188, BL-190, BL-193, BL-195, BL-197) in MR !5 and wave 3 (BL-189, BL-191, BL-194 feedstock part, BL-196, BL-198, BL-199) in MR !6, and the what-if sandbox (BL-202) in MR !7, 2026-10-19; build decisions in sections 6a to 6d. Values tagged [Default] are starting values until the Material Planning team confirms them (section 4). **Amended 2026-11-18:** DRC-9a, DRC-9c and C4 are superseded by PSC-4; DRC-10 and B9 amended; DRC-15a extended by PSC-6; DRC-B28 adds CNY and Typhoon. |
 | Date | 2026-10-19 |
 | Source meeting | Weekly SC Hub, 2026-10-14: DA, ROP and call-off. Cited as [MoM n] |
 | Other sources | *OSIP Playbook.pptx* (SharePoint, FSE Laboratory), cited [PPT n] by slide; *Framework OSIP PM 2026* (Google Sheets), cited [XLS sheet]. Neither is stored in this repository |
@@ -108,9 +108,9 @@
 | DRC-6 | Lead time per material, broken down by step | Build now | — |
 | DRC-7 | Safety order (ROP Order) and safety (ROP Fisik) | After module | B1–B4 as [Default] |
 | DRC-8 | Supplier confirms Incoming DA + current feedstock, with a date: daily on a pull agreement, else weekly | Build now | E1, E2 answered 2026-10-28 |
-| DRC-9a | Strategic buffer = LTP − baseline | After module | C4 as [Default] |
+| DRC-9a | Strategic buffer = LTP − baseline. **Superseded 2026-11-18 by PSC-4 BR-04; fallback display only** | After module | C4 as [Default] |
 | DRC-9b | Production limit | Build now | E3 as [Default] |
-| DRC-9c | Protection buffer | Built, proposal (merged 2026-10-20) | Built as a proposal, awaiting owner review: protection buffer = CEILING(max(0, LTP − average LTP of the 3 previous months), production MPQ), levels 5 to 7 only, display only; switch `protectionUplift` |
+| DRC-9c | Protection buffer. **Superseded 2026-11-18 by PSC-4 BR-03; fallback display only** | Built, proposal (merged 2026-10-20) | Built as a proposal, awaiting owner review: protection buffer = CEILING(max(0, LTP − average LTP of the 3 previous months), production MPQ), levels 5 to 7 only, display only; switch `protectionUplift` |
 | DRC-10 | System-calculated ROPs and Max, per the material's level | After module | B5–B9 as [Default]; DRC-D11 |
 | DRC-11 | CV per variant, SKU and component on 6 monthly buckets; stable/fluctuative | After module | C1 answered 2026-10-28 |
 | DRC-12a | NPD tag and ROP review after first order | After module | D1 as [Default] |
@@ -129,7 +129,7 @@ DRC-16 (daily FS reconcile) is merged into DRC-15a.
 
 **DRC-2 Rolling DA over the lead time**
 - BR-01. The horizon is the material's lead time (DRC-6), in weeks, rolling weekly [Owner, 2026-10-16, A3].
-- BR-02. DA(w) = LTP(w). Week 1 also carries the safety order (DRC-7) [Default A1; PPT 7].
+- BR-02. DA(w) = LTP A(w). Week 1 also carries the safety order (DRC-7) [Default A1; PPT 7]. **Amended 2026-11-18:** LTP A is the baseline under model A; week 1 still carries the safety order (PSC-4 BR-02).
 - BR-03. Remainder(w) = DA(w) − call-off(w). It moves to the last week of the horizon. With the supplier's agreement, recorded on the move, it can go to the first week outside the horizon instead [Owner, 2026-10-16, A8].
 - BR-04. Each supplier has a carry-over limit. Its default is the quantity of the last 4 weeks of sales orders [Owner, 2026-10-16, A8; unit is a Default, see A8b].
 - BR-05. Additional PO = Σ DA over the horizon − OSPO; OSPO(w) = OSPO(w−1) − call-off of the previous week + the PO placed that week [Default A9; PPT 8, 9; Owner, 2026-10-19]. Only this reading chains the slides' OSPO 35, 30, 25 with their own call-offs (5, 10, 5) and POs (40, 5, 0).
@@ -155,7 +155,7 @@ DRC-16 (daily FS reconcile) is merged into DRC-15a.
 - AC-01. PPT 7: LT 5, MPQ 61,224 gives SS 244,896 on the `sdSource: 'ltp'` variant. On the 13-week default the slide's 12 weeks give SD 42,092 and SS 183,672 The fixture stays on the variant [Owner, 2026-10-28, BL-231].
 
 **DRC-10 ROPs and Max** [PPT 11; Owner, 2026-10-16, B10]
-- **ROP Order** = c × d + safety order, where c = LTP and d = lead time PO→ETA. Its output is shown as the input to ZPE007 [Default B9]. The hub does not run ZPE007.
+- **ROP Order** = LTP A × d + safety order + the Protection Buffer + the Strategic Buffer total (PSC-4 BR-06), where d = lead time PO→ETA. Its output is shown as the input to ZPE007 [Default B9]. The hub does not run ZPE007 [Owner, 2026-11-18].
 - **ROP Fisik** = ceiling(demand × f) × MPQ + safety.
   - Demand for an existing material = min(highest of the last 3 months' consumption, production capacity, LTP).
   - Demand for an NPD material = min(highest LTP over the next 3 months, production capacity) [Default B5].
@@ -176,7 +176,7 @@ DRC-16 (daily FS reconcile) is merged into DRC-15a.
 - BR-07. [Owner, 2026-10-28, BL-232] When a PO line's balance is below the supplier's minimum delivery, the hub still drafts the call-off for the balance, flagged `BELOW_MIN_DELIVERY`; the rest goes to the next-oldest line with balance, and what no line covers is the PR recommendation (BR-02). A remainder on the next line that is below that line's supplier's minimum delivery is flagged too. The draft's panel shows the supplier's minimum delivery and the warning, so the planner checks with the supplier before releasing it. Example: balance 1,200, MDQ 2,000 → a 1,200 call-off, flagged, and a PR recommendation for 800.
 
 **DRC-15a Feedstock reconcile**
-- BR-01. Per supplier × material: PO ordered, call-offs requested, ASNs requested, and the remainder, shown daily [Owner, 2026-10-16, F4].
+- BR-01. Per supplier × material: PO ordered, DA, call-offs requested, ASNs requested, the 2 remainders, In grace and PO On Hold, shown daily; Total OSPO = min(OSPO, DA not yet called off) + PO On Hold (PSC-6) [Owner, 2026-11-18].
 - BR-02. The remainder is shown only. What happens to it is DRC-15b, which is on hold.
 - Replaces the "Fixed stock reconcile" page and its outcomes (REQ-E06-04, ENG-D21) [DRC-D14].
 
@@ -220,12 +220,12 @@ Rule (DRC-D9): when sources conflict, the newest wins, so MoM (14 Oct), then the
 | B6 | f per supplier, editable; default by area 1 day (Jabodetabek) / 2 days (outside) / 7 days (import) | [Team, 2026-10-28, B6]; owner ruling 2026-10-28 | Value per supplier | — |
 | B7 | g per material, default 1 day; owners Logistics Operations (ROP Fisik), Supply Sustainability (ROP Order). The hub applies g in ROP Fisik only: whether ROP Order reads g is open (team answers 4, Q3) | [Team, 2026-10-28, B7]; owner ruling 2026-10-28 | Value per material | — |
 | B8 | Max per deck; koli per pallet ("Non stc") or pack size ("stc", read as sticker) | PPT 11; XLS | Switch | XLS Guidance (ROP + cycle stock) |
-| B9 | ROP Order = cycle stock + safety order | PPT 7 | — | — |
+| B9 | ROP Order = cycle stock (LTP A × d) + safety order + the buffers (PSC-4 BR-06) | PPT 7 | — | — |
 | B10 | ROP Supplier = demand × the supplier's bottleneck production lead time, queueing included (per supplier × material, no default: "not available" until set). ROP FS removed. ROP to principal stays as built (unanswered) | [Team, 2026-10-28, B10]; owner ruling 2026-10-28 | Value per supplier × material | — |
 | C1 | CV on 6 monthly buckets (full calendar months, weeks spread by day), set by the FG-variant CV ("CV Comp FG Var"); threshold 0.5 final | [Team, 2026-10-28, C1]; owner ruling 2026-10-28 | Switch | Weekly buckets over 26 weeks |
 | C2 | Level is a field per material, default level 4 (warehouse replenishment) | XLS Guidance: levels 3–4 hold 6,751 of 9,210 pallets (73%) | Value | Automatic classification (DRC-19, hold) |
 | C3 | Protection buffer not built | — | Hold | — |
-| C4 | Strategic buffer = LTP − average of the 3 months before festive (no rounding stated) | PPT 12 | Value | — |
+| C4 | Strategic buffer = LTP − average of the 3 months before festive. **Superseded 2026-11-18 by PSC-4 BR-04; fallback display only** | PPT 12 | Value | — |
 | D1 | NPD until first order fulfilled | MoM 4C; [Team, 2026-10-28, D1]; owner ruling 2026-10-28 | Switch | 1 year after launch (XLS); 52 weeks (engine) |
 | D2 | NPD vs CMM not built | — | Hold | — |
 | E1 | LT spare 0, so feedstock target = 0; the next model defines no feedstock ROP | [Team, 2026-10-28, E1]; owner ruling 2026-10-28 | Value | — |
@@ -356,7 +356,7 @@ Readings the builders made where the sources leave a gap. Each sits behind a rul
 | DRC-B25 | Consumption per supplier (DRC-7, DRC-18) | Split by the supplier's LTP share over the share window (CAP-D11) on every page, the Demand anticipation grid included (DRC-D21, BL-211) |
 | DRC-B26 | CV (DRC-11) | Historical weekly sell-in before now, stock-outs filled as the engine fills them; since 2026-10-28 summed into the last 6 full calendar months (each week spread over its 7 days) [Team C1]; each SKU is its own variant (no variant grouping in the data) |
 | DRC-B27 | Production limit (DRC-9b) | The existing "Allocated" row on PTI Capacity is the production limit, relabelled and marked Provisional |
-| DRC-B28 | Strategic buffer (DRC-9a) | Festive window = the months from the first day of Ramadan to Lebaran (event calendar); CNY is not in the calendar and is not shown; an incomplete baseline shows "—" |
+| DRC-B28 | Strategic buffer (DRC-9a) | Festive window = the months from the first day of Ramadan to Lebaran (event calendar); CNY is not in the calendar and is not shown; an incomplete baseline shows "—" **Amended 2026-11-18:** CNY and Typhoon are added to the event calendar for the Material Buffer (PSC-4 BR-07). |
 
 ## 6c. Build decisions, wave 3 (2026-10-19)
 
