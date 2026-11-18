@@ -61,6 +61,10 @@ import { FOCUS_RING } from './focusRing';
 //     them wins (BL-319), before the default order.
 //   · A click on the (i), or Enter or Space on it, explains the card and does
 //     not also apply it (BL-320): on Shipments & ASN it set the "Draft" filter.
+//   · BL-322: a clickable card no longer WRAPS its label in a button — the card
+//     is a div with one stretched button and the label layer over it, marked
+//     `data-tip-host`. `hostControl` reads that marker as the card, so the fit
+//     and the click guard above hold without a button inside a button.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -146,10 +150,17 @@ const CONTROLS = 'input, select, textarea, button, a[href], [role="button"]';
 /**
  * BL-319 — the control the label sits in (a clickable status or KPI card), or
  * null when it sits in none.
+ *
+ * BL-322: a clickable card is no longer a control its label sits IN — the card
+ * is a div carrying one stretched button, and the label is that button's
+ * sibling. The card marks itself with `data-tip-host`, which stands in for the
+ * control here, so BL-319's fit, BL-309's covered-control count and BL-320's
+ * click guard keep working on the card's surface.
  * @param {Element} wrap
  * @returns {Element | null}
  */
-const hostControl = (wrap) => wrap.parentElement?.closest(CONTROLS) ?? null;
+const hostControl = (wrap) =>
+  wrap.parentElement?.closest(CONTROLS) ?? wrap.parentElement?.closest('[data-tip-host]') ?? null;
 
 /**
  * BL-319 (UL-04) — the box's width and left edge inside the card its label sits
@@ -175,19 +186,22 @@ export const fitInHost = (anchor, host, screen) => {
  * 26 pages with tips, "below first" covered a control in 33 tips and "above
  * first" in 39 (header and card tips sit under filters and cards), so each
  * opening counts. Not counted: the tip's own button, and the card the label
- * sits in (BL-319).
+ * sits in (BL-319) — including, since BL-322, the stretched button that IS that
+ * card's surface (the host no longer contains the label).
  * @param {{ top: number; left: number }} p
  * @param {{ width: number; height: number }} box
  * @param {Element} own
+ * @param {Element | null} [host]
  * @returns {{ n: number; area: number }}
  */
-const coveredControls = (p, box, own) => {
+const coveredControls = (p, box, own, host) => {
   const right = p.left + box.width;
   const bottom = p.top + box.height;
   let n = 0;
   let area = 0;
   for (const el of document.querySelectorAll(CONTROLS)) {
     if (own.contains(el) || el.contains(own)) continue;
+    if (host?.contains(el)) continue;
     const r = el.getBoundingClientRect();
     if (r.width === 0 || r.height === 0) continue;
     const w = Math.min(r.right, right) - Math.max(r.left, p.left);
@@ -261,7 +275,7 @@ const TermTip = ({ term, entry: termEntry, name, slugId, children, className = '
       ].flatMap((p) => {
         if (!p) return [];
         const at = fit && !('side' in p) ? { ...p, left: fit.left } : p;
-        return [{ p: at, ...coveredControls(at, size, wrap) }];
+        return [{ p: at, ...coveredControls(at, size, wrap, host) }];
       });
       const best = options.reduce((a, b) =>
         b.n < a.n || (b.n === a.n && b.area < a.area) ? b : a
@@ -339,7 +353,10 @@ const TermTip = ({ term, entry: termEntry, name, slugId, children, className = '
         type="button"
         aria-label={t('fux.term.aria', { term: announced })}
         aria-describedby={id}
-        className={`${HIT_AREA} rounded-sm text-text-tertiary hover:text-action-hover focus:text-action-hover ${FOCUS_RING}`}
+        // BL-322: the (i) re-enables pointer events on itself, so it stays
+        // clickable inside a card layer that is pointer-events-none to let the
+        // card's stretched button take every other click.
+        className={`${HIT_AREA} pointer-events-auto rounded-sm text-text-tertiary hover:text-action-hover focus:text-action-hover ${FOCUS_RING}`}
         onFocus={() => {
           setDismissed(false);
           setFocused(true);
