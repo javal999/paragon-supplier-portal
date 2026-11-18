@@ -14,6 +14,27 @@
 //      construction and is not a finding. Neither is a selection row whose
 //      click mirrors a checkbox/radio inside it (that control is the keyboard
 //      path).
+//   3. A FIELD MARKED INVALID NAMES ITS ERROR (BL-84, WCAG 1.3.1 / 3.3.1).
+//      An `<input>` / `<select>` / `<textarea>` carrying `aria-invalid` must
+//      also carry `aria-describedby`, so the message the reader sees is the
+//      message assistive technology announces with the field. The registration
+//      form is the pattern: `aria-describedby` points at the error element's
+//      `id`. A SPREAD acquits it, exactly as it does for buttons.
+//
+//      ⚠️ AND THE CLAIM IS NARROWER THAN "THE DESCRIPTION RESOLVES" (BL-326),
+//      because MR !151 shipped ten bindings the presence check passed and a
+//      reader could not use. TWO checks, and this is what they say:
+//        · every invalid field carrying `aria-invalid` must carry
+//          `aria-describedby` — PRESENCE, unchanged since BL-84;
+//        · a LITERAL `aria-describedby="<id>"` must name an `id="<id>"` the
+//          SAME FILE renders — deleting the id fails the gate.
+//      The second is what a source scan can decide. It does NOT claim more:
+//      the id may be real and still be the WRONG message, and a conditional
+//      binding (`aria-describedby={refused ? id : undefined}`) may render
+//      `undefined` on the path that matters — neither is decidable here. The
+//      controls this repo wires conditionally are covered by RUNTIME PAGE
+//      TESTS (BL-326: stockEntryA11y, ResponseDocumentsSection,
+//      quoteTermsSectionA11y, asnLinesA11y), not by this file.
 //
 // ⚠️ WHAT IT DELIBERATELY CANNOT SEE, SAID RATHER THAN LEFT TO BE DISCOVERED:
 //   · A child written as an EXPRESSION (`{label}`, `{t('x')}`, `{icon}`) is
@@ -22,6 +43,8 @@
 //     accuse every `{t(...)}` button in the tree.
 //   · A JSX SPREAD (`{...rest}`) on a BUTTON acquits it: the name may arrive
 //     through the spread. On a ROW only `{...rowActivation(...)}` acquits.
+//   · A CONDITIONAL `aria-describedby`, or an id built from an expression, is
+//     not statically checked (see invariant 3 above).
 //   · Rendered names (what a screen reader actually hears) are checked in the
 //     render tests beside this file, not here.
 // ────────────────────────────────────────────────────────────────────────────
@@ -44,6 +67,23 @@ const hasAttr = (open, ...names) =>
   open.attributes.properties.some((a) => ts.isJsxAttribute(a) && names.includes(a.name.getText()));
 /** @param {ts.JsxOpeningLikeElement} open */
 const hasSpread = (open) => open.attributes.properties.some(ts.isJsxSpreadAttribute);
+
+/**
+ * The plain string an attribute is set to, or `null` when the attribute is
+ * absent OR its value is an expression (`{id}`, a template literal). Only a
+ * literal is decidable statically; everything else is the page tests' job.
+ * @param {ts.JsxOpeningLikeElement} open
+ * @param {string} name
+ * @returns {string | null}
+ */
+function literalAttr(open, name) {
+  for (const a of open.attributes.properties) {
+    if (!ts.isJsxAttribute(a) || a.name.getText() !== name) continue;
+    const init = a.initializer;
+    return init && ts.isStringLiteral(init) ? init.text : null;
+  }
+  return null;
+}
 
 /**
  * Does this child render text a screen reader would read as the name?
@@ -92,6 +132,21 @@ export function scanSource(fileName, text, seen) {
   const out = [];
   /** @param {ts.Node} n */
   const at = (n) => sf.getLineAndCharacterOfPosition(n.getStart()).line + 1;
+  // The ids this file renders as plain string literals — the only ones a
+  // literal `aria-describedby` can be matched against. Collected up front so
+  // a reference above its target (JSX order is not render order) still passes.
+  /** @type {Set<string>} */
+  const literalIds = new Set();
+  /** @param {ts.Node} n */
+  const collectLiteralIds = (n) => {
+    if (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n)) {
+      const open = ts.isJsxElement(n) ? n.openingElement : n;
+      const id = literalAttr(open, 'id');
+      if (id !== null) literalIds.add(id);
+    }
+    ts.forEachChild(n, collectLiteralIds);
+  };
+  collectLiteralIds(sf);
   /** @param {ts.Node} n */
   const visit = (n) => {
     if (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n)) {
@@ -140,6 +195,34 @@ export function scanSource(fileName, text, seen) {
           viaHelper || mirrorsControl || (hasAttr(open, 'tabIndex') && hasAttr(open, 'onKeyDown'));
         if (!operable)
           out.push({ file: fileName, line: at(n), what: '<tr onClick> is not keyboard-operable' });
+      }
+      // Invariant 3: an invalid field names the message that explains it.
+      if (
+        ['input', 'select', 'textarea'].includes(tag) &&
+        hasAttr(open, 'aria-invalid') &&
+        !hasSpread(open)
+      ) {
+        seen?.push({ file: fileName, line: at(n), what: `<${tag} aria-invalid>` });
+        if (!hasAttr(open, 'aria-describedby'))
+          out.push({
+            file: fileName,
+            line: at(n),
+            what: `<${tag} aria-invalid> does not describe its error`
+          });
+      }
+      // Invariant 3, the statically-decidable half (BL-326): a LITERAL
+      // description must name an id this file renders.
+      const described = literalAttr(open, 'aria-describedby');
+      if (described !== null) {
+        seen?.push({ file: fileName, line: at(n), what: '<aria-describedby literal>' });
+        for (const id of described.split(/\s+/).filter(Boolean)) {
+          if (!literalIds.has(id))
+            out.push({
+              file: fileName,
+              line: at(n),
+              what: `aria-describedby names "${id}", which this file never renders`
+            });
+        }
       }
     }
     ts.forEachChild(n, visit);

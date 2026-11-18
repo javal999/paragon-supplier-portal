@@ -108,6 +108,15 @@ const LineItemsSection = ({
                     }}
                     aria-label={`${t('supplierOrders.panel.col.confirmed')} ${li.materialCode}`}
                     aria-invalid={!(lineReads[idx]?.ok ?? true) || !lineBounds[idx]}
+                    // BL-84 — one cell, two refusals; the association follows
+                    // the one on screen.
+                    aria-describedby={
+                      lineReads[idx] && !lineReads[idx].ok
+                        ? `po-confirm-refusal-${idx}`
+                        : lineReads[idx]?.ok && !lineBounds[idx]
+                          ? `po-confirm-bounds-${idx}`
+                          : undefined
+                    }
                     className={`${inputClass} text-right`}
                     style={{ width: 100, display: 'inline-block' }}
                   />
@@ -117,6 +126,7 @@ const LineItemsSection = ({
                       untouched-blank rule). */}
                   {lineReads[idx] && !lineReads[idx].ok && (
                     <div
+                      id={`po-confirm-refusal-${idx}`}
                       role="alert"
                       data-testid={`po-confirm-refusal-${idx}`}
                       className="mt-1 text-[length:var(--fs-label-3)] text-danger text-right"
@@ -140,6 +150,7 @@ const LineItemsSection = ({
                       language with the line's own bound. */}
                   {lineReads[idx]?.ok && !lineBounds[idx] && (
                     <div
+                      id={`po-confirm-bounds-${idx}`}
                       role="alert"
                       data-testid={`po-confirm-bounds-${idx}`}
                       className="mt-1 text-[length:var(--fs-label-3)] text-danger text-right"

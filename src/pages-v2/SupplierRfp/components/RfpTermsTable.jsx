@@ -88,12 +88,21 @@ const RfpTermsTable = ({
                       ariaLabel={label}
                       disabled={locked}
                       invalid={badValues.includes(row.termId) || termMissing}
+                      // BL-84 — the row's proposed value names the notes under it.
+                      describedBy={
+                        badValues.includes(row.termId)
+                          ? `supplier-rfp-value-invalid-${row.termId}`
+                          : termMissing
+                            ? `supplier-rfp-term-missing-${row.termId}`
+                            : undefined
+                      }
                     />
                     {!!termMissing && (
                       <StillMissing testId={`supplier-rfp-term-missing-${row.termId}`} />
                     )}
                     {badValues.includes(row.termId) && (
                       <div
+                        id={`supplier-rfp-value-invalid-${row.termId}`}
                         className="text-xs text-danger mt-1"
                         data-testid={`supplier-rfp-value-invalid-${row.termId}`}
                       >
@@ -122,6 +131,10 @@ const RfpTermsTable = ({
                       type="text"
                       disabled={locked || !deviates}
                       aria-label={`${label} — ${t('rfx.rfp.comment')}`}
+                      aria-invalid={needsComment || undefined}
+                      aria-describedby={
+                        needsComment ? `supplier-rfp-comment-required-${row.termId}` : undefined
+                      }
                       value={a?.comment ?? ''}
                       onChange={(e) => setAnswer(event, row.termId, { comment: e.target.value })}
                       className={`w-full bg-white border rounded-md px-3 h-9 text-sm focus:outline-none focus:border-action disabled:bg-bg-hover ${
@@ -130,6 +143,7 @@ const RfpTermsTable = ({
                     />
                     {needsComment && (
                       <div
+                        id={`supplier-rfp-comment-required-${row.termId}`}
                         className="text-xs text-danger mt-1"
                         data-testid={`supplier-rfp-comment-required-${row.termId}`}
                       >

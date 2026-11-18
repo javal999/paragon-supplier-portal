@@ -33,6 +33,12 @@ import { useDataService } from '@services/data/DataServiceContext';
  * with how many files of this pick were accepted before it; a returned text
  * refuses that file, which is never put, and the text is shown. Absent =
  * every file is taken.
+ * @property {string} [describedBy] BL-84 — the id of a slot-level message the
+ * file control should carry alongside its own refusals (a document slot's
+ * certificate/missing-file note).
+ * @property {boolean} [invalid] BL-326 — the caller's own invalid state, for a
+ * surface whose refusal is rendered by the caller (an RFQ question answer).
+ * Paired with `describedBy`, which names that refusal.
  */
 
 /**
@@ -47,7 +53,9 @@ const SessionAttachments = ({
   readOnly: readOnlyProp = false,
   single = false,
   refuse,
-  notHeldText
+  notHeldText,
+  describedBy,
+  invalid = false
 }) => {
   const { t } = useTranslation();
   const { files: fileService } = useDataService();
@@ -120,6 +128,14 @@ const SessionAttachments = ({
               className="sr-only"
               data-testid={`${testId}-input`}
               aria-label={label}
+              // BL-84 — a refused file is announced with the file control; a
+              // caller's slot-level refusal joins its own.
+              aria-invalid={invalid || refusals.length > 0 || !!describedBy || undefined}
+              aria-describedby={
+                [refusals.length > 0 ? `${testId}-refusal` : null, describedBy]
+                  .filter(Boolean)
+                  .join(' ') || undefined
+              }
               onChange={(e) => void onFiles(e.target.files)}
             />
             <Button
@@ -135,6 +151,7 @@ const SessionAttachments = ({
       </div>
       {refusals.length > 0 && (
         <ul
+          id={`${testId}-refusal`}
           role="alert"
           className="text-xs text-danger space-y-0.5"
           data-testid={`${testId}-refusal`}

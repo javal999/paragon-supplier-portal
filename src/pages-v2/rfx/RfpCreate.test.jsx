@@ -261,6 +261,65 @@ describe('section 3.6a — the buyer raises a proposal request', () => {
     expect(screen.queryByTestId('rfp-new-missing-values')).not.toBeInTheDocument();
   });
 
+  it('BL-326 · a wrong-kind requested value marks its field AND names the refusal under the list', async () => {
+    await openWizard();
+    fillScope();
+    next();
+    await screen.findByTestId('rfp-new-term-leadTime');
+    const row = screen.getByTestId('rfp-new-term-leadTime');
+    fireEvent.click(within(row).getByLabelText('Standard lead time (days) — Ask for this term'));
+    const input = within(row).getByLabelText('Standard lead time (days) — PTI asks for');
+    fireEvent.change(input, { target: { value: '21 days' } });
+
+    const refusal = await screen.findByTestId('rfp-new-missing-values');
+    await waitFor(() => expect(input).toHaveAttribute('aria-invalid', 'true'));
+    expect(input).toHaveAttribute('aria-describedby', 'rfp-new-missing-values');
+    expect(document.getElementById('rfp-new-missing-values')).toBe(refusal);
+    expect(refusal).toHaveTextContent('Say what PTI is asking for on every picked term.');
+
+    // KNOWN-GOOD — a readable value clears both the mark and the description.
+    fireEvent.change(input, { target: { value: '21' } });
+    await waitFor(() => expect(input).not.toHaveAttribute('aria-invalid'));
+    expect(input).not.toHaveAttribute('aria-describedby');
+  });
+
+  it('BL-326 · a custom choice term blames the option rows, not the requested value', async () => {
+    await openWizard();
+    fillScope();
+    next();
+    await screen.findByTestId('rfp-new-term-paymentTerms');
+    fireEvent.change(screen.getByLabelText('Term'), { target: { value: 'Pallet type' } });
+    fireEvent.change(screen.getByTestId('rfp-new-custom-kind'), { target: { value: 'choice' } });
+
+    // Two blank option rows — the refusal is about THEM.
+    const refusal = screen.getByTestId('rfp-new-custom-refusal');
+    expect(refusal).toHaveTextContent('A choice term needs at least two different options.');
+    const requested = screen.getByTestId('rfp-new-custom-requested');
+    expect(requested).not.toHaveAttribute('aria-invalid');
+    expect(requested).not.toHaveAttribute('aria-describedby');
+    const option = screen.getByTestId('rfp-new-custom-option-0');
+    expect(option).toHaveAttribute('aria-invalid', 'true');
+    expect(document.getElementById(option.getAttribute('aria-describedby') ?? '')).toBe(refusal);
+
+    // With the options given, the missing requested value is now the fault.
+    fireEvent.change(screen.getByTestId('rfp-new-custom-option-0'), { target: { value: 'Wood' } });
+    fireEvent.change(screen.getByTestId('rfp-new-custom-option-1'), {
+      target: { value: 'Plastic' }
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId('rfp-new-custom-refusal')).toHaveTextContent(
+        'Say what PTI asks for.'
+      )
+    );
+    expect(screen.getByTestId('rfp-new-custom-option-0')).not.toHaveAttribute('aria-invalid');
+    expect(screen.getByTestId('rfp-new-custom-requested')).toHaveAttribute('aria-invalid', 'true');
+    expect(
+      document.getElementById(
+        screen.getByTestId('rfp-new-custom-requested').getAttribute('aria-describedby') ?? ''
+      )
+    ).toBe(screen.getByTestId('rfp-new-custom-refusal'));
+  });
+
   it('CE-07 · no invitee ⇒ it cannot be sent, and the step says so', async () => {
     await openWizard();
     fillScope();

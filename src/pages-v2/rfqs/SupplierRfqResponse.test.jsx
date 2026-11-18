@@ -103,6 +103,10 @@ describe('the quote grid — refused out loud, accepted whole', () => {
     fillOslo({ item: 1, qty: 50000 });
     const before = quotationStore.forRfq('rfq-021').length;
     expect(screen.getByTestId('grid-item-1-price-50000-note')).toHaveTextContent('Still missing');
+    // BL-84 — the break's price field names the note under it.
+    const price = screen.getByTestId('grid-item-1-price-50000');
+    expect(price).toHaveAttribute('aria-invalid', 'true');
+    expect(price).toHaveAttribute('aria-describedby', 'grid-item-1-price-50000-note');
     expect(screen.getByTestId('quote-problems')).toHaveTextContent(/Item 1: price at 50/);
     expect(screen.getByTestId('quote-send-reason')).toHaveTextContent(/1 answer is given or fixed/);
     const submit = screen.getByRole('button', { name: 'Submit quotation' });
@@ -118,6 +122,11 @@ describe('the quote grid — refused out loud, accepted whole', () => {
     expect(screen.getByTestId('grid-item-2-spec-dieCutType-note')).toHaveTextContent(
       'Still missing'
     );
+    // BL-84 — the spec field names its own note.
+    expect(screen.getByTestId('grid-item-2-spec-dieCutType')).toHaveAttribute(
+      'aria-describedby',
+      'grid-item-2-spec-dieCutType-note'
+    );
     expect(screen.getByRole('button', { name: 'Submit quotation' })).toBeDisabled();
   });
 
@@ -131,6 +140,19 @@ describe('the quote grid — refused out loud, accepted whole', () => {
       'Still missing'
     );
     expect(screen.getByRole('button', { name: 'Submit quotation' })).toBeDisabled();
+  });
+
+  it('BL-326: an added cost’s name and amount each own a unique DOM id', async () => {
+    await openOsloGrid();
+    fireEvent.click(screen.getByTestId('grid-item-1-add-cost'));
+    const name = screen.getByLabelText('Other cost 1, name');
+    const amount = screen.getByLabelText('Other cost 1, amount');
+    expect(name.id).not.toBe('');
+    expect(amount.id).not.toBe('');
+    expect(name.id).not.toBe(amount.id);
+    // No duplicate in the document — the defect was one id on two controls.
+    expect(document.querySelectorAll(`[id="${name.id}"]`)).toHaveLength(1);
+    expect(document.querySelectorAll(`[id="${amount.id}"]`)).toHaveLength(1);
   });
 
   it('KNOWN-GOOD: the full grid is sent and stored, with the sample offer and an added cost', async () => {

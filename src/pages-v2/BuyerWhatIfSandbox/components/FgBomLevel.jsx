@@ -104,9 +104,15 @@ const FgBomLevel = () => {
             placeholder={t('pex.sandbox.fg.unitsPlaceholder')}
             onChange={(e) => setUnitsText(e.target.value)}
             aria-invalid={refusal !== null}
+            aria-describedby={refusal ? 'wi-fg-units-error' : undefined}
           />
           {refusal ? (
-            <p className="text-xs text-danger mt-1" role="alert" data-testid="wi-fg-units-error">
+            <p
+              id="wi-fg-units-error"
+              className="text-xs text-danger mt-1"
+              role="alert"
+              data-testid="wi-fg-units-error"
+            >
               {t('pex.sandbox.fg.unitsInvalid')}
             </p>
           ) : null}

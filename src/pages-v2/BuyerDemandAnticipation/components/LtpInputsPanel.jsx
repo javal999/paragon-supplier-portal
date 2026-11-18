@@ -149,13 +149,21 @@ const LtpInputsPanel = ({ materials }) => {
             accept=".csv,text/csv,text/plain"
             data-testid="ltp-in-file"
             disabled={materialCode === '' || command.isPending}
+            // BL-84 — the upload's refusal is announced with the file control.
+            aria-invalid={problem ? true : undefined}
+            aria-describedby={problem ? 'ltp-in-problem' : undefined}
             onChange={(e) => void onFile(e)}
           />
         </label>
         <span className="text-xs text-text-tertiary">{t('ltpIn.fileFormat')}</span>
       </div>
       {problem ? (
-        <p className="text-sm text-danger mt-2" role="alert" data-testid="ltp-in-problem">
+        <p
+          id="ltp-in-problem"
+          className="text-sm text-danger mt-2"
+          role="alert"
+          data-testid="ltp-in-problem"
+        >
           {problem}
         </p>
       ) : null}

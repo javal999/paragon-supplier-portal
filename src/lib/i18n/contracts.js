@@ -236,6 +236,8 @@ export const contractsEn = {
   'contracts.wizard.obl.col.title': 'Title',
   'contracts.wizard.obl.col.owner': 'Owner',
   'contracts.wizard.obl.col.dueDate': 'Due date',
+  'contracts.wizard.obl.ownerAria': 'Owner for "{{title}}"',
+  'contracts.wizard.obl.dueDateAria': 'Due date for "{{title}}"',
   'contracts.wizard.obl.remove': 'Remove',
   'contracts.wizard.obl.removeAria': 'Remove obligation',
   // — Wizard: review —
@@ -481,6 +483,8 @@ export const contractsId = {
   'contracts.wizard.obl.col.title': 'Judul',
   'contracts.wizard.obl.col.owner': 'Pemilik',
   'contracts.wizard.obl.col.dueDate': 'Tanggal tenggat',
+  'contracts.wizard.obl.ownerAria': 'Pemilik untuk "{{title}}"',
+  'contracts.wizard.obl.dueDateAria': 'Tanggal tenggat untuk "{{title}}"',
   'contracts.wizard.obl.remove': 'Hapus',
   'contracts.wizard.obl.removeAria': 'Hapus kewajiban',
   // — Wizard: review —

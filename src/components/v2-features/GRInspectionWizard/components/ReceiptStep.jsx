@@ -138,11 +138,18 @@ const ReceiptStep = ({ lines, lineQtys, blockedCodes }) => {
                           code: l.materialCode
                         })}
                         aria-invalid={!qty.ok && qty.field === 'received'}
+                        // BL-84 — each line names its own refusal.
+                        aria-describedby={
+                          !qty.ok && qty.field === 'received'
+                            ? `gr-received-refusal-${i}`
+                            : undefined
+                        }
                         {...register(`lines.${i}.qtyReceivedRaw`)}
                         className={inputCls}
                       />
                       {!qty.ok && qty.field === 'received' && (
                         <div
+                          id={`gr-received-refusal-${i}`}
                           role="alert"
                           data-testid={`gr-received-refusal-${i}`}
                           className="mt-1 text-[length:var(--fs-label-3)] text-danger"
@@ -167,11 +174,17 @@ const ReceiptStep = ({ lines, lineQtys, blockedCodes }) => {
                           code: l.materialCode
                         })}
                         aria-invalid={!qty.ok && qty.field === 'accepted'}
+                        aria-describedby={
+                          !qty.ok && qty.field === 'accepted'
+                            ? `gr-accepted-refusal-${i}`
+                            : undefined
+                        }
                         {...register(`lines.${i}.qtyAcceptedRaw`)}
                         className={inputCls}
                       />
                       {!qty.ok && qty.field === 'accepted' && (
                         <div
+                          id={`gr-accepted-refusal-${i}`}
                           role="alert"
                           data-testid={`gr-accepted-refusal-${i}`}
                           className="mt-1 text-[length:var(--fs-label-3)] text-danger"

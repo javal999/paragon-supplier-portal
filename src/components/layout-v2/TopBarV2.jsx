@@ -9,6 +9,13 @@ import paragonLogo from '../../../paradise/assets/paragon-logo-primary.svg';
 import { SupplierNoticeBell } from './SupplierNotices';
 import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 
+// BL-84 — the PTI bell's badge is sample chrome: no notice read backs it (the
+// supplier bell derives its own count). The number lives in ONE constant so the
+// badge and the accessible name are the same figure; when a real buyer-notice
+// read lands, both change together. [Proposed: the owner may prefer the badge
+// removed until that read exists.]
+const PTI_NOTICE_COUNT = 3;
+
 /**
  * @typedef {object} TopBarV2Props
  * @property {boolean} [navOpen] Whether the phone/tablet side-menu drawer is open.
@@ -77,12 +84,17 @@ const TopBarV2 = ({ navOpen = false, navControlsId, navButtonRef, onToggleNav })
         ) : (
           <button
             type="button"
-            aria-label={t('topbar.notifications')}
+            // BL-84 (WCAG 4.1.2): the visible badge said 3 and the name said
+            // only "Notifications", so a screen reader never heard the count.
+            // Name and badge now read ONE constant, so they cannot disagree.
+            aria-label={t('topbar.notificationsCount', {
+              n: PTI_NOTICE_COUNT
+            })}
             className="relative p-2 rounded-md text-text-secondary hover:bg-bg-hover"
           >
             <Bell size={18} />
             <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-danger text-white text-[length:var(--fs-caption-1)] font-bold flex items-center justify-center">
-              3
+              {PTI_NOTICE_COUNT}
             </span>
           </button>
         )}

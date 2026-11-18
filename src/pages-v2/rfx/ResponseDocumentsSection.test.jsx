@@ -144,6 +144,70 @@ describe('NR-1 BR-04 — a Certificate slot needs number, issuer and expiry date
   });
 });
 
+describe('BL-326 — a slot refusal marks the control it is about, not all of them', () => {
+  /** @param {HTMLElement} el */
+  const describedText = (el) => {
+    const ids = (el.getAttribute('aria-describedby') ?? '').split(/\s+/).filter(Boolean);
+    return ids
+      .map((id) => document.getElementById(id)?.textContent ?? '')
+      .join(' ')
+      .trim();
+  };
+  const CERT_FIELDS = /** @type {const} */ (['number', 'issuer', 'expiresOn']);
+
+  it('a missing required file marks the file control only, never the certificate fields', () => {
+    const { service } = stubFiles();
+    renderWithProviders(<Harness requests={[HALAL]} />, { service });
+
+    const file = screen.getByTestId('docs-slot-dr-halal-files-input');
+    expect(file).toHaveAttribute('aria-invalid', 'true');
+    expect(describedText(file)).toContain('Required: Halal certificate');
+
+    for (const key of CERT_FIELDS) {
+      const field = screen.getByTestId(`docs-slot-dr-halal-cert-${key}`);
+      expect(field).not.toHaveAttribute('aria-invalid');
+      expect(field).not.toHaveAttribute('aria-describedby');
+    }
+  });
+
+  it('missing certificate fields mark those fields only — and only the ones still blank', async () => {
+    const { service } = stubFiles();
+    renderWithProviders(<Harness requests={[HALAL]} />, { service });
+    pick('docs-slot-dr-halal-files', pdf('halal.pdf'));
+    await screen.findByText('halal.pdf');
+
+    // The file is present: the file control is no longer the one at fault.
+    const file = screen.getByTestId('docs-slot-dr-halal-files-input');
+    expect(file).not.toHaveAttribute('aria-invalid');
+    expect(file).not.toHaveAttribute('aria-describedby');
+
+    // All three are blank, so all three name the refusal.
+    for (const key of CERT_FIELDS) {
+      const field = screen.getByTestId(`docs-slot-dr-halal-cert-${key}`);
+      expect(field).toHaveAttribute('aria-invalid', 'true');
+      expect(describedText(field)).toContain(
+        'needs its certificate number, issuer and expiry date'
+      );
+    }
+
+    fireEvent.change(screen.getByTestId('docs-slot-dr-halal-cert-number'), {
+      target: { value: 'ID00410000123' }
+    });
+    // Exactly the fields still blank are marked; the filled one is acquitted.
+    expect(screen.getByTestId('docs-slot-dr-halal-cert-number')).not.toHaveAttribute(
+      'aria-invalid'
+    );
+    expect(screen.getByTestId('docs-slot-dr-halal-cert-issuer')).toHaveAttribute(
+      'aria-invalid',
+      'true'
+    );
+    expect(screen.getByTestId('docs-slot-dr-halal-cert-expiresOn')).toHaveAttribute(
+      'aria-invalid',
+      'true'
+    );
+  });
+});
+
 describe('NR-1 BR-05 / AC-03 — a file over the limit is refused on pick', () => {
   it('a 26 MB file is refused with the limit named and never put; the other files stay', async () => {
     const { files, service } = stubFiles();

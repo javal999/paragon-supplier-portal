@@ -93,12 +93,26 @@ const AsnLinesEditor = ({
                       inputMode="decimal"
                       aria-label={t('fc.asn.shippedFor', { material: l.materialCode })}
                       aria-invalid={bad || over}
+                      // BL-326 — an over-open line is not `bad`, so its note
+                      // is the form-level over-open alert (rendered below
+                      // whenever any line is over). The row's own note is
+                      // referenced only when it is the one that renders.
+                      aria-describedby={
+                        bad
+                          ? `asn-qty-${l.materialCode}-invalid`
+                          : over
+                            ? 'asn-over-open-alert'
+                            : undefined
+                      }
                       value={e.qty}
                       onChange={(ev) => onChange(l.materialCode, { qty: ev.target.value })}
                       className={`${inputClass} min-w-[96px]`}
                     />
                     {bad && (
-                      <div className="mt-1 text-[length:var(--fs-label-3)] text-danger">
+                      <div
+                        id={`asn-qty-${l.materialCode}-invalid`}
+                        className="mt-1 text-[length:var(--fs-label-3)] text-danger"
+                      >
                         {t('fc.asn.qty.invalid')}
                       </div>
                     )}
@@ -115,6 +129,19 @@ const AsnLinesEditor = ({
                     <input
                       type="date"
                       aria-label={t('fc.asn.expiryFor', { material: l.materialCode })}
+                      // BL-84 — an expiry the rule refuses says which note.
+                      aria-invalid={
+                        r?.refusal === 'expiry' ||
+                        r?.refusal === 'expiryRequired' ||
+                        r?.refusal === 'shelfLife' ||
+                        (r?.shelfLife ? !r.shelfLife.ok : false)
+                      }
+                      aria-describedby={
+                        r?.refusal === 'expiryRequired' ||
+                        (r?.shelfLife?.monthsLeft ?? null) !== null
+                          ? `asn-expiry-${l.materialCode}-note`
+                          : undefined
+                      }
                       value={e.expiry}
                       onChange={(ev) => onChange(l.materialCode, { expiry: ev.target.value })}
                       className={inputClass}
@@ -135,7 +162,7 @@ const AsnLinesEditor = ({
       </div>
       {read.overCount > 0 && (
         <div className="bg-warning-soft border-l-2 border-warning rounded px-3 py-2 space-y-2">
-          <p role="alert" className="text-xs text-warning-hover">
+          <p id="asn-over-open-alert" role="alert" className="text-xs text-warning-hover">
             {read.overCount === 1
               ? t('fc.asn.overOpen.one')
               : t('fc.asn.overOpen.other', { count: read.overCount })}

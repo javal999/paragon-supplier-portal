@@ -18,8 +18,14 @@ import SessionAttachments from '@components/ui-v2/SessionAttachments';
 const inputClass =
   'w-full bg-white border border-border-input rounded-md px-3 h-9 text-sm focus:outline-none focus:border-action';
 
-/** @type {React.FC<{ question: RfiQuestion; answer: RfiAnswer | undefined; onChange: (next: RfiAnswer) => void; }>} */
-const RfqQuestionField = ({ question, answer, onChange }) => {
+/** @type {React.FC<{ question: RfiQuestion; answer: RfiAnswer | undefined; onChange: (next: RfiAnswer) => void; 'aria-invalid'?: boolean; 'aria-describedby'?: string; }>} */
+const RfqQuestionField = ({
+  question,
+  answer,
+  onChange,
+  'aria-invalid': ariaInvalid,
+  'aria-describedby': ariaDescribedBy
+}) => {
   const { t } = useTranslation();
   // An attachment answer stores the file's NAME (the RFI rule); the file itself
   // is held for this session only (BL-27).
@@ -44,6 +50,9 @@ const RfqQuestionField = ({ question, answer, onChange }) => {
       {(question.type === 'yesNo' || question.type === 'singleChoice') && (
         <select
           id={id}
+          // BL-84 — the note under the question is announced with its control.
+          aria-invalid={ariaInvalid || undefined}
+          aria-describedby={ariaDescribedBy}
           value={typeof value === 'string' ? value : ''}
           onChange={(e) => set(e.target.value || undefined)}
           className={inputClass}
@@ -58,7 +67,12 @@ const RfqQuestionField = ({ question, answer, onChange }) => {
       )}
 
       {question.type === 'multipleChoice' && (
-        <div className="flex flex-wrap gap-3" id={id}>
+        <div
+          className="flex flex-wrap gap-3"
+          id={id}
+          aria-invalid={ariaInvalid || undefined}
+          aria-describedby={ariaDescribedBy}
+        >
           {options.map((o) => {
             const list = Array.isArray(value) ? /** @type {string[]} */ (value) : [];
             const chosen = list.includes(o);
@@ -82,6 +96,8 @@ const RfqQuestionField = ({ question, answer, onChange }) => {
           id={id}
           type="text"
           inputMode="decimal"
+          aria-invalid={ariaInvalid || undefined}
+          aria-describedby={ariaDescribedBy}
           value={typeof value === 'number' ? String(value) : typeof value === 'string' ? value : ''}
           onChange={(e) => {
             // Kept as typed; `readTieredDraft` reads it through the one legal
@@ -96,6 +112,8 @@ const RfqQuestionField = ({ question, answer, onChange }) => {
         <input
           id={id}
           type="date"
+          aria-invalid={ariaInvalid || undefined}
+          aria-describedby={ariaDescribedBy}
           value={typeof value === 'string' ? value : ''}
           onChange={(e) => set(e.target.value || undefined)}
           className={inputClass}
@@ -106,6 +124,10 @@ const RfqQuestionField = ({ question, answer, onChange }) => {
         <SessionAttachments
           label={t('rfqResponse.question.attachment')}
           testId={`rfq-q-att-${question.id}`}
+          // BL-326 — an attachment answer is the control the caller's note is
+          // about, so it forwards both halves of that wiring.
+          invalid={!!ariaInvalid}
+          describedBy={ariaDescribedBy}
           value={files}
           onChange={(next) => {
             setFiles(next);
@@ -125,6 +147,8 @@ const RfqQuestionField = ({ question, answer, onChange }) => {
         <textarea
           id={id}
           rows={2}
+          aria-invalid={ariaInvalid || undefined}
+          aria-describedby={ariaDescribedBy}
           value={typeof value === 'string' ? value : ''}
           onChange={(e) => set(e.target.value)}
           className="w-full bg-white border border-border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:border-action"

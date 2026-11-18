@@ -256,6 +256,24 @@ describe('SupplierForecasts — the governed submit (t_requirementresponse_submi
     ).toBeInTheDocument();
   });
 
+  it('BL-326 · an unreadable quantity describes the refusal that is on screen', async () => {
+    renderPage();
+    await openConfirmFor('PK-PETB-8810');
+    const input = screen.getByLabelText(/Confirmed quantity/);
+    // Pristine: the permanent hint is the description.
+    expect(input).toHaveAttribute('aria-describedby', 'sdcsup-qty-hint');
+    expect(document.getElementById('sdcsup-qty-hint')).toHaveTextContent('Digits only');
+
+    setQty('2.400'); // the unresolved cross-convention token
+    const refusal = screen.getByTestId('confirm-qty-refusal');
+    const ids = (input.getAttribute('aria-describedby') ?? '').split(/\s+/).filter(Boolean);
+    expect(ids).toContain('sdcsup-qty-refusal');
+    const described = document.getElementById('sdcsup-qty-refusal');
+    expect(described).toBe(refusal);
+    expect(described?.textContent).toBe(refusal.textContent);
+    expect(described?.textContent).toContain('can be read two ways');
+  });
+
   // PEX-D22 — on the firm line PK-PETB-8810 (40 000 PCS); it used the
   // semi-firm PK-CAPF-8820, which now takes an acknowledgement only.
   it('a SHORT confirm without a root cause is blocked at the form; with one it submits', async () => {

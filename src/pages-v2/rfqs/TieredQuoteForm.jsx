@@ -53,11 +53,26 @@ const FieldNote = ({ problem, showMissing, testId }) => {
   if (!problem) return null;
   if (problem.missing) return showMissing ? <StillMissing testId={testId} /> : null;
   return (
-    <div className="text-xs text-danger mt-1" data-testid={testId}>
+    // BL-84 — the owning field names this note with aria-describedby.
+    <div id={testId} className="text-xs text-danger mt-1" data-testid={testId}>
       {t('rfx.form.notValid')}
     </div>
   );
 };
+
+/**
+ * BL-84 — the attributes an owning control carries so the note under it is
+ * announced with it, derived from the SAME problem `FieldNote` renders (so a
+ * control never describes a note that is not on screen).
+ * @param {GridProblem | undefined} problem
+ * @param {boolean} showMissing
+ * @param {string} noteId
+ * @returns {Record<string, string | boolean | undefined>}
+ */
+const noteProps = (problem, showMissing, noteId) =>
+  problem && (!problem.missing || showMissing)
+    ? { 'aria-invalid': true, 'aria-describedby': noteId }
+    : {};
 
 /** @typedef {{ issue: (anchor: string) => GridProblem | undefined; showMissing: boolean }} FieldIssues */
 
@@ -85,6 +100,7 @@ const SpecInput = ({ field, value, onChange, testId, issues }) => {
           id={testId}
           aria-label={label}
           data-testid={testId}
+          {...noteProps(issues.issue(testId), issues.showMissing, `${testId}-note`)}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className={inputClass}
@@ -103,6 +119,7 @@ const SpecInput = ({ field, value, onChange, testId, issues }) => {
           id={testId}
           aria-label={label}
           data-testid={testId}
+          {...noteProps(issues.issue(testId), issues.showMissing, `${testId}-note`)}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className={inputClass}
@@ -144,6 +161,11 @@ const BreakPrices = ({ rfq, item, prices, onChange, testIdPrefix, labelPrefix, i
             })}
             id={`${testIdPrefix}-${tier.qty}`}
             data-testid={`${testIdPrefix}-${tier.qty}`}
+            {...noteProps(
+              issues.issue(`${testIdPrefix}-${tier.qty}`),
+              issues.showMissing,
+              `${testIdPrefix}-${tier.qty}-note`
+            )}
             value={prices[tier.qty] ?? ''}
             onChange={(e) => onChange(tier.qty, e.target.value)}
             className={inputClass}
@@ -249,6 +271,7 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged, issues }) => {
             aria-label={t('rfqResponse.grid.moqFor', { item: itemLabel })}
             id={`${tid}-moq`}
             data-testid={`${tid}-moq`}
+            {...noteProps(issues.issue(`${tid}-moq`), issues.showMissing, `${tid}-moq-note`)}
             value={draft.moq}
             onChange={(e) => onChange({ ...draft, moq: e.target.value })}
             className={inputClass}
@@ -270,6 +293,7 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged, issues }) => {
             aria-label={t('rfqResponse.grid.leadTimeFor', { item: itemLabel })}
             id={`${tid}-lead`}
             data-testid={`${tid}-lead`}
+            {...noteProps(issues.issue(`${tid}-lead`), issues.showMissing, `${tid}-lead-note`)}
             value={draft.leadTimeDays}
             onChange={(e) => onChange({ ...draft, leadTimeDays: e.target.value })}
             className={inputClass}
@@ -302,6 +326,11 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged, issues }) => {
                 })}
                 id={`${tid}-cost-${id}`}
                 data-testid={`${tid}-cost-${id}`}
+                {...noteProps(
+                  issues.issue(`${tid}-cost-${id}`),
+                  issues.showMissing,
+                  `${tid}-cost-${id}-note`
+                )}
                 value={draft.requestedCosts[id] ?? ''}
                 onChange={(e) =>
                   onChange({
@@ -324,7 +353,9 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged, issues }) => {
             <div key={c.id} className="flex flex-wrap items-center gap-2">
               <input
                 type="text"
-                id={`${tid}-extra-${c.id}`}
+                // BL-326 — the amount below owns `${tid}-extra-${c.id}` (its
+                // problem anchor); the name needs an id of its own.
+                id={`${tid}-extra-${c.id}-name`}
                 aria-label={t('rfqResponse.grid.extraCostName', { n: i + 1 })}
                 placeholder={t('rfqResponse.grid.extraCostNamePlaceholder')}
                 value={c.name}
@@ -342,6 +373,12 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged, issues }) => {
                 type="text"
                 inputMode="decimal"
                 aria-label={t('rfqResponse.grid.extraCostAmount', { n: i + 1 })}
+                id={`${tid}-extra-${c.id}`}
+                {...noteProps(
+                  issues.issue(`${tid}-extra-${c.id}`),
+                  issues.showMissing,
+                  `${tid}-extra-${c.id}-note`
+                )}
                 value={c.amount}
                 onChange={(e) =>
                   onChange({
@@ -367,7 +404,7 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged, issues }) => {
                 <FieldNote
                   problem={issues.issue(`${tid}-extra-${c.id}`)}
                   showMissing={issues.showMissing}
-                  testId={`${tid}-extra-${i + 1}-note`}
+                  testId={`${tid}-extra-${c.id}-note`}
                 />
               </span>
             </div>
@@ -412,6 +449,11 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged, issues }) => {
                   aria-label={t('rfqResponse.grid.altDescriptionFor', { item: itemLabel })}
                   id={`${tid}-alt-description`}
                   data-testid={`${tid}-alt-description`}
+                  {...noteProps(
+                    issues.issue(`${tid}-alt-description`),
+                    issues.showMissing,
+                    `${tid}-alt-description-note`
+                  )}
                   value={draft.alternative.description}
                   onChange={(e) =>
                     onChange({
@@ -531,6 +573,7 @@ const TieredQuoteForm = ({
               type="date"
               id="grid-valid-until"
               aria-label={t('rfqs.field.validUntil')}
+              {...noteProps(issues.issue('grid-valid-until'), showMissing, 'grid-valid-until-note')}
               value={draft.validUntil}
               onChange={(e) => onChange({ ...draft, validUntil: e.target.value })}
               className={inputClass}
@@ -563,6 +606,7 @@ const TieredQuoteForm = ({
                   question={q}
                   answer={draft.answers[q.id]}
                   onChange={(a) => onChange({ ...draft, answers: { ...draft.answers, [q.id]: a } })}
+                  {...noteProps(issues.issue(`grid-q-${q.id}`), showMissing, `grid-q-${q.id}-note`)}
                 />
                 <FieldNote
                   problem={issues.issue(`grid-q-${q.id}`)}
@@ -658,6 +702,7 @@ export const SampleOfferFields = ({
               key={String(v)}
               type="button"
               aria-pressed={canSample === v}
+              {...noteProps(sampleProblem, showMissing, 'sample-offer-note')}
               onClick={() => onChange(v, v ? readyDate : '')}
               className={`px-4 py-1.5 rounded-md text-sm font-semibold border transition-colors ${
                 canSample === v
@@ -683,6 +728,7 @@ export const SampleOfferFields = ({
               type="date"
               id={`${anchorPrefix}-sample-date`}
               aria-label={t('rfqResponse.sample.readyDate')}
+              {...noteProps(dateProblem, showMissing, 'sample-offer-date-note')}
               value={readyDate}
               onChange={(e) => onChange(true, e.target.value)}
               className={inputClass}

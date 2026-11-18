@@ -279,6 +279,8 @@ describe('BuyerSourcing — the RFQ wizard numerics are text, so the parser is l
     expect(refusal).toHaveAttribute('role', 'alert');
     expect(refusal.textContent).toMatch(/can be read two ways/i);
     expect(qty).toHaveAttribute('aria-invalid', 'true');
+    // BL-84 — the quantity field names the refusal under it.
+    expect(qty).toHaveAttribute('aria-describedby', 'rfq-qty-refusal');
   });
 
   it('an untouched blank quantity does NOT nag — it refuses at the gate instead', async () => {

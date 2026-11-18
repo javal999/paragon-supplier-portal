@@ -112,12 +112,19 @@ const SupplierShipments = () => {
   // when it is a confirmed one on the PO. Applied once per address, so a
   // supplier who then picks another PO is not overruled; a PO that is not
   // shippable, or a call-off that is not confirmed, leaves the choice open.
+  //
+  // BL-325 — the seed derives from EVERY read `poSelection` reads: the PO's open
+  // lines come from the POs, the ASNs and the receipts. Waiting only for the
+  // call-offs latched a seed built from empty reads when the receipts (or the
+  // ASNs) had not resolved yet, and the latch then prevented the correction —
+  // so a kept-open receipt's reopened quantity was silently missing.
   const [searchParams] = useSearchParams();
   const startedFor = useRef('');
   const startPoId = searchParams.get('tab') === 'create' ? drilledPoId(drill) : null;
   const startCallOffId = searchParams.get(CALL_OFF_PARAM);
   useEffect(() => {
     if (startPoId === null) return;
+    if (posQuery.isPending || asnsQuery.isPending || receiptsQuery.isPending) return;
     if (startCallOffId !== null && callOffsQuery.isPending) return;
     const key = `${startPoId}|${startCallOffId ?? ''}`;
     if (startedFor.current === key) return;
@@ -139,6 +146,9 @@ const SupplierShipments = () => {
     SHIPPABLE_POS,
     asns,
     receipts,
+    posQuery.isPending,
+    asnsQuery.isPending,
+    receiptsQuery.isPending,
     callOffsQuery.isPending,
     callOffsQuery.data
   ]);

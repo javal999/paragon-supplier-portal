@@ -34,9 +34,11 @@ export const monthsText = (months) => formatNumber(Math.round(months * 10) / 10)
  */
 export const ShelfLifeLineNote = ({ view, expiry, refusal, materialCode }) => {
   const { t } = useTranslation();
+  const noteId = `asn-expiry-${materialCode}-note`;
   if (refusal === 'expiryRequired') {
     return (
-      <div className="mt-1 text-[length:var(--fs-label-3)] text-danger">
+      // BL-84 — the expiry field names this note.
+      <div id={noteId} className="mt-1 text-[length:var(--fs-label-3)] text-danger">
         {t('fc.asn.shelfLife.expiryRequired')}
       </div>
     );
@@ -44,6 +46,7 @@ export const ShelfLifeLineNote = ({ view, expiry, refusal, materialCode }) => {
   if (!view || view.monthsLeft === null) return null;
   return (
     <div
+      id={noteId}
       data-testid={`asn-shelf-life-${materialCode}`}
       className={`mt-1 text-[length:var(--fs-label-3)] ${view.ok ? 'text-text-tertiary' : 'text-danger'}`}
     >

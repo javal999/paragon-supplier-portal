@@ -168,6 +168,9 @@ const WizardObligationsStep = ({
                   <td className="px-3 py-2">
                     <select
                       value={o.owner}
+                      // BL-84 (WCAG 4.1.2): every row's owner control was an
+                      // unnamed combobox; the row's title names it.
+                      aria-label={t('contracts.wizard.obl.ownerAria', { title: o.title })}
                       onChange={(e) =>
                         updateObligation(
                           i,
@@ -186,6 +189,8 @@ const WizardObligationsStep = ({
                     <input
                       type="date"
                       value={o.dueDate}
+                      // BL-84 (WCAG 4.1.2): same for the date control.
+                      aria-label={t('contracts.wizard.obl.dueDateAria', { title: o.title })}
                       onChange={(e) => updateObligation(i, 'dueDate', e.target.value)}
                       className="bg-white border border-border-input rounded-md px-2 h-8 text-xs focus:outline-none focus:border-action"
                     />
