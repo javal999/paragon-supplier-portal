@@ -22,6 +22,7 @@ import { planExecution, spreadAcrossWeeks } from '../../transitions/poOnHoldExec
 import { fulfilmentWindow } from '../../transitions/fulfilmentWindow';
 import { lastMovementDay } from '../../transitions/stockMovement';
 import { sdcClock } from '../../sdc';
+import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 import { NO_PERSON } from '@context/noPerson';
 
 const svc = new MockCommandService();
@@ -33,6 +34,13 @@ const planner = {
   businessRoles: ['planning'],
   actor: NO_PERSON
 };
+/** @param {string} supplierId @returns {import('../types').QueryScope} */
+const supplierSeat = (supplierId) => ({
+  personaType: 'supplier',
+  supplierId,
+  businessRoles: PERSONA_SYSTEM_ROLES.supplier,
+  actor: NO_PERSON
+});
 
 const LINE = { supplierId: 'sup-002', materialCode: 'RM-MYRST-7310' }; // no DA: all 10000 on hold
 const SMALL = { supplierId: 'sup-003', materialCode: 'FR-EMIN-4420' }; // 300 on hold
@@ -311,6 +319,39 @@ describe('the execution through the real services', () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ closed: true, qty: 0 });
     expect(rows[0]?.execution.record?.callOffIds).toHaveLength(made().length);
+  });
+
+  it('PSC-6 BR-09: a rejected execution call-off does not restart the grace', async () => {
+    await suggest({ ...LINE, option: 'fsOnly' });
+    const episode = (await find(LINE))?.grace.firstDay;
+    await setParam('grace', LINE, 0); // the call-off takes the whole quantity
+    const co = made()[0];
+    expect(co).toBeDefined();
+    // A read while the quantity is out of hold drops the pair's recorded first day.
+    expect((await find(LINE))?.execution.status).toBe('executed');
+    // Days later the call-off is rejected: the planner returns it for confirmation
+    // (a Confirmed call-off is not changed in place), the supplier rejects it.
+    sdcClock.set('2026-09-10T12:00:00.000Z');
+    const changed = await svc.dispatch(planner, {
+      transitionId: 't_calloff_change',
+      entity: 'callOff',
+      entityId: co?.id,
+      payload: { reason: 'Need it back: supplier cannot ship' }
+    });
+    expect(changed.status).not.toBe('failed');
+    const rejected = await svc.dispatch(supplierSeat(LINE.supplierId), {
+      transitionId: 't_calloff_reject',
+      entity: 'callOff',
+      entityId: co?.id,
+      payload: { reason: 'Cannot ship this quantity' }
+    });
+    expect(rejected.status).not.toBe('failed');
+    const back = await find(LINE);
+    // The quantity returns to the open PO, and the grace keeps its episode's start:
+    // had it restarted, firstDay would be the later hub day.
+    expect(back?.qty).toBe(10000);
+    expect(back?.grace.firstDay).toBe(episode);
+    expect(back?.grace.firstDay).not.toBe('2026-09-10');
   });
 
   it('FG: absorbed up to the cap, recorded on the PO line, no call-off; the rest stays on hold', async () => {

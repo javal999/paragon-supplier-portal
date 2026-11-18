@@ -13,6 +13,7 @@ import {
   workingDaysBetween
 } from './poOnHold';
 import { osipParamKey, osipParamRefusal, parseOsipParamKey } from './osipParams';
+import { fulfilmentWindow } from './fulfilmentWindow';
 
 describe('PEX-7 BR-01 — PO On Hold = max(0, OSPO − DA not yet called off)', () => {
   it('sums DA less call-offs per week, never below 0 for a week', () => {
@@ -38,26 +39,44 @@ describe('PEX-7 BR-02..BR-05 — the grace period', () => {
     expect(PO_ON_HOLD_RULES.graceDays).toBe(14);
     expect(PO_ON_HOLD_RULES.noMoveDays).toBe(14);
   });
-  it('counts WORKING days from the first day: 14 working days after Tue 3 Nov is Mon 23 Nov (owner, 2026-11-09)', () => {
-    const g = graceState('2026-11-10', '2026-11-03', 14);
-    expect(g.dueDay).toBe('2026-11-23');
-    expect(g.daysLeft).toBe(9);
-    expect(g.ended).toBe(false);
+  it('PSC-6 AC-01: a quantity that first appears on 1 Dec is in grace on days 1 to 14 (1 to 14 Dec) and moves on 15 Dec', () => {
+    expect(graceState('2026-12-01', '2026-12-01', 14)).toMatchObject({
+      firstDay: '2026-12-01',
+      dueDay: '2026-12-15',
+      daysLeft: 14,
+      ended: false
+    });
+    // Day 14 is still in grace; day 15 is the first day after it.
+    expect(graceState('2026-12-14', '2026-12-01', 14).ended).toBe(false);
+    expect(graceState('2026-12-15', '2026-12-01', 14).ended).toBe(true);
   });
-  it('ends on the due day itself, not before', () => {
-    expect(graceState('2026-11-23', '2026-11-03', 14).ended).toBe(true);
-    expect(graceState('2026-11-20', '2026-11-03', 14).ended).toBe(false);
+  it('counts CALENDAR days: a weekend does not stretch the grace (14 calendar days after Tue 3 Nov is Tue 17 Nov, not Mon 23 Nov)', () => {
+    expect(graceState('2026-11-10', '2026-11-03', 14)).toMatchObject({
+      dueDay: '2026-11-17',
+      daysLeft: 7,
+      ended: false
+    });
   });
-  it('weekends do not count: a Saturday first day counts from the next working day', () => {
-    expect(graceState('2026-11-07', '2026-11-07', 1).dueDay).toBe('2026-11-10');
+  it('a Saturday first day is day 1: a calendar clock does not move to the next working day', () => {
+    expect(graceState('2026-11-07', '2026-11-07', 1)).toMatchObject({
+      dueDay: '2026-11-08',
+      daysLeft: 1,
+      ended: false
+    });
   });
-  it('working days between two dates skip the weekend', () => {
+  it('the no-movement period stays WORKING days on the hub calendar (PEX-7 BR-03, PEX-D23)', () => {
+    // `workingDaysBetween` is the no-movement arithmetic (PO_ON_HOLD_RULES.noMoveDays).
     expect(workingDaysBetween('2026-11-06', '2026-11-10')).toBe(2);
     expect(workingDaysBetween('2026-11-10', '2026-11-10')).toBe(0);
     expect(workingDaysBetween('2026-11-10', '2026-11-06')).toBe(0);
   });
   it('a grace period of 0 days is over at once', () => {
     expect(graceState('2026-11-03', '2026-11-03', 0).ended).toBe(true);
+  });
+  it('PSC-6 AC-05 / PEX-D27: the end-of-grace need date is the grace end + the DRC-6 lead time, in calendar days', () => {
+    const g = graceState('2026-12-01', '2026-12-01', 14);
+    expect(g.dueDay).toBe('2026-12-15');
+    expect(fulfilmentWindow(g.dueDay, 28)?.by).toBe('2027-01-12');
   });
   it('the two settings are ledger keys grace|supplier|material and noMove|supplier|material (BR-04)', () => {
     expect(osipParamKey('grace', { supplierId: 's1', materialCode: 'M1' })).toBe('grace|s1|M1');

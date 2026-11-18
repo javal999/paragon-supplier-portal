@@ -357,7 +357,7 @@ export const processFlowPurposeEn = {
 
   // ── the hub's working calendar (BL-50) ─────────────────────────────────
   'processFlows.purpose.entity.workingCalendar':
-    'Which days count as working days for every deadline in the hub, starting from the calendar SAP holds and corrected by the hub administrator where the plant knows better.',
+    'Which days count as working days for every deadline that counts working days in the hub, starting from the calendar SAP holds and corrected by the hub administrator where the plant knows better.',
   'processFlows.purpose.t_calendar_day_set':
     'The hub administrator says one date is or is not a working day, and why. Every response and commitment deadline that spans that date moves with it at once, so the grounds for it have to be on record.',
   // ── the logistics providers list (BL-51) ─────────────────────────────
@@ -1014,7 +1014,7 @@ export const processFlowPurposeId = {
     'Seseorang menyalin satu kumpulan izin lalu memperluasnya. Memperluas tidak pernah menghapus apa pun, sehingga tidak ada yang diam-diam kehilangan wewenang yang diandalkan darinya, dan tindakan itu dicatat seperti setiap tindakan diatur lainnya.',
 
   'processFlows.purpose.entity.workingCalendar':
-    'Hari mana yang dihitung sebagai hari kerja untuk setiap tenggat di hub, berawal dari kalender yang disimpan SAP lalu dikoreksi oleh administrator hub bila pabrik lebih tahu.',
+    'Hari mana yang dihitung sebagai hari kerja untuk setiap tenggat yang menghitung hari kerja di hub, berawal dari kalender yang disimpan SAP lalu dikoreksi oleh administrator hub bila pabrik lebih tahu.',
   'processFlows.purpose.t_calendar_day_set':
     'Administrator hub menyatakan satu tanggal adalah atau bukan hari kerja, beserta alasannya. Setiap tenggat tanggapan dan komitmen yang melewati tanggal itu langsung ikut bergeser, sehingga alasannya harus tercatat.',
   'processFlows.purpose.entity.threePl':

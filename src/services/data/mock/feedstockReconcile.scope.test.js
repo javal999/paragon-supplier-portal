@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { MockProcurementService } from './MockProcurementService';
+import { allPoOnHoldFigures } from './poOnHoldReadModel';
+import { osipParamStore } from './stores/osipParamStore';
+import { sdcClock } from '../../sdc';
+import { NO_PERSON } from '@context/noPerson';
 /** @import { QueryScope } from '../types' */
 import { PERSONA_SYSTEM_ROLES } from '../../transitions/businessRoles';
 
@@ -18,6 +22,11 @@ const sup = (supplierId) => ({
   personaType: 'supplier',
   supplierId,
   businessRoles: PERSONA_SYSTEM_ROLES.supplier
+});
+
+afterEach(() => {
+  osipParamStore.reset();
+  sdcClock.reset();
 });
 
 describe('getFixedStockReconcile (the feedstock reconcile) — scoping and sample rows', () => {
@@ -54,6 +63,72 @@ describe('getFixedStockReconcile (the feedstock reconcile) — scoping and sampl
       valueOnlyLines: 1,
       calledOff: 100,
       notYetCalledOff: 400
+    });
+  });
+
+  it('PSC-6 BR-03/BR-04: every row carries its pair’s DA picture, the hold split and Total OSPO', async () => {
+    const rows = (await reads.getFixedStockReconcile(buyer)).items;
+    const figures = new Map(allPoOnHoldFigures().map((f) => [f.key, f]));
+    // The join is complete: every row is a pair the PO On Hold read model knows.
+    for (const r of rows) {
+      expect(r.da, r.key).not.toBeNull();
+      expect(r.daNotCalledOff, r.key).not.toBeNull();
+      expect(r.totalOspo, r.key).not.toBeNull();
+    }
+    const row = rows.find((r) => r.key === 'sup-007|PK-PETB-8801');
+    const fig = figures.get('sup-007|PK-PETB-8801');
+    expect(row).toMatchObject({
+      da: fig?.demand,
+      daNotCalledOff: fig?.daNotCalledOff,
+      // Hub day 2026-08-31: the quantity first appears today, so it is in grace
+      // (PSC-6 BR-02) until day 15 — 14 CALENDAR days later (PSC-6 BR-06).
+      inGraceQty: 117_700,
+      inGraceUntil: '2026-09-14',
+      onHoldQty: 0,
+      onHoldSince: null
+    });
+    expect(row?.totalOspo).toBe(Math.min(fig?.ospo ?? 0, fig?.daNotCalledOff ?? 0) + 117_700);
+  });
+
+  it('PSC-6 BR-02: when the grace ends the quantity leaves In grace for PO On Hold', async () => {
+    const key = 'sup-007|PK-PETB-8801';
+    const first = (await reads.getFixedStockReconcile(buyer)).items.find((r) => r.key === key);
+    expect(first).toMatchObject({ inGraceQty: 117_700, onHoldQty: 0, onHoldSince: null });
+    // Grace 0 on the pair: the episode is over on its own first day.
+    osipParamStore.append({
+      key: `grace|${key}`,
+      param: 'grace',
+      value: 0,
+      previous: null,
+      reason: null,
+      setAt: sdcClock.now(),
+      setBy: NO_PERSON
+    });
+    const fig = allPoOnHoldFigures().find((f) => f.key === key);
+    const later = (await reads.getFixedStockReconcile(buyer)).items.find((r) => r.key === key);
+    expect(later).toMatchObject({
+      inGraceQty: 0,
+      inGraceUntil: null,
+      onHoldQty: fig?.qty,
+      onHoldSince: '2026-08-31'
+    });
+    expect(later?.onHoldQty).toBe(117_700);
+  });
+
+  it('AC-04 (PSC-6): a pair with no PO On Hold quantity still reads its DA and Total OSPO', async () => {
+    // A reconcile row whose pair has nothing on hold keeps its DA columns and
+    // Total OSPO = min(OSPO, DA not yet called off) (PSC-6 BR-04, AC-04).
+    const rows = (await reads.getFixedStockReconcile(buyer)).items;
+    const figures = new Map(allPoOnHoldFigures().map((f) => [f.key, f]));
+    const key = rows.map((r) => r.key).find((k) => figures.get(k)?.qty === 0);
+    expect(key, 'a sample pair with nothing on hold').toBeDefined();
+    const fig = figures.get(key ?? '');
+    expect(rows.find((r) => r.key === key)).toMatchObject({
+      da: fig?.demand,
+      daNotCalledOff: fig?.daNotCalledOff,
+      inGraceQty: 0,
+      onHoldQty: 0,
+      totalOspo: Math.min(fig?.ospo ?? 0, fig?.daNotCalledOff ?? 0)
     });
   });
 

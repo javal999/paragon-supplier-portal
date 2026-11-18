@@ -44,6 +44,8 @@ import {
   forecastSupplierName
 } from './forecastReadModel';
 import { allFeedstockRows } from './feedstockReadModel';
+import { allPoOnHold, allPoOnHoldFigures } from './poOnHoldReadModel';
+import { withHoldColumns } from '../../transitions/feedstockReconcile';
 import { canSeePtiStock, maskForSupplier } from '../../transitions/inventoryRules';
 import { PTI_ONLY_RULES } from '../../transitions/inventoryAlertRules';
 import { mockShipments } from '@data/mockShipments';
@@ -173,7 +175,6 @@ import { supplierAskStore } from './stores/supplierAskStore';
 // INV-D8 — PTI's capacity gap decisions.
 import { capacityDecisionStore } from './stores/capacityDecisionStore';
 import { runDuePoOnHoldExecutions } from './MockCommandService';
-import { allPoOnHold } from './poOnHoldReadModel';
 import { withOwnQualificationWarnings } from '../../sourcing/sourcingType';
 
 /** REQ-E14-10 — the backtest's heavy half per engine dataset, keyed by hub date and the values it reads. */
@@ -784,7 +785,17 @@ export class MockProcurementService {
     // keeps its contract name (C1-methods) since FS now reads "feedstock". The
     // planner reads every supplier; a supplier reads only its own rows, scoped
     // HERE so another supplier's figures never reach the page.
-    return { items: applySupplierScope(scope, allFeedstockRows()) };
+    //
+    // PSC-6 BR-03 / BR-04 (BL-347) — each row also carries its pair's DA picture
+    // and the PO On Hold quantity split into In grace / PO On Hold, joined from
+    // the SAME PO On Hold read model the panel reads: one clock, one quantity.
+    // A pair with no PO On Hold figures keeps the DA columns empty.
+    const hold = new Map(allPoOnHoldFigures().map((f) => [f.key, f]));
+    return {
+      items: applySupplierScope(scope, allFeedstockRows()).map((r) =>
+        withHoldColumns(r, hold.get(r.key))
+      )
+    };
   }
 
   /**
