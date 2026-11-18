@@ -774,6 +774,9 @@ export function commitmentState(zone, forecastQty, response) {
 /**
  * `draftsFor`:  Include this supplier's own drafts (never PTI's view — BR-10).
  * `qualifiedSuppliers`:  Suppliers qualified for a material (REQ-E06-03 BR-05).
+ * `ptiStock`:  PEX-3 BR-02 (BL-284) — PTI stock on hand per material (SAP, all
+ *   plants), for the line's SOH share and the heads-up note's gap. Omitted,
+ *   every line reads no SOH.
  *
  * @typedef {{
  *     readonly publications: readonly ForecastPublication[];
@@ -782,11 +785,39 @@ export function commitmentState(zone, forecastQty, response) {
  *     readonly supplierName: (supplierId: string) => string;
  *     readonly draftsFor?: string | null;
  *     readonly qualifiedSuppliers?: (materialCode: string) => readonly string[];
+ *     readonly ptiStock?: (materialCode: string) => number | null;
  *   }} CommitmentInputs
  */
 
 /** @param {Pick<ForecastLine, 'supplierId' | 'materialCode' | 'periodBucket'>} l */
 const lineKey = (l) => `${l.supplierId}|${l.materialCode}|${l.periodBucket}`;
+
+/**
+ * PEX-3 BR-02 (BL-284) — the line's share of its material's period total, from
+ * the version's own split (`allocation.materialPeriodTotal`). It is the CAP-D11
+ * principle (the Demand Anticipation page's SOH share) read per period instead
+ * of over a four-week window. Null when the line carries no usable total.
+ * @param {Pick<ForecastLine, 'forecastQty' | 'allocation'>} line
+ * @returns {number | null}
+ */
+export function lineAllocationShare(line) {
+  const total = line.allocation?.materialPeriodTotal;
+  if (typeof total !== 'number' || total <= 0) return null;
+  return line.forecastQty / total;
+}
+
+/**
+ * PEX-3 BR-01 / BR-02 (BL-284) — the gap the heads-up note names: LTP (planned
+ * use) − PTI stock on hand. Negative when PTI's stock covers the period, which
+ * means nothing is ordered. Null when either term is unknown.
+ * @param {number | null | undefined} ltpQty
+ * @param {number | null | undefined} ptiSoh
+ * @returns {number | null}
+ */
+export function ltpSohGap(ltpQty, ptiSoh) {
+  if (typeof ltpQty !== 'number' || typeof ptiSoh !== 'number') return null;
+  return ltpQty - ptiSoh;
+}
 
 /**
  * Every line of the CURRENT version of each stream with its commitment state.
@@ -869,6 +900,14 @@ export function buildCommitmentLines(input) {
         .flatMap((r) => r.disputeResponse ?? [])
         .sort((a, b) => a.at.localeCompare(b.at));
       const dueAt = commitmentDueAt(zone, current.publishedAt);
+      // PEX-3 BR-02 (BL-284) — the heads-up note's three terms. The LTP is the
+      // forecast quantity the supplier commits against (the capacity reads' one
+      // demand figure); the SOH is the supplier's share of PTI's stock on hand
+      // for the material (CAP-D11), whole units. The gap is derived at read
+      // (`ltpSohGap`), never stored.
+      const share = lineAllocationShare(line);
+      const stockQty = share === null ? null : (input.ptiStock?.(line.materialCode) ?? null);
+      const ptiSoh = share === null || stockQty === null ? null : Math.round(share * stockQty);
       out.push({
         key: `${current.publicationId}|${lineKey(line)}`,
         stream,
@@ -886,6 +925,9 @@ export function buildCommitmentLines(input) {
         periodEnd: bounds.end,
         zone,
         forecastQty: line.forecastQty,
+        ltpQty: line.forecastQty,
+        ptiSoh,
+        ptiStockShared: true,
         previousQty: previous?.lines.find((l) => sameLine(l, line))?.forecastQty ?? null,
         publishedAt: current.publishedAt,
         dueAt,

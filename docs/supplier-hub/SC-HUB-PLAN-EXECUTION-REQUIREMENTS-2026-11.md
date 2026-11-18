@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | **Approved 2026-11-05 (MR !95, `c03e64e6`). Built and merged to GitLab `main` in waves 1 and 2: MR !97 `b1bc58e8` (wave 1 and P0 fixes, 2026-11-09), MR !100 `55b63846` (PO On Hold, 2026-11-09), MR !101 `bc6ec8a3` (lead time, switches, trace, sandbox levels, 2026-11-09), MR !102 `c904d7da` (LTP inputs, DA versions, capacity heads-up, 2026-11-10). See the Build status column in section 3 and the wave status in section 5.** The owner answered the clarifying questions on 2026-11-05 (section 2) and ruled on the wave 1 build decisions the same day (PEX-D16 to PEX-D22) and on the working-day count for PO On Hold on 2026-11-09 (PEX-D23). On 2026-11-12 the owner ruled PEX-D25 to PEX-D28 and TL-D40 as recommended (section 6); PEX-D25 and PEX-D26 are built and merged in MR !127 (`15f9712f`). MR !117 (end of grace) and MR !131 (`b3067dbf`, PEX-12 as an educated guess, BL-312) are also merged to GitLab `main`; MR !131 is [Proposed] throughout. MR !135 (`3890c224`, merged to `main` as `18f75ebc` on 2026-11-16, in production since 2026-11-17) adds a marker on the call-offs an execution creates and a "Suggest again" for a remainder left on hold (PEX-8, BL-314, BL-315); both are [Proposed] and passed a browser check on a local build, with four open calls in `DECISION-GUIDE.md` and two faults (BL-317, BL-318), both closed on 2026-11-17 (MR !145 and MR !147) and live in production `dd20cb5b`; what is still unchecked is BL-316. MR !140 (`48d3c673`, merged to `main` as `5d2edcea` on 2026-11-17) divides recorded sourcing shares by their total before the LTP split (PEX-5 BR-08, BL-313); the owner accepted it as built the same day (PEX-D29). Rows tagged [Proposed] and the decisions in the "My calls" table of section 6 are the builders' and my calls: they were built as written and the owner has not ruled on them |
+| Status | **Approved 2026-11-05 (MR !95, `c03e64e6`). Built and merged to GitLab `main` in waves 1 and 2: MR !97 `b1bc58e8` (wave 1 and P0 fixes, 2026-11-09), MR !100 `55b63846` (PO On Hold, 2026-11-09), MR !101 `bc6ec8a3` (lead time, switches, trace, sandbox levels, 2026-11-09), MR !102 `c904d7da` (LTP inputs, DA versions, capacity heads-up, 2026-11-10). See the Build status column in section 3 and the wave status in section 5.** The owner answered the clarifying questions on 2026-11-05 (section 2) and ruled on the wave 1 build decisions the same day (PEX-D16 to PEX-D22) and on the working-day count for PO On Hold on 2026-11-09 (PEX-D23). On 2026-11-12 the owner ruled PEX-D25 to PEX-D28 and TL-D40 as recommended (section 6); PEX-D25 and PEX-D26 are built and merged in MR !127 (`15f9712f`). MR !117 (end of grace) and MR !131 (`b3067dbf`, PEX-12 as an educated guess, BL-312) are also merged to GitLab `main`; MR !131 is [Proposed] throughout. MR !135 (`3890c224`, merged to `main` as `18f75ebc` on 2026-11-16, in production since 2026-11-17) adds a marker on the call-offs an execution creates and a "Suggest again" for a remainder left on hold (PEX-8, BL-314, BL-315); both are [Proposed] and passed a browser check on a local build, with four open calls in `DECISION-GUIDE.md` and two faults (BL-317, BL-318), both closed on 2026-11-17 (MR !145 and MR !147) and live in production `dd20cb5b`; what is still unchecked is BL-316. MR !140 (`48d3c673`, merged to `main` as `5d2edcea` on 2026-11-17) divides recorded sourcing shares by their total before the LTP split (PEX-5 BR-08, BL-313); the owner accepted it as built the same day (PEX-D29). Rows tagged [Proposed] and the decisions in the "My calls" table of section 6 are the builders' and my calls: they were built as written and the owner has not ruled on them. **Amended 2026-11-18 by PSC-4 (buffers model A), PSC-6 (grace calendar days) and PSC-5 (4 sandbox presets).** |
 | Date | 2026-11-05 |
 | Source meetings | Weekly SC Hub, 2026-10-21, cited [M21 n]. Weekly SC Hub, 2026-11-04, cited [M04 n]. The PO On Hold decision table shared with the 2026-11-04 notes, cited [Table] |
 | Owner review | Answers in chat, 2026-11-05, cited [Owner, 2026-11-05]; rulings on PEX-D25 to PEX-D28, 2026-11-12, cited [Owner, 2026-11-12]; ruling on PEX-D29, 2026-11-17, cited [Owner, 2026-11-17] |
@@ -164,26 +164,26 @@ Read on GitLab `main` `3da82ae5`. Paths are under `src/`.
 - AC-01. Demand 700, capacity 1,000 reads 70%, green. Demand 690 reads 69%, under-used.
 
 **PEX-5 LTP inputs [M04 3; Owner, 2026-11-05, A5, Q2]**
-- BR-01. Four inputs per material: LTP A, LTP Festive and LTP B (quantities per week), and the LTP choice (A, Festive or B) per material. All come from outside the hub (Mas Ghifari's system).
+- BR-01. Three inputs per material: LTP A, LTP Festive and LTP B (quantities per week). All come from outside the hub (Mas Ghifari's system). The LTP choice is retired (PSC-4 BR-01) [Owner, 2026-11-18].
 - BR-02. Until a feed exists, the planner uploads them from a file on the DA page [Proposed]. Each upload is stamped with the uploader, date and source file name. LTP A replaces today's source, the Foresight commitment `forecastQty`; until LTP A is uploaded for a material, that source stays.
-- BR-03. The DA grid shows LTP A as today and adds two rows, LTP Festive and LTP B. The row that DA uses is marked.
-- BR-04. DA(w) = the chosen LTP(w) (DRC-2 BR-02 reads the chosen LTP instead of the single LTP).
-- BR-05. Strategic buffer = LTP Festive − LTP A when LTP Festive is given. The DRC-9a calculation (LTP − baseline) stays as the fallback when it is not [Proposed].
-- BR-06. Protection buffer = LTP B − LTP A, used for orders (ROP Order) only. It replaces the built uplift (`protectionUplift: 'rollingBaseline'`) when LTP B is given [Proposed]. Tip wording: TL-D40 (BL-294).
-- BR-07. The hub never picks the LTP. A material with no choice uses LTP A.
+- BR-03. The DA grid shows LTP A as today and adds two rows, LTP Festive and LTP B. DA reads LTP A; no row is marked as 'the row DA uses' (PSC-4 BR-02, BR-09) [Owner, 2026-11-18].
+- BR-04. DA(w) = LTP A(w); week 1 also carries the safety order (DRC-2 BR-02 unchanged). LTP Festive and LTP B are buffer inputs (PSC-4 BR-01, BR-02) [Owner, 2026-11-18].
+- BR-05. Strategic buffer = the sum over the lead-time weeks of max(0, LTP Festive − LTP A), plus the event-driven Material Buffer, added once to ROP Order (PSC-4 BR-04, BR-05) [Owner, 2026-11-18].
+- BR-06. Protection buffer = max(0, [AVG(LTP B over the lead-time weeks) − AVG(LTP A over them)]) × P, a quantity added once to ROP Order; P is the per-material cover setting, default 4 weeks (PSC-4 BR-03). The per-week LTP B − LTP A adder is retired. Tip: TL-D41 (supersedes TL-D40) [Owner, 2026-11-18].
+- BR-07. Retired 2026-11-18: the LTP choice is no longer a DA input. DA reads LTP A and the buffers read Festive and B (PSC-4 BR-01).
 - BR-08. Supplier split. LTP A, LTP Festive and LTP B are per material; DA, safety order and the capacity heads-up are per supplier × material. **Ruled [Owner, 2026-11-12], PEX-D25 (BL-293):** each supplier reads its sourcing share on record (`MaterialSource.share`, the SAP purchasing info record; for example PK-PETB-8801: sup-007 0.7, sup-012 0.3). Only a material with no share on record falls back to the MR !102 rule: each supplier's share of the Foresight commitment LTP over the first 4 hub weeks, an even split when there is none. A supplier with no share on record for a material that has one reads 0 [Proposed]. **Ruled [Owner, 2026-11-17], PEX-D29 (BL-313):** each recorded share is divided by the total of the material's recorded shares, so the shares add up to 1 even when SAP's do not; the total covers every supplier with a share on record, so a sourced supplier the LTP does not name keeps its part. The SOH share and the consumption split keep the LTP share (CAP-D11, BL-211).
-- AC-01. Material X: LTP A 100, LTP Festive 130, LTP B 115, choice Festive. DA = 130, strategic buffer = 30, protection buffer = 15.
+- AC-01. Material X: LTP A 100, LTP Festive 130, LTP B 120, lead time 3 weeks, cover setting 4, coverage 2 weeks. DA = 100. Protection = (120 − 100) × 4 = 80. Strategic festive = (130 − 100) × 3 = 90. Material = 2 × 100 = 200. Strategic total = 290. ROP Order adds 80 + 290 [Owner, 2026-11-18].
 
 **PEX-6 DA versions [M04 3, 4; Owner, 2026-11-05, A6]**
-- BR-01. A DA version is a publication, as today. When any of these changes and moves a DA figure, the published DA is marked out of date with the cause: LTP A, LTP Festive, LTP B, the LTP choice, strategic buffer, protection buffer, the safety stock or protection buffer switch (PEX-13) [Proposed].
+- BR-01. A DA version is a publication, as today. When any of these changes and moves a DA figure, the published DA is marked out of date with the cause: LTP A, LTP Festive, LTP B, the strategic buffer, the protection buffer, the safety stock or protection buffer switch (PEX-13). The LTP choice cause is retired. A change that moves only ROP Order (the cover setting, the event window, the Material Buffer switch) is recorded with the ROP Order figure's stored inputs and rules version (DRC-D16) and does not write a DA version [Owner, 2026-11-18, PSC-4 BR-10].
 - BR-02. The next publication stores the causes since the previous one (which input, old value, new value, who, when) beside what it stores today. Version number = the count of publications for the pair and planning week.
-- BR-03. An input change that moves no DA figure is logged as an input change, not a version.
+- BR-03. An input change that moves no DA figure is logged as an input change, not a DA version. If it moves ROP Order, the ROP Order figure's stored inputs and rules version records it (DRC-D16) [Owner, 2026-11-18].
 - BR-04. The DA history page (DRC-3) lists the versions per material with the cause and a before/after per week. Two versions can be compared side by side.
-- AC-01. Uploading LTP B for a material whose choice is A marks nothing. Switching the choice to B marks DA out of date; the next publication records the cause "LTP choice A → B".
+- AC-01. Uploading LTP B marks ROP Order out of date with its cause and does not mark DA. Changing LTP A marks DA out of date; the next publication records the LTP A cause [Owner, 2026-11-18].
 
 **PEX-7 PO On Hold [M04 2; Table; Owner, 2026-11-05, Q7]**
 - BR-01. PO On Hold (supplier × material) = open PO quantity that DA over the horizon does not absorb: max(0, OSPO − Σ DA not yet called off over the horizon) [Proposed].
-- BR-02. The grace period starts on the day a PO On Hold quantity first appears [Proposed]. Its length is 14 working days on the hub calendar by default, editable per supplier × material [Owner, 2026-11-05, Q7; working days: Owner, 2026-11-09, PEX-D23].
+- BR-02. The grace period starts on the day a PO On Hold quantity first appears [Proposed]. Its length is 14 calendar days by default, editable per supplier × material [Owner, 2026-11-18; supersedes PEX-D23 for the grace]. The no-movement period (BR-03) stays 14 working days.
 - BR-03. The "no stock movement" period for the FG option is 14 working days on the hub calendar by default, editable per supplier × material [Owner, 2026-11-05, Q7; working days: Owner, 2026-11-09, PEX-D23].
 - BR-04. Both settings live in the planner ledger `t_osipparam_set`, keyed `grace|<supplier>|<material>` and `noMove|<supplier>|<material>` (DRC-B49 pattern) [Proposed].
 - BR-05. Until the grace period ends, the quantity shows as PO On Hold, "decision due <date>". The decision (PEX-8) takes effect at the end of the grace period [Table].
@@ -191,7 +191,7 @@ Read on GitLab `main` `3da82ae5`. Paths are under `src/`.
 **PEX-8 PO On Hold decision [M04 2; Table; Owner, 2026-11-05, Q3–Q6]**
 - BR-01. The planner suggests one option per PO On Hold line. The supplier sees the suggestion and chooses the final option. The supplier's choice is final [Owner, 2026-11-05, Q6].
 - BR-02. The hub pre-selects the suggestion from the conditions below; the planner can change it before sending.
-- **Ruled [Owner, 2026-11-12], PEX-D27 (BL-296):** at the end of the grace period the call-off draws the pair's open PO lines oldest first (CAP-9); its need date is the end of the grace period + the DRC-6 lead time, the fulfil-by date of PEX-10. Accepted as built in MR !117 (`src/services/transitions/poOnHoldExecution.js`). **Still open:** the FG option's data definitions (PIPO flag, Max PTI, "no stock movement") wait on Mba Septi (BL-297).
+- **Ruled [Owner, 2026-11-12], PEX-D27 (BL-296):** at the end of the grace period the call-off draws the pair's open PO lines oldest first (CAP-9); its need date is the end of the grace period + the DRC-6 lead time, the fulfil-by date of PEX-10. Accepted as built in MR !117 (`src/services/transitions/poOnHoldExecution.js`). **Still open:** the FG option's data definitions (PIPO flag, Max PTI, "no stock movement") wait on Mba Septi (BL-297). The end of the grace period is counted in calendar days (PEX-7 BR-02 as amended); the need date is the end + the DRC-6 lead time.
 - **Built beyond BR-01 [Proposed], MR !135 (BL-315):** a line whose decision has executed and that still has a quantity on hold takes a new decision (round 2, 3 and so on): the planner suggests again, the supplier can choose again, and the grace period restarts on the hub day. Each round is a new decision through the same verbs `t_poonhold_suggest` and `t_poonhold_choose`; the old decision and its execution row are never changed. No meeting or owner answer says whether a remainder may be suggested again, so the four calls are listed in `DECISION-GUIDE.md` (!135-1 to !135-4). As built, a call-off an earlier round made does not count against the week's DA room, so repeated rounds with FS + spread can put a week's call-offs above its DA (BL-317); the owner has not ruled (!135-3a). A call-off the execution created also carries a "From PO On Hold" marker on the Call-offs pages (BL-314, [Proposed]).
 
   | Option | Condition (all must hold) | At the end of the grace period |
@@ -230,7 +230,7 @@ Read on GitLab `main` `3da82ae5`. Paths are under `src/`.
 - BR-01. Per material, two switches: safety stock on/off, protection buffer on/off. Default on.
 - BR-02. Turning either one off or on requires a reason (free text, at least 10 characters), recorded with who and when. The protection buffer switch moves from the code constant `protectionUplift` to this per-material setting.
 - BR-03. A switch change that moves DA writes a DA version (PEX-6).
-- BR-04. **Hold:** the rules and thresholds that would flip the switch automatically.
+- BR-04. The Material Buffer switch flips on and off from the event calendar (CNY, Typhoon), with a planner override and a reason (PSC-4 BR-07) [Owner, 2026-11-18, Q-16]. The safety stock switch remains manual.
 
 **PEX-14 Master data [M21 3]** Hold. Waits on Mba Septi's review of the OSIP MDM template and the RFI field list. When it lands: each master field has a definition, a group, and a mandatory or optional mark; mandatory fields show a marker and block save when empty.
 
@@ -242,6 +242,7 @@ Read on GitLab `main` `3da82ae5`. Paths are under `src/`.
 - BR-02. Scenarios: Baseline (LTP A), Festive (LTP Festive), Protection buffer (LTP B), and BOM constraint. No LTP C. **Ruled [Owner, 2026-11-12], PEX-D28 (BL-298):** LTP is per material, so the FG tab stays unscaled by scenario and says so; scenarios run per material on the Material tab. Accepted as built, no build.
 - BR-03. **BOM constraint:** the planner enters the units a limiting material supports. The FG production quantity drops to that number, and every other material in the BOM is recalculated from it.
 - BR-04. Fixed vs editable inputs are listed on each tab. Presets load a known case.
+- BR-05. The sandbox offers 4 demand presets: SKU revamp (FG level), SKU off/retired, one-shot material uplift and material level transition. Each loads a demand shape on the Material tab; the FG tab stays unscaled (PEX-D28) [Owner, 2026-11-18, Q-10; Proposed].
 - AC-01. FG demand 110; material X supports 80. Materials Y and Z are recalculated for 80 FG units.
 
 **PEX-16 ASN tracking link [M04 5]**
@@ -254,7 +255,7 @@ Read on GitLab `main` `3da82ae5`. Paths are under `src/`.
 
 | ID | Default | Source | Kind | Confirm with |
 |---|---|---|---|---|
-| D1 | Grace period 14 working days per supplier × material | Owner, 2026-11-05, Q7; 2026-11-09 (PEX-D23) | Value | Planner |
+| D1 | Grace period 14 calendar days per supplier × material | Owner, 2026-11-18 (supersedes PEX-D23 for the grace) | Value | Planner |
 | D2 | No-movement period 14 working days per supplier × material | Owner, 2026-11-05, Q7; 2026-11-09 (PEX-D23) | Value | Planner |
 | D3 | Utilisation bands: <70% amber, 70–100% green, >100% red | M04 1 (70%); the rest Proposed | Value | Planner |
 | D4 | Grace period starts when the remainder first appears | Proposed | Rule | Mba Septi |
@@ -300,7 +301,7 @@ The supplier usability test is on Monday 9 or Tuesday 10 November 2026 [M04 6]. 
 | PEX-D4 | Who decides PO On Hold | Planner suggests; supplier chooses the final option |
 | PEX-D5 | Rows 1 and 3 overlap | PIPO with zero demand → FS only. FG needs not PIPO AND zero demand AND no movement |
 | PEX-D6 | FG formula | A cap; the rest stays on hold |
-| PEX-D7 | Grace and no-movement periods | 14 days each, per supplier × material; counted in working days from 2026-11-09 (PEX-D23) |
+| PEX-D7 | Grace and no-movement periods | Grace periods 14 calendar days; the no-movement period 14 working days. PEX-D23 applies to the no-movement only (Owner, 2026-11-18) |
 | PEX-D8 | ROP engine | One calculation module, ROP and DA as separate entry points |
 | PEX-D16 | Zone names after the lead time | Plain "Zone Capacity" for the old Trade-off and Forecast weeks, EN and ID (BL-264); detail in `DECISION-GUIDE.md` |
 | PEX-D17 | Fulfil-by lead time | DRC-6 `leadTimeBreakdown`; the Stock page mismatch is BL-285 |

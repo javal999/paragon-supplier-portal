@@ -607,6 +607,11 @@ const mk = (p) => ({
   periodEnd: '2026-09-13',
   zone: 'tradeOff',
   forecastQty: 1000,
+  // PEX-3 BR-02 (BL-284) — no PTI stock on the minimal line: the terms are
+  // carried, the hover is not built on them here.
+  ltpQty: 1000,
+  ptiSoh: null,
+  ptiStockShared: true,
   previousQty: 1000,
   publishedAt: '2026-08-28T02:00:00.000Z',
   // CR-26 — a Trade-off line of a version published Friday 28 August 09:00 WIB,

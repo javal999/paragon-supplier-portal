@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import Data from '@components/ui-v2/Data';
 import TermTip from '@components/forecast/TermTip';
 import { formatDate } from '@lib/format';
-import { fulfilByDay } from '@services/transitions/forecastRules';
+import { fulfilByDay, ltpSohGap } from '@services/transitions/forecastRules';
 import { qtyText } from '../../forecasts/forecastDisplay';
 /** @import { ForecastCommitmentLine } from '@services/data/types' */
 
@@ -24,18 +24,34 @@ export const HEAD =
   'px-3 py-2 border-b border-border-subtle bg-bg-hover text-label text-text-tertiary uppercase whitespace-nowrap';
 
 /**
- * PEX-3 (BL-266) BR-02 — the period's ordered quantity, with a hover that
- * explains it. The per-week LTP and PTI stock on hand are not in this page's
- * read (the Foresight line carries the ordered quantity only), so the hover
- * says so instead of showing a gap it cannot compute.
+ * PEX-3 (BL-266, BL-284) BR-02 — the period's ordered quantity, with a hover
+ * that explains it. PEX-3 BR-02 (BL-284) adds the note's own terms per period:
+ * the LTP (planned use), PTI stock on hand and the gap between them — but the
+ * SOH and the gap are shown ONLY for a material PTI has granted this supplier
+ * stock access to (Q-W3, PEX-D24); without the grant the supplier keeps the
+ * heads-up sentence and the ordered quantity alone, and the service has already
+ * cleared `ptiSoh` (`canSeePtiStock`).
  * @type {React.FC<{ l: ForecastCommitmentLine; label: string; className?: string }>}
  */
 export const DemandCell = ({ l, label, className = '' }) => {
   const { t, i18n } = useTranslation();
-  const vars = { period: label, qty: qtyText(l.forecastQty), uom: l.uom };
+  // The LTP is the forecast quantity the supplier commits against; the fallback
+  // keeps a hand-built line (no `ltpQty`) rendering the same figure.
+  const ltp = typeof l.ltpQty === 'number' ? l.ltpQty : l.forecastQty;
+  const gap = ltpSohGap(ltp, l.ptiSoh);
+  const shared = l.ptiStockShared !== false && gap !== null;
+  const vars = {
+    period: label,
+    qty: qtyText(l.forecastQty),
+    uom: l.uom,
+    ltp: qtyText(ltp),
+    soh: typeof l.ptiSoh === 'number' ? qtyText(l.ptiSoh) : '',
+    gap: gap === null ? '' : qtyText(gap)
+  };
   const en = i18n.getFixedT('en');
   const id = i18n.getFixedT('id');
   const name = t('fc.sup.demandHoverName', { period: label });
+  const hover = shared ? 'fc.sup.demandHover' : 'fc.sup.demandHoverNoAccess';
   return (
     // BL-307 (UL-09) — left-aligned like every other row and its week header,
     // so the figure no longer sits against the next week's column.
@@ -43,8 +59,8 @@ export const DemandCell = ({ l, label, className = '' }) => {
       <TermTip
         entry={{
           label: { en: name, id: name },
-          en: en('fc.sup.demandHover', vars),
-          id: id('fc.sup.demandHover', vars)
+          en: en(hover, vars),
+          id: id(hover, vars)
         }}
         name={name}
         slugId={`demand-${l.materialCode}-${l.periodBucket}`}
