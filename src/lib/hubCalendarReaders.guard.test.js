@@ -285,7 +285,9 @@ const CALENDAR_DAY_ALLOWLIST = {
   'services/data/mock/rescheduleReadModel.js#callOffOrderLines':
     'REQ-E14-13 — the same E14-03 grace window applied to an open call-off (ENG-B10): a delivery date passed more than 14 calendar days ago is treated as closed. A physical delivery window, not a response deadline.',
   'pages-v2/home/taskSeverity.js#assess':
-    'SC-01 Home severity — it computes no deadline. It reads deadlines the lanes already computed (on the hub calendar where they are working-day deadlines) and counts how many calendar days ago they passed, and how many calendar days a stock-out precedes today + the supplier lead time. Cover and lead time are calendar days (CR-01 / CR-24), so the ranking compares like with like.'
+    'SC-01 Home severity — it computes no deadline. It reads deadlines the lanes already computed (on the hub calendar where they are working-day deadlines) and counts how many calendar days ago they passed, and how many calendar days a stock-out precedes today + the supplier lead time. Cover and lead time are calendar days (CR-01 / CR-24), so the ranking compares like with like.',
+  'services/transitions/poOnHold.js#graceState':
+    'PSC-6 BR-01, BR-06 / PEX-D7 (owner, 2026-11-18) — the PO On Hold and feedstock grace is 14 CALENDAR days by design: days 1 to 14 inclusive are in grace and the quantity moves to PO On Hold on day 15. A hub-calendar ruling must not move it; the no-movement period stays working days on the hub calendar (`workingDaysBetween`, same file).'
 };
 
 describe('BL-50 · the deadline population reads the hub calendar', () => {
@@ -342,7 +344,8 @@ describe('BL-50 · the deadline population reads the hub calendar', () => {
       'services/data/poResponseProjection.js',
       'services/transitions/callOffRules.js',
       'services/transitions/forecastRules.js',
-      // PEX-7 — the PO On Hold grace period counts working days (owner, 2026-11-09).
+      // PEX-7 — the no-movement period counts working days (owner, 2026-11-09);
+      // the grace itself is CALENDAR days since PSC-6 (owner, 2026-11-18).
       'services/transitions/poOnHold.js',
       'services/transitions/stockMovement.js',
       // Material B1 — the weekly stock update cutoff moves off a non-working day (MR-1 BR-03).

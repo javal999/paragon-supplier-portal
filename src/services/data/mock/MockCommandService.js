@@ -1516,6 +1516,20 @@ const callOffTarget = {
       return;
     }
     if (toState === 'Rejected') {
+      // PSC-6 BR-09 — a rejected call-off does not restart the PO On Hold grace.
+      // The quantity returns to the open PO and PEX-8 decides; the pair keeps the
+      // start day of the episode its end-of-grace execution ran under, instead of
+      // the new grace an `observe` after the quantity left hold would start.
+      if (current.origin === 'poOnHold') {
+        const ran = poOnHoldStore
+          .executions()
+          .find((e) => e.callOffIds.includes(/** @type {string} */ (id)));
+        if (ran)
+          poOnHoldStore.restoreFirstDay(
+            `${current.supplierId}|${current.materialCode}`,
+            ran.firstDay
+          );
+      }
       callOffStore.update(id, (c) => ({
         ...c,
         status: 'Rejected',

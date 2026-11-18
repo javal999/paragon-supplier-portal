@@ -13,7 +13,7 @@ export const adminCalendarEn = {
   'adminCal.crumb.calendar': 'Working calendar',
   'adminCal.title': 'Working calendar',
   'adminCal.subtitle':
-    'Every deadline in the hub counts working days on this calendar: responses to purchase orders and call-offs, and forecast commitments.',
+    'Responses to purchase orders and call-offs, and forecast commitments, count working days on this calendar. The PO On Hold grace and the feedstock grace count calendar days and are not moved by it.',
 
   'adminCal.sections.label': 'Administration sections',
   'adminCal.section.workingCalendar': 'Working calendar',
@@ -93,7 +93,7 @@ export const adminCalendarId = {
   'adminCal.crumb.calendar': 'Kalender kerja',
   'adminCal.title': 'Kalender kerja',
   'adminCal.subtitle':
-    'Setiap tenggat di hub menghitung hari kerja pada kalender ini: tanggapan atas pesanan pembelian dan call-off, serta komitmen prakiraan.',
+    'Tanggapan atas pesanan pembelian dan call-off, serta komitmen prakiraan, menghitung hari kerja pada kalender ini. Masa tenggang PO On Hold dan feedstock menghitung hari kalender dan tidak digeser olehnya.',
 
   'adminCal.sections.label': 'Bagian administrasi',
   'adminCal.section.workingCalendar': 'Kalender kerja',
