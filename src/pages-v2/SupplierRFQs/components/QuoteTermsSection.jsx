@@ -25,6 +25,10 @@ import { StillMissing } from '../../rfx/ResponseFormState';
  */
 const QuoteTermsSection = ({ form, setForm, leadTime, moq, showMissing = false }) => {
   const { t } = useTranslation();
+  // BL-326 — the refusal is shown only once the supplier has engaged with the
+  // form, so the invalid mark and the description appear with it. A pristine
+  // blank is not nagged on sight (the price precedent).
+  const leadTimeRefused = !leadTime.ok && form.unitPrice.trim() !== '';
   return (
     <FormSection
       eyebrow={t('rfqs.panel.step2.eyebrow')}
@@ -47,12 +51,10 @@ const QuoteTermsSection = ({ form, setForm, leadTime, moq, showMissing = false }
             placeholder="14"
             id="quote-lead-time"
             aria-label={t('rfqs.field.leadTime')}
-            aria-invalid={!leadTime.ok}
+            aria-invalid={leadTimeRefused || undefined}
             // BL-84 — the refusal is tied to the lead-time field, and only
             // when it is the one on screen.
-            aria-describedby={
-              !leadTime.ok && form.unitPrice.trim() !== '' ? 'quote-leadtime-refusal' : undefined
-            }
+            aria-describedby={leadTimeRefused ? 'quote-leadtime-refusal' : undefined}
             value={form.leadTimeNum}
             onChange={(e) =>
               setForm({
@@ -92,7 +94,7 @@ const QuoteTermsSection = ({ form, setForm, leadTime, moq, showMissing = false }
         {/* An untouched blank does not nag on sight — it refuses at the
         gate, and says so on the field once the supplier has engaged
         with the form (the price precedent, 2e-a). */}
-        {!leadTime.ok && form.unitPrice.trim() !== '' && (
+        {leadTimeRefused && (
           <div
             id="quote-leadtime-refusal"
             role="alert"

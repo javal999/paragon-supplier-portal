@@ -353,7 +353,9 @@ const ItemBlock = ({ rfq, item, draft, onChange, flagged, issues }) => {
             <div key={c.id} className="flex flex-wrap items-center gap-2">
               <input
                 type="text"
-                id={`${tid}-extra-${c.id}`}
+                // BL-326 — the amount below owns `${tid}-extra-${c.id}` (its
+                // problem anchor); the name needs an id of its own.
+                id={`${tid}-extra-${c.id}-name`}
                 aria-label={t('rfqResponse.grid.extraCostName', { n: i + 1 })}
                 placeholder={t('rfqResponse.grid.extraCostNamePlaceholder')}
                 value={c.name}

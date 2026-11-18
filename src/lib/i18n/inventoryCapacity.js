@@ -323,6 +323,8 @@ export const inventoryCapacityEn = {
   'inv.entry.error.batchTotal': 'Batch quantities must add up to the stock on hand.',
   'inv.entry.error.productionDateMissing':
     'Enter the expected completion date for the quantity in production.',
+  'inv.entry.error.inProductionRequired':
+    'In production is required. Write 0 when nothing is in production.',
   'inv.entry.inProductionHint': 'In production is required. Write 0 when nothing is in production.',
   'inv.entry.batchesRaw': 'Batches (required for raw material)',
   'inv.entry.rawHint':
@@ -1031,6 +1033,8 @@ export const inventoryCapacityId = {
   'inv.entry.error.batchTotal': 'Jumlah kuantitas batch harus sama dengan stok tersedia.',
   'inv.entry.error.productionDateMissing':
     'Isi perkiraan tanggal selesai untuk kuantitas dalam produksi.',
+  'inv.entry.error.inProductionRequired':
+    'Dalam produksi wajib diisi. Tulis 0 bila tidak ada yang diproduksi.',
   'inv.entry.inProductionHint':
     'Dalam produksi wajib diisi. Tulis 0 bila tidak ada yang diproduksi.',
   'inv.entry.batchesRaw': 'Batch (wajib untuk bahan baku)',

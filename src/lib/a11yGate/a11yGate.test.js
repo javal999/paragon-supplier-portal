@@ -60,6 +60,10 @@ describe('BL-31 a11y gate · POPULATION — nothing below means anything without
     // (a control that is not a literal <button>, which is the whole point).
     expect(sites).toContain('components/ui-v2/KpiCard.jsx <button>');
     expect(sites).toContain('components/ui-v2/TermLabel.jsx <TermTip>');
+    // BL-326 — a known LITERAL description (a static binding, not `{…}`).
+    expect(sites).toContain(
+      'pages-v2/SupplierForecasts/components/ShipmentReportPanel.jsx <aria-describedby literal>'
+    );
   });
 });
 
@@ -217,6 +221,68 @@ describe('BL-31 a11y gate · PROBE — fires on the defect, accepts the fix', ()
     expect(scanSource('s.tsx', `const F = () => <select aria-invalid={!ok} />;`)).toHaveLength(1);
     expect(scanSource('t.tsx', `const F = () => <textarea aria-invalid={!ok} />;`)).toHaveLength(1);
   });
+
+  it('✅ BL-326: a literal aria-describedby whose id the file never renders is a finding', () => {
+    const bad = `const F = () => <input aria-invalid aria-describedby="qty-refusal" />;`;
+    const good = `const F = () => (
+      <>
+        <input aria-invalid aria-describedby="qty-refusal" />
+        <p id="qty-refusal">That is not a quantity.</p>
+      </>
+    );`;
+    expect(scanSource('bad.tsx', bad).map((f) => f.what)).toEqual([
+      'aria-describedby names "qty-refusal", which this file never renders'
+    ]);
+    expect(scanSource('good.tsx', good)).toEqual([]);
+    // A space-separated pair needs BOTH ids; one alone does not acquit.
+    const pair = `const F = () => (
+      <>
+        <input aria-invalid aria-describedby="hint refusal" />
+        <p id="hint">Digits only.</p>
+      </>
+    );`;
+    expect(scanSource('pair.tsx', pair).map((f) => f.what)).toEqual([
+      'aria-describedby names "refusal", which this file never renders'
+    ]);
+  });
+
+  it('✅ BL-326 FIRES AT THE REAL DEFECT: the shipped ConfirmPanel pairing, id deleted', () => {
+    // The literal pair ConfirmPanel @ 399bdc91 really carries.
+    const shipped = `const F = () => (
+      <>
+        <input aria-invalid aria-describedby="sdcsup-qty-hint" />
+        <div id="sdcsup-qty-hint">{t('sdcSup.panel.qty.hint')}</div>
+      </>
+    );`;
+    const mutant = `const F = () => (
+      <>
+        <input aria-invalid aria-describedby="sdcsup-qty-hint" />
+        <div>{t('sdcSup.panel.qty.hint')}</div>
+      </>
+    );`;
+    expect(scanSource('shipped.tsx', shipped)).toEqual([]);
+    expect(scanSource('mutant.tsx', mutant).map((f) => f.what)).toEqual([
+      'aria-describedby names "sdcsup-qty-hint", which this file never renders'
+    ]);
+    // An unrelated id does not acquit — the name must match.
+    const neighbour = `const F = () => (
+      <>
+        <input aria-invalid aria-describedby="sdcsup-qty-hint" />
+        <div id="sdcsup-ship-qty-hint">{hint}</div>
+      </>
+    );`;
+    expect(scanSource('neighbour.tsx', neighbour)).toHaveLength(1);
+  });
+
+  it('⚠️ SAID, NOT DISCOVERED: a CONDITIONAL binding is not decidable here', () => {
+    // `aria-describedby={refused ? id : undefined}` may render `undefined` — the
+    // static gate cannot tell, and does not claim to. Those controls are covered
+    // by runtime page tests (stockEntryA11y, ResponseDocumentsSection,
+    // quoteTermsSectionA11y, asnLinesA11y).
+    expect(
+      scanSource('c.tsx', `const F = () => <input aria-invalid aria-describedby={id} />;`)
+    ).toEqual([]);
+  });
 });
 
 describe('BL-31 a11y gate · THE TREE', () => {
@@ -237,6 +303,11 @@ describe('BL-31 a11y gate · THE TREE', () => {
 
   it('no interactive control is rendered inside another control (BL-322)', () => {
     const f = findings.filter((x) => x.what.startsWith('nested control'));
+    expect(f, f.map((x) => `${x.file}:${x.line} ${x.what}`).join('\n')).toEqual([]);
+  });
+
+  it('every literal aria-describedby in src/ names an id its own file renders (BL-326)', () => {
+    const f = findings.filter((x) => x.what.includes('which this file never renders'));
     expect(f, f.map((x) => `${x.file}:${x.line} ${x.what}`).join('\n')).toEqual([]);
   });
 });
