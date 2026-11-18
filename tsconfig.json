@@ -5,6 +5,14 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
+    // ── `disableSizeLimit` — THE LANGUAGE SERVER, NOT THE BUILD ──────────────
+    // TypeScript hands the editor a project only under a 20 MiB cap on
+    // JavaScript source; above it, project-wide features stop and the editor
+    // asks to "exclude large folders". The spec project
+    // (`tsconfig.vitest.json`) crossed it on 2026-11-18, and its large folder
+    // IS the specs, so there is nothing to exclude. This raises the cap for
+    // the language server; `tsc` ignores it and the gates are unaffected.
+    "disableSizeLimit": true,
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,

@@ -282,6 +282,11 @@ describe('BL-319 (UL-04): a tip in a clickable card stays inside that card', () 
     const [draft, submitted] = screen.getAllByRole('button', { pressed: false });
     draft.getBoundingClientRect = () => rect(272, 227, 213, 118);
     submitted.getBoundingClientRect = () => rect(501, 227, 213, 118);
+    // BL-322: the label no longer sits INSIDE the card's button, so the card
+    // surface the tip is fitted to (and read for BL-319) is the marked card,
+    // not the button. Same box, because the button stretches over it.
+    /** @type {HTMLElement} */ (draft.closest('[data-tip-host]')).getBoundingClientRect = () =>
+      rect(272, 227, 213, 118);
     screen.getByTestId('term-tip-asn-draft').getBoundingClientRect = () => rect(297, 250, 60, 16);
     return { draft, info: screen.getByRole('button', { name: /What “Draft” means/ }) };
   };

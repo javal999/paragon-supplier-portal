@@ -42,17 +42,25 @@ export const termLabelText = (term, indonesian, values = {}) => {
  *     readonly term: TermLabelId;
  *     readonly values?: Record<string, string | number>;
  *     readonly className?: string;
+ *     readonly textId?: string;
  *   }} TermLabelProps
  */
 
-/** @type {React.FC<TermLabelProps>} */
-const TermLabel = ({ term, values, className = '' }) => {
+/**
+ * `textId`: BL-322 — the id the label TEXT carries, so a control that covers a
+ * card (a stretched button outside this label) can take its accessible name from
+ * the label alone, without the (i) beside it.
+ * @type {React.FC<TermLabelProps>}
+ */
+const TermLabel = ({ term, values, className = '', textId }) => {
   const { i18n } = useTranslation();
   const indonesian = i18n.language?.toLowerCase().startsWith('id') ?? false;
   const text = termLabelText(term, indonesian, values);
   return (
     <TermTip entry={TERM_LABEL_GLOSSARY[term]} name={text} slugId={term} className={className}>
-      <span data-term={term}>{text}</span>
+      <span data-term={term} id={textId}>
+        {text}
+      </span>
     </TermTip>
   );
 };
