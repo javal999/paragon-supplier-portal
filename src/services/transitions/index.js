@@ -67,6 +67,7 @@ export { maxStockFlow } from './flows/maxStock.flow';
 export { supplierApplicationFlow } from './flows/supplierApplication.flow';
 export { receiptDiscrepancyFlow } from './flows/receiptDiscrepancy.flow';
 export { callOffFlow } from './flows/callOff.flow';
+export { callOffChaseFlow } from './flows/callOffChase.flow';
 export { stockAccessFlow } from './flows/stockAccess.flow';
 export { stockSyncFlow } from './flows/stockSync.flow';
 export { capacitySubmissionFlow } from './flows/capacitySubmission.flow';
@@ -85,6 +86,7 @@ export { promotionFlow } from './flows/promotion.flow';
 export { capacityMonthFlow } from './flows/capacityMonth.flow';
 export { whatIfScenarioFlow } from './flows/whatIfScenario.flow';
 export { feedstockConfirmationFlow } from './flows/feedstockConfirmation.flow';
+export { daConfirmationFlow } from './flows/daConfirmation.flow';
 export { supplierAskFlow } from './flows/supplierAsk.flow';
 export { capacityDecisionFlow } from './flows/capacityDecision.flow';
 export { poOnHoldDecisionFlow } from './flows/poOnHoldDecision.flow';
@@ -141,6 +143,7 @@ import { maxStockFlow } from './flows/maxStock.flow';
 import { supplierApplicationFlow } from './flows/supplierApplication.flow';
 import { receiptDiscrepancyFlow } from './flows/receiptDiscrepancy.flow';
 import { callOffFlow } from './flows/callOff.flow';
+import { callOffChaseFlow } from './flows/callOffChase.flow';
 import { stockAccessFlow } from './flows/stockAccess.flow';
 import { stockSyncFlow } from './flows/stockSync.flow';
 import { capacitySubmissionFlow } from './flows/capacitySubmission.flow';
@@ -159,6 +162,7 @@ import { promotionFlow } from './flows/promotion.flow';
 import { capacityMonthFlow } from './flows/capacityMonth.flow';
 import { whatIfScenarioFlow } from './flows/whatIfScenario.flow';
 import { feedstockConfirmationFlow } from './flows/feedstockConfirmation.flow';
+import { daConfirmationFlow } from './flows/daConfirmation.flow';
 import { supplierAskFlow } from './flows/supplierAsk.flow';
 import { capacityDecisionFlow } from './flows/capacityDecision.flow';
 import { poOnHoldDecisionFlow } from './flows/poOnHoldDecision.flow';
@@ -265,6 +269,9 @@ flowRegistry.register(maxStockFlow); // REQ-E06-04 — maximum stock
 flowRegistry.register(supplierApplicationFlow); // B1 — Supplier onboarding
 flowRegistry.register(receiptDiscrepancyFlow); // REQ-E07-06 — receipt discrepancy response
 flowRegistry.register(callOffFlow); // REQ-E09-01 / 03 / 04 — call-offs under an umbrella PO
+// AIB-3 (BL-351) — the planner closes a missing-ASN chase; the chase itself is
+// derived at read, one working day after a call-off is sent with no ASN.
+flowRegistry.register(callOffChaseFlow); // AIB-3 — missing-ASN chase
 flowRegistry.register(stockAccessFlow); // REQ-E08-03 — supplier access to PTI stock
 flowRegistry.register(stockSyncFlow); // REQ-E08-02 — API stock sync
 flowRegistry.register(capacitySubmissionFlow); // REQ-E08-04 — capacity confirmation
@@ -285,6 +292,9 @@ flowRegistry.register(whatIfScenarioFlow); // DRC-17 — the planner saves a wha
 // BL-194 / DRC-8 — the supplier confirms its current feedstock with a date: the
 // same degenerate single-state snapshot shape, append-only (DRC-D17).
 flowRegistry.register(feedstockConfirmationFlow); // BL-194 — supplier feedstock confirmation
+// PSC-1 (BL-336) — the one-time weekly DA confirmation. Append-only snapshot per
+// supplier × week; a carried-forward week writes no record.
+flowRegistry.register(daConfirmationFlow); // BL-336 — DA weekly confirmation
 // INV-D9 — "Ask supplier": PTI's hub ask, answered by the supplier in the hub.
 flowRegistry.register(supplierAskFlow); // INV-D9 — a hub ask to one supplier
 // INV-D8 — PTI accepts a supplier's additional capacity on one gap week.

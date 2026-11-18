@@ -70,7 +70,16 @@ const submitAsn = (asnNumber, payload = {}) =>
     transitionId: 't_asn_submit',
     entity: 'advanceShipNotice',
     entityId: asnNumber,
-    payload: { carrier: 'Sample Courier', trackingNumber: 'B 1 XY', eta: needDate(), ...payload }
+    payload: {
+      carrier: 'Sample Courier',
+      trackingNumber: 'B 1 XY',
+      eta: needDate(),
+      // AIB-1 BR-03 / BR-04 (BL-348) — derived from the ASN so two ASNs in one
+      // test never share a sequence (one sequence = one ASN, AIB-D1).
+      sequence: asnNumber.replace(/\D/g, '').slice(-4),
+      externalId: `SJ-${asnNumber}`,
+      ...payload
+    }
   });
 /** @param {number} qty */
 const lines = (qty) => [{ materialCode: 'PK-PETB-8801', shippedQty: qty, batchNumber: 'LOT-1' }];

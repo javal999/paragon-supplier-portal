@@ -24,10 +24,10 @@ import { useUrlEnumParam } from '@hooks/useUrlEnumParam';
 import { usePageTab } from '@hooks/usePageTab';
 import { useRowHighlight } from '@hooks/useRowHighlight';
 import { formatDate } from '@lib/format';
-import { useBlanketPoRunOuts, usePurchaseOrders } from '@services/query/hooks';
+import { useBlanketPoRunOuts, useCallOffChase, usePurchaseOrders } from '@services/query/hooks';
 import { runningOut } from '@services/transitions/blanketPoRules';
 import { RunningOutList } from '../callOffs/blanketRunOutDisplay';
-import { useCallOffCommand } from '@services/query/commandHooks';
+import { useCallOffCommand, useCallOffChaseCommand } from '@services/query/commandHooks';
 /** @import { CallOffType, POLineItem } from '@services/data/types' */
 import { POStatus } from '@services/data/types';
 /** @import { CallOffView, ReleaseCheck } from '@services/transitions/callOffRules' */
@@ -45,6 +45,7 @@ import { impliedCallOffTab } from './utils';
 import CallOffBanner from './components/CallOffBanner';
 import CallOffFilters from './components/CallOffFilters';
 import CallOffPanelBody from './components/CallOffPanelBody';
+import ChaseSection from './components/ChaseSection';
 import NewCallOffPanel from './components/NewCallOffPanel';
 import UmbrellaSection from './components/UmbrellaSection';
 import { callOffActions } from './hooks/callOffActions';
@@ -98,12 +99,18 @@ const BuyerCallOffs = () => {
   const { views, nowIso, isPending, error, refetch, asns } = useCallOffViews();
   // CAP-9 — every blanket PO line's run-out, projected by the read model.
   const runOutQuery = useBlanketPoRunOuts();
+  // AIB-3 (BL-351) — the missing-ASN chase, derived at read; the planner closes
+  // one with a reason and the line leaves the list.
+  const chaseQuery = useCallOffChase();
+  const chaseRows = (chaseQuery.data?.items ?? []).filter((r) => r.state === 'open');
   // MR-6 BR-12 (edge case 6) — each call-off's ASNs with the CURRENT comparison,
   // recomputed on read: the planner's "Mismatch" marker.
   const linkedAsns = useLinkedAsns(views, asns);
   const command = useCallOffCommand();
+  const chaseCommand = useCallOffChaseCommand();
   const planAvailability = useVerbAvailability('calloff:plan');
   const reviewAvailability = useVerbAvailability('calloff:review');
+  const chaseAvailability = useVerbAvailability('calloffchase:close');
   const [panel, setPanel] = useState(/** @type {Panel} */ (null));
   const [form, setForm] = useState({
     quantity: '',
@@ -165,19 +172,26 @@ const BuyerCallOffs = () => {
     setPanel
   );
 
-  if (posQuery.isPending || isPending || runOutQuery.isPending || drill.kind === 'pending')
+  if (
+    posQuery.isPending ||
+    isPending ||
+    runOutQuery.isPending ||
+    chaseQuery.isPending ||
+    drill.kind === 'pending'
+  )
     return <LoadingState breadcrumb={crumb} />;
   // AC-08 — an address naming a PO that does not exist, with a way back.
   if (drill.kind === 'notFound') return <OrderNotFound persona="buyer" breadcrumb={crumb} />;
-  if (posQuery.isError || error || runOutQuery.isError)
+  if (posQuery.isError || error || runOutQuery.isError || chaseQuery.isError)
     return (
       <ErrorState
         breadcrumb={crumb}
-        error={posQuery.error ?? error ?? runOutQuery.error}
+        error={posQuery.error ?? error ?? runOutQuery.error ?? chaseQuery.error}
         onRetry={() => {
           posQuery.refetch();
           refetch();
           runOutQuery.refetch();
+          chaseQuery.refetch();
         }}
       />
     );
@@ -271,6 +285,37 @@ const BuyerCallOffs = () => {
   const planHeld = planAvailability.kind === 'held';
   const reviewHeld = reviewAvailability.kind === 'held';
 
+  /**
+   * AIB-3 (BL-351) — close one missing-ASN chase. The verb proves the reason has
+   * substance; a refusal is shown with the dispatcher's own text.
+   * @param {string} callOffId
+   * @param {string} reason
+   * @returns {Promise<boolean>} True when the chase was closed.
+   */
+  const closeChase = async (callOffId, reason) => {
+    try {
+      const res = await chaseCommand.mutateAsync({ callOffId, reason });
+      if (res.status === 'failed') {
+        toast({
+          variant: 'warning',
+          title: t('co.chase.refused'),
+          description: refusalText(res.reason) ?? res.reason ?? ''
+        });
+        return false;
+      }
+      const row = chaseRows.find((r) => r.callOffId === callOffId);
+      toast({
+        variant: 'success',
+        title: t('co.chase.closed'),
+        description: t('co.chase.closedDesc', { callOff: row?.callOffNumber ?? callOffId })
+      });
+      return true;
+    } catch {
+      toast({ variant: 'error', title: t('co.chase.refused') });
+      return false;
+    }
+  };
+
   return (
     <AppShellV2>
       <PageHeader breadcrumb={crumb} title={t('co.pti.title')} subtitle={t('co.pti.subtitle')} />
@@ -323,7 +368,14 @@ const BuyerCallOffs = () => {
       />
 
       <div role="tabpanel" aria-label={t(`co.tab.${tab}`)} data-testid={`calloff-tabpanel-${tab}`}>
-        {tab === 'runOut' ? (
+        {tab === 'chase' ? (
+          <ChaseSection
+            rows={chaseRows}
+            availability={chaseAvailability}
+            busy={chaseCommand.isPending}
+            onClose={closeChase}
+          />
+        ) : tab === 'runOut' ? (
           <RunningOutList groups={runOutGroups} />
         ) : (
           <>

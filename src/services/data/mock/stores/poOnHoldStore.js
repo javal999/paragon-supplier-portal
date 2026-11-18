@@ -93,6 +93,20 @@ export const poOnHoldStore = {
   restart(key, day) {
     firstDays.set(key, day);
   },
+  /**
+   * PSC-6 BR-09 — a rejected call-off does NOT restart the grace. A call-off the
+   * end-of-grace execution created took the quantity out of hold, so `observe`
+   * dropped the pair; rejecting it brings the quantity back to the open PO, and
+   * the pair must keep the start day of the episode it was decided under. Only
+   * an absent or LATER recorded day is replaced: an episode already running
+   * keeps its own (earlier) start.
+   * @param {string} key  `supplierId|materialCode`.
+   * @param {string} day  The episode's first day, from its execution row.
+   */
+  restoreFirstDay(key, day) {
+    const seen = firstDays.get(key);
+    if (seen === undefined || seen > day) firstDays.set(key, day);
+  },
   /** @returns {readonly PoOnHoldDecisionRow[]} */
   all() {
     return decisions;

@@ -100,6 +100,8 @@ export const ROLE_LABEL_KEY = Object.freeze({
   compliance: 'roles.owner.compliance',
   planning: 'roles.owner.planning',
   requisitioner: 'roles.owner.requisitioner',
+  // AIB-2 BR-01 (BL-350) — the Expeditor names the inbound acknowledgment's owner.
+  expeditor: 'roles.owner.expeditor',
   buyer: 'roles.owner.buyer',
   supplier: 'roles.owner.supplier',
   commercial: 'roles.owner.commercial',
@@ -128,6 +130,9 @@ export const ROLE_ORDER = [
   'compliance',
   'planning',
   'requisitioner',
+  // AIB-2 BR-01 (BL-350) — a lane with exactly one atom; listed so the record
+  // stays total over `SystemRoleId` (asserted in `buyerAll.test.js` both ways).
+  'expeditor',
   // ⚠️ **THE ANCHORS SIT WITH THE SUPERSETS AND FOR THE SAME REASON, ONE STEP
   // FURTHER.** Neither holds an atom, so `rolesHolding` can never return either
   // — a superset names nothing because it holds everything; an anchor names

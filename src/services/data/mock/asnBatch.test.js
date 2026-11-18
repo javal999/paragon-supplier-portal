@@ -36,7 +36,10 @@ const SUBMIT = {
   carrier: 'Sample Courier',
   trackingNumber: 'B 1234 XY',
   eta: '2026-09-20',
-  shipDate: '2026-09-18'
+  shipDate: '2026-09-18',
+  // AIB-1 BR-03 / BR-04 (BL-348) — a unique sequence and the Surat Jalan.
+  sequence: '31',
+  externalId: 'SJ-TEST-31'
 };
 
 // A batch-grain stock record for sup-007 × PK-PETB-8801, added as the latest.
@@ -71,7 +74,13 @@ const submitAsn = (entityId, payload = {}) =>
     transitionId: 't_asn_submit',
     entity: 'advanceShipNotice',
     entityId,
-    payload: { ...SUBMIT, ...payload }
+    payload: {
+      ...SUBMIT,
+      // AIB-1 BR-03 / BR-04 (BL-348) — per-ASN so two submits never collide.
+      sequence: entityId.replace(/\D/g, '').slice(-4),
+      externalId: `SJ-${entityId}`,
+      ...payload
+    }
   });
 
 const po = () => /** @type {import('../types').PurchaseOrder} */ (purchaseOrderStore.get('po-007'));

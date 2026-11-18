@@ -431,6 +431,9 @@ describe('BL32-READ · every reader of a value reads it through its accessor, at
       updateCycleSettings: [
         // BL-194 (DRC-8 BR-b, [Default E2]) — the feedstock confirmation is due
         // with the same weekly stock update cycle.
+        // PSC-1 (BL-336) — the DA panel shows the stock cutoff beside the
+        // Wednesday confirmation deadline, from this same setting.
+        'src/pages-v2/demandAnticipation/DaConfirmationPanel.jsx',
         'src/pages-v2/inventory/FeedstockConfirmPanel.jsx',
         'src/pages-v2/inventory/WeeklyUpdatePanel.jsx',
         'src/services/data/mock/updateComplianceReadModel.js',

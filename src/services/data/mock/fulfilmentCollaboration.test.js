@@ -86,7 +86,11 @@ const SUBMIT = {
   carrier: 'Sample Courier',
   trackingNumber: 'B 1234 XY',
   eta: '2026-09-20',
-  shipDate: '2026-09-18'
+  shipDate: '2026-09-18',
+  // AIB-1 BR-03 / BR-04 (BL-348) — the sequence and the Surat Jalan. A unique
+  // sequence per test keeps the one-sequence-one-ASN rule out of the way.
+  sequence: '91',
+  externalId: 'SJ-TEST-91'
 };
 
 describe('ASN — roles (REQ-E07-04, bilateral)', () => {

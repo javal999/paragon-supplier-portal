@@ -90,9 +90,11 @@ export const OSIP_PARAMS = Object.freeze({
     boolean: true,
     reasonRequired: true
   }),
-  // PEX-7 BR-02..BR-04 [PEX-D7]: days, per supplier × material; default 14
-  // (`PO_ON_HOLD_RULES`). Set on the PO On Hold panel, not on the OSIP values
-  // page, so they are not in `OSIP_PARAM_KINDS`.
+  // PEX-7 BR-02..BR-04 [PEX-D7]: per supplier × material; default 14
+  // (`PO_ON_HOLD_RULES`). PSC-6 BR-01 / PEX-D7 (owner, 2026-11-18): `grace` is
+  // CALENDAR days; `noMove` stays WORKING days on the hub calendar.
+  // Set on the PO On Hold panel, not on the OSIP values page, so they are not
+  // in `OSIP_PARAM_KINDS`.
   grace: Object.freeze({
     scope: 'supplierMaterial',
     question: 'PEX-7',

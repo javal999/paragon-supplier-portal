@@ -17,6 +17,10 @@ export const feedstockReconcileEn = {
 
   'fsr.col.supplier': 'Supplier',
   'fsr.col.material': 'Material',
+  // PSC-6 BR-03 (BL-347) — the new columns' notes and the empty figure.
+  'fsr.none': '—',
+  'fsr.inGrace.until': 'until {{date}}',
+  'fsr.onHold.since': 'since {{date}}',
 
   'fsr.poCount_one': 'on {{count}} PO',
   'fsr.poCount_other': 'on {{count}} POs',
@@ -59,7 +63,9 @@ export const feedstockReconcileEn = {
   'fsr.rules.figures':
     'PO ordered is the quantity on the supplier’s PO lines for the material, except POs the supplier rejected; a value-only line carries no quantity. Called off is the quantity on the call-offs PTI released, from Awaiting Confirmation onward; drafts, dismissed and rejected call-offs count nothing. ASN requested is the quantity shipped on ASNs against those call-offs that are submitted, in transit, delivered or under discrepancy.',
   'fsr.rules.remainders':
-    'Not yet called off = PO ordered − called off. It never goes below zero; an excess shows as a note. What happens to a remainder is decided on its PO On Hold line, linked from the figure. Procurement maintains the max stock.'
+    'Not yet called off = PO ordered − called off. It never goes below zero; an excess shows as a note. What happens to a remainder is decided on its PO On Hold line, linked from the figure. Procurement maintains the max stock.',
+  'fsr.rules.hold':
+    'In grace and PO On Hold are one quantity at two moments: it is in grace for 14 calendar days from the day it first appears, then PO On Hold until the decision takes effect. Total OSPO = min(OSPO, DA not yet called off) + PO On Hold.'
 };
 
 /** @type {Record<string, string>} */
@@ -75,6 +81,10 @@ export const feedstockReconcileId = {
 
   'fsr.col.supplier': 'Pemasok',
   'fsr.col.material': 'Material',
+  // PSC-6 BR-03 (BL-347) — the new columns' notes and the empty figure.
+  'fsr.none': '—',
+  'fsr.inGrace.until': 'sampai {{date}}',
+  'fsr.onHold.since': 'sejak {{date}}',
 
   'fsr.poCount_other': 'pada {{count}} PO',
   'fsr.valueOnly_other': '{{count}} baris PO berbasis nilai, tanpa kuantitas',
@@ -114,5 +124,7 @@ export const feedstockReconcileId = {
   'fsr.rules.figures':
     'Dipesan di PO adalah kuantitas pada baris PO pemasok untuk material tersebut, kecuali PO yang ditolak pemasok; baris berbasis nilai tidak membawa kuantitas. Di-call-off adalah kuantitas pada call-off yang dirilis PTI, mulai dari Menunggu Konfirmasi; draf, call-off yang dibatalkan, dan yang ditolak tidak dihitung. Diminta di ASN adalah kuantitas yang dikirim pada ASN atas call-off tersebut yang sudah dikirim, dalam perjalanan, diterima, atau dalam selisih.',
   'fsr.rules.remainders':
-    'Belum di-call-off = dipesan di PO − di-call-off. Nilainya tidak pernah di bawah nol; kelebihan ditampilkan sebagai catatan. Apa yang terjadi pada sisa diputuskan pada baris PO On Hold-nya, yang ditautkan dari angka itu. Procurement mengelola stok maksimum.'
+    'Belum di-call-off = dipesan di PO − di-call-off. Nilainya tidak pernah di bawah nol; kelebihan ditampilkan sebagai catatan. Apa yang terjadi pada sisa diputuskan pada baris PO On Hold-nya, yang ditautkan dari angka itu. Procurement mengelola stok maksimum.',
+  'fsr.rules.hold':
+    'Dalam masa tenggang dan PO On Hold adalah satu kuantitas pada dua saat: dalam masa tenggang selama 14 hari kalender sejak pertama muncul, lalu PO On Hold sampai keputusannya berlaku. Total OSPO = min(OSPO, DA yang belum di-call-off) + PO On Hold.'
 };

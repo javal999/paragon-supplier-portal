@@ -142,6 +142,27 @@ export const safetyStockEn = {
     'ROP Fisik safety = 1 day × the lowest of the highest daily consumption of the last 3 months and the daily LTP, rounded up to the MPQ. Consumption is the material’s recorded consumption times the supplier’s share. Production capacity also belongs in the lowest; the hub has no figure for it, so it is left out.',
   'sst.osip.def.cv':
     'CV = standard deviation ÷ average of each finished good’s monthly demand over the last {{months}} full calendar months. A component takes its finished goods’ CVs weighted by their average demand. Stable below {{threshold}}, fluctuative from {{threshold}}. Finished goods carry no variant grouping yet, so each one is its own variant.',
+  // BL-342 (PSC-5 BR-03) — the CV explanation, folded like BL-208's level guide.
+  'sst.cv.guide.summary': 'How the CV is calculated',
+  'sst.cv.guide.current':
+    '{{material}}: CV {{cv}} ({{category}}) over the last {{months}} full calendar months, from {{count}} finished goods with demand.',
+  'sst.cv.guide.noCv':
+    'This material has no CV: no BOM line names it, or no finished good behind it has demand over the last {{months}} full calendar months.',
+  'sst.cv.guide.window.title': 'The window',
+  'sst.cv.guide.window':
+    'The last {{months}} full calendar months of finished-goods demand, built from the weekly sell-in history before today. Stock-outs are filled as the engine fills them, each week is spread over its 7 days, and only whole months are counted.',
+  'sst.cv.guide.formula.title': 'The calculation (DRC-11)',
+  'sst.cv.guide.formula':
+    'CV = the standard deviation of a finished good’s monthly demand ÷ its average monthly demand over the window. A high figure means the demand swings widely around its average; a low figure means it is steady.',
+  'sst.cv.guide.component.title': 'A component',
+  'sst.cv.guide.component':
+    'A component has no demand of its own: it takes the CV of the finished goods its BOM feeds, weighted by each one’s average demand. A component whose BOM names no finished good has no CV.',
+  'sst.cv.guide.threshold.title': 'Stable or fluctuative',
+  'sst.cv.guide.threshold':
+    'Stable below {{threshold}}, fluctuative at {{threshold}} or above. The category is read, not set: the suggested OSIP level uses it (see “How the level is suggested”), and the DRC-11 calculation behind it is unchanged.',
+  'sst.cv.guide.variants.title': 'Variants',
+  'sst.cv.guide.variants':
+    'The data carries no variant grouping, so each finished good is its own variant and is weighted separately.',
   'sst.osip.def.challenger':
     'The OSIP figures are the default rule. The engine’s fill-rate safety stock stays beside them as the challenger.',
   // BL-196 (DRC-10, DRC-D11) / BL-198 (DRC-12a)
@@ -426,6 +447,27 @@ export const safetyStockId = {
     'Safety ROP Fisik = 1 hari × nilai terendah dari konsumsi harian tertinggi 3 bulan terakhir dan LTP harian, dibulatkan ke atas ke MPQ. Konsumsi adalah konsumsi material yang tercatat dikali porsi pemasok. Kapasitas produksi juga termasuk dalam nilai terendah; hub tidak punya angkanya, jadi tidak diikutkan.',
   'sst.osip.def.cv':
     'CV = simpangan baku ÷ rata-rata permintaan bulanan setiap barang jadi selama {{months}} bulan kalender penuh terakhir. Komponen memakai CV barang jadinya, dibobot permintaan rata-ratanya. Stabil di bawah {{threshold}}, fluktuatif mulai {{threshold}}. Barang jadi belum punya pengelompokan varian, jadi setiap barang jadi adalah varian tersendiri.',
+  // BL-342 (PSC-5 BR-03) — penjelasan CV, dilipat seperti panduan level BL-208.
+  'sst.cv.guide.summary': 'Cara CV dihitung',
+  'sst.cv.guide.current':
+    '{{material}}: CV {{cv}} ({{category}}) selama {{months}} bulan kalender penuh terakhir, dari {{count}} barang jadi yang punya permintaan.',
+  'sst.cv.guide.noCv':
+    'Material ini tidak punya CV: tidak ada baris BOM yang menyebutnya, atau tidak ada barang jadi di baliknya yang punya permintaan selama {{months}} bulan kalender penuh terakhir.',
+  'sst.cv.guide.window.title': 'Jendela',
+  'sst.cv.guide.window':
+    '{{months}} bulan kalender penuh terakhir dari permintaan barang jadi, disusun dari riwayat penjualan mingguan sebelum hari ini. Kebuntuan stok diisi seperti mesin mengisinya, setiap minggu disebar ke 7 harinya, dan hanya bulan penuh yang dihitung.',
+  'sst.cv.guide.formula.title': 'Perhitungan (DRC-11)',
+  'sst.cv.guide.formula':
+    'CV = simpangan baku permintaan bulanan satu barang jadi ÷ rata-rata permintaan bulanannya selama jendela. Angka tinggi berarti permintaan bergerak jauh di sekitar rata-ratanya; angka rendah berarti stabil.',
+  'sst.cv.guide.component.title': 'Komponen',
+  'sst.cv.guide.component':
+    'Komponen tidak punya permintaan sendiri: ia memakai CV barang jadi yang diberi BOM-nya, dibobot rata-rata permintaan masing-masing. Komponen yang BOM-nya tidak menyebut barang jadi tidak punya CV.',
+  'sst.cv.guide.threshold.title': 'Stabil atau fluktuatif',
+  'sst.cv.guide.threshold':
+    'Stabil di bawah {{threshold}}, fluktuatif mulai {{threshold}}. Kategori dibaca, bukan diatur: saran level OSIP memakainya (lihat “Cara level disarankan”), dan perhitungan DRC-11 di baliknya tidak berubah.',
+  'sst.cv.guide.variants.title': 'Varian',
+  'sst.cv.guide.variants':
+    'Data tidak memuat pengelompokan varian, jadi setiap barang jadi adalah varian tersendiri dan dibobot terpisah.',
   'sst.osip.def.challenger':
     'Angka OSIP adalah aturan bawaan. Stok pengaman tingkat pemenuhan dari mesin tetap di sampingnya sebagai pembanding.',
   // BL-196 (DRC-10, DRC-D11) / BL-198 (DRC-12a)

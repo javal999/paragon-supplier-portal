@@ -309,6 +309,9 @@ describe('BL-51 · the ASN names its 3PL through the ASN verbs', () => {
         trackingNumber: 'B 1234 XYZ',
         eta: '2026-09-30',
         shipDate: '2026-09-28',
+        // AIB-1 BR-03 / BR-04 (BL-348).
+        sequence: '35',
+        externalId: 'SJ-TEST-35',
         lines: /** @type {NonNullable<ReturnType<typeof asnStore.get>>} */ (
           asnStore.get(id)
         ).lineItems.map((l) => ({

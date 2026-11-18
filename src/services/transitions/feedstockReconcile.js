@@ -28,6 +28,13 @@
 // the page links to; nothing about it is computed here.
 // DRC-15a BR-03 — the max stock Procurement maintains (`maxStock.js`) stays on
 // the row; it caps nothing here.
+//
+// ⚠️ PSC-6 (BL-347, owner 2026-11-18) EXTENDED DRC-15a BR-01: the row also shows
+// DA, DA not yet called off, the PO On Hold quantity split into In grace / PO On
+// Hold and Total OSPO = min(OSPO, DA not yet called off) + PO On Hold (BR-04).
+// The hold figures come from the PO On Hold read model (`allPoOnHoldFigures`) —
+// the SAME 14-calendar-day clock (BR-01, BR-06) — through `withHoldColumns`;
+// this rule holds no store and invents no figure.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @import { ASN, CallOff, PurchaseOrder } from '../data/types' */
@@ -71,6 +78,15 @@ export const FEEDSTOCK_PO_EXCLUDED_STATES = [POStatus.REJECTED];
  * `calledBeyondPo`:  Called off beyond the PO ordered (0 when not).
  * `shippedBeyondCalledOff`:  ASN requested beyond the called-off quantity (0 when not).
  *
+ * `notYetCalledOff`:  The quantity PO ordered that no call-off has asked for yet.
+ * `calledOffNotShipped`:  Called off and not yet shipped — kept in the row (PSC-6
+ *   BR-03 keeps the 2 remainders) though PEX-9 BR-01 removed its column.
+ * `da`:  PSC-6 BR-03 — the pair's demand anticipation over the horizon; null when the hub holds none.
+ * `daNotCalledOff`:  PSC-6 BR-03 — Σ over the horizon of max(0, DA − call-offs released for that week).
+ * `inGraceQty`, `inGraceUntil`:  The PO On Hold quantity while its grace runs (PSC-6 BR-02) and the grace-end date; 0 and null otherwise.
+ * `onHoldQty`, `onHoldSince`:  The PO On Hold quantity once the grace has ended, and the date it moved there; 0 and null otherwise.
+ * `totalOspo`:  PSC-6 BR-04 — min(OSPO, DA not yet called off) + PO On Hold; null when the hub holds no DA for the pair.
+ *
  * @typedef {{
  *   readonly key: string;
  *   readonly asOf: string;
@@ -92,6 +108,13 @@ export const FEEDSTOCK_PO_EXCLUDED_STATES = [POStatus.REJECTED];
  *   readonly shippedBeyondCalledOff: number;
  *   readonly maxStock: number | null;
  *   readonly maxStockSettable: boolean;
+ *   readonly da: number | null;
+ *   readonly daNotCalledOff: number | null;
+ *   readonly inGraceQty: number;
+ *   readonly inGraceUntil: string | null;
+ *   readonly onHoldQty: number;
+ *   readonly onHoldSince: string | null;
+ *   readonly totalOspo: number | null;
  * }} FsRow
  */
 
@@ -105,6 +128,65 @@ export function feedstockRemainders(f) {
     calledOffNotShipped: Math.max(0, f.calledOff - f.asnRequested),
     calledBeyondPo: Math.max(0, f.calledOff - f.poOrdered),
     shippedBeyondCalledOff: Math.max(0, f.asnRequested - f.calledOff)
+  };
+}
+
+/**
+ * PSC-6 BR-04 (AC-03, AC-04) — Total OSPO = min(OSPO, DA not yet called off) +
+ * PO On Hold. With OSPO 470k, DA not yet called off 92k and PO On Hold 170k it
+ * reads 262k; with OSPO 50k, DA not yet called off 92k and no hold, 50k.
+ * @param {{ readonly ospo: number; readonly daNotCalledOff: number; readonly poOnHold: number }} f
+ * @returns {number}
+ */
+export function totalOspo(f) {
+  return Math.min(Math.max(0, f.ospo), Math.max(0, f.daNotCalledOff)) + Math.max(0, f.poOnHold);
+}
+
+/**
+ * PSC-6 BR-03 / BR-04 — one row's take on its pair's PO On Hold figures: the DA
+ * columns, the quantity split into In grace and PO On Hold (one 14-CALENDAR-day
+ * clock, PSC-6 BR-01), and Total OSPO. A pair with no PO On Hold line leaves the
+ * DA columns empty and Total OSPO unknown: `min(OSPO, 0)` would read 0, and 0 is
+ * not what an unknown DA means.
+ * @param {FsRow} row
+ * @param {{
+ *   readonly ospo: number;
+ *   readonly daNotCalledOff: number;
+ *   readonly demand: number;
+ *   readonly qty: number;
+ *   readonly grace: { readonly dueDay: string; readonly ended: boolean };
+ * } | undefined} fig
+ * @returns {FsRow}
+ */
+export function withHoldColumns(row, fig) {
+  if (!fig)
+    return {
+      ...row,
+      da: null,
+      daNotCalledOff: null,
+      inGraceQty: 0,
+      inGraceUntil: null,
+      onHoldQty: 0,
+      onHoldSince: null,
+      totalOspo: null
+    };
+  // PSC-6 BR-02 — ONE bucket at a time: during the grace the quantity is In
+  // grace, after it it is PO On Hold (or it left the row with the decision).
+  const inGrace = !fig.grace.ended && fig.qty > 0;
+  const onHold = fig.grace.ended && fig.qty > 0;
+  return {
+    ...row,
+    da: fig.demand,
+    daNotCalledOff: fig.daNotCalledOff,
+    inGraceQty: inGrace ? fig.qty : 0,
+    inGraceUntil: inGrace ? fig.grace.dueDay : null,
+    onHoldQty: onHold ? fig.qty : 0,
+    onHoldSince: onHold ? fig.grace.dueDay : null,
+    totalOspo: totalOspo({
+      ospo: fig.ospo,
+      daNotCalledOff: fig.daNotCalledOff,
+      poOnHold: fig.qty
+    })
   };
 }
 
@@ -227,6 +309,15 @@ export function buildFeedstockReconcile(input) {
       asnRequested: g.asnRequested,
       asnNumbers: [...g.asnNumbers].sort(),
       ...remainders,
+      // PSC-6 BR-03 — the hold figures come from the PO On Hold read model at the
+      // service seam (`withHoldColumns`); the rule itself holds no stores.
+      da: null,
+      daNotCalledOff: null,
+      inGraceQty: 0,
+      inGraceUntil: null,
+      onHoldQty: 0,
+      onHoldSince: null,
+      totalOspo: null,
       maxStock,
       maxStockSettable: input.maxStockSettable(g.supplierId, g.materialCode)
     });

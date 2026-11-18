@@ -125,10 +125,14 @@ describe('⚠️ IT MIRRORS THE SUPPLIER ANCHOR — same shape, not a new invent
 });
 
 describe('⚠️ THE TENANCY ANSWERS ARE UNCHANGED — the anchor adds no atom', () => {
-  it('`PERSONA_ROLES.buyer` is identical with and without it', () => {
+  it('`PERSONA_ROLES.buyer` differs only by the named EXPEDITOR lane (AIB-2, BL-350)', () => {
+    // The anchor itself adds nothing. The one difference is the Expeditor: a
+    // seventh buyer-side role that is offered and unseeded, so the persona span
+    // gains exactly its atom — the tenancy answer staying right, not collapsing.
     const withAnchor = new Set(atomsFor(PERSONA_SYSTEM_ROLES.buyer));
     const lanesOnly = new Set(atomsFor(SEEDED_SEAT_ROLES.buyer));
-    expect(withAnchor).toEqual(lanesOnly);
+    for (const a of lanesOnly) expect(withAnchor.has(a), `lost '${a}'`).toBe(true);
+    expect([...withAnchor].filter((a) => !lanesOnly.has(a))).toEqual(['inbound:acknowledge']);
     expect(personaCan('buyer', 'gr:post')).toBe(true); // known-GOOD
     expect(personaCan('buyer', 'po:confirm')).toBe(false); // still a supplier act
   });

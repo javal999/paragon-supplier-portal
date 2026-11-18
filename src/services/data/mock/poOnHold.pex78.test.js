@@ -80,7 +80,7 @@ describe('the read (PEX-7)', () => {
     expect(some?.qty).toBeGreaterThan(0);
   });
 
-  it('BR-02/BR-05: the grace period starts on the first day and is 14 days by default', async () => {
+  it('BR-02/BR-05: the grace period starts on the first day and is 14 calendar days by default', async () => {
     const r = (await lines(planner)).find((x) => x.key === keyOf(NO_DEMAND));
     expect(r?.grace.firstDay).toBe(sdcClock.now().slice(0, 10));
     expect(r?.grace.graceDays).toBe(14);
@@ -95,9 +95,9 @@ describe('the read (PEX-7)', () => {
     sdcClock.set('2026-09-03T12:00:00.000Z');
     const later = (await lines(planner)).find((x) => x.key === keyOf(NO_DEMAND));
     expect(later?.grace.firstDay).toBe(first?.grace.firstDay);
-    // Working days: 4 Sep and 2 Sep are hub holidays in the sample calendar, due 22 Sep.
-    expect(later?.grace.dueDay).toBe(first?.grace.dueDay);
-    expect(later?.grace.daysLeft).toBe(12);
+    // PSC-6 BR-06 — CALENDAR days: 31 Aug + 14 is 14 Sep, and 3 Sep has 11 days left.
+    expect(later?.grace.dueDay).toBe('2026-09-14');
+    expect(later?.grace.daysLeft).toBe(11);
   });
 
   it('BR-03/BR-04: grace and no-movement days are set with t_osipparam_set and read back', async () => {

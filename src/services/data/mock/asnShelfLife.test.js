@@ -49,7 +49,10 @@ const SUBMIT = {
   carrier: 'Sample Courier',
   trackingNumber: 'B 1234 XY',
   eta: ETA,
-  shipDate: '2026-10-10'
+  shipDate: '2026-10-10',
+  // AIB-1 BR-03 / BR-04 (BL-348) — a unique sequence and the Surat Jalan.
+  sequence: '32',
+  externalId: 'SJ-TEST-32'
 };
 // ETA + 5 months: short of the default 6. ETA + 6 months exactly: passes (edge case 3).
 const SHORT = '2027-03-15';
@@ -89,7 +92,13 @@ const submitAsn = (entityId, payload = {}) =>
     transitionId: 't_asn_submit',
     entity: 'advanceShipNotice',
     entityId,
-    payload: { ...SUBMIT, ...payload }
+    payload: {
+      ...SUBMIT,
+      // AIB-1 BR-03 / BR-04 (BL-348) — per-ASN so two submits never collide.
+      sequence: entityId.replace(/\D/g, '').slice(-4),
+      externalId: `SJ-${entityId}`,
+      ...payload
+    }
   });
 /** @param {string} entityId */
 const requestException = (entityId, reason = 'Only batch available before the Ramadan run') =>
@@ -97,7 +106,12 @@ const requestException = (entityId, reason = 'Only batch available before the Ra
     transitionId: 't_asn_request_exception',
     entity: 'advanceShipNotice',
     entityId,
-    payload: { ...SUBMIT, reason }
+    payload: {
+      ...SUBMIT,
+      sequence: entityId.replace(/\D/g, '').slice(-4),
+      externalId: `SJ-${entityId}`,
+      reason
+    }
   });
 /**
  * @param {QueryScope} scope

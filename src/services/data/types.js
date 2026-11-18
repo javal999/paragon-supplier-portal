@@ -654,6 +654,33 @@ export class DataError extends Error {
  * }} FeedstockConfirmation
  */
 
+// ─── DA weekly confirmation (PSC-1 · BL-336) ────────────────────────────────
+
+/**
+ * One supplier's confirmation of a week's published demand anticipation,
+ * append-only; the latest recorded per supplier × week is in force. It is the
+ * ONE-TIME confirmation of PSC-1: the first cycle is explicit, later weeks
+ * carry the last confirmation forward and write no record.
+ *
+ * `week`:  The planning week of the publication it confirms (`YYYY-MM-DD`, the Monday).
+ * `soh`:  The figure per material the supplier confirmed; it is what PRE-FILLS
+ *   the stock page (PSC-1 BR-06) and is never itself a stock record.
+ * `changedFields`:  BR-08 — the fields that differ from the figure in force
+ *   before the submission (`soh:<materialCode>`), computed by the target, so
+ *   an API supplier's unchanged pre-filled figures are not recorded as changes.
+ *
+ * @typedef {{
+ *   readonly id: string;
+ *   readonly supplierId: string;
+ *   readonly week: string;
+ *   readonly publicationId: string;
+ *   readonly soh: readonly { readonly materialCode: string; readonly soh: number }[];
+ *   readonly changedFields: readonly string[];
+ *   readonly recordedAt: string;
+ *   readonly recordedBy: ActorAttribution;
+ * }} DaConfirmation
+ */
+
 // ─── "Ask supplier" — PTI's hub ask (INV-D9; Inventory UX S-04) ─────────────
 
 /**
@@ -1935,12 +1962,37 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  */
 
 /**
+ * AIB-2 BR-01 / BR-02 (BL-350) — the Expeditor's acknowledgment of one inbound.
+ * `acknowledgedBy`:  The session's actor — today always
+ *   `UNATTRIBUTED: NO_PERSON_IN_SESSION`, because the portal holds no persons.
+ * `seatRoles`:  The business roles the acting seat held, so the surface can name
+ *   the SEAT (Expeditor) when it cannot name the person.
+ * `acknowledgedAt`:  When the act was recorded (the hub's simulated clock).
+ *
+ * @typedef {{
+ *   readonly asnNumber: string;
+ *   readonly supplierId: string;
+ *   readonly acknowledgedBy: ActorAttribution;
+ *   readonly seatRoles: readonly string[];
+ *   readonly acknowledgedAt: string;
+ * }} InboundAcknowledgment
+ */
+
+/**
  * @typedef {object} ASN
  * @property {string} asnNumber
  * @property {string} supplierId
  * @property {string} poReference
  * @property {AsnStatus} status
  * @property {string} carrier
+ * @property {string} [sequence] AIB-1 BR-03 / BR-04 (BL-348) — the ZWME021 inbound
+ *   upload sequence the supplier enters. One sequence = one ASN, all its lines
+ *   share the PO, delivery date and External ID (AIB-D1).
+ * @property {string} [externalId] AIB-1 BR-04 (BL-348) — the Surat Jalan (SJ) number,
+ *   which is the inbound upload's External ID. Required to submit.
+ * @property {InboundAcknowledgment} [inboundAcknowledgment] AIB-2 BR-02 (BL-350) —
+ *   the Expeditor's acknowledgment, JOINED onto the ASN on read from its own store;
+ *   never a fixture field. Absent until a seat holding `inbound:acknowledge` acts.
  * @property {string} [threePlId] BL-51 / REQ-E07-04 BR-05 — the 3PL on the administrator's list this ASN
  *   travels with (`tpl-…`). Absent when the carrier was entered by name. It is
  *   what turns `trackingNumber` into a link to the 3PL's public tracking page;
@@ -3332,6 +3384,9 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * @property {(scope: QueryScope, filter?: ASNFilter) => Promise<Page<ASN>>} getASNs
  * @property {(scope: QueryScope, filter?: GRFilter) => Promise<Page<GoodsReceipt>>} getGoodsReceipts
  * @property {(scope: QueryScope) => Promise<Page<CallOff>>} getCallOffs -  Call-offs under umbrella POs (REQ-E09-03). A supplier never sees drafts.
+ * @property {(scope: QueryScope) => Promise<Page<import('../transitions/callOffChase').CallOffChaseRow>>} getCallOffChase AIB-3 (BL-351) — the missing-ASN chase: call-offs the planner
+ *   sent with no covering ASN, one working day after they were sent, with the planner's
+ *   closure when one exists. PTI reads every chase; a supplier reads only its own rows.
  * @property {(scope: QueryScope, filter?: InvoiceFilter) => Promise<Page<BuyerInvoice>>} getBuyerInvoices - — Finance —
  * @property {(scope: QueryScope, filter?: InvoiceFilter) => Promise<Page<SupplierInvoice>>} getSupplierInvoices
  * @property {(scope: QueryScope, filter?: ContractFilter) => Promise<Page<Contract>>} getContracts - — Contracts —

@@ -39,6 +39,8 @@ export const hubEn = {
   'hub.nav.pti.orderSummary': 'Order summary',
   'hub.nav.pti.purchaseOrders': 'Purchase orders',
   'hub.nav.pti.shipments': 'Shipments & ASN',
+  // AIB-2 (BL-350) — the Expeditor's inbound list.
+  'hub.nav.pti.inbound': 'Inbound acknowledgments',
   'hub.nav.pti.goodsReceipts': 'Goods receipts',
   // IA P-11 (IA-X02) — one name per object: the supplier menu says Stock too.
   'hub.nav.pti.inventory': 'Stock',
@@ -156,6 +158,8 @@ export const hubEn = {
   'hub.home.task.completionMoved': 'Orders whose expected completion moved later',
   'hub.home.task.receipts': 'Goods receipts to review',
   'hub.home.task.inboundAsn': 'Inbound shipments to receive',
+  // AIB-2 BR-05 (BL-350) — the Expeditor's missing acknowledgment.
+  'hub.home.task.inboundAcknowledgment': 'Inbounds awaiting acknowledgment',
   'hub.home.task.chase': 'Suppliers to follow up on forecasts or deliveries',
   'hub.home.task.rfqAward': 'RFQ ready to award',
   // REQ-E03-05 / REQ-E03-02 / REQ-E03-04 — the RFx tasks (Phase 6a).
@@ -171,6 +175,8 @@ export const hubEn = {
   'hub.home.task.callOffsEscalated': 'Escalated call-offs',
   'hub.home.task.callOffsDrift':
     'Delivery drift: suppliers late or missing 2 or more call-offs of a material',
+  // AIB-3 (BL-351) — a sent call-off with no ASN, chased from the next working day.
+  'hub.home.task.callOffsMissingAsn': 'Call-offs sent with no ASN to chase',
   'hub.home.task.inventoryHighAlerts': 'High-risk inventory and capacity alerts',
   'hub.home.task.capacityGaps': 'Suppliers with capacity below demand',
   // DRC-12a (BL-198) — a material's NPD tag dropped: review its ROP on its real demand.
@@ -199,6 +205,8 @@ export const hubEn = {
   'hub.home.task.sup.returnedInvoices': 'Returned invoices to correct and resubmit',
   'hub.home.task.sup.callOffsConfirm': 'Call-offs to confirm',
   'hub.home.task.sup.callOffsDue': 'Call-offs due within 7 days with no ASN or dispatch notice',
+  // AIB-3 (BL-351) — PTI is chasing this supplier for an ASN.
+  'hub.home.task.sup.callOffsMissingAsn': 'Call-offs PTI has sent: the ASN is still missing',
   'hub.home.task.sup.staleStock': 'Stock figures to update',
   'hub.home.task.sup.capacityDue': 'Capacity confirmations due',
   'hub.home.task.sup.newForecast': 'New forecast version to review',
@@ -256,6 +264,7 @@ export const hubId = {
   'hub.nav.pti.orderSummary': 'Ringkasan pesanan',
   'hub.nav.pti.purchaseOrders': 'Pesanan pembelian',
   'hub.nav.pti.shipments': 'Pengiriman & ASN',
+  'hub.nav.pti.inbound': 'Konfirmasi inbound',
   'hub.nav.pti.goodsReceipts': 'Penerimaan barang',
   'hub.nav.pti.inventory': 'Stok',
   'hub.nav.pti.stockSimulation': 'Simulasi stok',
@@ -356,6 +365,7 @@ export const hubId = {
   'hub.home.task.completionMoved': 'Pesanan yang perkiraan selesainya mundur',
   'hub.home.task.receipts': 'Penerimaan barang untuk ditinjau',
   'hub.home.task.inboundAsn': 'Pengiriman masuk untuk diterima',
+  'hub.home.task.inboundAcknowledgment': 'Inbound menunggu konfirmasi',
   'hub.home.task.chase': 'Pemasok yang perlu ditindaklanjuti untuk prakiraan atau pengiriman',
   'hub.home.task.rfqAward': 'RFQ siap ditetapkan pemenangnya',
   'hub.home.task.negotiationClosing': 'Putaran negosiasi yang segera ditutup',
@@ -370,6 +380,7 @@ export const hubId = {
   'hub.home.task.callOffsEscalated': 'Call-off yang dieskalasi',
   'hub.home.task.callOffsDrift':
     'Pergeseran pengiriman: pemasok terlambat atau tidak mengirim 2 call-off atau lebih untuk satu material',
+  'hub.home.task.callOffsMissingAsn': 'Call-off yang dikirim tanpa ASN untuk ditindaklanjuti',
   'hub.home.task.inventoryHighAlerts': 'Peringatan stok dan kapasitas berisiko tinggi',
   'hub.home.task.capacityGaps': 'Pemasok dengan kapasitas di bawah kebutuhan',
   'hub.home.task.npdRopReview':
@@ -393,6 +404,7 @@ export const hubId = {
   'hub.home.task.sup.callOffsConfirm': 'Call-off yang perlu dikonfirmasi',
   'hub.home.task.sup.callOffsDue':
     'Call-off yang jatuh tempo dalam 7 hari tanpa ASN atau pemberitahuan pengiriman',
+  'hub.home.task.sup.callOffsMissingAsn': 'Call-off dari PTI: ASN-nya belum ada',
   'hub.home.task.sup.staleStock': 'Angka stok yang perlu diperbarui',
   'hub.home.task.sup.capacityDue': 'Konfirmasi kapasitas yang jatuh tempo',
   'hub.home.task.sup.newForecast': 'Versi prakiraan baru untuk ditinjau',

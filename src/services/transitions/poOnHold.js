@@ -14,8 +14,14 @@
 //
 // The grace period starts on the day a quantity first appears [Proposed] and
 // lasts 14 days by default, per supplier × material [Owner, Q7, PEX-D7]. The
-// decision (PEX-8) takes effect at its end. Owner ruled 2026-11-09: the grace
-// and no-movement days are WORKING days on the hub calendar (BL-50).
+// decision (PEX-8) takes effect at its end.
+//
+// ⚠️ THE GRACE COUNTS CALENDAR DAYS (PSC-6 BR-01, BR-06; PEX-D7 amended
+// 2026-11-18, owner). Days 1..graceDays inclusive are in grace and the quantity
+// shows In grace; on day graceDays + 1 it moves to PO On Hold. The owner's
+// earlier ruling (2026-11-09, PEX-D23) that the grace counted working days on
+// the hub calendar is SUPERSEDED FOR THE GRACE ONLY: the no-movement period
+// (PEX-7 BR-03) still counts working days on the hub calendar (BL-50).
 //
 // PURE. No store, no clock: the read model hands in the figures and the day.
 // Nothing is decided for a planner here except the pre-selected suggestion
@@ -26,12 +32,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @import { WorkingCalendar } from '@lib/workingCalendar' */
-import { addWorkingDays, documentInstant, isWorkingDay } from '@lib/workingCalendar';
+import { isWorkingDay } from '@lib/workingCalendar';
 import { hubWorkingCalendar } from './workingCalendarStore';
 
 /**
- * PEX-D7 — 14 working days each, per supplier × material, editable (`t_osipparam_set`,
+ * PEX-D7 — 14 days each, per supplier × material, editable (`t_osipparam_set`,
  * keys `grace|<supplier>|<material>` and `noMove|<supplier>|<material>`).
+ * PSC-6 BR-01 / PEX-D7 (owner, 2026-11-18): `graceDays` is CALENDAR days;
+ * `noMoveDays` stays WORKING days (PEX-7 BR-03, PEX-D23).
  */
 export const PO_ON_HOLD_RULES = Object.freeze({
   graceDays: 14,
@@ -65,9 +73,11 @@ export function daNotCalledOff(weeks) {
 export const poOnHoldQty = (f) => Math.max(0, f.ospo - f.daNotCalledOff);
 
 /**
- * PEX-7 BR-02 / BR-05 — where a line stands against its grace period.
- * `dueDay`:  The first day after the grace period; the decision takes effect on it.
- * `daysLeft`:  Whole days from `asOf` to `dueDay`, never below 0.
+ * PEX-7 BR-02 / BR-05 (PSC-6 BR-01, BR-06) — where a line stands against its
+ * grace period.
+ * `dueDay`:  The first day after the grace period (day `graceDays` + 1, counted
+ *            in CALENDAR days from `firstDay`); the decision takes effect on it.
+ * `daysLeft`:  Calendar days from `asOf` to `dueDay`, never below 0.
  * `ended`:  The grace period is over on `asOf`.
  *
  * @typedef {{
@@ -98,25 +108,29 @@ export function workingDaysBetween(from, to, cal = hubWorkingCalendar()) {
 }
 
 /**
- * The grace period is `graceDays` WORKING days on the hub calendar (owner,
- * 2026-11-09). A first day that is not a working day counts from the next one,
- * as every other deadline does (REQ-E07-02). `daysLeft` is working days.
+ * The grace period is `graceDays` CALENDAR days (PSC-6 BR-01, BR-06; owner,
+ * 2026-11-18 — supersedes the working-day count of PEX-D23 for the grace; the
+ * no-movement period stays on the hub calendar). Days 1..graceDays inclusive are
+ * in grace; on day graceDays + 1 the quantity moves to PO On Hold. A first day
+ * on a weekend or a hub holiday counts as it falls: a calendar clock, so a
+ * calendar ruling by the hub administrator moves no grace end.
  * @param {string} asOf  `YYYY-MM-DD`
  * @param {string} firstDay  The day the quantity first appeared.
- * @param {number} graceDays  Working days.
- * @param {WorkingCalendar} [cal]
+ * @param {number} graceDays  Calendar days.
  * @returns {GraceState}
  */
-export function graceState(asOf, firstDay, graceDays, cal = hubWorkingCalendar()) {
-  const due = addWorkingDays(documentInstant(firstDay, cal), graceDays, cal);
-  const dueDay = new Date(due.getTime() + cal.utcOffsetHours * 3_600_000)
-    .toISOString()
-    .slice(0, 10);
+export function graceState(asOf, firstDay, graceDays) {
+  // ⚠️ CALENDAR DAYS ON PURPOSE (PSC-6 BR-06). Pinned in
+  // `hubCalendarReaders.guard.test.js`'s calendar-day allowlist with this reason.
+  const due = new Date(Date.parse(`${firstDay}T00:00:00.000Z`) + graceDays * 86_400_000);
+  const dueDay = due.toISOString().slice(0, 10);
+  const daysLeft =
+    (Date.parse(`${dueDay}T00:00:00.000Z`) - Date.parse(`${asOf}T00:00:00.000Z`)) / 86_400_000;
   return {
     firstDay,
     graceDays,
     dueDay,
-    daysLeft: workingDaysBetween(asOf, dueDay, cal),
+    daysLeft: Math.max(0, Math.round(daysLeft)),
     ended: asOf >= dueDay
   };
 }

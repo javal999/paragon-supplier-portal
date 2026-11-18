@@ -13,6 +13,7 @@ import { POStatus } from '../types';
 /** @import { PurchaseOrder, PoLineResponse, PoRejectionCause, ICommandService, QueryScope, CommandInput, CommandResult, CommandStatus, ASN, AsnLineItem, AsnShelfLifeEvent, AsnStatus, Invoice, InvoiceLine, InvoiceStatus, PurchaseRequisition, PRStatus, PRPriority, PrSource, CertType, CertificateDeclaration, SupplierDocumentCategory, SupplierDocumentStatus, SupplierApplicationStatus, SupplierApplicationDeclaration, CallOff, CallOffConfirmationKind, CallOffStatus, CallOffType } from '../types' */
 /** @import { GoodsReceipt, GRStatus, Disposition, InspectionResult, ReceiptDiscrepancyStatus } from '@data/mockGoodsReceipts' */
 import { receiptDiscrepancyStore } from './stores/receiptDiscrepancyStore';
+import { inboundAcknowledgmentStore } from './stores/inboundAcknowledgmentStore';
 import { callOffStore } from './stores/callOffStore';
 import { supplierDocumentStore } from './stores/supplierDocumentStore';
 import { supplierApplicationStore } from './stores/supplierApplicationStore';
@@ -52,6 +53,8 @@ import {
   INVOICEABLE_PO_STATES,
   asnLineCheckOf,
   asnLineRefusal,
+  asnSequenceRead,
+  asnSequenceRefusalText,
   asnSubmitRefusal,
   etaNeedsReapproval,
   onlyShelfLifeRefused,
@@ -176,6 +179,8 @@ import { warehouseDecisionTarget } from './targets/warehouseDecision';
 import { demandAnticipationTarget } from './targets/demandAnticipation';
 import { consumptionTarget } from './targets/consumption';
 import { osipLevelTarget } from './targets/osipLevel';
+// AIB-3 (BL-351) — the missing-ASN chase: the planner closes one with a reason.
+import { callOffChaseTarget } from './targets/callOffChase';
 import { osipParamTarget } from './targets/osipParam';
 import { ltpInputTarget } from './targets/ltpInput';
 import { promotionTarget } from './targets/promotion';
@@ -187,6 +192,8 @@ import { observeCallOffTriggers } from './callOffTriggerReadModel';
 import { ptiStockStore } from './stores/ptiStockStore';
 // BL-194 — the supplier's feedstock confirmation (its own module, DRC-8).
 import { feedstockConfirmationTarget } from './targets/feedstockConfirmation';
+// BL-336 — the one-time weekly DA confirmation (its own module, PSC-1).
+import { daConfirmationTarget } from './targets/daConfirmation';
 // INV-D9 — PTI's "Ask supplier" hub ask (its own module).
 import { supplierAskTarget } from './targets/supplierAsk';
 // INV-D8 — PTI's capacity gap decision (its own module).
@@ -621,6 +628,21 @@ const advanceShipNoticeTarget = {
   readScopeOwner: (id) => asnStore.get(id)?.supplierId ?? null,
   readEntity: (id) => asnStore.get(id) ?? null,
   applyTransition: (id, toState, payload, scope, transitionId) => {
+    // AIB-2 BR-02 (BL-350) — the Expeditor's acknowledgment RECORDS a fact and
+    // moves nothing: the ASN's state stays where the shipping lane put it, and
+    // the who/when lives in its own store (joined on read by `getASNs`).
+    if (transitionId === 't_asn_acknowledge_inbound') {
+      const acked = asnStore.get(id);
+      if (!acked) return;
+      inboundAcknowledgmentStore.add({
+        asnNumber: acked.asnNumber,
+        supplierId: acked.supplierId,
+        acknowledgedBy: scope.actor ?? NO_PERSON,
+        seatRoles: [...(scope.businessRoles ?? [])],
+        acknowledgedAt: sdcClock.now()
+      });
+      return;
+    }
     const current = asnStore.get(id);
     const shipDate = nonBlank(payload.shipDate) ?? current?.shipDate;
     if (toState === 'Submitted' && current) {
@@ -654,6 +676,10 @@ const advanceShipNoticeTarget = {
           ? payload.trackingNumber
           : a.trackingNumber,
       eta: typeof payload.eta === 'string' && payload.eta ? payload.eta : a.eta,
+      // AIB-1 BR-03 / BR-04 — the sequence and the Surat Jalan (External ID)
+      // the submission carried; a payload that says nothing keeps the draft's.
+      ...(nonBlank(payload.sequence) ? { sequence: nonBlank(payload.sequence) } : {}),
+      ...(nonBlank(payload.externalId) ? { externalId: nonBlank(payload.externalId) } : {}),
       ...(shipDate ? { shipDate } : {}),
       ...(nonBlank(payload.packingListFile)
         ? { packingListFile: nonBlank(payload.packingListFile) }
@@ -730,6 +756,10 @@ const advanceShipNoticeTarget = {
       ...(nonBlank(payload.threePlId) ? { threePlId: nonBlank(payload.threePlId) } : {}),
       trackingNumber: typeof payload.trackingNumber === 'string' ? payload.trackingNumber : '',
       eta: typeof payload.eta === 'string' ? payload.eta : '',
+      // AIB-1 BR-03 / BR-04 — the supplier enters the sequence and the SJ; a
+      // draft may still be missing them (the quick "Create ASN" action).
+      ...(nonBlank(payload.sequence) ? { sequence: nonBlank(payload.sequence) } : {}),
+      ...(nonBlank(payload.externalId) ? { externalId: nonBlank(payload.externalId) } : {}),
       details: {
         originCity: po?.supplierName ?? '',
         destinationWarehouse: 'NDC Jatake 6, Tangerang',
@@ -879,6 +909,46 @@ const asnSubmissionRead = (asn, payload, waive) => {
   });
   return { lines, eta, incomplete, refusals };
 };
+
+// AIB-1 BR-03 / BR-04 (BL-348) — the 4 ZWME021 sequence rules, checked on the
+// draft merged with what the submission adds. One sequence = one ASN (AIB-D1),
+// so the supplier's OTHER non-cancelled ASNs are the peers a sequence may not
+// already belong to.
+bindPolicyHook(POLICY_HOOKS.ASN_SEQUENCE_RULES, ({ entityId, payload }) => {
+  const asn = asnStore.get(entityId);
+  if (!asn) return { ok: false, reason: 'entity missing' };
+  const read = asnSubmissionRead(asn, payload, false);
+  const sequence = nonBlank(payload.sequence) ?? asn.sequence;
+  const externalId = nonBlank(payload.externalId) ?? asn.externalId;
+  const seqRead = asnSequenceRead({
+    sequence,
+    externalId,
+    poReference: asn.poReference,
+    deliveryDate: nonBlank(payload.eta) ?? asn.eta,
+    lines: read.lines.map((l) => ({ materialCode: l.materialCode })),
+    peers: asnStore
+      .all()
+      .filter((a) => a.supplierId === asn.supplierId && a.status !== 'Cancelled'),
+    excludeAsn: asn.asnNumber
+  });
+  return seqRead.ok ? { ok: true } : { ok: false, reason: asnSequenceRefusalText(seqRead) };
+});
+
+// AIB-2 BR-02 (BL-350) — the Expeditor's inbound acknowledgment is recorded
+// once. A second act would rewrite "who and when", which is the one thing the
+// record exists to say.
+bindPolicyHook(POLICY_HOOKS.INBOUND_ACKNOWLEDGMENT_UNACKNOWLEDGED, ({ entityId }) => {
+  const asn = asnStore.get(entityId);
+  if (!asn) return { ok: false, reason: 'entity missing' };
+  const existing = inboundAcknowledgmentStore.get(entityId);
+  if (existing) {
+    return {
+      ok: false,
+      reason: `ALREADY_ACKNOWLEDGED: ${asn.asnNumber} was acknowledged at ${existing.acknowledgedAt}`
+    };
+  }
+  return { ok: true };
+});
 
 // REQ-E07-04 BR-04 — what a submitted ASN must carry, read on the draft merged
 // with what the submission adds. MR-6 BR-05 to BR-08 — and each shelf-life
@@ -1516,6 +1586,20 @@ const callOffTarget = {
       return;
     }
     if (toState === 'Rejected') {
+      // PSC-6 BR-09 — a rejected call-off does not restart the PO On Hold grace.
+      // The quantity returns to the open PO and PEX-8 decides; the pair keeps the
+      // start day of the episode its end-of-grace execution ran under, instead of
+      // the new grace an `observe` after the quantity left hold would start.
+      if (current.origin === 'poOnHold') {
+        const ran = poOnHoldStore
+          .executions()
+          .find((e) => e.callOffIds.includes(/** @type {string} */ (id)));
+        if (ran)
+          poOnHoldStore.restoreFirstDay(
+            `${current.supplierId}|${current.materialCode}`,
+            ran.firstDay
+          );
+      }
       callOffStore.update(id, (c) => ({
         ...c,
         status: 'Rejected',
@@ -6315,6 +6399,9 @@ const TARGETS = {
   receiptDiscrepancy: receiptDiscrepancyTarget,
   // REQ-E09-03 — call-offs under an umbrella PO; the hub is their record.
   callOff: callOffTarget,
+  // AIB-3 (BL-351) — the missing-ASN chase. One chase per call-off, derived at
+  // read; the target stores only the planner's closure.
+  callOffChase: callOffChaseTarget,
   // REQ-E08-02 to REQ-E08-05 — inventory & capacity collaboration.
   stockSync: stockSyncTarget,
   stockAccess: stockAccessTarget,
@@ -6346,6 +6433,9 @@ const TARGETS = {
   // BL-194 / DRC-8 BR-a — a supplier's feedstock confirmation, append-only.
   // Ships in the same commit as its flow.
   feedstockConfirmation: feedstockConfirmationTarget,
+  // BL-336 / PSC-1 — the one-time weekly DA confirmation: append-only per
+  // supplier × week. Ships in the same commit as its flow.
+  daConfirmation: daConfirmationTarget,
   // INV-D9 — PTI's hub ask to a supplier, answered in the hub. Ships in the
   // same commit as its flow.
   supplierAsk: supplierAskTarget,

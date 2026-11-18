@@ -16,6 +16,10 @@
 /** @typedef {import('./asn').AsnLineInput} AsnLineInput */
 /** @typedef {import('./asn').AsnLineCheck} AsnLineCheck */
 /** @typedef {import('./asn').AsnLineRefusal} AsnLineRefusal */
+/** @typedef {import('./asnSequence').AsnSequenceLine} AsnSequenceLine */
+/** @typedef {import('./asnSequence').AsnSequenceLineError} AsnSequenceLineError */
+/** @typedef {import('./asnSequence').AsnSequenceRead} AsnSequenceRead */
+/** @typedef {import('./asnSequence').AsnSequencePeer} AsnSequencePeer */
 /** @typedef {import('./shelfLife').ShelfLifeLineView} ShelfLifeLineView */
 /** @typedef {import('./shelfLife').ShelfLifeRequest} ShelfLifeRequest */
 /** @typedef {import('./shelfLife').ShelfLifeDecision} ShelfLifeDecision */
@@ -40,6 +44,7 @@ export {
   asnLineCheckOf,
   asnLineRefusal
 } from './asn';
+export { asnSequenceRead, sequenceErrorFor, asnSequenceRefusalText } from './asnSequence';
 export {
   addCalendarMonths,
   shelfLifeMet,

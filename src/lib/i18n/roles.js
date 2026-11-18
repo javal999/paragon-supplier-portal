@@ -29,6 +29,8 @@ export const rolesEn = {
   'roles.owner.finance': 'Finance',
   'roles.owner.compliance': 'Compliance',
   'roles.owner.planning': 'Planning',
+  // AIB-2 BR-01 (BL-350) — the new PTI planning seat that acknowledges inbounds.
+  'roles.owner.expeditor': 'Expeditor',
   'roles.owner.requisitioner': 'Requisitioner',
   // ⚠️ A CAPITALISED NOUN, LIKE EVERY OTHER ROLE. It read 'the supplier' —
   // shaped for the sentence "Awaiting the supplier" — and the catalogue then
@@ -149,6 +151,8 @@ export const rolesEn = {
     'Supplier documents and governed-check enforcement. Verification is a pipeline, not a screen.',
   'roles.desc.planning':
     'Demand and supply planning. Reviews supplier responses and records stock declarations.',
+  'roles.desc.expeditor':
+    "Reviews and acknowledges inbound deliveries in the planning area. Sees each inbound's supplier, Surat Jalan, quantity and date, and records that PTI has seen it; the goods receipt and its quality status stay in SAP and this role neither posts nor re-records them. It cannot create, submit or cancel an ASN, and it does not answer a supplier's receipt dispute — those are the supplier's and the planner's acts.",
   'roles.desc.requisitioner':
     'Raises and revises purchase requisitions. Deliberately cannot approve one.',
   // ⚠️ **THE ANCHOR'S ROW MUST NOT CLAIM TO BE A GATE.** It holds no permission,
@@ -274,6 +278,7 @@ export const rolesId = {
   'roles.owner.finance': 'Keuangan',
   'roles.owner.compliance': 'Kepatuhan',
   'roles.owner.planning': 'Perencanaan',
+  'roles.owner.expeditor': 'Expeditor',
   'roles.owner.requisitioner': 'Pemohon',
   'roles.owner.supplier': 'Pemasok',
   'roles.owner.commercial': 'Komersial Pemasok',
@@ -342,6 +347,8 @@ export const rolesId = {
     'Dokumen pemasok dan penegakan pemeriksaan yang diatur. Verifikasi adalah alur, bukan layar.',
   'roles.desc.planning':
     'Perencanaan permintaan dan pasokan. Meninjau respons pemasok dan mencatat deklarasi stok.',
+  'roles.desc.expeditor':
+    'Meninjau dan mengonfirmasi pengiriman masuk di area perencanaan. Melihat pemasok, Surat Jalan, jumlah dan tanggal setiap inbound, lalu mencatat bahwa PTI telah melihatnya; penerimaan barang dan status kualitasnya tetap di SAP dan peran ini tidak memposting atau mencatat ulang. Peran ini tidak dapat membuat, mengirim atau membatalkan ASN, dan tidak menjawab sengketa penerimaan pemasok — itu tindakan pemasok dan perencana.',
   'roles.desc.requisitioner':
     'Mengajukan dan merevisi permintaan pembelian. Sengaja tidak dapat menyetujuinya.',
   'roles.desc.supplier':

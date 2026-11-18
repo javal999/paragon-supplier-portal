@@ -135,12 +135,12 @@ function settingOf(param, supplierId, materialCode) {
 }
 
 /**
- * Every supplier × material with a PO On Hold quantity above 0, on the hub's
- * current day. Reading records the first day of a newly appeared quantity.
- * @param {string} [nowIso]
- * @returns {PoOnHoldRow[]}
+ * The PO On Hold figures of EVERY supplier × material pair the hub knows, held
+ * or not, with no store write. `allPoOnHold` renders the held ones, and
+ * `allPoOnHoldFigures` hands every pair to the feedstock reconcile (PSC-6 BR-03).
+ * @param {string} nowIso
  */
-export function allPoOnHold(nowIso = sdcClock.now()) {
+function pairFigureData(nowIso) {
   const day = nowIso.slice(0, 10);
   const pos = purchaseOrderStore.all();
   const callOffs = callOffStore.all();
@@ -179,8 +179,6 @@ export function allPoOnHold(nowIso = sdcClock.now()) {
     if (!pairs.has(pk(f.supplierId, f.materialCode)))
       pairs.set(pk(f.supplierId, f.materialCode), undefined);
 
-  const positions = allPositions(nowIso);
-  const pti = ptiStockStore.combined();
   const figures = [];
   for (const [key, da] of pairs) {
     const [supplierId, materialCode] = key.split('|');
@@ -220,25 +218,79 @@ export function allPoOnHold(nowIso = sdcClock.now()) {
       ...w,
       calledOff: released.get(`${supplierId}|${materialCode}|${w.week}`) ?? 0
     }));
-    if (qty > 0)
-      figures.push({
-        key,
-        supplierId,
-        materialCode,
-        ospo,
-        notCalled,
-        qty,
-        weeks,
-        roomWeeks,
-        lines
-      });
+    figures.push({
+      key,
+      supplierId,
+      materialCode,
+      ospo,
+      notCalled,
+      qty,
+      weeks,
+      roomWeeks,
+      lines
+    });
   }
+  return { day, figures, pos, absorbedOnPair };
+}
+
+/**
+ * PSC-6 BR-03 — every pair's DA picture and PO On Hold quantity, held or not:
+ * the feedstock reconcile's "DA", "DA not yet called off", "In grace", "PO On
+ * Hold" and "Total OSPO" columns read them. Reading records the first day of a
+ * newly appeared quantity — and drops the days of pairs no longer on hold —
+ * exactly as `allPoOnHold` does.
+ * @param {string} [nowIso]
+ * @returns {{
+ *   readonly key: string;
+ *   readonly supplierId: string;
+ *   readonly materialCode: string;
+ *   readonly ospo: number;
+ *   readonly daNotCalledOff: number;
+ *   readonly demand: number;
+ *   readonly qty: number;
+ *   readonly grace: GraceState;
+ *   readonly graceIsDefault: boolean;
+ * }[]}
+ */
+export function allPoOnHoldFigures(nowIso = sdcClock.now()) {
+  const { day, figures } = pairFigureData(nowIso);
   const firstDays = poOnHoldStore.observe(
-    figures.map((f) => f.key),
+    figures.filter((f) => f.qty > 0).map((f) => f.key),
+    day
+  );
+  return figures.map((f) => {
+    const grace = settingOf('grace', f.supplierId, f.materialCode);
+    return {
+      key: f.key,
+      supplierId: f.supplierId,
+      materialCode: f.materialCode,
+      ospo: f.ospo,
+      daNotCalledOff: f.notCalled,
+      demand: f.weeks.reduce((n, w) => n + w.da, 0),
+      qty: f.qty,
+      grace: graceState(day, firstDays.get(f.key) ?? day, grace.days),
+      graceIsDefault: grace.isDefault
+    };
+  });
+}
+
+/**
+ * Every supplier × material with a PO On Hold quantity above 0, on the hub's
+ * current day. Reading records the first day of a newly appeared quantity.
+ * @param {string} [nowIso]
+ * @returns {PoOnHoldRow[]}
+ */
+export function allPoOnHold(nowIso = sdcClock.now()) {
+  const { day, figures, pos, absorbedOnPair } = pairFigureData(nowIso);
+  const positions = allPositions(nowIso);
+  const pti = ptiStockStore.combined();
+  const held = figures.filter((f) => f.qty > 0);
+  const firstDays = poOnHoldStore.observe(
+    held.map((f) => f.key),
     day
   );
 
-  const live = figures
+  const live = held
     .map((f) => {
       const entry = materialEntry(f.materialCode);
       const grace = settingOf('grace', f.supplierId, f.materialCode);
