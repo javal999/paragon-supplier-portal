@@ -43,6 +43,9 @@ const WizardReviewStep = ({ form, updateForm, selectedPO, wizardRead, wizardWarn
             [t('fc.asn.trackingOrVehicle'), form.trackingNumber || '—'],
             [t('supplierShipments.wizard.review.field.shipDate'), fmtDate(form.shipDate)],
             [t('supplierShipments.wizard.review.field.eta'), form.eta ? fmtDate(form.eta) : '—'],
+            // AIB-1 BR-03 / BR-04 (BL-348) — the inbound-upload identity.
+            [t('fc.asn.sequence'), form.sequence.trim() || '—'],
+            [t('fc.asn.externalId'), form.externalId.trim() || '—'],
             [t('supplierShipments.wizard.review.field.packages'), form.packages || '—'],
             [t('fc.asn.packingList'), form.packingList || '—'],
             ...(form.overShipReason.trim()

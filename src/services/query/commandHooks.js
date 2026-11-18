@@ -361,6 +361,8 @@ export function usePurchaseOrderShippingNotice() {
  * @property {AsnLineInput[]} [lines] -  REQ-E07-04 — shipped quantity, batch and expiry per PO line. Omitted, the
  *    draft proposes each line's open quantity.
  * @property {string} [shipDate]
+ * @property {string} [sequence] -  AIB-1 BR-03 (BL-348) — the ZWME021 sequence the supplier enters; one sequence = one ASN.
+ * @property {string} [externalId] -  AIB-1 BR-04 (BL-348) — the Surat Jalan (SJ) number, the inbound upload's External ID.
  * @property {string} [packingListFile]
  * @property {string} [overShipReason] -  BR-02 — required when a line ships more than its open quantity.
  * @property {string} [callOffId] -  REQ-E09-03 BR-06 — the confirmed call-off this ASN ships, if any.
@@ -399,6 +401,8 @@ export function useAdvanceShipNoticeCreate() {
  * @property {string} trackingNumber
  * @property {string} eta
  * @property {string} [shipDate]
+ * @property {string} [sequence] -  AIB-1 BR-03 (BL-348) — the ZWME021 sequence; validated by the verb.
+ * @property {string} [externalId] -  AIB-1 BR-04 (BL-348) — the Surat Jalan (SJ) number.
  * @property {AsnLineInput[]} [lines]
  * @property {string} [overShipReason]
  * @property {boolean} [callOffFinal] -  MR-6 BR-10 — the last ASN for its call-off; omitted keeps the draft's.
@@ -418,6 +422,8 @@ export function useAdvanceShipNoticeSubmit() {
       trackingNumber,
       eta,
       shipDate,
+      sequence,
+      externalId,
       lines,
       overShipReason,
       callOffFinal
@@ -432,6 +438,8 @@ export function useAdvanceShipNoticeSubmit() {
           trackingNumber,
           eta,
           ...(shipDate ? { shipDate } : {}),
+          ...(sequence !== undefined ? { sequence } : {}),
+          ...(externalId !== undefined ? { externalId } : {}),
           ...(lines ? { lines } : {}),
           ...(overShipReason ? { overShipReason } : {}),
           ...(callOffFinal !== undefined ? { callOffFinal } : {})
@@ -458,6 +466,32 @@ export function useAdvanceShipNoticeCancel() {
     mutationFn: ({ asnNumber }) =>
       svc.commands.dispatch(scope, {
         transitionId: 't_asn_cancel',
+        entity: 'advanceShipNotice',
+        entityId: asnNumber
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    }
+  });
+}
+
+/**
+ * AIB-2 BR-02 (BL-350) — the Expeditor acknowledges one inbound (fires
+ * `t_asn_acknowledge_inbound`, a state-preserving fact on the ASN). The record
+ * of who and when lives in the inbound acknowledgment store and is joined onto
+ * the ASN read, so one invalidation refreshes both the list and the To-Do.
+ */
+export function useInboundAcknowledge() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return /** @type {typeof useMutation<CommandResult, Error, { asnNumber: string }>} */ (
+    useMutation
+  )({
+    mutationFn: ({ asnNumber }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_asn_acknowledge_inbound',
         entity: 'advanceShipNotice',
         entityId: asnNumber
       }),

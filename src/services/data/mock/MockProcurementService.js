@@ -75,6 +75,7 @@ import {
 import { quotationStore } from './stores/quotationStore';
 import { asnStore } from './stores/asnStore';
 import { receiptDiscrepancyStore } from './stores/receiptDiscrepancyStore';
+import { inboundAcknowledgmentStore } from './stores/inboundAcknowledgmentStore';
 import { goodsReceiptStore } from './stores/goodsReceiptStore';
 import { invoiceStore } from './stores/invoiceStore';
 import { toBuyerInvoice, toSupplierInvoice } from '../invoiceProjection';
@@ -1512,10 +1513,17 @@ export class MockProcurementService {
     if (filter?.status) rows = rows.filter((a) => matchesList(a.status, filter.status));
     // Material C4 — each line names its material's MRP controller (MR-5 BR-03).
     return {
-      items: rows.map((a) => ({
-        ...a,
-        lineItems: a.lineItems.map((li) => withMrpController(li, li.materialCode, scope))
-      }))
+      items: rows.map((a) => {
+        // AIB-2 BR-02 (BL-350) — the Expeditor's acknowledgment is JOINED on
+        // read, exactly as the supplier's GR answer is joined onto its receipt:
+        // the fact lives in its own store and is never stored on the ASN.
+        const ack = inboundAcknowledgmentStore.get(a.asnNumber);
+        return {
+          ...a,
+          ...(ack ? { inboundAcknowledgment: ack } : {}),
+          lineItems: a.lineItems.map((li) => withMrpController(li, li.materialCode, scope))
+        };
+      })
     };
   }
 

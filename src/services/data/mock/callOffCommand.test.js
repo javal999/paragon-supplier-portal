@@ -498,7 +498,10 @@ describe('dispatch heads-up (REQ-E09-04) and ASN gating (REQ-E09-03 BR-06)', () 
         carrier: 'Sample Courier',
         trackingNumber: 'B 1 XY',
         eta: '2026-09-02',
-        shipDate: '2026-09-01'
+        shipDate: '2026-09-01',
+        // AIB-1 BR-03 / BR-04 (BL-348).
+        sequence: '37',
+        externalId: 'SJ-TEST-37'
       }
     });
     expect(submitted.reason).toBeUndefined();

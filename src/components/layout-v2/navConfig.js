@@ -20,6 +20,7 @@ import {
   Factory,
   FlaskConical,
   History,
+  Inbox,
   Route,
   FileCheck,
   FileQuestion,
@@ -106,6 +107,8 @@ export const PTI_NAV = [
       // orders it calls off, as on the supplier menu.
       { labelKey: 'hub.nav.pti.callOffs', icon: CalendarClock, path: '/buyer/call-offs' },
       { labelKey: 'hub.nav.pti.shipments', icon: Truck, path: '/buyer/shipments' },
+      // AIB-2 (BL-350) — the Expeditor's inbound review, in the planning area.
+      { labelKey: 'hub.nav.pti.inbound', icon: Inbox, path: '/buyer/inbound' },
       { labelKey: 'hub.nav.pti.goodsReceipts', icon: PackageCheck, path: '/buyer/goods-receipt' }
     ]
   },

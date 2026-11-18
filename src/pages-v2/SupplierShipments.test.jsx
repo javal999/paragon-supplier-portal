@@ -119,7 +119,10 @@ describe('SupplierShipments — ASN verbs (Step 4 batch i)', () => {
         poReference: 'PO-2025-00108',
         carrier: 'Sample Courier',
         trackingNumber: 'SMPL123',
-        eta: '2026-05-10'
+        eta: '2026-05-10',
+        // AIB-1 BR-03 / BR-04 (BL-348) — the sequence and the Surat Jalan.
+        sequence: '38',
+        externalId: 'SJ-TEST-38'
       }
     });
     expect(createRes.status).toBe('done');
@@ -213,6 +216,11 @@ describe('SupplierShipments — ASN verbs (Step 4 batch i)', () => {
     fireEvent.change(screen.getByLabelText('Estimated arrival'), {
       target: { value: '2026-05-20' }
     });
+    // AIB-1 BR-03 / BR-04 (BL-348) — the inbound upload's identity.
+    fireEvent.change(screen.getByLabelText('Sequence'), { target: { value: '39' } });
+    fireEvent.change(screen.getByLabelText('Surat Jalan (External ID)'), {
+      target: { value: 'SJ-TEST-39' }
+    });
     for (const batch of screen.getAllByLabelText(/^Batch number for /)) {
       fireEvent.change(batch, { target: { value: 'BATCH-99' } });
     }
@@ -221,6 +229,15 @@ describe('SupplierShipments — ASN verbs (Step 4 batch i)', () => {
     expect(
       commandAuditSink.byEvent('t_asn_submit').filter((e) => e.outcome === 'done')
     ).toHaveLength(1);
+  });
+
+  it('AIB-2 (BL-350) — the supplier sees the Expeditor’s acknowledgment on its ASN', async () => {
+    renderWithProviders(<SupplierShipments />, { identity: SUPPLIER });
+    const cell = await screen.findByText('ASN-2025-00198');
+    const row = /** @type {HTMLElement} */ (cell.closest('tr'));
+    fireEvent.click(within(row).getByRole('button', { name: 'Expand' }));
+    const line = await screen.findByTestId('asn-acknowledgment-ASN-2025-00198');
+    expect(line).toHaveTextContent('Acknowledged by Expeditor at');
   });
 
   it('submit rejection copy is human-readable with the code retained (i18n)', () => {

@@ -88,6 +88,15 @@ export const POLICY_HOOKS = /** @type {const} */ ({
   /** ASN create / submit (BL-51, BR-05): a 3PL the ASN names is on the 3PL list
    *  and still offered. An ASN naming no 3PL is untouched. */
   ASN_THREE_PL_LISTED: 'asn_three_pl_listed',
+  /** AIB-1 BR-03 / BR-04 (BL-348) — the 4 ZWME021 sequence rules at submit: the
+   *  sequence and the Surat Jalan (External ID) are present, every line agrees
+   *  with the sequence's PO, delivery date and External ID, and the sequence
+   *  belongs to this ASN alone (AIB-D1: one sequence = one ASN). */
+  ASN_SEQUENCE_RULES: 'asn_sequence_rules',
+  /** AIB-2 BR-02 (BL-350) — the Expeditor's inbound acknowledgment: the ASN is
+   *  an inbound (Submitted or later) and has no acknowledgment yet, so who/when
+   *  is recorded once and never rewritten. */
+  INBOUND_ACKNOWLEDGMENT_UNACKNOWLEDGED: 'inbound_acknowledgment_unacknowledged',
   /** GR create: the parent shipment/ASN (payload.asnReference) must have arrived. */
   GR_CREATE_SHIPMENT_RECEIVED: 'gr_create_shipment_received',
   // GR header disposition = ROLLUP of the per-line sub-flow states (census G2).

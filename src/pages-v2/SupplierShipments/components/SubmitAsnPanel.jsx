@@ -154,6 +154,37 @@ const SubmitAsnPanel = ({
               className={inputClass}
             />
           </label>
+          {/* AIB-1 BR-03 / BR-04 (BL-348) — the sequence and the Surat Jalan
+              (External ID) the inbound upload carries. */}
+          <label className="block">
+            <span className={`${labelClass} after:content-['_*']`}>{t('fc.asn.sequence')}</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              aria-required="true"
+              value={submitForm.sequence}
+              onChange={(e) => setSubmitForm((f) => ({ ...f, sequence: e.target.value }))}
+              className={inputClass}
+            />
+          </label>
+          <label className="block">
+            <span className={`${labelClass} after:content-['_*']`}>{t('fc.asn.externalId')}</span>
+            <input
+              type="text"
+              aria-required="true"
+              value={submitForm.externalId}
+              onChange={(e) => setSubmitForm((f) => ({ ...f, externalId: e.target.value }))}
+              className={inputClass}
+            />
+          </label>
+          {submitRead?.sequenceRead?.alreadyUsedBy ? (
+            <p className="text-xs text-danger" role="alert" data-testid="asn-submit-sequence-used">
+              {t('fc.asn.sequence.used', {
+                sequence: String(submitForm.sequence ?? '').trim(),
+                asnNumber: submitRead.sequenceRead.alreadyUsedBy
+              })}
+            </p>
+          ) : null}
           <div>
             <div className={labelClass}>{t('fc.asn.lines.title')}</div>
             <AsnLinesEditor

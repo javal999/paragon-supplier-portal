@@ -42,6 +42,8 @@ export const labelClass = 'block text-label text-text-tertiary uppercase mb-1';
  * @property {string} trackingNumber
  * @property {string} shipDate
  * @property {string} eta
+ * @property {string} sequence -  AIB-1 BR-03 / BR-04 (BL-348) — the ZWME021 sequence the supplier enters.
+ * @property {string} externalId -  AIB-1 BR-04 (BL-348) — the Surat Jalan (SJ) number, the inbound upload's External ID.
  * @property {string} packages
  * @property {string} weightKg
  * @property {string} packingList
@@ -63,6 +65,8 @@ export const labelClass = 'block text-label text-text-tertiary uppercase mb-1';
  * @property {string} trackingNumber
  * @property {string} eta
  * @property {string} shipDate
+ * @property {string} sequence
+ * @property {string} externalId
  * @property {Record<string, LineEntry>} lines
  * @property {string} overShipReason
  * @property {boolean} callOffFinal
@@ -79,6 +83,9 @@ export const EMPTY_FORM = {
   // BL-303 (UL-05) — the hub's today, not a fixed date five months back.
   shipDate: DECLARED_PRESENT,
   eta: '',
+  // AIB-1 BR-03 / BR-04 — the supplier enters both; required before submit.
+  sequence: '',
+  externalId: '',
   packages: '',
   weightKg: '',
   packingList: '',

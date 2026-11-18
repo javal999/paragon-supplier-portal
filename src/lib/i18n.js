@@ -62,6 +62,7 @@ import { sdcSupplierEn, sdcSupplierId } from './i18n/sdcSupplier';
 import { rolesEn, rolesId } from './i18n/roles';
 // — Comm Hub C2 inbound confirm-before-commit surface —
 import { commHubInboundEn, commHubInboundId } from './i18n/commHubInbound';
+import { inboundEn, inboundId } from './i18n/inbound';
 // — PF-1 process flows (the surface for the PF-0 analyzer) —
 import { processFlowsEn, processFlowsId } from './i18n/processFlows';
 // PF-2 — the purpose annotations. A SEPARATE fragment from the page chrome
@@ -237,6 +238,7 @@ export const resources = {
       ...rolesEn,
       // — Comm Hub C2 inbound confirm-before-commit —
       ...commHubInboundEn,
+      ...inboundEn,
       // — PF-1 process flows —
       ...processFlowsEn,
       ...processFlowPurposeEn,
@@ -749,6 +751,7 @@ export const resources = {
       ...rolesId,
       // — Comm Hub C2 inbound confirm-before-commit —
       ...commHubInboundId,
+      ...inboundId,
       // — PF-1 process flows —
       ...processFlowsId,
       ...processFlowPurposeId,

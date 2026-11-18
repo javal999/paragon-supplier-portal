@@ -128,6 +128,9 @@ export const TRANSITION_PURPOSE = Object.freeze({
   t_asn_approve_exception: { purposeKey: 'processFlows.purpose.t_asn_approve_exception' },
   t_asn_reject_exception: { purposeKey: 'processFlows.purpose.t_asn_reject_exception' },
   t_asn_change_eta: { purposeKey: 'processFlows.purpose.t_asn_change_eta' },
+  t_asn_acknowledge_inbound: {
+    purposeKey: 'processFlows.purpose.t_asn_acknowledge_inbound'
+  },
 
   // ── goodsReceipt ───────────────────────────────────────────────────────────
   t_gr_create: { purposeKey: 'processFlows.purpose.t_gr_create' },

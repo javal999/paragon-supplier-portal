@@ -88,6 +88,8 @@ export const processFlowPurposeEn = {
     'Quality refuses the short-dated goods and says why. The notice goes back to the supplier to rework.',
   'processFlows.purpose.t_asn_change_eta':
     'The supplier moves the arrival later than the date Quality approved, so the shelf life left at arrival is shorter and Quality decides again.',
+  'processFlows.purpose.t_asn_acknowledge_inbound':
+    'One planning seat confirms PTI has seen the inbound information — what is coming, on which order, against which delivery note — so a missing acknowledgment is visible before the goods are receipted.',
 
   // ── goodsReceipt ───────────────────────────────────────────────────────────
   'processFlows.purpose.entity.goodsReceipt':
@@ -750,6 +752,8 @@ export const processFlowPurposeId = {
     'Mutu menolak barang yang umur simpannya pendek dan menyebutkan alasannya. Pemberitahuan kembali ke pemasok untuk diperbaiki.',
   'processFlows.purpose.t_asn_change_eta':
     'Pemasok memundurkan tanggal tiba melewati tanggal yang disetujui Mutu, sehingga sisa umur simpan saat tiba lebih pendek dan Mutu memutuskan lagi.',
+  'processFlows.purpose.t_asn_acknowledge_inbound':
+    'Satu kursi perencanaan memastikan PTI telah melihat informasi inbound — apa yang datang, atas pesanan mana, dengan surat jalan mana — sehingga konfirmasi yang belum dilakukan terlihat sebelum barang diterima.',
 
   // ── goodsReceipt ───────────────────────────────────────────────────────────
   'processFlows.purpose.entity.goodsReceipt':
