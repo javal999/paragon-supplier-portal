@@ -58,6 +58,11 @@ describe('supplier — the call-off warnings before submit (MR-6 BR-10, BR-12)',
     fireEvent.change(screen.getByLabelText('Estimated arrival *'), {
       target: { value: needDate() }
     });
+    // AIB-1 BR-03 / BR-04 (BL-348) — required before step 2 can advance.
+    fireEvent.change(screen.getByLabelText('Sequence'), { target: { value: '34' } });
+    fireEvent.change(screen.getByLabelText('Surat Jalan (External ID)'), {
+      target: { value: 'SJ-TEST-34' }
+    });
     fireEvent.change(screen.getByLabelText(`Shipped quantity for ${MAT}`), {
       target: { value: '11000' }
     });
@@ -98,6 +103,11 @@ describe('supplier — the call-off warnings before submit (MR-6 BR-10, BR-12)',
     fireEvent.change(screen.getByLabelText('Ship date *'), { target: { value: needDate() } });
     fireEvent.change(screen.getByLabelText('Estimated arrival *'), {
       target: { value: needDate() }
+    });
+    // AIB-1 BR-03 / BR-04 (BL-348) — required before step 2 can advance.
+    fireEvent.change(screen.getByLabelText('Sequence'), { target: { value: '34' } });
+    fireEvent.change(screen.getByLabelText('Surat Jalan (External ID)'), {
+      target: { value: 'SJ-TEST-34' }
     });
     fireEvent.change(screen.getByLabelText(`Shipped quantity for ${MAT}`), {
       target: { value: '10000' }
@@ -161,7 +171,14 @@ describe('planner — "Mismatch" with the current figures, and "not in declared 
       transitionId: 't_asn_submit',
       entity: 'advanceShipNotice',
       entityId: /** @type {NonNullable<typeof created.entityId>} */ (created.entityId),
-      payload: { carrier: 'Sample Courier', trackingNumber: 'B 1 XY', eta: needDate() }
+      payload: {
+        carrier: 'Sample Courier',
+        trackingNumber: 'B 1 XY',
+        eta: needDate(),
+        // AIB-1 BR-03 / BR-04 (BL-348).
+        sequence: '34',
+        externalId: 'SJ-TEST-34'
+      }
     });
     return /** @type {NonNullable<typeof created.entityId>} */ (created.entityId);
   };

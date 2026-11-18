@@ -72,7 +72,10 @@ export function useAsnWizard({
       ...(form.threePlId ? { threePlId: form.threePlId } : {}),
       trackingNumber: form.trackingNumber,
       eta: form.eta,
-      shipDate: form.shipDate
+      shipDate: form.shipDate,
+      // AIB-1 BR-03 / BR-04 (BL-348) — the sequence and the Surat Jalan.
+      sequence: form.sequence.trim(),
+      externalId: form.externalId.trim()
     };
     try {
       const createRes = await createAsnMutation.mutateAsync({

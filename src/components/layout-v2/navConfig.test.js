@@ -338,6 +338,8 @@ describe('IA evaluation 2026-10 — menu homes, folded sections, one name per ob
       ['hub.nav.pti.purchaseOrders', '/buyer/orders'],
       ['hub.nav.pti.callOffs', '/buyer/call-offs'],
       ['hub.nav.pti.shipments', '/buyer/shipments'],
+      // AIB-2 (BL-350) — the Expeditor's inbound review sits with the receipts.
+      ['hub.nav.pti.inbound', '/buyer/inbound'],
       ['hub.nav.pti.goodsReceipts', '/buyer/goods-receipt']
     ]);
     const all = [...PTI_NAV, ...SUPPLIER_NAV].flatMap((s) => s.items.map((i) => i.path));

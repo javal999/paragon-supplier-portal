@@ -61,6 +61,22 @@ export const missingLogistics = (form) => {
 };
 
 /**
+ * AIB-1 BR-03 / BR-04 (BL-348) — the inbound-upload fields the supplier must
+ * enter, in the order the form shows them; empty when both are present. Kept
+ * apart from `missingLogistics` so the hint can name the right reason: the
+ * sequence and the Surat Jalan are the inbound's identity, not its logistics.
+ * @param {Pick<AsnForm, 'sequence' | 'externalId'>} form
+ * @returns {readonly ('sequence' | 'externalId')[]}
+ */
+export const missingInboundRefs = (form) => {
+  /** @type {('sequence' | 'externalId')[]} */
+  const out = [];
+  if (String(form.sequence ?? '').trim() === '') out.push('sequence');
+  if (String(form.externalId ?? '').trim() === '') out.push('externalId');
+  return out;
+};
+
+/**
  * A fresh ASN form, its carrier defaulted from the 3PL list in force.
  * @returns {AsnForm}
  */
@@ -142,6 +158,8 @@ export function readWizard({
     po: selectedPO,
     asns,
     eta: form.eta,
+    sequence: form.sequence,
+    externalId: form.externalId,
     overShipReason: form.overShipReason,
     batches: declaredBatches,
     receipts
@@ -170,6 +188,10 @@ export function readWizard({
   // BR-02's reason when a line ships above open.
   const step2Valid =
     missingLogistics(form).length === 0 &&
+    // AIB-1 BR-03 / BR-04 — the sequence and the SJ, and the sequence rules
+    // over the entered lines (one sequence = one ASN, AIB-D1).
+    missingInboundRefs(form).length === 0 &&
+    wizardRead.sequenceRead.ok &&
     // MR-6 BR-08 — a line short on shelf life does not stop the wizard: step 3
     // asks Quality for an exception instead of submitting.
     (wizardRead.complete || wizardRead.onlyShelfLife);

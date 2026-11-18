@@ -4,6 +4,7 @@ import Data from '@components/ui-v2/Data';
 /** @import { ASN } from '@services/data/types' */
 import { callOffWarningText } from '../../shipments/CallOffWarnings';
 import { fmtDate } from '../utils';
+import { formatDateTime } from '@lib/format';
 import { qty } from '../../callOffs/callOffDisplay';
 
 /**
@@ -40,6 +41,26 @@ const AsnDetailFacts = ({ asn }) => {
         <dt className="text-text-tertiary">{t('fc.asn.detail.shipDate')}</dt>
         <dd className="text-text-primary">
           <Data>{asn.shipDate ? fmtDate(asn.shipDate) : t('fc.asn.detail.none')}</Data>
+        </dd>
+        {/* AIB-1 BR-03 / BR-04 (BL-348) — the inbound-upload identity. */}
+        <dt className="text-text-tertiary">{t('fc.asn.sequence')}</dt>
+        <dd className="text-text-primary">
+          <Data>{asn.sequence ?? t('fc.asn.detail.none')}</Data>
+        </dd>
+        <dt className="text-text-tertiary">{t('fc.asn.externalId')}</dt>
+        <dd className="text-text-primary">
+          <Data>{asn.externalId ?? t('fc.asn.detail.none')}</Data>
+        </dd>
+        {/* AIB-2 BR-02 / BR-05 (BL-350) — the Expeditor's acknowledgment, as
+            recorded; the supplier sees it without acting on it (BR-04). */}
+        <dt className="text-text-tertiary">{t('inbound.ack.label')}</dt>
+        <dd className="text-text-primary" data-testid={`asn-acknowledgment-${asn.asnNumber}`}>
+          {asn.inboundAcknowledgment
+            ? t('inbound.ack.by', {
+                name: t(`roles.owner.${asn.inboundAcknowledgment.seatRoles[0] ?? 'expeditor'}`),
+                at: formatDateTime(asn.inboundAcknowledgment.acknowledgedAt)
+              })
+            : t('inbound.ack.none')}
         </dd>
         <dt className="text-text-tertiary">{t('fc.asn.detail.packingList')}</dt>
         <dd className="text-text-primary">{asn.packingListFile ?? t('fc.asn.detail.none')}</dd>

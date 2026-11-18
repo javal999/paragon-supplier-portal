@@ -13,6 +13,7 @@ import { POStatus } from '../types';
 /** @import { PurchaseOrder, PoLineResponse, PoRejectionCause, ICommandService, QueryScope, CommandInput, CommandResult, CommandStatus, ASN, AsnLineItem, AsnShelfLifeEvent, AsnStatus, Invoice, InvoiceLine, InvoiceStatus, PurchaseRequisition, PRStatus, PRPriority, PrSource, CertType, CertificateDeclaration, SupplierDocumentCategory, SupplierDocumentStatus, SupplierApplicationStatus, SupplierApplicationDeclaration, CallOff, CallOffConfirmationKind, CallOffStatus, CallOffType } from '../types' */
 /** @import { GoodsReceipt, GRStatus, Disposition, InspectionResult, ReceiptDiscrepancyStatus } from '@data/mockGoodsReceipts' */
 import { receiptDiscrepancyStore } from './stores/receiptDiscrepancyStore';
+import { inboundAcknowledgmentStore } from './stores/inboundAcknowledgmentStore';
 import { callOffStore } from './stores/callOffStore';
 import { supplierDocumentStore } from './stores/supplierDocumentStore';
 import { supplierApplicationStore } from './stores/supplierApplicationStore';
@@ -52,6 +53,8 @@ import {
   INVOICEABLE_PO_STATES,
   asnLineCheckOf,
   asnLineRefusal,
+  asnSequenceRead,
+  asnSequenceRefusalText,
   asnSubmitRefusal,
   etaNeedsReapproval,
   onlyShelfLifeRefused,
@@ -623,6 +626,21 @@ const advanceShipNoticeTarget = {
   readScopeOwner: (id) => asnStore.get(id)?.supplierId ?? null,
   readEntity: (id) => asnStore.get(id) ?? null,
   applyTransition: (id, toState, payload, scope, transitionId) => {
+    // AIB-2 BR-02 (BL-350) — the Expeditor's acknowledgment RECORDS a fact and
+    // moves nothing: the ASN's state stays where the shipping lane put it, and
+    // the who/when lives in its own store (joined on read by `getASNs`).
+    if (transitionId === 't_asn_acknowledge_inbound') {
+      const acked = asnStore.get(id);
+      if (!acked) return;
+      inboundAcknowledgmentStore.add({
+        asnNumber: acked.asnNumber,
+        supplierId: acked.supplierId,
+        acknowledgedBy: scope.actor ?? NO_PERSON,
+        seatRoles: [...(scope.businessRoles ?? [])],
+        acknowledgedAt: sdcClock.now()
+      });
+      return;
+    }
     const current = asnStore.get(id);
     const shipDate = nonBlank(payload.shipDate) ?? current?.shipDate;
     if (toState === 'Submitted' && current) {
@@ -656,6 +674,10 @@ const advanceShipNoticeTarget = {
           ? payload.trackingNumber
           : a.trackingNumber,
       eta: typeof payload.eta === 'string' && payload.eta ? payload.eta : a.eta,
+      // AIB-1 BR-03 / BR-04 — the sequence and the Surat Jalan (External ID)
+      // the submission carried; a payload that says nothing keeps the draft's.
+      ...(nonBlank(payload.sequence) ? { sequence: nonBlank(payload.sequence) } : {}),
+      ...(nonBlank(payload.externalId) ? { externalId: nonBlank(payload.externalId) } : {}),
       ...(shipDate ? { shipDate } : {}),
       ...(nonBlank(payload.packingListFile)
         ? { packingListFile: nonBlank(payload.packingListFile) }
@@ -732,6 +754,10 @@ const advanceShipNoticeTarget = {
       ...(nonBlank(payload.threePlId) ? { threePlId: nonBlank(payload.threePlId) } : {}),
       trackingNumber: typeof payload.trackingNumber === 'string' ? payload.trackingNumber : '',
       eta: typeof payload.eta === 'string' ? payload.eta : '',
+      // AIB-1 BR-03 / BR-04 — the supplier enters the sequence and the SJ; a
+      // draft may still be missing them (the quick "Create ASN" action).
+      ...(nonBlank(payload.sequence) ? { sequence: nonBlank(payload.sequence) } : {}),
+      ...(nonBlank(payload.externalId) ? { externalId: nonBlank(payload.externalId) } : {}),
       details: {
         originCity: po?.supplierName ?? '',
         destinationWarehouse: 'NDC Jatake 6, Tangerang',
@@ -881,6 +907,46 @@ const asnSubmissionRead = (asn, payload, waive) => {
   });
   return { lines, eta, incomplete, refusals };
 };
+
+// AIB-1 BR-03 / BR-04 (BL-348) — the 4 ZWME021 sequence rules, checked on the
+// draft merged with what the submission adds. One sequence = one ASN (AIB-D1),
+// so the supplier's OTHER non-cancelled ASNs are the peers a sequence may not
+// already belong to.
+bindPolicyHook(POLICY_HOOKS.ASN_SEQUENCE_RULES, ({ entityId, payload }) => {
+  const asn = asnStore.get(entityId);
+  if (!asn) return { ok: false, reason: 'entity missing' };
+  const read = asnSubmissionRead(asn, payload, false);
+  const sequence = nonBlank(payload.sequence) ?? asn.sequence;
+  const externalId = nonBlank(payload.externalId) ?? asn.externalId;
+  const seqRead = asnSequenceRead({
+    sequence,
+    externalId,
+    poReference: asn.poReference,
+    deliveryDate: nonBlank(payload.eta) ?? asn.eta,
+    lines: read.lines.map((l) => ({ materialCode: l.materialCode })),
+    peers: asnStore
+      .all()
+      .filter((a) => a.supplierId === asn.supplierId && a.status !== 'Cancelled'),
+    excludeAsn: asn.asnNumber
+  });
+  return seqRead.ok ? { ok: true } : { ok: false, reason: asnSequenceRefusalText(seqRead) };
+});
+
+// AIB-2 BR-02 (BL-350) — the Expeditor's inbound acknowledgment is recorded
+// once. A second act would rewrite "who and when", which is the one thing the
+// record exists to say.
+bindPolicyHook(POLICY_HOOKS.INBOUND_ACKNOWLEDGMENT_UNACKNOWLEDGED, ({ entityId }) => {
+  const asn = asnStore.get(entityId);
+  if (!asn) return { ok: false, reason: 'entity missing' };
+  const existing = inboundAcknowledgmentStore.get(entityId);
+  if (existing) {
+    return {
+      ok: false,
+      reason: `ALREADY_ACKNOWLEDGED: ${asn.asnNumber} was acknowledged at ${existing.acknowledgedAt}`
+    };
+  }
+  return { ok: true };
+});
 
 // REQ-E07-04 BR-04 — what a submitted ASN must carry, read on the draft merged
 // with what the submission adds. MR-6 BR-05 to BR-08 — and each shelf-life

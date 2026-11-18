@@ -347,6 +347,9 @@ describe('BL-50 · the deadline population reads the hub calendar', () => {
       'services/transitions/callOffChase.js',
       'services/transitions/callOffRules.js',
       'services/transitions/forecastRules.js',
+      // AIB-2 BR-05 (BL-350) — the Expeditor's acknowledgment is due within
+      // one working day of the inbound.
+      'services/transitions/inboundRules.js',
       // PEX-7 — the no-movement period counts working days (owner, 2026-11-09);
       // the grace itself is CALENDAR days since PSC-6 (owner, 2026-11-18).
       'services/transitions/poOnHold.js',

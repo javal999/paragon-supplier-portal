@@ -61,6 +61,7 @@
  *   | 'compliance'
  *   | 'planning'
  *   | 'requisitioner'
+ *   | 'expeditor'
  *   | 'buyer'
  *   | 'supplier'
  *   | 'commercial'
@@ -425,6 +426,27 @@ const LANE_BUNDLES = Object.freeze({
   // Raising and revising a requisition — split from approving one, which is
   // the segregation `pr:approve` living in `procurement` expresses.
   requisitioner: Object.freeze(['pr:create', 'pr:submit', 'pr:revise']),
+  // ── AIB-2 BR-01 (BL-350) · THE EXPEDITOR ────────────────────────────────
+  //
+  // ⚠️ **A NEW PTI SEAT IN THE PLANNING AREA, AND IT IS A LANE OF ITS OWN ON
+  // PURPOSE.** The owner ruled (AIB-D2, AIB-D5, 2026-11-18) that one planning
+  // seat reviews and acknowledges inbound information, with the atom
+  // `inbound:acknowledge`. Folding that atom into `planning` would make every
+  // planner's seat an Expeditor — the same undifferentiated grant the persona
+  // split retired — so it sits here, holdable and unseeded: a seat becomes the
+  // Expeditor by being given this role.
+  //
+  // ⚠️ **IT IS DELIBERATELY NOT IN `BUYER_LANE_IDS`.** That list derives
+  // `buyer_all` and the seeded buyer seat, and the Expeditor is neither: the
+  // owner's manager seat is the six established lanes' authority, and seeding
+  // this role would hand every buyer demo seat an acknowledgment it was not
+  // given. It joins `PERSONA_SYSTEM_ROLES.buyer` below so the identity panel
+  // can grant it.
+  //
+  // It grants NO authority over the GR: SAP posts the receipt and holds the
+  // quality status (AIB-2 BR-03); this atom only records that the inbound was
+  // seen (who and when).
+  expeditor: Object.freeze(['inbound:acknowledge']),
   // ── ⚠️ THE TENANCY ANCHOR, AND IT DELIBERATELY HOLDS NOTHING ────────────
   //
   // **`supplier` STOPPED BEING AN OPERATING ROLE** (operator ruling). It was
@@ -811,7 +833,16 @@ export const PERSONA_SYSTEM_ROLES = Object.freeze({
   // catalogue reader meets the role that grants nothing before the ones that
   // grant something, and the two sides read the same way round.
   buyer: Object.freeze(
-    /** @type {readonly SystemRoleId[]} */ (['buyer', ...BUYER_LANE_IDS, 'buyer_all'])
+    /** @type {readonly SystemRoleId[]} */ ([
+      'buyer',
+      ...BUYER_LANE_IDS,
+      // AIB-2 BR-01 (BL-350) — the Expeditor is HOLDABLE on a buyer seat and
+      // NOT seeded (`SEEDED_SEAT_ROLES` stays the six lanes) and NOT in
+      // `buyer_all` (that seat is the six lanes' authority). A planner becomes
+      // the Expeditor by adding this role.
+      'expeditor',
+      'buyer_all'
+    ])
   ),
   supplier: Object.freeze(
     /** @type {readonly SystemRoleId[]} */ (['supplier', ...SUPPLIER_LANE_IDS])

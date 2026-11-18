@@ -262,6 +262,11 @@ const asn = (asnNumber, c, status, shipOffset, etaOffset, lot) => ({
   asnNumber,
   supplierId: SSTP.supplierId,
   poReference: SSTP_PURCHASE_ORDER.poNumber,
+  // AIB-1 BR-03 / BR-04 (BL-348) — one sequence per ASN, and the Surat Jalan
+  // number as the External ID. Derived from the ASN number so a new row cannot
+  // collide with its neighbour by a hand-typed literal.
+  sequence: String(Number(asnNumber.slice(-2))),
+  externalId: `SJ-${asnNumber}`,
   callOffId: c.id,
   callOffFinal: true,
   status,

@@ -11,6 +11,7 @@ import { normalizeQty } from '@lib/localeNumber';
 /** @import { AsnBatchSource, AsnLineCheck, AsnLineInput, AvailableBatch } from '@services/transitions/fulfilmentRules' */
 import {
   asnLineRefusal,
+  asnSequenceRead,
   availableBatches,
   batchAboveAvailable,
   onlyShelfLifeRefused,
@@ -124,6 +125,8 @@ export const batchModeOf = (entry, options) =>
  * @property {string} [excludeAsn] -  The draft being submitted, left out of its own open quantity.
  * @property {readonly Pick<GoodsReceipt, 'poNumber' | 'asnNumber' | 'inspectionResults' | 'status'>[]} [receipts] -  GR-1 / BL-71 — kept-open receipts reopen their missing quantity.
  * @property {string} eta
+ * @property {string} [sequence] -  AIB-1 BR-03 (BL-348) — the sequence the form holds.
+ * @property {string} [externalId] -  AIB-1 BR-04 (BL-348) — the Surat Jalan (SJ) the form holds.
  * @property {string} overShipReason
  * @property {Readonly<Record<string, readonly AvailableBatch[]>>} batches -  Declared batches on offer, per material.
  */
@@ -192,7 +195,26 @@ export const readLines = (entries, open, ctx) => {
     complete: lines.length > 0 && lines.every((l) => l.refusal === null),
     // MR-6 BR-08 — shelf life is the one thing wrong: the supplier may ask for
     // an exception instead of submitting (the verb's own test).
-    onlyShelfLife: onlyShelfLifeRefused(lines.map((l) => l.refusal))
+    onlyShelfLife: onlyShelfLifeRefused(lines.map((l) => l.refusal)),
+    // AIB-1 BR-03 / BR-04 (BL-348) — the 4 ZWME021 sequence rules through the
+    // SAME function the submit policy hook calls, so the form cannot drift from
+    // the verb (AR-11).
+    sequenceRead: asnSequenceRead({
+      sequence: ctx.sequence,
+      externalId: ctx.externalId,
+      poReference: po.poNumber,
+      deliveryDate: ctx.eta,
+      lines: lines.map((l) => ({ materialCode: l.line.materialCode })),
+      peers: ctx.asns
+        .filter((a) => a.status !== 'Cancelled' && a.asnNumber !== ctx.excludeAsn)
+        .map((a) => ({
+          asnNumber: a.asnNumber,
+          sequence: a.sequence,
+          externalId: a.externalId,
+          poReference: a.poReference,
+          eta: a.eta
+        }))
+    })
   };
 };
 

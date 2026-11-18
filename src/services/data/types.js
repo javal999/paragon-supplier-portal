@@ -1935,12 +1935,37 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  */
 
 /**
+ * AIB-2 BR-01 / BR-02 (BL-350) — the Expeditor's acknowledgment of one inbound.
+ * `acknowledgedBy`:  The session's actor — today always
+ *   `UNATTRIBUTED: NO_PERSON_IN_SESSION`, because the portal holds no persons.
+ * `seatRoles`:  The business roles the acting seat held, so the surface can name
+ *   the SEAT (Expeditor) when it cannot name the person.
+ * `acknowledgedAt`:  When the act was recorded (the hub's simulated clock).
+ *
+ * @typedef {{
+ *   readonly asnNumber: string;
+ *   readonly supplierId: string;
+ *   readonly acknowledgedBy: ActorAttribution;
+ *   readonly seatRoles: readonly string[];
+ *   readonly acknowledgedAt: string;
+ * }} InboundAcknowledgment
+ */
+
+/**
  * @typedef {object} ASN
  * @property {string} asnNumber
  * @property {string} supplierId
  * @property {string} poReference
  * @property {AsnStatus} status
  * @property {string} carrier
+ * @property {string} [sequence] AIB-1 BR-03 / BR-04 (BL-348) — the ZWME021 inbound
+ *   upload sequence the supplier enters. One sequence = one ASN, all its lines
+ *   share the PO, delivery date and External ID (AIB-D1).
+ * @property {string} [externalId] AIB-1 BR-04 (BL-348) — the Surat Jalan (SJ) number,
+ *   which is the inbound upload's External ID. Required to submit.
+ * @property {InboundAcknowledgment} [inboundAcknowledgment] AIB-2 BR-02 (BL-350) —
+ *   the Expeditor's acknowledgment, JOINED onto the ASN on read from its own store;
+ *   never a fixture field. Absent until a seat holding `inbound:acknowledge` acts.
  * @property {string} [threePlId] BL-51 / REQ-E07-04 BR-05 — the 3PL on the administrator's list this ASN
  *   travels with (`tpl-…`). Absent when the carrier was entered by name. It is
  *   what turns `trackingNumber` into a link to the 3PL's public tracking page;

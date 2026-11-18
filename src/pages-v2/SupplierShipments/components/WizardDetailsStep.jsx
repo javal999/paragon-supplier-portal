@@ -7,7 +7,7 @@ import FormSection from '@components/ui-v2/FormSection';
 /** @import { AsnForm } from '../const' */
 import CarrierPicker from '../../shipments/CarrierPicker';
 import { inputClass, labelClass } from '../const';
-import { missingLogistics } from '../utils';
+import { missingInboundRefs, missingLogistics } from '../utils';
 import AsnLinesEditor from './AsnLinesEditor';
 
 /**
@@ -25,6 +25,7 @@ const WizardDetailsStep = ({
 }) => {
   const { t } = useTranslation();
   const missing = missingLogistics(form);
+  const missingRefs = missingInboundRefs(form);
   /** A field's own label, without the required marker. @type {Record<string, () => string>} */
   const FIELD_LABEL = {
     carrier: () => t('supplierShipments.wizard.details.field.carrier').replace(/\s*\*$/, ''),
@@ -88,6 +89,39 @@ const WizardDetailsStep = ({
               />
             </label>
           </div>
+          {/* AIB-1 BR-03 / BR-04 (BL-348) — the ZWME021 sequence and the Surat
+              Jalan (the External ID). Both are required before submit; the
+              sequence rules are checked over the entered lines below. */}
+          <div>
+            <label className={`${labelClass} after:content-['_*']`} htmlFor="asn-wizard-sequence">
+              {t('fc.asn.sequence')}
+            </label>
+            <input
+              id="asn-wizard-sequence"
+              aria-required="true"
+              type="text"
+              inputMode="numeric"
+              value={form.sequence}
+              onChange={(e) => updateForm({ sequence: e.target.value })}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label
+              className={`${labelClass} after:content-['_*']`}
+              htmlFor="asn-wizard-external-id"
+            >
+              {t('fc.asn.externalId')}
+            </label>
+            <input
+              id="asn-wizard-external-id"
+              aria-required="true"
+              type="text"
+              value={form.externalId}
+              onChange={(e) => updateForm({ externalId: e.target.value })}
+              className={inputClass}
+            />
+          </div>
         </div>
         {/* BL-303 (UL-05) — **Next** stays disabled until these are filled; say which. */}
         {missing.length > 0 ? (
@@ -100,6 +134,29 @@ const WizardDetailsStep = ({
                     .map((m) => FIELD_LABEL[m]())
                     .join(', ')
                 })}
+          </p>
+        ) : null}
+        {/* AIB-1 BR-03 / BR-04 — the inbound-upload identity, named when absent. */}
+        {missingRefs.length > 0 ? (
+          <p
+            className="text-xs text-text-secondary"
+            role="status"
+            data-testid="asn-wizard-missing-inbound"
+          >
+            {t('fc.asn.sequence.missing', {
+              fields: missingRefs
+                .map((m) => t(m === 'sequence' ? 'fc.asn.sequence' : 'fc.asn.externalId'))
+                .join(', ')
+            })}
+          </p>
+        ) : null}
+        {/* A sequence another ASN already holds (AIB-D1: one sequence = one ASN). */}
+        {wizardRead.sequenceRead?.alreadyUsedBy ? (
+          <p className="text-xs text-danger" role="alert" data-testid="asn-wizard-sequence-used">
+            {t('fc.asn.sequence.used', {
+              sequence: String(form.sequence ?? '').trim(),
+              asnNumber: wizardRead.sequenceRead?.alreadyUsedBy
+            })}
           </p>
         ) : null}
       </FormSection>

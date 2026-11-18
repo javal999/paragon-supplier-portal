@@ -39,6 +39,8 @@ export const hubEn = {
   'hub.nav.pti.orderSummary': 'Order summary',
   'hub.nav.pti.purchaseOrders': 'Purchase orders',
   'hub.nav.pti.shipments': 'Shipments & ASN',
+  // AIB-2 (BL-350) — the Expeditor's inbound list.
+  'hub.nav.pti.inbound': 'Inbound acknowledgments',
   'hub.nav.pti.goodsReceipts': 'Goods receipts',
   // IA P-11 (IA-X02) — one name per object: the supplier menu says Stock too.
   'hub.nav.pti.inventory': 'Stock',
@@ -156,6 +158,8 @@ export const hubEn = {
   'hub.home.task.completionMoved': 'Orders whose expected completion moved later',
   'hub.home.task.receipts': 'Goods receipts to review',
   'hub.home.task.inboundAsn': 'Inbound shipments to receive',
+  // AIB-2 BR-05 (BL-350) — the Expeditor's missing acknowledgment.
+  'hub.home.task.inboundAcknowledgment': 'Inbounds awaiting acknowledgment',
   'hub.home.task.chase': 'Suppliers to follow up on forecasts or deliveries',
   'hub.home.task.rfqAward': 'RFQ ready to award',
   // REQ-E03-05 / REQ-E03-02 / REQ-E03-04 — the RFx tasks (Phase 6a).
@@ -260,6 +264,7 @@ export const hubId = {
   'hub.nav.pti.orderSummary': 'Ringkasan pesanan',
   'hub.nav.pti.purchaseOrders': 'Pesanan pembelian',
   'hub.nav.pti.shipments': 'Pengiriman & ASN',
+  'hub.nav.pti.inbound': 'Konfirmasi inbound',
   'hub.nav.pti.goodsReceipts': 'Penerimaan barang',
   'hub.nav.pti.inventory': 'Stok',
   'hub.nav.pti.stockSimulation': 'Simulasi stok',
@@ -360,6 +365,7 @@ export const hubId = {
   'hub.home.task.completionMoved': 'Pesanan yang perkiraan selesainya mundur',
   'hub.home.task.receipts': 'Penerimaan barang untuk ditinjau',
   'hub.home.task.inboundAsn': 'Pengiriman masuk untuk diterima',
+  'hub.home.task.inboundAcknowledgment': 'Inbound menunggu konfirmasi',
   'hub.home.task.chase': 'Pemasok yang perlu ditindaklanjuti untuk prakiraan atau pengiriman',
   'hub.home.task.rfqAward': 'RFQ siap ditetapkan pemenangnya',
   'hub.home.task.negotiationClosing': 'Putaran negosiasi yang segera ditutup',
