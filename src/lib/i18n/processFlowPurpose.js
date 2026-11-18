@@ -509,6 +509,10 @@ export const processFlowPurposeEn = {
     'A warning that stock or capacity is heading for a shortage, with a risk class, so the planner acts before material is missing.',
   'processFlows.purpose.t_inventoryalert_close':
     'The planner closes an alert with a reason from the list, and a note when the reason is "Other". The same condition does not raise it again until it has cleared and come back.',
+  'processFlows.purpose.entity.callOffChase':
+    'One call-off the planner sent that has no ASN from the supplier, one working day after it was sent. The hub raises it on its own; the planner closes it with a reason once the supplier has been chased another way.',
+  'processFlows.purpose.t_calloffchase_close':
+    'The planner records why one call-off’s missing-ASN chase needs no further follow-up. The chase is raised once: after this record, a late ASN is a delivery problem, not a second chase. Nothing is sent to SAP; email waits on the notification service.',
   'processFlows.purpose.entity.forecastVersion':
     'One version of PTI’s forecast for packaging (weekly) or raw material (monthly), with a zone per period. Every version is kept.',
   'processFlows.purpose.t_forecastversion_publish':
@@ -1157,6 +1161,10 @@ export const processFlowPurposeId = {
     'Peringatan bahwa stok atau kapasitas menuju kekurangan, dengan kelas risiko, agar perencana bertindak sebelum material habis.',
   'processFlows.purpose.t_inventoryalert_close':
     'Perencana menutup peringatan dengan alasan dari daftar, dan catatan bila alasannya "Lainnya". Kondisi yang sama tidak memunculkannya lagi sampai kondisi itu pulih lalu terjadi lagi.',
+  'processFlows.purpose.entity.callOffChase':
+    'Satu call-off yang dikirim perencana dan belum punya ASN dari pemasok, satu hari kerja setelah dikirim. Hub memunculkannya sendiri; perencana menutupnya dengan alasan setelah pemasok ditindaklanjuti dengan cara lain.',
+  'processFlows.purpose.t_calloffchase_close':
+    'Perencana menutup tindak lanjut ASN yang hilang untuk satu call-off dengan alasan. Tindak lanjut ini muncul sekali: setelah ditutup, ASN yang terlambat adalah masalah pengiriman, bukan tindak lanjut kedua. Tidak ada yang dikirim ke SAP; email menunggu layanan notifikasi.',
   'processFlows.purpose.entity.forecastVersion':
     'Satu versi prakiraan PTI yang diterbitkan untuk kemasan (mingguan) atau bahan baku (bulanan), dengan zona per periode. Setiap versi disimpan.',
   'processFlows.purpose.t_forecastversion_publish':

@@ -29,6 +29,7 @@ import { osipSafety } from '@services/transitions/osipSafetyRules';
 import { osipRops } from '@services/transitions/osipRopRules';
 import {
   CvCell,
+  CvGuide,
   FisikSafetyCell,
   OsipColumnTitle,
   OsipRuleSwitches,
@@ -585,6 +586,8 @@ const BuyerSafetyStock = () => {
 
       {current ? (
         <HistoryPanel m={current}>
+          {/* BL-342 (PSC-5 BR-03) — how the CV is calculated, per material. */}
+          <CvGuide materialCode={current.materialCode} osip={current.osip} />
           <RopDetail
             materialCode={current.materialCode}
             uom={current.uom}

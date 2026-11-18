@@ -3332,6 +3332,9 @@ export const RELIABILITY_WINDOWS = /** @type {const} */ ([13, 26]);
  * @property {(scope: QueryScope, filter?: ASNFilter) => Promise<Page<ASN>>} getASNs
  * @property {(scope: QueryScope, filter?: GRFilter) => Promise<Page<GoodsReceipt>>} getGoodsReceipts
  * @property {(scope: QueryScope) => Promise<Page<CallOff>>} getCallOffs -  Call-offs under umbrella POs (REQ-E09-03). A supplier never sees drafts.
+ * @property {(scope: QueryScope) => Promise<Page<import('../transitions/callOffChase').CallOffChaseRow>>} getCallOffChase AIB-3 (BL-351) — the missing-ASN chase: call-offs the planner
+ *   sent with no covering ASN, one working day after they were sent, with the planner's
+ *   closure when one exists. PTI reads every chase; a supplier reads only its own rows.
  * @property {(scope: QueryScope, filter?: InvoiceFilter) => Promise<Page<BuyerInvoice>>} getBuyerInvoices - — Finance —
  * @property {(scope: QueryScope, filter?: InvoiceFilter) => Promise<Page<SupplierInvoice>>} getSupplierInvoices
  * @property {(scope: QueryScope, filter?: ContractFilter) => Promise<Page<Contract>>} getContracts - — Contracts —

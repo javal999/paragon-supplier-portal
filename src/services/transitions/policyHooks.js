@@ -146,6 +146,9 @@ export const POLICY_HOOKS = /** @type {const} */ ({
   CALLOFF_CHANGEABLE: 'calloff_changeable',
   /** Dismiss a draft / supplier rejection: the reason is substance. */
   CALLOFF_REASON_AUTHORED: 'calloff_reason_authored',
+  /** AIB-3 BR-01 (BL-351) — closing a missing-ASN chase: the reason is substance,
+   *  not presence (a required field that admits the space bar is a suggestion). */
+  CHASE_CLOSE_REASON_AUTHORED: 'chase_close_reason_authored',
   /** Supplier confirmation (REQ-E09-03 BR-02): the answer is well formed for
    *  its kind (a changed date, a changed quantity, two dated deliveries). */
   CALLOFF_CONFIRMATION_VALID: 'calloff_confirmation_valid',

@@ -324,6 +324,11 @@ async function realIds() {
     receiptDiscrepancy: receiptDiscrepancyStore.all()[0]?.receiptId ?? null,
     // REQ-E09-03 — the call-off store is seeded, so its first row is a real id.
     callOff: callOffStore.all()[0]?.id ?? null,
+    // AIB-3 (BL-351) — `entityId` IS the call-off id, and a chase exists only
+    // while the derivation says so. co-0006 is the seed's confirmed call-off
+    // sent with no ASN and past its firing day, so it is a real open chase; it
+    // names its supplier, so the target lands in `ownerful`.
+    callOffChase: 'co-0006',
     // REQ-E08-02 to 05 — the sync and capacity stores are seeded; supplier
     // access is keyed by a supplier in the inventory view; an alert by the key
     // of a condition active in the sample data.
