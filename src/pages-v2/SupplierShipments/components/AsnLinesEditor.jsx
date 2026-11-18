@@ -8,6 +8,7 @@ import MaterialSearch, {
   useMaterialSearch
 } from '@components/ui-v2/MaterialSearch';
 /** @import { AvailableBatch } from '@services/transitions/fulfilmentRules' */
+import { sequenceErrorFor } from '@services/transitions/fulfilmentRules';
 /** @import { AsnLinesRead, LineEntry, OpenLine } from '../../shipments/asnLines' */
 import { EMPTY_LINE } from '../../shipments/asnLines';
 import { ShelfLifeLineNote } from '../../shipments/ShelfLifeParts';
@@ -72,6 +73,11 @@ const AsnLinesEditor = ({
               const r = read.lines.find((x) => x.line.materialCode === l.materialCode);
               const bad = !!r && !r.qtyOk;
               const over = !!r && r.over;
+              // AIB-1 BR-05 (BL-348) — each failed line shows its sequence
+              // error, naming both values where two differ (AC-02: both POs).
+              const seqError = read.sequenceRead
+                ? sequenceErrorFor(read.sequenceRead, l.materialCode)
+                : null;
               return (
                 <tr key={l.materialCode} className="border-t border-border-subtle align-top">
                   <td className="py-1.5 pr-2">
@@ -83,6 +89,18 @@ const AsnLinesEditor = ({
                       match={match}
                       testId={`asn-line-match-${l.materialCode}`}
                     />
+                    {seqError && (
+                      <div
+                        id={`asn-sequence-${l.materialCode}-invalid`}
+                        role="alert"
+                        className="mt-1 text-[length:var(--fs-label-3)] text-danger"
+                      >
+                        {t(`fc.asn.sequence.error.${seqError.code}`, {
+                          value: seqError.value,
+                          expected: seqError.expected
+                        })}
+                      </div>
+                    )}
                   </td>
                   <td className="py-1.5 pr-2 text-right whitespace-nowrap">
                     <Data>{`${qty(l.open)} ${l.uom}`}</Data>

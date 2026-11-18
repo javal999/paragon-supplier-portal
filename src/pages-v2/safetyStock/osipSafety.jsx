@@ -286,6 +286,58 @@ export const FisikSafetyCell = ({ materialCode, uom, osip, figures, includesLtp 
 };
 
 /**
+ * BL-342 (PSC-5 BR-03) — the CV explanation, folded, as BL-208's "How the level
+ * is suggested" is. Every figure comes from the rule constants (`OSIP_RULES`)
+ * and the material's own CV, so the guide moves when the rules do; the DRC-11
+ * calculation itself is unchanged.
+ * @type {React.FC<{ materialCode: string; osip: MaterialOsipInputs }>}
+ */
+export const CvGuide = ({ materialCode, osip }) => {
+  const { t } = useTranslation();
+  const c = osip.cv;
+  const months = OSIP_RULES.cvWindowMonths;
+  const threshold = formatNumber(OSIP_RULES.cvThreshold);
+  const two = (/** @type {number} */ x) => formatNumber(Math.round(x * 100) / 100);
+  /** @type {{ title: string; text: string }[]} */
+  const rows = [
+    { title: t('sst.cv.guide.window.title'), text: t('sst.cv.guide.window', { months }) },
+    { title: t('sst.cv.guide.formula.title'), text: t('sst.cv.guide.formula') },
+    { title: t('sst.cv.guide.component.title'), text: t('sst.cv.guide.component') },
+    {
+      title: t('sst.cv.guide.threshold.title'),
+      text: t('sst.cv.guide.threshold', { threshold })
+    },
+    { title: t('sst.cv.guide.variants.title'), text: t('sst.cv.guide.variants') }
+  ];
+  return (
+    <details className="mt-2 mb-4" data-testid="sst-cv-guide">
+      <summary className="cursor-pointer text-action-hover">{t('sst.cv.guide.summary')}</summary>
+      <div className="mt-2 space-y-2 text-text-secondary">
+        <p className="text-sm text-text-primary" data-testid="sst-cv-guide-current">
+          {c.cv === null
+            ? t('sst.cv.guide.noCv', { months })
+            : t('sst.cv.guide.current', {
+                material: materialCode,
+                cv: two(c.cv),
+                category: t(`sst.osip.cv.${c.category}`),
+                months,
+                count: c.skus.length
+              })}
+        </p>
+        <dl className="space-y-1.5 text-sm">
+          {rows.map((r) => (
+            <div key={r.title}>
+              <dt className="font-medium text-text-primary">{r.title}</dt>
+              <dd>{r.text}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </details>
+  );
+};
+
+/**
  * BL-197 — the material's demand CV and its category.
  * @type {React.FC<{ materialCode: string; osip: MaterialOsipInputs }>}
  */

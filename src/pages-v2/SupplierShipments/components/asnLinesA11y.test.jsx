@@ -33,7 +33,15 @@ const readOf = ({ qtyOk, over }) =>
     overCount: over ? 1 : 0,
     aboveAvailable: [],
     complete: false,
-    onlyShelfLife: false
+    onlyShelfLife: false,
+    // AIB-1 (BL-348) — no sequence failure in this probe.
+    sequenceRead: {
+      ok: true,
+      sequenceMissing: false,
+      externalIdMissing: false,
+      alreadyUsedBy: null,
+      lines: []
+    }
   });
 
 /**

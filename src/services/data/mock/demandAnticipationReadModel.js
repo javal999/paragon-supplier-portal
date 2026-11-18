@@ -73,6 +73,10 @@ import { demandAnticipationStore } from './stores/demandAnticipationStore';
 import { osipSafetySizes } from './osipSafetyReadModel';
 /** @import { SupplierDaRowCore } from '../../transitions/supplierDaView' */
 import { supplierDaRows } from '../../transitions/supplierDaView';
+import { daConfirmationDueAt } from '../../transitions/daConfirmationRules';
+/** @import { DaConfirmationView } from './daConfirmationReadModel' */
+import { daConfirmationView } from './daConfirmationReadModel';
+import { hubWorkingCalendar } from '../../transitions/workingCalendarStore';
 
 /**
  * The pair's source in the engine dataset (lead time, MPQ), or undefined.
@@ -365,10 +369,20 @@ export function demandAnticipationUnabsorbed(nowIso = sdcClock.now()) {
 /**
  * BL-204 (DRC-1) — one supplier view row: the latest publication's figure for
  * the pair, with names for the page.
+ *
+ * `confirmation`:  PSC-1 (BL-336) — where this supplier × planning week stands
+ *   in the weekly confirmation (first due, carried forward, confirmed or
+ *   changed), the Wednesday deadline, and the confirmed SOH per material. Per
+ *   supplier × week, so every row of the same supplier and week carries the
+ *   same status.
  * @typedef {SupplierDaRowCore & {
  *   readonly supplierName: string;
  *   readonly materialLabel: string;
  *   readonly uom: string;
+ *   readonly confirmation: DaConfirmationView & {
+ *     readonly dueAt: string;
+ *     readonly publishedAt: string;
+ *   };
  * }} SupplierDaRow
  */
 
@@ -379,13 +393,20 @@ export function demandAnticipationUnabsorbed(nowIso = sdcClock.now()) {
  * @returns {SupplierDaRow[]}
  */
 export function supplierDemandAnticipation() {
+  const calendar = hubWorkingCalendar();
   return supplierDaRows(demandAnticipationStore.all()).map((r) => {
     const entry = materialEntry(r.materialCode);
     return {
       ...r,
       supplierName: supplierNameOf(r.supplierId),
       materialLabel: entry?.label ?? r.materialCode,
-      uom: entry?.canonicalUom ?? ''
+      uom: entry?.canonicalUom ?? '',
+      // PSC-1 — the confirmation is per supplier × week (BR-10).
+      confirmation: {
+        ...daConfirmationView(r.supplierId, r.planningWeek),
+        dueAt: daConfirmationDueAt(r.publishedAt, calendar),
+        publishedAt: r.publishedAt
+      }
     };
   });
 }

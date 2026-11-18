@@ -118,8 +118,11 @@ describe('⚠️ IT IS STRICTLY NARROWER THAN `admin` — the two seats are diff
     // Named, not counted — the difference IS the ruling, so it is asserted as a
     // set rather than as a size that would drift the day a lane gains an atom.
     const diff = new Set(SYSTEM_ROLES.admin.filter((a) => !SYSTEM_ROLES.buyer_all.includes(a)));
+    // AIB-2 (BL-350) — the Expeditor is a seventh lane the six buyer lanes do
+    // not cover, so `admin` holds its atom and `buyer_all` (derived from the
+    // six) does not. Named here rather than absorbed into the supplier set.
     const expected = /** @type {Set<string>} */ (
-      new Set([...atomsOfSide('supplier'), 'role:grant'])
+      new Set([...atomsOfSide('supplier'), 'role:grant', 'inbound:acknowledge'])
     );
     expect(diff).toEqual(expected);
   });
@@ -156,7 +159,9 @@ describe('⚠️ HOLDABLE, AND NOT SEEDED — the split the ruling required', ()
     const unseeded = /** @type {readonly string[]} */ (PERSONA_SYSTEM_ROLES.buyer).filter(
       (r) => !(/** @type {readonly string[]} */ (SEEDED_SEAT_ROLES.buyer).includes(r))
     );
-    expect([...unseeded].sort()).toEqual(['buyer', 'buyer_all']);
+    // AIB-2 (BL-350) — `expeditor` is the third offered-and-unseeded role: a
+    // new PTI seat, holdable and deliberately not everybody's default.
+    expect([...unseeded].sort()).toEqual(['buyer', 'buyer_all', 'expeditor']);
   });
 
   it('it is on the BUYER side, so it collapses no tenancy answer', () => {
@@ -166,14 +171,22 @@ describe('⚠️ HOLDABLE, AND NOT SEEDED — the split the ruling required', ()
     expect(/** @type {readonly string[]} */ (PERSONA_SYSTEM_ROLES.buyer)).not.toContain('admin');
   });
 
-  it('⚠️ `PERSONA_ROLES.buyer` IS UNCHANGED BY ITS PRESENCE — it adds no atom', () => {
+  it('⚠️ `buyer_all` ADDS NO ATOM TO `PERSONA_ROLES.buyer` — the offer differs only by the EXPEDITOR', () => {
     // The reason `buyer_all` can be offerable where `admin` cannot: its atoms
     // are a SUBSET of what the lanes already contribute, so `personaCan` — which
     // `nextActorFrom`, `catalogView` and the surfaceable invariant all read —
     // answers exactly as before.
+    //
+    // ⚠️ AIB-2 (BL-350) — THE ONE DELIBERATE DIFFERENCE IS NAMED, NOT ABSORBED.
+    // `expeditor` is a new lane in the offer and is not one of the six the seed
+    // holds, so the persona span gains exactly its atom (`inbound:acknowledge`).
+    // That is the tenancy answer being right rather than collapsing: a buyer
+    // seat CAN be the Expeditor. The assertion stays bilateral — every seeded
+    // atom is still present, and nothing else is added.
     const withIt = new Set(atomsFor(PERSONA_SYSTEM_ROLES.buyer));
     const lanesOnly = new Set(atomsFor(SEEDED_SEAT_ROLES.buyer));
-    expect(withIt).toEqual(lanesOnly);
+    for (const a of lanesOnly) expect(withIt.has(a), `lost '${a}'`).toBe(true);
+    expect([...withIt].filter((a) => !lanesOnly.has(a))).toEqual(['inbound:acknowledge']);
     expect(personaCan('buyer', 'po:confirm')).toBe(false); // still a supplier act
     expect(personaCan('buyer', 'gr:post')).toBe(true); // known-GOOD control
   });
@@ -234,7 +247,10 @@ describe('⚠️ THE COPY DEAD END IS ASSERTED, NOT HIDDEN', () => {
     // so honestly (`roles.page.createAddsNone`); this pins the arithmetic.
     const held = /** @type {Set<string>} */ (new Set(SYSTEM_ROLES.buyer_all));
     const addable = atomsOfSide('buyer').filter((a) => !held.has(a));
-    expect(addable).toEqual(['role:grant']);
+    // AIB-2 (BL-350) — the Expeditor's atom is also outside the six lanes, so
+    // it joins `role:grant` as addable. Neither makes `buyer_all` a copy parent:
+    // one is the authority the ruling forbids, the other is a seat of its own.
+    expect([...addable].sort()).toEqual(['inbound:acknowledge', 'role:grant']);
     // …and `role:grant` is exactly the atom a manager's seat must not gain by
     // copying itself, so the one addable atom is the one the ruling forbids.
     // A child of `buyer_all` is therefore either identical to it (refused

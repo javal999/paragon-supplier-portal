@@ -401,6 +401,12 @@ export const useASNs = (filter) =>
 export const useCallOffs = () =>
   useServiceQuery(['procurement', 'callOffs'], (svc, scope) => svc.procurement.getCallOffs(scope));
 
+/** AIB-3 (BL-351) — the missing-ASN chase. A supplier reads only its own rows. */
+export const useCallOffChase = () =>
+  useServiceQuery(['procurement', 'callOffChase'], (svc, scope) =>
+    svc.procurement.getCallOffChase(scope)
+  );
+
 /** @param {GRFilter} [filter] */
 export const useGoodsReceipts = (filter) =>
   useServiceQuery(['procurement', 'goodsReceipts', filter], (svc, scope) =>

@@ -136,6 +136,7 @@ import { capacityMonthStore } from '../data/mock/stores/capacityMonthStore';
 import { demandAnticipationStore } from '../data/mock/stores/demandAnticipationStore';
 import { materialNameStore } from '../data/mock/stores/materialNameStore';
 import { feedstockConfirmationStore } from '../data/mock/stores/feedstockConfirmationStore';
+import { daConfirmationStore } from '../data/mock/stores/daConfirmationStore';
 import { supplierAskStore } from '../data/mock/stores/supplierAskStore';
 import { capacityDecisionStore } from '../data/mock/stores/capacityDecisionStore';
 import { poOnHoldStore } from '../data/mock/stores/poOnHoldStore';
@@ -324,6 +325,11 @@ async function realIds() {
     receiptDiscrepancy: receiptDiscrepancyStore.all()[0]?.receiptId ?? null,
     // REQ-E09-03 — the call-off store is seeded, so its first row is a real id.
     callOff: callOffStore.all()[0]?.id ?? null,
+    // AIB-3 (BL-351) — `entityId` IS the call-off id, and a chase exists only
+    // while the derivation says so. co-0006 is the seed's confirmed call-off
+    // sent with no ASN and past its firing day, so it is a real open chase; it
+    // names its supplier, so the target lands in `ownerful`.
+    callOffChase: 'co-0006',
     // REQ-E08-02 to 05 — the sync and capacity stores are seeded; supplier
     // access is keyed by a supplier in the inventory view; an alert by the key
     // of a condition active in the sample data.
@@ -345,6 +351,10 @@ async function realIds() {
     // BL-194 — a feedstock confirmation is creation-only (unprobeable) and its
     // store starts empty (every material is due until confirmed); a well-formed id.
     feedstockConfirmation: 'fsc-0001',
+    // PSC-1 (BL-336) — a DA confirmation is creation-only (unprobeable) and its
+    // store starts empty (the first confirmation is the supplier's); a
+    // well-formed id.
+    daConfirmation: 'dac-0001',
     // INV-D9 — the ask store opens with two sample asks to sup-007; an ask
     // names its supplier, so it lands in `ownerful`.
     supplierAsk: supplierAskStore.all()[0]?.id ?? null,
@@ -552,6 +562,7 @@ const resetAll = () => {
   capacityMonthStore.reset();
   materialNameStore.reset();
   feedstockConfirmationStore.reset();
+  daConfirmationStore.reset();
   supplierAskStore.reset();
   capacityDecisionStore.reset();
   poOnHoldStore.reset();
@@ -683,6 +694,8 @@ describe('POPULATION — nothing below means anything without this', () => {
       'capacityMonth',
       'whatIfScenario',
       'feedstockConfirmation',
+      // PSC-1: its store opens empty, so no id can be walked to a state.
+      'daConfirmation',
       // PEX-8: its store opens empty, so no id can be walked to a state.
       'poOnHoldDecision',
       'poCancellation'

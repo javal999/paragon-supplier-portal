@@ -4,7 +4,9 @@ import { describe, expect, it } from 'vitest';
 import {
   FEEDSTOCK_PO_EXCLUDED_STATES,
   buildFeedstockReconcile,
-  feedstockRemainders
+  feedstockRemainders,
+  totalOspo,
+  withHoldColumns
 } from './feedstockReconcile';
 import { cycleOfDay } from './forecastConfig';
 
@@ -256,6 +258,101 @@ describe('DRC-15a BR-03 — max stock stays on the row', () => {
       })
     );
     expect(row).toMatchObject({ maxStock: 90, maxStockSettable: false });
+  });
+});
+
+describe('PSC-6 BR-04 — Total OSPO', () => {
+  it('AC-03: OSPO 470k, DA not yet called off 92k, PO On Hold 170k → 262k', () => {
+    expect(totalOspo({ ospo: 470_000, daNotCalledOff: 92_000, poOnHold: 170_000 })).toBe(262_000);
+  });
+
+  it('AC-04: OSPO 50k, DA not yet called off 92k, PO On Hold 0 → 50k', () => {
+    expect(totalOspo({ ospo: 50_000, daNotCalledOff: 92_000, poOnHold: 0 })).toBe(50_000);
+  });
+
+  it('never below zero on any input', () => {
+    expect(totalOspo({ ospo: -5, daNotCalledOff: 92_000, poOnHold: 0 })).toBe(0);
+    expect(totalOspo({ ospo: 50_000, daNotCalledOff: -1, poOnHold: -3 })).toBe(0);
+  });
+});
+
+describe('PSC-6 BR-02 / BR-03 — the row’s hold columns', () => {
+  /** @param {Partial<FsInputs>} [over] */
+  const oneRow = (over) =>
+    /** @type {import('./feedstockReconcile').FsRow} */ (
+      buildFeedstockReconcile(
+        inputs({ purchaseOrders: [po('PO-1', 'Confirmed', 470_000)], ...over })
+      )[0]
+    );
+
+  it('a pair with no PO On Hold figures leaves DA empty and Total OSPO unknown (never 0)', () => {
+    expect(withHoldColumns(oneRow(), undefined)).toMatchObject({
+      da: null,
+      daNotCalledOff: null,
+      inGraceQty: 0,
+      inGraceUntil: null,
+      onHoldQty: 0,
+      onHoldSince: null,
+      totalOspo: null
+    });
+  });
+
+  it('AC-03: in grace, the quantity is In grace until the grace end and not PO On Hold; Total OSPO 262k', () => {
+    expect(
+      withHoldColumns(oneRow(), {
+        ospo: 470_000,
+        daNotCalledOff: 92_000,
+        demand: 300_000,
+        qty: 170_000,
+        grace: { dueDay: '2026-12-15', ended: false }
+      })
+    ).toMatchObject({
+      da: 300_000,
+      daNotCalledOff: 92_000,
+      inGraceQty: 170_000,
+      inGraceUntil: '2026-12-15',
+      onHoldQty: 0,
+      onHoldSince: null,
+      totalOspo: 262_000
+    });
+  });
+
+  it('grace ended: the same quantity is PO On Hold since the grace end, with its date', () => {
+    expect(
+      withHoldColumns(oneRow(), {
+        ospo: 470_000,
+        daNotCalledOff: 92_000,
+        demand: 300_000,
+        qty: 170_000,
+        grace: { dueDay: '2026-12-15', ended: true }
+      })
+    ).toMatchObject({
+      inGraceQty: 0,
+      inGraceUntil: null,
+      onHoldQty: 170_000,
+      onHoldSince: '2026-12-15',
+      totalOspo: 262_000
+    });
+  });
+
+  it('AC-04: nothing on hold still reads DA, and Total OSPO = min(OSPO, DA not yet called off)', () => {
+    expect(
+      withHoldColumns(oneRow(), {
+        ospo: 50_000,
+        daNotCalledOff: 92_000,
+        demand: 300_000,
+        qty: 0,
+        grace: { dueDay: '2026-12-15', ended: true }
+      })
+    ).toMatchObject({
+      da: 300_000,
+      daNotCalledOff: 92_000,
+      inGraceQty: 0,
+      inGraceUntil: null,
+      onHoldQty: 0,
+      onHoldSince: null,
+      totalOspo: 50_000
+    });
   });
 });
 

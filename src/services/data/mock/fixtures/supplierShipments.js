@@ -95,6 +95,10 @@ import { shiftFields } from '../../fixturePresent';
 const MOCK_ASNS_RAW = [
   {
     asnNumber: 'ASN-2025-00211',
+    // AIB-1 BR-03 / BR-04 (BL-348) — the ZWME021 sequence and the Surat
+    // Jalan (External ID). One sequence = one ASN (AIB-D1).
+    sequence: '1',
+    externalId: 'SJ-2025-00211',
     supplierId: 'sup-007',
     // 2B-5b-i — was `PO-2025-00112` (sup-003, Sample Fragrance House). Unique at level 2:
     // sup-007 owns PO-2025-00107 (ordered 2025-03-15) and PO-2025-00108
@@ -132,6 +136,10 @@ const MOCK_ASNS_RAW = [
   },
   {
     asnNumber: 'ASN-2025-00198',
+    // AIB-1 BR-03 / BR-04 (BL-348) — the ZWME021 sequence and the Surat
+    // Jalan (External ID). One sequence = one ASN (AIB-D1).
+    sequence: '2',
+    externalId: 'SJ-2025-00198',
     supplierId: 'sup-007',
     // 2B-5b-i — UNCHANGED. The one reference of six that already named a PO its
     // own addressee owns. Its MATERIAL still disagrees (this PO orders
@@ -163,6 +171,10 @@ const MOCK_ASNS_RAW = [
   },
   {
     asnNumber: 'ASN-2025-00201',
+    // AIB-1 BR-03 / BR-04 (BL-348) — the ZWME021 sequence and the Surat
+    // Jalan (External ID). One sequence = one ASN (AIB-D1).
+    sequence: '3',
+    externalId: 'SJ-2025-00201',
     supplierId: 'sup-007',
     // 2B-5b-i — was `PO-2025-00109` (sup-008, PT Sample Carton). Unique at
     // level 2: PO-2025-00108 is ordered 2025-04-03, after this eta of
@@ -243,6 +255,10 @@ const MOCK_ASNS_RAW = [
   },
   {
     asnNumber: 'ASN-2025-00301',
+    // AIB-1 BR-03 / BR-04 (BL-348) — the ZWME021 sequence and the Surat
+    // Jalan (External ID). One sequence = one ASN (AIB-D1).
+    sequence: '1',
+    externalId: 'SJ-2025-00301',
     supplierId: 'sup-002',
     // 2B-5b-i — was `PO-2025-00120` (sup-011, Sample Salicylics). Both sup-002
     // orders precede this eta, so level 3 decides: PO-2025-00102 is confirmed
@@ -276,6 +292,10 @@ const MOCK_ASNS_RAW = [
   },
   {
     asnNumber: 'ASN-2025-00302',
+    // AIB-1 BR-03 / BR-04 (BL-348) — the ZWME021 sequence and the Surat
+    // Jalan (External ID). One sequence = one ASN (AIB-D1).
+    sequence: '1',
+    externalId: 'SJ-2025-00302',
     supplierId: 'sup-005',
     // 2B-5b-i — REFERENCE UNCHANGED; THE OBJECT WAS AUTHORED (operator ruling
     // R-4). `PO-2025-00131` did not exist in `mockPurchaseOrders.js` while

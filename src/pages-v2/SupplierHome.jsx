@@ -10,6 +10,7 @@ import NoSupplierIdentity from '@components/ui-v2/NoSupplierIdentity';
 import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import {
   useASNs,
+  useCallOffChase,
   useCapacityPlans,
   useDocuments,
   useForecastCommitments,
@@ -91,6 +92,8 @@ const SupplierHome = () => {
   const asns = useASNs();
   // REQ-E09-03 / REQ-E09-04 — the supplier's own call-offs (the read is scoped).
   const callOffs = useCallOffViews();
+  // AIB-3 (BL-351) — PTI's missing-ASN chase on this supplier's call-offs.
+  const missingAsn = useCallOffChase();
   // REQ-E08-01 / 04 / 05 — the supplier's stock freshness, capacity and alerts.
   const stock = useInventory();
   const capacity = useCapacityPlans();
@@ -158,6 +161,9 @@ const SupplierHome = () => {
         (v) => v.callOff.status === 'Awaiting Confirmation'
       );
       const dueCallOffs = callOffs.views.filter((v) => isDueWithoutHeadsUp(v, callOffs.nowIso));
+      // AIB-3 (BL-351) — the chases PTI raises on this supplier's own call-offs
+      // (the read is scoped to the seat's supplier, so no filter here).
+      const missingAsnChases = (missingAsn.data?.items ?? []).filter((r) => r.state === 'open');
       const positions = (stock.data?.items ?? []).filter((p) => p.supplierId === supplierId);
       const stalePositions = positions.filter(
         (p) => stockFreshness(p, inventoryNow()) !== 'current'
@@ -311,6 +317,17 @@ const SupplierHome = () => {
           deadlines: dueCallOffs.map((v) => v.dueDate),
           stock: coverOf(dueCallOffs.map((v) => v.callOff.materialCode)),
           to: deepLink('/supplier/call-offs', { status: 'dueSoon' })
+        },
+        {
+          // AIB-3 (BL-351) — PTI has sent a call-off and no ASN is on it; the
+          // chase is in the hub (email waits on the notification service, BL-26).
+          id: 'calloffs-missing-asn',
+          lane: 'orders',
+          label: t('hub.home.task.sup.callOffsMissingAsn'),
+          count: missingAsnChases.length,
+          deadlines: missingAsnChases.map((r) => r.dueAt),
+          stock: coverOf(missingAsnChases.map((r) => r.materialCode)),
+          to: '/supplier/call-offs'
         },
         {
           // REQ-E08-01 AC-05 — figures past their data-update SLA. S-02: only
@@ -569,6 +586,7 @@ const SupplierHome = () => {
       asns.data,
       callOffs.views,
       callOffs.nowIso,
+      missingAsn.data,
       stock.data,
       capacity.data,
       forecastLines.data,

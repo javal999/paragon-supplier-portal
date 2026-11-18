@@ -361,6 +361,8 @@ export function usePurchaseOrderShippingNotice() {
  * @property {AsnLineInput[]} [lines] -  REQ-E07-04 — shipped quantity, batch and expiry per PO line. Omitted, the
  *    draft proposes each line's open quantity.
  * @property {string} [shipDate]
+ * @property {string} [sequence] -  AIB-1 BR-03 (BL-348) — the ZWME021 sequence the supplier enters; one sequence = one ASN.
+ * @property {string} [externalId] -  AIB-1 BR-04 (BL-348) — the Surat Jalan (SJ) number, the inbound upload's External ID.
  * @property {string} [packingListFile]
  * @property {string} [overShipReason] -  BR-02 — required when a line ships more than its open quantity.
  * @property {string} [callOffId] -  REQ-E09-03 BR-06 — the confirmed call-off this ASN ships, if any.
@@ -399,6 +401,8 @@ export function useAdvanceShipNoticeCreate() {
  * @property {string} trackingNumber
  * @property {string} eta
  * @property {string} [shipDate]
+ * @property {string} [sequence] -  AIB-1 BR-03 (BL-348) — the ZWME021 sequence; validated by the verb.
+ * @property {string} [externalId] -  AIB-1 BR-04 (BL-348) — the Surat Jalan (SJ) number.
  * @property {AsnLineInput[]} [lines]
  * @property {string} [overShipReason]
  * @property {boolean} [callOffFinal] -  MR-6 BR-10 — the last ASN for its call-off; omitted keeps the draft's.
@@ -418,6 +422,8 @@ export function useAdvanceShipNoticeSubmit() {
       trackingNumber,
       eta,
       shipDate,
+      sequence,
+      externalId,
       lines,
       overShipReason,
       callOffFinal
@@ -432,6 +438,8 @@ export function useAdvanceShipNoticeSubmit() {
           trackingNumber,
           eta,
           ...(shipDate ? { shipDate } : {}),
+          ...(sequence !== undefined ? { sequence } : {}),
+          ...(externalId !== undefined ? { externalId } : {}),
           ...(lines ? { lines } : {}),
           ...(overShipReason ? { overShipReason } : {}),
           ...(callOffFinal !== undefined ? { callOffFinal } : {})
@@ -458,6 +466,32 @@ export function useAdvanceShipNoticeCancel() {
     mutationFn: ({ asnNumber }) =>
       svc.commands.dispatch(scope, {
         transitionId: 't_asn_cancel',
+        entity: 'advanceShipNotice',
+        entityId: asnNumber
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') invalidate(scope);
+    }
+  });
+}
+
+/**
+ * AIB-2 BR-02 (BL-350) — the Expeditor acknowledges one inbound (fires
+ * `t_asn_acknowledge_inbound`, a state-preserving fact on the ASN). The record
+ * of who and when lives in the inbound acknowledgment store and is joined onto
+ * the ASN read, so one invalidation refreshes both the list and the To-Do.
+ */
+export function useInboundAcknowledge() {
+  const svc = useDataService();
+  const scope = useScope();
+  const invalidate = useInvalidateProcurement();
+
+  return /** @type {typeof useMutation<CommandResult, Error, { asnNumber: string }>} */ (
+    useMutation
+  )({
+    mutationFn: ({ asnNumber }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_asn_acknowledge_inbound',
         entity: 'advanceShipNotice',
         entityId: asnNumber
       }),
@@ -2053,6 +2087,40 @@ export function useFeedstockConfirm() {
   });
 }
 
+// ── BL-336 · THE ONE-TIME WEEKLY DA CONFIRMATION (PSC-1) ─────────────────────
+//
+// The supplier confirms the week's published demand anticipation once, on the
+// DA page. The figure per material PRE-FILLS the stock page; this verb writes
+// no stock record (PSC-1 BR-06, REQ-E08-02 BR-09). The record's time and actor
+// are stamped by the target; the changed fields are derived there (BR-08). The
+// DA read carries the confirmation state, so that read is refreshed.
+/**
+ * @typedef {object} DaConfirmationVars
+ * @property {string} supplierId
+ * @property {string} week -  The publication's planning week (`YYYY-MM-DD`).
+ * @property {string} publicationId
+ * @property {{ materialCode: string; soh: number }[]} soh
+ */
+
+/** A supplier confirms one week's DA (`t_daconfirmation_confirm`). */
+export function useDaConfirmation() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, DaConfirmationVars>} */ (useMutation)({
+    mutationFn: ({ supplierId, week, publicationId, soh }) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_daconfirmation_confirm',
+        entity: 'daConfirmation',
+        payload: { supplierId, week, publicationId, soh }
+      }),
+    onSuccess: (result) => {
+      if (result.status !== 'failed') void qc.invalidateQueries();
+    }
+  });
+}
+
 // ── BL-50 · A RULING ON ONE DAY OF THE HUB'S WORKING CALENDAR ────────────────
 //
 // ⚠️ **`entityId` IS THE DATE, AND THERE IS NO `date` PAYLOAD FIELD** — the
@@ -2745,6 +2813,38 @@ export function useCallOffCommand() {
             // CAP-12 — and open supply, the gap and its proposal.
             q.queryKey[1] === 'demandAnticipation' ||
             q.queryKey[1] === 'inventoryAlerts')
+      });
+    }
+  });
+}
+
+/**
+ * AIB-3 (BL-351) — close one missing-ASN chase with a reason (fires
+ * `t_calloffchase_close`). The chase is derived at read; the verb stores only
+ * the closure, so the list re-reads and the row leaves it.
+ * @typedef {{ readonly callOffId: string; readonly reason: string }} CallOffChaseCloseVars
+ */
+
+/** Close a missing-ASN chase with a reason (fires `t_calloffchase_close`). */
+export function useCallOffChaseCommand() {
+  const svc = useDataService();
+  const scope = useScope();
+  const qc = useQueryClient();
+
+  return /** @type {typeof useMutation<CommandResult, Error, CallOffChaseCloseVars>} */ (
+    useMutation
+  )({
+    mutationFn: (vars) =>
+      svc.commands.dispatch(scope, {
+        transitionId: 't_calloffchase_close',
+        entity: 'callOffChase',
+        entityId: vars.callOffId,
+        payload: { closeReason: vars.reason }
+      }),
+    onSuccess: (result) => {
+      if (result.status === 'failed') return;
+      qc.invalidateQueries({
+        predicate: (q) => q.queryKey[0] === 'procurement' && q.queryKey[1] === 'callOffChase'
       });
     }
   });

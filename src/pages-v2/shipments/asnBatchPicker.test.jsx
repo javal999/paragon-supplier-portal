@@ -102,6 +102,11 @@ describe('supplier ASN form — batch from declared stock', () => {
     fireEvent.change(screen.getByLabelText('Estimated arrival *'), {
       target: { value: '2026-09-20' }
     });
+    // AIB-1 BR-03 / BR-04 (BL-348) — required before step 2 can advance.
+    fireEvent.change(screen.getByLabelText('Sequence'), { target: { value: '38' } });
+    fireEvent.change(screen.getByLabelText('Surat Jalan (External ID)'), {
+      target: { value: 'SJ-TEST-38' }
+    });
     fireEvent.change(screen.getByLabelText(`Shipped quantity for ${MAT}`), {
       target: { value: '2500' }
     });

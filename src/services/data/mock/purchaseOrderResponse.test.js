@@ -304,6 +304,9 @@ describe('shipping notice (REQ-E07-05)', () => {
         trackingNumber: 'TRK-1',
         eta: '2025-04-10',
         shipDate: '2025-04-08',
+        // AIB-1 BR-03 / BR-04 (BL-348).
+        sequence: '36',
+        externalId: 'SJ-TEST-36',
         lines: /** @type {import('../types').ASN} */ (asnStore.get(asnNumber)).lineItems.map(
           (l) => ({
             materialCode: l.materialCode,

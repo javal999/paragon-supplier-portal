@@ -109,6 +109,12 @@ export function groupTasksByLane(tasks, lanes) {
 }
 
 /**
+ * PSC-2 BR-09 / AC-07 (owner 2026-11-18) — the supplier To do's order: due date
+ * first (the oldest deadline wins, an undated row after every dated one), then
+ * risk class (critical before warning; "money PTI owes" after both), then TYPE
+ * — the row's lane — and only then the count. The lane is the task's type: the
+ * sections (`lanes`) group by it, and within one section this orders a job and
+ * an alert that fall due the same day.
  * @param {HomeTask} a
  * @param {HomeTask} b
  * @returns {number}
@@ -118,7 +124,12 @@ function byDeadline(a, b) {
   if (none !== 0) return none;
   const da = a.deadline ?? '9999-12-31';
   const db = b.deadline ?? '9999-12-31';
-  return da.localeCompare(db) || RANK[a.severity] - RANK[b.severity] || b.count - a.count;
+  return (
+    da.localeCompare(db) ||
+    RANK[a.severity] - RANK[b.severity] ||
+    (a.lane ?? '').localeCompare(b.lane ?? '') ||
+    b.count - a.count
+  );
 }
 
 /**

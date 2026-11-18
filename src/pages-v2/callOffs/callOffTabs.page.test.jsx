@@ -58,6 +58,7 @@ describe('PTI Call-offs — tabs (P-12)', () => {
     expect(await screen.findByTestId('calloff-row-co-0004')).toBeInTheDocument();
     expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
       'To act',
+      'Missing ASN',
       'All call-offs',
       'Blanket POs running out'
     ]);
@@ -126,6 +127,7 @@ describe('PTI Call-offs — tabs (P-12)', () => {
     await screen.findByTestId('calloff-row-co-0004');
     expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
       'Perlu tindakan',
+      'ASN belum ada',
       'Semua call-off',
       'PO induk yang akan habis'
     ]);

@@ -90,13 +90,17 @@ describe('BL-233 wave 2 — /supplier/inventory', () => {
   it('the supplier’s stock table: six measures with an (i), in EN and ID', async () => {
     renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
     const tips = headerTips(await tableOf('sup-stock-row-PK-PETB-8802'));
+    // TL-D43 (PSC-2) — the combined "Incoming" label is retired on this view:
+    // In Transit and In Production are two separate measures with their own tips.
     expect(tips).toMatchObject({
       Material: '',
+      'In Transit': 'term-tip-in-transit',
+      'In Production': 'term-tip-in-production',
       'Supplier stock': 'term-tip-supplier-stock',
       'Your reorder point': 'term-tip-supplier-own-rop',
       'PTI stock': 'term-tip-pti-stock',
       'PTI ROP': 'term-tip-pti-rop',
-      Incoming: 'term-tip-incoming',
+      'Feedstock to Confirm': '',
       'Days of supply': 'term-tip-days-of-supply',
       'Last update': ''
     });

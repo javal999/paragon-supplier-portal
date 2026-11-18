@@ -91,6 +91,9 @@ export const advanceShipNoticeFlow = {
       policyHooks: [
         POLICY_HOOKS.ASN_SUBMIT_COMPLETE,
         POLICY_HOOKS.ASN_LINES_WITHIN_OPEN,
+        // AIB-1 BR-03 / BR-04 (BL-348) — the 4 ZWME021 sequence rules, checked
+        // before the ASN would become an SAP inbound delivery.
+        POLICY_HOOKS.ASN_SEQUENCE_RULES,
         // BL-51 — a 3PL the submission names is on the list and still offered.
         POLICY_HOOKS.ASN_THREE_PL_LISTED
       ],
@@ -126,6 +129,9 @@ export const advanceShipNoticeFlow = {
       policyHooks: [
         POLICY_HOOKS.ASN_SHELF_LIFE_EXCEPTION_ONLY,
         POLICY_HOOKS.ASN_LINES_WITHIN_OPEN,
+        // AIB-1 BR-03 / BR-04 — an exception request carries what a submission
+        // carries, so the sequence rules apply here too.
+        POLICY_HOOKS.ASN_SEQUENCE_RULES,
         POLICY_HOOKS.ASN_THREE_PL_LISTED
       ],
       surfaceable: { surfaced: true },
@@ -258,6 +264,34 @@ export const advanceShipNoticeFlow = {
       requiredRole: 'asn:flag',
       requiredFields: [],
       policyHooks: [],
+      surfaceable: { surfaced: true },
+      version: 1
+    },
+    {
+      // AIB-2 BR-01 / BR-02 (BL-350) — THE EXPEDITOR'S INBOUND ACKNOWLEDGMENT.
+      //
+      // ⚠️ **A FACT, NOT A MOVE (`statePreserving`).** The acknowledgment says
+      // one planning-side seat has seen the inbound information; it does not
+      // change where the shipment is. The record (who and when) lives in its
+      // own store (`inboundAcknowledgmentStore`), joined onto the ASN on read —
+      // the ASN's own status stays what the shipping lane put it at.
+      //
+      // ⚠️ **`to` IS `Submitted` BECAUSE THAT IS THE EARLIEST LEGAL FROM-STATE
+      // AND `to` MUST BE A MEMBER OF `from`.** The dispatcher applies a
+      // state-preserving transition with the entity's CURRENT state, so no ASN
+      // is moved here; the declaration is only kept truthful about that rule.
+      //
+      // The supplier's GR acknowledge/dispute (REQ-E07-06 AC-03) is a DIFFERENT
+      // act on a DIFFERENT entity (`receiptDiscrepancy`) and neither waits on
+      // this one (AIB-2 BR-04).
+      id: 't_asn_acknowledge_inbound',
+      from: ['Submitted', 'In Transit', 'Delivered', 'Discrepancy'],
+      to: 'Submitted',
+      statePreserving: true,
+      trigger: 'user',
+      requiredRole: 'inbound:acknowledge',
+      requiredFields: [],
+      policyHooks: [POLICY_HOOKS.INBOUND_ACKNOWLEDGMENT_UNACKNOWLEDGED],
       surfaceable: { surfaced: true },
       version: 1
     }

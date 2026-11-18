@@ -5,9 +5,11 @@ import AppShellV2 from '@components/layout-v2/AppShellV2';
 import PageHeader from '@components/ui-v2/PageHeader';
 import SampleDataBadge from '@components/ui-v2/SampleDataBadge';
 import { deepLink, sharedValue } from '@lib/deepLink';
+import { useCurrentIdentity } from '@context/CurrentIdentityContext';
 import {
   useASNs,
   useBuyerInvoices,
+  useCallOffChase,
   useCapacityPlans,
   useForecastCommitments,
   useInventoryAlerts,
@@ -36,6 +38,9 @@ import {
   responseDeadline
 } from '@services/data/poResponseProjection';
 import { isOpenDispute } from '@services/transitions/fulfilmentRules';
+import { inboundRows, outstandingInbounds } from '@services/transitions/inboundRules';
+import { atomsForSeat } from '@services/transitions/customRoles';
+import { sdcClock } from '@services/sdc/clock';
 import { deliveryDrift, isDriftResult } from '@services/transitions/callOffRules';
 import { useCallOffViews } from './callOffs/callOffDisplay';
 import { gapWeeks, planStatus } from '@services/transitions/capacityRules';
@@ -61,6 +66,11 @@ const DAY_MS = 86_400_000;
 const BuyerHome = () => {
   const { t } = useTranslation();
   const [role] = useHubRole();
+  // AIB-2 BR-05 (BL-350) — the inbound acknowledgment is the EXPEDITOR's act,
+  // so its To-Do is shown to a seat that holds `inbound:acknowledge` (a new
+  // PTI seat, holdable from the identity panel and not seeded).
+  const { identity } = useCurrentIdentity();
+  const holdsInboundAck = atomsForSeat(identity.businessRoles).includes('inbound:acknowledge');
   const invoices = useBuyerInvoices();
   const pos = usePurchaseOrders();
   const rfqs = useRFQs();
@@ -73,6 +83,8 @@ const BuyerHome = () => {
   const chase = useUnifiedChase();
   // REQ-E09-03 / REQ-E09-04 — call-off reminders, derived at read time (CR-09).
   const callOffs = useCallOffViews();
+  // AIB-3 (BL-351) — call-offs sent with no ASN, chased from the next working day.
+  const missingAsn = useCallOffChase();
   // REQ-E08-04 / REQ-E08-05 — open High alerts and capacity gaps, derived at read.
   const alerts = useInventoryAlerts();
   const capacity = useCapacityPlans();
@@ -112,6 +124,8 @@ const BuyerHome = () => {
       const awaitingCallOffs = callOffs.views.filter((v) => v.confirmation === 'Awaiting Approval');
       const escalatedCallOffs = callOffs.views.filter((v) => v.confirmation === 'Escalated');
       const atRiskCallOffs = callOffs.views.filter((v) => v.delivery === 'atRisk');
+      // AIB-3 (BL-351) — the open missing-ASN chases; a closed or covered one is absent.
+      const missingAsnChases = (missingAsn.data?.items ?? []).filter((r) => r.state === 'open');
       const drift = deliveryDrift(callOffs.views);
       const driftKeys = new Set(drift.map((g) => `${g.supplierId}|${g.materialCode}`));
       const highAlerts = (alerts.data?.items ?? []).filter(
@@ -155,6 +169,9 @@ const BuyerHome = () => {
       const closingRfqId = sharedValue(closingRounds, (r) => r.rfqId);
       const awardRfqId = onlyOne(awardRfqs, (r) => r.id);
       const asnsDue = d.pendingAsns(asnItems);
+      // AIB-2 BR-05 (BL-350) — inbounds past their one-working-day deadline and
+      // not acknowledged. Derived at read, like every other task here.
+      const inboundDue = outstandingInbounds(inboundRows(asnItems, grItems, sdcClock.now()));
       const overdueInv = d.overdueInvoices(invItems);
       // Each task names the deadline of every line item it counts and, for stock,
       // cover against lead time; taskSeverity.js decides URGENT / DUE SOON.
@@ -237,6 +254,16 @@ const BuyerHome = () => {
             .filter((v) => driftKeys.has(`${v.callOff.supplierId}|${v.callOff.materialCode}`))
             .flatMap((v) => v.results.filter(isDriftResult).map((r) => r.approvedDate)),
           to: deepLink('/buyer/call-offs', { status: 'drift' })
+        },
+        {
+          // AIB-3 (BL-351) — a call-off the planner sent with no ASN, chased
+          // from the next working day. CR-09's 7-day reminder is separate (BR-02).
+          id: 'calloffs-missing-asn',
+          roles: ['MP'],
+          label: t('hub.home.task.callOffsMissingAsn'),
+          count: missingAsnChases.length,
+          deadlines: missingAsnChases.map((r) => r.dueAt),
+          to: deepLink('/buyer/call-offs', { tab: 'chase' })
         },
         {
           id: 'inventory-high-alerts',
@@ -370,6 +397,21 @@ const BuyerHome = () => {
           // lists exactly these ASNs under `?asns=toReceive`; one arrives open.
           to: deepLink('/buyer/shipments', { asns: 'toReceive' })
         },
+        // AIB-2 BR-05 (BL-350) — an inbound with no Expeditor acknowledgment,
+        // past the one-working-day deadline. Shown only to a seat holding
+        // `inbound:acknowledge`, because it is that seat's task.
+        ...(holdsInboundAck
+          ? [
+              {
+                id: 'inbound-acknowledgment',
+                roles: /** @type {const} */ (['MP']),
+                label: t('hub.home.task.inboundAcknowledgment'),
+                count: inboundDue.length,
+                deadlines: inboundDue.flatMap((r) => (r.dueAt ? [r.dueAt.toISOString()] : [])),
+                to: '/buyer/inbound'
+              }
+            ]
+          : []),
         {
           // REQ-E03-05 BR-03 — a round whose deadline is close and whose invitees
           // have not all answered. Derived from the clock at read (law 0.5).
@@ -448,6 +490,7 @@ const BuyerHome = () => {
       );
     }, [
       role,
+      holdsInboundAck,
       pos.data,
       invoices.data,
       rfqs.data,
@@ -457,6 +500,7 @@ const BuyerHome = () => {
       asns.data,
       chase.data,
       callOffs.views,
+      missingAsn.data,
       alerts.data,
       capacity.data,
       forecastLines.data,

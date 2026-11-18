@@ -88,6 +88,8 @@ export const processFlowPurposeEn = {
     'Quality refuses the short-dated goods and says why. The notice goes back to the supplier to rework.',
   'processFlows.purpose.t_asn_change_eta':
     'The supplier moves the arrival later than the date Quality approved, so the shelf life left at arrival is shorter and Quality decides again.',
+  'processFlows.purpose.t_asn_acknowledge_inbound':
+    'One planning seat confirms PTI has seen the inbound information — what is coming, on which order, against which delivery note — so a missing acknowledgment is visible before the goods are receipted.',
 
   // ── goodsReceipt ───────────────────────────────────────────────────────────
   'processFlows.purpose.entity.goodsReceipt':
@@ -357,7 +359,7 @@ export const processFlowPurposeEn = {
 
   // ── the hub's working calendar (BL-50) ─────────────────────────────────
   'processFlows.purpose.entity.workingCalendar':
-    'Which days count as working days for every deadline in the hub, starting from the calendar SAP holds and corrected by the hub administrator where the plant knows better.',
+    'Which days count as working days for every deadline that counts working days in the hub, starting from the calendar SAP holds and corrected by the hub administrator where the plant knows better.',
   'processFlows.purpose.t_calendar_day_set':
     'The hub administrator says one date is or is not a working day, and why. Every response and commitment deadline that spans that date moves with it at once, so the grounds for it have to be on record.',
   // ── the logistics providers list (BL-51) ─────────────────────────────
@@ -509,6 +511,10 @@ export const processFlowPurposeEn = {
     'A warning that stock or capacity is heading for a shortage, with a risk class, so the planner acts before material is missing.',
   'processFlows.purpose.t_inventoryalert_close':
     'The planner closes an alert with a reason from the list, and a note when the reason is "Other". The same condition does not raise it again until it has cleared and come back.',
+  'processFlows.purpose.entity.callOffChase':
+    'One call-off the planner sent that has no ASN from the supplier, one working day after it was sent. The hub raises it on its own; the planner closes it with a reason once the supplier has been chased another way.',
+  'processFlows.purpose.t_calloffchase_close':
+    'The planner records why one call-off’s missing-ASN chase needs no further follow-up. The chase is raised once: after this record, a late ASN is a delivery problem, not a second chase. Nothing is sent to SAP; email waits on the notification service.',
   'processFlows.purpose.entity.forecastVersion':
     'One version of PTI’s forecast for packaging (weekly) or raw material (monthly), with a zone per period. Every version is kept.',
   'processFlows.purpose.t_forecastversion_publish':
@@ -564,6 +570,12 @@ export const processFlowPurposeEn = {
     'A what-if scenario the Material Planner kept for one supplier and material: the figures it was run on, its rule choices and the rules version in force at the time. Nothing is edited or deleted; keeping other numbers makes a new scenario.',
   'processFlows.purpose.t_whatifscenario_save':
     'The Material Planner keeps a what-if scenario under a title, to compare it with the current plan later. Analysis only: nothing changes the plan or reaches suppliers or SAP.',
+  // PSC-1 (BL-336) — the machine tokens to avoid here are `Confirmed`, `week`,
+  // `supplierId`, `publicationId`, `soh`, `creation` and the ids themselves.
+  'processFlows.purpose.entity.daConfirmation':
+    'The supplier’s one-time answer to PTI’s published demand anticipation. The figures it states pre-fill the stock page, a period with no change carries the last answer forward without a new submit, and a period that changed records what moved and who moved it.',
+  'processFlows.purpose.t_daconfirmation_confirm':
+    'The supplier submits the one-time confirmation against the published demand anticipation, stating its stock figures per material. Later periods need a submit only when something changed, and nothing is sent to SAP.',
   'processFlows.purpose.entity.feedstockConfirmation':
     'A supplier’s confirmation of its current feedstock for one material: the quantity in the material’s unit, the day the figure holds for, and an optional note. Feedstock is not stock until it is produced, so it never adds to the supplier’s stock on hand. A newer confirmation replaces the earlier one; every confirmation stays on record.',
   'processFlows.purpose.t_feedstock_confirm':
@@ -750,6 +762,8 @@ export const processFlowPurposeId = {
     'Mutu menolak barang yang umur simpannya pendek dan menyebutkan alasannya. Pemberitahuan kembali ke pemasok untuk diperbaiki.',
   'processFlows.purpose.t_asn_change_eta':
     'Pemasok memundurkan tanggal tiba melewati tanggal yang disetujui Mutu, sehingga sisa umur simpan saat tiba lebih pendek dan Mutu memutuskan lagi.',
+  'processFlows.purpose.t_asn_acknowledge_inbound':
+    'Satu kursi perencanaan memastikan PTI telah melihat informasi inbound — apa yang datang, atas pesanan mana, dengan surat jalan mana — sehingga konfirmasi yang belum dilakukan terlihat sebelum barang diterima.',
 
   // ── goodsReceipt ───────────────────────────────────────────────────────────
   'processFlows.purpose.entity.goodsReceipt':
@@ -1014,7 +1028,7 @@ export const processFlowPurposeId = {
     'Seseorang menyalin satu kumpulan izin lalu memperluasnya. Memperluas tidak pernah menghapus apa pun, sehingga tidak ada yang diam-diam kehilangan wewenang yang diandalkan darinya, dan tindakan itu dicatat seperti setiap tindakan diatur lainnya.',
 
   'processFlows.purpose.entity.workingCalendar':
-    'Hari mana yang dihitung sebagai hari kerja untuk setiap tenggat di hub, berawal dari kalender yang disimpan SAP lalu dikoreksi oleh administrator hub bila pabrik lebih tahu.',
+    'Hari mana yang dihitung sebagai hari kerja untuk setiap tenggat yang menghitung hari kerja di hub, berawal dari kalender yang disimpan SAP lalu dikoreksi oleh administrator hub bila pabrik lebih tahu.',
   'processFlows.purpose.t_calendar_day_set':
     'Administrator hub menyatakan satu tanggal adalah atau bukan hari kerja, beserta alasannya. Setiap tenggat tanggapan dan komitmen yang melewati tanggal itu langsung ikut bergeser, sehingga alasannya harus tercatat.',
   'processFlows.purpose.entity.threePl':
@@ -1157,6 +1171,10 @@ export const processFlowPurposeId = {
     'Peringatan bahwa stok atau kapasitas menuju kekurangan, dengan kelas risiko, agar perencana bertindak sebelum material habis.',
   'processFlows.purpose.t_inventoryalert_close':
     'Perencana menutup peringatan dengan alasan dari daftar, dan catatan bila alasannya "Lainnya". Kondisi yang sama tidak memunculkannya lagi sampai kondisi itu pulih lalu terjadi lagi.',
+  'processFlows.purpose.entity.callOffChase':
+    'Satu call-off yang dikirim perencana dan belum punya ASN dari pemasok, satu hari kerja setelah dikirim. Hub memunculkannya sendiri; perencana menutupnya dengan alasan setelah pemasok ditindaklanjuti dengan cara lain.',
+  'processFlows.purpose.t_calloffchase_close':
+    'Perencana menutup tindak lanjut ASN yang hilang untuk satu call-off dengan alasan. Tindak lanjut ini muncul sekali: setelah ditutup, ASN yang terlambat adalah masalah pengiriman, bukan tindak lanjut kedua. Tidak ada yang dikirim ke SAP; email menunggu layanan notifikasi.',
   'processFlows.purpose.entity.forecastVersion':
     'Satu versi prakiraan PTI yang diterbitkan untuk kemasan (mingguan) atau bahan baku (bulanan), dengan zona per periode. Setiap versi disimpan.',
   'processFlows.purpose.t_forecastversion_publish':
@@ -1212,6 +1230,10 @@ export const processFlowPurposeId = {
     'Skenario what-if yang disimpan Perencana Material untuk satu pemasok dan material: angka yang dipakai, pilihan aturannya, dan versi aturan yang berlaku saat itu. Tidak ada yang diubah atau dihapus; angka lain menjadi skenario baru.',
   'processFlows.purpose.t_whatifscenario_save':
     'Perencana Material menyimpan skenario what-if dengan sebuah judul, untuk dibandingkan dengan rencana saat ini nanti. Hanya analisis: tidak ada yang mengubah rencana atau sampai ke pemasok atau SAP.',
+  'processFlows.purpose.entity.daConfirmation':
+    'Jawaban sekali dari pemasok atas demand anticipation yang diterbitkan PTI. Angka yang dinyatakannya mengisi awal halaman Stok, periode tanpa perubahan meneruskan jawaban terakhir tanpa kirim ulang, dan periode yang berubah mencatat apa yang bergeser dan siapa yang menggesernya.',
+  'processFlows.purpose.t_daconfirmation_confirm':
+    'Pemasok mengirim konfirmasi sekali terhadap demand anticipation yang diterbitkan, menyatakan angka stok per material. Periode berikutnya hanya perlu dikirim bila ada perubahan, dan tidak ada yang dikirim ke SAP.',
   'processFlows.purpose.entity.feedstockConfirmation':
     'Konfirmasi pemasok atas feedstock saat ini untuk satu material: jumlah dalam satuan material, tanggal konfirmasi, dan catatan opsional. Feedstock belum menjadi stok sampai diproduksi, sehingga tidak pernah menambah stok pemasok. Konfirmasi yang lebih baru menggantikan yang lama; setiap konfirmasi tetap tercatat.',
   'processFlows.purpose.t_feedstock_confirm':

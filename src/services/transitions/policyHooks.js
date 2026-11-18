@@ -88,6 +88,15 @@ export const POLICY_HOOKS = /** @type {const} */ ({
   /** ASN create / submit (BL-51, BR-05): a 3PL the ASN names is on the 3PL list
    *  and still offered. An ASN naming no 3PL is untouched. */
   ASN_THREE_PL_LISTED: 'asn_three_pl_listed',
+  /** AIB-1 BR-03 / BR-04 (BL-348) — the 4 ZWME021 sequence rules at submit: the
+   *  sequence and the Surat Jalan (External ID) are present, every line agrees
+   *  with the sequence's PO, delivery date and External ID, and the sequence
+   *  belongs to this ASN alone (AIB-D1: one sequence = one ASN). */
+  ASN_SEQUENCE_RULES: 'asn_sequence_rules',
+  /** AIB-2 BR-02 (BL-350) — the Expeditor's inbound acknowledgment: the ASN is
+   *  an inbound (Submitted or later) and has no acknowledgment yet, so who/when
+   *  is recorded once and never rewritten. */
+  INBOUND_ACKNOWLEDGMENT_UNACKNOWLEDGED: 'inbound_acknowledgment_unacknowledged',
   /** GR create: the parent shipment/ASN (payload.asnReference) must have arrived. */
   GR_CREATE_SHIPMENT_RECEIVED: 'gr_create_shipment_received',
   // GR header disposition = ROLLUP of the per-line sub-flow states (census G2).
@@ -146,6 +155,9 @@ export const POLICY_HOOKS = /** @type {const} */ ({
   CALLOFF_CHANGEABLE: 'calloff_changeable',
   /** Dismiss a draft / supplier rejection: the reason is substance. */
   CALLOFF_REASON_AUTHORED: 'calloff_reason_authored',
+  /** AIB-3 BR-01 (BL-351) — closing a missing-ASN chase: the reason is substance,
+   *  not presence (a required field that admits the space bar is a suggestion). */
+  CHASE_CLOSE_REASON_AUTHORED: 'chase_close_reason_authored',
   /** Supplier confirmation (REQ-E09-03 BR-02): the answer is well formed for
    *  its kind (a changed date, a changed quantity, two dated deliveries). */
   CALLOFF_CONFIRMATION_VALID: 'calloff_confirmation_valid',
@@ -532,6 +544,15 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    * the supplier form calls.
    */
   FEEDSTOCK_CONFIRMATION_VALID: 'feedstock_confirmation_valid',
+  /**
+   * PSC-1 (BL-336) — a supplier's one-time weekly DA confirmation: a known
+   * supplier (SUPPLIER_UNKNOWN), a week that is a date (WEEK_INVALID), a
+   * publication holding every material of the confirmation (NO_PUBLICATION),
+   * at least one material (NO_MATERIALS), each assigned to the supplier
+   * (NOT_ASSIGNED), and a figure of 0 or more per material (SOH_INVALID). The
+   * rule is `daConfirmationRefusal`, the one the supplier page's pre-check calls.
+   */
+  DA_CONFIRMATION_VALID: 'da_confirmation_valid',
   /**
    * INV-D9 — PTI's hub ask to a supplier: a known topic (TOPIC_UNKNOWN), a
    * material, or a planning group and week (SUBJECT_REQUIRED), that the

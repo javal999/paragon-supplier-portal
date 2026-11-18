@@ -46,6 +46,7 @@ import BuyerCapacity from '@pages-v2/BuyerCapacity';
 import BuyerAlerts from '@pages-v2/BuyerAlerts';
 import BuyerSupplierAccess from '@pages-v2/BuyerSupplierAccess';
 import BuyerShipments from '@pages-v2/BuyerShipments';
+import BuyerInbound from '@pages-v2/BuyerInbound';
 import BuyerGoodsReceipt from '@pages-v2/BuyerGoodsReceipt';
 import BuyerRequisitions from '@pages-v2/BuyerRequisitions';
 import BuyerSupplierApplications from '@pages-v2/BuyerSupplierApplications';
@@ -387,6 +388,14 @@ const ROUTES = [
     pattern: '/buyer/shipments',
     at: '/buyer/shipments',
     element: <BuyerShipments />,
+    identity: BUYER
+  },
+  {
+    // AIB-2 (BL-350) — the Expeditor's inbound list and acknowledgment.
+    name: 'buyer/inbound',
+    pattern: '/buyer/inbound',
+    at: '/buyer/inbound',
+    element: <BuyerInbound />,
     identity: BUYER
   },
   {

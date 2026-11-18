@@ -24,10 +24,25 @@ export const fulfilmentCollaborationEn = {
   'fc.asn.overOpen.reason': 'Reason for shipping more than the open quantity',
   'fc.asn.trackingOrVehicle': 'Tracking or vehicle number',
   'fc.asn.shipDate': 'Ship date',
+  // AIB-1 BR-03 / BR-04 (BL-348) — the ZWME021 inbound-upload identity.
+  'fc.asn.sequence': 'Sequence',
+  'fc.asn.externalId': 'Surat Jalan (External ID)',
+  'fc.asn.sequence.missing': '{{fields}} required before you can continue.',
+  'fc.asn.sequence.used':
+    'Sequence {{sequence}} already belongs to {{asnNumber}}. One sequence is one ASN — use another sequence.',
+  'fc.asn.sequence.error.po': 'This line names PO {{value}} but the sequence names {{expected}}.',
+  'fc.asn.sequence.error.deliveryDate':
+    'This line delivers {{value}} but the sequence delivers {{expected}}.',
+  'fc.asn.sequence.error.externalId':
+    'This line carries External ID {{value}} but the sequence carries {{expected}}.',
+  // AIB-2 BR-02 / BR-05 (BL-350) — the Expeditor's acknowledgment.
+  'inbound.ack.label': 'Inbound acknowledgment',
+  'inbound.ack.by': 'Acknowledged by {{name}} at {{at}}',
+  'inbound.ack.none': 'Not acknowledged yet',
   'fc.asn.packingList': 'Packing list (optional)',
   'fc.asn.select.open': 'Open quantity',
   'fc.asn.submit.required':
-    'Ship date, expected arrival, and a batch number and shipped quantity for every line are required. Expiry is required for materials with a shelf-life check.',
+    'Ship date, expected arrival, sequence and Surat Jalan (External ID), and a batch number and shipped quantity for every line are required. Expiry is required for materials with a shelf-life check.',
   'fc.asn.detail.shipDate': 'Ship date',
   'fc.asn.detail.packingList': 'Packing list',
   'fc.asn.detail.overShipReason': 'Reason for shipping above the open quantity',
@@ -275,10 +290,24 @@ export const fulfilmentCollaborationId = {
   'fc.asn.overOpen.reason': 'Alasan mengirim melebihi kuantitas terbuka',
   'fc.asn.trackingOrVehicle': 'Nomor resi atau nomor kendaraan',
   'fc.asn.shipDate': 'Tanggal kirim',
+  'fc.asn.sequence': 'Sekuens',
+  'fc.asn.externalId': 'Surat Jalan (ID Eksternal)',
+  'fc.asn.sequence.missing': '{{fields}} wajib diisi sebelum melanjutkan.',
+  'fc.asn.sequence.used':
+    'Sekuens {{sequence}} sudah dipakai {{asnNumber}}. Satu sekuens adalah satu ASN — gunakan sekuens lain.',
+  'fc.asn.sequence.error.po':
+    'Baris ini menyebut PO {{value}} tetapi sekuens menyebut {{expected}}.',
+  'fc.asn.sequence.error.deliveryDate':
+    'Baris ini mengirim {{value}} tetapi sekuens mengirim {{expected}}.',
+  'fc.asn.sequence.error.externalId':
+    'Baris ini membawa ID Eksternal {{value}} tetapi sekuens membawa {{expected}}.',
+  'inbound.ack.label': 'Konfirmasi inbound',
+  'inbound.ack.by': 'Dikonfirmasi oleh {{name}} pada {{at}}',
+  'inbound.ack.none': 'Belum dikonfirmasi',
   'fc.asn.packingList': 'Packing list (opsional)',
   'fc.asn.select.open': 'Kuantitas terbuka',
   'fc.asn.submit.required':
-    'Tanggal kirim, perkiraan tiba, serta nomor batch dan kuantitas dikirim untuk setiap baris wajib diisi. Tanggal kedaluwarsa wajib untuk material dengan pemeriksaan umur simpan.',
+    'Tanggal kirim, perkiraan tiba, sekuens dan Surat Jalan (ID Eksternal), serta nomor batch dan kuantitas dikirim untuk setiap baris wajib diisi. Tanggal kedaluwarsa wajib untuk material dengan pemeriksaan umur simpan.',
   'fc.asn.detail.shipDate': 'Tanggal kirim',
   'fc.asn.detail.packingList': 'Packing list',
   'fc.asn.detail.overShipReason': 'Alasan mengirim melebihi kuantitas terbuka',

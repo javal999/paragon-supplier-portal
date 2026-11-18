@@ -50,6 +50,9 @@ const fieldClass = `${inputClass} ${FIELD_FOCUS_RING}`;
 // PEX-9 BR-02/BR-03 (BL-271): "Not yet called off" links to the PO On Hold line
 // of the same supplier × material and shows its option and status; PO On Hold
 // replaces the [Proposed] leftover rule of BL-207.
+// PSC-6 BR-03 to BR-05 (BL-347): the row also shows DA, DA not yet called off,
+// the PO On Hold quantity split into In grace and PO On Hold (each with its
+// date — one 14-calendar-day clock, PSC-6 BR-01) and Total OSPO.
 // The max stock stays on the row and Procurement sets it with `maxstock:set`
 // (BR-03); any other PTI seat sees whose act it is; a supplier reads it only.
 // The planner sees every supplier; the supplier sees its own rows, scoped by
@@ -87,7 +90,7 @@ const FixedStockReconcile = ({ persona }) => {
     return <ErrorState breadcrumb={crumb} error={query.error} onRetry={() => query.refetch()} />;
 
   const rows = query.data?.items ?? [];
-  const cols = isPti ? 7 : 6;
+  const cols = isPti ? 12 : 11;
   const holdByKey = new Map((onHold.data?.items ?? []).map((h) => [h.key, h]));
   const draftQty = draft.trim() === '' ? null : Number(draft.trim());
   const draftInvalid =
@@ -239,11 +242,18 @@ const FixedStockReconcile = ({ persona }) => {
             {isPti ? <TableHeaderCell>{t('fsr.col.supplier')}</TableHeaderCell> : null}
             <TableHeaderCell>{t('fsr.col.material')}</TableHeaderCell>
             <TableHeaderCell term="poOrdered" />
+            <TableHeaderCell term="demandAnticipation" />
             <TableHeaderCell term="reconcileCalledOff" />
+            <TableHeaderCell term="daNotYetCalledOff" />
             <TableHeaderCell term="asnRequested" />
             <TableHeaderCell term="notYetCalledOff" />
-            {/* PEX-9 BR-01 (BL-274) — "Called off, not yet shipped" is gone on
-                both views (owner, 2026-11-05). */}
+            {/* PSC-6 BR-03/BR-05 (BL-347) — the PO On Hold quantity as 2
+                buckets, each with its date; Total OSPO as the rule computes it
+                (PSC-6 BR-04). PEX-9 BR-01 keeps "Called off, not yet shipped"
+                off the page; its remainder stays on the row. */}
+            <TableHeaderCell term="inGrace" />
+            <TableHeaderCell term="poOnHold" />
+            <TableHeaderCell term="totalOspo" />
             <TableHeaderCell term="maxStockSupplier" />
           </TableHeader>
           <tbody>
@@ -269,10 +279,28 @@ const FixedStockReconcile = ({ persona }) => {
                   )}
                 </TableCell>
                 <TableCell className="align-top">
+                  {r.da === null ? (
+                    <span className="text-text-tertiary" data-testid={`fsr-da-${r.key}`}>
+                      {t('fsr.none')}
+                    </span>
+                  ) : (
+                    <Qty value={r.da} uom={r.uom} testId={`fsr-da-${r.key}`} />
+                  )}
+                </TableCell>
+                <TableCell className="align-top">
                   <Qty value={r.calledOff} uom={r.uom} testId={`fsr-called-${r.key}`} />
                   <span className={note}>
                     {t('fsr.callOffCount', { count: r.callOffNumbers.length })}
                   </span>
+                </TableCell>
+                <TableCell className="align-top">
+                  {r.daNotCalledOff === null ? (
+                    <span className="text-text-tertiary" data-testid={`fsr-da-uncalled-${r.key}`}>
+                      {t('fsr.none')}
+                    </span>
+                  ) : (
+                    <Qty value={r.daNotCalledOff} uom={r.uom} testId={`fsr-da-uncalled-${r.key}`} />
+                  )}
                 </TableCell>
                 <TableCell className="align-top">
                   <Qty value={r.asnRequested} uom={r.uom} testId={`fsr-asn-${r.key}`} />
@@ -293,6 +321,31 @@ const FixedStockReconcile = ({ persona }) => {
                     </span>
                   )}
                   {holdLink(r)}
+                </TableCell>
+                <TableCell className="align-top">
+                  <Qty value={r.inGraceQty} uom={r.uom} testId={`fsr-ingrace-${r.key}`} />
+                  {r.inGraceUntil !== null && (
+                    <span className={note} data-testid={`fsr-ingrace-date-${r.key}`}>
+                      {t('fsr.inGrace.until', { date: formatDate(r.inGraceUntil) })}
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell className="align-top">
+                  <Qty value={r.onHoldQty} uom={r.uom} testId={`fsr-onhold-${r.key}`} />
+                  {r.onHoldSince !== null && (
+                    <span className={note} data-testid={`fsr-onhold-date-${r.key}`}>
+                      {t('fsr.onHold.since', { date: formatDate(r.onHoldSince) })}
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell className="align-top">
+                  {r.totalOspo === null ? (
+                    <span className="text-text-tertiary" data-testid={`fsr-total-ospo-${r.key}`}>
+                      {t('fsr.none')}
+                    </span>
+                  ) : (
+                    <Qty value={r.totalOspo} uom={r.uom} testId={`fsr-total-ospo-${r.key}`} />
+                  )}
                 </TableCell>
                 <TableCell className="align-top">{maxCell(r)}</TableCell>
               </TableRow>
@@ -321,6 +374,7 @@ const FixedStockReconcile = ({ persona }) => {
         <p>{t('fsr.rules.daily')}</p>
         <p>{t('fsr.rules.figures')}</p>
         <p>{t('fsr.rules.remainders')}</p>
+        <p>{t('fsr.rules.hold')}</p>
       </section>
 
       {isPti ? (

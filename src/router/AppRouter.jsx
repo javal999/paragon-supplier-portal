@@ -30,6 +30,7 @@ import BuyerCapacity from '@pages-v2/BuyerCapacity';
 import BuyerAlerts from '@pages-v2/BuyerAlerts';
 import BuyerSupplierAccess from '@pages-v2/BuyerSupplierAccess';
 import BuyerShipments from '@pages-v2/BuyerShipments';
+import BuyerInbound from '@pages-v2/BuyerInbound';
 import BuyerGoodsReceipt from '@pages-v2/BuyerGoodsReceipt';
 import BuyerRequisitions from '@pages-v2/BuyerRequisitions';
 import BuyerSupplierApplications from '@pages-v2/BuyerSupplierApplications';
@@ -209,6 +210,8 @@ const AppRouter = () => {
             <Route path="/buyer/alerts" element={<BuyerAlerts />} />
             <Route path="/buyer/supplier-access" element={<BuyerSupplierAccess />} />
             <Route path="/buyer/shipments" element={<BuyerShipments />} />
+            {/* AIB-2 (BL-350) — the Expeditor's inbound review and acknowledgment. */}
+            <Route path="/buyer/inbound" element={<BuyerInbound />} />
             <Route path="/buyer/goods-receipt" element={<BuyerGoodsReceipt />} />
             <Route path="/buyer/purchase-requisition" element={<BuyerRequisitions />} />
             <Route path="/buyer/supplier-applications" element={<BuyerSupplierApplications />} />

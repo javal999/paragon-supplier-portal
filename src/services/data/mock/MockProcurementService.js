@@ -1,4 +1,7 @@
 import { callOffStore } from './stores/callOffStore';
+// AIB-3 (BL-351) — the missing-ASN chase: derived at read, closures from the ledger.
+import { callOffChaseRows } from '../../transitions/callOffChase';
+import { callOffChaseStore } from './stores/callOffChaseStore';
 /** @import { CallOff } from '../types' */
 /** @import { BlanketPoRunOut } from '../../transitions/blanketPoRules' */
 /** @import { NpdReview } from '../../transitions/osipRopRules' */
@@ -44,6 +47,8 @@ import {
   forecastSupplierName
 } from './forecastReadModel';
 import { allFeedstockRows } from './feedstockReadModel';
+import { allPoOnHold, allPoOnHoldFigures } from './poOnHoldReadModel';
+import { withHoldColumns } from '../../transitions/feedstockReconcile';
 import { canSeePtiStock, maskForSupplier } from '../../transitions/inventoryRules';
 import { PTI_ONLY_RULES } from '../../transitions/inventoryAlertRules';
 import { mockShipments } from '@data/mockShipments';
@@ -75,6 +80,7 @@ import {
 import { quotationStore } from './stores/quotationStore';
 import { asnStore } from './stores/asnStore';
 import { receiptDiscrepancyStore } from './stores/receiptDiscrepancyStore';
+import { inboundAcknowledgmentStore } from './stores/inboundAcknowledgmentStore';
 import { goodsReceiptStore } from './stores/goodsReceiptStore';
 import { invoiceStore } from './stores/invoiceStore';
 import { toBuyerInvoice, toSupplierInvoice } from '../invoiceProjection';
@@ -173,7 +179,6 @@ import { supplierAskStore } from './stores/supplierAskStore';
 // INV-D8 — PTI's capacity gap decisions.
 import { capacityDecisionStore } from './stores/capacityDecisionStore';
 import { runDuePoOnHoldExecutions } from './MockCommandService';
-import { allPoOnHold } from './poOnHoldReadModel';
 import { withOwnQualificationWarnings } from '../../sourcing/sourcingType';
 
 /** REQ-E14-10 — the backtest's heavy half per engine dataset, keyed by hub date and the values it reads. */
@@ -784,7 +789,17 @@ export class MockProcurementService {
     // keeps its contract name (C1-methods) since FS now reads "feedstock". The
     // planner reads every supplier; a supplier reads only its own rows, scoped
     // HERE so another supplier's figures never reach the page.
-    return { items: applySupplierScope(scope, allFeedstockRows()) };
+    //
+    // PSC-6 BR-03 / BR-04 (BL-347) — each row also carries its pair's DA picture
+    // and the PO On Hold quantity split into In grace / PO On Hold, joined from
+    // the SAME PO On Hold read model the panel reads: one clock, one quantity.
+    // A pair with no PO On Hold figures keeps the DA columns empty.
+    const hold = new Map(allPoOnHoldFigures().map((f) => [f.key, f]));
+    return {
+      items: applySupplierScope(scope, allFeedstockRows()).map((r) =>
+        withHoldColumns(r, hold.get(r.key))
+      )
+    };
   }
 
   /**
@@ -1512,10 +1527,17 @@ export class MockProcurementService {
     if (filter?.status) rows = rows.filter((a) => matchesList(a.status, filter.status));
     // Material C4 — each line names its material's MRP controller (MR-5 BR-03).
     return {
-      items: rows.map((a) => ({
-        ...a,
-        lineItems: a.lineItems.map((li) => withMrpController(li, li.materialCode, scope))
-      }))
+      items: rows.map((a) => {
+        // AIB-2 BR-02 (BL-350) — the Expeditor's acknowledgment is JOINED on
+        // read, exactly as the supplier's GR answer is joined onto its receipt:
+        // the fact lives in its own store and is never stored on the ASN.
+        const ack = inboundAcknowledgmentStore.get(a.asnNumber);
+        return {
+          ...a,
+          ...(ack ? { inboundAcknowledgment: ack } : {}),
+          lineItems: a.lineItems.map((li) => withMrpController(li, li.materialCode, scope))
+        };
+      })
     };
   }
 
@@ -1539,6 +1561,32 @@ export class MockProcurementService {
     return {
       items: visible.map((c) => withLeadTime(withMrpController(c, c.materialCode, scope)))
     };
+  }
+
+  /**
+   * AIB-3 (BL-351) — the missing-ASN chase. Derived at read on the hub clock:
+   * a call-off the planner sent, one working day past sending, with no ASN
+   * covering what was agreed, and not closed. The planner reads every chase;
+   * a supplier reads only its own rows (scoped here, as every per-supplier read is).
+   * @param {QueryScope} scope
+   * @returns {Promise<Page<import('../../transitions/callOffChase').CallOffChaseRow>>}
+   */
+  async getCallOffChase(scope) {
+    const rows = callOffChaseRows(
+      callOffStore.all(),
+      asnStore.all(),
+      goodsReceiptStore.all(),
+      callOffChaseStore.all(),
+      sdcClock.now()
+    );
+    // The closure is PTI's record — who closed the chase and why — so a supplier
+    // reads its chases without it, the narrowing `getCallOffs` applies to
+    // `trigger`. The row's state still says the chase is closed.
+    const visible =
+      scope.personaType === 'supplier'
+        ? rows.map(({ closed: _ptiOnly, ...r }) => ({ ...r, closed: null }))
+        : [...rows];
+    return { items: applySupplierScope(scope, visible) };
   }
 
   /**

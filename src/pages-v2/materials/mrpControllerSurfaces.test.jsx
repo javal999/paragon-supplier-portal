@@ -52,22 +52,26 @@ describe('AC-01 — every surface shows the controller, with the SAP liveness pi
     expect(pics.some((p) => p.textContent === `P12 · ${PACKAGING}`)).toBe(true);
   });
 
-  it('the inventory detail panel names the controller', async () => {
+  it('the supplier Stock table names the controller through its filter (PSC-2 BR-05 drops the column)', async () => {
     renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
-    const open = (await screen.findAllByTestId(/^incoming-sup-007-/))[0];
-    fireEvent.click(open);
-    const panel = await screen.findByTestId('incoming-panel-pic');
-    expect(panel.textContent).toContain(PACKAGING);
-    expect(panel.textContent).not.toContain('P12');
+    await screen.findByTestId('sup-stock-row-PK-PETB-8801');
+    // Owner ruling 2026-11-18 (PSC-2 BR-05): the PIC column leaves this table;
+    // the MRP-controller FILTER stays (BR-08), and it still names the planner.
+    const filter = await screen.findByTestId('pic-filter-select');
+    expect(filter.textContent).toContain(PACKAGING);
+    expect(screen.queryByText('P12')).toBeNull();
   });
 });
 
 describe('AC-03 — a supplier sees the name, never the code', () => {
-  it('supplier inventory', async () => {
+  it('supplier inventory — no PIC cell on the Stock table, and no code anywhere', async () => {
     renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
-    const cell = await screen.findByTestId('sup-stock-pic-PK-PETB-8801');
-    expect(cell.textContent).toBe(PACKAGING);
+    await screen.findByTestId('sup-stock-row-PK-PETB-8801');
+    // PSC-2 BR-05 — the column is removed from this table only.
+    expect(screen.queryByTestId('sup-stock-pic-PK-PETB-8801')).toBeNull();
     expect(screen.queryByText('P12')).toBeNull();
+    // The name is still how a supplier filters this table.
+    expect(screen.getByTestId('pic-filter-select').textContent).toContain(PACKAGING);
   });
 
   it('supplier call-offs', async () => {
