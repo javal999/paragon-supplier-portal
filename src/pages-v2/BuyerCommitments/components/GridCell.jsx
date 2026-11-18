@@ -1,7 +1,8 @@
 /** @import React from 'react' */
 import { useTranslation } from 'react-i18next';
 import Data from '@components/ui-v2/Data';
-import { commitmentGap, isAcknowledgeOnly } from '@services/transitions/forecastRules';
+import TermTip from '@components/forecast/TermTip';
+import { commitmentGap, isAcknowledgeOnly, ltpSohGap } from '@services/transitions/forecastRules';
 import { CommitmentDeadline, pctText, qtyText } from '../../forecasts/forecastDisplay';
 /** @import { ForecastCommitmentLine } from '@services/data/types' */
 
@@ -10,10 +11,15 @@ import { CommitmentDeadline, pctText, qtyText } from '../../forecasts/forecastDi
  * commitment over forecast, tinted green / amber / red by the gap colour
  * (CR-22) once there is a commitment, the zone and gap text, and the time left
  * or how late (CR-26 · BL-48). A period with no line renders a dash.
- * @type {React.FC<{ line: ForecastCommitmentLine | undefined; nowIso: string }>}
+ *
+ * PEX-3 BR-02 (BL-284) — the forecast figure carries the week's hover: the LTP
+ * (planned use), PTI stock on hand and the gap between them (`ltpSohGap`, the
+ * heads-up note's formula). PTI reads every material, so no stock grant gates
+ * this side (Q-W3, PEX-D24).
+ * @type {React.FC<{ line: ForecastCommitmentLine | undefined; label: string; nowIso: string }>}
  */
-const GridCell = ({ line: l, nowIso }) => {
-  const { t } = useTranslation();
+const GridCell = ({ line: l, label, nowIso }) => {
+  const { t, i18n } = useTranslation();
   if (!l) return <td className="px-3 py-2 text-text-tertiary">—</td>;
   const committed = l.committedQty !== null && l.state !== 'awaiting' && !isAcknowledgeOnly(l.zone);
   const gap = committed
@@ -30,6 +36,20 @@ const GridCell = ({ line: l, nowIso }) => {
         ? 'bg-warning-soft'
         : 'bg-danger-soft'
     : '';
+  // PEX-3 BR-02 (BL-284) — the LTP is the forecast quantity; the stock term may
+  // be absent for a material with no PTI stock record, and then no tip shows.
+  const ltp = typeof l.ltpQty === 'number' ? l.ltpQty : l.forecastQty;
+  const stockGap = ltpSohGap(ltp, l.ptiSoh);
+  const tipName = t('fc.pti.cellHoverName', { period: label });
+  const tipVars = {
+    period: label,
+    uom: l.uom,
+    ltp: qtyText(ltp),
+    soh: qtyText(l.ptiSoh ?? 0),
+    gap: qtyText(stockGap ?? 0)
+  };
+  const en = i18n.getFixedT('en');
+  const id = i18n.getFixedT('id');
   return (
     <td
       className={`px-3 py-2 align-top whitespace-nowrap ${tint}`}
@@ -43,7 +63,21 @@ const GridCell = ({ line: l, nowIso }) => {
             : '—'}
         </Data>
         <span className="text-text-tertiary"> / </span>
-        <Data>{qtyText(l.forecastQty)}</Data>
+        {stockGap === null ? (
+          <Data>{qtyText(l.forecastQty)}</Data>
+        ) : (
+          <TermTip
+            entry={{
+              label: { en: tipName, id: tipName },
+              en: en('fc.pti.cellHover', tipVars),
+              id: id('fc.pti.cellHover', tipVars)
+            }}
+            name={tipName}
+            slugId={`demand-${l.supplierId}-${l.materialCode}-${l.periodBucket}`}
+          >
+            <Data>{qtyText(l.forecastQty)}</Data>
+          </TermTip>
+        )}
       </div>
       <div className="text-xs text-text-secondary">
         {t(`fc.zone.${l.zone}`)}

@@ -927,6 +927,9 @@ export class DataError extends Error {
  * `moves`:  CAP-8 BR-05 — the planner's moves of this line's demand to other suppliers, one entry per allocation, oldest first.
  * `otherQualifiedSuppliers`:  REQ-E06-03 BR-05 — the other suppliers qualified for the material (where demand can move).
  * `leadTimeDays`:  PEX-10 (BL-273) — the pair's lead time in days (DRC-6, `leadTimeBreakdown(...).totalDays`); null with no lead time on record. Optional for hand-built lines.
+ * `ltpQty`:  PEX-3 BR-02 (BL-284) — the period's LTP (planned use) for this supplier line: the forecast quantity it commits against, the capacity reads' one demand figure. The heads-up note's LTP term.
+ * `ptiSoh`:  PEX-3 BR-02 (BL-284) — the supplier's share of PTI stock on hand for the material (SAP, all plants, BL-199; share CAP-D11), whole units; null with no PTI stock record or, for a supplier, when that material is not covered by its granted PTI-stock access. The note's SOH term.
+ * `ptiStockShared`:  PEX-3 (BL-284) — whether PTI stock for this material is shared with this line's supplier: true for PTI, and for a supplier only on a granted material (`canSeePtiStock`, REQ-E08-03).
  *
  * @typedef {{
  *   readonly key: string;
@@ -945,6 +948,9 @@ export class DataError extends Error {
  *   readonly periodEnd: string;
  *   readonly zone: ForecastZone;
  *   readonly forecastQty: number;
+ *   readonly ltpQty: number;
+ *   readonly ptiSoh: number | null;
+ *   readonly ptiStockShared: boolean;
  *   readonly previousQty: number | null;
  *   readonly publishedAt: string;
  *   readonly dueAt: string;

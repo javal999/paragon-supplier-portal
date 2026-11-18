@@ -111,6 +111,14 @@ const periodDays = (p) =>
 
 /**
  * Base demand for a material in a period: daily demand × days.
+ *
+ * PEX-3 BR-02 (BL-284) — THIS IS THE MATERIAL'S LTP (planned use) for the
+ * period. The line's LTP is its share of it (`allocation.materialPeriodTotal`
+ * records the total), and the SOH term of the heads-up note's gap is PTI's
+ * stock on hand for the material, held once per material in `PTI_STOCK`
+ * (`fixtures/inventoryHub.js`, the hub's SAP records) and read by
+ * `forecastReadModel.allCommitmentLines`. Neither figure is stored here: the
+ * read model derives the per-line LTP and SOH share.
  * @param {string} materialCode
  * @param {ForecastPeriod} period
  * @returns {number}
