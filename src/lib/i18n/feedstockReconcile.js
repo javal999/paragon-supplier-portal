@@ -44,6 +44,14 @@ export const feedstockReconcileEn = {
   'fsr.max.saved': 'Max stock for {{material}} set to {{qty}} {{uom}}',
   'fsr.max.cleared': 'Max stock for {{material}} cleared',
   'fsr.max.refused': 'The max stock was not saved: {{reason}}',
+  'fsr.max.history.title': 'Changes on record',
+  'fsr.max.history.empty': 'No changes recorded.',
+  'fsr.max.history.before': 'Before:',
+  'fsr.max.history.after': 'After:',
+  'fsr.max.history.none': 'none',
+  'fsr.max.history.cleared': 'cleared',
+  'fsr.max.history.by': 'By {{by}}',
+  'fsr.max.history.unattributed': 'Not attributed (no named person in session)',
 
   'fsr.rules.title': 'How the reconcile works',
   'fsr.rules.daily':
@@ -91,6 +99,14 @@ export const feedstockReconcileId = {
   'fsr.max.saved': 'Stok maksimum {{material}} ditetapkan {{qty}} {{uom}}',
   'fsr.max.cleared': 'Stok maksimum {{material}} dihapus',
   'fsr.max.refused': 'Stok maksimum tidak disimpan: {{reason}}',
+  'fsr.max.history.title': 'Riwayat perubahan',
+  'fsr.max.history.empty': 'Belum ada perubahan yang tercatat.',
+  'fsr.max.history.before': 'Sebelum:',
+  'fsr.max.history.after': 'Sesudah:',
+  'fsr.max.history.none': 'belum ada',
+  'fsr.max.history.cleared': 'dikosongkan',
+  'fsr.max.history.by': 'Oleh {{by}}',
+  'fsr.max.history.unattributed': 'Tanpa nama (tidak ada orang bernama dalam sesi)',
 
   'fsr.rules.title': 'Cara kerja rekonsiliasi',
   'fsr.rules.daily':
