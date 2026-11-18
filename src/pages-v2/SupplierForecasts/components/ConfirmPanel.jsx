@@ -107,6 +107,9 @@ const ConfirmPanel = ({
   // a number that exists, so an unreadable entry never accuses the supplier of
   // falling short — it says it cannot read them.
   const isShort = panelLine !== null && confirmQty.ok && confirmQty.value < panelLine.forecastQty;
+  // BL-326 — the refusal element exists only while it is shown, so the field
+  // describes it exactly then (alongside the permanent hint).
+  const qtyRefused = form.confirmedQty.trim() !== '' && !confirmQty.ok;
 
   const submitConfirmation = async () => {
     if (!panelLine) return;
@@ -262,14 +265,17 @@ const ConfirmPanel = ({
                 type="text"
                 inputMode="decimal"
                 placeholder="0"
-                aria-invalid={form.confirmedQty.trim() !== '' && !confirmQty.ok}
-                aria-describedby="sdcsup-qty-hint"
+                aria-invalid={qtyRefused}
+                aria-describedby={
+                  qtyRefused ? 'sdcsup-qty-refusal sdcsup-qty-hint' : 'sdcsup-qty-hint'
+                }
                 value={form.confirmedQty}
                 onChange={(e) => setForm({ ...form, confirmedQty: e.target.value })}
                 className={inputClass}
               />
-              {form.confirmedQty.trim() !== '' && !confirmQty.ok && (
+              {qtyRefused && (
                 <div
+                  id="sdcsup-qty-refusal"
                   role="alert"
                   data-testid="confirm-qty-refusal"
                   className="mt-1 text-[length:var(--fs-label-3)] text-danger"

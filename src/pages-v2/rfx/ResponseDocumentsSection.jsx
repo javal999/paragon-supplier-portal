@@ -6,6 +6,7 @@ import StatusPill from '@components/ui-v2/StatusPill';
 import Data from '@components/ui-v2/Data';
 import SessionAttachments from '@components/ui-v2/SessionAttachments';
 import { formatDate } from '@lib/format';
+import { isCalendarDate } from '@lib/workingCalendar';
 import {
   fileLimitRefusal,
   MAX_FILE_BYTES,
@@ -67,11 +68,15 @@ const inputClass =
 /** @type {CertificateFields} */
 const EMPTY_CERT = { number: '', issuer: '', expiresOn: '' };
 
+/** The three fields a Certificate slot carries, in display order. */
+/** @type {readonly (keyof CertificateFields)[]} */
+const CERT_FIELDS = ['number', 'issuer', 'expiresOn'];
+
 /**
  * A Certificate slot's number, issuer and expiry date (NR-1 BR-04).
- * @type {React.FC<{ value: CertificateFields; onChange?: (next: CertificateFields) => void; testId: string; describedBy?: string; }>}
+ * @type {React.FC<{ value: CertificateFields; onChange?: (next: CertificateFields) => void; testId: string; describedBy?: string; invalidFields?: readonly (keyof CertificateFields)[]; }>}
  */
-const CertificateInputs = ({ value, onChange, testId, describedBy }) => {
+const CertificateInputs = ({ value, onChange, testId, describedBy, invalidFields = [] }) => {
   const { t } = useTranslation();
   if (!onChange) {
     return (
@@ -99,25 +104,30 @@ const CertificateInputs = ({ value, onChange, testId, describedBy }) => {
    * @param {keyof CertificateFields} key
    * @param {'text' | 'date'} type
    */
-  const field = (key, type) => (
-    <label className="block">
-      <span className="block text-label text-text-tertiary uppercase mb-1">
-        {t(`rfx.docs.cert.${key}`)}
-        <span className="text-danger ml-1">*</span>
-      </span>
-      <input
-        type={type}
-        aria-label={t(`rfx.docs.cert.${key}`)}
-        data-testid={`${testId}-cert-${key}`}
-        // BL-84 — the slot's refusal is announced with its certificate fields.
-        aria-invalid={describedBy ? true : undefined}
-        aria-describedby={describedBy}
-        value={value[key]}
-        onChange={(e) => onChange({ ...value, [key]: e.target.value })}
-        className={inputClass}
-      />
-    </label>
-  );
+  const field = (key, type) => {
+    // BL-326 — a missing-fields refusal marks the fields that ARE missing; a
+    // file refusal never marks any of them.
+    const invalid = invalidFields.includes(key);
+    return (
+      <label className="block">
+        <span className="block text-label text-text-tertiary uppercase mb-1">
+          {t(`rfx.docs.cert.${key}`)}
+          <span className="text-danger ml-1">*</span>
+        </span>
+        <input
+          type={type}
+          aria-label={t(`rfx.docs.cert.${key}`)}
+          data-testid={`${testId}-cert-${key}`}
+          // BL-84 — the slot's refusal is announced with the fields it names.
+          aria-invalid={invalid ? true : undefined}
+          aria-describedby={invalid ? describedBy : undefined}
+          value={value[key]}
+          onChange={(e) => onChange({ ...value, [key]: e.target.value })}
+          className={inputClass}
+        />
+      </label>
+    );
+  };
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2" data-testid={`${testId}-cert`}>
       {field('number', 'text')}
@@ -142,6 +152,21 @@ const DocumentSlot = ({ request, documents, cert, onFiles, onCert, refuse, testI
         0
       )
     : null;
+  // BL-326 — the refusal is ABOUT one control: a file refusal marks the file
+  // control, a missing-certificate-fields refusal marks the blank fields. The
+  // same predicates `rfxDocumentRules` uses, read once here.
+  const code = refusal === null ? null : refusal.split(':', 1)[0];
+  const fileRefused =
+    code === 'DOCUMENT_REQUIRED_MISSING' ||
+    code === 'DOCUMENT_REQUEST_UNKNOWN' ||
+    (code?.startsWith('FILE_') ?? false);
+  const certMissing = code === 'CERTIFICATE_FIELDS_MISSING';
+  /** @type {(keyof CertificateFields)[]} */
+  const blankCertFields = certMissing
+    ? CERT_FIELDS.filter((k) =>
+        k === 'expiresOn' ? !isCalendarDate(cert.expiresOn) : cert[k].trim() === ''
+      )
+    : [];
   return (
     <div
       className={`border rounded-md px-3 py-3 space-y-2 ${refusal ? 'border-danger' : 'border-border-subtle'}`}
@@ -160,14 +185,15 @@ const DocumentSlot = ({ request, documents, cert, onFiles, onCert, refuse, testI
         refuse={refuse}
         label={request.name}
         testId={`${testId}-files`}
-        describedBy={refusal ? `${testId}-refusal` : undefined}
+        describedBy={fileRefused ? `${testId}-refusal` : undefined}
       />
       {isCertificate && (
         <CertificateInputs
           value={cert}
           onChange={onCert}
           testId={testId}
-          describedBy={refusal ? `${testId}-refusal` : undefined}
+          describedBy={certMissing ? `${testId}-refusal` : undefined}
+          invalidFields={blankCertFields}
         />
       )}
       {!!refusal && (
