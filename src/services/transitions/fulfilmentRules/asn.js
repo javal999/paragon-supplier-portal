@@ -9,7 +9,7 @@ import { POStatus } from '../../data/types';
 /** @import { ASN, AsnLineItem, AsnStatus, PurchaseOrder, POLineItem } from '../../data/types' */
 /** @import { GoodsReceipt } from '@data/mockGoodsReceipts' */
 import { shelfLifeRuleFor } from '../fulfilmentConfig';
-import { reopenedQtyByMaterial } from './goodsReceipt';
+import { compareReceipt } from './goodsReceipt';
 import { isCalendarDate, isNonBlank } from './shared';
 import { shelfLifeMet } from './shelfLife';
 
@@ -57,9 +57,21 @@ export const committedQty = (li) => (li.confirmedQty > 0 ? li.confirmedQty : li.
  *
  * `receipts` is optional so a caller with no receipt read keeps BR-02's plain
  * answer; every ASN-lane caller (the policy hooks and the wizard) passes the
- * store's rows, so the form and the verb stay one rule (AR-11). A receipt
- * against a CANCELLED ASN reopens nothing: that shipment's quantity was never
- * consumed, so there is nothing to put back without double-counting.
+ * store's rows, so the form and the verb stay one rule (AR-11).
+ *
+ * ⚠️ BL-325 — the reopened amount is computed ONCE PER ASN, not summed per
+ * receipt. Only an ASN this read counts in `shipped` (same PO, active, not
+ * `excludeAsn`) may reopen, only when it has a kept-open receipt line for the
+ * material (no receipt → nothing was received → nothing to put back), and it
+ * reopens
+ *   max(0, its shipped quantity for the material − Σ received on the kept-open
+ *          lines of its receipts for the material).
+ * A receipt against a CANCELLED ASN, an ASN of another PO, the excluded ASN, or
+ * an ASN not on record reopens nothing: that shipment's quantity was never
+ * subtracted from `shipped`, so there is nothing to put back without
+ * double-counting. (Before this fix two receipts against one ASN reopened the
+ * same debt twice, and an ASN-less receipt reopened `qtyExpected − received`
+ * on top of a quantity that was never consumed.)
  * @param {Pick<PurchaseOrder, 'poNumber'>} po
  * @param {Pick<POLineItem, 'materialCode' | 'quantity' | 'confirmedQty'>} line
  * @param {readonly ASN[]} asns
@@ -68,19 +80,37 @@ export const committedQty = (li) => (li.confirmedQty > 0 ? li.confirmedQty : li.
  * @returns {number}
  */
 export function openQtyForLine(po, line, asns, excludeAsn, receipts = []) {
-  const shipped = asns
-    .filter((a) => a.poReference === po.poNumber && isActiveAsn(a) && a.asnNumber !== excludeAsn)
-    .flatMap((a) => a.lineItems)
-    .filter((l) => l.materialCode === line.materialCode)
-    .reduce((sum, l) => sum + (Number.isFinite(l.shippedQty) ? l.shippedQty : 0), 0);
-  const reopened = receipts
-    .filter((gr) => gr.poNumber === po.poNumber && gr.asnNumber !== excludeAsn)
-    .reduce((sum, gr) => {
-      const asn = asns.find((a) => a.asnNumber === gr.asnNumber);
-      if (asn && !isActiveAsn(asn)) return sum;
-      return sum + (reopenedQtyByMaterial(gr, asn ?? null)[line.materialCode] ?? 0);
-    }, 0);
-  return Math.max(0, committedQty(line) - shipped + reopened);
+  const counted = asns.filter(
+    (a) => a.poReference === po.poNumber && isActiveAsn(a) && a.asnNumber !== excludeAsn
+  );
+  /**
+   * One ASN's shipped quantity for this material.
+   * @param {Pick<ASN, 'lineItems'>} asn
+   * @returns {number}
+   */
+  const shippedOf = (asn) =>
+    asn.lineItems
+      .filter((l) => l.materialCode === line.materialCode)
+      .reduce((sum, l) => sum + (Number.isFinite(l.shippedQty) ? l.shippedQty : 0), 0);
+  const shipped = counted.reduce((sum, asn) => sum + shippedOf(asn), 0);
+  // BL-325 — per ASN, once: see the arithmetic in this function's doc. The
+  // existence check is what keeps this from reopening every shipment that has
+  // no receipt at all — with none, `Σ received` is 0 and there is nothing to
+  // reopen; only an ASN with a KEPT-OPEN line for this material puts quantity
+  // back.
+  const reopened = counted.reduce((sum, asn) => {
+    const keptOpenLines = receipts
+      .filter((gr) => gr.poNumber === po.poNumber && gr.asnNumber === asn.asnNumber)
+      .flatMap((gr) => compareReceipt(gr, asn))
+      .filter((l) => l.materialCode === line.materialCode && l.qtyOutcome === 'shortOver');
+    if (keptOpenLines.length === 0) return sum;
+    const receivedOnKeptOpenLines = keptOpenLines.reduce((received, l) => received + l.received, 0);
+    return sum + Math.max(0, shippedOf(asn) - receivedOnKeptOpenLines);
+  }, 0);
+  const open = committedQty(line) - shipped + reopened;
+  // BL-325 — never hand a NaN downstream: `q > NaN` is false, which silently
+  // disabled the over-ship refusal instead of refusing the line.
+  return Number.isFinite(open) ? Math.max(0, open) : 0;
 }
 
 /**

@@ -1,10 +1,12 @@
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { QueryClient } from '@tanstack/react-query';
 import { beforeEach } from 'vitest';
 import { renderWithProviders, SUPPLIER } from '@test/test-utils';
 import { mockDataService } from '@services/data/mock/mockDataService';
 import { withChaos } from '@services/data/mock/withChaos';
 import { purchaseOrderStore } from '@services/data/mock/stores/purchaseOrderStore';
 import { asnStore } from '@services/data/mock/stores/asnStore';
+import { goodsReceiptStore } from '@services/data/mock/stores/goodsReceiptStore';
 import { commandAuditSink } from '@services/data/mock/MockCommandService';
 /** @import { IDataService, QueryScope } from '@services/data/types' */
 import i18n from '@lib/i18n';
@@ -14,6 +16,7 @@ import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
 beforeEach(() => {
   purchaseOrderStore.reset();
   asnStore.reset();
+  goodsReceiptStore.reset();
   commandAuditSink.clear();
 });
 
@@ -282,5 +285,135 @@ describe('a flagged ASN shows the supplier a wait, not a false commit', () => {
         'supplierShipments.action.resolve'
       );
     }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BL-325 — the deep link seeds the wizard from the receipts read too.
+//
+// `?tab=create&po=<id>` seeded the form and latched `startedFor` once the
+// call-offs read settled. If the receipts read had not resolved by then, the
+// seed used an EMPTY receipt list — so the kept-open quantity was missing — and
+// the latch prevented any correction. The receipts read is one of the reads
+// `poSelection` derives from, so the seed must wait for it.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('deep link — the seed waits for every read it derives from', () => {
+  /** @type {QueryScope} */
+  const supScope = {
+    personaType: 'supplier',
+    supplierId: 'sup-007',
+    businessRoles: PERSONA_SYSTEM_ROLES.supplier
+  };
+
+  it('does not latch a seed while the receipts read is still pending', async () => {
+    // A 200,000 ASN on PO-2025-00107 and a kept-open receipt for 190,000:
+    // 10,000 is still owed, so that is what the addressed wizard must propose.
+    const created = await mockDataService.commands.dispatch(supScope, {
+      transitionId: 't_asn_create',
+      entity: 'advanceShipNotice',
+      payload: {
+        poReference: 'PO-2025-00107',
+        lines: [{ materialCode: 'PK-PETB-8801', shippedQty: 200_000 }]
+      }
+    });
+    expect(created.status).toBe('done');
+    goodsReceiptStore.add({
+      id: 'gr-bl325',
+      grNumber: 'GR-2026-925',
+      asnId: 'shp-bl325',
+      asnNumber: /** @type {string} */ (created.entityId),
+      poNumber: 'PO-2025-00107',
+      supplierId: 'sup-007',
+      supplierName: 'PT Sample Packaging Indonesia',
+      receivedDate: '2026-11-17',
+      receivedBy: 'Warehouse Supervisor',
+      status: 'Approved',
+      disposition: 'Accept',
+      inspectionResults: [
+        {
+          materialCode: 'PK-PETB-8801',
+          description: 'PET Bottle 200ml Frosted',
+          qtyExpected: 200_000,
+          qtyReceived: 190_000,
+          qtyAccepted: 190_000,
+          qtyRejected: 0,
+          visualCheck: 'Pass',
+          packagingCheck: 'Pass'
+        }
+      ]
+    });
+
+    // Defer the receipts read. The PO read is chained behind the ASN read, so
+    // the effect's first eligible run is exactly "every read but receipts has
+    // resolved" — the race the defect needs.
+    /** @type {() => void} */
+    let markAsnsRead = () => {};
+    const asnsRead = new Promise((resolve) => {
+      markAsnsRead = () => resolve(undefined);
+    });
+    /** @type {(value: Awaited<ReturnType<typeof mockDataService.procurement.getGoodsReceipts>>) => void} */
+    let releaseReceipts = () => {};
+    /** @type {Promise<Awaited<ReturnType<typeof mockDataService.procurement.getGoodsReceipts>>>} */
+    const receiptsRead = new Promise((resolve) => {
+      releaseReceipts = resolve;
+    });
+    /**
+     * @param {QueryScope} scope
+     * @param {Parameters<typeof mockDataService.procurement.getASNs>[1]} [filter]
+     */
+    const readAsns = async (scope, filter) => {
+      const res = await mockDataService.procurement.getASNs(scope, filter);
+      markAsnsRead();
+      return res;
+    };
+    /**
+     * @param {QueryScope} scope
+     * @param {Parameters<typeof mockDataService.procurement.getPurchaseOrders>[1]} [filter]
+     */
+    const readPurchaseOrders = async (scope, filter) => {
+      await asnsRead;
+      return mockDataService.procurement.getPurchaseOrders(scope, filter);
+    };
+    /** @type {IDataService} */
+    const service = {
+      ...mockDataService,
+      procurement: new Proxy(mockDataService.procurement, {
+        get(target, prop, receiver) {
+          if (prop === 'getASNs') return readAsns;
+          if (prop === 'getPurchaseOrders') return readPurchaseOrders;
+          if (prop === 'getGoodsReceipts') return () => receiptsRead;
+          const value = Reflect.get(target, prop, receiver);
+          return typeof value === 'function' ? value.bind(target) : value;
+        }
+      })
+    };
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    renderWithProviders(<SupplierShipments />, {
+      identity: SUPPLIER,
+      route: '/supplier/shipments?tab=create&po=po-007',
+      service,
+      queryClient
+    });
+
+    // Every OTHER read settles; the page still shows Loading on the receipts.
+    await waitFor(() => {
+      const stillPending = queryClient
+        .getQueryCache()
+        .getAll()
+        .filter((q) => !q.queryKey.includes('goodsReceipts'))
+        .filter((q) => q.state.status === 'pending');
+      expect(stillPending).toEqual([]);
+    });
+    expect(screen.getByText('Loading…')).toBeInTheDocument();
+
+    // Resolve the receipts read. The seed must not already be latched without it.
+    releaseReceipts(await mockDataService.procurement.getGoodsReceipts(supScope));
+
+    expect((await screen.findAllByText('PO-2025-00107')).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    // The seeded line carries the reopened 10,000 — not the empty seed the
+    // pending receipts read produced.
+    expect(screen.getByLabelText('Shipped quantity for PK-PETB-8801')).toHaveValue('10000');
   });
 });
