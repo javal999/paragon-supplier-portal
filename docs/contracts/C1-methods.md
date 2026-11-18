@@ -199,7 +199,7 @@ system reference is minted only on `settle` (see C5, SAP boundary).
 
 ---
 
-## Axis 3 — the 63 wired CommandTargets
+## Axis 3 — the 64 wired CommandTargets
 
 A `CommandTarget` is the per-entity adapter the dispatcher reads/writes through. **64 exist**, the
 runtime export `WIRED_COMMAND_TARGETS` (`MockCommandService.js` `TARGETS`):
@@ -229,9 +229,9 @@ transitions — scope is derived from the payload's **parent** (`creationOwner`,
 compare"** (§86). The dispatcher's supplier arm compares `owner !== scope.supplierId`
 unconditionally; a target that wants a supplier to reach a verb must NAME that supplier.
 
-### Wiring census (69 flows → 3 states)
+### Wiring census (70 flows → 3 states)
 
-- **63 behavior-wired** — have a `CommandTarget`, dispatch runs against in-memory stores. Named
+- **64 behavior-wired** — have a `CommandTarget`, dispatch runs against in-memory stores. Named
   above.
 - **2 rolled-up sub-flows** — authored, participate via terminal rollup (`grRollup.js` /
   `invoiceRollup.js`), **no standalone target**: `goodsReceiptLine`, `invoiceMatch`.
