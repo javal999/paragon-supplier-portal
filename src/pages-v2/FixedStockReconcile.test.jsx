@@ -4,8 +4,10 @@ import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
 import { BuyerFixedStockReconcile, SupplierFixedStockReconcile } from './FixedStockReconcile';
 import { feedstockReconcileEn, feedstockReconcileId } from '@lib/i18n/feedstockReconcile';
 import i18n from '@lib/i18n';
-import { formatNumber } from '@lib/format';
+import { formatDate, formatNumber } from '@lib/format';
 import { maxStockStore } from '@services/transitions/maxStock';
+import { poOnHoldStore } from '@services/data/mock/stores/poOnHoldStore';
+import { osipParamStore } from '@services/data/mock/stores/osipParamStore';
 import { headerNamed } from '@test/termText';
 
 /** @param {number} n */
@@ -23,6 +25,10 @@ const KUNASSIGNED = 'sup-020|PK-PETB-8801';
 
 beforeEach(() => {
   maxStockStore.reset();
+  // The PO On Hold decisions and first days are in-memory too: a test that
+  // suggests on a line must not leak into the next one (BL-347).
+  poOnHoldStore.reset();
+  osipParamStore.reset();
 });
 
 afterEach(() => {
@@ -81,6 +87,67 @@ describe('Feedstock reconcile — planner', () => {
     const link = await screen.findByTestId(`fsr-hold-${K8801}`);
     expect(link).toHaveTextContent(`PO On Hold: ${pcs(117_700)}`);
     expect(screen.getByTestId(`fsr-hold-status-${K8801}`)).toHaveTextContent('No suggestion yet');
+  });
+
+  it('PSC-6 BR-03 to BR-05 (BL-347): DA, DA not yet called off, In grace, PO On Hold and Total OSPO', async () => {
+    renderWithProviders(<BuyerFixedStockReconcile />, {
+      identity: BUYER,
+      route: '/buyer/fs-reconcile'
+    });
+    const row = await screen.findByTestId(`fsr-row-${K8801}`);
+    for (const label of [
+      'Demand anticipation (DA)',
+      'DA not yet called off',
+      'In grace',
+      'PO On Hold',
+      'Total OSPO'
+    ])
+      expect(
+        within(screen.getByTestId('fsr-table')).getByRole('columnheader', {
+          name: headerNamed(label)
+        }),
+        label
+      ).toBeInTheDocument();
+    // The hub day is 2026-08-31 and the quantity first appears today, so it is
+    // In grace until day 15: 14 CALENDAR days later (PSC-6 BR-06).
+    expect(screen.getByTestId(`fsr-ingrace-${K8801}`)).toHaveTextContent(pcs(117_700));
+    expect(screen.getByTestId(`fsr-ingrace-date-${K8801}`)).toHaveTextContent(
+      `until ${formatDate('2026-09-14')}`
+    );
+    expect(screen.getByTestId(`fsr-onhold-${K8801}`)).toHaveTextContent(pcs(0));
+    expect(screen.queryByTestId(`fsr-onhold-date-${K8801}`)).toBeNull();
+    // Total OSPO = min(OSPO, DA not yet called off) + PO On Hold, on the same
+    // figures the PO On Hold panel below reads.
+    /** @param {string} testId */
+    const num = (testId) =>
+      Number((screen.getByTestId(testId).textContent ?? '').replace(/[^\d]/g, ''));
+    const ospo = num(`poh-ospo-${K8801}`);
+    const daOff = num(`poh-da-${K8801}`);
+    const hold = num(`poh-qty-${K8801}`);
+    expect(screen.getByTestId(`fsr-da-uncalled-${K8801}`)).toHaveTextContent(pcs(daOff));
+    expect(screen.getByTestId(`fsr-total-ospo-${K8801}`)).toHaveTextContent(
+      pcs(Math.min(ospo, daOff) + hold)
+    );
+    expect(row).toHaveTextContent('PK-PETB-8801');
+  });
+
+  it('PSC-6 BR-07: a decision recorded during the grace keeps the quantity In grace, PO On Hold 0', async () => {
+    renderWithProviders(<BuyerFixedStockReconcile />, {
+      identity: BUYER,
+      route: '/buyer/fs-reconcile'
+    });
+    await screen.findByTestId(`fsr-hold-${K8801}`);
+    fireEvent.click(screen.getByTestId(`poh-suggest-send-${K8801}`));
+    await waitFor(() =>
+      expect(screen.getByTestId(`poh-status-${K8801}`)).toHaveAttribute(
+        'data-status',
+        'awaitingSupplier'
+      )
+    );
+    // The decision takes effect at the end of the grace, so the bucket does not move.
+    expect(screen.getByTestId(`fsr-ingrace-${K8801}`)).toHaveTextContent(pcs(117_700));
+    expect(screen.getByTestId(`fsr-onhold-${K8801}`)).toHaveTextContent(pcs(0));
+    expect(screen.queryByTestId(`fsr-onhold-date-${K8801}`)).toBeNull();
   });
 
   it('PEX-9 BR-02: the link shows the option and status once the planner has suggested', async () => {
@@ -168,6 +235,18 @@ describe('Feedstock reconcile — supplier', () => {
     expect(screen.queryByTestId(`fsr-liability-${K8801}`)).toBeNull();
     expect(screen.queryByTestId(`fsr-proposed-${K8801}`)).toBeNull();
     expect(screen.queryByTestId(`fsr-liability-${KUNASSIGNED}`)).toBeNull();
+  });
+
+  it('PSC-6 BR-03: the supplier sees In grace and PO On Hold on its own rows', async () => {
+    renderWithProviders(<SupplierFixedStockReconcile />, {
+      identity: SUPPLIER,
+      route: '/supplier/fs-reconcile'
+    });
+    await screen.findByTestId(`fsr-row-${K8801}`);
+    expect(screen.getByRole('columnheader', { name: headerNamed('In grace') })).toBeInTheDocument();
+    expect(screen.getByTestId(`fsr-ingrace-${K8801}`)).toHaveTextContent(pcs(117_700));
+    expect(screen.getByTestId(`fsr-onhold-${K8801}`)).toHaveTextContent(pcs(0));
+    expect(screen.queryByTestId(`fsr-onhold-date-${K8801}`)).toBeNull();
   });
 
   it('BR-05: reads in Indonesian', async () => {

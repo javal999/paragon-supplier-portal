@@ -7,6 +7,11 @@
 // with the max stock Procurement maintains (BR-03). Nothing computed here is
 // stored. The supplier scope is applied by the service, never here or on the
 // page (DRC-15a BR-04).
+//
+// PSC-6 BR-03 (BL-347) — the DA picture and the PO On Hold split are joined
+// ABOVE this model, in `MockProcurementService.getFixedStockReconcile`, from
+// `poOnHoldReadModel.allPoOnHoldFigures` (one clock, one quantity). The rows
+// read here carry those columns empty, so a caller cannot mistake them for 0.
 // ────────────────────────────────────────────────────────────────────────────
 
 /** @import { FsRow } from '../../transitions/feedstockReconcile' */
