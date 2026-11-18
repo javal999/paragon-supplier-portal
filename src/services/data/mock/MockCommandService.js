@@ -187,6 +187,8 @@ import { observeCallOffTriggers } from './callOffTriggerReadModel';
 import { ptiStockStore } from './stores/ptiStockStore';
 // BL-194 — the supplier's feedstock confirmation (its own module, DRC-8).
 import { feedstockConfirmationTarget } from './targets/feedstockConfirmation';
+// BL-336 — the one-time weekly DA confirmation (its own module, PSC-1).
+import { daConfirmationTarget } from './targets/daConfirmation';
 // INV-D9 — PTI's "Ask supplier" hub ask (its own module).
 import { supplierAskTarget } from './targets/supplierAsk';
 // INV-D8 — PTI's capacity gap decision (its own module).
@@ -6346,6 +6348,9 @@ const TARGETS = {
   // BL-194 / DRC-8 BR-a — a supplier's feedstock confirmation, append-only.
   // Ships in the same commit as its flow.
   feedstockConfirmation: feedstockConfirmationTarget,
+  // BL-336 / PSC-1 — the one-time weekly DA confirmation: append-only per
+  // supplier × week. Ships in the same commit as its flow.
+  daConfirmation: daConfirmationTarget,
   // INV-D9 — PTI's hub ask to a supplier, answered in the hub. Ships in the
   // same commit as its flow.
   supplierAsk: supplierAskTarget,

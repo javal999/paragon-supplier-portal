@@ -341,6 +341,8 @@ describe('BL-50 · the deadline population reads the hub calendar', () => {
     expect(readers).toEqual([
       'services/data/poResponseProjection.js',
       'services/transitions/callOffRules.js',
+      // PSC-1 (BL-336) — the Wednesday confirmation deadline reads the hub calendar.
+      'services/transitions/daConfirmationRules.js',
       'services/transitions/forecastRules.js',
       // PEX-7 — the PO On Hold grace period counts working days (owner, 2026-11-09).
       'services/transitions/poOnHold.js',

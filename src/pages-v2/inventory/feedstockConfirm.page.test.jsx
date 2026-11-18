@@ -116,7 +116,9 @@ describe('supplier · Current feedstock', () => {
 
   it('the stock figure on the row does not move after a confirmation (MoM 2B)', async () => {
     renderWithProviders(<SupplierInventory />, { identity: SUPPLIER });
-    const before = (await screen.findByTestId(`sup-stock-row-${CODE}`)).textContent;
+    // MoM 2B — the SOH figure is what must not move; the row now also carries the
+    // feedstock entry itself (PSC-2 BR-06), which does change.
+    const before = (await screen.findByTestId(`sup-stock-soh-${CODE}`)).textContent;
     // S-01 — feedstock is its own tab beside My stock.
     fireEvent.click(screen.getByRole('tab', { name: 'Feedstock to confirm' }));
     fireEvent.click(await screen.findByTestId(`feedstock-open-${CODE}`));
@@ -126,7 +128,7 @@ describe('supplier · Current feedstock', () => {
       expect(screen.getByTestId(`feedstock-status-${CODE}`).textContent).toBe('Confirmed')
     );
     fireEvent.click(screen.getByRole('tab', { name: 'My stock' }));
-    expect((await screen.findByTestId(`sup-stock-row-${CODE}`)).textContent).toBe(before);
+    expect((await screen.findByTestId(`sup-stock-soh-${CODE}`)).textContent).toBe(before);
   });
 });
 

@@ -856,20 +856,28 @@ export function templateFieldFor(header) {
 
 /**
  * The template as CSV text, one row per assigned material, prefilled with code and unit.
+ * PSC-2 BR-06 (BL-337) — `opts.feedstock: false` drops the two feedstock columns
+ * (K and L) for a raw material supplier; the header check is by name, so a file
+ * downloaded either way still uploads (MR-4 BR-02).
  * @param {readonly { readonly materialCode: string; readonly uom: string }[]} materials
  * @param {'en' | 'id'} language
+ * @param {{ readonly feedstock?: boolean }} [opts]
  * @returns {string}
  */
-export function stockTemplateCsv(materials, language) {
+export function stockTemplateCsv(materials, language, opts = {}) {
   /** @param {string} v */
   const quote = (v) => (/[",\n;]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
-  const header = STOCK_TEMPLATE_FIELDS.map((f) => quote(stockTemplateHeader(f, language))).join(
-    ','
-  );
+  const fields =
+    opts.feedstock === false
+      ? STOCK_TEMPLATE_FIELDS.filter(
+          (f) => !FEEDSTOCK_TEMPLATE_FIELDS.some((x) => x === /** @type {string} */ (f.field))
+        )
+      : STOCK_TEMPLATE_FIELDS;
+  const header = fields.map((f) => quote(stockTemplateHeader(f, language))).join(',');
   const rows = materials.map((m) =>
-    STOCK_TEMPLATE_FIELDS.map((f) =>
-      f.field === 'materialCode' ? m.materialCode : f.field === 'unit' ? m.uom : ''
-    ).join(',')
+    fields
+      .map((f) => (f.field === 'materialCode' ? m.materialCode : f.field === 'unit' ? m.uom : ''))
+      .join(',')
   );
   return [header, ...rows].join('\n') + '\n';
 }

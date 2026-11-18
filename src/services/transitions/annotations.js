@@ -358,6 +358,10 @@ export const TRANSITION_PURPOSE = Object.freeze({
   t_promotion_set: { purposeKey: 'processFlows.purpose.t_promotion_set' },
   t_whatifscenario_save: { purposeKey: 'processFlows.purpose.t_whatifscenario_save' },
   t_feedstock_confirm: { purposeKey: 'processFlows.purpose.t_feedstock_confirm' },
+  // PSC-1 (BL-336) — the one-time weekly confirmation on the supplier's DA page.
+  t_daconfirmation_confirm: {
+    purposeKey: 'processFlows.purpose.t_daconfirmation_confirm'
+  },
   // INV-D9 — "Ask supplier", the hub ask.
   t_supplierask_raise: { purposeKey: 'processFlows.purpose.t_supplierask_raise' },
   t_supplierask_answer: { purposeKey: 'processFlows.purpose.t_supplierask_answer' },
@@ -480,6 +484,7 @@ export const ENTITY_PURPOSE = Object.freeze({
   promotion: { purposeKey: 'processFlows.purpose.entity.promotion' },
   whatIfScenario: { purposeKey: 'processFlows.purpose.entity.whatIfScenario' },
   feedstockConfirmation: { purposeKey: 'processFlows.purpose.entity.feedstockConfirmation' },
+  daConfirmation: { purposeKey: 'processFlows.purpose.entity.daConfirmation' },
   supplierAsk: { purposeKey: 'processFlows.purpose.entity.supplierAsk' },
   capacityDecision: { purposeKey: 'processFlows.purpose.entity.capacityDecision' },
   poOnHoldDecision: { purposeKey: 'processFlows.purpose.entity.poOnHoldDecision' },

@@ -529,6 +529,10 @@ const LANE_BUNDLES = Object.freeze({
     // BL-194 / DRC-8 BR-a — confirming current feedstock with a date: the same
     // people who declare the stock, in the same weekly cycle [Default E2].
     'feedstock:confirm',
+    // PSC-1 (BL-336) — the one-time weekly DA confirmation: the same people who
+    // confirm the stock and the capacity, in the same Wednesday cycle. It
+    // pre-fills the stock page and writes no stock record of its own.
+    'da:confirm',
     // INV-D9 — answering PTI's ask about a material's stock, production date
     // or a capacity week: the people who declare the stock and confirm the
     // capacity it asks about.

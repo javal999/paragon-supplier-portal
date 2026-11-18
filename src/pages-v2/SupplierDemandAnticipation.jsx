@@ -12,12 +12,13 @@ import ErrorState from '@components/ui-v2/ErrorState';
 /** @import { WeekGridRow } from '@components/ui-v2/WeekGrid' */
 import { formatDate, formatNumber } from '@lib/format';
 import { isoWeek } from '@services/engine/dates';
-import { useSupplierDemandAnticipation } from '@services/query/hooks';
+import { useSupplierDemandAnticipation, useInventory } from '@services/query/hooks';
 /** @import { SupplierDaRow } from '@services/data/mock/demandAnticipationReadModel' */
 /** @import { SupplierDaWeek } from '@services/transitions/supplierDaView' */
 import { SUPPLIER_DA_VIEW_ENABLED } from '@services/transitions/supplierDaView';
 import { DA_PROVISIONAL_QUESTIONS } from '@services/transitions/demandAnticipationRules';
 import { inventoryNow } from './inventory/inventoryDisplay';
+import DaConfirmationPanel from './demandAnticipation/DaConfirmationPanel';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPLIER · DEMAND ANTICIPATION — BL-204 (DRC-1), under Planning.
@@ -93,6 +94,9 @@ const SupplierAnticipationGrid = ({ row, currentWeek }) => {
 const SupplierDemandAnticipation = () => {
   const { t } = useTranslation();
   const query = useSupplierDemandAnticipation(SUPPLIER_DA_VIEW_ENABLED);
+  // PSC-1 (BL-336) — SOH is ONE figure: the confirmation pre-fills the stock
+  // page, and what the page reads back is the stock record's own figure.
+  const inventory = useInventory();
   const nowIso = inventoryNow();
   const crumb = [t('hub.nav.section.planning'), t('hub.nav.sup.demandAnticipation')];
 
@@ -132,6 +136,13 @@ const SupplierDemandAnticipation = () => {
       <p className="text-xs text-text-tertiary mb-4" data-testid="supda-provisional">
         {t('ltpFg.provisional', { question: DA_PROVISIONAL_QUESTIONS.join(', ') })}
       </p>
+      {/* PSC-1 (BL-336) — the one-time weekly confirmation, above the figures. */}
+      <DaConfirmationPanel
+        rows={rows}
+        positions={inventory.data?.items ?? []}
+        supplierId={rows[0]?.supplierId ?? ''}
+        nowIso={nowIso}
+      />
       <div className="space-y-3">
         {rows.map((r) => (
           <section

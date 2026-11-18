@@ -85,6 +85,7 @@ export { promotionFlow } from './flows/promotion.flow';
 export { capacityMonthFlow } from './flows/capacityMonth.flow';
 export { whatIfScenarioFlow } from './flows/whatIfScenario.flow';
 export { feedstockConfirmationFlow } from './flows/feedstockConfirmation.flow';
+export { daConfirmationFlow } from './flows/daConfirmation.flow';
 export { supplierAskFlow } from './flows/supplierAsk.flow';
 export { capacityDecisionFlow } from './flows/capacityDecision.flow';
 export { poOnHoldDecisionFlow } from './flows/poOnHoldDecision.flow';
@@ -159,6 +160,7 @@ import { promotionFlow } from './flows/promotion.flow';
 import { capacityMonthFlow } from './flows/capacityMonth.flow';
 import { whatIfScenarioFlow } from './flows/whatIfScenario.flow';
 import { feedstockConfirmationFlow } from './flows/feedstockConfirmation.flow';
+import { daConfirmationFlow } from './flows/daConfirmation.flow';
 import { supplierAskFlow } from './flows/supplierAsk.flow';
 import { capacityDecisionFlow } from './flows/capacityDecision.flow';
 import { poOnHoldDecisionFlow } from './flows/poOnHoldDecision.flow';
@@ -285,6 +287,9 @@ flowRegistry.register(whatIfScenarioFlow); // DRC-17 — the planner saves a wha
 // BL-194 / DRC-8 — the supplier confirms its current feedstock with a date: the
 // same degenerate single-state snapshot shape, append-only (DRC-D17).
 flowRegistry.register(feedstockConfirmationFlow); // BL-194 — supplier feedstock confirmation
+// PSC-1 (BL-336) — the one-time weekly DA confirmation. Append-only snapshot per
+// supplier × week; a carried-forward week writes no record.
+flowRegistry.register(daConfirmationFlow); // BL-336 — DA weekly confirmation
 // INV-D9 — "Ask supplier": PTI's hub ask, answered by the supplier in the hub.
 flowRegistry.register(supplierAskFlow); // INV-D9 — a hub ask to one supplier
 // INV-D8 — PTI accepts a supplier's additional capacity on one gap week.

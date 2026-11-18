@@ -533,6 +533,15 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    */
   FEEDSTOCK_CONFIRMATION_VALID: 'feedstock_confirmation_valid',
   /**
+   * PSC-1 (BL-336) — a supplier's one-time weekly DA confirmation: a known
+   * supplier (SUPPLIER_UNKNOWN), a week that is a date (WEEK_INVALID), a
+   * publication holding every material of the confirmation (NO_PUBLICATION),
+   * at least one material (NO_MATERIALS), each assigned to the supplier
+   * (NOT_ASSIGNED), and a figure of 0 or more per material (SOH_INVALID). The
+   * rule is `daConfirmationRefusal`, the one the supplier page's pre-check calls.
+   */
+  DA_CONFIRMATION_VALID: 'da_confirmation_valid',
+  /**
    * INV-D9 — PTI's hub ask to a supplier: a known topic (TOPIC_UNKNOWN), a
    * material, or a planning group and week (SUBJECT_REQUIRED), that the
    * supplier supplies (NOT_SUPPLIED), a question (QUESTION_REQUIRED) of at
