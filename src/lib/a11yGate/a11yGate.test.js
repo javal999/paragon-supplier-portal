@@ -56,6 +56,10 @@ describe('BL-31 a11y gate · POPULATION — nothing below means anything without
     );
     // …and a known non-member: a field with no error state at all.
     expect(sites).not.toContain('pages/auth/Login.jsx <input aria-invalid>');
+    // BL-322 — the control sites: the card's stretched button, and a TermTip
+    // (a control that is not a literal <button>, which is the whole point).
+    expect(sites).toContain('components/ui-v2/KpiCard.jsx <button>');
+    expect(sites).toContain('components/ui-v2/TermLabel.jsx <TermTip>');
   });
 });
 
@@ -128,6 +132,75 @@ describe('BL-31 a11y gate · PROBE — fires on the defect, accepts the fix', ()
     expect(scanSource('n.tsx', notMirror)).toHaveLength(1);
   });
 
+  it('✅ BL-322: a control inside a control is a finding; siblings are not', () => {
+    // The literal shape: the glossary (i) is a <button> rendered by TermTip.
+    const bad = `const C = () => <button type="button" aria-label="Draft 1"><TermTip term="asnDraft">Draft</TermTip></button>;`;
+    expect(scanSource('bad.tsx', bad).map((f) => f.what)).toEqual([
+      'nested control: <TermTip> inside <button>'
+    ]);
+    // The fixed shape: one stretched button for the card, the label layer a
+    // sibling outside it.
+    const good = `const C = () => (
+      <div>
+        <button type="button" aria-label="Draft 1" />
+        <div><TermLabel term="asnDraft" /></div>
+      </div>
+    );`;
+    expect(scanSource('good.tsx', good)).toEqual([]);
+    // A field inside a button is the same rule, not only one control component.
+    expect(
+      scanSource(
+        'field.tsx',
+        `const C = () => <button type="button" aria-label="x"><input /></button>;`
+      ).map((f) => f.what)
+    ).toEqual(['nested control: <input> inside <button>']);
+    // An anchor with an href navigates; a plain <a name> is not a control.
+    expect(
+      scanSource('anchor.tsx', `const C = () => <a href="/x"><button type="button">x</button></a>;`)
+    ).toHaveLength(1);
+    expect(
+      scanSource('named.tsx', `const C = () => <a name="x"><button type="button">x</button></a>;`)
+    ).toEqual([]);
+  });
+
+  it('✅ FIRES AT THE REAL DEFECT: the KpiCard exactly as main shipped it before BL-322', () => {
+    // Verbatim shape of `src/components/ui-v2/KpiCard.jsx` @ 04d096d0: the card
+    // WAS a <button> and its children came from a `content` const held above it,
+    // with the term's (i) inside. A scan of literal JSX children only would
+    // report a clean tree here — `{content}` must be resolved.
+    const shipped = `
+      const KpiCard = ({ eyebrow, term, value, subtitle, icon: Icon, onClick, active = false }) => {
+        const content = (
+          <>
+            {Icon ? <Icon size={18} className="absolute top-5 right-5 text-text-tertiary" /> : null}
+            <div className="text-eyebrow text-text-tertiary uppercase">
+              {term ? <TermLabel term={term} /> : eyebrow}
+            </div>
+            <div className="text-kpi font-mono tabular-nums text-data-navy mt-3">{value}</div>
+            {subtitle ? <div className="text-meta text-text-secondary mt-2">{subtitle}</div> : null}
+          </>
+        );
+        if (onClick) {
+          return (
+            <button type="button" onClick={onClick} aria-pressed={active}>
+              {content}
+            </button>
+          );
+        }
+        return <div>{content}</div>;
+      };`;
+    expect(scanSource('shipped.jsx', shipped).map((f) => f.what)).toEqual([
+      'nested control: <TermLabel> inside <button>'
+    ]);
+    // The control: the same file with the (i) outside the button is accepted.
+    const fixed = shipped.replace(
+      '<button type="button" onClick={onClick} aria-pressed={active}>\n              {content}\n            </button>',
+      '<div>\n              <button type="button" onClick={onClick} aria-pressed={active} aria-label="card" />\n              {content}\n            </div>'
+    );
+    expect(fixed).not.toBe(shipped);
+    expect(scanSource('fixed.jsx', fixed)).toEqual([]);
+  });
+
   it('✅ BL-84: an invalid field with no aria-describedby is a finding; the wired twin is not', () => {
     const bad = `const F = () => <input aria-invalid={!ok} value={v} onChange={f} />;`;
     const good = `const F = () => <input aria-invalid={!ok} aria-describedby={errorId} value={v} onChange={f} />;`;
@@ -159,6 +232,11 @@ describe('BL-31 a11y gate · THE TREE', () => {
 
   it('every field marked aria-invalid in src/ describes its error (BL-84)', () => {
     const f = findings.filter((x) => x.what.includes('does not describe its error'));
+    expect(f, f.map((x) => `${x.file}:${x.line} ${x.what}`).join('\n')).toEqual([]);
+  });
+
+  it('no interactive control is rendered inside another control (BL-322)', () => {
+    const f = findings.filter((x) => x.what.startsWith('nested control'));
     expect(f, f.map((x) => `${x.file}:${x.line} ${x.what}`).join('\n')).toEqual([]);
   });
 });

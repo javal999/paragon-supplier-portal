@@ -110,10 +110,15 @@ describe('B-04 — the board opens on "Needs my action"', () => {
 
   it('a KPI tile filters the table to the RFQs it counts, and clicked again clears', async () => {
     renderWithProviders(<BuyerSourcing />);
-    const tile = (await screen.findByText('Ready to Award')).closest('button');
-    expect(tile).not.toBeNull();
-    const btn = /** @type {HTMLButtonElement} */ (tile);
-    const count = Number(within(btn).getByText(/^\d+$/).textContent);
+    // BL-322: the tile is no longer a <button> wrapping its label — the card is
+    // a surface with one stretched button and the label beside it, so read the
+    // button from the card, not from the label's ancestors.
+    const card = /** @type {HTMLElement} */ (
+      (await screen.findByText('Ready to Award')).closest('[data-tip-host]')
+    );
+    expect(card).not.toBeNull();
+    const btn = /** @type {HTMLButtonElement} */ (within(card).getByRole('button'));
+    const count = Number(within(card).getByText(/^\d+$/).textContent);
     fireEvent.click(btn);
     expect(btn).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('tab', { name: /^Needs my action/ })).toHaveAttribute(
