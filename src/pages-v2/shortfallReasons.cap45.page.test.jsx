@@ -176,27 +176,28 @@ describe('CAP-4 AC-01 — Force Majeure without a note refuses Submit', () => {
   // the Trade-off week W[7], which now takes an acknowledgement only.
   it('the commitment page: Force Majeure below forecast shows the note and refuses until it is filled', async () => {
     renderWithProviders(<SupplierForecastCommitments />, { identity: SUPPLIER });
+    // CAP-1 wave 3 — the period is a column of the material's grid; its
+    // controls and its refusal are scoped to the section.
     const section = await screen.findByTestId('fc-sup-material-PK-PETB-8802');
-    const row = within(section).getByTestId(`fc-sup-row-PK-PETB-8802-${W[0]}`);
     const period = `Week of ${formatDate(W[0])}`;
-    fireEvent.change(within(row).getByLabelText(`Commitment quantity for ${period}`), {
+    fireEvent.change(within(section).getByLabelText(`Commitment quantity for ${period}`), {
       target: { value: '20000' }
     });
-    const reason = within(row).getByLabelText(`Reason below forecast for ${period}`);
+    const reason = within(section).getByLabelText(`Reason below forecast for ${period}`);
     fireEvent.change(reason, { target: { value: 'material' } });
     // Known-good control: Material needs no note.
-    expect(within(row).queryByLabelText(`Note for ${period}`)).toBeNull();
+    expect(within(section).queryByLabelText(`Note for ${period}`)).toBeNull();
     expect(
-      within(row).queryByText('Force Majeure, Discontinued and Other need a note.')
+      within(section).queryByText('Force Majeure, Discontinued and Other need a note.')
     ).toBeNull();
     fireEvent.change(reason, { target: { value: 'force-majeure' } });
-    const note = within(row).getByLabelText(`Note for ${period}`);
+    const note = within(section).getByLabelText(`Note for ${period}`);
     expect(
-      within(row).getByText('Force Majeure, Discontinued and Other need a note.')
+      within(section).getByText('Force Majeure, Discontinued and Other need a note.')
     ).toBeTruthy();
     fireEvent.change(note, { target: { value: 'Port closed by the storm' } });
     expect(
-      within(row).queryByText('Force Majeure, Discontinued and Other need a note.')
+      within(section).queryByText('Force Majeure, Discontinued and Other need a note.')
     ).toBeNull();
   });
 

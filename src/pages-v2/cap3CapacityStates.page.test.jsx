@@ -12,7 +12,7 @@
 // header's "Needs additional" count drops.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { renderWithProviders, BUYER, SUPPLIER } from '@test/test-utils';
 import { SEEDED_SEAT_ROLES, PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
@@ -183,8 +183,11 @@ describe('Submit per period', () => {
       identity: SUPPLIER,
       route: '/supplier/forecasts'
     });
-    const row = await screen.findByTestId(`fc-week-${AMBER_FIRM}`);
-    const pill = within(row).getByTestId(`fc-week-check-${AMBER_FIRM}-pg-MG-20`);
+    // CAP-1 wave 3 — the period is a column: its header keeps the column's old
+    // id, and the check pill is the checks row's cell for that period.
+    const head = await screen.findByTestId(`fc-week-${AMBER_FIRM}`);
+    expect(head.tagName).toBe('TH');
+    const pill = screen.getByTestId(`fc-week-check-${AMBER_FIRM}-pg-MG-20`);
     expectSharedPill(pill, 'warning');
     expect(pill).toHaveTextContent('Needs confirmation');
     first.unmount();

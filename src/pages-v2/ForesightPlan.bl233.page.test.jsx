@@ -136,12 +136,10 @@ describe('BL-233 wave 4 — /supplier/forecasts', () => {
       identity: SUPPLIER,
       route: '/supplier/forecasts'
     });
-    const section = await screen.findByTestId('fc-sup-material-PK-PETB-8801');
-    // PEX-2 (BL-265) — the periods are columns, so the measures are the grid's row labels.
-    const headers = [...section.querySelectorAll('[data-grid-label]')].map((h) => ({
-      label: textWithoutTips(/** @type {HTMLElement} */ (h)).trim(),
-      tip: h.querySelector('[data-testid^="term-tip-"]') !== null
-    }));
+    await screen.findByTestId('fc-sup-material-PK-PETB-8801');
+    // PEX-2 (BL-265) — the periods are columns, so the measures are the grid's
+    // row labels (CAP-1 wave 3 renders the grid through `WeekGrid`).
+    const headers = labelled(screen.getByTestId('fc-sup-grid-PK-PETB-8801'), 'rowheader');
     const tipped = headers.filter((h) => h.tip).map((h) => h.label);
     expect(tipped).toEqual(
       expect.arrayContaining([
@@ -152,6 +150,11 @@ describe('BL-233 wave 4 — /supplier/forecasts', () => {
     );
     expect(tipped.some((l) => /^Commitment \(\w+\)$/.test(l))).toBe(true);
     expect(tipped.some((l) => /^Upside \(\w+\)$/.test(l))).toBe(true);
-    expect(headers.find((h) => h.label === 'Period')?.tip).toBe(false);
+    // The corner names the label column and carries no (i).
+    const corner = /** @type {HTMLElement} */ (
+      screen.getByTestId('fc-sup-grid-PK-PETB-8801').querySelector('th[data-label-col]')
+    );
+    expect(textWithoutTips(corner).trim()).toBe('Period');
+    expect(corner.querySelector('[data-testid^="term-tip-"]')).toBeNull();
   });
 });
