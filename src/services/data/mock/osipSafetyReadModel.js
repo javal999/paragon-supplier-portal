@@ -38,6 +38,7 @@ import { consumptionInForce } from '../../transitions/consumptionRules';
 import {
   DEMAND_ANTICIPATION_RULES,
   hubWeeks,
+  ltpSplitShares,
   materialShares
 } from '../../transitions/demandAnticipationRules';
 import { OSIP_RULES, supplyAreaOf } from '../../transitions/osipRules';
@@ -48,6 +49,9 @@ import { allCommitmentLines, forecastSupplierName } from './forecastReadModel';
 import { consumptionStore } from './stores/consumptionStore';
 import { osipParamStore } from './stores/osipParamStore';
 import { osipParamKey, switchIsOn } from '../../transitions/osipParams';
+import { ltpWeeks, materialLtpInputs } from '../../transitions/ltpInputRules';
+import { coverageWeeksFor, coverWeeksFor, materialBufferSwitchFor } from './bufferModelARead';
+import { ltpInputStore } from './stores/ltpInputStore';
 
 /**
  * The planner's value for one key, or null (the default applies).
@@ -189,18 +193,44 @@ export function osipSafetyInputs(nowIso = sdcClock.now()) {
   for (const m of data.materials) {
     const code = m.materialCode;
     const { sources, consumptionOf } = materialConsumption(code, { lines, inForce, nowIso });
+    // PSC-4 (BL-339) — the model A inputs: the uploaded series split to each
+    // supplier by the scale the Demand anticipation read uses, the material's
+    // cover setting P and this week's Material Buffer switch.
+    const ltpInputs = materialLtpInputs(ltpInputStore.all(), code);
+    const coverWeeks = coverWeeksFor(code);
+    const coverageWeeks = coverageWeeksFor(code);
+    const switchState = materialBufferSwitchFor(code, hubWeeks(nowIso, 1)[0]);
+    const materialBufferOn = switchState.on;
+    const materialSuppliers = sources.map((s) => s.supplierId);
+    const { shares: ltpShares } = ltpSplitShares(
+      data.sources,
+      lines,
+      code,
+      materialSuppliers,
+      hubWeeks(nowIso, DEMAND_ANTICIPATION_RULES.shareWindowWeeks)
+    );
     const suppliers = sources.map((s) => {
       const breakdown = leadTimeBreakdown(s);
       const leadTimeWeeks = breakdown.totalWeeks;
       const supplier = mockSuppliers.find((x) => x.id === s.supplierId);
+      // [Team B2] long enough for the 13-week SD as well as the horizon.
+      const weeks = hubWeeks(nowIso, Math.max(1, leadTimeWeeks, OSIP_RULES.ltpSdWeeks));
+      const source = weeks.map((w) => groupWeekLtp(lines, s.supplierId, [code], w));
+      const lw = ltpWeeks(weeks, source, ltpInputs, ltpShares.get(s.supplierId) ?? 0);
       return /** @type {OsipSupplierInput} */ ({
         supplierId: s.supplierId,
         supplierName: forecastSupplierName(s.supplierId),
         materialCode: code,
-        // [Team B2] long enough for the 13-week SD as well as the horizon.
-        ltp: hubWeeks(nowIso, Math.max(1, leadTimeWeeks, OSIP_RULES.ltpSdWeeks)).map((w) =>
-          groupWeekLtp(lines, s.supplierId, [code], w)
-        ),
+        // PSC-4 BR-01 — LTP A is the baseline (the upload split, else the forecast).
+        ltp: lw.a,
+        ltpB: lw.b,
+        ltpFestive: lw.festive,
+        coverWeeks,
+        coverageWeeks,
+        materialBufferOn,
+        // PSC-4 BR-07 — where the switch came from and the window in force.
+        materialBufferSource: switchState.source,
+        eventWindow: switchState.event,
         leadTimeWeeks,
         // [Default, wave 2] MPQ = orderMultiple until the master data feed carries MPQ (wave 2 default).
         mpq: s.orderMultiple,

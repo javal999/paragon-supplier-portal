@@ -119,6 +119,7 @@ import {
 } from '../data/mock/stores/rfqEngagementStores';
 import { customRoleStore } from './customRoles';
 import { workingCalendarStore } from './workingCalendarStore';
+import { eventCalendarStore } from './eventCalendarStore';
 import { threePlStore } from './threePlStore';
 import { supplierOverlayStore } from '../data/mock/stores/supplierOverlayStore';
 import { qualificationRuleStore } from './qualificationRuleStore';
@@ -287,6 +288,8 @@ async function realIds() {
     role: 'receiving',
     // BL-50 — `entityId` IS the date; any date the SAP load covers exists.
     workingCalendar: '2026-09-09',
+    // PSC-4 BR-07 (BL-339) — `entityId` IS the event key; any well-formed key exists.
+    eventCalendar: 'CNY|2027-02-01',
     // BL-51 — `entityId` IS the 3PL id; a sample-list row exists from the start.
     threePl: 'tpl-sample-express',
     // Material A1 — `entityId` IS the supplier id; every master supplier exists,
@@ -490,6 +493,7 @@ async function walk(entity, t) {
   if (entity === 'enforcement') return at(GOVERNED_CHECK_IDS[0], 'Governed');
   if (entity === 'role') return at('receiving', 'Defined');
   if (entity === 'workingCalendar') return at('2026-09-09', 'Maintained');
+  if (entity === 'eventCalendar') return at('CNY|2027-02-01', 'Maintained');
   if (entity === 'threePl') return at('tpl-sample-express', 'Maintained');
   if (entity === 'hubSetting') return at('callOff.overPct', 'Maintained');
   if (entity === 'reasonCode') return at('poAdjust:capacity', 'Maintained');
@@ -546,6 +550,7 @@ const resetAll = () => {
   callOffStore.reset();
   customRoleStore.reset();
   workingCalendarStore.reset();
+  eventCalendarStore.reset();
   maxStockStore.reset();
   threePlStore.reset();
   supplierOverlayStore.reset();
@@ -799,6 +804,9 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
     const { ownerless } = await derive();
     expect(ownerless.sort()).toEqual([
       'enforcement',
+      // PSC-4 BR-07 (BL-339) — the Material Buffer's event calendar is PTI's;
+      // no supplier is its owner.
+      'eventCalendar',
       // BL-32 — the rule values are PTI's; no supplier is their owner.
       'hubSetting',
       // BL-267 — the LTP inputs are PTI's.
@@ -909,6 +917,22 @@ describe('THE LEGITIMATE PATHS — the half a "refuse everyone" fix would break'
     });
     expect(calRes.status, calRes.reason).toBe('done');
     expect(workingCalendarStore.rulings().map((r) => r.date)).toContain('2026-09-09');
+    // PSC-4 BR-07 (BL-339) — the same lane administers the Material Buffer's
+    // event calendar (CNY and Typhoon windows).
+    const evtRes = await svc.dispatch(buyerSeat('compliance'), {
+      transitionId: 't_eventcalendar_set',
+      entity: 'eventCalendar',
+      entityId: 'CNY|2027-02-01',
+      payload: {
+        kind: 'CNY',
+        startsOn: '2027-02-01',
+        endsOn: '2027-02-14',
+        reason: 'Probe of the owner-less scope gate',
+        setBy: NO_PERSON
+      }
+    });
+    expect(evtRes.status, evtRes.reason).toBe('done');
+    expect(eventCalendarStore.inForce().some((r) => r.id === 'CNY|2027-02-01')).toBe(true);
     // BL-51 — the Hub administrator's lane (compliance) can still change a 3PL.
     const tplRes = await svc.dispatch(buyerSeat('compliance'), {
       transitionId: 't_threepl_set',

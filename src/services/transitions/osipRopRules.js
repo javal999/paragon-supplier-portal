@@ -37,6 +37,8 @@
 /** @import { OsipSafetyFigures, OsipSafetyInput } from './osipSafetyRules' */
 /** @import { LeadTimeStep, LeadTimeStepId } from '../engine/types' */
 import { OSIP_RULES, ceilingTo, cycleStock, maxStock, ropFisik, ropOrder } from './osipRules';
+import { bufferModelA } from './bufferModelA';
+/** @import { BufferModelA } from './bufferModelA' */
 
 /** @typedef {'firstOrderFulfilled' | 'oneYearAfterLaunch' | '52WeeksHistory'} NpdRule */
 
@@ -178,11 +180,15 @@ export function osipLevelInForce(rows, rules = OSIP_RULES) {
 /**
  * One supplier × material's ROPs and Max under `rules`.
  * `level`: the level the formula used (`levelFallback` when the asked level has none).
+ * PSC-4 (BL-339) — `buffers`: model A's three buffers, and the `protection` /
+ * `strategic` quantities ROP Order added (null when its inputs cannot support
+ * it: BR-08, the figure is "Not available" and nothing is added).
  * @typedef {{
- *   readonly ropOrder: RopFigure & { readonly cycleStock: number | null };
+ *   readonly ropOrder: RopFigure & { readonly cycleStock: number | null; readonly protection: number | null; readonly strategic: number | null };
  *   readonly ropFisik: RopFigure & { readonly cycle: number | null; readonly level: number; readonly levelFallback: boolean };
  *   readonly max: RopFigure;
  *   readonly supplier: Readonly<Record<SupplierRopKey, RopFigure>>;
+ *   readonly buffers: BufferModelA;
  *   readonly flags: readonly RopFlag[];
  * }} OsipRopFigures
  */
@@ -232,13 +238,44 @@ export function osipRops(input, safety, level, rules = OSIP_RULES) {
   /** @type {RopFlag[]} */
   const flags = [];
 
-  // ── ROP Order [Default B9] ──
+  // ── ROP Order [Default B9; PSC-4 BR-06] ──
+  // Model A: LTP A is the baseline; the Protection and Strategic buffers are
+  // quantities added ONCE, and a buffer whose input is missing adds nothing.
+  const buffers = bufferModelA({
+    ltpA: input.ltp,
+    ltpB: input.ltpB ?? null,
+    ltpFestive: input.ltpFestive ?? null,
+    leadTimeWeeks: input.leadTimeWeeks,
+    coverWeeks: input.coverWeeks ?? undefined,
+    coverageWeeks: input.coverageWeeks ?? undefined,
+    materialOn: input.materialBufferOn === true
+  });
   const cycle = cycleStock(input.ltp, input.leadTimeWeeks);
   const so = safety.safetyOrder.value;
+  const protection = buffers.protection.value;
+  const strategic = buffers.strategic.value;
   const ropOrderFig =
     so === null
-      ? { ...figure(null, 'NO_SAFETY_ORDER'), cycleStock: null }
-      : { ...figure(ropOrder({ cycleStock: cycle, safetyOrder: so }), null), cycleStock: cycle };
+      ? {
+          ...figure(null, 'NO_SAFETY_ORDER'),
+          cycleStock: null,
+          protection: null,
+          strategic: null
+        }
+      : {
+          ...figure(
+            ropOrder({
+              cycleStock: cycle,
+              safetyOrder: so,
+              protectionBuffer: protection ?? 0,
+              strategicBuffer: strategic ?? 0
+            }),
+            null
+          ),
+          cycleStock: cycle,
+          protection,
+          strategic
+        };
 
   // ── ROP Fisik by level (DRC-10, DRC-B3 to B5) ──
   const fis = safety.fisik;
@@ -333,7 +370,7 @@ export function osipRops(input, safety, level, rules = OSIP_RULES) {
   /** @type {Record<SupplierRopKey, RopFigure>} */
   const supplier = { ropSupplier: ropSupplierFig, ropToPrincipal: principalFig };
 
-  return { ropOrder: ropOrderFig, ropFisik: ropFisikFig, max: maxFig, supplier, flags };
+  return { ropOrder: ropOrderFig, ropFisik: ropFisikFig, max: maxFig, supplier, buffers, flags };
 }
 
 // ─── NPD (DRC-12a, BL-198) ───────────────────────────────────────────────────

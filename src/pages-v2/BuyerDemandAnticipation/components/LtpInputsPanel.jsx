@@ -4,70 +4,37 @@ import { useTranslation } from 'react-i18next';
 import Data from '@components/ui-v2/Data';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
-import { useToast } from '@hooks/useToast';
-import { useLtpInputCommand } from '@services/query/commandHooks';
-import { LTP_SERIES, parseLtpCsv } from '@services/transitions/ltpInputRules';
-/** @import { LtpSeries } from '@services/transitions/ltpInputRules' */
-/** @import { RowLtpInputs } from '@services/data/mock/demandAnticipationReadModel' */
+import { LTP_SERIES } from '@services/transitions/ltpInputRules';
+/** @import { LtpBatchMaterialView } from './LtpBatchUploads' */
 import { formatDate } from '@lib/format';
 import { inputClass, labelClass } from '../../inventory/inventoryDisplay';
+import LtpBatchUploads from './LtpBatchUploads';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// BL-267 (PEX-5) — LTP inputs on the DA page: the planner uploads LTP A, LTP
-// Festive and LTP B per material from a file (BR-02, PEX-D12 proposed) and
-// records the LTP choice per material (BR-01). The hub never picks the LTP
-// (BR-07). ONE verb, ONE notice in its slot: a seat without `ltpinput:set`
-// sees the handoff notice, and the form is gated with the mode (§84).
-// Every upload is stamped with who, when and the source file name (the ledger).
+// BL-267 (PEX-5) — LTP inputs on the DA page: the batch upload, three screens,
+// one per series (PSC-3 BR-01, BL-338), each taking one CSV with many
+// materials. The batch screens replaced the per-material CSV.
+//
+// PSC-4 BR-01 / BR-09 (BL-339) — the LTP CHOICE IS RETIRED: DA reads LTP A, the
+// chosen-LTP control is gone, and so is the marker on the grid. Its historical
+// ledger rows stay; nothing here writes one.
+// ONE verb, ONE notice in its slot: a seat without `ltpinput:set` sees the
+// handoff notice, and the controls are gated with the mode (§84). Every upload
+// is stamped with who, when and the source file name (the ledger).
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * @type {React.FC<{
- *   materials: readonly { materialCode: string; materialLabel: string; ltpInputs?: RowLtpInputs }[];
- * }>}
+ * @type {React.FC<{ materials: readonly LtpBatchMaterialView[] }>}
  */
 const LtpInputsPanel = ({ materials }) => {
   const { t } = useTranslation();
-  const { toast } = useToast();
   const availability = useVerbAvailability('ltpinput:set');
-  const command = useLtpInputCommand();
   const [materialCode, setMaterialCode] = useState('');
-  const [series, setSeries] = useState(/** @type {LtpSeries} */ ('A'));
-  const [problem, setProblem] = useState(/** @type {string | null} */ (null));
   const current = materials.find((m) => m.materialCode === materialCode) ?? null;
   const ltp = current?.ltpInputs ?? null;
 
   if (availability.kind !== 'held')
     return <HandoffNotice availability={availability} testId="handoff-ltp-input" />;
-
-  /** @param {unknown} res */
-  const report = (res) => {
-    const r = /** @type {{ status: string; reason?: string }} */ (res);
-    if (r.status === 'failed')
-      toast({ variant: 'error', title: t('ltpIn.failed'), description: r.reason });
-    else toast({ variant: 'success', title: t('ltpIn.done') });
-  };
-
-  /** @param {React.ChangeEvent<HTMLInputElement>} e */
-  const onFile = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file || materialCode === '') return;
-    const parsed = parseLtpCsv(await file.text());
-    if ('refusal' in parsed) {
-      setProblem(parsed.refusal);
-      return;
-    }
-    setProblem(null);
-    report(
-      await command.mutateAsync({
-        materialCode,
-        series,
-        weeks: parsed.weeks,
-        sourceFile: file.name
-      })
-    );
-  };
 
   return (
     <section
@@ -96,77 +63,10 @@ const LtpInputsPanel = ({ materials }) => {
             ))}
           </select>
         </div>
-        <div>
-          <label htmlFor="ltp-in-choice" className={labelClass}>
-            {t('ltpIn.choice')}
-          </label>
-          <select
-            id="ltp-in-choice"
-            data-testid="ltp-in-choice"
-            className={inputClass}
-            value={ltp?.choice ?? 'A'}
-            disabled={materialCode === '' || command.isPending}
-            onChange={async (e) =>
-              report(
-                await command.mutateAsync({
-                  materialCode,
-                  choice: /** @type {LtpSeries} */ (e.target.value)
-                })
-              )
-            }
-          >
-            {LTP_SERIES.map((s) => (
-              <option key={s} value={s}>
-                {t(`ltpIn.series.${s}`)}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="ltp-in-series" className={labelClass}>
-            {t('ltpIn.uploadSeries')}
-          </label>
-          <select
-            id="ltp-in-series"
-            data-testid="ltp-in-series"
-            className={inputClass}
-            value={series}
-            onChange={(e) => setSeries(/** @type {LtpSeries} */ (e.target.value))}
-          >
-            {LTP_SERIES.map((s) => (
-              <option key={s} value={s}>
-                {t(`ltpIn.series.${s}`)}
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <label className="inline-block">
-          <span className="sr-only">{t('ltpIn.file')}</span>
-          <input
-            type="file"
-            accept=".csv,text/csv,text/plain"
-            data-testid="ltp-in-file"
-            disabled={materialCode === '' || command.isPending}
-            // BL-84 — the upload's refusal is announced with the file control.
-            aria-invalid={problem ? true : undefined}
-            aria-describedby={problem ? 'ltp-in-problem' : undefined}
-            onChange={(e) => void onFile(e)}
-          />
-        </label>
-        <span className="text-xs text-text-tertiary">{t('ltpIn.fileFormat')}</span>
-      </div>
-      {problem ? (
-        <p
-          id="ltp-in-problem"
-          className="text-sm text-danger mt-2"
-          role="alert"
-          data-testid="ltp-in-problem"
-        >
-          {problem}
-        </p>
-      ) : null}
+      <p className="text-xs text-text-secondary mb-3" data-testid="ltp-in-da-baseline">
+        {t('ltpIn.daBaseline')}
+      </p>
       {ltp ? (
         <ul className="mt-3 text-xs text-text-secondary" data-testid="ltp-in-stamps">
           {LTP_SERIES.map((s) => {
@@ -186,6 +86,7 @@ const LtpInputsPanel = ({ materials }) => {
           })}
         </ul>
       ) : null}
+      <LtpBatchUploads materials={materials} />
     </section>
   );
 };

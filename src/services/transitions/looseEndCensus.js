@@ -293,6 +293,20 @@ export const LOOSE_END_CENSUS = Object.freeze([
       'neither an entry nor an exit. The type in force is derived at read from the latest change; an ' +
       'event stores its own type at publish.'
   },
+  // ── eventCalendar (PSC-4 BR-07, BL-339) ───────────────────────────────────
+  {
+    entity: 'eventCalendar',
+    kind: 'initial-integrity',
+    subject: 'Maintained',
+    reason: 'substrate-only',
+    note:
+      'THE SAME DEGENERATE SINGLE-STATE LEDGER SHAPE AS THE WORKING CALENDAR: the entity IS one window ' +
+      'on the Material Buffer event calendar, and a window the administrator sets for a date the key ' +
+      'names becomes a row — there is no separate creation verb to be an entry. The recording verb is ' +
+      'statePreserving, so it is neither an entry nor an exit, and the state is correctly declared ' +
+      'terminal. The switch a window moves is derived at read and is never a state of any machine. ' +
+      'BR-10: the change moves ROP Order only and is audited with DRC-D16; it writes no DA version.'
+  },
   // ── workingCalendar (BL-50) ────────────────────────────────────────────────
   {
     entity: 'workingCalendar',

@@ -23,10 +23,12 @@ export const demandAnticipationEn = {
   // BL-267 (PEX-5) — LTP inputs.
   'ltpIn.title': 'LTP inputs',
   'ltpIn.intro':
-    'Upload LTP A, LTP Festive and LTP B per material, and record which one the demand anticipation uses. The hub never picks it: a material with no choice uses LTP A. Until LTP A is uploaded, the forecast quantity stands in for it.',
+    'Upload LTP A, LTP Festive and LTP B per material, one file per series or as a batch file below. Until LTP A is uploaded, the forecast quantity stands in for it.',
   'ltpIn.material': 'Material',
   'ltpIn.pick': 'Pick a material',
   'ltpIn.choice': 'LTP in use',
+  'ltpIn.daBaseline':
+    'Demand anticipation reads LTP A. LTP Festive and LTP B are inputs to the buffers on Safety stock targets, not to the demand anticipation.',
   'ltpIn.uploadSeries': 'Upload for',
   'ltpIn.file': 'LTP file',
   'ltpIn.fileFormat':
@@ -42,6 +44,36 @@ export const demandAnticipationEn = {
   'ltpIn.fallbackSb': 'DRC-9a calculation (no LTP Festive)',
   'ltpIn.choiceWeekEmpty': 'LTP in use has no quantity for some weeks: those weeks read LTP A.',
   'ltpIn.choiceNotUploaded': 'The LTP in use is not uploaded: DA reads LTP A.',
+  // BL-338 (PSC-3) — the batch upload screens.
+  'ltpIn.batchTitle': 'Batch upload',
+  'ltpIn.batchIntro':
+    'One file per series for many materials at once. One row covers every finished good that uses the material; the computed total comes from the FG plan and the BOM, and the upload is the override.',
+  'ltpIn.batchFile': 'Batch file',
+  'ltpIn.batchFormat':
+    'File: one row per material and week — material, week (a Monday, YYYY-MM-DD), quantity — for example RM-STEAR-7300,2026-11-16,1200',
+  'ltpIn.batchPreview': 'Preview: the upload beside the computed total',
+  'ltpIn.batchMaterial': 'Material',
+  'ltpIn.batchWeek': 'Week',
+  'ltpIn.batchComputed': 'Computed total (FG plan and BOM)',
+  'ltpIn.batchUploaded': 'Uploaded',
+  'ltpIn.batchDifference': 'Difference',
+  'ltpIn.batchPlus': '+{{qty}}',
+  'ltpIn.batchNotAvailable': 'Not available',
+  'ltpIn.batchNoPlan': 'No FG plan for {{fgs}}: left out of the computed total',
+  'ltpIn.batchNoUsers': 'No finished good uses this material: no plan to compute a total from',
+  'ltpIn.batchPlanUnavailable': 'The FG plan is not readable: no computed total',
+  'ltpIn.batchRepeated': 'Repeated row: {{material}} {{week}} — the last row is the one uploaded',
+  'ltpIn.batchUnknown': '{{material}} is not a material on this page',
+  'ltpIn.batchBreakdown': 'FG breakdown',
+  'ltpIn.batchHideBreakdown': 'Hide the FG breakdown',
+  'ltpIn.batchBreakdownEmpty': 'No FG demand for this week',
+  'ltpIn.batchConfirm_one': 'Upload for {{count}} material',
+  'ltpIn.batchConfirm_other': 'Upload for {{count}} materials',
+  'ltpIn.batchDone_one': 'LTP {{series}} uploaded for {{count}} material',
+  'ltpIn.batchDone_other': 'LTP {{series}} uploaded for {{count}} materials',
+  'ltpIn.batchFailed': 'Could not upload {{material}}: {{reason}}',
+  'ltpIn.batchStamp': 'Stamped: {{file}} · {{date}} · {{by}}',
+  'ltpIn.batchNoStamp': 'no upload on record',
   'demandAnt.subtitle':
     'What PTI expects to call off from each supplier, per material and week, over the lead time. The horizon rolls weekly: each planning week is published on its own, and the next one rolls forward.',
   'demandAnt.asOf': 'As of',
@@ -165,10 +197,12 @@ export const demandAnticipationId = {
   // BL-267 (PEX-5) — LTP inputs.
   'ltpIn.title': 'Input LTP',
   'ltpIn.intro':
-    'Unggah LTP A, LTP Festive dan LTP B per material, dan catat mana yang dipakai demand anticipation. Hub tidak pernah memilihnya: material tanpa pilihan memakai LTP A. Sebelum LTP A diunggah, kuantitas prakiraan menggantikannya.',
+    'Unggah LTP A, LTP Festive dan LTP B per material, satu berkas per seri atau sebagai berkas batch di bawah. Sebelum LTP A diunggah, kuantitas prakiraan menggantikannya.',
   'ltpIn.material': 'Material',
   'ltpIn.pick': 'Pilih material',
   'ltpIn.choice': 'LTP yang dipakai',
+  'ltpIn.daBaseline':
+    'Demand anticipation memakai LTP A. LTP Festive dan LTP B adalah input buffer di Safety stock targets, bukan demand anticipation.',
   'ltpIn.uploadSeries': 'Unggah untuk',
   'ltpIn.file': 'Berkas LTP',
   'ltpIn.fileFormat':
@@ -185,6 +219,36 @@ export const demandAnticipationId = {
   'ltpIn.choiceWeekEmpty':
     'LTP yang dipakai tidak punya kuantitas untuk beberapa minggu: minggu itu memakai LTP A.',
   'ltpIn.choiceNotUploaded': 'LTP yang dipakai belum diunggah: DA memakai LTP A.',
+  // BL-338 (PSC-3) — layar unggah batch.
+  'ltpIn.batchTitle': 'Unggah batch',
+  'ltpIn.batchIntro':
+    'Satu berkas per seri untuk banyak material sekaligus. Satu baris mencakup setiap finished good yang memakai material itu; total terhitung berasal dari rencana FG dan BOM, dan unggahan menjadi override-nya.',
+  'ltpIn.batchFile': 'Berkas batch',
+  'ltpIn.batchFormat':
+    'Berkas: satu baris per material dan minggu — material, minggu (hari Senin, YYYY-MM-DD), kuantitas — misalnya RM-STEAR-7300,2026-11-16,1200',
+  'ltpIn.batchPreview': 'Pratinjau: unggahan di samping total terhitung',
+  'ltpIn.batchMaterial': 'Material',
+  'ltpIn.batchWeek': 'Minggu',
+  'ltpIn.batchComputed': 'Total terhitung (rencana FG dan BOM)',
+  'ltpIn.batchUploaded': 'Diunggah',
+  'ltpIn.batchDifference': 'Selisih',
+  'ltpIn.batchPlus': '+{{qty}}',
+  'ltpIn.batchNotAvailable': 'Tidak tersedia',
+  'ltpIn.batchNoPlan': 'Tidak ada rencana FG untuk {{fgs}}: tidak dihitung dalam total terhitung',
+  'ltpIn.batchNoUsers':
+    'Tidak ada finished good yang memakai material ini: tidak ada rencana untuk menghitung total',
+  'ltpIn.batchPlanUnavailable': 'Rencana FG tidak dapat dibaca: tidak ada total terhitung',
+  'ltpIn.batchRepeated': 'Baris berulang: {{material}} {{week}} — baris terakhir yang diunggah',
+  'ltpIn.batchUnknown': '{{material}} bukan material di halaman ini',
+  'ltpIn.batchBreakdown': 'Rincian FG',
+  'ltpIn.batchHideBreakdown': 'Sembunyikan rincian FG',
+  'ltpIn.batchBreakdownEmpty': 'Tidak ada permintaan FG untuk minggu ini',
+  // Indonesian has one plural category (other); an `_one` key here would fail parity.
+  'ltpIn.batchConfirm_other': 'Unggah untuk {{count}} material',
+  'ltpIn.batchDone_other': 'LTP {{series}} diunggah untuk {{count}} material',
+  'ltpIn.batchFailed': 'Tidak dapat mengunggah {{material}}: {{reason}}',
+  'ltpIn.batchStamp': 'Tercatat: {{file}} · {{date}} · {{by}}',
+  'ltpIn.batchNoStamp': 'belum ada unggahan tercatat',
   'demandAnt.subtitle':
     'Jumlah yang PTI perkirakan akan di-call-off dari tiap pemasok, per material dan minggu, sepanjang lead time. Horizon bergulir setiap minggu: tiap minggu perencanaan dipublikasikan tersendiri, dan minggu berikutnya bergulir maju.',
   'demandAnt.asOf': 'Per',

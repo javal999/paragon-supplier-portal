@@ -53,6 +53,7 @@ export { incomingShipmentFlow } from './flows/incomingShipment.flow';
 export { enforcementFlow } from './flows/enforcement.flow';
 export { roleFlow } from './flows/role.flow';
 export { workingCalendarFlow } from './flows/workingCalendar.flow';
+export { eventCalendarFlow } from './flows/eventCalendar.flow';
 export { threePlFlow } from './flows/threePl.flow';
 export { supplierOverlayFlow } from './flows/supplierOverlay.flow';
 export { qualificationRuleFlow } from './flows/qualificationRule.flow';
@@ -129,6 +130,7 @@ import { incomingShipmentFlow } from './flows/incomingShipment.flow';
 import { enforcementFlow } from './flows/enforcement.flow';
 import { roleFlow } from './flows/role.flow';
 import { workingCalendarFlow } from './flows/workingCalendar.flow';
+import { eventCalendarFlow } from './flows/eventCalendar.flow';
 import { threePlFlow } from './flows/threePl.flow';
 import { supplierOverlayFlow } from './flows/supplierOverlay.flow';
 import { qualificationRuleFlow } from './flows/qualificationRule.flow';
@@ -228,6 +230,10 @@ flowRegistry.register(roleFlow); // Duplicate-and-narrow — Role
 // shape: a day has no lifecycle, it has a ledger of rulings. Every deadline is
 // derived from the calendar at read, so nothing cascades from a ruling.
 flowRegistry.register(workingCalendarFlow); // BL-50 — Working calendar
+// PSC-4 BR-07 (BL-339) — the Material Buffer's event calendar (CNY, Typhoon).
+// The same degenerate single-state ledger shape; ADM maintains it. WIRED, so
+// every window lands in the audit trail and records its DRC-D16 inputs.
+flowRegistry.register(eventCalendarFlow); // PSC-4 — Event calendar
 // BL-51 — the administrator's 3PL list. The same degenerate single-state ledger
 // shape: a 3PL on the list has no lifecycle, it has a ledger of changes. WIRED,
 // so every change to where a tracking link points lands in the audit trail.

@@ -92,6 +92,9 @@ const StrategicBufferSection = ({ supplierId, materialCode }) => {
         <p className="text-xs text-text-tertiary mt-1">
           {t('buffers.strategic.subtitle', { months })}
         </p>
+        <p className="text-xs text-warning-hover mt-1" data-testid="strategic-buffer-fallback">
+          {t('buffers.fallback')}
+        </p>
         <p className="text-xs text-text-tertiary mt-1" data-testid="strategic-buffer-festive-note">
           {t('buffers.strategic.festiveNote')}
         </p>

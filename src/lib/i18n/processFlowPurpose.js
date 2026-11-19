@@ -562,6 +562,10 @@ export const processFlowPurposeEn = {
     'An LTP quantity the Material Planner uploaded for one material (LTP A, LTP Festive or LTP B, a quantity per week, with the file it came from) or the LTP choice for that material. Nothing is edited or deleted; the latest of each is in force.',
   'processFlows.purpose.t_ltpinput_set':
     'The Material Planner uploads LTP A, LTP Festive or LTP B for a material, or records which of them the demand anticipation uses. The hub never picks the LTP. Nothing is sent to SAP or a supplier.',
+  'processFlows.purpose.entity.eventCalendar':
+    "The Chinese New Year and Typhoon periods the additional stock cover for an event follows. The Hub administrator keeps them; a planner may override one material's switch separately. Nothing is sent to SAP or a supplier.",
+  'processFlows.purpose.t_eventcalendar_set':
+    'The Hub administrator adds or replaces a Chinese New Year or Typhoon period, so the additional stock cover follows it for the weeks it touches and stops after them. Nothing is sent to SAP or a supplier.',
   'processFlows.purpose.entity.promotion':
     'The expected increase the Material Planner entered for one SKU in one week of a campaign, as a percentage or a number of units. A change or a withdrawal is a new entry; nothing is edited or deleted, so the history stays.',
   'processFlows.purpose.t_promotion_set':
@@ -1222,6 +1226,10 @@ export const processFlowPurposeId = {
     'Kuantitas LTP yang diunggah Perencana Material untuk satu material (LTP A, LTP Festive atau LTP B, kuantitas per minggu, beserta berkasnya) atau pilihan LTP untuk material itu. Tidak ada yang diubah atau dihapus; yang terakhir berlaku.',
   'processFlows.purpose.t_ltpinput_set':
     'Perencana Material mengunggah LTP A, LTP Festive atau LTP B untuk satu material, atau mencatat mana yang dipakai demand anticipation. Hub tidak pernah memilih LTP. Tidak ada yang dikirim ke SAP atau pemasok.',
+  'processFlows.purpose.entity.eventCalendar':
+    'Periode Tahun Baru Imlek dan topan yang diikuti tambahan cadangan stok untuk suatu peristiwa. Administrator Hub mengelolanya; perencana dapat mengoverride saklar satu material secara terpisah. Tidak ada yang dikirim ke SAP atau pemasok.',
+  'processFlows.purpose.t_eventcalendar_set':
+    'Administrator Hub menambah atau mengganti periode Tahun Baru Imlek atau topan, sehingga tambahan cadangan stok mengikutinya pada minggu yang disentuhnya dan berhenti setelahnya. Tidak ada yang dikirim ke SAP atau pemasok.',
   'processFlows.purpose.entity.promotion':
     'Promosi yang dimasukkan Perencana Material untuk satu SKU pada satu minggu: kenaikan yang diharapkan dalam persen atau jumlah unit. Perubahan atau penarikan menjadi entri baru; tidak ada yang diubah atau dihapus, sehingga riwayat tetap ada.',
   'processFlows.purpose.t_promotion_set':

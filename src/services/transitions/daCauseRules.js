@@ -7,11 +7,16 @@
 // input, old value, new value, who, when (BR-02). An input change that moves no
 // DA figure stays on its ledger and is not a version (BR-03).
 //
-// Inputs this reads (the ledgers that exist): LTP A, LTP Festive, LTP B, the LTP
-// choice (`ltpInputRules`) and the safety stock values Z and g (`osipParams`).
-// The strategic and protection buffers follow LTP Festive and LTP B and, built
-// as PEX-5 says, move no DA week (the protection buffer adds to ROP Order
-// only), so they never appear as a cause on their own.
+// Inputs this reads (the ledgers that exist): LTP A, LTP Festive, LTP B and the
+// safety stock values Z and g (`osipParams`). PSC-4 (BL-339) — the LTP CHOICE
+// cause is RETIRED with the choice itself as a DA input (BR-01; PEX-6 BR-01
+// "after": "The LTP choice cause is retired"), and LTP B and Festive reach DA
+// only as the series in use, which is LTP A now: a B or Festive upload moves no
+// DA week on its own. PSC-4 BR-10 keeps the model A buffers out of the versions:
+// the cover setting, the event window, the Material Buffer switch and the
+// protection buffer switch move ROP Order only, so they are recorded with
+// DRC-D16 (the ROP Order figure's stored inputs and rules version) and write no
+// DA version (owner ruling 2026-11-19, Q2).
 //
 // PEX-13 BR-03: the safety stock switch (`safetyStockOn`) is a cause; turning it
 // off zeroes DA's safety order, so it moves DA. The protection buffer switch
@@ -22,8 +27,8 @@
 // "Moves a DA figure" = a DA week of the figure differs from the figure it is
 // set against (the published one for an out-of-date mark, the previous one for
 // a publication's causes). A cause counts only when it can have moved it: an
-// upload of a series only when that series is the one in use; a change of the
-// choice and a change of Z or g only when a week moved.
+// upload of a series only when that series is the one in use; a change of Z or g
+// only when a week moved.
 //
 // "Since" is a position in the ledgers, not a time: a publication records how
 // many rows each ledger held when it was made (`LedgerMark`), and its causes are
@@ -37,19 +42,12 @@
 /** @import { LtpInputRow, LtpSeries } from './ltpInputRules' */
 
 /**
- * @typedef {'ltpA' | 'ltpFestive' | 'ltpB' | 'ltpChoice' | 'safetyStock' | 'safetySwitch'} DaCauseKind
+ * @typedef {'ltpA' | 'ltpFestive' | 'ltpB' | 'safetyStock' | 'safetySwitch'} DaCauseKind
  */
 
 /** The kinds, in the order a list shows them. @type {readonly DaCauseKind[]} */
 export const DA_CAUSE_KINDS = Object.freeze(
-  /** @type {DaCauseKind[]} */ ([
-    'ltpA',
-    'ltpFestive',
-    'ltpB',
-    'ltpChoice',
-    'safetyStock',
-    'safetySwitch'
-  ])
+  /** @type {DaCauseKind[]} */ (['ltpA', 'ltpFestive', 'ltpB', 'safetyStock', 'safetySwitch'])
 );
 
 /**
@@ -101,13 +99,12 @@ export function daMoved(before, after) {
  *   readonly materialCode: string;
  *   readonly since: LedgerMark;
  *   readonly moved: boolean;
- *   readonly choice: LtpSeries;
  *   readonly ltpRows: readonly LtpInputRow[];
  *   readonly osipRows: readonly { readonly key: string; readonly param: string; readonly value: number | boolean | null; readonly previous: number | boolean | null; readonly reason?: string | null; readonly setAt: string; readonly setBy: ActorAttribution }[];
  * }} input
  * @returns {DaCause[]}
  */
-export function daCauses({ materialCode, since, moved, choice, ltpRows, osipRows }) {
+export function daCauses({ materialCode, since, moved, ltpRows, osipRows }) {
   if (!moved) return [];
   /** @type {DaCause[]} */
   const out = [];
@@ -120,8 +117,9 @@ export function daCauses({ materialCode, since, moved, choice, ltpRows, osipRows
       const before = lastTotal.get(r.series) ?? null;
       lastTotal.set(r.series, total(r.weeks));
       if (!inWindow) return;
-      // LTP Festive and LTP B reach DA only as the series in use.
-      if (r.series !== choice) return;
+      // PSC-4 BR-01 — LTP A is the only series DA reads; a B or Festive upload
+      // moves no DA week.
+      if (r.series !== 'A') return;
       out.push({
         kind: KIND_OF_SERIES[r.series],
         detail: null,
@@ -130,16 +128,8 @@ export function daCauses({ materialCode, since, moved, choice, ltpRows, osipRows
         at: r.setAt,
         by: r.setBy
       });
-    } else if (r.kind === 'choice' && inWindow) {
-      out.push({
-        kind: 'ltpChoice',
-        detail: null,
-        before: r.previousChoice ?? 'A',
-        after: r.choice,
-        at: r.setAt,
-        by: r.setBy
-      });
     }
+    // A `choice` row is history only (BR-01): it is no DA cause.
   });
   osipRows.forEach((r, i) => {
     if (r.key.split('|')[1] !== materialCode || i < since.osip) return;

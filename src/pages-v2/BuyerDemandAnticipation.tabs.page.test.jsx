@@ -7,7 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { renderWithProviders, BUYER } from '@test/test-utils';
 import { SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { demandAnticipationStore } from '@services/data/mock/stores/demandAnticipationStore';
@@ -35,14 +35,22 @@ afterEach(() => {
 const render = (route) =>
   renderWithProviders(<BuyerDemandAnticipation />, { identity: PLANNER, route });
 
+/**
+ * The page's own tab bar. BL-338 adds a second tablist inside "This week" (the
+ * three batch LTP upload screens), so the page's tabs are the first tablist on
+ * the surface — scope to it rather than to every tab role.
+ */
+const pageTablist = () => screen.getAllByRole('tablist')[0];
+
 describe('Demand anticipation — tabs (P-12)', () => {
   it('opens on This week: the publication and the cards, with the history linked beside the tabs', async () => {
     render('/buyer/demand-anticipation');
     expect(await screen.findByTestId(`dant-card-${KEY}`)).toBeInTheDocument();
-    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
-      'This week',
-      'Record consumption'
-    ]);
+    expect(
+      within(pageTablist())
+        .getAllByRole('tab')
+        .map((tab) => tab.textContent)
+    ).toEqual(['This week', 'Record consumption']);
     expect(screen.getByRole('tab', { name: 'This week' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByTestId('dant-publication')).toBeInTheDocument();
     expect(screen.queryByTestId('consumption-panel')).toBeNull();
@@ -52,7 +60,7 @@ describe('Demand anticipation — tabs (P-12)', () => {
     );
     // The Sample data badge stays above the tabs.
     expect(
-      screen.getByTestId('sample-data-badge').compareDocumentPosition(screen.getByRole('tablist')) &
+      screen.getByTestId('sample-data-badge').compareDocumentPosition(pageTablist()) &
         Node.DOCUMENT_POSITION_FOLLOWING
     ).toBeTruthy();
   });
@@ -82,9 +90,10 @@ describe('Demand anticipation — tabs (P-12)', () => {
     await i18n.changeLanguage('id');
     render('/buyer/demand-anticipation');
     await screen.findByTestId(`dant-card-${KEY}`);
-    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
-      'Minggu ini',
-      'Catat pemakaian'
-    ]);
+    expect(
+      within(pageTablist())
+        .getAllByRole('tab')
+        .map((tab) => tab.textContent)
+    ).toEqual(['Minggu ini', 'Catat pemakaian']);
   });
 });
