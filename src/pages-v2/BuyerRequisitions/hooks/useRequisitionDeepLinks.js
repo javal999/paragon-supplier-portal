@@ -20,8 +20,8 @@ import { emptyForm } from '../const';
 /**
  * The page's two URL entrances, each consumed once and then removed from the
  * URL: `?open=<id>` opens that requisition's panel, and
- * `?new=1&material=<code>&supplier=<id>` (Material E2, from the stock
- * simulation) opens the New-PR form pre-filled. Moved out of
+ * `?new=1&material=<code>&supplier=<id>&qty=<shortfall>` (Material E2, from
+ * the stock simulation) opens the New-PR form pre-filled. Moved out of
  * `BuyerRequisitions.jsx` by the Phase 5 page split (no behaviour change: the
  * same two effects, in the same order).
  * @param {RequisitionDeepLinkArgs} args
@@ -53,20 +53,26 @@ const useRequisitionDeepLinks = ({
   }, [openParam, prs]);
 
   // Material E2 (MR-7 step 6) — "Create PO request" from the stock simulation
-  // lands here with `?new=1&material=<code>&supplier=<id>` and opens the New PR
-  // form pre-filled with the material, its unit and a note naming the supplier
-  // (a requisition carries no supplier field). It creates nothing by itself,
-  // and only a seat holding `pr:create` gets the form. Consumed once.
+  // lands here with `?new=1&material=<code>&supplier=<id>&qty=<shortfall>` and
+  // opens the New PR form pre-filled with the material, its unit, the
+  // shortfall quantity (BL-292) and a note naming the supplier (a requisition
+  // carries no supplier field). It creates nothing by itself, and only a seat
+  // holding `pr:create` gets the form. Consumed once.
   const prefillNew = openParams.get('new');
   const suppliersQuery = useSuppliers();
   useEffect(() => {
     if (prefillNew !== '1' || suppliersQuery.isPending) return;
     const material = openParams.get('material') ?? '';
     const supplier = openParams.get('supplier') ?? '';
+    const qtyParam = (openParams.get('qty') ?? '').trim();
+    const qty = Number(qtyParam);
     if (createAvailability.kind === 'held' && material) {
       setForm({
         ...emptyForm,
         material,
+        // BL-292 — digits only, as the form's one parser reads them; anything
+        // that is not a positive finite number leaves the field as it was ('').
+        qty: qtyParam !== '' && Number.isFinite(qty) && qty > 0 ? String(qty) : emptyForm.qty,
         uom: materialEntry(material)?.canonicalUom ?? emptyForm.uom,
         justification: t('requisitions.new.prefill.fromSimulation', {
           material,
@@ -76,7 +82,7 @@ const useRequisitionDeepLinks = ({
       setNewOpen(true);
     }
     const next = new URLSearchParams(openParams);
-    for (const k of ['new', 'material', 'supplier']) next.delete(k);
+    for (const k of ['new', 'material', 'supplier', 'qty']) next.delete(k);
     setOpenParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefillNew, suppliersQuery.isPending]);

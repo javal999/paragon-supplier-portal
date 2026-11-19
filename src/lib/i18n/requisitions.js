@@ -181,8 +181,10 @@ export const requisitionsEn = {
   //   living in a string rather than in a handler.
   'requisitions.new.submit': 'Create requisition',
   // Material E2 — "Create PO request" from the stock simulation, pre-filled.
+  // BL-292 (owner, 2026-10-16, F2): the hub recommends only; the planner
+  // creates the PR in SAP, so the note says it where the draft PR is read.
   'requisitions.new.prefill.fromSimulation':
-    'From the stock simulation: {{material}}, supplier {{supplier}}.',
+    'From the stock simulation: {{material}}, supplier {{supplier}}. The planner creates the PR in SAP; nothing is posted automatically.',
   'requisitions.new.step1.eyebrow': 'Step 1',
   'requisitions.new.step1.title': 'Material & quantity',
   'requisitions.new.step1.desc': "What's being requested?",
@@ -375,7 +377,7 @@ export const requisitionsId = {
   'requisitions.new.cancel': 'Batal',
   'requisitions.new.submit': 'Buat permintaan',
   'requisitions.new.prefill.fromSimulation':
-    'Dari simulasi stok: {{material}}, pemasok {{supplier}}.',
+    'Dari simulasi stok: {{material}}, pemasok {{supplier}}. Planner membuat PR di SAP; tidak ada yang dikirim otomatis.',
   'requisitions.new.step1.eyebrow': 'Langkah 1',
   'requisitions.new.step1.title': 'Material & kuantitas',
   'requisitions.new.step1.desc': 'Apa yang diminta?',

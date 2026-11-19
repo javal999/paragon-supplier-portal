@@ -24,7 +24,11 @@ export const callOffHref = (supplierId, materialCode) =>
 /**
  * @param {string} supplierId
  * @param {string} materialCode
+ * @param {number} [qty] BL-292 — the shortfall the stock simulation pre-fills;
+ *   omitted (or 0) leaves the address as the other callers build it.
  * @returns {string} "Create PO request" pre-filled with this pair.
  */
-export const poRequestHref = (supplierId, materialCode) =>
-  `/buyer/purchase-requisition?new=1&supplier=${encodeURIComponent(supplierId)}&material=${encodeURIComponent(materialCode)}`;
+export const poRequestHref = (supplierId, materialCode, qty) => {
+  const base = `/buyer/purchase-requisition?new=1&supplier=${encodeURIComponent(supplierId)}&material=${encodeURIComponent(materialCode)}`;
+  return typeof qty === 'number' && Number.isFinite(qty) && qty > 0 ? `${base}&qty=${qty}` : base;
+};

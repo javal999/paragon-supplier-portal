@@ -113,6 +113,16 @@ export const lineLeftText = (t, line, uom) =>
 export const isOverCalled = (sim) => !!sim && sim.freeToCallOff !== null && sim.freeToCallOff < 0;
 
 /**
+ * BL-292 — the quantity the row is short by: how far "Free to call off" sits
+ * below zero, 0 when the pair is not over-called or the figure is unknown. The
+ * stock simulation pre-fills "Create PO request" with it instead of 0.
+ * @param {Pick<StockSimulation, 'freeToCallOff'> | null} sim
+ * @returns {number}
+ */
+export const shortfallQty = (sim) =>
+  !!sim && sim.freeToCallOff !== null && sim.freeToCallOff < 0 ? -sim.freeToCallOff : 0;
+
+/**
  * P-05 — the Free to call off cell: the figure, or "Over-called by N UOM" in red.
  * @type {React.FC<{ value: number; uom: string; testId?: string }>}
  */

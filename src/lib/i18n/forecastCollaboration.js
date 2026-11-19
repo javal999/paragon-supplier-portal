@@ -129,7 +129,10 @@ export const forecastCollaborationEn = {
   'fc.sup.grid.scrollHint':
     'Periods run left to right; scroll sideways for later weeks and months.',
   // PEX-3 (BL-266) — where the ordered quantity comes from (an explanation, not a figure).
-  'fc.sup.demandNote': 'Ordered quantity = LTP (planned use) − PTI stock on hand.',
+  // BL-284 / !161-7 (owner, 2026-11-19) — the row is the gross LTP share, so the
+  // note must not claim the row equals the hover's gap; the gap is context.
+  'fc.sup.demandNote':
+    'The row is the LTP (planned use) share to commit. The gap on the hover (LTP − PTI stock on hand) is shown for context.',
   // PEX-3 (BL-284) — the note's own terms per period, only on a material the
   // supplier's granted PTI-stock access covers (Q-W3, PEX-D24).
   'fc.sup.demandHover':
@@ -444,7 +447,8 @@ export const forecastCollaborationId = {
   'fc.sup.grid.scrollHint':
     'Periode berjalan dari kiri ke kanan; geser ke samping untuk minggu dan bulan berikutnya.',
   // PEX-3 (BL-266) — asal kuantitas pesanan (penjelasan, bukan angka baru).
-  'fc.sup.demandNote': 'Kuantitas pesanan = LTP (rencana pemakaian) − stok PTI yang ada.',
+  'fc.sup.demandNote':
+    'Baris ini adalah bagian LTP (rencana pemakaian) yang perlu dikomitmenkan. Selisih pada hover (LTP − stok PTI yang ada) ditampilkan sebagai konteks.',
   // PEX-3 (BL-284) — suku-suku catatan per periode, hanya untuk material yang
   // akses stok PTI-nya diberikan kepada pemasok (Q-W3, PEX-D24).
   'fc.sup.demandHover':

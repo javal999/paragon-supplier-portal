@@ -279,7 +279,7 @@ const CALENDAR_DAY_ALLOWLIST = {
   'services/transitions/rfxRules.js#daysToDeadline':
     'An RFI/RFQ/RFP deadline is a DATE THE BUYER SETS on the event (CE-07); nothing computes it, so no calendar ruling can move it. This is a calendar-day countdown to that chosen date for the "closing soon" band.',
   'services/sdc/consolidation.js#chaseList':
-    "The superseded SDC design's interim chase threshold (RESPONSE_DUE_DAYS) on /buyer/chase, a route hidden from the MVP menu (NV-06) and replaced by REQ-E06-03. No Supplier Hub rule defines it, so changing it would invent one. Reported as a follow-up rather than left silently.",
+    "The SDC design's interim chase threshold (RESPONSE_DUE_DAYS), kept by the owner on 2026-11-19 (BL-357): it still renders on the Comm Hub follow-up tab and the BuyerHome chase card. No Supplier Hub requirement defines it, so counting it on the hub calendar would invent a rule; it stays a calendar-day count until the owner retires it.",
   'services/engine/requirement.js#openReceipts':
     'REQ-E14-03 — an open PO line whose confirmed delivery date passed more than the grace window (14 calendar days) is treated as closed in netting: a physical delivery window counted in calendar days, like CR-07, not a response deadline anybody answers.',
   'services/data/mock/rescheduleReadModel.js#callOffOrderLines':
