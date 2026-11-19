@@ -323,3 +323,5 @@
 | PSC-D11 | Preset shapes | Ramp, decline to 0, one-week spike, step change; [Proposed] | Owner, 2026-11-18 (BL-353) |
 | PSC-D12 | Grace merge | The feedstock grace is the PO On Hold grace: 1 14-calendar-day clock | Owner, 2026-11-18 (BL-331) |
 | PSC-D13 | Rejected call-off | Does not restart the grace; PEX-8 decides | Owner, 2026-11-18 (BL-354) |
+| PSC-D14 | Material Buffer coverage | Two settings: `P` (default 4) is the Protection multiplier; the Material Buffer has its own coverage weeks (default 2), averaged over those weeks. AC-01 holds as written; the earlier one-setting reading is revised | Owner, 2026-11-19 |
+| PSC-D15 | Protection switch as a DA cause | The protection buffer switch stays ROP-Order-only: it writes a DRC-D16 row and no DA version. BR-10's cause list is read through its operative clause ("a change that moves DA") | Owner, 2026-11-19 |
