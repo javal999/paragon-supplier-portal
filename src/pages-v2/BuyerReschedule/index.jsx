@@ -311,7 +311,9 @@ const BuyerReschedule = () => {
           </>
         ) : null}
 
-        {tab === 'fill' && w && effect ? <FillSection w={w} effect={effect} /> : null}
+        {tab === 'fill' && w && effect ? (
+          <FillSection w={w} effect={effect} asOf={run?.asOf} />
+        ) : null}
 
         {tab === 'values' && (
           <>

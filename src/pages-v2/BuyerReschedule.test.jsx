@@ -261,8 +261,9 @@ describe('BuyerReschedule — the planner page (REQ-E14-13)', () => {
       'No open order can relieve them'
     );
     await openTab('Warehouse fill');
+    // CAP-1 wave 2 — the week is a column: its status pill is the column's cell.
     expect(
-      within(await screen.findByTestId(`rs-week-${weeks[0].weekStart}`)).getByText(
+      within(await screen.findByTestId(`rs-fill-status-${weeks[0].weekStart}`)).getByText(
         'Cannot be relieved by open orders'
       )
     ).toBeInTheDocument();
