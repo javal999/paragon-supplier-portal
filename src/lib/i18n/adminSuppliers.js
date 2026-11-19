@@ -7,8 +7,10 @@
 /** @type {Record<string, string>} */
 export const adminSuppliersEn = {
   'adminSup.crumb.administration': 'Administration',
-  'adminSup.crumb.page': 'Suppliers',
-  'adminSup.title': 'Suppliers',
+  // BL-183 (owner ruling 2026-11-19) — the page title and its crumb read the
+  // menu label (`hub.nav.util.suppliers`) verbatim; the menu label stays as is.
+  'adminSup.crumb.page': 'Supplier stock update mode',
+  'adminSup.title': 'Supplier stock update mode',
   'adminSup.subtitle':
     'How each supplier shares its stock with the hub: pulled from its own system, or entered by the supplier by template or by hand. The mode decides how often the stock must be updated and when it counts as out of date.',
   'adminSup.meta.count_one': '{{count}} supplier',
@@ -65,8 +67,8 @@ export const adminSuppliersEn = {
 /** @type {Record<string, string>} */
 export const adminSuppliersId = {
   'adminSup.crumb.administration': 'Administrasi',
-  'adminSup.crumb.page': 'Pemasok',
-  'adminSup.title': 'Pemasok',
+  'adminSup.crumb.page': 'Cara pembaruan stok pemasok',
+  'adminSup.title': 'Cara pembaruan stok pemasok',
   'adminSup.subtitle':
     'Cara setiap pemasok berbagi stoknya dengan hub: ditarik dari sistemnya sendiri, atau diisi pemasok lewat templat atau secara manual. Cara ini menentukan seberapa sering stok harus diperbarui dan kapan dianggap usang.',
   'adminSup.meta.count_other': '{{count}} pemasok',
