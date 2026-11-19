@@ -45,8 +45,9 @@
 
 /** @import { OsipRules, SupplyArea } from './osipRules' */
 import { OSIP_RULES } from './osipRules';
+import { COVER_WEEKS_MAX, COVER_WEEKS_MIN } from './bufferModelA';
 
-/** @typedef {'z' | 'g' | 'f' | 'pullAgreement' | 'bottleneckLeadTimeDays' | 'safetyStockOn' | 'protectionBufferOn' | 'grace' | 'noMove' | 'pipo' | 'maxPti' | 'autoAbsorbMaxPct' | 'autoCarryMaxPct'} OsipParam */
+/** @typedef {'z' | 'g' | 'f' | 'pullAgreement' | 'bottleneckLeadTimeDays' | 'safetyStockOn' | 'protectionBufferOn' | 'coverWeeks' | 'coverageWeeks' | 'materialBufferOn' | 'grace' | 'noMove' | 'pipo' | 'maxPti' | 'autoAbsorbMaxPct' | 'autoCarryMaxPct'} OsipParam */
 
 /** @typedef {'material' | 'supplier' | 'supplierMaterial' | 'materialClass'} OsipParamScope */
 
@@ -87,6 +88,38 @@ export const OSIP_PARAMS = Object.freeze({
   protectionBufferOn: Object.freeze({
     scope: 'material',
     question: 'PEX-13',
+    boolean: true,
+    reasonRequired: true
+  }),
+  // PSC-4 BR-03 (BL-339), owner ruling 2026-11-19 — the Protection Buffer's
+  // cover setting P per material, in weeks. Default 4 (`COVER_WEEKS_DEFAULT`).
+  // A change moves ROP Order only: recorded with DRC-D16, no DA version (BR-10).
+  coverWeeks: Object.freeze({
+    scope: 'material',
+    question: 'PSC-4',
+    integer: true,
+    min: COVER_WEEKS_MIN,
+    max: COVER_WEEKS_MAX
+  }),
+  // PSC-4 BR-05 (BL-339), owner ruling 2026-11-19 — the Material Buffer's OWN
+  // coverage weeks per material. Default 2 (`COVERAGE_WEEKS_DEFAULT`): the
+  // average weekly LTP A over the next N hub weeks, times N. Separate from the
+  // Protection setting. ROP Order only: DRC-D16, no DA version (BR-10).
+  coverageWeeks: Object.freeze({
+    scope: 'material',
+    question: 'PSC-4',
+    integer: true,
+    min: COVER_WEEKS_MIN,
+    max: COVER_WEEKS_MAX
+  }),
+  // PSC-4 BR-07 (BL-339) — the planner's override of the Material Buffer
+  // switch, with a required reason. The value in force: true/false overrides
+  // the event calendar; null (cleared) follows it again. The override persists
+  // across windows until it is cleared (PSC-4 edge case). ROP Order only:
+  // recorded with DRC-D16, writes no DA version (BR-10, Q2).
+  materialBufferOn: Object.freeze({
+    scope: 'material',
+    question: 'PSC-4',
     boolean: true,
     reasonRequired: true
   }),

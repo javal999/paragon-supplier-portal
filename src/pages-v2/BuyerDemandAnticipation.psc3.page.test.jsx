@@ -89,7 +89,7 @@ function computedOf(materialCode) {
 }
 
 describe('PSC-3 — the three batch screens', () => {
-  it('shows one screen per series on Demand anticipation, and keeps the LTP choice control', async () => {
+  it('shows one screen per series on Demand anticipation; the LTP choice control is retired', async () => {
     render();
     await screen.findByTestId('ltp-inputs');
     expect(
@@ -103,8 +103,9 @@ describe('PSC-3 — the three batch screens', () => {
       await openScreen(series);
       expect(screen.getByTestId(`ltp-batch-file-${series}`)).toBeInTheDocument();
     }
-    // The choice control stays until phase 2 retires it.
-    expect(screen.getByTestId('ltp-in-choice')).toBeInTheDocument();
+    // PSC-4 BR-09 (BL-339) — the choice control is gone; DA reads LTP A.
+    expect(screen.queryByTestId('ltp-in-choice')).toBeNull();
+    expect(screen.getByTestId('ltp-in-da-baseline')).toBeInTheDocument();
   });
 });
 

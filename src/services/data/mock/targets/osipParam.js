@@ -25,6 +25,21 @@ import { isKnownMaterial, sdcClock } from '../../../sdc';
 import { declaredGroups } from '../../../sdc/materialGroups';
 import { NO_PERSON } from '@context/noPerson';
 import { osipParamStore } from '../stores/osipParamStore';
+import { recordRopOnlyChange } from '../ropOrderAudit';
+
+/**
+ * PSC-4 BR-10 (BL-339) — the params that move ROP Order ONLY. A change to one
+ * writes no DA version; it is recorded with the ROP Order figure's stored
+ * inputs and rules version (DRC-D16). `safetyStockOn`, z and g move DA and are
+ * the DA-version causes instead (`daCauseRules`).
+ * @type {ReadonlySet<string>}
+ */
+const ROP_ONLY_PARAMS = new Set([
+  'coverWeeks',
+  'coverageWeeks',
+  'materialBufferOn',
+  'protectionBufferOn'
+]);
 
 /**
  * The key's parts, when the masters resolve every one of them.
@@ -49,16 +64,31 @@ export const osipParamTarget = {
     const k = resolved(id);
     // The policy hook has already refused every payload this could reject.
     if (!k || osipParamRefusal(k.param, payload.osipParamValue) !== null) return;
+    const reason =
+      typeof payload.osipParamReason === 'string' ? payload.osipParamReason.trim() || null : null;
     osipParamStore.append({
       key: id,
       param: k.param,
       value: /** @type {number | boolean | null} */ (payload.osipParamValue),
       previous: osipParamStore.valueOf(id),
-      reason:
-        typeof payload.osipParamReason === 'string' ? payload.osipParamReason.trim() || null : null,
+      reason,
       setAt: sdcClock.now(),
       setBy: scope.actor ?? NO_PERSON
     });
+    // PSC-4 BR-10 — an ROP-Order-only change is audited (DRC-D16), never a
+    // DA version. The material is the key's; a supplier-scoped param never is.
+    if (ROP_ONLY_PARAMS.has(k.param) && k.materialCode !== null)
+      recordRopOnlyChange({
+        key: id,
+        field:
+          /** @type {'coverWeeks' | 'coverageWeeks' | 'materialBufferOn' | 'protectionBufferOn'} */ (
+            k.param
+          ),
+        value: /** @type {number | boolean | null} */ (payload.osipParamValue),
+        reason,
+        materialCode: k.materialCode,
+        scope
+      });
   }
 };
 

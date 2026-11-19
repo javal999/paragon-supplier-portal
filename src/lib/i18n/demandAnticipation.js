@@ -27,6 +27,8 @@ export const demandAnticipationEn = {
   'ltpIn.material': 'Material',
   'ltpIn.pick': 'Pick a material',
   'ltpIn.choice': 'LTP in use',
+  'ltpIn.daBaseline':
+    'Demand anticipation reads LTP A. LTP Festive and LTP B are inputs to the buffers on Safety stock targets, not to the demand anticipation.',
   'ltpIn.uploadSeries': 'Upload for',
   'ltpIn.file': 'LTP file',
   'ltpIn.fileFormat':
@@ -199,6 +201,8 @@ export const demandAnticipationId = {
   'ltpIn.material': 'Material',
   'ltpIn.pick': 'Pilih material',
   'ltpIn.choice': 'LTP yang dipakai',
+  'ltpIn.daBaseline':
+    'Demand anticipation memakai LTP A. LTP Festive dan LTP B adalah input buffer di Safety stock targets, bukan demand anticipation.',
   'ltpIn.uploadSeries': 'Unggah untuk',
   'ltpIn.file': 'Berkas LTP',
   'ltpIn.fileFormat':

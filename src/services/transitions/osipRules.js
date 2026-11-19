@@ -259,11 +259,18 @@ export function safetyOrder(input, rules = OSIP_RULES) {
  * ZPE007; the hub does not run ZPE007 (DRC-10).
  * BL-267 (PEX-5 BR-06) — with LTP B given, the protection buffer (LTP B − LTP A) is
  * added here and nowhere else; 0 when it is not given.
- * @param {{ readonly cycleStock: number; readonly safetyOrder: number; readonly protectionBuffer?: number }} input
+ * PSC-4 BR-06 (BL-339) — the Strategic Buffer total is added here too, once;
+ * each component is a quantity, and with its own input missing it adds 0.
+ * @param {{ readonly cycleStock: number; readonly safetyOrder: number; readonly protectionBuffer?: number; readonly strategicBuffer?: number }} input
  * @returns {number}
  */
-export function ropOrder({ cycleStock: c, safetyOrder: s, protectionBuffer: p = 0 }) {
-  return c + s + p;
+export function ropOrder({
+  cycleStock: c,
+  safetyOrder: s,
+  protectionBuffer: p = 0,
+  strategicBuffer: b = 0
+}) {
+  return c + s + p + b;
 }
 
 /**

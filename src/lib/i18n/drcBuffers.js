@@ -8,6 +8,8 @@
 /** @type {Record<string, string>} */
 export const drcBuffersEn = {
   'buffers.provisional': 'Provisional: rule awaiting Material Planning ({{question}})',
+  'buffers.fallback':
+    'Fallback display only: the buffer definition is model A, on Safety stock targets (PSC-4).',
   'buffers.strategic.title': 'Strategic buffer, festive windows',
   'buffers.strategic.subtitle':
     'Strategic buffer = LTP − baseline, the baseline the average LTP of the {{months}} months before the festive window; never below 0. Read only: nothing is ordered from it.',
@@ -55,6 +57,8 @@ export const drcBuffersEn = {
 /** @type {Record<string, string>} */
 export const drcBuffersId = {
   'buffers.provisional': 'Sementara: aturan menunggu Material Planning ({{question}})',
+  'buffers.fallback':
+    'Hanya tampilan cadangan: definisi buffer adalah model A, di Safety stock targets (PSC-4).',
   'buffers.strategic.title': 'Strategic buffer, periode hari raya',
   'buffers.strategic.subtitle':
     'Strategic buffer = LTP − baseline, baseline adalah rata-rata LTP {{months}} bulan sebelum periode hari raya; tidak pernah di bawah 0. Hanya baca: tidak ada pesanan dari angka ini.',

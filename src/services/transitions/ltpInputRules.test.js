@@ -1,5 +1,8 @@
 // BL-267 (PEX-5) — the LTP inputs rules: the doc's AC-01 example, BR-02 (A falls
-// back to the forecast source), BR-07 (no choice reads A), the refusals, the file.
+// back to the forecast source), the refusals, the file. PSC-4 (BL-339) retires
+// the choice as a DA input: `used` IS LTP A (BR-01), and the per-week buffers
+// stay display figures only (ROP Order's model A quantities live in
+// `bufferModelA`, tested in `buffersModelA.psc4.test.js`).
 import { describe, expect, it } from 'vitest';
 import {
   choiceInForce,
@@ -9,10 +12,8 @@ import {
   parseLtpInputKey,
   ltpInputRefusal,
   ltpChoiceKey,
-  ltpUploadKey,
-  protectionForRopOrder
+  ltpUploadKey
 } from './ltpInputRules';
-import { ropOrder } from './osipRules';
 
 const W = ['2026-11-09', '2026-11-16', '2026-11-23'];
 /**
@@ -54,14 +55,10 @@ describe('PEX-5 AC-01', () => {
     choose('Festive')
   ]);
   const lw = ltpWeeks(W, [1, 1, 1], materialLtpInputs(rows, 'M-X'), 1);
-  it('DA reads the chosen LTP (130)', () => expect(lw.used).toEqual([130, 130, 130]));
+  it('PSC-4 BR-01: DA reads LTP A (100), not the chosen series', () =>
+    expect(lw.used).toEqual([100, 100, 100]));
   it('strategic buffer = Festive − A = 30', () => expect(lw.strategicBuffer).toEqual([30, 30, 30]));
   it('protection buffer = B − A = 15', () => expect(lw.protectionBuffer).toEqual([15, 15, 15]));
-  it('ROP Order adds the protection buffer over the horizon only', () => {
-    expect(protectionForRopOrder(lw, 2)).toBe(30);
-    expect(ropOrder({ cycleStock: 200, safetyOrder: 50, protectionBuffer: 30 })).toBe(280);
-    expect(ropOrder({ cycleStock: 200, safetyOrder: 50 })).toBe(250);
-  });
 });
 
 describe('PEX-6 AC-01 precondition (a B upload with choice A moves nothing)', () => {
@@ -73,17 +70,20 @@ describe('PEX-6 AC-01 precondition (a B upload with choice A moves nothing)', ()
 });
 
 describe('BR-02 and BR-07', () => {
-  it('with nothing uploaded, DA reads the forecast source and the choice is A', () => {
+  it('with nothing uploaded, DA reads the forecast source', () => {
     const lw = ltpWeeks(W, [7, 8, 9], materialLtpInputs([], 'M-X'), 1);
     expect(lw.used).toEqual([7, 8, 9]);
     expect(lw.aFromUpload).toBe(false);
-    expect(lw.choice).toBe('A');
   });
-  it('a choice of a series that is not uploaded reads A and says so', () => {
-    const rows = /** @type {any[]} */ ([upload('A', 100), choose('B')]);
+  it('PSC-4 BR-01: a choice moves no DA week at all', () => {
+    const rows = /** @type {any[]} */ ([
+      upload('A', 100),
+      upload('Festive', 130),
+      choose('Festive')
+    ]);
     const lw = ltpWeeks(W, [1, 1, 1], materialLtpInputs(rows, 'M-X'), 1);
     expect(lw.used).toEqual([100, 100, 100]);
-    expect(lw.flags).toContain('CHOICE_SERIES_NOT_UPLOADED');
+    expect(lw.flags).toEqual([]);
   });
   it('a later upload replaces the series; the latest choice wins', () => {
     const rows = /** @type {any[]} */ ([

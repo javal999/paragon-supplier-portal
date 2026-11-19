@@ -2,24 +2,27 @@
 // BL-267 — LTP INPUTS (PEX-5), SC-HUB-PLAN-EXECUTION-REQUIREMENTS-2026-11.
 //
 // Four inputs per material, all from outside the hub (BR-01): LTP A, LTP
-// Festive and LTP B (a quantity per hub week) and the LTP CHOICE (A, Festive or
-// B). Until a feed exists the planner uploads them from a file on the DA page
-// [Proposed, PEX-D12]; each upload is stamped with who, when and the source
-// file name (BR-02). Pure: rows in, figures out.
+// Festive and LTP B (a quantity per hub week) and, until PSC-4 (BL-339), the
+// LTP CHOICE (A, Festive or B). Until a feed exists the planner uploads them
+// from a file on the DA page [Proposed, PEX-D12]; each upload is stamped with
+// who, when and the source file name (BR-02). Pure: rows in, figures out.
 //
-//   DA(w)             = the chosen LTP(w)                              (BR-04)
-//   strategic buffer  = LTP Festive − LTP A, when Festive is given     (BR-05)
-//   protection buffer = LTP B − LTP A, when B is given, ROP Order only (BR-06)
-//   the hub never picks the LTP; no choice reads LTP A                 (BR-07)
+//   DA(w)             = LTP A(w)                      (PSC-4 BR-01, BR-02)
+//   strategic buffer  = LTP Festive − LTP A, when Festive is given     (PEX-5 BR-05)
+//   protection buffer = the model A figure, PSC-4 BR-03 (`bufferModelA`)
+//
+// ⚠️ **THE LTP CHOICE IS RETIRED AS A DA INPUT (PSC-4 BR-01, owner 2026-11-18,
+// model A).** Its ledger rows and its verb stay (append-only history), but
+// nothing reads them into DA any more: `ltpWeeks().used` IS LTP A, and the DA
+// grid no longer carries the chosen-LTP marker (BR-09). The per-week buffers the
+// grid used to show are quantities now, on Safety stock targets.
 //
 // MY CALLS (listed in the MR; none is in the requirements doc):
 //   · An upload replaces the whole series of its material: the latest upload of
 //     a series is the one in force; earlier ones stay on the ledger.
-//   · A buffer is never below 0 (DRC-9a's rule), per week.
-//   · A week the chosen series has no quantity for reads LTP A (or the source
-//     forecast when A is not uploaded), flagged `CHOICE_WEEK_EMPTY`.
-//   · ROP Order adds the protection buffer summed over the horizon weeks, as
-//     cycle stock is a horizon total.
+//   · A week the chosen series has no quantity for read LTP A; that rule now
+//     only ever applies to A itself (a week the A upload leaves out reads the
+//     forecast source).
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @typedef {'A' | 'Festive' | 'B'} LtpSeries */
@@ -176,15 +179,19 @@ export function materialLtpInputs(rows, materialCode) {
 }
 
 /**
- * One supplier × material's LTP weeks, with the three series, the chosen one,
- * and the buffers (BR-03 to BR-06). `source` is the weekly figure the hub read
- * before (the Foresight commitment `forecastQty`, spread by week) and stays the
- * LTP A until A is uploaded (BR-02). `share` splits a material's uploaded
- * quantity to this supplier [my call, see the MR].
+ * One supplier × material's LTP weeks, with the three series and the buffers
+ * they used to give per week (BR-03 to BR-06). `source` is the weekly figure the
+ * hub read before (the Foresight commitment `forecastQty`, spread by week) and
+ * stays the LTP A until A is uploaded (BR-02). `share` splits a material's
+ * uploaded quantity to this supplier [my call, see the MR].
+ *
+ * PSC-4 (BL-339) — `used` IS LTP A (BR-01, BR-02): the choice no longer picks
+ * the series DA reads. `strategicBuffer` / `protectionBuffer` stay the per-week
+ * differences for the DA grid's legacy fields; they are NOT what ROP Order adds
+ * any more — model A's quantities live in `bufferModelA`.
  *
  * @typedef {'CHOICE_WEEK_EMPTY' | 'CHOICE_SERIES_NOT_UPLOADED'} LtpInputFlag
  * @typedef {{
- *   readonly choice: LtpSeries;
  *   readonly aFromUpload: boolean;
  *   readonly a: readonly number[];
  *   readonly festive: readonly (number | null)[];
@@ -220,26 +227,14 @@ export function ltpWeeks(weeks, source, inputs, share) {
   const a = weeks.map((_, i) => aUp[i] ?? source[i] ?? 0);
   const festive = series('Festive');
   const b = series('B');
-  const choice = inputs?.choice ?? DEFAULT_LTP_CHOICE;
-  const chosen = choice === 'Festive' ? festive : choice === 'B' ? b : null;
-  if (chosen !== null && inputs?.uploads[choice] == null) flags.push('CHOICE_SERIES_NOT_UPLOADED');
-  const used = weeks.map((_, i) => {
-    if (chosen === null) return a[i];
-    if (chosen[i] === null) {
-      if (inputs?.uploads[choice] != null && !flags.includes('CHOICE_WEEK_EMPTY'))
-        flags.push('CHOICE_WEEK_EMPTY');
-      return a[i];
-    }
-    return /** @type {number} */ (chosen[i]);
-  });
   return {
-    choice,
     aFromUpload,
     a,
     festive,
     b,
-    used,
-    // BR-05 / BR-06, never below 0 [my call].
+    // PSC-4 BR-01 — DA reads LTP A; the choice is retired as a DA input.
+    used: a,
+    // PEX-5's per-week display figures; kept for the DA grid's own tests.
     strategicBuffer: festive.map((f, i) => (f === null ? null : Math.max(0, f - a[i]))),
     protectionBuffer: b.map((x, i) => (x === null ? null : Math.max(0, x - a[i]))),
     flags
@@ -247,29 +242,8 @@ export function ltpWeeks(weeks, source, inputs, share) {
 }
 
 /**
- * BR-06 — the protection buffer ROP Order adds, summed over `horizon` weeks;
- * 0 when LTP B is not given.
- * @param {LtpWeeks} w
- * @param {number} horizon
- * @returns {number}
- */
-export function protectionForRopOrder(w, horizon) {
-  let total = 0;
-  for (const v of w.protectionBuffer.slice(0, horizon)) total += v ?? 0;
-  return total;
-}
-
-/**
- * The protection buffer of the BL-205 uplift (`protectionUplift`) is replaced by
- * LTP B − LTP A when LTP B is given (BR-06). True when the figure comes from B.
- * @param {MaterialLtpInputs | null} inputs
- * @returns {boolean}
- */
-export const protectionFromInputs = (inputs) => inputs?.uploads.B != null;
-
-/**
  * BR-05 — true when the strategic buffer comes from LTP Festive; false: the
- * DRC-9a calculation (LTP − baseline) is the fallback.
+ * DRC-9a calculation (LTP − baseline) is the fallback display (PSC-4 BR-08).
  * @param {MaterialLtpInputs | null} inputs
  * @returns {boolean}
  */
