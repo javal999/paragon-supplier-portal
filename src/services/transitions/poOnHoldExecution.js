@@ -258,6 +258,29 @@ export function planHasNoRoom(plan) {
 }
 
 /**
+ * BL-323 — the room each option has left on a line, before the planner sends a
+ * round: the plan that option would run, judged by `planHasNoRoom`. The picker
+ * shows the line against this and the preview shows it against `planHasNoRoom`
+ * of the stored plan, so the two cannot disagree. FS only comes back false by
+ * the predicate's own rule (it places the whole remainder, or waits for a lead
+ * time); a missing fact comes back false too — that is `blocked`, not "no room".
+ * @param {{
+ *   readonly qty: number;
+ *   readonly cap: number | null;
+ *   readonly graceEndDay: string;
+ *   readonly leadTimeDays: number | null | undefined;
+ *   readonly lines: readonly ExecutionLine[];
+ *   readonly weeks: readonly ExecutionWeek[];
+ * }} f  Everything a plan needs except the option.
+ * @returns {Readonly<Record<import('./poOnHold').PoOnHoldOption, boolean>>}
+ */
+export function noRoomByOption(f) {
+  /** @param {import('./poOnHold').PoOnHoldOption} option */
+  const of = (option) => planHasNoRoom(planExecution({ ...f, option }));
+  return { fsOnly: of('fsOnly'), fsSpread: of('fsSpread'), fg: of('fg') };
+}
+
+/**
  * The idempotency key of one PO line's execution: a second run finds it and
  * does nothing. One decision is one supplier × material × grace episode.
  * @param {string} decisionId
