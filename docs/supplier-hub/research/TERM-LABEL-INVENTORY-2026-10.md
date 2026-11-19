@@ -36,7 +36,7 @@ The portal has **1,179 labels** in scope: 897 column headers, 157 grid row label
 | 8 | RFI and RFP Compare tab summary-card facts (Deviations, Lowest price, Answered) | **In, built in the last wave** while RFx is paused |
 | 9 | RFP term-catalog rows on /buyer/rfp/:rfpId and /supplier/rfp | **In, built in the last wave** |
 | | *BR-04 reach, TL-D11* | |
-| 10 | Is the TL-D6 list closed? | **Open rule:** any term the team writes in English inside Indonesian text stays English in the ID locale. Now covers FG demand, Max, Firm, call-off, lead time, Uplift, Protection buffer, Strategic buffer, plus the 6 in TL-D6 |
+| 10 | Is the TL-D6 list closed? | **Open rule:** any term the team writes in English inside Indonesian text stays English in the ID locale. Now covers FG demand, Max, Firm, call-off, lead time, Uplift, Protection buffer, Strategic buffer, Material Buffer, plus the 6 in TL-D6 |
 | | *Wording, TL-D12* | |
 | 11 | "Max" (/buyer/safety-stock, /buyer/order-plan), "Max stock" (/buyer/fs-reconcile) | **Rename to the team's "Max Stock" and "Max Stock Supplier"** |
 | 12 | /buyer/what-if "PR need" | **Rename to "PR Generated"** |
@@ -971,6 +971,14 @@ Q-file = `analysis/osip/PERTANYAAN-TIM-MATERIAL-2026-10-16.md`. Hub docs under `
 | column | LTP | LTP | buffers.strategic.col.ltp | Y | "LTP" (DRC-PROPOSAL-2026-10-19.md:133) | N | N |  | Keep |  |
 | column | Baseline | Baseline | buffers.strategic.col.baseline | Y | "baseline = rata-rata 3 bulan sebelum festive" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:169) | N | N |  | Keep |  |
 | column | Strategic buffer | Buffer strategis | buffers.strategic.col.buffer | Y | "Strategic buffer" (PERTANYAAN-TIM-MATERIAL-2026-10-16.md:168) | N | N |  | Decided (TL-D11) | ID now "Strategic buffer" (BL-233 wave 3) |
+
+## Page: /buyer/safety-stock — Buffers (model A) — `pages-v2/safetyStock/bufferModelA.jsx`
+
+| Kind | Label EN | Label ID | Key | Important | Source wording | Differs | Clash | Also called | Status | Note |
+|---|---|---|---|---|---|---|---|---|---|---|
+| column | Protection | Proteksi | sst.buffers.col.protection | Y | n/a (page label) | N | N |  | Keep | (i) from `protectionBuffer`; TL-D41 (BL-340) |
+| column | Strategic, festive | Strategis, hari raya | sst.buffers.col.festive | Y | n/a (page label) | N | N |  | Keep | (i) from `strategicBuffer`; BL-340 |
+| column | Strategic, material | Strategis, material | sst.buffers.col.material | Y | n/a (page label) | N | N |  | Keep | (i) from `materialBuffer`; TL-D42 (BL-340) |
 
 ## Page: /buyer/materials/trade-names — Trade names — `pages-v2/materials/BuyerTradeNames.jsx`
 
