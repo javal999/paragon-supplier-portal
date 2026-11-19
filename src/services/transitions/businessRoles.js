@@ -291,6 +291,13 @@ const LANE_BUNDLES = Object.freeze({
     // it is NOT subtracted from `buyer_all`: it grants no authority, it moves
     // dates — the `enforcement:set` shape, which `buyer_all` also holds.
     'calendar:set',
+    // ── PSC-4 BR-07 · THE MATERIAL BUFFER'S EVENT CALENDAR (CNY, Typhoon) ──
+    // A window switches the Material Buffer on, which moves ROP Order for
+    // every material while it is open. The same argument as `calendar:set`:
+    // the lanes measured by the rule cannot set it, so it sits with the
+    // platform's governance acts and `admin` (ADM) holds it by derivation.
+    // It writes no DA version; the change is audited with DRC-D16 (BR-10, Q2).
+    'eventcalendar:set',
     // ── BL-51 · THE 3PL LIST (REQ-E07-04 BR-05, maintained by ADM) ────────
     // Which public tracking page an ASN's number opens is what a planner
     // checks a supplier's "it is on the way" against. A supplier lane cannot

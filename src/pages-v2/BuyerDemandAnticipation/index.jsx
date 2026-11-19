@@ -111,16 +111,24 @@ const BuyerDemandAnticipation = () => {
   const crumb = forecastCrumb(t, 'demandAnticipation');
   const rows = useMemo(() => query.data?.items ?? [], [query.data]);
   // BL-267 — one entry per material (the inputs are per material, not per supplier).
+  // BL-338 — the same entry carries what the batch preview reads: the weeks'
+  // computed total and FG breakdown (DRC-18), and the FGs that use the material.
   const ltpMaterials = useMemo(
     () =>
-      [...new Map(rows.map((r) => [r.materialCode, r])).values()].map((r) => ({
-        materialCode: r.materialCode,
-        materialLabel: r.materialLabel,
-        ltpInputs:
-          /** @type {{ ltpInputs?: import('@services/data/mock/demandAnticipationReadModel').RowLtpInputs }} */ (
-            r
-          ).ltpInputs
-      })),
+      [...new Map(rows.map((r) => [r.materialCode, r])).values()].map((r) => {
+        const view = /** @type {import('./components/LtpBatchUploads').LtpBatchMaterialView} */ (
+          /** @type {unknown} */ (r)
+        );
+        return {
+          materialCode: r.materialCode,
+          materialLabel: r.materialLabel,
+          ltpInputs: view.ltpInputs,
+          weeks: view.weeks,
+          fgDemandAvailable: view.fgDemandAvailable,
+          fgUsers: view.fgUsers,
+          noPlanFgs: view.noPlanFgs
+        };
+      }),
     [rows]
   );
   const supplier = params.get('supplier');

@@ -106,6 +106,7 @@ import { feedstockConfirmEn, feedstockConfirmId } from './i18n/feedstockConfirm'
 import { capacityDecisionEn, capacityDecisionId } from './i18n/capacityDecision';
 import { leadTimeStepsEn, leadTimeStepsId } from './i18n/leadTimeSteps';
 import { adminCalendarEn, adminCalendarId } from './i18n/adminCalendar';
+import { adminEventCalendarEn, adminEventCalendarId } from './i18n/adminEventCalendar';
 import { performanceEn, performanceId } from './i18n/performance';
 import { inventoryCapacityEn, inventoryCapacityId } from './i18n/inventoryCapacity';
 // — DRC-9a strategic buffer, DRC-9b production limit (BL-195) —
@@ -261,6 +262,7 @@ export const resources = {
       ...capacityDecisionEn,
       ...leadTimeStepsEn,
       ...adminCalendarEn,
+      ...adminEventCalendarEn,
       ...performanceEn,
       ...inventoryCapacityEn,
       ...drcBuffersEn,
@@ -774,6 +776,7 @@ export const resources = {
       ...capacityDecisionId,
       ...leadTimeStepsId,
       ...adminCalendarId,
+      ...adminEventCalendarId,
       ...performanceId,
       ...inventoryCapacityId,
       ...drcBuffersId,

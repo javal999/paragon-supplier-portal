@@ -57,6 +57,7 @@ import BuyerCompliance from '@pages-v2/BuyerCompliance';
 import ProcessFlows from '@pages-v2/ProcessFlows';
 import InterfaceMonitor from '@pages-v2/InterfaceMonitor';
 import AdminWorkingCalendar from '@pages-v2/admin/AdminWorkingCalendar';
+import AdminEventCalendar from '@pages-v2/admin/AdminEventCalendar';
 import AdminThreePls from '@pages-v2/admin/AdminThreePls';
 import AdminSuppliers from '@pages-v2/admin/AdminSuppliers';
 import AdminQualification from '@pages-v2/admin/AdminQualification';
@@ -466,6 +467,13 @@ const ROUTES = [
     pattern: '/buyer/admin/working-calendar',
     at: '/buyer/admin/working-calendar',
     element: <AdminWorkingCalendar />,
+    identity: BUYER
+  },
+  {
+    name: 'buyer/admin/event-calendar',
+    pattern: '/buyer/admin/event-calendar',
+    at: '/buyer/admin/event-calendar',
+    element: <AdminEventCalendar />,
     identity: BUYER
   },
   {

@@ -49,24 +49,22 @@ describe('daMoved', () => {
 });
 
 describe('daCauses', () => {
-  it('PEX-6 AC-01: LTP B uploaded while the choice is A is no cause; switching A → B is', () => {
-    const rows = [up('B', 115)];
-    expect(daCauses({ ...base, choice: 'A', ltpRows: rows })).toEqual([]);
-    const [c] = daCauses({ ...base, choice: 'B', ltpRows: [...rows, pick('B', 'A')] });
-    expect(c ? daCauseText(c, (k) => k) : '').toBe('ltpB — → 115');
-    const causes = daCauses({ ...base, choice: 'B', ltpRows: [pick('B', 'A')] });
-    expect(causes.map((x) => daCauseText(x, () => 'LTP choice'))).toEqual(['LTP choice A → B']);
+  it('PSC-4 BR-01: only an LTP A upload is a cause; B, Festive and a choice are not', () => {
+    const rows = [up('B', 115), up('Festive', 130), pick('Festive', 'A')];
+    expect(daCauses({ ...base, ltpRows: rows })).toEqual([]);
+    const [c] = daCauses({ ...base, ltpRows: [...rows, up('A', 120)] });
+    expect(c ? daCauseText(c, (k) => k) : '').toBe('ltpA — → 120');
   });
   it('no DA week moved: no cause, the changes stay input changes (BR-03)', () => {
-    expect(daCauses({ ...base, moved: false, choice: 'B', ltpRows: [pick('B', 'A')] })).toEqual([]);
+    expect(daCauses({ ...base, moved: false, ltpRows: [up('A', 120), pick('B', 'A')] })).toEqual(
+      []
+    );
   });
   it('only rows after the previous publication count, and an upload shows the series total before and after', () => {
     const rows = [up('A', 100), up('A', 120)];
-    const [c] = daCauses({ ...base, since: { ltp: 1, osip: 0 }, choice: 'A', ltpRows: rows });
+    const [c] = daCauses({ ...base, since: { ltp: 1, osip: 0 }, ltpRows: rows });
     expect(c).toMatchObject({ kind: 'ltpA', before: 100, after: 120 });
-    expect(daCauses({ ...base, since: { ltp: 2, osip: 0 }, choice: 'A', ltpRows: rows })).toEqual(
-      []
-    );
+    expect(daCauses({ ...base, since: { ltp: 2, osip: 0 }, ltpRows: rows })).toEqual([]);
   });
   it('a change of Z or g of this material is a safety stock cause; another material is not', () => {
     const row = (/** @type {string} */ key, /** @type {string} */ param) => ({
@@ -79,7 +77,6 @@ describe('daCauses', () => {
     });
     const causes = daCauses({
       ...base,
-      choice: 'A',
       ltpRows: [],
       osipRows: [row('z|M', 'z'), row('z|OTHER', 'z'), row('f|sup', 'f')]
     });
@@ -100,7 +97,7 @@ describe('daCauses: the safety stock switch (PEX-13 BR-03)', () => {
     setAt: 't',
     setBy: by
   });
-  const args = { ...base, choice: /** @type {'A'} */ ('A'), ltpRows: [] };
+  const args = { ...base, ltpRows: [] };
 
   it('switching it off is a cause, with the reason, when DA moved', () => {
     const causes = daCauses({

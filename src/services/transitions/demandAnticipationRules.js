@@ -282,7 +282,8 @@ export function demandAnticipationPairs({ ltpLines, ptiStock }, nowIso, count) {
  * `sd`:  BL-210 — a typed SD (the sandbox's); absent or null, it is computed.
  * `z`:  [Team B3] the material's own Z (`osipParams`); absent or null, the rules'.
  * `safetyOn`:  PEX-13 BR-01 — the material's safety stock switch; absent or true, on. Off, the safety order is 0.
- * `protectionBuffer`:  BL-267 (PEX-5 BR-06) — LTP B − LTP A summed over the horizon, added to ROP Order only; absent, 0.
+ * `protectionBuffer`:  PSC-4 BR-03 (BL-339) — the model A Protection Buffer quantity, added to ROP Order only; absent, 0.
+ * `strategicBuffer`:  PSC-4 BR-04 to BR-06 (BL-339) — the Strategic Buffer total (festive + material), added to ROP Order once; absent, 0.
  *
  * @typedef {{
  *   readonly weeks: readonly string[];
@@ -305,6 +306,7 @@ export function demandAnticipationPairs({ ltpLines, ptiStock }, nowIso, count) {
  *   readonly z?: number | null;
  *   readonly safetyOn?: boolean;
  *   readonly protectionBuffer?: number;
+ *   readonly strategicBuffer?: number;
  * }} RollingDaInputs
  */
 
@@ -326,6 +328,7 @@ export function demandAnticipationPairs({ ltpLines, ptiStock }, nowIso, count) {
  *   readonly cycleStock: number;
  *   readonly ropOrder: number;
  *   readonly protectionBuffer: number;
+ *   readonly strategicBuffer: number;
  *   readonly soh: number;
  *   readonly ospo: number;
  *   readonly ospr: number;
@@ -418,7 +421,13 @@ export function rollingDaFigure(input, rules = OSIP_RULES) {
   // DRC-10 / [Default B9] — ROP Order; DRC-4 AC-01 — PR generated.
   const cycle = cycleStock(ltp, n);
   const protection = input.protectionBuffer ?? 0;
-  const rop = ropOrder({ cycleStock: cycle, safetyOrder: safety, protectionBuffer: protection });
+  const strategic = input.strategicBuffer ?? 0;
+  const rop = ropOrder({
+    cycleStock: cycle,
+    safetyOrder: safety,
+    protectionBuffer: protection,
+    strategicBuffer: strategic
+  });
   const pr = Math.max(0, -prGenerated({ ropOrder: rop, soh, ospo: da.ospo, ospr }));
   // DRC-4 BR-01 / BR-02 [Default A2; DRC-B7].
   const check = planCheck(
@@ -441,6 +450,7 @@ export function rollingDaFigure(input, rules = OSIP_RULES) {
     cycleStock: cycle,
     ropOrder: rop,
     protectionBuffer: protection,
+    strategicBuffer: strategic,
     soh,
     ospo: da.ospo,
     ospr,

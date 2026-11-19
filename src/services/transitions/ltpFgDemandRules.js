@@ -110,7 +110,17 @@ export function consumptionMovingAverage(
  *   readonly ltpLessFgDemand: number | null;
  *   readonly consumptionAverage: number | null;
  *   readonly consumptionAverageBasis: ConsumptionAverage;
+ *   readonly fgBreakdown: readonly FgBreakdownPart[] | null;
  * }} LtpFgWeekFields
+ */
+
+/**
+ * One finished good's part of a material's weekly requirement (PSC-3 AC-03):
+ * the engine's pegs grouped by finished good.
+ * @typedef {{
+ *   readonly skuCode: string;
+ *   readonly quantity: number;
+ * }} FgBreakdownPart
  */
 
 /**
@@ -120,25 +130,106 @@ export function consumptionMovingAverage(
  */
 
 /**
+ * PSC-3 (BL-338) — every finished good behind each material × week, from the
+ * engine's pegs. A material absent from the map has no FG demand read.
+ * @typedef {ReadonlyMap<string, ReadonlyMap<string, readonly FgBreakdownPart[]>> | null} FgBreakdownByMaterial
+ */
+
+/**
+ * PSC-3 (BL-338) — the finished goods that use each material, directly or
+ * through a bulk (one row covers every FG that uses the material, BR-02).
+ * @typedef {ReadonlyMap<string, readonly string[]>} FgUsersByMaterial
+ */
+
+/**
+ * Walk the BOM from each component up to the finished goods that use it. An
+ * item that is neither a finished good nor a component of anything has no FG
+ * behind it and is absent from the returned map.
+ * @param {readonly Pick<import('../engine/types').BomLine, 'parentCode' | 'componentCode'>[]} bom
+ * @param {readonly string[]} fgSkus
+ * @returns {FgUsersByMaterial}
+ */
+export function materialFgUsers(bom, fgSkus) {
+  const fgs = new Set(fgSkus);
+  /** @type {Map<string, string[]>} */
+  const parents = new Map();
+  for (const b of bom) {
+    const list = parents.get(b.componentCode) ?? [];
+    if (!list.includes(b.parentCode)) list.push(b.parentCode);
+    parents.set(b.componentCode, list);
+  }
+  /** @type {Map<string, readonly string[]>} */
+  const out = new Map();
+  for (const b of bom) {
+    if (out.has(b.componentCode)) continue;
+    const found = new Set();
+    /** @type {string[]} */
+    const stack = [b.componentCode];
+    const visited = new Set();
+    while (stack.length > 0) {
+      const code = /** @type {string} */ (stack.pop());
+      if (visited.has(code)) continue;
+      visited.add(code);
+      for (const parent of parents.get(code) ?? []) {
+        if (fgs.has(parent)) found.add(parent);
+        else stack.push(parent);
+      }
+    }
+    out.set(b.componentCode, [...found].sort());
+  }
+  return out;
+}
+
+/**
+ * PSC-3 AC-03 — the engine's pegs for one material × week, grouped by
+ * finished good (the same FG can reach a material through more than one BOM
+ * path, so the parts are summed).
+ * @param {readonly { readonly skuCode: string; readonly quantity: number }[]} pegs
+ * @returns {readonly FgBreakdownPart[]}
+ */
+export function pegsByFg(pegs) {
+  /** @type {Map<string, number>} */
+  const bySku = new Map();
+  for (const p of pegs) bySku.set(p.skuCode, (bySku.get(p.skuCode) ?? 0) + p.quantity);
+  return [...bySku].map(([skuCode, quantity]) => ({ skuCode, quantity }));
+}
+
+/**
  * DRC-18 — every row's weeks with FG demand, LTP − FG demand and the
  * consumption moving average. The demand anticipation fields are untouched.
+ *
+ * PSC-3 (BL-338) adds what the LTP batch preview reads: per week
+ * `fgBreakdown` (the finished goods behind the computed total), and per row
+ * `fgUsers` (every FG that uses the material) and `noPlanFgs` (those of them
+ * with no plan row in the FG plan version in force) — the edge case where an
+ * FG with no plan is left out of the total and the page says so.
+ *
  * @template {Omit<DemandAnticipationRow, 'weeks'> & { readonly weeks: readonly DemandAnticipationWeekView[] }} R
  * @param {readonly R[]} rows
  * @param {{
  *   readonly fgDemand: FgDemandByMaterial;
  *   readonly records: readonly ConsumptionRecord[];
  *   readonly nowIso: string;
+ *   readonly fgBreakdown?: FgBreakdownByMaterial;
+ *   readonly fgUsers?: FgUsersByMaterial;
+ *   readonly noPlanFgs?: FgUsersByMaterial;
  * }} input
- * @returns {(Omit<R, 'weeks'> & { readonly fgDemandAvailable: boolean; readonly weeks: readonly (R['weeks'][number] & LtpFgWeekFields)[] })[]}
+ * @returns {(Omit<R, 'weeks'> & { readonly fgDemandAvailable: boolean; readonly fgUsers: readonly string[]; readonly noPlanFgs: readonly string[]; readonly weeks: readonly (R['weeks'][number] & LtpFgWeekFields)[] })[]}
  */
-export function withLtpFgDemand(rows, { fgDemand, records, nowIso }) {
+export function withLtpFgDemand(
+  rows,
+  { fgDemand, records, nowIso, fgBreakdown, fgUsers, noPlanFgs }
+) {
   const currentWeek = mondayOf(dayOf(nowIso));
   return rows.map((row) => {
     const byWeek = fgDemand?.get(row.materialCode) ?? null;
+    const parts = fgBreakdown?.get(row.materialCode) ?? null;
     const share = row.share;
     return {
       ...row,
       fgDemandAvailable: byWeek !== null,
+      fgUsers: fgUsers?.get(row.materialCode) ?? [],
+      noPlanFgs: noPlanFgs?.get(row.materialCode) ?? [],
       weeks: row.weeks.map((w) => {
         const material = byWeek ? (byWeek.get(w.week) ?? 0) : null;
         const fg = material === null || share === null ? null : Math.round(material * share);
@@ -155,7 +246,8 @@ export function withLtpFgDemand(rows, { fgDemand, records, nowIso }) {
           ltpLessFgDemand: fg === null || ltp === undefined ? null : ltp - fg,
           consumptionAverage:
             basis.average === null || share === null ? null : Math.round(basis.average * share),
-          consumptionAverageBasis: basis
+          consumptionAverageBasis: basis,
+          fgBreakdown: parts === null ? null : (parts.get(w.week) ?? [])
         };
       })
     };

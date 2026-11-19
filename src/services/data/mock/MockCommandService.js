@@ -183,6 +183,7 @@ import { osipLevelTarget } from './targets/osipLevel';
 import { callOffChaseTarget } from './targets/callOffChase';
 import { osipParamTarget } from './targets/osipParam';
 import { ltpInputTarget } from './targets/ltpInput';
+import { eventCalendarTarget } from './targets/eventCalendar';
 import { promotionTarget } from './targets/promotion';
 import { capacityMonthTarget } from './targets/capacityMonth';
 // BL-202 — the what-if sandbox's saved scenarios (its own module, DRC-17).
@@ -6363,6 +6364,9 @@ const TARGETS = {
   // DR-10 trail: a ruling moves every deadline in the hub, and "who made this
   // day a holiday, when, and why" is exactly what an audit asks.
   workingCalendar: workingCalendarTarget,
+  // PSC-4 BR-07 (BL-339) — the Material Buffer's event calendar. Wired so
+  // every window lands in the DR-10 trail and records its DRC-D16 inputs.
+  eventCalendar: eventCalendarTarget,
   // BL-51 — the 3PL list. Wired so every change to where a tracking link points
   // lands in the DR-10 trail with who made it and when.
   threePl: threePlTarget,

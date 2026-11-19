@@ -48,7 +48,7 @@ const AnticipationGrid = ({ row, rowKey, currentWeek }) => {
     /** @type {DemandAnticipationWeekView} */ (row.weeks.find((w) => w.week === week));
 
   // BL-267 — a material with an uploaded LTP shows LTP A, Festive and B (DA reads the one in use).
-  const ltpIn = ltpInputRows(row, rowKey, t);
+  const ltpIn = ltpInputRows(row, rowKey);
   /** @type {WeekGridRow[]} */
   const rows = [
     {

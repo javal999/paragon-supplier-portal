@@ -44,6 +44,7 @@ import {
   RopRuleSwitches,
   defaultRopSwitches
 } from './safetyStock/osipRops';
+import BufferModelAPanel from './safetyStock/bufferModelA';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SAFETY STOCK AND REORDER POINT — REQ-E14-04, the Material Planner's view.
@@ -588,6 +589,14 @@ const BuyerSafetyStock = () => {
         <HistoryPanel m={current}>
           {/* BL-342 (PSC-5 BR-03) — how the CV is calculated, per material. */}
           <CvGuide materialCode={current.materialCode} osip={current.osip} />
+          {/* PSC-4 (BL-339) — model A: the three buffers, the cover setting P
+              and the Material Buffer's event window and switch. */}
+          <BufferModelAPanel
+            materialCode={current.materialCode}
+            uom={current.uom}
+            suppliers={current.osip.suppliers}
+            figures={ropFigures.get(current.materialCode) ?? []}
+          />
           <RopDetail
             materialCode={current.materialCode}
             uom={current.uom}

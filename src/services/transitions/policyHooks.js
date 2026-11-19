@@ -624,6 +624,14 @@ export const POLICY_HOOKS = /** @type {const} */ ({
    */
   CALENDAR_DAY_GOVERNED: 'calendar_day_governed',
   /**
+   * PSC-4 BR-07 (BL-339) — one window on the Material Buffer's event calendar:
+   * the entity key is `<kind>|<startsOn>`, the kind is CNY or Typhoon, both
+   * ends are calendar days with the end on or after the start inside the
+   * rule's bound, and the reason is SUBSTANCE. The rule is `eventRefusal`, the
+   * one the admin page's form pre-checks.
+   */
+  EVENT_CALENDAR_VALID: 'eventcalendar_valid',
+  /**
    * BL-32 — one rule value the Hub administrator changes: a key the registry
    * defines (or a stale-period override), a value of the key's type inside its
    * bounds, the order rules that tie values together still holding after the

@@ -93,6 +93,9 @@ const ProtectionBufferSection = ({ supplierId, materialCode, rules = PROTECTION_
         <p className="text-xs text-text-tertiary" data-testid="protection-buffer-provisional">
           {t('buffers.provisional', { question: provisionalBasis(PROTECTION_BUFFER_DEFAULTS, t) })}
         </p>
+        <p className="text-xs text-warning-hover mt-1" data-testid="protection-buffer-fallback">
+          {t('buffers.fallback')}
+        </p>
         <p className="text-xs text-text-tertiary mt-1">
           {t('buffers.protection.subtitle', { months: rules.baselineMonths })}
         </p>
