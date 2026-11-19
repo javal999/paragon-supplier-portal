@@ -53,7 +53,12 @@ const useGrSource = ({ sourceMode, selectedSourceId, manualASN, shipments, asns,
       ? manualAsnMatch
         ? sourceFromAsn(manualAsnMatch)
         : undefined
-      : sources.find((s) => s.id === selectedSourceId);
+      : // BL-139 — `initialAsnId` carries a receipt's `asnId`, which is a
+        // SHIPMENT id for a dock-sourced GR and the ASN NUMBER when the receipt
+        // names an ASN the store holds (the store has no separate id). Matching
+        // the ASN number as well preselects the receipt's own source; the list
+        // is shipments-first, so a dock shipment still wins when both exist.
+        sources.find((s) => s.id === selectedSourceId || s.asnNumber === selectedSourceId);
 
   // Draft the lines when a source resolves (dock selection, manual match, or the
   // initial pre-selection). A newly resolved source REPLACES lines drafted from

@@ -137,29 +137,33 @@ describe('supplier ASN form — batch from declared stock', () => {
 
 describe('planner ASN detail — "not in declared stock" (MR-6 BR-04, AC-02)', () => {
   it('marks a typed batch, and not a declared one', async () => {
-    // ASN-2025-00301 is the only ASN on PO-2025-00116 (po-016), so it opens.
-    asnStore.update('ASN-2025-00301', (a) => ({
+    // ⚠️ THE SUBJECT MOVED AT BL-139, BECAUSE THE PREMISE DID: the drill renders
+    // an ASN's LINES only when the PO has exactly one active ASN
+    // (`drilledAsns.length === 1`), and `gr-005` now names `ASN-2025-00405` on
+    // PO-2025-00116 — so that PO no longer has one. `ASN-2025-00403` is the
+    // only active ASN on PO-2025-00108 (po-008), and it carries a line.
+    asnStore.update('ASN-2025-00403', (a) => ({
       ...a,
       lineItems: a.lineItems.map((l) => ({ ...l, batchSource: /** @type {const} */ ('typed') }))
     }));
     const { unmount } = renderWithProviders(<BuyerShipments />, {
       identity: BUYER,
-      route: '/buyer/shipments?po=po-016&from=order-summary'
+      route: '/buyer/shipments?po=po-008&from=order-summary'
     });
     expect(
-      await screen.findByTestId('asn-batch-not-declared-ASN-2025-00301-RM-PSTN-7150')
+      await screen.findByTestId('asn-batch-not-declared-ASN-2025-00403-PK-PETB-8802')
     ).toHaveTextContent('Not in declared stock');
     unmount();
 
-    asnStore.update('ASN-2025-00301', (a) => ({
+    asnStore.update('ASN-2025-00403', (a) => ({
       ...a,
       lineItems: a.lineItems.map((l) => ({ ...l, batchSource: /** @type {const} */ ('declared') }))
     }));
     renderWithProviders(<BuyerShipments />, {
       identity: BUYER,
-      route: '/buyer/shipments?po=po-016&from=order-summary'
+      route: '/buyer/shipments?po=po-008&from=order-summary'
     });
-    expect(await screen.findByTestId('drill-asn-ASN-2025-00301')).toHaveTextContent('LOT-M7781');
-    expect(screen.queryByTestId('asn-batch-not-declared-ASN-2025-00301-RM-PSTN-7150')).toBeNull();
+    expect(await screen.findByTestId('drill-asn-ASN-2025-00403')).toHaveTextContent('LOT-403');
+    expect(screen.queryByTestId('asn-batch-not-declared-ASN-2025-00403-PK-PETB-8802')).toBeNull();
   });
 });

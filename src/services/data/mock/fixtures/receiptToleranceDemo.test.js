@@ -10,6 +10,10 @@
 import { describe, expect, it } from 'vitest';
 import { mockGoodsReceipts } from '@data/mockGoodsReceipts';
 import { MOCK_ASNS } from './supplierShipments';
+// BL-139 — the receipts now name the store's own series, and those rows are the
+// ASNs the comparison actually resolves. Both corpora are read here so this
+// spec measures the SHIPPED quantity, not the pre-BL-139 fallback.
+import { RECEIVED_ASNS } from './receivedAsns';
 /** @import { ReceiptQtyOutcome } from '../../../transitions/fulfilmentRules' */
 import {
   compareReceipt,
@@ -18,7 +22,8 @@ import {
 } from '../../../transitions/fulfilmentRules';
 
 /** @param {string} asnNumber */
-const asnFor = (asnNumber) => MOCK_ASNS.find((a) => a.asnNumber === asnNumber) ?? null;
+const asnFor = (asnNumber) =>
+  [...MOCK_ASNS, ...RECEIVED_ASNS].find((a) => a.asnNumber === asnNumber) ?? null;
 /** @param {string} id */
 const lines = (id) => {
   const gr = /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (

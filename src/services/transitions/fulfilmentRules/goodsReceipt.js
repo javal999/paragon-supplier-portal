@@ -159,6 +159,11 @@ export const hasReceiptDiscrepancy = (gr, asn) => compareReceipt(gr, asn).some((
  *     never subtracted from `shipped`, so its quantity is already open. This
  *     function reports one receipt's own missing quantity; the per-ASN
  *     aggregation lives in `openQtyForLine`, its only consumer;
+ *   · ⚠️ BL-139 (owner ruling, 2026-11-19) — a DELIVERED ASN that a receipt
+ *     covers does not reopen anything through that aggregation: the open
+ *     quantity is already `committed − received` (the receipt is the
+ *     authority), so adding the missing quantity back would count the same
+ *     shortfall twice. See `openQtyForLine`;
  *   · no second receipt is required: the quantity reopens as soon as the
  *     receipt is kept open, and it returns to the SAME PO line and material it
  *     was received against (no document is edited; the open quantity is a read);

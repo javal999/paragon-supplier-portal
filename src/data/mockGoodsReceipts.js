@@ -83,8 +83,8 @@ const mockGoodsReceiptsRaw = [
   {
     id: 'gr-001',
     grNumber: 'GR-2026-001',
-    asnId: 'shp-014',
-    asnNumber: 'ASN-2026-014',
+    asnId: 'ASN-2025-00401',
+    asnNumber: 'ASN-2025-00401',
     poNumber: 'PO-2025-00101',
     supplierId: 'sup-001',
     supplierName: 'PT Sample Oleochemicals',
@@ -120,8 +120,8 @@ const mockGoodsReceiptsRaw = [
   {
     id: 'gr-002',
     grNumber: 'GR-2026-002',
-    asnId: 'shp-012',
-    asnNumber: 'ASN-2026-012',
+    asnId: 'ASN-2025-00402',
+    asnNumber: 'ASN-2025-00402',
     poNumber: 'PO-2025-00107',
     supplierId: 'sup-007',
     supplierName: 'PT Sample Packaging Indonesia',
@@ -146,8 +146,8 @@ const mockGoodsReceiptsRaw = [
   {
     id: 'gr-003',
     grNumber: 'GR-2026-003',
-    asnId: 'shp-013',
-    asnNumber: 'ASN-2026-013',
+    asnId: 'ASN-2025-00403',
+    asnNumber: 'ASN-2025-00403',
     poNumber: 'PO-2025-00108',
     supplierId: 'sup-007',
     supplierName: 'PT Sample Packaging Indonesia',
@@ -176,8 +176,8 @@ const mockGoodsReceiptsRaw = [
   {
     id: 'gr-004',
     grNumber: 'GR-2026-004',
-    asnId: 'shp-015',
-    asnNumber: 'ASN-2026-015',
+    asnId: 'ASN-2025-00404',
+    asnNumber: 'ASN-2025-00404',
     poNumber: 'PO-2025-00112',
     supplierId: 'sup-003',
     supplierName: 'Sample Fragrance House Indonesia',
@@ -203,8 +203,8 @@ const mockGoodsReceiptsRaw = [
   {
     id: 'gr-005',
     grNumber: 'GR-2026-005',
-    asnId: 'shp-016',
-    asnNumber: 'ASN-2026-016',
+    asnId: 'ASN-2025-00405',
+    asnNumber: 'ASN-2025-00405',
     poNumber: 'PO-2025-00116',
     supplierId: 'sup-002',
     supplierName: 'PT Sample Specialty Fats',
@@ -235,8 +235,8 @@ const mockGoodsReceiptsRaw = [
   {
     id: 'gr-006',
     grNumber: 'GR-2026-006',
-    asnId: 'shp-017',
-    asnNumber: 'ASN-2026-017',
+    asnId: 'ASN-2025-00406',
+    asnNumber: 'ASN-2025-00406',
     poNumber: 'PO-2025-00117',
     supplierId: 'sup-008',
     supplierName: 'PT Sample Carton Packaging',
@@ -263,8 +263,8 @@ const mockGoodsReceiptsRaw = [
   {
     id: 'gr-007',
     grNumber: 'GR-2026-007',
-    asnId: 'shp-010',
-    asnNumber: 'ASN-2026-010',
+    asnId: 'ASN-2025-00407',
+    asnNumber: 'ASN-2025-00407',
     poNumber: 'PO-2025-00113',
     supplierId: 'sup-005',
     supplierName: 'Sample Personal Care Emulsifiers GmbH',
@@ -291,8 +291,8 @@ const mockGoodsReceiptsRaw = [
   {
     id: 'gr-008',
     grNumber: 'GR-2026-008',
-    asnId: 'shp-009',
-    asnNumber: 'ASN-2026-009',
+    asnId: 'ASN-2025-00408',
+    asnNumber: 'ASN-2025-00408',
     poNumber: 'PO-2025-00109',
     supplierId: 'sup-008',
     supplierName: 'PT Sample Carton Packaging',
@@ -316,8 +316,8 @@ const mockGoodsReceiptsRaw = [
   {
     id: 'gr-009',
     grNumber: 'GR-2026-009',
-    asnId: 'shp-011',
-    asnNumber: 'ASN-2026-011',
+    asnId: 'ASN-2025-00409',
+    asnNumber: 'ASN-2025-00409',
     poNumber: 'PO-2025-00115',
     supplierId: 'sup-010',
     supplierName: 'PT Sample Halal Emulsifiers',
@@ -342,8 +342,8 @@ const mockGoodsReceiptsRaw = [
   {
     id: 'gr-010',
     grNumber: 'GR-2026-010',
-    asnId: 'shp-005',
-    asnNumber: 'ASN-2026-005',
+    asnId: 'ASN-2025-00410',
+    asnNumber: 'ASN-2025-00410',
     poNumber: 'PO-2025-00105',
     supplierId: 'sup-005',
     supplierName: 'Sample Personal Care Emulsifiers GmbH',
@@ -369,8 +369,8 @@ const mockGoodsReceiptsRaw = [
   {
     id: 'gr-011',
     grNumber: 'GR-2026-011',
-    asnId: 'shp-007',
-    asnNumber: 'ASN-2026-007',
+    asnId: 'ASN-2025-00411',
+    asnNumber: 'ASN-2025-00411',
     poNumber: 'PO-2025-00106',
     supplierId: 'sup-006',
     supplierName: 'Sample Specialty Chemicals France',
@@ -397,8 +397,8 @@ const mockGoodsReceiptsRaw = [
   {
     id: 'gr-012',
     grNumber: 'GR-2026-012',
-    asnId: 'shp-008',
-    asnNumber: 'ASN-2026-008',
+    asnId: 'ASN-2025-00412',
+    asnNumber: 'ASN-2025-00412',
     poNumber: 'PO-2025-00104',
     supplierId: 'sup-004',
     supplierName: 'Sample Aromatics Sdn. Bhd.',
@@ -423,8 +423,8 @@ const mockGoodsReceiptsRaw = [
   {
     id: 'gr-013',
     grNumber: 'GR-2026-013',
-    asnId: 'shp-006',
-    asnNumber: 'ASN-2026-006',
+    asnId: 'ASN-2025-00413',
+    asnNumber: 'ASN-2025-00413',
     poNumber: 'PO-2025-00103',
     supplierId: 'sup-003',
     supplierName: 'Sample Fragrance House Indonesia',
@@ -448,8 +448,8 @@ const mockGoodsReceiptsRaw = [
   {
     id: 'gr-014',
     grNumber: 'GR-2026-014',
-    asnId: 'shp-004',
-    asnNumber: 'ASN-2026-004',
+    asnId: 'ASN-2025-00414',
+    asnNumber: 'ASN-2025-00414',
     poNumber: 'PO-2025-00102',
     supplierId: 'sup-002',
     supplierName: 'PT Sample Specialty Fats',
@@ -511,11 +511,16 @@ const mockGoodsReceiptsRaw = [
   // call-offs. Each value was chosen so sup-007's CFOT still rounds to 40% and
   // every call-off keeps its in-full result — measured, not assumed.
   //
-  // ⚠️ `hasReceiptDiscrepancy` COMPARES AGAINST `qtyExpected`, NOT AGAINST AN
-  // ASN, because no goods receipt in this fixture resolves an ASN number
-  // (`compareReceipt` falls back to `qtyExpected` when it cannot find one). So
-  // a short RECEIPT is what flags gr-015, and a rejected quantity is what flags
-  // gr-016 — two different arms of the same predicate, deliberately.
+  // ⚠️ BL-139 (owner ruling, 2026-11-19) — EVERY receipt that names an ASN now
+  // names one the ASN read holds (`fixtures/receivedAsns.js`, the store's own
+  // `ASN-2025-0NNNN` series), so `compareReceipt` compares against the shipped
+  // quantity. `asnId` is the ASN number: the store has no separate id, and a
+  // shipment id here named a document in a DIFFERENT series.
+  // ⚠️ ONE DELIBERATE EXCEPTION: `gr-016` names `ASN-2025-00416`, which the
+  // store does not hold — the fallback path (`compareReceipt` on `qtyExpected`
+  // when no ASN resolves) stays demonstrable, pinned by `receivedWithoutAsn`.
+  // A short RECEIPT flags gr-015 and a rejected quantity flags gr-016 — two
+  // different arms of the same predicate, deliberately.
   //
   // ⚠️ THE DATES ARE NOT FREE, AND NEITHER ARE THE MATERIALS. sup-007's only
   // two document-lane codes (`PK-PETB-8801`, `-8802`) BOTH carry call-off
@@ -531,8 +536,8 @@ const mockGoodsReceiptsRaw = [
   {
     id: 'gr-015',
     grNumber: 'GR-2026-015',
-    asnId: 'shp-025',
-    asnNumber: 'ASN-2026-025',
+    asnId: 'ASN-2025-00415',
+    asnNumber: 'ASN-2025-00415',
     poNumber: 'PO-2026-00125',
     supplierId: 'sup-007',
     supplierName: 'PT Sample Packaging Indonesia',
@@ -565,8 +570,8 @@ const mockGoodsReceiptsRaw = [
   {
     id: 'gr-016',
     grNumber: 'GR-2026-016',
-    asnId: 'shp-026',
-    asnNumber: 'ASN-2026-026',
+    asnId: 'ASN-2025-00416',
+    asnNumber: 'ASN-2025-00416',
     poNumber: 'PO-2026-00125',
     supplierId: 'sup-007',
     supplierName: 'PT Sample Packaging Indonesia',
@@ -592,8 +597,8 @@ const mockGoodsReceiptsRaw = [
   {
     id: 'gr-017',
     grNumber: 'GR-2026-017',
-    asnId: 'shp-027',
-    asnNumber: 'ASN-2026-027',
+    asnId: 'ASN-2025-00417',
+    asnNumber: 'ASN-2025-00417',
     poNumber: 'PO-2026-00126',
     supplierId: 'sup-007',
     supplierName: 'PT Sample Packaging Indonesia',

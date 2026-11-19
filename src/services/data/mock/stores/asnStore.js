@@ -11,6 +11,10 @@
 import { MOCK_ASNS } from '../fixtures/supplierShipments';
 // E2E walkthrough 2026-11-12 — the ASNs of the pair's two call-offs.
 import { SSTP_ASNS } from '../fixtures/walkthroughSstp';
+// BL-139 — the Delivered ASNs the sample goods receipts name. The RECEIPTS
+// corpus and the ASN read now share one series; before this the receipts cited
+// the shipments' numbers and no comparison could resolve.
+import { RECEIVED_ASNS } from '../fixtures/receivedAsns';
 /** @import { ASN } from '../../types' */
 
 /**
@@ -21,8 +25,10 @@ function clone(a) {
   return { ...a, details: { ...a.details }, lineItems: a.lineItems.map((li) => ({ ...li })) };
 }
 
+/** The seed set, built once so `reset` restores the same rows. */
+const SEED = [...MOCK_ASNS, ...SSTP_ASNS, ...RECEIVED_ASNS];
 /** @type {ASN[]} */
-let rows = [...MOCK_ASNS, ...SSTP_ASNS].map(clone);
+let rows = SEED.map(clone);
 let seq = 0;
 
 export const asnStore = {
@@ -64,7 +70,7 @@ export const asnStore = {
   },
   /** @returns {void} */
   reset() {
-    rows = [...MOCK_ASNS, ...SSTP_ASNS].map(clone);
+    rows = SEED.map(clone);
     seq = 0;
   }
 };

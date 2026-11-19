@@ -590,7 +590,12 @@ describe('CP-3 · H2 — THE DELTA, LINE BY LINE, over every receivable line', (
     // stated here rather than adjusted quietly.
     // ⚠️ TWELVE with the E2E walkthrough (2026-11-12): its two ASNs of
     // 2000028400 (one Delivered, one In Transit), packaging, so both REFUSE.
-    expect(rows).toHaveLength(12);
+    // ⚠️ TWENTY-NINE with BL-139 (2026-11-19): the sample goods receipts now
+    // name ASNs the store holds, and those 17 Delivered lines are receivable
+    // sources like any other Delivered ASN — a second partial receipt against
+    // an ASN is a supported flow (BL-325). Eleven GAIN the halal question and
+    // six REFUSE, so the one-directional property below still holds.
+    expect(rows).toHaveLength(29);
 
     const gained = rows
       .filter(({ li }) => {
@@ -611,13 +616,27 @@ describe('CP-3 · H2 — THE DELTA, LINE BY LINE, over every receivable line', (
     // ⚠️ SIX AT H4 — the fifth of the H2 five plus `AI-NIAC-6612`, which the
     // master marks REQUIRED. It gains a SEAL question exactly like the others;
     // what makes it the mandate exemplar is fact 3, not fact 1.
+    // ⚠️ SEVENTEEN WITH BL-139 — the receipts' Delivered lines carry eleven
+    // more gains (some of a material already present: the property is PER LINE,
+    // and two GR-eligible lines of one material are two lines).
     expect(gained).toEqual([
       'AI-NIAC-6612',
+      'AI-PEPTIDE-8801',
+      'FR-EMIN-4420',
       'FR-ROUD-4470',
       'FR-WARD-4410',
+      'FR-WARD-4410',
+      'FR-WARD-4410',
       'RM-COCO-8200',
+      'RM-COCO-8200',
+      'RM-EMUL-3320',
+      'RM-EMUL-3320',
+      'RM-EMUL-9410',
+      'RM-EMUL-9430',
       'RM-EMUL-9440',
-      'RM-PSTN-7150'
+      'RM-PSTN-7150',
+      'RM-STEAR-7300',
+      'RM-STEAR-7300'
     ]);
 
     // FOUR LINES CHANGE FROM A CONFIDENT `false` TO AN HONEST REFUSAL. All four
@@ -628,24 +647,43 @@ describe('CP-3 · H2 — THE DELTA, LINE BY LINE, over every receivable line', (
     // which is a different regime and a state they were already in. Recorded
     // because a dispatch expectation that is quietly not met is a finding.
     // + the E2E walkthrough's two packaging lines of 2000028400 (same reason).
+    // ⚠️ TWELVE WITH BL-139 — the receipts' packaging lines refuse for the same
+    // reason as the ones already here (PK-CART-9901 ×2, PK-PETB ×2 each).
     expect(refused).toEqual([
       '2000028400',
       '2000028400',
       'PK-ALCP-2450',
+      'PK-CART-9901',
+      'PK-CART-9901',
       'PK-PETB-8801',
+      'PK-PETB-8801',
+      'PK-PETB-8801',
+      'PK-PETB-8802',
+      'PK-PETB-8802',
       'PK-PETB-8802',
       'PK-PETB-8804'
     ]);
 
     // EVERY LINE IS NOW ANSWERED OR REFUSED — no third outcome, nothing silent.
-    // ⚠️ THE REFUSED SET IS UNCHANGED AT FOUR, which is the half that matters:
-    // the H4 line ADDED a question and moved no line out of a refusal.
-    expect(gained.length + refused.length).toBe(12);
+    // ⚠️ THE REFUSED SET GREW FROM FOUR TO TWELVE WITH BL-139 — six new
+    // packaging lines, each refusing for the reason already recorded here.
+    expect(gained.length + refused.length).toBe(29);
 
     // ⚠️ AND NOTHING MOVED FROM CHECKED TO UNCHECKED. The prose parse said
-    // `false` on ALL NINE, so the delta is one-directional by measurement, not
-    // by argument: no line lost a question it used to be asked.
-    expect(rows.filter(({ li }) => proseParseSays(li.description))).toEqual([]);
+    // `false` on ALL NINE at H2, so the delta was one-directional by
+    // measurement, not by argument: no line lost a question it used to be
+    // asked.
+    // ⚠️ BL-139 ADDS FOUR LINES THE PROSE PARSE WOULD HAVE CAUGHT, AND ALL FOUR
+    // ARE IN `gained` — the claim survives MEASURED rather than by an empty
+    // set: each was asked before and is asked now, so nothing moved off.
+    const proseHits = rows.filter(({ li }) => proseParseSays(li.description));
+    expect(proseHits.map(({ li }) => li.materialCode).sort()).toEqual([
+      'RM-EMUL-9410',
+      'RM-EMUL-9430',
+      'RM-STEAR-7300',
+      'RM-STEAR-7300'
+    ]);
+    expect(proseHits.every(({ li }) => gained.includes(li.materialCode))).toBe(true);
   });
 
   it('the prose parse is not dead-by-typo — it still fires SOMEWHERE, and on the wrong things', () => {
@@ -941,8 +979,8 @@ describe('CP-3 · E4 — ⚠️ THE PER-CHECK DELTA, AND IT IS ZERO', () => {
     const ledger = await seededLedger();
     const rows = receivableLines();
     // TEN at H4 — see the H2 census above for why the population grew; TWELVE
-    // with the E2E walkthrough's two lines.
-    expect(rows).toHaveLength(12);
+    // with the E2E walkthrough's two lines; TWENTY-NINE with BL-139's 17.
+    expect(rows).toHaveLength(29);
 
     /** @type {string[]} */
     const moved = [];
@@ -961,9 +999,9 @@ describe('CP-3 · E4 — ⚠️ THE PER-CHECK DELTA, AND IT IS ZERO', () => {
         }
       }
     }
-    // 12 lines × 4 answer states × 3 instants. Asserted so the census cannot
+    // 29 lines × 4 answer states × 3 instants. Asserted so the census cannot
     // pass by measuring nothing (`EMPTY-INPUT-REPORTS-CLEAN-01`).
-    expect(compared).toBe(144);
+    expect(compared).toBe(348);
     expect(moved).toEqual([]);
   });
 
@@ -1029,13 +1067,27 @@ describe('CP-3 · E4 — ⚠️ THE PER-CHECK DELTA, AND IT IS ZERO', () => {
     // `BLOCK` is out of reach until identity exists** — see `docs/findings.md`
     // §63 (`HALAL-ENFORCEMENT-CEILING-IS-IDENTITY-01`). Probed both ways in
     // `enforcementSetCommand.test.js`, including the tightening that IS accepted.
+    // ⚠️ SEVENTEEN WITH BL-139 — the same per-line gains the H2 census names,
+    // now measured on the OBSERVE ledger. Every gained line stops blocking; the
+    // one-directional property is unchanged.
     expect(differences.map((d) => d.code).sort()).toEqual([
       'AI-NIAC-6612',
+      'AI-PEPTIDE-8801',
+      'FR-EMIN-4420',
       'FR-ROUD-4470',
       'FR-WARD-4410',
+      'FR-WARD-4410',
+      'FR-WARD-4410',
       'RM-COCO-8200',
+      'RM-COCO-8200',
+      'RM-EMUL-3320',
+      'RM-EMUL-3320',
+      'RM-EMUL-9410',
+      'RM-EMUL-9430',
       'RM-EMUL-9440',
-      'RM-PSTN-7150'
+      'RM-PSTN-7150',
+      'RM-STEAR-7300',
+      'RM-STEAR-7300'
     ]);
   });
 
@@ -1307,8 +1359,9 @@ describe('CP-3 · H4 — the certificate notice TELLS, and does not STOP', () =>
     // platform has no business posing, and rendering it as a certificate
     // warning would answer `D-COMP-HALAL-1` in the affirmative by implication.
     //
-    // ⚠️ THE FOUR REFUSING LINES ARE ALL PACKAGING and NONE of them gets a
-    // notice, in EITHER shape. Derived, not listed.
+    // ⚠️ EVERY REFUSING LINE IS PACKAGING and NONE of them gets a notice, in
+    // EITHER shape. Derived, not listed. TWELVE with BL-139's six packaging
+    // lines (PK-CART-9901 ×2, PK-PETB-8801 ×2, PK-PETB-8802 ×2).
     await openAt(DOCK.asnNumber, '2026-10-17');
     expect(screen.getByTestId('gr-halal-refusal-0')).toBeInTheDocument();
     expect(screen.queryByTestId('gr-cert-notice-0')).toBeNull();
@@ -1319,7 +1372,13 @@ describe('CP-3 · H4 — the certificate notice TELLS, and does not STOP', () =>
       '2000028400', // the E2E walkthrough's two ASN lines
       '2000028400',
       'PK-ALCP-2450',
+      'PK-CART-9901', // BL-139's two receipt ASN lines
+      'PK-CART-9901',
       'PK-PETB-8801',
+      'PK-PETB-8801',
+      'PK-PETB-8801',
+      'PK-PETB-8802',
+      'PK-PETB-8802',
       'PK-PETB-8802',
       'PK-PETB-8804'
     ]);

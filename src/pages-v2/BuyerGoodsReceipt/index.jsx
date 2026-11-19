@@ -241,14 +241,17 @@ const GoodsReceiptWorkspace = ({
 
           ⚠️ **IT IS ITS OWN SECTION RATHER THAN A CONTROL IN THE GR PANEL, AND
           THE REASON IS MEASURED, NOT STYLISTIC.** The GR panel already shows
-          `selected.asnNumber`, which makes it the obvious anchor — but the GR
-          fixtures reference `ASN-2026-0xx` and the ASN store holds
-          `ASN-2025-002xx` / `ASN-2025-003xx`: **the intersection is EMPTY (14
-          refs × 6 ASNs × 0 shared)**. A control hung off `selected.asnNumber`
-          would therefore be reachable ONLY from a wizard-created GR and never
-          from a seeded row — the seeded `ASN-2025-00201` would carry a
-          discrepancy nobody could open. Keyed on the ASN instead, both the
-          seeded row and the cascade's output are reachable on the same surface.
+          `selected.asnNumber`, which makes it the obvious anchor — but a
+          control hung off a GR reaches only the ASN THAT GR names. The seeded
+          `Discrepancy` ASN, `ASN-2025-00201`, is named by NO receipt (the
+          receipts name the `ASN-2025-004xx` rows BL-139 added), so a GR-keyed
+          control would leave the one seeded problem row with a discrepancy
+          nobody could open — reachable only from a wizard-created GR. Keyed on
+          the ASN instead, both the seeded row and the cascade's output are
+          reachable on the same surface. ⚠️ BL-139 made the receipt↔ASN join
+          NON-empty (16 of the 17 naming receipts now resolve); the argument
+          above survives that change on the seeded row, which still resolves to
+          no receipt.
 
           ⚠️ **ABSENT WHEN EMPTY IS NOT THE WITHHELD-AS-ABSENT DEFECT.** Nothing
           is being hidden from a narrow seat here: with no flagged ASN there is

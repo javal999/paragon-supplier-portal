@@ -242,16 +242,18 @@ describe('AC-03 — exactly one record arrives open; several arrive as the filte
     await waitFor(() => expect(document.querySelector('aside[role="dialog"]')).toBeInTheDocument());
   });
 
-  it('three ASNs on the PO arrive as the filtered list, none auto-opened', async () => {
+  it('several ASNs on the PO arrive as the filtered list, none auto-opened', async () => {
+    // BL-139 — PO-2025-00107 carries FOUR active ASNs: the three fixtures plus
+    // `ASN-2025-00402`, the Delivered shipment `gr-002` names.
     renderWithProviders(<BuyerShipments />, {
       identity: BUYER,
       route: `/buyer/shipments?po=${PO_ID}&from=order-summary`
     });
     const section = await screen.findByTestId('drill-asn-section');
     const rows = within(section).getAllByTestId(/^drill-asn-/);
-    expect(rows).toHaveLength(3);
+    expect(rows).toHaveLength(4);
     for (const r of rows) expect(r).toHaveAttribute('data-open', 'false');
-    expect(screen.getByTestId('po-filter-count')).toHaveTextContent('3 records');
+    expect(screen.getByTestId('po-filter-count')).toHaveTextContent('4 records');
   });
 });
 
@@ -465,10 +467,11 @@ describe('AC-09 — a seat without the destination’s action role still sees th
 
 // ── AC-10 ───────────────────────────────────────────────────────────────────
 describe('AC-10 — a count on the summary equals the number of records the destination lists', () => {
-  it('ASNs: the cell says 3 and the shipments destination lists 3', async () => {
+  it('ASNs: the cell says 4 and the shipments destination lists 4', async () => {
+    // BL-139 — the fourth is `ASN-2025-00402`, the Delivered ASN `gr-002` names.
     const row = await summaryRow('supplier');
     const count = Number(within(row).getByTestId(`order-summary-asns-${PO_ID}`).textContent);
-    expect(count).toBe(3);
+    expect(count).toBe(4);
 
     const { unmount } = renderWithProviders(<SupplierShipments />, {
       identity: SUPPLIER,
