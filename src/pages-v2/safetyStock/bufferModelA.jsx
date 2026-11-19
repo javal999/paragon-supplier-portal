@@ -8,6 +8,7 @@ import Button from '@components/ui-v2/Button';
 import Data from '@components/ui-v2/Data';
 import StatusPill from '@components/ui-v2/StatusPill';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
+import { TermInfo } from '@components/ui-v2/TermLabel';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
 import { useToast } from '@hooks/useToast';
 import { useRefusalText } from '@hooks/useRefusalText';
@@ -296,19 +297,19 @@ const BufferModelAPanel = ({ materialCode, uom, suppliers, figures }) => {
                 scope="col"
                 className="text-right text-xs font-medium text-text-tertiary uppercase py-1 pr-4"
               >
-                {t('sst.buffers.col.protection')}
+                {t('sst.buffers.col.protection')} <TermInfo term="protectionBuffer" />
               </th>
               <th
                 scope="col"
                 className="text-right text-xs font-medium text-text-tertiary uppercase py-1 pr-4"
               >
-                {t('sst.buffers.col.festive')}
+                {t('sst.buffers.col.festive')} <TermInfo term="strategicBuffer" />
               </th>
               <th
                 scope="col"
                 className="text-right text-xs font-medium text-text-tertiary uppercase py-1 pr-4"
               >
-                {t('sst.buffers.col.material')}
+                {t('sst.buffers.col.material')} <TermInfo term="materialBuffer" />
               </th>
               <th
                 scope="col"
