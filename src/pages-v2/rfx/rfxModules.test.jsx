@@ -93,7 +93,15 @@ describe('each page carries its own title and count, and no type switch', () => 
     ['buyer RFQ', '/buyer/rfq', <BuyerSourcing />, BUYER, 'RFQ · Quotation requests'],
     ['supplier RFI', '/supplier/rfi', <SupplierRfi />, SUPPLIER, 'RFI · Information requests'],
     ['supplier RFP', '/supplier/rfp', <SupplierRfp />, SUPPLIER, 'RFP · Proposal requests'],
-    ['supplier RFQ', '/supplier/rfq', <SupplierRFQs />, SUPPLIER, 'RFQ · Quotation requests']
+    // BL-183 (owner ruling 2026-11-19) — the supplier page title is the menu
+    // label; the buyer row above keeps its own X-01 title (a separate key).
+    [
+      'supplier RFQ',
+      '/supplier/rfq',
+      <SupplierRFQs />,
+      SUPPLIER,
+      hubEn['hub.nav.sup.rfqInvitations']
+    ]
     /* eslint-enable react/jsx-key */
   ])('%s', async (_name, at, element, identity, title) => {
     await i18n.changeLanguage('en');

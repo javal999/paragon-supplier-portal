@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import Button from '@components/ui-v2/Button';
 import Data from '@components/ui-v2/Data';
 import StatusPill from '@components/ui-v2/StatusPill';
+import WeekGrid from '@components/ui-v2/WeekGrid';
 import { HandoffNotice } from '@components/ui-v2/HandoffNotice';
 import { useToast } from '@hooks/useToast';
 import { useVerbAvailability } from '@hooks/useVerbAvailability';
@@ -255,66 +256,85 @@ const ComponentLine = ({ c, uom }) => {
 };
 
 /**
- * The weekly buckets: the 2 figures at week end, and the events inside the week (MR-7 step 4).
+ * CAP-1 wave 2 (Table G) — the weekly buckets as the shared `WeekGrid`: the
+ * weeks are columns, the metrics rows, oldest week on the left (BR-02). Every
+ * figure and pill is the one the week rows showed (AC-05); the grid computes
+ * nothing.
  * @type {React.FC<{ sim: StockSimulation; uom: string; testId: string }>}
  */
 const WeeklyTable = ({ sim, uom, testId }) => {
   const { t } = useTranslation();
   return (
-    <table className="w-full text-xs" data-testid={testId}>
-      <thead>
-        <tr className="text-left text-text-tertiary">
-          <th scope="col" className="py-1 pr-3 font-medium sticky left-0 z-[1] bg-bg-surface">
-            {t('sim.detail.week')}
-          </th>
-          <th scope="col" className="py-1 pr-3 font-medium text-right">
-            <TermLabel term="supplierAvailable" />
-          </th>
-          <th scope="col" className="py-1 pr-3 font-medium text-right">
-            <TermLabel term="freeToCallOff" />
-          </th>
-          <th scope="col" className="py-1 pr-3 font-medium text-right">
-            <TermLabel term="ptiInbound" />
-          </th>
-          <th scope="col" className="py-1 font-medium">
-            {t('sim.detail.events')}
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {sim.weekly.map((w) => (
-          <tr key={w.weekStart} className="border-t border-border-subtle align-top">
-            <td className="py-1 pr-3 whitespace-nowrap sticky left-0 z-[1] bg-bg-surface">
-              <Data>{`${formatDate(w.weekStart)} – ${formatDate(w.weekEnd)}`}</Data>
-            </td>
-            <td className="py-1 pr-3 text-right">
-              {w.available === null ? t('sim.missing') : <Data>{qty(w.available)}</Data>}
-            </td>
-            <td className="py-1 pr-3 text-right">
-              {w.freeToCallOff === null ? t('sim.missing') : <Data>{qty(w.freeToCallOff)}</Data>}
-            </td>
-            <td className="py-1 pr-3 text-right border-l border-border-subtle pl-3">
-              <Data>{qty(w.ptiInbound)}</Data>
-            </td>
-            <td className="py-1">
-              {w.events.length === 0 ? (
-                <span className="text-text-tertiary">{t('sim.detail.noEvents')}</span>
-              ) : (
-                <ul>
-                  {w.events.map((c) => (
-                    <ComponentLine
-                      key={`${c.kind}-${c.reference ?? ''}-${c.date ?? ''}`}
-                      c={c}
-                      uom={uom}
-                    />
-                  ))}
-                </ul>
-              )}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <WeekGrid
+      label={`${t('sim.detail.weeks')} · ${sim.materialCode}`}
+      corner={t('sim.detail.week')}
+      currentWeek={sim.checkDate}
+      testId={testId}
+      viewKey="buyerStockSimulation"
+      weeks={sim.weekly.map((w) => ({
+        week: w.weekStart,
+        testId: `sim-week-${w.weekStart}`
+      }))}
+      rows={[
+        {
+          id: 'available',
+          label: <TermLabel term="supplierAvailable" />,
+          combine: 'last',
+          value: (_week, i) => sim.weekly[i].available,
+          format: qty,
+          cell: (_week, i) => {
+            const w = sim.weekly[i];
+            return w.available === null ? t('sim.missing') : <Data>{qty(w.available)}</Data>;
+          }
+        },
+        {
+          id: 'free',
+          label: <TermLabel term="freeToCallOff" />,
+          combine: 'last',
+          value: (_week, i) => sim.weekly[i].freeToCallOff,
+          format: qty,
+          cell: (_week, i) => {
+            const w = sim.weekly[i];
+            return w.freeToCallOff === null ? (
+              t('sim.missing')
+            ) : (
+              <Data>{qty(w.freeToCallOff)}</Data>
+            );
+          }
+        },
+        {
+          id: 'ptiInbound',
+          label: <TermLabel term="ptiInbound" />,
+          combine: 'sum',
+          value: (_week, i) => sim.weekly[i].ptiInbound,
+          format: qty,
+          cell: (_week, i) => <Data>{qty(sim.weekly[i].ptiInbound)}</Data>
+        },
+        {
+          id: 'events',
+          label: t('sim.detail.events'),
+          align: 'start',
+          combine: 'distinct',
+          value: (_week, i) => sim.weekly[i].events.map((c) => t(`sim.event.${c.kind}`)),
+          cell: (_week, i) => {
+            const w = sim.weekly[i];
+            return w.events.length === 0 ? (
+              <span className="text-text-tertiary">{t('sim.detail.noEvents')}</span>
+            ) : (
+              <ul>
+                {w.events.map((c) => (
+                  <ComponentLine
+                    key={`${c.kind}-${c.reference ?? ''}-${c.date ?? ''}`}
+                    c={c}
+                    uom={uom}
+                  />
+                ))}
+              </ul>
+            );
+          }
+        }
+      ]}
+    />
   );
 };
 
@@ -494,7 +514,8 @@ export const SimulationDetail = ({ row, open, setOpen }) => {
               ))}
             </ul>
           </section>
-          <section className="overflow-x-auto">
+          {/* BR-07 — the grid scrolls sideways inside its own container. */}
+          <section className="min-w-0">
             <h3 className="text-label text-text-tertiary uppercase mb-1">
               {t('sim.detail.weeks')}
             </h3>

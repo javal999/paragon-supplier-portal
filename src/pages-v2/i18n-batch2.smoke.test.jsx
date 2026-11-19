@@ -44,8 +44,11 @@ describe('Batch 2 — bilingual render (no EN leak in chrome)', () => {
   it('SupplierRFQs: ID chrome header, English gone', async () => {
     await setLang('id');
     renderWithProviders(<SupplierRFQs />, { identity: SUPPLIER });
-    // RFx UX X-01 — the title leads with the acronym the menu uses.
-    expect(await screen.findByText('RFQ · Permintaan penawaran harga')).toBeInTheDocument();
+    // BL-183 (owner ruling 2026-11-19) — the title is the menu label.
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Undangan RFQ' })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'RFQ · Permintaan penawaran harga' })).toBeNull();
     expect(screen.queryByText('RFQ · Quotation requests')).not.toBeInTheDocument();
   });
 });
