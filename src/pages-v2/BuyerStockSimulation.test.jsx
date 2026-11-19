@@ -88,10 +88,11 @@ describe('Stock simulation page (MR-7 section e)', () => {
     expect(
       within(screen.getByTestId(`sim-flags-${SAMPLE}`)).getByText('Capped by capacity')
     ).toBeInTheDocument();
-    // Step 4 — the row opens its 13 weekly buckets.
+    // Step 4 — the row opens its 13 weekly buckets. CAP-1 wave 2: the weeks
+    // are columns, so the grid is the header plus one row per metric.
     fireEvent.click(screen.getByTestId(`sim-toggle-${SAMPLE}`));
     const weeks = await screen.findByTestId(`sim-detail-${SAMPLE}-weeks`);
-    expect(within(weeks).getAllByRole('row')).toHaveLength(14);
+    expect(within(weeks).getAllByRole('row')).toHaveLength(5);
     expect(within(weeks).getByText('Production finishes')).toBeInTheDocument();
   });
 

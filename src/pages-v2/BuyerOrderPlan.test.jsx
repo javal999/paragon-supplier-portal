@@ -106,8 +106,9 @@ describe('BuyerOrderPlan — the planner page (REQ-E14-05)', () => {
       pk.weeks.find((wk) => wk.rentedPallets > 0)
     );
     expect(screen.getByTestId(`op-rent-${over.weekStart}`).textContent).toMatch(/^Rp /);
+    // CAP-1 wave 2 — the week is a column: its status pill is the column's cell.
     expect(
-      within(screen.getByTestId(`op-fill-${over.weekStart}`)).getByText('Over capacity')
+      within(screen.getByTestId(`op-fill-status-${over.weekStart}`)).getByText('Over capacity')
     ).toBeInTheDocument();
     expect(screen.getByTestId('op-kpi-orders')).toHaveTextContent(String(pk.after.orders));
   });
