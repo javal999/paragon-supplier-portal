@@ -61,10 +61,18 @@ beforeEach(() => {
 });
 
 // PO-2025-00107 (po-007) — sup-007, Confirmed, one line PK-PETB-8801 × 200,000
-// at Rp 1,600. The fixture ASNs against it carry other materials, so the whole
-// 200,000 is open.
+// at Rp 1,600.
+//
+// ⚠️ BL-139 — 120,000 OF IT IS NO LONGER OPEN. The receipts now name ASNs the
+// store holds, and `gr-002` covers `ASN-2025-00402` (Delivered, 120,000 of this
+// material, received in full). Under the owner's 2026-11-19 ruling the receipt
+// is the authority and the goods are subtracted once, so the line opens at
+// 200,000 − 120,000 = 80,000. Every expectation below is written against
+// `OPEN_AT_START` rather than re-deriving it, so a fixture move breaks this
+// file BY NAME instead of quietly re-basing it.
 const PO = 'PO-2025-00107';
 const MAT = 'PK-PETB-8801';
+const OPEN_AT_START = 80_000;
 
 /** @param {Record<string, unknown>} payload */
 const createAsn = (payload, scope = sup007) =>
@@ -127,21 +135,21 @@ describe('ASN — shipped quantity within open quantity (BR-02)', () => {
   });
 
   it('a draft without lines proposes the OPEN quantity, not the ordered quantity', async () => {
-    await createAsn({ lines: [{ materialCode: MAT, shippedQty: 150_000 }] });
+    await createAsn({ lines: [{ materialCode: MAT, shippedQty: 50_000 }] });
     const second = await createAsn({});
     expect(
       /** @type {ASN} */ (
         asnStore.get(/** @type {NonNullable<typeof second.entityId>} */ (second.entityId))
       ).lineItems[0].shippedQty
-    ).toBe(50_000);
+    ).toBe(OPEN_AT_START - 50_000);
   });
 
   it('KNOWN-BAD — over-shipment without a reason is refused; KNOWN-GOOD — with a reason it passes', async () => {
-    const over = await createAsn({ lines: [{ materialCode: MAT, shippedQty: 200_001 }] });
+    const over = await createAsn({ lines: [{ materialCode: MAT, shippedQty: OPEN_AT_START + 1 }] });
     expect(over.status).toBe('failed');
     expect(over.reason).toMatch(/POLICY_REJECTED:asn_lines_within_open:OVER_OPEN_QUANTITY/);
 
-    const exact = await createAsn({ lines: [{ materialCode: MAT, shippedQty: 200_000 }] });
+    const exact = await createAsn({ lines: [{ materialCode: MAT, shippedQty: OPEN_AT_START }] });
     expect(exact.status).toBe('done');
 
     const withReason = await createAsn({
@@ -161,8 +169,10 @@ describe('ASN — shipped quantity within open quantity (BR-02)', () => {
   });
 
   it('multiple ASNs per PO (partial shipments) — and a cancelled ASN frees its quantity again', async () => {
-    const first = await createAsn({ lines: [{ materialCode: MAT, shippedQty: 120_000 }] });
-    const second = await createAsn({ lines: [{ materialCode: MAT, shippedQty: 80_000 }] });
+    const first = await createAsn({ lines: [{ materialCode: MAT, shippedQty: 50_000 }] });
+    const second = await createAsn({
+      lines: [{ materialCode: MAT, shippedQty: OPEN_AT_START - 50_000 }]
+    });
     expect(second.status).toBe('done');
     const po = /** @type {import('../types').PurchaseOrder} */ (purchaseOrderStore.get('po-007'));
     expect(openQtyForLine(po, po.lineItems[0], asnStore.all())).toBe(0);
@@ -180,8 +190,8 @@ describe('ASN — shipped quantity within open quantity (BR-02)', () => {
         asnStore.get(/** @type {NonNullable<typeof first.entityId>} */ (first.entityId))
       ).status
     ).toBe('Cancelled');
-    expect(openQtyForLine(po, po.lineItems[0], asnStore.all())).toBe(120_000);
-    expect((await createAsn({ lines: [{ materialCode: MAT, shippedQty: 120_000 }] })).status).toBe(
+    expect(openQtyForLine(po, po.lineItems[0], asnStore.all())).toBe(50_000);
+    expect((await createAsn({ lines: [{ materialCode: MAT, shippedQty: 50_000 }] })).status).toBe(
       'done'
     );
   });
@@ -255,20 +265,20 @@ describe('GR-1 / BL-71 — a kept-open receipt reopens the missing quantity', ()
     );
 
   it('the missing quantity is open again for another ASN, and only that quantity', async () => {
-    const first = await createAsn({ lines: [{ materialCode: MAT, shippedQty: 200_000 }] });
+    const first = await createAsn({ lines: [{ materialCode: MAT, shippedQty: OPEN_AT_START }] });
     expect(first.status).toBe('done');
     expect(openWithReceipts()).toBe(0);
 
-    // 5% short: 190,000 of 200,000 arrived → the receipt is kept open (CR-25)
-    // and the 10,000 owed is open again.
-    addReceipt(/** @type {string} */ (first.entityId), 200_000, 190_000);
-    expect(openWithReceipts()).toBe(10_000);
-    expect(refusalFor(10_000)).toBeNull();
-    expect(refusalFor(10_001)).toBe('overOpen');
+    // 5% short: 76,000 of 80,000 arrived → the receipt is kept open (CR-25)
+    // and the 4,000 owed is open again.
+    addReceipt(/** @type {string} */ (first.entityId), OPEN_AT_START, 76_000);
+    expect(openWithReceipts()).toBe(4_000);
+    expect(refusalFor(4_000)).toBeNull();
+    expect(refusalFor(4_001)).toBe('overOpen');
 
     // The verb accepts exactly the reopened quantity, and one unit more is
     // still refused — so the reopening is not a hole in BR-02.
-    expect((await createAsn({ lines: [{ materialCode: MAT, shippedQty: 10_000 }] })).status).toBe(
+    expect((await createAsn({ lines: [{ materialCode: MAT, shippedQty: 4_000 }] })).status).toBe(
       'done'
     );
     const over = await createAsn({ lines: [{ materialCode: MAT, shippedQty: 1 }] });
@@ -277,22 +287,22 @@ describe('GR-1 / BL-71 — a kept-open receipt reopens the missing quantity', ()
   });
 
   it('a draft with no lines proposes the reopened quantity', async () => {
-    const first = await createAsn({ lines: [{ materialCode: MAT, shippedQty: 200_000 }] });
-    addReceipt(/** @type {string} */ (first.entityId), 200_000, 190_000);
+    const first = await createAsn({ lines: [{ materialCode: MAT, shippedQty: OPEN_AT_START }] });
+    addReceipt(/** @type {string} */ (first.entityId), OPEN_AT_START, 76_000);
     const draft = await createAsn({});
     expect(draft.status).toBe('done');
     const asn = /** @type {ASN} */ (
       asnStore.get(/** @type {NonNullable<typeof draft.entityId>} */ (draft.entityId))
     );
     expect(asn.lineItems).toEqual([
-      expect.objectContaining({ materialCode: MAT, shippedQty: 10_000 })
+      expect.objectContaining({ materialCode: MAT, shippedQty: 4_000 })
     ]);
   });
 
   it('CONTROL — a shortfall within CR-25 closes the receipt and reopens nothing', async () => {
-    const first = await createAsn({ lines: [{ materialCode: MAT, shippedQty: 200_000 }] });
+    const first = await createAsn({ lines: [{ materialCode: MAT, shippedQty: OPEN_AT_START }] });
     // Exactly 2% short: within tolerance, so the receipt closes (BL-45/CR-25).
-    addReceipt(/** @type {string} */ (first.entityId), 200_000, 196_000);
+    addReceipt(/** @type {string} */ (first.entityId), OPEN_AT_START, 78_400);
     expect(openWithReceipts()).toBe(0);
     expect(refusalFor(1)).toBe('overOpen');
     expect((await createAsn({ lines: [{ materialCode: MAT, shippedQty: 1 }] })).status).toBe(
@@ -340,7 +350,9 @@ describe('ASN — submission (BR-04) and the shipment-started date (REQ-E07-05 B
     const draft = /** @type {NonNullable<(Awaited<ReturnType<typeof createAsn>>)['entityId']>} */ (
       (await createAsn({ lines: [{ materialCode: MAT, shippedQty: 1_000 }] })).entityId
     );
-    await createAsn({ lines: [{ materialCode: MAT, shippedQty: 199_000 }] });
+    // Leaves 1,000 open (OPEN_AT_START − 79,000); the draft's own 1,000 is
+    // excluded from its own check, so a 5,000 submit is 4,000 over.
+    await createAsn({ lines: [{ materialCode: MAT, shippedQty: OPEN_AT_START - 1_000 }] });
     const res = await asnVerb('t_asn_submit', draft, {
       ...SUBMIT,
       lines: [{ materialCode: MAT, shippedQty: 5_000, batchNumber: 'B-1' }]

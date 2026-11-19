@@ -72,6 +72,17 @@ export const committedQty = (li) => (li.confirmedQty > 0 ? li.confirmedQty : li.
  * double-counting. (Before this fix two receipts against one ASN reopened the
  * same debt twice, and an ASN-less receipt reopened `qtyExpected − received`
  * on top of a quantity that was never consumed.)
+ *
+ * ⚠️ BL-139 (owner ruling, 2026-11-19) — THE RECEIPT IS THE AUTHORITY, AND THE
+ * GOODS ARE SUBTRACTED ONCE. A `Delivered` ASN that a receipt of this PO covers
+ * is accounted by what the receipts say ARRIVED (Σ `received` for the
+ * material), never by its shipped quantity AND the receipt both: the shipped
+ * figure is not subtracted a second time. A `Delivered` ASN with no covering
+ * receipt for the material keeps its shipped quantity (nothing arrived to
+ * measure), and every other state is unchanged. Because the receipt's figure is
+ * already the net of the shortfall, such an ASN does not also REOPEN its
+ * missing quantity — that would hand the same shortfall out twice. The ruling
+ * is pinned in `receiptAuthorityOpenQty.test.js`.
  * @param {Pick<PurchaseOrder, 'poNumber'>} po
  * @param {Pick<POLineItem, 'materialCode' | 'quantity' | 'confirmedQty'>} line
  * @param {readonly ASN[]} asns
@@ -92,22 +103,50 @@ export function openQtyForLine(po, line, asns, excludeAsn, receipts = []) {
     asn.lineItems
       .filter((l) => l.materialCode === line.materialCode)
       .reduce((sum, l) => sum + (Number.isFinite(l.shippedQty) ? l.shippedQty : 0), 0);
-  const shipped = counted.reduce((sum, asn) => sum + shippedOf(asn), 0);
+  /**
+   * The receipts of this PO that name this ASN.
+   * @param {Pick<ASN, 'asnNumber'>} asn
+   */
+  const coveringOf = (asn) =>
+    receipts.filter((gr) => gr.poNumber === po.poNumber && gr.asnNumber === asn.asnNumber);
+  /**
+   * This ASN's comparison lines for this material, over every covering receipt.
+   * @param {Pick<ASN, 'asnNumber' | 'lineItems'>} asn
+   */
+  const coveringLinesOf = (asn) =>
+    coveringOf(asn)
+      .flatMap((gr) => compareReceipt(gr, asn))
+      .filter((l) => l.materialCode === line.materialCode);
+  /**
+   * BL-139 — how much THIS ASN has accounted for against the committed line.
+   * A `Delivered` ASN a receipt covers is accounted by what the receipt says
+   * arrived; every other case is the ASN's shipped quantity. The two are never
+   * added together — that is the double count the ruling forbids.
+   * @param {ASN} asn
+   * @returns {number}
+   */
+  const accountedOf = (asn) => {
+    if (asn.status !== 'Delivered') return shippedOf(asn);
+    const covering = coveringLinesOf(asn);
+    if (covering.length === 0) return shippedOf(asn);
+    return covering.reduce((sum, l) => sum + l.received, 0);
+  };
+  const accounted = counted.reduce((sum, asn) => sum + accountedOf(asn), 0);
   // BL-325 — per ASN, once: see the arithmetic in this function's doc. The
   // existence check is what keeps this from reopening every shipment that has
   // no receipt at all — with none, `Σ received` is 0 and there is nothing to
   // reopen; only an ASN with a KEPT-OPEN line for this material puts quantity
-  // back.
+  // back. BL-139 — a `Delivered` ASN is accounted by its covering receipt
+  // already, so its missing quantity is open through that figure; reopening it
+  // as well would count the shortfall twice.
   const reopened = counted.reduce((sum, asn) => {
-    const keptOpenLines = receipts
-      .filter((gr) => gr.poNumber === po.poNumber && gr.asnNumber === asn.asnNumber)
-      .flatMap((gr) => compareReceipt(gr, asn))
-      .filter((l) => l.materialCode === line.materialCode && l.qtyOutcome === 'shortOver');
+    const keptOpenLines = coveringLinesOf(asn).filter((l) => l.qtyOutcome === 'shortOver');
     if (keptOpenLines.length === 0) return sum;
+    if (asn.status === 'Delivered') return sum;
     const receivedOnKeptOpenLines = keptOpenLines.reduce((received, l) => received + l.received, 0);
     return sum + Math.max(0, shippedOf(asn) - receivedOnKeptOpenLines);
   }, 0);
-  const open = committedQty(line) - shipped + reopened;
+  const open = committedQty(line) - accounted + reopened;
   // BL-325 — never hand a NaN downstream: `q > NaN` is false, which silently
   // disabled the over-ship refusal instead of refusing the line.
   return Number.isFinite(open) ? Math.max(0, open) : 0;

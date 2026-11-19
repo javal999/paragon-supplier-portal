@@ -17,14 +17,19 @@ import SupplierGoodsReceipts from './SupplierGoodsReceipts';
 import BuyerGoodsReceipt from './BuyerGoodsReceipt';
 
 describe('BL-33 — "Received without ASN" has a sample receipt to show it', () => {
-  it('the data: gr-018 names no ASN, gr-015 names ASN-2026-025', () => {
+  it('the data: gr-018 names no ASN, gr-015 names ASN-2025-00415', () => {
     /** @param {string} id */
     const gr = (id) =>
       /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
         mockGoodsReceipts.find((g) => g.id === id)
       );
     expect(gr('gr-018').asnNumber).toBe('');
-    expect(gr('gr-015').asnNumber).toBe('ASN-2026-025');
+    // BL-139 — the canonical ASN series is the store's own (`ASN-2025-0NNNN`).
+    // gr-015 previously named `ASN-2026-025`, which existed in neither corpus.
+    expect(gr('gr-015').asnNumber).toBe('ASN-2025-00415');
+    // The one deliberate mismatch: gr-016 names an ASN the store does NOT
+    // hold, so the "ASN not on record" fallback keeps a sample of its own.
+    expect(gr('gr-016').asnNumber).toBe('ASN-2025-00416');
   });
 
   it("the supplier's receipts page says it on gr-018 and not on gr-015", async () => {
@@ -37,8 +42,10 @@ describe('BL-33 — "Received without ASN" has a sample receipt to show it', () 
     expect(within(withAsn).queryByTestId('gr-without-asn-gr-015')).toBeNull();
     // The whole set, by name: only the four receipts that name no ASN. This
     // page used to decide by whether the named ASN RESOLVED, and none of the
-    // sample receipts' ASN numbers do, so it said "Received without ASN" on all
+    // sample receipts' ASN numbers did, so it said "Received without ASN" on all
     // nine of sup-007's rows, under a printed ASN number on five of them.
+    // BL-139 — the rule is `!gr.asnNumber` and stays that: a receipt whose ASN
+    // does not resolve (gr-016) still NAMES one, so it is not in this set.
     const flagged = screen
       .queryAllByTestId(/^gr-without-asn-/)
       .map((e) =>

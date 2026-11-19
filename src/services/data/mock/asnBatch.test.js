@@ -315,8 +315,10 @@ describe('batch from declared stock (MR-6 BR-01 to BR-04)', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 describe('GR-1 / BL-71 — the wizard seeds the reopened quantity', () => {
   it('the form proposes the reopened quantity and the line passes the one line rule', async () => {
-    const first = await createAsn({ lines: [{ materialCode: MAT, shippedQty: 200_000 }] });
-    // 190,000 of 200,000 arrived (5% short) → the receipt is kept open.
+    // BL-139 — PO-2025-00107 opens at 80,000 (`gr-002` covers ASN-2025-00402's
+    // 120,000 in full and the receipt is the authority), so the ASN ships the
+    // 80,000 that is open; 76,000 of it arrived (5% short) → 4,000 reopens.
+    const first = await createAsn({ lines: [{ materialCode: MAT, shippedQty: 80_000 }] });
     goodsReceiptStore.add({
       id: 'gr-9902',
       grNumber: 'GR-2026-902',
@@ -333,9 +335,9 @@ describe('GR-1 / BL-71 — the wizard seeds the reopened quantity', () => {
         {
           materialCode: MAT,
           description: 'PET Bottle 200ml Frosted',
-          qtyExpected: 200_000,
-          qtyReceived: 190_000,
-          qtyAccepted: 190_000,
+          qtyExpected: 80_000,
+          qtyReceived: 76_000,
+          qtyAccepted: 76_000,
           qtyRejected: 0,
           visualCheck: /** @type {const} */ ('Pass'),
           packagingCheck: /** @type {const} */ ('Pass')
@@ -344,7 +346,7 @@ describe('GR-1 / BL-71 — the wizard seeds the reopened quantity', () => {
     });
 
     const selection = poSelection(po(), asnStore.all(), goodsReceiptStore.all());
-    expect(selection.lines?.[MAT]?.qty).toBe('10000');
+    expect(selection.lines?.[MAT]?.qty).toBe('4000');
 
     const read = readWizard({
       form: /** @type {any} */ ({ ...selection, poId: po().id }),

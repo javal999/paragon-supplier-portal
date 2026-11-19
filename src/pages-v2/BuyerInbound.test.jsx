@@ -10,6 +10,8 @@ import { goodsReceiptStore } from '@services/data/mock/stores/goodsReceiptStore'
 import { receiptDiscrepancyStore } from '@services/data/mock/stores/receiptDiscrepancyStore';
 import { inboundAcknowledgmentStore } from '@services/data/mock/stores/inboundAcknowledgmentStore';
 import { inboundDueAt, inboundRows, outstandingInbounds } from '@services/transitions/inboundRules';
+import { compareReceipt } from '@services/transitions/fulfilmentRules';
+import { mockGoodsReceipts } from '@data/mockGoodsReceipts';
 import { PERSONA_SYSTEM_ROLES, SEEDED_SEAT_ROLES } from '@services/transitions/businessRoles';
 import { NO_PERSON } from '@context/noPerson';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
@@ -180,5 +182,78 @@ describe('AC-05 / AIB-2 BR-05 — one working day, on the hub calendar; the To-D
     renderWithProviders(<BuyerHome />, { identity: BUYER, route: '/buyer/home' });
     await screen.findByTestId('home-task-inbound-asn');
     expect(screen.queryByTestId('home-task-inbound-acknowledgment')).not.toBeInTheDocument();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BL-139 — THE RECEIPT-BACKED ASNS ARE NOT THE EXPEDITOR'S TO-DO.
+//
+// The sample goods receipts now name 16 Delivered ASNs the store holds. Those
+// ASNs are real inbounds, and their receipts are the record that the goods
+// arrived — so they are seeded as acknowledged rather than left unacknowledged
+// and overdue on the list. `gr-016` is the one receipt whose ASN the store does
+// NOT hold: it must gain no inbound row, and its comparison must keep the
+// `qtyExpected` fallback.
+// ─────────────────────────────────────────────────────────────────────────────
+describe('BL-139 — receipt-backed ASNs are acknowledged; gr-016 keeps the fallback', () => {
+  /** The 16 receipt-backed ASNs, named rather than counted. */
+  const RECEIPT_BACKED = [
+    'ASN-2025-00401',
+    'ASN-2025-00402',
+    'ASN-2025-00403',
+    'ASN-2025-00404',
+    'ASN-2025-00405',
+    'ASN-2025-00406',
+    'ASN-2025-00407',
+    'ASN-2025-00408',
+    'ASN-2025-00409',
+    'ASN-2025-00410',
+    'ASN-2025-00411',
+    'ASN-2025-00412',
+    'ASN-2025-00413',
+    'ASN-2025-00414',
+    'ASN-2025-00415',
+    'ASN-2025-00417'
+  ];
+
+  it('all 16 read as acknowledged and none is outstanding — and the page agrees', async () => {
+    // `inboundRows` reads the acknowledgment JOINED onto the ASN, exactly as
+    // `getASNs` joins it; the raw store rows carry no record of their own.
+    const asns = asnStore.all().map((a) => {
+      const ack = inboundAcknowledgmentStore.get(a.asnNumber);
+      return ack ? { ...a, inboundAcknowledgment: ack } : a;
+    });
+    const rows = inboundRows(asns, goodsReceiptStore.all(), new Date().toISOString());
+    for (const asnNumber of RECEIPT_BACKED) {
+      const row = rows.find((r) => r.asn.asnNumber === asnNumber);
+      expect(row, asnNumber).toBeDefined();
+      expect(row?.acknowledged, asnNumber).toBe(true);
+      expect(row?.overdue, asnNumber).toBe(false);
+    }
+    const outstanding = outstandingInbounds(rows).map((r) => r.asn.asnNumber);
+    expect(outstanding.filter((n) => RECEIPT_BACKED.includes(n))).toEqual([]);
+    // The surface reads the same store: one named row shows the record, and
+    // the acknowledge button is gone because the act is already done.
+    renderWithProviders(<BuyerInbound />, { identity: EXP, route: '/buyer/inbound' });
+    const rendered = await screen.findByTestId('inbound-row-ASN-2025-00402');
+    expect(rendered).toHaveTextContent('Acknowledged by Expeditor at');
+    expect(within(rendered).queryByTestId('inbound-ack-ASN-2025-00402')).toBeNull();
+  });
+
+  it('gr-016 has no ASN and no inbound row — its receipt keeps the qtyExpected fallback', () => {
+    // The acknowledgment fixture follows the ASN store: no ASN, no record.
+    expect(asnStore.get('ASN-2025-00416')).toBeUndefined();
+    expect(inboundAcknowledgmentStore.get('ASN-2025-00416')).toBeUndefined();
+    const rows = inboundRows(asnStore.all(), goodsReceiptStore.all(), new Date().toISOString());
+    expect(rows.some((r) => r.asn.asnNumber === 'ASN-2025-00416')).toBe(false);
+    // The comparison still reads the receipt's own expected quantity.
+    const gr = /** @type {import('@data/mockGoodsReceipts').GoodsReceipt} */ (
+      mockGoodsReceipts.find((g) => g.id === 'gr-016')
+    );
+    expect(compareReceipt(gr, null)[0]).toMatchObject({
+      shipped: 50_000,
+      received: 48_800,
+      qtyOutcome: 'shortOver'
+    });
   });
 });

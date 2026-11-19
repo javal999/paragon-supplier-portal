@@ -160,28 +160,28 @@ describe('SupplierShipments — ASN verbs (Step 4 batch i)', () => {
   });
 
   it('UI: "Create ASN" on a confirmed PO drafts a store-assigned ASN', async () => {
-    await mockDataService.commands.dispatch(supScope, {
-      transitionId: 't_po_confirm',
-      entity: 'purchaseOrder',
-      entityId: 'po-008',
-      payload: { confirmedQuantities: [150000] }
-    });
+    // ⚠️ THE SUBJECT MOVED AT BL-139, AND THE REASON IS A FACT ABOUT THE FIXTURE.
+    // `PO-2025-00108` was the previous subject because it was confirmed and
+    // named no ASN. The receipts now name ASNs the store holds, and `gr-003`
+    // names `ASN-2025-00403` on this PO — so it is no longer "awaiting ASN" and
+    // cannot be the subject of this claim. `PO-2026-00127` is sup-007's
+    // confirmed order that still names none.
     renderWithProviders(<SupplierShipments />, { identity: SUPPLIER });
 
     // The confirmed PO surfaces in the "awaiting ASN" panel with a Create action.
-    // ⚠️ SCOPED TO ITS OWN ROW — sup-007 now has several confirmed orders with
-    // open quantity (the demo-data walkthrough set), so the panel offers several
-    // Create actions. Which PO the draft is raised against is the claim here,
-    // and the assertions below already say so; the click has to agree.
-    const cell = await screen.findByText('PO-2025-00108');
-    const row = /** @type {HTMLElement} */ (
-      cell.closest('tr') ?? cell.closest('li') ?? /** @type {HTMLElement} */ (cell.parentElement)
-    );
+    // ⚠️ SCOPED TO THE PANEL AND TO ITS OWN ROW — sup-007 has several confirmed
+    // orders with open quantity (the demo-data walkthrough set), so the panel
+    // offers several Create actions and a bare `findByText` could match the ASN
+    // table instead. The panel is the only surface the claim is about.
+    const heading = await screen.findByText(/confirmed purchase orders? awaiting ASN/);
+    const panel = /** @type {HTMLElement} */ (heading.closest('section'));
+    const cell = within(panel).getByText('PO-2026-00127');
+    const row = /** @type {HTMLElement} */ (cell.closest('div') ?? cell.parentElement);
     fireEvent.click(within(row).getByRole('button', { name: 'Create ASN' }));
 
     // A Draft ASN was created for that PO — store re-derives; no fabricated id.
     await waitFor(() =>
-      expect(asnStore.all().some((a) => a.poReference === 'PO-2025-00108')).toBe(true)
+      expect(asnStore.all().some((a) => a.poReference === 'PO-2026-00127')).toBe(true)
     );
     const done = commandAuditSink.byEvent('t_asn_create').filter((e) => e.outcome === 'done');
     expect(done).toHaveLength(1);
@@ -324,14 +324,16 @@ describe('deep link — the seed waits for every read it derives from', () => {
   };
 
   it('does not latch a seed while the receipts read is still pending', async () => {
-    // A 200,000 ASN on PO-2025-00107 and a kept-open receipt for 190,000:
-    // 10,000 is still owed, so that is what the addressed wizard must propose.
+    // BL-139 — PO-2025-00107 opens at 80,000, not 200,000: `gr-002` covers
+    // ASN-2025-00402's 120,000 in full, and the receipt is the authority. So
+    // the ASN here ships the 80,000 that is open, and a kept-open receipt for
+    // 76,000 leaves 4,000 owed — what the addressed wizard must propose.
     const created = await mockDataService.commands.dispatch(supScope, {
       transitionId: 't_asn_create',
       entity: 'advanceShipNotice',
       payload: {
         poReference: 'PO-2025-00107',
-        lines: [{ materialCode: 'PK-PETB-8801', shippedQty: 200_000 }]
+        lines: [{ materialCode: 'PK-PETB-8801', shippedQty: 80_000 }]
       }
     });
     expect(created.status).toBe('done');
@@ -351,9 +353,9 @@ describe('deep link — the seed waits for every read it derives from', () => {
         {
           materialCode: 'PK-PETB-8801',
           description: 'PET Bottle 200ml Frosted',
-          qtyExpected: 200_000,
-          qtyReceived: 190_000,
-          qtyAccepted: 190_000,
+          qtyExpected: 80_000,
+          qtyReceived: 76_000,
+          qtyAccepted: 76_000,
           qtyRejected: 0,
           visualCheck: 'Pass',
           packagingCheck: 'Pass'
@@ -429,8 +431,8 @@ describe('deep link — the seed waits for every read it derives from', () => {
 
     expect((await screen.findAllByText('PO-2025-00107')).length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    // The seeded line carries the reopened 10,000 — not the empty seed the
+    // The seeded line carries the reopened 4,000 — not the empty seed the
     // pending receipts read produced.
-    expect(screen.getByLabelText('Shipped quantity for PK-PETB-8801')).toHaveValue('10000');
+    expect(screen.getByLabelText('Shipped quantity for PK-PETB-8801')).toHaveValue('4000');
   });
 });

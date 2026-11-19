@@ -103,6 +103,18 @@ describe('the premise — derived, not inherited from the dispatch', () => {
       'Discrepancy'
     );
   });
+
+  it('and it is the ONLY one — the section’s population is derived, so it is pinned', () => {
+    // BL-139 grew the ASN store by the receipts' Delivered ASNs. They must not
+    // join this list: the section offers a `t_asn_resolve_discrepancy` exit,
+    // and only a row in `Discrepancy` can be the subject of it.
+    asnStore.reset();
+    const flagged = asnStore
+      .all()
+      .filter((a) => a.status === 'Discrepancy')
+      .map((a) => a.asnNumber);
+    expect(flagged).toEqual([FLAGGED]);
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
