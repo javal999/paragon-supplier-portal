@@ -435,7 +435,7 @@ export function incomingDaFor(supplierId, materialCode) {
  *   readonly strategicFromFestive: boolean;
  *   readonly protectionFromB: boolean;
  *   readonly flags: readonly string[];
- *   readonly uploads: Readonly<Record<'A' | 'Festive' | 'B', { readonly sourceFile: string; readonly setAt: string } | null>>;
+ *   readonly uploads: Readonly<Record<'A' | 'Festive' | 'B', { readonly sourceFile: string; readonly setAt: string; readonly setBy: import('@lib/enforcement').ActorAttribution } | null>>;
  *   readonly byWeek: Readonly<Record<string, {
  *     readonly a: number;
  *     readonly festive: number | null;
@@ -461,7 +461,9 @@ export function withLtpInputsRead(rows) {
     /** @param {'A' | 'Festive' | 'B'} s */
     const meta = (s) => {
       const u = lw.inputs.uploads[s];
-      return u && u.sourceFile !== null ? { sourceFile: u.sourceFile, setAt: u.setAt } : null;
+      return u && u.sourceFile !== null
+        ? { sourceFile: u.sourceFile, setAt: u.setAt, setBy: u.setBy }
+        : null;
     };
     return {
       ...r,
