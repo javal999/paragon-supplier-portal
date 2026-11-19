@@ -15,6 +15,10 @@ export const poOnHoldEn = {
   'poh.col.material': 'Material',
   'poh.col.ospo': 'Open PO (OSPO)',
   'poh.col.da': 'DA not yet called off',
+  // BL-324 (owner, 2026-11-19) — the cell keeps the decision-4 reading and says
+  // what it leaves out, so it does not read as a contradiction of the room.
+  'poh.da.note':
+    'Excludes PO On Hold call-offs: an execution takes the quantity out of hold, so they are not counted against DA.',
   'poh.col.qty': 'PO On Hold',
   'poh.col.grace': 'Grace period',
   'poh.col.decision': 'Decision',
@@ -152,6 +156,9 @@ export const poOnHoldId = {
   'poh.col.material': 'Material',
   'poh.col.ospo': 'PO terbuka (OSPO)',
   'poh.col.da': 'DA yang belum di-call-off',
+  // BL-324 — the same note in Indonesian.
+  'poh.da.note':
+    'Tidak termasuk call-off PO On Hold: eksekusi mengeluarkan kuantitas itu dari tahanan, jadi tidak dihitung terhadap DA.',
   'poh.col.qty': 'PO On Hold',
   'poh.col.grace': 'Masa tenggang',
   'poh.col.decision': 'Keputusan',

@@ -82,10 +82,18 @@ describe('PO On Hold — a round with no room left', () => {
     expect(screen.getByTestId(`poh-ospo-${K}`)).toHaveTextContent('117,700');
     expect(screen.getByTestId(`poh-da-${K}`)).toHaveTextContent('4,300');
     expect(screen.getByTestId(`poh-qty-${K}`)).toHaveTextContent('113,400');
+    // BL-324 (owner, 2026-11-19) — the cell says what it leaves out, so the
+    // 4,300 does not read as a contradiction of the week's zero room.
+    expect(screen.getByTestId(`poh-da-note-${K}`)).toHaveTextContent(
+      'Excludes PO On Hold call-offs'
+    );
 
     await i18n.changeLanguage('id');
     expect(await screen.findByTestId(`poh-exec-noroom-${K}`)).toHaveTextContent(
       'Tidak ada ruang tersisa: tidak ada minggu yang bisa menerima call-off lagi.'
+    );
+    expect(screen.getByTestId(`poh-da-note-${K}`)).toHaveTextContent(
+      'Tidak termasuk call-off PO On Hold'
     );
     expect(screen.queryByText('Tidak ada yang akan dibuat.')).toBeNull();
   });

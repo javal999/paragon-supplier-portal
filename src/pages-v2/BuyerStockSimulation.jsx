@@ -46,6 +46,7 @@ import {
   lineLeftText,
   PlannerInputLabel,
   QtyCell,
+  shortfallQty,
   SIMULATE_ATOM,
   SimulationDetail
 } from './inventory/stockSimulationDisplay';
@@ -167,8 +168,10 @@ const BuyerStockSimulation = () => {
   };
   /** @param {StockSimulationRow} r */
   const createCallOff = (r) => navigate(callOffHref(r.supplierId, r.materialCode));
+  // BL-292 — the draft PR opens with the shortfall ("Over-called by N"), not 0.
   /** @param {StockSimulationRow} r */
-  const createPoRequest = (r) => navigate(poRequestHref(r.supplierId, r.materialCode));
+  const createPoRequest = (r) =>
+    navigate(poRequestHref(r.supplierId, r.materialCode, shortfallQty(r.simulation)));
 
   return (
     <AppShellV2>

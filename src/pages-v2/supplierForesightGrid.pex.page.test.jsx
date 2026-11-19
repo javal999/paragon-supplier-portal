@@ -100,8 +100,14 @@ describe('PEX-1 (BL-264) — zone names', () => {
 describe('PEX-3 (BL-266) — where the ordered quantity comes from', () => {
   it('states the rule once per material', async () => {
     const section = await open();
+    // BL-284 / !161-7 (owner, 2026-11-19): the row is the gross LTP share, so
+    // the note names the row as the LTP share to commit and the hover's gap as
+    // context — it must not claim the row equals the gap.
     expect(within(section).getByTestId('fc-sup-demand-note-PK-PETB-8802')).toHaveTextContent(
-      'Ordered quantity = LTP (planned use) − PTI stock on hand.'
+      'The row is the LTP (planned use) share to commit. The gap on the hover (LTP − PTI stock on hand) is shown for context.'
+    );
+    expect(within(section).getByTestId('fc-sup-demand-note-PK-PETB-8802')).not.toHaveTextContent(
+      'Ordered quantity ='
     );
   });
 
@@ -109,7 +115,7 @@ describe('PEX-3 (BL-266) — where the ordered quantity comes from', () => {
     await i18n.changeLanguage('id');
     const section = await open();
     expect(within(section).getByTestId('fc-sup-demand-note-PK-PETB-8802')).toHaveTextContent(
-      'Kuantitas pesanan = LTP (rencana pemakaian) − stok PTI yang ada.'
+      'Baris ini adalah bagian LTP (rencana pemakaian) yang perlu dikomitmenkan. Selisih pada hover (LTP − stok PTI yang ada) ditampilkan sebagai konteks.'
     );
   });
 

@@ -12,6 +12,14 @@ describe('inventoryLinks — one address per action on a supplier × material pa
     expect(poRequestHref('sup-007', 'PK-PETB-8802')).toBe(
       '/buyer/purchase-requisition?new=1&supplier=sup-007&material=PK-PETB-8802'
     );
+    // BL-292 — the stock simulation passes the shortfall to pre-fill the draft
+    // PR; every other caller omits it and the address is unchanged.
+    expect(poRequestHref('sup-007', 'PK-PETB-8802', 121000)).toBe(
+      '/buyer/purchase-requisition?new=1&supplier=sup-007&material=PK-PETB-8802&qty=121000'
+    );
+    expect(poRequestHref('sup-007', 'PK-PETB-8802', 0)).toBe(
+      '/buyer/purchase-requisition?new=1&supplier=sup-007&material=PK-PETB-8802'
+    );
   });
 
   it('encodes each value, so a code with reserved characters stays one parameter', () => {

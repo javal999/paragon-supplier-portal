@@ -818,6 +818,12 @@ const PoOnHoldPanel = ({ persona }) => {
                 </TableCell>
                 <TableCell className="align-top">
                   <Qty value={r.daNotCalledOff} uom={r.uom} testId={`poh-da-${r.key}`} />
+                  {/* BL-324 (owner, 2026-11-19) — the cell keeps the decision-4
+                      reading; the note says what it leaves out, so it does not
+                      read as a contradiction of the week's room. */}
+                  <span className={note} data-testid={`poh-da-note-${r.key}`}>
+                    {t('poh.da.note')}
+                  </span>
                 </TableCell>
                 <TableCell className="align-top">
                   <Qty value={r.qty} uom={r.uom} testId={`poh-qty-${r.key}`} />
