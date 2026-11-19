@@ -113,6 +113,42 @@ describe('PO On Hold — a round with no room left', () => {
     expect(within(preview).queryByTestId(`poh-exec-noroom-${K}`)).toBeNull();
   });
 
+  // BL-323 — the same line, before the send: the picker says it for the option it
+  // would send, and the round still runs (it informs, it does not block).
+  it('the picker says "No room left" before the send, hides it for an option with room, and the send still runs', async () => {
+    await executeRoundOne();
+    renderWithProviders(<BuyerFixedStockReconcile />, {
+      identity: BUYER,
+      route: '/buyer/fs-reconcile'
+    });
+    const row = await screen.findByTestId(`poh-row-${K}`);
+    // FS + spread has no room left after round 1: the line shows before any send.
+    fireEvent.click(within(row).getByTestId(`poh-option-fsSpread-${K}`));
+    const line = within(row).getByTestId(`poh-presend-noroom-${K}`);
+    expect(line).toHaveTextContent('No room left: no week can take another call-off.');
+    expect(line).toHaveTextContent('call-offs from earlier rounds count');
+    expect(poOnHoldStore.all()).toHaveLength(1);
+    // FS only takes the whole remainder: picking it hides the line (known good).
+    fireEvent.click(within(row).getByTestId(`poh-option-fsOnly-${K}`));
+    expect(within(row).queryByTestId(`poh-presend-noroom-${K}`)).toBeNull();
+    // Back to the zero-room option: the line returns, and sending still runs round 2.
+    fireEvent.click(within(row).getByTestId(`poh-option-fsSpread-${K}`));
+    expect(within(row).getByTestId(`poh-presend-noroom-${K}`)).toBeInTheDocument();
+    fireEvent.click(within(row).getByTestId(`poh-suggest-send-${K}`));
+    await waitFor(() => expect(poOnHoldStore.all()).toHaveLength(2));
+    expect(poOnHoldStore.all()[1]).toMatchObject({ round: 2, suggested: 'fsSpread' });
+  });
+
+  it('a line that still has room shows no presend line for FS + spread', async () => {
+    renderWithProviders(<BuyerFixedStockReconcile />, {
+      identity: BUYER,
+      route: '/buyer/fs-reconcile'
+    });
+    const row = await screen.findByTestId(`poh-row-${K}`);
+    fireEvent.click(within(row).getByTestId(`poh-option-fsSpread-${K}`));
+    expect(within(row).queryByTestId(`poh-presend-noroom-${K}`)).toBeNull();
+  });
+
   it('once the supplier has chosen FS + spread for that round, neither seat is told the remainder would be spread', async () => {
     await executeRoundOne();
     await svc.dispatch(planner, {

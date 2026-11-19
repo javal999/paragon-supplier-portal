@@ -36,7 +36,11 @@ import { blanketBalances, openSupplyIndex } from '../../transitions/supplyBelowD
 import { isReleased } from '../../transitions/callOffRules';
 import { mondayOf, dayOf } from '../../transitions/inventoryRules';
 import { lastMovementDay, POSTED_RECEIPT_STATUSES } from '../../transitions/stockMovement';
-import { executionStanding, planExecution } from '../../transitions/poOnHoldExecution';
+import {
+  executionStanding,
+  noRoomByOption,
+  planExecution
+} from '../../transitions/poOnHoldExecution';
 import { recommendAction } from '../../transitions/poOnHoldRecommendation';
 import {
   PO_ON_HOLD_RULES,
@@ -57,6 +61,7 @@ import {
  * `outcome`:  What the end of the grace period does with the quantity under `effective`.
  * `pipo`, `maxPti`, `daysSinceMovement`:  Null where the hub holds no such fact.
  * `cap`:  [Proposed] The FG cap (PEX-8 BR-03) an FG round has left: the formula's figure less what earlier rounds of this supplier × material absorbed, never below 0. Null when the formula cannot be computed.
+ * `noRoomByOption`:  BL-323 — the room each option has left before the planner sends a round: the plan that option would run, judged by the one `planHasNoRoom` predicate, so the picker's line before the send and the preview's line after it cannot disagree. Derived at read; the page renders it.
  * `execution`:  PEX-8 BR-02/BR-05 — the end of the grace period: `scheduled` (grace running), `due`, `blocked` (a fact is missing, see `plan.blocked`) or `executed`. `plan` is the read-only preview (what it would do now, or what it did); `record` is the ledger row once it ran.
  * `closed`:  True for a line that left hold after its execution: kept so the panel still says what was created. On a closed row `qty` is the quantity that stayed on hold after that round (BL-318), not the current hold.
  *
@@ -84,6 +89,7 @@ import {
  *   readonly sohSupplier: number | null;
  *   readonly cap: number | null;
  *   readonly conditions: Readonly<Record<PoOnHoldOption, boolean>>;
+ *   readonly noRoomByOption: Readonly<Record<PoOnHoldOption, boolean>>;
  *   readonly suggestion: PoOnHoldOption | null;
  *   readonly materialClass: string | null;
  *   readonly thresholds: { readonly absorbMaxPct: number | null; readonly carryMaxPct: number | null };
@@ -393,6 +399,17 @@ export function allPoOnHold(nowIso = sdcClock.now()) {
               weeks: f.roomWeeks
             })
           : null);
+      // BL-323 — the room each option has left, before the planner sends a
+      // round: planExecution + planHasNoRoom on this row's own figures, the
+      // same pair the preview and the executed rows use.
+      const optionNoRoom = noRoomByOption({
+        qty: f.qty,
+        cap,
+        graceEndDay: gs.dueDay,
+        leadTimeDays,
+        lines: f.lines,
+        weeks: f.roomWeeks
+      });
       const execution = {
         status: executionStanding({
           executed: ran !== undefined,
@@ -436,6 +453,7 @@ export function allPoOnHold(nowIso = sdcClock.now()) {
         sohSupplier,
         cap,
         conditions: optionConditions(facts),
+        noRoomByOption: optionNoRoom,
         suggestion: suggestOption(facts),
         materialClass,
         thresholds: {
