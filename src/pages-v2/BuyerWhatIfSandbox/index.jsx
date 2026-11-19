@@ -174,10 +174,13 @@ const Editor = ({ box }) => {
         </Button>
       </div>
       <BasisLine standing="planOfRecord" />
-      {/* PEX-15 BR-02 (BL-277) — Baseline, Festive and Protection buffer load their LTP series. */}
+      {/* PEX-15 BR-02 (BL-277) — Baseline, Festive and Protection buffer load their LTP series.
+          PSC-5 BR-05 (BL-344) — the four demand shapes rewrite the same demand row. */}
       <ScenarioPresets
         series={box.ltpSeries}
+        ltp={inputs.ltp}
         onLoad={(_scenario, ltp) => onInputs({ ltp: [...ltp] })}
+        onDemand={(ltp) => onInputs({ ltp })}
       />
       <div id={RESULTS_ANCHOR_ID} className="scroll-mt-4">
         <ResultsTable plan={plan} scenario={run} compared={compared} />

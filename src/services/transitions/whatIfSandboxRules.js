@@ -456,6 +456,116 @@ export function materialClassOf(materialType, engineKind = null) {
  */
 export const horizonOf = (materialClass) => WHAT_IF_RULES.horizonWeeks[materialClass];
 
+// ─── Demand presets — PSC-5 BR-05 (BL-344) ──────────────────────────────────
+
+/**
+ * The four demand shapes PSC-5 BR-05 offers, in the order the page lists them.
+ * Each rewrites the Material tab's demand row (the weekly LTP); the FG tab
+ * stays unscaled (PEX-D28).
+ * @type {readonly ['skuRevamp', 'skuRetire', 'oneShotUplift', 'levelTransition']}
+ */
+export const DEMAND_PRESETS = Object.freeze(
+  /** @type {const} */ (['skuRevamp', 'skuRetire', 'oneShotUplift', 'levelTransition'])
+);
+/** @typedef {(typeof DEMAND_PRESETS)[number]} DemandPreset */
+
+/**
+ * The magnitudes of the four shapes [Owner, 2026-11-18, BL-353 for the shapes;
+ * the figures are BL-344's build decisions]. A planner can edit every shaped
+ * week afterwards in the grid: a preset rewrites the row, it locks nothing.
+ *   · skuRevamp: +`skuRevampUpliftPct`% over `skuRevampWeeks` weeks, held after.
+ *   · skuRetire: declines to 0 over `skuRetireWeeks` weeks, 0 after.
+ *   · oneShotUplift: `oneShotUpliftWeek` (1-based) carries
+ *     +`oneShotUpliftPct`%, the other weeks keep their value.
+ *   · levelTransition: a step of +`levelTransitionUpliftPct`% from
+ *     `levelTransitionWeek` (1-based) onward.
+ */
+export const DEMAND_PRESET_RULES = Object.freeze({
+  skuRevampWeeks: 6,
+  skuRevampUpliftPct: 50,
+  skuRetireWeeks: 4,
+  oneShotUpliftWeek: 5,
+  oneShotUpliftPct: 50,
+  levelTransitionWeek: 13,
+  levelTransitionUpliftPct: 50
+});
+
+/**
+ * One week's quantity under a factor, whole units (the grid's unit).
+ * @param {number} qty
+ * @param {number} factor
+ * @returns {number}
+ */
+const shaped = (qty, factor) => Math.round(qty * factor);
+
+/**
+ * PSC-5 BR-05 — SKU revamp: a ramp over `skuRevampWeeks`, from the week's own
+ * value up to the `skuRevampUpliftPct` top, held after. Week k (1-based, in the
+ * ramp) is scaled by `1 + pct × k/weeks`, so the last ramp week is the top.
+ * @param {readonly number[]} ltp  The demand row to shape.
+ * @returns {number[]}
+ */
+export function skuRevampLtp(ltp) {
+  const { skuRevampWeeks: weeks, skuRevampUpliftPct: pct } = DEMAND_PRESET_RULES;
+  return ltp.map((q, i) => shaped(q, 1 + (pct / 100) * (i < weeks ? (i + 1) / weeks : 1)));
+}
+
+/**
+ * PSC-5 BR-05 — SKU off/retired: a decline to 0 over `skuRetireWeeks`. Week k
+ * (1-based, within those weeks) is scaled by `(weeks − k)/weeks`; every later
+ * week is 0.
+ * @param {readonly number[]} ltp
+ * @returns {number[]}
+ */
+export function skuRetireLtp(ltp) {
+  const { skuRetireWeeks: weeks } = DEMAND_PRESET_RULES;
+  return ltp.map((q, i) => (i < weeks ? shaped(q, (weeks - (i + 1)) / weeks) : 0));
+}
+
+/**
+ * PSC-5 BR-05 — one-shot material uplift: a single-week spike. Week
+ * `oneShotUpliftWeek` (1-based) carries the `oneShotUpliftPct` uplift; every
+ * other week keeps its value.
+ * @param {readonly number[]} ltp
+ * @returns {number[]}
+ */
+export function oneShotUpliftLtp(ltp) {
+  const { oneShotUpliftWeek: week, oneShotUpliftPct: pct } = DEMAND_PRESET_RULES;
+  return ltp.map((q, i) => (i + 1 === week ? shaped(q, 1 + pct / 100) : q));
+}
+
+/**
+ * PSC-5 BR-05 — material level transition: a step change at
+ * `levelTransitionWeek` (1-based). From that week on the demand carries the
+ * `levelTransitionUpliftPct` step; the weeks before keep their value.
+ * @param {readonly number[]} ltp
+ * @returns {number[]}
+ */
+export function levelTransitionLtp(ltp) {
+  const { levelTransitionWeek: week, levelTransitionUpliftPct: pct } = DEMAND_PRESET_RULES;
+  return ltp.map((q, i) => (i + 1 >= week ? shaped(q, 1 + pct / 100) : q));
+}
+
+/**
+ * PSC-5 BR-05 — the demand row a preset loads. A new array: the editor's row
+ * is replaced, never mutated (the sandbox stores nothing, BR-06).
+ * @param {DemandPreset} preset
+ * @param {readonly number[]} ltp
+ * @returns {number[]}
+ */
+export function demandPresetLtp(preset, ltp) {
+  switch (preset) {
+    case 'skuRevamp':
+      return skuRevampLtp(ltp);
+    case 'skuRetire':
+      return skuRetireLtp(ltp);
+    case 'oneShotUplift':
+      return oneShotUpliftLtp(ltp);
+    case 'levelTransition':
+      return levelTransitionLtp(ltp);
+  }
+}
+
 // ─── The run (BR-03) ────────────────────────────────────────────────────────
 
 /**
