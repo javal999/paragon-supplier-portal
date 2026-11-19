@@ -152,6 +152,18 @@ The requirements are `SC-HUB-PLAN-EXECUTION-REQUIREMENTS-2026-11.md`. This table
 | PEX-10 Fulfilment window (BL-273) | Built | MR !97, MR !100, MR !117 | Fulfil-by date from the lead time; the execution's need date is grace end + lead time |
 | PEX-12 Recommended action and cancellation (BL-312) | Built as an educated guess [Proposed] | MR !131 | `poOnHoldRecommendation.js`: auto absorb, auto carry-over or manual with a reason on each line, from `autoAbsorbMaxPct` and `autoCarryMaxPct` per material class; both **empty by default**, so every line reads "manual: no threshold set". Nothing executes automatically. Cancellation is a request only (`poCancellation` flow: planner requests, supplier acknowledges); no SAP write and no Cancelled status. Waits on Mba Septi for the real thresholds and the cancellation flow |
 
+The requirements are `SC-HUB-PLANNING-STOCK-CONFIRMATION-REQUIREMENTS-2026-11.md` and `SC-HUB-ASN-INBOUND-REQUIREMENTS-2026-11.md`. The rows below cover what the PSC/AIB wave built (MR !165, merged as `3a29ada8`, deployed `dpl_DHX4jGfydZinkSB1q4gc5UAu8kuQ`); the remaining PSC/AIB rows are in `BACKLOG.md` section 4h.
+
+| PSC/AIB | Status | Built in | What exists today |
+|---|---|---|---|
+| PSC-1 Weekly confirmation (BL-336) | Built; the DA view is off | MR !165 | The DA confirmation panel: Friday publication, Wednesday 23:59 WIB, Thursday stock cutoff, first explicit, later carried forward, change-only submit, SOH pre-fills the stock page. `SUPPLIER_DA_VIEW_ENABLED` stays off (DRC-D10). |
+| PSC-2 Stock table (BL-337) | Built; the multi-run record is BL-358 | MR !165 | 1 row per material, In Transit and In Production drawers, flattened download, PIC removed, Incoming renamed In Production, 3 filters, To-Do order. The stock record still carries one production entry. |
+| PSC-5 CV (BL-342) | Built | MR !165 | The CV guide in the Safety Stock detail panel. |
+| PSC-6 Grace and reconcile (BL-346, BL-347) | Built | MR !165 | The grace counts calendar days; the no-movement period stays working days; the In grace/PO On Hold columns and Total OSPO. |
+| AIB-1 ASN validation (BL-348) | Built; the SAP send is BL-349 | MR !165 | The 4 sequence rules, the SJ, per-line errors. The SAP send and the inbound number wait on BL-349. |
+| AIB-2 Expeditor (BL-350) | Built; the seat is holdable, not seeded | MR !165 | The inbound list, the acknowledge with who/when, the GR and quality read from SAP. |
+| AIB-3 Missing-ASN chase (BL-351) | Built; the chase auto-appears | MR !165 | The chase list, the close with reason, CR-09 unchanged. |
+
 ## 2. Build list
 
 | ID | Change | State |

@@ -1137,6 +1137,17 @@ Until Finance does, the three rates are admin settings with placeholder values, 
 
 **What would change this.** BL-287 being built; the note is then replaced by the service result.
 
+## PSC/AIB wave build rulings (decided 2026-11-18)
+
+The owner accepted the four lanes' calls on 2026-11-18 ("apply your recommendations"). The wave merged as `3a29ada8` (MR !165) and deployed as `dpl_DHX4jGfydZinkSB1q4gc5UAu8kuQ`.
+
+### PSC-1 to PSC-6 and AIB-1 to AIB-3 · the wave's calls
+**Decision.** Lane A: the "Called off, not yet shipped" column stays removed (PEX-9, BL-274); the second remainder is carried as row data; the non-working-day grace keeps the calendar due date. Lane D: the DA view flag stays off (DRC-D10); the In Production multi-run is BL-358. Lane C: the Expeditor is holdable, not seeded; the buyer-persona atom includes `inbound:acknowledge`; the delivery date is the ASN ETA; the sequence is validated as non-blank text; one sequence is one ASN; the peers are the supplier's non-cancelled ASNs; the 4 rules block the submit and the shelf-life exception; the acknowledgment is a state-preserving ASN transition; who is the seat; the deadline is the ETA working day + 1; the inbound is a submitted/in-transit/delivered/discrepancy ASN; the GR is the first matching goods receipt. Lane B: the chase auto-appears (BR-01 over the AIB-3 step list); a full receipt or a missed delivery closes it; a rejected call-off raises no chase; a dispatch notice does not clear it; no ageing cap; the surface is the Call-offs "Missing ASN" tab plus Home tasks; the close reason is free text; the closure is PTI-only; the fixture duplicate is BL-359; the CV guide is in the detail panel.
+
+**Alternative not taken.** Each call's alternative is in the lane reports; the material ones: seed the Expeditor (changes every buyer seat's authority), restore the "Called off, not yet shipped" column (reverses BL-274), a planner-triggered chase (the AIB-3 step list), the dispatch notice clearing the chase.
+
+**What would change this.** The owner's word on any call; the multi-run data model (BL-358); the Expeditor seed.
+
 ## Sources
 
 Market practice above draws on these, read 2026-09-21, plus the vendor research already recorded in section 8 of the requirements:
