@@ -23,7 +23,7 @@ export const demandAnticipationEn = {
   // BL-267 (PEX-5) — LTP inputs.
   'ltpIn.title': 'LTP inputs',
   'ltpIn.intro':
-    'Upload LTP A, LTP Festive and LTP B per material, and record which one the demand anticipation uses. The hub never picks it: a material with no choice uses LTP A. Until LTP A is uploaded, the forecast quantity stands in for it.',
+    'Upload LTP A, LTP Festive and LTP B per material, one file per series or as a batch file below. Until LTP A is uploaded, the forecast quantity stands in for it.',
   'ltpIn.material': 'Material',
   'ltpIn.pick': 'Pick a material',
   'ltpIn.choice': 'LTP in use',
@@ -197,7 +197,7 @@ export const demandAnticipationId = {
   // BL-267 (PEX-5) — LTP inputs.
   'ltpIn.title': 'Input LTP',
   'ltpIn.intro':
-    'Unggah LTP A, LTP Festive dan LTP B per material, dan catat mana yang dipakai demand anticipation. Hub tidak pernah memilihnya: material tanpa pilihan memakai LTP A. Sebelum LTP A diunggah, kuantitas prakiraan menggantikannya.',
+    'Unggah LTP A, LTP Festive dan LTP B per material, satu berkas per seri atau sebagai berkas batch di bawah. Sebelum LTP A diunggah, kuantitas prakiraan menggantikannya.',
   'ltpIn.material': 'Material',
   'ltpIn.pick': 'Pilih material',
   'ltpIn.choice': 'LTP yang dipakai',
