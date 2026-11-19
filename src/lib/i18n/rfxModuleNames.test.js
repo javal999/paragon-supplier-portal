@@ -1,6 +1,9 @@
 // RFx UX X-01 (owner ruling Q8, 2026-10-19) — one name per module, in both
 // languages: the menu's acronym leads the page title and the To do row, and the
 // section header reads "Pengadaan" in Bahasa Indonesia.
+// BL-183 (owner ruling 2026-11-19) — the SUPPLIER RFQ page title is its menu
+// label ("RFQ invitations" / "Undangan RFQ"), so that one title no longer leads
+// with the acronym; the buyer page keeps its X-01 title.
 import { describe, expect, it } from 'vitest';
 import { hubEn, hubId } from './hub';
 import { rfxEn, rfxId } from './rfx';
@@ -26,13 +29,11 @@ describe('X-01 — one name per module', () => {
       rfxEn['rfx.rfi.title'],
       rfxEn['rfx.rfi.supplier.title'],
       sourcingEn['sourcing.header.title'],
-      rfqsEn['rfqs.header.title'],
       rfxEn['rfx.rfp.title'],
       rfxEn['rfx.rfp.supplier.title']
     ]).toEqual([
       'RFI · Information requests',
       'RFI · Information requests',
-      'RFQ · Quotation requests',
       'RFQ · Quotation requests',
       'RFP · Proposal requests',
       'RFP · Proposal requests'
@@ -40,14 +41,17 @@ describe('X-01 — one name per module', () => {
     expect([
       rfxId['rfx.rfi.title'],
       sourcingId['sourcing.header.title'],
-      rfqsId['rfqs.header.title'],
       rfxId['rfx.rfp.title']
     ]).toEqual([
       'RFI · Permintaan informasi',
       'RFQ · Permintaan penawaran harga',
-      'RFQ · Permintaan penawaran harga',
       'RFP · Permintaan proposal'
     ]);
+  });
+
+  it('BL-183 — the supplier RFQ page title is its menu label, EN and ID', () => {
+    expect(rfqsEn['rfqs.header.title']).toBe(hubEn['hub.nav.sup.rfqInvitations']);
+    expect(rfqsId['rfqs.header.title']).toBe(hubId['hub.nav.sup.rfqInvitations']);
   });
 
   it('the To do rows name the module the menu names, EN and ID', () => {

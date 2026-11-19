@@ -8,7 +8,9 @@ export const sdcSupplierEn = {
   // — Page chrome —
   'sdcSup.crumb.section': 'Acquire',
   'sdcSup.crumb.page': 'Forecasts',
-  'sdcSup.header.title': 'Forecast Commitments',
+  // BL-183 (owner ruling 2026-11-19) — the page title is its menu label
+  // (`hub.nav.sup.forecast`) verbatim: the same name BL-243 / FSR-D7 settled on.
+  'sdcSup.header.title': 'Foresight commitments',
   'sdcSup.header.subtitle':
     'Published forecast lines for {{supplier}} — confirm what you can supply',
   'sdcSup.meta.summary':
@@ -243,7 +245,7 @@ export const sdcSupplierId = {
   // — Kerangka halaman —
   'sdcSup.crumb.section': 'Pengadaan',
   'sdcSup.crumb.page': 'Prakiraan',
-  'sdcSup.header.title': 'Komitmen Prakiraan',
+  'sdcSup.header.title': 'Komitmen foresight',
   'sdcSup.header.subtitle':
     'Baris prakiraan terbit untuk {{supplier}} — konfirmasikan yang dapat Anda pasok',
   'sdcSup.meta.summary': '{{lines}} baris terbit · {{responses}} respons · rencana {{planVersion}}',
