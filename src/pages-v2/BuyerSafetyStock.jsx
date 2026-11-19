@@ -15,7 +15,7 @@ import Data from '@components/ui-v2/Data';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
 import { formatDate, formatNumber } from '@lib/format';
-import { useSafetyStock } from '@services/query/hooks';
+import { useInventory, useSafetyStock } from '@services/query/hooks';
 /** @import { MaterialSafetyStockView } from '@services/data/types' */
 import { qtyOf } from './materialPlan/planDisplay';
 import PurposeHeader from '@components/forecast/PurposeHeader';
@@ -45,6 +45,7 @@ import {
   defaultRopSwitches
 } from './safetyStock/osipRops';
 import BufferModelAPanel from './safetyStock/bufferModelA';
+import { RopLevelView } from './safetyStock/ropLevelView';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SAFETY STOCK AND REORDER POINT — REQ-E14-04, the Material Planner's view.
@@ -74,6 +75,10 @@ import BufferModelAPanel from './safetyStock/bufferModelA';
 // supplier-side ROPs and the level control are in the material's detail panel
 // (the table would be too wide). `?material=` opens a material's panel (the
 // Home task "Review ROP after first order" links here).
+//
+// PSC-5 BR-02 (BL-341) — the ROP-level view (`safetyStock/ropLevelView.jsx`):
+// materials grouped by their OSIP level, PTI stock against the PTI ROP and the
+// DRC-10 Max, warning below the ROP and at or above Max.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @param {number | null} x */
@@ -253,6 +258,10 @@ const HistoryPanel = ({ m, children }) => {
 const BuyerSafetyStock = () => {
   const { t } = useTranslation();
   const query = useSafetyStock();
+  // PSC-5 BR-02 (BL-341) — the ROP-level view reads PTI stock and the Max from
+  // the inventory read (the buyer's rows carry `systemMax`).
+  const inventoryQuery = useInventory();
+  const positions = inventoryQuery.data?.items ?? [];
   const crumb = forecastCrumb(t, 'safetyStock');
   const run = query.data ?? null;
   const materials = useMemo(() => run?.materials ?? [], [run]);
@@ -609,6 +618,10 @@ const BuyerSafetyStock = () => {
       ) : (
         <p className="text-sm text-text-tertiary mb-6">{t('sst.detail.select')}</p>
       )}
+
+      {/* PSC-5 BR-02 (BL-341) — materials by OSIP level, PTI stock against the
+          PTI ROP and the Max, with the below-ROP and max-stock warnings. */}
+      <RopLevelView materials={materials} positions={positions} />
 
       <section
         className="bg-bg-surface border border-border-subtle rounded-lg p-4 text-sm text-text-secondary space-y-2"
