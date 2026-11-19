@@ -127,8 +127,12 @@ describe('Supplier · Foresight commitments tabs (P-04, IA-S03)', () => {
     fireEvent.click(within(panel).getByRole('tab', { name: /Shipments/ }));
     fireEvent.click(await within(panel).findByRole('button', { name: /^Report shipment$/ }));
     await waitFor(() => expect(document.getElementById('sdcsup-ship-material')).not.toBeNull());
-    // Embedded: the old page title is not shown.
-    expect(screen.queryByRole('heading', { name: 'Forecast Commitments' })).toBeNull();
+    // Embedded: one page header, the host's. BL-183 makes the tab's own title
+    // the same menu label the host shows, so the control counts the heading
+    // rather than naming an absent one — a second header would render twice.
+    expect(
+      screen.getAllByRole('heading', { level: 1, name: 'Foresight commitments' })
+    ).toHaveLength(1);
   });
 
   it('switching tabs keeps the deep-link `material` the first tab read', async () => {

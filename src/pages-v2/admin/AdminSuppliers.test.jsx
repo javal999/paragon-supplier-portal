@@ -3,6 +3,8 @@ import { screen, fireEvent, within } from '@testing-library/react';
 import { renderWithProviders, BUYER } from '@test/test-utils';
 import { supplierOverlayStore } from '@services/data/mock/stores/supplierOverlayStore';
 import { isApiConnected } from '@services/data/mock/inventoryReadModel';
+import { hubEn, hubId } from '@lib/i18n/hub';
+import { adminSuppliersEn, adminSuppliersId } from '@lib/i18n/adminSuppliers';
 import AdminSuppliers from './AdminSuppliers';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -14,6 +16,17 @@ const PLANNER = { ...BUYER, businessRoles: ['planning'] };
 beforeEach(() => supplierOverlayStore.reset());
 
 describe('Material A1 · AdminSuppliers', () => {
+  it('BL-183 — the page title and its crumb read the menu label, EN and ID', async () => {
+    renderWithProviders(<AdminSuppliers />, { identity: BUYER });
+    expect(
+      await screen.findByRole('heading', { level: 1, name: hubEn['hub.nav.util.suppliers'] })
+    ).toBeInTheDocument();
+    expect(adminSuppliersEn['adminSup.title']).toBe(hubEn['hub.nav.util.suppliers']);
+    expect(adminSuppliersEn['adminSup.crumb.page']).toBe(hubEn['hub.nav.util.suppliers']);
+    expect(adminSuppliersId['adminSup.title']).toBe(hubId['hub.nav.util.suppliers']);
+    expect(adminSuppliersId['adminSup.crumb.page']).toBe(hubId['hub.nav.util.suppliers']);
+  });
+
   it('lists every supplier with its resolved mode; an unset supplier follows the sample list', async () => {
     renderWithProviders(<AdminSuppliers />, { identity: BUYER });
     const sup1 = await screen.findByTestId('adminsup-row-sup-001');
