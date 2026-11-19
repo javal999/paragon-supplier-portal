@@ -150,7 +150,7 @@ Read on GitLab `main` `3da82ae5`. Paths are under `src/`.
 - AC-01. On planning week W45 2026 the grid shows W45 2026 to W8 2027 by week, then March 2027 to October 2027 by month. (Corrected 2026-11-05: 2026 has 53 ISO weeks, so 17 weeks from W45 end at W8, 22–28 Feb 2027; the text read W9.)
 
 **PEX-3 LTP vs SOH heads-up [Owner, 2026-11-05, Q8]**
-- BR-01. A one-line note on the Foresight demand row says where the ordered quantity comes from: "Ordered quantity = LTP (planned use) − PTI stock on hand." It is an explanation, not a new figure.
+- BR-01. A one-line note on the Foresight demand row says where the ordered quantity comes from: "The row is the LTP (planned use) share to commit. The gap on the hover (LTP − PTI stock on hand) is shown for context." It is an explanation, not a new figure.
 - BR-02. Hovering a week shows LTP, SOH and the gap for that week.
 
 **PEX-4 Capacity heads-up [M04 1; Owner, 2026-11-05, A2]**
