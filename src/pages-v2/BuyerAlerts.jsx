@@ -88,6 +88,7 @@ import { ALERT_PLAN, AlertBasis, AlertImpact, AlertNextStep } from './inventory/
  */
 const ALERT_RULE_TERM = {
   ptiBelowRop: 'alertPtiBelowRop',
+  ptiAtOrAboveMax: 'alertPtiAtOrAboveMax',
   supplierBelowRop: 'alertSupplierBelowRop',
   projectedStockOut: 'alertProjectedStockOut',
   capacityBelowDemand: 'alertCapacityBelowDemand',
@@ -520,7 +521,9 @@ const BuyerAlerts = () => {
                                     ? 'inv.alerts.openBlanketPo'
                                     : a.rule === 'demandAnticipationUnabsorbed'
                                       ? 'inv.alerts.openDemandAnticipation'
-                                      : 'inv.alerts.openInventory'
+                                      : a.rule === 'ptiAtOrAboveMax'
+                                        ? 'inv.alerts.openSafetyStock'
+                                        : 'inv.alerts.openInventory'
                             )}
                           </Link>
                         ) : null}

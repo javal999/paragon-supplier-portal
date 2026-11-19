@@ -45,6 +45,8 @@ import { weekLabel } from '../BuyerDemandAnticipation/display';
 /** @type {Readonly<Record<InventoryAlertRule, AlertPlan>>} */
 export const ALERT_PLAN = {
   ptiBelowRop: { simulation: true, order: true, ask: 'productionDate' },
+  // PSC-5 BR-02 (BL-341) — excess stock: PTI reviews the level at its ROP home.
+  ptiAtOrAboveMax: { link: true },
   projectedStockOut: { simulation: true, order: true, ask: 'productionDate' },
   coverage: { simulation: true, order: true, ask: 'productionDate' },
   supplierBelowRop: { simulation: true, ask: 'productionDate' },
@@ -61,7 +63,9 @@ export const ALERT_PLAN = {
 /** Rules whose `daysToImpact` is not computed (it defaults to 0): no impact line. */
 const NO_IMPACT_RULES = /** @type {readonly InventoryAlertRule[]} */ ([
   'commitmentBelowForecast',
-  'leadTimeMissing'
+  'leadTimeMissing',
+  // PSC-5 BR-02 (BL-341) — excess stock has no day it bites: no impact line.
+  'ptiAtOrAboveMax'
 ]);
 
 /** Rules about PTI's own stock: their basis is PTI stock against the PTI ROP (INV-D1). */
@@ -144,6 +148,21 @@ export const AlertImpact = ({ alert: a }) => {
  * @returns {string | null}
  */
 export function alertBasisText(t, a, ctx) {
+  // PSC-5 BR-02 (BL-341) — PTI stock against the DRC-10 Max, its own basis:
+  // "at or above Max" is page copy, not a new `RiskBasis` kind.
+  if (a.rule === 'ptiAtOrAboveMax') {
+    const p = ctx.positions.find(
+      (x) => x.supplierId === a.supplierId && x.materialCode === a.subject
+    );
+    if (!p || p.ptiSoh === null) return t('inv.alerts.basis.ptiNone');
+    const max = p.systemMax?.value ?? null;
+    if (max === null) return null;
+    return t('inv.alerts.basis.atMax', {
+      pti: qty(p.ptiSoh),
+      max: qty(max),
+      uom: p.uom
+    });
+  }
   if (PTI_STOCK_RULES.includes(a.rule)) {
     const p = ctx.positions.find(
       (x) => x.supplierId === a.supplierId && x.materialCode === a.subject

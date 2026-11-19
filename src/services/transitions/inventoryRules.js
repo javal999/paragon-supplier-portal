@@ -422,6 +422,19 @@ export function stockFreshness(p, nowIso) {
 export const isPtiBelowRop = (p) => p.ptiSoh !== null && p.ptiRop !== null && p.ptiSoh < p.ptiRop;
 
 /**
+ * PSC-5 BR-02 (BL-341) — PTI SOH has REACHED the DRC-10 Max: the stock is at
+ * maximum, so what sits above the ROP is excess. The Max is the system's figure
+ * (`systemMax`, `osipRopRules`); no Max (an input its level needs is missing) →
+ * the rule does not fire for the pair.
+ * @param {Pick<InventoryPosition, 'ptiSoh' | 'systemMax'>} p
+ * @returns {boolean}
+ */
+export const isPtiAtOrAboveMax = (p) => {
+  const max = p.systemMax?.value ?? null;
+  return p.ptiSoh !== null && max !== null && p.ptiSoh >= max;
+};
+
+/**
  * REQ-E08-05 `supplierBelowRop`, rewired by the owner (2026-10-19, DRC-D15):
  * the supplier's stock against the SYSTEM-calculated ROP Supplier
  * (`systemRopSupplier`, BL-196), never the supplier-typed `supplierRop`, which

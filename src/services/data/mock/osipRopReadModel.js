@@ -20,7 +20,7 @@
 // Everything else is computed at read and never stored (law 0.5).
 // ────────────────────────────────────────────────────────────────────────────
 
-/** @import { FirstOrder, MaterialRopInputs, NpdReview, NpdRule, NpdTag, RopFigure } from '../../transitions/osipRopRules' */
+/** @import { FirstOrder, MaterialRopInputs, NpdReview, NpdRule, NpdTag, OsipRopFigures, RopFigure } from '../../transitions/osipRopRules' */
 import { MATERIAL_MASTER, sdcClock } from '../../sdc';
 import { dayOf, mondayOf } from '../../engine/dates';
 import { RULES_VERSION, stamp } from '../../transitions/osipRules';
@@ -179,6 +179,30 @@ export function npdReviews() {
 }
 
 /**
+ * DRC-10 — every supplier × material's ROP Order, ROP Fisik, Max and supplier
+ * ROPs under the default rules, the level in force and the NPD rule in force:
+ * what the PTI stock view's ROP Supplier, the alert rules' `systemMax` and the
+ * ROP-level view read. Keyed `<supplierId>|<materialCode>`.
+ * @param {string} [nowIso]
+ * @returns {Map<string, OsipRopFigures>}
+ */
+export function systemRopFigures(nowIso = sdcClock.now()) {
+  const osip = osipSafetyInputs(nowIso);
+  const rop = osipRopInputs([...osip.keys()], nowIso);
+  /** @type {Map<string, OsipRopFigures>} */
+  const out = new Map();
+  for (const [code, m] of osip) {
+    const r = /** @type {MaterialRopInputs} */ (rop.get(code));
+    const npd = r.npd[OSIP_ROP_READ.npdRule].npd;
+    for (const s of m.suppliers) {
+      const safety = osipSafety({ ...s, npd });
+      out.set(`${s.supplierId}|${code}`, osipRops(s, safety, r.level.level));
+    }
+  }
+  return out;
+}
+
+/**
  * DRC-D15 — the system's ROP Supplier of every supplier × material, under the
  * default rules, the level in force and the NPD rule in force: what the PTI
  * stock view shows beside the supplier's own (display-only) reorder point.
@@ -187,17 +211,8 @@ export function npdReviews() {
  * @returns {Map<string, RopFigure>}
  */
 export function systemRopSuppliers(nowIso = sdcClock.now()) {
-  const osip = osipSafetyInputs(nowIso);
-  const rop = osipRopInputs([...osip.keys()], nowIso);
   /** @type {Map<string, RopFigure>} */
   const out = new Map();
-  for (const [code, m] of osip) {
-    const r = /** @type {MaterialRopInputs} */ (rop.get(code));
-    const npd = r.npd[OSIP_ROP_READ.npdRule].npd;
-    for (const s of m.suppliers) {
-      const safety = osipSafety({ ...s, npd });
-      out.set(`${s.supplierId}|${code}`, osipRops(s, safety, r.level.level).supplier.ropSupplier);
-    }
-  }
+  for (const [key, f] of systemRopFigures(nowIso)) out.set(key, f.supplier.ropSupplier);
   return out;
 }
