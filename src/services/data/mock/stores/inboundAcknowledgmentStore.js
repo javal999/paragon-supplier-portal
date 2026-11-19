@@ -14,12 +14,18 @@
 // raw attribution is kept so a real IdP fills the person field without a
 // migration.
 //
-// Seeded with ONE acknowledged inbound so the list shows both states without
-// the reviewer having to act first. The seed is a fixture fact, not a stored
-// write: `reset()` restores it.
+// Seeded so the list shows both states without the reviewer having to act
+// first: ONE hand-authored acknowledgment (`ASN-2025-00198`), plus BL-139's
+// receipt-backed ASNs — their goods receipts prove the inbounds arrived, so
+// they are not left unacknowledged and overdue. The seed is a fixture fact, not
+// a stored write: `reset()` restores it.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { DECLARED_PRESENT } from '../../fixturePresent';
+// BL-139 — the Delivered ASNs the sample goods receipts name. Their receipts
+// are the record that the goods arrived, so those inbounds are seeded as
+// acknowledged rather than left on the Expeditor's to-do.
+import { RECEIVED_ASNS } from '../fixtures/receivedAsns';
 import { NO_PERSON } from '@context/noPerson';
 /** @import { InboundAcknowledgment } from '../../types' */
 
@@ -49,8 +55,34 @@ const SEEDED = Object.freeze({
   acknowledgedAt: at(-1, 9)
 });
 
+/**
+ * BL-139 — one acknowledgment per receipt-backed ASN, on the same morning as
+ * the seeded one (the day before the declared present, 09:00 WIB). It is one
+ * demo instant rather than a per-ASN arrival-plus-a-day: the arrival dates
+ * resolve onto the declared present itself for some rows, and a "morning
+ * after" for those would be a clock claim in the future. The record says who
+ * and when, which is all the list reads.
+ * `gr-016` has NO row here by design: its ASN is absent from the store, so no
+ * inbound exists for it and the fallback stays demonstrable.
+ * @type {readonly InboundAcknowledgment[]}
+ */
+const RECEIPT_BACKED = Object.freeze(
+  RECEIVED_ASNS.map((a) =>
+    Object.freeze({
+      asnNumber: a.asnNumber,
+      supplierId: a.supplierId,
+      acknowledgedBy: NO_PERSON,
+      seatRoles: Object.freeze(['expeditor']),
+      acknowledgedAt: at(-1, 9)
+    })
+  )
+);
+
 /** @returns {InboundAcknowledgment[]} */
-const seed = () => [{ ...SEEDED }];
+const seed = () => [
+  { ...SEEDED, seatRoles: [...SEEDED.seatRoles] },
+  ...RECEIPT_BACKED.map((r) => ({ ...r, seatRoles: [...r.seatRoles] }))
+];
 
 /** @type {InboundAcknowledgment[]} */
 let rows = seed();
