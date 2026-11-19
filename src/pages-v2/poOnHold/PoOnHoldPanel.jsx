@@ -713,6 +713,15 @@ const PoOnHoldPanel = ({ persona }) => {
                 onPick={(o) => setPicked((p) => ({ ...p, [r.key]: o }))}
                 legend={t('poh.suggest.label')}
               />
+              {/* BL-323 — the room the picked option has left, said before the
+                  send: the same line the preview and the executed rows show, from
+                  the read model's one `planHasNoRoom` judgement. It informs; it
+                  does not block. */}
+              {value && r.noRoomByOption[value] ? (
+                <span className={note} data-testid={`poh-presend-noroom-${r.key}`}>
+                  {t(`poh.exec.noRoom.${value}`)}
+                </span>
+              ) : null}
               <span className={note} data-testid={`poh-preselect-${r.key}`}>
                 {t(r.suggestion ? 'poh.suggest.preselected' : 'poh.suggest.none')}
               </span>

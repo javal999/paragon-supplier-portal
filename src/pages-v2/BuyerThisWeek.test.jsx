@@ -169,12 +169,12 @@ describe('This week — the page (F-03)', () => {
     let over = 0;
     for (const name of ['Packaging warehouse', 'Raw material warehouse']) {
       fireEvent.click(await screen.findByRole('radio', { name }, SLOW));
+      // CAP-1 wave 2 — the status is a row of the week-as-column grid, so each
+      // status cell is one week's state.
       over += screen
-        .getAllByTestId(/^rs-week-/)
-        .filter((row) =>
-          /Over capacity|Cannot be relieved by open orders/.test(
-            row.querySelectorAll('td')[5].textContent ?? ''
-          )
+        .getAllByTestId(/^rs-fill-status-/)
+        .filter((cell) =>
+          /Over capacity|Cannot be relieved by open orders/.test(cell.textContent ?? '')
         ).length;
     }
     expect(over).toBeGreaterThan(0);

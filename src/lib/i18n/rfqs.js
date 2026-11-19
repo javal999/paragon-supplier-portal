@@ -6,7 +6,10 @@
 export const rfqsEn = {
   // breadcrumb
   // header + meta
-  'rfqs.header.title': 'RFQ · Quotation requests',
+  // BL-183 (owner ruling 2026-11-19) — the supplier page title is its menu label
+  // (`hub.nav.sup.rfqInvitations`) verbatim. The BUYER page keeps its own title
+  // under `sourcing.header.title`, so only this page changes.
+  'rfqs.header.title': 'RFQ invitations',
   'rfqs.rounds.link': 'RFQ rounds · Revised quotes',
   'rfqs.header.subtitle': 'RFQs received from Paragon Corp procurement team — {{supplier}}.',
   'rfqs.meta.event.one': 'open event',
@@ -217,7 +220,7 @@ export const rfqsEn = {
 export const rfqsId = {
   // breadcrumb
   // header + meta
-  'rfqs.header.title': 'RFQ · Permintaan penawaran harga',
+  'rfqs.header.title': 'Undangan RFQ',
   'rfqs.rounds.link': 'Putaran RFQ · Penawaran revisi',
   'rfqs.header.subtitle': 'RFQ diterima dari tim pengadaan Paragon Corp — {{supplier}}.',
   'rfqs.meta.event.one': 'acara terbuka',

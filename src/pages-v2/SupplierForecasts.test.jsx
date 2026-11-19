@@ -11,6 +11,7 @@ import {
 } from '@services/sdc';
 import { isLive } from '@services/liveness';
 import i18n from '@lib/i18n';
+import { hubEn, hubId } from '@lib/i18n/hub';
 /** @import { CurrentIdentity } from '@context/CurrentIdentityContext' */
 import { PERSONA_SYSTEM_ROLES } from '@services/transitions/businessRoles';
 import { NO_PERSON } from '@context/noPerson';
@@ -679,12 +680,24 @@ describe('SupplierForecasts — the shipment quantity is parsed, never coerced (
   });
 });
 
+// BL-183 (owner ruling 2026-11-19) — the page title is its menu label.
+describe('BL-183 — the title is the menu label', () => {
+  it('renders the Foresight commitments menu label as its heading (EN)', async () => {
+    renderPage();
+    expect(
+      await screen.findByRole('heading', { level: 1, name: hubEn['hub.nav.sup.forecast'] })
+    ).toBeInTheDocument();
+  });
+});
+
 describe('SupplierForecasts — i18n (ID)', () => {
   it('localizes the header, banner, and tabs to Indonesian', async () => {
     await i18n.changeLanguage('id');
     try {
       renderPage();
-      expect(await screen.findByText('Komitmen Prakiraan')).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { level: 1, name: hubId['hub.nav.sup.forecast'] })
+      ).toBeInTheDocument();
       expect(screen.getByText(/belum ada publikasi live/i)).toBeInTheDocument();
       expect(screen.getByRole('tab', { name: /Baris terbit/ })).toBeInTheDocument();
       expect(screen.getByRole('tab', { name: /Respons Saya/ })).toBeInTheDocument();

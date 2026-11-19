@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+/** @import React from 'react' */
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import AppShellV2 from '@components/layout-v2/AppShellV2';
@@ -14,6 +15,8 @@ import Data from '@components/ui-v2/Data';
 import Button from '@components/ui-v2/Button';
 import LoadingState from '@components/ui-v2/LoadingState';
 import ErrorState from '@components/ui-v2/ErrorState';
+import WeekGrid from '@components/ui-v2/WeekGrid';
+import TermLabel from '@components/ui-v2/TermLabel';
 import { formatDate, formatNumber } from '@lib/format';
 import DataHealthChip from '@components/forecast/DataHealthChip';
 import PurposeHeader from '@components/forecast/PurposeHeader';
@@ -149,11 +152,24 @@ const PegsPanel = ({ week, plan, names, onClose }) => {
   );
 };
 
-/** @type {React.FC<{ plan: MaterialPlanView; names: MaterialRequirementView['finishedGoodNames'] }>} */
-const WeekGrid = ({ plan, names }) => {
+/**
+ * CAP-1 wave 2 (Table D) — the selected material's weeks as columns (BR-02):
+ * the metric per row, the weeks left to right, oldest first. The gross
+ * requirement opens the pegs panel under the grid for that week (BR-05), and
+ * every figure is the engine's own (AC-05).
+ * @type {React.FC<{ plan: MaterialPlanView; names: MaterialRequirementView['finishedGoodNames']; asOf: string | undefined }>}
+ */
+const MaterialWeeks = ({ plan, names, asOf }) => {
   const { t } = useTranslation();
   const [pegWeek, setPegWeek] = useState(/** @type {string | null} */ (null));
   const open = plan.weeks.find((w) => w.weekStart === pegWeek) ?? null;
+  /**
+   * The week at a column index; the grid's columns are `plan.weeks`, in order.
+   * @param {number} i
+   */
+  const wAt = (i) => plan.weeks[i];
+  /** @param {number} n */
+  const quantity = (n) => qtyOf(n, plan.uom);
   return (
     <section
       className="bg-bg-surface border border-border-subtle rounded-lg p-4 mb-6"
@@ -171,104 +187,152 @@ const WeekGrid = ({ plan, names }) => {
           t('mrq.detail.noStock')
         )}
       </p>
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableHeaderCell>{t('mrq.wk.week')}</TableHeaderCell>
-            <TableHeaderCell term="mrpGross" />
-            <TableHeaderCell term="mrpStockStart" />
-            <TableHeaderCell term="mrpReceipts" />
-            <TableHeaderCell term="mrpSafetyStock" />
-            <TableHeaderCell term="mrpNet" />
-            <TableHeaderCell term="mrpPlannedOrder" />
-            <TableHeaderCell term="mrpRelease" />
-            <TableHeaderCell term="mrpStockEnd" />
-          </TableHeader>
-          <tbody>
-            {plan.weeks.map((w) => (
-              <React.Fragment key={w.weekStart}>
-                <TableRow data-testid={`mrq-week-${w.weekStart}`}>
-                  <TableCell className="whitespace-nowrap">
-                    <Data>{weekLabel(w.weekStart)}</Data>
-                    <div className="text-xs text-text-tertiary">
-                      <Data>{formatDate(w.weekStart)}</Data>
+      {/* CAP-1 wave 2 (Table D) — metrics per row, weeks per column; no inner
+          vertical scroll box, and the grid scrolls sideways inside its card. */}
+      <WeekGrid
+        label={`${t('mrq.detail.title')} · ${plan.materialCode}`}
+        corner={t('mrq.wk.week')}
+        currentWeek={asOf}
+        testId="mrq-weeks"
+        viewKey="buyerMaterialRequirement"
+        weeks={plan.weeks.map((w) => ({
+          week: w.weekStart,
+          testId: `mrq-week-${w.weekStart}`
+        }))}
+        rows={[
+          {
+            id: 'gross',
+            label: <TermLabel term="mrpGross" />,
+            unit: plan.uom,
+            combine: 'sum',
+            value: (_week, i) => wAt(i).gross,
+            format: quantity,
+            cell: (_week, i) => {
+              const w = wAt(i);
+              return w.gross > 0 ? (
+                <button
+                  type="button"
+                  className={`underline decoration-dotted hover:text-action-hover ${TOUCH_TARGET}`}
+                  onClick={() => setPegWeek(w.weekStart)}
+                  aria-label={t('mrq.wk.openPegs', { qty: quantity(w.gross) })}
+                  data-testid={`mrq-gross-${w.weekStart}`}
+                >
+                  <Data>{quantity(w.gross)}</Data>
+                </button>
+              ) : (
+                <Data className="text-text-tertiary" data-testid={`mrq-gross-${w.weekStart}`}>
+                  {quantity(0)}
+                </Data>
+              );
+            }
+          },
+          {
+            id: 'stockStart',
+            label: <TermLabel term="mrpStockStart" />,
+            unit: plan.uom,
+            combine: 'first',
+            value: (_week, i) => wAt(i).projectedStart,
+            format: quantity,
+            cell: (_week, i) => <Data>{quantity(wAt(i).projectedStart)}</Data>
+          },
+          {
+            id: 'receipts',
+            label: <TermLabel term="mrpReceipts" />,
+            unit: plan.uom,
+            combine: 'sum',
+            value: (_week, i) => wAt(i).receipts,
+            format: quantity,
+            cell: (_week, i) => {
+              const w = wAt(i);
+              return (
+                <>
+                  <Data>{quantity(w.receipts)}</Data>
+                  {w.unconfirmedReceipts > 0 && (
+                    <div
+                      className="text-xs text-warning-hover"
+                      data-testid={`mrq-unconfirmed-${w.weekStart}`}
+                    >
+                      {t('mrq.wk.unconfirmed', { qty: quantity(w.unconfirmedReceipts) })}
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    {w.gross > 0 ? (
-                      <button
-                        type="button"
-                        className={`underline decoration-dotted hover:text-action-hover ${TOUCH_TARGET}`}
-                        onClick={() => setPegWeek(w.weekStart)}
-                        aria-label={t('mrq.wk.openPegs', { qty: qtyOf(w.gross, plan.uom) })}
-                        data-testid={`mrq-gross-${w.weekStart}`}
-                      >
-                        <Data>{qtyOf(w.gross, plan.uom)}</Data>
-                      </button>
-                    ) : (
-                      <Data className="text-text-tertiary">{qtyOf(0, plan.uom)}</Data>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Data>{qtyOf(w.projectedStart, plan.uom)}</Data>
-                  </TableCell>
-                  <TableCell>
-                    <Data>{qtyOf(w.receipts, plan.uom)}</Data>
-                    {w.unconfirmedReceipts > 0 && (
-                      <div
-                        className="text-xs text-warning-hover"
-                        data-testid={`mrq-unconfirmed-${w.weekStart}`}
-                      >
-                        {t('mrq.wk.unconfirmed', { qty: qtyOf(w.unconfirmedReceipts, plan.uom) })}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Data>{qtyOf(w.safetyStock, plan.uom)}</Data>
-                  </TableCell>
-                  <TableCell>
-                    <Data data-testid={`mrq-net-${w.weekStart}`}>{qtyOf(w.net, plan.uom)}</Data>
-                  </TableCell>
-                  <TableCell>
-                    <Data data-testid={`mrq-planned-${w.weekStart}`}>
-                      {qtyOf(w.plannedReceipt, plan.uom)}
-                    </Data>
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    {w.releaseWeek ? (
-                      <>
-                        <Data>{weekLabel(w.releaseWeek)}</Data>
-                        {w.lateToRelease && (
-                          <div>
-                            <StatusPill variant="danger">{t('mrq.wk.late')}</StatusPill>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <Data className="text-text-tertiary">—</Data>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Data>{qtyOf(w.projectedEnd, plan.uom)}</Data>
-                  </TableCell>
-                </TableRow>
-                {open?.weekStart === w.weekStart && (
-                  <tr>
-                    <td colSpan={9} className="px-4 pb-4">
-                      <PegsPanel
-                        week={open}
-                        plan={plan}
-                        names={names}
-                        onClose={() => setPegWeek(null)}
-                      />
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
-            ))}
-          </tbody>
-        </Table>
-      </div>
+                  )}
+                </>
+              );
+            }
+          },
+          {
+            id: 'safetyStock',
+            label: <TermLabel term="mrpSafetyStock" />,
+            unit: plan.uom,
+            combine: 'last',
+            value: (_week, i) => wAt(i).safetyStock,
+            format: quantity,
+            cell: (_week, i) => <Data>{quantity(wAt(i).safetyStock)}</Data>
+          },
+          {
+            id: 'net',
+            label: <TermLabel term="mrpNet" />,
+            unit: plan.uom,
+            combine: 'sum',
+            value: (_week, i) => wAt(i).net,
+            format: quantity,
+            cell: (_week, i) => (
+              <Data data-testid={`mrq-net-${wAt(i).weekStart}`}>{quantity(wAt(i).net)}</Data>
+            )
+          },
+          {
+            id: 'planned',
+            label: <TermLabel term="mrpPlannedOrder" />,
+            unit: plan.uom,
+            combine: 'sum',
+            value: (_week, i) => wAt(i).plannedReceipt,
+            format: quantity,
+            cell: (_week, i) => (
+              <Data data-testid={`mrq-planned-${wAt(i).weekStart}`}>
+                {quantity(wAt(i).plannedReceipt)}
+              </Data>
+            )
+          },
+          {
+            // BR-05 — the release week stays per week; the late flag is the pill.
+            id: 'release',
+            label: <TermLabel term="mrpRelease" />,
+            align: 'start',
+            combine: 'distinct',
+            value: (_week, i) => {
+              const releaseWeek = wAt(i).releaseWeek;
+              return releaseWeek ? weekLabel(releaseWeek) : null;
+            },
+            cell: (_week, i) => {
+              const w = wAt(i);
+              return w.releaseWeek ? (
+                <>
+                  <Data>{weekLabel(w.releaseWeek)}</Data>
+                  {w.lateToRelease && (
+                    <div>
+                      <StatusPill variant="danger">{t('mrq.wk.late')}</StatusPill>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <Data className="text-text-tertiary">—</Data>
+              );
+            }
+          },
+          {
+            id: 'stockEnd',
+            label: <TermLabel term="mrpStockEnd" />,
+            unit: plan.uom,
+            combine: 'last',
+            value: (_week, i) => wAt(i).projectedEnd,
+            format: quantity,
+            cell: (_week, i) => <Data>{quantity(wAt(i).projectedEnd)}</Data>
+          }
+        ]}
+      />
+      {/* BR-05 — the per-week detail panel opens below the grid for that week. */}
+      {open ? (
+        <PegsPanel week={open} plan={plan} names={names} onClose={() => setPegWeek(null)} />
+      ) : null}
     </section>
   );
 };
@@ -487,10 +551,11 @@ const BuyerMaterialRequirement = () => {
       </div>
 
       {current ? (
-        <WeekGrid
+        <MaterialWeeks
           key={`${current.materialCode}-${mode}`}
           plan={current}
           names={run?.finishedGoodNames ?? {}}
+          asOf={run?.asOf}
         />
       ) : (
         <p className="text-sm text-text-tertiary mb-6">{t('mrq.detail.select')}</p>

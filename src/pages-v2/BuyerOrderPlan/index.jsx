@@ -223,7 +223,7 @@ const BuyerOrderPlan = () => {
             </p>
             <p className="text-xs text-text-tertiary mb-3">{t('op.fill.intro')}</p>
             <FillChart w={w} />
-            <FillTable w={w} />
+            <FillTable w={w} asOf={run?.asOf} />
           </CollapsedSection>
         ) : null}
 
